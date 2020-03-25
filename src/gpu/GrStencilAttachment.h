@@ -8,8 +8,8 @@
 #ifndef GrStencilAttachment_DEFINED
 #define GrStencilAttachment_DEFINED
 
-#include "include/gpu/GrGpuResource.h"
 #include "src/core/SkClipStack.h"
+#include "src/gpu/GrGpuResource.h"
 
 class GrRenderTarget;
 class GrResourceKey;

@@ -18,6 +18,7 @@
 class SkFontMgr;
 
 namespace sksg {
+class BlurImageFilter;
 class Group;
 template <typename T>
 class Matrix;
@@ -42,28 +43,46 @@ class TextAdapter final : public AnimatablePropertyContainer {
   void onSync() override;
 
  private:
-  TextAdapter(sk_sp<SkFontMgr>, sk_sp<Logger>);
+  enum class AnchorPointGrouping : uint8_t {
+    kCharacter,
+    kWord,
+    kLine,
+    kAll,
+  };
+
+  TextAdapter(sk_sp<SkFontMgr>, sk_sp<Logger>, AnchorPointGrouping);
 
   struct FragmentRec {
     SkPoint fOrigin;  // fragment position
 
-    sk_sp<sksg::Matrix<SkMatrix>> fMatrixNode;
+    sk_sp<sksg::Matrix<SkM44>> fMatrixNode;
     sk_sp<sksg::Color> fFillColorNode, fStrokeColorNode;
+    sk_sp<sksg::BlurImageFilter> fBlur;
+
+    float fAdvance,  // used for transform anchor point calculations
+        fAscent;     // ^
   };
 
   void reshape();
   void addFragment(const Shaper::Fragment&);
   void buildDomainMaps(const Shaper::Result&);
 
-  void pushPropsToFragment(const TextAnimator::ResolvedProps&, const FragmentRec&) const;
+  void pushPropsToFragment(
+      const TextAnimator::ResolvedProps&, const FragmentRec&, const SkVector&,
+      const TextAnimator::DomainSpan*) const;
 
   void adjustLineTracking(
       const TextAnimator::ModulatorBuffer&, const TextAnimator::DomainSpan&,
       float line_tracking) const;
 
+  SkV2 fragmentAnchorPoint(
+      const FragmentRec&, const SkVector&, const TextAnimator::DomainSpan*) const;
+  uint32_t shaperFlags() const;
+
   const sk_sp<sksg::Group> fRoot;
   const sk_sp<SkFontMgr> fFontMgr;
   sk_sp<Logger> fLogger;
+  const AnchorPointGrouping fAnchorPointGrouping;
 
   std::vector<sk_sp<TextAnimator>> fAnimators;
   std::vector<FragmentRec> fFragments;
@@ -88,6 +107,9 @@ class TextAdapter final : public AnimatablePropertyContainer {
   };
 
   TextValueTracker fText;
+  VectorValue fGroupingAlignment;
+
+  bool fHasBlurAnimator : 1, fRequiresAnchorPoint : 1;
 };
 
 }  // namespace internal

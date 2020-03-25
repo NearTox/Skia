@@ -243,7 +243,7 @@ static void draw_typeface_rendering_gm(
               SkScalar dx =
                   SkScalarCeilToScalar(font.measureText(&character, 1, SkTextEncoding::kUTF8)) + 5;
               x += dx;
-              xMax = SkTMax(x, xMax);
+              xMax = std::max(x, xMax);
             }
           }
         }

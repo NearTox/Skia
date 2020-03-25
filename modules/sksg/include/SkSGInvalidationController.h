@@ -10,7 +10,8 @@
 
 #include "include/core/SkMatrix.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkTDArray.h"
+
+#include <vector>
 
 struct SkRect;
 
@@ -30,13 +31,14 @@ class InvalidationController {
   void inval(const SkRect&, const SkMatrix& ctm = SkMatrix::I());
 
   const SkRect& bounds() const { return fBounds; }
-  const SkRect* begin() const { return fRects.begin(); }
-  const SkRect* end() const { return fRects.end(); }
+
+  auto begin() const { return fRects.cbegin(); }
+  auto end() const { return fRects.cend(); }
 
   void reset();
 
  private:
-  SkTDArray<SkRect> fRects;
+  std::vector<SkRect> fRects;
   SkRect fBounds;
 };
 

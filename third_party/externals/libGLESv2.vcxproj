@@ -67,7 +67,6 @@
     <ClCompile Include="angle2\src\compiler\translator\SymbolTable_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateMultiDrawShaderBuiltins.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\tree_ops\NameNamelessUniformBuffers.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveInactiveInterfaceVariables.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicCounters.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />

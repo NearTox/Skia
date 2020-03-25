@@ -410,8 +410,6 @@ void ConfigureMesh(
     int absVertBufferOffset) {
   SkASSERT(vertexBuffer);
 
-  mesh->setPrimitiveType(spec.primitiveType());
-
   if (spec.indexBufferOption() == IndexBufferOption::kTriStrips) {
     SkASSERT(!indexBuffer);
 
@@ -586,9 +584,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
           const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
           const CoordTransformRange& transformRange) override {
         const auto& gp = proc.cast<QuadPerEdgeAAGeometryProcessor>();
-        if (gp.fLocalCoord.isInitialized()) {
-          this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
-        }
+        this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
         fTextureColorSpaceXformHelper.setData(pdman, gp.fTextureColorSpaceXform.get());
       }
 
@@ -618,15 +614,16 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
           gpArgs->fPositionVar = gp.fPosition.asShaderVar();
         }
 
-        // Handle local coordinates if they exist
-        if (gp.fLocalCoord.isInitialized()) {
-          // NOTE: If the only usage of local coordinates is for the inline texture fetch
-          // before FPs, then there are no registered FPCoordTransforms and this ends up
-          // emitting nothing, so there isn't a duplication of local coordinates
-          this->emitTransforms(
-              args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler,
-              gp.fLocalCoord.asShaderVar(), args.fFPCoordTransformHandler);
-        }
+        // Handle local coordinates if they exist. This is required even when the op
+        // isn't providing local coords but there are FPs called with explicit coords.
+        // It installs the uniforms that transform their coordinates in the fragment
+        // shader.
+        // NOTE: If the only usage of local coordinates is for the inline texture fetch
+        // before FPs, then there are no registered FPCoordTransforms and this ends up
+        // emitting nothing, so there isn't a duplication of local coordinates
+        this->emitTransforms(
+            args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler,
+            gp.fLocalCoord.asShaderVar(), args.fFPCoordTransformHandler);
 
         // Solid color before any texturing gets modulated in
         if (gp.fColor.isInitialized()) {

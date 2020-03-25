@@ -55,14 +55,13 @@ const GrVkImageView* GrVkImageView::Create(
     return nullptr;
   }
 
-  return new GrVkImageView(imageView, ycbcrConversion);
+  return new GrVkImageView(gpu, imageView, ycbcrConversion);
 }
 
-void GrVkImageView::freeGPUData(GrVkGpu* gpu) const {
-  GR_VK_CALL(gpu->vkInterface(), DestroyImageView(gpu->device(), fImageView, nullptr));
+void GrVkImageView::freeGPUData() const {
+  GR_VK_CALL(fGpu->vkInterface(), DestroyImageView(fGpu->device(), fImageView, nullptr));
 
   if (fYcbcrConversion) {
-    fYcbcrConversion->unref(gpu);
+    fYcbcrConversion->unref();
   }
 }
-

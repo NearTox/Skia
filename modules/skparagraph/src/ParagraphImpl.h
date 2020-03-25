@@ -126,32 +126,14 @@ class ParagraphImpl final : public Paragraph {
   InternalState state() const { return fState; }
   SkSpan<Run> runs() { return SkSpan<Run>(fRuns.data(), fRuns.size()); }
   SkSpan<Block> styles() { return SkSpan<Block>(fTextStyles.data(), fTextStyles.size()); }
+  SkSpan<Placeholder> placeholders() {
+    return SkSpan<Placeholder>(fPlaceholders.data(), fPlaceholders.size());
+  }
   SkSpan<TextLine> lines() { return SkSpan<TextLine>(fLines.data(), fLines.size()); }
   const ParagraphStyle& paragraphStyle() const { return fParagraphStyle; }
   SkSpan<Cluster> clusters() { return SkSpan<Cluster>(fClusters.begin(), fClusters.size()); }
   sk_sp<FontCollection> fontCollection() const { return fFontCollection; }
   void formatLines(SkScalar maxWidth);
-
-  void shiftCluster(ClusterIndex index, SkScalar shift, SkScalar lastShift) {
-    auto& cluster = fClusters[index];
-    auto& runShift = fRunShifts[cluster.runIndex()];
-    auto& run = fRuns[cluster.runIndex()];
-    auto start = cluster.startPos();
-    auto end = cluster.endPos();
-    if (!run.leftToRight()) {
-      runShift.fShifts[start] = lastShift;
-      ++start;
-      ++end;
-    }
-    for (size_t pos = start; pos < end; ++pos) {
-      runShift.fShifts[pos] = shift;
-    }
-  }
-
-  SkScalar posShift(RunIndex index, size_t pos) const {
-    if (fRunShifts.count() == 0) return 0.0;
-    return fRunShifts[index].fShifts[pos];
-  }
 
   bool strutEnabled() const { return paragraphStyle().getStrutStyle().getStrutEnabled(); }
   bool strutForceHeight() const { return paragraphStyle().getStrutStyle().getForceStrutHeight(); }
@@ -177,7 +159,6 @@ class ParagraphImpl final : public Paragraph {
 
   void resetContext();
   void resolveStrut();
-  void resetRunShifts();
   void buildClusterTable();
   void markLineBreaks();
   bool shapeTextIntoEndlessLine();
@@ -195,6 +176,13 @@ class ParagraphImpl final : public Paragraph {
 
   BlockRange findAllBlocks(TextRange textRange);
 
+  void resetShifts() {
+    for (auto& run : fRuns) {
+      run.resetJustificationShifts();
+      run.resetShifts();
+    }
+  }
+
  private:
   friend class ParagraphBuilder;
   friend class ParagraphCacheKey;
@@ -205,7 +193,6 @@ class ParagraphImpl final : public Paragraph {
   friend class OneLineShaper;
 
   void calculateBoundaries();
-  void extractStyles();
 
   void markGraphemes16();
   void markGraphemes();
@@ -235,7 +222,6 @@ class ParagraphImpl final : public Paragraph {
   SkTHashSet<size_t> fGraphemes;
   size_t fUnresolvedGlyphs;
 
-  SkTArray<RunShifts, false> fRunShifts;
   SkTArray<TextLine, true> fLines;  // kFormatted   (cached: width, max lines, ellipsis, text align)
   sk_sp<SkPicture> fPicture;        // kRecorded    (cached: text styles)
 

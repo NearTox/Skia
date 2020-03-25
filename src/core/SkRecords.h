@@ -13,6 +13,7 @@
 #include "include/core/SkDrawable.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageFilter.h"
+#include "include/core/SkM44.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkPicture.h"
@@ -23,7 +24,6 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTextBlob.h"
 #include "include/core/SkVertices.h"
-#include "include/private/SkM44.h"
 #include "src/core/SkDrawShadowInfo.h"
 
 namespace SkRecords {
@@ -54,6 +54,7 @@ namespace SkRecords {
   M(ClipRRect)             \
   M(ClipRect)              \
   M(ClipRegion)            \
+  M(ClipShader)            \
   M(DrawArc)               \
   M(DrawDrawable)          \
   M(DrawImage)             \
@@ -215,6 +216,7 @@ RECORD(ClipPath, 0, PreCachedPath path; ClipOpAndAA opAA);
 RECORD(ClipRRect, 0, SkRRect rrect; ClipOpAndAA opAA);
 RECORD(ClipRect, 0, SkRect rect; ClipOpAndAA opAA);
 RECORD(ClipRegion, 0, SkRegion region; SkClipOp op);
+RECORD(ClipShader, 0, sk_sp<SkShader> shader; SkClipOp op);
 
 // While not strictly required, if you have an SkPaint, it's fastest to put it first.
 RECORD(DrawArc, kDraw_Tag | kHasPaint_Tag, SkPaint paint; SkRect oval; SkScalar startAngle;
@@ -251,7 +253,7 @@ RECORD(DrawAtlas, kDraw_Tag | kHasImage_Tag | kHasPaint_Tag, Optional<SkPaint> p
        sk_sp<const SkImage> atlas; PODArray<SkRSXform> xforms; PODArray<SkRect> texs;
        PODArray<SkColor> colors; int count; SkBlendMode mode; Optional<SkRect> cull);
 RECORD(DrawVertices, kDraw_Tag | kHasPaint_Tag, SkPaint paint; sk_sp<SkVertices> vertices;
-       PODArray<SkVertices::Bone> bones; int boneCount; SkBlendMode bmode);
+       SkBlendMode bmode);
 RECORD(DrawShadowRec, kDraw_Tag, PreCachedPath path; SkDrawShadowRec rec);
 RECORD(DrawAnnotation, 0,  // TODO: kDraw_Tag, skia:5548
        SkRect rect;

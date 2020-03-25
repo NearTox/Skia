@@ -23,6 +23,9 @@
 #  include "include/gpu/mtl/GrMtlTypes.h"
 #  include "src/gpu/mtl/GrMtlCppUtil.h"
 #endif
+#ifdef SK_DIRECT3D
+#  include "include/gpu/d3d/GrD3D12.h"
+#endif
 
 GrBackendFormat::GrBackendFormat(const GrBackendFormat& that)
     : fBackend(that.fBackend), fValid(that.fValid), fTextureType(that.fTextureType) {
@@ -39,6 +42,9 @@ GrBackendFormat::GrBackendFormat(const GrBackendFormat& that)
 #endif
 #ifdef SK_METAL
     case GrBackendApi::kMetal: fMtlFormat = that.fMtlFormat; break;
+#endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: fDxgiFormat = that.fDxgiFormat; break;
 #endif
 #ifdef SK_DAWN
     case GrBackendApi::kDawn: fDawnFormat = that.fDawnFormat; break;
@@ -140,6 +146,22 @@ GrMTLPixelFormat GrBackendFormat::asMtlFormat() const {
 }
 #endif
 
+#ifdef SK_DIRECT3D
+GrBackendFormat::GrBackendFormat(DXGI_FORMAT dxgiFormat)
+    : fBackend(GrBackendApi::kDirect3D),
+      fValid(true),
+      fDxgiFormat(dxgiFormat),
+      fTextureType(GrTextureType::k2D) {}
+
+bool GrBackendFormat::asDxgiFormat(DXGI_FORMAT* dxgiFormat) const {
+  if (this->isValid() && GrBackendApi::kDirect3D == fBackend) {
+    *dxgiFormat = fDxgiFormat;
+    return true;
+  }
+  return false;
+}
+#endif
+
 GrBackendFormat::GrBackendFormat(GrColorType colorType, SkImage::CompressionType compression)
     : fBackend(GrBackendApi::kMock), fValid(true), fTextureType(GrTextureType::k2D) {
   fMock.fColorType = colorType;
@@ -219,6 +241,9 @@ bool GrBackendFormat::operator==(const GrBackendFormat& that) const {
     case GrBackendApi::kMock:
       return fMock.fColorType == that.fMock.fColorType &&
              fMock.fCompressionType == that.fMock.fCompressionType;
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: return fDxgiFormat == that.fDxgiFormat;
+#endif
     default: SK_ABORT("Unknown GrBackend");
   }
   return false;
@@ -259,6 +284,11 @@ SkString GrBackendFormat::toStr() const {
     case GrBackendApi::kMetal:
 #  ifdef SK_METAL
       str.append(GrMtlFormatToStr(fMtlFormat));
+#  endif
+      break;
+    case GrBackendApi::kDirect3D:
+#  ifdef SK_DIRECT3D
+      // TODO str.append(GrD3DFormatToStr(fD3DFormat));
 #  endif
       break;
     case GrBackendApi::kDawn:
@@ -398,6 +428,11 @@ GrBackendTexture& GrBackendTexture::operator=(const GrBackendTexture& that) {
 #ifdef SK_METAL
     case GrBackendApi::kMetal: fMtlInfo = that.fMtlInfo; break;
 #endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D:
+      // TODO fD3DInfo = that.fD3DInfo;
+      break;
+#endif
 #ifdef SK_DAWN
     case GrBackendApi::kDawn: fDawnInfo = that.fDawnInfo; break;
 #endif
@@ -513,6 +548,9 @@ bool GrBackendTexture::isSameTexture(const GrBackendTexture& that) {
 #ifdef SK_METAL
     case GrBackendApi::kMetal: return this->fMtlInfo.fTexture == that.fMtlInfo.fTexture;
 #endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: return false;  // TODO
+#endif
     case GrBackendApi::kMock: return fMockInfo.id() == that.fMockInfo.id();
     default: return false;
   }
@@ -537,16 +575,21 @@ GrBackendFormat GrBackendTexture::getBackendFormat() const {
       return GrBackendFormat::MakeVk(info.fFormat);
     }
 #endif
-#ifdef SK_DAWN
-    case GrBackendApi::kDawn: {
-      return GrBackendFormat::MakeDawn(fDawnInfo.fFormat);
-    }
-#endif
 #ifdef SK_METAL
     case GrBackendApi::kMetal: {
       GrMtlTextureInfo mtlInfo;
       SkAssertResult(this->getMtlTextureInfo(&mtlInfo));
       return GrBackendFormat::MakeMtl(GrGetMTLPixelFormatFromMtlTextureInfo(mtlInfo));
+    }
+#endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: {
+      return GrBackendFormat();  // TODO
+    }
+#endif
+#ifdef SK_DAWN
+    case GrBackendApi::kDawn: {
+      return GrBackendFormat::MakeDawn(fDawnInfo.fFormat);
     }
 #endif
     case GrBackendApi::kMock: return fMockInfo.getBackendFormat();
@@ -575,6 +618,9 @@ bool GrBackendTexture::TestingOnly_Equals(const GrBackendTexture& t0, const GrBa
 #  endif
 #  ifdef SK_METAL
     case GrBackendApi::kMetal: return t0.fMtlInfo == t1.fMtlInfo;
+#  endif
+#  ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: return false;
 #  endif
 #  ifdef SK_DAWN
     case GrBackendApi::kDawn: return t0.fDawnInfo == t1.fDawnInfo;
@@ -625,7 +671,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
-      fSampleCnt(SkTMax(1, sampleCnt)),
+      fSampleCnt(std::max(1, sampleCnt)),
       fStencilBits(0)  // We always create stencil buffers internally for vulkan
       ,
       fBackend(GrBackendApi::kVulkan),
@@ -640,7 +686,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
       ,
       fWidth(width),
       fHeight(height),
-      fSampleCnt(SkTMax(1, sampleCnt)),
+      fSampleCnt(std::max(1, sampleCnt)),
       fStencilBits(0),
       fBackend(GrBackendApi::kMetal),
       fMtlInfo(mtlInfo) {}
@@ -651,7 +697,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
     int width, int height, int sampleCnt, int stencilBits, const GrGLFramebufferInfo& glInfo)
     : fWidth(width),
       fHeight(height),
-      fSampleCnt(SkTMax(1, sampleCnt)),
+      fSampleCnt(std::max(1, sampleCnt)),
       fStencilBits(stencilBits),
       fBackend(GrBackendApi::kOpenGL),
       fGLInfo(glInfo) {
@@ -664,7 +710,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
-      fSampleCnt(SkTMax(1, sampleCnt)),
+      fSampleCnt(std::max(1, sampleCnt)),
       fStencilBits(stencilBits),
       fMockInfo(mockInfo) {}
 
@@ -704,11 +750,16 @@ GrBackendRenderTarget& GrBackendRenderTarget::operator=(const GrBackendRenderTar
 #ifdef SK_VULKAN
     case GrBackendApi::kVulkan: fVkInfo.assign(that.fVkInfo, this->isValid()); break;
 #endif
-#ifdef SK_DAWN
-    case GrBackendApi::kDawn: fDawnInfo = that.fDawnInfo; break;
-#endif
 #ifdef SK_METAL
     case GrBackendApi::kMetal: fMtlInfo = that.fMtlInfo; break;
+#endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D:
+      // TODO fD3DInfo = that.fD3DInfo;
+      break;
+#endif
+#ifdef SK_DAWN
+    case GrBackendApi::kDawn: fDawnInfo = that.fDawnInfo; break;
 #endif
     case GrBackendApi::kMock: fMockInfo = that.fMockInfo; break;
     default: SK_ABORT("Unknown GrBackend");
@@ -799,6 +850,12 @@ GrBackendFormat GrBackendRenderTarget::getBackendFormat() const {
       return GrBackendFormat::MakeMtl(GrGetMTLPixelFormatFromMtlTextureInfo(mtlInfo));
     }
 #endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: {
+      // TODO
+      return GrBackendFormat();
+    }
+#endif
 #ifdef SK_DAWN
     case GrBackendApi::kDawn: {
       GrDawnRenderTargetInfo dawnInfo;
@@ -848,6 +905,9 @@ bool GrBackendRenderTarget::TestingOnly_Equals(
 #  endif
 #  ifdef SK_METAL
     case GrBackendApi::kMetal: return r0.fMtlInfo == r1.fMtlInfo;
+#  endif
+#  ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: return false;  // TODO r0.fD3DInfo == r1.fD3DInfo;
 #  endif
 #  ifdef SK_DAWN
     case GrBackendApi::kDawn: return r0.fDawnInfo == r1.fDawnInfo;

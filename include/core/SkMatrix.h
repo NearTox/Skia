@@ -1092,8 +1092,6 @@ class SK_API SkMatrix {
 
       @param src  SkRect to map from
       @param dst  SkRect to map to
-      @param stf  one of: kFill_ScaleToFit, kStart_ScaleToFit,
-                  kCenter_ScaleToFit, kEnd_ScaleToFit
       @return     true if SkMatrix can represent SkRect mapping
 
       example: https://fiddle.skia.org/c/@Matrix_setRectToRect
@@ -1111,8 +1109,6 @@ class SK_API SkMatrix {
 
       @param src  SkRect to map from
       @param dst  SkRect to map to
-      @param stf  one of: kFill_ScaleToFit, kStart_ScaleToFit,
-                  kCenter_ScaleToFit, kEnd_ScaleToFit
       @return     SkMatrix mapping src to dst
   */
   static SkMatrix MakeRectToRect(const SkRect& src, const SkRect& dst, ScaleToFit stf) {

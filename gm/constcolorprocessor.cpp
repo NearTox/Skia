@@ -161,8 +161,8 @@ class ConstColorProcessor : public GpuGM {
 
           // update x and y for the next test case.
           SkScalar height = renderRect.height();
-          SkScalar width = SkTMax(inputLabelBounds.fRight, procLabelBounds.fRight);
-          maxW = SkTMax(maxW, width);
+          SkScalar width = std::max(inputLabelBounds.fRight, procLabelBounds.fRight);
+          maxW = std::max(maxW, width);
           y += height + kPad;
           if (y + height > kHeight) {
             y = kPad;

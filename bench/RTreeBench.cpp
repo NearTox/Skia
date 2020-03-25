@@ -73,7 +73,7 @@ class RTreeQueryBench : public Benchmark {
   void onDraw(int loops, SkCanvas* canvas) override {
     SkRandom rand;
     for (int i = 0; i < loops; ++i) {
-      SkTDArray<int> hits;
+      std::vector<int> hits;
       SkRect query;
       query.fLeft = rand.nextRangeF(0, GENERATE_EXTENTS);
       query.fTop = rand.nextRangeF(0, GENERATE_EXTENTS);

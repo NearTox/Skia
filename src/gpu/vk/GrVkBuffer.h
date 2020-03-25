@@ -9,7 +9,7 @@
 #define GrVkBuffer_DEFINED
 
 #include "include/gpu/vk/GrVkTypes.h"
-#include "src/gpu/vk/GrVkResource.h"
+#include "src/gpu/vk/GrVkManagedResource.h"
 
 class GrVkGpu;
 
@@ -53,10 +53,10 @@ class GrVkBuffer : public SkNoncopyable {
 
   class Resource : public GrVkRecycledResource {
    public:
-    Resource(VkBuffer buf, const GrVkAlloc& alloc, Type type)
-        : INHERITED(), fBuffer(buf), fAlloc(alloc), fType(type) {}
+    Resource(GrVkGpu* gpu, VkBuffer buf, const GrVkAlloc& alloc, Type type)
+        : GrVkRecycledResource(gpu), fBuffer(buf), fAlloc(alloc), fType(type) {}
 
-#ifdef SK_TRACE_VK_RESOURCES
+#ifdef SK_TRACE_MANAGED_RESOURCES
     void dumpInfo() const override {
       SkDebugf("GrVkBuffer: %d (%d refs)\n", fBuffer, this->getRefCnt());
     }
@@ -65,10 +65,11 @@ class GrVkBuffer : public SkNoncopyable {
     GrVkAlloc fAlloc;
     Type fType;
 
-   private:
-    void freeGPUData(GrVkGpu* gpu) const override;
+   protected:
+    void freeGPUData() const override;
 
-    void onRecycle(GrVkGpu* gpu) const override { this->unref(gpu); }
+   private:
+    void onRecycle() const override { this->unref(); }
 
     typedef GrVkRecycledResource INHERITED;
   };
@@ -90,7 +91,7 @@ class GrVkBuffer : public SkNoncopyable {
   bool vkUpdateData(
       GrVkGpu* gpu, const void* src, size_t srcSizeInBytes, bool* createdNewBuffer = nullptr);
 
-  void vkRelease(const GrVkGpu* gpu);
+  void vkRelease();
 
  private:
   virtual const Resource* createResource(GrVkGpu* gpu, const Desc& descriptor) {

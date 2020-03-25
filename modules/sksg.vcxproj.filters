@@ -26,5 +26,6 @@
     <ClCompile Include="sksg\src\SkSGText.cpp" />
     <ClCompile Include="sksg\src\SkSGTransform.cpp" />
     <ClCompile Include="sksg\src\SkSGTrimEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGDashEffect.cpp" />
   </ItemGroup>
 </Project>

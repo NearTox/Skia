@@ -107,6 +107,8 @@ class SK_API PropertyObserver : public SkRefCnt {
   virtual void onTextProperty(const char node_name[], const LazyHandle<TextPropertyHandle>&);
   virtual void onTransformProperty(
       const char node_name[], const LazyHandle<TransformPropertyHandle>&);
+  virtual void onEnterNode(const char node_name[]);
+  virtual void onLeavingNode(const char node_name[]);
 };
 
 }  // namespace skottie

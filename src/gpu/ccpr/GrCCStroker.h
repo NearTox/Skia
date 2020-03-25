@@ -8,9 +8,9 @@
 #ifndef GrCCStroker_DEFINED
 #define GrCCStroker_DEFINED
 
+#include "include/private/GrTypesPriv.h"
 #include "include/private/SkNx.h"
 #include "src/gpu/GrAllocator.h"
-#include "src/gpu/GrMesh.h"
 #include "src/gpu/ccpr/GrCCStrokeGeometry.h"
 
 class GrGpuBuffer;
@@ -95,11 +95,10 @@ class GrCCStroker {
 
   class InstanceBufferBuilder;
 
-  void appendStrokeMeshesToBuffers(
-      int numSegmentsLog2, const Batch&, const InstanceTallies* startIndices[2],
-      int startScissorSubBatch, const SkIRect& drawBounds) const;
-  void flushBufferedMeshesAsStrokes(
-      const GrPrimitiveProcessor&, GrOpFlushState*, const GrPipeline&,
+  // Draws a batch of strokes by chopping them into "2^numSegmentsLog2" linear segments each.
+  void drawLog2Strokes(
+      int numSegmentsLog2, GrOpFlushState*, const GrPrimitiveProcessor&, const GrPipeline&,
+      const Batch&, const InstanceTallies* startIndices[2], int startScissorSubBatch,
       const SkIRect& drawBounds) const;
 
   template <int GrCCStrokeGeometry::InstanceTallies::*InstanceType>
@@ -122,9 +121,6 @@ class GrCCStroker {
   sk_sp<GrGpuBuffer> fInstanceBuffer;
   // The indices stored in batches are relative to these base instances.
   InstanceTallies fBaseInstances[kNumScissorModes];
-
-  mutable SkSTArray<32, GrMesh> fMeshesBuffer;
-  mutable SkSTArray<32, SkIRect> fScissorsBuffer;
 };
 
 #endif

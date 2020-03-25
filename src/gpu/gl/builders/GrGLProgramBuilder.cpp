@@ -45,19 +45,19 @@ static void cleanup_program(
   cleanup_shaders(gpu, shaderIDs);
 }
 
-GrGLProgram* GrGLProgramBuilder::CreateProgram(
-    GrRenderTarget* renderTarget, const GrProgramInfo& programInfo, GrProgramDesc* desc,
-    GrGLGpu* gpu, const GrGLPrecompiledProgram* precompiledProgram) {
+sk_sp<GrGLProgram> GrGLProgramBuilder::CreateProgram(
+    GrGLGpu* gpu, GrRenderTarget* renderTarget, const GrProgramDesc& desc,
+    const GrProgramInfo& programInfo, const GrGLPrecompiledProgram* precompiledProgram) {
   ATRACE_ANDROID_FRAMEWORK_ALWAYS("shader_compile");
   GrAutoLocaleSetter als("C");
 
   // create a builder.  This will be handed off to effects so they can use it to add
   // uniforms, varyings, textures, etc
-  GrGLProgramBuilder builder(gpu, renderTarget, programInfo, desc);
+  GrGLProgramBuilder builder(gpu, renderTarget, desc, programInfo);
 
   auto persistentCache = gpu->getContext()->priv().getPersistentCache();
   if (persistentCache && !precompiledProgram) {
-    sk_sp<SkData> key = SkData::MakeWithoutCopy(desc->asKey(), desc->keyLength());
+    sk_sp<SkData> key = SkData::MakeWithoutCopy(desc.asKey(), desc.keyLength());
     builder.fCached = persistentCache->load(*key);
     // the eventual end goal is to completely skip emitAndInstallProcs on a cache hit, but it's
     // doing necessary setup in addition to generating the SkSL code. Currently we are only able
@@ -72,9 +72,9 @@ GrGLProgram* GrGLProgramBuilder::CreateProgram(
 /////////////////////////////////////////////////////////////////////////////
 
 GrGLProgramBuilder::GrGLProgramBuilder(
-    GrGLGpu* gpu, GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
-    GrProgramDesc* desc)
-    : INHERITED(renderTarget, programInfo, desc),
+    GrGLGpu* gpu, GrRenderTarget* renderTarget, const GrProgramDesc& desc,
+    const GrProgramInfo& programInfo)
+    : INHERITED(renderTarget, desc, programInfo),
       fGpu(gpu),
       fVaryingHandler(this),
       fUniformHandler(this),
@@ -146,7 +146,7 @@ void GrGLProgramBuilder::storeShaderInCache(
   if (!this->gpu()->getContext()->priv().getPersistentCache()) {
     return;
   }
-  sk_sp<SkData> key = SkData::MakeWithoutCopy(this->desc()->asKey(), this->desc()->keyLength());
+  sk_sp<SkData> key = SkData::MakeWithoutCopy(this->desc().asKey(), this->desc().keyLength());
   if (fGpu->glCaps().programBinarySupport()) {
     // binary cache
     GrGLsizei length = 0;
@@ -185,7 +185,7 @@ void GrGLProgramBuilder::storeShaderInCache(
   }
 }
 
-GrGLProgram* GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* precompiledProgram) {
+sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* precompiledProgram) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
   // verify we can get a program id
@@ -218,11 +218,9 @@ GrGLProgram* GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* precompi
 
   SkSL::Program::Inputs inputs;
   SkTDArray<GrGLuint> shadersToDelete;
-  // Calling GetProgramiv is expensive in Chromium. Assume success in release builds.
-  bool checkLinked = kChromium_GrGLDriver != fGpu->ctxInfo().driver();
-#ifdef SK_DEBUG
-  checkLinked = true;
-#endif
+
+  bool checkLinked = !fGpu->glCaps().skipErrorChecks();
+
   bool cached = fCached.get() != nullptr;
   bool usedProgramBinaries = false;
   SkSL::String glsl[kGrShaderTypeCount];
@@ -519,13 +517,13 @@ void GrGLProgramBuilder::resolveProgramResourceLocations(GrGLuint programID, boo
   }
 }
 
-GrGLProgram* GrGLProgramBuilder::createProgram(GrGLuint programID) {
-  return new GrGLProgram(
+sk_sp<GrGLProgram> GrGLProgramBuilder::createProgram(GrGLuint programID) {
+  return sk_sp<GrGLProgram>(new GrGLProgram(
       fGpu, fUniformHandles, programID, fUniformHandler.fUniforms, fUniformHandler.fSamplers,
       fVaryingHandler.fPathProcVaryingInfos, std::move(fGeometryProcessor),
       std::move(fXferProcessor), std::move(fFragmentProcessors), fFragmentProcessorCnt,
       std::move(fAttributes), fVertexAttributeCnt, fInstanceAttributeCnt, fVertexStride,
-      fInstanceStride);
+      fInstanceStride));
 }
 
 bool GrGLProgramBuilder::PrecompileProgram(

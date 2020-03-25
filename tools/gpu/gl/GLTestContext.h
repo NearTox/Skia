@@ -44,9 +44,6 @@ class GLTestContext : public TestContext {
 
   void testAbandon() override;
 
-  /** Ensures all work is submitted to the GPU for execution. */
-  void submit() override;
-
   /** Wait until all GPU work is finished. */
   void finish() override;
 
@@ -78,9 +75,9 @@ class GLTestContext : public TestContext {
   GLTestContext();
 
   /*
-   * Methods that sublcasses must call from their constructors and destructors.
+   * Methods that subclasses must call from their constructors and destructors.
    */
-  void init(sk_sp<const GrGLInterface>, std::unique_ptr<FenceSync> = nullptr);
+  void init(sk_sp<const GrGLInterface>);
 
   void teardown() override;
 

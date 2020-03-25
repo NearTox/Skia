@@ -100,7 +100,6 @@ DummyClasses(Cubic, Cubic);
 #  define DEBUG_MARK_DONE 0
 #  define DEBUG_PATH_CONSTRUCTION 0
 #  define DEBUG_PERP 0
-#  define DEBUG_SHOW_TEST_NAME 0
 #  define DEBUG_SORT 0
 #  define DEBUG_T_SECT 0
 #  define DEBUG_T_SECT_DUMP 0
@@ -131,7 +130,6 @@ DummyClasses(Cubic, Cubic);
 #  define DEBUG_MARK_DONE 1
 #  define DEBUG_PATH_CONSTRUCTION 1
 #  define DEBUG_PERP 1
-#  define DEBUG_SHOW_TEST_NAME 1
 #  define DEBUG_SORT 1
 #  define DEBUG_T_SECT 0       // enabling may trigger validate asserts even though op does not fail
 #  define DEBUG_T_SECT_DUMP 0  // Use 1 normally. Use 2 to number segments, 3 for script output
@@ -228,10 +226,6 @@ extern int gDumpTSectNum;
 
 #ifndef DEBUG_TEST
 #  define DEBUG_TEST 0
-#endif
-
-#if DEBUG_SHOW_TEST_NAME
-#  include "src/core/SkTLS.h"
 #endif
 
 // Tests with extreme numbers may fail, but all other tests should never fail.
@@ -353,15 +347,6 @@ class SkPathOpsDebug {
   static bool ValidWind(int winding);
   static void WindingPrintf(int winding);
 
-#if DEBUG_SHOW_TEST_NAME
-  static void* CreateNameStr();
-  static void DeleteNameStr(void* v);
-#  define DEBUG_FILENAME_STRING_LENGTH 64
-#  define DEBUG_FILENAME_STRING \
-    (reinterpret_cast<char*>(   \
-        SkTLS::Get(SkPathOpsDebug::CreateNameStr, SkPathOpsDebug::DeleteNameStr)))
-  static void BumpTestName(char*);
-#endif
   static void ShowActiveSpans(SkOpContourHead* contourList);
   static void ShowOnePath(const SkPath& path, const char* name, bool includeDeclaration);
   static void ShowPath(const SkPath& one, const SkPath& two, SkPathOp op, const char* name);

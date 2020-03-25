@@ -40,9 +40,9 @@ class WinGLTestContext : public sk_gpu_test::GLTestContext {
  private:
   void destroyGLContext();
 
+  void onPlatformMakeNotCurrent() const override;
   void onPlatformMakeCurrent() const override;
   std::function<void()> onPlatformGetAutoContextRestore() const override;
-  void onPlatformSwapBuffers() const override;
   GrGLFuncPtr onPlatformGetProcAddress(const char* name) const override;
 
   HWND fWindow;
@@ -168,6 +168,12 @@ void WinGLTestContext::destroyGLContext() {
   }
 }
 
+void WinGLTestContext::onPlatformMakeNotCurrent() const {
+  if (!wglMakeCurrent(NULL, NULL)) {
+    SkDebugf("Could not null out the rendering context.\n");
+  }
+}
+
 void WinGLTestContext::onPlatformMakeCurrent() const {
   HDC dc;
   HGLRC glrc;
@@ -181,7 +187,7 @@ void WinGLTestContext::onPlatformMakeCurrent() const {
   }
 
   if (!wglMakeCurrent(dc, glrc)) {
-    SkDebugf("Could not create rendering context.\n");
+    SkDebugf("Could not make current.\n");
   }
 }
 
@@ -190,19 +196,6 @@ std::function<void()> WinGLTestContext::onPlatformGetAutoContextRestore() const 
     return nullptr;
   }
   return context_restorer();
-}
-
-void WinGLTestContext::onPlatformSwapBuffers() const {
-  HDC dc;
-
-  if (nullptr == fPbufferContext) {
-    dc = fDeviceContext;
-  } else {
-    dc = fPbufferContext->getDC();
-  }
-  if (!SwapBuffers(dc)) {
-    SkDebugf("Could not complete SwapBuffers.\n");
-  }
 }
 
 GrGLFuncPtr WinGLTestContext::onPlatformGetProcAddress(const char* name) const {

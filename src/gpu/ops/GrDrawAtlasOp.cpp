@@ -15,6 +15,7 @@
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
@@ -34,7 +35,13 @@ class DrawAtlasOp final : public GrMeshDrawOp {
 
   const char* name() const override { return "DrawAtlasOp"; }
 
-  void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
+  void visitProxies(const VisitProxyFunc& func) const override {
+    if (fProgramInfo) {
+      fProgramInfo->visitProxies(func);
+    } else {
+      fHelper.visitProxies(func);
+    }
+  }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override;
@@ -46,6 +53,20 @@ class DrawAtlasOp final : public GrMeshDrawOp {
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
 
  private:
+  GrProgramInfo* createProgramInfo(
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView);
+
+  GrProgramInfo* createProgramInfo(Target* target) {
+    return this->createProgramInfo(
+        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
+        target->dstProxyView());
+  }
+
+  void onPrePrepareDraws(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) override;
+
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
@@ -67,6 +88,9 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   SkPMColor4f fColor;
   int fQuadCount;
   bool fHasColors;
+
+  GrMesh* fMesh = nullptr;
+  GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
 };
@@ -178,14 +202,39 @@ SkString DrawAtlasOp::dumpInfo() const {
 }
 #endif
 
-void DrawAtlasOp::onPrepareDraws(Target* target) {
+GrProgramInfo* DrawAtlasOp::createProgramInfo(
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   // Setup geometry processor
-  GrGeometryProcessor* gp = make_gp(
-      target->allocator(), target->caps().shaderCaps(), this->hasColors(), this->color(),
-      this->viewMatrix());
+  GrGeometryProcessor* gp =
+      make_gp(arena, caps->shaderCaps(), this->hasColors(), this->color(), this->viewMatrix());
+
+  return fHelper.createProgramInfo(
+      caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+      GrPrimitiveType::kTriangles);
+}
+
+void DrawAtlasOp::onPrePrepareDraws(
+    GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+    const GrXferProcessor::DstProxyView& dstProxyView) {
+  SkArenaAlloc* arena = context->priv().recordTimeAllocator();
+
+  // This is equivalent to a GrOpFlushState::detachAppliedClip
+  GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
+
+  fProgramInfo = this->createProgramInfo(
+      context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
+
+  context->priv().recordProgramInfo(fProgramInfo);
+}
+
+void DrawAtlasOp::onPrepareDraws(Target* target) {
+  if (!fProgramInfo) {
+    fProgramInfo = this->createProgramInfo(target);
+  }
 
   int instanceCount = fGeoData.count();
-  size_t vertexStride = gp->vertexStride();
+  size_t vertexStride = fProgramInfo->primProc().vertexStride();
 
   int numQuads = this->quadCount();
   QuadHelper helper(target, vertexStride, numQuads);
@@ -203,14 +252,17 @@ void DrawAtlasOp::onPrepareDraws(Target* target) {
     memcpy(vertPtr, args.fVerts.begin(), allocSize);
     vertPtr += allocSize;
   }
-  helper.recordDraw(target, gp);
+
+  fMesh = helper.mesh();
 }
 
 void DrawAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
-  auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
-      flushState, fHelper.detachProcessorSet(), fHelper.pipelineFlags());
+  if (!fProgramInfo || !fMesh) {
+    return;
+  }
 
-  flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
+  flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
+  flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
 }
 
 GrOp::CombineResult DrawAtlasOp::onCombineIfPossible(

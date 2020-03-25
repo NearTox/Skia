@@ -108,7 +108,7 @@ class ShapesBench : public Benchmark {
 
  private:
   void clampShapeSize() {
-    float maxDiagonal = static_cast<float>(SkTMin(kBenchWidth, kBenchHeight));
+    float maxDiagonal = static_cast<float>(std::min(kBenchWidth, kBenchHeight));
     float diagonal = sqrtf(
         static_cast<float>(fShapesSize.width() * fShapesSize.width()) +
         static_cast<float>(fShapesSize.height() * fShapesSize.height()));

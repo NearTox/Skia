@@ -7,7 +7,6 @@
 
 #include "src/gpu/GrOpFlushState.h"
 
-#include "include/gpu/GrTexture.h"
 #include "src/core/SkConvertPixels.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawOpAtlas.h"
@@ -15,6 +14,7 @@
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrTexture.h"
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -42,11 +42,12 @@ void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
 
     GrProgramInfo programInfo(
         this->proxy()->numSamples(), this->proxy()->numStencilSamples(),
-        this->proxy()->backendFormat(), this->view()->origin(), pipeline,
+        this->proxy()->backendFormat(), this->outputView()->origin(), pipeline,
         fCurrDraw->fGeometryProcessor, fCurrDraw->fFixedDynamicState,
         fCurrDraw->fDynamicStateArrays, fCurrDraw->fMeshCnt, fCurrDraw->fPrimitiveType);
 
-    this->opsRenderPass()->draw(programInfo, fCurrDraw->fMeshes, fCurrDraw->fMeshCnt, chainBounds);
+    this->opsRenderPass()->bindPipeline(programInfo, chainBounds);
+    this->opsRenderPass()->drawMeshes(programInfo, fCurrDraw->fMeshes, fCurrDraw->fMeshCnt);
     fTokenTracker->flushToken();
     ++fCurrDraw;
   }

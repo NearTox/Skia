@@ -344,7 +344,8 @@ class BleedGM : public skiagm::GM {
     SkPoint corners[] = {{0, 0}, {0, kBottom}, {kWidth, kBottom}, {kWidth, 0}};
     matrices[matrices.count() - 1].mapPoints(corners, 4);
     SkScalar y = (corners[0].fY + corners[1].fY + corners[2].fY + corners[3].fY) / 4;
-    SkScalar x = SkTMax(SkTMax(corners[0].fX, corners[1].fX), SkTMax(corners[2].fX, corners[3].fX));
+    SkScalar x =
+        std::max(std::max(corners[0].fX, corners[1].fX), std::max(corners[2].fX, corners[3].fX));
     m.setTranslate(x, y);
     m.preScale(0.2f, 0.2f);
     *matrices.append() = m;
@@ -433,10 +434,10 @@ class BleedGM : public skiagm::GM {
 
         SkPoint corners[] = {{0, 0}, {0, kBottom}, {kWidth, kBottom}, {kWidth, 0}};
         matrices[m].mapPoints(corners, 4);
-        SkScalar x =
-            kBlockSize +
-            SkTMax(SkTMax(corners[0].fX, corners[1].fX), SkTMax(corners[2].fX, corners[3].fX));
-        maxX = SkTMax(maxX, x);
+        SkScalar x = kBlockSize + std::max(
+                                      std::max(corners[0].fX, corners[1].fX),
+                                      std::max(corners[2].fX, corners[3].fX));
+        maxX = std::max(maxX, x);
         canvas->restore();
       }
       canvas->restore();

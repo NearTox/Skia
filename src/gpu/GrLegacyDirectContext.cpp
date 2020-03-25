@@ -22,6 +22,9 @@
 #ifdef SK_VULKAN
 #  include "src/gpu/vk/GrVkGpu.h"
 #endif
+#ifdef SK_DIRECT3D
+#  include "src/gpu/d3d/GrD3DGpu.h"
+#endif
 #ifdef SK_DAWN
 #  include "src/gpu/dawn/GrDawnGpu.h"
 #endif
@@ -117,9 +120,9 @@ class GrLegacyDirectContext : public GrContext {
 };
 
 #ifdef SK_GL
-sk_sp<GrContext> GrContext::MakeGL(sk_sp<const GrGLInterface> interface) {
+sk_sp<GrContext> GrContext::MakeGL(sk_sp<const GrGLInterface> glInterface) {
   GrContextOptions defaultOptions;
-  return MakeGL(std::move(interface), defaultOptions);
+  return MakeGL(std::move(glInterface), defaultOptions);
 }
 
 sk_sp<GrContext> GrContext::MakeGL(const GrContextOptions& options) {
@@ -132,10 +135,10 @@ sk_sp<GrContext> GrContext::MakeGL() {
 }
 
 sk_sp<GrContext> GrContext::MakeGL(
-    sk_sp<const GrGLInterface> interface, const GrContextOptions& options) {
+    sk_sp<const GrGLInterface> glInterface, const GrContextOptions& options) {
   sk_sp<GrContext> context(new GrLegacyDirectContext(GrBackendApi::kOpenGL, options));
 
-  context->fGpu = GrGLGpu::Make(std::move(interface), options, context.get());
+  context->fGpu = GrGLGpu::Make(std::move(glInterface), options, context.get());
   if (!context->fGpu) {
     return nullptr;
   }
@@ -165,12 +168,6 @@ sk_sp<GrContext> GrContext::MakeMock(
     return nullptr;
   }
 
-#if GR_TEST_UTILS
-  if (mockOptions && mockOptions->fFailTextureAllocations) {
-    context->testingOnly_setSuppressAllocationWarnings();
-  }
-#endif
-
   return context;
 }
 
@@ -186,7 +183,6 @@ sk_sp<GrContext> GrContext::MakeVulkan(const GrVkBackendContext& backendContext)
 sk_sp<GrContext> GrContext::MakeVulkan(
     const GrVkBackendContext& backendContext, const GrContextOptions& options) {
 #ifdef SK_VULKAN
-  GrContextOptions defaultOptions;
   sk_sp<GrContext> context(new GrLegacyDirectContext(GrBackendApi::kVulkan, options));
 
   context->fGpu = GrVkGpu::Make(backendContext, options, context.get());
@@ -213,6 +209,28 @@ sk_sp<GrContext> GrContext::MakeMetal(void* device, void* queue, const GrContext
   sk_sp<GrContext> context(new GrLegacyDirectContext(GrBackendApi::kMetal, options));
 
   context->fGpu = GrMtlTrampoline::MakeGpu(context.get(), options, device, queue);
+  if (!context->fGpu) {
+    return nullptr;
+  }
+
+  if (!context->init(context->fGpu->refCaps())) {
+    return nullptr;
+  }
+  return context;
+}
+#endif
+
+#ifdef SK_DIRECT3D
+sk_sp<GrContext> GrContext::MakeDirect3D(const GrD3DBackendContext& backendContext) {
+  GrContextOptions defaultOptions;
+  return MakeDirect3D(backendContext, defaultOptions);
+}
+
+sk_sp<GrContext> GrContext::MakeDirect3D(
+    const GrD3DBackendContext& backendContext, const GrContextOptions& options) {
+  sk_sp<GrContext> context(new GrLegacyDirectContext(GrBackendApi::kDirect3D, options));
+
+  context->fGpu = GrD3DGpu::Make(backendContext, options, context.get());
   if (!context->fGpu) {
     return nullptr;
   }

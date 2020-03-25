@@ -202,20 +202,6 @@ void SkRecorder::onDrawBitmapRect(
   }
 }
 
-void SkRecorder::onDrawBitmapNine(
-    const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
-  if (image) {
-    this->onDrawImageNine(image.get(), center, dst, paint);
-  }
-}
-
-void SkRecorder::onDrawBitmapLattice(
-    const SkBitmap& bitmap, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
-  this->onDrawImageLattice(image.get(), lattice, dst, paint);
-}
-
 void SkRecorder::onDrawImage(
     const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
   this->append<SkRecords::DrawImage>(this->copy(paint), sk_ref_sp(image), left, top);
@@ -271,13 +257,18 @@ void SkRecorder::onDrawPicture(const SkPicture* pic, const SkMatrix* matrix, con
   }
 }
 
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
 void SkRecorder::onDrawVerticesObject(
     const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount, SkBlendMode bmode,
     const SkPaint& paint) {
-  this->append<SkRecords::DrawVertices>(
-      paint, sk_ref_sp(const_cast<SkVertices*>(vertices)), this->copy(bones, boneCount), boneCount,
-      bmode);
+  this->append<SkRecords::DrawVertices>(paint, sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode);
 }
+#else
+void SkRecorder::onDrawVerticesObject(
+    const SkVertices* vertices, SkBlendMode bmode, const SkPaint& paint) {
+  this->append<SkRecords::DrawVertices>(paint, sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode);
+}
+#endif
 
 void SkRecorder::onDrawPatch(
     const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4],
@@ -374,6 +365,11 @@ void SkRecorder::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle edgeS
   INHERITED(onClipPath, path, op, edgeStyle);
   SkRecords::ClipOpAndAA opAA(op, kSoft_ClipEdgeStyle == edgeStyle);
   this->append<SkRecords::ClipPath>(path, opAA);
+}
+
+void SkRecorder::onClipShader(sk_sp<SkShader> cs, SkClipOp op) {
+  INHERITED(onClipShader, cs, op);
+  this->append<SkRecords::ClipShader>(std::move(cs), op);
 }
 
 void SkRecorder::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {

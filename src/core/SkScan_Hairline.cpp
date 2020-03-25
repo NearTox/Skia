@@ -305,7 +305,7 @@ static inline Sk2s abs(const Sk2s& value) { return Sk2s::Max(value, Sk2s(0) - va
 static inline SkScalar max_component(const Sk2s& value) {
   SkScalar components[2];
   value.store(components);
-  return SkTMax(components[0], components[1]);
+  return std::max(components[0], components[1]);
 }
 
 static inline int compute_cubic_segs(const SkPoint pts[4]) {

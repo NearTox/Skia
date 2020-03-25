@@ -148,7 +148,7 @@ class CircleGM : public GM {
   void onDraw(SkCanvas* canvas) override {
     // Draw a giant AA circle as the background.
     SkISize size = this->getISize();
-    SkScalar giantRadius = SkTMin(SkIntToScalar(size.fWidth), SkIntToScalar(size.fHeight)) / 2.f;
+    SkScalar giantRadius = std::min(SkIntToScalar(size.fWidth), SkIntToScalar(size.fHeight)) / 2.f;
     SkPoint giantCenter =
         SkPoint::Make(SkIntToScalar(size.fWidth / 2), SkIntToScalar(size.fHeight / 2));
     SkPaint giantPaint;

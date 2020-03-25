@@ -10,7 +10,8 @@
 #include "src/gpu/ops/GrDrawOp.h"
 
 GrColorFragmentProcessorAnalysis::GrColorFragmentProcessorAnalysis(
-    const GrProcessorAnalysisColor& input, const GrFragmentProcessor* const* processors, int cnt) {
+    const GrProcessorAnalysisColor& input, std::unique_ptr<GrFragmentProcessor> const fps[],
+    int cnt) {
   fCompatibleWithCoverageAsAlpha = true;
   fIsOpaque = input.isOpaque();
   fUsesLocalCoords = false;
@@ -20,7 +21,7 @@ GrColorFragmentProcessorAnalysis::GrColorFragmentProcessorAnalysis(
     if (fUsesLocalCoords && !fKnowOutputColor && !fCompatibleWithCoverageAsAlpha && !fIsOpaque) {
       break;
     }
-    const GrFragmentProcessor* fp = processors[i];
+    const auto& fp = fps[i];
     if (fKnowOutputColor &&
         fp->hasConstantOutputForConstantInput(fLastKnownOutputColor, &fLastKnownOutputColor)) {
       ++fProcessorsToEliminate;

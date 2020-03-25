@@ -186,14 +186,14 @@ static GrSamplerState::WrapMode tile_mode_to_wrap_mode(const SkTileMode tileMode
 
 std::unique_ptr<GrFragmentProcessor> SkImageShader::asFragmentProcessor(
     const GrFPArgs& args) const {
-  const auto lm = this->totalLocalMatrix(args.fPreLocalMatrix, args.fPostLocalMatrix);
+  const auto lm = this->totalLocalMatrix(args.fPreLocalMatrix);
   SkMatrix lmInverse;
   if (!lm->invert(&lmInverse)) {
     return nullptr;
   }
 
-  GrSamplerState::WrapMode wrapModes[] = {
-      tile_mode_to_wrap_mode(fTileModeX), tile_mode_to_wrap_mode(fTileModeY)};
+  GrSamplerState::WrapMode wmX = tile_mode_to_wrap_mode(fTileModeX),
+                           wmY = tile_mode_to_wrap_mode(fTileModeY);
 
   // Must set wrap and filter on the sampler before requesting a texture. In two places below
   // we check the matrix scale factors to determine how to interpret the filter quality setting.
@@ -203,42 +203,26 @@ std::unique_ptr<GrFragmentProcessor> SkImageShader::asFragmentProcessor(
   GrSamplerState::Filter textureFilterMode = GrSkFilterQualityToGrFilterMode(
       fImage->width(), fImage->height(), args.fFilterQuality, *args.fViewMatrix, *lm,
       args.fContext->priv().options().fSharpenMipmappedTextures, &doBicubic);
-  GrSamplerState samplerState(wrapModes, textureFilterMode);
-  SkScalar scaleAdjust[2] = {1.0f, 1.0f};
-  sk_sp<GrTextureProxy> proxy(
-      as_IB(fImage)->asTextureProxyRef(args.fContext, samplerState, scaleAdjust));
-  if (!proxy) {
+  GrMipMapped mipMapped = GrMipMapped::kNo;
+  if (textureFilterMode == GrSamplerState::Filter::kMipMap) {
+    mipMapped = GrMipMapped::kYes;
+  }
+  GrSurfaceProxyView view = as_IB(fImage)->refView(args.fContext, mipMapped);
+  if (!view) {
     return nullptr;
   }
 
   SkAlphaType srcAlphaType = fImage->alphaType();
 
-  lmInverse.postScale(scaleAdjust[0], scaleAdjust[1]);
-
   const auto& caps = *args.fContext->priv().caps();
 
   std::unique_ptr<GrFragmentProcessor> inner;
   if (doBicubic) {
-    // If either domainX or domainY are un-ignored, a texture domain effect has to be used to
-    // implement the decal mode (while leaving non-decal axes alone). The wrap mode originally
-    // clamp-to-border is reset to clamp since the hw cannot implement it directly.
-    GrTextureDomain::Mode domainX = GrTextureDomain::kIgnore_Mode;
-    GrTextureDomain::Mode domainY = GrTextureDomain::kIgnore_Mode;
-    if (!caps.clampToBorderSupport()) {
-      if (wrapModes[0] == GrSamplerState::WrapMode::kClampToBorder) {
-        domainX = GrTextureDomain::kDecal_Mode;
-        wrapModes[0] = GrSamplerState::WrapMode::kClamp;
-      }
-      if (wrapModes[1] == GrSamplerState::WrapMode::kClampToBorder) {
-        domainY = GrTextureDomain::kDecal_Mode;
-        wrapModes[1] = GrSamplerState::WrapMode::kClamp;
-      }
-    }
     static constexpr auto kDir = GrBicubicEffect::Direction::kXY;
-    inner = GrBicubicEffect::Make(
-        std::move(proxy), lmInverse, wrapModes, domainX, domainY, kDir, srcAlphaType);
+    inner = GrBicubicEffect::Make(std::move(view), srcAlphaType, lmInverse, wmX, wmY, kDir, caps);
   } else {
-    inner = GrTextureEffect::Make(std::move(proxy), srcAlphaType, lmInverse, samplerState, caps);
+    GrSamplerState samplerState(wmX, wmY, textureFilterMode);
+    inner = GrTextureEffect::Make(std::move(view), srcAlphaType, lmInverse, samplerState, caps);
   }
   inner = GrColorSpaceXformEffect::Make(
       std::move(inner), fImage->colorSpace(), srcAlphaType, args.fDstColorInfo->colorSpace());
@@ -284,7 +268,7 @@ void SkShaderBase::RegisterFlattenables() { SK_REGISTER_FLATTENABLE(SkImageShade
 class SkImageStageUpdater : public SkStageUpdater {
  public:
   SkImageStageUpdater(const SkImageShader* shader, bool usePersp)
-      : fShader(shader), fUsePersp(usePersp) {}
+      : fShader(shader), fUsePersp(usePersp || as_SB(shader)->getLocalMatrix().hasPerspective()) {}
 
   const SkImageShader* fShader;
   const bool fUsePersp;  // else use affine
@@ -313,7 +297,17 @@ class SkImageStageUpdater : public SkStageUpdater {
       if (fUsePersp) {
         matrix.get9(fMatrixStorage);
       } else {
-        SkAssertResult(matrix.asAffine(fMatrixStorage));
+        // if we get here, matrix should be affine. If it isn't, then defensively we
+        // won't draw (by returning false), but we should work to never let this
+        // happen (i.e. better preflight by the caller to know ahead of time that we
+        // may encounter perspective, either in the CTM, or in the localM).
+        //
+        // See https://bugs.chromium.org/p/skia/issues/detail?id=10004
+        //
+        if (!matrix.asAffine(fMatrixStorage)) {
+          SkASSERT(false);
+          return false;
+        }
       }
       return true;
     }
@@ -453,9 +447,20 @@ bool SkImageShader::doStages(const SkStageRec& rec, SkImageStageUpdater* updater
         p->append(SkRasterPipeline::force_opaque);
         break;
 
+      case kBGRA_1010102_SkColorType:
+        p->append(SkRasterPipeline::gather_1010102, ctx);
+        p->append(SkRasterPipeline::swap_rb);
+        break;
+
       case kRGB_101010x_SkColorType:
         p->append(SkRasterPipeline::gather_1010102, ctx);
         p->append(SkRasterPipeline::force_opaque);
+        break;
+
+      case kBGR_101010x_SkColorType:
+        p->append(SkRasterPipeline::gather_1010102, ctx);
+        p->append(SkRasterPipeline::force_opaque);
+        p->append(SkRasterPipeline::swap_rb);
         break;
 
       case kBGRA_8888_SkColorType:
@@ -647,9 +652,18 @@ bool SkImageShader::onProgram(
   switch (pm.colorType()) {
     default: return false;
     case kRGB_565_SkColorType:
+    case kRGB_888x_SkColorType:
     case kRGBA_8888_SkColorType:
-    case kBGRA_8888_SkColorType: break;
+    case kBGRA_8888_SkColorType:
+    case kRGBA_1010102_SkColorType:
+    case kBGRA_1010102_SkColorType:
+    case kRGB_101010x_SkColorType:
+    case kBGR_101010x_SkColorType: break;
   }
+
+  // We can exploit image opacity to skip work unpacking alpha channels.
+  const bool input_is_opaque =
+      SkAlphaTypeIsOpaque(pm.alphaType()) || SkColorTypeIsAlwaysOpaque(pm.colorType());
 
   // Each call to sample() will try to rewrite the same uniforms over and over,
   // so remember where we start and reset back there each time.  That way each
@@ -706,11 +720,26 @@ bool SkImageShader::onProgram(
     switch (pm.colorType()) {
       default: SkUNREACHABLE;
       case kRGB_565_SkColorType: c = p->unpack_565(p->gather16(img, index)); break;
+
+      case kRGB_888x_SkColorType: [[fallthrough]];
       case kRGBA_8888_SkColorType: c = p->unpack_8888(p->gather32(img, index)); break;
       case kBGRA_8888_SkColorType:
         c = p->unpack_8888(p->gather32(img, index));
         std::swap(c.r, c.b);
         break;
+
+      case kRGB_101010x_SkColorType: [[fallthrough]];
+      case kRGBA_1010102_SkColorType: c = p->unpack_1010102(p->gather32(img, index)); break;
+
+      case kBGR_101010x_SkColorType: [[fallthrough]];
+      case kBGRA_1010102_SkColorType:
+        c = p->unpack_1010102(p->gather32(img, index));
+        std::swap(c.r, c.b);
+        break;
+    }
+    // If we know the image is opaque, jump right to alpha = 1.0f, skipping work to unpack it.
+    if (input_is_opaque) {
+      c.a = p->splat(1.0f);
     }
 
     // Mask away any pixels that we tried to sample outside the bounds in kDecal.
@@ -726,6 +755,7 @@ bool SkImageShader::onProgram(
       c.g = p->bit_cast(p->bit_and(mask, p->bit_cast(c.g)));
       c.b = p->bit_cast(p->bit_and(mask, p->bit_cast(c.b)));
       c.a = p->bit_cast(p->bit_and(mask, p->bit_cast(c.a)));
+      // Notice that even if input_is_opaque, c.a might now be 0.
     }
 
     return c;
@@ -800,7 +830,15 @@ bool SkImageShader::onProgram(
         *a = p->mad(c.a, w, *a);
       }
     }
+  }
 
+  // If the input is opaque and we're not in decal mode, that means the output is too.
+  // Forcing *a to 1.0 here will retroactively skip any work we did to interpolate sample alphas.
+  if (input_is_opaque && fTileModeX != SkTileMode::kDecal && fTileModeY != SkTileMode::kDecal) {
+    *a = p->splat(1.0f);
+  }
+
+  if (quality == kHigh_SkFilterQuality) {
     // Bicubic filtering naturally produces out of range values on both sides of [0,1].
     *a = p->clamp(*a, p->splat(0.0f), p->splat(1.0f));
 

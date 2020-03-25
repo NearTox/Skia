@@ -36,7 +36,7 @@ class GrTessellatePathOp : public GrDrawOp {
         fProcessors(std::move(paint)) {
     SkRect devBounds;
     fViewMatrix.mapRect(&devBounds, path.getBounds());
-    this->setBounds(devBounds, HasAABloat(GrAAType::kCoverage == fAAType), GrOp::IsHairline::kNo);
+    this->setBounds(devBounds, HasAABloat(GrAAType::kCoverage == fAAType), IsHairline::kNo);
   }
 
   const char* name() const override { return "GrTessellatePathOp"; }
@@ -53,9 +53,8 @@ class GrTessellatePathOp : public GrDrawOp {
   void onPrepare(GrOpFlushState* state) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-  void drawStencilPass(
-      GrOpFlushState*, const GrAppliedHardClip&, const GrPipeline::FixedDynamicState*);
-  void drawCoverPass(GrOpFlushState*, GrAppliedClip&&, const GrPipeline::FixedDynamicState*);
+  void drawStencilPass(GrOpFlushState*, const GrAppliedHardClip&);
+  void drawCoverPass(GrOpFlushState*, GrAppliedClip&&);
 
   const Flags fFlags;
   const SkMatrix fViewMatrix;

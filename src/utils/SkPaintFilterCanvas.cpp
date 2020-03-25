@@ -132,22 +132,6 @@ void SkPaintFilterCanvas::onDrawBitmapRect(
   }
 }
 
-void SkPaintFilterCanvas::onDrawBitmapNine(
-    const SkBitmap& bm, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawBitmapNine(bm, center, dst, &apf.paint());
-  }
-}
-
-void SkPaintFilterCanvas::onDrawBitmapLattice(
-    const SkBitmap& bitmap, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawBitmapLattice(bitmap, lattice, dst, &apf.paint());
-  }
-}
-
 void SkPaintFilterCanvas::onDrawImage(
     const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
   AutoPaintFilter apf(this, paint);
@@ -182,11 +166,19 @@ void SkPaintFilterCanvas::onDrawImageLattice(
 }
 
 void SkPaintFilterCanvas::onDrawVerticesObject(
-    const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount, SkBlendMode bmode,
-    const SkPaint& paint) {
+    const SkVertices* vertices,
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
+    const SkVertices::Bone bones[], int boneCount,
+#endif
+    SkBlendMode bmode, const SkPaint& paint) {
   AutoPaintFilter apf(this, paint);
   if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawVerticesObject(vertices, bones, boneCount, bmode, apf.paint());
+    this->SkNWayCanvas::onDrawVerticesObject(
+        vertices,
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
+        bones, boneCount,
+#endif
+        bmode, apf.paint());
   }
 }
 

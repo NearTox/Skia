@@ -16,9 +16,7 @@
 
 class GrBackendFormat;
 class GrRecordingContext;
-struct GrSurfaceDesc;
-class GrTexture;
-class GrTextureProxy;
+class GrSurfaceProxyView;
 class SkCachedData;
 
 /**
@@ -42,8 +40,8 @@ class GrYUVProvider {
    *
    *  On failure (e.g. the provider had no data), this returns NULL.
    */
-  sk_sp<GrTextureProxy> refAsTextureProxy(
-      GrRecordingContext*, const GrSurfaceDesc&, GrColorType colorType, SkColorSpace* srcColorSpace,
+  GrSurfaceProxyView refAsTextureProxyView(
+      GrRecordingContext*, SkISize, GrColorType colorType, SkColorSpace* srcColorSpace,
       SkColorSpace* dstColorSpace);
 
   sk_sp<SkCachedData> getPlanes(

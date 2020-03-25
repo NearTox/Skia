@@ -56,7 +56,9 @@ class OneLineShaper : public SkShaper::RunHandler {
   void iterateThroughFontStyles(
       TextRange textRange, SkSpan<Block> styleSpan, const ShapeSingleFontVisitor& visitor);
 
-  using TypefaceVisitor = std::function<bool(sk_sp<SkTypeface> typeface)>;
+  enum Resolved { Nothing, Something, Everything };
+
+  using TypefaceVisitor = std::function<Resolved(sk_sp<SkTypeface> typeface)>;
   void matchResolvedFonts(const TextStyle& textStyle, const TypefaceVisitor& visitor);
 #ifdef SK_DEBUG
   void printState();
@@ -99,6 +101,24 @@ class OneLineShaper : public SkShaper::RunHandler {
   std::shared_ptr<Run> fCurrentRun;
   std::queue<RunBlock> fUnresolvedBlocks;
   std::vector<RunBlock> fResolvedBlocks;
+
+  // Keeping all resolved typefaces
+  struct FontKey {
+    FontKey() {}
+
+    FontKey(SkUnichar unicode, SkFontStyle fontStyle, SkString locale)
+        : fUnicode(unicode), fFontStyle(fontStyle), fLocale(locale) {}
+    SkUnichar fUnicode;
+    SkFontStyle fFontStyle;
+    SkString fLocale;
+
+    bool operator==(const FontKey& other) const;
+
+    struct Hasher {
+      size_t operator()(const FontKey& key) const;
+    };
+  };
+  SkTHashMap<FontKey, sk_sp<SkTypeface>, FontKey::Hasher> fFallbackFonts;
 };
 
 }  // namespace textlayout

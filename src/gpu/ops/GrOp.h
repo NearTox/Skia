@@ -11,8 +11,8 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkString.h"
-#include "include/gpu/GrGpuResource.h"
 #include "include/private/GrRecordingContext.h"
+#include "src/gpu/GrGpuResource.h"
 #include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/GrTracing.h"
 #include "src/gpu/GrXferProcessor.h"
@@ -295,7 +295,7 @@ class GrOp : private SkNoncopyable {
 
   // TODO: the parameters to onPrePrepare mirror GrOpFlushState::OpArgs - fuse the two?
   virtual void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView*, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) {}
   virtual void onPrepare(GrOpFlushState*) = 0;
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.

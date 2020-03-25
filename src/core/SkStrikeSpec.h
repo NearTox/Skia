@@ -63,7 +63,7 @@ class SkStrikeSpec {
 
   SkScopedStrikeForGPU findOrCreateScopedStrike(SkStrikeForGPUCacheInterface* cache) const;
 
-  SkExclusiveStrikePtr findOrCreateExclusiveStrike(
+  sk_sp<SkStrike> findOrCreateStrike(
       SkStrikeCache* cache = SkStrikeCache::GlobalStrikeCache()) const;
 
   SkScalar strikeToSourceRatio() const { return fStrikeToSourceRatio; }
@@ -92,13 +92,13 @@ class SkBulkGlyphMetrics {
  private:
   static constexpr int kTypicalGlyphCount = 20;
   SkAutoSTArray<kTypicalGlyphCount, const SkGlyph*> fGlyphs;
-  SkExclusiveStrikePtr fStrike;
+  sk_sp<SkStrike> fStrike;
 };
 
 class SkBulkGlyphMetricsAndPaths {
  public:
   explicit SkBulkGlyphMetricsAndPaths(const SkStrikeSpec& spec);
-  explicit SkBulkGlyphMetricsAndPaths(SkExclusiveStrikePtr&& strike);
+  explicit SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike);
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkGlyphID> glyphIDs);
   const SkGlyph* glyph(SkGlyphID glyphID);
   void findIntercepts(
@@ -108,13 +108,13 @@ class SkBulkGlyphMetricsAndPaths {
  private:
   static constexpr int kTypicalGlyphCount = 20;
   SkAutoSTArray<kTypicalGlyphCount, const SkGlyph*> fGlyphs;
-  SkExclusiveStrikePtr fStrike;
+  sk_sp<SkStrike> fStrike;
 };
 
 class SkBulkGlyphMetricsAndImages {
  public:
   explicit SkBulkGlyphMetricsAndImages(const SkStrikeSpec& spec);
-  explicit SkBulkGlyphMetricsAndImages(SkExclusiveStrikePtr&& strike);
+  explicit SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike);
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkPackedGlyphID> packedIDs);
   const SkGlyph* glyph(SkPackedGlyphID packedID);
   const SkDescriptor& descriptor() const;
@@ -122,7 +122,7 @@ class SkBulkGlyphMetricsAndImages {
  private:
   static constexpr int kTypicalGlyphCount = 64;
   SkAutoSTArray<kTypicalGlyphCount, const SkGlyph*> fGlyphs;
-  SkExclusiveStrikePtr fStrike;
+  sk_sp<SkStrike> fStrike;
 };
 
 #endif  // SkStrikeSpec_DEFINED

@@ -20,7 +20,7 @@ class GrMtlBuffer;
 class GrMtlPipelineState;
 class GrMtlRenderTarget;
 
-class GrMtlOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl {
+class GrMtlOpsRenderPass : public GrOpsRenderPass {
  public:
   GrMtlOpsRenderPass(
       GrMtlGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin,
@@ -34,20 +34,28 @@ class GrMtlOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl
 
   void initRenderState(id<MTLRenderCommandEncoder>);
 
-  void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override {
-    // TODO: this could be more efficient
-    state->doUpload(upload);
-  }
+  void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override;
   void submit();
 
  private:
   GrGpu* gpu() override { return fGpu; }
 
-  GrMtlPipelineState* prepareDrawState(const GrProgramInfo&);
-
-  void onDraw(
-      const GrProgramInfo& programInfo, const GrMesh mesh[], int meshCount,
-      const SkRect& bounds) override;
+  bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) override;
+  void onSetScissorRect(const SkIRect&) override;
+  bool onBindTextures(
+      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrPipeline&) override;
+  void onBindBuffers(
+      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
+      GrPrimitiveRestart) override;
+  void onDraw(int vertexCount, int baseVertex) override;
+  void onDrawIndexed(
+      int indexCount, int baseIndex, uint16_t minIndexValue, uint16_t maxIndexValue,
+      int baseVertex) override;
+  void onDrawInstanced(
+      int instanceCount, int baseInstance, int vertexCount, int baseVertex) override;
+  void onDrawIndexedInstanced(
+      int indexCount, int baseIndex, int instanceCount, int baseInstance, int baseVertex) override;
 
   void onClear(const GrFixedClip& clip, const SkPMColor4f& color) override;
 
@@ -57,31 +65,24 @@ class GrMtlOpsRenderPass : public GrOpsRenderPass, private GrMesh::SendToGpuImpl
       const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
       const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo);
 
-  void bindGeometry(
-      const GrBuffer* vertexBuffer, size_t vertexOffset, const GrBuffer* instanceBuffer);
-
-  // GrMesh::SendToGpuImpl methods. These issue the actual Metal draw commands.
-  // Marked final as a hint to the compiler to not use virtual dispatch.
-  void sendArrayMeshToGpu(const GrMesh&, int vertexCount, int baseVertex) final;
-  void sendIndexedMeshToGpu(
-      const GrMesh&, int indexCount, int baseIndex, uint16_t /*minIndexValue*/,
-      uint16_t /*maxIndexValue*/, int baseVertex) final;
-  void sendInstancedMeshToGpu(
-      const GrMesh&, int vertexCount, int baseVertex, int instanceCount, int baseInstance) final;
-  void sendIndexedInstancedMeshToGpu(
-      const GrMesh&, int indexCount, int baseIndex, int baseVertex, int instanceCount,
-      int baseInstance) final;
-
   void setVertexBuffer(
-      id<MTLRenderCommandEncoder>, const GrMtlBuffer*, size_t offset, size_t index);
+      id<MTLRenderCommandEncoder>, const GrMtlBuffer*, size_t offset, size_t inputBufferIndex);
   void resetBufferBindings();
   void precreateCmdEncoder();
 
   GrMtlGpu* fGpu;
 
   id<MTLRenderCommandEncoder> fActiveRenderCmdEncoder;
+  GrMtlPipelineState* fActivePipelineState = nullptr;
+  MTLPrimitiveType fActivePrimitiveType;
   MTLRenderPassDescriptor* fRenderPassDesc;
   SkRect fBounds;
+
+  // The index buffer in metal is an argument to the draw call, rather than a stateful binding.
+  sk_sp<const GrMtlBuffer> fIndexBuffer;
+
+  // We defer binding of the vertex buffer because Metal doesn't have baseVertex for drawIndexed.
+  sk_sp<const GrMtlBuffer> fDeferredVertexBuffer;
   size_t fCurrentVertexStride;
 
   static constexpr size_t kNumBindings = GrMtlUniformHandler::kLastUniformBinding + 3;

@@ -17,7 +17,7 @@ GrVkStencilAttachment::GrVkStencilAttachment(
     GrVkGpu* gpu, const Format& format, const GrVkImage::ImageDesc& desc, const GrVkImageInfo& info,
     sk_sp<GrVkImageLayout> layout, const GrVkImageView* stencilView)
     : GrStencilAttachment(gpu, desc.fWidth, desc.fHeight, format.fStencilBits, desc.fSamples),
-      GrVkImage(info, std::move(layout), GrBackendObjectOwnership::kOwned),
+      GrVkImage(gpu, info, std::move(layout), GrBackendObjectOwnership::kOwned),
       fFormat(format),
       fStencilView(stencilView) {
   this->registerWithCache(SkBudgeted::kYes);
@@ -54,7 +54,7 @@ GrVkStencilAttachment* GrVkStencilAttachment::Create(
   sk_sp<GrVkImageLayout> layout(new GrVkImageLayout(info.fImageLayout));
   GrVkStencilAttachment* stencil =
       new GrVkStencilAttachment(gpu, format, imageDesc, info, std::move(layout), imageView);
-  imageView->unref(gpu);
+  imageView->unref();
 
   return stencil;
 }
@@ -75,7 +75,7 @@ size_t GrVkStencilAttachment::onGpuMemorySize() const {
 void GrVkStencilAttachment::onRelease() {
   GrVkGpu* gpu = this->getVkGpu();
   this->releaseImage(gpu);
-  fStencilView->unref(gpu);
+  fStencilView->unref();
   fStencilView = nullptr;
 
   GrStencilAttachment::onRelease();
@@ -84,7 +84,7 @@ void GrVkStencilAttachment::onRelease() {
 void GrVkStencilAttachment::onAbandon() {
   GrVkGpu* gpu = this->getVkGpu();
   this->releaseImage(gpu);
-  fStencilView->unref(gpu);
+  fStencilView->unref();
   fStencilView = nullptr;
 
   GrStencilAttachment::onAbandon();

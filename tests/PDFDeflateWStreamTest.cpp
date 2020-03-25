@@ -117,7 +117,7 @@ DEF_TEST(SkPDF_DeflateWStream, r) {
       SkDeflateWStream deflateWStream(&dynamicMemoryWStream);
       uint32_t j = 0;
       while (j < size) {
-        uint32_t writeSize = SkTMin(size - j, random.nextRangeU(1, 400));
+        uint32_t writeSize = std::min(size - j, random.nextRangeU(1, 400));
         if (!deflateWStream.write(&buffer[j], writeSize)) {
           ERRORF(r, "something went wrong.");
           return;
@@ -150,7 +150,7 @@ DEF_TEST(SkPDF_DeflateWStream, r) {
 
       continue;
     }
-    uint32_t minLength = SkTMin(size, (uint32_t)(decompressed->getLength()));
+    uint32_t minLength = std::min(size, (uint32_t)(decompressed->getLength()));
     for (uint32_t i = 0; i < minLength; ++i) {
       uint8_t c;
       SkDEBUGCODE(size_t rb =) decompressed->read(&c, sizeof(uint8_t));

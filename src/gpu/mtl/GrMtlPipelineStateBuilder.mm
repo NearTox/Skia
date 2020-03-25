@@ -26,21 +26,21 @@
 #endif
 
 GrMtlPipelineState* GrMtlPipelineStateBuilder::CreatePipelineState(
-    GrMtlGpu* gpu, GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
-    GrProgramDesc* desc) {
+    GrMtlGpu* gpu, GrRenderTarget* renderTarget, const GrProgramDesc& desc,
+    const GrProgramInfo& programInfo) {
   GrAutoLocaleSetter als("C");
-  GrMtlPipelineStateBuilder builder(gpu, renderTarget, programInfo, desc);
+  GrMtlPipelineStateBuilder builder(gpu, renderTarget, desc, programInfo);
 
   if (!builder.emitAndInstallProcs()) {
     return nullptr;
   }
-  return builder.finalize(renderTarget, programInfo, desc);
+  return builder.finalize(renderTarget, desc, programInfo);
 }
 
 GrMtlPipelineStateBuilder::GrMtlPipelineStateBuilder(
-    GrMtlGpu* gpu, GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
-    GrProgramDesc* desc)
-    : INHERITED(renderTarget, programInfo, desc),
+    GrMtlGpu* gpu, GrRenderTarget* renderTarget, const GrProgramDesc& desc,
+    const GrProgramInfo& programInfo)
+    : INHERITED(renderTarget, desc, programInfo),
       fGpu(gpu),
       fUniformHandler(this),
       fVaryingHandler(this) {}
@@ -83,7 +83,7 @@ void GrMtlPipelineStateBuilder::storeShadersInCache(
   // persistent key. This is because Mtl only caches the MSL code, not the fully compiled
   // program, and that only depends on the base GrProgramDesc data.
   sk_sp<SkData> key =
-      SkData::MakeWithoutCopy(this->desc()->asKey(), this->desc()->initialKeyLength());
+      SkData::MakeWithoutCopy(this->desc().asKey(), this->desc().initialKeyLength());
   sk_sp<SkData> data = GrPersistentCacheUtils::PackCachedShaders(
       isSkSL ? kSKSL_Tag : kMSL_Tag, shaders, inputs, kGrShaderTypeCount);
   fGpu->getContext()->priv().getPersistentCache()->store(*key, *data);
@@ -91,7 +91,7 @@ void GrMtlPipelineStateBuilder::storeShadersInCache(
 
 id<MTLLibrary> GrMtlPipelineStateBuilder::generateMtlShaderLibrary(
     const SkSL::String& shader, SkSL::Program::Kind kind, const SkSL::Program::Settings& settings,
-    GrProgramDesc* desc, SkSL::String* msl, SkSL::Program::Inputs* inputs) {
+    SkSL::String* msl, SkSL::Program::Inputs* inputs) {
   id<MTLLibrary> shaderLibrary =
       GrGenerateMtlShaderLibrary(fGpu, shader, kind, settings, msl, inputs);
   if (shaderLibrary != nil && inputs->fRTHeight) {
@@ -334,7 +334,7 @@ uint32_t buffer_size(uint32_t offset, uint32_t maxAlignment) {
 }
 
 GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(
-    GrRenderTarget* renderTarget, const GrProgramInfo& programInfo, GrProgramDesc* desc) {
+    GrRenderTarget* renderTarget, const GrProgramDesc& desc, const GrProgramInfo& programInfo) {
   auto pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
   id<MTLLibrary> shaderLibraries[kGrShaderTypeCount];
 
@@ -359,7 +359,7 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(
     // Here we shear off the Mtl-specific portion of the Desc in order to create the
     // persistent key. This is because Mtl only caches the MSL code, not the fully compiled
     // program, and that only depends on the base GrProgramDesc data.
-    sk_sp<SkData> key = SkData::MakeWithoutCopy(desc->asKey(), desc->initialKeyLength());
+    sk_sp<SkData> key = SkData::MakeWithoutCopy(desc.asKey(), desc.initialKeyLength());
     cached = persistentCache->load(*key);
     if (cached) {
       reader.setMemory(cached->data(), cached->size());
@@ -387,10 +387,10 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(
     }
 
     shaderLibraries[kVertex_GrShaderType] = this->generateMtlShaderLibrary(
-        *sksl[kVertex_GrShaderType], SkSL::Program::kVertex_Kind, settings, desc,
+        *sksl[kVertex_GrShaderType], SkSL::Program::kVertex_Kind, settings,
         &shaders[kVertex_GrShaderType], &inputs[kVertex_GrShaderType]);
     shaderLibraries[kFragment_GrShaderType] = this->generateMtlShaderLibrary(
-        *sksl[kFragment_GrShaderType], SkSL::Program::kFragment_Kind, settings, desc,
+        *sksl[kFragment_GrShaderType], SkSL::Program::kFragment_Kind, settings,
         &shaders[kFragment_GrShaderType], &inputs[kFragment_GrShaderType]);
 
     // Geometry shaders are not supported
@@ -452,29 +452,23 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(
   SkASSERT(pipelineDescriptor.vertexDescriptor);
   SkASSERT(pipelineDescriptor.colorAttachments[0]);
 
-#if defined(SK_BUILD_FOR_MAC) && defined(GR_USE_COMPLETION_HANDLER)
-  bool timedout;
-  id<MTLRenderPipelineState> pipelineState =
-      GrMtlNewRenderPipelineStateWithDescriptor(fGpu->device(), pipelineDescriptor, &timedout);
-  if (timedout) {
-    // try a second time
-    pipelineState =
-        GrMtlNewRenderPipelineStateWithDescriptor(fGpu->device(), pipelineDescriptor, &timedout);
-  }
-  if (!pipelineState) {
-    return nullptr;
-  }
-#else
   NSError* error = nil;
+#if defined(SK_BUILD_FOR_MAC)
+  id<MTLRenderPipelineState> pipelineState =
+      GrMtlNewRenderPipelineStateWithDescriptor(fGpu->device(), pipelineDescriptor, &error);
+#else
   id<MTLRenderPipelineState> pipelineState =
       [fGpu->device() newRenderPipelineStateWithDescriptor:pipelineDescriptor error:&error];
+#endif
   if (error) {
     SkDebugf(
         "Error creating pipeline: %s\n",
         [[error localizedDescription] cStringUsingEncoding:NSASCIIStringEncoding]);
     return nullptr;
   }
-#endif
+  if (!pipelineState) {
+    return nullptr;
+  }
 
   uint32_t bufferSize =
       buffer_size(fUniformHandler.fCurrentUBOOffset, fUniformHandler.fCurrentUBOMaxAlignment);

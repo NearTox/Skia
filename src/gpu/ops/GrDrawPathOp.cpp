@@ -93,7 +93,7 @@ void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBoun
   GrRenderTargetProxy* proxy = flushState->proxy();
   GrProgramInfo programInfo(
       proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(),
-      flushState->view()->origin(), pipeline, pathProc.get(), fixedDynamicState, nullptr, 0,
+      flushState->outputView()->origin(), pipeline, pathProc.get(), fixedDynamicState, nullptr, 0,
       GrPrimitiveType::kPath);
 
   GrStencilSettings stencil;

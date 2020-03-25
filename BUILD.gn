@@ -597,6 +597,20 @@ optional("gpu") {
     }
   }
 
+  if (skia_use_direct3d) {
+    public_defines += [ "SK_DIRECT3D" ]
+    deps += [ "//third_party/spirv-cross:spirv_cross" ]
+    sources += skia_direct3d_sources
+    if (skia_enable_direct3d_debug_layer) {
+      public_defines += [ "SK_ENABLE_D3D_DEBUG_LAYER" ]
+    }
+    libs += [
+      "d3d12.lib",
+      "dxgi.lib",
+      "d3dcompiler.lib",
+    ]
+  }
+
   cflags_objcc = []
   if (skia_use_metal) {
     public_defines += [ "SK_METAL" ]
@@ -647,9 +661,23 @@ optional("heif") {
   ]
 }
 
-optional("jpeg") {
-  enabled = skia_use_libjpeg_turbo
-  public_defines = [ "SK_HAS_JPEG_LIBRARY" ]
+optional("jpeg_decode") {
+  enabled = skia_use_libjpeg_turbo_decode
+  public_defines = [ "SK_CODEC_DECODES_JPEG" ]
+
+  deps = [
+    "//third_party/libjpeg-turbo:libjpeg",
+  ]
+  sources = [
+    "src/codec/SkJpegCodec.cpp",
+    "src/codec/SkJpegDecoderMgr.cpp",
+    "src/codec/SkJpegUtility.cpp",
+  ]
+}
+
+optional("jpeg_encode") {
+  enabled = skia_use_libjpeg_turbo_encode
+  public_defines = [ "SK_ENCODE_JPEG" ]
 
   deps = [
     "//third_party/libjpeg-turbo:libjpeg",
@@ -658,9 +686,6 @@ optional("jpeg") {
     "include/encode/SkJpegEncoder.h",
   ]
   sources = [
-    "src/codec/SkJpegCodec.cpp",
-    "src/codec/SkJpegDecoderMgr.cpp",
-    "src/codec/SkJpegUtility.cpp",
     "src/images/SkJPEGWriteUtility.cpp",
     "src/images/SkJpegEncoder.cpp",
   ]
@@ -673,8 +698,11 @@ optional("pdf") {
   deps = [
     "//third_party/zlib",
   ]
-  if (skia_use_libjpeg_turbo) {
-    deps += [ ":jpeg" ]
+  if (skia_use_libjpeg_turbo_decode) {
+    deps += [ ":jpeg_decode" ]
+  }
+  if (skia_use_libjpeg_turbo_encode) {
+    deps += [ ":jpeg_encode" ]
   }
   sources = skia_pdf_sources
   sources_when_disabled = [ "src/pdf/SkDocument_PDF_None.cpp" ]
@@ -687,9 +715,9 @@ optional("pdf") {
   }
 }
 
-optional("png") {
-  enabled = skia_use_libpng
-  public_defines = [ "SK_HAS_PNG_LIBRARY" ]
+optional("png_decode") {
+  enabled = skia_use_libpng_decode
+  public_defines = [ "SK_CODEC_DECODES_PNG" ]
 
   deps = [
     "//third_party/libpng",
@@ -697,12 +725,23 @@ optional("png") {
   sources = [
     "src/codec/SkIcoCodec.cpp",
     "src/codec/SkPngCodec.cpp",
+  ]
+}
+
+optional("png_encode") {
+  enabled = skia_use_libpng_encode
+  public_defines = [ "SK_ENCODE_PNG" ]
+
+  deps = [
+    "//third_party/libpng",
+  ]
+  sources = [
     "src/images/SkPngEncoder.cpp",
   ]
 }
 
 optional("raw") {
-  enabled = skia_use_dng_sdk && skia_use_libjpeg_turbo && skia_use_piex
+  enabled = skia_use_dng_sdk && skia_use_libjpeg_turbo_decode && skia_use_piex
   public_defines = [ "SK_CODEC_DECODES_RAW" ]
 
   deps = [
@@ -749,15 +788,26 @@ optional("typeface_freetype") {
   ]
 }
 
-optional("webp") {
-  enabled = skia_use_libwebp
-  public_defines = [ "SK_HAS_WEBP_LIBRARY" ]
+optional("webp_decode") {
+  enabled = skia_use_libwebp_decode
+  public_defines = [ "SK_CODEC_DECODES_WEBP" ]
 
   deps = [
     "//third_party/libwebp",
   ]
   sources = [
     "src/codec/SkWebpCodec.cpp",
+  ]
+}
+
+optional("webp_encode") {
+  enabled = skia_use_libwebp_encode
+  public_defines = [ "SK_ENCODE_WEBP" ]
+
+  deps = [
+    "//third_party/libwebp",
+  ]
+  sources = [
     "src/images/SkWebpEncoder.cpp",
   ]
 }
@@ -854,9 +904,11 @@ component("skia") {
     ":gif",
     ":heif",
     ":hsw",
-    ":jpeg",
+    ":jpeg_decode",
+    ":jpeg_encode",
     ":none",
-    ":png",
+    ":png_decode",
+    ":png_encode",
     ":raw",
     ":sksl_interpreter",
     ":skvm_jit",
@@ -864,7 +916,8 @@ component("skia") {
     ":sse41",
     ":sse42",
     ":ssse3",
-    ":webp",
+    ":webp_decode",
+    ":webp_encode",
     ":wuffs",
     ":xml",
   ]
@@ -933,7 +986,6 @@ component("skia") {
       "src/ports/SkImageGeneratorWIC.cpp",
       "src/ports/SkOSFile_win.cpp",
       "src/ports/SkOSLibrary_win.cpp",
-      "src/ports/SkTLS_win.cpp",
     ]
     libs += [
       "FontSub.lib",
@@ -946,7 +998,6 @@ component("skia") {
     sources += [
       "src/ports/SkOSFile_posix.cpp",
       "src/ports/SkOSLibrary_posix.cpp",
-      "src/ports/SkTLS_pthread.cpp",
     ]
     libs += [ "dl" ]
   }
@@ -1077,6 +1128,7 @@ static_library("pathkit") {
     "src/core/SkEdgeBuilder.cpp",
     "src/core/SkEdgeClipper.cpp",
     "src/core/SkGeometry.cpp",
+    "src/core/SkIDChangeListener.cpp",
     "src/core/SkLineClipper.cpp",
     "src/core/SkMalloc.cpp",
     "src/core/SkMallocPixelRef.cpp",
@@ -1372,9 +1424,14 @@ if (skia_enable_tools) {
     if (skia_use_metal) {
       sources += [ "tools/gpu/mtl/MtlTestContext.mm" ]
     }
+    if (skia_use_direct3d) {
+      sources += [ "tools/gpu/d3d/D3DTestContext.cpp" ]
+      sources += [ "tools/gpu/d3d/D3DTestUtils.cpp" ]
+    }
     if (skia_use_dawn) {
       public_deps += [ "//third_party/dawn:dawn_headers" ]
       sources += [ "tools/gpu/dawn/DawnTestContext.cpp" ]
+      cflags_cc = [ "-Wno-microsoft-cast" ]
     }
   }  # test_lib("gpu_tool_utils")
 

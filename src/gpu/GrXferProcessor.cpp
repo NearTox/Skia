@@ -125,6 +125,9 @@ GrXPFactory::AnalysisProperties GrXPFactory::GetAnalysisProperties(
   } else {
     result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(color, coverage, caps, clampType);
   }
+  if (coverage == GrProcessorAnalysisCoverage::kNone) {
+    result |= AnalysisProperties::kCompatibleWithCoverageAsAlpha;
+  }
   SkASSERT(!(result & AnalysisProperties::kRequiresDstTexture));
   if ((result & AnalysisProperties::kReadsDstInShader) &&
       !caps.shaderCaps()->dstReadInShaderSupport()) {

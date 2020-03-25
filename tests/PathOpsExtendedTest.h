@@ -63,7 +63,6 @@ void RunTestSet(
     void (*firstTest)(skiatest::Reporter*, const char* filename),
     void (*skipTest)(skiatest::Reporter*, const char* filename),
     void (*stopTest)(skiatest::Reporter*, const char* filename), bool reverse);
-void ShowTestName(PathOpsThreadState* data, int a, int b, int c, int d);
 void ShowFunctionHeader(const char* name);
 void ShowPath(const SkPath& path, const char* pathName);
 void ShowOp(SkPathOp op, const char* pathOne, const char* pathTwo);

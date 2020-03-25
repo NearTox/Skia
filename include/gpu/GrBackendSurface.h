@@ -30,11 +30,21 @@ class GrGLTextureParameters;
 #  include "include/gpu/mtl/GrMtlTypes.h"
 #endif
 
+#ifdef SK_DIRECT3D
+#  include <dxgiformat.h>
+#endif
+
 #if GR_TEST_UTILS
 class SkString;
 #endif
 
 #if !SK_SUPPORT_GPU
+
+// SkSurfaceCharacterization always needs a minimal version of this
+class SK_API GrBackendFormat {
+ public:
+  bool isValid() const { return false; }
+};
 
 // SkSurface and SkImage rely on a minimal version of these always being available
 class SK_API GrBackendTexture {
@@ -80,6 +90,10 @@ class SK_API GrBackendFormat {
   static GrBackendFormat MakeMtl(GrMTLPixelFormat format) { return GrBackendFormat(format); }
 #  endif
 
+#  ifdef SK_DIRECT3D
+  static GrBackendFormat MakeDxgi(DXGI_FORMAT format) { return GrBackendFormat(format); }
+#  endif
+
   static GrBackendFormat MakeMock(GrColorType colorType, SkImage::CompressionType compression);
 
   bool operator==(const GrBackendFormat& that) const;
@@ -118,6 +132,14 @@ class SK_API GrBackendFormat {
   GrMTLPixelFormat asMtlFormat() const;
 #  endif
 
+#  ifdef SK_DIRECT3D
+  /**
+   * If the backend API is Direct3D this gets the format as a DXGI_FORMAT and returns true.
+   * Otherwise, returns false.
+   */
+  bool asDxgiFormat(DXGI_FORMAT*) const;
+#  endif
+
   /**
    * If the backend API is not Mock these two calls will return kUnknown and kNone, respectively.
    * Otherwise, if the compression type is kNone then the GrColorType will be valid. If the
@@ -151,6 +173,10 @@ class SK_API GrBackendFormat {
   GrBackendFormat(const GrMTLPixelFormat mtlFormat);
 #  endif
 
+#  ifdef SK_DIRECT3D
+  GrBackendFormat(DXGI_FORMAT dxgiFormat);
+#  endif
+
   GrBackendFormat(GrColorType, SkImage::CompressionType);
 
   GrBackendApi fBackend = GrBackendApi::kMock;
@@ -168,6 +194,10 @@ class SK_API GrBackendFormat {
 
 #  ifdef SK_METAL
     GrMTLPixelFormat fMtlFormat;
+#  endif
+
+#  ifdef SK_DIRECT3D
+    DXGI_FORMAT fDxgiFormat;
 #  endif
     struct {
       GrColorType fColorType;
@@ -203,6 +233,7 @@ class SK_API GrBackendTexture {
 
   GrBackendTexture& operator=(const GrBackendTexture& that);
 
+  SkISize dimensions() const { return {fWidth, fHeight}; }
   int width() const { return fWidth; }
   int height() const { return fHeight; }
   bool hasMipMaps() const { return GrMipMapped::kYes == fMipMapped; }
@@ -332,6 +363,7 @@ class SK_API GrBackendRenderTarget {
   GrBackendRenderTarget(const GrBackendRenderTarget& that);
   GrBackendRenderTarget& operator=(const GrBackendRenderTarget&);
 
+  SkISize dimensions() const { return {fWidth, fHeight}; }
   int width() const { return fWidth; }
   int height() const { return fHeight; }
   int sampleCnt() const { return fSampleCnt; }

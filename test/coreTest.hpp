@@ -18,9 +18,6 @@ static_assert(std::is_nothrow_move_constructible_v<SkRect>);
 static_assert(std::is_nothrow_move_assignable_v<SkRRect>);
 static_assert(std::is_nothrow_move_constructible_v<SkRRect>);
 
-static_assert(std::is_nothrow_move_assignable_v<SkMatrix44>);
-static_assert(std::is_nothrow_move_constructible_v<SkMatrix44>);
-
 static_assert(std::is_nothrow_move_assignable_v<SkMatrix>);
 static_assert(std::is_nothrow_move_constructible_v<SkMatrix>);
 

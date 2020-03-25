@@ -67,7 +67,8 @@ class GrOnFlushResourceProvider {
   explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
 
   std::unique_ptr<GrRenderTargetContext> makeRenderTargetContext(
-      sk_sp<GrSurfaceProxy>, GrColorType, sk_sp<SkColorSpace>, const SkSurfaceProps*);
+      sk_sp<GrSurfaceProxy>, GrSurfaceOrigin, GrColorType, sk_sp<SkColorSpace>,
+      const SkSurfaceProps*);
 
   void addTextureResolveTask(sk_sp<GrTextureProxy>, GrSurfaceProxy::ResolveFlags);
 
@@ -76,8 +77,7 @@ class GrOnFlushResourceProvider {
   void removeUniqueKeyFromProxy(GrTextureProxy*);
   void processInvalidUniqueKey(const GrUniqueKey&);
   // GrColorType is necessary to set the proxy's texture swizzle.
-  sk_sp<GrTextureProxy> findOrCreateProxyByUniqueKey(
-      const GrUniqueKey&, GrColorType, GrSurfaceOrigin, UseAllocator);
+  sk_sp<GrTextureProxy> findOrCreateProxyByUniqueKey(const GrUniqueKey&, GrColorType, UseAllocator);
 
   bool instatiateProxy(GrSurfaceProxy*);
 
@@ -90,10 +90,9 @@ class GrOnFlushResourceProvider {
 
   uint32_t contextID() const;
   const GrCaps* caps() const;
+  GrOpMemoryPool* opMemoryPool() const;
 
-#if GR_TEST_UTILS
-  bool testingOnly_getSuppressAllocationWarnings() const;
-#endif
+  void printWarningMessage(const char* msg) const;
 
  private:
   GrOnFlushResourceProvider(const GrOnFlushResourceProvider&) = delete;

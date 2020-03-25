@@ -138,21 +138,6 @@ sk_sp<SkShader> SkPictureShader::Make(
   return sk_sp<SkShader>(new SkPictureShader(std::move(picture), tmx, tmy, localMatrix, tile));
 }
 
-SkPicture* SkPictureShader::isAPicture(
-    SkMatrix* matrix, SkTileMode tileModes[2], SkRect* tile) const {
-  if (matrix) {
-    *matrix = this->getLocalMatrix();
-  }
-  if (tileModes) {
-    tileModes[0] = fTmx;
-    tileModes[1] = fTmy;
-  }
-  if (tile) {
-    *tile = fTile;
-  }
-  return fPicture.get();
-}
-
 sk_sp<SkFlattenable> SkPictureShader::CreateProc(SkReadBuffer& buffer) {
   SkMatrix lm;
   buffer.readMatrix(&lm);
@@ -215,7 +200,7 @@ sk_sp<SkShader> SkPictureShader::refBitmapShader(
   // texture
   if (maxTextureSize) {
     if (scaledSize.width() > maxTextureSize || scaledSize.height() > maxTextureSize) {
-      SkScalar downScale = maxTextureSize / SkMaxScalar(scaledSize.width(), scaledSize.height());
+      SkScalar downScale = maxTextureSize / std::max(scaledSize.width(), scaledSize.height());
       scaledSize.set(
           SkScalarFloorToScalar(scaledSize.width() * downScale),
           SkScalarFloorToScalar(scaledSize.height() * downScale));
@@ -336,7 +321,7 @@ std::unique_ptr<GrFragmentProcessor> SkPictureShader::asFragmentProcessor(
     maxTextureSize = args.fContext->priv().caps()->maxTextureSize();
   }
 
-  auto lm = this->totalLocalMatrix(args.fPreLocalMatrix, args.fPostLocalMatrix);
+  auto lm = this->totalLocalMatrix(args.fPreLocalMatrix);
   SkColorType dstColorType = GrColorTypeToSkColorType(args.fDstColorInfo->colorType());
   if (dstColorType == kUnknown_SkColorType) {
     dstColorType = kRGBA_8888_SkColorType;

@@ -94,7 +94,8 @@ class GrColorFragmentProcessorAnalysis {
   GrColorFragmentProcessorAnalysis() = delete;
 
   GrColorFragmentProcessorAnalysis(
-      const GrProcessorAnalysisColor& input, const GrFragmentProcessor* const* processors, int cnt);
+      const GrProcessorAnalysisColor& input, std::unique_ptr<GrFragmentProcessor> const fps[],
+      int cnt);
 
   bool isOpaque() const { return fIsOpaque; }
 

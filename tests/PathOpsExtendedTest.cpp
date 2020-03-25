@@ -68,67 +68,6 @@ enum class SkipAssert { kNo, kYes };
 
 enum class ExpectMatch { kNo, kYes, kFlaky };
 
-#if DEBUG_SHOW_TEST_NAME
-static void showPathData(const SkPath& path) {
-  SkPath::RawIter iter(path);
-  uint8_t verb;
-  SkPoint pts[4];
-  SkPoint firstPt = {0, 0}, lastPt = {0, 0};
-  bool firstPtSet = false;
-  bool lastPtSet = true;
-  while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
-    switch (verb) {
-      case SkPath::kMove_Verb:
-        if (firstPtSet && lastPtSet && firstPt != lastPt) {
-          SkDebugf(
-              "{{%1.9g,%1.9g}, {%1.9g,%1.9g}},\n", lastPt.fX, lastPt.fY, firstPt.fX, firstPt.fY);
-          lastPtSet = false;
-        }
-        firstPt = pts[0];
-        firstPtSet = true;
-        continue;
-      case SkPath::kLine_Verb:
-        SkDebugf("{{%1.9g,%1.9g}, {%1.9g,%1.9g}},\n", pts[0].fX, pts[0].fY, pts[1].fX, pts[1].fY);
-        lastPt = pts[1];
-        lastPtSet = true;
-        break;
-      case SkPath::kQuad_Verb:
-        SkDebugf(
-            "{{%1.9g,%1.9g}, {%1.9g,%1.9g}, {%1.9g,%1.9g}},\n", pts[0].fX, pts[0].fY, pts[1].fX,
-            pts[1].fY, pts[2].fX, pts[2].fY);
-        lastPt = pts[2];
-        lastPtSet = true;
-        break;
-      case SkPath::kConic_Verb:
-        SkDebugf(
-            "{{%1.9g,%1.9g}, {%1.9g,%1.9g}, {%1.9g,%1.9g}},  //weight=%1.9g\n", pts[0].fX,
-            pts[0].fY, pts[1].fX, pts[1].fY, pts[2].fX, pts[2].fY, iter.conicWeight());
-        lastPt = pts[2];
-        lastPtSet = true;
-        break;
-      case SkPath::kCubic_Verb:
-        SkDebugf(
-            "{{%1.9g,%1.9g}, {%1.9g,%1.9g}, {%1.9g,%1.9g}, {%1.9g,%1.9g}},\n", pts[0].fX, pts[0].fY,
-            pts[1].fX, pts[1].fY, pts[2].fX, pts[2].fY, pts[3].fX, pts[3].fY);
-        lastPt = pts[3];
-        lastPtSet = true;
-        break;
-      case SkPath::kClose_Verb:
-        if (firstPtSet && lastPtSet && firstPt != lastPt) {
-          SkDebugf(
-              "{{%1.9g,%1.9g}, {%1.9g,%1.9g}},\n", lastPt.fX, lastPt.fY, firstPt.fX, firstPt.fY);
-        }
-        firstPtSet = lastPtSet = false;
-        break;
-      default: SkDEBUGFAIL("bad verb"); return;
-    }
-  }
-  if (firstPtSet && lastPtSet && firstPt != lastPt) {
-    SkDebugf("{{%1.9g,%1.9g}, {%1.9g,%1.9g}},\n", lastPt.fX, lastPt.fY, firstPt.fX, firstPt.fY);
-  }
-}
-#endif
-
 void showOp(const SkPathOp op) {
   switch (op) {
     case kDifference_SkPathOp: SkDebugf("op difference\n"); break;
@@ -138,35 +77,6 @@ void showOp(const SkPathOp op) {
     case kReverseDifference_SkPathOp: SkDebugf("op reverse difference\n"); break;
     default: SkASSERT(0);
   }
-}
-
-#if DEBUG_SHOW_TEST_NAME
-static char hexorator(int x) {
-  if (x < 10) {
-    return x + '0';
-  }
-  x -= 10;
-  SkASSERT(x < 26);
-  return x + 'A';
-}
-#endif
-
-void ShowTestName(PathOpsThreadState* state, int a, int b, int c, int d) {
-#if DEBUG_SHOW_TEST_NAME
-  state->fSerialNo[0] = hexorator(state->fA);
-  state->fSerialNo[1] = hexorator(state->fB);
-  state->fSerialNo[2] = hexorator(state->fC);
-  state->fSerialNo[3] = hexorator(state->fD);
-  state->fSerialNo[4] = hexorator(a);
-  state->fSerialNo[5] = hexorator(b);
-  state->fSerialNo[6] = hexorator(c);
-  state->fSerialNo[7] = hexorator(d);
-  state->fSerialNo[8] = '\0';
-  SkDebugf("%s\n", state->fSerialNo);
-  if (strcmp(state->fSerialNo, state->fKey) == 0) {
-    SkDebugf("%s\n", state->fPathStr.c_str());
-  }
-#endif
 }
 
 const int bitWidth = 64;
@@ -535,55 +445,52 @@ static bool check_for_duplicate_names(const char* testName) {
 static bool inner_simplify(
     skiatest::Reporter* reporter, const SkPath& path, const char* filename,
     ExpectSuccess expectSuccess, SkipAssert skipAssert, ExpectMatch expectMatch) {
-#if 0 && DEBUG_SHOW_TEST_NAME
-    showPathData(path);
-#endif
-    if (PathOpsDebug::gJson) {
-      if (check_for_duplicate_names(filename)) {
-        return true;
-      }
-      if (!PathOpsDebug::gOutFirst) {
-        fprintf(PathOpsDebug::gOut, ",\n");
-      }
-      PathOpsDebug::gOutFirst = false;
-      fprintf(PathOpsDebug::gOut, "\"%s\": {\n", filename);
-      json_path_out(path, "path", "", false);
+  if (PathOpsDebug::gJson) {
+    if (check_for_duplicate_names(filename)) {
+      return true;
     }
-    SkPath out;
-    if (!SimplifyDebug(
-            path, &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
-      if (ExpectSuccess::kYes == expectSuccess) {
-        SkDebugf("%s did not expect %s failure\n", __FUNCTION__, filename);
-        REPORTER_ASSERT(reporter, 0);
-      }
-      if (PathOpsDebug::gJson) {
-        json_status(expectSuccess, expectMatch, false);
-        fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
-      }
-      return false;
-    } else {
-      if (ExpectSuccess::kNo == expectSuccess) {
-        SkDebugf("%s %s unexpected success\n", __FUNCTION__, filename);
-        REPORTER_ASSERT(reporter, 0);
-      }
-      if (PathOpsDebug::gJson) {
-        json_status(expectSuccess, expectMatch, true);
-        json_path_out(out, "out", "Out", true);
-      }
+    if (!PathOpsDebug::gOutFirst) {
+      fprintf(PathOpsDebug::gOut, ",\n");
     }
-    SkBitmap bitmap;
-    int errors = comparePaths(reporter, filename, path, out, bitmap);
-    if (ExpectMatch::kNo == expectMatch) {
-      if (!errors) {
-        SkDebugf("%s failing test %s now succeeds\n", __FUNCTION__, filename);
-        REPORTER_ASSERT(reporter, 0);
-        return false;
-      }
-    } else if (ExpectMatch::kYes == expectMatch && errors) {
+    PathOpsDebug::gOutFirst = false;
+    fprintf(PathOpsDebug::gOut, "\"%s\": {\n", filename);
+    json_path_out(path, "path", "", false);
+  }
+  SkPath out;
+  if (!SimplifyDebug(
+          path, &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
+    if (ExpectSuccess::kYes == expectSuccess) {
+      SkDebugf("%s did not expect %s failure\n", __FUNCTION__, filename);
       REPORTER_ASSERT(reporter, 0);
     }
-    reporter->bumpTestCount();
-    return errors == 0;
+    if (PathOpsDebug::gJson) {
+      json_status(expectSuccess, expectMatch, false);
+      fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
+    }
+    return false;
+  } else {
+    if (ExpectSuccess::kNo == expectSuccess) {
+      SkDebugf("%s %s unexpected success\n", __FUNCTION__, filename);
+      REPORTER_ASSERT(reporter, 0);
+    }
+    if (PathOpsDebug::gJson) {
+      json_status(expectSuccess, expectMatch, true);
+      json_path_out(out, "out", "Out", true);
+    }
+  }
+  SkBitmap bitmap;
+  int errors = comparePaths(reporter, filename, path, out, bitmap);
+  if (ExpectMatch::kNo == expectMatch) {
+    if (!errors) {
+      SkDebugf("%s failing test %s now succeeds\n", __FUNCTION__, filename);
+      REPORTER_ASSERT(reporter, 0);
+      return false;
+    }
+  } else if (ExpectMatch::kYes == expectMatch && errors) {
+    REPORTER_ASSERT(reporter, 0);
+  }
+  reporter->bumpTestCount();
+  return errors == 0;
 }
 
 bool testSimplify(skiatest::Reporter* reporter, const SkPath& path, const char* filename) {
@@ -608,90 +515,78 @@ bool testSimplifyFail(skiatest::Reporter* reporter, const SkPath& path, const ch
       reporter, path, filename, ExpectSuccess::kNo, SkipAssert::kYes, ExpectMatch::kNo);
 }
 
-#if DEBUG_SHOW_TEST_NAME
-static void showName(const SkPath& a, const SkPath& b, const SkPathOp shapeOp) {
-  SkDebugf("\n");
-  showPathData(a);
-  showOp(shapeOp);
-  showPathData(b);
-}
-#endif
-
 static bool innerPathOp(
     skiatest::Reporter* reporter, const SkPath& a, const SkPath& b, const SkPathOp shapeOp,
     const char* testName, ExpectSuccess expectSuccess, SkipAssert skipAssert,
     ExpectMatch expectMatch) {
-#if 0 && DEBUG_SHOW_TEST_NAME
-    showName(a, b, shapeOp);
-#endif
-    if (PathOpsDebug::gJson) {
-      if (check_for_duplicate_names(testName)) {
-        return true;
-      }
-      if (!PathOpsDebug::gOutFirst) {
-        fprintf(PathOpsDebug::gOut, ",\n");
-      }
-      PathOpsDebug::gOutFirst = false;
-      fprintf(PathOpsDebug::gOut, "\"%s\": {\n", testName);
-      json_path_out(a, "p1", "1", false);
-      json_path_out(b, "p2", "2", false);
-      fprintf(PathOpsDebug::gOut, "  \"op\": \"%s\",\n", opStrs[shapeOp]);
-    }
-    SkPath out;
-    if (!OpDebug(
-            a, b, shapeOp,
-            &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
-      if (ExpectSuccess::kYes == expectSuccess) {
-        SkDebugf("%s %s did not expect failure\n", __FUNCTION__, testName);
-        REPORTER_ASSERT(reporter, 0);
-      }
-      if (PathOpsDebug::gJson) {
-        json_status(expectSuccess, expectMatch, false);
-        fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
-      }
-      return false;
-    } else {
-      if (ExpectSuccess::kNo == expectSuccess) {
-        SkDebugf("%s %s unexpected success\n", __FUNCTION__, testName);
-        REPORTER_ASSERT(reporter, 0);
-      }
-      if (PathOpsDebug::gJson) {
-        json_status(expectSuccess, expectMatch, true);
-        json_path_out(out, "out", "Out", true);
-      }
-    }
-    if (!reporter->verbose()) {
+  if (PathOpsDebug::gJson) {
+    if (check_for_duplicate_names(testName)) {
       return true;
     }
-    SkPath pathOut, scaledPathOut;
-    SkRegion rgnA, rgnB, openClip, rgnOut;
-    openClip.setRect({-16000, -16000, 16000, 16000});
-    rgnA.setPath(a, openClip);
-    rgnB.setPath(b, openClip);
-    rgnOut.op(rgnA, rgnB, (SkRegion::Op)shapeOp);
-    rgnOut.getBoundaryPath(&pathOut);
+    if (!PathOpsDebug::gOutFirst) {
+      fprintf(PathOpsDebug::gOut, ",\n");
+    }
+    PathOpsDebug::gOutFirst = false;
+    fprintf(PathOpsDebug::gOut, "\"%s\": {\n", testName);
+    json_path_out(a, "p1", "1", false);
+    json_path_out(b, "p2", "2", false);
+    fprintf(PathOpsDebug::gOut, "  \"op\": \"%s\",\n", opStrs[shapeOp]);
+  }
+  SkPath out;
+  if (!OpDebug(
+          a, b, shapeOp,
+          &out SkDEBUGPARAMS(SkipAssert::kYes == skipAssert) SkDEBUGPARAMS(testName))) {
+    if (ExpectSuccess::kYes == expectSuccess) {
+      SkDebugf("%s %s did not expect failure\n", __FUNCTION__, testName);
+      REPORTER_ASSERT(reporter, 0);
+    }
+    if (PathOpsDebug::gJson) {
+      json_status(expectSuccess, expectMatch, false);
+      fprintf(PathOpsDebug::gOut, "  \"out\": \"\"\n}");
+    }
+    return false;
+  } else {
+    if (ExpectSuccess::kNo == expectSuccess) {
+      SkDebugf("%s %s unexpected success\n", __FUNCTION__, testName);
+      REPORTER_ASSERT(reporter, 0);
+    }
+    if (PathOpsDebug::gJson) {
+      json_status(expectSuccess, expectMatch, true);
+      json_path_out(out, "out", "Out", true);
+    }
+  }
+  if (!reporter->verbose()) {
+    return true;
+  }
+  SkPath pathOut, scaledPathOut;
+  SkRegion rgnA, rgnB, openClip, rgnOut;
+  openClip.setRect({-16000, -16000, 16000, 16000});
+  rgnA.setPath(a, openClip);
+  rgnB.setPath(b, openClip);
+  rgnOut.op(rgnA, rgnB, (SkRegion::Op)shapeOp);
+  rgnOut.getBoundaryPath(&pathOut);
 
-    SkMatrix scale;
-    scaleMatrix(a, b, scale);
-    SkRegion scaledRgnA, scaledRgnB, scaledRgnOut;
-    SkPath scaledA, scaledB;
-    scaledA.addPath(a, scale);
-    scaledA.setFillType(a.getFillType());
-    scaledB.addPath(b, scale);
-    scaledB.setFillType(b.getFillType());
-    scaledRgnA.setPath(scaledA, openClip);
-    scaledRgnB.setPath(scaledB, openClip);
-    scaledRgnOut.op(scaledRgnA, scaledRgnB, (SkRegion::Op)shapeOp);
-    scaledRgnOut.getBoundaryPath(&scaledPathOut);
-    SkBitmap bitmap;
-    SkPath scaledOut;
-    scaledOut.addPath(out, scale);
-    scaledOut.setFillType(out.getFillType());
-    int result = comparePaths(
-        reporter, testName, pathOut, scaledPathOut, out, scaledOut, bitmap, a, b, shapeOp, scale,
-        expectMatch);
-    reporter->bumpTestCount();
-    return result == 0;
+  SkMatrix scale;
+  scaleMatrix(a, b, scale);
+  SkRegion scaledRgnA, scaledRgnB, scaledRgnOut;
+  SkPath scaledA, scaledB;
+  scaledA.addPath(a, scale);
+  scaledA.setFillType(a.getFillType());
+  scaledB.addPath(b, scale);
+  scaledB.setFillType(b.getFillType());
+  scaledRgnA.setPath(scaledA, openClip);
+  scaledRgnB.setPath(scaledB, openClip);
+  scaledRgnOut.op(scaledRgnA, scaledRgnB, (SkRegion::Op)shapeOp);
+  scaledRgnOut.getBoundaryPath(&scaledPathOut);
+  SkBitmap bitmap;
+  SkPath scaledOut;
+  scaledOut.addPath(out, scale);
+  scaledOut.setFillType(out.getFillType());
+  int result = comparePaths(
+      reporter, testName, pathOut, scaledPathOut, out, scaledOut, bitmap, a, b, shapeOp, scale,
+      expectMatch);
+  reporter->bumpTestCount();
+  return result == 0;
 }
 
 bool testPathOp(
@@ -720,9 +615,6 @@ bool testPathOpFuzz(
 bool testPathOpFail(
     skiatest::Reporter* reporter, const SkPath& a, const SkPath& b, const SkPathOp shapeOp,
     const char* testName) {
-#if DEBUG_SHOW_TEST_NAME
-  showName(a, b, shapeOp);
-#endif
   SkPath orig;
   orig.lineTo(54, 43);
   SkPath out = orig;
@@ -787,9 +679,6 @@ void RunTestSet(
     while (index > 0 && tests[index].fun != firstTest) {
       --index;
     }
-#if DEBUG_SHOW_TEST_NAME
-    SkDebugf("\n<div id=\"%s\">\n", tests[index].str);
-#endif
     (*tests[index].fun)(reporter, tests[index].str);
     if (tests[index].fun == stopTest) {
       return;
@@ -803,9 +692,6 @@ void RunTestSet(
       foundSkip = true;
     }
     if (foundSkip && tests[index].fun != firstTest) {
-#if DEBUG_SHOW_TEST_NAME
-      SkDebugf("\n<div id=\"%s\">\n", tests[index].str);
-#endif
       (*tests[index].fun)(reporter, tests[index].str);
     }
     if (tests[index].fun == stopTest || index == last) {
@@ -813,28 +699,4 @@ void RunTestSet(
     }
     index += reverse ? -1 : 1;
   } while (true);
-#if DEBUG_SHOW_TEST_NAME
-  SkDebugf(
-      "\n"
-      "</div>\n"
-      "\n"
-      "<script type=\"text/javascript\">\n"
-      "\n"
-      "var testDivs = [\n");
-  index = reverse ? count - 1 : 0;
-  last = reverse ? 0 : count - 1;
-  foundSkip = !skipTest;
-  do {
-    if (tests[index].fun == skipTest) {
-      foundSkip = true;
-    }
-    if (foundSkip && tests[index].fun != firstTest) {
-      SkDebugf("    %s,\n", tests[index].str);
-    }
-    if (tests[index].fun == stopTest || index == last) {
-      break;
-    }
-    index += reverse ? -1 : 1;
-  } while (true);
-#endif
 }

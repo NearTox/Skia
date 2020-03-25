@@ -98,7 +98,8 @@ const SkPoint gCubics[SkPatchUtils::kNumCtrlPts] = {
 const SkPoint gTexCoords[SkPatchUtils::kNumCorners] = {
     {0.0f, 0.0f}, {100.0f, 0.0f}, {100.0f, 100.0f}, {0.0f, 100.0f}};
 
-static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img = nullptr) {
+static void dopatch(
+    SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img, const SkMatrix* localMatrix) {
   SkPaint paint;
 
   const SkBlendMode modes[] = {
@@ -114,7 +115,7 @@ static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img
   if (img) {
     SkScalar w = img->width();
     SkScalar h = img->height();
-    shader = img->makeShader();
+    shader = img->makeShader(localMatrix);
     texStorage[0].set(0, 0);
     texStorage[1].set(w, 0);
     texStorage[2].set(w, h);
@@ -155,12 +156,20 @@ static void dopatch(SkCanvas* canvas, const SkColor colors[], sk_sp<SkImage> img
 DEF_SIMPLE_GM(patch_primitive, canvas, 1500, 1100) {
   const SkColor colors[SkPatchUtils::kNumCorners] = {
       SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
-  dopatch(canvas, colors);
+  dopatch(canvas, colors, nullptr, nullptr);
 }
 DEF_SIMPLE_GM(patch_image, canvas, 1500, 1100) {
   const SkColor colors[SkPatchUtils::kNumCorners] = {
       SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
-  dopatch(canvas, colors, GetResourceAsImage("images/mandrill_128.png"));
+  dopatch(canvas, colors, GetResourceAsImage("images/mandrill_128.png"), nullptr);
+}
+DEF_SIMPLE_GM(patch_image_persp, canvas, 1500, 1100) {
+  const SkColor colors[SkPatchUtils::kNumCorners] = {
+      SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
+  SkMatrix localM;
+  localM.reset();
+  localM[6] = 0.00001f;  // force perspective
+  dopatch(canvas, colors, GetResourceAsImage("images/mandrill_128.png"), &localM);
 }
 DEF_SIMPLE_GM(patch_alpha, canvas, 1500, 1100) {
   const SkColor colors[SkPatchUtils::kNumCorners] = {
@@ -169,7 +178,7 @@ DEF_SIMPLE_GM(patch_alpha, canvas, 1500, 1100) {
       SK_ColorBLUE,
       0x00FF00FF,
   };
-  dopatch(canvas, colors);
+  dopatch(canvas, colors, nullptr, nullptr);
 }
 
 // These two should look the same (one patch, one simple path)

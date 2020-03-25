@@ -96,7 +96,6 @@ IRGenerator::IRGenerator(
       fSymbolTable(symbolTable),
       fLoopLevel(0),
       fSwitchLevel(0),
-      fTmpCount(0),
       fErrors(errorReporter) {}
 
 void IRGenerator::pushSymbolTable() {
@@ -129,9 +128,6 @@ static void fill_caps(
 
 void IRGenerator::start(
     const Program::Settings* settings, std::vector<std::unique_ptr<ProgramElement>>* inherited) {
-  if (fStarted) {
-    this->popSymbolTable();
-  }
   fSettings = settings;
   fCapsMap.clear();
   if (settings->fCaps) {
@@ -710,14 +706,12 @@ void IRGenerator::convertFunction(const ASTNode& f) {
       case Program::kPipelineStage_Kind: {
         bool valid;
         switch (parameters.size()) {
-          case 3:
+          case 2:
             valid =
-                parameters[0]->fType == *fContext.fFloat_Type &&
+                parameters[0]->fType == *fContext.fFloat2_Type &&
                 parameters[0]->fModifiers.fFlags == 0 &&
-                parameters[1]->fType == *fContext.fFloat_Type &&
-                parameters[1]->fModifiers.fFlags == 0 &&
-                parameters[2]->fType == *fContext.fHalf4_Type &&
-                parameters[2]->fModifiers.fFlags == (Modifiers::kIn_Flag | Modifiers::kOut_Flag);
+                parameters[1]->fType == *fContext.fHalf4_Type &&
+                parameters[1]->fModifiers.fFlags == (Modifiers::kIn_Flag | Modifiers::kOut_Flag);
             break;
           case 1:
             valid =
@@ -729,8 +723,8 @@ void IRGenerator::convertFunction(const ASTNode& f) {
         if (!valid) {
           fErrors.error(
               f.fOffset,
-              "pipeline stage 'main' must be declared main(float, "
-              "float, inout half4) or main(inout half4)");
+              "pipeline stage 'main' must be declared main(float2, "
+              "inout half4) or main(inout half4)");
           return;
         }
         break;
@@ -809,10 +803,9 @@ void IRGenerator::convertFunction(const ASTNode& f) {
     std::shared_ptr<SymbolTable> old = fSymbolTable;
     AutoSymbolTable table(this);
     if (fd.fName == "main" && fKind == Program::kPipelineStage_Kind) {
-      if (parameters.size() == 3) {
-        parameters[0]->fModifiers.fLayout.fBuiltin = SK_MAIN_X_BUILTIN;
-        parameters[1]->fModifiers.fLayout.fBuiltin = SK_MAIN_Y_BUILTIN;
-        parameters[2]->fModifiers.fLayout.fBuiltin = SK_OUTCOLOR_BUILTIN;
+      if (parameters.size() == 2) {
+        parameters[0]->fModifiers.fLayout.fBuiltin = SK_MAIN_COORDS_BUILTIN;
+        parameters[1]->fModifiers.fLayout.fBuiltin = SK_OUTCOLOR_BUILTIN;
       } else {
         SkASSERT(parameters.size() == 1);
         parameters[0]->fModifiers.fLayout.fBuiltin = SK_OUTCOLOR_BUILTIN;
@@ -823,12 +816,7 @@ void IRGenerator::convertFunction(const ASTNode& f) {
     }
     bool needInvocationIDWorkaround = fInvocations != -1 && fd.fName == "main" &&
                                       fSettings->fCaps && !fSettings->fCaps->gsInvocationsSupport();
-    SkASSERT(!fExtraVars.size());
     std::unique_ptr<Block> body = this->convertBlock(*iter);
-    for (auto& v : fExtraVars) {
-      body->fStatements.insert(body->fStatements.begin(), std::move(v));
-    }
-    fExtraVars.clear();
     fCurrentFunction = nullptr;
     if (!body) {
       return;
@@ -1651,6 +1639,11 @@ std::unique_ptr<Expression> IRGenerator::call(
       msg += "s";
     }
     msg += ", but found " + to_string((uint64_t)arguments.size());
+    fErrors.error(offset, msg);
+    return nullptr;
+  }
+  if (fKind == Program::kPipelineStage_Kind && !function.fDefined && !function.fBuiltin) {
+    String msg = "call to undefined function '" + function.fName + "'";
     fErrors.error(offset, msg);
     return nullptr;
   }

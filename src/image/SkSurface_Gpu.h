@@ -28,7 +28,8 @@ class SkSurface_Gpu : public SkSurface_Base {
   GrBackendTexture onGetBackendTexture(BackendHandleAccess) override;
   GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess) override;
   bool onReplaceBackendTexture(
-      const GrBackendTexture&, GrSurfaceOrigin, TextureReleaseProc, ReleaseContext) override;
+      const GrBackendTexture&, GrSurfaceOrigin, ContentChangeMode, TextureReleaseProc,
+      ReleaseContext) override;
 
   SkCanvas* onNewCanvas() override;
   sk_sp<SkSurface> onNewSurface(const SkImageInfo&) override;

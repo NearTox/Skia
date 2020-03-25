@@ -9,10 +9,10 @@
 #define GrMtlGpu_DEFINED
 
 #include <list>
-#include "include/gpu/GrTexture.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrSemaphore.h"
+#include "src/gpu/GrTexture.h"
 
 #include "src/gpu/mtl/GrMtlCaps.h"
 #include "src/gpu/mtl/GrMtlResourceProvider.h"
@@ -57,6 +57,8 @@ class GrMtlGpu : public GrGpu {
 
   void deleteBackendTexture(const GrBackendTexture&) override;
 
+  bool compile(const GrProgramDesc&, const GrProgramInfo&) override;
+
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
 
@@ -94,9 +96,7 @@ class GrMtlGpu : public GrGpu {
   void insertSemaphore(GrSemaphore* semaphore) override;
   void waitSemaphore(GrSemaphore* semaphore) override;
   void checkFinishProcs() override;
-  std::unique_ptr<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override {
-    return nullptr;
-  }
+  std::unique_ptr<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override;
 
   // When the Metal backend actually uses indirect command buffers, this function will actually do
   // what it says. For now, every command is encoded directly into the primary command buffer, so
@@ -132,8 +132,8 @@ class GrMtlGpu : public GrGpu {
       const BackendTextureData*) override;
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
-      SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
+      SkISize, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt, SkBudgeted,
+      GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
       SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
       const void* data, size_t dataSize) override;
@@ -174,8 +174,7 @@ class GrMtlGpu : public GrGpu {
   bool onRegenerateMipMapLevels(GrTexture*) override;
 
   void onResolveRenderTarget(
-      GrRenderTarget* target, const SkIRect& resolveRect, GrSurfaceOrigin resolveOrigin,
-      ForExternalIO) override;
+      GrRenderTarget* target, const SkIRect& resolveRect, ForExternalIO) override;
 
   void resolveTexture(id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture);
 

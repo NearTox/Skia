@@ -76,9 +76,8 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
 
   // add to texture atlas that matches this format
   GrDrawOpAtlas::ErrorCode addToAtlas(
-      GrResourceProvider*, GrStrikeCache*, GrTextStrike*, GrDrawOpAtlas::PlotLocator*,
-      GrDeferredUploadTarget*, GrMaskFormat, int width, int height, const void* image,
-      SkIPoint16* loc);
+      GrResourceProvider*, GrDrawOpAtlas::PlotLocator*, GrDeferredUploadTarget*, GrMaskFormat,
+      int width, int height, const void* image, SkIPoint16* loc);
 
   // Some clients may wish to verify the integrity of the texture backing store of the
   // GrDrawOpAtlas. The atlasGeneration returned below is a monotonically increasing number which

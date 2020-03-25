@@ -21,9 +21,9 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
   // it is the Y plane's domain. This will automatically inset for bilinear filtering, and only
   // the clamp wrap mode is supported.
   static std::unique_ptr<GrFragmentProcessor> Make(
-      const sk_sp<GrTextureProxy> proxies[], const SkYUVAIndex indices[4],
-      SkYUVColorSpace yuvColorSpace, GrSamplerState::Filter filterMode, const GrCaps&,
-      const SkMatrix& localMatrix = SkMatrix::I(), const SkRect* domain = nullptr);
+      GrSurfaceProxyView views[], const SkYUVAIndex indices[4], SkYUVColorSpace yuvColorSpace,
+      GrSamplerState samplerState, const GrCaps&, const SkMatrix& localMatrix = SkMatrix::I(),
+      const SkRect* subset = nullptr);
 #ifdef SK_DEBUG
   SkString dumpInfo() const override;
 #endif

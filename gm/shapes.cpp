@@ -133,7 +133,7 @@ class InnerShapesGM : public ShapesGM {
     for (int i = 0; i < fShapes.count(); i++) {
       const SkRRect& outer = fShapes[i];
       const SkRRect& inner = fShapes[(i * 7 + 11) % fSimpleShapeCount];
-      float s = 0.95f * SkTMin(
+      float s = 0.95f * std::min(
                             outer.rect().width() / inner.rect().width(),
                             outer.rect().height() / inner.rect().height());
       SkMatrix innerXform;

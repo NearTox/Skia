@@ -143,7 +143,7 @@ static void get_ubo_aligned_offset(
   *uniformOffset = *currentOffset + offsetDiff;
   SkASSERT(sizeof(float) == 4);
   if (arrayCount) {
-    uint32_t elementSize = SkTMax<uint32_t>(16, grsltype_to_vk_size(type));
+    uint32_t elementSize = std::max<uint32_t>(16, grsltype_to_vk_size(type));
     SkASSERT(0 == (elementSize & 0xF));
     *currentOffset = *uniformOffset + elementSize * arrayCount;
   } else {
@@ -152,10 +152,9 @@ static void get_ubo_aligned_offset(
 }
 
 GrVkUniformHandler::~GrVkUniformHandler() {
-  GrVkGpu* gpu = static_cast<GrVkPipelineStateBuilder*>(fProgramBuilder)->gpu();
   for (decltype(fSamplers)::Iter iter(&fSamplers); iter.next();) {
     if (iter->fImmutableSampler) {
-      iter->fImmutableSampler->unref(gpu);
+      iter->fImmutableSampler->unref();
       iter->fImmutableSampler = nullptr;
     }
   }
@@ -200,16 +199,15 @@ GrGLSLUniformHandler::UniformHandle GrVkUniformHandler::internalAddUniformArray(
 }
 
 GrGLSLUniformHandler::SamplerHandle GrVkUniformHandler::addSampler(
-    const GrSurfaceProxy* texture, GrSamplerState state, const GrSwizzle& swizzle, const char* name,
-    const GrShaderCaps* shaderCaps) {
+    const GrBackendFormat& backendFormat, GrSamplerState state, const GrSwizzle& swizzle,
+    const char* name, const GrShaderCaps* shaderCaps) {
   SkASSERT(name && strlen(name));
-  SkASSERT(texture->asTextureProxy());
 
   SkString mangleName;
   char prefix = 'u';
   fProgramBuilder->nameVariable(&mangleName, prefix, name, true);
 
-  GrTextureType type = texture->backendFormat().textureType();
+  GrTextureType type = backendFormat.textureType();
 
   UniformInfo& info = fSamplers.push_back();
   info.fVariable.setType(GrSLCombinedSamplerTypeForTextureType(type));
@@ -222,7 +220,7 @@ GrGLSLUniformHandler::SamplerHandle GrVkUniformHandler::addSampler(
   info.fUBOffset = 0;
 
   // Check if we are dealing with an external texture and store the needed information if so.
-  auto ycbcrInfo = texture->backendFormat().getVkYcbcrConversionInfo();
+  auto ycbcrInfo = backendFormat.getVkYcbcrConversionInfo();
   if (ycbcrInfo && ycbcrInfo->isValid()) {
     GrVkGpu* gpu = static_cast<GrVkPipelineStateBuilder*>(fProgramBuilder)->gpu();
     info.fImmutableSampler =

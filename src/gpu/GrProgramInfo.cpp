@@ -33,11 +33,26 @@ void GrProgramInfo::validate(bool flushTime) const {
     SkASSERT(fPrimProc->numTextureSamplers());
   } else if (this->hasFixedPrimProcTextures()) {
     SkASSERT(fPrimProc->numTextureSamplers());
-  } else {
-    SkASSERT(!fPrimProc->numTextureSamplers());
+    // TODO: We will soon remove dynamic state from GrProgramInfo. But while migrating to the new
+    // bind/draw API on GrOpsRenderPass, some code will not set the dynamic state because it calls
+    // bindTextures() directly. Once dynamic state (including this validation code) is moved out of
+    // GrProgramInfo, we can restore this assert.
+    // } else {
+    //     SkASSERT(!fPrimProc->numTextureSamplers());
   }
 
-  SkASSERT(!fPipeline->isScissorEnabled() || this->hasFixedScissor() || this->hasDynamicScissors());
+  // TODO: We will soon remove dynamic state from GrProgramInfo. But while migrating to the new
+  // bind/draw API on GrOpsRenderPass, some code will not set the dynamic state because it calls
+  // setScissorRect() directly. Once dynamic state (including this validation code) is moved out
+  // of GrProgramInfo, we can restore this assert.
+#  if 0
+    SkASSERT((fPipeline->isScissorTestEnabled()) ==
+             (this->hasFixedScissor() || this->hasDynamicScissors()));
+#  else
+  if (!fPipeline->isScissorTestEnabled()) {
+    SkASSERT(!this->hasFixedScissor() && !this->hasDynamicScissors());
+  }
+#  endif
 
   if (this->hasDynamicPrimProcTextures()) {
     // Check that, for a given sampler, the properties of the dynamic textures remain
@@ -113,30 +128,6 @@ void GrProgramInfo::checkMSAAAndMIPSAreResolved() const {
 
   for (auto [sampler, fp] : GrFragmentProcessor::PipelineTextureSamplerRange(this->pipeline())) {
     assertResolved(sampler.peekTexture(), sampler.samplerState());
-  }
-}
-
-void GrProgramInfo::compatibleWithMeshes(
-    const GrMesh meshes[], int meshCount, const GrCaps& caps) const {
-  SkASSERT(!fNumDynamicStateArrays || meshCount == fNumDynamicStateArrays);
-
-  for (int i = 0; i < meshCount; ++i) {
-    SkASSERT(fPrimitiveType == meshes[i].primitiveType());
-    if (GrPrimitiveType::kPatches == fPrimitiveType) {
-      SkASSERT(fTessellationPatchVertexCount == meshes[i].tessellationPatchVertexCount());
-    }
-    SkASSERT(fPrimProc->hasVertexAttributes() == SkToBool(meshes[i].vertexBuffer()));
-    SkASSERT(fPrimProc->hasInstanceAttributes() == SkToBool(meshes[i].instanceBuffer()));
-    if (fPipeline->usesConservativeRaster()) {
-      // Conservative raster, by default, only supports triangles. Implementations can
-      // optionally indicate that they also support points and lines, but we don't currently
-      // query or track that info.
-      SkASSERT(GrIsPrimTypeTris(meshes[i].primitiveType()));
-    }
-    SkASSERT(
-        GrPrimitiveType::kPatches != meshes[i].primitiveType() ||
-        caps.shaderCaps()->tessellationSupport());
-    SkASSERT(GrPrimitiveRestart::kNo == meshes[i].primitiveRestart() || caps.usePrimitiveRestart());
   }
 }
 

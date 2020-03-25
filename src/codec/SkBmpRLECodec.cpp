@@ -66,7 +66,7 @@ bool SkBmpRLECodec::createColorTable(SkColorType dstColorType) {
     // Inform the caller of the number of colors
     uint32_t maxColors = 1 << this->bitsPerPixel();
     // Don't bother reading more than maxColors.
-    const uint32_t numColorsToRead = fNumColors == 0 ? maxColors : SkTMin(fNumColors, maxColors);
+    const uint32_t numColorsToRead = fNumColors == 0 ? maxColors : std::min(fNumColors, maxColors);
 
     // Read the color table from the stream
     colorBytes = numColorsToRead * fBytesPerColor;
@@ -464,7 +464,7 @@ int SkBmpRLECodec::decodeRLE(const SkImageInfo& dstInfo, void* dst, size_t dstRo
       // If the first byte read is not a flag, it indicates the number of
       // pixels to set in RLE mode.
       const uint8_t numPixels = flag;
-      const int endX = SkTMin<int>(x + numPixels, width);
+      const int endX = std::min<int>(x + numPixels, width);
 
       if (24 == this->bitsPerPixel()) {
         // In RLE24, the second byte read is part of the pixel color.

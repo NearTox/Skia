@@ -10,6 +10,7 @@
 
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/GrNativeRect.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrSwizzle.h"
 
@@ -41,7 +42,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
    */
   void setNeedsStencil(int8_t numStencilSamples) {
     SkASSERT(numStencilSamples >= fSampleCnt);
-    fNumStencilSamples = SkTMax(numStencilSamples, fNumStencilSamples);
+    fNumStencilSamples = std::max(numStencilSamples, fNumStencilSamples);
   }
 
   /**
@@ -58,10 +59,12 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
 
   bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
 
-  void markMSAADirty(const SkIRect& dirtyRect) {
+  void markMSAADirty(const SkIRect& dirtyRect, GrSurfaceOrigin origin) {
     SkASSERT(SkIRect::MakeSize(this->dimensions()).contains(dirtyRect));
     SkASSERT(this->requiresManualMSAAResolve());
-    fMSAADirtyRect.join(dirtyRect);
+    auto nativeRect =
+        GrNativeRect::MakeRelativeTo(origin, this->backingStoreDimensions().height(), dirtyRect);
+    fMSAADirtyRect.join(nativeRect.asSkIRect());
   }
   void markMSAAResolved() {
     SkASSERT(this->requiresManualMSAAResolve());
@@ -89,7 +92,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
 
   // Deferred version
   GrRenderTargetProxy(
-      const GrCaps&, const GrBackendFormat&, const GrSurfaceDesc&, int sampleCount, GrSurfaceOrigin,
+      const GrCaps&, const GrBackendFormat&, SkISize, int sampleCount,
       const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
       GrInternalSurfaceFlags, UseAllocator);
 
@@ -106,13 +109,13 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // The minimal knowledge version is used for CCPR where we are generating an atlas but we do not
   // know the final size until flush time.
   GrRenderTargetProxy(
-      LazyInstantiateCallback&&, const GrBackendFormat&, const GrSurfaceDesc&, int sampleCount,
-      GrSurfaceOrigin, const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
+      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, int sampleCount,
+      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
       GrInternalSurfaceFlags, UseAllocator, WrapsVkSecondaryCB);
 
   // Wrapped version
   GrRenderTargetProxy(
-      sk_sp<GrSurface>, GrSurfaceOrigin, const GrSwizzle& textureSwizzle, UseAllocator,
+      sk_sp<GrSurface>, const GrSwizzle& textureSwizzle, UseAllocator,
       WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;

@@ -136,7 +136,8 @@ sk_sp<SkSpecialImage> SkDropShadowImageFilterImpl::onFilterImage(
   ctx.ctm().mapVectors(&offsetVec, 1);
 
   canvas->translate(
-      SkIntToScalar(inputOffset.fX - bounds.fLeft), SkIntToScalar(inputOffset.fY - bounds.fTop));
+      SkIntToScalar(inputOffset.fX) - SkIntToScalar(bounds.fLeft),
+      SkIntToScalar(inputOffset.fY) - SkIntToScalar(bounds.fTop));
   input->draw(canvas, offsetVec.fX, offsetVec.fY, &paint);
 
   if (!fShadowOnly) {

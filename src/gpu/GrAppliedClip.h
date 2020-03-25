@@ -25,6 +25,9 @@ class GrAppliedHardClip {
   GrAppliedHardClip(const GrAppliedHardClip&) = delete;
 
   const GrScissorState& scissorState() const { return fScissorState; }
+  const SkIRect* scissorRectIfEnabled() const {
+    return fScissorState.enabled() ? &fScissorState.rect() : nullptr;
+  }
   const GrWindowRectsState& windowRectsState() const { return fWindowRectsState; }
   uint32_t stencilStackID() const { return fStencilStackID; }
   bool hasStencilClip() const { return SkClipStack::kInvalidGenID != fStencilStackID; }
@@ -79,6 +82,7 @@ class GrAppliedClip {
   GrAppliedClip(const GrAppliedClip&) = delete;
 
   const GrScissorState& scissorState() const { return fHardClip.scissorState(); }
+  const SkIRect* scissorRectIfEnabled() const { return fHardClip.scissorRectIfEnabled(); }
   const GrWindowRectsState& windowRectsState() const { return fHardClip.windowRectsState(); }
   uint32_t stencilStackID() const { return fHardClip.stencilStackID(); }
   bool hasStencilClip() const { return fHardClip.hasStencilClip(); }

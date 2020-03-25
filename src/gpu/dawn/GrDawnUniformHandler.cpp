@@ -142,7 +142,7 @@ uint32_t get_ubo_offset(uint32_t* currentOffset, GrSLType type, int arrayCount) 
   uint32_t uniformOffset = *currentOffset + offsetDiff;
   SkASSERT(sizeof(float) == 4);
   if (arrayCount) {
-    uint32_t elementSize = SkTMax<uint32_t>(16, grsltype_to_size(type));
+    uint32_t elementSize = std::max<uint32_t>(16, grsltype_to_size(type));
     SkASSERT(0 == (elementSize & 0xF));
     *currentOffset = uniformOffset + elementSize * arrayCount;
   } else {
@@ -182,7 +182,7 @@ void GrDawnUniformHandler::updateUniformVisibility(UniformHandle u, uint32_t vis
 }
 
 GrGLSLUniformHandler::SamplerHandle GrDawnUniformHandler::addSampler(
-    const GrSurfaceProxy*, GrSamplerState, const GrSwizzle& swizzle, const char* name,
+    const GrBackendFormat&, GrSamplerState, const GrSwizzle& swizzle, const char* name,
     const GrShaderCaps* caps) {
   SkString mangleName;
   char prefix = 's';

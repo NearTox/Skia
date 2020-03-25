@@ -469,7 +469,7 @@ void GrVkCaps::applyDriverCorrectnessWorkarounds(const VkPhysicalDevicePropertie
 
   // AMD advertises support for MAX_UINT vertex input attributes, but in reality only supports 32.
   if (kAMD_VkVendor == properties.vendorID) {
-    fMaxVertexAttributes = SkTMin(fMaxVertexAttributes, 32);
+    fMaxVertexAttributes = std::min(fMaxVertexAttributes, 32);
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -497,7 +497,7 @@ void GrVkCaps::initGrCaps(
   // attribs timeout looping over that many. For now, we'll cap this at 64 max and can raise it if
   // we ever find that need.
   static const uint32_t kMaxVertexAttributes = 64;
-  fMaxVertexAttributes = SkTMin(properties.limits.maxVertexInputAttributes, kMaxVertexAttributes);
+  fMaxVertexAttributes = std::min(properties.limits.maxVertexInputAttributes, kMaxVertexAttributes);
 
   if (properties.limits.standardSampleLocations) {
     fSampleLocationsSupport = true;
@@ -520,14 +520,14 @@ void GrVkCaps::initGrCaps(
 
   // We could actually query and get a max size for each config, however maxImageDimension2D will
   // give the minimum max size across all configs. So for simplicity we will use that for now.
-  fMaxRenderTargetSize = SkTMin(properties.limits.maxImageDimension2D, (uint32_t)INT_MAX);
-  fMaxTextureSize = SkTMin(properties.limits.maxImageDimension2D, (uint32_t)INT_MAX);
+  fMaxRenderTargetSize = std::min(properties.limits.maxImageDimension2D, (uint32_t)INT_MAX);
+  fMaxTextureSize = std::min(properties.limits.maxImageDimension2D, (uint32_t)INT_MAX);
   if (fDriverBugWorkarounds.max_texture_size_limit_4096) {
-    fMaxTextureSize = SkTMin(fMaxTextureSize, 4096);
+    fMaxTextureSize = std::min(fMaxTextureSize, 4096);
   }
   // Our render targets are always created with textures as the color
   // attachment, hence this min:
-  fMaxRenderTargetSize = SkTMin(fMaxTextureSize, fMaxRenderTargetSize);
+  fMaxRenderTargetSize = std::min(fMaxTextureSize, fMaxRenderTargetSize);
 
   // TODO: check if RT's larger than 4k incur a performance cost on ARM.
   fMaxPreferredRenderTargetSize = fMaxRenderTargetSize;
@@ -603,8 +603,8 @@ void GrVkCaps::initShaderCaps(
   shaderCaps->fFloatIs32Bits = true;
   shaderCaps->fHalfIs32Bits = false;
 
-  shaderCaps->fMaxFragmentSamplers = SkTMin(
-      SkTMin(
+  shaderCaps->fMaxFragmentSamplers = std::min(
+      std::min(
           properties.limits.maxPerStageDescriptorSampledImages,
           properties.limits.maxPerStageDescriptorSamplers),
       (uint32_t)INT_MAX);
@@ -1356,7 +1356,7 @@ int GrVkCaps::getRenderTargetSampleCount(int requestedCount, const GrBackendForm
 }
 
 int GrVkCaps::getRenderTargetSampleCount(int requestedCount, VkFormat format) const {
-  requestedCount = SkTMax(1, requestedCount);
+  requestedCount = std::max(1, requestedCount);
 
   const FormatInfo& info = this->getFormatInfo(format);
 

@@ -396,8 +396,8 @@ class ThinAASample : public Sample {
       case 'u': fAngle = 0.f; return true;
       case 'y': fAngle = 90.f; return true;
       case ' ': fAngle = SkScalarMod(fAngle + 15.f, 360.f); return true;
-      case '-': fStrokeWidth = SkMaxScalar(0.1f, fStrokeWidth - 0.05f); return true;
-      case '=': fStrokeWidth = SkMinScalar(1.f, fStrokeWidth + 0.05f); return true;
+      case '-': fStrokeWidth = std::max(0.1f, fStrokeWidth - 0.05f); return true;
+      case '=': fStrokeWidth = std::min(1.f, fStrokeWidth + 0.05f); return true;
     }
     return false;
   }

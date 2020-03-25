@@ -9,9 +9,9 @@
 #define GrSoftwarePathRenderer_DEFINED
 
 #include "src/gpu/GrPathRenderer.h"
+#include "src/gpu/GrSurfaceProxyView.h"
 
 class GrProxyProvider;
-class GrTextureProxy;
 
 /**
  * This class uses the software side to render a path to an SkBitmap and
@@ -40,7 +40,7 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
   // space. The 'viewMatrix' will be used to ensure the correct local coords are provided to
   // any fragment processors in the paint.
   static void DrawToTargetWithShapeMask(
-      sk_sp<GrTextureProxy> proxy, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      GrSurfaceProxyView, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
       const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
       const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
       const SkIRect& deviceSpaceRectToDraw);

@@ -222,7 +222,7 @@ bool SkTSpan::initBounds(const SkTCurve& c) {
   fBounds.setBounds(*fPart);
   fCoinStart.init();
   fCoinEnd.init();
-  fBoundsMax = SkTMax(fBounds.width(), fBounds.height());
+  fBoundsMax = std::max(fBounds.width(), fBounds.height());
   fCollapsed = fPart->collapsed();
   fHasPerp = false;
   fDeleted = false;
@@ -273,12 +273,12 @@ int SkTSpan::linearIntersects(const SkTCurve& q2) const {
   double origY = (*fPart)[start].fY;
   double adj = (*fPart)[end].fX - origX;
   double opp = (*fPart)[end].fY - origY;
-  double maxPart = SkTMax(fabs(adj), fabs(opp));
+  double maxPart = std::max(fabs(adj), fabs(opp));
   double sign = 0;  // initialization to shut up warning in release build
   for (int n = 0; n < q2.pointCount(); ++n) {
     double dx = q2[n].fY - origY;
     double dy = q2[n].fX - origX;
-    double maxVal = SkTMax(maxPart, SkTMax(fabs(dx), fabs(dy)));
+    double maxVal = std::max(maxPart, std::max(fabs(dx), fabs(dy)));
     double test = (q2[n].fY - origY) * adj - (q2[n].fX - origX) * opp;
     if (precisely_zero_when_compared_to(test, maxVal)) {
       return 1;
@@ -441,7 +441,7 @@ void SkTSpan::validate() const {
 #endif
 #if DEBUG_T_SECT
   SkASSERT(fBounds.width() || fBounds.height() || fCollapsed);
-  SkASSERT(fBoundsMax == SkTMax(fBounds.width(), fBounds.height()) || fCollapsed == 0xFF);
+  SkASSERT(fBoundsMax == std::max(fBounds.width(), fBounds.height()) || fCollapsed == 0xFF);
   SkASSERT(0 <= fStartT);
   SkASSERT(fEndT <= 1);
   SkASSERT(fStartT <= fEndT);
@@ -677,8 +677,8 @@ void SkTSect::coincidentForce(SkTSect* sect2, double start1s, double start1e) {
   first->fCoinStart.setPerp(fCurve, start1s, fCurve[0], sect2->fCurve);
   first->fCoinEnd.setPerp(fCurve, start1e, this->pointLast(), sect2->fCurve);
   bool oppMatched = first->fCoinStart.perpT() < first->fCoinEnd.perpT();
-  double oppStartT = first->fCoinStart.perpT() == -1 ? 0 : SkTMax(0., first->fCoinStart.perpT());
-  double oppEndT = first->fCoinEnd.perpT() == -1 ? 1 : SkTMin(1., first->fCoinEnd.perpT());
+  double oppStartT = first->fCoinStart.perpT() == -1 ? 0 : std::max(0., first->fCoinStart.perpT());
+  double oppEndT = first->fCoinEnd.perpT() == -1 ? 1 : std::min(1., first->fCoinEnd.perpT());
   if (!oppMatched) {
     using std::swap;
     swap(oppStartT, oppEndT);
@@ -1143,8 +1143,8 @@ int SkTSect::linesIntersect(SkTSpan* span, SkTSect* opp, SkTSpan* oppSpan, SkInt
     using std::swap;
     swap(tStart, tEnd);
   }
-  tStart = SkTMax(tStart, span->fStartT);
-  tEnd = SkTMin(tEnd, span->fEndT);
+  tStart = std::max(tStart, span->fStartT);
+  tEnd = std::min(tEnd, span->fEndT);
   if (tStart > tEnd) {
     return 0;
   }
@@ -1673,10 +1673,10 @@ struct SkClosestRecord {
   }
 
   void update(const SkClosestRecord& mate) {
-    fC1StartT = SkTMin(fC1StartT, mate.fC1StartT);
-    fC1EndT = SkTMax(fC1EndT, mate.fC1EndT);
-    fC2StartT = SkTMin(fC2StartT, mate.fC2StartT);
-    fC2EndT = SkTMax(fC2EndT, mate.fC2EndT);
+    fC1StartT = std::min(fC1StartT, mate.fC1StartT);
+    fC1EndT = std::max(fC1EndT, mate.fC1EndT);
+    fC2StartT = std::min(fC2StartT, mate.fC2StartT);
+    fC2EndT = std::max(fC2EndT, mate.fC2EndT);
   }
 
   const SkTSpan* fC1Span;

@@ -100,7 +100,7 @@ bool SkDiscretePathEffect::onFilterPath(
     } else {
       int n = SkScalarRoundToInt(length / fSegLength);
       constexpr int kMaxReasonableIterations = 100000;
-      n = SkTMin(n, kMaxReasonableIterations);
+      n = std::min(n, kMaxReasonableIterations);
       SkScalar delta = length / n;
       SkScalar distance = 0;
 

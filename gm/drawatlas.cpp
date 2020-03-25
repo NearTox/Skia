@@ -135,9 +135,9 @@ static void draw_text_on_path(
 
   // Compute a conservative bounds so we can cull the draw
   const SkRect fontb = SkFontPriv::GetFontBounds(font);
-  const SkScalar max = SkTMax(
-      SkTMax(SkScalarAbs(fontb.fLeft), SkScalarAbs(fontb.fRight)),
-      SkTMax(SkScalarAbs(fontb.fTop), SkScalarAbs(fontb.fBottom)));
+  const SkScalar max = std::max(
+      std::max(SkScalarAbs(fontb.fLeft), SkScalarAbs(fontb.fRight)),
+      std::max(SkScalarAbs(fontb.fTop), SkScalarAbs(fontb.fBottom)));
   const SkRect bounds = path.getBounds().makeOutset(max, max);
 
   SkAutoTArray<SkGlyphID> glyphs(count);

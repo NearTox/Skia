@@ -23,9 +23,9 @@ sk_sp<GrTextureProxy> MakeTextureProxyFromData(
     size_t rowBytes);
 
 GrProgramInfo* CreateProgramInfo(
-    const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* dstView, GrAppliedClip&&,
-    const GrXferProcessor::DstProxyView& dstProxyView, GrGeometryProcessor*, SkBlendMode,
-    GrPrimitiveType, GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone,
+    const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+    const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, SkBlendMode, GrPrimitiveType,
+    GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone,
     const GrUserStencilSettings* stencil = &GrUserStencilSettings::kUnused);
 
 }  // namespace sk_gpu_test

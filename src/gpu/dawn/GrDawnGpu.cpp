@@ -137,7 +137,7 @@ bool GrDawnGpu::onTransferPixelsFrom(
 
 ////////////////////////////////////////////////////////////////////////////////
 sk_sp<GrTexture> GrDawnGpu::onCreateTexture(
-    const GrSurfaceDesc& desc, const GrBackendFormat& backendFormat, GrRenderable renderable,
+    SkISize dimensions, const GrBackendFormat& backendFormat, GrRenderable renderable,
     int renderTargetSampleCnt, SkBudgeted budgeted, GrProtected, int mipLevelCount,
     uint32_t levelClearMask) {
   SkASSERT(!levelClearMask);
@@ -150,8 +150,8 @@ sk_sp<GrTexture> GrDawnGpu::onCreateTexture(
       mipLevelCount > 1 ? GrMipMapsStatus::kDirty : GrMipMapsStatus::kNotAllocated;
 
   return GrDawnTexture::Make(
-      this, {desc.fWidth, desc.fHeight}, format, renderable, renderTargetSampleCnt, budgeted,
-      mipLevelCount, mipMapsStatus);
+      this, dimensions, format, renderable, renderTargetSampleCnt, budgeted, mipLevelCount,
+      mipMapsStatus);
 }
 
 sk_sp<GrTexture> GrDawnGpu::onCreateCompressedTexture(
@@ -163,7 +163,7 @@ sk_sp<GrTexture> GrDawnGpu::onCreateCompressedTexture(
 
 sk_sp<GrTexture> GrDawnGpu::onWrapBackendTexture(
     const GrBackendTexture& backendTex, GrColorType colorType, GrWrapOwnership ownership,
-    GrWrapCacheable cacheable, GrIOType) {
+    GrWrapCacheable cacheable, GrIOType ioType) {
   GrDawnTextureInfo info;
   if (!backendTex.getDawnTextureInfo(&info)) {
     return nullptr;
@@ -172,7 +172,7 @@ sk_sp<GrTexture> GrDawnGpu::onWrapBackendTexture(
   SkISize dimensions = {backendTex.width(), backendTex.height()};
   GrMipMapsStatus status = GrMipMapsStatus::kNotAllocated;
   return GrDawnTexture::MakeWrapped(
-      this, dimensions, GrRenderable::kNo, 1, status, cacheable, info);
+      this, dimensions, GrRenderable::kNo, 1, status, cacheable, ioType, info);
 }
 
 sk_sp<GrTexture> GrDawnGpu::onWrapCompressedBackendTexture(
@@ -196,7 +196,7 @@ sk_sp<GrTexture> GrDawnGpu::onWrapRenderableBackendTexture(
 
   GrMipMapsStatus status = GrMipMapsStatus::kNotAllocated;
   return GrDawnTexture::MakeWrapped(
-      this, dimensions, GrRenderable::kYes, sampleCnt, status, cacheable, info);
+      this, dimensions, GrRenderable::kYes, sampleCnt, status, cacheable, kRW_GrIOType, info);
 }
 
 sk_sp<GrRenderTarget> GrDawnGpu::onWrapBackendRenderTarget(
@@ -313,8 +313,8 @@ GrBackendTexture GrDawnGpu::onCreateBackendTexture(
     dstTexture.origin = {0, 0, 0};
     wgpu::Extent3D copySize = {(uint32_t)w, (uint32_t)h, 1};
     copyEncoder.CopyBufferToTexture(&srcBuffer, &dstTexture, &copySize);
-    w = SkTMax(1, w / 2);
-    h = SkTMax(1, h / 2);
+    w = std::max(1, w / 2);
+    h = std::max(1, h / 2);
   }
   wgpu::CommandBuffer cmdBuf = copyEncoder.Finish();
   fQueue.Submit(1, &cmdBuf);
@@ -337,6 +337,8 @@ void GrDawnGpu::deleteBackendTexture(const GrBackendTexture& tex) {
     info.fTexture = nullptr;
   }
 }
+
+bool GrDawnGpu::compile(const GrProgramDesc&, const GrProgramInfo&) { return false; }
 
 #if GR_TEST_UTILS
 bool GrDawnGpu::isTestingOnlyBackendTexture(const GrBackendTexture& tex) const {

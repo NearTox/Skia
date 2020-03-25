@@ -30,6 +30,7 @@ HashAndEncode::HashAndEncode(const SkBitmap& bitmap) : fSize(bitmap.info().dimen
         case kRGBA_8888_SkColorType:          srcFmt = skcms_PixelFormat_RGBA_8888;    break;
         case kBGRA_8888_SkColorType:          srcFmt = skcms_PixelFormat_BGRA_8888;    break;
         case kRGBA_1010102_SkColorType:       srcFmt = skcms_PixelFormat_RGBA_1010102; break;
+        case kBGRA_1010102_SkColorType: srcFmt = skcms_PixelFormat_BGRA_1010102; break;
         case kGray_8_SkColorType:             srcFmt = skcms_PixelFormat_G_8;          break;
         case kRGBA_F16Norm_SkColorType:       srcFmt = skcms_PixelFormat_RGBA_hhhh;    break;
         case kRGBA_F16_SkColorType:           srcFmt = skcms_PixelFormat_RGBA_hhhh;    break;
@@ -39,6 +40,10 @@ HashAndEncode::HashAndEncode(const SkBitmap& bitmap) : fSize(bitmap.info().dimen
                                               srcAlpha = skcms_AlphaFormat_Opaque;     break;
         case kRGB_101010x_SkColorType:        srcFmt = skcms_PixelFormat_RGBA_1010102;
                                               srcAlpha = skcms_AlphaFormat_Opaque;     break;
+        case kBGR_101010x_SkColorType:
+          srcFmt = skcms_PixelFormat_BGRA_1010102;
+          srcAlpha = skcms_AlphaFormat_Opaque;
+          break;
         case kR8G8_unorm_SkColorType:         return;
         case kR16G16_unorm_SkColorType:       return;
         case kR16G16_float_SkColorType:       return;

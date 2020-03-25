@@ -41,7 +41,7 @@ SkEventTracer::Handle SkDebugfTracer::addTraceEvent(
         if (newLineAt > 0) {
           truncAt = newLineAt;
         }
-        truncAt = SkTMin(truncAt, kMaxLen);
+        truncAt = std::min(truncAt, kMaxLen);
         if (truncAt < string.size()) {
           string.resize(truncAt);
           string.append("...");

@@ -66,7 +66,7 @@ static std::unique_ptr<GrFragmentProcessor> make_textured_colorizer(
     return nullptr;
   }
 
-  return GrTextureGradientColorizer::Make(view.detachProxy());
+  return GrTextureGradientColorizer::Make(std::move(view));
 }
 
 // Analyze the shader's color stops and positions and chooses an appropriate colorizer to represent

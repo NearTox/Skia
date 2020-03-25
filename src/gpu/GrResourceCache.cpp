@@ -8,7 +8,6 @@
 #include "src/gpu/GrResourceCache.h"
 #include <atomic>
 #include "include/gpu/GrContext.h"
-#include "include/gpu/GrTexture.h"
 #include "include/private/GrSingleOwner.h"
 #include "include/private/SkTo.h"
 #include "include/utils/SkRandom.h"
@@ -21,6 +20,7 @@
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpuResourceCacheAccess.h"
 #include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTextureProxyCacheAccess.h"
 #include "src/gpu/GrTracing.h"
 #include "src/gpu/SkGr.h"
@@ -140,8 +140,8 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
   size_t size = resource->gpuMemorySize();
   SkDEBUGCODE(++fCount;) fBytes += size;
 #if GR_CACHE_STATS
-  fHighWaterCount = SkTMax(this->getResourceCount(), fHighWaterCount);
-  fHighWaterBytes = SkTMax(fBytes, fHighWaterBytes);
+  fHighWaterCount = std::max(this->getResourceCount(), fHighWaterCount);
+  fHighWaterBytes = std::max(fBytes, fHighWaterBytes);
 #endif
   if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
     ++fBudgetedCount;
@@ -150,8 +150,8 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
         "skia.gpu.cache", "skia budget", "used", fBudgetedBytes, "free",
         fMaxBytes - fBudgetedBytes);
 #if GR_CACHE_STATS
-    fBudgetedHighWaterCount = SkTMax(fBudgetedCount, fBudgetedHighWaterCount);
-    fBudgetedHighWaterBytes = SkTMax(fBudgetedBytes, fBudgetedHighWaterBytes);
+    fBudgetedHighWaterCount = std::max(fBudgetedCount, fBudgetedHighWaterCount);
+    fBudgetedHighWaterBytes = std::max(fBudgetedBytes, fBudgetedHighWaterBytes);
 #endif
   }
   if (resource->resourcePriv().getScratchKey().isValid() && !resource->getUniqueKey().isValid()) {
@@ -472,8 +472,8 @@ void GrResourceCache::didChangeBudgetStatus(GrGpuResource* resource) {
     ++fBudgetedCount;
     fBudgetedBytes += size;
 #if GR_CACHE_STATS
-    fBudgetedHighWaterBytes = SkTMax(fBudgetedBytes, fBudgetedHighWaterBytes);
-    fBudgetedHighWaterCount = SkTMax(fBudgetedCount, fBudgetedHighWaterCount);
+    fBudgetedHighWaterBytes = std::max(fBudgetedBytes, fBudgetedHighWaterBytes);
+    fBudgetedHighWaterCount = std::max(fBudgetedCount, fBudgetedHighWaterCount);
 #endif
     if (!resource->resourcePriv().isPurgeable() && !resource->cacheAccess().hasRef()) {
       ++fNumBudgetedResourcesFlushWillMakePurgeable;
@@ -572,7 +572,7 @@ void GrResourceCache::purgeResourcesNotUsedSince(GrStdSteadyClock::time_point pu
 }
 
 void GrResourceCache::purgeUnlockedResources(size_t bytesToPurge, bool preferScratchResources) {
-  const size_t tmpByteBudget = SkTMax((size_t)0, fBytes - bytesToPurge);
+  const size_t tmpByteBudget = std::max((size_t)0, fBytes - bytesToPurge);
   bool stillOverbudget = tmpByteBudget < fBytes;
 
   if (preferScratchResources && bytesToPurge < fPurgeableBytes) {

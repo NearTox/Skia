@@ -14,8 +14,7 @@
 class SkMaskFilter;
 
 namespace sksg {
-class MaskFilter;
-class MaskFilterEffect;
+class MaskShaderEffect;
 }  // namespace sksg
 
 namespace skottie {
@@ -45,11 +44,13 @@ class EffectBuilder final : public SkNoncopyable {
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachInvertEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
-  sk_sp<sksg::RenderNode> attachLevelsEffect(
+  sk_sp<sksg::RenderNode> attachEasyLevelsEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachLinearWipeEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachMotionTileEffect(
+      const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachProLevelsEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachRadialWipeEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
@@ -70,20 +71,41 @@ class EffectBuilder final : public SkNoncopyable {
   const SkSize fLayerSize;
 };
 
-/**
- * Base class for mask-filter-related effects.
- */
-class MaskFilterEffectBase : public AnimatablePropertyContainer {
+// Syntactic sugar/helper.
+class EffectBinder {
  public:
-  const sk_sp<sksg::MaskFilterEffect>& node() const { return fMaskEffectNode; }
+  EffectBinder(
+      const skjson::ArrayValue& jprops, const AnimationBuilder& abuilder,
+      AnimatablePropertyContainer* acontainer)
+      : fProps(jprops), fBuilder(abuilder), fContainer(acontainer) {}
+
+  template <typename T>
+  const EffectBinder& bind(size_t prop_index, T& value) const {
+    fContainer->bind(fBuilder, EffectBuilder::GetPropValue(fProps, prop_index), value);
+
+    return *this;
+  }
+
+ private:
+  const skjson::ArrayValue& fProps;
+  const AnimationBuilder& fBuilder;
+  AnimatablePropertyContainer* fContainer;
+};
+
+/**
+ * Base class for mask-shader-related effects.
+ */
+class MaskShaderEffectBase : public AnimatablePropertyContainer {
+ public:
+  const sk_sp<sksg::MaskShaderEffect>& node() const { return fMaskEffectNode; }
 
  protected:
-  MaskFilterEffectBase(sk_sp<sksg::RenderNode>, const SkSize&);
+  MaskShaderEffectBase(sk_sp<sksg::RenderNode>, const SkSize&);
 
   const SkSize& layerSize() const { return fLayerSize; }
 
   struct MaskInfo {
-    sk_sp<SkMaskFilter> fMask;
+    sk_sp<SkShader> fMaskShader;
     bool fVisible;
   };
   virtual MaskInfo onMakeMask() const = 0;
@@ -91,8 +113,7 @@ class MaskFilterEffectBase : public AnimatablePropertyContainer {
  private:
   void onSync() final;
 
-  const sk_sp<sksg::MaskFilter> fMaskNode;
-  const sk_sp<sksg::MaskFilterEffect> fMaskEffectNode;
+  const sk_sp<sksg::MaskShaderEffect> fMaskEffectNode;
   const SkSize fLayerSize;
 };
 

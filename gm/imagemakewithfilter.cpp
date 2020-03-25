@@ -241,6 +241,9 @@ class ImageMakeWithFilterGM : public skiagm::GM {
       mainImage = fMainImage;
       auxImage = fAuxImage;
     }
+    if (!mainImage || !auxImage) {
+      return;
+    }
     SkASSERT(mainImage && (mainImage->isTextureBacked() || !canvas->getGrContext()));
     SkASSERT(auxImage && (auxImage->isTextureBacked() || !canvas->getGrContext()));
 

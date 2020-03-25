@@ -13,7 +13,6 @@
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrPipeline.h"
-#include "src/gpu/ccpr/GrCCAtlas.h"
 #include "src/gpu/ccpr/GrOctoBounds.h"
 
 class GrCCPathCacheEntry;
@@ -51,10 +50,8 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
   enum class CoverageMode : bool { kCoverageCount, kLiteral };
 
-  static CoverageMode GetCoverageMode(GrCCAtlas::CoverageType coverageType) {
-    return (GrCCAtlas::CoverageType::kFP16_CoverageCount == coverageType)
-               ? CoverageMode::kCoverageCount
-               : CoverageMode::kLiteral;
+  static GrColorType GetColorTypeFromCoverageMode(CoverageMode mode) {
+    return mode == CoverageMode::kCoverageCount ? GrColorType::kAlpha_F16 : GrColorType::kAlpha_8;
   }
 
   GrCCPathProcessor(
@@ -68,7 +65,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
   void drawPaths(
-      GrOpFlushState*, const GrPipeline&, const GrPipeline::FixedDynamicState*,
+      GrOpFlushState*, const GrPipeline&, const GrSurfaceProxy& atlasProxy,
       const GrCCPerFlushResources&, int baseInstance, int endInstance, const SkRect& bounds) const;
 
  private:

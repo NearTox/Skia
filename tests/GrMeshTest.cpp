@@ -155,7 +155,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrMeshTest, reporter, ctxInfo) {
       },
       [&](DrawMeshHelper* helper) {
         for (int y = 0; y < kBoxCountY; ++y) {
-          GrMesh mesh(GrPrimitiveType::kTriangles);
+          GrMesh mesh;
           mesh.setNonIndexedNonInstanced(kBoxCountX * 6);
           mesh.setVertexData(helper->fVertBuffer, y * kBoxCountX * 6);
           helper->drawMesh(mesh, GrPrimitiveType::kTriangles);
@@ -177,9 +177,9 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrMeshTest, reporter, ctxInfo) {
         // index.
         while (i < kBoxCount) {
           static_assert(kIndexPatternRepeatCount >= 3);
-          int repetitionCount = SkTMin(3 - baseRepetition, kBoxCount - i);
+          int repetitionCount = std::min(3 - baseRepetition, kBoxCount - i);
 
-          GrMesh mesh(GrPrimitiveType::kTriangles);
+          GrMesh mesh;
           mesh.setIndexed(
               helper->fIndexBuffer, repetitionCount * 6, baseRepetition * 6, baseRepetition * 4,
               (baseRepetition + repetitionCount) * 4 - 1, GrPrimitiveRestart::kNo);
@@ -203,7 +203,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrMeshTest, reporter, ctxInfo) {
         // Draw boxes one line at a time to exercise base vertex. setIndexedPatterned does
         // not support a base index.
         for (int y = 0; y < kBoxCountY; ++y) {
-          GrMesh mesh(GrPrimitiveType::kTriangles);
+          GrMesh mesh;
           mesh.setIndexedPatterned(
               helper->fIndexBuffer, 6, 4, kBoxCountX, kIndexPatternRepeatCount);
           mesh.setVertexData(helper->fVertBuffer, y * kBoxCountX * 4);
@@ -236,7 +236,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrMeshTest, reporter, ctxInfo) {
           for (int y = 0; y < kBoxCountY; ++y) {
             GrPrimitiveType primitiveType =
                 indexed ? GrPrimitiveType::kTriangles : GrPrimitiveType::kTriangleStrip;
-            GrMesh mesh(primitiveType);
+            GrMesh mesh;
             if (indexed) {
               VALIDATE(helper->fIndexBuffer);
               mesh.setIndexedInstanced(
@@ -424,10 +424,11 @@ void DrawMeshHelper::drawMesh(const GrMesh& mesh, GrPrimitiveType primitiveType)
 
   GrProgramInfo programInfo(
       fState->proxy()->numSamples(), fState->proxy()->numStencilSamples(),
-      fState->proxy()->backendFormat(), fState->view()->origin(), pipeline, mtp, nullptr, nullptr,
-      0, primitiveType);
+      fState->proxy()->backendFormat(), fState->outputView()->origin(), pipeline, mtp, nullptr,
+      nullptr, 0, primitiveType);
 
-  fState->opsRenderPass()->draw(programInfo, &mesh, 1, SkRect::MakeIWH(kImageWidth, kImageHeight));
+  fState->opsRenderPass()->bindPipeline(programInfo, SkRect::MakeIWH(kImageWidth, kImageHeight));
+  fState->opsRenderPass()->drawMeshes(programInfo, &mesh, 1);
 }
 
 static void run_test(

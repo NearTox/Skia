@@ -8,9 +8,9 @@
 #include "modules/skottie/src/SkottieValue.h"
 
 #include "include/core/SkColor.h"
+#include "include/core/SkM44.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkSize.h"
-#include "include/private/SkM44.h"
 #include "include/private/SkNx.h"
 #include "modules/skottie/src/SkottieJson.h"
 #include "modules/skottie/src/SkottiePriv.h"
@@ -20,6 +20,12 @@ namespace skottie {
 template <>
 bool ValueTraits<ScalarValue>::FromJSON(
     const skjson::Value& jv, const internal::AnimationBuilder*, ScalarValue* v) {
+  return Parse(jv, v);
+}
+
+template <>
+bool ValueTraits<Vec2Value>::FromJSON(
+    const skjson::Value& jv, const internal::AnimationBuilder*, Vec2Value* v) {
   return Parse(jv, v);
 }
 

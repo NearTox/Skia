@@ -276,23 +276,20 @@ class GrTextBlob::VertexRegenerator {
    * SkGlyphCache.
    */
   VertexRegenerator(
-      GrResourceProvider*, GrTextBlob::SubRun* subRun, GrDeferredUploadTarget*, GrStrikeCache*,
-      GrAtlasManager*);
+      GrResourceProvider*, GrTextBlob::SubRun* subRun, GrDeferredUploadTarget*, GrAtlasManager*);
 
   // Return {success, number of glyphs regenerated}
   std::tuple<bool, int> regenerate(int begin, int end);
 
  private:
   // Return {success, number of glyphs regenerated}
-  std::tuple<bool, int> updateTextureCoordinatesMaybeStrike(int begin, int end);
+  std::tuple<bool, int> updateTextureCoordinates(int begin, int end);
 
   GrResourceProvider* fResourceProvider;
   GrDeferredUploadTarget* fUploadTarget;
-  GrStrikeCache* fGrStrikeCache;
   GrAtlasManager* fFullAtlasManager;
   SkTLazy<SkBulkGlyphMetricsAndImages> fMetricsAndImages;
   SubRun* fSubRun;
-  bool fRegenerateTextureCoordinates{false};
 };
 
 // -- GrTextBlob::SubRun ---------------------------------------------------------------------------

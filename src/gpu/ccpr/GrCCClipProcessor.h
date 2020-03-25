@@ -18,7 +18,8 @@ class GrCCClipProcessor : public GrFragmentProcessor {
 
   enum class MustCheckBounds : bool { kNo = false, kYes = true };
 
-  GrCCClipProcessor(const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
+  GrCCClipProcessor(GrSurfaceProxyView, const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
+  GrCCClipProcessor(const GrCaps&, const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
 
   const char* name() const override { return "GrCCClipProcessor"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;

@@ -8,7 +8,6 @@
 #include "src/gpu/GrDrawOpAtlas.h"
 
 #include "include/gpu/GrContext.h"
-#include "include/gpu/GrTexture.h"
 #include "src/core/SkOpts.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
@@ -18,7 +17,12 @@
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrResourceProviderPriv.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTracing.h"
+
+#ifdef DUMP_ATLAS_DATA
+static bool gDumpAtlasData = false;
+#endif
 
 // When proxy allocation is deferred until flush time the proxies acting as atlases require
 // special handling. This is because the usage that can be determined from the ops themselves
@@ -50,13 +54,37 @@ std::unique_ptr<GrDrawOpAtlas> GrDrawOpAtlas::Make(
     return nullptr;
   }
 
-  atlas->fEvictionCallbacks.emplace_back(evictor);
+  if (evictor != nullptr) {
+    atlas->fEvictionCallbacks.emplace_back(evictor);
+  }
   return atlas;
 }
 
-#ifdef DUMP_ATLAS_DATA
-static bool gDumpAtlasData = false;
-#endif
+// The two bits that make up the texture index are packed into the lower bits of the u and v
+// coordinate respectively.
+std::pair<uint16_t, uint16_t> GrDrawOpAtlas::PackIndexInTexCoords(
+    uint16_t u, uint16_t v, int pageIndex) {
+  SkASSERT(pageIndex >= 0 && pageIndex < 4);
+  uint16_t uBit = (pageIndex >> 1u) & 0x1u;
+  uint16_t vBit = pageIndex & 0x1u;
+  u <<= 1u;
+  u |= uBit;
+  v <<= 1u;
+  v |= vBit;
+  return std::make_pair(u, v);
+}
+
+std::tuple<uint16_t, uint16_t, int> GrDrawOpAtlas::UnpackIndexFromTexCoords(
+    uint16_t u, uint16_t v) {
+  int pageIndex = 0;
+  if (u & 0x1) {
+    pageIndex |= 0x2;
+  }
+  if (v & 0x1) {
+    pageIndex |= 0x1;
+  }
+  return std::make_tuple(u >> 1, v >> 1, pageIndex);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 GrDrawOpAtlas::Plot::Plot(
@@ -519,9 +547,7 @@ bool GrDrawOpAtlas::createPages(
     GrProxyProvider* proxyProvider, GenerationCounter* generationCounter) {
   SkASSERT(SkIsPow2(fTextureWidth) && SkIsPow2(fTextureHeight));
 
-  GrSurfaceDesc desc;
-  desc.fWidth = fTextureWidth;
-  desc.fHeight = fTextureHeight;
+  SkISize dims = {fTextureWidth, fTextureHeight};
 
   int numPlotsX = fTextureWidth / fPlotWidth;
   int numPlotsY = fTextureHeight / fPlotHeight;
@@ -529,8 +555,8 @@ bool GrDrawOpAtlas::createPages(
   for (uint32_t i = 0; i < this->maxPages(); ++i) {
     GrSwizzle swizzle = proxyProvider->caps()->getReadSwizzle(fFormat, fColorType);
     sk_sp<GrSurfaceProxy> proxy = proxyProvider->createProxy(
-        fFormat, desc, swizzle, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
-        SkBackingFit::kExact, SkBudgeted::kYes, GrProtected::kNo, GrInternalSurfaceFlags::kNone,
+        fFormat, dims, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kExact,
+        SkBudgeted::kYes, GrProtected::kNo, GrInternalSurfaceFlags::kNone,
         GrSurfaceProxy::UseAllocator::kNo);
     if (!proxy) {
       return false;
@@ -622,17 +648,17 @@ GrDrawOpAtlasConfig::GrDrawOpAtlasConfig(int maxTextureSize, size_t maxBytes) {
   SkASSERT(kARGBDimensions[index].width() <= kMaxAtlasDim);
   SkASSERT(kARGBDimensions[index].height() <= kMaxAtlasDim);
   fARGBDimensions.set(
-      SkTMin<int>(kARGBDimensions[index].width(), maxTextureSize),
-      SkTMin<int>(kARGBDimensions[index].height(), maxTextureSize));
-  fMaxTextureSize = SkTMin<int>(maxTextureSize, kMaxAtlasDim);
+      std::min<int>(kARGBDimensions[index].width(), maxTextureSize),
+      std::min<int>(kARGBDimensions[index].height(), maxTextureSize));
+  fMaxTextureSize = std::min<int>(maxTextureSize, kMaxAtlasDim);
 }
 
 SkISize GrDrawOpAtlasConfig::atlasDimensions(GrMaskFormat type) const {
   if (kA8_GrMaskFormat == type) {
     // A8 is always 2x the ARGB dimensions, clamped to the max allowed texture size
     return {
-        SkTMin<int>(2 * fARGBDimensions.width(), fMaxTextureSize),
-        SkTMin<int>(2 * fARGBDimensions.height(), fMaxTextureSize)};
+        std::min<int>(2 * fARGBDimensions.width(), fMaxTextureSize),
+        std::min<int>(2 * fARGBDimensions.height(), fMaxTextureSize)};
   } else {
     return fARGBDimensions;
   }

@@ -137,7 +137,7 @@ static double test_parse_fixed_r(
       double f2 = fix * SK_FixedEpsilon_double;
       double error = fabs(f - f2);
       REPORTER_ASSERT(reporter, error <= SK_FixedEpsilon_double);
-      maxError = SkTMax(maxError, error);
+      maxError = std::max(maxError, error);
     } else {
       REPORTER_ASSERT(reporter, f < -SK_FixedMax_double || SK_FixedMax_double < f);
     }

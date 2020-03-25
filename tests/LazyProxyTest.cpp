@@ -7,7 +7,6 @@
 
 #include "tests/Test.h"
 
-#include "include/gpu/GrTexture.h"
 #include "include/gpu/mock/GrMockTypes.h"
 #include "src/core/SkExchange.h"
 #include "src/core/SkRectPriv.h"
@@ -21,6 +20,7 @@
 #include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/GrTextureProxyPriv.h"
 #include "src/gpu/mock/GrMockGpu.h"
@@ -86,18 +86,16 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
             if (nullTexture) {
               return {};
             } else {
-              GrSurfaceDesc desc;
-              desc.fWidth = 1234;
-              desc.fHeight = 567;
+              static constexpr SkISize kDimensions = {1234, 567};
               sk_sp<GrTexture> texture = rp->createTexture(
-                  desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kYes,
+                  kDimensions, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kYes,
                   GrProtected::kNo);
               REPORTER_ASSERT(fTest->fReporter, texture);
               return texture;
             }
           },
-          format, readSwizzle, GrRenderable::kNo, 1, GrProtected::kNo, kTopLeft_GrSurfaceOrigin,
-          *proxyProvider->caps(), GrSurfaceProxy::UseAllocator::kYes);
+          format, readSwizzle, GrRenderable::kNo, 1, GrProtected::kNo, *proxyProvider->caps(),
+          GrSurfaceProxy::UseAllocator::kYes);
 
       this->setBounds(SkRectPriv::MakeLargest(), GrOp::HasAABloat::kNo, GrOp::IsHairline::kNo);
     }
@@ -137,8 +135,8 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
             fAtlas->instantiate(rp);
             return sk_ref_sp(fAtlas->peekTexture());
           },
-          format, readSwizzle, GrRenderable::kYes, 1, GrProtected::kNo, kOrigin,
-          *proxyProvider->caps(), GrSurfaceProxy::UseAllocator::kYes);
+          format, readSwizzle, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
+          GrSurfaceProxy::UseAllocator::kYes);
       fAccess.set(
           GrSurfaceProxyView(fLazyProxy, kOrigin, readSwizzle), GrSamplerState::Filter::kNearest);
       this->setTextureSamplerCnt(1);
@@ -224,15 +222,12 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
   auto proxyProvider = ctx->priv().proxyProvider();
   const GrCaps* caps = ctx->priv().caps();
 
-  GrSurfaceDesc desc;
-  desc.fWidth = kSize;
-  desc.fHeight = kSize;
-
   GrBackendFormat format =
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
   auto tex = ctx->priv().resourceProvider()->createTexture(
-      desc, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo, GrProtected::kNo);
+      {kSize, kSize}, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo,
+      GrProtected::kNo);
   using LazyInstantiationResult = GrSurfaceProxy::LazyCallbackResult;
   for (bool doInstantiate : {true, false}) {
     for (bool releaseCallback : {false, true}) {
@@ -270,10 +265,10 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
       };
       GrSwizzle readSwizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
       sk_sp<GrTextureProxy> proxy = proxyProvider->createLazyProxy(
-          TestCallback(&testCount, releaseCallback, tex), format, desc, readSwizzle,
-          GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
-          GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kNone, SkBackingFit::kExact,
-          SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
+          TestCallback(&testCount, releaseCallback, tex), format, {kSize, kSize}, readSwizzle,
+          GrRenderable::kNo, 1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
+          GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
+          GrSurfaceProxy::UseAllocator::kYes);
 
       REPORTER_ASSERT(reporter, proxy.get());
       REPORTER_ASSERT(reporter, 0 == testCount);
@@ -321,7 +316,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
       GrContext* ctx, GrProxyProvider* proxyProvider, int* testExecuteValue,
       bool shouldFailInstantiation)
       : INHERITED(ClassID()), fTestExecuteValue(testExecuteValue) {
-    GrSurfaceDesc desc;
+    SkISize desc;
     desc.fWidth = kSize;
     desc.fHeight = kSize;
     GrBackendFormat format =
@@ -341,7 +336,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
                   GrProtected::kNo),
               true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
-        format, desc, readSwizzle, GrRenderable::kNo, 1, kTopLeft_GrSurfaceOrigin, GrMipMapped::kNo,
+        format, desc, readSwizzle, GrRenderable::kNo, 1, GrMipMapped::kNo,
         GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kNone, SkBackingFit::kExact,
         SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
 

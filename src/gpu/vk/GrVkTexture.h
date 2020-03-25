@@ -8,10 +8,10 @@
 #ifndef GrVkTexture_DEFINED
 #define GrVkTexture_DEFINED
 
-#include "include/gpu/GrTexture.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/core/SkLRUCache.h"
 #include "src/gpu/GrSamplerState.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/vk/GrVkImage.h"
 
 class GrVkDescriptorSet;
@@ -22,11 +22,11 @@ struct GrVkImageInfo;
 class GrVkTexture : public GrTexture, public virtual GrVkImage {
  public:
   static sk_sp<GrVkTexture> MakeNewTexture(
-      GrVkGpu*, SkBudgeted budgeted, const GrSurfaceDesc&, const GrVkImage::ImageDesc&,
+      GrVkGpu*, SkBudgeted budgeted, SkISize dimensions, const GrVkImage::ImageDesc&,
       GrMipMapsStatus);
 
   static sk_sp<GrVkTexture> MakeWrappedTexture(
-      GrVkGpu*, const GrSurfaceDesc&, GrWrapOwnership, GrWrapCacheable, GrIOType,
+      GrVkGpu*, SkISize dimensions, GrWrapOwnership, GrWrapCacheable, GrIOType,
       const GrVkImageInfo&, sk_sp<GrVkImageLayout>);
 
   ~GrVkTexture() override;
@@ -40,7 +40,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
   const GrVkImageView* textureView();
 
   void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) override;
-  void callIdleProcsOnBehalfOfResource();
+  void callIdleProcsOnBehalfOfResource() override;
 
   // For each GrVkTexture, there is a cache of GrVkDescriptorSets which only contain a single
   // texture/sampler descriptor. If there is a cached descriptor set that matches the passed in
@@ -53,7 +53,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
 
  protected:
   GrVkTexture(
-      GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
+      GrVkGpu*, SkISize dimensions, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
       const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership);
 
   GrVkGpu* getVkGpu() const;
@@ -69,12 +69,11 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
 
  private:
   GrVkTexture(
-      GrVkGpu*, SkBudgeted, const GrSurfaceDesc&, const GrVkImageInfo&,
-      sk_sp<GrVkImageLayout> layout, const GrVkImageView* imageView, GrMipMapsStatus);
+      GrVkGpu*, SkBudgeted, SkISize, const GrVkImageInfo&, sk_sp<GrVkImageLayout> layout,
+      const GrVkImageView* imageView, GrMipMapsStatus);
   GrVkTexture(
-      GrVkGpu*, const GrSurfaceDesc&, const GrVkImageInfo&, sk_sp<GrVkImageLayout>,
-      const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership, GrWrapCacheable, GrIOType,
-      bool isExternal);
+      GrVkGpu*, SkISize, const GrVkImageInfo&, sk_sp<GrVkImageLayout>, const GrVkImageView*,
+      GrMipMapsStatus, GrBackendObjectOwnership, GrWrapCacheable, GrIOType, bool isExternal);
 
   // In Vulkan we call the release proc after we are finished with the underlying
   // GrVkImage::Resource object (which occurs after the GPU has finished all work on it).

@@ -369,7 +369,7 @@ sk_sp<GrDawnProgram> GrDawnProgramBuilder::Build(
 GrDawnProgramBuilder::GrDawnProgramBuilder(
     GrDawnGpu* gpu, GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
     GrProgramDesc* desc)
-    : INHERITED(renderTarget, programInfo, desc),
+    : INHERITED(renderTarget, *desc, programInfo),
       fGpu(gpu),
       fVaryingHandler(this),
       fUniformHandler(this) {}
@@ -464,12 +464,10 @@ wgpu::BindGroup GrDawnProgram::setUniformData(
 }
 
 wgpu::BindGroup GrDawnProgram::setTextures(
-    GrDawnGpu* gpu, const GrProgramInfo& programInfo,
+    GrDawnGpu* gpu, const GrPrimitiveProcessor& primProc, const GrPipeline& pipeline,
     const GrSurfaceProxy* const primProcTextures[]) {
   std::vector<wgpu::BindGroupBinding> bindings;
   int binding = 0;
-  const GrPipeline& pipeline = programInfo.pipeline();
-  const GrPrimitiveProcessor& primProc = programInfo.primProc();
   if (primProcTextures) {
     for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
       SkASSERT(primProcTextures[i]->asTextureProxy());

@@ -16,6 +16,7 @@
 class GrColorInfo;
 class GrFragmentProcessor;
 class GrRecordingContext;
+class SkArenaAlloc;
 class SkBitmap;
 class SkColorMatrix;
 class SkColorSpace;
@@ -60,8 +61,8 @@ class SK_API SkColorFilter : public SkFlattenable {
   bool appendStages(const SkStageRec& rec, bool shaderIsOpaque) const;
 
   bool program(
-      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32* r, skvm::F32* g,
-      skvm::F32* b, skvm::F32* a) const;
+      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc* alloc,
+      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const;
 
   enum Flags {
     /** If set the filter methods will not change the alpha channel of the colors.
@@ -141,8 +142,8 @@ class SK_API SkColorFilter : public SkFlattenable {
   virtual bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const = 0;
 
   virtual bool onProgram(
-      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, skvm::F32* r, skvm::F32* g,
-      skvm::F32* b, skvm::F32* a) const;
+      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc* alloc,
+      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const;
 
   friend class SkComposeColorFilter;
 

@@ -45,8 +45,8 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
   // TODO we can handle some of these cases if we really want to, but the long term solution is to
   // get the actual glyph image itself when we get the glyph metrics.
   GrDrawOpAtlas::ErrorCode addGlyphToAtlas(
-      GrResourceProvider*, GrDeferredUploadTarget*, GrStrikeCache*, GrAtlasManager*, GrGlyph*,
-      SkBulkGlyphMetricsAndImages*, GrMaskFormat expectedMaskFormat, bool isScaledGlyph);
+      const SkGlyph&, GrMaskFormat expectedMaskFormat, bool isScaledGlyph, GrResourceProvider*,
+      GrDeferredUploadTarget*, GrAtlasManager*, GrGlyph*);
 
   // testing
   int countGlyphs() const { return fCache.count(); }
@@ -74,12 +74,9 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
  * GrStrikeCache manages strikes which are indexed by a SkStrike. These strikes can then be
  * used to generate individual Glyph Masks.
  */
-class GrStrikeCache final : public GrDrawOpAtlas::EvictionCallback {
+class GrStrikeCache {
  public:
-  GrStrikeCache(const GrCaps* caps, size_t maxTextureBytes);
-  ~GrStrikeCache() override;
-
-  void setStrikeToPreserve(GrTextStrike* strike) { fPreserveStrike = strike; }
+  ~GrStrikeCache();
 
   // The user of the cache may hold a long-lived ref to the returned strike. However, actions by
   // another client of the cache may cause the strike to be purged while it is still reffed.
@@ -92,11 +89,7 @@ class GrStrikeCache final : public GrDrawOpAtlas::EvictionCallback {
     return this->generateStrike(desc);
   }
 
-  const SkMasks& getMasks() const { return *f565Masks; }
-
   void freeAll();
-
-  void evict(GrDrawOpAtlas::PlotLocator plotLocator) override;
 
  private:
   sk_sp<GrTextStrike> generateStrike(const SkDescriptor& desc) {
@@ -115,8 +108,6 @@ class GrStrikeCache final : public GrDrawOpAtlas::EvictionCallback {
   using StrikeHash = SkTHashTable<sk_sp<GrTextStrike>, SkDescriptor, DescriptorHashTraits>;
 
   StrikeHash fCache;
-  GrTextStrike* fPreserveStrike;
-  std::unique_ptr<const SkMasks> f565Masks;
 };
 
 #endif  // GrStrikeCache_DEFINED

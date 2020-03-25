@@ -130,11 +130,18 @@ void SkOverdrawCanvas::onDrawPoints(
   fList[0]->onDrawPoints(mode, count, points, this->overdrawPaint(paint));
 }
 
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
 void SkOverdrawCanvas::onDrawVerticesObject(
     const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount,
     SkBlendMode blendMode, const SkPaint& paint) {
   fList[0]->onDrawVerticesObject(vertices, bones, boneCount, blendMode, this->overdrawPaint(paint));
 }
+#else
+void SkOverdrawCanvas::onDrawVerticesObject(
+    const SkVertices* vertices, SkBlendMode blendMode, const SkPaint& paint) {
+  fList[0]->onDrawVerticesObject(vertices, blendMode, this->overdrawPaint(paint));
+}
+#endif
 
 void SkOverdrawCanvas::onDrawAtlas(
     const SkImage* image, const SkRSXform xform[], const SkRect texs[], const SkColor colors[],
@@ -196,17 +203,6 @@ void SkOverdrawCanvas::onDrawBitmap(
 void SkOverdrawCanvas::onDrawBitmapRect(
     const SkBitmap&, const SkRect*, const SkRect& dst, const SkPaint*, SrcRectConstraint) {
   fList[0]->onDrawRect(dst, fPaint);
-}
-
-void SkOverdrawCanvas::onDrawBitmapNine(
-    const SkBitmap&, const SkIRect&, const SkRect& dst, const SkPaint*) {
-  fList[0]->onDrawRect(dst, fPaint);
-}
-
-void SkOverdrawCanvas::onDrawBitmapLattice(
-    const SkBitmap& bitmap, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  sk_sp<SkImage> image = SkMakeImageFromRasterBitmap(bitmap, kNever_SkCopyPixelsMode);
-  this->onDrawImageLattice(image.get(), lattice, dst, paint);
 }
 
 void SkOverdrawCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {

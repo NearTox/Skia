@@ -28,17 +28,17 @@
 
 // skbug.com/5932
 static void test_basic_draw_as_src(
-    skiatest::Reporter* reporter, GrContext* context, sk_sp<GrTextureProxy> rectProxy,
+    skiatest::Reporter* reporter, GrContext* context, GrSurfaceProxyView rectView,
     GrColorType colorType, SkAlphaType alphaType, uint32_t expectedPixelValues[]) {
   auto rtContext = GrRenderTargetContext::Make(
-      context, colorType, nullptr, SkBackingFit::kExact, rectProxy->dimensions());
+      context, colorType, nullptr, SkBackingFit::kExact, rectView.proxy()->dimensions());
   for (auto filter :
        {GrSamplerState::Filter::kNearest, GrSamplerState::Filter::kBilerp,
         GrSamplerState::Filter::kMipMap}) {
     rtContext->clear(
         nullptr, SkPMColor4f::FromBytes_RGBA(0xDDCCBBAA),
         GrRenderTargetContext::CanClearFullscreen::kYes);
-    auto fp = GrTextureEffect::Make(rectProxy, alphaType, SkMatrix::I(), filter);
+    auto fp = GrTextureEffect::Make(rectView, alphaType, SkMatrix::I(), filter);
     GrPaint paint;
     paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
     paint.addColorFragmentProcessor(std::move(fp));
@@ -107,7 +107,7 @@ static void test_copy_to_surface(
   }
 
   for (auto renderable : {GrRenderable::kNo, GrRenderable::kYes}) {
-    auto origin = dstContext->asSurfaceProxy()->origin();
+    auto origin = dstContext->origin();
     auto src = sk_gpu_test::MakeTextureProxyFromData(
         context, renderable, origin,
         {GrColorType::kRGBA_8888, kPremul_SkAlphaType, nullptr, dstContext->width(),
@@ -115,7 +115,7 @@ static void test_copy_to_surface(
         pixels.get(), 0);
     // If this assert ever fails we can add a fallback to do copy as draw, but until then we can
     // be more restrictive.
-    SkAssertResult(dstContext->testCopy(src.get()));
+    SkAssertResult(dstContext->testCopy(src.get(), origin));
     TestReadPixels(reporter, dstContext, pixels.get(), testName);
   }
 }
@@ -165,8 +165,8 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(RectangleTexture, reporter, ctxInfo) {
     }
 
     sk_sp<GrTextureProxy> rectProxy = proxyProvider->wrapBackendTexture(
-        rectangleTex, GrColorType::kRGBA_8888, origin, kBorrow_GrWrapOwnership,
-        GrWrapCacheable::kNo, kRW_GrIOType);
+        rectangleTex, GrColorType::kRGBA_8888, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo,
+        kRW_GrIOType);
 
     if (!rectProxy) {
       ERRORF(reporter, "Error creating proxy for rectangle texture.");
@@ -182,17 +182,18 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(RectangleTexture, reporter, ctxInfo) {
     SkASSERT(rectProxy->hasRestrictedSampling());
     SkASSERT(rectProxy->peekTexture()->texturePriv().hasRestrictedSampling());
 
+    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(
+        rectangleTex.getBackendFormat(), GrColorType::kRGBA_8888);
+    GrSurfaceProxyView view(rectProxy, origin, swizzle);
+
     test_basic_draw_as_src(
-        reporter, context, rectProxy, GrColorType::kRGBA_8888, kPremul_SkAlphaType, refPixels);
+        reporter, context, view, GrColorType::kRGBA_8888, kPremul_SkAlphaType, refPixels);
 
     // Test copy to both a texture and RT
     TestCopyFromSurface(
-        reporter, context, rectProxy.get(), GrColorType::kRGBA_8888, refPixels,
+        reporter, context, rectProxy.get(), origin, GrColorType::kRGBA_8888, refPixels,
         "RectangleTexture-copy-from");
 
-    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(
-        rectangleTex.getBackendFormat(), GrColorType::kRGBA_8888);
-    GrSurfaceProxyView view(std::move(rectProxy), origin, swizzle);
     auto rectContext = GrSurfaceContext::Make(
         context, std::move(view), GrColorType::kRGBA_8888, kPremul_SkAlphaType, nullptr);
     SkASSERT(rectContext);

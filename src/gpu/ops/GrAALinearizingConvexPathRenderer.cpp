@@ -25,7 +25,7 @@
 #include "src/gpu/ops/GrAAConvexTessellator.h"
 #include "src/gpu/ops/GrAALinearizingConvexPathRenderer.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
-#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
 static const int DEFAULT_BUFFER_SIZE = 100;
 
@@ -201,7 +201,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       return;
     }
     memcpy(idxs, indices, indexCount * sizeof(uint16_t));
-    GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
+    GrMesh* mesh = target->allocMesh();
     mesh->setIndexed(
         std::move(indexBuffer), indexCount, firstIndex, 0, vertexCount - 1,
         GrPrimitiveRestart::kNo);
@@ -245,7 +245,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
         indexCount = 0;
       }
       if (vertexCount + currentVertices > maxVertices) {
-        maxVertices = SkTMax(vertexCount + currentVertices, maxVertices * 2);
+        maxVertices = std::max(vertexCount + currentVertices, maxVertices * 2);
         if (maxVertices * vertexStride > SK_MaxS32) {
           sk_free(vertices);
           sk_free(indices);
@@ -255,7 +255,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       }
       int currentIndices = tess.numIndices();
       if (indexCount + currentIndices > maxIndices) {
-        maxIndices = SkTMax(indexCount + currentIndices, maxIndices * 2);
+        maxIndices = std::max(indexCount + currentIndices, maxIndices * 2);
         if (maxIndices * sizeof(uint16_t) > SK_MaxS32) {
           sk_free(vertices);
           sk_free(indices);
@@ -278,9 +278,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
-        flushState, fHelper.detachProcessorSet(), fHelper.pipelineFlags(),
-        fHelper.stencilSettings());
+    auto pipeline = fHelper.createPipelineWithStencil(flushState);
 
     flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
   }

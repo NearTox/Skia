@@ -105,7 +105,7 @@ sk_sp<const GrGLInterface> GLWindowContext_win::onInitializeContext() {
     if (extensions.hasExtension(dc, "WGL_ARB_multisample")) {
       static const int kSampleCountAttr = SK_WGL_SAMPLES;
       extensions.getPixelFormatAttribiv(dc, pixelFormat, 0, 1, &kSampleCountAttr, &fSampleCount);
-      fSampleCount = SkTMax(fSampleCount, 1);
+      fSampleCount = std::max(fSampleCount, 1);
     } else {
       fSampleCount = 1;
     }

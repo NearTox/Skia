@@ -115,29 +115,29 @@ static void testOne(
     return;
   }
   if (line1[0].fY == line1[1].fY) {
-    double left = SkTMin(line1[0].fX, line1[1].fX);
-    double right = SkTMax(line1[0].fX, line1[1].fX);
+    double left = std::min(line1[0].fX, line1[1].fX);
+    double right = std::max(line1[0].fX, line1[1].fX);
     SkIntersections ts;
     ts.horizontal(line2, left, right, line1[0].fY, line1[0].fX != left);
     check_results(reporter, line2, line1, ts, nearAllowed);
   }
   if (line2[0].fY == line2[1].fY) {
-    double left = SkTMin(line2[0].fX, line2[1].fX);
-    double right = SkTMax(line2[0].fX, line2[1].fX);
+    double left = std::min(line2[0].fX, line2[1].fX);
+    double right = std::max(line2[0].fX, line2[1].fX);
     SkIntersections ts;
     ts.horizontal(line1, left, right, line2[0].fY, line2[0].fX != left);
     check_results(reporter, line1, line2, ts, nearAllowed);
   }
   if (line1[0].fX == line1[1].fX) {
-    double top = SkTMin(line1[0].fY, line1[1].fY);
-    double bottom = SkTMax(line1[0].fY, line1[1].fY);
+    double top = std::min(line1[0].fY, line1[1].fY);
+    double bottom = std::max(line1[0].fY, line1[1].fY);
     SkIntersections ts;
     ts.vertical(line2, top, bottom, line1[0].fX, line1[0].fY != top);
     check_results(reporter, line2, line1, ts, nearAllowed);
   }
   if (line2[0].fX == line2[1].fX) {
-    double top = SkTMin(line2[0].fY, line2[1].fY);
-    double bottom = SkTMax(line2[0].fY, line2[1].fY);
+    double top = std::min(line2[0].fY, line2[1].fY);
+    double bottom = std::max(line2[0].fY, line2[1].fY);
     SkIntersections ts;
     ts.vertical(line1, top, bottom, line2[0].fX, line2[0].fY != top);
     check_results(reporter, line1, line2, ts, nearAllowed);
@@ -158,8 +158,8 @@ static void testOneCoincident(
     return;
   }
   if (line1[0].fY == line1[1].fY) {
-    double left = SkTMin(line1[0].fX, line1[1].fX);
-    double right = SkTMax(line1[0].fX, line1[1].fX);
+    double left = std::min(line1[0].fX, line1[1].fX);
+    double right = std::max(line1[0].fX, line1[1].fX);
     SkIntersections ts;
     ts.horizontal(line2, left, right, line1[0].fY, line1[0].fX != left);
     REPORTER_ASSERT(reporter, pts == 2);
@@ -167,8 +167,8 @@ static void testOneCoincident(
     check_results(reporter, line2, line1, ts, false);
   }
   if (line2[0].fY == line2[1].fY) {
-    double left = SkTMin(line2[0].fX, line2[1].fX);
-    double right = SkTMax(line2[0].fX, line2[1].fX);
+    double left = std::min(line2[0].fX, line2[1].fX);
+    double right = std::max(line2[0].fX, line2[1].fX);
     SkIntersections ts;
     ts.horizontal(line1, left, right, line2[0].fY, line2[0].fX != left);
     REPORTER_ASSERT(reporter, pts == 2);
@@ -176,8 +176,8 @@ static void testOneCoincident(
     check_results(reporter, line1, line2, ts, false);
   }
   if (line1[0].fX == line1[1].fX) {
-    double top = SkTMin(line1[0].fY, line1[1].fY);
-    double bottom = SkTMax(line1[0].fY, line1[1].fY);
+    double top = std::min(line1[0].fY, line1[1].fY);
+    double bottom = std::max(line1[0].fY, line1[1].fY);
     SkIntersections ts;
     ts.vertical(line2, top, bottom, line1[0].fX, line1[0].fY != top);
     REPORTER_ASSERT(reporter, pts == 2);
@@ -185,8 +185,8 @@ static void testOneCoincident(
     check_results(reporter, line2, line1, ts, false);
   }
   if (line2[0].fX == line2[1].fX) {
-    double top = SkTMin(line2[0].fY, line2[1].fY);
-    double bottom = SkTMax(line2[0].fY, line2[1].fY);
+    double top = std::min(line2[0].fY, line2[1].fY);
+    double bottom = std::max(line2[0].fY, line2[1].fY);
     SkIntersections ts;
     ts.vertical(line1, top, bottom, line2[0].fX, line2[0].fY != top);
     REPORTER_ASSERT(reporter, pts == 2);

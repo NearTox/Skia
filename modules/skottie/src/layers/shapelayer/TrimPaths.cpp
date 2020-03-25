@@ -36,7 +36,7 @@ class TrimEffectAdapter final : public DiscardableAdapterBase<TrimEffectAdapter,
     // BM semantics: start/end are percentages, offset is "degrees" (?!).
     const auto start = fStart / 100, end = fEnd / 100, offset = fOffset / 360;
 
-    auto startT = SkTMin(start, end) + offset, stopT = SkTMax(start, end) + offset;
+    auto startT = std::min(start, end) + offset, stopT = std::max(start, end) + offset;
     auto mode = SkTrimPathEffect::Mode::kNormal;
 
     if (stopT - startT < 1) {
@@ -74,7 +74,7 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AttachTrimGeometryEffect(
   } gModes[] = {Mode::kParallel, Mode::kSerial};
 
   const auto mode =
-      gModes[SkTMin<size_t>(ParseDefault<size_t>(jtrim["m"], 1) - 1, SK_ARRAY_COUNT(gModes) - 1)];
+      gModes[std::min<size_t>(ParseDefault<size_t>(jtrim["m"], 1) - 1, SK_ARRAY_COUNT(gModes) - 1)];
 
   std::vector<sk_sp<sksg::GeometryNode>> inputs;
   if (mode == Mode::kSerial) {

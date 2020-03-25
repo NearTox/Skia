@@ -268,7 +268,7 @@ class SkNx<4, float> {
     return vminvq_f32(fVec);
 #else
     SkNx min = Min(*this, vrev64q_f32(fVec));
-    return SkTMin(min[0], min[2]);
+    return std::min(min[0], min[2]);
 #endif
   }
 
@@ -277,7 +277,7 @@ class SkNx<4, float> {
     return vmaxvq_f32(fVec);
 #else
     SkNx max = Max(*this, vrev64q_f32(fVec));
-    return SkTMax(max[0], max[2]);
+    return std::max(max[0], max[2]);
 #endif
   }
 

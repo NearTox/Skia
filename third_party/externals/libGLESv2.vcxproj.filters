@@ -379,7 +379,6 @@
     <ClCompile Include="angle2\src\libGLESv2\proc_table_egl_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\ExternalImageSiblingImpl11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\MappedSubresourceVerifier11.cpp" />
-    <ClCompile Include="angle2\src\compiler\translator\tree_ops\NameNamelessUniformBuffers.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteCubeMapSamplersAs2DArray.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteStructSamplersOld.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteRowMajorMatrices.cpp" />

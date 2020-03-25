@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkShader.h"
 #include "include/utils/SkNWayCanvas.h"
 #include "src/core/SkCanvasPriv.h"
 
@@ -89,7 +90,7 @@ void SkNWayCanvas::willRestore() {
 void SkNWayCanvas::didConcat44(const SkScalar m[16]) {
   Iter iter(fList);
   while (iter.next()) {
-    iter->experimental_concat44(m);
+    iter->concat44(m);
   }
 }
 
@@ -143,6 +144,14 @@ void SkNWayCanvas::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle edg
     iter->clipPath(path, op, kSoft_ClipEdgeStyle == edgeStyle);
   }
   this->INHERITED::onClipPath(path, op, edgeStyle);
+}
+
+void SkNWayCanvas::onClipShader(sk_sp<SkShader> sh, SkClipOp op) {
+  Iter iter(fList);
+  while (iter.next()) {
+    iter->clipShader(sh, op);
+  }
+  this->INHERITED::onClipShader(std::move(sh), op);
 }
 
 void SkNWayCanvas::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
@@ -243,22 +252,6 @@ void SkNWayCanvas::onDrawBitmapRect(
   }
 }
 
-void SkNWayCanvas::onDrawBitmapNine(
-    const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  Iter iter(fList);
-  while (iter.next()) {
-    iter->drawBitmapNine(bitmap, center, dst, paint);
-  }
-}
-
-void SkNWayCanvas::onDrawBitmapLattice(
-    const SkBitmap& bitmap, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  Iter iter(fList);
-  while (iter.next()) {
-    iter->drawBitmapLattice(bitmap, lattice, dst, paint);
-  }
-}
-
 void SkNWayCanvas::onDrawImage(
     const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
   Iter iter(fList);
@@ -316,11 +309,14 @@ void SkNWayCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) 
 }
 
 void SkNWayCanvas::onDrawVerticesObject(
-    const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount, SkBlendMode bmode,
-    const SkPaint& paint) {
+    const SkVertices* vertices,
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
+    const SkVertices::Bone bones[], int boneCount,
+#endif
+    SkBlendMode bmode, const SkPaint& paint) {
   Iter iter(fList);
   while (iter.next()) {
-    iter->drawVertices(vertices, bones, boneCount, bmode, paint);
+    iter->drawVertices(vertices, bmode, paint);
   }
 }
 

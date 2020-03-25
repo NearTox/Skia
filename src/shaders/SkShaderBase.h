@@ -51,6 +51,9 @@ class SkShaderBase : public SkShader {
  public:
   ~SkShaderBase() override;
 
+  sk_sp<SkShader> makeInvertAlpha() const;
+  sk_sp<SkShader> makeWithCTM(const SkMatrix&) const;  // owns its own ctm
+
   /**
    *  Returns true if the shader is guaranteed to produce only a single color.
    *  Subclasses can override this to allow loop-hoisting optimization.
@@ -179,11 +182,9 @@ class SkShaderBase : public SkShader {
   //
   //   M = postLocalMatrix x shaderLocalMatrix x preLocalMatrix
   //
-  SkTCopyOnFirstWrite<SkMatrix> totalLocalMatrix(
-      const SkMatrix* preLocalMatrix, const SkMatrix* postLocalMatrix = nullptr) const;
+  SkTCopyOnFirstWrite<SkMatrix> totalLocalMatrix(const SkMatrix* preLocalMatrix) const;
 
   virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
-  virtual SkPicture* isAPicture(SkMatrix*, SkTileMode[2], SkRect* tile) const { return nullptr; }
 
   static Type GetFlattenableType() { return kSkShaderBase_Type; }
   Type getFlattenableType() const override { return GetFlattenableType(); }

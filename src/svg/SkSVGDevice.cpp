@@ -24,7 +24,6 @@
 #include "include/utils/SkBase64.h"
 #include "include/utils/SkParsePath.h"
 #include "src/codec/SkJpegCodec.h"
-#include "src/codec/SkPngCodec.h"
 #include "src/core/SkAnnotationKeys.h"
 #include "src/core/SkClipOpPriv.h"
 #include "src/core/SkClipStack.h"
@@ -66,8 +65,23 @@ static SkString svg_color(SkColor color) {
     return SkString(nc);
   }
 
-  return SkStringPrintf(
-      "rgb(%u,%u,%u)", SkColorGetR(color), SkColorGetG(color), SkColorGetB(color));
+  uint8_t r = SkColorGetR(color);
+  uint8_t g = SkColorGetG(color);
+  uint8_t b = SkColorGetB(color);
+
+  // Some users care about every byte here, so we'll use hex colors with single-digit channels
+  // when possible.
+  uint8_t rh = r >> 4;
+  uint8_t rl = r & 0xf;
+  uint8_t gh = g >> 4;
+  uint8_t gl = g & 0xf;
+  uint8_t bh = b >> 4;
+  uint8_t bl = b & 0xf;
+  if ((rh == rl) && (gh == gl) && (bh == bl)) {
+    return SkStringPrintf("#%1X%1X%1X", rh, gh, bh);
+  }
+
+  return SkStringPrintf("#%02X%02X%02X", r, g, b);
 }
 
 static SkScalar svg_opacity(SkColor color) {
@@ -403,6 +417,13 @@ void SkSVGDevice::AutoElement::addColorFilterResources(
   resources->fColorFilter.printf("url(#%s)", colorfilterID.c_str());
 }
 
+namespace {
+bool is_png(const void* bytes, size_t length) {
+  constexpr uint8_t kPngSig[] = {0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A};
+  return length >= sizeof(kPngSig) && !memcmp(bytes, kPngSig, sizeof(kPngSig));
+}
+}  // namespace
+
 // Returns data uri from bytes.
 // it will use any cached data if available, otherwise will
 // encode as png.
@@ -412,20 +433,25 @@ sk_sp<SkData> AsDataUri(SkImage* image) {
     return nullptr;
   }
 
-  const char* src = (char*)imageData->data();
   const char* selectedPrefix = nullptr;
   size_t selectedPrefixLength = 0;
 
-  const static char pngDataPrefix[] = "data:image/png;base64,";
-  const static char jpgDataPrefix[] = "data:image/jpeg;base64,";
-
-  if (SkJpegCodec::IsJpeg(src, imageData->size())) {
+#ifdef SK_CODEC_DECODES_JPEG
+  if (SkJpegCodec::IsJpeg(imageData->data(), imageData->size())) {
+    const static char jpgDataPrefix[] = "data:image/jpeg;base64,";
     selectedPrefix = jpgDataPrefix;
     selectedPrefixLength = sizeof(jpgDataPrefix);
-  } else {
-    if (!SkPngCodec::IsPng(src, imageData->size())) {
+  } else
+#endif
+  {
+    if (!is_png(imageData->data(), imageData->size())) {
+#ifdef SK_ENCODE_PNG
       imageData = image->encodeToData(SkEncodedImageFormat::kPNG, 100);
+#else
+      return nullptr;
+#endif
     }
+    const static char pngDataPrefix[] = "data:image/png;base64,";
     selectedPrefix = pngDataPrefix;
     selectedPrefixLength = sizeof(pngDataPrefix);
   }
@@ -977,8 +1003,7 @@ void SkSVGDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
   }
 }
 
-void SkSVGDevice::drawVertices(
-    const SkVertices*, const SkVertices::Bone[], int, SkBlendMode, const SkPaint&) {
+void SkSVGDevice::drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) {
   // todo
 }
 

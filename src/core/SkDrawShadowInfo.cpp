@@ -124,10 +124,10 @@ void GetLocalBounds(
   } else {
     occluderZ = compute_z(ambientBounds.fLeft, ambientBounds.fTop, rec.fZPlaneParams);
     occluderZ =
-        SkTMax(occluderZ, compute_z(ambientBounds.fRight, ambientBounds.fTop, rec.fZPlaneParams));
-    occluderZ =
-        SkTMax(occluderZ, compute_z(ambientBounds.fLeft, ambientBounds.fBottom, rec.fZPlaneParams));
-    occluderZ = SkTMax(
+        std::max(occluderZ, compute_z(ambientBounds.fRight, ambientBounds.fTop, rec.fZPlaneParams));
+    occluderZ = std::max(
+        occluderZ, compute_z(ambientBounds.fLeft, ambientBounds.fBottom, rec.fZPlaneParams));
+    occluderZ = std::max(
         occluderZ, compute_z(ambientBounds.fRight, ambientBounds.fBottom, rec.fZPlaneParams));
   }
   SkScalar ambientBlur;

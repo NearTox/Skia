@@ -98,6 +98,7 @@ class CustomPropertyManager final {
   PropMap<skottie::TransformPropertyHandle> fTransformMap;
   PropMap<skottie::TextPropertyHandle> fTextMap;
   std::vector<MarkerInfo> fMarkers;
+  std::string fCurrentNode;
 };
 
 }  // namespace skottie_utils

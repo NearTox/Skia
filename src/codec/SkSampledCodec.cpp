@@ -268,7 +268,7 @@ SkCodec::Result SkSampledCodec::sampledDecode(
 
   SkSampler* sampler = this->codec()->getSampler(true);
   if (!sampler) {
-    return SkCodec::kUnimplemented;
+    return SkCodec::kInternalError;
   }
 
   if (sampler->setSampleX(sampleX) != info.width()) {

@@ -31,7 +31,6 @@
 #include "include/core/SkSurface.h"
 #include "include/core/SkTime.h"
 #include "src/core/SkAutoMalloc.h"
-#include "src/core/SkBBoxHierarchy.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkLeanWindows.h"
 #include "src/core/SkOSFile.h"
@@ -225,7 +224,7 @@ struct GPUTarget : public Target {
   }
   void endTiming() override {
     if (this->contextInfo.testContext()) {
-      this->contextInfo.testContext()->waitOnSyncOrSwap();
+      this->contextInfo.testContext()->flushAndWaitOnSync(contextInfo.grContext());
     }
   }
   void fence() override { this->contextInfo.testContext()->finish(); }
@@ -293,9 +292,6 @@ static double time(int loops, Benchmark* bench, Target* target) {
   double start = now_ms();
   canvas = target->beginTiming(canvas);
   bench->draw(loops, canvas);
-  if (canvas) {
-    canvas->flush();
-  }
   target->endTiming();
   double elapsed = now_ms() - start;
   bench->postDraw(canvas);
@@ -950,7 +946,7 @@ class BenchmarkStream {
       while (fCurrentSampleSize < (int)SK_ARRAY_COUNT(sampleSizes)) {
         int sampleSize = sampleSizes[fCurrentSampleSize];
         fCurrentSampleSize++;
-        if (10 * sampleSize > SkTMin(codec->getInfo().width(), codec->getInfo().height())) {
+        if (10 * sampleSize > std::min(codec->getInfo().width(), codec->getInfo().height())) {
           // Avoid benchmarking scaled decodes of already small images.
           break;
         }
@@ -1284,6 +1280,7 @@ int main(int argc, char** argv) {
         auto stop = now_ms() + 1000;
         do {
           time(loops, bench.get(), target);
+          pool.drain();
         } while (now_ms() < stop);
       }
 
@@ -1292,11 +1289,13 @@ int main(int argc, char** argv) {
         auto stop = now_ms() + FLAGS_ms;
         do {
           samples.push_back(time(loops, bench.get(), target) / loops);
+          pool.drain();
         } while (now_ms() < stop);
       } else {
         samples.reset(FLAGS_samples);
         for (int s = 0; s < FLAGS_samples; s++) {
           samples[s] = time(loops, bench.get(), target) / loops;
+          pool.drain();
         }
       }
 

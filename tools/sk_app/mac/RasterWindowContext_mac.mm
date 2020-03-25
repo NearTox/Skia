@@ -62,10 +62,11 @@ RasterWindowContext_mac::RasterWindowContext_mac(const MacWindowInfo& info,
 }
 
 RasterWindowContext_mac::~RasterWindowContext_mac() {
-    [fPixelFormat release];
-    fPixelFormat = nil;
-    [fGLContext release];
-    fGLContext = nil;
+  [NSOpenGLContext clearCurrentContext];
+  [fPixelFormat release];
+  fPixelFormat = nil;
+  [fGLContext release];
+  fGLContext = nil;
 }
 
 sk_sp<const GrGLInterface> RasterWindowContext_mac::onInitializeContext() {
@@ -134,7 +135,7 @@ sk_sp<const GrGLInterface> RasterWindowContext_mac::onInitializeContext() {
     GLint sampleCount;
     [fPixelFormat getValues:&sampleCount forAttribute:NSOpenGLPFASamples forVirtualScreen:0];
     fSampleCount = sampleCount;
-    fSampleCount = SkTMax(fSampleCount, 1);
+    fSampleCount = std::max(fSampleCount, 1);
 
     const NSRect viewportRect = [fMainView frame];
     fWidth = viewportRect.size.width;

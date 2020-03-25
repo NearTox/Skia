@@ -13,8 +13,8 @@
 #include "src/core/SkDraw.h"
 #include "src/core/SkFontPriv.h"
 #include "src/core/SkPaintDefaults.h"
+#include "src/core/SkScalerCache.h"
 #include "src/core/SkScalerContext.h"
-#include "src/core/SkStrike.h"
 #include "src/core/SkStrikeCache.h"
 #include "src/core/SkStrikeSpec.h"
 #include "src/core/SkTLazy.h"
@@ -26,7 +26,7 @@
 #define kDefault_Edging SkFont::Edging::kAntiAlias
 #define kDefault_Hinting SkPaintDefaults_Hinting
 
-static inline SkScalar valid_size(SkScalar size) { return SkTMax<SkScalar>(0, size); }
+static inline SkScalar valid_size(SkScalar size) { return std::max<SkScalar>(0, size); }
 
 SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX)
     : fTypeface(std::move(face)),
@@ -330,7 +330,7 @@ SkScalar SkFont::getMetrics(SkFontMetrics* metrics) const {
     metrics = &storage;
   }
 
-  auto cache = strikeSpec.findOrCreateExclusiveStrike();
+  auto cache = strikeSpec.findOrCreateStrike();
   *metrics = cache->getFontMetrics();
 
   if (strikeSpec.strikeToSourceRatio() != 1) {

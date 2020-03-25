@@ -92,6 +92,7 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
       std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform);
 
   static OptimizationFlags OptFlags(const GrFragmentProcessor* child);
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;

@@ -32,10 +32,10 @@ struct GrVkImageInfo;
 class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
  public:
   static sk_sp<GrVkRenderTarget> MakeWrappedRenderTarget(
-      GrVkGpu*, const GrSurfaceDesc&, int sampleCnt, const GrVkImageInfo&, sk_sp<GrVkImageLayout>);
+      GrVkGpu*, SkISize, int sampleCnt, const GrVkImageInfo&, sk_sp<GrVkImageLayout>);
 
   static sk_sp<GrVkRenderTarget> MakeSecondaryCBRenderTarget(
-      GrVkGpu*, const GrSurfaceDesc&, const GrVkDrawableInfo& vkInfo);
+      GrVkGpu*, SkISize, const GrVkDrawableInfo& vkInfo);
 
   ~GrVkRenderTarget() override;
 
@@ -43,7 +43,7 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
 
   const GrVkFramebuffer* getFramebuffer();
   const GrVkImageView* colorAttachmentView() const { return fColorAttachmentView; }
-  const GrVkResource* msaaImageResource() const {
+  const GrManagedResource* msaaImageResource() const {
     if (fMSAAImage) {
       return fMSAAImage->fResource;
     }
@@ -51,7 +51,7 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
   }
   GrVkImage* msaaImage() { return fMSAAImage.get(); }
   const GrVkImageView* resolveAttachmentView() const { return fResolveAttachmentView; }
-  const GrVkResource* stencilImageResource() const;
+  const GrManagedResource* stencilImageResource() const;
   const GrVkImageView* stencilAttachmentView() const;
 
   const GrVkRenderPass* getSimpleRenderPass();
@@ -92,15 +92,14 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
 
  protected:
   GrVkRenderTarget(
-      GrVkGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, const GrVkImageInfo& info,
+      GrVkGpu* gpu, SkISize dimensions, int sampleCnt, const GrVkImageInfo& info,
       sk_sp<GrVkImageLayout> layout, const GrVkImageInfo& msaaInfo,
       sk_sp<GrVkImageLayout> msaaLayout, const GrVkImageView* colorAttachmentView,
       const GrVkImageView* resolveAttachmentView, GrBackendObjectOwnership);
 
   GrVkRenderTarget(
-      GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
-      sk_sp<GrVkImageLayout> layout, const GrVkImageView* colorAttachmentView,
-      GrBackendObjectOwnership);
+      GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout,
+      const GrVkImageView* colorAttachmentView, GrBackendObjectOwnership);
 
   void onAbandon() override;
   void onRelease() override;
@@ -119,19 +118,18 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
 
  private:
   GrVkRenderTarget(
-      GrVkGpu* gpu, const GrSurfaceDesc& desc, int sampleCnt, const GrVkImageInfo& info,
+      GrVkGpu* gpu, SkISize dimensions, int sampleCnt, const GrVkImageInfo& info,
       sk_sp<GrVkImageLayout> layout, const GrVkImageInfo& msaaInfo,
       sk_sp<GrVkImageLayout> msaaLayout, const GrVkImageView* colorAttachmentView,
       const GrVkImageView* resolveAttachmentView);
 
   GrVkRenderTarget(
-      GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
-      sk_sp<GrVkImageLayout> layout, const GrVkImageView* colorAttachmentView);
+      GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout,
+      const GrVkImageView* colorAttachmentView);
 
   GrVkRenderTarget(
-      GrVkGpu* gpu, const GrSurfaceDesc& desc, const GrVkImageInfo& info,
-      sk_sp<GrVkImageLayout> layout, const GrVkRenderPass* renderPass,
-      VkCommandBuffer secondaryCommandBuffer);
+      GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout,
+      const GrVkRenderPass* renderPass, VkCommandBuffer secondaryCommandBuffer);
 
   GrVkGpu* getVkGpu() const;
 
@@ -165,15 +163,15 @@ class GrVkRenderTarget : public GrRenderTarget, public virtual GrVkImage {
   // VkCommandBuffer and not VK_NULL_HANDLE. In this case the render target will not be backed by
   // an actual VkImage and will thus be limited in terms of what it can be used for.
   VkCommandBuffer fSecondaryCommandBuffer = VK_NULL_HANDLE;
-  // When we wrap a secondary command buffer, we will record GrVkResources onto it which need to
-  // be kept alive till the command buffer gets submitted and the GPU has finished. However, in
+  // When we wrap a secondary command buffer, we will record GrManagedResources onto it which need
+  // to be kept alive till the command buffer gets submitted and the GPU has finished. However, in
   // the wrapped case, we don't know when the command buffer gets submitted and when it is
   // finished on the GPU since the client is in charge of that. However, we do require that the
   // client keeps the GrVkSecondaryCBDrawContext alive and call releaseResources on it once the
   // GPU is finished all the work. Thus we can use this to manage the lifetime of our
   // GrVkSecondaryCommandBuffers. By storing them on the GrVkRenderTarget, which is owned by the
-  // SkGpuDevice on the GrVkSecondaryCBDrawContext, we assure that the GrVkResources held by the
-  // GrVkSecondaryCommandBuffer don't get deleted before they are allowed to.
+  // SkGpuDevice on the GrVkSecondaryCBDrawContext, we assure that the GrManagedResources held by
+  // the GrVkSecondaryCommandBuffer don't get deleted before they are allowed to.
   SkTArray<std::unique_ptr<GrVkCommandBuffer>> fGrSecondaryCommandBuffers;
 };
 

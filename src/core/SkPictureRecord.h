@@ -180,13 +180,18 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
       const SkImage*, const SkCanvas::Lattice& lattice, const SkRect& dst, const SkPaint*) override;
 
   void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
   void onDrawVerticesObject(
       const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
       const SkPaint&) override;
+#else
+  void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
+#endif
 
   void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
   void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
   void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
+  void onClipShader(sk_sp<SkShader>, SkClipOp) override;
   void onClipRegion(const SkRegion&, SkClipOp) override;
 
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
@@ -223,15 +228,6 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onDrawBitmapRect(
       const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
       SrcRectConstraint) override {
-    SK_ABORT("not reached");
-  }
-  void onDrawBitmapNine(
-      const SkBitmap&, const SkIRect& center, const SkRect& dst, const SkPaint*) override {
-    SK_ABORT("not reached");
-  }
-  void onDrawBitmapLattice(
-      const SkBitmap&, const SkCanvas::Lattice& lattice, const SkRect& dst,
-      const SkPaint*) override {
     SK_ABORT("not reached");
   }
 

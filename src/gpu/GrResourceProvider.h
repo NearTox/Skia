@@ -60,12 +60,12 @@ class GrResourceProvider {
    * The contents of the texture are undefined.
    */
   sk_sp<GrTexture> createApproxTexture(
-      const GrSurfaceDesc& desc, const GrBackendFormat& format, GrRenderable renderable,
+      SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
       int renderTargetSampleCnt, GrProtected isProtected);
 
   /** Create an exact fit texture with no initial data to upload. */
   sk_sp<GrTexture> createTexture(
-      const GrSurfaceDesc& desc, const GrBackendFormat& format, GrRenderable renderable,
+      SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
       int renderTargetSampleCnt, GrMipMapped mipMapped, SkBudgeted budgeted,
       GrProtected isProtected);
 
@@ -75,7 +75,7 @@ class GrResourceProvider {
    * need to get applied to the data before upload are applied.
    */
   sk_sp<GrTexture> createTexture(
-      const GrSurfaceDesc& desc, const GrBackendFormat& format, GrColorType colorType,
+      SkISize dimensions, const GrBackendFormat& format, GrColorType colorType,
       GrRenderable renderable, int renderTargetSampleCnt, SkBudgeted budgeted,
       GrProtected isProtected, const GrMipLevel texels[], int mipLevelCount);
 
@@ -85,7 +85,7 @@ class GrResourceProvider {
    * need to get applied to the data before upload are applied.
    */
   sk_sp<GrTexture> createTexture(
-      const GrSurfaceDesc&, const GrBackendFormat&, GrColorType srcColorType, GrRenderable,
+      SkISize dimensions, const GrBackendFormat&, GrColorType srcColorType, GrRenderable,
       int renderTargetSampleCnt, SkBudgeted, SkBackingFit, GrProtected, const GrMipLevel& mipLevel);
 
   /**
@@ -283,10 +283,10 @@ class GrResourceProvider {
  private:
   sk_sp<GrGpuResource> findResourceByUniqueKey(const GrUniqueKey&);
 
-  // Attempts to find a resource in the cache that exactly matches the GrSurfaceDesc. Failing that
+  // Attempts to find a resource in the cache that exactly matches the SkISize. Failing that
   // it returns null. If non-null, the resulting texture is always budgeted.
   sk_sp<GrTexture> refScratchTexture(
-      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
       GrMipMapped, GrProtected);
 
   /*
@@ -294,7 +294,7 @@ class GrResourceProvider {
    * update the budgeting accordingly.
    */
   sk_sp<GrTexture> getExactScratch(
-      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
       SkBudgeted, GrMipMapped, GrProtected);
 
   // Used to perform any conversions necessary to texel data before creating a texture with
@@ -302,8 +302,8 @@ class GrResourceProvider {
   using TempLevels = SkAutoSTMalloc<14, GrMipLevel>;
   using TempLevelDatas = SkAutoSTArray<14, std::unique_ptr<char[]>>;
   GrColorType prepareLevels(
-      const GrBackendFormat& format, GrColorType, const SkISize& baseSize,
-      const GrMipLevel texels[], int mipLevelCount, TempLevels*, TempLevelDatas*) const;
+      const GrBackendFormat& format, GrColorType, SkISize baseSize, const GrMipLevel texels[],
+      int mipLevelCount, TempLevels*, TempLevelDatas*) const;
 
   // GrResourceProvider may be asked to "create" a new texture with initial pixel data to populate
   // it. In implementation it may pull an existing texture from GrResourceCache and then write the
@@ -311,8 +311,8 @@ class GrResourceProvider {
   // using an approximate-sized scratch texture. On success the texture is returned and nullptr
   // on failure.
   sk_sp<GrTexture> writePixels(
-      sk_sp<GrTexture> texture, GrColorType colorType, const SkISize& baseSize,
-      const GrMipLevel texels[], int mipLevelCount) const;
+      sk_sp<GrTexture> texture, GrColorType colorType, SkISize baseSize, const GrMipLevel texels[],
+      int mipLevelCount) const;
 
   GrResourceCache* cache() { return fCache; }
   const GrResourceCache* cache() const { return fCache; }

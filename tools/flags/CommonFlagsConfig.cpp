@@ -71,6 +71,7 @@ static const struct {
     { "gltestglslcache",       "gpu", "api=gl,testPersistentCache=2" },
     { "gltestprecompile",      "gpu", "api=gl,testPrecompile=true" },
     { "glestestprecompile",    "gpu", "api=gles,testPrecompile=true" },
+    { "glddl",                 "gpu", "api=gl,useDDLSink=true" },
     { "angle_d3d11_es2",       "gpu", "api=angle_d3d11_es2" },
     { "angle_d3d11_es3",       "gpu", "api=angle_d3d11_es3" },
     { "angle_d3d9_es2",        "gpu", "api=angle_d3d9_es2" },
@@ -101,12 +102,17 @@ static const struct {
     { "vkbetex",               "gpu", "api=vulkan,surf=betex" },
     { "vkbert",                "gpu", "api=vulkan,surf=bert" },
     { "vktestpersistentcache", "gpu", "api=vulkan,testPersistentCache=1" },
+    { "vkddl",                 "gpu", "api=vulkan,useDDLSink=true" },
 #endif
 #ifdef SK_METAL
     { "mtl",                   "gpu", "api=metal" },
     { "mtl1010102",            "gpu", "api=metal,color=1010102" },
     { "mtlmsaa4",              "gpu", "api=metal,samples=4" },
     { "mtlmsaa8",              "gpu", "api=metal,samples=8" },
+    { "mtlddl",                "gpu", "api=metal,useDDLSink=true" },
+#endif
+#ifdef SK_DIRECT3D
+    { "d3d",                   "gpu", "api=direct3d" },
 #endif
 };
 // clang-format on
@@ -273,6 +279,12 @@ static bool parse_option_gpu_api(const SkString&                      value,
         return true;
     }
 #endif
+#ifdef SK_DIRECT3D
+    if (value.equals("direct3d")) {
+      *outContextType = GrContextFactory::kDirect3D_ContextType;
+      return true;
+    }
+#endif
 #ifdef SK_DAWN
     if (value.equals("dawn")) {
         *outContextType = GrContextFactory::kDawn_ContextType;
@@ -434,34 +446,27 @@ private:
     SkTHashMap<SkString, SkString> fOptionsMap;
 };
 
-SkCommandLineConfigGpu::SkCommandLineConfigGpu(const SkString&           tag,
-                                               const SkTArray<SkString>& viaParts,
-                                               ContextType               contextType,
-                                               bool                      useDIText,
-                                               int                       samples,
-                                               SkColorType               colorType,
-                                               SkAlphaType               alphaType,
-                                               sk_sp<SkColorSpace>       colorSpace,
-                                               bool                      useStencilBuffers,
-                                               bool                      testThreading,
-                                               int                       testPersistentCache,
-                                               bool                      testPrecompile,
-                                               SurfType                  surfType)
-        : SkCommandLineConfig(tag, SkString("gpu"), viaParts)
-        , fContextType(contextType)
-        , fContextOverrides(ContextOverrides::kNone)
-        , fUseDIText(useDIText)
-        , fSamples(samples)
-        , fColorType(colorType)
-        , fAlphaType(alphaType)
-        , fColorSpace(std::move(colorSpace))
-        , fTestThreading(testThreading)
-        , fTestPersistentCache(testPersistentCache)
-        , fTestPrecompile(testPrecompile)
-        , fSurfType(surfType) {
-    if (!useStencilBuffers) {
-        fContextOverrides |= ContextOverrides::kAvoidStencilBuffers;
-    }
+SkCommandLineConfigGpu::SkCommandLineConfigGpu(
+    const SkString& tag, const SkTArray<SkString>& viaParts, ContextType contextType,
+    bool useDIText, int samples, SkColorType colorType, SkAlphaType alphaType,
+    sk_sp<SkColorSpace> colorSpace, bool useStencilBuffers, bool testThreading,
+    int testPersistentCache, bool testPrecompile, bool useDDLSink, SurfType surfType)
+    : SkCommandLineConfig(tag, SkString("gpu"), viaParts),
+      fContextType(contextType),
+      fContextOverrides(ContextOverrides::kNone),
+      fUseDIText(useDIText),
+      fSamples(samples),
+      fColorType(colorType),
+      fAlphaType(alphaType),
+      fColorSpace(std::move(colorSpace)),
+      fTestThreading(testThreading),
+      fTestPersistentCache(testPersistentCache),
+      fTestPrecompile(testPrecompile),
+      fUseDDLSink(useDDLSink),
+      fSurfType(surfType) {
+  if (!useStencilBuffers) {
+    fContextOverrides |= ContextOverrides::kAvoidStencilBuffers;
+  }
 }
 
 SkCommandLineConfigGpu* parse_command_line_config_gpu(const SkString&           tag,
@@ -478,6 +483,7 @@ SkCommandLineConfigGpu* parse_command_line_config_gpu(const SkString&           
     bool                                testThreading       = false;
     int                                 testPersistentCache = 0;
     bool                                testPrecompile      = false;
+    bool useDDLs = false;
     SkCommandLineConfigGpu::SurfType    surfType = SkCommandLineConfigGpu::SurfType::kDefault;
 
     bool            parseSucceeded = false;
@@ -487,34 +493,25 @@ SkCommandLineConfigGpu* parse_command_line_config_gpu(const SkString&           
     }
 
     bool validOptions =
-            extendedOptions.get_option_gpu_api("api", &contextType, false) &&
-            extendedOptions.get_option_bool("dit", &useDIText) &&
-            extendedOptions.get_option_int("samples", &samples) &&
-            extendedOptions.get_option_gpu_color("color", &colorType, &alphaType, &colorSpace) &&
-            extendedOptions.get_option_bool("stencils", &useStencils) &&
-            extendedOptions.get_option_bool("testThreading", &testThreading) &&
-            extendedOptions.get_option_int("testPersistentCache", &testPersistentCache) &&
-            extendedOptions.get_option_bool("testPrecompile", &testPrecompile) &&
-            extendedOptions.get_option_gpu_surf_type("surf", &surfType);
+        extendedOptions.get_option_gpu_api("api", &contextType, false) &&
+        extendedOptions.get_option_bool("dit", &useDIText) &&
+        extendedOptions.get_option_int("samples", &samples) &&
+        extendedOptions.get_option_gpu_color("color", &colorType, &alphaType, &colorSpace) &&
+        extendedOptions.get_option_bool("stencils", &useStencils) &&
+        extendedOptions.get_option_bool("testThreading", &testThreading) &&
+        extendedOptions.get_option_int("testPersistentCache", &testPersistentCache) &&
+        extendedOptions.get_option_bool("testPrecompile", &testPrecompile) &&
+        extendedOptions.get_option_bool("useDDLSink", &useDDLs) &&
+        extendedOptions.get_option_gpu_surf_type("surf", &surfType);
 
     // testing threading and the persistent cache are mutually exclusive.
     if (!validOptions || (testThreading && (testPersistentCache != 0))) {
         return nullptr;
     }
 
-    return new SkCommandLineConfigGpu(tag,
-                                      vias,
-                                      contextType,
-                                      useDIText,
-                                      samples,
-                                      colorType,
-                                      alphaType,
-                                      colorSpace,
-                                      useStencils,
-                                      testThreading,
-                                      testPersistentCache,
-                                      testPrecompile,
-                                      surfType);
+    return new SkCommandLineConfigGpu(
+        tag, vias, contextType, useDIText, samples, colorType, alphaType, colorSpace, useStencils,
+        testThreading, testPersistentCache, testPrecompile, useDDLs, surfType);
 }
 
 SkCommandLineConfigSvg::SkCommandLineConfigSvg(const SkString&           tag,

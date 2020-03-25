@@ -41,7 +41,7 @@ sk_sp<GrRenderTask> GrCopyRenderTask::Make(
 
   sk_sp<GrCopyRenderTask> task(new GrCopyRenderTask(
       std::move(srcView), clippedSrcRect, std::move(dstView), clippedDstPoint));
-  return task;
+  return std::move(task);
 }
 
 GrCopyRenderTask::GrCopyRenderTask(

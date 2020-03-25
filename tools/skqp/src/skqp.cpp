@@ -45,7 +45,7 @@
 
 static constexpr char kRenderTestCSVReport[] = "out.csv";
 static constexpr char kRenderTestReportPath[] = "report.html";
-static constexpr char kRenderTestsPath[] = "skqp/rendertests.txt";
+static constexpr char kDefaultRenderTestsPath[] = "skqp/rendertests.txt";
 static constexpr char kUnitTestReportPath[] = "unit_tests.txt";
 static constexpr char kUnitTestsPath[]   = "skqp/unittests.txt";
 
@@ -88,52 +88,57 @@ static void get_unit_tests(SkQPAssetManager* mgr, std::vector<SkQP::UnitTest>* u
     std::sort(unitTests->begin(), unitTests->end(), lt);
 }
 
-static void get_render_tests(SkQPAssetManager* mgr,
-                             std::vector<SkQP::GMFactory>* gmlist,
-                             std::unordered_map<std::string, int64_t>* gmThresholds) {
-    auto insert = [gmThresholds](const char* s, size_t l) {
-        SkASSERT(l > 1) ;
-        if (l > 0 && s[l - 1] == '\n') {  // strip line endings.
-            --l;
-        }
-        if (l == 0) {
-            return;
-        }
-        const char* end = s + l;
-        const char* ptr = s;
-        constexpr char kDelimeter = ',';
-        while (ptr < end && *ptr != kDelimeter) { ++ptr; }
-        if (ptr + 1 >= end) {
-            SkASSERT(false);  // missing delimeter
-            return;
-        }
-        std::string key(s, ptr - s);
-        ++ptr;  // skip delimeter
-        std::string number(ptr, end - ptr);  // null-terminated copy.
-        int64_t value = 0;
-        if (1 != sscanf(number.c_str(), "%" SCNd64 , &value)) {
-            SkASSERT(false);  // Not a number
-            return;
-        }
-        gmThresholds->insert({std::move(key), value});  // (*gmThresholds)[s] = value;
-    };
-    if (sk_sp<SkData> dat = mgr->open(kRenderTestsPath)) {
-        readlines(dat->data(), dat->size(), insert);
+static void get_render_tests(
+    SkQPAssetManager* mgr, const char* renderTestsIn, std::vector<SkQP::GMFactory>* gmlist,
+    std::unordered_map<std::string, int64_t>* gmThresholds) {
+  // Runs all render tests if the |renderTests| file can't be found or is empty.
+  const char* renderTests = renderTestsIn ? renderTestsIn : kDefaultRenderTestsPath;
+  auto insert = [gmThresholds](const char* s, size_t l) {
+    SkASSERT(l > 1);
+    if (l > 0 && s[l - 1] == '\n') {  // strip line endings.
+      --l;
     }
-    using GmAndName = std::pair<SkQP::GMFactory, std::string>;
-    std::vector<GmAndName> gmsWithNames;
-    for (skiagm::GMFactory f : skiagm::GMRegistry::Range()) {
-        std::string name = SkQP::GetGMName(f);
-        if ((gmThresholds->empty() || gmThresholds->count(name) > 0)) {
-            gmsWithNames.push_back(std::make_pair(f, std::move(name)));
-        }
+    if (l == 0) {
+      return;
     }
-    std::sort(gmsWithNames.begin(), gmsWithNames.end(),
-              [](GmAndName u, GmAndName v) { return u.second < v.second; });
-    gmlist->reserve(gmsWithNames.size());
-    for (const GmAndName& gmn : gmsWithNames) {
-        gmlist->push_back(gmn.first);
+    const char* end = s + l;
+    const char* ptr = s;
+    constexpr char kDelimeter = ',';
+    while (ptr < end && *ptr != kDelimeter) {
+      ++ptr;
     }
+    if (ptr + 1 >= end) {
+      SkASSERT(false);  // missing delimeter
+      return;
+    }
+    std::string key(s, ptr - s);
+    ++ptr;                               // skip delimeter
+    std::string number(ptr, end - ptr);  // null-terminated copy.
+    int64_t value = 0;
+    if (1 != sscanf(number.c_str(), "%" SCNd64, &value)) {
+      SkASSERT(false);  // Not a number
+      return;
+    }
+    gmThresholds->insert({std::move(key), value});  // (*gmThresholds)[s] = value;
+  };
+  if (sk_sp<SkData> dat = mgr->open(renderTests)) {
+    readlines(dat->data(), dat->size(), insert);
+  }
+  using GmAndName = std::pair<SkQP::GMFactory, std::string>;
+  std::vector<GmAndName> gmsWithNames;
+  for (skiagm::GMFactory f : skiagm::GMRegistry::Range()) {
+    std::string name = SkQP::GetGMName(f);
+    if ((gmThresholds->empty() || gmThresholds->count(name) > 0)) {
+      gmsWithNames.push_back(std::make_pair(f, std::move(name)));
+    }
+  }
+  std::sort(gmsWithNames.begin(), gmsWithNames.end(), [](GmAndName u, GmAndName v) {
+    return u.second < v.second;
+  });
+  gmlist->reserve(gmsWithNames.size());
+  for (const GmAndName& gmn : gmsWithNames) {
+    gmlist->push_back(gmn.first);
+  }
 }
 
 static std::unique_ptr<sk_gpu_test::TestContext> make_test_context(SkQP::SkiaBackend backend) {
@@ -246,24 +251,22 @@ SkQP::SkQP() {}
 
 SkQP::~SkQP() {}
 
-void SkQP::init(SkQPAssetManager* am, const char* reportDirectory) {
-    SkASSERT_RELEASE(!fAssetManager);
-    SkASSERT_RELEASE(am);
-    fAssetManager = am;
-    fReportDirectory = reportDirectory;
+void SkQP::init(SkQPAssetManager* am, const char* renderTests, const char* reportDirectory) {
+  SkASSERT_RELEASE(!fAssetManager);
+  SkASSERT_RELEASE(am);
+  fAssetManager = am;
+  fReportDirectory = reportDirectory;
 
-    SkGraphics::Init();
-    gSkFontMgr_DefaultFactory = &ToolUtils::MakePortableFontMgr;
+  SkGraphics::Init();
+  gSkFontMgr_DefaultFactory = &ToolUtils::MakePortableFontMgr;
 
-    /* If the file "skqp/rendertests.txt" does not exist or is empty, run all
-       render tests.  Otherwise only run tests mentioned in that file.  */
-    get_render_tests(fAssetManager, &fGMs, &fGMThresholds);
-    /* If the file "skqp/unittests.txt" does not exist or is empty, run all gpu
-       unit tests.  Otherwise only run tests mentioned in that file.  */
-    get_unit_tests(fAssetManager, &fUnitTests);
-    fSupportedBackends = get_backends();
+  get_render_tests(fAssetManager, renderTests, &fGMs, &fGMThresholds);
+  /* If the file "skqp/unittests.txt" does not exist or is empty, run all gpu
+     unit tests.  Otherwise only run tests mentioned in that file.  */
+  get_unit_tests(fAssetManager, &fUnitTests);
+  fSupportedBackends = get_backends();
 
-    print_backend_info((fReportDirectory + "/grdump.txt").c_str(), fSupportedBackends);
+  print_backend_info((fReportDirectory + "/grdump.txt").c_str(), fSupportedBackends);
 }
 
 std::tuple<SkQP::RenderOutcome, std::string> SkQP::evaluateGM(SkQP::SkiaBackend backend,

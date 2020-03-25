@@ -63,6 +63,7 @@ class ByteCodeGenerator : public CodeGenerator {
   enum class SpecialIntrinsic {
     kDot,
     kInverse,
+    kPrint,
   };
 
   struct Intrinsic {

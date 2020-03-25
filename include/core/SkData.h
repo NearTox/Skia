@@ -49,7 +49,7 @@ class SK_API SkData final : public SkNVRefCnt<SkData> {
       // only assert we're unique if we're not empty
       SkASSERT(this->unique());
     }
-    return fPtr;
+    return const_cast<void*>(fPtr);
   }
 
   /**
@@ -158,7 +158,7 @@ class SK_API SkData final : public SkNVRefCnt<SkData> {
   friend class SkNVRefCnt<SkData>;
   ReleaseProc fReleaseProc;
   void* fReleaseProcContext;
-  void* fPtr;
+  const void* fPtr;
   size_t fSize;
 
   SkData(const void* ptr, size_t size, ReleaseProc, void* context);

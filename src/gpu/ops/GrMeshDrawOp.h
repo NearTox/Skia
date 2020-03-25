@@ -50,6 +50,7 @@ class GrMeshDrawOp : public GrDrawOp {
         Target*, const GrGeometryProcessor*, const GrPipeline::FixedDynamicState*) const;
 
     void* vertices() const { return fVertices; }
+    GrMesh* mesh() { return fMesh; }
 
    protected:
     PatternHelper() = default;
@@ -71,6 +72,7 @@ class GrMeshDrawOp : public GrDrawOp {
     QuadHelper() = delete;
     QuadHelper(Target* target, size_t vertexStride, int quadsToDraw);
 
+    using PatternHelper::mesh;
     using PatternHelper::recordDraw;
     using PatternHelper::vertices;
 
@@ -88,15 +90,15 @@ class GrMeshDrawOp : public GrDrawOp {
 
  private:
   void onPrePrepare(
-      GrRecordingContext* context, const GrSurfaceProxyView* dstView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) final {
-    this->onPrePrepareDraws(context, dstView, clip, dstProxyView);
+    this->onPrePrepareDraws(context, outputView, clip, dstProxyView);
   }
   void onPrepare(GrOpFlushState* state) final;
 
   // Only the GrTextureOp currently overrides this virtual
   virtual void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView*, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) {}
 
   virtual void onPrepareDraws(Target*) = 0;
@@ -163,10 +165,7 @@ class GrMeshDrawOp::Target {
   virtual void putBackIndices(int indices) = 0;
   virtual void putBackVertices(int vertices, size_t vertexStride) = 0;
 
-  GrMesh* allocMesh(GrPrimitiveType primitiveType) {
-    return this->allocator()->make<GrMesh>(primitiveType);
-  }
-
+  GrMesh* allocMesh() { return this->allocator()->make<GrMesh>(); }
   GrMesh* allocMeshes(int n) { return this->allocator()->makeArray<GrMesh>(n); }
 
   static GrPipeline::DynamicStateArrays* AllocDynamicStateArrays(
@@ -181,6 +180,7 @@ class GrMeshDrawOp::Target {
   }
 
   virtual GrRenderTargetProxy* proxy() const = 0;
+  virtual const GrSurfaceProxyView* outputView() const = 0;
 
   virtual const GrAppliedClip* appliedClip() const = 0;
   virtual GrAppliedClip detachAppliedClip() = 0;

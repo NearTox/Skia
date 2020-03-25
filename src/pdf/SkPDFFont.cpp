@@ -30,8 +30,8 @@
 #include "src/core/SkGlyph.h"
 #include "src/core/SkImagePriv.h"
 #include "src/core/SkMask.h"
+#include "src/core/SkScalerCache.h"
 #include "src/core/SkScalerContext.h"
-#include "src/core/SkStrike.h"
 #include "src/core/SkStrikeSpec.h"
 #include "src/pdf/SkPDFBitmap.h"
 #include "src/pdf/SkPDFDocumentPriv.h"
@@ -132,7 +132,7 @@ const SkAdvancedTypefaceMetrics* SkPDFFont::GetMetrics(
         uint16_t g = font.unicharToGlyph(c);
         SkRect bounds;
         font.getBounds(&g, 1, &bounds, nullptr);
-        stemV = SkTMin(stemV, SkToS16(SkScalarRoundToInt(bounds.width())));
+        stemV = std::min(stemV, SkToS16(SkScalarRoundToInt(bounds.width())));
       }
       metrics->fStemV = stemV;
     }
@@ -211,7 +211,7 @@ SkPDFFont* SkPDFFont::GetFontResource(SkPDFDocument* doc, const SkGlyph* glyph, 
     firstNonZeroGlyph = 1;
   } else {
     firstNonZeroGlyph = subsetCode;
-    lastGlyph = SkToU16(SkTMin<int>((int)lastGlyph, 254 + (int)subsetCode));
+    lastGlyph = SkToU16(std::min<int>((int)lastGlyph, 254 + (int)subsetCode));
   }
   auto ref = doc->reserveRef();
   return doc->fFontMap.set(
@@ -433,7 +433,7 @@ static ImageAndOffset to_image(SkGlyphID gid, SkBulkGlyphMetricsAndImages* small
       for (int y = 0; y < bm.height(); ++y) {
         for (int x8 = 0; x8 < bm.width(); x8 += 8) {
           uint8_t v = *mask.getAddr1(x8 + bounds.x(), y + bounds.y());
-          int e = SkTMin(x8 + 8, bm.width());
+          int e = std::min(x8 + 8, bm.width());
           for (int x = x8; x < e; ++x) {
             *bm.getAddr8(x, y) = (v >> (x & 0x7)) & 0x1 ? 0xFF : 0x00;
           }
@@ -514,11 +514,11 @@ static void emit_subset_type3(const SkPDFFont& pdfFont, SkPDFDocument* doc) {
   }
   int unitsPerEm;
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakePDFVector(*typeface, &unitsPerEm);
-  auto cache = strikeSpec.findOrCreateExclusiveStrike();
-  SkASSERT(cache);
+  auto strike = strikeSpec.findOrCreateStrike();
+  SkASSERT(strike);
   SkScalar emSize = (SkScalar)unitsPerEm;
-  SkScalar xHeight = cache->getFontMetrics().fXHeight;
-  SkBulkGlyphMetricsAndPaths metricsAndPaths(std::move(cache));
+  SkScalar xHeight = strike->getFontMetrics().fXHeight;
+  SkBulkGlyphMetricsAndPaths metricsAndPaths(std::move(strike));
 
   SkStrikeSpec strikeSpecSmall = kBitmapFontSize > 0 ? make_small_strike(*typeface) : strikeSpec;
 

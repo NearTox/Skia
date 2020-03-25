@@ -26,13 +26,14 @@ EffectBuilder::EffectBuilderT EffectBuilder::findBuilder(const skjson::ObjectVal
     EffectBuilderT fBuilder;
   } gBuilderInfo[] = {
       {"ADBE Drop Shadow", &EffectBuilder::attachDropShadowEffect},
-      {"ADBE Easy Levels2", &EffectBuilder::attachLevelsEffect},
+      {"ADBE Easy Levels2", &EffectBuilder::attachEasyLevelsEffect},
       {"ADBE Fill", &EffectBuilder::attachFillEffect},
       {"ADBE Gaussian Blur 2", &EffectBuilder::attachGaussianBlurEffect},
       {"ADBE Geometry2", &EffectBuilder::attachTransformEffect},
       {"ADBE HUE SATURATION", &EffectBuilder::attachHueSaturationEffect},
       {"ADBE Invert", &EffectBuilder::attachInvertEffect},
       {"ADBE Linear Wipe", &EffectBuilder::attachLinearWipeEffect},
+      {"ADBE Pro Levels2", &EffectBuilder::attachProLevelsEffect},
       {"ADBE Radial Wipe", &EffectBuilder::attachRadialWipeEffect},
       {"ADBE Ramp", &EffectBuilder::attachGradientEffect},
       {"ADBE Shift Channels", &EffectBuilder::attachShiftChannelsEffect},
@@ -124,16 +125,14 @@ const skjson::Value& EffectBuilder::GetPropValue(
   return jprop ? (*jprop)["v"] : kNull;
 }
 
-MaskFilterEffectBase::MaskFilterEffectBase(sk_sp<sksg::RenderNode> child, const SkSize& ls)
-    : fMaskNode(sksg::MaskFilter::Make(nullptr)),
-      fMaskEffectNode(sksg::MaskFilterEffect::Make(std::move(child), fMaskNode)),
-      fLayerSize(ls) {}
+MaskShaderEffectBase::MaskShaderEffectBase(sk_sp<sksg::RenderNode> child, const SkSize& ls)
+    : fMaskEffectNode(sksg::MaskShaderEffect::Make(std::move(child))), fLayerSize(ls) {}
 
-void MaskFilterEffectBase::onSync() {
+void MaskShaderEffectBase::onSync() {
   const auto minfo = this->onMakeMask();
 
   fMaskEffectNode->setVisible(minfo.fVisible);
-  fMaskNode->setMaskFilter(std::move(minfo.fMask));
+  fMaskEffectNode->setShader(std::move(minfo.fMaskShader));
 }
 
 }  // namespace internal

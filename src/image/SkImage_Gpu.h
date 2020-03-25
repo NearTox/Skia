@@ -31,15 +31,12 @@ class SkImage_Gpu : public SkImage_GpuBase {
   GrSemaphoresSubmitted onFlush(GrContext*, const GrFlushInfo&) override;
 
   GrTextureProxy* peekProxy() const override { return fView.asTextureProxy(); }
-  sk_sp<GrTextureProxy> asTextureProxyRef(GrRecordingContext*) const override {
-    return fView.asTextureProxyRef();
-  }
 
-  GrSurfaceProxyView asSurfaceProxyViewRef(GrRecordingContext* context) const override {
-    return fView;
-  }
-  const GrSurfaceProxyView& getSurfaceProxyView(GrRecordingContext* context) const override {
-    return fView;
+  const GrSurfaceProxyView* view(GrRecordingContext* context) const override {
+    if (!fView.proxy()) {
+      return nullptr;
+    }
+    return &fView;
   }
 
   bool onIsTextureBacked() const override {

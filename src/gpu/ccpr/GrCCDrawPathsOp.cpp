@@ -41,7 +41,7 @@ std::unique_ptr<GrCCDrawPathsOp> GrCCDrawPathsOp::Make(
   }
 
   std::unique_ptr<GrCCDrawPathsOp> op;
-  float conservativeSize = SkTMax(conservativeDevBounds.height(), conservativeDevBounds.width());
+  float conservativeSize = std::max(conservativeDevBounds.height(), conservativeDevBounds.width());
   if (conservativeSize > GrCoverageCountingPathRenderer::kPathCropThreshold) {
     // The path is too large. Crop it or analytic AA can run out of fp32 precision.
     SkPath croppedDevPath;
@@ -82,7 +82,7 @@ std::unique_ptr<GrCCDrawPathsOp> GrCCDrawPathsOp::InternalMake(
   // The path itself should have been cropped if larger than kPathCropThreshold. If it had a
   // stroke, that would have further inflated its draw bounds.
   SkASSERT(
-      SkTMax(conservativeDevBounds.height(), conservativeDevBounds.width()) <
+      std::max(conservativeDevBounds.height(), conservativeDevBounds.width()) <
       GrCoverageCountingPathRenderer::kPathCropThreshold +
           GrCoverageCountingPathRenderer::kMaxBoundsInflationFromStroke * 2 + 1);
 
@@ -287,7 +287,7 @@ bool GrCCDrawPathsOp::SingleDraw::shouldCachePathMask(int maxRenderTargetSize) c
   }
 
   int shapeMaxDimension =
-      SkTMax(fShapeConservativeIBounds.height(), fShapeConservativeIBounds.width());
+      std::max(fShapeConservativeIBounds.height(), fShapeConservativeIBounds.width());
   if (shapeMaxDimension > maxRenderTargetSize) {
     return false;  // This path isn't cachable.
   }
@@ -359,7 +359,7 @@ void GrCCDrawPathsOp::SingleDraw::setupResources(
                     ? SkPMColor4f{0,0,.25,.25} : SkPMColor4f{0,.25,0,.25};
 #endif
       auto coverageMode =
-          GrCCPathProcessor::GetCoverageMode(fCacheEntry->cachedAtlas()->coverageType());
+          GrCCAtlas::CoverageTypeToPathCoverageMode(fCacheEntry->cachedAtlas()->coverageType());
       op->recordInstance(
           coverageMode, fCacheEntry->cachedAtlas()->getOnFlushProxy(),
           resources->nextPathInstanceIdx());
@@ -387,7 +387,8 @@ void GrCCDrawPathsOp::SingleDraw::setupResources(
   if (auto atlas = resources->renderShapeInAtlas(
           fMaskDevIBounds, fMatrix, fShape, fStrokeDevWidth, &octoBounds, &devIBounds,
           &devToAtlasOffset)) {
-    auto coverageMode = GrCCPathProcessor::GetCoverageMode(resources->renderedPathCoverageType());
+    auto coverageMode =
+        GrCCAtlas::CoverageTypeToPathCoverageMode(resources->renderedPathCoverageType());
     op->recordInstance(coverageMode, atlas->textureProxy(), resources->nextPathInstanceIdx());
     resources->appendDrawPathInstance().set(
         octoBounds, devToAtlasOffset, SkPMColor4f_toFP16(fColor), fillRule);
@@ -436,10 +437,6 @@ void GrCCDrawPathsOp::onExecute(GrOpFlushState* flushState, const SkRect& chainB
   initArgs.fDstProxyView = flushState->drawOpArgs().dstProxyView();
   initArgs.fOutputSwizzle = flushState->drawOpArgs().outputSwizzle();
   auto clip = flushState->detachAppliedClip();
-  GrPipeline::FixedDynamicState fixedDynamicState;
-  if (clip.scissorState().enabled()) {
-    fixedDynamicState.fScissorRect = clip.scissorState().rect();
-  }
   GrPipeline pipeline(initArgs, std::move(fProcessors), std::move(clip));
 
   int baseInstance = fBaseInstance;
@@ -450,12 +447,13 @@ void GrCCDrawPathsOp::onExecute(GrOpFlushState* flushState, const SkRect& chainB
 
     GrSurfaceProxy* atlas = range.fAtlasProxy;
     if (atlas->isInstantiated()) {  // Instantiation can fail in exceptional circumstances.
+      GrColorType ct = GrCCPathProcessor::GetColorTypeFromCoverageMode(range.fCoverageMode);
+      GrSwizzle swizzle = flushState->caps().getReadSwizzle(atlas->backendFormat(), ct);
       GrCCPathProcessor pathProc(
-          range.fCoverageMode, atlas->peekTexture(), atlas->textureSwizzle(), atlas->origin(),
+          range.fCoverageMode, atlas->peekTexture(), swizzle, GrCCAtlas::kTextureOrigin,
           fViewMatrixIfUsingLocalCoords);
-      fixedDynamicState.fPrimitiveProcessorTextures = &atlas;
       pathProc.drawPaths(
-          flushState, pipeline, &fixedDynamicState, *resources, baseInstance, range.fEndInstanceIdx,
+          flushState, pipeline, *atlas, *resources, baseInstance, range.fEndInstanceIdx,
           this->bounds());
     }
 

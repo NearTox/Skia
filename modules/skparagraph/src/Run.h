@@ -91,9 +91,10 @@ class Run {
   bool leftToRight() const { return fBidiLevel % 2 == 0; }
   size_t index() const { return fIndex; }
   SkScalar lineHeight() const { return fHeightMultiplier; }
-  PlaceholderStyle* placeholder() const { return fPlaceholder; }
-  bool isPlaceholder() const { return fPlaceholder != nullptr; }
+  PlaceholderStyle* placeholderStyle() const;
+  bool isPlaceholder() const { return fPlaceholderIndex != std::numeric_limits<size_t>::max(); }
   size_t clusterIndex(size_t pos) const { return fClusterIndexes[pos]; }
+  size_t globalClusterIndex(size_t pos) const { return fClusterStart + fClusterIndexes[pos]; }
   SkScalar positionX(size_t pos) const;
 
   TextRange textRange() const { return fTextRange; }
@@ -149,6 +150,15 @@ class Run {
 
   SkRect getBounds(size_t pos) const { return fBounds[pos]; }
 
+  void resetShifts() {
+    for (auto& r : fShifts) {
+      r = 0;
+    }
+    fSpaced = false;
+  }
+
+  void resetJustificationShifts() { fJustificationShifts.reset(); }
+
  private:
   friend class ParagraphImpl;
   friend class TextLine;
@@ -163,7 +173,7 @@ class Run {
   SkFont fFont;
   SkFontMetrics fFontMetrics;
   SkScalar fHeightMultiplier;
-  PlaceholderStyle* fPlaceholder;
+  size_t fPlaceholderIndex;
   bool fEllipsis;
   size_t fIndex;
   uint8_t fBidiLevel;
@@ -173,11 +183,13 @@ class Run {
   SkShaper::RunHandler::Range fUtf8Range;
   SkSTArray<128, SkGlyphID, true> fGlyphs;
   SkSTArray<128, SkPoint, true> fPositions;
+  SkSTArray<128, SkPoint, true>
+      fJustificationShifts;  // For justification (current and prev shifts)
   SkSTArray<128, SkPoint, true> fOffsets;
   SkSTArray<128, uint32_t, true> fClusterIndexes;
   SkSTArray<128, SkRect, true> fBounds;
 
-  SkSTArray<128, SkScalar, true> fShifts;  // For formatting (letter/word spacing, justification)
+  SkSTArray<128, SkScalar, true> fShifts;  // For formatting (letter/word spacing)
   bool fSpaced;
 };
 
@@ -331,15 +343,15 @@ class InternalLineMetrics {
       return;
     }
 
-    fAscent = SkTMin(fAscent, run->correctAscent());
-    fDescent = SkTMax(fDescent, run->correctDescent());
-    fLeading = SkTMax(fLeading, run->correctLeading());
+    fAscent = std::min(fAscent, run->correctAscent());
+    fDescent = std::max(fDescent, run->correctDescent());
+    fLeading = std::max(fLeading, run->correctLeading());
   }
 
   void add(InternalLineMetrics other) {
-    fAscent = SkTMin(fAscent, other.fAscent);
-    fDescent = SkTMax(fDescent, other.fDescent);
-    fLeading = SkTMax(fLeading, other.fLeading);
+    fAscent = std::min(fAscent, other.fAscent);
+    fDescent = std::max(fDescent, other.fDescent);
+    fLeading = std::max(fLeading, other.fLeading);
   }
   void clean() {
     fAscent = 0;
@@ -356,8 +368,8 @@ class InternalLineMetrics {
       metrics.fLeading = fLeading;
     } else {
       // This is another of those flutter changes. To be removed...
-      metrics.fAscent = SkTMin(metrics.fAscent, fAscent - fLeading / 2.0f);
-      metrics.fDescent = SkTMax(metrics.fDescent, fDescent + fLeading / 2.0f);
+      metrics.fAscent = std::min(metrics.fAscent, fAscent - fLeading / 2.0f);
+      metrics.fDescent = std::max(metrics.fDescent, fDescent + fLeading / 2.0f);
     }
   }
 

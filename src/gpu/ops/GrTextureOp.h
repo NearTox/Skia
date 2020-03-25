@@ -41,8 +41,8 @@ class GrTextureOp {
    */
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext*, GrSurfaceProxyView, SkAlphaType srcAlphaType, sk_sp<GrColorSpaceXform>,
-      GrSamplerState::Filter, const SkPMColor4f&, Saturate, SkBlendMode, GrAAType, GrQuadAAFlags,
-      const GrQuad& deviceQuad, const GrQuad& localQuad, const SkRect* domain = nullptr);
+      GrSamplerState::Filter, const SkPMColor4f&, Saturate, SkBlendMode, GrAAType, DrawQuad*,
+      const SkRect* domain = nullptr);
 
   // Automatically falls back to using one GrFillRectOp per entry if dynamic states are not
   // supported, or if the blend mode is not src-over. 'cnt' is the size of the entry array.

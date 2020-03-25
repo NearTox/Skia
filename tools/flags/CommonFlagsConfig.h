@@ -54,7 +54,7 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
       const SkString& tag, const SkTArray<SkString>& viaParts, ContextType contextType,
       bool useDIText, int samples, SkColorType colorType, SkAlphaType alphaType,
       sk_sp<SkColorSpace> colorSpace, bool useStencilBuffers, bool testThreading,
-      int testPersistentCache, bool testPrecompile, SurfType);
+      int testPersistentCache, bool testPrecompile, bool useDDLSink, SurfType);
 
   const SkCommandLineConfigGpu* asConfigGpu() const override { return this; }
   ContextType getContextType() const { return fContextType; }
@@ -67,6 +67,7 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
   bool getTestThreading() const { return fTestThreading; }
   int getTestPersistentCache() const { return fTestPersistentCache; }
   bool getTestPrecompile() const { return fTestPrecompile; }
+  bool getUseDDLSink() const { return fUseDDLSink; }
   SurfType getSurfType() const { return fSurfType; }
 
  private:
@@ -80,6 +81,7 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
   bool fTestThreading;
   int fTestPersistentCache;
   bool fTestPrecompile;
+  bool fUseDDLSink;
   SurfType fSurfType;
 };
 

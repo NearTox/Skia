@@ -50,11 +50,61 @@ class GrOpsRenderPass {
   // Signals the end of recording to the GrOpsRenderPass and that it can now be submitted.
   virtual void end() = 0;
 
-  // We pass in an array of meshCount GrMesh to the draw. The backend should loop over each
-  // GrMesh object and emit a draw for it. Each draw will use the same GrPipeline and
-  // GrPrimitiveProcessor. This may fail if the draw would exceed any resource limits (e.g.
-  // number of vertex attributes is too large).
-  bool draw(const GrProgramInfo&, const GrMesh[], int meshCount, const SkRect& bounds);
+  // Updates the internal pipeline state for drawing with the provided GrProgramInfo. If an
+  // optional scissor rect is provided, then this method calls setScissor for convenience after
+  // binding the pipeline. Enters an internal "bad" state if the pipeline could not be set.
+  void bindPipeline(
+      const GrProgramInfo&, const SkRect& drawBounds, const SkIRect* optionalScissorRect = nullptr);
+
+  // The scissor rect is always dynamic state and therefore not stored on GrPipeline. If scissor
+  // test is enabled on the current pipeline, then the client must call setScissorRect() before
+  // drawing. The scissor rect may also be updated between draws without having to bind a new
+  // pipeline.
+  void setScissorRect(const SkIRect&);
+
+  // Binds textures for the primitive processor and any FP on the GrPipeline. Texture bindings are
+  // dynamic state and therefore not set during bindPipeline(). If the current program uses
+  // textures, then the client must call bindTextures() before drawing. The primitive processor
+  // textures may also be updated between draws by calling bindTextures() again with a different
+  // array for primProcTextures. (On subsequent calls, if the backend is capable of updating the
+  // primitive processor textures independently, then it will automatically skip re-binding
+  // FP textures from GrPipeline.)
+  //
+  // If the current program does not use textures, this is a no-op.
+  void bindTextures(
+      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrPipeline&);
+
+  // This is a convenience overload for when the primitive processor has exactly one texture. It
+  // binds one texture for the primitive processor, and any others for FPs on the pipeline.
+  void bindTextures(
+      const GrPrimitiveProcessor&, const GrSurfaceProxy& singlePrimProcTexture, const GrPipeline&);
+
+  void bindBuffers(
+      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
+      GrPrimitiveRestart = GrPrimitiveRestart::kNo);
+
+  // Draws the given array of meshes using the current pipeline state. The client must call
+  // bindPipeline() before using this method.
+  //
+  // NOTE: This method will soon be deleted. While it continues to exist, it takes care of calling
+  // setScissor() and bindTextures() on the client's behalf.
+  void drawMeshes(const GrProgramInfo&, const GrMesh[], int meshCount);
+
+  // These methods issue draws using the current pipeline state. Before drawing, the caller must
+  // configure the pipeline and dynamic state:
+  //
+  //   - Call bindPipeline()
+  //   - If the scissor test is enabled, call setScissorRect()
+  //   - If the current program uses textures, call bindTextures()
+  //   - Call bindBuffers() (even if all buffers are null)
+  void draw(int vertexCount, int baseVertex);
+  void drawIndexed(
+      int indexCount, int baseIndex, uint16_t minIndexValue, uint16_t maxIndexValue,
+      int baseVertex);
+  void drawInstanced(int instanceCount, int baseInstance, int vertexCount, int baseVertex);
+  void drawIndexedInstanced(
+      int indexCount, int baseIndex, int instanceCount, int baseInstance, int baseVertex);
 
   // Performs an upload of vertex data in the middle of a set of a set of draws
   virtual void inlineUpload(GrOpFlushState*, GrDeferredTextureUploadFn&) = 0;
@@ -69,7 +119,7 @@ class GrOpsRenderPass {
   /**
    * Executes the SkDrawable object for the underlying backend.
    */
-  virtual void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
+  void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>);
 
  protected:
   GrOpsRenderPass() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
@@ -90,14 +140,43 @@ class GrOpsRenderPass {
  private:
   virtual GrGpu* gpu() = 0;
 
-  // overridden by backend-specific derived class to perform the draw call.
-  virtual void onDraw(
-      const GrProgramInfo&, const GrMesh[], int meshCount, const SkRect& bounds) = 0;
+  bool prepareToDraw();
 
-  // overridden by backend-specific derived class to perform the clear.
+  // overridden by backend-specific derived class to perform the rendering command.
+  virtual bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) = 0;
+  virtual void onSetScissorRect(const SkIRect&) = 0;
+  virtual bool onBindTextures(
+      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrPipeline&) = 0;
+  virtual void onBindBuffers(
+      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
+      GrPrimitiveRestart) = 0;
+  virtual void onDraw(int vertexCount, int baseVertex) = 0;
+  virtual void onDrawIndexed(
+      int indexCount, int baseIndex, uint16_t minIndexValue, uint16_t maxIndexValue,
+      int baseVertex) = 0;
+  virtual void onDrawInstanced(
+      int instanceCount, int baseInstance, int vertexCount, int baseVertex) = 0;
+  virtual void onDrawIndexedInstanced(
+      int indexCount, int baseIndex, int instanceCount, int baseInstance, int baseVertex) = 0;
   virtual void onClear(const GrFixedClip&, const SkPMColor4f&) = 0;
-
   virtual void onClearStencilClip(const GrFixedClip&, bool insideStencilMask) = 0;
+  virtual void onExecuteDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
+
+  enum class DrawPipelineStatus { kOk = 0, kNotConfigured, kFailedToBind };
+
+  DrawPipelineStatus fDrawPipelineStatus = DrawPipelineStatus::kNotConfigured;
+  GrXferBarrierType fXferBarrierType;
+
+#ifdef SK_DEBUG
+  enum class DynamicStateStatus { kDisabled, kUninitialized, kConfigured };
+
+  DynamicStateStatus fScissorStatus = DynamicStateStatus::kDisabled;
+  DynamicStateStatus fTextureBindingStatus = DynamicStateStatus::kDisabled;
+  bool fHasIndexBuffer = false;
+  DynamicStateStatus fInstanceBufferStatus = DynamicStateStatus::kDisabled;
+  DynamicStateStatus fVertexBufferStatus = DynamicStateStatus::kDisabled;
+#endif
 
   typedef GrOpsRenderPass INHERITED;
 };

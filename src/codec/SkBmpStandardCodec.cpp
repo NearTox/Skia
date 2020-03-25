@@ -67,7 +67,7 @@ bool SkBmpStandardCodec::createColorTable(SkColorType dstColorType, SkAlphaType 
     // Inform the caller of the number of colors
     uint32_t maxColors = 1 << this->bitsPerPixel();
     // Don't bother reading more than maxColors.
-    const uint32_t numColorsToRead = fNumColors == 0 ? maxColors : SkTMin(fNumColors, maxColors);
+    const uint32_t numColorsToRead = fNumColors == 0 ? maxColors : std::min(fNumColors, maxColors);
 
     // Read the color table from the stream
     colorBytes = numColorsToRead * fBytesPerColor;

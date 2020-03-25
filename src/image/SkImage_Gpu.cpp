@@ -12,7 +12,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/GrContext.h"
-#include "include/gpu/GrTexture.h"
 #include "include/private/GrRecordingContext.h"
 #include "include/private/SkImageInfoPriv.h"
 #include "src/core/SkAutoPixmapStorage.h"
@@ -37,6 +36,7 @@
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrSemaphore.h"
 #include "src/gpu/GrSurfacePriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTextureAdjuster.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/GrTextureProxy.h"
@@ -93,8 +93,7 @@ sk_sp<SkImage> SkImage_Gpu::onMakeColorTypeAndColorSpace(
 
   GrPaint paint;
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
-  sk_sp<GrTextureProxy> proxy = this->asTextureProxyRef(context);
-  paint.addColorFragmentProcessor(GrTextureEffect::Make(std::move(proxy), this->alphaType()));
+  paint.addColorFragmentProcessor(GrTextureEffect::Make(*this->view(context), this->alphaType()));
   if (xform) {
     paint.addColorFragmentProcessor(std::move(xform));
   }
@@ -132,7 +131,7 @@ static sk_sp<SkImage> new_wrapped_texture_common(
 
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
   sk_sp<GrTextureProxy> proxy = proxyProvider->wrapBackendTexture(
-      backendTex, colorType, origin, ownership, GrWrapCacheable::kNo, kRead_GrIOType, releaseProc,
+      backendTex, colorType, ownership, GrWrapCacheable::kNo, kRead_GrIOType, releaseProc,
       releaseCtx);
   if (!proxy) {
     return nullptr;
@@ -160,7 +159,7 @@ sk_sp<SkImage> SkImage::MakeFromCompressedTexture(
 
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
   sk_sp<GrTextureProxy> proxy = proxyProvider->wrapCompressedBackendTexture(
-      tex, origin, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, releaseP, releaseC);
+      tex, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, releaseP, releaseC);
   if (!proxy) {
     return nullptr;
   }
@@ -241,9 +240,6 @@ sk_sp<SkImage> SkImage::MakeTextureFromCompressed(
   if (!proxy) {
     return nullptr;
   }
-  // TODO: remove asserts when proxy doesn't hold origin or swizzle
-  SkASSERT(proxy->origin() == kTopLeft_GrSurfaceOrigin);
-  SkASSERT(proxy->textureSwizzle() == GrSwizzle());
   GrSurfaceProxyView view(std::move(proxy));
 
   SkColorType colorType = GrCompressionTypeToSkColorType(type);
@@ -264,16 +260,15 @@ sk_sp<SkImage> SkImage_Gpu::ConvertYUVATexturesToRGB(
     return nullptr;
   }
 
-  sk_sp<GrTextureProxy> tempTextureProxies[4];
+  GrSurfaceProxyView tempViews[4];
   if (!SkImage_GpuBase::MakeTempTextureProxies(
-          ctx, yuvaTextures, numTextures, yuvaIndices, origin, tempTextureProxies)) {
+          ctx, yuvaTextures, numTextures, yuvaIndices, origin, tempViews)) {
     return nullptr;
   }
 
   const SkRect rect = SkRect::MakeIWH(size.width(), size.height());
   if (!RenderYUVAToRGBA(
-          ctx, renderTargetContext, rect, yuvColorSpace, nullptr, tempTextureProxies,
-          yuvaIndices)) {
+          ctx, renderTargetContext, rect, yuvColorSpace, nullptr, tempViews, yuvaIndices)) {
     return nullptr;
   }
 
@@ -387,16 +382,12 @@ sk_sp<SkImage> SkImage::MakeFromNV12TexturesCopyWithExternalBackend(
 
 static sk_sp<SkImage> create_image_from_producer(
     GrContext* context, GrTextureProducer* producer, uint32_t id, GrMipMapped mipMapped) {
-  // TODO: have texture producer return a GrSurfaceProxyView
-  auto [proxy, colorType] = producer->refTextureProxy(mipMapped);
-  if (!proxy) {
+  auto view = producer->view(mipMapped);
+  if (!view) {
     return nullptr;
   }
-  GrSurfaceOrigin origin = proxy->origin();
-  const GrSwizzle& swizzle = proxy->textureSwizzle();
-  GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
   return sk_make_sp<SkImage_Gpu>(
-      sk_ref_sp(context), id, std::move(view), GrColorTypeToSkColorType(colorType),
+      sk_ref_sp(context), id, std::move(view), GrColorTypeToSkColorType(producer->colorType()),
       producer->alphaType(), sk_ref_sp(producer->colorSpace()));
 }
 
@@ -410,13 +401,12 @@ sk_sp<SkImage> SkImage::makeTextureImage(GrContext* context, GrMipMapped mipMapp
       return nullptr;
     }
 
-    sk_sp<GrTextureProxy> proxy = as_IB(this)->asTextureProxyRef(context);
-    SkASSERT(proxy);
-    if (GrMipMapped::kNo == mipMapped || proxy->mipMapped() == mipMapped) {
+    const GrSurfaceProxyView* view = as_IB(this)->view(context);
+    SkASSERT(view && view->asTextureProxy());
+    if (GrMipMapped::kNo == mipMapped || view->asTextureProxy()->mipMapped() == mipMapped) {
       return sk_ref_sp(const_cast<SkImage*>(this));
     }
-    GrTextureAdjuster adjuster(
-        context, std::move(proxy), this->imageInfo().colorInfo(), this->uniqueID());
+    GrTextureAdjuster adjuster(context, *view, this->imageInfo().colorInfo(), this->uniqueID());
     return create_image_from_producer(context, &adjuster, this->uniqueID(), mipMapped);
   }
 
@@ -469,7 +459,7 @@ sk_sp<SkImage> SkImage_Gpu::MakePromiseTexture(
 
   callDone.clear();
   auto proxy = MakePromiseImageLazyProxy(
-      context, width, height, origin, grColorType, backendFormat, mipMapped, textureFulfillProc,
+      context, width, height, grColorType, backendFormat, mipMapped, textureFulfillProc,
       textureReleaseProc, textureDoneProc, textureContext, version);
   if (!proxy) {
     return nullptr;
@@ -506,11 +496,11 @@ sk_sp<SkImage> SkImage::MakeCrossContextFromPixmap(
   const SkPixmap* pixmap = &originalPixmap;
   SkAutoPixmapStorage resized;
   int maxTextureSize = context->priv().caps()->maxTextureSize();
-  int maxDim = SkTMax(originalPixmap.width(), originalPixmap.height());
+  int maxDim = std::max(originalPixmap.width(), originalPixmap.height());
   if (limitToMaxTextureSize && maxDim > maxTextureSize) {
     float scale = static_cast<float>(maxTextureSize) / maxDim;
-    int newWidth = SkTMin(static_cast<int>(originalPixmap.width() * scale), maxTextureSize);
-    int newHeight = SkTMin(static_cast<int>(originalPixmap.height() * scale), maxTextureSize);
+    int newWidth = std::min(static_cast<int>(originalPixmap.width() * scale), maxTextureSize);
+    int newHeight = std::min(static_cast<int>(originalPixmap.height() * scale), maxTextureSize);
     SkImageInfo info = originalPixmap.info().makeWH(newWidth, newHeight);
     if (!resized.tryAlloc(info) || !originalPixmap.scalePixels(resized, kLow_SkFilterQuality)) {
       return nullptr;
@@ -522,22 +512,22 @@ sk_sp<SkImage> SkImage::MakeCrossContextFromPixmap(
   bmp.installPixels(*pixmap);
   GrBitmapTextureMaker bitmapMaker(context, bmp);
   GrMipMapped mipMapped = buildMips ? GrMipMapped::kYes : GrMipMapped::kNo;
-  auto [proxy, grCT] = bitmapMaker.refTextureProxy(mipMapped);
-  if (!proxy) {
+  auto view = bitmapMaker.view(mipMapped);
+  if (!view) {
     return SkImage::MakeRasterCopy(*pixmap);
   }
 
-  sk_sp<GrTexture> texture = sk_ref_sp(proxy->peekTexture());
+  sk_sp<GrTexture> texture = sk_ref_sp(view.proxy()->peekTexture());
 
   // Flush any writes or uploads
-  context->priv().flushSurface(proxy.get());
+  context->priv().flushSurface(view.proxy());
   GrGpu* gpu = context->priv().getGpu();
 
   std::unique_ptr<GrSemaphore> sema = gpu->prepareTextureForCrossContextUsage(texture.get());
 
-  SkColorType skCT = GrColorTypeToSkColorType(grCT);
+  SkColorType skCT = GrColorTypeToSkColorType(bitmapMaker.colorType());
   auto gen = GrBackendTextureImageGenerator::Make(
-      std::move(texture), proxy->origin(), std::move(sema), skCT, pixmap->alphaType(),
+      std::move(texture), view.origin(), std::move(sema), skCT, pixmap->alphaType(),
       pixmap->info().refColorSpace());
   return SkImage::MakeFromGenerator(std::move(gen));
 }
@@ -590,8 +580,8 @@ sk_sp<SkImage> SkImage::MakeFromAHardwareBufferWithData(
   }
 
   sk_sp<GrTextureProxy> proxy = proxyProvider->wrapBackendTexture(
-      backendTexture, grColorType, surfaceOrigin, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo,
-      kRW_GrIOType, deleteImageProc, deleteImageCtx);
+      backendTexture, grColorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRW_GrIOType,
+      deleteImageProc, deleteImageCtx);
   if (!proxy) {
     deleteImageProc(deleteImageCtx);
     return nullptr;
@@ -647,7 +637,8 @@ bool SkImage::MakeBackendTextureFromSkImage(
       return false;
     }
   }
-  GrTexture* texture = image->getTexture();
+  SkImage_GpuBase* gpuImage = static_cast<SkImage_GpuBase*>(as_IB(image));
+  GrTexture* texture = gpuImage->getTexture();
   if (!texture) {
     // In context-loss cases, we may not have a texture.
     return false;
@@ -670,7 +661,7 @@ bool SkImage::MakeBackendTextureFromSkImage(
       return false;
     }
 
-    texture = image->getTexture();
+    texture = gpuImage->getTexture();
     if (!texture) {
       return false;
     }

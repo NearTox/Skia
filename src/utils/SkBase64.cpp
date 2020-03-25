@@ -30,7 +30,8 @@ SkBase64::SkBase64() : fLength((size_t)-1), fData(nullptr) {}
 
 SkBase64::Error SkBase64::decode(const void* srcPtr, size_t size, bool writeDestination) {
   unsigned char* dst = (unsigned char*)fData;
-  const unsigned char* dstStart = (const unsigned char*)fData;
+  int i = 0;
+
   const unsigned char* src = (const unsigned char*)srcPtr;
   bool padTwo = false;
   bool padThree = false;
@@ -71,18 +72,18 @@ SkBase64::Error SkBase64::decode(const void* srcPtr, size_t size, bool writeDest
       three = (uint8_t)((three << 6) & 0xFF);
       three |= bytes[3];
       SkASSERT(one < 256 && two < 256 && three < 256);
-      *dst = (unsigned char)one;
+      dst[i] = (unsigned char)one;
     }
-    dst++;
+    i++;
     if (padTwo) break;
-    if (writeDestination) *dst = (unsigned char)two;
-    dst++;
+    if (writeDestination) dst[i] = (unsigned char)two;
+    i++;
     if (padThree) break;
-    if (writeDestination) *dst = (unsigned char)three;
-    dst++;
+    if (writeDestination) dst[i] = (unsigned char)three;
+    i++;
   }
 goHome:
-  fLength = dst - dstStart;
+  fLength = i;
   return kNoError;
 }
 

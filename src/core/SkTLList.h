@@ -156,7 +156,7 @@ class SkTLList {
     this->validate();
   }
 
-  int count() const { return SkTMax(fCount, 0); }
+  int count() const { return std::max(fCount, 0); }
   bool isEmpty() const {
     this->validate();
     return 0 == fCount || -1 == fCount;

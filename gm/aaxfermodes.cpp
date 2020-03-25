@@ -204,11 +204,11 @@ class AAXfermodesGM : public skiagm::GM {
 
     if (mode == SkBlendMode::kPlus) {
       // Check for overflow, otherwise we might get confusing AA artifacts.
-      int maxSum = SkTMax(
-          SkTMax(
+      int maxSum = std::max(
+          std::max(
               SkColorGetA(kBGColor) + SkColorGetA(color),
               SkColorGetR(kBGColor) + SkColorGetR(color)),
-          SkTMax(
+          std::max(
               SkColorGetG(kBGColor) + SkColorGetG(color),
               SkColorGetB(kBGColor) + SkColorGetB(color)));
 

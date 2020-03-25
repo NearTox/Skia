@@ -229,8 +229,26 @@ class SampleLocationsTestOp : public GrDrawOp {
     return GrProcessorSet::EmptySetAnalysis();
   }
 
+  GrProgramInfo* createProgramInfo(
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) const {
+    GrGeometryProcessor* geomProc = SampleLocationsTestProcessor::Make(arena, fGradType);
+
+    GrPipeline::InputFlags flags = GrPipeline::InputFlags::kHWAntialias;
+
+    return sk_gpu_test::CreateProgramInfo(
+        caps, arena, outputView, std::move(appliedClip), dstProxyView, geomProc,
+        SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip, flags, &gStencilWrite);
+  }
+
+  GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) const {
+    return this->createProgramInfo(
+        &flushState->caps(), flushState->allocator(), flushState->outputView(),
+        flushState->detachAppliedClip(), flushState->dstProxyView());
+  }
+
   void onPrePrepare(
-      GrRecordingContext* context, const GrSurfaceProxyView* dstView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) final {
     // We're going to create the GrProgramInfo (and the GrPipeline and geometry processor
     // it relies on) in the DDL-record-time arena.
@@ -239,31 +257,24 @@ class SampleLocationsTestOp : public GrDrawOp {
     // This is equivalent to a GrOpFlushState::detachAppliedClip
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
 
-    GrGeometryProcessor* geomProc = SampleLocationsTestProcessor::Make(arena, fGradType);
+    fProgramInfo = this->createProgramInfo(
+        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
 
-    fProgramInfo = sk_gpu_test::CreateProgramInfo(
-        context->priv().caps(), arena, dstView, std::move(appliedClip), dstProxyView, geomProc,
-        SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip,
-        GrPipeline::InputFlags::kHWAntialias, &gStencilWrite);
+    context->priv().recordProgramInfo(fProgramInfo);
   }
 
   void onPrepare(GrOpFlushState*) final {}
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) final {
     if (!fProgramInfo) {
-      auto geomProc = SampleLocationsTestProcessor::Make(flushState->allocator(), fGradType);
-
-      fProgramInfo = sk_gpu_test::CreateProgramInfo(
-          &flushState->caps(), flushState->allocator(), flushState->view(),
-          flushState->detachAppliedClip(), flushState->dstProxyView(), geomProc,
-          SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip,
-          GrPipeline::InputFlags::kHWAntialias, &gStencilWrite);
+      fProgramInfo = this->createProgramInfo(flushState);
     }
 
-    GrMesh mesh(GrPrimitiveType::kTriangleStrip);
+    GrMesh mesh;
     mesh.setInstanced(nullptr, 200 * 200, 0, 4);
 
-    flushState->opsRenderPass()->draw(*fProgramInfo, &mesh, 1, SkRect::MakeIWH(200, 200));
+    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, SkRect::MakeIWH(200, 200));
+    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, &mesh, 1);
   }
 
   const GradType fGradType;
@@ -332,9 +343,9 @@ DrawResult SampleLocationsGM::onDraw(
 
   // Copy offscreen texture to canvas.
   rtc->drawTexture(
-      GrNoClip(), sk_ref_sp(offscreenRTC->asTextureProxy()), offscreenRTC->colorInfo().colorType(),
-      offscreenRTC->colorInfo().alphaType(), GrSamplerState::Filter::kNearest, SkBlendMode::kSrc,
-      SK_PMColor4fWHITE, {0, 0, 200, 200}, {0, 0, 200, 200}, GrAA::kNo, GrQuadAAFlags::kNone,
+      GrNoClip(), offscreenRTC->readSurfaceView(), offscreenRTC->colorInfo().alphaType(),
+      GrSamplerState::Filter::kNearest, SkBlendMode::kSrc, SK_PMColor4fWHITE, {0, 0, 200, 200},
+      {0, 0, 200, 200}, GrAA::kNo, GrQuadAAFlags::kNone,
       SkCanvas::SrcRectConstraint::kStrict_SrcRectConstraint, SkMatrix::I(), nullptr);
 
   return skiagm::DrawResult::kOk;

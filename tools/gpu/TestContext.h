@@ -22,6 +22,7 @@ struct GrContextOptions;
 namespace sk_gpu_test {
 
 class GpuTimer;
+class FlushFinishTracker;
 
 /**
  * An offscreen 3D context. This class is intended for Skia's internal testing needs and not
@@ -31,11 +32,7 @@ class TestContext : public SkNoncopyable {
  public:
   virtual ~TestContext();
 
-  bool fenceSyncSupport() const { return fFenceSync != nullptr; }
-  FenceSync* fenceSync() {
-    SkASSERT(fFenceSync);
-    return fFenceSync.get();
-  }
+  bool fenceSyncSupport() const { return fFenceSupport; }
 
   bool gpuTimingSupport() const { return fGpuTimer != nullptr; }
   GpuTimer* gpuTimer() const {
@@ -44,13 +41,14 @@ class TestContext : public SkNoncopyable {
   }
 
   bool getMaxGpuFrameLag(int* maxFrameLag) const {
-    if (!fFenceSync) {
+    if (!this->fenceSyncSupport()) {
       return false;
     }
     *maxFrameLag = kMaxFrameLag;
     return true;
   }
 
+  void makeNotCurrent() const;
   void makeCurrent() const;
 
   /**
@@ -69,25 +67,13 @@ class TestContext : public SkNoncopyable {
 
   virtual sk_sp<GrContext> makeGrContext(const GrContextOptions&);
 
-  /** Swaps front and back buffer (if the context has such buffers) */
-  void swapBuffers();
-
   /**
-   * The only purpose of this function it to provide a means of scheduling
-   * work on the GPU (since all of the subclasses create primary buffers for
-   * testing that are small and not meant to be rendered to the screen).
-   *
-   * If the platform supports fence syncs (OpenGL 3.2+ or EGL_KHR_fence_sync),
-   * this will not swap any buffers, but rather emulate triple buffer synchronization
-   * using fences.
-   *
-   * Otherwise it will call the platform SwapBuffers method. This may or may
-   * not perform some sort of synchronization, depending on whether the
-   * drawing surface provided by the platform is double buffered.
-   *
-   * Implicitly performs a submit().
+   * This will flush work to the GPU. Additionally, if the platform supports fence syncs, we will
+   * add a finished callback to our flush call. We allow ourselves to have kMaxFrameLag number of
+   * unfinished flushes active on the GPU at a time. If we have 2 outstanding flushes then we will
+   * wait on the CPU until one has finished.
    */
-  void waitOnSyncOrSwap();
+  void flushAndWaitOnSync(GrContext* context);
 
   /**
    * This notifies the context that we are deliberately testing abandoning
@@ -97,14 +83,12 @@ class TestContext : public SkNoncopyable {
    */
   virtual void testAbandon();
 
-  /** Ensures all work is submitted to the GPU for execution. */
-  virtual void submit() = 0;
-
   /** Wait until all GPU work is finished. */
   virtual void finish() = 0;
 
  protected:
-  std::unique_ptr<FenceSync> fFenceSync;
+  bool fFenceSupport = false;
+
   std::unique_ptr<GpuTimer> fGpuTimer;
 
   TestContext();
@@ -112,6 +96,7 @@ class TestContext : public SkNoncopyable {
   /** This should destroy the 3D context. */
   virtual void teardown();
 
+  virtual void onPlatformMakeNotCurrent() const = 0;
   virtual void onPlatformMakeCurrent() const = 0;
   /**
    * Subclasses should implement such that the returned function will cause the current context
@@ -121,13 +106,12 @@ class TestContext : public SkNoncopyable {
    * should remain current.
    */
   virtual std::function<void()> onPlatformGetAutoContextRestore() const = 0;
-  virtual void onPlatformSwapBuffers() const = 0;
 
  private:
   enum { kMaxFrameLag = 3 };
 
-  PlatformFence fFrameFences[kMaxFrameLag - 1];
-  int fCurrentFenceIdx;
+  sk_sp<FlushFinishTracker> fFinishTrackers[kMaxFrameLag - 1];
+  int fCurrentFlushIdx = 0;
 
   typedef SkNoncopyable INHERITED;
 };

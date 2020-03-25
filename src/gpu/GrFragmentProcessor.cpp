@@ -71,7 +71,7 @@ const GrFragmentProcessor::TextureSampler& GrFragmentProcessor::textureSampler(i
 
 void GrFragmentProcessor::addCoordTransform(GrCoordTransform* transform) {
   fCoordTransforms.push_back(transform);
-  fFlags |= kHasCoordTranforms_Flag;
+  fFlags |= kHasCoordTransforms_Flag;
 }
 
 #ifdef SK_DEBUG
@@ -93,8 +93,8 @@ bool GrFragmentProcessor::isInstantiated() const {
 #endif
 
 int GrFragmentProcessor::registerChildProcessor(std::unique_ptr<GrFragmentProcessor> child) {
-  if (child->fFlags & kHasCoordTranforms_Flag) {
-    fFlags |= kHasCoordTranforms_Flag;
+  if (child->fFlags & kHasCoordTransforms_Flag) {
+    fFlags |= kHasCoordTransforms_Flag;
   }
   fRequestedFeatures |= child->fRequestedFeatures;
 
@@ -291,7 +291,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::OverrideInput(
 }
 
 std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::RunInSeries(
-    std::unique_ptr<GrFragmentProcessor>* series, int cnt) {
+    std::unique_ptr<GrFragmentProcessor> series[], int cnt) {
   class SeriesFragmentProcessor : public GrFragmentProcessor {
    public:
     static std::unique_ptr<GrFragmentProcessor> Make(
@@ -368,8 +368,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::RunInSeries(
   // Run the through the series, do the invariant output processing, and look for eliminations.
   GrProcessorAnalysisColor inputColor;
   inputColor.setToUnknown();
-  GrColorFragmentProcessorAnalysis info(
-      inputColor, unique_ptr_address_as_pointer_address(series), cnt);
+  GrColorFragmentProcessorAnalysis info(inputColor, series, cnt);
   SkTArray<std::unique_ptr<GrFragmentProcessor>> replacementSeries;
   SkPMColor4f knownColor;
   int leadingFPsToEliminate = info.initialProcessorsToEliminate(&knownColor);
@@ -422,23 +421,9 @@ GrFragmentProcessor::TextureSampler::TextureSampler(
     GrSurfaceProxyView view, GrSamplerState samplerState)
     : fView(std::move(view)), fSamplerState(samplerState) {
   GrSurfaceProxy* proxy = this->proxy();
-  fSamplerState.setFilterMode(SkTMin(
+  fSamplerState.setFilterMode(std::min(
       samplerState.filter(),
       GrTextureProxy::HighestFilterMode(proxy->backendFormat().textureType())));
-}
-
-GrFragmentProcessor::TextureSampler::TextureSampler(
-    sk_sp<GrSurfaceProxy> proxy, GrSamplerState samplerState) {
-  SkASSERT(proxy->asTextureProxy());
-  GrSurfaceOrigin origin = proxy->origin();
-  GrSwizzle swizzle = proxy->textureSwizzle();
-  fView = GrSurfaceProxyView(std::move(proxy), origin, swizzle);
-
-  fSamplerState = samplerState;
-  GrSurfaceProxy* surfProxy = this->proxy();
-  fSamplerState.setFilterMode(SkTMin(
-      samplerState.filter(),
-      GrTextureProxy::HighestFilterMode(surfProxy->backendFormat().textureType())));
 }
 
 #if GR_TEST_UTILS
@@ -448,7 +433,7 @@ void GrFragmentProcessor::TextureSampler::set(
   fView = std::move(view);
   fSamplerState = samplerState;
 
-  fSamplerState.setFilterMode(SkTMin(
+  fSamplerState.setFilterMode(std::min(
       samplerState.filter(),
       GrTextureProxy::HighestFilterMode(this->proxy()->backendFormat().textureType())));
 }

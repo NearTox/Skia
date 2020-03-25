@@ -273,11 +273,12 @@ class Interpreter {
    *   ...
    *   args[argCount - 1] points to an array of N values, the last argument for each invocation
    *
-   * All values in 'args', 'outReturn', and 'uniforms' are 32-bit values (typically floats,
+   * All values in 'args', 'outResult', and 'uniforms' are 32-bit values (typically floats,
    * but possibly int32_t or uint32_t, depending on the types used in the SkSL).
    * Any 'out' or 'inout' parameters will result in the 'args' array being modified.
    */
-  bool runStriped(const ByteCodeFunction* f, int count, float* args[]) {
+  bool runStriped(
+      const ByteCodeFunction* f, int count, float* args[], float* outResult[] = nullptr) {
     SkASSERT(f);
     Vector* stack = fMemory + MEMORY_SIZE;
     int stackCount = f->fStackSlotCount + f->fParameterSlotCount;
@@ -286,6 +287,7 @@ class Interpreter {
     VectorI maskStack[MASK_STACK_SIZE];
     VectorI loopStack[LOOP_STACK_SIZE];
     VectorI continueStack[LOOP_STACK_SIZE];
+    Vector* innerResult = nullptr;
     Context context(fMemory, stack, condStack, maskStack, loopStack, continueStack);
     for (int i = 0; i < count; i += width) {
       int lanes = std::min(width, count - i);
@@ -300,7 +302,7 @@ class Interpreter {
       for (int j = 0; j < f->fParameterSlotCount; ++j) {
         memcpy(stack + j, &args[j][i], size);
       }
-      if (!this->innerRun(f, context, i, nullptr)) {
+      if (!this->innerRun(f, context, i, &innerResult)) {
         return false;
       }
       int slot = 0;
@@ -311,6 +313,11 @@ class Interpreter {
           }
         }
         slot += p.fSlotCount;
+      }
+      if (outResult) {
+        for (int j = 0; j < f->fReturnSlotCount; ++j) {
+          memcpy(&outResult[j][i], &innerResult[j], size);
+        }
       }
     }
     return true;

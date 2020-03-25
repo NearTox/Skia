@@ -21,7 +21,7 @@ namespace internal {
 
 namespace {
 
-class LinearWipeAdapter final : public MaskFilterEffectBase {
+class LinearWipeAdapter final : public MaskShaderEffectBase {
  public:
   static sk_sp<LinearWipeAdapter> Make(
       const skjson::ArrayValue& jprops, sk_sp<sksg::RenderNode> layer, const SkSize& layer_size,
@@ -93,15 +93,12 @@ class LinearWipeAdapter final : public MaskFilterEffectBase {
     const auto adjusted_t = t * (len + feather) / grad_len;
     const SkScalar pos[] = {adjusted_t, adjusted_t + feather / grad_len};
 
-    return {
-        SkShaderMaskFilter::Make(
-            SkGradientShader::MakeLinear(pts, colors, pos, 2, SkTileMode::kClamp)),
-        true};
+    return {SkGradientShader::MakeLinear(pts, colors, pos, 2, SkTileMode::kClamp), true};
   }
 
   float fCompletion = 0, fAngle = 0, fFeather = 0;
 
-  using INHERITED = MaskFilterEffectBase;
+  using INHERITED = MaskShaderEffectBase;
 };
 
 }  // namespace

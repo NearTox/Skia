@@ -196,8 +196,8 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
 
     // Visualize coverage count in main canvas.
     GrPaint paint;
-    paint.addColorFragmentProcessor(GrTextureEffect::Make(
-        sk_ref_sp(ccbuff->asTextureProxy()), ccbuff->colorInfo().alphaType()));
+    paint.addColorFragmentProcessor(
+        GrTextureEffect::Make(ccbuff->readSurfaceView(), ccbuff->colorInfo().alphaType()));
     paint.addColorFragmentProcessor(std::make_unique<VisualizeCoverageCountFP>());
     paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
     rtc->drawRect(
@@ -333,32 +333,34 @@ void CCPRGeometryView::DrawCoverageCountOp::onExecute(
   } else {
     proc = std::make_unique<GrVSCoverageProcessor>();
   }
+  SkDEBUGCODE(proc->enableDebugBloat(kDebugBloat));
+
+  GrOpsRenderPass* renderPass = state->opsRenderPass();
 
   if (!fView->fDoStroke) {
-    proc->reset(fView->fPrimitiveType, rp);
-    SkDEBUGCODE(proc->enableDebugBloat(kDebugBloat));
+    for (int i = 0; i < proc->numSubpasses(); ++i) {
+      proc->reset(fView->fPrimitiveType, i, rp);
+      proc->bindPipeline(state, pipeline, this->bounds());
 
-    SkSTArray<1, GrMesh> mesh;
-    if (PrimitiveType::kCubics == fView->fPrimitiveType ||
-        PrimitiveType::kConics == fView->fPrimitiveType) {
-      sk_sp<GrGpuBuffer> instBuff(rp->createBuffer(
-          fView->fQuadPointInstances.count() * sizeof(QuadPointInstance), GrGpuBufferType::kVertex,
-          kDynamic_GrAccessPattern, fView->fQuadPointInstances.begin()));
-      if (!fView->fQuadPointInstances.empty() && instBuff) {
-        proc->appendMesh(std::move(instBuff), fView->fQuadPointInstances.count(), 0, &mesh);
+      if (PrimitiveType::kCubics == fView->fPrimitiveType ||
+          PrimitiveType::kConics == fView->fPrimitiveType) {
+        sk_sp<GrGpuBuffer> instBuff(rp->createBuffer(
+            fView->fQuadPointInstances.count() * sizeof(QuadPointInstance),
+            GrGpuBufferType::kVertex, kDynamic_GrAccessPattern,
+            fView->fQuadPointInstances.begin()));
+        if (!fView->fQuadPointInstances.empty() && instBuff) {
+          proc->bindBuffers(renderPass, instBuff.get());
+          proc->drawInstances(renderPass, fView->fQuadPointInstances.count(), 0);
+        }
+      } else {
+        sk_sp<GrGpuBuffer> instBuff(rp->createBuffer(
+            fView->fTriPointInstances.count() * sizeof(TriPointInstance), GrGpuBufferType::kVertex,
+            kDynamic_GrAccessPattern, fView->fTriPointInstances.begin()));
+        if (!fView->fTriPointInstances.empty() && instBuff) {
+          proc->bindBuffers(renderPass, instBuff.get());
+          proc->drawInstances(renderPass, fView->fTriPointInstances.count(), 0);
+        }
       }
-    } else {
-      sk_sp<GrGpuBuffer> instBuff(rp->createBuffer(
-          fView->fTriPointInstances.count() * sizeof(TriPointInstance), GrGpuBufferType::kVertex,
-          kDynamic_GrAccessPattern, fView->fTriPointInstances.begin()));
-      if (!fView->fTriPointInstances.empty() && instBuff) {
-        proc->appendMesh(std::move(instBuff), fView->fTriPointInstances.count(), 0, &mesh);
-      }
-    }
-
-    if (!mesh.empty()) {
-      SkASSERT(1 == mesh.count());
-      proc->draw(state, pipeline, nullptr, mesh.begin(), 1, this->bounds());
     }
   } else if (PrimitiveType::kConics != fView->fPrimitiveType) {  // No conic stroke support yet.
     GrCCStroker stroker(0, 0, 0);

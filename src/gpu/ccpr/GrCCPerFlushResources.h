@@ -118,21 +118,21 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
     SkASSERT(!this->isMapped());
     return fStroker;
   }
-  sk_sp<const GrGpuBuffer> refIndexBuffer() const {
+  const GrGpuBuffer* indexBuffer() const {
     SkASSERT(!this->isMapped());
-    return fIndexBuffer;
+    return fIndexBuffer.get();
   }
-  sk_sp<const GrGpuBuffer> refVertexBuffer() const {
+  const GrGpuBuffer* instanceBuffer() const {
     SkASSERT(!this->isMapped());
-    return fVertexBuffer;
+    return fInstanceBuffer.get();
   }
-  sk_sp<const GrGpuBuffer> refInstanceBuffer() const {
+  const GrGpuBuffer* vertexBuffer() const {
     SkASSERT(!this->isMapped());
-    return fInstanceBuffer;
+    return fVertexBuffer.get();
   }
-  sk_sp<const GrGpuBuffer> refStencilResolveBuffer() const {
+  const GrGpuBuffer* stencilResolveBuffer() const {
     SkASSERT(!this->isMapped());
-    return fStencilResolveBuffer;
+    return fStencilResolveBuffer.get();
   }
 
  private:
@@ -200,7 +200,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
 };
 
 inline void GrCCRenderedPathStats::statPath(const SkPath& path) {
-  fMaxPointsPerPath = SkTMax(fMaxPointsPerPath, path.countPoints());
+  fMaxPointsPerPath = std::max(fMaxPointsPerPath, path.countPoints());
   fNumTotalSkPoints += path.countPoints();
   fNumTotalSkVerbs += path.countVerbs();
   fNumTotalConicWeights += SkPathPriv::ConicWeightCnt(path);

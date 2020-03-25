@@ -184,18 +184,12 @@ class SK_API SkPaint {
 
   /** Returns SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
-
-      @return  one of: kNone_SkFilterQuality, kLow_SkFilterQuality,
-               kMedium_SkFilterQuality, kHigh_SkFilterQuality
   */
   SkFilterQuality getFilterQuality() const { return (SkFilterQuality)fBitfields.fFilterQuality; }
 
   /** Sets SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
       Does not check to see if quality is valid.
-
-      @param quality  one of: kNone_SkFilterQuality, kLow_SkFilterQuality,
-                      kMedium_SkFilterQuality, kHigh_SkFilterQuality
 
       example: https://fiddle.skia.org/c/@Color_Methods
       example: https://fiddle.skia.org/c/@Paint_setFilterQuality
@@ -221,15 +215,11 @@ class SK_API SkPaint {
   static constexpr int kStyleCount = kStrokeAndFill_Style + 1;
 
   /** Returns whether the geometry is filled, stroked, or filled and stroked.
-
-      @return  one of:kFill_Style, kStroke_Style, kStrokeAndFill_Style
-  */
+   */
   Style getStyle() const { return (Style)fBitfields.fStyle; }
 
   /** Sets whether the geometry is filled, stroked, or filled and stroked.
       Has no effect if style is not a legal SkPaint::Style value.
-
-      @param style  one of: kFill_Style, kStroke_Style, kStrokeAndFill_Style
 
       example: https://fiddle.skia.org/c/@Paint_setStyle
       example: https://fiddle.skia.org/c/@Stroke_Width
@@ -383,15 +373,10 @@ class SK_API SkPaint {
   static constexpr int kJoinCount = kLast_Join + 1;
 
   /** Returns the geometry drawn at the beginning and end of strokes.
-
-      @return  one of: kButt_Cap, kRound_Cap, kSquare_Cap
-  */
+   */
   Cap getStrokeCap() const { return (Cap)fBitfields.fCapType; }
 
   /** Sets the geometry drawn at the beginning and end of strokes.
-
-      @param cap  one of: kButt_Cap, kRound_Cap, kSquare_Cap;
-                  has no effect if cap is not valid
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeCap_a
       example: https://fiddle.skia.org/c/@Paint_setStrokeCap_b
@@ -399,15 +384,10 @@ class SK_API SkPaint {
   void setStrokeCap(Cap cap);
 
   /** Returns the geometry drawn at the corners of strokes.
-
-      @return  one of: kMiter_Join, kRound_Join, kBevel_Join
-  */
+   */
   Join getStrokeJoin() const { return (Join)fBitfields.fJoinType; }
 
   /** Sets the geometry drawn at the corners of strokes.
-
-      @param join  one of: kMiter_Join, kRound_Join, kBevel_Join;
-                   otherwise, has no effect
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeJoin
   */

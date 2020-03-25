@@ -64,12 +64,12 @@ class SkLRUCache : public SkNoncopyable {
 
   int count() { return fMap.count(); }
 
-  template <typename Fn>  // f(V*)
+  template <typename Fn>  // f(K*, V*)
   void foreach (Fn&& fn) {
     typename SkTInternalLList<Entry>::Iter iter;
     for (Entry* e = iter.init(fLRU, SkTInternalLList<Entry>::Iter::kHead_IterStart); e;
          e = iter.next()) {
-      fn(&e->fValue);
+      fn(&e->fKey, &e->fValue);
     }
   }
 

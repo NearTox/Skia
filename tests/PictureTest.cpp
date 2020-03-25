@@ -26,7 +26,6 @@
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
 #include "include/utils/SkRandom.h"
-#include "src/core/SkBBoxHierarchy.h"
 #include "src/core/SkBigPicture.h"
 #include "src/core/SkClipOpPriv.h"
 #include "src/core/SkMiniRecorder.h"
@@ -468,13 +467,6 @@ static void test_cull_rect_reset(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 0 == finalCullRect.fTop);
   REPORTER_ASSERT(reporter, 100 == finalCullRect.fBottom);
   REPORTER_ASSERT(reporter, 100 == finalCullRect.fRight);
-
-  auto pictureBBH = (const SkBBoxHierarchy_Base*)picture->bbh();
-  SkRect bbhCullRect = pictureBBH->getRootBound();
-  REPORTER_ASSERT(reporter, 0 == bbhCullRect.fLeft);
-  REPORTER_ASSERT(reporter, 0 == bbhCullRect.fTop);
-  REPORTER_ASSERT(reporter, 100 == bbhCullRect.fBottom);
-  REPORTER_ASSERT(reporter, 100 == bbhCullRect.fRight);
 }
 
 /**
@@ -579,18 +571,11 @@ DEF_TEST(Picture, reporter) {
 static void draw_bitmaps(const SkBitmap bitmap, SkCanvas* canvas) {
   const SkPaint paint;
   const SkRect rect = {5.0f, 5.0f, 8.0f, 8.0f};
-  const SkIRect irect = {2, 2, 3, 3};
-  int divs[] = {2, 3};
-  SkCanvas::Lattice lattice;
-  lattice.fXCount = lattice.fYCount = 2;
-  lattice.fXDivs = lattice.fYDivs = divs;
 
   // Don't care what these record, as long as they're legal.
   canvas->drawBitmap(bitmap, 0.0f, 0.0f, &paint);
   canvas->drawBitmapRect(bitmap, rect, rect, &paint, SkCanvas::kStrict_SrcRectConstraint);
-  canvas->drawBitmapNine(bitmap, irect, rect, &paint);
   canvas->drawBitmap(bitmap, 1, 1);  // drawSprite
-  canvas->drawBitmapLattice(bitmap, lattice, rect, &paint);
 }
 
 static void test_draw_bitmaps(SkCanvas* canvas) {
@@ -661,17 +646,17 @@ DEF_TEST(DontOptimizeSaveLayerDrawDrawRestore, reporter) {
   REPORTER_ASSERT(reporter, replayBM.getColor(55, 55) == 0xff800000);
 }
 
-struct CountingBBH : public SkBBoxHierarchy_Base {
+struct CountingBBH : public SkBBoxHierarchy {
   mutable int searchCalls;
-  SkRect rootBound;
 
-  CountingBBH(const SkRect& bound) : searchCalls(0), rootBound(bound) {}
+  CountingBBH() : searchCalls(0) {}
 
-  void search(const SkRect& query, SkTDArray<int>* results) const override { this->searchCalls++; }
+  void search(const SkRect& query, std::vector<int>* results) const override {
+    this->searchCalls++;
+  }
 
   void insert(const SkRect[], int) override {}
   virtual size_t bytesUsed() const override { return 0; }
-  SkRect getRootBound() const override { return rootBound; }
 };
 
 class SpoonFedBBHFactory : public SkBBHFactory {
@@ -687,7 +672,7 @@ class SpoonFedBBHFactory : public SkBBHFactory {
 DEF_TEST(Picture_SkipBBH, r) {
   SkRect bound = SkRect::MakeWH(320, 240);
 
-  auto bbh = sk_make_sp<CountingBBH>(bound);
+  auto bbh = sk_make_sp<CountingBBH>();
   SpoonFedBBHFactory factory(bbh);
 
   SkPictureRecorder recorder;
@@ -982,10 +967,9 @@ DEF_TEST(Picture_fillsBBH, r) {
     }
     sk_sp<SkPicture> pic = rec.finishRecordingAsPicture();
 
-    auto base = (const SkBBoxHierarchy_Base*)bbh.get();
-    SkTDArray<int> results;
-    base->search({0, 0, 100, 100}, &results);
+    std::vector<int> results;
+    bbh->search({0, 0, 100, 100}, &results);
     REPORTER_ASSERT(
-        r, results.count() == n, "results.count() == %d, want %d\n", results.count(), n);
+        r, (int)results.size() == n, "results.size() == %d, want %d\n", (int)results.size(), n);
   }
 }

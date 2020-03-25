@@ -30,6 +30,12 @@ public:
 private:
     std::string fPrefix;
 };
+
+struct Args {
+  char* assetDir;
+  char* renderTests;
+  char* outputDir;
+};
 }
 
 static constexpr char kSkipUsage[] =
@@ -73,73 +79,82 @@ static bool should_skip(const char* const* rules, size_t count, const char* name
     return !anyExclude;
 }
 
-int main(int argc, char** argv) {
-    if (argc < 3) {
-        std::cerr << "Usage:\n  " << argv[0]
-                  << " ASSET_DIRECTORY_PATH SKQP_REPORT_PATH [TEST_MATCH_RULES]\n"
-                  << kSkipUsage << '\n';
-        return 1;
+static void parse_args(int argc, char* argv[], Args* args) {
+  if (argc < 4) {
+    std::cerr << "Usage:\n  " << argv[0]
+              << " ASSET_DIR RENDER_TESTS OUTPUT_DIR [TEST_MATCH_RULES]\n"
+              << kSkipUsage << '\n';
+    exit(1);
+  }
+  args->assetDir = argv[1];
+  args->renderTests = argv[2];
+  args->outputDir = argv[3];
+}
+
+int main(int argc, char* argv[]) {
+  Args args;
+  parse_args(argc, argv, &args);
+
+  SetResourcePath(std::string(args.assetDir + std::string("/resources")).c_str());
+  if (!sk_mkdir(args.outputDir)) {
+    std::cerr << "sk_mkdir(" << args.outputDir << ") failed.\n";
+    return 2;
+  }
+  StdAssetManager mgr(args.assetDir);
+  SkQP skqp;
+  skqp.init(&mgr, args.renderTests, args.outputDir);
+  int ret = 0;
+
+  const char* const* matchRules = &argv[4];
+  size_t matchRulesCount = (size_t)(argc - 4);
+
+  // Rendering Tests
+  std::ostream& out = std::cout;
+  for (auto backend : skqp.getSupportedBackends()) {
+    auto testPrefix = std::string(SkQP::GetBackendName(backend)) + "_";
+    for (auto gmFactory : skqp.getGMs()) {
+      auto testName = testPrefix + SkQP::GetGMName(gmFactory);
+      if (should_skip(matchRules, matchRulesCount, testName.c_str())) {
+        continue;
+      }
+      out << "Starting: " << testName << std::endl;
+      SkQP::RenderOutcome outcome;
+      std::string except;
+
+      std::tie(outcome, except) = skqp.evaluateGM(backend, gmFactory);
+      if (!except.empty()) {
+        out << "ERROR:    " << testName << " (" << except << ")\n";
+        ret = 1;
+      } else if (outcome.fMaxError != 0) {
+        out << "FAILED:   " << testName << " (" << outcome.fMaxError << ")\n";
+        ret = 1;
+      } else {
+        out << "Passed:   " << testName << "\n";
+      }
+      out.flush();
     }
-    SetResourcePath((std::string(argv[1]) + "/resources").c_str());
-    if (!sk_mkdir(argv[2])) {
-        std::cerr << "sk_mkdir(" << argv[2] << ") failed.\n";
-        return 2;
+  }
+
+  // Unit Tests
+  for (auto test : skqp.getUnitTests()) {
+    auto testName = std::string("unitTest_") + SkQP::GetUnitTestName(test);
+    if (should_skip(matchRules, matchRulesCount, testName.c_str())) {
+      continue;
     }
-    StdAssetManager mgr(argv[1]);
-    SkQP skqp;
-    skqp.init(&mgr, argv[2]);
-    int ret = 0;
-
-    const char* const* matchRules = &argv[3];
-    size_t matchRulesCount = (size_t)(argc - 3);
-
-    // Rendering Tests
-    std::ostream& out = std::cout;
-    for (auto backend : skqp.getSupportedBackends()) {
-        auto testPrefix = std::string(SkQP::GetBackendName(backend)) + "_";
-        for (auto gmFactory : skqp.getGMs()) {
-            auto testName = testPrefix + SkQP::GetGMName(gmFactory);
-            if (should_skip(matchRules, matchRulesCount, testName.c_str())) {
-                continue;
-            }
-            out << "Starting: " << testName << std::endl;
-            SkQP::RenderOutcome outcome;
-            std::string except;
-
-            std::tie(outcome, except) = skqp.evaluateGM(backend, gmFactory);
-            if (!except.empty()) {
-                out << "ERROR:    " << testName << " (" << except << ")\n";
-                ret = 1;
-            } else if (outcome.fMaxError != 0) {
-                out << "FAILED:   " << testName << " (" << outcome.fMaxError << ")\n";
-                ret = 1;
-            } else {
-                out << "Passed:   " << testName << "\n";
-            }
-            out.flush();
-        }
+    out << "Starting test: " << testName << std::endl;
+    std::vector<std::string> errors = skqp.executeTest(test);
+    if (!errors.empty()) {
+      out << "TEST FAILED (" << errors.size() << "): " << testName << "\n";
+      for (const std::string& error : errors) {
+        out << error << "\n";
+      }
+      ret = 1;
+    } else {
+      out << "Test passed:   " << testName << "\n";
     }
+    out.flush();
+  }
+  skqp.makeReport();
 
-    // Unit Tests
-    for (auto test : skqp.getUnitTests()) {
-        auto testName = std::string("unitTest_") +  SkQP::GetUnitTestName(test);
-        if (should_skip(matchRules, matchRulesCount, testName.c_str())) {
-            continue;
-        }
-        out << "Starting test: " << testName << std::endl;
-        std::vector<std::string> errors = skqp.executeTest(test);
-        if (!errors.empty()) {
-            out << "TEST FAILED (" << errors.size() << "): " << testName << "\n";
-            for (const std::string& error : errors) {
-                out << error << "\n";
-            }
-            ret = 1;
-        } else {
-            out << "Test passed:   " << testName << "\n";
-        }
-        out.flush();
-    }
-    skqp.makeReport();
-
-    return ret;
+  return ret;
 }

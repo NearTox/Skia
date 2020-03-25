@@ -153,7 +153,7 @@ class LatticeGM : public skiagm::GM {
       for (int ix = 0; ix < 2; ++ix) {
         int i = ix * 2 + iy;
         SkRect r = SkRect::MakeXYWH(x + ix * 60, y + iy * 60, size[i].width(), size[i].height());
-        canvas->drawBitmapLattice(bitmap, lattice, r);
+        canvas->drawImageLattice(image.get(), lattice, r);
       }
     }
 

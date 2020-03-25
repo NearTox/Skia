@@ -7,9 +7,9 @@
 
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
 
-#include "include/gpu/GrTexture.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpsRenderPass.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/ccpr/GrCCPerFlushResources.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
@@ -128,28 +128,29 @@ GrGLSLPrimitiveProcessor* GrCCPathProcessor::createGLSLInstance(const GrShaderCa
 }
 
 void GrCCPathProcessor::drawPaths(
-    GrOpFlushState* flushState, const GrPipeline& pipeline,
-    const GrPipeline::FixedDynamicState* fixedDynamicState, const GrCCPerFlushResources& resources,
-    int baseInstance, int endInstance, const SkRect& bounds) const {
+    GrOpFlushState* flushState, const GrPipeline& pipeline, const GrSurfaceProxy& atlasProxy,
+    const GrCCPerFlushResources& resources, int baseInstance, int endInstance,
+    const SkRect& bounds) const {
   const GrCaps& caps = flushState->caps();
   GrPrimitiveType primitiveType =
       caps.usePrimitiveRestart() ? GrPrimitiveType::kTriangleStrip : GrPrimitiveType::kTriangles;
   int numIndicesPerInstance = caps.usePrimitiveRestart() ? SK_ARRAY_COUNT(kOctoIndicesAsStrips)
                                                          : SK_ARRAY_COUNT(kOctoIndicesAsTris);
-  GrMesh mesh(primitiveType);
   auto enablePrimitiveRestart = GrPrimitiveRestart(flushState->caps().usePrimitiveRestart());
 
-  mesh.setIndexedInstanced(
-      resources.refIndexBuffer(), numIndicesPerInstance, resources.refInstanceBuffer(),
-      endInstance - baseInstance, baseInstance, enablePrimitiveRestart);
-  mesh.setVertexData(resources.refVertexBuffer());
-
+  GrRenderTargetProxy* rtProxy = flushState->proxy();
   GrProgramInfo programInfo(
-      flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-      flushState->proxy()->backendFormat(), flushState->view()->origin(), &pipeline, this,
-      fixedDynamicState, nullptr, 0, primitiveType);
+      rtProxy->numSamples(), rtProxy->numStencilSamples(), rtProxy->backendFormat(),
+      flushState->outputView()->origin(), &pipeline, this, nullptr, nullptr, 0, primitiveType);
 
-  flushState->opsRenderPass()->draw(programInfo, &mesh, 1, bounds);
+  GrOpsRenderPass* renderPass = flushState->opsRenderPass();
+  renderPass->bindPipeline(programInfo, bounds, flushState->scissorRectIfEnabled());
+  renderPass->bindTextures(*this, atlasProxy, pipeline);
+  renderPass->bindBuffers(
+      resources.indexBuffer(), resources.instanceBuffer(), resources.vertexBuffer(),
+      enablePrimitiveRestart);
+  renderPass->drawIndexedInstanced(
+      numIndicesPerInstance, 0, endInstance - baseInstance, baseInstance, 0);
 }
 
 void GrCCPathProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {

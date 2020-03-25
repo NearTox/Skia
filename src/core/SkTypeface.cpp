@@ -14,6 +14,7 @@
 #include "src/core/SkAdvancedTypefaceMetrics.h"
 #include "src/core/SkEndian.h"
 #include "src/core/SkFontDescriptor.h"
+#include "src/core/SkScalerContext.h"
 #include "src/core/SkSurfacePriv.h"
 #include "src/core/SkTypefaceCache.h"
 #include "src/sfnt/SkOTTable_OS_2.h"
@@ -49,8 +50,9 @@ class SkEmptyTypeface : public SkTypeface {
     return sk_ref_sp(this);
   }
   SkScalerContext* onCreateScalerContext(
-      const SkScalerContextEffects&, const SkDescriptor*) const override {
-    return nullptr;
+      const SkScalerContextEffects& effects, const SkDescriptor* desc) const override {
+    return SkScalerContext::MakeEmptyContext(
+        sk_ref_sp(const_cast<SkEmptyTypeface*>(this)), effects, desc);
   }
   void onFilterRec(SkScalerContextRec*) const override {}
   std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override {
@@ -384,10 +386,7 @@ bool SkTypeface::onComputeBounds(SkRect* bounds) const {
   SkScalerContextEffects noeffects;
   SkScalerContext::AutoDescriptorGivenRecAndEffects(rec, noeffects, &ad);
 
-  std::unique_ptr<SkScalerContext> ctx = this->createScalerContext(noeffects, ad.getDesc(), true);
-  if (!ctx) {
-    return false;
-  }
+  std::unique_ptr<SkScalerContext> ctx = this->createScalerContext(noeffects, ad.getDesc());
 
   SkFontMetrics fm;
   ctx->getFontMetrics(&fm);

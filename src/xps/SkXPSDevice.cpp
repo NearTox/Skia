@@ -146,7 +146,7 @@ HRESULT SkXPSDevice::createXpsThumbnail(
       "Could not create thumbnail generator.");
 
   SkTScopedComPtr<IOpcPartUri> partUri;
-  constexpr size_t size = SkTMax(
+  constexpr size_t size = std::max(
       SK_ARRAY_COUNT(L"/Documents/1/Metadata/.png") + sk_digits_in<decltype(pageNum)>(),
       SK_ARRAY_COUNT(L"/Metadata/" L_GUID_ID L".png"));
   wchar_t buffer[size];
@@ -983,9 +983,7 @@ void SkXPSDevice::drawPoints(
   // TODO
 }
 
-void SkXPSDevice::drawVertices(
-    const SkVertices* v, const SkVertices::Bone bones[], int boneCount, SkBlendMode blendMode,
-    const SkPaint& paint) {
+void SkXPSDevice::drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) {
   // TODO
 }
 

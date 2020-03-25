@@ -56,9 +56,10 @@ class GrProgramInfo {
   const GrPipeline& pipeline() const { return *fPipeline; }
   const GrPrimitiveProcessor& primProc() const { return *fPrimProc; }
   const GrPipeline::FixedDynamicState* fixedDynamicState() const { return fFixedDynamicState; }
+  int numDynamicStateArrays() const { return fNumDynamicStateArrays; }
 
   bool hasDynamicScissors() const {
-    return fPipeline->isScissorEnabled() && fDynamicStateArrays &&
+    return fPipeline->isScissorTestEnabled() && fDynamicStateArrays &&
            fDynamicStateArrays->fScissorRects;
   }
 
@@ -68,7 +69,7 @@ class GrProgramInfo {
     return fDynamicStateArrays->fScissorRects[i];
   }
 
-  bool hasFixedScissor() const { return fPipeline->isScissorEnabled() && fFixedDynamicState; }
+  bool hasFixedScissor() const { return fPipeline->isScissorTestEnabled() && fFixedDynamicState; }
 
   const SkIRect& fixedScissor() const {
     SkASSERT(this->hasFixedScissor());
@@ -111,13 +112,23 @@ class GrProgramInfo {
   // create the stencil settings here.
   GrStencilSettings nonGLStencilSettings() const;
 
-  void visitProxies(const GrOp::VisitProxyFunc& fn) const { fPipeline->visitProxies(fn); }
+  void visitProxies(const GrOp::VisitProxyFunc& func) const {
+    if (this->hasFixedPrimProcTextures()) {
+      for (int i = 0; i < fPrimProc->numTextureSamplers(); ++i) {
+        GrSamplerState samplerState = fPrimProc->textureSampler(i).samplerState();
+
+        func(
+            fFixedDynamicState->fPrimitiveProcessorTextures[i],
+            GrMipMapped(samplerState == GrSamplerState::Filter::kMipMap));
+      }
+    }
+    fPipeline->visitProxies(func);
+  }
 
 #ifdef SK_DEBUG
   void validate(bool flushTime) const;
   void checkAllInstantiated() const;
   void checkMSAAAndMIPSAreResolved() const;
-  void compatibleWithMeshes(const GrMesh meshes[], int meshCount, const GrCaps&) const;
 
   bool isNVPR() const {
     return fPrimProc->isPathRendering() && !fPrimProc->willUseGeoShader() &&

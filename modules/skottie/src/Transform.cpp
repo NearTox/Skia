@@ -33,41 +33,31 @@ TransformAdapter2D::~TransformAdapter2D() {}
 void TransformAdapter2D::onSync() { this->node()->setMatrix(this->totalMatrix()); }
 
 SkMatrix TransformAdapter2D::totalMatrix() const {
-  const auto anchor_point = ValueTraits<VectorValue>::As<SkPoint>(fAnchorPoint),
-             position = ValueTraits<VectorValue>::As<SkPoint>(fPosition),
-             scale = ValueTraits<VectorValue>::As<SkPoint>(fScale);
+  SkMatrix t = SkMatrix::MakeTrans(-fAnchorPoint.x, -fAnchorPoint.y);
 
-  SkMatrix t = SkMatrix::MakeTrans(-anchor_point.x(), -anchor_point.y());
-
-  t.postScale(scale.x() / 100, scale.y() / 100);  // 100% based
+  t.postScale(fScale.x / 100, fScale.y / 100);  // 100% based
   t.postRotate(fRotation);
-  t.postTranslate(position.x(), position.y());
+  t.postTranslate(fPosition.x, fPosition.y);
   // TODO: skew
 
   return t;
 }
 
-SkPoint TransformAdapter2D::getAnchorPoint() const {
-  return ValueTraits<VectorValue>::As<SkPoint>(fAnchorPoint);
-}
+SkPoint TransformAdapter2D::getAnchorPoint() const { return {fAnchorPoint.x, fAnchorPoint.y}; }
 
 void TransformAdapter2D::setAnchorPoint(const SkPoint& ap) {
   fAnchorPoint = {ap.x(), ap.y()};
   this->onSync();
 }
 
-SkPoint TransformAdapter2D::getPosition() const {
-  return ValueTraits<VectorValue>::As<SkPoint>(fPosition);
-}
+SkPoint TransformAdapter2D::getPosition() const { return {fPosition.x, fPosition.y}; }
 
 void TransformAdapter2D::setPosition(const SkPoint& p) {
   fPosition = {p.x(), p.y()};
   this->onSync();
 }
 
-SkVector TransformAdapter2D::getScale() const {
-  return ValueTraits<VectorValue>::As<SkVector>(fScale);
-}
+SkVector TransformAdapter2D::getScale() const { return {fScale.x, fScale.y}; }
 
 void TransformAdapter2D::setScale(const SkVector& s) {
   fScale = {s.x(), s.y()};
@@ -148,10 +138,10 @@ SkV3 TransformAdapter3D::rotation() const {
 }
 
 SkM44 TransformAdapter3D::totalMatrix() const {
-  const auto anchor_point = this->anchor_point(), positon = this->position(),
+  const auto anchor_point = this->anchor_point(), position = this->position(),
              scale = ValueTraits<VectorValue>::As<SkV3>(fScale), rotation = this->rotation();
 
-  return SkM44::Translate(positon.x, positon.y, positon.z) *
+  return SkM44::Translate(position.x, position.y, position.z) *
          SkM44::Rotate({1, 0, 0}, SkDegreesToRadians(rotation.x)) *
          SkM44::Rotate({0, 1, 0}, SkDegreesToRadians(rotation.y)) *
          SkM44::Rotate({0, 0, 1}, SkDegreesToRadians(rotation.z)) *

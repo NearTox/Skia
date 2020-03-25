@@ -535,38 +535,6 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
     }
     ++vd.fSizeCount;
-  }
-  getNode(currentVar).setVarData(vd);
-  if (this->checkNext(Token::EQ)) {
-    ASTNode::ID value = this->assignmentExpression();
-    if (!value) {
-      return ASTNode::ID::Invalid();
-    }
-    getNode(currentVar).addChild(value);
-  }
-  while (this->checkNext(Token::COMMA)) {
-    Token name;
-    if (!this->expect(Token::IDENTIFIER, "an identifier", &name)) {
-      return ASTNode::ID::Invalid();
-    }
-    currentVar = ASTNode::ID(fFile->fNodes.size());
-    vd = ASTNode::VarData(this->text(name), 0);
-    fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
-    getNode(result).addChild(currentVar);
-    while (this->checkNext(Token::LBRACKET)) {
-      if (this->checkNext(Token::RBRACKET)) {
-        CREATE_EMPTY_CHILD(currentVar);
-      } else {
-        ASTNode::ID size = this->expression();
-        if (!size) {
-          return ASTNode::ID::Invalid();
-        }
-        getNode(currentVar).addChild(size);
-        if (!this->expect(Token::RBRACKET, "']'")) {
-          return ASTNode::ID::Invalid();
-        }
-      }
-      ++vd.fSizeCount;
     }
     getNode(currentVar).setVarData(vd);
     if (this->checkNext(Token::EQ)) {
@@ -576,7 +544,39 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
       getNode(currentVar).addChild(value);
     }
-  }
+    while (this->checkNext(Token::COMMA)) {
+      Token name;
+      if (!this->expect(Token::IDENTIFIER, "an identifier", &name)) {
+        return ASTNode::ID::Invalid();
+      }
+      currentVar = ASTNode::ID(fFile->fNodes.size());
+      vd = ASTNode::VarData(this->text(name), 0);
+      fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
+      getNode(result).addChild(currentVar);
+      while (this->checkNext(Token::LBRACKET)) {
+        if (this->checkNext(Token::RBRACKET)) {
+          CREATE_EMPTY_CHILD(currentVar);
+        } else {
+          ASTNode::ID size = this->expression();
+          if (!size) {
+            return ASTNode::ID::Invalid();
+          }
+          getNode(currentVar).addChild(size);
+          if (!this->expect(Token::RBRACKET, "']'")) {
+            return ASTNode::ID::Invalid();
+          }
+        }
+        ++vd.fSizeCount;
+      }
+      getNode(currentVar).setVarData(vd);
+      if (this->checkNext(Token::EQ)) {
+        ASTNode::ID value = this->assignmentExpression();
+        if (!value) {
+          return ASTNode::ID::Invalid();
+        }
+        getNode(currentVar).addChild(value);
+      }
+    }
     if (!this->expect(Token::SEMICOLON, "';'")) {
       return ASTNode::ID::Invalid();
     }

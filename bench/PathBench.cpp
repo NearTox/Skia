@@ -677,8 +677,8 @@ class ArbRoundRectBench : public Benchmark {
 
   static void add_corner_arc(
       SkPath* path, const SkRect& rect, SkScalar xIn, SkScalar yIn, int startAngle) {
-    SkScalar rx = SkMinScalar(rect.width(), xIn);
-    SkScalar ry = SkMinScalar(rect.height(), yIn);
+    SkScalar rx = std::min(rect.width(), xIn);
+    SkScalar ry = std::min(rect.height(), yIn);
 
     SkRect arcRect;
     arcRect.setLTRB(-rx, -ry, rx, ry);

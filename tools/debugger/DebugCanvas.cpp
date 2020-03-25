@@ -313,6 +313,10 @@ void DebugCanvas::onClipRegion(const SkRegion& region, SkClipOp op) {
   this->addDrawCommand(new ClipRegionCommand(region, op));
 }
 
+void DebugCanvas::onClipShader(sk_sp<SkShader> cs, SkClipOp op) {
+  this->addDrawCommand(new ClipShaderCommand(std::move(cs), op));
+}
+
 void DebugCanvas::didConcat44(const SkScalar m[16]) {
   // TODO
   this->INHERITED::didConcat44(m);
@@ -361,21 +365,11 @@ void DebugCanvas::onDrawBitmap(
   this->addDrawCommand(new DrawBitmapCommand(bitmap, left, top, paint));
 }
 
-void DebugCanvas::onDrawBitmapLattice(
-    const SkBitmap& bitmap, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  this->addDrawCommand(new DrawBitmapLatticeCommand(bitmap, lattice, dst, paint));
-}
-
 void DebugCanvas::onDrawBitmapRect(
     const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
     SrcRectConstraint constraint) {
   this->addDrawCommand(
       new DrawBitmapRectCommand(bitmap, src, dst, paint, (SrcRectConstraint)constraint));
-}
-
-void DebugCanvas::onDrawBitmapNine(
-    const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  this->addDrawCommand(new DrawBitmapNineCommand(bitmap, center, dst, paint));
 }
 
 void DebugCanvas::onDrawImage(
@@ -484,6 +478,7 @@ void DebugCanvas::onDrawPatch(
   this->addDrawCommand(new DrawPatchCommand(cubics, colors, texCoords, bmode, paint));
 }
 
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
 void DebugCanvas::onDrawVerticesObject(
     const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount, SkBlendMode bmode,
     const SkPaint& paint) {
@@ -491,6 +486,13 @@ void DebugCanvas::onDrawVerticesObject(
   this->addDrawCommand(
       new DrawVerticesCommand(sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode, paint));
 }
+#else
+void DebugCanvas::onDrawVerticesObject(
+    const SkVertices* vertices, SkBlendMode bmode, const SkPaint& paint) {
+  this->addDrawCommand(
+      new DrawVerticesCommand(sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode, paint));
+}
+#endif
 
 void DebugCanvas::onDrawAtlas(
     const SkImage* image, const SkRSXform xform[], const SkRect tex[], const SkColor colors[],

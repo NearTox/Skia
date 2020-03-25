@@ -12,7 +12,6 @@
 #  include "include/gpu/gl/GrGLInterface.h"
 #  include "include/private/SkMutex.h"
 #  include "include/private/SkOnce.h"
-#  include "src/core/SkTLS.h"
 #  include "src/ports/SkOSLibrary.h"
 #  include "tools/gpu/gl/command_buffer/GLTestContext_command_buffer.h"
 
@@ -195,9 +194,10 @@ class TLSCurrentObjects {
   EGLSurface fDrawSurface = EGL_NO_SURFACE;
   EGLContext fContext = EGL_NO_CONTEXT;
 
-  static TLSCurrentObjects* Get() { return (TLSCurrentObjects*)SkTLS::Get(TLSCreate, TLSDelete); }
-  static void* TLSCreate() { return new TLSCurrentObjects(); }
-  static void TLSDelete(void* objs) { delete (TLSCurrentObjects*)objs; }
+  static TLSCurrentObjects* Get() {
+    static thread_local TLSCurrentObjects objects;
+    return &objects;
+  }
 };
 
 std::function<void()> context_restorer() {
@@ -333,6 +333,15 @@ void CommandBufferGLTestContext::destroyGLContext() {
   fDisplay = EGL_NO_DISPLAY;
 }
 
+void CommandBufferGLTestContext::onPlatformMakeNotCurrent() const {
+  if (!gfFunctionsLoadedSuccessfully) {
+    return;
+  }
+  if (!TLSCurrentObjects::MakeCurrent(fDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+    SkDebugf("Command Buffer: Could not null out current EGL context.\n");
+  }
+}
+
 void CommandBufferGLTestContext::onPlatformMakeCurrent() const {
   if (!gfFunctionsLoadedSuccessfully) {
     return;
@@ -349,15 +358,6 @@ std::function<void()> CommandBufferGLTestContext::onPlatformGetAutoContextRestor
   return context_restorer();
 }
 
-void CommandBufferGLTestContext::onPlatformSwapBuffers() const {
-  if (!gfFunctionsLoadedSuccessfully) {
-    return;
-  }
-  if (!gfSwapBuffers(fDisplay, fSurface)) {
-    SkDebugf("Command Buffer: Could not complete gfSwapBuffers.\n");
-  }
-}
-
 GrGLFuncPtr CommandBufferGLTestContext::onPlatformGetProcAddress(const char* name) const {
   if (!gfFunctionsLoadedSuccessfully) {
     return nullptr;
@@ -370,7 +370,12 @@ void CommandBufferGLTestContext::presentCommandBuffer() {
     this->gl()->fFunctions.fFlush();
   }
 
-  this->onPlatformSwapBuffers();
+  if (!gfFunctionsLoadedSuccessfully) {
+    return;
+  }
+  if (!gfSwapBuffers(fDisplay, fSurface)) {
+    SkDebugf("Command Buffer: Could not complete gfSwapBuffers.\n");
+  }
 }
 
 bool CommandBufferGLTestContext::makeCurrent() {

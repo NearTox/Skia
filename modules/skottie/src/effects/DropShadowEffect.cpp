@@ -60,9 +60,7 @@ class DropShadowAdapter final : public AnimatablePropertyContainer {
     fDropShadow->setOffset(
         SkVector::Make(fDistance * SkScalarCos(rad), -fDistance * SkScalarSin(rad)));
 
-    // Close enough to AE.
-    static constexpr SkScalar kSoftnessToSigmaFactor = 0.3f;
-    const auto sigma = fSoftness * kSoftnessToSigmaFactor;
+    const auto sigma = fSoftness * kBlurSizeToSigma;
     fDropShadow->setSigma(SkVector::Make(sigma, sigma));
 
     fDropShadow->setMode(

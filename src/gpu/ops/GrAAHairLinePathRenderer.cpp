@@ -27,7 +27,7 @@
 #include "src/gpu/geometry/GrShape.h"
 #include "src/gpu/ops/GrAAHairLinePathRenderer.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
-#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
 #define PREALLOC_PTARRAY(N) SkSTArray<(N), SkPoint, true>
 
@@ -214,7 +214,7 @@ static int num_quad_subdivs(const SkPoint p[3]) {
 
     // +1 since we're ignoring the mantissa contribution.
     int log = get_float_exp(dsqd / (gSubdivTol * gSubdivTol)) + 1;
-    log = SkTMin(SkTMax(0, log), kMaxSub);
+    log = std::min(std::max(0, log), kMaxSub);
     return log;
   }
 }
@@ -1034,7 +1034,7 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
       GrGeometryProcessor* quadGP = this->makeQuadGP(
           target->caps(), target->allocator(), geometryProcessorViewM, geometryProcessorLocalM);
 
-      GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
+      GrMesh* mesh = target->allocMesh();
       mesh->setIndexedPatterned(
           quadsIndexBuffer, kIdxsPerQuad, kQuadNumVertices, quadCount, kQuadsNumInIdxBuffer);
       mesh->setVertexData(vertexBuffer, firstVertex);
@@ -1046,7 +1046,7 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
       GrGeometryProcessor* conicGP = this->makeConicGP(
           target->caps(), target->allocator(), geometryProcessorViewM, geometryProcessorLocalM);
 
-      GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
+      GrMesh* mesh = target->allocMesh();
       mesh->setIndexedPatterned(
           std::move(quadsIndexBuffer), kIdxsPerQuad, kQuadNumVertices, conicCount,
           kQuadsNumInIdxBuffer);
@@ -1057,8 +1057,7 @@ void AAHairlineOp::onPrepareDraws(Target* target) {
 }
 
 void AAHairlineOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
-  auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
-      flushState, fHelper.detachProcessorSet(), fHelper.pipelineFlags(), fHelper.stencilSettings());
+  auto pipeline = fHelper.createPipelineWithStencil(flushState);
 
   flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
 }

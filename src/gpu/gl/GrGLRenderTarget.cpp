@@ -108,7 +108,7 @@ bool GrGLRenderTarget::completeStencilAttachment() {
         interface,
         FramebufferRenderbuffer(GR_GL_FRAMEBUFFER, GR_GL_DEPTH_ATTACHMENT, GR_GL_RENDERBUFFER, 0));
 #ifdef SK_DEBUG
-    if (kChromium_GrGLDriver != gpu->glContext().driver()) {
+    if (!gpu->glCaps().skipErrorChecks()) {
       // This check can cause problems in Chromium if the context has been asynchronously
       // abandoned (see skbug.com/5200)
       GrGLenum status;
@@ -137,7 +137,7 @@ bool GrGLRenderTarget::completeStencilAttachment() {
     }
 
 #ifdef SK_DEBUG
-    if (kChromium_GrGLDriver != gpu->glContext().driver()) {
+    if (!gpu->glCaps().skipErrorChecks()) {
       // This check can cause problems in Chromium if the context has been asynchronously
       // abandoned (see skbug.com/5200)
       GrGLenum status;

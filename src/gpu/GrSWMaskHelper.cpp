@@ -92,8 +92,7 @@ bool GrSWMaskHelper::init(const SkIRect& resultBounds) {
   return true;
 }
 
-sk_sp<GrTextureProxy> GrSWMaskHelper::toTextureProxy(
-    GrRecordingContext* context, SkBackingFit fit) {
+GrSurfaceProxyView GrSWMaskHelper::toTextureView(GrRecordingContext* context, SkBackingFit fit) {
   SkImageInfo ii = SkImageInfo::MakeA8(fPixels->width(), fPixels->height());
   size_t rowBytes = fPixels->rowBytes();
 
@@ -104,6 +103,5 @@ sk_sp<GrTextureProxy> GrSWMaskHelper::toTextureProxy(
   bitmap.setImmutable();
 
   GrBitmapTextureMaker maker(context, bitmap, GrBitmapTextureMaker::Cached::kNo, fit);
-  auto [texture, ct] = maker.refTextureProxy(GrMipMapped::kNo);
-  return texture;
+  return maker.view(GrMipMapped::kNo);
 }

@@ -47,8 +47,8 @@
     <ClCompile Include="skottie\src\layers\shapelayer\TrimPaths.cpp" />
     <ClCompile Include="skottie\src\layers\SolidLayer.cpp" />
     <ClCompile Include="skottie\src\layers\TextLayer.cpp" />
+    <ClCompile Include="skottie\src\Path.cpp" />
     <ClCompile Include="skottie\src\Skottie.cpp" />
-    <ClCompile Include="skottie\src\SkottieAnimator.cpp" />
     <ClCompile Include="skottie\src\SkottieJson.cpp" />
     <ClCompile Include="skottie\src\SkottieProperty.cpp" />
     <ClCompile Include="skottie\src\SkottieValue.cpp" />
@@ -59,6 +59,7 @@
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
     <ClCompile Include="skottie\src\Transform.cpp" />
     <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
+    <ClCompile Include="skresources\src\SkResources.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -115,7 +116,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>

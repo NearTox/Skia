@@ -98,9 +98,7 @@ class SkBitmapDevice : public SkBaseDevice {
       SkCanvas::SrcRectConstraint) override;
 
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
-  void drawVertices(
-      const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
-      const SkPaint& paint) override;
+  void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
   void drawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
       const SkPaint&) override;
@@ -127,6 +125,7 @@ class SkBitmapDevice : public SkBaseDevice {
   void onClipRect(const SkRect& rect, SkClipOp, bool aa) override;
   void onClipRRect(const SkRRect& rrect, SkClipOp, bool aa) override;
   void onClipPath(const SkPath& path, SkClipOp, bool aa) override;
+  void onClipShader(sk_sp<SkShader>) override;
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
   void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override;
   bool onClipIsAA() const override;
@@ -134,6 +133,7 @@ class SkBitmapDevice : public SkBaseDevice {
   void onAsRgnClip(SkRegion*) const override;
   void validateDevBounds(const SkIRect& r) override;
   ClipType onGetClipType() const override;
+  SkIRect onDevClipBounds() const override;
 
   virtual void drawBitmap(
       const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkPaint&);

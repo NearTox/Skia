@@ -100,15 +100,15 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
       SrcRectConstraint) override;
   void onDrawImageNine(
       const SkImage*, const SkIRect& center, const SkRect& dst, const SkPaint*) override;
-  void onDrawBitmapNine(
-      const SkBitmap&, const SkIRect& center, const SkRect& dst, const SkPaint*) override;
   void onDrawImageLattice(
       const SkImage*, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
-  void onDrawBitmapLattice(
-      const SkBitmap&, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
   void onDrawVerticesObject(
       const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
       const SkPaint&) override;
+#else
+  void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
+#endif
   void onDrawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
       const SkRect* cull, const SkPaint*) override;
@@ -117,6 +117,7 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void onClipRect(const SkRect& rect, SkClipOp, ClipEdgeStyle) override;
   void onClipRRect(const SkRRect& rrect, SkClipOp, ClipEdgeStyle) override;
   void onClipPath(const SkPath& path, SkClipOp, ClipEdgeStyle) override;
+  void onClipShader(sk_sp<SkShader>, SkClipOp) override;
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
 
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;

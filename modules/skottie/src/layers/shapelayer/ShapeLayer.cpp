@@ -41,6 +41,14 @@ static constexpr GeometryAttacherT gGeometryAttachers[] = {
     ShapeBuilder::AttachPolystarGeometry,
 };
 
+using GeometryEffectAttacherT = std::vector<sk_sp<sksg::GeometryNode>> (*)(
+    const skjson::ObjectValue&, const AnimationBuilder*, std::vector<sk_sp<sksg::GeometryNode>>&&);
+static constexpr GeometryEffectAttacherT gGeometryEffectAttachers[] = {
+    ShapeBuilder::AttachMergeGeometryEffect,
+    ShapeBuilder::AttachTrimGeometryEffect,
+    ShapeBuilder::AttachRoundGeometryEffect,
+};
+
 using PaintAttacherT =
     sk_sp<sksg::PaintNode> (*)(const skjson::ObjectValue&, const AnimationBuilder*);
 static constexpr PaintAttacherT gPaintAttachers[] = {
@@ -50,13 +58,14 @@ static constexpr PaintAttacherT gPaintAttachers[] = {
     ShapeBuilder::AttachGradientStroke,
 };
 
-using GeometryEffectAttacherT = std::vector<sk_sp<sksg::GeometryNode>> (*)(
-    const skjson::ObjectValue&, const AnimationBuilder*, std::vector<sk_sp<sksg::GeometryNode>>&&);
-static constexpr GeometryEffectAttacherT gGeometryEffectAttachers[] = {
-    ShapeBuilder::AttachMergeGeometryEffect,
-    ShapeBuilder::AttachTrimGeometryEffect,
-    ShapeBuilder::AttachRoundGeometryEffect,
+// Some paint types (looking at you dashed-stroke) mess with the local geometry.
+static constexpr GeometryEffectAttacherT gPaintGeometryAdjusters[] = {
+    nullptr,                             // color fill
+    ShapeBuilder::AdjustStrokeGeometry,  // color stroke
+    nullptr,                             // gradient fill
+    ShapeBuilder::AdjustStrokeGeometry,  // gradient stroke
 };
+static_assert(SK_ARRAY_COUNT(gPaintGeometryAdjusters) == SK_ARRAY_COUNT(gPaintAttachers), "");
 
 using DrawEffectAttacherT = std::vector<sk_sp<sksg::RenderNode>> (*)(
     const skjson::ObjectValue&, const AnimationBuilder*, std::vector<sk_sp<sksg::RenderNode>>&&);
@@ -246,6 +255,12 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
         for (auto it = ctx->fGeometryEffectStack->rbegin(); it != ctx->fGeometryEffectStack->rend();
              ++it) {
           drawGeos = it->fAttach(it->fJson, this, std::move(drawGeos));
+        }
+
+        // Apply local paint geometry adjustments (e.g. dashing).
+        SkASSERT(rec->fInfo.fAttacherIndex < SK_ARRAY_COUNT(gPaintGeometryAdjusters));
+        if (const auto adjuster = gPaintGeometryAdjusters[rec->fInfo.fAttacherIndex]) {
+          drawGeos = adjuster(rec->fJson, this, std::move(drawGeos));
         }
 
         // If we still have multiple geos, reduce using 'merge'.

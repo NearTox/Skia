@@ -458,7 +458,7 @@ class SkTArray {
       fOwnMemory = true;
       fReserved = false;
     } else {
-      fAllocCount = SkTMax(count, SkTMax(kMinHeapAllocCount, reserveCount));
+      fAllocCount = std::max(count, std::max(kMinHeapAllocCount, reserveCount));
       fItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
       fOwnMemory = true;
       fReserved = reserveCount > 0;
@@ -473,7 +473,7 @@ class SkTArray {
     fItemArray = nullptr;
     fReserved = false;
     if (count > preallocCount) {
-      fAllocCount = SkTMax(count, kMinHeapAllocCount);
+      fAllocCount = std::max(count, kMinHeapAllocCount);
       fItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
       fOwnMemory = true;
     } else {

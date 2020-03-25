@@ -6,7 +6,8 @@
  */
 
 #include "src/gpu/ops/GrTessellatingPathRenderer.h"
-#include <stdio.h>
+
+#include "include/private/SkIDChangeListener.h"
 #include "src/core/SkGeometry.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrCaps.h"
@@ -16,6 +17,7 @@
 #include "src/gpu/GrEagerVertexAllocator.h"
 #include "src/gpu/GrMesh.h"
 #include "src/gpu/GrOpFlushState.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrResourceCache.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrStyle.h"
@@ -23,7 +25,9 @@
 #include "src/gpu/geometry/GrPathUtils.h"
 #include "src/gpu/geometry/GrShape.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
-#include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
+#include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
+
+#include <stdio.h>
 
 #ifndef GR_AA_TESSELLATOR_MAX_VERB_COUNT
 #  define GR_AA_TESSELLATOR_MAX_VERB_COUNT 10
@@ -42,14 +46,15 @@ struct TessInfo {
 };
 
 // When the SkPathRef genID changes, invalidate a corresponding GrResource described by key.
-class PathInvalidator : public SkPathRef::GenIDChangeListener {
+class UniqueKeyInvalidator : public SkIDChangeListener {
  public:
-  PathInvalidator(const GrUniqueKey& key, uint32_t contextUniqueID) : fMsg(key, contextUniqueID) {}
+  UniqueKeyInvalidator(const GrUniqueKey& key, uint32_t contextUniqueID)
+      : fMsg(key, contextUniqueID) {}
 
  private:
   GrUniqueKeyInvalidatedMessage fMsg;
 
-  void onChange() override { SkMessageBus<GrUniqueKeyInvalidatedMessage>::Post(fMsg); }
+  void changed() override { SkMessageBus<GrUniqueKeyInvalidatedMessage>::Post(fMsg); }
 };
 
 bool cache_match(GrGpuBuffer* vertexBuffer, SkScalar tol, int* actualCount) {
@@ -167,7 +172,13 @@ class TessellatingPathOp final : public GrMeshDrawOp {
 
   const char* name() const override { return "TessellatingPathOp"; }
 
-  void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
+  void visitProxies(const VisitProxyFunc& func) const override {
+    if (fProgramInfo) {
+      fProgramInfo->visitProxies(func);
+    } else {
+      fHelper.visitProxies(func);
+    }
+  }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -220,7 +231,7 @@ class TessellatingPathOp final : public GrMeshDrawOp {
     return path;
   }
 
-  void draw(Target* target, const GrGeometryProcessor* gp) {
+  void draw(Target* target) {
     SkASSERT(!fAntiAlias);
     GrResourceProvider* rp = target->resourceProvider();
     bool inverseFill = fShape.inverseFilled();
@@ -244,7 +255,7 @@ class TessellatingPathOp final : public GrMeshDrawOp {
     SkScalar tol = GrPathUtils::kDefaultTolerance;
     tol = GrPathUtils::scaleToleranceToSrc(tol, fViewMatrix, fShape.bounds());
     if (cache_match(cachedVertexBuffer.get(), tol, &actualCount)) {
-      this->drawVertices(target, gp, std::move(cachedVertexBuffer), 0, actualCount);
+      this->createMesh(target, std::move(cachedVertexBuffer), 0, actualCount);
       return;
     }
 
@@ -267,14 +278,14 @@ class TessellatingPathOp final : public GrMeshDrawOp {
     TessInfo info;
     info.fTolerance = isLinear ? 0 : tol;
     info.fCount = count;
-    fShape.addGenIDChangeListener(sk_make_sp<PathInvalidator>(key, target->contextUniqueID()));
+    fShape.addGenIDChangeListener(sk_make_sp<UniqueKeyInvalidator>(key, target->contextUniqueID()));
     key.setCustomData(SkData::MakeWithCopy(&info, sizeof(info)));
     rp->assignUniqueKeyToResource(key, vb.get());
 
-    this->drawVertices(target, gp, std::move(vb), 0, count);
+    this->createMesh(target, std::move(vb), 0, count);
   }
 
-  void drawAA(Target* target, const GrGeometryProcessor* gp) {
+  void drawAA(Target* target) {
     SkASSERT(fAntiAlias);
     SkPath path = getPath();
     if (path.isEmpty()) {
@@ -292,10 +303,12 @@ class TessellatingPathOp final : public GrMeshDrawOp {
     if (count == 0) {
       return;
     }
-    this->drawVertices(target, gp, std::move(vertexBuffer), firstVertex, count);
+    this->createMesh(target, std::move(vertexBuffer), firstVertex, count);
   }
 
-  void onPrepareDraws(Target* target) override {
+  GrProgramInfo* createProgramInfo(
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -315,46 +328,73 @@ class TessellatingPathOp final : public GrMeshDrawOp {
       }
       if (fAntiAlias) {
         gp = GrDefaultGeoProcFactory::MakeForDeviceSpace(
-            target->allocator(), target->caps().shaderCaps(), color, coverageType, localCoordsType,
-            fViewMatrix);
+            arena, caps->shaderCaps(), color, coverageType, localCoordsType, fViewMatrix);
       } else {
         gp = GrDefaultGeoProcFactory::Make(
-            target->allocator(), target->caps().shaderCaps(), color, coverageType, localCoordsType,
-            fViewMatrix);
+            arena, caps->shaderCaps(), color, coverageType, localCoordsType, fViewMatrix);
       }
     }
     if (!gp) {
-      return;
+      return nullptr;
     }
+
 #ifdef SK_DEBUG
     auto mode = (fAntiAlias) ? GrTessellator::Mode::kEdgeAntialias : GrTessellator::Mode::kNormal;
     SkASSERT(GrTessellator::GetVertexStride(mode) == gp->vertexStride());
 #endif
-    if (fAntiAlias) {
-      this->drawAA(target, gp);
-    } else {
-      this->draw(target, gp);
-    }
-  }
 
-  void drawVertices(
-      Target* target, const GrGeometryProcessor* gp, sk_sp<const GrBuffer> vb, int firstVertex,
-      int count) {
     GrPrimitiveType primitiveType =
         TESSELLATOR_WIREFRAME ? GrPrimitiveType::kLines : GrPrimitiveType::kTriangles;
 
-    GrMesh* mesh = target->allocMesh(primitiveType);
-    mesh->setNonIndexedNonInstanced(count);
-    mesh->setVertexData(std::move(vb), firstVertex);
-    target->recordDraw(gp, mesh, 1, primitiveType);
+    return fHelper.createProgramInfoWithStencil(
+        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, primitiveType);
+  }
+
+  GrProgramInfo* createProgramInfo(Target* target) {
+    return this->createProgramInfo(
+        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
+        target->dstProxyView());
+  }
+
+  void onPrePrepareDraws(
+      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+      const GrXferProcessor::DstProxyView& dstProxyView) override {
+    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
+
+    // This is equivalent to a GrOpFlushState::detachAppliedClip
+    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
+
+    fProgramInfo = this->createProgramInfo(
+        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
+
+    context->priv().recordProgramInfo(fProgramInfo);
+  }
+
+  void onPrepareDraws(Target* target) override {
+    if (fAntiAlias) {
+      this->drawAA(target);
+    } else {
+      this->draw(target);
+    }
+  }
+
+  void createMesh(Target* target, sk_sp<const GrBuffer> vb, int firstVertex, int count) {
+    fMesh = target->allocMesh();
+    fMesh->setNonIndexedNonInstanced(count);
+    fMesh->setVertexData(std::move(vb), firstVertex);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
-        flushState, fHelper.detachProcessorSet(), fHelper.pipelineFlags(),
-        fHelper.stencilSettings());
+    if (!fProgramInfo) {
+      fProgramInfo = this->createProgramInfo(flushState);
+    }
 
-    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
+    if (!fProgramInfo || !fMesh) {
+      return;
+    }
+
+    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
+    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
   }
 
   Helper fHelper;
@@ -363,6 +403,9 @@ class TessellatingPathOp final : public GrMeshDrawOp {
   SkMatrix fViewMatrix;
   SkIRect fDevClipBounds;
   bool fAntiAlias;
+
+  GrMesh* fMesh = nullptr;
+  GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
 };

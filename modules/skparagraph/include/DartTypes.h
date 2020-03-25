@@ -95,7 +95,7 @@ struct SkRange {
   bool contains(SkRange<size_t> other) const { return start <= other.start && end >= other.end; }
 
   bool intersects(SkRange<size_t> other) const {
-    return SkTMax(start, other.start) <= SkTMin(end, other.end);
+    return std::max(start, other.start) <= std::min(end, other.end);
   }
 
   bool empty() const { return start == EMPTY_INDEX && end == EMPTY_INDEX; }

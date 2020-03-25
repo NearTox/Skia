@@ -300,6 +300,9 @@ class SkScalerContext {
 
   static SkDescriptor* MakeDescriptorForPaths(SkFontID fontID, SkAutoDescriptor* ad);
 
+  static SkScalerContext* MakeEmptyContext(
+      sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc);
+
   static SkDescriptor* AutoDescriptorGivenRecAndEffects(
       const SkScalerContextRec& rec, const SkScalerContextEffects& effects, SkAutoDescriptor* ad);
 

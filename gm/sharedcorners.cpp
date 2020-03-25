@@ -145,7 +145,7 @@ class SharedCornersGM : public GM {
       path.lineTo(points[triangle[2]]);
       path.close();
     }
-    SkScalar scale = kBoxSize / SkTMax(path.getBounds().height(), path.getBounds().width());
+    SkScalar scale = kBoxSize / std::max(path.getBounds().height(), path.getBounds().width());
     path.transform(SkMatrix::MakeScale(scale, scale));
 
     this->drawRow(canvas, path);

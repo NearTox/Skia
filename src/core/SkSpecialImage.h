@@ -135,7 +135,7 @@ class SkSpecialImage : public SkRefCnt {
    * coordinates must be mapped from the content rect (e.g. relative to 'subset()') to the proxy's
    * space (offset by subset().topLeft()).
    */
-  GrSurfaceProxyView asSurfaceProxyViewRef(GrRecordingContext*) const;
+  GrSurfaceProxyView view(GrRecordingContext*) const;
 #endif
 
   /**

@@ -150,8 +150,6 @@ class SK_API SkPath {
 
   /** Sets FillType, the rule used to fill SkPath. While there is no check
       that ft is legal, values outside of FillType are not supported.
-
-      @param ft  one of: kWinding, kEvenOdd,  kInverseWinding, kInverseEvenOdd
   */
   void setFillType(SkPathFillType ft) { fFillType = SkToU8(ft); }
 
@@ -191,8 +189,6 @@ class SK_API SkPath {
   /** Stores a convexity type for this path. This is what will be returned if
    *  getConvexityTypeOrUnknown() is called. If you pass kUnknown, then if getContexityType()
    *  is called, the real convexity will be computed.
-   *
-   *  @param convexity  one of: kUnknown, kConvex, or kConcave
    *
    *  example: https://fiddle.skia.org/c/@Path_setConvexity
    */
@@ -1707,6 +1703,8 @@ class SK_API SkPath {
   }
 
   void setPt(int index, SkScalar x, SkScalar y);
+
+  SkPath& dirtyAfterEdit();
 
   // Bottlenecks for working with fConvexity and fFirstDirection.
   // Notice the setters are const... these are mutable atomic fields.

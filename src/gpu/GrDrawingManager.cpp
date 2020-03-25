@@ -7,10 +7,9 @@
 
 #include "src/gpu/GrDrawingManager.h"
 
+#include "include/core/SkDeferredDisplayList.h"
 #include "include/gpu/GrBackendSemaphore.h"
-#include "include/gpu/GrTexture.h"
 #include "include/private/GrRecordingContext.h"
-#include "include/private/SkDeferredDisplayList.h"
 #include "src/core/SkTTopoSort.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrClientMappedBufferManager.h"
@@ -28,6 +27,7 @@
 #include "src/gpu/GrSoftwarePathRenderer.h"
 #include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTexturePriv.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/GrTextureProxyPriv.h"
@@ -102,6 +102,12 @@ GrRenderTask* GrDrawingManager::RenderTaskDAG::addBeforeLast(sk_sp<GrRenderTask>
 }
 
 void GrDrawingManager::RenderTaskDAG::add(const SkTArray<sk_sp<GrRenderTask>>& renderTasks) {
+#ifdef SK_DEBUG
+  for (auto& renderTask : renderTasks) {
+    SkASSERT(renderTask->unique());
+  }
+#endif
+
   fRenderTasks.push_back_n(renderTasks.count(), renderTasks.begin());
 }
 
@@ -529,8 +535,7 @@ GrSemaphoresSubmitted GrDrawingManager::flushSurfaces(
       if (rtProxy->isMSAADirty()) {
         SkASSERT(rtProxy->peekRenderTarget());
         gpu->resolveRenderTarget(
-            rtProxy->peekRenderTarget(), rtProxy->msaaDirtyRect(), rtProxy->origin(),
-            GrGpu::ForExternalIO::kYes);
+            rtProxy->peekRenderTarget(), rtProxy->msaaDirtyRect(), GrGpu::ForExternalIO::kYes);
         rtProxy->markMSAAResolved();
       }
     }
@@ -572,14 +577,15 @@ void GrDrawingManager::moveRenderTasksToDDL(SkDeferredDisplayList* ddl) {
   fActiveOpsTask = nullptr;
 
   fDAG.swap(&ddl->fRenderTasks);
+  SkASSERT(!fDAG.numRenderTasks());
 
-  for (auto renderTask : ddl->fRenderTasks) {
+  for (auto& renderTask : ddl->fRenderTasks) {
     renderTask->prePrepare(fContext);
   }
 
   ddl->fArenas = std::move(fContext->priv().detachArenas());
 
-  fContext->priv().detachProgramInfos(&ddl->fProgramInfos);
+  fContext->priv().detachProgramData(&ddl->fProgramData);
 
   if (fPathRendererChain) {
     if (auto ccpr = fPathRendererChain->getCoverageCountingPathRenderer()) {

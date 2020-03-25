@@ -73,9 +73,9 @@ static void test_image(
   REPORTER_ASSERT(reporter, isGPUBacked == img->isTextureBacked());
 
   //--------------
-  // Test asSurfaceProxyViewRef - as long as there is a context this should succeed
+  // Test view - as long as there is a context this should succeed
   if (context) {
-    GrSurfaceProxyView view = img->asSurfaceProxyViewRef(context);
+    GrSurfaceProxyView view = img->view(context);
     REPORTER_ASSERT(reporter, view.asTextureProxy());
   }
 
@@ -219,18 +219,14 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SpecialImage_MakeTexture, reporter, ctxInfo) 
     {
       // gpu
       GrBitmapTextureMaker maker(context, bm);
-      auto [proxy, grCT] = maker.refTextureProxy(GrMipMapped::kNo);
-      if (!proxy) {
+      auto view = maker.view(GrMipMapped::kNo);
+      if (!view) {
         return;
       }
 
-      GrSurfaceOrigin origin = proxy->origin();
-      GrSwizzle swizzle = proxy->textureSwizzle();
-      GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
-
       sk_sp<SkSpecialImage> gpuImage(SkSpecialImage::MakeDeferredFromGpu(
           context, SkIRect::MakeWH(kFullSize, kFullSize), kNeedNewImageUniqueID_SpecialImage,
-          std::move(view), grCT, nullptr));
+          std::move(view), maker.colorType(), nullptr));
 
       {
         sk_sp<SkSpecialImage> fromGPU(gpuImage->makeTextureImage(context));
@@ -250,24 +246,21 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SpecialImage_Gpu, reporter, ctxInfo) {
   GrContext* context = ctxInfo.grContext();
   SkBitmap bm = create_bm();
   GrBitmapTextureMaker maker(context, bm);
-  auto [proxy, grCT] = maker.refTextureProxy(GrMipMapped::kNo);
-  if (!proxy) {
+  auto view = maker.view(GrMipMapped::kNo);
+  if (!view.proxy()) {
     return;
   }
 
-  GrSurfaceOrigin origin = proxy->origin();
-  GrSwizzle swizzle = proxy->textureSwizzle();
-  GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
-
   sk_sp<SkSpecialImage> fullSImg(SkSpecialImage::MakeDeferredFromGpu(
       context, SkIRect::MakeWH(kFullSize, kFullSize), kNeedNewImageUniqueID_SpecialImage, view,
-      grCT, nullptr));
+      maker.colorType(), nullptr));
 
   const SkIRect& subset = SkIRect::MakeXYWH(kPad, kPad, kSmallerSize, kSmallerSize);
 
   {
     sk_sp<SkSpecialImage> subSImg1(SkSpecialImage::MakeDeferredFromGpu(
-        context, subset, kNeedNewImageUniqueID_SpecialImage, std::move(view), grCT, nullptr));
+        context, subset, kNeedNewImageUniqueID_SpecialImage, std::move(view), maker.colorType(),
+        nullptr));
     test_image(subSImg1, reporter, context, true);
   }
 

@@ -106,4 +106,8 @@ void PropertyObserver::onTextProperty(const char[], const LazyHandle<TextPropert
 void PropertyObserver::onTransformProperty(
     const char[], const LazyHandle<TransformPropertyHandle>&) {}
 
+void PropertyObserver::onEnterNode(const char node_name[]) {}
+
+void PropertyObserver::onLeavingNode(const char node_name[]) {}
+
 }  // namespace skottie

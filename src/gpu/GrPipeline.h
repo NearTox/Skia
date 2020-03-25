@@ -194,7 +194,7 @@ class GrPipeline {
     }
   }
 
-  bool isScissorEnabled() const { return SkToBool(fFlags & Flags::kScissorEnabled); }
+  bool isScissorTestEnabled() const { return SkToBool(fFlags & Flags::kScissorTestEnabled); }
 
   const GrWindowRectsState& getWindowRectsState() const { return fWindowRectsState; }
 
@@ -237,7 +237,7 @@ class GrPipeline {
   enum class Flags : uint8_t {
     kHasStencilClip = (kLastInputFlag << 1),
     kStencilEnabled = (kLastInputFlag << 2),
-    kScissorEnabled = (kLastInputFlag << 3),
+    kScissorTestEnabled = (kLastInputFlag << 3),
   };
 
   GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(Flags);

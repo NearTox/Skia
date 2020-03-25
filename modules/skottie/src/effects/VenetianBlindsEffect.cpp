@@ -20,7 +20,7 @@ namespace internal {
 
 namespace {
 
-class VenetianBlindsAdapter final : public MaskFilterEffectBase {
+class VenetianBlindsAdapter final : public MaskShaderEffectBase {
  public:
   static sk_sp<VenetianBlindsAdapter> Make(
       const skjson::ArrayValue& jprops, sk_sp<sksg::RenderNode> layer, const SkSize& layer_size,
@@ -134,14 +134,13 @@ class VenetianBlindsAdapter final : public MaskFilterEffectBase {
     };
 
     return {
-        SkShaderMaskFilter::Make(SkGradientShader::MakeLinear(
-            pts, colors, pos, SK_ARRAY_COUNT(colors), SkTileMode::kRepeat, 0, nullptr)),
+        SkGradientShader::MakeLinear(pts, colors, pos, SK_ARRAY_COUNT(colors), SkTileMode::kRepeat),
         true};
   }
 
   float fCompletion = 0, fDirection = 0, fWidth = 0, fFeather = 0;
 
-  using INHERITED = MaskFilterEffectBase;
+  using INHERITED = MaskShaderEffectBase;
 };
 
 }  // namespace

@@ -30,7 +30,7 @@ static SkPath create_concave_path() {
 
 static void draw_path(
     GrContext* ctx, GrRenderTargetContext* renderTargetContext, const SkPath& path,
-    GrPathRenderer* pr, GrAAType aaType, const GrStyle& style) {
+    GrPathRenderer* pr, GrAAType aaType, const GrStyle& style, float scaleX = 1.f) {
   GrPaint paint;
   paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
 
@@ -42,6 +42,7 @@ static void draw_path(
     shape = shape.applyStyle(GrStyle::Apply::kPathEffectAndStrokeRec, 1.0f);
   }
   SkMatrix matrix = SkMatrix::I();
+  matrix.setScaleX(scaleX);
   GrPathRenderer::DrawPathArgs args{
       ctx,
       std::move(paint),
@@ -69,7 +70,8 @@ static bool cache_non_scratch_resources_equals(GrResourceCache* cache, int expec
 static void test_path(
     skiatest::Reporter* reporter, std::function<SkPath(void)> createPath,
     std::function<GrPathRenderer*(GrContext*)> createPathRenderer, int expected,
-    GrAAType aaType = GrAAType::kNone, GrStyle style = GrStyle(SkStrokeRec::kFill_InitStyle)) {
+    bool checkListeners, GrAAType aaType = GrAAType::kNone,
+    GrStyle style = GrStyle(SkStrokeRec::kFill_InitStyle)) {
   sk_sp<GrContext> ctx = GrContext::MakeMock(nullptr);
   // The cache needs to be big enough that nothing gets flushed, or our expectations can be wrong
   ctx->setResourceCacheLimit(8000000);
@@ -102,6 +104,24 @@ static void test_path(
   path.reset();
   cache->purgeAsNeeded();
   REPORTER_ASSERT(reporter, cache_non_scratch_resources_equals(cache, expected - 1));
+
+  if (!checkListeners) {
+    return;
+  }
+
+  // Test that purging the cache of masks also removes listeners from the path.
+  path = createPath();
+  REPORTER_ASSERT(reporter, SkPathPriv::GenIDChangeListenersCount(path) == 0);
+  for (int i = 0; i < 20; ++i) {
+    float scaleX = 1 + ((float)i + 1) / 20.f;
+    draw_path(ctx.get(), rtc.get(), path, pathRenderer.get(), aaType, style, scaleX);
+  }
+  ctx->flush();
+  REPORTER_ASSERT(reporter, SkPathPriv::GenIDChangeListenersCount(path) == 20);
+  cache->purgeAllUnlocked();
+  // The listeners don't actually purge until we try to add another one.
+  draw_path(ctx.get(), rtc.get(), path, pathRenderer.get(), aaType, style);
+  REPORTER_ASSERT(reporter, SkPathPriv::GenIDChangeListenersCount(path) == 1);
 }
 
 // Test that deleting the original path invalidates the VBs cached by the tessellating path renderer
@@ -112,7 +132,7 @@ DEF_GPUTEST(TessellatingPathRendererCacheTest, reporter, /* options */) {
   // resources should be created.
   const int kExpectedResources = 1;
 
-  test_path(reporter, create_concave_path, createPR, kExpectedResources);
+  test_path(reporter, create_concave_path, createPR, kExpectedResources, false);
 
   // Test with a style that alters the path geometry. This needs to attach the invalidation logic
   // to the original path, not the modified path produced by the style.
@@ -120,7 +140,8 @@ DEF_GPUTEST(TessellatingPathRendererCacheTest, reporter, /* options */) {
   paint.setStyle(SkPaint::kStroke_Style);
   paint.setStrokeWidth(1);
   GrStyle style(paint);
-  test_path(reporter, create_concave_path, createPR, kExpectedResources, GrAAType::kNone, style);
+  test_path(
+      reporter, create_concave_path, createPR, kExpectedResources, false, GrAAType::kNone, style);
 }
 
 // Test that deleting the original path invalidates the textures cached by the SW path renderer
@@ -133,7 +154,7 @@ DEF_GPUTEST(SoftwarePathRendererCacheTest, reporter, /* options */) {
   // only contains a single quad so GrFillRectOp doesn't need to use the shared index buffer.
   const int kExpectedResources = 1;
 
-  test_path(reporter, create_concave_path, createPR, kExpectedResources, GrAAType::kCoverage);
+  test_path(reporter, create_concave_path, createPR, kExpectedResources, true, GrAAType::kCoverage);
 
   // Test with a style that alters the path geometry. This needs to attach the invalidation logic
   // to the original path, not the modified path produced by the style.
@@ -142,5 +163,6 @@ DEF_GPUTEST(SoftwarePathRendererCacheTest, reporter, /* options */) {
   paint.setStrokeWidth(1);
   GrStyle style(paint);
   test_path(
-      reporter, create_concave_path, createPR, kExpectedResources, GrAAType::kCoverage, style);
+      reporter, create_concave_path, createPR, kExpectedResources, true, GrAAType::kCoverage,
+      style);
 }

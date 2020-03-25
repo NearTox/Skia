@@ -175,12 +175,16 @@ static void clip_quads(
       auto* blobCoordsRB =
           reinterpret_cast<const uint16_t*>(blobVertices + 3 * vertexStride + coordOffset);
       // Pull out the texel coordinates and texture index bits
-      uint16_t coordsRectL = blobCoordsLT[0] >> 1;
-      uint16_t coordsRectT = blobCoordsLT[1] >> 1;
-      uint16_t coordsRectR = blobCoordsRB[0] >> 1;
-      uint16_t coordsRectB = blobCoordsRB[1] >> 1;
-      uint16_t pageIndexX = blobCoordsLT[0] & 0x1;
-      uint16_t pageIndexY = blobCoordsLT[1] & 0x1;
+      uint16_t coordsRectL = blobCoordsLT[0];
+      uint16_t coordsRectT = blobCoordsLT[1];
+      uint16_t coordsRectR = blobCoordsRB[0];
+      uint16_t coordsRectB = blobCoordsRB[1];
+      int index0, index1;
+      std::tie(coordsRectL, coordsRectT, index0) =
+          GrDrawOpAtlas::UnpackIndexFromTexCoords(coordsRectL, coordsRectT);
+      std::tie(coordsRectR, coordsRectB, index1) =
+          GrDrawOpAtlas::UnpackIndexFromTexCoords(coordsRectR, coordsRectB);
+      SkASSERT(index0 == index1);
 
       int positionRectWidth = positionRect.width();
       int positionRectHeight = positionRect.height();
@@ -189,27 +193,27 @@ static void clip_quads(
 
       // Clip position and texCoords to the clipRect
       unsigned int delta;
-      delta = SkTMin(SkTMax(clipRect.fLeft - positionRect.fLeft, 0), positionRectWidth);
+      delta = std::min(std::max(clipRect.fLeft - positionRect.fLeft, 0), positionRectWidth);
       coordsRectL += delta;
       positionRect.fLeft += delta;
 
-      delta = SkTMin(SkTMax(clipRect.fTop - positionRect.fTop, 0), positionRectHeight);
+      delta = std::min(std::max(clipRect.fTop - positionRect.fTop, 0), positionRectHeight);
       coordsRectT += delta;
       positionRect.fTop += delta;
 
-      delta = SkTMin(SkTMax(positionRect.fRight - clipRect.fRight, 0), positionRectWidth);
+      delta = std::min(std::max(positionRect.fRight - clipRect.fRight, 0), positionRectWidth);
       coordsRectR -= delta;
       positionRect.fRight -= delta;
 
-      delta = SkTMin(SkTMax(positionRect.fBottom - clipRect.fBottom, 0), positionRectHeight);
+      delta = std::min(std::max(positionRect.fBottom - clipRect.fBottom, 0), positionRectHeight);
       coordsRectB -= delta;
       positionRect.fBottom -= delta;
 
       // Repack texel coordinates and index
-      coordsRectL = coordsRectL << 1 | pageIndexX;
-      coordsRectT = coordsRectT << 1 | pageIndexY;
-      coordsRectR = coordsRectR << 1 | pageIndexX;
-      coordsRectB = coordsRectB << 1 | pageIndexY;
+      std::tie(coordsRectL, coordsRectT) =
+          GrDrawOpAtlas::PackIndexInTexCoords(coordsRectL, coordsRectT, index0);
+      std::tie(coordsRectR, coordsRectB) =
+          GrDrawOpAtlas::PackIndexInTexCoords(coordsRectR, coordsRectB, index1);
 
       // Set new positions and coords
       SkPoint* currPosition = reinterpret_cast<SkPoint*>(currVertex);
@@ -264,7 +268,6 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
   }
 
   GrAtlasManager* atlasManager = target->atlasManager();
-  GrStrikeCache* glyphCache = target->glyphCache();
 
   GrMaskFormat maskFormat = this->maskFormat();
 
@@ -336,8 +339,7 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
 
     // TODO4F: Preserve float colors
     GrTextBlob::VertexRegenerator regenerator(
-        resourceProvider, args.fSubRunPtr, target->deferredUploadTarget(), glyphCache,
-        atlasManager);
+        resourceProvider, args.fSubRunPtr, target->deferredUploadTarget(), atlasManager);
 
     // Where the subRun begins and ends relative to totalGlyphsRegened.
     int subRunBegin = totalGlyphsRegened;
@@ -403,7 +405,7 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
       if (totalGlyphsRegened != subRunEnd) {
         // Flush if not all glyphs drawn because either the quad buffer is full or the
         // atlas is out of space.
-        this->flush(target, &flushInfo);
+        this->createDrawForGeneratedGlyphs(target, &flushInfo);
         if (totalGlyphsRegened == quadBufferEnd) {
           // Quad buffer is full. Get more buffer.
           quadBufferBegin = totalGlyphsRegened;
@@ -421,7 +423,7 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
       }
     }
   }  // for all geometries
-  this->flush(target, &flushInfo);
+  this->createDrawForGeneratedGlyphs(target, &flushInfo);
 }
 
 void GrAtlasTextOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
@@ -431,7 +433,8 @@ void GrAtlasTextOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBou
   flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
 }
 
-void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const {
+void GrAtlasTextOp::createDrawForGeneratedGlyphs(
+    GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const {
   if (!flushInfo->fGlyphsToFlush) {
     return;
   }
@@ -476,7 +479,7 @@ void GrAtlasTextOp::flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) co
     }
   }
   int maxGlyphsPerDraw = static_cast<int>(flushInfo->fIndexBuffer->size() / sizeof(uint16_t) / 6);
-  GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangles);
+  GrMesh* mesh = target->allocMesh();
   mesh->setIndexedPatterned(
       flushInfo->fIndexBuffer, kIndicesPerGlyph, kVerticesPerGlyph, flushInfo->fGlyphsToFlush,
       maxGlyphsPerDraw);

@@ -218,8 +218,8 @@ DEF_TEST(CubicStrokerUnbounded, reporter) {
         SkDebugf("fill:\n");
         fill.dumpHex();
       }
-      bestTan = SkTMax(bestTan, gMaxRecursion[0]);
-      bestCubic = SkTMax(bestCubic, gMaxRecursion[1]);
+      bestTan = std::max(bestTan, gMaxRecursion[0]);
+      bestCubic = std::max(bestCubic, gMaxRecursion[1]);
     }
 #endif
     if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {
@@ -328,8 +328,8 @@ DEF_TEST(CubicStrokerConstrained, reporter) {
         SkDebugf("fill:\n");
         fill.dumpHex();
       }
-      bestTan = SkTMax(bestTan, gMaxRecursion[0]);
-      bestCubic = SkTMax(bestCubic, gMaxRecursion[1]);
+      bestTan = std::max(bestTan, gMaxRecursion[0]);
+      bestCubic = std::max(bestCubic, gMaxRecursion[1]);
     }
 #endif
     if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {
@@ -414,8 +414,8 @@ DEF_TEST(CubicStrokerRange, reporter) {
         SkDebugf("fill:\n");
         fill.dumpHex();
       }
-      best[0] = SkTMax(best[0], gMaxRecursion[0]);
-      best[1] = SkTMax(best[1], gMaxRecursion[1]);
+      best[0] = std::max(best[0], gMaxRecursion[0]);
+      best[1] = std::max(best[1], gMaxRecursion[1]);
     }
 #endif
     if (FLAGS_timeout && timer.elapsedMs() > MS_TEST_DURATION) {

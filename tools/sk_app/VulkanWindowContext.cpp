@@ -234,7 +234,7 @@ bool VulkanWindowContext::createSwapchain(int width, int height, const DisplayPa
     }
   }
   fDisplayParams = params;
-  fSampleCount = SkTMax(1, params.fMSAASampleCount);
+  fSampleCount = std::max(1, params.fMSAASampleCount);
   fStencilBits = 8;
 
   if (VK_FORMAT_UNDEFINED == surfaceFormat) {

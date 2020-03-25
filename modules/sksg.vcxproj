@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClCompile Include="sksg\src\SkSGClipEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGColorFilter.cpp" />
+    <ClCompile Include="sksg\src\SkSGDashEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGDraw.cpp" />
     <ClCompile Include="sksg\src\SkSGEffectNode.cpp" />
     <ClCompile Include="sksg\src\SkSGGeometryNode.cpp" />
@@ -93,7 +94,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>

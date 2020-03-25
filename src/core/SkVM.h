@@ -9,6 +9,7 @@
 #define SkVM_DEFINED
 
 #include "include/core/SkTypes.h"
+#include "include/private/SkMacros.h"
 #include "include/private/SkTHash.h"
 #include "src/core/SkVM_fwd.h"
 #include <vector>      // std::vector
@@ -183,7 +184,8 @@ class Assembler {
   // All dst = x op y.
   using DstEqXOpY = void(Ymm dst, Ymm x, Ymm y);
   DstEqXOpY vpandn, vpmulld, vpsubw, vpmullw, vdivps, vfmadd132ps, vfmadd213ps, vfmadd231ps,
-      vpackusdw, vpackuswb, vpcmpeqd, vpcmpgtd;
+      vfmsub132ps, vfmsub213ps, vfmsub231ps, vfnmadd132ps, vfnmadd213ps, vfnmadd231ps, vpackusdw,
+      vpackuswb, vpcmpeqd, vpcmpgtd;
 
   using DstEqXOpYOrLabel = void(Ymm dst, Ymm x, YmmOrLabel y);
   DstEqXOpYOrLabel vpand, vpor, vpxor, vpaddd, vpsubd, vaddps, vsubps, vmulps, vminps, vmaxps;
@@ -266,6 +268,9 @@ class Assembler {
   // d += n*m
   void fmla4s(V d, V n, V m);
 
+  // d -= n*m
+  void fmls4s(V d, V n, V m);
+
   // d = op(n,imm)
   using DOpNImm = void(V d, V n, int imm);
   DOpNImm sli4s, shl4s, sshr4s, ushr4s, ushr8h;
@@ -273,6 +278,7 @@ class Assembler {
   // d = op(n)
   using DOpN = void(V d, V n);
   DOpN not16b,   // d = ~n
+      fneg4s,    // d = -n
       scvtf4s,   // int -> float
       fcvtzs4s,  // truncate float -> int
       fcvtns4s,  // round float -> int
@@ -368,13 +374,13 @@ class Assembler {
   M(store32) M(index) M(load8) M(load16) M(load32) M(gather8) M(gather16) M(gather32) M(uniform8) \
       M(uniform16) M(uniform32) M(splat) M(add_f32) M(add_i32) M(add_i16x2) M(sub_f32) M(sub_i32) \
           M(sub_i16x2) M(mul_f32) M(mul_i32) M(mul_i16x2) M(div_f32) M(min_f32) M(max_f32)        \
-              M(mad_f32) M(sqrt_f32) M(shl_i32) M(shl_i16x2) M(shr_i32) M(shr_i16x2) M(sra_i32)   \
-                  M(sra_i16x2) M(add_f32_imm) M(sub_f32_imm) M(mul_f32_imm) M(min_f32_imm)        \
-                      M(max_f32_imm) M(floor) M(trunc) M(round) M(to_f32) M(eq_f32) M(eq_i32)     \
-                          M(eq_i16x2) M(neq_f32) M(neq_i32) M(neq_i16x2) M(gt_f32) M(gt_i32)      \
-                              M(gt_i16x2) M(gte_f32) M(gte_i32) M(gte_i16x2) M(bit_and) M(bit_or) \
-                                  M(bit_xor) M(bit_clear) M(bit_and_imm) M(bit_or_imm)            \
-                                      M(bit_xor_imm) M(select) M(bytes)                           \
+              M(fma_f32) M(fms_f32) M(fnma_f32) M(sqrt_f32) M(shl_i32) M(shl_i16x2) M(shr_i32)    \
+                  M(shr_i16x2) M(sra_i32) M(sra_i16x2) M(add_f32_imm) M(sub_f32_imm)              \
+                      M(mul_f32_imm) M(min_f32_imm) M(max_f32_imm) M(floor) M(trunc) M(to_f32)    \
+                          M(eq_f32) M(eq_i32) M(eq_i16x2) M(neq_f32) M(neq_i32) M(neq_i16x2)      \
+                              M(gt_f32) M(gt_i32) M(gt_i16x2) M(gte_f32) M(gte_i32) M(gte_i16x2)  \
+                                  M(bit_and) M(bit_or) M(bit_xor) M(bit_clear) M(bit_and_imm)     \
+                                      M(bit_or_imm) M(bit_xor_imm) M(select) M(bytes)             \
                                           M(pack)  // End of SKVM_OPS
 
 enum class Op : int {
@@ -401,25 +407,31 @@ struct Color {
   skvm::F32 r, g, b, a;
 };
 
+struct OptimizedInstruction {
+  Op op;
+  Val x, y, z;
+  int immy, immz;
+
+  int death;
+  bool can_hoist;
+  bool used_in_loop;
+};
+
 class Builder {
  public:
+  SK_BEGIN_REQUIRE_DENSE
   struct Instruction {
-    // Tightly packed for hashing:
     Op op;           // v* = op(x,y,z,imm), where * == index of this Instruction.
     Val x, y, z;     // Enough arguments for mad().
     int immy, immz;  // Immediate bit pattern, shift count, argument index, etc.
-    // End tightly packed for hashing.
-
-    // Not populated until done() has been called.
-    int death;          // Index of last live instruction taking this input; live if != 0.
-    bool can_hoist;     // Value independent of all loop variables?
-    bool used_in_loop;  // Is the value used in the loop (or only by hoisted values)?
   };
+  SK_END_REQUIRE_DENSE
 
-  Program done(const char* debug_name = nullptr);
+  Program done(const char* debug_name = nullptr) const;
 
   // Mostly for debugging, tests, etc.
   std::vector<Instruction> program() const { return fProgram; }
+  std::vector<OptimizedInstruction> optimize(bool for_jit = false) const;
 
   // Declare an argument with given stride (use stride=0 for uniforms).
   // TODO: different types for varying and uniforms?
@@ -490,7 +502,7 @@ class Builder {
   F32 div(F32 x, F32 y);
   F32 min(F32 x, F32 y);
   F32 max(F32 x, F32 y);
-  F32 mad(F32 x, F32 y, F32 z);  //  x*y+z, often an FMA
+  F32 mad(F32 x, F32 y, F32 z) { return this->add(this->mul(x, y), z); }
   F32 sqrt(F32 x);
 
   F32 negate(F32 x) { return sub(splat(0.0f), x); }
@@ -509,7 +521,6 @@ class Builder {
 
   F32 floor(F32);
   I32 trunc(F32 x);
-  I32 round(F32 x);
   I32 bit_cast(F32 x) { return {x.id}; }
 
   // int math, comparisons, etc.
@@ -585,9 +596,10 @@ class Builder {
   I32 pack(I32 x, I32 y, int bits);     // x | (y << bits), assuming (x & (y << bits)) == 0
 
   // Common idioms used in several places, worth centralizing for consistency.
-  F32 unorm(int bits, I32);  // E.g. unorm(8, x) -> x * (1/255.0f)
-  I32 unorm(int bits, F32);  // E.g. unorm(8, f) -> round(x * 255)
+  F32 from_unorm(int bits, I32);  // E.g. from_unorm(8, x) -> x * (1/255.0f)
+  I32 to_unorm(int bits, F32);    // E.g.   to_unorm(8, x) -> trunc(mad(x, 255, 0.5))
 
+  Color unpack_1010102(I32 rgba);
   Color unpack_8888(I32 rgba);
   Color unpack_565(I32 bgr);  // bottom 16 bits
 
@@ -597,6 +609,7 @@ class Builder {
   Color lerp(Color lo, Color hi, F32 t);
 
   void dump(SkWStream* = nullptr) const;
+  void dot(SkWStream* = nullptr) const;
 
   uint64_t hash() const;
 
@@ -621,60 +634,68 @@ class Builder {
   SkTHashMap<Instruction, Val, InstructionHash> fIndex;
   std::vector<Instruction> fProgram;
   std::vector<int> fStrides;
-  uint32_t fHashLo{0}, fHashHi{0};
 };
 
 // Helper to streamline allocating and working with uniforms.
 struct Uniforms {
-  Arg ptr;
+  Arg base;
   std::vector<int> buf;
 
-  explicit Uniforms(int init) : ptr(Arg{0}), buf(init) {}
+  explicit Uniforms(int init) : base(Arg{0}), buf(init) {}
 
-  Builder::Uniform push(const int* vals, int n) {
-    int offset = sizeof(int) * buf.size();
-    buf.insert(buf.end(), vals, vals + n);
-    return {ptr, offset};
+  Builder::Uniform push(int val) {
+    buf.push_back(val);
+    return {base, (int)(sizeof(int) * (buf.size() - 1))};
   }
-  Builder::Uniform pushF(const float* vals, int n) { return this->push((const int*)vals, n); }
 
-  Builder::Uniform push(int val) { return this->push(&val, 1); }
-  Builder::Uniform pushF(float val) { return this->pushF(&val, 1); }
+  Builder::Uniform pushF(float val) {
+    int bits;
+    memcpy(&bits, &val, sizeof(int));
+    return this->push(bits);
+  }
 
   Builder::Uniform pushPtr(const void* ptr) {
-    union {
-      const void* ptr;
-      int ints[sizeof(const void*) / sizeof(int)];
-    } pun = {ptr};
-    return this->push(pun.ints, SK_ARRAY_COUNT(pun.ints));
+    // Jam the pointer into 1 or 2 ints.
+    int ints[sizeof(ptr) / sizeof(int)];
+    memcpy(ints, &ptr, sizeof(ptr));
+    for (int bits : ints) {
+      buf.push_back(bits);
+    }
+    return {base, (int)(sizeof(int) * (buf.size() - SK_ARRAY_COUNT(ints)))};
   }
 };
 
 using Reg = int;
 
+// d = op(x, y/imm, z/imm)
+struct InterpreterInstruction {
+  Op op;
+  Reg d, x;
+  union {
+    Reg y;
+    int immy;
+  };
+  union {
+    Reg z;
+    int immz;
+  };
+};
+
 class Program {
  public:
-  struct Instruction {  // d = op(x, y/imm, z/imm)
-    Op op;
-    Reg d, x;
-    union {
-      Reg y;
-      int immy;
-    };
-    union {
-      Reg z;
-      int immz;
-    };
-  };
+  Program(const std::vector<OptimizedInstruction>& interpreter, const std::vector<int>& strides);
 
   Program(
-      const std::vector<Builder::Instruction>& instructions, const std::vector<int>& strides,
+      const std::vector<OptimizedInstruction>& interpreter,
+      const std::vector<OptimizedInstruction>& jit, const std::vector<int>& strides,
       const char* debug_name);
 
   Program();
   ~Program();
+
   Program(Program&&);
   Program& operator=(Program&&);
+
   Program(const Program&) = delete;
   Program& operator=(const Program&) = delete;
 
@@ -682,16 +703,17 @@ class Program {
 
   template <typename... T>
   void eval(int n, T*... arg) const {
-    SkASSERT(sizeof...(arg) == fStrides.size());
+    SkASSERT(sizeof...(arg) == this->nargs());
     // This nullptr isn't important except that it makes args[] non-empty if you pass none.
     void* args[] = {(void*)arg..., nullptr};
     this->eval(n, args);
   }
 
-  std::vector<Instruction> instructions() const { return fInstructions; }
-  int nregs() const { return fRegs; }
-  int loop() const { return fLoop; }
-  bool empty() const { return fInstructions.empty(); }
+  std::vector<InterpreterInstruction> instructions() const;
+  int nargs() const;
+  int nregs() const;
+  int loop() const;
+  bool empty() const;
 
   bool hasJIT() const;  // Has this Program been JITted?
   void dropJIT();       // If hasJIT(), drop it, forcing interpreter fallback.
@@ -699,21 +721,16 @@ class Program {
   void dump(SkWStream* = nullptr) const;
 
  private:
-  void setupInterpreter(const std::vector<Builder::Instruction>&);
-  void setupJIT(const std::vector<Builder::Instruction>&, const char* debug_name);
+  void setupInterpreter(const std::vector<OptimizedInstruction>&);
+  void setupJIT(const std::vector<OptimizedInstruction>&, const char* debug_name);
+  void setupLLVM(const std::vector<OptimizedInstruction>&, const char* debug_name);
 
-  void interpret(int n, void* args[]) const;
+  bool jit(const std::vector<OptimizedInstruction>&, bool try_hoisting, Assembler*) const;
 
-  bool jit(const std::vector<Builder::Instruction>&, bool try_hoisting, Assembler*) const;
+  void waitForLLVM() const;
 
-  std::vector<Instruction> fInstructions;
-  int fRegs = 0;
-  int fLoop = 0;
-  std::vector<int> fStrides;
-
-  void* fJITEntry = nullptr;
-  size_t fJITSize = 0;
-  void* fDylib = nullptr;
+  struct Impl;
+  std::unique_ptr<Impl> fImpl;
 };
 
 // TODO: control flow

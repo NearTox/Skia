@@ -62,12 +62,10 @@ void testing_only_texture_test(
   sk_sp<GrTextureProxy> wrappedProxy;
   if (GrRenderable::kYes == renderable) {
     wrappedProxy = context->priv().proxyProvider()->wrapRenderableBackendTexture(
-        backendTex, kTopLeft_GrSurfaceOrigin, 1, grCT, kAdopt_GrWrapOwnership,
-        GrWrapCacheable::kNo);
+        backendTex, 1, grCT, kAdopt_GrWrapOwnership, GrWrapCacheable::kNo);
   } else {
     wrappedProxy = context->priv().proxyProvider()->wrapBackendTexture(
-        backendTex, grCT, kTopLeft_GrSurfaceOrigin, kAdopt_GrWrapOwnership, GrWrapCacheable::kNo,
-        GrIOType::kRW_GrIOType);
+        backendTex, grCT, kAdopt_GrWrapOwnership, GrWrapCacheable::kNo, GrIOType::kRW_GrIOType);
   }
   REPORTER_ASSERT(reporter, wrappedProxy);
 

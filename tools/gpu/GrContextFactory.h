@@ -41,6 +41,7 @@ class GrContextFactory : SkNoncopyable {
     kCommandBuffer_ContextType,    //! Chromium command buffer OpenGL ES context.
     kVulkan_ContextType,           //! Vulkan
     kMetal_ContextType,            //! Metal
+    kDirect3D_ContextType,         //! Direct3D 12
     kDawn_ContextType,             //! Dawn
     kMock_ContextType,             //! Mock context that does not draw.
     kLastContextType = kMock_ContextType
@@ -68,6 +69,7 @@ class GrContextFactory : SkNoncopyable {
     switch (type) {
       case kVulkan_ContextType: return GrBackendApi::kVulkan;
       case kMetal_ContextType: return GrBackendApi::kMetal;
+      case kDirect3D_ContextType: return GrBackendApi::kDirect3D;
       case kDawn_ContextType: return GrBackendApi::kDawn;
       case kMock_ContextType: return GrBackendApi::kMock;
       default: return GrBackendApi::kOpenGL;
@@ -86,6 +88,7 @@ class GrContextFactory : SkNoncopyable {
       case kCommandBuffer_ContextType: return "Command Buffer";
       case kVulkan_ContextType: return "Vulkan";
       case kMetal_ContextType: return "Metal";
+      case kDirect3D_ContextType: return "Direct3D";
       case kDawn_ContextType: return "Dawn";
       case kMock_ContextType: return "Mock";
     }

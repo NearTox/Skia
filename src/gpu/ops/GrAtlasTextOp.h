@@ -129,7 +129,8 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
            kLCDBGRDistanceField_MaskType == fMaskType;
   }
 
-  inline void flush(GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const;
+  inline void createDrawForGeneratedGlyphs(
+      GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const;
 
   const SkPMColor4f& color() const {
     SkASSERT(fGeoCount > 0);

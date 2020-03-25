@@ -37,7 +37,7 @@ class HaltingStream : public SkStream {
   HaltingStream(sk_sp<SkData> data, size_t initialLimit)
       : fTotalSize(data->size()), fLimit(initialLimit), fStream(std::move(data)) {}
 
-  void addNewData(size_t extra) { fLimit = SkTMin(fTotalSize, fLimit + extra); }
+  void addNewData(size_t extra) { fLimit = std::min(fTotalSize, fLimit + extra); }
 
   size_t read(void* buffer, size_t size) override {
     if (fStream.getPosition() + size > fLimit) {

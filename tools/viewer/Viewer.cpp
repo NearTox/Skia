@@ -958,12 +958,12 @@ void Viewer::setupCurrentSlide() {
   }
 }
 
-#define MAX_ZOOM_LEVEL 8
-#define MIN_ZOOM_LEVEL -8
+#define MAX_ZOOM_LEVEL 8.0f
+#define MIN_ZOOM_LEVEL -8.0f
 
 void Viewer::changeZoomLevel(float delta) {
   fZoomLevel += delta;
-  fZoomLevel = SkScalarPin(fZoomLevel, MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
+  fZoomLevel = SkTPin(fZoomLevel, MIN_ZOOM_LEVEL, MAX_ZOOM_LEVEL);
   this->preTouchMatrixChanged();
 }
 
@@ -1253,19 +1253,11 @@ void Viewer::drawSlide(SkSurface* surface) {
   if (fTiled) {
     int tileW = SkScalarCeilToInt(fWindow->width() * fTileScale.width());
     int tileH = SkScalarCeilToInt(fWindow->height() * fTileScale.height());
-    sk_sp<SkSurface> tileSurface = make_surface(tileW, tileH);
-    SkCanvas* tileCanvas = tileSurface->getCanvas();
-    SkMatrix m = this->computeMatrix();
     for (int y = 0; y < fWindow->height(); y += tileH) {
       for (int x = 0; x < fWindow->width(); x += tileW) {
-        SkAutoCanvasRestore acr(tileCanvas, true);
-        tileCanvas->translate(-x, -y);
-        tileCanvas->clear(SK_ColorTRANSPARENT);
-        tileCanvas->concat(m);
-        OveridePaintFilterCanvas filterCanvas(
-            tileCanvas, &fPaint, &fPaintOverrides, &fFont, &fFontOverrides);
-        fSlides[fCurrentSlide]->draw(&filterCanvas);
-        tileSurface->draw(slideCanvas, x, y, nullptr);
+        SkAutoCanvasRestore acr(slideCanvas, true);
+        slideCanvas->clipRect(SkRect::MakeXYWH(x, y, tileW, tileH));
+        fSlides[fCurrentSlide]->draw(slideCanvas);
       }
     }
 
@@ -2131,13 +2123,13 @@ void Viewer::drawImGui() {
     if (ImGui::Begin("Zoom", &fShowZoomWindow)) {
       static int zoomFactor = 8;
       if (ImGui::Button("<<")) {
-        zoomFactor = SkTMax(zoomFactor / 2, 4);
+        zoomFactor = std::max(zoomFactor / 2, 4);
       }
       ImGui::SameLine();
       ImGui::Text("%2d", zoomFactor);
       ImGui::SameLine();
       if (ImGui::Button(">>")) {
-        zoomFactor = SkTMin(zoomFactor * 2, 32);
+        zoomFactor = std::min(zoomFactor * 2, 32);
       }
 
       if (!fZoomWindowFixed) {

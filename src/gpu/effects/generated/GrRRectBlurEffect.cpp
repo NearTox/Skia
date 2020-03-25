@@ -37,8 +37,8 @@ std::unique_ptr<GrFragmentProcessor> GrRRectBlurEffect::Make(
     return nullptr;
   }
 
-  sk_sp<GrTextureProxy> mask(
-      find_or_create_rrect_blur_mask(context, rrectToDraw, dimensions, xformedSigma));
+  GrSurfaceProxyView mask =
+      find_or_create_rrect_blur_mask(context, rrectToDraw, dimensions, xformedSigma);
   if (!mask) {
     return nullptr;
   }
@@ -47,7 +47,7 @@ std::unique_ptr<GrFragmentProcessor> GrRRectBlurEffect::Make(
       xformedSigma, devRRect.getBounds(), SkRRectPriv::GetSimpleRadii(devRRect).fX,
       std::move(mask)));
 }
-#include "include/gpu/GrTexture.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"

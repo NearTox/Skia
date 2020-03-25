@@ -81,7 +81,7 @@ class GrGLSLUniformHandler {
   virtual GrSwizzle samplerSwizzle(SamplerHandle) const = 0;
 
   virtual SamplerHandle addSampler(
-      const GrSurfaceProxy*, GrSamplerState, const GrSwizzle&, const char* name,
+      const GrBackendFormat&, GrSamplerState, const GrSwizzle&, const char* name,
       const GrShaderCaps*) = 0;
 
   virtual UniformHandle internalAddUniformArray(

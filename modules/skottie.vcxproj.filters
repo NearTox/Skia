@@ -4,7 +4,6 @@
     <ClCompile Include="skottie\src\Composition.cpp" />
     <ClCompile Include="skottie\src\Layer.cpp" />
     <ClCompile Include="skottie\src\Skottie.cpp" />
-    <ClCompile Include="skottie\src\SkottieAnimator.cpp" />
     <ClCompile Include="skottie\src\SkottieJson.cpp" />
     <ClCompile Include="skottie\src\SkottieProperty.cpp" />
     <ClCompile Include="skottie\src\SkottieValue.cpp" />
@@ -49,5 +48,7 @@
     <ClCompile Include="skottie\src\layers\shapelayer\RoundCorners.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\ShapeLayer.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\TrimPaths.cpp" />
+    <ClCompile Include="skresources\src\SkResources.cpp" />
+    <ClCompile Include="skottie\src\Path.cpp" />
   </ItemGroup>
 </Project>

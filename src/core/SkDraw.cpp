@@ -782,7 +782,7 @@ SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) {
   SkScalar sx = SkPoint::Length(matrix[SkMatrix::kMScaleX], matrix[SkMatrix::kMSkewY]);
   SkScalar sy = SkPoint::Length(matrix[SkMatrix::kMSkewX], matrix[SkMatrix::kMScaleY]);
   if (SkScalarsAreFinite(sx, sy)) {
-    SkScalar scale = SkTMax(sx, sy);
+    SkScalar scale = std::max(sx, sy);
     if (scale > 0) {
       return scale;
     }
@@ -1061,7 +1061,8 @@ void SkDraw::drawBitmap(
     if (clipHandlesSprite(*fRC, ix, iy, pmap)) {
       SkSTArenaAlloc<kSkBlitterContextSize> allocator;
       // blitter will be owned by the allocator.
-      SkBlitter* blitter = SkBlitter::ChooseSprite(fDst, *paint, pmap, ix, iy, &allocator);
+      SkBlitter* blitter =
+          SkBlitter::ChooseSprite(fDst, *paint, pmap, ix, iy, &allocator, fRC->clipShader());
       if (blitter) {
         SkScan::FillIRect(SkIRect::MakeXYWH(ix, iy, pmap.width(), pmap.height()), *fRC, blitter);
         return;
@@ -1114,7 +1115,8 @@ void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& ori
   if (nullptr == paint.getColorFilter() && clipHandlesSprite(*fRC, x, y, pmap)) {
     // blitter will be owned by the allocator.
     SkSTArenaAlloc<kSkBlitterContextSize> allocator;
-    SkBlitter* blitter = SkBlitter::ChooseSprite(fDst, paint, pmap, x, y, &allocator);
+    SkBlitter* blitter =
+        SkBlitter::ChooseSprite(fDst, paint, pmap, x, y, &allocator, fRC->clipShader());
     if (blitter) {
       SkScan::FillIRect(bounds, *fRC, blitter);
       return;
@@ -1191,7 +1193,7 @@ bool SkDraw::ComputeMaskBounds(
     // requests.
     static const int MAX_MARGIN = 128;
     if (!bounds->intersect(clipBounds->makeOutset(
-            SkMin32(margin.fX, MAX_MARGIN), SkMin32(margin.fY, MAX_MARGIN)))) {
+            std::min(margin.fX, MAX_MARGIN), std::min(margin.fY, MAX_MARGIN)))) {
       return false;
     }
   }

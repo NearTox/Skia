@@ -73,6 +73,9 @@ class GrVkGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   void deleteBackendTexture(const GrBackendTexture&) override;
+
+  bool compile(const GrProgramDesc&, const GrProgramInfo&) override;
+
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
 
@@ -95,19 +98,18 @@ class GrVkGpu : public GrGpu {
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
 
   void addBufferMemoryBarrier(
-      const GrVkResource*, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
-      bool byRegion, VkBufferMemoryBarrier* barrier) const;
+      const GrManagedResource*, VkPipelineStageFlags srcStageMask,
+      VkPipelineStageFlags dstStageMask, bool byRegion, VkBufferMemoryBarrier* barrier) const;
   void addImageMemoryBarrier(
-      const GrVkResource*, VkPipelineStageFlags srcStageMask, VkPipelineStageFlags dstStageMask,
-      bool byRegion, VkImageMemoryBarrier* barrier) const;
+      const GrManagedResource*, VkPipelineStageFlags srcStageMask,
+      VkPipelineStageFlags dstStageMask, bool byRegion, VkImageMemoryBarrier* barrier) const;
 
   SkSL::Compiler* shaderCompiler() const { return fCompiler; }
 
   bool onRegenerateMipMapLevels(GrTexture* tex) override;
 
   void onResolveRenderTarget(
-      GrRenderTarget* target, const SkIRect& resolveRect, GrSurfaceOrigin resolveOrigin,
-      ForExternalIO) override;
+      GrRenderTarget* target, const SkIRect& resolveRect, ForExternalIO) override;
 
   void submitSecondaryCommandBuffer(std::unique_ptr<GrVkSecondaryCommandBuffer>);
 
@@ -172,8 +174,8 @@ class GrVkGpu : public GrGpu {
       const BackendTextureData*) override;
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
-      SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
+      SkISize, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt, SkBudgeted,
+      GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
       SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
       const void* data, size_t dataSize) override;

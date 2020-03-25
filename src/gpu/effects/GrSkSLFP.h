@@ -9,6 +9,7 @@
 #define GrSkSLFP_DEFINED
 
 #include "include/core/SkRefCnt.h"
+#include "include/gpu/GrContextOptions.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
@@ -24,6 +25,7 @@
 
 class GrContext_Base;
 class GrShaderCaps;
+class SkData;
 class SkRuntimeEffect;
 
 class GrSkSLFP : public GrFragmentProcessor {
@@ -65,8 +67,8 @@ class GrSkSLFP : public GrFragmentProcessor {
    * 'uniform'.
    */
   static std::unique_ptr<GrSkSLFP> Make(
-      GrContext_Base* context, sk_sp<SkRuntimeEffect> effect, const char* name, const void* inputs,
-      size_t inputSize, const SkMatrix* matrix = nullptr);
+      GrContext_Base* context, sk_sp<SkRuntimeEffect> effect, const char* name,
+      sk_sp<SkData> inputs, const SkMatrix* matrix = nullptr);
 
   const char* name() const override;
 
@@ -75,9 +77,12 @@ class GrSkSLFP : public GrFragmentProcessor {
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
  private:
+  using ShaderErrorHandler = GrContextOptions::ShaderErrorHandler;
+
   GrSkSLFP(
-      sk_sp<const GrShaderCaps> shaderCaps, sk_sp<SkRuntimeEffect> effect, const char* name,
-      const void* inputs, size_t inputSize, const SkMatrix* matrix);
+      sk_sp<const GrShaderCaps> shaderCaps, ShaderErrorHandler* shaderErrorHandler,
+      sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs,
+      const SkMatrix* matrix);
 
   GrSkSLFP(const GrSkSLFP& other);
 
@@ -88,12 +93,11 @@ class GrSkSLFP : public GrFragmentProcessor {
   bool onIsEqual(const GrFragmentProcessor&) const override;
 
   sk_sp<const GrShaderCaps> fShaderCaps;
+  ShaderErrorHandler* fShaderErrorHandler;
 
   sk_sp<SkRuntimeEffect> fEffect;
   const char* fName;
-
-  const std::unique_ptr<int8_t[]> fInputs;
-  size_t fInputSize;
+  sk_sp<SkData> fInputs;
 
   GrCoordTransform fCoordTransform;
 

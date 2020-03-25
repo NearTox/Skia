@@ -96,7 +96,7 @@ DEF_TEST(SkSLFPHelloWorld, r) {
        "#ifndef GrTest_DEFINED\n"
        "#define GrTest_DEFINED\n"
        "#include \"include/core/SkTypes.h\"\n"
-       "#include \"include/private/SkM44.h\"\n\n"
+       "#include \"include/core/SkM44.h\"\n\n"
        "#include \"src/gpu/GrCoordTransform.h\"\n"
        "#include \"src/gpu/GrFragmentProcessor.h\"\n"
        "class GrTest : public GrFragmentProcessor {\n"
@@ -125,7 +125,7 @@ DEF_TEST(SkSLFPHelloWorld, r) {
        " ******************************************************************************************"
        "********/\n"
        "#include \"GrTest.h\"\n\n"
-       "#include \"include/gpu/GrTexture.h\"\n"
+       "#include \"src/gpu/GrTexture.h\"\n"
        "#include \"src/gpu/glsl/GrGLSLFragmentProcessor.h\"\n"
        "#include \"src/gpu/glsl/GrGLSLFragmentShaderBuilder.h\"\n"
        "#include \"src/gpu/glsl/GrGLSLProgramBuilder.h\"\n"
@@ -445,12 +445,26 @@ DEF_TEST(SkSLFPChildProcessors, r) {
       *SkSL::ShaderCapsFactory::Default(),
       {"this->registerChildProcessor(std::move(child1));",
        "this->registerChildProcessor(std::move(child2));"},
-      {"SkString _sample93;\n", "_sample93 = this->invokeChild(_outer.child1_index, args);\n",
-       "SkString _sample110;\n", "_sample110 = this->invokeChild(_outer.child2_index, args);\n",
-       "fragBuilder->codeAppendf(\"%s = %s * %s;\\n\", args.fOutputColor, _sample93.c_str(), "
-       "_sample110.c_str());\n",
-       "this->registerChildProcessor(src.childProcessor(child1_index).clone());",
-       "this->registerChildProcessor(src.childProcessor(child2_index).clone());"});
+      {
+          "SkString _sample93;\n",
+          "_sample93 = this->invokeChild(_outer.child1_index, args);\n",
+          "SkString _sample110;\n",
+          "_sample110 = this->invokeChild(_outer.child2_index, args);\n",
+          "fragBuilder->codeAppendf(\"%s = %s * %s;\\n\", args.fOutputColor, _sample93.c_str(), "
+          "_sample110.c_str());\n",
+          "{",
+          "    auto clone = src.childProcessor(child1_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child1_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+          "{",
+          "    auto clone = src.childProcessor(child2_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child2_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+      });
 }
 
 DEF_TEST(SkSLFPChildProcessorsWithInput, r) {
@@ -471,9 +485,15 @@ DEF_TEST(SkSLFPChildProcessorsWithInput, r) {
        "_sample128 = this->invokeChild(_outer.child1_index, _input128.c_str(), args);",
        "fragBuilder->codeAppendf(\"\\nhalf4 childOut1 = %s;\", _sample128.c_str());",
        "SkString _input174(\"childOut1\");", "SkString _sample174;",
-       "_sample174 = this->invokeChild(_outer.child2_index, _input174.c_str(), args);",
-       "this->registerChildProcessor(src.childProcessor(child1_index).clone());",
-       "this->registerChildProcessor(src.childProcessor(child2_index).clone());"});
+       "_sample174 = this->invokeChild(_outer.child2_index, _input174.c_str(), args);", "{",
+       "    auto clone = src.childProcessor(child1_index).clone();",
+       "    clone->setSampledWithExplicitCoords(",
+       "            src.childProcessor(child1_index).isSampledWithExplicitCoords());",
+       "    this->registerChildProcessor(std::move(clone));", "}", "{",
+       "    auto clone = src.childProcessor(child2_index).clone();",
+       "    clone->setSampledWithExplicitCoords(",
+       "            src.childProcessor(child2_index).isSampledWithExplicitCoords());",
+       "    this->registerChildProcessor(std::move(clone));", "}"});
 }
 
 DEF_TEST(SkSLFPChildProcessorWithInputExpression, r) {
@@ -492,7 +512,12 @@ DEF_TEST(SkSLFPChildProcessorWithInputExpression, r) {
           "SkString _sample64;",
           "_sample64 = this->invokeChild(_outer.child_index, _input64.c_str(), args);",
           "fragBuilder->codeAppendf(\"%s = %s;\\n\", args.fOutputColor, _sample64.c_str());",
-          "this->registerChildProcessor(src.childProcessor(child_index).clone());",
+          "{",
+          "    auto clone = src.childProcessor(child_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
       });
 }
 
@@ -507,15 +532,27 @@ DEF_TEST(SkSLFPNestedChildProcessors, r) {
       *SkSL::ShaderCapsFactory::Default(),
       {"this->registerChildProcessor(std::move(child1));",
        "this->registerChildProcessor(std::move(child2));"},
-      {"SkString _input121 = SkStringPrintf(\"%s * half4(0.5)\", args.fInputColor);",
-       "SkString _sample121;",
-       "_sample121 = this->invokeChild(_outer.child1_index, _input121.c_str(), args);",
-       "SkString _input93 = SkStringPrintf(\"%s * %s\", args.fInputColor, _sample121.c_str());",
-       "SkString _sample93;",
-       "_sample93 = this->invokeChild(_outer.child2_index, _input93.c_str(), args);",
-       "fragBuilder->codeAppendf(\"%s = %s;\\n\", args.fOutputColor, _sample93.c_str());",
-       "this->registerChildProcessor(src.childProcessor(child1_index).clone());",
-       "this->registerChildProcessor(src.childProcessor(child2_index).clone());"});
+      {
+          "SkString _input121 = SkStringPrintf(\"%s * half4(0.5)\", args.fInputColor);",
+          "SkString _sample121;",
+          "_sample121 = this->invokeChild(_outer.child1_index, _input121.c_str(), args);",
+          "SkString _input93 = SkStringPrintf(\"%s * %s\", args.fInputColor, _sample121.c_str());",
+          "SkString _sample93;",
+          "_sample93 = this->invokeChild(_outer.child2_index, _input93.c_str(), args);",
+          "fragBuilder->codeAppendf(\"%s = %s;\\n\", args.fOutputColor, _sample93.c_str());",
+          "{",
+          "    auto clone = src.childProcessor(child1_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child1_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+          "{",
+          "    auto clone = src.childProcessor(child2_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child2_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+      });
 }
 
 DEF_TEST(SkSLFPChildFPAndGlobal, r) {
@@ -531,14 +568,22 @@ DEF_TEST(SkSLFPChildFPAndGlobal, r) {
       "    }"
       "}",
       *SkSL::ShaderCapsFactory::Default(), {"this->registerChildProcessor(std::move(child));"},
-      {"hasCap = sk_Caps.externalTextureSupport;",
-       "fragBuilder->codeAppendf(\"bool hasCap = %s;\\nif (hasCap) {\", (hasCap ? \"true\" : "
-       "\"false\"));",
-       "SkString _input130 = SkStringPrintf(\"%s\", args.fInputColor);", "SkString _sample130;",
-       "_sample130 = this->invokeChild(_outer.child_index, _input130.c_str(), args);",
-       "fragBuilder->codeAppendf(\"\\n    %s = %s;\\n} else {\\n    %s = half4(1.0);\\n}\\n\","
-       " args.fOutputColor, _sample130.c_str(), args.fOutputColor);",
-       "this->registerChildProcessor(src.childProcessor(child_index).clone());"});
+      {
+          "hasCap = sk_Caps.externalTextureSupport;",
+          "fragBuilder->codeAppendf(\"bool hasCap = %s;\\nif (hasCap) {\", (hasCap ? \"true\" : "
+          "\"false\"));",
+          "SkString _input130 = SkStringPrintf(\"%s\", args.fInputColor);",
+          "SkString _sample130;",
+          "_sample130 = this->invokeChild(_outer.child_index, _input130.c_str(), args);",
+          "fragBuilder->codeAppendf(\"\\n    %s = %s;\\n} else {\\n    %s = half4(1.0);\\n}\\n\","
+          " args.fOutputColor, _sample130.c_str(), args.fOutputColor);",
+          "{",
+          "    auto clone = src.childProcessor(child_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+      });
 }
 
 DEF_TEST(SkSLFPChildProcessorInlineFieldAccess, r) {
@@ -553,13 +598,21 @@ DEF_TEST(SkSLFPChildProcessorInlineFieldAccess, r) {
       "    }"
       "}",
       *SkSL::ShaderCapsFactory::Default(), {"this->registerChildProcessor(std::move(child));"},
-      {"fragBuilder->codeAppendf(\"if (%s) {\", "
-       "(_outer.childProcessor(_outer.child_index).preservesOpaqueInput() ? ",
-       "SkString _input105 = SkStringPrintf(\"%s\", args.fInputColor);", "SkString _sample105;",
-       "_sample105 = this->invokeChild(_outer.child_index, _input105.c_str(), args);",
-       "fragBuilder->codeAppendf(\"\\n    %s = %s;\\n} else {\\n    %s = half4(1.0);\\n}\\n\","
-       " args.fOutputColor, _sample105.c_str(), args.fOutputColor);",
-       "this->registerChildProcessor(src.childProcessor(child_index).clone());"});
+      {
+          "fragBuilder->codeAppendf(\"if (%s) {\", "
+          "(_outer.childProcessor(_outer.child_index).preservesOpaqueInput() ? ",
+          "SkString _input105 = SkStringPrintf(\"%s\", args.fInputColor);",
+          "SkString _sample105;",
+          "_sample105 = this->invokeChild(_outer.child_index, _input105.c_str(), args);",
+          "fragBuilder->codeAppendf(\"\\n    %s = %s;\\n} else {\\n    %s = half4(1.0);\\n}\\n\","
+          " args.fOutputColor, _sample105.c_str(), args.fOutputColor);",
+          "{",
+          "    auto clone = src.childProcessor(child_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+      });
 }
 
 DEF_TEST(SkSLFPChildProcessorFieldAccess, r) {
@@ -575,13 +628,21 @@ DEF_TEST(SkSLFPChildProcessorFieldAccess, r) {
       "    }"
       "}",
       *SkSL::ShaderCapsFactory::Default(), {"this->registerChildProcessor(std::move(child));"},
-      {"opaque = _outer.childProcessor(_outer.child_index).preservesOpaqueInput();",
-       "fragBuilder->codeAppendf(\"bool opaque = %s;\\nif (opaque) {\", (opaque ? \"true\" : "
-       "\"false\"));",
-       "SkString _sample126;", "_sample126 = this->invokeChild(_outer.child_index, args);",
-       "fragBuilder->codeAppendf(\"\\n    %s = %s;\\n} else {\\n    %s = half4(0.5);\\n}\\n\","
-       " args.fOutputColor, _sample126.c_str(), args.fOutputColor);",
-       "this->registerChildProcessor(src.childProcessor(child_index).clone());"});
+      {
+          "opaque = _outer.childProcessor(_outer.child_index).preservesOpaqueInput();",
+          "fragBuilder->codeAppendf(\"bool opaque = %s;\\nif (opaque) {\", (opaque ? \"true\" : "
+          "\"false\"));",
+          "SkString _sample126;",
+          "_sample126 = this->invokeChild(_outer.child_index, args);",
+          "fragBuilder->codeAppendf(\"\\n    %s = %s;\\n} else {\\n    %s = half4(0.5);\\n}\\n\","
+          " args.fOutputColor, _sample126.c_str(), args.fOutputColor);",
+          "{",
+          "    auto clone = src.childProcessor(child_index).clone();",
+          "    clone->setSampledWithExplicitCoords(",
+          "            src.childProcessor(child_index).isSampledWithExplicitCoords());",
+          "    this->registerChildProcessor(std::move(clone));",
+          "}",
+      });
 }
 
 DEF_TEST(SkSLFPNullableChildProcessor, r) {

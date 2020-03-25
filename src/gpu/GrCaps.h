@@ -202,7 +202,7 @@ class GrCaps : public SkRefCnt {
   // Returns the number of samples to use when performing internal draws to the given config with
   // MSAA or mixed samples. If 0, Ganesh should not attempt to use internal multisampling.
   int internalMultisampleCount(const GrBackendFormat& format) const {
-    return SkTMin(fInternalMultisampleCount, this->maxRenderTargetSampleCount(format));
+    return std::min(fInternalMultisampleCount, this->maxRenderTargetSampleCount(format));
   }
 
   virtual bool isFormatAsColorTypeRenderable(

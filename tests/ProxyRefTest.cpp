@@ -9,12 +9,12 @@
 
 #include "tests/Test.h"
 
-#include "include/gpu/GrTexture.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRenderTargetProxy.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrSurfaceProxy.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "tests/TestUtils.h"
 
@@ -24,15 +24,11 @@ static sk_sp<GrTextureProxy> make_deferred(GrContext* context) {
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
   const GrCaps* caps = context->priv().caps();
 
-  GrSurfaceDesc desc;
-  desc.fWidth = kWidthHeight;
-  desc.fHeight = kWidthHeight;
-
   const GrBackendFormat format =
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
   GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
   return proxyProvider->createProxy(
-      format, desc, swizzle, GrRenderable::kYes, 1, kBottomLeft_GrSurfaceOrigin, GrMipMapped::kNo,
+      format, {kWidthHeight, kWidthHeight}, swizzle, GrRenderable::kYes, 1, GrMipMapped::kNo,
       SkBackingFit::kApprox, SkBudgeted::kYes, GrProtected::kNo);
 }
 
@@ -41,7 +37,7 @@ static sk_sp<GrTextureProxy> make_wrapped(GrContext* context) {
 
   return proxyProvider->testingOnly_createInstantiatedProxy(
       {kWidthHeight, kWidthHeight}, GrColorType::kRGBA_8888, GrRenderable::kYes, 1,
-      kBottomLeft_GrSurfaceOrigin, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo);
+      SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo);
 }
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ProxyRefTest, reporter, ctxInfo) {

@@ -95,7 +95,7 @@ class SkBlurMaskFilterImpl : public SkMaskFilterBase {
 
   SkScalar computeXformedSigma(const SkMatrix& ctm) const {
     SkScalar xformedSigma = this->ignoreXform() ? fSigma : ctm.mapRadius(fSigma);
-    return SkMinScalar(xformedSigma, kMAX_BLUR_SIGMA);
+    return std::min(xformedSigma, kMAX_BLUR_SIGMA);
   }
 
   friend class SkBlurMaskFilter;
@@ -172,10 +172,10 @@ bool SkComputeBlurredRRectParams(
   const SkVector& devRadiiLR = devRRect.radii(SkRRect::kLowerRight_Corner);
   const SkVector& devRadiiLL = devRRect.radii(SkRRect::kLowerLeft_Corner);
 
-  const int devLeft = SkScalarCeilToInt(SkTMax<SkScalar>(devRadiiUL.fX, devRadiiLL.fX));
-  const int devTop = SkScalarCeilToInt(SkTMax<SkScalar>(devRadiiUL.fY, devRadiiUR.fY));
-  const int devRight = SkScalarCeilToInt(SkTMax<SkScalar>(devRadiiUR.fX, devRadiiLR.fX));
-  const int devBot = SkScalarCeilToInt(SkTMax<SkScalar>(devRadiiLL.fY, devRadiiLR.fY));
+  const int devLeft = SkScalarCeilToInt(std::max<SkScalar>(devRadiiUL.fX, devRadiiLL.fX));
+  const int devTop = SkScalarCeilToInt(std::max<SkScalar>(devRadiiUL.fY, devRadiiUR.fY));
+  const int devRight = SkScalarCeilToInt(std::max<SkScalar>(devRadiiUR.fX, devRadiiLR.fX));
+  const int devBot = SkScalarCeilToInt(std::max<SkScalar>(devRadiiLL.fY, devRadiiLR.fY));
 
   // This is a conservative check for nine-patchability
   if (devOrig.fLeft + devLeft + devBlurRadius >= devOrig.fRight - devRight - devBlurRadius ||
@@ -188,10 +188,10 @@ bool SkComputeBlurredRRectParams(
   const SkVector& srcRadiiLR = srcRRect.radii(SkRRect::kLowerRight_Corner);
   const SkVector& srcRadiiLL = srcRRect.radii(SkRRect::kLowerLeft_Corner);
 
-  const SkScalar srcLeft = SkTMax<SkScalar>(srcRadiiUL.fX, srcRadiiLL.fX);
-  const SkScalar srcTop = SkTMax<SkScalar>(srcRadiiUL.fY, srcRadiiUR.fY);
-  const SkScalar srcRight = SkTMax<SkScalar>(srcRadiiUR.fX, srcRadiiLR.fX);
-  const SkScalar srcBot = SkTMax<SkScalar>(srcRadiiLL.fY, srcRadiiLR.fY);
+  const SkScalar srcLeft = std::max<SkScalar>(srcRadiiUL.fX, srcRadiiLL.fX);
+  const SkScalar srcTop = std::max<SkScalar>(srcRadiiUL.fY, srcRadiiUR.fY);
+  const SkScalar srcRight = std::max<SkScalar>(srcRadiiUR.fX, srcRadiiLR.fX);
+  const SkScalar srcBot = std::max<SkScalar>(srcRadiiLL.fY, srcRadiiLR.fY);
 
   int newRRWidth = 2 * devBlurRadius + devLeft + devRight + 1;
   int newRRHeight = 2 * devBlurRadius + devTop + devBot + 1;
@@ -467,8 +467,8 @@ SkMaskFilterBase::FilterReturn SkBlurMaskFilterImpl::filterRRectToNine(
   const SkVector& LR = rrect.radii(SkRRect::kLowerRight_Corner);
   const SkVector& LL = rrect.radii(SkRRect::kLowerLeft_Corner);
 
-  const SkScalar leftUnstretched = SkTMax(UL.fX, LL.fX) + SkIntToScalar(2 * margin.fX);
-  const SkScalar rightUnstretched = SkTMax(UR.fX, LR.fX) + SkIntToScalar(2 * margin.fX);
+  const SkScalar leftUnstretched = std::max(UL.fX, LL.fX) + SkIntToScalar(2 * margin.fX);
+  const SkScalar rightUnstretched = std::max(UR.fX, LR.fX) + SkIntToScalar(2 * margin.fX);
 
   // Extra space in the middle to ensure an unchanging piece for stretching. Use 3 to cover
   // any fractional space on either side plus 1 for the part to stretch.
@@ -480,8 +480,8 @@ SkMaskFilterBase::FilterReturn SkBlurMaskFilterImpl::filterRRectToNine(
     return kUnimplemented_FilterReturn;
   }
 
-  const SkScalar topUnstretched = SkTMax(UL.fY, UR.fY) + SkIntToScalar(2 * margin.fY);
-  const SkScalar bottomUnstretched = SkTMax(LL.fY, LR.fY) + SkIntToScalar(2 * margin.fY);
+  const SkScalar topUnstretched = std::max(UL.fY, UR.fY) + SkIntToScalar(2 * margin.fY);
+  const SkScalar bottomUnstretched = std::max(LL.fY, LR.fY) + SkIntToScalar(2 * margin.fY);
 
   const SkScalar totalSmallHeight = topUnstretched + bottomUnstretched + stretchSize;
   if (totalSmallHeight >= rrect.rect().height()) {
@@ -775,8 +775,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     sk_sp<SkVertices> vertices = builder.detach();
 
     paint.addCoverageFragmentProcessor(std::move(fp));
-    renderTargetContext->drawVertices(
-        clip, std::move(paint), viewMatrix, std::move(vertices), nullptr, 0);
+    renderTargetContext->drawVertices(clip, std::move(paint), viewMatrix, std::move(vertices));
   } else {
     SkMatrix inverse;
     if (!viewMatrix.invert(&inverse)) {
@@ -854,7 +853,7 @@ GrSurfaceProxyView SkBlurMaskFilterImpl::filterMaskGPU(
   if (!isNormalBlur) {
     GrPaint paint;
     // Blend pathTexture over blurTexture.
-    paint.addCoverageFragmentProcessor(GrTextureEffect::Make(srcView.detachProxy(), srcAlphaType));
+    paint.addCoverageFragmentProcessor(GrTextureEffect::Make(std::move(srcView), srcAlphaType));
     if (kInner_SkBlurStyle == fBlurStyle) {
       // inner:  dst = dst * src
       paint.setCoverageSetOpXPFactory(SkRegion::kIntersect_Op);

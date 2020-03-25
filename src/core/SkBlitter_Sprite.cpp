@@ -96,8 +96,13 @@ class SkSpriteBlitter_Memcpy final : public SkSpriteBlitter {
 
 class SkRasterPipelineSpriteBlitter : public SkSpriteBlitter {
  public:
-  SkRasterPipelineSpriteBlitter(const SkPixmap& src, SkArenaAlloc* alloc)
-      : INHERITED(src), fAlloc(alloc), fBlitter(nullptr), fSrcPtr{nullptr, 0} {}
+  SkRasterPipelineSpriteBlitter(
+      const SkPixmap& src, SkArenaAlloc* alloc, sk_sp<SkShader> clipShader)
+      : INHERITED(src),
+        fAlloc(alloc),
+        fBlitter(nullptr),
+        fSrcPtr{nullptr, 0},
+        fClipShader(std::move(clipShader)) {}
 
   void setup(const SkPixmap& dst, int left, int top, const SkPaint& paint) override {
     fDst = dst;
@@ -129,7 +134,7 @@ class SkRasterPipelineSpriteBlitter : public SkSpriteBlitter {
     }
 
     bool is_opaque = fSource.isOpaque() && fPaintColor.fA == 1.0f;
-    fBlitter = SkCreateRasterPipelineBlitter(fDst, paint, p, is_opaque, fAlloc);
+    fBlitter = SkCreateRasterPipelineBlitter(fDst, paint, p, is_opaque, fAlloc, fClipShader);
   }
 
   void blitRect(int x, int y, int width, int height) override {
@@ -151,6 +156,7 @@ class SkRasterPipelineSpriteBlitter : public SkSpriteBlitter {
   SkBlitter* fBlitter;
   SkRasterPipeline_MemoryCtx fSrcPtr;
   SkColor4f fPaintColor;
+  sk_sp<SkShader> fClipShader;
 
   typedef SkSpriteBlitter INHERITED;
 };
@@ -159,7 +165,7 @@ class SkRasterPipelineSpriteBlitter : public SkSpriteBlitter {
 // have wrapped the source bitmap inside a shader
 SkBlitter* SkBlitter::ChooseSprite(
     const SkPixmap& dst, const SkPaint& paint, const SkPixmap& source, int left, int top,
-    SkArenaAlloc* allocator) {
+    SkArenaAlloc* alloc, sk_sp<SkShader> clipShader) {
   /*  We currently ignore antialiasing and filtertype, meaning we will take our
       special blitters regardless of these settings. Ignoring filtertype seems fine
       since by definition there is no scale in the matrix. Ignoring antialiasing is
@@ -169,7 +175,7 @@ SkBlitter* SkBlitter::ChooseSprite(
       paint and return null if it is set, forcing the client to take the slow shader case
       (which does respect soft edges).
   */
-  SkASSERT(allocator != nullptr);
+  SkASSERT(alloc != nullptr);
 
   // TODO: in principle SkRasterPipelineSpriteBlitter could be made to handle this.
   if (source.alphaType() == kUnpremul_SkAlphaType) {
@@ -178,27 +184,25 @@ SkBlitter* SkBlitter::ChooseSprite(
 
   SkSpriteBlitter* blitter = nullptr;
 
-  if (0 == SkColorSpaceXformSteps(source, dst).flags.mask()) {
+  if (0 == SkColorSpaceXformSteps(source, dst).flags.mask() && !clipShader) {
     if (!blitter && SkSpriteBlitter_Memcpy::Supports(dst, source, paint)) {
-      blitter = allocator->make<SkSpriteBlitter_Memcpy>(source);
+      blitter = alloc->make<SkSpriteBlitter_Memcpy>(source);
     }
     if (!blitter) {
       switch (dst.colorType()) {
-        case kN32_SkColorType:
-          blitter = SkSpriteBlitter::ChooseL32(source, paint, allocator);
-          break;
+        case kN32_SkColorType: blitter = SkSpriteBlitter::ChooseL32(source, paint, alloc); break;
         case kRGB_565_SkColorType:
-          blitter = SkSpriteBlitter::ChooseL565(source, paint, allocator);
+          blitter = SkSpriteBlitter::ChooseL565(source, paint, alloc);
           break;
         case kAlpha_8_SkColorType:
-          blitter = SkSpriteBlitter::ChooseLA8(source, paint, allocator);
+          blitter = SkSpriteBlitter::ChooseLA8(source, paint, alloc);
           break;
         default: break;
       }
     }
   }
   if (!blitter && !paint.getMaskFilter()) {
-    blitter = allocator->make<SkRasterPipelineSpriteBlitter>(source, allocator);
+    blitter = alloc->make<SkRasterPipelineSpriteBlitter>(source, alloc, clipShader);
   }
 
   if (blitter) {

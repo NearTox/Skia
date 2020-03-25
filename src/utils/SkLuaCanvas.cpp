@@ -5,10 +5,10 @@
  * found in the LICENSE file.
  */
 
-#include "include/utils/SkLuaCanvas.h"
-
+#include "include/core/SkShader.h"
 #include "include/private/SkTo.h"
 #include "include/utils/SkLua.h"
+#include "include/utils/SkLuaCanvas.h"
 #include "src/core/SkStringUtils.h"
 
 extern "C" {
@@ -156,6 +156,11 @@ void SkLuaCanvas::onClipPath(const SkPath& path, SkClipOp op, ClipEdgeStyle edge
   this->INHERITED::onClipPath(path, op, edgeStyle);
 }
 
+void SkLuaCanvas::onClipShader(sk_sp<SkShader> cs, SkClipOp op) {
+  AUTO_LUA("clipShader");
+  this->INHERITED::onClipShader(std::move(cs), op);
+}
+
 void SkLuaCanvas::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
   AUTO_LUA("clipRegion");
   this->INHERITED::onClipRegion(deviceRgn, op);
@@ -232,14 +237,6 @@ void SkLuaCanvas::onDrawBitmapRect(
   }
 }
 
-void SkLuaCanvas::onDrawBitmapNine(
-    const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint* paint) {
-  AUTO_LUA("drawBitmapNine");
-  if (paint) {
-    lua.pushPaint(*paint, "paint");
-  }
-}
-
 void SkLuaCanvas::onDrawImage(const SkImage* image, SkScalar x, SkScalar y, const SkPaint* paint) {
   AUTO_LUA("drawImage");
   if (paint) {
@@ -278,8 +275,15 @@ void SkLuaCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
   this->INHERITED::onDrawDrawable(drawable, matrix);
 }
 
+#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
 void SkLuaCanvas::onDrawVerticesObject(
     const SkVertices*, const SkVertices::Bone[], int, SkBlendMode, const SkPaint& paint) {
   AUTO_LUA("drawVertices");
   lua.pushPaint(paint, "paint");
 }
+#else
+void SkLuaCanvas::onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint& paint) {
+  AUTO_LUA("drawVertices");
+  lua.pushPaint(paint, "paint");
+}
+#endif

@@ -214,7 +214,7 @@ class Op : public GrMeshDrawOp {
       }
     }
 
-    GrMesh* mesh = target->allocMesh(GrPrimitiveType::kTriangleStrip);
+    GrMesh* mesh = target->allocMesh();
     mesh->setNonIndexedNonInstanced(kVertexCount);
     mesh->setVertexData(std::move(vertexBuffer), firstVertex);
     target->recordDraw(gp, mesh, 1, GrPrimitiveType::kTriangleStrip);

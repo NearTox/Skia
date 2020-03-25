@@ -10,12 +10,12 @@
 
 #include "include/core/SkRect.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrGpuResource.h"
-#include "include/gpu/GrSurface.h"
-#include "include/gpu/GrTexture.h"
 #include "include/private/SkNoncopyable.h"
+#include "src/gpu/GrGpuResource.h"
 #include "src/gpu/GrNonAtomicRef.h"
+#include "src/gpu/GrSurface.h"
 #include "src/gpu/GrSwizzle.h"
+#include "src/gpu/GrTexture.h"
 
 class GrCaps;
 class GrContext_Base;
@@ -26,6 +26,7 @@ class GrRenderTask;
 class GrResourceProvider;
 class GrSurfaceContext;
 class GrSurfaceProxyPriv;
+class GrSurfaceProxyView;
 class GrTextureProxy;
 
 class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
@@ -130,12 +131,9 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    */
   SkRect backingStoreBoundsRect() const { return SkRect::Make(this->backingStoreDimensions()); }
 
-  GrSurfaceOrigin origin() const {
-    SkASSERT(kTopLeft_GrSurfaceOrigin == fOrigin || kBottomLeft_GrSurfaceOrigin == fOrigin);
-    return fOrigin;
-  }
-
-  const GrSwizzle& textureSwizzle() const { return fTextureSwizzle; }
+  // Do not call this. It will shortly be removed and is just needed for a couple cases where we
+  // are getting a proxy from the cache and cannot be certain what the GrColorType of the proxy.
+  const GrSwizzle& textureSwizzleDoNotUse() const { return fTextureSwizzle; }
 
   const GrBackendFormat& backendFormat() const { return fFormat; }
 
@@ -275,14 +273,25 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
 
   // Helper function that creates a temporary SurfaceContext to perform the copy
   // The copy is is not a render target and not multisampled.
-  static sk_sp<GrTextureProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrColorType srcColorType, GrMipMapped,
-      SkIRect srcRect, SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
+  //
+  // The intended use of this copy call is simply to copy exact pixel values from one proxy to a
+  // new one. Thus there isn't a need for a swizzle when doing the copy. Also, there shouldn't be
+  // an assumed "view" of the copy. However, even though not really needed for the swizzle, we
+  // still pass in a srcColorType since it is required for making a GrSurface/RenderTargetContext.
+  // Additionally, almost all callers of this will immediately put the resulting proxy into a view
+  // which is compatible with the srcColorType and origin passed in here. Thus for now we just
+  // return the GrSurfaceProxyView that is already stored on the internal GrSurfaceContext. If we
+  // later decide to not pass in a srcColorType (and assume some default color type based on the
+  // backend format) then we should go back to returning a proxy here and have the callers decide
+  // what view they want of the proxy.
+  static GrSurfaceProxyView Copy(
+      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrColorType srcColorType,
+      GrMipMapped, SkIRect srcRect, SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
 
-  // Copy the entire 'src'
-  static sk_sp<GrTextureProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrColorType srcColorType, GrMipMapped, SkBackingFit,
-      SkBudgeted);
+  // Same as above Copy but copies the entire 'src'
+  static GrSurfaceProxyView Copy(
+      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrColorType srcColorType,
+      GrMipMapped, SkBackingFit, SkBudgeted);
 
 #if GR_TEST_UTILS
   int32_t testingOnly_getBackingRefCnt() const;
@@ -300,22 +309,19 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
  protected:
   // Deferred version - takes a new UniqueID from the shared resource/proxy pool.
   GrSurfaceProxy(
-      const GrBackendFormat&, const GrSurfaceDesc&, GrRenderable, GrSurfaceOrigin,
-      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator);
+      const GrBackendFormat&, SkISize, GrRenderable, const GrSwizzle& textureSwizzle, SkBackingFit,
+      SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator);
   // Lazy-callback version - takes a new UniqueID from the shared resource/proxy pool.
   GrSurfaceProxy(
-      LazyInstantiateCallback&&, const GrBackendFormat&, const GrSurfaceDesc&, GrRenderable,
-      GrSurfaceOrigin, const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
+      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, GrRenderable,
+      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
       GrInternalSurfaceFlags, UseAllocator);
 
   // Wrapped version - shares the UniqueID of the passed surface.
   // Takes UseAllocator because even though this is already instantiated it still can participate
   // in allocation by having its backing resource recycled to other uninstantiated proxies or
   // not depending on UseAllocator.
-  GrSurfaceProxy(
-      sk_sp<GrSurface>, GrSurfaceOrigin, const GrSwizzle& textureSwizzle, SkBackingFit,
-      UseAllocator);
+  GrSurfaceProxy(sk_sp<GrSurface>, const GrSwizzle& textureSwizzle, SkBackingFit, UseAllocator);
 
   friend class GrSurfaceProxyPriv;
 
@@ -358,11 +364,10 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   GrInternalSurfaceFlags fSurfaceFlags;
 
  private:
-  // For wrapped resources, 'fFormat', 'fWidth', 'fHeight', and 'fOrigin; will always
-  // be filled in from the wrapped resource.
+  // For wrapped resources, 'fFormat', 'fWidth', and 'fHeight'; will always be filled in from the
+  // wrapped resource.
   const GrBackendFormat fFormat;
   SkISize fDimensions;
-  const GrSurfaceOrigin fOrigin;
   const GrSwizzle fTextureSwizzle;
 
   SkBackingFit fFit;             // always kApprox for lazy-callback resources

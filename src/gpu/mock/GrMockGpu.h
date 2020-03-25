@@ -8,11 +8,11 @@
 #ifndef GrMockGpu_DEFINED
 #define GrMockGpu_DEFINED
 
-#include "include/gpu/GrTexture.h"
 #include "include/private/SkTHash.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrSemaphore.h"
+#include "src/gpu/GrTexture.h"
 
 class GrMockOpsRenderPass;
 struct GrMockOptions;
@@ -61,8 +61,8 @@ class GrMockGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   sk_sp<GrTexture> onCreateTexture(
-      const GrSurfaceDesc&, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
-      SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
+      SkISize, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt, SkBudgeted,
+      GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
 
   sk_sp<GrTexture> onCreateCompressedTexture(
       SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
@@ -117,8 +117,7 @@ class GrMockGpu : public GrGpu {
 
   bool onRegenerateMipMapLevels(GrTexture*) override { return true; }
 
-  void onResolveRenderTarget(
-      GrRenderTarget* target, const SkIRect&, GrSurfaceOrigin, ForExternalIO) override {}
+  void onResolveRenderTarget(GrRenderTarget* target, const SkIRect&, ForExternalIO) override {}
 
   bool onFinishFlush(
       GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
@@ -138,6 +137,8 @@ class GrMockGpu : public GrGpu {
       SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
       const BackendTextureData*) override;
   void deleteBackendTexture(const GrBackendTexture&) override;
+
+  bool compile(const GrProgramDesc&, const GrProgramInfo&) override { return false; }
 
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;

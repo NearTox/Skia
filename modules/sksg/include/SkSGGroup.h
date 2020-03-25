@@ -43,6 +43,7 @@ class Group : public RenderNode {
 
  private:
   std::vector<sk_sp<RenderNode>> fChildren;
+  bool fRequiresIsolation = true;
 
   typedef RenderNode INHERITED;
 };

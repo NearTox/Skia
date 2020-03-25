@@ -129,7 +129,7 @@ void make_checkerboard(SkBitmap* bitmap) {
 sk_sp<SkImage> make_gradient_circle(int width, int height) {
   SkScalar x = SkIntToScalar(width / 2);
   SkScalar y = SkIntToScalar(height / 2);
-  SkScalar radius = SkMinScalar(x, y) * 0.8f;
+  SkScalar radius = std::min(x, y) * 0.8f;
   auto surface(SkSurface::MakeRasterN32Premul(width, height));
   SkCanvas* canvas = surface->getCanvas();
   canvas->clear(0x00000000);

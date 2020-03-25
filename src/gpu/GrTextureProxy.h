@@ -109,7 +109,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   // Deferred version - no data.
   GrTextureProxy(
-      const GrBackendFormat&, const GrSurfaceDesc&, GrSurfaceOrigin, GrMipMapped, GrMipMapsStatus,
+      const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus,
       const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
       GrInternalSurfaceFlags, UseAllocator);
 
@@ -124,12 +124,12 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // The minimal knowledge version is used for CCPR where we are generating an atlas but we do not
   // know the final size until flush time.
   GrTextureProxy(
-      LazyInstantiateCallback&&, const GrBackendFormat&, const GrSurfaceDesc& desc, GrSurfaceOrigin,
-      GrMipMapped, GrMipMapsStatus, const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted,
-      GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus,
+      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
+      GrInternalSurfaceFlags, UseAllocator);
 
   // Wrapped version
-  GrTextureProxy(sk_sp<GrSurface>, GrSurfaceOrigin, const GrSwizzle&, UseAllocator);
+  GrTextureProxy(sk_sp<GrSurface>, const GrSwizzle&, UseAllocator);
 
   ~GrTextureProxy() override;
 

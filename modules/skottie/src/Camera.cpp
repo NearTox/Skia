@@ -32,7 +32,7 @@ SkM44 ComputeCameraMatrix(
   //   * size     -> composition size (TODO: AE seems to base it on width only?)
   //   * distance -> "zoom" camera attribute
   //
-  const auto view_size = SkTMax(viewport_size.width(), viewport_size.height()),
+  const auto view_size = std::max(viewport_size.width(), viewport_size.height()),
              view_distance = zoom,
              view_angle = std::atan(sk_ieee_float_divide(view_size * 0.5f, view_distance));
 

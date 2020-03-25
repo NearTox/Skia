@@ -58,22 +58,64 @@ const MaskInfo* GetMaskInfo(char mode) {
   return nullptr;
 }
 
+class MaskAdapter final : public AnimatablePropertyContainer {
+ public:
+  MaskAdapter(const skjson::ObjectValue& jmask, const AnimationBuilder& abuilder, SkBlendMode bm)
+      : fMaskPaint(sksg::Color::Make(SK_ColorBLACK)) {
+    fMaskPaint->setAntiAlias(true);
+    fMaskPaint->setBlendMode(bm);
+
+    this->bind(abuilder, jmask["o"], fOpacity);
+
+    if (this->bind(abuilder, jmask["f"], fFeather)) {
+      fMaskFilter = sksg::BlurImageFilter::Make();
+    }
+  }
+
+  bool hasEffect() const {
+    return !this->isStatic() || fOpacity < 100 ||
+           ValueTraits<VectorValue>::As<SkVector>(fFeather) != SkVector{0, 0};
+  }
+
+  sk_sp<sksg::RenderNode> makeMask(sk_sp<sksg::Path> mask_path) const {
+    auto mask = sksg::Draw::Make(std::move(mask_path), fMaskPaint);
+
+    // Optional mask blur (feather).
+    return sksg::ImageFilterEffect::Make(std::move(mask), fMaskFilter);
+  }
+
+ private:
+  void onSync() override {
+    fMaskPaint->setOpacity(fOpacity * 0.01f);
+    if (fMaskFilter) {
+      const auto f = ValueTraits<VectorValue>::As<SkVector>(fFeather);
+
+      // Close enough to AE.
+      static constexpr SkScalar kFeatherToSigma = 0.38f;
+      fMaskFilter->setSigma(f * kFeatherToSigma);
+    }
+  }
+
+  const sk_sp<sksg::PaintNode> fMaskPaint;
+  sk_sp<sksg::BlurImageFilter> fMaskFilter;  // optional "feather"
+
+  VectorValue fFeather;
+  ScalarValue fOpacity = 100;
+};
+
 sk_sp<sksg::RenderNode> AttachMask(
     const skjson::ArrayValue* jmask, const AnimationBuilder* abuilder,
     sk_sp<sksg::RenderNode> childNode) {
   if (!jmask) return childNode;
 
   struct MaskRecord {
-    sk_sp<sksg::Path> mask_path;             // for clipping and masking
-    sk_sp<sksg::Color> mask_paint;           // for masking
-    sk_sp<sksg::BlurImageFilter> mask_blur;  // for masking
-    sksg::Merge::Mode merge_mode;            // for clipping
+    sk_sp<sksg::Path> mask_path;      // for clipping and masking
+    sk_sp<MaskAdapter> mask_adapter;  // for masking
+    sksg::Merge::Mode merge_mode;     // for clipping
   };
 
   SkSTArray<4, MaskRecord, true> mask_stack;
-
   bool has_effect = false;
-  auto blur_effect = sksg::BlurImageFilter::Make();
 
   for (const skjson::ObjectValue* m : *jmask) {
     if (!m) continue;
@@ -106,32 +148,14 @@ sk_sp<sksg::RenderNode> AttachMask(
     const auto inverted = (mask_info->fInvertGeometry != ParseDefault<bool>((*m)["inv"], false));
     mask_path->setFillType(inverted ? SkPathFillType::kInverseWinding : SkPathFillType::kWinding);
 
-    auto mask_paint = sksg::Color::Make(SK_ColorBLACK);
-    mask_paint->setAntiAlias(true);
-    // First mask in the stack initializes the mask buffer.
-    mask_paint->setBlendMode(mask_stack.empty() ? SkBlendMode::kSrc : mask_info->fBlendMode);
+    const auto blend_mode = mask_stack.empty() ? SkBlendMode::kSrc : mask_info->fBlendMode;
 
-    has_effect |= abuilder->bindProperty<ScalarValue>(
-        (*m)["o"], [mask_paint](const ScalarValue& o) { mask_paint->setOpacity(o * 0.01f); },
-        100.0f);
+    auto mask_adapter = sk_make_sp<MaskAdapter>(*m, *abuilder, blend_mode);
+    abuilder->attachDiscardableAdapter(mask_adapter);
 
-    static const VectorValue default_feather = {0, 0};
-    if (abuilder->bindProperty<VectorValue>(
-            (*m)["f"],
-            [blur_effect](const VectorValue& feather) {
-              // Close enough to AE.
-              static constexpr SkScalar kFeatherToSigma = 0.38f;
-              auto sX = feather.size() > 0 ? feather[0] * kFeatherToSigma : 0,
-                   sY = feather.size() > 1 ? feather[1] * kFeatherToSigma : 0;
-              blur_effect->setSigma({sX, sY});
-            },
-            default_feather)) {
-      has_effect = true;
-      mask_stack.push_back({mask_path, mask_paint, std::move(blur_effect), mask_info->fMergeMode});
-      blur_effect = sksg::BlurImageFilter::Make();
-    } else {
-      mask_stack.push_back({mask_path, mask_paint, nullptr, mask_info->fMergeMode});
-    }
+    has_effect |= mask_adapter->hasEffect();
+
+    mask_stack.push_back({std::move(mask_path), std::move(mask_adapter), mask_info->fMergeMode});
   }
 
   if (mask_stack.empty()) return childNode;
@@ -158,21 +182,17 @@ sk_sp<sksg::RenderNode> AttachMask(
     return sksg::ClipEffect::Make(std::move(childNode), std::move(clip_node), true);
   }
 
-  const auto make_mask = [](const MaskRecord& rec) {
-    auto mask = sksg::Draw::Make(std::move(rec.mask_path), std::move(rec.mask_paint));
-    // Optional mask blur (feather).
-    return sksg::ImageFilterEffect::Make(std::move(mask), std::move(rec.mask_blur));
-  };
-
+  // Complex masks (non-opaque or blurred) turn into a mask node stack.
   sk_sp<sksg::RenderNode> maskNode;
   if (mask_stack.count() == 1) {
     // no group needed for single mask
-    maskNode = make_mask(mask_stack.front());
+    const auto rec = mask_stack.front();
+    maskNode = rec.mask_adapter->makeMask(std::move(rec.mask_path));
   } else {
     std::vector<sk_sp<sksg::RenderNode>> masks;
     masks.reserve(SkToSizeT(mask_stack.count()));
     for (auto& rec : mask_stack) {
-      masks.push_back(make_mask(rec));
+      masks.push_back(rec.mask_adapter->makeMask(std::move(rec.mask_path)));
     }
 
     maskNode = sksg::Group::Make(std::move(masks));
@@ -194,7 +214,8 @@ class LayerController final : public sksg::Animator {
 
  protected:
   void onTick(float t) override {
-    const auto active = (t >= fIn && t < fOut);
+    // in/out may be inverted for time-reversed layers
+    const auto active = (t >= fIn && t < fOut) || (t > fOut && t <= fIn);
 
     if (fLayerNode) {
       fLayerNode->setVisible(active);
@@ -332,7 +353,7 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
       ParseDefault<float>(fJlayer["ip"], 0.0f),
       ParseDefault<float>(fJlayer["op"], 0.0f),
   };
-  if (layer_info.fInPoint >= layer_info.fOutPoint) {
+  if (SkScalarNearlyEqual(layer_info.fInPoint, layer_info.fOutPoint)) {
     abuilder.log(
         Logger::Level::kError, nullptr, "Invalid layer in/out points: %f/%f.", layer_info.fInPoint,
         layer_info.fOutPoint);

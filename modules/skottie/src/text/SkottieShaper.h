@@ -27,6 +27,7 @@ class Shaper final {
     SkPoint fPos;
 
     // Only valid for kFragmentGlyphs
+    float fAdvance, fAscent;
     uint32_t fLineIndex;  // 0-based index for the line this fragment belongs to.
     bool fIsWhitespace;   // True if the first code point in the corresponding
                           // cluster is whitespace.
@@ -80,6 +81,9 @@ class Shaper final {
     // Split out individual glyphs into separate Fragments
     // (useful when the caller intends to manipulate glyphs independently).
     kFragmentGlyphs = 0x01,
+
+    // Compute the advance and ascent for each fragment.
+    kTrackFragmentAdvanceAscent = 0x02,
   };
 
   struct TextDesc {

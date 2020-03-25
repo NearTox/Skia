@@ -12,7 +12,6 @@
 
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkColorFilter.h"
-#include "include/core/SkMaskFilter.h"
 #include "include/core/SkShader.h"
 
 class SkCanvas;
@@ -53,7 +52,7 @@ class RenderNode : public Node {
   struct RenderContext {
     sk_sp<SkColorFilter> fColorFilter;
     sk_sp<SkShader> fShader;
-    sk_sp<SkMaskFilter> fMaskFilter;
+    sk_sp<SkShader> fMaskShader;
     SkMatrix fShaderCTM = SkMatrix::I(), fMaskCTM = SkMatrix::I();
     float fOpacity = 1;
     SkBlendMode fBlendMode = SkBlendMode::kSrcOver;
@@ -61,7 +60,7 @@ class RenderNode : public Node {
     // Returns true if the paint overrides require a layer when applied to non-atomic draws.
     bool requiresIsolation() const;
 
-    void modulatePaint(const SkMatrix& ctm, SkPaint*) const;
+    void modulatePaint(const SkMatrix& ctm, SkPaint*, bool is_layer_paint = false) const;
   };
 
   class ScopedRenderContext final {
@@ -74,6 +73,7 @@ class RenderNode : public Node {
     ScopedRenderContext& operator=(ScopedRenderContext&& that) {
       fCanvas = that.fCanvas;
       fCtx = std::move(that.fCtx);
+      fMaskShader = std::move(that.fMaskShader);
       fRestoreCount = that.fRestoreCount;
 
       // scope ownership is being transferred
@@ -89,7 +89,7 @@ class RenderNode : public Node {
     ScopedRenderContext&& modulateOpacity(float opacity);
     ScopedRenderContext&& modulateColorFilter(sk_sp<SkColorFilter>);
     ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm);
-    ScopedRenderContext&& modulateMaskFilter(sk_sp<SkMaskFilter>, const SkMatrix& mf_ctm);
+    ScopedRenderContext&& modulateMaskShader(sk_sp<SkShader>, const SkMatrix& ms_ctm);
     ScopedRenderContext&& modulateBlendMode(SkBlendMode);
 
     // Force content isolation for a node sub-DAG by applying the RenderContext
@@ -112,6 +112,7 @@ class RenderNode : public Node {
 
     SkCanvas* fCanvas;
     RenderContext fCtx;
+    sk_sp<SkShader> fMaskShader;  // to be applied at isolation layer restore time
     int fRestoreCount;
   };
 

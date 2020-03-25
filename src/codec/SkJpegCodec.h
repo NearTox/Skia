@@ -104,7 +104,7 @@ class SkJpegCodec : public SkCodec {
       SkEncodedOrigin origin);
 
   void initializeSwizzler(const SkImageInfo& dstInfo, const Options& options, bool needsCMYKToRGB);
-  void allocateStorage(const SkImageInfo& dstInfo);
+  bool SK_WARN_UNUSED_RESULT allocateStorage(const SkImageInfo& dstInfo);
   int readRows(const SkImageInfo& dstInfo, void* dst, size_t rowBytes, int count, const Options&);
 
   /*
