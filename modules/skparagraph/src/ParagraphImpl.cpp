@@ -131,38 +131,38 @@ void ParagraphImpl::layout(SkScalar rawWidth) {
     fState = kShaped;
   }
 
-    if (fState < kShaped) {
-      fGraphemes.reset();
-      this->markGraphemes();
+  if (fState < kShaped) {
+    fGraphemes.reset();
+    this->markGraphemes();
 
-      if (!this->shapeTextIntoEndlessLine()) {
-        this->resetContext();
-        // TODO: merge the two next calls - they always come together
-        this->resolveStrut();
-        this->computeEmptyMetrics();
-        this->fLines.reset();
+    if (!this->shapeTextIntoEndlessLine()) {
+      this->resetContext();
+      // TODO: merge the two next calls - they always come together
+      this->resolveStrut();
+      this->computeEmptyMetrics();
+      this->fLines.reset();
 
-        // Set the important values that are not zero
-        fWidth = floorWidth;
-        fHeight = fEmptyMetrics.height();
-        if (fParagraphStyle.getStrutStyle().getStrutEnabled() &&
-            fParagraphStyle.getStrutStyle().getForceStrutHeight()) {
-          fHeight = fStrutMetrics.height();
-        }
-        fAlphabeticBaseline = fEmptyMetrics.alphabeticBaseline();
-        fIdeographicBaseline = fEmptyMetrics.ideographicBaseline();
-        fMinIntrinsicWidth = 0;
-        fMaxIntrinsicWidth = 0;
-        this->fOldWidth = floorWidth;
-        this->fOldHeight = this->fHeight;
-
-        return;
+      // Set the important values that are not zero
+      fWidth = floorWidth;
+      fHeight = fEmptyMetrics.height();
+      if (fParagraphStyle.getStrutStyle().getStrutEnabled() &&
+          fParagraphStyle.getStrutStyle().getForceStrutHeight()) {
+        fHeight = fStrutMetrics.height();
       }
+      fAlphabeticBaseline = fEmptyMetrics.alphabeticBaseline();
+      fIdeographicBaseline = fEmptyMetrics.ideographicBaseline();
+      fMinIntrinsicWidth = 0;
+      fMaxIntrinsicWidth = 0;
+      this->fOldWidth = floorWidth;
+      this->fOldHeight = this->fHeight;
 
-      this->fClusters.reset();
-      this->resetShifts();
-      fState = kShaped;
+      return;
     }
+
+    this->fClusters.reset();
+    this->resetShifts();
+    fState = kShaped;
+  }
 
     if (fState < kMarked) {
       this->buildClusterTable();
@@ -261,6 +261,9 @@ void ParagraphImpl::buildClusterTable() {
         auto& cluster =
             fClusters.emplace_back(this, runIndex, glyphStart, glyphEnd, text, width, height);
         cluster.setIsWhiteSpaces();
+        if (fGraphemes.find(cluster.fTextRange.end) != nullptr) {
+          cluster.setBreakType(Cluster::BreakType::GraphemeBreak);
+        }
       });
     }
 
@@ -277,6 +280,8 @@ void ParagraphImpl::markLineBreaks() {
     return;
   }
 
+  // Mark all soft line breaks
+  // Remove soft line breaks that are not on grapheme cluster edge
   Cluster* current = fClusters.begin();
   while (!breaker.eof() && current < fClusters.end()) {
     size_t currentPos = breaker.next();
@@ -284,9 +289,15 @@ void ParagraphImpl::markLineBreaks() {
       if (current->textRange().end > currentPos) {
         break;
       } else if (current->textRange().end == currentPos) {
-        current->setBreakType(
-            breaker.status() == UBRK_LINE_HARD ? Cluster::BreakType::HardLineBreak
-                                               : Cluster::BreakType::SoftLineBreak);
+        if (breaker.status() == UBRK_LINE_HARD) {
+          // Hard line break stronger than anything
+          current->setBreakType(Cluster::BreakType::HardLineBreak);
+        } else if (current->isGraphemeBreak()) {
+          // Only allow soft line break if it's grapheme break
+          current->setBreakType(Cluster::BreakType::SoftLineBreak);
+        } else {
+          // Leave it as is (either it's no break or a placeholder)
+        }
         ++current;
         break;
       }

@@ -27,7 +27,7 @@
         }
     }
 #else
-static void debug_trace() {}
+static void debug_trace() noexcept {}
 #endif
 
 // Renamed from "pause" to avoid conflict with function defined in unistd.h
@@ -39,7 +39,7 @@ static void do_pause() { /*spin*/
 }
 #endif
 
-void SkSpinlock::contendedAcquire() {
+void SkSpinlock::contendedAcquire() noexcept {
   debug_trace();
 
   // To act as a mutex, we need an acquire barrier when we acquire the lock.

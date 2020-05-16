@@ -13,7 +13,6 @@
 #include "include/private/SkTArray.h"
 #include "src/core/SkLRUCache.h"
 #include "src/gpu/GrGpu.h"
-#include "src/gpu/GrMesh.h"
 #include "src/gpu/GrNativeRect.h"
 #include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/GrWindowRectsState.h"
@@ -38,16 +37,16 @@ class GrGLGpu final : public GrGpu {
 
   void disconnect(DisconnectType) override;
 
-  const GrGLContext& glContext() const { return *fGLContext; }
+  const GrGLContext& glContext() const noexcept { return *fGLContext; }
 
-  const GrGLInterface* glInterface() const { return fGLContext->glInterface(); }
-  const GrGLContextInfo& ctxInfo() const { return *fGLContext; }
-  GrGLStandard glStandard() const { return fGLContext->standard(); }
-  GrGLVersion glVersion() const { return fGLContext->version(); }
-  GrGLSLGeneration glslGeneration() const { return fGLContext->glslGeneration(); }
-  const GrGLCaps& glCaps() const { return *fGLContext->caps(); }
+  const GrGLInterface* glInterface() const noexcept { return fGLContext->glInterface(); }
+  const GrGLContextInfo& ctxInfo() const noexcept { return *fGLContext; }
+  GrGLStandard glStandard() const noexcept { return fGLContext->standard(); }
+  GrGLVersion glVersion() const noexcept { return fGLContext->version(); }
+  GrGLSLGeneration glslGeneration() const noexcept { return fGLContext->glslGeneration(); }
+  const GrGLCaps& glCaps() const noexcept { return *fGLContext->caps(); }
 
-  GrGLPathRendering* glPathRendering() {
+  GrGLPathRendering* glPathRendering() noexcept {
     SkASSERT(glCaps().shaderCaps()->pathRenderingSupport());
     return static_cast<GrGLPathRendering*>(pathRendering());
   }
@@ -61,7 +60,9 @@ class GrGLGpu final : public GrGpu {
 
   // These callbacks update state tracking when GL objects are deleted. They are called from
   // GrGLResource onRelease functions.
-  void notifyVertexArrayDelete(GrGLuint id) { fHWVertexArrayState.notifyVertexArrayDelete(id); }
+  void notifyVertexArrayDelete(GrGLuint id) noexcept {
+    fHWVertexArrayState.notifyVertexArrayDelete(id);
+  }
 
   // Binds a buffer to the GL target corresponding to 'type', updates internal state tracking, and
   // returns the GL target the buffer was bound to.
@@ -143,7 +144,7 @@ class GrGLGpu final : public GrGpu {
       const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
 
-  void invalidateBoundRenderTarget() { fHWBoundRenderTargetUniqueID.makeInvalid(); }
+  void invalidateBoundRenderTarget() noexcept { fHWBoundRenderTargetUniqueID.makeInvalid(); }
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget* rt, int width, int height, int numStencilSamples) override;
@@ -226,16 +227,14 @@ class GrGLGpu final : public GrGpu {
       size_t size, GrGpuBufferType intendedType, GrAccessPattern, const void* data) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
-      const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
   sk_sp<GrTexture> onWrapCompressedBackendTexture(
       const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable) override;
   sk_sp<GrTexture> onWrapRenderableBackendTexture(
-      const GrBackendTexture&, int sampleCnt, GrColorType, GrWrapOwnership,
-      GrWrapCacheable) override;
-  sk_sp<GrRenderTarget> onWrapBackendRenderTarget(
-      const GrBackendRenderTarget&, GrColorType) override;
+      const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable) override;
+  sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
   sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt, GrColorType) override;
+      const GrBackendTexture&, int sampleCnt) override;
 
   // Given a GL format return the index into the stencil format array on GrGLCaps to a
   // compatible stencil format, or negative if there is no compatible stencil format.
@@ -376,9 +375,9 @@ class GrGLGpu final : public GrGpu {
   int numTextureUnits() const { return this->caps()->shaderCaps()->maxFragmentSamplers(); }
 
   // Binds a texture to a target on the "scratch" texture unit to use for texture operations
-  // other than usual draw flow (i.e. a GrGLProgram derived from a GrPipeline used to draw
-  // GrMesh). It ensures that such operations don't negatively interact with draws.
-  // The active texture unit and the binding for 'target' will change.
+  // other than usual draw flow (i.e. a GrGLProgram derived from a GrPipeline used to draw). It
+  // ensures that such operations don't negatively interact with draws. The active texture unit
+  // and the binding for 'target' will change.
   void bindTextureToScratchUnit(GrGLenum target, GrGLint textureID);
 
   // The passed bounds contains the render target's color values that will subsequently be
@@ -462,7 +461,7 @@ class GrGLGpu final : public GrGpu {
   struct {
     TriState fEnabled;
     GrNativeRect fRect;
-    void invalidate() {
+    void invalidate() noexcept {
       fEnabled = kUnknown_TriState;
       fRect.invalidate();
     }
@@ -470,16 +469,17 @@ class GrGLGpu final : public GrGpu {
 
   class {
    public:
-    bool valid() const { return kInvalidSurfaceOrigin != fRTOrigin; }
-    void invalidate() { fRTOrigin = kInvalidSurfaceOrigin; }
-    bool knownDisabled() const { return this->valid() && !fWindowState.enabled(); }
-    void setDisabled() {
+    bool valid() const noexcept { return kInvalidSurfaceOrigin != fRTOrigin; }
+    void invalidate() noexcept { fRTOrigin = kInvalidSurfaceOrigin; }
+    bool knownDisabled() const noexcept { return this->valid() && !fWindowState.enabled(); }
+    void setDisabled() noexcept {
       fRTOrigin = kTopLeft_GrSurfaceOrigin;
       fWindowState.setDisabled();
     }
 
     void set(
-        GrSurfaceOrigin rtOrigin, int width, int height, const GrWindowRectsState& windowState) {
+        GrSurfaceOrigin rtOrigin, int width, int height,
+        const GrWindowRectsState& windowState) noexcept {
       fRTOrigin = rtOrigin;
       fWidth = width;
       fHeight = height;
@@ -488,7 +488,7 @@ class GrGLGpu final : public GrGpu {
 
     bool knownEqualTo(
         GrSurfaceOrigin rtOrigin, int width, int height,
-        const GrWindowRectsState& windowState) const {
+        const GrWindowRectsState& windowState) const noexcept {
       if (!this->valid()) {
         return false;
       }
@@ -527,7 +527,7 @@ class GrGLGpu final : public GrGpu {
       }
     }
 
-    void notifyVertexArrayDelete(GrGLuint id) {
+    void notifyVertexArrayDelete(GrGLuint id) noexcept {
       if (fBoundVertexArrayIDIsValid && fBoundVertexArrayID == id) {
         // Does implicit bind to 0
         fBoundVertexArrayID = 0;
@@ -578,13 +578,13 @@ class GrGLGpu final : public GrGpu {
     GrGpuResource::UniqueID fBoundBufferUniqueID;
     bool fBufferZeroKnownBound;
 
-    void invalidate() {
+    void invalidate() noexcept {
       fBoundBufferUniqueID.makeInvalid();
       fBufferZeroKnownBound = false;
     }
   } fHWBufferState[kGrGpuBufferTypeCount];
 
-  auto* hwBufferState(GrGpuBufferType type) {
+  auto* hwBufferState(GrGpuBufferType type) noexcept {
     unsigned typeAsUInt = static_cast<unsigned>(type);
     SkASSERT(typeAsUInt < SK_ARRAY_COUNT(fHWBufferState));
     return &fHWBufferState[typeAsUInt];
@@ -598,7 +598,7 @@ class GrGLGpu final : public GrGpu {
     bool fConstColorValid;
     TriState fEnabled;
 
-    void invalidate() {
+    void invalidate() noexcept {
       fEquation = kIllegal_GrBlendEquation;
       fSrcCoeff = kIllegal_GrBlendCoeff;
       fDstCoeff = kIllegal_GrBlendCoeff;
@@ -664,7 +664,7 @@ class GrGLGpu final : public GrGpu {
 
   static int TextureToCopyProgramIdx(GrTexture* texture);
 
-  static int TextureSizeToMipmapProgramIdx(int width, int height) {
+  static int TextureSizeToMipmapProgramIdx(int width, int height) noexcept {
     const bool wide = (width > 1) && SkToBool(width & 0x1);
     const bool tall = (height > 1) && SkToBool(height & 0x1);
     return (wide ? 0x2 : 0x0) | (tall ? 0x1 : 0x0);

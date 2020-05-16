@@ -82,16 +82,16 @@ class GrConicEffect : public GrGeometryProcessor {
 
   const char* name() const override { return "Conic"; }
 
-  inline const Attribute& inPosition() const { return kAttributes[0]; }
-  inline const Attribute& inConicCoeffs() const { return kAttributes[1]; }
-  inline bool isAntiAliased() const { return GrProcessorEdgeTypeIsAA(fEdgeType); }
-  inline bool isFilled() const { return GrProcessorEdgeTypeIsFill(fEdgeType); }
-  inline GrClipEdgeType getEdgeType() const { return fEdgeType; }
-  const SkPMColor4f& color() const { return fColor; }
-  const SkMatrix& viewMatrix() const { return fViewMatrix; }
-  const SkMatrix& localMatrix() const { return fLocalMatrix; }
-  bool usesLocalCoords() const { return fUsesLocalCoords; }
-  uint8_t coverageScale() const { return fCoverageScale; }
+  inline const Attribute& inPosition() const noexcept { return kAttributes[0]; }
+  inline const Attribute& inConicCoeffs() const noexcept { return kAttributes[1]; }
+  inline bool isAntiAliased() const noexcept { return GrProcessorEdgeTypeIsAA(fEdgeType); }
+  inline bool isFilled() const noexcept { return GrProcessorEdgeTypeIsFill(fEdgeType); }
+  inline GrClipEdgeType getEdgeType() const noexcept { return fEdgeType; }
+  const SkPMColor4f& color() const noexcept { return fColor; }
+  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
+  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
+  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  uint8_t coverageScale() const noexcept { return fCoverageScale; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
@@ -156,16 +156,16 @@ class GrQuadEffect : public GrGeometryProcessor {
 
   const char* name() const override { return "Quad"; }
 
-  inline const Attribute& inPosition() const { return kAttributes[0]; }
-  inline const Attribute& inHairQuadEdge() const { return kAttributes[1]; }
-  inline bool isAntiAliased() const { return GrProcessorEdgeTypeIsAA(fEdgeType); }
-  inline bool isFilled() const { return GrProcessorEdgeTypeIsFill(fEdgeType); }
-  inline GrClipEdgeType getEdgeType() const { return fEdgeType; }
-  const SkPMColor4f& color() const { return fColor; }
-  const SkMatrix& viewMatrix() const { return fViewMatrix; }
-  const SkMatrix& localMatrix() const { return fLocalMatrix; }
-  bool usesLocalCoords() const { return fUsesLocalCoords; }
-  uint8_t coverageScale() const { return fCoverageScale; }
+  inline const Attribute& inPosition() const noexcept { return kAttributes[0]; }
+  inline const Attribute& inHairQuadEdge() const noexcept { return kAttributes[1]; }
+  inline bool isAntiAliased() const noexcept { return GrProcessorEdgeTypeIsAA(fEdgeType); }
+  inline bool isFilled() const noexcept { return GrProcessorEdgeTypeIsFill(fEdgeType); }
+  inline GrClipEdgeType getEdgeType() const noexcept { return fEdgeType; }
+  const SkPMColor4f& color() const noexcept { return fColor; }
+  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
+  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
+  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  uint8_t coverageScale() const noexcept { return fCoverageScale; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 

@@ -200,7 +200,7 @@ GrGLSLFragmentProcessor* GrTextureEffect::onCreateGLSLInstance() const {
 
    public:
     void emitCode(EmitArgs& args) override {
-      auto te = args.fFp.cast<GrTextureEffect>();
+      auto& te = args.fFp.cast<GrTextureEffect>();
       const char* coords;
       if (args.fFp.isSampledWithExplicitCoords()) {
         coords = "_coords";
@@ -588,7 +588,7 @@ void GrTextureEffect::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyB
 }
 
 bool GrTextureEffect::onIsEqual(const GrFragmentProcessor& other) const {
-  auto that = other.cast<GrTextureEffect>();
+  auto& that = other.cast<GrTextureEffect>();
   if (fShaderModes[0] != that.fShaderModes[0] || fShaderModes[1] != that.fShaderModes[1]) {
     return false;
   }

@@ -53,10 +53,6 @@ class GrMockCaps : public GrCaps {
     return format.asMockCompressionType();
   }
 
-  bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat& format) const override {
-    return this->isFormatTexturable(format);
-  }
-
   bool isFormatTexturable(const GrBackendFormat& format) const override {
     SkImage::CompressionType compression = format.asMockCompressionType();
     if (compression != SkImage::CompressionType::kNone) {
@@ -163,7 +159,7 @@ class GrMockCaps : public GrCaps {
   GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override {
     return GrSwizzle();
   }
-  GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override {
+  GrSwizzle getWriteSwizzle(const GrBackendFormat& format, GrColorType ct) const override {
     return GrSwizzle();
   }
 
@@ -182,7 +178,7 @@ class GrMockCaps : public GrCaps {
       const SkIPoint& dstPoint) const override {
     return true;
   }
-  GrBackendFormat onGetDefaultBackendFormat(GrColorType ct, GrRenderable) const override {
+  GrBackendFormat onGetDefaultBackendFormat(GrColorType ct) const override {
     return GrBackendFormat::MakeMock(ct, SkImage::CompressionType::kNone);
   }
 

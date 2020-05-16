@@ -32,7 +32,7 @@ class BitmapProcInfoContext : public SkShaderBase::Context {
     }
   }
 
-  uint32_t getFlags() const override { return fFlags; }
+  uint32_t getFlags() const noexcept override { return fFlags; }
 
  private:
   SkBitmapProcInfo* fInfo;

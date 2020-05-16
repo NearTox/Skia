@@ -140,7 +140,7 @@ bool SkDeferredDisplayListRecorder::init() {
         auto surface = sk_ref_sp<GrSurface>(lazyProxyData->fReplayDest->peekSurface());
         return GrSurfaceProxy::LazyCallbackResult(std::move(surface));
       },
-      fCharacterization.backendFormat(), fCharacterization.dimensions(), readSwizzle,
+      fCharacterization.backendFormat(), fCharacterization.dimensions(),
       fCharacterization.sampleCount(), surfaceFlags, optionalTextureInfo,
       GrMipMapsStatus::kNotAllocated, SkBackingFit::kExact, SkBudgeted::kYes,
       fCharacterization.isProtected(), fCharacterization.vulkanSecondaryCBCompatible(),
@@ -150,10 +150,10 @@ bool SkDeferredDisplayListRecorder::init() {
     return false;
   }
 
-  GrSwizzle outputSwizzle = caps->getOutputSwizzle(fCharacterization.backendFormat(), grColorType);
+  GrSwizzle writeSwizzle = caps->getWriteSwizzle(fCharacterization.backendFormat(), grColorType);
 
   GrSurfaceProxyView readView(proxy, fCharacterization.origin(), readSwizzle);
-  GrSurfaceProxyView outputView(std::move(proxy), fCharacterization.origin(), outputSwizzle);
+  GrSurfaceProxyView outputView(std::move(proxy), fCharacterization.origin(), writeSwizzle);
 
   auto rtc = std::make_unique<GrRenderTargetContext>(
       fContext.get(), std::move(readView), std::move(outputView), grColorType,

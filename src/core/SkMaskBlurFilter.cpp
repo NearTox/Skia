@@ -19,11 +19,11 @@
 #include <climits>
 
 namespace {
-static const double kPi = 3.14159265358979323846264338327950288;
+static constexpr double kPi = 3.14159265358979323846264338327950288;
 
 class PlanGauss final {
  public:
-  explicit PlanGauss(double sigma) {
+  explicit PlanGauss(double sigma) noexcept {
     auto possibleWindow = static_cast<int>(floor(sigma * 3 * sqrt(2 * kPi) / 4 + 0.5));
     auto window = std::max(1, possibleWindow);
 
@@ -85,16 +85,16 @@ class PlanGauss final {
     fWeight = static_cast<uint64_t>(round(1.0 / divisor * (1ull << 32)));
   }
 
-  size_t bufferSize() const { return fPass0Size + fPass1Size + fPass2Size; }
+  size_t bufferSize() const noexcept { return fPass0Size + fPass1Size + fPass2Size; }
 
-  int border() const { return fBorder; }
+  int border() const noexcept { return fBorder; }
 
  public:
   class Scan {
    public:
     Scan(
         uint64_t weight, int noChangeCount, uint32_t* buffer0, uint32_t* buffer0End,
-        uint32_t* buffer1, uint32_t* buffer1End, uint32_t* buffer2, uint32_t* buffer2End)
+        uint32_t* buffer1, uint32_t* buffer1End, uint32_t* buffer2, uint32_t* buffer2End) noexcept
         : fWeight{weight},
           fNoChangeCount{noChangeCount},
           fBuffer0{buffer0},
@@ -197,7 +197,9 @@ class PlanGauss final {
    private:
     static constexpr uint64_t kHalf = static_cast<uint64_t>(1) << 31;
 
-    uint8_t finalScale(uint32_t sum) const { return SkTo<uint8_t>((fWeight * sum + kHalf) >> 32); }
+    uint8_t finalScale(uint32_t sum) const noexcept {
+      return SkTo<uint8_t>((fWeight * sum + kHalf) >> 32);
+    }
 
     uint64_t fWeight;
     int fNoChangeCount;
@@ -246,13 +248,13 @@ class PlanGauss final {
 //
 //   window = floor(sigma * 3 * sqrt(2 * kPi) / 4)
 //   For window <= 255, the largest value for sigma is 135.
-SkMaskBlurFilter::SkMaskBlurFilter(double sigmaW, double sigmaH)
+SkMaskBlurFilter::SkMaskBlurFilter(double sigmaW, double sigmaH) noexcept
     : fSigmaW{SkTPin(sigmaW, 0.0, 135.0)}, fSigmaH{SkTPin(sigmaH, 0.0, 135.0)} {
   SkASSERT(sigmaW >= 0);
   SkASSERT(sigmaH >= 0);
 }
 
-bool SkMaskBlurFilter::hasNoBlur() const { return (3 * fSigmaW <= 1) && (3 * fSigmaH <= 1); }
+bool SkMaskBlurFilter::hasNoBlur() const noexcept { return (3 * fSigmaW <= 1) && (3 * fSigmaH <= 1); }
 
 // We favor A8 masks, and if we need to work with another format, we'll convert to A8 first.
 // Each of these converts width (up to 8) mask values to A8.

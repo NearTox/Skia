@@ -27,7 +27,7 @@
  */
 class SkDiscardableMemoryPool : public SkDiscardableMemory::Factory {
  public:
-  virtual ~SkDiscardableMemoryPool() {}
+  virtual ~SkDiscardableMemoryPool() = default;
 
   virtual size_t getRAMUsed() = 0;
   virtual void setRAMBudget(size_t budget) = 0;

@@ -9,10 +9,12 @@
 #define SkVertices_DEFINED
 
 #include "include/core/SkColor.h"
-#include "include/core/SkData.h"
-#include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
+
+class SkData;
+struct SkPoint;
+class SkVerticesPriv;
 
 /**
  * An immutable set of vertex data that can be used with SkCanvas::drawVertices.
@@ -49,8 +51,27 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     return MakeCopy(mode, vertexCount, positions, texs, colors, 0, nullptr);
   }
 
-  struct CustomLayout {
-    int fPerVertexDataCount;
+  static constexpr int kMaxCustomAttributes = 8;
+
+  struct Attribute {
+    enum class Type : uint8_t {
+      kFloat,
+      kFloat2,
+      kFloat3,
+      kFloat4,
+      kByte4_unorm,
+    };
+
+    constexpr Attribute() noexcept : fType(Type::kFloat) {}
+    constexpr Attribute(Type t) noexcept : fType(t) {}
+
+    bool operator==(const Attribute& that) const noexcept { return fType == that.fType; }
+    bool operator!=(const Attribute& that) const noexcept { return !(*this == that); }
+
+    int channelCount() const noexcept;
+    size_t bytesPerVertex() const noexcept;
+
+    Type fType;
   };
 
   enum BuilderFlags {
@@ -62,26 +83,23 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     Builder(VertexMode mode, int vertexCount, int indexCount, uint32_t flags);
 
     // EXPERIMENTAL -- do not call if you care what happens
-    Builder(VertexMode mode, int vertexCount, int indexCount, CustomLayout customLayout);
+    Builder(
+        VertexMode mode, int vertexCount, int indexCount, const Attribute* attrs, int attrCount);
 
-    bool isValid() const { return fVertices != nullptr; }
+    bool isValid() const noexcept { return fVertices != nullptr; }
 
-    // if the builder is invalid, these will return 0
-    int vertexCount() const;
-    int indexCount() const;
-    int perVertexDataCount() const;
-    SkPoint* positions();
-    uint16_t* indices();  // returns null if there are no indices
+    SkPoint* positions() noexcept;
+    uint16_t* indices() noexcept;  // returns null if there are no indices
 
     // if we have texCoords or colors, this will always be null
-    float* perVertexData();  // return null if there is no perVertexData
+    void* customData() noexcept;  // returns null if there are no custom attributes
 
-    // If we have per-vertex-data, these will always be null
-    SkPoint* texCoords();  // returns null if there are no texCoords
-    SkColor* colors();     // returns null if there are no colors
+    // If we have custom attributes, these will always be null
+    SkPoint* texCoords() noexcept;  // returns null if there are no texCoords
+    SkColor* colors() noexcept;     // returns null if there are no colors
 
     // Detach the built vertices object. After the first call, this will always return null.
-    sk_sp<SkVertices> detach();
+    sk_sp<SkVertices> detach() noexcept;
 
    private:
     Builder(const Desc&);
@@ -97,24 +115,8 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     friend class SkVertices;
   };
 
-  uint32_t uniqueID() const { return fUniqueID; }
-  VertexMode mode() const { return fMode; }
-  const SkRect& bounds() const { return fBounds; }
-
-  bool hasPerVertexData() const { return SkToBool(this->perVertexData()); }
-  bool hasColors() const { return SkToBool(this->colors()); }
-  bool hasTexCoords() const { return SkToBool(this->texCoords()); }
-  bool hasIndices() const { return SkToBool(this->indices()); }
-
-  int vertexCount() const { return fVertexCount; }
-  int indexCount() const { return fIndexCount; }
-  int perVertexDataCount() const { return fPerVertexDataCount; }
-
-  const SkPoint* positions() const { return fPositions; }
-  const float* perVertexData() const { return fPerVertexData; }
-  const SkPoint* texCoords() const { return fTexs; }
-  const SkColor* colors() const { return fColors; }
-  const uint16_t* indices() const { return fIndices; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  const SkRect& bounds() const noexcept { return fBounds; }
 
   // returns approximate byte size of the vertices object
   size_t approximateSize() const;
@@ -131,14 +133,18 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
    */
   sk_sp<SkData> encode() const;
 
+  // Provides access to functions that aren't part of the public API.
+  SkVerticesPriv priv();
+  const SkVerticesPriv priv() const;
+
  private:
   SkVertices() {}
+
+  friend class SkVerticesPriv;
 
   // these are needed since we've manually sized our allocation (see Builder::init)
   friend class SkNVRefCnt<SkVertices>;
   void operator delete(void* p);
-
-  static sk_sp<SkVertices> Alloc(int vCount, int iCount, uint32_t builderFlags, size_t* arraySize);
 
   Sizes getSizes() const;
 
@@ -147,16 +153,18 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
   uint32_t fUniqueID;
 
   // these point inside our allocation, so none of these can be "freed"
-  SkPoint* fPositions;    // [vertexCount]
-  uint16_t* fIndices;     // [indexCount] or null
-  float* fPerVertexData;  // [perVertexDataCount * vertexCount] or null
-  SkPoint* fTexs;         // [vertexCount] or null
-  SkColor* fColors;       // [vertexCount] or null
+  SkPoint* fPositions;  // [vertexCount]
+  uint16_t* fIndices;   // [indexCount] or null
+  void* fCustomData;    // [customDataSize * vertexCount] or null
+  SkPoint* fTexs;       // [vertexCount] or null
+  SkColor* fColors;     // [vertexCount] or null
 
   SkRect fBounds;  // computed to be the union of the fPositions[]
   int fVertexCount;
   int fIndexCount;
-  int fPerVertexDataCount;
+
+  Attribute fAttributes[kMaxCustomAttributes];
+  int fAttributeCount;
 
   VertexMode fMode;
   // below here is where the actual array data is stored.

@@ -24,15 +24,17 @@ class SkMatrix;
 class SkPaint;
 class SkPicture;
 
+enum class GrImageTexGenPolicy : int;
+
 class SK_API SkImageGenerator {
  public:
   /**
    *  The PixelRef which takes ownership of this SkImageGenerator
    *  will call the image generator's destructor.
    */
-  virtual ~SkImageGenerator() {}
+  virtual ~SkImageGenerator() = default;
 
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /**
    *  Return a ref to the encoded (i.e. compressed) representation
@@ -46,7 +48,7 @@ class SK_API SkImageGenerator {
   /**
    *  Return the ImageInfo associated with this generator.
    */
-  const SkImageInfo& getInfo() const { return fInfo; }
+  const SkImageInfo& getInfo() const noexcept { return fInfo; }
 
   /**
    *  Can this generator be used to produce images that will be drawable to the specified context
@@ -134,9 +136,14 @@ class SK_API SkImageGenerator {
    *  at least has the mip levels allocated and the base layer filled in. If this is not possible,
    *  the generator is allowed to return a non mipped proxy, but this will have some additional
    *  overhead in later allocating mips and copying of the base layer.
+   *
+   *  GrImageTexGenPolicy determines whether or not a new texture must be created (and its budget
+   *  status) or whether this may (but is not required to) return a pre-existing texture that is
+   *  retained by the generator (kDraw).
    */
   GrSurfaceProxyView generateTexture(
-      GrRecordingContext*, const SkImageInfo& info, const SkIPoint& origin, GrMipMapped);
+      GrRecordingContext*, const SkImageInfo& info, const SkIPoint& origin, GrMipMapped,
+      GrImageTexGenPolicy);
 
 #endif
 
@@ -174,14 +181,9 @@ class SK_API SkImageGenerator {
     return false;
   }
 #if SK_SUPPORT_GPU
-  enum class TexGenType {
-    kNone,       // image generator does not implement onGenerateTexture
-    kCheap,      // onGenerateTexture is implemented and it is fast (does not render offscreen)
-    kExpensive,  // onGenerateTexture is implemented and it is relatively slow
-  };
-
+  // returns nullptr
   virtual GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped);  // returns nullptr
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped, GrImageTexGenPolicy);
 #endif
 
  private:

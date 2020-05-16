@@ -19,7 +19,7 @@ class GrMixerEffect : public GrFragmentProcessor {
  public:
   static OptimizationFlags OptFlags(
       const std::unique_ptr<GrFragmentProcessor>& fp0,
-      const std::unique_ptr<GrFragmentProcessor>& fp1) {
+      const std::unique_ptr<GrFragmentProcessor>& fp1) noexcept {
     auto flags = ProcessorOptimizationFlags(fp0.get());
     if (fp1) {
       flags &= ProcessorOptimizationFlags(fp1.get());

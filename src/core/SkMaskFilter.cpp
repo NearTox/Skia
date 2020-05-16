@@ -38,7 +38,7 @@ SkMaskFilterBase::NinePatch::~NinePatch() {
 
 bool SkMaskFilterBase::asABlur(BlurRec*) const { return false; }
 
-static void extractMaskSubset(const SkMask& src, SkMask* dst) {
+static void extractMaskSubset(const SkMask& src, SkMask* dst) noexcept {
   SkASSERT(src.fBounds.contains(dst->fBounds));
 
   const int dx = dst->fBounds.left() - src.fBounds.left();

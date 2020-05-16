@@ -40,6 +40,7 @@ class GrTextureProxy;
 struct GrVkBackendContext;
 
 class SkImage;
+class SkString;
 class SkSurfaceCharacterization;
 class SkSurfaceProps;
 class SkTaskGroup;
@@ -47,6 +48,7 @@ class SkTraceMemoryDump;
 
 class SK_API GrContext : public GrRecordingContext {
  public:
+#ifdef SK_GL
   /**
    * Creates a GrContext for a backend context. If no GrGLInterface is provided then the result of
    * GrGLMakeNativeInterface() is used if it succeeds.
@@ -55,6 +57,7 @@ class SK_API GrContext : public GrRecordingContext {
   static sk_sp<GrContext> MakeGL(sk_sp<const GrGLInterface>);
   static sk_sp<GrContext> MakeGL(const GrContextOptions&);
   static sk_sp<GrContext> MakeGL();
+#endif
 
   /**
    * The Vulkan context (VkQueue, VkDevice, VkInstance) must be kept alive until the returned
@@ -133,9 +136,12 @@ class SK_API GrContext : public GrRecordingContext {
   void abandonContext() override;
 
   /**
-   * Returns true if the context was abandoned.
+   * Returns true if the context was abandoned or if the if the backend specific context has
+   * gotten into an unrecoverarble, lost state (e.g. in Vulkan backend if we've gotten a
+   * VK_ERROR_DEVICE_LOST). If the backend context is lost, this call will also abandon the
+   * GrContext.
    */
-  using GrImageContext::abandoned;
+  bool abandoned() override;
 
   /**
    * This is similar to abandonContext() however the underlying 3D context is not yet lost and
@@ -363,8 +369,8 @@ class SK_API GrContext : public GrRecordingContext {
   void checkAsyncWorkCompletion();
 
   // Provides access to functions that aren't part of the public API.
-  GrContextPriv priv();
-  const GrContextPriv priv() const;
+  GrContextPriv priv() noexcept;
+  const GrContextPriv priv() const noexcept;
 
   /** Enumerates all cached GPU resources and dumps their memory to traceMemoryDump. */
   // Chrome is using this!
@@ -548,7 +554,7 @@ class SK_API GrContext : public GrRecordingContext {
 
   bool init(sk_sp<const GrCaps>) override;
 
-  GrContext* asDirectContext() override { return this; }
+  GrContext* asDirectContext() noexcept override { return this; }
 
   virtual GrAtlasManager* onGetAtlasManager() = 0;
 

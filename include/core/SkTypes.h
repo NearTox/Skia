@@ -242,9 +242,16 @@
  * and opting in to additional backends. TODO: Require explicit opt in for GL.
  */
 #if SK_SUPPORT_GPU
-#  if !defined(SK_GL) && !defined(SK_VULKAN) && !defined(SK_METAL)
+#  if !defined(SK_GL) && !defined(SK_VULKAN) && !defined(SK_METAL) && !defined(SK_DAWN) && \
+      !defined(SK_DIRECT3D)
 #    define SK_GL
 #  endif
+#else
+#  undef SK_GL
+#  undef SK_VULKAN
+#  undef SK_METAL
+#  undef SK_DAWN
+#  undef SK_DIRECT3D
 #endif
 
 #if !defined(SK_SUPPORT_ATLAS_TEXT)
@@ -423,14 +430,20 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  define SK_ENABLE_LEGACY_SHADERCONTEXT
 #endif
 
+#ifdef SK_ENABLE_API_AVAILABLE
+#  define SK_API_AVAILABLE API_AVAILABLE
+#else
+#  define SK_API_AVAILABLE(...)
+#endif
+
 /** Called internally if we hit an unrecoverable error.
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-SK_API extern void sk_abort_no_print(void);
+SK_API extern void sk_abort_no_print(void) noexcept;
 
 #ifndef SkDebugf
-SK_API void SkDebugf(const char format[], ...);
+SK_API void SkDebugf(const char format[], ...) noexcept;
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -444,7 +457,7 @@ SK_API void SkDebugf(const char format[], ...);
 //               x - 4;
 //    }
 #define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : [] { SK_ABORT("assert(" #cond ")"); }())
+  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(" #cond ")"); }())
 
 #ifdef SK_DEBUG
 #  define SkASSERT(cond) SkASSERT_RELEASE(cond)
@@ -490,7 +503,7 @@ typedef unsigned U16CPU;
 /** @return false or true based on the condition
  */
 template <typename T>
-static constexpr bool SkToBool(const T& x) {
+static constexpr bool SkToBool(const T& x) noexcept(noexcept(0 != x)) {
   return 0 != x;
 }
 
@@ -504,11 +517,11 @@ static constexpr int32_t SK_NaN32 = INT32_MIN;
 static constexpr int64_t SK_MaxS64 = INT64_MAX;
 static constexpr int64_t SK_MinS64 = -SK_MaxS64;
 
-static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) {
+static constexpr int32_t SkLeftShift(int32_t value, int32_t shift) noexcept {
   return (int32_t)((uint32_t)value << shift);
 }
 
-static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) {
+static constexpr int64_t SkLeftShift(int64_t value, int32_t shift) noexcept {
   return (int64_t)((uint64_t)value << shift);
 }
 
@@ -523,42 +536,42 @@ char (&SkArrayCountHelper(T (&array)[N]))[N];
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-static constexpr T SkAlign2(T x) {
+static constexpr T SkAlign2(T x) noexcept {
   return (x + 1) >> 1 << 1;
 }
 template <typename T>
-static constexpr T SkAlign4(T x) {
+static constexpr T SkAlign4(T x) noexcept {
   return (x + 3) >> 2 << 2;
 }
 template <typename T>
-static constexpr T SkAlign8(T x) {
+static constexpr T SkAlign8(T x) noexcept {
   return (x + 7) >> 3 << 3;
 }
 
 template <typename T>
-static constexpr bool SkIsAlign2(T x) {
+static constexpr bool SkIsAlign2(T x) noexcept {
   return 0 == (x & 1);
 }
 template <typename T>
-static constexpr bool SkIsAlign4(T x) {
+static constexpr bool SkIsAlign4(T x) noexcept {
   return 0 == (x & 3);
 }
 template <typename T>
-static constexpr bool SkIsAlign8(T x) {
+static constexpr bool SkIsAlign8(T x) noexcept {
   return 0 == (x & 7);
 }
 
 template <typename T>
-static constexpr T SkAlignPtr(T x) {
+static constexpr T SkAlignPtr(T x) noexcept {
   return sizeof(void*) == 8 ? SkAlign8(x) : SkAlign4(x);
 }
 template <typename T>
-static constexpr bool SkIsAlignPtr(T x) {
+static constexpr bool SkIsAlignPtr(T x) noexcept {
   return sizeof(void*) == 8 ? SkIsAlign8(x) : SkIsAlign4(x);
 }
 
 typedef uint32_t SkFourByteTag;
-static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) {
+static constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
   return (((uint8_t)a << 24) | ((uint8_t)b << 16) | ((uint8_t)c << 8) | (uint8_t)d);
 }
 
@@ -589,7 +602,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
+static constexpr int32_t SkAbs32(int32_t value) noexcept {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -611,7 +624,8 @@ static inline T SkTAbs(T value) {
           floating point NaN. In that case, 'max' is returned.
 */
 template <typename T>
-static constexpr const T& SkTPin(const T& value, const T& min, const T& max) {
+static constexpr const T& SkTPin(const T& value, const T& min, const T& max) noexcept(
+    noexcept(value < min)) {
   return value < min ? min : (value < max ? value : max);
 }
 

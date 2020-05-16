@@ -85,7 +85,7 @@ class GrDrawOpAtlas {
   class GenerationCounter {
    public:
     static constexpr uint64_t kInvalidGeneration = 0;
-    uint64_t next() { return fGeneration++; }
+    uint64_t next() noexcept { return fGeneration++; }
 
    private:
     uint64_t fGeneration{1};
@@ -151,11 +151,11 @@ class GrDrawOpAtlas {
       GrResourceProvider*, PlotLocator*, GrDeferredUploadTarget*, int width, int height,
       const void* image, SkIPoint16* loc);
 
-  const GrSurfaceProxyView* getViews() const { return fViews; }
+  const GrSurfaceProxyView* getViews() const noexcept { return fViews; }
 
-  uint64_t atlasGeneration() const { return fAtlasGeneration; }
+  uint64_t atlasGeneration() const noexcept { return fAtlasGeneration; }
 
-  bool hasID(PlotLocator plotLocator) {
+  bool hasID(PlotLocator plotLocator) noexcept {
     if (kInvalidPlotLocator == plotLocator) {
       return false;
     }
@@ -179,7 +179,7 @@ class GrDrawOpAtlas {
     plot->setLastUseToken(token);
   }
 
-  uint32_t numActivePages() { return fNumActivePages; }
+  uint32_t numActivePages() noexcept { return fNumActivePages; }
 
   /**
    * A class which can be handed back to GrDrawOpAtlas for updating last use tokens in bulk.  The
@@ -209,13 +209,13 @@ class GrDrawOpAtlas {
     }
 
     struct PlotData {
-      PlotData(int pageIdx, int plotIdx) : fPageIndex(pageIdx), fPlotIndex(plotIdx) {}
+      PlotData(int pageIdx, int plotIdx) noexcept : fPageIndex(pageIdx), fPlotIndex(plotIdx) {}
       uint32_t fPageIndex;
       uint32_t fPlotIndex;
     };
 
    private:
-    bool find(int pageIdx, int index) const {
+    bool find(int pageIdx, int index) const noexcept {
       SkASSERT(index < kMaxPlots);
       return (fPlotAlreadyUpdated[pageIdx] >> index) & 1;
     }
@@ -250,11 +250,13 @@ class GrDrawOpAtlas {
 
   void compact(GrDeferredUploadToken startTokenForNextFlush);
 
-  static uint32_t GetPageIndexFromID(PlotLocator plotLocator) { return plotLocator & 0xff; }
+  static uint32_t GetPageIndexFromID(PlotLocator plotLocator) noexcept {
+    return plotLocator & 0xff;
+  }
 
   void instantiate(GrOnFlushResourceProvider*);
 
-  uint32_t maxPages() const { return fMaxPages; }
+  uint32_t maxPages() const noexcept { return fMaxPages; }
 
   int numAllocated_TestingOnly() const;
   void setMaxPages_TestingOnly(uint32_t maxPages);
@@ -277,19 +279,19 @@ class GrDrawOpAtlas {
 
    public:
     /** index() is a unique id for the plot relative to the owning GrAtlas and page. */
-    uint32_t index() const { return fPlotIndex; }
+    uint32_t index() const noexcept { return fPlotIndex; }
     /**
      * genID() is incremented when the plot is evicted due to a atlas spill. It is used to know
      * if a particular subimage is still present in the atlas.
      */
-    uint64_t genID() const { return fGenID; }
-    GrDrawOpAtlas::PlotLocator plotLocator() const {
+    uint64_t genID() const noexcept { return fGenID; }
+    GrDrawOpAtlas::PlotLocator plotLocator() const noexcept {
       SkASSERT(GrDrawOpAtlas::kInvalidPlotLocator != fPlotLocator);
       return fPlotLocator;
     }
-    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; })
+    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; });
 
-        bool addSubImage(int width, int height, const void* image, SkIPoint16* loc);
+    bool addSubImage(int width, int height, const void* image, SkIPoint16* loc);
 
     /**
      * To manage the lifetime of a plot, we use two tokens. We use the last upload token to
@@ -298,17 +300,17 @@ class GrDrawOpAtlas {
      * use lastUse to determine when we can evict a plot from the cache, i.e. if the last use
      * has already flushed through the gpu then we can reuse the plot.
      */
-    GrDeferredUploadToken lastUploadToken() const { return fLastUpload; }
-    GrDeferredUploadToken lastUseToken() const { return fLastUse; }
-    void setLastUploadToken(GrDeferredUploadToken token) { fLastUpload = token; }
-    void setLastUseToken(GrDeferredUploadToken token) { fLastUse = token; }
+    GrDeferredUploadToken lastUploadToken() const noexcept { return fLastUpload; }
+    GrDeferredUploadToken lastUseToken() const noexcept { return fLastUse; }
+    void setLastUploadToken(GrDeferredUploadToken token) noexcept { fLastUpload = token; }
+    void setLastUseToken(GrDeferredUploadToken token) noexcept { fLastUse = token; }
 
     void uploadToTexture(GrDeferredTextureUploadWritePixelsFn&, GrTextureProxy*);
     void resetRects();
 
-    int flushesSinceLastUsed() { return fFlushesSinceLastUse; }
-    void resetFlushesSinceLastUsed() { fFlushesSinceLastUse = 0; }
-    void incFlushesSinceLastUsed() { fFlushesSinceLastUse++; }
+    int flushesSinceLastUsed() noexcept { return fFlushesSinceLastUse; }
+    void resetFlushesSinceLastUsed() noexcept { fFlushesSinceLastUse = 0; }
+    void incFlushesSinceLastUsed() noexcept { fFlushesSinceLastUse++; }
 
    private:
     Plot(
@@ -327,7 +329,7 @@ class GrDrawOpAtlas {
     }
 
     static GrDrawOpAtlas::PlotLocator CreatePlotLocator(
-        uint32_t pageIdx, uint32_t plotIdx, uint64_t generation) {
+        uint32_t pageIdx, uint32_t plotIdx, uint64_t generation) noexcept {
       SkASSERT(pageIdx < (1 << 8));
       SkASSERT(pageIdx < kMaxMultitexturePages);
       SkASSERT(plotIdx < (1 << 8));
@@ -366,10 +368,12 @@ class GrDrawOpAtlas {
 
   typedef SkTInternalLList<Plot> PlotList;
 
-  static uint32_t GetPlotIndexFromID(PlotLocator plotLocator) { return (plotLocator >> 8) & 0xff; }
+  static uint32_t GetPlotIndexFromID(PlotLocator plotLocator) noexcept {
+    return (plotLocator >> 8) & 0xff;
+  }
 
   // top 48 bits are reserved for the generation ID
-  static uint64_t GetGenerationFromID(PlotLocator plotLocator) {
+  static uint64_t GetGenerationFromID(PlotLocator plotLocator) noexcept {
     return (plotLocator >> 16) & 0xffffffffffff;
   }
 
@@ -414,6 +418,9 @@ class GrDrawOpAtlas {
 
   // nextTokenToFlush() value at the end of the previous flush
   GrDeferredUploadToken fPrevFlushToken;
+
+  // the number of flushes since this atlas has been last used
+  int fFlushesSinceLastUse;
 
   std::vector<EvictionCallback*> fEvictionCallbacks;
 

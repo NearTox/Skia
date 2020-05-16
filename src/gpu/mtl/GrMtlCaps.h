@@ -28,7 +28,6 @@ class GrMtlCaps : public GrCaps {
   bool isFormatSRGB(const GrBackendFormat&) const override;
   SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
 
-  bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat&) const override;
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isFormatTexturable(MTLPixelFormat) const;
 
@@ -84,7 +83,7 @@ class GrMtlCaps : public GrCaps {
   }
 
   GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
-  GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override;
+  GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
@@ -93,6 +92,7 @@ class GrMtlCaps : public GrCaps {
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;
 #endif
+  void onDumpJSON(SkJSONWriter*) const override;
 
  private:
   void initFeatureSet(MTLFeatureSet featureSet);
@@ -108,7 +108,7 @@ class GrMtlCaps : public GrCaps {
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
-  GrBackendFormat onGetDefaultBackendFormat(GrColorType, GrRenderable) const override;
+  GrBackendFormat onGetDefaultBackendFormat(GrColorType) const override;
   bool onAreColorTypeAndFormatCompatible(GrColorType, const GrBackendFormat&) const override;
 
   SupportedRead onSupportedReadPixelsColorType(
@@ -126,7 +126,7 @@ class GrMtlCaps : public GrCaps {
     uint32_t fFlags = 0;
 
     GrSwizzle fReadSwizzle;
-    GrSwizzle fOutputSwizzle;
+    GrSwizzle fWriteSwizzle;
   };
 
   struct FormatInfo {

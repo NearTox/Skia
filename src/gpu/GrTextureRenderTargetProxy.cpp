@@ -22,20 +22,17 @@
 // GrRenderTargetProxy) so its constructor must be explicitly called.
 GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
     const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, int sampleCnt,
-    GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus, const GrSwizzle& texSwizzle,
-    SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
-    : GrSurfaceProxy(
-          format, dimensions, GrRenderable::kYes, texSwizzle, fit, budgeted, isProtected,
-          surfaceFlags, useAllocator)
+    GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus, SkBackingFit fit, SkBudgeted budgeted,
+    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
+    : GrSurfaceProxy(format, dimensions, fit, budgeted, isProtected, surfaceFlags, useAllocator)
       // for now textures w/ data are always wrapped
       ,
       GrRenderTargetProxy(
-          caps, format, dimensions, sampleCnt, texSwizzle, fit, budgeted, isProtected, surfaceFlags,
+          caps, format, dimensions, sampleCnt, fit, budgeted, isProtected, surfaceFlags,
           useAllocator),
       GrTextureProxy(
-          format, dimensions, mipMapped, mipMapsStatus, texSwizzle, fit, budgeted, isProtected,
-          surfaceFlags, useAllocator) {
+          format, dimensions, mipMapped, mipMapsStatus, fit, budgeted, isProtected, surfaceFlags,
+          useAllocator) {
   this->initSurfaceFlags(caps);
 }
 
@@ -43,20 +40,20 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
 GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
     const GrCaps& caps, LazyInstantiateCallback&& callback, const GrBackendFormat& format,
     SkISize dimensions, int sampleCnt, GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus,
-    const GrSwizzle& texSwizzle, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
+    SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
     GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
     : GrSurfaceProxy(
-          std::move(callback), format, dimensions, GrRenderable::kYes, texSwizzle, fit, budgeted,
-          isProtected, surfaceFlags, useAllocator)
+          std::move(callback), format, dimensions, fit, budgeted, isProtected, surfaceFlags,
+          useAllocator)
       // Since we have virtual inheritance, we initialize GrSurfaceProxy directly. Send null
       // callbacks to the texture and RT proxies simply to route to the appropriate constructors.
       ,
       GrRenderTargetProxy(
-          LazyInstantiateCallback(), format, dimensions, sampleCnt, texSwizzle, fit, budgeted,
-          isProtected, surfaceFlags, useAllocator, WrapsVkSecondaryCB::kNo),
+          LazyInstantiateCallback(), format, dimensions, sampleCnt, fit, budgeted, isProtected,
+          surfaceFlags, useAllocator, WrapsVkSecondaryCB::kNo),
       GrTextureProxy(
-          LazyInstantiateCallback(), format, dimensions, mipMapped, mipMapsStatus, texSwizzle, fit,
-          budgeted, isProtected, surfaceFlags, useAllocator) {
+          LazyInstantiateCallback(), format, dimensions, mipMapped, mipMapsStatus, fit, budgeted,
+          isProtected, surfaceFlags, useAllocator) {
   this->initSurfaceFlags(caps);
 }
 
@@ -64,10 +61,10 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
 // This class is virtually derived from GrSurfaceProxy (via both GrTextureProxy and
 // GrRenderTargetProxy) so its constructor must be explicitly called.
 GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
-    sk_sp<GrSurface> surf, const GrSwizzle& texSwizzle, UseAllocator useAllocator)
-    : GrSurfaceProxy(surf, texSwizzle, SkBackingFit::kExact, useAllocator),
-      GrRenderTargetProxy(surf, texSwizzle, useAllocator),
-      GrTextureProxy(surf, texSwizzle, useAllocator) {
+    sk_sp<GrSurface> surf, UseAllocator useAllocator)
+    : GrSurfaceProxy(surf, SkBackingFit::kExact, useAllocator),
+      GrRenderTargetProxy(surf, useAllocator),
+      GrTextureProxy(surf, useAllocator) {
   SkASSERT(surf->asTexture());
   SkASSERT(surf->asRenderTarget());
   SkASSERT(fSurfaceFlags == fTarget->surfacePriv().flags());

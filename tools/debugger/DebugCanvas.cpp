@@ -360,18 +360,6 @@ void DebugCanvas::onDrawAnnotation(const SkRect& rect, const char key[], SkData*
   this->addDrawCommand(new DrawAnnotationCommand(rect, key, sk_ref_sp(value)));
 }
 
-void DebugCanvas::onDrawBitmap(
-    const SkBitmap& bitmap, SkScalar left, SkScalar top, const SkPaint* paint) {
-  this->addDrawCommand(new DrawBitmapCommand(bitmap, left, top, paint));
-}
-
-void DebugCanvas::onDrawBitmapRect(
-    const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-    SrcRectConstraint constraint) {
-  this->addDrawCommand(
-      new DrawBitmapRectCommand(bitmap, src, dst, paint, (SrcRectConstraint)constraint));
-}
-
 void DebugCanvas::onDrawImage(
     const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
   this->addDrawCommand(new DrawImageCommand(image, left, top, paint));
@@ -478,21 +466,11 @@ void DebugCanvas::onDrawPatch(
   this->addDrawCommand(new DrawPatchCommand(cubics, colors, texCoords, bmode, paint));
 }
 
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-void DebugCanvas::onDrawVerticesObject(
-    const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount, SkBlendMode bmode,
-    const SkPaint& paint) {
-  // TODO: ANIMATION NOT LOGGED
-  this->addDrawCommand(
-      new DrawVerticesCommand(sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode, paint));
-}
-#else
 void DebugCanvas::onDrawVerticesObject(
     const SkVertices* vertices, SkBlendMode bmode, const SkPaint& paint) {
   this->addDrawCommand(
       new DrawVerticesCommand(sk_ref_sp(const_cast<SkVertices*>(vertices)), bmode, paint));
 }
-#endif
 
 void DebugCanvas::onDrawAtlas(
     const SkImage* image, const SkRSXform xform[], const SkRect tex[], const SkColor colors[],

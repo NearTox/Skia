@@ -30,21 +30,21 @@ class SkZip {
     using pointer = value_type*;
     using reference = value_type;
     using iterator_category = std::input_iterator_tag;
-    constexpr Iterator(const SkZip* zip, size_t index) : fZip{zip}, fIndex{index} {}
-    constexpr Iterator(const Iterator& that) : Iterator{that.fZip, that.fIndex} {}
-    constexpr Iterator& operator++() {
+    constexpr Iterator(const SkZip* zip, size_t index) noexcept : fZip{zip}, fIndex{index} {}
+    constexpr Iterator(const Iterator& that) noexcept : Iterator{that.fZip, that.fIndex} {}
+    constexpr Iterator& operator++() noexcept {
       ++fIndex;
       return *this;
     }
-    constexpr Iterator operator++(int) {
+    constexpr Iterator operator++(int) noexcept {
       Iterator tmp(*this);
       operator++();
       return tmp;
     }
-    constexpr bool operator==(const Iterator& rhs) const { return fIndex == rhs.fIndex; }
-    constexpr bool operator!=(const Iterator& rhs) const { return fIndex != rhs.fIndex; }
-    constexpr reference operator*() { return (*fZip)[fIndex]; }
-    friend constexpr difference_type operator-(Iterator lhs, Iterator rhs) {
+    constexpr bool operator==(const Iterator& rhs) const noexcept { return fIndex == rhs.fIndex; }
+    constexpr bool operator!=(const Iterator& rhs) const noexcept { return fIndex != rhs.fIndex; }
+    constexpr reference operator*() noexcept { return (*fZip)[fIndex]; }
+    friend constexpr difference_type operator-(Iterator lhs, Iterator rhs) noexcept {
       return lhs.fIndex - rhs.fIndex;
     }
 
@@ -57,9 +57,9 @@ class SkZip {
   static constexpr T* nullify = nullptr;
 
  public:
-  constexpr SkZip() : fPointers{nullify<Ts>...}, fSize{0} {}
+  constexpr SkZip() noexcept : fPointers{nullify<Ts>...}, fSize{0} {}
   constexpr SkZip(size_t) = delete;
-  constexpr SkZip(size_t size, Ts*... ts) : fPointers{ts...}, fSize{size} {}
+  constexpr SkZip(size_t size, Ts*... ts) noexcept : fPointers{ts...}, fSize{size} {}
   constexpr SkZip(const SkZip& that) = default;
 
   // Check to see if U can be used for const T or is the same as T
@@ -71,7 +71,7 @@ class SkZip {
   template <
       typename... Us,
       typename = std::enable_if<skstd::conjunction<CanConvertToConst<Us, Ts>...>::value>>
-  constexpr SkZip(const SkZip<Us...>& that) : fPointers(that.data()), fSize{that.size()} {}
+  constexpr SkZip(const SkZip<Us...>& that) noexcept : fPointers(that.data()), fSize{that.size()} {}
 
   constexpr ReturnTuple operator[](size_t i) const { return this->index(i); }
   constexpr size_t size() const { return fSize; }

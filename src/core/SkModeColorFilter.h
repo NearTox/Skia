@@ -17,7 +17,7 @@ class SkModeColorFilter : public SkColorFilter {
     return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
   }
 
-  uint32_t getFlags() const override;
+  uint32_t getFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -31,6 +31,8 @@ class SkModeColorFilter : public SkColorFilter {
   bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::Color, SkColorSpace*, skvm::Uniforms*, SkArenaAlloc*) const override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkModeColorFilter)

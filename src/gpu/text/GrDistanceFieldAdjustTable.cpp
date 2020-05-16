@@ -97,7 +97,12 @@ SkDEBUGCODE(static const int kExpectedDistanceAdjustTableSize = 8;)
   return table;
 }
 
-void GrDistanceFieldAdjustTable::buildDistanceAdjustTables() {
+const GrDistanceFieldAdjustTable* GrDistanceFieldAdjustTable::Get() {
+  static const GrDistanceFieldAdjustTable* dfat = new GrDistanceFieldAdjustTable;
+  return dfat;
+}
+
+GrDistanceFieldAdjustTable::GrDistanceFieldAdjustTable() {
   fTable = build_distance_adjust_table(SK_GAMMA_EXPONENT, SK_GAMMA_EXPONENT);
   fGammaCorrectTable = build_distance_adjust_table(SK_Scalar1, SK_Scalar1);
 }

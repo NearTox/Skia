@@ -52,8 +52,8 @@ struct Variable : public Symbol {
 
   bool dead() const {
     if ((fStorage != kLocal_Storage && fReadCount) ||
-        (fModifiers.fFlags &
-         (Modifiers::kIn_Flag | Modifiers::kOut_Flag | Modifiers::kUniform_Flag))) {
+        (fModifiers.fFlags & (Modifiers::kIn_Flag | Modifiers::kOut_Flag |
+                              Modifiers::kUniform_Flag | Modifiers::kVarying_Flag))) {
       return false;
     }
     return !fWriteCount ||

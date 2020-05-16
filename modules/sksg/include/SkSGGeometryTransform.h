@@ -31,7 +31,7 @@ class GeometryTransform final : public GeometryNode {
 
   ~GeometryTransform() override;
 
-  const sk_sp<Transform>& getTransform() const { return fTransform; }
+  const sk_sp<Transform>& getTransform() const noexcept { return fTransform; }
 
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;

@@ -221,7 +221,7 @@ class DashOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fProcessorSet.visitProxies(func);
     }
@@ -316,9 +316,11 @@ class DashOp final : public GrMeshDrawOp {
     bool fHasEndRect;
   };
 
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     DashCap capType = (this->cap() == SkPaint::kRound_Cap) ? kRound_DashCap : kNonRound_DashCap;
 
     GrGeometryProcessor* gp;
@@ -332,13 +334,12 @@ class DashOp final : public GrMeshDrawOp {
       LocalCoords::Type localCoordsType =
           fUsesLocalCoords ? LocalCoords::kUsePosition_Type : LocalCoords::kUnused_Type;
       gp = MakeForDeviceSpace(
-          arena, caps->shaderCaps(), color, Coverage::kSolid_Type, localCoordsType,
-          this->viewMatrix());
+          arena, color, Coverage::kSolid_Type, localCoordsType, this->viewMatrix());
     }
 
     if (!gp) {
       SkDebugf("Could not create GrGeometryProcessor\n");
-      return nullptr;
+      return;
     }
 
     auto pipelineFlags = GrPipeline::InputFlags::kNone;
@@ -346,29 +347,9 @@ class DashOp final : public GrMeshDrawOp {
       pipelineFlags |= GrPipeline::InputFlags::kHWAntialias;
     }
 
-    return GrSimpleMeshDrawOpHelper::CreateProgramInfo(
+    fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
         GrPrimitiveType::kTriangles, pipelineFlags, fStencilSettings);
-  }
-
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -377,7 +358,7 @@ class DashOp final : public GrMeshDrawOp {
     DashCap capType = (SkPaint::kRound_Cap == cap) ? kRound_DashCap : kNonRound_DashCap;
 
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -660,8 +641,9 @@ class DashOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -715,7 +697,7 @@ class DashOp final : public GrMeshDrawOp {
   GrProcessorSet fProcessorSet;
   const GrUserStencilSettings* fStencilSettings;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;

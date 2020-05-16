@@ -45,7 +45,7 @@ class SK_API SkShader : public SkFlattenable {
    *  alpha value. Subclasses should override this to allow some
    *  optimizations.
    */
-  virtual bool isOpaque() const { return false; }
+  virtual bool isOpaque() const noexcept { return false; }
 
   /**
    *  Iff this shader is backed by a single SkImage, return its ptr (the caller must ref this
@@ -126,7 +126,7 @@ class SK_API SkShader : public SkFlattenable {
   sk_sp<SkShader> makeWithColorFilter(sk_sp<SkColorFilter>) const;
 
  private:
-  SkShader() = default;
+  constexpr SkShader() noexcept = default;
   friend class SkShaderBase;
 
   typedef SkFlattenable INHERITED;
@@ -137,15 +137,8 @@ class SK_API SkShaders {
   static sk_sp<SkShader> Empty();
   static sk_sp<SkShader> Color(SkColor);
   static sk_sp<SkShader> Color(const SkColor4f&, sk_sp<SkColorSpace>);
-  static sk_sp<SkShader> Blend(
-      SkBlendMode mode, sk_sp<SkShader> dst, sk_sp<SkShader> src,
-      const SkMatrix* localMatrix = nullptr);
-  static sk_sp<SkShader> Lerp(
-      float t, sk_sp<SkShader> dst, sk_sp<SkShader> src, const SkMatrix* localMatrix = nullptr);
-
-  static sk_sp<SkShader> Lerp(
-      sk_sp<SkShader> red, sk_sp<SkShader> dst, sk_sp<SkShader> src,
-      const SkMatrix* localMatrix = nullptr);
+  static sk_sp<SkShader> Blend(SkBlendMode mode, sk_sp<SkShader> dst, sk_sp<SkShader> src);
+  static sk_sp<SkShader> Lerp(float t, sk_sp<SkShader> dst, sk_sp<SkShader> src);
 
  private:
   SkShaders() = delete;

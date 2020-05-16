@@ -355,7 +355,7 @@ SkCodec::Result SkIcoCodec::onIncrementalDecode(int* rowsDecoded) {
   return fCurrCodec->incrementalDecode(rowsDecoded);
 }
 
-SkCodec::SkScanlineOrder SkIcoCodec::onGetScanlineOrder() const {
+SkCodec::SkScanlineOrder SkIcoCodec::onGetScanlineOrder() const noexcept {
   // FIXME: This function will possibly return the wrong value if it is called
   //        before startScanlineDecode()/startIncrementalDecode().
   if (fCurrCodec) {

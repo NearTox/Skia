@@ -18,10 +18,6 @@
 #include "src/gpu/vk/GrVkUniformBuffer.h"
 #include "src/gpu/vk/GrVkUtil.h"
 
-#ifdef SK_TRACE_MANAGED_RESOURCES
-std::atomic<uint32_t> GrManagedResource::fKeyCounter{0};
-#endif
-
 GrVkResourceProvider::GrVkResourceProvider(GrVkGpu* gpu)
     : fGpu(gpu), fPipelineCache(VK_NULL_HANDLE) {
   fPipelineStateCache = new PipelineStateCache(gpu);
@@ -380,14 +376,10 @@ void GrVkResourceProvider::destroyResources(bool deviceLost) {
   fExternalRenderPasses.reset();
 
   // Iterate through all store GrVkSamplers and unref them before resetting the hash.
-  for (decltype(fSamplers)::Iter iter(&fSamplers); !iter.done(); ++iter) {
-    (*iter).unref();
-  }
+  fSamplers.foreach ([&](auto* elt) { elt->unref(); });
   fSamplers.reset();
 
-  for (decltype(fYcbcrConversions)::Iter iter(&fYcbcrConversions); !iter.done(); ++iter) {
-    (*iter).unref();
-  }
+  fYcbcrConversions.foreach ([&](auto* elt) { elt->unref(); });
   fYcbcrConversions.reset();
 
   fPipelineStateCache->release();

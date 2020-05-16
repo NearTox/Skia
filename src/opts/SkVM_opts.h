@@ -326,6 +326,8 @@ inline void interpret_skvm(
           break;
           CASE(Op::trunc) : r(d).i32 = skvx::cast<int>(r(x).f32);
           break;
+          CASE(Op::round) : r(d).i32 = skvx::cast<int>(skvx::lrint(r(x).f32));
+          break;
 #undef CASE
       }
     }

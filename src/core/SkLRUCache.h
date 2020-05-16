@@ -83,7 +83,7 @@ class SkLRUCache : public SkNoncopyable {
 
  private:
   struct Traits {
-    static const K& GetKey(Entry* e) { return e->fKey; }
+    static const K& GetKey(Entry* e) noexcept { return e->fKey; }
 
     static uint32_t Hash(const K& k) { return HashK()(k); }
   };

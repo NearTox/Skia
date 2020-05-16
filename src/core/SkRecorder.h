@@ -20,11 +20,11 @@ class SkBBHFactory;
 
 class SkDrawableList : SkNoncopyable {
  public:
-  SkDrawableList() {}
+  constexpr SkDrawableList() noexcept = default;
   ~SkDrawableList();
 
-  int count() const { return fArray.count(); }
-  SkDrawable* const* begin() const { return fArray.begin(); }
+  int count() const noexcept { return fArray.count(); }
+  SkDrawable* const* begin() const noexcept { return fArray.begin(); }
 
   void append(SkDrawable* drawable);
 
@@ -51,10 +51,10 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   };
   void reset(SkRecord*, const SkRect& bounds, DrawPictureMode, SkMiniRecorder* = nullptr);
 
-  size_t approxBytesUsedBySubPictures() const { return fApproxBytesUsedBySubPictures; }
+  size_t approxBytesUsedBySubPictures() const noexcept { return fApproxBytesUsedBySubPictures; }
 
-  SkDrawableList* getDrawableList() const { return fDrawableList.get(); }
-  std::unique_ptr<SkDrawableList> detachDrawableList() { return std::move(fDrawableList); }
+  SkDrawableList* getDrawableList() const noexcept { return fDrawableList.get(); }
+  std::unique_ptr<SkDrawableList> detachDrawableList() noexcept { return std::move(fDrawableList); }
 
   // Make SkRecorder forget entirely about its SkRecord*; all calls to SkRecorder will fail.
   void forgetRecord();
@@ -90,10 +90,6 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
   void onDrawRRect(const SkRRect&, const SkPaint&) override;
   void onDrawPath(const SkPath&, const SkPaint&) override;
-  void onDrawBitmap(const SkBitmap&, SkScalar left, SkScalar top, const SkPaint*) override;
-  void onDrawBitmapRect(
-      const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
-      SrcRectConstraint) override;
   void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
   void onDrawImageRect(
       const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
@@ -102,13 +98,7 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
       const SkImage*, const SkIRect& center, const SkRect& dst, const SkPaint*) override;
   void onDrawImageLattice(
       const SkImage*, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-  void onDrawVerticesObject(
-      const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
-      const SkPaint&) override;
-#else
   void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
-#endif
   void onDrawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
       const SkRect* cull, const SkPaint*) override;

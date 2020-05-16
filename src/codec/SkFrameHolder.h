@@ -23,17 +23,18 @@
  */
 class SkFrame : public SkNoncopyable {
  public:
-  SkFrame(int id)
+  constexpr SkFrame(int id) noexcept
       : fId(id),
         fHasAlpha(false),
         fRequiredFrame(kUninitialized),
+        fRect(SkIRect::MakeEmpty()),
         fDisposalMethod(SkCodecAnimation::DisposalMethod::kKeep),
         fDuration(0),
         fBlend(SkCodecAnimation::Blend::kPriorFrame) {
-    fRect.setEmpty();
+    // fRect.setEmpty();
   }
 
-  virtual ~SkFrame() {}
+  virtual ~SkFrame() = default;
 
   /**
    * An explicit move constructor, as
@@ -44,12 +45,12 @@ class SkFrame : public SkNoncopyable {
    * Without a move constructor, it is harder to use an SkFrame, or an
    * SkFrame subclass, inside a std::vector.
    */
-  SkFrame(SkFrame&&) = default;
+  SkFrame(SkFrame&&) noexcept = default;
 
   /**
    *  0-based index of the frame in the image sequence.
    */
-  int frameId() const { return fId; }
+  int frameId() const noexcept { return fId; }
 
   /**
    *  How this frame reports its alpha.
@@ -64,25 +65,25 @@ class SkFrame : public SkNoncopyable {
    *  Cached value representing whether the frame has alpha,
    *  after compositing with the prior frame.
    */
-  bool hasAlpha() const { return fHasAlpha; }
+  bool hasAlpha() const noexcept { return fHasAlpha; }
 
   /**
    *  Cache whether the finished frame has alpha.
    */
-  void setHasAlpha(bool alpha) { fHasAlpha = alpha; }
+  void setHasAlpha(bool alpha) noexcept { fHasAlpha = alpha; }
 
   /**
    *  Whether enough of the frame has been read to determine
    *  fRequiredFrame and fHasAlpha.
    */
-  bool reachedStartOfData() const { return fRequiredFrame != kUninitialized; }
+  bool reachedStartOfData() const noexcept { return fRequiredFrame != kUninitialized; }
 
   /**
    *  The frame this one depends on.
    *
    *  Must not be called until fRequiredFrame has been set properly.
    */
-  int getRequiredFrame() const {
+  int getRequiredFrame() const noexcept {
     SkASSERT(this->reachedStartOfData());
     return fRequiredFrame;
   }
@@ -90,42 +91,42 @@ class SkFrame : public SkNoncopyable {
   /**
    *  Set the frame that this frame depends on.
    */
-  void setRequiredFrame(int req) { fRequiredFrame = req; }
+  void setRequiredFrame(int req) noexcept { fRequiredFrame = req; }
 
   /**
    *  Set the rectangle that is updated by this frame.
    */
-  void setXYWH(int x, int y, int width, int height) { fRect.setXYWH(x, y, width, height); }
+  void setXYWH(int x, int y, int width, int height) noexcept { fRect.setXYWH(x, y, width, height); }
 
   /**
    *  The rectangle that is updated by this frame.
    */
-  SkIRect frameRect() const { return fRect; }
+  SkIRect frameRect() const noexcept { return fRect; }
 
-  int xOffset() const { return fRect.x(); }
-  int yOffset() const { return fRect.y(); }
-  int width() const { return fRect.width(); }
-  int height() const { return fRect.height(); }
+  int xOffset() const noexcept { return fRect.x(); }
+  int yOffset() const noexcept { return fRect.y(); }
+  int width() const noexcept { return fRect.width(); }
+  int height() const noexcept { return fRect.height(); }
 
-  SkCodecAnimation::DisposalMethod getDisposalMethod() const { return fDisposalMethod; }
+  SkCodecAnimation::DisposalMethod getDisposalMethod() const noexcept { return fDisposalMethod; }
 
-  void setDisposalMethod(SkCodecAnimation::DisposalMethod disposalMethod) {
+  void setDisposalMethod(SkCodecAnimation::DisposalMethod disposalMethod) noexcept {
     fDisposalMethod = disposalMethod;
   }
 
   /**
    * Set the duration (in ms) to show this frame.
    */
-  void setDuration(int duration) { fDuration = duration; }
+  void setDuration(int duration) noexcept { fDuration = duration; }
 
   /**
    *  Duration in ms to show this frame.
    */
-  int getDuration() const { return fDuration; }
+  int getDuration() const noexcept { return fDuration; }
 
-  void setBlend(SkCodecAnimation::Blend blend) { fBlend = blend; }
+  void setBlend(SkCodecAnimation::Blend blend) noexcept { fBlend = blend; }
 
-  SkCodecAnimation::Blend getBlend() const { return fBlend; }
+  SkCodecAnimation::Blend getBlend() const noexcept { return fBlend; }
 
  protected:
   virtual SkEncodedInfo::Alpha onReportedAlpha() const = 0;
@@ -148,16 +149,16 @@ class SkFrame : public SkNoncopyable {
  */
 class SkFrameHolder : public SkNoncopyable {
  public:
-  SkFrameHolder() : fScreenWidth(0), fScreenHeight(0) {}
+  constexpr SkFrameHolder() noexcept : fScreenWidth(0), fScreenHeight(0) {}
 
-  virtual ~SkFrameHolder() {}
+  virtual ~SkFrameHolder() = default;
 
   /**
    *  Size of the image. Each frame will be contained in
    *  these dimensions (possibly after clipping).
    */
-  int screenWidth() const { return fScreenWidth; }
-  int screenHeight() const { return fScreenHeight; }
+  int screenWidth() const noexcept { return fScreenWidth; }
+  int screenHeight() const noexcept { return fScreenHeight; }
 
   /**
    *  Compute the opacity and required frame, based on

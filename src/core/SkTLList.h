@@ -194,6 +194,11 @@ class SkTLList {
     static const IterStart kTail_IterStart = INHERITED::kTail_IterStart;
 
     Iter() {}
+    Iter(const Iter& that) : INHERITED(that) {}
+    Iter& operator=(const Iter& that) {
+      INHERITED::operator=(that);
+      return *this;
+    }
 
     Iter(const SkTLList& list, IterStart start = kHead_IterStart) {
       INHERITED::init(list.fList, start);
@@ -208,11 +213,6 @@ class SkTLList {
     T* next() { return this->nodeToObj(INHERITED::next()); }
 
     T* prev() { return this->nodeToObj(INHERITED::prev()); }
-
-    Iter& operator=(const Iter& iter) {
-      INHERITED::operator=(iter);
-      return *this;
-    }
 
    private:
     friend class SkTLList;

@@ -67,8 +67,8 @@ class GrSamplerState {
   constexpr bool operator!=(const GrSamplerState& that) const { return !(*this == that); }
 
   constexpr static uint8_t GenerateKey(GrSamplerState samplerState) {
-    const int kTileModeXShift = 2;
-    const int kTileModeYShift = 4;
+    constexpr int kTileModeXShift = 2;
+    constexpr int kTileModeYShift = 4;
 
     SkASSERT(static_cast<int>(samplerState.filter()) <= 3);
     uint8_t key = static_cast<uint8_t>(samplerState.filter());

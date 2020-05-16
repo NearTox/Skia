@@ -49,7 +49,9 @@ enum SkAlphaType {
     kOpaque_SkAlphaType, and SkColorType is not opaque, then the result of
     drawing any pixel with a alpha value less than 1.0 is undefined.
 */
-static inline bool SkAlphaTypeIsOpaque(SkAlphaType at) { return kOpaque_SkAlphaType == at; }
+static constexpr bool SkAlphaTypeIsOpaque(SkAlphaType at) noexcept {
+  return kOpaque_SkAlphaType == at;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -112,14 +114,14 @@ enum SkColorType {
 
     @return    bytes per pixel
 */
-SK_API int SkColorTypeBytesPerPixel(SkColorType ct);
+SK_API int SkColorTypeBytesPerPixel(SkColorType ct) noexcept;
 
 /** Returns true if SkColorType always decodes alpha to 1.0, making the pixel
     fully opaque. If true, SkColorType does not reserve bits to encode alpha.
 
     @return    true if alpha is always set to 1.0
 */
-SK_API bool SkColorTypeIsAlwaysOpaque(SkColorType ct);
+SK_API bool SkColorTypeIsAlwaysOpaque(SkColorType ct) noexcept;
 
 /** Returns true if canonical can be set to a valid SkAlphaType for colorType. If
     there is more than one valid canonical SkAlphaType, set to alphaType, if valid.
@@ -133,7 +135,7 @@ SK_API bool SkColorTypeIsAlwaysOpaque(SkColorType ct);
     @return           true if valid SkAlphaType can be associated with colorType
 */
 SK_API bool SkColorTypeValidateAlphaType(
-    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical = nullptr);
+    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical = nullptr) noexcept;
 
 /** \enum SkImageInfo::SkYUVColorSpace
     Describes color range of YUV pixels. The color mapping from YUV to RGB varies
@@ -172,7 +174,7 @@ class SK_API SkColorInfo {
 
       @return  empty SkImageInfo
   */
-  SkColorInfo() = default;
+  constexpr SkColorInfo() noexcept = default;
 
   /** Creates SkColorInfo from SkColorType ct, SkAlphaType at, and optionally SkColorSpace cs.
 
@@ -183,21 +185,23 @@ class SK_API SkColorInfo {
       combination is supported.
       @return        created SkColorInfo
   */
-  SkColorInfo(SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs)
+  SkColorInfo(SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs) noexcept
       : fColorSpace(std::move(cs)), fColorType(ct), fAlphaType(at) {}
 
   SkColorInfo(const SkColorInfo&) = default;
-  SkColorInfo(SkColorInfo&&) = default;
+  SkColorInfo(SkColorInfo&&) noexcept = default;
 
   SkColorInfo& operator=(const SkColorInfo&) = default;
-  SkColorInfo& operator=(SkColorInfo&&) = default;
+  SkColorInfo& operator=(SkColorInfo&&) noexcept = default;
 
-  SkColorSpace* colorSpace() const { return fColorSpace.get(); }
+  SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
   sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
-  SkColorType colorType() const { return fColorType; }
-  SkAlphaType alphaType() const { return fAlphaType; }
+  SkColorType colorType() const noexcept { return fColorType; }
+  SkAlphaType alphaType() const noexcept { return fAlphaType; }
 
-  bool isOpaque() const { return SkAlphaTypeIsOpaque(fAlphaType); }
+  bool isOpaque() const noexcept {
+    return SkAlphaTypeIsOpaque(fAlphaType) || SkColorTypeIsAlwaysOpaque(fColorType);
+  }
 
   bool gammaCloseToSRGB() const { return fColorSpace && fColorSpace->gammaCloseToSRGB(); }
 
@@ -230,7 +234,7 @@ class SK_API SkColorInfo {
   /** Creates SkColorInfo with same SkAlphaType, SkColorType, with SkColorSpace
       set to cs. cs may be nullptr.
   */
-  SkColorInfo makeColorSpace(sk_sp<SkColorSpace> cs) const {
+  SkColorInfo makeColorSpace(sk_sp<SkColorSpace> cs) const noexcept {
     return SkColorInfo(this->colorType(), this->alphaType(), std::move(cs));
   }
 
@@ -241,7 +245,7 @@ class SK_API SkColorInfo {
 
       example: https://fiddle.skia.org/c/@ImageInfo_bytesPerPixel
   */
-  int bytesPerPixel() const;
+  int bytesPerPixel() const noexcept;
 
   /** Returns bit shift converting row bytes to row pixels.
       Returns zero for kUnknown_SkColorType.
@@ -250,7 +254,7 @@ class SK_API SkColorInfo {
 
       example: https://fiddle.skia.org/c/@ImageInfo_shiftPerPixel
   */
-  int shiftPerPixel() const;
+  int shiftPerPixel() const noexcept;
 
  private:
   sk_sp<SkColorSpace> fColorSpace;
@@ -275,7 +279,7 @@ struct SK_API SkImageInfo {
 
       @return  empty SkImageInfo
   */
-  SkImageInfo() = default;
+  constexpr SkImageInfo() noexcept = default;
 
   /** Creates SkImageInfo from integral dimensions width and height, SkColorType ct,
       SkAlphaType at, and optionally SkColorSpace cs.
@@ -292,11 +296,13 @@ struct SK_API SkImageInfo {
       @return        created SkImageInfo
   */
   static SkImageInfo Make(
-      int width, int height, SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs = nullptr) {
+      int width, int height, SkColorType ct, SkAlphaType at,
+      sk_sp<SkColorSpace> cs = nullptr) noexcept {
     return SkImageInfo({width, height}, {ct, at, std::move(cs)});
   }
   static SkImageInfo Make(
-      SkISize dimensions, SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs = nullptr) {
+      SkISize dimensions, SkColorType ct, SkAlphaType at,
+      sk_sp<SkColorSpace> cs = nullptr) noexcept {
     return SkImageInfo(dimensions, {ct, at, std::move(cs)});
   }
 
@@ -313,7 +319,7 @@ struct SK_API SkImageInfo {
   static SkImageInfo Make(SkISize dimensions, const SkColorInfo& colorInfo) {
     return SkImageInfo(dimensions, colorInfo);
   }
-  static SkImageInfo Make(SkISize dimensions, SkColorInfo&& colorInfo) {
+  static SkImageInfo Make(SkISize dimensions, SkColorInfo&& colorInfo) noexcept {
     return SkImageInfo(dimensions, std::move(colorInfo));
   }
 
@@ -333,7 +339,7 @@ struct SK_API SkImageInfo {
       @return        created SkImageInfo
   */
   static SkImageInfo MakeN32(
-      int width, int height, SkAlphaType at, sk_sp<SkColorSpace> cs = nullptr) {
+      int width, int height, SkAlphaType at, sk_sp<SkColorSpace> cs = nullptr) noexcept {
     return Make({width, height}, kN32_SkColorType, at, std::move(cs));
   }
 
@@ -365,7 +371,8 @@ struct SK_API SkImageInfo {
       @param cs      range of colors; may be nullptr
       @return        created SkImageInfo
   */
-  static SkImageInfo MakeN32Premul(int width, int height, sk_sp<SkColorSpace> cs = nullptr) {
+  static SkImageInfo MakeN32Premul(
+      int width, int height, sk_sp<SkColorSpace> cs = nullptr) noexcept {
     return Make({width, height}, kN32_SkColorType, kPremul_SkAlphaType, std::move(cs));
   }
 
@@ -382,7 +389,7 @@ struct SK_API SkImageInfo {
       @param cs          range of colors; may be nullptr
       @return            created SkImageInfo
   */
-  static SkImageInfo MakeN32Premul(SkISize dimensions, sk_sp<SkColorSpace> cs = nullptr) {
+  static SkImageInfo MakeN32Premul(SkISize dimensions, sk_sp<SkColorSpace> cs = nullptr) noexcept {
     return Make(dimensions, kN32_SkColorType, kPremul_SkAlphaType, std::move(cs));
   }
 
@@ -393,7 +400,7 @@ struct SK_API SkImageInfo {
       @param height  pixel row count; must be zero or greater
       @return        created SkImageInfo
   */
-  static SkImageInfo MakeA8(int width, int height) {
+  static SkImageInfo MakeA8(int width, int height) noexcept {
     return Make({width, height}, kAlpha_8_SkColorType, kPremul_SkAlphaType, nullptr);
   }
   /** Creates SkImageInfo from integral dimensions, kAlpha_8_SkColorType,
@@ -402,7 +409,7 @@ struct SK_API SkImageInfo {
       @param dimensions   pixel row and column count; must be zero or greater
       @return             created SkImageInfo
   */
-  static SkImageInfo MakeA8(SkISize dimensions) {
+  static SkImageInfo MakeA8(SkISize dimensions) noexcept {
     return Make(dimensions, kAlpha_8_SkColorType, kPremul_SkAlphaType, nullptr);
   }
 
@@ -416,7 +423,7 @@ struct SK_API SkImageInfo {
       @param height  pixel row count; must be zero or greater
       @return        created SkImageInfo
   */
-  static SkImageInfo MakeUnknown(int width, int height) {
+  static SkImageInfo MakeUnknown(int width, int height) noexcept {
     return Make({width, height}, kUnknown_SkColorType, kUnknown_SkAlphaType, nullptr);
   }
 
@@ -428,30 +435,30 @@ struct SK_API SkImageInfo {
 
       @return  created SkImageInfo
   */
-  static SkImageInfo MakeUnknown() { return MakeUnknown(0, 0); }
+  static SkImageInfo MakeUnknown() noexcept { return MakeUnknown(0, 0); }
 
   /** Returns pixel count in each row.
 
       @return  pixel width
   */
-  int width() const { return fDimensions.width(); }
+  int width() const noexcept { return fDimensions.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height
   */
-  int height() const { return fDimensions.height(); }
+  int height() const noexcept { return fDimensions.height(); }
 
-  SkColorType colorType() const { return fColorInfo.colorType(); }
+  SkColorType colorType() const noexcept { return fColorInfo.colorType(); }
 
-  SkAlphaType alphaType() const { return fColorInfo.alphaType(); }
+  SkAlphaType alphaType() const noexcept { return fColorInfo.alphaType(); }
 
   /** Returns SkColorSpace, the range of colors. The reference count of
       SkColorSpace is unchanged. The returned SkColorSpace is immutable.
 
       @return  SkColorSpace, or nullptr
   */
-  SkColorSpace* colorSpace() const { return fColorInfo.colorSpace(); }
+  SkColorSpace* colorSpace() const noexcept { return fColorInfo.colorSpace(); }
 
   /** Returns smart pointer to SkColorSpace, the range of colors. The smart pointer
       tracks the number of objects sharing this SkColorSpace reference so the memory
@@ -468,12 +475,12 @@ struct SK_API SkImageInfo {
 
       @return  true if either dimension is zero or smaller
   */
-  bool isEmpty() const { return fDimensions.isEmpty(); }
+  bool isEmpty() const noexcept { return fDimensions.isEmpty(); }
 
   /** Returns the dimensionless SkColorInfo that represents the same color type,
       alpha type, and color space as this SkImageInfo.
    */
-  const SkColorInfo& colorInfo() const { return fColorInfo; }
+  const SkColorInfo& colorInfo() const noexcept { return fColorInfo; }
 
   /** Returns true if SkAlphaType is set to hint that all pixels are opaque; their
       alpha value is implicitly or explicitly 1.0. If true, and all pixels are
@@ -484,19 +491,19 @@ struct SK_API SkImageInfo {
 
       @return  true if SkAlphaType is kOpaque_SkAlphaType
   */
-  bool isOpaque() const { return fColorInfo.isOpaque(); }
+  bool isOpaque() const noexcept { return fColorInfo.isOpaque(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const { return fDimensions; }
+  SkISize dimensions() const noexcept { return fDimensions; }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return SkIRect::MakeSize(fDimensions); }
+  SkIRect bounds() const noexcept { return SkIRect::MakeSize(fDimensions); }
 
   /** Returns true if associated SkColorSpace is not nullptr, and SkColorSpace gamma
       is approximately the same as sRGB.
@@ -552,7 +559,7 @@ struct SK_API SkImageInfo {
       @param cs  range of colors; may be nullptr
       @return    created SkImageInfo
   */
-  SkImageInfo makeColorSpace(sk_sp<SkColorSpace> cs) const {
+  SkImageInfo makeColorSpace(sk_sp<SkColorSpace> cs) const noexcept {
     return Make(fDimensions, fColorInfo.makeColorSpace(std::move(cs)));
   }
 
@@ -561,14 +568,14 @@ struct SK_API SkImageInfo {
 
       @return  bytes in pixel
   */
-  int bytesPerPixel() const { return fColorInfo.bytesPerPixel(); }
+  int bytesPerPixel() const noexcept { return fColorInfo.bytesPerPixel(); }
 
   /** Returns bit shift converting row bytes to row pixels.
       Returns zero for kUnknown_SkColorType.
 
       @return  one of: 0, 1, 2, 3; left shift to convert pixels to bytes
   */
-  int shiftPerPixel() const { return fColorInfo.shiftPerPixel(); }
+  int shiftPerPixel() const noexcept { return fColorInfo.shiftPerPixel(); }
 
   /** Returns minimum bytes per row, computed from pixel width() and SkColorType, which
       specifies bytesPerPixel(). SkBitmap maximum value for row bytes must fit
@@ -576,7 +583,9 @@ struct SK_API SkImageInfo {
 
       @return  width() times bytesPerPixel() as unsigned 64-bit integer
   */
-  uint64_t minRowBytes64() const { return sk_64_mul(this->width(), this->bytesPerPixel()); }
+  uint64_t minRowBytes64() const noexcept {
+    return sk_64_mul(this->width(), this->bytesPerPixel());
+  }
 
   /** Returns minimum bytes per row, computed from pixel width() and SkColorType, which
       specifies bytesPerPixel(). SkBitmap maximum value for row bytes must fit
@@ -584,7 +593,7 @@ struct SK_API SkImageInfo {
 
       @return  width() times bytesPerPixel() as signed 32-bit integer
   */
-  size_t minRowBytes() const {
+  size_t minRowBytes() const noexcept {
     uint64_t minRowBytes = this->minRowBytes64();
     if (!SkTFitsIn<int32_t>(minRowBytes)) {
       return 0;
@@ -604,7 +613,7 @@ struct SK_API SkImageInfo {
 
       example: https://fiddle.skia.org/c/@ImageInfo_computeOffset
   */
-  size_t computeOffset(int x, int y, size_t rowBytes) const;
+  size_t computeOffset(int x, int y, size_t rowBytes) const noexcept;
 
   /** Compares SkImageInfo with other, and returns true if width, height, SkColorType,
       SkAlphaType, and SkColorSpace are equivalent.
@@ -635,7 +644,7 @@ struct SK_API SkImageInfo {
 
       example: https://fiddle.skia.org/c/@ImageInfo_computeByteSize
   */
-  size_t computeByteSize(size_t rowBytes) const;
+  size_t computeByteSize(size_t rowBytes) const noexcept;
 
   /** Returns storage required by pixel array, given SkImageInfo dimensions, and
       SkColorType. Uses minRowBytes() to compute bytes for pixel row.
@@ -645,7 +654,7 @@ struct SK_API SkImageInfo {
 
       @return  least memory required by pixel buffer
   */
-  size_t computeMinByteSize() const { return this->computeByteSize(this->minRowBytes()); }
+  size_t computeMinByteSize() const noexcept { return this->computeByteSize(this->minRowBytes()); }
 
   /** Returns true if byteSize equals SIZE_MAX. computeByteSize() and
       computeMinByteSize() return SIZE_MAX if size_t can not hold buffer size.
@@ -653,7 +662,9 @@ struct SK_API SkImageInfo {
       @param byteSize  result of computeByteSize() or computeMinByteSize()
       @return          true if computeByteSize() or computeMinByteSize() result exceeds size_t
   */
-  static bool ByteSizeOverflowed(size_t byteSize) { return SIZE_MAX == byteSize; }
+  static constexpr bool ByteSizeOverflowed(size_t byteSize) noexcept {
+    return SIZE_MAX == byteSize;
+  }
 
   /** Returns true if rowBytes is valid for this SkImageInfo.
 
@@ -661,7 +672,7 @@ struct SK_API SkImageInfo {
       @return          true if rowBytes is large enough to contain pixel row and is properly
                        aligned
   */
-  bool validRowBytes(size_t rowBytes) const {
+  bool validRowBytes(size_t rowBytes) const noexcept {
     if (rowBytes < this->minRowBytes64()) {
       return false;
     }
@@ -673,20 +684,21 @@ struct SK_API SkImageInfo {
   /** Creates an empty SkImageInfo with kUnknown_SkColorType, kUnknown_SkAlphaType,
       a width and height of zero, and no SkColorSpace.
   */
-  void reset() { *this = {}; }
+  void reset() noexcept { *this = {}; }
 
   /** Asserts if internal values are illegal or inconsistent. Only available if
       SK_DEBUG is defined at compile time.
   */
-  SkDEBUGCODE(void validate() const;)
+  SkDEBUGCODE(void validate() const);
 
-      private : SkColorInfo fColorInfo;
+ private:
+  SkColorInfo fColorInfo;
   SkISize fDimensions = {0, 0};
 
   SkImageInfo(SkISize dimensions, const SkColorInfo& colorInfo)
       : fColorInfo(colorInfo), fDimensions(dimensions) {}
 
-  SkImageInfo(SkISize dimensions, SkColorInfo&& colorInfo)
+  SkImageInfo(SkISize dimensions, SkColorInfo&& colorInfo) noexcept
       : fColorInfo(std::move(colorInfo)), fDimensions(dimensions) {}
 };
 

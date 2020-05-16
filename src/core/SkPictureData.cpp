@@ -30,7 +30,7 @@ int SafeCount(const T* obj) {
 
 SkPictureData::SkPictureData(const SkPictInfo& info) : fInfo(info) {}
 
-void SkPictureData::initForPlayback() const {
+void SkPictureData::initForPlayback() const noexcept {
   // ensure that the paths bounds are pre-computed
   for (int i = 0; i < fPaths.count(); i++) {
     fPaths[i].updateBoundsCache();

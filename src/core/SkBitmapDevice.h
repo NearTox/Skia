@@ -87,14 +87,9 @@ class SkBitmapDevice : public SkBaseDevice {
    *  path on the stack to hold the representation of the oval.
    */
   void drawPath(const SkPath&, const SkPaint&, bool pathIsMutable) override;
-  void drawSprite(const SkBitmap&, int x, int y, const SkPaint&) override;
 
-  /**
-   *  The default impl. will create a bitmap-shader from the bitmap,
-   *  and call drawRect with it.
-   */
-  void drawBitmapRect(
-      const SkBitmap&, const SkRect*, const SkRect&, const SkPaint&,
+  void drawImageRect(
+      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint&,
       SkCanvas::SrcRectConstraint) override;
 
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
@@ -135,8 +130,7 @@ class SkBitmapDevice : public SkBaseDevice {
   ClipType onGetClipType() const override;
   SkIRect onDevClipBounds() const override;
 
-  virtual void drawBitmap(
-      const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkPaint&);
+  void drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkPaint&);
 
  private:
   friend class SkCanvas;

@@ -96,7 +96,7 @@
                                                                                                                       M(swizzle)
 
 // The largest number of pixels we handle at a time.
-static const int SkRasterPipeline_kMaxStride = 16;
+static constexpr int SkRasterPipeline_kMaxStride = 16;
 
 // Structs representing the arguments to some common stages.
 
@@ -197,15 +197,15 @@ struct SkRasterPipeline_EmbossCtx {
 
 class SkRasterPipeline {
  public:
-  explicit SkRasterPipeline(SkArenaAlloc*);
+  explicit SkRasterPipeline(SkArenaAlloc*) noexcept;
 
   SkRasterPipeline(const SkRasterPipeline&) = delete;
-  SkRasterPipeline(SkRasterPipeline&&) = default;
+  SkRasterPipeline(SkRasterPipeline&&) noexcept = default;
 
   SkRasterPipeline& operator=(const SkRasterPipeline&) = delete;
-  SkRasterPipeline& operator=(SkRasterPipeline&&) = default;
+  SkRasterPipeline& operator=(SkRasterPipeline&&) noexcept = default;
 
-  void reset();
+  void reset() noexcept;
 
   enum StockStage {
 #define M(stage) stage,
@@ -254,7 +254,7 @@ class SkRasterPipeline {
 
   void append_transfer_function(const skcms_TransferFunction&);
 
-  bool empty() const { return fStages == nullptr; }
+  bool empty() const noexcept { return fStages == nullptr; }
 
  private:
   struct StageList {

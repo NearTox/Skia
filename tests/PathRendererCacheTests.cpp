@@ -16,7 +16,7 @@
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 #include "src/gpu/geometry/GrShape.h"
-#include "src/gpu/ops/GrTessellatingPathRenderer.h"
+#include "src/gpu/ops/GrTriangulatingPathRenderer.h"
 
 static SkPath create_concave_path() {
   SkPath path;
@@ -125,10 +125,10 @@ static void test_path(
 }
 
 // Test that deleting the original path invalidates the VBs cached by the tessellating path renderer
-DEF_GPUTEST(TessellatingPathRendererCacheTest, reporter, /* options */) {
-  auto createPR = [](GrContext*) { return new GrTessellatingPathRenderer(); };
+DEF_GPUTEST(TriangulatingPathRendererCacheTest, reporter, /* options */) {
+  auto createPR = [](GrContext*) { return new GrTriangulatingPathRenderer(); };
 
-  // Tessellating path renderer creates a single vertex buffer for non-AA paths. No other
+  // Triangulating path renderer creates a single vertex buffer for non-AA paths. No other
   // resources should be created.
   const int kExpectedResources = 1;
 

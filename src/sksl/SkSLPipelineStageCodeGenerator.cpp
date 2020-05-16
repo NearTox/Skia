@@ -128,9 +128,8 @@ void PipelineStageCodeGenerator::writeVariableReference(const VariableReference&
       this->write("%s");
       fArgs->fFormatArgs.push_back(Compiler::FormatArg(Compiler::FormatArg::Kind::kCoords));
       break;
-    default:
-      if (ref.fVariable.fModifiers.fFlags & Modifiers::kUniform_Flag) {
-        this->write("%s");
+    default: {
+      auto varIndexByFlag = [this, &ref](uint32_t flag) {
         int index = 0;
         bool found = false;
         for (const auto& e : fProgram) {
@@ -145,18 +144,27 @@ void PipelineStageCodeGenerator::writeVariableReference(const VariableReference&
                 found = true;
                 break;
               }
-              if (var.fModifiers.fFlags & Modifiers::kUniform_Flag) {
+              if (var.fModifiers.fFlags & flag) {
                 ++index;
               }
             }
           }
         }
         SkASSERT(found);
-        fArgs->fFormatArgs.push_back(
-            Compiler::FormatArg(Compiler::FormatArg::Kind::kUniform, index));
+        return index;
+      };
+
+      if (ref.fVariable.fModifiers.fFlags & Modifiers::kUniform_Flag) {
+        this->write("%s");
+        fArgs->fFormatArgs.push_back(Compiler::FormatArg(
+            Compiler::FormatArg::Kind::kUniform, varIndexByFlag(Modifiers::kUniform_Flag)));
+      } else if (ref.fVariable.fModifiers.fFlags & Modifiers::kVarying_Flag) {
+        this->write("_vtx_attr_");
+        this->write(to_string(varIndexByFlag(Modifiers::kVarying_Flag)));
       } else {
         this->write(ref.fVariable.fName);
       }
+    }
   }
 }
 
@@ -247,7 +255,8 @@ void PipelineStageCodeGenerator::writeProgramElement(const ProgramElement& p) {
       return;
     }
     const Variable& var = *((VarDeclaration&)*decls.fVars[0]).fVar;
-    if (var.fModifiers.fFlags & (Modifiers::kIn_Flag | Modifiers::kUniform_Flag) ||
+    if (var.fModifiers.fFlags &
+            (Modifiers::kIn_Flag | Modifiers::kUniform_Flag | Modifiers::kVarying_Flag) ||
         -1 != var.fModifiers.fLayout.fBuiltin) {
       return;
     }

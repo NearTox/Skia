@@ -34,7 +34,6 @@
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
     <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
     <ClCompile Include="skottie\src\effects\ShiftChannelsEffect.cpp" />
-    <ClCompile Include="skottie\src\Animator.cpp" />
     <ClCompile Include="skottie\src\Camera.cpp" />
     <ClCompile Include="skottie\src\Transform.cpp" />
     <ClCompile Include="skottie\src\effects\InvertEffect.cpp" />
@@ -50,5 +49,11 @@
     <ClCompile Include="skottie\src\layers\shapelayer\TrimPaths.cpp" />
     <ClCompile Include="skresources\src\SkResources.cpp" />
     <ClCompile Include="skottie\src\Path.cpp" />
+    <ClCompile Include="skottie\src\animator\Animator.cpp" />
+    <ClCompile Include="skottie\src\animator\Keyframe.cpp" />
+    <ClCompile Include="skottie\src\animator\Scalar.cpp" />
+    <ClCompile Include="skottie\src\animator\Shape.cpp" />
+    <ClCompile Include="skottie\src\animator\Vec2.cpp" />
+    <ClCompile Include="skottie\src\animator\Vector.cpp" />
   </ItemGroup>
 </Project>

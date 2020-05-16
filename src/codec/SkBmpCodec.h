@@ -75,7 +75,7 @@ class SkBmpCodec : public SkCodec {
    * Accessors used by subclasses
    */
   uint16_t bitsPerPixel() const { return fBitsPerPixel; }
-  SkScanlineOrder onGetScanlineOrder() const override { return fRowOrder; }
+  SkScanlineOrder onGetScanlineOrder() const noexcept override { return fRowOrder; }
   size_t srcRowBytes() const { return fSrcRowBytes; }
 
   /*

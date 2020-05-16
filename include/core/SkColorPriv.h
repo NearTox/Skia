@@ -18,7 +18,7 @@
 
     In debugging, asserts that alpha is 0..255
 */
-static inline unsigned SkAlpha255To256(U8CPU alpha) {
+static constexpr unsigned SkAlpha255To256(U8CPU alpha) noexcept {
   SkASSERT(SkToU8(alpha) == alpha);
   // this one assues that blending on top of an opaque dst keeps it that way
   // even though it is less accurate than a+(a>>7) for non-opaque dsts
@@ -30,7 +30,7 @@ static inline unsigned SkAlpha255To256(U8CPU alpha) {
  */
 #define SkAlphaMul(value, alpha256) (((value) * (alpha256)) >> 8)
 
-static inline U8CPU SkUnitScalarClampToByte(SkScalar x) {
+static constexpr U8CPU SkUnitScalarClampToByte(SkScalar x) noexcept {
   return static_cast<U8CPU>(SkTPin(x, 0.0f, 1.0f) * 255 + 0.5);
 }
 
@@ -98,7 +98,7 @@ static inline U8CPU SkUnitScalarClampToByte(SkScalar x) {
  *  Pack the components into a SkPMColor, checking (in the debug version) that
  *  the components are 0..255, and are already premultiplied (i.e. alpha >= color)
  */
-static inline SkPMColor SkPackARGB32(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+static constexpr SkPMColor SkPackARGB32(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   SkA32Assert(a);
   SkASSERT(r <= a);
   SkASSERT(g <= a);
@@ -111,11 +111,11 @@ static inline SkPMColor SkPackARGB32(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
  *  Same as SkPackARGB32, but this version guarantees to not check that the
  *  values are premultiplied in the debug version.
  */
-static inline SkPMColor SkPackARGB32NoCheck(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+static constexpr SkPMColor SkPackARGB32NoCheck(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   return (a << SK_A32_SHIFT) | (r << SK_R32_SHIFT) | (g << SK_G32_SHIFT) | (b << SK_B32_SHIFT);
 }
 
-static inline SkPMColor SkPremultiplyARGBInline(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+static inline SkPMColor SkPremultiplyARGBInline(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   SkA32Assert(a);
   SkR32Assert(r);
   SkG32Assert(g);
@@ -131,15 +131,15 @@ static inline SkPMColor SkPremultiplyARGBInline(U8CPU a, U8CPU r, U8CPU g, U8CPU
 
 // When Android is compiled optimizing for size, SkAlphaMulQ doesn't get
 // inlined; forcing inlining significantly improves performance.
-static SK_ALWAYS_INLINE uint32_t SkAlphaMulQ(uint32_t c, unsigned scale) {
-  uint32_t mask = 0xFF00FF;
+static constexpr SK_ALWAYS_INLINE uint32_t SkAlphaMulQ(uint32_t c, unsigned scale) noexcept {
+  constexpr uint32_t mask = 0xFF00FF;
 
   uint32_t rb = ((c & mask) * scale) >> 8;
   uint32_t ag = ((c >> 8) & mask) * scale;
   return (rb & mask) | (ag & ~mask);
 }
 
-static inline SkPMColor SkPMSrcOver(SkPMColor src, SkPMColor dst) {
+static constexpr SkPMColor SkPMSrcOver(SkPMColor src, SkPMColor dst) noexcept {
   return src + SkAlphaMulQ(dst, SkAlpha255To256(255 - SkGetPackedA32(src)));
 }
 

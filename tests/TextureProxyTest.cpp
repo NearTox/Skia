@@ -34,10 +34,9 @@ static sk_sp<GrTextureProxy> deferred_tex(
   const GrCaps* caps = ctx->priv().caps();
 
   GrBackendFormat format = caps->getDefaultBackendFormat(kColorType, GrRenderable::kNo);
-  GrSwizzle swizzle = caps->getReadSwizzle(format, kColorType);
 
   sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
-      format, kSize, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, fit, SkBudgeted::kYes,
+      format, kSize, GrRenderable::kNo, 1, GrMipMapped::kNo, fit, SkBudgeted::kYes,
       GrProtected::kNo);
   // Only budgeted & wrapped external proxies get to carry uniqueKeys
   REPORTER_ASSERT(reporter, !proxy->getUniqueKey().isValid());
@@ -50,10 +49,9 @@ static sk_sp<GrTextureProxy> deferred_texRT(
   const GrCaps* caps = ctx->priv().caps();
 
   GrBackendFormat format = caps->getDefaultBackendFormat(kColorType, GrRenderable::kYes);
-  GrSwizzle swizzle = caps->getReadSwizzle(format, kColorType);
 
   sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
-      format, kSize, swizzle, GrRenderable::kYes, 1, GrMipMapped::kNo, fit, SkBudgeted::kYes,
+      format, kSize, GrRenderable::kYes, 1, GrMipMapped::kNo, fit, SkBudgeted::kYes,
       GrProtected::kNo);
   // Only budgeted & wrapped external proxies get to carry uniqueKeys
   REPORTER_ASSERT(reporter, !proxy->getUniqueKey().isValid());
@@ -107,8 +105,7 @@ static sk_sp<GrTextureProxy> create_wrapped_backend(
   GrBackendTexture backendTex = (*backingSurface)->getBackendTexture();
 
   return proxyProvider->wrapBackendTexture(
-      backendTex, GrColorType::kRGBA_8888, kBorrow_GrWrapOwnership, GrWrapCacheable::kYes,
-      kRead_GrIOType);
+      backendTex, kBorrow_GrWrapOwnership, GrWrapCacheable::kYes, kRead_GrIOType);
 }
 
 // This tests the basic capabilities of the uniquely keyed texture proxies. Does assigning
@@ -142,7 +139,7 @@ static void basic_test(
   REPORTER_ASSERT(reporter, key == proxy->getUniqueKey());
 
   // We just added it, surely we can find it
-  REPORTER_ASSERT(reporter, proxyProvider->findOrCreateProxyByUniqueKey(key, kColorType));
+  REPORTER_ASSERT(reporter, proxyProvider->findOrCreateProxyByUniqueKey(key));
   REPORTER_ASSERT(reporter, 1 == proxyProvider->numUniqueKeyProxies_TestOnly());
 
   int expectedCacheCount = startCacheCount + (proxy->isInstantiated() ? 0 : 1);
@@ -172,7 +169,7 @@ static void basic_test(
   REPORTER_ASSERT(reporter, expectedCacheCount == cache->getResourceCount());
 
   // If the proxy was cached refinding it should bring it back to life
-  proxy = proxyProvider->findOrCreateProxyByUniqueKey(key, kColorType);
+  proxy = proxyProvider->findOrCreateProxyByUniqueKey(key);
   REPORTER_ASSERT(reporter, proxy);
   REPORTER_ASSERT(reporter, 1 == proxyProvider->numUniqueKeyProxies_TestOnly());
   REPORTER_ASSERT(reporter, expectedCacheCount == cache->getResourceCount());
@@ -187,7 +184,7 @@ static void basic_test(
 
   // If the texture was deleted then the proxy should no longer be findable. Otherwise, it should
   // be.
-  proxy = proxyProvider->findOrCreateProxyByUniqueKey(key, kColorType);
+  proxy = proxyProvider->findOrCreateProxyByUniqueKey(key);
   REPORTER_ASSERT(reporter, expectResourceToOutliveProxy ? (bool)proxy : !proxy);
   REPORTER_ASSERT(reporter, expectedCacheCount == cache->getResourceCount());
 
@@ -197,7 +194,7 @@ static void basic_test(
     SkMessageBus<GrUniqueKeyInvalidatedMessage>::Post(msg);
     cache->purgeAsNeeded();
     expectedCacheCount--;
-    proxy = proxyProvider->findOrCreateProxyByUniqueKey(key, kColorType);
+    proxy = proxyProvider->findOrCreateProxyByUniqueKey(key);
     REPORTER_ASSERT(reporter, !proxy);
     REPORTER_ASSERT(reporter, expectedCacheCount == cache->getResourceCount());
   }
@@ -226,7 +223,7 @@ static void invalidation_test(GrContext* context, skiatest::Reporter* reporter) 
   }
 
   sk_sp<SkImage> textureImg = rasterImg->makeTextureImage(context);
-  REPORTER_ASSERT(reporter, 1 == proxyProvider->numUniqueKeyProxies_TestOnly());
+  REPORTER_ASSERT(reporter, 0 == proxyProvider->numUniqueKeyProxies_TestOnly());
   REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
 
   rasterImg = nullptr;  // this invalidates the uniqueKey

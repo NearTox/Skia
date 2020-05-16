@@ -15,7 +15,6 @@
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
-#include "src/gpu/glsl/GrGLSLUtil.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
@@ -439,9 +438,7 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
 
     if (dfpgp.matrix().hasPerspective() && !SkMatrixPriv::CheapEqual(fMatrix, dfpgp.matrix())) {
       fMatrix = dfpgp.matrix();
-      float matrix[3 * 3];
-      GrGLSLGetMatrix<3>(matrix, fMatrix);
-      pdman.setMatrix3f(fMatrixUniform, matrix);
+      pdman.setSkMatrix(fMatrixUniform, fMatrix);
     }
 
     const SkISize& atlasDimensions = dfpgp.atlasDimensions();

@@ -67,7 +67,7 @@ class SK_API SkDrawable : public SkFlattenable {
 
   class GpuDrawHandler {
    public:
-    virtual ~GpuDrawHandler() {}
+    virtual ~GpuDrawHandler() = default;
 
     virtual void draw(const GrBackendDrawableInfo&) {}
   };
@@ -109,9 +109,9 @@ class SK_API SkDrawable : public SkFlattenable {
    */
   void notifyDrawingChanged();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkDrawable_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawable_Type; }
 
-  SkFlattenable::Type getFlattenableType() const override { return kSkDrawable_Type; }
+  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkDrawable_Type; }
 
   static sk_sp<SkDrawable> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {

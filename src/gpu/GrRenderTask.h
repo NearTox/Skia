@@ -42,7 +42,7 @@ class GrRenderTask : public SkRefCnt {
   // https://bugs.chromium.org/p/skia/issues/detail?id=7111
   virtual void endFlush() {}
 
-  bool isClosed() const { return this->isSetFlag(kClosed_Flag); }
+  bool isClosed() const noexcept { return this->isSetFlag(kClosed_Flag); }
 
   /*
    * Notify this GrRenderTask that it relies on the contents of 'dependedOn'
@@ -61,7 +61,7 @@ class GrRenderTask : public SkRefCnt {
    */
   bool dependsOn(const GrRenderTask* dependedOn) const;
 
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /*
    * Safely cast this GrRenderTask to a GrOpsTask (if possible).
@@ -133,8 +133,9 @@ class GrRenderTask : public SkRefCnt {
 
   void addDependency(GrRenderTask* dependedOn);
   void addDependent(GrRenderTask* dependent);
-  SkDEBUGCODE(bool isDependedent(const GrRenderTask* dependent) const;)
-      SkDEBUGCODE(void validate() const;) void closeThoseWhoDependOnMe(const GrCaps&);
+  SkDEBUGCODE(bool isDependedent(const GrRenderTask* dependent) const);
+  SkDEBUGCODE(void validate() const);
+  void closeThoseWhoDependOnMe(const GrCaps&);
 
   // Feed proxy usage intervals to the GrResourceAllocator class
   virtual void gatherProxyIntervals(GrResourceAllocator*) const = 0;
@@ -148,28 +149,32 @@ class GrRenderTask : public SkRefCnt {
     kTempMark_Flag = 0x04,   //!< Flag for topological sorting
   };
 
-  void setFlag(uint32_t flag) { fFlags |= flag; }
+  void setFlag(uint32_t flag) noexcept { fFlags |= flag; }
 
-  void resetFlag(uint32_t flag) { fFlags &= ~flag; }
+  void resetFlag(uint32_t flag) noexcept { fFlags &= ~flag; }
 
-  bool isSetFlag(uint32_t flag) const { return SkToBool(fFlags & flag); }
+  bool isSetFlag(uint32_t flag) const noexcept { return SkToBool(fFlags & flag); }
 
   struct TopoSortTraits {
-    static void Output(GrRenderTask* renderTask, int /* index */) {
+    static void Output(GrRenderTask* renderTask, int /* index */) noexcept {
       renderTask->setFlag(kWasOutput_Flag);
     }
-    static bool WasOutput(const GrRenderTask* renderTask) {
+    static bool WasOutput(const GrRenderTask* renderTask) noexcept {
       return renderTask->isSetFlag(kWasOutput_Flag);
     }
-    static void SetTempMark(GrRenderTask* renderTask) { renderTask->setFlag(kTempMark_Flag); }
-    static void ResetTempMark(GrRenderTask* renderTask) { renderTask->resetFlag(kTempMark_Flag); }
-    static bool IsTempMarked(const GrRenderTask* renderTask) {
+    static void SetTempMark(GrRenderTask* renderTask) noexcept {
+      renderTask->setFlag(kTempMark_Flag);
+    }
+    static void ResetTempMark(GrRenderTask* renderTask) noexcept {
+      renderTask->resetFlag(kTempMark_Flag);
+    }
+    static bool IsTempMarked(const GrRenderTask* renderTask) noexcept {
       return renderTask->isSetFlag(kTempMark_Flag);
     }
-    static int NumDependencies(const GrRenderTask* renderTask) {
+    static int NumDependencies(const GrRenderTask* renderTask) noexcept {
       return renderTask->fDependencies.count();
     }
-    static GrRenderTask* Dependency(GrRenderTask* renderTask, int index) {
+    static GrRenderTask* Dependency(GrRenderTask* renderTask, int index) noexcept {
       return renderTask->fDependencies[index];
     }
   };

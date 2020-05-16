@@ -20,8 +20,8 @@ class GrTextureProxyPriv;
 // This class delays the acquisition of textures until they are actually required
 class GrTextureProxy : virtual public GrSurfaceProxy {
  public:
-  GrTextureProxy* asTextureProxy() override { return this; }
-  const GrTextureProxy* asTextureProxy() const override { return this; }
+  GrTextureProxy* asTextureProxy() noexcept override { return this; }
+  const GrTextureProxy* asTextureProxy() const noexcept override { return this; }
 
   // Actually instantiate the backing texture, if necessary
   bool instantiate(GrResourceProvider*) override;
@@ -33,28 +33,28 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // generation later.
   GrMipMapped mipMapped() const;
 
-  bool mipMapsAreDirty() const {
+  bool mipMapsAreDirty() const noexcept {
     SkASSERT(
         (GrMipMapped::kNo == fMipMapped) == (GrMipMapsStatus::kNotAllocated == fMipMapsStatus));
     return GrMipMapped::kYes == fMipMapped && GrMipMapsStatus::kValid != fMipMapsStatus;
   }
-  void markMipMapsDirty() {
+  void markMipMapsDirty() noexcept {
     SkASSERT(GrMipMapped::kYes == fMipMapped);
     fMipMapsStatus = GrMipMapsStatus::kDirty;
   }
-  void markMipMapsClean() {
+  void markMipMapsClean() noexcept {
     SkASSERT(GrMipMapped::kYes == fMipMapped);
     fMipMapsStatus = GrMipMapsStatus::kValid;
   }
 
   // Returns the GrMipMapped value of the proxy from creation time regardless of whether it has
   // been instantiated or not.
-  GrMipMapped proxyMipMapped() const { return fMipMapped; }
+  GrMipMapped proxyMipMapped() const noexcept { return fMipMapped; }
 
-  GrTextureType textureType() const { return this->backendFormat().textureType(); }
+  GrTextureType textureType() const noexcept { return this->backendFormat().textureType(); }
 
   /** If true then the texture does not support MIP maps and only supports clamp wrap mode. */
-  bool hasRestrictedSampling() const {
+  bool hasRestrictedSampling() const noexcept {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
 
@@ -71,7 +71,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   /**
    * Return the texture proxy's unique key. It will be invalid if the proxy doesn't have one.
    */
-  const GrUniqueKey& getUniqueKey() const {
+  const GrUniqueKey& getUniqueKey() const noexcept {
 #ifdef SK_DEBUG
     if (this->isInstantiated() && fUniqueKey.isValid() && fSyncTargetKey) {
       GrSurface* surface = this->peekSurface();
@@ -93,8 +93,8 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
    * Internal-only helper class used for manipulations of the resource by the cache.
    */
   class CacheAccess;
-  inline CacheAccess cacheAccess();
-  inline const CacheAccess cacheAccess() const;
+  inline CacheAccess cacheAccess() noexcept;
+  inline const CacheAccess cacheAccess() const noexcept;
 
   // Provides access to special purpose functions.
   GrTextureProxyPriv texPriv();
@@ -109,9 +109,8 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   // Deferred version - no data.
   GrTextureProxy(
-      const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus,
-      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator);
+      const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus, SkBackingFit, SkBudgeted,
+      GrProtected, GrInternalSurfaceFlags, UseAllocator);
 
   // Lazy-callback version
   // There are two main use cases for lazily-instantiated proxies:
@@ -125,17 +124,16 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // know the final size until flush time.
   GrTextureProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus,
-      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator);
+      SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator);
 
   // Wrapped version
-  GrTextureProxy(sk_sp<GrSurface>, const GrSwizzle&, UseAllocator);
+  GrTextureProxy(sk_sp<GrSurface>, UseAllocator);
 
   ~GrTextureProxy() override;
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
-  void setTargetKeySync(bool sync) { fSyncTargetKey = sync; }
+  void setTargetKeySync(bool sync) noexcept { fSyncTargetKey = sync; }
 
  private:
   // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings

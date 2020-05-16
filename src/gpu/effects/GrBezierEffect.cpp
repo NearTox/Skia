@@ -11,7 +11,6 @@
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
-#include "src/gpu/glsl/GrGLSLUtil.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
@@ -31,9 +30,7 @@ class GrGLConicEffect : public GrGLSLGeometryProcessor {
 
     if (!ce.viewMatrix().isIdentity() && !SkMatrixPriv::CheapEqual(fViewMatrix, ce.viewMatrix())) {
       fViewMatrix = ce.viewMatrix();
-      float viewMatrix[3 * 3];
-      GrGLSLGetMatrix<3>(viewMatrix, fViewMatrix);
-      pdman.setMatrix3f(fViewMatrixUniform, viewMatrix);
+      pdman.setSkMatrix(fViewMatrixUniform, fViewMatrix);
     }
 
     if (ce.color() != fColor) {
@@ -257,9 +254,7 @@ class GrGLQuadEffect : public GrGLSLGeometryProcessor {
 
     if (!qe.viewMatrix().isIdentity() && !SkMatrixPriv::CheapEqual(fViewMatrix, qe.viewMatrix())) {
       fViewMatrix = qe.viewMatrix();
-      float viewMatrix[3 * 3];
-      GrGLSLGetMatrix<3>(viewMatrix, fViewMatrix);
-      pdman.setMatrix3f(fViewMatrixUniform, viewMatrix);
+      pdman.setSkMatrix(fViewMatrixUniform, fViewMatrix);
     }
 
     if (qe.color() != fColor) {

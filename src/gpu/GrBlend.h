@@ -43,7 +43,7 @@ enum GrBlendEquation {
   kLast_GrBlendEquation = kIllegal_GrBlendEquation,
 };
 
-static const int kGrBlendEquationCnt = kLast_GrBlendEquation + 1;
+static constexpr int kGrBlendEquationCnt = kLast_GrBlendEquation + 1;
 
 /**
  * Coefficients for alpha-blending.
@@ -61,8 +61,6 @@ enum GrBlendCoeff {
   kIDA_GrBlendCoeff,      //<! one minus dst alpha
   kConstC_GrBlendCoeff,   //<! constant color
   kIConstC_GrBlendCoeff,  //<! one minus constant color
-  kConstA_GrBlendCoeff,   //<! constant color alpha
-  kIConstA_GrBlendCoeff,  //<! one minus constant color alpha
   kS2C_GrBlendCoeff,
   kIS2C_GrBlendCoeff,
   kS2A_GrBlendCoeff,
@@ -73,7 +71,7 @@ enum GrBlendCoeff {
   kLast_GrBlendCoeff = kIllegal_GrBlendCoeff,
 };
 
-static const int kGrBlendCoeffCnt = kLast_GrBlendCoeff + 1;
+static constexpr int kGrBlendCoeffCnt = kLast_GrBlendCoeff + 1;
 
 static constexpr bool GrBlendCoeffRefsSrc(const GrBlendCoeff coeff) {
   return kSC_GrBlendCoeff == coeff || kISC_GrBlendCoeff == coeff || kSA_GrBlendCoeff == coeff ||
@@ -106,6 +104,16 @@ static constexpr bool GrBlendModifiesDst(
     GrBlendEquation equation, GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) {
   return (kAdd_GrBlendEquation != equation && kReverseSubtract_GrBlendEquation != equation) ||
          kZero_GrBlendCoeff != srcCoeff || kOne_GrBlendCoeff != dstCoeff;
+}
+
+static constexpr bool GrBlendCoeffRefsConstant(const GrBlendCoeff coeff) {
+  return coeff == kConstC_GrBlendCoeff || coeff == kIConstC_GrBlendCoeff;
+}
+
+static constexpr bool GrBlendShouldDisable(
+    GrBlendEquation equation, GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) {
+  return (kAdd_GrBlendEquation == equation || kSubtract_GrBlendEquation == equation) &&
+         kOne_GrBlendCoeff == srcCoeff && kZero_GrBlendCoeff == dstCoeff;
 }
 
 /**

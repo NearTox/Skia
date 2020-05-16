@@ -142,7 +142,7 @@ class PongView final : public Sample {
         SkRect::MakeWH(1, 1), SkRect::MakeIWH(this->width(), this->height()),
         SkMatrix::kFill_ScaleToFit));
     auto root = sksg::TransformEffect::Make(std::move(group), fContentMatrix);
-    fScene = sksg::Scene::Make(std::move(root), sksg::AnimatorList());
+    fScene = sksg::Scene::Make(std::move(root));
 
     // Off we go.
     this->updatePaddleStrategy();
@@ -172,7 +172,6 @@ class PongView final : public Sample {
 
   void onDrawContent(SkCanvas* canvas) override {
     sksg::InvalidationController ic;
-    fScene->animate(0, &ic);
     fScene->render(canvas);
 
     if (fShowInval) {

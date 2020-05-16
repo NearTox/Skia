@@ -210,8 +210,7 @@ static GrSurfaceProxyView create_profile_texture(
   builder.finish();
 
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
-  if (sk_sp<GrTextureProxy> blurProfile =
-          proxyProvider->findOrCreateProxyByUniqueKey(key, GrColorType::kAlpha_8)) {
+  if (sk_sp<GrTextureProxy> blurProfile = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
     GrSwizzle swizzle =
         context->priv().caps()->getReadSwizzle(blurProfile->backendFormat(), GrColorType::kAlpha_8);
     return {std::move(blurProfile), kTopLeft_GrSurfaceOrigin, swizzle};
@@ -234,7 +233,7 @@ static GrSurfaceProxyView create_profile_texture(
 
   bm.setImmutable();
 
-  GrBitmapTextureMaker maker(context, bm);
+  GrBitmapTextureMaker maker(context, bm, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
   auto blurView = maker.view(GrMipMapped::kNo);
   if (!blurView) {
     return {};

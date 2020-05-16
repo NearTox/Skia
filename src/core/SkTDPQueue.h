@@ -32,18 +32,18 @@ class SkTDPQueue {
   SkTDPQueue() {}
   SkTDPQueue(int reserve) { fArray.setReserve(reserve); }
 
-  SkTDPQueue(SkTDPQueue&&) = default;
-  SkTDPQueue& operator=(SkTDPQueue&&) = default;
+  SkTDPQueue(SkTDPQueue&&) noexcept = default;
+  SkTDPQueue& operator=(SkTDPQueue&&) noexcept = default;
 
   SkTDPQueue(const SkTDPQueue&) = delete;
   SkTDPQueue& operator=(const SkTDPQueue&) = delete;
 
   /** Number of items in the queue. */
-  int count() const { return fArray.count(); }
+  int count() const noexcept { return fArray.count(); }
 
   /** Gets the next item in the queue without popping it. */
   const T& peek() const { return fArray[0]; }
-  T& peek() { return fArray[0]; }
+  T& peek() noexcept { return fArray[0]; }
 
   /** Removes the next item. */
   void pop() {
@@ -77,7 +77,8 @@ class SkTDPQueue {
     int index = *INDEX(entry);
     SkASSERT(index >= 0 && index < fArray.count());
     this->validate();
-    SkDEBUGCODE(*INDEX(fArray[index]) = -1;) if (index == fArray.count() - 1) {
+    SkDEBUGCODE(*INDEX(fArray[index]) = -1);
+    if (index == fArray.count() - 1) {
       fArray.pop();
       return;
     }
@@ -102,7 +103,7 @@ class SkTDPQueue {
 
   /** Gets the item at index i in the priority queue (for i < this->count()). at(0) is equivalent
       to peek(). Otherwise, there is no guarantee about ordering of elements in the queue. */
-  T at(int i) const { return fArray[i]; }
+  T at(int i) const noexcept { return fArray[i]; }
 
   /** Sorts the queue into priority order.  The queue is only guarenteed to remain in sorted order
    *  until any other operation, other than at(), is performed.
@@ -118,11 +119,11 @@ class SkTDPQueue {
   }
 
  private:
-  static int LeftOf(int x) {
+  static int LeftOf(int x) noexcept {
     SkASSERT(x >= 0);
     return 2 * x + 1;
   }
-  static int ParentOf(int x) {
+  static int ParentOf(int x) noexcept {
     SkASSERT(x > 0);
     return (x - 1) >> 1;
   }
@@ -205,7 +206,7 @@ class SkTDPQueue {
     }
   }
 
-  void validate(int excludedIndex = -1) const {
+  void validate(int excludedIndex = -1) const noexcept {
 #ifdef SK_DEBUG
     for (int i = 1; i < fArray.count(); ++i) {
       int p = ParentOf(i);

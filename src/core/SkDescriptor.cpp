@@ -24,7 +24,7 @@ void* SkDescriptor::operator new(size_t) {
   SK_ABORT("Descriptors are created with placement new.");
 }
 
-void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) {
+void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) noexcept {
   SkASSERT(tag);
   SkASSERT(SkAlign4(length) == length);
   SkASSERT(this->findEntry(tag, nullptr) == nullptr);
@@ -43,7 +43,7 @@ void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) {
 
 void SkDescriptor::computeChecksum() { fChecksum = SkDescriptor::ComputeChecksum(this); }
 
-const void* SkDescriptor::findEntry(uint32_t tag, uint32_t* length) const {
+const void* SkDescriptor::findEntry(uint32_t tag, uint32_t* length) const noexcept {
   const Entry* entry = (const Entry*)(this + 1);
   int count = fCount;
 
@@ -65,7 +65,7 @@ std::unique_ptr<SkDescriptor> SkDescriptor::copy() const {
   return desc;
 }
 
-bool SkDescriptor::operator==(const SkDescriptor& other) const {
+bool SkDescriptor::operator==(const SkDescriptor& other) const noexcept {
   // the first value we should look at is the checksum, so this loop
   // should terminate early if they descriptors are different.
   // NOTE: if we wrote a sentinel value at the end of each, we could
@@ -85,7 +85,7 @@ uint32_t SkDescriptor::ComputeChecksum(const SkDescriptor* desc) {
   return SkOpts::hash(ptr, len);
 }
 
-bool SkDescriptor::isValid() const {
+bool SkDescriptor::isValid() const noexcept {
   uint32_t count = fCount;
   size_t lengthRemaining = this->fLength;
   if (lengthRemaining < sizeof(SkDescriptor)) {
@@ -118,7 +118,7 @@ bool SkDescriptor::isValid() const {
   return lengthRemaining == 0 && count == 0;
 }
 
-SkAutoDescriptor::SkAutoDescriptor() = default;
+SkAutoDescriptor::SkAutoDescriptor() noexcept = default;
 SkAutoDescriptor::SkAutoDescriptor(size_t size) { this->reset(size); }
 SkAutoDescriptor::SkAutoDescriptor(const SkDescriptor& desc) { this->reset(desc); }
 SkAutoDescriptor::SkAutoDescriptor(const SkAutoDescriptor& ad) { this->reset(*ad.getDesc()); }
@@ -144,7 +144,7 @@ void SkAutoDescriptor::reset(const SkDescriptor& desc) {
   memcpy(fDesc, &desc, size);
 }
 
-void SkAutoDescriptor::free() {
+void SkAutoDescriptor::free() noexcept {
   if (fDesc != (SkDescriptor*)&fStorage) {
     delete fDesc;
   }

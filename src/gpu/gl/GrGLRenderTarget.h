@@ -37,9 +37,9 @@ class GrGLRenderTarget : public GrRenderTarget {
   // The following two functions return the same ID when a texture/render target is not
   // multisampled, and different IDs when it is multisampled.
   // FBO ID used to render into
-  GrGLuint renderFBOID() const { return fRTFBOID; }
+  GrGLuint renderFBOID() const noexcept { return fRTFBOID; }
   // FBO ID that has texture ID attached.
-  GrGLuint textureFBOID() const { return fTexFBOID; }
+  GrGLuint textureFBOID() const noexcept { return fTexFBOID; }
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
 
@@ -51,7 +51,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   // components seperately.
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
-  GrGLFormat format() const { return fRTFormat; }
+  GrGLFormat format() const noexcept { return fRTFormat; }
 
  protected:
   // Constructor for subclasses.
@@ -62,7 +62,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   void onAbandon() override;
   void onRelease() override;
 
-  int numSamplesOwnedPerPixel() const { return fNumSamplesOwnedPerPixel; }
+  int numSamplesOwnedPerPixel() const noexcept { return fNumSamplesOwnedPerPixel; }
 
  private:
   // Constructor for instances wrapping backend objects.

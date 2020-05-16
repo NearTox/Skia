@@ -104,8 +104,8 @@ class SkFontRequestCache {
   struct Result : public SkResourceCache::Rec {
     Result(Request* request, sk_sp<SkTypeface> typeface)
         : fRequest(request), fFace(std::move(typeface)) {}
-    Result(Result&&) = default;
-    Result& operator=(Result&&) = default;
+    Result(Result&&) noexcept = default;
+    Result& operator=(Result&&) noexcept = default;
 
     const Key& getKey() const override { return *fRequest; }
     size_t bytesUsed() const override { return fRequest->size() + sizeof(fFace); }

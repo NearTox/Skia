@@ -11,6 +11,7 @@
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkImageInfo.h"
 #include "include/private/SkImageInfoPriv.h"
+#include "src/core/SkVM_fwd.h"
 
 class SkRasterPipeline;
 
@@ -22,7 +23,7 @@ struct SkColorSpaceXformSteps {
     bool encode = false;
     bool premul = false;
 
-    uint32_t mask() const {
+    uint32_t mask() const noexcept {
       return (unpremul ? 1 : 0) | (linearize ? 2 : 0) | (gamut_transform ? 4 : 0) |
              (encode ? 8 : 0) | (premul ? 16 : 0);
     }
@@ -38,6 +39,7 @@ struct SkColorSpaceXformSteps {
 
   void apply(float rgba[4]) const;
   void apply(SkRasterPipeline*, bool src_is_normalized) const;
+  skvm::Color program(skvm::Builder*, skvm::Uniforms*, skvm::Color) const;
 
   void apply(SkRasterPipeline* p, SkColorType srcCT) const {
     return this->apply(p, SkColorTypeIsNormalized(srcCT));

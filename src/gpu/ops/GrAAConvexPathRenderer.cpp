@@ -47,15 +47,15 @@ struct Segment {
   // sharp. If so, fMid is a normalized bisector facing outward.
   SkVector fMid;
 
-  int countPoints() {
+  int countPoints() noexcept {
     static_assert(0 == kLine && 1 == kQuad);
     return fType + 1;
   }
-  const SkPoint& endPt() const {
+  const SkPoint& endPt() const noexcept {
     static_assert(0 == kLine && 1 == kQuad);
     return fPts[fType];
   }
-  const SkPoint& endNorm() const {
+  const SkPoint& endNorm() const noexcept {
     static_assert(0 == kLine && 1 == kQuad);
     return fNorms[fType];
   }
@@ -63,7 +63,7 @@ struct Segment {
 
 typedef SkTArray<Segment, true> SegmentArray;
 
-static bool center_of_mass(const SegmentArray& segments, SkPoint* c) {
+static bool center_of_mass(const SegmentArray& segments, SkPoint* c) noexcept {
   SkScalar area = 0;
   SkPoint center = {0, 0};
   int count = segments.count();
@@ -176,17 +176,17 @@ static bool compute_vectors(
 
 struct DegenerateTestData {
   DegenerateTestData() { fStage = kInitial; }
-  bool isDegenerate() const { return kNonDegenerate != fStage; }
+  bool isDegenerate() const noexcept { return kNonDegenerate != fStage; }
   enum { kInitial, kPoint, kLine, kNonDegenerate } fStage;
   SkPoint fFirstPoint;
   SkVector fLineNormal;
   SkScalar fLineC;
 };
 
-static const SkScalar kClose = (SK_Scalar1 / 16);
-static const SkScalar kCloseSqd = kClose * kClose;
+static constexpr SkScalar kClose = (SK_Scalar1 / 16);
+static constexpr SkScalar kCloseSqd = kClose * kClose;
 
-static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) {
+static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) noexcept {
   switch (data->fStage) {
     case DegenerateTestData::kInitial:
       data->fFirstPoint = pt;
@@ -211,7 +211,7 @@ static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) 
 }
 
 static inline bool get_direction(
-    const SkPath& path, const SkMatrix& m, SkPathPriv::FirstDirection* dir) {
+    const SkPath& path, const SkMatrix& m, SkPathPriv::FirstDirection* dir) noexcept {
   // At this point, we've already returned true from canDraw(), which checked that the path's
   // direction could be determined, so this should just be fetching the cached direction.
   // However, if perspective is involved, we're operating on a transformed path, which may no
@@ -668,7 +668,7 @@ class AAConvexPathOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -695,47 +695,29 @@ class AAConvexPathOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     SkMatrix invert;
     if (fHelper.usesLocalCoords() && !fPaths.back().fViewMatrix.invert(&invert)) {
-      return nullptr;
+      return;
     }
 
     GrGeometryProcessor* quadProcessor =
         QuadEdgeEffect::Make(arena, invert, fHelper.usesLocalCoords(), fWideColor);
 
-    return fHelper.createProgramInfoWithStencil(
+    fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, quadProcessor,
         GrPrimitiveType::kTriangles);
-  }
-
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
   }
 
   void onPrepareDraws(Target* target) override {
     int instanceCount = fPaths.count();
 
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -802,13 +784,12 @@ class AAConvexPathOp final : public GrMeshDrawOp {
       GrVertexColor color(args.fColor, fWideColor);
       create_vertices(segments, fanPt, color, &draws, verts, idxs, kVertexStride);
 
-      GrMesh* meshes = target->allocMeshes(draws.count());
+      GrSimpleMesh* meshes = target->allocMeshes(draws.count());
       for (int j = 0; j < draws.count(); ++j) {
         const Draw& draw = draws[j];
         meshes[j].setIndexed(
             indexBuffer, draw.fIndexCnt, firstIndex, 0, draw.fVertexCnt - 1,
-            GrPrimitiveRestart::kNo);
-        meshes[j].setVertexData(vertexBuffer, firstVertex);
+            GrPrimitiveRestart::kNo, vertexBuffer, firstVertex);
         firstIndex += draw.fIndexCnt;
         firstVertex += draw.fVertexCnt;
       }
@@ -822,10 +803,12 @@ class AAConvexPathOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
     for (int i = 0; i < fDraws.count(); ++i) {
-      flushState->opsRenderPass()->drawMeshes(
-          *fProgramInfo, fDraws[i].fMeshes, fDraws[i].fMeshCount);
+      for (int j = 0; j < fDraws[i].fMeshCount; ++j) {
+        flushState->drawMesh(fDraws[i].fMeshes[j]);
+      }
     }
   }
 
@@ -856,7 +839,7 @@ class AAConvexPathOp final : public GrMeshDrawOp {
   bool fWideColor;
 
   struct MeshDraw {
-    GrMesh* fMeshes;
+    GrSimpleMesh* fMeshes;
     int fMeshCount;
   };
 

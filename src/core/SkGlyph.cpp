@@ -32,7 +32,7 @@ SkMask SkGlyph::mask(SkPoint position) const {
   return answer;
 }
 
-void SkGlyph::zeroMetrics() {
+void SkGlyph::zeroMetrics() noexcept {
   fAdvanceX = 0;
   fAdvanceY = 0;
   fWidth = 0;
@@ -41,9 +41,9 @@ void SkGlyph::zeroMetrics() {
   fLeft = 0;
 }
 
-static size_t bits_to_bytes(size_t bits) { return (bits + 7) >> 3; }
+static constexpr size_t bits_to_bytes(size_t bits) noexcept { return (bits + 7) >> 3; }
 
-static size_t format_alignment(SkMask::Format format) {
+static size_t format_alignment(SkMask::Format format) noexcept {
   switch (format) {
     case SkMask::kBW_Format:
     case SkMask::kA8_Format:
@@ -56,11 +56,11 @@ static size_t format_alignment(SkMask::Format format) {
   return 0;
 }
 
-static size_t format_rowbytes(int width, SkMask::Format format) {
+static size_t format_rowbytes(int width, SkMask::Format format) noexcept {
   return format == SkMask::kBW_Format ? bits_to_bytes(width) : width * format_alignment(format);
 }
 
-size_t SkGlyph::formatAlignment() const { return format_alignment(this->maskFormat()); }
+size_t SkGlyph::formatAlignment() const noexcept { return format_alignment(this->maskFormat()); }
 
 size_t SkGlyph::allocImage(SkArenaAlloc* alloc) {
   SkASSERT(!this->isEmpty());
@@ -109,13 +109,15 @@ bool SkGlyph::setMetricsAndImage(SkArenaAlloc* alloc, const SkGlyph& from) {
   return false;
 }
 
-size_t SkGlyph::rowBytes() const { return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat); }
+size_t SkGlyph::rowBytes() const noexcept {
+  return format_rowbytes(fWidth, (SkMask::Format)fMaskFormat);
+}
 
-size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const {
+size_t SkGlyph::rowBytesUsingFormat(SkMask::Format format) const noexcept {
   return format_rowbytes(fWidth, format);
 }
 
-size_t SkGlyph::imageSize() const {
+size_t SkGlyph::imageSize() const noexcept {
   if (this->isEmpty() || this->imageTooLarge()) {
     return 0;
   }
@@ -163,7 +165,7 @@ bool SkGlyph::setPath(SkArenaAlloc* alloc, const SkPath* path) {
   return false;
 }
 
-const SkPath* SkGlyph::path() const {
+const SkPath* SkGlyph::path() const noexcept {
   // setPath must have been called previously.
   SkASSERT(this->setPathHasBeenCalled());
   if (fPathData->fHasPath) {

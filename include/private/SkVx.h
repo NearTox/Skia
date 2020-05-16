@@ -28,7 +28,7 @@
 #include <cstring>           // memcpy()
 #include <initializer_list>  // std::initializer_list
 
-#if defined(__SSE__) || defined(__AVX2__)
+#if defined(__SSE__) || defined(__AVX__) || defined(__AVX2__)
 #  include <immintrin.h>
 #elif defined(__ARM_NEON)
 #  include <arm_neon.h>
@@ -85,12 +85,12 @@ struct SKVX_ALIGNMENT Vec {
   //   - they'll definitely never want a specialized implementation.
   // Other operations on Vec should be defined outside the type.
 
-  SKVX_ALWAYS_INLINE Vec() = default;
+  SKVX_ALWAYS_INLINE Vec() noexcept = default;
 
   template <typename U, typename = typename std::enable_if<std::is_convertible<U, T>::value>::type>
-  SKVX_ALWAYS_INLINE Vec(U x) : lo(x), hi(x) {}
+  SKVX_ALWAYS_INLINE Vec(U x) noexcept : lo(x), hi(x) {}
 
-  SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) {
+  SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) noexcept {
     T vals[N] = {0};
     memcpy(vals, xs.begin(), std::min(xs.size(), (size_t)N) * sizeof(T));
 
@@ -98,41 +98,43 @@ struct SKVX_ALIGNMENT Vec {
     hi = Vec<N / 2, T>::Load(vals + N / 2);
   }
 
-  SKVX_ALWAYS_INLINE T operator[](int i) const { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
-  SKVX_ALWAYS_INLINE T& operator[](int i) { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
+  SKVX_ALWAYS_INLINE T operator[](int i) const noexcept {
+    return i < N / 2 ? lo[i] : hi[i - N / 2];
+  }
+  SKVX_ALWAYS_INLINE T& operator[](int i) noexcept { return i < N / 2 ? lo[i] : hi[i - N / 2]; }
 
-  SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
+  SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) noexcept {
     Vec v;
     memcpy(&v, ptr, sizeof(Vec));
     return v;
   }
-  SKVX_ALWAYS_INLINE void store(void* ptr) const { memcpy(ptr, this, sizeof(Vec)); }
+  SKVX_ALWAYS_INLINE void store(void* ptr) const noexcept { memcpy(ptr, this, sizeof(Vec)); }
 };
 
 template <typename T>
 struct Vec<1, T> {
   T val;
 
-  SKVX_ALWAYS_INLINE Vec() = default;
+  SKVX_ALWAYS_INLINE Vec() noexcept = default;
 
   template <typename U, typename = typename std::enable_if<std::is_convertible<U, T>::value>::type>
-  SKVX_ALWAYS_INLINE Vec(U x) : val(x) {}
+  SKVX_ALWAYS_INLINE Vec(U x) noexcept : val(x) {}
 
-  SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) : val(xs.size() ? *xs.begin() : 0) {}
+  SKVX_ALWAYS_INLINE Vec(std::initializer_list<T> xs) noexcept : val(xs.size() ? *xs.begin() : 0) {}
 
-  SKVX_ALWAYS_INLINE T operator[](int) const { return val; }
-  SKVX_ALWAYS_INLINE T& operator[](int) { return val; }
+  SKVX_ALWAYS_INLINE T operator[](int) const noexcept { return val; }
+  SKVX_ALWAYS_INLINE T& operator[](int) noexcept { return val; }
 
-  SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) {
+  SKVX_ALWAYS_INLINE static Vec Load(const void* ptr) noexcept {
     Vec v;
     memcpy(&v, ptr, sizeof(Vec));
     return v;
   }
-  SKVX_ALWAYS_INLINE void store(void* ptr) const { memcpy(ptr, this, sizeof(Vec)); }
+  SKVX_ALWAYS_INLINE void store(void* ptr) const noexcept { memcpy(ptr, this, sizeof(Vec)); }
 };
 
 template <typename D, typename S>
-static inline D bit_pun(const S& s) {
+static inline D bit_pun(const S& s) noexcept(std::is_nothrow_default_constructible_v<D>) {
   static_assert(sizeof(D) == sizeof(S), "");
   D d;
   memcpy(&d, &s, sizeof(D));
@@ -156,7 +158,7 @@ template <typename T>
 using M = typename Mask<T>::type;
 
 // Join two Vec<N,T> into one Vec<2N,T>.
-SINT Vec<2 * N, T> join(const Vec<N, T>& lo, const Vec<N, T>& hi) {
+SINT Vec<2 * N, T> join(const Vec<N, T>& lo, const Vec<N, T>& hi) noexcept {
   Vec<2 * N, T> v;
   v.lo = lo;
   v.hi = hi;
@@ -359,6 +361,8 @@ SIT Vec<1, T> round(const Vec<1, T>& x) { return std::round(x.val); }
 SIT Vec<1, T> sqrt(const Vec<1, T>& x) { return std::sqrt(x.val); }
 SIT Vec<1, T> abs(const Vec<1, T>& x) { return std::abs(x.val); }
 
+SIT Vec<1, int> lrint(const Vec<1, T>& x) { return (int)std::lrint(x.val); }
+
 SIT Vec<1, T> rcp(const Vec<1, T>& x) { return 1 / x.val; }
 SIT Vec<1, T> rsqrt(const Vec<1, T>& x) { return rcp(sqrt(x)); }
 SIT Vec<1, T> mad(const Vec<1, T>& f, const Vec<1, T>& m, const Vec<1, T>& a) { return f * m + a; }
@@ -387,6 +391,8 @@ SINT Vec<N, T> trunc(const Vec<N, T>& x) { return join(trunc(x.lo), trunc(x.hi))
 SINT Vec<N, T> round(const Vec<N, T>& x) { return join(round(x.lo), round(x.hi)); }
 SINT Vec<N, T> sqrt(const Vec<N, T>& x) { return join(sqrt(x.lo), sqrt(x.hi)); }
 SINT Vec<N, T> abs(const Vec<N, T>& x) { return join(abs(x.lo), abs(x.hi)); }
+
+SINT Vec<N, int> lrint(const Vec<N, T>& x) { return join(lrint(x.lo), lrint(x.hi)); }
 
 SINT Vec<N, T> rcp(const Vec<N, T>& x) { return join(rcp(x.lo), rcp(x.hi)); }
 SINT Vec<N, T> rsqrt(const Vec<N, T>& x) { return join(rsqrt(x.lo), rsqrt(x.hi)); }
@@ -481,7 +487,7 @@ static inline Vec<N, D> cast(const Vec<N, S>& src) {
 //    shuffle<3,3,3,3>        (rgba) ~> {A,A,A,A}
 // The only real restriction is that the output also be a legal N=power-of-two sknx::Vec.
 template <int... Ix, int N, typename T>
-static inline Vec<sizeof...(Ix), T> shuffle(const Vec<N, T>& x) {
+static inline Vec<sizeof...(Ix), T> shuffle(const Vec<N, T>& x) noexcept {
 #if !defined(SKNX_NO_SIMD) && defined(__clang__)
   return to_vec<sizeof...(Ix), T>(__builtin_shufflevector(to_vext(x), to_vext(x), Ix...));
 #else
@@ -491,12 +497,12 @@ static inline Vec<sizeof...(Ix), T> shuffle(const Vec<N, T>& x) {
 
 // fma() delivers a fused mul-add, even if that's really expensive.  Call it when you know it's not.
 static inline Vec<1, float> fma(
-    const Vec<1, float>& x, const Vec<1, float>& y, const Vec<1, float>& z) {
+    const Vec<1, float>& x, const Vec<1, float>& y, const Vec<1, float>& z) noexcept {
   return std::fma(x.val, y.val, z.val);
 }
 template <int N>
 static inline Vec<N, float> fma(
-    const Vec<N, float>& x, const Vec<N, float>& y, const Vec<N, float>& z) {
+    const Vec<N, float>& x, const Vec<N, float>& y, const Vec<N, float>& z) noexcept {
   return join(fma(x.lo, y.lo, z.lo), fma(x.hi, y.hi, z.hi));
 }
 
@@ -547,6 +553,21 @@ static inline Vec<N, uint16_t> mull(const Vec<N, uint8_t>& x, const Vec<N, uint8
 
 // Platform-specific specializations and overloads can now drop in here.
 
+#  if defined(__AVX__)
+static inline Vec<8, float> sqrt(const Vec<8, float>& x) {
+  return bit_pun<Vec<8, float>>(_mm256_sqrt_ps(bit_pun<__m256>(x)));
+}
+static inline Vec<8, float> rsqrt(const Vec<8, float>& x) {
+  return bit_pun<Vec<8, float>>(_mm256_rsqrt_ps(bit_pun<__m256>(x)));
+}
+static inline Vec<8, float> rcp(const Vec<8, float>& x) {
+  return bit_pun<Vec<8, float>>(_mm256_rcp_ps(bit_pun<__m256>(x)));
+}
+static inline Vec<8, int> lrint(const Vec<8, float>& x) {
+  return bit_pun<Vec<8, int>>(_mm256_cvtps_epi32(bit_pun<__m256>(x)));
+}
+#  endif
+
 #  if defined(__SSE__)
 static inline Vec<4, float> sqrt(const Vec<4, float>& x) {
   return bit_pun<Vec<4, float>>(_mm_sqrt_ps(bit_pun<__m128>(x)));
@@ -557,6 +578,9 @@ static inline Vec<4, float> rsqrt(const Vec<4, float>& x) {
 static inline Vec<4, float> rcp(const Vec<4, float>& x) {
   return bit_pun<Vec<4, float>>(_mm_rcp_ps(bit_pun<__m128>(x)));
 }
+static inline Vec<4, int> lrint(const Vec<4, float>& x) {
+  return bit_pun<Vec<4, int>>(_mm_cvtps_epi32(bit_pun<__m128>(x)));
+}
 
 static inline Vec<2, float> sqrt(const Vec<2, float>& x) {
   return shuffle<0, 1>(sqrt(shuffle<0, 1, 0, 1>(x)));
@@ -566,6 +590,9 @@ static inline Vec<2, float> rsqrt(const Vec<2, float>& x) {
 }
 static inline Vec<2, float> rcp(const Vec<2, float>& x) {
   return shuffle<0, 1>(rcp(shuffle<0, 1, 0, 1>(x)));
+}
+static inline Vec<2, int> lrint(const Vec<2, float>& x) {
+  return shuffle<0, 1>(lrint(shuffle<0, 1, 0, 1>(x)));
 }
 #  endif
 

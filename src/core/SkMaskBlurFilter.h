@@ -21,10 +21,10 @@ class SkMaskBlurFilter {
  public:
   // Create an object suitable for filtering an SkMask using a filter with width sigmaW and
   // height sigmaH.
-  SkMaskBlurFilter(double sigmaW, double sigmaH);
+  SkMaskBlurFilter(double sigmaW, double sigmaH) noexcept;
 
   // returns true iff the sigmas will result in an identity mask (no blurring)
-  bool hasNoBlur() const;
+  bool hasNoBlur() const noexcept;
 
   // Given a src SkMask, generate dst SkMask returning the border width and height.
   SkIPoint blur(const SkMask& src, SkMask* dst) const;

@@ -219,6 +219,7 @@ class Cluster {
     WordBreakWithHyphen,
     SoftLineBreak,  // calculated for all clusters (UBRK_LINE)
     HardLineBreak,  // calculated for all clusters (UBRK_LINE)
+    GraphemeBreak,
   };
 
   Cluster()
@@ -261,6 +262,7 @@ class Cluster {
   }
   bool isHardBreak() const { return fBreakType == HardLineBreak; }
   bool isSoftBreak() const { return fBreakType == SoftLineBreak; }
+  bool isGraphemeBreak() const { return fBreakType == GraphemeBreak; }
   size_t startPos() const { return fStart; }
   size_t endPos() const { return fEnd; }
   SkScalar width() const { return fWidth; }

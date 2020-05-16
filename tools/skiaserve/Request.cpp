@@ -49,24 +49,31 @@ sk_sp<SkData> Request::writeCanvasToPng(SkCanvas* canvas) {
 }
 
 SkCanvas* Request::getCanvas() {
-    GrContextFactory* factory = fContextFactory;
-    GLTestContext* gl = factory->getContextInfo(GrContextFactory::kGL_ContextType,
-            GrContextFactory::ContextOverrides::kNone).glContext();
-    if (!gl) {
-        gl = factory->getContextInfo(GrContextFactory::kGLES_ContextType,
-                                     GrContextFactory::ContextOverrides::kNone).glContext();
-    }
-    if (gl) {
-        gl->makeCurrent();
-    }
-    SkASSERT(fDebugCanvas);
+#ifdef SK_GL
+  GrContextFactory* factory = fContextFactory;
+  GLTestContext* gl =
+      factory
+          ->getContextInfo(
+              GrContextFactory::kGL_ContextType, GrContextFactory::ContextOverrides::kNone)
+          .glContext();
+  if (!gl) {
+    gl = factory
+             ->getContextInfo(
+                 GrContextFactory::kGLES_ContextType, GrContextFactory::ContextOverrides::kNone)
+             .glContext();
+  }
+  if (gl) {
+    gl->makeCurrent();
+  }
+#endif
+  SkASSERT(fDebugCanvas);
 
-    // create the appropriate surface if necessary
-    if (!fSurface) {
-        this->enableGPU(fGPUEnabled);
-    }
-    SkCanvas* target = fSurface->getCanvas();
-    return target;
+  // create the appropriate surface if necessary
+  if (!fSurface) {
+    this->enableGPU(fGPUEnabled);
+  }
+  SkCanvas* target = fSurface->getCanvas();
+  return target;
 }
 
 sk_sp<SkData> Request::drawToPng(int n, int m) {

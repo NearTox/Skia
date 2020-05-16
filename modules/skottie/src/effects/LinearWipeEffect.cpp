@@ -41,9 +41,10 @@ class LinearWipeAdapter final : public MaskShaderEffectBase {
       kFeather_Index = 2,
     };
 
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kCompletion_Index), &fCompletion);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kAngle_Index), &fAngle);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kFeather_Index), &fFeather);
+    EffectBinder(jprops, *abuilder, this)
+        .bind(kCompletion_Index, fCompletion)
+        .bind(kAngle_Index, fAngle)
+        .bind(kFeather_Index, fFeather);
   }
 
   MaskInfo onMakeMask() const override {
@@ -96,7 +97,7 @@ class LinearWipeAdapter final : public MaskShaderEffectBase {
     return {SkGradientShader::MakeLinear(pts, colors, pos, 2, SkTileMode::kClamp), true};
   }
 
-  float fCompletion = 0, fAngle = 0, fFeather = 0;
+  ScalarValue fCompletion = 0, fAngle = 0, fFeather = 0;
 
   using INHERITED = MaskShaderEffectBase;
 };

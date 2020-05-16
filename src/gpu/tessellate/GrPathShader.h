@@ -42,8 +42,7 @@ class GrPathShader : public GrGeometryProcessor {
         const GrPathShader* shader)
         : GrProgramInfo(
               proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(), origin,
-              pipeline, shader, nullptr, nullptr, 0, shader->fPrimitiveType,
-              shader->fTessellationPatchVertexCount) {}
+              pipeline, shader, shader->fPrimitiveType, shader->fTessellationPatchVertexCount) {}
   };
 
  private:

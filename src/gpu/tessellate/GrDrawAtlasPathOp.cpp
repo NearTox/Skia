@@ -142,6 +142,10 @@ GrOp::CombineResult GrDrawAtlasPathOp::onCombineIfPossible(
   return CombineResult::kMerged;
 }
 
+void GrDrawAtlasPathOp::onPrePrepare(
+    GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+    const GrXferProcessor::DstProxyView&) {}
+
 void GrDrawAtlasPathOp::onPrepare(GrOpFlushState* state) {
   size_t instanceStride = Instance::Stride(fUsesLocalCoords);
   if (char* instanceData = (char*)state->makeVertexSpace(
@@ -158,17 +162,14 @@ void GrDrawAtlasPathOp::onPrepare(GrOpFlushState* state) {
 void GrDrawAtlasPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {
   SkASSERT(fAtlasProxy->isInstantiated());
 
-  GrAppliedClip clip = state->detachAppliedClip();
-  const SkIRect* scissorRectIfEnabled = clip.scissorRectIfEnabled();
-
   GrPipeline::InitArgs initArgs;
   if (fEnableHWAA) {
     initArgs.fInputFlags |= GrPipeline::InputFlags::kHWAntialias;
   }
   initArgs.fCaps = &state->caps();
   initArgs.fDstProxyView = state->drawOpArgs().dstProxyView();
-  initArgs.fOutputSwizzle = state->drawOpArgs().outputSwizzle();
-  GrPipeline pipeline(initArgs, std::move(fProcessors), std::move(clip));
+  initArgs.fWriteSwizzle = state->drawOpArgs().writeSwizzle();
+  GrPipeline pipeline(initArgs, std::move(fProcessors), state->detachAppliedClip());
 
   GrSwizzle swizzle =
       state->caps().getReadSwizzle(fAtlasProxy->backendFormat(), GrColorType::kAlpha_8);
@@ -178,12 +179,11 @@ void GrDrawAtlasPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBoun
 
   GrProgramInfo programInfo(
       state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
-      state->proxy()->backendFormat(), state->outputView()->origin(), &pipeline, &shader, nullptr,
-      nullptr, 0, GrPrimitiveType::kTriangleStrip);
+      state->proxy()->backendFormat(), state->outputView()->origin(), &pipeline, &shader,
+      GrPrimitiveType::kTriangleStrip);
 
-  GrOpsRenderPass* renderPass = state->opsRenderPass();
-  renderPass->bindPipeline(programInfo, this->bounds(), scissorRectIfEnabled);
-  renderPass->bindTextures(shader, *fAtlasProxy, pipeline);
-  renderPass->bindBuffers(nullptr, fInstanceBuffer.get(), nullptr);
-  renderPass->drawInstanced(fInstanceCount, fBaseInstance, 4, 0);
+  state->bindPipelineAndScissorClip(programInfo, this->bounds());
+  state->bindTextures(shader, *fAtlasProxy, pipeline);
+  state->bindBuffers(nullptr, fInstanceBuffer.get(), nullptr);
+  state->drawInstanced(fInstanceCount, fBaseInstance, 4, 0);
 }

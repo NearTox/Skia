@@ -24,11 +24,11 @@
 */
 class SkRBuffer : SkNoncopyable {
  public:
-  SkRBuffer() : fData(nullptr), fPos(nullptr), fStop(nullptr) {}
+  constexpr SkRBuffer() noexcept : fData(nullptr), fPos(nullptr), fStop(nullptr) {}
 
   /** Initialize RBuffer with a data point and length.
    */
-  SkRBuffer(const void* data, size_t size) {
+  SkRBuffer(const void* data, size_t size) noexcept {
     SkASSERT(data != nullptr || size == 0);
     fData = (const char*)data;
     fPos = (const char*)data;
@@ -38,20 +38,20 @@ class SkRBuffer : SkNoncopyable {
   /** Return the number of bytes that have been read from the beginning
       of the data pointer.
   */
-  size_t pos() const { return fPos - fData; }
+  size_t pos() const noexcept { return fPos - fData; }
   /** Return the total size of the data pointer. Only defined if the length was
       specified in the constructor or in a call to reset().
   */
-  size_t size() const { return fStop - fData; }
+  size_t size() const noexcept { return fStop - fData; }
   /** Return true if the buffer has read to the end of the data pointer.
       Only defined if the length was specified in the constructor or in a call
       to reset(). Always returns true if the length was not specified.
   */
-  bool eof() const { return fPos >= fStop; }
+  bool eof() const noexcept { return fPos >= fStop; }
 
-  size_t available() const { return fStop - fPos; }
+  size_t available() const noexcept { return fStop - fPos; }
 
-  bool isValid() const { return fValid; }
+  bool isValid() const noexcept { return fValid; }
 
   /** Read the specified number of bytes from the data pointer. If buffer is not
       null, copy those bytes into buffer.
@@ -87,24 +87,24 @@ class SkRBuffer : SkNoncopyable {
 */
 class SkWBuffer : SkNoncopyable {
  public:
-  SkWBuffer() : fData(nullptr), fPos(nullptr), fStop(nullptr) {}
+  constexpr SkWBuffer() noexcept : fData(nullptr), fPos(nullptr), fStop(nullptr) {}
   SkWBuffer(void* data) { reset(data); }
   SkWBuffer(void* data, size_t size) { reset(data, size); }
 
-  void reset(void* data) {
+  void reset(void* data) noexcept {
     fData = (char*)data;
     fPos = (char*)data;
     fStop = nullptr;  // no bounds checking
   }
 
-  void reset(void* data, size_t size) {
+  void reset(void* data, size_t size) noexcept {
     SkASSERT(data != nullptr || size == 0);
     fData = (char*)data;
     fPos = (char*)data;
     fStop = (char*)data + size;
   }
 
-  size_t pos() const { return fPos - fData; }
+  size_t pos() const noexcept { return fPos - fData; }
   void* skip(size_t size);  // return start of skipped data
 
   void write(const void* buffer, size_t size) {

@@ -32,13 +32,13 @@ class GrRenderTarget : virtual public GrSurface {
   virtual bool alwaysClearStencil() const { return false; }
 
   // GrSurface overrides
-  GrRenderTarget* asRenderTarget() override { return this; }
-  const GrRenderTarget* asRenderTarget() const override { return this; }
+  GrRenderTarget* asRenderTarget() noexcept override { return this; }
+  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
   /**
    * Returns the number of samples/pixel in the color buffer (One if non-MSAA).
    */
-  int numSamples() const { return fSampleCnt; }
+  int numSamples() const noexcept { return fSampleCnt; }
 
   virtual GrBackendRenderTarget getBackendRenderTarget() const = 0;
 
@@ -46,8 +46,8 @@ class GrRenderTarget : virtual public GrSurface {
   virtual bool canAttemptStencilAttachment() const = 0;
 
   // Provides access to functions that aren't part of the public API.
-  GrRenderTargetPriv renderTargetPriv();
-  const GrRenderTargetPriv renderTargetPriv() const;
+  GrRenderTargetPriv renderTargetPriv() noexcept;
+  const GrRenderTargetPriv renderTargetPriv() const noexcept;
 
  protected:
   GrRenderTarget(

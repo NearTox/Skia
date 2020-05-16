@@ -158,6 +158,7 @@ static void setup_yuv_indices(YUVFormat yuvFormat, bool addExtraAlpha, SkYUVAInd
         yuvaIndices[3].fChannel = SkColorChannel::kA;  // bc 16bit is stored in A16 or AF16
       } else {
         yuvaIndices[3].fIndex = -1;  // No alpha channel
+        yuvaIndices[3].fChannel = SkColorChannel::kA;
       }
       break;
     case kY416_YUVFormat:
@@ -205,6 +206,7 @@ static void setup_yuv_indices(YUVFormat yuvFormat, bool addExtraAlpha, SkYUVAInd
         yuvaIndices[3].fChannel = SkColorChannel::kA;
       } else {
         yuvaIndices[3].fIndex = -1;  // No alpha channel
+        yuvaIndices[3].fChannel = SkColorChannel::kA;
       }
       break;
     case kNV21_YUVFormat:
@@ -219,6 +221,7 @@ static void setup_yuv_indices(YUVFormat yuvFormat, bool addExtraAlpha, SkYUVAInd
         yuvaIndices[3].fChannel = SkColorChannel::kA;
       } else {
         yuvaIndices[3].fIndex = -1;  // No alpha channel
+        yuvaIndices[3].fChannel = SkColorChannel::kA;
       }
       break;
     case kI420_YUVFormat:
@@ -233,6 +236,7 @@ static void setup_yuv_indices(YUVFormat yuvFormat, bool addExtraAlpha, SkYUVAInd
         yuvaIndices[3].fChannel = SkColorChannel::kA;
       } else {
         yuvaIndices[3].fIndex = -1;  // No alpha channel
+        yuvaIndices[3].fChannel = SkColorChannel::kA;
       }
       break;
     case kYV12_YUVFormat:
@@ -247,6 +251,7 @@ static void setup_yuv_indices(YUVFormat yuvFormat, bool addExtraAlpha, SkYUVAInd
         yuvaIndices[3].fChannel = SkColorChannel::kA;
       } else {
         yuvaIndices[3].fIndex = -1;  // No alpha channel
+        yuvaIndices[3].fChannel = SkColorChannel::kA;
       }
       break;
   }

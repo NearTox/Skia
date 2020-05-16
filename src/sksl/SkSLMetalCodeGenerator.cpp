@@ -15,10 +15,6 @@
 #include "src/sksl/ir/SkSLNop.h"
 #include "src/sksl/ir/SkSLVariableReference.h"
 
-#ifdef SK_MOLTENVK
-static const uint32_t MVKMagicNum = 0x19960412;
-#endif
-
 namespace SkSL {
 
 void MetalCodeGenerator::setupIntrinsics() {
@@ -493,7 +489,7 @@ void MetalCodeGenerator::writeVariableReference(const VariableReference& ref) {
     case SK_INSTANCEID_BUILTIN: this->write("sk_InstanceID"); break;
     case SK_CLOCKWISE_BUILTIN:
       // We'd set the front facing winding in the MTLRenderCommandEncoder to be counter
-      // clockwise to match Skia convention. This is also the default in MoltenVK.
+      // clockwise to match Skia convention.
       this->write(fProgram.fSettings.fFlipY ? "_frontFacing" : "(!_frontFacing)");
       break;
     default:
@@ -740,20 +736,8 @@ void MetalCodeGenerator::writeFunction(const FunctionDefinition& f) {
   const char* separator = "";
   if ("main" == f.fDeclaration.fName) {
     switch (fProgram.fKind) {
-      case Program::kFragment_Kind:
-#ifdef SK_MOLTENVK
-        this->write("fragment Outputs main0");
-#else
-        this->write("fragment Outputs fragmentMain");
-#endif
-        break;
-      case Program::kVertex_Kind:
-#ifdef SK_MOLTENVK
-        this->write("vertex Outputs main0");
-#else
-        this->write("vertex Outputs vertexMain");
-#endif
-        break;
+      case Program::kFragment_Kind: this->write("fragment Outputs fragmentMain"); break;
+      case Program::kVertex_Kind: this->write("vertex Outputs vertexMain"); break;
       default: SkASSERT(false);
     }
     this->write("(Inputs _in [[stage_in]]");
@@ -792,21 +776,13 @@ void MetalCodeGenerator::writeFunction(const FunctionDefinition& f) {
         this->write("& ");
         this->write(fInterfaceBlockNameMap[&intf]);
         this->write(" [[buffer(");
-#ifdef SK_MOLTENVK
-        this->write(to_string(intf.fVariable.fModifiers.fLayout.fSet));
-#else
         this->write(to_string(intf.fVariable.fModifiers.fLayout.fBinding));
-#endif
         this->write(")]]");
       }
     }
     if (fProgram.fKind == Program::kFragment_Kind) {
       if (fProgram.fInputs.fRTHeight && fInterfaceBlockNameMap.empty()) {
-#ifdef SK_MOLTENVK
-        this->write(", constant sksl_synthetic_uniforms& _anonInterface0 [[buffer(0)]]");
-#else
         this->write(", constant sksl_synthetic_uniforms& _anonInterface0 [[buffer(1)]]");
-#endif
         fRTHeightName = "_anonInterface0.u_skRTHeight";
       }
       this->write(", bool _frontFacing [[front_facing]]");
@@ -976,11 +952,7 @@ void MetalCodeGenerator::writeInterfaceBlock(const InterfaceBlock& intf) {
 
 void MetalCodeGenerator::writeFields(
     const std::vector<Type::Field>& fields, int parentOffset, const InterfaceBlock* parentIntf) {
-#ifdef SK_MOLTENVK
-  MemoryLayout memoryLayout(MemoryLayout::k140_Standard);
-#else
   MemoryLayout memoryLayout(MemoryLayout::kMetal_Standard);
-#endif
   int currentOffset = 0;
   for (const auto& field : fields) {
     int fieldOffset = field.fModifiers.fLayout.fOffset;
@@ -1005,20 +977,6 @@ void MetalCodeGenerator::writeFields(
                               to_string((int)alignment));
       }
     }
-#ifdef SK_MOLTENVK
-    if (fieldType->kind() == Type::kVector_Kind && fieldType->columns() == 3) {
-      SkASSERT(memoryLayout.size(*fieldType) == 3);
-      // Pack all vec3 types so that their size in bytes will match what was expected in the
-      // original SkSL code since MSL has vec3 sizes equal to 4 * component type, while SkSL
-      // has vec3 equal to 3 * component type.
-
-      // FIXME - Packed vectors can't be accessed by swizzles, but can be indexed into. A
-      // combination of this being a problem which only occurs when using MoltenVK and the
-      // fact that we haven't swizzled a vec3 yet means that this problem hasn't been
-      // addressed.
-      this->write(PACKED_PREFIX);
-    }
-#endif
     currentOffset += memoryLayout.size(*fieldType);
     std::vector<int> sizes;
     while (fieldType->kind() == Type::kArray_Kind) {
@@ -1596,9 +1554,6 @@ MetalCodeGenerator::Requirements MetalCodeGenerator::requirements(const Function
 bool MetalCodeGenerator::generateCode() {
   OutputStream* rawOut = fOut;
   fOut = &fHeader;
-#ifdef SK_MOLTENVK
-  fOut->write((const char*)&MVKMagicNum, sizeof(MVKMagicNum));
-#endif
   fProgramKind = fProgram.fKind;
   this->writeHeader();
   this->writeUniformStruct();
@@ -1616,9 +1571,6 @@ bool MetalCodeGenerator::generateCode() {
   write_stringstream(fHeader, *rawOut);
   write_stringstream(fExtraFunctions, *rawOut);
   write_stringstream(body, *rawOut);
-#ifdef SK_MOLTENVK
-  this->write("\0");
-#endif
   return true;
 }
 

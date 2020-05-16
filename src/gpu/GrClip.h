@@ -39,7 +39,7 @@ class GrClip {
       GrRecordingContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
       GrAppliedClip*, SkRect* bounds) const = 0;
 
-  virtual ~GrClip() {}
+  virtual ~GrClip() = default;
 
   /**
    * This method quickly and conservatively determines whether the entire clip is equivalent to
@@ -104,7 +104,7 @@ class GrClip {
   /**
    * Returns the minimal integer rect that counts as containing a given set of bounds.
    */
-  static SkIRect GetPixelIBounds(const SkRect& bounds) {
+  static SkIRect GetPixelIBounds(const SkRect& bounds) noexcept {
     return SkIRect::MakeLTRB(
         SkScalarFloorToInt(bounds.fLeft + kBoundsTolerance),
         SkScalarFloorToInt(bounds.fTop + kBoundsTolerance),
@@ -115,7 +115,7 @@ class GrClip {
   /**
    * Returns the minimal pixel-aligned rect that counts as containing a given set of bounds.
    */
-  static SkRect GetPixelBounds(const SkRect& bounds) {
+  static SkRect GetPixelBounds(const SkRect& bounds) noexcept {
     return SkRect::MakeLTRB(
         SkScalarFloorToScalar(bounds.fLeft + kBoundsTolerance),
         SkScalarFloorToScalar(bounds.fTop + kBoundsTolerance),
@@ -126,7 +126,7 @@ class GrClip {
   /**
    * Returns true if the given rect counts as aligned with pixel boundaries.
    */
-  static bool IsPixelAligned(const SkRect& rect) {
+  static bool IsPixelAligned(const SkRect& rect) noexcept {
     return SkScalarAbs(SkScalarRoundToScalar(rect.fLeft) - rect.fLeft) <= kBoundsTolerance &&
            SkScalarAbs(SkScalarRoundToScalar(rect.fTop) - rect.fTop) <= kBoundsTolerance &&
            SkScalarAbs(SkScalarRoundToScalar(rect.fRight) - rect.fRight) <= kBoundsTolerance &&

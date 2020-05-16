@@ -8,9 +8,7 @@
 #ifndef GrDefaultGeoProcFactory_DEFINED
 #define GrDefaultGeoProcFactory_DEFINED
 
-#include "src/gpu/GrColorSpaceXform.h"
 #include "src/gpu/GrGeometryProcessor.h"
-#include "src/gpu/GrShaderCaps.h"
 
 /*
  * A factory for creating default Geometry Processors which simply multiply position by the uniform
@@ -22,20 +20,15 @@ struct Color {
     kPremulGrColorUniform_Type,
     kPremulGrColorAttribute_Type,
     kPremulWideColorAttribute_Type,
-    kUnpremulSkColorAttribute_Type,
   };
-  explicit Color(const SkPMColor4f& color)
-      : fType(kPremulGrColorUniform_Type), fColor(color), fColorSpaceXform(nullptr) {}
-  Color(Type type) : fType(type), fColor(SK_PMColor4fILLEGAL), fColorSpaceXform(nullptr) {
+  explicit Color(const SkPMColor4f& color) noexcept
+      : fType(kPremulGrColorUniform_Type), fColor(color) {}
+  Color(Type type) noexcept : fType(type), fColor(SK_PMColor4fILLEGAL) {
     SkASSERT(type != kPremulGrColorUniform_Type);
   }
 
   Type fType;
   SkPMColor4f fColor;
-
-  // This only applies to SkColor. Any GrColors are assumed to have been color converted
-  // during paint conversion.
-  sk_sp<GrColorSpaceXform> fColorSpaceXform;
 };
 
 struct Coverage {
@@ -45,8 +38,8 @@ struct Coverage {
     kAttribute_Type,
     kAttributeTweakAlpha_Type,
   };
-  explicit Coverage(uint8_t coverage) : fType(kUniform_Type), fCoverage(coverage) {}
-  Coverage(Type type) : fType(type), fCoverage(0xff) { SkASSERT(type != kUniform_Type); }
+  explicit Coverage(uint8_t coverage) noexcept : fType(kUniform_Type), fCoverage(coverage) {}
+  Coverage(Type type) noexcept : fType(type), fCoverage(0xff) { SkASSERT(type != kUniform_Type); }
 
   Type fType;
   uint8_t fCoverage;
@@ -57,10 +50,9 @@ struct LocalCoords {
     kUnused_Type,
     kUsePosition_Type,
     kHasExplicit_Type,
-    kHasTransformed_Type,
   };
-  LocalCoords(Type type) : fType(type), fMatrix(nullptr) {}
-  LocalCoords(Type type, const SkMatrix* matrix) : fType(type), fMatrix(matrix) {
+  LocalCoords(Type type) noexcept : fType(type), fMatrix(nullptr) {}
+  LocalCoords(Type type, const SkMatrix* matrix) noexcept : fType(type), fMatrix(matrix) {
     SkASSERT(kUnused_Type != type);
   }
   bool hasLocalMatrix() const { return nullptr != fMatrix; }
@@ -70,8 +62,7 @@ struct LocalCoords {
 };
 
 GrGeometryProcessor* Make(
-    SkArenaAlloc*, const GrShaderCaps*, const Color&, const Coverage&, const LocalCoords&,
-    const SkMatrix& viewMatrix);
+    SkArenaAlloc*, const Color&, const Coverage&, const LocalCoords&, const SkMatrix& viewMatrix);
 
 /*
  * Use this factory to create a GrGeometryProcessor that expects a device space vertex position
@@ -79,8 +70,7 @@ GrGeometryProcessor* Make(
  * coordinates for GrFragmentProcessors. It may fail if the view matrix is not invertible.
  */
 GrGeometryProcessor* MakeForDeviceSpace(
-    SkArenaAlloc*, const GrShaderCaps*, const Color&, const Coverage&, const LocalCoords&,
-    const SkMatrix& viewMatrix);
+    SkArenaAlloc*, const Color&, const Coverage&, const LocalCoords&, const SkMatrix& viewMatrix);
 };  // namespace GrDefaultGeoProcFactory
 
 #endif

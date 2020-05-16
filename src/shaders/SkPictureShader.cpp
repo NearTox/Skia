@@ -15,6 +15,7 @@
 #include "src/core/SkPicturePriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkResourceCache.h"
+#include "src/core/SkVM.h"
 #include "src/shaders/SkBitmapProcShader.h"
 #include "src/shaders/SkImageShader.h"
 #include <atomic>
@@ -52,15 +53,16 @@ struct BitmapShaderKey : public SkResourceCache::Key {
         fColorSpaceTransferFnHash(colorSpace->transferFnHash()),
         fBitDepth(bitDepth),
         fScale(scale) {
-    static const size_t keySize = sizeof(fColorSpaceXYZHash) + sizeof(fColorSpaceTransferFnHash) +
-                                  sizeof(fBitDepth) + sizeof(fScale);
+    static constexpr size_t keySize = sizeof(fColorSpaceXYZHash) +
+                                      sizeof(fColorSpaceTransferFnHash) + sizeof(fBitDepth) +
+                                      sizeof(fScale);
     // This better be packed.
     SkASSERT(sizeof(uint32_t) * (&fEndOfStruct - &fColorSpaceXYZHash) == keySize);
     this->init(&gBitmapShaderKeyNamespaceLabel, MakeSharedID(shaderID), keySize);
   }
 
-  static uint64_t MakeSharedID(uint32_t shaderID) {
-    uint64_t sharedID = SkSetFourByteTag('p', 's', 'd', 'r');
+  static uint64_t MakeSharedID(uint32_t shaderID) noexcept {
+    constexpr uint64_t sharedID = SkSetFourByteTag('p', 's', 'd', 'r');
     return (sharedID << 32) | shaderID;
   }
 
@@ -100,7 +102,7 @@ struct BitmapShaderRec : public SkResourceCache::Rec {
   }
 };
 
-uint32_t next_id() {
+uint32_t next_id() noexcept {
   static std::atomic<uint32_t> nextID{1};
 
   uint32_t id;
@@ -266,6 +268,22 @@ bool SkPictureShader::onAppendStages(const SkStageRec& rec) const {
   return as_SB(bitmapShader)->appendStages(localRec);
 }
 
+skvm::Color SkPictureShader::onProgram(
+    skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
+    const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
+    skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
+  auto lm = this->totalLocalMatrix(localM);
+
+  // Keep bitmapShader alive by using alloc instead of stack memory
+  auto& bitmapShader = *alloc->make<sk_sp<SkShader>>();
+  bitmapShader = this->refBitmapShader(ctm, &lm, dst.colorType(), dst.colorSpace());
+  if (!bitmapShader) {
+    return {};
+  }
+
+  return as_SB(bitmapShader)->program(p, x, y, paint, ctm, lm, quality, dst, uniforms, alloc);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////
 
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
@@ -300,7 +318,7 @@ SkPictureShader::PictureShaderContext::PictureShaderContext(
   // if fBitmapShaderContext is null, we are invalid
 }
 
-uint32_t SkPictureShader::PictureShaderContext::getFlags() const {
+uint32_t SkPictureShader::PictureShaderContext::getFlags() const noexcept {
   SkASSERT(fBitmapShaderContext);
   return fBitmapShaderContext->getFlags();
 }

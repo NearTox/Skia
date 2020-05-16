@@ -60,7 +60,8 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
 
     DstProxyView(const DstProxyView& other) { *this = other; }
 
-    DstProxyView(GrSurfaceProxyView view, const SkIPoint& offset) : fProxyView(std::move(view)) {
+    DstProxyView(GrSurfaceProxyView view, const SkIPoint& offset) noexcept
+        : fProxyView(std::move(view)) {
       if (fProxyView.proxy()) {
         fOffset = offset;
       } else {
@@ -74,20 +75,20 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
       return *this;
     }
 
-    bool operator==(const DstProxyView& that) const {
+    bool operator==(const DstProxyView& that) const noexcept {
       return fProxyView == that.fProxyView && fOffset == that.fOffset;
     }
-    bool operator!=(const DstProxyView& that) const { return !(*this == that); }
+    bool operator!=(const DstProxyView& that) const noexcept { return !(*this == that); }
 
-    const SkIPoint& offset() const { return fOffset; }
+    const SkIPoint& offset() const noexcept { return fOffset; }
 
-    void setOffset(const SkIPoint& offset) { fOffset = offset; }
-    void setOffset(int ox, int oy) { fOffset.set(ox, oy); }
+    void setOffset(const SkIPoint& offset) noexcept { fOffset = offset; }
+    void setOffset(int ox, int oy) noexcept { fOffset.set(ox, oy); }
 
-    GrTextureProxy* proxy() const { return fProxyView.asTextureProxy(); }
-    const GrSurfaceProxyView& proxyView() const { return fProxyView; }
+    GrTextureProxy* proxy() const noexcept { return fProxyView.asTextureProxy(); }
+    const GrSurfaceProxyView& proxyView() const noexcept { return fProxyView; }
 
-    void setProxyView(GrSurfaceProxyView view) {
+    void setProxyView(GrSurfaceProxyView view) noexcept {
       fProxyView = std::move(view);
       if (!fProxyView.proxy()) {
         fOffset = {0, 0};
@@ -140,14 +141,14 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
     return blendInfo;
   }
 
-  bool willReadDstColor() const { return fWillReadDstColor; }
+  bool willReadDstColor() const noexcept { return fWillReadDstColor; }
 
   /**
    * If we are performing a dst read, returns whether the base class will use mixed samples to
    * antialias the shader's final output. If not doing a dst read, the subclass is responsible
    * for antialiasing and this returns false.
    */
-  bool dstReadUsesMixedSamples() const { return fDstReadUsesMixedSamples; }
+  bool dstReadUsesMixedSamples() const noexcept { return fDstReadUsesMixedSamples; }
 
   /**
    * Returns whether or not this xferProcossor will set a secondary output to be used with dual
@@ -155,7 +156,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
    */
   bool hasSecondaryOutput() const;
 
-  bool isLCD() const { return fIsLCD; }
+  bool isLCD() const noexcept { return fIsLCD; }
 
   /** Returns true if this and other processor conservatively draw identically. It can only return
       true when the two processor are of the same subclass (i.e. they return the same object from
@@ -285,7 +286,7 @@ class GrXPFactory {
       const GrCaps&, GrClampType);
 
  protected:
-  constexpr GrXPFactory() {}
+  constexpr GrXPFactory() noexcept = default;
 
  private:
   virtual sk_sp<const GrXferProcessor> makeXferProcessor(

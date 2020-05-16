@@ -14,11 +14,11 @@
 namespace SK_OPTS_NS {
 
 template <typename T>
-static void memsetT(T buffer[], T value, int count) {
+static void memsetT(T buffer[], T value, int count) noexcept {
 #if defined(SK_CPU_SSE_LEVEL) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
-  static const int N = 32 / sizeof(T);
+  static constexpr int N = 32 / sizeof(T);
 #else
-  static const int N = 16 / sizeof(T);
+  static constexpr int N = 16 / sizeof(T);
 #endif
   while (count >= N) {
     SkNx<N, T>(value).store(buffer);
@@ -30,18 +30,18 @@ static void memsetT(T buffer[], T value, int count) {
   }
 }
 
-/*not static*/ inline void memset16(uint16_t buffer[], uint16_t value, int count) {
+/*not static*/ inline void memset16(uint16_t buffer[], uint16_t value, int count) noexcept {
   memsetT(buffer, value, count);
 }
-/*not static*/ inline void memset32(uint32_t buffer[], uint32_t value, int count) {
+/*not static*/ inline void memset32(uint32_t buffer[], uint32_t value, int count) noexcept {
   memsetT(buffer, value, count);
 }
-/*not static*/ inline void memset64(uint64_t buffer[], uint64_t value, int count) {
+/*not static*/ inline void memset64(uint64_t buffer[], uint64_t value, int count) noexcept {
   memsetT(buffer, value, count);
 }
 
 template <typename T>
-static void rect_memsetT(T buffer[], T value, int count, size_t rowBytes, int height) {
+static void rect_memsetT(T buffer[], T value, int count, size_t rowBytes, int height) noexcept {
   while (height-- > 0) {
     memsetT(buffer, value, count);
     buffer = (T*)((char*)buffer + rowBytes);
@@ -49,15 +49,15 @@ static void rect_memsetT(T buffer[], T value, int count, size_t rowBytes, int he
 }
 
 /*not static*/ inline void rect_memset16(
-    uint16_t buffer[], uint16_t value, int count, size_t rowBytes, int height) {
+    uint16_t buffer[], uint16_t value, int count, size_t rowBytes, int height) noexcept {
   rect_memsetT(buffer, value, count, rowBytes, height);
 }
 /*not static*/ inline void rect_memset32(
-    uint32_t buffer[], uint32_t value, int count, size_t rowBytes, int height) {
+    uint32_t buffer[], uint32_t value, int count, size_t rowBytes, int height) noexcept {
   rect_memsetT(buffer, value, count, rowBytes, height);
 }
 /*not static*/ inline void rect_memset64(
-    uint64_t buffer[], uint64_t value, int count, size_t rowBytes, int height) {
+    uint64_t buffer[], uint64_t value, int count, size_t rowBytes, int height) noexcept {
   rect_memsetT(buffer, value, count, rowBytes, height);
 }
 

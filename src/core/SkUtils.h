@@ -31,18 +31,23 @@ static inline void sk_memset64(uint64_t buffer[], uint64_t value, int count) {
 
 // Unlike the functions in SkUTF.h, these two functions do not take an array
 // length parameter.  When possible, use SkUTF::NextUTF{8,16} instead.
-SkUnichar SkUTF8_NextUnichar(const char**);
-SkUnichar SkUTF16_NextUnichar(const uint16_t**);
+SkUnichar SkUTF8_NextUnichar(const char**) noexcept;
+SkUnichar SkUTF16_NextUnichar(const uint16_t**) noexcept;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline bool SkUTF16_IsLeadingSurrogate(uint16_t c) { return ((c)&0xFC00) == 0xD800; }
+static inline bool SkUTF16_IsLeadingSurrogate(uint16_t c) noexcept {
+  return ((c)&0xFC00) == 0xD800;
+}
 
-static inline bool SkUTF16_IsTrailingSurrogate(uint16_t c) { return ((c)&0xFC00) == 0xDC00; }
+static inline bool SkUTF16_IsTrailingSurrogate(uint16_t c) noexcept {
+  return ((c)&0xFC00) == 0xDC00;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline int SkUTFN_CountUnichars(SkTextEncoding enc, const void* utfN, size_t bytes) {
+static inline int SkUTFN_CountUnichars(
+    SkTextEncoding enc, const void* utfN, size_t bytes) noexcept {
   switch (enc) {
     case SkTextEncoding::kUTF8: return SkUTF::CountUTF8((const char*)utfN, bytes);
     case SkTextEncoding::kUTF16: return SkUTF::CountUTF16((const uint16_t*)utfN, bytes);
@@ -51,7 +56,8 @@ static inline int SkUTFN_CountUnichars(SkTextEncoding enc, const void* utfN, siz
   }
 }
 
-static inline SkUnichar SkUTFN_Next(SkTextEncoding enc, const void** ptr, const void* stop) {
+static inline SkUnichar SkUTFN_Next(
+    SkTextEncoding enc, const void** ptr, const void* stop) noexcept {
   switch (enc) {
     case SkTextEncoding::kUTF8: return SkUTF::NextUTF8((const char**)ptr, (const char*)stop);
     case SkTextEncoding::kUTF16:

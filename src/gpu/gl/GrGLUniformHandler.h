@@ -19,7 +19,7 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
   static const int kUniformsPerBlock = 8;
 
   const GrShaderVar& getUniformVariable(UniformHandle u) const override {
-    return fUniforms[u.toIndex()].fVariable;
+    return fUniforms.item(u.toIndex()).fVariable;
   }
 
   const char* getUniformCStr(UniformHandle u) const override {
@@ -34,16 +34,12 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
       uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
       const char** outName) override;
 
-  void updateUniformVisibility(UniformHandle u, uint32_t visibility) override {
-    fUniforms[u.toIndex()].fVisibility |= visibility;
-  }
-
   SamplerHandle addSampler(
       const GrBackendFormat&, GrSamplerState, const GrSwizzle&, const char* name,
       const GrShaderCaps*) override;
 
   const char* samplerVariable(SamplerHandle handle) const override {
-    return fSamplers[handle.toIndex()].fVariable.c_str();
+    return fSamplers.item(handle.toIndex()).fVariable.c_str();
   }
 
   GrSwizzle samplerSwizzle(SamplerHandle handle) const override {

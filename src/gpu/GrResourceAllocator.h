@@ -72,8 +72,8 @@ class GrResourceAllocator {
 
   ~GrResourceAllocator();
 
-  unsigned int curOp() const { return fNumOps; }
-  void incOps() { fNumOps++; }
+  unsigned int curOp() const noexcept { return fNumOps; }
+  void incOps() noexcept { fNumOps++; }
 
   /** Indicates whether a given call to addInterval represents an actual usage of the
    *  provided proxy. This is mainly here to accomodate deferred proxies attached to opsTasks.
@@ -119,11 +119,11 @@ class GrResourceAllocator {
   sk_sp<GrSurface> findSurfaceFor(const GrSurfaceProxy* proxy);
 
   struct FreePoolTraits {
-    static const GrScratchKey& GetKey(const GrSurface& s) {
+    static const GrScratchKey& GetKey(const GrSurface& s) noexcept {
       return s.resourcePriv().getScratchKey();
     }
 
-    static uint32_t Hash(const GrScratchKey& key) { return key.hash(); }
+    static uint32_t Hash(const GrScratchKey& key) noexcept { return key.hash(); }
     static void OnFree(GrSurface* s) { s->unref(); }
   };
   typedef SkTMultiMap<GrSurface, GrScratchKey, FreePoolTraits> FreePoolMultiMap;
@@ -132,7 +132,7 @@ class GrResourceAllocator {
 
   class Interval {
    public:
-    Interval(GrSurfaceProxy* proxy, unsigned int start, unsigned int end)
+    Interval(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) noexcept
         : fProxy(proxy),
           fProxyID(proxy->uniqueID().asUInt()),
           fStart(start),
@@ -148,7 +148,7 @@ class GrResourceAllocator {
     }
 
     // Used when recycling an interval
-    void resetTo(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) {
+    void resetTo(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) noexcept {
       SkASSERT(proxy);
       SkASSERT(!fProxy && !fNext);
 
@@ -168,23 +168,23 @@ class GrResourceAllocator {
 
     ~Interval() { SkASSERT(!fAssignedSurface); }
 
-    const GrSurfaceProxy* proxy() const { return fProxy; }
-    GrSurfaceProxy* proxy() { return fProxy; }
+    const GrSurfaceProxy* proxy() const noexcept { return fProxy; }
+    GrSurfaceProxy* proxy() noexcept { return fProxy; }
 
-    unsigned int start() const { return fStart; }
-    unsigned int end() const { return fEnd; }
+    unsigned int start() const noexcept { return fStart; }
+    unsigned int end() const noexcept { return fEnd; }
 
-    void setNext(Interval* next) { fNext = next; }
-    const Interval* next() const { return fNext; }
-    Interval* next() { return fNext; }
+    void setNext(Interval* next) noexcept { fNext = next; }
+    const Interval* next() const noexcept { return fNext; }
+    Interval* next() noexcept { return fNext; }
 
-    void markAsRecyclable() { fIsRecyclable = true; }
-    bool isRecyclable() const { return fIsRecyclable; }
+    void markAsRecyclable() noexcept { fIsRecyclable = true; }
+    bool isRecyclable() const noexcept { return fIsRecyclable; }
 
-    void addUse() { fUses++; }
-    int uses() { return fUses; }
+    void addUse() noexcept { fUses++; }
+    int uses() noexcept { return fUses; }
 
-    void extendEnd(unsigned int newEnd) {
+    void extendEnd(unsigned int newEnd) noexcept {
       if (newEnd > fEnd) {
         fEnd = newEnd;
 #if GR_TRACK_INTERVAL_CREATION
@@ -194,12 +194,12 @@ class GrResourceAllocator {
     }
 
     void assign(sk_sp<GrSurface>);
-    bool wasAssignedSurface() const { return fAssignedSurface != nullptr; }
-    sk_sp<GrSurface> detachSurface() { return std::move(fAssignedSurface); }
+    bool wasAssignedSurface() const noexcept { return fAssignedSurface != nullptr; }
+    sk_sp<GrSurface> detachSurface() noexcept { return std::move(fAssignedSurface); }
 
     // for SkTDynamicHash
-    static const uint32_t& GetKey(const Interval& intvl) { return intvl.fProxyID; }
-    static uint32_t Hash(const uint32_t& key) { return key; }
+    static const uint32_t& GetKey(const Interval& intvl) noexcept { return intvl.fProxyID; }
+    static uint32_t Hash(const uint32_t& key) noexcept { return key; }
 
    private:
     sk_sp<GrSurface> fAssignedSurface;
@@ -226,21 +226,21 @@ class GrResourceAllocator {
       // Since the arena allocator will clean up for us we don't bother here.
     }
 
-    bool empty() const {
+    bool empty() const noexcept {
       SkASSERT(SkToBool(fHead) == SkToBool(fTail));
       return !SkToBool(fHead);
     }
-    const Interval* peekHead() const { return fHead; }
-    Interval* peekHead() { return fHead; }
+    const Interval* peekHead() const noexcept { return fHead; }
+    Interval* peekHead() noexcept { return fHead; }
     Interval* popHead();
     void insertByIncreasingStart(Interval*);
     void insertByIncreasingEnd(Interval*);
     Interval* detachAll();
 
    private:
-    SkDEBUGCODE(void validate() const;)
+    SkDEBUGCODE(void validate() const);
 
-        Interval* fHead = nullptr;
+    Interval* fHead = nullptr;
     Interval* fTail = nullptr;
   };
 

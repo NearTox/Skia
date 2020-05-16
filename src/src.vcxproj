@@ -156,9 +156,6 @@
     <ClCompile Include="core\SkMiniRecorder.cpp" />
     <ClCompile Include="core\SkMipMap.cpp" />
     <ClCompile Include="core\SkModeColorFilter.cpp" />
-    <ClCompile Include="core\SkNormalFlatSource.cpp" />
-    <ClCompile Include="core\SkNormalMapSource.cpp" />
-    <ClCompile Include="core\SkNormalSource.cpp" />
     <ClCompile Include="core\SkOpts.cpp" />
     <ClCompile Include="core\SkOverdrawCanvas.cpp" />
     <ClCompile Include="core\SkPaint.cpp" />
@@ -322,7 +319,6 @@
     <ClCompile Include="gpu\effects\generated\GrClampFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrColorMatrixFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrComposeLerpEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrComposeLerpRedEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrConfigConversionEffect.cpp" />
     <ClCompile Include="gpu\effects\generated\GrConstColorProcessor.cpp" />
     <ClCompile Include="gpu\effects\generated\GrDeviceSpaceEffect.cpp" />
@@ -351,7 +347,6 @@
     <ClCompile Include="gpu\effects\GrRRectEffect.cpp" />
     <ClCompile Include="gpu\effects\GrShadowGeoProc.cpp" />
     <ClCompile Include="gpu\effects\GrSkSLFP.cpp" />
-    <ClCompile Include="gpu\effects\GrSRGBEffect.cpp" />
     <ClCompile Include="gpu\effects\GrTextureDomain.cpp" />
     <ClCompile Include="gpu\effects\GrTextureEffect.cpp" />
     <ClCompile Include="gpu\effects\GrXfermodeFragmentProcessor.cpp" />
@@ -369,7 +364,6 @@
     <ClCompile Include="gpu\glsl\GrGLSLProgramBuilder.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLProgramDataManager.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLShaderBuilder.cpp" />
-    <ClCompile Include="gpu\glsl\GrGLSLUtil.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLVarying.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLVertexGeoBuilder.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLXferProcessor.cpp" />
@@ -422,6 +416,7 @@
     <ClCompile Include="gpu\GrBackendSurface.cpp" />
     <ClCompile Include="gpu\GrBackendTextureImageGenerator.cpp" />
     <ClCompile Include="gpu\GrBitmapTextureMaker.cpp" />
+    <ClCompile Include="gpu\GrBlockAllocator.cpp" />
     <ClCompile Include="gpu\GrBlurUtils.cpp" />
     <ClCompile Include="gpu\GrBufferAllocPool.cpp" />
     <ClCompile Include="gpu\GrCaps.cpp" />
@@ -495,7 +490,6 @@
     <ClCompile Include="gpu\GrSurfaceProxy.cpp" />
     <ClCompile Include="gpu\GrSwizzle.cpp" />
     <ClCompile Include="gpu\GrSWMaskHelper.cpp" />
-    <ClCompile Include="gpu\GrTessellator.cpp" />
     <ClCompile Include="gpu\GrTestUtils.cpp" />
     <ClCompile Include="gpu\GrTexture.cpp" />
     <ClCompile Include="gpu\GrTextureAdjuster.cpp" />
@@ -505,6 +499,7 @@
     <ClCompile Include="gpu\GrTextureRenderTargetProxy.cpp" />
     <ClCompile Include="gpu\GrTextureResolveRenderTask.cpp" />
     <ClCompile Include="gpu\GrTransferFromRenderTask.cpp" />
+    <ClCompile Include="gpu\GrTriangulator.cpp" />
     <ClCompile Include="gpu\GrWaitRenderTask.cpp" />
     <ClCompile Include="gpu\GrXferProcessor.cpp" />
     <ClCompile Include="gpu\GrYUVProvider.cpp" />
@@ -540,17 +535,17 @@
     <ClCompile Include="gpu\ops\GrStencilAndCoverPathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrStencilPathOp.cpp" />
     <ClCompile Include="gpu\ops\GrStrokeRectOp.cpp" />
-    <ClCompile Include="gpu\ops\GrTessellatingPathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrTextureOp.cpp" />
+    <ClCompile Include="gpu\ops\GrTriangulatingPathRenderer.cpp" />
     <ClCompile Include="gpu\SkGpuDevice.cpp" />
     <ClCompile Include="gpu\SkGpuDevice_drawTexture.cpp" />
     <ClCompile Include="gpu\SkGr.cpp" />
     <ClCompile Include="gpu\tessellate\GrDrawAtlasPathOp.cpp" />
     <ClCompile Include="gpu\tessellate\GrFillPathShader.cpp" />
-    <ClCompile Include="gpu\tessellate\GrGpuTessellationPathRenderer.cpp" />
     <ClCompile Include="gpu\tessellate\GrPathParser.cpp" />
     <ClCompile Include="gpu\tessellate\GrStencilPathShader.cpp" />
     <ClCompile Include="gpu\tessellate\GrTessellatePathOp.cpp" />
+    <ClCompile Include="gpu\tessellate\GrTessellationPathRenderer.cpp" />
     <ClCompile Include="gpu\text\GrAtlasManager.cpp" />
     <ClCompile Include="gpu\text\GrDistanceFieldAdjustTable.cpp" />
     <ClCompile Include="gpu\text\GrSDFMaskFilter.cpp" />
@@ -692,8 +687,6 @@
     <ClCompile Include="shaders\SkColorShader.cpp" />
     <ClCompile Include="shaders\SkComposeShader.cpp" />
     <ClCompile Include="shaders\SkImageShader.cpp" />
-    <ClCompile Include="shaders\SkLightingShader.cpp" />
-    <ClCompile Include="shaders\SkLights.cpp" />
     <ClCompile Include="shaders\SkLocalMatrixShader.cpp" />
     <ClCompile Include="shaders\SkPerlinNoiseShader.cpp" />
     <ClCompile Include="shaders\SkPictureShader.cpp" />
@@ -852,7 +845,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>

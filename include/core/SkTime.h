@@ -34,9 +34,9 @@ class SK_API SkTime {
   };
   static void GetDateTime(DateTime*);
 
-  static double GetSecs() { return GetNSecs() * 1e-9; }
-  static double GetMSecs() { return GetNSecs() * 1e-6; }
-  static double GetNSecs();
+  static double GetSecs() noexcept { return GetNSecs() * 1e-9; }
+  static double GetMSecs() noexcept { return GetNSecs() * 1e-6; }
+  static double GetNSecs() noexcept;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

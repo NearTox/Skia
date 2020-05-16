@@ -184,6 +184,9 @@ struct SK_API GrGLInterface : public SkRefCnt {
     GrGLFunction<GrGLMapBufferSubDataFn> fMapBufferSubData;
     GrGLFunction<GrGLMapTexSubImage2DFn> fMapTexSubImage2D;
     GrGLFunction<GrGLMemoryBarrierFn> fMemoryBarrier;
+    GrGLFunction<GrGLDrawArraysInstancedBaseInstanceFn> fDrawArraysInstancedBaseInstance;
+    GrGLFunction<GrGLDrawElementsInstancedBaseVertexBaseInstanceFn>
+        fDrawElementsInstancedBaseVertexBaseInstance;
     GrGLFunction<GrGLMultiDrawArraysIndirectFn> fMultiDrawArraysIndirect;
     GrGLFunction<GrGLMultiDrawElementsIndirectFn> fMultiDrawElementsIndirect;
     GrGLFunction<GrGLPatchParameteriFn> fPatchParameteri;

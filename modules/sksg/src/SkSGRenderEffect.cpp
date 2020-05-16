@@ -74,7 +74,7 @@ void ShaderEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   this->INHERITED::onRender(canvas, local_ctx);
 }
 
-Shader::Shader() : INHERITED(kBubbleDamage_Trait) {}
+Shader::Shader() noexcept : INHERITED(kBubbleDamage_Trait) {}
 
 Shader::~Shader() = default;
 

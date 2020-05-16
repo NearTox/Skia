@@ -38,15 +38,15 @@ class SkResourceCache {
     void init(void* nameSpace, uint64_t sharedID, size_t dataSize);
 
     /** Returns the size of this key. */
-    size_t size() const { return fCount32 << 2; }
+    size_t size() const noexcept { return fCount32 << 2; }
 
-    void* getNamespace() const { return fNamespace; }
-    uint64_t getSharedID() const { return ((uint64_t)fSharedID_hi << 32) | fSharedID_lo; }
+    void* getNamespace() const noexcept { return fNamespace; }
+    uint64_t getSharedID() const noexcept { return ((uint64_t)fSharedID_hi << 32) | fSharedID_lo; }
 
     // This is only valid after having called init().
-    uint32_t hash() const { return fHash; }
+    uint32_t hash() const noexcept { return fHash; }
 
-    bool operator==(const Key& other) const {
+    bool operator==(const Key& other) const noexcept {
       const uint32_t* a = this->as32();
       const uint32_t* b = other.as32();
       for (int i = 0; i < fCount32; ++i) {  // (This checks fCount == other.fCount first.)
@@ -66,14 +66,14 @@ class SkResourceCache {
     void* fNamespace;  // A unique namespace tag. This is hashed.
     /* uint32_t fContents32[] */
 
-    const uint32_t* as32() const { return (const uint32_t*)this; }
+    const uint32_t* as32() const noexcept { return (const uint32_t*)this; }
   };
 
   struct Rec {
     typedef SkResourceCache::Key Key;
 
-    Rec() {}
-    virtual ~Rec() {}
+    Rec() noexcept = default;
+    virtual ~Rec() = default;
 
     uint32_t getHash() const { return this->getKey().hash(); }
 
@@ -109,7 +109,7 @@ class SkResourceCache {
 
   // Used with SkMessageBus
   struct PurgeSharedIDMessage {
-    PurgeSharedIDMessage(uint64_t sharedID) : fSharedID(sharedID) {}
+    constexpr PurgeSharedIDMessage(uint64_t sharedID) noexcept : fSharedID(sharedID) {}
     uint64_t fSharedID;
   };
 
@@ -218,8 +218,8 @@ class SkResourceCache {
   void add(Rec*, void* payload = nullptr);
   void visitAll(Visitor, void* context);
 
-  size_t getTotalBytesUsed() const { return fTotalBytesUsed; }
-  size_t getTotalByteLimit() const { return fTotalByteLimit; }
+  size_t getTotalBytesUsed() const noexcept { return fTotalBytesUsed; }
+  size_t getTotalByteLimit() const noexcept { return fTotalByteLimit; }
 
   /**
    *  This is respected by SkBitmapProcState::possiblyScaleImage.
@@ -243,7 +243,7 @@ class SkResourceCache {
 
   void purgeAll() { this->purgeAsNeeded(true); }
 
-  DiscardableFactory discardableFactory() const { return fDiscardableFactory; }
+  DiscardableFactory discardableFactory() const noexcept { return fDiscardableFactory; }
 
   SkCachedData* newCachedData(size_t bytes);
 
@@ -282,7 +282,7 @@ class SkResourceCache {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 };
 #endif

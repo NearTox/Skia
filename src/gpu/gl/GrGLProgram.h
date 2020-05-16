@@ -67,7 +67,7 @@ class GrGLProgram : public SkRefCnt {
   /**
    * Gets the GL program ID for this program.
    */
-  GrGLuint programID() const { return fProgramID; }
+  GrGLuint programID() const noexcept { return fProgramID; }
 
   /**
    * We use the RT's size and origin to adjust from Skia device space to OpenGL normalized device
@@ -79,7 +79,7 @@ class GrGLProgram : public SkRefCnt {
     GrSurfaceOrigin fRenderTargetOrigin;
 
     RenderTargetState() { this->invalidate(); }
-    void invalidate() {
+    void invalidate() noexcept {
       fRenderTargetSize.fWidth = -1;
       fRenderTargetSize.fHeight = -1;
       fRenderTargetOrigin = (GrSurfaceOrigin)-1;
@@ -92,7 +92,7 @@ class GrGLProgram : public SkRefCnt {
      * pos.x = dot(v.xy, pos.xz)
      * pos.y = dot(v.zw, pos.yz)
      */
-    void getRTAdjustmentVec(float* destVec) {
+    void getRTAdjustmentVec(float* destVec) noexcept {
       destVec[0] = 2.f / fRenderTargetSize.fWidth;
       destVec[1] = -1.f;
       if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
@@ -119,17 +119,17 @@ class GrGLProgram : public SkRefCnt {
       const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
       const GrPipeline&);
 
-  int vertexStride() const { return fVertexStride; }
-  int instanceStride() const { return fInstanceStride; }
+  int vertexStride() const noexcept { return fVertexStride; }
+  int instanceStride() const noexcept { return fInstanceStride; }
 
-  int numVertexAttributes() const { return fVertexAttributeCnt; }
-  const Attribute& vertexAttribute(int i) const {
+  int numVertexAttributes() const noexcept { return fVertexAttributeCnt; }
+  const Attribute& vertexAttribute(int i) const noexcept {
     SkASSERT(i >= 0 && i < fVertexAttributeCnt);
     return fAttributes[i];
   }
 
-  int numInstanceAttributes() const { return fInstanceAttributeCnt; }
-  const Attribute& instanceAttribute(int i) const {
+  int numInstanceAttributes() const noexcept { return fInstanceAttributeCnt; }
+  const Attribute& instanceAttribute(int i) const noexcept {
     SkASSERT(i >= 0 && i < fInstanceAttributeCnt);
     return fAttributes[i + fVertexAttributeCnt];
   }

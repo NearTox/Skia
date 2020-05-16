@@ -88,7 +88,7 @@ void GrBackendTextureImageGenerator::ReleaseRefHelper_TextureReleaseProc(void* c
 
 GrSurfaceProxyView GrBackendTextureImageGenerator::onGenerateTexture(
     GrRecordingContext* context, const SkImageInfo& info, const SkIPoint& origin,
-    GrMipMapped mipMapped) {
+    GrMipMapped mipMapped, GrImageTexGenPolicy texGenPolicy) {
   SkASSERT(context);
 
   if (context->backend() != fBackendTexture.backend()) {
@@ -150,8 +150,8 @@ GrSurfaceProxyView GrBackendTextureImageGenerator::onGenerateTexture(
   // Must make copies of member variables to capture in the lambda since this image generator may
   // be deleted before we actually execute the lambda.
   sk_sp<GrTextureProxy> proxy = proxyProvider->createLazyProxy(
-      [refHelper = fRefHelper, releaseProcHelper, backendTexture = fBackendTexture,
-       grColorType](GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyCallbackResult {
+      [refHelper = fRefHelper, releaseProcHelper, backendTexture = fBackendTexture](
+          GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyCallbackResult {
         if (refHelper->fSemaphore) {
           resourceProvider->priv().gpu()->waitSemaphore(refHelper->fSemaphore.get());
         }
@@ -176,8 +176,7 @@ GrSurfaceProxyView GrBackendTextureImageGenerator::onGenerateTexture(
           // texture, so this should be safe. We make the texture uncacheable so
           // that the release proc is called ASAP.
           tex = resourceProvider->wrapBackendTexture(
-              backendTexture, grColorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo,
-              kRead_GrIOType);
+              backendTexture, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType);
           if (!tex) {
             return {};
           }
@@ -189,25 +188,27 @@ GrSurfaceProxyView GrBackendTextureImageGenerator::onGenerateTexture(
         // proxy.
         return {std::move(tex), true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
       },
-      backendFormat, fBackendTexture.dimensions(), readSwizzle, GrRenderable::kNo, 1,
-      textureIsMipMapped, mipMapsStatus, GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact,
-      SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
+      backendFormat, fBackendTexture.dimensions(), GrRenderable::kNo, 1, textureIsMipMapped,
+      mipMapsStatus, GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact, SkBudgeted::kNo,
+      GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
   if (!proxy) {
     return {};
   }
 
-  if (origin.isZero() && info.dimensions() == fBackendTexture.dimensions() &&
+  if (texGenPolicy == GrImageTexGenPolicy::kDraw && origin.isZero() &&
+      info.dimensions() == fBackendTexture.dimensions() &&
       (mipMapped == GrMipMapped::kNo || proxy->mipMapped() == GrMipMapped::kYes)) {
     // If the caller wants the entire texture and we have the correct mip support, we're done
     return GrSurfaceProxyView(std::move(proxy), fSurfaceOrigin, readSwizzle);
   } else {
-    // Otherwise, make a copy of the requested subset. Make sure our temporary is renderable,
-    // because Vulkan will want to do the copy as a draw. All other copies would require a
-    // layout change in Vulkan and we do not change the layout of borrowed images.
     SkIRect subset = SkIRect::MakeXYWH(origin.fX, origin.fY, info.width(), info.height());
+
+    SkBudgeted budgeted = texGenPolicy == GrImageTexGenPolicy::kNew_Uncached_Unbudgeted
+                              ? SkBudgeted::kNo
+                              : SkBudgeted::kYes;
 
     return GrSurfaceProxy::Copy(
         context, proxy.get(), fSurfaceOrigin, grColorType, mipMapped, subset, SkBackingFit::kExact,
-        SkBudgeted::kYes);
+        budgeted);
   }
 }

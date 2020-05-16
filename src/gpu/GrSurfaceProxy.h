@@ -14,7 +14,6 @@
 #include "src/gpu/GrGpuResource.h"
 #include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/GrSurface.h"
-#include "src/gpu/GrSwizzle.h"
 #include "src/gpu/GrTexture.h"
 
 class GrCaps;
@@ -64,18 +63,18 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   };
 
   struct LazyCallbackResult {
-    LazyCallbackResult() = default;
+    constexpr LazyCallbackResult() noexcept = default;
     LazyCallbackResult(const LazyCallbackResult&) = default;
-    LazyCallbackResult(LazyCallbackResult&& that) = default;
+    LazyCallbackResult(LazyCallbackResult&& that) noexcept = default;
     LazyCallbackResult(
         sk_sp<GrSurface> surf, bool releaseCallback = true,
-        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced)
+        LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
         : fSurface(std::move(surf)), fKeyMode(mode), fReleaseCallback(releaseCallback) {}
-    LazyCallbackResult(sk_sp<GrTexture> tex)
+    LazyCallbackResult(sk_sp<GrTexture> tex) noexcept
         : LazyCallbackResult(sk_sp<GrSurface>(std::move(tex))) {}
 
     LazyCallbackResult& operator=(const LazyCallbackResult&) = default;
-    LazyCallbackResult& operator=(LazyCallbackResult&&) = default;
+    LazyCallbackResult& operator=(LazyCallbackResult&&) noexcept = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -100,28 +99,30 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
     kYes = true,
   };
 
-  bool isLazy() const { return !this->isInstantiated() && SkToBool(fLazyInstantiateCallback); }
+  bool isLazy() const noexcept {
+    return !this->isInstantiated() && SkToBool(fLazyInstantiateCallback);
+  }
 
-  bool isFullyLazy() const {
+  bool isFullyLazy() const noexcept {
     bool result = fDimensions.width() < 0;
     SkASSERT(result == (fDimensions.height() < 0));
     SkASSERT(!result || this->isLazy());
     return result;
   }
 
-  SkISize dimensions() const {
+  SkISize dimensions() const noexcept {
     SkASSERT(!this->isFullyLazy());
     return fDimensions;
   }
-  int width() const { return this->dimensions().width(); }
-  int height() const { return this->dimensions().height(); }
+  int width() const noexcept { return this->dimensions().width(); }
+  int height() const noexcept { return this->dimensions().height(); }
 
   SkISize backingStoreDimensions() const;
 
   /**
    * Helper that gets the width and height of the proxy as a bounding rectangle.
    */
-  SkRect getBoundsRect() const { return SkRect::Make(this->dimensions()); }
+  SkRect getBoundsRect() const noexcept { return SkRect::Make(this->dimensions()); }
 
   /* A perhaps faster check for this->dimensions() == this->backingStoreDimensions(). */
   bool isFunctionallyExact() const;
@@ -131,33 +132,29 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    */
   SkRect backingStoreBoundsRect() const { return SkRect::Make(this->backingStoreDimensions()); }
 
-  // Do not call this. It will shortly be removed and is just needed for a couple cases where we
-  // are getting a proxy from the cache and cannot be certain what the GrColorType of the proxy.
-  const GrSwizzle& textureSwizzleDoNotUse() const { return fTextureSwizzle; }
-
-  const GrBackendFormat& backendFormat() const { return fFormat; }
+  const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
 
   bool isFormatCompressed(const GrCaps*) const;
 
   class UniqueID {
    public:
-    static UniqueID InvalidID() { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
+    static UniqueID InvalidID() noexcept { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
 
     // wrapped
-    explicit UniqueID(const GrGpuResource::UniqueID& id) : fID(id.asUInt()) {}
+    explicit UniqueID(const GrGpuResource::UniqueID& id) noexcept : fID(id.asUInt()) {}
     // deferred and lazy-callback
-    UniqueID() : fID(GrGpuResource::CreateUniqueID()) {}
+    UniqueID() noexcept : fID(GrGpuResource::CreateUniqueID()) {}
 
-    uint32_t asUInt() const { return fID; }
+    uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const { return !(*this == other); }
+    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const { return SK_InvalidUniqueID == fID; }
+    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
 
    private:
-    explicit UniqueID(uint32_t id) : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
     uint32_t fID;
   };
@@ -177,9 +174,9 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    * track/identify a proxy but should never be used to distinguish between
    * resources and proxies - beware!
    */
-  UniqueID uniqueID() const { return fUniqueID; }
+  UniqueID uniqueID() const noexcept { return fUniqueID; }
 
-  UniqueID underlyingUniqueID() const {
+  UniqueID underlyingUniqueID() const noexcept {
     if (fTarget) {
       return UniqueID(fTarget->uniqueID());
     }
@@ -195,45 +192,49 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    * Proxies that are already instantiated and whose backing surface cannot be recycled to
    * instantiate other proxies do not need to be considered by GrResourceAllocator.
    */
-  bool canSkipResourceAllocator() const;
+  bool canSkipResourceAllocator() const noexcept;
 
   /**
    * @return the texture proxy associated with the surface proxy, may be NULL.
    */
-  virtual GrTextureProxy* asTextureProxy() { return nullptr; }
-  virtual const GrTextureProxy* asTextureProxy() const { return nullptr; }
+  virtual GrTextureProxy* asTextureProxy() noexcept { return nullptr; }
+  virtual const GrTextureProxy* asTextureProxy() const noexcept { return nullptr; }
 
   /**
    * @return the render target proxy associated with the surface proxy, may be NULL.
    */
-  virtual GrRenderTargetProxy* asRenderTargetProxy() { return nullptr; }
-  virtual const GrRenderTargetProxy* asRenderTargetProxy() const { return nullptr; }
+  virtual GrRenderTargetProxy* asRenderTargetProxy() noexcept { return nullptr; }
+  virtual const GrRenderTargetProxy* asRenderTargetProxy() const noexcept { return nullptr; }
 
-  bool isInstantiated() const { return SkToBool(fTarget); }
+  bool isInstantiated() const noexcept { return SkToBool(fTarget); }
 
   // If the proxy is already instantiated, return its backing GrTexture; if not, return null.
-  GrSurface* peekSurface() const { return fTarget.get(); }
+  GrSurface* peekSurface() const noexcept { return fTarget.get(); }
 
   // If this is a texture proxy and the proxy is already instantiated, return its backing
   // GrTexture; if not, return null.
-  GrTexture* peekTexture() const { return fTarget ? fTarget->asTexture() : nullptr; }
+  GrTexture* peekTexture() const noexcept { return fTarget ? fTarget->asTexture() : nullptr; }
 
   // If this is a render target proxy and the proxy is already instantiated, return its backing
   // GrRenderTarget; if not, return null.
-  GrRenderTarget* peekRenderTarget() const { return fTarget ? fTarget->asRenderTarget() : nullptr; }
+  GrRenderTarget* peekRenderTarget() const noexcept {
+    return fTarget ? fTarget->asRenderTarget() : nullptr;
+  }
 
   /**
    * Does the resource count against the resource budget?
    */
-  SkBudgeted isBudgeted() const { return fBudgeted; }
+  SkBudgeted isBudgeted() const noexcept { return fBudgeted; }
 
   /**
    * The pixel values of this proxy's surface cannot be modified (e.g. doesn't support write
    * pixels or MIP map level regen). Read-only proxies also bypass interval tracking and
    * assignment in GrResourceAllocator.
    */
-  bool readOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
-  bool framebufferOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly; }
+  bool readOnly() const noexcept { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
+  bool framebufferOnly() const noexcept {
+    return fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly;
+  }
 
   /**
    * This means surface is a multisampled render target, and internally holds a non-msaa texture
@@ -241,12 +242,12 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    * (asTexture() might or might not return the internal texture, but if it does, we always
    * resolve the render target before accessing this texture's data.)
    */
-  bool requiresManualMSAAResolve() const {
+  bool requiresManualMSAAResolve() const noexcept {
     return fSurfaceFlags & GrInternalSurfaceFlags::kRequiresManualMSAAResolve;
   }
 
-  void setLastRenderTask(GrRenderTask*);
-  GrRenderTask* getLastRenderTask() { return fLastRenderTask; }
+  void setLastRenderTask(GrRenderTask*) noexcept;
+  GrRenderTask* getLastRenderTask() noexcept { return fLastRenderTask; }
 
   GrOpsTask* getLastOpsTask();
 
@@ -298,36 +299,35 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   GrInternalSurfaceFlags testingOnly_getFlags() const;
 #endif
 
-  SkDEBUGCODE(void validate(GrContext_Base*) const;)
+  SkDEBUGCODE(void validate(GrContext_Base*) const);
 
-      // Provides access to functions that aren't part of the public API.
-      inline GrSurfaceProxyPriv priv();
-  inline const GrSurfaceProxyPriv priv() const;
+  // Provides access to functions that aren't part of the public API.
+  inline GrSurfaceProxyPriv priv() noexcept;
+  inline const GrSurfaceProxyPriv priv() const noexcept;
 
-  GrProtected isProtected() const { return fIsProtected; }
+  GrProtected isProtected() const noexcept { return fIsProtected; }
 
  protected:
   // Deferred version - takes a new UniqueID from the shared resource/proxy pool.
   GrSurfaceProxy(
-      const GrBackendFormat&, SkISize, GrRenderable, const GrSwizzle& textureSwizzle, SkBackingFit,
-      SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      const GrBackendFormat&, SkISize, SkBackingFit, SkBudgeted, GrProtected,
+      GrInternalSurfaceFlags, UseAllocator);
   // Lazy-callback version - takes a new UniqueID from the shared resource/proxy pool.
   GrSurfaceProxy(
-      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, GrRenderable,
-      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator);
+      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, SkBackingFit, SkBudgeted,
+      GrProtected, GrInternalSurfaceFlags, UseAllocator);
 
   // Wrapped version - shares the UniqueID of the passed surface.
   // Takes UseAllocator because even though this is already instantiated it still can participate
   // in allocation by having its backing resource recycled to other uninstantiated proxies or
   // not depending on UseAllocator.
-  GrSurfaceProxy(sk_sp<GrSurface>, const GrSwizzle& textureSwizzle, SkBackingFit, UseAllocator);
+  GrSurfaceProxy(sk_sp<GrSurface>, SkBackingFit, UseAllocator);
 
   friend class GrSurfaceProxyPriv;
 
   // Methods made available via GrSurfaceProxyPriv
-  bool ignoredByResourceAllocator() const { return fIgnoredByResourceAllocator; }
-  void setIgnoredByResourceAllocator() { fIgnoredByResourceAllocator = true; }
+  bool ignoredByResourceAllocator() const noexcept { return fIgnoredByResourceAllocator; }
+  void setIgnoredByResourceAllocator() noexcept { fIgnoredByResourceAllocator = true; }
 
   void computeScratchKey(const GrCaps&, GrScratchKey*) const;
 
@@ -341,7 +341,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // client can use this optional method to specify the proxy's dimensions. (A proxy's dimensions
   // can be less than the GPU surface that backs it. e.g., SkBackingFit::kApprox.) Otherwise,
   // the proxy's dimensions will be set to match the underlying GPU surface upon instantiation.
-  void setLazyDimensions(SkISize dimensions) {
+  void setLazyDimensions(SkISize dimensions) noexcept {
     SkASSERT(this->isFullyLazy());
     SkASSERT(!dimensions.isEmpty());
     fDimensions = dimensions;
@@ -368,7 +368,6 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // wrapped resource.
   const GrBackendFormat fFormat;
   SkISize fDimensions;
-  const GrSwizzle fTextureSwizzle;
 
   SkBackingFit fFit;             // always kApprox for lazy-callback resources
                                  // always kExact for wrapped resources
@@ -382,13 +381,13 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
 
   LazyInstantiateCallback fLazyInstantiateCallback;
 
-  SkDEBUGCODE(void validateSurface(const GrSurface*);)
-      SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0;)
+  SkDEBUGCODE(void validateSurface(const GrSurface*));
+  SkDEBUGCODE(virtual void onValidateSurface(const GrSurface*) = 0);
 
-          static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
-  SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; })
+  static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
+  SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; });
 
-      virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;
+  virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;
 
   bool fIgnoredByResourceAllocator = false;
   GrProtected fIsProtected;

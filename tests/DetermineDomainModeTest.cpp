@@ -133,10 +133,8 @@ static sk_sp<GrTextureProxy> create_proxy(
       (isPowerOfTwo || isExact) ? RectInfo::kHard : RectInfo::kBad,
       (isPowerOfTwo || isExact) ? RectInfo::kHard : RectInfo::kBad, name);
 
-  GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
-
   return proxyProvider->createProxy(
-      format, {size, size}, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, fit, SkBudgeted::kYes,
+      format, {size, size}, GrRenderable::kNo, 1, GrMipMapped::kNo, fit, SkBudgeted::kYes,
       GrProtected::kNo);
 }
 

@@ -17,7 +17,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
 
   explicit SkColorFilter_Matrix(const float array[20], Domain);
 
-  uint32_t getFlags() const override;
+  uint32_t getFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -33,9 +33,9 @@ class SkColorFilter_Matrix : public SkColorFilter {
   SK_FLATTENABLE_HOOKS(SkColorFilter_Matrix)
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
-  bool onProgram(
-      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc*, skvm::F32* r,
-      skvm::F32* g, skvm::F32* b, skvm::F32* a) const override;
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms* uniforms,
+      SkArenaAlloc*) const override;
 
   float fMatrix[20];
   uint16_t fFlags;

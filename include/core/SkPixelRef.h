@@ -35,17 +35,17 @@ class SK_API SkPixelRef : public SkRefCnt {
   SkPixelRef(int width, int height, void* addr, size_t rowBytes);
   ~SkPixelRef() override;
 
-  SkISize dimensions() const { return {fWidth, fHeight}; }
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
-  void* pixels() const { return fPixels; }
-  size_t rowBytes() const { return fRowBytes; }
+  SkISize dimensions() const noexcept { return {fWidth, fHeight}; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
+  void* pixels() const noexcept { return fPixels; }
+  size_t rowBytes() const noexcept { return fRowBytes; }
 
   /** Returns a non-zero, unique value corresponding to the pixels in this
       pixelref. Each time the pixels are changed (and notifyPixelsChanged is
       called), a different generation ID will be returned.
   */
-  uint32_t getGenerationID() const;
+  uint32_t getGenerationID() const noexcept;
 
   /**
    *  Call this if you have changed the contents of the pixels. This will in-
@@ -57,13 +57,13 @@ class SK_API SkPixelRef : public SkRefCnt {
   /** Returns true if this pixelref is marked as immutable, meaning that the
       contents of its pixels will not change for the lifetime of the pixelref.
   */
-  bool isImmutable() const { return fMutability != kMutable; }
+  bool isImmutable() const noexcept { return fMutability != kMutable; }
 
   /** Marks this pixelref is immutable, meaning that the contents of its
       pixels will not change for the lifetime of the pixelref. This state can
       be set on a pixelref, but it cannot be cleared once it is set.
   */
-  void setImmutable();
+  void setImmutable() noexcept;
 
   // Register a listener that may be called the next time our generation ID changes.
   //
@@ -78,7 +78,7 @@ class SK_API SkPixelRef : public SkRefCnt {
 
   // Call when this pixelref is part of the key to a resourcecache entry. This allows the cache
   // to know automatically those entries can be purged when this pixelref is changed or deleted.
-  void notifyAddedToCache() { fAddedToCache.store(true); }
+  void notifyAddedToCache() noexcept { fAddedToCache.store(true); }
 
   virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const { return nullptr; }
 
@@ -92,7 +92,7 @@ class SK_API SkPixelRef : public SkRefCnt {
   size_t fRowBytes;
 
   // Bottom bit indicates the Gen ID is unique.
-  bool genIDIsUnique() const { return SkToBool(fTaggedGenID.load() & 1); }
+  bool genIDIsUnique() const noexcept { return SkToBool(fTaggedGenID.load() & 1); }
   mutable std::atomic<uint32_t> fTaggedGenID;
 
   SkIDChangeListener::List fGenIDChangeListeners;
@@ -106,14 +106,14 @@ class SK_API SkPixelRef : public SkRefCnt {
     kImmutable,             // Once set to this state, it never leaves.
   } fMutability : 8;        // easily fits inside a byte
 
-  void needsNewGenID();
+  void needsNewGenID() noexcept;
   void callGenIDChangeListeners();
 
-  void setTemporarilyImmutable();
-  void restoreMutability();
+  void setTemporarilyImmutable() noexcept;
+  void restoreMutability() noexcept;
   friend class SkSurface_Raster;  // For the two methods above.
 
-  void setImmutableWithID(uint32_t genID);
+  void setImmutableWithID(uint32_t genID) noexcept;
   friend void SkBitmapCache_setImmutableWithID(SkPixelRef*, uint32_t);
 
   typedef SkRefCnt INHERITED;

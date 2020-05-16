@@ -25,7 +25,7 @@ Group::~Group() {
   }
 }
 
-void Group::clear() {
+void Group::clear() noexcept {
   for (const auto& child : fChildren) {
     this->unobserveInval(child);
   }
@@ -46,7 +46,7 @@ void Group::addChild(sk_sp<RenderNode> node) {
   this->invalidate();
 }
 
-void Group::removeChild(const sk_sp<RenderNode>& node) {
+void Group::removeChild(const sk_sp<RenderNode>& node) noexcept {
   SkDEBUGCODE(const auto origSize = fChildren.size());
   fChildren.erase(std::remove(fChildren.begin(), fChildren.end(), node), fChildren.end());
   SkASSERT(fChildren.size() == origSize - 1);

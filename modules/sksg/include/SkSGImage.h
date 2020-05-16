@@ -11,8 +11,7 @@
 #include "modules/sksg/include/SkSGRenderNode.h"
 
 #include "include/core/SkFilterQuality.h"
-
-class SkImage;
+#include "include/core/SkImage.h"
 
 namespace sksg {
 

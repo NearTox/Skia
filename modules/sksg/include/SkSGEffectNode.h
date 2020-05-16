@@ -28,7 +28,7 @@ class EffectNode : public RenderNode {
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-  const sk_sp<RenderNode>& getChild() const { return fChild; }
+  const sk_sp<RenderNode>& getChild() const noexcept { return fChild; }
 
  private:
   sk_sp<RenderNode> fChild;

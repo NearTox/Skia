@@ -93,17 +93,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const override {
-    if (fDWriteFontCollectionLoader.get()) {
-      HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
-    }
-    if (fDWriteFontFileLoader.get()) {
-      HRV(fFactory->UnregisterFontFileLoader(fDWriteFontFileLoader.get()));
-    }
-
-    // SkTypefaceCache::Remove(this);
-    INHERITED::weak_dispose();
-  }
+  void weak_dispose() const noexcept override;
 
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const override;
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override;

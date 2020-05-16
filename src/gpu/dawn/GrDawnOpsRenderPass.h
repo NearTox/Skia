@@ -12,7 +12,6 @@
 
 #include "include/gpu/GrTypes.h"
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrMesh.h"
 #include "dawn/webgpu_cpp.h"
 
 class GrDawnGpu;
@@ -27,9 +26,6 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass {
 
   ~GrDawnOpsRenderPass() override;
 
-  void begin() override {}
-  void end() override;
-
   wgpu::RenderPassEncoder beginRenderPass(wgpu::LoadOp colorOp, wgpu::LoadOp stencilOp);
 
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override;
@@ -39,9 +35,9 @@ class GrDawnOpsRenderPass : public GrOpsRenderPass {
  private:
   GrGpu* gpu() override;
 
-  void setScissorState(const GrProgramInfo&);
   void applyState(GrDawnProgram*, const GrProgramInfo& programInfo);
 
+  void onEnd() override;
   bool onBindPipeline(const GrProgramInfo& programInfo, const SkRect& drawBounds) override;
   void onSetScissorRect(const SkIRect&) override;
   bool onBindTextures(

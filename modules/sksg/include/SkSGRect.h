@@ -44,7 +44,7 @@ class Rect final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  explicit Rect(const SkRect&);
+  explicit Rect(const SkRect&) noexcept;
 
   SkRect fRect;
 
@@ -52,11 +52,13 @@ class Rect final : public GeometryNode {
     uint8_t fDirection : 1;
     uint8_t fInitialPointIndex : 2;
 
-    SkPathDirection getDirection() const { return static_cast<SkPathDirection>(fDirection); }
-    void setDirection(SkPathDirection dir) { fDirection = SkTo<uint8_t>(dir); }
+    SkPathDirection getDirection() const noexcept {
+      return static_cast<SkPathDirection>(fDirection);
+    }
+    void setDirection(SkPathDirection dir) noexcept { fDirection = SkTo<uint8_t>(dir); }
 
-    uint8_t getInitialPointIndex() const { return fInitialPointIndex; }
-    void setInitialPointIndex(uint8_t idx) { fInitialPointIndex = idx; }
+    uint8_t getInitialPointIndex() const noexcept { return fInitialPointIndex; }
+    void setInitialPointIndex(uint8_t idx) noexcept { fInitialPointIndex = idx; }
   };
   AttrContainer fAttrContaier = {(int)SkPathDirection::kCW, 0};
 

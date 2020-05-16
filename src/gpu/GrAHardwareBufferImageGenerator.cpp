@@ -30,6 +30,7 @@
 #  include "src/gpu/GrResourceProviderPriv.h"
 #  include "src/gpu/GrTexture.h"
 #  include "src/gpu/GrTextureProxy.h"
+#  include "src/gpu/SkGr.h"
 #  include "src/gpu/gl/GrGLDefines.h"
 
 #  include <EGL/egl.h>
@@ -133,12 +134,9 @@ GrSurfaceProxyView GrAHardwareBufferImageGenerator::makeView(GrRecordingContext*
     AHardwareBuffer* fAhb;
   };
 
-  GrSwizzle readSwizzle = context->priv().caps()->getReadSwizzle(backendFormat, grColorType);
-
   sk_sp<GrTextureProxy> texProxy = proxyProvider->createLazyProxy(
       [direct, buffer = AutoAHBRelease(hardwareBuffer), width, height, isProtectedContent,
-       backendFormat,
-       grColorType](GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyCallbackResult {
+       backendFormat](GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyCallbackResult {
         GrAHardwareBufferUtils::DeleteImageProc deleteImageProc = nullptr;
         GrAHardwareBufferUtils::UpdateImageProc updateImageProc = nullptr;
         GrAHardwareBufferUtils::TexImageCtx texImageCtx = nullptr;
@@ -155,8 +153,7 @@ GrSurfaceProxyView GrAHardwareBufferImageGenerator::makeView(GrRecordingContext*
         // is invoked. We know the owning SkIamge will send an invalidation message when the
         // image is destroyed, so the texture will be removed at that time.
         sk_sp<GrTexture> tex = resourceProvider->wrapBackendTexture(
-            backendTex, grColorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kYes,
-            kRead_GrIOType);
+            backendTex, kBorrow_GrWrapOwnership, GrWrapCacheable::kYes, kRead_GrIOType);
         if (!tex) {
           deleteImageProc(texImageCtx);
           return {};
@@ -168,34 +165,40 @@ GrSurfaceProxyView GrAHardwareBufferImageGenerator::makeView(GrRecordingContext*
 
         return tex;
       },
-      backendFormat, {width, height}, readSwizzle, GrRenderable::kNo, 1, GrMipMapped::kNo,
+      backendFormat, {width, height}, GrRenderable::kNo, 1, GrMipMapped::kNo,
       GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact,
       SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
+
+  GrSwizzle readSwizzle = context->priv().caps()->getReadSwizzle(backendFormat, grColorType);
 
   return GrSurfaceProxyView(std::move(texProxy), fSurfaceOrigin, readSwizzle);
 }
 
 GrSurfaceProxyView GrAHardwareBufferImageGenerator::onGenerateTexture(
     GrRecordingContext* context, const SkImageInfo& info, const SkIPoint& origin,
-    GrMipMapped mipMapped) {
+    GrMipMapped mipMapped, GrImageTexGenPolicy texGenPolicy) {
   GrSurfaceProxyView texProxyView = this->makeView(context);
   if (!texProxyView.proxy()) {
     return {};
   }
   SkASSERT(texProxyView.asTextureProxy());
 
-  if (origin.isZero() && info.dimensions() == this->getInfo().dimensions() &&
-      mipMapped == GrMipMapped::kNo) {
+  if (texGenPolicy == GrImageTexGenPolicy::kDraw && origin.isZero() &&
+      info.dimensions() == this->getInfo().dimensions() && mipMapped == GrMipMapped::kNo) {
     // If the caller wants the full non-MIP mapped texture we're done.
     return texProxyView;
   }
   // Otherwise, make a copy for the requested subset and/or MIP maps.
   SkIRect subset = SkIRect::MakeXYWH(origin.fX, origin.fY, info.width(), info.height());
 
+  SkBudgeted budgeted = texGenPolicy == GrImageTexGenPolicy::kNew_Uncached_Unbudgeted
+                            ? SkBudgeted::kNo
+                            : SkBudgeted::kYes;
+
   GrColorType grColorType = SkColorTypeToGrColorType(this->getInfo().colorType());
   return GrSurfaceProxy::Copy(
       context, texProxyView.proxy(), texProxyView.origin(), grColorType, mipMapped, subset,
-      SkBackingFit::kExact, SkBudgeted::kYes);
+      SkBackingFit::kExact, budgeted);
 }
 
 bool GrAHardwareBufferImageGenerator::onIsValid(GrContext* context) const {

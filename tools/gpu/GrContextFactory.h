@@ -155,10 +155,12 @@ class ContextInfo {
 
   TestContext* testContext() const { return fTestContext; }
 
+#ifdef SK_GL
   GLTestContext* glContext() const {
     SkASSERT(GrBackendApi::kOpenGL == this->backend());
     return static_cast<GLTestContext*>(fTestContext);
   }
+#endif
 
   const GrContextOptions& options() const { return fOptions; }
 

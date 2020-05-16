@@ -44,7 +44,7 @@ class GrGpuResource::ResourcePriv {
    * Get the resource's budgeted-type which indicates whether it counts against the resource cache
    * budget and if not whether it is allowed to be cached.
    */
-  GrBudgetedType budgetedType() const {
+  GrBudgetedType budgetedType() const noexcept {
     SkASSERT(
         GrBudgetedType::kBudgeted == fResource->fBudgetedType ||
         !fResource->getUniqueKey().isValid() || fResource->fRefsWrappedObjects);
@@ -54,14 +54,14 @@ class GrGpuResource::ResourcePriv {
   /**
    * Is the resource object wrapping an externally allocated GPU resource?
    */
-  bool refsWrappedObjects() const { return fResource->fRefsWrappedObjects; }
+  bool refsWrappedObjects() const noexcept { return fResource->fRefsWrappedObjects; }
 
   /**
    * If this resource can be used as a scratch resource this returns a valid scratch key.
    * Otherwise it returns a key for which isNullScratch is true. The resource may currently be
    * used as a uniquely keyed resource rather than scratch. Check isScratch().
    */
-  const GrScratchKey& getScratchKey() const { return fResource->fScratchKey; }
+  const GrScratchKey& getScratchKey() const noexcept { return fResource->fScratchKey; }
 
   /**
    * If the resource has a scratch key, the key will be removed. Since scratch keys are installed
@@ -69,13 +69,13 @@ class GrGpuResource::ResourcePriv {
    */
   void removeScratchKey() const { fResource->removeScratchKey(); }
 
-  bool isPurgeable() const { return fResource->isPurgeable(); }
+  bool isPurgeable() const noexcept { return fResource->isPurgeable(); }
 
-  bool hasRef() const { return fResource->hasRef(); }
+  bool hasRef() const noexcept { return fResource->hasRef(); }
 
  protected:
-  ResourcePriv(GrGpuResource* resource) : fResource(resource) {}
-  ResourcePriv(const ResourcePriv& that) : fResource(that.fResource) {}
+  ResourcePriv(GrGpuResource* resource) noexcept : fResource(resource) {}
+  ResourcePriv(const ResourcePriv& that) noexcept : fResource(that.fResource) {}
   ResourcePriv& operator=(const CacheAccess&);  // unimpl
 
   // No taking addresses of this type.
@@ -87,9 +87,11 @@ class GrGpuResource::ResourcePriv {
   friend class GrGpuResource;  // to construct/copy this type.
 };
 
-inline GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() { return ResourcePriv(this); }
+inline GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() noexcept {
+  return ResourcePriv(this);
+}
 
-inline const GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() const {
+inline const GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() const noexcept {
   return ResourcePriv(const_cast<GrGpuResource*>(this));
 }
 

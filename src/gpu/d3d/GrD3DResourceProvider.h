@@ -8,20 +8,26 @@
 #ifndef GrD3DResourceProvider_DEFINED
 #define GrD3DResourceProvider_DEFINED
 
-#include "include/gpu/d3d/GrD3D12.h"
+#include "include/gpu/d3d/GrD3DTypes.h"
+#include "include/private/SkTArray.h"
 
+#include <memory>
+
+class GrD3DDirectCommandList;
 class GrD3DGpu;
 
 class GrD3DResourceProvider {
  public:
   GrD3DResourceProvider(GrD3DGpu*);
 
-  gr_cp<ID3D12GraphicsCommandList> findOrCreateDirectCommandList();
+  std::unique_ptr<GrD3DDirectCommandList> findOrCreateDirectCommandList();
+
+  void recycleDirectCommandList(std::unique_ptr<GrD3DDirectCommandList>);
 
  private:
-  gr_cp<ID3D12CommandAllocator> fDirectCommandAllocator;
-
   GrD3DGpu* fGpu;
+
+  SkSTArray<4, std::unique_ptr<GrD3DDirectCommandList>> fAvailableDirectCommandLists;
 };
 
 #endif

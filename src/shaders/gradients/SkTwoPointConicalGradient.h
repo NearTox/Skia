@@ -47,7 +47,7 @@ class SkTwoPointConicalGradient final : public SkGradientShaderBase {
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
-  bool isOpaque() const override;
+  bool isOpaque() const noexcept override;
 
   SkScalar getCenterX1() const { return SkPoint::Distance(fCenter1, fCenter2); }
   SkScalar getStartRadius() const { return fRadius1; }

@@ -8,8 +8,9 @@
 #ifndef GrD3DCaps_DEFINED
 #define GrD3DCaps_DEFINED
 
-#include "include/gpu/d3d/GrD3D12.h"
 #include "src/gpu/GrCaps.h"
+
+#include "include/gpu/d3d/GrD3DTypes.h"
 
 class GrShaderCaps;
 
@@ -27,7 +28,6 @@ class GrD3DCaps : public GrCaps {
   bool isFormatSRGB(const GrBackendFormat&) const override;
   SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
 
-  bool isFormatTexturableAndUploadable(GrColorType, const GrBackendFormat&) const override;
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isFormatTexturable(DXGI_FORMAT) const;
 
@@ -64,7 +64,7 @@ class GrD3DCaps : public GrCaps {
   }
 
   GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
-  GrSwizzle getOutputSwizzle(const GrBackendFormat&, GrColorType) const override;
+  GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
@@ -101,7 +101,7 @@ class GrD3DCaps : public GrCaps {
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
-  GrBackendFormat onGetDefaultBackendFormat(GrColorType, GrRenderable) const override;
+  GrBackendFormat onGetDefaultBackendFormat(GrColorType) const override;
 
   bool onAreColorTypeAndFormatCompatible(GrColorType, const GrBackendFormat&) const override;
 
@@ -123,7 +123,7 @@ class GrD3DCaps : public GrCaps {
     uint32_t fFlags = 0;
 
     GrSwizzle fReadSwizzle;
-    GrSwizzle fOutputSwizzle;
+    GrSwizzle fWriteSwizzle;
   };
 
   struct FormatInfo {

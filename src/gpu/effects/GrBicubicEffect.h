@@ -55,6 +55,14 @@ class GrBicubicEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> MakeSubset(
       GrSurfaceProxyView view, SkAlphaType, const SkMatrix&, const GrSamplerState::WrapMode wrapX,
       const GrSamplerState::WrapMode wrapY, const SkRect& subset, Direction, const GrCaps&);
+
+  /**
+   * Make a Mitchell filter of a another fragment processor. The bicubic filter assumes that the
+   * discrete samples of the provided processor are at half-integer coords.
+   */
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      std::unique_ptr<GrFragmentProcessor>, SkAlphaType, const SkMatrix&, Direction);
+
   /**
    * Determines whether the bicubic effect should be used based on the transformation from the
    * local coords to the device. Returns true if the bicubic effect should be used. filterMode
@@ -73,7 +81,8 @@ class GrBicubicEffect : public GrFragmentProcessor {
     kPremul,    // clamps a to 0..1 and rgb to 0..a
   };
 
-  GrBicubicEffect(std::unique_ptr<GrFragmentProcessor> fp, Direction direction, Clamp clamp);
+  GrBicubicEffect(std::unique_ptr<GrFragmentProcessor>, const SkMatrix&, Direction, Clamp);
+
   explicit GrBicubicEffect(const GrBicubicEffect&);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
@@ -81,6 +90,8 @@ class GrBicubicEffect : public GrFragmentProcessor {
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor&) const override;
+
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f&) const override;
 
   GrCoordTransform fCoordTransform;
   Direction fDirection;

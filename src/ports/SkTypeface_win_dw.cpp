@@ -268,6 +268,18 @@ sk_sp<SkData> DWriteFontTypeface::onCopyTableData(SkFontTableTag tag) const {
       new Context(lock, fDWriteFontFace.get()));
 }
 
+void DWriteFontTypeface::weak_dispose() const noexcept {
+  if (fDWriteFontCollectionLoader.get()) {
+    HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
+  }
+  if (fDWriteFontFileLoader.get()) {
+    HRV(fFactory->UnregisterFontFileLoader(fDWriteFontFileLoader.get()));
+  }
+
+  // SkTypefaceCache::Remove(this);
+  INHERITED::weak_dispose();
+}
+
 sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) const {
   // Skip if the current face index does not match the ttcIndex
   if (fDWriteFontFace->GetIndex() != SkTo<UINT32>(args.getCollectionIndex())) {

@@ -15,28 +15,28 @@ namespace sksg {
 namespace {
 
 template <typename T>
-SkMatrix AsSkMatrix(const T&);
+SkMatrix AsSkMatrix(const T&) noexcept;
 
 template <>
-SkMatrix AsSkMatrix<SkMatrix>(const SkMatrix& m) {
+SkMatrix AsSkMatrix<SkMatrix>(const SkMatrix& m) noexcept {
   return m;
 }
 
 template <>
-SkMatrix AsSkMatrix<SkM44>(const SkM44& m) {
+SkMatrix AsSkMatrix<SkM44>(const SkM44& m) noexcept {
   return m.asM33();
 }
 
 template <typename T>
-SkM44 AsSkM44(const T&);
+SkM44 AsSkM44(const T&) noexcept;
 
 template <>
-SkM44 AsSkM44<SkMatrix>(const SkMatrix& m) {
+SkM44 AsSkM44<SkMatrix>(const SkMatrix& m) noexcept {
   return SkM44(m);
 }
 
 template <>
-SkM44 AsSkM44<SkM44>(const SkM44& m) {
+SkM44 AsSkM44<SkM44>(const SkM44& m) noexcept {
   return m;
 }
 
@@ -67,7 +67,7 @@ class Concat final : public Transform {
     return SkRect::MakeEmpty();
   }
 
-  bool is44() const override { return std::is_same<T, SkM44>::value; }
+  bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
 
   SkMatrix asMatrix() const override {
     SkASSERT(!this->hasInval());
@@ -110,7 +110,7 @@ class Inverse final : public Transform {
     return SkRect::MakeEmpty();
   }
 
-  bool is44() const override { return std::is_same<T, SkM44>::value; }
+  bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
 
   SkMatrix asMatrix() const override {
     SkASSERT(!this->hasInval());
@@ -152,7 +152,7 @@ SkM44 Matrix<SkM44>::asM44() const {
 }
 
 // Transform nodes don't generate damage on their own, but via ancestor TransformEffects.
-Transform::Transform() : INHERITED(kBubbleDamage_Trait) {}
+Transform::Transform() noexcept : INHERITED(kBubbleDamage_Trait) {}
 
 sk_sp<Transform> Transform::MakeConcat(sk_sp<Transform> a, sk_sp<Transform> b) {
   if (!a) {

@@ -20,8 +20,8 @@ class GrTexturePriv;
 
 class GrTexture : virtual public GrSurface {
  public:
-  GrTexture* asTexture() override { return this; }
-  const GrTexture* asTexture() const override { return this; }
+  GrTexture* asTexture() noexcept override { return this; }
+  const GrTexture* asTexture() const noexcept override { return this; }
 
   virtual GrBackendTexture getBackendTexture() const = 0;
 
@@ -65,8 +65,8 @@ class GrTexture : virtual public GrSurface {
   }
 
   /** Access methods that are only to be used within Skia code. */
-  inline GrTexturePriv texturePriv();
-  inline const GrTexturePriv texturePriv() const;
+  inline GrTexturePriv texturePriv() noexcept;
+  inline const GrTexturePriv texturePriv() const noexcept;
 
  protected:
   GrTexture(GrGpu*, const SkISize&, GrProtected, GrTextureType, GrMipMapsStatus);

@@ -27,11 +27,11 @@ static constexpr float kInvDistTolerance = 1.f / kDistTolerance;
 
 // These rotate the points/edge values either clockwise or counterclockwise assuming tri strip
 // order.
-static AI V4f next_cw(const V4f& v) { return skvx::shuffle<2, 0, 3, 1>(v); }
+static AI V4f next_cw(const V4f& v) noexcept { return skvx::shuffle<2, 0, 3, 1>(v); }
 
-static AI V4f next_ccw(const V4f& v) { return skvx::shuffle<1, 3, 0, 2>(v); }
+static AI V4f next_ccw(const V4f& v) noexcept { return skvx::shuffle<1, 3, 0, 2>(v); }
 
-static AI V4f next_diag(const V4f& v) {
+static AI V4f next_diag(const V4f& v) noexcept {
   // Same as next_ccw(next_ccw(v)), or next_cw(next_cw(v)), e.g. two rotations either direction.
   return skvx::shuffle<3, 2, 1, 0>(v);
 }

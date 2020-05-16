@@ -35,10 +35,10 @@ struct SkSemaphore::OSSemaphore {
   }
   ~OSSemaphore() { CloseHandle(fSemaphore); }
 
-  void signal(int n) {
+  void signal(int n) noexcept {
     ReleaseSemaphore(fSemaphore, n, nullptr /*returns previous count, optional*/);
   }
-  void wait() { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
+  void wait() noexcept { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
 };
 #else
 // It's important we test for Mach before this.  This code will compile but not work there.
@@ -77,7 +77,7 @@ void SkSemaphore::osWait() {
   fOSSemaphore->wait();
 }
 
-bool SkSemaphore::try_wait() {
+bool SkSemaphore::try_wait() noexcept {
   int count = fCount.load(std::memory_order_relaxed);
   if (count > 0) {
     return fCount.compare_exchange_weak(count, count - 1, std::memory_order_acquire);

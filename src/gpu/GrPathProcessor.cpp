@@ -59,12 +59,10 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
       FPCoordTransformHandler* transformHandler) {
     for (int i = 0; *transformHandler; ++*transformHandler, ++i) {
       auto [coordTransform, fp] = transformHandler->get();
-      GrSLType varyingType =
-          coordTransform.matrix().hasPerspective() ? kHalf3_GrSLType : kHalf2_GrSLType;
 
       SkString matrix;
-      UniformHandle uniformHandle;
       GrShaderVar fragmentVar;
+      GrShaderVar transformVar;
       if (fp.isSampledWithExplicitCoords()) {
         if (coordTransform.isNoOp()) {
           transformHandler->omitCoordsForCurrCoordTransform();
@@ -73,17 +71,23 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
           const char* name;
           SkString strUniName;
           strUniName.printf("CoordTransformMatrix_%d", i);
-          fUniformTransform.push_back().fHandle =
+          auto& uni = fUniformTransform.push_back();
+          if (coordTransform.matrix().isScaleTranslate()) {
+            uni.fType = kFloat4_GrSLType;
+          } else {
+            uni.fType = kFloat3x3_GrSLType;
+          }
+          uni.fHandle =
               uniformHandler
-                  ->addUniform(
-                      kFragment_GrShaderFlag, kFloat3x3_GrSLType, strUniName.c_str(), &name)
+                  ->addUniform(kFragment_GrShaderFlag, uni.fType, strUniName.c_str(), &name)
                   .toIndex();
-          uniformHandle = fUniformTransform.back().fHandle;
-          matrix = name;
+          transformVar = uniformHandler->getUniformVariable(uni.fHandle);
         }
       } else {
         SkString strVaryingName;
         strVaryingName.printf("TransformedCoord_%d", i);
+        GrSLType varyingType =
+            coordTransform.matrix().hasPerspective() ? kHalf3_GrSLType : kHalf2_GrSLType;
         GrGLSLVarying v(varyingType);
 #ifdef SK_GL
         GrGLVaryingHandler* glVaryingHandler = (GrGLVaryingHandler*)varyingHandler;
@@ -94,7 +98,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
         matrix = matrix_to_sksl(coordTransform.matrix());
         fragmentVar = {SkString(v.fsIn()), varyingType};
       }
-      transformHandler->specifyCoordsForCurrCoordTransform(matrix, uniformHandle, fragmentVar);
+      transformHandler->specifyCoordsForCurrCoordTransform(transformVar, fragmentVar);
     }
   }
 
@@ -117,7 +121,14 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
           SkMatrix m = GetTransformMatrix(transform, SkMatrix::I());
           if (!SkMatrixPriv::CheapEqual(fUniformTransform[u].fCurrentValue, m)) {
             fUniformTransform[u].fCurrentValue = m;
-            pd.setSkMatrix(fUniformTransform[u].fHandle.toIndex(), m);
+            if (fUniformTransform[u].fType == kFloat4_GrSLType) {
+              float values[4] = {
+                  m.getScaleX(), m.getTranslateX(), m.getScaleY(), m.getTranslateY()};
+              pd.set4fv(fUniformTransform[u].fHandle.toIndex(), 1, values);
+            } else {
+              SkASSERT(fUniformTransform[u].fType == kFloat3x3_GrSLType);
+              pd.setSkMatrix(fUniformTransform[u].fHandle.toIndex(), m);
+            }
           }
         }
         ++u;
@@ -153,6 +164,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
   struct TransformUniform {
     UniformHandle fHandle;
     SkMatrix fCurrentValue = SkMatrix::InvalidMatrix();
+    GrSLType fType = kVoid_GrSLType;
   };
 
   SkTArray<TransformVarying, true> fVaryingTransform;

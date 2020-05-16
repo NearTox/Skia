@@ -10,6 +10,7 @@
 
 #include "include/core/SkRefCnt.h"
 #include "include/private/GrImageContext.h"
+#include "include/private/SkTArray.h"
 
 class GrAuditTrail;
 class GrBackendFormat;
@@ -34,8 +35,8 @@ class GrRecordingContext : public GrImageContext {
   }
 
   // Provides access to functions that aren't part of the public API.
-  GrRecordingContextPriv priv();
-  const GrRecordingContextPriv priv() const;
+  GrRecordingContextPriv priv() noexcept;
+  const GrRecordingContextPriv priv() const noexcept;
 
   // The collection of specialized memory arenas for different types of data recorded by a
   // GrRecordingContext. Arenas does not maintain ownership of the pools it groups together.
@@ -44,10 +45,10 @@ class GrRecordingContext : public GrImageContext {
     Arenas(GrOpMemoryPool*, SkArenaAlloc*);
 
     // For storing GrOp-derived classes recorded by a GrRecordingContext
-    GrOpMemoryPool* opMemoryPool() { return fOpMemoryPool; }
+    GrOpMemoryPool* opMemoryPool() noexcept { return fOpMemoryPool; }
 
     // For storing pipelines and other complex data as-needed by ops
-    SkArenaAlloc* recordTimeAllocator() { return fRecordTimeAllocator; }
+    SkArenaAlloc* recordTimeAllocator() noexcept { return fRecordTimeAllocator; }
 
    private:
     GrOpMemoryPool* fOpMemoryPool;
@@ -93,8 +94,8 @@ class GrRecordingContext : public GrImageContext {
     ProgramData(const ProgramData&) = delete;
     ~ProgramData();
 
-    const GrProgramDesc& desc() const { return *fDesc; }
-    const GrProgramInfo& info() const { return *fInfo; }
+    const GrProgramDesc& desc() const noexcept { return *fDesc; }
+    const GrProgramInfo& info() const noexcept { return *fInfo; }
 
    private:
     // TODO: store the GrProgramDescs in the 'fRecordTimeData' arena
@@ -115,7 +116,7 @@ class GrRecordingContext : public GrImageContext {
   // same lifetime at the DDL itself.
   virtual void detachProgramData(SkTArray<ProgramData>*) {}
 
-  GrStrikeCache* getGrStrikeCache() { return fStrikeCache.get(); }
+  GrStrikeCache* getGrStrikeCache() noexcept { return fStrikeCache.get(); }
   GrTextBlobCache* getTextBlobCache();
   const GrTextBlobCache* getTextBlobCache() const;
 
@@ -127,9 +128,9 @@ class GrRecordingContext : public GrImageContext {
    */
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
-  GrAuditTrail* auditTrail() { return fAuditTrail.get(); }
+  GrAuditTrail* auditTrail() noexcept { return fAuditTrail.get(); }
 
-  GrRecordingContext* asRecordingContext() override { return this; }
+  GrRecordingContext* asRecordingContext() noexcept override { return this; }
 
  private:
   OwnedArenas fArenas;

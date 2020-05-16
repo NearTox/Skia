@@ -81,30 +81,30 @@ class SK_API SkSurfaceCharacterization {
    */
   SkSurfaceCharacterization createFBO0(bool usesGLFBO0) const;
 
-  GrContextThreadSafeProxy* contextInfo() const { return fContextInfo.get(); }
+  GrContextThreadSafeProxy* contextInfo() const noexcept { return fContextInfo.get(); }
   sk_sp<GrContextThreadSafeProxy> refContextInfo() const { return fContextInfo; }
-  size_t cacheMaxResourceBytes() const { return fCacheMaxResourceBytes; }
+  size_t cacheMaxResourceBytes() const noexcept { return fCacheMaxResourceBytes; }
 
-  bool isValid() const { return kUnknown_SkColorType != fImageInfo.colorType(); }
+  bool isValid() const noexcept { return kUnknown_SkColorType != fImageInfo.colorType(); }
 
-  const SkImageInfo& imageInfo() const { return fImageInfo; }
-  const GrBackendFormat& backendFormat() const { return fBackendFormat; }
-  GrSurfaceOrigin origin() const { return fOrigin; }
-  SkISize dimensions() const { return fImageInfo.dimensions(); }
-  int width() const { return fImageInfo.width(); }
-  int height() const { return fImageInfo.height(); }
-  SkColorType colorType() const { return fImageInfo.colorType(); }
-  int sampleCount() const { return fSampleCnt; }
-  bool isTextureable() const { return Textureable::kYes == fIsTextureable; }
-  bool isMipMapped() const { return MipMapped::kYes == fIsMipMapped; }
-  bool usesGLFBO0() const { return UsesGLFBO0::kYes == fUsesGLFBO0; }
-  bool vulkanSecondaryCBCompatible() const {
+  const SkImageInfo& imageInfo() const noexcept { return fImageInfo; }
+  const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
+  GrSurfaceOrigin origin() const noexcept { return fOrigin; }
+  SkISize dimensions() const noexcept { return fImageInfo.dimensions(); }
+  int width() const noexcept { return fImageInfo.width(); }
+  int height() const noexcept { return fImageInfo.height(); }
+  SkColorType colorType() const noexcept { return fImageInfo.colorType(); }
+  int sampleCount() const noexcept { return fSampleCnt; }
+  bool isTextureable() const noexcept { return Textureable::kYes == fIsTextureable; }
+  bool isMipMapped() const noexcept { return MipMapped::kYes == fIsMipMapped; }
+  bool usesGLFBO0() const noexcept { return UsesGLFBO0::kYes == fUsesGLFBO0; }
+  bool vulkanSecondaryCBCompatible() const noexcept {
     return VulkanSecondaryCBCompatible::kYes == fVulkanSecondaryCBCompatible;
   }
-  GrProtected isProtected() const { return fIsProtected; }
-  SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
+  GrProtected isProtected() const noexcept { return fIsProtected; }
+  SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
   sk_sp<SkColorSpace> refColorSpace() const { return fImageInfo.refColorSpace(); }
-  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
+  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
 
   // Is the provided backend texture compatible with this surface characterization?
   bool isCompatible(const GrBackendTexture&) const;
@@ -116,14 +116,14 @@ class SK_API SkSurfaceCharacterization {
   friend class SkDeferredDisplayListRecorder;  // for 'config'
   friend class SkSurface;                      // for 'config'
 
-  SkDEBUGCODE(void validate() const;)
+  SkDEBUGCODE(void validate() const);
 
-      SkSurfaceCharacterization(
-          sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
-          const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
-          int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
-          VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
-          const SkSurfaceProps& surfaceProps)
+  SkSurfaceCharacterization(
+      sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
+      const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
+      int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
+      VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
+      const SkSurfaceProps& surfaceProps)
       : fContextInfo(std::move(contextInfo)),
         fCacheMaxResourceBytes(cacheMaxResourceBytes),
         fImageInfo(ii),

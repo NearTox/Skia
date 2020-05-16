@@ -43,13 +43,11 @@ void GrResourceCache::changeTimestamp(uint32_t newTimestamp) { fTimestamp = newT
 #ifdef SK_DEBUG
 int GrResourceCache::countUniqueKeysWithTag(const char* tag) const {
   int count = 0;
-  UniqueHash::ConstIter iter(&fUniqueHash);
-  while (!iter.done()) {
-    if (0 == strcmp(tag, (*iter).getUniqueKey().tag())) {
+  fUniqueHash.foreach ([&](const GrGpuResource& resource) {
+    if (0 == strcmp(tag, resource.getUniqueKey().tag())) {
       ++count;
     }
-    ++iter;
-  }
+  });
   return count;
 }
 #endif
@@ -167,7 +165,7 @@ DRAW_OP_TEST_EXTERN(ShadowRRectOp);
 DRAW_OP_TEST_EXTERN(SmallPathOp);
 DRAW_OP_TEST_EXTERN(RegionOp);
 DRAW_OP_TEST_EXTERN(RRectOp);
-DRAW_OP_TEST_EXTERN(TesselatingPathOp);
+DRAW_OP_TEST_EXTERN(TriangulatingPathOp);
 DRAW_OP_TEST_EXTERN(TextureOp);
 
 void GrDrawRandomOp(SkRandom* random, GrRenderTargetContext* renderTargetContext, GrPaint&& paint) {
@@ -184,7 +182,7 @@ void GrDrawRandomOp(SkRandom* random, GrRenderTargetContext* renderTargetContext
       DRAW_OP_TEST_ENTRY(DrawVerticesOp),    DRAW_OP_TEST_ENTRY(NonAALatticeOp),
       DRAW_OP_TEST_ENTRY(NonAAStrokeRectOp), DRAW_OP_TEST_ENTRY(ShadowRRectOp),
       DRAW_OP_TEST_ENTRY(SmallPathOp),       DRAW_OP_TEST_ENTRY(RegionOp),
-      DRAW_OP_TEST_ENTRY(RRectOp),           DRAW_OP_TEST_ENTRY(TesselatingPathOp),
+      DRAW_OP_TEST_ENTRY(RRectOp),           DRAW_OP_TEST_ENTRY(TriangulatingPathOp),
       DRAW_OP_TEST_ENTRY(TextureOp),
   };
 

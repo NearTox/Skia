@@ -193,7 +193,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
     cached = persistentCache->load(*key);
     if (cached) {
       reader.setMemory(cached->data(), cached->size());
-      shaderType = reader.readU32();
+      shaderType = GrPersistentCacheUtils::GetType(&reader);
     }
   }
 

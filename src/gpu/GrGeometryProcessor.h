@@ -31,7 +31,7 @@ class GrGeometryProcessor : public GrPrimitiveProcessor {
  protected:
   // GPs that need to use either float or ubyte colors can just call this to get a correctly
   // configured Attribute struct
-  static Attribute MakeColorAttribute(const char* name, bool wideColor) {
+  static Attribute MakeColorAttribute(const char* name, bool wideColor) noexcept {
     return {
         name, wideColor ? kFloat4_GrVertexAttribType : kUByte4_norm_GrVertexAttribType,
         kHalf4_GrSLType};

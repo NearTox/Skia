@@ -49,5 +49,5 @@ void GrPathRendering::drawPath(
           programInfo.pipeline().xferBarrierType(renderTarget->asTexture(), *fGpu->caps())) {
     fGpu->xferBarrier(renderTarget, barrierType);
   }
-  this->onDrawPath(renderTarget, programInfo, stencilPassSettings, path);
+  this->onDrawPath(stencilPassSettings, path);
 }

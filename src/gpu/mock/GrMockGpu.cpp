@@ -13,7 +13,7 @@
 #include "src/gpu/mock/GrMockTexture.h"
 #include <atomic>
 
-int GrMockGpu::NextInternalTextureID() {
+int GrMockGpu::NextInternalTextureID() noexcept {
   static std::atomic<int> nextID{1};
   int id;
   do {
@@ -22,21 +22,21 @@ int GrMockGpu::NextInternalTextureID() {
   return id;
 }
 
-int GrMockGpu::NextExternalTextureID() {
+int GrMockGpu::NextExternalTextureID() noexcept {
   // We use negative ints for the "testing only external textures" so they can easily be
   // identified when debugging.
   static std::atomic<int> nextID{-1};
   return nextID--;
 }
 
-int GrMockGpu::NextInternalRenderTargetID() {
+int GrMockGpu::NextInternalRenderTargetID() noexcept {
   // We start off with large numbers to differentiate from texture IDs, even though they're
   // technically in a different space.
   static std::atomic<int> nextID{SK_MaxS32};
   return nextID--;
 }
 
-int GrMockGpu::NextExternalRenderTargetID() {
+int GrMockGpu::NextExternalRenderTargetID() noexcept {
   // We use large negative ints for the "testing only external render targets" so they can easily
   // be identified when debugging.
   static std::atomic<int> nextID{SK_MinS32};
@@ -179,8 +179,8 @@ sk_sp<GrTexture> GrMockGpu::onCreateCompressedTexture(
 }
 
 sk_sp<GrTexture> GrMockGpu::onWrapBackendTexture(
-    const GrBackendTexture& tex, GrColorType colorType, GrWrapOwnership ownership,
-    GrWrapCacheable wrapType, GrIOType ioType) {
+    const GrBackendTexture& tex, GrWrapOwnership ownership, GrWrapCacheable wrapType,
+    GrIOType ioType) {
   GrMockTextureInfo texInfo;
   SkAssertResult(tex.getMockTextureInfo(&texInfo));
 
@@ -188,8 +188,6 @@ sk_sp<GrTexture> GrMockGpu::onWrapBackendTexture(
   if (compression != SkImage::CompressionType::kNone) {
     return nullptr;
   }
-
-  SkASSERT(colorType == texInfo.colorType());
 
   GrMipMapsStatus mipMapsStatus =
       tex.hasMipMaps() ? GrMipMapsStatus::kValid : GrMipMapsStatus::kNotAllocated;
@@ -204,13 +202,11 @@ sk_sp<GrTexture> GrMockGpu::onWrapCompressedBackendTexture(
 }
 
 sk_sp<GrTexture> GrMockGpu::onWrapRenderableBackendTexture(
-    const GrBackendTexture& tex, int sampleCnt, GrColorType colorType, GrWrapOwnership ownership,
+    const GrBackendTexture& tex, int sampleCnt, GrWrapOwnership ownership,
     GrWrapCacheable cacheable) {
   GrMockTextureInfo texInfo;
   SkAssertResult(tex.getMockTextureInfo(&texInfo));
   SkASSERT(texInfo.compressionType() == SkImage::CompressionType::kNone);
-
-  SkASSERT(colorType == texInfo.colorType());
 
   GrMipMapsStatus mipMapsStatus =
       tex.hasMipMaps() ? GrMipMapsStatus::kValid : GrMipMapsStatus::kNotAllocated;
@@ -223,12 +219,9 @@ sk_sp<GrTexture> GrMockGpu::onWrapRenderableBackendTexture(
       this, tex.dimensions(), sampleCnt, isProtected, mipMapsStatus, texInfo, rtInfo, cacheable));
 }
 
-sk_sp<GrRenderTarget> GrMockGpu::onWrapBackendRenderTarget(
-    const GrBackendRenderTarget& rt, GrColorType colorType) {
+sk_sp<GrRenderTarget> GrMockGpu::onWrapBackendRenderTarget(const GrBackendRenderTarget& rt) {
   GrMockRenderTargetInfo info;
   SkAssertResult(rt.getMockRenderTargetInfo(&info));
-
-  SkASSERT(colorType == info.colorType());
 
   auto isProtected = GrProtected(rt.isProtected());
   return sk_sp<GrRenderTarget>(new GrMockRenderTarget(
@@ -236,12 +229,10 @@ sk_sp<GrRenderTarget> GrMockGpu::onWrapBackendRenderTarget(
 }
 
 sk_sp<GrRenderTarget> GrMockGpu::onWrapBackendTextureAsRenderTarget(
-    const GrBackendTexture& tex, int sampleCnt, GrColorType colorType) {
+    const GrBackendTexture& tex, int sampleCnt) {
   GrMockTextureInfo texInfo;
   SkAssertResult(tex.getMockTextureInfo(&texInfo));
   SkASSERT(texInfo.compressionType() == SkImage::CompressionType::kNone);
-
-  SkASSERT(colorType == texInfo.colorType());
 
   // The client gave us the texture ID but we supply the render target ID.
   GrMockRenderTargetInfo rtInfo(texInfo.colorType(), NextInternalRenderTargetID());

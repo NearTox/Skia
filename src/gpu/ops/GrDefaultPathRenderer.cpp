@@ -17,10 +17,10 @@
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrFixedClip.h"
-#include "src/gpu/GrMesh.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSimpleMesh.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrSurfaceContextPriv.h"
 #include "src/gpu/geometry/GrPathUtils.h"
@@ -67,7 +67,7 @@ namespace {
 class PathGeoBuilder {
  public:
   PathGeoBuilder(
-      GrPrimitiveType primitiveType, GrMeshDrawOp::Target* target, SkTDArray<GrMesh*>* meshes)
+      GrPrimitiveType primitiveType, GrMeshDrawOp::Target* target, SkTDArray<GrSimpleMesh*>* meshes)
       : fPrimitiveType(primitiveType),
         fTarget(target),
         fVertexStride(sizeof(SkPoint)),
@@ -250,17 +250,16 @@ class PathGeoBuilder {
     SkASSERT(vertexCount <= fVerticesInChunk);
     SkASSERT(indexCount <= fIndicesInChunk);
 
-    GrMesh* mesh = nullptr;
+    GrSimpleMesh* mesh = nullptr;
     if (this->isIndexed() ? SkToBool(indexCount) : SkToBool(vertexCount)) {
       mesh = fTarget->allocMesh();
       if (!this->isIndexed()) {
-        mesh->setNonIndexedNonInstanced(vertexCount);
+        mesh->set(std::move(fVertexBuffer), vertexCount, fFirstVertex);
       } else {
         mesh->setIndexed(
             std::move(fIndexBuffer), indexCount, fFirstIndex, 0, vertexCount - 1,
-            GrPrimitiveRestart::kNo);
+            GrPrimitiveRestart::kNo, std::move(fVertexBuffer), fFirstVertex);
       }
-      mesh->setVertexData(std::move(fVertexBuffer), fFirstVertex);
     }
 
     fTarget->putBackIndices((size_t)(fIndicesInChunk - indexCount));
@@ -314,7 +313,7 @@ class PathGeoBuilder {
   uint16_t* fCurIdx;
   uint16_t fSubpathIndexStart;
 
-  SkTDArray<GrMesh*>* fMeshes;
+  SkTDArray<GrSimpleMesh*>* fMeshes;
 };
 
 class DefaultPathOp final : public GrMeshDrawOp {
@@ -337,7 +336,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -400,9 +399,11 @@ class DefaultPathOp final : public GrMeshDrawOp {
     return GrPrimitiveType::kTriangles;
   }
 
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -410,34 +411,13 @@ class DefaultPathOp final : public GrMeshDrawOp {
       Coverage coverage(this->coverage());
       LocalCoords localCoords(
           fHelper.usesLocalCoords() ? LocalCoords::kUsePosition_Type : LocalCoords::kUnused_Type);
-      gp = GrDefaultGeoProcFactory::Make(
-          arena, caps->shaderCaps(), color, coverage, localCoords, this->viewMatrix());
+      gp = GrDefaultGeoProcFactory::Make(arena, color, coverage, localCoords, this->viewMatrix());
     }
 
     SkASSERT(gp->vertexStride() == sizeof(SkPoint));
 
-    return fHelper.createProgramInfoWithStencil(
+    fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, this->primType());
-  }
-
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -452,16 +432,17 @@ class DefaultPathOp final : public GrMeshDrawOp {
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(flushState);
+      this->createProgramInfo(flushState);
     }
 
     if (!fProgramInfo || !fMeshes.count()) {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
     for (int i = 0; i < fMeshes.count(); ++i) {
-      flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMeshes[i], 1);
+      flushState->drawMesh(*fMeshes[i]);
     }
   }
 
@@ -509,7 +490,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
   SkMatrix fViewMatrix;
   bool fIsHairline;
 
-  SkTDArray<GrMesh*> fMeshes;
+  SkTDArray<GrSimpleMesh*> fMeshes;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;

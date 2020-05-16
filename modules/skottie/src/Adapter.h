@@ -8,7 +8,7 @@
 #ifndef SkottieAdapter_DEFINED
 #define SkottieAdapter_DEFINED
 
-#include "modules/skottie/src/Animator.h"
+#include "modules/skottie/src/animator/Animator.h"
 
 namespace skottie {
 namespace internal {
@@ -23,7 +23,7 @@ class DiscardableAdapterBase : public AnimatablePropertyContainer {
     return adapter;
   }
 
-  const sk_sp<T>& node() const { return fNode; }
+  const sk_sp<T>& node() const noexcept { return fNode; }
 
  protected:
   DiscardableAdapterBase() : fNode(T::Make()) {}

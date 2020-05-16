@@ -43,7 +43,7 @@ class SkStrikeForGPU {
   virtual const SkGlyphPositionRoundingSpec& roundingSpec() const = 0;
 
   // Used with SkScopedStrikeForGPU to take action at the end of a scope.
-  virtual void onAboutToExitScope() = 0;
+  virtual void onAboutToExitScope() noexcept = 0;
 
   // Common categories for glyph types used by GPU.
   static bool CanDrawAsMask(const SkGlyph& glyph);

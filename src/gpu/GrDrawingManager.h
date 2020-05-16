@@ -139,16 +139,16 @@ class GrDrawingManager {
     void removeRenderTask(int index);
     void removeRenderTasks(int startIndex, int stopIndex);
 
-    bool empty() const { return fRenderTasks.empty(); }
-    int numRenderTasks() const { return fRenderTasks.count(); }
+    bool empty() const noexcept { return fRenderTasks.empty(); }
+    int numRenderTasks() const noexcept { return fRenderTasks.count(); }
 
     bool isUsed(GrSurfaceProxy*) const;
 
-    GrRenderTask* renderTask(int index) { return fRenderTasks[index].get(); }
-    const GrRenderTask* renderTask(int index) const { return fRenderTasks[index].get(); }
+    GrRenderTask* renderTask(int index) noexcept { return fRenderTasks[index].get(); }
+    const GrRenderTask* renderTask(int index) const noexcept { return fRenderTasks[index].get(); }
 
-    GrRenderTask* back() { return fRenderTasks.back().get(); }
-    const GrRenderTask* back() const { return fRenderTasks.back().get(); }
+    GrRenderTask* back() noexcept { return fRenderTasks.back().get(); }
+    const GrRenderTask* back() const noexcept { return fRenderTasks.back().get(); }
 
     GrRenderTask* add(sk_sp<GrRenderTask>);
     GrRenderTask* addBeforeLast(sk_sp<GrRenderTask>);
@@ -156,7 +156,7 @@ class GrDrawingManager {
 
     void swap(SkTArray<sk_sp<GrRenderTask>>* renderTasks);
 
-    bool sortingRenderTasks() const { return fSortRenderTasks; }
+    bool sortingRenderTasks() const noexcept { return fSortRenderTasks; }
 
    private:
     SkTArray<sk_sp<GrRenderTask>> fRenderTasks;
@@ -222,7 +222,7 @@ class GrDrawingManager {
 
   void addDDLTarget(GrSurfaceProxy* proxy) { fDDLTargets.insert(proxy); }
   bool isDDLTarget(GrSurfaceProxy* proxy) { return fDDLTargets.find(proxy) != fDDLTargets.end(); }
-  void clearDDLTargets() { fDDLTargets.clear(); }
+  void clearDDLTargets() noexcept { fDDLTargets.clear(); }
 
   // We play a trick with lazy proxies to retarget the base target of a DDL to the SkSurface
   // it is replayed on. Because of this remapping we need to explicitly store the targets of

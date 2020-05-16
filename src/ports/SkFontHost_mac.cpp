@@ -955,7 +955,7 @@ static void add_notrak_attr(CFMutableDictionaryRef attr) {
 static SkUniqueCFRef<CTFontRef> ctfont_create_exact_copy(
     CTFontRef baseFont, CGFloat textSize, OpszVariation opsz) {
   SkUniqueCFRef<CFMutableDictionaryRef> attr(CFDictionaryCreateMutable(
-      kCFAllocatorDefault, 1, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
+      kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
 
   if (opsz.isSet) {
     add_opsz_attr(attr.get(), opsz.value);

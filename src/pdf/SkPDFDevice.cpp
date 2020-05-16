@@ -354,11 +354,18 @@ void SkPDFDevice::drawAnnotation(const SkRect& rect, const char key[], SkData* v
   if (transformedRect.isEmpty()) {
     return;
   }
+
+  SkPDFLink::Type linkType = SkPDFLink::Type::kNone;
   if (!strcmp(SkAnnotationKeys::URL_Key(), key)) {
-    fDocument->fCurrentPageLinkToURLs.push_back(std::make_pair(sk_ref_sp(value), transformedRect));
+    linkType = SkPDFLink::Type::kUrl;
   } else if (!strcmp(SkAnnotationKeys::Link_Named_Dest_Key(), key)) {
-    fDocument->fCurrentPageLinkToDestinations.emplace_back(
-        std::make_pair(sk_ref_sp(value), transformedRect));
+    linkType = SkPDFLink::Type::kNamedDestination;
+  }
+
+  if (linkType != SkPDFLink::Type::kNone) {
+    std::unique_ptr<SkPDFLink> link =
+        std::make_unique<SkPDFLink>(linkType, value, transformedRect, fNodeId);
+    fDocument->fCurrentPageLinks.push_back(std::move(link));
   }
 }
 
@@ -616,13 +623,6 @@ void SkPDFDevice::drawImageRect(
   SkASSERT(image);
   this->internalDrawImageRect(
       SkKeyedImage(sk_ref_sp(const_cast<SkImage*>(image))), src, dst, paint, this->localToDevice());
-}
-
-void SkPDFDevice::drawBitmapRect(
-    const SkBitmap& bm, const SkRect* src, const SkRect& dst, const SkPaint& paint,
-    SkCanvas::SrcRectConstraint) {
-  SkASSERT(!bm.drawsNothing());
-  this->internalDrawImageRect(SkKeyedImage(bm), src, dst, paint, this->localToDevice());
 }
 
 void SkPDFDevice::drawSprite(const SkBitmap& bm, int x, int y, const SkPaint& paint) {

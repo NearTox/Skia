@@ -249,7 +249,7 @@ class SK_API SkImage : public SkRefCnt {
 
   static constexpr int kCompressionTypeCount = static_cast<int>(CompressionType::kLast) + 1;
 
-  static const CompressionType kETC1_CompressionType = CompressionType::kETC2_RGB8_UNORM;
+  static constexpr CompressionType kETC1_CompressionType = CompressionType::kETC2_RGB8_UNORM;
 
   /** Creates a GPU-backed SkImage from compressed data.
 
@@ -615,31 +615,31 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  image info of SkImage.
   */
-  const SkImageInfo& imageInfo() const { return fInfo; }
+  const SkImageInfo& imageInfo() const noexcept { return fInfo; }
 
   /** Returns pixel count in each row.
 
       @return  pixel width in SkImage
   */
-  int width() const { return fInfo.width(); }
+  int width() const noexcept { return fInfo.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height in SkImage
   */
-  int height() const { return fInfo.height(); }
+  int height() const noexcept { return fInfo.height(); }
 
   /** Returns SkISize { width(), height() }.
 
       @return  integral size of width() and height()
   */
-  SkISize dimensions() const { return SkISize::Make(fInfo.width(), fInfo.height()); }
+  SkISize dimensions() const noexcept { return SkISize::Make(fInfo.width(), fInfo.height()); }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
+  SkIRect bounds() const noexcept { return SkIRect::MakeWH(fInfo.width(), fInfo.height()); }
 
   /** Returns value unique to image. SkImage contents cannot change after SkImage is
       created. Any operation to create a new SkImage will receive generate a new
@@ -647,7 +647,7 @@ class SK_API SkImage : public SkRefCnt {
 
       @return  unique identifier
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns SkAlphaType.
 
@@ -658,7 +658,7 @@ class SK_API SkImage : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Image_alphaType
   */
-  SkAlphaType alphaType() const;
+  SkAlphaType alphaType() const noexcept;
 
   /** Returns SkColorType if known; otherwise, returns kUnknown_SkColorType.
 
@@ -666,7 +666,7 @@ class SK_API SkImage : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Image_colorType
   */
-  SkColorType colorType() const;
+  SkColorType colorType() const noexcept;
 
   /** Returns SkColorSpace, the range of colors, associated with SkImage.  The
       reference count of SkColorSpace is unchanged. The returned SkColorSpace is
@@ -680,7 +680,7 @@ class SK_API SkImage : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Image_colorSpace
   */
-  SkColorSpace* colorSpace() const;
+  SkColorSpace* colorSpace() const noexcept;
 
   /** Returns a smart pointer to SkColorSpace, the range of colors, associated with
       SkImage.  The smart pointer tracks the number of objects sharing this
@@ -705,13 +705,13 @@ class SK_API SkImage : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Image_isAlphaOnly
   */
-  bool isAlphaOnly() const;
+  bool isAlphaOnly() const noexcept;
 
   /** Returns true if pixels ignore their alpha value and are treated as fully opaque.
 
       @return  true if SkAlphaType is kOpaque_SkAlphaType
   */
-  bool isOpaque() const { return SkAlphaTypeIsOpaque(this->alphaType()); }
+  bool isOpaque() const noexcept { return SkAlphaTypeIsOpaque(this->alphaType()); }
 
   /** Creates SkShader from SkImage. SkShader dimensions are taken from SkImage. SkShader uses
       SkTileMode rules to fill drawn area outside SkImage. localMatrix permits
@@ -986,18 +986,25 @@ class SK_API SkImage : public SkRefCnt {
   /** Returns SkImage backed by GPU texture associated with context. Returned SkImage is
       compatible with SkSurface created with dstColorSpace. The returned SkImage respects
       mipMapped setting; if mipMapped equals GrMipMapped::kYes, the backing texture
-      allocates mip map levels. Returns original SkImage if context
-      and dstColorSpace match and mipMapped is compatible with backing GPU texture.
+      allocates mip map levels.
+
+      The mipMapped parameter is effectively treated as kNo if MIP maps are not supported by the
+      GPU.
+
+      Returns original SkImage if the image is already texture-backed, the context matches, and
+      mipMapped is compatible with the backing GPU texture. SkBudgeted is ignored in this case.
 
       Returns nullptr if context is nullptr, or if SkImage was created with another
       GrContext.
 
-      @param context        GPU context
-      @param dstColorSpace  range of colors of matching SkSurface on GPU
-      @param mipMapped      whether created SkImage texture must allocate mip map levels
+      @param GrContext      GPU context
+      @param GrMipMapped    whether created SkImage texture must allocate mip map levels
+      @param SkBudgeted     whether to count a newly created texture for the returned image
+                            counts against the GrContext's budget.
       @return               created SkImage, or nullptr
   */
-  sk_sp<SkImage> makeTextureImage(GrContext* context, GrMipMapped = GrMipMapped::kNo) const;
+  sk_sp<SkImage> makeTextureImage(
+      GrContext*, GrMipMapped = GrMipMapped::kNo, SkBudgeted = SkBudgeted::kYes) const;
 
   /** Returns raster image or lazy image. Copies SkImage backed by GPU texture into
       CPU memory if needed. Returns original SkImage if decoded in raster bitmap,
@@ -1152,7 +1159,7 @@ class SK_API SkImage : public SkRefCnt {
   sk_sp<SkImage> reinterpretColorSpace(sk_sp<SkColorSpace> newColorSpace) const;
 
  private:
-  SkImage(const SkImageInfo& info, uint32_t uniqueID);
+  SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept;
   friend class SkImage_Base;
 
   SkImageInfo fInfo;

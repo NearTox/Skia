@@ -33,7 +33,7 @@ class GrVkDescriptorSetManager {
   static GrVkDescriptorSetManager* CreateSamplerManager(
       GrVkGpu* gpu, VkDescriptorType type, const SkTArray<uint32_t>& visibilities);
 
-  ~GrVkDescriptorSetManager() {}
+  ~GrVkDescriptorSetManager() = default;
 
   void release(GrVkGpu* gpu);
 

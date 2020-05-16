@@ -695,9 +695,8 @@ static void gpu_read_pixels_test_driver(
     if (success && srcReadRect.intersect(surfBounds, rect)) {
       SkIRect dstWriteRect = srcReadRect.makeOffset(-rect.fLeft, -rect.fTop);
 
-      const bool lumConversion =
-          !(SkColorTypeComponentFlags(srcCT) & kGray_SkColorTypeComponentFlag) &&
-          (SkColorTypeComponentFlags(readCT) & kGray_SkColorTypeComponentFlag);
+      const bool lumConversion = !(SkColorTypeChannelFlags(srcCT) & kGray_SkColorChannelFlag) &&
+                                 (SkColorTypeChannelFlags(readCT) & kGray_SkColorChannelFlag);
       // A CS or luminance conversion allows a 3 value difference and otherwise a 2 value
       // difference. Note that sometimes read back on GPU can be lossy even when there no
       // conversion at allbecause GPU->CPU read may go to a lower bit depth format and then be
@@ -764,7 +763,7 @@ static void gpu_read_pixels_test_driver(
   static constexpr int kH = 16;
 
   // Makes the reference data that is used to populate the src. Always F32 regardless of srcCT.
-  auto make_ref_f32_data = [](SkAlphaType srcAT, SkColorType srcCT) {
+  auto make_ref_f32_data = [](SkAlphaType srcAT, SkColorType srcCT) -> SkAutoPixmapStorage {
     // Make src data in F32 with srcAT. We will convert it to each color type we test to
     // initialize the src.
     const auto refInfo =
@@ -803,7 +802,7 @@ static void gpu_read_pixels_test_driver(
     SkAutoPixmapStorage srcPixels;
     srcPixels.alloc(srcInfo);
     refSurf->readPixels(srcPixels, 0, 0);
-    return std::move(srcPixels);
+    return srcPixels;
   };
 
   for (int sat = 0; sat < kLastEnum_SkAlphaType; ++sat) {

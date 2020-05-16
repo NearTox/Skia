@@ -33,10 +33,10 @@ class SkIDChangeListener : public SkRefCnt {
    * Mark the listener is no longer needed. It should be removed and changed() should not be
    * called.
    */
-  void markShouldDeregister() { fShouldDeregister.store(true, std::memory_order_relaxed); }
+  void markShouldDeregister() noexcept { fShouldDeregister.store(true, std::memory_order_relaxed); }
 
   /** Indicates whether markShouldDeregister was called. */
-  bool shouldDeregister() { return fShouldDeregister.load(std::memory_order_acquire); }
+  bool shouldDeregister() noexcept { return fShouldDeregister.load(std::memory_order_acquire); }
 
   /** Manages a list of SkIDChangeListeners. */
   class List {

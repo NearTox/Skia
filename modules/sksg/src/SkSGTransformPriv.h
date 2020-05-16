@@ -15,7 +15,7 @@ namespace sksg {
 // Helper for accessing implementation-private Transform methods.
 class TransformPriv final {
  public:
-  static bool Is44(const sk_sp<Transform>& t) { return t->is44(); }
+  static bool Is44(const sk_sp<Transform>& t) noexcept { return t->is44(); }
 
   template <
       typename T,

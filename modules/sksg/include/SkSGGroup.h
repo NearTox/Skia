@@ -26,11 +26,11 @@ class Group : public RenderNode {
   }
 
   void addChild(sk_sp<RenderNode>);
-  void removeChild(const sk_sp<RenderNode>&);
+  void removeChild(const sk_sp<RenderNode>&) noexcept;
 
-  size_t size() const { return fChildren.size(); }
-  bool empty() const { return fChildren.empty(); }
-  void clear();
+  size_t size() const noexcept { return fChildren.size(); }
+  bool empty() const noexcept { return fChildren.empty(); }
+  void clear() noexcept;
 
  protected:
   explicit Group(std::vector<sk_sp<RenderNode>>);

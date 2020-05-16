@@ -43,7 +43,7 @@ class SkRawCodec : public SkCodec {
 
   // SkCodec only applies the colorXform if it's necessary for color space
   // conversion. SkRawCodec will always convert, so tell SkCodec not to.
-  bool usesColorXform() const override { return false; }
+  bool usesColorXform() const noexcept override { return false; }
 
  private:
   /*

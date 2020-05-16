@@ -38,16 +38,16 @@ class GrGLTexture : public GrTexture {
   // TODO: Remove once clients are no longer calling this.
   void textureParamsModified() override { fParameters->invalidate(); }
 
-  GrGLTextureParameters* parameters() { return fParameters.get(); }
+  GrGLTextureParameters* parameters() noexcept { return fParameters.get(); }
 
-  GrGLuint textureID() const { return fID; }
+  GrGLuint textureID() const noexcept { return fID; }
 
   GrGLenum target() const;
 
-  GrGLFormat format() const { return fFormat; }
+  GrGLFormat format() const noexcept { return fFormat; }
 
-  bool hasBaseLevelBeenBoundToFBO() const { return fBaseLevelHasBeenBoundToFBO; }
-  void baseLevelWasBoundToFBO() { fBaseLevelHasBeenBoundToFBO = true; }
+  bool hasBaseLevelBeenBoundToFBO() const noexcept { return fBaseLevelHasBeenBoundToFBO; }
+  void baseLevelWasBoundToFBO() noexcept { fBaseLevelHasBeenBoundToFBO = true; }
 
   static sk_sp<GrGLTexture> MakeWrapped(
       GrGLGpu*, GrMipMapsStatus, const Desc&, sk_sp<GrGLTextureParameters>, GrWrapCacheable,

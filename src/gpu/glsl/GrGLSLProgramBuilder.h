@@ -32,7 +32,7 @@ class GrGLSLProgramBuilder {
   using UniformHandle = GrGLSLUniformHandler::UniformHandle;
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
-  virtual ~GrGLSLProgramBuilder() {}
+  virtual ~GrGLSLProgramBuilder() = default;
 
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }

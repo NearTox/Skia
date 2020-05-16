@@ -75,13 +75,13 @@ class GrTextureProducer : public SkNoncopyable {
   /** Helper version of above that determines MIP mapping requirement from Filter. */
   GrSurfaceProxyView view(GrSamplerState::Filter);
 
-  int width() const { return fImageInfo.width(); }
-  int height() const { return fImageInfo.height(); }
-  SkISize dimensions() const { return fImageInfo.dimensions(); }
-  GrColorType colorType() const { return fImageInfo.colorType(); }
-  SkAlphaType alphaType() const { return fImageInfo.alphaType(); }
-  SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
-  bool isAlphaOnly() const { return GrColorTypeIsAlphaOnly(fImageInfo.colorType()); }
+  int width() const noexcept { return fImageInfo.width(); }
+  int height() const noexcept { return fImageInfo.height(); }
+  SkISize dimensions() const noexcept { return fImageInfo.dimensions(); }
+  GrColorType colorType() const noexcept { return fImageInfo.colorType(); }
+  SkAlphaType alphaType() const noexcept { return fImageInfo.alphaType(); }
+  SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
+  bool isAlphaOnly() const noexcept { return GrColorTypeIsAlphaOnly(fImageInfo.colorType()); }
   /* Is it a planar image consisting of multiple textures that may have different resolutions? */
   virtual bool isPlanar() const { return false; }
 
@@ -103,7 +103,7 @@ class GrTextureProducer : public SkNoncopyable {
       GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
       const GrSamplerState::Filter* filterOrNullForBicubic);
 
-  GrRecordingContext* context() const { return fContext; }
+  GrRecordingContext* context() const noexcept { return fContext; }
 
  private:
   virtual GrSurfaceProxyView onView(GrMipMapped) = 0;

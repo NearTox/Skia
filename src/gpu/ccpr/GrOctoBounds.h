@@ -29,51 +29,51 @@ class GrOctoBounds {
   GrOctoBounds() = default;
   GrOctoBounds(const SkRect& bounds, const SkRect& bounds45) { this->set(bounds, bounds45); }
 
-  void set(const SkRect& bounds, const SkRect& bounds45) {
+  void set(const SkRect& bounds, const SkRect& bounds45) noexcept {
     fBounds = bounds;
     fBounds45 = bounds45;
     SkDEBUGCODE(this->validateBoundsAreTight());
   }
 
-  bool operator==(const GrOctoBounds& that) const {
+  bool operator==(const GrOctoBounds& that) const noexcept {
     return fBounds == that.fBounds && fBounds45 == that.fBounds45;
   }
-  bool operator!=(const GrOctoBounds& that) const { return !(*this == that); }
+  bool operator!=(const GrOctoBounds& that) const noexcept { return !(*this == that); }
 
-  const SkRect& bounds() const { return fBounds; }
-  float left() const { return fBounds.left(); }
-  float top() const { return fBounds.top(); }
-  float right() const { return fBounds.right(); }
-  float bottom() const { return fBounds.bottom(); }
+  const SkRect& bounds() const noexcept { return fBounds; }
+  float left() const noexcept { return fBounds.left(); }
+  float top() const noexcept { return fBounds.top(); }
+  float right() const noexcept { return fBounds.right(); }
+  float bottom() const noexcept { return fBounds.bottom(); }
 
   // The 45-degree bounding box resides in "| 1  -1 | * coords" space.
   //                                        | 1   1 |
-  const SkRect& bounds45() const { return fBounds45; }
-  float left45() const { return fBounds45.left(); }
-  float top45() const { return fBounds45.top(); }
-  float right45() const { return fBounds45.right(); }
-  float bottom45() const { return fBounds45.bottom(); }
+  const SkRect& bounds45() const noexcept { return fBounds45; }
+  float left45() const noexcept { return fBounds45.left(); }
+  float top45() const noexcept { return fBounds45.top(); }
+  float right45() const noexcept { return fBounds45.right(); }
+  float bottom45() const noexcept { return fBounds45.bottom(); }
 
-  void roundOut(SkIRect* out) const {
+  void roundOut(SkIRect* out) const noexcept {
     // The octagon is the intersection of fBounds and fBounds45 (see the comment at the start of
     // the class). The octagon's bounding box is therefore just fBounds. And the integer
     // bounding box can be found by simply rounding out fBounds.
     fBounds.roundOut(out);
   }
 
-  GrOctoBounds makeOffset(float dx, float dy) const {
+  GrOctoBounds makeOffset(float dx, float dy) const noexcept {
     GrOctoBounds offset;
     offset.setOffset(*this, dx, dy);
     return offset;
   }
 
-  void setOffset(const GrOctoBounds& octoBounds, float dx, float dy) {
+  void setOffset(const GrOctoBounds& octoBounds, float dx, float dy) noexcept {
     fBounds = octoBounds.fBounds.makeOffset(dx, dy);
     fBounds45 = octoBounds.fBounds45.makeOffset(dx - dy, dx + dy);
     SkDEBUGCODE(this->validateBoundsAreTight());
   }
 
-  void outset(float radius) {
+  void outset(float radius) noexcept {
     fBounds.outset(radius, radius);
     fBounds45.outset(radius * SK_ScalarSqrt2, radius * SK_ScalarSqrt2);
     SkDEBUGCODE(this->validateBoundsAreTight());

@@ -9,9 +9,9 @@
 #define GrGLSLVarying_DEFINED
 
 #include "include/private/GrTypesPriv.h"
-#include "src/gpu/GrAllocator.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrShaderVar.h"
+#include "src/gpu/GrTAllocator.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
 class GrGLSLProgramBuilder;
@@ -34,8 +34,9 @@ class GrGLSLVarying {
  public:
   enum class Scope { kVertToFrag, kVertToGeo, kGeoToFrag };
 
-  GrGLSLVarying() = default;
-  GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) : fType(type), fScope(scope) {
+  constexpr GrGLSLVarying() noexcept = default;
+  GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) noexcept
+      : fType(type), fScope(scope) {
     // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
     SkASSERT(!is_matrix(type));
   }
@@ -48,18 +49,18 @@ class GrGLSLVarying {
     fScope = scope;
   }
 
-  GrSLType type() const { return fType; }
-  Scope scope() const { return fScope; }
-  bool isInVertexShader() const { return Scope::kGeoToFrag != fScope; }
-  bool isInFragmentShader() const { return Scope::kVertToGeo != fScope; }
+  GrSLType type() const noexcept { return fType; }
+  Scope scope() const noexcept { return fScope; }
+  bool isInVertexShader() const noexcept { return Scope::kGeoToFrag != fScope; }
+  bool isInFragmentShader() const noexcept { return Scope::kVertToGeo != fScope; }
 
-  const char* vsOut() const {
+  const char* vsOut() const noexcept {
     SkASSERT(this->isInVertexShader());
     return fVsOut;
   }
-  const char* gsIn() const { return fGsIn; }
-  const char* gsOut() const { return fGsOut; }
-  const char* fsIn() const {
+  const char* gsIn() const noexcept { return fGsIn; }
+  const char* gsOut() const noexcept { return fGsOut; }
+  const char* fsIn() const noexcept {
     SkASSERT(this->isInFragmentShader());
     return fFsIn;
   }
@@ -75,7 +76,7 @@ class GrGLSLVarying {
   friend class GrGLSLVaryingHandler;
 };
 
-static const int kVaryingsPerBlock = 8;
+static constexpr int kVaryingsPerBlock = 8;
 
 class GrGLSLVaryingHandler {
  public:

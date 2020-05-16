@@ -13,7 +13,7 @@
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrProxyProvider.h"
 
-struct GrGlyph;
+class GrGlyph;
 class GrTextStrike;
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,7 +58,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
 
   void freeAll();
 
-  bool hasGlyph(GrGlyph* glyph);
+  bool hasGlyph(GrMaskFormat, GrGlyph*);
 
   // To ensure the GrDrawOpAtlas does not evict the Glyph Mask from its texture backing store,
   // the client must pass in the current op token along with the GrGlyph.
@@ -66,7 +66,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   // For convenience, this function will also set the use token for the current glyph if required
   // NOTE: the bulk uploader is only valid if the subrun has a valid atlasGeneration
   void addGlyphToBulkAndSetUseToken(
-      GrDrawOpAtlas::BulkUseTokenUpdater*, GrGlyph*, GrDeferredUploadToken);
+      GrDrawOpAtlas::BulkUseTokenUpdater*, GrMaskFormat, GrGlyph*, GrDeferredUploadToken);
 
   void setUseTokenBulk(
       const GrDrawOpAtlas::BulkUseTokenUpdater& updater, GrDeferredUploadToken token,
@@ -123,8 +123,12 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   bool initAtlas(GrMaskFormat);
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static int MaskFormatToAtlasIndex(GrMaskFormat format) { return static_cast<int>(format); }
-  static GrMaskFormat AtlasIndexToMaskFormat(int idx) { return static_cast<GrMaskFormat>(idx); }
+  static int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
+    return static_cast<int>(format);
+  }
+  static GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
+    return static_cast<GrMaskFormat>(idx);
+  }
 
   GrDrawOpAtlas* getAtlas(GrMaskFormat format) const {
     format = this->resolveMaskFormat(format);

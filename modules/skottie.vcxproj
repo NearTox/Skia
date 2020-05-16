@@ -11,7 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="skottie\src\Animator.cpp" />
+    <ClCompile Include="skottie\src\animator\Animator.cpp" />
+    <ClCompile Include="skottie\src\animator\Keyframe.cpp" />
+    <ClCompile Include="skottie\src\animator\Scalar.cpp" />
+    <ClCompile Include="skottie\src\animator\Shape.cpp" />
+    <ClCompile Include="skottie\src\animator\Vec2.cpp" />
+    <ClCompile Include="skottie\src\animator\Vector.cpp" />
     <ClCompile Include="skottie\src\Camera.cpp" />
     <ClCompile Include="skottie\src\Composition.cpp" />
     <ClCompile Include="skottie\src\effects\DropShadowEffect.cpp" />
@@ -140,7 +145,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>

@@ -220,23 +220,6 @@ void SkLuaCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
   lua.pushPaint(paint, "paint");
 }
 
-void SkLuaCanvas::onDrawBitmap(
-    const SkBitmap& bitmap, SkScalar x, SkScalar y, const SkPaint* paint) {
-  AUTO_LUA("drawBitmap");
-  if (paint) {
-    lua.pushPaint(*paint, "paint");
-  }
-}
-
-void SkLuaCanvas::onDrawBitmapRect(
-    const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-    SrcRectConstraint) {
-  AUTO_LUA("drawBitmapRect");
-  if (paint) {
-    lua.pushPaint(*paint, "paint");
-  }
-}
-
 void SkLuaCanvas::onDrawImage(const SkImage* image, SkScalar x, SkScalar y, const SkPaint* paint) {
   AUTO_LUA("drawImage");
   if (paint) {
@@ -275,15 +258,7 @@ void SkLuaCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
   this->INHERITED::onDrawDrawable(drawable, matrix);
 }
 
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-void SkLuaCanvas::onDrawVerticesObject(
-    const SkVertices*, const SkVertices::Bone[], int, SkBlendMode, const SkPaint& paint) {
-  AUTO_LUA("drawVertices");
-  lua.pushPaint(paint, "paint");
-}
-#else
 void SkLuaCanvas::onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint& paint) {
   AUTO_LUA("drawVertices");
   lua.pushPaint(paint, "paint");
 }
-#endif

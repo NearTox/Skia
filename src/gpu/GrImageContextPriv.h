@@ -16,30 +16,30 @@
 class GrImageContextPriv {
  public:
   // from GrContext_Base
-  uint32_t contextID() const { return fContext->contextID(); }
+  uint32_t contextID() const noexcept { return fContext->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const noexcept { return fContext->matches(candidate); }
 
-  const GrContextOptions& options() const { return fContext->options(); }
+  const GrContextOptions& options() const noexcept { return fContext->options(); }
 
-  const GrCaps* caps() const { return fContext->caps(); }
+  const GrCaps* caps() const noexcept { return fContext->caps(); }
   sk_sp<const GrCaps> refCaps() const;
 
-  GrImageContext* asImageContext() { return fContext->asImageContext(); }
+  GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
-  GrContext* asDirectContext() { return fContext->asDirectContext(); }
+  GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   // from GrImageContext
-  GrProxyProvider* proxyProvider() { return fContext->proxyProvider(); }
-  const GrProxyProvider* proxyProvider() const { return fContext->proxyProvider(); }
+  GrProxyProvider* proxyProvider() noexcept { return fContext->proxyProvider(); }
+  const GrProxyProvider* proxyProvider() const noexcept { return fContext->proxyProvider(); }
 
   bool abandoned() const { return fContext->abandoned(); }
 
   /** This is only useful for debug purposes */
-  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); })
+  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
 
-      private : explicit GrImageContextPriv(GrImageContext* context)
-      : fContext(context) {}
+ private:
+  explicit GrImageContextPriv(GrImageContext* context) noexcept : fContext(context) {}
   GrImageContextPriv(const GrImageContextPriv&);             // unimpl
   GrImageContextPriv& operator=(const GrImageContextPriv&);  // unimpl
 
@@ -52,9 +52,9 @@ class GrImageContextPriv {
   friend class GrImageContext;  // to construct/copy this type.
 };
 
-inline GrImageContextPriv GrImageContext::priv() { return GrImageContextPriv(this); }
+inline GrImageContextPriv GrImageContext::priv() noexcept { return GrImageContextPriv(this); }
 
-inline const GrImageContextPriv GrImageContext::priv() const {
+inline const GrImageContextPriv GrImageContext::priv() const noexcept {
   return GrImageContextPriv(const_cast<GrImageContext*>(this));
 }
 

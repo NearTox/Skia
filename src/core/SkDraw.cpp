@@ -336,10 +336,10 @@ void SkDraw::drawPoints(
   }
 
   SkASSERT(pts != nullptr);
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 

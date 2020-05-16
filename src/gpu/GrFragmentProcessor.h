@@ -111,34 +111,42 @@ class GrFragmentProcessor : public GrProcessor {
     }
   }
 
-  int numTextureSamplers() const { return fTextureSamplerCnt; }
+  int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
   const TextureSampler& textureSampler(int i) const;
 
-  int numCoordTransforms() const { return fCoordTransforms.count(); }
+  int numCoordTransforms() const noexcept { return fCoordTransforms.count(); }
 
   /** Returns the coordinate transformation at index. index must be valid according to
       numCoordTransforms(). */
-  const GrCoordTransform& coordTransform(int index) const { return *fCoordTransforms[index]; }
-  GrCoordTransform& coordTransform(int index) { return *fCoordTransforms[index]; }
+  const GrCoordTransform& coordTransform(int index) const noexcept {
+    return *fCoordTransforms[index];
+  }
+  GrCoordTransform& coordTransform(int index) noexcept { return *fCoordTransforms[index]; }
 
-  const SkTArray<GrCoordTransform*, true>& coordTransforms() const { return fCoordTransforms; }
+  const SkTArray<GrCoordTransform*, true>& coordTransforms() const noexcept {
+    return fCoordTransforms;
+  }
 
-  int numChildProcessors() const { return fChildProcessors.count(); }
+  int numChildProcessors() const noexcept { return fChildProcessors.count(); }
 
-  GrFragmentProcessor& childProcessor(int index) { return *fChildProcessors[index]; }
-  const GrFragmentProcessor& childProcessor(int index) const { return *fChildProcessors[index]; }
+  GrFragmentProcessor& childProcessor(int index) noexcept { return *fChildProcessors[index]; }
+  const GrFragmentProcessor& childProcessor(int index) const noexcept {
+    return *fChildProcessors[index];
+  }
 
-  SkDEBUGCODE(bool isInstantiated() const;)
+  SkDEBUGCODE(bool isInstantiated() const);
 
-      /** Do any of the coord transforms for this processor require local coords? */
-      bool usesLocalCoords() const {
+  /** Do any of the coord transforms for this processor require local coords? */
+  bool usesLocalCoords() const noexcept {
     // If the processor is sampled with explicit coords then we do not need to apply the
     // coord transforms in the vertex shader to the local coords.
     return SkToBool(fFlags & kHasCoordTransforms_Flag) &&
            !SkToBool(fFlags & kSampledWithExplicitCoords);
   }
 
-  bool isSampledWithExplicitCoords() const { return SkToBool(fFlags & kSampledWithExplicitCoords); }
+  bool isSampledWithExplicitCoords() const noexcept {
+    return SkToBool(fFlags & kSampledWithExplicitCoords);
+  }
 
   void setSampledWithExplicitCoords(bool value) {
     if (value) {
@@ -163,14 +171,14 @@ class GrFragmentProcessor : public GrProcessor {
    * value cannot depend on the input's color channels unless it unpremultiplies the input color
    * channels by the input alpha.
    */
-  bool compatibleWithCoverageAsAlpha() const {
+  bool compatibleWithCoverageAsAlpha() const noexcept {
     return SkToBool(fFlags & kCompatibleWithCoverageAsAlpha_OptimizationFlag);
   }
 
   /**
    * If this is true then all opaque input colors to the processor produce opaque output colors.
    */
-  bool preservesOpaqueInput() const {
+  bool preservesOpaqueInput() const noexcept {
     return SkToBool(fFlags & kPreservesOpaqueInput_OptimizationFlag);
   }
 
@@ -186,7 +194,7 @@ class GrFragmentProcessor : public GrProcessor {
     }
     return false;
   }
-  bool hasConstantOutputForConstantInput() const {
+  bool hasConstantOutputForConstantInput() const noexcept {
     return SkToBool(fFlags & kConstantOutputForConstantInput_OptimizationFlag);
   }
 
@@ -337,7 +345,8 @@ class GrFragmentProcessor : public GrProcessor {
    * callers must determine on their own if the sampling uses a decal strategy in any way, in
    * which case the texture may become transparent regardless of the color type.
    */
-  static OptimizationFlags ModulateForSamplerOptFlags(SkAlphaType alphaType, bool samplingDecal) {
+  static OptimizationFlags ModulateForSamplerOptFlags(
+      SkAlphaType alphaType, bool samplingDecal) noexcept {
     if (samplingDecal) {
       return kCompatibleWithCoverageAsAlpha_OptimizationFlag;
     } else {
@@ -346,7 +355,8 @@ class GrFragmentProcessor : public GrProcessor {
   }
 
   // As above, but callers should somehow ensure or assert their sampler still uses clamping
-  static OptimizationFlags ModulateForClampedSamplerOptFlags(SkAlphaType alphaType) {
+  static constexpr OptimizationFlags ModulateForClampedSamplerOptFlags(
+      SkAlphaType alphaType) noexcept {
     if (alphaType == kOpaque_SkAlphaType) {
       return kCompatibleWithCoverageAsAlpha_OptimizationFlag |
              kPreservesOpaqueInput_OptimizationFlag;
@@ -360,12 +370,12 @@ class GrFragmentProcessor : public GrProcessor {
     SkASSERT((optimizationFlags & ~kAll_OptimizationFlags) == 0);
   }
 
-  OptimizationFlags optimizationFlags() const {
+  OptimizationFlags optimizationFlags() const noexcept {
     return static_cast<OptimizationFlags>(kAll_OptimizationFlags & fFlags);
   }
 
   /** Useful when you can't call fp->optimizationFlags() on a base class object from a subclass.*/
-  static OptimizationFlags ProcessorOptimizationFlags(const GrFragmentProcessor* fp) {
+  static OptimizationFlags ProcessorOptimizationFlags(const GrFragmentProcessor* fp) noexcept {
     return fp->optimizationFlags();
   }
 
@@ -410,7 +420,7 @@ class GrFragmentProcessor : public GrProcessor {
    */
   int registerChildProcessor(std::unique_ptr<GrFragmentProcessor> child);
 
-  void setTextureSamplerCnt(int cnt) {
+  void setTextureSamplerCnt(int cnt) noexcept {
     SkASSERT(cnt >= 0);
     fTextureSamplerCnt = cnt;
   }
@@ -496,20 +506,20 @@ class GrFragmentProcessor::TextureSampler {
 
   bool operator!=(const TextureSampler& other) const { return !(*this == other); }
 
-  SkDEBUGCODE(bool isInstantiated() const { return this->proxy()->isInstantiated(); })
+  SkDEBUGCODE(bool isInstantiated() const { return this->proxy()->isInstantiated(); });
 
-      // 'peekTexture' should only ever be called after a successful 'instantiate' call
-      GrTexture* peekTexture() const {
+  // 'peekTexture' should only ever be called after a successful 'instantiate' call
+  GrTexture* peekTexture() const noexcept {
     SkASSERT(this->proxy()->isInstantiated());
     return this->proxy()->peekTexture();
   }
 
-  const GrSurfaceProxyView& view() const { return fView; }
-  GrSamplerState samplerState() const { return fSamplerState; }
+  const GrSurfaceProxyView& view() const noexcept { return fView; }
+  GrSamplerState samplerState() const noexcept { return fSamplerState; }
 
-  bool isInitialized() const { return SkToBool(this->proxy()); }
+  bool isInitialized() const noexcept { return SkToBool(this->proxy()); }
 
-  GrSurfaceProxy* proxy() const { return fView.proxy(); }
+  GrSurfaceProxy* proxy() const noexcept { return fView.proxy(); }
 
 #if GR_TEST_UTILS
   void set(GrSurfaceProxyView, GrSamplerState);

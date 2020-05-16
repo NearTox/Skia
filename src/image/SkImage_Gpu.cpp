@@ -131,8 +131,7 @@ static sk_sp<SkImage> new_wrapped_texture_common(
 
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
   sk_sp<GrTextureProxy> proxy = proxyProvider->wrapBackendTexture(
-      backendTex, colorType, ownership, GrWrapCacheable::kNo, kRead_GrIOType, releaseProc,
-      releaseCtx);
+      backendTex, ownership, GrWrapCacheable::kNo, kRead_GrIOType, releaseProc, releaseCtx);
   if (!proxy) {
     return nullptr;
   }
@@ -391,7 +390,8 @@ static sk_sp<SkImage> create_image_from_producer(
       producer->alphaType(), sk_ref_sp(producer->colorSpace()));
 }
 
-sk_sp<SkImage> SkImage::makeTextureImage(GrContext* context, GrMipMapped mipMapped) const {
+sk_sp<SkImage> SkImage::makeTextureImage(
+    GrContext* context, GrMipMapped mipMapped, SkBudgeted budgeted) const {
   if (!context) {
     return nullptr;
   }
@@ -401,22 +401,34 @@ sk_sp<SkImage> SkImage::makeTextureImage(GrContext* context, GrMipMapped mipMapp
       return nullptr;
     }
 
+    // TODO: Don't flatten YUVA images here.
     const GrSurfaceProxyView* view = as_IB(this)->view(context);
     SkASSERT(view && view->asTextureProxy());
-    if (GrMipMapped::kNo == mipMapped || view->asTextureProxy()->mipMapped() == mipMapped) {
+
+    if (mipMapped == GrMipMapped::kNo || view->asTextureProxy()->mipMapped() == mipMapped ||
+        !context->priv().caps()->mipMapSupport()) {
       return sk_ref_sp(const_cast<SkImage*>(this));
     }
-    GrTextureAdjuster adjuster(context, *view, this->imageInfo().colorInfo(), this->uniqueID());
-    return create_image_from_producer(context, &adjuster, this->uniqueID(), mipMapped);
+    auto copy = GrCopyBaseMipMapToTextureProxy(
+        context->priv().asRecordingContext(), view->proxy(), view->origin(),
+        SkColorTypeToGrColorType(this->colorType()), budgeted);
+    if (!copy) {
+      return nullptr;
+    }
+    return sk_make_sp<SkImage_Gpu>(
+        sk_ref_sp(context), this->uniqueID(), std::move(copy), this->colorType(), this->alphaType(),
+        this->refColorSpace());
   }
 
+  auto policy = budgeted == SkBudgeted::kYes ? GrImageTexGenPolicy::kNew_Uncached_Budgeted
+                                             : GrImageTexGenPolicy::kNew_Uncached_Unbudgeted;
   if (this->isLazyGenerated()) {
-    GrImageTextureMaker maker(context, this, kDisallow_CachingHint);
+    GrImageTextureMaker maker(context, this, policy);
     return create_image_from_producer(context, &maker, this->uniqueID(), mipMapped);
   }
 
   if (const SkBitmap* bmp = as_IB(this)->onPeekBitmap()) {
-    GrBitmapTextureMaker maker(context, *bmp, GrBitmapTextureMaker::Cached::kYes);
+    GrBitmapTextureMaker maker(context, *bmp, policy);
     return create_image_from_producer(context, &maker, this->uniqueID(), mipMapped);
   }
   return nullptr;
@@ -510,7 +522,7 @@ sk_sp<SkImage> SkImage::MakeCrossContextFromPixmap(
   // Turn the pixmap into a GrTextureProxy
   SkBitmap bmp;
   bmp.installPixels(*pixmap);
-  GrBitmapTextureMaker bitmapMaker(context, bmp);
+  GrBitmapTextureMaker bitmapMaker(context, bmp, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
   GrMipMapped mipMapped = buildMips ? GrMipMapped::kYes : GrMipMapped::kNo;
   auto view = bitmapMaker.view(mipMapped);
   if (!view) {
@@ -580,8 +592,8 @@ sk_sp<SkImage> SkImage::MakeFromAHardwareBufferWithData(
   }
 
   sk_sp<GrTextureProxy> proxy = proxyProvider->wrapBackendTexture(
-      backendTexture, grColorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRW_GrIOType,
-      deleteImageProc, deleteImageCtx);
+      backendTexture, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRW_GrIOType, deleteImageProc,
+      deleteImageCtx);
   if (!proxy) {
     deleteImageProc(deleteImageCtx);
     return nullptr;

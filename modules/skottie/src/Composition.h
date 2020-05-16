@@ -27,7 +27,7 @@ class CompositionBuilder final : SkNoncopyable {
  private:
   LayerBuilder* layerBuilder(int layer_index);
 
-  const sk_sp<sksg::Transform>& getCameraTransform() const { return fCameraTransform; }
+  const sk_sp<sksg::Transform>& getCameraTransform() const noexcept { return fCameraTransform; }
 
   friend class LayerBuilder;
 

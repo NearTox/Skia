@@ -23,6 +23,7 @@
 #include "experimental/svg/model/SkSVGRenderContext.h"
 #include "experimental/svg/model/SkSVGSVG.h"
 #include "experimental/svg/model/SkSVGStop.h"
+#include "experimental/svg/model/SkSVGText.h"
 #include "experimental/svg/model/SkSVGTypes.h"
 #include "experimental/svg/model/SkSVGUse.h"
 #include "experimental/svg/model/SkSVGValue.h"
@@ -88,6 +89,14 @@ bool SetPathDataAttribute(
   }
 
   node->setAttribute(attr, SkSVGPathValue(path));
+  return true;
+}
+
+bool SetStringAttribute(
+    const sk_sp<SkSVGNode>& node, SkSVGAttribute attr, const char* stringValue) {
+  SkString str(stringValue, strlen(stringValue));
+  SkSVGStringType strType = SkSVGStringType(str);
+  node->setAttribute(attr, SkSVGStringValue(strType));
   return true;
 }
 
@@ -311,6 +320,8 @@ SortedDictionaryEntry<AttrParseInfo> gAttributeParseInfo[] = {
     {"fill", {SkSVGAttribute::kFill, SetPaintAttribute}},
     {"fill-opacity", {SkSVGAttribute::kFillOpacity, SetNumberAttribute}},
     {"fill-rule", {SkSVGAttribute::kFillRule, SetFillRuleAttribute}},
+    {"font-family", {SkSVGAttribute::kFontFamily, SetStringAttribute}},
+    {"font-size", {SkSVGAttribute::kFontSize, SetLengthAttribute}},
     // focal point x & y
     {"fx", {SkSVGAttribute::kFx, SetLengthAttribute}},
     {"fy", {SkSVGAttribute::kFy, SetLengthAttribute}},
@@ -335,6 +346,8 @@ SortedDictionaryEntry<AttrParseInfo> gAttributeParseInfo[] = {
     {"stroke-opacity", {SkSVGAttribute::kStrokeOpacity, SetNumberAttribute}},
     {"stroke-width", {SkSVGAttribute::kStrokeWidth, SetLengthAttribute}},
     {"style", {SkSVGAttribute::kUnknown, SetStyleAttributes}},
+    {"text", {SkSVGAttribute::kText, SetStringAttribute}},
+    {"text-anchor", {SkSVGAttribute::kTextAnchor, SetStringAttribute}},
     {"transform", {SkSVGAttribute::kTransform, SetTransformAttribute}},
     {"viewBox", {SkSVGAttribute::kViewBox, SetViewBoxAttribute}},
     {"visibility", {SkSVGAttribute::kVisibility, SetVisibilityAttribute}},
@@ -365,6 +378,7 @@ SortedDictionaryEntry<sk_sp<SkSVGNode> (*)()> gTagFactories[] = {
     {"rect", []() -> sk_sp<SkSVGNode> { return SkSVGRect::Make(); }},
     {"stop", []() -> sk_sp<SkSVGNode> { return SkSVGStop::Make(); }},
     {"svg", []() -> sk_sp<SkSVGNode> { return SkSVGSVG::Make(); }},
+    {"text", []() -> sk_sp<SkSVGNode> { return SkSVGText::Make(); }},
     {"use", []() -> sk_sp<SkSVGNode> { return SkSVGUse::Make(); }},
 };
 

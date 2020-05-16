@@ -7,7 +7,6 @@
 
 #include "modules/skottie/src/effects/Effects.h"
 
-#include "modules/skottie/src/Animator.h"
 #include "modules/skottie/src/SkottieJson.h"
 #include "modules/skottie/src/SkottieValue.h"
 #include "modules/sksg/include/SkSGColorFilter.h"
@@ -46,11 +45,11 @@ class HueSaturationEffectAdapter final : public AnimatablePropertyContainer {
       kColorizeLightness_Index = 8,
     };
 
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kChannelControl_Index), &fChanCtrl);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kMasterHue_Index), &fMasterHue);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kMasterSat_Index), &fMasterSat);
-    this->bind(
-        *abuilder, EffectBuilder::GetPropValue(jprops, kMasterLightness_Index), &fMasterLight);
+    EffectBinder(jprops, *abuilder, this)
+        .bind(kChannelControl_Index, fChanCtrl)
+        .bind(kMasterHue_Index, fMasterHue)
+        .bind(kMasterSat_Index, fMasterSat)
+        .bind(kMasterLightness_Index, fMasterLight);
 
     // TODO: colorize support?
   }

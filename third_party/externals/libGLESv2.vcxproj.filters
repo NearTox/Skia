@@ -82,13 +82,11 @@
     <ClCompile Include="angle2\src\libANGLE\Framebuffer.cpp" />
     <ClCompile Include="angle2\src\libANGLE\FramebufferAttachment.cpp" />
     <ClCompile Include="angle2\src\libANGLE\HandleAllocator.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\HandleRangeAllocator.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Image.cpp" />
     <ClCompile Include="angle2\src\libANGLE\ImageIndex.cpp" />
     <ClCompile Include="angle2\src\libANGLE\IndexRangeCache.cpp" />
     <ClCompile Include="angle2\src\libANGLE\LoggingAnnotator.cpp" />
     <ClCompile Include="angle2\src\libANGLE\MemoryProgramCache.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\Path.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Platform.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Program.cpp" />
     <ClCompile Include="angle2\src\libANGLE\ProgramLinkedResources.cpp" />
@@ -240,7 +238,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\FenceNVGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\FramebufferGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\FunctionsGL.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\renderer\gl\PathGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ProgramGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ProgramPipelineGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\QueryGL.cpp" />
@@ -400,5 +397,7 @@
     <ClCompile Include="angle2\src\libANGLE\validationESEXT.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveInactiveInterfaceVariables.cpp" />
     <ClCompile Include="angle2\src\common\system_utils_win32.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\ProgramExecutable.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveAtomicCounterBuiltins.cpp" />
   </ItemGroup>
 </Project>

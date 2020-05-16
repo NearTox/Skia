@@ -13,7 +13,6 @@
 #include "include/gpu/GrTypes.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrMesh.h"
 #include "src/gpu/GrTRecorder.h"
 #include "src/gpu/vk/GrVkPipelineState.h"
 
@@ -28,9 +27,6 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   GrVkOpsRenderPass(GrVkGpu*);
 
   ~GrVkOpsRenderPass() override;
-
-  void begin() override {}
-  void end() override;
 
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override;
 
@@ -62,6 +58,8 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   GrGpu* gpu() override;
 
   GrVkCommandBuffer* currentCommandBuffer();
+
+  void onEnd() override;
 
   bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) override;
   void onSetScissorRect(const SkIRect&) override;

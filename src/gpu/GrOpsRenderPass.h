@@ -15,7 +15,6 @@
 class GrOpFlushState;
 class GrFixedClip;
 class GrGpu;
-class GrMesh;
 class GrPipeline;
 class GrPrimitiveProcessor;
 class GrProgramInfo;
@@ -31,7 +30,7 @@ struct SkRect;
  */
 class GrOpsRenderPass {
  public:
-  virtual ~GrOpsRenderPass() {}
+  virtual ~GrOpsRenderPass() = default;
 
   struct LoadAndStoreInfo {
     GrLoadOp fLoadOp;
@@ -46,15 +45,13 @@ class GrOpsRenderPass {
     GrStoreOp fStoreOp;
   };
 
-  virtual void begin() = 0;
+  void begin();
   // Signals the end of recording to the GrOpsRenderPass and that it can now be submitted.
-  virtual void end() = 0;
+  void end();
 
-  // Updates the internal pipeline state for drawing with the provided GrProgramInfo. If an
-  // optional scissor rect is provided, then this method calls setScissor for convenience after
-  // binding the pipeline. Enters an internal "bad" state if the pipeline could not be set.
-  void bindPipeline(
-      const GrProgramInfo&, const SkRect& drawBounds, const SkIRect* optionalScissorRect = nullptr);
+  // Updates the internal pipeline state for drawing with the provided GrProgramInfo. Enters an
+  // internal "bad" state if the pipeline could not be set.
+  void bindPipeline(const GrProgramInfo&, const SkRect& drawBounds);
 
   // The scissor rect is always dynamic state and therefore not stored on GrPipeline. If scissor
   // test is enabled on the current pipeline, then the client must call setScissorRect() before
@@ -75,21 +72,9 @@ class GrOpsRenderPass {
       const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
       const GrPipeline&);
 
-  // This is a convenience overload for when the primitive processor has exactly one texture. It
-  // binds one texture for the primitive processor, and any others for FPs on the pipeline.
-  void bindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy& singlePrimProcTexture, const GrPipeline&);
-
   void bindBuffers(
       const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
       GrPrimitiveRestart = GrPrimitiveRestart::kNo);
-
-  // Draws the given array of meshes using the current pipeline state. The client must call
-  // bindPipeline() before using this method.
-  //
-  // NOTE: This method will soon be deleted. While it continues to exist, it takes care of calling
-  // setScissor() and bindTextures() on the client's behalf.
-  void drawMeshes(const GrProgramInfo&, const GrMesh[], int meshCount);
 
   // These methods issue draws using the current pipeline state. Before drawing, the caller must
   // configure the pipeline and dynamic state:
@@ -105,6 +90,13 @@ class GrOpsRenderPass {
   void drawInstanced(int instanceCount, int baseInstance, int vertexCount, int baseVertex);
   void drawIndexedInstanced(
       int indexCount, int baseIndex, int instanceCount, int baseInstance, int baseVertex);
+
+  // This is a helper method for drawing a repeating pattern of vertices. The bound index buffer
+  // is understood to contain 'maxPatternRepetitionsInIndexBuffer' repetitions of the pattern.
+  // If more repetitions are required, then we loop.
+  void drawIndexPattern(
+      int patternIndexCount, int patternRepeatCount, int maxPatternRepetitionsInIndexBuffer,
+      int patternVertexCount, int baseVertex);
 
   // Performs an upload of vertex data in the middle of a set of a set of draws
   virtual void inlineUpload(GrOpFlushState*, GrDeferredTextureUploadFn&) = 0;
@@ -122,12 +114,12 @@ class GrOpsRenderPass {
   void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>);
 
  protected:
-  GrOpsRenderPass() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
+  GrOpsRenderPass() noexcept : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
 
-  GrOpsRenderPass(GrRenderTarget* rt, GrSurfaceOrigin origin)
+  GrOpsRenderPass(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept
       : fOrigin(origin), fRenderTarget(rt) {}
 
-  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) {
+  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept {
     SkASSERT(!fRenderTarget);
 
     fRenderTarget = rt;
@@ -137,12 +129,26 @@ class GrOpsRenderPass {
   GrSurfaceOrigin fOrigin;
   GrRenderTarget* fRenderTarget;
 
+  // Backends may defer binding of certain buffers if their draw API requires a buffer, or if
+  // their bind methods don't support base values.
+  sk_sp<const GrBuffer> fActiveIndexBuffer;
+  sk_sp<const GrBuffer> fActiveVertexBuffer;
+  sk_sp<const GrBuffer> fActiveInstanceBuffer;
+
  private:
   virtual GrGpu* gpu() = 0;
+
+  void resetActiveBuffers() {
+    fActiveIndexBuffer.reset();
+    fActiveInstanceBuffer.reset();
+    fActiveVertexBuffer.reset();
+  }
 
   bool prepareToDraw();
 
   // overridden by backend-specific derived class to perform the rendering command.
+  virtual void onBegin() {}
+  virtual void onEnd() {}
   virtual bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) = 0;
   virtual void onSetScissorRect(const SkIRect&) = 0;
   virtual bool onBindTextures(
@@ -171,11 +177,11 @@ class GrOpsRenderPass {
 #ifdef SK_DEBUG
   enum class DynamicStateStatus { kDisabled, kUninitialized, kConfigured };
 
-  DynamicStateStatus fScissorStatus = DynamicStateStatus::kDisabled;
-  DynamicStateStatus fTextureBindingStatus = DynamicStateStatus::kDisabled;
-  bool fHasIndexBuffer = false;
-  DynamicStateStatus fInstanceBufferStatus = DynamicStateStatus::kDisabled;
-  DynamicStateStatus fVertexBufferStatus = DynamicStateStatus::kDisabled;
+  DynamicStateStatus fScissorStatus;
+  DynamicStateStatus fTextureBindingStatus;
+  bool fHasIndexBuffer;
+  DynamicStateStatus fInstanceBufferStatus;
+  DynamicStateStatus fVertexBufferStatus;
 #endif
 
   typedef GrOpsRenderPass INHERITED;

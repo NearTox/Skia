@@ -23,7 +23,7 @@ Text::Text(sk_sp<SkTypeface> tf, const SkString& text) : fTypeface(std::move(tf)
 
 Text::~Text() = default;
 
-SkPoint Text::alignedPosition(SkScalar advance) const {
+SkPoint Text::alignedPosition(SkScalar advance) const noexcept {
   auto aligned = fPosition;
 
   switch (fAlign) {
@@ -81,7 +81,7 @@ sk_sp<TextBlob> TextBlob::Make(sk_sp<SkTextBlob> blob) {
   return sk_sp<TextBlob>(new TextBlob(std::move(blob)));
 }
 
-TextBlob::TextBlob(sk_sp<SkTextBlob> blob) : fBlob(std::move(blob)) {}
+TextBlob::TextBlob(sk_sp<SkTextBlob> blob) noexcept : fBlob(std::move(blob)) {}
 
 TextBlob::~TextBlob() = default;
 

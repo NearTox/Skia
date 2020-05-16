@@ -55,17 +55,17 @@ class GrSurfaceContext {
 
   virtual ~GrSurfaceContext() = default;
 
-  const GrColorInfo& colorInfo() const { return fColorInfo; }
+  const GrColorInfo& colorInfo() const noexcept { return fColorInfo; }
   GrImageInfo imageInfo() const { return {fColorInfo, fReadView.proxy()->dimensions()}; }
 
-  GrSurfaceOrigin origin() const { return fReadView.origin(); }
-  GrSwizzle readSwizzle() const { return fReadView.swizzle(); }
+  GrSurfaceOrigin origin() const noexcept { return fReadView.origin(); }
+  GrSwizzle readSwizzle() const noexcept { return fReadView.swizzle(); }
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
   // make a copy (which refs the proxy) if needed.
   GrSurfaceProxyView readSurfaceView() { return fReadView; }
 
-  int width() const { return fReadView.proxy()->width(); }
-  int height() const { return fReadView.proxy()->height(); }
+  int width() const noexcept { return fReadView.proxy()->width(); }
+  int height() const noexcept { return fReadView.proxy()->height(); }
 
   const GrCaps* caps() const;
 
@@ -96,16 +96,18 @@ class GrSurfaceContext {
       const GrImageInfo& srcInfo, const void* src, size_t rowBytes, SkIPoint dstPt,
       GrContext* direct = nullptr);
 
-  GrSurfaceProxy* asSurfaceProxy() { return fReadView.proxy(); }
-  const GrSurfaceProxy* asSurfaceProxy() const { return fReadView.proxy(); }
+  GrSurfaceProxy* asSurfaceProxy() noexcept { return fReadView.proxy(); }
+  const GrSurfaceProxy* asSurfaceProxy() const noexcept { return fReadView.proxy(); }
   sk_sp<GrSurfaceProxy> asSurfaceProxyRef() { return fReadView.refProxy(); }
 
-  GrTextureProxy* asTextureProxy() { return fReadView.asTextureProxy(); }
-  const GrTextureProxy* asTextureProxy() const { return fReadView.asTextureProxy(); }
+  GrTextureProxy* asTextureProxy() noexcept { return fReadView.asTextureProxy(); }
+  const GrTextureProxy* asTextureProxy() const noexcept { return fReadView.asTextureProxy(); }
   sk_sp<GrTextureProxy> asTextureProxyRef() { return fReadView.asTextureProxyRef(); }
 
-  GrRenderTargetProxy* asRenderTargetProxy() { return fReadView.asRenderTargetProxy(); }
-  const GrRenderTargetProxy* asRenderTargetProxy() const { return fReadView.asRenderTargetProxy(); }
+  GrRenderTargetProxy* asRenderTargetProxy() noexcept { return fReadView.asRenderTargetProxy(); }
+  const GrRenderTargetProxy* asRenderTargetProxy() const noexcept {
+    return fReadView.asRenderTargetProxy();
+  }
   sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() { return fReadView.asRenderTargetProxyRef(); }
 
   virtual GrRenderTargetContext* asRenderTargetContext() { return nullptr; }

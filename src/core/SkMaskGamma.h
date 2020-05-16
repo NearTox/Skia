@@ -52,7 +52,7 @@ class SkColorSpaceLuminance : SkNoncopyable {
  * @param base the number to be scaled to [0, 255].
  */
 template <U8CPU N>
-static inline U8CPU sk_t_scale255(U8CPU base) {
+static inline U8CPU sk_t_scale255(U8CPU base) noexcept {
   base <<= (8 - N);
   U8CPU lum = base;
   for (unsigned int i = N; i < 8; i += N) {
@@ -60,10 +60,10 @@ static inline U8CPU sk_t_scale255(U8CPU base) {
   }
   return lum;
 }
-template <> /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) { return base * 0xFF; }
-template <> /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) { return base * 0x55; }
-template <> /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) { return base * 0x11; }
-template <> /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) { return base; }
+template <> /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) noexcept { return base * 0xFF; }
+template <> /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) noexcept { return base * 0x55; }
+template <> /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) noexcept { return base * 0x11; }
+template <> /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) noexcept { return base; }
 ///@}
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
@@ -214,10 +214,11 @@ SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const 
  *  @lut a look-up table which transforms the component.
  */
 template <bool APPLY_LUT>
-static inline U8CPU sk_apply_lut_if(U8CPU component, const uint8_t*) {
+static inline U8CPU sk_apply_lut_if(U8CPU component, const uint8_t*) noexcept {
   return component;
 }
-template <> /*static*/ inline U8CPU sk_apply_lut_if<true>(U8CPU component, const uint8_t* lut) {
+template <>
+/*static*/ inline U8CPU sk_apply_lut_if<true>(U8CPU component, const uint8_t* lut) noexcept {
   return lut[component];
 }
 ///@}

@@ -28,7 +28,7 @@ class Gradient : public Shader {
     SkScalar fPosition;
     SkColor4f fColor;
 
-    bool operator==(const ColorStop& other) const {
+    bool operator==(const ColorStop& other) const noexcept {
       return fPosition == other.fPosition && fColor == other.fColor;
     }
   };
@@ -43,7 +43,7 @@ class Gradient : public Shader {
       const std::vector<SkColor4f>& colors, const std::vector<SkScalar>& positions) const = 0;
 
  protected:
-  Gradient() = default;
+  Gradient() noexcept = default;
 
  private:
   std::vector<ColorStop> fColorStops;

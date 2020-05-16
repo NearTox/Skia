@@ -33,12 +33,6 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
 
   GrGlyph* getGlyph(const SkGlyph& skGlyph);
 
-  // This variant of the above function is called by GrAtlasTextOp. At this point, it is possible
-  // that the maskformat of the glyph differs from what we expect.  In these cases we will just
-  // draw a clear square.
-  // skbug:4143 crbug:510931
-  GrGlyph* getGlyph(SkPackedGlyphID packed, SkBulkGlyphMetricsAndImages* metricsAndImages);
-
   // returns true if glyph successfully added to texture atlas, false otherwise.  If the glyph's
   // mask format has changed, then addGlyphToAtlas will draw a clear box.  This will almost never
   // happen.
@@ -47,12 +41,6 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
   GrDrawOpAtlas::ErrorCode addGlyphToAtlas(
       const SkGlyph&, GrMaskFormat expectedMaskFormat, bool isScaledGlyph, GrResourceProvider*,
       GrDeferredUploadTarget*, GrAtlasManager*, GrGlyph*);
-
-  // testing
-  int countGlyphs() const { return fCache.count(); }
-
-  // remove any references to this plot
-  void removeID(GrDrawOpAtlas::PlotLocator);
 
  private:
   struct HashTraits {
@@ -64,8 +52,6 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
   SkTHashTable<GrGlyph*, SkPackedGlyphID, HashTraits> fCache;
   SkAutoDescriptor fFontScalerKey;
   SkArenaAlloc fAlloc{512};
-
-  int fAtlasedGlyphs{0};
 
   friend class GrStrikeCache;
 };

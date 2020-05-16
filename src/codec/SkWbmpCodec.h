@@ -29,7 +29,7 @@ class SkWbmpCodec final : public SkCodec {
   bool onRewind() override;
   bool conversionSupported(const SkImageInfo& dst, bool srcIsOpaque, bool needsXform) override;
   // No need to Xform; all pixels are either black or white.
-  bool usesColorXform() const override { return false; }
+  bool usesColorXform() const noexcept override { return false; }
 
  private:
   SkSampler* getSampler(bool createIfNecessary) override {

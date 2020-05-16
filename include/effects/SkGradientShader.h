@@ -51,6 +51,7 @@ class SK_API SkGradientShader {
      *  and then premultiply each of the results. By setting this flag, the
      *  gradients will premultiply their colors first, and then interpolate
      *  between them.
+     *  example: https://fiddle.skia.org/c/@GradientShader_MakeLinear
      */
     kInterpolateColorsInPremul_Flag = 1 << 0,
   };
@@ -66,6 +67,8 @@ class SK_API SkGradientShader {
                       intermediate values must be strictly increasing.
       @param  count   Must be >=2. The number of colors (and pos if not NULL) entries.
       @param  mode    The tiling mode
+
+      example: https://fiddle.skia.org/c/@GradientShader_MakeLinear
   */
   static sk_sp<SkShader> MakeLinear(
       const SkPoint pts[2], const SkColor colors[], const SkScalar pos[], int count,
@@ -87,6 +90,8 @@ class SK_API SkGradientShader {
                       intermediate values must be strictly increasing.
       @param  count   Must be >=2. The number of colors (and pos if not NULL) entries.
       @param  mode    The tiling mode
+
+      example: https://fiddle.skia.org/c/@GradientShader_MakeLinear
   */
   static sk_sp<SkShader> MakeLinear(
       const SkPoint pts[2], const SkColor4f colors[], sk_sp<SkColorSpace> colorSpace,

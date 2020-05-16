@@ -50,8 +50,6 @@ static wgpu::BlendFactor to_dawn_blend_factor(GrBlendCoeff coeff) {
     case kIDA_GrBlendCoeff: return wgpu::BlendFactor::OneMinusDstAlpha;
     case kConstC_GrBlendCoeff: return wgpu::BlendFactor::BlendColor;
     case kIConstC_GrBlendCoeff: return wgpu::BlendFactor::OneMinusBlendColor;
-    case kConstA_GrBlendCoeff:
-    case kIConstA_GrBlendCoeff:
     case kS2C_GrBlendCoeff:
     case kIS2C_GrBlendCoeff:
     case kS2A_GrBlendCoeff:
@@ -128,8 +126,7 @@ static wgpu::VertexFormat to_dawn_vertex_format(GrVertexAttribType type) {
     case kHalf_GrVertexAttribType: return wgpu::VertexFormat::Float;
     case kFloat2_GrVertexAttribType:
     case kHalf2_GrVertexAttribType: return wgpu::VertexFormat::Float2;
-    case kFloat3_GrVertexAttribType:
-    case kHalf3_GrVertexAttribType: return wgpu::VertexFormat::Float3;
+    case kFloat3_GrVertexAttribType: return wgpu::VertexFormat::Float3;
     case kFloat4_GrVertexAttribType:
     case kHalf4_GrVertexAttribType: return wgpu::VertexFormat::Float4;
     case kUShort2_GrVertexAttribType: return wgpu::VertexFormat::UShort2;
@@ -455,7 +452,9 @@ wgpu::BindGroup GrDawnProgram::setUniformData(
   SkIPoint offset;
   GrTexture* dstTexture = pipeline.peekDstTexture(&offset);
   fXferProcessor->setData(fDataManager, pipeline.getXferProcessor(), dstTexture, offset);
-  fDataManager.uploadUniformBuffers(gpu, slice);
+  if (0 != uniformBufferSize) {
+    fDataManager.uploadUniformBuffers(slice.fData);
+  }
   wgpu::BindGroupDescriptor descriptor;
   descriptor.layout = fBindGroupLayouts[0];
   descriptor.bindingCount = bindings.size();

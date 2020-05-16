@@ -34,9 +34,9 @@ class DiscardableMemoryPool : public SkDiscardableMemoryPool {
     return this->make(bytes).release();  // TODO: change API
   }
 
-  size_t getRAMUsed() override;
+  size_t getRAMUsed() noexcept override;
   void setRAMBudget(size_t budget) override;
-  size_t getRAMBudget() override { return fBudget; }
+  size_t getRAMBudget() noexcept override { return fBudget; }
 
   /** purges all unlocked DMs */
   void dumpPool() override;
@@ -75,10 +75,11 @@ class DiscardableMemoryPool : public SkDiscardableMemoryPool {
  */
 class PoolDiscardableMemory : public SkDiscardableMemory {
  public:
-  PoolDiscardableMemory(sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes);
+  PoolDiscardableMemory(
+      sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes) noexcept;
   ~PoolDiscardableMemory() override;
   bool lock() override;
-  void* data() override;
+  void* data() noexcept override;
   void unlock() override;
   friend class DiscardableMemoryPool;
 
@@ -91,7 +92,7 @@ class PoolDiscardableMemory : public SkDiscardableMemory {
 };
 
 PoolDiscardableMemory::PoolDiscardableMemory(
-    sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes)
+    sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes) noexcept
     : fPool(std::move(pool)), fLocked(true), fPointer(std::move(pointer)), fBytes(bytes) {
   SkASSERT(fPool != nullptr);
   SkASSERT(fPointer != nullptr);
@@ -108,7 +109,7 @@ bool PoolDiscardableMemory::lock() {
   return fPool->lock(this);
 }
 
-void* PoolDiscardableMemory::data() {
+void* PoolDiscardableMemory::data() noexcept {
   SkASSERT(fLocked);  // contract for SkDiscardableMemory
   return fPointer.get();
 }
@@ -209,7 +210,7 @@ void DiscardableMemoryPool::unlock(PoolDiscardableMemory* dm) {
   this->dumpDownTo(fBudget);
 }
 
-size_t DiscardableMemoryPool::getRAMUsed() { return fUsed; }
+size_t DiscardableMemoryPool::getRAMUsed() noexcept { return fUsed; }
 void DiscardableMemoryPool::setRAMBudget(size_t budget) {
   SkAutoMutexExclusive autoMutexAcquire(fMutex);
   fBudget = budget;

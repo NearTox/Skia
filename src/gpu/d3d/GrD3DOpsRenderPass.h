@@ -12,7 +12,6 @@
 
 #include "include/gpu/GrTypes.h"
 #include "include/private/GrTypesPriv.h"
-#include "src/gpu/GrMesh.h"
 
 class GrD3DGpu;
 
@@ -21,9 +20,6 @@ class GrD3DOpsRenderPass : public GrOpsRenderPass {
   GrD3DOpsRenderPass(GrD3DGpu*);
 
   ~GrD3DOpsRenderPass() override;
-
-  void begin() override {}
-  void end() override {}
 
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override {}
 

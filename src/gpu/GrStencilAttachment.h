@@ -20,13 +20,13 @@ class GrStencilAttachment : public GrGpuResource {
     // TODO: allow SB to be purged and detach itself from rts
   }
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
-  int bits() const { return fBits; }
-  int numSamples() const { return fSampleCnt; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
+  int bits() const noexcept { return fBits; }
+  int numSamples() const noexcept { return fSampleCnt; }
 
-  bool hasPerformedInitialClear() const { return fHasPerformedInitialClear; }
-  void markHasPerformedInitialClear() { fHasPerformedInitialClear = true; }
+  bool hasPerformedInitialClear() const noexcept { return fHasPerformedInitialClear; }
+  void markHasPerformedInitialClear() noexcept { fHasPerformedInitialClear = true; }
 
   // We create a unique stencil buffer at each width, height and sampleCnt and share it for
   // all render targets that require a stencil with those params.

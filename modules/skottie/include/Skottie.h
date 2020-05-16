@@ -16,6 +16,7 @@
 #include "modules/skresources/include/SkResources.h"
 
 #include <memory>
+#include <vector>
 
 class SkCanvas;
 struct SkRect;
@@ -33,6 +34,10 @@ class Scene;
 }  // namespace sksg
 
 namespace skottie {
+
+namespace internal {
+class Animator;
+}
 
 using ImageAsset = skresources::ImageAsset;
 using ResourceProvider = skresources::ResourceProvider;
@@ -87,7 +92,7 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
      *
      * @return Stats (see above).
      */
-    const Stats& getStats() const { return fStats; }
+    const Stats& getStats() const noexcept { return fStats; }
 
     /**
      * Specify a loader for external resources (images, etc.).
@@ -200,15 +205,15 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
   /**
    * Returns the animation duration in seconds.
    */
-  double duration() const { return fDuration; }
+  double duration() const noexcept { return fDuration; }
 
   /**
    * Returns the animation frame rate (frames / second).
    */
-  double fps() const { return fFPS; }
+  double fps() const noexcept { return fFPS; }
 
-  const SkString& version() const { return fVersion; }
-  const SkSize& size() const { return fSize; }
+  const SkString& version() const noexcept { return fVersion; }
+  const SkSize& size() const noexcept { return fSize; }
 
  private:
   enum Flags : uint32_t {
@@ -216,10 +221,12 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
   };
 
   Animation(
-      std::unique_ptr<sksg::Scene>, SkString ver, const SkSize& size, double inPoint,
-      double outPoint, double duration, double fps, uint32_t flags);
+      std::unique_ptr<sksg::Scene>, std::vector<sk_sp<internal::Animator>>&&, SkString ver,
+      const SkSize& size, double inPoint, double outPoint, double duration, double fps,
+      uint32_t flags);
 
-  std::unique_ptr<sksg::Scene> fScene;
+  const std::unique_ptr<sksg::Scene> fScene;
+  const std::vector<sk_sp<internal::Animator>> fAnimators;
   const SkString fVersion;
   const SkSize fSize;
   const double fInPoint, fOutPoint, fDuration, fFPS;

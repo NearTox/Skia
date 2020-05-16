@@ -34,8 +34,8 @@ GrSimpleMeshDrawOpHelper::~GrSimpleMeshDrawOpHelper() {
 }
 
 GrDrawOp::FixedFunctionFlags GrSimpleMeshDrawOpHelper::fixedFunctionFlags() const {
-  return GrAATypeIsHW((this->aaType())) ? GrDrawOp::FixedFunctionFlags::kUsesHWAA
-                                        : GrDrawOp::FixedFunctionFlags::kNone;
+  return GrAATypeIsHW(this->aaType()) ? GrDrawOp::FixedFunctionFlags::kUsesHWAA
+                                      : GrDrawOp::FixedFunctionFlags::kNone;
 }
 
 bool GrSimpleMeshDrawOpHelper::isCompatible(
@@ -109,7 +109,7 @@ GrProcessorSet::Analysis GrSimpleMeshDrawOpHelper::finalizeProcessors(
 }
 
 const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, GrSwizzle outputViewSwizzle,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrProcessorSet&& processorSet, GrPipeline::InputFlags pipelineFlags,
     const GrUserStencilSettings* stencilSettings) {
@@ -119,7 +119,7 @@ const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
   pipelineArgs.fUserStencil = stencilSettings;
   pipelineArgs.fCaps = caps;
   pipelineArgs.fDstProxyView = dstProxyView;
-  pipelineArgs.fOutputSwizzle = outputView->swizzle();
+  pipelineArgs.fWriteSwizzle = outputViewSwizzle;
 
   return arena->make<GrPipeline>(pipelineArgs, std::move(processorSet), std::move(appliedClip));
 }
@@ -128,14 +128,14 @@ const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
     GrOpFlushState* flushState, GrProcessorSet&& processorSet, GrPipeline::InputFlags pipelineFlags,
     const GrUserStencilSettings* stencilSettings) {
   return CreatePipeline(
-      &flushState->caps(), flushState->allocator(), flushState->outputView(),
+      &flushState->caps(), flushState->allocator(), flushState->outputView()->swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView(), std::move(processorSet),
       pipelineFlags, stencilSettings);
 }
 
 const GrPipeline* GrSimpleMeshDrawOpHelper::createPipeline(GrOpFlushState* flushState) {
   return CreatePipeline(
-      &flushState->caps(), flushState->allocator(), flushState->outputView(),
+      &flushState->caps(), flushState->allocator(), flushState->outputView()->swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView(), this->detachProcessorSet(),
       this->pipelineFlags());
 }
@@ -145,25 +145,22 @@ GrProgramInfo* GrSimpleMeshDrawOpHelper::CreateProgramInfo(
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* geometryProcessor, GrProcessorSet&& processorSet,
     GrPrimitiveType primitiveType, GrPipeline::InputFlags pipelineFlags,
-    const GrUserStencilSettings* stencilSettings,
-    GrPipeline::FixedDynamicState* fixedDynamicState) {
-  if (!fixedDynamicState) {
-    static constexpr int kZeroPrimProcTextures = 0;
-    fixedDynamicState =
-        GrMeshDrawOp::Target::MakeFixedDynamicState(arena, &appliedClip, kZeroPrimProcTextures);
-  }
-
+    const GrUserStencilSettings* stencilSettings) {
   auto pipeline = CreatePipeline(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, std::move(processorSet),
-      pipelineFlags, stencilSettings);
+      caps, arena, outputView->swizzle(), std::move(appliedClip), dstProxyView,
+      std::move(processorSet), pipelineFlags, stencilSettings);
 
+  return CreateProgramInfo(arena, pipeline, outputView, geometryProcessor, primitiveType);
+}
+
+GrProgramInfo* GrSimpleMeshDrawOpHelper::CreateProgramInfo(
+    SkArenaAlloc* arena, const GrPipeline* pipeline, const GrSurfaceProxyView* outputView,
+    GrGeometryProcessor* geometryProcessor, GrPrimitiveType primitiveType) {
   GrRenderTargetProxy* outputProxy = outputView->asRenderTargetProxy();
 
-  static constexpr int kOneMesh = 1;
   auto tmp = arena->make<GrProgramInfo>(
       outputProxy->numSamples(), outputProxy->numStencilSamples(), outputProxy->backendFormat(),
-      outputView->origin(), pipeline, geometryProcessor, fixedDynamicState, nullptr, kOneMesh,
-      primitiveType);
+      outputView->origin(), pipeline, geometryProcessor, primitiveType);
   return tmp;
 }
 

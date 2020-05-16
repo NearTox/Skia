@@ -70,7 +70,7 @@ void SkTime::GetDateTime(DateTime* dt) {
 #  define __has_feature(x) 0
 #endif
 
-double SkTime::GetNSecs() {
+double SkTime::GetNSecs() noexcept {
 #if __has_feature(memory_sanitizer)
   // See skia:6504
   struct timespec tp;

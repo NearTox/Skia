@@ -42,7 +42,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
     kCubics,
     kConics
   };
-  static const char* PrimitiveTypeName(PrimitiveType);
+  static const char* PrimitiveTypeName(PrimitiveType) noexcept;
 
   // Defines a single primitive shape with 3 input points (i.e. Triangles and Quadratics).
   // X,Y point values are transposed.
@@ -72,17 +72,17 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
     void setW(const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans, float w);
   };
 
-  PrimitiveType primitiveType() const { return fPrimitiveType; }
+  PrimitiveType primitiveType() const noexcept { return fPrimitiveType; }
 
   // Number of bezier points for curves, or 3 for triangles.
-  int numInputPoints() const { return PrimitiveType::kCubics == fPrimitiveType ? 4 : 3; }
+  int numInputPoints() const noexcept { return PrimitiveType::kCubics == fPrimitiveType ? 4 : 3; }
 
-  bool isTriangles() const {
+  bool isTriangles() const noexcept {
     return PrimitiveType::kTriangles == fPrimitiveType ||
            PrimitiveType::kWeightedTriangles == fPrimitiveType;
   }
 
-  int hasInputWeight() const {
+  int hasInputWeight() const noexcept {
     return PrimitiveType::kWeightedTriangles == fPrimitiveType ||
            PrimitiveType::kConics == fPrimitiveType;
   }
@@ -232,7 +232,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
   typedef GrGeometryProcessor INHERITED;
 };
 
-inline const char* GrCCCoverageProcessor::PrimitiveTypeName(PrimitiveType type) {
+inline const char* GrCCCoverageProcessor::PrimitiveTypeName(PrimitiveType type) noexcept {
   switch (type) {
     case PrimitiveType::kTriangles: return "kTriangles";
     case PrimitiveType::kWeightedTriangles: return "kWeightedTriangles";

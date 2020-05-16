@@ -180,7 +180,8 @@ SkString GrGLSLProgramBuilder::emitAndInstallFragProc(
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(fp);) glslFragmentProcessors->emplace_back(fragProc);
+  SkDEBUGCODE(verify(fp));
+  glslFragmentProcessors->emplace_back(fragProc);
 
   fFS.codeAppend("}");
   return output;
@@ -227,12 +228,13 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
       &fFS, this->uniformHandler(), this->shaderCaps(), xp, finalInColor.c_str(),
       coverageIn.size() ? coverageIn.c_str() : "float4(1)", fFS.getPrimaryColorOutputName(),
       fFS.getSecondaryColorOutputName(), dstTextureSamplerHandle, dstTextureOrigin,
-      this->pipeline().outputSwizzle());
+      this->pipeline().writeSwizzle());
   fXferProcessor->emitCode(args);
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(xp);) fFS.codeAppend("}");
+  SkDEBUGCODE(verify(xp));
+  fFS.codeAppend("}");
 }
 
 GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitSampler(

@@ -52,7 +52,7 @@ template <typename T>
 using add_lvalue_reference_t = typename std::add_lvalue_reference<T>::type;
 
 template <typename T>
-using result_of_t = typename std::result_of<T>::type;
+using result_of_t = typename std::invoke_result<T>::type;
 
 template <typename... T>
 using common_type_t = typename std::common_type<T...>::type;

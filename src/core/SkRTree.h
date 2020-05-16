@@ -29,7 +29,7 @@
  */
 class SkRTree : public SkBBoxHierarchy {
  public:
-  SkRTree();
+  SkRTree() noexcept;
 
   void insert(const SkRect[], int N) override;
   void search(const SkRect& query, std::vector<int>* results) const override;
@@ -38,9 +38,9 @@ class SkRTree : public SkBBoxHierarchy {
   // Methods and constants below here are only public for tests.
 
   // Return the depth of the tree structure.
-  int getDepth() const { return fCount ? fRoot.fSubtree->fLevel + 1 : 0; }
+  int getDepth() const noexcept { return fCount ? fRoot.fSubtree->fLevel + 1 : 0; }
   // Insertion count (not overall node count, which may be greater).
-  int getCount() const { return fCount; }
+  int getCount() const noexcept { return fCount; }
 
   // These values were empirically determined to produce reasonable performance in most cases.
   static const int kMinChildren = 6, kMaxChildren = 11;

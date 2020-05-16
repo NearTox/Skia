@@ -18,19 +18,19 @@
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrXferProcessor.h"
-#include "tests/Test.h"
-#include "tools/gpu/GrContextFactory.h"
-
-#include "src/gpu/ops/GrDrawOp.h"
-
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 #include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
 #include "src/gpu/effects/generated/GrConfigConversionEffect.h"
-
-#include "src/gpu/gl/GrGLGpu.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/gpu/ops/GrDrawOp.h"
+#include "tests/Test.h"
+#include "tools/gpu/GrContextFactory.h"
+
+#ifdef SK_GL
+#  include "src/gpu/gl/GrGLGpu.h"
+#endif
 
 /*
  * A dummy processor which just tries to insert a massive key and verify that it can retrieve the
@@ -66,7 +66,7 @@ class BigKeyProcessor : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(new BigKeyProcessor);
   }
 
-  const char* name() const override { return "Big Ole Key"; }
+  const char* name() const override { return "Big_Ole_Key"; }
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLBigKeyProcessor; }
 
@@ -260,10 +260,10 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
     static constexpr SkISize kDummyDims = {34, 18};
     const GrBackendFormat format = context->priv().caps()->getDefaultBackendFormat(
         GrColorType::kRGBA_8888, GrRenderable::kYes);
-    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
     auto proxy = proxyProvider->createProxy(
-        format, kDummyDims, swizzle, GrRenderable::kYes, 1, mipMapped, SkBackingFit::kExact,
-        SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
+        format, kDummyDims, GrRenderable::kYes, 1, mipMapped, SkBackingFit::kExact, SkBudgeted::kNo,
+        GrProtected::kNo, GrInternalSurfaceFlags::kNone);
+    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
     views[0] = {
         {std::move(proxy), kBottomLeft_GrSurfaceOrigin, swizzle},
         GrColorType::kRGBA_8888,
@@ -273,10 +273,10 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
     static constexpr SkISize kDummyDims = {16, 22};
     const GrBackendFormat format =
         context->priv().caps()->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
-    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kAlpha_8);
     auto proxy = proxyProvider->createProxy(
-        format, kDummyDims, swizzle, GrRenderable::kNo, 1, mipMapped, SkBackingFit::kExact,
-        SkBudgeted::kNo, GrProtected::kNo, GrInternalSurfaceFlags::kNone);
+        format, kDummyDims, GrRenderable::kNo, 1, mipMapped, SkBackingFit::kExact, SkBudgeted::kNo,
+        GrProtected::kNo, GrInternalSurfaceFlags::kNone);
+    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kAlpha_8);
     views[1] = {
         {std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle},
         GrColorType::kAlpha_8,
@@ -342,23 +342,24 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
 #endif
 
 static int get_programs_max_stages(const sk_gpu_test::ContextInfo& ctxInfo) {
-  GrContext* context = ctxInfo.grContext();
   int maxStages = 6;
+#ifdef SK_GL
+  GrContext* context = ctxInfo.grContext();
   if (skiatest::IsGLContextType(ctxInfo.type())) {
     GrGLGpu* gpu = static_cast<GrGLGpu*>(context->priv().getGpu());
     if (kGLES_GrGLStandard == gpu->glStandard()) {
       // We've had issues with driver crashes and HW limits being exceeded with many effects on
       // Android devices. We have passes on ARM devices with the default number of stages.
       // TODO When we run ES 3.00 GLSL in more places, test again
-#ifdef SK_BUILD_FOR_ANDROID
+#  ifdef SK_BUILD_FOR_ANDROID
       if (kARM_GrGLVendor != gpu->ctxInfo().vendor()) {
         maxStages = 1;
       }
-#endif
+#  endif
       // On iOS we can exceed the maximum number of varyings. http://skbug.com/6627.
-#ifdef SK_BUILD_FOR_IOS
+#  ifdef SK_BUILD_FOR_IOS
       maxStages = 3;
-#endif
+#  endif
     }
     if (ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D9_ES2_ContextType ||
         ctxInfo.type() == sk_gpu_test::GrContextFactory::kANGLE_D3D11_ES2_ContextType) {
@@ -366,6 +367,7 @@ static int get_programs_max_stages(const sk_gpu_test::ContextInfo& ctxInfo) {
       maxStages = 3;
     }
   }
+#endif
   return maxStages;
 }
 

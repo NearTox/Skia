@@ -17,9 +17,9 @@
 using std::abs;
 
 struct Float4 {
-  Float4(float x, float y, float z, float w) : fX(x), fY(y), fZ(z), fW(w) {}
+  constexpr Float4(float x, float y, float z, float w) noexcept : fX(x), fY(y), fZ(z), fW(w) {}
 
-  operator SkRect() const { return SkRect::MakeLTRB(fX, fY, fZ, fW); }
+  operator SkRect() const noexcept { return SkRect::MakeLTRB(fX, fY, fZ, fW); }
 
  private:
   float fX;
@@ -34,13 +34,15 @@ struct Float4 {
 #define floatIs32Bits floatIs32Bits()
 
 // functions to make GLSL constructors work from C++ code
-inline SkPoint float2(float xy) { return SkPoint::Make(xy, xy); }
+inline constexpr SkPoint float2(float xy) noexcept { return SkPoint::Make(xy, xy); }
 
-inline SkPoint float2(float x, float y) { return SkPoint::Make(x, y); }
+inline constexpr SkPoint float2(float x, float y) noexcept { return SkPoint::Make(x, y); }
 
-inline Float4 float4(float xyzw) { return Float4(xyzw, xyzw, xyzw, xyzw); }
+inline constexpr Float4 float4(float xyzw) noexcept { return Float4(xyzw, xyzw, xyzw, xyzw); }
 
-inline Float4 float4(float x, float y, float z, float w) { return Float4(x, y, z, w); }
+inline constexpr Float4 float4(float x, float y, float z, float w) noexcept {
+  return Float4(x, y, z, w);
+}
 
 #define half2 float2
 

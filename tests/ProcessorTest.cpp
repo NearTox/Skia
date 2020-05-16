@@ -61,6 +61,17 @@ class TestOp : public GrMeshDrawOp {
     this->setBounds(SkRect::MakeWH(100, 100), HasAABloat::kNo, IsHairline::kNo);
   }
 
+  GrProgramInfo* programInfo() override { return nullptr; }
+  void onCreateProgramInfo(
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&) override {
+    return;
+  }
+  void onPrePrepareDraws(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) override {
+    return;
+  }
   void onPrepareDraws(Target* target) override { return; }
   void onExecute(GrOpFlushState*, const SkRect&) override { return; }
 
@@ -136,7 +147,7 @@ class TestFP : public GrFragmentProcessor {
   bool onIsEqual(const GrFragmentProcessor&) const override { return false; }
   const TextureSampler& onTextureSampler(int i) const override { return fSamplers[i]; }
 
-  GrTAllocator<TextureSampler> fSamplers;
+  SkSTArray<4, TextureSampler> fSamplers;
   typedef GrFragmentProcessor INHERITED;
 };
 }  // namespace
@@ -157,7 +168,7 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(ProcessorRefTest, reporter, ctxInfo) {
           context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox, {1, 1});
       {
         sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
-            format, kDims, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kExact,
+            format, kDims, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kExact,
             SkBudgeted::kYes, GrProtected::kNo);
 
         {
@@ -275,7 +286,7 @@ bool init_test_textures(
         ii, rgbaData, ii.minRowBytes(), [](void* addr, void* context) { delete[](GrColor*) addr; },
         nullptr);
     bitmap.setImmutable();
-    GrBitmapTextureMaker maker(context, bitmap);
+    GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
     auto view = maker.view(GrMipMapped::kNo);
     if (!view.proxy() || !view.proxy()->instantiate(resourceProvider)) {
       return false;
@@ -299,7 +310,7 @@ bool init_test_textures(
         ii, alphaData, ii.minRowBytes(), [](void* addr, void* context) { delete[](uint8_t*) addr; },
         nullptr);
     bitmap.setImmutable();
-    GrBitmapTextureMaker maker(context, bitmap);
+    GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
     auto view = maker.view(GrMipMapped::kNo);
     if (!view.proxy() || !view.proxy()->instantiate(resourceProvider)) {
       return false;
@@ -327,7 +338,7 @@ GrSurfaceProxyView make_input_texture(
       ii, data, ii.minRowBytes(), [](void* addr, void* context) { delete[](GrColor*) addr; },
       nullptr);
   bitmap.setImmutable();
-  GrBitmapTextureMaker maker(context, bitmap);
+  GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
   return maker.view(GrMipMapped::kNo);
 }
 

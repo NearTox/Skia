@@ -90,11 +90,11 @@ class SK_API SkPicture : public SkRefCnt {
 
         @return  abstract class cannot be instantiated
     */
-    AbortCallback() {}
+    constexpr AbortCallback() noexcept = default;
 
     /** Has no effect.
      */
-    virtual ~AbortCallback() {}
+    virtual ~AbortCallback() = default;
 
     /** Stops SkPicture playback when some condition is met. A subclass of
         AbortCallback provides an override for abort() that can stop SkPicture::playback.
@@ -143,7 +143,7 @@ class SK_API SkPicture : public SkRefCnt {
 
       @return  identifier for SkPicture
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns storage containing SkData describing SkPicture, using optional custom
       encoders.

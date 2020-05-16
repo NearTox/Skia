@@ -20,7 +20,7 @@ class LayerBuilder final {
   explicit LayerBuilder(const skjson::ObjectValue& jlayer);
   ~LayerBuilder();
 
-  int index() const { return fIndex; }
+  int index() const noexcept { return fIndex; }
 
   bool isCamera() const;
 
@@ -43,7 +43,7 @@ class LayerBuilder final {
     kIs3D = 0x04,  // 3D layer ("ddd": 1) or camera layer
   };
 
-  bool is3D() const { return fFlags & Flags::kIs3D; }
+  bool is3D() const noexcept { return fFlags & Flags::kIs3D; }
 
   bool hasMotionBlur(const CompositionBuilder*) const;
 

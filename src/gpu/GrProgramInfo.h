@@ -12,7 +12,6 @@
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrPrimitiveProcessor.h"
 
-class GrMesh;
 class GrStencilSettings;
 
 class GrProgramInfo {
@@ -20,8 +19,6 @@ class GrProgramInfo {
   GrProgramInfo(
       int numSamples, int numStencilSamples, const GrBackendFormat& backendFormat,
       GrSurfaceOrigin origin, const GrPipeline* pipeline, const GrPrimitiveProcessor* primProc,
-      const GrPipeline::FixedDynamicState* fixedDynamicState,
-      const GrPipeline::DynamicStateArrays* dynamicStateArrays, int numDynamicStateArrays,
       GrPrimitiveType primitiveType, uint8_t tessellationPatchVertexCount = 0)
       : fNumRasterSamples(pipeline->isStencilEnabled() ? numStencilSamples : numSamples),
         fIsMixedSampled(fNumRasterSamples > numSamples),
@@ -29,9 +26,6 @@ class GrProgramInfo {
         fOrigin(origin),
         fPipeline(pipeline),
         fPrimProc(primProc),
-        fFixedDynamicState(fixedDynamicState),
-        fDynamicStateArrays(dynamicStateArrays),
-        fNumDynamicStateArrays(numDynamicStateArrays),
         fPrimitiveType(primitiveType),
         fTessellationPatchVertexCount(tessellationPatchVertexCount) {
     SkASSERT(fNumRasterSamples > 0);
@@ -42,69 +36,26 @@ class GrProgramInfo {
     }
     fRequestedFeatures |= fPipeline->getXferProcessor().requestedFeatures();
 
-    SkDEBUGCODE(this->validate(false);)(void)
-        fNumDynamicStateArrays;  // touch this to quiet unused member warnings
+    SkDEBUGCODE(this->validate(false));
   }
 
-  GrProcessor::CustomFeatures requestedFeatures() const { return fRequestedFeatures; }
+  GrProcessor::CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }
 
-  int numRasterSamples() const { return fNumRasterSamples; }
-  bool isMixedSampled() const { return fIsMixedSampled; }
+  int numRasterSamples() const noexcept { return fNumRasterSamples; }
+  bool isMixedSampled() const noexcept { return fIsMixedSampled; }
   // The backend format of the destination render target [proxy]
-  const GrBackendFormat& backendFormat() const { return fBackendFormat; }
-  GrSurfaceOrigin origin() const { return fOrigin; }
-  const GrPipeline& pipeline() const { return *fPipeline; }
-  const GrPrimitiveProcessor& primProc() const { return *fPrimProc; }
-  const GrPipeline::FixedDynamicState* fixedDynamicState() const { return fFixedDynamicState; }
-  int numDynamicStateArrays() const { return fNumDynamicStateArrays; }
+  const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
+  GrSurfaceOrigin origin() const noexcept { return fOrigin; }
+  const GrPipeline& pipeline() const noexcept { return *fPipeline; }
+  const GrPrimitiveProcessor& primProc() const noexcept { return *fPrimProc; }
 
-  bool hasDynamicScissors() const {
-    return fPipeline->isScissorTestEnabled() && fDynamicStateArrays &&
-           fDynamicStateArrays->fScissorRects;
-  }
-
-  const SkIRect& dynamicScissor(int i) const {
-    SkASSERT(this->hasDynamicScissors());
-
-    return fDynamicStateArrays->fScissorRects[i];
-  }
-
-  bool hasFixedScissor() const { return fPipeline->isScissorTestEnabled() && fFixedDynamicState; }
-
-  const SkIRect& fixedScissor() const {
-    SkASSERT(this->hasFixedScissor());
-
-    return fFixedDynamicState->fScissorRect;
-  }
-
-  bool hasDynamicPrimProcTextures() const {
-    return fDynamicStateArrays && fDynamicStateArrays->fPrimitiveProcessorTextures;
-  }
-
-  const GrSurfaceProxy* const* dynamicPrimProcTextures(int i) const {
-    SkASSERT(this->hasDynamicPrimProcTextures());
-    SkASSERT(i < fNumDynamicStateArrays);
-
-    return fDynamicStateArrays->fPrimitiveProcessorTextures + i * fPrimProc->numTextureSamplers();
-  }
-
-  bool hasFixedPrimProcTextures() const {
-    return fFixedDynamicState && fFixedDynamicState->fPrimitiveProcessorTextures;
-  }
-
-  const GrSurfaceProxy* const* fixedPrimProcTextures() const {
-    SkASSERT(this->hasFixedPrimProcTextures());
-
-    return fFixedDynamicState->fPrimitiveProcessorTextures;
-  }
-
-  GrPrimitiveType primitiveType() const { return fPrimitiveType; }
-  uint8_t tessellationPatchVertexCount() const {
+  GrPrimitiveType primitiveType() const noexcept { return fPrimitiveType; }
+  uint8_t tessellationPatchVertexCount() const noexcept {
     SkASSERT(GrPrimitiveType::kPatches == fPrimitiveType);
     return fTessellationPatchVertexCount;
   }
 
-  uint16_t primitiveTypeKey() const {
+  uint16_t primitiveTypeKey() const noexcept {
     return ((uint16_t)fPrimitiveType << 8) | fTessellationPatchVertexCount;
   }
 
@@ -112,18 +63,9 @@ class GrProgramInfo {
   // create the stencil settings here.
   GrStencilSettings nonGLStencilSettings() const;
 
-  void visitProxies(const GrOp::VisitProxyFunc& func) const {
-    if (this->hasFixedPrimProcTextures()) {
-      for (int i = 0; i < fPrimProc->numTextureSamplers(); ++i) {
-        GrSamplerState samplerState = fPrimProc->textureSampler(i).samplerState();
-
-        func(
-            fFixedDynamicState->fPrimitiveProcessorTextures[i],
-            GrMipMapped(samplerState == GrSamplerState::Filter::kMipMap));
-      }
-    }
-    fPipeline->visitProxies(func);
-  }
+  // Invokes the visitor function on all FP proxies in the pipeline. The caller is responsible
+  // to call the visitor on its own primProc proxies.
+  void visitFPProxies(const GrOp::VisitProxyFunc& func) const { fPipeline->visitProxies(func); }
 
 #ifdef SK_DEBUG
   void validate(bool flushTime) const;
@@ -143,9 +85,6 @@ class GrProgramInfo {
   const GrSurfaceOrigin fOrigin;
   const GrPipeline* fPipeline;
   const GrPrimitiveProcessor* fPrimProc;
-  const GrPipeline::FixedDynamicState* fFixedDynamicState;
-  const GrPipeline::DynamicStateArrays* fDynamicStateArrays;
-  const int fNumDynamicStateArrays;
   GrProcessor::CustomFeatures fRequestedFeatures;
   GrPrimitiveType fPrimitiveType;
   uint8_t fTessellationPatchVertexCount;  // GrPrimType::kPatches.

@@ -30,14 +30,14 @@ class SkReadBuffer;
 class SkTextBlob;
 
 struct SkPictInfo {
-  SkPictInfo() : fVersion(~0U) {}
+  SkPictInfo() noexcept : fVersion(~0U) {}
 
-  uint32_t getVersion() const {
+  uint32_t getVersion() const noexcept {
     SkASSERT(fVersion != ~0U);
     return fVersion;
   }
 
-  void setVersion(uint32_t version) {
+  void setVersion(uint32_t version) noexcept {
     SkASSERT(version != ~0U);
     fVersion = version;
   }
@@ -87,7 +87,7 @@ class SkPictureData {
   void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*, bool textBlobsOnly = false) const;
   void flatten(SkWriteBuffer&) const;
 
-  const sk_sp<SkData>& opData() const { return fOpData; }
+  const sk_sp<SkData>& opData() const noexcept { return fOpData; }
 
  protected:
   explicit SkPictureData(const SkPictInfo& info);
@@ -97,13 +97,13 @@ class SkPictureData {
   bool parseBuffer(SkReadBuffer& buffer);
 
  public:
-  const SkImage* getImage(SkReadBuffer* reader) const {
+  const SkImage* getImage(SkReadBuffer* reader) const noexcept {
     // images are written base-0, unlike paths, pictures, drawables, etc.
     const int index = reader->readInt();
     return reader->validateIndex(index, fImages.count()) ? fImages[index].get() : nullptr;
   }
 
-  const SkPath& getPath(SkReadBuffer* reader) const {
+  const SkPath& getPath(SkReadBuffer* reader) const noexcept {
     int index = reader->readInt();
     return reader->validate(index > 0 && index <= fPaths.count()) ? fPaths[index - 1] : fEmptyPath;
   }
@@ -116,7 +116,7 @@ class SkPictureData {
     return read_index_base_1_or_null(reader, fDrawables);
   }
 
-  const SkPaint* getPaint(SkReadBuffer* reader) const {
+  const SkPaint* getPaint(SkReadBuffer* reader) const noexcept {
     int index = reader->readInt();
     if (index == 0) {
       return nullptr;  // recorder wrote a zero for no paint (likely drawimage)
@@ -162,7 +162,7 @@ class SkPictureData {
   static void WriteFactories(SkWStream* stream, const SkFactorySet& rec);
   static void WriteTypefaces(SkWStream* stream, const SkRefCntSet& rec, const SkSerialProcs&);
 
-  void initForPlayback() const;
+  void initForPlayback() const noexcept;
 };
 
 #endif

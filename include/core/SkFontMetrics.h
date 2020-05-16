@@ -55,7 +55,7 @@ struct SK_API SkFontMetrics {
    @param thickness  storage for underline width
    @return           true if font specifies underline width
    */
-  bool hasUnderlineThickness(SkScalar* thickness) const {
+  bool hasUnderlineThickness(SkScalar* thickness) const noexcept {
     if (SkToBool(fFlags & kUnderlineThicknessIsValid_Flag)) {
       *thickness = fUnderlineThickness;
       return true;
@@ -70,7 +70,7 @@ struct SK_API SkFontMetrics {
    @param position  storage for underline position
    @return          true if font specifies underline position
    */
-  bool hasUnderlinePosition(SkScalar* position) const {
+  bool hasUnderlinePosition(SkScalar* position) const noexcept {
     if (SkToBool(fFlags & kUnderlinePositionIsValid_Flag)) {
       *position = fUnderlinePosition;
       return true;
@@ -85,7 +85,7 @@ struct SK_API SkFontMetrics {
    @param thickness  storage for strikeout width
    @return           true if font specifies strikeout width
    */
-  bool hasStrikeoutThickness(SkScalar* thickness) const {
+  bool hasStrikeoutThickness(SkScalar* thickness) const noexcept {
     if (SkToBool(fFlags & kStrikeoutThicknessIsValid_Flag)) {
       *thickness = fStrikeoutThickness;
       return true;
@@ -100,7 +100,7 @@ struct SK_API SkFontMetrics {
    @param position  storage for strikeout position
    @return          true if font specifies strikeout position
    */
-  bool hasStrikeoutPosition(SkScalar* position) const {
+  bool hasStrikeoutPosition(SkScalar* position) const noexcept {
     if (SkToBool(fFlags & kStrikeoutPositionIsValid_Flag)) {
       *position = fStrikeoutPosition;
       return true;

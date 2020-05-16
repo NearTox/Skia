@@ -73,5 +73,6 @@ GrGLSLPrimitiveProcessor::FPCoordTransformHandler&
 GrGLSLPrimitiveProcessor::FPCoordTransformHandler::operator++() {
   SkASSERT(fAddedCoord);
   ++fIter;
-  SkDEBUGCODE(fAddedCoord = false;) return *this;
+  SkDEBUGCODE(fAddedCoord = false);
+  return *this;
 }

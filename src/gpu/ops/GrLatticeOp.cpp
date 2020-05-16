@@ -9,7 +9,6 @@
 #include "include/core/SkRect.h"
 #include "src/core/SkLatticeIter.h"
 #include "src/core/SkMatrixPriv.h"
-#include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrOpFlushState.h"
@@ -154,11 +153,11 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   const char* name() const override { return "NonAALatticeOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
+    bool mipped = (GrSamplerState::Filter::kMipMap == fFilter);
+    func(fView.proxy(), GrMipMapped(mipped));
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
-      bool mipped = (GrSamplerState::Filter::kMipMap == fFilter);
-      func(fView.proxy(), GrMipMapped(mipped));
       fHelper.visitProxies(func);
     }
   }
@@ -198,48 +197,25 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     auto gp = LatticeGP::Make(arena, fView, fColorSpaceXform, fFilter, fWideColor);
     if (!gp) {
-      return nullptr;
+      return;
     }
 
-    static constexpr int kOnePrimProcTexture = 1;
-    auto fixedDynamicState =
-        GrMeshDrawOp::Target::MakeFixedDynamicState(arena, &appliedClip, kOnePrimProcTexture);
-    fixedDynamicState->fPrimitiveProcessorTextures[0] = fView.proxy();
-
-    return GrSimpleMeshDrawOpHelper::CreateProgramInfo(
+    fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         fHelper.detachProcessorSet(), GrPrimitiveType::kTriangles, fHelper.pipelineFlags(),
-        &GrUserStencilSettings::kUnused, fixedDynamicState);
-  }
-
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
+        &GrUserStencilSettings::kUnused);
   }
 
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -323,8 +299,9 @@ class NonAALatticeOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), *fView.proxy(), fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -363,7 +340,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   GrSamplerState::Filter fFilter;
   bool fWideColor;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -438,11 +415,10 @@ GR_DRAW_OP_TEST_DEFINE(NonAALatticeOp) {
       random->nextBool() ? kTopLeft_GrSurfaceOrigin : kBottomLeft_GrSurfaceOrigin;
   const GrBackendFormat format =
       context->priv().caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
-  GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
 
   auto proxy = context->priv().proxyProvider()->createProxy(
-      format, dims, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kExact,
-      SkBudgeted::kYes, GrProtected::kNo);
+      format, dims, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes,
+      GrProtected::kNo);
 
   do {
     if (random->nextBool()) {

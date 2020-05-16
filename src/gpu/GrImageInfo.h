@@ -14,7 +14,7 @@
 
 class GrImageInfo {
  public:
-  GrImageInfo() = default;
+  GrImageInfo() noexcept = default;
 
   /* implicit */ GrImageInfo(const SkImageInfo& info)
       : fColorInfo(info.colorInfo()), fDimensions(info.dimensions()) {}
@@ -32,9 +32,9 @@ class GrImageInfo {
       : fColorInfo(std::move(info)), fDimensions(dimensions) {}
 
   GrImageInfo(const GrImageInfo&) = default;
-  GrImageInfo(GrImageInfo&&) = default;
+  GrImageInfo(GrImageInfo&&) noexcept = default;
   GrImageInfo& operator=(const GrImageInfo&) = default;
-  GrImageInfo& operator=(GrImageInfo&&) = default;
+  GrImageInfo& operator=(GrImageInfo&&) noexcept = default;
 
   GrImageInfo makeColorType(GrColorType ct) const {
     return {ct, this->alphaType(), this->refColorSpace(), this->width(), this->height()};
@@ -48,21 +48,21 @@ class GrImageInfo {
     return {this->colorType(), this->alphaType(), this->refColorSpace(), width, height};
   }
 
-  const GrColorInfo& colorInfo() const { return fColorInfo; }
+  const GrColorInfo& colorInfo() const noexcept { return fColorInfo; }
 
-  GrColorType colorType() const { return fColorInfo.colorType(); }
+  GrColorType colorType() const noexcept { return fColorInfo.colorType(); }
 
-  SkAlphaType alphaType() const { return fColorInfo.alphaType(); }
+  SkAlphaType alphaType() const noexcept { return fColorInfo.alphaType(); }
 
-  SkColorSpace* colorSpace() const { return fColorInfo.colorSpace(); }
+  SkColorSpace* colorSpace() const noexcept { return fColorInfo.colorSpace(); }
 
   sk_sp<SkColorSpace> refColorSpace() const { return fColorInfo.refColorSpace(); }
 
-  SkISize dimensions() const { return fDimensions; }
+  SkISize dimensions() const noexcept { return fDimensions; }
 
-  int width() const { return fDimensions.width(); }
+  int width() const noexcept { return fDimensions.width(); }
 
-  int height() const { return fDimensions.height(); }
+  int height() const noexcept { return fDimensions.height(); }
 
   size_t bpp() const { return GrColorTypeBytesPerPixel(this->colorType()); }
 
@@ -90,7 +90,9 @@ class GrImageInfo {
     return true;
   }
 
-  bool isValid() const { return fColorInfo.isValid() && this->width() > 0 && this->height() > 0; }
+  bool isValid() const noexcept {
+    return fColorInfo.isValid() && this->width() > 0 && this->height() > 0;
+  }
 
  private:
   GrColorInfo fColorInfo = {};

@@ -25,7 +25,6 @@
 #include "include/core/SkString.h"
 #include "include/core/SkSurfaceProps.h"
 #include "include/core/SkTypes.h"
-#include "include/core/SkVertices.h"
 #include "include/private/SkDeque.h"
 #include "include/private/SkMacros.h"
 
@@ -54,6 +53,7 @@ struct SkRSXform;
 class SkSurface;
 class SkSurface_Base;
 class SkTextBlob;
+class SkVertices;
 
 /** \class SkCanvas
     SkCanvas provides an interface for drawing, and how the drawing is clipped and transformed.
@@ -290,7 +290,7 @@ class SK_API SkCanvas {
   /** Sometimes a canvas is owned by a surface. If it is, getSurface() will return a bare
    *  pointer to that surface, else this will return nullptr.
    */
-  SkSurface* getSurface() const;
+  SkSurface* getSurface() const noexcept;
 
   /** Returns the pixel base address, SkImageInfo, rowBytes, and origin if the pixels
       can be read directly. The returned address is only valid
@@ -545,7 +545,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_save
   */
-  int save();
+  int save() noexcept;
 
   /** Saves SkMatrix and clip, and allocates a SkBitmap for subsequent drawing.
       Calling restore() discards changes to SkMatrix and clip, and draws the SkBitmap.
@@ -567,6 +567,7 @@ class SK_API SkCanvas {
       @return        depth of saved stack
 
       example: https://fiddle.skia.org/c/@Canvas_saveLayer
+      example: https://fiddle.skia.org/c/@Canvas_saveLayer_4
   */
   int saveLayer(const SkRect* bounds, const SkPaint* paint);
 
@@ -644,7 +645,7 @@ class SK_API SkCanvas {
 
         @return  empty SaveLayerRec
     */
-    SaveLayerRec() {}
+    constexpr SaveLayerRec() noexcept = default;
 
     /** Sets fBounds, fPaint, and fSaveLayerFlags; sets fBackdrop to nullptr.
 
@@ -653,7 +654,8 @@ class SK_API SkCanvas {
         @param saveLayerFlags  SaveLayerRec options to modify layer
         @return                SaveLayerRec with empty fBackdrop
     */
-    SaveLayerRec(const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0)
+    SaveLayerRec(
+        const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0) noexcept
         : fBounds(bounds), fPaint(paint), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Sets fBounds, fPaint, fBackdrop, and fSaveLayerFlags.
@@ -670,7 +672,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        SaveLayerFlags saveLayerFlags)
+        SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds), fPaint(paint), fBackdrop(backdrop), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Experimental. Not ready for general use.
@@ -693,7 +695,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags)
+        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds),
           fPaint(paint),
           fBackdrop(backdrop),
@@ -767,7 +769,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getSaveCount
   */
-  int getSaveCount() const;
+  int getSaveCount() const noexcept;
 
   /** Restores state to SkMatrix and clip values when save(), saveLayer(),
       saveLayerPreserveLCDTextRequests(), or saveLayerAlpha() returned saveCount.
@@ -871,11 +873,6 @@ class SK_API SkCanvas {
   void concat(const SkMatrix& matrix);
   void concat44(const SkM44&);
   void concat44(const SkScalar[]);  // column-major
-
-#ifdef SK_SUPPORT_EXPERIMENTAL_CANVAS44
-  void experimental_concat44(const SkM44& m) { this->concat44(m); }
-  void experimental_concat44(const SkScalar colMajor[]) { this->concat44(colMajor); }
-#endif
 
   /** Replaces SkMatrix with matrix.
       Unlike concat(), any prior matrix state is overwritten.
@@ -1084,7 +1081,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getDeviceClipBounds
   */
-  SkIRect getDeviceClipBounds() const;
+  SkIRect getDeviceClipBounds() const noexcept;
 
   /** Returns SkIRect bounds of clip, unaffected by SkMatrix. If clip is empty,
       return false, and set bounds to SkRect::MakeEmpty, where all SkRect sides equal zero.
@@ -1094,7 +1091,7 @@ class SK_API SkCanvas {
       @param bounds  SkRect of clip in device coordinates
       @return        true if clip bounds is not empty
   */
-  bool getDeviceClipBounds(SkIRect* bounds) const {
+  bool getDeviceClipBounds(SkIRect* bounds) const noexcept {
     *bounds = this->getDeviceClipBounds();
     return !bounds->isEmpty();
   }
@@ -1870,11 +1867,11 @@ class SK_API SkCanvas {
   struct SK_API ImageSetEntry {
     ImageSetEntry(
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, int matrixIndex,
-        float alpha, unsigned aaFlags, bool hasClip);
+        float alpha, unsigned aaFlags, bool hasClip) noexcept;
 
     ImageSetEntry(
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, float alpha,
-        unsigned aaFlags);
+        unsigned aaFlags) noexcept;
 
     ImageSetEntry();
     ~ImageSetEntry();
@@ -2418,18 +2415,11 @@ class SK_API SkCanvas {
       example: https://fiddle.skia.org/c/@Clip
   */
   SkMatrix getTotalMatrix() const;
-  SkM44 getLocalToDevice() const;  // entire matrix stack
-  void getLocalToDevice(SkScalar colMajor[16]) const;
+  SkM44 getLocalToDevice() const noexcept;  // entire matrix stack
+  void getLocalToDevice(SkScalar colMajor[16]) const noexcept;
 
-#ifdef SK_SUPPORT_EXPERIMENTAL_CANVAS44
-  SkM44 experimental_getLocalToDevice() const { return this->getLocalToDevice(); }
-  void experimental_getLocalToDevice(SkScalar colMajor[16]) const {
-    this->getLocalToDevice(colMajor);
-  }
-#endif
-
-  SkM44 experimental_getLocalToWorld() const;   // up to but not including top-most camera
-  SkM44 experimental_getLocalToCamera() const;  // up to and including top-most camera
+  SkM44 experimental_getLocalToWorld() const noexcept;   // up to but not including top-most camera
+  SkM44 experimental_getLocalToCamera() const noexcept;  // up to and including top-most camera
 
   void experimental_getLocalToWorld(SkScalar colMajor[16]) const;
   void experimental_getLocalToCamera(SkScalar colMajor[16]) const;
@@ -2443,9 +2433,6 @@ class SK_API SkCanvas {
   // TEMP helpers until we switch virtual over to const& for src-rect
   void legacy_drawImageRect(
       const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-      SrcRectConstraint constraint = kStrict_SrcRectConstraint);
-  void legacy_drawBitmapRect(
-      const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
       SrcRectConstraint constraint = kStrict_SrcRectConstraint);
 
   /**
@@ -2514,18 +2501,8 @@ class SK_API SkCanvas {
   virtual void onDrawPoints(
       PointMode mode, size_t count, const SkPoint pts[], const SkPaint& paint);
 
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-  virtual void onDrawVerticesObject(
-      const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint) {
-    this->onDrawVerticesObject(vertices, nullptr, 0, mode, paint);
-  }
-  virtual void onDrawVerticesObject(
-      const SkVertices* vertices, const SkVertices::Bone bones[], int boneCount, SkBlendMode mode,
-      const SkPaint& paint);
-#else
   virtual void onDrawVerticesObject(
       const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint);
-#endif
   virtual void onDrawImage(const SkImage* image, SkScalar dx, SkScalar dy, const SkPaint* paint);
   virtual void onDrawImageRect(
       const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint* paint,
@@ -2534,16 +2511,6 @@ class SK_API SkCanvas {
       const SkImage* image, const SkIRect& center, const SkRect& dst, const SkPaint* paint);
   virtual void onDrawImageLattice(
       const SkImage* image, const Lattice& lattice, const SkRect& dst, const SkPaint* paint);
-
-  virtual void onDrawBitmap(const SkBitmap& bitmap, SkScalar dx, SkScalar dy, const SkPaint* paint);
-  virtual void onDrawBitmapRect(
-      const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-      SrcRectConstraint constraint);
-  // REMOVE ME
-  virtual void onDrawBitmapNine(const SkBitmap&, const SkIRect&, const SkRect&, const SkPaint*) {}
-  // REMOVE ME
-  virtual void onDrawBitmapLattice(const SkBitmap&, const Lattice&, const SkRect&, const SkPaint*) {
-  }
 
   virtual void onDrawAtlas(
       const SkImage* atlas, const SkRSXform xform[], const SkRect rect[], const SkColor colors[],
@@ -2581,7 +2548,7 @@ class SK_API SkCanvas {
       const SkRect* bounds, SaveLayerFlags flags, SkIRect* intersection,
       const SkImageFilter* imageFilter = nullptr);
 
-  SkBaseDevice* getTopDevice() const;
+  SkBaseDevice* getTopDevice() const noexcept;
 
  private:
   /** After calling saveLayer(), there can be any number of devices that make
@@ -2597,18 +2564,18 @@ class SK_API SkCanvas {
     ~LayerIter();
 
     /** Return true if the iterator is done */
-    bool done() const { return fDone; }
+    bool done() const noexcept { return fDone; }
     /** Cycle to the next device */
     void next();
 
     // These reflect the current device in the iterator
 
-    SkBaseDevice* device() const;
+    SkBaseDevice* device() const noexcept;
     const SkMatrix& matrix() const;
     SkIRect clipBounds() const;
-    const SkPaint& paint() const;
-    int x() const;
-    int y() const;
+    const SkPaint& paint() const noexcept;
+    int x() const noexcept;
+    int y() const noexcept;
 
    private:
     // used to embed the SkDrawIter object directly in our instance, w/o
@@ -2623,7 +2590,7 @@ class SK_API SkCanvas {
     bool fDone;
   };
 
-  static bool BoundsAffectsClip(SaveLayerFlags);
+  static bool BoundsAffectsClip(SaveLayerFlags) noexcept;
 
   static void DrawDeviceWithFilter(
       SkBaseDevice* src, const SkImageFilter* filter, SkBaseDevice* dst, const SkIPoint& dstOrigin,
@@ -2645,7 +2612,7 @@ class SK_API SkCanvas {
         shaderOverrideIsOpaque ? kOpaque_ShaderOverrideOpacity : kNotOpaque_ShaderOverrideOpacity);
   }
 
-  SkBaseDevice* getDevice() const;
+  SkBaseDevice* getDevice() const noexcept;
 
   class MCRec;
 
@@ -2658,7 +2625,7 @@ class SK_API SkCanvas {
     SkM44 fCamera;         // just the user's camera
     SkM44 fInvPostCamera;  // cache of ctm post camera
 
-    CameraRec(MCRec* owner, const SkM44& camera);
+    CameraRec(MCRec* owner, const SkM44& camera) noexcept;
   };
   std::vector<CameraRec> fCameraStack;
 
@@ -2677,8 +2644,8 @@ class SK_API SkCanvas {
   std::unique_ptr<SkRasterHandleAllocator> fAllocator;
 
   SkSurface_Base* fSurfaceBase;
-  SkSurface_Base* getSurfaceBase() const { return fSurfaceBase; }
-  void setSurfaceBase(SkSurface_Base* sb) { fSurfaceBase = sb; }
+  SkSurface_Base* getSurfaceBase() const noexcept { return fSurfaceBase; }
+  void setSurfaceBase(SkSurface_Base* sb) noexcept { fSurfaceBase = sb; }
   friend class SkSurface_Base;
   friend class SkSurface_Gpu;
 
@@ -2745,9 +2712,6 @@ class SK_API SkCanvas {
    */
   SkIRect getTopLayerBounds() const;
 
-  void internalDrawBitmapRect(
-      const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-      SrcRectConstraint);
   void internalDrawPaint(const SkPaint& paint);
   void internalSaveLayer(const SaveLayerRec&, SaveLayerStrategy);
   void internalSaveBehind(const SkRect*);
@@ -2787,7 +2751,9 @@ class SK_API SkCanvas {
 
   class AutoValidateClip {
    public:
-    explicit AutoValidateClip(SkCanvas* canvas) : fCanvas(canvas) { fCanvas->validateClip(); }
+    explicit AutoValidateClip(SkCanvas* canvas) noexcept : fCanvas(canvas) {
+      fCanvas->validateClip();
+    }
     ~AutoValidateClip() { fCanvas->validateClip(); }
 
    private:
@@ -2802,7 +2768,7 @@ class SK_API SkCanvas {
 #ifdef SK_DEBUG
   void validateClip() const;
 #else
-  void validateClip() const {}
+  void validateClip() const noexcept {}
 #endif
 
   std::unique_ptr<SkGlyphRunBuilder> fScratchGlyphRunBuilder;
@@ -2823,7 +2789,7 @@ class SkAutoCanvasRestore {
       @param doSave  call SkCanvas::save()
       @return        utility to restore SkCanvas state on destructor
   */
-  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) : fCanvas(canvas), fSaveCount(0) {
+  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) noexcept : fCanvas(canvas), fSaveCount(0) {
     if (fCanvas) {
       fSaveCount = canvas->getSaveCount();
       if (doSave) {

@@ -31,7 +31,7 @@ class GrGLSLXferProcessor {
         const GrShaderCaps* caps, const GrXferProcessor& xp, const char* inputColor,
         const char* inputCoverage, const char* outputPrimary, const char* outputSecondary,
         const SamplerHandle dstTextureSamplerHandle, GrSurfaceOrigin dstTextureOrigin,
-        const GrSwizzle& outputSwizzle)
+        const GrSwizzle& writeSwizzle)
         : fXPFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),
@@ -42,7 +42,7 @@ class GrGLSLXferProcessor {
           fOutputSecondary(outputSecondary),
           fDstTextureSamplerHandle(dstTextureSamplerHandle),
           fDstTextureOrigin(dstTextureOrigin),
-          fOutputSwizzle(outputSwizzle) {}
+          fWriteSwizzle(writeSwizzle) {}
     GrGLSLXPFragmentBuilder* fXPFragBuilder;
     GrGLSLUniformHandler* fUniformHandler;
     const GrShaderCaps* fShaderCaps;
@@ -53,7 +53,7 @@ class GrGLSLXferProcessor {
     const char* fOutputSecondary;
     const SamplerHandle fDstTextureSamplerHandle;
     GrSurfaceOrigin fDstTextureOrigin;
-    GrSwizzle fOutputSwizzle;
+    GrSwizzle fWriteSwizzle;
   };
   /**
    * This is similar to emitCode() in the base class, except it takes a full shader builder.
@@ -99,7 +99,7 @@ class GrGLSLXferProcessor {
     SK_ABORT("emitBlendCodeForDstRead not implemented.");
   }
 
-  virtual void emitOutputSwizzle(
+  virtual void emitWriteSwizzle(
       GrGLSLXPFragmentBuilder*, const GrSwizzle&, const char* outColor,
       const char* outColorSecondary) const;
 

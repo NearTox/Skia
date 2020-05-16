@@ -69,7 +69,13 @@ class BezierTestOp : public GrMeshDrawOp {
         hasMixedSampledCoverage, caps, clampType, &fColor);
   }
 
-  void visitProxies(const VisitProxyFunc& func) const override { fProcessorSet.visitProxies(func); }
+  void visitProxies(const VisitProxyFunc& func) const override {
+    if (fProgramInfo) {
+      fProgramInfo->visitFPProxies(func);
+    } else {
+      fProcessorSet.visitProxies(func);
+    }
+  }
 
  protected:
   BezierTestOp(GrClipEdgeType et, const SkRect& rect, const SkPMColor4f& color, int32_t classID)
@@ -83,53 +89,35 @@ class BezierTestOp : public GrMeshDrawOp {
 
   virtual GrGeometryProcessor* makeGP(const GrCaps& caps, SkArenaAlloc* arena) = 0;
 
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     auto gp = this->makeGP(*caps, arena);
     if (!gp) {
-      return nullptr;
+      return;
     }
 
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone;
 
-    return GrSimpleMeshDrawOpHelper::CreateProgramInfo(
+    fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
         GrPrimitiveType::kTriangles, flags);
   }
 
-  GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) {
-    return this->createProgramInfo(
-        &flushState->caps(), flushState->allocator(), flushState->outputView(),
-        flushState->detachAppliedClip(), flushState->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) final {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) final {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(flushState);
+      this->createProgramInfo(flushState);
     }
 
     if (!fProgramInfo) {
       return;
     }
 
-    static constexpr int kOneMesh = 1;
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, kOneMesh);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   GrClipEdgeType edgeType() const { return fEdgeType; }
@@ -138,7 +126,7 @@ class BezierTestOp : public GrMeshDrawOp {
   const SkPMColor4f& color() const { return fColor; }
 
  protected:
-  GrMesh* fMesh = nullptr;  // filled in by the derived classes
+  GrSimpleMesh* fMesh = nullptr;  // filled in by the derived classes
 
  private:
   SkRect fRect;

@@ -9,7 +9,7 @@
 #include "src/core/SkGlyphRunPainter.h"
 #include "src/core/SkStrikeForGPU.h"
 
-void SkSourceGlyphBuffer::reset() {
+void SkSourceGlyphBuffer::reset() noexcept {
   fRejectedGlyphIDs.reset();
   fRejectedPositions.reset();
 }

@@ -23,8 +23,8 @@ class GrRenderTargetProxyPriv;
 // the uniqueID of the RenderTarget it represents!
 class GrRenderTargetProxy : virtual public GrSurfaceProxy {
  public:
-  GrRenderTargetProxy* asRenderTargetProxy() override { return this; }
-  const GrRenderTargetProxy* asRenderTargetProxy() const override { return this; }
+  GrRenderTargetProxy* asRenderTargetProxy() noexcept override { return this; }
+  const GrRenderTargetProxy* asRenderTargetProxy() const noexcept override { return this; }
 
   // Actually instantiate the backing rendertarget, if necessary.
   bool instantiate(GrResourceProvider*) override;
@@ -40,7 +40,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
    * The number of stencil samples on this proxy will be equal to the largest sample count passed
    * to this method.
    */
-  void setNeedsStencil(int8_t numStencilSamples) {
+  void setNeedsStencil(int8_t numStencilSamples) noexcept {
     SkASSERT(numStencilSamples >= fSampleCnt);
     fNumStencilSamples = std::max(numStencilSamples, fNumStencilSamples);
   }
@@ -48,16 +48,18 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   /**
    * Returns the number of stencil samples this proxy will use, or 0 if it does not use stencil.
    */
-  int numStencilSamples() const { return fNumStencilSamples; }
+  int numStencilSamples() const noexcept { return fNumStencilSamples; }
 
   /**
    * Returns the number of samples/pixel in the color buffer (One if non-MSAA).
    */
-  int numSamples() const { return fSampleCnt; }
+  int numSamples() const noexcept { return fSampleCnt; }
 
   int maxWindowRectangles(const GrCaps& caps) const;
 
-  bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
+  bool wrapsVkSecondaryCB() const noexcept {
+    return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes;
+  }
 
   void markMSAADirty(const SkIRect& dirtyRect, GrSurfaceOrigin origin) {
     SkASSERT(SkIRect::MakeSize(this->dimensions()).contains(dirtyRect));
@@ -66,15 +68,15 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
         GrNativeRect::MakeRelativeTo(origin, this->backingStoreDimensions().height(), dirtyRect);
     fMSAADirtyRect.join(nativeRect.asSkIRect());
   }
-  void markMSAAResolved() {
+  void markMSAAResolved() noexcept {
     SkASSERT(this->requiresManualMSAAResolve());
     fMSAADirtyRect.setEmpty();
   }
-  bool isMSAADirty() const {
+  bool isMSAADirty() const noexcept {
     SkASSERT(fMSAADirtyRect.isEmpty() || this->requiresManualMSAAResolve());
     return this->requiresManualMSAAResolve() && !fMSAADirtyRect.isEmpty();
   }
-  const SkIRect& msaaDirtyRect() const {
+  const SkIRect& msaaDirtyRect() const noexcept {
     SkASSERT(this->requiresManualMSAAResolve());
     return fMSAADirtyRect;
   }
@@ -92,9 +94,8 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
 
   // Deferred version
   GrRenderTargetProxy(
-      const GrCaps&, const GrBackendFormat&, SkISize, int sampleCount,
-      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator);
+      const GrCaps&, const GrBackendFormat&, SkISize, int sampleCount, SkBackingFit, SkBudgeted,
+      GrProtected, GrInternalSurfaceFlags, UseAllocator);
 
   enum class WrapsVkSecondaryCB : bool { kNo = false, kYes = true };
 
@@ -109,20 +110,19 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // The minimal knowledge version is used for CCPR where we are generating an atlas but we do not
   // know the final size until flush time.
   GrRenderTargetProxy(
-      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, int sampleCount,
-      const GrSwizzle& textureSwizzle, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator, WrapsVkSecondaryCB);
+      LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, int sampleCount, SkBackingFit,
+      SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator, WrapsVkSecondaryCB);
 
   // Wrapped version
-  GrRenderTargetProxy(
-      sk_sp<GrSurface>, const GrSwizzle& textureSwizzle, UseAllocator,
-      WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
+  GrRenderTargetProxy(sk_sp<GrSurface>, UseAllocator, WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
  private:
-  void setGLRTFBOIDIs0() { fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
-  bool glRTFBOIDIs0() const { return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
+  void setGLRTFBOIDIs0() noexcept { fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
+  bool glRTFBOIDIs0() const noexcept {
+    return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0;
+  }
   bool canChangeStencilAttachment() const;
 
   size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;

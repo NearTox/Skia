@@ -22,7 +22,7 @@ namespace internal {
 sk_sp<sksg::RenderNode> AnimationBuilder::attachNestedAnimation(const char* name) const {
   class SkottieSGAdapter final : public sksg::RenderNode {
    public:
-    explicit SkottieSGAdapter(sk_sp<Animation> animation) : fAnimation(std::move(animation)) {
+    explicit SkottieSGAdapter(sk_sp<Animation> animation) noexcept : fAnimation(std::move(animation)) {
       SkASSERT(fAnimation);
     }
 
@@ -43,17 +43,20 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachNestedAnimation(const char* name
     const sk_sp<Animation> fAnimation;
   };
 
-  class SkottieAnimatorAdapter final : public sksg::Animator {
+  class SkottieAnimatorAdapter final : public Animator {
    public:
-    SkottieAnimatorAdapter(sk_sp<Animation> animation, float time_scale)
+    SkottieAnimatorAdapter(sk_sp<Animation> animation, float time_scale) noexcept
         : fAnimation(std::move(animation)), fTimeScale(time_scale) {
       SkASSERT(fAnimation);
     }
 
    protected:
-    void onTick(float t) {
+    StateChanged onSeek(float t) {
       // TODO: we prolly need more sophisticated timeline mapping for nested animations.
       fAnimation->seek(t * fTimeScale);
+
+      // TODO: bubble the real update status to clients?
+      return true;
     }
 
    private:

@@ -8,8 +8,8 @@
 #ifndef SkottieEffects_DEFINED
 #define SkottieEffects_DEFINED
 
-#include "modules/skottie/src/Animator.h"
 #include "modules/skottie/src/SkottiePriv.h"
+#include "modules/skottie/src/animator/Animator.h"
 
 class SkMaskFilter;
 
@@ -25,6 +25,8 @@ class EffectBuilder final : public SkNoncopyable {
   EffectBuilder(const AnimationBuilder*, const SkSize&);
 
   sk_sp<sksg::RenderNode> attachEffects(const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
+
+  sk_sp<sksg::RenderNode> attachStyles(const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
 
   static const skjson::Value& GetPropValue(const skjson::ArrayValue& jprops, size_t prop_index);
 
@@ -65,6 +67,9 @@ class EffectBuilder final : public SkNoncopyable {
   sk_sp<sksg::RenderNode> attachShiftChannelsEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
 
+  sk_sp<sksg::RenderNode> attachDropShadowStyle(
+      const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
+
   EffectBuilderT findBuilder(const skjson::ObjectValue&) const;
 
   const AnimationBuilder* fBuilder;
@@ -76,7 +81,7 @@ class EffectBinder {
  public:
   EffectBinder(
       const skjson::ArrayValue& jprops, const AnimationBuilder& abuilder,
-      AnimatablePropertyContainer* acontainer)
+      AnimatablePropertyContainer* acontainer) noexcept
       : fProps(jprops), fBuilder(abuilder), fContainer(acontainer) {}
 
   template <typename T>
@@ -97,12 +102,12 @@ class EffectBinder {
  */
 class MaskShaderEffectBase : public AnimatablePropertyContainer {
  public:
-  const sk_sp<sksg::MaskShaderEffect>& node() const { return fMaskEffectNode; }
+  const sk_sp<sksg::MaskShaderEffect>& node() const noexcept { return fMaskEffectNode; }
 
  protected:
   MaskShaderEffectBase(sk_sp<sksg::RenderNode>, const SkSize&);
 
-  const SkSize& layerSize() const { return fLayerSize; }
+  const SkSize& layerSize() const noexcept { return fLayerSize; }
 
   struct MaskInfo {
     sk_sp<SkShader> fMaskShader;

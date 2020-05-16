@@ -21,15 +21,15 @@ enum class SkPathFillType {
   kInverseEvenOdd
 };
 
-static inline bool SkPathFillType_IsEvenOdd(SkPathFillType ft) {
+static constexpr bool SkPathFillType_IsEvenOdd(SkPathFillType ft) noexcept {
   return (static_cast<int>(ft) & 1) != 0;
 }
 
-static inline bool SkPathFillType_IsInverse(SkPathFillType ft) {
+static constexpr bool SkPathFillType_IsInverse(SkPathFillType ft) noexcept {
   return (static_cast<int>(ft) & 2) != 0;
 }
 
-static inline SkPathFillType SkPathFillType_ConvertToNonInverse(SkPathFillType ft) {
+static constexpr SkPathFillType SkPathFillType_ConvertToNonInverse(SkPathFillType ft) noexcept {
   return static_cast<SkPathFillType>(static_cast<int>(ft) & 1);
 }
 

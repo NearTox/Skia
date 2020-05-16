@@ -27,9 +27,9 @@ class Transform : public Node {
   static sk_sp<Transform> MakeInverse(sk_sp<Transform> t);
 
  protected:
-  Transform();
+  Transform() noexcept;
 
-  virtual bool is44() const = 0;
+  virtual bool is44() const noexcept = 0;
 
   virtual SkMatrix asMatrix() const = 0;
   virtual SkM44 asM44() const = 0;
@@ -70,7 +70,7 @@ class Matrix final : public Transform {
     return SkRect::MakeEmpty();
   }
 
-  bool is44() const override { return std::is_same<T, SkM44>::value; }
+  bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
 
   SkMatrix asMatrix() const override;
   SkM44 asM44() const override;
@@ -98,7 +98,7 @@ class TransformEffect final : public EffectNode {
 
   ~TransformEffect() override;
 
-  const sk_sp<Transform>& getTransform() const { return fTransform; }
+  const sk_sp<Transform>& getTransform() const noexcept { return fTransform; }
 
  protected:
   void onRender(SkCanvas*, const RenderContext*) const override;

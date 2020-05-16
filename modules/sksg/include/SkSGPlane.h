@@ -31,7 +31,7 @@ class Plane final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  Plane();
+  Plane() noexcept;
 
   using INHERITED = GeometryNode;
 };

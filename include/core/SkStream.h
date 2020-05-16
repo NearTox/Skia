@@ -40,8 +40,8 @@ class SkStreamMemory;
  */
 class SK_API SkStream {
  public:
-  virtual ~SkStream() {}
-  SkStream() {}
+  virtual ~SkStream() = default;
+  constexpr SkStream() noexcept = default;
 
   /**
    *  Attempts to open the specified file as a stream, returns nullptr on failure.
@@ -121,9 +121,9 @@ class SK_API SkStream {
 
   // SkStreamSeekable
   /** Returns true if this stream can report it's current position. */
-  virtual bool hasPosition() const { return false; }
+  virtual bool hasPosition() const noexcept { return false; }
   /** Returns the current position in the stream. If this cannot be done, returns 0. */
-  virtual size_t getPosition() const { return 0; }
+  virtual size_t getPosition() const noexcept { return 0; }
 
   /** Seeks to an absolute position in the stream. If this cannot be done, returns false.
    *  If an attempt is made to seek past the end of the stream, the position will be set
@@ -139,7 +139,7 @@ class SK_API SkStream {
 
   // SkStreamAsset
   /** Returns true if this stream can report it's total length. */
-  virtual bool hasLength() const { return false; }
+  virtual bool hasLength() const noexcept { return false; }
   /** Returns the total length of the stream. If this cannot be done, returns 0. */
   virtual size_t getLength() const { return 0; }
 
@@ -178,8 +178,8 @@ class SK_API SkStreamSeekable : public SkStreamRewindable {
     return std::unique_ptr<SkStreamSeekable>(this->onDuplicate());
   }
 
-  bool hasPosition() const override { return true; }
-  size_t getPosition() const override = 0;
+  bool hasPosition() const noexcept override { return true; }
+  size_t getPosition() const noexcept override = 0;
   bool seek(size_t position) override = 0;
   bool move(long offset) override = 0;
 
@@ -195,7 +195,7 @@ class SK_API SkStreamSeekable : public SkStreamRewindable {
 /** SkStreamAsset is a SkStreamSeekable for which getLength is required. */
 class SK_API SkStreamAsset : public SkStreamSeekable {
  public:
-  bool hasLength() const override { return true; }
+  bool hasLength() const noexcept override { return true; }
   size_t getLength() const override = 0;
 
   std::unique_ptr<SkStreamAsset> duplicate() const {
@@ -230,7 +230,7 @@ class SK_API SkStreamMemory : public SkStreamAsset {
 class SK_API SkWStream {
  public:
   virtual ~SkWStream();
-  SkWStream() {}
+  constexpr SkWStream() noexcept = default;
 
   /** Called to write bytes to a SkWStream. Returns true on success
       @param buffer the address of at least size bytes to be written to the stream
@@ -276,7 +276,7 @@ class SK_API SkWStream {
    * This returns the number of bytes in the stream required to store
    * 'value'.
    */
-  static int SizeOfPackedUInt(size_t value);
+  static int SizeOfPackedUInt(size_t value) noexcept;
 
  private:
   SkWStream(const SkWStream&) = delete;
@@ -285,7 +285,7 @@ class SK_API SkWStream {
 
 class SK_API SkNullWStream : public SkWStream {
  public:
-  SkNullWStream() : fBytesWritten(0) {}
+  constexpr SkNullWStream() noexcept : fBytesWritten(0) {}
 
   bool write(const void*, size_t n) override {
     fBytesWritten += n;
@@ -325,10 +325,10 @@ class SK_API SkFILEStream : public SkStreamAsset {
   }
 
   /** Returns true if the current path could be opened. */
-  bool isValid() const { return fFILE != nullptr; }
+  bool isValid() const noexcept { return fFILE != nullptr; }
 
   /** Close this SkFILEStream. */
-  void close();
+  void close() noexcept;
 
   size_t read(void* buffer, size_t size) override;
   bool isAtEnd() const override;
@@ -338,7 +338,7 @@ class SK_API SkFILEStream : public SkStreamAsset {
     return std::unique_ptr<SkStreamAsset>(this->onDuplicate());
   }
 
-  size_t getPosition() const override;
+  size_t getPosition() const noexcept override;
   bool seek(size_t position) override;
   bool move(long offset) override;
 
@@ -346,11 +346,12 @@ class SK_API SkFILEStream : public SkStreamAsset {
     return std::unique_ptr<SkStreamAsset>(this->onFork());
   }
 
-  size_t getLength() const override;
+  size_t getLength() const noexcept override;
 
  private:
-  explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset);
-  explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset, size_t originalOffset);
+  explicit SkFILEStream(std::shared_ptr<FILE>, size_t size, size_t offset) noexcept;
+  explicit SkFILEStream(
+      std::shared_ptr<FILE>, size_t size, size_t offset, size_t originalOffset) noexcept;
 
   SkStreamAsset* onDuplicate() const override;
   SkStreamAsset* onFork() const override;
@@ -414,7 +415,7 @@ class SK_API SkMemoryStream : public SkStreamMemory {
     return std::unique_ptr<SkMemoryStream>(this->onDuplicate());
   }
 
-  size_t getPosition() const override;
+  size_t getPosition() const noexcept override;
   bool seek(size_t position) override;
   bool move(long offset) override;
 
@@ -422,7 +423,7 @@ class SK_API SkMemoryStream : public SkStreamMemory {
     return std::unique_ptr<SkMemoryStream>(this->onFork());
   }
 
-  size_t getLength() const override;
+  size_t getLength() const noexcept override;
 
   const void* getMemoryBase() override;
 
@@ -445,7 +446,7 @@ class SK_API SkFILEWStream : public SkWStream {
 
   /** Returns true if the current path could be opened.
    */
-  bool isValid() const { return fFILE != nullptr; }
+  bool isValid() const noexcept { return fFILE != nullptr; }
 
   bool write(const void* buffer, size_t size) override;
   void flush() override;
@@ -460,9 +461,9 @@ class SK_API SkFILEWStream : public SkWStream {
 
 class SK_API SkDynamicMemoryWStream : public SkWStream {
  public:
-  SkDynamicMemoryWStream() = default;
-  SkDynamicMemoryWStream(SkDynamicMemoryWStream&&);
-  SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&);
+  constexpr SkDynamicMemoryWStream() noexcept = default;
+  SkDynamicMemoryWStream(SkDynamicMemoryWStream&&) noexcept;
+  SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&) noexcept;
   ~SkDynamicMemoryWStream() override;
 
   bool write(const void* buffer, size_t size) override;
@@ -494,7 +495,7 @@ class SK_API SkDynamicMemoryWStream : public SkWStream {
   std::unique_ptr<SkStreamAsset> detachAsStream();
 
   /** Reset the stream to its original, empty, state. */
-  void reset();
+  void reset() noexcept;
   void padToAlign4();
 
  private:
@@ -506,7 +507,7 @@ class SK_API SkDynamicMemoryWStream : public SkWStream {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   // For access to the Block type.

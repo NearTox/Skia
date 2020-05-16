@@ -21,11 +21,11 @@ class SkMatrixPriv {
     kMaxFlattenSize = 9 * sizeof(SkScalar) + sizeof(uint32_t),
   };
 
-  static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) {
+  static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) noexcept {
     return matrix.writeToMemory(buffer);
   }
 
-  static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) {
+  static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) noexcept {
     return matrix->readFromMemory(buffer, length);
   }
 
@@ -147,21 +147,21 @@ class SkMatrixPriv {
 
   static void MapHomogeneousPointsWithStride(
       const SkMatrix& mx, SkPoint3 dst[], size_t dstStride, const SkPoint3 src[], size_t srcStride,
-      int count);
+      int count) noexcept;
 
   // Returns the recommended filterquality, assuming the caller originally wanted kHigh (bicubic)
   static SkFilterQuality AdjustHighQualityFilterLevel(
       const SkMatrix&, bool matrixIsInverse = false);
 
-  static bool PostIDiv(SkMatrix* matrix, int divx, int divy) {
+  static bool PostIDiv(SkMatrix* matrix, int divx, int divy) noexcept {
     return matrix->postIDiv(divx, divy);
   }
 
-  static bool CheapEqual(const SkMatrix& a, const SkMatrix& b) {
+  static bool CheapEqual(const SkMatrix& a, const SkMatrix& b) noexcept {
     return &a == &b || 0 == memcmp(a.fMat, b.fMat, sizeof(a.fMat));
   }
 
-  static const SkScalar* M44ColMajor(const SkM44& m) { return m.fMat; }
+  static const SkScalar* M44ColMajor(const SkM44& m) noexcept { return m.fMat; }
 };
 
 #endif

@@ -53,7 +53,7 @@ class Text final : public GeometryNode {
  private:
   Text(sk_sp<SkTypeface>, const SkString&);
 
-  SkPoint alignedPosition(SkScalar advance) const;
+  SkPoint alignedPosition(SkScalar advance) const noexcept;
 
   sk_sp<SkTypeface> fTypeface;
   SkString fText;
@@ -90,7 +90,7 @@ class TextBlob final : public GeometryNode {
   SkPath onAsPath() const override;
 
  private:
-  explicit TextBlob(sk_sp<SkTextBlob>);
+  explicit TextBlob(sk_sp<SkTextBlob>) noexcept;
 
   sk_sp<SkTextBlob> fBlob;
   SkPoint fPosition = SkPoint::Make(0, 0);

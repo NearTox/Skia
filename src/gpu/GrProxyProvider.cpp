@@ -113,9 +113,8 @@ sk_sp<GrTextureProxy> GrProxyProvider::findProxyByUniqueKey(const GrUniqueKey& k
 
 #if GR_TEST_UTILS
 sk_sp<GrTextureProxy> GrProxyProvider::testingOnly_createInstantiatedProxy(
-    SkISize dimensions, GrColorType colorType, const GrBackendFormat& format,
-    GrRenderable renderable, int renderTargetSampleCnt, SkBackingFit fit, SkBudgeted budgeted,
-    GrProtected isProtected) {
+    SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
+    int renderTargetSampleCnt, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
     return nullptr;
@@ -146,7 +145,7 @@ sk_sp<GrTextureProxy> GrProxyProvider::testingOnly_createInstantiatedProxy(
     return nullptr;
   }
 
-  return this->createWrapped(std::move(tex), colorType, UseAllocator::kYes);
+  return this->createWrapped(std::move(tex), UseAllocator::kYes);
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::testingOnly_createInstantiatedProxy(
@@ -158,34 +157,31 @@ sk_sp<GrTextureProxy> GrProxyProvider::testingOnly_createInstantiatedProxy(
   }
   auto format = this->caps()->getDefaultBackendFormat(colorType, renderable);
   return this->testingOnly_createInstantiatedProxy(
-      dimensions, colorType, format, renderable, renderTargetSampleCnt, fit, budgeted, isProtected);
+      dimensions, format, renderable, renderTargetSampleCnt, fit, budgeted, isProtected);
 }
 
-sk_sp<GrTextureProxy> GrProxyProvider::testingOnly_createWrapped(
-    sk_sp<GrTexture> tex, GrColorType colorType) {
-  return this->createWrapped(std::move(tex), colorType, UseAllocator::kYes);
+sk_sp<GrTextureProxy> GrProxyProvider::testingOnly_createWrapped(sk_sp<GrTexture> tex) {
+  return this->createWrapped(std::move(tex), UseAllocator::kYes);
 }
 #endif
 
 sk_sp<GrTextureProxy> GrProxyProvider::createWrapped(
-    sk_sp<GrTexture> tex, GrColorType colorType, UseAllocator useAllocator) {
+    sk_sp<GrTexture> tex, UseAllocator useAllocator) {
 #ifdef SK_DEBUG
   if (tex->getUniqueKey().isValid()) {
     SkASSERT(!this->findProxyByUniqueKey(tex->getUniqueKey()));
   }
 #endif
-  GrSwizzle readSwizzle = this->caps()->getReadSwizzle(tex->backendFormat(), colorType);
 
   if (tex->asRenderTarget()) {
-    return sk_sp<GrTextureProxy>(
-        new GrTextureRenderTargetProxy(std::move(tex), readSwizzle, useAllocator));
+    return sk_sp<GrTextureProxy>(new GrTextureRenderTargetProxy(std::move(tex), useAllocator));
   } else {
-    return sk_sp<GrTextureProxy>(new GrTextureProxy(std::move(tex), readSwizzle, useAllocator));
+    return sk_sp<GrTextureProxy>(new GrTextureProxy(std::move(tex), useAllocator));
   }
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::findOrCreateProxyByUniqueKey(
-    const GrUniqueKey& key, GrColorType colorType, UseAllocator useAllocator) {
+    const GrUniqueKey& key, UseAllocator useAllocator) {
   ASSERT_SINGLE_OWNER
 
   if (this->isAbandoned()) {
@@ -212,18 +208,15 @@ sk_sp<GrTextureProxy> GrProxyProvider::findOrCreateProxyByUniqueKey(
   sk_sp<GrTexture> texture(static_cast<GrSurface*>(resource)->asTexture());
   SkASSERT(texture);
 
-  result = this->createWrapped(std::move(texture), colorType, useAllocator);
+  result = this->createWrapped(std::move(texture), useAllocator);
   SkASSERT(result->getUniqueKey() == key);
   // createWrapped should've added this for us
   SkASSERT(fUniquelyKeyedProxies.find(key));
-  SkASSERT(
-      result->textureSwizzleDoNotUse() ==
-      this->caps()->getReadSwizzle(result->backendFormat(), colorType));
   return result;
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::createProxyFromBitmap(
-    const SkBitmap& bitmap, GrMipMapped mipMapped, SkBackingFit fit) {
+    const SkBitmap& bitmap, GrMipMapped mipMapped, SkBackingFit fit, SkBudgeted budgeted) {
   ASSERT_SINGLE_OWNER
   SkASSERT(fit == SkBackingFit::kExact || mipMapped == GrMipMapped::kNo);
 
@@ -251,18 +244,12 @@ sk_sp<GrTextureProxy> GrProxyProvider::createProxyFromBitmap(
     copyBitmap.setImmutable();
   }
 
-  GrColorType grCT = SkColorTypeToGrColorType(copyBitmap.info().colorType());
-  GrBackendFormat format = this->caps()->getDefaultBackendFormat(grCT, GrRenderable::kNo);
-  if (!format.isValid()) {
-    return nullptr;
-  }
-
   sk_sp<GrTextureProxy> proxy;
   if (mipMapped == GrMipMapped::kNo ||
       0 == SkMipMap::ComputeLevelCount(copyBitmap.width(), copyBitmap.height())) {
-    proxy = this->createNonMippedProxyFromBitmap(copyBitmap, fit, format, grCT);
+    proxy = this->createNonMippedProxyFromBitmap(copyBitmap, fit, budgeted);
   } else {
-    proxy = this->createMippedProxyFromBitmap(copyBitmap, format, grCT);
+    proxy = this->createMippedProxyFromBitmap(copyBitmap, budgeted);
   }
 
   if (!proxy) {
@@ -283,21 +270,25 @@ sk_sp<GrTextureProxy> GrProxyProvider::createProxyFromBitmap(
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::createNonMippedProxyFromBitmap(
-    const SkBitmap& bitmap, SkBackingFit fit, const GrBackendFormat& format,
-    GrColorType colorType) {
-  GrSwizzle swizzle = this->caps()->getReadSwizzle(format, colorType);
+    const SkBitmap& bitmap, SkBackingFit fit, SkBudgeted budgeted) {
   auto dims = bitmap.dimensions();
 
+  auto colorType = SkColorTypeToGrColorType(bitmap.colorType());
+  GrBackendFormat format = this->caps()->getDefaultBackendFormat(colorType, GrRenderable::kNo);
+  if (!format.isValid()) {
+    return nullptr;
+  }
+
   sk_sp<GrTextureProxy> proxy = this->createLazyProxy(
-      [dims, format, bitmap, fit, colorType](GrResourceProvider* resourceProvider) {
+      [dims, format, bitmap, fit, colorType, budgeted](GrResourceProvider* resourceProvider) {
         GrMipLevel mipLevel = {bitmap.getPixels(), bitmap.rowBytes()};
 
         return LazyCallbackResult(resourceProvider->createTexture(
-            dims, format, colorType, GrRenderable::kNo, 1, SkBudgeted::kYes, fit, GrProtected::kNo,
+            dims, format, colorType, GrRenderable::kNo, 1, budgeted, fit, GrProtected::kNo,
             mipLevel));
       },
-      format, dims, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
-      GrInternalSurfaceFlags::kNone, fit, SkBudgeted::kYes, GrProtected::kNo, UseAllocator::kYes);
+      format, dims, GrRenderable::kNo, 1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
+      GrInternalSurfaceFlags::kNone, fit, budgeted, GrProtected::kNo, UseAllocator::kYes);
 
   if (!proxy) {
     return nullptr;
@@ -307,19 +298,24 @@ sk_sp<GrTextureProxy> GrProxyProvider::createNonMippedProxyFromBitmap(
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::createMippedProxyFromBitmap(
-    const SkBitmap& bitmap, const GrBackendFormat& format, GrColorType colorType) {
+    const SkBitmap& bitmap, SkBudgeted budgeted) {
   SkASSERT(this->caps()->mipMapSupport());
+
+  auto colorType = SkColorTypeToGrColorType(bitmap.colorType());
+  GrBackendFormat format = this->caps()->getDefaultBackendFormat(colorType, GrRenderable::kNo);
+  if (!format.isValid()) {
+    return nullptr;
+  }
 
   sk_sp<SkMipMap> mipmaps(SkMipMap::Build(bitmap.pixmap(), nullptr));
   if (!mipmaps) {
     return nullptr;
   }
 
-  GrSwizzle readSwizzle = this->caps()->getReadSwizzle(format, colorType);
   auto dims = bitmap.dimensions();
 
   sk_sp<GrTextureProxy> proxy = this->createLazyProxy(
-      [dims, format, bitmap, mipmaps](GrResourceProvider* resourceProvider) {
+      [dims, format, bitmap, mipmaps, budgeted](GrResourceProvider* resourceProvider) {
         const int mipLevelCount = mipmaps->countLevels() + 1;
         std::unique_ptr<GrMipLevel[]> texels(new GrMipLevel[mipLevelCount]);
 
@@ -336,11 +332,11 @@ sk_sp<GrTextureProxy> GrProxyProvider::createMippedProxyFromBitmap(
           SkASSERT(generatedMipLevel.fPixmap.colorType() == bitmap.colorType());
         }
         return LazyCallbackResult(resourceProvider->createTexture(
-            dims, format, colorType, GrRenderable::kNo, 1, SkBudgeted::kYes, GrProtected::kNo,
-            texels.get(), mipLevelCount));
+            dims, format, colorType, GrRenderable::kNo, 1, budgeted, GrProtected::kNo, texels.get(),
+            mipLevelCount));
       },
-      format, dims, readSwizzle, GrRenderable::kNo, 1, GrMipMapped::kYes, GrMipMapsStatus::kValid,
-      GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, SkBudgeted::kYes, GrProtected::kNo,
+      format, dims, GrRenderable::kNo, 1, GrMipMapped::kYes, GrMipMapsStatus::kValid,
+      GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, budgeted, GrProtected::kNo,
       UseAllocator::kYes);
 
   if (!proxy) {
@@ -353,9 +349,9 @@ sk_sp<GrTextureProxy> GrProxyProvider::createMippedProxyFromBitmap(
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::createProxy(
-    const GrBackendFormat& format, SkISize dimensions, GrSwizzle readSwizzle,
-    GrRenderable renderable, int renderTargetSampleCnt, GrMipMapped mipMapped, SkBackingFit fit,
-    SkBudgeted budgeted, GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags,
+    const GrBackendFormat& format, SkISize dimensions, GrRenderable renderable,
+    int renderTargetSampleCnt, GrMipMapped mipMapped, SkBackingFit fit, SkBudgeted budgeted,
+    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags,
     GrSurfaceProxy::UseAllocator useAllocator) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
@@ -389,13 +385,13 @@ sk_sp<GrTextureProxy> GrProxyProvider::createProxy(
     // We know anything we instantiate later from this deferred path will be
     // both texturable and renderable
     return sk_sp<GrTextureProxy>(new GrTextureRenderTargetProxy(
-        *caps, format, dimensions, renderTargetSampleCnt, mipMapped, mipMapsStatus, readSwizzle,
-        fit, budgeted, isProtected, surfaceFlags, useAllocator));
+        *caps, format, dimensions, renderTargetSampleCnt, mipMapped, mipMapsStatus, fit, budgeted,
+        isProtected, surfaceFlags, useAllocator));
   }
 
   return sk_sp<GrTextureProxy>(new GrTextureProxy(
-      format, dimensions, mipMapped, mipMapsStatus, readSwizzle, fit, budgeted, isProtected,
-      surfaceFlags, useAllocator));
+      format, dimensions, mipMapped, mipMapsStatus, fit, budgeted, isProtected, surfaceFlags,
+      useAllocator));
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::createCompressedTextureProxy(
@@ -421,7 +417,7 @@ sk_sp<GrTextureProxy> GrProxyProvider::createCompressedTextureProxy(
         return LazyCallbackResult(resourceProvider->createCompressedTexture(
             dimensions, format, budgeted, mipMapped, isProtected, data.get()));
       },
-      format, dimensions, GrSwizzle(), GrRenderable::kNo, 1, mipMapped, mipMapsStatus,
+      format, dimensions, GrRenderable::kNo, 1, mipMapped, mipMapsStatus,
       GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact, SkBudgeted::kYes, GrProtected::kNo,
       UseAllocator::kYes);
 
@@ -442,9 +438,8 @@ sk_sp<GrTextureProxy> GrProxyProvider::createCompressedTextureProxy(
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::wrapBackendTexture(
-    const GrBackendTexture& backendTex, GrColorType grColorType, GrWrapOwnership ownership,
-    GrWrapCacheable cacheable, GrIOType ioType, ReleaseProc releaseProc,
-    ReleaseContext releaseCtx) {
+    const GrBackendTexture& backendTex, GrWrapOwnership ownership, GrWrapCacheable cacheable,
+    GrIOType ioType, ReleaseProc releaseProc, ReleaseContext releaseCtx) {
   SkASSERT(ioType != kWrite_GrIOType);
   if (this->isAbandoned()) {
     return nullptr;
@@ -456,12 +451,10 @@ sk_sp<GrTextureProxy> GrProxyProvider::wrapBackendTexture(
     return nullptr;
   }
 
-  const GrCaps* caps = this->caps();
-
   GrResourceProvider* resourceProvider = direct->priv().resourceProvider();
 
   sk_sp<GrTexture> tex =
-      resourceProvider->wrapBackendTexture(backendTex, grColorType, ownership, cacheable, ioType);
+      resourceProvider->wrapBackendTexture(backendTex, ownership, cacheable, ioType);
   if (!tex) {
     return nullptr;
   }
@@ -474,9 +467,7 @@ sk_sp<GrTextureProxy> GrProxyProvider::wrapBackendTexture(
   // Make sure we match how we created the proxy with SkBudgeted::kNo
   SkASSERT(GrBudgetedType::kBudgeted != tex->resourcePriv().budgetedType());
 
-  GrSwizzle readSwizzle = caps->getReadSwizzle(tex->backendFormat(), grColorType);
-
-  return sk_sp<GrTextureProxy>(new GrTextureProxy(std::move(tex), readSwizzle, UseAllocator::kNo));
+  return sk_sp<GrTextureProxy>(new GrTextureProxy(std::move(tex), UseAllocator::kNo));
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::wrapCompressedBackendTexture(
@@ -491,8 +482,6 @@ sk_sp<GrTextureProxy> GrProxyProvider::wrapCompressedBackendTexture(
   if (!direct) {
     return nullptr;
   }
-
-  const GrCaps* caps = this->caps();
 
   GrResourceProvider* resourceProvider = direct->priv().resourceProvider();
 
@@ -510,18 +499,12 @@ sk_sp<GrTextureProxy> GrProxyProvider::wrapCompressedBackendTexture(
   // Make sure we match how we created the proxy with SkBudgeted::kNo
   SkASSERT(GrBudgetedType::kBudgeted != tex->resourcePriv().budgetedType());
 
-  SkImage::CompressionType compressionType = caps->compressionType(beTex.getBackendFormat());
-
-  GrSwizzle texSwizzle =
-      SkCompressionTypeIsOpaque(compressionType) ? GrSwizzle::RGB1() : GrSwizzle::RGBA();
-
-  return sk_sp<GrTextureProxy>(new GrTextureProxy(std::move(tex), texSwizzle, UseAllocator::kNo));
+  return sk_sp<GrTextureProxy>(new GrTextureProxy(std::move(tex), UseAllocator::kNo));
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::wrapRenderableBackendTexture(
-    const GrBackendTexture& backendTex, int sampleCnt, GrColorType colorType,
-    GrWrapOwnership ownership, GrWrapCacheable cacheable, ReleaseProc releaseProc,
-    ReleaseContext releaseCtx) {
+    const GrBackendTexture& backendTex, int sampleCnt, GrWrapOwnership ownership,
+    GrWrapCacheable cacheable, ReleaseProc releaseProc, ReleaseContext releaseCtx) {
   if (this->isAbandoned()) {
     return nullptr;
   }
@@ -536,16 +519,11 @@ sk_sp<GrTextureProxy> GrProxyProvider::wrapRenderableBackendTexture(
 
   GrResourceProvider* resourceProvider = direct->priv().resourceProvider();
 
-  // TODO: This should have been checked and validated before getting into GrProxyProvider.
-  if (!caps->isFormatAsColorTypeRenderable(colorType, backendTex.getBackendFormat(), sampleCnt)) {
-    return nullptr;
-  }
-
   sampleCnt = caps->getRenderTargetSampleCount(sampleCnt, backendTex.getBackendFormat());
   SkASSERT(sampleCnt);
 
-  sk_sp<GrTexture> tex = resourceProvider->wrapRenderableBackendTexture(
-      backendTex, sampleCnt, colorType, ownership, cacheable);
+  sk_sp<GrTexture> tex =
+      resourceProvider->wrapRenderableBackendTexture(backendTex, sampleCnt, ownership, cacheable);
   if (!tex) {
     return nullptr;
   }
@@ -558,15 +536,11 @@ sk_sp<GrTextureProxy> GrProxyProvider::wrapRenderableBackendTexture(
   // Make sure we match how we created the proxy with SkBudgeted::kNo
   SkASSERT(GrBudgetedType::kBudgeted != tex->resourcePriv().budgetedType());
 
-  GrSwizzle readSwizzle = caps->getReadSwizzle(tex->backendFormat(), colorType);
-
-  return sk_sp<GrTextureProxy>(
-      new GrTextureRenderTargetProxy(std::move(tex), readSwizzle, UseAllocator::kNo));
+  return sk_sp<GrTextureProxy>(new GrTextureRenderTargetProxy(std::move(tex), UseAllocator::kNo));
 }
 
 sk_sp<GrSurfaceProxy> GrProxyProvider::wrapBackendRenderTarget(
-    const GrBackendRenderTarget& backendRT, GrColorType grColorType, ReleaseProc releaseProc,
-    ReleaseContext releaseCtx) {
+    const GrBackendRenderTarget& backendRT, ReleaseProc releaseProc, ReleaseContext releaseCtx) {
   if (this->isAbandoned()) {
     return nullptr;
   }
@@ -577,11 +551,9 @@ sk_sp<GrSurfaceProxy> GrProxyProvider::wrapBackendRenderTarget(
     return nullptr;
   }
 
-  const GrCaps* caps = this->caps();
-
   GrResourceProvider* resourceProvider = direct->priv().resourceProvider();
 
-  sk_sp<GrRenderTarget> rt = resourceProvider->wrapBackendRenderTarget(backendRT, grColorType);
+  sk_sp<GrRenderTarget> rt = resourceProvider->wrapBackendRenderTarget(backendRT);
   if (!rt) {
     return nullptr;
   }
@@ -595,14 +567,11 @@ sk_sp<GrSurfaceProxy> GrProxyProvider::wrapBackendRenderTarget(
   // Make sure we match how we created the proxy with SkBudgeted::kNo
   SkASSERT(GrBudgetedType::kBudgeted != rt->resourcePriv().budgetedType());
 
-  GrSwizzle readSwizzle = caps->getReadSwizzle(rt->backendFormat(), grColorType);
-
-  return sk_sp<GrRenderTargetProxy>(
-      new GrRenderTargetProxy(std::move(rt), readSwizzle, UseAllocator::kNo));
+  return sk_sp<GrRenderTargetProxy>(new GrRenderTargetProxy(std::move(rt), UseAllocator::kNo));
 }
 
 sk_sp<GrSurfaceProxy> GrProxyProvider::wrapBackendTextureAsRenderTarget(
-    const GrBackendTexture& backendTex, GrColorType grColorType, int sampleCnt) {
+    const GrBackendTexture& backendTex, int sampleCnt) {
   if (this->isAbandoned()) {
     return nullptr;
   }
@@ -613,12 +582,10 @@ sk_sp<GrSurfaceProxy> GrProxyProvider::wrapBackendTextureAsRenderTarget(
     return nullptr;
   }
 
-  const GrCaps* caps = this->caps();
-
   GrResourceProvider* resourceProvider = direct->priv().resourceProvider();
 
   sk_sp<GrRenderTarget> rt =
-      resourceProvider->wrapBackendTextureAsRenderTarget(backendTex, sampleCnt, grColorType);
+      resourceProvider->wrapBackendTextureAsRenderTarget(backendTex, sampleCnt);
   if (!rt) {
     return nullptr;
   }
@@ -627,10 +594,7 @@ sk_sp<GrSurfaceProxy> GrProxyProvider::wrapBackendTextureAsRenderTarget(
   // This proxy should be unbudgeted because we're just wrapping an external resource
   SkASSERT(GrBudgetedType::kBudgeted != rt->resourcePriv().budgetedType());
 
-  GrSwizzle readSwizzle = caps->getReadSwizzle(rt->backendFormat(), grColorType);
-
-  return sk_sp<GrSurfaceProxy>(
-      new GrRenderTargetProxy(std::move(rt), readSwizzle, UseAllocator::kNo));
+  return sk_sp<GrSurfaceProxy>(new GrRenderTargetProxy(std::move(rt), UseAllocator::kNo));
 }
 
 sk_sp<GrRenderTargetProxy> GrProxyProvider::wrapVulkanSecondaryCBAsRenderTarget(
@@ -659,7 +623,6 @@ sk_sp<GrRenderTargetProxy> GrProxyProvider::wrapVulkanSecondaryCBAsRenderTarget(
   SkASSERT(GrBudgetedType::kBudgeted != rt->resourcePriv().budgetedType());
 
   GrColorType colorType = SkColorTypeToGrColorType(imageInfo.colorType());
-  GrSwizzle readSwizzle = this->caps()->getReadSwizzle(rt->backendFormat(), colorType);
 
   if (!this->caps()->isFormatAsColorTypeRenderable(
           colorType, rt->backendFormat(), rt->numSamples())) {
@@ -667,16 +630,14 @@ sk_sp<GrRenderTargetProxy> GrProxyProvider::wrapVulkanSecondaryCBAsRenderTarget(
   }
 
   return sk_sp<GrRenderTargetProxy>(new GrRenderTargetProxy(
-      std::move(rt), readSwizzle, UseAllocator::kNo,
-      GrRenderTargetProxy::WrapsVkSecondaryCB::kYes));
+      std::move(rt), UseAllocator::kNo, GrRenderTargetProxy::WrapsVkSecondaryCB::kYes));
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::createLazyProxy(
     LazyInstantiateCallback&& callback, const GrBackendFormat& format, SkISize dimensions,
-    GrSwizzle readSwizzle, GrRenderable renderable, int renderTargetSampleCnt,
-    GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus, GrInternalSurfaceFlags surfaceFlags,
-    SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrSurfaceProxy::UseAllocator useAllocator) {
+    GrRenderable renderable, int renderTargetSampleCnt, GrMipMapped mipMapped,
+    GrMipMapsStatus mipMapsStatus, GrInternalSurfaceFlags surfaceFlags, SkBackingFit fit,
+    SkBudgeted budgeted, GrProtected isProtected, GrSurfaceProxy::UseAllocator useAllocator) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
     return nullptr;
@@ -697,20 +658,19 @@ sk_sp<GrTextureProxy> GrProxyProvider::createLazyProxy(
   if (renderable == GrRenderable::kYes) {
     return sk_sp<GrTextureProxy>(new GrTextureRenderTargetProxy(
         *this->caps(), std::move(callback), format, dimensions, renderTargetSampleCnt, mipMapped,
-        mipMapsStatus, readSwizzle, fit, budgeted, isProtected, surfaceFlags, useAllocator));
+        mipMapsStatus, fit, budgeted, isProtected, surfaceFlags, useAllocator));
   } else {
     return sk_sp<GrTextureProxy>(new GrTextureProxy(
-        std::move(callback), format, dimensions, mipMapped, mipMapsStatus, readSwizzle, fit,
-        budgeted, isProtected, surfaceFlags, useAllocator));
+        std::move(callback), format, dimensions, mipMapped, mipMapsStatus, fit, budgeted,
+        isProtected, surfaceFlags, useAllocator));
   }
 }
 
 sk_sp<GrRenderTargetProxy> GrProxyProvider::createLazyRenderTargetProxy(
     LazyInstantiateCallback&& callback, const GrBackendFormat& format, SkISize dimensions,
-    GrSwizzle readSwizzle, int sampleCnt, GrInternalSurfaceFlags surfaceFlags,
-    const TextureInfo* textureInfo, GrMipMapsStatus mipMapsStatus, SkBackingFit fit,
-    SkBudgeted budgeted, GrProtected isProtected, bool wrapsVkSecondaryCB,
-    UseAllocator useAllocator) {
+    int sampleCnt, GrInternalSurfaceFlags surfaceFlags, const TextureInfo* textureInfo,
+    GrMipMapsStatus mipMapsStatus, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
+    bool wrapsVkSecondaryCB, UseAllocator useAllocator) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
     return nullptr;
@@ -730,7 +690,7 @@ sk_sp<GrRenderTargetProxy> GrProxyProvider::createLazyRenderTargetProxy(
     SkASSERT(!wrapsVkSecondaryCB);
     return sk_sp<GrRenderTargetProxy>(new GrTextureRenderTargetProxy(
         *this->caps(), std::move(callback), format, dimensions, sampleCnt, textureInfo->fMipMapped,
-        mipMapsStatus, readSwizzle, fit, budgeted, isProtected, surfaceFlags, useAllocator));
+        mipMapsStatus, fit, budgeted, isProtected, surfaceFlags, useAllocator));
   }
 
   GrRenderTargetProxy::WrapsVkSecondaryCB vkSCB =
@@ -738,13 +698,13 @@ sk_sp<GrRenderTargetProxy> GrProxyProvider::createLazyRenderTargetProxy(
                          : GrRenderTargetProxy::WrapsVkSecondaryCB::kNo;
 
   return sk_sp<GrRenderTargetProxy>(new GrRenderTargetProxy(
-      std::move(callback), format, dimensions, sampleCnt, readSwizzle, fit, budgeted, isProtected,
-      surfaceFlags, useAllocator, vkSCB));
+      std::move(callback), format, dimensions, sampleCnt, fit, budgeted, isProtected, surfaceFlags,
+      useAllocator, vkSCB));
 }
 
 sk_sp<GrTextureProxy> GrProxyProvider::MakeFullyLazyProxy(
-    LazyInstantiateCallback&& callback, const GrBackendFormat& format, GrSwizzle readSwizzle,
-    GrRenderable renderable, int renderTargetSampleCnt, GrProtected isProtected, const GrCaps& caps,
+    LazyInstantiateCallback&& callback, const GrBackendFormat& format, GrRenderable renderable,
+    int renderTargetSampleCnt, GrProtected isProtected, const GrCaps& caps,
     UseAllocator useAllocator) {
   if (!format.isValid()) {
     return nullptr;
@@ -757,18 +717,24 @@ sk_sp<GrTextureProxy> GrProxyProvider::MakeFullyLazyProxy(
   if (GrRenderable::kYes == renderable) {
     return sk_sp<GrTextureProxy>(new GrTextureRenderTargetProxy(
         caps, std::move(callback), format, kLazyDims, renderTargetSampleCnt, GrMipMapped::kNo,
-        GrMipMapsStatus::kNotAllocated, readSwizzle, SkBackingFit::kApprox, SkBudgeted::kYes,
-        isProtected, surfaceFlags, useAllocator));
+        GrMipMapsStatus::kNotAllocated, SkBackingFit::kApprox, SkBudgeted::kYes, isProtected,
+        surfaceFlags, useAllocator));
   } else {
     return sk_sp<GrTextureProxy>(new GrTextureProxy(
         std::move(callback), format, kLazyDims, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
-        readSwizzle, SkBackingFit::kApprox, SkBudgeted::kYes, isProtected, surfaceFlags,
-        useAllocator));
+        SkBackingFit::kApprox, SkBudgeted::kYes, isProtected, surfaceFlags, useAllocator));
   }
 }
 
 void GrProxyProvider::processInvalidUniqueKey(
-    const GrUniqueKey& key, GrTextureProxy* proxy, InvalidateGPUResource invalidateGPUResource) {
+    const GrUniqueKey& key, GrTextureProxy* proxy,
+    InvalidateGPUResource invalidateGPUResource) noexcept {
+  this->processInvalidUniqueKeyImpl(key, proxy, invalidateGPUResource, RemoveTableEntry::kYes);
+}
+
+void GrProxyProvider::processInvalidUniqueKeyImpl(
+    const GrUniqueKey& key, GrTextureProxy* proxy, InvalidateGPUResource invalidateGPUResource,
+    RemoveTableEntry removeTableEntry) noexcept {
   SkASSERT(key.isValid());
 
   if (!proxy) {
@@ -791,7 +757,9 @@ void GrProxyProvider::processInvalidUniqueKey(
   // Note: this method is called for the whole variety of GrGpuResources so often 'key'
   // will not be in 'fUniquelyKeyedProxies'.
   if (proxy) {
-    fUniquelyKeyedProxies.remove(key);
+    if (removeTableEntry == RemoveTableEntry::kYes) {
+      fUniquelyKeyedProxies.remove(key);
+    }
     proxy->cacheAccess().clearUniqueKey();
   }
 
@@ -800,31 +768,29 @@ void GrProxyProvider::processInvalidUniqueKey(
   }
 }
 
-uint32_t GrProxyProvider::contextID() const { return fImageContext->priv().contextID(); }
+uint32_t GrProxyProvider::contextID() const noexcept { return fImageContext->priv().contextID(); }
 
-const GrCaps* GrProxyProvider::caps() const { return fImageContext->priv().caps(); }
+const GrCaps* GrProxyProvider::caps() const noexcept { return fImageContext->priv().caps(); }
 
 sk_sp<const GrCaps> GrProxyProvider::refCaps() const { return fImageContext->priv().refCaps(); }
 
 bool GrProxyProvider::isAbandoned() const { return fImageContext->priv().abandoned(); }
 
 void GrProxyProvider::orphanAllUniqueKeys() {
-  UniquelyKeyedProxyHash::Iter iter(&fUniquelyKeyedProxies);
-  for (UniquelyKeyedProxyHash::Iter iter(&fUniquelyKeyedProxies); !iter.done(); ++iter) {
-    GrTextureProxy& tmp = *iter;
-
-    tmp.fProxyProvider = nullptr;
-  }
+  fUniquelyKeyedProxies.foreach ([&](GrTextureProxy* proxy) { proxy->fProxyProvider = nullptr; });
 }
 
-void GrProxyProvider::removeAllUniqueKeys() {
-  UniquelyKeyedProxyHash::Iter iter(&fUniquelyKeyedProxies);
-  for (UniquelyKeyedProxyHash::Iter iter(&fUniquelyKeyedProxies); !iter.done(); ++iter) {
-    GrTextureProxy& tmp = *iter;
-
-    this->processInvalidUniqueKey(tmp.getUniqueKey(), &tmp, InvalidateGPUResource::kNo);
-  }
-  SkASSERT(!fUniquelyKeyedProxies.count());
+void GrProxyProvider::removeAllUniqueKeys() noexcept {
+  fUniquelyKeyedProxies.foreach ([&](GrTextureProxy* proxy) noexcept {
+    // It's not safe to remove table entries while iterating with foreach(),
+    // but since we're going to remove them all anyway, simply save that for the end.
+    this->processInvalidUniqueKeyImpl(
+        proxy->getUniqueKey(), proxy, InvalidateGPUResource::kNo, RemoveTableEntry::kNo);
+  });
+  // Removing all those table entries is safe now.
+  fUniquelyKeyedProxies.reset();
 }
 
-bool GrProxyProvider::renderingDirectly() const { return fImageContext->priv().asDirectContext(); }
+bool GrProxyProvider::renderingDirectly() const noexcept {
+  return fImageContext->priv().asDirectContext();
+}

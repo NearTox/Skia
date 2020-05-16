@@ -12,6 +12,7 @@
 #include "include/core/SkPicture.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkVertices.h"
+#include "include/effects/SkRuntimeEffect.h"
 #include "include/gpu/GrContext.h"
 #include "include/private/SkShadowFlags.h"
 #include "include/private/SkTo.h"
@@ -29,6 +30,7 @@
 #include "src/core/SkStroke.h"
 #include "src/core/SkTLazy.h"
 #include "src/core/SkVertState.h"
+#include "src/core/SkVerticesPriv.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrBlurUtils.h"
 #include "src/gpu/GrContextPriv.h"
@@ -632,22 +634,6 @@ void SkGpuDevice::drawPath(const SkPath& origSrcPath, const SkPaint& paint, bool
       shape);
 }
 
-void SkGpuDevice::drawSprite(const SkBitmap& bitmap, int left, int top, const SkPaint& paint) {
-  ASSERT_SINGLE_OWNER
-  GR_CREATE_TRACE_MARKER_CONTEXT("SkGpuDevice", "drawSprite", fContext.get());
-
-  if (fContext->priv().abandoned()) {
-    return;
-  }
-
-  sk_sp<SkSpecialImage> srcImg = this->makeSpecial(bitmap);
-  if (!srcImg) {
-    return;
-  }
-
-  this->drawSpecial(srcImg.get(), left, top, paint, nullptr, SkMatrix::I());
-}
-
 void SkGpuDevice::drawSpecial(
     SkSpecialImage* special, int left, int top, const SkPaint& paint, SkImage* clipImage,
     const SkMatrix& clipMatrix) {
@@ -760,13 +746,6 @@ void SkGpuDevice::drawSpecial(
   // Draw directly in screen space, possibly with an extra coverage processor
   fRenderTargetContext->fillRectToRect(
       this->clip(), std::move(grPaint), GrAA(paint.isAntiAlias()), SkMatrix::I(), dstRect, srcRect);
-}
-
-void SkGpuDevice::drawBitmapRect(
-    const SkBitmap& bitmap, const SkRect* src, const SkRect& origDst, const SkPaint& paint,
-    SkCanvas::SrcRectConstraint constraint) {
-  sk_sp<SkImage> asImage = SkMakeImageFromRasterBitmap(bitmap, kNever_SkCopyPixelsMode);
-  this->drawImageRect(asImage.get(), src, origDst, paint, constraint);
 }
 
 sk_sp<SkSpecialImage> SkGpuDevice::makeSpecial(const SkBitmap& bitmap) {
@@ -893,21 +872,13 @@ void SkGpuDevice::drawImageNine(
   } else {
     SkBitmap bm;
     if (image->isLazyGenerated()) {
-      GrImageTextureMaker maker(fContext.get(), image, SkImage::kAllow_CachingHint);
+      GrImageTextureMaker maker(fContext.get(), image, GrImageTexGenPolicy::kDraw);
       this->drawProducerLattice(&maker, std::move(iter), dst, paint);
     } else if (as_IB(image)->getROPixels(&bm)) {
-      GrBitmapTextureMaker maker(fContext.get(), bm, GrBitmapTextureMaker::Cached::kYes);
+      GrBitmapTextureMaker maker(fContext.get(), bm, GrImageTexGenPolicy::kDraw);
       this->drawProducerLattice(&maker, std::move(iter), dst, paint);
     }
   }
-}
-
-void SkGpuDevice::drawBitmapNine(
-    const SkBitmap& bitmap, const SkIRect& center, const SkRect& dst, const SkPaint& paint) {
-  ASSERT_SINGLE_OWNER
-  auto iter = std::make_unique<SkLatticeIter>(bitmap.width(), bitmap.height(), center, dst);
-  GrBitmapTextureMaker maker(fContext.get(), bitmap, GrBitmapTextureMaker::Cached::kYes);
-  this->drawProducerLattice(&maker, std::move(iter), dst, paint);
 }
 
 void SkGpuDevice::drawProducerLattice(
@@ -952,22 +923,13 @@ void SkGpuDevice::drawImageLattice(
   } else {
     SkBitmap bm;
     if (image->isLazyGenerated()) {
-      GrImageTextureMaker maker(fContext.get(), image, SkImage::kAllow_CachingHint);
+      GrImageTextureMaker maker(fContext.get(), image, GrImageTexGenPolicy::kDraw);
       this->drawProducerLattice(&maker, std::move(iter), dst, paint);
     } else if (as_IB(image)->getROPixels(&bm)) {
-      GrBitmapTextureMaker maker(fContext.get(), bm, GrBitmapTextureMaker::Cached::kYes);
+      GrBitmapTextureMaker maker(fContext.get(), bm, GrImageTexGenPolicy::kDraw);
       this->drawProducerLattice(&maker, std::move(iter), dst, paint);
     }
   }
-}
-
-void SkGpuDevice::drawBitmapLattice(
-    const SkBitmap& bitmap, const SkCanvas::Lattice& lattice, const SkRect& dst,
-    const SkPaint& paint) {
-  ASSERT_SINGLE_OWNER
-  auto iter = std::make_unique<SkLatticeIter>(lattice, dst);
-  GrBitmapTextureMaker maker(fContext.get(), bitmap, GrBitmapTextureMaker::Cached::kYes);
-  this->drawProducerLattice(&maker, std::move(iter), dst, paint);
 }
 
 static bool init_vertices_paint(
@@ -1048,16 +1010,23 @@ void SkGpuDevice::wireframeVertices(
 void SkGpuDevice::drawVertices(const SkVertices* vertices, SkBlendMode mode, const SkPaint& paint) {
   ASSERT_SINGLE_OWNER
   GR_CREATE_TRACE_MARKER_CONTEXT("SkGpuDevice", "drawVertices", fContext.get());
-
   SkASSERT(vertices);
+
+  SkVerticesPriv info(vertices->priv());
+
+  const SkRuntimeEffect* effect =
+      paint.getShader() ? as_SB(paint.getShader())->asRuntimeEffect() : nullptr;
+
+  // Pretend that we have tex coords when using custom per-vertex data. The shader is going to
+  // use those (rather than local coords), but our paint conversion remains the same.
   GrPaint grPaint;
-  bool hasColors = vertices->hasColors();
-  bool hasTexs = vertices->hasTexCoords();
+  bool hasColors = info.hasColors();
+  bool hasTexs = info.hasTexCoords() || info.hasCustomData();
   if ((!hasTexs || !paint.getShader()) && !hasColors) {
     // The dreaded wireframe mode. Fallback to drawVertices and go so slooooooow.
     this->wireframeVertices(
-        vertices->mode(), vertices->vertexCount(), vertices->positions(), mode, vertices->indices(),
-        vertices->indexCount(), paint);
+        info.mode(), info.vertexCount(), info.positions(), mode, info.indices(), info.indexCount(),
+        paint);
     return;
   }
   if (!init_vertices_paint(
@@ -1067,7 +1036,7 @@ void SkGpuDevice::drawVertices(const SkVertices* vertices, SkBlendMode mode, con
   }
   fRenderTargetContext->drawVertices(
       this->clip(), std::move(grPaint), this->localToDevice(),
-      sk_ref_sp(const_cast<SkVertices*>(vertices)));
+      sk_ref_sp(const_cast<SkVertices*>(vertices)), nullptr, effect);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

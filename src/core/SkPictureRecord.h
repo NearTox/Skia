@@ -180,13 +180,7 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
       const SkImage*, const SkCanvas::Lattice& lattice, const SkRect& dst, const SkPaint*) override;
 
   void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-  void onDrawVerticesObject(
-      const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
-      const SkPaint&) override;
-#else
   void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
-#endif
 
   void onClipRect(const SkRect&, SkClipOp, ClipEdgeStyle) override;
   void onClipRRect(const SkRRect&, SkClipOp, ClipEdgeStyle) override;
@@ -220,16 +214,6 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
   void recordSave();
   void recordSaveLayer(const SaveLayerRec&);
   void recordRestore(bool fillInSkips = true);
-
-  // SHOULD NEVER BE CALLED
-  void onDrawBitmap(const SkBitmap&, SkScalar left, SkScalar top, const SkPaint*) override {
-    SK_ABORT("not reached");
-  }
-  void onDrawBitmapRect(
-      const SkBitmap&, const SkRect* src, const SkRect& dst, const SkPaint*,
-      SrcRectConstraint) override {
-    SK_ABORT("not reached");
-  }
 
  private:
   SkTArray<SkPaint> fPaints;

@@ -66,9 +66,9 @@ class SkStrikeSpec {
   sk_sp<SkStrike> findOrCreateStrike(
       SkStrikeCache* cache = SkStrikeCache::GlobalStrikeCache()) const;
 
-  SkScalar strikeToSourceRatio() const { return fStrikeToSourceRatio; }
-  bool isEmpty() const { return SkScalarNearlyZero(fStrikeToSourceRatio); }
-  const SkDescriptor& descriptor() const { return *fAutoDescriptor.getDesc(); }
+  SkScalar strikeToSourceRatio() const noexcept { return fStrikeToSourceRatio; }
+  bool isEmpty() const noexcept { return SkScalarNearlyZero(fStrikeToSourceRatio); }
+  const SkDescriptor& descriptor() const noexcept { return *fAutoDescriptor.getDesc(); }
   static bool ShouldDrawAsPath(const SkPaint& paint, const SkFont& font, const SkMatrix& matrix);
 
  private:
@@ -98,7 +98,7 @@ class SkBulkGlyphMetrics {
 class SkBulkGlyphMetricsAndPaths {
  public:
   explicit SkBulkGlyphMetricsAndPaths(const SkStrikeSpec& spec);
-  explicit SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike);
+  explicit SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike) noexcept;
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkGlyphID> glyphIDs);
   const SkGlyph* glyph(SkGlyphID glyphID);
   void findIntercepts(
@@ -114,7 +114,7 @@ class SkBulkGlyphMetricsAndPaths {
 class SkBulkGlyphMetricsAndImages {
  public:
   explicit SkBulkGlyphMetricsAndImages(const SkStrikeSpec& spec);
-  explicit SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike);
+  explicit SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike) noexcept;
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkPackedGlyphID> packedIDs);
   const SkGlyph* glyph(SkPackedGlyphID packedID);
   const SkDescriptor& descriptor() const;

@@ -10,7 +10,7 @@
 
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkNx.h"
-#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrTAllocator.h"
 #include "src/gpu/ccpr/GrCCStrokeGeometry.h"
 
 class GrGpuBuffer;
@@ -62,6 +62,7 @@ class GrCCStroker {
   static constexpr BatchID kEmptyBatchID = -1;
   using Verb = GrCCStrokeGeometry::Verb;
   using InstanceTallies = GrCCStrokeGeometry::InstanceTallies;
+  using InstanceTalliesAllocator = GrTAllocator<InstanceTallies, 128>;
 
   // Every kBeginPath verb has a corresponding PathInfo entry.
   struct PathInfo {
@@ -74,7 +75,7 @@ class GrCCStroker {
   // Start indices are deduced by looking at the previous ScissorSubBatch.
   struct ScissorSubBatch {
     ScissorSubBatch(
-        GrTAllocator<InstanceTallies>* alloc, const InstanceTallies& startIndices,
+        InstanceTalliesAllocator* alloc, const InstanceTallies& startIndices,
         const SkIRect& scissor)
         : fEndInstances(&alloc->emplace_back(startIndices)), fScissor(scissor) {}
     InstanceTallies* fEndInstances;
@@ -85,7 +86,7 @@ class GrCCStroker {
   // deduced by looking at the previous Batch in the list.
   struct Batch {
     Batch(
-        GrTAllocator<InstanceTallies>* alloc, const InstanceTallies& startNonScissorIndices,
+        InstanceTalliesAllocator* alloc, const InstanceTallies& startNonScissorIndices,
         int startScissorSubBatch)
         : fNonScissorEndInstances(&alloc->emplace_back(startNonScissorIndices)),
           fEndScissorSubBatch(startScissorSubBatch) {}
@@ -115,7 +116,7 @@ class GrCCStroker {
   bool fHasOpenBatch = false;
 
   const InstanceTallies fZeroTallies = InstanceTallies();
-  GrSTAllocator<128, InstanceTallies> fTalliesAllocator;
+  InstanceTalliesAllocator fTalliesAllocator;
   const InstanceTallies* fInstanceCounts[kNumScissorModes] = {&fZeroTallies, &fZeroTallies};
 
   sk_sp<GrGpuBuffer> fInstanceBuffer;

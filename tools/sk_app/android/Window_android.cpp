@@ -47,15 +47,18 @@ bool Window_android::attach(BackendType attachType) {
 void Window_android::initDisplay(ANativeWindow* window) {
     SkASSERT(window);
     switch (fBackendType) {
-        case kNativeGL_BackendType:
-        default:
-            fWindowContext =
-                    window_context_factory::MakeGLForAndroid(window, fRequestedDisplayParams);
-            break;
-        case kRaster_BackendType:
-            fWindowContext =
-                    window_context_factory::MakeRasterForAndroid(window, fRequestedDisplayParams);
-            break;
+#ifdef SK_GL
+      case kNativeGL_BackendType:
+      default:
+        fWindowContext = window_context_factory::MakeGLForAndroid(window, fRequestedDisplayParams);
+        break;
+#else
+      default:
+#endif
+      case kRaster_BackendType:
+        fWindowContext =
+            window_context_factory::MakeRasterForAndroid(window, fRequestedDisplayParams);
+        break;
 #ifdef SK_VULKAN
         case kVulkan_BackendType:
             fWindowContext =

@@ -50,7 +50,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
   enum class CoverageMode : bool { kCoverageCount, kLiteral };
 
-  static GrColorType GetColorTypeFromCoverageMode(CoverageMode mode) {
+  static GrColorType GetColorTypeFromCoverageMode(CoverageMode mode) noexcept {
     return mode == CoverageMode::kCoverageCount ? GrColorType::kAlpha_F16 : GrColorType::kAlpha_8;
   }
 

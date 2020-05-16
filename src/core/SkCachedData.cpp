@@ -9,7 +9,7 @@
 #include "src/core/SkCachedData.h"
 #include "src/core/SkDiscardableMemory.h"
 
-SkCachedData::SkCachedData(void* data, size_t size)
+SkCachedData::SkCachedData(void* data, size_t size) noexcept
     : fData(data),
       fSize(size),
       fRefCnt(1),
@@ -47,8 +47,8 @@ class SkCachedData::AutoMutexWritable {
     fCD->fMutex.release();
   }
 
-  SkCachedData* get() { return fCD; }
-  SkCachedData* operator->() { return fCD; }
+  SkCachedData* get() noexcept { return fCD; }
+  SkCachedData* operator->() noexcept { return fCD; }
 
  private:
   SkCachedData* fCD;

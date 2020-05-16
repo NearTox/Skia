@@ -110,30 +110,30 @@ class GrStyle {
   bool isSimpleFill() const { return fStrokeRec.isFillStyle() && !fPathEffect; }
 
   /** Is this style a hairline with no path effect? */
-  bool isSimpleHairline() const { return fStrokeRec.isHairlineStyle() && !fPathEffect; }
+  bool isSimpleHairline() const noexcept { return fStrokeRec.isHairlineStyle() && !fPathEffect; }
 
-  SkPathEffect* pathEffect() const { return fPathEffect.get(); }
+  SkPathEffect* pathEffect() const noexcept { return fPathEffect.get(); }
   sk_sp<SkPathEffect> refPathEffect() const { return fPathEffect; }
 
-  bool hasPathEffect() const { return SkToBool(fPathEffect.get()); }
+  bool hasPathEffect() const noexcept { return SkToBool(fPathEffect.get()); }
 
   bool hasNonDashPathEffect() const { return fPathEffect.get() && !this->isDashed(); }
 
-  bool isDashed() const { return SkPathEffect::kDash_DashType == fDashInfo.fType; }
-  SkScalar dashPhase() const {
+  bool isDashed() const noexcept { return SkPathEffect::kDash_DashType == fDashInfo.fType; }
+  SkScalar dashPhase() const noexcept {
     SkASSERT(this->isDashed());
     return fDashInfo.fPhase;
   }
-  int dashIntervalCnt() const {
+  int dashIntervalCnt() const noexcept {
     SkASSERT(this->isDashed());
     return fDashInfo.fIntervals.count();
   }
-  const SkScalar* dashIntervals() const {
+  const SkScalar* dashIntervals() const noexcept {
     SkASSERT(this->isDashed());
     return fDashInfo.fIntervals.get();
   }
 
-  const SkStrokeRec& strokeRec() const { return fStrokeRec; }
+  const SkStrokeRec& strokeRec() const noexcept { return fStrokeRec; }
 
   /** Hairline or fill styles without path effects make no alterations to a geometry. */
   bool applies() const {

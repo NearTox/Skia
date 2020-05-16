@@ -37,7 +37,7 @@ class SkPtrSet : public SkRefCnt {
   /**
    *  Return the number of (non-null) ptrs in the set.
    */
-  int count() const { return fList.count(); }
+  int count() const noexcept { return fList.count(); }
 
   /**
    *  Copy the ptrs in the set into the specified array (allocated by the
@@ -46,7 +46,7 @@ class SkPtrSet : public SkRefCnt {
    *
    *  incPtr() and decPtr() are not called during this operation.
    */
-  void copyToArray(void* array[]) const;
+  void copyToArray(void* array[]) const noexcept;
 
   /**
    *  Call decPtr() on each ptr in the set, and the reset the size of the set
@@ -59,12 +59,14 @@ class SkPtrSet : public SkRefCnt {
    */
   class Iter {
    public:
-    Iter(const SkPtrSet& set) : fSet(set), fIndex(0) {}
+    Iter(const SkPtrSet& set) noexcept : fSet(set), fIndex(0) {}
 
     /**
      * Return the next ptr in the set or null if the end was reached.
      */
-    void* next() { return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr; }
+    void* next() noexcept {
+      return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr;
+    }
 
    private:
     const SkPtrSet& fSet;
@@ -87,7 +89,7 @@ class SkPtrSet : public SkRefCnt {
   // is not related to its "index".
   SkTDArray<Pair> fList;
 
-  static bool Less(const Pair& a, const Pair& b);
+  static bool Less(const Pair& a, const Pair& b) noexcept;
 
   typedef SkRefCnt INHERITED;
 };
@@ -102,7 +104,7 @@ class SkTPtrSet : public SkPtrSet {
   uint32_t find(T ptr) { return this->INHERITED::find((void*)ptr); }
   uint32_t add(T ptr) { return this->INHERITED::add((void*)ptr); }
 
-  void copyToArray(T* array) const { this->INHERITED::copyToArray((void**)array); }
+  void copyToArray(T* array) const noexcept { this->INHERITED::copyToArray((void**)array); }
 
  private:
   typedef SkPtrSet INHERITED;

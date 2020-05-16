@@ -21,7 +21,6 @@
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
-#include "src/gpu/glsl/GrGLSLUtil.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
@@ -32,10 +31,11 @@
 
 namespace {
 
-static inline bool circle_stays_circle(const SkMatrix& m) { return m.isSimilarity(); }
+static inline bool circle_stays_circle(const SkMatrix& m) noexcept { return m.isSimilarity(); }
 
 // Produces TriStrip vertex data for an origin-centered rectangle from [-x, -y] to [x, y]
-static inline GrVertexWriter::TriStrip<float> origin_centered_tri_strip(float x, float y) {
+static constexpr inline GrVertexWriter::TriStrip<float> origin_centered_tri_strip(
+    float x, float y) noexcept {
   return GrVertexWriter::TriStrip<float>{-x, -y, x, y};
 };
 
@@ -860,9 +860,7 @@ class DIEllipseGeometryProcessor : public GrGeometryProcessor {
       if (!diegp.fViewMatrix.isIdentity() &&
           !SkMatrixPriv::CheapEqual(fViewMatrix, diegp.fViewMatrix)) {
         fViewMatrix = diegp.fViewMatrix;
-        float viewMatrix[3 * 3];
-        GrGLSLGetMatrix<3>(viewMatrix, fViewMatrix);
-        pdman.setMatrix3f(fViewMatrixUniform, viewMatrix);
+        pdman.setSkMatrix(fViewMatrixUniform, fViewMatrix);
       }
       this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
     }
@@ -1207,7 +1205,7 @@ class CircleOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -1242,46 +1240,28 @@ class CircleOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
-      return nullptr;
+      return;
     }
 
     GrGeometryProcessor* gp = CircleGeometryProcessor::Make(
         arena, !fAllFill, fClipPlane, fClipPlaneIsect, fClipPlaneUnion, fRoundCaps, fWideColor,
         localMatrix);
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -1402,9 +1382,8 @@ class CircleOp final : public GrMeshDrawOp {
 
     fMesh = target->allocMesh();
     fMesh->setIndexed(
-        std::move(indexBuffer), fIndexCount, firstIndex, 0, fVertCount - 1,
-        GrPrimitiveRestart::kNo);
-    fMesh->setVertexData(std::move(vertexBuffer), firstVertex);
+        std::move(indexBuffer), fIndexCount, firstIndex, 0, fVertCount - 1, GrPrimitiveRestart::kNo,
+        std::move(vertexBuffer), firstVertex);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -1412,8 +1391,9 @@ class CircleOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -1474,7 +1454,7 @@ class CircleOp final : public GrMeshDrawOp {
   bool fRoundCaps;
   bool fWideColor;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -1568,7 +1548,7 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -1605,46 +1585,28 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
-      return nullptr;
+      return;
     }
 
     // Setup geometry processor
     GrGeometryProcessor* gp =
         ButtCapDashedCircleGeometryProcessor::Make(arena, fWideColor, localMatrix);
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -1720,9 +1682,8 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
 
     fMesh = target->allocMesh();
     fMesh->setIndexed(
-        std::move(indexBuffer), fIndexCount, firstIndex, 0, fVertCount - 1,
-        GrPrimitiveRestart::kNo);
-    fMesh->setVertexData(std::move(vertexBuffer), firstVertex);
+        std::move(indexBuffer), fIndexCount, firstIndex, 0, fVertCount - 1, GrPrimitiveRestart::kNo,
+        std::move(vertexBuffer), firstVertex);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -1730,8 +1691,9 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -1778,7 +1740,7 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
   int fIndexCount;
   bool fWideColor;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -1903,7 +1865,7 @@ class EllipseOp : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -1941,45 +1903,27 @@ class EllipseOp : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
-      return nullptr;
+      return;
     }
 
     GrGeometryProcessor* gp =
         EllipseGeometryProcessor::Make(arena, fStroked, fWideColor, fUseScale, localMatrix);
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -2027,8 +1971,9 @@ class EllipseOp : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -2070,7 +2015,7 @@ class EllipseOp : public GrMeshDrawOp {
   bool fUseScale;
   SkSTArray<1, Ellipse, true> fEllipses;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -2189,7 +2134,7 @@ class DIEllipseOp : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -2227,40 +2172,22 @@ class DIEllipseOp : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp = DIEllipseGeometryProcessor::Make(
         arena, fWideColor, fUseScale, this->viewMatrix(), this->style());
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
     }
 
     QuadHelper helper(target, fProgramInfo->primProc().vertexStride(), fEllipses.count());
@@ -2302,8 +2229,9 @@ class DIEllipseOp : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -2348,7 +2276,7 @@ class DIEllipseOp : public GrMeshDrawOp {
   bool fUseScale;
   SkSTArray<1, Ellipse, true> fEllipses;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -2541,7 +2469,7 @@ class CircularRRectOp : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -2618,46 +2546,28 @@ class CircularRRectOp : public GrMeshDrawOp {
         innerRadius);
   }
 
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     // Invert the view matrix as a local matrix (if any other processors require coords).
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
-      return nullptr;
+      return;
     }
 
     GrGeometryProcessor* gp = CircleGeometryProcessor::Make(
         arena, !fAllFill, false, false, false, false, fWideColor, localMatrix);
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -2743,9 +2653,8 @@ class CircularRRectOp : public GrMeshDrawOp {
 
     fMesh = target->allocMesh();
     fMesh->setIndexed(
-        std::move(indexBuffer), fIndexCount, firstIndex, 0, fVertCount - 1,
-        GrPrimitiveRestart::kNo);
-    fMesh->setVertexData(std::move(vertexBuffer), firstVertex);
+        std::move(indexBuffer), fIndexCount, firstIndex, 0, fVertCount - 1, GrPrimitiveRestart::kNo,
+        std::move(vertexBuffer), firstVertex);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -2753,8 +2662,9 @@ class CircularRRectOp : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -2800,13 +2710,13 @@ class CircularRRectOp : public GrMeshDrawOp {
   bool fWideColor;
   SkSTArray<1, RRect, true> fRRects;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
 };
 
-static const int kNumRRectsInIndexBuffer = 256;
+static constexpr int kNumRRectsInIndexBuffer = 256;
 
 GR_DECLARE_STATIC_UNIQUE_KEY(gStrokeRRectOnlyIndexBufferKey);
 GR_DECLARE_STATIC_UNIQUE_KEY(gRRectOnlyIndexBufferKey);
@@ -2906,7 +2816,7 @@ class EllipticalRRectOp : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -2943,45 +2853,27 @@ class EllipticalRRectOp : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
-      return nullptr;
+      return;
     }
 
     GrGeometryProcessor* gp =
         EllipseGeometryProcessor::Make(arena, fStroked, fWideColor, fUseScale, localMatrix);
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -3063,8 +2955,9 @@ class EllipticalRRectOp : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -3106,7 +2999,7 @@ class EllipticalRRectOp : public GrMeshDrawOp {
   bool fUseScale;
   SkSTArray<1, RRect, true> fRRects;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -3416,31 +3309,31 @@ GR_DRAW_OP_TEST_DEFINE(DIEllipseOp) {
 }
 
 GR_DRAW_OP_TEST_DEFINE(CircularRRectOp) {
+  do {
+    SkScalar rotate = random->nextSScalar1() * 360.f;
+    SkScalar translateX = random->nextSScalar1() * 1000.f;
+    SkScalar translateY = random->nextSScalar1() * 1000.f;
+    SkScalar scale;
     do {
-      SkScalar rotate = random->nextSScalar1() * 360.f;
-      SkScalar translateX = random->nextSScalar1() * 1000.f;
-      SkScalar translateY = random->nextSScalar1() * 1000.f;
-      SkScalar scale;
-      do {
-        scale = random->nextSScalar1() * 100.f;
-      } while (scale == 0);
-      SkMatrix viewMatrix;
-      viewMatrix.setRotate(rotate);
-      viewMatrix.postTranslate(translateX, translateY);
-      viewMatrix.postScale(scale, scale);
-      SkRect rect = GrTest::TestRect(random);
-      SkScalar radius = random->nextRangeF(0.1f, 10.f);
-      SkRRect rrect = SkRRect::MakeRectXY(rect, radius, radius);
-      if (rrect.isOval()) {
-        continue;
-      }
-      std::unique_ptr<GrDrawOp> op = GrOvalOpFactory::MakeCircularRRectOp(
-          context, std::move(paint), viewMatrix, rrect, GrTest::TestStrokeRec(random), nullptr);
-      if (op) {
-        return op;
-      }
-      assert_alive(paint);
-    } while (true);
+      scale = random->nextSScalar1() * 100.f;
+    } while (scale == 0);
+    SkMatrix viewMatrix;
+    viewMatrix.setRotate(rotate);
+    viewMatrix.postTranslate(translateX, translateY);
+    viewMatrix.postScale(scale, scale);
+    SkRect rect = GrTest::TestRect(random);
+    SkScalar radius = random->nextRangeF(0.1f, 10.f);
+    SkRRect rrect = SkRRect::MakeRectXY(rect, radius, radius);
+    if (rrect.isOval()) {
+      continue;
+    }
+    std::unique_ptr<GrDrawOp> op = GrOvalOpFactory::MakeCircularRRectOp(
+        context, std::move(paint), viewMatrix, rrect, GrTest::TestStrokeRec(random), nullptr);
+    if (op) {
+      return op;
+    }
+    assert_alive(paint);
+  } while (true);
 }
 
 GR_DRAW_OP_TEST_DEFINE(RRectOp) {

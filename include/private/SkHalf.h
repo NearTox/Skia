@@ -28,7 +28,7 @@ SkHalf SkFloatToHalf(float f);
 // Convert between half and single precision floating point,
 // assuming inputs and outputs are both finite, and may
 // flush values which would be denormal half floats to zero.
-static inline Sk4f SkHalfToFloat_finite_ftz(uint64_t);
+static inline Sk4f SkHalfToFloat_finite_ftz(uint64_t) noexcept;
 static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f&);
 
 // ~~~~~~~~~~~ impl ~~~~~~~~~~~~~~ //
@@ -38,13 +38,13 @@ static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f&);
 
 // GCC 4.9 lacks the intrinsics to use ARMv8 f16<->f32 instructions, so we use inline assembly.
 
-static inline Sk4f SkHalfToFloat_finite_ftz(uint64_t rgba) {
+static inline Sk4f SkHalfToFloat_finite_ftz(uint64_t rgba) noexcept {
   Sk4h hs = Sk4h::Load(&rgba);
 #if !defined(SKNX_NO_SIMD) && defined(SK_CPU_ARM64)
   float32x4_t fs;
   asm("fcvtl %[fs].4s, %[hs].4h   \n"  // vcvt_f32_f16(...)
-      : [ fs ] "=w"(fs)                // =w: write-only NEON register
-      : [ hs ] "w"(hs.fVec));          //  w: read-only NEON register
+      : [fs] "=w"(fs)                  // =w: write-only NEON register
+      : [hs] "w"(hs.fVec));            //  w: read-only NEON register
   return fs;
 #else
   Sk4i bits = SkNx_cast<int>(hs),   // Expand to 32 bit.
@@ -65,7 +65,7 @@ static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f& fs) {
 #if !defined(SKNX_NO_SIMD) && defined(SK_CPU_ARM64)
   float32x4_t vec = fs.fVec;
   asm("fcvtn %[vec].4h, %[vec].4s  \n"  // vcvt_f16_f32(vec)
-      : [ vec ] "+w"(vec));             // +w: read-write NEON register
+      : [vec] "+w"(vec));               // +w: read-write NEON register
   return vreinterpret_u16_f32(vget_low_f32(vec));
 #else
   Sk4i bits = Sk4i::Load(&fs),

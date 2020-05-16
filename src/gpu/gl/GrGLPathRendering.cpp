@@ -108,21 +108,7 @@ void GrGLPathRendering::onStencilPath(const StencilPathArgs& args, const GrPath*
 }
 
 void GrGLPathRendering::onDrawPath(
-    GrRenderTarget* renderTarget, const GrProgramInfo& programInfo,
     const GrStencilSettings& stencilPassSettings, const GrPath* path) {
-  SkASSERT(!programInfo.hasDynamicScissors());
-  SkASSERT(!programInfo.hasDynamicPrimProcTextures());
-  if (!this->gpu()->flushGLState(renderTarget, programInfo)) {
-    return;
-  }
-  if (programInfo.hasFixedScissor()) {
-    this->gpu()->flushScissorRect(
-        programInfo.fixedScissor(), renderTarget->width(), renderTarget->height(),
-        programInfo.origin());
-  }
-  this->gpu()->currentProgram()->bindTextures(
-      programInfo.primProc(), nullptr, programInfo.pipeline());
-
   const GrGLPath* glPath = static_cast<const GrGLPath*>(path);
 
   this->flushPathStencilSettings(stencilPassSettings);
@@ -182,7 +168,7 @@ void GrGLPathRendering::setProjectionMatrix(
   fHWProjectionMatrixState.fRenderTargetOrigin = renderTargetOrigin;
 
   float glMatrix[4 * 4];
-  fHWProjectionMatrixState.getRTAdjustedGLMatrix<4>(glMatrix);
+  fHWProjectionMatrixState.getRTAdjustedGLMatrix(glMatrix);
   SkDEBUGCODE(verify_floats(glMatrix, SK_ARRAY_COUNT(glMatrix)));
   GL_CALL(MatrixLoadf(GR_GL_PATH_PROJECTION, glMatrix));
 }

@@ -37,12 +37,12 @@ class SK_API SkFlattenable : public SkRefCnt {
     kSkShaderBase_Type,
     kSkUnused_Type,  // used to be SkUnitMapper
     kSkUnused_Type2,
-    kSkNormalSource_Type,
+    kSkUnused_Type3,  // use to be NormalSource,
   };
 
   typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
 
-  SkFlattenable() {}
+  constexpr SkFlattenable() noexcept = default;
 
   /** Implement this to return a factory function pointer that can be called
    to recreate your class given a buffer (previously written to by your
@@ -68,7 +68,7 @@ class SK_API SkFlattenable : public SkRefCnt {
    */
   virtual void flatten(SkWriteBuffer&) const {}
 
-  virtual Type getFlattenableType() const = 0;
+  virtual Type getFlattenableType() const noexcept = 0;
 
   //
   // public ways to serialize / deserialize

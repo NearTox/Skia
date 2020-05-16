@@ -27,7 +27,7 @@ class SK_API SkEventTracer {
    * installed and true is returned. Otherwise, false is returned. In either case ownership of the
    * tracer is transferred and it will be deleted when no longer needed.
    */
-  static bool SetInstance(SkEventTracer*);
+  static bool SetInstance(SkEventTracer*) noexcept;
 
   /**
    * Gets the event tracer. If this is the first call to SetInstance or GetIntance then a default
@@ -35,7 +35,7 @@ class SK_API SkEventTracer {
    */
   static SkEventTracer* GetInstance();
 
-  virtual ~SkEventTracer() {}
+  virtual ~SkEventTracer() = default;
 
   // The pointer returned from GetCategoryGroupEnabled() points to a
   // value with zero or more of the following bits. Used in this class only.

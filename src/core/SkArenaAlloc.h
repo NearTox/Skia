@@ -64,9 +64,9 @@
 // there are 71 allocations.
 class SkArenaAlloc {
  public:
-  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation);
+  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation) noexcept;
 
-  explicit SkArenaAlloc(size_t firstHeapAllocation)
+  explicit SkArenaAlloc(size_t firstHeapAllocation) noexcept
       : SkArenaAlloc(nullptr, 0, firstHeapAllocation) {}
 
   ~SkArenaAlloc();
@@ -74,7 +74,7 @@ class SkArenaAlloc {
   template <typename T, typename... Args>
   T* make(Args&&... args) {
     uint32_t size = ToU32(sizeof(T));
-    uint32_t alignment = ToU32(alignof(T));
+    constexpr uint32_t alignment = ToU32(alignof(T));
     char* objStart;
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(size, alignment);
@@ -134,15 +134,15 @@ class SkArenaAlloc {
   }
 
   // Destroy all allocated objects, free any heap allocations.
-  void reset();
+  void reset() noexcept;
 
  private:
-  static void AssertRelease(bool cond) {
+  static void AssertRelease(bool cond) noexcept {
     if (!cond) {
       ::abort();
     }
   }
-  static uint32_t ToU32(size_t v) {
+  static constexpr uint32_t ToU32(size_t v) noexcept {
     assert(SkTFitsIn<uint32_t>(v));
     return (uint32_t)v;
   }
@@ -150,13 +150,13 @@ class SkArenaAlloc {
   using Footer = int64_t;
   using FooterAction = char*(char*);
 
-  static char* SkipPod(char* footerEnd);
+  static char* SkipPod(char* footerEnd) noexcept;
   static void RunDtorsOnBlock(char* footerEnd);
   static char* NextBlock(char* footerEnd);
 
-  void installFooter(FooterAction* releaser, uint32_t padding);
-  void installUint32Footer(FooterAction* action, uint32_t value, uint32_t padding);
-  void installPtrFooter(FooterAction* action, char* ptr, uint32_t padding);
+  void installFooter(FooterAction* releaser, uint32_t padding) noexcept;
+  void installUint32Footer(FooterAction* action, uint32_t value, uint32_t padding) noexcept;
+  void installPtrFooter(FooterAction* action, char* ptr, uint32_t padding) noexcept;
 
   void ensureSpace(uint32_t size, uint32_t alignment);
 
@@ -179,7 +179,7 @@ class SkArenaAlloc {
     char* objStart;
     AssertRelease(count <= std::numeric_limits<uint32_t>::max() / sizeof(T));
     uint32_t arraySize = ToU32(count * sizeof(T));
-    uint32_t alignment = ToU32(alignof(T));
+    constexpr uint32_t alignment = ToU32(alignof(T));
 
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(arraySize, alignment);

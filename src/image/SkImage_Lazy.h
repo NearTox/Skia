@@ -10,6 +10,7 @@
 
 #include "include/private/SkIDChangeListener.h"
 #include "include/private/SkMutex.h"
+#include "src/gpu/SkGr.h"
 #include "src/image/SkImage_Base.h"
 
 #if SK_SUPPORT_GPU
@@ -61,7 +62,7 @@ class SkImage_Lazy : public SkImage_Base {
   // Returns the texture proxy. CachingHint refers to whether the generator's output should be
   // cached in CPU memory. We will always cache the generated texture on success.
   GrSurfaceProxyView lockTextureProxyView(
-      GrRecordingContext*, SkImage::CachingHint, GrMipMapped) const;
+      GrRecordingContext*, GrImageTexGenPolicy, GrMipMapped) const;
 
   // Returns the GrColorType to use with the GrTextureProxy returned from lockTextureProxy. This
   // may be different from the color type on the image in the case where we need up upload CPU

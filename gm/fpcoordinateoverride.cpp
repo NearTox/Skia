@@ -81,7 +81,7 @@ DEF_SIMPLE_GPU_GM_BG(
 
   SkBitmap bmp;
   GetResourceAsBitmap("images/mandrill_512_q075.jpg", &bmp);
-  GrBitmapTextureMaker maker(ctx, bmp);
+  GrBitmapTextureMaker maker(ctx, bmp, GrImageTexGenPolicy::kDraw);
   auto view = maker.view(GrMipMapped::kNo);
   if (!view) {
     return;

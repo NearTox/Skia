@@ -26,6 +26,6 @@ class SkMatrix;
  *  but has better numerical stability by using (partial) hypot,
  *  and saves a multiply by not computing r.
  */
-void SkComputeGivensRotation(const SkVector& h, SkMatrix* G);
+void SkComputeGivensRotation(const SkVector& h, SkMatrix* G) noexcept;
 
 #endif

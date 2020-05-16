@@ -41,7 +41,7 @@ class SK_API SkDeferredDisplayListRecorder {
   SkDeferredDisplayListRecorder(const SkSurfaceCharacterization&);
   ~SkDeferredDisplayListRecorder();
 
-  const SkSurfaceCharacterization& characterization() const { return fCharacterization; }
+  const SkSurfaceCharacterization& characterization() const noexcept { return fCharacterization; }
 
   // The backing canvas will become invalid (and this entry point will return
   // null) once 'detach' is called.

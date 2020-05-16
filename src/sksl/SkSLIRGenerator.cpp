@@ -259,6 +259,15 @@ std::unique_ptr<VarDeclarations> IRGenerator::convertVarDeclarations(
   if (modifiers.fLayout.fKey && (modifiers.fFlags & Modifiers::kUniform_Flag)) {
     fErrors.error(decls.fOffset, "'key' is not permitted on 'uniform' variables");
   }
+  if (modifiers.fFlags & Modifiers::kVarying_Flag) {
+    if (fKind != Program::kPipelineStage_Kind) {
+      fErrors.error(decls.fOffset, "'varying' is only permitted in runtime effects");
+    }
+    if (!baseType->isFloat() &&
+        !(baseType->kind() == Type::kVector_Kind && baseType->componentType().isFloat())) {
+      fErrors.error(decls.fOffset, "'varying' must be float scalar or vector");
+    }
+  }
   for (; iter != decls.end(); ++iter) {
     const ASTNode& varDecl = *iter;
     if (modifiers.fLayout.fLocation == 0 && modifiers.fLayout.fIndex == 0 &&
@@ -2257,7 +2266,8 @@ void IRGenerator::setRefKind(const Expression& expr, VariableReference::RefKind 
   switch (expr.fKind) {
     case Expression::kVariableReference_Kind: {
       const Variable& var = ((VariableReference&)expr).fVariable;
-      if (var.fModifiers.fFlags & (Modifiers::kConst_Flag | Modifiers::kUniform_Flag)) {
+      if (var.fModifiers.fFlags &
+          (Modifiers::kConst_Flag | Modifiers::kUniform_Flag | Modifiers::kVarying_Flag)) {
         fErrors.error(expr.fOffset, "cannot modify immutable variable '" + var.fName + "'");
       }
       ((VariableReference&)expr).setRefKind(kind);

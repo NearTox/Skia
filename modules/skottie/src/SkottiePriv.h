@@ -15,10 +15,12 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkTHash.h"
 #include "modules/skottie/include/SkottieProperty.h"
+#include "modules/skottie/src/animator/Animator.h"
 #include "modules/sksg/include/SkSGScene.h"
 #include "src/utils/SkUTF.h"
 
 #include <functional>
+#include <vector>
 
 class SkFontMgr;
 
@@ -45,7 +47,7 @@ class TextAdapter;
 class TransformAdapter2D;
 class TransformAdapter3D;
 
-using AnimatorScope = sksg::AnimatorList;
+using AnimatorScope = std::vector<sk_sp<Animator>>;
 
 class AnimationBuilder final : public SkNoncopyable {
  public:
@@ -54,7 +56,12 @@ class AnimationBuilder final : public SkNoncopyable {
       sk_sp<MarkerObserver>, Animation::Builder::Stats*, const SkSize& comp_size, float duration,
       float framerate, uint32_t flags);
 
-  std::unique_ptr<sksg::Scene> parse(const skjson::ObjectValue&);
+  struct AnimationInfo {
+    std::unique_ptr<sksg::Scene> fScene;
+    AnimatorScope fAnimators;
+  };
+
+  AnimationInfo parse(const skjson::ObjectValue&);
 
   struct FontInfo {
     SkString fFamily, fStyle;
@@ -77,20 +84,21 @@ class AnimationBuilder final : public SkNoncopyable {
   sk_sp<sksg::RenderNode> attachOpacity(const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::Path> attachPath(const skjson::Value&) const;
 
-  bool hasNontrivialBlending() const { return fHasNontrivialBlending; }
+  bool hasNontrivialBlending() const noexcept { return fHasNontrivialBlending; }
 
   class AutoScope final {
    public:
-    explicit AutoScope(const AnimationBuilder* builder) : AutoScope(builder, AnimatorScope()) {}
+    explicit AutoScope(const AnimationBuilder* builder) noexcept
+        : AutoScope(builder, AnimatorScope()) {}
 
-    AutoScope(const AnimationBuilder* builder, AnimatorScope&& scope)
+    AutoScope(const AnimationBuilder* builder, AnimatorScope&& scope) noexcept
         : fBuilder(builder),
           fCurrentScope(std::move(scope)),
           fPrevScope(fBuilder->fCurrentAnimatorScope) {
       fBuilder->fCurrentAnimatorScope = &fCurrentScope;
     }
 
-    AnimatorScope release() {
+    AnimatorScope release() noexcept {
       fBuilder->fCurrentAnimatorScope = fPrevScope;
       SkDEBUGCODE(fBuilder = nullptr);
 
@@ -109,22 +117,24 @@ class AnimationBuilder final : public SkNoncopyable {
   void attachDiscardableAdapter(sk_sp<T> adapter) const {
     if (adapter->isStatic()) {
       // Fire off a synthetic tick to force a single SG sync before discarding.
-      adapter->tick(0);
+      adapter->seek(0);
     } else {
       fCurrentAnimatorScope->push_back(std::move(adapter));
     }
   }
 
-  template <typename T, typename NodeType = sk_sp<sksg::RenderNode>, typename... Args>
-  NodeType attachDiscardableAdapter(Args&&... args) const {
+  template <typename T, typename... Args>
+  auto attachDiscardableAdapter(Args&&... args) const ->
+      typename std::decay<decltype(T::Make(std::forward<Args>(args)...)->node())>::type {
+    using NodeType =
+        typename std::decay<decltype(T::Make(std::forward<Args>(args)...)->node())>::type;
+
+    NodeType node;
     if (auto adapter = T::Make(std::forward<Args>(args)...)) {
-      auto node = adapter->node();
+      node = adapter->node();
       this->attachDiscardableAdapter(std::move(adapter));
-
-      return std::move(node);
     }
-
-    return nullptr;
+    return node;
   }
 
   class AutoPropertyTracker {
@@ -192,7 +202,7 @@ class AnimationBuilder final : public SkNoncopyable {
 
   // Delay resolving the fontmgr until it is actually needed.
   struct LazyResolveFontMgr {
-    LazyResolveFontMgr(sk_sp<SkFontMgr> fontMgr) : fFontMgr(std::move(fontMgr)) {}
+    LazyResolveFontMgr(sk_sp<SkFontMgr> fontMgr) noexcept : fFontMgr(std::move(fontMgr)) {}
 
     const sk_sp<SkFontMgr>& get() {
       if (!fFontMgr) {
@@ -202,7 +212,7 @@ class AnimationBuilder final : public SkNoncopyable {
       return fFontMgr;
     }
 
-    const sk_sp<SkFontMgr>& getMaybeNull() const { return fFontMgr; }
+    const sk_sp<SkFontMgr>& getMaybeNull() const noexcept { return fFontMgr; }
 
    private:
     sk_sp<SkFontMgr> fFontMgr;

@@ -26,7 +26,7 @@ class SkPngCodec : public SkCodec {
       std::unique_ptr<SkStream>, Result*, SkPngChunkReader* = nullptr);
 
   // FIXME (scroggo): Temporarily needed by AutoCleanPng.
-  void setIdatLength(size_t len) { fIdatLength = len; }
+  void setIdatLength(size_t len) noexcept { fIdatLength = len; }
 
   ~SkPngCodec() override;
 
@@ -34,14 +34,14 @@ class SkPngCodec : public SkCodec {
   // We hold the png_ptr and info_ptr as voidp to avoid having to include png.h
   // or forward declare their types here.  voidp auto-casts to the real pointer types.
   struct voidp {
-    voidp(void* ptr) : fPtr(ptr) {}
+    voidp(void* ptr) noexcept : fPtr(ptr) {}
 
     template <typename T>
-    operator T*() const {
+    operator T*() const noexcept {
       return (T*)fPtr;
     }
 
-    explicit operator bool() const { return fPtr != nullptr; }
+    explicit operator bool() const noexcept { return fPtr != nullptr; }
 
     void* fPtr;
   };
@@ -57,10 +57,10 @@ class SkPngCodec : public SkCodec {
   SkSampler* getSampler(bool createIfNecessary) override;
   void applyXformRow(void* dst, const void* src);
 
-  voidp png_ptr() { return fPng_ptr; }
-  voidp info_ptr() { return fInfo_ptr; }
+  voidp png_ptr() noexcept { return fPng_ptr; }
+  voidp info_ptr() noexcept { return fInfo_ptr; }
 
-  SkSwizzler* swizzler() { return fSwizzler.get(); }
+  SkSwizzler* swizzler() noexcept { return fSwizzler.get(); }
 
   // Initialize variables used by applyXformRow.
   void initializeXformParams();

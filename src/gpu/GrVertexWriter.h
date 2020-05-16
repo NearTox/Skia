@@ -99,6 +99,11 @@ struct GrVertexWriter {
     this->write(remainder...);
   }
 
+  void writeRaw(const void* data, size_t size) {
+    memcpy(fPtr, data, size);
+    fPtr = SkTAddOffset<void>(fPtr, size);
+  }
+
   void write() {}
 
   /**
@@ -117,7 +122,7 @@ struct GrVertexWriter {
     T l, t, r, b;
   };
 
-  static TriStrip<float> TriStripFromRect(const SkRect& r) {
+  static TriStrip<float> TriStripFromRect(const SkRect& r) noexcept {
     return {r.fLeft, r.fTop, r.fRight, r.fBottom};
   }
 
@@ -126,7 +131,7 @@ struct GrVertexWriter {
     T l, t, r, b;
   };
 
-  static TriFan<float> TriFanFromRect(const SkRect& r) {
+  static TriFan<float> TriFanFromRect(const SkRect& r) noexcept {
     return {r.fLeft, r.fTop, r.fRight, r.fBottom};
   }
 

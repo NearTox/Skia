@@ -31,32 +31,32 @@ class GrSurfaceProxyPriv {
   void assign(sk_sp<GrSurface> surface) { fProxy->assign(std::move(surface)); }
 
   // Don't abuse this call!!!!!!!
-  bool isExact() const { return SkBackingFit::kExact == fProxy->fFit; }
+  bool isExact() const noexcept { return SkBackingFit::kExact == fProxy->fFit; }
 
   // Don't. Just don't.
-  void exactify(bool allocatedCaseOnly);
+  void exactify(bool allocatedCaseOnly) noexcept;
 
-  void setLazyDimensions(SkISize dimensions) { fProxy->setLazyDimensions(dimensions); }
+  void setLazyDimensions(SkISize dimensions) noexcept { fProxy->setLazyDimensions(dimensions); }
 
   bool doLazyInstantiation(GrResourceProvider*);
 
  private:
-  explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) : fProxy(proxy) {}
-  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) {}           // unimpl
-  GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&);  // unimpl
+  explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) noexcept : fProxy(proxy) {}
+  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) = delete;             // unimpl
+  GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&) = delete;  // unimpl
 
   // No taking addresses of this type.
-  const GrSurfaceProxyPriv* operator&() const;
-  GrSurfaceProxyPriv* operator&();
+  const GrSurfaceProxyPriv* operator&() const = delete;
+  GrSurfaceProxyPriv* operator&() = delete;
 
   GrSurfaceProxy* fProxy;
 
   friend class GrSurfaceProxy;  // to construct/copy this type.
 };
 
-inline GrSurfaceProxyPriv GrSurfaceProxy::priv() { return GrSurfaceProxyPriv(this); }
+inline GrSurfaceProxyPriv GrSurfaceProxy::priv() noexcept { return GrSurfaceProxyPriv(this); }
 
-inline const GrSurfaceProxyPriv GrSurfaceProxy::priv() const {
+inline const GrSurfaceProxyPriv GrSurfaceProxy::priv() const noexcept {
   return GrSurfaceProxyPriv(const_cast<GrSurfaceProxy*>(this));
 }
 

@@ -37,7 +37,7 @@ class PaintNode : public Node {
   SG_ATTRIBUTE(StrokeCap, SkPaint::Cap, fStrokeCap)
 
  protected:
-  PaintNode();
+  PaintNode() noexcept;
 
   virtual void onApplyToPaint(SkPaint*) const = 0;
 
@@ -67,7 +67,7 @@ class Color : public PaintNode {
   void onApplyToPaint(SkPaint*) const override;
 
  private:
-  explicit Color(SkColor);
+  explicit Color(SkColor) noexcept;
 
   SkColor fColor;
 };

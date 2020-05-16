@@ -9,7 +9,7 @@
 #define GrCCAtlas_DEFINED
 
 #include "src/gpu/GrDynamicAtlas.h"
-
+#include "src/gpu/GrTAllocator.h"
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
 
 class GrCCCachedAtlas;
@@ -29,7 +29,7 @@ class GrCCAtlas : public GrDynamicAtlas {
     int fApproxNumPixels = 0;
 
     // Add space for a rect in the desired atlas specs.
-    void accountForSpace(int width, int height);
+    void accountForSpace(int width, int height) noexcept;
   };
 
   enum class CoverageType { kFP16_CoverageCount, kA8_Multisample, kA8_LiteralCoverage };
@@ -73,12 +73,12 @@ class GrCCAtlas : public GrDynamicAtlas {
 
   // This is an optional space for the caller to jot down user-defined instance data to use when
   // rendering atlas content.
-  void setFillBatchID(int id);
-  int getFillBatchID() const { return fFillBatchID; }
-  void setStrokeBatchID(int id);
-  int getStrokeBatchID() const { return fStrokeBatchID; }
-  void setEndStencilResolveInstance(int idx);
-  int getEndStencilResolveInstance() const { return fEndStencilResolveInstance; }
+  void setFillBatchID(int id) noexcept;
+  int getFillBatchID() const noexcept { return fFillBatchID; }
+  void setStrokeBatchID(int id) noexcept;
+  int getStrokeBatchID() const noexcept { return fStrokeBatchID; }
+  void setEndStencilResolveInstance(int idx) noexcept;
+  int getEndStencilResolveInstance() const noexcept { return fEndStencilResolveInstance; }
 
   sk_sp<GrCCCachedAtlas> refOrMakeCachedAtlas(GrOnFlushResourceProvider*);
 
@@ -97,11 +97,12 @@ class GrCCAtlas : public GrDynamicAtlas {
 class GrCCAtlasStack {
  public:
   using CoverageType = GrCCAtlas::CoverageType;
+  using CCAtlasAllocator = GrTAllocator<GrCCAtlas, 4>;
 
   GrCCAtlasStack(CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps)
       : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
-  CoverageType coverageType() const { return fCoverageType; }
+  CoverageType coverageType() const noexcept { return fCoverageType; }
   bool empty() const { return fAtlases.empty(); }
   const GrCCAtlas& front() const {
     SkASSERT(!this->empty());
@@ -116,15 +117,8 @@ class GrCCAtlasStack {
     return fAtlases.back();
   }
 
-  class Iter {
-   public:
-    Iter(GrCCAtlasStack& stack) : fImpl(&stack.fAtlases) {}
-    bool next() { return fImpl.next(); }
-    GrCCAtlas* operator->() const { return fImpl.get(); }
-
-   private:
-    typename GrTAllocator<GrCCAtlas>::Iter fImpl;
-  };
+  CCAtlasAllocator::Iter atlases() { return fAtlases.items(); }
+  CCAtlasAllocator::CIter atlases() const { return fAtlases.items(); }
 
   // Adds a rect to the current atlas and returns the offset from device space to atlas space.
   // Call current() to get the atlas it was added to.
@@ -139,10 +133,10 @@ class GrCCAtlasStack {
   const CoverageType fCoverageType;
   const GrCCAtlas::Specs fSpecs;
   const GrCaps* const fCaps;
-  GrSTAllocator<4, GrCCAtlas> fAtlases;
+  CCAtlasAllocator fAtlases;
 };
 
-inline void GrCCAtlas::Specs::accountForSpace(int width, int height) {
+inline void GrCCAtlas::Specs::accountForSpace(int width, int height) noexcept {
   fMinWidth = std::max(width, fMinWidth);
   fMinHeight = std::max(height, fMinHeight);
   fApproxNumPixels += (width + kPadding) * (height + kPadding);

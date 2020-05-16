@@ -233,7 +233,7 @@ GrSurfaceProxyView SkImage_Lazy::refView(GrRecordingContext* context, GrMipMappe
     return {};
   }
 
-  GrImageTextureMaker textureMaker(context, this, kAllow_CachingHint);
+  GrImageTextureMaker textureMaker(context, this, GrImageTexGenPolicy::kDraw);
   return textureMaker.view(mipMapped);
 }
 #endif
@@ -379,7 +379,7 @@ sk_sp<SkCachedData> SkImage_Lazy::getPlanes(
  *  4. Ask the generator to return RGB(A) data, which the GPU can convert
  */
 GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
-    GrRecordingContext* ctx, SkImage::CachingHint chint, GrMipMapped mipMapped) const {
+    GrRecordingContext* ctx, GrImageTexGenPolicy texGenPolicy, GrMipMapped mipMapped) const {
   // Values representing the various texture lock paths we can take. Used for logging the path
   // taken to a histogram.
   enum LockTexturePath {
@@ -394,7 +394,9 @@ GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
   enum { kLockTexturePathCount = kRGBA_LockTexturePath + 1 };
 
   GrUniqueKey key;
-  GrMakeKeyFromImageID(&key, this->uniqueID(), SkIRect::MakeSize(this->dimensions()));
+  if (texGenPolicy == GrImageTexGenPolicy::kDraw) {
+    GrMakeKeyFromImageID(&key, this->uniqueID(), SkIRect::MakeSize(this->dimensions()));
+  }
 
   const GrCaps* caps = ctx->priv().caps();
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
@@ -410,9 +412,9 @@ GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
 
   auto ct = this->colorTypeOfLockTextureProxy(caps);
 
-  // 1. Check the cache for a pre-existing one
+  // 1. Check the cache for a pre-existing one.
   if (key.isValid()) {
-    auto proxy = proxyProvider->findOrCreateProxyByUniqueKey(key, ct);
+    auto proxy = proxyProvider->findOrCreateProxyByUniqueKey(key);
     if (proxy) {
       SK_HISTOGRAM_ENUMERATION(
           "LockTexturePath", kPreExisting_LockTexturePath, kLockTexturePathCount);
@@ -440,10 +442,11 @@ GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
     }
   }
 
-  // 2. Ask the generator to natively create one
+  // 2. Ask the generator to natively create one.
   {
     ScopedGenerator generator(fSharedGenerator);
-    if (auto view = generator->generateTexture(ctx, this->imageInfo(), fOrigin, mipMapped)) {
+    if (auto view =
+            generator->generateTexture(ctx, this->imageInfo(), fOrigin, mipMapped, texGenPolicy)) {
       SK_HISTOGRAM_ENUMERATION("LockTexturePath", kNative_LockTexturePath, kLockTexturePathCount);
       installKey(view);
       return view;
@@ -451,7 +454,7 @@ GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
   }
 
   // 3. Ask the generator to return YUV planes, which the GPU can convert. If we will be mipping
-  //    the texture we fall through here and have the CPU generate the mip maps for us.
+  //    the texture we skip this step so the CPU generate non-planar MIP maps for us.
   if (mipMapped == GrMipMapped::kNo && !ctx->priv().options().fDisableGpuYUVConversion) {
     SkColorType colorType = this->colorType();
 
@@ -467,9 +470,12 @@ GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
 
     // TODO: Update to create the mipped surface in the YUV generator and draw the base
     // layer directly into the mipped surface.
+    SkBudgeted budgeted = texGenPolicy == GrImageTexGenPolicy::kNew_Uncached_Unbudgeted
+                              ? SkBudgeted::kNo
+                              : SkBudgeted::kYes;
     auto view = provider.refAsTextureProxyView(
         ctx, this->imageInfo().dimensions(), SkColorTypeToGrColorType(colorType),
-        generatorColorSpace, thisColorSpace);
+        generatorColorSpace, thisColorSpace, budgeted);
     if (view) {
       SK_HISTOGRAM_ENUMERATION("LockTexturePath", kYUV_LockTexturePath, kLockTexturePathCount);
       installKey(view);
@@ -477,9 +483,16 @@ GrSurfaceProxyView SkImage_Lazy::lockTextureProxyView(
     }
   }
 
-  // 4. Ask the generator to return RGB(A) data, which the GPU can convert
-  if (SkBitmap bitmap; this->getROPixels(&bitmap, chint)) {
-    GrBitmapTextureMaker bitmapMaker(ctx, bitmap, GrBitmapTextureMaker::Cached::kNo);
+  // 4. Ask the generator to return a bitmap, which the GPU can convert.
+  auto hint = texGenPolicy == GrImageTexGenPolicy::kDraw ? CachingHint::kAllow_CachingHint
+                                                         : CachingHint::kDisallow_CachingHint;
+  if (SkBitmap bitmap; this->getROPixels(&bitmap, hint)) {
+    // We always pass uncached here because we will cache it external to the maker based on
+    // *our* cache policy. We're just using the maker to generate the texture.
+    auto makerPolicy = texGenPolicy == GrImageTexGenPolicy::kNew_Uncached_Unbudgeted
+                           ? GrImageTexGenPolicy::kNew_Uncached_Unbudgeted
+                           : GrImageTexGenPolicy::kNew_Uncached_Budgeted;
+    GrBitmapTextureMaker bitmapMaker(ctx, bitmap, makerPolicy);
     auto view = bitmapMaker.view(mipMapped);
     if (view) {
       installKey(view);

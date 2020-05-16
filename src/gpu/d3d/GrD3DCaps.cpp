@@ -6,8 +6,8 @@
  */
 
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/d3d/GrD3D12.h"
 #include "include/gpu/d3d/GrD3DBackendContext.h"
+#include "include/gpu/d3d/GrD3DTypes.h"
 
 #include "src/core/SkCompressedDataUtils.h"
 #include "src/gpu/GrProgramDesc.h"
@@ -87,8 +87,8 @@ void GrD3DCaps::init(
   SkASSERT(SUCCEEDED(hr));
 
   D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2Desc;
-  SkDEBUGCODE(hr =)
-      device->CheckFeatureSupport(D3D12_FEATURE_D3D12_OPTIONS2, &optionsDesc, sizeof(options2Desc));
+  SkDEBUGCODE(hr =) device->CheckFeatureSupport(
+      D3D12_FEATURE_D3D12_OPTIONS2, &options2Desc, sizeof(options2Desc));
   SkASSERT(SUCCEEDED(hr));
 
   // See https://docs.microsoft.com/en-us/windows/win32/direct3d12/hardware-support
@@ -322,7 +322,7 @@ void GrD3DCaps::initFormatTable(const DXGI_ADAPTER_DESC& adapterDesc, ID3D12Devi
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle("rrrr");
-        ctInfo.fOutputSwizzle = GrSwizzle("aaaa");
+        ctInfo.fWriteSwizzle = GrSwizzle("aaaa");
       }
       // Format: DXGI_FORMAT_R8_UNORM, Surface: kGray_8
       {
@@ -415,7 +415,7 @@ void GrD3DCaps::initFormatTable(const DXGI_ADAPTER_DESC& adapterDesc, ID3D12Devi
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle("rrrr");
-        ctInfo.fOutputSwizzle = GrSwizzle("aaaa");
+        ctInfo.fWriteSwizzle = GrSwizzle("aaaa");
       }
     }
   }
@@ -474,7 +474,7 @@ void GrD3DCaps::initFormatTable(const DXGI_ADAPTER_DESC& adapterDesc, ID3D12Devi
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle("bgra");
-        ctInfo.fOutputSwizzle = GrSwizzle("bgra");
+        ctInfo.fWriteSwizzle = GrSwizzle("bgra");
       }
     }
   }
@@ -514,7 +514,7 @@ void GrD3DCaps::initFormatTable(const DXGI_ADAPTER_DESC& adapterDesc, ID3D12Devi
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle("rrrr");
-        ctInfo.fOutputSwizzle = GrSwizzle("aaaa");
+        ctInfo.fWriteSwizzle = GrSwizzle("aaaa");
       }
     }
   }
@@ -711,18 +711,6 @@ SkImage::CompressionType GrD3DCaps::compressionType(const GrBackendFormat& forma
   SkUNREACHABLE;
 }
 
-bool GrD3DCaps::isFormatTexturableAndUploadable(
-    GrColorType ct, const GrBackendFormat& format) const {
-  DXGI_FORMAT dxgiFormat;
-  if (!format.asDxgiFormat(&dxgiFormat)) {
-    return false;
-  }
-
-  uint32_t ctFlags = this->getFormatInfo(dxgiFormat).colorTypeFlags(ct);
-  return this->isFormatTexturable(dxgiFormat) &&
-         SkToBool(ctFlags & ColorTypeInfo::kUploadData_Flag);
-}
-
 bool GrD3DCaps::isFormatTexturable(const GrBackendFormat& format) const {
   DXGI_FORMAT dxgiFormat;
   if (!format.asDxgiFormat(&dxgiFormat)) {
@@ -831,7 +819,23 @@ size_t GrD3DCaps::bytesPerPixel(DXGI_FORMAT format) const {
 GrCaps::SupportedWrite GrD3DCaps::supportedWritePixelsColorType(
     GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
     GrColorType srcColorType) const {
-  // TODO
+  DXGI_FORMAT dxgiFormat;
+  if (!surfaceFormat.asDxgiFormat(&dxgiFormat)) {
+    return {GrColorType::kUnknown, 0};
+  }
+
+  // TODO: this seems to be pretty constrictive, confirm
+  // Any buffer data needs to be aligned to 512 bytes and that of a single texel.
+  size_t offsetAlignment =
+      GrAlignTo(this->bytesPerPixel(dxgiFormat), D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
+
+  const auto& info = this->getFormatInfo(dxgiFormat);
+  for (int i = 0; i < info.fColorTypeInfoCount; ++i) {
+    const auto& ctInfo = info.fColorTypeInfos[i];
+    if (ctInfo.fColorType == surfaceColorType) {
+      return {surfaceColorType, offsetAlignment};
+    }
+  }
   return {GrColorType::kUnknown, 0};
 }
 
@@ -845,8 +849,10 @@ GrCaps::SurfaceReadPixelsSupport GrD3DCaps::surfaceSupportsReadPixels(
 }
 
 bool GrD3DCaps::onSurfaceSupportsWritePixels(const GrSurface* surface) const {
-  // TODO
-  return false;
+  if (auto rt = surface->asRenderTarget()) {
+    return rt->numSamples() <= 1 && SkToBool(surface->asTexture());
+  }
+  return true;
 }
 
 bool GrD3DCaps::onAreColorTypeAndFormatCompatible(
@@ -895,11 +901,10 @@ GrColorType GrD3DCaps::getYUVAColorTypeFromBackendFormat(
   SkUNREACHABLE;
 }
 
-GrBackendFormat GrD3DCaps::onGetDefaultBackendFormat(
-    GrColorType ct, GrRenderable renderable) const {
+GrBackendFormat GrD3DCaps::onGetDefaultBackendFormat(GrColorType ct) const {
   DXGI_FORMAT format = this->getFormatFromColorType(ct);
   if (format == DXGI_FORMAT_UNKNOWN) {
-    return GrBackendFormat();
+    return {};
   }
   return GrBackendFormat::MakeDxgi(format);
 }
@@ -931,14 +936,14 @@ GrSwizzle GrD3DCaps::getReadSwizzle(const GrBackendFormat& format, GrColorType c
   return GrSwizzle::RGBA();
 }
 
-GrSwizzle GrD3DCaps::getOutputSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
+GrSwizzle GrD3DCaps::getWriteSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
   DXGI_FORMAT dxgiFormat;
   SkAssertResult(format.asDxgiFormat(&dxgiFormat));
   const auto& info = this->getFormatInfo(dxgiFormat);
   for (int i = 0; i < info.fColorTypeInfoCount; ++i) {
     const auto& ctInfo = info.fColorTypeInfos[i];
     if (ctInfo.fColorType == colorType) {
-      return ctInfo.fOutputSwizzle;
+      return ctInfo.fWriteSwizzle;
     }
   }
   return GrSwizzle::RGBA();

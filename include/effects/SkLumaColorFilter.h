@@ -50,6 +50,9 @@ class SK_API SkLumaColorFilter : public SkColorFilter {
 
   SkLumaColorFilter();
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*,
+      SkArenaAlloc*) const override;
 
   typedef SkColorFilter INHERITED;
 };

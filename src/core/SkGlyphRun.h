@@ -26,7 +26,7 @@ class SkTextBlobRunIterator;
 
 class SkGlyphRun {
  public:
-  SkGlyphRun() = default;
+  SkGlyphRun() noexcept = default;
   SkGlyphRun(
       const SkFont& font, SkSpan<const SkPoint> positions, SkSpan<const SkGlyphID> glyphIDs,
       SkSpan<const char> text, SkSpan<const uint32_t> clusters);
@@ -35,10 +35,10 @@ class SkGlyphRun {
   size_t runSize() const { return fSource.size(); }
   SkSpan<const SkPoint> positions() const { return fSource.get<1>(); }
   SkSpan<const SkGlyphID> glyphsIDs() const { return fSource.get<0>(); }
-  SkZip<const SkGlyphID, const SkPoint> source() const { return fSource; }
-  const SkFont& font() const { return fFont; }
-  SkSpan<const uint32_t> clusters() const { return fClusters; }
-  SkSpan<const char> text() const { return fText; }
+  SkZip<const SkGlyphID, const SkPoint> source() const noexcept { return fSource; }
+  const SkFont& font() const noexcept { return fFont; }
+  SkSpan<const uint32_t> clusters() const noexcept { return fClusters; }
+  SkSpan<const char> text() const noexcept { return fText; }
 
  private:
   // GlyphIDs and positions.
@@ -68,7 +68,7 @@ class SkGlyphRunList {
   bool anyRunsSubpixelPositioned() const;
   void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const;
 
-  bool canCache() const { return fOriginalTextBlob != nullptr; }
+  bool canCache() const noexcept { return fOriginalTextBlob != nullptr; }
   size_t runCount() const { return fGlyphRuns.size(); }
   size_t totalGlyphCount() const {
     size_t glyphCount = 0;
@@ -79,9 +79,9 @@ class SkGlyphRunList {
   }
   bool allFontsFinite() const;
 
-  SkPoint origin() const { return fOrigin; }
-  const SkPaint& paint() const { return *fOriginalPaint; }
-  const SkTextBlob* blob() const { return fOriginalTextBlob; }
+  SkPoint origin() const noexcept { return fOrigin; }
+  const SkPaint& paint() const noexcept { return *fOriginalPaint; }
+  const SkTextBlob* blob() const noexcept { return fOriginalTextBlob; }
 
   auto begin() -> decltype(fGlyphRuns.begin()) { return fGlyphRuns.begin(); }
   auto end() -> decltype(fGlyphRuns.end()) { return fGlyphRuns.end(); }
@@ -123,7 +123,7 @@ class SkGlyphRunBuilder {
 
   const SkGlyphRunList& useGlyphRunList();
 
-  bool empty() const { return fGlyphRunListStorage.empty(); }
+  bool empty() const noexcept { return fGlyphRunListStorage.empty(); }
 
  private:
   void initialize(size_t totalRunSize);

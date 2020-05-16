@@ -45,7 +45,6 @@ class AtlasOp : public GrDrawOp {
     // TODO: make use of texture chaining.
     return CombineResult::kCannotCombine;
   }
-  void onPrepare(GrOpFlushState*) override {}
 
  protected:
   AtlasOp(uint32_t classID, sk_sp<const GrCCPerFlushResources> resources, const SkISize& drawBounds)
@@ -56,6 +55,12 @@ class AtlasOp : public GrDrawOp {
   }
 
   const sk_sp<const GrCCPerFlushResources> fResources;
+
+ private:
+  void onPrePrepare(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) final {}
+  void onPrepare(GrOpFlushState*) final {}
 };
 
 // Copies paths from a cached coverage count or msaa atlas into an 8-bit literal-coverage atlas.
@@ -91,7 +96,7 @@ class CopyAtlasOp : public AtlasOp {
         coverageMode, fSrcProxy->peekTexture(), swizzle, GrCCAtlas::kTextureOrigin);
 
     GrPipeline pipeline(
-        GrScissorTest::kDisabled, SkBlendMode::kSrc, flushState->drawOpArgs().outputSwizzle());
+        GrScissorTest::kDisabled, SkBlendMode::kSrc, flushState->drawOpArgs().writeSwizzle());
 
     pathProc.drawPaths(
         flushState, pipeline, *fSrcProxy, *fResources, fBaseInstance, fEndInstance, this->bounds());
@@ -133,7 +138,7 @@ class RenderAtlasOp : public AtlasOp {
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
     ProcessorType proc;
     GrPipeline pipeline(
-        GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().outputSwizzle());
+        GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().writeSwizzle());
     fResources->filler().drawFills(flushState, &proc, pipeline, fFillBatchID, fDrawBounds);
     fResources->stroker().drawStrokes(flushState, &proc, fStrokeBatchID, fDrawBounds);
   }
@@ -156,7 +161,7 @@ class RenderAtlasOp : public AtlasOp {
 
 }  // namespace
 
-static int inst_buffer_count(const GrCCPerFlushResourceSpecs& specs) {
+static int inst_buffer_count(const GrCCPerFlushResourceSpecs& specs) noexcept {
   return specs.fNumCachedPaths +
          // Copies get two instances per draw: 1 copy + 1 draw.
          (specs.fNumCopiedPaths[kFillIdx] + specs.fNumCopiedPaths[kStrokeIdx]) * 2 +
@@ -191,8 +196,6 @@ GrCCPerFlushResources::GrCCPerFlushResources(
       fRenderedAtlasStack(coverageType, specs.fRenderedAtlasSpecs, onFlushRP->caps()),
       fIndexBuffer(GrCCPathProcessor::FindIndexBuffer(onFlushRP)),
       fVertexBuffer(GrCCPathProcessor::FindVertexBuffer(onFlushRP)),
-      fInstanceBuffer(onFlushRP->makeBuffer(
-          GrGpuBufferType::kVertex, inst_buffer_count(specs) * sizeof(PathInstance))),
       fNextCopyInstanceIdx(0),
       fNextPathInstanceIdx(specs.fNumCopiedPaths[kFillIdx] + specs.fNumCopiedPaths[kStrokeIdx]) {
   if (!fIndexBuffer) {
@@ -203,21 +206,23 @@ GrCCPerFlushResources::GrCCPerFlushResources(
     SkDebugf("WARNING: failed to allocate CCPR vertex buffer. No paths will be drawn.\n");
     return;
   }
-  if (!fInstanceBuffer) {
+  fPathInstanceBuffer.resetAndMapBuffer(onFlushRP, inst_buffer_count(specs) * sizeof(PathInstance));
+  if (!fPathInstanceBuffer.gpuBuffer()) {
     SkDebugf("WARNING: failed to allocate CCPR instance buffer. No paths will be drawn.\n");
     return;
   }
-  fPathInstanceData = static_cast<PathInstance*>(fInstanceBuffer->map());
-  SkASSERT(fPathInstanceData);
 
   if (CoverageType::kA8_Multisample == coverageType) {
     int numRenderedPaths = specs.fNumRenderedPaths[kFillIdx] + specs.fNumRenderedPaths[kStrokeIdx] +
                            specs.fNumClipPaths;
-    fStencilResolveBuffer = onFlushRP->makeBuffer(
-        GrGpuBufferType::kVertex, numRenderedPaths * sizeof(GrStencilAtlasOp::ResolveRectInstance));
-    fStencilResolveInstanceData =
-        static_cast<GrStencilAtlasOp::ResolveRectInstance*>(fStencilResolveBuffer->map());
-    SkASSERT(fStencilResolveInstanceData);
+    fStencilResolveBuffer.resetAndMapBuffer(
+        onFlushRP, numRenderedPaths * sizeof(GrStencilAtlasOp::ResolveRectInstance));
+    if (!fStencilResolveBuffer.gpuBuffer()) {
+      SkDebugf(
+          "WARNING: failed to allocate CCPR stencil resolve buffer. "
+          "No paths will be drawn.\n");
+      return;
+    }
     SkDEBUGCODE(fEndStencilResolveInstance = numRenderedPaths);
   }
 
@@ -276,7 +281,7 @@ void GrCCPerFlushResources::recordCopyPathInstance(
   int currentInstanceIdx = fNextCopyInstanceIdx++;
   constexpr uint64_t kWhite = (((uint64_t)SK_Half1) << 0) | (((uint64_t)SK_Half1) << 16) |
                               (((uint64_t)SK_Half1) << 32) | (((uint64_t)SK_Half1) << 48);
-  fPathInstanceData[currentInstanceIdx].set(entry, newAtlasOffset, kWhite, fillRule);
+  fPathInstanceBuffer[currentInstanceIdx].set(entry, newAtlasOffset, kWhite, fillRule);
 
   // Percolate the instance forward until it's contiguous with other instances that share the same
   // proxy.
@@ -286,7 +291,7 @@ void GrCCPerFlushResources::recordCopyPathInstance(
       return;
     }
     int rangeFirstInstanceIdx = currentInstanceIdx - fCopyPathRanges[i].fCount;
-    std::swap(fPathInstanceData[rangeFirstInstanceIdx], fPathInstanceData[currentInstanceIdx]);
+    std::swap(fPathInstanceBuffer[rangeFirstInstanceIdx], fPathInstanceBuffer[currentInstanceIdx]);
     currentInstanceIdx = rangeFirstInstanceIdx;
   }
 
@@ -484,7 +489,7 @@ void GrCCPerFlushResources::recordStencilResolveInstance(
     // "nonzero" settings in front and "even/odd" settings in back.
     std::swap(atlasIBounds.fLeft, atlasIBounds.fRight);
   }
-  fStencilResolveInstanceData[fNextStencilResolveInstanceIdx++] = {
+  fStencilResolveBuffer[fNextStencilResolveInstanceIdx++] = {
       (int16_t)atlasIBounds.left(), (int16_t)atlasIBounds.top(), (int16_t)atlasIBounds.right(),
       (int16_t)atlasIBounds.bottom()};
 }
@@ -497,12 +502,10 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
       GrCCAtlas::CoverageType::kA8_Multisample != this->renderedPathCoverageType() ||
       fNextStencilResolveInstanceIdx == fEndStencilResolveInstance);
 
-  fInstanceBuffer->unmap();
-  fPathInstanceData = nullptr;
+  fPathInstanceBuffer.unmapBuffer();
 
-  if (fStencilResolveBuffer) {
-    fStencilResolveBuffer->unmap();
-    fStencilResolveInstanceData = nullptr;
+  if (fStencilResolveBuffer.gpuBuffer()) {
+    fStencilResolveBuffer.unmapBuffer();
   }
 
   if (!fCopyAtlasStack.empty()) {
@@ -527,18 +530,18 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
   // Draw the copies from coverage count or msaa atlas(es) into 8-bit cached atlas(es).
   int copyRangeIdx = 0;
   int baseCopyInstance = 0;
-  for (GrCCAtlasStack::Iter atlas(fCopyAtlasStack); atlas.next();) {
-    int endCopyRange = atlas->getFillBatchID();
+  for (GrCCAtlas& atlas : fCopyAtlasStack.atlases()) {
+    int endCopyRange = atlas.getFillBatchID();
     SkASSERT(endCopyRange > copyRangeIdx);
 
-    auto rtc = atlas->instantiate(onFlushRP);
+    auto rtc = atlas.instantiate(onFlushRP);
     for (; copyRangeIdx < endCopyRange; ++copyRangeIdx) {
       const CopyPathRange& copyRange = fCopyPathRanges[copyRangeIdx];
       int endCopyInstance = baseCopyInstance + copyRange.fCount;
       if (rtc) {
         auto op = CopyAtlasOp::Make(
             rtc->surfPriv().getContext(), sk_ref_sp(this), copyRange.fSrcProxy, baseCopyInstance,
-            endCopyInstance, atlas->drawBounds());
+            endCopyInstance, atlas.drawBounds());
         rtc->addDrawOp(GrNoClip(), std::move(op));
       }
       baseCopyInstance = endCopyInstance;
@@ -550,33 +553,33 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
 
   // Render the coverage count atlas(es).
   int baseStencilResolveInstance = 0;
-  for (GrCCAtlasStack::Iter atlas(fRenderedAtlasStack); atlas.next();) {
+  for (GrCCAtlas& atlas : fRenderedAtlasStack.atlases()) {
     // Copies will be finished by the time we get to rendering new atlases. See if we can
     // recycle any previous invalidated atlas textures instead of creating new ones.
     sk_sp<GrTexture> backingTexture;
     for (sk_sp<GrTexture>& texture : fRecyclableAtlasTextures) {
-      if (texture && atlas->currentHeight() == texture->height() &&
-          atlas->currentWidth() == texture->width()) {
-        backingTexture = skstd::exchange(texture, nullptr);
+      if (texture && atlas.currentHeight() == texture->height() &&
+          atlas.currentWidth() == texture->width()) {
+        backingTexture = std::exchange(texture, nullptr);
         break;
       }
     }
 
-    if (auto rtc = atlas->instantiate(onFlushRP, std::move(backingTexture))) {
+    if (auto rtc = atlas.instantiate(onFlushRP, std::move(backingTexture))) {
       std::unique_ptr<GrDrawOp> op;
       if (CoverageType::kA8_Multisample == fRenderedAtlasStack.coverageType()) {
         op = GrStencilAtlasOp::Make(
-            rtc->surfPriv().getContext(), sk_ref_sp(this), atlas->getFillBatchID(),
-            atlas->getStrokeBatchID(), baseStencilResolveInstance,
-            atlas->getEndStencilResolveInstance(), atlas->drawBounds());
+            rtc->surfPriv().getContext(), sk_ref_sp(this), atlas.getFillBatchID(),
+            atlas.getStrokeBatchID(), baseStencilResolveInstance,
+            atlas.getEndStencilResolveInstance(), atlas.drawBounds());
       } else if (onFlushRP->caps()->shaderCaps()->geometryShaderSupport()) {
         op = RenderAtlasOp<GrGSCoverageProcessor>::Make(
-            rtc->surfPriv().getContext(), sk_ref_sp(this), atlas->getFillBatchID(),
-            atlas->getStrokeBatchID(), atlas->drawBounds());
+            rtc->surfPriv().getContext(), sk_ref_sp(this), atlas.getFillBatchID(),
+            atlas.getStrokeBatchID(), atlas.drawBounds());
       } else {
         op = RenderAtlasOp<GrVSCoverageProcessor>::Make(
-            rtc->surfPriv().getContext(), sk_ref_sp(this), atlas->getFillBatchID(),
-            atlas->getStrokeBatchID(), atlas->drawBounds());
+            rtc->surfPriv().getContext(), sk_ref_sp(this), atlas.getFillBatchID(),
+            atlas.getStrokeBatchID(), atlas.drawBounds());
       }
       rtc->addDrawOp(GrNoClip(), std::move(op));
       if (rtc->asSurfaceProxy()->requiresManualMSAAResolve()) {
@@ -585,8 +588,8 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
       }
     }
 
-    SkASSERT(atlas->getEndStencilResolveInstance() >= baseStencilResolveInstance);
-    baseStencilResolveInstance = atlas->getEndStencilResolveInstance();
+    SkASSERT(atlas.getEndStencilResolveInstance() >= baseStencilResolveInstance);
+    baseStencilResolveInstance = atlas.getEndStencilResolveInstance();
   }
   SkASSERT(
       GrCCAtlas::CoverageType::kA8_Multisample != this->renderedPathCoverageType() ||

@@ -24,7 +24,7 @@ static sk_sp<GrSurfaceProxy> make_wrapped_rt(
     GrColorType colorType) {
   auto backendRT =
       gpu->createTestingOnlyBackendRenderTarget(size.width(), size.height(), colorType);
-  return provider->wrapBackendRenderTarget(backendRT, colorType, nullptr, nullptr);
+  return provider->wrapBackendRenderTarget(backendRT, nullptr, nullptr);
 }
 
 void clean_up_wrapped_rt(GrGpu* gpu, sk_sp<GrSurfaceProxy> proxy) {
@@ -123,11 +123,9 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DefferredProxyConversionTest, reporter, ctxIn
 
   const GrBackendFormat format =
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
-  GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
-
   {
     sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
-        format, kDims, swizzle, GrRenderable::kYes, 1, GrMipMapped::kNo, SkBackingFit::kApprox,
+        format, kDims, GrRenderable::kYes, 1, GrMipMapped::kNo, SkBackingFit::kApprox,
         SkBudgeted::kYes, GrProtected::kNo);
 
     // Both RenderTarget and Texture
@@ -141,7 +139,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DefferredProxyConversionTest, reporter, ctxIn
 
   {
     sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
-        format, kDims, swizzle, GrRenderable::kYes, 1, GrMipMapped::kNo, SkBackingFit::kApprox,
+        format, kDims, GrRenderable::kYes, 1, GrMipMapped::kNo, SkBackingFit::kApprox,
         SkBudgeted::kYes, GrProtected::kNo);
 
     // Both RenderTarget and Texture - but via GrTextureProxy
@@ -155,7 +153,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DefferredProxyConversionTest, reporter, ctxIn
 
   {
     sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
-        format, kDims, swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kApprox,
+        format, kDims, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kApprox,
         SkBudgeted::kYes, GrProtected::kNo);
     // Texture-only
     GrTextureProxy* tProxy = proxy->asTextureProxy();

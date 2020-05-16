@@ -121,7 +121,7 @@ class DashAdapter final : public DiscardableAdapterBase<DashAdapter, sksg::DashE
 sk_sp<sksg::PaintNode> ShapeBuilder::AttachFill(
     const skjson::ObjectValue& jpaint, const AnimationBuilder* abuilder,
     sk_sp<sksg::PaintNode> paint_node, sk_sp<AnimatablePropertyContainer> gradient) {
-  return abuilder->attachDiscardableAdapter<FillStrokeAdapter, sk_sp<sksg::PaintNode>>(
+  return abuilder->attachDiscardableAdapter<FillStrokeAdapter>(
       jpaint, *abuilder, std::move(paint_node), std::move(gradient),
       FillStrokeAdapter::Type::kFill);
 }
@@ -129,7 +129,7 @@ sk_sp<sksg::PaintNode> ShapeBuilder::AttachFill(
 sk_sp<sksg::PaintNode> ShapeBuilder::AttachStroke(
     const skjson::ObjectValue& jpaint, const AnimationBuilder* abuilder,
     sk_sp<sksg::PaintNode> paint_node, sk_sp<AnimatablePropertyContainer> gradient) {
-  return abuilder->attachDiscardableAdapter<FillStrokeAdapter, sk_sp<sksg::PaintNode>>(
+  return abuilder->attachDiscardableAdapter<FillStrokeAdapter>(
       jpaint, *abuilder, std::move(paint_node), std::move(gradient),
       FillStrokeAdapter::Type::kStroke);
 }
@@ -156,8 +156,8 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AdjustStrokeGeometry(
   const skjson::ArrayValue* jdash = jstroke["d"];
   if (jdash && jdash->size() > 1) {
     for (size_t i = 0; i < geos.size(); ++i) {
-      geos[i] = abuilder->attachDiscardableAdapter<DashAdapter, sk_sp<sksg::GeometryNode>>(
-          *jdash, *abuilder, std::move(geos[i]));
+      geos[i] =
+          abuilder->attachDiscardableAdapter<DashAdapter>(*jdash, *abuilder, std::move(geos[i]));
     }
   }
 

@@ -40,13 +40,9 @@ class SkCanvasVirtualEnforcer : public Base {
   void onDrawPoints(
       SkCanvas::PointMode mode, size_t count, const SkPoint pts[],
       const SkPaint& paint) override = 0;
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-  void onDrawVerticesObject(
-      const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
-      const SkPaint&) override = 0;
-#else
-  void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override = 0;
-#endif
+
+  // restore me later when clients are updated
+  //    void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override = 0;
 
   void onDrawImage(const SkImage* image, SkScalar dx, SkScalar dy, const SkPaint* paint) override =
       0;
@@ -79,12 +75,6 @@ class SkCanvasVirtualEnforcer : public Base {
       const SkMatrix preViewMatrices[], const SkPaint* paint,
       SkCanvas::SrcRectConstraint constraint) override = 0;
 #endif
-
-  void onDrawBitmap(
-      const SkBitmap& bitmap, SkScalar dx, SkScalar dy, const SkPaint* paint) override = 0;
-  void onDrawBitmapRect(
-      const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-      SkCanvas::SrcRectConstraint constraint) override = 0;
 
   void onDrawAtlas(
       const SkImage* atlas, const SkRSXform xform[], const SkRect rect[], const SkColor colors[],

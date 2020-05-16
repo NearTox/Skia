@@ -12,7 +12,7 @@
 #include "src/gpu/GrShaderUtils.h"
 #include "src/gpu/effects/GrSkSLFP.h"
 
-static int32_t next_id() {
+static int32_t next_id() noexcept {
   static std::atomic<int32_t> nextID{1};
   int32_t id;
   do {
@@ -22,21 +22,21 @@ static int32_t next_id() {
 }
 
 GrContext_Base::GrContext_Base(
-    GrBackendApi backend, const GrContextOptions& options, uint32_t contextID)
+    GrBackendApi backend, const GrContextOptions& options, uint32_t contextID) noexcept
     : fBackend(backend),
       fOptions(options),
       fContextID(SK_InvalidGenID == contextID ? next_id() : contextID) {}
 
-GrContext_Base::~GrContext_Base() {}
+GrContext_Base::~GrContext_Base() = default;
 
 bool GrContext_Base::init(sk_sp<const GrCaps> caps) {
   SkASSERT(caps);
 
-  fCaps = caps;
+  fCaps = std::move(caps);
   return true;
 }
 
-const GrCaps* GrContext_Base::caps() const { return fCaps.get(); }
+const GrCaps* GrContext_Base::caps() const noexcept { return fCaps.get(); }
 sk_sp<const GrCaps> GrContext_Base::refCaps() const { return fCaps; }
 
 GrBackendFormat GrContext_Base::defaultBackendFormat(
@@ -50,7 +50,6 @@ GrBackendFormat GrContext_Base::defaultBackendFormat(
     return GrBackendFormat();
   }
 
-  SkASSERT(caps->isFormatTexturableAndUploadable(grColorType, format));
   SkASSERT(
       renderable == GrRenderable::kNo || caps->isFormatAsColorTypeRenderable(grColorType, format));
 

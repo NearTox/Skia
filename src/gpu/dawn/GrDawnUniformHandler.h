@@ -8,7 +8,7 @@
 #ifndef GrDawnUniformHandler_DEFINED
 #define GrDawnUniformHandler_DEFINED
 
-#include "src/gpu/GrAllocator.h"
+#include "src/gpu/GrTAllocator.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class GrDawnGpu;
@@ -43,8 +43,6 @@ class GrDawnUniformHandler : public GrGLSLUniformHandler {
   UniformHandle internalAddUniformArray(
       uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
       const char** outName) override;
-
-  void updateUniformVisibility(UniformHandle u, uint32_t visibility) override;
 
   UniformInfoArray fUniforms;
   UniformInfoArray fSamplers;

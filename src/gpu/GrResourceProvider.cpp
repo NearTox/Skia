@@ -258,13 +258,13 @@ sk_sp<GrTexture> GrResourceProvider::refScratchTexture(
 }
 
 sk_sp<GrTexture> GrResourceProvider::wrapBackendTexture(
-    const GrBackendTexture& tex, GrColorType colorType, GrWrapOwnership ownership,
-    GrWrapCacheable cacheable, GrIOType ioType) {
+    const GrBackendTexture& tex, GrWrapOwnership ownership, GrWrapCacheable cacheable,
+    GrIOType ioType) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
     return nullptr;
   }
-  return fGpu->wrapBackendTexture(tex, colorType, ownership, cacheable, ioType);
+  return fGpu->wrapBackendTexture(tex, ownership, cacheable, ioType);
 }
 
 sk_sp<GrTexture> GrResourceProvider::wrapCompressedBackendTexture(
@@ -278,19 +278,19 @@ sk_sp<GrTexture> GrResourceProvider::wrapCompressedBackendTexture(
 }
 
 sk_sp<GrTexture> GrResourceProvider::wrapRenderableBackendTexture(
-    const GrBackendTexture& tex, int sampleCnt, GrColorType colorType, GrWrapOwnership ownership,
+    const GrBackendTexture& tex, int sampleCnt, GrWrapOwnership ownership,
     GrWrapCacheable cacheable) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
     return nullptr;
   }
-  return fGpu->wrapRenderableBackendTexture(tex, sampleCnt, colorType, ownership, cacheable);
+  return fGpu->wrapRenderableBackendTexture(tex, sampleCnt, ownership, cacheable);
 }
 
 sk_sp<GrRenderTarget> GrResourceProvider::wrapBackendRenderTarget(
-    const GrBackendRenderTarget& backendRT, GrColorType colorType) {
+    const GrBackendRenderTarget& backendRT) {
   ASSERT_SINGLE_OWNER
-  return this->isAbandoned() ? nullptr : fGpu->wrapBackendRenderTarget(backendRT, colorType);
+  return this->isAbandoned() ? nullptr : fGpu->wrapBackendRenderTarget(backendRT);
 }
 
 sk_sp<GrRenderTarget> GrResourceProvider::wrapVulkanSecondaryCBAsRenderTarget(
@@ -492,11 +492,11 @@ bool GrResourceProvider::attachStencilAttachment(GrRenderTarget* rt, int numSten
 }
 
 sk_sp<GrRenderTarget> GrResourceProvider::wrapBackendTextureAsRenderTarget(
-    const GrBackendTexture& tex, int sampleCnt, GrColorType colorType) {
+    const GrBackendTexture& tex, int sampleCnt) {
   if (this->isAbandoned()) {
     return nullptr;
   }
-  return fGpu->wrapBackendTextureAsRenderTarget(tex, sampleCnt, colorType);
+  return fGpu->wrapBackendTextureAsRenderTarget(tex, sampleCnt);
 }
 
 std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT GrResourceProvider::makeSemaphore(bool isOwned) {

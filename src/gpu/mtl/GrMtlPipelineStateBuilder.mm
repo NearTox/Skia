@@ -122,7 +122,6 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         return MTLVertexFormatInvalid;
       }
     case kHalf2_GrVertexAttribType: return MTLVertexFormatHalf2;
-    case kHalf3_GrVertexAttribType: return MTLVertexFormatHalf3;
     case kHalf4_GrVertexAttribType: return MTLVertexFormatHalf4;
     case kInt2_GrVertexAttribType: return MTLVertexFormatInt2;
     case kInt3_GrVertexAttribType: return MTLVertexFormatInt3;
@@ -134,7 +133,6 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         return MTLVertexFormatInvalid;
       }
     case kByte2_GrVertexAttribType: return MTLVertexFormatChar2;
-    case kByte3_GrVertexAttribType: return MTLVertexFormatChar3;
     case kByte4_GrVertexAttribType: return MTLVertexFormatChar4;
     case kUByte_GrVertexAttribType:
       if (@available(macOS 10.13, iOS 11.0, *)) {
@@ -143,7 +141,6 @@ static inline MTLVertexFormat attribute_type_to_mtlformat(GrVertexAttribType typ
         return MTLVertexFormatInvalid;
       }
     case kUByte2_GrVertexAttribType: return MTLVertexFormatUChar2;
-    case kUByte3_GrVertexAttribType: return MTLVertexFormatUChar3;
     case kUByte4_GrVertexAttribType: return MTLVertexFormatUChar4;
     case kUByte_norm_GrVertexAttribType:
       if (@available(macOS 10.13, iOS 11.0, *)) {
@@ -242,8 +239,6 @@ static MTLBlendFactor blend_coeff_to_mtl_blend(GrBlendCoeff coeff) {
     case kIDA_GrBlendCoeff: return MTLBlendFactorOneMinusDestinationAlpha;
     case kConstC_GrBlendCoeff: return MTLBlendFactorBlendColor;
     case kIConstC_GrBlendCoeff: return MTLBlendFactorOneMinusBlendColor;
-    case kConstA_GrBlendCoeff: return MTLBlendFactorBlendAlpha;
-    case kIConstA_GrBlendCoeff: return MTLBlendFactorOneMinusBlendAlpha;
     case kS2C_GrBlendCoeff:
       if (@available(macOS 10.12, iOS 11.0, *)) {
         return MTLBlendFactorSource1Color;
@@ -302,8 +297,7 @@ static MTLRenderPipelineColorAttachmentDescriptor* create_color_attachment(
   GrBlendEquation equation = blendInfo.fEquation;
   GrBlendCoeff srcCoeff = blendInfo.fSrcBlend;
   GrBlendCoeff dstCoeff = blendInfo.fDstBlend;
-  bool blendOff = (kAdd_GrBlendEquation == equation || kSubtract_GrBlendEquation == equation) &&
-                  kOne_GrBlendCoeff == srcCoeff && kZero_GrBlendCoeff == dstCoeff;
+  bool blendOff = GrBlendShouldDisable(equation, srcCoeff, dstCoeff);
 
   mtlColorAttachment.blendingEnabled = !blendOff;
   if (!blendOff) {
@@ -363,7 +357,7 @@ GrMtlPipelineState* GrMtlPipelineStateBuilder::finalize(
     cached = persistentCache->load(*key);
     if (cached) {
       reader.setMemory(cached->data(), cached->size());
-      shaderType = reader.readU32();
+      shaderType = GrPersistentCacheUtils::GetType(&reader);
     }
   }
 

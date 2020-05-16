@@ -15,8 +15,8 @@
 
 class SkBBoxHierarchy : public SkRefCnt {
  public:
-  SkBBoxHierarchy() {}
-  virtual ~SkBBoxHierarchy() {}
+  constexpr SkBBoxHierarchy() noexcept = default;
+  virtual ~SkBBoxHierarchy() = default;
 
   struct Metadata {
     bool isDraw;  // The corresponding SkRect bounds a draw command, not a pure state change.
@@ -45,7 +45,7 @@ class SK_API SkBBHFactory {
    *  Allocate a new SkBBoxHierarchy. Return NULL on failure.
    */
   virtual sk_sp<SkBBoxHierarchy> operator()() const = 0;
-  virtual ~SkBBHFactory() {}
+  virtual ~SkBBHFactory() = default;
 };
 
 class SK_API SkRTreeFactory : public SkBBHFactory {

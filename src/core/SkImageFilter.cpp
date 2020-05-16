@@ -43,13 +43,13 @@
  *  Returns the number of inputs this filter will accept (some inputs can
  *  be NULL).
  */
-int SkImageFilter::countInputs() const { return as_IFB(this)->fInputs.count(); }
+int SkImageFilter::countInputs() const noexcept { return as_IFB(this)->fInputs.count(); }
 
 /**
  *  Returns the input filter at a given index, or NULL if no input is
  *  connected.  The indices used are filter-specific.
  */
-const SkImageFilter* SkImageFilter::getInput(int i) const {
+const SkImageFilter* SkImageFilter::getInput(int i) const noexcept {
   SkASSERT(i < this->countInputs());
   return as_IFB(this)->fInputs[i].get();
 }
@@ -137,7 +137,7 @@ sk_sp<SkImageFilter> SkImageFilter::makeWithLocalMatrix(const SkMatrix& matrix) 
 
 SK_USE_FLUENT_IMAGE_FILTER_TYPES
 
-static int32_t next_image_filter_unique_id() {
+static int32_t next_image_filter_unique_id() noexcept {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;
@@ -622,7 +622,7 @@ sk_sp<SkSpecialImage> SkImageFilter_Base::ImageToColorSpace(
 // opposite side be preserved.
 SkIRect SkImageFilter_Base::DetermineRepeatedSrcBound(
     const SkIRect& srcBounds, const SkIVector& filterOffset, const SkISize& filterSize,
-    const SkIRect& originalSrcBounds) {
+    const SkIRect& originalSrcBounds) noexcept {
   SkIRect tmp = srcBounds;
   tmp.adjust(
       -filterOffset.fX, -filterOffset.fY, filterSize.fWidth - filterOffset.fX,

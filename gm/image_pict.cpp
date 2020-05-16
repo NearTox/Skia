@@ -181,7 +181,7 @@ class TextureGenerator : public SkImageGenerator {
  protected:
   GrSurfaceProxyView onGenerateTexture(
       GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin,
-      GrMipMapped mipMapped) override {
+      GrMipMapped mipMapped, GrImageTexGenPolicy) override {
     SkASSERT(ctx);
     SkASSERT(ctx == fCtx.get());
 

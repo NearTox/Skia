@@ -8,7 +8,6 @@
 #include "src/gpu/GrOpsTask.h"
 
 #include "include/private/GrRecordingContext.h"
-#include "src/core/SkExchange.h"
 #include "src/core/SkRectPriv.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrAuditTrail.h"
@@ -30,8 +29,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 // Experimentally we have found that most combining occurs within the first 10 comparisons.
-static const int kMaxOpMergeDistance = 10;
-static const int kMaxOpChainDistance = 10;
+static constexpr int kMaxOpMergeDistance = 10;
+static constexpr int kMaxOpChainDistance = 10;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,14 +42,14 @@ static inline bool can_reorder(const SkRect& a, const SkRect& b) { return !GrRec
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline GrOpsTask::OpChain::List::List(std::unique_ptr<GrOp> op)
+inline GrOpsTask::OpChain::List::List(std::unique_ptr<GrOp> op) noexcept
     : fHead(std::move(op)), fTail(fHead.get()) {
   this->validate();
 }
 
-inline GrOpsTask::OpChain::List::List(List&& that) { *this = std::move(that); }
+inline GrOpsTask::OpChain::List::List(List&& that) noexcept { *this = std::move(that); }
 
-inline GrOpsTask::OpChain::List& GrOpsTask::OpChain::List::operator=(List&& that) {
+inline GrOpsTask::OpChain::List& GrOpsTask::OpChain::List::operator=(List&& that) noexcept {
   fHead = std::move(that.fHead);
   fTail = that.fTail;
   that.fTail = nullptr;
@@ -112,7 +111,7 @@ inline void GrOpsTask::OpChain::List::pushTail(std::unique_ptr<GrOp> op) {
   fTail = fTail->nextInChain();
 }
 
-inline void GrOpsTask::OpChain::List::validate() const {
+inline void GrOpsTask::OpChain::List::validate() const noexcept {
 #ifdef SK_DEBUG
   if (fHead) {
     SkASSERT(fTail);
@@ -265,8 +264,7 @@ bool GrOpsTask::OpChain::tryConcat(
         SkASSERT(first);
         return false;
       case GrOp::CombineResult::kMayChain:
-        fList =
-            DoConcat(std::move(fList), skstd::exchange(*list, List()), caps, arenas, auditTrail);
+        fList = DoConcat(std::move(fList), std::exchange(*list, List()), caps, arenas, auditTrail);
         // The above exchange cleared out 'list'. The list needs to be empty now for the
         // loop to terminate.
         SkASSERT(list->empty());
@@ -340,7 +338,7 @@ std::unique_ptr<GrOp> GrOpsTask::OpChain::appendOp(
   return nullptr;
 }
 
-inline void GrOpsTask::OpChain::validate() const {
+inline void GrOpsTask::OpChain::validate() const noexcept {
 #ifdef SK_DEBUG
   fList.validate();
   for (const auto& op : GrOp::ChainRange<>(fList.head())) {
@@ -610,7 +608,7 @@ bool GrOpsTask::resetForFullscreenClear(CanDiscardPreviousOps canDiscardPrevious
   return false;
 }
 
-void GrOpsTask::discard() {
+void GrOpsTask::discard() noexcept {
   // Discard calls to in-progress opsTasks are ignored. Calls at the start update the
   // opsTasks' color & stencil load ops.
   if (this->isEmpty()) {

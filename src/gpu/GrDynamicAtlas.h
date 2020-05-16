@@ -8,7 +8,6 @@
 #ifndef GrDynamicAtlas_DEFINED
 #define GrDynamicAtlas_DEFINED
 
-#include "src/gpu/GrAllocator.h"
 #include "src/gpu/GrTextureProxy.h"
 
 class GrOnFlushResourceProvider;
@@ -44,15 +43,15 @@ class GrDynamicAtlas {
 
   void reset(SkISize initialSize, const GrCaps& caps);
 
-  GrTextureProxy* textureProxy() const { return fTextureProxy.get(); }
-  bool isInstantiated() const { return fTextureProxy->isInstantiated(); }
-  int currentWidth() const { return fWidth; }
-  int currentHeight() const { return fHeight; }
+  GrTextureProxy* textureProxy() const noexcept { return fTextureProxy.get(); }
+  bool isInstantiated() const noexcept { return fTextureProxy->isInstantiated(); }
+  int currentWidth() const noexcept { return fWidth; }
+  int currentHeight() const noexcept { return fHeight; }
 
   // Attempts to add a rect to the atlas. If successful, returns the integer offset from
   // device-space pixels where the path will be drawn, to atlas pixels where its mask resides.
   bool addRect(const SkIRect& devIBounds, SkIVector* atlasOffset);
-  const SkISize& drawBounds() { return fDrawBounds; }
+  const SkISize& drawBounds() noexcept { return fDrawBounds; }
 
   // Instantiates our texture proxy for the atlas and returns a pre-cleared GrRenderTargetContext
   // that the caller may use to render the content. After this call, it is no longer valid to call

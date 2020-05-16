@@ -350,8 +350,7 @@ GrSurfaceProxyView GrClipStackClip::createAlphaClipMask(
   create_clip_mask_key(
       reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs(), &key);
 
-  if (sk_sp<GrTextureProxy> proxy =
-          proxyProvider->findOrCreateProxyByUniqueKey(key, GrColorType::kAlpha_8)) {
+  if (sk_sp<GrTextureProxy> proxy = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
     GrSwizzle swizzle =
         context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kAlpha_8);
     return {std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle};
@@ -465,8 +464,7 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
   const GrCaps* caps = context->priv().caps();
 
-  if (sk_sp<GrTextureProxy> proxy =
-          proxyProvider->findOrCreateProxyByUniqueKey(key, GrColorType::kAlpha_8)) {
+  if (sk_sp<GrTextureProxy> proxy = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
     GrSwizzle swizzle =
         context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kAlpha_8);
     return {std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle};
@@ -492,7 +490,7 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
     // MDB TODO: We're going to fill this proxy with an ASAP upload (which is out of order wrt
     // to ops), so it can't have any pending IO.
     auto proxy = proxyProvider->createProxy(
-        format, maskSpaceIBounds.size(), swizzle, GrRenderable::kNo, 1, GrMipMapped::kNo,
+        format, maskSpaceIBounds.size(), GrRenderable::kNo, 1, GrMipMapped::kNo,
         SkBackingFit::kApprox, SkBudgeted::kYes, GrProtected::kNo);
 
     auto uploader = std::make_unique<GrTDeferredProxyUploader<ClipMaskData>>(reducedClip);

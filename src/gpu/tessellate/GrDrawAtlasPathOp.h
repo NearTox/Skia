@@ -40,6 +40,10 @@ class GrDrawAtlasPathOp : public GrDrawOp {
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
  private:
+  void onPrePrepare(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) override;
+
   struct Instance {
     constexpr static size_t Stride(bool usesLocalCoords) {
       size_t stride = sizeof(Instance);

@@ -25,13 +25,13 @@
 template <typename T, typename K, typename Traits = T>
 class SkTHashTable {
  public:
-  SkTHashTable() : fCount(0), fCapacity(0) {}
-  SkTHashTable(SkTHashTable&& other)
+  constexpr SkTHashTable() noexcept : fCount(0), fCapacity(0) {}
+  SkTHashTable(SkTHashTable&& other) noexcept
       : fCount(other.fCount), fCapacity(other.fCapacity), fSlots(std::move(other.fSlots)) {
     other.fCount = other.fCapacity = 0;
   }
 
-  SkTHashTable& operator=(SkTHashTable&& other) {
+  SkTHashTable& operator=(SkTHashTable&& other) noexcept {
     if (this != &other) {
       this->~SkTHashTable();
       new (this) SkTHashTable(std::move(other));
@@ -40,13 +40,13 @@ class SkTHashTable {
   }
 
   // Clear the table.
-  void reset() { *this = SkTHashTable(); }
+  void reset() noexcept { *this = SkTHashTable(); }
 
   // How many entries are in the table?
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
-  size_t approxBytesUsed() const { return fCapacity * sizeof(Slot); }
+  size_t approxBytesUsed() const noexcept { return fCapacity * sizeof(Slot); }
 
   // !!!!!!!!!!!!!!!!!                 CAUTION                   !!!!!!!!!!!!!!!!!
   // set(), find() and foreach() all allow mutable access to table entries.
@@ -105,6 +105,9 @@ class SkTHashTable {
       SkASSERT(!s.empty());
       if (hash == s.hash && key == Traits::GetKey(s.val)) {
         this->removeSlot(index);
+        if (4 * fCount <= fCapacity && fCapacity > 4) {
+          this->resize(fCapacity / 2);
+        }
         return;
       }
       index = this->next(index);
@@ -127,25 +130,6 @@ class SkTHashTable {
     for (int i = 0; i < fCapacity; i++) {
       if (!fSlots[i].empty()) {
         fn(fSlots[i].val);
-      }
-    }
-  }
-
-  // Call fn on every entry in the table. Fn can return false to remove the entry. You may mutate
-  // the entries, but be very careful.
-  template <typename Fn>  // f(T*)
-  void mutate(Fn&& fn) {
-    for (int i = 0; i < fCapacity;) {
-      bool keep = true;
-      if (!fSlots[i].empty()) {
-        keep = fn(&fSlots[i].val);
-      }
-      if (keep) {
-        i++;
-      } else {
-        this->removeSlot(i);
-        // Something may now have moved into slot i, so we'll loop
-        // around to check slot i again.
       }
     }
   }
@@ -227,7 +211,7 @@ class SkTHashTable {
     }
   }
 
-  int next(int index) const {
+  int next(int index) const noexcept {
     index--;
     if (index < 0) {
       index += fCapacity;
@@ -241,16 +225,17 @@ class SkTHashTable {
   }
 
   struct Slot {
-    Slot() : val{}, hash(0) {}
-    Slot(T&& v, uint32_t h) : val(std::move(v)), hash(h) {}
-    Slot(Slot&& o) { *this = std::move(o); }
-    Slot& operator=(Slot&& o) {
+    Slot() noexcept(std::is_nothrow_default_constructible_v<T>) : val{}, hash(0) {}
+    Slot(T&& v, uint32_t h) noexcept(std::is_nothrow_move_constructible_v<T>)
+        : val(std::move(v)), hash(h) {}
+    Slot(Slot&& o) noexcept(std::is_nothrow_move_assignable_v<T>) { *this = std::move(o); }
+    Slot& operator=(Slot&& o) noexcept(std::is_nothrow_move_assignable_v<T>) {
       val = std::move(o.val);
       hash = o.hash;
       return *this;
     }
 
-    bool empty() const { return this->hash == 0; }
+    bool empty() const noexcept { return this->hash == 0; }
 
     T val;
     uint32_t hash;
@@ -268,15 +253,15 @@ class SkTHashTable {
 template <typename K, typename V, typename HashK = SkGoodHash>
 class SkTHashMap {
  public:
-  SkTHashMap() {}
-  SkTHashMap(SkTHashMap&&) = default;
-  SkTHashMap& operator=(SkTHashMap&&) = default;
+  constexpr SkTHashMap() noexcept = default;
+  SkTHashMap(SkTHashMap&&) noexcept = default;
+  SkTHashMap& operator=(SkTHashMap&&) noexcept = default;
 
   // Clear the map.
-  void reset() { fTable.reset(); }
+  void reset() noexcept { fTable.reset(); }
 
   // How many key/value pairs are in the table?
-  int count() const { return fTable.count(); }
+  int count() const noexcept { return fTable.count(); }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
   size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
@@ -324,18 +309,11 @@ class SkTHashMap {
     fTable.foreach ([&fn](const Pair& p) { fn(p.key, p.val); });
   }
 
-  // Call fn on every key/value pair in the table. Fn may return false to remove the entry. You
-  // may mutate the value but not the key.
-  template <typename Fn>  // f(K, V*) or f(const K&, V*)
-  void mutate(Fn&& fn) {
-    fTable.mutate([&fn](Pair* p) { return fn(p->key, &p->val); });
-  }
-
  private:
   struct Pair {
     K key;
     V val;
-    static const K& GetKey(const Pair& p) { return p.key; }
+    static const K& GetKey(const Pair& p) noexcept { return p.key; }
     static auto Hash(const K& key) { return HashK()(key); }
   };
 
@@ -349,12 +327,12 @@ class SkTHashMap {
 template <typename T, typename HashT = SkGoodHash>
 class SkTHashSet {
  public:
-  SkTHashSet() {}
-  SkTHashSet(SkTHashSet&&) = default;
-  SkTHashSet& operator=(SkTHashSet&&) = default;
+  constexpr SkTHashSet() noexcept = default;
+  SkTHashSet(SkTHashSet&&) noexcept = default;
+  SkTHashSet& operator=(SkTHashSet&&) noexcept = default;
 
   // Clear the set.
-  void reset() { fTable.reset(); }
+  void reset() noexcept { fTable.reset(); }
 
   // How many items are in the set?
   int count() const { return fTable.count(); }

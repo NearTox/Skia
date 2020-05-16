@@ -7,21 +7,23 @@
 
 #include "src/gpu/d3d/GrD3DResourceProvider.h"
 
+#include "src/gpu/d3d/GrD3DCommandList.h"
 #include "src/gpu/d3d/GrD3DGpu.h"
 
 GrD3DResourceProvider::GrD3DResourceProvider(GrD3DGpu* gpu) : fGpu(gpu) {
-  SkDEBUGCODE(HRESULT hr =) gpu->device()->CreateCommandAllocator(
-      D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&fDirectCommandAllocator));
-  SkASSERT(SUCCEEDED(hr));
 }
 
-gr_cp<ID3D12GraphicsCommandList> GrD3DResourceProvider::findOrCreateDirectCommandList() {
-  gr_cp<ID3D12GraphicsCommandList> commandList;
+std::unique_ptr<GrD3DDirectCommandList> GrD3DResourceProvider::findOrCreateDirectCommandList() {
+  if (fAvailableDirectCommandLists.count()) {
+    std::unique_ptr<GrD3DDirectCommandList> list = std::move(fAvailableDirectCommandLists.back());
+    fAvailableDirectCommandLists.pop_back();
+    return list;
+  }
+  return GrD3DDirectCommandList::Make(fGpu->device());
+}
 
-  SkDEBUGCODE(HRESULT hr =) fGpu->device()->CreateCommandList(
-      0, D3D12_COMMAND_LIST_TYPE_DIRECT, fDirectCommandAllocator.Get(), nullptr,
-      IID_PPV_ARGS(&commandList));
-  SkASSERT(SUCCEEDED(hr));
-
-  return commandList;
+void GrD3DResourceProvider::recycleDirectCommandList(
+    std::unique_ptr<GrD3DDirectCommandList> commandList) {
+  commandList.reset();
+  fAvailableDirectCommandLists.push_back(std::move(commandList));
 }

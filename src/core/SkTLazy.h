@@ -85,7 +85,7 @@ class SkTLazy {
   /**
    * Destroy the lazy object (if it was created via init() or set())
    */
-  void reset() {
+  void reset() noexcept {
     if (this->isValid()) {
       fPtr->~T();
       fPtr = nullptr;
@@ -96,24 +96,24 @@ class SkTLazy {
    *  Returns true if a valid object has been initialized in the SkTLazy,
    *  false otherwise.
    */
-  bool isValid() const { return SkToBool(fPtr); }
+  bool isValid() const noexcept { return SkToBool(fPtr); }
 
   /**
    * Returns the object. This version should only be called when the caller
    * knows that the object has been initialized.
    */
-  T* get() const {
+  T* get() const noexcept {
     SkASSERT(this->isValid());
     return fPtr;
   }
-  T* operator->() const { return this->get(); }
-  T& operator*() const { return *this->get(); }
+  T* operator->() const noexcept { return this->get(); }
+  T& operator*() const noexcept { return *this->get(); }
 
   /**
    * Like above but doesn't assert if object isn't initialized (in which case
    * nullptr is returned).
    */
-  T* getMaybeNull() const { return fPtr; }
+  T* getMaybeNull() const noexcept { return fPtr; }
 
  private:
   typename std::aligned_storage<sizeof(T), alignof(T)>::type fStorage;
@@ -187,17 +187,17 @@ class SkTCopyOnFirstWrite {
     return const_cast<T*>(fObj);
   }
 
-  const T* get() const { return fObj; }
+  const T* get() const noexcept{ return fObj; }
 
   /**
    * Operators for treating this as though it were a const pointer.
    */
 
-  const T* operator->() const { return fObj; }
+  const T* operator->() const noexcept{ return fObj; }
 
-  operator const T*() const { return fObj; }
+  operator const T*() const noexcept { return fObj; }
 
-  const T& operator*() const { return *fObj; }
+  const T& operator*() const noexcept{ return *fObj; }
 
  private:
   const T* fObj;

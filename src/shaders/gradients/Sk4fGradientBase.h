@@ -55,7 +55,7 @@ class SkGradientShaderBase::GradientShaderBase4fContext : public Context {
  public:
   GradientShaderBase4fContext(const SkGradientShaderBase&, const ContextRec&);
 
-  uint32_t getFlags() const override { return fFlags; }
+  uint32_t getFlags() const noexcept override { return fFlags; }
 
   bool isValid() const;
 

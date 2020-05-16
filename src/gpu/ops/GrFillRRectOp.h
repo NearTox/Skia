@@ -19,8 +19,7 @@ class SkRRect;
 
 namespace GrFillRRectOp {
 std::unique_ptr<GrDrawOp> Make(
-    GrRecordingContext*, GrAAType, const SkMatrix& viewMatrix, const SkRRect&, const GrCaps&,
-    GrPaint&&);
+    GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, const SkRRect&, GrAAType);
 };
 
 #endif

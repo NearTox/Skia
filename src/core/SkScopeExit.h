@@ -16,9 +16,9 @@
 /** SkScopeExit calls a std:::function<void()> in its destructor. */
 class SkScopeExit {
  public:
-  SkScopeExit() = default;
-  SkScopeExit(std::function<void()> f) : fFn(std::move(f)) {}
-  SkScopeExit(SkScopeExit&& that) : fFn(std::move(that.fFn)) {}
+  SkScopeExit() noexcept = default;
+  SkScopeExit(std::function<void()> f) noexcept : fFn(std::move(f)) {}
+  SkScopeExit(SkScopeExit&& that) noexcept : fFn(std::move(that.fFn)) {}
 
   ~SkScopeExit() {
     if (fFn) {
@@ -26,9 +26,9 @@ class SkScopeExit {
     }
   }
 
-  void clear() { fFn = {}; }
+  void clear() noexcept { fFn = {}; }
 
-  SkScopeExit& operator=(SkScopeExit&& that) {
+  SkScopeExit& operator=(SkScopeExit&& that) noexcept {
     fFn = std::move(that.fFn);
     return *this;
   }

@@ -31,8 +31,8 @@ class SkBigPicture final : public SkPicture {
       }
     }
 
-    const SkPicture* const* begin() const { return fPics; }
-    int count() const { return fCount; }
+    const SkPicture* const* begin() const noexcept { return fPics; }
+    int count() const noexcept { return fCount; }
 
    private:
     SkAutoTMalloc<const SkPicture*> fPics;
@@ -53,8 +53,8 @@ class SkBigPicture final : public SkPicture {
   // Used by GrLayerHoister
   void partialPlayback(SkCanvas*, int start, int stop, const SkMatrix& initialCTM) const;
   // Used by GrRecordReplaceDraw
-  const SkBBoxHierarchy* bbh() const { return fBBH.get(); }
-  const SkRecord* record() const { return fRecord.get(); }
+  const SkBBoxHierarchy* bbh() const noexcept { return fBBH.get(); }
+  const SkRecord* record() const noexcept { return fRecord.get(); }
 
  private:
   int drawableCount() const;

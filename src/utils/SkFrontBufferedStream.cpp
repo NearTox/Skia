@@ -22,7 +22,7 @@ class FrontBufferedStream : public SkStreamRewindable {
 
   bool rewind() override;
 
-  bool hasLength() const override { return fHasLength; }
+  bool hasLength() const noexcept override { return fHasLength; }
 
   size_t getLength() const override { return fLength; }
 

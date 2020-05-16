@@ -88,14 +88,14 @@ class GrSimpleMeshDrawOpHelper {
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType,
       GrProcessorAnalysisCoverage geometryCoverage, SkPMColor4f* geometryColor, bool* wideColor);
 
-  bool isTrivial() const { return fProcessors == nullptr; }
+  bool isTrivial() const noexcept { return fProcessors == nullptr; }
 
-  bool usesLocalCoords() const {
+  bool usesLocalCoords() const noexcept {
     SkASSERT(fDidAnalysis);
     return fUsesLocalCoords;
   }
 
-  bool compatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
+  bool compatibleWithCoverageAsAlpha() const noexcept { return fCompatibleWithCoverageAsAlpha; }
 
   struct MakeArgs {
    private:
@@ -115,12 +115,12 @@ class GrSimpleMeshDrawOpHelper {
 #ifdef SK_DEBUG
   SkString dumpInfo() const;
 #endif
-  GrAAType aaType() const { return static_cast<GrAAType>(fAAType); }
+  GrAAType aaType() const noexcept { return static_cast<GrAAType>(fAAType); }
 
-  void setAAType(GrAAType aaType) { fAAType = static_cast<unsigned>(aaType); }
+  void setAAType(GrAAType aaType) noexcept { fAAType = static_cast<unsigned>(aaType); }
 
   static const GrPipeline* CreatePipeline(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, GrSwizzle outputViewSwizzle, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrProcessorSet&&, GrPipeline::InputFlags pipelineFlags,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
   static const GrPipeline* CreatePipeline(
@@ -129,26 +129,28 @@ class GrSimpleMeshDrawOpHelper {
 
   const GrPipeline* createPipeline(GrOpFlushState* flushState);
 
+  static GrProgramInfo* CreateProgramInfo(
+      SkArenaAlloc*, const GrPipeline*, const GrSurfaceProxyView* outputView, GrGeometryProcessor*,
+      GrPrimitiveType);
+
   // Create a programInfo with the following properties:
   //     its primitive processor uses no textures
   //     it has no dynamic state besides the scissor clip
-  //     it is only applied to a single mesh
   static GrProgramInfo* CreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrProcessorSet&&, GrPrimitiveType,
       GrPipeline::InputFlags pipelineFlags = GrPipeline::InputFlags::kNone,
-      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused,
-      GrPipeline::FixedDynamicState* = nullptr);
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
   GrProgramInfo* createProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
 
-  GrProcessorSet detachProcessorSet() {
+  GrProcessorSet detachProcessorSet() noexcept {
     return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
   }
 
-  GrPipeline::InputFlags pipelineFlags() const { return fPipelineFlags; }
+  GrPipeline::InputFlags pipelineFlags() const noexcept { return fPipelineFlags; }
 
  protected:
   GrProcessorSet::Analysis finalizeProcessors(

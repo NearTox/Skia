@@ -107,7 +107,7 @@ class GrGLVertexArray {
    */
   GrGLAttribArrayState* bindWithIndexBuffer(GrGLGpu* gpu, const GrBuffer* indexBuffer);
 
-  GrGLuint arrayID() const { return fID; }
+  GrGLuint arrayID() const noexcept { return fID; }
 
   void invalidateCachedState();
 

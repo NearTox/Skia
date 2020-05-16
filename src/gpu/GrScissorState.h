@@ -12,27 +12,27 @@
 
 class GrScissorState {
  public:
-  GrScissorState() : fEnabled(false) {}
-  GrScissorState(const SkIRect& rect) : fEnabled(true), fRect(rect) {}
-  void setDisabled() { fEnabled = false; }
-  void set(const SkIRect& rect) {
+  GrScissorState() noexcept : fEnabled(false) {}
+  GrScissorState(const SkIRect& rect) noexcept : fEnabled(true), fRect(rect) {}
+  void setDisabled() noexcept { fEnabled = false; }
+  void set(const SkIRect& rect) noexcept {
     fRect = rect;
     fEnabled = true;
   }
-  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& rect) {
+  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& rect) noexcept {
     if (!fEnabled) {
       this->set(rect);
       return true;
     }
     return fRect.intersect(rect);
   }
-  bool operator==(const GrScissorState& other) const {
+  bool operator==(const GrScissorState& other) const noexcept {
     return fEnabled == other.fEnabled && (false == fEnabled || fRect == other.fRect);
   }
-  bool operator!=(const GrScissorState& other) const { return !(*this == other); }
+  bool operator!=(const GrScissorState& other) const noexcept { return !(*this == other); }
 
-  bool enabled() const { return fEnabled; }
-  const SkIRect& rect() const {
+  bool enabled() const noexcept { return fEnabled; }
+  const SkIRect& rect() const noexcept {
     SkASSERT(fEnabled);
     return fRect;
   }

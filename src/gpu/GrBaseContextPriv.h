@@ -16,23 +16,23 @@
 class GrBaseContextPriv {
  public:
   // from GrContext_Base
-  uint32_t contextID() const { return fContext->contextID(); }
+  uint32_t contextID() const noexcept { return fContext->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const noexcept { return fContext->matches(candidate); }
 
-  const GrContextOptions& options() const { return fContext->options(); }
+  const GrContextOptions& options() const noexcept { return fContext->options(); }
 
-  const GrCaps* caps() const { return fContext->caps(); }
+  const GrCaps* caps() const noexcept { return fContext->caps(); }
   sk_sp<const GrCaps> refCaps() const;
 
-  GrImageContext* asImageContext() { return fContext->asImageContext(); }
+  GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
   GrContext* asDirectContext() { return fContext->asDirectContext(); }
 
   GrContextOptions::ShaderErrorHandler* getShaderErrorHandler() const;
 
  private:
-  explicit GrBaseContextPriv(GrContext_Base* context) : fContext(context) {}
+  explicit GrBaseContextPriv(GrContext_Base* context) noexcept : fContext(context) {}
   GrBaseContextPriv(const GrBaseContextPriv&);             // unimpl
   GrBaseContextPriv& operator=(const GrBaseContextPriv&);  // unimpl
 
@@ -45,9 +45,9 @@ class GrBaseContextPriv {
   friend class GrContext_Base;  // to construct/copy this type.
 };
 
-inline GrBaseContextPriv GrContext_Base::priv() { return GrBaseContextPriv(this); }
+inline GrBaseContextPriv GrContext_Base::priv() noexcept { return GrBaseContextPriv(this); }
 
-inline const GrBaseContextPriv GrContext_Base::priv() const {
+inline const GrBaseContextPriv GrContext_Base::priv() const noexcept {
   return GrBaseContextPriv(const_cast<GrContext_Base*>(this));
 }
 

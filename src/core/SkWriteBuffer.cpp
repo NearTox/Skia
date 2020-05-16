@@ -18,75 +18,81 @@
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkBinaryWriteBuffer::SkBinaryWriteBuffer() : fFactorySet(nullptr), fTFSet(nullptr) {}
+SkBinaryWriteBuffer::SkBinaryWriteBuffer() noexcept : fFactorySet(nullptr), fTFSet(nullptr) {}
 
-SkBinaryWriteBuffer::SkBinaryWriteBuffer(void* storage, size_t storageSize)
+SkBinaryWriteBuffer::SkBinaryWriteBuffer(void* storage, size_t storageSize) noexcept
     : fFactorySet(nullptr), fTFSet(nullptr), fWriter(storage, storageSize) {}
 
 SkBinaryWriteBuffer::~SkBinaryWriteBuffer() {}
 
-bool SkBinaryWriteBuffer::usingInitialStorage() const { return fWriter.usingInitialStorage(); }
+bool SkBinaryWriteBuffer::usingInitialStorage() const noexcept {
+  return fWriter.usingInitialStorage();
+}
 
-void SkBinaryWriteBuffer::writeByteArray(const void* data, size_t size) {
+void SkBinaryWriteBuffer::writeByteArray(const void* data, size_t size) noexcept {
   fWriter.write32(SkToU32(size));
   fWriter.writePad(data, size);
 }
 
-void SkBinaryWriteBuffer::writeBool(bool value) { fWriter.writeBool(value); }
+void SkBinaryWriteBuffer::writeBool(bool value) noexcept { fWriter.writeBool(value); }
 
-void SkBinaryWriteBuffer::writeScalar(SkScalar value) { fWriter.writeScalar(value); }
+void SkBinaryWriteBuffer::writeScalar(SkScalar value) noexcept { fWriter.writeScalar(value); }
 
-void SkBinaryWriteBuffer::writeScalarArray(const SkScalar* value, uint32_t count) {
+void SkBinaryWriteBuffer::writeScalarArray(const SkScalar* value, uint32_t count) noexcept {
   fWriter.write32(count);
   fWriter.write(value, count * sizeof(SkScalar));
 }
 
-void SkBinaryWriteBuffer::writeInt(int32_t value) { fWriter.write32(value); }
+void SkBinaryWriteBuffer::writeInt(int32_t value) noexcept { fWriter.write32(value); }
 
-void SkBinaryWriteBuffer::writeIntArray(const int32_t* value, uint32_t count) {
+void SkBinaryWriteBuffer::writeIntArray(const int32_t* value, uint32_t count) noexcept {
   fWriter.write32(count);
   fWriter.write(value, count * sizeof(int32_t));
 }
 
-void SkBinaryWriteBuffer::writeUInt(uint32_t value) { fWriter.write32(value); }
+void SkBinaryWriteBuffer::writeUInt(uint32_t value) noexcept { fWriter.write32(value); }
 
-void SkBinaryWriteBuffer::writeString(const char* value) { fWriter.writeString(value); }
+void SkBinaryWriteBuffer::writeString(const char* value) noexcept { fWriter.writeString(value); }
 
-void SkBinaryWriteBuffer::writeColor(SkColor color) { fWriter.write32(color); }
+void SkBinaryWriteBuffer::writeColor(SkColor color) noexcept { fWriter.write32(color); }
 
-void SkBinaryWriteBuffer::writeColorArray(const SkColor* color, uint32_t count) {
+void SkBinaryWriteBuffer::writeColorArray(const SkColor* color, uint32_t count) noexcept {
   fWriter.write32(count);
   fWriter.write(color, count * sizeof(SkColor));
 }
 
-void SkBinaryWriteBuffer::writeColor4f(const SkColor4f& color) {
+void SkBinaryWriteBuffer::writeColor4f(const SkColor4f& color) noexcept {
   fWriter.write(&color, sizeof(SkColor4f));
 }
 
-void SkBinaryWriteBuffer::writeColor4fArray(const SkColor4f* color, uint32_t count) {
+void SkBinaryWriteBuffer::writeColor4fArray(const SkColor4f* color, uint32_t count) noexcept {
   fWriter.write32(count);
   fWriter.write(color, count * sizeof(SkColor4f));
 }
 
-void SkBinaryWriteBuffer::writePoint(const SkPoint& point) {
+void SkBinaryWriteBuffer::writePoint(const SkPoint& point) noexcept {
   fWriter.writeScalar(point.fX);
   fWriter.writeScalar(point.fY);
 }
 
-void SkBinaryWriteBuffer::writePoint3(const SkPoint3& point) {
+void SkBinaryWriteBuffer::writePoint3(const SkPoint3& point) noexcept {
   this->writePad32(&point, sizeof(SkPoint3));
 }
 
-void SkBinaryWriteBuffer::writePointArray(const SkPoint* point, uint32_t count) {
+void SkBinaryWriteBuffer::writePointArray(const SkPoint* point, uint32_t count) noexcept {
   fWriter.write32(count);
   fWriter.write(point, count * sizeof(SkPoint));
 }
 
-void SkBinaryWriteBuffer::writeMatrix(const SkMatrix& matrix) { fWriter.writeMatrix(matrix); }
+void SkBinaryWriteBuffer::writeMatrix(const SkMatrix& matrix) noexcept {
+  fWriter.writeMatrix(matrix);
+}
 
-void SkBinaryWriteBuffer::writeIRect(const SkIRect& rect) { fWriter.write(&rect, sizeof(SkIRect)); }
+void SkBinaryWriteBuffer::writeIRect(const SkIRect& rect) noexcept {
+  fWriter.write(&rect, sizeof(SkIRect));
+}
 
-void SkBinaryWriteBuffer::writeRect(const SkRect& rect) { fWriter.writeRect(rect); }
+void SkBinaryWriteBuffer::writeRect(const SkRect& rect) noexcept { fWriter.writeRect(rect); }
 
 void SkBinaryWriteBuffer::writeRegion(const SkRegion& region) { fWriter.writeRegion(region); }
 
@@ -161,11 +167,13 @@ void SkBinaryWriteBuffer::writeTypeface(SkTypeface* obj) {
 
 void SkBinaryWriteBuffer::writePaint(const SkPaint& paint) { SkPaintPriv::Flatten(paint, *this); }
 
-void SkBinaryWriteBuffer::setFactoryRecorder(sk_sp<SkFactorySet> rec) {
+void SkBinaryWriteBuffer::setFactoryRecorder(sk_sp<SkFactorySet> rec) noexcept {
   fFactorySet = std::move(rec);
 }
 
-void SkBinaryWriteBuffer::setTypefaceRecorder(sk_sp<SkRefCntSet> rec) { fTFSet = std::move(rec); }
+void SkBinaryWriteBuffer::setTypefaceRecorder(sk_sp<SkRefCntSet> rec) noexcept {
+  fTFSet = std::move(rec);
+}
 
 void SkBinaryWriteBuffer::writeFlattenable(const SkFlattenable* flattenable) {
   if (nullptr == flattenable) {

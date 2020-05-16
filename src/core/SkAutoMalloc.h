@@ -48,7 +48,7 @@ class SkAutoMalloc : SkNoncopyable {
   /**
    *  Reallocates the block to a new size. The ptr may or may not change.
    */
-  void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) {
+  void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) noexcept {
     if (size != fSize && (size > fSize || kReuse_OnShrink != shrink)) {
       fPtr.reset(size ? sk_malloc_throw(size) : nullptr);
       fSize = size;
@@ -59,21 +59,21 @@ class SkAutoMalloc : SkNoncopyable {
   /**
    *  Return the allocated block.
    */
-  void* get() { return fPtr.get(); }
-  const void* get() const { return fPtr.get(); }
+  void* get() noexcept { return fPtr.get(); }
+  const void* get() const noexcept { return fPtr.get(); }
 
   /** Transfer ownership of the current ptr to the caller, setting the
       internal reference to null. Note the caller is reponsible for calling
       sk_free on the returned address.
    */
-  void* release() {
+  void* release() noexcept {
     fSize = 0;
     return fPtr.release();
   }
 
  private:
   struct WrapFree {
-    void operator()(void* p) { sk_free(p); }
+    void operator()(void* p) noexcept { sk_free(p); }
   };
   std::unique_ptr<void, WrapFree> fPtr;
   size_t fSize;  // can be larger than the requested size (see kReuse)

@@ -18,14 +18,15 @@
  * the GrColorSpaceXform from sRGB. */
 class GrColorInfo {
  public:
-  GrColorInfo() = default;
+  constexpr GrColorInfo() noexcept = default;
   GrColorInfo(const GrColorInfo&);
+  GrColorInfo& operator=(const GrColorInfo&);
   GrColorInfo(GrColorType, SkAlphaType, sk_sp<SkColorSpace>);
   /* implicit */ GrColorInfo(const SkColorInfo&);
 
   bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
-  SkColorSpace* colorSpace() const { return fColorSpace.get(); }
+  SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
   sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
 
   GrColorSpaceXform* colorSpaceXformFromSRGB() const;
@@ -33,10 +34,10 @@ class GrColorInfo {
     return sk_ref_sp(this->colorSpaceXformFromSRGB());
   }
 
-  GrColorType colorType() const { return fColorType; }
-  SkAlphaType alphaType() const { return fAlphaType; }
+  GrColorType colorType() const noexcept { return fColorType; }
+  SkAlphaType alphaType() const noexcept { return fAlphaType; }
 
-  bool isValid() const {
+  bool isValid() const noexcept {
     return fColorType != GrColorType::kUnknown && fAlphaType != kUnknown_SkAlphaType;
   }
 

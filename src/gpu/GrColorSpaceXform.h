@@ -20,12 +20,12 @@ class SkColorSpace;
  */
 class GrColorSpaceXform : public SkRefCnt {
  public:
-  GrColorSpaceXform(const SkColorSpaceXformSteps& steps) : fSteps(steps) {}
+  GrColorSpaceXform(const SkColorSpaceXformSteps& steps) noexcept : fSteps(steps) {}
 
   static sk_sp<GrColorSpaceXform> Make(
       SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst, SkAlphaType dstAT);
 
-  const SkColorSpaceXformSteps& steps() const { return fSteps; }
+  const SkColorSpaceXformSteps& steps() const noexcept { return fSteps; }
 
   /**
    * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its
@@ -85,7 +85,7 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
   const char* name() const override { return "ColorSpaceXform"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  const GrColorSpaceXform* colorXform() const { return fColorXform.get(); }
+  const GrColorSpaceXform* colorXform() const noexcept { return fColorXform.get(); }
 
  private:
   GrColorSpaceXformEffect(

@@ -11,7 +11,7 @@
 
 #define TYPEFACE_CACHE_LIMIT 1024
 
-SkTypefaceCache::SkTypefaceCache() {}
+SkTypefaceCache::SkTypefaceCache() noexcept = default;
 
 void SkTypefaceCache::add(sk_sp<SkTypeface> face) {
   if (fTypefaces.count() >= TYPEFACE_CACHE_LIMIT) {
@@ -50,12 +50,12 @@ void SkTypefaceCache::purgeAll() { this->purge(fTypefaces.count()); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkTypefaceCache& SkTypefaceCache::Get() {
+SkTypefaceCache& SkTypefaceCache::Get() noexcept {
   static SkTypefaceCache gCache;
   return gCache;
 }
 
-SkFontID SkTypefaceCache::NewFontID() {
+SkFontID SkTypefaceCache::NewFontID() noexcept {
   static std::atomic<int32_t> nextID{1};
   return nextID++;
 }

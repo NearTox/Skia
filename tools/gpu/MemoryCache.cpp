@@ -44,13 +44,13 @@ sk_sp<SkData> MemoryCache::load(const SkData& key) {
     ++fCacheMissCnt;
     return nullptr;
   }
-  if (LOG_MEMORY_CACHE) {
-    SkDebugf(
-        "Load Key: %s\n\tFound Data: %s\n\n", data_to_str(key).c_str(),
-        data_to_str(*result->second.fData).c_str());
-  }
-  result->second.fHitCount++;
-  return result->second.fData;
+    if (LOG_MEMORY_CACHE) {
+      SkDebugf(
+          "Load Key: %s\n\tFound Data: %s\n\n", data_to_str(key).c_str(),
+          data_to_str(*result->second.fData).c_str());
+    }
+    result->second.fHitCount++;
+    return result->second.fData;
 }
 
 void MemoryCache::store(const SkData& key, const SkData& data) {
@@ -97,7 +97,7 @@ void MemoryCache::writeShadersToDisk(const char* path, GrBackendApi api) {
     // run glslang on the input.
     const char* ext = GrBackendApi::kOpenGL == api ? "frag" : "spv";
     SkReader32 reader(data->data(), data->size());
-    reader.readU32();  // Shader type tag
+    GrPersistentCacheUtils::GetType(&reader);  // Shader type tag
     GrPersistentCacheUtils::UnpackCachedShaders(
         &reader, shaders, inputsIgnored, kGrShaderTypeCount);
 

@@ -13,7 +13,7 @@
 
 namespace sksg {
 
-Rect::Rect(const SkRect& rect) : fRect(rect) {}
+Rect::Rect(const SkRect& rect) noexcept : fRect(rect) {}
 
 void Rect::onClip(SkCanvas* canvas, bool antiAlias) const {
   canvas->clipRect(fRect, SkClipOp::kIntersect, antiAlias);

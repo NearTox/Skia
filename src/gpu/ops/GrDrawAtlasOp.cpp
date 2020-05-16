@@ -37,7 +37,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -53,18 +53,10 @@ class DrawAtlasOp final : public GrMeshDrawOp {
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
 
  private:
-  GrProgramInfo* createProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView);
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+  void onCreateProgramInfo(
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) override;
 
   void onPrepareDraws(Target*) override;
@@ -89,15 +81,14 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   int fQuadCount;
   bool fHasColors;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
 };
 
 static GrGeometryProcessor* make_gp(
-    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, bool hasColors, const SkPMColor4f& color,
-    const SkMatrix& viewMatrix) {
+    SkArenaAlloc* arena, bool hasColors, const SkPMColor4f& color, const SkMatrix& viewMatrix) {
   using namespace GrDefaultGeoProcFactory;
   Color gpColor(color);
   if (hasColors) {
@@ -105,8 +96,7 @@ static GrGeometryProcessor* make_gp(
   }
 
   return GrDefaultGeoProcFactory::Make(
-      arena, shaderCaps, gpColor, Coverage::kSolid_Type, LocalCoords::kHasExplicit_Type,
-      viewMatrix);
+      arena, gpColor, Coverage::kSolid_Type, LocalCoords::kHasExplicit_Type, viewMatrix);
 }
 
 DrawAtlasOp::DrawAtlasOp(
@@ -202,35 +192,20 @@ SkString DrawAtlasOp::dumpInfo() const {
 }
 #endif
 
-GrProgramInfo* DrawAtlasOp::createProgramInfo(
+void DrawAtlasOp::onCreateProgramInfo(
     const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   // Setup geometry processor
-  GrGeometryProcessor* gp =
-      make_gp(arena, caps->shaderCaps(), this->hasColors(), this->color(), this->viewMatrix());
+  GrGeometryProcessor* gp = make_gp(arena, this->hasColors(), this->color(), this->viewMatrix());
 
-  return fHelper.createProgramInfo(
+  fProgramInfo = fHelper.createProgramInfo(
       caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
       GrPrimitiveType::kTriangles);
 }
 
-void DrawAtlasOp::onPrePrepareDraws(
-    GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-    const GrXferProcessor::DstProxyView& dstProxyView) {
-  SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-  // This is equivalent to a GrOpFlushState::detachAppliedClip
-  GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-  fProgramInfo = this->createProgramInfo(
-      context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-  context->priv().recordProgramInfo(fProgramInfo);
-}
-
 void DrawAtlasOp::onPrepareDraws(Target* target) {
   if (!fProgramInfo) {
-    fProgramInfo = this->createProgramInfo(target);
+    this->createProgramInfo(target);
   }
 
   int instanceCount = fGeoData.count();
@@ -261,8 +236,9 @@ void DrawAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBound
     return;
   }
 
-  flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-  flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+  flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+  flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+  flushState->drawMesh(*fMesh);
 }
 
 GrOp::CombineResult DrawAtlasOp::onCombineIfPossible(

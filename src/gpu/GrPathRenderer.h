@@ -104,7 +104,8 @@ class GrPathRenderer : public SkRefCnt {
    * called when searching for the best path renderer to draw a path.
    */
   CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
-    SkDEBUGCODE(args.validate();) return this->onCanDrawPath(args);
+    SkDEBUGCODE(args.validate());
+    return this->onCanDrawPath(args);
   }
 
   struct DrawPathArgs {

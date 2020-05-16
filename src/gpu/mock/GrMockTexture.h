@@ -151,10 +151,10 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
     this->registerWithCacheWrapped(cacheable);
   }
 
-  GrTexture* asTexture() override { return this; }
-  GrRenderTarget* asRenderTarget() override { return this; }
-  const GrTexture* asTexture() const override { return this; }
-  const GrRenderTarget* asRenderTarget() const override { return this; }
+  GrTexture* asTexture() noexcept override { return this; }
+  GrRenderTarget* asRenderTarget() noexcept override { return this; }
+  const GrTexture* asTexture() const noexcept override { return this; }
+  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
   GrBackendFormat backendFormat() const override { return GrMockTexture::backendFormat(); }
 

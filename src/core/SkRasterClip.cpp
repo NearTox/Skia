@@ -15,7 +15,7 @@ enum MutateResult {
   kContinue_MutateResult,
 };
 
-static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) {
+static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled) noexcept {
   if (inverseFilled) {
     switch (*op) {
       case SkRegion::kIntersect_Op:
@@ -120,20 +120,38 @@ void SkConservativeClip::opIRect(const SkIRect& devRect, SkRegion::Op op) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRasterClip::SkRasterClip(const SkRasterClip& src) {
-  AUTO_RASTERCLIP_VALIDATE(src);
+SkRasterClip::SkRasterClip(const SkRasterClip& that)
+    : fIsBW(that.fIsBW),
+      fIsEmpty(that.fIsEmpty),
+      fIsRect(that.fIsRect),
+      fClipRestrictionRect(that.fClipRestrictionRect),
+      fShader(that.fShader) {
+  AUTO_RASTERCLIP_VALIDATE(that);
 
-  fIsBW = src.fIsBW;
   if (fIsBW) {
-    fBW = src.fBW;
+    fBW = that.fBW;
   } else {
-    fAA = src.fAA;
+    fAA = that.fAA;
   }
 
-  fIsEmpty = src.isEmpty();
-  fIsRect = src.isRect();
-  fClipRestrictionRect = src.fClipRestrictionRect;
   SkDEBUGCODE(this->validate();)
+}
+
+SkRasterClip& SkRasterClip::operator=(const SkRasterClip& that) {
+  AUTO_RASTERCLIP_VALIDATE(that);
+
+  fIsBW = that.fIsBW;
+  if (fIsBW) {
+    fBW = that.fBW;
+  } else {
+    fAA = that.fAA;
+  }
+
+  fIsEmpty = that.isEmpty();
+  fIsRect = that.isRect();
+  fClipRestrictionRect = that.fClipRestrictionRect;
+  fShader = that.fShader;
+  SkDEBUGCODE(this->validate();) return *this;
 }
 
 SkRasterClip::SkRasterClip(const SkRegion& rgn) : fBW(rgn) {
@@ -354,9 +372,9 @@ bool SkRasterClip::op(sk_sp<SkShader> sh) {
  *  axis. Thus we can treat an axis coordinate as an integer if it differs
  *  from its nearest int by < half of that value (1.8 in this case).
  */
-static bool nearly_integral(SkScalar x) {
-  static const SkScalar domain = SK_Scalar1 / 4;
-  static const SkScalar halfDomain = domain / 2;
+static bool nearly_integral(SkScalar x) noexcept {
+  static constexpr SkScalar domain = SK_Scalar1 / 4;
+  static constexpr SkScalar halfDomain = domain / 2;
 
   x += halfDomain;
   return x - SkScalarFloorToScalar(x) < domain;

@@ -67,6 +67,7 @@
     <ClCompile Include="angle2\src\compiler\translator\SymbolTable_autogen.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\SymbolUniqueId.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EmulateMultiDrawShaderBuiltins.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveAtomicCounterBuiltins.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveInactiveInterfaceVariables.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicCounters.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RewriteAtomicFunctionExpressions.cpp" />
@@ -139,6 +140,7 @@
     <ClCompile Include="angle2\src\libANGLE\OverlayWidgets.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Overlay_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Overlay_font_autogen.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\ProgramExecutable.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_support_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\ExternalImageSiblingImpl11.cpp" />
@@ -218,14 +220,12 @@
     <ClCompile Include="angle2\src\libANGLE\GLES1Renderer.cpp" />
     <ClCompile Include="angle2\src\libANGLE\GLES1State.cpp" />
     <ClCompile Include="angle2\src\libANGLE\HandleAllocator.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\HandleRangeAllocator.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Image.cpp" />
     <ClCompile Include="angle2\src\libANGLE\ImageIndex.cpp" />
     <ClCompile Include="angle2\src\libANGLE\IndexRangeCache.cpp" />
     <ClCompile Include="angle2\src\libANGLE\LoggingAnnotator.cpp" />
     <ClCompile Include="angle2\src\libANGLE\MemoryProgramCache.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Observer.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\Path.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Platform.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Program.cpp" />
     <ClCompile Include="angle2\src\libANGLE\ProgramLinkedResources.cpp" />
@@ -308,7 +308,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\FenceNVGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\FramebufferGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\FunctionsGL.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\renderer\gl\PathGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ProgramGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\ProgramPipelineGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\QueryGL.cpp" />
@@ -457,11 +456,11 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CLANG_CONCEPTS_MESSAGE;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>
@@ -477,11 +476,11 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <PreprocessorDefinitions>WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_SILENCE_CLANG_CONCEPTS_MESSAGE;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>

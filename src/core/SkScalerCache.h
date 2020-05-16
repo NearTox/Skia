@@ -50,7 +50,7 @@ class SkScalerCache {
       const SkScalar bounds[2], SkScalar scale, SkScalar xPos, SkGlyph*, SkScalar* array,
       int* count) SK_EXCLUDES(fMu);
 
-  const SkFontMetrics& getFontMetrics() const { return fFontMetrics; }
+  const SkFontMetrics& getFontMetrics() const noexcept { return fFontMetrics; }
 
   std::tuple<SkSpan<const SkGlyph*>, size_t> metrics(
       SkSpan<const SkGlyphID> glyphIDs, const SkGlyph* results[]) SK_EXCLUDES(fMu);
@@ -64,7 +64,7 @@ class SkScalerCache {
   size_t prepareForDrawingMasksCPU(SkDrawableGlyphBuffer* drawables) SK_EXCLUDES(fMu);
 
   // SkStrikeForGPU APIs
-  const SkGlyphPositionRoundingSpec& roundingSpec() const { return fRoundingSpec; }
+  const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept { return fRoundingSpec; }
 
   const SkDescriptor& getDescriptor() const;
 
@@ -79,7 +79,7 @@ class SkScalerCache {
 
   void dump() const SK_EXCLUDES(fMu);
 
-  SkScalerContext* getScalerContext() const { return fScalerContext.get(); }
+  SkScalerContext* getScalerContext() const noexcept { return fScalerContext.get(); }
 
  private:
   class GlyphMapHashTraits {

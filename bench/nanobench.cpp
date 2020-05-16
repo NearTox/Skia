@@ -259,6 +259,7 @@ struct GPUTarget : public Target {
     return true;
   }
   void fillOptions(NanoJSONResultsWriter& log) override {
+#ifdef SK_GL
     const GrGLubyte* version;
     if (this->contextInfo.backend() == GrBackendApi::kOpenGL) {
       const GrGLInterface* gl =
@@ -275,6 +276,7 @@ struct GPUTarget : public Target {
       GR_GL_CALL_RET(gl, version, GetString(GR_GL_SHADING_LANGUAGE_VERSION));
       log.appendString("GL_SHADING_LANGUAGE_VERSION", (const char*)version);
     }
+#endif
   }
 
   void dumpStats() override {

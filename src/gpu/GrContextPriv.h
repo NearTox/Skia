@@ -28,38 +28,36 @@ class SkTaskGroup;
 class GrContextPriv {
  public:
   // from GrContext_Base
-  uint32_t contextID() const { return fContext->contextID(); }
+  uint32_t contextID() const noexcept { return fContext->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const noexcept { return fContext->matches(candidate); }
 
-  const GrContextOptions& options() const { return fContext->options(); }
+  const GrContextOptions& options() const noexcept { return fContext->options(); }
 
-  const GrCaps* caps() const { return fContext->caps(); }
+  const GrCaps* caps() const noexcept { return fContext->caps(); }
   sk_sp<const GrCaps> refCaps() const;
 
-  GrImageContext* asImageContext() { return fContext->asImageContext(); }
+  GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
-  GrContext* asDirectContext() { return fContext->asDirectContext(); }
+  GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   // from GrImageContext
-  GrProxyProvider* proxyProvider() { return fContext->proxyProvider(); }
-  const GrProxyProvider* proxyProvider() const { return fContext->proxyProvider(); }
+  GrProxyProvider* proxyProvider() noexcept { return fContext->proxyProvider(); }
+  const GrProxyProvider* proxyProvider() const noexcept { return fContext->proxyProvider(); }
 
   bool abandoned() const { return fContext->abandoned(); }
 
   /** This is only useful for debug purposes */
-  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); })
+  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
 
-      // from GrRecordingContext
-      GrDrawingManager* drawingManager() {
-    return fContext->drawingManager();
-  }
+  // from GrRecordingContext
+  GrDrawingManager* drawingManager() { return fContext->drawingManager(); }
 
   GrOpMemoryPool* opMemoryPool() { return fContext->arenas().opMemoryPool(); }
   SkArenaAlloc* recordTimeAllocator() { return fContext->arenas().recordTimeAllocator(); }
   GrRecordingContext::Arenas arenas() { return fContext->arenas(); }
 
-  GrStrikeCache* getGrStrikeCache() { return fContext->getGrStrikeCache(); }
+  GrStrikeCache* getGrStrikeCache() noexcept { return fContext->getGrStrikeCache(); }
   GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
 
   /**
@@ -70,7 +68,7 @@ class GrContextPriv {
    */
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
-  GrAuditTrail* auditTrail() { return fContext->auditTrail(); }
+  GrAuditTrail* auditTrail() noexcept { return fContext->auditTrail(); }
 
   /**
    * Create a GrContext without a resource cache
@@ -106,15 +104,17 @@ class GrContextPriv {
   std::unique_ptr<GrFragmentProcessor> createPMToUPMEffect(std::unique_ptr<GrFragmentProcessor>);
   std::unique_ptr<GrFragmentProcessor> createUPMToPMEffect(std::unique_ptr<GrFragmentProcessor>);
 
-  SkTaskGroup* getTaskGroup() { return fContext->fTaskGroup.get(); }
+  SkTaskGroup* getTaskGroup() noexcept { return fContext->fTaskGroup.get(); }
 
-  GrResourceProvider* resourceProvider() { return fContext->fResourceProvider; }
-  const GrResourceProvider* resourceProvider() const { return fContext->fResourceProvider; }
+  GrResourceProvider* resourceProvider() noexcept { return fContext->fResourceProvider; }
+  const GrResourceProvider* resourceProvider() const noexcept {
+    return fContext->fResourceProvider;
+  }
 
-  GrResourceCache* getResourceCache() { return fContext->fResourceCache; }
+  GrResourceCache* getResourceCache() noexcept { return fContext->fResourceCache; }
 
-  GrGpu* getGpu() { return fContext->fGpu.get(); }
-  const GrGpu* getGpu() const { return fContext->fGpu.get(); }
+  GrGpu* getGpu() noexcept { return fContext->fGpu.get(); }
+  const GrGpu* getGpu() const noexcept { return fContext->fGpu.get(); }
 
   // This accessor should only ever be called by the GrOpFlushState.
   GrAtlasManager* getAtlasManager() { return fContext->onGetAtlasManager(); }
@@ -124,12 +124,14 @@ class GrContextPriv {
 
   void compile(const GrProgramDesc&, const GrProgramInfo&);
 
-  GrContextOptions::PersistentCache* getPersistentCache() { return fContext->fPersistentCache; }
-  GrContextOptions::ShaderErrorHandler* getShaderErrorHandler() const {
+  GrContextOptions::PersistentCache* getPersistentCache() noexcept {
+    return fContext->fPersistentCache;
+  }
+  GrContextOptions::ShaderErrorHandler* getShaderErrorHandler() const noexcept {
     return fContext->fShaderErrorHandler;
   }
 
-  GrClientMappedBufferManager* clientMappedBufferManager() {
+  GrClientMappedBufferManager* clientMappedBufferManager() noexcept {
     return fContext->fMappedBufferManager.get();
   }
 
@@ -167,7 +169,7 @@ class GrContextPriv {
 #endif
 
  private:
-  explicit GrContextPriv(GrContext* context) : fContext(context) {}
+  explicit GrContextPriv(GrContext* context) noexcept : fContext(context) {}
   GrContextPriv(const GrContextPriv&);             // unimpl
   GrContextPriv& operator=(const GrContextPriv&);  // unimpl
 
@@ -180,9 +182,9 @@ class GrContextPriv {
   friend class GrContext;  // to construct/copy this type.
 };
 
-inline GrContextPriv GrContext::priv() { return GrContextPriv(this); }
+inline GrContextPriv GrContext::priv() noexcept { return GrContextPriv(this); }
 
-inline const GrContextPriv GrContext::priv() const {
+inline const GrContextPriv GrContext::priv() const noexcept {
   return GrContextPriv(const_cast<GrContext*>(this));
 }
 

@@ -156,7 +156,7 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    *  Returns a hash of the gamut transformation to XYZ D50. Allows for fast equality checking
    *  of gamuts, at the (very small) risk of collision.
    */
-  uint32_t toXYZD50Hash() const { return fToXYZD50Hash; }
+  uint32_t toXYZD50Hash() const noexcept { return fToXYZD50Hash; }
 
   /**
    *  Returns a color space with the same gamut as this one, but with a linear gamma.
@@ -221,8 +221,8 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
   void invTransferFn(skcms_TransferFunction* fn) const;
   void gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* src_to_dst) const;
 
-  uint32_t transferFnHash() const { return fTransferFnHash; }
-  uint64_t hash() const { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
+  uint32_t transferFnHash() const noexcept { return fTransferFnHash; }
+  uint64_t hash() const noexcept { return (uint64_t)fTransferFnHash << 32 | fToXYZD50Hash; }
 
  private:
   friend class SkColorSpaceSingletonFactory;

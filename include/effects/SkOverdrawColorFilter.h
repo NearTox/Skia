@@ -45,6 +45,8 @@ class SK_API SkOverdrawColorFilter : public SkColorFilter {
   }
 
   bool onAppendStages(const SkStageRec&, bool) const override;
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::Color, SkColorSpace*, skvm::Uniforms*, SkArenaAlloc*) const override;
 
   SkColor fColors[kNumColors];
 

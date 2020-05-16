@@ -39,144 +39,154 @@ class GrShaderCaps : public SkRefCnt {
 
   void dumpJSON(SkJSONWriter*) const;
 
-  bool supportsDistanceFieldText() const { return fShaderDerivativeSupport; }
+  bool supportsDistanceFieldText() const noexcept { return fShaderDerivativeSupport; }
 
-  bool shaderDerivativeSupport() const { return fShaderDerivativeSupport; }
-  bool geometryShaderSupport() const { return fGeometryShaderSupport; }
-  bool gsInvocationsSupport() const { return fGSInvocationsSupport; }
-  bool pathRenderingSupport() const { return fPathRenderingSupport; }
-  bool dstReadInShaderSupport() const { return fDstReadInShaderSupport; }
-  bool dualSourceBlendingSupport() const { return fDualSourceBlendingSupport; }
-  bool integerSupport() const { return fIntegerSupport; }
+  bool shaderDerivativeSupport() const noexcept { return fShaderDerivativeSupport; }
+  bool geometryShaderSupport() const noexcept { return fGeometryShaderSupport; }
+  bool gsInvocationsSupport() const noexcept { return fGSInvocationsSupport; }
+  bool pathRenderingSupport() const noexcept { return fPathRenderingSupport; }
+  bool dstReadInShaderSupport() const noexcept { return fDstReadInShaderSupport; }
+  bool dualSourceBlendingSupport() const noexcept { return fDualSourceBlendingSupport; }
+  bool integerSupport() const noexcept { return fIntegerSupport; }
 
   /**
    * Some helper functions for encapsulating various extensions to read FB Buffer on openglES
    *
    * TODO(joshualitt) On desktop opengl 4.2+ we can achieve something similar to this effect
    */
-  bool fbFetchSupport() const { return fFBFetchSupport; }
+  bool fbFetchSupport() const noexcept { return fFBFetchSupport; }
 
-  bool fbFetchNeedsCustomOutput() const { return fFBFetchNeedsCustomOutput; }
+  bool fbFetchNeedsCustomOutput() const noexcept { return fFBFetchNeedsCustomOutput; }
 
-  const char* versionDeclString() const { return fVersionDeclString; }
+  const char* versionDeclString() const noexcept { return fVersionDeclString; }
 
-  const char* fbFetchColorName() const { return fFBFetchColorName; }
+  const char* fbFetchColorName() const noexcept { return fFBFetchColorName; }
 
-  const char* fbFetchExtensionString() const { return fFBFetchExtensionString; }
+  const char* fbFetchExtensionString() const noexcept { return fFBFetchExtensionString; }
 
-  bool flatInterpolationSupport() const { return fFlatInterpolationSupport; }
+  bool flatInterpolationSupport() const noexcept { return fFlatInterpolationSupport; }
 
-  bool preferFlatInterpolation() const { return fPreferFlatInterpolation; }
+  bool preferFlatInterpolation() const noexcept { return fPreferFlatInterpolation; }
 
-  bool noperspectiveInterpolationSupport() const { return fNoPerspectiveInterpolationSupport; }
+  bool noperspectiveInterpolationSupport() const noexcept {
+    return fNoPerspectiveInterpolationSupport;
+  }
 
-  bool sampleMaskSupport() const { return fSampleMaskSupport; }
+  bool sampleMaskSupport() const noexcept { return fSampleMaskSupport; }
 
-  bool tessellationSupport() const { return fTessellationSupport; }
+  bool tessellationSupport() const noexcept { return fTessellationSupport; }
 
-  bool externalTextureSupport() const { return fExternalTextureSupport; }
+  bool externalTextureSupport() const noexcept { return fExternalTextureSupport; }
 
-  bool vertexIDSupport() const { return fVertexIDSupport; }
+  bool vertexIDSupport() const noexcept { return fVertexIDSupport; }
 
   // frexp, ldexp, etc.
-  bool fpManipulationSupport() const { return fFPManipulationSupport; }
+  bool fpManipulationSupport() const noexcept { return fFPManipulationSupport; }
 
-  bool floatIs32Bits() const { return fFloatIs32Bits; }
+  bool floatIs32Bits() const noexcept { return fFloatIs32Bits; }
 
-  bool halfIs32Bits() const { return fHalfIs32Bits; }
+  bool halfIs32Bits() const noexcept { return fHalfIs32Bits; }
 
-  bool hasLowFragmentPrecision() const { return fHasLowFragmentPrecision; }
+  bool hasLowFragmentPrecision() const noexcept { return fHasLowFragmentPrecision; }
 
   // SkSL only.
-  bool builtinFMASupport() const { return fBuiltinFMASupport; }
+  bool builtinFMASupport() const noexcept { return fBuiltinFMASupport; }
 
-  AdvBlendEqInteraction advBlendEqInteraction() const { return fAdvBlendEqInteraction; }
+  AdvBlendEqInteraction advBlendEqInteraction() const noexcept { return fAdvBlendEqInteraction; }
 
-  bool mustEnableAdvBlendEqs() const {
+  bool mustEnableAdvBlendEqs() const noexcept {
     return fAdvBlendEqInteraction >= kGeneralEnable_AdvBlendEqInteraction;
   }
 
-  bool mustEnableSpecificAdvBlendEqs() const {
+  bool mustEnableSpecificAdvBlendEqs() const noexcept {
     return fAdvBlendEqInteraction == kSpecificEnables_AdvBlendEqInteraction;
   }
 
-  bool mustDeclareFragmentShaderOutput() const { return fGLSLGeneration > k110_GrGLSLGeneration; }
+  bool mustDeclareFragmentShaderOutput() const noexcept {
+    return fGLSLGeneration > k110_GrGLSLGeneration;
+  }
 
-  bool usesPrecisionModifiers() const { return fUsesPrecisionModifiers; }
+  bool usesPrecisionModifiers() const noexcept { return fUsesPrecisionModifiers; }
 
   // Returns whether we can use the glsl function any() in our shader code.
-  bool canUseAnyFunctionInShader() const { return fCanUseAnyFunctionInShader; }
+  bool canUseAnyFunctionInShader() const noexcept { return fCanUseAnyFunctionInShader; }
 
-  bool canUseMinAndAbsTogether() const { return fCanUseMinAndAbsTogether; }
+  bool canUseMinAndAbsTogether() const noexcept { return fCanUseMinAndAbsTogether; }
 
-  bool canUseFractForNegativeValues() const { return fCanUseFractForNegativeValues; }
+  bool canUseFractForNegativeValues() const noexcept { return fCanUseFractForNegativeValues; }
 
-  bool mustForceNegatedAtanParamToFloat() const { return fMustForceNegatedAtanParamToFloat; }
+  bool mustForceNegatedAtanParamToFloat() const noexcept {
+    return fMustForceNegatedAtanParamToFloat;
+  }
 
   // Returns whether a device incorrectly implements atan(y,x) as atan(y/x)
-  bool atan2ImplementedAsAtanYOverX() const { return fAtan2ImplementedAsAtanYOverX; }
+  bool atan2ImplementedAsAtanYOverX() const noexcept { return fAtan2ImplementedAsAtanYOverX; }
 
   // If this returns true some operation (could be a no op) must be called between floor and abs
   // to make sure the driver compiler doesn't inline them together which can cause a driver bug in
   // the shader.
-  bool mustDoOpBetweenFloorAndAbs() const { return fMustDoOpBetweenFloorAndAbs; }
+  bool mustDoOpBetweenFloorAndAbs() const noexcept { return fMustDoOpBetweenFloorAndAbs; }
 
   // If false, SkSL uses a workaround so that sk_FragCoord doesn't actually query gl_FragCoord
-  bool canUseFragCoord() const { return fCanUseFragCoord; }
+  bool canUseFragCoord() const noexcept { return fCanUseFragCoord; }
 
   // If true, short ints can't represent every integer in the 16-bit two's complement range as
   // required by the spec. SKSL will always emit full ints.
-  bool incompleteShortIntPrecision() const { return fIncompleteShortIntPrecision; }
+  bool incompleteShortIntPrecision() const noexcept { return fIncompleteShortIntPrecision; }
+
+  bool colorSpaceMathNeedsFloat() const noexcept { return fColorSpaceMathNeedsFloat; }
 
   // If true, then conditions in for loops need "&& true" to work around driver bugs.
-  bool addAndTrueToLoopCondition() const { return fAddAndTrueToLoopCondition; }
+  bool addAndTrueToLoopCondition() const noexcept { return fAddAndTrueToLoopCondition; }
 
   // If true, then expressions such as "x && y" or "x || y" are rewritten as
   // ternary to work around driver bugs.
-  bool unfoldShortCircuitAsTernary() const { return fUnfoldShortCircuitAsTernary; }
+  bool unfoldShortCircuitAsTernary() const noexcept { return fUnfoldShortCircuitAsTernary; }
 
-  bool emulateAbsIntFunction() const { return fEmulateAbsIntFunction; }
+  bool emulateAbsIntFunction() const noexcept { return fEmulateAbsIntFunction; }
 
-  bool rewriteDoWhileLoops() const { return fRewriteDoWhileLoops; }
+  bool rewriteDoWhileLoops() const noexcept { return fRewriteDoWhileLoops; }
 
-  bool removePowWithConstantExponent() const { return fRemovePowWithConstantExponent; }
+  bool removePowWithConstantExponent() const noexcept { return fRemovePowWithConstantExponent; }
 
-  bool requiresLocalOutputColorForFBFetch() const { return fRequiresLocalOutputColorForFBFetch; }
+  bool requiresLocalOutputColorForFBFetch() const noexcept {
+    return fRequiresLocalOutputColorForFBFetch;
+  }
 
-  bool mustObfuscateUniformColor() const { return fMustObfuscateUniformColor; }
+  bool mustObfuscateUniformColor() const noexcept { return fMustObfuscateUniformColor; }
 
   // The D3D shader compiler, when targeting PS 3.0 (ie within ANGLE) fails to compile certain
   // constructs. See detailed comments in GrGLCaps.cpp.
-  bool mustGuardDivisionEvenAfterExplicitZeroCheck() const {
+  bool mustGuardDivisionEvenAfterExplicitZeroCheck() const noexcept {
     return fMustGuardDivisionEvenAfterExplicitZeroCheck;
   }
 
   // On Pixel 3, 3a, and 4 devices we've noticed that the simple function:
   // half4 blend(half4 a, half4 b) { return a.a * b; }
   // may return (0, 0, 0, 1) when b is (0, 0, 0, 0).
-  bool inBlendModesFailRandomlyForAllZeroVec() const {
+  bool inBlendModesFailRandomlyForAllZeroVec() const noexcept {
     return fInBlendModesFailRandomlyForAllZeroVec;
   }
 
   // On Nexus 6, the GL context can get lost if a shader does not write a value to gl_FragColor.
   // https://bugs.chromium.org/p/chromium/issues/detail?id=445377
-  bool mustWriteToFragColor() const { return fMustWriteToFragColor; }
+  bool mustWriteToFragColor() const noexcept { return fMustWriteToFragColor; }
 
   // The Android emulator claims samplerExternalOES is an unknown type if a default precision
   // statement is made for the type.
-  bool noDefaultPrecisionForExternalSamplers() const {
+  bool noDefaultPrecisionForExternalSamplers() const noexcept {
     return fNoDefaultPrecisionForExternalSamplers;
   }
 
   // The sample mask round rect op draws nothing on several Adreno and Radeon bots. Other ops that
   // use sample mask while rendering to stencil seem to work fine.
   // http://skbug.com/8921
-  bool canOnlyUseSampleMaskWithStencil() const { return fCanOnlyUseSampleMaskWithStencil; }
+  bool canOnlyUseSampleMaskWithStencil() const noexcept { return fCanOnlyUseSampleMaskWithStencil; }
 
   // Returns the string of an extension that must be enabled in the shader to support
   // derivatives. If nullptr is returned then no extension needs to be enabled. Before calling
   // this function, the caller should check that shaderDerivativeSupport exists.
-  const char* shaderDerivativeExtensionString() const {
+  const char* shaderDerivativeExtensionString() const noexcept {
     SkASSERT(this->shaderDerivativeSupport());
     return fShaderDerivativeExtensionString;
   }
@@ -184,7 +194,7 @@ class GrShaderCaps : public SkRefCnt {
   // Returns the string of an extension that must be enabled in the shader to support geometry
   // shaders. If nullptr is returned then no extension needs to be enabled. Before calling this
   // function, the caller must verify that geometryShaderSupport exists.
-  const char* geometryShaderExtensionString() const {
+  const char* geometryShaderExtensionString() const noexcept {
     SkASSERT(this->geometryShaderSupport());
     return fGeometryShaderExtensionString;
   }
@@ -192,7 +202,7 @@ class GrShaderCaps : public SkRefCnt {
   // Returns the string of an extension that must be enabled in the shader to support
   // geometry shader invocations. If nullptr is returned then no extension needs to be enabled.
   // Before calling this function, the caller must verify that gsInvocationsSupport exists.
-  const char* gsInvocationsExtensionString() const {
+  const char* gsInvocationsExtensionString() const noexcept {
     SkASSERT(this->gsInvocationsSupport());
     return fGSInvocationsExtensionString;
   }
@@ -201,7 +211,7 @@ class GrShaderCaps : public SkRefCnt {
   // when reading the fragment position. If such an extension does not exisits, this function
   // returns a nullptr, and all transforms of the frag position must be done manually in the
   // shader.
-  const char* fragCoordConventionsExtensionString() const {
+  const char* fragCoordConventionsExtensionString() const noexcept {
     return fFragCoordConventionsExtensionString;
   }
 
@@ -209,42 +219,44 @@ class GrShaderCaps : public SkRefCnt {
   // required in order to use a secondary output in the shader. This returns a nullptr if no such
   // extension is required. However, the return value of this function does not say whether dual
   // source blending is supported.
-  const char* secondaryOutputExtensionString() const { return fSecondaryOutputExtensionString; }
+  const char* secondaryOutputExtensionString() const noexcept {
+    return fSecondaryOutputExtensionString;
+  }
 
   // This returns the name of an extension that must be enabled in the shader to support external
   // textures. In some cases, two extensions must be enabled - the second extension is returned
   // by secondExternalTextureExtensionString(). If that function returns nullptr, then only one
   // extension is required.
-  const char* externalTextureExtensionString() const {
+  const char* externalTextureExtensionString() const noexcept {
     SkASSERT(this->externalTextureSupport());
     return fExternalTextureExtensionString;
   }
 
-  const char* secondExternalTextureExtensionString() const {
+  const char* secondExternalTextureExtensionString() const noexcept {
     SkASSERT(this->externalTextureSupport());
     return fSecondExternalTextureExtensionString;
   }
 
-  const char* noperspectiveInterpolationExtensionString() const {
+  const char* noperspectiveInterpolationExtensionString() const noexcept {
     SkASSERT(this->noperspectiveInterpolationSupport());
     return fNoPerspectiveInterpolationExtensionString;
   }
 
-  const char* sampleVariablesExtensionString() const {
+  const char* sampleVariablesExtensionString() const noexcept {
     SkASSERT(this->sampleMaskSupport());
     return fSampleVariablesExtensionString;
   }
 
-  const char* tessellationExtensionString() const {
+  const char* tessellationExtensionString() const noexcept {
     SkASSERT(this->tessellationSupport());
     return fTessellationExtensionString;
   }
 
-  int maxFragmentSamplers() const { return fMaxFragmentSamplers; }
+  int maxFragmentSamplers() const noexcept { return fMaxFragmentSamplers; }
 
-  bool textureSwizzleAppliedInShader() const { return fTextureSwizzleAppliedInShader; }
+  bool textureSwizzleAppliedInShader() const noexcept { return fTextureSwizzleAppliedInShader; }
 
-  GrGLSLGeneration generation() const { return fGLSLGeneration; }
+  GrGLSLGeneration generation() const noexcept { return fGLSLGeneration; }
 
  private:
   void applyOptionsOverrides(const GrContextOptions& options);
@@ -298,6 +310,7 @@ class GrShaderCaps : public SkRefCnt {
   bool fMustWriteToFragColor : 1;
   bool fNoDefaultPrecisionForExternalSamplers : 1;
   bool fCanOnlyUseSampleMaskWithStencil : 1;
+  bool fColorSpaceMathNeedsFloat : 1;
 
   const char* fVersionDeclString;
 

@@ -118,7 +118,7 @@ sk_sp<GrContextThreadSafeProxy> GrContext::threadSafeProxy() { return fThreadSaf
 //////////////////////////////////////////////////////////////////////////////
 
 void GrContext::abandonContext() {
-  if (this->abandoned()) {
+  if (INHERITED::abandoned()) {
     return;
   }
 
@@ -142,7 +142,7 @@ void GrContext::abandonContext() {
 }
 
 void GrContext::releaseResourcesAndAbandonContext() {
-  if (this->abandoned()) {
+  if (INHERITED::abandoned()) {
     return;
   }
 
@@ -160,6 +160,18 @@ void GrContext::releaseResourcesAndAbandonContext() {
   fResourceCache->releaseAll();
 
   fGpu->disconnect(GrGpu::DisconnectType::kCleanup);
+}
+
+bool GrContext::abandoned() {
+  if (INHERITED::abandoned()) {
+    return true;
+  }
+
+  if (fGpu && fGpu->isDeviceLost()) {
+    this->abandonContext();
+    return true;
+  }
+  return false;
 }
 
 void GrContext::resetGLTextureBindings() {
@@ -499,7 +511,7 @@ GrBackendTexture GrContext::createBackendTexture(
   }
 
   GrColorType grColorType = SkColorTypeToGrColorType(skColorType);
-  SkColor4f swizzledColor = this->caps()->getOutputSwizzle(format, grColorType).applyTo(color);
+  SkColor4f swizzledColor = this->caps()->getWriteSwizzle(format, grColorType).applyTo(color);
 
   return this->createBackendTexture(
       width, height, format, swizzledColor, mipMapped, renderable, isProtected);
@@ -629,6 +641,7 @@ bool GrContext::precompileShader(const SkData& key, const SkData& data) {
 }
 
 #ifdef SK_ENABLE_DUMP_GPU
+#  include "include/core/SkString.h"
 #  include "src/utils/SkJSONWriter.h"
 SkString GrContext::dump() const {
   SkDynamicMemoryWStream stream;

@@ -210,7 +210,7 @@ struct GrUserStencilSettings {
 
   static const GrUserStencilSettings& kUnused;
 
-  bool isUnused() const { return this == &kUnused; }
+  bool isUnused() const noexcept { return this == &kUnused; }
 };
 
 template <GrUserStencilTest Test, GrUserStencilOp PassOp, GrUserStencilOp FailOp>

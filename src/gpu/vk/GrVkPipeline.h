@@ -37,7 +37,7 @@ class GrVkPipeline : public GrVkManagedResource {
       const SkIRect& scissorRect);
   static void SetDynamicViewportState(GrVkGpu*, GrVkCommandBuffer*, const GrRenderTarget*);
   static void SetDynamicBlendConstantState(
-      GrVkGpu*, GrVkCommandBuffer*, const GrSwizzle& outputSwizzle, const GrXferProcessor&);
+      GrVkGpu*, GrVkCommandBuffer*, const GrSwizzle& writeSwizzle, const GrXferProcessor&);
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
   void dumpInfo() const override {

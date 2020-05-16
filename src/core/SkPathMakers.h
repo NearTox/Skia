@@ -15,15 +15,15 @@
 template <unsigned N>
 class SkPath_PointIterator {
  public:
-  SkPath_PointIterator(SkPathDirection dir, unsigned startIndex)
+  SkPath_PointIterator(SkPathDirection dir, unsigned startIndex) noexcept
       : fCurrent(startIndex % N), fAdvance(dir == SkPathDirection::kCW ? 1 : N - 1) {}
 
-  const SkPoint& current() const {
+  const SkPoint& current() const noexcept {
     SkASSERT(fCurrent < N);
     return fPts[fCurrent];
   }
 
-  const SkPoint& next() {
+  const SkPoint& next() noexcept {
     fCurrent = (fCurrent + fAdvance) % N;
     return this->current();
   }
@@ -38,7 +38,7 @@ class SkPath_PointIterator {
 
 class SkPath_RectPointIterator : public SkPath_PointIterator<4> {
  public:
-  SkPath_RectPointIterator(const SkRect& rect, SkPathDirection dir, unsigned startIndex)
+  SkPath_RectPointIterator(const SkRect& rect, SkPathDirection dir, unsigned startIndex) noexcept
       : SkPath_PointIterator(dir, startIndex) {
     fPts[0] = SkPoint::Make(rect.fLeft, rect.fTop);
     fPts[1] = SkPoint::Make(rect.fRight, rect.fTop);
@@ -49,7 +49,7 @@ class SkPath_RectPointIterator : public SkPath_PointIterator<4> {
 
 class SkPath_OvalPointIterator : public SkPath_PointIterator<4> {
  public:
-  SkPath_OvalPointIterator(const SkRect& oval, SkPathDirection dir, unsigned startIndex)
+  SkPath_OvalPointIterator(const SkRect& oval, SkPathDirection dir, unsigned startIndex) noexcept
       : SkPath_PointIterator(dir, startIndex) {
     const SkScalar cx = oval.centerX();
     const SkScalar cy = oval.centerY();
@@ -63,7 +63,7 @@ class SkPath_OvalPointIterator : public SkPath_PointIterator<4> {
 
 class SkPath_RRectPointIterator : public SkPath_PointIterator<8> {
  public:
-  SkPath_RRectPointIterator(const SkRRect& rrect, SkPathDirection dir, unsigned startIndex)
+  SkPath_RRectPointIterator(const SkRRect& rrect, SkPathDirection dir, unsigned startIndex) noexcept
       : SkPath_PointIterator(dir, startIndex) {
     const SkRect& bounds = rrect.getBounds();
     const SkScalar L = bounds.fLeft;

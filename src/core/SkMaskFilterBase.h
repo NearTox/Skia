@@ -217,13 +217,15 @@ class SkMaskFilterBase : public SkMaskFilter {
   typedef SkFlattenable INHERITED;
 };
 
-inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) { return static_cast<SkMaskFilterBase*>(mf); }
+inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) noexcept {
+  return static_cast<SkMaskFilterBase*>(mf);
+}
 
-inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) {
+inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) noexcept {
   return static_cast<const SkMaskFilterBase*>(mf);
 }
 
-inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) {
+inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) noexcept {
   return static_cast<SkMaskFilterBase*>(mf.get());
 }
 

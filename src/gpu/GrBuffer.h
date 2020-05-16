@@ -24,13 +24,13 @@ class GrBuffer {
   virtual void unref() const = 0;
 
   /** Size of the buffer in bytes. */
-  virtual size_t size() const = 0;
+  virtual size_t size() const noexcept = 0;
 
   /** Is this an instance of GrCpuBuffer? Otherwise, an instance of GrGpuBuffer. */
-  virtual bool isCpuBuffer() const = 0;
+  virtual bool isCpuBuffer() const noexcept = 0;
 
  protected:
-  GrBuffer() = default;
+  constexpr GrBuffer() noexcept = default;
 };
 
 #endif

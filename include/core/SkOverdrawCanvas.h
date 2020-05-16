@@ -33,13 +33,7 @@ class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
   void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
   void onDrawRRect(const SkRRect&, const SkPaint&) override;
   void onDrawPoints(PointMode, size_t, const SkPoint[], const SkPaint&) override;
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-  void onDrawVerticesObject(
-      const SkVertices*, const SkVertices::Bone bones[], int boneCount, SkBlendMode,
-      const SkPaint&) override;
-#else
   void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
-#endif
   void onDrawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
       const SkRect*, const SkPaint*) override;
@@ -49,9 +43,6 @@ class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
       const SkImage*, const SkRect*, const SkRect&, const SkPaint*, SrcRectConstraint) override;
   void onDrawImageNine(const SkImage*, const SkIRect&, const SkRect&, const SkPaint*) override;
   void onDrawImageLattice(const SkImage*, const Lattice&, const SkRect&, const SkPaint*) override;
-  void onDrawBitmap(const SkBitmap&, SkScalar, SkScalar, const SkPaint*) override;
-  void onDrawBitmapRect(
-      const SkBitmap&, const SkRect*, const SkRect&, const SkPaint*, SrcRectConstraint) override;
   void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 

@@ -8,13 +8,15 @@
 #ifndef GrD3DGpu_DEFINED
 #define GrD3DGpu_DEFINED
 
-#include "include/gpu/d3d/GrD3DBackendContext.h"
+#include "include/private/SkDeque.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrSemaphore.h"
 #include "src/gpu/d3d/GrD3DCaps.h"
+#include "src/gpu/d3d/GrD3DCommandList.h"
 #include "src/gpu/d3d/GrD3DResourceProvider.h"
 
+struct GrD3DBackendContext;
 class GrD3DOpsRenderPass;
 struct GrD3DOptions;
 class GrPipeline;
@@ -26,8 +28,10 @@ class GrD3DGpu : public GrGpu {
 
   ~GrD3DGpu() override;
 
-  ID3D12Device* device() const { return fDevice.Get(); }
-  ID3D12CommandQueue* queue() const { return fQueue.Get(); }
+  const GrD3DCaps& d3dCaps() const { return static_cast<const GrD3DCaps&>(*fCaps); }
+
+  ID3D12Device* device() const { return fDevice.get(); }
+  ID3D12CommandQueue* queue() const { return fQueue.get(); }
 
   void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>* sampleLocations) override;
 
@@ -79,6 +83,8 @@ class GrD3DGpu : public GrGpu {
  private:
   GrD3DGpu(GrContext* context, const GrContextOptions&, const GrD3DBackendContext&);
 
+  void destroyResources();
+
   void onResetContext(uint32_t resetBits) override {}
 
   sk_sp<GrTexture> onCreateTexture(
@@ -90,19 +96,17 @@ class GrD3DGpu : public GrGpu {
       const void* data, size_t dataSize) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
-      const GrBackendTexture&, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, GrIOType) override;
   sk_sp<GrTexture> onWrapCompressedBackendTexture(
       const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable) override;
 
   sk_sp<GrTexture> onWrapRenderableBackendTexture(
-      const GrBackendTexture&, int sampleCnt, GrColorType, GrWrapOwnership,
-      GrWrapCacheable) override;
+      const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable) override;
 
-  sk_sp<GrRenderTarget> onWrapBackendRenderTarget(
-      const GrBackendRenderTarget&, GrColorType) override;
+  sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
 
   sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt, GrColorType) override;
+      const GrBackendTexture&, int sampleCnt) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(
       size_t sizeInBytes, GrGpuBufferType, GrAccessPattern, const void*) override;
@@ -156,12 +160,28 @@ class GrD3DGpu : public GrGpu {
       SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
       const BackendTextureData*) override;
 
+  void submitDirectCommandList();
+
+  void checkForFinishedCommandLists();
+
   gr_cp<ID3D12Device> fDevice;
   gr_cp<ID3D12CommandQueue> fQueue;
 
   GrD3DResourceProvider fResourceProvider;
 
-  gr_cp<ID3D12CommandList> fCurrentDirectCommandList;
+  gr_cp<ID3D12Fence> fFence;
+  uint64_t fCurrentFenceValue = 0;
+
+  std::unique_ptr<GrD3DDirectCommandList> fCurrentDirectCommandList;
+
+  struct OutstandingCommandList {
+    OutstandingCommandList(std::unique_ptr<GrD3DDirectCommandList> commandList, uint64_t fenceValue)
+        : fCommandList(std::move(commandList)), fFenceValue(fenceValue) {}
+    std::unique_ptr<GrD3DDirectCommandList> fCommandList;
+    uint64_t fFenceValue;
+  };
+
+  SkDeque fOutstandingCommandLists;
 
   std::unique_ptr<GrD3DOpsRenderPass> fCachedOpsRenderPass;
 

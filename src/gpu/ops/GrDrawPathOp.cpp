@@ -72,14 +72,6 @@ std::unique_ptr<GrDrawOp> GrDrawPathOp::Make(
 }
 
 void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
-  GrPipeline::FixedDynamicState *fixedDynamicState = nullptr, storage;
-
-  const GrAppliedClip* appliedClip = flushState->appliedClip();
-  if (appliedClip && appliedClip->scissorState().enabled()) {
-    storage.fScissorRect = appliedClip->scissorState().rect();
-    fixedDynamicState = &storage;
-  }
-
   GrPipeline::InputFlags pipelineFlags = GrPipeline::InputFlags::kNone;
   if (this->doAA()) {
     pipelineFlags |= GrPipeline::InputFlags::kHWAntialias;
@@ -93,8 +85,10 @@ void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBoun
   GrRenderTargetProxy* proxy = flushState->proxy();
   GrProgramInfo programInfo(
       proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(),
-      flushState->outputView()->origin(), pipeline, pathProc.get(), fixedDynamicState, nullptr, 0,
-      GrPrimitiveType::kPath);
+      flushState->outputView()->origin(), pipeline, pathProc.get(), GrPrimitiveType::kPath);
+
+  flushState->bindPipelineAndScissorClip(programInfo, this->bounds());
+  flushState->bindTextures(programInfo.primProc(), nullptr, programInfo.pipeline());
 
   GrStencilSettings stencil;
   init_stencil_pass_settings(*flushState, this->fillType(), &stencil);

@@ -56,7 +56,7 @@ void GrVkCommandBuffer::freeGPUData(const GrGpu* gpu, VkCommandPool cmdPool) con
 
 void GrVkCommandBuffer::releaseResources() {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
-  SkDEBUGCODE(fResourcesReleased = true;) SkASSERT(!fIsActive);
+  SkASSERT(!fIsActive);
   for (int i = 0; i < fTrackedResources.count(); ++i) {
     fTrackedResources[i]->notifyFinishedWithWorkOnGpu();
     fTrackedResources[i]->unref();

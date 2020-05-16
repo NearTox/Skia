@@ -176,6 +176,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
   bool fTiled;
   bool fDrawTileBoundaries;
   SkSize fTileScale;
+  bool fDrawViaSerialize = false;
 
   enum PerspectiveMode {
     kPerspective_Off,

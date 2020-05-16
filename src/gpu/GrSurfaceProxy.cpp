@@ -46,13 +46,11 @@ static bool is_valid_non_lazy(SkISize dimensions) {
 
 // Deferred version
 GrSurfaceProxy::GrSurfaceProxy(
-    const GrBackendFormat& format, SkISize dimensions, GrRenderable renderable,
-    const GrSwizzle& textureSwizzle, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
+    const GrBackendFormat& format, SkISize dimensions, SkBackingFit fit, SkBudgeted budgeted,
+    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
     : fSurfaceFlags(surfaceFlags),
       fFormat(format),
       fDimensions(dimensions),
-      fTextureSwizzle(textureSwizzle),
       fFit(fit),
       fBudgeted(budgeted),
       fUseAllocator(useAllocator),
@@ -65,12 +63,11 @@ GrSurfaceProxy::GrSurfaceProxy(
 // Lazy-callback version
 GrSurfaceProxy::GrSurfaceProxy(
     LazyInstantiateCallback&& callback, const GrBackendFormat& format, SkISize dimensions,
-    GrRenderable renderable, const GrSwizzle& textureSwizzle, SkBackingFit fit, SkBudgeted budgeted,
-    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
+    SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
     : fSurfaceFlags(surfaceFlags),
       fFormat(format),
       fDimensions(dimensions),
-      fTextureSwizzle(textureSwizzle),
       fFit(fit),
       fBudgeted(budgeted),
       fUseAllocator(useAllocator),
@@ -84,13 +81,11 @@ GrSurfaceProxy::GrSurfaceProxy(
 
 // Wrapped version
 GrSurfaceProxy::GrSurfaceProxy(
-    sk_sp<GrSurface> surface, const GrSwizzle& textureSwizzle, SkBackingFit fit,
-    UseAllocator useAllocator)
+    sk_sp<GrSurface> surface, SkBackingFit fit, UseAllocator useAllocator)
     : fTarget(std::move(surface)),
       fSurfaceFlags(fTarget->surfacePriv().flags()),
       fFormat(fTarget->backendFormat()),
       fDimensions(fTarget->dimensions()),
-      fTextureSwizzle(textureSwizzle),
       fFit(fit),
       fBudgeted(
           fTarget->resourcePriv().budgetedType() == GrBudgetedType::kBudgeted ? SkBudgeted::kYes
@@ -131,7 +126,7 @@ sk_sp<GrSurface> GrSurfaceProxy::createSurfaceImpl(
   return surface;
 }
 
-bool GrSurfaceProxy::canSkipResourceAllocator() const {
+bool GrSurfaceProxy::canSkipResourceAllocator() const noexcept {
   if (fUseAllocator == UseAllocator::kNo) {
     // Usually an atlas or onFlush proxy
     return true;
@@ -149,9 +144,9 @@ bool GrSurfaceProxy::canSkipResourceAllocator() const {
 void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) {
   SkASSERT(!fTarget && surface);
 
-  SkDEBUGCODE(this->validateSurface(surface.get());)
+  SkDEBUGCODE(this->validateSurface(surface.get()));
 
-      fTarget = std::move(surface);
+  fTarget = std::move(surface);
 
 #ifdef SK_DEBUG
   if (this->asRenderTargetProxy()) {
@@ -217,7 +212,7 @@ void GrSurfaceProxy::computeScratchKey(const GrCaps& caps, GrScratchKey* key) co
       mipMapped, fIsProtected, key);
 }
 
-void GrSurfaceProxy::setLastRenderTask(GrRenderTask* renderTask) {
+void GrSurfaceProxy::setLastRenderTask(GrRenderTask* renderTask) noexcept {
 #ifdef SK_DEBUG
   if (fLastRenderTask) {
     SkASSERT(fLastRenderTask->isClosed());
@@ -329,7 +324,7 @@ int32_t GrSurfaceProxy::testingOnly_getBackingRefCnt() const {
 GrInternalSurfaceFlags GrSurfaceProxy::testingOnly_getFlags() const { return fSurfaceFlags; }
 #endif
 
-void GrSurfaceProxyPriv::exactify(bool allocatedCaseOnly) {
+void GrSurfaceProxyPriv::exactify(bool allocatedCaseOnly) noexcept {
   SkASSERT(!fProxy->isFullyLazy());
   if (this->isExact()) {
     return;

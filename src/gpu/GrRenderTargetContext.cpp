@@ -160,7 +160,7 @@ std::unique_ptr<GrRenderTargetContext> GrRenderTargetContext::Make(
 
   const GrBackendFormat& format = proxy->backendFormat();
   GrSwizzle readSwizzle = context->priv().caps()->getReadSwizzle(format, colorType);
-  GrSwizzle outSwizzle = context->priv().caps()->getOutputSwizzle(format, colorType);
+  GrSwizzle outSwizzle = context->priv().caps()->getWriteSwizzle(format, colorType);
 
   GrSurfaceProxyView readView(proxy, origin, readSwizzle);
   GrSurfaceProxyView outputView(std::move(proxy), origin, outSwizzle);
@@ -183,11 +183,8 @@ std::unique_ptr<GrRenderTargetContext> GrRenderTargetContext::Make(
     return nullptr;
   }
 
-  GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(format, colorType);
-
   sk_sp<GrTextureProxy> proxy = context->priv().proxyProvider()->createProxy(
-      format, dimensions, swizzle, GrRenderable::kYes, sampleCnt, mipMapped, fit, budgeted,
-      isProtected);
+      format, dimensions, GrRenderable::kYes, sampleCnt, mipMapped, fit, budgeted, isProtected);
   if (!proxy) {
     return nullptr;
   }
@@ -254,8 +251,7 @@ std::unique_ptr<GrRenderTargetContext> GrRenderTargetContext::MakeFromBackendTex
     const SkSurfaceProps* surfaceProps, ReleaseProc releaseProc, ReleaseContext releaseCtx) {
   SkASSERT(sampleCnt > 0);
   sk_sp<GrTextureProxy> proxy(context->priv().proxyProvider()->wrapRenderableBackendTexture(
-      tex, sampleCnt, colorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, releaseProc,
-      releaseCtx));
+      tex, sampleCnt, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, releaseProc, releaseCtx));
   if (!proxy) {
     return nullptr;
   }
@@ -270,7 +266,7 @@ std::unique_ptr<GrRenderTargetContext> GrRenderTargetContext::MakeFromBackendTex
     const SkSurfaceProps* surfaceProps) {
   SkASSERT(sampleCnt > 0);
   sk_sp<GrSurfaceProxy> proxy(
-      context->priv().proxyProvider()->wrapBackendTextureAsRenderTarget(tex, colorType, sampleCnt));
+      context->priv().proxyProvider()->wrapBackendTextureAsRenderTarget(tex, sampleCnt));
   if (!proxy) {
     return nullptr;
   }
@@ -283,8 +279,8 @@ std::unique_ptr<GrRenderTargetContext> GrRenderTargetContext::MakeFromBackendRen
     GrRecordingContext* context, GrColorType colorType, sk_sp<SkColorSpace> colorSpace,
     const GrBackendRenderTarget& rt, GrSurfaceOrigin origin, const SkSurfaceProps* surfaceProps,
     ReleaseProc releaseProc, ReleaseContext releaseCtx) {
-  sk_sp<GrSurfaceProxy> proxy(context->priv().proxyProvider()->wrapBackendRenderTarget(
-      rt, colorType, releaseProc, releaseCtx));
+  sk_sp<GrSurfaceProxy> proxy(
+      context->priv().proxyProvider()->wrapBackendRenderTarget(rt, releaseProc, releaseCtx));
   if (!proxy) {
     return nullptr;
   }
@@ -424,7 +420,8 @@ void GrRenderTargetContextPriv::clear(
     const GrFixedClip& clip, const SkPMColor4f& color, CanClearFullscreen canClearFullscreen) {
   ASSERT_SINGLE_OWNER_PRIV
   RETURN_IF_ABANDONED_PRIV
-  SkDEBUGCODE(fRenderTargetContext->validate();) GR_CREATE_TRACE_MARKER_CONTEXT(
+  SkDEBUGCODE(fRenderTargetContext->validate());
+  GR_CREATE_TRACE_MARKER_CONTEXT(
       "GrRenderTargetContextPriv", "clear", fRenderTargetContext->fContext);
 
   AutoCheckFlush acf(fRenderTargetContext->drawingManager());
@@ -745,7 +742,8 @@ void GrRenderTargetContext::drawTexturedQuad(
     SkBlendMode blendMode, GrAA aa, DrawQuad* quad, const SkRect* domain) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate();) SkASSERT(proxyView.asTextureProxy());
+  SkDEBUGCODE(this->validate());
+  SkASSERT(proxyView.asTextureProxy());
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawTexturedQuad", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -903,7 +901,8 @@ void GrRenderTargetContext::setNeedsStencil(bool useMixedSamplesIfNotMSAA) {
 void GrRenderTargetContextPriv::clearStencilClip(const GrFixedClip& clip, bool insideStencilMask) {
   ASSERT_SINGLE_OWNER_PRIV
   RETURN_IF_ABANDONED_PRIV
-  SkDEBUGCODE(fRenderTargetContext->validate();) GR_CREATE_TRACE_MARKER_CONTEXT(
+  SkDEBUGCODE(fRenderTargetContext->validate());
+  GR_CREATE_TRACE_MARKER_CONTEXT(
       "GrRenderTargetContextPriv", "clearStencilClip", fRenderTargetContext->fContext);
 
   AutoCheckFlush acf(fRenderTargetContext->drawingManager());
@@ -938,7 +937,8 @@ void GrRenderTargetContextPriv::stencilPath(
     sk_sp<const GrPath> path) {
   ASSERT_SINGLE_OWNER_PRIV
   RETURN_IF_ABANDONED_PRIV
-  SkDEBUGCODE(fRenderTargetContext->validate();) GR_CREATE_TRACE_MARKER_CONTEXT(
+  SkDEBUGCODE(fRenderTargetContext->validate());
+  GR_CREATE_TRACE_MARKER_CONTEXT(
       "GrRenderTargetContextPriv", "stencilPath", fRenderTargetContext->fContext);
 
   // TODO: extract portions of checkDraw that are relevant to path stenciling.
@@ -992,7 +992,7 @@ void GrRenderTargetContext::drawTextureSet(
 
 void GrRenderTargetContext::drawVertices(
     const GrClip& clip, GrPaint&& paint, const SkMatrix& viewMatrix, sk_sp<SkVertices> vertices,
-    GrPrimitiveType* overridePrimType) {
+    GrPrimitiveType* overridePrimType, const SkRuntimeEffect* effect) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
   SkDEBUGCODE(this->validate();)
@@ -1004,7 +1004,7 @@ void GrRenderTargetContext::drawVertices(
   GrAAType aaType = this->chooseAAType(GrAA::kNo);
   std::unique_ptr<GrDrawOp> op = GrDrawVerticesOp::Make(
       fContext, std::move(paint), std::move(vertices), viewMatrix, aaType,
-      this->colorInfo().refColorSpaceXformFromSRGB(), overridePrimType);
+      this->colorInfo().refColorSpaceXformFromSRGB(), overridePrimType, effect);
   this->addDrawOp(clip, std::move(op));
 }
 
@@ -1074,7 +1074,7 @@ void GrRenderTargetContext::drawRRect(
   }
   if (!op && style.isSimpleFill()) {
     assert_alive(paint);
-    op = GrFillRRectOp::Make(fContext, aaType, viewMatrix, rrect, *this->caps(), std::move(paint));
+    op = GrFillRRectOp::Make(fContext, std::move(paint), viewMatrix, rrect, aaType);
   }
   if (!op && GrAAType::kCoverage == aaType) {
     assert_alive(paint);
@@ -1470,7 +1470,7 @@ void GrRenderTargetContext::drawOval(
     // ovals the exact same way we do round rects.
     assert_alive(paint);
     op = GrFillRRectOp::Make(
-        fContext, aaType, viewMatrix, SkRRect::MakeOval(oval), *this->caps(), std::move(paint));
+        fContext, std::move(paint), viewMatrix, SkRRect::MakeOval(oval), aaType);
   }
   if (!op && GrAAType::kCoverage == aaType) {
     assert_alive(paint);
@@ -1576,10 +1576,10 @@ void GrRenderTargetContext::asyncRescaleAndReadPixels(
   }
   // Fail if read color type does not have all of dstCT's color channels and those missing color
   // channels are in the src.
-  uint32_t dstComponents = GrColorTypeComponentFlags(dstCT);
-  uint32_t legalReadComponents = GrColorTypeComponentFlags(readInfo.fColorType);
-  uint32_t srcComponents = GrColorTypeComponentFlags(this->colorInfo().colorType());
-  if ((~legalReadComponents & dstComponents) & srcComponents) {
+  uint32_t dstChannels = GrColorTypeChannelFlags(dstCT);
+  uint32_t legalReadChannels = GrColorTypeChannelFlags(readInfo.fColorType);
+  uint32_t srcChannels = GrColorTypeChannelFlags(this->colorInfo().colorType());
+  if ((~legalReadChannels & dstChannels) & srcChannels) {
     callback(context, nullptr);
     return;
   }
@@ -2132,7 +2132,8 @@ bool GrRenderTargetContextPriv::drawAndStencilPath(
     const SkMatrix& viewMatrix, const SkPath& path) {
   ASSERT_SINGLE_OWNER_PRIV
   RETURN_FALSE_IF_ABANDONED_PRIV
-  SkDEBUGCODE(fRenderTargetContext->validate();) GR_CREATE_TRACE_MARKER_CONTEXT(
+  SkDEBUGCODE(fRenderTargetContext->validate());
+  GR_CREATE_TRACE_MARKER_CONTEXT(
       "GrRenderTargetContextPriv", "drawAndStencilPath", fRenderTargetContext->fContext);
 
   if (path.isEmpty() && path.isInverseFillType()) {
@@ -2329,7 +2330,8 @@ void GrRenderTargetContext::addDrawOp(
     fContext->priv().opMemoryPool()->release(std::move(op));
     return;
   }
-  SkDEBUGCODE(this->validate();) SkDEBUGCODE(op->fAddDrawOpCalled = true;)
+  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(op->fAddDrawOpCalled = true;)
       GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "addDrawOp", fContext);
 
   // Setup clip

@@ -120,7 +120,7 @@ GrGLBuffer::GrGLBuffer(
   }
 }
 
-inline GrGLGpu* GrGLBuffer::glGpu() const {
+inline GrGLGpu* GrGLBuffer::glGpu() const noexcept {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }

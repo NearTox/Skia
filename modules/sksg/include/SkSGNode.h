@@ -45,17 +45,17 @@ class Node : public SkRefCnt {
     kOverrideDamage_Trait = 1 << 1,
   };
 
-  explicit Node(uint32_t invalTraits);
+  explicit Node(uint32_t invalTraits) noexcept;
   ~Node() override;
 
-  const SkRect& bounds() const {
+  const SkRect& bounds() const noexcept {
     SkASSERT(!this->hasInval());
     return fBounds;
   }
 
   // Tag this node for invalidation and optional damage.
-  void invalidate(bool damage = true);
-  bool hasInval() const { return fFlags & kInvalidated_Flag; }
+  void invalidate(bool damage = true) noexcept;
+  bool hasInval() const noexcept { return fFlags & kInvalidated_Flag; }
 
   // Dispatched on revalidation.  Subclasses are expected to recompute/cache their properties
   // and return their bounding box in local coordinates.
@@ -63,7 +63,7 @@ class Node : public SkRefCnt {
 
   // Register/unregister |this| to receive invalidation events from a descendant.
   void observeInval(const sk_sp<Node>&);
-  void unobserveInval(const sk_sp<Node>&);
+  void unobserveInval(const sk_sp<Node>&) noexcept;
 
  private:
   enum Flags {
@@ -95,17 +95,19 @@ class Node : public SkRefCnt {
 };
 
 // Helper for defining attribute getters/setters in subclasses.
-#define SG_ATTRIBUTE(attr_name, attr_type, attr_container)           \
-  const attr_type& get##attr_name() const { return attr_container; } \
-  void set##attr_name(const attr_type& v) {                          \
-    if (attr_container == v) return;                                 \
-    attr_container = v;                                              \
-    this->invalidate();                                              \
-  }                                                                  \
-  void set##attr_name(attr_type&& v) {                               \
-    if (attr_container == v) return;                                 \
-    attr_container = std::move(v);                                   \
-    this->invalidate();                                              \
+#define SG_ATTRIBUTE(attr_name, attr_type, attr_container)                                      \
+  const attr_type& get##attr_name() const noexcept { return attr_container; }                   \
+  void set##attr_name(const attr_type& v) noexcept(                                             \
+      std::is_nothrow_copy_assignable_v<attr_type>&& noexcept(noexcept(attr_container == v))) { \
+    if (attr_container == v) return;                                                            \
+    attr_container = v;                                                                         \
+    this->invalidate();                                                                         \
+  }                                                                                             \
+  void set##attr_name(attr_type&& v) noexcept(                                                  \
+      std::is_nothrow_move_assignable_v<attr_type>&& noexcept(noexcept(attr_container == v))) { \
+    if (attr_container == v) return;                                                            \
+    attr_container = std::move(v);                                                              \
+    this->invalidate();                                                                         \
   }
 
 #define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)              \

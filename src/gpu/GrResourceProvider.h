@@ -111,7 +111,7 @@ class GrResourceProvider {
    * @return GrTexture object or NULL on failure.
    */
   sk_sp<GrTexture> wrapBackendTexture(
-      const GrBackendTexture& tex, GrColorType, GrWrapOwnership, GrWrapCacheable, GrIOType);
+      const GrBackendTexture& tex, GrWrapOwnership, GrWrapCacheable, GrIOType);
 
   sk_sp<GrTexture> wrapCompressedBackendTexture(
       const GrBackendTexture& tex, GrWrapOwnership, GrWrapCacheable);
@@ -122,7 +122,7 @@ class GrResourceProvider {
    * to the texture.
    */
   sk_sp<GrTexture> wrapRenderableBackendTexture(
-      const GrBackendTexture& tex, int sampleCnt, GrColorType, GrWrapOwnership, GrWrapCacheable);
+      const GrBackendTexture& tex, int sampleCnt, GrWrapOwnership, GrWrapCacheable);
 
   /**
    * Wraps an existing render target with a GrRenderTarget object. It is
@@ -133,8 +133,7 @@ class GrResourceProvider {
    *
    * @return GrRenderTarget object or NULL on failure.
    */
-  sk_sp<GrRenderTarget> wrapBackendRenderTarget(
-      const GrBackendRenderTarget&, GrColorType colorType);
+  sk_sp<GrRenderTarget> wrapBackendRenderTarget(const GrBackendRenderTarget&);
 
   sk_sp<GrRenderTarget> wrapVulkanSecondaryCBAsRenderTarget(
       const SkImageInfo&, const GrVkDrawableInfo&);
@@ -246,8 +245,7 @@ class GrResourceProvider {
    *
    * @return GrRenderTarget object or NULL on failure.
    */
-  sk_sp<GrRenderTarget> wrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt, GrColorType);
+  sk_sp<GrRenderTarget> wrapBackendTextureAsRenderTarget(const GrBackendTexture&, int sampleCnt);
 
   /**
    * Assigns a unique key to a resource. If the key is associated with another resource that
@@ -266,14 +264,14 @@ class GrResourceProvider {
       const GrBackendSemaphore&, SemaphoreWrapType wrapType,
       GrWrapOwnership = kBorrow_GrWrapOwnership);
 
-  void abandon() {
+  void abandon() noexcept {
     fCache = nullptr;
     fGpu = nullptr;
   }
 
-  uint32_t contextUniqueID() const { return fCache->contextUniqueID(); }
-  const GrCaps* caps() const { return fCaps.get(); }
-  bool overBudget() const { return fCache->overBudget(); }
+  uint32_t contextUniqueID() const noexcept { return fCache->contextUniqueID(); }
+  const GrCaps* caps() const noexcept { return fCaps.get(); }
+  bool overBudget() const noexcept { return fCache->overBudget(); }
 
   static SkISize MakeApprox(SkISize);
 
@@ -314,16 +312,16 @@ class GrResourceProvider {
       sk_sp<GrTexture> texture, GrColorType colorType, SkISize baseSize, const GrMipLevel texels[],
       int mipLevelCount) const;
 
-  GrResourceCache* cache() { return fCache; }
-  const GrResourceCache* cache() const { return fCache; }
+  GrResourceCache* cache() noexcept { return fCache; }
+  const GrResourceCache* cache() const noexcept { return fCache; }
 
   friend class GrResourceProviderPriv;
 
   // Method made available via GrResourceProviderPriv
-  GrGpu* gpu() { return fGpu; }
-  const GrGpu* gpu() const { return fGpu; }
+  GrGpu* gpu() noexcept { return fGpu; }
+  const GrGpu* gpu() const noexcept { return fGpu; }
 
-  bool isAbandoned() const {
+  bool isAbandoned() const noexcept {
     SkASSERT(SkToBool(fGpu) == SkToBool(fCache));
     return !SkToBool(fCache);
   }

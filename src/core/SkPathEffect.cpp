@@ -49,7 +49,7 @@ SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const { return this
  */
 class SkPairPathEffect : public SkPathEffect {
  protected:
-  SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1)
+  SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1) noexcept
       : fPE0(std::move(pe0)), fPE1(std::move(pe1)) {
     SkASSERT(fPE0.get());
     SkASSERT(fPE1.get());

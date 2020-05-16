@@ -27,15 +27,15 @@ class RepeaterAdapter final : public DiscardableAdapterBase<RepeaterAdapter, sks
       const AnimationBuilder& abuilder, sk_sp<sksg::RenderNode> repeater_node)
       : fRepeaterNode(std::move(repeater_node)),
         fComposite((ParseDefault(jrepeater["m"], 1) == 1) ? Composite::kAbove : Composite::kBelow) {
-    this->bind(abuilder, jrepeater["c"], &fCount);
-    this->bind(abuilder, jrepeater["o"], &fOffset);
+    this->bind(abuilder, jrepeater["c"], fCount);
+    this->bind(abuilder, jrepeater["o"], fOffset);
 
-    this->bind(abuilder, jtransform["a"], &fAnchorPoint);
-    this->bind(abuilder, jtransform["p"], &fPosition);
-    this->bind(abuilder, jtransform["s"], &fScale);
-    this->bind(abuilder, jtransform["r"], &fRotation);
-    this->bind(abuilder, jtransform["so"], &fStartOpacity);
-    this->bind(abuilder, jtransform["eo"], &fEndOpacity);
+    this->bind(abuilder, jtransform["a"], fAnchorPoint);
+    this->bind(abuilder, jtransform["p"], fPosition);
+    this->bind(abuilder, jtransform["s"], fScale);
+    this->bind(abuilder, jtransform["r"], fRotation);
+    this->bind(abuilder, jtransform["so"], fStartOpacity);
+    this->bind(abuilder, jtransform["eo"], fEndOpacity);
   }
 
  private:
@@ -43,18 +43,14 @@ class RepeaterAdapter final : public DiscardableAdapterBase<RepeaterAdapter, sks
     static constexpr SkScalar kMaxCount = 512;
     const auto count = static_cast<size_t>(SkTPin(fCount, 0.0f, kMaxCount) + 0.5f);
 
-    const auto anchor_point = ValueTraits<VectorValue>::As<SkPoint>(fAnchorPoint),
-               position = ValueTraits<VectorValue>::As<SkPoint>(fPosition),
-               scale = ValueTraits<VectorValue>::As<SkVector>(fScale);
-
     const auto& compute_transform = [&](size_t index) {
       const auto t = fOffset + index;
 
       // Position, scale & rotation are "scaled" by index/offset.
-      SkMatrix m = SkMatrix::MakeTrans(-anchor_point.x(), -anchor_point.y());
-      m.postScale(std::pow(scale.x() * .01f, fOffset), std::pow(scale.y() * .01f, fOffset));
+      SkMatrix m = SkMatrix::MakeTrans(-fAnchorPoint.x, -fAnchorPoint.y);
+      m.postScale(std::pow(fScale.x * .01f, fOffset), std::pow(fScale.y * .01f, fOffset));
       m.postRotate(t * fRotation);
-      m.postTranslate(t * position.x() + anchor_point.x(), t * position.y() + anchor_point.y());
+      m.postTranslate(t * fPosition.x + fAnchorPoint.x, t * fPosition.y + fAnchorPoint.y);
 
       return m;
     };
@@ -79,7 +75,7 @@ class RepeaterAdapter final : public DiscardableAdapterBase<RepeaterAdapter, sks
   ScalarValue fCount = 0, fOffset = 0;
 
   // Transform props
-  VectorValue fAnchorPoint, fPosition, fScale = {100, 100};
+  Vec2Value fAnchorPoint = {0, 0}, fPosition = {0, 0}, fScale = {100, 100};
   ScalarValue fRotation = 0, fStartOpacity = 100, fEndOpacity = 100;
 };
 

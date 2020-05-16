@@ -108,7 +108,7 @@ sk_sp<sksg::Transform> AnimationBuilder::attachCamera(
   auto adapter = sk_make_sp<CameraAdaper>(jlayer, jtransform, *this, viewport_size);
 
   if (adapter->isStatic()) {
-    adapter->tick(0);
+    adapter->seek(0);
   } else {
     fCurrentAnimatorScope->push_back(adapter);
   }

@@ -129,9 +129,11 @@ class GrGLSLFragmentProcessor {
   // is the responsibility of the caller.
   void setData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor);
 
-  int numChildProcessors() const { return fChildProcessors.count(); }
+  int numChildProcessors() const noexcept { return fChildProcessors.count(); }
 
-  GrGLSLFragmentProcessor* childProcessor(int index) const { return fChildProcessors[index]; }
+  GrGLSLFragmentProcessor* childProcessor(int index) const noexcept {
+    return fChildProcessors[index];
+  }
 
   // Invoke the child with the default input color (solid white)
   inline SkString invokeChild(int childIndex, EmitArgs& parentArgs, SkSL::String skslCoords = "") {
@@ -161,7 +163,7 @@ class GrGLSLFragmentProcessor {
     GrGLSLFragmentProcessor& operator*() const;
     GrGLSLFragmentProcessor* operator->() const;
     Iter& operator++();
-    operator bool() const { return !fFPStack.empty(); }
+    operator bool() const noexcept { return !fFPStack.empty(); }
 
     // Because each iterator carries a stack we want to avoid copies.
     Iter(const Iter&) = delete;

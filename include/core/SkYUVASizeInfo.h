@@ -37,7 +37,7 @@ struct SK_API SkYUVASizeInfo {
    */
   SkEncodedOrigin fOrigin = kDefault_SkEncodedOrigin;
 
-  bool operator==(const SkYUVASizeInfo& that) const {
+  bool operator==(const SkYUVASizeInfo& that) const noexcept {
     for (int i = 0; i < kMaxCount; ++i) {
       SkASSERT(
           (!fSizes[i].isEmpty() && fWidthBytes[i]) || (fSizes[i].isEmpty() && !fWidthBytes[i]));

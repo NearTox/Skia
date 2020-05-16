@@ -235,23 +235,6 @@ void SkNWayCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
   }
 }
 
-void SkNWayCanvas::onDrawBitmap(
-    const SkBitmap& bitmap, SkScalar x, SkScalar y, const SkPaint* paint) {
-  Iter iter(fList);
-  while (iter.next()) {
-    iter->drawBitmap(bitmap, x, y, paint);
-  }
-}
-
-void SkNWayCanvas::onDrawBitmapRect(
-    const SkBitmap& bitmap, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-    SrcRectConstraint constraint) {
-  Iter iter(fList);
-  while (iter.next()) {
-    iter->legacy_drawBitmapRect(bitmap, src, dst, paint, (SrcRectConstraint)constraint);
-  }
-}
-
 void SkNWayCanvas::onDrawImage(
     const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
   Iter iter(fList);
@@ -309,11 +292,7 @@ void SkNWayCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) 
 }
 
 void SkNWayCanvas::onDrawVerticesObject(
-    const SkVertices* vertices,
-#ifdef SK_SUPPORT_LEGACY_DRAWVERTS_VIRTUAL
-    const SkVertices::Bone bones[], int boneCount,
-#endif
-    SkBlendMode bmode, const SkPaint& paint) {
+    const SkVertices* vertices, SkBlendMode bmode, const SkPaint& paint) {
   Iter iter(fList);
   while (iter.next()) {
     iter->drawVertices(vertices, bmode, paint);

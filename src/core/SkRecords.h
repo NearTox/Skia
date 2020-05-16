@@ -201,10 +201,10 @@ RECORD(Scale, 0, SkScalar sx; SkScalar sy);
 
 struct ClipOpAndAA {
   ClipOpAndAA() {}
-  ClipOpAndAA(SkClipOp op, bool aa) : fOp(static_cast<unsigned>(op)), fAA(aa) {}
+  ClipOpAndAA(SkClipOp op, bool aa) noexcept : fOp(static_cast<unsigned>(op)), fAA(aa) {}
 
-  SkClipOp op() const { return static_cast<SkClipOp>(fOp); }
-  bool aa() const { return fAA != 0; }
+  SkClipOp op() const noexcept { return static_cast<SkClipOp>(fOp); }
+  bool aa() const noexcept { return fAA != 0; }
 
  private:
   unsigned fOp : 31;  // This really only needs to be 3, but there's no win today to do so.

@@ -68,7 +68,7 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     bitmap.installPixels(ii, srcData, 4 * kSize);
     bitmap.setImmutable();
 
-    GrBitmapTextureMaker maker(context, bitmap);
+    GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
     auto dataView = maker.view(GrMipMapped::kNo);
     if (!dataView) {
       return false;

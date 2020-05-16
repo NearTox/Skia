@@ -45,7 +45,7 @@ class GrDDLContext final : public GrContext {
  private:
   // TODO: Here we're pretending this isn't derived from GrContext. Switch this to be derived from
   // GrRecordingContext!
-  GrContext* asDirectContext() override { return nullptr; }
+  GrContext* asDirectContext() noexcept override { return nullptr; }
 
   bool init(sk_sp<const GrCaps> caps) override {
     SkASSERT(caps);
@@ -77,8 +77,9 @@ class GrDDLContext final : public GrContext {
 
     const GrCaps* caps = this->caps();
 
-    if (this->backend() == GrBackendApi::kVulkan || this->backend() == GrBackendApi::kMetal) {
-      // Currently, both Vulkan and Metal require a live renderTarget to
+    if (this->backend() == GrBackendApi::kVulkan || this->backend() == GrBackendApi::kMetal ||
+        this->backend() == GrBackendApi::kDawn) {
+      // Currently, Vulkan, Metal and Dawn require a live renderTarget to
       // compute the key
       return;
     }

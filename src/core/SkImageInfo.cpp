@@ -10,7 +10,7 @@
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkWriteBuffer.h"
 
-int SkColorTypeBytesPerPixel(SkColorType ct) {
+int SkColorTypeBytesPerPixel(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 1;
@@ -37,25 +37,25 @@ int SkColorTypeBytesPerPixel(SkColorType ct) {
   SkUNREACHABLE;
 }
 
-bool SkColorTypeIsAlwaysOpaque(SkColorType ct) {
-  return !(kAlpha_SkColorTypeComponentFlag & SkColorTypeComponentFlags(ct));
+bool SkColorTypeIsAlwaysOpaque(SkColorType ct) noexcept {
+  return !(SkColorTypeChannelFlags(ct) & kAlpha_SkColorChannelFlag);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int SkColorInfo::bytesPerPixel() const { return SkColorTypeBytesPerPixel(fColorType); }
+int SkColorInfo::bytesPerPixel() const noexcept { return SkColorTypeBytesPerPixel(fColorType); }
 
-int SkColorInfo::shiftPerPixel() const { return SkColorTypeShiftPerPixel(fColorType); }
+int SkColorInfo::shiftPerPixel() const noexcept { return SkColorTypeShiftPerPixel(fColorType); }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkImageInfo::computeOffset(int x, int y, size_t rowBytes) const {
+size_t SkImageInfo::computeOffset(int x, int y, size_t rowBytes) const noexcept {
   SkASSERT((unsigned)x < (unsigned)this->width());
   SkASSERT((unsigned)y < (unsigned)this->height());
   return SkColorTypeComputeOffset(this->colorType(), x, y, rowBytes);
 }
 
-size_t SkImageInfo::computeByteSize(size_t rowBytes) const {
+size_t SkImageInfo::computeByteSize(size_t rowBytes) const noexcept {
   if (0 == this->height()) {
     return 0;
   }
@@ -80,7 +80,7 @@ void SkImageInfo::validate() const {
 #endif
 
 bool SkColorTypeValidateAlphaType(
-    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical) {
+    SkColorType colorType, SkAlphaType alphaType, SkAlphaType* canonical) noexcept {
   switch (colorType) {
     case kUnknown_SkColorType: alphaType = kUnknown_SkAlphaType; break;
     case kAlpha_8_SkColorType:    // fall-through

@@ -29,7 +29,6 @@
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrGpuBuffer.h"
 #include "src/gpu/GrMemoryPool.h"
-#include "src/gpu/GrMesh.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrPipeline.h"
@@ -209,12 +208,9 @@ class ClockwiseTestOp : public GrDrawOp {
       fProgramInfo = this->createProgramInfo(flushState);
     }
 
-    GrMesh mesh;
-    mesh.setNonIndexedNonInstanced(4);
-    mesh.setVertexData(std::move(fVertexBuffer));
-
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, SkRect::MakeXYWH(0, fY, 100, 100));
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, &mesh, 1);
+    flushState->bindPipeline(*fProgramInfo, SkRect::MakeXYWH(0, fY, 100, 100));
+    flushState->bindBuffers(nullptr, nullptr, fVertexBuffer.get());
+    flushState->draw(4, 0);
   }
 
   sk_sp<GrBuffer> fVertexBuffer;

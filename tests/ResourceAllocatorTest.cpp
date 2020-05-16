@@ -33,10 +33,8 @@ struct ProxyParams {
 static sk_sp<GrSurfaceProxy> make_deferred(
     GrProxyProvider* proxyProvider, const GrCaps* caps, const ProxyParams& p) {
   const GrBackendFormat format = caps->getDefaultBackendFormat(p.fColorType, p.fRenderable);
-  GrSwizzle swizzle = caps->getReadSwizzle(format, p.fColorType);
-
   return proxyProvider->createProxy(
-      format, {p.fSize, p.fSize}, swizzle, p.fRenderable, p.fSampleCnt, GrMipMapped::kNo, p.fFit,
+      format, {p.fSize, p.fSize}, p.fRenderable, p.fSampleCnt, GrMipMapped::kNo, p.fFit,
       p.fBudgeted, GrProtected::kNo);
 }
 
@@ -55,7 +53,7 @@ static sk_sp<GrSurfaceProxy> make_backend(
   }
 
   return proxyProvider->wrapBackendTexture(
-      *backendTex, p.fColorType, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType);
+      *backendTex, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType);
 }
 
 static void cleanup_backend(GrContext* context, const GrBackendTexture& backendTex) {
@@ -267,9 +265,8 @@ sk_sp<GrSurfaceProxy> make_lazy(
     return GrSurfaceProxy::LazyCallbackResult(std::move(texture));
   };
   GrInternalSurfaceFlags flags = GrInternalSurfaceFlags::kNone;
-  GrSwizzle readSwizzle = caps->getReadSwizzle(format, p.fColorType);
   return proxyProvider->createLazyProxy(
-      callback, format, dims, readSwizzle, p.fRenderable, p.fSampleCnt, GrMipMapped::kNo,
+      callback, format, dims, p.fRenderable, p.fSampleCnt, GrMipMapped::kNo,
       GrMipMapsStatus::kNotAllocated, flags, p.fFit, p.fBudgeted, GrProtected::kNo,
       GrSurfaceProxy::UseAllocator::kYes);
 }

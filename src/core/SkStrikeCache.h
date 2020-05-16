@@ -123,9 +123,9 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       this->updateDelta(increase);
     }
 
-    void onAboutToExitScope() override { this->unref(); }
+    void onAboutToExitScope() noexcept override { this->unref(); }
 
-    void updateDelta(size_t increase);
+    void updateDelta(size_t increase) noexcept;
 
     SkStrikeCache* const fStrikeCache;
     Strike* fNext{nullptr};
@@ -162,16 +162,16 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
 
   void purgeAll() SK_EXCLUDES(fLock);  // does not change budget
 
-  int getCacheCountLimit() const SK_EXCLUDES(fLock);
+  int getCacheCountLimit() const noexcept SK_EXCLUDES(fLock);
   int setCacheCountLimit(int limit) SK_EXCLUDES(fLock);
-  int getCacheCountUsed() const SK_EXCLUDES(fLock);
+  int getCacheCountUsed() const noexcept SK_EXCLUDES(fLock);
 
-  size_t getCacheSizeLimit() const SK_EXCLUDES(fLock);
+  size_t getCacheSizeLimit() const noexcept SK_EXCLUDES(fLock);
   size_t setCacheSizeLimit(size_t limit) SK_EXCLUDES(fLock);
-  size_t getTotalMemoryUsed() const SK_EXCLUDES(fLock);
+  size_t getTotalMemoryUsed() const noexcept SK_EXCLUDES(fLock);
 
-  int getCachePointSizeLimit() const SK_EXCLUDES(fLock);
-  int setCachePointSizeLimit(int limit) SK_EXCLUDES(fLock);
+  int getCachePointSizeLimit() const noexcept SK_EXCLUDES(fLock);
+  int setCachePointSizeLimit(int limit) noexcept SK_EXCLUDES(fLock);
 
  private:
   sk_sp<Strike> internalFindStrikeOrNull(const SkDescriptor& desc) SK_REQUIRES(fLock);
@@ -190,7 +190,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
   size_t internalPurge(size_t minBytesNeeded = 0) SK_REQUIRES(fLock);
 
   // A simple accounting of what each glyph cache reports and the strike cache total.
-  void validate() const SK_REQUIRES(fLock);
+  void validate() const noexcept SK_REQUIRES(fLock);
 
   void forEachStrike(std::function<void(const Strike&)> visitor) const SK_EXCLUDES(fLock);
 

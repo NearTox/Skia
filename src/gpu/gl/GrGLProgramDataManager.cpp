@@ -19,26 +19,24 @@ GrGLProgramDataManager::GrGLProgramDataManager(
     GrGLGpu* gpu, GrGLuint programID, const UniformInfoArray& uniforms,
     const VaryingInfoArray& pathProcVaryings)
     : fGpu(gpu), fProgramID(programID) {
-  int count = uniforms.count();
-  fUniforms.push_back_n(count);
-  for (int i = 0; i < count; i++) {
-    Uniform& uniform = fUniforms[i];
-    const UniformInfo& builderUniform = uniforms[i];
+  fUniforms.push_back_n(uniforms.count());
+  int i = 0;
+  for (const UniformInfo& builderUniform : uniforms.items()) {
+    Uniform& uniform = fUniforms[i++];
     SkASSERT(
         GrShaderVar::kNonArray == builderUniform.fVariable.getArrayCount() ||
         builderUniform.fVariable.getArrayCount() > 0);
     SkDEBUGCODE(uniform.fArrayCount = builderUniform.fVariable.getArrayCount();
-                uniform.fType = builderUniform.fVariable.getType();) uniform.fLocation =
-        builderUniform.fLocation;
+                uniform.fType = builderUniform.fVariable.getType());
+    uniform.fLocation = builderUniform.fLocation;
   }
 
   // NVPR programs have separable varyings
-  count = pathProcVaryings.count();
-  fPathProcVaryings.push_back_n(count);
-  for (int i = 0; i < count; i++) {
+  fPathProcVaryings.push_back_n(pathProcVaryings.count());
+  i = 0;
+  for (const VaryingInfo& builderPathProcVarying : pathProcVaryings.items()) {
     SkASSERT(fGpu->glCaps().shaderCaps()->pathRenderingSupport());
-    PathProcVarying& pathProcVarying = fPathProcVaryings[i];
-    const VaryingInfo& builderPathProcVarying = pathProcVaryings[i];
+    PathProcVarying& pathProcVarying = fPathProcVaryings[i++];
     SkASSERT(
         GrShaderVar::kNonArray == builderPathProcVarying.fVariable.getArrayCount() ||
         builderPathProcVarying.fVariable.getArrayCount() > 0);
@@ -50,12 +48,13 @@ GrGLProgramDataManager::GrGLProgramDataManager(
 
 void GrGLProgramDataManager::setSamplerUniforms(
     const UniformInfoArray& samplers, int startUnit) const {
-  for (int i = 0; i < samplers.count(); ++i) {
-    const UniformInfo& sampler = samplers[i];
+  int i = 0;
+  for (const UniformInfo& sampler : samplers.items()) {
     SkASSERT(sampler.fVisibility);
     if (kUnusedUniform != sampler.fLocation) {
       GR_GL_CALL(fGpu->glInterface(), Uniform1i(sampler.fLocation, i + startUnit));
     }
+    ++i;
   }
 }
 

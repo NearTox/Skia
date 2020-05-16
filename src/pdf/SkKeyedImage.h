@@ -21,10 +21,10 @@ class SkKeyedImage {
   SkKeyedImage() {}
   SkKeyedImage(sk_sp<SkImage>);
   SkKeyedImage(const SkBitmap&);
-  SkKeyedImage(SkKeyedImage&&) = default;
+  SkKeyedImage(SkKeyedImage&&) noexcept = default;
   SkKeyedImage(const SkKeyedImage&) = default;
 
-  SkKeyedImage& operator=(SkKeyedImage&&) = default;
+  SkKeyedImage& operator=(SkKeyedImage&&) noexcept = default;
   SkKeyedImage& operator=(const SkKeyedImage&) = default;
 
   explicit operator bool() const { return fImage != nullptr; }

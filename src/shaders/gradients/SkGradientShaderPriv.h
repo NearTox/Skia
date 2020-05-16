@@ -49,8 +49,8 @@ class SkGradientShaderBase : public SkShaderBase {
 
     // fColors and fPos always point into local memory, so they can be safely mutated
     //
-    SkColor4f* mutableColors() { return const_cast<SkColor4f*>(fColors); }
-    SkScalar* mutablePos() { return const_cast<SkScalar*>(fPos); }
+    SkColor4f* mutableColors() noexcept { return const_cast<SkColor4f*>(fColors); }
+    SkScalar* mutablePos() noexcept { return const_cast<SkScalar*>(fPos); }
 
    private:
     SkSTArray<16, SkColor4f, true> fColorStorage;
@@ -61,11 +61,11 @@ class SkGradientShaderBase : public SkShaderBase {
   SkGradientShaderBase(const Descriptor& desc, const SkMatrix& ptsToUnit);
   ~SkGradientShaderBase() override;
 
-  bool isOpaque() const override;
+  bool isOpaque() const noexcept override;
 
-  uint32_t getGradFlags() const { return fGradFlags; }
+  uint32_t getGradFlags() const noexcept { return fGradFlags; }
 
-  const SkMatrix& getGradientMatrix() const { return fPtsToUnit; }
+  const SkMatrix& getGradientMatrix() const noexcept { return fPtsToUnit; }
 
  protected:
   class GradientShaderBase4fContext;
@@ -73,16 +73,16 @@ class SkGradientShaderBase : public SkShaderBase {
   SkGradientShaderBase(SkReadBuffer&);
   void flatten(SkWriteBuffer&) const override;
 
-  void commonAsAGradient(GradientInfo*) const;
+  void commonAsAGradient(GradientInfo*) const noexcept;
 
   bool onAsLuminanceColor(SkColor*) const override;
 
   bool onAppendStages(const SkStageRec&) const override;
 
-  bool onProgram(
-      skvm::Builder* p, const SkMatrix& ctm, const SkMatrix* localM, SkFilterQuality quality,
-      SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc* alloc, skvm::F32 x, skvm::F32 y,
-      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const override;
+  skvm::Color onProgram(
+      skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
+      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dstCS,
+      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override;
 
   virtual void appendGradientStages(
       SkArenaAlloc* alloc, SkRasterPipeline* tPipeline, SkRasterPipeline* postPipeline) const = 0;
@@ -105,17 +105,17 @@ class SkGradientShaderBase : public SkShaderBase {
   uint8_t fGradFlags;
 
  public:
-  SkScalar getPos(int i) const {
+  SkScalar getPos(int i) const noexcept {
     SkASSERT(i < fColorCount);
     return fOrigPos ? fOrigPos[i] : SkIntToScalar(i) / (fColorCount - 1);
   }
 
-  SkColor getLegacyColor(int i) const {
+  SkColor getLegacyColor(int i) const noexcept {
     SkASSERT(i < fColorCount);
     return fOrigColors4f[i].toSkColor();
   }
 
-  bool colorsCanConvertToSkColor() const {
+  bool colorsCanConvertToSkColor() const noexcept {
     bool canConvert = true;
     for (int i = 0; i < fColorCount; ++i) {
       canConvert &= fOrigColors4f[i].fitsInBytes();
@@ -128,9 +128,9 @@ class SkGradientShaderBase : public SkShaderBase {
   int fColorCount;
   sk_sp<SkColorSpace> fColorSpace;  // color space of gradient stops
 
-  bool colorsAreOpaque() const { return fColorsAreOpaque; }
+  bool colorsAreOpaque() const noexcept { return fColorsAreOpaque; }
 
-  SkTileMode getTileMode() const { return fTileMode; }
+  SkTileMode getTileMode() const noexcept { return fTileMode; }
 
  private:
   // Reserve inline space for up to 4 stops.

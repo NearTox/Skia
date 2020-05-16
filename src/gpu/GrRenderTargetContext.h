@@ -49,6 +49,7 @@ struct SkRect;
 class SkRegion;
 class SkRRect;
 struct SkRSXform;
+class SkRuntimeEffect;
 class SkTextBlob;
 class SkVertices;
 
@@ -363,10 +364,11 @@ class GrRenderTargetContext : public GrSurfaceContext {
    * @param   viewMatrix       transformation matrix
    * @param   vertices         specifies the mesh to draw.
    * @param   overridePrimType primitive type to draw. If NULL, derive prim type from vertices.
+   * @param   effect           runtime effect that will handle custom vertex attributes.
    */
   void drawVertices(
       const GrClip&, GrPaint&& paint, const SkMatrix& viewMatrix, sk_sp<SkVertices> vertices,
-      GrPrimitiveType* overridePrimType = nullptr);
+      GrPrimitiveType* overridePrimType = nullptr, const SkRuntimeEffect* effect = nullptr);
 
   /**
    * Draws textured sprites from an atlas with a paint. This currently does not support AA for the
@@ -475,9 +477,11 @@ class GrRenderTargetContext : public GrSurfaceContext {
    */
   bool waitOnSemaphores(int numSemaphores, const GrBackendSemaphore waitSemaphores[]);
 
-  int numSamples() const { return this->asRenderTargetProxy()->numSamples(); }
-  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
-  bool wrapsVkSecondaryCB() const { return this->asRenderTargetProxy()->wrapsVkSecondaryCB(); }
+  int numSamples() const noexcept { return this->asRenderTargetProxy()->numSamples(); }
+  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  bool wrapsVkSecondaryCB() const noexcept {
+    return this->asRenderTargetProxy()->wrapsVkSecondaryCB();
+  }
   GrMipMapped mipMapped() const;
 
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
@@ -486,7 +490,9 @@ class GrRenderTargetContext : public GrSurfaceContext {
 
   // This entry point should only be called if the backing GPU object is known to be
   // instantiated.
-  GrRenderTarget* accessRenderTarget() { return this->asSurfaceProxy()->peekRenderTarget(); }
+  GrRenderTarget* accessRenderTarget() noexcept {
+    return this->asSurfaceProxy()->peekRenderTarget();
+  }
 
   GrRenderTargetContext* asRenderTargetContext() override { return this; }
 
@@ -494,7 +500,7 @@ class GrRenderTargetContext : public GrSurfaceContext {
   GrRenderTargetContextPriv priv();
   const GrRenderTargetContextPriv priv() const;
 
-  GrTextTarget* textTarget() { return fTextTarget.get(); }
+  GrTextTarget* textTarget() noexcept { return fTextTarget.get(); }
 
 #if GR_TEST_UTILS
   bool testingOnly_IsInstantiated() const { return this->asSurfaceProxy()->isInstantiated(); }
@@ -523,11 +529,11 @@ class GrRenderTargetContext : public GrSurfaceContext {
   friend class GrSmallPathRenderer;                // for access to add[Mesh]DrawOp
   friend class GrDefaultPathRenderer;              // for access to add[Mesh]DrawOp
   friend class GrStencilAndCoverPathRenderer;      // for access to add[Mesh]DrawOp
-  friend class GrTessellatingPathRenderer;         // for access to add[Mesh]DrawOp
+  friend class GrTriangulatingPathRenderer;        // for access to add[Mesh]DrawOp
   friend class GrCCPerFlushResources;              // for access to addDrawOp
   friend class GrCoverageCountingPathRenderer;     // for access to addDrawOp
   friend class GrFillRectOp;                       // for access to addDrawOp
-  friend class GrGpuTessellationPathRenderer;      // for access to addDrawOp
+  friend class GrTessellationPathRenderer;         // for access to addDrawOp
   friend class GrTextureOp;                        // for access to addDrawOp
 
   SkDEBUGCODE(void onValidate() const override;)

@@ -27,10 +27,12 @@ class PathAdapter final : public DiscardableAdapterBase<PathAdapter, sksg::Path>
   void onSync() override {
     const auto& path_node = this->node();
 
-    auto path = ValueTraits<ShapeValue>::As<SkPath>(fShape);
+    SkPath path = fShape;
 
     // FillType is tracked in the SG node, not in keyframes -- make sure we preserve it.
     path.setFillType(path_node->getFillType());
+    path.setIsVolatile(!this->isStatic());
+
     path_node->setPath(path);
   }
 
@@ -42,7 +44,7 @@ class PathAdapter final : public DiscardableAdapterBase<PathAdapter, sksg::Path>
 }  // namespace
 
 sk_sp<sksg::Path> AnimationBuilder::attachPath(const skjson::Value& jpath) const {
-  return this->attachDiscardableAdapter<PathAdapter, sk_sp<sksg::Path>>(jpath, *this);
+  return this->attachDiscardableAdapter<PathAdapter>(jpath, *this);
 }
 
 }  // namespace internal

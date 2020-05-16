@@ -26,7 +26,7 @@ class GrContext_Base : public SkRefCnt {
   /*
    * The 3D API backing this context
    */
-  SK_API GrBackendApi backend() const { return fBackend; }
+  SK_API GrBackendApi backend() const noexcept { return fBackend; }
 
   /*
    * Retrieve the default GrBackendFormat for a given SkColorType and renderability.
@@ -40,13 +40,14 @@ class GrContext_Base : public SkRefCnt {
   SK_API GrBackendFormat compressedBackendFormat(SkImage::CompressionType) const;
 
   // Provides access to functions that aren't part of the public API.
-  GrBaseContextPriv priv();
-  const GrBaseContextPriv priv() const;
+  GrBaseContextPriv priv() noexcept;
+  const GrBaseContextPriv priv() const noexcept;
 
  protected:
   friend class GrBaseContextPriv;  // for hidden functions
 
-  GrContext_Base(GrBackendApi backend, const GrContextOptions& options, uint32_t contextID);
+  GrContext_Base(
+      GrBackendApi backend, const GrContextOptions& options, uint32_t contextID) noexcept;
 
   virtual bool init(sk_sp<const GrCaps>);
 
@@ -57,23 +58,23 @@ class GrContext_Base : public SkRefCnt {
    * a third thread with a direct context, then all three contexts will report the same id.
    * It is an error for an image to be used with contexts that report different ids.
    */
-  uint32_t contextID() const { return fContextID; }
+  uint32_t contextID() const noexcept { return fContextID; }
 
-  bool matches(GrContext_Base* candidate) const {
+  bool matches(GrContext_Base* candidate) const noexcept {
     return candidate->contextID() == this->contextID();
   }
 
   /*
    * The options in effect for this context
    */
-  const GrContextOptions& options() const { return fOptions; }
+  const GrContextOptions& options() const noexcept { return fOptions; }
 
-  const GrCaps* caps() const;
+  const GrCaps* caps() const noexcept;
   sk_sp<const GrCaps> refCaps() const;
 
-  virtual GrImageContext* asImageContext() { return nullptr; }
-  virtual GrRecordingContext* asRecordingContext() { return nullptr; }
-  virtual GrContext* asDirectContext() { return nullptr; }
+  virtual GrImageContext* asImageContext() noexcept { return nullptr; }
+  virtual GrRecordingContext* asRecordingContext() noexcept { return nullptr; }
+  virtual GrContext* asDirectContext() noexcept { return nullptr; }
 
  private:
   const GrBackendApi fBackend;

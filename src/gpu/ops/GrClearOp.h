@@ -43,8 +43,8 @@ class GrClearOp final : public GrOp {
   }
 #endif
 
-  const SkPMColor4f& color() const { return fColor; }
-  void setColor(const SkPMColor4f& color) { fColor = color; }
+  const SkPMColor4f& color() const noexcept { return fColor; }
+  void setColor(const SkPMColor4f& color) noexcept { fColor = color; }
 
  private:
   friend class GrOpMemoryPool;  // for ctors
@@ -83,6 +83,10 @@ class GrClearOp final : public GrOp {
     return !fClip.scissorEnabled() || (that->fClip.scissorEnabled() &&
                                        fClip.scissorRect().contains(that->fClip.scissorRect()));
   }
+
+  void onPrePrepare(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) override {}
 
   void onPrepare(GrOpFlushState*) override {}
 

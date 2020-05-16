@@ -18,11 +18,11 @@
     to read from.
 */
 struct SK_API SkYUVAIndex {
-  bool operator==(const SkYUVAIndex& that) const {
+  bool operator==(const SkYUVAIndex& that) const noexcept {
     return this->fIndex == that.fIndex && this->fChannel == that.fChannel;
   }
 
-  bool operator!=(const SkYUVAIndex& that) const { return !(*this == that); }
+  bool operator!=(const SkYUVAIndex& that) const noexcept { return !(*this == that); }
 
   // Index in the array of SkYUVAIndex
   // TODO: rename as Component

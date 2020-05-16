@@ -16,6 +16,7 @@
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProcessor.h"
+#include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrVertexWriter.h"
@@ -93,8 +94,8 @@ static void extract_verts(
 }
 
 static GrGeometryProcessor* create_lines_only_gp(
-    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, bool tweakAlphaForCoverage,
-    const SkMatrix& viewMatrix, bool usesLocalCoords, bool wideColor) {
+    SkArenaAlloc* arena, bool tweakAlphaForCoverage, const SkMatrix& viewMatrix,
+    bool usesLocalCoords, bool wideColor) {
   using namespace GrDefaultGeoProcFactory;
 
   Coverage::Type coverageType =
@@ -104,8 +105,7 @@ static GrGeometryProcessor* create_lines_only_gp(
   Color::Type colorType =
       wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
 
-  return MakeForDeviceSpace(
-      arena, shaderCaps, colorType, coverageType, localCoordsType, viewMatrix);
+  return MakeForDeviceSpace(arena, colorType, coverageType, localCoordsType, viewMatrix);
 }
 
 namespace {
@@ -129,8 +129,10 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkMatrix& viewMatrix,
       const SkPath& path, SkScalar strokeWidth, SkStrokeRec::Style style, SkPaint::Join join,
       SkScalar miterLimit, const GrUserStencilSettings* stencilSettings)
-      : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage, stencilSettings) {
-    fPaths.emplace_back(PathData{color, viewMatrix, path, strokeWidth, style, join, miterLimit});
+      : INHERITED(ClassID()),
+        fHelper(helperArgs, GrAAType::kCoverage, stencilSettings),
+        fViewMatrix(viewMatrix) {
+    fPaths.emplace_back(PathData{color, path, strokeWidth, style, join, miterLimit});
 
     // compute bounds
     SkRect bounds = path.getBounds();
@@ -150,7 +152,13 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
 
   const char* name() const override { return "AAFlatteningConvexPathOp"; }
 
-  void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
+  void visitProxies(const VisitProxyFunc& func) const override {
+    if (fProgramInfo) {
+      fProgramInfo->visitFPProxies(func);
+    } else {
+      fHelper.visitProxies(func);
+    }
+  }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -178,9 +186,27 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
   }
 
  private:
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+    GrGeometryProcessor* gp = create_lines_only_gp(
+        arena, fHelper.compatibleWithCoverageAsAlpha(), fViewMatrix, fHelper.usesLocalCoords(),
+        fWideColor);
+    if (!gp) {
+      SkDebugf("Couldn't create a GrGeometryProcessor\n");
+      return;
+    }
+
+    fProgramInfo = fHelper.createProgramInfoWithStencil(
+        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+        GrPrimitiveType::kTriangles);
+  }
+
   void recordDraw(
-      Target* target, const GrGeometryProcessor* gp, int vertexCount, size_t vertexStride,
-      void* vertices, int indexCount, uint16_t* indices) const {
+      Target* target, int vertexCount, size_t vertexStride, void* vertices, int indexCount,
+      uint16_t* indices) {
     if (vertexCount == 0 || indexCount == 0) {
       return;
     }
@@ -201,25 +227,22 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       return;
     }
     memcpy(idxs, indices, indexCount * sizeof(uint16_t));
-    GrMesh* mesh = target->allocMesh();
+    GrSimpleMesh* mesh = target->allocMesh();
     mesh->setIndexed(
-        std::move(indexBuffer), indexCount, firstIndex, 0, vertexCount - 1,
-        GrPrimitiveRestart::kNo);
-    mesh->setVertexData(std::move(vertexBuffer), firstVertex);
-    target->recordDraw(gp, mesh, 1, GrPrimitiveType::kTriangles);
+        std::move(indexBuffer), indexCount, firstIndex, 0, vertexCount - 1, GrPrimitiveRestart::kNo,
+        std::move(vertexBuffer), firstVertex);
+    fMeshes.push_back(mesh);
   }
 
   void onPrepareDraws(Target* target) override {
-    // Setup GrGeometryProcessor
-    GrGeometryProcessor* gp = create_lines_only_gp(
-        target->allocator(), target->caps().shaderCaps(), fHelper.compatibleWithCoverageAsAlpha(),
-        this->viewMatrix(), fHelper.usesLocalCoords(), fWideColor);
-    if (!gp) {
-      SkDebugf("Couldn't create a GrGeometryProcessor\n");
-      return;
+    if (!fProgramInfo) {
+      this->createProgramInfo(target);
+      if (!fProgramInfo) {
+        return;
+      }
     }
 
-    size_t vertexStride = gp->vertexStride();
+    size_t vertexStride = fProgramInfo->primProc().vertexStride();
     int instanceCount = fPaths.count();
 
     int64_t vertexCount = 0;
@@ -232,7 +255,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       const PathData& args = fPaths[i];
       GrAAConvexTessellator tess(args.fStyle, args.fStrokeWidth, args.fJoin, args.fMiterLimit);
 
-      if (!tess.tessellate(args.fViewMatrix, args.fPath)) {
+      if (!tess.tessellate(fViewMatrix, args.fPath)) {
         continue;
       }
 
@@ -240,7 +263,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       if (vertexCount + currentVertices > static_cast<int>(UINT16_MAX)) {
         // if we added the current instance, we would overflow the indices we can store in a
         // uint16_t. Draw what we've got so far and reset.
-        this->recordDraw(target, gp, vertexCount, vertexStride, vertices, indexCount, indices);
+        this->recordDraw(target, vertexCount, vertexStride, vertices, indexCount, indices);
         vertexCount = 0;
         indexCount = 0;
       }
@@ -271,16 +294,22 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
       indexCount += currentIndices;
     }
     if (vertexCount <= SK_MaxS32 && indexCount <= SK_MaxS32) {
-      this->recordDraw(target, gp, vertexCount, vertexStride, vertices, indexCount, indices);
+      this->recordDraw(target, vertexCount, vertexStride, vertices, indexCount, indices);
     }
     sk_free(vertices);
     sk_free(indices);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    auto pipeline = fHelper.createPipelineWithStencil(flushState);
+    if (!fProgramInfo || fMeshes.isEmpty()) {
+      return;
+    }
 
-    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    for (int i = 0; i < fMeshes.count(); ++i) {
+      flushState->drawMesh(*fMeshes[i]);
+    }
   }
 
   CombineResult onCombineIfPossible(
@@ -289,17 +318,17 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
       return CombineResult::kCannotCombine;
     }
+    if (fViewMatrix != that->fViewMatrix) {
+      return CombineResult::kCannotCombine;
+    }
 
     fPaths.push_back_n(that->fPaths.count(), that->fPaths.begin());
     fWideColor |= that->fWideColor;
     return CombineResult::kMerged;
   }
 
-  const SkMatrix& viewMatrix() const { return fPaths[0].fViewMatrix; }
-
   struct PathData {
     SkPMColor4f fColor;
-    SkMatrix fViewMatrix;
     SkPath fPath;
     SkScalar fStrokeWidth;
     SkStrokeRec::Style fStyle;
@@ -309,7 +338,11 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
 
   SkSTArray<1, PathData, true> fPaths;
   Helper fHelper;
+  SkMatrix fViewMatrix;
   bool fWideColor;
+
+  SkTDArray<GrSimpleMesh*> fMeshes;
+  GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
 };

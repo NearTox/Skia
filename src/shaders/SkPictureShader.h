@@ -37,6 +37,11 @@ class SkPictureShader : public SkShaderBase {
   SkPictureShader(SkReadBuffer&);
   void flatten(SkWriteBuffer&) const override;
   bool onAppendStages(const SkStageRec&) const override;
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
+      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
+      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override;
+
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
   Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
@@ -55,7 +60,7 @@ class SkPictureShader : public SkShaderBase {
     PictureShaderContext(
         const SkPictureShader&, const ContextRec&, sk_sp<SkShader> bitmapShader, SkArenaAlloc*);
 
-    uint32_t getFlags() const override;
+    uint32_t getFlags() const noexcept override;
 
     void shadeSpan(int x, int y, SkPMColor dstC[], int count) override;
 

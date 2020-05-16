@@ -25,31 +25,31 @@ class SK_API SkROBuffer : public SkRefCnt {
    *  Return the logical length of the data owned/shared by this buffer. It may be stored in
    *  multiple contiguous blocks, accessible via the iterator.
    */
-  size_t size() const { return fAvailable; }
+  size_t size() const noexcept { return fAvailable; }
 
   class SK_API Iter {
    public:
-    Iter(const SkROBuffer*);
-    Iter(const sk_sp<SkROBuffer>&);
+    Iter(const SkROBuffer*) noexcept;
+    Iter(const sk_sp<SkROBuffer>&) noexcept;
 
-    void reset(const SkROBuffer*);
+    void reset(const SkROBuffer*) noexcept;
 
     /**
      *  Return the current continuous block of memory, or nullptr if the iterator is exhausted
      */
-    const void* data() const;
+    const void* data() const noexcept;
 
     /**
      *  Returns the number of bytes in the current continguous block of memory, or 0 if the
      *  iterator is exhausted.
      */
-    size_t size() const;
+    size_t size() const noexcept;
 
     /**
      *  Advance to the next contiguous block of memory, returning true if there is another
      *  block, or false if the iterator is exhausted.
      */
-    bool next();
+    bool next() noexcept;
 
    private:
     const SkBufferBlock* fBlock;
@@ -58,7 +58,7 @@ class SK_API SkROBuffer : public SkRefCnt {
   };
 
  private:
-  SkROBuffer(const SkBufferHead* head, size_t available, const SkBufferBlock* fTail);
+  SkROBuffer(const SkBufferHead* head, size_t available, const SkBufferBlock* fTail) noexcept;
   virtual ~SkROBuffer();
 
   const SkBufferHead* fHead;
@@ -79,7 +79,7 @@ class SK_API SkRWBuffer {
   SkRWBuffer(size_t initialCapacity = 0);
   ~SkRWBuffer();
 
-  size_t size() const { return fTotalUsed; }
+  size_t size() const noexcept { return fTotalUsed; }
 
   /**
    *  Append |length| bytes from |buffer|.
@@ -88,7 +88,7 @@ class SK_API SkRWBuffer {
    *  pass a |reserve| hint (representing the number of upcoming bytes *in addition* to the
    *  current append), to minimize the number of internal allocations.
    */
-  void append(const void* buffer, size_t length, size_t reserve = 0);
+  void append(const void* buffer, size_t length, size_t reserve = 0) noexcept;
 
   sk_sp<SkROBuffer> makeROBufferSnapshot() const {
     return sk_sp<SkROBuffer>(new SkROBuffer(fHead, fTotalUsed, fTail));
@@ -99,7 +99,7 @@ class SK_API SkRWBuffer {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
  private:

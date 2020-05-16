@@ -20,14 +20,12 @@
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
 static GrGeometryProcessor* make_gp(
-    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, const SkMatrix& viewMatrix,
-    bool wideColor) {
+    SkArenaAlloc* arena, const SkMatrix& viewMatrix, bool wideColor) {
   using namespace GrDefaultGeoProcFactory;
   Color::Type colorType =
       wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
   return GrDefaultGeoProcFactory::Make(
-      arena, shaderCaps, colorType, Coverage::kSolid_Type, LocalCoords::kUsePosition_Type,
-      viewMatrix);
+      arena, colorType, Coverage::kSolid_Type, LocalCoords::kUsePosition_Type, viewMatrix);
 }
 
 namespace {
@@ -65,7 +63,7 @@ class RegionOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -98,43 +96,25 @@ class RegionOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
-    GrGeometryProcessor* gp = make_gp(arena, caps->shaderCaps(), fViewMatrix, fWideColor);
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+    GrGeometryProcessor* gp = make_gp(arena, fViewMatrix, fWideColor);
     if (!gp) {
       SkDebugf("Couldn't create GrGeometryProcessor\n");
-      return nullptr;
+      return;
     }
 
-    return fHelper.createProgramInfoWithStencil(
+    fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
-  }
-
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -176,8 +156,9 @@ class RegionOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   CombineResult onCombineIfPossible(
@@ -206,7 +187,7 @@ class RegionOp final : public GrMeshDrawOp {
   SkSTArray<1, RegionInfo, true> fRegions;
   bool fWideColor;
 
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;

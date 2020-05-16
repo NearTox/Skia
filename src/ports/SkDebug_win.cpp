@@ -14,9 +14,9 @@
 #  include <stdarg.h>
 #  include <stdio.h>
 
-static const size_t kBufferSize = 2048;
+static constexpr size_t kBufferSize = 2048;
 
-void SkDebugf(const char format[], ...) {
+void SkDebugf(const char format[], ...) noexcept {
   char buffer[kBufferSize + 1];
   va_list args;
 

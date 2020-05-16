@@ -437,6 +437,13 @@ void GrVkCaps::applyDriverCorrectnessWorkarounds(const VkPhysicalDevicePropertie
     fPreferPrimaryOverSecondaryCommandBuffers = false;
   }
 
+  // On Mali G series GPUs, applying transfer functions in the fragment shader with half-floats
+  // produces answers that are much less accurate than expected/required. This forces full floats
+  // for some intermediate values to get acceptable results.
+  if (kARM_VkVendor == properties.vendorID) {
+    fShaderCaps->fColorSpaceMathNeedsFloat = true;
+  }
+
   // On various devices, when calling vkCmdClearAttachments on a primary command buffer, it
   // corrupts the bound buffers on the command buffer. As a workaround we invalidate our knowledge
   // of bound buffers so that we will rebind them on the next draw.
@@ -778,7 +785,7 @@ void GrVkCaps::initFormatTable(
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle::RRRR();
-        ctInfo.fOutputSwizzle = GrSwizzle::AAAA();
+        ctInfo.fWriteSwizzle = GrSwizzle::AAAA();
       }
       // Format: VK_FORMAT_R8_UNORM, Surface: kGray_8
       {
@@ -871,7 +878,7 @@ void GrVkCaps::initFormatTable(
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle::RRRR();
-        ctInfo.fOutputSwizzle = GrSwizzle::AAAA();
+        ctInfo.fWriteSwizzle = GrSwizzle::AAAA();
       }
     }
   }
@@ -949,7 +956,7 @@ void GrVkCaps::initFormatTable(
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle::BGRA();
-        ctInfo.fOutputSwizzle = GrSwizzle::BGRA();
+        ctInfo.fWriteSwizzle = GrSwizzle::BGRA();
       }
     }
   }
@@ -1008,7 +1015,7 @@ void GrVkCaps::initFormatTable(
         ctInfo.fColorType = ct;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
         ctInfo.fReadSwizzle = GrSwizzle::RRRR();
-        ctInfo.fOutputSwizzle = GrSwizzle::AAAA();
+        ctInfo.fWriteSwizzle = GrSwizzle::AAAA();
       }
     }
   }
@@ -1288,18 +1295,6 @@ SkImage::CompressionType GrVkCaps::compressionType(const GrBackendFormat& format
   SkUNREACHABLE;
 }
 
-bool GrVkCaps::isFormatTexturableAndUploadable(
-    GrColorType ct, const GrBackendFormat& format) const {
-  VkFormat vkFormat;
-  if (!format.asVkFormat(&vkFormat)) {
-    return false;
-  }
-
-  uint32_t ctFlags = this->getFormatInfo(vkFormat).colorTypeFlags(ct);
-  return this->isVkFormatTexturable(vkFormat) &&
-         SkToBool(ctFlags & ColorTypeInfo::kUploadData_Flag);
-}
-
 bool GrVkCaps::isFormatTexturable(const GrBackendFormat& format) const {
   VkFormat vkFormat;
   if (!format.asVkFormat(&vkFormat)) {
@@ -1536,10 +1531,10 @@ GrColorType GrVkCaps::getYUVAColorTypeFromBackendFormat(
   SkUNREACHABLE;
 }
 
-GrBackendFormat GrVkCaps::onGetDefaultBackendFormat(GrColorType ct, GrRenderable renderable) const {
+GrBackendFormat GrVkCaps::onGetDefaultBackendFormat(GrColorType ct) const {
   VkFormat format = this->getFormatFromColorType(ct);
   if (format == VK_FORMAT_UNDEFINED) {
-    return GrBackendFormat();
+    return {};
   }
   return GrBackendFormat::MakeVk(format);
 }
@@ -1581,14 +1576,14 @@ GrSwizzle GrVkCaps::getReadSwizzle(const GrBackendFormat& format, GrColorType co
   return GrSwizzle::RGBA();
 }
 
-GrSwizzle GrVkCaps::getOutputSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
+GrSwizzle GrVkCaps::getWriteSwizzle(const GrBackendFormat& format, GrColorType colorType) const {
   VkFormat vkFormat;
   SkAssertResult(format.asVkFormat(&vkFormat));
   const auto& info = this->getFormatInfo(vkFormat);
   for (int i = 0; i < info.fColorTypeInfoCount; ++i) {
     const auto& ctInfo = info.fColorTypeInfos[i];
     if (ctInfo.fColorType == colorType) {
-      return ctInfo.fOutputSwizzle;
+      return ctInfo.fWriteSwizzle;
     }
   }
   return GrSwizzle::RGBA();

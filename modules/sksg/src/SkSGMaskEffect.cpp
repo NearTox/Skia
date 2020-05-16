@@ -12,9 +12,13 @@
 
 namespace sksg {
 
-static bool is_inverted(sksg::MaskEffect::Mode mode) { return static_cast<uint32_t>(mode) & 1; };
+static bool is_inverted(sksg::MaskEffect::Mode mode) noexcept {
+  return static_cast<uint32_t>(mode) & 1;
+};
 
-static bool is_luma(sksg::MaskEffect::Mode mode) { return static_cast<uint32_t>(mode) & 2; }
+static bool is_luma(sksg::MaskEffect::Mode mode) noexcept {
+  return static_cast<uint32_t>(mode) & 2;
+}
 
 MaskEffect::MaskEffect(sk_sp<RenderNode> child, sk_sp<RenderNode> mask, Mode mode)
     : INHERITED(std::move(child)), fMaskNode(std::move(mask)), fMaskMode(mode) {

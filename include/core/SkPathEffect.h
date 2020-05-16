@@ -73,7 +73,7 @@ class SK_API SkPathEffect : public SkFlattenable {
   */
   class PointData {
    public:
-    PointData() : fFlags(0), fPoints(nullptr), fNumPoints(0) {
+    PointData() noexcept : fFlags(0), fPoints(nullptr), fNumPoints(0) {
       fSize.set(SK_Scalar1, SK_Scalar1);
       // 'asPoints' needs to initialize/fill-in 'fClipRect' if it sets
       // the kUseClip flag
@@ -126,8 +126,8 @@ class SK_API SkPathEffect : public SkFlattenable {
   };
 
   struct DashInfo {
-    DashInfo() : fIntervals(nullptr), fCount(0), fPhase(0) {}
-    DashInfo(SkScalar* intervals, int32_t count, SkScalar phase)
+    constexpr DashInfo() noexcept : fIntervals(nullptr), fCount(0), fPhase(0) {}
+    DashInfo(SkScalar* intervals, int32_t count, SkScalar phase) noexcept
         : fIntervals(intervals), fCount(count), fPhase(phase) {}
 
     SkScalar* fIntervals;  //!< Length of on/off intervals for dashed lines
@@ -141,9 +141,9 @@ class SK_API SkPathEffect : public SkFlattenable {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkPathEffect_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkPathEffect_Type; }
 
-  SkFlattenable::Type getFlattenableType() const override { return kSkPathEffect_Type; }
+  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkPathEffect_Type; }
 
   static sk_sp<SkPathEffect> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -152,7 +152,7 @@ class SK_API SkPathEffect : public SkFlattenable {
   }
 
  protected:
-  SkPathEffect() {}
+  constexpr SkPathEffect() noexcept = default;
 
   virtual bool onFilterPath(SkPath*, const SkPath&, SkStrokeRec*, const SkRect*) const = 0;
   virtual SkRect onComputeFastBounds(const SkRect& src) const { return src; }
@@ -160,7 +160,7 @@ class SK_API SkPathEffect : public SkFlattenable {
       PointData*, const SkPath&, const SkStrokeRec&, const SkMatrix&, const SkRect*) const {
     return false;
   }
-  virtual DashType onAsADash(DashInfo*) const { return kNone_DashType; }
+  virtual DashType onAsADash(DashInfo*) const noexcept { return kNone_DashType; }
 
  private:
   // illegal

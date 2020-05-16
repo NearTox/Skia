@@ -21,7 +21,7 @@ class GrTexture;
  */
 class GrCoordTransform {
  public:
-  GrCoordTransform() = default;
+  GrCoordTransform() noexcept = default;
 
   GrCoordTransform(const GrCoordTransform&) = default;
 
@@ -29,14 +29,14 @@ class GrCoordTransform {
    * Create a transformation that maps [0, proxy->width()] x [0, proxy->height()] to a proxy's
    * extent.
    */
-  GrCoordTransform(GrSurfaceProxy* proxy, GrSurfaceOrigin origin)
+  GrCoordTransform(GrSurfaceProxy* proxy, GrSurfaceOrigin origin) noexcept
       : fProxy(proxy), fOrigin(origin) {}
 
   /**
    * Create a transformation from a matrix. The origin implies whether a y-reversal should be
    * performed.
    */
-  GrCoordTransform(const SkMatrix& m, GrSurfaceProxy* proxy, GrSurfaceOrigin origin)
+  GrCoordTransform(const SkMatrix& m, GrSurfaceProxy* proxy, GrSurfaceOrigin origin) noexcept
       : fProxy(proxy), fOrigin(origin), fMatrix(m) {
     SkASSERT(proxy);
   }
@@ -44,7 +44,7 @@ class GrCoordTransform {
   /**
    * Create a transformation that applies the matrix to a coord set.
    */
-  GrCoordTransform(const SkMatrix& m) : fMatrix(m) {}
+  GrCoordTransform(const SkMatrix& m) noexcept : fMatrix(m) {}
 
   GrCoordTransform& operator=(const GrCoordTransform& that) = default;
 
@@ -72,13 +72,15 @@ class GrCoordTransform {
     return true;
   }
 
-  const SkMatrix& matrix() const { return fMatrix; }
-  const GrSurfaceProxy* proxy() const { return fProxy; }
-  bool normalize() const {
+  const SkMatrix& matrix() const noexcept { return fMatrix; }
+  const GrSurfaceProxy* proxy() const noexcept { return fProxy; }
+  bool normalize() const noexcept {
     return fProxy && fProxy->backendFormat().textureType() != GrTextureType::kRectangle;
   }
-  bool reverseY() const { return fProxy && fOrigin == kBottomLeft_GrSurfaceOrigin; }
-  bool isNoOp() const { return fMatrix.isIdentity() && !this->normalize() && !this->reverseY(); }
+  bool reverseY() const noexcept { return fProxy && fOrigin == kBottomLeft_GrSurfaceOrigin; }
+  bool isNoOp() const noexcept {
+    return fMatrix.isIdentity() && !this->normalize() && !this->reverseY();
+  }
 
   // This should only ever be called at flush time after the backing texture has been
   // successfully instantiated

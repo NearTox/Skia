@@ -92,7 +92,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -175,9 +175,11 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& clip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& clip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -185,37 +187,19 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
       LocalCoords::Type localCoordsType =
           fHelper.usesLocalCoords() ? LocalCoords::kUsePosition_Type : LocalCoords::kUnused_Type;
       gp = GrDefaultGeoProcFactory::Make(
-          arena, caps->shaderCaps(), color, Coverage::kSolid_Type, localCoordsType, fViewMatrix);
+          arena, color, Coverage::kSolid_Type, localCoordsType, fViewMatrix);
     }
 
-    return fHelper.createProgramInfo(
-        caps, arena, outputView, std::move(clip), dstProxyView, gp,
-        (fStrokeWidth > 0) ? GrPrimitiveType::kTriangleStrip : GrPrimitiveType::kLineStrip);
-  }
+    GrPrimitiveType primType =
+        (fStrokeWidth > 0) ? GrPrimitiveType::kTriangleStrip : GrPrimitiveType::kLineStrip;
 
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
+    fProgramInfo = fHelper.createProgramInfo(
+        caps, arena, outputView, std::move(clip), dstProxyView, gp, primType);
   }
 
   void onPrepareDraws(Target* target) override {
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
     }
 
     size_t kVertexStride = fProgramInfo->primProc().vertexStride();
@@ -248,8 +232,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
     }
 
     fMesh = target->allocMesh();
-    fMesh->setNonIndexedNonInstanced(vertexCount);
-    fMesh->setVertexData(std::move(vertexBuffer), firstVertex);
+    fMesh->set(std::move(vertexBuffer), vertexCount, firstVertex);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -257,8 +240,9 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   // TODO: override onCombineIfPossible
@@ -268,7 +252,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
   SkMatrix fViewMatrix;
   SkRect fRect;
   SkScalar fStrokeWidth;
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   const static int kVertsPerHairlineRect = 5;
@@ -341,8 +325,8 @@ static void compute_aa_rects(
 }
 
 static GrGeometryProcessor* create_aa_stroke_rect_gp(
-    SkArenaAlloc* arena, const GrShaderCaps* shaderCaps, bool tweakAlphaForCoverage,
-    const SkMatrix& viewMatrix, bool usesLocalCoords, bool wideColor) {
+    SkArenaAlloc* arena, bool tweakAlphaForCoverage, const SkMatrix& viewMatrix,
+    bool usesLocalCoords, bool wideColor) {
   using namespace GrDefaultGeoProcFactory;
 
   Coverage::Type coverageType =
@@ -352,8 +336,7 @@ static GrGeometryProcessor* create_aa_stroke_rect_gp(
   Color::Type colorType =
       wideColor ? Color::kPremulWideColorAttribute_Type : Color::kPremulGrColorAttribute_Type;
 
-  return MakeForDeviceSpace(
-      arena, shaderCaps, colorType, coverageType, localCoordsType, viewMatrix);
+  return MakeForDeviceSpace(arena, colorType, coverageType, localCoordsType, viewMatrix);
 }
 
 class AAStrokeRectOp final : public GrMeshDrawOp {
@@ -419,7 +402,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -456,14 +439,12 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* createProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&);
-  GrProgramInfo* createProgramInfo(Target*);
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
 
-  void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+  void onCreateProgramInfo(
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) override;
+
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
@@ -500,7 +481,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   Helper fHelper;
   SkSTArray<1, RectInfo, true> fRects;
   SkMatrix fViewMatrix;
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
   bool fMiterStroke;
   bool fWideColor;
@@ -508,80 +489,60 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   typedef GrMeshDrawOp INHERITED;
 };
 
-GrProgramInfo* AAStrokeRectOp::createProgramInfo(
+void AAStrokeRectOp::onCreateProgramInfo(
     const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   GrGeometryProcessor* gp = create_aa_stroke_rect_gp(
-      arena, caps->shaderCaps(), fHelper.compatibleWithCoverageAsAlpha(), this->viewMatrix(),
-      fHelper.usesLocalCoords(), fWideColor);
+      arena, fHelper.compatibleWithCoverageAsAlpha(), this->viewMatrix(), fHelper.usesLocalCoords(),
+      fWideColor);
   if (!gp) {
     SkDebugf("Couldn't create GrGeometryProcessor\n");
-    return nullptr;
+    return;
   }
 
-  return fHelper.createProgramInfo(
+  fProgramInfo = fHelper.createProgramInfo(
       caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
       GrPrimitiveType::kTriangles);
 }
 
-GrProgramInfo* AAStrokeRectOp::createProgramInfo(Target* target) {
-  return this->createProgramInfo(
-      &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-      target->dstProxyView());
-}
-
-void AAStrokeRectOp::onPrePrepareDraws(
-    GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-    const GrXferProcessor::DstProxyView& dstProxyView) {
-  SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-  // This is equivalent to a GrOpFlushState::detachAppliedClip
-  GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-  fProgramInfo = this->createProgramInfo(
-      context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-  context->priv().recordProgramInfo(fProgramInfo);
-}
-
 void AAStrokeRectOp::onPrepareDraws(Target* target) {
-  if (!fProgramInfo) {
-    fProgramInfo = this->createProgramInfo(target);
     if (!fProgramInfo) {
+      this->createProgramInfo(target);
+      if (!fProgramInfo) {
+        return;
+      }
+    }
+
+    int innerVertexNum = 4;
+    int outerVertexNum = this->miterStroke() ? 4 : 8;
+    int verticesPerInstance = (outerVertexNum + innerVertexNum) * 2;
+    int indicesPerInstance = this->miterStroke() ? kMiterIndexCnt : kBevelIndexCnt;
+    int instanceCount = fRects.count();
+    int maxQuads = this->miterStroke() ? kNumMiterRectsInIndexBuffer : kNumBevelRectsInIndexBuffer;
+
+    sk_sp<const GrGpuBuffer> indexBuffer =
+        GetIndexBuffer(target->resourceProvider(), this->miterStroke());
+    if (!indexBuffer) {
+      SkDebugf("Could not allocate indices\n");
       return;
     }
-  }
+    PatternHelper helper(
+        target, GrPrimitiveType::kTriangles, fProgramInfo->primProc().vertexStride(),
+        std::move(indexBuffer), verticesPerInstance, indicesPerInstance, instanceCount, maxQuads);
+    GrVertexWriter vertices{helper.vertices()};
+    if (!vertices.fPtr) {
+      SkDebugf("Could not allocate vertices\n");
+      return;
+    }
 
-  int innerVertexNum = 4;
-  int outerVertexNum = this->miterStroke() ? 4 : 8;
-  int verticesPerInstance = (outerVertexNum + innerVertexNum) * 2;
-  int indicesPerInstance = this->miterStroke() ? kMiterIndexCnt : kBevelIndexCnt;
-  int instanceCount = fRects.count();
-  int maxQuads = this->miterStroke() ? kNumMiterRectsInIndexBuffer : kNumBevelRectsInIndexBuffer;
-
-  sk_sp<const GrGpuBuffer> indexBuffer =
-      GetIndexBuffer(target->resourceProvider(), this->miterStroke());
-  if (!indexBuffer) {
-    SkDebugf("Could not allocate indices\n");
-    return;
-  }
-  PatternHelper helper(
-      target, GrPrimitiveType::kTriangles, fProgramInfo->primProc().vertexStride(),
-      std::move(indexBuffer), verticesPerInstance, indicesPerInstance, instanceCount, maxQuads);
-  GrVertexWriter vertices{helper.vertices()};
-  if (!vertices.fPtr) {
-    SkDebugf("Could not allocate vertices\n");
-    return;
-  }
-
-  for (int i = 0; i < instanceCount; i++) {
-    const RectInfo& info = fRects[i];
-    this->generateAAStrokeRectGeometry(
-        vertices, info.fColor, fWideColor, info.fDevOutside, info.fDevOutsideAssist,
-        info.fDevInside, fMiterStroke, info.fDegenerate, fHelper.compatibleWithCoverageAsAlpha(),
-        info.fDevHalfStrokeSize);
-  }
-  fMesh = helper.mesh();
+    for (int i = 0; i < instanceCount; i++) {
+      const RectInfo& info = fRects[i];
+      this->generateAAStrokeRectGeometry(
+          vertices, info.fColor, fWideColor, info.fDevOutside, info.fDevOutsideAssist,
+          info.fDevInside, fMiterStroke, info.fDegenerate, fHelper.compatibleWithCoverageAsAlpha(),
+          info.fDevHalfStrokeSize);
+    }
+    fMesh = helper.mesh();
 }
 
 void AAStrokeRectOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
@@ -589,8 +550,9 @@ void AAStrokeRectOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBo
     return;
   }
 
-  flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-  flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+  flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+  flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+  flushState->drawMesh(*fMesh);
 }
 
 sk_sp<const GrGpuBuffer> AAStrokeRectOp::GetIndexBuffer(

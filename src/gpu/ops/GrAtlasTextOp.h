@@ -9,7 +9,6 @@
 #define GrAtlasTextOp_DEFINED
 
 #include "src/gpu/ops/GrMeshDrawOp.h"
-#include "src/gpu/text/GrDistanceFieldAdjustTable.h"
 #include "src/gpu/text/GrTextBlob.h"
 
 class GrRecordingContext;
@@ -41,9 +40,8 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
       GrRecordingContext*, GrPaint&&, GrMaskFormat, int glyphCount, bool needsTransform);
 
   static std::unique_ptr<GrAtlasTextOp> MakeDistanceField(
-      GrRecordingContext*, GrPaint&&, int glyphCount, const GrDistanceFieldAdjustTable*,
-      bool useGammaCorrectDistanceTable, SkColor luminanceColor, const SkSurfaceProps&,
-      bool isAntiAliased, bool useLCD);
+      GrRecordingContext*, GrPaint&&, int glyphCount, bool useGammaCorrectDistanceTable,
+      SkColor luminanceColor, const SkSurfaceProps&, bool isAntiAliased, bool useLCD);
 
   // To avoid even the initial copy of the struct, we have a getter for the first item which
   // is used to seed the op with its initial geometry.  After seeding, the client should call
@@ -96,11 +94,28 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     sk_sp<const GrBuffer> fVertexBuffer;
     sk_sp<const GrBuffer> fIndexBuffer;
     GrGeometryProcessor* fGeometryProcessor;
-    GrPipeline::FixedDynamicState* fFixedDynamicState;
+    const GrSurfaceProxy** fPrimProcProxies;
     int fGlyphsToFlush = 0;
     int fVertexOffset = 0;
     int fNumDraws = 0;
   };
+
+  GrProgramInfo* programInfo() override {
+    // TODO [PI]: implement
+    return nullptr;
+  }
+
+  void onCreateProgramInfo(
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&) override {
+    // TODO [PI]: implement
+  }
+
+  void onPrePrepareDraws(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) override {
+    // TODO [PI]: implement
+  }
 
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
@@ -143,7 +158,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
       GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override;
 
   GrGeometryProcessor* setupDfProcessor(
-      SkArenaAlloc* arena, const GrShaderCaps& caps, const GrSurfaceProxyView* views,
+      SkArenaAlloc*, const GrShaderCaps&, const GrSurfaceProxyView* views,
       unsigned int numActiveViews) const;
 
   SkAutoSTMalloc<kMinGeometryAllocated, Geometry> fGeoData;
@@ -158,7 +173,6 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   int fNumGlyphs;
   MaskType fMaskType;
   // Distance field properties
-  sk_sp<const GrDistanceFieldAdjustTable> fDistanceAdjustTable;
   SkColor fLuminanceColor;
   uint32_t fDFGPFlags = 0;
 

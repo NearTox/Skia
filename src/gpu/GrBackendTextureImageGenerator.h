@@ -41,7 +41,8 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
   bool onIsValid(GrContext*) const override { return true; }
 
   GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped mipMapped) override;
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped mipMapped,
+      GrImageTexGenPolicy) override;
 
  private:
   GrBackendTextureImageGenerator(

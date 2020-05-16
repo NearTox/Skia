@@ -33,12 +33,6 @@ namespace sk_gpu_test {
 
 bool LoadVkLibraryAndGetProcAddrFuncs(
     PFN_vkGetInstanceProcAddr* instProc, PFN_vkGetDeviceProcAddr* devProc) {
-#  ifdef SK_MOLTENVK
-  // MoltenVK is a statically linked framework, so there is no Vulkan library to load.
-  *instProc = &vkGetInstanceProcAddr;
-  *devProc = &vkGetDeviceProcAddr;
-  return true;
-#  else
   static void* vkLib = nullptr;
   static PFN_vkGetInstanceProcAddr localInstProc = nullptr;
   static PFN_vkGetDeviceProcAddr localDevProc = nullptr;
@@ -56,7 +50,6 @@ bool LoadVkLibraryAndGetProcAddrFuncs(
   *instProc = localInstProc;
   *devProc = localDevProc;
   return true;
-#  endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

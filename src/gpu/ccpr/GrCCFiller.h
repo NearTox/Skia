@@ -11,7 +11,8 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "src/core/SkPathPriv.h"
-#include "src/gpu/GrTessellator.h"
+#include "src/gpu/GrTriangulator.h"
+#include "src/gpu/ccpr/GrAutoMapVertexBuffer.h"
 #include "src/gpu/ccpr/GrCCCoverageProcessor.h"
 #include "src/gpu/ccpr/GrCCFillGeometry.h"
 #include "src/gpu/ops/GrDrawOp.h"
@@ -58,19 +59,19 @@ class GrCCFiller {
   // Every kBeginPath verb has a corresponding PathInfo entry.
   class PathInfo {
    public:
-    PathInfo(GrScissorTest scissorTest, const SkIVector& devToAtlasOffset)
+    PathInfo(GrScissorTest scissorTest, const SkIVector& devToAtlasOffset) noexcept
         : fScissorTest(scissorTest), fDevToAtlasOffset(devToAtlasOffset) {}
 
-    GrScissorTest scissorTest() const { return fScissorTest; }
-    const SkIVector& devToAtlasOffset() const { return fDevToAtlasOffset; }
+    GrScissorTest scissorTest() const noexcept { return fScissorTest; }
+    const SkIVector& devToAtlasOffset() const noexcept { return fDevToAtlasOffset; }
 
     // An empty tessellation fan is also valid; we use negative count to denote not tessellated.
-    bool hasFanTessellation() const { return fFanTessellationCount >= 0; }
-    int fanTessellationCount() const {
+    bool hasFanTessellation() const noexcept { return fFanTessellationCount >= 0; }
+    int fanTessellationCount() const noexcept {
       SkASSERT(this->hasFanTessellation());
       return fFanTessellationCount;
     }
-    const GrTessellator::WindingVertex* fanTessellation() const {
+    const GrTriangulator::WindingVertex* fanTessellation() const noexcept {
       SkASSERT(this->hasFanTessellation());
       return fFanTessellation.get();
     }
@@ -82,7 +83,7 @@ class GrCCFiller {
     GrScissorTest fScissorTest;
     SkIVector fDevToAtlasOffset;  // Translation from device space to location in atlas.
     int fFanTessellationCount = -1;
-    std::unique_ptr<const GrTessellator::WindingVertex[]> fFanTessellation;
+    std::unique_ptr<const GrTriangulator::WindingVertex[]> fFanTessellation;
   };
 
   // Defines a batch of CCPR primitives. Start indices are deduced by looking at the previous
@@ -101,7 +102,7 @@ class GrCCFiller {
   };
 
   void emitTessellatedFan(
-      const GrTessellator::WindingVertex*, int numVertices, const Sk2f& devToAtlasOffset,
+      const GrTriangulator::WindingVertex*, int numVertices, const Sk2f& devToAtlasOffset,
       GrCCCoverageProcessor::TriPointInstance::Ordering, GrCCCoverageProcessor::TriPointInstance*,
       GrCCCoverageProcessor::QuadPointInstance*, GrCCFillGeometry::PrimitiveTallies*);
   void drawPrimitives(
@@ -116,7 +117,7 @@ class GrCCFiller {
   PrimitiveTallies fTotalPrimitiveCounts[kNumScissorModes];
   int fMaxMeshesPerDraw = 0;
 
-  sk_sp<GrGpuBuffer> fInstanceBuffer;
+  GrAutoMapVertexBuffer fInstanceBuffer;
   PrimitiveTallies fBaseInstances[kNumScissorModes];
 };
 

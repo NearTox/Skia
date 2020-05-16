@@ -42,7 +42,8 @@ class GrAHardwareBufferImageGenerator : public SkImageGenerator {
   bool onIsValid(GrContext*) const override;
 
   GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped) override;
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped,
+      GrImageTexGenPolicy) override;
 
  private:
   GrAHardwareBufferImageGenerator(

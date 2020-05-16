@@ -12,7 +12,7 @@
 
 namespace sksg {
 
-Plane::Plane() = default;
+Plane::Plane() noexcept = default;
 
 void Plane::onClip(SkCanvas*, bool) const {}
 

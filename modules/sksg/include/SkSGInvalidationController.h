@@ -24,18 +24,18 @@ namespace sksg {
  */
 class InvalidationController {
  public:
-  InvalidationController();
+  InvalidationController() noexcept;
   InvalidationController(const InvalidationController&) = delete;
   InvalidationController& operator=(const InvalidationController&) = delete;
 
   void inval(const SkRect&, const SkMatrix& ctm = SkMatrix::I());
 
-  const SkRect& bounds() const { return fBounds; }
+  const SkRect& bounds() const noexcept { return fBounds; }
 
-  auto begin() const { return fRects.cbegin(); }
-  auto end() const { return fRects.cend(); }
+  auto begin() const noexcept { return fRects.cbegin(); }
+  auto end() const noexcept { return fRects.cend(); }
 
-  void reset();
+  void reset() noexcept;
 
  private:
   std::vector<SkRect> fRects;

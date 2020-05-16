@@ -48,7 +48,7 @@ class GrMtlPipelineState {
   void bindTextures(id<MTLRenderCommandEncoder> renderCmdEncoder);
 
   void setDrawState(
-      id<MTLRenderCommandEncoder>, const GrSwizzle& outputSwizzle, const GrXferProcessor&);
+      id<MTLRenderCommandEncoder>, const GrSwizzle& writeSwizzle, const GrXferProcessor&);
 
   static void SetDynamicScissorRectState(
       id<MTLRenderCommandEncoder> renderCmdEncoder, const GrRenderTarget* renderTarget,

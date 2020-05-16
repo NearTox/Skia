@@ -10,7 +10,7 @@
 
 #include "include/core/SkImage.h"
 #include "include/gpu/GrTypes.h"
-#include "include/gpu/d3d/GrD3D12.h"
+#include "include/gpu/d3d/GrD3DTypes.h"
 #include "include/private/GrTypesPriv.h"
 
 /**

@@ -57,7 +57,7 @@ struct Ctx {
   void* ptr;
   void**& program;
 
-  explicit Ctx(void**& p) : ptr(nullptr), program(p) {}
+  explicit Ctx(void**& p) noexcept : ptr(nullptr), program(p) {}
 
   template <typename T>
   operator T*() {
@@ -66,7 +66,7 @@ struct Ctx {
     }
     return (T*)ptr;
   }
-  operator None() { return None{}; }
+  operator None() noexcept { return None{}; }
 };
 
 #if !defined(__clang__)

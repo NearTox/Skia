@@ -12,10 +12,12 @@
 #include "include/private/SkMutex.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
+#include "src/core/SkVM.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/sksl/SkSLByteCode.h"
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLInterpreter.h"
+#include "src/sksl/ir/SkSLFunctionDefinition.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
 
 #if SK_SUPPORT_GPU
@@ -66,7 +68,23 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
   size_t offset = 0, uniformSize = 0;
   std::vector<Variable> inAndUniformVars;
   std::vector<SkString> children;
+  std::vector<Varying> varyings;
   const SkSL::Context& ctx(compiler->context());
+
+  // Scrape the varyings
+  for (const auto& e : *program) {
+    if (e.fKind == SkSL::ProgramElement::kVar_Kind) {
+      SkSL::VarDeclarations& v = (SkSL::VarDeclarations&)e;
+      for (const auto& varStatement : v.fVars) {
+        const SkSL::Variable& var = *((SkSL::VarDeclaration&)*varStatement).fVar;
+
+        if (var.fModifiers.fFlags & SkSL::Modifiers::kVarying_Flag) {
+          varyings.push_back(
+              {var.fName, var.fType.kind() == SkSL::Type::kVector_Kind ? var.fType.columns() : 1});
+        }
+      }
+    }
+  }
 
   // Gather the inputs in two passes, to de-interleave them in our input layout.
   // We put the uniforms *first*, so that the CPU backend can alias the combined input block as
@@ -205,7 +223,7 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
 
   sk_sp<SkRuntimeEffect> effect(new SkRuntimeEffect(
       std::move(sksl), std::move(program), std::move(inAndUniformVars), std::move(children),
-      uniformSize));
+      std::move(varyings), uniformSize));
   return std::make_pair(std::move(effect), SkString());
 }
 
@@ -230,12 +248,14 @@ size_t SkRuntimeEffect::Variable::sizeInBytes() const {
 
 SkRuntimeEffect::SkRuntimeEffect(
     SkString sksl, std::unique_ptr<SkSL::Program> baseProgram,
-    std::vector<Variable>&& inAndUniformVars, std::vector<SkString>&& children, size_t uniformSize)
+    std::vector<Variable>&& inAndUniformVars, std::vector<SkString>&& children,
+    std::vector<Varying>&& varyings, size_t uniformSize)
     : fHash(SkGoodHash()(sksl)),
       fSkSL(std::move(sksl)),
       fBaseProgram(std::move(baseProgram)),
       fInAndUniformVars(std::move(inAndUniformVars)),
       fChildren(std::move(children)),
+      fVaryings(std::move(varyings)),
       fUniformSize(uniformSize) {
   SkASSERT(fBaseProgram);
   SkASSERT(SkIsAlign4(fUniformSize));
@@ -386,6 +406,12 @@ class SkRuntimeColorFilter : public SkColorFilter {
     return true;
   }
 
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*,
+      SkArenaAlloc*) const override {
+    return {};  // <-- this signals failure -- TODO
+  }
+
   void flatten(SkWriteBuffer& buffer) const override {
     buffer.writeString(fEffect->source().c_str());
     if (fInputs) {
@@ -450,7 +476,7 @@ class SkRTShader : public SkShaderBase {
         fInputs(std::move(inputs)),
         fChildren(children, children + childCount) {}
 
-  bool isOpaque() const override { return fIsOpaque; }
+  bool isOpaque() const noexcept override { return fIsOpaque; }
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const override {
@@ -458,7 +484,7 @@ class SkRTShader : public SkShaderBase {
     if (!this->totalLocalMatrix(args.fPreLocalMatrix)->invert(&matrix)) {
       return nullptr;
     }
-    auto fp = GrSkSLFP::Make(args.fContext, fEffect, "runtime-shader", fInputs, &matrix);
+    auto fp = GrSkSLFP::Make(args.fContext, fEffect, "runtime_shader", fInputs, &matrix);
     for (const auto& child : fChildren) {
       auto childFP = child ? as_SB(child)->asFragmentProcessor(args) : nullptr;
       if (!childFP) {
@@ -530,6 +556,8 @@ class SkRTShader : public SkShaderBase {
       buffer.writeFlattenable(child.get());
     }
   }
+
+  SkRuntimeEffect* asRuntimeEffect() const override { return fEffect.get(); }
 
   SK_FLATTENABLE_HOOKS(SkRTShader)
 

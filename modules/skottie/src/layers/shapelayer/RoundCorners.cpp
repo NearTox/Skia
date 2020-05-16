@@ -45,8 +45,7 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AttachRoundGeometryEffect(
 
   for (auto& g : geos) {
     rounded.push_back(
-        abuilder->attachDiscardableAdapter<RoundCornersAdapter, sk_sp<sksg::RoundEffect>>(
-            jround, *abuilder, std::move(g)));
+        abuilder->attachDiscardableAdapter<RoundCornersAdapter>(jround, *abuilder, std::move(g)));
   }
 
   return rounded;

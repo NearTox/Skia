@@ -52,7 +52,7 @@ class SampleSG : public Sample {
   SampleSG() {
     fGroup = sksg::Group::Make();
 
-    fScene = sksg::Scene::Make(fGroup, sksg::AnimatorList());
+    fScene = sksg::Scene::Make(fGroup);
 
     auto r = sksg::Rect::Make({20, 20, 400, 300});
     auto p = sksg::Color::Make(SK_ColorRED);

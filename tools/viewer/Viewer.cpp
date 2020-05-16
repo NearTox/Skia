@@ -43,7 +43,7 @@
 #include "tools/viewer/SvgSlide.h"
 #include "tools/viewer/Viewer.h"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <map>
 
 #include "imgui.h"
@@ -132,22 +132,27 @@ static DEFINE_int_2(
 static DEFINE_bool(redraw, false, "Toggle continuous redraw.");
 
 static DEFINE_bool(offscreen, false, "Force rendering to an offscreen surface.");
+static DEFINE_bool(skvm, false, "Try to use skvm blitters for raster.");
 
-const char* kBackendTypeStrings[sk_app::Window::kBackendTypeCount] = {
-    "OpenGL",
+#ifndef SK_GL
+static_assert(false, "viewer requires GL backend for raster.")
+#endif
+
+    const char* kBackendTypeStrings[sk_app::Window::kBackendTypeCount] = {
+        "OpenGL",
 #if SK_ANGLE && defined(SK_BUILD_FOR_WIN)
-    "ANGLE",
+        "ANGLE",
 #endif
 #ifdef SK_DAWN
-    "Dawn",
+        "Dawn",
 #endif
 #ifdef SK_VULKAN
-    "Vulkan",
+        "Vulkan",
 #endif
 #ifdef SK_METAL
-    "Metal",
+        "Metal",
 #endif
-    "Raster"};
+        "Raster"};
 
 static sk_app::Window::BackendType get_backend_type(const char* str) {
 #ifdef SK_DAWN
@@ -232,6 +237,8 @@ const char* kON = "ON";
 const char* kOFF = "OFF";
 const char* kRefreshStateName = "Refresh";
 
+extern bool gUseSkVMBlitter;
+
 Viewer::Viewer(int argc, char** argv, void* platformData)
     : fCurrentSlide(-1),
       fRefresh(false),
@@ -262,11 +269,11 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
   SkGraphics::Init();
 
   gPathRendererNames[GpuPathRenderers::kDefault] = "Default Path Renderers";
-  gPathRendererNames[GpuPathRenderers::kGpuTessellation] = "GPU Tessellation";
+  gPathRendererNames[GpuPathRenderers::kTessellation] = "Tessellation";
   gPathRendererNames[GpuPathRenderers::kStencilAndCover] = "NV_path_rendering";
   gPathRendererNames[GpuPathRenderers::kSmall] = "Small paths (cached sdf or alpha masks)";
   gPathRendererNames[GpuPathRenderers::kCoverageCounting] = "CCPR";
-  gPathRendererNames[GpuPathRenderers::kTessellating] = "Tessellating";
+  gPathRendererNames[GpuPathRenderers::kTriangulating] = "Triangulating";
   gPathRendererNames[GpuPathRenderers::kNone] = "Software masks";
 
   SkDebugf("Command line arguments: ");
@@ -279,6 +286,8 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
 #ifdef SK_BUILD_FOR_ANDROID
   SetResourcePath("/data/local/tmp/resources");
 #endif
+
+  gUseSkVMBlitter = FLAGS_skvm;
 
   ToolUtils::SetDefaultFontMgr();
 
@@ -564,6 +573,16 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
     fStatsLayer.setDisplayScale(fZoomUI ? 2.0f : 1.0f);
     fWindow->inval();
   });
+  fCommands.addCommand('$', "ViaSerialize", "Toggle ViaSerialize", [this]() {
+    fDrawViaSerialize = !fDrawViaSerialize;
+    this->updateTitle();
+    fWindow->inval();
+  });
+  fCommands.addCommand('!', "SkVM", "Toggle SkVM", [this]() {
+    gUseSkVMBlitter = !gUseSkVMBlitter;
+    this->updateTitle();
+    fWindow->inval();
+  });
 
   // set up slides
   this->initSlides();
@@ -773,6 +792,12 @@ void Viewer::updateTitle() {
     } else {
       title.append(" <AAA>");
     }
+  }
+  if (fDrawViaSerialize) {
+    title.append(" <serialize>");
+  }
+  if (gUseSkVMBlitter) {
+    title.append(" <skvm>");
   }
 
   SkPaintTitleUpdater paintTitle(&title);
@@ -1246,72 +1271,86 @@ void Viewer::drawSlide(SkSurface* surface) {
     slideCanvas = offscreenSurface->getCanvas();
   }
 
-  int count = slideCanvas->save();
-  slideCanvas->clear(SK_ColorWHITE);
-  // Time the painting logic of the slide
-  fStatsLayer.beginTiming(fPaintTimer);
-  if (fTiled) {
-    int tileW = SkScalarCeilToInt(fWindow->width() * fTileScale.width());
-    int tileH = SkScalarCeilToInt(fWindow->height() * fTileScale.height());
-    for (int y = 0; y < fWindow->height(); y += tileH) {
-      for (int x = 0; x < fWindow->width(); x += tileW) {
-        SkAutoCanvasRestore acr(slideCanvas, true);
-        slideCanvas->clipRect(SkRect::MakeXYWH(x, y, tileW, tileH));
-        fSlides[fCurrentSlide]->draw(slideCanvas);
-      }
+    SkPictureRecorder recorder;
+    SkCanvas* recorderRestoreCanvas = nullptr;
+    if (fDrawViaSerialize) {
+      recorderRestoreCanvas = slideCanvas;
+      slideCanvas = recorder.beginRecording(SkRect::Make(fSlides[fCurrentSlide]->getDimensions()));
     }
 
-    // Draw borders between tiles
-    if (fDrawTileBoundaries) {
-      SkPaint border;
-      border.setColor(0x60FF00FF);
-      border.setStyle(SkPaint::kStroke_Style);
+    int count = slideCanvas->save();
+    slideCanvas->clear(SK_ColorWHITE);
+    // Time the painting logic of the slide
+    fStatsLayer.beginTiming(fPaintTimer);
+    if (fTiled) {
+      int tileW = SkScalarCeilToInt(fWindow->width() * fTileScale.width());
+      int tileH = SkScalarCeilToInt(fWindow->height() * fTileScale.height());
       for (int y = 0; y < fWindow->height(); y += tileH) {
         for (int x = 0; x < fWindow->width(); x += tileW) {
-          slideCanvas->drawRect(SkRect::MakeXYWH(x, y, tileW, tileH), border);
+          SkAutoCanvasRestore acr(slideCanvas, true);
+          slideCanvas->clipRect(SkRect::MakeXYWH(x, y, tileW, tileH));
+          fSlides[fCurrentSlide]->draw(slideCanvas);
         }
       }
+
+      // Draw borders between tiles
+      if (fDrawTileBoundaries) {
+        SkPaint border;
+        border.setColor(0x60FF00FF);
+        border.setStyle(SkPaint::kStroke_Style);
+        for (int y = 0; y < fWindow->height(); y += tileH) {
+          for (int x = 0; x < fWindow->width(); x += tileW) {
+            slideCanvas->drawRect(SkRect::MakeXYWH(x, y, tileW, tileH), border);
+          }
+        }
+      }
+    } else {
+      slideCanvas->concat(this->computeMatrix());
+      if (kPerspective_Real == fPerspectiveMode) {
+        slideCanvas->clipRect(SkRect::MakeWH(fWindow->width(), fWindow->height()));
+      }
+      OveridePaintFilterCanvas filterCanvas(
+          slideCanvas, &fPaint, &fPaintOverrides, &fFont, &fFontOverrides);
+      fSlides[fCurrentSlide]->draw(&filterCanvas);
     }
-  } else {
-    slideCanvas->concat(this->computeMatrix());
-    if (kPerspective_Real == fPerspectiveMode) {
-      slideCanvas->clipRect(SkRect::MakeWH(fWindow->width(), fWindow->height()));
+    fStatsLayer.endTiming(fPaintTimer);
+    slideCanvas->restoreToCount(count);
+
+    if (recorderRestoreCanvas) {
+      sk_sp<SkPicture> picture(recorder.finishRecordingAsPicture());
+      auto data = picture->serialize();
+      slideCanvas = recorderRestoreCanvas;
+      slideCanvas->drawPicture(SkPicture::MakeFromData(data.get()));
     }
-    OveridePaintFilterCanvas filterCanvas(
-        slideCanvas, &fPaint, &fPaintOverrides, &fFont, &fFontOverrides);
-    fSlides[fCurrentSlide]->draw(&filterCanvas);
-  }
-  fStatsLayer.endTiming(fPaintTimer);
-  slideCanvas->restoreToCount(count);
 
-  // Force a flush so we can time that, too
-  fStatsLayer.beginTiming(fFlushTimer);
-  slideSurface->flush();
-  fStatsLayer.endTiming(fFlushTimer);
+    // Force a flush so we can time that, too
+    fStatsLayer.beginTiming(fFlushTimer);
+    slideSurface->flush();
+    fStatsLayer.endTiming(fFlushTimer);
 
-  // If we rendered offscreen, snap an image and push the results to the window's canvas
-  if (offscreenSurface) {
-    fLastImage = offscreenSurface->makeImageSnapshot();
+    // If we rendered offscreen, snap an image and push the results to the window's canvas
+    if (offscreenSurface) {
+      fLastImage = offscreenSurface->makeImageSnapshot();
 
-    SkCanvas* canvas = surface->getCanvas();
-    SkPaint paint;
-    paint.setBlendMode(SkBlendMode::kSrc);
-    int prePerspectiveCount = canvas->save();
-    if (kPerspective_Fake == fPerspectiveMode) {
-      paint.setFilterQuality(kHigh_SkFilterQuality);
-      canvas->clear(SK_ColorWHITE);
-      canvas->concat(this->computePerspectiveMatrix());
+      SkCanvas* canvas = surface->getCanvas();
+      SkPaint paint;
+      paint.setBlendMode(SkBlendMode::kSrc);
+      int prePerspectiveCount = canvas->save();
+      if (kPerspective_Fake == fPerspectiveMode) {
+        paint.setFilterQuality(kHigh_SkFilterQuality);
+        canvas->clear(SK_ColorWHITE);
+        canvas->concat(this->computePerspectiveMatrix());
+      }
+      canvas->drawImage(fLastImage, 0, 0, &paint);
+      canvas->restoreToCount(prePerspectiveCount);
     }
-    canvas->drawImage(fLastImage, 0, 0, &paint);
-    canvas->restoreToCount(prePerspectiveCount);
-  }
 
-  if (fShowSlideDimensions) {
-    SkRect r = SkRect::Make(fSlides[fCurrentSlide]->getDimensions());
-    SkPaint paint;
-    paint.setColor(0x40FFFF00);
-    surface->getCanvas()->drawRect(r, paint);
-  }
+    if (fShowSlideDimensions) {
+      SkRect r = SkRect::Make(fSlides[fCurrentSlide]->getDimensions());
+      SkPaint paint;
+      paint.setColor(0x40FFFF00);
+      surface->getCanvas()->drawRect(r, paint);
+    }
 }
 
 void Viewer::onBackendCreated() {
@@ -1620,7 +1659,7 @@ void Viewer::drawImGui() {
             prButton(GpuPathRenderers::kDefault);
             if (fWindow->sampleCount() > 1 || caps->mixedSamplesSupport()) {
               if (caps->shaderCaps()->tessellationSupport()) {
-                prButton(GpuPathRenderers::kGpuTessellation);
+                prButton(GpuPathRenderers::kTessellation);
               }
               if (caps->shaderCaps()->pathRenderingSupport()) {
                 prButton(GpuPathRenderers::kStencilAndCover);
@@ -1632,7 +1671,7 @@ void Viewer::drawImGui() {
               }
               prButton(GpuPathRenderers::kSmall);
             }
-            prButton(GpuPathRenderers::kTessellating);
+            prButton(GpuPathRenderers::kTriangulating);
             prButton(GpuPathRenderers::kNone);
           }
           ImGui::TreePop();
@@ -2006,7 +2045,7 @@ void Viewer::drawImGui() {
             }
 
             SkReader32 reader(data->data(), data->size());
-            entry.fShaderType = reader.readU32();
+            entry.fShaderType = GrPersistentCacheUtils::GetType(&reader);
             GrPersistentCacheUtils::UnpackCachedShaders(
                 &reader, entry.fShader, entry.fInputs, kGrShaderTypeCount);
           };
@@ -2261,7 +2300,7 @@ void Viewer::updateUIState() {
           writer.appendString(gPathRendererNames[GpuPathRenderers::kDefault].c_str());
           if (fWindow->sampleCount() > 1 || caps->mixedSamplesSupport()) {
             if (caps->shaderCaps()->tessellationSupport()) {
-              writer.appendString(gPathRendererNames[GpuPathRenderers::kGpuTessellation].c_str());
+              writer.appendString(gPathRendererNames[GpuPathRenderers::kTessellation].c_str());
             }
             if (caps->shaderCaps()->pathRenderingSupport()) {
               writer.appendString(gPathRendererNames[GpuPathRenderers::kStencilAndCover].c_str());
@@ -2273,7 +2312,7 @@ void Viewer::updateUIState() {
             }
             writer.appendString(gPathRendererNames[GpuPathRenderers::kSmall].c_str());
           }
-          writer.appendString(gPathRendererNames[GpuPathRenderers::kTessellating].c_str());
+          writer.appendString(gPathRendererNames[GpuPathRenderers::kTriangulating].c_str());
           writer.appendString(gPathRendererNames[GpuPathRenderers::kNone].c_str());
         }
       });

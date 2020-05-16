@@ -22,7 +22,7 @@ GrImageContext::GrImageContext(
   fProxyProvider.reset(new GrProxyProvider(this));
 }
 
-GrImageContext::~GrImageContext() {}
+GrImageContext::~GrImageContext() = default;
 
 void GrImageContext::abandonContext() {
   ASSERT_SINGLE_OWNER
@@ -30,7 +30,7 @@ void GrImageContext::abandonContext() {
   fAbandoned = true;
 }
 
-bool GrImageContext::abandoned() const {
+bool GrImageContext::abandoned() {
   ASSERT_SINGLE_OWNER
 
   return fAbandoned;

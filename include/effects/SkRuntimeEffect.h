@@ -74,6 +74,11 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
     size_t sizeInBytes() const;
   };
 
+  struct Varying {
+    SkString fName;
+    int fWidth;  // 1 - 4 (floats)
+  };
+
   // [Effect, ErrorText]
   // If successful, Effect != nullptr, otherwise, ErrorText contains the reason for failure.
   using EffectResult = std::tuple<sk_sp<SkRuntimeEffect>, SkString>;
@@ -115,6 +120,7 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
 
   ConstIterable<Variable> inputs() const { return ConstIterable<Variable>(fInAndUniformVars); }
   ConstIterable<SkString> children() const { return ConstIterable<SkString>(fChildren); }
+  ConstIterable<Varying> varyings() const { return ConstIterable<Varying>(fVaryings); }
 
 #if SK_SUPPORT_GPU
   // This re-compiles the program from scratch, using the supplied shader caps.
@@ -138,7 +144,7 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   SkRuntimeEffect(
       SkString sksl, std::unique_ptr<SkSL::Program> baseProgram,
       std::vector<Variable>&& inAndUniformVars, std::vector<SkString>&& children,
-      size_t uniformSize);
+      std::vector<Varying>&& varyings, size_t uniformSize);
 
   using SpecializeResult = std::tuple<std::unique_ptr<SkSL::Program>, SkString>;
   SpecializeResult specialize(
@@ -150,6 +156,7 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   std::unique_ptr<SkSL::Program> fBaseProgram;
   std::vector<Variable> fInAndUniformVars;
   std::vector<SkString> fChildren;
+  std::vector<Varying> fVaryings;
 
   size_t fUniformSize;
 };

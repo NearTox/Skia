@@ -10,7 +10,7 @@
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/ccpr/GrCCPathCache.h"
 
-static SkISize choose_initial_atlas_size(const GrCCAtlas::Specs& specs) {
+static SkISize choose_initial_atlas_size(const GrCCAtlas::Specs& specs) noexcept {
   // Begin with the first pow2 dimensions whose area is theoretically large enough to contain the
   // pending paths, favoring height over width if necessary.
   int log2area = SkNextLog2(std::max(specs.fApproxNumPixels, 1));
@@ -23,7 +23,7 @@ static SkISize choose_initial_atlas_size(const GrCCAtlas::Specs& specs) {
   return SkISize::Make(width, height);
 }
 
-static int choose_max_atlas_size(const GrCCAtlas::Specs& specs, const GrCaps& caps) {
+static int choose_max_atlas_size(const GrCCAtlas::Specs& specs, const GrCaps& caps) noexcept {
   return (std::max(specs.fMinHeight, specs.fMinWidth) <= specs.fMaxPreferredTextureSize)
              ? specs.fMaxPreferredTextureSize
              : caps.maxRenderTargetSize();
@@ -37,27 +37,27 @@ GrCCAtlas::GrCCAtlas(CoverageType coverageType, const Specs& specs, const GrCaps
   SkASSERT(specs.fMaxPreferredTextureSize > 0);
 }
 
-GrCCAtlas::~GrCCAtlas() {}
+GrCCAtlas::~GrCCAtlas() = default;
 
-void GrCCAtlas::setFillBatchID(int id) {
+void GrCCAtlas::setFillBatchID(int id) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!this->isInstantiated());
   fFillBatchID = id;
 }
 
-void GrCCAtlas::setStrokeBatchID(int id) {
+void GrCCAtlas::setStrokeBatchID(int id) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!this->isInstantiated());
   fStrokeBatchID = id;
 }
 
-void GrCCAtlas::setEndStencilResolveInstance(int idx) {
+void GrCCAtlas::setEndStencilResolveInstance(int idx) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!this->isInstantiated());
   fEndStencilResolveInstance = idx;
 }
 
-static uint32_t next_atlas_unique_id() {
+static uint32_t next_atlas_unique_id() noexcept {
   static std::atomic<uint32_t> nextID;
   return nextID++;
 }

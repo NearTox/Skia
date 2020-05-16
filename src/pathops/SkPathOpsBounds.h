@@ -20,7 +20,7 @@ struct SkPathOpsBounds : public SkRect {
   // Note that add(), unlike SkRect::join() or SkRect::growToInclude()
   // does not treat the bounds of horizontal and vertical lines as
   // empty rectangles.
-  void add(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) {
+  void add(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     if (left < fLeft) fLeft = left;
     if (top < fTop) fTop = top;
     if (right > fRight) fRight = right;
@@ -31,14 +31,14 @@ struct SkPathOpsBounds : public SkRect {
     add(toAdd.fLeft, toAdd.fTop, toAdd.fRight, toAdd.fBottom);
   }
 
-  void add(const SkPoint& pt) {
+  void add(const SkPoint& pt) noexcept {
     if (pt.fX < fLeft) fLeft = pt.fX;
     if (pt.fY < fTop) fTop = pt.fY;
     if (pt.fX > fRight) fRight = pt.fX;
     if (pt.fY > fBottom) fBottom = pt.fY;
   }
 
-  void add(const SkDPoint& pt) {
+  void add(const SkDPoint& pt) noexcept {
     if (pt.fX < fLeft) fLeft = SkDoubleToScalar(pt.fX);
     if (pt.fY < fTop) fTop = SkDoubleToScalar(pt.fY);
     if (pt.fX > fRight) fRight = SkDoubleToScalar(pt.fX);
@@ -50,7 +50,7 @@ struct SkPathOpsBounds : public SkRect {
            AlmostLessOrEqualUlps(fTop, pt.fY) && AlmostLessOrEqualUlps(pt.fY, fBottom);
   }
 
-  bool contains(const SkPoint& pt) const {
+  bool contains(const SkPoint& pt) const noexcept {
     return fLeft <= pt.fX && fTop <= pt.fY && fRight >= pt.fX && fBottom >= pt.fY;
   }
 

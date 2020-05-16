@@ -13,12 +13,12 @@
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 
-const GrProcessorSet& GrProcessorSet::EmptySet() {
+const GrProcessorSet& GrProcessorSet::EmptySet() noexcept {
   static GrProcessorSet gEmpty(GrProcessorSet::Empty::kEmpty);
   return gEmpty;
 }
 
-GrProcessorSet GrProcessorSet::MakeEmptySet() {
+GrProcessorSet GrProcessorSet::MakeEmptySet() noexcept {
   return GrProcessorSet(GrProcessorSet::Empty::kEmpty);
 }
 
@@ -40,7 +40,7 @@ GrProcessorSet::GrProcessorSet(GrPaint&& paint) : fXP(paint.getXPFactory()) {
     SkDebugf("Insane number of color fragment processors in paint. Dropping all processors.");
     fColorFragmentProcessorCnt = 0;
   }
-  SkDEBUGCODE(paint.fAlive = false;)
+  SkDEBUGCODE(paint.fAlive = false);
 }
 
 GrProcessorSet::GrProcessorSet(SkBlendMode mode)
@@ -59,7 +59,7 @@ GrProcessorSet::GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP)
   fFragmentProcessors[0] = std::move(colorFP);
 }
 
-GrProcessorSet::GrProcessorSet(GrProcessorSet&& that)
+GrProcessorSet::GrProcessorSet(GrProcessorSet&& that) noexcept
     : fXP(std::move(that.fXP)),
       fColorFragmentProcessorCnt(that.fColorFragmentProcessorCnt),
       fFragmentProcessorOffset(0),

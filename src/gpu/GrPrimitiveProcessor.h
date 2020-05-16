@@ -12,6 +12,7 @@
 #include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/GrShaderVar.h"
+#include "src/gpu/GrSwizzle.h"
 
 class GrCoordTransform;
 
@@ -51,23 +52,23 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
   /** Describes a vertex or instance attribute. */
   class Attribute {
    public:
-    constexpr Attribute() = default;
-    constexpr Attribute(const char* name, GrVertexAttribType cpuType, GrSLType gpuType)
+    constexpr Attribute() noexcept = default;
+    constexpr Attribute(const char* name, GrVertexAttribType cpuType, GrSLType gpuType) noexcept
         : fName(name), fCPUType(cpuType), fGPUType(gpuType) {}
-    constexpr Attribute(const Attribute&) = default;
+    constexpr Attribute(const Attribute&) noexcept = default;
 
-    Attribute& operator=(const Attribute&) = default;
+    Attribute& operator=(const Attribute&) noexcept = default;
 
-    constexpr bool isInitialized() const { return SkToBool(fName); }
+    constexpr bool isInitialized() const noexcept { return SkToBool(fName); }
 
-    constexpr const char* name() const { return fName; }
-    constexpr GrVertexAttribType cpuType() const { return fCPUType; }
-    constexpr GrSLType gpuType() const { return fGPUType; }
+    constexpr const char* name() const noexcept { return fName; }
+    constexpr GrVertexAttribType cpuType() const noexcept { return fCPUType; }
+    constexpr GrSLType gpuType() const noexcept { return fGPUType; }
 
-    inline constexpr size_t size() const;
-    constexpr size_t sizeAlign4() const { return SkAlign4(this->size()); }
+    inline constexpr size_t size() const noexcept;
+    constexpr size_t sizeAlign4() const noexcept { return SkAlign4(this->size()); }
 
-    GrShaderVar asShaderVar() const { return {fName, fGPUType, GrShaderVar::kIn_TypeModifier}; }
+    GrShaderVar asShaderVar() const { return {fName, fGPUType, GrShaderVar::TypeModifier::In}; }
 
    private:
     const char* fName = nullptr;
@@ -77,20 +78,20 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   class Iter {
    public:
-    Iter() : fCurr(nullptr), fRemaining(0) {}
-    Iter(const Iter& iter) : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
-    Iter& operator=(const Iter& iter) {
+    constexpr Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
+    Iter(const Iter& iter) noexcept : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
+    Iter& operator=(const Iter& iter) noexcept {
       fCurr = iter.fCurr;
       fRemaining = iter.fRemaining;
       return *this;
     }
-    Iter(const Attribute* attrs, int count) : fCurr(attrs), fRemaining(count) {
+    Iter(const Attribute* attrs, int count) noexcept : fCurr(attrs), fRemaining(count) {
       this->skipUninitialized();
     }
 
-    bool operator!=(const Iter& that) const { return fCurr != that.fCurr; }
-    const Attribute& operator*() const { return *fCurr; }
-    void operator++() {
+    bool operator!=(const Iter& that) const noexcept { return fCurr != that.fCurr; }
+    const Attribute& operator*() const noexcept { return *fCurr; }
+    void operator++() noexcept {
       if (fRemaining) {
         fRemaining--;
         fCurr++;
@@ -99,7 +100,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
     }
 
    private:
-    void skipUninitialized() {
+    void skipUninitialized() noexcept {
       if (!fRemaining) {
         fCurr = nullptr;
       } else {
@@ -115,13 +116,13 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   class AttributeSet {
    public:
-    Iter begin() const { return Iter(fAttributes, fCount); }
-    Iter end() const { return Iter(); }
+    Iter begin() const noexcept { return Iter(fAttributes, fCount); }
+    Iter end() const noexcept { return Iter(); }
 
    private:
     friend class GrPrimitiveProcessor;
 
-    void init(const Attribute* attrs, int count) {
+    void init(const Attribute* attrs, int count) noexcept {
       fAttributes = attrs;
       fRawCount = count;
       fCount = 0;
@@ -142,29 +143,29 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   GrPrimitiveProcessor(ClassID);
 
-  int numTextureSamplers() const { return fTextureSamplerCnt; }
+  int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
   const TextureSampler& textureSampler(int index) const;
-  int numVertexAttributes() const { return fVertexAttributes.fCount; }
-  const AttributeSet& vertexAttributes() const { return fVertexAttributes; }
-  int numInstanceAttributes() const { return fInstanceAttributes.fCount; }
-  const AttributeSet& instanceAttributes() const { return fInstanceAttributes; }
+  int numVertexAttributes() const noexcept { return fVertexAttributes.fCount; }
+  const AttributeSet& vertexAttributes() const noexcept { return fVertexAttributes; }
+  int numInstanceAttributes() const noexcept { return fInstanceAttributes.fCount; }
+  const AttributeSet& instanceAttributes() const noexcept { return fInstanceAttributes; }
 
-  bool hasVertexAttributes() const { return SkToBool(fVertexAttributes.fCount); }
-  bool hasInstanceAttributes() const { return SkToBool(fInstanceAttributes.fCount); }
+  bool hasVertexAttributes() const noexcept { return SkToBool(fVertexAttributes.fCount); }
+  bool hasInstanceAttributes() const noexcept { return SkToBool(fInstanceAttributes.fCount); }
 
   /**
    * A common practice is to populate the the vertex/instance's memory using an implicit array of
    * structs. In this case, it is best to assert that:
    *     stride == sizeof(struct)
    */
-  size_t vertexStride() const { return fVertexAttributes.fStride; }
-  size_t instanceStride() const { return fInstanceAttributes.fStride; }
+  size_t vertexStride() const noexcept { return fVertexAttributes.fStride; }
+  size_t instanceStride() const noexcept { return fInstanceAttributes.fStride; }
 
-  bool willUseTessellationShaders() const {
+  bool willUseTessellationShaders() const noexcept {
     return fShaders & (kTessControl_GrShaderFlag | kTessEvaluation_GrShaderFlag);
   }
 
-  bool willUseGeoShader() const { return fShaders & kGeometry_GrShaderFlag; }
+  bool willUseGeoShader() const noexcept { return fShaders & kGeometry_GrShaderFlag; }
 
   /**
    * Computes a key for the transforms owned by an FP based on the shader code that will be
@@ -214,18 +215,18 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
   }
 
  protected:
-  void setVertexAttributes(const Attribute* attrs, int attrCount) {
+  void setVertexAttributes(const Attribute* attrs, int attrCount) noexcept {
     fVertexAttributes.init(attrs, attrCount);
   }
-  void setInstanceAttributes(const Attribute* attrs, int attrCount) {
+  void setInstanceAttributes(const Attribute* attrs, int attrCount) noexcept {
     SkASSERT(attrCount >= 0);
     fInstanceAttributes.init(attrs, attrCount);
   }
-  void setWillUseTessellationShaders() {
+  void setWillUseTessellationShaders() noexcept {
     fShaders |= kTessControl_GrShaderFlag | kTessEvaluation_GrShaderFlag;
   }
-  void setWillUseGeoShader() { fShaders |= kGeometry_GrShaderFlag; }
-  void setTextureSamplerCnt(int cnt) {
+  void setWillUseGeoShader() noexcept { fShaders |= kGeometry_GrShaderFlag; }
+  void setTextureSamplerCnt(int cnt) noexcept {
     SkASSERT(cnt >= 0);
     fTextureSamplerCnt = cnt;
   }
@@ -272,13 +273,13 @@ class GrPrimitiveProcessor::TextureSampler {
 
   void reset(GrSamplerState, const GrBackendFormat&, const GrSwizzle&);
 
-  const GrBackendFormat& backendFormat() const { return fBackendFormat; }
-  GrTextureType textureType() const { return fBackendFormat.textureType(); }
+  const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
+  GrTextureType textureType() const noexcept { return fBackendFormat.textureType(); }
 
-  GrSamplerState samplerState() const { return fSamplerState; }
-  const GrSwizzle& swizzle() const { return fSwizzle; }
+  GrSamplerState samplerState() const noexcept { return fSamplerState; }
+  const GrSwizzle& swizzle() const noexcept { return fSwizzle; }
 
-  bool isInitialized() const { return fIsInitialized; }
+  bool isInitialized() const noexcept { return fIsInitialized; }
 
  private:
   GrSamplerState fSamplerState;
@@ -300,7 +301,7 @@ const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSamp
  * This was moved from include/private/GrTypesPriv.h in service of Skia dependents that build
  * with C++11.
  */
-static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
+static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) noexcept {
   switch (type) {
     case kFloat_GrVertexAttribType: return sizeof(float);
     case kFloat2_GrVertexAttribType: return 2 * sizeof(float);
@@ -308,18 +309,15 @@ static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
     case kFloat4_GrVertexAttribType: return 4 * sizeof(float);
     case kHalf_GrVertexAttribType: return sizeof(uint16_t);
     case kHalf2_GrVertexAttribType: return 2 * sizeof(uint16_t);
-    case kHalf3_GrVertexAttribType: return 3 * sizeof(uint16_t);
     case kHalf4_GrVertexAttribType: return 4 * sizeof(uint16_t);
     case kInt2_GrVertexAttribType: return 2 * sizeof(int32_t);
     case kInt3_GrVertexAttribType: return 3 * sizeof(int32_t);
     case kInt4_GrVertexAttribType: return 4 * sizeof(int32_t);
     case kByte_GrVertexAttribType: return 1 * sizeof(char);
     case kByte2_GrVertexAttribType: return 2 * sizeof(char);
-    case kByte3_GrVertexAttribType: return 3 * sizeof(char);
     case kByte4_GrVertexAttribType: return 4 * sizeof(char);
     case kUByte_GrVertexAttribType: return 1 * sizeof(char);
     case kUByte2_GrVertexAttribType: return 2 * sizeof(char);
-    case kUByte3_GrVertexAttribType: return 3 * sizeof(char);
     case kUByte4_GrVertexAttribType: return 4 * sizeof(char);
     case kUByte_norm_GrVertexAttribType: return 1 * sizeof(char);
     case kUByte4_norm_GrVertexAttribType: return 4 * sizeof(char);
@@ -340,7 +338,7 @@ static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
   return 0;
 }
 
-constexpr size_t GrPrimitiveProcessor::Attribute::size() const {
+constexpr size_t GrPrimitiveProcessor::Attribute::size() const noexcept {
   return GrVertexAttribTypeSize(fCPUType);
 }
 

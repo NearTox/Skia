@@ -29,7 +29,7 @@ class GrEagerVertexAllocator {
 
   virtual void unlock(int actualCount) = 0;
 
-  virtual ~GrEagerVertexAllocator() {}
+  virtual ~GrEagerVertexAllocator() = default;
 };
 
 // GrEagerVertexAllocator implementation that uses GrMeshDrawOp::Target::makeVertexSpace and

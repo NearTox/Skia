@@ -7,8 +7,8 @@
 
 #include "src/core/SkUtils.h"
 
-template <typename T>
-static SkUnichar next(const T** srcPtr, unsigned N, SkUnichar (*fn)(const T**, const T*)) {
+template <typename T, SkUnichar (*fn)(const T**, const T*)>
+static SkUnichar next(const T** srcPtr, unsigned N) noexcept {
   SkASSERT(srcPtr);
   const T* ptr = *srcPtr;
   SkUnichar c = fn(&ptr, ptr + N);
@@ -20,10 +20,12 @@ static SkUnichar next(const T** srcPtr, unsigned N, SkUnichar (*fn)(const T**, c
   *srcPtr = ptr;
   return c;
 }
-SkUnichar SkUTF8_NextUnichar(const char** p) {
-  return next<char>(p, SkUTF::kMaxBytesInUTF8Sequence, SkUTF::NextUTF8);
+SkUnichar SkUTF8_NextUnichar(const char** p) noexcept {
+  return next<char, SkUTF::NextUTF8>(p, SkUTF::kMaxBytesInUTF8Sequence);
 }
-SkUnichar SkUTF16_NextUnichar(const uint16_t** p) { return next<uint16_t>(p, 2, SkUTF::NextUTF16); }
+SkUnichar SkUTF16_NextUnichar(const uint16_t** p) noexcept {
+  return next<uint16_t, SkUTF::NextUTF16>(p, 2);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

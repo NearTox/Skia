@@ -15,7 +15,8 @@ namespace sksg {
 
 class Node::ScopedFlag {
  public:
-  ScopedFlag(Node* node, uint32_t flag) : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
+  ScopedFlag(Node* node, uint32_t flag) noexcept
+      : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
     node->fFlags |= flag;
   }
   ~ScopedFlag() {
@@ -24,7 +25,7 @@ class Node::ScopedFlag {
     }
   }
 
-  bool wasSet() const { return fWasSet; }
+  bool wasSet() const noexcept { return fWasSet; }
 
  private:
   Node* fNode;
@@ -36,7 +37,7 @@ class Node::ScopedFlag {
   ScopedFlag traversal_guard(this, kInTraversal_Flag); \
   if (traversal_guard.wasSet()) return
 
-Node::Node(uint32_t invalTraits)
+Node::Node(uint32_t invalTraits) noexcept
     : fInvalObserver(nullptr),
       fBounds(SkRectPriv::MakeLargeS32()),
       fInvalTraits(invalTraits),
@@ -76,7 +77,7 @@ void Node::observeInval(const sk_sp<Node>& node) {
   node->fInvalObserverArray->push_back(this);
 }
 
-void Node::unobserveInval(const sk_sp<Node>& node) {
+void Node::unobserveInval(const sk_sp<Node>& node) noexcept {
   SkASSERT(node);
   if (!(node->fFlags & kObserverArray_Flag)) {
     SkASSERT(node->fInvalObserver == this);
@@ -105,7 +106,7 @@ void Node::forEachInvalObserver(Func&& func) const {
   }
 }
 
-void Node::invalidate(bool damageBubbling) {
+void Node::invalidate(bool damageBubbling) noexcept {
   TRAVERSAL_GUARD;
 
   if (this->hasInval() && (!damageBubbling || (fFlags & kDamage_Flag))) {
@@ -121,7 +122,7 @@ void Node::invalidate(bool damageBubbling) {
 
   fFlags |= kInvalidated_Flag;
 
-  forEachInvalObserver([&](Node* observer) { observer->invalidate(damageBubbling); });
+  forEachInvalObserver([&](Node* observer) noexcept { observer->invalidate(damageBubbling); });
 }
 
 const SkRect& Node::revalidate(InvalidationController* ic, const SkMatrix& ctm) {

@@ -20,7 +20,7 @@ class GrVkImageLayout;
 // current VkImageLayout which can be shared with an internal GrVkImage so that layout updates can
 // be seen by all users of the image.
 struct GrVkBackendSurfaceInfo {
-  GrVkBackendSurfaceInfo(GrVkImageInfo info, GrVkImageLayout* layout)
+  GrVkBackendSurfaceInfo(GrVkImageInfo info, GrVkImageLayout* layout) noexcept
       : fImageInfo(info), fLayout(layout) {}
 
   void cleanup();
@@ -37,7 +37,7 @@ struct GrVkBackendSurfaceInfo {
 
   GrVkImageInfo snapImageInfo() const;
 
-  bool isProtected() const { return fImageInfo.fProtected == GrProtected::kYes; }
+  bool isProtected() const noexcept { return fImageInfo.fProtected == GrProtected::kYes; }
 #if GR_TEST_UTILS
   bool operator==(const GrVkBackendSurfaceInfo& that) const;
 #endif

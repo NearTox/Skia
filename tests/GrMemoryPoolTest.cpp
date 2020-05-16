@@ -46,6 +46,12 @@ class A {
 
   static void ResetAllocator() { gPool.reset(); }
 
+  static void ValidatePool() {
+#ifdef SK_DEBUG
+    gPool->validate();
+#endif
+  }
+
  private:
   static std::unique_ptr<GrMemoryPool> gPool;
   char fChar;
@@ -165,6 +171,7 @@ DEF_TEST(GrMemoryPool, reporter) {
       {10000 * sizeof(A), 0},
       {1, 100 * sizeof(A)},
   };
+
   // different percentages of creation vs deletion
   static const float gCreateFraction[] = {1.f, .95f, 0.75f, .5f};
   // number of create/destroys per test
@@ -176,6 +183,7 @@ DEF_TEST(GrMemoryPool, reporter) {
   SkRandom r;
   for (size_t s = 0; s < SK_ARRAY_COUNT(gSizes); ++s) {
     A::SetAllocator(gSizes[s][0], gSizes[s][1]);
+    A::ValidatePool();
     for (size_t c = 0; c < SK_ARRAY_COUNT(gCreateFraction); ++c) {
       SkTDArray<Rec> instanceRecs;
       for (int i = 0; i < kNumIters; ++i) {
@@ -193,6 +201,7 @@ DEF_TEST(GrMemoryPool, reporter) {
           instanceRecs.removeShuffle(d);
         }
         if (0 == i % kCheckPeriod) {
+          A::ValidatePool();
           for (int r = 0; r < instanceRecs.count(); ++r) {
             Rec& rec = instanceRecs[r];
             REPORTER_ASSERT(reporter, rec.fInstance->checkValues(rec.fValue));
@@ -263,6 +272,7 @@ DEF_TEST(GrMemoryPoolAPI, reporter) {
     constexpr size_t kMinAllocSize = kSmallestMinAllocSize * 7;
     auto pool = GrMemoryPool::Make(0, kMinAllocSize);
     AutoPoolReleaser r(*pool);
+    REPORTER_ASSERT(reporter, pool->size() == 0);
 
     allocateMemory(*pool, r);
     REPORTER_ASSERT(reporter, pool->size() == kMinAllocSize);

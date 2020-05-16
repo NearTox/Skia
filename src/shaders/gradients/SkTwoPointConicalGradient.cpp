@@ -104,7 +104,7 @@ SkTwoPointConicalGradient::SkTwoPointConicalGradient(
   }
 }
 
-bool SkTwoPointConicalGradient::isOpaque() const {
+bool SkTwoPointConicalGradient::isOpaque() const noexcept {
   // Because areas outside the cone are left untouched, we cannot treat the
   // shader as opaque even if the gradient itself is opaque.
   // TODO(junov): Compute whether the cone fills the plane crbug.com/222380
@@ -261,7 +261,7 @@ skvm::F32 SkTwoPointConicalGradient::transformT(
   } else {
     skvm::F32 k = p->sqrt(p->sub(p->mul(x, x), p->mul(y, y)));
     if (fFocalData.isSwapped() || 1 - fFocalData.fFocalX < 0) {
-      k = p->negate(k);
+      k = -k;
     }
     t = p->sub(k, p->mul(x, invR1));
   }
@@ -273,7 +273,7 @@ skvm::F32 SkTwoPointConicalGradient::transformT(
 
   const skvm::F32 focalX = p->uniformF(uniforms->pushF(fFocalData.fFocalX));
   if (1 - fFocalData.fFocalX < 0) {
-    t = p->negate(t);
+    t = -t;
   }
   if (!fFocalData.isNativelyFocal()) {
     t = p->add(t, focalX);

@@ -87,9 +87,7 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AttachTrimGeometryEffect(
   trimmed.reserve(inputs.size());
 
   for (const auto& i : inputs) {
-    trimmed.push_back(
-        abuilder->attachDiscardableAdapter<TrimEffectAdapter, sk_sp<sksg::TrimEffect>>(
-            jtrim, *abuilder, i));
+    trimmed.push_back(abuilder->attachDiscardableAdapter<TrimEffectAdapter>(jtrim, *abuilder, i));
   }
 
   return trimmed;

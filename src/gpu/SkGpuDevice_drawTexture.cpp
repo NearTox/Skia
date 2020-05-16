@@ -534,8 +534,7 @@ void draw_tiled_bitmap(
             tmpB.width() <= context->priv().caps()->maxTileSize() &&
             tmpB.height() <= context->priv().caps()->maxTileSize());
 
-        GrBitmapTextureMaker tileProducer(
-            context, tmpB, GrBitmapTextureMaker::Cached::kYes, SkBackingFit::kExact);
+        GrBitmapTextureMaker tileProducer(context, tmpB, GrImageTexGenPolicy::kDraw);
 
         GrQuadAAFlags aaFlags = GrQuadAAFlags::kNone;
         if (aa == GrAA::kYes) {
@@ -687,7 +686,7 @@ void SkGpuDevice::drawImageQuad(
   // Lazily generated images must get drawn as a texture producer that handles the final
   // texture creation.
   if (image->isLazyGenerated()) {
-    GrImageTextureMaker maker(fContext.get(), image, SkImage::kAllow_CachingHint);
+    GrImageTextureMaker maker(fContext.get(), image, GrImageTexGenPolicy::kDraw);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), clip, ctm, paint, &maker, src, dst, dstClip,
         srcToDst, aa, aaFlags, constraint, wrapMode, fm, doBicubic);
@@ -696,8 +695,7 @@ void SkGpuDevice::drawImageQuad(
 
   SkBitmap bm;
   if (as_IB(image)->getROPixels(&bm)) {
-    GrBitmapTextureMaker maker(
-        fContext.get(), bm, GrBitmapTextureMaker::Cached::kYes, SkBackingFit::kExact);
+    GrBitmapTextureMaker maker(fContext.get(), bm, GrImageTexGenPolicy::kDraw);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), clip, ctm, paint, &maker, src, dst, dstClip,
         srcToDst, aa, aaFlags, constraint, wrapMode, fm, doBicubic);

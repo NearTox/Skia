@@ -9,6 +9,7 @@
 #define GrCCPerFlushResources_DEFINED
 
 #include "src/gpu/GrNonAtomicRef.h"
+#include "src/gpu/ccpr/GrAutoMapVertexBuffer.h"
 #include "src/gpu/ccpr/GrCCAtlas.h"
 #include "src/gpu/ccpr/GrCCFiller.h"
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
@@ -30,7 +31,7 @@ struct GrCCRenderedPathStats {
   int fNumTotalSkVerbs = 0;
   int fNumTotalConicWeights = 0;
 
-  void statPath(const SkPath&);
+  void statPath(const SkPath&) noexcept;
 };
 
 /**
@@ -52,7 +53,7 @@ struct GrCCPerFlushResourceSpecs {
   GrCCRenderedPathStats fRenderedPathStats[2];
   GrCCAtlas::Specs fRenderedAtlasSpecs;
 
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     return 0 == fNumCachedPaths + fNumCopiedPaths[kFillIdx] + fNumCopiedPaths[kStrokeIdx] +
                     fNumRenderedPaths[kFillIdx] + fNumRenderedPaths[kStrokeIdx] + fNumClipPaths;
   }
@@ -70,7 +71,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   GrCCPerFlushResources(
       GrOnFlushResourceProvider*, GrCCAtlas::CoverageType, const GrCCPerFlushResourceSpecs&);
 
-  bool isMapped() const { return SkToBool(fPathInstanceData); }
+  bool isMapped() const { return fPathInstanceBuffer.isMapped(); }
 
   GrCCAtlas::CoverageType renderedPathCoverageType() const {
     return fRenderedAtlasStack.coverageType();
@@ -95,7 +96,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
 
   // Returns the index in instanceBuffer() of the next instance that will be added by
   // appendDrawPathInstance().
-  int nextPathInstanceIdx() const { return fNextPathInstanceIdx; }
+  int nextPathInstanceIdx() const noexcept { return fNextPathInstanceIdx; }
 
   // Appends an instance to instanceBuffer() that will draw a path to the destination render
   // target. The caller is responsible to call set() on the returned instance, to keep track of
@@ -103,36 +104,36 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   GrCCPathProcessor::Instance& appendDrawPathInstance() {
     SkASSERT(this->isMapped());
     SkASSERT(fNextPathInstanceIdx < fEndPathInstance);
-    return fPathInstanceData[fNextPathInstanceIdx++];
+    return fPathInstanceBuffer[fNextPathInstanceIdx++];
   }
 
   // Finishes off the GPU buffers and renders the atlas(es).
   bool finalize(GrOnFlushResourceProvider*);
 
   // Accessors used by draw calls, once the resources have been finalized.
-  const GrCCFiller& filler() const {
+  const GrCCFiller& filler() const noexcept {
     SkASSERT(!this->isMapped());
     return fFiller;
   }
-  const GrCCStroker& stroker() const {
+  const GrCCStroker& stroker() const noexcept {
     SkASSERT(!this->isMapped());
     return fStroker;
   }
-  const GrGpuBuffer* indexBuffer() const {
+  const GrGpuBuffer* indexBuffer() const noexcept {
     SkASSERT(!this->isMapped());
     return fIndexBuffer.get();
   }
   const GrGpuBuffer* instanceBuffer() const {
     SkASSERT(!this->isMapped());
-    return fInstanceBuffer.get();
+    return fPathInstanceBuffer.gpuBuffer();
   }
-  const GrGpuBuffer* vertexBuffer() const {
+  const GrGpuBuffer* vertexBuffer() const noexcept {
     SkASSERT(!this->isMapped());
     return fVertexBuffer.get();
   }
   const GrGpuBuffer* stencilResolveBuffer() const {
     SkASSERT(!this->isMapped());
-    return fStencilResolveBuffer.get();
+    return fStencilResolveBuffer.gpuBuffer();
   }
 
  private:
@@ -155,9 +156,8 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
 
   const sk_sp<const GrGpuBuffer> fIndexBuffer;
   const sk_sp<const GrGpuBuffer> fVertexBuffer;
-  const sk_sp<GrGpuBuffer> fInstanceBuffer;
 
-  GrCCPathProcessor::Instance* fPathInstanceData = nullptr;
+  GrTAutoMapVertexBuffer<GrCCPathProcessor::Instance> fPathInstanceBuffer;
   int fNextCopyInstanceIdx;
   SkDEBUGCODE(int fEndCopyInstance);
   int fNextPathInstanceIdx;
@@ -182,8 +182,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   SkSTArray<2, sk_sp<GrTexture>> fRecyclableAtlasTextures;
 
   // Used in MSAA mode make an intermediate draw that resolves stencil winding values to coverage.
-  sk_sp<GrGpuBuffer> fStencilResolveBuffer;
-  GrStencilAtlasOp::ResolveRectInstance* fStencilResolveInstanceData = nullptr;
+  GrTAutoMapVertexBuffer<GrStencilAtlasOp::ResolveRectInstance> fStencilResolveBuffer;
   int fNextStencilResolveInstanceIdx = 0;
   SkDEBUGCODE(int fEndStencilResolveInstance);
 
@@ -199,7 +198,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   const GrTexture* testingOnly_frontRenderedAtlasTexture() const;
 };
 
-inline void GrCCRenderedPathStats::statPath(const SkPath& path) {
+inline void GrCCRenderedPathStats::statPath(const SkPath& path) noexcept {
   fMaxPointsPerPath = std::max(fMaxPointsPerPath, path.countPoints());
   fNumTotalSkPoints += path.countPoints();
   fNumTotalSkVerbs += path.countVerbs();

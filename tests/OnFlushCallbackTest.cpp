@@ -68,7 +68,7 @@ class NonAARectOp : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       fHelper.visitProxies(func);
     }
@@ -96,42 +96,24 @@ class NonAARectOp : public GrMeshDrawOp {
   SkRect fRect;
 
  private:
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     using namespace GrDefaultGeoProcFactory;
 
     GrGeometryProcessor* gp = GrDefaultGeoProcFactory::Make(
-        arena, caps->shaderCaps(), Color::kPremulGrColorAttribute_Type, Coverage::kSolid_Type,
+        arena, Color::kPremulGrColorAttribute_Type, Coverage::kSolid_Type,
         fHasLocalRect ? LocalCoords::kHasExplicit_Type : LocalCoords::kUnused_Type, SkMatrix::I());
     if (!gp) {
       SkDebugf("Couldn't create GrGeometryProcessor\n");
-      return nullptr;
+      return;
     }
 
-    return fHelper.createProgramInfo(
+    fProgramInfo = fHelper.createProgramInfo(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
-  }
-
-  GrProgramInfo* createProgramInfo(Target* target) {
-    return this->createProgramInfo(
-        &target->caps(), target->allocator(), target->outputView(), target->detachAppliedClip(),
-        target->dstProxyView());
-  }
-
-  void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
-    SkArenaAlloc* arena = context->priv().recordTimeAllocator();
-
-    // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
-
-    fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
-
-    context->priv().recordProgramInfo(fProgramInfo);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -140,7 +122,7 @@ class NonAARectOp : public GrMeshDrawOp {
     static const int kLocalOffset = sizeof(SkPoint) + sizeof(GrColor);
 
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(target);
+      this->createProgramInfo(target);
       if (!fProgramInfo) {
         return;
       }
@@ -193,8 +175,8 @@ class NonAARectOp : public GrMeshDrawOp {
     }
 
     fMesh = target->allocMesh();
-    fMesh->setIndexed(indexBuffer, 6, firstIndex, 0, 3, GrPrimitiveRestart::kNo);
-    fMesh->setVertexData(vertexBuffer, firstVertex);
+    fMesh->setIndexed(
+        indexBuffer, 6, firstIndex, 0, 3, GrPrimitiveRestart::kNo, vertexBuffer, firstVertex);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -202,12 +184,13 @@ class NonAARectOp : public GrMeshDrawOp {
       return;
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->drawMesh(*fMesh);
   }
 
   Helper fHelper;
-  GrMesh* fMesh = nullptr;
+  GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
   typedef GrMeshDrawOp INHERITED;
@@ -327,8 +310,6 @@ class AtlasObject final : public GrOnFlushCallbackObject {
 
     const GrBackendFormat format =
         caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
-    GrSwizzle readSwizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
-
     auto proxy = GrProxyProvider::MakeFullyLazyProxy(
         [format](GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyCallbackResult {
           SkISize dims;
@@ -341,9 +322,10 @@ class AtlasObject final : public GrOnFlushCallbackObject {
               dims, format, GrRenderable::kYes, 1, GrMipMapped::kNo, SkBudgeted::kYes,
               GrProtected::kNo);
         },
-        format, readSwizzle, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
+        format, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
         GrSurfaceProxy::UseAllocator::kNo);
 
+    GrSwizzle readSwizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
     fAtlasView = {std::move(proxy), kBottomLeft_GrSurfaceOrigin, readSwizzle};
     return fAtlasView;
   }

@@ -109,7 +109,7 @@ class GrManagedResource : SkNoncopyable {
   /** Increment the reference count.
       Must be balanced by a call to unref() or unrefAndFreeResources().
    */
-  void ref() const {
+  void ref() const noexcept {
     // No barrier required.
     SkDEBUGCODE(int newRefCount =) fRefCnt.fetch_add(+1, std::memory_order_relaxed);
     SkASSERT(newRefCount >= 1);

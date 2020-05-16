@@ -33,6 +33,10 @@ class SkEmptyShader : public SkShaderBase {
 
   bool onAppendStages(const SkStageRec&) const override { return false; }
 
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::F32, skvm::F32, skvm::Color, const SkMatrix&, const SkMatrix*,
+      SkFilterQuality, const SkColorInfo&, skvm::Uniforms*, SkArenaAlloc*) const override;
+
  private:
   SK_FLATTENABLE_HOOKS(SkEmptyShader)
 

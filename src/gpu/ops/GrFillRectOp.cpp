@@ -108,7 +108,7 @@ class FillRectOp final : public GrMeshDrawOp {
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
-      fProgramInfo->visitProxies(func);
+      fProgramInfo->visitFPProxies(func);
     } else {
       return fHelper.visitProxies(func);
     }
@@ -153,9 +153,9 @@ class FillRectOp final : public GrMeshDrawOp {
 
     // If the AA type is coverage, it will be a single value per pixel; if it's not coverage AA
     // then the coverage is always 1.0, so specify kNone for more optimal blending.
-    GrProcessorAnalysisCoverage coverage = fHelper.aaType() == GrAAType::kCoverage
-                                               ? GrProcessorAnalysisCoverage::kSingleChannel
-                                               : GrProcessorAnalysisCoverage::kNone;
+    auto coverage = fHelper.aaType() == GrAAType::kCoverage
+                        ? GrProcessorAnalysisCoverage::kSingleChannel
+                        : GrProcessorAnalysisCoverage::kNone;
     auto result = fHelper.finalizeProcessors(
         caps, clip, hasMixedSampledCoverage, clampType, coverage, &quadColors);
     // If there is a constant color after analysis, that means all of the quads should be set
@@ -211,23 +211,23 @@ class FillRectOp final : public GrMeshDrawOp {
         indexBufferOption);
   }
 
-  GrProgramInfo* createProgramInfo(
+  GrProgramInfo* programInfo() override {
+    // This Op implements its own onPrePrepareDraws so this entry point should never be called.
+    SkASSERT(0);
+    return fProgramInfo;
+  }
+
+  void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     const VertexSpec vertexSpec = this->vertexSpec();
 
     GrGeometryProcessor* gp = GrQuadPerEdgeAA::MakeProcessor(arena, vertexSpec);
     SkASSERT(gp->vertexStride() == vertexSpec.vertexSize());
 
-    return fHelper.createProgramInfoWithStencil(
+    fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
         vertexSpec.primitiveType());
-  }
-
-  GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) {
-    return this->createProgramInfo(
-        &flushState->caps(), flushState->allocator(), flushState->outputView(),
-        flushState->detachAppliedClip(), flushState->dstProxyView());
   }
 
   void onPrePrepareDraws(
@@ -242,7 +242,7 @@ class FillRectOp final : public GrMeshDrawOp {
     // This is equivalent to a GrOpFlushState::detachAppliedClip
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
 
-    fProgramInfo = this->createProgramInfo(
+    this->createProgramInfo(
         context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
 
     context->priv().recordProgramInfo(fProgramInfo);
@@ -281,14 +281,11 @@ class FillRectOp final : public GrMeshDrawOp {
     // local coords.
     SkASSERT(!fHelper.isTrivial() || !fHelper.usesLocalCoords());
 
-    sk_sp<const GrBuffer> vertexBuffer;
-    int vertexOffsetInBuffer = 0;
-
     const int totalNumVertices = fQuads.count() * vertexSpec.verticesPerQuad();
 
     // Fill the allocated vertex data
     void* vdata = target->makeVertexSpace(
-        vertexSpec.vertexSize(), totalNumVertices, &vertexBuffer, &vertexOffsetInBuffer);
+        vertexSpec.vertexSize(), totalNumVertices, &fVertexBuffer, &fBaseVertex);
     if (!vdata) {
       SkDebugf("Could not allocate vertices\n");
       return;
@@ -302,33 +299,38 @@ class FillRectOp final : public GrMeshDrawOp {
       this->tessellate(vertexSpec, (char*)vdata);
     }
 
-    sk_sp<const GrBuffer> indexBuffer;
     if (vertexSpec.needsIndexBuffer()) {
-      indexBuffer = GrQuadPerEdgeAA::GetIndexBuffer(target, vertexSpec.indexBufferOption());
-      if (!indexBuffer) {
+      fIndexBuffer = GrQuadPerEdgeAA::GetIndexBuffer(target, vertexSpec.indexBufferOption());
+      if (!fIndexBuffer) {
         SkDebugf("Could not allocate indices\n");
         return;
       }
     }
-
-    // Configure the mesh for the vertex data
-    fMesh = target->allocMeshes(1);
-    GrQuadPerEdgeAA::ConfigureMesh(
-        target->caps(), fMesh, vertexSpec, 0, fQuads.count(), totalNumVertices,
-        std::move(vertexBuffer), std::move(indexBuffer), vertexOffsetInBuffer);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    if (!fMesh) {
+    if (!fVertexBuffer) {
+      return;
+    }
+
+    const VertexSpec vertexSpec = this->vertexSpec();
+
+    if (vertexSpec.needsIndexBuffer() && !fIndexBuffer) {
       return;
     }
 
     if (!fProgramInfo) {
-      fProgramInfo = this->createProgramInfo(flushState);
+      this->createProgramInfo(flushState);
     }
 
-    flushState->opsRenderPass()->bindPipeline(*fProgramInfo, chainBounds);
-    flushState->opsRenderPass()->drawMeshes(*fProgramInfo, fMesh, 1);
+    const int totalNumVertices = fQuads.count() * vertexSpec.verticesPerQuad();
+
+    flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
+    flushState->bindBuffers(fIndexBuffer.get(), nullptr, fVertexBuffer.get());
+    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    GrQuadPerEdgeAA::IssueDraw(
+        flushState->caps(), flushState->opsRenderPass(), vertexSpec, 0, fQuads.count(),
+        totalNumVertices, fBaseVertex);
   }
 
   CombineResult onCombineIfPossible(
@@ -439,9 +441,12 @@ class FillRectOp final : public GrMeshDrawOp {
   GrQuadBuffer<ColorAndAA> fQuads;
   char* fPrePreparedVertices = nullptr;
 
-  GrMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
   ColorType fColorType;
+
+  sk_sp<const GrBuffer> fVertexBuffer;
+  sk_sp<const GrBuffer> fIndexBuffer;
+  int fBaseVertex;
 
   typedef GrMeshDrawOp INHERITED;
 };

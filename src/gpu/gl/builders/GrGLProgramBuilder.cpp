@@ -239,7 +239,7 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* pr
   } else if (cached) {
     ATRACE_ANDROID_FRAMEWORK_ALWAYS("cache_hit");
     SkReader32 reader(fCached->data(), fCached->size());
-    SkFourByteTag shaderType = reader.readU32();
+    SkFourByteTag shaderType = GrPersistentCacheUtils::GetType(&reader);
 
     switch (shaderType) {
       case kGLPB_Tag: {
@@ -410,17 +410,11 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* pr
 
   cleanup_shaders(fGpu, shadersToDelete);
 
-  // With ANGLE, we can't cache path-rendering programs. We use ProgramPathFragmentInputGen,
-  // and ANGLE's deserialized program state doesn't restore enough state to handle that.
-  // The native NVIDIA drivers do, but this is such an edge case that it's easier to just
-  // black-list caching these programs in all cases. See: anglebug.com/3619
-  //
   // We temporarily can't cache tessellation shaders while using back door GLSL.
   //
   // We also can't cache SkSL or GLSL if we were given a precompiled program, but there's not
   // much point in doing so.
-  if (!cached && !primProc.isPathRendering() && !primProc.willUseTessellationShaders() &&
-      !precompiledProgram) {
+  if (!cached && !primProc.willUseTessellationShaders() && !precompiledProgram) {
     // FIXME: Remove the check for tessellation shaders in the above 'if' once the back door
     // GLSL mechanism is removed.
     (void)&GrPrimitiveProcessor::getTessControlShaderGLSL;
@@ -455,11 +449,11 @@ void GrGLProgramBuilder::bindProgramResourceLocations(GrGLuint programID) {
       !fGpu->glPathRendering()->shouldBindFragmentInputs()) {
     return;
   }
-  int count = fVaryingHandler.fPathProcVaryingInfos.count();
-  for (int i = 0; i < count; ++i) {
-    GL_CALL(BindFragmentInputLocation(
-        programID, i, fVaryingHandler.fPathProcVaryingInfos[i].fVariable.c_str()));
-    fVaryingHandler.fPathProcVaryingInfos[i].fLocation = i;
+  int i = 0;
+  for (auto& varying : fVaryingHandler.fPathProcVaryingInfos.items()) {
+    GL_CALL(BindFragmentInputLocation(programID, i, varying.fVariable.c_str()));
+    varying.fLocation = i;
+    ++i;
   }
 }
 
@@ -506,14 +500,12 @@ void GrGLProgramBuilder::resolveProgramResourceLocations(GrGLuint programID, boo
       fGpu->glPathRendering()->shouldBindFragmentInputs()) {
     return;
   }
-  int count = fVaryingHandler.fPathProcVaryingInfos.count();
-  for (int i = 0; i < count; ++i) {
+  for (auto& varying : fVaryingHandler.fPathProcVaryingInfos.items()) {
     GrGLint location;
     GL_CALL_RET(
-        location, GetProgramResourceLocation(
-                      programID, GR_GL_FRAGMENT_INPUT,
-                      fVaryingHandler.fPathProcVaryingInfos[i].fVariable.c_str()));
-    fVaryingHandler.fPathProcVaryingInfos[i].fLocation = location;
+        location,
+        GetProgramResourceLocation(programID, GR_GL_FRAGMENT_INPUT, varying.fVariable.c_str()));
+    varying.fLocation = location;
   }
 }
 
@@ -529,7 +521,7 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::createProgram(GrGLuint programID) {
 bool GrGLProgramBuilder::PrecompileProgram(
     GrGLPrecompiledProgram* precompiledProgram, GrGLGpu* gpu, const SkData& cachedData) {
   SkReader32 reader(cachedData.data(), cachedData.size());
-  SkFourByteTag shaderType = reader.readU32();
+  SkFourByteTag shaderType = GrPersistentCacheUtils::GetType(&reader);
   if (shaderType != kSKSL_Tag) {
     // TODO: Support GLSL, and maybe even program binaries, too?
     return false;

@@ -105,13 +105,13 @@ struct Program {
     // program will compile to the same code regardless of the flipY setting.
     bool fFlipY;
 
-    void reset() {
+    void reset() noexcept {
       fRTWidth = false;
       fRTHeight = false;
       fFlipY = false;
     }
 
-    bool isEmpty() { return !fRTWidth && !fRTHeight && !fFlipY; }
+    bool isEmpty() noexcept { return !fRTWidth && !fRTHeight && !fFlipY; }
   };
 
   class iterator {

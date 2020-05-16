@@ -207,12 +207,10 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceCacheWrappedResources, reporter, ctxI
   context->resetContext();
 
   sk_sp<GrTexture> borrowed(resourceProvider->wrapBackendTexture(
-      backendTextures[0], GrColorType::kRGBA_8888, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo,
-      kRead_GrIOType));
+      backendTextures[0], kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType));
 
   sk_sp<GrTexture> adopted(resourceProvider->wrapBackendTexture(
-      backendTextures[1], GrColorType::kRGBA_8888, kAdopt_GrWrapOwnership, GrWrapCacheable::kNo,
-      kRead_GrIOType));
+      backendTextures[1], kAdopt_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType));
 
   REPORTER_ASSERT(reporter, borrowed != nullptr && adopted != nullptr);
   if (!borrowed || !adopted) {
@@ -1470,7 +1468,7 @@ static void test_free_texture_messages(skiatest::Reporter* reporter) {
         16, 16, SkColorType::kRGBA_8888_SkColorType, GrMipMapped::kNo, GrRenderable::kNo);
     wrapped[i] =
         gpu->wrapBackendTexture(
-               backends[i], GrColorType::kRGBA_8888, GrWrapOwnership::kBorrow_GrWrapOwnership,
+               backends[i], GrWrapOwnership::kBorrow_GrWrapOwnership,
                (i < 2) ? GrWrapCacheable::kYes : GrWrapCacheable::kNo, GrIOType::kRead_GrIOType)
             .release();
     wrapped[i]->setRelease(releaseProc, &freed[i]);
@@ -1549,11 +1547,10 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceMessagesAfterAbandon, reporter, ctxIn
 
   GrBackendTexture backend = context->createBackendTexture(
       16, 16, SkColorType::kRGBA_8888_SkColorType, GrMipMapped::kNo, GrRenderable::kNo);
-  GrTexture* tex =
-      gpu->wrapBackendTexture(
-             backend, GrColorType::kRGBA_8888, GrWrapOwnership::kBorrow_GrWrapOwnership,
-             GrWrapCacheable::kYes, GrIOType::kRead_GrIOType)
-          .release();
+  GrTexture* tex = gpu->wrapBackendTexture(
+                          backend, GrWrapOwnership::kBorrow_GrWrapOwnership, GrWrapCacheable::kYes,
+                          GrIOType::kRead_GrIOType)
+                       .release();
 
   auto releaseProc = [](void* ctx) {
     int* index = (int*)ctx;
@@ -1602,10 +1599,9 @@ static sk_sp<GrTextureProxy> make_mipmap_proxy(
 
   const GrBackendFormat format =
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
-  GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
 
   return proxyProvider->createProxy(
-      format, dims, swizzle, renderable, sampleCnt, GrMipMapped::kYes, SkBackingFit::kExact,
+      format, dims, renderable, sampleCnt, GrMipMapped::kYes, SkBackingFit::kExact,
       SkBudgeted::kYes, GrProtected::kNo);
 }
 

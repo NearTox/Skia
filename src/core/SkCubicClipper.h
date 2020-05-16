@@ -19,13 +19,13 @@
  */
 class SkCubicClipper {
  public:
-  SkCubicClipper();
+  SkCubicClipper() noexcept;
 
-  void setClip(const SkIRect& clip);
+  void setClip(const SkIRect& clip) noexcept;
 
   bool SK_WARN_UNUSED_RESULT clipCubic(const SkPoint src[4], SkPoint dst[4]);
 
-  static bool SK_WARN_UNUSED_RESULT ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t);
+  static bool SK_WARN_UNUSED_RESULT ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) noexcept;
 
  private:
   SkRect fClip;

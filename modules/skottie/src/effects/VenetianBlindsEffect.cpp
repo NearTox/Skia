@@ -41,10 +41,11 @@ class VenetianBlindsAdapter final : public MaskShaderEffectBase {
       kFeather_Index = 3,
     };
 
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kCompletion_Index), &fCompletion);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kDirection_Index), &fDirection);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kWidth_Index), &fWidth);
-    this->bind(*abuilder, EffectBuilder::GetPropValue(jprops, kFeather_Index), &fFeather);
+    EffectBinder(jprops, *abuilder, this)
+        .bind(kCompletion_Index, fCompletion)
+        .bind(kDirection_Index, fDirection)
+        .bind(kWidth_Index, fWidth)
+        .bind(kFeather_Index, fFeather);
   }
 
   MaskInfo onMakeMask() const override {
@@ -138,7 +139,7 @@ class VenetianBlindsAdapter final : public MaskShaderEffectBase {
         true};
   }
 
-  float fCompletion = 0, fDirection = 0, fWidth = 0, fFeather = 0;
+  ScalarValue fCompletion = 0, fDirection = 0, fWidth = 0, fFeather = 0;
 
   using INHERITED = MaskShaderEffectBase;
 };

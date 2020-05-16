@@ -16,7 +16,7 @@
 /**
  *  Use this for bitmapcache and mipmapcache entries.
  */
-uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) {
+uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) noexcept {
   uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
   return (sharedID << 32) | bitmapGenID;
 }
@@ -27,7 +27,7 @@ void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) noexcept {
   SkASSERT(imageID);
   SkASSERT(subset.width() > 0 && subset.height() > 0);
   return {imageID, subset};
@@ -161,7 +161,7 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
   bool fDiscardableIsLocked = true;
 };
 
-void SkBitmapCache::PrivateDeleteRec(Rec* rec) { delete rec; }
+void SkBitmapCache::PrivateDeleteRec(Rec* rec) noexcept { delete rec; }
 
 SkBitmapCache::RecPtr SkBitmapCache::Alloc(
     const SkBitmapCacheDesc& desc, const SkImageInfo& info, SkPixmap* pmap) {

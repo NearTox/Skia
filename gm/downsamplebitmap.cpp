@@ -55,6 +55,7 @@ struct DownsampleBitmapGM : public skiagm::GM {
     }
 
     SkBitmap bm = fMakeBitmap(info);
+    bm.setImmutable();
 
     int curY = 0;
     int curHeight;

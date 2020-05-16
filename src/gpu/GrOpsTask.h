@@ -45,7 +45,7 @@ class GrOpsTask : public GrRenderTask {
 
   GrOpsTask* asOpsTask() override { return this; }
 
-  bool isEmpty() const { return fOpChains.empty(); }
+  bool isEmpty() const noexcept { return fOpChains.empty(); }
 
   /**
    * Empties the draw buffer of any queued up draws.
@@ -109,20 +109,18 @@ class GrOpsTask : public GrRenderTask {
         std::move(op), processorAnalysis, clip.doesClip() ? &clip : nullptr, &dstProxyView, caps);
   }
 
-  void discard();
+  void discard() noexcept;
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override;)
-      SkDEBUGCODE(int numClips() const override { return fNumClips; })
-          SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;)
+  SkDEBUGCODE(void dump(bool printDependencies) const override);
+  SkDEBUGCODE(int numClips() const override { return fNumClips; });
+  SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override);
 #if GR_TEST_UTILS
-              int numOpChains() const {
-    return fOpChains.count();
-  }
+  int numOpChains() const { return fOpChains.count(); }
   const GrOp* getChain(int index) const { return fOpChains[index].head(); }
 #endif
 
  private:
-  bool isNoOp() const {
+  bool isNoOp() const noexcept {
     // TODO: GrLoadOp::kDiscard (i.e., storing a discard) should also be grounds for skipping
     // execution. We currently don't because of Vulkan. See http://skbug.com/9373.
     //
@@ -149,13 +147,13 @@ class GrOpsTask : public GrRenderTask {
   // once finished.)
   //
   // NOTE: initialContent must not be kClear if caps.performStencilClearsAsDraws() is true.
-  void setInitialStencilContent(StencilContent initialContent) {
+  void setInitialStencilContent(StencilContent initialContent) noexcept {
     fInitialStencilContent = initialContent;
   }
 
   // If a renderTargetContext splits its opsTask, it uses this method to guarantee stencil values
   // get preserved across its split tasks.
-  void setMustPreserveStencil() { fMustPreserveStencil = true; }
+  void setMustPreserveStencil() noexcept { fMustPreserveStencil = true; }
 
   // Must only be called if native color buffer clearing is enabled.
   void setColorLoadOp(GrLoadOp op, const SkPMColor4f& color);
@@ -185,11 +183,11 @@ class GrOpsTask : public GrRenderTask {
 
     void visitProxies(const GrOp::VisitProxyFunc&) const;
 
-    GrOp* head() const { return fList.head(); }
+    GrOp* head() const noexcept { return fList.head(); }
 
-    GrAppliedClip* appliedClip() const { return fAppliedClip; }
-    const DstProxyView& dstProxyView() const { return fDstProxyView; }
-    const SkRect& bounds() const { return fBounds; }
+    GrAppliedClip* appliedClip() const noexcept { return fAppliedClip; }
+    const DstProxyView& dstProxyView() const noexcept { return fDstProxyView; }
+    const SkRect& bounds() const noexcept { return fBounds; }
 
     // Deletes all the ops in the chain via the pool.
     void deleteOps(GrOpMemoryPool* pool);
@@ -206,34 +204,34 @@ class GrOpsTask : public GrRenderTask {
         std::unique_ptr<GrOp> op, GrProcessorSet::Analysis, const DstProxyView*,
         const GrAppliedClip*, const GrCaps&, GrRecordingContext::Arenas*, GrAuditTrail*);
 
-    void setSkipExecuteFlag() { fSkipExecute = true; }
-    bool shouldExecute() const { return SkToBool(this->head()) && !fSkipExecute; }
+    void setSkipExecuteFlag() noexcept { fSkipExecute = true; }
+    bool shouldExecute() const noexcept { return SkToBool(this->head()) && !fSkipExecute; }
 
    private:
     class List {
      public:
-      List() = default;
-      List(std::unique_ptr<GrOp>);
-      List(List&&);
-      List& operator=(List&& that);
+      constexpr List() noexcept = default;
+      List(std::unique_ptr<GrOp>) noexcept;
+      List(List&&) noexcept;
+      List& operator=(List&& that) noexcept;
 
-      bool empty() const { return !SkToBool(fHead); }
-      GrOp* head() const { return fHead.get(); }
-      GrOp* tail() const { return fTail; }
+      bool empty() const noexcept { return !SkToBool(fHead); }
+      GrOp* head() const noexcept { return fHead.get(); }
+      GrOp* tail() const noexcept { return fTail; }
 
       std::unique_ptr<GrOp> popHead();
       std::unique_ptr<GrOp> removeOp(GrOp* op);
       void pushHead(std::unique_ptr<GrOp> op);
       void pushTail(std::unique_ptr<GrOp>);
 
-      void validate() const;
+      void validate() const noexcept;
 
      private:
       std::unique_ptr<GrOp> fHead;
       GrOp* fTail = nullptr;
     };
 
-    void validate() const;
+    void validate() const noexcept;
 
     bool tryConcat(
         List*, GrProcessorSet::Analysis, const DstProxyView&, const GrAppliedClip*,
@@ -298,11 +296,11 @@ class GrOpsTask : public GrRenderTask {
   // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
   // Gather statistics to determine the correct size.
   SkArenaAlloc fClipAllocator{4096};
-  SkDEBUGCODE(int fNumClips;)
+  SkDEBUGCODE(int fNumClips);
 
-      // TODO: We could look into this being a set if we find we're adding a lot of duplicates that
-      // is causing slow downs.
-      SkTArray<GrSurfaceProxy*, true> fSampledProxies;
+  // TODO: We could look into this being a set if we find we're adding a lot of duplicates that
+  // is causing slow downs.
+  SkTArray<GrSurfaceProxy*, true> fSampledProxies;
 
   SkRect fTotalBounds = SkRect::MakeEmpty();
   SkIRect fClippedContentBounds = SkIRect::MakeEmpty();

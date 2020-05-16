@@ -89,25 +89,25 @@ class SkClipStack {
     bool operator!=(const Element& element) const { return !(*this == element); }
 
     //!< Call to get the type of the clip element.
-    DeviceSpaceType getDeviceSpaceType() const { return fDeviceSpaceType; }
+    DeviceSpaceType getDeviceSpaceType() const noexcept { return fDeviceSpaceType; }
 
     //!< Call to get the save count associated with this clip element.
-    int getSaveCount() const { return fSaveCount; }
+    int getSaveCount() const noexcept { return fSaveCount; }
 
     //!< Call if getDeviceSpaceType() is kPath to get the path.
-    const SkPath& getDeviceSpacePath() const {
+    const SkPath& getDeviceSpacePath() const noexcept {
       SkASSERT(DeviceSpaceType::kPath == fDeviceSpaceType);
       return *fDeviceSpacePath.get();
     }
 
     //!< Call if getDeviceSpaceType() is kRRect to get the round-rect.
-    const SkRRect& getDeviceSpaceRRect() const {
+    const SkRRect& getDeviceSpaceRRect() const noexcept {
       SkASSERT(DeviceSpaceType::kRRect == fDeviceSpaceType);
       return fDeviceSpaceRRect;
     }
 
     //!< Call if getDeviceSpaceType() is kRect to get the rect.
-    const SkRect& getDeviceSpaceRect() const {
+    const SkRect& getDeviceSpaceRect() const noexcept {
       SkASSERT(
           DeviceSpaceType::kRect == fDeviceSpaceType &&
           (fDeviceSpaceRRect.isRect() || fDeviceSpaceRRect.isEmpty()));
@@ -116,33 +116,33 @@ class SkClipStack {
 
     //!< Call if getDeviceSpaceType() is not kEmpty to get the set operation used to combine
     //!< this element.
-    SkClipOp getOp() const { return fOp; }
+    SkClipOp getOp() const noexcept { return fOp; }
 
     //!< Call to get the element as a path, regardless of its type.
     void asDeviceSpacePath(SkPath* path) const;
 
     //!< Call if getType() is not kPath to get the element as a round rect.
-    const SkRRect& asDeviceSpaceRRect() const {
+    const SkRRect& asDeviceSpaceRRect() const noexcept {
       SkASSERT(DeviceSpaceType::kPath != fDeviceSpaceType);
       return fDeviceSpaceRRect;
     }
 
     /** If getType() is not kEmpty this indicates whether the clip shape should be anti-aliased
         when it is rasterized. */
-    bool isAA() const { return fDoAA; }
+    bool isAA() const noexcept { return fDoAA; }
 
     //!< Inverts the fill of the clip shape. Note that a kEmpty element remains kEmpty.
     void invertShapeFillType();
 
     //!< Sets the set operation represented by the element.
-    void setOp(SkClipOp op) { fOp = op; }
+    void setOp(SkClipOp op) noexcept { fOp = op; }
 
     /** The GenID can be used by clip stack clients to cache representations of the clip. The
         ID corresponds to the set of clip elements up to and including this element within the
         stack not to the element itself. That is the same clip path in different stacks will
         have a different ID since the elements produce different clip result in the context of
         their stacks. */
-    uint32_t getGenID() const {
+    uint32_t getGenID() const noexcept {
       SkASSERT(kInvalidGenID != fGenID);
       return fGenID;
     }
@@ -287,7 +287,7 @@ class SkClipStack {
 
   void reset();
 
-  int getSaveCount() const { return fSaveCount; }
+  int getSaveCount() const noexcept { return fSaveCount; }
   void save();
   void restore();
 
@@ -348,7 +348,9 @@ class SkClipStack {
   void clipPath(const SkPath&, const SkMatrix& matrix, SkClipOp, bool doAA);
   // An optimized version of clipDevRect(emptyRect, kIntersect, ...)
   void clipEmpty();
-  void setDeviceClipRestriction(const SkIRect& rect) { fClipRestrictionRect = SkRect::Make(rect); }
+  void setDeviceClipRestriction(const SkIRect& rect) noexcept {
+    fClipRestrictionRect = SkRect::Make(rect);
+  }
 
   /**
    * isWideOpen returns true if the clip state corresponds to the infinite
@@ -493,7 +495,7 @@ class SkClipStack {
    */
   void restoreTo(int saveCount);
 
-  inline bool hasClipRestriction(SkClipOp op) {
+  inline bool hasClipRestriction(SkClipOp op) noexcept {
     return op >= kUnion_SkClipOp && !fClipRestrictionRect.isEmpty();
   }
 

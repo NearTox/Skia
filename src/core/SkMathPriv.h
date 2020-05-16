@@ -13,16 +13,16 @@
 /**
  *  Return the integer square root of value, with a bias of bitBias
  */
-int32_t SkSqrtBits(int32_t value, int bitBias);
+int32_t SkSqrtBits(int32_t value, int bitBias) noexcept;
 
 /** Return the integer square root of n, treated as a SkFixed (16.16)
  */
-static inline int32_t SkSqrt32(int32_t n) { return SkSqrtBits(n, 15); }
+static inline int32_t SkSqrt32(int32_t n) noexcept { return SkSqrtBits(n, 15); }
 
 /**
  *  Returns (value < 0 ? 0 : value) efficiently (i.e. no compares or branches)
  */
-static inline int SkClampPos(int value) { return value & ~(value >> 31); }
+static constexpr int SkClampPos(int value) noexcept { return value & ~(value >> 31); }
 
 /**
  * Stores numer/denom and numer%denom into div and mod respectively.
@@ -53,13 +53,13 @@ inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) {
 /** If sign == -1, returns -n, else sign must be 0, and returns n.
  Typically used in conjunction with SkExtractSign().
  */
-static inline int32_t SkApplySign(int32_t n, int32_t sign) {
+static constexpr inline int32_t SkApplySign(int32_t n, int32_t sign) noexcept {
   SkASSERT(sign == 0 || sign == -1);
   return (n ^ sign) - sign;
 }
 
 /** Return x with the sign of y */
-static inline int32_t SkCopySign32(int32_t x, int32_t y) {
+static inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
   return SkApplySign(x, SkExtractSign(x ^ y));
 }
 
@@ -68,7 +68,7 @@ static inline int32_t SkCopySign32(int32_t x, int32_t y) {
  Note: only works as long as max - value doesn't wrap around
  @return max if value >= max, else value
  */
-static inline unsigned SkClampUMax(unsigned value, unsigned max) {
+static constexpr unsigned SkClampUMax(unsigned value, unsigned max) noexcept {
   if (value > max) {
     value = max;
   }
@@ -79,7 +79,7 @@ static inline unsigned SkClampUMax(unsigned value, unsigned max) {
 // we negate it (even though we *know* we're 2's complement and we'll get the same
 // value back). So we create this helper function that casts to size_t (unsigned) first,
 // to avoid the complaint.
-static inline size_t sk_negate_to_size_t(int32_t value) {
+static constexpr inline size_t sk_negate_to_size_t(int32_t value) noexcept {
 #if defined(_MSC_VER)
 #  pragma warning(push)
 #  pragma warning(disable : 4146)  // Thanks MSVC, we know what we're negating an unsigned
@@ -95,7 +95,7 @@ static inline size_t sk_negate_to_size_t(int32_t value) {
 /** Return a*b/255, truncating away any fractional bits. Only valid if both
  a and b are 0..255
  */
-static inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) {
+static inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
   SkASSERT((uint8_t)a == a);
   SkASSERT((uint8_t)b == b);
   unsigned prod = a * b + 1;
@@ -105,7 +105,7 @@ static inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) {
 /** Return (a*b)/255, taking the ceiling of any fractional bits. Only valid if
  both a and b are 0..255. The expected result equals (a * b + 254) / 255.
  */
-static inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) {
+static inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
   SkASSERT((uint8_t)a == a);
   SkASSERT((uint8_t)b == b);
   unsigned prod = a * b + 255;
@@ -114,7 +114,7 @@ static inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) {
 
 /** Just the rounding step in SkDiv255Round: round(value / 255)
  */
-static inline unsigned SkDiv255Round(unsigned prod) {
+static constexpr unsigned SkDiv255Round(unsigned prod) noexcept {
   prod += 128;
   return (prod + (prod >> 8)) >> 8;
 }
@@ -124,19 +124,19 @@ static inline unsigned SkDiv255Round(unsigned prod) {
  */
 #if defined(_MSC_VER)
 #  include <stdlib.h>
-static inline uint32_t SkBSwap32(uint32_t v) { return _byteswap_ulong(v); }
+static inline uint32_t SkBSwap32(uint32_t v) noexcept { return _byteswap_ulong(v); }
 #else
 static inline uint32_t SkBSwap32(uint32_t v) { return __builtin_bswap32(v); }
 #endif
 
 //! Returns the number of leading zero bits (0...32)
-int SkCLZ_portable(uint32_t);
+int SkCLZ_portable(uint32_t) noexcept;
 
 #ifndef SkCLZ
 #  if defined(SK_BUILD_FOR_WIN)
 #    include <intrin.h>
 
-static inline int SkCLZ(uint32_t mask) {
+static inline int SkCLZ(uint32_t mask) noexcept {
   if (mask) {
     unsigned long index;
     _BitScanReverse(&index, mask);
@@ -163,7 +163,7 @@ static inline int SkCLZ(uint32_t mask) {
  *  is already a power of 2, then it is returned unchanged. It is undefined
  *  if value is <= 0.
  */
-static inline int SkNextPow2(int value) {
+static inline int SkNextPow2(int value) noexcept {
   SkASSERT(value > 0);
   return 1 << (32 - SkCLZ(value - 1));
 }
@@ -173,7 +173,7 @@ static inline int SkNextPow2(int value) {
  *  is already a power of 2, then it is returned unchanged. It is undefined
  *  if value is <= 0.
  */
-static inline int SkPrevPow2(int value) {
+static inline int SkPrevPow2(int value) noexcept {
   SkASSERT(value > 0);
   return 1 << (32 - SkCLZ(value >> 1));
 }
@@ -187,7 +187,7 @@ static inline int SkPrevPow2(int value) {
  *  SkNextLog2(4) -> 2
  *  SkNextLog2(5) -> 3
  */
-static inline int SkNextLog2(uint32_t value) {
+static inline int SkNextLog2(uint32_t value) noexcept {
   SkASSERT(value != 0);
   return 32 - SkCLZ(value - 1);
 }
@@ -201,7 +201,7 @@ static inline int SkNextLog2(uint32_t value) {
  *  SkPrevLog2(4) -> 2
  *  SkPrevLog2(5) -> 2
  */
-static inline int SkPrevLog2(uint32_t value) {
+static inline int SkPrevLog2(uint32_t value) noexcept {
   SkASSERT(value != 0);
   return 32 - SkCLZ(value >> 1);
 }
@@ -211,12 +211,14 @@ static inline int SkPrevLog2(uint32_t value) {
 /**
  *  Return the smallest power-of-2 >= n.
  */
-static inline uint32_t GrNextPow2(uint32_t n) { return n ? (1 << (32 - SkCLZ(n - 1))) : 1; }
+static inline uint32_t GrNextPow2(uint32_t n) noexcept {
+  return n ? (1 << (32 - SkCLZ(n - 1))) : 1;
+}
 
 /**
  * Returns the next power of 2 >= n or n if the next power of 2 can't be represented by size_t.
  */
-static inline size_t GrNextSizePow2(size_t n) {
+static inline size_t GrNextSizePow2(size_t n) noexcept {
   constexpr int kNumSizeTBits = 8 * sizeof(size_t);
   constexpr size_t kHighBitSet = size_t(1) << (kNumSizeTBits - 1);
 

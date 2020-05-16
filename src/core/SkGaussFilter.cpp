@@ -16,7 +16,7 @@ static constexpr double kGoodEnough = 1.0 / 100.0;
 
 // Normalize the values of gauss to 1.0, and make sure they add to one.
 // NB if n == 1, then this will force gauss[0] == 1.
-static void normalize(int n, double* gauss) {
+static void normalize(int n, double* gauss) noexcept {
   // Carefully add from smallest to largest to calculate the normalizing sum.
   double sum = 0;
   for (int i = n - 1; i >= 1; i--) {

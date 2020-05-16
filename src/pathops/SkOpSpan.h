@@ -28,7 +28,7 @@ class SkOpPtT {
   const SkOpPtT* active() const;
 
   // please keep in sync with debugAddOpp()
-  void addOpp(SkOpPtT* opp, SkOpPtT* oppPrev) {
+  void addOpp(SkOpPtT* opp, SkOpPtT* oppPrev) noexcept {
     SkOpPtT* oldNext = this->fNext;
     SkASSERT(this != opp);
     this->fNext = opp;
@@ -37,14 +37,14 @@ class SkOpPtT {
   }
 
   bool alias() const;
-  bool coincident() const { return fCoincident; }
+  bool coincident() const noexcept { return fCoincident; }
   bool contains(const SkOpPtT*) const;
   bool contains(const SkOpSegment*, const SkPoint&) const;
   bool contains(const SkOpSegment*, double t) const;
   const SkOpPtT* contains(const SkOpSegment*) const;
   SkOpContour* contour() const;
 
-  int debugID() const { return SkDEBUGRELEASE(fID, -1); }
+  int debugID() const noexcept { return SkDEBUGRELEASE(fID, -1); }
 
   void debugAddOpp(const SkOpPtT* opp, const SkOpPtT* oppPrev) const;
   const SkOpAngle* debugAngle(int id) const;
@@ -63,9 +63,9 @@ class SkOpPtT {
   const SkOpSpanBase* debugSpan(int id) const;
   void debugValidate() const;
 
-  bool deleted() const { return fDeleted; }
+  bool deleted() const noexcept { return fDeleted; }
 
-  bool duplicate() const { return fDuplicatePt; }
+  bool duplicate() const noexcept { return fDuplicatePt; }
 
   void dump() const;  // available to testing only
   void dumpAll() const;
@@ -75,20 +75,20 @@ class SkOpPtT {
   SkOpGlobalState* globalState() const;
   void init(SkOpSpanBase*, double t, const SkPoint&, bool dup);
 
-  void insert(SkOpPtT* span) {
+  void insert(SkOpPtT* span) noexcept {
     SkASSERT(span != this);
     span->fNext = fNext;
     fNext = span;
   }
 
-  const SkOpPtT* next() const { return fNext; }
+  const SkOpPtT* next() const noexcept { return fNext; }
 
-  SkOpPtT* next() { return fNext; }
+  SkOpPtT* next() noexcept { return fNext; }
 
   bool onEnd() const;
 
   // returns nullptr if this is already in the opp ptT loop
-  SkOpPtT* oppPrev(const SkOpPtT* opp) const {
+  SkOpPtT* oppPrev(const SkOpPtT* opp) const noexcept {
     // find the fOpp ptr to opp
     SkOpPtT* oppPrev = opp->fNext;
     if (oppPrev == this) {
@@ -129,20 +129,20 @@ class SkOpPtT {
   const SkOpSegment* segment() const;
   SkOpSegment* segment();
 
-  void setCoincident() const {
+  void setCoincident() const noexcept {
     SkOPASSERT(!fDeleted);
     fCoincident = true;
   }
 
   void setDeleted();
 
-  void setSpan(const SkOpSpanBase* span) { fSpan = const_cast<SkOpSpanBase*>(span); }
+  void setSpan(const SkOpSpanBase* span) noexcept { fSpan = const_cast<SkOpSpanBase*>(span); }
 
-  const SkOpSpanBase* span() const { return fSpan; }
+  const SkOpSpanBase* span() const noexcept { return fSpan; }
 
-  SkOpSpanBase* span() { return fSpan; }
+  SkOpSpanBase* span() noexcept { return fSpan; }
 
-  const SkOpPtT* starter(const SkOpPtT* end) const { return fT < end->fT ? this : end; }
+  const SkOpPtT* starter(const SkOpPtT* end) const noexcept { return fT < end->fT ? this : end; }
 
   double fT;
   SkPoint fPt;  // cache of point value at this t
@@ -166,19 +166,19 @@ class SkOpSpanBase {
 
   bool addOpp(SkOpSpanBase* opp);
 
-  void bumpSpanAdds() { ++fSpanAdds; }
+  void bumpSpanAdds() noexcept { ++fSpanAdds; }
 
-  bool chased() const { return fChased; }
+  bool chased() const noexcept { return fChased; }
 
   void checkForCollapsedCoincidence();
 
-  const SkOpSpanBase* coinEnd() const { return fCoinEnd; }
+  const SkOpSpanBase* coinEnd() const noexcept { return fCoinEnd; }
 
   Collapsed collapsed(double s, double e) const;
   bool contains(const SkOpSpanBase*) const;
   const SkOpPtT* contains(const SkOpSegment*) const;
 
-  bool containsCoinEnd(const SkOpSpanBase* coin) const {
+  bool containsCoinEnd(const SkOpSpanBase* coin) const noexcept {
     SkASSERT(this != coin);
     const SkOpSpanBase* next = this;
     while ((next = next->fCoinEnd) != this) {
@@ -192,9 +192,9 @@ class SkOpSpanBase {
   bool containsCoinEnd(const SkOpSegment*) const;
   SkOpContour* contour() const;
 
-  int debugBumpCount() { return SkDEBUGRELEASE(++fCount, -1); }
+  int debugBumpCount() noexcept { return SkDEBUGRELEASE(++fCount, -1); }
 
-  int debugID() const { return SkDEBUGRELEASE(fID, -1); }
+  int debugID() const noexcept { return SkDEBUGRELEASE(fID, -1); }
 
 #if DEBUG_COIN
   void debugAddOpp(SkPathOpsDebug::GlitchLog*, const SkOpSpanBase* opp) const;
@@ -227,7 +227,7 @@ class SkOpSpanBase {
   SkOpGlobalState* globalState() const;
   void debugValidate() const;
 
-  bool deleted() const { return fPtT.deleted(); }
+  bool deleted() const noexcept { return fPtT.deleted(); }
 
   void dump() const;  // available to testing only
   void dumpCoin() const;
@@ -235,9 +235,9 @@ class SkOpSpanBase {
   void dumpBase() const;
   void dumpHead() const;
 
-  bool final() const { return fPtT.fT == 1; }
+  bool final() const noexcept { return fPtT.fT == 1; }
 
-  SkOpAngle* fromAngle() const { return fFromAngle; }
+  SkOpAngle* fromAngle() const noexcept { return fFromAngle; }
 
   void initBase(SkOpSegment* parent, SkOpSpan* prev, double t, const SkPoint& pt);
 
@@ -258,32 +258,32 @@ class SkOpSpanBase {
   void merge(SkOpSpan* span);
   bool mergeMatches(SkOpSpanBase* opp);
 
-  const SkOpSpan* prev() const { return fPrev; }
+  const SkOpSpan* prev() const noexcept { return fPrev; }
 
-  SkOpSpan* prev() { return fPrev; }
+  SkOpSpan* prev() noexcept { return fPrev; }
 
-  const SkPoint& pt() const { return fPtT.fPt; }
+  const SkPoint& pt() const noexcept { return fPtT.fPt; }
 
-  const SkOpPtT* ptT() const { return &fPtT; }
+  const SkOpPtT* ptT() const noexcept { return &fPtT; }
 
-  SkOpPtT* ptT() { return &fPtT; }
+  SkOpPtT* ptT() noexcept { return &fPtT; }
 
-  SkOpSegment* segment() const { return fSegment; }
+  SkOpSegment* segment() const noexcept { return fSegment; }
 
-  void setAligned() { fAligned = true; }
+  void setAligned() noexcept { fAligned = true; }
 
-  void setChased(bool chased) { fChased = chased; }
+  void setChased(bool chased) noexcept { fChased = chased; }
 
-  void setFromAngle(SkOpAngle* angle) { fFromAngle = angle; }
+  void setFromAngle(SkOpAngle* angle) noexcept { fFromAngle = angle; }
 
-  void setPrev(SkOpSpan* prev) { fPrev = prev; }
+  void setPrev(SkOpSpan* prev) noexcept { fPrev = prev; }
 
   bool simple() const {
     fPtT.debugValidate();
     return fPtT.next()->next() == &fPtT;
   }
 
-  int spanAddsCount() const { return fSpanAdds; }
+  int spanAddsCount() const noexcept { return fSpanAdds; }
 
   const SkOpSpan* starter(const SkOpSpanBase* end) const {
     const SkOpSpanBase* result = t() < end->t() ? this : end;
@@ -311,16 +311,16 @@ class SkOpSpanBase {
 
   int step(const SkOpSpanBase* end) const { return t() < end->t() ? 1 : -1; }
 
-  double t() const { return fPtT.fT; }
+  double t() const noexcept { return fPtT.fT; }
 
-  void unaligned() { fAligned = false; }
+  void unaligned() noexcept { fAligned = false; }
 
-  SkOpSpan* upCast() {
+  SkOpSpan* upCast() noexcept {
     SkASSERT(!final());
     return (SkOpSpan*)this;
   }
 
-  const SkOpSpan* upCast() const {
+  const SkOpSpan* upCast() const noexcept {
     SkOPASSERT(!final());
     return (const SkOpSpan*)this;
   }
@@ -348,14 +348,14 @@ class SkOpSpanBase {
 
 class SkOpSpan : public SkOpSpanBase {
  public:
-  bool alreadyAdded() const {
+  bool alreadyAdded() const noexcept {
     if (fAlreadyAdded) {
       return true;
     }
     return false;
   }
 
-  bool clearCoincident() {
+  bool clearCoincident() noexcept {
     SkASSERT(!final());
     if (fCoincident == this) {
       return false;
@@ -367,7 +367,7 @@ class SkOpSpan : public SkOpSpanBase {
   int computeWindSum();
   bool containsCoincidence(const SkOpSegment*) const;
 
-  bool containsCoincidence(const SkOpSpan* coin) const {
+  bool containsCoincidence(const SkOpSpan* coin) const noexcept {
     SkASSERT(this != coin);
     const SkOpSpan* next = this;
     while ((next = next->fCoincident) != this) {
@@ -387,7 +387,7 @@ class SkOpSpan : public SkOpSpanBase {
   void dumpCoin() const;
   bool dumpSpan() const;
 
-  bool done() const {
+  bool done() const noexcept {
     SkASSERT(!final());
     return fDone;
   }
@@ -409,29 +409,29 @@ class SkOpSpan : public SkOpSpanBase {
     debugValidate();
   }
 
-  bool isCanceled() const {
+  bool isCanceled() const noexcept {
     SkASSERT(!final());
     return fWindValue == 0 && fOppValue == 0;
   }
 
-  bool isCoincident() const {
+  bool isCoincident() const noexcept {
     SkASSERT(!final());
     return fCoincident != this;
   }
 
-  void markAdded() { fAlreadyAdded = true; }
+  void markAdded() noexcept { fAlreadyAdded = true; }
 
-  SkOpSpanBase* next() const {
+  SkOpSpanBase* next() const noexcept {
     SkASSERT(!final());
     return fNext;
   }
 
-  int oppSum() const {
+  int oppSum() const noexcept {
     SkASSERT(!final());
     return fOppSum;
   }
 
-  int oppValue() const {
+  int oppValue() const noexcept {
     SkASSERT(!final());
     return fOppValue;
   }
@@ -440,33 +440,33 @@ class SkOpSpan : public SkOpSpanBase {
 
   SkOpPtT* setCoinStart(SkOpSpan* oldCoinStart, SkOpSegment* oppSegment);
 
-  void setDone(bool done) {
+  void setDone(bool done) noexcept {
     SkASSERT(!final());
     fDone = done;
   }
 
-  void setNext(SkOpSpanBase* nextT) {
+  void setNext(SkOpSpanBase* nextT) noexcept {
     SkASSERT(!final());
     fNext = nextT;
   }
 
   void setOppSum(int oppSum);
 
-  void setOppValue(int oppValue) {
+  void setOppValue(int oppValue) noexcept {
     SkASSERT(!final());
     SkASSERT(fOppSum == SK_MinS32);
     SkOPASSERT(!oppValue || !fDone);
     fOppValue = oppValue;
   }
 
-  void setToAngle(SkOpAngle* angle) {
+  void setToAngle(SkOpAngle* angle) noexcept {
     SkASSERT(!final());
     fToAngle = angle;
   }
 
   void setWindSum(int windSum);
 
-  void setWindValue(int windValue) {
+  void setWindValue(int windValue) noexcept {
     SkASSERT(!final());
     SkASSERT(windValue >= 0);
     SkASSERT(fWindSum == SK_MinS32);
@@ -476,17 +476,17 @@ class SkOpSpan : public SkOpSpanBase {
 
   bool sortableTop(SkOpContour*);
 
-  SkOpAngle* toAngle() const {
+  SkOpAngle* toAngle() const noexcept {
     SkASSERT(!final());
     return fToAngle;
   }
 
-  int windSum() const {
+  int windSum() const noexcept {
     SkASSERT(!final());
     return fWindSum;
   }
 
-  int windValue() const {
+  int windValue() const noexcept {
     SkOPASSERT(!final());
     return fWindValue;
   }

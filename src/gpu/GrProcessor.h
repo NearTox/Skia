@@ -27,7 +27,7 @@ class GrResourceProvider;
  */
 class GrProcessorKeyBuilder {
  public:
-  GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) : fData(data), fCount(0) {
+  GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) noexcept : fData(data), fCount(0) {
     SkASSERT(0 == fData->count() % sizeof(uint32_t));
   }
 
@@ -44,7 +44,7 @@ class GrProcessorKeyBuilder {
     return reinterpret_cast<uint32_t*>(fData->push_back_n(4 * count));
   }
 
-  size_t size() const { return sizeof(uint32_t) * fCount; }
+  size_t size() const noexcept { return sizeof(uint32_t) * fCount; }
 
  private:
   SkTArray<uint8_t, true>* fData;  // unowned ptr to the larger key.
@@ -96,7 +96,6 @@ class GrProcessor {
     kGrColorMatrixFragmentProcessor_ClassID,
     kGrColorSpaceXformEffect_ClassID,
     kGrComposeLerpEffect_ClassID,
-    kGrComposeLerpRedEffect_ClassID,
     kGrConfigConversionEffect_ClassID,
     kGrConicEffect_ClassID,
     kGrConstColorProcessor_ClassID,
@@ -135,7 +134,6 @@ class GrProcessor {
     kGrSingleIntervalGradientColorizer_ClassID,
     kGrSkSLFP_ClassID,
     kGrSpecularLightingEffect_ClassID,
-    kGrSRGBEffect_ClassID,
     kGrSampleMaskProcessor_ClassID,
     kGrSweepGradientLayout_ClassID,
     kGrTextureEffect_ClassID,
@@ -172,12 +170,13 @@ class GrProcessor {
     kMappedNormalsFP_ClassID,
     kLightingFP_ClassID,
     kLinearStrokeProcessor_ClassID,
+    kVerticesGP_ClassID,
   };
 
   virtual ~GrProcessor() = default;
 
   /** Human-meaningful string to identify this prcoessor; may be embedded in generated shader
-      code. */
+      code and must be a legal identifier. */
   virtual const char* name() const = 0;
 
   /** Human-readable dump of all information */
@@ -203,7 +202,7 @@ class GrProcessor {
 
   GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(CustomFeatures);
 
-  CustomFeatures requestedFeatures() const { return fRequestedFeatures; }
+  CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }
 
   void* operator new(size_t size);
   void operator delete(void* target);
@@ -217,15 +216,15 @@ class GrProcessor {
     return *static_cast<const T*>(this);
   }
 
-  ClassID classID() const { return fClassID; }
+  ClassID classID() const noexcept { return fClassID; }
 
  protected:
-  GrProcessor(ClassID classID) : fClassID(classID) {}
+  GrProcessor(ClassID classID) noexcept : fClassID(classID) {}
   GrProcessor(const GrProcessor&) = delete;
   GrProcessor& operator=(const GrProcessor&) = delete;
 
-  void setWillUseCustomFeature(CustomFeatures feature) { fRequestedFeatures |= feature; }
-  void resetCustomFeatures() { fRequestedFeatures = CustomFeatures::kNone; }
+  void setWillUseCustomFeature(CustomFeatures feature) noexcept { fRequestedFeatures |= feature; }
+  void resetCustomFeatures() noexcept { fRequestedFeatures = CustomFeatures::kNone; }
 
   const ClassID fClassID;
   CustomFeatures fRequestedFeatures = CustomFeatures::kNone;

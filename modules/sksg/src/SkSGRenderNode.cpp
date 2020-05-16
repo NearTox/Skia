@@ -22,11 +22,11 @@ enum Flags : uint8_t {
 
 }  // namespace
 
-RenderNode::RenderNode(uint32_t inval_traits) : INHERITED(inval_traits) {}
+RenderNode::RenderNode(uint32_t inval_traits) noexcept : INHERITED(inval_traits) {}
 
-bool RenderNode::isVisible() const { return !(fNodeFlags & kInvisible_Flag); }
+bool RenderNode::isVisible() const noexcept { return !(fNodeFlags & kInvisible_Flag); }
 
-void RenderNode::setVisible(bool v) {
+void RenderNode::setVisible(bool v) noexcept {
   if (v == this->isVisible()) {
     return;
   }
@@ -47,12 +47,12 @@ const RenderNode* RenderNode::nodeAt(const SkPoint& p) const {
   return this->bounds().contains(p.x(), p.y()) ? this->onNodeAt(p) : nullptr;
 }
 
-static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) {
+static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) noexcept {
   return SkToU8(sk_float_round2int(alpha * opacity));
 }
 
 static sk_sp<SkShader> LocalShader(
-    const sk_sp<SkShader> shader, const SkMatrix& base, const SkMatrix& ctm) {
+    const sk_sp<SkShader>& shader, const SkMatrix& base, const SkMatrix& ctm) {
   // Mask filters / shaders are declared to operate under a specific transform, but due to the
   // deferral mechanism, other transformations might have been pushed to the state.
   // We want to undo these transforms (T):
@@ -79,7 +79,7 @@ static sk_sp<SkShader> LocalShader(
   return shader->makeWithLocalMatrix(lm);
 }
 
-bool RenderNode::RenderContext::requiresIsolation() const {
+bool RenderNode::RenderContext::requiresIsolation() const noexcept {
   // Note: fShader is never applied on isolation layers.
   return ScaleAlpha(SK_AlphaOPAQUE, fOpacity) != SK_AlphaOPAQUE || fColorFilter || fMaskShader ||
          fBlendMode != SkBlendMode::kSrcOver;
@@ -117,7 +117,8 @@ RenderNode::ScopedRenderContext::~ScopedRenderContext() {
   }
 }
 
-RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateOpacity(float opacity) {
+RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateOpacity(
+    float opacity) noexcept {
   SkASSERT(opacity >= 0 && opacity <= 1);
   fCtx.fOpacity *= opacity;
   return std::move(*this);
@@ -165,7 +166,7 @@ RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateMaskS
 }
 
 RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateBlendMode(
-    SkBlendMode mode) {
+    SkBlendMode mode) noexcept {
   fCtx.fBlendMode = mode;
   return std::move(*this);
 }

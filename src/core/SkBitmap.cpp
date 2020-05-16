@@ -32,19 +32,20 @@
 #include <cstring>
 #include <utility>
 
-static bool reset_return_false(SkBitmap* bm) {
+static bool reset_return_false(SkBitmap* bm) noexcept {
   bm->reset();
   return false;
 }
 
-SkBitmap::SkBitmap() : fFlags(0) {}
+SkBitmap::SkBitmap() noexcept : fFlags(0) {}
 
 SkBitmap::SkBitmap(const SkBitmap& src)
     : fPixelRef(src.fPixelRef), fPixmap(src.fPixmap), fFlags(src.fFlags) {
-  SkDEBUGCODE(src.validate();) SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(src.validate());
+  SkDEBUGCODE(this->validate());
 }
 
-SkBitmap::SkBitmap(SkBitmap&& other)
+SkBitmap::SkBitmap(SkBitmap&& other) noexcept
     : fPixelRef(std::move(other.fPixelRef)),
       fPixmap(std::move(other.fPixmap)),
       fFlags(other.fFlags) {
@@ -53,7 +54,7 @@ SkBitmap::SkBitmap(SkBitmap&& other)
   other.fFlags = 0;
 }
 
-SkBitmap::~SkBitmap() {}
+SkBitmap::~SkBitmap() = default;
 
 SkBitmap& SkBitmap::operator=(const SkBitmap& src) {
   if (this != &src) {
@@ -61,10 +62,11 @@ SkBitmap& SkBitmap::operator=(const SkBitmap& src) {
     fPixmap = src.fPixmap;
     fFlags = src.fFlags;
   }
-  SkDEBUGCODE(this->validate();) return *this;
+  SkDEBUGCODE(this->validate());
+  return *this;
 }
 
-SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
+SkBitmap& SkBitmap::operator=(SkBitmap&& other) noexcept {
   if (this != &other) {
     fPixelRef = std::move(other.fPixelRef);
     fPixmap = std::move(other.fPixmap);
@@ -76,13 +78,13 @@ SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
   return *this;
 }
 
-void SkBitmap::swap(SkBitmap& other) {
+void SkBitmap::swap(SkBitmap& other) noexcept {
   using std::swap;
   swap(*this, other);
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 }
 
-void SkBitmap::reset() {
+void SkBitmap::reset() noexcept {
   fPixelRef = nullptr;  // Free pixels.
   fPixmap.reset();
   fFlags = 0;
@@ -93,7 +95,7 @@ void SkBitmap::getBounds(SkRect* bounds) const {
   *bounds = SkRect::Make(this->dimensions());
 }
 
-void SkBitmap::getBounds(SkIRect* bounds) const {
+void SkBitmap::getBounds(SkIRect* bounds) const noexcept {
   SkASSERT(bounds);
   *bounds = fPixmap.bounds();
 }
@@ -144,7 +146,7 @@ bool SkBitmap::setAlphaType(SkAlphaType newAlphaType) {
   SkDEBUGCODE(this->validate();) return true;
 }
 
-SkIPoint SkBitmap::pixelRefOrigin() const {
+SkIPoint SkBitmap::pixelRefOrigin() const noexcept {
   const char* addr = (const char*)fPixmap.addr();
   const char* pix = (const char*)(fPixelRef ? fPixelRef->pixels() : nullptr);
   size_t rb = this->rowBytes();
@@ -320,7 +322,9 @@ bool SkBitmap::installMaskPixels(const SkMask& mask) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-uint32_t SkBitmap::getGenerationID() const { return fPixelRef ? fPixelRef->getGenerationID() : 0; }
+uint32_t SkBitmap::getGenerationID() const noexcept {
+  return fPixelRef ? fPixelRef->getGenerationID() : 0;
+}
 
 void SkBitmap::notifyPixelsChanged() const {
   SkASSERT(!this->isImmutable());
@@ -352,17 +356,17 @@ bool SkBitmap::HeapAllocator::allocPixelRef(SkBitmap* dst) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::isImmutable() const { return fPixelRef ? fPixelRef->isImmutable() : false; }
+bool SkBitmap::isImmutable() const noexcept { return fPixelRef ? fPixelRef->isImmutable() : false; }
 
-void SkBitmap::setImmutable() {
+void SkBitmap::setImmutable() noexcept {
   if (fPixelRef) {
     fPixelRef->setImmutable();
   }
 }
 
-bool SkBitmap::isVolatile() const { return (fFlags & kImageIsVolatile_Flag) != 0; }
+bool SkBitmap::isVolatile() const noexcept { return (fFlags & kImageIsVolatile_Flag) != 0; }
 
-void SkBitmap::setIsVolatile(bool isVolatile) {
+void SkBitmap::setIsVolatile(bool isVolatile) noexcept {
   if (isVolatile) {
     fFlags |= kImageIsVolatile_Flag;
   } else {
@@ -370,7 +374,7 @@ void SkBitmap::setIsVolatile(bool isVolatile) {
   }
 }
 
-void* SkBitmap::getAddr(int x, int y) const {
+void* SkBitmap::getAddr(int x, int y) const noexcept {
   SkASSERT((unsigned)x < (unsigned)this->width());
   SkASSERT((unsigned)y < (unsigned)this->height());
 

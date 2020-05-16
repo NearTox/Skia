@@ -21,8 +21,8 @@ class SkRefCntSet;
 
 class SkWriteBuffer {
  public:
-  SkWriteBuffer() {}
-  virtual ~SkWriteBuffer() {}
+  constexpr SkWriteBuffer() noexcept = default;
+  virtual ~SkWriteBuffer() = default;
 
   virtual void writePad32(const void* buffer, size_t bytes) = 0;
 
@@ -55,7 +55,7 @@ class SkWriteBuffer {
   virtual void writeTypeface(SkTypeface* typeface) = 0;
   virtual void writePaint(const SkPaint& paint) = 0;
 
-  void setSerialProcs(const SkSerialProcs& procs) { fProcs = procs; }
+  void setSerialProcs(const SkSerialProcs& procs) noexcept { fProcs = procs; }
 
  protected:
   SkSerialProcs fProcs;
@@ -68,43 +68,45 @@ class SkWriteBuffer {
  */
 class SkBinaryWriteBuffer : public SkWriteBuffer {
  public:
-  SkBinaryWriteBuffer();
-  SkBinaryWriteBuffer(void* initialStorage, size_t storageSize);
+  SkBinaryWriteBuffer() noexcept;
+  SkBinaryWriteBuffer(void* initialStorage, size_t storageSize) noexcept;
   ~SkBinaryWriteBuffer() override;
 
-  void write(const void* buffer, size_t bytes) { fWriter.write(buffer, bytes); }
-  void writePad32(const void* buffer, size_t bytes) override { fWriter.writePad(buffer, bytes); }
+  void write(const void* buffer, size_t bytes) noexcept { fWriter.write(buffer, bytes); }
+  void writePad32(const void* buffer, size_t bytes) noexcept override {
+    fWriter.writePad(buffer, bytes);
+  }
 
-  void reset(void* storage = nullptr, size_t storageSize = 0) {
+  void reset(void* storage = nullptr, size_t storageSize = 0) noexcept {
     fWriter.reset(storage, storageSize);
   }
 
-  size_t bytesWritten() const { return fWriter.bytesWritten(); }
+  size_t bytesWritten() const noexcept { return fWriter.bytesWritten(); }
 
   // Returns true iff all of the bytes written so far are stored in the initial storage
   // buffer provided in the constructor or the most recent call to reset.
-  bool usingInitialStorage() const;
+  bool usingInitialStorage() const noexcept;
 
-  void writeByteArray(const void* data, size_t size) override;
-  void writeBool(bool value) override;
-  void writeScalar(SkScalar value) override;
-  void writeScalarArray(const SkScalar* value, uint32_t count) override;
-  void writeInt(int32_t value) override;
-  void writeIntArray(const int32_t* value, uint32_t count) override;
-  void writeUInt(uint32_t value) override;
-  void writeString(const char* value) override;
+  void writeByteArray(const void* data, size_t size) noexcept override;
+  void writeBool(bool value) noexcept override;
+  void writeScalar(SkScalar value) noexcept override;
+  void writeScalarArray(const SkScalar* value, uint32_t count) noexcept override;
+  void writeInt(int32_t value) noexcept override;
+  void writeIntArray(const int32_t* value, uint32_t count) noexcept override;
+  void writeUInt(uint32_t value) noexcept override;
+  void writeString(const char* value) noexcept override;
 
   void writeFlattenable(const SkFlattenable* flattenable) override;
-  void writeColor(SkColor color) override;
-  void writeColorArray(const SkColor* color, uint32_t count) override;
-  void writeColor4f(const SkColor4f& color) override;
-  void writeColor4fArray(const SkColor4f* color, uint32_t count) override;
-  void writePoint(const SkPoint& point) override;
-  void writePointArray(const SkPoint* point, uint32_t count) override;
-  void writePoint3(const SkPoint3& point) override;
-  void writeMatrix(const SkMatrix& matrix) override;
-  void writeIRect(const SkIRect& rect) override;
-  void writeRect(const SkRect& rect) override;
+  void writeColor(SkColor color) noexcept override;
+  void writeColorArray(const SkColor* color, uint32_t count) noexcept override;
+  void writeColor4f(const SkColor4f& color) noexcept override;
+  void writeColor4fArray(const SkColor4f* color, uint32_t count) noexcept override;
+  void writePoint(const SkPoint& point) noexcept override;
+  void writePointArray(const SkPoint* point, uint32_t count) noexcept override;
+  void writePoint3(const SkPoint3& point) noexcept override;
+  void writeMatrix(const SkMatrix& matrix) noexcept override;
+  void writeIRect(const SkIRect& rect) noexcept override;
+  void writeRect(const SkRect& rect) noexcept override;
   void writeRegion(const SkRegion& region) override;
   void writePath(const SkPath& path) override;
   size_t writeStream(SkStream* stream, size_t length) override;
@@ -113,10 +115,10 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
   void writePaint(const SkPaint& paint) override;
 
   bool writeToStream(SkWStream*) const;
-  void writeToMemory(void* dst) const { fWriter.flatten(dst); }
+  void writeToMemory(void* dst) const noexcept { fWriter.flatten(dst); }
 
-  void setFactoryRecorder(sk_sp<SkFactorySet>);
-  void setTypefaceRecorder(sk_sp<SkRefCntSet>);
+  void setFactoryRecorder(sk_sp<SkFactorySet>) noexcept;
+  void setTypefaceRecorder(sk_sp<SkRefCntSet>) noexcept;
 
  private:
   sk_sp<SkFactorySet> fFactorySet;

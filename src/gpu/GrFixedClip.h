@@ -17,29 +17,30 @@
  */
 class GrFixedClip final : public GrHardClip {
  public:
-  GrFixedClip() = default;
-  explicit GrFixedClip(const SkIRect& scissorRect) : fScissorState(scissorRect) {}
+  GrFixedClip() noexcept = default;
+  explicit GrFixedClip(const SkIRect& scissorRect) noexcept : fScissorState(scissorRect) {}
 
-  const GrScissorState& scissorState() const { return fScissorState; }
-  bool scissorEnabled() const { return fScissorState.enabled(); }
-  const SkIRect& scissorRect() const {
+  const GrScissorState& scissorState() const noexcept { return fScissorState; }
+  bool scissorEnabled() const noexcept { return fScissorState.enabled(); }
+  const SkIRect& scissorRect() const noexcept {
     SkASSERT(scissorEnabled());
     return fScissorState.rect();
   }
 
-  void disableScissor() { fScissorState.setDisabled(); }
+  void disableScissor() noexcept { fScissorState.setDisabled(); }
 
-  void setScissor(const SkIRect& irect) { fScissorState.set(irect); }
-  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) {
+  void setScissor(const SkIRect& irect) noexcept { fScissorState.set(irect); }
+  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) noexcept {
     return fScissorState.intersect(irect);
   }
 
-  const GrWindowRectsState& windowRectsState() const { return fWindowRectsState; }
-  bool hasWindowRectangles() const { return fWindowRectsState.enabled(); }
+  const GrWindowRectsState& windowRectsState() const noexcept { return fWindowRectsState; }
+  bool hasWindowRectangles() const noexcept { return fWindowRectsState.enabled(); }
 
-  void disableWindowRectangles() { fWindowRectsState.setDisabled(); }
+  void disableWindowRectangles() noexcept { fWindowRectsState.setDisabled(); }
 
-  void setWindowRectangles(const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) {
+  void setWindowRectangles(
+      const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) noexcept {
     fWindowRectsState.set(windows, mode);
   }
 

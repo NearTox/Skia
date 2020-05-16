@@ -141,6 +141,7 @@ struct SkPDFTagNode {
     kNo,
   } fCanDiscard = kUnknown;
   std::unique_ptr<SkPDFArray> fAttributes;
+  std::vector<SkPDFIndirectReference> fAnnotations;
 };
 
 SkPDFTagTree::SkPDFTagTree() : fArena(4 * sizeof(SkPDFTagNode)) {}
@@ -257,6 +258,11 @@ SkPDFIndirectReference prepare_tag_tree_to_emit(
     mcr->insertInt("MCID", info.fMarkId);
     kids->appendObject(std::move(mcr));
   }
+  for (SkPDFIndirectReference annotationRef : node->fAnnotations) {
+    std::unique_ptr<SkPDFDict> annotationDict = SkPDFMakeDict("OBJR");
+    annotationDict->insertRef("Obj", annotationRef);
+    kids->appendObject(std::move(annotationDict));
+  }
   node->fRef = ref;
   SkPDFDict dict("StructElem");
   if (!node->fTypeString.isEmpty()) {
@@ -280,6 +286,19 @@ SkPDFIndirectReference prepare_tag_tree_to_emit(
   }
 
   return doc->emit(dict, ref);
+}
+
+void SkPDFTagTree::addNodeAnnotation(int nodeId, SkPDFIndirectReference annotationRef) {
+  if (!fRoot) {
+    return;
+  }
+  SkPDFTagNode** tagPtr = fNodeMap.find(nodeId);
+  if (!tagPtr) {
+    return;
+  }
+  SkPDFTagNode* tag = *tagPtr;
+  SkASSERT(tag);
+  tag->fAnnotations.push_back(annotationRef);
 }
 
 SkPDFIndirectReference SkPDFTagTree::makeStructTreeRoot(SkPDFDocument* doc) {

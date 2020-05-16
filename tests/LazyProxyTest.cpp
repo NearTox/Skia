@@ -77,7 +77,6 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
         : GrDrawOp(ClassID()), fTest(test) {
       const GrBackendFormat format =
           ctx->priv().caps()->getDefaultBackendFormat(GrColorType::kBGR_565, GrRenderable::kNo);
-      GrSwizzle readSwizzle = ctx->priv().caps()->getReadSwizzle(format, GrColorType::kBGR_565);
       fProxy = GrProxyProvider::MakeFullyLazyProxy(
           [this, format,
            nullTexture](GrResourceProvider* rp) -> GrSurfaceProxy::LazyCallbackResult {
@@ -94,7 +93,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
               return texture;
             }
           },
-          format, readSwizzle, GrRenderable::kNo, 1, GrProtected::kNo, *proxyProvider->caps(),
+          format, GrRenderable::kNo, 1, GrProtected::kNo, *proxyProvider->caps(),
           GrSurfaceProxy::UseAllocator::kYes);
 
       this->setBounds(SkRectPriv::MakeLargest(), GrOp::HasAABloat::kNo, GrOp::IsHairline::kNo);
@@ -107,6 +106,10 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
         GrClampType) override {
       return GrProcessorSet::EmptySetAnalysis();
     }
+    void onPrePrepare(
+        GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+        const GrXferProcessor::DstProxyView&) override {}
+
     void onPrepare(GrOpFlushState*) override {}
 
     LazyProxyTest* const fTest;
@@ -135,7 +138,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
             fAtlas->instantiate(rp);
             return sk_ref_sp(fAtlas->peekTexture());
           },
-          format, readSwizzle, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
+          format, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
           GrSurfaceProxy::UseAllocator::kYes);
       fAccess.set(
           GrSurfaceProxyView(fLazyProxy, kOrigin, readSwizzle), GrSamplerState::Filter::kNearest);
@@ -263,11 +266,10 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
         bool fReleaseCallback;
         sk_sp<GrTexture> fTexture;
       };
-      GrSwizzle readSwizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
       sk_sp<GrTextureProxy> proxy = proxyProvider->createLazyProxy(
-          TestCallback(&testCount, releaseCallback, tex), format, {kSize, kSize}, readSwizzle,
-          GrRenderable::kNo, 1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
-          GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
+          TestCallback(&testCount, releaseCallback, tex), format, {kSize, kSize}, GrRenderable::kNo,
+          1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kNone,
+          SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
           GrSurfaceProxy::UseAllocator::kYes);
 
       REPORTER_ASSERT(reporter, proxy.get());
@@ -322,7 +324,6 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
     GrBackendFormat format =
         ctx->priv().caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
-    GrSwizzle readSwizzle = ctx->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
     fLazyProxy = proxyProvider->createLazyProxy(
         [testExecuteValue, shouldFailInstantiation, desc,
          format](GrResourceProvider* rp) -> GrSurfaceProxy::LazyCallbackResult {
@@ -336,9 +337,9 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
                   GrProtected::kNo),
               true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
-        format, desc, readSwizzle, GrRenderable::kNo, 1, GrMipMapped::kNo,
-        GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kNone, SkBackingFit::kExact,
-        SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
+        format, desc, GrRenderable::kNo, 1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
+        GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
+        GrSurfaceProxy::UseAllocator::kYes);
 
     SkASSERT(fLazyProxy.get());
 
@@ -351,6 +352,9 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override {
     return GrProcessorSet::EmptySetAnalysis();
   }
+  void onPrePrepare(
+      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
     *fTestExecuteValue = 2;

@@ -27,7 +27,7 @@ class SkSurfaceProps;
  */
 class GrOnFlushCallbackObject {
  public:
-  virtual ~GrOnFlushCallbackObject() {}
+  virtual ~GrOnFlushCallbackObject() = default;
 
   /*
    * The onFlush callback allows subsystems (e.g., text, path renderers) to create atlases
@@ -76,8 +76,7 @@ class GrOnFlushResourceProvider {
   bool assignUniqueKeyToProxy(const GrUniqueKey&, GrTextureProxy*);
   void removeUniqueKeyFromProxy(GrTextureProxy*);
   void processInvalidUniqueKey(const GrUniqueKey&);
-  // GrColorType is necessary to set the proxy's texture swizzle.
-  sk_sp<GrTextureProxy> findOrCreateProxyByUniqueKey(const GrUniqueKey&, GrColorType, UseAllocator);
+  sk_sp<GrTextureProxy> findOrCreateProxyByUniqueKey(const GrUniqueKey&, UseAllocator);
 
   bool instatiateProxy(GrSurfaceProxy*);
 

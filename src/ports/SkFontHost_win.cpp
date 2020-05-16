@@ -67,7 +67,7 @@ static bool isLCD(const SkScalerContextRec& rec) {
   return SkMask::kLCD16_Format == rec.fMaskFormat;
 }
 
-static bool bothZero(SkScalar a, SkScalar b) { return 0 == a && 0 == b; }
+static bool bothZero(SkScalar a, SkScalar b) noexcept { return 0 == a && 0 == b; }
 
 // returns false if there is any non-90-rotation or skew
 static bool isAxisAligned(const SkScalerContextRec& rec) {
@@ -114,9 +114,9 @@ static void dcfontname_to_skstring(HDC deviceContext, const LOGFONT& lf, SkStrin
     if (0 == GetTextFace(deviceContext, fontNameLen, fontName.get())) {
       fontName[0] = 0;
     }
-    }
+  }
 
-    tchar_to_skstring(fontName.get(), familyName);
+  tchar_to_skstring(fontName.get(), familyName);
 }
 
 static void make_canonical(LOGFONT* lf) {
@@ -298,7 +298,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
   }
 
  protected:
-  void weak_dispose() const override {
+  void weak_dispose() const noexcept override {
     RemoveFontMemResourceEx(fFontMemResource);
     INHERITED::weak_dispose();
   }

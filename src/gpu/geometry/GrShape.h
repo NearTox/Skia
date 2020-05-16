@@ -137,7 +137,7 @@ class GrShape {
    */
   static GrShape MakeFilled(const GrShape& original, FillInversion = FillInversion::kPreserve);
 
-  const GrStyle& style() const { return fStyle; }
+  const GrStyle& style() const noexcept { return fStyle; }
 
   /**
    * Returns a shape that has either applied the path effect or path effect and stroking
@@ -148,7 +148,7 @@ class GrShape {
     return GrShape(*this, apply, scale);
   }
 
-  bool isRect() const {
+  bool isRect() const noexcept {
     if (Type::kRRect != fType) {
       return false;
     }
@@ -157,7 +157,8 @@ class GrShape {
   }
 
   /** Returns the unstyled geometry as a rrect if possible. */
-  bool asRRect(SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const {
+  bool asRRect(
+      SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const noexcept {
     if (Type::kRRect != fType) {
       return false;
     }
@@ -180,7 +181,7 @@ class GrShape {
    * If the unstyled shape is a straight line segment, returns true and sets pts to the endpoints.
    * An inverse filled line path is still considered a line.
    */
-  bool asLine(SkPoint pts[2], bool* inverted) const {
+  bool asLine(SkPoint pts[2], bool* inverted) const noexcept {
     if (fType != Type::kLine) {
       return false;
     }
@@ -237,7 +238,7 @@ class GrShape {
   }
 
   // Can this shape be drawn as a pair of filled nested rectangles?
-  bool asNestedRects(SkRect rects[2]) const {
+  bool asNestedRects(SkRect rects[2]) const noexcept {
     if (Type::kPath != fType) {
       return false;
     }
@@ -285,7 +286,7 @@ class GrShape {
    * Returns whether the geometry is empty. Note that applying the style could produce a
    * non-empty shape. It also may have an inverse fill.
    */
-  bool isEmpty() const { return Type::kEmpty == fType || Type::kInvertedEmpty == fType; }
+  bool isEmpty() const noexcept { return Type::kEmpty == fType || Type::kInvertedEmpty == fType; }
 
   /**
    * Gets the bounds of the geometry without reflecting the shape's styling. This ignores
@@ -329,7 +330,7 @@ class GrShape {
    * a computable direction, but this is not always a requirement for path renderers so it is
    * kept separate from knownToBeConvex().
    */
-  bool knownDirection() const {
+  bool knownDirection() const noexcept {
     switch (fType) {
       case Type::kEmpty: return true;
       case Type::kInvertedEmpty: return true;
@@ -346,7 +347,7 @@ class GrShape {
   }
 
   /** Is the pre-styled geometry inverse filled? */
-  bool inverseFilled() const {
+  bool inverseFilled() const noexcept {
     bool ret = false;
     switch (fType) {
       case Type::kEmpty: ret = false; break;
@@ -379,7 +380,7 @@ class GrShape {
    * Is it known that the unstyled geometry has no unclosed contours. This means that it will
    * not have any caps if stroked (modulo the effect of any path effect).
    */
-  bool knownToBeClosed() const {
+  bool knownToBeClosed() const noexcept {
     switch (fType) {
       case Type::kEmpty: return true;
       case Type::kInvertedEmpty: return true;
@@ -393,7 +394,7 @@ class GrShape {
     return false;
   }
 
-  uint32_t segmentMask() const {
+  uint32_t segmentMask() const noexcept {
     switch (fType) {
       case Type::kEmpty: return 0;
       case Type::kInvertedEmpty: return 0;
@@ -483,12 +484,12 @@ class GrShape {
     fPathData.fGenID = 0;
   }
 
-  SkPath& path() {
+  SkPath& path() noexcept {
     SkASSERT(Type::kPath == fType);
     return fPathData.fPath;
   }
 
-  const SkPath& path() const {
+  const SkPath& path() const noexcept {
     SkASSERT(Type::kPath == fType);
     return fPathData.fPath;
   }
@@ -520,7 +521,7 @@ class GrShape {
   static constexpr unsigned kDefaultRRectStart = 0;
 
   static unsigned DefaultRectDirAndStartIndex(
-      const SkRect& rect, bool hasPathEffect, SkPathDirection* dir) {
+      const SkRect& rect, bool hasPathEffect, SkPathDirection* dir) noexcept {
     *dir = kDefaultRRectDir;
     // This comes from SkPath's interface. The default for adding a SkRect is counter clockwise
     // beginning at index 0 (which happens to correspond to rrect index 0 or 7).
@@ -549,7 +550,7 @@ class GrShape {
   }
 
   static unsigned DefaultRRectDirAndStartIndex(
-      const SkRRect& rrect, bool hasPathEffect, SkPathDirection* dir) {
+      const SkRRect& rrect, bool hasPathEffect, SkPathDirection* dir) noexcept {
     // This comes from SkPath's interface. The default for adding a SkRRect to a path is
     // clockwise beginning at starting index 6.
     static constexpr unsigned kPathRRectStartIdx = 6;

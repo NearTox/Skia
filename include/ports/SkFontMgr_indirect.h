@@ -68,8 +68,9 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
 
     DataEntry(DataEntry&& that)
         : fDataId(that.fDataId), fTtcIndex(that.fTtcIndex), fTypeface(that.fTypeface) {
-      SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId;)
-          SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef;) that.fTypeface = nullptr;
+      SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId);
+      SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef);
+      that.fTypeface = nullptr;
     }
 
     ~DataEntry() {

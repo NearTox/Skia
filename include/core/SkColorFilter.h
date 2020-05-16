@@ -26,6 +26,7 @@ namespace skvm {
 class Builder;
 struct F32;
 struct Uniforms;
+struct Color;
 }  // namespace skvm
 
 /**
@@ -60,9 +61,8 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   bool appendStages(const SkStageRec& rec, bool shaderIsOpaque) const;
 
-  bool program(
-      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc* alloc,
-      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const;
+  skvm::Color program(
+      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*, SkArenaAlloc*) const;
 
   enum Flags {
     /** If set the filter methods will not change the alpha channel of the colors.
@@ -72,7 +72,7 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   /** Returns the flags for this filter. Override in subclasses to return custom flags.
    */
-  virtual uint32_t getFlags() const { return 0; }
+  virtual uint32_t getFlags() const noexcept { return 0; }
 
   SkColor filterColor(SkColor) const;
 
@@ -87,9 +87,6 @@ class SK_API SkColorFilter : public SkFlattenable {
    *  this filter, applied to the output of the inner filter.
    *
    *  result = this(inner(...))
-   *
-   *  Due to internal limits, it is possible that this will return NULL, so the caller must
-   *  always check.
    */
   sk_sp<SkColorFilter> makeComposed(sk_sp<SkColorFilter> inner) const;
 
@@ -113,9 +110,9 @@ class SK_API SkColorFilter : public SkFlattenable {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
 
-  SkFlattenable::Type getFlattenableType() const override { return kSkColorFilter_Type; }
+  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkColorFilter_Type; }
 
   static sk_sp<SkColorFilter> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -124,28 +121,16 @@ class SK_API SkColorFilter : public SkFlattenable {
   }
 
  protected:
-  SkColorFilter() {}
+  constexpr SkColorFilter() noexcept = default;
 
   virtual bool onAsAColorMatrix(float[20]) const;
   virtual bool onAsAColorMode(SkColor* color, SkBlendMode* bmode) const;
 
  private:
-  /*
-   *  Returns 1 if this is a single filter (not a composition of other filters), otherwise it
-   *  reutrns the number of leaf-node filters in a composition. This should be the same value
-   *  as the number of GrFragmentProcessors returned by asFragmentProcessors's array parameter.
-   *
-   *  e.g. compose(filter, compose(compose(filter, filter), filter)) --> 4
-   */
-  virtual int privateComposedFilterCount() const { return 1; }
-
   virtual bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const = 0;
 
-  virtual bool onProgram(
-      skvm::Builder*, SkColorSpace* dstCS, skvm::Uniforms* uniforms, SkArenaAlloc* alloc,
-      skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32* a) const;
-
-  friend class SkComposeColorFilter;
+  virtual skvm::Color onProgram(
+      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*, SkArenaAlloc*) const = 0;
 
   typedef SkFlattenable INHERITED;
 };
@@ -168,7 +153,7 @@ class SK_API SkColorFilters {
   static sk_sp<SkColorFilter> Lerp(float t, sk_sp<SkColorFilter> dst, sk_sp<SkColorFilter> src);
 
  private:
-  SkColorFilters() = delete;
+  constexpr SkColorFilters() noexcept = delete;
 };
 
 #endif

@@ -28,8 +28,7 @@
 
 class GrAtlasManager;
 class GrAtlasTextOp;
-struct GrDistanceFieldAdjustTable;
-struct GrGlyph;
+class GrGlyph;
 
 class SkTextBlob;
 class SkTextBlobRunIterator;
@@ -123,8 +122,7 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
       SkPoint drawOrigin);
 
   void flush(
-      GrTextTarget*, const SkSurfaceProps& props,
-      const GrDistanceFieldAdjustTable* distanceAdjustTable, const SkPaint& paint,
+      GrTextTarget*, const SkSurfaceProps& props, const SkPaint& paint,
       const SkPMColor4f& filteredColor, const GrClip& clip, const SkMatrix& drawMatrix,
       SkPoint drawOrigin);
 
@@ -162,8 +160,7 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
   // Internal test methods
   std::unique_ptr<GrDrawOp> test_makeOp(
       int glyphCount, const SkMatrix& drawMatrix, SkPoint drawOrigin, const SkPaint& paint,
-      const SkPMColor4f& filteredColor, const SkSurfaceProps&, const GrDistanceFieldAdjustTable*,
-      GrTextTarget*);
+      const SkPMColor4f& filteredColor, const SkSurfaceProps&, GrTextTarget*);
 
   bool hasW(SubRunType type) const;
 
@@ -204,7 +201,7 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
   std::unique_ptr<GrAtlasTextOp> makeOp(
       SubRun& info, int glyphCount, const SkMatrix& drawMatrix, SkPoint drawOrigin,
       const SkIRect& clipRect, const SkPaint& paint, const SkPMColor4f& filteredColor,
-      const SkSurfaceProps&, const GrDistanceFieldAdjustTable*, GrTextTarget*);
+      const SkSurfaceProps&, GrTextTarget*);
 
   // Methods to satisfy SkGlyphRunPainterInterface
   void processDeviceMasks(

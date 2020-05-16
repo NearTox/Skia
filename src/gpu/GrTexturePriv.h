@@ -22,7 +22,7 @@ class GrTexturePriv {
 
   void markMipMapsClean() { fTexture->markMipMapsClean(); }
 
-  GrMipMapsStatus mipMapsStatus() const { return fTexture->fMipMapsStatus; }
+  GrMipMapsStatus mipMapsStatus() const noexcept { return fTexture->fMipMapsStatus; }
 
   bool mipMapsAreDirty() const { return GrMipMapsStatus::kValid != this->mipMapsStatus(); }
 
@@ -33,9 +33,9 @@ class GrTexturePriv {
     return GrMipMapped::kNo;
   }
 
-  int maxMipMapLevel() const { return fTexture->fMaxMipMapLevel; }
+  int maxMipMapLevel() const noexcept { return fTexture->fMaxMipMapLevel; }
 
-  GrTextureType textureType() const { return fTexture->fTextureType; }
+  GrTextureType textureType() const noexcept { return fTexture->fTextureType; }
   bool hasRestrictedSampling() const {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
@@ -45,8 +45,8 @@ class GrTexturePriv {
       int sampleCnt, GrMipMapped, GrProtected, GrScratchKey* key);
 
  private:
-  GrTexturePriv(GrTexture* texture) : fTexture(texture) {}
-  GrTexturePriv(const GrTexturePriv& that) : fTexture(that.fTexture) {}
+  GrTexturePriv(GrTexture* texture) noexcept : fTexture(texture) {}
+  GrTexturePriv(const GrTexturePriv& that) noexcept : fTexture(that.fTexture) {}
   GrTexturePriv& operator=(const GrTexturePriv&);  // unimpl
 
   // No taking addresses of this type.
@@ -58,9 +58,9 @@ class GrTexturePriv {
   friend class GrTexture;  // to construct/copy this type.
 };
 
-inline GrTexturePriv GrTexture::texturePriv() { return GrTexturePriv(this); }
+inline GrTexturePriv GrTexture::texturePriv() noexcept { return GrTexturePriv(this); }
 
-inline const GrTexturePriv GrTexture::texturePriv() const {
+inline const GrTexturePriv GrTexture::texturePriv() const noexcept {
   return GrTexturePriv(const_cast<GrTexture*>(this));
 }
 

@@ -82,7 +82,8 @@ class GrBufferAllocPool : SkNoncopyable {
    *                              or staging buffers used before data is uploaded to
    *                              GPU buffer objects.
    */
-  GrBufferAllocPool(GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache);
+  GrBufferAllocPool(
+      GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache) noexcept;
 
   virtual ~GrBufferAllocPool();
 
@@ -145,7 +146,7 @@ class GrBufferAllocPool : SkNoncopyable {
   };
 
   bool createBlock(size_t requestSize);
-  void destroyBlock();
+  void destroyBlock() noexcept;
   void deleteBlocks();
   void flushCpuData(const BufferBlock& block, size_t flushSize);
   void resetCpuData(size_t newSize);
@@ -175,7 +176,7 @@ class GrVertexBufferAllocPool : public GrBufferAllocPool {
    *                              or staging buffers used before data is uploaded to
    *                              GPU buffer objects.
    */
-  GrVertexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache);
+  GrVertexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept;
 
   /**
    * Returns a block of memory to hold vertices. A buffer designated to hold
@@ -249,7 +250,7 @@ class GrIndexBufferAllocPool : public GrBufferAllocPool {
    *                              or staging buffers used before data is uploaded to
    *                              GPU buffer objects.
    */
-  GrIndexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache);
+  GrIndexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept;
 
   /**
    * Returns a block of memory to hold indices. A buffer designated to hold
