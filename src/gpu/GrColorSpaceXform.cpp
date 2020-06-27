@@ -19,7 +19,7 @@ sk_sp<GrColorSpaceXform> GrColorSpaceXform::Make(
                                  : sk_make_sp<GrColorSpaceXform>(steps);
 }
 
-bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b) {
+bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b) noexcept {
   if (a == b) {
     return true;
   }
@@ -48,7 +48,7 @@ bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXfo
   return true;
 }
 
-SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) {
+SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) noexcept {
   SkColor4f result = srcColor;
   fSteps.apply(result.vec());
   return result;
@@ -109,7 +109,7 @@ std::unique_ptr<GrFragmentProcessor> GrColorSpaceXformEffect::clone() const {
       new GrColorSpaceXformEffect(std::move(child), fColorXform));
 }
 
-bool GrColorSpaceXformEffect::onIsEqual(const GrFragmentProcessor& s) const {
+bool GrColorSpaceXformEffect::onIsEqual(const GrFragmentProcessor& s) const noexcept {
   const GrColorSpaceXformEffect& other = s.cast<GrColorSpaceXformEffect>();
   return GrColorSpaceXform::Equals(fColorXform.get(), other.fColorXform.get());
 }

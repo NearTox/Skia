@@ -41,7 +41,7 @@ class GrGLContextInfo {
   /** What driver is running our GL implementation? This is not necessarily related to the vendor.
       (e.g. Intel GPU being driven by Mesa) */
   GrGLDriver driver() const noexcept { return fDriver; }
-  GrGLDriverVersion driverVersion() const noexcept { return fDriverVersion; }
+  GrGLDriverVersion driverVersion() const { return fDriverVersion; }
   const GrGLCaps* caps() const noexcept { return fGLCaps.get(); }
   GrGLCaps* caps() noexcept { return fGLCaps.get(); }
   bool hasExtension(const char* ext) const { return fInterface->hasExtension(ext); }

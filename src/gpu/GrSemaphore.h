@@ -20,7 +20,7 @@
  */
 class GrSemaphore {
  public:
-  virtual ~GrSemaphore() {}
+  virtual ~GrSemaphore() = default;
 
   // The derived class can return its GrBackendSemaphore. This is used when flushing with signal
   // semaphores so we can set the client's GrBackendSemaphore object after we've created the

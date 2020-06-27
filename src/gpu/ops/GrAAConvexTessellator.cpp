@@ -18,19 +18,19 @@
 //  test more degenerate cases
 
 // The tolerance for fusing vertices and eliminating colinear lines (It is in device space).
-static constexpr SkScalar kClose = (SK_Scalar1 / 16);
-static constexpr SkScalar kCloseSqd = kClose * kClose;
+static const SkScalar kClose = (SK_Scalar1 / 16);
+static const SkScalar kCloseSqd = kClose * kClose;
 
 // tesselation tolerance values, in device space pixels
-static constexpr SkScalar kQuadTolerance = 0.2f;
-static constexpr SkScalar kCubicTolerance = 0.2f;
-static constexpr SkScalar kConicTolerance = 0.25f;
+static const SkScalar kQuadTolerance = 0.2f;
+static const SkScalar kCubicTolerance = 0.2f;
+static const SkScalar kConicTolerance = 0.25f;
 
 // dot product below which we use a round cap between curve segments
-static constexpr SkScalar kRoundCapThreshold = 0.8f;
+static const SkScalar kRoundCapThreshold = 0.8f;
 
 // dot product above which we consider two adjacent curves to be part of the "same" curve
-static constexpr SkScalar kCurveConnectionThreshold = 0.8f;
+static const SkScalar kCurveConnectionThreshold = 0.8f;
 
 static bool intersect(
     const SkPoint& p0, const SkPoint& n0, const SkPoint& p1, const SkPoint& n1, SkScalar* t) {
@@ -283,8 +283,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(
         outerStrokeAndAARing, 0.0f, 0.0f, 2 * kAntialiasingRadius, 1.0f, &insetAARing);
 
-    SkDEBUGCODE(this->validate());
-    return true;
+    SkDEBUGCODE(this->validate();) return true;
   }
 
   if (SkStrokeRec::kStroke_Style == fStyle) {
@@ -322,8 +321,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(fInitialRing, 0.0f, 0.5f, kAntialiasingRadius, 1.0f, &insetAARing);
   }
 
-  SkDEBUGCODE(this->validate());
-  return true;
+  SkDEBUGCODE(this->validate();) return true;
 }
 
 SkScalar GrAAConvexTessellator::computeDepthFromEdge(int edgeIdx, const SkPoint& p) const {

@@ -32,39 +32,39 @@ class GrReducedClip {
 
   enum class InitialState : bool { kAllIn, kAllOut };
 
-  InitialState initialState() const { return fInitialState; }
+  InitialState initialState() const noexcept { return fInitialState; }
 
   /**
    * If hasScissor() is true, the clip mask is not valid outside this rect and the caller must
    * enforce this scissor during draw.
    */
-  const SkIRect& scissor() const {
+  const SkIRect& scissor() const noexcept {
     SkASSERT(fHasScissor);
     return fScissor;
   }
-  int left() const { return this->scissor().left(); }
-  int top() const { return this->scissor().top(); }
-  int width() const { return this->scissor().width(); }
-  int height() const { return this->scissor().height(); }
+  int left() const noexcept { return this->scissor().left(); }
+  int top() const noexcept { return this->scissor().top(); }
+  int width() const noexcept { return this->scissor().width(); }
+  int height() const noexcept { return this->scissor().height(); }
 
   /**
    * Indicates whether scissor() is defined. It will always be defined if the maskElements() are
    * nonempty.
    */
-  bool hasScissor() const { return fHasScissor; }
+  bool hasScissor() const noexcept { return fHasScissor; }
 
   /**
    * If nonempty, the clip mask is not valid inside these windows and the caller must clip them
    * out using the window rectangles GPU extension.
    */
-  const GrWindowRectangles& windowRectangles() const { return fWindowRects; }
+  const GrWindowRectangles& windowRectangles() const noexcept { return fWindowRects; }
 
   /**
    * An ordered list of clip elements that could not be skipped or implemented by other means. If
    * nonempty, the caller must create an alpha and/or stencil mask for these elements and apply it
    * during draw.
    */
-  const ElementList& maskElements() const { return fMaskElements; }
+  const ElementList& maskElements() const noexcept { return fMaskElements; }
 
   /**
    * If maskElements() are nonempty, uniquely identifies the region of the clip mask that falls
@@ -76,7 +76,7 @@ class GrReducedClip {
    * FIXME: this prevents us from reusing a sub-rect of a perfectly good mask when that rect has
    * been assigned a less restrictive ID.
    */
-  uint32_t maskGenID() const {
+  uint32_t maskGenID() const noexcept {
     SkASSERT(!fMaskElements.isEmpty());
     return fMaskGenID;
   }
@@ -84,7 +84,7 @@ class GrReducedClip {
   /**
    * Indicates whether antialiasing is required to process any of the mask elements.
    */
-  bool maskRequiresAA() const {
+  bool maskRequiresAA() const noexcept {
     SkASSERT(!fMaskElements.isEmpty());
     return fMaskRequiresAA;
   }
@@ -92,7 +92,7 @@ class GrReducedClip {
   bool drawAlphaClipMask(GrRenderTargetContext*) const;
   bool drawStencilClipMask(GrRecordingContext*, GrRenderTargetContext*) const;
 
-  int numAnalyticFPs() const { return fAnalyticFPs.count() + fCCPRClipPaths.count(); }
+  int numAnalyticFPs() const noexcept { return fAnalyticFPs.count() + fCCPRClipPaths.count(); }
 
   /**
    * Called once the client knows the ID of the opsTask that the clip FPs will operate in. This
@@ -123,7 +123,7 @@ class GrReducedClip {
 
   enum class Invert : bool { kNo = false, kYes = true };
 
-  static GrClipEdgeType GetClipEdgeType(Invert, GrAA);
+  static GrClipEdgeType GetClipEdgeType(Invert, GrAA) noexcept;
   ClipResult addAnalyticFP(const SkRect& deviceSpaceRect, Invert, GrAA);
   ClipResult addAnalyticFP(const SkRRect& deviceSpaceRRect, Invert, GrAA);
   ClipResult addAnalyticFP(const SkPath& deviceSpacePath, Invert, GrAA);

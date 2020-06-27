@@ -90,7 +90,7 @@ class GrTAllocator {
   /**
    * Returns the item count.
    */
-  int count() const noexcept {
+  int count() const {
 #ifdef SK_DEBUG
     // Confirm total count matches sum of block counts
     int count = 0;
@@ -107,7 +107,7 @@ class GrTAllocator {
   /**
    * Is the count 0?
    */
-  bool empty() const noexcept { return this->count() == 0; }
+  bool empty() const { return this->count() == 0; }
 
   /**
    * Access first item, only call if count() != 0
@@ -171,8 +171,8 @@ class GrTAllocator {
 
       C& operator*() const {
         C* item = const_cast<C*>(static_cast<const C*>((*fBlock)->ptr(fIndex)));
-        SkDEBUGCODE(int offset;)
-            SkASSERT(item == GetItemAndOffset(*fBlock, fItem, &offset) && offset == fIndex);
+        SkDEBUGCODE(int offset);
+        SkASSERT(item == GetItemAndOffset(*fBlock, fItem, &offset) && offset == fIndex);
         return *item;
       }
 

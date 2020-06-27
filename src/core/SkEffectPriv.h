@@ -13,6 +13,7 @@
 
 class SkArenaAlloc;
 class SkColorSpace;
+class SkMatrixProvider;
 class SkPaint;
 class SkRasterPipeline;
 
@@ -24,7 +25,7 @@ struct SkStageRec {
   SkColorSpace* fDstCS;  // may be nullptr
   const SkPaint& fPaint;
   const SkMatrix* fLocalM;  // may be nullptr
-  const SkMatrix fCTM;
+  const SkMatrixProvider& fMatrixProvider;
 };
 
 #endif  // SkEffectPriv_DEFINED

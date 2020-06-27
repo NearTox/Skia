@@ -20,11 +20,11 @@ class GrOpMemoryPool;
 class GrProgramDesc;
 class GrProgramInfo;
 class GrRecordingContextPriv;
-class GrStrikeCache;
 class GrSurfaceContext;
 class GrSurfaceProxy;
 class GrTextBlobCache;
 class SkArenaAlloc;
+class SkJSONWriter;
 
 class GrRecordingContext : public GrImageContext {
  public:
@@ -42,7 +42,7 @@ class GrRecordingContext : public GrImageContext {
   // GrRecordingContext. Arenas does not maintain ownership of the pools it groups together.
   class Arenas {
    public:
-    Arenas(GrOpMemoryPool*, SkArenaAlloc*);
+    Arenas(GrOpMemoryPool*, SkArenaAlloc*) noexcept;
 
     // For storing GrOp-derived classes recorded by a GrRecordingContext
     GrOpMemoryPool* opMemoryPool() noexcept { return fOpMemoryPool; }
@@ -63,12 +63,12 @@ class GrRecordingContext : public GrImageContext {
   // Like Arenas, but preserves ownership of the underlying pools.
   class OwnedArenas {
    public:
-    OwnedArenas();
+    OwnedArenas() noexcept;
     ~OwnedArenas();
 
     Arenas get();
 
-    OwnedArenas& operator=(OwnedArenas&&);
+    OwnedArenas& operator=(OwnedArenas&&) noexcept;
 
    private:
     std::unique_ptr<GrOpMemoryPool> fOpMemoryPool;
@@ -81,16 +81,16 @@ class GrRecordingContext : public GrImageContext {
 
   void abandonContext() override;
 
-  GrDrawingManager* drawingManager();
+  GrDrawingManager* drawingManager() noexcept;
 
   Arenas arenas() { return fArenas.get(); }
   // This entry point should only be used for DDL creation where we want the ops' lifetime to
   // match that of the DDL.
-  OwnedArenas&& detachArenas();
+  OwnedArenas&& detachArenas() noexcept;
 
   struct ProgramData {
-    ProgramData(std::unique_ptr<const GrProgramDesc>, const GrProgramInfo*);
-    ProgramData(ProgramData&&);  // for SkTArray
+    ProgramData(std::unique_ptr<const GrProgramDesc>, const GrProgramInfo*) noexcept;
+    ProgramData(ProgramData&&) noexcept;  // for SkTArray
     ProgramData(const ProgramData&) = delete;
     ~ProgramData();
 
@@ -116,9 +116,8 @@ class GrRecordingContext : public GrImageContext {
   // same lifetime at the DDL itself.
   virtual void detachProgramData(SkTArray<ProgramData>*) {}
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fStrikeCache.get(); }
-  GrTextBlobCache* getTextBlobCache();
-  const GrTextBlobCache* getTextBlobCache() const;
+  GrTextBlobCache* getTextBlobCache() noexcept;
+  const GrTextBlobCache* getTextBlobCache() const noexcept;
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -132,12 +131,48 @@ class GrRecordingContext : public GrImageContext {
 
   GrRecordingContext* asRecordingContext() noexcept override { return this; }
 
+  class Stats {
+   public:
+    constexpr Stats() noexcept = default;
+
+#if GR_GPU_STATS
+    void reset() noexcept { *this = {}; }
+
+    int numPathMasksGenerated() const noexcept { return fNumPathMasksGenerated; }
+    void incNumPathMasksGenerated() noexcept { fNumPathMasksGenerated++; }
+
+    int numPathMaskCacheHits() const noexcept { return fNumPathMaskCacheHits; }
+    void incNumPathMasksCacheHits() noexcept { fNumPathMaskCacheHits++; }
+
+#  if GR_TEST_UTILS
+    void dump(SkString* out);
+    void dumpKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values);
+#  endif
+
+   private:
+    int fNumPathMasksGenerated{0};
+    int fNumPathMaskCacheHits{0};
+
+#else  // GR_GPU_STATS
+    void incNumPathMasksGenerated() {}
+    void incNumPathMasksCacheHits() {}
+
+#  if GR_TEST_UTILS
+    void dump(SkString*) {}
+    void dumpKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values) {}
+#  endif
+#endif  // GR_GPU_STATS
+  } fStats;
+
+  Stats* stats() noexcept { return &fStats; }
+  const Stats* stats() const noexcept { return &fStats; }
+  void dumpJSON(SkJSONWriter*) const;
+
  private:
   OwnedArenas fArenas;
 
   std::unique_ptr<GrDrawingManager> fDrawingManager;
 
-  std::unique_ptr<GrStrikeCache> fStrikeCache;
   std::unique_ptr<GrTextBlobCache> fTextBlobCache;
 
   std::unique_ptr<GrAuditTrail> fAuditTrail;

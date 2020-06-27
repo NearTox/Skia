@@ -93,7 +93,7 @@ sk_sp<TextAdapter> TextAdapter::Make(
         adapter->fHasBlurAnimator |= animator->hasBlur();
         adapter->fRequiresAnchorPoint |= animator->requiresAnchorPoint();
 
-        adapter->fAnimators.push_back(std::move(animator));
+        adapter->fAnimators.emplace_back(std::move(animator));
       }
     }
   }
@@ -139,13 +139,13 @@ void TextAdapter::addFragment(const Shaper::Fragment& frag) {
   if (fText->fHasFill) {
     rec.fFillColorNode = sksg::Color::Make(fText->fFillColor);
     rec.fFillColorNode->setAntiAlias(true);
-    draws.push_back(sksg::Draw::Make(blob_node, rec.fFillColorNode));
+    draws.emplace_back(sksg::Draw::Make(blob_node, rec.fFillColorNode));
   }
   if (fText->fHasStroke) {
     rec.fStrokeColorNode = sksg::Color::Make(fText->fStrokeColor);
     rec.fStrokeColorNode->setAntiAlias(true);
     rec.fStrokeColorNode->setStyle(SkPaint::kStroke_Style);
-    draws.push_back(sksg::Draw::Make(blob_node, rec.fStrokeColorNode));
+    draws.emplace_back(sksg::Draw::Make(blob_node, rec.fStrokeColorNode));
   }
 
   SkASSERT(!draws.empty());
@@ -157,7 +157,7 @@ void TextAdapter::addFragment(const Shaper::Fragment& frag) {
     box_color->setStrokeWidth(1);
     box_color->setAntiAlias(true);
     auto box = SkRect::MakeLTRB(0, rec.fAscent, rec.fAdvance, 0);
-    draws.push_back(sksg::Draw::Make(sksg::Rect::Make(box), std::move(box_color)));
+    draws.emplace_back(sksg::Draw::Make(sksg::Rect::Make(box), std::move(box_color)));
   }
 
   auto draws_node = (draws.size() > 1) ? sksg::Group::Make(std::move(draws)) : std::move(draws[0]);
@@ -169,7 +169,7 @@ void TextAdapter::addFragment(const Shaper::Fragment& frag) {
   }
 
   fRoot->addChild(sksg::TransformEffect::Make(std::move(draws_node), rec.fMatrixNode));
-  fFragments.push_back(std::move(rec));
+  fFragments.emplace_back(std::move(rec));
 }
 
 void TextAdapter::buildDomainMaps(const Shaper::Result& shape_result) {

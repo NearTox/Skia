@@ -22,14 +22,15 @@ enum MatrixType {
   kGeneral_MatrixType = 3,
 };
 
-GrPrimitiveProcessor::GrPrimitiveProcessor(ClassID classID) : GrProcessor(classID) {}
+GrPrimitiveProcessor::GrPrimitiveProcessor(ClassID classID) noexcept : GrProcessor(classID) {}
 
 const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler(int i) const {
   SkASSERT(i >= 0 && i < this->numTextureSamplers());
   return this->onTextureSampler(i);
 }
 
-uint32_t GrPrimitiveProcessor::computeCoordTransformsKey(const GrFragmentProcessor& fp) const {
+uint32_t GrPrimitiveProcessor::computeCoordTransformsKey(
+    const GrFragmentProcessor& fp) const noexcept {
   // This is highly coupled with the code in GrGLSLGeometryProcessor::emitTransforms().
   SkASSERT(fp.numCoordTransforms() * 2 <= 32);
   uint32_t totalKey = 0;
@@ -58,7 +59,7 @@ uint32_t GrPrimitiveProcessor::computeCoordTransformsKey(const GrFragmentProcess
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static inline GrSamplerState::Filter clamp_filter(
-    GrTextureType type, GrSamplerState::Filter requestedFilter) {
+    GrTextureType type, GrSamplerState::Filter requestedFilter) noexcept {
   if (GrTextureTypeHasRestrictedSampling(type)) {
     return std::min(requestedFilter, GrSamplerState::Filter::kBilerp);
   }

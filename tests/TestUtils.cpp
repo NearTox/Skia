@@ -76,10 +76,11 @@ void TestWritePixels(
 void TestCopyFromSurface(
     skiatest::Reporter* reporter, GrContext* context, GrSurfaceProxy* proxy, GrSurfaceOrigin origin,
     GrColorType colorType, uint32_t expectedPixelValues[], const char* testName) {
-  GrSurfaceProxyView view = GrSurfaceProxy::Copy(
-      context, proxy, origin, colorType, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes);
-  SkASSERT(view.asTextureProxy());
-
+  auto copy = GrSurfaceProxy::Copy(
+      context, proxy, origin, GrMipMapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes);
+  SkASSERT(copy && copy->asTextureProxy());
+  auto swizzle = context->priv().caps()->getReadSwizzle(copy->backendFormat(), colorType);
+  GrSurfaceProxyView view(std::move(copy), origin, swizzle);
   auto dstContext =
       GrSurfaceContext::Make(context, std::move(view), colorType, kPremul_SkAlphaType, nullptr);
   SkASSERT(dstContext);
@@ -98,10 +99,27 @@ void FillPixelData(int width, int height, GrColor* data) {
 }
 
 bool CreateBackendTexture(
+    GrContext* context, GrBackendTexture* backendTex, int width, int height, SkColorType colorType,
+    const SkColor4f& color, GrMipMapped mipMapped, GrRenderable renderable,
+    GrProtected isProtected) {
+  SkImageInfo info = SkImageInfo::Make(width, height, colorType, kPremul_SkAlphaType);
+  return CreateBackendTexture(context, backendTex, info, color, mipMapped, renderable, isProtected);
+}
+
+bool CreateBackendTexture(
     GrContext* context, GrBackendTexture* backendTex, const SkImageInfo& ii, const SkColor4f& color,
-    GrMipMapped mipMapped, GrRenderable renderable) {
+    GrMipMapped mipMapped, GrRenderable renderable, GrProtected isProtected) {
+  bool finishedBECreate = false;
+  auto markFinished = [](void* context) { *(bool*)context = true; };
+
   *backendTex = context->createBackendTexture(
-      ii.width(), ii.height(), ii.colorType(), color, mipMapped, renderable);
+      ii.width(), ii.height(), ii.colorType(), color, mipMapped, renderable, isProtected,
+      markFinished, &finishedBECreate);
+  if (backendTex->isValid()) {
+    while (!finishedBECreate) {
+      context->checkAsyncWorkCompletion();
+    }
+  }
   return backendTex->isValid();
 }
 

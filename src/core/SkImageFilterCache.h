@@ -18,7 +18,7 @@ class SkImageFilter;
 struct SkImageFilterCacheKey {
   SkImageFilterCacheKey(
       const uint32_t uniqueID, const SkMatrix& matrix, const SkIRect& clipBounds, uint32_t srcGenID,
-      const SkIRect& srcSubset)
+      const SkIRect& srcSubset) noexcept
       : fUniqueID(uniqueID),
         fMatrix(matrix),
         fClipBounds(clipBounds),
@@ -39,7 +39,7 @@ struct SkImageFilterCacheKey {
   uint32_t fSrcGenID;
   SkIRect fSrcSubset;
 
-  bool operator==(const SkImageFilterCacheKey& other) const {
+  bool operator==(const SkImageFilterCacheKey& other) const noexcept {
     return fUniqueID == other.fUniqueID && fMatrix == other.fMatrix &&
            fClipBounds == other.fClipBounds && fSrcGenID == other.fSrcGenID &&
            fSrcSubset == other.fSrcSubset;
@@ -55,7 +55,7 @@ class SkImageFilterCache : public SkRefCnt {
 
   enum { kDefaultTransientSize = 32 * 1024 * 1024 };
 
-  virtual ~SkImageFilterCache() {}
+  virtual ~SkImageFilterCache() = default;
   static SkImageFilterCache* Create(size_t maxBytes);
   static SkImageFilterCache* Get();
 
@@ -70,7 +70,7 @@ class SkImageFilterCache : public SkRefCnt {
       const skif::FilterResult<For::kOutput>& result) = 0;
   virtual void purge() = 0;
   virtual void purgeByImageFilter(const SkImageFilter*) = 0;
-  SkDEBUGCODE(virtual int count() const = 0;)
+  SkDEBUGCODE(virtual int count() const = 0);
 };
 
 #endif

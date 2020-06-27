@@ -13,6 +13,7 @@
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 #include "tools/gpu/ProxyUtils.h"
@@ -55,7 +56,7 @@ sk_sp<GrTextureProxy> MakeTextureProxyFromData(
 }
 
 GrProgramInfo* CreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* geomProc, SkBlendMode blendMode, GrPrimitiveType primitiveType,
     GrPipeline::InputFlags flags, const GrUserStencilSettings* stencilSettings) {
@@ -69,8 +70,8 @@ GrProgramInfo* CreateProgramInfo(
   SkASSERT(!analysis.requiresDstTexture());
 
   return GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, geomProc,
-      std::move(processors), primitiveType, flags, stencilSettings);
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc, std::move(processors),
+      primitiveType, flags, stencilSettings);
 }
 
 }  // namespace sk_gpu_test

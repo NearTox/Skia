@@ -44,12 +44,12 @@ class GrFixedClip final : public GrHardClip {
     fWindowRectsState.set(windows, mode);
   }
 
-  bool quickContains(const SkRect&) const override;
-  void getConservativeBounds(int w, int h, SkIRect* devResult, bool* iior) const override;
-  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA*) const override;
-  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip*, SkRect*) const override;
+  bool quickContains(const SkRect&) const noexcept override;
+  SkIRect getConservativeBounds(int w, int h) const noexcept override;
+  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA*) const noexcept override;
+  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip*, SkRect*) const noexcept override;
 
-  static const GrFixedClip& Disabled();
+  static const GrFixedClip& Disabled() noexcept;
 
  private:
   GrScissorState fScissorState;

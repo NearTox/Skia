@@ -74,7 +74,6 @@
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>

@@ -33,7 +33,7 @@ struct IVector {
   int32_t fX;
   int32_t fY;
 
-  IVector() = default;
+  IVector() noexcept = default;
   IVector(int32_t x, int32_t y) noexcept : fX(x), fY(y) {}
   explicit IVector(const SkIVector& v) noexcept : fX(v.fX), fY(v.fY) {}
 };
@@ -42,7 +42,7 @@ struct Vector {
   SkScalar fX;
   SkScalar fY;
 
-  Vector() = default;
+  Vector() noexcept = default;
   Vector(SkScalar x, SkScalar y) noexcept : fX(x), fY(y) {}
   explicit Vector(const SkVector& v) noexcept : fX(v.fX), fY(v.fY) {}
 };
@@ -74,7 +74,8 @@ struct Vector {
 template <typename T>
 class ParameterSpace {
  public:
-  explicit ParameterSpace(const T& data) : fData(data) {}
+  explicit ParameterSpace(const T& data) noexcept(std::is_nothrow_copy_constructible_v<T>)
+      : fData(data) {}
   explicit ParameterSpace(T&& data) noexcept(std::is_nothrow_move_constructible_v<T>)
       : fData(std::move(data)) {}
 
@@ -93,7 +94,8 @@ class ParameterSpace {
 template <typename T>
 class DeviceSpace {
  public:
-  explicit DeviceSpace(const T& data) : fData(data) {}
+  explicit DeviceSpace(const T& data) noexcept(std::is_nothrow_copy_constructible_v<T>)
+      : fData(data) {}
   explicit DeviceSpace(T&& data) noexcept(std::is_nothrow_move_constructible_v<T>)
       : fData(std::move(data)) {}
 
@@ -121,7 +123,7 @@ class LayerSpace {};
 template <>
 class LayerSpace<IVector> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const IVector& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(IVector&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const IVector&() const noexcept { return fData; }
@@ -163,7 +165,7 @@ class LayerSpace<IVector> {
 template <>
 class LayerSpace<Vector> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const Vector& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(Vector&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const Vector&() const noexcept { return fData; }
@@ -221,7 +223,7 @@ class LayerSpace<Vector> {
 template <>
 class LayerSpace<SkIPoint> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const SkIPoint& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkIPoint&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkIPoint&() const noexcept { return fData; }
@@ -254,7 +256,7 @@ class LayerSpace<SkIPoint> {
 template <>
 class LayerSpace<SkPoint> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const SkPoint& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkPoint&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkPoint&() const noexcept { return fData; }
@@ -289,7 +291,7 @@ class LayerSpace<SkPoint> {
 template <>
 class LayerSpace<SkISize> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const SkISize& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkISize&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkISize&() const noexcept { return fData; }
@@ -307,7 +309,7 @@ class LayerSpace<SkISize> {
 template <>
 class LayerSpace<SkSize> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const SkSize& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkSize&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkSize&() const noexcept { return fData; }
@@ -330,7 +332,7 @@ class LayerSpace<SkSize> {
 template <>
 class LayerSpace<SkIRect> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const SkIRect& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkIRect&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkIRect&() const noexcept { return fData; }
@@ -362,7 +364,7 @@ class LayerSpace<SkIRect> {
 template <>
 class LayerSpace<SkRect> {
  public:
-  LayerSpace() = default;
+  LayerSpace() noexcept = default;
   explicit LayerSpace(const SkRect& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkRect&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkRect&() const noexcept { return fData; }
@@ -412,7 +414,7 @@ class Mapping {
 
   // Return a new Mapping object whose parameter-to-layer matrix is equal to this->layerMatrix() *
   // local, but both share the same layer-to-device matrix.
-  Mapping concatLocal(const SkMatrix& local) const {
+  Mapping concatLocal(const SkMatrix& local) const noexcept {
     return Mapping(fLayerToDevMatrix, SkMatrix::Concat(fParamToLayerMatrix, local));
   }
 
@@ -515,7 +517,7 @@ enum class Usage {
 template <Usage kU>
 class FilterResult {
  public:
-  constexpr FilterResult() noexcept : fImage(nullptr), fOrigin(SkIPoint::Make(0, 0)) {}
+  FilterResult() : fImage(nullptr), fOrigin(SkIPoint::Make(0, 0)) {}
 
   FilterResult(sk_sp<SkSpecialImage> image, const LayerSpace<SkIPoint>& origin) noexcept
       : fImage(std::move(image)), fOrigin(origin) {}
@@ -596,7 +598,7 @@ class Context {
   // with an origin of (0,0).
   Context(
       const SkMatrix& layerMatrix, const SkIRect& clipBounds, SkImageFilterCache* cache,
-      SkColorType colorType, SkColorSpace* colorSpace, const SkSpecialImage* source)
+      SkColorType colorType, SkColorSpace* colorSpace, const SkSpecialImage* source) noexcept
       : fMapping(SkMatrix::I(), layerMatrix),
         fDesiredOutput(clipBounds),
         fCache(cache),

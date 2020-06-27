@@ -56,7 +56,7 @@ enum BmpInputFormat {
 /*
  * Checks the start of the stream to see if the image is a bitmap
  */
-bool SkBmpCodec::IsBmp(const void* buffer, size_t bytesRead) {
+bool SkBmpCodec::IsBmp(const void* buffer, size_t bytesRead) noexcept {
   // TODO: Support "IC", "PT", "CI", "CP", "BA"
   const char bmpSig[] = {'B', 'M'};
   return bytesRead >= sizeof(bmpSig) && !memcmp(buffer, bmpSig, sizeof(bmpSig));
@@ -93,7 +93,7 @@ static constexpr uint32_t kBmpInfoV4Bytes = 108;
 static constexpr uint32_t kBmpInfoV5Bytes = 124;
 static constexpr uint32_t kBmpMaskBytes = 12;
 
-static BmpHeaderType get_header_type(size_t infoBytes) {
+static BmpHeaderType get_header_type(size_t infoBytes) noexcept {
   if (infoBytes >= kBmpInfoBaseBytes) {
     // Check the version of the header
     switch (infoBytes) {
@@ -584,7 +584,7 @@ std::unique_ptr<SkCodec> SkBmpCodec::MakeFromStream(
 
 SkBmpCodec::SkBmpCodec(
     SkEncodedInfo&& info, std::unique_ptr<SkStream> stream, uint16_t bitsPerPixel,
-    SkCodec::SkScanlineOrder rowOrder)
+    SkCodec::SkScanlineOrder rowOrder) noexcept
     : INHERITED(std::move(info), kXformSrcColorFormat, std::move(stream)),
       fBitsPerPixel(bitsPerPixel),
       fRowOrder(rowOrder),
@@ -595,7 +595,7 @@ bool SkBmpCodec::onRewind() {
   return SkBmpCodec::ReadHeader(this->stream(), this->inIco(), nullptr) == kSuccess;
 }
 
-int32_t SkBmpCodec::getDstRow(int32_t y, int32_t height) const {
+int32_t SkBmpCodec::getDstRow(int32_t y, int32_t height) const noexcept {
   if (SkCodec::kTopDown_SkScanlineOrder == fRowOrder) {
     return y;
   }

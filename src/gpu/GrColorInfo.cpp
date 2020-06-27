@@ -10,14 +10,14 @@
 #include "src/core/SkColorSpacePriv.h"
 
 GrColorInfo::GrColorInfo(
-    GrColorType colorType, SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace)
+    GrColorType colorType, SkAlphaType alphaType, sk_sp<SkColorSpace> colorSpace) noexcept
     : fColorSpace(std::move(colorSpace)), fColorType(colorType), fAlphaType(alphaType) {}
 
-GrColorInfo::GrColorInfo(const SkColorInfo& ci)
+GrColorInfo::GrColorInfo(const SkColorInfo& ci) noexcept
     : GrColorInfo(SkColorTypeToGrColorType(ci.colorType()), ci.alphaType(), ci.refColorSpace()) {}
 
-GrColorInfo::GrColorInfo(const GrColorInfo&) = default;
-GrColorInfo& GrColorInfo::operator=(const GrColorInfo&) = default;
+GrColorInfo::GrColorInfo(const GrColorInfo&) noexcept = default;
+GrColorInfo& GrColorInfo::operator=(const GrColorInfo&) noexcept = default;
 
 GrColorSpaceXform* GrColorInfo::colorSpaceXformFromSRGB() const {
   // TODO: Make this atomic if we start accessing this on multiple threads.

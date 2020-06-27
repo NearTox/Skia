@@ -33,16 +33,16 @@ void SkNWayCanvas::removeAll() { fList.reset(); }
 
 class SkNWayCanvas::Iter {
  public:
-  Iter(const SkTDArray<SkCanvas*>& list) : fList(list) { fIndex = 0; }
-  bool next() {
+  Iter(const SkTDArray<SkCanvas*>& list) noexcept : fList(list) { fIndex = 0; }
+  bool next() noexcept {
     if (fIndex < fList.count()) {
       fCanvas = fList[fIndex++];
       return true;
     }
     return false;
   }
-  SkCanvas* operator->() { return fCanvas; }
-  SkCanvas* get() const { return fCanvas; }
+  SkCanvas* operator->() noexcept { return fCanvas; }
+  SkCanvas* get() const noexcept { return fCanvas; }
 
  private:
   const SkTDArray<SkCanvas*>& fList;
@@ -87,10 +87,18 @@ void SkNWayCanvas::willRestore() {
   this->INHERITED::willRestore();
 }
 
-void SkNWayCanvas::didConcat44(const SkScalar m[16]) {
+void SkNWayCanvas::onMarkCTM(const char* name) {
   Iter iter(fList);
   while (iter.next()) {
-    iter->concat44(m);
+    iter->markCTM(name);
+  }
+  this->INHERITED::onMarkCTM(name);
+}
+
+void SkNWayCanvas::didConcat44(const SkM44& m) {
+  Iter iter(fList);
+  while (iter.next()) {
+    iter->concat(m);
   }
 }
 

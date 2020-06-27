@@ -365,7 +365,7 @@ bool GrResourceAllocator::assign(int* startIndex, int* stopIndex, AssignError* o
   SkDebugf("\n");
 #endif
 
-  SkDEBUGCODE(fAssigned = true;)
+  SkDEBUGCODE(fAssigned = true);
 
 #if GR_ALLOCATION_SPEW
       this->dumpIntervals();

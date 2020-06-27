@@ -24,9 +24,9 @@ class GrTwoPointConicalGradientLayout : public GrFragmentProcessor {
 
   static std::unique_ptr<GrFragmentProcessor> Make(
       const SkTwoPointConicalGradient& gradient, const GrFPArgs& args);
-  GrTwoPointConicalGradientLayout(const GrTwoPointConicalGradientLayout& src);
+  GrTwoPointConicalGradientLayout(const GrTwoPointConicalGradientLayout& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "TwoPointConicalGradientLayout"; }
+  const char* name() const noexcept override { return "TwoPointConicalGradientLayout"; }
   GrCoordTransform fCoordTransform0;
   SkMatrix gradientMatrix;
   Type type;
@@ -40,7 +40,7 @@ class GrTwoPointConicalGradientLayout : public GrFragmentProcessor {
  private:
   GrTwoPointConicalGradientLayout(
       SkMatrix gradientMatrix, Type type, bool isRadiusIncreasing, bool isFocalOnCircle,
-      bool isWellBehaved, bool isSwapped, bool isNativelyFocal, SkPoint focalParams)
+      bool isWellBehaved, bool isSwapped, bool isNativelyFocal, SkPoint focalParams) noexcept
       : INHERITED(
             kGrTwoPointConicalGradientLayout_ClassID, (OptimizationFlags)kNone_OptimizationFlags),
         fCoordTransform0(gradientMatrix),
@@ -56,7 +56,7 @@ class GrTwoPointConicalGradientLayout : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

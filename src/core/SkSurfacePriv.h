@@ -12,7 +12,7 @@
 
 struct SkImageInfo;
 
-static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) {
+static inline SkSurfaceProps SkSurfacePropsCopyOrDefault(const SkSurfaceProps* props) noexcept {
   if (props) {
     return *props;
   } else {

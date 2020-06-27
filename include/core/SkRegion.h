@@ -209,7 +209,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_setRects
   */
-  bool setRects(const SkIRect rects[], int count);
+  bool setRects(const SkIRect rects[], int count) noexcept;
 
   /** Constructs a copy of an existing region.
       Makes two regions identical by value. Internally, region and
@@ -259,7 +259,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_intersects_2
   */
-  bool intersects(const SkRegion& other) const;
+  bool intersects(const SkRegion& other) const noexcept;
 
   /** Returns true if SkIPoint (x, y) is inside SkRegion.
       Returns false if SkRegion is empty.
@@ -290,7 +290,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_contains_3
   */
-  bool contains(const SkRegion& other) const;
+  bool contains(const SkRegion& other) const noexcept;
 
   /** Returns true if SkRegion is a single rectangle and contains r.
       May return false even though SkRegion contains r.
@@ -335,7 +335,7 @@ class SK_API SkRegion {
       @param dx  x-axis offset
       @param dy  y-axis offset
   */
-  void translate(int dx, int dy) { this->translate(dx, dy, this); }
+  void translate(int dx, int dy) noexcept { this->translate(dx, dy, this); }
 
   /** Offsets SkRegion by ivector (dx, dy), writing result to dst. SkRegion may be passed
       as dst parameter, translating SkRegion in place. Has no effect if dst is nullptr.
@@ -347,7 +347,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_translate_2
   */
-  void translate(int dx, int dy, SkRegion* dst) const;
+  void translate(int dx, int dy, SkRegion* dst) const noexcept;
 
   /** \enum SkRegion::Op
       The logical operations that can be performed when combining two SkRegion.
@@ -370,7 +370,7 @@ class SK_API SkRegion {
       @param rect  SkIRect operand
       @return      false if result is empty
   */
-  bool op(const SkIRect& rect, Op op) {
+  bool op(const SkIRect& rect, Op op) noexcept {
     if (this->isRect() && kIntersect_Op == op) {
       if (!fBounds.intersect(rect)) {
         return this->setEmpty();
@@ -386,7 +386,7 @@ class SK_API SkRegion {
       @param rgn  SkRegion operand
       @return     false if result is empty
   */
-  bool op(const SkRegion& rgn, Op op) { return this->op(*this, rgn, op); }
+  bool op(const SkRegion& rgn, Op op) noexcept { return this->op(*this, rgn, op); }
 
   /** Replaces SkRegion with the result of rect op rgn.
       Returns true if replaced SkRegion is not empty.
@@ -397,7 +397,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_op_4
   */
-  bool op(const SkIRect& rect, const SkRegion& rgn, Op op);
+  bool op(const SkIRect& rect, const SkRegion& rgn, Op op) noexcept;
 
   /** Replaces SkRegion with the result of rgn op rect.
       Returns true if replaced SkRegion is not empty.
@@ -408,7 +408,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_op_5
   */
-  bool op(const SkRegion& rgn, const SkIRect& rect, Op op);
+  bool op(const SkRegion& rgn, const SkIRect& rect, Op op) noexcept;
 
   /** Replaces SkRegion with the result of rgna op rgnb.
       Returns true if replaced SkRegion is not empty.
@@ -419,7 +419,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_op_6
   */
-  bool op(const SkRegion& rgna, const SkRegion& rgnb, Op op);
+  bool op(const SkRegion& rgna, const SkRegion& rgnb, Op op) noexcept;
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
   /** Private. Android framework only.
@@ -586,7 +586,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_writeToMemory
   */
-  size_t writeToMemory(void* buffer) const;
+  size_t writeToMemory(void* buffer) const noexcept;
 
   /** Constructs SkRegion from buffer of size length. Returns bytes read.
       Returned value will be multiple of four or zero if length was too small.
@@ -597,7 +597,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_readFromMemory
   */
-  size_t readFromMemory(const void* buffer, size_t length);
+  size_t readFromMemory(const void* buffer, size_t length) noexcept;
 
  private:
   static constexpr int kOpCount = kReplace_Op + 1;
@@ -634,7 +634,7 @@ class SK_API SkRegion {
   // This is called with runs[] that do not yet have their interval-count
   // field set on each scanline. That is computed as part of this call
   // (inside ComputeRunBounds).
-  bool setRuns(RunType runs[], int count);
+  bool setRuns(RunType runs[], int count) noexcept;
 
   int count_runtype_values(int* itop, int* ibot) const noexcept;
 
@@ -650,7 +650,7 @@ class SK_API SkRegion {
    *  If the last arg is null, just return if the result is non-empty,
    *  else store the result in the last arg.
    */
-  static bool Oper(const SkRegion&, const SkRegion&, SkRegion::Op, SkRegion*);
+  static bool Oper(const SkRegion&, const SkRegion&, SkRegion::Op, SkRegion*) noexcept;
 
   friend struct RunHead;
   friend class Iterator;

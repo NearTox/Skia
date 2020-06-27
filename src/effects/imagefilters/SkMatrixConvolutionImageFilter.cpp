@@ -16,9 +16,11 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkWriteBuffer.h"
+#include "src/gpu/SkGr.h"
 
 #if SK_SUPPORT_GPU
 #  include "include/gpu/GrContext.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/gpu/GrTextureProxy.h"
 #  include "src/gpu/effects/GrMatrixConvolutionEffect.h"
 #endif
@@ -324,20 +326,6 @@ void SkMatrixConvolutionImageFilterImpl::filterBorderPixels(
   }
 }
 
-#if SK_SUPPORT_GPU
-
-static GrTextureDomain::Mode convert_tilemodes(SkTileMode tileMode) {
-  switch (tileMode) {
-    case SkTileMode::kClamp: return GrTextureDomain::kClamp_Mode;
-    case SkTileMode::kMirror: return GrTextureDomain::kMirrorRepeat_Mode;
-    case SkTileMode::kRepeat: return GrTextureDomain::kRepeat_Mode;
-    case SkTileMode::kDecal: return GrTextureDomain::kDecal_Mode;
-    default: SkASSERT(false);
-  }
-  return GrTextureDomain::kIgnore_Mode;
-}
-#endif
-
 sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
     const Context& ctx, SkIPoint* offset) const {
   SkIPoint inputOffset = SkIPoint::Make(0, 0);
@@ -367,8 +355,7 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
   }
 
 #if SK_SUPPORT_GPU
-  // Note: if the kernel is too big, the GPU path falls back to SW
-  if (ctx.gpuBacked() && fKernelSize.width() * fKernelSize.height() <= MAX_KERNEL_SIZE) {
+  if (ctx.gpuBacked()) {
     auto context = ctx.getContext();
 
     // Ensure the input is in the destination color space. Typically applyCropRect will have
@@ -390,8 +377,8 @@ sk_sp<SkSpecialImage> SkMatrixConvolutionImageFilterImpl::onFilterImage(
     srcBounds.offset(input->subset().x(), input->subset().y());
 
     auto fp = GrMatrixConvolutionEffect::Make(
-        std::move(inputView), srcBounds, fKernelSize, fKernel, fGain, fBias, fKernelOffset,
-        convert_tilemodes(fTileMode), fConvolveAlpha);
+        context, std::move(inputView), srcBounds, fKernelSize, fKernel, fGain, fBias, fKernelOffset,
+        SkTileModeToWrapMode(fTileMode), fConvolveAlpha, *ctx.getContext()->priv().caps());
     if (!fp) {
       return nullptr;
     }

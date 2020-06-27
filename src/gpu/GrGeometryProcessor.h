@@ -26,7 +26,7 @@
  */
 class GrGeometryProcessor : public GrPrimitiveProcessor {
  public:
-  GrGeometryProcessor(ClassID classID) : INHERITED(classID) {}
+  GrGeometryProcessor(ClassID classID) noexcept : INHERITED(classID) {}
 
  protected:
   // GPs that need to use either float or ubyte colors can just call this to get a correctly

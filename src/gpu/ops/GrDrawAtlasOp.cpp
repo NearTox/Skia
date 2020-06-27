@@ -56,7 +56,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) override;
 
   void onPrepareDraws(Target*) override;
@@ -193,13 +193,13 @@ SkString DrawAtlasOp::dumpInfo() const {
 #endif
 
 void DrawAtlasOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   // Setup geometry processor
   GrGeometryProcessor* gp = make_gp(arena, this->hasColors(), this->color(), this->viewMatrix());
 
   fProgramInfo = fHelper.createProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
       GrPrimitiveType::kTriangles);
 }
 

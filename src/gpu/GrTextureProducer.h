@@ -32,7 +32,7 @@ struct SkRect;
  */
 class GrTextureProducer : public SkNoncopyable {
  public:
-  virtual ~GrTextureProducer() {}
+  virtual ~GrTextureProducer() = default;
 
   enum FilterConstraint {
     kYes_FilterConstraint,
@@ -83,7 +83,7 @@ class GrTextureProducer : public SkNoncopyable {
   SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
   bool isAlphaOnly() const noexcept { return GrColorTypeIsAlphaOnly(fImageInfo.colorType()); }
   /* Is it a planar image consisting of multiple textures that may have different resolutions? */
-  virtual bool isPlanar() const { return false; }
+  virtual bool isPlanar() const noexcept { return false; }
 
  protected:
   friend class GrTextureProducer_TestAccess;

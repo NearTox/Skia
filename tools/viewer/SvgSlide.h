@@ -18,6 +18,7 @@ class SvgSlide final : public Slide {
 
   void load(SkScalar winWidth, SkScalar winHeight) override;
   void unload() override;
+  void resize(SkScalar, SkScalar) override;
 
   SkISize getDimensions() const override;
 

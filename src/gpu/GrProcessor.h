@@ -31,7 +31,7 @@ class GrProcessorKeyBuilder {
     SkASSERT(0 == fData->count() % sizeof(uint32_t));
   }
 
-  void add32(uint32_t v) {
+  void add32(uint32_t v) noexcept {
     ++fCount;
     fData->push_back_n(4, reinterpret_cast<uint8_t*>(&v));
   }
@@ -117,6 +117,7 @@ class GrProcessor {
     kGrLumaColorFilterEffect_ClassID,
     kGrMagnifierEffect_ClassID,
     kGrMatrixConvolutionEffect_ClassID,
+    kGrMatrixEffect_ClassID,
     kGrMeshTestProcessor_ClassID,
     kGrMorphologyEffect_ClassID,
     kGrMixerEffect_ClassID,
@@ -175,9 +176,9 @@ class GrProcessor {
 
   virtual ~GrProcessor() = default;
 
-  /** Human-meaningful string to identify this prcoessor; may be embedded in generated shader
-      code and must be a legal identifier. */
-  virtual const char* name() const = 0;
+  /** Human-meaningful string to identify this processor; may be embedded in generated shader
+      code and must be a legal SkSL identifier prefix. */
+  virtual const char* name() const noexcept = 0;
 
   /** Human-readable dump of all information */
 #ifdef SK_DEBUG
@@ -212,7 +213,7 @@ class GrProcessor {
 
   /** Helper for down-casting to a GrProcessor subclass */
   template <typename T>
-  const T& cast() const {
+  const T& cast() const noexcept {
     return *static_cast<const T*>(this);
   }
 

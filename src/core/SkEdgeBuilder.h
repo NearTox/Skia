@@ -20,7 +20,7 @@ class SkEdgeBuilder {
   int buildEdges(const SkPath& path, const SkIRect* shiftedClip);
 
  protected:
-  SkEdgeBuilder() = default;
+  SkEdgeBuilder() noexcept = default;
   virtual ~SkEdgeBuilder() = default;
 
   // In general mode we allocate pointers in fList and fEdgeList points to its head.
@@ -66,7 +66,7 @@ class SkBasicEdgeBuilder final : public SkEdgeBuilder {
 
 class SkAnalyticEdgeBuilder final : public SkEdgeBuilder {
  public:
-  SkAnalyticEdgeBuilder() {}
+  SkAnalyticEdgeBuilder() noexcept = default;
 
   SkAnalyticEdge** analyticEdgeList() { return (SkAnalyticEdge**)fEdgeList; }
 

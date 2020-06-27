@@ -399,5 +399,8 @@
     <ClCompile Include="angle2\src\common\system_utils_win32.cpp" />
     <ClCompile Include="angle2\src\libANGLE\ProgramExecutable.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\RemoveAtomicCounterBuiltins.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_ops\EarlyFragmentTestsOptimization.cpp" />
+    <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceClipDistanceVariable.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\ProgramPipelineImpl.cpp" />
   </ItemGroup>
 </Project>

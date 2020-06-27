@@ -7,6 +7,7 @@
 
 #include "src/core/SkDraw.h"
 #include "src/core/SkFontPriv.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkScalerCache.h"
@@ -37,11 +38,12 @@ static bool check_glyph_position(SkPoint position) {
 void SkDraw::paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) const {
   // The size used for a typical blitter.
   SkSTArenaAlloc<3308> alloc;
-  SkBlitter* blitter = SkBlitter::Choose(fDst, *fMatrix, paint, &alloc, false, fRC->clipShader());
+  SkBlitter* blitter =
+      SkBlitter::Choose(fDst, *fMatrixProvider, paint, &alloc, false, fRC->clipShader());
   if (fCoverage) {
     blitter = alloc.make<SkPairBlitter>(
-        blitter,
-        SkBlitter::Choose(*fCoverage, *fMatrix, SkPaint(), &alloc, true, fRC->clipShader()));
+        blitter, SkBlitter::Choose(
+                     *fCoverage, *fMatrixProvider, SkPaint(), &alloc, true, fRC->clipShader()));
   }
 
   SkAAClipBlitterWrapper wrapper{*fRC, blitter};
@@ -116,13 +118,13 @@ void SkDraw::paintPaths(
 
 void SkDraw::drawGlyphRunList(
     const SkGlyphRunList& glyphRunList, SkGlyphRunListPainter* glyphPainter) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      if (fRC->isEmpty()) {
+  if (fRC->isEmpty()) {
     return;
   }
 
-  glyphPainter->drawForBitmapDevice(glyphRunList, *fMatrix, this);
+  glyphPainter->drawForBitmapDevice(glyphRunList, fMatrixProvider->localToDevice(), this);
 }
 
 #if defined _WIN32

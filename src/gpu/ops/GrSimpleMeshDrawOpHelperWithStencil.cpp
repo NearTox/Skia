@@ -8,17 +8,17 @@
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
 const GrPipeline* GrSimpleMeshDrawOpHelperWithStencil::createPipelineWithStencil(
-    const GrCaps* caps, SkArenaAlloc* arena, GrSwizzle outputViewSwizzle,
+    const GrCaps* caps, SkArenaAlloc* arena, GrSwizzle writeViewSwizzle,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   return GrSimpleMeshDrawOpHelper::CreatePipeline(
-      caps, arena, outputViewSwizzle, std::move(appliedClip), dstProxyView,
+      caps, arena, writeViewSwizzle, std::move(appliedClip), dstProxyView,
       this->detachProcessorSet(), this->pipelineFlags(), this->stencilSettings());
 }
 
 const GrPipeline* GrSimpleMeshDrawOpHelperWithStencil::createPipelineWithStencil(
     GrOpFlushState* flushState) {
   return this->createPipelineWithStencil(
-      &flushState->caps(), flushState->allocator(), flushState->outputView()->swizzle(),
+      &flushState->caps(), flushState->allocator(), flushState->writeView()->swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView());
 }
 
@@ -58,12 +58,12 @@ bool GrSimpleMeshDrawOpHelperWithStencil::isCompatible(
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelperWithStencil::createProgramInfoWithStencil(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeViewSwizzle,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* gp, GrPrimitiveType primType) {
   return CreateProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, this->detachProcessorSet(),
-      primType, this->pipelineFlags(), this->stencilSettings());
+      caps, arena, writeViewSwizzle, std::move(appliedClip), dstProxyView, gp,
+      this->detachProcessorSet(), primType, this->pipelineFlags(), this->stencilSettings());
 }
 
 #ifdef SK_DEBUG

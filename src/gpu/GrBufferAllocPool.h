@@ -43,7 +43,7 @@ class GrBufferAllocPool : SkNoncopyable {
     static sk_sp<CpuBufferCache> Make(int maxBuffersToCache);
 
     sk_sp<GrCpuBuffer> makeBuffer(size_t size, bool mustBeInitialized);
-    void releaseAll();
+    void releaseAll() noexcept;
 
    private:
     CpuBufferCache(int maxBuffersToCache);
@@ -146,7 +146,7 @@ class GrBufferAllocPool : SkNoncopyable {
   };
 
   bool createBlock(size_t requestSize);
-  void destroyBlock() noexcept;
+  void destroyBlock();
   void deleteBlocks();
   void flushCpuData(const BufferBlock& block, size_t flushSize);
   void resetCpuData(size_t newSize);
@@ -303,6 +303,26 @@ class GrIndexBufferAllocPool : public GrBufferAllocPool {
 
  private:
   typedef GrBufferAllocPool INHERITED;
+};
+
+class GrDrawIndirectBufferAllocPool : private GrBufferAllocPool {
+ public:
+  GrDrawIndirectBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
+      : GrBufferAllocPool(gpu, GrGpuBufferType::kDrawIndirect, std::move(cpuBufferCache)) {}
+
+  GrDrawIndirectCommand* makeSpace(int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offset) {
+    return static_cast<GrDrawIndirectCommand*>(this->GrBufferAllocPool::makeSpace(
+        (size_t)drawCount * sizeof(GrDrawIndirectCommand), 4, buffer, offset));
+  }
+
+  GrDrawIndexedIndirectCommand* makeIndexedSpace(
+      int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offset) {
+    return static_cast<GrDrawIndexedIndirectCommand*>(this->GrBufferAllocPool::makeSpace(
+        (size_t)drawCount * sizeof(GrDrawIndexedIndirectCommand), 4, buffer, offset));
+  }
+
+  using GrBufferAllocPool::reset;
+  using GrBufferAllocPool::unmap;
 };
 
 #endif

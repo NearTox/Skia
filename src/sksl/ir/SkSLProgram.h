@@ -39,13 +39,13 @@ class Context;
 struct Program {
   struct Settings {
     struct Value {
-      Value(bool b) : fKind(kBool_Kind), fValue(b) {}
+      Value(bool b) noexcept : fKind(kBool_Kind), fValue(b) {}
 
-      Value(int i) : fKind(kInt_Kind), fValue(i) {}
+      Value(int i) noexcept : fKind(kInt_Kind), fValue(i) {}
 
-      Value(unsigned int i) : fKind(kInt_Kind), fValue(i) {}
+      Value(unsigned int i) noexcept : fKind(kInt_Kind), fValue(i) {}
 
-      Value(float f) : fKind(kFloat_Kind), fValue(f) {}
+      Value(float f) noexcept : fKind(kFloat_Kind), fValue(f) {}
 
       std::unique_ptr<Expression> literal(const Context& context, int offset) const {
         switch (fKind) {
@@ -72,9 +72,6 @@ struct Program {
     const StandaloneShaderCaps* fCaps = &standaloneCaps;
 #else
     const GrShaderCaps* fCaps = nullptr;
-#  ifdef SK_VULKAN
-    const GrVkCaps* fVkCaps = nullptr;
-#  endif
 #endif
     // if false, sk_FragCoord is exactly the same as gl_FragCoord. If true, the y coordinate
     // must be flipped.
@@ -91,6 +88,11 @@ struct Program {
     // if the program needs to create an RTHeight uniform, this is its offset in the uniform
     // buffer
     int fRTHeightOffset = -1;
+    // if the program needs to create an RTHeight uniform and is creating spriv, this is the
+    // binding and set number of the uniform buffer.
+    int fRTHeightBinding = -1;
+    int fRTHeightSet = -1;
+
     std::unordered_map<String, Value> fArgs;
   };
 
@@ -141,7 +143,7 @@ struct Program {
    private:
     using inner = std::vector<std::unique_ptr<ProgramElement>>::iterator;
 
-    iterator(inner begin1, inner end1, inner begin2, inner end2)
+    iterator(inner begin1, inner end1, inner begin2, inner end2) noexcept
         : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
     inner fIter1;
@@ -179,7 +181,7 @@ struct Program {
    private:
     using inner = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
 
-    const_iterator(inner begin1, inner end1, inner begin2, inner end2)
+    const_iterator(inner begin1, inner end1, inner begin2, inner end2) noexcept
         : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
     inner fIter1;
@@ -214,7 +216,7 @@ struct Program {
         fInheritedElements(inheritedElements),
         fElements(std::move(elements)) {}
 
-  iterator begin() {
+  iterator begin() noexcept {
     if (fInheritedElements) {
       return iterator(
           fInheritedElements->begin(), fInheritedElements->end(), fElements.begin(),
@@ -223,7 +225,7 @@ struct Program {
     return iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  iterator end() {
+  iterator end() noexcept {
     if (fInheritedElements) {
       return iterator(
           fInheritedElements->end(), fInheritedElements->end(), fElements.end(), fElements.end());
@@ -231,7 +233,7 @@ struct Program {
     return iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  const_iterator begin() const {
+  const_iterator begin() const noexcept {
     if (fInheritedElements) {
       return const_iterator(
           fInheritedElements->begin(), fInheritedElements->end(), fElements.begin(),
@@ -240,7 +242,7 @@ struct Program {
     return const_iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  const_iterator end() const {
+  const_iterator end() const noexcept {
     if (fInheritedElements) {
       return const_iterator(
           fInheritedElements->end(), fInheritedElements->end(), fElements.end(), fElements.end());

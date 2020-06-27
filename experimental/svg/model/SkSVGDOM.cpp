@@ -184,6 +184,18 @@ bool SetSpreadMethodAttribute(
   return true;
 }
 
+bool SetStopColorAttribute(
+    const sk_sp<SkSVGNode>& node, SkSVGAttribute attr, const char* stringValue) {
+  SkSVGStopColor stopColor;
+  SkSVGAttributeParser parser(stringValue);
+  if (!parser.parseStopColor(&stopColor)) {
+    return false;
+  }
+
+  node->setAttribute(attr, SkSVGStopColorValue(stopColor));
+  return true;
+}
+
 bool SetPointsAttribute(
     const sk_sp<SkSVGNode>& node, SkSVGAttribute attr, const char* stringValue) {
   SkSVGPointsType points;
@@ -284,7 +296,7 @@ class StyleIterator {
   const char* fPos;
 };
 
-void set_string_attribute(const sk_sp<SkSVGNode>& node, const char* name, const char* value);
+bool set_string_attribute(const sk_sp<SkSVGNode>& node, const char* name, const char* value);
 
 bool SetStyleAttributes(const sk_sp<SkSVGNode>& node, SkSVGAttribute, const char* stringValue) {
   SkString name, value;
@@ -314,6 +326,7 @@ struct AttrParseInfo {
 SortedDictionaryEntry<AttrParseInfo> gAttributeParseInfo[] = {
     {"clip-path", {SkSVGAttribute::kClipPath, SetClipPathAttribute}},
     {"clip-rule", {SkSVGAttribute::kClipRule, SetFillRuleAttribute}},
+    {"color", {SkSVGAttribute::kColor, SetColorAttribute}},
     {"cx", {SkSVGAttribute::kCx, SetLengthAttribute}},
     {"cy", {SkSVGAttribute::kCy, SetLengthAttribute}},
     {"d", {SkSVGAttribute::kD, SetPathDataAttribute}},
@@ -322,6 +335,8 @@ SortedDictionaryEntry<AttrParseInfo> gAttributeParseInfo[] = {
     {"fill-rule", {SkSVGAttribute::kFillRule, SetFillRuleAttribute}},
     {"font-family", {SkSVGAttribute::kFontFamily, SetStringAttribute}},
     {"font-size", {SkSVGAttribute::kFontSize, SetLengthAttribute}},
+    {"font-style", {SkSVGAttribute::kFontStyle, SetStringAttribute}},
+    {"font-weight", {SkSVGAttribute::kFontWeight, SetStringAttribute}},
     // focal point x & y
     {"fx", {SkSVGAttribute::kFx, SetLengthAttribute}},
     {"fy", {SkSVGAttribute::kFy, SetLengthAttribute}},
@@ -335,7 +350,7 @@ SortedDictionaryEntry<AttrParseInfo> gAttributeParseInfo[] = {
     {"rx", {SkSVGAttribute::kRx, SetLengthAttribute}},
     {"ry", {SkSVGAttribute::kRy, SetLengthAttribute}},
     {"spreadMethod", {SkSVGAttribute::kSpreadMethod, SetSpreadMethodAttribute}},
-    {"stop-color", {SkSVGAttribute::kStopColor, SetColorAttribute}},
+    {"stop-color", {SkSVGAttribute::kStopColor, SetStopColorAttribute}},
     {"stop-opacity", {SkSVGAttribute::kStopOpacity, SetNumberAttribute}},
     {"stroke", {SkSVGAttribute::kStroke, SetPaintAttribute}},
     {"stroke-dasharray", {SkSVGAttribute::kStrokeDashArray, SetDashArrayAttribute}},
@@ -391,7 +406,7 @@ struct ConstructionContext {
   SkSVGIDMapper* fIDMapper;
 };
 
-void set_string_attribute(const sk_sp<SkSVGNode>& node, const char* name, const char* value) {
+bool set_string_attribute(const sk_sp<SkSVGNode>& node, const char* name, const char* value) {
   const int attrIndex = SkStrSearch(
       &gAttributeParseInfo[0].fKey, SkTo<int>(SK_ARRAY_COUNT(gAttributeParseInfo)), name,
       sizeof(gAttributeParseInfo[0]));
@@ -399,7 +414,7 @@ void set_string_attribute(const sk_sp<SkSVGNode>& node, const char* name, const 
 #if defined(SK_VERBOSE_SVG_PARSING)
     SkDebugf("unhandled attribute: %s\n", name);
 #endif
-    return;
+    return false;
   }
 
   SkASSERT(SkTo<size_t>(attrIndex) < SK_ARRAY_COUNT(gAttributeParseInfo));
@@ -408,7 +423,10 @@ void set_string_attribute(const sk_sp<SkSVGNode>& node, const char* name, const 
 #if defined(SK_VERBOSE_SVG_PARSING)
     SkDebugf("could not parse attribute: '%s=\"%s\"'\n", name, value);
 #endif
+    return false;
   }
+
+  return true;
 }
 
 void parse_node_attributes(
@@ -515,4 +533,14 @@ void SkSVGDOM::setContainerSize(const SkSize& containerSize) {
   fContainerSize = containerSize;
 }
 
+sk_sp<SkSVGNode>* SkSVGDOM::findNodeById(const char* id) {
+  SkString idStr(id);
+  return this->fIDMapper.find(idStr);
+}
+
 void SkSVGDOM::setRoot(sk_sp<SkSVGNode> root) { fRoot = std::move(root); }
+
+// TODO(fuego): move this to SkSVGNode or its own CU.
+bool SkSVGNode::setAttribute(const char* attributeName, const char* attributeValue) {
+  return set_string_attribute(sk_ref_sp(this), attributeName, attributeValue);
+}

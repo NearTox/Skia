@@ -13,10 +13,10 @@ SkSVGStop::SkSVGStop() : INHERITED(SkSVGTag::kStop) {}
 
 void SkSVGStop::setOffset(const SkSVGLength& offset) { fOffset = offset; }
 
-void SkSVGStop::setStopColor(const SkSVGColorType& color) { fStopColor = color; }
+void SkSVGStop::setStopColor(const SkSVGStopColor& color) { fStopColor = color; }
 
 void SkSVGStop::setStopOpacity(const SkSVGNumberType& opacity) {
-  fStopOpacity = SkTPin<SkScalar>(opacity.value(), 0, 1);
+  fStopOpacity = SkTPin<SkScalar>(opacity, 0, 1);
 }
 
 void SkSVGStop::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
@@ -27,7 +27,7 @@ void SkSVGStop::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
       }
       break;
     case SkSVGAttribute::kStopColor:
-      if (const auto* color = v.as<SkSVGColorValue>()) {
+      if (const auto* color = v.as<SkSVGStopColorValue>()) {
         this->setStopColor(*color);
       }
       break;

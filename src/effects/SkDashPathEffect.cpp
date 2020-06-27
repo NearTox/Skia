@@ -349,7 +349,7 @@ bool SkDashImpl::onAsPoints(
   return true;
 }
 
-SkPathEffect::DashType SkDashImpl::onAsADash(DashInfo* info) const noexcept {
+SkPathEffect::DashType SkDashImpl::onAsADash(DashInfo* info) const {
   if (info) {
     if (info->fCount >= fCount && info->fIntervals) {
       memcpy(info->fIntervals, fIntervals, fCount * sizeof(SkScalar));

@@ -55,6 +55,7 @@ bool GrGLSLProgramBuilder::emitAndInstallProcs() {
   this->emitAndInstallPrimProc(&inputColor, &inputCoverage);
   this->emitAndInstallFragProcs(&inputColor, &inputCoverage);
   this->emitAndInstallXferProc(inputColor, inputCoverage);
+  fGeometryProcessor->emitTransformCode(&fVS, this->uniformHandler());
 
   return this->checkSamplerCounts();
 }
@@ -77,7 +78,7 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
     rtAdjustVisibility = kVertex_GrShaderFlag;
   }
   fUniformHandles.fRTAdjustmentUni = this->uniformHandler()->addUniform(
-      rtAdjustVisibility, kFloat4_GrSLType, SkSL::Compiler::RTADJUST_NAME);
+      nullptr, rtAdjustVisibility, kFloat4_GrSLType, SkSL::Compiler::RTADJUST_NAME);
   const char* rtAdjustName =
       this->uniformHandler()->getUniformCStr(fUniformHandles.fRTAdjustmentUni);
 
@@ -180,8 +181,7 @@ SkString GrGLSLProgramBuilder::emitAndInstallFragProc(
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(fp));
-  glslFragmentProcessors->emplace_back(fragProc);
+  SkDEBUGCODE(verify(fp);) glslFragmentProcessors->emplace_back(fragProc);
 
   fFS.codeAppend("}");
   return output;
@@ -233,8 +233,7 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(xp));
-  fFS.codeAppend("}");
+  SkDEBUGCODE(verify(xp);) fFS.codeAppend("}");
 }
 
 GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitSampler(
@@ -308,14 +307,14 @@ void GrGLSLProgramBuilder::addRTWidthUniform(const char* name) {
   SkASSERT(!fUniformHandles.fRTWidthUni.isValid());
   GrGLSLUniformHandler* uniformHandler = this->uniformHandler();
   fUniformHandles.fRTWidthUni = uniformHandler->internalAddUniformArray(
-      kFragment_GrShaderFlag, kHalf_GrSLType, name, false, 0, nullptr);
+      nullptr, kFragment_GrShaderFlag, kHalf_GrSLType, name, false, 0, nullptr);
 }
 
 void GrGLSLProgramBuilder::addRTHeightUniform(const char* name) {
   SkASSERT(!fUniformHandles.fRTHeightUni.isValid());
   GrGLSLUniformHandler* uniformHandler = this->uniformHandler();
   fUniformHandles.fRTHeightUni = uniformHandler->internalAddUniformArray(
-      kFragment_GrShaderFlag, kHalf_GrSLType, name, false, 0, nullptr);
+      nullptr, kFragment_GrShaderFlag, kHalf_GrSLType, name, false, 0, nullptr);
 }
 
 void GrGLSLProgramBuilder::finalizeShaders() {

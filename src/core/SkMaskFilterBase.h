@@ -28,7 +28,7 @@ class GrRecordingContext;
 class GrRenderTarget;
 class GrRenderTargetContext;
 class GrResourceProvider;
-class GrShape;
+class GrStyledShape;
 class GrSurfaceProxyView;
 class GrTexture;
 class GrTextureProxy;
@@ -104,7 +104,7 @@ class SkMaskFilterBase : public SkMaskFilter {
    * this would hide the RRect special case and the mask generation
    */
   virtual bool canFilterMaskGPU(
-      const GrShape&, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
+      const GrStyledShape&, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
       const SkMatrix& ctm, SkIRect* maskRect) const;
 
   /**
@@ -113,7 +113,7 @@ class SkMaskFilterBase : public SkMaskFilter {
    */
   virtual bool directFilterMaskGPU(
       GrRecordingContext*, GrRenderTargetContext*, GrPaint&& paint, const GrClip&,
-      const SkMatrix& viewMatrix, const GrShape& shape) const;
+      const SkMatrix& viewMatrix, const GrStyledShape& shape) const;
 
   /**
    * This function is used to implement filters that require an explicit src mask. It should only
@@ -149,10 +149,10 @@ class SkMaskFilterBase : public SkMaskFilter {
    *  provided BlurRec parameter. If this effect cannot be represented as a BlurRec, return false
    *  and ignore the BlurRec parameter.
    */
-  virtual bool asABlur(BlurRec*) const;
+  virtual bool asABlur(BlurRec*) const noexcept;
 
  protected:
-  SkMaskFilterBase() {}
+  SkMaskFilterBase() noexcept = default;
 
 #if SK_SUPPORT_GPU
   virtual std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&) const;
@@ -163,7 +163,7 @@ class SkMaskFilterBase : public SkMaskFilter {
 
   class NinePatch : ::SkNoncopyable {
    public:
-    NinePatch() : fCache(nullptr) {}
+    NinePatch() noexcept : fCache(nullptr) {}
     ~NinePatch();
 
     SkMask fMask;        // fBounds must have [0,0] in its top-left

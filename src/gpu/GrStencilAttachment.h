@@ -34,7 +34,7 @@ class GrStencilAttachment : public GrGpuResource {
       int width, int height, int sampleCnt, GrUniqueKey* key);
 
  protected:
-  GrStencilAttachment(GrGpu* gpu, int width, int height, int bits, int sampleCnt)
+  GrStencilAttachment(GrGpu* gpu, int width, int height, int bits, int sampleCnt) noexcept
       : INHERITED(gpu), fWidth(width), fHeight(height), fBits(bits), fSampleCnt(sampleCnt) {}
 
  private:

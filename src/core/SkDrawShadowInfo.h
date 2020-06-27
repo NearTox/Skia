@@ -34,28 +34,30 @@ static constexpr auto kAmbientGeomFactor = 64.0f;
 // We'll round up to 300 to keep it simple.
 static constexpr auto kMaxAmbientRadius = 300 * kAmbientHeightFactor * kAmbientGeomFactor;
 
-static inline float divide_and_pin(float numer, float denom, float min, float max) noexcept {
+static constexpr inline float divide_and_pin(
+    float numer, float denom, float min, float max) noexcept {
   float result = SkTPin(sk_ieee_float_divide(numer, denom), min, max);
   // ensure that SkTPin handled non-finites correctly
   SkASSERT(result >= min && result <= max);
   return result;
 }
 
-inline SkScalar AmbientBlurRadius(SkScalar height) noexcept {
+inline constexpr SkScalar AmbientBlurRadius(SkScalar height) noexcept {
   return std::min(height * kAmbientHeightFactor * kAmbientGeomFactor, kMaxAmbientRadius);
 }
 
-inline SkScalar AmbientRecipAlpha(SkScalar height) noexcept {
+inline constexpr SkScalar AmbientRecipAlpha(SkScalar height) noexcept {
   return 1.0f + std::max(height * kAmbientHeightFactor, 0.0f);
 }
 
-inline SkScalar SpotBlurRadius(SkScalar occluderZ, SkScalar lightZ, SkScalar lightRadius) {
+inline constexpr SkScalar SpotBlurRadius(
+    SkScalar occluderZ, SkScalar lightZ, SkScalar lightRadius) noexcept {
   return lightRadius * divide_and_pin(occluderZ, lightZ - occluderZ, 0.0f, 0.95f);
 }
 
 inline void GetSpotParams(
     SkScalar occluderZ, SkScalar lightX, SkScalar lightY, SkScalar lightZ, SkScalar lightRadius,
-    SkScalar* blurRadius, SkScalar* scale, SkVector* translate) {
+    SkScalar* blurRadius, SkScalar* scale, SkVector* translate) noexcept {
   SkScalar zRatio = divide_and_pin(occluderZ, lightZ - occluderZ, 0.0f, 0.95f);
   *blurRadius = lightRadius * zRatio;
   *scale = divide_and_pin(lightZ, lightZ - occluderZ, 1.0f, 1.95f);

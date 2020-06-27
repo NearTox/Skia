@@ -69,9 +69,9 @@ class TextAnimator final : public SkNVRefCnt<TextAnimator> {
 
   void modulateProps(const DomainMaps&, ModulatorBuffer&) const;
 
-  bool hasBlur() const { return fHasBlur; }
+  bool hasBlur() const noexcept { return fHasBlur; }
 
-  bool requiresAnchorPoint() const { return fRequiresAnchorPoint; }
+  bool requiresAnchorPoint() const noexcept { return fRequiresAnchorPoint; }
 
  private:
   TextAnimator(

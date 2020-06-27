@@ -46,7 +46,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
       SkVector fTranslate;
       bool fApplyPostCTM;
 
-      void applyToCTM(SkMatrix* ctm) const;
+      void applyToCTM(SkMatrix* ctm) const noexcept;
       void applyToCanvas(SkCanvas*) const;
     };
 
@@ -105,7 +105,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
    *
    *  If any of the above are not met, return false and ignore the BlurShadowRec parameter.
    */
-  virtual bool asABlurShadow(BlurShadowRec*) const;
+  virtual bool asABlurShadow(BlurShadowRec*) const noexcept;
 
   static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawLooper_Type; }
 
@@ -121,7 +121,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
       SkCanvas* canvas, const SkPaint& paint, std::function<void(SkCanvas*, const SkPaint&)>);
 
  protected:
-  SkDrawLooper() {}
+  constexpr SkDrawLooper() noexcept = default;
 
  private:
   typedef SkFlattenable INHERITED;

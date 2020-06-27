@@ -20,16 +20,18 @@ namespace SkSL {
  * An expression modified by a unary operator appearing before it, such as '!flag'.
  */
 struct PrefixExpression : public Expression {
-  PrefixExpression(Token::Kind op, std::unique_ptr<Expression> operand)
+  PrefixExpression(Token::Kind op, std::unique_ptr<Expression> operand) noexcept
       : INHERITED(operand->fOffset, kPrefix_Kind, operand->fType),
         fOperand(std::move(operand)),
         fOperator(op) {}
 
-  bool isConstant() const override { return fOperator == Token::MINUS && fOperand->isConstant(); }
+  bool isConstant() const noexcept override {
+    return fOperator == Token::Kind::TK_MINUS && fOperand->isConstant();
+  }
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     if (property == Property::kSideEffects &&
-        (fOperator == Token::PLUSPLUS || fOperator == Token::MINUSMINUS)) {
+        (fOperator == Token::Kind::TK_PLUSPLUS || fOperator == Token::Kind::TK_MINUSMINUS)) {
       return true;
     }
     return fOperand->hasProperty(property);
@@ -45,17 +47,17 @@ struct PrefixExpression : public Expression {
   }
 
   SKSL_FLOAT getFVecComponent(int index) const override {
-    SkASSERT(fOperator == Token::Kind::MINUS);
+    SkASSERT(fOperator == Token::Kind::TK_MINUS);
     return -fOperand->getFVecComponent(index);
   }
 
   SKSL_INT getIVecComponent(int index) const override {
-    SkASSERT(fOperator == Token::Kind::MINUS);
+    SkASSERT(fOperator == Token::Kind::TK_MINUS);
     return -fOperand->getIVecComponent(index);
   }
 
   SKSL_FLOAT getMatComponent(int col, int row) const override {
-    SkASSERT(fOperator == Token::Kind::MINUS);
+    SkASSERT(fOperator == Token::Kind::TK_MINUS);
     return -fOperand->getMatComponent(col, row);
   }
 
@@ -63,11 +65,9 @@ struct PrefixExpression : public Expression {
     return std::unique_ptr<Expression>(new PrefixExpression(fOperator, fOperand->clone()));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     return Compiler::OperatorName(fOperator) + fOperand->description();
   }
-#endif
 
   std::unique_ptr<Expression> fOperand;
   const Token::Kind fOperator;

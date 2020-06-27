@@ -14,6 +14,8 @@
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkSpriteBlitter.h"
 
+extern bool gUseSkVMBlitter;
+
 SkSpriteBlitter::SkSpriteBlitter(const SkPixmap& source) : fSource(source) {}
 
 void SkSpriteBlitter::setup(const SkPixmap& dst, int left, int top, const SkPaint& paint) {
@@ -176,6 +178,12 @@ SkBlitter* SkBlitter::ChooseSprite(
       (which does respect soft edges).
   */
   SkASSERT(alloc != nullptr);
+
+  if (gUseSkVMBlitter) {
+    // TODO: one day, focused SkVMBlitters with the sprite as a varying?
+    // For now, returning nullptr here will make it fall back to normal non-sprite blitting.
+    return nullptr;
+  }
 
   // TODO: in principle SkRasterPipelineSpriteBlitter could be made to handle this.
   if (source.alphaType() == kUnpremul_SkAlphaType) {

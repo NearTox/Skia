@@ -139,7 +139,7 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
     return GrProcessorSet::EmptySetAnalysis();
   }
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
@@ -154,7 +154,7 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
 
     GrProgramInfo programInfo(
         flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-        flushState->proxy()->backendFormat(), flushState->outputView()->origin(), &pipeline,
+        flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &pipeline,
         geomProc, GrPrimitiveType::kTriangleStrip);
 
     flushState->bindPipeline(programInfo, SkRect::MakeIWH(kScreenSize, kScreenSize));

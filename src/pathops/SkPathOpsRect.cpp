@@ -10,7 +10,8 @@
 #include "src/pathops/SkPathOpsQuad.h"
 #include "src/pathops/SkPathOpsRect.h"
 
-void SkDRect::setBounds(const SkDQuad& curve, const SkDQuad& sub, double startT, double endT) {
+void SkDRect::setBounds(
+    const SkDQuad& curve, const SkDQuad& sub, double startT, double endT) noexcept {
   set(sub[0]);
   add(sub[2]);
   double tValues[2];
@@ -27,7 +28,8 @@ void SkDRect::setBounds(const SkDQuad& curve, const SkDQuad& sub, double startT,
   }
 }
 
-void SkDRect::setBounds(const SkDConic& curve, const SkDConic& sub, double startT, double endT) {
+void SkDRect::setBounds(
+    const SkDConic& curve, const SkDConic& sub, double startT, double endT) noexcept {
   set(sub[0]);
   add(sub[2]);
   double tValues[2];
@@ -44,7 +46,8 @@ void SkDRect::setBounds(const SkDConic& curve, const SkDConic& sub, double start
   }
 }
 
-void SkDRect::setBounds(const SkDCubic& curve, const SkDCubic& sub, double startT, double endT) {
+void SkDRect::setBounds(
+    const SkDCubic& curve, const SkDCubic& sub, double startT, double endT) noexcept {
   set(sub[0]);
   add(sub[3]);
   double tValues[4];
@@ -61,4 +64,4 @@ void SkDRect::setBounds(const SkDCubic& curve, const SkDCubic& sub, double start
   }
 }
 
-void SkDRect::setBounds(const SkTCurve& curve) { curve.setBounds(this); }
+void SkDRect::setBounds(const SkTCurve& curve) noexcept { curve.setBounds(this); }

@@ -45,7 +45,7 @@ size_t SkReader32::readIntoString(SkString* copy) {
   return len;
 }
 
-void SkWriter32::writeString(const char str[], size_t len) noexcept {
+void SkWriter32::writeString(const char str[], size_t len) {
   if (nullptr == str) {
     str = "";
     len = 0;

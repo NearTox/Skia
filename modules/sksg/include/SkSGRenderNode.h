@@ -65,7 +65,7 @@ class RenderNode : public Node {
 
   class ScopedRenderContext final {
    public:
-    ScopedRenderContext(SkCanvas*, const RenderContext*);
+    ScopedRenderContext(SkCanvas*, const RenderContext*) noexcept;
     ~ScopedRenderContext();
 
     ScopedRenderContext(ScopedRenderContext&& that) noexcept { *this = std::move(that); }
@@ -134,7 +134,7 @@ class CustomRenderNode : public RenderNode {
 
   const std::vector<sk_sp<RenderNode>>& children() const noexcept { return fChildren; }
 
-  bool hasChildrenInval() const;
+  bool hasChildrenInval() const noexcept;
 
  private:
   std::vector<sk_sp<RenderNode>> fChildren;

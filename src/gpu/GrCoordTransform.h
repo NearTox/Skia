@@ -23,7 +23,7 @@ class GrCoordTransform {
  public:
   GrCoordTransform() noexcept = default;
 
-  GrCoordTransform(const GrCoordTransform&) = default;
+  GrCoordTransform(const GrCoordTransform&) noexcept = default;
 
   /**
    * Create a transformation that maps [0, proxy->width()] x [0, proxy->height()] to a proxy's
@@ -46,14 +46,14 @@ class GrCoordTransform {
    */
   GrCoordTransform(const SkMatrix& m) noexcept : fMatrix(m) {}
 
-  GrCoordTransform& operator=(const GrCoordTransform& that) = default;
+  GrCoordTransform& operator=(const GrCoordTransform& that) noexcept = default;
 
   // The textures' effect is to optionally normalize the final matrix, so a blind equality check
   // could be misleading.
   bool operator==(const GrCoordTransform& that) const = delete;
   bool operator!=(const GrCoordTransform& that) const = delete;
 
-  bool hasSameEffectiveMatrix(const GrCoordTransform& that) const {
+  bool hasSameEffectiveMatrix(const GrCoordTransform& that) const noexcept {
     // This is slightly more conservative than computing each transforms effective matrix and
     // then comparing them.
     if (!SkMatrixPriv::CheapEqual(fMatrix, that.fMatrix)) {
@@ -84,7 +84,7 @@ class GrCoordTransform {
 
   // This should only ever be called at flush time after the backing texture has been
   // successfully instantiated
-  GrTexture* peekTexture() const { return fProxy->peekTexture(); }
+  GrTexture* peekTexture() const noexcept { return fProxy->peekTexture(); }
 
  private:
   const GrSurfaceProxy* fProxy = nullptr;

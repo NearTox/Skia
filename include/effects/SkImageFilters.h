@@ -295,7 +295,8 @@ class SK_API SkImageFilters {
    *  @param cropRect Optional rectangle that crops the input and output.
    */
   static sk_sp<SkImageFilter> Dilate(
-      int radiusX, int radiusY, sk_sp<SkImageFilter> input, const SkIRect* cropRect = nullptr);
+      SkScalar radiusX, SkScalar radiusY, sk_sp<SkImageFilter> input,
+      const SkIRect* cropRect = nullptr);
 
   /**
    *  Create a filter that erodes each input pixel's channel values to the minimum channel value
@@ -306,7 +307,8 @@ class SK_API SkImageFilters {
    *  @param cropRect Optional rectangle that crops the input and output.
    */
   static sk_sp<SkImageFilter> Erode(
-      int radiusX, int radiusY, sk_sp<SkImageFilter> input, const SkIRect* cropRect = nullptr);
+      SkScalar radiusX, SkScalar radiusY, sk_sp<SkImageFilter> input,
+      const SkIRect* cropRect = nullptr);
 
   // Lighting filter effects
 

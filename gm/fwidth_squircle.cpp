@@ -96,7 +96,7 @@ class FwidthSquircleTestProcessor::Impl : public GrGLSLGeometryProcessor {
 
     auto* uniforms = args.fUniformHandler;
     fViewMatrixHandle =
-        uniforms->addUniform(kVertex_GrShaderFlag, kFloat3x3_GrSLType, "viewmatrix");
+        uniforms->addUniform(nullptr, kVertex_GrShaderFlag, kFloat3x3_GrSLType, "viewmatrix");
 
     auto* varyings = args.fVaryingHandler;
     varyings->emitAttributes(proc);
@@ -168,23 +168,23 @@ class FwidthSquircleTestOp : public GrDrawOp {
   }
 
   GrProgramInfo* createProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) const {
     GrGeometryProcessor* geomProc = FwidthSquircleTestProcessor::Make(arena, fViewMatrix);
 
     return sk_gpu_test::CreateProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, geomProc,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc,
         SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip);
   }
 
   GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) const {
     return this->createProgramInfo(
-        &flushState->caps(), flushState->allocator(), flushState->outputView(),
+        &flushState->caps(), flushState->allocator(), flushState->writeView(),
         flushState->detachAppliedClip(), flushState->dstProxyView());
   }
 
   void onPrePrepare(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) final {
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
 
@@ -192,7 +192,7 @@ class FwidthSquircleTestOp : public GrDrawOp {
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
 
     fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
 
     context->priv().recordProgramInfo(fProgramInfo);
   }

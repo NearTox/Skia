@@ -23,12 +23,13 @@ enum class AAMode {
   kCoverage,
   kCoverageWithMSAA,
 };
-static const int kAAModeCnt = static_cast<int>(AAMode::kCoverageWithMSAA) + 1;
+static constexpr int kAAModeCnt = static_cast<int>(AAMode::kCoverageWithMSAA) + 1;
 
 std::unique_ptr<GrDrawOp> MakeDashLineOp(
     GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, const SkPoint pts[2], AAMode,
     const GrStyle& style, const GrUserStencilSettings*);
-bool CanDrawDashLine(const SkPoint pts[2], const GrStyle& style, const SkMatrix& viewMatrix);
+bool CanDrawDashLine(
+    const SkPoint pts[2], const GrStyle& style, const SkMatrix& viewMatrix) noexcept;
 }  // namespace GrDashOp
 
 #endif

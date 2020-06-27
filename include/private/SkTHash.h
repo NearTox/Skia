@@ -68,7 +68,8 @@ class SkTHashTable {
   }
 
   // If there is an entry in the table with this key, return a pointer to it.  If not, null.
-  T* find(const K& key) const {
+  T* find(const K& key) const
+      noexcept(noexcept(Traits::GetKey(fSlots[0].val)) && noexcept(Hash(key))) {
     uint32_t hash = Hash(key);
     int index = hash & (fCapacity - 1);
     for (int n = 0; n < fCapacity; n++) {
@@ -87,7 +88,7 @@ class SkTHashTable {
 
   // If there is an entry in the table with this key, return it.  If not, null.
   // This only works for pointer type T, and cannot be used to find an nullptr entry.
-  T findOrNull(const K& key) const {
+  T findOrNull(const K& key) const noexcept(noexcept(find(key))) {
     if (T* p = this->find(key)) {
       return *p;
     }
@@ -135,7 +136,8 @@ class SkTHashTable {
   }
 
  private:
-  T* uncheckedSet(T&& val) {
+  T* uncheckedSet(T&& val) noexcept(std::is_nothrow_move_assignable_v<T>&& noexcept(
+      Traits::GetKey(val)) && noexcept(Hash(Traits::GetKey(val)))) {
     const K& key = Traits::GetKey(val);
     uint32_t hash = Hash(key);
     int index = hash & (fCapacity - 1);
@@ -219,7 +221,7 @@ class SkTHashTable {
     return index;
   }
 
-  static uint32_t Hash(const K& key) {
+  static uint32_t Hash(const K& key) noexcept(noexcept(Traits::Hash(key))) {
     uint32_t hash = Traits::Hash(key) & 0xffffffff;
     return hash ? hash : 1;  // We reserve hash 0 to mark empty.
   }
@@ -264,7 +266,7 @@ class SkTHashMap {
   int count() const noexcept { return fTable.count(); }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
-  size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
+  size_t approxBytesUsed() const noexcept { return fTable.approxBytesUsed(); }
 
   // N.B. The pointers returned by set() and find() are valid only until the next call to set().
 
@@ -335,13 +337,13 @@ class SkTHashSet {
   void reset() noexcept { fTable.reset(); }
 
   // How many items are in the set?
-  int count() const { return fTable.count(); }
+  int count() const noexcept { return fTable.count(); }
 
   // Is empty?
-  bool empty() const { return fTable.count() == 0; }
+  bool empty() const noexcept { return fTable.count() == 0; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
-  size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
+  size_t approxBytesUsed() const noexcept { return fTable.approxBytesUsed(); }
 
   // Copy an item into the set.
   void add(T item) { fTable.set(std::move(item)); }
@@ -367,7 +369,7 @@ class SkTHashSet {
 
  private:
   struct Traits {
-    static const T& GetKey(const T& item) { return item; }
+    static const T& GetKey(const T& item) noexcept { return item; }
     static auto Hash(const T& item) { return HashT()(item); }
   };
   SkTHashTable<T, T, Traits> fTable;

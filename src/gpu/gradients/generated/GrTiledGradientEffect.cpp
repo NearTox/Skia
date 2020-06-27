@@ -50,8 +50,8 @@ class GrGLSLTiledGradientEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
-  }
+  void onSetData(
+      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
 };
 GrGLSLFragmentProcessor* GrTiledGradientEffect::onCreateGLSLInstance() const {
   return new GrGLSLTiledGradientEffect();
@@ -61,7 +61,7 @@ void GrTiledGradientEffect::onGetGLSLProcessorKey(
   b->add32((int32_t)mirror);
   b->add32((int32_t)makePremul);
 }
-bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrTiledGradientEffect& that = other.cast<GrTiledGradientEffect>();
   (void)that;
   if (mirror != that.mirror) return false;
@@ -78,14 +78,16 @@ GrTiledGradientEffect::GrTiledGradientEffect(const GrTiledGradientEffect& src)
       colorsAreOpaque(src.colorsAreOpaque) {
   {
     auto clone = src.childProcessor(colorizer_index).clone();
-    clone->setSampledWithExplicitCoords(
-        src.childProcessor(colorizer_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(colorizer_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
   {
     auto clone = src.childProcessor(gradLayout_index).clone();
-    clone->setSampledWithExplicitCoords(
-        src.childProcessor(gradLayout_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(gradLayout_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
 }

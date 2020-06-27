@@ -30,14 +30,14 @@ struct SkColorSpaceXformSteps {
   };
 
   SkColorSpaceXformSteps(
-      SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst, SkAlphaType dstAT);
+      const SkColorSpace* src, SkAlphaType srcAT, const SkColorSpace* dst, SkAlphaType dstAT);
 
   template <typename S, typename D>
   SkColorSpaceXformSteps(const S& src, const D& dst)
       : SkColorSpaceXformSteps(
             src.colorSpace(), src.alphaType(), dst.colorSpace(), dst.alphaType()) {}
 
-  void apply(float rgba[4]) const;
+  void apply(float rgba[4]) const noexcept;
   void apply(SkRasterPipeline*, bool src_is_normalized) const;
   skvm::Color program(skvm::Builder*, skvm::Uniforms*, skvm::Color) const;
 

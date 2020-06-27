@@ -86,8 +86,8 @@ class GrTRecorder {
    * operating on TItem*. Multiple inheritance may make this not true. It is runtime asserted.
    */
   template <typename TItem, typename... Args>
-  SK_WHEN((std::is_base_of<TBase, TItem>::value), TItem&)
-  emplaceWithData(size_t extraDataSize, Args... args);
+  std::enable_if_t<(std::is_base_of<TBase, TItem>::value), TItem&> emplaceWithData(
+      size_t extraDataSize, Args... args);
 
  private:
   struct Header {
@@ -106,8 +106,8 @@ class GrTRecorder {
 
 template <typename TBase>
 template <typename TItem, typename... Args>
-inline SK_WHEN((std::is_base_of<TBase, TItem>::value), TItem&)
-    GrTRecorder<TBase>::emplaceWithData(size_t extraDataSize, Args... args) {
+inline std::enable_if_t<(std::is_base_of<TBase, TItem>::value), TItem&>
+GrTRecorder<TBase>::emplaceWithData(size_t extraDataSize, Args... args) {
   static constexpr size_t kTAlign = alignof(TItem);
   static constexpr size_t kHeaderAlign = alignof(Header);
   static constexpr size_t kAllocAlign = kTAlign > kHeaderAlign ? kTAlign : kHeaderAlign;
@@ -153,27 +153,27 @@ class GrTRecorder<TBase>::IterImpl {
   using T = typename std::conditional<IsConst, const TBase, TBase>::type;
 
  public:
-  IterImpl() = default;
+  IterImpl() noexcept = default;
 
-  IterImpl operator++() {
+  IterImpl operator++() noexcept {
     fCurr = fCurr->fNext;
     return *this;
   }
 
-  IterImpl operator++(int) {
+  IterImpl operator++(int) noexcept {
     auto old = fCurr;
     fCurr = fCurr->fNext;
     return {old};
   }
 
-  T& operator*() const { return *fCurr->get(); }
-  T* operator->() const { return fCurr->get(); }
+  T& operator*() const noexcept { return *fCurr->get(); }
+  T* operator->() const noexcept { return fCurr->get(); }
 
-  bool operator==(const IterImpl& that) const { return fCurr == that.fCurr; }
-  bool operator!=(const IterImpl& that) const { return !(*this == that); }
+  bool operator==(const IterImpl& that) const noexcept { return fCurr == that.fCurr; }
+  bool operator!=(const IterImpl& that) const noexcept { return !(*this == that); }
 
  private:
-  IterImpl(Header* curr) : fCurr(curr) {}
+  IterImpl(Header* curr) noexcept : fCurr(curr) {}
   Header* fCurr = nullptr;
 
   friend class GrTRecorder<TBase>;  // To construct from Header.

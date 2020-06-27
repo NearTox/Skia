@@ -24,9 +24,9 @@ class GrProcessorSet {
   enum class Empty { kEmpty };
 
  public:
-  GrProcessorSet(GrPaint&&);
-  GrProcessorSet(SkBlendMode);
-  GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP);
+  GrProcessorSet(GrPaint&&) noexcept;
+  GrProcessorSet(SkBlendMode) noexcept;
+  GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP) noexcept;
   GrProcessorSet(GrProcessorSet&&) noexcept;
   GrProcessorSet(const GrProcessorSet&) = delete;
   GrProcessorSet& operator=(const GrProcessorSet&) = delete;
@@ -146,7 +146,7 @@ class GrProcessorSet {
   /** These are valid only for non-LCD coverage. */
   static const GrProcessorSet& EmptySet() noexcept;
   static GrProcessorSet MakeEmptySet() noexcept;
-  static constexpr const Analysis EmptySetAnalysis() noexcept { return Analysis(Empty::kEmpty); }
+  static constexpr const Analysis EmptySetAnalysis() { return Analysis(Empty::kEmpty); }
 
 #ifdef SK_DEBUG
   SkString dumpProcessors() const;

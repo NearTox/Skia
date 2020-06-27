@@ -80,7 +80,7 @@ class SkImage_GpuBase : public SkImage_Base {
   // proxy along with the TextureFulfillProc and TextureReleaseProc. PromiseDoneProc must not
   // be null.
   static sk_sp<GrTextureProxy> MakePromiseImageLazyProxy(
-      GrContext*, int width, int height, GrColorType, GrBackendFormat, GrMipMapped,
+      GrContext*, int width, int height, GrBackendFormat, GrMipMapped,
       PromiseImageTextureFulfillProc, PromiseImageTextureReleaseProc, PromiseImageTextureDoneProc,
       PromiseImageTextureContext, PromiseImageApiVersion);
 

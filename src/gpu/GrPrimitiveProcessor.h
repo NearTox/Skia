@@ -78,7 +78,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   class Iter {
    public:
-    constexpr Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
+    Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
     Iter(const Iter& iter) noexcept : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
     Iter& operator=(const Iter& iter) noexcept {
       fCurr = iter.fCurr;
@@ -141,7 +141,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
     size_t fStride = 0;
   };
 
-  GrPrimitiveProcessor(ClassID);
+  GrPrimitiveProcessor(ClassID) noexcept;
 
   int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
   const TextureSampler& textureSampler(int index) const;
@@ -171,7 +171,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    * Computes a key for the transforms owned by an FP based on the shader code that will be
    * emitted by the primitive processor to implement them.
    */
-  uint32_t computeCoordTransformsKey(const GrFragmentProcessor& fp) const;
+  uint32_t computeCoordTransformsKey(const GrFragmentProcessor& fp) const noexcept;
 
   /**
    * Sets a unique key on the GrProcessorKeyBuilder that is directly associated with this geometry
@@ -237,13 +237,15 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    */
   template <typename... Args>
   static const TextureSampler& IthTextureSampler(
-      int i, const TextureSampler& samp0, const Args&... samps) {
+      int i, const TextureSampler& samp0, const Args&... samps) noexcept {
     return (0 == i) ? samp0 : IthTextureSampler(i - 1, samps...);
   }
-  inline static const TextureSampler& IthTextureSampler(int i);
+  inline static const TextureSampler& IthTextureSampler(int i) noexcept;
 
  private:
-  virtual const TextureSampler& onTextureSampler(int) const { return IthTextureSampler(0); }
+  virtual const TextureSampler& onTextureSampler(int) const noexcept {
+    return IthTextureSampler(0);
+  }
 
   GrShaderFlags fShaders = kVertex_GrShaderFlag | kFragment_GrShaderFlag;
 
@@ -264,7 +266,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
  */
 class GrPrimitiveProcessor::TextureSampler {
  public:
-  TextureSampler() = default;
+  TextureSampler() noexcept = default;
 
   TextureSampler(GrSamplerState, const GrBackendFormat&, const GrSwizzle&);
 
@@ -288,7 +290,8 @@ class GrPrimitiveProcessor::TextureSampler {
   bool fIsInitialized = false;
 };
 
-const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSampler(int i) {
+const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSampler(
+    int i) noexcept {
   SK_ABORT("Illegal texture sampler index");
   static const TextureSampler kBogus;
   return kBogus;
@@ -301,7 +304,7 @@ const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::IthTextureSamp
  * This was moved from include/private/GrTypesPriv.h in service of Skia dependents that build
  * with C++11.
  */
-static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) noexcept {
+static constexpr inline size_t GrVertexAttribTypeSize(GrVertexAttribType type) {
   switch (type) {
     case kFloat_GrVertexAttribType: return sizeof(float);
     case kFloat2_GrVertexAttribType: return 2 * sizeof(float);

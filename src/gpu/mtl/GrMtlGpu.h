@@ -8,7 +8,7 @@
 #ifndef GrMtlGpu_DEFINED
 #define GrMtlGpu_DEFINED
 
-#include <list>
+#include "src/gpu/GrFinishCallbacks.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrSemaphore.h"
@@ -86,7 +86,7 @@ class GrMtlGpu : public GrGpu {
   void submit(GrOpsRenderPass* renderPass) override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override;
-  bool waitFence(GrFence, uint64_t) override;
+  bool waitFence(GrFence) override;
   void deleteFence(GrFence) const override;
 
   std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned) override;
@@ -124,12 +124,15 @@ class GrMtlGpu : public GrGpu {
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
   GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected,
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+
+  bool onUpdateBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
       const BackendTextureData*) override;
 
   GrBackendTexture onCreateCompressedBackendTexture(
       SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      const BackendTextureData*) override;
+      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) override;
 
   sk_sp<GrTexture> onCreateTexture(
       SkISize, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt, SkBudgeted,
@@ -177,9 +180,10 @@ class GrMtlGpu : public GrGpu {
 
   void resolveTexture(id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture);
 
-  bool onFinishFlush(
-      GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
-      const GrPrepareForExternalIORequests&) override;
+  void addFinishedProc(
+      GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) override;
+
+  bool onSubmitToGpu(bool syncCpu) override;
 
   // Function that uploads data onto textures with private storage mode (GPU access only).
   bool uploadToTexture(
@@ -196,7 +200,7 @@ class GrMtlGpu : public GrGpu {
 
   bool createMtlTextureForBackendSurface(
       MTLPixelFormat, SkISize dimensions, GrTexturable, GrRenderable, GrMipMapped,
-      GrMtlTextureInfo*, const BackendTextureData*);
+      GrMtlTextureInfo*);
 
 #if GR_TEST_UTILS
   void testingOnly_startCapture() override;
@@ -220,12 +224,7 @@ class GrMtlGpu : public GrGpu {
 
   bool fDisconnected;
 
-  struct FinishCallback {
-    GrGpuFinishedProc fCallback;
-    GrGpuFinishedContext fContext;
-    GrFence fFence;
-  };
-  std::list<FinishCallback> fFinishCallbacks;
+  GrFinishCallbacks fFinishCallbacks;
 
   typedef GrGpu INHERITED;
 };

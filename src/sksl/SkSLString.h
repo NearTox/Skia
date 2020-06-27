@@ -30,10 +30,10 @@ struct StringFragment {
 
   char operator[](size_t idx) const noexcept { return fChars[idx]; }
 
-  bool operator==(const char* s) const;
-  bool operator!=(const char* s) const;
-  bool operator==(StringFragment s) const;
-  bool operator!=(StringFragment s) const;
+  bool operator==(const char* s) const noexcept;
+  bool operator!=(const char* s) const noexcept;
+  bool operator==(StringFragment s) const noexcept;
+  bool operator!=(StringFragment s) const noexcept;
   bool operator<(StringFragment s) const;
 
 #ifndef SKSL_STANDALONE
@@ -85,13 +85,13 @@ class SK_API String : public std::string {
   String& operator+=(const char* s);
   String& operator+=(const String& s);
   String& operator+=(StringFragment s);
-  bool operator==(const char* s) const;
-  bool operator!=(const char* s) const;
-  bool operator==(const String& s) const;
-  bool operator!=(const String& s) const;
+  bool operator==(const char* s) const noexcept;
+  bool operator!=(const char* s) const noexcept;
+  bool operator==(const String& s) const noexcept;
+  bool operator!=(const String& s) const noexcept;
   friend String operator+(const char* s1, const String& s2);
-  friend bool operator==(const char* s1, const String& s2);
-  friend bool operator!=(const char* s1, const String& s2);
+  friend bool operator==(const char* s1, const String& s2) noexcept;
+  friend bool operator!=(const char* s1, const String& s2) noexcept;
 
 #ifndef SKSL_STANDALONE
   operator SkString() const { return SkString(c_str()); }
@@ -102,7 +102,7 @@ class SK_API String : public std::string {
 };
 
 String operator+(const char* s1, const String& s2);
-bool operator!=(const char* s1, const String& s2);
+bool operator!=(const char* s1, const String& s2) noexcept;
 
 String to_string(double value);
 

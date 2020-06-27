@@ -35,7 +35,7 @@ class SkMessageBus : SkNoncopyable {
     Inbox(uint32_t uniqueID = SK_InvalidUniqueID);
     ~Inbox();
 
-    uint32_t uniqueID() const { return fUniqueID; }
+    uint32_t uniqueID() const noexcept { return fUniqueID; }
 
     // Overwrite out with all the messages we've received since the last call.  Threadsafe.
     void poll(SkTArray<Message>* out);
@@ -50,7 +50,7 @@ class SkMessageBus : SkNoncopyable {
   };
 
  private:
-  SkMessageBus();
+  SkMessageBus() noexcept;
   static SkMessageBus* Get();
 
   SkTDArray<Inbox*> fInboxes;
@@ -109,7 +109,7 @@ void SkMessageBus<Message>::Inbox::poll(SkTArray<Message>* messages) {
 //   ----------------------- Implementation of SkMessageBus -----------------------
 
 template <typename Message>
-SkMessageBus<Message>::SkMessageBus() {}
+SkMessageBus<Message>::SkMessageBus() noexcept = default;
 
 template <typename Message>
 /*static*/ void SkMessageBus<Message>::Post(const Message& m) {

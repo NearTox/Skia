@@ -14,10 +14,11 @@
  * This macro creates the member variables required by the SkTInternalLList class. It should be
  * placed in the private section of any class that will be stored in a double linked list.
  */
-#define SK_DECLARE_INTERNAL_LLIST_INTERFACE(ClassName)                                   \
-  friend class SkTInternalLList<ClassName>;                                              \
-  /* back pointer to the owning list - for debugging */                                  \
-  SkDEBUGCODE(SkTInternalLList<ClassName>* fList = nullptr;) ClassName* fPrev = nullptr; \
+#define SK_DECLARE_INTERNAL_LLIST_INTERFACE(ClassName)       \
+  friend class SkTInternalLList<ClassName>;                  \
+  /* back pointer to the owning list - for debugging */      \
+  SkDEBUGCODE(SkTInternalLList<ClassName>* fList = nullptr); \
+  ClassName* fPrev = nullptr;                                \
   ClassName* fNext = nullptr
 
 /**
@@ -78,7 +79,7 @@ class SkTInternalLList {
 #endif
   }
 
-  void addToTail(T* entry) {
+  void addToTail(T* entry) noexcept {
     SkASSERT(nullptr == entry->fPrev && nullptr == entry->fNext);
     SkASSERT(nullptr == entry->fList);
 
@@ -155,7 +156,7 @@ class SkTInternalLList {
 #endif
   }
 
-  void concat(SkTInternalLList&& list) {
+  void concat(SkTInternalLList&& list) noexcept {
     if (list.isEmpty()) {
       return;
     }
@@ -180,26 +181,26 @@ class SkTInternalLList {
     list.fHead = list.fTail = nullptr;
   }
 
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     SkASSERT(SkToBool(fHead) == SkToBool(fTail));
     return !fHead;
   }
 
-  T* head() noexcept { return fHead; }
-  T* tail() noexcept { return fTail; }
+  T* head() const noexcept { return fHead; }
+  T* tail() const noexcept { return fTail; }
 
   class Iter {
    public:
     enum IterStart { kHead_IterStart, kTail_IterStart };
 
-    Iter() : fCurr(nullptr) {}
-    Iter(const Iter& iter) : fCurr(iter.fCurr) {}
-    Iter& operator=(const Iter& iter) {
+    constexpr Iter() noexcept : fCurr(nullptr) {}
+    Iter(const Iter& iter) noexcept : fCurr(iter.fCurr) {}
+    Iter& operator=(const Iter& iter) noexcept {
       fCurr = iter.fCurr;
       return *this;
     }
 
-    T* init(const SkTInternalLList& list, IterStart startLoc) {
+    T* init(const SkTInternalLList& list, IterStart startLoc) noexcept {
       if (kHead_IterStart == startLoc) {
         fCurr = list.fHead;
       } else {
@@ -210,12 +211,12 @@ class SkTInternalLList {
       return fCurr;
     }
 
-    T* get() { return fCurr; }
+    T* get() noexcept { return fCurr; }
 
     /**
      * Return the next/previous element in the list or NULL if at the end.
      */
-    T* next() {
+    T* next() noexcept {
       if (nullptr == fCurr) {
         return nullptr;
       }
@@ -224,7 +225,7 @@ class SkTInternalLList {
       return fCurr;
     }
 
-    T* prev() {
+    T* prev() noexcept {
       if (nullptr == fCurr) {
         return nullptr;
       }
@@ -236,21 +237,21 @@ class SkTInternalLList {
     /**
      * C++11 range-for interface.
      */
-    bool operator!=(const Iter& that) { return fCurr != that.fCurr; }
-    T* operator*() { return this->get(); }
-    void operator++() { this->next(); }
+    bool operator!=(const Iter& that) noexcept { return fCurr != that.fCurr; }
+    T* operator*() noexcept { return this->get(); }
+    void operator++() noexcept { this->next(); }
 
    private:
     T* fCurr;
   };
 
-  Iter begin() const {
+  Iter begin() const noexcept {
     Iter iter;
     iter.init(*this, Iter::kHead_IterStart);
     return iter;
   }
 
-  Iter end() const { return Iter(); }
+  Iter end() const noexcept { return Iter(); }
 
 #ifdef SK_DEBUG
   void validate() const {

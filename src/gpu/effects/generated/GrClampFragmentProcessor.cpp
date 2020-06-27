@@ -43,13 +43,13 @@ void GrClampFragmentProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)clampToPremul);
 }
-bool GrClampFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrClampFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrClampFragmentProcessor& that = other.cast<GrClampFragmentProcessor>();
   (void)that;
   if (clampToPremul != that.clampToPremul) return false;
   return true;
 }
-GrClampFragmentProcessor::GrClampFragmentProcessor(const GrClampFragmentProcessor& src)
+GrClampFragmentProcessor::GrClampFragmentProcessor(const GrClampFragmentProcessor& src) noexcept
     : INHERITED(kGrClampFragmentProcessor_ClassID, src.optimizationFlags()),
       clampToPremul(src.clampToPremul) {}
 std::unique_ptr<GrFragmentProcessor> GrClampFragmentProcessor::clone() const {

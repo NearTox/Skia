@@ -59,10 +59,10 @@
 #  define HB_FEATURE_GLOBAL_END ((unsigned int)-1)
 #endif
 
-namespace skstd {
+namespace sknonstd {
 template <>
 struct is_bitmask_enum<hb_buffer_flags_t> : std::true_type {};
-}  // namespace skstd
+}  // namespace sknonstd
 
 namespace {
 template <typename T, typename P, P* p>

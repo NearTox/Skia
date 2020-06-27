@@ -21,7 +21,7 @@ static SkPixelGeometry compute_default_geometry() noexcept {
   } else {
     // Bit0 is RGB(0), BGR(1)
     // Bit1 is H(0), V(1)
-    const SkPixelGeometry gGeo[] = {
+    constexpr SkPixelGeometry gGeo[] = {
         kRGB_H_SkPixelGeometry,
         kBGR_H_SkPixelGeometry,
         kRGB_V_SkPixelGeometry,
@@ -49,15 +49,15 @@ SkSurfaceProps::SkSurfaceProps(uint32_t flags, InitType) noexcept
 SkSurfaceProps::SkSurfaceProps(uint32_t flags, SkPixelGeometry pg) noexcept
     : fFlags(flags), fPixelGeometry(pg) {}
 
-SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps&) = default;
-SkSurfaceProps& SkSurfaceProps::operator=(const SkSurfaceProps&) = default;
+SkSurfaceProps::SkSurfaceProps(const SkSurfaceProps&) noexcept = default;
+SkSurfaceProps& SkSurfaceProps::operator=(const SkSurfaceProps&) noexcept = default;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkSurface_Base::SkSurface_Base(int width, int height, const SkSurfaceProps* props)
+SkSurface_Base::SkSurface_Base(int width, int height, const SkSurfaceProps* props) noexcept
     : INHERITED(width, height, props) {}
 
-SkSurface_Base::SkSurface_Base(const SkImageInfo& info, const SkSurfaceProps* props)
+SkSurface_Base::SkSurface_Base(const SkImageInfo& info, const SkSurfaceProps* props) noexcept
     : INHERITED(info, props) {}
 
 SkSurface_Base::~SkSurface_Base() {
@@ -66,6 +66,8 @@ SkSurface_Base::~SkSurface_Base() {
     fCachedCanvas->setSurfaceBase(nullptr);
   }
 }
+
+GrContext* SkSurface_Base::onGetContext() { return nullptr; }
 
 GrBackendTexture SkSurface_Base::onGetBackendTexture(BackendHandleAccess) {
   return GrBackendTexture();  // invalid
@@ -266,14 +268,14 @@ static const SkSurface_Base* asConstSB(const SkSurface* surface) noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkSurface::SkSurface(int width, int height, const SkSurfaceProps* props)
+SkSurface::SkSurface(int width, int height, const SkSurfaceProps* props) noexcept
     : fProps(SkSurfacePropsCopyOrDefault(props)), fWidth(width), fHeight(height) {
   SkASSERT(fWidth > 0);
   SkASSERT(fHeight > 0);
   fGenerationID = 0;
 }
 
-SkSurface::SkSurface(const SkImageInfo& info, const SkSurfaceProps* props)
+SkSurface::SkSurface(const SkImageInfo& info, const SkSurfaceProps* props) noexcept
     : fProps(SkSurfacePropsCopyOrDefault(props)), fWidth(info.width()), fHeight(info.height()) {
   SkASSERT(fWidth > 0);
   SkASSERT(fHeight > 0);
@@ -390,6 +392,8 @@ void SkSurface::writePixels(const SkBitmap& src, int x, int y) {
   }
 }
 
+GrContext* SkSurface::getContext() { return asSB(this)->onGetContext(); }
+
 GrBackendTexture SkSurface::getBackendTexture(BackendHandleAccess access) {
   return asSB(this)->onGetBackendTexture(access);
 }
@@ -405,7 +409,7 @@ bool SkSurface::replaceBackendTexture(
       backendTexture, origin, mode, textureReleaseProc, releaseContext);
 }
 
-void SkSurface::flush() { this->flush(BackendSurfaceAccess::kNoAccess, GrFlushInfo()); }
+void SkSurface::flushAndSubmit() { this->flush(BackendSurfaceAccess::kNoAccess, GrFlushInfo()); }
 
 GrSemaphoresSubmitted SkSurface::flush(BackendSurfaceAccess access, const GrFlushInfo& flushInfo) {
   return asSB(this)->onFlush(access, flushInfo);
@@ -462,17 +466,19 @@ bool SkSurface::draw(SkDeferredDisplayList* ddl) { return asSB(this)->onDraw(ddl
 
 class SkNullSurface : public SkSurface_Base {
  public:
-  SkNullSurface(int width, int height) : SkSurface_Base(width, height, nullptr) {}
+  SkNullSurface(int width, int height) noexcept : SkSurface_Base(width, height, nullptr) {}
 
  protected:
   SkCanvas* onNewCanvas() override { return new SkNoDrawCanvas(this->width(), this->height()); }
   sk_sp<SkSurface> onNewSurface(const SkImageInfo& info) override {
     return MakeNull(info.width(), info.height());
   }
-  sk_sp<SkImage> onNewImageSnapshot(const SkIRect* subsetOrNull) override { return nullptr; }
-  void onWritePixels(const SkPixmap&, int x, int y) override {}
-  void onDraw(SkCanvas*, SkScalar x, SkScalar y, const SkPaint*) override {}
-  void onCopyOnWrite(ContentChangeMode) override {}
+  sk_sp<SkImage> onNewImageSnapshot(const SkIRect* subsetOrNull) noexcept override {
+    return nullptr;
+  }
+  void onWritePixels(const SkPixmap&, int x, int y) noexcept override {}
+  void onDraw(SkCanvas*, SkScalar x, SkScalar y, const SkPaint*) noexcept override {}
+  void onCopyOnWrite(ContentChangeMode) noexcept override {}
 };
 
 sk_sp<SkSurface> SkSurface::MakeNull(int width, int height) {

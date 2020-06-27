@@ -107,7 +107,7 @@ static inline bool valid_alpha(SkAlphaType dstAlpha, bool srcIsOpaque) noexcept 
 /*
  * If there is a color table, get a pointer to the colors, otherwise return nullptr
  */
-static inline const SkPMColor* get_color_ptr(SkColorTable* colorTable) {
+static inline const SkPMColor* get_color_ptr(SkColorTable* colorTable) noexcept {
   return nullptr != colorTable ? colorTable->readColors() : nullptr;
 }
 
@@ -231,7 +231,7 @@ static constexpr inline bool is_rgba(SkColorType colorType) noexcept {
 // Method for coverting to a 32 bit pixel.
 typedef uint32_t (*PackColorProc)(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
 
-static inline PackColorProc choose_pack_color_proc(bool isPremul, SkColorType colorType) {
+static inline PackColorProc choose_pack_color_proc(bool isPremul, SkColorType colorType) noexcept {
   bool isRGBA = is_rgba(colorType);
   if (isPremul) {
     if (isRGBA) {

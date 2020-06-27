@@ -17,7 +17,7 @@
 #include "src/gpu/GrFragmentProcessor.h"
 class GrColorMatrixFragmentProcessor : public GrFragmentProcessor {
  public:
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
     SkColor4f color;
     if (unpremulInput) {
       color = input.unpremul();
@@ -52,9 +52,9 @@ class GrColorMatrixFragmentProcessor : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(
         new GrColorMatrixFragmentProcessor(m44, v4, unpremulInput, clampRGBOutput, premulOutput));
   }
-  GrColorMatrixFragmentProcessor(const GrColorMatrixFragmentProcessor& src);
+  GrColorMatrixFragmentProcessor(const GrColorMatrixFragmentProcessor& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "ColorMatrixFragmentProcessor"; }
+  const char* name() const noexcept override { return "ColorMatrixFragmentProcessor"; }
   SkM44 m;
   SkV4 v;
   bool unpremulInput;
@@ -63,7 +63,7 @@ class GrColorMatrixFragmentProcessor : public GrFragmentProcessor {
 
  private:
   GrColorMatrixFragmentProcessor(
-      SkM44 m, SkV4 v, bool unpremulInput, bool clampRGBOutput, bool premulOutput)
+      SkM44 m, SkV4 v, bool unpremulInput, bool clampRGBOutput, bool premulOutput) noexcept
       : INHERITED(
             kGrColorMatrixFragmentProcessor_ClassID,
             (OptimizationFlags)kConstantOutputForConstantInput_OptimizationFlag),
@@ -74,7 +74,7 @@ class GrColorMatrixFragmentProcessor : public GrFragmentProcessor {
         premulOutput(premulOutput) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

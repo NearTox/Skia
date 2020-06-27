@@ -19,7 +19,7 @@ class GrRGBToHSLFilterEffect : public GrFragmentProcessor {
  public:
 #include "include/private/SkColorData.h"
 
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& c) const override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& c) const noexcept override {
     const auto p = (c.fG < c.fB) ? SkPMColor4f{c.fB, c.fG, -1, 2 / 3.f}
                                  : SkPMColor4f{c.fG, c.fB, 0, -1 / 3.f},
                q = (c.fR < p[0]) ? SkPMColor4f{p[0], c.fR, p[1], p[3]}
@@ -35,19 +35,19 @@ class GrRGBToHSLFilterEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make() {
     return std::unique_ptr<GrFragmentProcessor>(new GrRGBToHSLFilterEffect());
   }
-  GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src);
+  GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "RGBToHSLFilterEffect"; }
+  const char* name() const noexcept override { return "RGBToHSLFilterEffect"; }
 
  private:
-  GrRGBToHSLFilterEffect()
+  GrRGBToHSLFilterEffect() noexcept
       : INHERITED(
             kGrRGBToHSLFilterEffect_ClassID, (OptimizationFlags)(
                                                  kConstantOutputForConstantInput_OptimizationFlag |
                                                  kPreservesOpaqueInput_OptimizationFlag)) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

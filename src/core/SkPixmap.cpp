@@ -20,6 +20,7 @@
 #include "src/core/SkConvertPixels.h"
 #include "src/core/SkDraw.h"
 #include "src/core/SkMask.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkPixmapPriv.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkUtils.h"
@@ -36,7 +37,7 @@ void SkPixmap::reset() noexcept {
   fInfo = SkImageInfo::MakeUnknown();
 }
 
-void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) {
+void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept {
   if (addr) {
     SkASSERT(info.validRowBytes(rowBytes));
   }
@@ -45,7 +46,7 @@ void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes)
   fInfo = info;
 }
 
-bool SkPixmap::reset(const SkMask& src) {
+bool SkPixmap::reset(const SkMask& src) noexcept {
   if (SkMask::kA8_Format == src.fFormat) {
     this->reset(
         SkImageInfo::MakeA8(src.fBounds.width(), src.fBounds.height()), src.fImage, src.fRowBytes);
@@ -55,7 +56,7 @@ bool SkPixmap::reset(const SkMask& src) {
   return false;
 }
 
-void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) {
+void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) noexcept {
   fInfo = fInfo.makeColorSpace(std::move(cs));
 }
 
@@ -83,12 +84,12 @@ bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const {
 // This is the same as SkPixmap::addr(x,y), but this version gets inlined, while the public
 // method does not. Perhaps we could bloat it so it can be inlined, but that would grow code-size
 // everywhere, instead of just here (on behalf of getAlphaf()).
-static const void* fast_getaddr(const SkPixmap& pm, int x, int y) {
+static const void* fast_getaddr(const SkPixmap& pm, int x, int y) noexcept {
   x <<= SkColorTypeShiftPerPixel(pm.colorType());
   return static_cast<const char*>(pm.addr()) + y * pm.rowBytes() + x;
 }
 
-float SkPixmap::getAlphaf(int x, int y) const {
+float SkPixmap::getAlphaf(int x, int y) const noexcept {
   SkASSERT(this->addr());
   SkASSERT((unsigned)x < (unsigned)this->width());
   SkASSERT((unsigned)y < (unsigned)this->height());
@@ -168,10 +169,10 @@ bool SkPixmap::erase(SkColor color, const SkIRect& subset) const {
   return this->erase(SkColor4f::FromColor(color), &subset);
 }
 
-bool SkPixmap::erase(const SkColor4f& color, const SkIRect* subset) const {
+bool SkPixmap::erase(const SkColor4f& color, SkColorSpace* cs, const SkIRect* subset) const {
   SkPaint paint;
   paint.setBlendMode(SkBlendMode::kSrc);
-  paint.setColor4f(color, this->colorSpace());
+  paint.setColor4f(color, cs);
 
   SkIRect clip = this->bounds();
   if (subset && !clip.intersect(*subset)) {
@@ -180,8 +181,9 @@ bool SkPixmap::erase(const SkColor4f& color, const SkIRect* subset) const {
   SkRasterClip rc{clip};
 
   SkDraw draw;
+  SkSimpleMatrixProvider matrixProvider(SkMatrix::I());
   draw.fDst = *this;
-  draw.fMatrix = &SkMatrix::I();
+  draw.fMatrixProvider = &matrixProvider;
   draw.fRC = &rc;
 
   draw.drawPaint(paint);
@@ -389,7 +391,7 @@ SkColor SkPixmap::getColor(int x, int y) const {
   return SkColorSetARGB(0, 0, 0, 0);
 }
 
-bool SkPixmap::computeIsOpaque() const {
+bool SkPixmap::computeIsOpaque() const noexcept {
   const int height = this->height();
   const int width = this->width();
 
@@ -569,11 +571,11 @@ bool SkPixmapPriv::Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOri
   return draw_orientation(dst, src, origin);
 }
 
-bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) {
+bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) noexcept {
   // The last four SkEncodedOrigin values involve 90 degree rotations
   return origin >= kLeftTop_SkEncodedOrigin;
 }
 
-SkImageInfo SkPixmapPriv::SwapWidthHeight(const SkImageInfo& info) {
+SkImageInfo SkPixmapPriv::SwapWidthHeight(const SkImageInfo& info) noexcept {
   return info.makeWH(info.height(), info.width());
 }

@@ -46,7 +46,7 @@ class SkPtrSet : public SkRefCnt {
    *
    *  incPtr() and decPtr() are not called during this operation.
    */
-  void copyToArray(void* array[]) const noexcept;
+  void copyToArray(void* array[]) const;
 
   /**
    *  Call decPtr() on each ptr in the set, and the reset the size of the set
@@ -104,7 +104,7 @@ class SkTPtrSet : public SkPtrSet {
   uint32_t find(T ptr) { return this->INHERITED::find((void*)ptr); }
   uint32_t add(T ptr) { return this->INHERITED::add((void*)ptr); }
 
-  void copyToArray(T* array) const noexcept { this->INHERITED::copyToArray((void**)array); }
+  void copyToArray(T* array) const { this->INHERITED::copyToArray((void**)array); }
 
  private:
   typedef SkPtrSet INHERITED;

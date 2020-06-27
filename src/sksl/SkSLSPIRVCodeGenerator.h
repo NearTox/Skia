@@ -44,11 +44,11 @@
 #include "src/sksl/spirv.h"
 
 union ConstantValue {
-  ConstantValue(int64_t i) : fInt(i) {}
+  ConstantValue(int64_t i) noexcept : fInt(i) {}
 
-  ConstantValue(double d) : fDouble(d) {}
+  ConstantValue(double d) noexcept : fDouble(d) {}
 
-  bool operator==(const ConstantValue& other) const { return fInt == other.fInt; }
+  bool operator==(const ConstantValue& other) const noexcept { return fInt == other.fInt; }
 
   int64_t fInt;
   double fDouble;
@@ -68,7 +68,7 @@ namespace std {
 
 template <>
 struct hash<std::pair<ConstantValue, ConstantType>> {
-  size_t operator()(const std::pair<ConstantValue, ConstantType>& key) const {
+  size_t operator()(const std::pair<ConstantValue, ConstantType>& key) const noexcept {
     return key.first.fInt ^ (int)key.second;
   }
 };
@@ -86,11 +86,11 @@ class SPIRVCodeGenerator : public CodeGenerator {
  public:
   class LValue {
    public:
-    virtual ~LValue() {}
+    virtual ~LValue() = default;
 
     // returns a pointer to the lvalue, if possible. If the lvalue cannot be directly referenced
     // by a pointer (e.g. vector swizzles), returns 0.
-    virtual SpvId getPointer() = 0;
+    virtual SpvId getPointer() noexcept = 0;
 
     virtual SpvId load(OutputStream& out) = 0;
 
@@ -138,7 +138,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
 
   void setupIntrinsics();
 
-  SpvId nextId();
+  SpvId nextId() noexcept;
 
   Type getActualType(const Type& type);
 

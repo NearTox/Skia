@@ -51,7 +51,7 @@ class GrGLSLPrimitiveProcessor {
     FPCoordTransformHandler(const GrPipeline&, SkTArray<TransformVar>*);
     ~FPCoordTransformHandler() { SkASSERT(!fIter); }
 
-    operator bool() const { return (bool)fIter; }
+    operator bool() const noexcept { return (bool)fIter; }
 
     // Gets the current coord transform and its owning GrFragmentProcessor.
     std::pair<const GrCoordTransform&, const GrFragmentProcessor&> get() const;
@@ -59,7 +59,8 @@ class GrGLSLPrimitiveProcessor {
     FPCoordTransformHandler& operator++();
 
     // 'args' are constructor params to GrShaderVar.
-    void specifyCoordsForCurrCoordTransform(GrShaderVar transformVar, GrShaderVar varyingVar) {
+    void specifyCoordsForCurrCoordTransform(
+        GrShaderVar transformVar, GrShaderVar varyingVar) noexcept {
       SkASSERT(!fAddedCoord);
       fTransformedCoordVars->push_back({transformVar, varyingVar});
       SkDEBUGCODE(fAddedCoord = true;)
@@ -116,6 +117,11 @@ class GrGLSLPrimitiveProcessor {
    */
   virtual void emitCode(EmitArgs&) = 0;
 
+  /**
+   * Called after all effect emitCode() functions, to give the processor a chance to write out
+   * additional transformation code now that all uniforms have been emitted.
+   */
+  virtual void emitTransformCode(GrGLSLVertexBuilder* vb, GrGLSLUniformHandler* uniformHandler) {}
   /**
    * A GrGLSLPrimitiveProcessor instance can be reused with any GrGLSLPrimitiveProcessor that
    * produces the same stage key; this function reads data from a GrGLSLPrimitiveProcessor and

@@ -28,7 +28,7 @@ struct SkSemaphore::OSSemaphore {
 struct SkSemaphore::OSSemaphore {
   HANDLE fSemaphore;
 
-  OSSemaphore() {
+  OSSemaphore() noexcept {
     fSemaphore = CreateSemaphore(
         nullptr /*security attributes, optional*/, 0 /*initial count*/, MAXLONG /*max count*/,
         nullptr /*name, optional*/);

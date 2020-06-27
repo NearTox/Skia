@@ -53,37 +53,37 @@ class GrGLAttribArrayState {
     fEnableStateIsValid = false;
   }
 
-    /**
-     * The number of attrib arrays that this object is configured to track.
-     */
-    int count() const { return fAttribArrayStates.count(); }
+  /**
+   * The number of attrib arrays that this object is configured to track.
+   */
+  int count() const noexcept { return fAttribArrayStates.count(); }
 
-   private:
-    static constexpr int kInvalidDivisor = -1;
+ private:
+  static constexpr int kInvalidDivisor = -1;
 
-    /**
-     * Tracks the state of glVertexAttribArray for an attribute index.
-     */
-    struct AttribArrayState {
-      void invalidate() {
-        fVertexBufferUniqueID.makeInvalid();
-        fDivisor = kInvalidDivisor;
-        fUsingCpuBuffer = false;
-      }
+  /**
+   * Tracks the state of glVertexAttribArray for an attribute index.
+   */
+  struct AttribArrayState {
+    void invalidate() noexcept {
+      fVertexBufferUniqueID.makeInvalid();
+      fDivisor = kInvalidDivisor;
+      fUsingCpuBuffer = false;
+    }
 
-      GrGpuResource::UniqueID fVertexBufferUniqueID;
-      bool fUsingCpuBuffer;
-      GrVertexAttribType fCPUType;
-      GrSLType fGPUType;
-      GrGLsizei fStride;
-      const GrGLvoid* fOffset;
-      int fDivisor;
-    };
+    GrGpuResource::UniqueID fVertexBufferUniqueID;
+    bool fUsingCpuBuffer;
+    GrVertexAttribType fCPUType;
+    GrSLType fGPUType;
+    GrGLsizei fStride;
+    const GrGLvoid* fOffset;
+    int fDivisor;
+  };
 
-    SkSTArray<16, AttribArrayState, true> fAttribArrayStates;
-    int fNumEnabledArrays;
-    GrPrimitiveRestart fPrimitiveRestartEnabled;
-    bool fEnableStateIsValid = false;
+  SkSTArray<16, AttribArrayState, true> fAttribArrayStates;
+  int fNumEnabledArrays;
+  GrPrimitiveRestart fPrimitiveRestartEnabled;
+  bool fEnableStateIsValid = false;
 };
 
 /**

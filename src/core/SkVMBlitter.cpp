@@ -17,6 +17,8 @@
 #include "src/core/SkVM.h"
 #include "src/shaders/SkColorFilterShader.h"
 
+#include <cinttypes>
+
 namespace {
 
 // Uniforms set by the Blitter itself,
@@ -40,7 +42,7 @@ struct Params {
   SkFilterQuality quality;
   SkMatrix ctm;
 
-  Params withCoverage(Coverage c) const noexcept {
+  Params withCoverage(Coverage c) const {
     Params p = *this;
     p.coverage = c;
     return p;
@@ -56,14 +58,14 @@ struct Key {
   // not used here by the blitter itself.  No need to include them in the key;
   // they'll be folded into the shader key if used.
 
-  bool operator==(const Key& that) const noexcept {
+  bool operator==(const Key& that) const {
     return this->shader == that.shader && this->clip == that.clip &&
            this->colorSpace == that.colorSpace && this->colorType == that.colorType &&
            this->alphaType == that.alphaType && this->blendMode == that.blendMode &&
            this->coverage == that.coverage;
   }
 
-  Key withCoverage(Coverage c) const noexcept {
+  Key withCoverage(Coverage c) const {
     Key k = *this;
     k.coverage = SkToU8(c);
     return k;
@@ -73,13 +75,13 @@ SK_END_REQUIRE_DENSE;
 
 static SkString debug_name(const Key& key) {
   return SkStringPrintf(
-      "Shader-%llx_Clip-%llx_CS-%llx_CT-%d_AT-%d_Blend-%d_Cov-%d", key.shader, key.clip,
-      key.colorSpace, key.colorType, key.alphaType, key.blendMode, key.coverage);
+      "Shader-%" PRIx64 "_Clip-%" PRIx64 "_CS-%" PRIx64 "_CT-%d_AT-%d_Blend-%d_Cov-%d", key.shader,
+      key.clip, key.colorSpace, key.colorType, key.alphaType, key.blendMode, key.coverage);
 }
 
 static SkLRUCache<Key, skvm::Program>* try_acquire_program_cache() {
 #if 1 && defined(SKVM_JIT)
-  thread_local static SkLRUCache<Key, skvm::Program> cache{8};
+  thread_local static SkLRUCache<Key, skvm::Program> cache{64};
   return &cache;
 #else
   // iOS in particular does not support thread_local until iOS 9.0.
@@ -222,10 +224,11 @@ static void build_program(
   // and how coverage is applied, and to complicate things, LCD coverage
   // needs to know dst.a.  We're careful to assert it's loaded in time.
   skvm::Color dst;
-  SkDEBUGCODE(bool dst_loaded = false;)
+  SkDEBUGCODE(bool dst_loaded = false);
 
-      // load_coverage() returns false when there's no need to apply coverage.
-      auto load_coverage = [&](skvm::Color* cov) {
+  // load_coverage() returns false when there's no need to apply coverage.
+  auto load_coverage =
+      [&](skvm::Color* cov) {
         bool partial_coverage = true;
         switch (params.coverage) {
           case Coverage::Full:
@@ -283,8 +286,7 @@ static void build_program(
   }
 
   // Load up the destination color.
-  SkDEBUGCODE(dst_loaded = true);
-  switch (params.dst.colorType()) {
+  SkDEBUGCODE(dst_loaded = true;) switch (params.dst.colorType()) {
     default: SkUNREACHABLE;
     case kRGB_565_SkColorType: dst = unpack_565(p->load16(dst_ptr)); break;
 
@@ -582,8 +584,7 @@ class Blitter final : public SkBlitter {
     // It's just more natural to have effects unconditionally emit them,
     // and more natural to rebuild fUniforms than to emit them into a dummy buffer.
     // fUniforms should reuse the exact same memory, so this is very cheap.
-    SkDEBUGCODE(size_t prev = fUniforms.buf.size());
-    fUniforms.buf.resize(kBlitterUniformsCount);
+    SkDEBUGCODE(size_t prev = fUniforms.buf.size();) fUniforms.buf.resize(kBlitterUniformsCount);
     skvm::Builder builder;
     build_program(&builder, fParams.withCoverage(coverage), &fUniforms, &fAlloc);
     SkASSERTF(fUniforms.buf.size() == prev, "%zu, prev was %zu", fUniforms.buf.size(), prev);
@@ -598,7 +599,7 @@ class Blitter final : public SkBlitter {
 
         SkString path = SkStringPrintf("/tmp/%s.dot", debug_name(key).c_str());
         SkFILEWStream tmp(path.c_str());
-        builder.dot(&tmp, true);
+        builder.dot(&tmp);
 
         missed++;
       }
@@ -612,7 +613,7 @@ class Blitter final : public SkBlitter {
     return program;
   }
 
-  void updateUniforms(int right, int y) noexcept {
+  void updateUniforms(int right, int y) {
     BlitterUniforms uniforms{right, y, fPaint};
     memcpy(fUniforms.buf.data(), &uniforms, sizeof(BlitterUniforms));
   }

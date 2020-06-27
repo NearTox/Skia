@@ -134,7 +134,7 @@ struct Vec<1, T> {
 };
 
 template <typename D, typename S>
-static inline D bit_pun(const S& s) noexcept(std::is_nothrow_default_constructible_v<D>) {
+static inline D bit_pun(const S& s) noexcept {
   static_assert(sizeof(D) == sizeof(S), "");
   D d;
   memcpy(&d, &s, sizeof(D));
@@ -189,58 +189,62 @@ using VExt = typename VExtHelper<N, T>::type;
 
 // For some reason some (new!) versions of GCC cannot seem to deduce N in the generic
 // to_vec<N,T>() below for N=4 and T=float.  This workaround seems to help...
-static inline Vec<4, float> to_vec(VExt<4, float> v) { return bit_pun<Vec<4, float>>(v); }
+static inline Vec<4, float> to_vec(VExt<4, float> v) noexcept { return bit_pun<Vec<4, float>>(v); }
 #  endif
 
-SINT VExt<N, T> to_vext(const Vec<N, T>& v) { return bit_pun<VExt<N, T>>(v); }
-SINT Vec<N, T> to_vec(const VExt<N, T>& v) { return bit_pun<Vec<N, T>>(v); }
+SINT VExt<N, T> to_vext(const Vec<N, T>& v) noexcept { return bit_pun<VExt<N, T>>(v); }
+SINT Vec<N, T> to_vec(const VExt<N, T>& v) noexcept { return bit_pun<Vec<N, T>>(v); }
 
-SINT Vec<N, T> operator+(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator+(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) + to_vext(y));
 }
-SINT Vec<N, T> operator-(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator-(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) - to_vext(y));
 }
-SINT Vec<N, T> operator*(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator*(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) * to_vext(y));
 }
-SINT Vec<N, T> operator/(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator/(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) / to_vext(y));
 }
 
-SINT Vec<N, T> operator^(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator^(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) ^ to_vext(y));
 }
-SINT Vec<N, T> operator&(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator&(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) & to_vext(y));
 }
-SINT Vec<N, T> operator|(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator|(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return to_vec<N, T>(to_vext(x) | to_vext(y));
 }
 
-SINT Vec<N, T> operator!(const Vec<N, T>& x) { return to_vec<N, T>(!to_vext(x)); }
-SINT Vec<N, T> operator-(const Vec<N, T>& x) { return to_vec<N, T>(-to_vext(x)); }
-SINT Vec<N, T> operator~(const Vec<N, T>& x) { return to_vec<N, T>(~to_vext(x)); }
+SINT Vec<N, T> operator!(const Vec<N, T>& x) noexcept { return to_vec<N, T>(!to_vext(x)); }
+SINT Vec<N, T> operator-(const Vec<N, T>& x) noexcept { return to_vec<N, T>(-to_vext(x)); }
+SINT Vec<N, T> operator~(const Vec<N, T>& x) noexcept { return to_vec<N, T>(~to_vext(x)); }
 
-SINT Vec<N, T> operator<<(const Vec<N, T>& x, int bits) { return to_vec<N, T>(to_vext(x) << bits); }
-SINT Vec<N, T> operator>>(const Vec<N, T>& x, int bits) { return to_vec<N, T>(to_vext(x) >> bits); }
+SINT Vec<N, T> operator<<(const Vec<N, T>& x, int bits) noexcept {
+  return to_vec<N, T>(to_vext(x) << bits);
+}
+SINT Vec<N, T> operator>>(const Vec<N, T>& x, int bits) noexcept {
+  return to_vec<N, T>(to_vext(x) >> bits);
+}
 
-SINT Vec<N, M<T>> operator==(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator==(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return bit_pun<Vec<N, M<T>>>(to_vext(x) == to_vext(y));
 }
-SINT Vec<N, M<T>> operator!=(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator!=(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return bit_pun<Vec<N, M<T>>>(to_vext(x) != to_vext(y));
 }
-SINT Vec<N, M<T>> operator<=(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator<=(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return bit_pun<Vec<N, M<T>>>(to_vext(x) <= to_vext(y));
 }
-SINT Vec<N, M<T>> operator>=(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator>=(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return bit_pun<Vec<N, M<T>>>(to_vext(x) >= to_vext(y));
 }
-SINT Vec<N, M<T>> operator<(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator<(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return bit_pun<Vec<N, M<T>>>(to_vext(x) < to_vext(y));
 }
-SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return bit_pun<Vec<N, M<T>>>(to_vext(x) > to_vext(y));
 }
 
@@ -250,88 +254,92 @@ SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) {
 // We'll implement things portably, in a way that should be easily autovectorizable.
 
 // N == 1 scalar implementations.
-SIT Vec<1, T> operator+(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val + y.val; }
-SIT Vec<1, T> operator-(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val - y.val; }
-SIT Vec<1, T> operator*(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val * y.val; }
-SIT Vec<1, T> operator/(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val / y.val; }
+SIT Vec<1, T> operator+(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val + y.val; }
+SIT Vec<1, T> operator-(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val - y.val; }
+SIT Vec<1, T> operator*(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val * y.val; }
+SIT Vec<1, T> operator/(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val / y.val; }
 
-SIT Vec<1, T> operator^(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val ^ y.val; }
-SIT Vec<1, T> operator&(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val & y.val; }
-SIT Vec<1, T> operator|(const Vec<1, T>& x, const Vec<1, T>& y) { return x.val | y.val; }
+SIT Vec<1, T> operator^(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val ^ y.val; }
+SIT Vec<1, T> operator&(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val & y.val; }
+SIT Vec<1, T> operator|(const Vec<1, T>& x, const Vec<1, T>& y) noexcept { return x.val | y.val; }
 
-SIT Vec<1, T> operator!(const Vec<1, T>& x) { return !x.val; }
-SIT Vec<1, T> operator-(const Vec<1, T>& x) { return -x.val; }
-SIT Vec<1, T> operator~(const Vec<1, T>& x) { return ~x.val; }
+SIT Vec<1, T> operator!(const Vec<1, T>& x) noexcept { return !x.val; }
+SIT Vec<1, T> operator-(const Vec<1, T>& x) noexcept { return -x.val; }
+SIT Vec<1, T> operator~(const Vec<1, T>& x) noexcept { return ~x.val; }
 
-SIT Vec<1, T> operator<<(const Vec<1, T>& x, int bits) { return x.val << bits; }
-SIT Vec<1, T> operator>>(const Vec<1, T>& x, int bits) { return x.val >> bits; }
+SIT Vec<1, T> operator<<(const Vec<1, T>& x, int bits) noexcept { return x.val << bits; }
+SIT Vec<1, T> operator>>(const Vec<1, T>& x, int bits) noexcept { return x.val >> bits; }
 
-SIT Vec<1, M<T>> operator==(const Vec<1, T>& x, const Vec<1, T>& y) {
+SIT Vec<1, M<T>> operator==(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
   return x.val == y.val ? ~0 : 0;
 }
-SIT Vec<1, M<T>> operator!=(const Vec<1, T>& x, const Vec<1, T>& y) {
+SIT Vec<1, M<T>> operator!=(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
   return x.val != y.val ? ~0 : 0;
 }
-SIT Vec<1, M<T>> operator<=(const Vec<1, T>& x, const Vec<1, T>& y) {
+SIT Vec<1, M<T>> operator<=(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
   return x.val <= y.val ? ~0 : 0;
 }
-SIT Vec<1, M<T>> operator>=(const Vec<1, T>& x, const Vec<1, T>& y) {
+SIT Vec<1, M<T>> operator>=(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
   return x.val >= y.val ? ~0 : 0;
 }
-SIT Vec<1, M<T>> operator<(const Vec<1, T>& x, const Vec<1, T>& y) {
+SIT Vec<1, M<T>> operator<(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
   return x.val < y.val ? ~0 : 0;
 }
-SIT Vec<1, M<T>> operator>(const Vec<1, T>& x, const Vec<1, T>& y) {
+SIT Vec<1, M<T>> operator>(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
   return x.val > y.val ? ~0 : 0;
 }
 
 // All default N != 1 implementations just recurse on lo and hi halves.
-SINT Vec<N, T> operator+(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator+(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo + y.lo, x.hi + y.hi);
 }
-SINT Vec<N, T> operator-(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator-(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo - y.lo, x.hi - y.hi);
 }
-SINT Vec<N, T> operator*(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator*(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo * y.lo, x.hi * y.hi);
 }
-SINT Vec<N, T> operator/(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator/(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo / y.lo, x.hi / y.hi);
 }
 
-SINT Vec<N, T> operator^(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator^(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo ^ y.lo, x.hi ^ y.hi);
 }
-SINT Vec<N, T> operator&(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator&(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo & y.lo, x.hi & y.hi);
 }
-SINT Vec<N, T> operator|(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> operator|(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo | y.lo, x.hi | y.hi);
 }
 
-SINT Vec<N, T> operator!(const Vec<N, T>& x) { return join(!x.lo, !x.hi); }
-SINT Vec<N, T> operator-(const Vec<N, T>& x) { return join(-x.lo, -x.hi); }
-SINT Vec<N, T> operator~(const Vec<N, T>& x) { return join(~x.lo, ~x.hi); }
+SINT Vec<N, T> operator!(const Vec<N, T>& x) noexcept { return join(!x.lo, !x.hi); }
+SINT Vec<N, T> operator-(const Vec<N, T>& x) noexcept { return join(-x.lo, -x.hi); }
+SINT Vec<N, T> operator~(const Vec<N, T>& x) noexcept { return join(~x.lo, ~x.hi); }
 
-SINT Vec<N, T> operator<<(const Vec<N, T>& x, int bits) { return join(x.lo << bits, x.hi << bits); }
-SINT Vec<N, T> operator>>(const Vec<N, T>& x, int bits) { return join(x.lo >> bits, x.hi >> bits); }
+SINT Vec<N, T> operator<<(const Vec<N, T>& x, int bits) noexcept {
+  return join(x.lo << bits, x.hi << bits);
+}
+SINT Vec<N, T> operator>>(const Vec<N, T>& x, int bits) noexcept {
+  return join(x.lo >> bits, x.hi >> bits);
+}
 
-SINT Vec<N, M<T>> operator==(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator==(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo == y.lo, x.hi == y.hi);
 }
-SINT Vec<N, M<T>> operator!=(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator!=(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo != y.lo, x.hi != y.hi);
 }
-SINT Vec<N, M<T>> operator<=(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator<=(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo <= y.lo, x.hi <= y.hi);
 }
-SINT Vec<N, M<T>> operator>=(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator>=(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo >= y.lo, x.hi >= y.hi);
 }
-SINT Vec<N, M<T>> operator<(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator<(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo < y.lo, x.hi < y.hi);
 }
-SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(x.lo > y.lo, x.hi > y.hi);
 }
 #endif
@@ -340,138 +348,174 @@ SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) {
 // extensions, so we implement them using the recursive approach.
 
 // N == 1 scalar implementations.
-SIT Vec<1, T> if_then_else(const Vec<1, M<T>>& cond, const Vec<1, T>& t, const Vec<1, T>& e) {
+SIT Vec<1, T> if_then_else(
+    const Vec<1, M<T>>& cond, const Vec<1, T>& t, const Vec<1, T>& e) noexcept {
   auto t_bits = bit_pun<M<T>>(t), e_bits = bit_pun<M<T>>(e);
   return bit_pun<T>((cond.val & t_bits) | (~cond.val & e_bits));
 }
 
-SIT bool any(const Vec<1, T>& x) { return x.val != 0; }
-SIT bool all(const Vec<1, T>& x) { return x.val != 0; }
+SIT bool any(const Vec<1, T>& x) noexcept { return x.val != 0; }
+SIT bool all(const Vec<1, T>& x) noexcept { return x.val != 0; }
 
-SIT T min(const Vec<1, T>& x) { return x.val; }
-SIT T max(const Vec<1, T>& x) { return x.val; }
+SIT T min(const Vec<1, T>& x) noexcept { return x.val; }
+SIT T max(const Vec<1, T>& x) noexcept { return x.val; }
 
-SIT Vec<1, T> min(const Vec<1, T>& x, const Vec<1, T>& y) { return std::min(x.val, y.val); }
-SIT Vec<1, T> max(const Vec<1, T>& x, const Vec<1, T>& y) { return std::max(x.val, y.val); }
+SIT Vec<1, T> min(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
+  return std::min(x.val, y.val);
+}
+SIT Vec<1, T> max(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
+  return std::max(x.val, y.val);
+}
+SIT Vec<1, T> pow(const Vec<1, T>& x, const Vec<1, T>& y) noexcept {
+  return std::pow(x.val, y.val);
+}
 
-SIT Vec<1, T> ceil(const Vec<1, T>& x) { return std::ceil(x.val); }
-SIT Vec<1, T> floor(const Vec<1, T>& x) { return std::floor(x.val); }
-SIT Vec<1, T> trunc(const Vec<1, T>& x) { return std::trunc(x.val); }
-SIT Vec<1, T> round(const Vec<1, T>& x) { return std::round(x.val); }
-SIT Vec<1, T> sqrt(const Vec<1, T>& x) { return std::sqrt(x.val); }
-SIT Vec<1, T> abs(const Vec<1, T>& x) { return std::abs(x.val); }
+SIT Vec<1, T> atan(const Vec<1, T>& x) noexcept { return std::atan(x.val); }
+SIT Vec<1, T> ceil(const Vec<1, T>& x) noexcept { return std::ceil(x.val); }
+SIT Vec<1, T> floor(const Vec<1, T>& x) noexcept { return std::floor(x.val); }
+SIT Vec<1, T> trunc(const Vec<1, T>& x) noexcept { return std::trunc(x.val); }
+SIT Vec<1, T> round(const Vec<1, T>& x) noexcept { return std::round(x.val); }
+SIT Vec<1, T> sqrt(const Vec<1, T>& x) noexcept { return std::sqrt(x.val); }
+SIT Vec<1, T> abs(const Vec<1, T>& x) noexcept { return std::abs(x.val); }
+SIT Vec<1, T> sin(const Vec<1, T>& x) noexcept { return std::sin(x.val); }
+SIT Vec<1, T> cos(const Vec<1, T>& x) noexcept { return std::cos(x.val); }
+SIT Vec<1, T> tan(const Vec<1, T>& x) noexcept { return std::tan(x.val); }
 
-SIT Vec<1, int> lrint(const Vec<1, T>& x) { return (int)std::lrint(x.val); }
+SIT Vec<1, int> lrint(const Vec<1, T>& x) noexcept { return (int)std::lrint(x.val); }
 
-SIT Vec<1, T> rcp(const Vec<1, T>& x) { return 1 / x.val; }
-SIT Vec<1, T> rsqrt(const Vec<1, T>& x) { return rcp(sqrt(x)); }
-SIT Vec<1, T> mad(const Vec<1, T>& f, const Vec<1, T>& m, const Vec<1, T>& a) { return f * m + a; }
+SIT Vec<1, T> rcp(const Vec<1, T>& x) noexcept { return 1 / x.val; }
+SIT Vec<1, T> rsqrt(const Vec<1, T>& x) noexcept { return rcp(sqrt(x)); }
+SIT Vec<1, T> mad(const Vec<1, T>& f, const Vec<1, T>& m, const Vec<1, T>& a) noexcept {
+  return f * m + a;
+}
 
 // All default N != 1 implementations just recurse on lo and hi halves.
-SINT Vec<N, T> if_then_else(const Vec<N, M<T>>& cond, const Vec<N, T>& t, const Vec<N, T>& e) {
+SINT Vec<N, T> if_then_else(
+    const Vec<N, M<T>>& cond, const Vec<N, T>& t, const Vec<N, T>& e) noexcept {
   return join(if_then_else(cond.lo, t.lo, e.lo), if_then_else(cond.hi, t.hi, e.hi));
 }
 
-SINT bool any(const Vec<N, T>& x) { return any(x.lo) || any(x.hi); }
-SINT bool all(const Vec<N, T>& x) { return all(x.lo) && all(x.hi); }
+SINT bool any(const Vec<N, T>& x) noexcept { return any(x.lo) || any(x.hi); }
+SINT bool all(const Vec<N, T>& x) noexcept { return all(x.lo) && all(x.hi); }
 
-SINT T min(const Vec<N, T>& x) { return std::min(min(x.lo), min(x.hi)); }
-SINT T max(const Vec<N, T>& x) { return std::max(max(x.lo), max(x.hi)); }
+SINT T min(const Vec<N, T>& x) noexcept { return std::min(min(x.lo), min(x.hi)); }
+SINT T max(const Vec<N, T>& x) noexcept { return std::max(max(x.lo), max(x.hi)); }
 
-SINT Vec<N, T> min(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> min(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(min(x.lo, y.lo), min(x.hi, y.hi));
 }
-SINT Vec<N, T> max(const Vec<N, T>& x, const Vec<N, T>& y) {
+SINT Vec<N, T> max(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
   return join(max(x.lo, y.lo), max(x.hi, y.hi));
 }
+SINT Vec<N, T> pow(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
+  return join(pow(x.lo, y.lo), pow(x.hi, y.hi));
+}
 
-SINT Vec<N, T> ceil(const Vec<N, T>& x) { return join(ceil(x.lo), ceil(x.hi)); }
-SINT Vec<N, T> floor(const Vec<N, T>& x) { return join(floor(x.lo), floor(x.hi)); }
-SINT Vec<N, T> trunc(const Vec<N, T>& x) { return join(trunc(x.lo), trunc(x.hi)); }
-SINT Vec<N, T> round(const Vec<N, T>& x) { return join(round(x.lo), round(x.hi)); }
-SINT Vec<N, T> sqrt(const Vec<N, T>& x) { return join(sqrt(x.lo), sqrt(x.hi)); }
-SINT Vec<N, T> abs(const Vec<N, T>& x) { return join(abs(x.lo), abs(x.hi)); }
+SINT Vec<N, T> atan(const Vec<N, T>& x) noexcept { return join(atan(x.lo), atan(x.hi)); }
+SINT Vec<N, T> ceil(const Vec<N, T>& x) noexcept { return join(ceil(x.lo), ceil(x.hi)); }
+SINT Vec<N, T> floor(const Vec<N, T>& x) noexcept { return join(floor(x.lo), floor(x.hi)); }
+SINT Vec<N, T> trunc(const Vec<N, T>& x) noexcept { return join(trunc(x.lo), trunc(x.hi)); }
+SINT Vec<N, T> round(const Vec<N, T>& x) noexcept { return join(round(x.lo), round(x.hi)); }
+SINT Vec<N, T> sqrt(const Vec<N, T>& x) noexcept { return join(sqrt(x.lo), sqrt(x.hi)); }
+SINT Vec<N, T> abs(const Vec<N, T>& x) noexcept { return join(abs(x.lo), abs(x.hi)); }
+SINT Vec<N, T> sin(const Vec<N, T>& x) noexcept { return join(sin(x.lo), sin(x.hi)); }
+SINT Vec<N, T> cos(const Vec<N, T>& x) noexcept { return join(cos(x.lo), cos(x.hi)); }
+SINT Vec<N, T> tan(const Vec<N, T>& x) noexcept { return join(tan(x.lo), tan(x.hi)); }
 
-SINT Vec<N, int> lrint(const Vec<N, T>& x) { return join(lrint(x.lo), lrint(x.hi)); }
+SINT Vec<N, int> lrint(const Vec<N, T>& x) noexcept { return join(lrint(x.lo), lrint(x.hi)); }
 
-SINT Vec<N, T> rcp(const Vec<N, T>& x) { return join(rcp(x.lo), rcp(x.hi)); }
-SINT Vec<N, T> rsqrt(const Vec<N, T>& x) { return join(rsqrt(x.lo), rsqrt(x.hi)); }
-SINT Vec<N, T> mad(const Vec<N, T>& f, const Vec<N, T>& m, const Vec<N, T>& a) {
+SINT Vec<N, T> rcp(const Vec<N, T>& x) noexcept { return join(rcp(x.lo), rcp(x.hi)); }
+SINT Vec<N, T> rsqrt(const Vec<N, T>& x) noexcept { return join(rsqrt(x.lo), rsqrt(x.hi)); }
+SINT Vec<N, T> mad(const Vec<N, T>& f, const Vec<N, T>& m, const Vec<N, T>& a) noexcept {
   return join(mad(f.lo, m.lo, a.lo), mad(f.hi, m.hi, a.hi));
 }
 
 // Scalar/vector operations just splat the scalar to a vector...
-SINTU Vec<N, T> operator+(U x, const Vec<N, T>& y) { return Vec<N, T>(x) + y; }
-SINTU Vec<N, T> operator-(U x, const Vec<N, T>& y) { return Vec<N, T>(x) - y; }
-SINTU Vec<N, T> operator*(U x, const Vec<N, T>& y) { return Vec<N, T>(x) * y; }
-SINTU Vec<N, T> operator/(U x, const Vec<N, T>& y) { return Vec<N, T>(x) / y; }
-SINTU Vec<N, T> operator^(U x, const Vec<N, T>& y) { return Vec<N, T>(x) ^ y; }
-SINTU Vec<N, T> operator&(U x, const Vec<N, T>& y) { return Vec<N, T>(x) & y; }
-SINTU Vec<N, T> operator|(U x, const Vec<N, T>& y) { return Vec<N, T>(x) | y; }
-SINTU Vec<N, M<T>> operator==(U x, const Vec<N, T>& y) { return Vec<N, T>(x) == y; }
-SINTU Vec<N, M<T>> operator!=(U x, const Vec<N, T>& y) { return Vec<N, T>(x) != y; }
-SINTU Vec<N, M<T>> operator<=(U x, const Vec<N, T>& y) { return Vec<N, T>(x) <= y; }
-SINTU Vec<N, M<T>> operator>=(U x, const Vec<N, T>& y) { return Vec<N, T>(x) >= y; }
-SINTU Vec<N, M<T>> operator<(U x, const Vec<N, T>& y) { return Vec<N, T>(x) < y; }
-SINTU Vec<N, M<T>> operator>(U x, const Vec<N, T>& y) { return Vec<N, T>(x) > y; }
-SINTU Vec<N, T> min(U x, const Vec<N, T>& y) { return min(Vec<N, T>(x), y); }
-SINTU Vec<N, T> max(U x, const Vec<N, T>& y) { return max(Vec<N, T>(x), y); }
+SINTU Vec<N, T> operator+(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) + y; }
+SINTU Vec<N, T> operator-(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) - y; }
+SINTU Vec<N, T> operator*(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) * y; }
+SINTU Vec<N, T> operator/(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) / y; }
+SINTU Vec<N, T> operator^(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) ^ y; }
+SINTU Vec<N, T> operator&(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) & y; }
+SINTU Vec<N, T> operator|(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) | y; }
+SINTU Vec<N, M<T>> operator==(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) == y; }
+SINTU Vec<N, M<T>> operator!=(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) != y; }
+SINTU Vec<N, M<T>> operator<=(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) <= y; }
+SINTU Vec<N, M<T>> operator>=(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) >= y; }
+SINTU Vec<N, M<T>> operator<(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) < y; }
+SINTU Vec<N, M<T>> operator>(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) > y; }
+SINTU Vec<N, T> min(U x, const Vec<N, T>& y) noexcept { return min(Vec<N, T>(x), y); }
+SINTU Vec<N, T> max(U x, const Vec<N, T>& y) noexcept { return max(Vec<N, T>(x), y); }
+SINTU Vec<N, T> pow(U x, const Vec<N, T>& y) noexcept { return pow(Vec<N, T>(x), y); }
 
 // ... and same deal for vector/scalar operations.
-SINTU Vec<N, T> operator+(const Vec<N, T>& x, U y) { return x + Vec<N, T>(y); }
-SINTU Vec<N, T> operator-(const Vec<N, T>& x, U y) { return x - Vec<N, T>(y); }
-SINTU Vec<N, T> operator*(const Vec<N, T>& x, U y) { return x * Vec<N, T>(y); }
-SINTU Vec<N, T> operator/(const Vec<N, T>& x, U y) { return x / Vec<N, T>(y); }
-SINTU Vec<N, T> operator^(const Vec<N, T>& x, U y) { return x ^ Vec<N, T>(y); }
-SINTU Vec<N, T> operator&(const Vec<N, T>& x, U y) { return x & Vec<N, T>(y); }
-SINTU Vec<N, T> operator|(const Vec<N, T>& x, U y) { return x | Vec<N, T>(y); }
-SINTU Vec<N, M<T>> operator==(const Vec<N, T>& x, U y) { return x == Vec<N, T>(y); }
-SINTU Vec<N, M<T>> operator!=(const Vec<N, T>& x, U y) { return x != Vec<N, T>(y); }
-SINTU Vec<N, M<T>> operator<=(const Vec<N, T>& x, U y) { return x <= Vec<N, T>(y); }
-SINTU Vec<N, M<T>> operator>=(const Vec<N, T>& x, U y) { return x >= Vec<N, T>(y); }
-SINTU Vec<N, M<T>> operator<(const Vec<N, T>& x, U y) { return x < Vec<N, T>(y); }
-SINTU Vec<N, M<T>> operator>(const Vec<N, T>& x, U y) { return x > Vec<N, T>(y); }
-SINTU Vec<N, T> min(const Vec<N, T>& x, U y) { return min(x, Vec<N, T>(y)); }
-SINTU Vec<N, T> max(const Vec<N, T>& x, U y) { return max(x, Vec<N, T>(y)); }
+SINTU Vec<N, T> operator+(const Vec<N, T>& x, U y) noexcept { return x + Vec<N, T>(y); }
+SINTU Vec<N, T> operator-(const Vec<N, T>& x, U y) noexcept { return x - Vec<N, T>(y); }
+SINTU Vec<N, T> operator*(const Vec<N, T>& x, U y) noexcept { return x * Vec<N, T>(y); }
+SINTU Vec<N, T> operator/(const Vec<N, T>& x, U y) noexcept { return x / Vec<N, T>(y); }
+SINTU Vec<N, T> operator^(const Vec<N, T>& x, U y) noexcept { return x ^ Vec<N, T>(y); }
+SINTU Vec<N, T> operator&(const Vec<N, T>& x, U y) noexcept { return x & Vec<N, T>(y); }
+SINTU Vec<N, T> operator|(const Vec<N, T>& x, U y) noexcept { return x | Vec<N, T>(y); }
+SINTU Vec<N, M<T>> operator==(const Vec<N, T>& x, U y) noexcept { return x == Vec<N, T>(y); }
+SINTU Vec<N, M<T>> operator!=(const Vec<N, T>& x, U y) noexcept { return x != Vec<N, T>(y); }
+SINTU Vec<N, M<T>> operator<=(const Vec<N, T>& x, U y) noexcept { return x <= Vec<N, T>(y); }
+SINTU Vec<N, M<T>> operator>=(const Vec<N, T>& x, U y) noexcept { return x >= Vec<N, T>(y); }
+SINTU Vec<N, M<T>> operator<(const Vec<N, T>& x, U y) noexcept { return x < Vec<N, T>(y); }
+SINTU Vec<N, M<T>> operator>(const Vec<N, T>& x, U y) noexcept { return x > Vec<N, T>(y); }
+SINTU Vec<N, T> min(const Vec<N, T>& x, U y) noexcept { return min(x, Vec<N, T>(y)); }
+SINTU Vec<N, T> max(const Vec<N, T>& x, U y) noexcept { return max(x, Vec<N, T>(y)); }
+SINTU Vec<N, T> pow(const Vec<N, T>& x, U y) noexcept { return pow(x, Vec<N, T>(y)); }
 
 // All vector/scalar combinations for mad() with at least one vector.
-SINTU Vec<N, T> mad(U f, const Vec<N, T>& m, const Vec<N, T>& a) { return Vec<N, T>(f) * m + a; }
-SINTU Vec<N, T> mad(const Vec<N, T>& f, U m, const Vec<N, T>& a) { return f * Vec<N, T>(m) + a; }
-SINTU Vec<N, T> mad(const Vec<N, T>& f, const Vec<N, T>& m, U a) { return f * m + Vec<N, T>(a); }
-SINTU Vec<N, T> mad(const Vec<N, T>& f, U m, U a) { return f * Vec<N, T>(m) + Vec<N, T>(a); }
-SINTU Vec<N, T> mad(U f, const Vec<N, T>& m, U a) { return Vec<N, T>(f) * m + Vec<N, T>(a); }
-SINTU Vec<N, T> mad(U f, U m, const Vec<N, T>& a) { return Vec<N, T>(f) * Vec<N, T>(m) + a; }
+SINTU Vec<N, T> mad(U f, const Vec<N, T>& m, const Vec<N, T>& a) noexcept {
+  return Vec<N, T>(f) * m + a;
+}
+SINTU Vec<N, T> mad(const Vec<N, T>& f, U m, const Vec<N, T>& a) noexcept {
+  return f * Vec<N, T>(m) + a;
+}
+SINTU Vec<N, T> mad(const Vec<N, T>& f, const Vec<N, T>& m, U a) noexcept {
+  return f * m + Vec<N, T>(a);
+}
+SINTU Vec<N, T> mad(const Vec<N, T>& f, U m, U a) noexcept {
+  return f * Vec<N, T>(m) + Vec<N, T>(a);
+}
+SINTU Vec<N, T> mad(U f, const Vec<N, T>& m, U a) noexcept {
+  return Vec<N, T>(f) * m + Vec<N, T>(a);
+}
+SINTU Vec<N, T> mad(U f, U m, const Vec<N, T>& a) noexcept {
+  return Vec<N, T>(f) * Vec<N, T>(m) + a;
+}
 
 // The various op= operators, for vectors...
-SINT Vec<N, T>& operator+=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x + y); }
-SINT Vec<N, T>& operator-=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x - y); }
-SINT Vec<N, T>& operator*=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x * y); }
-SINT Vec<N, T>& operator/=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x / y); }
-SINT Vec<N, T>& operator^=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x ^ y); }
-SINT Vec<N, T>& operator&=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x & y); }
-SINT Vec<N, T>& operator|=(Vec<N, T>& x, const Vec<N, T>& y) { return (x = x | y); }
+SINT Vec<N, T>& operator+=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x + y); }
+SINT Vec<N, T>& operator-=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x - y); }
+SINT Vec<N, T>& operator*=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x * y); }
+SINT Vec<N, T>& operator/=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x / y); }
+SINT Vec<N, T>& operator^=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x ^ y); }
+SINT Vec<N, T>& operator&=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x & y); }
+SINT Vec<N, T>& operator|=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x | y); }
 
 // ... for scalars...
-SINTU Vec<N, T>& operator+=(Vec<N, T>& x, U y) { return (x = x + Vec<N, T>(y)); }
-SINTU Vec<N, T>& operator-=(Vec<N, T>& x, U y) { return (x = x - Vec<N, T>(y)); }
-SINTU Vec<N, T>& operator*=(Vec<N, T>& x, U y) { return (x = x * Vec<N, T>(y)); }
-SINTU Vec<N, T>& operator/=(Vec<N, T>& x, U y) { return (x = x / Vec<N, T>(y)); }
-SINTU Vec<N, T>& operator^=(Vec<N, T>& x, U y) { return (x = x ^ Vec<N, T>(y)); }
-SINTU Vec<N, T>& operator&=(Vec<N, T>& x, U y) { return (x = x & Vec<N, T>(y)); }
-SINTU Vec<N, T>& operator|=(Vec<N, T>& x, U y) { return (x = x | Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator+=(Vec<N, T>& x, U y) noexcept { return (x = x + Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator-=(Vec<N, T>& x, U y) noexcept { return (x = x - Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator*=(Vec<N, T>& x, U y) noexcept { return (x = x * Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator/=(Vec<N, T>& x, U y) noexcept { return (x = x / Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator^=(Vec<N, T>& x, U y) noexcept { return (x = x ^ Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator&=(Vec<N, T>& x, U y) noexcept { return (x = x & Vec<N, T>(y)); }
+SINTU Vec<N, T>& operator|=(Vec<N, T>& x, U y) noexcept { return (x = x | Vec<N, T>(y)); }
 
 // ... and for shifts.
-SINT Vec<N, T>& operator<<=(Vec<N, T>& x, int bits) { return (x = x << bits); }
-SINT Vec<N, T>& operator>>=(Vec<N, T>& x, int bits) { return (x = x >> bits); }
+SINT Vec<N, T>& operator<<=(Vec<N, T>& x, int bits) noexcept { return (x = x << bits); }
+SINT Vec<N, T>& operator>>=(Vec<N, T>& x, int bits) noexcept { return (x = x >> bits); }
 
 // cast() Vec<N,S> to Vec<N,D>, as if applying a C-cast to each lane.
 template <typename D, typename S>
-static inline Vec<1, D> cast(const Vec<1, S>& src) {
+static inline Vec<1, D> cast(const Vec<1, S>& src) noexcept {
   return (D)src.val;
 }
 
 template <typename D, int N, typename S>
-static inline Vec<N, D> cast(const Vec<N, S>& src) {
+static inline Vec<N, D> cast(const Vec<N, S>& src) noexcept {
 #if !defined(SKNX_NO_SIMD) && defined(__clang__)
   return to_vec(__builtin_convertvector(to_vext(src), VExt<N, D>));
 #else
@@ -506,16 +550,22 @@ static inline Vec<N, float> fma(
   return join(fma(x.lo, y.lo, z.lo), fma(x.hi, y.hi, z.hi));
 }
 
+template <int N>
+static inline Vec<N, float> fract(const Vec<N, float>& x) noexcept {
+  return x - floor(x);
+}
+
 // div255(x) = (x + 127) / 255 is a bit-exact rounding divide-by-255, packing down to 8-bit.
 template <int N>
-static inline Vec<N, uint8_t> div255(const Vec<N, uint16_t>& x) {
+static inline Vec<N, uint8_t> div255(const Vec<N, uint16_t>& x) noexcept {
   return cast<uint8_t>((x + 127) / 255);
 }
 
 // approx_scale(x,y) approximates div255(cast<uint16_t>(x)*cast<uint16_t>(y)) within a bit,
 // and is always perfect when x or y is 0 or 255.
 template <int N>
-static inline Vec<N, uint8_t> approx_scale(const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) {
+static inline Vec<N, uint8_t> approx_scale(
+    const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) noexcept {
   // All of (x*y+x)/256, (x*y+y)/256, and (x*y+255)/256 meet the criteria above.
   // We happen to have historically picked (x*y+x)/256.
   auto X = cast<uint16_t>(x), Y = cast<uint16_t>(y);
@@ -544,7 +594,7 @@ static inline typename std::enable_if<(N > 8), Vec<N, uint16_t>>::type mull(
 #else
 // Nothing special when we don't have NEON... just cast up to 16-bit and multiply.
 template <int N>
-static inline Vec<N, uint16_t> mull(const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) {
+static inline Vec<N, uint16_t> mull(const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) noexcept {
   return cast<uint16_t>(x) * cast<uint16_t>(y);
 }
 #endif
@@ -554,57 +604,57 @@ static inline Vec<N, uint16_t> mull(const Vec<N, uint8_t>& x, const Vec<N, uint8
 // Platform-specific specializations and overloads can now drop in here.
 
 #  if defined(__AVX__)
-static inline Vec<8, float> sqrt(const Vec<8, float>& x) {
+static inline Vec<8, float> sqrt(const Vec<8, float>& x) noexcept {
   return bit_pun<Vec<8, float>>(_mm256_sqrt_ps(bit_pun<__m256>(x)));
 }
-static inline Vec<8, float> rsqrt(const Vec<8, float>& x) {
+static inline Vec<8, float> rsqrt(const Vec<8, float>& x) noexcept {
   return bit_pun<Vec<8, float>>(_mm256_rsqrt_ps(bit_pun<__m256>(x)));
 }
-static inline Vec<8, float> rcp(const Vec<8, float>& x) {
+static inline Vec<8, float> rcp(const Vec<8, float>& x) noexcept {
   return bit_pun<Vec<8, float>>(_mm256_rcp_ps(bit_pun<__m256>(x)));
 }
-static inline Vec<8, int> lrint(const Vec<8, float>& x) {
+static inline Vec<8, int> lrint(const Vec<8, float>& x) noexcept {
   return bit_pun<Vec<8, int>>(_mm256_cvtps_epi32(bit_pun<__m256>(x)));
 }
 #  endif
 
 #  if defined(__SSE__)
-static inline Vec<4, float> sqrt(const Vec<4, float>& x) {
+static inline Vec<4, float> sqrt(const Vec<4, float>& x) noexcept {
   return bit_pun<Vec<4, float>>(_mm_sqrt_ps(bit_pun<__m128>(x)));
 }
-static inline Vec<4, float> rsqrt(const Vec<4, float>& x) {
+static inline Vec<4, float> rsqrt(const Vec<4, float>& x) noexcept {
   return bit_pun<Vec<4, float>>(_mm_rsqrt_ps(bit_pun<__m128>(x)));
 }
-static inline Vec<4, float> rcp(const Vec<4, float>& x) {
+static inline Vec<4, float> rcp(const Vec<4, float>& x) noexcept {
   return bit_pun<Vec<4, float>>(_mm_rcp_ps(bit_pun<__m128>(x)));
 }
-static inline Vec<4, int> lrint(const Vec<4, float>& x) {
+static inline Vec<4, int> lrint(const Vec<4, float>& x) noexcept {
   return bit_pun<Vec<4, int>>(_mm_cvtps_epi32(bit_pun<__m128>(x)));
 }
 
-static inline Vec<2, float> sqrt(const Vec<2, float>& x) {
+static inline Vec<2, float> sqrt(const Vec<2, float>& x) noexcept {
   return shuffle<0, 1>(sqrt(shuffle<0, 1, 0, 1>(x)));
 }
-static inline Vec<2, float> rsqrt(const Vec<2, float>& x) {
+static inline Vec<2, float> rsqrt(const Vec<2, float>& x) noexcept {
   return shuffle<0, 1>(rsqrt(shuffle<0, 1, 0, 1>(x)));
 }
-static inline Vec<2, float> rcp(const Vec<2, float>& x) {
+static inline Vec<2, float> rcp(const Vec<2, float>& x) noexcept {
   return shuffle<0, 1>(rcp(shuffle<0, 1, 0, 1>(x)));
 }
-static inline Vec<2, int> lrint(const Vec<2, float>& x) {
+static inline Vec<2, int> lrint(const Vec<2, float>& x) noexcept {
   return shuffle<0, 1>(lrint(shuffle<0, 1, 0, 1>(x)));
 }
 #  endif
 
 #  if defined(__SSE4_1__)
 static inline Vec<4, float> if_then_else(
-    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) {
+    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) noexcept {
   return bit_pun<Vec<4, float>>(
       _mm_blendv_ps(bit_pun<__m128>(e), bit_pun<__m128>(t), bit_pun<__m128>(c)));
 }
 #  elif defined(__SSE__)
 static inline Vec<4, float> if_then_else(
-    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) {
+    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) noexcept {
   return bit_pun<Vec<4, float>>(_mm_or_ps(
       _mm_and_ps(bit_pun<__m128>(c), bit_pun<__m128>(t)),
       _mm_andnot_ps(bit_pun<__m128>(c), bit_pun<__m128>(e))));
@@ -619,13 +669,13 @@ static inline Vec<4, float> if_then_else(
 
 #  if defined(__AVX2__)
 static inline Vec<4, float> fma(
-    const Vec<4, float>& x, const Vec<4, float>& y, const Vec<4, float>& z) {
+    const Vec<4, float>& x, const Vec<4, float>& y, const Vec<4, float>& z) noexcept {
   return bit_pun<Vec<4, float>>(
       _mm_fmadd_ps(bit_pun<__m128>(x), bit_pun<__m128>(y), bit_pun<__m128>(z)));
 }
 
 static inline Vec<8, float> fma(
-    const Vec<8, float>& x, const Vec<8, float>& y, const Vec<8, float>& z) {
+    const Vec<8, float>& x, const Vec<8, float>& y, const Vec<8, float>& z) noexcept {
   return bit_pun<Vec<8, float>>(
       _mm256_fmadd_ps(bit_pun<__m256>(x), bit_pun<__m256>(y), bit_pun<__m256>(z)));
 }

@@ -14,6 +14,10 @@
 #include <atomic>
 #include <cstring>
 
+// This entire file is DEPRECATED, and will be removed at some point.
+// SkCanvas has full support for 4x4 matrices using SkM44
+
+// DEPRECATED
 struct SkVector4 {
   SkScalar fData[4];
 
@@ -48,20 +52,16 @@ struct SkVector4 {
   }
 };
 
-/** \class SkMatrix44
-
-    The SkMatrix44 class holds a 4x4 matrix.
-
-*/
+// DEPRECATED
 class SK_API SkMatrix44 {
  public:
   enum Uninitialized_Constructor { kUninitialized_Constructor };
   enum Identity_Constructor { kIdentity_Constructor };
   enum NaN_Constructor { kNaN_Constructor };
 
-  SkMatrix44(Uninitialized_Constructor) {}  // ironically, cannot be constexpr
+  SkMatrix44(Uninitialized_Constructor) noexcept {}  // ironically, cannot be constexpr
 
-  constexpr SkMatrix44(Identity_Constructor) noexcept
+  constexpr SkMatrix44(Identity_Constructor)noexcept
         : fMat{{ 1, 0, 0, 0, },
                { 0, 1, 0, 0, },
                { 0, 0, 1, 0, },
@@ -74,9 +74,9 @@ class SK_API SkMatrix44 {
 
   constexpr SkMatrix44() noexcept : SkMatrix44{kIdentity_Constructor} {}
 
-  SkMatrix44(const SkMatrix44& src) = default;
+  SkMatrix44(const SkMatrix44& src) noexcept = default;
 
-  SkMatrix44& operator=(const SkMatrix44& src) = default;
+  SkMatrix44& operator=(const SkMatrix44& src) noexcept = default;
 
   SkMatrix44(const SkMatrix44& a, const SkMatrix44& b) noexcept { this->setConcat(a, b); }
 

@@ -58,13 +58,9 @@ static inline float sk_float_pow(float base, float exp) noexcept { return powf(b
 #define sk_float_exp(x) expf(x)
 #define sk_float_log(x) logf(x)
 
-constexpr float sk_float_degrees_to_radians(float degrees) noexcept {
-  return degrees * (SK_FloatPI / 180);
-}
+constexpr float sk_float_degrees_to_radians(float degrees) { return degrees * (SK_FloatPI / 180); }
 
-constexpr float sk_float_radians_to_degrees(float radians) noexcept {
-  return radians * (180 / SK_FloatPI);
-}
+constexpr float sk_float_radians_to_degrees(float radians) { return radians * (180 / SK_FloatPI); }
 
 #define sk_float_round(x) sk_float_floor((x) + 0.5f)
 
@@ -78,11 +74,11 @@ static inline float sk_float_log2(float x) {
 #  define sk_float_log2(x) log2f(x)
 #endif
 
-static constexpr bool sk_float_isfinite(float x) noexcept {
+static constexpr inline bool sk_float_isfinite(float x) noexcept {
   return SkFloatBits_IsFinite(SkFloat2Bits(x));
 }
 
-static constexpr bool sk_floats_are_finite(float a, float b) noexcept {
+static constexpr inline bool sk_floats_are_finite(float a, float b) noexcept {
   return sk_float_isfinite(a) && sk_float_isfinite(b);
 }
 
@@ -95,11 +91,11 @@ static inline bool sk_floats_are_finite(const float array[], int count) noexcept
   return prod == 0;  // if prod is NaN, this check will return false
 }
 
-static constexpr bool sk_float_isinf(float x) noexcept {
+static constexpr inline bool sk_float_isinf(float x) noexcept {
   return SkFloatBits_IsInf(SkFloat2Bits(x));
 }
 
-static constexpr bool sk_float_isnan(float x) noexcept { return !(x == x); }
+static constexpr inline bool sk_float_isnan(float x) noexcept { return !(x == x); }
 
 #define sk_double_isnan(a) sk_float_isnan(a)
 
@@ -112,7 +108,7 @@ static constexpr bool sk_float_isnan(float x) noexcept { return !(x == x); }
 /**
  *  Return the closest int for the given float. Returns SK_MaxS32FitsInFloat for NaN.
  */
-static constexpr int sk_float_saturate2int(float x) noexcept {
+static constexpr inline int sk_float_saturate2int(float x) noexcept {
   x = x < SK_MaxS32FitsInFloat ? x : SK_MaxS32FitsInFloat;
   x = x > SK_MinS32FitsInFloat ? x : SK_MinS32FitsInFloat;
   return (int)x;
@@ -121,7 +117,7 @@ static constexpr int sk_float_saturate2int(float x) noexcept {
 /**
  *  Return the closest int for the given double. Returns SK_MaxS32 for NaN.
  */
-static constexpr int sk_double_saturate2int(double x) noexcept {
+static constexpr inline int sk_double_saturate2int(double x) noexcept {
   x = x < SK_MaxS32 ? x : SK_MaxS32;
   x = x > SK_MinS32 ? x : SK_MinS32;
   return (int)x;
@@ -130,7 +126,7 @@ static constexpr int sk_double_saturate2int(double x) noexcept {
 /**
  *  Return the closest int64_t for the given float. Returns SK_MaxS64FitsInFloat for NaN.
  */
-static constexpr int64_t sk_float_saturate2int64(float x) noexcept {
+static constexpr inline int64_t sk_float_saturate2int64(float x) noexcept {
   x = x < SK_MaxS64FitsInFloat ? x : SK_MaxS64FitsInFloat;
   x = x > SK_MinS64FitsInFloat ? x : SK_MinS64FitsInFloat;
   return (int64_t)x;
@@ -154,7 +150,7 @@ static constexpr int64_t sk_float_saturate2int64(float x) noexcept {
 // Cast double to float, ignoring any warning about too-large finite values being cast to float.
 // Clang thinks this is undefined, but it's actually implementation defined to return either
 // the largest float or infinity (one of the two bracketing representable floats).  Good enough!
-[[clang::no_sanitize("float-cast-overflow")]] static constexpr float sk_double_to_float(
+[[clang::no_sanitize("float-cast-overflow")]] static constexpr inline float sk_double_to_float(
     double x) noexcept {
   return static_cast<float>(x);
 }
@@ -167,7 +163,7 @@ static constexpr int64_t sk_float_saturate2int64(float x) noexcept {
 
 // Returns false if any of the floats are outside of [0...1]
 // Returns true if count is 0
-bool sk_floats_are_unit(const float array[], size_t count) noexcept;
+bool sk_floats_are_unit(const float array[], size_t count);
 
 static inline float sk_float_rsqrt_portable(float x) noexcept {
   // Get initial estimate.
@@ -221,22 +217,22 @@ static inline float sk_float_rsqrt(float x) noexcept {
 // IEEE defines how float divide behaves for non-finite values and zero-denoms, but C does not
 // so we have a helper that suppresses the possible undefined-behavior warnings.
 
-[[clang::no_sanitize("float-divide-by-zero")]] static constexpr float sk_ieee_float_divide(
+[[clang::no_sanitize("float-divide-by-zero")]] static constexpr inline float sk_ieee_float_divide(
     float numer, float denom) noexcept {
   return numer / denom;
 }
 
-[[clang::no_sanitize("float-divide-by-zero")]] static constexpr double sk_ieee_double_divide(
+[[clang::no_sanitize("float-divide-by-zero")]] static constexpr inline double sk_ieee_double_divide(
     double numer, double denom) noexcept {
   return numer / denom;
 }
 
 // While we clean up divide by zero, we'll replace places that do divide by zero with this TODO.
-static constexpr float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
+static constexpr inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
     float n, float d) noexcept {
   return sk_ieee_float_divide(n, d);
 }
-static constexpr float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
+static constexpr inline float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
     double n, double d) noexcept {
   return static_cast<float>(sk_ieee_double_divide(n, d));
 }

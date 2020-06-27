@@ -27,7 +27,7 @@ uint32_t SkNextID::ImageID() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes)
+SkPixelRef::SkPixelRef(int width, int height, void* pixels, size_t rowBytes) noexcept
     : fWidth(width), fHeight(height), fPixels(pixels), fRowBytes(rowBytes), fAddedToCache(false) {
   this->needsNewGenID();
   fMutability = kMutable;
@@ -135,7 +135,7 @@ sk_sp<SkPixelRef> SkMakePixelRefWithProc(
   struct PixelRef final : public SkPixelRef {
     void (*fReleaseProc)(void*, void*);
     void* fReleaseProcContext;
-    PixelRef(int w, int h, void* s, size_t r, void (*proc)(void*, void*), void* ctx)
+    PixelRef(int w, int h, void* s, size_t r, void (*proc)(void*, void*), void* ctx) noexcept
         : SkPixelRef(w, h, s, r), fReleaseProc(proc), fReleaseProcContext(ctx) {}
     ~PixelRef() override { fReleaseProc(this->pixels(), fReleaseProcContext); }
   };

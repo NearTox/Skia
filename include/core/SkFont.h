@@ -505,7 +505,7 @@ class SK_API SkFont {
   uint8_t fEdging;
   uint8_t fHinting;
 
-  SkScalar setupForAsPaths(SkPaint*);
+  SkScalar setupForAsPaths(SkPaint*) noexcept;
   bool hasSomeAntiAliasing() const noexcept;
 
   friend class GrTextBlob;

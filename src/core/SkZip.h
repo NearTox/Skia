@@ -11,6 +11,7 @@
 #include <iterator>
 #include <tuple>
 #include <type_traits>
+#include <utility>
 
 #include "include/core/SkTypes.h"
 #include "include/private/SkTemplates.h"
@@ -60,7 +61,7 @@ class SkZip {
   constexpr SkZip() noexcept : fPointers{nullify<Ts>...}, fSize{0} {}
   constexpr SkZip(size_t) = delete;
   constexpr SkZip(size_t size, Ts*... ts) noexcept : fPointers{ts...}, fSize{size} {}
-  constexpr SkZip(const SkZip& that) = default;
+  constexpr SkZip(const SkZip& that) noexcept = default;
 
   // Check to see if U can be used for const T or is the same as T
   template <typename U, typename T>
@@ -73,33 +74,33 @@ class SkZip {
       typename = std::enable_if<skstd::conjunction<CanConvertToConst<Us, Ts>...>::value>>
   constexpr SkZip(const SkZip<Us...>& that) noexcept : fPointers(that.data()), fSize{that.size()} {}
 
-  constexpr ReturnTuple operator[](size_t i) const { return this->index(i); }
-  constexpr size_t size() const { return fSize; }
-  constexpr bool empty() const { return this->size() == 0; }
-  constexpr ReturnTuple front() const { return this->index(0); }
-  constexpr ReturnTuple back() const { return this->index(this->size() - 1); }
-  constexpr Iterator begin() const { return Iterator{this, 0}; }
-  constexpr Iterator end() const { return Iterator{this, this->size()}; }
+  constexpr ReturnTuple operator[](size_t i) const noexcept { return this->index(i); }
+  constexpr size_t size() const noexcept { return fSize; }
+  constexpr bool empty() const noexcept { return this->size() == 0; }
+  constexpr ReturnTuple front() const noexcept { return this->index(0); }
+  constexpr ReturnTuple back() const noexcept { return this->index(this->size() - 1); }
+  constexpr Iterator begin() const noexcept { return Iterator{this, 0}; }
+  constexpr Iterator end() const noexcept { return Iterator{this, this->size()}; }
   template <size_t I>
-  constexpr auto get() const {
+  constexpr auto get() const noexcept {
     return SkMakeSpan(std::get<I>(fPointers), fSize);
   }
-  constexpr std::tuple<Ts*...> data() const { return fPointers; }
-  constexpr SkZip first(size_t n) const {
+  constexpr std::tuple<Ts*...> data() const noexcept { return fPointers; }
+  constexpr SkZip first(size_t n) const noexcept {
     SkASSERT(n <= this->size());
     if (n == 0) {
       return SkZip();
     }
     return SkZip{n, fPointers};
   }
-  constexpr SkZip last(size_t n) const {
+  constexpr SkZip last(size_t n) const noexcept {
     SkASSERT(n <= this->size());
     if (n == 0) {
       return SkZip();
     }
     return SkZip{n, this->pointersAt(fSize - n)};
   }
-  constexpr SkZip subspan(size_t offset, size_t count) const {
+  constexpr SkZip subspan(size_t offset, size_t count) const noexcept {
     SkASSERT(offset < this->size());
     SkASSERT(count <= this->size() - offset);
     if (count == 0) {
@@ -109,27 +110,28 @@ class SkZip {
   }
 
  private:
-  constexpr SkZip(size_t n, const std::tuple<Ts*...>& pointers) : fPointers{pointers}, fSize{n} {}
+  constexpr SkZip(size_t n, const std::tuple<Ts*...>& pointers) noexcept
+      : fPointers{pointers}, fSize{n} {}
 
   constexpr ReturnTuple index(size_t i) const {
     SkASSERT(this->size() > 0);
     SkASSERT(i < this->size());
-    return indexDetail(i, skstd::make_index_sequence<sizeof...(Ts)>{});
+    return indexDetail(i, std::make_index_sequence<sizeof...(Ts)>{});
   }
 
   template <std::size_t... Is>
-  constexpr ReturnTuple indexDetail(size_t i, skstd::index_sequence<Is...>) const {
+  constexpr ReturnTuple indexDetail(size_t i, std::index_sequence<Is...>) const {
     return ReturnTuple((std::get<Is>(fPointers))[i]...);
   }
 
   std::tuple<Ts*...> pointersAt(size_t i) const {
     SkASSERT(this->size() > 0);
     SkASSERT(i < this->size());
-    return pointersAtDetail(i, skstd::make_index_sequence<sizeof...(Ts)>{});
+    return pointersAtDetail(i, std::make_index_sequence<sizeof...(Ts)>{});
   }
 
   template <std::size_t... Is>
-  constexpr std::tuple<Ts*...> pointersAtDetail(size_t i, skstd::index_sequence<Is...>) const {
+  constexpr std::tuple<Ts*...> pointersAtDetail(size_t i, std::index_sequence<Is...>) const {
     return std::tuple<Ts*...>{&(std::get<Is>(fPointers))[i]...};
   }
 

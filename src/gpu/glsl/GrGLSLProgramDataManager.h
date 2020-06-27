@@ -23,7 +23,7 @@ class GrGLSLProgramDataManager : SkNoncopyable {
  public:
   GR_DEFINE_RESOURCE_HANDLE_CLASS(UniformHandle);
 
-  virtual ~GrGLSLProgramDataManager() {}
+  virtual ~GrGLSLProgramDataManager() = default;
 
   /** Functions for uploading uniform values. The varities ending in v can be used to upload to an
    *  array of uniforms. arrayCount must be <= the array count of the uniform.
@@ -64,7 +64,7 @@ class GrGLSLProgramDataManager : SkNoncopyable {
       VaryingHandle u, int components, const SkMatrix& matrix) const = 0;
 
  protected:
-  GrGLSLProgramDataManager() {}
+  constexpr GrGLSLProgramDataManager() noexcept = default;
 
  private:
   typedef SkNoncopyable INHERITED;

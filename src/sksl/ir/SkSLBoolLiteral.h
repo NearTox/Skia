@@ -20,13 +20,11 @@ struct BoolLiteral : public Expression {
   BoolLiteral(const Context& context, int offset, bool value)
       : INHERITED(offset, kBoolLiteral_Kind, *context.fBool_Type), fValue(value) {}
 
-#ifdef SK_DEBUG
   String description() const override { return String(fValue ? "true" : "false"); }
-#endif
 
-  bool hasProperty(Property property) const override { return false; }
+  bool hasProperty(Property property) const noexcept override { return false; }
 
-  bool isConstant() const override { return true; }
+  bool isConstant() const noexcept override { return true; }
 
   bool compareConstant(const Context& context, const Expression& other) const override {
     BoolLiteral& b = (BoolLiteral&)other;

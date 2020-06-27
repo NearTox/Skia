@@ -44,7 +44,7 @@ class GrCCCoverageProcessor::TriangleShader : public GrCCCoverageProcessor::Shad
     }
   }
 
-  void emitSampleMaskCode(GrGLSLFPFragmentBuilder*) const override { return; }
+  void emitSampleMaskCode(GrGLSLFPFragmentBuilder*) const noexcept override { return; }
 
   GrGLSLVarying fCoverages;
 };
@@ -189,7 +189,7 @@ void GrCCCoverageProcessor::bindPipeline(
     GrOpFlushState* flushState, const GrPipeline& pipeline, const SkRect& drawBounds) const {
   GrProgramInfo programInfo(
       flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-      flushState->proxy()->backendFormat(), flushState->outputView()->origin(), &pipeline, this,
+      flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &pipeline, this,
       this->primType());
   flushState->bindPipeline(programInfo, drawBounds);
 }

@@ -59,7 +59,7 @@ class GrOpsRenderPass;
 
 // A helper macro to generate a class static id
 #define DEFINE_OP_CLASS_ID                     \
-  static uint32_t ClassID() noexcept {                  \
+  static uint32_t ClassID() noexcept {         \
     static uint32_t kClassID = GenOpClassID(); \
     return kClassID;                           \
   }
@@ -206,12 +206,12 @@ class GrOp : private SkNoncopyable {
    private:
     class Iter {
      public:
-      explicit Iter(const OpSubclass* head) : fCurr(head) {}
-      inline Iter& operator++() {
+      explicit Iter(const OpSubclass* head) noexcept : fCurr(head) {}
+      inline Iter& operator++() noexcept {
         return *this = Iter(static_cast<const OpSubclass*>(fCurr->nextInChain()));
       }
-      const OpSubclass& operator*() const { return *fCurr; }
-      bool operator!=(const Iter& that) const { return fCurr != that.fCurr; }
+      const OpSubclass& operator*() const noexcept { return *fCurr; }
+      bool operator!=(const Iter& that) const noexcept { return fCurr != that.fCurr; }
 
      private:
       const OpSubclass* fCurr;
@@ -219,16 +219,16 @@ class GrOp : private SkNoncopyable {
     const OpSubclass* fHead;
 
    public:
-    explicit ChainRange(const OpSubclass* head) : fHead(head) {}
-    Iter begin() { return Iter(fHead); }
-    Iter end() { return Iter(nullptr); }
+    explicit ChainRange(const OpSubclass* head) noexcept : fHead(head) {}
+    Iter begin() noexcept { return Iter(fHead); }
+    Iter end() noexcept { return Iter(nullptr); }
   };
 
   /**
    * Concatenates two op chains. This op must be a tail and the passed op must be a head. The ops
    * must be of the same subclass.
    */
-  void chainConcat(std::unique_ptr<GrOp>);
+  void chainConcat(std::unique_ptr<GrOp>) noexcept;
   /** Returns true if this is the head of a chain (including a length 1 chain). */
   bool isChainHead() const noexcept { return !fPrevInChain; }
   /** Returns true if this is the tail of a chain (including a length 1 chain). */
@@ -241,7 +241,7 @@ class GrOp : private SkNoncopyable {
    * Cuts the chain after this op. The returned op is the op that was previously next in the
    * chain or null if this was already a tail.
    */
-  std::unique_ptr<GrOp> cutChain();
+  std::unique_ptr<GrOp> cutChain() noexcept;
   SkDEBUGCODE(void validateChain(GrOp* expectedTail = nullptr) const);
 
 #ifdef SK_DEBUG
@@ -249,7 +249,7 @@ class GrOp : private SkNoncopyable {
 #endif
 
  protected:
-  GrOp(uint32_t classID);
+  GrOp(uint32_t classID) noexcept;
 
   /**
    * Indicates that the op will produce geometry that extends beyond its bounds for the
@@ -295,7 +295,7 @@ class GrOp : private SkNoncopyable {
 
   // TODO: the parameters to onPrePrepare mirror GrOpFlushState::OpArgs - fuse the two?
   virtual void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) = 0;
   virtual void onPrepare(GrOpFlushState*) = 0;
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.

@@ -76,7 +76,7 @@ class SK_API SkROBuffer : public SkRefCnt {
  */
 class SK_API SkRWBuffer {
  public:
-  SkRWBuffer(size_t initialCapacity = 0);
+  SkRWBuffer(size_t initialCapacity = 0) noexcept;
   ~SkRWBuffer();
 
   size_t size() const noexcept { return fTotalUsed; }

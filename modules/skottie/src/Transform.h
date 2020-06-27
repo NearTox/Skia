@@ -36,13 +36,13 @@ class TransformAdapter2D final
 
   // Accessors needed for public property APIs.
   // TODO: introduce a separate public type.
-  SkPoint getAnchorPoint() const;
+  SkPoint getAnchorPoint() const noexcept;
   void setAnchorPoint(const SkPoint&);
 
-  SkPoint getPosition() const;
+  SkPoint getPosition() const noexcept;
   void setPosition(const SkPoint&);
 
-  SkVector getScale() const;
+  SkVector getScale() const noexcept;
   void setScale(const SkVector&);
 
   float getRotation() const noexcept { return fRotation; }

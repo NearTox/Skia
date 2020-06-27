@@ -43,7 +43,7 @@ class SkIcoCodec : public SkCodec {
 
   SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kICO; }
 
-  SkScanlineOrder onGetScanlineOrder() const noexcept override;
+  SkScanlineOrder onGetScanlineOrder() const override;
 
   bool conversionSupported(const SkImageInfo&, bool, bool) override {
     // This will be checked by the embedded codec.

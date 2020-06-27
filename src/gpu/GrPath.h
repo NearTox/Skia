@@ -14,14 +14,14 @@
 #include "src/gpu/GrPathRendering.h"
 #include "src/gpu/GrStyle.h"
 
-class GrShape;
+class GrStyledShape;
 
 class GrPath : public GrGpuResource {
  public:
   /**
    * Initialize to a path with a fixed stroke. Stroke must not be hairline.
    */
-  GrPath(GrGpu* gpu, const SkPath& skPath, const GrStyle& style)
+  GrPath(GrGpu* gpu, const SkPath& skPath, const GrStyle& style) noexcept
       : INHERITED(gpu),
         fBounds(SkRect::MakeEmpty()),
         fFillType(GrPathRendering::kWinding_FillType)
@@ -33,11 +33,11 @@ class GrPath : public GrGpuResource {
   {
   }
 
-  static void ComputeKey(const GrShape&, GrUniqueKey* key, bool* outIsVolatile);
+  static void ComputeKey(const GrStyledShape&, GrUniqueKey* key, bool* outIsVolatile);
 
-  const SkRect& getBounds() const { return fBounds; }
+  const SkRect& getBounds() const noexcept { return fBounds; }
 
-  GrPathRendering::FillType getFillType() const { return fFillType; }
+  GrPathRendering::FillType getFillType() const noexcept { return fFillType; }
 #ifdef SK_DEBUG
   bool isEqualTo(const SkPath& path, const GrStyle& style) const;
 #endif

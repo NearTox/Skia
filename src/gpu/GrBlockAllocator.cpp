@@ -12,7 +12,7 @@
 #endif
 
 GrBlockAllocator::GrBlockAllocator(
-    GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes)
+    GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes) noexcept
     : fTail(&fHead)
       // Round up to the nearest max-aligned value, and then divide so that fBlockSizeIncrement
       // can effectively fit higher byte counts in its 16 bits of storage
@@ -33,15 +33,15 @@ GrBlockAllocator::GrBlockAllocator(
 GrBlockAllocator::Block::Block(Block* prev, int allocationSize) noexcept
     : fNext(nullptr), fPrev(prev), fSize(allocationSize), fCursor(kDataStart), fMetadata(0) {
   SkASSERT(allocationSize >= (int)sizeof(Block));
-  SkDEBUGCODE(fSentinel = kAssignedMarker;)
+  SkDEBUGCODE(fSentinel = kAssignedMarker);
 }
 
 GrBlockAllocator::Block::~Block() {
   SkASSERT(fSentinel == kAssignedMarker);
-  SkDEBUGCODE(fSentinel = kFreedMarker);  // FWIW
+  SkDEBUGCODE(fSentinel = kFreedMarker;)  // FWIW
 }
 
-size_t GrBlockAllocator::totalSize() const {
+size_t GrBlockAllocator::totalSize() const noexcept {
   // Use size_t since the sum across all blocks could exceed 'int', even though each block won't
   size_t size = offsetof(GrBlockAllocator, fHead);
   for (const Block* b : this->blocks()) {
@@ -51,7 +51,7 @@ size_t GrBlockAllocator::totalSize() const {
   return size;
 }
 
-size_t GrBlockAllocator::totalUsableSpace() const {
+size_t GrBlockAllocator::totalUsableSpace() const noexcept {
   size_t size = 0;
   for (const Block* b : this->blocks()) {
     size += (b->fSize - kDataStart);
@@ -60,7 +60,7 @@ size_t GrBlockAllocator::totalUsableSpace() const {
   return size;
 }
 
-size_t GrBlockAllocator::totalSpaceInUse() const {
+size_t GrBlockAllocator::totalSpaceInUse() const noexcept {
   size_t size = 0;
   for (const Block* b : this->blocks()) {
     size += (b->fCursor - kDataStart);
@@ -69,7 +69,7 @@ size_t GrBlockAllocator::totalSpaceInUse() const {
   return size;
 }
 
-GrBlockAllocator::Block* GrBlockAllocator::findOwningBlock(const void* p) {
+GrBlockAllocator::Block* GrBlockAllocator::findOwningBlock(const void* p) noexcept {
   // When in doubt, search in reverse to find an overlapping block.
   uintptr_t ptr = reinterpret_cast<uintptr_t>(p);
   for (Block* b : this->rblocks()) {

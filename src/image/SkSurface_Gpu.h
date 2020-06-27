@@ -25,6 +25,8 @@ class SkSurface_Gpu : public SkSurface_Base {
   static sk_sp<SkSurface> MakeWrappedRenderTarget(
       GrContext*, std::unique_ptr<GrRenderTargetContext>);
 
+  GrContext* onGetContext() override;
+
   GrBackendTexture onGetBackendTexture(BackendHandleAccess) override;
   GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess) override;
   bool onReplaceBackendTexture(

@@ -69,7 +69,7 @@ class TessellationTestTriShader : public GrGeometryProcessor {
       args.fVaryingHandler->emitAttributes(args.fGP.cast<TessellationTestTriShader>());
       const char* viewMatrix;
       fViewMatrixUniform = args.fUniformHandler->addUniform(
-          kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
+          nullptr, kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
       args.fVertBuilder->declareGlobal(
           GrShaderVar("P_", kFloat3_GrSLType, GrShaderVar::TypeModifier::Out));
       args.fVertBuilder->codeAppendf(
@@ -187,7 +187,7 @@ class TessellationTestRectShader : public GrGeometryProcessor {
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const char* viewMatrix;
       fViewMatrixUniform = args.fUniformHandler->addUniform(
-          kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
+          nullptr, kVertex_GrShaderFlag, kFloat3x3_GrSLType, "view_matrix", &viewMatrix);
       args.fVertBuilder->declareGlobal(
           GrShaderVar("M_", kFloat3x3_GrSLType, GrShaderVar::TypeModifier::Out));
       args.fVertBuilder->codeAppendf("M_ = %s;", viewMatrix);
@@ -305,7 +305,7 @@ class TessellationTestOp : public GrDrawOp {
   }
 
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override {}
 
   void onPrepare(GrOpFlushState* flushState) override {
@@ -337,7 +337,7 @@ class TessellationTestOp : public GrDrawOp {
 
     GrProgramInfo programInfo(
         state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
-        state->proxy()->backendFormat(), state->outputView()->origin(), &pipeline, shader.get(),
+        state->proxy()->backendFormat(), state->writeView()->origin(), &pipeline, shader.get(),
         GrPrimitiveType::kPatches, tessellationPatchVertexCount);
 
     state->bindPipeline(programInfo, SkRect::MakeIWH(kWidth, kHeight));

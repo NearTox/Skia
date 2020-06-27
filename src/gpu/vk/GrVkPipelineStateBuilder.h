@@ -35,7 +35,7 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
 
   const GrCaps* caps() const override;
 
-  GrVkGpu* gpu() const { return fGpu; }
+  GrVkGpu* gpu() const noexcept { return fGpu; }
 
   void finalizeFragmentOutputColor(GrShaderVar& outputColor) override;
   void finalizeFragmentSecondaryColor(GrShaderVar& outputColor) override;

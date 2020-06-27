@@ -19,15 +19,16 @@
  */
 class DisableColorXP : public GrXferProcessor {
  public:
-  DisableColorXP() : INHERITED(kDisableColorXP_ClassID) {}
+  DisableColorXP() noexcept : INHERITED(kDisableColorXP_ClassID) {}
 
  private:
-  const char* name() const override { return "Disable Color"; }
-  bool onIsEqual(const GrXferProcessor& xpBase) const override { return true; }
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
+  const char* name() const noexcept override { return "Disable Color"; }
+  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override { return true; }
+  void onGetGLSLProcessorKey(
+      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept override {
     return;  // No key.
   }
-  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override {
+  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const noexcept override {
     blendInfo->fWriteColor = false;
   }
   GrGLSLXferProcessor* createGLSLInstance() const override;
@@ -48,13 +49,13 @@ class GLDisableColorXP : public GrGLSLXferProcessor {
     }
   }
 
-  void emitWriteSwizzle(
-      GrGLSLXPFragmentBuilder*, const GrSwizzle&, const char*, const char*) const override {
+  void emitWriteSwizzle(GrGLSLXPFragmentBuilder*, const GrSwizzle&, const char*, const char*)
+      const noexcept override {
     // Don't write any swizzling. This makes sure the final shader does not output a color.
     return;
   }
 
-  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
+  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) noexcept override {}
 
   typedef GrGLSLXferProcessor INHERITED;
 };

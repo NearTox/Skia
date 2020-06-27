@@ -46,8 +46,8 @@ struct GrVertexWriter {
   struct Skip {};
 
   template <typename T, typename... Args>
-  void write(const T& val, const Args&... remainder) {
-    static_assert(std::is_pod<T>::value, "");
+  void write(const T& val, const Args&... remainder) noexcept {
+    static_assert(std::is_trivially_copyable<T>::value, "");
     // This assert is barely related to what we're trying to check - that our vertex data
     // matches our attribute layouts, where each attribute is aligned to four bytes. If this
     // becomes a problem, just remove it.
@@ -58,8 +58,8 @@ struct GrVertexWriter {
   }
 
   template <typename T, size_t N, typename... Args>
-  void write(const T (&val)[N], const Args&... remainder) {
-    static_assert(std::is_pod<T>::value, "");
+  void write(const T (&val)[N], const Args&... remainder) noexcept {
+    static_assert(std::is_trivially_copyable<T>::value, "");
     static_assert(alignof(T) <= 4, "");
     memcpy(fPtr, val, N * sizeof(T));
     fPtr = SkTAddOffset<void>(fPtr, N * sizeof(T));
@@ -99,12 +99,12 @@ struct GrVertexWriter {
     this->write(remainder...);
   }
 
-  void writeRaw(const void* data, size_t size) {
+  void writeRaw(const void* data, size_t size) noexcept {
     memcpy(fPtr, data, size);
     fPtr = SkTAddOffset<void>(fPtr, size);
   }
 
-  void write() {}
+  void write() noexcept {}
 
   /**
    * Specialized utility for writing a four-vertices, with some data being replicated at each
@@ -124,6 +124,10 @@ struct GrVertexWriter {
 
   static TriStrip<float> TriStripFromRect(const SkRect& r) noexcept {
     return {r.fLeft, r.fTop, r.fRight, r.fBottom};
+  }
+
+  static TriStrip<uint16_t> TriStripFromUVs(const std::array<uint16_t, 4>& rect) noexcept {
+    return {rect[0], rect[1], rect[2], rect[3]};
   }
 
   template <typename T>

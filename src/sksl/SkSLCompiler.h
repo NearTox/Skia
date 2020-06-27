@@ -75,9 +75,9 @@ class SK_API Compiler : public ErrorReporter {
   struct FormatArg {
     enum class Kind { kInput, kOutput, kCoords, kUniform, kChildProcessor, kFunctionName };
 
-    FormatArg(Kind kind) : fKind(kind) {}
+    FormatArg(Kind kind) noexcept : fKind(kind) {}
 
-    FormatArg(Kind kind, int index) : fKind(kind), fIndex(index) {}
+    FormatArg(Kind kind, int index) noexcept : fKind(kind), fIndex(index) {}
 
     Kind fKind;
     int fIndex;
@@ -155,11 +155,11 @@ class SK_API Compiler : public ErrorReporter {
 
   int errorCount() override { return fErrorCount; }
 
-  Context& context() { return *fContext; }
+  Context& context() noexcept { return *fContext; }
 
   static const char* OperatorName(Token::Kind token);
 
-  static bool IsAssignment(Token::Kind token);
+  static bool IsAssignment(Token::Kind token) noexcept;
 
  private:
   void processIncludeFile(
@@ -198,8 +198,8 @@ class SK_API Compiler : public ErrorReporter {
 
   Position position(int offset);
 
-  std::map<String, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
-  std::map<String, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
+  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
+  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
   std::unique_ptr<ASTFile> fGpuIncludeSource;
   std::shared_ptr<SymbolTable> fGpuSymbolTable;
   std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;
@@ -210,7 +210,6 @@ class SK_API Compiler : public ErrorReporter {
   std::shared_ptr<SymbolTable> fGeometrySymbolTable;
   std::vector<std::unique_ptr<ProgramElement>> fPipelineInclude;
   std::shared_ptr<SymbolTable> fPipelineSymbolTable;
-  std::unique_ptr<ASTFile> fInterpreterIncludeSource;
   std::vector<std::unique_ptr<ProgramElement>> fInterpreterInclude;
   std::shared_ptr<SymbolTable> fInterpreterSymbolTable;
 

@@ -287,7 +287,29 @@ void HCodeGenerator::writeConstructor() {
           FieldName(String(param->fName).c_str()).c_str());
       if (fSectionAndParameterHelper.hasCoordOverrides(*param)) {
         this->writef(
-            "            %s->setSampledWithExplicitCoords(true);", String(param->fName).c_str());
+            "            %s->setSampledWithExplicitCoords();", String(param->fName).c_str());
+      }
+      SampleMatrix matrix = fSectionAndParameterHelper.getMatrix(*param);
+      switch (matrix.fKind) {
+        case SampleMatrix::Kind::kVariable:
+          this->writef(
+              "            %s->setSampleMatrix(this, "
+              "SkSL::SampleMatrix::Kind::kVariable);",
+              String(param->fName).c_str());
+          break;
+        case SampleMatrix::Kind::kConstantOrUniform:
+          this->writef(
+              "            %s->setSampleMatrix(SkSL::SampleMatrix("
+              "SkSL::SampleMatrix::Kind::kConstantOrUniform, this, \"%s\"));",
+              String(param->fName).c_str(), matrix.fExpression.c_str());
+          break;
+        case SampleMatrix::Kind::kMixed:
+          this->writef(
+              "            %s->setSampleMatrix(SkSL::SampleMatrix("
+              "SkSL::SampleMatrix::Kind::kMixed, this, \"%s\"));",
+              String(param->fName).c_str(), matrix.fExpression.c_str());
+          break;
+        case SampleMatrix::Kind::kNone: break;
       }
       this->writef(
           "            this->registerChildProcessor(std::move(%s));", String(param->fName).c_str());
@@ -332,8 +354,8 @@ String HCodeGenerator::GetHeader(const Program& program, ErrorReporter& errors) 
   for (;;) {
     Token header = parser.nextRawToken();
     switch (header.fKind) {
-      case Token::WHITESPACE: break;
-      case Token::BLOCK_COMMENT:
+      case Token::Kind::TK_WHITESPACE: break;
+      case Token::Kind::TK_BLOCK_COMMENT:
         return String(program.fSource->c_str() + header.fOffset, header.fLength);
       default: return "";
     }

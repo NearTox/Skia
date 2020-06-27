@@ -51,9 +51,11 @@ class SkSVGNode : public SkRefCnt {
   SkPath asPath(const SkSVGRenderContext&) const;
 
   void setAttribute(SkSVGAttribute, const SkSVGValue&);
+  bool setAttribute(const char* attributeName, const char* attributeValue);
 
   void setClipPath(const SkSVGClip&);
   void setClipRule(const SkSVGFillRule&);
+  void setColor(const SkSVGColorType&);
   void setFill(const SkSVGPaint&);
   void setFillOpacity(const SkSVGNumberType&);
   void setFillRule(const SkSVGFillRule&);
@@ -62,6 +64,9 @@ class SkSVGNode : public SkRefCnt {
   void setStrokeDashArray(const SkSVGDashArray&);
   void setStrokeDashOffset(const SkSVGLength&);
   void setStrokeOpacity(const SkSVGNumberType&);
+  void setStrokeLineCap(const SkSVGLineCap&);
+  void setStrokeLineJoin(const SkSVGLineJoin&);
+  void setStrokeMiterLimit(const SkSVGNumberType&);
   void setStrokeWidth(const SkSVGLength&);
   void setVisibility(const SkSVGVisibility&);
 

@@ -30,7 +30,7 @@ class GrMockGpu : public GrGpu {
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override { return 0; }
-  bool waitFence(GrFence, uint64_t) override { return true; }
+  bool waitFence(GrFence) override { return true; }
   void deleteFence(GrFence) const override {}
 
   std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned) override {
@@ -117,23 +117,28 @@ class GrMockGpu : public GrGpu {
 
   void onResolveRenderTarget(GrRenderTarget* target, const SkIRect&, ForExternalIO) override {}
 
-  bool onFinishFlush(
-      GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
-      const GrPrepareForExternalIORequests&) override {
-    if (info.fFinishedProc) {
-      info.fFinishedProc(info.fFinishedContext);
-    }
-    return true;
+  void addFinishedProc(
+      GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) override {
+    SkASSERT(finishedProc);
+    finishedProc(finishedContext);
   }
+
+  bool onSubmitToGpu(bool syncCpu) override { return true; }
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
   GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected,
-      const BackendTextureData*) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+
+  bool onUpdateBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
+      const BackendTextureData*) override {
+    return true;
+  }
+
   GrBackendTexture onCreateCompressedBackendTexture(
       SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      const BackendTextureData*) override;
+      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) override;
   void deleteBackendTexture(const GrBackendTexture&) override;
 
   bool compile(const GrProgramDesc&, const GrProgramInfo&) override { return false; }
@@ -149,10 +154,10 @@ class GrMockGpu : public GrGpu {
 
   const GrMockOptions fMockOptions;
 
-  static int NextInternalTextureID() noexcept;
-  static int NextExternalTextureID() noexcept;
-  static int NextInternalRenderTargetID() noexcept;
-  static int NextExternalRenderTargetID() noexcept;
+  static int NextInternalTextureID();
+  static int NextExternalTextureID();
+  static int NextInternalRenderTargetID();
+  static int NextExternalRenderTargetID();
 
   SkTHashSet<int> fOutstandingTestingOnlyTextureIDs;
 

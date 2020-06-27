@@ -12,7 +12,9 @@
 
 class GrAAConvexPathRenderer : public GrPathRenderer {
  public:
-  GrAAConvexPathRenderer();
+  const char* name() const noexcept final { return "AAConvex"; }
+
+  GrAAConvexPathRenderer() noexcept;
 
  private:
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;

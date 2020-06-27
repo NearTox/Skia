@@ -74,7 +74,7 @@ struct RunRecordStorageEquivalent {
   SkPoint fOffset;
   uint32_t fCount;
   uint32_t fFlags;
-  SkDEBUGCODE(unsigned fMagic;)
+  SkDEBUGCODE(unsigned fMagic);
 };
 }  // namespace
 
@@ -181,7 +181,7 @@ enum SkTextBlob::GlyphPositioning : uint8_t {
 };
 
 unsigned SkTextBlob::ScalarsPerGlyph(GlyphPositioning pos) noexcept {
-  constexpr uint8_t gScalarsPerPositioning[] = {
+  const uint8_t gScalarsPerPositioning[] = {
       0,  // kDefault_Positioning
       1,  // kHorizontal_Positioning
       2,  // kFull_Positioning
@@ -206,8 +206,8 @@ void SkTextBlobRunIterator::next() noexcept {
   SkASSERT(!this->done());
 
   if (!this->done()) {
-    SkDEBUGCODE(fCurrentRun->validate(fStorageTop));
-    fCurrentRun = SkTextBlob::RunRecord::Next(fCurrentRun);
+    SkDEBUGCODE(fCurrentRun->validate(fStorageTop);) fCurrentRun =
+        SkTextBlob::RunRecord::Next(fCurrentRun);
   }
 }
 

@@ -22,14 +22,14 @@ static constexpr uint16_t SK_HalfEpsilon = 0x1400;  // 2^-10
 static constexpr uint16_t SK_Half1 = 0x3C00;        // 1
 
 // convert between half and single precision floating point
-float SkHalfToFloat(SkHalf h);
-SkHalf SkFloatToHalf(float f);
+float SkHalfToFloat(SkHalf h) noexcept;
+SkHalf SkFloatToHalf(float f) noexcept;
 
 // Convert between half and single precision floating point,
 // assuming inputs and outputs are both finite, and may
 // flush values which would be denormal half floats to zero.
 static inline Sk4f SkHalfToFloat_finite_ftz(uint64_t) noexcept;
-static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f&);
+static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f&) noexcept;
 
 // ~~~~~~~~~~~ impl ~~~~~~~~~~~~~~ //
 
@@ -61,7 +61,7 @@ static inline Sk4f SkHalfToFloat_finite_ftz(uint64_t rgba) noexcept {
 #endif
 }
 
-static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f& fs) {
+static inline Sk4h SkFloatToHalf_finite_ftz(const Sk4f& fs) noexcept {
 #if !defined(SKNX_NO_SIMD) && defined(SK_CPU_ARM64)
   float32x4_t vec = fs.fVec;
   asm("fcvtn %[vec].4h, %[vec].4s  \n"  // vcvt_f16_f32(vec)

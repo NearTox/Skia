@@ -32,6 +32,21 @@
 #  include "src/utils/win/SkDWrite.h"
 #  include "src/utils/win/SkDWriteFontFileStream.h"
 
+DWriteFontTypeface::Loaders::~Loaders() {
+  // Don't return if any fail, just keep going to free up as much as possible.
+  HRESULT hr;
+
+  hr = fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get());
+  if (FAILED(hr)) {
+    SK_TRACEHR(hr, "FontCollectionLoader");
+  }
+
+  hr = fFactory->UnregisterFontFileLoader(fDWriteFontFileLoader.get());
+  if (FAILED(hr)) {
+    SK_TRACEHR(hr, "FontFileLoader");
+  }
+}
+
 void DWriteFontTypeface::onGetFamilyName(SkString* familyName) const {
   SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
   HRV(fDWriteFontFamily->GetFamilyNames(&familyNames));
@@ -49,11 +64,11 @@ void DWriteFontTypeface::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLoc
 
   desc->setFamilyName(utf8FamilyName.c_str());
   desc->setStyle(this->fontStyle());
-  *isLocalStream = SkToBool(fDWriteFontFileLoader.get());
+  *isLocalStream = SkToBool(fLoaders);
 }
 
 void DWriteFontTypeface::onCharsToGlyphs(
-    const SkUnichar uni[], int count, SkGlyphID glyphs[]) const {
+    const SkUnichar* uni, int count, SkGlyphID glyphs[]) const {
   fDWriteFontFace->GetGlyphIndices((const UINT32*)uni, count, glyphs);
 }
 
@@ -70,7 +85,7 @@ int DWriteFontTypeface::onGetUPEM() const {
 class LocalizedStrings_IDWriteLocalizedStrings : public SkTypeface::LocalizedStrings {
  public:
   /** Takes ownership of the IDWriteLocalizedStrings. */
-  explicit LocalizedStrings_IDWriteLocalizedStrings(IDWriteLocalizedStrings* strings)
+  explicit LocalizedStrings_IDWriteLocalizedStrings(IDWriteLocalizedStrings* strings) noexcept
       : fIndex(0), fStrings(strings) {}
 
   bool next(SkTypeface::LocalizedString* localizedString) override {
@@ -268,13 +283,8 @@ sk_sp<SkData> DWriteFontTypeface::onCopyTableData(SkFontTableTag tag) const {
       new Context(lock, fDWriteFontFace.get()));
 }
 
-void DWriteFontTypeface::weak_dispose() const noexcept {
-  if (fDWriteFontCollectionLoader.get()) {
-    HRV(fFactory->UnregisterFontCollectionLoader(fDWriteFontCollectionLoader.get()));
-  }
-  if (fDWriteFontFileLoader.get()) {
-    HRV(fFactory->UnregisterFontFileLoader(fDWriteFontFileLoader.get()));
-  }
+inline void DWriteFontTypeface::weak_dispose() const noexcept {
+  fLoaders.reset();
 
   // SkTypefaceCache::Remove(this);
   INHERITED::weak_dispose();
@@ -314,8 +324,7 @@ sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) c
     SkTScopedComPtr<IDWriteFontFace> newFontFace;
     HRN(newFontFace5->QueryInterface(&newFontFace));
     return DWriteFontTypeface::Make(
-        fFactory.get(), newFontFace.get(), fDWriteFont.get(), fDWriteFontFamily.get(),
-        fDWriteFontFileLoader.get(), fDWriteFontCollectionLoader.get());
+        fFactory.get(), newFontFace.get(), fDWriteFont.get(), fDWriteFontFamily.get(), fLoaders);
   }
 
 #  endif

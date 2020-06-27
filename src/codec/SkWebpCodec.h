@@ -66,7 +66,7 @@ class SkWebpCodec final : public SkScalingCodec {
 
   class FrameHolder : public SkFrameHolder {
    public:
-    ~FrameHolder() override {}
+    ~FrameHolder() override = default;
     void setScreenSize(int w, int h) {
       fScreenWidth = w;
       fScreenHeight = h;

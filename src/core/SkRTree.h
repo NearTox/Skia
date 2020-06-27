@@ -33,7 +33,7 @@ class SkRTree : public SkBBoxHierarchy {
 
   void insert(const SkRect[], int N) override;
   void search(const SkRect& query, std::vector<int>* results) const override;
-  size_t bytesUsed() const override;
+  size_t bytesUsed() const noexcept override;
 
   // Methods and constants below here are only public for tests.
 
@@ -68,7 +68,7 @@ class SkRTree : public SkBBoxHierarchy {
   Branch bulkLoad(std::vector<Branch>* branches, int level = 0);
 
   // How many times will bulkLoad() call allocateNodeAtLevel()?
-  static int CountNodes(int branches);
+  static int CountNodes(int branches) noexcept;
 
   Node* allocateNodeAtLevel(uint16_t level);
 

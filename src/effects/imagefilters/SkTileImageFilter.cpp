@@ -25,15 +25,16 @@ namespace {
 
 class SkTileImageFilterImpl final : public SkImageFilter_Base {
  public:
-  SkTileImageFilterImpl(const SkRect& srcRect, const SkRect& dstRect, sk_sp<SkImageFilter> input)
+  SkTileImageFilterImpl(
+      const SkRect& srcRect, const SkRect& dstRect, sk_sp<SkImageFilter> input) noexcept
       : INHERITED(&input, 1, nullptr), fSrcRect(srcRect), fDstRect(dstRect) {}
 
   SkIRect onFilterBounds(
       const SkIRect& src, const SkMatrix& ctm, MapDirection,
-      const SkIRect* inputRect) const override;
+      const SkIRect* inputRect) const noexcept override;
   SkIRect onFilterNodeBounds(
       const SkIRect&, const SkMatrix& ctm, MapDirection, const SkIRect* inputRect) const override;
-  SkRect computeFastBounds(const SkRect& src) const override;
+  SkRect computeFastBounds(const SkRect& src) const noexcept override;
 
  protected:
   void flatten(SkWriteBuffer& buffer) const override;
@@ -174,9 +175,11 @@ SkIRect SkTileImageFilterImpl::onFilterNodeBounds(
 }
 
 SkIRect SkTileImageFilterImpl::onFilterBounds(
-    const SkIRect& src, const SkMatrix&, MapDirection, const SkIRect* inputRect) const {
+    const SkIRect& src, const SkMatrix&, MapDirection, const SkIRect* inputRect) const noexcept {
   // Don't recurse into inputs.
   return src;
 }
 
-SkRect SkTileImageFilterImpl::computeFastBounds(const SkRect& src) const { return fDstRect; }
+SkRect SkTileImageFilterImpl::computeFastBounds(const SkRect& src) const noexcept {
+  return fDstRect;
+}

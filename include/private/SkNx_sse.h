@@ -39,7 +39,7 @@ class SkNx<2, float> {
  public:
   AI SkNx(const __m128& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(float val) noexcept : fVec(_mm_set1_ps(val)) {}
   AI static SkNx Load(const void* ptr) noexcept {
     return _mm_castsi128_ps(_mm_loadl_epi64((const __m128i*)ptr));
@@ -134,7 +134,7 @@ class SkNx<4, float> {
  public:
   AI SkNx(const __m128& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(float val) noexcept : fVec(_mm_set1_ps(val)) {}
   AI SkNx(float a, float b, float c, float d) noexcept : fVec(_mm_setr_ps(a, b, c, d)) {}
 
@@ -248,7 +248,7 @@ class SkNx<4, int32_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(int32_t val) noexcept : fVec(_mm_set1_epi32(val)) {}
   AI static SkNx Load(const void* ptr) noexcept { return _mm_loadu_si128((const __m128i*)ptr); }
   AI SkNx(int32_t a, int32_t b, int32_t c, int32_t d) noexcept : fVec(_mm_setr_epi32(a, b, c, d)) {}
@@ -320,7 +320,7 @@ class SkNx<2, uint32_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(uint32_t val) noexcept : fVec(_mm_set1_epi32(val)) {}
   AI static SkNx Load(const void* ptr) noexcept { return _mm_loadl_epi64((const __m128i*)ptr); }
   AI SkNx(uint32_t a, uint32_t b) noexcept : fVec(_mm_setr_epi32(a, b, 0, 0)) {}
@@ -369,7 +369,7 @@ class SkNx<4, uint32_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(uint32_t val) noexcept : fVec(_mm_set1_epi32(val)) {}
   AI static SkNx Load(const void* ptr) noexcept { return _mm_loadu_si128((const __m128i*)ptr); }
   AI SkNx(uint32_t a, uint32_t b, uint32_t c, uint32_t d) noexcept
@@ -425,7 +425,7 @@ class SkNx<4, uint16_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(uint16_t val) noexcept : fVec(_mm_set1_epi16(val)) {}
   AI SkNx(uint16_t a, uint16_t b, uint16_t c, uint16_t d) noexcept
       : fVec(_mm_setr_epi16(a, b, c, d, 0, 0, 0, 0)) {}
@@ -496,7 +496,7 @@ class SkNx<8, uint16_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(uint16_t val) noexcept : fVec(_mm_set1_epi16(val)) {}
   AI SkNx(
       uint16_t a, uint16_t b, uint16_t c, uint16_t d, uint16_t e, uint16_t f, uint16_t g,
@@ -599,7 +599,7 @@ class SkNx<8, uint16_t> {
 template <>
 class SkNx<4, uint8_t> {
  public:
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
   AI SkNx(uint8_t a, uint8_t b, uint8_t c, uint8_t d) noexcept
       : fVec(_mm_setr_epi8(a, b, c, d, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)) {}
@@ -626,7 +626,7 @@ class SkNx<8, uint8_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(uint8_t val) noexcept : fVec(_mm_set1_epi8(val)) {}
   AI static SkNx Load(const void* ptr) noexcept { return _mm_loadl_epi64((const __m128i*)ptr); }
   AI SkNx(
@@ -669,7 +669,7 @@ class SkNx<16, uint8_t> {
  public:
   AI SkNx(const __m128i& vec) noexcept : fVec(vec) {}
 
-  AI SkNx() {}
+  AI SkNx() noexcept = default;
   AI SkNx(uint8_t val) noexcept : fVec(_mm_set1_epi8(val)) {}
   AI static SkNx Load(const void* ptr) noexcept { return _mm_loadu_si128((const __m128i*)ptr); }
   AI SkNx(

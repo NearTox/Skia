@@ -93,7 +93,7 @@ class SK_API SkDrawable : public SkFlattenable {
    *  Subclasses that change their state should call notifyDrawingChanged() to ensure that
    *  a new value will be returned the next time it is called.
    */
-  uint32_t getGenerationID();
+  uint32_t getGenerationID() noexcept;
 
   /**
    *  Return the (conservative) bounds of what the drawable will draw. If the drawable can
@@ -107,7 +107,7 @@ class SK_API SkDrawable : public SkFlattenable {
    *  the next time getGenerationID() is called. Typically this is called by the object itself,
    *  in response to its internal state changing.
    */
-  void notifyDrawingChanged();
+  void notifyDrawingChanged() noexcept;
 
   static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawable_Type; }
 
@@ -123,7 +123,7 @@ class SK_API SkDrawable : public SkFlattenable {
   const char* getTypeName() const override { return nullptr; }
 
  protected:
-  SkDrawable();
+  SkDrawable() noexcept;
 
   virtual SkRect onGetBounds() = 0;
   virtual void onDraw(SkCanvas*) = 0;

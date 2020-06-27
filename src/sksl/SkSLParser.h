@@ -68,9 +68,11 @@ class Parser {
     TRIANGLES_ADJACENCY,
     MAX_VERTICES,
     INVOCATIONS,
+    MARKER,
     WHEN,
     KEY,
     TRACKED,
+    SRGB_UNPREMUL,
     CTYPE,
     SKPMCOLOR4F,
     SKV4,
@@ -113,7 +115,7 @@ class Parser {
    * of pushback is supported (that is, it is an error to call pushback() twice in a row without
    * an intervening nextToken()).
    */
-  void pushback(Token t);
+  void pushback(Token t) noexcept;
 
   /**
    * Returns the next non-whitespace token without consuming it from the stream.

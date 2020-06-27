@@ -78,7 +78,7 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AttachTrimGeometryEffect(
 
   std::vector<sk_sp<sksg::GeometryNode>> inputs;
   if (mode == Mode::kSerial) {
-    inputs.push_back(ShapeBuilder::MergeGeometry(std::move(geos), sksg::Merge::Mode::kMerge));
+    inputs.emplace_back(ShapeBuilder::MergeGeometry(std::move(geos), sksg::Merge::Mode::kMerge));
   } else {
     inputs = std::move(geos);
   }
@@ -87,7 +87,8 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AttachTrimGeometryEffect(
   trimmed.reserve(inputs.size());
 
   for (const auto& i : inputs) {
-    trimmed.push_back(abuilder->attachDiscardableAdapter<TrimEffectAdapter>(jtrim, *abuilder, i));
+    trimmed.emplace_back(
+        abuilder->attachDiscardableAdapter<TrimEffectAdapter>(jtrim, *abuilder, i));
   }
 
   return trimmed;

@@ -16,7 +16,7 @@ class SkGaussFilter {
  public:
   static constexpr int kGaussArrayMax = 6;
 
-  explicit SkGaussFilter(double sigma);
+  explicit SkGaussFilter(double sigma) noexcept;
 
   size_t size() const noexcept { return fN; }
   int radius() const noexcept { return fN - 1; }

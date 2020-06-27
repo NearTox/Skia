@@ -27,7 +27,8 @@ namespace SkSL {
 struct InterfaceBlock : public ProgramElement {
   InterfaceBlock(
       int offset, const Variable* var, String typeName, String instanceName,
-      std::vector<std::unique_ptr<Expression>> sizes, std::shared_ptr<SymbolTable> typeOwner)
+      std::vector<std::unique_ptr<Expression>> sizes,
+      std::shared_ptr<SymbolTable> typeOwner) noexcept
       : INHERITED(offset, kInterfaceBlock_Kind),
         fVariable(*var),
         fTypeName(std::move(typeName)),
@@ -44,7 +45,6 @@ struct InterfaceBlock : public ProgramElement {
         fOffset, &fVariable, fTypeName, fInstanceName, std::move(sizesClone), fTypeOwner));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result = fVariable.fModifiers.description() + fTypeName + " {\n";
     const Type* structType = &fVariable.fType;
@@ -67,7 +67,6 @@ struct InterfaceBlock : public ProgramElement {
     }
     return result + ";";
   }
-#endif
 
   const Variable& fVariable;
   const String fTypeName;

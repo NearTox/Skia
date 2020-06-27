@@ -75,13 +75,13 @@ inline SkFixed SkIntToFixed(int n) {
 #define SkFixedCeilToInt(x) (((x) + SK_Fixed1 - 1) >> 16)
 #define SkFixedFloorToInt(x) ((x) >> 16)
 
-static constexpr SkFixed SkFixedRoundToFixed(SkFixed x) noexcept {
+static constexpr inline SkFixed SkFixedRoundToFixed(SkFixed x) noexcept {
   return (x + SK_FixedHalf) & 0xFFFF0000;
 }
-static constexpr SkFixed SkFixedCeilToFixed(SkFixed x) noexcept {
+static constexpr inline SkFixed SkFixedCeilToFixed(SkFixed x) noexcept {
   return (x + SK_Fixed1 - 1) & 0xFFFF0000;
 }
-static constexpr SkFixed SkFixedFloorToFixed(SkFixed x) noexcept { return x & 0xFFFF0000; }
+static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept { return x & 0xFFFF0000; }
 
 #define SkFixedAbs(x) SkAbs32(x)
 #define SkFixedAve(a, b) (((a) + (b)) >> 1)
@@ -90,7 +90,7 @@ static constexpr SkFixed SkFixedFloorToFixed(SkFixed x) noexcept { return x & 0x
 #define SkFixedDiv(numer, denom) \
   SkToS32(SkTPin<int64_t>((SkLeftShift((int64_t)(numer), 16) / (denom)), SK_MinS32, SK_MaxS32))
 
-static constexpr SkFixed SkFixedMul(SkFixed a, SkFixed b) noexcept {
+static constexpr inline SkFixed SkFixedMul(SkFixed a, SkFixed b) noexcept {
   return (SkFixed)((int64_t)a * b >> 16);
 }
 

@@ -12,7 +12,7 @@
 
 namespace sksg {
 
-Image::Image(sk_sp<SkImage> image) : fImage(std::move(image)) {}
+Image::Image(sk_sp<SkImage> image) noexcept : fImage(std::move(image)) {}
 
 void Image::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   if (!fImage) {
@@ -30,12 +30,12 @@ void Image::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   canvas->drawImage(fImage, 0, 0, &paint);
 }
 
-const RenderNode* Image::onNodeAt(const SkPoint& p) const {
+const RenderNode* Image::onNodeAt(const SkPoint& p) const noexcept {
   SkASSERT(this->bounds().contains(p.x(), p.y()));
   return this;
 }
 
-SkRect Image::onRevalidate(InvalidationController*, const SkMatrix& ctm) {
+SkRect Image::onRevalidate(InvalidationController*, const SkMatrix& ctm) noexcept {
   return fImage ? SkRect::Make(fImage->bounds()) : SkRect::MakeEmpty();
 }
 

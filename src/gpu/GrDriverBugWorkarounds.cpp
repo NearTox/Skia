@@ -9,7 +9,7 @@
 
 #include "include/core/SkTypes.h"
 
-GrDriverBugWorkarounds::GrDriverBugWorkarounds() = default;
+GrDriverBugWorkarounds::GrDriverBugWorkarounds() noexcept = default;
 
 GrDriverBugWorkarounds::GrDriverBugWorkarounds(
     const std::vector<int>& enabled_driver_bug_workarounds) {
@@ -25,7 +25,7 @@ GrDriverBugWorkarounds::GrDriverBugWorkarounds(
   }
 }
 
-void GrDriverBugWorkarounds::applyOverrides(const GrDriverBugWorkarounds& workarounds) {
+void GrDriverBugWorkarounds::applyOverrides(const GrDriverBugWorkarounds& workarounds) noexcept {
 #define GPU_OP(type, name) name |= workarounds.name;
 
   GPU_DRIVER_BUG_WORKAROUNDS(GPU_OP)

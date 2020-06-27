@@ -37,7 +37,7 @@ class SkTypeface;
  */
 class GrPathRendering {
  public:
-  virtual ~GrPathRendering() {}
+  virtual ~GrPathRendering() = default;
 
   enum PathTransformType {
     kNone_PathTransformType,        //!< []
@@ -73,7 +73,7 @@ class GrPathRendering {
     kEvenOdd_FillType,
   };
 
-  static const GrUserStencilSettings& GetStencilPassSettings(FillType);
+  static const GrUserStencilSettings& GetStencilPassSettings(FillType) noexcept;
 
   /**
    * Creates a new gpu path, based on the specified path and stroke and returns it.
@@ -89,7 +89,8 @@ class GrPathRendering {
   struct StencilPathArgs {
     StencilPathArgs(
         bool useHWAA, GrRenderTargetProxy* proxy, GrSurfaceOrigin origin,
-        const SkMatrix* viewMatrix, const GrScissorState* scissor, const GrStencilSettings* stencil)
+        const SkMatrix* viewMatrix, const GrScissorState* scissor,
+        const GrStencilSettings* stencil) noexcept
         : fUseHWAA(useHWAA),
           fProxy(proxy),
           fOrigin(origin),

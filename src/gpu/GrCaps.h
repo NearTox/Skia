@@ -51,7 +51,11 @@ class GrCaps : public SkRefCnt {
   bool textureBarrierSupport() const noexcept { return fTextureBarrierSupport; }
   bool sampleLocationsSupport() const noexcept { return fSampleLocationsSupport; }
   bool multisampleDisableSupport() const noexcept { return fMultisampleDisableSupport; }
-  bool instanceAttribSupport() const noexcept { return fInstanceAttribSupport; }
+  bool drawInstancedSupport() const noexcept { return fDrawInstancedSupport; }
+  // Is there hardware support for indirect draws? (Ganesh always supports indirect draws as long
+  // as it can polyfill them with instanced calls, but this cap tells us if they are supported
+  // natively.)
+  bool nativeDrawIndirectSupport() const noexcept { return fNativeDrawIndirectSupport; }
   bool mixedSamplesSupport() const noexcept { return fMixedSamplesSupport; }
   bool conservativeRasterSupport() const noexcept { return fConservativeRasterSupport; }
   bool wireframeSupport() const noexcept { return fWireframeSupport; }
@@ -79,6 +83,11 @@ class GrCaps : public SkRefCnt {
     return this->preferFullscreenClears();
   }
 
+  // D3D does not allow the refs or masks to differ on a two-sided stencil draw.
+  bool twoSidedStencilRefsAndMasksMustMatch() const noexcept {
+    return fTwoSidedStencilRefsAndMasksMustMatch;
+  }
+
   bool preferVRAMUseOverFlushes() const noexcept { return fPreferVRAMUseOverFlushes; }
 
   bool preferTrianglesOverSampleMask() const noexcept { return fPreferTrianglesOverSampleMask; }
@@ -90,6 +99,11 @@ class GrCaps : public SkRefCnt {
   // http://skbug.com/9739
   bool requiresManualFBBarrierAfterTessellatedStencilDraw() const noexcept {
     return fRequiresManualFBBarrierAfterTessellatedStencilDraw;
+  }
+
+  // glDrawElementsIndirect fails GrMeshTest on every Win10 Intel bot.
+  bool nativeDrawIndexedIndirectIsBroken() const noexcept {
+    return fNativeDrawIndexedIndirectIsBroken;
   }
 
   /**
@@ -397,13 +411,6 @@ class GrCaps : public SkRefCnt {
     return this->onAreColorTypeAndFormatCompatible(grCT, format);
   }
 
-  /**
-   * Special method only for YUVA images. Returns a colortype that matches the backend format or
-   * kUnknown if a colortype could not be determined.
-   */
-  virtual GrColorType getYUVAColorTypeFromBackendFormat(
-      const GrBackendFormat&, bool isAlphaChannel) const = 0;
-
   /** These are used when creating a new texture internally. */
   GrBackendFormat getDefaultBackendFormat(GrColorType, GrRenderable) const;
 
@@ -467,7 +474,8 @@ class GrCaps : public SkRefCnt {
   bool fTextureBarrierSupport : 1;
   bool fSampleLocationsSupport : 1;
   bool fMultisampleDisableSupport : 1;
-  bool fInstanceAttribSupport : 1;
+  bool fDrawInstancedSupport : 1;
+  bool fNativeDrawIndirectSupport : 1;
   bool fMixedSamplesSupport : 1;
   bool fConservativeRasterSupport : 1;
   bool fWireframeSupport : 1;
@@ -475,6 +483,7 @@ class GrCaps : public SkRefCnt {
   bool fUsePrimitiveRestart : 1;
   bool fPreferClientSideDynamicBuffers : 1;
   bool fPreferFullscreenClears : 1;
+  bool fTwoSidedStencilRefsAndMasksMustMatch : 1;
   bool fMustClearUploadedBufferData : 1;
   bool fShouldInitializeTextures : 1;
   bool fSupportsAHardwareBufferImages : 1;
@@ -497,6 +506,7 @@ class GrCaps : public SkRefCnt {
   bool fAvoidStencilBuffers : 1;
   bool fAvoidWritePixelsFastPath : 1;
   bool fRequiresManualFBBarrierAfterTessellatedStencilDraw : 1;
+  bool fNativeDrawIndexedIndirectIsBroken : 1;
 
   // ANGLE performance workaround
   bool fPreferVRAMUseOverFlushes : 1;

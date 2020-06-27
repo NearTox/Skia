@@ -24,9 +24,7 @@ struct ExpressionStatement : public Statement {
     return std::unique_ptr<Statement>(new ExpressionStatement(fExpression->clone()));
   }
 
-#ifdef SK_DEBUG
   String description() const override { return fExpression->description() + ";"; }
-#endif
 
   std::unique_ptr<Expression> fExpression;
 

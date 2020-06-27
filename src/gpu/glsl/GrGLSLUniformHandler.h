@@ -16,6 +16,7 @@
 #define GR_NO_MANGLE_PREFIX "sk_"
 
 class GrGLSLProgramBuilder;
+class GrGLSLShaderBuilder;
 class GrSamplerState;
 class GrSurfaceProxy;
 
@@ -31,7 +32,14 @@ struct GrGLSLBuiltinUniformHandles {
 
 class GrGLSLUniformHandler {
  public:
-  virtual ~GrGLSLUniformHandler() {}
+  struct UniformInfo {
+    GrShaderVar fVariable;
+    uint32_t fVisibility;
+    const GrFragmentProcessor* fOwner;
+    SkString fRawName;
+  };
+
+  virtual ~GrGLSLUniformHandler() = default;
 
   using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 
@@ -44,17 +52,19 @@ class GrGLSLUniformHandler {
       then it will refer to the final uniform name after return. Use the addUniformArray variant
       to add an array of uniforms. */
   UniformHandle addUniform(
-      uint32_t visibility, GrSLType type, const char* name, const char** outName = nullptr) {
+      const GrFragmentProcessor* owner, uint32_t visibility, GrSLType type, const char* name,
+      const char** outName = nullptr) {
     SkASSERT(!GrSLTypeIsCombinedSamplerType(type));
-    return this->addUniformArray(visibility, type, name, 0, outName);
+    return this->addUniformArray(owner, visibility, type, name, 0, outName);
   }
 
   UniformHandle addUniformArray(
-      uint32_t visibility, GrSLType type, const char* name, int arrayCount,
-      const char** outName = nullptr) {
+      const GrFragmentProcessor* owner, uint32_t visibility, GrSLType type, const char* name,
+      int arrayCount, const char** outName = nullptr) {
     SkASSERT(!GrSLTypeIsCombinedSamplerType(type));
     bool mangle = strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX));
-    return this->internalAddUniformArray(visibility, type, name, mangle, arrayCount, outName);
+    return this->internalAddUniformArray(
+        owner, visibility, type, name, mangle, arrayCount, outName);
   }
 
   virtual const GrShaderVar& getUniformVariable(UniformHandle u) const = 0;
@@ -64,8 +74,23 @@ class GrGLSLUniformHandler {
    */
   virtual const char* getUniformCStr(UniformHandle u) const = 0;
 
+  virtual int numUniforms() const = 0;
+
+  virtual UniformInfo& uniform(int idx) = 0;
+
+  void writeUniformMappings(GrFragmentProcessor* owner, GrGLSLShaderBuilder* b);
+
  protected:
-  explicit GrGLSLUniformHandler(GrGLSLProgramBuilder* program) : fProgramBuilder(program) {}
+  struct UniformMapping {
+    const GrFragmentProcessor* fOwner;
+    int fInfoIndex;
+    SkString fRawName;
+    const char* fFinalName;
+    GrSLType fType;
+  };
+
+  explicit GrGLSLUniformHandler(GrGLSLProgramBuilder* program) noexcept
+      : fProgramBuilder(program) {}
 
   // This is not owned by the class
   GrGLSLProgramBuilder* fProgramBuilder;
@@ -80,8 +105,8 @@ class GrGLSLUniformHandler {
       const GrShaderCaps*) = 0;
 
   virtual UniformHandle internalAddUniformArray(
-      uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
-      const char** outName) = 0;
+      const GrFragmentProcessor* owner, uint32_t visibility, GrSLType type, const char* name,
+      bool mangleName, int arrayCount, const char** outName) = 0;
 
   virtual void appendUniformDecls(GrShaderFlags visibility, SkString*) const = 0;
 

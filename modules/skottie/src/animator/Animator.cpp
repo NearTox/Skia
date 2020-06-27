@@ -9,7 +9,7 @@
 
 #include "modules/skottie/src/SkottieJson.h"
 #include "modules/skottie/src/SkottiePriv.h"
-#include "modules/skottie/src/animator/Keyframe.h"
+#include "modules/skottie/src/animator/KeyframeAnimator.h"
 
 namespace skottie::internal {
 
@@ -74,7 +74,7 @@ bool AnimatablePropertyContainer::bindImpl(
   }
 
   // Keyframed property.
-  sk_sp<KeyframeAnimatorBase> animator;
+  sk_sp<KeyframeAnimator> animator;
   const skjson::ArrayValue* jkfs = jpropK;
   if (jkfs && jkfs->size() > 0) {
     animator = builder.make(abuilder, *jkfs, target_value);

@@ -32,15 +32,15 @@
 #define SkGetPackedG16(color) (((unsigned)(color) >> SK_G16_SHIFT) & SK_G16_MASK)
 #define SkGetPackedB16(color) (((unsigned)(color) >> SK_B16_SHIFT) & SK_B16_MASK)
 
-static constexpr unsigned SkR16ToR32(unsigned r) noexcept {
+static constexpr inline unsigned SkR16ToR32(unsigned r) noexcept {
   return (r << (8 - SK_R16_BITS)) | (r >> (2 * SK_R16_BITS - 8));
 }
 
-static constexpr unsigned SkG16ToG32(unsigned g) noexcept {
+static constexpr inline unsigned SkG16ToG32(unsigned g) noexcept {
   return (g << (8 - SK_G16_BITS)) | (g >> (2 * SK_G16_BITS - 8));
 }
 
-static constexpr unsigned SkB16ToB32(unsigned b) noexcept {
+static constexpr inline unsigned SkB16ToB32(unsigned b) noexcept {
   return (b << (8 - SK_B16_BITS)) | (b >> (2 * SK_B16_BITS - 8));
 }
 
@@ -55,15 +55,15 @@ static constexpr unsigned SkB16ToB32(unsigned b) noexcept {
 // Reverse the bytes coorsponding to RED and BLUE in a packed pixels. Note the
 // pair of them are in the same 2 slots in both RGBA and BGRA, thus there is
 // no need to pass in the colortype to this function.
-static inline uint32_t SkSwizzle_RB(uint32_t c) noexcept {
-  static constexpr uint32_t kRBMask = (0xFF << SK_R32_SHIFT) | (0xFF << SK_B32_SHIFT);
+static constexpr inline uint32_t SkSwizzle_RB(uint32_t c) noexcept {
+  constexpr uint32_t kRBMask = (0xFF << SK_R32_SHIFT) | (0xFF << SK_B32_SHIFT);
 
   unsigned c0 = (c >> SK_R32_SHIFT) & 0xFF;
   unsigned c1 = (c >> SK_B32_SHIFT) & 0xFF;
   return (c & ~kRBMask) | (c0 << SK_B32_SHIFT) | (c1 << SK_R32_SHIFT);
 }
 
-static constexpr uint32_t SkPackARGB_as_RGBA(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
+static constexpr inline uint32_t SkPackARGB_as_RGBA(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   SkASSERT_IS_BYTE(a);
   SkASSERT_IS_BYTE(r);
   SkASSERT_IS_BYTE(g);
@@ -72,7 +72,7 @@ static constexpr uint32_t SkPackARGB_as_RGBA(U8CPU a, U8CPU r, U8CPU g, U8CPU b)
          (b << SK_RGBA_B32_SHIFT);
 }
 
-static constexpr uint32_t SkPackARGB_as_BGRA(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
+static constexpr inline uint32_t SkPackARGB_as_BGRA(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   SkASSERT_IS_BYTE(a);
   SkASSERT_IS_BYTE(r);
   SkASSERT_IS_BYTE(g);
@@ -116,7 +116,7 @@ static inline SkPMColor SkSwizzle_BGRA_to_PMColor(uint32_t c) noexcept {
 /** Computes the luminance from the given r, g, and b in accordance with
     SK_LUM_COEFF_X. For correct results, r, g, and b should be in linear space.
 */
-static constexpr U8CPU SkComputeLuminance(U8CPU r, U8CPU g, U8CPU b) noexcept {
+static constexpr inline U8CPU SkComputeLuminance(U8CPU r, U8CPU g, U8CPU b) noexcept {
   // The following is
   // r * SK_LUM_COEFF_R + g * SK_LUM_COEFF_G + b * SK_LUM_COEFF_B
   // with SK_LUM_COEFF_X in 1.8 fixed point (rounding adjusted to sum to 256).
@@ -126,7 +126,7 @@ static constexpr U8CPU SkComputeLuminance(U8CPU r, U8CPU g, U8CPU b) noexcept {
 /** Calculates 256 - (value * alpha256) / 255 in range [0,256],
  *  for [0,255] value and [0,256] alpha256.
  */
-static constexpr U16CPU SkAlphaMulInv256(U16CPU value, U16CPU alpha256) noexcept {
+static constexpr inline U16CPU SkAlphaMulInv256(U16CPU value, U16CPU alpha256) noexcept {
   unsigned prod = 0xFFFF - value * alpha256;
   return (prod + (prod >> 8)) >> 8;
 }
@@ -134,12 +134,12 @@ static constexpr U16CPU SkAlphaMulInv256(U16CPU value, U16CPU alpha256) noexcept
 //  The caller may want negative values, so keep all params signed (int)
 //  so we don't accidentally slip into unsigned math and lose the sign
 //  extension when we shift (in SkAlphaMul)
-static constexpr int SkAlphaBlend(int src, int dst, int scale256) noexcept {
+static constexpr inline int SkAlphaBlend(int src, int dst, int scale256) noexcept {
   SkASSERT((unsigned)scale256 <= 256);
   return dst + SkAlphaMul(src - dst, scale256);
 }
 
-static constexpr uint16_t SkPackRGB16(unsigned r, unsigned g, unsigned b) {
+static constexpr inline uint16_t SkPackRGB16(unsigned r, unsigned g, unsigned b) noexcept {
   SkASSERT(r <= SK_R16_MASK);
   SkASSERT(g <= SK_G16_MASK);
   SkASSERT(b <= SK_B16_MASK);
@@ -160,7 +160,8 @@ static constexpr uint16_t SkPackRGB16(unsigned r, unsigned g, unsigned b) {
  *   (src, dst, 0xFF) returns src
  *   srcWeight is [0..256], unlike SkFourByteInterp which takes [0..255]
  */
-static constexpr SkPMColor SkFourByteInterp256(SkPMColor src, SkPMColor dst, unsigned scale) {
+static constexpr inline SkPMColor SkFourByteInterp256(
+    SkPMColor src, SkPMColor dst, unsigned scale) noexcept {
   unsigned a = SkAlphaBlend(SkGetPackedA32(src), SkGetPackedA32(dst), scale);
   unsigned r = SkAlphaBlend(SkGetPackedR32(src), SkGetPackedR32(dst), scale);
   unsigned g = SkAlphaBlend(SkGetPackedG32(src), SkGetPackedG32(dst), scale);
@@ -175,7 +176,8 @@ static constexpr SkPMColor SkFourByteInterp256(SkPMColor src, SkPMColor dst, uns
  *   (src, dst, 0) returns dst
  *   (src, dst, 0xFF) returns src
  */
-static inline SkPMColor SkFourByteInterp(SkPMColor src, SkPMColor dst, U8CPU srcWeight) noexcept {
+static constexpr inline SkPMColor SkFourByteInterp(
+    SkPMColor src, SkPMColor dst, U8CPU srcWeight) noexcept {
   unsigned scale = SkAlpha255To256(srcWeight);
   return SkFourByteInterp256(src, dst, scale);
 }
@@ -183,7 +185,7 @@ static inline SkPMColor SkFourByteInterp(SkPMColor src, SkPMColor dst, U8CPU src
 /**
  * 0xAARRGGBB -> 0x00AA00GG, 0x00RR00BB
  */
-static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept {
+static constexpr inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept {
   constexpr uint32_t mask = 0x00FF00FF;
   *ag = (color >> 8) & mask;
   *rb = color & mask;
@@ -193,7 +195,7 @@ static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept 
  * 0xAARRGGBB -> 0x00AA00GG00RR00BB
  * (note, ARGB -> AGRB)
  */
-static constexpr uint64_t SkSplay(uint32_t color) noexcept {
+static constexpr inline uint64_t SkSplay(uint32_t color) noexcept {
   constexpr uint32_t mask = 0x00FF00FF;
   uint64_t agrb = (color >> 8) & mask;  // 0x0000000000AA00GG
   agrb <<= 32;                          // 0x00AA00GG00000000
@@ -204,7 +206,7 @@ static constexpr uint64_t SkSplay(uint32_t color) noexcept {
 /**
  * 0xAAxxGGxx, 0xRRxxBBxx-> 0xAARRGGBB
  */
-static constexpr uint32_t SkUnsplay(uint32_t ag, uint32_t rb) noexcept {
+static constexpr inline uint32_t SkUnsplay(uint32_t ag, uint32_t rb) noexcept {
   constexpr uint32_t mask = 0xFF00FF00;
   return (ag & mask) | ((rb & mask) >> 8);
 }
@@ -213,7 +215,7 @@ static constexpr uint32_t SkUnsplay(uint32_t ag, uint32_t rb) noexcept {
  * 0xAAxxGGxxRRxxBBxx -> 0xAARRGGBB
  * (note, AGRB -> ARGB)
  */
-static constexpr uint32_t SkUnsplay(uint64_t agrb) noexcept {
+static constexpr inline uint32_t SkUnsplay(uint64_t agrb) noexcept {
   constexpr uint32_t mask = 0xFF00FF00;
   return SkPMColor(
       ((agrb & mask) >> 8) |   // 0x00RR00BB
@@ -319,14 +321,14 @@ static inline unsigned SkB32ToB16(unsigned b) {
 #  define SkB32ToB16(b) SkB32ToB16_MACRO(b)
 #endif
 
-static constexpr U16CPU SkPixel32ToPixel16(SkPMColor c) noexcept {
+static constexpr inline U16CPU SkPixel32ToPixel16(SkPMColor c) noexcept {
   unsigned r = ((c >> (SK_R32_SHIFT + (8 - SK_R16_BITS))) & SK_R16_MASK) << SK_R16_SHIFT;
   unsigned g = ((c >> (SK_G32_SHIFT + (8 - SK_G16_BITS))) & SK_G16_MASK) << SK_G16_SHIFT;
   unsigned b = ((c >> (SK_B32_SHIFT + (8 - SK_B16_BITS))) & SK_B16_MASK) << SK_B16_SHIFT;
   return r | g | b;
 }
 
-static constexpr U16CPU SkPack888ToRGB16(U8CPU r, U8CPU g, U8CPU b) noexcept {
+static constexpr inline U16CPU SkPack888ToRGB16(U8CPU r, U8CPU g, U8CPU b) noexcept {
   return (SkR32ToR16(r) << SK_R16_SHIFT) | (SkG32ToG16(g) << SK_G16_SHIFT) |
          (SkB32ToB16(b) << SK_B16_SHIFT);
 }
@@ -336,7 +338,7 @@ static constexpr U16CPU SkPack888ToRGB16(U8CPU r, U8CPU g, U8CPU b) noexcept {
 /*  SrcOver the 32bit src color with the 16bit dst, returning a 16bit value
     (with dirt in the high 16bits, so caller beware).
 */
-static constexpr inline U16CPU SkSrcOver32To16(SkPMColor src, uint16_t dst) noexcept {
+static inline U16CPU SkSrcOver32To16(SkPMColor src, uint16_t dst) noexcept {
   unsigned sr = SkGetPackedR32(src);
   unsigned sg = SkGetPackedG32(src);
   unsigned sb = SkGetPackedB32(src);
@@ -354,7 +356,7 @@ static constexpr inline U16CPU SkSrcOver32To16(SkPMColor src, uint16_t dst) noex
   return SkPackRGB16(dr, dg, db);
 }
 
-static constexpr SkColor SkPixel16ToColor(U16CPU src) noexcept {
+static constexpr inline SkColor SkPixel16ToColor(U16CPU src) noexcept {
   SkASSERT(src == SkToU16(src));
 
   unsigned r = SkPacked16ToR32(src);
@@ -378,7 +380,7 @@ typedef uint16_t SkPMColor16;
 #define SK_G4444_SHIFT 8
 #define SK_B4444_SHIFT 4
 
-static constexpr U8CPU SkReplicateNibble(unsigned nib) noexcept {
+static constexpr inline U8CPU SkReplicateNibble(unsigned nib) noexcept {
   SkASSERT(nib <= 0xF);
   return (nib << 4) | nib;
 }
@@ -390,7 +392,7 @@ static constexpr U8CPU SkReplicateNibble(unsigned nib) noexcept {
 
 #define SkPacked4444ToA32(c) SkReplicateNibble(SkGetPackedA4444(c))
 
-static constexpr SkPMColor SkPixel4444ToPixel32(U16CPU c) noexcept {
+static constexpr inline SkPMColor SkPixel4444ToPixel32(U16CPU c) noexcept {
   uint32_t d = (SkGetPackedA4444(c) << SK_A32_SHIFT) | (SkGetPackedR4444(c) << SK_R32_SHIFT) |
                (SkGetPackedG4444(c) << SK_G32_SHIFT) | (SkGetPackedB4444(c) << SK_B32_SHIFT);
   return d | (d << 4);
@@ -398,7 +400,7 @@ static constexpr SkPMColor SkPixel4444ToPixel32(U16CPU c) noexcept {
 
 static inline Sk4f swizzle_rb(const Sk4f& x) noexcept { return SkNx_shuffle<2, 1, 0, 3>(x); }
 
-static inline Sk4f swizzle_rb_if_bgra(const Sk4f& x) {
+static inline Sk4f swizzle_rb_if_bgra(const Sk4f& x) noexcept {
 #ifdef SK_PMCOLOR_IS_BGRA
   return swizzle_rb(x);
 #else

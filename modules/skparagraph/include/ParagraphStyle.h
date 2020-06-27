@@ -86,6 +86,9 @@ struct ParagraphStyle {
   SkScalar getHeight() const { return fHeight; }
   void setHeight(SkScalar height) { fHeight = height; }
 
+  TextHeightBehavior getTextHeightBehavior() const { return fTextHeightBehavior; }
+  void setTextHeightBehavior(TextHeightBehavior v) { fTextHeightBehavior = v; }
+
   bool unlimited_lines() const { return fLinesLimit == std::numeric_limits<size_t>::max(); }
   bool ellipsized() const { return fEllipsis.size() != 0; }
   TextAlign effective_align() const;
@@ -100,6 +103,7 @@ struct ParagraphStyle {
   size_t fLinesLimit;
   SkString fEllipsis;
   SkScalar fHeight;
+  TextHeightBehavior fTextHeightBehavior;
   bool fHintingIsOn;
 };
 }  // namespace textlayout

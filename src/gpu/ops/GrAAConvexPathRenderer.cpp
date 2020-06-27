@@ -19,7 +19,7 @@
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrVertexWriter.h"
 #include "src/gpu/geometry/GrPathUtils.h"
-#include "src/gpu/geometry/GrShape.h"
+#include "src/gpu/geometry/GrStyledShape.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
@@ -30,7 +30,7 @@
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
-GrAAConvexPathRenderer::GrAAConvexPathRenderer() {}
+GrAAConvexPathRenderer::GrAAConvexPathRenderer() noexcept = default;
 
 struct Segment {
   enum {
@@ -115,7 +115,7 @@ static bool center_of_mass(const SegmentArray& segments, SkPoint* c) noexcept {
 
 static bool compute_vectors(
     SegmentArray* segments, SkPoint* fanPt, SkPathPriv::FirstDirection dir, int* vCount,
-    int* iCount) {
+    int* iCount) noexcept {
   if (!center_of_mass(*segments, fanPt)) {
     return false;
   }
@@ -175,7 +175,7 @@ static bool compute_vectors(
 }
 
 struct DegenerateTestData {
-  DegenerateTestData() { fStage = kInitial; }
+  DegenerateTestData() noexcept { fStage = kInitial; }
   bool isDegenerate() const noexcept { return kNonDegenerate != fStage; }
   enum { kInitial, kPoint, kLine, kNonDegenerate } fStage;
   SkPoint fFirstPoint;
@@ -231,13 +231,13 @@ static inline bool get_direction(
   return true;
 }
 
-static inline void add_line_to_segment(const SkPoint& pt, SegmentArray* segments) {
+static inline void add_line_to_segment(const SkPoint& pt, SegmentArray* segments) noexcept {
   segments->push_back();
   segments->back().fType = Segment::kLine;
   segments->back().fPts[0] = pt;
 }
 
-static inline void add_quad_segment(const SkPoint pts[3], SegmentArray* segments) {
+static inline void add_quad_segment(const SkPoint pts[3], SegmentArray* segments) noexcept {
   if (SkPointPriv::DistanceToLineSegmentBetweenSqd(pts[1], pts[0], pts[2]) < kCloseSqd) {
     if (pts[0] != pts[2]) {
       add_line_to_segment(pts[2], segments);
@@ -444,17 +444,23 @@ static void create_vertices(
       verts.write(qpts[0], color, skipUVs, 0.0f, -segb.fNorms[1].dot(qpts[0]) + c1);
 
       verts.write(qpts[2], color, skipUVs, -segb.fNorms[0].dot(qpts[2]) + c0, 0.0f);
+      // We need a negative value that is very large that it won't effect results if it is
+      // interpolated with. However, the value can't be too large of a negative that it
+      // effects numerical precision on less powerful GPUs.
+      static constexpr SkScalar kStableLargeNegativeValue = -SK_ScalarMax / 1000000;
+      verts.write(
+          qpts[0] + segb.fNorms[0], color, skipUVs, kStableLargeNegativeValue,
+          kStableLargeNegativeValue);
 
       verts.write(
-          qpts[0] + segb.fNorms[0], color, skipUVs, -SK_ScalarMax / 100, -SK_ScalarMax / 100);
-
-      verts.write(
-          qpts[2] + segb.fNorms[1], color, skipUVs, -SK_ScalarMax / 100, -SK_ScalarMax / 100);
+          qpts[2] + segb.fNorms[1], color, skipUVs, kStableLargeNegativeValue,
+          kStableLargeNegativeValue);
 
       SkVector midVec = segb.fNorms[0] + segb.fNorms[1];
       midVec.normalize();
 
-      verts.write(qpts[1] + midVec, color, skipUVs, -SK_ScalarMax / 100, -SK_ScalarMax / 100);
+      verts.write(
+          qpts[1] + midVec, color, skipUVs, kStableLargeNegativeValue, kStableLargeNegativeValue);
 
       GrPathUtils::QuadUVMatrix toUV(qpts);
       toUV.apply(quadVertsBegin, 6, vertexStride, uvOffset);
@@ -507,13 +513,13 @@ class QuadEdgeEffect : public GrGeometryProcessor {
     return arena->make<QuadEdgeEffect>(localMatrix, usesLocalCoords, wideColor);
   }
 
-  ~QuadEdgeEffect() override {}
+  ~QuadEdgeEffect() override = default;
 
-  const char* name() const override { return "QuadEdge"; }
+  const char* name() const noexcept override { return "QuadEdge"; }
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
-    GLSLProcessor() {}
+    GLSLProcessor() noexcept = default;
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const QuadEdgeEffect& qe = args.fGP.cast<QuadEdgeEffect>();
@@ -664,7 +670,7 @@ class AAConvexPathOp final : public GrMeshDrawOp {
     this->setTransformedBounds(path.getBounds(), viewMatrix, HasAABloat::kYes, IsHairline::kNo);
   }
 
-  const char* name() const override { return "AAConvexPathOp"; }
+  const char* name() const noexcept override { return "AAConvexPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -695,10 +701,10 @@ class AAConvexPathOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* programInfo() override { return fProgramInfo; }
+  GrProgramInfo* programInfo() noexcept override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     SkMatrix invert;
     if (fHelper.usesLocalCoords() && !fPaths.back().fViewMatrix.invert(&invert)) {
@@ -709,7 +715,7 @@ class AAConvexPathOp final : public GrMeshDrawOp {
         QuadEdgeEffect::Make(arena, invert, fHelper.usesLocalCoords(), fWideColor);
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, quadProcessor,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, quadProcessor,
         GrPrimitiveType::kTriangles);
   }
 

@@ -25,28 +25,28 @@ struct BasicBlock {
 
     Node(
         Kind kind, bool constantPropagation, std::unique_ptr<Expression>* expression,
-        std::unique_ptr<Statement>* statement)
+        std::unique_ptr<Statement>* statement) noexcept
         : fKind(kind),
           fConstantPropagation(constantPropagation),
           fExpression(expression),
           fStatement(statement) {}
 
-    std::unique_ptr<Expression>* expression() const {
+    std::unique_ptr<Expression>* expression() const noexcept {
       SkASSERT(fKind == kExpression_Kind);
       return fExpression;
     }
 
-    void setExpression(std::unique_ptr<Expression> expr) {
+    void setExpression(std::unique_ptr<Expression> expr) noexcept {
       SkASSERT(fKind == kExpression_Kind);
       *fExpression = std::move(expr);
     }
 
-    std::unique_ptr<Statement>* statement() const {
+    std::unique_ptr<Statement>* statement() const noexcept {
       SkASSERT(fKind == kStatement_Kind);
       return fStatement;
     }
 
-    void setStatement(std::unique_ptr<Statement> stmt) {
+    void setStatement(std::unique_ptr<Statement> stmt) noexcept {
       SkASSERT(fKind == kStatement_Kind);
       *fStatement = std::move(stmt);
     }
@@ -150,7 +150,7 @@ struct CFG {
  */
 class CFGGenerator {
  public:
-  CFGGenerator() {}
+  CFGGenerator() noexcept = default;
 
   CFG getCFG(FunctionDefinition& f);
 

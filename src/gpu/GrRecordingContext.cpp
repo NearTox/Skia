@@ -26,10 +26,10 @@
   SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
 
 GrRecordingContext::ProgramData::ProgramData(
-    std::unique_ptr<const GrProgramDesc> desc, const GrProgramInfo* info)
+    std::unique_ptr<const GrProgramDesc> desc, const GrProgramInfo* info) noexcept
     : fDesc(std::move(desc)), fInfo(info) {}
 
-GrRecordingContext::ProgramData::ProgramData(ProgramData&& other)
+GrRecordingContext::ProgramData::ProgramData(ProgramData&& other) noexcept
     : fDesc(std::move(other.fDesc)), fInfo(other.fInfo) {}
 
 GrRecordingContext::ProgramData::~ProgramData() {}
@@ -63,8 +63,6 @@ bool GrRecordingContext::init(sk_sp<const GrCaps> caps) {
   if (!INHERITED::init(std::move(caps))) {
     return false;
   }
-
-  fStrikeCache.reset(new GrStrikeCache{});
 
   fTextBlobCache.reset(new GrTextBlobCache(textblobcache_overbudget_CB, this, this->contextID()));
 
@@ -109,13 +107,13 @@ void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTa
 void GrRecordingContext::abandonContext() {
   INHERITED::abandonContext();
 
-  fStrikeCache->freeAll();
   fTextBlobCache->freeAll();
 }
 
-GrDrawingManager* GrRecordingContext::drawingManager() { return fDrawingManager.get(); }
+GrDrawingManager* GrRecordingContext::drawingManager() noexcept { return fDrawingManager.get(); }
 
-GrRecordingContext::Arenas::Arenas(GrOpMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator)
+GrRecordingContext::Arenas::Arenas(
+    GrOpMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator) noexcept
     : fOpMemoryPool(opMemoryPool), fRecordTimeAllocator(recordTimeAllocator) {
   // OwnedArenas should instantiate these before passing the bare pointer off to this struct.
   SkASSERT(opMemoryPool);
@@ -124,10 +122,11 @@ GrRecordingContext::Arenas::Arenas(GrOpMemoryPool* opMemoryPool, SkArenaAlloc* r
 
 // Must be defined here so that std::unique_ptr can see the sizes of the various pools, otherwise
 // it can't generate a default destructor for them.
-GrRecordingContext::OwnedArenas::OwnedArenas() {}
+GrRecordingContext::OwnedArenas::OwnedArenas() noexcept = default;
 GrRecordingContext::OwnedArenas::~OwnedArenas() {}
 
-GrRecordingContext::OwnedArenas& GrRecordingContext::OwnedArenas::operator=(OwnedArenas&& a) {
+GrRecordingContext::OwnedArenas& GrRecordingContext::OwnedArenas::operator=(
+    OwnedArenas&& a) noexcept {
   fOpMemoryPool = std::move(a.fOpMemoryPool);
   fRecordTimeAllocator = std::move(a.fRecordTimeAllocator);
   return *this;
@@ -149,11 +148,15 @@ GrRecordingContext::Arenas GrRecordingContext::OwnedArenas::get() {
   return {fOpMemoryPool.get(), fRecordTimeAllocator.get()};
 }
 
-GrRecordingContext::OwnedArenas&& GrRecordingContext::detachArenas() { return std::move(fArenas); }
+GrRecordingContext::OwnedArenas&& GrRecordingContext::detachArenas() noexcept {
+  return std::move(fArenas);
+}
 
-GrTextBlobCache* GrRecordingContext::getTextBlobCache() { return fTextBlobCache.get(); }
+GrTextBlobCache* GrRecordingContext::getTextBlobCache() noexcept { return fTextBlobCache.get(); }
 
-const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const { return fTextBlobCache.get(); }
+const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const noexcept {
+  return fTextBlobCache.get();
+}
 
 void GrRecordingContext::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {
   this->drawingManager()->addOnFlushCallbackObject(onFlushCBObject);
@@ -166,4 +169,44 @@ void GrRecordingContextPriv::addOnFlushCallbackObject(GrOnFlushCallbackObject* o
   fContext->addOnFlushCallbackObject(onFlushCBObject);
 }
 
-GrContext* GrRecordingContextPriv::backdoor() { return (GrContext*)fContext; }
+GrContext* GrRecordingContextPriv::backdoor() noexcept { return (GrContext*)fContext; }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef SK_ENABLE_DUMP_GPU
+#  include "src/utils/SkJSONWriter.h"
+
+void GrRecordingContext::dumpJSON(SkJSONWriter* writer) const {
+  writer->beginObject();
+
+#  if GR_GPU_STATS
+  writer->appendS32("path_masks_generated", this->stats()->numPathMasksGenerated());
+  writer->appendS32("path_mask_cache_hits", this->stats()->numPathMaskCacheHits());
+#  endif
+
+  writer->endObject();
+}
+#else
+void GrRecordingContext::dumpJSON(SkJSONWriter*) const {}
+#endif
+
+#if GR_TEST_UTILS
+
+#  if GR_GPU_STATS
+
+void GrRecordingContext::Stats::dump(SkString* out) {
+  out->appendf("Num Path Masks Generated: %d\n", fNumPathMasksGenerated);
+  out->appendf("Num Path Mask Cache Hits: %d\n", fNumPathMaskCacheHits);
+}
+
+void GrRecordingContext::Stats::dumpKeyValuePairs(
+    SkTArray<SkString>* keys, SkTArray<double>* values) {
+  keys->push_back(SkString("path_masks_generated"));
+  values->push_back(fNumPathMasksGenerated);
+
+  keys->push_back(SkString("path_mask_cache_hits"));
+  values->push_back(fNumPathMaskCacheHits);
+}
+
+#  endif  // GR_GPU_STATS
+#endif  // GR_TEST_UTILS

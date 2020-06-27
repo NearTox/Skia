@@ -25,7 +25,7 @@ class SkWriteBuffer;
 class SkGradientShaderBase : public SkShaderBase {
  public:
   struct Descriptor {
-    Descriptor() {
+    Descriptor() noexcept {
       sk_bzero(this, sizeof(*this));
       fTileMode = SkTileMode::kClamp;
     }
@@ -43,7 +43,7 @@ class SkGradientShaderBase : public SkShaderBase {
 
   class DescriptorScope : public Descriptor {
    public:
-    DescriptorScope() {}
+    DescriptorScope() noexcept = default;
 
     bool unflatten(SkReadBuffer&);
 
@@ -73,7 +73,7 @@ class SkGradientShaderBase : public SkShaderBase {
   SkGradientShaderBase(SkReadBuffer&);
   void flatten(SkWriteBuffer&) const override;
 
-  void commonAsAGradient(GradientInfo*) const noexcept;
+  void commonAsAGradient(GradientInfo*) const;
 
   bool onAsLuminanceColor(SkColor*) const override;
 

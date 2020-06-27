@@ -44,7 +44,7 @@ class GrMixerEffect : public GrFragmentProcessor {
   }
   GrMixerEffect(const GrMixerEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "MixerEffect"; }
+  const char* name() const noexcept override { return "MixerEffect"; }
   int fp0_index = -1;
   int fp1_index = -1;
   float weight;
@@ -52,7 +52,7 @@ class GrMixerEffect : public GrFragmentProcessor {
  private:
   GrMixerEffect(
       std::unique_ptr<GrFragmentProcessor> fp0, std::unique_ptr<GrFragmentProcessor> fp1,
-      float weight)
+      float weight) noexcept
       : INHERITED(kGrMixerEffect_ClassID, (OptimizationFlags)OptFlags(fp0, fp1)), weight(weight) {
     SkASSERT(fp0);
     fp0_index = this->numChildProcessors();
@@ -64,7 +64,7 @@ class GrMixerEffect : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

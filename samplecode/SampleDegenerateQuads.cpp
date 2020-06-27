@@ -402,7 +402,7 @@ class DegenerateQuadSample : public Sample {
         GrQuadPerEdgeAA::ColorType::kNone,
         GrQuad::Type::kAxisAligned,
         false,
-        GrQuadPerEdgeAA::Domain::kNo,
+        GrQuadPerEdgeAA::Subset::kNo,
         GrAAType::kCoverage,
         false,
         GrQuadPerEdgeAA::IndexBufferOption::kPictureFramed};

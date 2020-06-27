@@ -20,14 +20,16 @@
 template <typename T>
 class SkTLazy {
  public:
-  SkTLazy() = default;
+  SkTLazy() noexcept = default;
   explicit SkTLazy(const T* src) : fPtr(src ? new (&fStorage) T(*src) : nullptr) {}
-  SkTLazy(const SkTLazy& that) : fPtr(that.fPtr ? new (&fStorage) T(*that.fPtr) : nullptr) {}
-  SkTLazy(SkTLazy&& that) : fPtr(that.fPtr ? new (&fStorage) T(std::move(*that.fPtr)) : nullptr) {}
+  SkTLazy(const SkTLazy& that) noexcept(std::is_nothrow_copy_constructible_v<T>)
+      : fPtr(that.fPtr ? new (&fStorage) T(*that.fPtr) : nullptr) {}
+  SkTLazy(SkTLazy&& that) noexcept(std::is_nothrow_move_constructible_v<T>)
+      : fPtr(that.fPtr ? new (&fStorage) T(std::move(*that.fPtr)) : nullptr) {}
 
   ~SkTLazy() { this->reset(); }
 
-  SkTLazy& operator=(const SkTLazy& that) {
+  SkTLazy& operator=(const SkTLazy& that) noexcept(std::is_nothrow_copy_constructible_v<T>) {
     if (that.isValid()) {
       this->set(*that);
     } else {
@@ -36,7 +38,7 @@ class SkTLazy {
     return *this;
   }
 
-  SkTLazy& operator=(SkTLazy&& that) {
+  SkTLazy& operator=(SkTLazy&& that) noexcept(std::is_nothrow_move_constructible_v<T>) {
     if (that.isValid()) {
       this->set(std::move(*that));
     } else {
@@ -64,7 +66,7 @@ class SkTLazy {
    *  has already been initialized, then this will copy over the previous
    *  contents.
    */
-  T* set(const T& src) {
+  T* set(const T& src) noexcept(std::is_nothrow_copy_constructible_v<T>) {
     if (this->isValid()) {
       *fPtr = src;
     } else {
@@ -73,7 +75,7 @@ class SkTLazy {
     return fPtr;
   }
 
-  T* set(T&& src) {
+  T* set(T&& src) noexcept(std::is_nothrow_move_constructible_v<T>) {
     if (this->isValid()) {
       *fPtr = std::move(src);
     } else {
@@ -146,23 +148,31 @@ class SkTLazy {
 template <typename T>
 class SkTCopyOnFirstWrite {
  public:
-  explicit SkTCopyOnFirstWrite(const T& initial) : fObj(&initial) {}
+  explicit SkTCopyOnFirstWrite(const T& initial) noexcept : fObj(&initial) {}
 
-  explicit SkTCopyOnFirstWrite(const T* initial) : fObj(initial) {}
+  explicit SkTCopyOnFirstWrite(const T* initial) noexcept : fObj(initial) {}
 
   // Constructor for delayed initialization.
-  SkTCopyOnFirstWrite() : fObj(nullptr) {}
+  SkTCopyOnFirstWrite() noexcept : fObj(nullptr) {}
 
-  SkTCopyOnFirstWrite(const SkTCopyOnFirstWrite& that) { *this = that; }
-  SkTCopyOnFirstWrite(SkTCopyOnFirstWrite&& that) { *this = std::move(that); }
+  SkTCopyOnFirstWrite(const SkTCopyOnFirstWrite& that) noexcept(
+      std::is_nothrow_copy_constructible_v<SkTLazy<T>>) {
+    *this = that;
+  }
+  SkTCopyOnFirstWrite(SkTCopyOnFirstWrite&& that) noexcept(
+      std::is_nothrow_move_assignable_v<SkTLazy<T>>) {
+    *this = std::move(that);
+  }
 
-  SkTCopyOnFirstWrite& operator=(const SkTCopyOnFirstWrite& that) {
+  SkTCopyOnFirstWrite& operator=(const SkTCopyOnFirstWrite& that) noexcept(
+      std::is_nothrow_copy_constructible_v<SkTLazy<T>>) {
     fLazy = that.fLazy;
     fObj = fLazy.isValid() ? fLazy.get() : that.fObj;
     return *this;
   }
 
-  SkTCopyOnFirstWrite& operator=(SkTCopyOnFirstWrite&& that) {
+  SkTCopyOnFirstWrite& operator=(SkTCopyOnFirstWrite&& that) noexcept(
+      std::is_nothrow_move_assignable_v<SkTLazy<T>>) {
     fLazy = std::move(that.fLazy);
     fObj = fLazy.isValid() ? fLazy.get() : that.fObj;
     return *this;
@@ -187,17 +197,17 @@ class SkTCopyOnFirstWrite {
     return const_cast<T*>(fObj);
   }
 
-  const T* get() const noexcept{ return fObj; }
+  const T* get() const noexcept { return fObj; }
 
   /**
    * Operators for treating this as though it were a const pointer.
    */
 
-  const T* operator->() const noexcept{ return fObj; }
+  const T* operator->() const noexcept { return fObj; }
 
   operator const T*() const noexcept { return fObj; }
 
-  const T& operator*() const noexcept{ return *fObj; }
+  const T& operator*() const noexcept { return *fObj; }
 
  private:
   const T* fObj;

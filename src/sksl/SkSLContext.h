@@ -400,13 +400,11 @@ class Context {
  private:
   class Defined : public Expression {
    public:
-    Defined(const Type& type) : INHERITED(-1, kDefined_Kind, type) {}
+    Defined(const Type& type) noexcept : INHERITED(-1, kDefined_Kind, type) {}
 
-    bool hasProperty(Property property) const override { return false; }
+    bool hasProperty(Property property) const noexcept override { return false; }
 
-#ifdef SK_DEBUG
     String description() const override { return "<defined>"; }
-#endif
 
     std::unique_ptr<Expression> clone() const override {
       return std::unique_ptr<Expression>(new Defined(fType));

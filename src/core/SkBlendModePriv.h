@@ -27,7 +27,7 @@ SkPMColor4f SkBlendMode_Apply(SkBlendMode, const SkPMColor4f& src, const SkPMCol
 
 #if SK_SUPPORT_GPU
 #  include "src/gpu/GrXferProcessor.h"
-const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode);
+const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode) noexcept;
 #endif
 
 #endif

@@ -16,35 +16,36 @@ class GrImageInfo {
  public:
   GrImageInfo() noexcept = default;
 
-  /* implicit */ GrImageInfo(const SkImageInfo& info)
+  /* implicit */ GrImageInfo(const SkImageInfo& info) noexcept
       : fColorInfo(info.colorInfo()), fDimensions(info.dimensions()) {}
 
-  GrImageInfo(GrColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs, int w, int h)
+  GrImageInfo(GrColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs, int w, int h) noexcept
       : fColorInfo(ct, at, std::move(cs)), fDimensions{w, h} {}
 
-  GrImageInfo(GrColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs, const SkISize& dimensions)
+  GrImageInfo(
+      GrColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs, const SkISize& dimensions) noexcept
       : fColorInfo(ct, at, std::move(cs)), fDimensions(dimensions) {}
 
-  GrImageInfo(const GrColorInfo& info, const SkISize& dimensions)
+  GrImageInfo(const GrColorInfo& info, const SkISize& dimensions) noexcept
       : fColorInfo(info), fDimensions(dimensions) {}
 
-  GrImageInfo(GrColorInfo&& info, const SkISize& dimensions)
+  GrImageInfo(GrColorInfo&& info, const SkISize& dimensions) noexcept
       : fColorInfo(std::move(info)), fDimensions(dimensions) {}
 
-  GrImageInfo(const GrImageInfo&) = default;
+  GrImageInfo(const GrImageInfo&) noexcept = default;
   GrImageInfo(GrImageInfo&&) noexcept = default;
-  GrImageInfo& operator=(const GrImageInfo&) = default;
+  GrImageInfo& operator=(const GrImageInfo&) noexcept = default;
   GrImageInfo& operator=(GrImageInfo&&) noexcept = default;
 
-  GrImageInfo makeColorType(GrColorType ct) const {
+  GrImageInfo makeColorType(GrColorType ct) const noexcept {
     return {ct, this->alphaType(), this->refColorSpace(), this->width(), this->height()};
   }
 
-  GrImageInfo makeAlphaType(SkAlphaType at) const {
+  GrImageInfo makeAlphaType(SkAlphaType at) const noexcept {
     return {this->colorType(), at, this->refColorSpace(), this->width(), this->height()};
   }
 
-  GrImageInfo makeWH(int width, int height) const {
+  GrImageInfo makeWH(int width, int height) const noexcept {
     return {this->colorType(), this->alphaType(), this->refColorSpace(), width, height};
   }
 
@@ -56,7 +57,7 @@ class GrImageInfo {
 
   SkColorSpace* colorSpace() const noexcept { return fColorInfo.colorSpace(); }
 
-  sk_sp<SkColorSpace> refColorSpace() const { return fColorInfo.refColorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorInfo.refColorSpace(); }
 
   SkISize dimensions() const noexcept { return fDimensions; }
 
@@ -64,9 +65,9 @@ class GrImageInfo {
 
   int height() const noexcept { return fDimensions.height(); }
 
-  size_t bpp() const { return GrColorTypeBytesPerPixel(this->colorType()); }
+  size_t bpp() const noexcept { return GrColorTypeBytesPerPixel(this->colorType()); }
 
-  size_t minRowBytes() const { return this->bpp() * this->width(); }
+  size_t minRowBytes() const noexcept { return this->bpp() * this->width(); }
 
   /**
    * Place this image rect in a surface of dimensions surfaceWidth x surfaceHeight size offset at

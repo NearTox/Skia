@@ -119,11 +119,11 @@ class GrResourceAllocator {
   sk_sp<GrSurface> findSurfaceFor(const GrSurfaceProxy* proxy);
 
   struct FreePoolTraits {
-    static const GrScratchKey& GetKey(const GrSurface& s) noexcept {
+    static const GrScratchKey& GetKey(const GrSurface& s) {
       return s.resourcePriv().getScratchKey();
     }
 
-    static uint32_t Hash(const GrScratchKey& key) noexcept { return key.hash(); }
+    static uint32_t Hash(const GrScratchKey& key) { return key.hash(); }
     static void OnFree(GrSurface* s) { s->unref(); }
   };
   typedef SkTMultiMap<GrSurface, GrScratchKey, FreePoolTraits> FreePoolMultiMap;
@@ -198,8 +198,8 @@ class GrResourceAllocator {
     sk_sp<GrSurface> detachSurface() noexcept { return std::move(fAssignedSurface); }
 
     // for SkTDynamicHash
-    static const uint32_t& GetKey(const Interval& intvl) noexcept { return intvl.fProxyID; }
-    static uint32_t Hash(const uint32_t& key) noexcept { return key; }
+    static const uint32_t& GetKey(const Interval& intvl) { return intvl.fProxyID; }
+    static uint32_t Hash(const uint32_t& key) { return key; }
 
    private:
     sk_sp<GrSurface> fAssignedSurface;
@@ -220,7 +220,7 @@ class GrResourceAllocator {
 
   class IntervalList {
    public:
-    IntervalList() = default;
+    constexpr IntervalList() noexcept = default;
     ~IntervalList() {
       // The only time we delete an IntervalList is in the GrResourceAllocator dtor.
       // Since the arena allocator will clean up for us we don't bother here.
@@ -257,11 +257,11 @@ class GrResourceAllocator {
   unsigned int fNumOps = 0;
   SkTArray<unsigned int> fEndOfOpsTaskOpIndices;
   int fCurOpsTaskIndex = 0;
-  SkDEBUGCODE(const int fNumOpsTasks = -1;)
+  SkDEBUGCODE(const int fNumOpsTasks = -1);
 
-      SkDEBUGCODE(bool fAssigned = false;)
+  SkDEBUGCODE(bool fAssigned = false);
 
-          char fStorage[kInitialArenaSize];
+  char fStorage[kInitialArenaSize];
   SkArenaAlloc fIntervalAllocator{fStorage, kInitialArenaSize, kInitialArenaSize};
   Interval* fFreeIntervalList = nullptr;
   bool fLazyInstantiationError = false;

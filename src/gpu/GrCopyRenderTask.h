@@ -36,6 +36,7 @@ class GrCopyRenderTask final : public GrRenderTask {
   bool onExecute(GrOpFlushState*) override;
 
 #ifdef SK_DEBUG
+  const char* name() const final { return "Copy"; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const override {
     fn(fSrcView.proxy(), GrMipMapped::kNo);
   }

@@ -9,6 +9,7 @@
 
 #include "include/private/GrRecordingContext.h"
 #include "src/core/SkRectPriv.h"
+#include "src/core/SkScopeExit.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrCaps.h"
@@ -38,7 +39,13 @@ using DstProxyView = GrXferProcessor::DstProxyView;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline bool can_reorder(const SkRect& a, const SkRect& b) { return !GrRectsOverlap(a, b); }
+GrOpsTaskClosedObserver::~GrOpsTaskClosedObserver() = default;
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline bool can_reorder(const SkRect& a, const SkRect& b) noexcept {
+  return !GrRectsOverlap(a, b);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -57,7 +64,7 @@ inline GrOpsTask::OpChain::List& GrOpsTask::OpChain::List::operator=(List&& that
   return *this;
 }
 
-inline std::unique_ptr<GrOp> GrOpsTask::OpChain::List::popHead() {
+inline std::unique_ptr<GrOp> GrOpsTask::OpChain::List::popHead() noexcept {
   SkASSERT(fHead);
   auto temp = fHead->cutChain();
   std::swap(temp, fHead);
@@ -92,7 +99,7 @@ inline std::unique_ptr<GrOp> GrOpsTask::OpChain::List::removeOp(GrOp* op) {
   return temp;
 }
 
-inline void GrOpsTask::OpChain::List::pushHead(std::unique_ptr<GrOp> op) {
+inline void GrOpsTask::OpChain::List::pushHead(std::unique_ptr<GrOp> op) noexcept {
   SkASSERT(op);
   SkASSERT(op->isChainHead());
   SkASSERT(op->isChainTail());
@@ -105,7 +112,7 @@ inline void GrOpsTask::OpChain::List::pushHead(std::unique_ptr<GrOp> op) {
   }
 }
 
-inline void GrOpsTask::OpChain::List::pushTail(std::unique_ptr<GrOp> op) {
+inline void GrOpsTask::OpChain::List::pushTail(std::unique_ptr<GrOp> op) noexcept {
   SkASSERT(op->isChainTail());
   fTail->chainConcat(std::move(op));
   fTail = fTail->nextInChain();
@@ -338,7 +345,7 @@ std::unique_ptr<GrOp> GrOpsTask::OpChain::appendOp(
   return nullptr;
 }
 
-inline void GrOpsTask::OpChain::validate() const noexcept {
+inline void GrOpsTask::OpChain::validate() const {
 #ifdef SK_DEBUG
   fList.validate();
   for (const auto& op : GrOp::ChainRange<>(fList.head())) {
@@ -353,11 +360,10 @@ inline void GrOpsTask::OpChain::validate() const noexcept {
 ////////////////////////////////////////////////////////////////////////////////
 
 GrOpsTask::GrOpsTask(
-    GrRecordingContext::Arenas arenas, GrSurfaceProxyView view, GrAuditTrail* auditTrail)
+    GrRecordingContext::Arenas arenas, GrSurfaceProxyView view, GrAuditTrail* auditTrail) noexcept
     : GrRenderTask(std::move(view)),
       fArenas(arenas),
-      fAuditTrail(auditTrail),
-      fLastClipStackGenID(SK_InvalidUniqueID) SkDEBUGCODE(, fNumClips(0)) {
+      fAuditTrail(auditTrail) SkDEBUGCODE(, fNumClips(0)) {
   fTargetView.proxy()->setLastRenderTask(this);
 }
 
@@ -370,7 +376,15 @@ void GrOpsTask::deleteOps() {
 
 GrOpsTask::~GrOpsTask() { this->deleteOps(); }
 
-////////////////////////////////////////////////////////////////////////////////
+void GrOpsTask::removeClosedObserver(GrOpsTaskClosedObserver* observer) noexcept {
+  SkASSERT(observer);
+  for (int i = 0; i < fClosedObservers.count(); ++i) {
+    if (fClosedObservers[i] == observer) {
+      fClosedObservers.removeShuffle(i);
+      --i;
+    }
+  }
+}
 
 void GrOpsTask::endFlush() {
   fLastClipStackGenID = SK_InvalidUniqueID;
@@ -690,7 +704,7 @@ bool GrOpsTask::onIsUsed(GrSurfaceProxy* proxyToCheck) const {
 
 void GrOpsTask::handleInternalAllocationFailure() {
   bool hasUninstantiatedProxy = false;
-  auto checkInstantiation = [&hasUninstantiatedProxy](GrSurfaceProxy* p, GrMipMapped) {
+  auto checkInstantiation = [&hasUninstantiatedProxy](GrSurfaceProxy* p, GrMipMapped) noexcept {
     if (!p->isInstantiated()) {
       hasUninstantiatedProxy = true;
     }
@@ -749,8 +763,8 @@ void GrOpsTask::gatherProxyIntervals(GrResourceAllocator* alloc) const {
 void GrOpsTask::recordOp(
     std::unique_ptr<GrOp> op, GrProcessorSet::Analysis processorAnalysis, GrAppliedClip* clip,
     const DstProxyView* dstProxyView, const GrCaps& caps) {
-  SkDEBUGCODE(op->validate();)
-      SkASSERT(processorAnalysis.requiresDstTexture() == (dstProxyView && dstProxyView->proxy()));
+  SkDEBUGCODE(op->validate());
+  SkASSERT(processorAnalysis.requiresDstTexture() == (dstProxyView && dstProxyView->proxy()));
   GrSurfaceProxy* proxy = fTargetView.proxy();
   SkASSERT(proxy);
 
@@ -804,7 +818,7 @@ void GrOpsTask::recordOp(
   }
   if (clip) {
     clip = fClipAllocator.make<GrAppliedClip>(std::move(*clip));
-    SkDEBUGCODE(fNumClips++;)
+    SkDEBUGCODE(fNumClips++);
   }
   fOpChains.emplace_back(std::move(op), processorAnalysis, clip, dstProxyView);
 }
@@ -844,6 +858,12 @@ void GrOpsTask::forwardCombine(const GrCaps& caps) {
 GrRenderTask::ExpectedOutcome GrOpsTask::onMakeClosed(
     const GrCaps& caps, SkIRect* targetUpdateBounds) {
   this->forwardCombine(caps);
+  SkScopeExit triggerObservers([&] {
+    for (const auto& o : fClosedObservers) {
+      o->wasClosed(*this);
+    }
+    fClosedObservers.reset();
+  });
   if (!this->isNoOp()) {
     GrSurfaceProxy* proxy = fTargetView.proxy();
     SkRect clippedContentBounds = proxy->getBoundsRect();

@@ -234,7 +234,7 @@ class SkTextBlobRunIterator {
     SkASSERT(!this->done());
     return fCurrentRun->textSize();
   }
-  char* text() const {
+  char* text() const noexcept {
     SkASSERT(!this->done());
     return fCurrentRun->textBuffer();
   }

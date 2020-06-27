@@ -12,7 +12,7 @@
 #include "include/core/SkRect.h"
 #include "src/core/SkArenaAlloc.h"
 
-void SkDrawLooper::Context::Info::applyToCTM(SkMatrix* ctm) const {
+void SkDrawLooper::Context::Info::applyToCTM(SkMatrix* ctm) const noexcept {
   if (fApplyPostCTM) {
     ctm->postTranslate(fTranslate.fX, fTranslate.fY);
   } else {
@@ -77,7 +77,7 @@ void SkDrawLooper::computeFastBounds(const SkPaint& paint, const SkRect& s, SkRe
   }
 }
 
-bool SkDrawLooper::asABlurShadow(BlurShadowRec*) const { return false; }
+bool SkDrawLooper::asABlurShadow(BlurShadowRec*) const noexcept { return false; }
 
 void SkDrawLooper::apply(
     SkCanvas* canvas, const SkPaint& paint, std::function<void(SkCanvas*, const SkPaint&)> proc) {

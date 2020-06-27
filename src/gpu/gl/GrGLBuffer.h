@@ -25,16 +25,16 @@ class GrGLBuffer : public GrGpuBuffer {
     SkASSERT(0 == fBufferID);
   }
 
-  GrGLuint bufferID() const noexcept { return fBufferID; }
+  GrGLuint bufferID() const { return fBufferID; }
 
   /**
    * Returns the actual size of the underlying GL buffer object. In certain cases we may make this
    * smaller than the size reported by GrGpuBuffer.
    */
-  size_t glSizeInBytes() const noexcept { return fGLSizeInBytes; }
+  size_t glSizeInBytes() const { return fGLSizeInBytes; }
 
-  void setHasAttachedToTexture() noexcept { fHasAttachedToTexture = true; }
-  bool hasAttachedToTexture() const noexcept { return fHasAttachedToTexture; }
+  void setHasAttachedToTexture() { fHasAttachedToTexture = true; }
+  bool hasAttachedToTexture() const { return fHasAttachedToTexture; }
 
  protected:
   GrGLBuffer(
@@ -46,7 +46,7 @@ class GrGLBuffer : public GrGpuBuffer {
       SkTraceMemoryDump* traceMemoryDump, const SkString& dumpName) const override;
 
  private:
-  GrGLGpu* glGpu() const noexcept;
+  GrGLGpu* glGpu() const;
   const GrGLCaps& glCaps() const;
 
   void onMap() override;

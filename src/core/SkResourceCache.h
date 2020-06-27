@@ -78,7 +78,7 @@ class SkResourceCache {
     uint32_t getHash() const { return this->getKey().hash(); }
 
     virtual const Key& getKey() const = 0;
-    virtual size_t bytesUsed() const = 0;
+    virtual size_t bytesUsed() const noexcept = 0;
 
     // Called if the cache needs to purge/remove/delete the Rec. Default returns true.
     // Subclass may return false if there are outstanding references to it (e.g. bitmaps).
@@ -109,7 +109,7 @@ class SkResourceCache {
 
   // Used with SkMessageBus
   struct PurgeSharedIDMessage {
-    constexpr PurgeSharedIDMessage(uint64_t sharedID) noexcept : fSharedID(sharedID) {}
+    PurgeSharedIDMessage(uint64_t sharedID) noexcept : fSharedID(sharedID) {}
     uint64_t fSharedID;
   };
 
@@ -226,11 +226,11 @@ class SkResourceCache {
    *  0 is no maximum at all; this is the default.
    *  setSingleAllocationByteLimit() returns the previous value.
    */
-  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize);
-  size_t getSingleAllocationByteLimit() const;
+  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize) noexcept;
+  size_t getSingleAllocationByteLimit() const noexcept;
   // returns the logical single allocation size (pinning against the budget when the cache
   // is not backed by discardable memory.
-  size_t getEffectiveSingleAllocationByteLimit() const;
+  size_t getEffectiveSingleAllocationByteLimit() const noexcept;
 
   /**
    *  Set the maximum number of bytes available to this cache. If the current
@@ -272,9 +272,9 @@ class SkResourceCache {
   void purgeAsNeeded(bool forcePurge = false);
 
   // linklist management
-  void moveToHead(Rec*);
-  void addToHead(Rec*);
-  void release(Rec*);
+  void moveToHead(Rec*) noexcept;
+  void addToHead(Rec*) noexcept;
+  void release(Rec*) noexcept;
   void remove(Rec*);
 
   void init();  // called by constructors

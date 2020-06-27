@@ -12,8 +12,6 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkFilterQuality.h"
 #include "include/core/SkImageInfo.h"
-#include "include/core/SkMatrix.h"
-#include "include/core/SkVertices.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkColorData.h"
 #include "src/core/SkBlendModePriv.h"
@@ -34,6 +32,8 @@ class GrTextureProxy;
 class GrUniqueKey;
 class SkBitmap;
 class SkData;
+class SkMatrix;
+class SkMatrixProvider;
 class SkPaint;
 class SkPixelRef;
 class SkPixmap;
@@ -42,7 +42,7 @@ struct SkIRect;
 ////////////////////////////////////////////////////////////////////////////////
 // Color type conversions
 
-static inline GrColor SkColorToPremulGrColor(SkColor c) {
+static inline GrColor SkColorToPremulGrColor(SkColor c) noexcept {
   SkPMColor pm = SkPreMultiplyColor(c);
   unsigned r = SkGetPackedR32(pm);
   unsigned g = SkGetPackedG32(pm);
@@ -51,7 +51,7 @@ static inline GrColor SkColorToPremulGrColor(SkColor c) {
   return GrColorPackRGBA(r, g, b, a);
 }
 
-static inline GrColor SkColorToUnpremulGrColor(SkColor c) {
+static inline GrColor SkColorToUnpremulGrColor(SkColor c) noexcept {
   unsigned r = SkColorGetR(c);
   unsigned g = SkColorGetG(c);
   unsigned b = SkColorGetB(c);
@@ -66,30 +66,45 @@ SkPMColor4f SkColorToPMColor4f(SkColor, const GrColorInfo&);
 SkColor4f SkColor4fPrepForDst(SkColor4f, const GrColorInfo&);
 
 ////////////////////////////////////////////////////////////////////////////////
+// SkTileMode conversion
+
+static constexpr GrSamplerState::WrapMode SkTileModeToWrapMode(SkTileMode tileMode) {
+  switch (tileMode) {
+    case SkTileMode::kClamp: return GrSamplerState::WrapMode::kClamp;
+    case SkTileMode::kDecal: return GrSamplerState::WrapMode::kClampToBorder;
+    case SkTileMode::kMirror: return GrSamplerState::WrapMode::kMirrorRepeat;
+    case SkTileMode::kRepeat: return GrSamplerState::WrapMode::kRepeat;
+  }
+  SkUNREACHABLE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 // Paint conversion
 
 /** Converts an SkPaint to a GrPaint for a given GrRecordingContext. The matrix is required in order
     to convert the SkShader (if any) on the SkPaint. The primitive itself has no color. */
 bool SkPaintToGrPaint(
     GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
-    const SkMatrix& viewM, GrPaint* grPaint);
+    const SkMatrixProvider& matrixProvider, GrPaint* grPaint);
 
 /** Same as above but ignores the SkShader (if any) on skPaint. */
 bool SkPaintToGrPaintNoShader(
-    GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint, GrPaint* grPaint);
+    GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
+    const SkMatrixProvider& matrixProvider, GrPaint* grPaint);
 
 /** Replaces the SkShader (if any) on skPaint with the passed in GrFragmentProcessor. The processor
     should expect an unpremul input color and produce a premultiplied output color. There is
     no primitive color. */
 bool SkPaintToGrPaintReplaceShader(
     GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
-    std::unique_ptr<GrFragmentProcessor> shaderFP, GrPaint* grPaint);
+    const SkMatrixProvider& matrixProvider, std::unique_ptr<GrFragmentProcessor> shaderFP,
+    GrPaint* grPaint);
 
 /** Blends the SkPaint's shader (or color if no shader) with the color which specified via a
     GrOp's GrPrimitiveProcesssor. */
 bool SkPaintToGrPaintWithXfermode(
     GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
-    const SkMatrix& viewM, SkBlendMode primColorMode, GrPaint* grPaint);
+    const SkMatrixProvider& matrixProvider, SkBlendMode primColorMode, GrPaint* grPaint);
 
 /** This is used when there is a primitive color, but the shader should be ignored. Currently,
     the expectation is that the primitive color will be premultiplied, though it really should be
@@ -97,17 +112,17 @@ bool SkPaintToGrPaintWithXfermode(
     applied to the primitive color after interpolation. */
 inline bool SkPaintToGrPaintWithPrimitiveColor(
     GrRecordingContext* context, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
-    GrPaint* grPaint) {
+    const SkMatrixProvider& matrixProvider, GrPaint* grPaint) {
   return SkPaintToGrPaintWithXfermode(
-      context, dstColorInfo, skPaint, SkMatrix::I(), SkBlendMode::kDst, grPaint);
+      context, dstColorInfo, skPaint, matrixProvider, SkBlendMode::kDst, grPaint);
 }
 
 /** This is used when there may or may not be a shader, and the caller wants to plugin a texture
     lookup.  If there is a shader, then its output will only be used if the texture is alpha8. */
 bool SkPaintToGrPaintWithTexture(
     GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
-    const SkMatrix& viewM, std::unique_ptr<GrFragmentProcessor> fp, bool textureIsAlphaOnly,
-    GrPaint* grPaint);
+    const SkMatrixProvider& matrixProvider, std::unique_ptr<GrFragmentProcessor> fp,
+    bool textureIsAlphaOnly, GrPaint* grPaint);
 
 ////////////////////////////////////////////////////////////////////////////////
 // Misc Sk to Gr type conversions
@@ -115,17 +130,6 @@ bool SkPaintToGrPaintWithTexture(
 GrSamplerState::Filter GrSkFilterQualityToGrFilterMode(
     int imageWidth, int imageHeight, SkFilterQuality paintFilterQuality, const SkMatrix& viewM,
     const SkMatrix& localM, bool sharpenMipmappedTextures, bool* doBicubic);
-
-//////////////////////////////////////////////////////////////////////////////
-
-static inline GrPrimitiveType SkVertexModeToGrPrimitiveType(SkVertices::VertexMode mode) {
-  switch (mode) {
-    case SkVertices::kTriangles_VertexMode: return GrPrimitiveType::kTriangles;
-    case SkVertices::kTriangleStrip_VertexMode: return GrPrimitiveType::kTriangleStrip;
-    case SkVertices::kTriangleFan_VertexMode: break;
-  }
-  SK_ABORT("Invalid mode");
-}
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -167,9 +171,15 @@ GrSurfaceProxyView GrRefCachedBitmapView(GrRecordingContext*, const SkBitmap&, G
 /**
  * Creates a new texture with mipmap levels and copies the baseProxy into the base layer.
  */
-GrSurfaceProxyView GrCopyBaseMipMapToTextureProxy(
+sk_sp<GrSurfaceProxy> GrCopyBaseMipMapToTextureProxy(
     GrRecordingContext*, GrSurfaceProxy* baseProxy, GrSurfaceOrigin origin,
-    GrColorType srcColorType, SkBudgeted = SkBudgeted::kYes);
+    SkBudgeted = SkBudgeted::kYes);
+/**
+ * Same as GrCopyBaseMipMapToTextureProxy but takes the src as a view and returns a view with same
+ * origin and swizzle as the src view.
+ */
+GrSurfaceProxyView GrCopyBaseMipMapToView(
+    GrRecordingContext*, GrSurfaceProxyView, SkBudgeted = SkBudgeted::kYes);
 
 /*
  * Create a texture proxy from the provided bitmap and add it to the texture cache

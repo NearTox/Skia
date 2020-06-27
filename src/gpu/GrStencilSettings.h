@@ -46,20 +46,21 @@ static constexpr int kGrStencilOpCount = 1 + (int)GrStencilOp::kDecClamp;
  */
 class GrStencilSettings {
  public:
-  GrStencilSettings() { this->setDisabled(); }
-  GrStencilSettings(const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) {
+  GrStencilSettings() noexcept { this->setDisabled(); }
+  GrStencilSettings(
+      const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) noexcept {
     this->reset(user, hasStencilClip, numStencilBits);
   }
-  GrStencilSettings(const GrStencilSettings& that) { this->reset(that); }
-  GrStencilSettings& operator=(const GrStencilSettings& that) {
+  GrStencilSettings(const GrStencilSettings& that) noexcept { this->reset(that); }
+  GrStencilSettings& operator=(const GrStencilSettings& that) noexcept {
     this->reset(that);
     return *this;
   }
 
   void invalidate() noexcept { fFlags |= kInvalid_PrivateFlag; }
   void setDisabled() noexcept { fFlags = kAll_StencilFlags; }
-  void reset(const GrUserStencilSettings&, bool hasStencilClip, int numStencilBits);
-  void reset(const GrStencilSettings&);
+  void reset(const GrUserStencilSettings&, bool hasStencilClip, int numStencilBits) noexcept;
+  void reset(const GrStencilSettings&) noexcept;
 
   bool isValid() const noexcept { return !(fFlags & kInvalid_PrivateFlag); }
   bool isDisabled() const noexcept {
@@ -79,14 +80,15 @@ class GrStencilSettings {
     return !(fFlags & kNoWrapOps_StencilFlag);
   }
 
-  void genKey(GrProcessorKeyBuilder* b) const;
+  void genKey(GrProcessorKeyBuilder* b, bool includeRefsAndMasks) const;
 
-  bool operator!=(const GrStencilSettings& that) const { return !(*this == that); }
-  bool operator==(const GrStencilSettings&) const;
+  bool operator!=(const GrStencilSettings& that) const noexcept { return !(*this == that); }
+  bool operator==(const GrStencilSettings&) const noexcept;
 
   struct Face : public GrTStencilFaceSettings<GrStencilTest, GrStencilOp> {
-    void reset(const GrUserStencilSettings::Face&, bool useStencilClip, int numStencilBits);
-    void setDisabled();
+    void reset(
+        const GrUserStencilSettings::Face&, bool useStencilClip, int numStencilBits) noexcept;
+    void setDisabled() noexcept;
   };
 
   const Face& singleSidedFace() const noexcept {
@@ -109,34 +111,8 @@ class GrStencilSettings {
     return (kTopLeft_GrSurfaceOrigin == origin) ? fCCWFace : fCWFace;
   }
 
-  /**
-   * Given a thing to draw into the stencil clip, a fill type, and a set op
-   * this function determines:
-   *      1. Whether the thing can be draw directly to the stencil clip or
-   *      needs to be drawn to the client portion of the stencil first.
-   *      2. How many passes are needed.
-   *      3. What those passes are.
-   *
-   * @param op                the set op to combine this element with the existing clip
-   * @param canBeDirect       can the caller draw this element directly (without using stencil)?
-   * @param invertedFill      is this path inverted
-   * @param drawDirectToClip  out: true if caller should draw the element directly, false if it
-   *                          should draw it into the user stencil bits first.
-   *
-   * @return a null-terminated array of settings for stencil passes.
-   *
-   *         If drawDirectToClip is false, the caller must first draw the element into the user
-   *         stencil bits, and then cover the clip area with multiple passes using the returned
-   *         stencil settings.
-   *
-   *         If drawDirectToClip is true, the returned array will only have one pass and the
-   *         caller should use those stencil settings while drawing the element directly.
-   */
-  static GrUserStencilSettings const* const* GetClipPasses(
-      SkRegion::Op op, bool canBeDirect, bool invertedFill, bool* drawDirectToClip);
-
   /** Gets the user stencil settings to directly set the clip bit. */
-  static const GrUserStencilSettings* SetClipBitSettings(bool setToInside);
+  static const GrUserStencilSettings* SetClipBitSettings(bool setToInside) noexcept;
 
  private:
   // Internal flag for backends to optionally mark their tracked stencil state as invalid.

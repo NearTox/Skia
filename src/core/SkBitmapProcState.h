@@ -88,14 +88,14 @@ struct SkBitmapProcState : public SkBitmapProcInfo {
 
   // If a shader proc is present, then the corresponding matrix/sample procs
   // are ignored
-  ShaderProc32 getShaderProc32() const { return fShaderProc32; }
+  ShaderProc32 getShaderProc32() const noexcept { return fShaderProc32; }
 
 #ifdef SK_DEBUG
   MatrixProc getMatrixProc() const;
 #else
-  MatrixProc getMatrixProc() const { return fMatrixProc; }
+  MatrixProc getMatrixProc() const noexcept { return fMatrixProc; }
 #endif
-  SampleProc32 getSampleProc32() const { return fSampleProc32; }
+  SampleProc32 getSampleProc32() const noexcept { return fSampleProc32; }
 
  private:
   ShaderProc32 fShaderProc32;  // chooseProcs
@@ -187,14 +187,14 @@ class SkBitmapProcStateAutoMapper {
     }
   }
 
-  SkFractionalInt fractionalIntX() const { return fX; }
-  SkFractionalInt fractionalIntY() const { return fY; }
+  SkFractionalInt fractionalIntX() const noexcept { return fX; }
+  SkFractionalInt fractionalIntY() const noexcept { return fY; }
 
-  SkFixed fixedX() const { return SkFractionalIntToFixed(fX); }
-  SkFixed fixedY() const { return SkFractionalIntToFixed(fY); }
+  SkFixed fixedX() const noexcept { return SkFractionalIntToFixed(fX); }
+  SkFixed fixedY() const noexcept { return SkFractionalIntToFixed(fY); }
 
-  int intX() const { return SkFractionalIntToInt(fX); }
-  int intY() const { return SkFractionalIntToInt(fY); }
+  int intX() const noexcept { return SkFractionalIntToInt(fX); }
+  int intY() const noexcept { return SkFractionalIntToInt(fY); }
 
  private:
   SkFractionalInt fX, fY;

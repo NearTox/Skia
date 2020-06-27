@@ -15,19 +15,19 @@
  */
 class GrGSCoverageProcessor : public GrCCCoverageProcessor {
  public:
-  GrGSCoverageProcessor() : GrCCCoverageProcessor(kGrGSCoverageProcessor_ClassID) {
+  GrGSCoverageProcessor() noexcept : GrCCCoverageProcessor(kGrGSCoverageProcessor_ClassID) {
     this->setWillUseGeoShader();
   }
 
  private:
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
     SkDEBUGCODE(this->getDebugBloatKey(b));
     b->add32(((int)fPrimitiveType << 16) | (int)fSubpass);
   }
 
-  GrPrimitiveType primType() const final { return GrPrimitiveType::kLines; }
-  int numSubpasses() const override { return 2; }
-  void reset(PrimitiveType, int subpassIdx, GrResourceProvider*) override;
+  GrPrimitiveType primType() const noexcept final { return GrPrimitiveType::kLines; }
+  int numSubpasses() const noexcept override { return 2; }
+  void reset(PrimitiveType, int subpassIdx, GrResourceProvider*) noexcept override;
   void bindBuffers(GrOpsRenderPass*, const GrBuffer* instanceBuffer) const override;
   void drawInstances(GrOpsRenderPass*, int instanceCount, int baseInstance) const override;
 

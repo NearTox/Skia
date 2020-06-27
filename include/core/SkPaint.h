@@ -70,7 +70,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_copy_const_SkPaint
   */
-  SkPaint(const SkPaint& paint);
+  SkPaint(const SkPaint& paint) noexcept;
 
   /** Implements a move constructor to avoid increasing the reference counts
       of objects referenced by the paint.
@@ -102,7 +102,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_copy_operator
   */
-  SkPaint& operator=(const SkPaint& paint);
+  SkPaint& operator=(const SkPaint& paint) noexcept;
 
   /** Moves the paint to avoid increasing the reference counts
       of objects referenced by the paint parameter. Objects containing SkRefCnt in the
@@ -597,7 +597,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_nothingToDraw
   */
-  bool nothingToDraw() const;
+  bool nothingToDraw() const noexcept;
 
   /**     (to be made private)
       Returns true if SkPaint does not include elements requiring extensive computation

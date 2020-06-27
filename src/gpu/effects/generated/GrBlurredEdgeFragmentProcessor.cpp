@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLBlurredEdgeFragmentProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLBlurredEdgeFragmentProcessor() {}
+  GrGLSLBlurredEdgeFragmentProcessor() = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrBlurredEdgeFragmentProcessor& _outer = args.fFp.cast<GrBlurredEdgeFragmentProcessor>();
@@ -34,8 +34,8 @@ class GrGLSLBlurredEdgeFragmentProcessor : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
-  }
+  void onSetData(
+      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
 };
 GrGLSLFragmentProcessor* GrBlurredEdgeFragmentProcessor::onCreateGLSLInstance() const {
   return new GrGLSLBlurredEdgeFragmentProcessor();
@@ -44,15 +44,16 @@ void GrBlurredEdgeFragmentProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)mode);
 }
-bool GrBlurredEdgeFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrBlurredEdgeFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrBlurredEdgeFragmentProcessor& that = other.cast<GrBlurredEdgeFragmentProcessor>();
   (void)that;
   if (mode != that.mode) return false;
   return true;
 }
 GrBlurredEdgeFragmentProcessor::GrBlurredEdgeFragmentProcessor(
-    const GrBlurredEdgeFragmentProcessor& src)
+    const GrBlurredEdgeFragmentProcessor& src) noexcept
     : INHERITED(kGrBlurredEdgeFragmentProcessor_ClassID, src.optimizationFlags()), mode(src.mode) {}
+
 std::unique_ptr<GrFragmentProcessor> GrBlurredEdgeFragmentProcessor::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrBlurredEdgeFragmentProcessor(*this));
 }

@@ -8,11 +8,11 @@
 #include "include/private/SkTFitsIn.h"
 #include "src/utils/SkCharToGlyphCache.h"
 
-SkCharToGlyphCache::SkCharToGlyphCache() { this->reset(); }
+SkCharToGlyphCache::SkCharToGlyphCache() noexcept { this->reset(); }
 
 SkCharToGlyphCache::~SkCharToGlyphCache() {}
 
-void SkCharToGlyphCache::reset() {
+void SkCharToGlyphCache::reset() noexcept {
   fK32.reset();
   fV16.reset();
 
@@ -36,7 +36,7 @@ constexpr int kSmallCountLimit = 16;
 //
 constexpr int kMinCountForSlope = 4;
 
-static int find_simple(const SkUnichar base[], int count, SkUnichar value) {
+static int find_simple(const SkUnichar base[], int count, SkUnichar value) noexcept {
   int index;
   for (index = 0;; ++index) {
     if (value <= base[index]) {
@@ -49,7 +49,8 @@ static int find_simple(const SkUnichar base[], int count, SkUnichar value) {
   return index;
 }
 
-static int find_with_slope(const SkUnichar base[], int count, SkUnichar value, double denom) {
+static int find_with_slope(
+    const SkUnichar base[], int count, SkUnichar value, double denom) noexcept {
   SkASSERT(count >= kMinCountForSlope);
 
   int index;
@@ -93,7 +94,7 @@ static int find_with_slope(const SkUnichar base[], int count, SkUnichar value, d
   return index;
 }
 
-int SkCharToGlyphCache::findGlyphIndex(SkUnichar unichar) const {
+int SkCharToGlyphCache::findGlyphIndex(SkUnichar unichar) const noexcept {
   const int count = fK32.count();
   int index;
   if (count <= kSmallCountLimit) {
@@ -107,7 +108,8 @@ int SkCharToGlyphCache::findGlyphIndex(SkUnichar unichar) const {
   return index;
 }
 
-void SkCharToGlyphCache::insertCharAndGlyph(int index, SkUnichar unichar, SkGlyphID glyph) {
+void SkCharToGlyphCache::insertCharAndGlyph(
+    int index, SkUnichar unichar, SkGlyphID glyph) noexcept {
   SkASSERT(fK32.size() == fV16.size());
   SkASSERT((unsigned)index < fK32.size());
   SkASSERT(unichar < fK32[index]);

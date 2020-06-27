@@ -20,14 +20,14 @@ namespace {
 class SkColorFilterImageFilterImpl final : public SkImageFilter_Base {
  public:
   SkColorFilterImageFilterImpl(
-      sk_sp<SkColorFilter> cf, sk_sp<SkImageFilter> input, const CropRect* cropRect)
+      sk_sp<SkColorFilter> cf, sk_sp<SkImageFilter> input, const CropRect* cropRect) noexcept
       : INHERITED(&input, 1, cropRect), fColorFilter(std::move(cf)) {}
 
  protected:
   void flatten(SkWriteBuffer&) const override;
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
-  bool onIsColorFilterNode(SkColorFilter**) const override;
-  bool onCanHandleComplexCTM() const override { return true; }
+  bool onIsColorFilterNode(SkColorFilter**) const noexcept override;
+  bool onCanHandleComplexCTM() const noexcept override { return true; }
   bool affectsTransparentBlack() const override;
 
  private:
@@ -138,7 +138,7 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilterImpl::onFilterImage(
   return surf->makeImageSnapshot();
 }
 
-bool SkColorFilterImageFilterImpl::onIsColorFilterNode(SkColorFilter** filter) const {
+bool SkColorFilterImageFilterImpl::onIsColorFilterNode(SkColorFilter** filter) const noexcept {
   SkASSERT(1 == this->countInputs());
   if (!this->cropRectIsSet()) {
     if (filter) {

@@ -65,7 +65,7 @@ struct SK_API GrContextOptions {
     virtual void compileError(const char* shader, const char* errors) = 0;
   };
 
-  GrContextOptions() {}
+  GrContextOptions() noexcept = default;
 
   // Suppress prints for the GrContext.
   bool fSuppressPrints = false;
@@ -241,6 +241,11 @@ struct SK_API GrContextOptions {
    * If true, the caps will never support geometry shaders.
    */
   bool fSuppressGeometryShaders = false;
+
+  /**
+   * If true, the caps will never support tessellation shaders.
+   */
+  bool fSuppressTessellationShaders = false;
 
   /**
    * Render everything in wireframe

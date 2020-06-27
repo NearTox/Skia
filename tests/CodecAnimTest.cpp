@@ -223,7 +223,7 @@ DEF_TEST(Codec_frames, r) {
     const int expected = rec.fFrameCount;
     if (rec.fRequiredFrames.size() + 1 != static_cast<size_t>(expected)) {
       ERRORF(
-          r, "'%s' has wrong number entries in fRequiredFrames; expected: %i\tactual: %i",
+          r, "'%s' has wrong number entries in fRequiredFrames; expected: %i\tactual: %zu",
           rec.fName, expected - 1, rec.fRequiredFrames.size());
       continue;
     }
@@ -231,14 +231,14 @@ DEF_TEST(Codec_frames, r) {
     if (expected > 1) {
       if (rec.fDurations.size() != static_cast<size_t>(expected)) {
         ERRORF(
-            r, "'%s' has wrong number entries in fDurations; expected: %i\tactual: %i", rec.fName,
+            r, "'%s' has wrong number entries in fDurations; expected: %i\tactual: %zu", rec.fName,
             expected, rec.fDurations.size());
         continue;
       }
 
       if (rec.fAlphas.size() + 1 != static_cast<size_t>(expected)) {
         ERRORF(
-            r, "'%s' has wrong number entries in fAlphas; expected: %i\tactual: %i", rec.fName,
+            r, "'%s' has wrong number entries in fAlphas; expected: %i\tactual: %zu", rec.fName,
             expected - 1, rec.fAlphas.size());
         continue;
       }
@@ -247,7 +247,7 @@ DEF_TEST(Codec_frames, r) {
         ERRORF(
             r,
             "'%s' has wrong number entries in fDisposalMethods; "
-            "expected %i\tactual: %i",
+            "expected %i\tactual: %zu",
             rec.fName, expected, rec.fDisposalMethods.size());
         continue;
       }

@@ -31,7 +31,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // claim to not need mips at creation time, but the instantiation happens to give us a mipped
   // target. In that case we should use that for our benefit to avoid possible copies/mip
   // generation later.
-  GrMipMapped mipMapped() const;
+  GrMipMapped mipMapped() const noexcept;
 
   bool mipMapsAreDirty() const noexcept {
     SkASSERT(
@@ -59,14 +59,14 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   }
 
   // Returns the highest allowed filter mode for a given texture type
-  static GrSamplerState::Filter HighestFilterMode(const GrTextureType textureType);
+  static GrSamplerState::Filter HighestFilterMode(const GrTextureType textureType) noexcept;
 
   // Returns true if the passed in proxies can be used as dynamic state together when flushing
   // draws to the gpu. This accepts GrSurfaceProxy since the information needed is defined on
   // that type, but this function exists in GrTextureProxy because it's only relevant when the
   // proxies are being used as textures.
   static bool ProxiesAreCompatibleAsDynamicState(
-      const GrSurfaceProxy* first, const GrSurfaceProxy* second);
+      const GrSurfaceProxy* first, const GrSurfaceProxy* second) noexcept;
 
   /**
    * Return the texture proxy's unique key. It will be invalid if the proxy doesn't have one.
@@ -97,8 +97,8 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   inline const CacheAccess cacheAccess() const noexcept;
 
   // Provides access to special purpose functions.
-  GrTextureProxyPriv texPriv();
-  const GrTextureProxyPriv texPriv() const;
+  GrTextureProxyPriv texPriv() noexcept;
+  const GrTextureProxyPriv texPriv() const noexcept;
 
  protected:
   // DDL TODO: rm the GrSurfaceProxy friending
@@ -110,7 +110,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // Deferred version - no data.
   GrTextureProxy(
       const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus, SkBackingFit, SkBudgeted,
-      GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      GrProtected, GrInternalSurfaceFlags, UseAllocator) noexcept;
 
   // Lazy-callback version
   // There are two main use cases for lazily-instantiated proxies:
@@ -124,7 +124,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // know the final size until flush time.
   GrTextureProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus,
-      SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator) noexcept;
 
   // Wrapped version
   GrTextureProxy(sk_sp<GrSurface>, UseAllocator);
@@ -156,12 +156,14 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   //
   // NOTE: fMipMapsStatus may no longer be equal to fInitialMipMapsStatus by the time the texture
   // is instantiated, since it tracks mipmaps in the time frame in which the DAG is being built.
-  SkDEBUGCODE(const GrMipMapsStatus fInitialMipMapsStatus;)
+  SkDEBUGCODE(const GrMipMapsStatus fInitialMipMapsStatus);
 
-      bool fSyncTargetKey = true;  // Should target's unique key be sync'ed with ours.
+  bool fSyncTargetKey = true;  // Should target's unique key be sync'ed with ours.
 
   GrUniqueKey fUniqueKey;
   GrProxyProvider* fProxyProvider;  // only set when fUniqueKey is valid
+
+  LazySurfaceDesc callbackDesc() const override;
 
   // Only used for proxies whose contents are being prepared on a worker thread. This object
   // stores the texture data, allowing the proxy to remain uninstantiated until flush. At that
@@ -172,11 +174,11 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   // Methods made available via GrTextureProxy::CacheAccess
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
-  void clearUniqueKey();
+  void clearUniqueKey() noexcept;
 
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 
-      typedef GrSurfaceProxy INHERITED;
+  typedef GrSurfaceProxy INHERITED;
 };
 
 #endif

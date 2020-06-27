@@ -11,6 +11,7 @@
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/ops/GrOp.h"
+#include "src/sksl/SkSLSampleMatrix.h"
 
 class GrGLSLFragmentProcessor;
 class GrPaint;
@@ -112,7 +113,7 @@ class GrFragmentProcessor : public GrProcessor {
   }
 
   int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
-  const TextureSampler& textureSampler(int i) const;
+  const TextureSampler& textureSampler(int i) const noexcept;
 
   int numCoordTransforms() const noexcept { return fCoordTransforms.count(); }
 
@@ -148,16 +149,16 @@ class GrFragmentProcessor : public GrProcessor {
     return SkToBool(fFlags & kSampledWithExplicitCoords);
   }
 
-  void setSampledWithExplicitCoords(bool value) {
-    if (value) {
-      fFlags |= kSampledWithExplicitCoords;
-    } else {
-      fFlags &= ~kSampledWithExplicitCoords;
-    }
+  void setSampledWithExplicitCoords() noexcept {
+    fFlags |= kSampledWithExplicitCoords;
     for (auto& child : fChildProcessors) {
-      child->setSampledWithExplicitCoords(value);
+      child->setSampledWithExplicitCoords();
     }
   }
+
+  SkSL::SampleMatrix sampleMatrix() const { return fMatrix; }
+
+  void setSampleMatrix(SkSL::SampleMatrix matrix);
 
   /**
    * A GrDrawOp may premultiply its antialiasing coverage into its GrGeometryProcessor's color
@@ -355,8 +356,7 @@ class GrFragmentProcessor : public GrProcessor {
   }
 
   // As above, but callers should somehow ensure or assert their sampler still uses clamping
-  static constexpr OptimizationFlags ModulateForClampedSamplerOptFlags(
-      SkAlphaType alphaType) noexcept {
+  static OptimizationFlags ModulateForClampedSamplerOptFlags(SkAlphaType alphaType) noexcept {
     if (alphaType == kOpaque_SkAlphaType) {
       return kCompatibleWithCoverageAsAlpha_OptimizationFlag |
              kPreservesOpaqueInput_OptimizationFlag;
@@ -365,7 +365,7 @@ class GrFragmentProcessor : public GrProcessor {
     }
   }
 
-  GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags)
+  GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags) noexcept
       : INHERITED(classID), fFlags(optimizationFlags) {
     SkASSERT((optimizationFlags & ~kAll_OptimizationFlags) == 0);
   }
@@ -407,7 +407,7 @@ class GrFragmentProcessor : public GrProcessor {
    * transforms in a consistent order. The non-virtual implementation of isEqual() automatically
    * compares transforms and will assume they line up across the two processor instances.
    */
-  void addCoordTransform(GrCoordTransform*);
+  void addCoordTransform(GrCoordTransform*) noexcept;
 
   /**
    * FragmentProcessor subclasses call this from their constructor to register any child
@@ -418,7 +418,7 @@ class GrFragmentProcessor : public GrProcessor {
    * processors will allow the ProgramBuilder to automatically handle their transformed coords and
    * texture accesses and mangle their uniform and output color names.
    */
-  int registerChildProcessor(std::unique_ptr<GrFragmentProcessor> child);
+  int registerChildProcessor(std::unique_ptr<GrFragmentProcessor> child) noexcept;
 
   void setTextureSamplerCnt(int cnt) noexcept {
     SkASSERT(cnt >= 0);
@@ -431,10 +431,10 @@ class GrFragmentProcessor : public GrProcessor {
    */
   template <typename... Args>
   static const TextureSampler& IthTextureSampler(
-      int i, const TextureSampler& samp0, const Args&... samps) {
+      int i, const TextureSampler& samp0, const Args&... samps) noexcept {
     return (0 == i) ? samp0 : IthTextureSampler(i - 1, samps...);
   }
-  inline static const TextureSampler& IthTextureSampler(int i);
+  inline static const TextureSampler& IthTextureSampler(int i) noexcept;
 
  private:
   // Implementation details of Iter and CIter.
@@ -459,11 +459,13 @@ class GrFragmentProcessor : public GrProcessor {
    * getFactory()). The processor subclass should not compare its coord transforms as that will
    * be performed automatically in the non-virtual isEqual().
    */
-  virtual bool onIsEqual(const GrFragmentProcessor&) const = 0;
+  virtual bool onIsEqual(const GrFragmentProcessor&) const noexcept = 0;
 
-  virtual const TextureSampler& onTextureSampler(int) const { return IthTextureSampler(0); }
+  virtual const TextureSampler& onTextureSampler(int) const noexcept {
+    return IthTextureSampler(0);
+  }
 
-  bool hasSameTransforms(const GrFragmentProcessor&) const;
+  bool hasSameTransforms(const GrFragmentProcessor&) const noexcept;
 
   enum PrivateFlags {
     kFirstPrivateFlag = kAll_OptimizationFlags + 1,
@@ -479,6 +481,8 @@ class GrFragmentProcessor : public GrProcessor {
 
   SkSTArray<1, std::unique_ptr<GrFragmentProcessor>, true> fChildProcessors;
 
+  SkSL::SampleMatrix fMatrix;
+
   typedef GrProcessor INHERITED;
 };
 
@@ -489,22 +493,24 @@ class GrFragmentProcessor : public GrProcessor {
  */
 class GrFragmentProcessor::TextureSampler {
  public:
-  TextureSampler() = default;
+  TextureSampler() noexcept = default;
 
   /**
    * This copy constructor is used by GrFragmentProcessor::clone() implementations.
    */
-  explicit TextureSampler(const TextureSampler&) = default;
+  explicit TextureSampler(const TextureSampler&) noexcept = default;
 
-  TextureSampler(GrSurfaceProxyView, GrSamplerState = {});
+  TextureSampler(GrSurfaceProxyView, GrSamplerState = {}) noexcept;
 
-  TextureSampler& operator=(const TextureSampler&) = delete;
+  TextureSampler(TextureSampler&&) noexcept = default;
+  TextureSampler& operator=(TextureSampler&&) noexcept = default;
+  TextureSampler& operator=(const TextureSampler&) noexcept = delete;
 
-  bool operator==(const TextureSampler& that) const {
+  bool operator==(const TextureSampler& that) const noexcept {
     return fView == that.fView && fSamplerState == that.fSamplerState;
   }
 
-  bool operator!=(const TextureSampler& other) const { return !(*this == other); }
+  bool operator!=(const TextureSampler& other) const noexcept { return !(*this == other); }
 
   SkDEBUGCODE(bool isInstantiated() const { return this->proxy()->isInstantiated(); });
 
@@ -532,7 +538,7 @@ class GrFragmentProcessor::TextureSampler {
 
 //////////////////////////////////////////////////////////////////////////////
 
-const GrFragmentProcessor::TextureSampler& GrFragmentProcessor::IthTextureSampler(int i) {
+const GrFragmentProcessor::TextureSampler& GrFragmentProcessor::IthTextureSampler(int i) noexcept {
   SK_ABORT("Illegal texture sampler index");
   static const TextureSampler kBogus;
   return kBogus;
@@ -545,10 +551,10 @@ GR_MAKE_BITFIELD_OPS(GrFragmentProcessor::OptimizationFlags)
 template <typename FP>
 class GrFragmentProcessor::IterBase {
  public:
-  FP& operator*() const { return *fFPStack.back(); }
-  FP* operator->() const { return fFPStack.back(); }
-  operator bool() const { return !fFPStack.empty(); }
-  bool operator!=(const EndIter&) { return (bool)*this; }
+  FP& operator*() const noexcept { return *fFPStack.back(); }
+  FP* operator->() const noexcept { return fFPStack.back(); }
+  operator bool() const noexcept { return !fFPStack.empty(); }
+  bool operator!=(const EndIter&) noexcept { return (bool)*this; }
 
   // Hopefully this does not actually get called because of RVO.
   IterBase(const IterBase&) = default;
@@ -557,16 +563,16 @@ class GrFragmentProcessor::IterBase {
   IterBase& operator=(const IterBase&) = delete;
 
  protected:
-  void increment();
+  void increment() noexcept;
 
-  IterBase() = default;
-  explicit IterBase(FP& fp) { fFPStack.push_back(&fp); }
+  IterBase() noexcept = default;
+  explicit IterBase(FP& fp) noexcept { fFPStack.push_back(&fp); }
 
   SkSTArray<4, FP*, true> fFPStack;
 };
 
 template <typename FP>
-void GrFragmentProcessor::IterBase<FP>::increment() {
+void GrFragmentProcessor::IterBase<FP>::increment() noexcept {
   SkASSERT(!fFPStack.empty());
   FP* back = fFPStack.back();
   fFPStack.pop_back();
@@ -579,8 +585,8 @@ void GrFragmentProcessor::IterBase<FP>::increment() {
 
 class GrFragmentProcessor::Iter : public IterBase<GrFragmentProcessor> {
  public:
-  explicit Iter(GrFragmentProcessor& fp) : IterBase(fp) {}
-  Iter& operator++() {
+  explicit Iter(GrFragmentProcessor& fp) noexcept : IterBase(fp) {}
+  Iter& operator++() noexcept {
     this->increment();
     return *this;
   }
@@ -590,11 +596,11 @@ class GrFragmentProcessor::Iter : public IterBase<GrFragmentProcessor> {
 
 class GrFragmentProcessor::CIter : public IterBase<const GrFragmentProcessor> {
  public:
-  explicit CIter(const GrFragmentProcessor& fp) : IterBase(fp) {}
-  explicit CIter(const GrPaint&);
-  explicit CIter(const GrProcessorSet&);
-  explicit CIter(const GrPipeline&);
-  CIter& operator++() {
+  explicit CIter(const GrFragmentProcessor& fp) noexcept : IterBase(fp) {}
+  explicit CIter(const GrPaint&) noexcept;
+  explicit CIter(const GrProcessorSet&) noexcept;
+  explicit CIter(const GrPipeline&) noexcept;
+  CIter& operator++() noexcept {
     this->increment();
     return *this;
   }
@@ -605,9 +611,9 @@ class GrFragmentProcessor::CIter : public IterBase<const GrFragmentProcessor> {
 template <typename Src>
 class GrFragmentProcessor::CIterRange {
  public:
-  explicit CIterRange(const Src& t) : fT(t) {}
-  CIter begin() const { return CIter(fT); }
-  EndIter end() const { return EndIter(); }
+  explicit CIterRange(const Src& t) noexcept : fT(t) {}
+  CIter begin() const noexcept { return CIter(fT); }
+  EndIter end() const noexcept { return EndIter(); }
 
  private:
   const Src& fT;
@@ -619,14 +625,14 @@ template <typename Item, GrFragmentProcessor::CountFn Count, GrFragmentProcessor
 class GrFragmentProcessor::FPItemIter {
  public:
   template <typename Src>
-  explicit FPItemIter(Src& s);
+  explicit FPItemIter(Src& s) noexcept;
 
-  std::pair<Item&, const GrFragmentProcessor&> operator*() const {
+  std::pair<Item&, const GrFragmentProcessor&> operator*() const noexcept {
     return {(*fFPIter.*Get)(fIndex), *fFPIter};
   }
-  FPItemIter& operator++();
-  operator bool() const { return fFPIter; }
-  bool operator!=(const FPItemEndIter&) { return (bool)*this; }
+  FPItemIter& operator++() noexcept;
+  operator bool() const noexcept { return fFPIter; }
+  bool operator!=(const FPItemEndIter&) noexcept { return (bool)*this; }
 
   FPItemIter(const FPItemIter&) = delete;
   FPItemIter& operator=(const FPItemIter&) = delete;
@@ -638,7 +644,8 @@ class GrFragmentProcessor::FPItemIter {
 
 template <typename Item, GrFragmentProcessor::CountFn Count, GrFragmentProcessor::GetFn<Item> Get>
 template <typename Src>
-GrFragmentProcessor::FPItemIter<Item, Count, Get>::FPItemIter(Src& s) : fFPIter(s), fIndex(-1) {
+GrFragmentProcessor::FPItemIter<Item, Count, Get>::FPItemIter(Src& s) noexcept
+    : fFPIter(s), fIndex(-1) {
   if (fFPIter) {
     ++*this;
   }
@@ -646,7 +653,7 @@ GrFragmentProcessor::FPItemIter<Item, Count, Get>::FPItemIter(Src& s) : fFPIter(
 
 template <typename Item, GrFragmentProcessor::CountFn Count, GrFragmentProcessor::GetFn<Item> Get>
 GrFragmentProcessor::FPItemIter<Item, Count, Get>&
-GrFragmentProcessor::FPItemIter<Item, Count, Get>::operator++() {
+GrFragmentProcessor::FPItemIter<Item, Count, Get>::operator++() noexcept {
   ++fIndex;
   if (fIndex < ((*fFPIter).*Count)()) {
     return *this;
@@ -662,9 +669,9 @@ GrFragmentProcessor::FPItemIter<Item, Count, Get>::operator++() {
 template <typename Src, typename ItemIter>
 class GrFragmentProcessor::FPItemRange {
  public:
-  FPItemRange(Src& src) : fSrc(src) {}
-  ItemIter begin() const { return ItemIter(fSrc); }
-  FPItemEndIter end() const { return FPItemEndIter(); }
+  FPItemRange(Src& src) noexcept : fSrc(src) {}
+  ItemIter begin() const noexcept { return ItemIter(fSrc); }
+  FPItemEndIter end() const noexcept { return FPItemEndIter(); }
 
  private:
   Src& fSrc;

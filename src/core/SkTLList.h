@@ -45,7 +45,7 @@ class SkTLList {
   // Having fCount initialized to -1 indicates that the first time we attempt to grab a free node
   // all the nodes in the pre-allocated first block need to be inserted into the free list. This
   // allows us to skip that loop in instances when the list is never populated.
-  SkTLList() : fCount(-1) {}
+  SkTLList() noexcept = default;
 
   ~SkTLList() {
     this->validate();
@@ -109,13 +109,13 @@ class SkTLList {
   }
 
   /** Convenience methods for getting an iterator initialized to the head/tail of the list. */
-  Iter headIter() const { return Iter(*this, Iter::kHead_IterStart); }
-  Iter tailIter() const { return Iter(*this, Iter::kTail_IterStart); }
+  Iter headIter() const noexcept { return Iter(*this, Iter::kHead_IterStart); }
+  Iter tailIter() const noexcept { return Iter(*this, Iter::kTail_IterStart); }
 
-  T* head() { return Iter(*this, Iter::kHead_IterStart).get(); }
-  T* tail() { return Iter(*this, Iter::kTail_IterStart).get(); }
-  const T* head() const { return Iter(*this, Iter::kHead_IterStart).get(); }
-  const T* tail() const { return Iter(*this, Iter::kTail_IterStart).get(); }
+  T* head() noexcept { return Iter(*this, Iter::kHead_IterStart).get(); }
+  T* tail() noexcept { return Iter(*this, Iter::kTail_IterStart).get(); }
+  const T* head() const noexcept { return Iter(*this, Iter::kHead_IterStart).get(); }
+  const T* tail() const noexcept { return Iter(*this, Iter::kTail_IterStart).get(); }
 
   void popHead() {
     this->validate();
@@ -156,8 +156,8 @@ class SkTLList {
     this->validate();
   }
 
-  int count() const { return std::max(fCount, 0); }
-  bool isEmpty() const {
+  int count() const noexcept { return std::max(fCount, 0); }
+  bool isEmpty() const noexcept {
     this->validate();
     return 0 == fCount || -1 == fCount;
   }
@@ -193,32 +193,32 @@ class SkTLList {
     //!< Start the iterator at the tail of the list.
     static const IterStart kTail_IterStart = INHERITED::kTail_IterStart;
 
-    Iter() {}
-    Iter(const Iter& that) : INHERITED(that) {}
-    Iter& operator=(const Iter& that) {
+    constexpr Iter() noexcept = default;
+    Iter(const Iter& that) noexcept : INHERITED(that) {}
+    Iter& operator=(const Iter& that) noexcept {
       INHERITED::operator=(that);
       return *this;
     }
 
-    Iter(const SkTLList& list, IterStart start = kHead_IterStart) {
+    Iter(const SkTLList& list, IterStart start = kHead_IterStart) noexcept {
       INHERITED::init(list.fList, start);
     }
 
-    T* init(const SkTLList& list, IterStart start = kHead_IterStart) {
+    T* init(const SkTLList& list, IterStart start = kHead_IterStart) noexcept {
       return this->nodeToObj(INHERITED::init(list.fList, start));
     }
 
-    T* get() { return this->nodeToObj(INHERITED::get()); }
+    T* get() noexcept { return this->nodeToObj(INHERITED::get()); }
 
-    T* next() { return this->nodeToObj(INHERITED::next()); }
+    T* next() noexcept { return this->nodeToObj(INHERITED::next()); }
 
-    T* prev() { return this->nodeToObj(INHERITED::prev()); }
+    T* prev() noexcept { return this->nodeToObj(INHERITED::prev()); }
 
    private:
     friend class SkTLList;
-    Node* getNode() { return INHERITED::get(); }
+    Node* getNode() noexcept { return INHERITED::get(); }
 
-    T* nodeToObj(Node* node) {
+    T* nodeToObj(Node* node) noexcept {
       if (node) {
         return reinterpret_cast<T*>(node->fObj.get());
       } else {
@@ -292,7 +292,7 @@ class SkTLList {
     this->validate();
   }
 
-  void validate() const {
+  void validate() const noexcept {
 #ifdef SK_DEBUG
     bool isEmpty = false;
     if (-1 == fCount) {
@@ -355,7 +355,7 @@ class SkTLList {
   NodeList fList;
   NodeList fFreeList;
   Block fFirstBlock;
-  int fCount;
+  int fCount = -1;
 
   SkTLList(const SkTLList&) = delete;
   SkTLList& operator=(const SkTLList&) = delete;

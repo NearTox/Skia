@@ -21,6 +21,7 @@
 
 #include <atomic>
 #include <limits>
+#include <tuple>
 
 class SkRBuffer;
 class SkWBuffer;
@@ -65,7 +66,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
      * return value is a pointer to where the points for the verb should be written.
      * 'weight' is only used if 'verb' is kConic_Verb
      */
-    SkPoint* growForVerb(int /*SkPath::Verb*/ verb, SkScalar weight = 0) {
+    SkPoint* growForVerb(int /*SkPath::Verb*/ verb, SkScalar weight = 0) noexcept {
       SkDEBUGCODE(fPathRef->validate());
       return fPathRef->growForVerb(verb, weight);
     }
@@ -78,7 +79,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
      * space for the conic weights (indexed normally).
      */
     SkPoint* growForRepeatedVerb(
-        int /*SkPath::Verb*/ verb, int numVbs, SkScalar** weights = nullptr) {
+        int /*SkPath::Verb*/ verb, int numVbs, SkScalar** weights = nullptr) noexcept {
       return fPathRef->growForRepeatedVerb(verb, numVbs, weights);
     }
 
@@ -89,7 +90,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
      *
      * Returns pointers to the uninitialized points and conic weights data.
      */
-    std::tuple<SkPoint*, SkScalar*> growForVerbsInPath(const SkPathRef& path) {
+    std::tuple<SkPoint*, SkScalar*> growForVerbsInPath(const SkPathRef& path) noexcept {
       return fPathRef->growForVerbsInPath(path);
     }
 
@@ -201,7 +202,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
     return SkToBool(fIsOval);
   }
 
-  bool isRRect(SkRRect* rrect, bool* isCCW, unsigned* start) const {
+  bool isRRect(SkRRect* rrect, bool* isCCW, unsigned* start) const noexcept {
     if (fIsRRect) {
       if (rrect) {
         *rrect = this->getRRect();
@@ -230,7 +231,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
     return fBounds;
   }
 
-  SkRRect getRRect() const;
+  SkRRect getRRect() const noexcept;
 
   /**
    * Transforms a path ref by a matrix, allocating a new one only if necessary.
@@ -286,7 +287,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   /**
    * Writes the path points and verbs to a buffer.
    */
-  void writeToBuffer(SkWBuffer* buffer) const;
+  void writeToBuffer(SkWBuffer* buffer) const noexcept;
 
   /**
    * Gets the number of bytes that would be written in writeBuffer()
@@ -305,7 +306,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   void addGenIDChangeListener(sk_sp<SkIDChangeListener>);  // Threadsafe.
   int genIDChangeListenerCount();                          // Threadsafe
 
-  bool isValid() const;
+  bool isValid() const noexcept;
   SkDEBUGCODE(void validate() const { SkASSERT(this->isValid()); });
 
  private:
@@ -318,7 +319,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
     kSegmentMask_SerializationShift = 0                  // requires 4 bits (deprecated)
   };
 
-  SkPathRef() {
+  SkPathRef() noexcept {
     fBoundsIsDirty = true;  // this also invalidates fIsFinite
     fGenerationID = kEmptyGenID;
     fSegmentMask = 0;
@@ -394,14 +395,14 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
    * verb. If 'verb' is kConic_Verb, 'weights' will return a pointer to the
    * uninitialized conic weights.
    */
-  SkPoint* growForRepeatedVerb(int /*SkPath::Verb*/ verb, int numVbs, SkScalar** weights);
+  SkPoint* growForRepeatedVerb(int /*SkPath::Verb*/ verb, int numVbs, SkScalar** weights) noexcept;
 
   /**
    * Increases the verb count 1, records the new verb, and creates room for the requisite number
    * of additional points. A pointer to the first point is returned. Any new points are
    * uninitialized.
    */
-  SkPoint* growForVerb(int /*SkPath::Verb*/ verb, SkScalar weight);
+  SkPoint* growForVerb(int /*SkPath::Verb*/ verb, SkScalar weight) noexcept;
 
   /**
    * Concatenates all verbs from 'path' onto our own verbs array. Increases the point count by the
@@ -409,7 +410,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
    *
    * Returns pointers to the uninitialized points and conic weights data.
    */
-  std::tuple<SkPoint*, SkScalar*> growForVerbsInPath(const SkPathRef& path);
+  std::tuple<SkPoint*, SkScalar*> growForVerbsInPath(const SkPathRef& path) noexcept;
 
   /**
    * Private, non-const-ptr version of the public function verbsMemBegin().

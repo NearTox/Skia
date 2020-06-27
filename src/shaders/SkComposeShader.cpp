@@ -20,7 +20,7 @@
 namespace {
 
 struct LocalMatrixStageRec final : public SkStageRec {
-  LocalMatrixStageRec(const SkStageRec& rec, const SkMatrix& lm) : INHERITED(rec) {
+  LocalMatrixStageRec(const SkStageRec& rec, const SkMatrix& lm) noexcept : INHERITED(rec) {
     if (!lm.isIdentity()) {
       if (fLocalM) {
         fStorage.setConcat(lm, *fLocalM);

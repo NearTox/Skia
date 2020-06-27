@@ -64,10 +64,12 @@ class SkBitmapDevice : public SkBaseDevice {
     return Create(info, props, false, nullptr);
   }
 
-  const SkPixmap* accessCoverage() const { return fCoverage ? &fCoverage->pixmap() : nullptr; }
+  const SkPixmap* accessCoverage() const noexcept {
+    return fCoverage ? &fCoverage->pixmap() : nullptr;
+  }
 
  protected:
-  void* getRasterHandle() const override { return fRasterHandle; }
+  void* getRasterHandle() const noexcept override { return fRasterHandle; }
 
   /** These are called inside the per-device-layer loop for each draw call.
    When these are called, we have already applied any saveLayer operations,
@@ -176,7 +178,7 @@ class SkBitmapDeviceFilteredSurfaceProps {
   SkBitmapDeviceFilteredSurfaceProps(SkBitmapDeviceFilteredSurfaceProps&&) = delete;
   SkBitmapDeviceFilteredSurfaceProps& operator=(SkBitmapDeviceFilteredSurfaceProps&&) = delete;
 
-  const SkSurfaceProps& operator()() const { return *fSurfaceProps; }
+  const SkSurfaceProps& operator()() const noexcept { return *fSurfaceProps; }
 
  private:
   SkTLazy<SkSurfaceProps> fLazy;

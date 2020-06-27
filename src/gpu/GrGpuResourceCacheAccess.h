@@ -53,7 +53,7 @@ class GrGpuResource::CacheAccess {
   }
 
   /** Called by the cache to assign a new unique key. */
-  void setUniqueKey(const GrUniqueKey& key) { fResource->fUniqueKey = key; }
+  void setUniqueKey(const GrUniqueKey& key) noexcept { fResource->fUniqueKey = key; }
 
   /** Is the resource ref'ed */
   bool hasRef() const noexcept { return fResource->hasRef(); }

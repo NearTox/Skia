@@ -22,31 +22,31 @@ class SkSurface;
  * Defines overloaded bitwise operators to make it easier to use an enum as a
  * bitfield.
  */
-#define GR_MAKE_BITFIELD_OPS(X)                                              \
-  constexpr inline X operator|(X a, X b) noexcept { return (X)(+a | +b); }   \
-  constexpr inline X& operator|=(X& a, X b) noexcept { return (a = a | b); } \
-  constexpr inline X operator&(X a, X b) noexcept { return (X)(+a & +b); }   \
-  constexpr inline X& operator&=(X& a, X b) noexcept { return (a = a & b); } \
-  template <typename T>                                                      \
-  inline X operator&(T a, X b) noexcept {                                    \
-    return (X)(+a & +b);                                                     \
-  }                                                                          \
-  template <typename T>                                                      \
-  inline X operator&(X a, T b) noexcept {                                    \
-    return (X)(+a & +b);                                                     \
+#define GR_MAKE_BITFIELD_OPS(X)                                    \
+  inline X operator|(X a, X b) noexcept { return (X)(+a | +b); }   \
+  inline X& operator|=(X& a, X b) noexcept { return (a = a | b); } \
+  inline X operator&(X a, X b) noexcept { return (X)(+a & +b); }   \
+  inline X& operator&=(X& a, X b) noexcept { return (a = a & b); } \
+  template <typename T>                                            \
+  inline X operator&(T a, X b) noexcept {                          \
+    return (X)(+a & +b);                                           \
+  }                                                                \
+  template <typename T>                                            \
+  inline X operator&(X a, T b) noexcept {                          \
+    return (X)(+a & +b);                                           \
   }
 
-#define GR_DECL_BITFIELD_OPS_FRIENDS(X)               \
-  friend constexpr X operator|(X a, X b) noexcept;    \
-  friend constexpr X& operator|=(X& a, X b) noexcept; \
-                                                      \
-  friend constexpr X operator&(X a, X b) noexcept;    \
-  friend constexpr X& operator&=(X& a, X b) noexcept; \
-                                                      \
-  template <typename T>                               \
-  friend X operator&(T a, X b) noexcept;              \
-                                                      \
-  template <typename T>                               \
+#define GR_DECL_BITFIELD_OPS_FRIENDS(X)     \
+  friend X operator|(X a, X b) noexcept;    \
+  friend X& operator|=(X& a, X b) noexcept; \
+                                            \
+  friend X operator&(X a, X b) noexcept;    \
+  friend X& operator&=(X& a, X b) noexcept; \
+                                            \
+  template <typename T>                     \
+  friend X operator&(T a, X b) noexcept;    \
+                                            \
+  template <typename T>                     \
   friend X operator&(X a, T b) noexcept;
 
 /**
@@ -58,7 +58,7 @@ class GrTFlagsMask {
  public:
   constexpr explicit GrTFlagsMask(TFlags value) noexcept : GrTFlagsMask(static_cast<int>(value)) {}
   constexpr explicit GrTFlagsMask(int value) noexcept : fValue(value) {}
-  constexpr int value() const { return fValue; }
+  constexpr int value() const noexcept { return fValue; }
 
  private:
   const int fValue;

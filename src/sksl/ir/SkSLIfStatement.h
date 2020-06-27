@@ -19,7 +19,7 @@ namespace SkSL {
 struct IfStatement : public Statement {
   IfStatement(
       int offset, bool isStatic, std::unique_ptr<Expression> test,
-      std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse)
+      std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse) noexcept
       : INHERITED(offset, kIf_Kind),
         fIsStatic(isStatic),
         fTest(std::move(test)),
@@ -32,7 +32,6 @@ struct IfStatement : public Statement {
         fIfFalse ? fIfFalse->clone() : nullptr));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result;
     if (fIsStatic) {
@@ -44,7 +43,6 @@ struct IfStatement : public Statement {
     }
     return result;
   }
-#endif
 
   bool fIsStatic;
   std::unique_ptr<Expression> fTest;

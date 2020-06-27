@@ -45,7 +45,7 @@ class SkStageUpdater {
  public:
   virtual ~SkStageUpdater() = default;
 
-  virtual bool update(const SkMatrix& ctm, const SkMatrix* localM) = 0;
+  virtual bool SK_WARN_UNUSED_RESULT update(const SkMatrix& ctm, const SkMatrix* localM) = 0;
 };
 
 class SkShaderBase : public SkShader {
@@ -187,9 +187,9 @@ class SkShaderBase : public SkShader {
 
   virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
 
-  virtual SkRuntimeEffect* asRuntimeEffect() const { return nullptr; }
+  virtual SkRuntimeEffect* asRuntimeEffect() const noexcept { return nullptr; }
 
-  static constexpr Type GetFlattenableType() noexcept { return kSkShaderBase_Type; }
+  static Type GetFlattenableType() noexcept { return kSkShaderBase_Type; }
   Type getFlattenableType() const noexcept override { return GetFlattenableType(); }
 
   static sk_sp<SkShaderBase> Deserialize(
@@ -215,7 +215,7 @@ class SkShaderBase : public SkShader {
       skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
 
  protected:
-  SkShaderBase(const SkMatrix* localMatrix = nullptr);
+  SkShaderBase(const SkMatrix* localMatrix = nullptr) noexcept;
 
   void flatten(SkWriteBuffer&) const override;
 

@@ -16,7 +16,7 @@ class GrDrawAtlasPathOp : public GrDrawOp {
 
   GrDrawAtlasPathOp(
       int numRenderTargetSamples, sk_sp<GrTextureProxy> atlasProxy, const SkIRect& devIBounds,
-      const SkIVector& devToAtlasOffset, const SkMatrix& viewMatrix, GrPaint&& paint)
+      const SkIVector& devToAtlasOffset, const SkMatrix& viewMatrix, GrPaint&& paint) noexcept
       : GrDrawOp(ClassID()),
         fEnableHWAA(numRenderTargetSamples > 1),
         fAtlasProxy(std::move(atlasProxy)),
@@ -25,8 +25,8 @@ class GrDrawAtlasPathOp : public GrDrawOp {
     this->setBounds(SkRect::Make(devIBounds), HasAABloat::kYes, IsHairline::kNo);
   }
 
-  const char* name() const override { return "GrDrawAtlasPathOp"; }
-  FixedFunctionFlags fixedFunctionFlags() const override {
+  const char* name() const noexcept override { return "GrDrawAtlasPathOp"; }
+  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
     return (fEnableHWAA) ? FixedFunctionFlags::kUsesHWAA : FixedFunctionFlags::kNone;
   }
   void visitProxies(const VisitProxyFunc& fn) const override {
@@ -41,7 +41,7 @@ class GrDrawAtlasPathOp : public GrDrawOp {
 
  private:
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override;
 
   struct Instance {
@@ -54,7 +54,7 @@ class GrDrawAtlasPathOp : public GrDrawOp {
     }
     Instance(
         const SkIRect& devIBounds, SkIVector devToAtlasOffset, const SkPMColor4f& color,
-        const SkMatrix& m)
+        const SkMatrix& m) noexcept
         : fDevIBounds(devIBounds),
           fDevToAtlasOffset(devToAtlasOffset),
           fColor(color),
@@ -69,7 +69,7 @@ class GrDrawAtlasPathOp : public GrDrawOp {
   struct InstanceList {
     InstanceList(
         const SkIRect& devIBounds, SkIVector devToAtlasOffset, const SkPMColor4f& color,
-        const SkMatrix& viewMatrix)
+        const SkMatrix& viewMatrix) noexcept
         : fInstance(devIBounds, devToAtlasOffset, color, viewMatrix) {}
     InstanceList* fNext = nullptr;
     Instance fInstance;

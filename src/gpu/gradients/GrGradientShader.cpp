@@ -30,11 +30,11 @@
 
 // Intervals smaller than this (that aren't hard stops) on low-precision-only devices force us to
 // use the textured gradient
-static const SkScalar kLowPrecisionIntervalLimit = 0.01f;
+static constexpr SkScalar kLowPrecisionIntervalLimit = 0.01f;
 
 // Each cache entry costs 1K or 2K of RAM. Each bitmap will be 1x256 at either 32bpp or 64bpp.
-static const int kMaxNumCachedGradientBitmaps = 32;
-static const int kGradientTextureSize = 256;
+static constexpr int kMaxNumCachedGradientBitmaps = 32;
+static constexpr int kGradientTextureSize = 256;
 
 // NOTE: signature takes raw pointers to the color/pos arrays and a count to make it easy for
 // MakeColorizer to transparently take care of hard stops at the end points of the gradient.

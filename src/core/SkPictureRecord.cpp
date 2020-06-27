@@ -27,7 +27,7 @@ enum {
 };
 
 // A lot of basic types get stored as a uint32_t: bools, ints, paint indices, etc.
-static int const kUInt32Size = 4;
+static int constexpr kUInt32Size = 4;
 
 SkPictureRecord::SkPictureRecord(const SkIRect& dimensions, uint32_t flags)
     : INHERITED(dimensions), fRecordFlags(flags), fInitialSaveCount(kNoInitialSave) {}
@@ -58,6 +58,16 @@ void SkPictureRecord::recordSave() {
   size_t initialOffset = this->addDraw(SAVE, &size);
 
   this->validate(initialOffset, size);
+}
+
+void SkPictureRecord::onMarkCTM(const char* name) {
+  size_t nameLen = fWriter.WriteStringSize(name);
+  size_t size = sizeof(kUInt32Size) + nameLen;  // op + name
+  size_t initialOffset = this->addDraw(MARK_CTM, &size);
+  fWriter.writeString(name);
+  this->validate(initialOffset, size);
+
+  this->INHERITED::onMarkCTM(name);
 }
 
 SkCanvas::SaveLayerStrategy SkPictureRecord::getSaveLayerStrategy(const SaveLayerRec& rec) {
@@ -216,12 +226,12 @@ void SkPictureRecord::recordScale(const SkMatrix& m) {
   this->validate(initialOffset, size);
 }
 
-void SkPictureRecord::didConcat44(const SkScalar m[16]) {
+void SkPictureRecord::didConcat44(const SkM44& m) {
   this->validate(fWriter.bytesWritten(), 0);
   // op + matrix
   size_t size = kUInt32Size + 16 * sizeof(SkScalar);
   size_t initialOffset = this->addDraw(CONCAT44, &size);
-  fWriter.write(m, 16 * sizeof(SkScalar));
+  fWriter.write(SkMatrixPriv::M44ColMajor(m), 16 * sizeof(SkScalar));
   this->validate(initialOffset, size);
 
   this->INHERITED::didConcat44(m);
@@ -263,7 +273,7 @@ void SkPictureRecord::didSetMatrix(const SkMatrix& matrix) {
   this->INHERITED::didSetMatrix(matrix);
 }
 
-static bool clipOpExpands(SkClipOp op) {
+static bool clipOpExpands(SkClipOp op) noexcept {
   switch (op) {
     case kUnion_SkClipOp:
     case kXOR_SkClipOp:
@@ -294,7 +304,7 @@ void SkPictureRecord::fillRestoreOffsetPlaceholdersForCurrentStackLevel(uint32_t
 #endif
 }
 
-void SkPictureRecord::beginRecording() {
+void SkPictureRecord::beginRecording() noexcept {
   // we have to call this *after* our constructor, to ensure that it gets
   // recorded. This is balanced by restoreToCount() call from endRecording,
   // which in-turn calls our overridden restore(), so those get recorded too.
@@ -822,12 +832,12 @@ void SkPictureRecord::onDrawEdgeAAImageSet(
 // De-duping helper.
 
 template <typename T>
-static bool equals(T* a, T* b) {
+static bool equals(T* a, T* b) noexcept {
   return a->uniqueID() == b->uniqueID();
 }
 
 template <>
-bool equals(SkDrawable* a, SkDrawable* b) {
+bool equals(SkDrawable* a, SkDrawable* b) noexcept {
   // SkDrawable's generationID is not a stable unique identifier.
   return a == b;
 }

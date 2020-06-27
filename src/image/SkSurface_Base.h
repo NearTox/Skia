@@ -15,9 +15,11 @@
 
 class SkSurface_Base : public SkSurface {
  public:
-  SkSurface_Base(int width, int height, const SkSurfaceProps*);
-  SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*);
+  SkSurface_Base(int width, int height, const SkSurfaceProps*) noexcept;
+  SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*) noexcept;
   virtual ~SkSurface_Base();
+
+  virtual GrContext* onGetContext();
 
   virtual GrBackendTexture onGetBackendTexture(BackendHandleAccess);
   virtual GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess);

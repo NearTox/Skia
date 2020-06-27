@@ -18,21 +18,21 @@
 
 class CoverageSetOpXP : public GrXferProcessor {
  public:
-  CoverageSetOpXP(SkRegion::Op regionOp, bool invertCoverage)
+  CoverageSetOpXP(SkRegion::Op regionOp, bool invertCoverage) noexcept
       : INHERITED(kCoverageSetOpXP_ClassID), fRegionOp(regionOp), fInvertCoverage(invertCoverage) {}
 
-  const char* name() const override { return "Coverage Set Op"; }
+  const char* name() const noexcept override { return "Coverage Set Op"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  bool invertCoverage() const { return fInvertCoverage; }
+  bool invertCoverage() const noexcept { return fInvertCoverage; }
 
  private:
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override;
+  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const noexcept override;
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const override {
+  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override {
     const CoverageSetOpXP& xp = xpBase.cast<CoverageSetOpXP>();
     return (fRegionOp == xp.fRegionOp && fInvertCoverage == xp.fInvertCoverage);
   }
@@ -70,7 +70,7 @@ class GLCoverageSetOpXP : public GrGLSLXferProcessor {
     }
   }
 
-  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
+  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) noexcept override {}
 
   typedef GrGLSLXferProcessor INHERITED;
 };
@@ -86,7 +86,7 @@ GrGLSLXferProcessor* CoverageSetOpXP::createGLSLInstance() const {
   return new GLCoverageSetOpXP(*this);
 }
 
-void CoverageSetOpXP::onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const {
+void CoverageSetOpXP::onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const noexcept {
   switch (fRegionOp) {
     case SkRegion::kReplace_Op:
       blendInfo->fSrcBlend = kOne_GrBlendCoeff;

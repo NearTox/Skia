@@ -17,7 +17,7 @@
 #include "src/gpu/GrFragmentProcessor.h"
 class GrClampFragmentProcessor : public GrFragmentProcessor {
  public:
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
     float clampedAlpha = SkTPin(input.fA, 0.f, 1.f);
     float clampVal = clampToPremul ? clampedAlpha : 1.f;
     return {
@@ -27,13 +27,13 @@ class GrClampFragmentProcessor : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(bool clampToPremul) {
     return std::unique_ptr<GrFragmentProcessor>(new GrClampFragmentProcessor(clampToPremul));
   }
-  GrClampFragmentProcessor(const GrClampFragmentProcessor& src);
+  GrClampFragmentProcessor(const GrClampFragmentProcessor& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "ClampFragmentProcessor"; }
+  const char* name() const noexcept override { return "ClampFragmentProcessor"; }
   bool clampToPremul;
 
  private:
-  GrClampFragmentProcessor(bool clampToPremul)
+  GrClampFragmentProcessor(bool clampToPremul) noexcept
       : INHERITED(
             kGrClampFragmentProcessor_ClassID,
             (OptimizationFlags)kConstantOutputForConstantInput_OptimizationFlag |
@@ -41,7 +41,7 @@ class GrClampFragmentProcessor : public GrFragmentProcessor {
         clampToPremul(clampToPremul) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

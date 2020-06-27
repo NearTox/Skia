@@ -19,7 +19,6 @@
 #include "modules/sksg/include/SkSGScene.h"
 #include "src/utils/SkUTF.h"
 
-#include <functional>
 #include <vector>
 
 class SkFontMgr;
@@ -53,8 +52,8 @@ class AnimationBuilder final : public SkNoncopyable {
  public:
   AnimationBuilder(
       sk_sp<ResourceProvider>, sk_sp<SkFontMgr>, sk_sp<PropertyObserver>, sk_sp<Logger>,
-      sk_sp<MarkerObserver>, Animation::Builder::Stats*, const SkSize& comp_size, float duration,
-      float framerate, uint32_t flags);
+      sk_sp<MarkerObserver>, sk_sp<PrecompInterceptor>, Animation::Builder::Stats*,
+      const SkSize& comp_size, float duration, float framerate, uint32_t flags);
 
   struct AnimationInfo {
     std::unique_ptr<sksg::Scene> fScene;
@@ -173,7 +172,7 @@ class AnimationBuilder final : public SkNoncopyable {
 
   struct AttachLayerContext;
   struct AttachShapeContext;
-  struct ImageAssetInfo;
+  struct FootageAssetInfo;
   struct LayerInfo;
 
   void parseAssets(const skjson::ArrayValue*);
@@ -185,15 +184,13 @@ class AnimationBuilder final : public SkNoncopyable {
       const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
 
   sk_sp<sksg::RenderNode> attachShape(const skjson::ArrayValue*, AttachShapeContext*) const;
-  sk_sp<sksg::RenderNode> attachAssetRef(
-      const skjson::ObjectValue&,
-      const std::function<sk_sp<sksg::RenderNode>(const skjson::ObjectValue&)>&) const;
-  const ImageAssetInfo* loadImageAsset(const skjson::ObjectValue&) const;
-  sk_sp<sksg::RenderNode> attachImageAsset(const skjson::ObjectValue&, LayerInfo*) const;
+  const FootageAssetInfo* loadFootageAsset(const skjson::ObjectValue&) const;
+  sk_sp<sksg::RenderNode> attachFootageAsset(const skjson::ObjectValue&, LayerInfo*) const;
 
-  sk_sp<sksg::RenderNode> attachNestedAnimation(const char* name) const;
+  sk_sp<sksg::RenderNode> attachExternalPrecompLayer(
+      const skjson::ObjectValue&, const LayerInfo&) const;
 
-  sk_sp<sksg::RenderNode> attachImageLayer(const skjson::ObjectValue&, LayerInfo*) const;
+  sk_sp<sksg::RenderNode> attachFootageLayer(const skjson::ObjectValue&, LayerInfo*) const;
   sk_sp<sksg::RenderNode> attachNullLayer(const skjson::ObjectValue&, LayerInfo*) const;
   sk_sp<sksg::RenderNode> attachPrecompLayer(const skjson::ObjectValue&, LayerInfo*) const;
   sk_sp<sksg::RenderNode> attachShapeLayer(const skjson::ObjectValue&, LayerInfo*) const;
@@ -223,6 +220,7 @@ class AnimationBuilder final : public SkNoncopyable {
   sk_sp<PropertyObserver> fPropertyObserver;
   sk_sp<Logger> fLogger;
   sk_sp<MarkerObserver> fMarkerObserver;
+  sk_sp<PrecompInterceptor> fPrecompInterceptor;
   Animation::Builder::Stats* fStats;
   const SkSize fCompSize;
   const float fDuration, fFrameRate;
@@ -241,14 +239,32 @@ class AnimationBuilder final : public SkNoncopyable {
     mutable bool fIsAttaching;  // Used for cycle detection
   };
 
-  struct ImageAssetInfo {
+  struct FootageAssetInfo {
     sk_sp<ImageAsset> fAsset;
     SkISize fSize;
   };
 
+  class ScopedAssetRef {
+   public:
+    ScopedAssetRef(const AnimationBuilder* abuilder, const skjson::ObjectValue& jlayer);
+
+    ~ScopedAssetRef() {
+      if (fInfo) {
+        fInfo->fIsAttaching = false;
+      }
+    }
+
+    operator bool() const noexcept { return !!fInfo; }
+
+    const skjson::ObjectValue& operator*() const noexcept { return *fInfo->fAsset; }
+
+   private:
+    const AssetInfo* fInfo = nullptr;
+  };
+
   SkTHashMap<SkString, AssetInfo> fAssets;
   SkTHashMap<SkString, FontInfo> fFonts;
-  mutable SkTHashMap<SkString, ImageAssetInfo> fImageAssetCache;
+  mutable SkTHashMap<SkString, FootageAssetInfo> fImageAssetCache;
 
   using INHERITED = SkNoncopyable;
 };

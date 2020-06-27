@@ -26,7 +26,7 @@ class GrRecordingContextPriv {
   sk_sp<const GrCaps> refCaps() const;
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
-  GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
+  GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
   GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   // from GrImageContext
@@ -39,13 +39,13 @@ class GrRecordingContextPriv {
   SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
 
   // from GrRecordingContext
-  GrDrawingManager* drawingManager() { return fContext->drawingManager(); }
+  GrDrawingManager* drawingManager() noexcept { return fContext->drawingManager(); }
 
   GrOpMemoryPool* opMemoryPool() { return fContext->arenas().opMemoryPool(); }
   SkArenaAlloc* recordTimeAllocator() { return fContext->arenas().recordTimeAllocator(); }
   GrRecordingContext::Arenas arenas() { return fContext->arenas(); }
 
-  GrRecordingContext::OwnedArenas&& detachArenas() { return fContext->detachArenas(); }
+  GrRecordingContext::OwnedArenas&& detachArenas() noexcept { return fContext->detachArenas(); }
 
   void recordProgramInfo(const GrProgramInfo* programInfo) {
     fContext->recordProgramInfo(programInfo);
@@ -55,8 +55,7 @@ class GrRecordingContextPriv {
     fContext->detachProgramData(dst);
   }
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fContext->getGrStrikeCache(); }
-  GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
+  GrTextBlobCache* getTextBlobCache() noexcept { return fContext->getTextBlobCache(); }
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -70,7 +69,7 @@ class GrRecordingContextPriv {
 
   // CONTEXT TODO: remove this backdoor
   // In order to make progress we temporarily need a way to break CL impasses.
-  GrContext* backdoor();
+  GrContext* backdoor() noexcept;
 
 #if GR_TEST_UTILS
   // Used by tests that intentionally exercise codepaths that print warning messages, in order to
@@ -89,7 +88,7 @@ class GrRecordingContextPriv {
   void decrSuppressWarningMessages() { --fContext->fSuppressWarningMessages; }
 #endif
 
-  void printWarningMessage(const char* msg) const noexcept {
+  void printWarningMessage(const char* msg) const {
 #if GR_TEST_UTILS
     if (fContext->fSuppressWarningMessages > 0) {
       return;
@@ -97,6 +96,8 @@ class GrRecordingContextPriv {
 #endif
     SkDebugf(msg);
   }
+
+  GrRecordingContext::Stats* stats() noexcept { return &fContext->fStats; }
 
  private:
   explicit GrRecordingContextPriv(GrRecordingContext* context) noexcept : fContext(context) {}

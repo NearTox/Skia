@@ -12,7 +12,7 @@
 
 typedef int64_t SkThreadID;
 
-SkThreadID SkGetThreadID() noexcept;
+SkThreadID SkGetThreadID();
 
 constexpr SkThreadID kIllegalThreadID = 0;
 

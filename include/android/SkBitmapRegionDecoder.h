@@ -69,13 +69,13 @@ class SK_API SkBitmapRegionDecoder {
   virtual sk_sp<SkColorSpace> computeOutputColorSpace(
       SkColorType outputColorType, sk_sp<SkColorSpace> prefColorSpace = nullptr) = 0;
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
 
   virtual ~SkBitmapRegionDecoder() = default;
 
  protected:
-  SkBitmapRegionDecoder(int width, int height) : fWidth(width), fHeight(height) {}
+  SkBitmapRegionDecoder(int width, int height) noexcept : fWidth(width), fHeight(height) {}
 
  private:
   const int fWidth;

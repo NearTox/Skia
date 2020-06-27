@@ -18,12 +18,12 @@ namespace SkSL {
  * An expression modified by a unary operator appearing after it, such as 'i++'.
  */
 struct PostfixExpression : public Expression {
-  PostfixExpression(std::unique_ptr<Expression> operand, Token::Kind op)
+  PostfixExpression(std::unique_ptr<Expression> operand, Token::Kind op) noexcept
       : INHERITED(operand->fOffset, kPostfix_Kind, operand->fType),
         fOperand(std::move(operand)),
         fOperator(op) {}
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     if (property == Property::kSideEffects) {
       return true;
     }
@@ -34,11 +34,9 @@ struct PostfixExpression : public Expression {
     return std::unique_ptr<Expression>(new PostfixExpression(fOperand->clone(), fOperator));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     return fOperand->description() + Compiler::OperatorName(fOperator);
   }
-#endif
 
   std::unique_ptr<Expression> fOperand;
   const Token::Kind fOperator;

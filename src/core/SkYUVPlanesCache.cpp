@@ -41,7 +41,7 @@ struct YUVPlanesRec : public SkResourceCache::Rec {
   YUVValue fValue;
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(*this) + fValue.fData->size(); }
+  size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
   const char* getCategory() const override { return "yuv-planes"; }
   SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fValue.fData->diagnostic_only_getDiscardable();

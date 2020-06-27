@@ -56,7 +56,7 @@ static bool eq(const SkString& str, const char* strPtr, size_t len) {
 static void assert_eql(
     skiatest::Reporter* reporter, const SkString& skString, const char* str, size_t len) {
   if (!eq(skString, str, len)) {
-    REPORT_FAILURE(reporter, "", SkStringPrintf("'%*s' != '%s'", len, str, skString.c_str()));
+    REPORT_FAILURE(reporter, "", SkStringPrintf("'%*s' != '%s'", (int)len, str, skString.c_str()));
   }
 }
 

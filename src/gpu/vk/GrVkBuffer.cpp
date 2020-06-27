@@ -35,6 +35,7 @@ const GrVkBuffer::Resource* GrVkBuffer::Create(GrVkGpu* gpu, const Desc& desc) {
   switch (desc.fType) {
     case kVertex_Type: bufInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT; break;
     case kIndex_Type: bufInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT; break;
+    case kIndirect_Type: bufInfo.usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT; break;
     case kUniform_Type: bufInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT; break;
     case kCopyRead_Type: bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT; break;
     case kCopyWrite_Type: bufInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT; break;
@@ -229,6 +230,7 @@ bool GrVkBuffer::vkUpdateData(
 void GrVkBuffer::validate() const {
   SkASSERT(
       !fResource || kVertex_Type == fDesc.fType || kIndex_Type == fDesc.fType ||
-      kTexel_Type == fDesc.fType || kCopyRead_Type == fDesc.fType ||
-      kCopyWrite_Type == fDesc.fType || kUniform_Type == fDesc.fType);
+      kIndirect_Type == fDesc.fType || kTexel_Type == fDesc.fType ||
+      kCopyRead_Type == fDesc.fType || kCopyWrite_Type == fDesc.fType ||
+      kUniform_Type == fDesc.fType);
 }

@@ -41,7 +41,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
     // Setup uniform color
     const char* stagedLocalVarName;
     fColorUniform = args.fUniformHandler->addUniform(
-        kFragment_GrShaderFlag, kHalf4_GrSLType, "Color", &stagedLocalVarName);
+        nullptr, kFragment_GrShaderFlag, kHalf4_GrSLType, "Color", &stagedLocalVarName);
     fragBuilder->codeAppendf("%s = %s;", args.fOutputColor, stagedLocalVarName);
 
     // setup constant solid coverage
@@ -60,7 +60,6 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
     for (int i = 0; *transformHandler; ++*transformHandler, ++i) {
       auto [coordTransform, fp] = transformHandler->get();
 
-      SkString matrix;
       GrShaderVar fragmentVar;
       GrShaderVar transformVar;
       if (fp.isSampledWithExplicitCoords()) {
@@ -79,7 +78,8 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
           }
           uni.fHandle =
               uniformHandler
-                  ->addUniform(kFragment_GrShaderFlag, uni.fType, strUniName.c_str(), &name)
+                  ->addUniform(
+                      nullptr, kFragment_GrShaderFlag, uni.fType, strUniName.c_str(), &name)
                   .toIndex();
           transformVar = uniformHandler->getUniformVariable(uni.fHandle);
         }
@@ -95,7 +95,6 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
             glVaryingHandler->addPathProcessingVarying(strVaryingName.c_str(), &v).toIndex();
 #endif
         fVaryingTransform.back().fType = varyingType;
-        matrix = matrix_to_sksl(coordTransform.matrix());
         fragmentVar = {SkString(v.fsIn()), varyingType};
       }
       transformHandler->specifyCoordsForCurrCoordTransform(transformVar, fragmentVar);

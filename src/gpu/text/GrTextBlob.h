@@ -8,28 +8,29 @@
 #ifndef GrTextBlob_DEFINED
 #define GrTextBlob_DEFINED
 
-#include "include/core/SkPathEffect.h"
+#include <limits>
+
 #include "include/core/SkPoint3.h"
-#include "include/core/SkSurfaceProps.h"
-#include "src/core/SkDescriptor.h"
+#include "include/core/SkRefCnt.h"
+#include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkIPoint16.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkRectPriv.h"
-#include "src/core/SkStrikeCache.h"
 #include "src/core/SkStrikeSpec.h"
-#include "src/core/SkTInternalLList.h"
+#include "src/core/SkTLazy.h"
 #include "src/gpu/GrColor.h"
 #include "src/gpu/GrDrawOpAtlas.h"
-#include "src/gpu/text/GrStrikeCache.h"
-#include "src/gpu/text/GrTextContext.h"
-#include "src/gpu/text/GrTextTarget.h"
-
-#include <limits>
 
 class GrAtlasManager;
 class GrAtlasTextOp;
+class GrDeferredUploadTarget;
 class GrGlyph;
+class GrStrikeCache;
+class GrTextContext;
 
+class SkMatrixProvider;
+class SkSurfaceProps;
 class SkTextBlob;
 class SkTextBlobRunIterator;
 
@@ -98,8 +99,8 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
   // Make an empty GrTextBlob, with all the invariants set to make the right decisions when
   // adding SubRuns.
   static sk_sp<GrTextBlob> Make(
-      const SkGlyphRunList& glyphRunList, GrStrikeCache* strikeCache, const SkMatrix& drawMatrix,
-      GrColor color, bool forceWForDistanceFields);
+      const SkGlyphRunList& glyphRunList, const SkMatrix& drawMatrix, GrColor color,
+      bool forceWForDistanceFields);
 
   // Key manipulation functions
   void setupKey(
@@ -121,14 +122,10 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
       const SkPaint&, bool, const SkMaskFilterBase::BlurRec& blurRec, const SkMatrix& drawMatrix,
       SkPoint drawOrigin);
 
-  void flush(
-      GrTextTarget*, const SkSurfaceProps& props, const SkPaint& paint,
-      const SkPMColor4f& filteredColor, const GrClip& clip, const SkMatrix& drawMatrix,
+  void addOp(
+      GrTextTarget* target, const SkSurfaceProps& props, const SkPaint& paint,
+      const SkPMColor4f& filteredColor, const GrClip& clip, const SkMatrixProvider& deviceMatrix,
       SkPoint drawOrigin);
-
-  void computeSubRunBounds(
-      SkRect* outBounds, const SubRun& subRun, const SkMatrix& drawMatrix, SkPoint drawOrigin,
-      bool needsGlyphTransform);
 
   // Normal text mask, SDFT, or color.
   struct Mask2DVertex {
@@ -159,7 +156,7 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
 
   // Internal test methods
   std::unique_ptr<GrDrawOp> test_makeOp(
-      int glyphCount, const SkMatrix& drawMatrix, SkPoint drawOrigin, const SkPaint& paint,
+      const SkMatrixProvider& matrixProvider, SkPoint drawOrigin, const SkPaint& paint,
       const SkPMColor4f& filteredColor, const SkSurfaceProps&, GrTextTarget*);
 
   bool hasW(SubRunType type) const;
@@ -193,13 +190,13 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
   };
 
   GrTextBlob(
-      size_t allocSize, GrStrikeCache* strikeCache, const SkMatrix& drawMatrix, SkPoint origin,
-      GrColor color, SkColor initialLuminance, bool forceWForDistanceFields);
+      size_t allocSize, const SkMatrix& drawMatrix, SkPoint origin, GrColor color,
+      SkColor initialLuminance, bool forceWForDistanceFields);
 
   void insertSubRun(SubRun* subRun);
 
   std::unique_ptr<GrAtlasTextOp> makeOp(
-      SubRun& info, int glyphCount, const SkMatrix& drawMatrix, SkPoint drawOrigin,
+      SubRun& info, const SkMatrixProvider& matrixProvider, SkPoint drawOrigin,
       const SkIRect& clipRect, const SkPaint& paint, const SkPMColor4f& filteredColor,
       const SkSurfaceProps&, GrTextTarget*);
 
@@ -218,16 +215,11 @@ class GrTextBlob final : public SkNVRefCnt<GrTextBlob>, public SkGlyphRunPainter
   // Overall size of this struct plus vertices and glyphs at the end.
   const size_t fSize;
 
-  // Lifetime: The GrStrikeCache is owned by and has the same lifetime as the GrRecordingContext.
-  // The GrRecordingContext also owns the GrTextBlob cache which owns this GrTextBlob.
-  GrStrikeCache* const fStrikeCache;
-
-  // The initial view matrix and its inverse. This is used for moving additional draws of this
+  // The initial view matrix. This is used for moving additional draws of this
   // same text blob. We record the initial view matrix and initial offsets(x,y), because we
   // record vertex bounds relative to these numbers.  When blobs are reused with new matrices,
   // we need to return to source space so we can update the vertex bounds appropriately.
   const SkMatrix fInitialMatrix;
-  const SkMatrix fInitialMatrixInverse;
 
   // Initial position of this blob. Used for calculating position differences when reusing this
   // blob.
@@ -294,11 +286,20 @@ class GrTextBlob::VertexRegenerator {
 // glyphs that are included in them.
 class GrTextBlob::SubRun {
  public:
+  // Within a glyph-based subRun, the glyphs are initially recorded as SkPackedGlyphs. At
+  // flush time they are then converted to GrGlyph's (via the GrTextStrike). Once converted
+  // they are never converted back.
+  union PackedGlyphIDorGrGlyph {
+    PackedGlyphIDorGrGlyph() {}
+
+    SkPackedGlyphID fPackedGlyphID;
+    GrGlyph* fGrGlyph;
+  };
+
   // SubRun for masks
   SubRun(
       SubRunType type, GrTextBlob* textBlob, const SkStrikeSpec& strikeSpec, GrMaskFormat format,
-      const SkSpan<GrGlyph*>& glyphs, const SkSpan<char>& vertexData,
-      sk_sp<GrTextStrike>&& grStrike);
+      const SkSpan<PackedGlyphIDorGrGlyph>& glyphs, const SkSpan<char>& vertexData);
 
   // SubRun for paths
   SubRun(GrTextBlob* textBlob, const SkStrikeSpec& strikeSpec);
@@ -308,7 +309,6 @@ class GrTextBlob::SubRun {
   // TODO when this object is more internal, drop the privacy
   void resetBulkUseToken();
   GrDrawOpAtlas::BulkUseTokenUpdater* bulkUseToken();
-  void setStrike(sk_sp<GrTextStrike> strike);
   GrTextStrike* strike() const;
 
   GrMaskFormat maskFormat() const;
@@ -319,16 +319,24 @@ class GrTextBlob::SubRun {
   char* quadStart(size_t index) const;
   size_t quadOffset(size_t index) const;
 
-  const SkRect& vertexBounds() const;
   void joinGlyphBounds(const SkRect& glyphBounds);
 
   bool drawAsDistanceFields() const;
   bool drawAsPaths() const;
   bool needsTransform() const;
+  bool needsPadding() const;
 
-  void translateVerticesIfNeeded(const SkMatrix& drawMatrix, SkPoint drawOrigin);
+  // Acquire a GrTextStrike and convert the SkPackedGlyphIDs to GrGlyphs for this run
+  void prepareGrGlyphs(GrStrikeCache*);
+  // has 'prepareGrGlyphs' been called (i.e., can the GrGlyphs be accessed) ?
+  SkDEBUGCODE(bool isPrepared() const { return SkToBool(fStrike); })
+
+      void translateVerticesIfNeeded(const SkMatrix& drawMatrix, SkPoint drawOrigin);
   void updateVerticesColorIfNeeded(GrColor newColor);
   void updateTexCoords(int begin, int end);
+
+  // The rectangle that surrounds all the glyph bounding boxes in device space.
+  SkRect deviceRect(const SkMatrix& drawMatrix, SkPoint drawOrigin) const;
 
   // df properties
   void setUseLCDText(bool useLCDText);
@@ -342,7 +350,7 @@ class GrTextBlob::SubRun {
   const SubRunType fType;
   GrTextBlob* const fBlob;
   const GrMaskFormat fMaskFormat;
-  const SkSpan<GrGlyph*> fGlyphs;
+  const SkSpan<PackedGlyphIDorGrGlyph> fGlyphs;
   const SkSpan<char> fVertexData;
   const SkStrikeSpec fStrikeSpec;
   sk_sp<GrTextStrike> fStrike;
@@ -351,7 +359,6 @@ class GrTextBlob::SubRun {
     bool antiAliased : 1;
   } fFlags{false, false};
   GrDrawOpAtlas::BulkUseTokenUpdater fBulkUseToken;
-  SkRect fVertexBounds = SkRectPriv::MakeLargestInverted();
   uint64_t fAtlasGeneration{GrDrawOpAtlas::kInvalidAtlasGeneration};
   GrColor fCurrentColor;
   SkPoint fCurrentOrigin;
@@ -359,6 +366,9 @@ class GrTextBlob::SubRun {
   std::vector<PathGlyph> fPaths;
 
  private:
+  // The vertex bounds in device space if needsTransform() is false, otherwise the bounds in
+  // source space. The bounds are the joined rectangles of all the glyphs.
+  SkRect fVertexBounds = SkRectPriv::MakeLargestInverted();
   bool hasW() const;
 
 };  // SubRun

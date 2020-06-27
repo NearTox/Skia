@@ -18,7 +18,7 @@ class GrPathShader : public GrGeometryProcessor {
  public:
   GrPathShader(
       ClassID classID, const SkMatrix& viewMatrix, GrPrimitiveType primitiveType,
-      int tessellationPatchVertexCount)
+      int tessellationPatchVertexCount) noexcept
       : GrGeometryProcessor(classID),
         fViewMatrix(viewMatrix),
         fPrimitiveType(primitiveType),
@@ -28,18 +28,19 @@ class GrPathShader : public GrGeometryProcessor {
     }
   }
 
-  const SkMatrix& viewMatrix() const { return fViewMatrix; }
+  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
 
   // This subclass is used to simplify the argument list for constructing GrProgramInfo from a
   // GrPathShader.
   class ProgramInfo : public GrProgramInfo {
    public:
     ProgramInfo(
-        const GrSurfaceProxyView* view, const GrPipeline* pipeline, const GrPathShader* shader)
+        const GrSurfaceProxyView* view, const GrPipeline* pipeline,
+        const GrPathShader* shader) noexcept
         : ProgramInfo(view->asRenderTargetProxy(), view->origin(), pipeline, shader) {}
     ProgramInfo(
         const GrRenderTargetProxy* proxy, GrSurfaceOrigin origin, const GrPipeline* pipeline,
-        const GrPathShader* shader)
+        const GrPathShader* shader) noexcept
         : GrProgramInfo(
               proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(), origin,
               pipeline, shader, shader->fPrimitiveType, shader->fTessellationPatchVertexCount) {}

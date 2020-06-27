@@ -13,16 +13,16 @@ class LineConicIntersections {
  public:
   enum PinTPoint { kPointUninitialized, kPointInitialized };
 
-  LineConicIntersections(const SkDConic& c, const SkDLine& l, SkIntersections* i)
+  LineConicIntersections(const SkDConic& c, const SkDLine& l, SkIntersections* i) noexcept
       : fConic(c), fLine(&l), fIntersections(i), fAllowNear(true) {
     i->setMax(4);  // allow short partial coincidence plus discrete intersection
   }
 
-  LineConicIntersections(const SkDConic& c)
+  LineConicIntersections(const SkDConic& c) noexcept
       : fConic(c) SkDEBUGPARAMS(fLine(nullptr)) SkDEBUGPARAMS(fIntersections(nullptr))
             SkDEBUGPARAMS(fAllowNear(false)) {}
 
-  void allowNear(bool allow) { fAllowNear = allow; }
+  void allowNear(bool allow) noexcept { fAllowNear = allow; }
 
   void checkCoincident() {
     int last = fIntersections->used() - 1;
@@ -54,7 +54,7 @@ class LineConicIntersections {
     return approximately_zero_when_compared_to(a - b, max);
   }
 #endif
-  int horizontalIntersect(double axisIntercept, double roots[2]) {
+  int horizontalIntersect(double axisIntercept, double roots[2]) noexcept {
     double conicVals[] = {fConic[0].fY, fConic[1].fY, fConic[2].fY};
     return this->validT(conicVals, axisIntercept, roots);
   }
@@ -110,7 +110,7 @@ class LineConicIntersections {
     return fIntersections->used();
   }
 
-  int intersectRay(double roots[2]) {
+  int intersectRay(double roots[2]) noexcept {
     double adj = (*fLine)[1].fX - (*fLine)[0].fX;
     double opp = (*fLine)[1].fY - (*fLine)[0].fY;
     double r[3];
@@ -120,7 +120,7 @@ class LineConicIntersections {
     return this->validT(r, 0, roots);
   }
 
-  int validT(double r[3], double axisIntercept, double roots[2]) {
+  int validT(double r[3], double axisIntercept, double roots[2]) noexcept {
     double A = r[2];
     double B = r[1] * fConic.fWeight - axisIntercept * fConic.fWeight + axisIntercept;
     double C = r[0];
@@ -130,7 +130,7 @@ class LineConicIntersections {
     return SkDQuad::RootsValidT(A, 2 * B, C, roots);
   }
 
-  int verticalIntersect(double axisIntercept, double roots[2]) {
+  int verticalIntersect(double axisIntercept, double roots[2]) noexcept {
     double conicVals[] = {fConic[0].fX, fConic[1].fX, fConic[2].fX};
     return this->validT(conicVals, axisIntercept, roots);
   }
@@ -255,7 +255,7 @@ class LineConicIntersections {
     this->addLineNearEndPoints();
   }
 
-  double findLineT(double t) {
+  double findLineT(double t) noexcept {
     SkDPoint xy = fConic.ptAtT(t);
     double dx = (*fLine)[1].fX - (*fLine)[0].fX;
     double dy = (*fLine)[1].fY - (*fLine)[0].fY;
@@ -300,7 +300,7 @@ class LineConicIntersections {
     return true;
   }
 
-  bool uniqueAnswer(double conicT, const SkDPoint& pt) {
+  bool uniqueAnswer(double conicT, const SkDPoint& pt) noexcept {
     for (int inner = 0; inner < fIntersections->used(); ++inner) {
       if (fIntersections->pt(inner) != pt) {
         continue;
@@ -350,7 +350,7 @@ int SkIntersections::intersect(const SkDConic& conic, const SkDLine& line) {
   return c.intersect();
 }
 
-int SkIntersections::intersectRay(const SkDConic& conic, const SkDLine& line) {
+int SkIntersections::intersectRay(const SkDConic& conic, const SkDLine& line) noexcept {
   LineConicIntersections c(conic, line, this);
   fUsed = c.intersectRay(fT[0]);
   for (int index = 0; index < fUsed; ++index) {
@@ -359,12 +359,13 @@ int SkIntersections::intersectRay(const SkDConic& conic, const SkDLine& line) {
   return fUsed;
 }
 
-int SkIntersections::HorizontalIntercept(const SkDConic& conic, SkScalar y, double* roots) {
+int SkIntersections::HorizontalIntercept(
+    const SkDConic& conic, SkScalar y, double* roots) noexcept {
   LineConicIntersections c(conic);
   return c.horizontalIntersect(y, roots);
 }
 
-int SkIntersections::VerticalIntercept(const SkDConic& conic, SkScalar x, double* roots) {
+int SkIntersections::VerticalIntercept(const SkDConic& conic, SkScalar x, double* roots) noexcept {
   LineConicIntersections c(conic);
   return c.verticalIntersect(x, roots);
 }

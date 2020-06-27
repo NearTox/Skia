@@ -139,7 +139,7 @@ class SkArenaAlloc {
  private:
   static void AssertRelease(bool cond) noexcept {
     if (!cond) {
-      ::abort();
+      std::abort();
     }
   }
   static constexpr uint32_t ToU32(size_t v) noexcept {
@@ -181,7 +181,7 @@ class SkArenaAlloc {
     uint32_t arraySize = ToU32(count * sizeof(T));
     constexpr uint32_t alignment = ToU32(alignof(T));
 
-    if (std::is_trivially_destructible<T>::value) {
+    if (std::is_trivially_destructible_v<T>) {
       objStart = this->allocObject(arraySize, alignment);
       fCursor = objStart + arraySize;
     } else {
@@ -234,7 +234,7 @@ class SkArenaAlloc {
 template <size_t InlineStorageSize>
 class SkSTArenaAlloc : private std::array<char, InlineStorageSize>, public SkArenaAlloc {
  public:
-  explicit SkSTArenaAlloc(size_t firstHeapAllocation = InlineStorageSize)
+  explicit SkSTArenaAlloc(size_t firstHeapAllocation = InlineStorageSize) noexcept
       : SkArenaAlloc{this->data(), this->size(), firstHeapAllocation} {}
 };
 

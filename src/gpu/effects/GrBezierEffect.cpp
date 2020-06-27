@@ -16,12 +16,12 @@
 
 class GrGLConicEffect : public GrGLSLGeometryProcessor {
  public:
-  GrGLConicEffect(const GrGeometryProcessor&);
+  GrGLConicEffect(const GrGeometryProcessor&) noexcept;
 
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
   static inline void GenKey(
-      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
@@ -57,7 +57,7 @@ class GrGLConicEffect : public GrGLSLGeometryProcessor {
   typedef GrGLSLGeometryProcessor INHERITED;
 };
 
-GrGLConicEffect::GrGLConicEffect(const GrGeometryProcessor& processor)
+GrGLConicEffect::GrGLConicEffect(const GrGeometryProcessor& processor) noexcept
     : fViewMatrix(SkMatrix::InvalidMatrix()), fColor(SK_PMColor4fILLEGAL), fCoverageScale(0xff) {
   const GrConicEffect& ce = processor.cast<GrConicEffect>();
   fEdgeType = ce.getEdgeType();
@@ -170,7 +170,7 @@ void GrGLConicEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
   if (gp.coverageScale() != 0xff) {
     const char* coverageScale;
     fCoverageScaleUniform = uniformHandler->addUniform(
-        kFragment_GrShaderFlag, kFloat_GrSLType, "Coverage", &coverageScale);
+        nullptr, kFragment_GrShaderFlag, kFloat_GrSLType, "Coverage", &coverageScale);
     fragBuilder->codeAppendf(
         "%s = half4(half(%s) * %s);", args.fOutputCoverage, coverageScale, edgeAlpha.c_str());
   } else {
@@ -179,7 +179,7 @@ void GrGLConicEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 }
 
 void GrGLConicEffect::GenKey(
-    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const GrConicEffect& ce = gp.cast<GrConicEffect>();
   uint32_t key = ce.isAntiAliased() ? (ce.isFilled() ? 0x0 : 0x1) : 0x2;
   key |= 0xff != ce.coverageScale() ? 0x8 : 0x0;
@@ -204,7 +204,7 @@ GrGLSLPrimitiveProcessor* GrConicEffect::createGLSLInstance(const GrShaderCaps&)
 
 GrConicEffect::GrConicEffect(
     const SkPMColor4f& color, const SkMatrix& viewMatrix, uint8_t coverage, GrClipEdgeType edgeType,
-    const SkMatrix& localMatrix, bool usesLocalCoords)
+    const SkMatrix& localMatrix, bool usesLocalCoords) noexcept
     : INHERITED(kGrConicEffect_ClassID),
       fColor(color),
       fViewMatrix(viewMatrix),
@@ -240,12 +240,12 @@ GrGeometryProcessor* GrConicEffect::TestCreate(GrProcessorTestData* d) {
 
 class GrGLQuadEffect : public GrGLSLGeometryProcessor {
  public:
-  GrGLQuadEffect(const GrGeometryProcessor&);
+  GrGLQuadEffect(const GrGeometryProcessor&) noexcept;
 
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
   static inline void GenKey(
-      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+      const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
@@ -281,7 +281,7 @@ class GrGLQuadEffect : public GrGLSLGeometryProcessor {
   typedef GrGLSLGeometryProcessor INHERITED;
 };
 
-GrGLQuadEffect::GrGLQuadEffect(const GrGeometryProcessor& processor)
+GrGLQuadEffect::GrGLQuadEffect(const GrGeometryProcessor& processor) noexcept
     : fViewMatrix(SkMatrix::InvalidMatrix()), fColor(SK_PMColor4fILLEGAL), fCoverageScale(0xff) {
   const GrQuadEffect& ce = processor.cast<GrQuadEffect>();
   fEdgeType = ce.getEdgeType();
@@ -359,7 +359,7 @@ void GrGLQuadEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
   if (0xff != gp.coverageScale()) {
     const char* coverageScale;
     fCoverageScaleUniform = uniformHandler->addUniform(
-        kFragment_GrShaderFlag, kHalf_GrSLType, "Coverage", &coverageScale);
+        nullptr, kFragment_GrShaderFlag, kHalf_GrSLType, "Coverage", &coverageScale);
     fragBuilder->codeAppendf("%s = half4(%s * edgeAlpha);", args.fOutputCoverage, coverageScale);
   } else {
     fragBuilder->codeAppendf("%s = half4(edgeAlpha);", args.fOutputCoverage);
@@ -367,7 +367,7 @@ void GrGLQuadEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 }
 
 void GrGLQuadEffect::GenKey(
-    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const GrQuadEffect& ce = gp.cast<GrQuadEffect>();
   uint32_t key = ce.isAntiAliased() ? (ce.isFilled() ? 0x0 : 0x1) : 0x2;
   key |= ce.coverageScale() != 0xff ? 0x8 : 0x0;
@@ -392,7 +392,7 @@ GrGLSLPrimitiveProcessor* GrQuadEffect::createGLSLInstance(const GrShaderCaps&) 
 
 GrQuadEffect::GrQuadEffect(
     const SkPMColor4f& color, const SkMatrix& viewMatrix, uint8_t coverage, GrClipEdgeType edgeType,
-    const SkMatrix& localMatrix, bool usesLocalCoords)
+    const SkMatrix& localMatrix, bool usesLocalCoords) noexcept
     : INHERITED(kGrQuadEffect_ClassID),
       fColor(color),
       fViewMatrix(viewMatrix),

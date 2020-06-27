@@ -25,10 +25,10 @@ struct Symbol : public IRNode {
     kExternal_Kind
   };
 
-  Symbol(int offset, Kind kind, StringFragment name)
+  Symbol(int offset, Kind kind, StringFragment name) noexcept
       : INHERITED(offset), fKind(kind), fName(name) {}
 
-  virtual ~Symbol() {}
+  virtual ~Symbol() = default;
 
   Kind fKind;
   StringFragment fName;

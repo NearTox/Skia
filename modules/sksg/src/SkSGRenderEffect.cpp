@@ -103,14 +103,17 @@ SkRect ImageFilterEffect::onRevalidate(InvalidationController* ic, const SkMatri
   fImageFilter->revalidate(ic, ctm);
 
   const auto& filter = fImageFilter->getFilter();
-  SkASSERT(!filter || filter->canComputeFastBounds());
+
+  // Would be nice for this this to stick, but canComputeFastBounds()
+  // appears to be conservative (false negatives).
+  // SkASSERT(!filter || filter->canComputeFastBounds());
 
   const auto content_bounds = this->INHERITED::onRevalidate(ic, ctm);
 
   return filter ? filter->computeFastBounds(content_bounds) : content_bounds;
 }
 
-const RenderNode* ImageFilterEffect::onNodeAt(const SkPoint& p) const {
+const RenderNode* ImageFilterEffect::onNodeAt(const SkPoint& p) const noexcept {
   // TODO: map p through the filter DAG and dispatch to descendants?
   // For now, image filters occlude hit-testing.
   SkASSERT(this->bounds().contains(p.x(), p.y()));
@@ -156,6 +159,9 @@ SkRect ImageFilter::onRevalidate(InvalidationController*, const SkMatrix&) {
   fFilter = this->onRevalidateFilter();
   return SkRect::MakeEmpty();
 }
+
+ExternalImageFilter::ExternalImageFilter() = default;
+ExternalImageFilter::~ExternalImageFilter() = default;
 
 sk_sp<DropShadowImageFilter> DropShadowImageFilter::Make(sk_sp<ImageFilter> input) {
   return sk_sp<DropShadowImageFilter>(new DropShadowImageFilter(std::move(input)));

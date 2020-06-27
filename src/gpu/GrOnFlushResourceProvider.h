@@ -64,7 +64,8 @@ class GrOnFlushResourceProvider {
  public:
   using UseAllocator = GrSurfaceProxy::UseAllocator;
 
-  explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
+  explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) noexcept
+      : fDrawingMgr(drawingMgr) {}
 
   std::unique_ptr<GrRenderTargetContext> makeRenderTargetContext(
       sk_sp<GrSurfaceProxy>, GrSurfaceOrigin, GrColorType, sk_sp<SkColorSpace>,

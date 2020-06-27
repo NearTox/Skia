@@ -38,11 +38,11 @@ struct VariableReference : public Expression {
   VariableReference(const VariableReference&) = delete;
   VariableReference& operator=(const VariableReference&) = delete;
 
-  RefKind refKind() const { return fRefKind; }
+  RefKind refKind() const noexcept { return fRefKind; }
 
   void setRefKind(RefKind refKind);
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     switch (property) {
       case Property::kSideEffects: return false;
       case Property::kContainsRTAdjust: return fVariable.fName == "sk_RTAdjust";
@@ -50,17 +50,19 @@ struct VariableReference : public Expression {
     }
   }
 
-  bool isConstant() const override {
+  bool isConstant() const noexcept override {
     return 0 != (fVariable.fModifiers.fFlags & Modifiers::kConst_Flag);
+  }
+
+  bool isConstantOrUniform() const noexcept override {
+    return (fVariable.fModifiers.fFlags & Modifiers::kUniform_Flag) != 0;
   }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new VariableReference(fOffset, fVariable, fRefKind));
   }
 
-#ifdef SK_DEBUG
   String description() const override { return fVariable.fName; }
-#endif
 
   static std::unique_ptr<Expression> copy_constant(
       const IRGenerator& irGenerator, const Expression* expr);

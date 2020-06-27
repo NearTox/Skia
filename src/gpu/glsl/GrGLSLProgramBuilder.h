@@ -37,14 +37,20 @@ class GrGLSLProgramBuilder {
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
 
-  GrSurfaceOrigin origin() const { return fProgramInfo.origin(); }
-  const GrPipeline& pipeline() const { return fProgramInfo.pipeline(); }
-  const GrPrimitiveProcessor& primitiveProcessor() const { return fProgramInfo.primProc(); }
-  GrProcessor::CustomFeatures processorFeatures() const { return fProgramInfo.requestedFeatures(); }
-  bool snapVerticesToPixelCenters() const {
+  GrSurfaceOrigin origin() const noexcept { return fProgramInfo.origin(); }
+  const GrPipeline& pipeline() const noexcept { return fProgramInfo.pipeline(); }
+  const GrPrimitiveProcessor& primitiveProcessor() const noexcept {
+    return fProgramInfo.primProc();
+  }
+  GrProcessor::CustomFeatures processorFeatures() const noexcept {
+    return fProgramInfo.requestedFeatures();
+  }
+  bool snapVerticesToPixelCenters() const noexcept {
     return fProgramInfo.pipeline().snapVerticesToPixelCenters();
   }
-  bool hasPointSize() const { return fProgramInfo.primitiveType() == GrPrimitiveType::kPoints; }
+  bool hasPointSize() const noexcept {
+    return fProgramInfo.primitiveType() == GrPrimitiveType::kPoints;
+  }
 
   // TODO: stop passing in the renderTarget for just the sampleLocations
   int effectiveSampleCnt() const {
@@ -52,10 +58,11 @@ class GrGLSLProgramBuilder {
     return fRenderTarget->renderTargetPriv().getSampleLocations().count();
   }
   const SkTArray<SkPoint>& getSampleLocations() const {
+    SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & fProgramInfo.requestedFeatures());
     return fRenderTarget->renderTargetPriv().getSampleLocations();
   }
 
-  const GrProgramDesc& desc() const { return fDesc; }
+  const GrProgramDesc& desc() const noexcept { return fDesc; }
 
   void appendUniformDecls(GrShaderFlags visibility, SkString*) const;
 
@@ -127,11 +134,11 @@ class GrGLSLProgramBuilder {
   // reset is called by program creator between each processor's emit code.  It increments the
   // stage offset for variable name mangling, and also ensures verfication variables in the
   // fragment shader are cleared.
-  void reset() {
+  void reset() noexcept {
     this->addStage();
     SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
   }
-  void addStage() { fStageIndex++; }
+  void addStage() noexcept { fStageIndex++; }
 
   class AutoStageAdvance {
    public:
@@ -140,7 +147,7 @@ class GrGLSLProgramBuilder {
       // Each output to the fragment processor gets its own code section
       fPB->fFS.nextStage();
     }
-    ~AutoStageAdvance() {}
+    ~AutoStageAdvance() = default;
 
    private:
     GrGLSLProgramBuilder* fPB;

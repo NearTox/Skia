@@ -29,8 +29,8 @@ template <
     int* (*INDEX)(const T&) = (int* (*)(const T&)) nullptr>
 class SkTDPQueue {
  public:
-  SkTDPQueue() {}
-  SkTDPQueue(int reserve) { fArray.setReserve(reserve); }
+  SkTDPQueue() noexcept = default;
+  SkTDPQueue(int reserve) noexcept { fArray.setReserve(reserve); }
 
   SkTDPQueue(SkTDPQueue&&) noexcept = default;
   SkTDPQueue& operator=(SkTDPQueue&&) noexcept = default;
@@ -42,13 +42,14 @@ class SkTDPQueue {
   int count() const noexcept { return fArray.count(); }
 
   /** Gets the next item in the queue without popping it. */
-  const T& peek() const { return fArray[0]; }
+  const T& peek() const noexcept { return fArray[0]; }
   T& peek() noexcept { return fArray[0]; }
 
   /** Removes the next item. */
   void pop() {
     this->validate();
-    SkDEBUGCODE(if (SkToBool(INDEX)) { *INDEX(fArray[0]) = -1; }) if (1 == fArray.count()) {
+    SkDEBUGCODE(if (SkToBool(INDEX)) { *INDEX(fArray[0]) = -1; });
+    if (1 == fArray.count()) {
       fArray.pop();
       return;
     }
@@ -119,11 +120,11 @@ class SkTDPQueue {
   }
 
  private:
-  static int LeftOf(int x) noexcept {
+  static constexpr int LeftOf(int x) noexcept {
     SkASSERT(x >= 0);
     return 2 * x + 1;
   }
-  static int ParentOf(int x) noexcept {
+  static constexpr int ParentOf(int x) noexcept {
     SkASSERT(x > 0);
     return (x - 1) >> 1;
   }
@@ -206,7 +207,7 @@ class SkTDPQueue {
     }
   }
 
-  void validate(int excludedIndex = -1) const noexcept {
+  void validate(int excludedIndex = -1) const {
 #ifdef SK_DEBUG
     for (int i = 1; i < fArray.count(); ++i) {
       int p = ParentOf(i);

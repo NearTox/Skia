@@ -62,9 +62,24 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
     kSynced
   };
 
+  /**
+   * Specifies the expected properties of the GrSurface returned by a lazy instantiation
+   * callback. The dimensions will be negative in the case of a fully lazy proxy.
+   */
+  struct LazySurfaceDesc {
+    SkISize fDimensions;
+    SkBackingFit fFit;
+    GrRenderable fRenderable;
+    GrMipMapped fMipMapped;
+    int fSampleCnt;
+    const GrBackendFormat& fFormat;
+    GrProtected fProtected;
+    SkBudgeted fBudgeted;
+  };
+
   struct LazyCallbackResult {
     constexpr LazyCallbackResult() noexcept = default;
-    LazyCallbackResult(const LazyCallbackResult&) = default;
+    LazyCallbackResult(const LazyCallbackResult&) noexcept = default;
     LazyCallbackResult(LazyCallbackResult&& that) noexcept = default;
     LazyCallbackResult(
         sk_sp<GrSurface> surf, bool releaseCallback = true,
@@ -73,7 +88,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
     LazyCallbackResult(sk_sp<GrTexture> tex) noexcept
         : LazyCallbackResult(sk_sp<GrSurface>(std::move(tex))) {}
 
-    LazyCallbackResult& operator=(const LazyCallbackResult&) = default;
+    LazyCallbackResult& operator=(const LazyCallbackResult&) noexcept = default;
     LazyCallbackResult& operator=(LazyCallbackResult&&) noexcept = default;
 
     sk_sp<GrSurface> fSurface;
@@ -85,7 +100,8 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
     bool fReleaseCallback = true;
   };
 
-  using LazyInstantiateCallback = std::function<LazyCallbackResult(GrResourceProvider*)>;
+  using LazyInstantiateCallback =
+      std::function<LazyCallbackResult(GrResourceProvider*, const LazySurfaceDesc&)>;
 
   enum class UseAllocator {
     /**
@@ -117,7 +133,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   int width() const noexcept { return this->dimensions().width(); }
   int height() const noexcept { return this->dimensions().height(); }
 
-  SkISize backingStoreDimensions() const;
+  SkISize backingStoreDimensions() const noexcept;
 
   /**
    * Helper that gets the width and height of the proxy as a bounding rectangle.
@@ -125,12 +141,14 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   SkRect getBoundsRect() const noexcept { return SkRect::Make(this->dimensions()); }
 
   /* A perhaps faster check for this->dimensions() == this->backingStoreDimensions(). */
-  bool isFunctionallyExact() const;
+  bool isFunctionallyExact() const noexcept;
 
   /**
    * Helper that gets the dimensions the backing GrSurface will have as a bounding rectangle.
    */
-  SkRect backingStoreBoundsRect() const { return SkRect::Make(this->backingStoreDimensions()); }
+  SkRect backingStoreBoundsRect() const noexcept {
+    return SkRect::Make(this->backingStoreDimensions());
+  }
 
   const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
 
@@ -249,7 +267,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   void setLastRenderTask(GrRenderTask*) noexcept;
   GrRenderTask* getLastRenderTask() noexcept { return fLastRenderTask; }
 
-  GrOpsTask* getLastOpsTask();
+  GrOpsTask* getLastOpsTask() noexcept;
 
   /**
    * Retrieves the amount of GPU memory that will be or currently is used by this resource
@@ -276,23 +294,17 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // The copy is is not a render target and not multisampled.
   //
   // The intended use of this copy call is simply to copy exact pixel values from one proxy to a
-  // new one. Thus there isn't a need for a swizzle when doing the copy. Also, there shouldn't be
-  // an assumed "view" of the copy. However, even though not really needed for the swizzle, we
-  // still pass in a srcColorType since it is required for making a GrSurface/RenderTargetContext.
-  // Additionally, almost all callers of this will immediately put the resulting proxy into a view
-  // which is compatible with the srcColorType and origin passed in here. Thus for now we just
-  // return the GrSurfaceProxyView that is already stored on the internal GrSurfaceContext. If we
-  // later decide to not pass in a srcColorType (and assume some default color type based on the
-  // backend format) then we should go back to returning a proxy here and have the callers decide
-  // what view they want of the proxy.
-  static GrSurfaceProxyView Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrColorType srcColorType,
-      GrMipMapped, SkIRect srcRect, SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
+  // new one. Thus, there isn't a need for a swizzle when doing the copy. The format of the copy
+  // will be the same as the src. Therefore, the copy can be used in a view with the same swizzle
+  // as the original for use with a given color type.
+  static sk_sp<GrSurfaceProxy> Copy(
+      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrMipMapped, SkIRect srcRect,
+      SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
 
   // Same as above Copy but copies the entire 'src'
-  static GrSurfaceProxyView Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrColorType srcColorType,
-      GrMipMapped, SkBackingFit, SkBudgeted);
+  static sk_sp<GrSurfaceProxy> Copy(
+      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrMipMapped, SkBackingFit,
+      SkBudgeted);
 
 #if GR_TEST_UTILS
   int32_t testingOnly_getBackingRefCnt() const;
@@ -311,11 +323,11 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // Deferred version - takes a new UniqueID from the shared resource/proxy pool.
   GrSurfaceProxy(
       const GrBackendFormat&, SkISize, SkBackingFit, SkBudgeted, GrProtected,
-      GrInternalSurfaceFlags, UseAllocator);
+      GrInternalSurfaceFlags, UseAllocator) noexcept;
   // Lazy-callback version - takes a new UniqueID from the shared resource/proxy pool.
   GrSurfaceProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, SkBackingFit, SkBudgeted,
-      GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      GrProtected, GrInternalSurfaceFlags, UseAllocator) noexcept;
 
   // Wrapped version - shares the UniqueID of the passed surface.
   // Takes UseAllocator because even though this is already instantiated it still can participate
@@ -388,6 +400,8 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; });
 
   virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;
+
+  virtual LazySurfaceDesc callbackDesc() const = 0;
 
   bool fIgnoredByResourceAllocator = false;
   GrProtected fIsProtected;

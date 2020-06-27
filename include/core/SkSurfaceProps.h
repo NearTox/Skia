@@ -24,22 +24,22 @@ enum SkPixelGeometry {
 };
 
 // Returns true iff geo is a known geometry and is RGB.
-static constexpr bool SkPixelGeometryIsRGB(SkPixelGeometry geo) noexcept {
+static constexpr inline bool SkPixelGeometryIsRGB(SkPixelGeometry geo) noexcept {
   return kRGB_H_SkPixelGeometry == geo || kRGB_V_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is BGR.
-static constexpr bool SkPixelGeometryIsBGR(SkPixelGeometry geo) noexcept {
+static constexpr inline bool SkPixelGeometryIsBGR(SkPixelGeometry geo) noexcept {
   return kBGR_H_SkPixelGeometry == geo || kBGR_V_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is horizontal.
-static constexpr bool SkPixelGeometryIsH(SkPixelGeometry geo) noexcept {
+static constexpr inline bool SkPixelGeometryIsH(SkPixelGeometry geo) noexcept {
   return kRGB_H_SkPixelGeometry == geo || kBGR_H_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is vertical.
-static constexpr bool SkPixelGeometryIsV(SkPixelGeometry geo) noexcept {
+static constexpr inline bool SkPixelGeometryIsV(SkPixelGeometry geo) noexcept {
   return kRGB_V_SkPixelGeometry == geo || kBGR_V_SkPixelGeometry == geo;
 }
 
@@ -61,8 +61,8 @@ class SK_API SkSurfaceProps {
   enum InitType { kLegacyFontHost_InitType };
   SkSurfaceProps(InitType) noexcept;
   SkSurfaceProps(uint32_t flags, InitType) noexcept;
-  SkSurfaceProps(const SkSurfaceProps&);
-  SkSurfaceProps& operator=(const SkSurfaceProps&);
+  SkSurfaceProps(const SkSurfaceProps&) noexcept;
+  SkSurfaceProps& operator=(const SkSurfaceProps&) noexcept;
 
   uint32_t flags() const noexcept { return fFlags; }
   SkPixelGeometry pixelGeometry() const noexcept { return fPixelGeometry; }

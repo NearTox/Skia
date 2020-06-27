@@ -109,7 +109,7 @@ GrProcessorSet::Analysis GrSimpleMeshDrawOpHelper::finalizeProcessors(
 }
 
 const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
-    const GrCaps* caps, SkArenaAlloc* arena, GrSwizzle outputViewSwizzle,
+    const GrCaps* caps, SkArenaAlloc* arena, GrSwizzle writeViewSwizzle,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrProcessorSet&& processorSet, GrPipeline::InputFlags pipelineFlags,
     const GrUserStencilSettings* stencilSettings) {
@@ -119,7 +119,7 @@ const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
   pipelineArgs.fUserStencil = stencilSettings;
   pipelineArgs.fCaps = caps;
   pipelineArgs.fDstProxyView = dstProxyView;
-  pipelineArgs.fWriteSwizzle = outputViewSwizzle;
+  pipelineArgs.fWriteSwizzle = writeViewSwizzle;
 
   return arena->make<GrPipeline>(pipelineArgs, std::move(processorSet), std::move(appliedClip));
 }
@@ -128,48 +128,48 @@ const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
     GrOpFlushState* flushState, GrProcessorSet&& processorSet, GrPipeline::InputFlags pipelineFlags,
     const GrUserStencilSettings* stencilSettings) {
   return CreatePipeline(
-      &flushState->caps(), flushState->allocator(), flushState->outputView()->swizzle(),
+      &flushState->caps(), flushState->allocator(), flushState->writeView()->swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView(), std::move(processorSet),
       pipelineFlags, stencilSettings);
 }
 
 const GrPipeline* GrSimpleMeshDrawOpHelper::createPipeline(GrOpFlushState* flushState) {
   return CreatePipeline(
-      &flushState->caps(), flushState->allocator(), flushState->outputView()->swizzle(),
+      &flushState->caps(), flushState->allocator(), flushState->writeView()->swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView(), this->detachProcessorSet(),
       this->pipelineFlags());
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* geometryProcessor, GrProcessorSet&& processorSet,
     GrPrimitiveType primitiveType, GrPipeline::InputFlags pipelineFlags,
     const GrUserStencilSettings* stencilSettings) {
   auto pipeline = CreatePipeline(
-      caps, arena, outputView->swizzle(), std::move(appliedClip), dstProxyView,
+      caps, arena, writeView->swizzle(), std::move(appliedClip), dstProxyView,
       std::move(processorSet), pipelineFlags, stencilSettings);
 
-  return CreateProgramInfo(arena, pipeline, outputView, geometryProcessor, primitiveType);
+  return CreateProgramInfo(arena, pipeline, writeView, geometryProcessor, primitiveType);
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-    SkArenaAlloc* arena, const GrPipeline* pipeline, const GrSurfaceProxyView* outputView,
+    SkArenaAlloc* arena, const GrPipeline* pipeline, const GrSurfaceProxyView* writeView,
     GrGeometryProcessor* geometryProcessor, GrPrimitiveType primitiveType) {
-  GrRenderTargetProxy* outputProxy = outputView->asRenderTargetProxy();
+  GrRenderTargetProxy* outputProxy = writeView->asRenderTargetProxy();
 
   auto tmp = arena->make<GrProgramInfo>(
       outputProxy->numSamples(), outputProxy->numStencilSamples(), outputProxy->backendFormat(),
-      outputView->origin(), pipeline, geometryProcessor, primitiveType);
+      writeView->origin(), pipeline, geometryProcessor, primitiveType);
   return tmp;
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelper::createProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* gp, GrPrimitiveType primType) {
   return CreateProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, this->detachProcessorSet(),
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->detachProcessorSet(),
       primType, this->pipelineFlags());
 }
 

@@ -7,36 +7,36 @@
 #include "src/core/SkGeometry.h"
 #include "src/pathops/SkReduceOrder.h"
 
-int SkReduceOrder::reduce(const SkDLine& line) {
+int SkReduceOrder::reduce(const SkDLine& line) noexcept {
   fLine[0] = line[0];
   int different = line[0] != line[1];
   fLine[1] = line[different];
   return 1 + different;
 }
 
-static int coincident_line(const SkDQuad& quad, SkDQuad& reduction) {
+static int coincident_line(const SkDQuad& quad, SkDQuad& reduction) noexcept {
   reduction[0] = reduction[1] = quad[0];
   return 1;
 }
 
-static int reductionLineCount(const SkDQuad& reduction) {
+static int reductionLineCount(const SkDQuad& reduction) noexcept {
   return 1 + !reduction[0].approximatelyEqual(reduction[1]);
 }
 
-static int vertical_line(const SkDQuad& quad, SkDQuad& reduction) {
+static int vertical_line(const SkDQuad& quad, SkDQuad& reduction) noexcept {
   reduction[0] = quad[0];
   reduction[1] = quad[2];
   return reductionLineCount(reduction);
 }
 
-static int horizontal_line(const SkDQuad& quad, SkDQuad& reduction) {
+static int horizontal_line(const SkDQuad& quad, SkDQuad& reduction) noexcept {
   reduction[0] = quad[0];
   reduction[1] = quad[2];
   return reductionLineCount(reduction);
 }
 
 static int check_linear(
-    const SkDQuad& quad, int minX, int maxX, int minY, int maxY, SkDQuad& reduction) {
+    const SkDQuad& quad, int minX, int maxX, int minY, int maxY, SkDQuad& reduction) noexcept {
   if (!quad.isLinear(0, 2)) {
     return 0;
   }
@@ -52,7 +52,7 @@ static int check_linear(
 // note that three points in a line doesn't simplify a cubic
 // look for approximation with single quadratic
 // save approximation with multiple quadratics for later
-int SkReduceOrder::reduce(const SkDQuad& quad) {
+int SkReduceOrder::reduce(const SkDQuad& quad) noexcept {
   int index, minX, maxX, minY, maxY;
   int minXSet, minYSet;
   minX = maxX = minY = maxY = 0;
@@ -100,29 +100,29 @@ int SkReduceOrder::reduce(const SkDQuad& quad) {
 
 ////////////////////////////////////////////////////////////////////////////////////
 
-static int coincident_line(const SkDCubic& cubic, SkDCubic& reduction) {
+static int coincident_line(const SkDCubic& cubic, SkDCubic& reduction) noexcept {
   reduction[0] = reduction[1] = cubic[0];
   return 1;
 }
 
-static int reductionLineCount(const SkDCubic& reduction) {
+static int reductionLineCount(const SkDCubic& reduction) noexcept {
   return 1 + !reduction[0].approximatelyEqual(reduction[1]);
 }
 
-static int vertical_line(const SkDCubic& cubic, SkDCubic& reduction) {
+static int vertical_line(const SkDCubic& cubic, SkDCubic& reduction) noexcept {
   reduction[0] = cubic[0];
   reduction[1] = cubic[3];
   return reductionLineCount(reduction);
 }
 
-static int horizontal_line(const SkDCubic& cubic, SkDCubic& reduction) {
+static int horizontal_line(const SkDCubic& cubic, SkDCubic& reduction) noexcept {
   reduction[0] = cubic[0];
   reduction[1] = cubic[3];
   return reductionLineCount(reduction);
 }
 
 // check to see if it is a quadratic or a line
-static int check_quadratic(const SkDCubic& cubic, SkDCubic& reduction) {
+static int check_quadratic(const SkDCubic& cubic, SkDCubic& reduction) noexcept {
   double dx10 = cubic[1].fX - cubic[0].fX;
   double dx23 = cubic[2].fX - cubic[3].fX;
   double midX = cubic[0].fX + dx10 * 3 / 2;
@@ -149,7 +149,7 @@ static int check_quadratic(const SkDCubic& cubic, SkDCubic& reduction) {
 }
 
 static int check_linear(
-    const SkDCubic& cubic, int minX, int maxX, int minY, int maxY, SkDCubic& reduction) {
+    const SkDCubic& cubic, int minX, int maxX, int minY, int maxY, SkDCubic& reduction) noexcept {
   if (!cubic.isLinear(0, 3)) {
     return 0;
   }
@@ -185,7 +185,7 @@ http://kaba.hilvi.org
 // note that three points in a line doesn't simplify a cubic
 // look for approximation with single quadratic
 // save approximation with multiple quadratics for later
-int SkReduceOrder::reduce(const SkDCubic& cubic, Quadratics allowQuadratics) {
+int SkReduceOrder::reduce(const SkDCubic& cubic, Quadratics allowQuadratics) noexcept {
   int index, minX, maxX, minY, maxY;
   int minXSet, minYSet;
   minX = maxX = minY = maxY = 0;
@@ -243,7 +243,7 @@ int SkReduceOrder::reduce(const SkDCubic& cubic, Quadratics allowQuadratics) {
   return 4;
 }
 
-SkPath::Verb SkReduceOrder::Quad(const SkPoint a[3], SkPoint* reducePts) {
+SkPath::Verb SkReduceOrder::Quad(const SkPoint a[3], SkPoint* reducePts) noexcept {
   SkDQuad quad;
   quad.set(a);
   SkReduceOrder reducer;
@@ -256,7 +256,7 @@ SkPath::Verb SkReduceOrder::Quad(const SkPoint a[3], SkPoint* reducePts) {
   return SkPathOpsPointsToVerb(order - 1);
 }
 
-SkPath::Verb SkReduceOrder::Conic(const SkConic& c, SkPoint* reducePts) {
+SkPath::Verb SkReduceOrder::Conic(const SkConic& c, SkPoint* reducePts) noexcept {
   SkPath::Verb verb = SkReduceOrder::Quad(c.fPts, reducePts);
   if (verb > SkPath::kLine_Verb && c.fW == 1) {
     return SkPath::kQuad_Verb;
@@ -264,7 +264,7 @@ SkPath::Verb SkReduceOrder::Conic(const SkConic& c, SkPoint* reducePts) {
   return verb == SkPath::kQuad_Verb ? SkPath::kConic_Verb : verb;
 }
 
-SkPath::Verb SkReduceOrder::Cubic(const SkPoint a[4], SkPoint* reducePts) {
+SkPath::Verb SkReduceOrder::Cubic(const SkPoint a[4], SkPoint* reducePts) noexcept {
   if (SkDPoint::ApproximatelyEqual(a[0], a[1]) && SkDPoint::ApproximatelyEqual(a[0], a[2]) &&
       SkDPoint::ApproximatelyEqual(a[0], a[3])) {
     reducePts[0] = a[0];

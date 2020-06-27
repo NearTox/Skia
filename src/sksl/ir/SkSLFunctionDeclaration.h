@@ -23,7 +23,7 @@ namespace SkSL {
 struct FunctionDeclaration : public Symbol {
   FunctionDeclaration(
       int offset, Modifiers modifiers, StringFragment name, std::vector<const Variable*> parameters,
-      const Type& returnType)
+      const Type& returnType) noexcept
       : INHERITED(offset, kFunctionDeclaration_Kind, std::move(name)),
         fDefined(false),
         fBuiltin(false),
@@ -37,17 +37,15 @@ struct FunctionDeclaration : public Symbol {
     for (auto p : fParameters) {
       result += separator;
       separator = ", ";
-      result += p->fType.displayName();
+      result += p->fName;
     }
-    result += ")";
+    result += ')';
     return result;
   }
 
-#ifdef SK_DEBUG
   String description() const override { return this->declaration(); }
-#endif
 
-  bool matches(const FunctionDeclaration& f) const {
+  bool matches(const FunctionDeclaration& f) const noexcept {
     if (fName != f.fName) {
       return false;
     }

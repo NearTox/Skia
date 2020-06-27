@@ -16,7 +16,7 @@ namespace SkSL {
  * A section declaration (e.g. @body { body code here })..
  */
 struct Section : public ProgramElement {
-  Section(int offset, String name, String arg, String text)
+  Section(int offset, String name, String arg, String text) noexcept
       : INHERITED(offset, kSection_Kind),
         fName(std::move(name)),
         fArgument(std::move(arg)),
@@ -26,7 +26,6 @@ struct Section : public ProgramElement {
     return std::unique_ptr<ProgramElement>(new Section(fOffset, fName, fArgument, fText));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result = "@" + fName;
     if (fArgument.size()) {
@@ -35,7 +34,6 @@ struct Section : public ProgramElement {
     result += " { " + fText + " }";
     return result;
   }
-#endif
 
   const String fName;
   const String fArgument;

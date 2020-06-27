@@ -56,9 +56,9 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
    */
   class DstProxyView {
    public:
-    DstProxyView() { fOffset.set(0, 0); }
+    DstProxyView() noexcept { fOffset.set(0, 0); }
 
-    DstProxyView(const DstProxyView& other) { *this = other; }
+    DstProxyView(const DstProxyView& other) noexcept { *this = other; }
 
     DstProxyView(GrSurfaceProxyView view, const SkIPoint& offset) noexcept
         : fProxyView(std::move(view)) {
@@ -69,7 +69,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
       }
     }
 
-    DstProxyView& operator=(const DstProxyView& other) {
+    DstProxyView& operator=(const DstProxyView& other) noexcept {
       fProxyView = other.fProxyView;
       fOffset = other.fOffset;
       return *this;
@@ -122,9 +122,9 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
   }
 
   struct BlendInfo {
-    SkDEBUGCODE(SkString dump() const;)
+    SkDEBUGCODE(SkString dump() const);
 
-        GrBlendEquation fEquation = kAdd_GrBlendEquation;
+    GrBlendEquation fEquation = kAdd_GrBlendEquation;
     GrBlendCoeff fSrcBlend = kOne_GrBlendCoeff;
     GrBlendCoeff fDstBlend = kZero_GrBlendCoeff;
     SkPMColor4f fBlendConstant = SK_PMColor4fTRANSPARENT;
@@ -166,7 +166,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
       generate the same shader code. To test for identical code generation use getGLSLProcessorKey
     */
 
-  bool isEqual(const GrXferProcessor& that) const {
+  bool isEqual(const GrXferProcessor& that) const noexcept {
     if (this->classID() != that.classID()) {
       return false;
     }
@@ -183,9 +183,10 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
   }
 
  protected:
-  GrXferProcessor(ClassID classID);
+  GrXferProcessor(ClassID classID) noexcept;
   GrXferProcessor(
-      ClassID classID, bool willReadDstColor, bool hasMixedSamples, GrProcessorAnalysisCoverage);
+      ClassID classID, bool willReadDstColor, bool hasMixedSamples,
+      GrProcessorAnalysisCoverage) noexcept;
 
  private:
   /**
@@ -208,7 +209,7 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
    */
   virtual void onGetBlendInfo(BlendInfo*) const {}
 
-  virtual bool onIsEqual(const GrXferProcessor&) const = 0;
+  virtual bool onIsEqual(const GrXferProcessor&) const noexcept = 0;
 
   bool fWillReadDstColor;
   bool fDstReadUsesMixedSamples;

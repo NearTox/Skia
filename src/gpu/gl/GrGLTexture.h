@@ -29,7 +29,7 @@ class GrGLTexture : public GrTexture {
 
   GrGLTexture(GrGLGpu*, SkBudgeted, const Desc&, GrMipMapsStatus);
 
-  ~GrGLTexture() override {}
+  ~GrGLTexture() override = default;
 
   GrBackendTexture getBackendTexture() const override;
 

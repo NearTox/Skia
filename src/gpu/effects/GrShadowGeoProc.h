@@ -25,14 +25,15 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
     return arena->make<GrRRectShadowGeoProc>(lutView);
   }
 
-  const char* name() const override { return "RRectShadow"; }
+  const char* name() const noexcept override { return "RRectShadow"; }
 
-  const Attribute& inPosition() const { return fInPosition; }
-  const Attribute& inColor() const { return fInColor; }
-  const Attribute& inShadowParams() const { return fInShadowParams; }
-  GrColor color() const { return fColor; }
+  const Attribute& inPosition() const noexcept { return fInPosition; }
+  const Attribute& inColor() const noexcept { return fInColor; }
+  const Attribute& inShadowParams() const noexcept { return fInShadowParams; }
+  GrColor color() const noexcept { return fColor; }
 
-  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
+  void getGLSLProcessorKey(
+      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept override {}
 
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
@@ -41,7 +42,9 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
 
   GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView);
 
-  const TextureSampler& onTextureSampler(int i) const override { return fLUTTextureSampler; }
+  const TextureSampler& onTextureSampler(int i) const noexcept override {
+    return fLUTTextureSampler;
+  }
 
   GrColor fColor;
   TextureSampler fLUTTextureSampler;

@@ -11,19 +11,6 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkImageInfo.h"
 
-enum SkColorChannelFlag : uint32_t {
-  kRed_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kR),
-  kGreen_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kG),
-  kBlue_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kB),
-  kAlpha_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kA),
-  kGray_SkColorChannelFlag = 0x10,
-  // Convenience values
-  kRG_SkColorChannelFlags = kRed_SkColorChannelFlag | kGreen_SkColorChannelFlag,
-  kRGB_SkColorChannelFlags = kRG_SkColorChannelFlags | kBlue_SkColorChannelFlag,
-  kRGBA_SkColorChannelFlags = kRGB_SkColorChannelFlags | kAlpha_SkColorChannelFlag,
-};
-static_assert(0 == (kGray_SkColorChannelFlag & kRGBA_SkColorChannelFlags), "bitfield conflict");
-
 static inline uint32_t SkColorTypeChannelFlags(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
@@ -55,7 +42,7 @@ static inline bool SkColorTypeIsAlphaOnly(SkColorType ct) noexcept {
   return SkColorTypeChannelFlags(ct) == kAlpha_SkColorChannelFlag;
 }
 
-static constexpr bool SkAlphaTypeIsValid(unsigned value) noexcept {
+static constexpr inline bool SkAlphaTypeIsValid(unsigned value) noexcept {
   return value <= kLastEnum_SkAlphaType;
 }
 
@@ -90,7 +77,7 @@ static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width) noexcept 
   return width * SkColorTypeBytesPerPixel(ct);
 }
 
-static constexpr bool SkColorTypeIsValid(unsigned value) noexcept {
+static constexpr inline bool SkColorTypeIsValid(unsigned value) noexcept {
   return value <= kLastEnum_SkColorType;
 }
 
@@ -157,7 +144,8 @@ static inline bool SkImageInfoIsValid(const SkImageInfo& info) noexcept {
  *  Returns true if Skia has defined a pixel conversion from the |src| to the |dst|.
  *  Returns false otherwise.
  */
-static inline bool SkImageInfoValidConversion(const SkImageInfo& dst, const SkImageInfo& src) {
+static inline bool SkImageInfoValidConversion(
+    const SkImageInfo& dst, const SkImageInfo& src) noexcept {
   return SkImageInfoIsValid(dst) && SkImageInfoIsValid(src);
 }
 #endif  // SkImageInfoPriv_DEFINED

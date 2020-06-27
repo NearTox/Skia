@@ -181,7 +181,7 @@ class TextureGenerator : public SkImageGenerator {
  protected:
   GrSurfaceProxyView onGenerateTexture(
       GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin,
-      GrMipMapped mipMapped, GrImageTexGenPolicy) override {
+      GrMipMapped mipMapped, GrImageTexGenPolicy policy) override {
     SkASSERT(ctx);
     SkASSERT(ctx == fCtx.get());
 
@@ -189,16 +189,16 @@ class TextureGenerator : public SkImageGenerator {
       return {};
     }
 
-    if (origin.fX == 0 && origin.fY == 0 && info.dimensions() == fView.proxy()->dimensions()) {
+    if (origin.fX == 0 && origin.fY == 0 && info.dimensions() == fView.proxy()->dimensions() &&
+        policy == GrImageTexGenPolicy::kDraw) {
       return fView;
     }
-
-    // TODO: When we update this function to return a view instead of just a proxy then we can
-    // remove the extra ref that happens when we call asTextureProxyRef.
-    return GrSurfaceProxy::Copy(
-        fCtx.get(), fView.proxy(), fView.origin(), SkColorTypeToGrColorType(info.colorType()),
-        mipMapped, SkIRect::MakeXYWH(origin.x(), origin.y(), info.width(), info.height()),
-        SkBackingFit::kExact, SkBudgeted::kYes);
+    auto budgeted = policy == GrImageTexGenPolicy::kNew_Uncached_Unbudgeted ? SkBudgeted::kNo
+                                                                            : SkBudgeted::kYes;
+    return GrSurfaceProxyView::Copy(
+        fCtx.get(), fView, mipMapped,
+        SkIRect::MakeXYWH(origin.x(), origin.y(), info.width(), info.height()),
+        SkBackingFit::kExact, budgeted);
   }
 
  private:

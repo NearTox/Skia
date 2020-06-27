@@ -10,7 +10,7 @@
 #include "src/gpu/GrSwizzle.h"
 #include "src/gpu/gl/GrGLDefines.h"
 
-GrGLTextureParameters::SamplerOverriddenState::SamplerOverriddenState()
+GrGLTextureParameters::SamplerOverriddenState::SamplerOverriddenState() noexcept
     // These are the OpenGL defaults.
     : fMinFilter(GR_GL_NEAREST_MIPMAP_LINEAR),
       fMagFilter(GR_GL_LINEAR),
@@ -20,7 +20,7 @@ GrGLTextureParameters::SamplerOverriddenState::SamplerOverriddenState()
       fMaxLOD(1000.f),
       fBorderColorInvalid(false) {}
 
-void GrGLTextureParameters::SamplerOverriddenState::invalidate() {
+void GrGLTextureParameters::SamplerOverriddenState::invalidate() noexcept {
   fMinFilter = ~0U;
   fMagFilter = ~0U;
   fWrapS = ~0U;
@@ -30,17 +30,17 @@ void GrGLTextureParameters::SamplerOverriddenState::invalidate() {
   fBorderColorInvalid = true;
 }
 
-GrGLTextureParameters::NonsamplerState::NonsamplerState()
+GrGLTextureParameters::NonsamplerState::NonsamplerState() noexcept
     // These are the OpenGL defaults.
     : fSwizzleKey(GrSwizzle::RGBA().asKey()), fBaseMipMapLevel(0), fMaxMipMapLevel(1000) {}
 
-void GrGLTextureParameters::NonsamplerState::invalidate() {
+void GrGLTextureParameters::NonsamplerState::invalidate() noexcept {
   fSwizzleKey = ~0U;
   fBaseMipMapLevel = ~0;
   fMaxMipMapLevel = ~0;
 }
 
-void GrGLTextureParameters::invalidate() {
+void GrGLTextureParameters::invalidate() noexcept {
   fSamplerOverriddenState.invalidate();
   fNonsamplerState.invalidate();
 }
@@ -55,7 +55,7 @@ void GrGLTextureParameters::set(
   fResetTimestamp = currTimestamp;
 }
 
-void GrGLBackendTextureInfo::assign(const GrGLBackendTextureInfo& that, bool thisIsValid) {
+void GrGLBackendTextureInfo::assign(const GrGLBackendTextureInfo& that, bool thisIsValid) noexcept {
   fInfo = that.fInfo;
   SkSafeRef(that.fParams);
   if (thisIsValid) {
@@ -64,4 +64,4 @@ void GrGLBackendTextureInfo::assign(const GrGLBackendTextureInfo& that, bool thi
   fParams = that.fParams;
 }
 
-void GrGLBackendTextureInfo::cleanup() { SkSafeUnref(fParams); }
+void GrGLBackendTextureInfo::cleanup() noexcept { SkSafeUnref(fParams); }

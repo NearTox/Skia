@@ -46,7 +46,7 @@ struct Constructor : public Expression {
     return nullptr;
   }
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     for (const auto& arg : fArguments) {
       if (arg->hasProperty(property)) {
         return true;
@@ -63,7 +63,6 @@ struct Constructor : public Expression {
     return std::unique_ptr<Expression>(new Constructor(fOffset, fType, std::move(cloned)));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result = fType.description() + "(";
     String separator;
@@ -75,11 +74,19 @@ struct Constructor : public Expression {
     result += ")";
     return result;
   }
-#endif
 
-  bool isConstant() const override {
+  bool isConstant() const noexcept override {
     for (size_t i = 0; i < fArguments.size(); i++) {
       if (!fArguments[i]->isConstant()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  bool isConstantOrUniform() const noexcept override {
+    for (size_t i = 0; i < fArguments.size(); i++) {
+      if (!fArguments[i]->isConstantOrUniform()) {
         return false;
       }
     }

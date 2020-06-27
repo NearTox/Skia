@@ -43,7 +43,7 @@ class PolystarGeometryAdapter final
     const auto count = SkToUInt(SkTPin(SkScalarRoundToInt(fPointCount), 0, kMaxPointCount));
     const auto arc = sk_ieee_float_divide(SK_ScalarPI * 2, count);
 
-    const auto pt_on_circle = [](const SkV2& c, SkScalar r, SkScalar a) {
+    const auto pt_on_circle = [](const SkV2& c, SkScalar r, SkScalar a) noexcept {
       return SkPoint::Make(c.x + r * std::cos(a), c.y + r * std::sin(a));
     };
 

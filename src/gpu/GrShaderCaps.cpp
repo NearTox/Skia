@@ -12,7 +12,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
+GrShaderCaps::GrShaderCaps(const GrContextOptions& options) noexcept {
   fGLSLGeneration = k330_GrGLSLGeneration;
   fShaderDerivativeSupport = false;
   fGeometryShaderSupport = false;
@@ -182,6 +182,9 @@ void GrShaderCaps::applyOptionsOverrides(const GrContextOptions& options) {
   }
   if (options.fSuppressGeometryShaders) {
     fGeometryShaderSupport = false;
+  }
+  if (options.fSuppressTessellationShaders) {
+    fTessellationSupport = false;
   }
 #endif
 }

@@ -18,6 +18,7 @@
 
 class SkArenaAlloc;
 class SkMatrix;
+class SkMatrixProvider;
 class SkPaint;
 class SkPixmap;
 struct SkMask;
@@ -110,7 +111,7 @@ class SkBlitter {
    *  from Choose() if the request cannot be fulfilled. Default impl
    *  returns false.
    */
-  virtual bool isNullBlitter() const;
+  virtual bool isNullBlitter() const noexcept;
 
   /**
    * Special methods for blitters that can blit more than one row at a time.
@@ -140,8 +141,8 @@ class SkBlitter {
       Return the correct blitter to use given the specified context.
    */
   static SkBlitter* Choose(
-      const SkPixmap& dst, const SkMatrix& matrix, const SkPaint& paint, SkArenaAlloc*,
-      bool drawCoverage, sk_sp<SkShader> clipShader);
+      const SkPixmap& dst, const SkMatrixProvider& matrixProvider, const SkPaint& paint,
+      SkArenaAlloc*, bool drawCoverage, sk_sp<SkShader> clipShader);
 
   static SkBlitter* ChooseSprite(
       const SkPixmap& dst, const SkPaint&, const SkPixmap& src, int left, int top, SkArenaAlloc*,
@@ -164,7 +165,7 @@ class SkNullBlitter : public SkBlitter {
   void blitRect(int x, int y, int width, int height) override;
   void blitMask(const SkMask&, const SkIRect& clip) override;
   const SkPixmap* justAnOpaqueColor(uint32_t* value) override;
-  bool isNullBlitter() const override;
+  bool isNullBlitter() const noexcept override;
 };
 
 /** Wraps another (real) blitter, and ensures that the real blitter is only
@@ -281,7 +282,7 @@ class SkPairBlitter : public SkBlitter {
   SkBlitter* fB = nullptr;
 
  public:
-  SkPairBlitter(SkBlitter* a, SkBlitter* b) : fA(a), fB(b) {}
+  SkPairBlitter(SkBlitter* a, SkBlitter* b) noexcept : fA(a), fB(b) {}
 
   void blitH(int x, int y, int width) override { SHARD(blitH(x, y, width)) }
   void blitAntiH(int x, int y, const SkAlpha alphas[], const int16_t runs[]) override {

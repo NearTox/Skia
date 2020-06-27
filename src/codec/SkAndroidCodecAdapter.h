@@ -18,7 +18,7 @@ class SkAndroidCodecAdapter : public SkAndroidCodec {
  public:
   explicit SkAndroidCodecAdapter(SkCodec*, ExifOrientationBehavior);
 
-  ~SkAndroidCodecAdapter() override {}
+  ~SkAndroidCodecAdapter() override = default;
 
  protected:
   SkISize onGetSampledDimensions(int sampleSize) const override;

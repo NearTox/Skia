@@ -11,7 +11,7 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 
-SkCornerPathEffect::SkCornerPathEffect(SkScalar radius) {
+SkCornerPathEffect::SkCornerPathEffect(SkScalar radius) noexcept {
   // check with ! to catch NaNs
   if (!(radius > 0)) {
     radius = 0;
@@ -20,7 +20,8 @@ SkCornerPathEffect::SkCornerPathEffect(SkScalar radius) {
 }
 SkCornerPathEffect::~SkCornerPathEffect() {}
 
-static bool ComputeStep(const SkPoint& a, const SkPoint& b, SkScalar radius, SkPoint* step) {
+static bool ComputeStep(
+    const SkPoint& a, const SkPoint& b, SkScalar radius, SkPoint* step) noexcept {
   SkScalar dist = SkPoint::Distance(a, b);
 
   *step = b - a;
@@ -146,4 +147,6 @@ sk_sp<SkFlattenable> SkCornerPathEffect::CreateProc(SkReadBuffer& buffer) {
   return SkCornerPathEffect::Make(buffer.readScalar());
 }
 
-void SkCornerPathEffect::flatten(SkWriteBuffer& buffer) const { buffer.writeScalar(fRadius); }
+void SkCornerPathEffect::flatten(SkWriteBuffer& buffer) const noexcept {
+  buffer.writeScalar(fRadius);
+}

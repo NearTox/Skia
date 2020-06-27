@@ -28,7 +28,7 @@
 #endif
 
 #ifdef _WIN32
-static bool is_ascii(const char* s) noexcept {
+static bool is_ascii(const char* s) {
   while (char v = *s++) {
     if ((v & 0x80) != 0) {
       return false;
@@ -121,17 +121,17 @@ size_t sk_fgetsize(FILE* f) noexcept {
   return size;
 }
 
-size_t sk_fwrite(const void* buffer, size_t byteCount, FILE* f) noexcept {
+size_t sk_fwrite(const void* buffer, size_t byteCount, FILE* f) {
   SkASSERT(f);
   return fwrite(buffer, 1, byteCount, f);
 }
 
-void sk_fflush(FILE* f) noexcept {
+void sk_fflush(FILE* f) {
   SkASSERT(f);
   fflush(f);
 }
 
-void sk_fsync(FILE* f) noexcept {
+void sk_fsync(FILE* f) {
 #if !defined(_WIN32) && !defined(SK_BUILD_FOR_ANDROID) && !defined(__UCLIBC__) && \
     !defined(_NEWLIB_VERSION)
   int fd = fileno(f);
@@ -153,7 +153,7 @@ void sk_fclose(FILE* f) noexcept {
   }
 }
 
-bool sk_isdir(const char* path) noexcept {
+bool sk_isdir(const char* path) {
   struct stat status;
   if (0 != stat(path, &status)) {
 #ifdef SK_BUILD_FOR_IOS
@@ -171,7 +171,7 @@ bool sk_isdir(const char* path) noexcept {
   return SkToBool(status.st_mode & S_IFDIR);
 }
 
-bool sk_mkdir(const char* path) noexcept {
+bool sk_mkdir(const char* path) {
   if (sk_isdir(path)) {
     return true;
   }

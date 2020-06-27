@@ -37,21 +37,27 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
 
   GrD3DTextureResource* msaaTextureResource() { return fMSAATextureResource.get(); }
 
-  bool canAttemptStencilAttachment() const override {
-    return false;  // For now
-  }
+  bool canAttemptStencilAttachment() const override { return true; }
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
+
+  D3D12_CPU_DESCRIPTOR_HANDLE colorRenderTargetView() { return fColorRenderTargetView; }
+
+  DXGI_FORMAT stencilDxgiFormat() const;
+
+  // Key used for the program desc
+  void genKey(GrProcessorKeyBuilder* b) const;
 
  protected:
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
-      sk_sp<GrD3DResourceState> msaaState);
+      sk_sp<GrD3DResourceState> msaaState, const D3D12_CPU_DESCRIPTOR_HANDLE& colorRenderTargetView,
+      const D3D12_CPU_DESCRIPTOR_HANDLE& resolveRenderTargetView);
 
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state);
+      sk_sp<GrD3DResourceState> state, const D3D12_CPU_DESCRIPTOR_HANDLE& renderTargetView);
 
   void onAbandon() override;
   void onRelease() override;
@@ -74,17 +80,17 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
-      sk_sp<GrD3DResourceState> msaaState, Wrapped);
+      sk_sp<GrD3DResourceState> msaaState, const D3D12_CPU_DESCRIPTOR_HANDLE& colorRenderTargetView,
+      const D3D12_CPU_DESCRIPTOR_HANDLE& resolveRenderTargetView, Wrapped);
 
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state, Wrapped);
+      sk_sp<GrD3DResourceState> state, const D3D12_CPU_DESCRIPTOR_HANDLE& renderTargetView,
+      Wrapped);
 
   GrD3DGpu* getD3DGpu() const;
 
-  bool completeStencilAttachment() override { /* TODO */
-    return false;
-  }
+  bool completeStencilAttachment() override { return true; }
 
   // In Direct3D we call the release proc after we are finished with the underlying
   // GrD3DTextureResource::Resource object (which occurs after the GPU finishes all work on it).
@@ -96,6 +102,9 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
   void releaseInternalObjects();
 
   std::unique_ptr<GrD3DTextureResource> fMSAATextureResource;
+
+  D3D12_CPU_DESCRIPTOR_HANDLE fColorRenderTargetView;
+  D3D12_CPU_DESCRIPTOR_HANDLE fResolveRenderTargetView;
 };
 
 #endif

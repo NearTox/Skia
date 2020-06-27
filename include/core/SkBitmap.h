@@ -44,7 +44,7 @@ class SkShader;
     SkBitmap is not thread safe. Each thread must have its own copy of SkBitmap fields,
     although threads may share the underlying pixel array.
 */
-class SK_API SkBitmap {
+class SK_API SkBitmap final {
  public:
   class SK_API Allocator;
 
@@ -69,7 +69,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_copy_const_SkBitmap
   */
-  SkBitmap(const SkBitmap& src);
+  SkBitmap(const SkBitmap& src) noexcept;
 
   /** Copies settings from src to returned SkBitmap. Moves ownership of src pixels to
       SkBitmap.
@@ -93,7 +93,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_copy_operator
   */
-  SkBitmap& operator=(const SkBitmap& src);
+  SkBitmap& operator=(const SkBitmap& src) noexcept;
 
   /** Copies settings from src to returned SkBitmap. Moves ownership of src pixels to
       SkBitmap.
@@ -165,7 +165,7 @@ class SK_API SkBitmap {
 
       @return  SkColorSpace in SkImageInfo wrapped in a smart pointer
   */
-  sk_sp<SkColorSpace> refColorSpace() const { return fPixmap.info().refColorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fPixmap.info().refColorSpace(); }
 
   /** Returns number of bytes per pixel required by SkColorType.
       Returns zero if colorType( is kUnknown_SkColorType.
@@ -250,7 +250,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_setAlphaType
   */
-  bool setAlphaType(SkAlphaType alphaType);
+  bool setAlphaType(SkAlphaType alphaType) noexcept;
 
   /** Returns pixel address, the base address corresponding to the pixel origin.
 
@@ -353,7 +353,7 @@ class SK_API SkBitmap {
       @param bm  SkBitmap to check
       @return    true if all pixels have opaque values or SkColorType is opaque
   */
-  static bool ComputeIsOpaque(const SkBitmap& bm) { return bm.pixmap().computeIsOpaque(); }
+  static bool ComputeIsOpaque(const SkBitmap& bm) noexcept { return bm.pixmap().computeIsOpaque(); }
 
   /** Returns SkRect { 0, 0, width(), height() }.
 
@@ -361,7 +361,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_getBounds
   */
-  void getBounds(SkRect* bounds) const;
+  void getBounds(SkRect* bounds) const noexcept;
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
@@ -744,7 +744,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_setPixelRef
   */
-  void setPixelRef(sk_sp<SkPixelRef> pixelRef, int dx, int dy);
+  void setPixelRef(sk_sp<SkPixelRef> pixelRef, int dx, int dy) noexcept;
 
   /** Returns true if SkBitmap is can be drawn.
 
@@ -771,10 +771,10 @@ class SK_API SkBitmap {
   */
   void notifyPixelsChanged() const;
 
-  /** Replaces pixel values with c. All pixels contained by bounds() are affected.
-      If the colorType() is kGray_8_SkColorType or kRGB_565_SkColorType, then alpha
-      is ignored; RGB is treated as opaque. If colorType() is kAlpha_8_SkColorType,
-      then RGB is ignored.
+  /** Replaces pixel values with c, interpreted as being in the sRGB SkColorSpace.
+      All pixels contained by bounds() are affected. If the colorType() is
+      kGray_8_SkColorType or kRGB_565_SkColorType, then alpha is ignored; RGB is
+      treated as opaque. If colorType() is kAlpha_8_SkColorType, then RGB is ignored.
 
       @param c  unpremultiplied color
 
@@ -782,11 +782,11 @@ class SK_API SkBitmap {
   */
   void eraseColor(SkColor c) const;
 
-  /** Replaces pixel values with unpremultiplied color built from a, r, g, and b.
-      All pixels contained by bounds() are affected.
-      If the colorType() is kGray_8_SkColorType or kRGB_565_SkColorType, then a
-      is ignored; r, g, and b are treated as opaque. If colorType() is kAlpha_8_SkColorType,
-      then r, g, and b are ignored.
+  /** Replaces pixel values with unpremultiplied color built from a, r, g, and b,
+      interpreted as being in the sRGB SkColorSpace. All pixels contained by
+      bounds() are affected. If the colorType() is kGray_8_SkColorType or
+      kRGB_565_SkColorType, then a is ignored; r, g, and b are treated as opaque.
+      If colorType() is kAlpha_8_SkColorType, then r, g, and b are ignored.
 
       @param a  amount of alpha, from fully transparent (0) to fully opaque (255)
       @param r  amount of red, from no red (0) to full red (255)
@@ -797,8 +797,8 @@ class SK_API SkBitmap {
     this->eraseColor(SkColorSetARGB(a, r, g, b));
   }
 
-  /** Replaces pixel values inside area with c. If area does not intersect bounds(),
-      call has no effect.
+  /** Replaces pixel values inside area with c. interpreted as being in the sRGB
+      SkColorSpace. If area does not intersect bounds(), call has no effect.
 
       If the colorType() is kGray_8_SkColorType or kRGB_565_SkColorType, then alpha
       is ignored; RGB is treated as opaque. If colorType() is kAlpha_8_SkColorType,
@@ -841,7 +841,7 @@ class SK_API SkBitmap {
       @param y  row index, zero or greater, and less than height()
       @return   alpha converted to normalized float
    */
-  float getAlphaf(int x, int y) const { return this->pixmap().getAlphaf(x, y); }
+  float getAlphaf(int x, int y) const noexcept { return this->pixmap().getAlphaf(x, y); }
 
   /** Returns pixel address at (x, y).
 
@@ -1117,7 +1117,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_peekPixels
   */
-  bool peekPixels(SkPixmap* pixmap) const;
+  bool peekPixels(SkPixmap* pixmap) const noexcept;
 
   sk_sp<SkShader> makeShader(
       SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix = nullptr) const;
@@ -1152,7 +1152,7 @@ class SK_API SkBitmap {
       memory from the heap. This is the default SkBitmap::Allocator invoked by
       allocPixels().
   */
-  class HeapAllocator : public Allocator {
+  class HeapAllocator final : public Allocator {
    public:
     /** Allocates the pixel memory for the bitmap, given its dimensions and
         SkColorType. Returns true on success, where success means either setPixels()

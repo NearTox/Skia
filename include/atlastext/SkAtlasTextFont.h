@@ -19,16 +19,16 @@ class SK_API SkAtlasTextFont : public SkRefCnt {
     return sk_sp<SkAtlasTextFont>(new SkAtlasTextFont(std::move(typeface), size));
   }
 
-  SkTypeface* typeface() const { return fTypeface.get(); }
+  SkTypeface* typeface() const noexcept { return fTypeface.get(); }
 
   sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
 
-  SkScalar size() const { return fSize; }
+  SkScalar size() const noexcept { return fSize; }
 
   SkFont makeFont() const { return SkFont(fTypeface, fSize); }
 
  private:
-  SkAtlasTextFont(sk_sp<SkTypeface> typeface, SkScalar size)
+  SkAtlasTextFont(sk_sp<SkTypeface> typeface, SkScalar size) noexcept
       : fTypeface(std::move(typeface)), fSize(size) {}
 
   sk_sp<SkTypeface> fTypeface;

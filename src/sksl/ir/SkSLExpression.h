@@ -49,14 +49,14 @@ struct Expression : public IRNode {
 
   enum class Property { kSideEffects, kContainsRTAdjust };
 
-  Expression(int offset, Kind kind, const Type& type)
+  Expression(int offset, Kind kind, const Type& type) noexcept
       : INHERITED(offset), fKind(kind), fType(std::move(type)) {}
 
   /**
    * Returns true if this expression is constant. compareConstant must be implemented for all
    * constants!
    */
-  virtual bool isConstant() const { return false; }
+  virtual bool isConstant() const noexcept { return false; }
 
   /**
    * Compares this constant expression against another constant expression of the same type. It is
@@ -79,11 +79,20 @@ struct Expression : public IRNode {
    */
   virtual double getConstantFloat() const { ABORT("not a constant float"); }
 
-  virtual bool hasProperty(Property property) const = 0;
+  /**
+   * Returns true if, given fixed values for uniforms, this expression always evaluates to the
+   * same result with no side effects.
+   */
+  virtual bool isConstantOrUniform() const noexcept {
+    SkASSERT(!this->isConstant() || !this->hasSideEffects());
+    return this->isConstant();
+  }
 
-  bool hasSideEffects() const { return this->hasProperty(Property::kSideEffects); }
+  virtual bool hasProperty(Property property) const noexcept = 0;
 
-  bool containsRTAdjust() const { return this->hasProperty(Property::kContainsRTAdjust); }
+  bool hasSideEffects() const noexcept { return this->hasProperty(Property::kSideEffects); }
+
+  bool containsRTAdjust() const noexcept { return this->hasProperty(Property::kContainsRTAdjust); }
 
   /**
    * Given a map of known constant variable values, substitute them in for references to those

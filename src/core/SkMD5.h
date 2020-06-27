@@ -20,14 +20,14 @@ class SkMD5 : public SkWStream {
       Calling this after finish is undefined.  */
   bool write(const void* buffer, size_t size) final;
 
-  size_t bytesWritten() const final { return SkToSizeT(this->byteCount); }
+  size_t bytesWritten() const noexcept final { return SkToSizeT(this->byteCount); }
 
   struct Digest {
     uint8_t data[16];
-    bool operator==(Digest const& other) const {
+    bool operator==(Digest const& other) const noexcept {
       return 0 == memcmp(data, other.data, sizeof(data));
     }
-    bool operator!=(Digest const& other) const { return !(*this == other); }
+    bool operator!=(Digest const& other) const noexcept { return !(*this == other); }
   };
 
   /** Computes and returns the digest. */

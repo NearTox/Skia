@@ -12,30 +12,30 @@
 struct SkDLine {
   SkDPoint fPts[2];
 
-  const SkDPoint& operator[](int n) const {
+  const SkDPoint& operator[](int n) const noexcept {
     SkASSERT(n >= 0 && n < 2);
     return fPts[n];
   }
-  SkDPoint& operator[](int n) {
+  SkDPoint& operator[](int n) noexcept {
     SkASSERT(n >= 0 && n < 2);
     return fPts[n];
   }
 
-  const SkDLine& set(const SkPoint pts[2]) {
+  const SkDLine& set(const SkPoint pts[2]) noexcept {
     fPts[0] = pts[0];
     fPts[1] = pts[1];
     return *this;
   }
 
-  double exactPoint(const SkDPoint& xy) const;
-  static double ExactPointH(const SkDPoint& xy, double left, double right, double y);
-  static double ExactPointV(const SkDPoint& xy, double top, double bottom, double x);
+  double exactPoint(const SkDPoint& xy) const noexcept;
+  static double ExactPointH(const SkDPoint& xy, double left, double right, double y) noexcept;
+  static double ExactPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept;
 
-  double nearPoint(const SkDPoint& xy, bool* unequal) const;
-  bool nearRay(const SkDPoint& xy) const;
-  static double NearPointH(const SkDPoint& xy, double left, double right, double y);
-  static double NearPointV(const SkDPoint& xy, double top, double bottom, double x);
-  SkDPoint ptAtT(double t) const;
+  double nearPoint(const SkDPoint& xy, bool* unequal) const noexcept;
+  bool nearRay(const SkDPoint& xy) const noexcept;
+  static double NearPointH(const SkDPoint& xy, double left, double right, double y) noexcept;
+  static double NearPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept;
+  SkDPoint ptAtT(double t) const noexcept;
 
   void dump() const;
   void dumpID(int) const;

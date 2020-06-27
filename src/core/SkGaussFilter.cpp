@@ -39,7 +39,7 @@ static void normalize(int n, double* gauss) noexcept {
   gauss[0] = 1 - sum;
 }
 
-static int calculate_bessel_factors(double sigma, double* gauss) {
+static int calculate_bessel_factors(double sigma, double* gauss) noexcept {
   auto var = sigma * sigma;
 
   // The two functions below come from the equations in "Handbook of Mathematical Functions"
@@ -47,7 +47,7 @@ static int calculate_bessel_factors(double sigma, double* gauss) {
   // explicitly as 9.6.12
   // BesselI_0 for 0 <= sigma < 2.
   // NB the k = 0 factor is just sum = 1.0.
-  auto besselI_0 = [](double t) -> double {
+  auto besselI_0 = [](double t) noexcept -> double {
     auto tSquaredOver4 = t * t / 4.0;
     auto sum = 1.0;
     auto factor = 1.0;
@@ -62,7 +62,7 @@ static int calculate_bessel_factors(double sigma, double* gauss) {
     return sum;
   };
   // BesselI_1 for 0 <= sigma < 2.
-  auto besselI_1 = [](double t) -> double {
+  auto besselI_1 = [](double t) noexcept -> double {
     auto tSquaredOver4 = t * t / 4.0;
     auto sum = t / 2.0;
     auto factor = sum;
@@ -101,7 +101,7 @@ static int calculate_bessel_factors(double sigma, double* gauss) {
   return n;
 }
 
-SkGaussFilter::SkGaussFilter(double sigma) {
+SkGaussFilter::SkGaussFilter(double sigma) noexcept {
   SkASSERT(0 <= sigma && sigma < 2);
 
   fN = calculate_bessel_factors(sigma, fBasis);

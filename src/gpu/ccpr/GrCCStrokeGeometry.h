@@ -23,7 +23,7 @@ class GrCCStrokeGeometry {
  public:
   static constexpr int kMaxNumLinearSegmentsLog2 = 15;
 
-  GrCCStrokeGeometry(int numSkPoints = 0, int numSkVerbs = 0)
+  GrCCStrokeGeometry(int numSkPoints = 0, int numSkVerbs = 0) noexcept
       : fVerbs(numSkVerbs * 5 / 2)  // Reserve for a 2.5x expansion in verbs. (Joins get their
                                     // own separate verb in our representation.)
         ,
@@ -98,7 +98,7 @@ class GrCCStrokeGeometry {
     int fTriangles;
     int fConics;
 
-    InstanceTallies operator+(const InstanceTallies&) const;
+    InstanceTallies operator+(const InstanceTallies&) const noexcept;
   };
 
   void beginPath(const SkStrokeRec&, float strokeDevWidth, InstanceTallies*);
@@ -163,7 +163,7 @@ class GrCCStrokeGeometry {
 };
 
 inline GrCCStrokeGeometry::InstanceTallies GrCCStrokeGeometry::InstanceTallies::operator+(
-    const InstanceTallies& t) const {
+    const InstanceTallies& t) const noexcept {
   InstanceTallies ret;
   for (int i = 0; i <= kMaxNumLinearSegmentsLog2; ++i) {
     ret.fStrokes[i] = fStrokes[i] + t.fStrokes[i];

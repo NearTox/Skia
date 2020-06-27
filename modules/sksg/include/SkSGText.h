@@ -86,7 +86,7 @@ class TextBlob final : public GeometryNode {
   void onDraw(SkCanvas*, const SkPaint&) const override;
   bool onContains(const SkPoint&) const override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
   SkPath onAsPath() const override;
 
  private:

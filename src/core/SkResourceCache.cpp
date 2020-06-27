@@ -43,10 +43,10 @@ void SkResourceCache::Key::init(void* nameSpace, uint64_t sharedID, size_t dataS
   SkASSERT(SkAlign4(dataSize) == dataSize);
 
   // fCount32 and fHash are not hashed
-  static const int kUnhashedLocal32s = 2;  // fCache32 + fHash
-  static const int kSharedIDLocal32s = 2;  // fSharedID_lo + fSharedID_hi
-  static const int kHashedLocal32s = kSharedIDLocal32s + (sizeof(fNamespace) >> 2);
-  static const int kLocal32s = kUnhashedLocal32s + kHashedLocal32s;
+  static constexpr int kUnhashedLocal32s = 2;  // fCache32 + fHash
+  static constexpr int kSharedIDLocal32s = 2;  // fSharedID_lo + fSharedID_hi
+  static constexpr int kHashedLocal32s = kSharedIDLocal32s + (sizeof(fNamespace) >> 2);
+  static constexpr int kLocal32s = kUnhashedLocal32s + kHashedLocal32s;
 
   static_assert(sizeof(Key) == (kLocal32s << 2), "unaccounted_key_locals");
   static_assert(
@@ -305,7 +305,7 @@ SkCachedData* SkResourceCache::newCachedData(size_t bytes) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkResourceCache::release(Rec* rec) {
+void SkResourceCache::release(Rec* rec) noexcept {
   Rec* prev = rec->fPrev;
   Rec* next = rec->fNext;
 
@@ -325,7 +325,7 @@ void SkResourceCache::release(Rec* rec) {
   rec->fNext = rec->fPrev = nullptr;
 }
 
-void SkResourceCache::moveToHead(Rec* rec) {
+void SkResourceCache::moveToHead(Rec* rec) noexcept {
   if (fHead == rec) {
     return;
   }
@@ -344,7 +344,7 @@ void SkResourceCache::moveToHead(Rec* rec) {
   this->validate();
 }
 
-void SkResourceCache::addToHead(Rec* rec) {
+void SkResourceCache::addToHead(Rec* rec) noexcept {
   this->validate();
 
   rec->fPrev = nullptr;
@@ -417,15 +417,17 @@ void SkResourceCache::dump() const {
       fDiscardableFactory ? "discardable" : "malloc");
 }
 
-size_t SkResourceCache::setSingleAllocationByteLimit(size_t newLimit) {
+size_t SkResourceCache::setSingleAllocationByteLimit(size_t newLimit) noexcept {
   size_t oldLimit = fSingleAllocationByteLimit;
   fSingleAllocationByteLimit = newLimit;
   return oldLimit;
 }
 
-size_t SkResourceCache::getSingleAllocationByteLimit() const { return fSingleAllocationByteLimit; }
+size_t SkResourceCache::getSingleAllocationByteLimit() const noexcept {
+  return fSingleAllocationByteLimit;
+}
 
-size_t SkResourceCache::getEffectiveSingleAllocationByteLimit() const {
+size_t SkResourceCache::getEffectiveSingleAllocationByteLimit() const noexcept {
   // fSingleAllocationByteLimit == 0 means the caller is asking for our default
   size_t limit = fSingleAllocationByteLimit;
 

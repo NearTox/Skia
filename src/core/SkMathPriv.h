@@ -13,16 +13,16 @@
 /**
  *  Return the integer square root of value, with a bias of bitBias
  */
-int32_t SkSqrtBits(int32_t value, int bitBias) noexcept;
+int32_t SkSqrtBits(int32_t value, int bitBias);
 
 /** Return the integer square root of n, treated as a SkFixed (16.16)
  */
-static inline int32_t SkSqrt32(int32_t n) noexcept { return SkSqrtBits(n, 15); }
+static inline int32_t SkSqrt32(int32_t n) { return SkSqrtBits(n, 15); }
 
 /**
  *  Returns (value < 0 ? 0 : value) efficiently (i.e. no compares or branches)
  */
-static constexpr int SkClampPos(int value) noexcept { return value & ~(value >> 31); }
+static constexpr inline int SkClampPos(int value) noexcept { return value & ~(value >> 31); }
 
 /**
  * Stores numer/denom and numer%denom into div and mod respectively.
@@ -59,7 +59,7 @@ static constexpr inline int32_t SkApplySign(int32_t n, int32_t sign) noexcept {
 }
 
 /** Return x with the sign of y */
-static inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
+static constexpr inline int32_t SkCopySign32(int32_t x, int32_t y) {
   return SkApplySign(x, SkExtractSign(x ^ y));
 }
 
@@ -68,7 +68,7 @@ static inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
  Note: only works as long as max - value doesn't wrap around
  @return max if value >= max, else value
  */
-static constexpr unsigned SkClampUMax(unsigned value, unsigned max) noexcept {
+static constexpr inline unsigned SkClampUMax(unsigned value, unsigned max) noexcept {
   if (value > max) {
     value = max;
   }
@@ -95,7 +95,7 @@ static constexpr inline size_t sk_negate_to_size_t(int32_t value) noexcept {
 /** Return a*b/255, truncating away any fractional bits. Only valid if both
  a and b are 0..255
  */
-static inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
+static constexpr inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
   SkASSERT((uint8_t)a == a);
   SkASSERT((uint8_t)b == b);
   unsigned prod = a * b + 1;
@@ -105,7 +105,7 @@ static inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
 /** Return (a*b)/255, taking the ceiling of any fractional bits. Only valid if
  both a and b are 0..255. The expected result equals (a * b + 254) / 255.
  */
-static inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
+static constexpr inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
   SkASSERT((uint8_t)a == a);
   SkASSERT((uint8_t)b == b);
   unsigned prod = a * b + 255;
@@ -114,7 +114,7 @@ static inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
 
 /** Just the rounding step in SkDiv255Round: round(value / 255)
  */
-static constexpr unsigned SkDiv255Round(unsigned prod) noexcept {
+static constexpr inline unsigned SkDiv255Round(unsigned prod) noexcept {
   prod += 128;
   return (prod + (prod >> 8)) >> 8;
 }
@@ -126,11 +126,11 @@ static constexpr unsigned SkDiv255Round(unsigned prod) noexcept {
 #  include <stdlib.h>
 static inline uint32_t SkBSwap32(uint32_t v) noexcept { return _byteswap_ulong(v); }
 #else
-static inline uint32_t SkBSwap32(uint32_t v) { return __builtin_bswap32(v); }
+static inline uint32_t SkBSwap32(uint32_t v) noexcept { return __builtin_bswap32(v); }
 #endif
 
 //! Returns the number of leading zero bits (0...32)
-int SkCLZ_portable(uint32_t) noexcept;
+int SkCLZ_portable(uint32_t);
 
 #ifndef SkCLZ
 #  if defined(SK_BUILD_FOR_WIN)
@@ -140,8 +140,8 @@ static inline int SkCLZ(uint32_t mask) noexcept {
   if (mask) {
     unsigned long index;
     _BitScanReverse(&index, mask);
-    // Suppress this bogus /analyze warning. The check for non-zero
-    // guarantees that _BitScanReverse will succeed.
+// Suppress this bogus /analyze warning. The check for non-zero
+// guarantees that _BitScanReverse will succeed.
 #    pragma warning(suppress : 6102)  // Using 'index' from failed function call
     return index ^ 0x1F;
   } else {
@@ -154,7 +154,36 @@ static inline int SkCLZ(uint32_t mask) {
   return mask ? __builtin_clz(mask) : 32;
 }
 #  else
-#    define SkCLZ(x) SkCLZ_portable(x)
+static inline int SkCLZ(uint32_t mask) { return SkCLZ_portable(mask); }
+#  endif
+#endif
+
+//! Returns the number of trailing zero bits (0...32)
+int SkCTZ_portable(uint32_t);
+
+#ifndef SkCTZ
+#  if defined(SK_BUILD_FOR_WIN)
+#    include <intrin.h>
+
+static inline int SkCTZ(uint32_t mask) noexcept {
+  if (mask) {
+    unsigned long index;
+    _BitScanForward(&index, mask);
+// Suppress this bogus /analyze warning. The check for non-zero
+// guarantees that _BitScanReverse will succeed.
+#    pragma warning(suppress : 6102)  // Using 'index' from failed function call
+    return index;
+  } else {
+    return 32;
+  }
+}
+#  elif defined(SK_CPU_ARM32) || defined(__GNUC__) || defined(__clang__)
+static inline int SkCTZ(uint32_t mask) {
+  // __builtin_ctz(0) is undefined, so we have to detect that case.
+  return mask ? __builtin_ctz(mask) : 32;
+}
+#  else
+static inline int SkCTZ(uint32_t mask) { return SkCTZ_portable(mask); }
 #  endif
 #endif
 
@@ -218,7 +247,7 @@ static inline uint32_t GrNextPow2(uint32_t n) noexcept {
 /**
  * Returns the next power of 2 >= n or n if the next power of 2 can't be represented by size_t.
  */
-static inline size_t GrNextSizePow2(size_t n) noexcept {
+static constexpr inline size_t GrNextSizePow2(size_t n) noexcept {
   constexpr int kNumSizeTBits = 8 * sizeof(size_t);
   constexpr size_t kHighBitSet = size_t(1) << (kNumSizeTBits - 1);
 

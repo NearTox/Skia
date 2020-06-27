@@ -11,6 +11,7 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkMutex.h"
 #include "include/private/SkOnce.h"
+#include "include/utils/SkCustomTypeface.h"
 #include "src/core/SkAdvancedTypefaceMetrics.h"
 #include "src/core/SkEndian.h"
 #include "src/core/SkFontDescriptor.h"
@@ -22,7 +23,7 @@
 SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch) noexcept
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) {}
 
-SkTypeface::~SkTypeface() = default;
+SkTypeface::~SkTypeface() {}
 
 #ifdef SK_WHITELIST_SERIALIZED_TYPEFACES
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);
@@ -154,6 +155,12 @@ sk_sp<SkTypeface> SkTypeface::MakeFromData(sk_sp<SkData> data, int index) {
 }
 
 sk_sp<SkTypeface> SkTypeface::MakeFromFontData(std::unique_ptr<SkFontData> data) {
+  if (data->hasStream()) {
+    if (auto tf = SkCustomTypefaceBuilder::Deserialize(data->getStream())) {
+      return tf;
+    }
+  }
+
   return SkFontMgr::RefDefault()->makeFromFontData(std::move(data));
 }
 

@@ -73,17 +73,17 @@ class SK_API GrContextThreadSafeProxy : public GrContext_Base {
     return INHERITED::defaultBackendFormat(ct, renderable);
   }
 
-  bool operator==(const GrContextThreadSafeProxy& that) const {
+  bool operator==(const GrContextThreadSafeProxy& that) const noexcept {
     // Each GrContext should only ever have a single thread-safe proxy.
     SkASSERT((this == &that) == (this->contextID() == that.contextID()));
     return this == &that;
   }
 
-  bool operator!=(const GrContextThreadSafeProxy& that) const { return !(*this == that); }
+  bool operator!=(const GrContextThreadSafeProxy& that) const noexcept { return !(*this == that); }
 
   // Provides access to functions that aren't part of the public API.
-  GrContextThreadSafeProxyPriv priv();
-  const GrContextThreadSafeProxyPriv priv() const;
+  GrContextThreadSafeProxyPriv priv() noexcept;
+  const GrContextThreadSafeProxyPriv priv() const noexcept;
 
  private:
   friend class GrContextThreadSafeProxyPriv;  // for ctor and hidden methods

@@ -61,7 +61,7 @@ SkPath DashEffect::onAsPath() const { return fDashedPath; }
 SkRect DashEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto child_bounds = fChild->revalidate(ic, ctm);
+  const auto& child_bounds = fChild->revalidate(ic, ctm);
   const auto child_path = fChild->asPath();
 
   fDashedPath.reset();

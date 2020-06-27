@@ -23,7 +23,7 @@ class GrGLStencilAttachment : public GrStencilAttachment {
   };
 
   struct IDDesc {
-    IDDesc() : fRenderbufferID(0) {}
+    constexpr IDDesc() noexcept : fRenderbufferID(0) {}
     GrGLuint fRenderbufferID;
   };
 
@@ -35,9 +35,9 @@ class GrGLStencilAttachment : public GrStencilAttachment {
     this->registerWithCache(SkBudgeted::kYes);
   }
 
-  GrGLuint renderbufferID() const { return fRenderbufferID; }
+  GrGLuint renderbufferID() const noexcept { return fRenderbufferID; }
 
-  const Format& format() const { return fFormat; }
+  const Format& format() const noexcept { return fFormat; }
 
  protected:
   // overrides of GrResource

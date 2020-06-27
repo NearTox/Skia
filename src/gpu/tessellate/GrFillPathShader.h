@@ -17,10 +17,11 @@ class GrGLSLVertexBuilder;
 class GrFillPathShader : public GrPathShader {
  public:
   GrFillPathShader(
-      ClassID classID, const SkMatrix& viewMatrix, SkPMColor4f color, GrPrimitiveType primitiveType)
+      ClassID classID, const SkMatrix& viewMatrix, SkPMColor4f color,
+      GrPrimitiveType primitiveType) noexcept
       : GrPathShader(classID, viewMatrix, primitiveType, 0), fColor(color) {}
 
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const final;
 
  protected:
@@ -36,7 +37,7 @@ class GrFillPathShader : public GrPathShader {
 // Fills a simple array of triangles.
 class GrFillTriangleShader : public GrFillPathShader {
  public:
-  GrFillTriangleShader(const SkMatrix& viewMatrix, SkPMColor4f color)
+  GrFillTriangleShader(const SkMatrix& viewMatrix, SkPMColor4f color) noexcept
       : GrFillPathShader(
             kTessellate_GrFillTriangleShader_ClassID, viewMatrix, color,
             GrPrimitiveType::kTriangles) {
@@ -46,7 +47,7 @@ class GrFillTriangleShader : public GrFillPathShader {
   }
 
  private:
-  const char* name() const override { return "GrFillTriangleShader"; }
+  const char* name() const noexcept override { return "GrFillTriangleShader"; }
   void emitVertexCode(
       Impl*, GrGLSLVertexBuilder*, const char* viewMatrix, GrGLSLUniformHandler*) const override;
 };
@@ -54,7 +55,7 @@ class GrFillTriangleShader : public GrFillPathShader {
 // Fills an array of convex hulls surrounding 4-point cubic instances.
 class GrFillCubicHullShader : public GrFillPathShader {
  public:
-  GrFillCubicHullShader(const SkMatrix& viewMatrix, SkPMColor4f color)
+  GrFillCubicHullShader(const SkMatrix& viewMatrix, SkPMColor4f color) noexcept
       : GrFillPathShader(
             kTessellate_GrFillCubicHullShader_ClassID, viewMatrix, color,
             GrPrimitiveType::kTriangleStrip) {
@@ -65,7 +66,7 @@ class GrFillCubicHullShader : public GrFillPathShader {
   }
 
  private:
-  const char* name() const override { return "GrFillCubicHullShader"; }
+  const char* name() const noexcept override { return "GrFillCubicHullShader"; }
   void emitVertexCode(
       Impl*, GrGLSLVertexBuilder*, const char* viewMatrix, GrGLSLUniformHandler*) const override;
 };
@@ -75,16 +76,17 @@ class GrFillCubicHullShader : public GrFillPathShader {
 // NOTE: The emitted geometry may not be axis-aligned, depending on the view matrix.
 class GrFillBoundingBoxShader : public GrFillPathShader {
  public:
-  GrFillBoundingBoxShader(const SkMatrix& viewMatrix, SkPMColor4f color, const SkRect& pathBounds)
+  GrFillBoundingBoxShader(
+      const SkMatrix& viewMatrix, SkPMColor4f color, const SkRect& pathBounds) noexcept
       : GrFillPathShader(
             kTessellate_GrFillBoundingBoxShader_ClassID, viewMatrix, color,
             GrPrimitiveType::kTriangleStrip),
         fPathBounds(pathBounds) {}
 
-  const SkRect& pathBounds() const { return fPathBounds; }
+  const SkRect& pathBounds() const noexcept { return fPathBounds; }
 
  private:
-  const char* name() const override { return "GrFillBoundingBoxShader"; }
+  const char* name() const noexcept override { return "GrFillBoundingBoxShader"; }
   void emitVertexCode(
       Impl*, GrGLSLVertexBuilder*, const char* viewMatrix, GrGLSLUniformHandler*) const override;
 

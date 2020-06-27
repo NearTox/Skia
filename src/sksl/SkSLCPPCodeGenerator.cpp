@@ -10,6 +10,7 @@
 #include "src/sksl/SkSLCPPUniformCTypes.h"
 #include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLHCodeGenerator.h"
+#include "src/sksl/SkSLSampleMatrix.h"
 
 #include <algorithm>
 
@@ -62,7 +63,7 @@ String CPPCodeGenerator::getTypeName(const Type& type) { return type.name(); }
 
 void CPPCodeGenerator::writeBinaryExpression(
     const BinaryExpression& b, Precedence parentPrecedence) {
-  if (b.fOperator == Token::PERCENT) {
+  if (b.fOperator == Token::Kind::TK_PERCENT) {
     // need to use "%%" instead of "%" b/c the code will be inside of a printf
     Precedence precedence = GetBinaryPrecedence(b.fOperator);
     if (precedence >= parentPrecedence) {
@@ -91,8 +92,8 @@ void CPPCodeGenerator::writeBinaryExpression(
     this->write("%s");
     const char* op;
     switch (b.fOperator) {
-      case Token::EQEQ: op = "<"; break;
-      case Token::NEQ: op = ">="; break;
+      case Token::Kind::TK_EQEQ: op = "<"; break;
+      case Token::Kind::TK_NEQ: op = ">="; break;
       default: SkASSERT(false);
     }
     fFormatArgs.push_back(
@@ -121,7 +122,7 @@ void CPPCodeGenerator::writeIndexExpression(const IndexExpression& i) {
       if (fWrittenTransformedCoords.find(index) == fWrittenTransformedCoords.end()) {
         addExtraEmitCodeLine(
             "SkString " + name + " = fragBuilder->ensureCoords2D(args.fTransformedCoords[" +
-            to_string(index) + "].fVaryingPoint);");
+            to_string(index) + "].fVaryingPoint, _outer.sampleMatrix());");
         fWrittenTransformedCoords.insert(index);
       }
       return;
@@ -435,14 +436,19 @@ void CPPCodeGenerator::writeFunctionCall(const FunctionCall& c) {
     }
 
     bool hasCoords = c.fArguments.back()->fType.name() == "float2";
-
+    SampleMatrix matrix = fSectionAndParameterHelper.getMatrix(child);
     // Write the output handling after the possible input handling
     String childName = "_sample" + to_string(c.fOffset);
     addExtraEmitCodeLine("SkString " + childName + ";");
     String coordsName;
+    String matrixName;
     if (hasCoords) {
       coordsName = "_coords" + to_string(c.fOffset);
       addExtraEmitCodeLine(convertSKSLExpressionToCPP(*c.fArguments.back(), coordsName));
+    }
+    if (matrix.fKind == SampleMatrix::Kind::kVariable) {
+      matrixName = "_matrix" + to_string(c.fOffset);
+      addExtraEmitCodeLine(convertSKSLExpressionToCPP(*c.fArguments.back(), matrixName));
     }
     if (c.fArguments[0]->fType.kind() == Type::kNullable_Kind) {
       addExtraEmitCodeLine("if (_outer." + String(child.fName) + "_index >= 0) {\n    ");
@@ -452,9 +458,20 @@ void CPPCodeGenerator::writeFunctionCall(const FunctionCall& c) {
           childName + " = this->invokeChild(_outer." + String(child.fName) + "_index" + inputArg +
           ", args, " + coordsName + ".c_str());");
     } else {
-      addExtraEmitCodeLine(
-          childName + " = this->invokeChild(_outer." + String(child.fName) + "_index" + inputArg +
-          ", args);");
+      switch (matrix.fKind) {
+        case SampleMatrix::Kind::kMixed:
+        case SampleMatrix::Kind::kVariable:
+          addExtraEmitCodeLine(
+              childName + " = this->invokeChildWithMatrix(_outer." + String(child.fName) +
+              "_index" + inputArg + ", args, " + matrixName + ".c_str());");
+          break;
+        case SampleMatrix::Kind::kConstantOrUniform:
+        case SampleMatrix::Kind::kNone:
+          addExtraEmitCodeLine(
+              childName + " = this->invokeChild(_outer." + String(child.fName) + "_index" +
+              inputArg + ", args);");
+          break;
+      }
     }
 
     if (c.fArguments[0]->fType.kind() == Type::kNullable_Kind) {
@@ -515,6 +532,14 @@ static const char* glsltype_string(const Context& context, const Type& type) {
     return "kFloat4_GrSLType";
   } else if (type == *context.fHalf4_Type) {
     return "kHalf4_GrSLType";
+  } else if (type == *context.fFloat2x2_Type) {
+    return "kFloat2x2_GrSLType";
+  } else if (type == *context.fHalf2x2_Type) {
+    return "kHalf2x2_GrSLType";
+  } else if (type == *context.fFloat3x3_Type) {
+    return "kFloat3x3_GrSLType";
+  } else if (type == *context.fHalf3x3_Type) {
+    return "kHalf3x3_GrSLType";
   } else if (type == *context.fFloat4x4_Type) {
     return "kFloat4x4_GrSLType";
   } else if (type == *context.fHalf4x4_Type) {
@@ -620,8 +645,8 @@ void CPPCodeGenerator::addUniform(const Variable& var) {
   const char* type = glsltype_string(fContext, var.fType);
   String name(var.fName);
   this->writef(
-      "        %sVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, %s, "
-      "\"%s\");\n",
+      "        %sVar = args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag,"
+      " %s, \"%s\");\n",
       HCodeGenerator::FieldName(name.c_str()).c_str(), type, name.c_str());
   if (var.fModifiers.fLayout.fWhen.fLength) {
     this->write("        }\n");
@@ -1114,9 +1139,9 @@ void CPPCodeGenerator::writeClone() {
         }
         this->writef(
             "        auto clone = src.childProcessor(%s_index).clone();\n"
-            "        clone->setSampledWithExplicitCoords(\n"
-            "                 "
-            "src.childProcessor(%s_index).isSampledWithExplicitCoords());\n"
+            "        if (src.childProcessor(%s_index).isSampledWithExplicitCoords()) {\n"
+            "            clone->setSampledWithExplicitCoords();\n"
+            "        }"
             "        this->registerChildProcessor(std::move(clone));\n"
             "    }\n",
             fieldName.c_str(), fieldName.c_str());

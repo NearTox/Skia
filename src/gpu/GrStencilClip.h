@@ -16,28 +16,31 @@
  */
 class GrStencilClip final : public GrHardClip {
  public:
-  GrStencilClip(uint32_t stencilStackID = SK_InvalidGenID) : fStencilStackID(stencilStackID) {}
+  GrStencilClip(uint32_t stencilStackID = SK_InvalidGenID) noexcept
+      : fStencilStackID(stencilStackID) {}
 
-  explicit GrStencilClip(const SkIRect& scissorRect, uint32_t stencilStackID = SK_InvalidGenID)
+  explicit GrStencilClip(
+      const SkIRect& scissorRect, uint32_t stencilStackID = SK_InvalidGenID) noexcept
       : fFixedClip(scissorRect), fStencilStackID(stencilStackID) {}
 
-  const GrFixedClip& fixedClip() const { return fFixedClip; }
-  GrFixedClip& fixedClip() { return fFixedClip; }
+  const GrFixedClip& fixedClip() const noexcept { return fFixedClip; }
+  GrFixedClip& fixedClip() noexcept { return fFixedClip; }
 
-  bool stencilStackID() const { return fStencilStackID; }
-  bool hasStencilClip() const { return SK_InvalidGenID != fStencilStackID; }
-  void setStencilClip(uint32_t stencilStackID) { fStencilStackID = stencilStackID; }
+  uint32_t stencilStackID() const noexcept { return fStencilStackID; }
+  bool hasStencilClip() const noexcept { return SK_InvalidGenID != fStencilStackID; }
+  void setStencilClip(uint32_t stencilStackID) noexcept { fStencilStackID = stencilStackID; }
 
-  bool quickContains(const SkRect& rect) const override {
+  bool quickContains(const SkRect& rect) const noexcept override {
     return !this->hasStencilClip() && fFixedClip.quickContains(rect);
   }
-  void getConservativeBounds(int width, int height, SkIRect* bounds, bool* iior) const override {
-    fFixedClip.getConservativeBounds(width, height, bounds, iior);
+  SkIRect getConservativeBounds(int width, int height) const noexcept override {
+    return fFixedClip.getConservativeBounds(width, height);
   }
-  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const override {
+  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const noexcept override {
     return !this->hasStencilClip() && fFixedClip.isRRect(rtBounds, rr, aa);
   }
-  bool apply(int rtWidth, int rtHeight, GrAppliedHardClip* out, SkRect* bounds) const override {
+  bool apply(
+      int rtWidth, int rtHeight, GrAppliedHardClip* out, SkRect* bounds) const noexcept override {
     if (!fFixedClip.apply(rtWidth, rtHeight, out, bounds)) {
       return false;
     }

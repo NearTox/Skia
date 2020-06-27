@@ -26,8 +26,8 @@ class GrBaseContextPriv {
   sk_sp<const GrCaps> refCaps() const;
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
-  GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
-  GrContext* asDirectContext() { return fContext->asDirectContext(); }
+  GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
+  GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   GrContextOptions::ShaderErrorHandler* getShaderErrorHandler() const;
 

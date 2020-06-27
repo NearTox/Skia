@@ -22,20 +22,20 @@ class GrDeviceSpaceEffect : public GrFragmentProcessor {
   }
   GrDeviceSpaceEffect(const GrDeviceSpaceEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "DeviceSpaceEffect"; }
+  const char* name() const noexcept override { return "DeviceSpaceEffect"; }
   int fp_index = -1;
 
  private:
-  GrDeviceSpaceEffect(std::unique_ptr<GrFragmentProcessor> fp)
+  GrDeviceSpaceEffect(std::unique_ptr<GrFragmentProcessor> fp) noexcept
       : INHERITED(kGrDeviceSpaceEffect_ClassID, kNone_OptimizationFlags) {
     SkASSERT(fp);
     fp_index = this->numChildProcessors();
-    fp->setSampledWithExplicitCoords(true);
+    fp->setSampledWithExplicitCoords();
     this->registerChildProcessor(std::move(fp));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

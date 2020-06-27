@@ -33,16 +33,16 @@ enum {
 
 /* SkPicture impl.  This handles generic responsibilities like unique IDs and serialization. */
 
-SkPicture::SkPicture() {
+SkPicture::SkPicture() noexcept {
   static std::atomic<uint32_t> nextID{1};
   do {
     fUniqueID = nextID.fetch_add(+1, std::memory_order_relaxed);
   } while (fUniqueID == 0);
 }
 
-static const char kMagic[] = {'s', 'k', 'i', 'a', 'p', 'i', 'c', 't'};
+static constexpr char kMagic[] = {'s', 'k', 'i', 'a', 'p', 'i', 'c', 't'};
 
-SkPictInfo SkPicture::createHeader() const {
+SkPictInfo SkPicture::createHeader() const noexcept {
   SkPictInfo info;
   // Copy magic bytes at the beginning of the header
   static_assert(sizeof(kMagic) == 8, "");
@@ -55,7 +55,7 @@ SkPictInfo SkPicture::createHeader() const {
   return info;
 }
 
-bool SkPicture::IsValidPictInfo(const SkPictInfo& info) {
+bool SkPicture::IsValidPictInfo(const SkPictInfo& info) noexcept {
   if (0 != memcmp(info.fMagic, kMagic, sizeof(kMagic))) {
     return false;
   }
@@ -66,7 +66,7 @@ bool SkPicture::IsValidPictInfo(const SkPictInfo& info) {
   return true;
 }
 
-bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
+bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) noexcept {
   if (!stream) {
     return false;
   }
@@ -109,11 +109,11 @@ bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
   }
   return true;
 }
-bool SkPicture_StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
+bool SkPicture_StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) noexcept {
   return SkPicture::StreamIsSKP(stream, pInfo);
 }
 
-bool SkPicture::BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo) {
+bool SkPicture::BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo) noexcept {
   SkPictInfo info;
   SkASSERT(sizeof(kMagic) == sizeof(info.fMagic));
   if (!buffer->readByteArray(&info.fMagic, sizeof(kMagic))) {
@@ -337,15 +337,15 @@ void SkPicturePriv::Flatten(const sk_sp<const SkPicture> picture, SkWriteBuffer&
 
 sk_sp<SkPicture> SkPicture::MakePlaceholder(SkRect cull) {
   struct Placeholder : public SkPicture {
-    explicit Placeholder(SkRect cull) : fCull(cull) {}
+    explicit Placeholder(SkRect cull) noexcept : fCull(cull) {}
 
-    void playback(SkCanvas*, AbortCallback*) const override {}
+    void playback(SkCanvas*, AbortCallback*) const noexcept override {}
 
     // approximateOpCount() needs to be greater than kMaxPictureOpsToUnrollInsteadOfRef
     // in SkCanvas.cpp to avoid that unrolling.  SK_MaxS32 can't not be big enough!
-    int approximateOpCount() const override { return SK_MaxS32; }
-    size_t approximateBytesUsed() const override { return sizeof(*this); }
-    SkRect cullRect() const override { return fCull; }
+    int approximateOpCount() const noexcept override { return SK_MaxS32; }
+    size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
+    SkRect cullRect() const noexcept override { return fCull; }
 
     SkRect fCull;
   };

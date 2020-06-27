@@ -10,14 +10,14 @@
 DECLARE_SKMESSAGEBUS_MESSAGE(GrTextBlobCache::PurgeBlobMessage)
 
 static inline bool SkShouldPostMessageToBus(
-    const GrTextBlobCache::PurgeBlobMessage& msg, uint32_t msgBusUniqueID) {
+    const GrTextBlobCache::PurgeBlobMessage& msg, uint32_t msgBusUniqueID) noexcept {
   return msg.fContextID == msgBusUniqueID;
 }
 
 GrTextBlobCache::~GrTextBlobCache() { this->freeAll(); }
 
-void GrTextBlobCache::freeAll() {
-  fBlobIDCache.foreach ([this](uint32_t, BlobIDCacheEntry* entry) {
+void GrTextBlobCache::freeAll() noexcept {
+  fBlobIDCache.foreach ([this](uint32_t, BlobIDCacheEntry* entry) noexcept {
     for (const auto& blob : entry->fBlobs) {
       fBlobList.remove(blob.get());
     }

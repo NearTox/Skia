@@ -35,9 +35,9 @@ struct Bounder {
     }
   }
 
-  bool hasBounds() const { return fHasBounds; }
-  const SkRect* bounds() const { return fHasBounds ? &fBounds : nullptr; }
-  operator const SkRect*() const { return this->bounds(); }
+  bool hasBounds() const noexcept { return fHasBounds; }
+  const SkRect* bounds() const noexcept { return fHasBounds ? &fBounds : nullptr; }
+  operator const SkRect*() const noexcept { return this->bounds(); }
 };
 
 class SkDrawTiler {
@@ -54,14 +54,14 @@ class SkDrawTiler {
   SkDraw fDraw;
 
   // fCurr... are only used if fNeedTiling
-  SkMatrix fTileMatrix;
+  SkTLazy<SkPostConcatMatrixProvider> fTileMatrixProvider;
   SkRasterClip fTileRC;
   SkIPoint fOrigin;
 
   bool fDone, fNeedsTiling;
 
  public:
-  static bool NeedsTiling(SkBitmapDevice* dev) {
+  static bool NeedsTiling(SkBitmapDevice* dev) noexcept {
     return dev->width() > kMaxDim || dev->height() > kMaxDim;
   }
 
@@ -105,15 +105,14 @@ class SkDrawTiler {
     }
 
     if (fNeedsTiling) {
-      // fDraw.fDst is reset each time in setupTileDraw()
-      fDraw.fMatrix = &fTileMatrix;
+      // fDraw.fDst and fMatrixProvider are reset each time in setupTileDraw()
       fDraw.fRC = &fTileRC;
       // we'll step/increase it before using it
       fOrigin.set(fSrcBounds.fLeft - kMaxDim, fSrcBounds.fTop);
     } else {
       // don't reference fSrcBounds, as it may not have been set
       fDraw.fDst = fRootPixmap;
-      fDraw.fMatrix = &dev->localToDevice();
+      fDraw.fMatrixProvider = dev;
       fDraw.fRC = &dev->fRCStack.rc();
       fOrigin.set(0, 0);
 
@@ -121,7 +120,7 @@ class SkDrawTiler {
     }
   }
 
-  bool needsTiling() const { return fNeedsTiling; }
+  bool needsTiling() const noexcept { return fNeedsTiling; }
 
   const SkDraw* next() {
     if (fDone) {
@@ -164,8 +163,9 @@ class SkDrawTiler {
     SkASSERT_RELEASE(success);
     // now don't use bounds, since fDst has the clipped dimensions.
 
-    fTileMatrix = fDevice->localToDevice();
-    fTileMatrix.postTranslate(SkIntToScalar(-fOrigin.x()), SkIntToScalar(-fOrigin.y()));
+    fDraw.fMatrixProvider = fTileMatrixProvider.init(
+        fDevice->asMatrixProvider(),
+        SkMatrix::MakeTrans(SkIntToScalar(-fOrigin.x()), SkIntToScalar(-fOrigin.y())));
     fDevice->fRCStack.rc().translate(-fOrigin.x(), -fOrigin.y(), &fTileRC);
     fTileRC.op(SkIRect::MakeWH(fDraw.fDst.width(), fDraw.fDst.height()), SkRegion::kIntersect_Op);
   }
@@ -190,7 +190,7 @@ class SkBitmapDevice::BDDraw : public SkDraw {
       // NoDrawDevice uses us (why?) so we have to catch this case w/ no pixels
       fDst.reset(dev->imageInfo(), nullptr, 0);
     }
-    fMatrix = &dev->localToDevice();
+    fMatrixProvider = dev;
     fRC = &dev->fRCStack.rc();
     fCoverage = dev->accessCoverage();
   }
@@ -557,8 +557,9 @@ void SkBitmapDevice::drawDevice(SkBaseDevice* device, int x, int y, const SkPain
   SkBitmapDevice* src = static_cast<SkBitmapDevice*>(device);
   if (src->fCoverage) {
     SkDraw draw;
+    SkSimpleMatrixProvider matrixProvider(SkMatrix::I());
     draw.fDst = fBitmap.pixmap();
-    draw.fMatrix = &SkMatrix::I();
+    draw.fMatrixProvider = &matrixProvider;
     draw.fRC = &fRCStack.rc();
     paint.writable()->setShader(src->fBitmap.makeShader());
     draw.drawBitmap(
@@ -587,9 +588,9 @@ namespace {
 class SkAutoDeviceClipRestore {
  public:
   SkAutoDeviceClipRestore(SkBaseDevice* device, const SkIRect& clip)
-      : fDevice(device), fPrevLocalToDevice(device->localToDevice()) {
+      : fDevice(device), fPrevLocalToDevice(device->localToDevice44()) {
     fDevice->save();
-    fDevice->setLocalToDevice(SkMatrix::I());
+    fDevice->setLocalToDevice(SkM44());
     fDevice->clipRect(SkRect::Make(clip), SkClipOp::kIntersect, false);
     fDevice->setLocalToDevice(fPrevLocalToDevice);
   }
@@ -598,7 +599,7 @@ class SkAutoDeviceClipRestore {
 
  private:
   SkBaseDevice* fDevice;
-  const SkMatrix fPrevLocalToDevice;
+  const SkM44 fPrevLocalToDevice;
 };
 
 }  // namespace

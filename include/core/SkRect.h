@@ -822,7 +822,7 @@ struct SK_API SkRect {
       or if top is equal to or greater than bottom. Setting all members to zero
       is a convenience, but does not designate a special empty rectangle.
   */
-  constexpr void setEmpty() noexcept { *this = MakeEmpty(); }
+  void setEmpty() noexcept { *this = MakeEmpty(); }
 
   /** Sets SkRect to src, promoting src members from integer to scalar.
       Very large values in src may lose precision.

@@ -17,7 +17,7 @@
 
 GrPipeline::GrPipeline(
     const InitArgs& args, sk_sp<const GrXferProcessor> xferProcessor,
-    const GrAppliedHardClip& hardClip)
+    const GrAppliedHardClip& hardClip) noexcept
     : fWriteSwizzle(args.fWriteSwizzle) {
   fFlags = (Flags)args.fInputFlags;
   if (hardClip.hasStencilClip()) {
@@ -39,7 +39,7 @@ GrPipeline::GrPipeline(
 }
 
 GrPipeline::GrPipeline(
-    const InitArgs& args, GrProcessorSet&& processors, GrAppliedClip&& appliedClip)
+    const InitArgs& args, GrProcessorSet&& processors, GrAppliedClip&& appliedClip) noexcept
     : GrPipeline(args, processors.refXferProcessor(), appliedClip.hardClip()) {
   SkASSERT(processors.isFinalized());
   // Copy GrFragmentProcessors from GrProcessorSet to Pipeline
@@ -70,7 +70,7 @@ GrXferBarrierType GrPipeline::xferBarrierType(GrTexture* texture, const GrCaps& 
 
 GrPipeline::GrPipeline(
     GrScissorTest scissorTest, sk_sp<const GrXferProcessor> xp, const GrSwizzle& writeSwizzle,
-    InputFlags inputFlags, const GrUserStencilSettings* userStencil)
+    InputFlags inputFlags, const GrUserStencilSettings* userStencil) noexcept
     : fWindowRectsState(),
       fFlags((Flags)inputFlags),
       fXferProcessor(std::move(xp)),
@@ -92,8 +92,8 @@ void GrPipeline::genKey(GrProcessorKeyBuilder* b, const GrCaps& caps) const {
 
   const GrXferProcessor::BlendInfo& blendInfo = this->getXferProcessor().getBlendInfo();
 
-  static const uint32_t kBlendWriteShift = 1;
-  static const uint32_t kBlendCoeffShift = 5;
+  static constexpr uint32_t kBlendWriteShift = 1;
+  static constexpr uint32_t kBlendCoeffShift = 5;
   static_assert(kLast_GrBlendCoeff < (1 << kBlendCoeffShift));
   static_assert(kFirstAdvancedGrBlendEquation - 1 < 4);
 

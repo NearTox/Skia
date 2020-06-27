@@ -63,9 +63,9 @@ class BaseSuperBlitter : public SkBlitter {
   /// Leftmost x coordinate in any row, in supersampled coordinates.
   int fSuperLeft;
 
-  SkDEBUGCODE(int fCurrX;)
-      /// Current y coordinate in supersampled coordinates.
-      int fCurrY;
+  SkDEBUGCODE(int fCurrX);
+  /// Current y coordinate in supersampled coordinates.
+  int fCurrY;
   /// Initial y coordinate (top of bounds).
   int fTop;
 
@@ -97,7 +97,7 @@ BaseSuperBlitter::BaseSuperBlitter(
   fCurrIY = fTop - 1;
   fCurrY = SkLeftShift(fTop, SHIFT) - 1;
 
-  SkDEBUGCODE(fCurrX = -1;)
+  SkDEBUGCODE(fCurrX = -1);
 }
 
 /// Run-length-encoded supersampling antialiased blitter.
@@ -163,14 +163,14 @@ void SuperBlitter::flush() {
   if (fCurrIY >= fTop) {
     SkASSERT(fCurrentRun < fRunsToBuffer);
     if (!fRuns.empty()) {
-      // SkDEBUGCODE(fRuns.dump();)
+      // SkDEBUGCODE(fRuns.dump());
       fRealBlitter->blitAntiH(fLeft, fCurrIY, fRuns.fAlpha, fRuns.fRuns);
       this->advanceRuns();
       fOffsetX = 0;
     }
 
     fCurrIY = fTop - 1;
-    SkDEBUGCODE(fCurrX = -1;)
+    SkDEBUGCODE(fCurrX = -1);
   }
 }
 

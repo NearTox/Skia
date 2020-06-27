@@ -61,10 +61,10 @@ class GrCCAtlas : public GrDynamicAtlas {
   }
 
   static sk_sp<GrTextureProxy> MakeLazyAtlasProxy(
-      const LazyInstantiateAtlasCallback& callback, CoverageType coverageType, const GrCaps& caps,
+      LazyInstantiateAtlasCallback&& callback, CoverageType coverageType, const GrCaps& caps,
       GrSurfaceProxy::UseAllocator useAllocator) {
     return GrDynamicAtlas::MakeLazyAtlasProxy(
-        callback, CoverageTypeToColorType(coverageType),
+        std::move(callback), CoverageTypeToColorType(coverageType),
         CoverageTypeHasInternalMultisample(coverageType), caps, useAllocator);
   }
 
@@ -73,11 +73,11 @@ class GrCCAtlas : public GrDynamicAtlas {
 
   // This is an optional space for the caller to jot down user-defined instance data to use when
   // rendering atlas content.
-  void setFillBatchID(int id) noexcept;
+  void setFillBatchID(int id);
   int getFillBatchID() const noexcept { return fFillBatchID; }
-  void setStrokeBatchID(int id) noexcept;
+  void setStrokeBatchID(int id);
   int getStrokeBatchID() const noexcept { return fStrokeBatchID; }
-  void setEndStencilResolveInstance(int idx) noexcept;
+  void setEndStencilResolveInstance(int idx);
   int getEndStencilResolveInstance() const noexcept { return fEndStencilResolveInstance; }
 
   sk_sp<GrCCCachedAtlas> refOrMakeCachedAtlas(GrOnFlushResourceProvider*);

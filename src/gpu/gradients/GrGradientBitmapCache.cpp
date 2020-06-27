@@ -22,7 +22,7 @@ struct GrGradientBitmapCache::Entry {
   size_t fSize;
   SkBitmap fBitmap;
 
-  Entry(const void* buffer, size_t size, const SkBitmap& bm)
+  Entry(const void* buffer, size_t size, const SkBitmap& bm) noexcept
       : fPrev(nullptr), fNext(nullptr), fBitmap(bm) {
     fBuffer = sk_malloc_throw(size);
     fSize = size;
@@ -31,12 +31,12 @@ struct GrGradientBitmapCache::Entry {
 
   ~Entry() { sk_free(fBuffer); }
 
-  bool equals(const void* buffer, size_t size) const {
+  bool equals(const void* buffer, size_t size) const noexcept {
     return (fSize == size) && !memcmp(fBuffer, buffer, size);
   }
 };
 
-GrGradientBitmapCache::GrGradientBitmapCache(int max, int res)
+GrGradientBitmapCache::GrGradientBitmapCache(int max, int res) noexcept
     : fMaxEntries(max), fResolution(res) {
   fEntryCount = 0;
   fHead = fTail = nullptr;
@@ -55,7 +55,7 @@ GrGradientBitmapCache::~GrGradientBitmapCache() {
   }
 }
 
-GrGradientBitmapCache::Entry* GrGradientBitmapCache::release(Entry* entry) const {
+GrGradientBitmapCache::Entry* GrGradientBitmapCache::release(Entry* entry) const noexcept {
   if (entry->fPrev) {
     SkASSERT(fHead != entry);
     entry->fPrev->fNext = entry->fNext;
@@ -73,7 +73,7 @@ GrGradientBitmapCache::Entry* GrGradientBitmapCache::release(Entry* entry) const
   return entry;
 }
 
-void GrGradientBitmapCache::attachToHead(Entry* entry) const {
+void GrGradientBitmapCache::attachToHead(Entry* entry) const noexcept {
   entry->fPrev = nullptr;
   entry->fNext = fHead;
   if (fHead) {
@@ -84,7 +84,7 @@ void GrGradientBitmapCache::attachToHead(Entry* entry) const {
   fHead = entry;
 }
 
-bool GrGradientBitmapCache::find(const void* buffer, size_t size, SkBitmap* bm) const {
+bool GrGradientBitmapCache::find(const void* buffer, size_t size, SkBitmap* bm) const noexcept {
   AutoValidate av(this);
 
   Entry* entry = fHead;
@@ -127,14 +127,14 @@ void GrGradientBitmapCache::fillGradient(
 
   typedef std::function<void(const Sk4f&, int)> pixelWriteFn_t;
 
-  pixelWriteFn_t writeF16Pixel = [&](const Sk4f& x, int index) {
+  pixelWriteFn_t writeF16Pixel = [&](const Sk4f& x, int index) noexcept {
     Sk4h c = SkFloatToHalf_finite_ftz(x);
     pixelsF16[4 * index + 0] = c[0];
     pixelsF16[4 * index + 1] = c[1];
     pixelsF16[4 * index + 2] = c[2];
     pixelsF16[4 * index + 3] = c[3];
   };
-  pixelWriteFn_t write8888Pixel = [&](const Sk4f& c, int index) {
+  pixelWriteFn_t write8888Pixel = [&](const Sk4f& c, int index) noexcept {
     pixels32[index] = Sk4f_toL32(c);
   };
 

@@ -178,7 +178,8 @@ class SkImageFilter_Base : public SkImageFilter {
   // Whether or not to recurse to child input filters for certain operations that walk the DAG.
   enum class VisitChildren : bool { kNo = false, kYes = true };
 
-  SkImageFilter_Base(sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect);
+  SkImageFilter_Base(
+      sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect) noexcept;
 
   ~SkImageFilter_Base() override;
 
@@ -325,7 +326,7 @@ class SkImageFilter_Base : public SkImageFilter {
    *  arbitrary transformation matrix. If this returns false, the filter only needs to worry about
    *  mapping from parameter to layer using a scale+translate matrix.
    */
-  virtual bool onCanHandleComplexCTM() const { return false; }
+  virtual bool onCanHandleComplexCTM() const noexcept { return false; }
 
   /**
    *  Return true if this filter would transform transparent black pixels to a color other than

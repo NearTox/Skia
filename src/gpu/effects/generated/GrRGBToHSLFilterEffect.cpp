@@ -35,20 +35,20 @@ class GrGLSLRGBToHSLFilterEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
-  }
+  void onSetData(
+      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
 };
 GrGLSLFragmentProcessor* GrRGBToHSLFilterEffect::onCreateGLSLInstance() const {
   return new GrGLSLRGBToHSLFilterEffect();
 }
 void GrRGBToHSLFilterEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrRGBToHSLFilterEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrRGBToHSLFilterEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrRGBToHSLFilterEffect& that = other.cast<GrRGBToHSLFilterEffect>();
   (void)that;
   return true;
 }
-GrRGBToHSLFilterEffect::GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src)
+GrRGBToHSLFilterEffect::GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src) noexcept
     : INHERITED(kGrRGBToHSLFilterEffect_ClassID, src.optimizationFlags()) {}
 std::unique_ptr<GrFragmentProcessor> GrRGBToHSLFilterEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrRGBToHSLFilterEffect(*this));

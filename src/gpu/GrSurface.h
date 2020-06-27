@@ -38,7 +38,7 @@ class GrSurface : public GrGpuResource {
   /**
    * Helper that gets the width and height of the surface as a bounding rectangle.
    */
-  SkRect getBoundsRect() const { return SkRect::Make(this->dimensions()); }
+  SkRect getBoundsRect() const noexcept { return SkRect::Make(this->dimensions()); }
 
   virtual GrBackendFormat backendFormat() const = 0;
 
@@ -69,8 +69,8 @@ class GrSurface : public GrGpuResource {
   virtual const GrRenderTarget* asRenderTarget() const noexcept { return nullptr; }
 
   /** Access methods that are only to be used within Skia code. */
-  inline GrSurfacePriv surfacePriv();
-  inline const GrSurfacePriv surfacePriv() const;
+  inline GrSurfacePriv surfacePriv() noexcept;
+  inline const GrSurfacePriv surfacePriv() const noexcept;
 
   static size_t ComputeSize(
       const GrCaps&, const GrBackendFormat&, SkISize dimensions, int colorSamplesPerPixel,
@@ -122,7 +122,7 @@ class GrSurface : public GrGpuResource {
   // Provides access to methods that should be public within Skia code.
   friend class GrSurfacePriv;
 
-  GrSurface(GrGpu* gpu, const SkISize& dimensions, GrProtected isProtected)
+  GrSurface(GrGpu* gpu, const SkISize& dimensions, GrProtected isProtected) noexcept
       : INHERITED(gpu),
         fDimensions(dimensions),
         fSurfaceFlags(GrInternalSurfaceFlags::kNone),
@@ -143,7 +143,7 @@ class GrSurface : public GrGpuResource {
   // ensure it isn't called until GPU work related to the resource is completed.
   virtual void onSetRelease(sk_sp<GrRefCntedCallback>) {}
 
-  void invokeReleaseProc() {
+  void invokeReleaseProc() noexcept {
     // Depending on the ref count of fReleaseHelper this may or may not actually trigger the
     // ReleaseProc to be called.
     fReleaseHelper.reset();

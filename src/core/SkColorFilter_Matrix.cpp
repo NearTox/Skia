@@ -18,7 +18,7 @@
 #include "src/core/SkVM.h"
 #include "src/core/SkWriteBuffer.h"
 
-static uint16_t ComputeFlags(const float matrix[20]) {
+static uint16_t ComputeFlags(const float matrix[20]) noexcept {
   const float* srcA = matrix + 15;
 
   return SkScalarNearlyZero(srcA[0]) && SkScalarNearlyZero(srcA[1]) &&
@@ -28,7 +28,7 @@ static uint16_t ComputeFlags(const float matrix[20]) {
              : 0;
 }
 
-SkColorFilter_Matrix::SkColorFilter_Matrix(const float array[20], Domain domain)
+SkColorFilter_Matrix::SkColorFilter_Matrix(const float array[20], Domain domain) noexcept
     : fFlags(ComputeFlags(array)), fDomain(domain) {
   memcpy(fMatrix, array, 20 * sizeof(float));
 }
@@ -37,7 +37,7 @@ uint32_t SkColorFilter_Matrix::getFlags() const noexcept {
   return this->INHERITED::getFlags() | fFlags;
 }
 
-void SkColorFilter_Matrix::flatten(SkWriteBuffer& buffer) const {
+void SkColorFilter_Matrix::flatten(SkWriteBuffer& buffer) const noexcept {
   SkASSERT(sizeof(fMatrix) / sizeof(float) == 20);
   buffer.writeScalarArray(fMatrix, 20);
 
@@ -100,10 +100,10 @@ skvm::Color SkColorFilter_Matrix::onProgram(
       auto custom_mad = [&](float f, skvm::F32 m, skvm::F32 a) {
         // skvm::Builder won't fold f*0 == 0, but we shouldn't encounter NaN here.
         // While looking, also simplify f == ±1.  Anything else becomes a uniform.
-        return f == 0.0f
-                   ? a
-                   : f == +1.0f ? a + m
-                                : f == -1.0f ? a - m : m * p->uniformF(uniforms->pushF(f)) + a;
+        return f == 0.0f    ? a
+               : f == +1.0f ? a + m
+               : f == -1.0f ? a - m
+                            : m * p->uniformF(uniforms->pushF(f)) + a;
       };
 
       // Similarly, let skvm::Builder fold away the additive bias when zero.

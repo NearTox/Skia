@@ -17,7 +17,7 @@
  *  Use this for bitmapcache and mipmapcache entries.
  */
 uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) noexcept {
-  uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
+  constexpr uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
   return (sharedID << 32) | bitmapGenID;
 }
 
@@ -33,7 +33,7 @@ SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subse
   return {imageID, subset};
 }
 
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) noexcept {
   SkIRect bounds = SkIRect::MakeWH(image->width(), image->height());
   return Make(image->uniqueID(), bounds);
 }
@@ -57,7 +57,9 @@ struct BitmapKey : public SkResourceCache::Key {
 #include "src/core/SkDiscardableMemory.h"
 #include "src/core/SkNextID.h"
 
-void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) { pr->setImmutableWithID(id); }
+void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) noexcept {
+  pr->setImmutableWithID(id);
+}
 
 class SkBitmapCache::Rec : public SkResourceCache::Rec {
  public:
@@ -81,7 +83,9 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
   }
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(fKey) + fInfo.computeByteSize(fRowBytes); }
+  size_t bytesUsed() const noexcept override {
+    return sizeof(fKey) + fInfo.computeByteSize(fRowBytes);
+  }
   bool canBePurged() override {
     SkAutoMutexExclusive ama(fMutex);
     return fExternalCounter == 0;
@@ -228,7 +232,7 @@ struct MipMapRec : public SkResourceCache::Rec {
   ~MipMapRec() override { fMipMap->detachFromCacheAndUnref(); }
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override { return sizeof(fKey) + fMipMap->size(); }
+  size_t bytesUsed() const noexcept override { return sizeof(fKey) + fMipMap->size(); }
   const char* getCategory() const override { return "mipmap"; }
   SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fMipMap->diagnostic_only_getDiscardable();

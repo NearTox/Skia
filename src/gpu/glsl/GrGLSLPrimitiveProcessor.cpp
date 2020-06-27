@@ -51,7 +51,7 @@ void GrGLSLPrimitiveProcessor::setupUniformColor(
   SkASSERT(colorUniform);
   const char* stagedLocalVarName;
   *colorUniform = uniformHandler->addUniform(
-      kFragment_GrShaderFlag, kHalf4_GrSLType, "Color", &stagedLocalVarName);
+      nullptr, kFragment_GrShaderFlag, kHalf4_GrSLType, "Color", &stagedLocalVarName);
   fragBuilder->codeAppendf("%s = %s;", outputName, stagedLocalVarName);
   if (fragBuilder->getProgramBuilder()->shaderCaps()->mustObfuscateUniformColor()) {
     fragBuilder->codeAppendf("%s = max(%s, half4(0, 0, 0, 0));", outputName, outputName);
@@ -73,6 +73,5 @@ GrGLSLPrimitiveProcessor::FPCoordTransformHandler&
 GrGLSLPrimitiveProcessor::FPCoordTransformHandler::operator++() {
   SkASSERT(fAddedCoord);
   ++fIter;
-  SkDEBUGCODE(fAddedCoord = false);
-  return *this;
+  SkDEBUGCODE(fAddedCoord = false;) return *this;
 }

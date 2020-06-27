@@ -21,7 +21,7 @@ class GrTexture;
 class GrGLSLXferProcessor {
  public:
   GrGLSLXferProcessor() {}
-  virtual ~GrGLSLXferProcessor() {}
+  virtual ~GrGLSLXferProcessor() = default;
 
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
@@ -31,7 +31,7 @@ class GrGLSLXferProcessor {
         const GrShaderCaps* caps, const GrXferProcessor& xp, const char* inputColor,
         const char* inputCoverage, const char* outputPrimary, const char* outputSecondary,
         const SamplerHandle dstTextureSamplerHandle, GrSurfaceOrigin dstTextureOrigin,
-        const GrSwizzle& writeSwizzle)
+        const GrSwizzle& writeSwizzle) noexcept
         : fXPFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),

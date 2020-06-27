@@ -20,8 +20,6 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
   struct Format {
     VkFormat fInternalFormat;
     int fStencilBits;
-    int fTotalBits;
-    bool fPacked;
   };
 
   static GrVkStencilAttachment* Create(
@@ -29,10 +27,8 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
 
   ~GrVkStencilAttachment() override;
 
-  const GrManagedResource* imageResource() const { return this->resource(); }
-  const GrVkImageView* stencilView() const { return fStencilView; }
-
-  VkFormat vkFormat() const { return fFormat.fInternalFormat; }
+  const GrManagedResource* imageResource() const noexcept { return this->resource(); }
+  const GrVkImageView* stencilView() const noexcept { return fStencilView; }
 
  protected:
   void onRelease() override;
@@ -46,8 +42,6 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
       sk_sp<GrVkImageLayout> layout, const GrVkImageView* stencilView);
 
   GrVkGpu* getVkGpu() const;
-
-  Format fFormat;
 
   const GrVkImageView* fStencilView;
 };

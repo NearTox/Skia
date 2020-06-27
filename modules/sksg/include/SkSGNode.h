@@ -110,17 +110,21 @@ class Node : public SkRefCnt {
     this->invalidate();                                                                         \
   }
 
-#define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)              \
-  attr_type get##attr_name() const { return attr_container.get##attr_name(); } \
-  void set##attr_name(const attr_type& v) {                                    \
-    if (attr_container.get##attr_name() == v) return;                          \
-    attr_container.set##attr_name(v);                                          \
-    this->invalidate();                                                        \
-  }                                                                            \
-  void set##attr_name(attr_type&& v) {                                         \
-    if (attr_container.get##attr_name() == v) return;                          \
-    attr_container.set##attr_name(std::move(v));                               \
-    this->invalidate();                                                        \
+#define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)                           \
+  attr_type get##attr_name() const noexcept(noexcept(attr_container.get##attr_name())) {    \
+    return attr_container.get##attr_name();                                                 \
+  }                                                                                         \
+  void set##attr_name(const attr_type& v) noexcept(noexcept(                                \
+      attr_container.set##attr_name(v))&& noexcept(attr_container.get##attr_name() == v)) { \
+    if (attr_container.get##attr_name() == v) return;                                       \
+    attr_container.set##attr_name(v);                                                       \
+    this->invalidate();                                                                     \
+  }                                                                                         \
+  void set##attr_name(attr_type&& v) noexcept(noexcept(attr_container.set##attr_name(       \
+      std::move(v)))&& noexcept(attr_container.get##attr_name() == v)) {                    \
+    if (attr_container.get##attr_name() == v) return;                                       \
+    attr_container.set##attr_name(std::move(v));                                            \
+    this->invalidate();                                                                     \
   }
 
 }  // namespace sksg

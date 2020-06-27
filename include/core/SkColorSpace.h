@@ -214,7 +214,7 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    *  If both are null, we return true.  If one is null and the other is not, we return false.
    *  If both are non-null, we do a deeper compare.
    */
-  static bool Equals(const SkColorSpace*, const SkColorSpace*);
+  static bool Equals(const SkColorSpace*, const SkColorSpace*) noexcept;
 
   void transferFn(float gabcdef[7]) const;  // DEPRECATED: Remove when webview usage is gone
   void transferFn(skcms_TransferFunction* fn) const;

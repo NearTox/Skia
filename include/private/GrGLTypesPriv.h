@@ -25,12 +25,12 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
 
   // This initializes the params to have an expired timestamp. They'll be considered invalid the
   // first time the texture is used unless set() is called.
-  GrGLTextureParameters() = default;
+  GrGLTextureParameters() noexcept = default;
 
   // This is texture parameter state that is overridden when a non-zero sampler object is bound.
   struct SamplerOverriddenState {
-    SamplerOverriddenState();
-    void invalidate();
+    SamplerOverriddenState() noexcept;
+    void invalidate() noexcept;
 
     GrGLenum fMinFilter;
     GrGLenum fMagFilter;
@@ -45,15 +45,15 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
 
   // Texture parameter state that is not overridden by a bound sampler object.
   struct NonsamplerState {
-    NonsamplerState();
-    void invalidate();
+    NonsamplerState() noexcept;
+    void invalidate() noexcept;
 
     uint32_t fSwizzleKey;
     GrGLint fBaseMipMapLevel;
     GrGLint fMaxMipMapLevel;
   };
 
-  void invalidate();
+  void invalidate() noexcept;
 
   ResetTimestamp resetTimestamp() const noexcept { return fResetTimestamp; }
   const SamplerOverriddenState& samplerOverriddenState() const noexcept {
@@ -85,8 +85,8 @@ class GrGLBackendTextureInfo {
   GrGLTextureParameters* parameters() const noexcept { return fParams; }
   sk_sp<GrGLTextureParameters> refParameters() const noexcept { return sk_ref_sp(fParams); }
 
-  void cleanup();
-  void assign(const GrGLBackendTextureInfo&, bool thisIsValid);
+  void cleanup() noexcept;
+  void assign(const GrGLBackendTextureInfo&, bool thisIsValid) noexcept;
 
  private:
   GrGLTextureInfo fInfo;

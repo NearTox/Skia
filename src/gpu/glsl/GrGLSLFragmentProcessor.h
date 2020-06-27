@@ -22,7 +22,7 @@ class GrGLSLFPFragmentBuilder;
 
 class GrGLSLFragmentProcessor {
  public:
-  GrGLSLFragmentProcessor() {}
+  GrGLSLFragmentProcessor() noexcept = default;
 
   virtual ~GrGLSLFragmentProcessor() {
     for (int i = 0; i < fChildProcessors.count(); ++i) {
@@ -43,7 +43,7 @@ class GrGLSLFragmentProcessor {
   template <typename T, int (GrFragmentProcessor::*COUNT)() const>
   class BuilderInputProvider {
    public:
-    BuilderInputProvider(const GrFragmentProcessor* fp, const T* ts) : fFP(fp), fTs(ts) {}
+    BuilderInputProvider(const GrFragmentProcessor* fp, const T* ts) noexcept : fFP(fp), fTs(ts) {}
 
     const T& operator[](int i) const {
       SkASSERT(i >= 0 && i < (fFP->*COUNT)());
@@ -104,7 +104,7 @@ class GrGLSLFragmentProcessor {
         GrGLSLFPFragmentBuilder* fragBuilder, GrGLSLUniformHandler* uniformHandler,
         const GrShaderCaps* caps, const GrFragmentProcessor& fp, const char* outputColor,
         const char* inputColor, const TransformedCoordVars& transformedCoordVars,
-        const TextureSamplers& textureSamplers)
+        const TextureSamplers& textureSamplers) noexcept
         : fFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),
@@ -140,6 +140,11 @@ class GrGLSLFragmentProcessor {
     return this->invokeChild(childIndex, nullptr, parentArgs, skslCoords);
   }
 
+  inline SkString invokeChildWithMatrix(
+      int childIndex, EmitArgs& parentArgs, SkSL::String skslMatrix) {
+    return this->invokeChildWithMatrix(childIndex, nullptr, parentArgs, skslMatrix);
+  }
+
   /** Invokes a child proc in its own scope. Pass in the parent's EmitArgs and invokeChild will
    *  automatically extract the coords and samplers of that child and pass them on to the child's
    *  emitCode(). Also, any uniforms or functions emitted by the child will have their names
@@ -151,6 +156,12 @@ class GrGLSLFragmentProcessor {
       int childIndex, const char* inputColor, EmitArgs& parentArgs, SkSL::String skslCoords = "");
 
   /**
+   * As invokeChild, but transforms the coordinates according to the provided matrix. The matrix
+   * must be a snippet of SkSL code which evaluates to a float3x3.
+   */
+  SkString invokeChildWithMatrix(
+      int childIndex, const char* inputColor, EmitArgs& parentArgs, SkSL::String skslMatrix);
+  /**
    * Pre-order traversal of a GLSLFP hierarchy, or of multiple trees with roots in an array of
    * GLSLFPS. If initialized with an array color followed by coverage processors installed in a
    * program thenthe iteration order will agree with a GrFragmentProcessor::Iter initialized with
@@ -158,10 +169,10 @@ class GrGLSLFragmentProcessor {
    */
   class Iter {
    public:
-    Iter(std::unique_ptr<GrGLSLFragmentProcessor> fps[], int cnt);
+    Iter(std::unique_ptr<GrGLSLFragmentProcessor> fps[], int cnt) noexcept;
 
-    GrGLSLFragmentProcessor& operator*() const;
-    GrGLSLFragmentProcessor* operator->() const;
+    GrGLSLFragmentProcessor& operator*() const noexcept;
+    GrGLSLFragmentProcessor* operator->() const noexcept;
     Iter& operator++();
     operator bool() const noexcept { return !fFPStack.empty(); }
 

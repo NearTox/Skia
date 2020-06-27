@@ -23,7 +23,7 @@
 
 class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
  public:
-  GrGLDistanceFieldA8TextGeoProc() = default;
+  GrGLDistanceFieldA8TextGeoProc() noexcept = default;
 
   void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
     const GrDistanceFieldA8TextGeoProc& dfTexEffect = args.fGP.cast<GrDistanceFieldA8TextGeoProc>();
@@ -38,13 +38,14 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
 
     const char* atlasDimensionsInvName;
     fAtlasDimensionsInvUniform = uniformHandler->addUniform(
-        kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv", &atlasDimensionsInvName);
+        nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv",
+        &atlasDimensionsInvName);
 #ifdef SK_GAMMA_APPLY_TO_A8
     // adjust based on gamma
     const char* distanceAdjustUniName = nullptr;
     // width, height, 1/(3*width)
     fDistanceAdjustUni = uniformHandler->addUniform(
-        kFragment_GrShaderFlag, kHalf_GrSLType, "DistanceAdjust", &distanceAdjustUniName);
+        nullptr, kFragment_GrShaderFlag, kHalf_GrSLType, "DistanceAdjust", &distanceAdjustUniName);
 #endif
 
     // Setup pass through color
@@ -322,7 +323,8 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
 
     const char* atlasDimensionsInvName;
     fAtlasDimensionsInvUniform = uniformHandler->addUniform(
-        kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv", &atlasDimensionsInvName);
+        nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv",
+        &atlasDimensionsInvName);
 
     GrGLSLVarying uv(kFloat2_GrSLType);
     GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;
@@ -587,7 +589,8 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
 
     const char* atlasDimensionsInvName;
     fAtlasDimensionsInvUniform = uniformHandler->addUniform(
-        kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv", &atlasDimensionsInvName);
+        nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv",
+        &atlasDimensionsInvName);
 
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
 
@@ -684,7 +687,7 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
     // adjust width based on gamma
     const char* distanceAdjustUniName = nullptr;
     fDistanceAdjustUni = uniformHandler->addUniform(
-        kFragment_GrShaderFlag, kHalf3_GrSLType, "DistanceAdjust", &distanceAdjustUniName);
+        nullptr, kFragment_GrShaderFlag, kHalf3_GrSLType, "DistanceAdjust", &distanceAdjustUniName);
     fragBuilder->codeAppendf("distance -= %s;", distanceAdjustUniName);
 
     // To be strictly correct, we should compute the anti-aliasing factor separately

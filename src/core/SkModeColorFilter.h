@@ -25,10 +25,10 @@ class SkModeColorFilter : public SkColorFilter {
 #endif
 
  protected:
-  SkModeColorFilter(SkColor color, SkBlendMode mode);
+  SkModeColorFilter(SkColor color, SkBlendMode mode) noexcept;
 
-  void flatten(SkWriteBuffer&) const override;
-  bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
+  bool onAsAColorMode(SkColor*, SkBlendMode*) const noexcept override;
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
   skvm::Color onProgram(

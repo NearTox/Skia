@@ -41,14 +41,14 @@ class SK_API SkRRect {
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect(const SkRRect& rrect) = default;
+  SkRRect(const SkRRect& rrect) noexcept = default;
 
   /** Copies rrect bounds and corner radii.
 
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect& operator=(const SkRRect& rrect) = default;
+  SkRRect& operator=(const SkRRect& rrect) noexcept = default;
 
   /** \enum SkRRect::Type
       Type describes possible specializations of SkRRect. Each Type is
@@ -107,7 +107,7 @@ class SK_API SkRRect {
   /** Sets bounds to zero width and height at (0, 0), the origin. Sets
       corner radii to zero and sets type to kEmpty_Type.
   */
-  constexpr void setEmpty() noexcept { *this = SkRRect(); }
+  void setEmpty() noexcept { *this = SkRRect(); }
 
   /** Sets bounds to sorted rect, and sets corner radii to zero.
       If set bounds has width and height, and sets type to kRect_Type;
@@ -250,7 +250,7 @@ class SK_API SkRRect {
 
       example: https://fiddle.skia.org/c/@RRect_setRectRadii
   */
-  void setRectRadii(const SkRect& rect, const SkVector radii[4]);
+  void setRectRadii(const SkRect& rect, const SkVector radii[4]) noexcept;
 
   /** \enum SkRRect::Corner
       The radii are stored: top-left, top-right, bottom-right, bottom-left.
@@ -329,7 +329,7 @@ class SK_API SkRRect {
 
       example: https://fiddle.skia.org/c/@RRect_inset
   */
-  void inset(SkScalar dx, SkScalar dy, SkRRect* dst) const;
+  void inset(SkScalar dx, SkScalar dy, SkRRect* dst) const noexcept;
 
   /** Insets bounds by dx and dy, and adjusts radii by dx and dy. dx and dy may be
       positive, negative, or zero.
@@ -345,7 +345,7 @@ class SK_API SkRRect {
       @param dx  added to rect().fLeft, and subtracted from rect().fRight
       @param dy  added to rect().fTop, and subtracted from rect().fBottom
   */
-  void inset(SkScalar dx, SkScalar dy) { this->inset(dx, dy, this); }
+  void inset(SkScalar dx, SkScalar dy) noexcept { this->inset(dx, dy, this); }
 
   /** Outsets dst bounds by dx and dy, and adjusts radii by dx and dy. dx and dy may be
       positive, negative, or zero.
@@ -362,7 +362,7 @@ class SK_API SkRRect {
       @param dy   subtracted from rect().fTop, and added to rect().fBottom
       @param dst  outset bounds and radii
   */
-  void outset(SkScalar dx, SkScalar dy, SkRRect* dst) const { this->inset(-dx, -dy, dst); }
+  void outset(SkScalar dx, SkScalar dy, SkRRect* dst) const noexcept { this->inset(-dx, -dy, dst); }
 
   /** Outsets bounds by dx and dy, and adjusts radii by dx and dy. dx and dy may be
       positive, negative, or zero.
@@ -378,7 +378,7 @@ class SK_API SkRRect {
       @param dx  subtracted from rect().fLeft, and added to rect().fRight
       @param dy  subtracted from rect().fTop, and added to rect().fBottom
   */
-  void outset(SkScalar dx, SkScalar dy) { this->inset(-dx, -dy, this); }
+  void outset(SkScalar dx, SkScalar dy) noexcept { this->inset(-dx, -dy, this); }
 
   /** Translates SkRRect by (dx, dy).
 
@@ -440,7 +440,7 @@ class SK_API SkRRect {
 
       example: https://fiddle.skia.org/c/@RRect_readFromMemory
   */
-  size_t readFromMemory(const void* buffer, size_t length);
+  size_t readFromMemory(const void* buffer, size_t length) noexcept;
 
   /** Transforms by SkRRect by matrix, storing result in dst.
       Returns true if SkRRect transformed can be represented by another SkRRect.
@@ -494,7 +494,8 @@ class SK_API SkRRect {
 
   void computeType() noexcept;
   bool checkCornerContainment(SkScalar x, SkScalar y) const noexcept;
-  void scaleRadii(const SkRect& rect) noexcept;
+  // Returns true if the radii had to be scaled to fit rect
+  bool scaleRadii() noexcept;
 
   SkRect fRect = SkRect::MakeEmpty();
   // Radii order is UL, UR, LR, LL. Use Corner enum to index into fRadii[]

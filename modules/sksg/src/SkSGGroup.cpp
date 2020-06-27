@@ -82,7 +82,7 @@ SkRect Group::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   fRequiresIsolation = false;
 
   for (size_t i = 0; i < fChildren.size(); ++i) {
-    const auto child_bounds = fChildren[i]->revalidate(ic, ctm);
+    const auto& child_bounds = fChildren[i]->revalidate(ic, ctm);
 
     // If any of the child nodes overlap, group effects require layer isolation.
     if (!fRequiresIsolation && i > 0 && child_bounds.intersects(bounds)) {

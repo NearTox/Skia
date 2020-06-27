@@ -14,13 +14,13 @@ namespace sksg {
 
 Plane::Plane() noexcept = default;
 
-void Plane::onClip(SkCanvas*, bool) const {}
+void Plane::onClip(SkCanvas*, bool) const noexcept {}
 
 void Plane::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawPaint(paint); }
 
-bool Plane::onContains(const SkPoint&) const { return true; }
+bool Plane::onContains(const SkPoint&) const noexcept { return true; }
 
-SkRect Plane::onRevalidate(InvalidationController*, const SkMatrix&) {
+SkRect Plane::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   SkASSERT(this->hasInval());
 
   return SkRect::MakeLTRB(SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax);

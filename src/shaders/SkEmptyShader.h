@@ -18,7 +18,7 @@
  */
 class SkEmptyShader : public SkShaderBase {
  public:
-  SkEmptyShader() {}
+  SkEmptyShader() noexcept = default;
 
  protected:
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT

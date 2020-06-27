@@ -18,6 +18,8 @@
 #  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/GrGpu.h"
 #  include "src/gpu/GrMemoryPool.h"
+#  include "src/gpu/GrOnFlushResourceProvider.h"
+#  include "src/gpu/GrOpFlushState.h"
 #  include "src/gpu/GrRenderTargetContext.h"
 #  include "src/gpu/GrRenderTargetContextPriv.h"
 #  include "src/gpu/GrResourceProvider.h"
@@ -100,7 +102,7 @@ class CCPRGeometryView::DrawCoverageCountOp : public GrDrawOp {
     return GrProcessorSet::EmptySetAnalysis();
   }
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;

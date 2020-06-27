@@ -22,23 +22,23 @@ class SkColorTable : public SkRefCnt {
  public:
   /** Copy up to 256 colors into a new SkColorTable.
    */
-  SkColorTable(const SkPMColor colors[], int count);
+  SkColorTable(const SkPMColor colors[], int count) noexcept;
   ~SkColorTable() override;
 
   /** Returns the number of colors in the table.
    */
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   /** Returns the specified color from the table. In the debug build, this asserts that
    *  the index is in range (0 <= index < count).
    */
-  SkPMColor operator[](int index) const {
+  SkPMColor operator[](int index) const noexcept {
     SkASSERT(fColors != nullptr && (unsigned)index < (unsigned)fCount);
     return fColors[index];
   }
 
   /** Return the array of colors for reading. */
-  const SkPMColor* readColors() const { return fColors; }
+  const SkPMColor* readColors() const noexcept { return fColors; }
 
  private:
   SkPMColor* fColors;

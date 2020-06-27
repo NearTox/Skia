@@ -20,14 +20,14 @@ class GrAARectEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(GrClipEdgeType edgeType, SkRect rect) {
     return std::unique_ptr<GrFragmentProcessor>(new GrAARectEffect(edgeType, rect));
   }
-  GrAARectEffect(const GrAARectEffect& src);
+  GrAARectEffect(const GrAARectEffect& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "AARectEffect"; }
+  const char* name() const noexcept override { return "AARectEffect"; }
   GrClipEdgeType edgeType;
   SkRect rect;
 
  private:
-  GrAARectEffect(GrClipEdgeType edgeType, SkRect rect)
+  GrAARectEffect(GrClipEdgeType edgeType, SkRect rect) noexcept
       : INHERITED(
             kGrAARectEffect_ClassID,
             (OptimizationFlags)kCompatibleWithCoverageAsAlpha_OptimizationFlag),
@@ -35,7 +35,7 @@ class GrAARectEffect : public GrFragmentProcessor {
         rect(rect) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

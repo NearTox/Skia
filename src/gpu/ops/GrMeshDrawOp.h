@@ -28,7 +28,7 @@ class GrMeshDrawOp : public GrDrawOp {
   /** Abstract interface that represents a destination for a GrMeshDrawOp. */
   class Target;
 
-  static bool CanUpgradeAAOnMerge(GrAAType aa1, GrAAType aa2) noexcept {
+  static constexpr bool CanUpgradeAAOnMerge(GrAAType aa1, GrAAType aa2) noexcept {
     return (aa1 == GrAAType::kNone && aa2 == GrAAType::kCoverage) ||
            (aa1 == GrAAType::kCoverage && aa2 == GrAAType::kNone);
   }
@@ -37,9 +37,9 @@ class GrMeshDrawOp : public GrDrawOp {
   GrMeshDrawOp(uint32_t classID);
 
   void createProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
-    this->onCreateProgramInfo(caps, arena, outputView, std::move(appliedClip), dstProxyView);
+    this->onCreateProgramInfo(caps, arena, writeView, std::move(appliedClip), dstProxyView);
   }
 
   void createProgramInfo(Target* target);
@@ -89,7 +89,7 @@ class GrMeshDrawOp : public GrDrawOp {
   };
 
   static bool CombinedQuadCountWillOverflow(
-      GrAAType aaType, bool willBeUpgradedToAA, int combinedQuadCount) {
+      GrAAType aaType, bool willBeUpgradedToAA, int combinedQuadCount) noexcept {
     bool willBeAA = (aaType == GrAAType::kCoverage) || willBeUpgradedToAA;
 
     return combinedQuadCount > (willBeAA ? GrResourceProvider::MaxNumAAQuads()
@@ -97,7 +97,7 @@ class GrMeshDrawOp : public GrDrawOp {
   }
 
   virtual void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&);
 
  private:
@@ -105,13 +105,13 @@ class GrMeshDrawOp : public GrDrawOp {
   // This method is responsible for creating all the programInfos required
   // by this op.
   virtual void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) = 0;
 
   void onPrePrepare(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) final {
-    this->onPrePrepareDraws(context, outputView, clip, dstProxyView);
+    this->onPrePrepareDraws(context, writeView, clip, dstProxyView);
   }
   void onPrepare(GrOpFlushState* state) final;
 
@@ -121,7 +121,7 @@ class GrMeshDrawOp : public GrDrawOp {
 
 class GrMeshDrawOp::Target {
  public:
-  virtual ~Target() {}
+  virtual ~Target() = default;
 
   /** Adds a draw of a mesh. 'primProcProxies' must have
    * GrPrimitiveProcessor::numTextureSamplers() entries. Can be null if no samplers.
@@ -174,6 +174,20 @@ class GrMeshDrawOp::Target {
       int minIndexCount, int fallbackIndexCount, sk_sp<const GrBuffer>*, int* startIndex,
       int* actualIndexCount) = 0;
 
+  /**
+   * Makes space for elements in a draw-indirect buffer. Upon success, the returned pointer is a
+   * CPU mapping where the data should be written.
+   */
+  virtual GrDrawIndirectCommand* makeDrawIndirectSpace(
+      int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offsetInBytes) = 0;
+
+  /**
+   * Makes space for elements in a draw-indexed-indirect buffer. Upon success, the returned
+   * pointer is a CPU mapping where the data should be written.
+   */
+  virtual GrDrawIndexedIndirectCommand* makeDrawIndexedIndirectSpace(
+      int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offsetInBytes) = 0;
+
   /** Helpers for ops which over-allocate and then return excess data to the pool. */
   virtual void putBackIndices(int indices) = 0;
   virtual void putBackVertices(int vertices, size_t vertexStride) = 0;
@@ -185,7 +199,7 @@ class GrMeshDrawOp::Target {
   }
 
   virtual GrRenderTargetProxy* proxy() const = 0;
-  virtual const GrSurfaceProxyView* outputView() const = 0;
+  virtual const GrSurfaceProxyView* writeView() const = 0;
 
   virtual const GrAppliedClip* appliedClip() const = 0;
   virtual GrAppliedClip detachAppliedClip() = 0;
@@ -195,7 +209,7 @@ class GrMeshDrawOp::Target {
   virtual GrResourceProvider* resourceProvider() const = 0;
   uint32_t contextUniqueID() const { return this->resourceProvider()->contextUniqueID(); }
 
-  virtual GrStrikeCache* glyphCache() const = 0;
+  virtual GrStrikeCache* strikeCache() const = 0;
   virtual GrAtlasManager* atlasManager() const = 0;
 
   // This should be called during onPrepare of a GrOp. The caller should add any proxies to the

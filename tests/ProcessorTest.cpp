@@ -63,12 +63,12 @@ class TestOp : public GrMeshDrawOp {
 
   GrProgramInfo* programInfo() override { return nullptr; }
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) override {
     return;
   }
   void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override {
     return;
   }

@@ -19,7 +19,7 @@
 
 class AutoAAClipValidate {
  public:
-  AutoAAClipValidate(const SkAAClip& clip) : fClip(clip) { fClip.validate(); }
+  AutoAAClipValidate(const SkAAClip& clip) noexcept : fClip(clip) { fClip.validate(); }
   ~AutoAAClipValidate() { fClip.validate(); }
 
  private:
@@ -42,7 +42,7 @@ static inline bool x_in_rect(int x, const SkIRect& rect) {
 }
 #endif
 
-static inline bool y_in_rect(int y, const SkIRect& rect) {
+static inline bool y_in_rect(int y, const SkIRect& rect) noexcept {
   return (unsigned)(y - rect.fTop) < (unsigned)rect.height();
 }
 
@@ -60,12 +60,14 @@ struct SkAAClip::RunHead {
   int32_t fRowCount;
   size_t fDataSize;
 
-  YOffset* yoffsets() { return (YOffset*)((char*)this + sizeof(RunHead)); }
-  const YOffset* yoffsets() const { return (const YOffset*)((const char*)this + sizeof(RunHead)); }
-  uint8_t* data() { return (uint8_t*)(this->yoffsets() + fRowCount); }
-  const uint8_t* data() const { return (const uint8_t*)(this->yoffsets() + fRowCount); }
+  YOffset* yoffsets() noexcept { return (YOffset*)((char*)this + sizeof(RunHead)); }
+  const YOffset* yoffsets() const noexcept {
+    return (const YOffset*)((const char*)this + sizeof(RunHead));
+  }
+  uint8_t* data() noexcept { return (uint8_t*)(this->yoffsets() + fRowCount); }
+  const uint8_t* data() const noexcept { return (const uint8_t*)(this->yoffsets() + fRowCount); }
 
-  static RunHead* Alloc(int rowCount, size_t dataSize) {
+  static RunHead* Alloc(int rowCount, size_t dataSize) noexcept {
     size_t size = sizeof(RunHead) + rowCount * sizeof(YOffset) + dataSize;
     RunHead* head = (RunHead*)sk_malloc_throw(size);
     head->fRefCnt.store(1);
@@ -74,7 +76,7 @@ struct SkAAClip::RunHead {
     return head;
   }
 
-  static int ComputeRowSizeForWidth(int width) {
+  static constexpr int ComputeRowSizeForWidth(int width) noexcept {
     // 2 bytes per segment, where each segment can store up to 255 for count
     int segments = 0;
     while (width > 0) {
@@ -85,7 +87,7 @@ struct SkAAClip::RunHead {
     return segments * 2;  // each segment is row[0] + row[1] (n + alpha)
   }
 
-  static RunHead* AllocRect(const SkIRect& bounds) {
+  static RunHead* AllocRect(const SkIRect& bounds) noexcept {
     SkASSERT(!bounds.isEmpty());
     int width = bounds.width();
     size_t rowSize = ComputeRowSizeForWidth(width);
@@ -107,13 +109,13 @@ struct SkAAClip::RunHead {
 
 class SkAAClip::Iter {
  public:
-  Iter(const SkAAClip&);
+  Iter(const SkAAClip&) noexcept;
 
-  bool done() const { return fDone; }
-  int top() const { return fTop; }
-  int bottom() const { return fBottom; }
-  const uint8_t* data() const { return fData; }
-  void next();
+  bool done() const noexcept { return fDone; }
+  int top() const noexcept { return fTop; }
+  int bottom() const noexcept { return fBottom; }
+  const uint8_t* data() const noexcept { return fData; }
+  void next() noexcept;
 
  private:
   const YOffset* fCurrYOff;
@@ -124,7 +126,7 @@ class SkAAClip::Iter {
   bool fDone;
 };
 
-SkAAClip::Iter::Iter(const SkAAClip& clip) {
+SkAAClip::Iter::Iter(const SkAAClip& clip) noexcept {
   if (clip.isEmpty()) {
     fDone = true;
     fTop = fBottom = clip.fBounds.fBottom;
@@ -145,7 +147,7 @@ SkAAClip::Iter::Iter(const SkAAClip& clip) {
   fDone = false;
 }
 
-void SkAAClip::Iter::next() {
+void SkAAClip::Iter::next() noexcept {
   if (!fDone) {
     const YOffset* prev = fCurrYOff;
     const YOffset* curr = prev + 1;
@@ -394,8 +396,8 @@ bool SkAAClip::trimLeftRight() {
     uint8_t* row = base + yoff->fOffset;
     SkDEBUGCODE((void)compute_row_length(row, width);) yoff->fOffset +=
         trim_row_left_right(row, width, leftZeros, riteZeros);
-    SkDEBUGCODE((void)compute_row_length(base + yoff->fOffset, width - leftZeros - riteZeros);)
-        yoff += 1;
+    SkDEBUGCODE((void)compute_row_length(base + yoff->fOffset, width - leftZeros - riteZeros));
+    yoff += 1;
   }
   return true;
 }
@@ -518,7 +520,7 @@ bool SkAAClip::trimBounds() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkAAClip::freeRuns() {
+void SkAAClip::freeRuns() noexcept {
   if (fRunHead) {
     SkASSERT(fRunHead->fRefCnt.load() >= 1);
     if (1 == fRunHead->fRefCnt--) {
@@ -527,20 +529,20 @@ void SkAAClip::freeRuns() {
   }
 }
 
-SkAAClip::SkAAClip() {
+SkAAClip::SkAAClip() noexcept {
   fBounds.setEmpty();
   fRunHead = nullptr;
 }
 
-SkAAClip::SkAAClip(const SkAAClip& src) {
-  SkDEBUGCODE(fBounds.setEmpty();)  // need this for validate
-      fRunHead = nullptr;
+SkAAClip::SkAAClip(const SkAAClip& src) noexcept {
+  SkDEBUGCODE(fBounds.setEmpty());  // need this for validate
+  fRunHead = nullptr;
   *this = src;
 }
 
 SkAAClip::~SkAAClip() { this->freeRuns(); }
 
-SkAAClip& SkAAClip::operator=(const SkAAClip& src) {
+SkAAClip& SkAAClip::operator=(const SkAAClip& src) noexcept {
   AUTO_AACLIP_VALIDATE(*this);
   src.validate();
 
@@ -555,7 +557,7 @@ SkAAClip& SkAAClip::operator=(const SkAAClip& src) {
   return *this;
 }
 
-bool operator==(const SkAAClip& a, const SkAAClip& b) {
+bool operator==(const SkAAClip& a, const SkAAClip& b) noexcept {
   a.validate();
   b.validate();
 
@@ -583,7 +585,7 @@ bool operator==(const SkAAClip& a, const SkAAClip& b) {
          !memcmp(ah->data(), bh->data(), ah->fDataSize);
 }
 
-void SkAAClip::swap(SkAAClip& other) {
+void SkAAClip::swap(SkAAClip& other) noexcept {
   AUTO_AACLIP_VALIDATE(*this);
   other.validate();
 
@@ -592,19 +594,19 @@ void SkAAClip::swap(SkAAClip& other) {
   swap(fRunHead, other.fRunHead);
 }
 
-bool SkAAClip::set(const SkAAClip& src) {
+bool SkAAClip::set(const SkAAClip& src) noexcept {
   *this = src;
   return !this->isEmpty();
 }
 
-bool SkAAClip::setEmpty() {
+bool SkAAClip::setEmpty() noexcept {
   this->freeRuns();
   fBounds.setEmpty();
   fRunHead = nullptr;
   return false;
 }
 
-bool SkAAClip::setRect(const SkIRect& bounds) {
+bool SkAAClip::setRect(const SkIRect& bounds) noexcept {
   if (bounds.isEmpty()) {
     return this->setEmpty();
   }
@@ -626,7 +628,7 @@ bool SkAAClip::setRect(const SkIRect& bounds) {
 #endif
 }
 
-bool SkAAClip::isRect() const {
+bool SkAAClip::isRect() const noexcept {
   if (this->isEmpty()) {
     return false;
   }
@@ -668,7 +670,7 @@ bool SkAAClip::setRect(const SkRect& r, bool doAA) {
   return this->setPath(path, nullptr, doAA);
 }
 
-static void append_run(SkTDArray<uint8_t>& array, uint8_t value, int count) {
+static void append_run(SkTDArray<uint8_t>& array, uint8_t value, int count) noexcept {
   SkASSERT(count >= 0);
   while (count > 0) {
     int n = count;
@@ -859,7 +861,7 @@ class SkAAClip::Builder {
   int fMinY;
 
  public:
-  Builder(const SkIRect& bounds) : fBounds(bounds) {
+  Builder(const SkIRect& bounds) noexcept : fBounds(bounds) {
     fPrevY = -1;
     fWidth = bounds.width();
     fCurrRow = nullptr;
@@ -875,7 +877,7 @@ class SkAAClip::Builder {
     }
   }
 
-  const SkIRect& getBounds() const { return fBounds; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
   void addRun(int x, int y, U8CPU alpha, int count) {
     SkASSERT(count > 0);
@@ -1071,10 +1073,10 @@ class SkAAClip::Builder {
   }
 
   // only called by BuilderBlitter
-  void setMinY(int y) { fMinY = y; }
+  void setMinY(int y) noexcept { fMinY = y; }
 
  private:
-  void flushRowH(Row* row) {
+  void flushRowH(Row* row) noexcept {
     // flush current row if needed
     if (row->fWidth < fWidth) {
       AppendRun(*row->fData, 0, fWidth - row->fWidth);
@@ -1118,7 +1120,7 @@ class SkAAClip::Builder {
     return next;
   }
 
-  static void AppendRun(SkTDArray<uint8_t>& data, U8CPU alpha, int count) {
+  static void AppendRun(SkTDArray<uint8_t>& data, U8CPU alpha, int count) noexcept {
     do {
       int n = count;
       if (n > 255) {
@@ -1153,7 +1155,7 @@ class SkAAClip::BuilderBlitter : public SkBlitter {
   }
 
  public:
-  BuilderBlitter(Builder* builder) {
+  BuilderBlitter(Builder* builder) noexcept {
     fBuilder = builder;
     fLeft = builder->getBounds().fLeft;
     fRight = builder->getBounds().fRight;
@@ -1161,7 +1163,7 @@ class SkAAClip::BuilderBlitter : public SkBlitter {
     fLastY = -SK_MaxS32;  // sentinel
   }
 
-  void finish() {
+  void finish() noexcept {
     if (fMinY < SK_MaxS32) {
       fBuilder->setMinY(fMinY);
     }
@@ -1203,9 +1205,9 @@ class SkAAClip::BuilderBlitter : public SkBlitter {
     fLastY = y + height - 1;
   }
 
-  void blitMask(const SkMask&, const SkIRect& clip) override { unexpected(); }
+  void blitMask(const SkMask&, const SkIRect& clip) noexcept override { unexpected(); }
 
-  const SkPixmap* justAnOpaqueColor(uint32_t*) override { return nullptr; }
+  const SkPixmap* justAnOpaqueColor(uint32_t*) noexcept override { return nullptr; }
 
   void blitH(int x, int y, int width) override {
     this->recordMinY(y);
@@ -1267,13 +1269,13 @@ class SkAAClip::BuilderBlitter : public SkBlitter {
    *  the builder, during its finish, to trip its bounds down to the "real"
    *  top.
    */
-  void recordMinY(int y) {
+  void recordMinY(int y) noexcept {
     if (y < fMinY) {
       fMinY = y;
     }
   }
 
-  void unexpected() { SK_ABORT("---- did not expect to get called here"); }
+  void unexpected() noexcept { SK_ABORT("---- did not expect to get called here"); }
 };
 
 bool SkAAClip::setPath(const SkPath& path, const SkRegion* clip, bool doAA) {
@@ -1327,27 +1329,27 @@ typedef void (*RowProc)(
 
 typedef U8CPU (*AlphaProc)(U8CPU alphaA, U8CPU alphaB);
 
-static U8CPU sectAlphaProc(U8CPU alphaA, U8CPU alphaB) {
+static U8CPU sectAlphaProc(U8CPU alphaA, U8CPU alphaB) noexcept {
   // Multiply
   return SkMulDiv255Round(alphaA, alphaB);
 }
 
-static U8CPU unionAlphaProc(U8CPU alphaA, U8CPU alphaB) {
+static U8CPU unionAlphaProc(U8CPU alphaA, U8CPU alphaB) noexcept {
   // SrcOver
   return alphaA + alphaB - SkMulDiv255Round(alphaA, alphaB);
 }
 
-static U8CPU diffAlphaProc(U8CPU alphaA, U8CPU alphaB) {
+static U8CPU diffAlphaProc(U8CPU alphaA, U8CPU alphaB) noexcept {
   // SrcOut
   return SkMulDiv255Round(alphaA, 0xFF - alphaB);
 }
 
-static U8CPU xorAlphaProc(U8CPU alphaA, U8CPU alphaB) {
+static U8CPU xorAlphaProc(U8CPU alphaA, U8CPU alphaB) noexcept {
   // XOR
   return alphaA + alphaB - 2 * SkMulDiv255Round(alphaA, alphaB);
 }
 
-static AlphaProc find_alpha_proc(SkRegion::Op op) {
+static AlphaProc find_alpha_proc(SkRegion::Op op) noexcept {
   switch (op) {
     case SkRegion::kIntersect_Op: return sectAlphaProc;
     case SkRegion::kDifference_Op: return diffAlphaProc;
@@ -1359,7 +1361,7 @@ static AlphaProc find_alpha_proc(SkRegion::Op op) {
 
 class RowIter {
  public:
-  RowIter(const uint8_t* row, const SkIRect& bounds) {
+  RowIter(const uint8_t* row, const SkIRect& bounds) noexcept {
     fRow = row;
     fLeft = bounds.fLeft;
     fBoundsRight = bounds.fRight;
@@ -1375,11 +1377,11 @@ class RowIter {
     }
   }
 
-  bool done() const { return fDone; }
-  int left() const { return fLeft; }
-  int right() const { return fRight; }
-  U8CPU alpha() const { return fAlpha; }
-  void next() {
+  bool done() const noexcept { return fDone; }
+  int left() const noexcept { return fLeft; }
+  int right() const noexcept { return fRight; }
+  U8CPU alpha() const noexcept { return fAlpha; }
+  void next() noexcept {
     if (!fDone) {
       fLeft = fRight;
       if (fRight == fBoundsRight) {
@@ -1404,7 +1406,7 @@ class RowIter {
   uint8_t fAlpha;
 };
 
-static void adjust_row(RowIter& iter, int& leftA, int& riteA, int rite) {
+static void adjust_row(RowIter& iter, int& leftA, int& riteA, int rite) noexcept {
   if (rite == riteA) {
     iter.next();
     leftA = iter.left();
@@ -1489,7 +1491,7 @@ static void operatorX(
   }
 }
 
-static void adjust_iter(SkAAClip::Iter& iter, int& topA, int& botA, int bot) {
+static void adjust_iter(SkAAClip::Iter& iter, int& topA, int& botA, int bot) noexcept {
   if (bot == botA) {
     iter.next();
     topA = botA;
@@ -1793,7 +1795,7 @@ static void expandToRuns(
 
 SkAAClipBlitter::~SkAAClipBlitter() { sk_free(fScanlineScratch); }
 
-void SkAAClipBlitter::ensureRunsAndAA() {
+void SkAAClipBlitter::ensureRunsAndAA() noexcept {
   if (nullptr == fScanlineScratch) {
     // add 1 so we can store the terminating run count of 0
     int count = fAAClipBounds.width() + 1;
@@ -1925,15 +1927,15 @@ void SkAAClipBlitter::blitRect(int x, int y, int width, int height) {
 typedef void (*MergeAAProc)(
     const void* src, int width, const uint8_t* row, int initialRowCount, void* dst);
 
-static void small_memcpy(void* dst, const void* src, size_t n) { memcpy(dst, src, n); }
+static void small_memcpy(void* dst, const void* src, size_t n) noexcept { memcpy(dst, src, n); }
 
-static void small_bzero(void* dst, size_t n) { sk_bzero(dst, n); }
+static void small_bzero(void* dst, size_t n) noexcept { sk_bzero(dst, n); }
 
-static inline uint8_t mergeOne(uint8_t value, unsigned alpha) {
+static inline uint8_t mergeOne(uint8_t value, unsigned alpha) noexcept {
   return SkMulDiv255Round(value, alpha);
 }
 
-static inline uint16_t mergeOne(uint16_t value, unsigned alpha) {
+static inline uint16_t mergeOne(uint16_t value, unsigned alpha) noexcept {
   unsigned r = SkGetPackedR16(value);
   unsigned g = SkGetPackedG16(value);
   unsigned b = SkGetPackedB16(value);
@@ -1974,7 +1976,7 @@ void mergeT(const void* inSrc, int srcN, const uint8_t* SK_RESTRICT row, int row
   }
 }
 
-static MergeAAProc find_merge_aa_proc(SkMask::Format format) {
+static MergeAAProc find_merge_aa_proc(SkMask::Format format) noexcept {
   switch (format) {
     case SkMask::kBW_Format: SkDEBUGFAIL("unsupported"); return nullptr;
     case SkMask::kA8_Format:
@@ -1984,7 +1986,7 @@ static MergeAAProc find_merge_aa_proc(SkMask::Format format) {
   }
 }
 
-static U8CPU bit2byte(int bitInAByte) {
+static U8CPU bit2byte(int bitInAByte) noexcept {
   SkASSERT(bitInAByte <= 0xFF);
   // negation turns any non-zero into 0xFFFFFF??, so we just shift down
   // some value >= 8 to get a full FF value

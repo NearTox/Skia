@@ -28,7 +28,7 @@ struct SkNx {
 
   Half fLo, fHi;
 
-  AI SkNx() = default;
+  AI SkNx() noexcept = default;
   AI SkNx(const Half& lo, const Half& hi) noexcept : fLo(lo), fHi(hi) {}
 
   AI SkNx(T v) noexcept : fLo(v), fHi(v) {}
@@ -157,7 +157,7 @@ template <typename T>
 struct SkNx<1, T> {
   T fVal;
 
-  AI SkNx() = default;
+  AI SkNx() noexcept = default;
   AI SkNx(T v) noexcept : fVal(v) {}
 
   // Android complains against unused parameters, so we guard it
@@ -429,7 +429,7 @@ typedef SkNx<4, uint32_t> Sk4u;
 #  include "include/private/SkNx_neon.h"
 #else
 
-AI static Sk4i Sk4f_round(const Sk4f& x) noexcept {
+AI static Sk4i Sk4f_round(const Sk4f& x) {
   return {
       (int)lrintf(x[0]),
       (int)lrintf(x[1]),

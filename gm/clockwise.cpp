@@ -159,23 +159,23 @@ class ClockwiseTestOp : public GrDrawOp {
   }
 
   GrProgramInfo* createProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) const {
     GrGeometryProcessor* geomProc = ClockwiseTestProcessor::Make(arena, fReadSkFragCoord);
 
     return sk_gpu_test::CreateProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, geomProc, SkBlendMode::kPlus,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc, SkBlendMode::kPlus,
         GrPrimitiveType::kTriangleStrip);
   }
 
   GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) const {
     return this->createProgramInfo(
-        &flushState->caps(), flushState->allocator(), flushState->outputView(),
+        &flushState->caps(), flushState->allocator(), flushState->writeView(),
         flushState->detachAppliedClip(), flushState->dstProxyView());
   }
 
   void onPrePrepare(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) final {
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
 
@@ -183,7 +183,7 @@ class ClockwiseTestOp : public GrDrawOp {
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
 
     fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
 
     context->priv().recordProgramInfo(fProgramInfo);
   }

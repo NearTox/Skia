@@ -69,12 +69,12 @@ class Concat final : public Transform {
 
   bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
 
-  SkMatrix asMatrix() const override {
+  SkMatrix asMatrix() const noexcept override {
     SkASSERT(!this->hasInval());
     return AsSkMatrix(fComposed);
   }
 
-  SkM44 asM44() const override {
+  SkM44 asM44() const noexcept override {
     SkASSERT(!this->hasInval());
     return AsSkM44(fComposed);
   }
@@ -112,12 +112,12 @@ class Inverse final : public Transform {
 
   bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
 
-  SkMatrix asMatrix() const override {
+  SkMatrix asMatrix() const noexcept override {
     SkASSERT(!this->hasInval());
     return AsSkMatrix(fInverted);
   }
 
-  SkM44 asM44() const override {
+  SkM44 asM44() const noexcept override {
     SkASSERT(!this->hasInval());
     return AsSkM44(fInverted);
   }
@@ -132,22 +132,22 @@ class Inverse final : public Transform {
 }  // namespace
 
 template <>
-SkMatrix Matrix<SkMatrix>::asMatrix() const {
+SkMatrix Matrix<SkMatrix>::asMatrix() const noexcept {
   return fMatrix;
 }
 
 template <>
-SkM44 Matrix<SkMatrix>::asM44() const {
+SkM44 Matrix<SkMatrix>::asM44() const noexcept {
   return SkM44(fMatrix);
 }
 
 template <>
-SkMatrix Matrix<SkM44>::asMatrix() const {
+SkMatrix Matrix<SkM44>::asMatrix() const noexcept {
   return fMatrix.asM33();
 }
 
 template <>
-SkM44 Matrix<SkM44>::asM44() const {
+SkM44 Matrix<SkM44>::asM44() const noexcept {
   return fMatrix;
 }
 
@@ -186,7 +186,7 @@ TransformEffect::~TransformEffect() { this->unobserveInval(fTransform); }
 
 void TransformEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   SkAutoCanvasRestore acr(canvas, true);
-  canvas->concat44(TransformPriv::As<SkM44>(fTransform));
+  canvas->concat(TransformPriv::As<SkM44>(fTransform));
 
   this->INHERITED::onRender(canvas, ctx);
 }

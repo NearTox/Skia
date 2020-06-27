@@ -15,6 +15,7 @@
 #include "src/core/SkMathPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDataUtils.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrGpuBuffer.h"
 #include "src/gpu/GrImageInfo.h"
@@ -32,7 +33,8 @@ const int GrResourceProvider::kMinScratchTextureSize = 16;
 
 #define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
 
-GrResourceProvider::GrResourceProvider(GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* owner)
+GrResourceProvider::GrResourceProvider(
+    GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* owner) noexcept
     : fCache(cache),
       fGpu(gpu)
 #ifdef SK_DEBUG
@@ -172,9 +174,9 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
 
 // Map 'value' to a larger multiple of 2. Values <= 'kMagicTol' will pop up to
 // the next power of 2. Those above 'kMagicTol' will only go up half the floor power of 2.
-SkISize GrResourceProvider::MakeApprox(SkISize dimensions) {
-  auto adjust = [](int value) {
-    static const int kMagicTol = 1024;
+SkISize GrResourceProvider::MakeApprox(SkISize dimensions) noexcept {
+  auto adjust = [](int value) noexcept {
+    static constexpr int kMagicTol = 1024;
 
     value = std::max(kMinScratchTextureSize, value);
 
@@ -368,13 +370,13 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createPatternedIndexBuffer(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static constexpr int kMaxNumNonAAQuads = 1 << 12;  // max possible: (1 << 14) - 1;
-static const int kVertsPerNonAAQuad = 4;
-static const int kIndicesPerNonAAQuad = 6;
+static constexpr int kVertsPerNonAAQuad = 4;
+static constexpr int kIndicesPerNonAAQuad = 6;
 
 sk_sp<const GrGpuBuffer> GrResourceProvider::createNonAAQuadIndexBuffer() {
   static_assert(kVertsPerNonAAQuad * kMaxNumNonAAQuads <= 65535);  // indices fit in a uint16_t
 
-  static const uint16_t kNonAAQuadIndexPattern[] = {0, 1, 2, 2, 1, 3};
+  static constexpr uint16_t kNonAAQuadIndexPattern[] = {0, 1, 2, 2, 1, 3};
 
   static_assert(SK_ARRAY_COUNT(kNonAAQuadIndexPattern) == kIndicesPerNonAAQuad);
 
@@ -382,20 +384,20 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createNonAAQuadIndexBuffer() {
       kNonAAQuadIndexPattern, kIndicesPerNonAAQuad, kMaxNumNonAAQuads, kVertsPerNonAAQuad, nullptr);
 }
 
-int GrResourceProvider::MaxNumNonAAQuads() { return kMaxNumNonAAQuads; }
-int GrResourceProvider::NumVertsPerNonAAQuad() { return kVertsPerNonAAQuad; }
-int GrResourceProvider::NumIndicesPerNonAAQuad() { return kIndicesPerNonAAQuad; }
+int GrResourceProvider::MaxNumNonAAQuads() noexcept { return kMaxNumNonAAQuads; }
+int GrResourceProvider::NumVertsPerNonAAQuad() noexcept { return kVertsPerNonAAQuad; }
+int GrResourceProvider::NumIndicesPerNonAAQuad() noexcept { return kIndicesPerNonAAQuad; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static constexpr int kMaxNumAAQuads = 1 << 9;  // max possible: (1 << 13) - 1;
-static const int kVertsPerAAQuad = 8;
-static const int kIndicesPerAAQuad = 30;
+static constexpr int kVertsPerAAQuad = 8;
+static constexpr int kIndicesPerAAQuad = 30;
 
 sk_sp<const GrGpuBuffer> GrResourceProvider::createAAQuadIndexBuffer() {
   static_assert(kVertsPerAAQuad * kMaxNumAAQuads <= 65535);  // indices fit in a uint16_t
 
   // clang-format off
-    static const uint16_t kAAQuadIndexPattern[] = {
+    static constexpr uint16_t kAAQuadIndexPattern[] = {
         0, 1, 2, 1, 3, 2,
         0, 4, 1, 4, 5, 1,
         0, 6, 4, 0, 2, 6,
@@ -404,15 +406,15 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createAAQuadIndexBuffer() {
     };
   // clang-format on
 
-    static_assert(SK_ARRAY_COUNT(kAAQuadIndexPattern) == kIndicesPerAAQuad);
+  static_assert(SK_ARRAY_COUNT(kAAQuadIndexPattern) == kIndicesPerAAQuad);
 
-    return this->createPatternedIndexBuffer(
-        kAAQuadIndexPattern, kIndicesPerAAQuad, kMaxNumAAQuads, kVertsPerAAQuad, nullptr);
+  return this->createPatternedIndexBuffer(
+      kAAQuadIndexPattern, kIndicesPerAAQuad, kMaxNumAAQuads, kVertsPerAAQuad, nullptr);
 }
 
-int GrResourceProvider::MaxNumAAQuads() { return kMaxNumAAQuads; }
-int GrResourceProvider::NumVertsPerAAQuad() { return kVertsPerAAQuad; }
-int GrResourceProvider::NumIndicesPerAAQuad() { return kIndicesPerAAQuad; }
+int GrResourceProvider::MaxNumAAQuads() noexcept { return kMaxNumAAQuads; }
+int GrResourceProvider::NumVertsPerAAQuad() noexcept { return kVertsPerAAQuad; }
+int GrResourceProvider::NumIndicesPerAAQuad() noexcept { return kIndicesPerAAQuad; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 sk_sp<GrPath> GrResourceProvider::createPath(const SkPath& path, const GrStyle& style) {
@@ -433,7 +435,7 @@ sk_sp<GrGpuBuffer> GrResourceProvider::createBuffer(
     return this->gpu()->createBuffer(size, intendedType, accessPattern, data);
   }
   // bin by pow2 with a reasonable min
-  static const size_t MIN_SIZE = 1 << 12;
+  static constexpr size_t MIN_SIZE = 1 << 12;
   size_t allocSize = std::max(MIN_SIZE, GrNextSizePow2(size));
 
   GrScratchKey key;

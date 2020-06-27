@@ -34,7 +34,7 @@ class GrSwizzle {
   /** 4 char null terminated string consisting only of chars 'r', 'g', 'b', 'a', '0', and '1'. */
   SkString asString() const;
 
-  constexpr char operator[](int i) const {
+  constexpr char operator[](int i) const noexcept {
     SkASSERT(i >= 0 && i < 4);
     int idx = (fKey >> (4U * i)) & 0xfU;
     return IToC(idx);

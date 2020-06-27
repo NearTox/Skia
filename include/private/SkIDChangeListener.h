@@ -23,7 +23,7 @@
  */
 class SkIDChangeListener : public SkRefCnt {
  public:
-  SkIDChangeListener();
+  SkIDChangeListener() noexcept;
 
   ~SkIDChangeListener() override;
 
@@ -41,7 +41,7 @@ class SkIDChangeListener : public SkRefCnt {
   /** Manages a list of SkIDChangeListeners. */
   class List {
    public:
-    List();
+    List() noexcept;
 
     ~List();
 

@@ -11,6 +11,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
 #include "src/core/SkArenaAlloc.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkMatrixUtils.h"
 #include "src/core/SkPicturePriv.h"
 #include "src/core/SkReadBuffer.h"
@@ -61,7 +62,7 @@ struct BitmapShaderKey : public SkResourceCache::Key {
     this->init(&gBitmapShaderKeyNamespaceLabel, MakeSharedID(shaderID), keySize);
   }
 
-  static uint64_t MakeSharedID(uint32_t shaderID) noexcept {
+  static constexpr uint64_t MakeSharedID(uint32_t shaderID) noexcept {
     constexpr uint64_t sharedID = SkSetFourByteTag('p', 's', 'd', 'r');
     return (sharedID << 32) | shaderID;
   }
@@ -76,19 +77,19 @@ struct BitmapShaderKey : public SkResourceCache::Key {
 };
 
 struct BitmapShaderRec : public SkResourceCache::Rec {
-  BitmapShaderRec(const BitmapShaderKey& key, SkShader* tileShader)
+  BitmapShaderRec(const BitmapShaderKey& key, SkShader* tileShader) noexcept
       : fKey(key), fShader(SkRef(tileShader)) {}
 
   BitmapShaderKey fKey;
   sk_sp<SkShader> fShader;
 
-  const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const override {
+  const Key& getKey() const noexcept override { return fKey; }
+  size_t bytesUsed() const noexcept override {
     // Just the record overhead -- the actual pixels are accounted by SkImage_Lazy.
     return sizeof(fKey) + sizeof(SkImageShader);
   }
-  const char* getCategory() const override { return "bitmap-shader"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return nullptr; }
+  const char* getCategory() const noexcept override { return "bitmap-shader"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override { return nullptr; }
 
   static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextShader) {
     const BitmapShaderRec& rec = static_cast<const BitmapShaderRec&>(baseRec);
@@ -191,7 +192,7 @@ sk_sp<SkShader> SkPictureShader::refBitmapShader(
       SkSize::Make(SkScalarAbs(scale.x() * fTile.width()), SkScalarAbs(scale.y() * fTile.height()));
 
   // Clamp the tile size to about 4M pixels
-  static const SkScalar kMaxTileArea = 2048 * 2048;
+  static constexpr SkScalar kMaxTileArea = 2048 * 2048;
   SkScalar tileArea = scaledSize.width() * scaledSize.height();
   if (tileArea > kMaxTileArea) {
     SkScalar clampScale = SkScalarSqrt(kMaxTileArea / tileArea);
@@ -256,7 +257,8 @@ bool SkPictureShader::onAppendStages(const SkStageRec& rec) const {
 
   // Keep bitmapShader alive by using alloc instead of stack memory
   auto& bitmapShader = *rec.fAlloc->make<sk_sp<SkShader>>();
-  bitmapShader = this->refBitmapShader(rec.fCTM, &lm, rec.fDstColorType, rec.fDstCS);
+  bitmapShader = this->refBitmapShader(
+      rec.fMatrixProvider.localToDevice(), &lm, rec.fDstColorType, rec.fDstCS);
 
   if (!bitmapShader) {
     return false;
@@ -345,13 +347,14 @@ std::unique_ptr<GrFragmentProcessor> SkPictureShader::asFragmentProcessor(
     dstColorType = kRGBA_8888_SkColorType;
   }
   sk_sp<SkShader> bitmapShader(this->refBitmapShader(
-      *args.fViewMatrix, &lm, dstColorType, args.fDstColorInfo->colorSpace(), maxTextureSize));
+      args.fMatrixProvider.localToDevice(), &lm, dstColorType, args.fDstColorInfo->colorSpace(),
+      maxTextureSize));
   if (!bitmapShader) {
     return nullptr;
   }
 
   // We want to *reset* args.fPreLocalMatrix, not compose it.
-  GrFPArgs newArgs(args.fContext, args.fViewMatrix, args.fFilterQuality, args.fDstColorInfo);
+  GrFPArgs newArgs(args.fContext, args.fMatrixProvider, args.fFilterQuality, args.fDstColorInfo);
   newArgs.fPreLocalMatrix = lm.get();
 
   return as_SB(bitmapShader)->asFragmentProcessor(newArgs);

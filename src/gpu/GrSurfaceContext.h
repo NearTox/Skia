@@ -56,14 +56,15 @@ class GrSurfaceContext {
   virtual ~GrSurfaceContext() = default;
 
   const GrColorInfo& colorInfo() const noexcept { return fColorInfo; }
-  GrImageInfo imageInfo() const { return {fColorInfo, fReadView.proxy()->dimensions()}; }
+  GrImageInfo imageInfo() const noexcept { return {fColorInfo, fReadView.proxy()->dimensions()}; }
 
   GrSurfaceOrigin origin() const noexcept { return fReadView.origin(); }
   GrSwizzle readSwizzle() const noexcept { return fReadView.swizzle(); }
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
   // make a copy (which refs the proxy) if needed.
-  GrSurfaceProxyView readSurfaceView() { return fReadView; }
+  GrSurfaceProxyView readSurfaceView() noexcept { return fReadView; }
 
+  SkISize dimensions() const noexcept { return fReadView.dimensions(); }
   int width() const noexcept { return fReadView.proxy()->width(); }
   int height() const noexcept { return fReadView.proxy()->height(); }
 
@@ -98,35 +99,35 @@ class GrSurfaceContext {
 
   GrSurfaceProxy* asSurfaceProxy() noexcept { return fReadView.proxy(); }
   const GrSurfaceProxy* asSurfaceProxy() const noexcept { return fReadView.proxy(); }
-  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() { return fReadView.refProxy(); }
+  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() noexcept { return fReadView.refProxy(); }
 
   GrTextureProxy* asTextureProxy() noexcept { return fReadView.asTextureProxy(); }
   const GrTextureProxy* asTextureProxy() const noexcept { return fReadView.asTextureProxy(); }
-  sk_sp<GrTextureProxy> asTextureProxyRef() { return fReadView.asTextureProxyRef(); }
+  sk_sp<GrTextureProxy> asTextureProxyRef() noexcept { return fReadView.asTextureProxyRef(); }
 
   GrRenderTargetProxy* asRenderTargetProxy() noexcept { return fReadView.asRenderTargetProxy(); }
   const GrRenderTargetProxy* asRenderTargetProxy() const noexcept {
     return fReadView.asRenderTargetProxy();
   }
-  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() { return fReadView.asRenderTargetProxyRef(); }
+  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() noexcept {
+    return fReadView.asRenderTargetProxyRef();
+  }
 
-  virtual GrRenderTargetContext* asRenderTargetContext() { return nullptr; }
+  virtual GrRenderTargetContext* asRenderTargetContext() noexcept { return nullptr; }
 
   GrAuditTrail* auditTrail();
 
   // Provides access to functions that aren't part of the public API.
-  GrSurfaceContextPriv surfPriv();
-  const GrSurfaceContextPriv surfPriv() const;
+  GrSurfaceContextPriv surfPriv() noexcept;
+  const GrSurfaceContextPriv surfPriv() const noexcept;
 
 #if GR_TEST_UTILS
-  bool testCopy(
-      GrSurfaceProxy* src, GrSurfaceOrigin origin, const SkIRect& srcRect,
-      const SkIPoint& dstPoint) {
-    return this->copy(src, origin, srcRect, dstPoint);
+  bool testCopy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint) {
+    return this->copy(src, srcRect, dstPoint);
   }
 
-  bool testCopy(GrSurfaceProxy* src, GrSurfaceOrigin origin) {
-    return this->copy(src, origin, SkIRect::MakeSize(src->dimensions()), SkIPoint::Make(0, 0));
+  bool testCopy(GrSurfaceProxy* src) {
+    return this->copy(src, SkIRect::MakeSize(src->dimensions()), {0, 0});
   }
 #endif
 
@@ -136,11 +137,11 @@ class GrSurfaceContext {
   GrDrawingManager* drawingManager();
   const GrDrawingManager* drawingManager() const;
 
-  SkDEBUGCODE(void validate() const;)
+  SkDEBUGCODE(void validate() const);
 
-      SkDEBUGCODE(GrSingleOwner* singleOwner();)
+  SkDEBUGCODE(GrSingleOwner* singleOwner());
 
-          GrRecordingContext* fContext;
+  GrRecordingContext* fContext;
 
   GrSurfaceProxyView fReadView;
 
@@ -166,26 +167,23 @@ class GrSurfaceContext {
  private:
   friend class GrSurfaceProxy;  // for copy
 
-  SkDEBUGCODE(virtual void onValidate() const {})
+  SkDEBUGCODE(virtual void onValidate() const {});
 
-      /**
-       * Copy 'src' into the proxy backing this context. This call will not do any draw fallback.
-       * Currently only writePixels and replaceRenderTarget call this directly. All other copies
-       * should go through GrSurfaceProxy::Copy.
-       * @param src       src of pixels
-       * @param srcRect   the subset of 'src' to copy
-       * @param dstPoint  the origin of the 'srcRect' in the destination coordinate space
-       * @return          true if the copy succeeded; false otherwise
-       *
-       * Note: Notionally, 'srcRect' is clipped to 'src's extent with 'dstPoint' being adjusted.
-       *       Then the 'srcRect' offset by 'dstPoint' is clipped against the dst's extent.
-       *       The end result is only valid src pixels and dst pixels will be touched but the copied
-       *       regions will not be shifted. The 'src' must have the same origin as the backing proxy
-       *       of fSurfaceContext.
-       */
-      bool copy(
-          GrSurfaceProxy* src, GrSurfaceOrigin origin, const SkIRect& srcRect,
-          const SkIPoint& dstPoint);
+  /**
+   * Copy 'src' into the proxy backing this context. This call will not do any draw fallback.
+   * Currently only writePixels and replaceRenderTarget call this directly. All other copies
+   * should go through GrSurfaceProxy::Copy.
+   * @param src       src of pixels
+   * @param dstPoint  the origin of the 'srcRect' in the destination coordinate space
+   * @return          true if the copy succeeded; false otherwise
+   *
+   * Note: Notionally, 'srcRect' is clipped to 'src's extent with 'dstPoint' being adjusted.
+   *       Then the 'srcRect' offset by 'dstPoint' is clipped against the dst's extent.
+   *       The end result is only valid src pixels and dst pixels will be touched but the copied
+   *       regions will not be shifted. The 'src' must have the same origin as the backing proxy
+   *       of fSurfaceContext.
+   */
+  bool copy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint);
 
   GrColorInfo fColorInfo;
 

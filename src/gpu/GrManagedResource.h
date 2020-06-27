@@ -74,7 +74,7 @@ class GrManagedResource : SkNoncopyable {
 
   /** Default construct, initializing the reference count to 1.
    */
-  GrManagedResource() : fRefCnt(1) {
+  GrManagedResource() noexcept : fRefCnt(1) {
 #ifdef SK_TRACE_MANAGED_RESOURCES
     fKey = fKeyCounter.fetch_add(+1, std::memory_order_relaxed);
     GetTrace()->add(this);
@@ -99,7 +99,7 @@ class GrManagedResource : SkNoncopyable {
   /** May return true if the caller is the only owner.
    *  Ensures that all previous owner's actions are complete.
    */
-  bool unique() const {
+  bool unique() const noexcept {
     // The acquire barrier is only really needed if we return true.  It
     // prevents code conditioned on the result of unique() from running
     // until previous owners are all totally done calling unref().
@@ -137,6 +137,13 @@ class GrManagedResource : SkNoncopyable {
   // Called every time this resource has finished its use on the GPU (typically because
   // the command buffer finished execution on the GPU.)
   virtual void notifyFinishedWithWorkOnGpu() const {}
+
+#ifdef SK_DEBUG
+  // This is used for validating in the vulkan backend when using a main command buffer and temp
+  // command buffer at the same time. We need to validate that no images in the temp command
+  // buffer have been used in the main command buffer.
+  virtual const GrManagedResource* asVkImageResource() const { return nullptr; }
+#endif
 
 #ifdef SK_DEBUG
   void validate() const { SkASSERT(this->getRefCnt() > 0); }
@@ -211,7 +218,7 @@ class GrRecycledResource : public GrManagedResource {
 */
 class GrTextureResource : public GrManagedResource {
  public:
-  GrTextureResource() {}
+  GrTextureResource() noexcept = default;
 
   ~GrTextureResource() override { SkASSERT(!fReleaseHelper); }
 
@@ -227,9 +234,9 @@ class GrTextureResource : public GrManagedResource {
    * GrTexture is purgeable.
    */
   void addIdleProc(GrTexture*, sk_sp<GrRefCntedCallback>) const;
-  int idleProcCnt() const;
-  sk_sp<GrRefCntedCallback> idleProc(int) const;
-  void resetIdleProcs() const;
+  int idleProcCnt() const noexcept;
+  sk_sp<GrRefCntedCallback> idleProc(int) const noexcept;
+  void resetIdleProcs() const noexcept;
   void removeOwningTexture() const;
 
   /**
@@ -238,13 +245,13 @@ class GrTextureResource : public GrManagedResource {
    */
   void notifyQueuedForWorkOnGpu() const override;
   void notifyFinishedWithWorkOnGpu() const override;
-  bool isQueuedForWorkOnGpu() const { return fNumOwners > 0; }
+  bool isQueuedForWorkOnGpu() const noexcept { return fNumOwners > 0; }
 
  protected:
   mutable sk_sp<GrRefCntedCallback> fReleaseHelper;
   mutable GrTexture* fOwningTexture = nullptr;
 
-  void invokeReleaseProc() const {
+  void invokeReleaseProc() const noexcept {
     if (fReleaseHelper) {
       // Depending on the ref count of fReleaseHelper this may or may not actually trigger
       // the ReleaseProc to be called.

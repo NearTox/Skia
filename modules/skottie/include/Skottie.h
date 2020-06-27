@@ -13,6 +13,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
+#include "modules/skottie/include/ExternalLayer.h"
 #include "modules/skresources/include/SkResources.h"
 
 #include <memory>
@@ -123,6 +124,12 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
     Builder& setMarkerObserver(sk_sp<MarkerObserver>);
 
     /**
+     * Register a precomp layer interceptor.
+     * This allows substituting precomp layers with custom/externally managed content.
+     */
+    Builder& setPrecompInterceptor(sk_sp<PrecompInterceptor>);
+
+    /**
      * Animation factories.
      */
     sk_sp<Animation> make(SkStream*);
@@ -137,6 +144,7 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
     sk_sp<PropertyObserver> fPropertyObserver;
     sk_sp<Logger> fLogger;
     sk_sp<MarkerObserver> fMarkerObserver;
+    sk_sp<PrecompInterceptor> fPrecompInterceptor;
     Stats fStats;
   };
 

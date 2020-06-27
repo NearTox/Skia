@@ -15,10 +15,10 @@
     additional data members or virtual methods. */
 class GrSurfaceContextPriv {
  public:
-  GrRecordingContext* getContext() { return fSurfaceContext->fContext; }
+  GrRecordingContext* getContext() noexcept { return fSurfaceContext->fContext; }
 
  private:
-  explicit GrSurfaceContextPriv(GrSurfaceContext* surfaceContext)
+  explicit GrSurfaceContextPriv(GrSurfaceContext* surfaceContext) noexcept
       : fSurfaceContext(surfaceContext) {}
 
   GrSurfaceContextPriv(const GrSurfaceContextPriv&) {}           // unimpl
@@ -33,9 +33,11 @@ class GrSurfaceContextPriv {
   friend class GrSurfaceContext;  // to construct/copy this type.
 };
 
-inline GrSurfaceContextPriv GrSurfaceContext::surfPriv() { return GrSurfaceContextPriv(this); }
+inline GrSurfaceContextPriv GrSurfaceContext::surfPriv() noexcept {
+  return GrSurfaceContextPriv(this);
+}
 
-inline const GrSurfaceContextPriv GrSurfaceContext::surfPriv() const {
+inline const GrSurfaceContextPriv GrSurfaceContext::surfPriv() const noexcept {
   return GrSurfaceContextPriv(const_cast<GrSurfaceContext*>(this));
 }
 

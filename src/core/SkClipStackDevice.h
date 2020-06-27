@@ -13,11 +13,11 @@
 
 class SkClipStackDevice : public SkBaseDevice {
  public:
-  SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
+  SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props) noexcept
       : SkBaseDevice(info, props), fClipStack(fStorage, sizeof(fStorage)) {}
 
-  SkClipStack& cs() { return fClipStack; }
-  const SkClipStack& cs() const { return fClipStack; }
+  SkClipStack& cs() noexcept { return fClipStack; }
+  const SkClipStack& cs() const noexcept { return fClipStack; }
 
  protected:
   void onSave() override;

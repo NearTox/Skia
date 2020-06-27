@@ -21,18 +21,18 @@ class SK_API SkDataTable : public SkRefCnt {
   /**
    *  Returns true if the table is empty (i.e. has no entries).
    */
-  bool isEmpty() const { return 0 == fCount; }
+  bool isEmpty() const noexcept { return 0 == fCount; }
 
   /**
    *  Return the number of entries in the table. 0 for an empty table
    */
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   /**
    *  Return the size of the index'th entry in the table. The caller must
    *  ensure that index is valid for this table.
    */
-  size_t atSize(int index) const;
+  size_t atSize(int index) const noexcept;
 
   /**
    *  Return a pointer to the data of the index'th entry in the table.
@@ -41,10 +41,10 @@ class SK_API SkDataTable : public SkRefCnt {
    *  @param size If non-null, this returns the byte size of this entry. This
    *              will be the same value that atSize(index) would return.
    */
-  const void* at(int index, size_t* size = nullptr) const;
+  const void* at(int index, size_t* size = nullptr) const noexcept;
 
   template <typename T>
-  const T* atT(int index, size_t* size = nullptr) const {
+  const T* atT(int index, size_t* size = nullptr) const noexcept {
     return reinterpret_cast<const T*>(this->at(index, size));
   }
 
@@ -104,9 +104,9 @@ class SK_API SkDataTable : public SkRefCnt {
   FreeProc fFreeProc;
   void* fFreeProcContext;
 
-  SkDataTable();
-  SkDataTable(const void* array, size_t elemSize, int count, FreeProc, void* context);
-  SkDataTable(const Dir*, int count, FreeProc, void* context);
+  SkDataTable() noexcept;
+  SkDataTable(const void* array, size_t elemSize, int count, FreeProc, void* context) noexcept;
+  SkDataTable(const Dir*, int count, FreeProc, void* context) noexcept;
   virtual ~SkDataTable();
 
   friend class SkDataTableBuilder;  // access to Dir

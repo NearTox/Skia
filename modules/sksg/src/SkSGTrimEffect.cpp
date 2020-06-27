@@ -36,7 +36,7 @@ SkPath TrimEffect::onAsPath() const { return fTrimmedPath; }
 SkRect TrimEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto childbounds = fChild->revalidate(ic, ctm);
+  const auto& childbounds = fChild->revalidate(ic, ctm);
   const auto path = fChild->asPath();
 
   if (auto trim = SkTrimPathEffect::Make(fStart, fStop, fMode)) {

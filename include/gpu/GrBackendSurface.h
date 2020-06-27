@@ -70,15 +70,15 @@ enum class GrGLFormat;
 class SK_API GrBackendFormat {
  public:
   // Creates an invalid backend format.
-  GrBackendFormat() {}
-  GrBackendFormat(const GrBackendFormat&);
+  GrBackendFormat() noexcept {}
+  GrBackendFormat(const GrBackendFormat&) noexcept;
   GrBackendFormat& operator=(const GrBackendFormat&);
 
-  static GrBackendFormat MakeGL(GrGLenum format, GrGLenum target) {
+  static GrBackendFormat MakeGL(GrGLenum format, GrGLenum target) noexcept {
     return GrBackendFormat(format, target);
   }
 
-  static GrBackendFormat MakeVk(VkFormat format) {
+  static GrBackendFormat MakeVk(VkFormat format) noexcept {
     return GrBackendFormat(format, GrVkYcbcrConversionInfo());
   }
 
@@ -98,25 +98,31 @@ class SK_API GrBackendFormat {
 
   static GrBackendFormat MakeMock(GrColorType colorType, SkImage::CompressionType compression);
 
-  bool operator==(const GrBackendFormat& that) const;
-  bool operator!=(const GrBackendFormat& that) const { return !(*this == that); }
+  bool operator==(const GrBackendFormat& that) const noexcept;
+  bool operator!=(const GrBackendFormat& that) const noexcept { return !(*this == that); }
 
   GrBackendApi backend() const noexcept { return fBackend; }
   GrTextureType textureType() const noexcept { return fTextureType; }
 
   /**
+   * Gets the channels present in the format as a bitfield of SkColorChannelFlag values.
+   * Luminance channels are reported as kGray_SkColorChannelFlag.
+   */
+  uint32_t channelMask() const;
+
+  /**
    * If the backend API is GL this gets the format as a GrGLFormat. Otherwise, returns
    * GrGLFormat::kUnknown.
    */
-  GrGLFormat asGLFormat() const;
+  GrGLFormat asGLFormat() const noexcept;
 
   /**
    * If the backend API is Vulkan this gets the format as a VkFormat and returns true. Otherwise,
    * returns false.
    */
-  bool asVkFormat(VkFormat*) const;
+  bool asVkFormat(VkFormat*) const noexcept;
 
-  const GrVkYcbcrConversionInfo* getVkYcbcrConversionInfo() const;
+  const GrVkYcbcrConversionInfo* getVkYcbcrConversionInfo() const noexcept;
 
 #  ifdef SK_DAWN
   /**
@@ -147,8 +153,8 @@ class SK_API GrBackendFormat {
    * Otherwise, if the compression type is kNone then the GrColorType will be valid. If the
    * compression type is anything other then kNone than the GrColorType will be kUnknown.
    */
-  GrColorType asMockColorType() const;
-  SkImage::CompressionType asMockCompressionType() const;
+  GrColorType asMockColorType() const noexcept;
+  SkImage::CompressionType asMockCompressionType() const noexcept;
 
   // If possible, copies the GrBackendFormat and forces the texture type to be Texture2D. If the
   // GrBackendFormat was for Vulkan and it originally had a GrVkYcbcrConversionInfo, we will
@@ -163,9 +169,9 @@ class SK_API GrBackendFormat {
 #  endif
 
  private:
-  GrBackendFormat(GrGLenum format, GrGLenum target);
+  GrBackendFormat(GrGLenum format, GrGLenum target) noexcept;
 
-  GrBackendFormat(const VkFormat vkFormat, const GrVkYcbcrConversionInfo&);
+  GrBackendFormat(const VkFormat vkFormat, const GrVkYcbcrConversionInfo&) noexcept;
 
 #  ifdef SK_DAWN
   GrBackendFormat(wgpu::TextureFormat format);
@@ -179,7 +185,7 @@ class SK_API GrBackendFormat {
   GrBackendFormat(DXGI_FORMAT dxgiFormat);
 #  endif
 
-  GrBackendFormat(GrColorType, SkImage::CompressionType);
+  GrBackendFormat(GrColorType, SkImage::CompressionType) noexcept;
 
   GrBackendApi fBackend = GrBackendApi::kMock;
   bool fValid = false;
@@ -231,7 +237,7 @@ class SK_API GrBackendTexture {
   GrBackendTexture(int width, int height, const GrDawnTextureInfo& dawnInfo);
 #  endif
 
-  GrBackendTexture(int width, int height, GrMipMapped, const GrMockTextureInfo& mockInfo);
+  GrBackendTexture(int width, int height, GrMipMapped, const GrMockTextureInfo& mockInfo) noexcept;
 
   GrBackendTexture(const GrBackendTexture& that);
 
@@ -247,7 +253,7 @@ class SK_API GrBackendTexture {
 
   // If the backend API is GL, copies a snapshot of the GrGLTextureInfo struct into the passed in
   // pointer and returns true. Otherwise returns false if the backend API is not GL.
-  bool getGLTextureInfo(GrGLTextureInfo*) const;
+  bool getGLTextureInfo(GrGLTextureInfo*) const noexcept;
 
   // Call this to indicate that the texture parameters have been modified in the GL context
   // externally to GrContext.
@@ -290,10 +296,10 @@ class SK_API GrBackendTexture {
 
   // If the backend API is Mock, copies a snapshot of the GrMockTextureInfo struct into the passed
   // in pointer and returns true. Otherwise returns false if the backend API is not Mock.
-  bool getMockTextureInfo(GrMockTextureInfo*) const;
+  bool getMockTextureInfo(GrMockTextureInfo*) const noexcept;
 
   // Returns true if we are working with protected content.
-  bool isProtected() const;
+  bool isProtected() const noexcept;
 
   // Returns true if the backend texture has been initialized.
   bool isValid() const noexcept { return fIsValid; }
@@ -311,15 +317,16 @@ class SK_API GrBackendTexture {
   friend class GrGLTexture;
   friend class GrGLGpu;  // for getGLTextureParams
   GrBackendTexture(
-      int width, int height, GrMipMapped, const GrGLTextureInfo, sk_sp<GrGLTextureParameters>);
-  sk_sp<GrGLTextureParameters> getGLTextureParams() const;
+      int width, int height, GrMipMapped, const GrGLTextureInfo,
+      sk_sp<GrGLTextureParameters>) noexcept;
+  sk_sp<GrGLTextureParameters> getGLTextureParams() const noexcept;
 #  endif
 
 #  ifdef SK_VULKAN
   friend class GrVkTexture;
   friend class GrVkGpu;  // for getGrVkImageLayout
   GrBackendTexture(
-      int width, int height, const GrVkImageInfo& vkInfo, sk_sp<GrVkImageLayout> layout);
+      int width, int height, const GrVkImageInfo& vkInfo, sk_sp<GrVkImageLayout> layout) noexcept;
   sk_sp<GrVkImageLayout> getGrVkImageLayout() const;
 #  endif
 
@@ -366,7 +373,8 @@ class SK_API GrBackendRenderTarget {
 
   // The GrGLTextureInfo must have a valid fFormat.
   GrBackendRenderTarget(
-      int width, int height, int sampleCnt, int stencilBits, const GrGLFramebufferInfo& glInfo);
+      int width, int height, int sampleCnt, int stencilBits,
+      const GrGLFramebufferInfo& glInfo) noexcept;
 
 #  ifdef SK_DAWN
   GrBackendRenderTarget(
@@ -390,7 +398,7 @@ class SK_API GrBackendRenderTarget {
 
   GrBackendRenderTarget(
       int width, int height, int sampleCnt, int stencilBits,
-      const GrMockRenderTargetInfo& mockInfo);
+      const GrMockRenderTargetInfo& mockInfo) noexcept;
 
   ~GrBackendRenderTarget();
 
@@ -407,7 +415,7 @@ class SK_API GrBackendRenderTarget {
 
   // If the backend API is GL, copies a snapshot of the GrGLFramebufferInfo struct into the passed
   // in pointer and returns true. Otherwise returns false if the backend API is not GL.
-  bool getGLFramebufferInfo(GrGLFramebufferInfo*) const;
+  bool getGLFramebufferInfo(GrGLFramebufferInfo*) const noexcept;
 
 #  ifdef SK_DAWN
   // If the backend API is Dawn, copies a snapshot of the GrDawnRenderTargetInfo struct into the
@@ -445,10 +453,10 @@ class SK_API GrBackendRenderTarget {
 
   // If the backend API is Mock, copies a snapshot of the GrMockTextureInfo struct into the passed
   // in pointer and returns true. Otherwise returns false if the backend API is not Mock.
-  bool getMockRenderTargetInfo(GrMockRenderTargetInfo*) const;
+  bool getMockRenderTargetInfo(GrMockRenderTargetInfo*) const noexcept;
 
   // Returns true if we are working with protected content.
-  bool isProtected() const;
+  bool isProtected() const noexcept;
 
   // Returns true if the backend texture has been initialized.
   bool isValid() const noexcept { return fIsValid; }
@@ -464,7 +472,7 @@ class SK_API GrBackendRenderTarget {
   friend class GrVkRenderTarget;
   GrBackendRenderTarget(
       int width, int height, int sampleCnt, const GrVkImageInfo& vkInfo,
-      sk_sp<GrVkImageLayout> layout);
+      sk_sp<GrVkImageLayout> layout) noexcept;
 #  ifdef SK_DIRECT3D
   friend class GrD3DGpu;
   friend class GrD3DRenderTarget;

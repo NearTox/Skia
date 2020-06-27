@@ -11,15 +11,15 @@
 
 namespace SkSL {
 
-static const uint8_t INVALID_CHAR = 18;
-static int8_t mappings[127] = {
+static constexpr uint8_t INVALID_CHAR = 18;
+static constexpr int8_t mappings[127] = {
     0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  2,  3,  3,  1,  3,  3,  3,  3,  3,  3,  3,  3,
     3,  3,  3,  3,  3,  3,  3,  3,  3,  3,  1,  4,  3,  5,  6,  7,  8,  3,  9,  10, 11, 12,
     13, 14, 15, 16, 17, 18, 18, 18, 18, 18, 18, 18, 18, 18, 19, 20, 21, 22, 23, 24, 25, 26,
     26, 26, 26, 27, 26, 6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,  28, 6,  6,  6,
     29, 6,  6,  30, 3,  31, 32, 33, 3,  34, 35, 36, 37, 38, 39, 40, 41, 42, 6,  43, 44, 45,
     46, 47, 48, 6,  49, 50, 51, 52, 53, 54, 55, 56, 6,  57, 58, 59, 60};
-static int16_t transitions[61][310] = {
+static constexpr int16_t transitions[61][310] = {
     {
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -946,7 +946,7 @@ static int16_t transitions[61][310] = {
     },
 };
 
-static int8_t accepts[310] = {
+static constexpr int8_t accepts[310] = {
     -1, -1, 96, 96, 99, 70, 76, 99, 44, 43, 43, 60, 85, 65, 69, 93, 90, 46, 47, 58, 83, 56, 54, 81,
     53, 57, 55, 82, 95, 52, 1,  -1, -1, 1,  59, -1, -1, 98, 97, 84, 2,  1,  1,  -1, -1, 1,  -1, -1,
     1,  2,  -1, -1, 1,  -1, 2,  2,  73, 72, 94, 78, 61, 86, 80, 74, 75, 77, 79, 62, 87, 71, 99, 45,
@@ -970,13 +970,13 @@ Token Lexer::next() {
   // a bit.
   int32_t startOffset = fOffset;
   if (startOffset == fLength) {
-    return Token(Token::END_OF_FILE, startOffset, 0);
+    return Token(Token::Kind::TK_END_OF_FILE, startOffset, 0);
   }
   int16_t state = 1;
   for (;;) {
     if (fOffset >= fLength) {
       if (accepts[state] == -1) {
-        return Token(Token::END_OF_FILE, startOffset, 0);
+        return Token(Token::Kind::TK_END_OF_FILE, startOffset, 0);
       }
       break;
     }

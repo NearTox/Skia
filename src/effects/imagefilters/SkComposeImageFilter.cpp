@@ -16,7 +16,7 @@ namespace {
 
 class SkComposeImageFilterImpl final : public SkImageFilter_Base {
  public:
-  explicit SkComposeImageFilterImpl(sk_sp<SkImageFilter> inputs[2])
+  explicit SkComposeImageFilterImpl(sk_sp<SkImageFilter> inputs[2]) noexcept
       : INHERITED(inputs, 2, nullptr) {
     SkASSERT(inputs[0].get());
     SkASSERT(inputs[1].get());
@@ -28,7 +28,7 @@ class SkComposeImageFilterImpl final : public SkImageFilter_Base {
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
   SkIRect onFilterBounds(
       const SkIRect&, const SkMatrix& ctm, MapDirection, const SkIRect* inputRect) const override;
-  bool onCanHandleComplexCTM() const override { return true; }
+  bool onCanHandleComplexCTM() const noexcept override { return true; }
 
  private:
   friend void SkComposeImageFilter::RegisterFlattenables();

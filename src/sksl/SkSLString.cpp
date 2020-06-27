@@ -120,17 +120,17 @@ String& String::operator+=(StringFragment s) {
   return *this;
 }
 
-bool String::operator==(const String& s) const {
+bool String::operator==(const String& s) const noexcept {
   return this->size() == s.size() && !memcmp(c_str(), s.c_str(), this->size());
 }
 
-bool String::operator!=(const String& s) const { return !(*this == s); }
+bool String::operator!=(const String& s) const noexcept { return !(*this == s); }
 
-bool String::operator==(const char* s) const {
+bool String::operator==(const char* s) const noexcept {
   return this->size() == strlen(s) && !memcmp(c_str(), s, this->size());
 }
 
-bool String::operator!=(const char* s) const { return !(*this == s); }
+bool String::operator!=(const char* s) const noexcept { return !(*this == s); }
 
 String operator+(const char* s1, const String& s2) {
   String result(s1);
@@ -138,25 +138,25 @@ String operator+(const char* s1, const String& s2) {
   return result;
 }
 
-bool operator==(const char* s1, const String& s2) { return s2 == s1; }
+bool operator==(const char* s1, const String& s2) noexcept { return s2 == s1; }
 
-bool operator!=(const char* s1, const String& s2) { return s2 != s1; }
+bool operator!=(const char* s1, const String& s2) noexcept { return s2 != s1; }
 
-bool StringFragment::operator==(StringFragment s) const {
+bool StringFragment::operator==(StringFragment s) const noexcept {
   if (fLength != s.fLength) {
     return false;
   }
   return !memcmp(fChars, s.fChars, fLength);
 }
 
-bool StringFragment::operator!=(StringFragment s) const {
+bool StringFragment::operator!=(StringFragment s) const noexcept {
   if (fLength != s.fLength) {
     return true;
   }
   return memcmp(fChars, s.fChars, fLength);
 }
 
-bool StringFragment::operator==(const char* s) const {
+bool StringFragment::operator==(const char* s) const noexcept {
   for (size_t i = 0; i < fLength; ++i) {
     if (fChars[i] != s[i]) {
       return false;
@@ -165,7 +165,7 @@ bool StringFragment::operator==(const char* s) const {
   return 0 == s[fLength];
 }
 
-bool StringFragment::operator!=(const char* s) const {
+bool StringFragment::operator!=(const char* s) const noexcept {
   for (size_t i = 0; i < fLength; ++i) {
     if (fChars[i] != s[i]) {
       return true;

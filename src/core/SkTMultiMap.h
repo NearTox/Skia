@@ -17,7 +17,7 @@
 template <typename T, typename Key, typename HashTraits = T>
 class SkTMultiMap {
   struct ValueList {
-    explicit ValueList(T* value) noexcept : fValue(value), fNext(nullptr) {}
+    explicit ValueList(T* value) : fValue(value), fNext(nullptr) {}
 
     static const Key& GetKey(const ValueList& e) { return HashTraits::GetKey(*e.fValue); }
     static uint32_t Hash(const Key& key) { return HashTraits::Hash(key); }

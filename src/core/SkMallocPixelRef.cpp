@@ -11,7 +11,7 @@
 #include "include/core/SkImageInfo.h"
 #include "include/private/SkMalloc.h"
 
-static bool is_valid(const SkImageInfo& info) {
+static bool is_valid(const SkImageInfo& info) noexcept {
   if (info.width() < 0 || info.height() < 0 ||
       (unsigned)info.colorType() > (unsigned)kLastEnum_SkColorType ||
       (unsigned)info.alphaType() > (unsigned)kLastEnum_SkAlphaType) {
@@ -42,7 +42,7 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeAllocate(const SkImageInfo& info, size_t
   }
 
   struct PixelRef final : public SkPixelRef {
-    PixelRef(int w, int h, void* s, size_t r) : SkPixelRef(w, h, s, r) {}
+    PixelRef(int w, int h, void* s, size_t r) noexcept : SkPixelRef(w, h, s, r) {}
     ~PixelRef() override { sk_free(this->pixels()); }
   };
   return sk_sp<SkPixelRef>(new PixelRef(info.width(), info.height(), addr, rowBytes));
@@ -62,7 +62,7 @@ sk_sp<SkPixelRef> SkMallocPixelRef::MakeWithData(
   }
   struct PixelRef final : public SkPixelRef {
     sk_sp<SkData> fData;
-    PixelRef(int w, int h, void* s, size_t r, sk_sp<SkData> d)
+    PixelRef(int w, int h, void* s, size_t r, sk_sp<SkData> d) noexcept
         : SkPixelRef(w, h, s, r), fData(std::move(d)) {}
   };
   void* pixels = const_cast<void*>(data->data());

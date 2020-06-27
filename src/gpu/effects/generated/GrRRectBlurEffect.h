@@ -48,16 +48,17 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
     }
     builder.finish();
 
+    static constexpr auto kMaskOrigin = kBottomLeft_GrSurfaceOrigin;
     GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
-    if (sk_sp<GrTextureProxy> mask = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
-      GrSwizzle swizzle =
-          context->priv().caps()->getReadSwizzle(mask->backendFormat(), GrColorType::kAlpha_8);
-      return {std::move(mask), kBottomLeft_GrSurfaceOrigin, swizzle};
+    if (auto view = proxyProvider->findCachedProxyWithColorTypeFallback(
+            key, kMaskOrigin, GrColorType::kAlpha_8, 1)) {
+      return view;
     }
 
     auto rtc = GrRenderTargetContext::MakeWithFallback(
-        context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kExact, dimensions);
+        context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kExact, dimensions, 1,
+        GrMipMapped::kNo, GrProtected::kNo, kMaskOrigin);
     if (!rtc) {
       return {};
     }
@@ -96,9 +97,9 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(
       GrRecordingContext* context, float sigma, float xformedSigma, const SkRRect& srcRRect,
       const SkRRect& devRRect);
-  GrRRectBlurEffect(const GrRRectBlurEffect& src);
+  GrRRectBlurEffect(const GrRRectBlurEffect& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "RRectBlurEffect"; }
+  const char* name() const noexcept override { return "RRectBlurEffect"; }
   float sigma;
   SkRect rect;
   float cornerRadius;
@@ -106,7 +107,7 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
 
  private:
   GrRRectBlurEffect(
-      float sigma, SkRect rect, float cornerRadius, GrSurfaceProxyView ninePatchSampler)
+      float sigma, SkRect rect, float cornerRadius, GrSurfaceProxyView ninePatchSampler) noexcept
       : INHERITED(
             kGrRRectBlurEffect_ClassID,
             (OptimizationFlags)kCompatibleWithCoverageAsAlpha_OptimizationFlag),
@@ -118,8 +119,8 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
-  const TextureSampler& onTextureSampler(int) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  const TextureSampler& onTextureSampler(int) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

@@ -17,7 +17,7 @@ namespace SkSL {
 /**
  * Given a type, returns the type that will result from extracting an array value from it.
  */
-static const Type& index_type(const Context& context, const Type& type) {
+static const Type& index_type(const Context& context, const Type& type) noexcept {
   if (type.kind() == Type::kMatrix_Kind) {
     if (type.componentType() == *context.fFloat_Type) {
       switch (type.rows()) {
@@ -51,14 +51,15 @@ static const Type& index_type(const Context& context, const Type& type) {
  */
 struct IndexExpression : public Expression {
   IndexExpression(
-      const Context& context, std::unique_ptr<Expression> base, std::unique_ptr<Expression> index)
+      const Context& context, std::unique_ptr<Expression> base,
+      std::unique_ptr<Expression> index) noexcept
       : INHERITED(base->fOffset, kIndex_Kind, index_type(context, base->fType)),
         fBase(std::move(base)),
         fIndex(std::move(index)) {
     SkASSERT(fIndex->fType == *context.fInt_Type || fIndex->fType == *context.fUInt_Type);
   }
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     return fBase->hasProperty(property) || fIndex->hasProperty(property);
   }
 
@@ -67,11 +68,9 @@ struct IndexExpression : public Expression {
         new IndexExpression(fBase->clone(), fIndex->clone(), &fType));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     return fBase->description() + "[" + fIndex->description() + "]";
   }
-#endif
 
   std::unique_ptr<Expression> fBase;
   std::unique_ptr<Expression> fIndex;
@@ -80,7 +79,8 @@ struct IndexExpression : public Expression {
 
  private:
   IndexExpression(
-      std::unique_ptr<Expression> base, std::unique_ptr<Expression> index, const Type* type)
+      std::unique_ptr<Expression> base, std::unique_ptr<Expression> index,
+      const Type* type) noexcept
       : INHERITED(base->fOffset, kIndex_Kind, *type),
         fBase(std::move(base)),
         fIndex(std::move(index)) {}

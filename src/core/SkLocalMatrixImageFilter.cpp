@@ -26,7 +26,7 @@ sk_sp<SkImageFilter> SkLocalMatrixImageFilter::Make(
 }
 
 SkLocalMatrixImageFilter::SkLocalMatrixImageFilter(
-    const SkMatrix& localM, sk_sp<SkImageFilter> input)
+    const SkMatrix& localM, sk_sp<SkImageFilter> input) noexcept
     : INHERITED(&input, 1, nullptr), fLocalM(localM) {}
 
 sk_sp<SkFlattenable> SkLocalMatrixImageFilter::CreateProc(SkReadBuffer& buffer) {

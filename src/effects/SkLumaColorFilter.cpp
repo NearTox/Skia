@@ -41,7 +41,7 @@ sk_sp<SkColorFilter> SkLumaColorFilter::Make() {
   return sk_sp<SkColorFilter>(new SkLumaColorFilter);
 }
 
-SkLumaColorFilter::SkLumaColorFilter() : INHERITED() {}
+SkLumaColorFilter::SkLumaColorFilter() noexcept : INHERITED() {}
 
 sk_sp<SkFlattenable> SkLumaColorFilter::CreateProc(SkReadBuffer&) { return Make(); }
 

@@ -39,7 +39,7 @@ class SK_API SkImageFilter : public SkFlattenable {
       kHasHeight_CropEdge = 0x08,
       kHasAll_CropEdge = 0x0F,
     };
-    CropRect() {}
+    CropRect() noexcept = default;
     explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge) noexcept
         : fRect(rect), fFlags(flags) {}
     uint32_t flags() const noexcept { return fFlags; }
@@ -133,7 +133,7 @@ class SK_API SkImageFilter : public SkFlattenable {
   static sk_sp<SkImageFilter> MakeMatrixFilter(
       const SkMatrix& matrix, SkFilterQuality quality, sk_sp<SkImageFilter> input);
 
-  static constexpr SkFlattenable::Type GetFlattenableType() noexcept { return kSkImageFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkImageFilter_Type; }
 
   SkFlattenable::Type getFlattenableType() const noexcept override { return kSkImageFilter_Type; }
 

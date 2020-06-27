@@ -152,7 +152,7 @@ static void blit_mask_d32_a8_black(
 static void blit_mask_d32_a8_general(
     SkPMColor* dst, size_t dstRB, const SkAlpha* mask, size_t maskRB, SkColor color, int w, int h) {
   auto s = Sk4px::DupPMColor(SkPreMultiplyColor(color));
-  auto fn = [&](const Sk4px& d, const Sk4px& aa) {
+  auto fn = [&](const Sk4px& d, const Sk4px& aa) noexcept {
     //  = (s + d(1-sa))aa + d(1-aa)
     //  = s*aa + d(1-sa*aa)
     auto left = s.approxMulDiv255(aa), right = d.approxMulDiv255(left.alphas().inv());
@@ -170,7 +170,7 @@ static void blit_mask_d32_a8_opaque(
     SkPMColor* dst, size_t dstRB, const SkAlpha* mask, size_t maskRB, SkColor color, int w, int h) {
   SkASSERT(SkColorGetA(color) == 0xFF);
   auto s = Sk4px::DupPMColor(SkPreMultiplyColor(color));
-  auto fn = [&](const Sk4px& d, const Sk4px& aa) {
+  auto fn = [&](const Sk4px& d, const Sk4px& aa) noexcept {
     //  = (s + d(1-sa))aa + d(1-aa)
     //  = s*aa + d(1-sa*aa)
     //   ~~~>
@@ -187,7 +187,7 @@ static void blit_mask_d32_a8_opaque(
 // Same as _opaque, but assumes color == SK_ColorBLACK, a very common and even simpler case.
 static void blit_mask_d32_a8_black(
     SkPMColor* dst, size_t dstRB, const SkAlpha* mask, size_t maskRB, int w, int h) {
-  auto fn = [](const Sk4px& d, const Sk4px& aa) {
+  auto fn = [](const Sk4px& d, const Sk4px& aa) noexcept {
     //   = (s + d(1-sa))aa + d(1-aa)
     //   = s*aa + d(1-sa*aa)
     //   ~~~>

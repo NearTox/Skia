@@ -44,7 +44,11 @@ class GrEagerDynamicVertexAllocator : public GrEagerVertexAllocator {
   ~GrEagerDynamicVertexAllocator() override { SkASSERT(!fLockCount); }
 #endif
 
-  void* lock(size_t stride, int eagerCount) override {
+  // Un-shadow GrEagerVertexAllocator::lock<T>.
+  using GrEagerVertexAllocator::lock;
+
+  // Mark "final" as a hint for the compiler to not use the vtable.
+  void* lock(size_t stride, int eagerCount) final {
     SkASSERT(!fLockCount);
     SkASSERT(eagerCount);
     if (void* data = fTarget->makeVertexSpace(stride, eagerCount, fVertexBuffer, fBaseVertex)) {
@@ -57,7 +61,8 @@ class GrEagerDynamicVertexAllocator : public GrEagerVertexAllocator {
     return nullptr;
   }
 
-  void unlock(int actualCount) override {
+  // Mark "final" as a hint for the compiler to not use the vtable.
+  void unlock(int actualCount) final {
     SkASSERT(fLockCount);
     SkASSERT(actualCount <= fLockCount);
     fTarget->putBackVertices(fLockCount - actualCount, fLockStride);

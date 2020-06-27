@@ -27,7 +27,8 @@ class GrGLSLConstColorProcessor : public GrGLSLFragmentProcessor {
     (void)color;
     auto mode = _outer.mode;
     (void)mode;
-    colorVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "color");
+    colorVar =
+        args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "color");
     fragBuilder->codeAppendf(
         "@switch (%d) {\n    case 0:\n        %s = %s;\n        break;\n    case 1:\n      "
         "  %s = %s * %s;\n        break;\n    case 2:\n        %s = %s.w * %s;\n        "
@@ -58,14 +59,14 @@ void GrConstColorProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)mode);
 }
-bool GrConstColorProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrConstColorProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrConstColorProcessor& that = other.cast<GrConstColorProcessor>();
   (void)that;
   if (color != that.color) return false;
   if (mode != that.mode) return false;
   return true;
 }
-GrConstColorProcessor::GrConstColorProcessor(const GrConstColorProcessor& src)
+GrConstColorProcessor::GrConstColorProcessor(const GrConstColorProcessor& src) noexcept
     : INHERITED(kGrConstColorProcessor_ClassID, src.optimizationFlags()),
       color(src.color),
       mode(src.mode) {}

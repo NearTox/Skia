@@ -472,7 +472,8 @@ SkMaskSwizzler* SkMaskSwizzler::CreateMaskSwizzler(
  * Constructor for mask swizzler
  *
  */
-SkMaskSwizzler::SkMaskSwizzler(SkMasks* masks, RowProc proc, int srcOffset, int subsetWidth)
+SkMaskSwizzler::SkMaskSwizzler(
+    SkMasks* masks, RowProc proc, int srcOffset, int subsetWidth) noexcept
     : fMasks(masks),
       fRowProc(proc),
       fSubsetWidth(subsetWidth),

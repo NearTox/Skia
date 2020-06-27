@@ -31,14 +31,14 @@ void SkIntersections::cleanUpParallelLines(bool parallel) {
   }
 }
 
-void SkIntersections::computePoints(const SkDLine& line, int used) {
+void SkIntersections::computePoints(const SkDLine& line, int used) noexcept {
   fPt[0] = line.ptAtT(fT[0][0]);
   if ((fUsed = used) == 2) {
     fPt[1] = line.ptAtT(fT[0][1]);
   }
 }
 
-int SkIntersections::intersectRay(const SkDLine& a, const SkDLine& b) {
+int SkIntersections::intersectRay(const SkDLine& a, const SkDLine& b) noexcept {
   fMax = 2;
   SkDVector aLen = a[1] - a[0];
   SkDVector bLen = b[1] - b[0];
@@ -180,7 +180,7 @@ int SkIntersections::intersect(const SkDLine& a, const SkDLine& b) {
   return fUsed;
 }
 
-static int horizontal_coincident(const SkDLine& line, double y) {
+static int horizontal_coincident(const SkDLine& line, double y) noexcept {
   double min = line[0].fY;
   double max = line[1].fY;
   if (min > max) {
@@ -196,7 +196,7 @@ static int horizontal_coincident(const SkDLine& line, double y) {
   return 1;
 }
 
-double SkIntersections::HorizontalIntercept(const SkDLine& line, double y) {
+double SkIntersections::HorizontalIntercept(const SkDLine& line, double y) noexcept {
   SkASSERT(line[1].fY != line[0].fY);
   return SkPinT((y - line[0].fY) / (line[1].fY - line[0].fY));
 }
@@ -258,7 +258,7 @@ int SkIntersections::horizontal(
   return fUsed;
 }
 
-static int vertical_coincident(const SkDLine& line, double x) {
+static int vertical_coincident(const SkDLine& line, double x) noexcept {
   double min = line[0].fX;
   double max = line[1].fX;
   if (min > max) {
@@ -274,7 +274,7 @@ static int vertical_coincident(const SkDLine& line, double x) {
   return 1;
 }
 
-double SkIntersections::VerticalIntercept(const SkDLine& line, double x) {
+double SkIntersections::VerticalIntercept(const SkDLine& line, double x) noexcept {
   SkASSERT(line[1].fX != line[0].fX);
   return SkPinT((x - line[0].fX) / (line[1].fX - line[0].fX));
 }

@@ -34,7 +34,7 @@ class GrGLBitmapTextGeoProc : public GrGLSLGeometryProcessor {
 
     const char* atlasDimensionsInvName;
     fAtlasDimensionsInvUniform = uniformHandler->addUniform(
-        kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasSizeInv", &atlasDimensionsInvName);
+        nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasSizeInv", &atlasDimensionsInvName);
 
     GrGLSLVarying uv(kFloat2_GrSLType);
     GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;

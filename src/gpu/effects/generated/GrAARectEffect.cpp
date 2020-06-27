@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLAARectEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLAARectEffect() {}
+  GrGLSLAARectEffect() = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrAARectEffect& _outer = args.fFp.cast<GrAARectEffect>();
@@ -28,8 +28,8 @@ class GrGLSLAARectEffect : public GrGLSLFragmentProcessor {
     auto rect = _outer.rect;
     (void)rect;
     prevRect = float4(-1.0);
-    rectUniformVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "rectUniform");
+    rectUniformVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "rectUniform");
     fragBuilder->codeAppendf(
         "float4 prevRect = float4(%f, %f, %f, %f);\nhalf alpha;\n@switch (%d) {\n    case "
         "0:\n    case 2:\n        alpha = half(all(greaterThan(float4(sk_FragCoord.xy, "
@@ -77,14 +77,14 @@ void GrAARectEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)edgeType);
 }
-bool GrAARectEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrAARectEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrAARectEffect& that = other.cast<GrAARectEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
   if (rect != that.rect) return false;
   return true;
 }
-GrAARectEffect::GrAARectEffect(const GrAARectEffect& src)
+GrAARectEffect::GrAARectEffect(const GrAARectEffect& src) noexcept
     : INHERITED(kGrAARectEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),
       rect(src.rect) {}

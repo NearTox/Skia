@@ -8,7 +8,6 @@
 #ifndef GrBicubicTextureEffect_DEFINED
 #define GrBicubicTextureEffect_DEFINED
 
-#include "src/gpu/effects/GrTextureDomain.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 
 class GrInvariantOutput;
@@ -29,7 +28,7 @@ class GrBicubicEffect : public GrFragmentProcessor {
     kXY
   };
 
-  const char* name() const override { return "Bicubic"; }
+  const char* name() const noexcept override { return "Bicubic"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrBicubicEffect(*this));
@@ -81,7 +80,7 @@ class GrBicubicEffect : public GrFragmentProcessor {
     kPremul,    // clamps a to 0..1 and rgb to 0..a
   };
 
-  GrBicubicEffect(std::unique_ptr<GrFragmentProcessor>, const SkMatrix&, Direction, Clamp);
+  GrBicubicEffect(std::unique_ptr<GrFragmentProcessor>, const SkMatrix&, Direction, Clamp) noexcept;
 
   explicit GrBicubicEffect(const GrBicubicEffect&);
 
@@ -89,7 +88,7 @@ class GrBicubicEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
   SkPMColor4f constantOutputForConstantInput(const SkPMColor4f&) const override;
 

@@ -140,8 +140,7 @@ void GrResourceCache::insertResource(GrGpuResource* resource) {
   this->addToNonpurgeableArray(resource);
 
   size_t size = resource->gpuMemorySize();
-  SkDEBUGCODE(++fCount);
-  fBytes += size;
+  SkDEBUGCODE(++fCount;) fBytes += size;
 #if GR_CACHE_STATS
   fHighWaterCount = std::max(this->getResourceCount(), fHighWaterCount);
   fHighWaterBytes = std::max(fBytes, fHighWaterBytes);
@@ -178,8 +177,7 @@ void GrResourceCache::removeResource(GrGpuResource* resource) {
     this->removeFromNonpurgeableArray(resource);
   }
 
-  SkDEBUGCODE(--fCount);
-  fBytes -= size;
+  SkDEBUGCODE(--fCount;) fBytes -= size;
   if (GrBudgetedType::kBudgeted == resource->resourcePriv().budgetedType()) {
     --fBudgetedCount;
     fBudgetedBytes -= size;
@@ -277,9 +275,9 @@ void GrResourceCache::refResource(GrGpuResource* resource) {
 
 class GrResourceCache::AvailableForScratchUse {
  public:
-  AvailableForScratchUse() {}
+  constexpr AvailableForScratchUse() noexcept = default;
 
-  bool operator()(const GrGpuResource* resource) const noexcept {
+  bool operator()(const GrGpuResource* resource) const {
     SkASSERT(
         !resource->getUniqueKey().isValid() && resource->resourcePriv().getScratchKey().isValid());
 
@@ -455,8 +453,7 @@ void GrResourceCache::notifyRefCntReachedZero(GrGpuResource* resource) {
     }
   }
 
-  SkDEBUGCODE(int beforeCount = this->getResourceCount());
-  resource->cacheAccess().release();
+  SkDEBUGCODE(int beforeCount = this->getResourceCount();) resource->cacheAccess().release();
   // We should at least free this resource, perhaps dependent resources as well.
   SkASSERT(this->getResourceCount() < beforeCount);
   this->validate();

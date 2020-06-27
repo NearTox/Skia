@@ -59,7 +59,7 @@ GrRenderTargetProxy::GrRenderTargetProxy(
       !this->requiresManualMSAAResolve());
 }
 
-int GrRenderTargetProxy::maxWindowRectangles(const GrCaps& caps) const {
+int GrRenderTargetProxy::maxWindowRectangles(const GrCaps& caps) const noexcept {
   return this->glRTFBOIDIs0() ? 0 : caps.maxWindowRectangles();
 }
 
@@ -110,13 +110,23 @@ size_t GrRenderTargetProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) co
       !this->priv().isExact());
 }
 
-bool GrRenderTargetProxy::refsWrappedObjects() const {
+bool GrRenderTargetProxy::refsWrappedObjects() const noexcept {
   if (!this->isInstantiated()) {
     return false;
   }
 
   GrSurface* surface = this->peekSurface();
   return surface->resourcePriv().refsWrappedObjects();
+}
+
+GrSurfaceProxy::LazySurfaceDesc GrRenderTargetProxy::callbackDesc() const {
+  // We only expect exactly sized lazy RT proxies.
+  SkASSERT(!this->isFullyLazy());
+  SkASSERT(this->isFunctionallyExact());
+  return {
+      this->dimensions(), SkBackingFit::kExact,  GrRenderable::kYes,  GrMipMapped::kNo,
+      this->numSamples(), this->backendFormat(), this->isProtected(), this->isBudgeted(),
+  };
 }
 
 #ifdef SK_DEBUG

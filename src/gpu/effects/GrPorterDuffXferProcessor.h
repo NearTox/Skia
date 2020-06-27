@@ -23,7 +23,7 @@
 #endif
 class GrPorterDuffXPFactory : public GrXPFactory {
  public:
-  static const GrXPFactory* Get(SkBlendMode blendMode);
+  static const GrXPFactory* Get(SkBlendMode blendMode) noexcept;
 
   /** Because src-over is so common we special case it for performance reasons. If this returns
       null then the SimpleSrcOverXP() below should be used. */
@@ -36,14 +36,14 @@ class GrPorterDuffXPFactory : public GrXPFactory {
 
   /** This XP implements non-LCD src-over using hw blend with no optimizations. It is returned
       by reference because it is global and its ref-cnting methods are not thread safe. */
-  static const GrXferProcessor& SimpleSrcOverXP();
+  static const GrXferProcessor& SimpleSrcOverXP() noexcept;
 
   static AnalysisProperties SrcOverAnalysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
       GrClampType);
 
  private:
-  constexpr GrPorterDuffXPFactory(SkBlendMode);
+  constexpr GrPorterDuffXPFactory(SkBlendMode) noexcept;
 
   sk_sp<const GrXferProcessor> makeXferProcessor(
       const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
@@ -54,7 +54,8 @@ class GrPorterDuffXPFactory : public GrXPFactory {
       GrClampType) const override;
 
   GR_DECLARE_XP_FACTORY_TEST
-  static void TestGetXPOutputTypes(const GrXferProcessor*, int* outPrimary, int* outSecondary);
+  static void TestGetXPOutputTypes(
+      const GrXferProcessor*, int* outPrimary, int* outSecondary) noexcept;
 
   SkBlendMode fBlendMode;
 

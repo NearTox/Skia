@@ -13,8 +13,8 @@
 struct SK_API SkPoint3 {
   SkScalar fX, fY, fZ;
 
-  static constexpr SkPoint3 Make(SkScalar x, SkScalar y, SkScalar z) noexcept {
-    SkPoint3 pt{};
+  static SkPoint3 Make(SkScalar x, SkScalar y, SkScalar z) noexcept {
+    SkPoint3 pt;
     pt.set(x, y, z);
     return pt;
   }
@@ -23,7 +23,7 @@ struct SK_API SkPoint3 {
   SkScalar y() const noexcept { return fY; }
   SkScalar z() const noexcept { return fZ; }
 
-  constexpr void set(SkScalar x, SkScalar y, SkScalar z) noexcept {
+  void set(SkScalar x, SkScalar y, SkScalar z) noexcept {
     fX = x;
     fY = y;
     fZ = z;
@@ -37,17 +37,17 @@ struct SK_API SkPoint3 {
 
   /** Returns the Euclidian distance from (0,0,0) to (x,y,z)
    */
-  static SkScalar Length(SkScalar x, SkScalar y, SkScalar z) noexcept;
+  static SkScalar Length(SkScalar x, SkScalar y, SkScalar z);
 
   /** Return the Euclidian distance from (0,0,0) to the point
    */
-  SkScalar length() const noexcept { return SkPoint3::Length(fX, fY, fZ); }
+  SkScalar length() const { return SkPoint3::Length(fX, fY, fZ); }
 
   /** Set the point (vector) to be unit-length in the same direction as it
       already points.  If the point has a degenerate length (i.e., nearly 0)
       then set it to (0,0,0) and return false; otherwise return true.
   */
-  bool normalize() noexcept;
+  bool normalize();
 
   /** Return a new point whose X, Y and Z coordinates are scaled.
    */

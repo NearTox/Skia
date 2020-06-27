@@ -47,7 +47,7 @@ class SkBmpStandardCodec : public SkBmpBaseCodec {
   Result onGetPixels(
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&, int*) override;
 
-  bool onInIco() const override { return fInIco; }
+  bool onInIco() const noexcept override { return fInIco; }
 
   SkCodec::Result onPrepareToDecode(
       const SkImageInfo& dstInfo, const SkCodec::Options& options) override;

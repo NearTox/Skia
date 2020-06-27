@@ -327,7 +327,7 @@ class DOM final : public SkNoncopyable {
  public:
   DOM(const char*, size_t);
 
-  const Value& root() const { return fRoot; }
+  const Value& root() const noexcept { return fRoot; }
 
   void write(SkWStream*) const;
 

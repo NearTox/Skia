@@ -8,9 +8,10 @@
 #ifndef SkRasterPipeline_opts_DEFINED
 #define SkRasterPipeline_opts_DEFINED
 
+#include "include/core/SkData.h"
 #include "include/core/SkTypes.h"
 #include "src/core/SkUtils.h"  // unaligned_{load,store}
-#include "src/sksl/SkSLInterpreter.h"
+#include "src/sksl/SkSLByteCode.h"
 
 // Every function in this file should be marked static and inline using SI.
 #if defined(__clang__)
@@ -38,7 +39,7 @@ SI Dst widen_cast(const Src& src) {
 //   - 2 void* per stage with a context pointer, first the context pointer, then the next stage.
 
 // load_and_inc() steps the program forward by 1 void*, returning that pointer.
-SI void* load_and_inc(void**& program) {
+SI void* load_and_inc(void**& program) noexcept {
 #if defined(__GNUC__) && defined(__x86_64__)
   // If program is in %rsi (we try to make this likely) then this is a single instruction.
   void* rax;
@@ -73,8 +74,8 @@ struct Ctx {
 #  define JUMPER_IS_SCALAR
 #elif defined(SK_ARM_HAS_NEON)
 #  define JUMPER_IS_NEON
-#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX512
-#  define JUMPER_IS_AVX512
+#elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SKX
+#  define JUMPER_IS_SKX
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
 #  define JUMPER_IS_HSW
 #elif SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX
@@ -120,66 +121,66 @@ using U32 = uint32_t;
 using U16 = uint16_t;
 using U8 = uint8_t;
 
-SI F mad(F f, F m, F a) { return f * m + a; }
-SI F min(F a, F b) { return fminf(a, b); }
-SI F max(F a, F b) { return fmaxf(a, b); }
-SI F abs_(F v) { return fabsf(v); }
-SI F floor_(F v) { return floorf(v); }
-SI F rcp(F v) { return 1.0f / v; }
-SI F rsqrt(F v) { return 1.0f / sqrtf(v); }
-SI F sqrt_(F v) { return sqrtf(v); }
-SI U32 round(F v, F scale) { return (uint32_t)(v * scale + 0.5f); }
-SI U16 pack(U32 v) { return (U16)v; }
-SI U8 pack(U16 v) { return (U8)v; }
+SI F mad(F f, F m, F a) noexcept { return f * m + a; }
+SI F min(F a, F b) noexcept { return fminf(a, b); }
+SI F max(F a, F b) noexcept { return fmaxf(a, b); }
+SI F abs_(F v) noexcept { return fabsf(v); }
+SI F floor_(F v) noexcept { return floorf(v); }
+SI F rcp(F v) noexcept { return 1.0f / v; }
+SI F rsqrt(F v) noexcept { return 1.0f / sqrtf(v); }
+SI F sqrt_(F v) noexcept { return sqrtf(v); }
+SI U32 round(F v, F scale) noexcept { return (uint32_t)(v * scale + 0.5f); }
+SI U16 pack(U32 v) noexcept { return (U16)v; }
+SI U8 pack(U16 v) noexcept { return (U8)v; }
 
-SI F if_then_else(I32 c, F t, F e) { return c ? t : e; }
+SI F if_then_else(I32 c, F t, F e) noexcept { return c ? t : e; }
 
 template <typename T>
-SI T gather(const T* p, U32 ix) {
+SI T gather(const T* p, U32 ix) noexcept {
   return p[ix];
 }
 
-SI void load2(const uint16_t* ptr, size_t tail, U16* r, U16* g) {
+SI void load2(const uint16_t* ptr, size_t tail, U16* r, U16* g) noexcept {
   *r = ptr[0];
   *g = ptr[1];
 }
-SI void store2(uint16_t* ptr, size_t tail, U16 r, U16 g) {
+SI void store2(uint16_t* ptr, size_t tail, U16 r, U16 g) noexcept {
   ptr[0] = r;
   ptr[1] = g;
 }
-SI void load3(const uint16_t* ptr, size_t tail, U16* r, U16* g, U16* b) {
+SI void load3(const uint16_t* ptr, size_t tail, U16* r, U16* g, U16* b) noexcept {
   *r = ptr[0];
   *g = ptr[1];
   *b = ptr[2];
 }
-SI void load4(const uint16_t* ptr, size_t tail, U16* r, U16* g, U16* b, U16* a) {
+SI void load4(const uint16_t* ptr, size_t tail, U16* r, U16* g, U16* b, U16* a) noexcept {
   *r = ptr[0];
   *g = ptr[1];
   *b = ptr[2];
   *a = ptr[3];
 }
-SI void store4(uint16_t* ptr, size_t tail, U16 r, U16 g, U16 b, U16 a) {
+SI void store4(uint16_t* ptr, size_t tail, U16 r, U16 g, U16 b, U16 a) noexcept {
   ptr[0] = r;
   ptr[1] = g;
   ptr[2] = b;
   ptr[3] = a;
 }
 
-SI void load2(const float* ptr, size_t tail, F* r, F* g) {
+SI void load2(const float* ptr, size_t tail, F* r, F* g) noexcept {
   *r = ptr[0];
   *g = ptr[1];
 }
-SI void store2(float* ptr, size_t tail, F r, F g) {
+SI void store2(float* ptr, size_t tail, F r, F g) noexcept {
   ptr[0] = r;
   ptr[1] = g;
 }
-SI void load4(const float* ptr, size_t tail, F* r, F* g, F* b, F* a) {
+SI void load4(const float* ptr, size_t tail, F* r, F* g, F* b, F* a) noexcept {
   *r = ptr[0];
   *g = ptr[1];
   *b = ptr[2];
   *a = ptr[3];
 }
-SI void store4(float* ptr, size_t tail, F r, F g, F b, F a) {
+SI void store4(float* ptr, size_t tail, F r, F g, F b, F a) noexcept {
   ptr[0] = r;
   ptr[1] = g;
   ptr[2] = b;
@@ -397,7 +398,7 @@ SI void store4(float* ptr, size_t tail, F r, F g, F b, F a) {
   }
 }
 
-#elif defined(JUMPER_IS_AVX) || defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#elif defined(JUMPER_IS_AVX) || defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
 // These are __m256 and __m256i, but friendlier and strongly-typed.
 template <typename T>
 using V = T __attribute__((ext_vector_type(8)));
@@ -409,7 +410,7 @@ using U16 = V<uint16_t>;
 using U8 = V<uint8_t>;
 
 SI F mad(F f, F m, F a) {
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   return _mm256_fmadd_ps(f, m, a);
 #  else
   return f * m + a;
@@ -441,7 +442,7 @@ SI V<T> gather(const T* p, U32 ix) {
       p[ix[0]], p[ix[1]], p[ix[2]], p[ix[3]], p[ix[4]], p[ix[5]], p[ix[6]], p[ix[7]],
   };
 }
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
 SI F gather(const float* p, U32 ix) { return _mm256_i32gather_ps(p, ix, 4); }
 SI U32 gather(const uint32_t* p, U32 ix) { return _mm256_i32gather_epi32(p, ix, 4); }
 SI U64 gather(const uint64_t* p, U32 ix) {
@@ -1063,11 +1064,11 @@ SI void store4(float* ptr, size_t tail, F r, F g, F b, F a) {
 // (F)x means cast x to float in the portable path, but bit_cast x to float in the others.
 // These named casts and bit_cast() are always what they seem to be.
 #if defined(JUMPER_IS_SCALAR)
-SI F cast(U32 v) { return (F)v; }
-SI F cast64(U64 v) { return (F)v; }
-SI U32 trunc_(F v) { return (U32)v; }
-SI U32 expand(U16 v) { return (U32)v; }
-SI U32 expand(U8 v) { return (U32)v; }
+SI F cast(U32 v) noexcept { return (F)v; }
+SI F cast64(U64 v) noexcept { return (F)v; }
+SI U32 trunc_(F v) noexcept { return (U32)v; }
+SI U32 expand(U16 v) noexcept { return (U32)v; }
+SI U32 expand(U8 v) noexcept { return (U32)v; }
 #else
 SI F cast(U32 v) { return __builtin_convertvector((I32)v, F); }
 SI F cast64(U64 v) { return __builtin_convertvector(v, F); }
@@ -1081,7 +1082,7 @@ SI V if_then_else(I32 c, V t, V e) {
   return bit_cast<V>(if_then_else(c, bit_cast<F>(t), bit_cast<F>(e)));
 }
 
-SI U16 bswap(U16 x) {
+SI U16 bswap(U16 x) noexcept {
 #if defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41)
   // Somewhat inexplicably Clang decides to do (x<<8) | (x>>8) in 32-bit lanes
   // when generating code for SSE2 and SSE4.1.  We'll do it manually...
@@ -1093,7 +1094,7 @@ SI U16 bswap(U16 x) {
 #endif
 }
 
-SI F fract(F v) { return v - floor_(v); }
+SI F fract(F v) noexcept { return v - floor_(v); }
 
 // See http://www.machinedlearnings.com/2011/06/fast-approximate-logarithm-exponential.html.
 SI F approx_log2(F x) {
@@ -1106,7 +1107,7 @@ SI F approx_log2(F x) {
 }
 
 SI F approx_log(F x) {
-  const float ln2 = 0.69314718f;
+  constexpr float ln2 = 0.69314718f;
   return ln2 * approx_log2(x);
 }
 
@@ -1117,7 +1118,7 @@ SI F approx_pow2(F x) {
 }
 
 SI F approx_exp(F x) {
-  const float log2_e = 1.4426950408889634074f;
+  constexpr float log2_e = 1.4426950408889634074f;
   return approx_pow2(log2_e * x);
 }
 
@@ -1138,7 +1139,7 @@ SI F from_half(U16 h) {
     !defined(SK_BUILD_FOR_GOOGLE3)  // Temporary workaround for some Google3 builds.
   return vcvt_f32_f16(h);
 
-#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   return _mm256_cvtph_ps(h);
 
 #else
@@ -1156,7 +1157,7 @@ SI U16 to_half(F f) {
     !defined(SK_BUILD_FOR_GOOGLE3)  // Temporary workaround for some Google3 builds.
   return vcvt_f16_f32(f);
 
-#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   return _mm256_cvtps_ph(f, _MM_FROUND_CUR_DIRECTION);
 
 #else
@@ -1170,7 +1171,7 @@ SI U16 to_half(F f) {
 }
 
 // Our fundamental vector depth is our pixel stride.
-static const size_t N = sizeof(F) / sizeof(float);
+static constexpr size_t N = sizeof(F) / sizeof(float);
 
 // We're finally going to get to what a Stage function looks like!
 //    tail == 0 ~~> work on a full N pixels
@@ -1278,7 +1279,7 @@ static void start_pipeline(size_t dx, size_t dy, size_t xlimit, size_t ylimit, v
 // just_return() is a simple no-op stage that only exists to end the chain,
 // returning back up to start_pipeline(), and from there to the caller.
 #if JUMPER_NARROW_STAGES
-static void ABI just_return(Params*, void**, F, F, F, F) {}
+static void ABI just_return(Params*, void**, F, F, F, F) noexcept {}
 #else
 static void ABI just_return(size_t, void**, size_t, size_t, F, F, F, F, F, F, F, F) {}
 #endif
@@ -1329,43 +1330,43 @@ SI void store(T* dst, V v, size_t tail) {
   sk_unaligned_store(dst, v);
 }
 
-SI F from_byte(U8 b) { return cast(expand(b)) * (1 / 255.0f); }
-SI F from_short(U16 s) { return cast(expand(s)) * (1 / 65535.0f); }
-SI void from_565(U16 _565, F* r, F* g, F* b) {
+SI F from_byte(U8 b) noexcept { return cast(expand(b)) * (1 / 255.0f); }
+SI F from_short(U16 s) noexcept { return cast(expand(s)) * (1 / 65535.0f); }
+SI void from_565(U16 _565, F* r, F* g, F* b) noexcept {
   U32 wide = expand(_565);
   *r = cast(wide & (31 << 11)) * (1.0f / (31 << 11));
   *g = cast(wide & (63 << 5)) * (1.0f / (63 << 5));
   *b = cast(wide & (31 << 0)) * (1.0f / (31 << 0));
 }
-SI void from_4444(U16 _4444, F* r, F* g, F* b, F* a) {
+SI void from_4444(U16 _4444, F* r, F* g, F* b, F* a) noexcept {
   U32 wide = expand(_4444);
   *r = cast(wide & (15 << 12)) * (1.0f / (15 << 12));
   *g = cast(wide & (15 << 8)) * (1.0f / (15 << 8));
   *b = cast(wide & (15 << 4)) * (1.0f / (15 << 4));
   *a = cast(wide & (15 << 0)) * (1.0f / (15 << 0));
 }
-SI void from_8888(U32 _8888, F* r, F* g, F* b, F* a) {
+SI void from_8888(U32 _8888, F* r, F* g, F* b, F* a) noexcept {
   *r = cast((_8888)&0xff) * (1 / 255.0f);
   *g = cast((_8888 >> 8) & 0xff) * (1 / 255.0f);
   *b = cast((_8888 >> 16) & 0xff) * (1 / 255.0f);
   *a = cast((_8888 >> 24)) * (1 / 255.0f);
 }
-SI void from_88(U16 _88, F* r, F* g) {
+SI void from_88(U16 _88, F* r, F* g) noexcept {
   U32 wide = expand(_88);
   *r = cast((wide)&0xff) * (1 / 255.0f);
   *g = cast((wide >> 8) & 0xff) * (1 / 255.0f);
 }
-SI void from_1010102(U32 rgba, F* r, F* g, F* b, F* a) {
+SI void from_1010102(U32 rgba, F* r, F* g, F* b, F* a) noexcept {
   *r = cast((rgba)&0x3ff) * (1 / 1023.0f);
   *g = cast((rgba >> 10) & 0x3ff) * (1 / 1023.0f);
   *b = cast((rgba >> 20) & 0x3ff) * (1 / 1023.0f);
   *a = cast((rgba >> 30)) * (1 / 3.0f);
 }
-SI void from_1616(U32 _1616, F* r, F* g) {
+SI void from_1616(U32 _1616, F* r, F* g) noexcept {
   *r = cast((_1616)&0xffff) * (1 / 65535.0f);
   *g = cast((_1616 >> 16) & 0xffff) * (1 / 65535.0f);
 }
-SI void from_16161616(U64 _16161616, F* r, F* g, F* b, F* a) {
+SI void from_16161616(U64 _16161616, F* r, F* g, F* b, F* a) noexcept {
   *r = cast64((_16161616)&0xffff) * (1 / 65535.0f);
   *g = cast64((_16161616 >> 16) & 0xffff) * (1 / 65535.0f);
   *b = cast64((_16161616 >> 32) & 0xffff) * (1 / 65535.0f);
@@ -2038,10 +2039,8 @@ STAGE(to_srgb, Ctx::None) {
     U32 sign;
     l = strip_sign(l, &sign);
     // We tweak c and d for each instruction set to make sure fn(1) is exactly 1.
-#if defined(JUMPER_IS_AVX512)
-    const float c = 1.130026340485f, d = 0.141387879848f;
-#elif defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX) || \
-    defined(JUMPER_IS_HSW)
+#if defined(JUMPER_IS_SSE2) || defined(JUMPER_IS_SSE41) || defined(JUMPER_IS_AVX) || \
+    defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
     const float c = 1.130048394203f, d = 0.141357362270f;
 #elif defined(JUMPER_IS_NEON)
     const float c = 1.129999995232f, d = 0.141381442547f;
@@ -2527,7 +2526,7 @@ STAGE(matrix_perspective, const float* m) {
 SI void gradient_lookup(
     const SkRasterPipeline_GradientCtx* c, U32 idx, F t, F* r, F* g, F* b, F* a) {
   F fr, br, fg, bg, fb, bb, fa, ba;
-#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   if (c->stopCount <= 8) {
     fr = _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->fs[0]), idx);
     br = _mm256_permutevar8x32_ps(_mm256_loadu_ps(c->bs[0]), idx);
@@ -2820,6 +2819,7 @@ STAGE(interpreter, SkRasterPipeline_InterpreterCtx* c) {
 
   float* args[] = {xx, yy, rr, gg, bb, aa};
   float** in_args = args;
+  int in_count = 6;
 
   if (c->shaderConvention) {
     // our caller must have called seed_shader to set these
@@ -2831,14 +2831,16 @@ STAGE(interpreter, SkRasterPipeline_InterpreterCtx* c) {
     sk_unaligned_store(aa, F(c->paintColor.fA));
   } else {
     in_args += 2;  // skip x,y
+    in_count = 4;
     sk_unaligned_store(rr, r);
     sk_unaligned_store(gg, g);
     sk_unaligned_store(bb, b);
     sk_unaligned_store(aa, a);
   }
 
-  c->interpreter->setUniforms((float*)c->inputs);
-  SkAssertResult(c->interpreter->runStriped(c->fn, tail ? tail : N, (float**)in_args));
+  SkAssertResult(c->byteCode->runStriped(
+      c->fn, tail ? tail : N, in_args, in_count, nullptr, 0, (const float*)c->inputs->data(),
+      c->ninputs));
 
   r = sk_unaligned_load<F>(rr);
   g = sk_unaligned_load<F>(gg);
@@ -3050,11 +3052,11 @@ SK_RASTER_PIPELINE_STAGES(M)
 #  undef M
 static void (*just_return)(void) = nullptr;
 
-static void start_pipeline(size_t, size_t, size_t, size_t, void**) {}
+static void start_pipeline(size_t, size_t, size_t, size_t, void**) noexcept {}
 
 #else  // We are compiling vector code with Clang... let's make some lowp stages!
 
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
 using U8 = uint8_t __attribute__((ext_vector_type(16)));
 using U16 = uint16_t __attribute__((ext_vector_type(16)));
 using I16 = int16_t __attribute__((ext_vector_type(16)));
@@ -3277,7 +3279,7 @@ SI F mad(F f, F m, F a) { return f * m + a; }
 SI U32 trunc_(F x) { return (U32)cast<I32>(x); }
 
 SI F rcp(F x) {
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   __m256 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm256_rcp_ps(lo), _mm256_rcp_ps(hi));
@@ -3298,7 +3300,7 @@ SI F rcp(F x) {
 #  endif
 }
 SI F sqrt_(F x) {
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   __m256 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm256_sqrt_ps(lo), _mm256_sqrt_ps(hi));
@@ -3333,7 +3335,7 @@ SI F floor_(F x) {
   float32x4_t lo, hi;
   split(x, &lo, &hi);
   return join<F>(vrndmq_f32(lo), vrndmq_f32(hi));
-#  elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  elif defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   __m256 lo, hi;
   split(x, &lo, &hi);
   return join<F>(_mm256_floor_ps(lo), _mm256_floor_ps(hi));
@@ -3529,12 +3531,12 @@ SI T* ptr_at_xy(const SkRasterPipeline_MemoryCtx* ctx, size_t dx, size_t dy) {
 
 template <typename T>
 SI U32 ix_and_ptr(T** ptr, const SkRasterPipeline_GatherCtx* ctx, F x, F y) {
-  auto clamp = [](F v, F limit) {
-    limit = bit_cast<F>(bit_cast<U32>(limit) - 1);  // Exclusive -> inclusive.
-    return min(max(0, v), limit);
-  };
-  x = clamp(x, ctx->width);
-  y = clamp(y, ctx->height);
+  // Exclusive -> inclusive.
+  const F w = bit_cast<float>(bit_cast<uint32_t>(ctx->width) - 1),
+          h = bit_cast<float>(bit_cast<uint32_t>(ctx->height) - 1);
+
+  x = min(max(0, x), w);
+  y = min(max(0, y), h);
 
   *ptr = (const T*)ctx->pixels;
   return trunc_(y) * ctx->stride + trunc_(x);
@@ -3545,7 +3547,7 @@ SI V load(const T* ptr, size_t tail) {
   V v = 0;
   switch (tail & (N - 1)) {
     case 0: memcpy(&v, ptr, sizeof(v)); break;
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
     case 15: v[14] = ptr[14];
     case 14: v[13] = ptr[13];
     case 13: v[12] = ptr[12];
@@ -3569,7 +3571,7 @@ template <typename V, typename T>
 SI void store(T* ptr, size_t tail, V v) {
   switch (tail & (N - 1)) {
     case 0: memcpy(ptr, &v, sizeof(v)); break;
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
     case 15: ptr[14] = v[14];
     case 14: ptr[13] = v[13];
     case 13: ptr[12] = v[12];
@@ -3589,7 +3591,7 @@ SI void store(T* ptr, size_t tail, V v) {
   }
 }
 
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
 template <typename V, typename T>
 SI V gather(const T* ptr, U32 ix) {
   return V{
@@ -3627,7 +3629,7 @@ SI V gather(const T* ptr, U32 ix) {
 // ~~~~~~ 32-bit memory loads and stores ~~~~~~ //
 
 SI void from_8888(U32 rgba, U16* r, U16* g, U16* b, U16* a) {
-#  if 1 && defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if 1 && defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   // Swap the middle 128-bit lanes to make _mm256_packus_epi32() in cast_U16() work out nicely.
   __m256i _01, _23;
   split(rgba, &_01, &_23);
@@ -4048,7 +4050,7 @@ SI void round_F_to_U16(
 SI void gradient_lookup(
     const SkRasterPipeline_GradientCtx* c, U32 idx, F t, U16* r, U16* g, U16* b, U16* a) {
   F fr, fg, fb, fa, br, bg, bb, ba;
-#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_AVX512)
+#  if defined(JUMPER_IS_HSW) || defined(JUMPER_IS_SKX)
   if (c->stopCount <= 8) {
     __m256i lo, hi;
     split(idx, &lo, &hi);

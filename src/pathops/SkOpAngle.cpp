@@ -937,7 +937,7 @@ unorderable:
 
 // OPTIMIZE: if this shows up in a profile, add a previous pointer
 // as is, this should be rarely called
-SkOpAngle* SkOpAngle::previous() const {
+SkOpAngle* SkOpAngle::previous() const noexcept {
   SkOpAngle* last = fNext;
   do {
     SkOpAngle* next = last->fNext;

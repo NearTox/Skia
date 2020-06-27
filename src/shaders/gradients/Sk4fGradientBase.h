@@ -19,7 +19,7 @@
 struct Sk4fGradientInterval {
   Sk4fGradientInterval(const Sk4f& c0, SkScalar t0, const Sk4f& c1, SkScalar t1);
 
-  bool contains(SkScalar t) const {
+  bool contains(SkScalar t) const noexcept {
     // True if t is in [p0,p1].  Note: this helper assumes a
     // natural/increasing interval - so it's not usable in Sk4fLinearGradient.
     SkASSERT(fT0 < fT1);
@@ -45,7 +45,7 @@ class Sk4fGradientIntervalBuffer {
 
   using BufferType = SkSTArray<8, Sk4fGradientInterval, true>;
 
-  const BufferType* operator->() const { return &fIntervals; }
+  const BufferType* operator->() const noexcept { return &fIntervals; }
 
  private:
   BufferType fIntervals;

@@ -106,8 +106,9 @@ enum DrawType {
   DRAW_BEHIND_PAINT,
   CONCAT44,
   CLIP_SHADER_IN_PAINT,
+  MARK_CTM,
 
-  LAST_DRAWTYPE_ENUM = CLIP_SHADER_IN_PAINT,
+  LAST_DRAWTYPE_ENUM = MARK_CTM,
 };
 
 enum DrawVertexFlags {
@@ -143,7 +144,7 @@ enum SaveBehindFlatFlags {
 // clipparams are packed in 5 bits
 //  doAA:1 | clipOp:4
 
-static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
+static constexpr inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
   unsigned doAABit = doAA ? 1 : 0;
   return (doAABit << 4) | static_cast<int>(op);
 }
@@ -161,7 +162,7 @@ static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t 
   return asValidEnum<SkClipOp>(buffer, packed & 0xF);
 }
 
-static inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
+static constexpr inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
   return SkToBool((packed >> 4) & 1);
 }
 

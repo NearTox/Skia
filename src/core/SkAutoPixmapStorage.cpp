@@ -8,15 +8,15 @@
 #include "include/core/SkData.h"
 #include "src/core/SkAutoPixmapStorage.h"
 
-SkAutoPixmapStorage::SkAutoPixmapStorage() : fStorage(nullptr) {}
+SkAutoPixmapStorage::SkAutoPixmapStorage() noexcept : fStorage(nullptr) {}
 
 SkAutoPixmapStorage::~SkAutoPixmapStorage() { this->freeStorage(); }
 
-SkAutoPixmapStorage::SkAutoPixmapStorage(SkAutoPixmapStorage&& other) : fStorage(nullptr) {
+SkAutoPixmapStorage::SkAutoPixmapStorage(SkAutoPixmapStorage&& other) noexcept : fStorage(nullptr) {
   *this = std::move(other);
 }
 
-SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) {
+SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) noexcept {
   this->fStorage = other.fStorage;
   this->INHERITED::reset(other.info(), this->fStorage, other.rowBytes());
 
@@ -26,7 +26,7 @@ SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other)
   return *this;
 }
 
-size_t SkAutoPixmapStorage::AllocSize(const SkImageInfo& info, size_t* rowBytes) {
+size_t SkAutoPixmapStorage::AllocSize(const SkImageInfo& info, size_t* rowBytes) noexcept {
   size_t rb = info.minRowBytes();
   if (rowBytes) {
     *rowBytes = rb;
@@ -34,7 +34,7 @@ size_t SkAutoPixmapStorage::AllocSize(const SkImageInfo& info, size_t* rowBytes)
   return info.computeByteSize(rb);
 }
 
-bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) {
+bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) noexcept {
   this->freeStorage();
 
   size_t rb;
@@ -51,9 +51,11 @@ bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) {
   return true;
 }
 
-void SkAutoPixmapStorage::alloc(const SkImageInfo& info) { SkASSERT_RELEASE(this->tryAlloc(info)); }
+void SkAutoPixmapStorage::alloc(const SkImageInfo& info) noexcept {
+  SkASSERT_RELEASE(this->tryAlloc(info));
+}
 
-void* SkAutoPixmapStorage::detachPixels() {
+void* SkAutoPixmapStorage::detachPixels() noexcept {
   if (!fStorage) {
     return nullptr;
   }

@@ -54,7 +54,7 @@ SkRTree::Node* SkRTree::allocateNodeAtLevel(uint16_t level) {
 }
 
 // This function parallels bulkLoad, but just counts how many nodes bulkLoad would allocate.
-int SkRTree::CountNodes(int branches) {
+int SkRTree::CountNodes(int branches) noexcept {
   if (branches == 1) {
     return 1;
   }
@@ -163,7 +163,7 @@ void SkRTree::search(Node* node, const SkRect& query, std::vector<int>* results)
   }
 }
 
-size_t SkRTree::bytesUsed() const {
+size_t SkRTree::bytesUsed() const noexcept {
   size_t byteCount = sizeof(SkRTree);
 
   byteCount += fNodes.capacity() * sizeof(Node);

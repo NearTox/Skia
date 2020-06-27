@@ -12,8 +12,8 @@
 
 namespace {
 
-enum Mode { Opts, RP, F32, I32_Naive, I32, I32_SWAR };
-static const char* kMode_name[] = {"Opts", "RP", "F32", "I32_Naive", "I32", "I32_SWAR"};
+enum Mode { Opts, RP, F32, I32_Naive };
+static const char* kMode_name[] = {"Opts", "RP", "F32", "I32_Naive"};
 
 }  // namespace
 
@@ -38,12 +38,6 @@ class SkVMBench : public Benchmark {
     }
     if (fMode == I32_Naive) {
       fProgram = SrcoverBuilder_I32_Naive{}.done();
-    }
-    if (fMode == I32) {
-      fProgram = SrcoverBuilder_I32{}.done();
-    }
-    if (fMode == I32_SWAR) {
-      fProgram = SrcoverBuilder_I32_SWAR{}.done();
     }
 
     if (fMode == RP) {
@@ -115,22 +109,6 @@ DEF_BENCH(return (new SkVMBench{63, I32_Naive});)
 DEF_BENCH(return (new SkVMBench{256, I32_Naive});)
 DEF_BENCH(return (new SkVMBench{1024, I32_Naive});)
 DEF_BENCH(return (new SkVMBench{4096, I32_Naive});)
-
-DEF_BENCH(return (new SkVMBench{1, I32});)
-DEF_BENCH(return (new SkVMBench{4, I32});)
-DEF_BENCH(return (new SkVMBench{15, I32});)
-DEF_BENCH(return (new SkVMBench{63, I32});)
-DEF_BENCH(return (new SkVMBench{256, I32});)
-DEF_BENCH(return (new SkVMBench{1024, I32});)
-DEF_BENCH(return (new SkVMBench{4096, I32});)
-
-DEF_BENCH(return (new SkVMBench{1, I32_SWAR});)
-DEF_BENCH(return (new SkVMBench{4, I32_SWAR});)
-DEF_BENCH(return (new SkVMBench{15, I32_SWAR});)
-DEF_BENCH(return (new SkVMBench{63, I32_SWAR});)
-DEF_BENCH(return (new SkVMBench{256, I32_SWAR});)
-DEF_BENCH(return (new SkVMBench{1024, I32_SWAR});)
-DEF_BENCH(return (new SkVMBench{4096, I32_SWAR});)
 
 class SkVM_Overhead : public Benchmark {
  public:

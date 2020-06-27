@@ -202,19 +202,19 @@ class SkPathStroker {
   static ReductionType CheckCubicLinear(
       const SkPoint cubic[4], SkPoint reduction[3], const SkPoint** tanPtPtr) noexcept;
   static ReductionType CheckQuadLinear(const SkPoint quad[3], SkPoint* reduction) noexcept;
-  ResultType compareQuadConic(const SkConic&, SkQuadConstruct*) const noexcept;
-  ResultType compareQuadCubic(const SkPoint cubic[4], SkQuadConstruct*) noexcept;
-  ResultType compareQuadQuad(const SkPoint quad[3], SkQuadConstruct*) noexcept;
+  ResultType compareQuadConic(const SkConic&, SkQuadConstruct*) const;
+  ResultType compareQuadCubic(const SkPoint cubic[4], SkQuadConstruct*);
+  ResultType compareQuadQuad(const SkPoint quad[3], SkQuadConstruct*);
   void conicPerpRay(
       const SkConic&, SkScalar t, SkPoint* tPt, SkPoint* onPt, SkPoint* tangent) const noexcept;
   void conicQuadEnds(const SkConic&, SkQuadConstruct*) const noexcept;
   bool conicStroke(const SkConic&, SkQuadConstruct*);
-  bool cubicMidOnLine(const SkPoint cubic[4], const SkQuadConstruct*) const noexcept;
+  bool cubicMidOnLine(const SkPoint cubic[4], const SkQuadConstruct*) const;
   void cubicPerpRay(
       const SkPoint cubic[4], SkScalar t, SkPoint* tPt, SkPoint* onPt,
       SkPoint* tangent) const noexcept;
-  void cubicQuadEnds(const SkPoint cubic[4], SkQuadConstruct*) noexcept;
-  void cubicQuadMid(const SkPoint cubic[4], const SkQuadConstruct*, SkPoint* mid) const noexcept;
+  void cubicQuadEnds(const SkPoint cubic[4], SkQuadConstruct*);
+  void cubicQuadMid(const SkPoint cubic[4], const SkQuadConstruct*, SkPoint* mid) const;
   bool cubicStroke(const SkPoint cubic[4], SkQuadConstruct*);
   void init(StrokeType strokeType, SkQuadConstruct*, SkScalar tStart, SkScalar tEnd) noexcept;
   ResultType intersectRay(
@@ -236,8 +236,8 @@ class SkPathStroker {
   static bool SlightAngle(SkQuadConstruct*);
   ResultType strokeCloseEnough(
       const SkPoint stroke[3], const SkPoint ray[2],
-      SkQuadConstruct* STROKER_DEBUG_PARAMS(int depth)) const noexcept;
-  ResultType tangentsMeet(const SkPoint cubic[4], SkQuadConstruct*) noexcept;
+      SkQuadConstruct* STROKER_DEBUG_PARAMS(int depth)) const;
+  ResultType tangentsMeet(const SkPoint cubic[4], SkQuadConstruct*);
 
   void finishContour(bool close, bool isLine);
   bool preJoinTo(const SkPoint&, SkVector* normal, SkVector* unitNormal, bool isLine);
@@ -830,7 +830,7 @@ void SkPathStroker::cubicPerpRay(
 }
 
 // Given a cubic and a t range, find the start and end if they haven't been found already.
-void SkPathStroker::cubicQuadEnds(const SkPoint cubic[4], SkQuadConstruct* quadPts) noexcept {
+void SkPathStroker::cubicQuadEnds(const SkPoint cubic[4], SkQuadConstruct* quadPts) {
   if (!quadPts->fStartSet) {
     SkPoint cubicStartPt;
     this->cubicPerpRay(
@@ -846,7 +846,7 @@ void SkPathStroker::cubicQuadEnds(const SkPoint cubic[4], SkQuadConstruct* quadP
 }
 
 void SkPathStroker::cubicQuadMid(
-    const SkPoint cubic[4], const SkQuadConstruct* quadPts, SkPoint* mid) const noexcept {
+    const SkPoint cubic[4], const SkQuadConstruct* quadPts, SkPoint* mid) const {
   SkPoint cubicMidPt;
   this->cubicPerpRay(cubic, quadPts->fMidT, &cubicMidPt, mid, nullptr);
 }
@@ -924,7 +924,7 @@ SkPathStroker::ResultType SkPathStroker::intersectRay(
 
 // Given a cubic and a t-range, determine if the stroke can be described by a quadratic.
 SkPathStroker::ResultType SkPathStroker::tangentsMeet(
-    const SkPoint cubic[4], SkQuadConstruct* quadPts) noexcept {
+    const SkPoint cubic[4], SkQuadConstruct* quadPts) {
   this->cubicQuadEnds(cubic, quadPts);
   return this->intersectRay(quadPts, kResultType_RayType STROKER_DEBUG_PARAMS(fRecursionDepth));
 }
@@ -990,7 +990,7 @@ static bool sharp_angle(const SkPoint quad[3]) noexcept {
 
 SkPathStroker::ResultType SkPathStroker::strokeCloseEnough(
     const SkPoint stroke[3], const SkPoint ray[2],
-    SkQuadConstruct* quadPts STROKER_DEBUG_PARAMS(int depth)) const noexcept {
+    SkQuadConstruct* quadPts STROKER_DEBUG_PARAMS(int depth)) const {
   SkPoint strokeMid = SkEvalQuadAt(stroke, SK_ScalarHalf);
   // measure the distance from the curve to the quad-stroke midpoint, compare to radius
   if (points_within_dist(ray[0], strokeMid, fInvResScale)) {  // if the difference is small
@@ -1038,7 +1038,7 @@ SkPathStroker::ResultType SkPathStroker::strokeCloseEnough(
 }
 
 SkPathStroker::ResultType SkPathStroker::compareQuadCubic(
-    const SkPoint cubic[4], SkQuadConstruct* quadPts) noexcept {
+    const SkPoint cubic[4], SkQuadConstruct* quadPts) {
   // get the quadratic approximation of the stroke
   this->cubicQuadEnds(cubic, quadPts);
   ResultType resultType =
@@ -1054,7 +1054,7 @@ SkPathStroker::ResultType SkPathStroker::compareQuadCubic(
 }
 
 SkPathStroker::ResultType SkPathStroker::compareQuadConic(
-    const SkConic& conic, SkQuadConstruct* quadPts) const noexcept {
+    const SkConic& conic, SkQuadConstruct* quadPts) const {
   // get the quadratic approximation of the stroke
   this->conicQuadEnds(conic, quadPts);
   ResultType resultType =
@@ -1070,7 +1070,7 @@ SkPathStroker::ResultType SkPathStroker::compareQuadConic(
 }
 
 SkPathStroker::ResultType SkPathStroker::compareQuadQuad(
-    const SkPoint quad[3], SkQuadConstruct* quadPts) noexcept {
+    const SkPoint quad[3], SkQuadConstruct* quadPts) {
   // get the quadratic approximation of the stroke
   if (!quadPts->fStartSet) {
     SkPoint quadStartPt;
@@ -1101,8 +1101,7 @@ void SkPathStroker::addDegenerateLine(const SkQuadConstruct* quadPts) {
   path->lineTo(quad[2].fX, quad[2].fY);
 }
 
-bool SkPathStroker::cubicMidOnLine(
-    const SkPoint cubic[4], const SkQuadConstruct* quadPts) const noexcept {
+bool SkPathStroker::cubicMidOnLine(const SkPoint cubic[4], const SkQuadConstruct* quadPts) const {
   SkPoint strokeMid;
   this->cubicQuadMid(cubic, quadPts, &strokeMid);
   SkScalar dist = pt_to_line(strokeMid, quadPts->fQuad[0], quadPts->fQuad[2]);
@@ -1301,13 +1300,14 @@ void SkPathStroker::cubicTo(const SkPoint& pt1, const SkPoint& pt2, const SkPoin
 
 #include "src/core/SkPaintDefaults.h"
 
-SkStroke::SkStroke() noexcept
-    : fWidth(SK_Scalar1),
-      fMiterLimit(SkPaintDefaults_MiterLimit),
-      fResScale(1),
-      fCap(SkPaint::kDefault_Cap),
-      fJoin(SkPaint::kDefault_Join),
-      fDoFill(false) {}
+SkStroke::SkStroke() noexcept {
+  fWidth = SK_Scalar1;
+  fMiterLimit = SkPaintDefaults_MiterLimit;
+  fResScale = 1;
+  fCap = SkPaint::kDefault_Cap;
+  fJoin = SkPaint::kDefault_Join;
+  fDoFill = false;
+}
 
 SkStroke::SkStroke(const SkPaint& p) noexcept {
   fWidth = p.getStrokeWidth();
@@ -1495,7 +1495,7 @@ DONE:
 }
 
 static SkPathDirection reverse_direction(SkPathDirection dir) noexcept {
-  static const SkPathDirection gOpposite[] = {SkPathDirection::kCCW, SkPathDirection::kCW};
+  static constexpr SkPathDirection gOpposite[] = {SkPathDirection::kCCW, SkPathDirection::kCW};
   return gOpposite[(int)dir];
 }
 

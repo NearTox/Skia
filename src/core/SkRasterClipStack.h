@@ -16,7 +16,7 @@
 template <typename T>
 class SkTStack {
  public:
-  SkTStack(void* storage, size_t size) : fDeque(sizeof(T), storage, size), fTop(nullptr) {}
+  SkTStack(void* storage, size_t size) noexcept : fDeque(sizeof(T), storage, size), fTop(nullptr) {}
   ~SkTStack() {
     while (!fDeque.empty()) {
       ((T*)fDeque.back())->~T();
@@ -24,21 +24,21 @@ class SkTStack {
     }
   }
 
-  bool empty() const { return fDeque.empty(); }
+  bool empty() const noexcept { return fDeque.empty(); }
 
-  int count() const { return fDeque.count(); }
+  int count() const noexcept { return fDeque.count(); }
 
-  const T& top() const {
+  const T& top() const noexcept {
     SkASSERT(fTop);
     return *fTop;
   }
 
-  T& top() {
+  T& top() noexcept {
     SkASSERT(fTop);
     return *fTop;
   }
 
-  T* push_raw() { return (T*)fDeque.push_back(); }
+  T* push_raw() noexcept { return (T*)fDeque.push_back(); }
   T& push() {
     fTop = this->push_raw();
     new (fTop) T();
@@ -50,7 +50,7 @@ class SkTStack {
     return *fTop;
   }
 
-  void pop() {
+  void pop() noexcept {
     fTop->~T();
     fDeque.pop_back();
     fTop = fDeque.empty() ? nullptr : (T*)fDeque.back();

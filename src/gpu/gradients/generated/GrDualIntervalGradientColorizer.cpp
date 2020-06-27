@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLDualIntervalGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLDualIntervalGradientColorizer() {}
+  GrGLSLDualIntervalGradientColorizer() noexcept = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrDualIntervalGradientColorizer& _outer =
@@ -34,16 +34,16 @@ class GrGLSLDualIntervalGradientColorizer : public GrGLSLFragmentProcessor {
     (void)bias23;
     auto threshold = _outer.threshold;
     (void)threshold;
-    scale01Var =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "scale01");
-    bias01Var =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "bias01");
-    scale23Var =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "scale23");
-    bias23Var =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "bias23");
-    thresholdVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf_GrSLType, "threshold");
+    scale01Var = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "scale01");
+    bias01Var = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "bias01");
+    scale23Var = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "scale23");
+    bias23Var = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "bias23");
+    thresholdVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "threshold");
     fragBuilder->codeAppendf(
         "half t = %s.x;\nfloat4 scale, bias;\nif (t < %s) {\n    scale = %s;\n    bias = "
         "%s;\n} else {\n    scale = %s;\n    bias = %s;\n}\n%s = half4(float(t) * scale + "
@@ -102,7 +102,7 @@ GrGLSLFragmentProcessor* GrDualIntervalGradientColorizer::onCreateGLSLInstance()
 }
 void GrDualIntervalGradientColorizer::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrDualIntervalGradientColorizer& that = other.cast<GrDualIntervalGradientColorizer>();
   (void)that;
   if (scale01 != that.scale01) return false;
@@ -113,7 +113,7 @@ bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other
   return true;
 }
 GrDualIntervalGradientColorizer::GrDualIntervalGradientColorizer(
-    const GrDualIntervalGradientColorizer& src)
+    const GrDualIntervalGradientColorizer& src) noexcept
     : INHERITED(kGrDualIntervalGradientColorizer_ClassID, src.optimizationFlags()),
       scale01(src.scale01),
       bias01(src.bias01),

@@ -48,13 +48,13 @@ struct SkCpu {
   };
 
   static void CacheRuntimeFeatures();
-  static bool Supports(uint32_t);
+  static bool Supports(uint32_t) noexcept;
 
  private:
   static uint32_t gCachedFeatures;
 };
 
-inline bool SkCpu::Supports(uint32_t mask) {
+inline bool SkCpu::Supports(uint32_t mask) noexcept {
   uint32_t features = gCachedFeatures;
 
   // If we mask in compile-time known lower limits, the compiler can
@@ -84,6 +84,9 @@ inline bool SkCpu::Supports(uint32_t mask) {
 // F16C goes here if we add SK_CPU_SSE_LEVEL_F16C
 #  if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_AVX2
   features |= AVX2;
+#  endif
+#  if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SKX
+  features |= (AVX512F | AVX512DQ | AVX512CD | AVX512BW | AVX512VL);
 #  endif
   // FMA doesn't fit neatly into this total ordering.
   // It's available on Haswell+ just like AVX2, but it's technically a different bit.

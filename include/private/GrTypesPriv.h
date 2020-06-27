@@ -34,12 +34,14 @@ using GrStdSteadyClock = std::chrono::steady_clock;
  *  divide, rounding up
  */
 
-static constexpr size_t GrSizeDivRoundUp(size_t x, size_t y) noexcept { return (x + (y - 1)) / y; }
+static inline constexpr size_t GrSizeDivRoundUp(size_t x, size_t y) noexcept {
+  return (x + (y - 1)) / y;
+}
 
 /**
  *  align up to a power of 2
  */
-static constexpr size_t GrAlignTo(size_t x, size_t alignment) noexcept {
+static inline constexpr size_t GrAlignTo(size_t x, size_t alignment) noexcept {
   SkASSERT(alignment && SkIsPow2(alignment));
   return (x + alignment - 1) & ~(alignment - 1);
 }
@@ -68,6 +70,27 @@ static constexpr bool GrIsPrimTypeTris(GrPrimitiveType type) noexcept {
 
 enum class GrPrimitiveRestart : bool { kNo = false, kYes = true };
 
+struct GrDrawIndirectCommand {
+  uint32_t fVertexCount;
+  uint32_t fInstanceCount;
+  uint32_t fBaseVertex;
+  uint32_t fBaseInstance;
+};
+
+static_assert(sizeof(GrDrawIndirectCommand) == 16, "GrDrawIndirectCommand must be tightly packed");
+
+struct GrDrawIndexedIndirectCommand {
+  uint32_t fIndexCount;
+  uint32_t fInstanceCount;
+  uint32_t fBaseIndex;
+  int32_t fBaseVertex;
+  uint32_t fBaseInstance;
+};
+
+static_assert(
+    sizeof(GrDrawIndexedIndirectCommand) == 20,
+    "GrDrawIndexedIndirectCommand must be tightly packed");
+
 /**
  * Should a created surface be texturable?
  */
@@ -93,7 +116,7 @@ static inline int GrMaskFormatBytesPerPixel(GrMaskFormat format) noexcept {
   // kA8   (0) -> 1
   // kA565 (1) -> 2
   // kARGB (2) -> 4
-  static const int sBytesPerPixel[] = {1, 2, 4};
+  static constexpr int sBytesPerPixel[] = {1, 2, 4};
   static_assert(SK_ARRAY_COUNT(sBytesPerPixel) == kMaskFormatCount, "array_size_mismatch");
   static_assert(kA8_GrMaskFormat == 0, "enum_order_dependency");
   static_assert(kA565_GrMaskFormat == 1, "enum_order_dependency");
@@ -251,7 +274,7 @@ enum class GrQuadAAFlags {
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrQuadAAFlags)
 
-static constexpr GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) noexcept {
+static constexpr inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) noexcept {
   return static_cast<GrQuadAAFlags>(flags);
 }
 
@@ -599,6 +622,7 @@ enum GrIOType { kRead_GrIOType, kWrite_GrIOType, kRW_GrIOType };
 enum class GrGpuBufferType {
   kVertex,
   kIndex,
+  kDrawIndirect,
   kXferCpuToGpu,
   kXferGpuToCpu,
 };
@@ -647,13 +671,13 @@ GR_MAKE_BITFIELD_CLASS_OPS(GrInternalSurfaceFlags)
 
 // 'GR_MAKE_BITFIELD_CLASS_OPS' defines the & operator on GrInternalSurfaceFlags to return bool.
 // We want to find the bitwise & with these masks, so we declare them as ints.
-static constexpr int kGrInternalTextureFlagsMask =
+constexpr static int kGrInternalTextureFlagsMask =
     static_cast<int>(GrInternalSurfaceFlags::kReadOnly);
 
-static constexpr int kGrInternalRenderTargetFlagsMask = static_cast<int>(
+constexpr static int kGrInternalRenderTargetFlagsMask = static_cast<int>(
     GrInternalSurfaceFlags::kGLRTFBOIDIs0 | GrInternalSurfaceFlags::kRequiresManualMSAAResolve);
 
-static constexpr int kGrInternalTextureRenderTargetFlagsMask =
+constexpr static int kGrInternalTextureRenderTargetFlagsMask =
     kGrInternalTextureFlagsMask | kGrInternalRenderTargetFlagsMask;
 
 #ifdef SK_DEBUG
@@ -729,6 +753,7 @@ enum class GrColorType {
   kRG_88,
   kBGRA_8888,
   kRGBA_1010102,
+  kBGRA_1010102,
   kGray_8,
   kAlpha_F16,
   kRGBA_F16,
@@ -773,6 +798,7 @@ static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) noexcept {
     case GrColorType::kRG_88: return kR8G8_unorm_SkColorType;
     case GrColorType::kBGRA_8888: return kBGRA_8888_SkColorType;
     case GrColorType::kRGBA_1010102: return kRGBA_1010102_SkColorType;
+    case GrColorType::kBGRA_1010102: return kBGRA_1010102_SkColorType;
     case GrColorType::kGray_8: return kGray_8_SkColorType;
     case GrColorType::kAlpha_F16: return kA16_float_SkColorType;
     case GrColorType::kRGBA_F16: return kRGBA_F16_SkColorType;
@@ -808,7 +834,7 @@ static constexpr GrColorType SkColorTypeToGrColorType(SkColorType ct) noexcept {
     case kRGBA_F16_SkColorType: return GrColorType::kRGBA_F16;
     case kRGBA_1010102_SkColorType: return GrColorType::kRGBA_1010102;
     case kRGB_101010x_SkColorType: return GrColorType::kUnknown;
-    case kBGRA_1010102_SkColorType: return GrColorType::kUnknown;
+    case kBGRA_1010102_SkColorType: return GrColorType::kBGRA_1010102;
     case kBGR_101010x_SkColorType: return GrColorType::kUnknown;
     case kRGBA_F32_SkColorType: return GrColorType::kRGBA_F32;
     case kR8G8_unorm_SkColorType: return GrColorType::kRG_88;
@@ -838,6 +864,7 @@ static constexpr uint32_t GrColorTypeChannelFlags(GrColorType ct) noexcept {
     case GrColorType::kRG_88: return kRG_SkColorChannelFlags;
     case GrColorType::kBGRA_8888: return kRGBA_SkColorChannelFlags;
     case GrColorType::kRGBA_1010102: return kRGBA_SkColorChannelFlags;
+    case GrColorType::kBGRA_1010102: return kRGBA_SkColorChannelFlags;
     case GrColorType::kGray_8: return kGray_SkColorChannelFlag;
     case GrColorType::kAlpha_F16: return kAlpha_SkColorChannelFlag;
     case GrColorType::kRGBA_F16: return kRGBA_SkColorChannelFlags;
@@ -964,6 +991,8 @@ static constexpr GrColorTypeDesc GrGetColorTypeDesc(GrColorType ct) noexcept {
     case GrColorType::kBGRA_8888: return GrColorTypeDesc::MakeRGBA(8, GrColorTypeEncoding::kUnorm);
     case GrColorType::kRGBA_1010102:
       return GrColorTypeDesc::MakeRGBA(10, 2, GrColorTypeEncoding::kUnorm);
+    case GrColorType::kBGRA_1010102:
+      return GrColorTypeDesc::MakeRGBA(10, 2, GrColorTypeEncoding::kUnorm);
     case GrColorType::kGray_8: return GrColorTypeDesc::MakeGray(8, GrColorTypeEncoding::kUnorm);
     case GrColorType::kAlpha_F16:
       return GrColorTypeDesc::MakeAlpha(16, GrColorTypeEncoding::kFloat);
@@ -1027,6 +1056,7 @@ static constexpr size_t GrColorTypeBytesPerPixel(GrColorType ct) noexcept {
     case GrColorType::kRG_88: return 2;
     case GrColorType::kBGRA_8888: return 4;
     case GrColorType::kRGBA_1010102: return 4;
+    case GrColorType::kBGRA_1010102: return 4;
     case GrColorType::kGray_8: return 1;
     case GrColorType::kAlpha_F16: return 2;
     case GrColorType::kRGBA_F16: return 8;
@@ -1050,7 +1080,8 @@ static constexpr size_t GrColorTypeBytesPerPixel(GrColorType ct) noexcept {
 
 // In general we try to not mix CompressionType and ColorType, but currently SkImage still requires
 // an SkColorType even for CompressedTypes so we need some conversion.
-static constexpr SkColorType GrCompressionTypeToSkColorType(SkImage::CompressionType compression) noexcept {
+static constexpr SkColorType GrCompressionTypeToSkColorType(
+    SkImage::CompressionType compression) noexcept {
   switch (compression) {
     case SkImage::CompressionType::kNone: return kUnknown_SkColorType;
     case SkImage::CompressionType::kETC2_RGB8_UNORM: return kRGB_888x_SkColorType;
@@ -1115,6 +1146,7 @@ static constexpr const char* GrColorTypeToStr(GrColorType ct) noexcept {
     case GrColorType::kRG_88: return "kRG_88";
     case GrColorType::kBGRA_8888: return "kBGRA_8888";
     case GrColorType::kRGBA_1010102: return "kRGBA_1010102";
+    case GrColorType::kBGRA_1010102: return "kBGRA_1010102";
     case GrColorType::kGray_8: return "kGray_8";
     case GrColorType::kAlpha_F16: return "kAlpha_F16";
     case GrColorType::kRGBA_F16: return "kRGBA_F16";

@@ -14,45 +14,53 @@
 template <typename T>
 class SkSpan {
  public:
-  constexpr SkSpan() : fPtr{nullptr}, fSize{0} {}
-  constexpr SkSpan(T* ptr, size_t size) : fPtr{ptr}, fSize{size} {}
+  constexpr SkSpan() noexcept : fPtr{nullptr}, fSize{0} {}
+  constexpr SkSpan(T* ptr, size_t size) noexcept : fPtr{ptr}, fSize{size} {}
   template <typename U, typename = typename std::enable_if<std::is_same<const U, T>::value>::type>
-  constexpr SkSpan(const SkSpan<U>& that) : fPtr(that.data()), fSize{that.size()} {}
-  constexpr SkSpan(const SkSpan& o) = default;
-  constexpr SkSpan& operator=(const SkSpan& that) {
+  constexpr SkSpan(const SkSpan<U>& that) noexcept : fPtr(that.data()), fSize{that.size()} {}
+  constexpr SkSpan(const SkSpan& o) noexcept = default;
+  constexpr SkSpan& operator=(const SkSpan& that) noexcept {
     fPtr = that.fPtr;
     fSize = that.fSize;
     return *this;
   }
-  constexpr T& operator[](size_t i) const { return fPtr[i]; }
-  constexpr T& front() const { return fPtr[0]; }
-  constexpr T& back() const { return fPtr[fSize - 1]; }
-  constexpr T* begin() const { return fPtr; }
-  constexpr T* end() const { return fPtr + fSize; }
-  constexpr const T* cbegin() const { return fPtr; }
-  constexpr const T* cend() const { return fPtr + fSize; }
+  constexpr T& operator[](size_t i) const noexcept { return fPtr[i]; }
+  constexpr T& front() const noexcept { return fPtr[0]; }
+  constexpr T& back() const noexcept { return fPtr[fSize - 1]; }
+  constexpr T* begin() const noexcept { return fPtr; }
+  constexpr T* end() const noexcept { return fPtr + fSize; }
+  constexpr const T* cbegin() const noexcept { return fPtr; }
+  constexpr const T* cend() const noexcept { return fPtr + fSize; }
   constexpr auto rbegin() const { return std::make_reverse_iterator(this->end()); }
   constexpr auto rend() const { return std::make_reverse_iterator(this->begin()); }
   constexpr auto crbegin() const { return std::make_reverse_iterator(this->cend()); }
   constexpr auto crend() const { return std::make_reverse_iterator(this->cbegin()); }
-  constexpr T* data() const { return fPtr; }
-  constexpr int count() const { return SkTo<int>(fSize); }
-  constexpr size_t size() const { return fSize; }
-  constexpr bool empty() const { return fSize == 0; }
-  constexpr size_t size_bytes() const { return fSize * sizeof(T); }
-  constexpr SkSpan<T> first(size_t prefixLen) const {
+  constexpr T* data() const noexcept { return fPtr; }
+  constexpr int count() const noexcept { return SkTo<int>(fSize); }
+  constexpr size_t size() const noexcept { return fSize; }
+  constexpr bool empty() const noexcept { return fSize == 0; }
+  constexpr size_t size_bytes() const noexcept { return fSize * sizeof(T); }
+  constexpr SkSpan<T> first(size_t prefixLen) const noexcept {
     SkASSERT(prefixLen <= this->size());
     if (prefixLen == 0) {
       return SkSpan{};
     }
     return SkSpan{fPtr, prefixLen};
   }
-  constexpr SkSpan<T> last(size_t postfixLen) const {
+  constexpr SkSpan<T> last(size_t postfixLen) const noexcept {
     SkASSERT(postfixLen <= this->size());
     if (postfixLen == 0) {
       return SkSpan{};
     }
     return SkSpan{fPtr + (this->size() - postfixLen), postfixLen};
+  }
+  constexpr SkSpan<T> subspan(size_t offset, size_t count) const noexcept {
+    SkASSERT(offset <= this->size());
+    SkASSERT(count <= this->size() - offset);
+    if (count == 0) {
+      return SkSpan{};
+    }
+    return SkSpan{fPtr + offset, count};
   }
 
  private:
@@ -61,12 +69,12 @@ class SkSpan {
 };
 
 template <typename T, typename S>
-inline constexpr SkSpan<T> SkMakeSpan(T* p, S s) {
+inline constexpr SkSpan<T> SkMakeSpan(T* p, S s) noexcept {
   return SkSpan<T>{p, SkTo<size_t>(s)};
 }
 
 template <size_t N, typename T>
-inline constexpr SkSpan<T> SkMakeSpan(T (&a)[N]) {
+inline constexpr SkSpan<T> SkMakeSpan(T (&a)[N]) noexcept {
   return SkSpan<T>{a, N};
 }
 

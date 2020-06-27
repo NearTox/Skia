@@ -26,9 +26,8 @@
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/effects/GrConvexPolyEffect.h"
 #include "src/gpu/effects/GrRRectEffect.h"
-#include "src/gpu/effects/GrTextureDomain.h"
 #include "src/gpu/effects/generated/GrDeviceSpaceEffect.h"
-#include "src/gpu/geometry/GrShape.h"
+#include "src/gpu/geometry/GrStyledShape.h"
 
 typedef SkClipStack::Element Element;
 typedef GrReducedClip::InitialState InitialState;
@@ -36,21 +35,21 @@ typedef GrReducedClip::ElementList ElementList;
 
 const char GrClipStackClip::kMaskTestTag[] = "clip_mask";
 
-bool GrClipStackClip::quickContains(const SkRect& rect) const {
+bool GrClipStackClip::quickContains(const SkRect& rect) const noexcept {
   if (!fStack || fStack->isWideOpen()) {
     return true;
   }
   return fStack->quickContains(rect);
 }
 
-bool GrClipStackClip::quickContains(const SkRRect& rrect) const {
+bool GrClipStackClip::quickContains(const SkRRect& rrect) const noexcept {
   if (!fStack || fStack->isWideOpen()) {
     return true;
   }
   return fStack->quickContains(rrect);
 }
 
-bool GrClipStackClip::isRRect(const SkRect& origRTBounds, SkRRect* rr, GrAA* aa) const {
+bool GrClipStackClip::isRRect(const SkRect& origRTBounds, SkRRect* rr, GrAA* aa) const noexcept {
   if (!fStack) {
     return false;
   }
@@ -63,18 +62,14 @@ bool GrClipStackClip::isRRect(const SkRect& origRTBounds, SkRRect* rr, GrAA* aa)
   return false;
 }
 
-void GrClipStackClip::getConservativeBounds(
-    int width, int height, SkIRect* devResult, bool* isIntersectionOfRects) const {
-  if (!fStack) {
-    devResult->setXYWH(0, 0, width, height);
-    if (isIntersectionOfRects) {
-      *isIntersectionOfRects = true;
-    }
-    return;
+SkIRect GrClipStackClip::getConservativeBounds(int width, int height) const noexcept {
+  if (fStack) {
+    SkRect devBounds;
+    fStack->getConservativeBounds(0, 0, width, height, &devBounds);
+    return devBounds.roundOut();
+  } else {
+    return this->GrClip::getConservativeBounds(width, height);
   }
-  SkRect devBounds;
-  fStack->getConservativeBounds(0, 0, width, height, &devBounds, isIntersectionOfRects);
-  devBounds.roundOut(devResult);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,13 +121,14 @@ bool GrClipStackClip::PathNeedsSWRenderer(
                                              ? GrPathRendererChain::DrawType::kStencilAndColor
                                              : GrPathRendererChain::DrawType::kColor;
 
-    GrShape shape(path, GrStyle::SimpleFill());
+    GrStyledShape shape(path, GrStyle::SimpleFill());
     GrPathRenderer::CanDrawPathArgs canDrawArgs;
     canDrawArgs.fCaps = context->priv().caps();
     canDrawArgs.fProxy = renderTargetContext->asRenderTargetProxy();
     canDrawArgs.fClipConservativeBounds = &scissorRect;
     canDrawArgs.fViewMatrix = &viewMatrix;
     canDrawArgs.fShape = &shape;
+    canDrawArgs.fPaint = nullptr;
     canDrawArgs.fAAType = aaType;
     SkASSERT(!renderTargetContext->wrapsVkSecondaryCB());
     canDrawArgs.fTargetIsWrappedVkSecondaryCB = false;
@@ -298,17 +294,7 @@ bool GrClipStackClip::applyClipMask(
     }
   }
 
-  // This relies on the property that a reduced sub-rect of the last clip will contain all the
-  // relevant window rectangles that were in the last clip. This subtle requirement will go away
-  // after clipping is overhauled.
-  if (renderTargetContext->priv().mustRenderClip(
-          reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs())) {
-    reducedClip.drawStencilClipMask(context, renderTargetContext);
-    renderTargetContext->priv().setLastClip(
-        reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs());
-  }
-  // GrAppliedClip doesn't need to figure numAnalyticFPs into its key (used by operator==) because
-  // it verifies the FPs are also equal.
+  reducedClip.drawStencilClipMask(context, renderTargetContext);
   out->hardClip().addStencilClip(reducedClip.maskGenID());
   return true;
 }
@@ -343,6 +329,12 @@ static void add_invalidate_on_pop_message(
   SkDEBUGFAIL("Gen ID was not found in stack.");
 }
 
+static constexpr auto kMaskOrigin = kTopLeft_GrSurfaceOrigin;
+
+static GrSurfaceProxyView find_mask(GrProxyProvider* provider, const GrUniqueKey& key) {
+  return provider->findCachedProxyWithColorTypeFallback(key, kMaskOrigin, GrColorType::kAlpha_8, 1);
+}
+
 GrSurfaceProxyView GrClipStackClip::createAlphaClipMask(
     GrRecordingContext* context, const GrReducedClip& reducedClip) const {
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
@@ -350,16 +342,14 @@ GrSurfaceProxyView GrClipStackClip::createAlphaClipMask(
   create_clip_mask_key(
       reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs(), &key);
 
-  if (sk_sp<GrTextureProxy> proxy = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
-    GrSwizzle swizzle =
-        context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kAlpha_8);
-    return {std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle};
+  if (auto cachedView = find_mask(context->priv().proxyProvider(), key)) {
+    return cachedView;
   }
 
   auto rtc = GrRenderTargetContext::MakeWithFallback(
       context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kApprox,
       {reducedClip.width(), reducedClip.height()}, 1, GrMipMapped::kNo, GrProtected::kNo,
-      kTopLeft_GrSurfaceOrigin);
+      kMaskOrigin);
   if (!rtc) {
     return {};
   }
@@ -373,7 +363,7 @@ GrSurfaceProxyView GrClipStackClip::createAlphaClipMask(
     return {};
   }
 
-  SkASSERT(result.origin() == kTopLeft_GrSurfaceOrigin);
+  SkASSERT(result.origin() == kMaskOrigin);
   proxyProvider->assignUniqueKeyToProxy(key, result.asTextureProxy());
   add_invalidate_on_pop_message(context, *fStack, reducedClip.maskGenID(), key);
 
@@ -397,9 +387,9 @@ class ClipMaskData {
     }
   }
 
-  const SkIRect& scissor() const { return fScissor; }
-  InitialState initialState() const { return fInitialState; }
-  const ElementList& elements() const { return fElements; }
+  const SkIRect& scissor() const noexcept { return fScissor; }
+  InitialState initialState() const noexcept { return fInitialState; }
+  const ElementList& elements() const noexcept { return fElements; }
 
  private:
   SkIRect fScissor;
@@ -436,8 +426,7 @@ static void draw_clip_elements_to_mask_helper(
       SkPath clipPath;
       element->asDeviceSpacePath(&clipPath);
       clipPath.toggleInverseFillType();
-      GrShape shape(clipPath, GrStyle::SimpleFill());
-      helper.drawShape(shape, translate, SkRegion::kReplace_Op, aa, 0x00);
+      helper.drawShape(GrShape(clipPath), translate, SkRegion::kReplace_Op, aa, 0x00);
       continue;
     }
 
@@ -445,11 +434,12 @@ static void draw_clip_elements_to_mask_helper(
     // the geometry so they can just be drawn normally
     if (Element::DeviceSpaceType::kRect == element->getDeviceSpaceType()) {
       helper.drawRect(element->getDeviceSpaceRect(), translate, (SkRegion::Op)op, aa, 0xFF);
+    } else if (Element::DeviceSpaceType::kRRect == element->getDeviceSpaceType()) {
+      helper.drawRRect(element->getDeviceSpaceRRect(), translate, (SkRegion::Op)op, aa, 0xFF);
     } else {
       SkPath path;
       element->asDeviceSpacePath(&path);
-      GrShape shape(path, GrStyle::SimpleFill());
-      helper.drawShape(shape, translate, (SkRegion::Op)op, aa, 0xFF);
+      helper.drawShape(GrShape(path), translate, (SkRegion::Op)op, aa, 0xFF);
     }
   }
 }
@@ -462,12 +452,9 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
       reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticFPs(), &key);
 
   GrProxyProvider* proxyProvider = context->priv().proxyProvider();
-  const GrCaps* caps = context->priv().caps();
 
-  if (sk_sp<GrTextureProxy> proxy = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
-    GrSwizzle swizzle =
-        context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kAlpha_8);
-    return {std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle};
+  if (auto cachedView = find_mask(proxyProvider, key)) {
+    return cachedView;
   }
 
   // The mask texture may be larger than necessary. We round out the clip bounds and pin the top
@@ -481,6 +468,7 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
 
   GrSurfaceProxyView view;
   if (taskGroup && renderTargetContext) {
+    const GrCaps* caps = context->priv().caps();
     // Create our texture proxy
     GrBackendFormat format =
         caps->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
@@ -511,7 +499,7 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
     taskGroup->add(std::move(drawAndUploadMask));
     proxy->texPriv().setDeferredUploader(std::move(uploader));
 
-    view = {std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle};
+    view = {std::move(proxy), kMaskOrigin, swizzle};
   } else {
     GrSWMaskHelper helper;
     if (!helper.init(maskSpaceIBounds)) {
@@ -525,7 +513,7 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
   }
 
   SkASSERT(view);
-  SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
+  SkASSERT(view.origin() == kMaskOrigin);
   proxyProvider->assignUniqueKeyToProxy(key, view.asTextureProxy());
   add_invalidate_on_pop_message(context, *fStack, reducedClip.maskGenID(), key);
   return view;

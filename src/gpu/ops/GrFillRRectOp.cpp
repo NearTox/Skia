@@ -78,7 +78,7 @@ class FillRRectOp : public GrMeshDrawOp {
   // data. The actual layout of the instance buffer can vary from Op to Op.
   template <typename T>
   inline T* appendInstanceData(int count) {
-    static_assert(std::is_pod<T>::value, "");
+    static_assert(std::is_trivially_copyable<T>::value, "");
     static_assert(4 == alignof(T), "");
     return reinterpret_cast<T*>(fInstanceData.push_back_n(sizeof(T) * count));
   }
@@ -95,7 +95,7 @@ class FillRRectOp : public GrMeshDrawOp {
 
   // Create a GrProgramInfo object in the provided arena
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) final;
 
   Helper fHelper;
@@ -134,7 +134,7 @@ std::unique_ptr<GrDrawOp> FillRRectOp::Make(
 
   const GrCaps* caps = ctx->priv().caps();
 
-  if (!caps->instanceAttribSupport()) {
+  if (!caps->drawInstancedSupport()) {
     return nullptr;
   }
 
@@ -288,7 +288,7 @@ class FillRRectOp::Processor : public GrGeometryProcessor {
     return arena->make<Processor>(aaType, flags);
   }
 
-  const char* name() const final { return "GrFillRRectOp::Processor"; }
+  const char* name() const noexcept final { return "GrFillRRectOp::Processor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const final {
     b->add32(((uint32_t)fFlags << 16) | (uint32_t)fAAType);
@@ -815,13 +815,13 @@ GrGLSLPrimitiveProcessor* FillRRectOp::Processor::createGLSLInstance(const GrSha
 }
 
 void FillRRectOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   GrGeometryProcessor* gp = Processor::Make(arena, fHelper.aaType(), fProcessorFlags);
   SkASSERT(gp->instanceStride() == (size_t)fInstanceStride);
 
   fProgramInfo = fHelper.createProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
       GrPrimitiveType::kTriangles);
 }
 

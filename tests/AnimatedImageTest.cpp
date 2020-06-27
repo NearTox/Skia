@@ -271,7 +271,7 @@ DEF_TEST(AnimatedImage, r) {
       }
 
       if (!testDraw(animatedImage, i)) {
-        ERRORF(r, "Did not update to %i properly", i);
+        ERRORF(r, "Did not update to %zu properly", i);
         failed = true;
         break;
       }
@@ -340,7 +340,8 @@ DEF_TEST(AnimatedImage, r) {
               failed = true;
             }
             if (i != frameInfos.size() - 1) {
-              ERRORF(r, "%s animation stopped early: i: %i\tsize: %i", file, i, frameInfos.size());
+              ERRORF(
+                  r, "%s animation stopped early: i: %zu\tsize: %zu", file, i, frameInfos.size());
               failed = true;
             }
             break;

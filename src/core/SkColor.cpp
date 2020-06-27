@@ -19,12 +19,12 @@ SkPMColor SkPreMultiplyColor(SkColor c) noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr SkScalar ByteToScalar(U8CPU x) noexcept {
+static constexpr inline SkScalar ByteToScalar(U8CPU x) noexcept {
   SkASSERT(x <= 255);
   return SkIntToScalar(x) / 255;
 }
 
-static constexpr SkScalar ByteDivToScalar(int numer, U8CPU denom) noexcept {
+static constexpr inline SkScalar ByteDivToScalar(int numer, U8CPU denom) noexcept {
   // cast to keep the answer signed
   return SkIntToScalar(numer) / (int)denom;
 }

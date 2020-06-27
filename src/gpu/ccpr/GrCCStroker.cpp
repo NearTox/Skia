@@ -80,7 +80,7 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const override { return "LinearStrokeProcessor"; }
+  const char* name() const noexcept override { return "LinearStrokeProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[2] = {
@@ -177,7 +177,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const override { return "CubicStrokeProcessor"; }
+  const char* name() const noexcept override { return "CubicStrokeProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[3] = {
@@ -742,7 +742,7 @@ void GrCCStroker::drawLog2Strokes(
     int startScissorSubBatch, const SkIRect& drawBounds) const {
   GrProgramInfo programInfo(
       flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-      flushState->proxy()->backendFormat(), flushState->outputView()->origin(), &pipeline,
+      flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &pipeline,
       &processor, GrPrimitiveType::kTriangleStrip);
 
   flushState->bindPipeline(programInfo, SkRect::Make(drawBounds));

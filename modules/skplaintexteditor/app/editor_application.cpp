@@ -228,7 +228,7 @@ struct EditorLayer : public sk_app::Window::Layer {
     } else if (skui::InputState::kUp == state) {
       fMouseDown = false;
     }
-    bool shiftOrDrag = skstd::Any(modifiers & skui::ModifierKey::kShift) || !mouseDown;
+    bool shiftOrDrag = sknonstd::Any(modifiers & skui::ModifierKey::kShift) || !mouseDown;
     if (fMouseDown) {
       return this->move(fEditor.getPosition({x - fMargin, y + fPos - fMargin}), shiftOrDrag);
     }
@@ -236,7 +236,7 @@ struct EditorLayer : public sk_app::Window::Layer {
   }
 
   bool onChar(SkUnichar c, skui::ModifierKey modi) override {
-    using skstd::Any;
+    using sknonstd::Any;
     modi &= ~skui::ModifierKey::kFirstPress;
     if (!Any(
             modi & (skui::ModifierKey::kControl | skui::ModifierKey::kOption |
@@ -350,7 +350,7 @@ struct EditorLayer : public sk_app::Window::Layer {
       return false;  // ignore keyup
     }
     // ignore other modifiers.
-    using skstd::Any;
+    using sknonstd::Any;
     skui::ModifierKey ctrlAltCmd =
         modifiers &
         (skui::ModifierKey::kControl | skui::ModifierKey::kOption | skui::ModifierKey::kCommand);
@@ -387,7 +387,7 @@ struct EditorLayer : public sk_app::Window::Layer {
         case skui::Key::kOK: return this->onChar('\n', modifiers);
         default: break;
       }
-    } else if (skstd::Any(
+    } else if (sknonstd::Any(
                    ctrlAltCmd & (skui::ModifierKey::kControl | skui::ModifierKey::kCommand))) {
       switch (key) {
         case skui::Key::kLeft: return this->moveCursor(Editor::Movement::kWordLeft, shift);

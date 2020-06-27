@@ -45,6 +45,7 @@ namespace SkRecords {
   M(Save)                  \
   M(SaveLayer)             \
   M(SaveBehind)            \
+  M(MarkCTM)               \
   M(SetMatrix)             \
   M(Translate)             \
   M(Scale)                 \
@@ -85,17 +86,17 @@ namespace SkRecords {
 enum Type { SK_RECORD_TYPES(ENUM) };
 #undef ENUM
 
-#define ACT_AS_PTR(ptr)               \
-  operator T*() const { return ptr; } \
-  T* operator->() const { return ptr; }
+#define ACT_AS_PTR(ptr)                        \
+  operator T*() const noexcept { return ptr; } \
+  T* operator->() const noexcept { return ptr; }
 
 // An Optional doesn't own the pointer's memory, but may need to destroy non-POD data.
 template <typename T>
 class Optional {
  public:
-  Optional() : fPtr(nullptr) {}
-  Optional(T* ptr) : fPtr(ptr) {}
-  Optional(Optional&& o) : fPtr(o.fPtr) { o.fPtr = nullptr; }
+  constexpr Optional() noexcept : fPtr(nullptr) {}
+  Optional(T* ptr) noexcept : fPtr(ptr) {}
+  Optional(Optional&& o) noexcept : fPtr(o.fPtr) { o.fPtr = nullptr; }
   ~Optional() {
     if (fPtr) fPtr->~T();
   }
@@ -111,8 +112,8 @@ class Optional {
 template <typename T>
 class Adopted {
  public:
-  Adopted(T* ptr) : fPtr(ptr) { SkASSERT(fPtr); }
-  Adopted(Adopted* source) {
+  Adopted(T* ptr) noexcept : fPtr(ptr) { SkASSERT(fPtr); }
+  Adopted(Adopted* source) noexcept {
     // Transfer ownership from source to this.
     fPtr = source->fPtr;
     source->fPtr = NULL;
@@ -132,8 +133,8 @@ class Adopted {
 template <typename T>
 class PODArray {
  public:
-  PODArray() {}
-  PODArray(T* ptr) : fPtr(ptr) {}
+  PODArray() noexcept = default;
+  PODArray(T* ptr) noexcept : fPtr(ptr) {}
   // Default copy and assign.
 
   ACT_AS_PTR(fPtr)
@@ -154,13 +155,8 @@ struct PreCachedPath : public SkPath {
 // Like SkPath::getBounds(), SkMatrix::getType() isn't thread safe unless we precache it.
 // This may not cover all SkMatrices used by the picture (e.g. some could be hiding in a shader).
 struct TypedMatrix : public SkMatrix {
-  TypedMatrix() {}
-  TypedMatrix(const SkMatrix& matrix);
-};
-
-struct Matrix44 : public SkM44 {
-  Matrix44() {}
-  Matrix44(const SkScalar m[16]) { this->setColMajor(m); }
+  TypedMatrix() noexcept = default;
+  TypedMatrix(const SkMatrix& matrix) noexcept;
 };
 
 enum Tags {
@@ -191,16 +187,17 @@ RECORD(SaveLayer, kHasPaint_Tag, Optional<SkRect> bounds; Optional<SkPaint> pain
 
 RECORD(SaveBehind, 0, Optional<SkRect> subset);
 
+RECORD(MarkCTM, 0, SkString name);
 RECORD(SetMatrix, 0, TypedMatrix matrix);
 RECORD(Concat, 0, TypedMatrix matrix);
-RECORD(Concat44, 0, Matrix44 matrix);
+RECORD(Concat44, 0, SkM44 matrix);
 
 RECORD(Translate, 0, SkScalar dx; SkScalar dy);
 
 RECORD(Scale, 0, SkScalar sx; SkScalar sy);
 
 struct ClipOpAndAA {
-  ClipOpAndAA() {}
+  ClipOpAndAA() noexcept = default;
   ClipOpAndAA(SkClipOp op, bool aa) noexcept : fOp(static_cast<unsigned>(op)), fAA(aa) {}
 
   SkClipOp op() const noexcept { return static_cast<SkClipOp>(fOp); }

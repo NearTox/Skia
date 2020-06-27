@@ -22,11 +22,11 @@ class GrPathProcessor : public GrPrimitiveProcessor {
     return new GrPathProcessor(color, viewMatrix, localMatrix);
   }
 
-  const char* name() const override { return "PathProcessor"; }
+  const char* name() const noexcept override { return "PathProcessor"; }
 
-  const SkPMColor4f& color() const { return fColor; }
-  const SkMatrix& viewMatrix() const { return fViewMatrix; }
-  const SkMatrix& localMatrix() const { return fLocalMatrix; }
+  const SkPMColor4f& color() const noexcept { return fColor; }
+  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
+  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
 
   virtual void getGLSLProcessorKey(
       const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;

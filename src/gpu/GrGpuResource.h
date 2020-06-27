@@ -58,7 +58,7 @@ class GrIORef : public SkNoncopyable {
   }
 
 #if GR_TEST_UTILS
-  int32_t testingOnly_getRefCnt() const { return this->getRefCnt(); }
+  int32_t testingOnly_getRefCnt() const noexcept { return this->getRefCnt(); }
 #endif
 
  protected:

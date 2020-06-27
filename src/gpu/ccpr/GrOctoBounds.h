@@ -26,8 +26,10 @@
  */
 class GrOctoBounds {
  public:
-  GrOctoBounds() = default;
-  GrOctoBounds(const SkRect& bounds, const SkRect& bounds45) { this->set(bounds, bounds45); }
+  GrOctoBounds() noexcept = default;
+  GrOctoBounds(const SkRect& bounds, const SkRect& bounds45) noexcept {
+    this->set(bounds, bounds45);
+  }
 
   void set(const SkRect& bounds, const SkRect& bounds45) noexcept {
     fBounds = bounds;
@@ -93,10 +95,10 @@ class GrOctoBounds {
   //        | y45 | = | x + y |
   //
   // These methods transform points between device space and 45-degree space.
-  constexpr static float Get_x45(float x, float y) { return x - y; }
-  constexpr static float Get_y45(float x, float y) { return x + y; }
-  constexpr static float Get_x(float x45, float y45) { return (x45 + y45) * .5f; }
-  constexpr static float Get_y(float x45, float y45) { return (y45 - x45) * .5f; }
+  constexpr static float Get_x45(float x, float y) noexcept { return x - y; }
+  constexpr static float Get_y45(float x, float y) noexcept { return x + y; }
+  constexpr static float Get_x(float x45, float y45) noexcept { return (x45 + y45) * .5f; }
+  constexpr static float Get_y(float x45, float y45) noexcept { return (y45 - x45) * .5f; }
 
 #if defined(SK_DEBUG) || defined(GR_TEST_UTILS)
   void validateBoundsAreTight() const;

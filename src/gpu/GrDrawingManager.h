@@ -18,6 +18,9 @@
 #include "src/gpu/GrResourceCache.h"
 #include "src/gpu/text/GrTextContext.h"
 
+// Enabling this will print out which path renderers are being chosen
+#define GR_PATH_RENDERER_SPEW 0
+
 class GrCoverageCountingPathRenderer;
 class GrOnFlushCallbackObject;
 class GrOpFlushState;
@@ -74,7 +77,7 @@ class GrDrawingManager {
       GrSurfaceProxyView srcView, const SkIRect& srcRect, GrSurfaceProxyView dstView,
       const SkIPoint& dstPoint);
 
-  GrRecordingContext* getContext() { return fContext; }
+  GrRecordingContext* getContext() noexcept { return fContext; }
 
   GrTextContext* getTextContext();
 
@@ -115,7 +118,7 @@ class GrDrawingManager {
   // renderTasks.
   class RenderTaskDAG {
    public:
-    RenderTaskDAG(bool sortRenderTasks);
+    RenderTaskDAG(bool sortRenderTasks) noexcept;
     ~RenderTaskDAG();
 
     // Currently, when explicitly allocating resources, this call will topologically sort the
@@ -130,7 +133,7 @@ class GrDrawingManager {
 
     void gatherIDs(SkSTArray<8, uint32_t, true>* idArray) const;
 
-    void reset();
+    void reset() noexcept;
 
     // These calls forceably remove a GrRenderTask from the DAG. They are problematic bc they
     // just remove the GrRenderTask but don't cleanup any refering pointers (i.e., dependency
@@ -180,9 +183,11 @@ class GrDrawingManager {
   bool executeRenderTasks(
       int startIndex, int stopIndex, GrOpFlushState*, int* numRenderTasksExecuted);
 
-  GrSemaphoresSubmitted flush(
+  bool flush(
       GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
       const GrFlushInfo&, const GrPrepareForExternalIORequests&);
+
+  bool submitToGpu(bool syncToCpu);
 
   SkDEBUGCODE(void validate() const);
 

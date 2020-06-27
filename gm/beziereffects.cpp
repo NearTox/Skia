@@ -92,7 +92,7 @@ class BezierTestOp : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     auto gp = this->makeGP(*caps, arena);
     if (!gp) {
@@ -102,7 +102,7 @@ class BezierTestOp : public GrMeshDrawOp {
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone;
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
         GrPrimitiveType::kTriangles, flags);
   }
 

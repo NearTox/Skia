@@ -36,7 +36,7 @@ class GrSimpleMeshDrawOpHelper {
    * which is public or made accessible via 'friend'.
    */
   template <typename Op, typename... OpArgs>
-  static std::unique_ptr<GrDrawOp> FactoryHelper(GrRecordingContext*, GrPaint&&, OpArgs...);
+  static std::unique_ptr<GrDrawOp> FactoryHelper(GrRecordingContext*, GrPaint&&, OpArgs&&...);
 
   // Here we allow callers to specify a subset of the GrPipeline::InputFlags upon creation.
   enum class InputFlags : uint8_t {
@@ -120,7 +120,7 @@ class GrSimpleMeshDrawOpHelper {
   void setAAType(GrAAType aaType) noexcept { fAAType = static_cast<unsigned>(aaType); }
 
   static const GrPipeline* CreatePipeline(
-      const GrCaps*, SkArenaAlloc*, GrSwizzle outputViewSwizzle, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, GrSwizzle writeViewSwizzle, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrProcessorSet&&, GrPipeline::InputFlags pipelineFlags,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
   static const GrPipeline* CreatePipeline(
@@ -130,23 +130,23 @@ class GrSimpleMeshDrawOpHelper {
   const GrPipeline* createPipeline(GrOpFlushState* flushState);
 
   static GrProgramInfo* CreateProgramInfo(
-      SkArenaAlloc*, const GrPipeline*, const GrSurfaceProxyView* outputView, GrGeometryProcessor*,
+      SkArenaAlloc*, const GrPipeline*, const GrSurfaceProxyView* writeView, GrGeometryProcessor*,
       GrPrimitiveType);
 
   // Create a programInfo with the following properties:
   //     its primitive processor uses no textures
   //     it has no dynamic state besides the scissor clip
   static GrProgramInfo* CreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrProcessorSet&&, GrPrimitiveType,
       GrPipeline::InputFlags pipelineFlags = GrPipeline::InputFlags::kNone,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
   GrProgramInfo* createProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
 
-  GrProcessorSet detachProcessorSet() noexcept {
+  GrProcessorSet detachProcessorSet() {
     return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
   }
 
@@ -168,7 +168,7 @@ class GrSimpleMeshDrawOpHelper {
 
 template <typename Op, typename... OpArgs>
 std::unique_ptr<GrDrawOp> GrSimpleMeshDrawOpHelper::FactoryHelper(
-    GrRecordingContext* context, GrPaint&& paint, OpArgs... opArgs) {
+    GrRecordingContext* context, GrPaint&& paint, OpArgs&&... opArgs) {
   GrOpMemoryPool* pool = context->priv().opMemoryPool();
 
   MakeArgs makeArgs;

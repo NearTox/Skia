@@ -41,7 +41,7 @@ class GrYUVAImageTextureMaker final : public GrTextureMaker {
       GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
       const GrSamplerState::Filter* filterOrNullForBicubic) override;
 
-  bool isPlanar() const override { return true; }
+  bool isPlanar() const noexcept override { return true; }
 
  private:
   GrSurfaceProxyView refOriginalTextureProxyView(GrMipMapped) override;

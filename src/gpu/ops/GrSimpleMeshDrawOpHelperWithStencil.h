@@ -23,13 +23,13 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   using GrSimpleMeshDrawOpHelper::visitProxies;
 
   const GrPipeline* createPipelineWithStencil(
-      const GrCaps*, SkArenaAlloc*, GrSwizzle outputViewSwizzle, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, GrSwizzle writeViewSwizzle, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&);
 
   const GrPipeline* createPipelineWithStencil(GrOpFlushState* flushState);
 
   GrProgramInfo* createProgramInfoWithStencil(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeViewSwizzle, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
 
   // using declarations can't be templated, so this is a pass through function instead.
@@ -74,7 +74,7 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   SkString dumpInfo() const;
 #endif
 
-  const GrUserStencilSettings* stencilSettings() const { return fStencilSettings; }
+  const GrUserStencilSettings* stencilSettings() const noexcept { return fStencilSettings; }
 
  private:
   const GrUserStencilSettings* fStencilSettings;

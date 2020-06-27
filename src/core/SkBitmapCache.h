@@ -33,7 +33,7 @@ struct SkBitmapCacheDesc {
     SkASSERT(fSubset.width() > 0 && fSubset.height() > 0);
   }
 
-  static SkBitmapCacheDesc Make(const SkImage*);
+  static SkBitmapCacheDesc Make(const SkImage*) noexcept;
   static SkBitmapCacheDesc Make(uint32_t genID, const SkIRect& subset) noexcept;
 };
 
@@ -47,7 +47,7 @@ class SkBitmapCache {
 
   class Rec;
   struct RecDeleter {
-    void operator()(Rec* r) { PrivateDeleteRec(r); }
+    void operator()(Rec* r) noexcept { PrivateDeleteRec(r); }
   };
   typedef std::unique_ptr<Rec, RecDeleter> RecPtr;
 

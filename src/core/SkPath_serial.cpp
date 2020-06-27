@@ -37,19 +37,21 @@ enum SerializationVersions {
 
 enum SerializationType { kGeneral = 0, kRRect = 1 };
 
-static unsigned extract_version(uint32_t packed) { return packed & kVersion_SerializationMask; }
+static constexpr unsigned extract_version(uint32_t packed) noexcept {
+  return packed & kVersion_SerializationMask;
+}
 
-static SkPathFillType extract_filltype(uint32_t packed) {
+static constexpr SkPathFillType extract_filltype(uint32_t packed) noexcept {
   return static_cast<SkPathFillType>((packed >> kFillType_SerializationShift) & 0x3);
 }
 
-static SerializationType extract_serializationtype(uint32_t packed) {
+static constexpr SerializationType extract_serializationtype(uint32_t packed) noexcept {
   return static_cast<SerializationType>((packed >> kType_SerializationShift) & 0xF);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkPath::writeToMemoryAsRRect(void* storage) const {
+size_t SkPath::writeToMemoryAsRRect(void* storage) const noexcept {
   SkRect oval;
   SkRRect rrect;
   bool isCCW;
@@ -63,7 +65,7 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
   }
 
   // packed header, rrect, start index.
-  const size_t sizeNeeded = sizeof(int32_t) + SkRRect::kSizeInMemory + sizeof(int32_t);
+  constexpr size_t sizeNeeded = sizeof(int32_t) + SkRRect::kSizeInMemory + sizeof(int32_t);
   if (!storage) {
     return sizeNeeded;
   }
@@ -82,10 +84,10 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const {
   return buffer.pos();
 }
 
-size_t SkPath::writeToMemory(void* storage) const {
-  SkDEBUGCODE(this->validate();)
+size_t SkPath::writeToMemory(void* storage) const noexcept {
+  SkDEBUGCODE(this->validate());
 
-      if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
+  if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
     return bytes;
   }
 

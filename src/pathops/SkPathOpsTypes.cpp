@@ -111,7 +111,7 @@ bool AlmostBequalUlps(float a, float b) noexcept {
 }
 
 bool AlmostPequalUlps(float a, float b) noexcept {
-  const int UlpsEpsilon = 8;
+  constexpr int UlpsEpsilon = 8;
   return equal_ulps(a, b, UlpsEpsilon, UlpsEpsilon);
 }
 
@@ -148,7 +148,7 @@ bool NotAlmostEqualUlps(float a, float b) noexcept {
 }
 
 bool NotAlmostEqualUlps_Pin(float a, float b) noexcept {
-  constexpr int UlpsEpsilon = 16;
+  constexpr int UlpsEpsilon = 6;
   return not_equal_ulps_pin(a, b, UlpsEpsilon);
 }
 
@@ -179,7 +179,7 @@ bool AlmostLessOrEqualUlps(float a, float b) noexcept {
   return less_or_equal_ulps(a, b, UlpsEpsilon);
 }
 
-int UlpsDistance(float a, float b) {
+int UlpsDistance(float a, float b) noexcept {
   SkFloatIntUnion floatIntA, floatIntB;
   floatIntA.fFloat = a;
   floatIntB.fFloat = b;
@@ -230,8 +230,8 @@ double SkDCubeRoot(double x) noexcept {
 }
 
 SkOpGlobalState::SkOpGlobalState(
-    SkOpContourHead* head,
-    SkArenaAlloc* allocator SkDEBUGPARAMS(bool debugSkipAssert) SkDEBUGPARAMS(const char* testName))
+    SkOpContourHead* head, SkArenaAlloc* allocator SkDEBUGPARAMS(bool debugSkipAssert)
+                               SkDEBUGPARAMS(const char* testName)) noexcept
     : fAllocator(allocator),
       fCoincidence(nullptr),
       fContourHead(head),

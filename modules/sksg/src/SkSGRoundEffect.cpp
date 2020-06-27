@@ -36,7 +36,7 @@ SkPath RoundEffect::onAsPath() const { return fRoundedPath; }
 SkRect RoundEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto childbounds = fChild->revalidate(ic, ctm);
+  const auto& childbounds = fChild->revalidate(ic, ctm);
   const auto path = fChild->asPath();
 
   if (auto round = SkCornerPathEffect::Make(fRadius)) {

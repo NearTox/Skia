@@ -13,7 +13,7 @@
 #include "src/gpu/mock/GrMockTexture.h"
 #include <atomic>
 
-int GrMockGpu::NextInternalTextureID() noexcept {
+int GrMockGpu::NextInternalTextureID() {
   static std::atomic<int> nextID{1};
   int id;
   do {
@@ -22,21 +22,21 @@ int GrMockGpu::NextInternalTextureID() noexcept {
   return id;
 }
 
-int GrMockGpu::NextExternalTextureID() noexcept {
+int GrMockGpu::NextExternalTextureID() {
   // We use negative ints for the "testing only external textures" so they can easily be
   // identified when debugging.
   static std::atomic<int> nextID{-1};
   return nextID--;
 }
 
-int GrMockGpu::NextInternalRenderTargetID() noexcept {
+int GrMockGpu::NextInternalRenderTargetID() {
   // We start off with large numbers to differentiate from texture IDs, even though they're
   // technically in a different space.
   static std::atomic<int> nextID{SK_MaxS32};
   return nextID--;
 }
 
-int GrMockGpu::NextExternalRenderTargetID() noexcept {
+int GrMockGpu::NextExternalRenderTargetID() {
   // We use large negative ints for the "testing only external render targets" so they can easily
   // be identified when debugging.
   static std::atomic<int> nextID{SK_MinS32};
@@ -257,7 +257,7 @@ GrStencilAttachment* GrMockGpu::createStencilAttachmentForRenderTarget(
 
 GrBackendTexture GrMockGpu::onCreateBackendTexture(
     SkISize dimensions, const GrBackendFormat& format, GrRenderable, GrMipMapped mipMapped,
-    GrProtected, const BackendTextureData*) {
+    GrProtected) {
   SkImage::CompressionType compression = format.asMockCompressionType();
   if (compression != SkImage::CompressionType::kNone) {
     return {};  // should go through onCreateCompressedBackendTexture
@@ -276,7 +276,7 @@ GrBackendTexture GrMockGpu::onCreateBackendTexture(
 
 GrBackendTexture GrMockGpu::onCreateCompressedBackendTexture(
     SkISize dimensions, const GrBackendFormat& format, GrMipMapped mipMapped, GrProtected,
-    const BackendTextureData*) {
+    sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) {
   SkImage::CompressionType compression = format.asMockCompressionType();
   if (compression == SkImage::CompressionType::kNone) {
     return {};  // should go through onCreateBackendTexture

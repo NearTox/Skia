@@ -37,7 +37,7 @@ class SkTypeface;
  */
 class GrResourceProvider {
  public:
-  GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*);
+  GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*) noexcept;
 
   /**
    * Finds a resource in the cache, based on the specified key. Prior to calling this, the caller
@@ -188,9 +188,9 @@ class GrResourceProvider {
     return fNonAAQuadIndexBuffer;
   }
 
-  static int MaxNumNonAAQuads();
-  static int NumVertsPerNonAAQuad();
-  static int NumIndicesPerNonAAQuad();
+  static int MaxNumNonAAQuads() noexcept;
+  static int NumVertsPerNonAAQuad() noexcept;
+  static int NumIndicesPerNonAAQuad() noexcept;
 
   /**
    * Returns an index buffer that can be used to render antialiased quads.
@@ -206,9 +206,9 @@ class GrResourceProvider {
     return fAAQuadIndexBuffer;
   }
 
-  static int MaxNumAAQuads();
-  static int NumVertsPerAAQuad();
-  static int NumIndicesPerAAQuad();
+  static int MaxNumAAQuads() noexcept;
+  static int NumVertsPerAAQuad() noexcept;
+  static int NumIndicesPerAAQuad() noexcept;
 
   /**
    * Factories for GrPath objects. It's an error to call these if path rendering
@@ -273,10 +273,10 @@ class GrResourceProvider {
   const GrCaps* caps() const noexcept { return fCaps.get(); }
   bool overBudget() const noexcept { return fCache->overBudget(); }
 
-  static SkISize MakeApprox(SkISize);
+  static SkISize MakeApprox(SkISize) noexcept;
 
-  inline GrResourceProviderPriv priv();
-  inline const GrResourceProviderPriv priv() const;
+  inline GrResourceProviderPriv priv() noexcept;
+  inline const GrResourceProviderPriv priv() const noexcept;
 
  private:
   sk_sp<GrGpuResource> findResourceByUniqueKey(const GrUniqueKey&);
@@ -339,7 +339,7 @@ class GrResourceProvider {
   sk_sp<const GrGpuBuffer> fAAQuadIndexBuffer;
 
   // In debug builds we guard against improper thread handling
-  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
+  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner);
 };
 
 #endif

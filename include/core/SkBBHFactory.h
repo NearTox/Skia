@@ -36,7 +36,7 @@ class SkBBoxHierarchy : public SkRefCnt {
   /**
    * Return approximate size in memory of *this.
    */
-  virtual size_t bytesUsed() const = 0;
+  virtual size_t bytesUsed() const noexcept = 0;
 };
 
 class SK_API SkBBHFactory {

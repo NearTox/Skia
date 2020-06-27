@@ -25,17 +25,17 @@ struct SkHighContrastConfig {
     kLast = kInvertLightness
   };
 
-  SkHighContrastConfig() {
+  SkHighContrastConfig() noexcept {
     fGrayscale = false;
     fInvertStyle = InvertStyle::kNoInvert;
     fContrast = 0.0f;
   }
 
-  SkHighContrastConfig(bool grayscale, InvertStyle invertStyle, SkScalar contrast)
+  SkHighContrastConfig(bool grayscale, InvertStyle invertStyle, SkScalar contrast) noexcept
       : fGrayscale(grayscale), fInvertStyle(invertStyle), fContrast(contrast) {}
 
   // Returns true if all of the fields are set within the valid range.
-  bool isValid() const {
+  bool isValid() const noexcept {
     return fInvertStyle >= InvertStyle::kNoInvert &&
            fInvertStyle <= InvertStyle::kInvertLightness && fContrast >= -1.0 && fContrast <= 1.0;
   }

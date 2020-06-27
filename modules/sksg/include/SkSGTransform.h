@@ -31,8 +31,8 @@ class Transform : public Node {
 
   virtual bool is44() const noexcept = 0;
 
-  virtual SkMatrix asMatrix() const = 0;
-  virtual SkM44 asM44() const = 0;
+  virtual SkMatrix asMatrix() const noexcept = 0;
+  virtual SkM44 asM44() const noexcept = 0;
 
  private:
   friend class TransformPriv;
@@ -64,16 +64,16 @@ class Matrix final : public Transform {
   SG_ATTRIBUTE(Matrix, T, fMatrix)
 
  protected:
-  explicit Matrix(const T& m) : fMatrix(m) {}
+  explicit Matrix(const T& m) noexcept : fMatrix(m) {}
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override {
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override {
     return SkRect::MakeEmpty();
   }
 
   bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
 
-  SkMatrix asMatrix() const override;
-  SkM44 asM44() const override;
+  SkMatrix asMatrix() const noexcept override;
+  SkM44 asM44() const noexcept override;
 
  private:
   T fMatrix;

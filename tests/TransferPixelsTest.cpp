@@ -184,8 +184,8 @@ void basic_transfer_to_test(
   auto error = std::function<ComparePixmapsErrorReporter>(
       [reporter, colorType](int x, int y, const float diffs[4]) {
         ERRORF(
-            reporter, "Error at (%d %d) in transfer, color type: %d, diffs: (%f, %f, %f, %f)", x, y,
-            colorType, diffs[0], diffs[1], diffs[2], diffs[3]);
+            reporter, "Error at (%d %d) in transfer, color type: %s, diffs: (%f, %f, %f, %f)", x, y,
+            GrColorTypeToStr(colorType), diffs[0], diffs[1], diffs[2], diffs[3]);
       });
   GrImageInfo srcInfo(
       allowedSrc.fColorType, kUnpremul_SkAlphaType, nullptr, tex->width(), tex->height());
@@ -337,12 +337,8 @@ void basic_transfer_from_test(
   }
   ++expectedTransferCnt;
 
-  GrFlushInfo flushInfo;
-  flushInfo.fFlags = kSyncCpu_GrFlushFlag;
   if (context->priv().caps()->mapBufferFlags() & GrCaps::kAsyncRead_MapFlag) {
-    gpu->finishFlush(
-        nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, flushInfo,
-        GrPrepareForExternalIORequests());
+    gpu->submitToGpu(true);
   }
 
   // Copy the transfer buffer contents to a temporary so we can manipulate it.
@@ -363,8 +359,8 @@ void basic_transfer_from_test(
   auto error = std::function<ComparePixmapsErrorReporter>(
       [reporter, colorType](int x, int y, const float diffs[4]) {
         ERRORF(
-            reporter, "Error at (%d %d) in transfer, color type: %d, diffs: (%f, %f, %f, %f)", x, y,
-            colorType, diffs[0], diffs[1], diffs[2], diffs[3]);
+            reporter, "Error at (%d %d) in transfer, color type: %s, diffs: (%f, %f, %f, %f)", x, y,
+            GrColorTypeToStr(colorType), diffs[0], diffs[1], diffs[2], diffs[3]);
       });
   GrImageInfo textureDataInfo(colorType, kUnpremul_SkAlphaType, nullptr, kTexDims);
   ComparePixels(
@@ -383,9 +379,7 @@ void basic_transfer_from_test(
   ++expectedTransferCnt;
 
   if (context->priv().caps()->mapBufferFlags() & GrCaps::kAsyncRead_MapFlag) {
-    gpu->finishFlush(
-        nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, flushInfo,
-        GrPrepareForExternalIORequests());
+    gpu->submitToGpu(true);
   }
 
   map = reinterpret_cast<const char*>(buffer->map());
@@ -427,6 +421,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsToTextureTest, reporter, ctxInf
              GrColorType::kRG_88,
              GrColorType::kBGRA_8888,
              GrColorType::kRGBA_1010102,
+             GrColorType::kBGRA_1010102,
              GrColorType::kGray_8,
              GrColorType::kAlpha_F16,
              GrColorType::kRGBA_F16,
@@ -459,6 +454,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TransferPixelsFromTextureTest, reporter, ctxI
              GrColorType::kRG_88,
              GrColorType::kBGRA_8888,
              GrColorType::kRGBA_1010102,
+             GrColorType::kBGRA_1010102,
              GrColorType::kGray_8,
              GrColorType::kAlpha_F16,
              GrColorType::kRGBA_F16,

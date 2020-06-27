@@ -84,7 +84,7 @@ class SkPointPriv {
 
   static void RotateCW(SkPoint* pt) noexcept { RotateCW(*pt, pt); }
 
-  static bool SetLengthFast(SkPoint* pt, float length);
+  static bool SetLengthFast(SkPoint* pt, float length) noexcept;
 
   static SkPoint MakeOrthog(const SkPoint& vec, Side side = kLeft_Side) noexcept {
     SkASSERT(side == kRight_Side || side == kLeft_Side);

@@ -593,7 +593,7 @@ static constexpr inline float muladdmul(float a, float b, float c, float d) noex
   return sk_double_to_float((double)a * b + (double)c * d);
 }
 
-static inline float rowcol3(const float row[], const float col[]) noexcept {
+static constexpr inline float rowcol3(const float row[], const float col[]) noexcept {
   return row[0] * col[0] + row[1] * col[3] + row[2] * col[6];
 }
 
@@ -693,7 +693,7 @@ static constexpr inline SkScalar scross_dscale(
   return SkDoubleToScalar(scross(a, b, c, d) * scale);
 }
 
-static constexpr double dcross(double a, double b, double c, double d) noexcept {
+static constexpr inline double dcross(double a, double b, double c, double d) noexcept {
   return a * b - c * d;
 }
 
@@ -979,7 +979,8 @@ void SkMatrix::Persp_pts(
   }
 }
 
-void SkMatrix::Affine_vpts(const SkMatrix& m, SkPoint dst[], const SkPoint src[], int count) noexcept {
+void SkMatrix::Affine_vpts(
+    const SkMatrix& m, SkPoint dst[], const SkPoint src[], int count) noexcept {
   SkASSERT(m.getType() != SkMatrix::kPerspective_Mask);
   if (count > 0) {
     SkScalar tx = m.getTranslateX();
@@ -1369,7 +1370,7 @@ typedef bool (*PolyMapProc)(const SkPoint[], SkMatrix*) noexcept;
 
 /*  Adapted from Rob Johnson's original sample code in QuickDraw GX
  */
-bool SkMatrix::setPolyToPoly(const SkPoint src[], const SkPoint dst[], int count) noexcept {
+bool SkMatrix::setPolyToPoly(const SkPoint src[], const SkPoint dst[], int count) {
   if ((unsigned)count > 4) {
     SkDebugf("--- SkMatrix::setPolyToPoly count out of range %d\n", count);
     return false;

@@ -36,7 +36,7 @@ class SK_API SkPixmap {
 
       @return  empty SkPixmap
   */
-  SkPixmap() : fPixels(nullptr), fRowBytes(0), fInfo(SkImageInfo::MakeUnknown(0, 0)) {}
+  SkPixmap() noexcept : fPixels(nullptr), fRowBytes(0), fInfo(SkImageInfo::MakeUnknown(0, 0)) {}
 
   /** Creates SkPixmap from info width, height, SkAlphaType, and SkColorType.
       addr points to pixels, or nullptr. rowBytes should be info.width() times
@@ -56,7 +56,7 @@ class SK_API SkPixmap {
       @param rowBytes  size of one row of addr; width times pixel size, or larger
       @return          initialized SkPixmap
   */
-  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes)
+  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept
       : fPixels(addr), fRowBytes(rowBytes), fInfo(info) {}
 
   /** Sets width, height, row bytes to zero; pixel address to nullptr; SkColorType to
@@ -86,7 +86,7 @@ class SK_API SkPixmap {
 
       example: https://fiddle.skia.org/c/@Pixmap_reset_2
   */
-  void reset(const SkImageInfo& info, const void* addr, size_t rowBytes);
+  void reset(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept;
 
   /** Changes SkColorSpace in SkImageInfo; preserves width, height, SkAlphaType, and
       SkColorType in SkImage, and leaves pixel address and row bytes unchanged.
@@ -96,11 +96,11 @@ class SK_API SkPixmap {
 
       example: https://fiddle.skia.org/c/@Pixmap_setColorSpace
   */
-  void setColorSpace(sk_sp<SkColorSpace> colorSpace);
+  void setColorSpace(sk_sp<SkColorSpace> colorSpace) noexcept;
 
   /** Deprecated.
    */
-  bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask);
+  bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) noexcept;
 
   /** Sets subset width, height, pixel address to intersection of SkPixmap with area,
       if intersection is not empty; and return true. Otherwise, leave subset unchanged
@@ -176,7 +176,7 @@ class SK_API SkPixmap {
 
       @return  SkColorSpace in SkImageInfo wrapped in a smart pointer
   */
-  sk_sp<SkColorSpace> refColorSpace() const { return fInfo.refColorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fInfo.refColorSpace(); }
 
   /** Returns true if SkAlphaType is kOpaque_SkAlphaType.
       Does not check if SkColorType allows alpha, or if any pixel value has
@@ -234,7 +234,7 @@ class SK_API SkPixmap {
 
       example: https://fiddle.skia.org/c/@Pixmap_computeIsOpaque
   */
-  bool computeIsOpaque() const;
+  bool computeIsOpaque() const noexcept;
 
   /** Returns pixel at (x, y) as unpremultiplied color.
       Returns black with alpha if SkColorType is kAlpha_8_SkColorType.
@@ -264,7 +264,7 @@ class SK_API SkPixmap {
       @param y  row index, zero or greater, and less than height()
       @return   alpha converted to normalized float
    */
-  float getAlphaf(int x, int y) const;
+  float getAlphaf(int x, int y) const noexcept;
 
   /** Returns readable pixel address at (x, y). Returns nullptr if SkPixelRef is nullptr.
 
@@ -668,7 +668,7 @@ class SK_API SkPixmap {
       Returns false if colorType() is kUnknown_SkColorType, or if subset does
       not intersect bounds().
 
-      @param color   unpremultiplied color to write
+      @param color   sRGB unpremultiplied color to write
       @param subset  bounding integer SkRect of written pixels
       @return        true if pixels are changed
 
@@ -680,7 +680,7 @@ class SK_API SkPixmap {
       Returns false if colorType() is kUnknown_SkColorType, or if bounds()
       is empty.
 
-      @param color  unpremultiplied color to write
+      @param color  sRGB unpremultiplied color to write
       @return       true if pixels are changed
   */
   bool erase(SkColor color) const { return this->erase(color, this->bounds()); }
@@ -690,13 +690,27 @@ class SK_API SkPixmap {
       colorType() is kUnknown_SkColorType, if subset is not nullptr and does
       not intersect bounds(), or if subset is nullptr and bounds() is empty.
 
-      @param color   unpremultiplied color to write
+      @param color   sRGB unpremultiplied color to write
       @param subset  bounding integer SkRect of pixels to write; may be nullptr
       @return        true if pixels are changed
 
       example: https://fiddle.skia.org/c/@Pixmap_erase_3
   */
-  bool erase(const SkColor4f& color, const SkIRect* subset = nullptr) const;
+  bool erase(const SkColor4f& color, const SkIRect* subset = nullptr) const {
+    return this->erase(color, nullptr, subset);
+  }
+
+  /** Writes color to pixels bounded by subset; returns true on success.
+      if subset is nullptr, writes colors pixels inside bounds(). Returns false if
+      colorType() is kUnknown_SkColorType, if subset is not nullptr and does
+      not intersect bounds(), or if subset is nullptr and bounds() is empty.
+
+      @param color   unpremultiplied color to write
+      @param cs      SkColorSpace of color
+      @param subset  bounding integer SkRect of pixels to write; may be nullptr
+      @return        true if pixels are changed
+  */
+  bool erase(const SkColor4f& color, SkColorSpace* cs, const SkIRect* subset = nullptr) const;
 
  private:
   const void* fPixels;

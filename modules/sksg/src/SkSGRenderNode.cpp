@@ -102,7 +102,8 @@ void RenderNode::RenderContext::modulatePaint(
   }
 }
 
-RenderNode::ScopedRenderContext::ScopedRenderContext(SkCanvas* canvas, const RenderContext* ctx)
+RenderNode::ScopedRenderContext::ScopedRenderContext(
+    SkCanvas* canvas, const RenderContext* ctx) noexcept
     : fCanvas(canvas), fCtx(ctx ? *ctx : RenderContext()), fRestoreCount(canvas->getSaveCount()) {}
 
 RenderNode::ScopedRenderContext::~ScopedRenderContext() {
@@ -221,7 +222,7 @@ CustomRenderNode::~CustomRenderNode() {
   }
 }
 
-bool CustomRenderNode::hasChildrenInval() const {
+bool CustomRenderNode::hasChildrenInval() const noexcept {
   for (const auto& child : fChildren) {
     if (NodePriv::HasInval(child)) {
       return true;

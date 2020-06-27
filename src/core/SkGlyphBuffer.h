@@ -20,7 +20,7 @@ struct SkGlyphPositionRoundingSpec;
 // are reject by a stage they become the source for the next stage.
 class SkSourceGlyphBuffer {
  public:
-  SkSourceGlyphBuffer() = default;
+  SkSourceGlyphBuffer() noexcept = default;
 
   void setSource(SkZip<const SkGlyphID, const SkPoint> source) {
     this->~SkSourceGlyphBuffer();

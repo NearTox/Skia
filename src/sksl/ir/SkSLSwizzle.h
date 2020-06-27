@@ -17,17 +17,17 @@
 namespace SkSL {
 
 // represents a swizzle component of constant 0, as in x.rgb0
-const int SKSL_SWIZZLE_0 = -2;
+constexpr int SKSL_SWIZZLE_0 = -2;
 
 // represents a swizzle component of constant 1, as in x.rgb1
-const int SKSL_SWIZZLE_1 = -1;
+constexpr int SKSL_SWIZZLE_1 = -1;
 
 /**
  * Given a type and a swizzle component count, returns the type that will result from swizzling. For
  * instance, swizzling a float3 with two components will result in a float2. It is possible to
  * swizzle with more components than the source vector, as in 'float2(1).xxxx'.
  */
-static const Type& get_type(const Context& context, Expression& value, size_t count) {
+static const Type& get_type(const Context& context, Expression& value, size_t count) noexcept {
   const Type& base = value.fType.componentType();
   if (count == 1) {
     return base;
@@ -103,7 +103,9 @@ static const Type& get_type(const Context& context, Expression& value, size_t co
  * Represents a vector swizzle operation such as 'float2(1, 2, 3).zyx'.
  */
 struct Swizzle : public Expression {
-  Swizzle(const Context& context, std::unique_ptr<Expression> base, std::vector<int> components)
+  Swizzle(
+      const Context& context, std::unique_ptr<Expression> base,
+      std::vector<int> components) noexcept
       : INHERITED(base->fOffset, kSwizzle_Kind, get_type(context, *base, components.size())),
         fBase(std::move(base)),
         fComponents(std::move(components)) {
@@ -128,13 +130,14 @@ struct Swizzle : public Expression {
     return nullptr;
   }
 
-  bool hasProperty(Property property) const override { return fBase->hasProperty(property); }
+  bool hasProperty(Property property) const noexcept override {
+    return fBase->hasProperty(property);
+  }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new Swizzle(fType, fBase->clone(), fComponents));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result = fBase->description() + ".";
     for (int x : fComponents) {
@@ -142,7 +145,6 @@ struct Swizzle : public Expression {
     }
     return result;
   }
-#endif
 
   std::unique_ptr<Expression> fBase;
   std::vector<int> fComponents;
@@ -150,7 +152,7 @@ struct Swizzle : public Expression {
   typedef Expression INHERITED;
 
  private:
-  Swizzle(const Type& type, std::unique_ptr<Expression> base, std::vector<int> components)
+  Swizzle(const Type& type, std::unique_ptr<Expression> base, std::vector<int> components) noexcept
       : INHERITED(base->fOffset, kSwizzle_Kind, type),
         fBase(std::move(base)),
         fComponents(std::move(components)) {

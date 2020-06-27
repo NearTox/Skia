@@ -36,7 +36,7 @@ const RenderNode* ClipEffect::onNodeAt(const SkPoint& p) const {
 SkRect ClipEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto clipBounds = fClipNode->revalidate(ic, ctm);
+  const auto& clipBounds = fClipNode->revalidate(ic, ctm);
   auto childBounds = this->INHERITED::onRevalidate(ic, ctm);
 
   fNoop = fClipNode->asPath().conservativelyContainsRect(childBounds);

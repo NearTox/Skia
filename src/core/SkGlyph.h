@@ -89,7 +89,7 @@ struct SkPackedGlyphID {
   }
 
  private:
-  static constexpr uint32_t PackIDSubXSubY(SkGlyphID glyphID, uint32_t x, uint32_t y) {
+  static constexpr uint32_t PackIDSubXSubY(SkGlyphID glyphID, uint32_t x, uint32_t y) noexcept {
     SkASSERT(x < (1u << kSubPixelPosLen));
     SkASSERT(y < (1u << kSubPixelPosLen));
 
@@ -172,8 +172,8 @@ class SkGlyph {
 
   SkGlyphID getGlyphID() const noexcept { return fID.glyphID(); }
   SkPackedGlyphID getPackedID() const noexcept { return fID; }
-  SkFixed getSubXFixed() const { return fID.getSubXFixed(); }
-  SkFixed getSubYFixed() const { return fID.getSubYFixed(); }
+  SkFixed getSubXFixed() const noexcept { return fID.getSubXFixed(); }
+  SkFixed getSubYFixed() const noexcept { return fID.getSubYFixed(); }
 
   size_t rowBytes() const noexcept;
   size_t rowBytesUsingFormat(SkMask::Format format) const noexcept;
@@ -283,6 +283,7 @@ class SkGlyph {
   friend class SkStrikeServer;
   friend class SkTestScalerContext;
   friend class SkTestSVGScalerContext;
+  friend class SkUserScalerContext;
   friend class TestSVGTypeface;
   friend class TestTypeface;
 

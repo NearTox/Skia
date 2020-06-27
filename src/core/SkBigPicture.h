@@ -24,7 +24,7 @@ class SkBigPicture final : public SkPicture {
   // An array of refcounted const SkPicture pointers.
   class SnapshotArray : ::SkNoncopyable {
    public:
-    SnapshotArray(const SkPicture* pics[], int count) : fPics(pics), fCount(count) {}
+    SnapshotArray(const SkPicture* pics[], int count) noexcept : fPics(pics), fCount(count) {}
     ~SnapshotArray() {
       for (int i = 0; i < fCount; i++) {
         fPics[i]->unref();
@@ -41,14 +41,14 @@ class SkBigPicture final : public SkPicture {
 
   SkBigPicture(
       const SkRect& cull, sk_sp<SkRecord>, std::unique_ptr<SnapshotArray>, sk_sp<SkBBoxHierarchy>,
-      size_t approxBytesUsedBySubPictures);
+      size_t approxBytesUsedBySubPictures) noexcept;
 
   // SkPicture overrides
   void playback(SkCanvas*, AbortCallback*) const override;
-  SkRect cullRect() const override;
-  int approximateOpCount() const override;
-  size_t approximateBytesUsed() const override;
-  const SkBigPicture* asSkBigPicture() const override { return this; }
+  SkRect cullRect() const noexcept override;
+  int approximateOpCount() const noexcept override;
+  size_t approximateBytesUsed() const noexcept override;
+  const SkBigPicture* asSkBigPicture() const noexcept override { return this; }
 
   // Used by GrLayerHoister
   void partialPlayback(SkCanvas*, int start, int stop, const SkMatrix& initialCTM) const;
@@ -57,8 +57,8 @@ class SkBigPicture final : public SkPicture {
   const SkRecord* record() const noexcept { return fRecord.get(); }
 
  private:
-  int drawableCount() const;
-  SkPicture const* const* drawablePicts() const;
+  int drawableCount() const noexcept;
+  SkPicture const* const* drawablePicts() const noexcept;
 
   const SkRect fCullRect;
   const size_t fApproxBytesUsedBySubPictures;

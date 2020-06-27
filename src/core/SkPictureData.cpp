@@ -30,7 +30,7 @@ int SafeCount(const T* obj) {
 
 SkPictureData::SkPictureData(const SkPictInfo& info) : fInfo(info) {}
 
-void SkPictureData::initForPlayback() const noexcept {
+void SkPictureData::initForPlayback() const {
   // ensure that the paths bounds are pre-computed
   for (int i = 0; i < fPaths.count(); i++) {
     fPaths[i].updateBoundsCache();
@@ -231,7 +231,7 @@ void SkPictureData::serialize(
       fBytesWritten += size;
       return true;
     }
-    size_t bytesWritten() const override { return fBytesWritten; }
+    size_t bytesWritten() const noexcept override { return fBytesWritten; }
   } devnull;
   for (const auto& pic : fPictures) {
     pic->serialize(&devnull, nullptr, typefaceSet, /*textBlobsOnly=*/true);

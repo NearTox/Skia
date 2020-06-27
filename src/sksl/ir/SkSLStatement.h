@@ -35,7 +35,7 @@ struct Statement : public IRNode {
     kWhile_Kind
   };
 
-  Statement(int offset, Kind kind) : INHERITED(offset), fKind(kind) {}
+  constexpr Statement(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
 
   virtual bool isEmpty() const { return false; }
 

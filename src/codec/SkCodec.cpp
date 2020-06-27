@@ -690,7 +690,7 @@ std::vector<SkCodec::FrameInfo> SkCodec::getFrameInfo() {
   return result;
 }
 
-const char* SkCodec::ResultToString(Result result) {
+const char* SkCodec::ResultToString(Result result) noexcept {
   switch (result) {
     case kSuccess: return "success";
     case kIncompleteInput: return "incomplete input";
@@ -706,11 +706,11 @@ const char* SkCodec::ResultToString(Result result) {
   }
 }
 
-static bool independent(const SkFrame& frame) noexcept {
+static bool independent(const SkFrame& frame) {
   return frame.getRequiredFrame() == SkCodec::kNoFrame;
 }
 
-static bool restore_bg(const SkFrame& frame) noexcept {
+static bool restore_bg(const SkFrame& frame) {
   return frame.getDisposalMethod() == SkCodecAnimation::DisposalMethod::kRestoreBGColor;
 }
 

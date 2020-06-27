@@ -99,7 +99,7 @@ class NonAARectOp : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     using namespace GrDefaultGeoProcFactory;
 
@@ -112,7 +112,7 @@ class NonAARectOp : public GrMeshDrawOp {
     }
 
     fProgramInfo = fHelper.createProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 
@@ -311,7 +311,9 @@ class AtlasObject final : public GrOnFlushCallbackObject {
     const GrBackendFormat format =
         caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
     auto proxy = GrProxyProvider::MakeFullyLazyProxy(
-        [format](GrResourceProvider* resourceProvider) -> GrSurfaceProxy::LazyCallbackResult {
+        [](GrResourceProvider* resourceProvider,
+           const GrSurfaceProxy::LazySurfaceDesc& desc) -> GrSurfaceProxy::LazyCallbackResult {
+          SkASSERT(desc.fDimensions.width() < 0 && desc.fDimensions.height() < 0);
           SkISize dims;
           // TODO: until partial flushes in MDB lands we're stuck having
           // all 9 atlas draws occur
@@ -319,8 +321,8 @@ class AtlasObject final : public GrOnFlushCallbackObject {
           dims.fHeight = kAtlasTileSize;
 
           return resourceProvider->createTexture(
-              dims, format, GrRenderable::kYes, 1, GrMipMapped::kNo, SkBudgeted::kYes,
-              GrProtected::kNo);
+              dims, desc.fFormat, desc.fRenderable, desc.fSampleCnt, desc.fMipMapped,
+              desc.fBudgeted, desc.fProtected);
         },
         format, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
         GrSurfaceProxy::UseAllocator::kNo);

@@ -248,14 +248,14 @@ class GrUniqueKey : public GrResourceKey {
   /** Creates an invalid unique key. It must be initialized using a Builder object before use. */
   GrUniqueKey() noexcept : fTag(nullptr) {}
 
-  GrUniqueKey(const GrUniqueKey& that) { *this = that; }
+  GrUniqueKey(const GrUniqueKey& that) noexcept { *this = that; }
 
   /** reset() returns the key to the invalid state. */
   using INHERITED::reset;
 
   using INHERITED::isValid;
 
-  GrUniqueKey& operator=(const GrUniqueKey& that) {
+  GrUniqueKey& operator=(const GrUniqueKey& that) noexcept {
     this->INHERITED::operator=(that);
     this->setCustomData(sk_ref_sp(that.getCustomData()));
     fTag = that.fTag;
@@ -267,7 +267,7 @@ class GrUniqueKey : public GrResourceKey {
   }
   bool operator!=(const GrUniqueKey& that) const noexcept { return !(*this == that); }
 
-  void setCustomData(sk_sp<SkData> data) { fData = std::move(data); }
+  void setCustomData(sk_sp<SkData> data) noexcept { fData = std::move(data); }
   SkData* getCustomData() const noexcept { return fData.get(); }
 
   const char* tag() const noexcept { return fTag; }
@@ -327,8 +327,7 @@ class GrUniqueKey : public GrResourceKey {
   name##_once(gr_init_static_unique_key_once, &name##_storage); \
   static const GrUniqueKey& name = *reinterpret_cast<GrUniqueKey*>(name##_storage.get())
 
-static inline void gr_init_static_unique_key_once(
-    SkAlignedSTStorage<1, GrUniqueKey>* keyStorage) {
+static inline void gr_init_static_unique_key_once(SkAlignedSTStorage<1, GrUniqueKey>* keyStorage) {
   GrUniqueKey* key = new (keyStorage->get()) GrUniqueKey;
   GrUniqueKey::Builder builder(key, GrUniqueKey::GenerateDomain(), 0);
 }
@@ -337,7 +336,7 @@ static inline void gr_init_static_unique_key_once(
 class GrUniqueKeyInvalidatedMessage {
  public:
   GrUniqueKeyInvalidatedMessage() noexcept = default;
-  GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key, uint32_t contextUniqueID)
+  GrUniqueKeyInvalidatedMessage(const GrUniqueKey& key, uint32_t contextUniqueID) noexcept
       : fKey(key), fContextID(contextUniqueID) {
     SkASSERT(SK_InvalidUniqueID != contextUniqueID);
   }

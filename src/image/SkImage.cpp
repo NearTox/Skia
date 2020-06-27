@@ -32,7 +32,7 @@
 #endif
 #include "include/gpu/GrBackendSurface.h"
 
-SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID)
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {
   SkASSERT(info.width() > 0);
   SkASSERT(info.height() > 0);
@@ -185,7 +185,7 @@ void SkImage::flush(GrContext*) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID)
     : INHERITED(info, uniqueID), fAddedToRasterCache(false) {}
 
 SkImage_Base::~SkImage_Base() {

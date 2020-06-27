@@ -54,6 +54,10 @@ class SkCanvasPriv {
   static void GetDstClipAndMatrixCounts(
       const SkCanvas::ImageSetEntry set[], int count, int* totalDstClipCount,
       int* totalMatrixCount);
+
+  // Checks that the marker name is an identifier ([a-zA-Z][a-zA-Z0-9_]*)
+  // Identifiers with leading underscores are reserved (not allowed).
+  static bool ValidateMarker(const char*);
 };
 
 #endif

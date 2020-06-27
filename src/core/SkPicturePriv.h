@@ -31,7 +31,7 @@ class SkPicturePriv {
   static void Flatten(const sk_sp<const SkPicture>, SkWriteBuffer& buffer);
 
   // Returns NULL if this is not an SkBigPicture.
-  static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) {
+  static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) noexcept {
     return picture->asSkBigPicture();
   }
 
@@ -74,6 +74,7 @@ class SkPicturePriv {
   // V71: Unify erode and dilate image filters
   // V72: SkColorFilter_Matrix domain (rgba vs. hsla)
   // V73: Use SkColor4f in per-edge AA quad API
+  // V74: MorphologyImageFilter internal radius is SkScaler
 
   enum Version {
     kTileModeInBlurImageFilter_Version = 56,
@@ -94,10 +95,11 @@ class SkPicturePriv {
     kUnifyErodeDilateImpls_Version = 71,
     kMatrixColorFilterDomain_Version = 72,
     kEdgeAAQuadColor4f_Version = 73,
+    kMorphologyTakesScalar_Version = 74,
 
     // Only SKPs within the min/current picture version range (inclusive) can be read.
     kMin_Version = kTileModeInBlurImageFilter_Version,
-    kCurrent_Version = kEdgeAAQuadColor4f_Version
+    kCurrent_Version = kMorphologyTakesScalar_Version
   };
 
   static_assert(kMin_Version <= 62, "Remove kFontAxes_bad from SkFontDescriptor.cpp");

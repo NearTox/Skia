@@ -43,19 +43,19 @@ class GrVkImage : SkNoncopyable {
   }
   virtual ~GrVkImage();
 
-  VkImage image() const {
+  VkImage image() const noexcept {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return fInfo.fImage;
   }
-  const GrVkAlloc& alloc() const {
+  const GrVkAlloc& alloc() const noexcept {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return fInfo.fAlloc;
   }
-  VkFormat imageFormat() const { return fInfo.fFormat; }
+  VkFormat imageFormat() const noexcept { return fInfo.fFormat; }
   GrBackendFormat getBackendFormat() const {
     if (fResource && this->ycbcrConversionInfo().isValid()) {
       SkASSERT(this->imageFormat() == this->ycbcrConversionInfo().fFormat);
@@ -64,28 +64,28 @@ class GrVkImage : SkNoncopyable {
     SkASSERT(this->imageFormat() != VK_FORMAT_UNDEFINED);
     return GrBackendFormat::MakeVk(this->imageFormat());
   }
-  uint32_t mipLevels() const { return fInfo.fLevelCount; }
-  const GrVkYcbcrConversionInfo& ycbcrConversionInfo() const {
+  uint32_t mipLevels() const noexcept { return fInfo.fLevelCount; }
+  const GrVkYcbcrConversionInfo& ycbcrConversionInfo() const noexcept {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return fInfo.fYcbcrConversionInfo;
   }
-  const Resource* resource() const {
+  const Resource* resource() const noexcept {
     SkASSERT(fResource);
     return fResource;
   }
-  bool isLinearTiled() const {
+  bool isLinearTiled() const noexcept {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return SkToBool(VK_IMAGE_TILING_LINEAR == fInfo.fImageTiling);
   }
-  bool isBorrowed() const { return fIsBorrowed; }
+  bool isBorrowed() const noexcept { return fIsBorrowed; }
 
   sk_sp<GrVkImageLayout> grVkImageLayout() const { return fLayout; }
 
-  VkImageLayout currentLayout() const { return fLayout->getImageLayout(); }
+  VkImageLayout currentLayout() const noexcept { return fLayout->getImageLayout(); }
 
   void setImageLayout(
       const GrVkGpu* gpu, VkImageLayout newLayout, VkAccessFlags dstAccessMask,
@@ -101,7 +101,7 @@ class GrVkImage : SkNoncopyable {
   // This simply updates our tracking of the image layout and does not actually do any gpu work.
   // This is only used for mip map generation where we are manually changing the layouts as we
   // blit each layer, and then at the end need to update our tracking.
-  void updateImageLayout(VkImageLayout newLayout) {
+  void updateImageLayout(VkImageLayout newLayout) noexcept {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
@@ -120,7 +120,7 @@ class GrVkImage : SkNoncopyable {
     VkFlags fMemProps;
     GrProtected fIsProtected;
 
-    ImageDesc()
+    ImageDesc() noexcept
         : fImageType(VK_IMAGE_TYPE_2D),
           fFormat(VK_FORMAT_UNDEFINED),
           fWidth(0),
@@ -153,7 +153,7 @@ class GrVkImage : SkNoncopyable {
 
  protected:
   void releaseImage(GrVkGpu* gpu);
-  bool hasResource() const { return fResource; }
+  bool hasResource() const noexcept { return fResource; }
 
   GrVkImageInfo fInfo;
   uint32_t fInitialQueueFamily;
@@ -163,12 +163,13 @@ class GrVkImage : SkNoncopyable {
  private:
   class Resource : public GrTextureResource {
    public:
-    explicit Resource(const GrVkGpu* gpu) : fGpu(gpu), fImage(VK_NULL_HANDLE) {
+    explicit Resource(const GrVkGpu* gpu) noexcept : fGpu(gpu), fImage(VK_NULL_HANDLE) {
       fAlloc.fMemory = VK_NULL_HANDLE;
       fAlloc.fOffset = 0;
     }
 
-    Resource(const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
+    Resource(
+        const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling) noexcept
         : fGpu(gpu), fImage(image), fAlloc(alloc), fImageTiling(tiling) {}
 
     ~Resource() override {}
@@ -177,6 +178,10 @@ class GrVkImage : SkNoncopyable {
     void dumpInfo() const override {
       SkDebugf("GrVkImage: %d (%d refs)\n", fImage, this->getRefCnt());
     }
+#endif
+
+#ifdef SK_DEBUG
+    const GrManagedResource* asVkImageResource() const override { return this; }
 #endif
 
    private:

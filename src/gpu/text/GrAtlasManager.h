@@ -25,8 +25,7 @@ class GrTextStrike;
  */
 class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::GenerationCounter {
  public:
-  GrAtlasManager(
-      GrProxyProvider*, GrStrikeCache*, size_t maxTextureBytes, GrDrawOpAtlas::AllowMultitexturing);
+  GrAtlasManager(GrProxyProvider*, size_t maxTextureBytes, GrDrawOpAtlas::AllowMultitexturing);
   ~GrAtlasManager() override;
 
   // Change an expected 565 mask format to 8888 if 565 is not supported (will happen when using
@@ -76,8 +75,8 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
 
   // add to texture atlas that matches this format
   GrDrawOpAtlas::ErrorCode addToAtlas(
-      GrResourceProvider*, GrDrawOpAtlas::PlotLocator*, GrDeferredUploadTarget*, GrMaskFormat,
-      int width, int height, const void* image, SkIPoint16* loc);
+      GrResourceProvider*, GrDeferredUploadTarget*, GrMaskFormat, int width, int height,
+      const void* image, GrDrawOpAtlas::AtlasLocator*);
 
   // Some clients may wish to verify the integrity of the texture backing store of the
   // GrDrawOpAtlas. The atlasGeneration returned below is a monotonically increasing number which
@@ -123,10 +122,10 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   bool initAtlas(GrMaskFormat);
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
+  static constexpr int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
     return static_cast<int>(format);
   }
-  static GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
+  static constexpr GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
     return static_cast<GrMaskFormat>(idx);
   }
 
@@ -142,7 +141,6 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   static_assert(kMaskFormatCount == 3);
   GrProxyProvider* fProxyProvider;
   sk_sp<const GrCaps> fCaps;
-  GrStrikeCache* fGlyphCache;
   GrDrawOpAtlasConfig fAtlasConfig;
 
   typedef GrOnFlushCallbackObject INHERITED;

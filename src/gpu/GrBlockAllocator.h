@@ -131,12 +131,12 @@ class GrBlockAllocator final : SkNoncopyable {
 
     // Get fCursor, but aligned such that ptr(rval) satisfies Align.
     template <size_t Align, size_t Padding>
-    int cursor() const {
+    int cursor() const noexcept {
       return this->alignedOffset<Align, Padding>(fCursor);
     }
 
     template <size_t Align, size_t Padding>
-    int alignedOffset(int offset) const;
+    int alignedOffset(int offset) const noexcept;
 
     SkDEBUGCODE(int fSentinel);  // known value to check for bad back pointers to blocks
 
@@ -159,7 +159,7 @@ class GrBlockAllocator final : SkNoncopyable {
   // is in-place new'ed into a larger block of memory, but it should remain set to 0 if stack
   // allocated or if the class layout does not guarantee that space is present.
   GrBlockAllocator(
-      GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes = 0);
+      GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes = 0) noexcept;
 
   ~GrBlockAllocator() { this->reset(); }
   void operator delete(void* p) { ::operator delete(p); }
@@ -171,7 +171,7 @@ class GrBlockAllocator final : SkNoncopyable {
    *   BlockOverhead<alignof(T)>() + N * sizeof(T) when making the GrBlockAllocator.
    */
   template <size_t Align = 1, size_t Padding = 0>
-  static constexpr size_t BlockOverhead();
+  static constexpr size_t BlockOverhead() noexcept;
 
   /**
    * Helper to calculate the minimum number of bytes needed for a preallocation, under the
@@ -180,31 +180,31 @@ class GrBlockAllocator final : SkNoncopyable {
    *   Overhead<alignof(T)>() + N * sizeof(T)
    */
   template <size_t Align = 1, size_t Padding = 0>
-  static constexpr size_t Overhead();
+  static constexpr size_t Overhead() noexcept;
 
   /**
    * Return the total number of bytes of the allocator, including its instance overhead, per-block
    * overhead and space used for allocations.
    */
-  size_t totalSize() const;
+  size_t totalSize() const noexcept;
   /**
    * Return the total number of bytes usable for allocations. This includes bytes that have
    * been reserved already by a call to allocate() and bytes that are still available. It is
    * totalSize() minus all allocator and block-level overhead.
    */
-  size_t totalUsableSpace() const;
+  size_t totalUsableSpace() const noexcept;
   /**
    * Return the total number of usable bytes that have been reserved by allocations. This will
    * be less than or equal to totalUsableSpace().
    */
-  size_t totalSpaceInUse() const;
+  size_t totalSpaceInUse() const noexcept;
 
   /**
    * Return the total number of bytes that were pre-allocated for the GrBlockAllocator. This will
    * include 'additionalPreallocBytes' passed to the constructor, and represents what the total
    * size would become after a call to reset().
    */
-  size_t preallocSize() const {
+  size_t preallocSize() const noexcept {
     // Don't double count fHead's Block overhead in both sizeof(GrBlockAllocator) and fSize.
     return sizeof(GrBlockAllocator) + fHead.fSize - BaseHeadBlockSize();
   }
@@ -278,8 +278,8 @@ class GrBlockAllocator final : SkNoncopyable {
    * Find the owning block of the allocated pointer, 'p'. Without any additional information this
    * is O(N) on the number of allocated blocks.
    */
-  Block* findOwningBlock(const void* ptr);
-  const Block* findOwningBlock(const void* ptr) const {
+  Block* findOwningBlock(const void* ptr) noexcept;
+  const Block* findOwningBlock(const void* ptr) const noexcept {
     return const_cast<GrBlockAllocator*>(this)->findOwningBlock(ptr);
   }
 
@@ -332,9 +332,9 @@ class GrBlockAllocator final : SkNoncopyable {
   // Calculates the size of a new Block required to store a kMaxAllocationSize request for the
   // given alignment and padding bytes. Also represents maximum valid fCursor value in a Block.
   template <size_t Align, size_t Padding>
-  static constexpr size_t MaxBlockSize();
+  static constexpr size_t MaxBlockSize() noexcept;
 
-  static constexpr int BaseHeadBlockSize() {
+  static constexpr int BaseHeadBlockSize() noexcept {
     return sizeof(GrBlockAllocator) - offsetof(GrBlockAllocator, fHead);
   }
 
@@ -376,14 +376,14 @@ class GrSBlockAllocator : SkNoncopyable {
  public:
   using GrowthPolicy = GrBlockAllocator::GrowthPolicy;
 
-  GrSBlockAllocator() {
+  GrSBlockAllocator() noexcept {
     new (fStorage) GrBlockAllocator(GrowthPolicy::kFixed, N, N - sizeof(GrBlockAllocator));
   }
-  explicit GrSBlockAllocator(GrowthPolicy policy) {
+  explicit GrSBlockAllocator(GrowthPolicy policy) noexcept {
     new (fStorage) GrBlockAllocator(policy, N, N - sizeof(GrBlockAllocator));
   }
 
-  GrSBlockAllocator(GrowthPolicy policy, size_t blockIncrementBytes) {
+  GrSBlockAllocator(GrowthPolicy policy, size_t blockIncrementBytes) noexcept {
     new (fStorage) GrBlockAllocator(policy, blockIncrementBytes, N - sizeof(GrBlockAllocator));
   }
 
@@ -408,19 +408,19 @@ class GrSBlockAllocator : SkNoncopyable {
 // Template and inline implementations
 
 template <size_t Align, size_t Padding>
-constexpr size_t GrBlockAllocator::BlockOverhead() {
+constexpr size_t GrBlockAllocator::BlockOverhead() noexcept {
   return std::max(sizeof(Block), GrAlignTo(kDataStart + Padding, Align));
 }
 
 template <size_t Align, size_t Padding>
-constexpr size_t GrBlockAllocator::Overhead() {
+constexpr size_t GrBlockAllocator::Overhead() noexcept {
   return std::max(
       sizeof(GrBlockAllocator),
       offsetof(GrBlockAllocator, fHead) + BlockOverhead<Align, Padding>());
 }
 
 template <size_t Align, size_t Padding>
-constexpr size_t GrBlockAllocator::MaxBlockSize() {
+constexpr size_t GrBlockAllocator::MaxBlockSize() noexcept {
   // Without loss of generality, assumes 'align' will be the largest encountered alignment for the
   // allocator (if it's not, the largest align will be encountered by the compiler and pass/fail
   // the same set of static asserts).
@@ -489,7 +489,7 @@ GrBlockAllocator::Block* GrBlockAllocator::owningBlock(const void* p, int start)
 }
 
 template <size_t Align, size_t Padding>
-int GrBlockAllocator::Block::alignedOffset(int offset) const {
+int GrBlockAllocator::Block::alignedOffset(int offset) const noexcept {
   static_assert(SkIsPow2(Align));
   // Aligning adds (Padding + Align - 1) as an intermediate step, so ensure that can't overflow
   static_assert(
@@ -551,7 +551,7 @@ class GrBlockAllocator::BlockIter {
   using AllocatorT =
       typename std::conditional<Const, const GrBlockAllocator, GrBlockAllocator>::type;
 
-  BlockIter(AllocatorT* allocator) noexcept : fAllocator(allocator) {}
+  constexpr BlockIter(AllocatorT* allocator) noexcept : fAllocator(allocator) {}
 
   class Item {
    public:
@@ -559,7 +559,7 @@ class GrBlockAllocator::BlockIter {
 
     BlockT* operator*() const noexcept { return fBlock; }
 
-    Item& operator++() noexcept {
+    constexpr Item& operator++() noexcept {
       fBlock = Forward ? fBlock->fNext : fBlock->fPrev;
       return *this;
     }
@@ -567,13 +567,15 @@ class GrBlockAllocator::BlockIter {
    private:
     friend BlockIter;
 
-    Item(BlockT* block) noexcept : fBlock(block) {}
+    constexpr Item(BlockT* block) noexcept : fBlock(block) {}
 
     BlockT* fBlock;
   };
 
-  Item begin() const { return Item(Forward ? &fAllocator->fHead : fAllocator->fTail); }
-  Item end() const { return Item(nullptr); }
+  constexpr Item begin() const noexcept {
+    return Item(Forward ? &fAllocator->fHead : fAllocator->fTail);
+  }
+  constexpr Item end() const noexcept { return Item(nullptr); }
 
  private:
   AllocatorT* fAllocator;

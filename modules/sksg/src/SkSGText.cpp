@@ -85,7 +85,7 @@ TextBlob::TextBlob(sk_sp<SkTextBlob> blob) noexcept : fBlob(std::move(blob)) {}
 
 TextBlob::~TextBlob() = default;
 
-SkRect TextBlob::onRevalidate(InvalidationController*, const SkMatrix&) {
+SkRect TextBlob::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   return fBlob ? fBlob->bounds().makeOffset(fPosition.x(), fPosition.y()) : SkRect::MakeEmpty();
 }
 

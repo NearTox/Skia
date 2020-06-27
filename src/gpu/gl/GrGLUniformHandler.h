@@ -8,9 +8,10 @@
 #ifndef GrGLUniformHandler_DEFINED
 #define GrGLUniformHandler_DEFINED
 
+#include "src/gpu/gl/GrGLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
-#include "src/gpu/gl/GrGLProgramDataManager.h"
+#include <vector>
 
 class GrGLCaps;
 
@@ -26,13 +27,17 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
     return this->getUniformVariable(u).c_str();
   }
 
+  int numUniforms() const override { return fUniforms.count(); }
+
+  UniformInfo& uniform(int idx) override { return fUniforms.item(idx); }
+
  private:
   explicit GrGLUniformHandler(GrGLSLProgramBuilder* program)
       : INHERITED(program), fUniforms(kUniformsPerBlock), fSamplers(kUniformsPerBlock) {}
 
   UniformHandle internalAddUniformArray(
-      uint32_t visibility, GrSLType type, const char* name, bool mangleName, int arrayCount,
-      const char** outName) override;
+      const GrFragmentProcessor* owner, uint32_t visibility, GrSLType type, const char* name,
+      bool mangleName, int arrayCount, const char** outName) override;
 
   SamplerHandle addSampler(
       const GrBackendFormat&, GrSamplerState, const GrSwizzle&, const char* name,
@@ -56,7 +61,7 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
 
   const GrGLGpu* glGpu() const;
 
-  typedef GrGLProgramDataManager::UniformInfo UniformInfo;
+  typedef GrGLProgramDataManager::GLUniformInfo GLUniformInfo;
   typedef GrGLProgramDataManager::UniformInfoArray UniformInfoArray;
 
   UniformInfoArray fUniforms;

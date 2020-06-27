@@ -302,7 +302,7 @@ class SK_API SkSurface : public SkRefCnt {
   static sk_sp<SkSurface> MakeFromCAMetalLayer(
       GrContext* context, GrMTLHandle layer, GrSurfaceOrigin origin, int sampleCnt,
       SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* surfaceProps,
-      GrMTLHandle* drawable);
+      GrMTLHandle* drawable) SK_API_AVAILABLE_CA_METAL_LAYER;
 
   /** Creates SkSurface from MTKView.
       Returned SkSurface takes a reference on the MTKView. The ref on the layer will be
@@ -506,6 +506,12 @@ class SK_API SkSurface : public SkRefCnt {
       example: https://fiddle.skia.org/c/@Surface_notifyContentWillChange
   */
   void notifyContentWillChange(ContentChangeMode mode);
+
+  /** Returns the GPU context of the GPU surface.
+
+      @return  GPU context, if available; nullptr otherwise
+  */
+  GrContext* getContext();
 
   enum BackendHandleAccess {
     kFlushRead_BackendHandleAccess,     //!< back-end object is readable
@@ -749,7 +755,7 @@ class SK_API SkSurface : public SkRefCnt {
     AsyncReadResult& operator=(AsyncReadResult&&) = delete;
 
     virtual ~AsyncReadResult() = default;
-    virtual int count() const = 0;
+    virtual int count() const noexcept = 0;
     virtual const void* data(int i) const = 0;
     virtual size_t rowBytes(int i) const = 0;
 
@@ -875,13 +881,18 @@ class SK_API SkSurface : public SkRefCnt {
   */
   const SkSurfaceProps& props() const noexcept { return fProps; }
 
-  /** Issues pending SkSurface commands to the GPU-backed API and resolves any SkSurface MSAA.
-
-      Skia flushes as needed, so it is not necessary to call this if Skia manages
-      drawing and object lifetime. Call when interleaving Skia calls with native
-      GPU calls.
+  /** Call to ensure all reads/writes of the surface have been issued to the underlying 3D API.
+      Skia will correctly order its own draws and pixel operations. This must to be used to ensure
+      correct ordering when the surface backing store is accessed outside Skia (e.g. direct use of
+      the 3D API or a windowing system). GrContext has additional flush and submit methods that
+      apply to all surfaces and images created from a GrContext.
   */
-  void flush();
+  void flushAndSubmit();
+
+  /**
+   * Deprecated.
+   */
+  void flush() { this->flushAndSubmit(); }
 
   enum class BackendSurfaceAccess {
     kNoAccess,  //!< back-end object will not be used by client
@@ -904,9 +915,13 @@ class SK_API SkSurface : public SkRefCnt {
       The GrFlushInfo describes additional options to flush. Please see documentation at
       GrFlushInfo for more info.
 
-      If GrSemaphoresSubmitted::kNo is returned, the GPU back-end did not create or
-      add any semaphores to signal on the GPU; the caller should not instruct the GPU
-      to wait on any of the semaphores passed in the GrFlushInfo.
+       If the return is GrSemaphoresSubmitted::kYes, only initialized GrBackendSemaphores will
+       have been submitted and can be waited on (it is possible Skia failed to create a subset of
+       the semaphores). If this call returns GrSemaphoresSubmitted::kNo, the GPU backend will not
+       have submitted any semaphores to be signaled on the GPU. Thus the client should not have
+       the GPU wait on any of the semaphores passed in with the GrFlushInfo. Regardless of whether
+       semaphores were submitted to the GPU or not, the client is still responsible for deleting
+       any initialized semaphores.
 
       Pending surface commands are flushed regardless of the return result.
 
@@ -978,8 +993,8 @@ class SK_API SkSurface : public SkRefCnt {
   bool draw(SkDeferredDisplayList* deferredDisplayList);
 
  protected:
-  SkSurface(int width, int height, const SkSurfaceProps* surfaceProps);
-  SkSurface(const SkImageInfo& imageInfo, const SkSurfaceProps* surfaceProps);
+  SkSurface(int width, int height, const SkSurfaceProps* surfaceProps) noexcept;
+  SkSurface(const SkImageInfo& imageInfo, const SkSurfaceProps* surfaceProps) noexcept;
 
   // called by subclass if their contents have changed
   void dirtyGenerationID() noexcept { fGenerationID = 0; }

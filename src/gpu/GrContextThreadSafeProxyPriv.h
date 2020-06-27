@@ -20,11 +20,11 @@
 class GrContextThreadSafeProxyPriv {
  public:
   // from GrContext_Base
-  uint32_t contextID() const { return fProxy->contextID(); }
+  uint32_t contextID() const noexcept { return fProxy->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const { return fProxy->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const noexcept { return fProxy->matches(candidate); }
 
-  const GrContextOptions& options() const { return fProxy->options(); }
+  const GrContextOptions& options() const noexcept { return fProxy->options(); }
 
   const GrCaps* caps() const { return fProxy->caps(); }
   sk_sp<const GrCaps> refCaps() const { return fProxy->refCaps(); }
@@ -34,7 +34,7 @@ class GrContextThreadSafeProxyPriv {
       GrBackendApi, const GrContextOptions&, uint32_t contextID, sk_sp<const GrCaps>);
 
  private:
-  explicit GrContextThreadSafeProxyPriv(GrContextThreadSafeProxy* proxy) : fProxy(proxy) {}
+  explicit GrContextThreadSafeProxyPriv(GrContextThreadSafeProxy* proxy) noexcept : fProxy(proxy) {}
   GrContextThreadSafeProxyPriv(const GrContextThreadSafeProxy&) = delete;
   GrContextThreadSafeProxyPriv& operator=(const GrContextThreadSafeProxyPriv&) = delete;
 
@@ -47,11 +47,11 @@ class GrContextThreadSafeProxyPriv {
   friend class GrContextThreadSafeProxy;  // to construct/copy this type.
 };
 
-inline GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() {
+inline GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() noexcept {
   return GrContextThreadSafeProxyPriv(this);
 }
 
-inline const GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() const {
+inline const GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() const noexcept {
   return GrContextThreadSafeProxyPriv(const_cast<GrContextThreadSafeProxy*>(this));
 }
 

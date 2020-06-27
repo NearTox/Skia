@@ -30,8 +30,8 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   };
 
   // Forwarded to the wrapped canvas.
-  SkISize getBaseLayerSize() const override { return proxy()->getBaseLayerSize(); }
-  GrContext* getGrContext() override { return proxy()->getGrContext(); }
+  SkISize getBaseLayerSize() const noexcept override { return proxy()->getBaseLayerSize(); }
+  GrContext* getGrContext() noexcept override { return proxy()->getGrContext(); }
   GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext() override {
     return proxy()->internal_private_accessTopLayerRenderTargetContext();
   }
@@ -92,18 +92,18 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   sk_sp<SkSurface> onNewSurface(const SkImageInfo&, const SkSurfaceProps&) override;
   bool onPeekPixels(SkPixmap* pixmap) override;
   bool onAccessTopLayerPixels(SkPixmap* pixmap) override;
-  SkImageInfo onImageInfo() const override;
+  SkImageInfo onImageInfo() const noexcept override;
   bool onGetProps(SkSurfaceProps* props) const override;
 
  private:
   class AutoPaintFilter;
 
-  SkCanvas* proxy() const {
+  SkCanvas* proxy() const noexcept {
     SkASSERT(fList.count() == 1);
     return fList[0];
   }
 
-  SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const override {
+  SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const noexcept override {
     return const_cast<SkPaintFilterCanvas*>(this);
   }
 

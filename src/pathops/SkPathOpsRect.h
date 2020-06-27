@@ -14,21 +14,21 @@ class SkTCurve;
 struct SkDRect {
   double fLeft, fTop, fRight, fBottom;
 
-  void add(const SkDPoint& pt) {
+  void add(const SkDPoint& pt) noexcept {
     fLeft = std::min(fLeft, pt.fX);
     fTop = std::min(fTop, pt.fY);
     fRight = std::max(fRight, pt.fX);
     fBottom = std::max(fBottom, pt.fY);
   }
 
-  bool contains(const SkDPoint& pt) const {
+  bool contains(const SkDPoint& pt) const noexcept {
     return approximately_between(fLeft, pt.fX, fRight) &&
            approximately_between(fTop, pt.fY, fBottom);
   }
 
-  void debugInit();
+  void debugInit() noexcept;
 
-  bool intersects(const SkDRect& r) const {
+  bool intersects(const SkDRect& r) const noexcept {
     SkASSERT(fLeft <= fRight);
     SkASSERT(fTop <= fBottom);
     SkASSERT(r.fLeft <= r.fRight);
@@ -36,30 +36,30 @@ struct SkDRect {
     return r.fLeft <= fRight && fLeft <= r.fRight && r.fTop <= fBottom && fTop <= r.fBottom;
   }
 
-  void set(const SkDPoint& pt) {
+  void set(const SkDPoint& pt) noexcept {
     fLeft = fRight = pt.fX;
     fTop = fBottom = pt.fY;
   }
 
-  double width() const { return fRight - fLeft; }
+  double width() const noexcept { return fRight - fLeft; }
 
-  double height() const { return fBottom - fTop; }
+  double height() const noexcept { return fBottom - fTop; }
 
-  void setBounds(const SkDConic& curve) { setBounds(curve, curve, 0, 1); }
+  void setBounds(const SkDConic& curve) noexcept { setBounds(curve, curve, 0, 1); }
 
-  void setBounds(const SkDConic& curve, const SkDConic& sub, double tStart, double tEnd);
+  void setBounds(const SkDConic& curve, const SkDConic& sub, double tStart, double tEnd) noexcept;
 
-  void setBounds(const SkDCubic& curve) { setBounds(curve, curve, 0, 1); }
+  void setBounds(const SkDCubic& curve) noexcept { setBounds(curve, curve, 0, 1); }
 
-  void setBounds(const SkDCubic& curve, const SkDCubic& sub, double tStart, double tEnd);
+  void setBounds(const SkDCubic& curve, const SkDCubic& sub, double tStart, double tEnd) noexcept;
 
-  void setBounds(const SkDQuad& curve) { setBounds(curve, curve, 0, 1); }
+  void setBounds(const SkDQuad& curve) noexcept { setBounds(curve, curve, 0, 1); }
 
-  void setBounds(const SkDQuad& curve, const SkDQuad& sub, double tStart, double tEnd);
+  void setBounds(const SkDQuad& curve, const SkDQuad& sub, double tStart, double tEnd) noexcept;
 
-  void setBounds(const SkTCurve& curve);
+  void setBounds(const SkTCurve& curve) noexcept;
 
-  bool valid() const { return fLeft <= fRight && fTop <= fBottom; }
+  bool valid() const noexcept { return fLeft <= fRight && fTop <= fBottom; }
 };
 
 #endif

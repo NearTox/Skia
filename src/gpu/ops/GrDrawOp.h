@@ -20,7 +20,7 @@ class GrAppliedClip;
  */
 class GrDrawOp : public GrOp {
  public:
-  GrDrawOp(uint32_t classID) : INHERITED(classID) {}
+  GrDrawOp(uint32_t classID) noexcept : INHERITED(classID) {}
 
   /**
    * This information is required to determine how to compute a GrAppliedClip from a GrClip for

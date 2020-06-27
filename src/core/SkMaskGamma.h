@@ -23,15 +23,15 @@
  */
 class SkColorSpaceLuminance : SkNoncopyable {
  public:
-  virtual ~SkColorSpaceLuminance() {}
+  virtual ~SkColorSpaceLuminance() = default;
 
   /** Converts a color component luminance in the color space to a linear luma. */
-  virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const = 0;
+  virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const noexcept = 0;
   /** Converts a linear luma to a color component luminance in the color space. */
-  virtual SkScalar fromLuma(SkScalar gamma, SkScalar luma) const = 0;
+  virtual SkScalar fromLuma(SkScalar gamma, SkScalar luma) const noexcept = 0;
 
   /** Converts a color to a luminance value. */
-  static U8CPU computeLuminance(SkScalar gamma, SkColor c) {
+  static U8CPU computeLuminance(SkScalar gamma, SkColor c) noexcept {
     const SkColorSpaceLuminance& luminance = Fetch(gamma);
     SkScalar r = luminance.toLuma(gamma, SkIntToScalar(SkColorGetR(c)) / 255);
     SkScalar g = luminance.toLuma(gamma, SkIntToScalar(SkColorGetG(c)) / 255);
@@ -42,7 +42,7 @@ class SkColorSpaceLuminance : SkNoncopyable {
   }
 
   /** Retrieves the SkColorSpaceLuminance for the given gamma. */
-  static const SkColorSpaceLuminance& Fetch(SkScalar gamma);
+  static const SkColorSpaceLuminance& Fetch(SkScalar gamma) noexcept;
 };
 
 ///@{
@@ -71,7 +71,7 @@ class SkTMaskPreBlend;
 
 void SkTMaskGamma_build_correcting_lut(
     uint8_t table[256], U8CPU srcI, SkScalar contrast, const SkColorSpaceLuminance& srcConvert,
-    SkScalar srcGamma, const SkColorSpaceLuminance& dstConvert, SkScalar dstGamma);
+    SkScalar srcGamma, const SkColorSpaceLuminance& dstConvert, SkScalar dstGamma) noexcept;
 
 /**
  * A regular mask contains linear alpha values. A gamma correcting mask
@@ -88,7 +88,7 @@ template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
 class SkTMaskGamma : public SkRefCnt {
  public:
   /** Creates a linear SkTMaskGamma. */
-  SkTMaskGamma() : fIsLinear(true) {}
+  SkTMaskGamma() noexcept : fIsLinear(true) {}
 
   /**
    * Creates tables to convert linear alpha values to gamma correcting alpha
@@ -168,7 +168,7 @@ class SkTMaskPreBlend {
  private:
   SkTMaskPreBlend(
       sk_sp<const SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>> parent, const uint8_t* r,
-      const uint8_t* g, const uint8_t* b)
+      const uint8_t* g, const uint8_t* b) noexcept
       : fParent(std::move(parent)), fR(r), fG(g), fB(b) {}
 
   sk_sp<const SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>> fParent;
@@ -176,7 +176,7 @@ class SkTMaskPreBlend {
 
  public:
   /** Creates a non applicable SkTMaskPreBlend. */
-  SkTMaskPreBlend() : fParent(), fR(nullptr), fG(nullptr), fB(nullptr) {}
+  constexpr SkTMaskPreBlend() noexcept : fParent(), fR(nullptr), fG(nullptr), fB(nullptr) {}
 
   /**
    * This copy contructor exists for correctness, but should never be called
@@ -185,10 +185,10 @@ class SkTMaskPreBlend {
   SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that)
       : fParent(that.fParent), fR(that.fR), fG(that.fG), fB(that.fB) {}
 
-  ~SkTMaskPreBlend() {}
+  ~SkTMaskPreBlend() = default;
 
   /** True if this PreBlend should be applied. When false, fR, fG, and fB are nullptr. */
-  bool isApplicable() const { return SkToBool(this->fG); }
+  bool isApplicable() const noexcept { return SkToBool(this->fG); }
 
   const uint8_t* fR;
   const uint8_t* fG;

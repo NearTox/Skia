@@ -30,20 +30,20 @@ class GrGLSLLumaColorFilterEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
-  }
+  void onSetData(
+      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
 };
 GrGLSLFragmentProcessor* GrLumaColorFilterEffect::onCreateGLSLInstance() const {
   return new GrGLSLLumaColorFilterEffect();
 }
 void GrLumaColorFilterEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrLumaColorFilterEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrLumaColorFilterEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrLumaColorFilterEffect& that = other.cast<GrLumaColorFilterEffect>();
   (void)that;
   return true;
 }
-GrLumaColorFilterEffect::GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src)
+GrLumaColorFilterEffect::GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src) noexcept
     : INHERITED(kGrLumaColorFilterEffect_ClassID, src.optimizationFlags()) {}
 std::unique_ptr<GrFragmentProcessor> GrLumaColorFilterEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrLumaColorFilterEffect(*this));

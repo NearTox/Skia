@@ -10,16 +10,17 @@
 
 #include <utility>
 
-SkQuadClipper::SkQuadClipper() { fClip.setEmpty(); }
+SkQuadClipper::SkQuadClipper() noexcept { fClip.setEmpty(); }
 
-void SkQuadClipper::setClip(const SkIRect& clip) {
+void SkQuadClipper::setClip(const SkIRect& clip) noexcept {
   // conver to scalars, since that's where we'll see the points
   fClip.set(clip);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) {
+static bool chopMonoQuadAt(
+    SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) noexcept {
   /* Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
    *  We solve for t, using quadratic equation, hence we have to rearrange
    * our cooefficents to look like At^2 + Bt + C
@@ -37,7 +38,7 @@ static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar targe
   return false;
 }
 
-static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) {
+static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) noexcept {
   return chopMonoQuadAt(pts[0].fY, pts[1].fY, pts[2].fY, y, t);
 }
 

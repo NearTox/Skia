@@ -95,7 +95,7 @@ std::unique_ptr<GrFragmentProcessor> GrYUVtoRGBEffect::Make(
       new GrYUVtoRGBEffect(planeFPs, numPlanes, yuvaIndices, yuvColorSpace));
 }
 
-static SkAlphaType alpha_type(const SkYUVAIndex yuvaIndices[4]) {
+static SkAlphaType alpha_type(const SkYUVAIndex yuvaIndices[4]) noexcept {
   return yuvaIndices[3].fIndex >= 0 ? kPremul_SkAlphaType : kOpaque_SkAlphaType;
 }
 
@@ -158,9 +158,9 @@ GrGLSLFragmentProcessor* GrYUVtoRGBEffect::onCreateGLSLInstance() const {
 
       if (kIdentity_SkYUVColorSpace != yuvEffect.fYUVColorSpace) {
         fColorSpaceMatrixVar = args.fUniformHandler->addUniform(
-            kFragment_GrShaderFlag, kHalf3x3_GrSLType, "colorSpaceMatrix");
+            &yuvEffect, kFragment_GrShaderFlag, kHalf3x3_GrSLType, "colorSpaceMatrix");
         fColorSpaceTranslateVar = args.fUniformHandler->addUniform(
-            kFragment_GrShaderFlag, kHalf3_GrSLType, "colorSpaceTranslate");
+            &yuvEffect, kFragment_GrShaderFlag, kHalf3_GrSLType, "colorSpaceTranslate");
         fragBuilder->codeAppendf(
             "color.rgb = saturate(color.rgb * %s + %s);",
             args.fUniformHandler->getUniformCStr(fColorSpaceMatrixVar),
@@ -225,7 +225,7 @@ void GrYUVtoRGBEffect::onGetGLSLProcessorKey(
   b->add32(packed);
 }
 
-bool GrYUVtoRGBEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrYUVtoRGBEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrYUVtoRGBEffect& that = other.cast<GrYUVtoRGBEffect>();
 
   for (int i = 0; i < 4; ++i) {

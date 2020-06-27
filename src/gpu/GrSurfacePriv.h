@@ -17,10 +17,10 @@
     implemented privately in GrSurface with a inline public method here). */
 class GrSurfacePriv {
  public:
-  GrInternalSurfaceFlags flags() const { return fSurface->fSurfaceFlags; }
+  GrInternalSurfaceFlags flags() const noexcept { return fSurface->fSurfaceFlags; }
 
  private:
-  explicit GrSurfacePriv(GrSurface* surface) : fSurface(surface) {}
+  explicit GrSurfacePriv(GrSurface* surface) noexcept : fSurface(surface) {}
   GrSurfacePriv(const GrSurfacePriv&);             // unimpl
   GrSurfacePriv& operator=(const GrSurfacePriv&);  // unimpl
 
@@ -33,9 +33,9 @@ class GrSurfacePriv {
   friend class GrSurface;  // to construct/copy this type.
 };
 
-inline GrSurfacePriv GrSurface::surfacePriv() { return GrSurfacePriv(this); }
+inline GrSurfacePriv GrSurface::surfacePriv() noexcept { return GrSurfacePriv(this); }
 
-inline const GrSurfacePriv GrSurface::surfacePriv() const {
+inline const GrSurfacePriv GrSurface::surfacePriv() const noexcept {
   return GrSurfacePriv(const_cast<GrSurface*>(this));
 }
 

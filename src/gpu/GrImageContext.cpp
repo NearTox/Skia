@@ -22,7 +22,7 @@ GrImageContext::GrImageContext(
   fProxyProvider.reset(new GrProxyProvider(this));
 }
 
-GrImageContext::~GrImageContext() = default;
+GrImageContext::~GrImageContext() {}
 
 void GrImageContext::abandonContext() {
   ASSERT_SINGLE_OWNER

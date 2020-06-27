@@ -22,20 +22,20 @@
 // Firefox used to do the same too, until 4.0 where they fixed it.  So at some
 // point we should probably get rid of these scaling constants and rebaseline
 // all the blur tests.
-static const SkScalar kBLUR_SIGMA_SCALE = 0.57735f;
+static constexpr SkScalar kBLUR_SIGMA_SCALE = 0.57735f;
 
-SkScalar SkBlurMask::ConvertRadiusToSigma(SkScalar radius) {
+SkScalar SkBlurMask::ConvertRadiusToSigma(SkScalar radius) noexcept {
   return radius > 0 ? kBLUR_SIGMA_SCALE * radius + 0.5f : 0.0f;
 }
 
-SkScalar SkBlurMask::ConvertSigmaToRadius(SkScalar sigma) {
+SkScalar SkBlurMask::ConvertSigmaToRadius(SkScalar sigma) noexcept {
   return sigma > 0.5f ? (sigma - 0.5f) / kBLUR_SIGMA_SCALE : 0.0f;
 }
 
 template <typename AlphaIter>
 static void merge_src_with_blur(
     uint8_t dst[], int dstRB, AlphaIter src, int srcRB, const uint8_t blur[], int blurRB, int sw,
-    int sh) {
+    int sh) noexcept {
   dstRB -= sw;
   blurRB -= sw;
   while (--sh >= 0) {
@@ -54,7 +54,7 @@ static void merge_src_with_blur(
 
 template <typename AlphaIter>
 static void clamp_solid_with_orig(
-    uint8_t dst[], int dstRowBytes, AlphaIter src, int srcRowBytes, int sw, int sh) {
+    uint8_t dst[], int dstRowBytes, AlphaIter src, int srcRowBytes, int sw, int sh) noexcept {
   int x;
   while (--sh >= 0) {
     AlphaIter rowSrc(src);
@@ -72,7 +72,7 @@ static void clamp_solid_with_orig(
 
 template <typename AlphaIter>
 static void clamp_outer_with_orig(
-    uint8_t dst[], int dstRowBytes, AlphaIter src, int srcRowBytes, int sw, int sh) {
+    uint8_t dst[], int dstRowBytes, AlphaIter src, int srcRowBytes, int sw, int sh) noexcept {
   int x;
   while (--sh >= 0) {
     AlphaIter rowSrc(src);
@@ -92,8 +92,8 @@ static void clamp_outer_with_orig(
 
 // we use a local function to wrap the class static method to work around
 // a bug in gcc98
-void SkMask_FreeImage(uint8_t* image);
-void SkMask_FreeImage(uint8_t* image) { SkMask::FreeImage(image); }
+void SkMask_FreeImage(uint8_t* image) noexcept;
+void SkMask_FreeImage(uint8_t* image) noexcept { SkMask::FreeImage(image); }
 
 bool SkBlurMask::BoxBlur(
     SkMask* dst, const SkMask& src, SkScalar sigma, SkBlurStyle style, SkIPoint* margin) {
@@ -276,7 +276,7 @@ bool SkBlurMask::BoxBlur(
    },1]
 */
 
-static float gaussianIntegral(float x) {
+static float gaussianIntegral(float x) noexcept {
   if (x > 1.5f) {
     return 0.0f;
   }
@@ -304,7 +304,7 @@ static float gaussianIntegral(float x) {
     (already done 255-x).
 */
 
-void SkBlurMask::ComputeBlurProfile(uint8_t* profile, int size, SkScalar sigma) {
+void SkBlurMask::ComputeBlurProfile(uint8_t* profile, int size, SkScalar sigma) noexcept {
   SkASSERT(SkScalarCeilToInt(6 * sigma) == size);
 
   int center = size >> 1;
@@ -327,7 +327,7 @@ void SkBlurMask::ComputeBlurProfile(uint8_t* profile, int size, SkScalar sigma) 
 // http://stereopsis.com/shadowrect/
 
 uint8_t SkBlurMask::ProfileLookup(
-    const uint8_t* profile, int loc, int blurredWidth, int sharpWidth) {
+    const uint8_t* profile, int loc, int blurredWidth, int sharpWidth) noexcept {
   // how far are we from the original edge?
   int dx = SkAbs32(((loc << 1) + 1) - blurredWidth) - sharpWidth;
   int ox = dx >> 1;
@@ -339,7 +339,7 @@ uint8_t SkBlurMask::ProfileLookup(
 }
 
 void SkBlurMask::ComputeBlurredScanline(
-    uint8_t* pixels, const uint8_t* profile, unsigned int width, SkScalar sigma) {
+    uint8_t* pixels, const uint8_t* profile, unsigned int width, SkScalar sigma) noexcept {
   unsigned int profile_size = SkScalarCeilToInt(6 * sigma);
   SkAutoTMalloc<uint8_t> horizontalScanline(width);
 

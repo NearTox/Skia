@@ -1,14 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <RuleSet Name="rules skia" ToolsVersion="16.0">
   <Rules AnalyzerId="Microsoft.Analyzers.NativeCodeAnalysis" RuleNamespace="Microsoft.Rules.Native">
-    <Rule Id="C26433" Action="Info" />
-    <Rule Id="C26439" Action="Info" />
+    <Rule Id="C26433" Action="Warning" />
     <Rule Id="C26440" Action="Warning" />
     <Rule Id="C26447" Action="Warning" />
     <Rule Id="C26478" Action="Warning" />
     <Rule Id="C26497" Action="Warning" />
     <Rule Id="C26498" Action="Warning" />
     <Rule Id="C26800" Action="Warning" />
-    <Rule Id="C26814" Action="Info" />
+    <Rule Id="C26814" Action="Warning" />
+    <Rule Id="C26817" Action="Warning" />
+    <Rule Id="C26819" Action="Warning" />
+    <Rule Id="C26820" Action="Warning" />
   </Rules>
 </RuleSet>

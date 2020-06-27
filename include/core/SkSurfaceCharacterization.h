@@ -39,7 +39,7 @@ class SK_API SkSurfaceCharacterization {
   // This flag indicates if the surface is wrapping a raw Vulkan secondary command buffer.
   enum class VulkanSecondaryCBCompatible : bool { kNo = false, kYes = true };
 
-  SkSurfaceCharacterization()
+  SkSurfaceCharacterization() noexcept
       : fCacheMaxResourceBytes(0),
         fOrigin(kBottomLeft_GrSurfaceOrigin),
         fSampleCnt(0),
@@ -50,13 +50,15 @@ class SK_API SkSurfaceCharacterization {
         fIsProtected(GrProtected::kNo),
         fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
-  SkSurfaceCharacterization(SkSurfaceCharacterization&&) = default;
-  SkSurfaceCharacterization& operator=(SkSurfaceCharacterization&&) = default;
+  SkSurfaceCharacterization(SkSurfaceCharacterization&&) noexcept = default;
+  SkSurfaceCharacterization& operator=(SkSurfaceCharacterization&&) noexcept = default;
 
-  SkSurfaceCharacterization(const SkSurfaceCharacterization&) = default;
-  SkSurfaceCharacterization& operator=(const SkSurfaceCharacterization& other) = default;
-  bool operator==(const SkSurfaceCharacterization& other) const;
-  bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
+  SkSurfaceCharacterization(const SkSurfaceCharacterization&) noexcept = default;
+  SkSurfaceCharacterization& operator=(const SkSurfaceCharacterization& other) noexcept = default;
+  bool operator==(const SkSurfaceCharacterization& other) const noexcept;
+  bool operator!=(const SkSurfaceCharacterization& other) const noexcept {
+    return !(*this == other);
+  }
 
   /*
    * Return a new surface characterization with the only difference being a different width
@@ -103,7 +105,7 @@ class SK_API SkSurfaceCharacterization {
   }
   GrProtected isProtected() const noexcept { return fIsProtected; }
   SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
-  sk_sp<SkColorSpace> refColorSpace() const { return fImageInfo.refColorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fImageInfo.refColorSpace(); }
   const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
 
   // Is the provided backend texture compatible with this surface characterization?
@@ -123,7 +125,7 @@ class SK_API SkSurfaceCharacterization {
       const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
       int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
       VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
-      const SkSurfaceProps& surfaceProps)
+      const SkSurfaceProps& surfaceProps) noexcept
       : fContextInfo(std::move(contextInfo)),
         fCacheMaxResourceBytes(cacheMaxResourceBytes),
         fImageInfo(ii),

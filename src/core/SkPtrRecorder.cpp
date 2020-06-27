@@ -56,7 +56,7 @@ uint32_t SkPtrSet::add(void* ptr) {
   }
 }
 
-void SkPtrSet::copyToArray(void* array[]) const noexcept {
+void SkPtrSet::copyToArray(void* array[]) const {
   int count = fList.count();
   if (count > 0) {
     SkASSERT(array);

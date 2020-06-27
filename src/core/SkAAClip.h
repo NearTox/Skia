@@ -14,29 +14,29 @@
 
 class SkAAClip {
  public:
-  SkAAClip();
-  SkAAClip(const SkAAClip&);
+  SkAAClip() noexcept;
+  SkAAClip(const SkAAClip&) noexcept;
   ~SkAAClip();
 
-  SkAAClip& operator=(const SkAAClip&);
-  friend bool operator==(const SkAAClip&, const SkAAClip&);
-  friend bool operator!=(const SkAAClip& a, const SkAAClip& b) { return !(a == b); }
+  SkAAClip& operator=(const SkAAClip&) noexcept;
+  friend bool operator==(const SkAAClip&, const SkAAClip&) noexcept;
+  friend bool operator!=(const SkAAClip& a, const SkAAClip& b) noexcept { return !(a == b); }
 
-  void swap(SkAAClip&);
+  void swap(SkAAClip&) noexcept;
 
-  bool isEmpty() const { return nullptr == fRunHead; }
-  const SkIRect& getBounds() const { return fBounds; }
+  bool isEmpty() const noexcept { return nullptr == fRunHead; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
   // Returns true iff the clip is not empty, and is just a hard-edged rect (no partial alpha).
   // If true, getBounds() can be used in place of this clip.
-  bool isRect() const;
+  bool isRect() const noexcept;
 
-  bool setEmpty();
-  bool setRect(const SkIRect&);
+  bool setEmpty() noexcept;
+  bool setRect(const SkIRect&) noexcept;
   bool setRect(const SkRect&, bool doAA = true);
   bool setPath(const SkPath&, const SkRegion* clip = nullptr, bool doAA = true);
   bool setRegion(const SkRegion&);
-  bool set(const SkAAClip&);
+  bool set(const SkAAClip&) noexcept;
 
   bool op(const SkAAClip&, const SkAAClip&, SkRegion::Op);
 
@@ -73,15 +73,15 @@ class SkAAClip {
   void validate() const;
   void debug(bool compress_y = false) const;
 #else
-  void validate() const {}
-  void debug(bool compress_y = false) const {}
+  void validate() const noexcept {}
+  void debug(bool compress_y = false) const noexcept {}
 #endif
 
  private:
   SkIRect fBounds;
   RunHead* fRunHead;
 
-  void freeRuns();
+  void freeRuns() noexcept;
   bool trimBounds();
   bool trimTopBottom();
   bool trimLeftRight();
@@ -95,10 +95,10 @@ class SkAAClip {
 
 class SkAAClipBlitter : public SkBlitter {
  public:
-  SkAAClipBlitter() : fScanlineScratch(nullptr) {}
+  SkAAClipBlitter() noexcept : fScanlineScratch(nullptr) {}
   ~SkAAClipBlitter() override;
 
-  void init(SkBlitter* blitter, const SkAAClip* aaclip) {
+  void init(SkBlitter* blitter, const SkAAClip* aaclip) noexcept {
     SkASSERT(aaclip && !aaclip->isEmpty());
     fBlitter = blitter;
     fAAClip = aaclip;
@@ -125,7 +125,7 @@ class SkAAClipBlitter : public SkBlitter {
   SkAutoSMalloc<kSize> fGrayMaskScratch;  // used for blitMask
   void* fScanlineScratch;                 // enough for a mask at 32bit, or runs+aa
 
-  void ensureRunsAndAA();
+  void ensureRunsAndAA() noexcept;
 };
 
 #endif

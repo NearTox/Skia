@@ -235,6 +235,7 @@ class GrGLSLShaderBuilder {
   friend class GrCCCoverageProcessor;  // to access code().
   friend class GrGLSLProgramBuilder;
   friend class GrGLProgramBuilder;
+  friend class GrD3DPipelineStateBuilder;
   friend class GrDawnProgramBuilder;
   friend class GrGLSLVaryingHandler;    // to access noperspective interpolation feature.
   friend class GrGLPathProgramBuilder;  // to access fInputs.

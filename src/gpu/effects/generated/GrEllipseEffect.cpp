@@ -31,11 +31,11 @@ class GrGLSLEllipseEffect : public GrGLSLFragmentProcessor {
     (void)radii;
     prevRadii = float2(-1.0);
     medPrecision = !sk_Caps.floatIs32Bits;
-    ellipseVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "ellipse");
+    ellipseVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "ellipse");
     if (medPrecision) {
-      scaleVar =
-          args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat2_GrSLType, "scale");
+      scaleVar = args.fUniformHandler->addUniform(
+          &_outer, kFragment_GrShaderFlag, kFloat2_GrSLType, "scale");
     }
     fragBuilder->codeAppendf(
         "float2 prevCenter;\nfloat2 prevRadii = float2(%f, %f);\nbool medPrecision = "
@@ -109,10 +109,10 @@ GrGLSLFragmentProcessor* GrEllipseEffect::onCreateGLSLInstance() const {
   return new GrGLSLEllipseEffect();
 }
 void GrEllipseEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)edgeType);
 }
-bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrEllipseEffect& that = other.cast<GrEllipseEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
@@ -120,7 +120,7 @@ bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const {
   if (radii != that.radii) return false;
   return true;
 }
-GrEllipseEffect::GrEllipseEffect(const GrEllipseEffect& src)
+GrEllipseEffect::GrEllipseEffect(const GrEllipseEffect& src) noexcept
     : INHERITED(kGrEllipseEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),
       center(src.center),

@@ -13,13 +13,13 @@
 
 class SkCharToGlyphCache {
  public:
-  SkCharToGlyphCache();
+  SkCharToGlyphCache() noexcept;
   ~SkCharToGlyphCache();
 
   // return number of unichars cached
-  int count() const { return fK32.count(); }
+  int count() const noexcept { return fK32.count(); }
 
-  void reset();  // forget all cache entries (to save memory)
+  void reset() noexcept;  // forget all cache entries (to save memory)
 
   /**
    *  Given a unichar, return its glyphID (if the return value is positive), else return
@@ -33,16 +33,16 @@ class SkCharToGlyphCache {
    *      cache.insertCharAndGlyph(~result, unichar, glyphID);
    *  }
    */
-  int findGlyphIndex(SkUnichar c) const;
+  int findGlyphIndex(SkUnichar c) const noexcept;
 
   /**
    *  Insert a new char/glyph pair into the cache at the specified index.
    *  See charToGlyph() for how to compute the bit-not of the index.
    */
-  void insertCharAndGlyph(int index, SkUnichar, SkGlyphID);
+  void insertCharAndGlyph(int index, SkUnichar, SkGlyphID) noexcept;
 
   // helper to pre-seed an entry in the cache
-  void addCharAndGlyph(SkUnichar unichar, SkGlyphID glyph) {
+  void addCharAndGlyph(SkUnichar unichar, SkGlyphID glyph) noexcept {
     int index = this->findGlyphIndex(unichar);
     if (index >= 0) {
       SkASSERT(SkToU16(index) == glyph);

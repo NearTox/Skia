@@ -96,7 +96,6 @@
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <EnablePREfast>false</EnablePREfast>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <AssemblerOutput>AssemblyCode</AssemblerOutput>
     </ClCompile>

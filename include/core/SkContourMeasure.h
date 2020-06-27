@@ -18,7 +18,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
  public:
   /** Return the length of the contour.
    */
-  SkScalar length() const { return fLength; }
+  SkScalar length() const noexcept { return fLength; }
 
   /** Pins distance to 0 <= distance <= length(), and then computes the corresponding
    *  position and tangent.
@@ -51,7 +51,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
 
   /** Return true if the contour is closed()
    */
-  bool isClosed() const { return fIsClosed; }
+  bool isClosed() const noexcept { return fIsClosed; }
 
  private:
   struct Segment {
@@ -61,9 +61,9 @@ class SK_API SkContourMeasure : public SkRefCnt {
     unsigned fType : 2;  // actually the enum SkSegType
     // See SkPathMeasurePriv.h
 
-    SkScalar getScalarT() const;
+    SkScalar getScalarT() const noexcept;
 
-    static const Segment* Next(const Segment* seg) {
+    static const Segment* Next(const Segment* seg) noexcept {
       unsigned ptIndex = seg->fPtIndex;
       do {
         ++seg;
@@ -79,17 +79,17 @@ class SK_API SkContourMeasure : public SkRefCnt {
   const bool fIsClosed;
 
   SkContourMeasure(
-      SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed);
+      SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed) noexcept;
   ~SkContourMeasure() override = default;
 
-  const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const;
+  const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const noexcept;
 
   friend class SkContourMeasureIter;
 };
 
 class SK_API SkContourMeasureIter {
  public:
-  SkContourMeasureIter();
+  SkContourMeasureIter() noexcept;
   /**
    *  Initialize the Iter with a path.
    *  The parts of the path that are needed are copied, so the client is free to modify/delete
@@ -119,28 +119,9 @@ class SK_API SkContourMeasureIter {
   sk_sp<SkContourMeasure> next();
 
  private:
-  SkPath::RawIter fIter;
-  SkPath fPath;
-  SkScalar fTolerance;
-  bool fForceClosed;
+  class Impl;
 
-  // temporary
-  SkTDArray<SkContourMeasure::Segment> fSegments;
-  SkTDArray<SkPoint> fPts;  // Points used to define the segments
-
-  SkContourMeasure* buildSegments();
-
-  SkScalar compute_line_seg(SkPoint p0, SkPoint p1, SkScalar distance, unsigned ptIndex);
-  SkScalar compute_quad_segs(
-      const SkPoint pts[3], SkScalar distance, int mint, int maxt, unsigned ptIndex);
-  SkScalar compute_conic_segs(
-      const SkConic& conic, SkScalar distance, int mint, const SkPoint& minPt, int maxt,
-      const SkPoint& maxPt, unsigned ptIndex);
-  SkScalar compute_cubic_segs(
-      const SkPoint pts[4], SkScalar distance, int mint, int maxt, unsigned ptIndex);
-
-  SkContourMeasureIter(const SkContourMeasureIter&) = delete;
-  SkContourMeasureIter& operator=(const SkContourMeasureIter&) = delete;
+  std::unique_ptr<Impl> fImpl;
 };
 
 #endif

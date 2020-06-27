@@ -171,7 +171,7 @@ struct SkMask::AlphaIter<SkMask::kBW_Format> {
     }
     return *this;
   }
-  AlphaIter& operator>>=(uint32_t rb) {
+  AlphaIter& operator>>=(uint32_t rb) noexcept {
     fPtr = SkTAddOffset<const uint8_t>(fPtr, rb);
     return *this;
   }
@@ -195,7 +195,7 @@ struct SkMask::AlphaIter<SkMask::kA8_Format> {
     --fPtr;
     return *this;
   }
-  AlphaIter& operator>>=(uint32_t rb) {
+  AlphaIter& operator>>=(uint32_t rb) noexcept {
     fPtr = SkTAddOffset<const uint8_t>(fPtr, rb);
     return *this;
   }
@@ -216,7 +216,7 @@ struct SkMask::AlphaIter<SkMask::kARGB32_Format> {
     --fPtr;
     return *this;
   }
-  AlphaIter& operator>>=(uint32_t rb) {
+  AlphaIter& operator>>=(uint32_t rb) noexcept {
     fPtr = SkTAddOffset<const uint32_t>(fPtr, rb);
     return *this;
   }
@@ -237,7 +237,7 @@ struct SkMask::AlphaIter<SkMask::kLCD16_Format> {
     --fPtr;
     return *this;
   }
-  AlphaIter& operator>>=(uint32_t rb) {
+  AlphaIter& operator>>=(uint32_t rb) noexcept {
     fPtr = SkTAddOffset<const uint16_t>(fPtr, rb);
     return *this;
   }

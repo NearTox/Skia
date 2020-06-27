@@ -43,6 +43,7 @@ class SkFont;
 class SkGlyphRunBuilder;
 class SkImage;
 class SkImageFilter;
+class SkMarkerStack;
 class SkPaintFilterCanvas;
 class SkPath;
 class SkPicture;
@@ -236,7 +237,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_imageInfo
   */
-  SkImageInfo imageInfo() const;
+  SkImageInfo imageInfo() const noexcept;
 
   /** Copies SkSurfaceProps, if SkCanvas is associated with raster surface or
       GPU surface, and returns true. Otherwise, returns false and leave props unchanged.
@@ -263,7 +264,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getBaseLayerSize
   */
-  virtual SkISize getBaseLayerSize() const;
+  virtual SkISize getBaseLayerSize() const noexcept;
 
   /** Creates SkSurface matching info and props, and associates it with SkCanvas.
       Returns nullptr if no match found.
@@ -285,7 +286,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getGrContext
   */
-  virtual GrContext* getGrContext();
+  virtual GrContext* getGrContext() noexcept;
 
   /** Sometimes a canvas is owned by a surface. If it is, getSurface() will return a bare
    *  pointer to that surface, else this will return nullptr.
@@ -624,7 +625,7 @@ class SK_API SkCanvas {
       kPreserveLCDText_SaveLayerFlag, kInitWithPrevious_SaveLayerFlag, or both flags.
   */
   enum SaveLayerFlagsSet {
-    // kPreserveLCDText_SaveLayerFlag  = 1 << 1, (no longer used)
+    kPreserveLCDText_SaveLayerFlag = 1 << 1,
     kInitWithPrevious_SaveLayerFlag = 1 << 2,  //!< initializes with previous contents
     kMaskAgainstCoverage_EXPERIMENTAL_DONT_USE_SaveLayerFlag = 1
                                                                << 3,  //!< experimental: do not use
@@ -747,9 +748,6 @@ class SK_API SkCanvas {
   */
   int saveLayer(const SaveLayerRec& layerRec);
 
-  int experimental_saveCamera(const SkM44& projection, const SkM44& camera);
-  int experimental_saveCamera(const SkScalar projection[16], const SkScalar camera[16]);
-
   /** Removes changes to SkMatrix and clip since SkCanvas state was
       last saved. The state is removed from the stack.
 
@@ -871,8 +869,21 @@ class SK_API SkCanvas {
       example: https://fiddle.skia.org/c/@Canvas_concat
   */
   void concat(const SkMatrix& matrix);
-  void concat44(const SkM44&);
-  void concat44(const SkScalar[]);  // column-major
+  void concat(const SkM44&);
+
+  /**
+   *  Record a marker (provided by caller) for the current CTM. This does not change anything
+   *  about the ctm or clip, but does "name" this matrix value, so it can be referenced by
+   *  custom effects (who access it by specifying the same name).
+   *
+   *  Within a save frame, marking with the same name more than once just replaces the previous
+   *  value. However, between save frames, marking with the same name does not lose the marker
+   *  in the previous save frame. It is "visible" when the current save() is balanced with
+   *  a restore().
+   */
+  void markCTM(const char* name);
+
+  bool findMarkedCTM(const char* name, SkM44*) const;
 
   /** Replaces SkMatrix with matrix.
       Unlike concat(), any prior matrix state is overwritten.
@@ -1873,10 +1884,10 @@ class SK_API SkCanvas {
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, float alpha,
         unsigned aaFlags) noexcept;
 
-    ImageSetEntry();
+    ImageSetEntry() noexcept;
     ~ImageSetEntry();
-    ImageSetEntry(const ImageSetEntry&);
-    ImageSetEntry& operator=(const ImageSetEntry&);
+    ImageSetEntry(const ImageSetEntry&) noexcept;
+    ImageSetEntry& operator=(const ImageSetEntry&) noexcept;
 
     sk_sp<const SkImage> fImage;
     SkRect fSrcRect;
@@ -2108,8 +2119,9 @@ class SK_API SkCanvas {
       SkMatrix matrix, if provided; and use SkPaint paint alpha, SkColorFilter,
       SkImageFilter, and SkBlendMode, if provided.
 
-      matrix transformation is equivalent to: save(), concat(), drawPicture(), restore().
-      paint use is equivalent to: saveLayer(), drawPicture(), restore().
+      If paint is non-null, then the picture is always drawn into a temporary layer before
+      actually landing on the canvas. Note that drawing into a layer can also change its
+      appearance if there are any non-associative blendModes inside any of the pictures elements.
 
       @param picture  recorded drawing commands to play
       @param matrix   SkMatrix to rotate, scale, translate, and so on; may be nullptr
@@ -2123,8 +2135,9 @@ class SK_API SkCanvas {
       SkMatrix matrix, if provided; and use SkPaint paint alpha, SkColorFilter,
       SkImageFilter, and SkBlendMode, if provided.
 
-      matrix transformation is equivalent to: save(), concat(), drawPicture(), restore().
-      paint use is equivalent to: saveLayer(), drawPicture(), restore().
+      If paint is non-null, then the picture is always drawn into a temporary layer before
+      actually landing on the canvas. Note that drawing into a layer can also change its
+      appearance if there are any non-associative blendModes inside any of the pictures elements.
 
       @param picture  recorded drawing commands to play
       @param matrix   SkMatrix to rotate, scale, translate, and so on; may be nullptr
@@ -2395,7 +2408,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_isClipEmpty
   */
-  virtual bool isClipEmpty() const;
+  virtual bool isClipEmpty() const noexcept;
 
   /** Returns true if clip is SkRect and not empty.
       Returns false if the clip is empty, or if it is not SkRect.
@@ -2406,23 +2419,22 @@ class SK_API SkCanvas {
   */
   virtual bool isClipRect() const;
 
-  /** Returns SkMatrix.
-      This does not account for translation by SkBaseDevice or SkSurface.
+  /** Returns the current transform from local coordinates to the 'device', which for most
+   *  purposes means pixels.
+   *
+   *  @return transformation from local coordinates to device / pixels.
+   */
+  SkM44 getLocalToDevice() const noexcept;
 
-      @return  SkMatrix in SkCanvas
-
-      example: https://fiddle.skia.org/c/@Canvas_getTotalMatrix
-      example: https://fiddle.skia.org/c/@Clip
-  */
-  SkMatrix getTotalMatrix() const;
-  SkM44 getLocalToDevice() const noexcept;  // entire matrix stack
-  void getLocalToDevice(SkScalar colMajor[16]) const noexcept;
-
-  SkM44 experimental_getLocalToWorld() const noexcept;   // up to but not including top-most camera
-  SkM44 experimental_getLocalToCamera() const noexcept;  // up to and including top-most camera
-
-  void experimental_getLocalToWorld(SkScalar colMajor[16]) const;
-  void experimental_getLocalToCamera(SkScalar colMajor[16]) const;
+  /** Legacy version of getLocalToDevice(), which strips away any Z information, and
+   *  just returns a 3x3 version.
+   *
+   *  @return 3x3 version of getLocalToDevice()
+   *
+   *  example: https://fiddle.skia.org/c/@Canvas_getTotalMatrix
+   *  example: https://fiddle.skia.org/c/@Clip
+   */
+  SkMatrix getTotalMatrix() const noexcept;
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -2450,7 +2462,7 @@ class SK_API SkCanvas {
   // default impl defers to its device
   virtual bool onPeekPixels(SkPixmap* pixmap);
   virtual bool onAccessTopLayerPixels(SkPixmap* pixmap);
-  virtual SkImageInfo onImageInfo() const;
+  virtual SkImageInfo onImageInfo() const noexcept;
   virtual bool onGetProps(SkSurfaceProps* props) const;
   virtual void onFlush();
 
@@ -2467,12 +2479,14 @@ class SK_API SkCanvas {
   virtual SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec&) {
     return kFullLayer_SaveLayerStrategy;
   }
+
   // returns true if we should actually perform the saveBehind, or false if we should just save.
   virtual bool onDoSaveBehind(const SkRect*) { return true; }
   virtual void willRestore() {}
   virtual void didRestore() {}
 
-  virtual void didConcat44(const SkScalar[]) {}  // colMajor
+  virtual void onMarkCTM(const char*) {}
+  virtual void didConcat44(const SkM44&) {}
   virtual void didConcat(const SkMatrix&) {}
   virtual void didSetMatrix(const SkMatrix&) {}
   virtual void didTranslate(SkScalar, SkScalar) {}
@@ -2560,18 +2574,18 @@ class SK_API SkCanvas {
   class LayerIter /*: SkNoncopyable*/ {
    public:
     /** Initialize iterator with canvas, and set values for 1st device */
-    LayerIter(SkCanvas*);
+    LayerIter(SkCanvas*) noexcept;
     ~LayerIter();
 
     /** Return true if the iterator is done */
     bool done() const noexcept { return fDone; }
     /** Cycle to the next device */
-    void next();
+    void next() noexcept;
 
     // These reflect the current device in the iterator
 
     SkBaseDevice* device() const noexcept;
-    const SkMatrix& matrix() const;
+    const SkMatrix& matrix() const noexcept;
     SkIRect clipBounds() const;
     const SkPaint& paint() const noexcept;
     int x() const noexcept;
@@ -2620,14 +2634,7 @@ class SK_API SkCanvas {
   // points to top of stack
   MCRec* fMCRec;
 
-  struct CameraRec {
-    MCRec* fMCRec;         // the saveCamera rec that built us
-    SkM44 fCamera;         // just the user's camera
-    SkM44 fInvPostCamera;  // cache of ctm post camera
-
-    CameraRec(MCRec* owner, const SkM44& camera) noexcept;
-  };
-  std::vector<CameraRec> fCameraStack;
+  sk_sp<SkMarkerStack> fMarkerStack;
 
   // the first N recs that can fit here mean we won't call malloc
   static constexpr int kMCRecSize = 128;     // most recent measurement
@@ -2653,7 +2660,7 @@ class SK_API SkCanvas {
 
   void doSave();
   void checkForDeferredSave();
-  void internalSetMatrix(const SkMatrix&);
+  void internalSetMatrix(const SkMatrix&) noexcept;
 
   friend class SkAndroidFrameworkUtils;
   friend class SkCanvasPriv;  // needs kDontClipToLayer_PrivateSaveLayerFlag
@@ -2717,6 +2724,8 @@ class SK_API SkCanvas {
   void internalSaveBehind(const SkRect*);
   void internalDrawDevice(
       SkBaseDevice*, const SkPaint*, SkImage* clipImage, const SkMatrix& clipMatrix);
+
+  void internalConcat44(const SkM44&);
 
   // shared by save() and saveLayer()
   void internalSave();

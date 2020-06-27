@@ -24,7 +24,7 @@ namespace {
 // simulating a bad or empty codec stream.
 class EmptyImageGenerator final : public SkImageGenerator {
  public:
-  EmptyImageGenerator(const SkImageInfo& info) : INHERITED(info) {}
+  EmptyImageGenerator(const SkImageInfo& info) noexcept : INHERITED(info) {}
 
  private:
   typedef SkImageGenerator INHERITED;
@@ -37,7 +37,7 @@ static sk_sp<SkImage> MakeEmptyImage(int width, int height) {
 
 }  // anonymous namespace
 
-SkReadBuffer::SkReadBuffer() {
+SkReadBuffer::SkReadBuffer() noexcept {
   fVersion = 0;
 
   fTFArray = nullptr;
@@ -47,7 +47,7 @@ SkReadBuffer::SkReadBuffer() {
   fFactoryCount = 0;
 }
 
-SkReadBuffer::SkReadBuffer(const void* data, size_t size) {
+SkReadBuffer::SkReadBuffer(const void* data, size_t size) noexcept {
   fVersion = 0;
   this->setMemory(data, size);
 
@@ -170,7 +170,7 @@ void SkReadBuffer::readPoint3(SkPoint3* point) noexcept {
   this->readPad32(point, sizeof(SkPoint3));
 }
 
-void SkReadBuffer::readMatrix(SkMatrix* matrix) {
+void SkReadBuffer::readMatrix(SkMatrix* matrix) noexcept {
   size_t size = 0;
   if (this->isValid()) {
     size = SkMatrixPriv::ReadFromMemory(matrix, fReader.peek(), fReader.available());
@@ -449,7 +449,7 @@ int32_t SkReadBuffer::checkInt(int32_t min, int32_t max) noexcept {
   return value;
 }
 
-SkFilterQuality SkReadBuffer::checkFilterQuality() {
+SkFilterQuality SkReadBuffer::checkFilterQuality() noexcept {
   return this->checkRange<SkFilterQuality>(kNone_SkFilterQuality, kLast_SkFilterQuality);
 }
 

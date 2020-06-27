@@ -31,7 +31,7 @@ class GrColorSpaceXform : public SkRefCnt {
    * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its
    * computed key.
    */
-  static uint32_t XformKey(const GrColorSpaceXform* xform) {
+  static uint32_t XformKey(const GrColorSpaceXform* xform) noexcept {
     // Code generation depends on which steps we apply,
     // and the kinds of transfer functions (if we're applying those).
     if (!xform) {
@@ -49,9 +49,9 @@ class GrColorSpaceXform : public SkRefCnt {
     return key;
   }
 
-  static bool Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b);
+  static bool Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b) noexcept;
 
-  SkColor4f apply(const SkColor4f& srcColor);
+  SkColor4f apply(const SkColor4f& srcColor) noexcept;
 
  private:
   friend class GrGLSLColorSpaceXformHelper;
@@ -82,7 +82,7 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(
       std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform);
 
-  const char* name() const override { return "ColorSpaceXform"; }
+  const char* name() const noexcept override { return "ColorSpaceXform"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
   const GrColorSpaceXform* colorXform() const noexcept { return fColorXform.get(); }
@@ -96,7 +96,7 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
   sk_sp<GrColorSpaceXform> fColorXform;
 

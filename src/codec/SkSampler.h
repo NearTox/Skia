@@ -22,19 +22,21 @@ class SkSampler : public SkNoncopyable {
   /**
    *  Update the sampler to sample every sampleY'th row.
    */
-  void setSampleY(int sampleY) { fSampleY = sampleY; }
+  void setSampleY(int sampleY) noexcept { fSampleY = sampleY; }
 
   /**
    *  Retrieve the value set for sampleY.
    */
-  int sampleY() const { return fSampleY; }
+  int sampleY() const noexcept { return fSampleY; }
 
   /**
    *  Based on fSampleY, return whether this row belongs in the output.
    *
    *  @param row Row of the image, starting with the first row in the subset.
    */
-  bool rowNeeded(int row) const { return (row - get_start_coord(fSampleY)) % fSampleY == 0; }
+  bool rowNeeded(int row) const noexcept {
+    return (row - get_start_coord(fSampleY)) % fSampleY == 0;
+  }
 
   /**
    * Fill the remainder of the destination with 0.
@@ -60,11 +62,11 @@ class SkSampler : public SkNoncopyable {
   static void Fill(
       const SkImageInfo& info, void* dst, size_t rowBytes, SkCodec::ZeroInitialized zeroInit);
 
-  virtual int fillWidth() const = 0;
+  virtual int fillWidth() const noexcept = 0;
 
-  SkSampler() : fSampleY(1) {}
+  constexpr SkSampler() noexcept : fSampleY(1) {}
 
-  virtual ~SkSampler() {}
+  virtual ~SkSampler() = default;
 
  private:
   int fSampleY;

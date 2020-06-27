@@ -148,7 +148,7 @@ class GradientAdapter final : public AnimatablePropertyContainer {
           std::min(c_pos, o_pos),
           {lerp(current_stop.fColor.fR, cs.r, t_c), lerp(current_stop.fColor.fG, cs.g, t_c),
            lerp(current_stop.fColor.fB, cs.b, t_c), lerp(current_stop.fColor.fA, os.a, t_o)}};
-      stops.push_back(current_stop);
+      stops.emplace_back(current_stop);
 
       // Consume one of, or both (for coincident positions) color/opacity stops.
       if (c_pos <= o_pos) {

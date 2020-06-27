@@ -22,9 +22,9 @@ class SkPaintFilterCanvas::AutoPaintFilter {
   AutoPaintFilter(const SkPaintFilterCanvas* canvas, const SkPaint& paint)
       : AutoPaintFilter(canvas, &paint) {}
 
-  const SkPaint& paint() const { return fPaint; }
+  const SkPaint& paint() const noexcept { return fPaint; }
 
-  bool shouldDraw() const { return fShouldDraw; }
+  bool shouldDraw() const noexcept { return fShouldDraw; }
 
  private:
   SkPaint fPaint;
@@ -166,10 +166,23 @@ void SkPaintFilterCanvas::onDrawPatch(
 }
 
 void SkPaintFilterCanvas::onDrawPicture(
-    const SkPicture* picture, const SkMatrix* m, const SkPaint* paint) {
-  AutoPaintFilter apf(this, paint);
+    const SkPicture* picture, const SkMatrix* m, const SkPaint* originalPaint) {
+  AutoPaintFilter apf(this, originalPaint);
   if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawPicture(picture, m, &apf.paint());
+    const SkPaint* newPaint = &apf.paint();
+
+    // Passing a paint (-vs- passing null) makes drawPicture draw into a layer...
+    // much slower, and can produce different blending. Thus we should only do this
+    // if the filter's effect actually impacts the picture.
+    if (originalPaint == nullptr) {
+      if (newPaint->getAlphaf() == 1.0f && newPaint->getColorFilter() == nullptr &&
+          newPaint->getImageFilter() == nullptr &&
+          newPaint->getBlendMode() == SkBlendMode::kSrcOver) {
+        // restore the original nullptr
+        newPaint = nullptr;
+      }
+    }
+    this->SkNWayCanvas::onDrawPicture(picture, m, newPaint);
   }
 }
 
@@ -251,7 +264,7 @@ bool SkPaintFilterCanvas::onAccessTopLayerPixels(SkPixmap* pixmap) {
   return true;
 }
 
-SkImageInfo SkPaintFilterCanvas::onImageInfo() const { return proxy()->imageInfo(); }
+SkImageInfo SkPaintFilterCanvas::onImageInfo() const noexcept { return proxy()->imageInfo(); }
 
 bool SkPaintFilterCanvas::onGetProps(SkSurfaceProps* props) const {
   return proxy()->getProps(props);

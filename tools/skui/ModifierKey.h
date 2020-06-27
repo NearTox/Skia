@@ -16,8 +16,8 @@ enum class ModifierKey {
 };
 }
 
-namespace skstd {
+namespace sknonstd {
 template <>
 struct is_bitmask_enum<skui::ModifierKey> : std::true_type {};
-}  // namespace skstd
+}  // namespace sknonstd
 #endif  // skui_modifierkey_defined

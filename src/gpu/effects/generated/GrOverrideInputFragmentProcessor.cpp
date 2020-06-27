@@ -31,8 +31,8 @@ class GrGLSLOverrideInputFragmentProcessor : public GrGLSLFragmentProcessor {
     auto literalColor = _outer.literalColor;
     (void)literalColor;
     if (useUniform) {
-      uniformColorVar =
-          args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "uniformColor");
+      uniformColorVar = args.fUniformHandler->addUniform(
+          &_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "uniformColor");
     }
     fragBuilder->codeAppendf(
         "half4 constColor;\n@if (%s) {\n    constColor = %s;\n} else {\n    constColor = "
@@ -74,7 +74,7 @@ void GrOverrideInputFragmentProcessor::onGetGLSLProcessorKey(
     b->add32(((uint32_t)blue << 16) | alpha);
   }
 }
-bool GrOverrideInputFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrOverrideInputFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrOverrideInputFragmentProcessor& that = other.cast<GrOverrideInputFragmentProcessor>();
   (void)that;
   if (useUniform != that.useUniform) return false;
@@ -91,7 +91,9 @@ GrOverrideInputFragmentProcessor::GrOverrideInputFragmentProcessor(
       literalColor(src.literalColor) {
   {
     auto clone = src.childProcessor(fp_index).clone();
-    clone->setSampledWithExplicitCoords(src.childProcessor(fp_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(fp_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
 }

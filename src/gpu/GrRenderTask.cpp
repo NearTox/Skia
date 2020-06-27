@@ -12,7 +12,7 @@
 #include "src/gpu/GrTextureProxyPriv.h"
 #include "src/gpu/GrTextureResolveRenderTask.h"
 
-uint32_t GrRenderTask::CreateUniqueID() {
+uint32_t GrRenderTask::CreateUniqueID() noexcept {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {
@@ -21,9 +21,9 @@ uint32_t GrRenderTask::CreateUniqueID() {
   return id;
 }
 
-GrRenderTask::GrRenderTask() : fUniqueID(CreateUniqueID()), fFlags(0) {}
+GrRenderTask::GrRenderTask() noexcept : fUniqueID(CreateUniqueID()), fFlags(0) {}
 
-GrRenderTask::GrRenderTask(GrSurfaceProxyView targetView)
+GrRenderTask::GrRenderTask(GrSurfaceProxyView targetView) noexcept
     : fTargetView(std::move(targetView)), fUniqueID(CreateUniqueID()), fFlags(0) {}
 
 GrRenderTask::~GrRenderTask() {
@@ -239,7 +239,7 @@ void GrRenderTask::closeThoseWhoDependOnMe(const GrCaps& caps) {
   }
 }
 
-bool GrRenderTask::isInstantiated() const {
+bool GrRenderTask::isInstantiated() const noexcept {
   // Some renderTasks (e.g. GrTransferFromRenderTask) don't have a target.
   GrSurfaceProxy* proxy = fTargetView.proxy();
   if (!proxy) {
@@ -263,7 +263,7 @@ void GrRenderTask::dump(bool printDependencies) const {
   SkDebugf("--------------------------------------------------------------\n");
   GrSurfaceProxy* proxy = fTargetView.proxy();
   SkDebugf(
-      "renderTaskID: %d - proxyID: %d - surfaceID: %d\n", fUniqueID,
+      "%s - renderTaskID: %d - proxyID: %d - surfaceID: %d\n", this->name(), fUniqueID,
       proxy ? proxy->uniqueID().asUInt() : -1,
       proxy && proxy->peekSurface() ? proxy->peekSurface()->uniqueID().asUInt() : -1);
 

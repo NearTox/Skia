@@ -12,13 +12,14 @@
 
 #include "dawn/webgpu_cpp.h"
 #include "src/core/SkLRUCache.h"
+#include "src/gpu/GrFinishCallbacks.h"
 #include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/dawn/GrDawnRingBuffer.h"
-#include "src/gpu/dawn/GrDawnStagingManager.h"
 
 #include <unordered_map>
 
 class GrDawnOpsRenderPass;
+class GrDawnStagingBuffer;
 class GrPipeline;
 struct GrDawnProgram;
 
@@ -40,13 +41,6 @@ class GrDawnGpu : public GrGpu {
 
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
-  GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected,
-      const BackendTextureData*) override;
-  GrBackendTexture onCreateCompressedBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      const BackendTextureData*) override;
-
   void deleteBackendTexture(const GrBackendTexture&) override;
 
   bool compile(const GrProgramDesc&, const GrProgramInfo&) override;
@@ -59,7 +53,7 @@ class GrDawnGpu : public GrGpu {
 
   void testingOnly_flushGpuAndSync() override;
 #endif
-  void flush();
+  std::unique_ptr<GrStagingBuffer> createStagingBuffer(size_t size) override;
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
@@ -74,7 +68,7 @@ class GrDawnGpu : public GrGpu {
   void submit(GrOpsRenderPass*) override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override;
-  bool waitFence(GrFence, uint64_t timeout) override;
+  bool waitFence(GrFence) override;
   void deleteFence(GrFence) const override;
 
   std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned = true) override;
@@ -92,8 +86,6 @@ class GrDawnGpu : public GrGpu {
   wgpu::Sampler getOrCreateSampler(GrSamplerState samplerState);
 
   GrDawnRingBuffer::Slice allocateUniformRingBufferSlice(int size);
-  GrDawnStagingBuffer* getStagingBuffer(size_t size);
-  GrDawnStagingManager* getStagingManager() { return &fStagingManager; }
   wgpu::CommandEncoder getCopyEncoder();
   void flushCopyEncoder();
   void appendCommandBuffer(wgpu::CommandBuffer commandBuffer);
@@ -121,6 +113,17 @@ class GrDawnGpu : public GrGpu {
 
   sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
       const GrBackendTexture&, int sampleCnt) override;
+
+  GrBackendTexture onCreateBackendTexture(
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+
+  bool onUpdateBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
+      const BackendTextureData*) override;
+
+  GrBackendTexture onCreateCompressedBackendTexture(
+      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
+      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(
       size_t size, GrGpuBufferType type, GrAccessPattern, const void* data) override;
@@ -150,9 +153,12 @@ class GrDawnGpu : public GrGpu {
   bool onCopySurface(
       GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint) override;
 
-  bool onFinishFlush(
-      GrSurfaceProxy*[], int n, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
-      const GrPrepareForExternalIORequests&) override;
+  void addFinishedProc(
+      GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) override;
+
+  bool onSubmitToGpu(bool syncCpu) override;
+
+  void mapStagingBuffers();
 
   wgpu::Device fDevice;
   wgpu::Queue fQueue;
@@ -176,7 +182,8 @@ class GrDawnGpu : public GrGpu {
 
   SkLRUCache<GrProgramDesc, sk_sp<GrDawnProgram>, ProgramDescHash> fRenderPipelineCache;
   std::unordered_map<GrSamplerState, wgpu::Sampler, SamplerHash> fSamplers;
-  GrDawnStagingManager fStagingManager;
+
+  GrFinishCallbacks fFinishCallbacks;
 
   typedef GrGpu INHERITED;
 };

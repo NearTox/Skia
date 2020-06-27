@@ -9,7 +9,7 @@
 #include "include/core/SkDrawable.h"
 #include <atomic>
 
-static int32_t next_generation_id() {
+static int32_t next_generation_id() noexcept {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;
@@ -19,7 +19,7 @@ static int32_t next_generation_id() {
   return id;
 }
 
-SkDrawable::SkDrawable() : fGenerationID(0) {}
+SkDrawable::SkDrawable() noexcept : fGenerationID(0) {}
 
 static void draw_bbox(SkCanvas* canvas, const SkRect& r) {
   SkPaint paint;
@@ -49,7 +49,7 @@ void SkDrawable::draw(SkCanvas* canvas, SkScalar x, SkScalar y) {
 
 SkPicture* SkDrawable::newPictureSnapshot() { return this->onNewPictureSnapshot(); }
 
-uint32_t SkDrawable::getGenerationID() {
+uint32_t SkDrawable::getGenerationID() noexcept {
   if (0 == fGenerationID) {
     fGenerationID = next_generation_id();
   }
@@ -58,7 +58,7 @@ uint32_t SkDrawable::getGenerationID() {
 
 SkRect SkDrawable::getBounds() { return this->onGetBounds(); }
 
-void SkDrawable::notifyDrawingChanged() { fGenerationID = 0; }
+void SkDrawable::notifyDrawingChanged() noexcept { fGenerationID = 0; }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 

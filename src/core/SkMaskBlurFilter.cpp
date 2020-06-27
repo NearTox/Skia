@@ -211,7 +211,7 @@ class PlanGauss final {
     uint32_t* fBuffer2End;
   };
 
-  Scan makeBlurScan(int width, uint32_t* buffer) const {
+  Scan makeBlurScan(int width, uint32_t* buffer) const noexcept {
     uint32_t *buffer0, *buffer0End, *buffer1, *buffer1End, *buffer2, *buffer2End;
     buffer0 = buffer;
     buffer0End = buffer1 = buffer0 + fPass0Size;
@@ -254,11 +254,13 @@ SkMaskBlurFilter::SkMaskBlurFilter(double sigmaW, double sigmaH) noexcept
   SkASSERT(sigmaH >= 0);
 }
 
-bool SkMaskBlurFilter::hasNoBlur() const noexcept { return (3 * fSigmaW <= 1) && (3 * fSigmaH <= 1); }
+bool SkMaskBlurFilter::hasNoBlur() const noexcept {
+  return (3 * fSigmaW <= 1) && (3 * fSigmaH <= 1);
+}
 
 // We favor A8 masks, and if we need to work with another format, we'll convert to A8 first.
 // Each of these converts width (up to 8) mask values to A8.
-static void bw_to_a8(uint8_t* a8, const uint8_t* from, int width) {
+static void bw_to_a8(uint8_t* a8, const uint8_t* from, int width) noexcept {
   SkASSERT(0 < width && width <= 8);
 
   uint8_t masks = *from;
@@ -266,7 +268,7 @@ static void bw_to_a8(uint8_t* a8, const uint8_t* from, int width) {
     a8[i] = (masks >> (7 - i)) & 1 ? 0xFF : 0x00;
   }
 }
-static void lcd_to_a8(uint8_t* a8, const uint8_t* from, int width) {
+static void lcd_to_a8(uint8_t* a8, const uint8_t* from, int width) noexcept {
   SkASSERT(0 < width && width <= 8);
 
   for (int i = 0; i < width; ++i) {
@@ -275,7 +277,7 @@ static void lcd_to_a8(uint8_t* a8, const uint8_t* from, int width) {
     a8[i] = (r + g + b) / 3;
   }
 }
-static void argb32_to_a8(uint8_t* a8, const uint8_t* from, int width) {
+static void argb32_to_a8(uint8_t* a8, const uint8_t* from, int width) noexcept {
   SkASSERT(0 < width && width <= 8);
   for (int i = 0; i < width; ++i) {
     uint32_t rgba = reinterpret_cast<const uint32_t*>(from)[i];
@@ -304,7 +306,7 @@ static Sk8h load(const uint8_t* from, int width, ToA8* toA8) {
   return SkNx_cast<uint16_t>(Sk8b::Load(from)) << 8;
 }
 
-static void store(uint8_t* to, const Sk8h& v, int width) {
+static void store(uint8_t* to, const Sk8h& v, int width) noexcept {
   Sk8b b = SkNx_cast<uint8_t>(v >> 8);
   if (width == 8) {
     b.store(to);
@@ -401,7 +403,7 @@ static constexpr uint16_t kHalf = 0x80u;
 
 static void blur_x_radius_1(
     const Sk8h& s0, const Sk8h& g0, const Sk8h& g1, const Sk8h&, const Sk8h&, const Sk8h&, Sk8h* d0,
-    Sk8h* d8) {
+    Sk8h* d8) noexcept {
   auto v1 = s0.mulHi(g1);
   auto v0 = s0.mulHi(g0);
 
@@ -419,7 +421,7 @@ static void blur_x_radius_1(
 
 static void blur_x_radius_2(
     const Sk8h& s0, const Sk8h& g0, const Sk8h& g1, const Sk8h& g2, const Sk8h&, const Sk8h&,
-    Sk8h* d0, Sk8h* d8) {
+    Sk8h* d0, Sk8h* d8) noexcept {
   auto v0 = s0.mulHi(g0);
   auto v1 = s0.mulHi(g1);
   auto v2 = s0.mulHi(g2);
@@ -446,7 +448,7 @@ static void blur_x_radius_2(
 
 static void blur_x_radius_3(
     const Sk8h& s0, const Sk8h& gauss0, const Sk8h& gauss1, const Sk8h& gauss2, const Sk8h& gauss3,
-    const Sk8h&, Sk8h* d0, Sk8h* d8) {
+    const Sk8h&, Sk8h* d0, Sk8h* d8) noexcept {
   auto v0 = s0.mulHi(gauss0);
   auto v1 = s0.mulHi(gauss1);
   auto v2 = s0.mulHi(gauss2);
@@ -482,7 +484,7 @@ static void blur_x_radius_3(
 
 static void blur_x_radius_4(
     const Sk8h& s0, const Sk8h& gauss0, const Sk8h& gauss1, const Sk8h& gauss2, const Sk8h& gauss3,
-    const Sk8h& gauss4, Sk8h* d0, Sk8h* d8) {
+    const Sk8h& gauss4, Sk8h* d0, Sk8h* d8) noexcept {
   auto v0 = s0.mulHi(gauss0);
   auto v1 = s0.mulHi(gauss1);
   auto v2 = s0.mulHi(gauss2);
@@ -657,7 +659,7 @@ static void direct_blur_x(
 //   return answer[0..7]
 static Sk8h blur_y_radius_1(
     const Sk8h& s0, const Sk8h& g0, const Sk8h& g1, const Sk8h&, const Sk8h&, const Sk8h&,
-    Sk8h* d01, Sk8h* d12, Sk8h*, Sk8h*, Sk8h*, Sk8h*, Sk8h*, Sk8h*) {
+    Sk8h* d01, Sk8h* d12, Sk8h*, Sk8h*, Sk8h*, Sk8h*, Sk8h*, Sk8h*) noexcept {
   auto v0 = s0.mulHi(g0);
   auto v1 = s0.mulHi(g1);
 
@@ -670,7 +672,7 @@ static Sk8h blur_y_radius_1(
 
 static Sk8h blur_y_radius_2(
     const Sk8h& s0, const Sk8h& g0, const Sk8h& g1, const Sk8h& g2, const Sk8h&, const Sk8h&,
-    Sk8h* d01, Sk8h* d12, Sk8h* d23, Sk8h* d34, Sk8h*, Sk8h*, Sk8h*, Sk8h*) {
+    Sk8h* d01, Sk8h* d12, Sk8h* d23, Sk8h* d34, Sk8h*, Sk8h*, Sk8h*, Sk8h*) noexcept {
   auto v0 = s0.mulHi(g0);
   auto v1 = s0.mulHi(g1);
   auto v2 = s0.mulHi(g2);
@@ -686,7 +688,7 @@ static Sk8h blur_y_radius_2(
 
 static Sk8h blur_y_radius_3(
     const Sk8h& s0, const Sk8h& g0, const Sk8h& g1, const Sk8h& g2, const Sk8h& g3, const Sk8h&,
-    Sk8h* d01, Sk8h* d12, Sk8h* d23, Sk8h* d34, Sk8h* d45, Sk8h* d56, Sk8h*, Sk8h*) {
+    Sk8h* d01, Sk8h* d12, Sk8h* d23, Sk8h* d34, Sk8h* d45, Sk8h* d56, Sk8h*, Sk8h*) noexcept {
   auto v0 = s0.mulHi(g0);
   auto v1 = s0.mulHi(g1);
   auto v2 = s0.mulHi(g2);
@@ -705,7 +707,8 @@ static Sk8h blur_y_radius_3(
 
 static Sk8h blur_y_radius_4(
     const Sk8h& s0, const Sk8h& g0, const Sk8h& g1, const Sk8h& g2, const Sk8h& g3, const Sk8h& g4,
-    Sk8h* d01, Sk8h* d12, Sk8h* d23, Sk8h* d34, Sk8h* d45, Sk8h* d56, Sk8h* d67, Sk8h* d78) {
+    Sk8h* d01, Sk8h* d12, Sk8h* d23, Sk8h* d34, Sk8h* d45, Sk8h* d56, Sk8h* d67,
+    Sk8h* d78) noexcept {
   auto v0 = s0.mulHi(g0);
   auto v1 = s0.mulHi(g1);
   auto v2 = s0.mulHi(g2);
@@ -735,7 +738,7 @@ static void blur_column(
   Sk8h d01{kHalf}, d12{kHalf}, d23{kHalf}, d34{kHalf}, d45{kHalf}, d56{kHalf}, d67{kHalf},
       d78{kHalf};
 
-  auto flush = [&](uint8_t* to, const Sk8h& v0, const Sk8h& v1) {
+  auto flush = [&](uint8_t* to, const Sk8h& v0, const Sk8h& v1) noexcept {
     store(to, v0, width);
     to += dstRB;
     store(to, v1, width);

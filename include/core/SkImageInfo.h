@@ -49,7 +49,7 @@ enum SkAlphaType {
     kOpaque_SkAlphaType, and SkColorType is not opaque, then the result of
     drawing any pixel with a alpha value less than 1.0 is undefined.
 */
-static constexpr bool SkAlphaTypeIsOpaque(SkAlphaType at) noexcept {
+static constexpr inline bool SkAlphaTypeIsOpaque(SkAlphaType at) noexcept {
   return kOpaque_SkAlphaType == at;
 }
 
@@ -188,14 +188,14 @@ class SK_API SkColorInfo {
   SkColorInfo(SkColorType ct, SkAlphaType at, sk_sp<SkColorSpace> cs) noexcept
       : fColorSpace(std::move(cs)), fColorType(ct), fAlphaType(at) {}
 
-  SkColorInfo(const SkColorInfo&) = default;
+  SkColorInfo(const SkColorInfo&) noexcept = default;
   SkColorInfo(SkColorInfo&&) noexcept = default;
 
-  SkColorInfo& operator=(const SkColorInfo&) = default;
+  SkColorInfo& operator=(const SkColorInfo&) noexcept = default;
   SkColorInfo& operator=(SkColorInfo&&) noexcept = default;
 
   SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
-  sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
   SkColorType colorType() const noexcept { return fColorType; }
   SkAlphaType alphaType() const noexcept { return fAlphaType; }
 
@@ -206,13 +206,13 @@ class SK_API SkColorInfo {
   bool gammaCloseToSRGB() const { return fColorSpace && fColorSpace->gammaCloseToSRGB(); }
 
   /** Does other represent the same color type, alpha type, and color space? */
-  bool operator==(const SkColorInfo& other) const {
+  bool operator==(const SkColorInfo& other) const noexcept {
     return fColorType == other.fColorType && fAlphaType == other.fAlphaType &&
            SkColorSpace::Equals(fColorSpace.get(), other.fColorSpace.get());
   }
 
   /** Does other represent a different color type, alpha type, or color space? */
-  bool operator!=(const SkColorInfo& other) const { return !(*this == other); }
+  bool operator!=(const SkColorInfo& other) const noexcept { return !(*this == other); }
 
   /** Creates SkColorInfo with same SkColorType, SkColorSpace, with SkAlphaType set
       to newAlphaType.
@@ -220,14 +220,14 @@ class SK_API SkColorInfo {
       Created SkColorInfo contains newAlphaType even if it is incompatible with
       SkColorType, in which case SkAlphaType in SkColorInfo is ignored.
   */
-  SkColorInfo makeAlphaType(SkAlphaType newAlphaType) const {
+  SkColorInfo makeAlphaType(SkAlphaType newAlphaType) const noexcept {
     return SkColorInfo(this->colorType(), newAlphaType, this->refColorSpace());
   }
 
   /** Creates new SkColorInfo with same SkAlphaType, SkColorSpace, with SkColorType
       set to newColorType.
   */
-  SkColorInfo makeColorType(SkColorType newColorType) const {
+  SkColorInfo makeColorType(SkColorType newColorType) const noexcept {
     return SkColorInfo(newColorType, this->alphaType(), this->refColorSpace());
   }
 
@@ -316,7 +316,7 @@ struct SK_API SkImageInfo {
                           SkColorSpace (which may be nullptr)
       @return        created SkImageInfo
   */
-  static SkImageInfo Make(SkISize dimensions, const SkColorInfo& colorInfo) {
+  static SkImageInfo Make(SkISize dimensions, const SkColorInfo& colorInfo) noexcept {
     return SkImageInfo(dimensions, colorInfo);
   }
   static SkImageInfo Make(SkISize dimensions, SkColorInfo&& colorInfo) noexcept {
@@ -468,7 +468,7 @@ struct SK_API SkImageInfo {
 
       @return  SkColorSpace wrapped in a smart pointer
   */
-  sk_sp<SkColorSpace> refColorSpace() const { return fColorInfo.refColorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorInfo.refColorSpace(); }
 
   /** Returns if SkImageInfo describes an empty area of pixels by checking if either
       width or height is zero or smaller.
@@ -520,7 +520,7 @@ struct SK_API SkImageInfo {
       @param newHeight  pixel row count; must be zero or greater
       @return           created SkImageInfo
   */
-  SkImageInfo makeWH(int newWidth, int newHeight) const {
+  SkImageInfo makeWH(int newWidth, int newHeight) const noexcept {
     return Make({newWidth, newHeight}, fColorInfo);
   }
 
@@ -530,7 +530,7 @@ struct SK_API SkImageInfo {
       @param newSize   pixel column and row count; must be zero or greater
       @return          created SkImageInfo
   */
-  SkImageInfo makeDimensions(SkISize newSize) const { return Make(newSize, fColorInfo); }
+  SkImageInfo makeDimensions(SkISize newSize) const noexcept { return Make(newSize, fColorInfo); }
 
   /** Creates SkImageInfo with same SkColorType, SkColorSpace, width, and height,
       with SkAlphaType set to newAlphaType.
@@ -540,7 +540,7 @@ struct SK_API SkImageInfo {
 
       @return              created SkImageInfo
   */
-  SkImageInfo makeAlphaType(SkAlphaType newAlphaType) const {
+  SkImageInfo makeAlphaType(SkAlphaType newAlphaType) const noexcept {
     return Make(fDimensions, fColorInfo.makeAlphaType(newAlphaType));
   }
 
@@ -549,7 +549,7 @@ struct SK_API SkImageInfo {
 
       @return              created SkImageInfo
   */
-  SkImageInfo makeColorType(SkColorType newColorType) const {
+  SkImageInfo makeColorType(SkColorType newColorType) const noexcept {
     return Make(fDimensions, fColorInfo.makeColorType(newColorType));
   }
 
@@ -621,7 +621,7 @@ struct SK_API SkImageInfo {
       @param other  SkImageInfo to compare
       @return       true if SkImageInfo equals other
   */
-  bool operator==(const SkImageInfo& other) const {
+  bool operator==(const SkImageInfo& other) const noexcept {
     return fDimensions == other.fDimensions && fColorInfo == other.fColorInfo;
   }
 
@@ -631,7 +631,7 @@ struct SK_API SkImageInfo {
       @param other  SkImageInfo to compare
       @return       true if SkImageInfo is not equal to other
   */
-  bool operator!=(const SkImageInfo& other) const { return !(*this == other); }
+  bool operator!=(const SkImageInfo& other) const noexcept { return !(*this == other); }
 
   /** Returns storage required by pixel array, given SkImageInfo dimensions, SkColorType,
       and rowBytes. rowBytes is assumed to be at least as large as minRowBytes().
@@ -695,7 +695,7 @@ struct SK_API SkImageInfo {
   SkColorInfo fColorInfo;
   SkISize fDimensions = {0, 0};
 
-  SkImageInfo(SkISize dimensions, const SkColorInfo& colorInfo)
+  SkImageInfo(SkISize dimensions, const SkColorInfo& colorInfo) noexcept
       : fColorInfo(colorInfo), fDimensions(dimensions) {}
 
   SkImageInfo(SkISize dimensions, SkColorInfo&& colorInfo) noexcept

@@ -141,7 +141,7 @@ bool SkStrikeSpec::ShouldDrawAsPath(
   SkScalar limit = std::min(SkGraphics::GetFontCachePointSizeLimit(), 1024);
   SkScalar maxSizeSquared = limit * limit;
 
-  auto distance = [&textMatrix](int XIndex, int YIndex) noexcept {
+  auto distance = [&textMatrix](int XIndex, int YIndex) {
     return textMatrix[XIndex] * textMatrix[XIndex] + textMatrix[YIndex] * textMatrix[YIndex];
   };
 
@@ -195,7 +195,7 @@ std::tuple<SkStrikeSpec, SkScalar, SkScalar> SkStrikeSpec::MakeSDFT(
 }
 
 sk_sp<GrTextStrike> SkStrikeSpec::findOrCreateGrStrike(GrStrikeCache* cache) const {
-  return cache->getStrike(*fAutoDescriptor.getDesc());
+  return cache->findOrCreateStrike(*fAutoDescriptor.getDesc());
 }
 #endif
 

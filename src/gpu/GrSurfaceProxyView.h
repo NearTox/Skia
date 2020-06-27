@@ -17,7 +17,7 @@
 
 class GrSurfaceProxyView {
  public:
-  constexpr GrSurfaceProxyView() noexcept = default;
+  GrSurfaceProxyView() noexcept = default;
 
   GrSurfaceProxyView(
       sk_sp<GrSurfaceProxy> proxy, GrSurfaceOrigin origin, GrSwizzle swizzle) noexcept
@@ -28,11 +28,11 @@ class GrSurfaceProxyView {
       : fProxy(std::move(proxy)), fOrigin(kTopLeft_GrSurfaceOrigin) {}
 
   GrSurfaceProxyView(GrSurfaceProxyView&& view) noexcept = default;
-  GrSurfaceProxyView(const GrSurfaceProxyView&) = default;
+  GrSurfaceProxyView(const GrSurfaceProxyView&) noexcept = default;
 
   operator bool() const noexcept { return SkToBool(fProxy.get()); }
 
-  GrSurfaceProxyView& operator=(const GrSurfaceProxyView&) = default;
+  GrSurfaceProxyView& operator=(const GrSurfaceProxyView&) noexcept = default;
   GrSurfaceProxyView& operator=(GrSurfaceProxyView&& view) noexcept = default;
 
   bool operator==(const GrSurfaceProxyView& view) const noexcept {
@@ -46,7 +46,7 @@ class GrSurfaceProxyView {
   SkISize dimensions() const noexcept { return this->proxy()->dimensions(); }
 
   GrSurfaceProxy* proxy() const noexcept { return fProxy.get(); }
-  sk_sp<GrSurfaceProxy> refProxy() const { return fProxy; }
+  sk_sp<GrSurfaceProxy> refProxy() const noexcept { return fProxy; }
 
   GrTextureProxy* asTextureProxy() const noexcept {
     if (!fProxy) {
@@ -73,6 +73,17 @@ class GrSurfaceProxyView {
   GrSwizzle swizzle() const noexcept { return fSwizzle; }
 
   void reset() noexcept { *this = {}; }
+
+  // Helper that copies a rect of a src view'' proxy and then creates a view for the copy with
+  // the same origin and swizzle as the src view.
+  static GrSurfaceProxyView Copy(
+      GrRecordingContext* context, GrSurfaceProxyView src, GrMipMapped mipMapped, SkIRect srcRect,
+      SkBackingFit fit, SkBudgeted budgeted) {
+    auto origin = src.origin();
+    auto* proxy = src.proxy();
+    auto copy = GrSurfaceProxy::Copy(context, proxy, origin, mipMapped, srcRect, fit, budgeted);
+    return {std::move(copy), src.origin(), src.swizzle()};
+  }
 
   // This does not reset the origin or swizzle, so the View can still be used to access those
   // properties associated with the detached proxy.

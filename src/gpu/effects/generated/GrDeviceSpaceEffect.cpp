@@ -31,15 +31,15 @@ class GrGLSLDeviceSpaceEffect : public GrGLSLFragmentProcessor {
   }
 
  private:
-  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
-  }
+  void onSetData(
+      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
 };
 GrGLSLFragmentProcessor* GrDeviceSpaceEffect::onCreateGLSLInstance() const {
   return new GrGLSLDeviceSpaceEffect();
 }
 void GrDeviceSpaceEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrDeviceSpaceEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrDeviceSpaceEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrDeviceSpaceEffect& that = other.cast<GrDeviceSpaceEffect>();
   (void)that;
   return true;
@@ -48,7 +48,9 @@ GrDeviceSpaceEffect::GrDeviceSpaceEffect(const GrDeviceSpaceEffect& src)
     : INHERITED(kGrDeviceSpaceEffect_ClassID, src.optimizationFlags()), fp_index(src.fp_index) {
   {
     auto clone = src.childProcessor(fp_index).clone();
-    clone->setSampledWithExplicitCoords(src.childProcessor(fp_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(fp_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
 }

@@ -14,11 +14,11 @@
 #include "include/private/SkTemplates.h"
 
 /**
- * Represents the various ways that a GrShape can be styled. It has fill/stroking information
+ * Represents the various ways that a GrStyledShape can be styled. It has fill/stroking information
  * as well as an optional path effect. If the path effect represents dashing, the dashing
  * information is extracted from the path effect and stored explicitly.
  *
- * This will replace GrStrokeInfo as GrShape is deployed.
+ * This will replace GrStrokeInfo as GrStyledShape is deployed.
  */
 class GrStyle {
  public:
@@ -107,7 +107,7 @@ class GrStyle {
   }
 
   /** Is this style a fill with no path effect? */
-  bool isSimpleFill() const { return fStrokeRec.isFillStyle() && !fPathEffect; }
+  bool isSimpleFill() const noexcept { return fStrokeRec.isFillStyle() && !fPathEffect; }
 
   /** Is this style a hairline with no path effect? */
   bool isSimpleHairline() const noexcept { return fStrokeRec.isHairlineStyle() && !fPathEffect; }
@@ -117,7 +117,7 @@ class GrStyle {
 
   bool hasPathEffect() const noexcept { return SkToBool(fPathEffect.get()); }
 
-  bool hasNonDashPathEffect() const { return fPathEffect.get() && !this->isDashed(); }
+  bool hasNonDashPathEffect() const noexcept { return fPathEffect.get() && !this->isDashed(); }
 
   bool isDashed() const noexcept { return SkPathEffect::kDash_DashType == fDashInfo.fType; }
   SkScalar dashPhase() const noexcept {
@@ -136,11 +136,11 @@ class GrStyle {
   const SkStrokeRec& strokeRec() const noexcept { return fStrokeRec; }
 
   /** Hairline or fill styles without path effects make no alterations to a geometry. */
-  bool applies() const {
+  bool applies() const noexcept {
     return this->pathEffect() || (!fStrokeRec.isFillStyle() && !fStrokeRec.isHairlineStyle());
   }
 
-  static SkScalar MatrixToScaleFactor(const SkMatrix& matrix) {
+  static SkScalar MatrixToScaleFactor(const SkMatrix& matrix) noexcept {
     // getMaxScale will return -1 if the matrix has perspective. In that case we can use a scale
     // factor of 1. This isn't necessarily a good choice and in the future we might consider
     // taking a bounds here for the perspective case.

@@ -40,15 +40,15 @@ class DefaultGeoProc : public GrGeometryProcessor {
         gpTypeFlags, color, viewMatrix, localMatrix, coverage, localCoordsWillBeRead);
   }
 
-  const char* name() const override { return "DefaultGeometryProcessor"; }
+  const char* name() const noexcept override { return "DefaultGeometryProcessor"; }
 
-  const SkPMColor4f& color() const { return fColor; }
-  bool hasVertexColor() const { return fInColor.isInitialized(); }
-  const SkMatrix& viewMatrix() const { return fViewMatrix; }
-  const SkMatrix& localMatrix() const { return fLocalMatrix; }
-  bool localCoordsWillBeRead() const { return fLocalCoordsWillBeRead; }
-  uint8_t coverage() const { return fCoverage; }
-  bool hasVertexCoverage() const { return fInCoverage.isInitialized(); }
+  const SkPMColor4f& color() const noexcept { return fColor; }
+  bool hasVertexColor() const noexcept { return fInColor.isInitialized(); }
+  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
+  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
+  bool localCoordsWillBeRead() const noexcept { return fLocalCoordsWillBeRead; }
+  uint8_t coverage() const noexcept { return fCoverage; }
+  bool hasVertexCoverage() const noexcept { return fInCoverage.isInitialized(); }
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
@@ -79,7 +79,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
         } else {
           const char* colorUniformName;
           fColorUniform = uniformHandler->addUniform(
-              kVertex_GrShaderFlag, kHalf4_GrSLType, "Color", &colorUniformName);
+              nullptr, kVertex_GrShaderFlag, kHalf4_GrSLType, "Color", &colorUniformName);
           vertBuilder->codeAppendf("half4 color = %s;", colorUniformName);
         }
 
@@ -115,7 +115,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
       } else {
         const char* fragCoverage;
         fCoverageUniform = uniformHandler->addUniform(
-            kFragment_GrShaderFlag, kHalf_GrSLType, "Coverage", &fragCoverage);
+            nullptr, kFragment_GrShaderFlag, kHalf_GrSLType, "Coverage", &fragCoverage);
         fragBuilder->codeAppendf("%s = half4(%s);", args.fOutputCoverage, fragCoverage);
       }
     }
@@ -177,7 +177,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
 
   DefaultGeoProc(
       uint32_t gpTypeFlags, const SkPMColor4f& color, const SkMatrix& viewMatrix,
-      const SkMatrix& localMatrix, uint8_t coverage, bool localCoordsWillBeRead)
+      const SkMatrix& localMatrix, uint8_t coverage, bool localCoordsWillBeRead) noexcept
       : INHERITED(kDefaultGeoProc_ClassID),
         fColor(color),
         fViewMatrix(viewMatrix),
@@ -222,23 +222,23 @@ GrGeometryProcessor* DefaultGeoProc::TestCreate(GrProcessorTestData* d) {
   if (d->fRandom->nextBool()) {
     flags |= kColorAttribute_GPFlag;
   }
+  if (d->fRandom->nextBool()) {
+    flags |= kColorAttributeIsWide_GPFlag;
+  }
+  if (d->fRandom->nextBool()) {
+    flags |= kCoverageAttribute_GPFlag;
     if (d->fRandom->nextBool()) {
-      flags |= kColorAttributeIsWide_GPFlag;
+      flags |= kCoverageAttributeTweak_GPFlag;
     }
-    if (d->fRandom->nextBool()) {
-      flags |= kCoverageAttribute_GPFlag;
-      if (d->fRandom->nextBool()) {
-        flags |= kCoverageAttributeTweak_GPFlag;
-      }
-    }
-    if (d->fRandom->nextBool()) {
-      flags |= kLocalCoordAttribute_GPFlag;
-    }
+  }
+  if (d->fRandom->nextBool()) {
+    flags |= kLocalCoordAttribute_GPFlag;
+  }
 
-    return DefaultGeoProc::Make(
-        d->allocator(), flags, SkPMColor4f::FromBytes_RGBA(GrRandomColor(d->fRandom)),
-        GrTest::TestMatrix(d->fRandom), GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
-        GrRandomCoverage(d->fRandom));
+  return DefaultGeoProc::Make(
+      d->allocator(), flags, SkPMColor4f::FromBytes_RGBA(GrRandomColor(d->fRandom)),
+      GrTest::TestMatrix(d->fRandom), GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
+      GrRandomCoverage(d->fRandom));
 }
 #endif
 

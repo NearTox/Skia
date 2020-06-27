@@ -27,46 +27,46 @@ class GrSamplerState {
   static constexpr int kFilterCount = static_cast<int>(Filter::kLast) + 1;
   static constexpr int kWrapModeCount = static_cast<int>(WrapMode::kLast) + 1;
 
-  constexpr GrSamplerState() = default;
+  constexpr GrSamplerState() noexcept = default;
 
-  constexpr GrSamplerState(WrapMode wrapXAndY, Filter filter)
+  constexpr GrSamplerState(WrapMode wrapXAndY, Filter filter) noexcept
       : fWrapModes{wrapXAndY, wrapXAndY}, fFilter(filter) {}
 
-  constexpr GrSamplerState(WrapMode wrapX, WrapMode wrapY, Filter filter)
+  constexpr GrSamplerState(WrapMode wrapX, WrapMode wrapY, Filter filter) noexcept
       : fWrapModes{wrapX, wrapY}, fFilter(filter) {}
 
-  constexpr GrSamplerState(const WrapMode wrapModes[2], Filter filter)
+  constexpr GrSamplerState(const WrapMode wrapModes[2], Filter filter) noexcept
       : fWrapModes{wrapModes[0], wrapModes[1]}, fFilter(filter) {}
 
-  constexpr /*explicit*/ GrSamplerState(Filter filter) : fFilter(filter) {}
+  constexpr /*explicit*/ GrSamplerState(Filter filter) noexcept : fFilter(filter) {}
 
-  constexpr GrSamplerState(const GrSamplerState&) = default;
+  constexpr GrSamplerState(const GrSamplerState&) noexcept = default;
 
-  constexpr GrSamplerState& operator=(const GrSamplerState&) = default;
+  constexpr GrSamplerState& operator=(const GrSamplerState&) noexcept = default;
 
-  constexpr Filter filter() const { return fFilter; }
+  constexpr Filter filter() const noexcept { return fFilter; }
 
-  constexpr void setFilterMode(Filter filterMode) { fFilter = filterMode; }
+  constexpr void setFilterMode(Filter filterMode) noexcept { fFilter = filterMode; }
 
-  constexpr void setWrapModeX(const WrapMode wrap) { fWrapModes[0] = wrap; }
-  constexpr void setWrapModeY(const WrapMode wrap) { fWrapModes[1] = wrap; }
+  constexpr void setWrapModeX(const WrapMode wrap) noexcept { fWrapModes[0] = wrap; }
+  constexpr void setWrapModeY(const WrapMode wrap) noexcept { fWrapModes[1] = wrap; }
 
-  constexpr WrapMode wrapModeX() const { return fWrapModes[0]; }
-  constexpr WrapMode wrapModeY() const { return fWrapModes[1]; }
+  constexpr WrapMode wrapModeX() const noexcept { return fWrapModes[0]; }
+  constexpr WrapMode wrapModeY() const noexcept { return fWrapModes[1]; }
 
-  constexpr bool isRepeated() const {
+  constexpr bool isRepeated() const noexcept {
     return (WrapMode::kClamp != fWrapModes[0] && WrapMode::kClampToBorder != fWrapModes[0]) ||
            (WrapMode::kClamp != fWrapModes[1] && WrapMode::kClampToBorder != fWrapModes[1]);
   }
 
-  constexpr bool operator==(GrSamplerState that) const {
+  constexpr bool operator==(GrSamplerState that) const noexcept {
     return fWrapModes[0] == that.fWrapModes[0] && fWrapModes[1] == that.fWrapModes[1] &&
            fFilter == that.fFilter;
   }
 
-  constexpr bool operator!=(const GrSamplerState& that) const { return !(*this == that); }
+  constexpr bool operator!=(const GrSamplerState& that) const noexcept { return !(*this == that); }
 
-  constexpr static uint8_t GenerateKey(GrSamplerState samplerState) {
+  constexpr static uint8_t GenerateKey(GrSamplerState samplerState) noexcept {
     constexpr int kTileModeXShift = 2;
     constexpr int kTileModeYShift = 4;
 

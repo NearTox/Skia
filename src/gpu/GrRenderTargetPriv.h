@@ -53,12 +53,12 @@ class GrRenderTargetPriv {
  private:
   explicit GrRenderTargetPriv(GrRenderTarget* renderTarget) noexcept
       : fRenderTarget(renderTarget) {}
-  GrRenderTargetPriv(const GrRenderTargetPriv&) = delete;             // unimpl
-  GrRenderTargetPriv& operator=(const GrRenderTargetPriv&) = delete;  // unimpl
+  GrRenderTargetPriv(const GrRenderTargetPriv&) noexcept {}  // unimpl
+  GrRenderTargetPriv& operator=(const GrRenderTargetPriv&);  // unimpl
 
   // No taking addresses of this type.
-  const GrRenderTargetPriv* operator&() const = delete;
-  GrRenderTargetPriv* operator&() = delete;
+  const GrRenderTargetPriv* operator&() const;
+  GrRenderTargetPriv* operator&();
 
   GrRenderTarget* fRenderTarget;
 

@@ -16,8 +16,9 @@ using BufferUsage = GrVkMemoryAllocator::BufferUsage;
 
 static BufferUsage get_buffer_usage(GrVkBuffer::Type type, bool dynamic) {
   switch (type) {
-    case GrVkBuffer::kVertex_Type:  // fall through
-    case GrVkBuffer::kIndex_Type:   // fall through
+    case GrVkBuffer::kVertex_Type:    // fall through
+    case GrVkBuffer::kIndex_Type:     // fall through
+    case GrVkBuffer::kIndirect_Type:  // fall through
     case GrVkBuffer::kTexel_Type:
       return dynamic ? BufferUsage::kCpuWritesGpuReads : BufferUsage::kGpuOnly;
     case GrVkBuffer::kUniform_Type: SkASSERT(dynamic); return BufferUsage::kCpuWritesGpuReads;
@@ -127,13 +128,6 @@ void GrVkMemory::FreeImageMemory(const GrVkGpu* gpu, bool linearTiling, const Gr
 
 void* GrVkMemory::MapAlloc(GrVkGpu* gpu, const GrVkAlloc& alloc) {
   SkASSERT(GrVkAlloc::kMappable_Flag & alloc.fFlags);
-#ifdef SK_DEBUG
-  if (alloc.fFlags & GrVkAlloc::kNoncoherent_Flag) {
-    VkDeviceSize alignment = gpu->physicalDeviceProperties().limits.nonCoherentAtomSize;
-    SkASSERT(0 == (alloc.fOffset & (alignment - 1)));
-    SkASSERT(0 == (alloc.fSize & (alignment - 1)));
-  }
-#endif
   if (alloc.fBackendMemory) {
     GrVkMemoryAllocator* allocator = gpu->memoryAllocator();
     return allocator->mapMemory(alloc.fBackendMemory);

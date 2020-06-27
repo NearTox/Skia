@@ -129,7 +129,7 @@ class PathRenderer : public ShapeRenderer {
 
     // Adding round caps forces Ganesh to use the path renderer for lines instead of converting
     // them to rectangles (which are already explicitly tested). However, when not curved, the
-    // GrShape will still find a way to turn it into a rrect draw so it doesn't hit the
+    // GrStyledShape will still find a way to turn it into a rrect draw so it doesn't hit the
     // path renderer in that condition.
     paint->setStrokeCap(SkPaint::kRound_Cap);
     paint->setStrokeJoin(SkPaint::kMiter_Join);

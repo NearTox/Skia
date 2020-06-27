@@ -26,7 +26,9 @@
 #define kDefault_Edging SkFont::Edging::kAntiAlias
 #define kDefault_Hinting SkPaintDefaults_Hinting
 
-static constexpr SkScalar valid_size(SkScalar size) noexcept { return std::max<SkScalar>(0, size); }
+static constexpr inline SkScalar valid_size(SkScalar size) noexcept {
+  return std::max<SkScalar>(0, size);
+}
 
 SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept
     : fTypeface(std::move(face)),
@@ -61,7 +63,7 @@ void SkFont::dump() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline uint32_t set_clear_mask(uint32_t bits, bool cond, uint32_t mask) noexcept {
+static constexpr inline uint32_t set_clear_mask(uint32_t bits, bool cond, uint32_t mask) noexcept {
   return cond ? bits | mask : bits & ~mask;
 }
 
@@ -99,7 +101,7 @@ SkFont SkFont::makeWithSize(SkScalar newSize) const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkScalar SkFont::setupForAsPaths(SkPaint* paint) {
+SkScalar SkFont::setupForAsPaths(SkPaint* paint) noexcept {
   constexpr uint32_t flagsToIgnore = kEmbeddedBitmaps_PrivFlag | kForceAutoHinting_PrivFlag;
 
   fFlags = (fFlags & ~flagsToIgnore) | kSubpixel_PrivFlag;
@@ -133,7 +135,7 @@ void SkFont::unicharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID glyphs
 
 class SkConvertToUTF32 {
  public:
-  SkConvertToUTF32() {}
+  SkConvertToUTF32() noexcept = default;
 
   const SkUnichar* convert(const void* text, size_t byteLength, SkTextEncoding encoding) {
     const SkUnichar* uni;

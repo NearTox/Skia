@@ -19,13 +19,13 @@
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTexturePriv.h"
 
-void GrTexture::markMipMapsDirty() {
+void GrTexture::markMipMapsDirty() noexcept {
   if (GrMipMapsStatus::kValid == fMipMapsStatus) {
     fMipMapsStatus = GrMipMapsStatus::kDirty;
   }
 }
 
-void GrTexture::markMipMapsClean() {
+void GrTexture::markMipMapsClean() noexcept {
   SkASSERT(GrMipMapsStatus::kNotAllocated != fMipMapsStatus);
   fMipMapsStatus = GrMipMapsStatus::kValid;
 }

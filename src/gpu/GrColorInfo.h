@@ -19,15 +19,15 @@
 class GrColorInfo {
  public:
   constexpr GrColorInfo() noexcept = default;
-  GrColorInfo(const GrColorInfo&);
-  GrColorInfo& operator=(const GrColorInfo&);
-  GrColorInfo(GrColorType, SkAlphaType, sk_sp<SkColorSpace>);
-  /* implicit */ GrColorInfo(const SkColorInfo&);
+  GrColorInfo(const GrColorInfo&) noexcept;
+  GrColorInfo& operator=(const GrColorInfo&) noexcept;
+  GrColorInfo(GrColorType, SkAlphaType, sk_sp<SkColorSpace>) noexcept;
+  /* implicit */ GrColorInfo(const SkColorInfo&) noexcept;
 
   bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
   SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
-  sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
 
   GrColorSpaceXform* colorSpaceXformFromSRGB() const;
   sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const {

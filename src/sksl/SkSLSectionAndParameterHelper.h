@@ -9,6 +9,7 @@
 #define SKSL_SECTIONANDPARAMETERHELPER
 
 #include "src/sksl/SkSLErrorReporter.h"
+#include "src/sksl/SkSLSampleMatrix.h"
 #include "src/sksl/ir/SkSLProgram.h"
 #include "src/sksl/ir/SkSLSection.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
@@ -58,11 +59,13 @@ class SectionAndParameterHelper {
     return found->second;
   }
 
-  const std::vector<const Variable*>& getParameters() { return fParameters; }
+  const std::vector<const Variable*>& getParameters() noexcept { return fParameters; }
 
   bool hasCoordOverrides(const Variable& fp);
 
-  static bool IsParameter(const Variable& var) {
+  SampleMatrix getMatrix(const Variable& fp);
+
+  static bool IsParameter(const Variable& var) noexcept {
     return (var.fModifiers.fFlags & Modifiers::kIn_Flag) && -1 == var.fModifiers.fLayout.fBuiltin;
   }
 
@@ -98,6 +101,12 @@ class SectionAndParameterHelper {
   bool hasCoordOverrides(const Expression& e, const Variable& fp);
 
   bool hasCoordOverrides(const ProgramElement& p, const Variable& fp);
+
+  SampleMatrix getMatrix(const Statement& s, const Variable& fp);
+
+  SampleMatrix getMatrix(const Expression& e, const Variable& fp);
+
+  SampleMatrix getMatrix(const ProgramElement& p, const Variable& fp);
 
   const Program& fProgram;
   std::vector<const Variable*> fParameters;

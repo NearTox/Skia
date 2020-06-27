@@ -28,7 +28,9 @@ class DiscardableAdapterBase : public AnimatablePropertyContainer {
  protected:
   DiscardableAdapterBase() : fNode(T::Make()) {}
 
-  explicit DiscardableAdapterBase(sk_sp<T> node) : fNode(std::move(node)) {}
+  explicit DiscardableAdapterBase(sk_sp<T> node) noexcept(
+      std::is_nothrow_move_constructible_v<sk_sp<T>>)
+      : fNode(std::move(node)) {}
 
  private:
   const sk_sp<T> fNode;

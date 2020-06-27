@@ -21,9 +21,9 @@ void Rect::onClip(SkCanvas* canvas, bool antiAlias) const {
 
 void Rect::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawRect(fRect, paint); }
 
-bool Rect::onContains(const SkPoint& p) const { return fRect.contains(p.x(), p.y()); }
+bool Rect::onContains(const SkPoint& p) const noexcept { return fRect.contains(p.x(), p.y()); }
 
-SkRect Rect::onRevalidate(InvalidationController*, const SkMatrix&) {
+SkRect Rect::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   SkASSERT(this->hasInval());
 
   return fRect;
@@ -35,7 +35,7 @@ SkPath Rect::onAsPath() const {
   return path;
 }
 
-RRect::RRect(const SkRRect& rr) : fRRect(rr) {}
+RRect::RRect(const SkRRect& rr) noexcept : fRRect(rr) {}
 
 void RRect::onClip(SkCanvas* canvas, bool antiAlias) const {
   canvas->clipRRect(fRRect, SkClipOp::kIntersect, antiAlias);
@@ -45,7 +45,7 @@ void RRect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawRRect(fRRect, paint);
 }
 
-bool RRect::onContains(const SkPoint& p) const {
+bool RRect::onContains(const SkPoint& p) const noexcept {
   if (!fRRect.rect().contains(p.x(), p.y())) {
     return false;
   }
@@ -60,7 +60,7 @@ bool RRect::onContains(const SkPoint& p) const {
       p.y() + SK_ScalarNearlyZero));
 }
 
-SkRect RRect::onRevalidate(InvalidationController*, const SkMatrix&) {
+SkRect RRect::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   SkASSERT(this->hasInval());
 
   return fRRect.getBounds();

@@ -32,20 +32,20 @@ struct SkIPoint16 {
 
    @return  fX
    */
-  int16_t x() const { return fX; }
+  int16_t x() const noexcept { return fX; }
 
   /** Returns y-axis value of SkIPoint.
 
    @return  fY
    */
-  int16_t y() const { return fY; }
+  int16_t y() const noexcept { return fY; }
 
   /** Sets fX to x and fY to y.
 
    @param x  new value for fX
    @param y  new value for fY
    */
-  void set(int x, int y) {
+  void set(int x, int y) noexcept {
     fX = SkToS16(x);
     fY = SkToS16(y);
   }

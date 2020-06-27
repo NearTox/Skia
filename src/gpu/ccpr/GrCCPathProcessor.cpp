@@ -141,7 +141,7 @@ void GrCCPathProcessor::drawPaths(
   GrRenderTargetProxy* rtProxy = flushState->proxy();
   GrProgramInfo programInfo(
       rtProxy->numSamples(), rtProxy->numStencilSamples(), rtProxy->backendFormat(),
-      flushState->outputView()->origin(), &pipeline, this, primitiveType);
+      flushState->writeView()->origin(), &pipeline, this, primitiveType);
 
   flushState->bindPipelineAndScissorClip(programInfo, bounds);
   flushState->bindTextures(*this, atlasProxy, pipeline);
@@ -161,8 +161,8 @@ void GrCCPathProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
   bool isCoverageCount = (CoverageMode::kCoverageCount == proc.fCoverageMode);
 
   const char* atlasAdjust;
-  fAtlasAdjustUniform =
-      uniHandler->addUniform(kVertex_GrShaderFlag, kFloat2_GrSLType, "atlas_adjust", &atlasAdjust);
+  fAtlasAdjustUniform = uniHandler->addUniform(
+      nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "atlas_adjust", &atlasAdjust);
 
   varyingHandler->emitAttributes(proc);
 

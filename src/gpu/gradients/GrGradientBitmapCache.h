@@ -15,7 +15,7 @@
 
 class GrGradientBitmapCache : SkNoncopyable {
  public:
-  GrGradientBitmapCache(int maxEntries, int resolution);
+  GrGradientBitmapCache(int maxEntries, int resolution) noexcept;
   ~GrGradientBitmapCache();
 
   // Assumes colors are compatible with the specified alphaType (e.g. if it's premul then colors
@@ -35,10 +35,10 @@ class GrGradientBitmapCache : SkNoncopyable {
   mutable Entry* fHead;
   mutable Entry* fTail;
 
-  inline Entry* release(Entry*) const;
-  inline void attachToHead(Entry*) const;
+  inline Entry* release(Entry*) const noexcept;
+  inline void attachToHead(Entry*) const noexcept;
 
-  bool find(const void* buffer, size_t len, SkBitmap*) const;
+  bool find(const void* buffer, size_t len, SkBitmap*) const noexcept;
   void add(const void* buffer, size_t len, const SkBitmap&);
 
   void fillGradient(
@@ -48,12 +48,12 @@ class GrGradientBitmapCache : SkNoncopyable {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   class AutoValidate : SkNoncopyable {
    public:
-    AutoValidate(const GrGradientBitmapCache* bc) : fBC(bc) { bc->validate(); }
+    AutoValidate(const GrGradientBitmapCache* bc) noexcept : fBC(bc) { bc->validate(); }
     ~AutoValidate() { fBC->validate(); }
 
    private:

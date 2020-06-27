@@ -42,12 +42,12 @@ class GrSurfaceProxyPriv {
 
  private:
   explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) noexcept : fProxy(proxy) {}
-  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) = delete;             // unimpl
-  GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&) = delete;  // unimpl
+  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) noexcept {}  // unimpl
+  GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&);  // unimpl
 
   // No taking addresses of this type.
-  const GrSurfaceProxyPriv* operator&() const = delete;
-  GrSurfaceProxyPriv* operator&() = delete;
+  const GrSurfaceProxyPriv* operator&() const;
+  GrSurfaceProxyPriv* operator&();
 
   GrSurfaceProxy* fProxy;
 

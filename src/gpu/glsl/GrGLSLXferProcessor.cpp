@@ -60,9 +60,10 @@ void GrGLSLXferProcessor::emitCode(const EmitArgs& args) {
       const char* dstCoordScaleName;
 
       fDstTopLeftUni = uniformHandler->addUniform(
-          kFragment_GrShaderFlag, kHalf2_GrSLType, "DstTextureUpperLeft", &dstTopLeftName);
+          nullptr, kFragment_GrShaderFlag, kHalf2_GrSLType, "DstTextureUpperLeft", &dstTopLeftName);
       fDstScaleUni = uniformHandler->addUniform(
-          kFragment_GrShaderFlag, kHalf2_GrSLType, "DstTextureCoordScale", &dstCoordScaleName);
+          nullptr, kFragment_GrShaderFlag, kHalf2_GrSLType, "DstTextureCoordScale",
+          &dstCoordScaleName);
 
       fragBuilder->codeAppend("// Read color from copy of the destination.\n");
       fragBuilder->codeAppendf(

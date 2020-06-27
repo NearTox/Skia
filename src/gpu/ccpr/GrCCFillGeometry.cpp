@@ -50,19 +50,19 @@ inline void GrCCFillGeometry::appendLine(const Sk2f& p0, const Sk2f& p1) {
   fVerbs.push_back(Verb::kLineTo);
 }
 
-static inline Sk2f normalize(const Sk2f& n) {
+static inline Sk2f normalize(const Sk2f& n) noexcept {
   Sk2f nn = n * n;
   return n * (nn + SkNx_shuffle<1, 0>(nn)).rsqrt();
 }
 
-static inline float dot(const Sk2f& a, const Sk2f& b) {
+static inline float dot(const Sk2f& a, const Sk2f& b) noexcept {
   float product[2];
   (a * b).store(product);
   return product[0] + product[1];
 }
 
 static inline bool are_collinear(
-    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, float tolerance = kFlatnessThreshold) {
+    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, float tolerance = kFlatnessThreshold) noexcept {
   Sk2f l = p2 - p0;  // Line from p0 -> p2.
 
   // lwidth = Manhattan width of l.
@@ -130,7 +130,7 @@ static inline bool is_convex_curve_monotonic(
 
 template <int N>
 static inline SkNx<N, float> lerp(
-    const SkNx<N, float>& a, const SkNx<N, float>& b, const SkNx<N, float>& t) {
+    const SkNx<N, float>& a, const SkNx<N, float>& b, const SkNx<N, float>& t) noexcept {
   return SkNx_fma(t, b - a, a);
 }
 

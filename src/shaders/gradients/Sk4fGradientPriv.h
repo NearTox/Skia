@@ -26,12 +26,12 @@ struct PremulTraits;
 
 template <>
 struct PremulTraits<ApplyPremul::False> {
-  static Sk4f apply(const Sk4f& c) { return c; }
+  static Sk4f apply(const Sk4f& c) noexcept { return c; }
 };
 
 template <>
 struct PremulTraits<ApplyPremul::True> {
-  static Sk4f apply(const Sk4f& c) {
+  static Sk4f apply(const Sk4f& c) noexcept {
     const float alpha = c[3];
     // FIXME: portable swizzle?
     return c * Sk4f(alpha, alpha, alpha, 1);

@@ -24,10 +24,10 @@ struct FunctionDeclaration;
  */
 class SymbolTable {
  public:
-  SymbolTable(ErrorReporter* errorReporter) : fErrorReporter(*errorReporter) {}
+  SymbolTable(ErrorReporter* errorReporter) noexcept : fErrorReporter(*errorReporter) {}
 
-  SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter)
-      : fParent(parent), fErrorReporter(*errorReporter) {}
+  SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter) noexcept
+      : fParent(std::move(parent)), fErrorReporter(*errorReporter) {}
 
   const Symbol* operator[](StringFragment name);
 
@@ -41,9 +41,9 @@ class SymbolTable {
 
   void markAllFunctionsBuiltin();
 
-  std::unordered_map<StringFragment, const Symbol*>::iterator begin();
+  std::unordered_map<StringFragment, const Symbol*>::iterator begin() noexcept;
 
-  std::unordered_map<StringFragment, const Symbol*>::iterator end();
+  std::unordered_map<StringFragment, const Symbol*>::iterator end() noexcept;
 
   const std::shared_ptr<SymbolTable> fParent;
 

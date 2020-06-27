@@ -37,9 +37,23 @@ class SkRRectPriv {
   static bool AllCornersCircular(
       const SkRRect& rr, SkScalar tolerance = SK_ScalarNearlyZero) noexcept;
 
-  static bool ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr);
+  static bool ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr) noexcept;
 
-  static void WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer);
+  static void WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer) noexcept;
+
+  // Compute an approximate largest inscribed bounding box of the rounded rect. For empty,
+  // rect, oval, and simple types this will be the largest inscribed rectangle. Otherwise it may
+  // not be the global maximum, but will be non-empty, touch at least one edge and be contained
+  // in the round rect.
+  static SkRect InnerBounds(const SkRRect& rr) noexcept;
+
+  // Attempt to compute the intersection of two round rects. The intersection is not necessarily
+  // a round rect. This returns intersections only when the shape is representable as a new
+  // round rect (or rect). Empty is returned if 'a' and 'b' do not intersect or if the
+  // intersection is too complicated. This is conservative, it may not always detect that an
+  // intersection could be represented as a round rect. However, when it does return a round rect
+  // that intersection will be exact (i.e. it is NOT just a subset of the actual intersection).
+  static SkRRect ConservativeIntersect(const SkRRect& a, const SkRRect& b) noexcept;
 };
 
 #endif

@@ -94,8 +94,9 @@ void Draw::draw(const DrawBehind& r) {
   SkCanvasPriv::DrawBehind(fCanvas, r.paint);
 }
 
+DRAW(MarkCTM, markCTM(r.name.c_str()));
 DRAW(SetMatrix, setMatrix(SkMatrix::Concat(fInitialCTM, r.matrix)));
-DRAW(Concat44, concat44(r.matrix));
+DRAW(Concat44, concat(r.matrix));
 DRAW(Concat, concat(r.matrix));
 DRAW(Translate, translate(r.dx, r.dy));
 DRAW(Scale, scale(r.sx, r.sy));
@@ -184,7 +185,7 @@ class FillBounds : SkNoncopyable {
  public:
   FillBounds(
       const SkRect& cullRect, const SkRecord& record, SkRect bounds[],
-      SkBBoxHierarchy::Metadata meta[])
+      SkBBoxHierarchy::Metadata meta[]) noexcept
       : fCullRect(cullRect), fBounds(bounds), fMeta(meta) {
     fCTM = SkMatrix::I();
 
@@ -205,7 +206,7 @@ class FillBounds : SkNoncopyable {
     }
   }
 
-  void setCurrentOp(int currentOp) { fCurrentOp = currentOp; }
+  void setCurrentOp(int currentOp) noexcept { fCurrentOp = currentOp; }
 
   template <typename T>
   void operator()(const T& op) {
@@ -254,35 +255,36 @@ class FillBounds : SkNoncopyable {
 
   // Only Restore, SetMatrix, Concat, and Translate change the CTM.
   template <typename T>
-  void updateCTM(const T&) {}
-  void updateCTM(const Restore& op) { fCTM = op.matrix; }
-  void updateCTM(const SetMatrix& op) { fCTM = op.matrix; }
-  void updateCTM(const Concat44& op) { fCTM.preConcat(op.matrix.asM33()); }
-  void updateCTM(const Concat& op) { fCTM.preConcat(op.matrix); }
-  void updateCTM(const Scale& op) { fCTM.preScale(op.sx, op.sy); }
-  void updateCTM(const Translate& op) { fCTM.preTranslate(op.dx, op.dy); }
+  void updateCTM(const T&) noexcept {}
+  void updateCTM(const Restore& op) noexcept { fCTM = op.matrix; }
+  void updateCTM(const SetMatrix& op) noexcept { fCTM = op.matrix; }
+  void updateCTM(const Concat44& op) noexcept { fCTM.preConcat(op.matrix.asM33()); }
+  void updateCTM(const Concat& op) noexcept { fCTM.preConcat(op.matrix); }
+  void updateCTM(const Scale& op) noexcept { fCTM.preScale(op.sx, op.sy); }
+  void updateCTM(const Translate& op) noexcept { fCTM.preTranslate(op.dx, op.dy); }
 
   // The bounds of these ops must be calculated when we hit the Restore
   // from the bounds of the ops in the same Save block.
-  void trackBounds(const Save&) { this->pushSaveBlock(nullptr); }
-  void trackBounds(const SaveLayer& op) { this->pushSaveBlock(op.paint); }
-  void trackBounds(const SaveBehind&) { this->pushSaveBlock(nullptr); }
-  void trackBounds(const Restore&) {
+  void trackBounds(const Save&) noexcept { this->pushSaveBlock(nullptr); }
+  void trackBounds(const SaveLayer& op) noexcept { this->pushSaveBlock(op.paint); }
+  void trackBounds(const SaveBehind&) noexcept { this->pushSaveBlock(nullptr); }
+  void trackBounds(const Restore&) noexcept {
     const bool isSaveLayer = fSaveStack.top().paint != nullptr;
     fBounds[fCurrentOp] = this->popSaveBlock();
     fMeta[fCurrentOp].isDraw = isSaveLayer;
   }
 
-  void trackBounds(const SetMatrix&) { this->pushControl(); }
-  void trackBounds(const Concat&) { this->pushControl(); }
-  void trackBounds(const Concat44&) { this->pushControl(); }
-  void trackBounds(const Scale&) { this->pushControl(); }
-  void trackBounds(const Translate&) { this->pushControl(); }
-  void trackBounds(const ClipRect&) { this->pushControl(); }
-  void trackBounds(const ClipRRect&) { this->pushControl(); }
-  void trackBounds(const ClipPath&) { this->pushControl(); }
-  void trackBounds(const ClipRegion&) { this->pushControl(); }
-  void trackBounds(const ClipShader&) { this->pushControl(); }
+  void trackBounds(const MarkCTM&) noexcept { this->pushControl(); }
+  void trackBounds(const SetMatrix&) noexcept { this->pushControl(); }
+  void trackBounds(const Concat&) noexcept { this->pushControl(); }
+  void trackBounds(const Concat44&) noexcept { this->pushControl(); }
+  void trackBounds(const Scale&) noexcept { this->pushControl(); }
+  void trackBounds(const Translate&) noexcept { this->pushControl(); }
+  void trackBounds(const ClipRect&) noexcept { this->pushControl(); }
+  void trackBounds(const ClipRRect&) noexcept { this->pushControl(); }
+  void trackBounds(const ClipPath&) noexcept { this->pushControl(); }
+  void trackBounds(const ClipRegion&) noexcept { this->pushControl(); }
+  void trackBounds(const ClipShader&) noexcept { this->pushControl(); }
 
   // For all other ops, we can calculate and store the bounds directly now.
   template <typename T>
@@ -292,7 +294,7 @@ class FillBounds : SkNoncopyable {
     this->updateSaveBounds(fBounds[fCurrentOp]);
   }
 
-  void pushSaveBlock(const SkPaint* paint) {
+  void pushSaveBlock(const SkPaint* paint) noexcept {
     // Starting a new Save block.  Push a new entry to represent that.
     SaveBounds sb;
     sb.controlOps = 0;
@@ -306,7 +308,7 @@ class FillBounds : SkNoncopyable {
     this->pushControl();
   }
 
-  static bool PaintMayAffectTransparentBlack(const SkPaint* paint) {
+  static bool PaintMayAffectTransparentBlack(const SkPaint* paint) noexcept {
     if (paint) {
       // FIXME: this is very conservative
       if (paint->getImageFilter() || paint->getColorFilter()) {
@@ -336,7 +338,7 @@ class FillBounds : SkNoncopyable {
     return false;
   }
 
-  Bounds popSaveBlock() {
+  Bounds popSaveBlock() noexcept {
     // We're done the Save block.  Apply the block's bounds to all control ops inside it.
     SaveBounds sb;
     fSaveStack.pop(&sb);
@@ -352,31 +354,31 @@ class FillBounds : SkNoncopyable {
     return sb.bounds;
   }
 
-  void pushControl() {
+  void pushControl() noexcept {
     fControlIndices.push_back(fCurrentOp);
     if (!fSaveStack.isEmpty()) {
       fSaveStack.top().controlOps++;
     }
   }
 
-  void popControl(const Bounds& bounds) {
+  void popControl(const Bounds& bounds) noexcept {
     fBounds[fControlIndices.top()] = bounds;
     fMeta[fControlIndices.top()].isDraw = false;
     fControlIndices.pop();
   }
 
-  void updateSaveBounds(const Bounds& bounds) {
+  void updateSaveBounds(const Bounds& bounds) noexcept {
     // If we're in a Save block, expand its bounds to cover these bounds too.
     if (!fSaveStack.isEmpty()) {
       fSaveStack.top().bounds.join(bounds);
     }
   }
 
-  Bounds bounds(const Flush&) const { return fCullRect; }
+  Bounds bounds(const Flush&) const noexcept { return fCullRect; }
 
-  Bounds bounds(const DrawPaint&) const { return fCullRect; }
-  Bounds bounds(const DrawBehind&) const { return fCullRect; }
-  Bounds bounds(const NoOp&) const { return Bounds::MakeEmpty(); }  // NoOps don't draw.
+  Bounds bounds(const DrawPaint&) const noexcept { return fCullRect; }
+  Bounds bounds(const DrawBehind&) const noexcept { return fCullRect; }
+  Bounds bounds(const NoOp&) const noexcept { return Bounds::MakeEmpty(); }  // NoOps don't draw.
 
   Bounds bounds(const DrawRect& op) const { return this->adjustAndMap(op.rect, &op.paint); }
   Bounds bounds(const DrawRegion& op) const {

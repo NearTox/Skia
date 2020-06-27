@@ -48,7 +48,7 @@ class SK_API SkLumaColorFilter : public SkColorFilter {
  private:
   SK_FLATTENABLE_HOOKS(SkLumaColorFilter)
 
-  SkLumaColorFilter();
+  SkLumaColorFilter() noexcept;
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
   skvm::Color onProgram(
       skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*,

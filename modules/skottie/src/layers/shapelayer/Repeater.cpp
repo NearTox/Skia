@@ -94,7 +94,7 @@ std::vector<sk_sp<sksg::RenderNode>> ShapeBuilder::AttachRepeaterDrawEffect(
     auto repeater_root = abuilder->attachDiscardableAdapter<RepeaterAdapter>(
         jrepeater, *jtransform, *abuilder, std::move(repeater_node));
     repeater_draws.reserve(1);
-    repeater_draws.push_back(std::move(repeater_root));
+    repeater_draws.emplace_back(std::move(repeater_root));
   } else {
     repeater_draws = std::move(draws);
   }

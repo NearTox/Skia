@@ -41,7 +41,7 @@ class GrGLSLVarying {
     SkASSERT(!is_matrix(type));
   }
 
-  void reset(GrSLType type, Scope scope = Scope::kVertToFrag) {
+  void reset(GrSLType type, Scope scope = Scope::kVertToFrag) noexcept {
     // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
     SkASSERT(!is_matrix(type));
     *this = GrGLSLVarying();
@@ -91,7 +91,7 @@ class GrGLSLVaryingHandler {
         fProgramBuilder(program),
         fDefaultInterpolationModifier(nullptr) {}
 
-  virtual ~GrGLSLVaryingHandler() {}
+  virtual ~GrGLSLVaryingHandler() = default;
 
   /*
    * Notifies the varying handler that this shader will never emit geometry in perspective and

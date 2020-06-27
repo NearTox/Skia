@@ -62,6 +62,7 @@ SkScalar Run::calculateWidth(size_t start, size_t end, bool clip) const {
   }
   auto correction = 0.0f;
   if (end > start && !fJustificationShifts.empty()) {
+    // This is not a typo: we are using Point as a pair of SkScalars
     correction = fJustificationShifts[end - 1].fX - fJustificationShifts[start].fY;
   }
   return posX(end) - posX(start) + shift + correction;
@@ -118,7 +119,7 @@ std::tuple<bool, ClusterIndex, ClusterIndex> Run::findLimitingClusters(
       }
     }
   } else {
-    // TODO: Do we need to use this branch?..
+    // We need this branch when we draw styles for the part of a cluster
     for (auto i = fClusterRange.start; i != fClusterRange.end; ++i) {
       auto& cluster = fMaster->cluster(i);
       if (cluster.textRange().end > text.start && start == nullptr) {
@@ -146,7 +147,7 @@ std::tuple<bool, ClusterIndex, ClusterIndex> Run::findLimitingClusters(
       startIndex != fClusterRange.end && endIndex != fClusterRange.end, startIndex, endIndex);
 }
 
-void Run::iterateThroughClustersInTextOrder(const ClusterVisitor& visitor) {
+void Run::iterateThroughClustersInTextOrder(const ClusterTextVisitor& visitor) {
   // Can't figure out how to do it with one code for both cases without 100 ifs
   // Can't go through clusters because there are no cluster table yet
   if (leftToRight()) {
@@ -160,7 +161,8 @@ void Run::iterateThroughClustersInTextOrder(const ClusterVisitor& visitor) {
 
       visitor(
           start, glyph, fClusterStart + cluster, fClusterStart + nextCluster,
-          this->calculateWidth(start, glyph, glyph == size()), this->calculateHeight());
+          this->calculateWidth(start, glyph, glyph == size()),
+          this->calculateHeight(LineMetricStyle::CSS, LineMetricStyle::CSS));
 
       start = glyph;
       cluster = nextCluster;
@@ -176,11 +178,20 @@ void Run::iterateThroughClustersInTextOrder(const ClusterVisitor& visitor) {
 
       visitor(
           start, glyph, fClusterStart + cluster, fClusterStart + nextCluster,
-          this->calculateWidth(start, glyph, glyph == 0), this->calculateHeight());
+          this->calculateWidth(start, glyph, glyph == 0),
+          this->calculateHeight(LineMetricStyle::CSS, LineMetricStyle::CSS));
 
       glyph = start;
       cluster = nextCluster;
     }
+  }
+}
+
+void Run::iterateThroughClusters(const ClusterVisitor& visitor) {
+  for (size_t index = 0; index < fClusterRange.width(); ++index) {
+    auto correctIndex = leftToRight() ? fClusterRange.start + index : fClusterRange.end - index - 1;
+    auto cluster = &fMaster->cluster(correctIndex);
+    visitor(cluster);
   }
 }
 

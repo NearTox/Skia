@@ -42,7 +42,7 @@ class SkPathPriv {
    *  opposite.
    */
   static FirstDirection OppositeFirstDirection(FirstDirection dir) noexcept {
-    static const FirstDirection gOppositeDir[] = {
+    static constexpr FirstDirection gOppositeDir[] = {
         kCCW_FirstDirection,
         kCW_FirstDirection,
         kUnknown_FirstDirection,
@@ -105,7 +105,7 @@ class SkPathPriv {
    * optional. This does not permit degenerate line or point rectangles.
    */
   static bool IsSimpleClosedRect(
-      const SkPath& path, SkRect* rect, SkPathDirection* direction, unsigned* start) noexcept;
+      const SkPath& path, SkRect* rect, SkPathDirection* direction, unsigned* start);
 
   /**
    * Creates a path from arc params using the semantics of SkCanvas::drawArc. This function
@@ -145,6 +145,43 @@ class SkPathPriv {
     Verbs(const Verbs&) = delete;
     Verbs& operator=(const Verbs&) = delete;
     SkPathRef* fPathRef;
+  };
+
+  /**
+   * Iterates through a raw range of path verbs, points, and conics. All values are returned
+   * unaltered.
+   *
+   * NOTE: This class's definition will be moved into SkPathPriv once RangeIter is removed.
+   */
+  using RangeIter = SkPath::RangeIter;
+
+  /**
+   * Iterable object for traversing verbs, points, and conic weights in a path:
+   *
+   *   for (auto [verb, pts, weights] : SkPathPriv::Iterate(skPath)) {
+   *       ...
+   *   }
+   */
+  struct Iterate {
+   public:
+    Iterate(const SkPath& path) noexcept
+        : Iterate(
+              path.fPathRef->verbsBegin(),
+              // Don't allow iteration through non-finite points.
+              (!path.isFinite()) ? path.fPathRef->verbsBegin() : path.fPathRef->verbsEnd(),
+              path.fPathRef->points(), path.fPathRef->conicWeights()) {}
+    Iterate(
+        const uint8_t* verbsBegin, const uint8_t* verbsEnd, const SkPoint* points,
+        const SkScalar* weights) noexcept
+        : fVerbsBegin(verbsBegin), fVerbsEnd(verbsEnd), fPoints(points), fWeights(weights) {}
+    SkPath::RangeIter begin() noexcept { return {fVerbsBegin, fPoints, fWeights}; }
+    SkPath::RangeIter end() noexcept { return {fVerbsEnd, nullptr, nullptr}; }
+
+   private:
+    const uint8_t* fVerbsBegin;
+    const uint8_t* fVerbsEnd;
+    const SkPoint* fPoints;
+    const SkScalar* fWeights;
   };
 
   /**
@@ -223,7 +260,8 @@ class SkPathPriv {
    @param start  storage for start of SkRRect; may be nullptr
    @return       true if SkPath contains only SkRRect
    */
-  static bool IsRRect(const SkPath& path, SkRRect* rrect, SkPathDirection* dir, unsigned* start) {
+  static bool IsRRect(
+      const SkPath& path, SkRRect* rrect, SkPathDirection* dir, unsigned* start) noexcept {
     bool isCCW = false;
     bool result = path.fPathRef->isRRect(rrect, &isCCW, start);
     if (dir && result) {
@@ -255,7 +293,7 @@ class SkPathPriv {
 
   // Returns number of valid points for each SkPath::Iter verb
   static int PtsInIter(unsigned verb) noexcept {
-    static const uint8_t gPtsInVerb[] = {
+    static constexpr uint8_t gPtsInVerb[] = {
         1,  // kMove    pts[0]
         2,  // kLine    pts[0..1]
         3,  // kQuad    pts[0..2]
@@ -332,6 +370,13 @@ class SkPathPriv {
    * at some point during the execution of the function.
    */
   static int GenIDChangeListenersCount(const SkPath&);
+
+  static void UpdatePathPoint(SkPath* path, int index, const SkPoint& pt) {
+    SkASSERT(index < path->countPoints());
+    SkPathRef::Editor ed(&path->fPathRef);
+    ed.writablePoints()[index] = pt;
+    path->dirtyAfterEdit();
+  }
 };
 
 // Lightweight variant of SkPath::Iter that only returns segments (e.g. lines/conics).
@@ -426,131 +471,6 @@ class SkPathEdgeIter {
         }
       }
     }
-  }
-};
-
-// Parses out each contour in a path. Example usage:
-//
-//   SkTPathContourParser parser;
-//   while (parser.parseNextContour()) {
-//       for (int i = 0; i < parser.countVerbs(); ++i) {
-//           switch (parser.atVerb(i)) {
-//               ...
-//           }
-//       }
-//   }
-//
-// TSubclass must inherit from "SkTPathContourParser<TSubclass>", and must contain two methods:
-//
-//      // Called on each implicit or explicit moveTo.
-//      void resetGeometry(const SkPoint& startPoint);
-//
-//      // Called on each lineTo, quadTo, conicTo, and cubicTo.
-//      void geometryTo(SkPathVerb, const SkPoint& endpoint);
-//
-// If no special tracking of endpoints is required, then use SkPathContourParser below.
-template <typename TSubclass>
-class SkTPathContourParser {
- public:
-  SkTPathContourParser(const SkPath& path) noexcept
-      : fPath(path),
-        fVerbs(SkPathPriv::VerbData(fPath)),
-        fNumRemainingVerbs(fPath.countVerbs()),
-        fPoints(SkPathPriv::PointData(fPath)) {}
-
-  // Returns the number of verbs in the current contour, plus 1 so we can inject kDone at the end.
-  int countVerbs() const noexcept { return fVerbsIdx + 1; }
-
-  // Returns the ith non-move verb in the current contour.
-  SkPathVerb atVerb(int i) const {
-    SkASSERT(i >= 0 && i <= fVerbsIdx);
-    SkPathVerb verb = (i < fVerbsIdx) ? (SkPathVerb)fVerbs[i] : SkPathVerb::kDone;
-    SkASSERT(SkPathVerb::kMove != verb);
-    return verb;
-  }
-
-  // Returns the current contour's starting point.
-  SkPoint startPoint() const noexcept { return fStartPoint; }
-
-  // Returns the ith point in the current contour, not including the start point. (i.e., index 0
-  // is the first point immediately following the start point from the path's point array.)
-  const SkPoint& atPoint(int i) const {
-    SkASSERT(i >= 0 && i < fPtsIdx);
-    return fPoints[i];
-  }
-
-  // Advances the internal state to the next contour in the path. Returns false if there are no
-  // more contours.
-  //
-  //   SkTPathContourParser parser;
-  //   while (parser.parseNextContour()) {
-  //       ...
-  //   }
-  bool parseNextContour() {
-    this->advance();
-    fStartPoint = {0, 0};
-    static_cast<TSubclass*>(this)->resetGeometry(fStartPoint);
-
-    bool hasGeometry = false;
-
-    while (fVerbsIdx < fNumRemainingVerbs) {
-      switch (uint8_t verb = fVerbs[fVerbsIdx]) {
-        case SkPath::kMove_Verb:
-          if (!hasGeometry) {
-            fStartPoint = fPoints[fPtsIdx];
-            static_cast<TSubclass*>(this)->resetGeometry(fStartPoint);
-            ++fVerbsIdx;
-            ++fPtsIdx;
-            this->advance();
-            continue;
-          }
-          return true;
-
-          static_assert(SkPath::kLine_Verb == 1);
-        case 1: static_assert(SkPath::kQuad_Verb == 2);
-        case 2: static_assert(SkPath::kConic_Verb == 3);
-        case 3: static_assert(SkPath::kCubic_Verb == 4);
-        case 4:
-          static constexpr int kPtsAdvance[] = {0, 1, 2, 2, 3};
-          fPtsIdx += kPtsAdvance[verb];
-          static_cast<TSubclass*>(this)->geometryTo((SkPathVerb)verb, fPoints[fPtsIdx - 1]);
-          hasGeometry = true;
-          break;
-      }
-      ++fVerbsIdx;
-    }
-
-    return hasGeometry;
-  }
-
- private:
-  void advance() noexcept {
-    fVerbs += fVerbsIdx;
-    fNumRemainingVerbs -= fVerbsIdx;
-    fVerbsIdx = 0;
-    fPoints += fPtsIdx;
-    fPtsIdx = 0;
-  }
-
-  const SkPath& fPath;
-
-  const uint8_t* fVerbs;
-  int fNumRemainingVerbs = 0;
-  int fVerbsIdx = 0;
-
-  const SkPoint* fPoints;
-  SkPoint fStartPoint;
-  int fPtsIdx = 0;
-};
-
-class SkPathContourParser : public SkTPathContourParser<SkPathContourParser> {
- public:
-  SkPathContourParser(const SkPath& path) noexcept : SkTPathContourParser(path) {}
-  // Called on each implicit or explicit moveTo.
-  void resetGeometry(const SkPoint& startPoint) noexcept { /* No-op */
-  }
-  // Called on each lineTo, quadTo, conicTo, and cubicTo.
-  void geometryTo(SkPathVerb, const SkPoint& endpoint) noexcept { /* No-op */
   }
 };
 

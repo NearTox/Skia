@@ -27,7 +27,7 @@ GrContext_Base::GrContext_Base(
       fOptions(options),
       fContextID(SK_InvalidGenID == contextID ? next_id() : contextID) {}
 
-GrContext_Base::~GrContext_Base() = default;
+GrContext_Base::~GrContext_Base() {}
 
 bool GrContext_Base::init(sk_sp<const GrCaps> caps) {
   SkASSERT(caps);

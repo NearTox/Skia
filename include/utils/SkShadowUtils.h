@@ -50,7 +50,8 @@ class SK_API SkShadowUtils {
    * @param outSpotColor  Modified spot color
    */
   static void ComputeTonalColors(
-      SkColor inAmbientColor, SkColor inSpotColor, SkColor* outAmbientColor, SkColor* outSpotColor);
+      SkColor inAmbientColor, SkColor inSpotColor, SkColor* outAmbientColor,
+      SkColor* outSpotColor) noexcept;
 };
 
 #endif

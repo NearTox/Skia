@@ -19,7 +19,7 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
    * Computes a scratch key for a GPU-side buffer with a "dynamic" access pattern. (Buffers with
    * "static" and "stream" patterns are disqualified by nature from being cached and reused.)
    */
-  static void ComputeScratchKeyForDynamicVBO(size_t size, GrGpuBufferType, GrScratchKey*);
+  static void ComputeScratchKeyForDynamicVBO(size_t size, GrGpuBufferType, GrScratchKey*) noexcept;
 
   GrAccessPattern accessPattern() const noexcept { return fAccessPattern; }
 
@@ -81,7 +81,7 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
   bool updateData(const void* src, size_t srcSizeInBytes);
 
  protected:
-  GrGpuBuffer(GrGpu*, size_t sizeInBytes, GrGpuBufferType, GrAccessPattern);
+  GrGpuBuffer(GrGpu*, size_t sizeInBytes, GrGpuBufferType, GrAccessPattern) noexcept;
   GrGpuBufferType intendedType() const noexcept { return fIntendedType; }
 
   void* fMapPtr;

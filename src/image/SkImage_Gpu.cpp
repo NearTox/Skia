@@ -328,13 +328,26 @@ sk_sp<SkImage> SkImage::MakeFromYUVATexturesCopyWithExternalBackend(
       renderTargetContext.get());
 }
 
+// Some YUVA factories infer the YUVAIndices. This helper identifies the channel to use for single
+// channel textures.
+static SkColorChannel get_single_channel(const GrBackendTexture& tex) {
+  switch (tex.getBackendFormat().channelMask()) {
+    case kGray_SkColorChannelFlag:  // Gray can be read as any of kR, kG, kB.
+    case kRed_SkColorChannelFlag: return SkColorChannel::kR;
+    case kAlpha_SkColorChannelFlag: return SkColorChannel::kA;
+    default:  // multiple channels in the texture. Guess kR.
+      return SkColorChannel::kR;
+  }
+}
+
 sk_sp<SkImage> SkImage::MakeFromYUVTexturesCopy(
     GrContext* ctx, SkYUVColorSpace yuvColorSpace, const GrBackendTexture yuvTextures[3],
     GrSurfaceOrigin imageOrigin, sk_sp<SkColorSpace> imageColorSpace) {
   // TODO: SkImageSourceChannel input is being ingored right now. Setup correctly in the future.
   SkYUVAIndex yuvaIndices[4] = {
-      SkYUVAIndex{0, SkColorChannel::kR}, SkYUVAIndex{1, SkColorChannel::kR},
-      SkYUVAIndex{2, SkColorChannel::kR}, SkYUVAIndex{-1, SkColorChannel::kA}};
+      SkYUVAIndex{0, get_single_channel(yuvTextures[0])},
+      SkYUVAIndex{1, get_single_channel(yuvTextures[1])},
+      SkYUVAIndex{2, get_single_channel(yuvTextures[2])}, SkYUVAIndex{-1, SkColorChannel::kA}};
   SkISize size{yuvTextures[0].width(), yuvTextures[0].height()};
   return SkImage_Gpu::MakeFromYUVATexturesCopy(
       ctx, yuvColorSpace, yuvTextures, yuvaIndices, size, imageOrigin, std::move(imageColorSpace));
@@ -345,8 +358,9 @@ sk_sp<SkImage> SkImage::MakeFromYUVTexturesCopyWithExternalBackend(
     GrSurfaceOrigin imageOrigin, const GrBackendTexture& backendTexture,
     sk_sp<SkColorSpace> imageColorSpace) {
   SkYUVAIndex yuvaIndices[4] = {
-      SkYUVAIndex{0, SkColorChannel::kR}, SkYUVAIndex{1, SkColorChannel::kR},
-      SkYUVAIndex{2, SkColorChannel::kR}, SkYUVAIndex{-1, SkColorChannel::kA}};
+      SkYUVAIndex{0, get_single_channel(yuvTextures[0])},
+      SkYUVAIndex{1, get_single_channel(yuvTextures[1])},
+      SkYUVAIndex{2, get_single_channel(yuvTextures[2])}, SkYUVAIndex{-1, SkColorChannel::kA}};
   SkISize size{yuvTextures[0].width(), yuvTextures[0].height()};
   return SkImage_Gpu::MakeFromYUVATexturesCopyWithExternalBackend(
       ctx, yuvColorSpace, yuvTextures, yuvaIndices, size, imageOrigin, backendTexture,
@@ -358,7 +372,7 @@ sk_sp<SkImage> SkImage::MakeFromNV12TexturesCopy(
     GrSurfaceOrigin imageOrigin, sk_sp<SkColorSpace> imageColorSpace) {
   // TODO: SkImageSourceChannel input is being ingored right now. Setup correctly in the future.
   SkYUVAIndex yuvaIndices[4] = {
-      SkYUVAIndex{0, SkColorChannel::kR}, SkYUVAIndex{1, SkColorChannel::kR},
+      SkYUVAIndex{0, get_single_channel(nv12Textures[0])}, SkYUVAIndex{1, SkColorChannel::kR},
       SkYUVAIndex{1, SkColorChannel::kG}, SkYUVAIndex{-1, SkColorChannel::kA}};
   SkISize size{nv12Textures[0].width(), nv12Textures[0].height()};
   return SkImage_Gpu::MakeFromYUVATexturesCopy(
@@ -371,7 +385,7 @@ sk_sp<SkImage> SkImage::MakeFromNV12TexturesCopyWithExternalBackend(
     sk_sp<SkColorSpace> imageColorSpace, TextureReleaseProc textureReleaseProc,
     ReleaseContext releaseContext) {
   SkYUVAIndex yuvaIndices[4] = {
-      SkYUVAIndex{0, SkColorChannel::kR}, SkYUVAIndex{1, SkColorChannel::kR},
+      SkYUVAIndex{0, get_single_channel(nv12Textures[0])}, SkYUVAIndex{1, SkColorChannel::kR},
       SkYUVAIndex{1, SkColorChannel::kG}, SkYUVAIndex{-1, SkColorChannel::kA}};
   SkISize size{nv12Textures[0].width(), nv12Textures[0].height()};
   return SkImage_Gpu::MakeFromYUVATexturesCopyWithExternalBackend(
@@ -409,14 +423,12 @@ sk_sp<SkImage> SkImage::makeTextureImage(
         !context->priv().caps()->mipMapSupport()) {
       return sk_ref_sp(const_cast<SkImage*>(this));
     }
-    auto copy = GrCopyBaseMipMapToTextureProxy(
-        context->priv().asRecordingContext(), view->proxy(), view->origin(),
-        SkColorTypeToGrColorType(this->colorType()), budgeted);
+    auto copy = GrCopyBaseMipMapToView(context->priv().asRecordingContext(), *view, budgeted);
     if (!copy) {
       return nullptr;
     }
     return sk_make_sp<SkImage_Gpu>(
-        sk_ref_sp(context), this->uniqueID(), std::move(copy), this->colorType(), this->alphaType(),
+        sk_ref_sp(context), this->uniqueID(), copy, this->colorType(), this->alphaType(),
         this->refColorSpace());
   }
 
@@ -471,8 +483,8 @@ sk_sp<SkImage> SkImage_Gpu::MakePromiseTexture(
 
   callDone.clear();
   auto proxy = MakePromiseImageLazyProxy(
-      context, width, height, grColorType, backendFormat, mipMapped, textureFulfillProc,
-      textureReleaseProc, textureDoneProc, textureContext, version);
+      context, width, height, backendFormat, mipMapped, textureFulfillProc, textureReleaseProc,
+      textureDoneProc, textureContext, version);
   if (!proxy) {
     return nullptr;
   }

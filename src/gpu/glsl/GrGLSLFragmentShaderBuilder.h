@@ -23,7 +23,7 @@ class GrGLSLVarying;
 class GrGLSLFragmentBuilder : public GrGLSLShaderBuilder {
  public:
   GrGLSLFragmentBuilder(GrGLSLProgramBuilder* program) : INHERITED(program) {}
-  virtual ~GrGLSLFragmentBuilder() {}
+  virtual ~GrGLSLFragmentBuilder() = default;
 
   /**
    * This returns a variable name to access the 2D, perspective correct version of the coords in
@@ -31,7 +31,7 @@ class GrGLSLFragmentBuilder : public GrGLSLShaderBuilder {
    * the coordinates are 3-dimensional, it a perspective divide into is emitted into the
    * fragment shader (xy / z) to convert them to 2D.
    */
-  virtual SkString ensureCoords2D(const GrShaderVar&) = 0;
+  virtual SkString ensureCoords2D(const GrShaderVar&, const SkSL::SampleMatrix& matrix) = 0;
 
   // TODO: remove this method.
   void declAppendf(const char* fmt, ...);
@@ -94,21 +94,19 @@ class GrGLSLFPFragmentBuilder : virtual public GrGLSLFragmentBuilder {
    */
   virtual void applyFnToMultisampleMask(const char* fn, const char* grad, ScopeFlags) = 0;
 
-  /**
-   * Fragment procs with child procs should call these functions before/after calling emitCode
-   * on a child proc.
-   */
-  virtual void onBeforeChildProcEmitCode() = 0;
-  virtual void onAfterChildProcEmitCode() = 0;
-
-  virtual SkString writeProcessorFunction(
-      GrGLSLFragmentProcessor* fp, GrGLSLFragmentProcessor::EmitArgs& args);
-
-  virtual const SkString& getMangleString() const = 0;
+  SkString writeProcessorFunction(GrGLSLFragmentProcessor*, GrGLSLFragmentProcessor::EmitArgs&);
 
   virtual void forceHighPrecision() = 0;
 
  private:
+  /**
+   * These are called before/after calling emitCode on a child proc to update mangling.
+   */
+  virtual void onBeforeChildProcEmitCode() = 0;
+  virtual void onAfterChildProcEmitCode() = 0;
+
+  virtual const SkString& getMangleString() const = 0;
+
   // WARNING: LIke GrRenderTargetProxy, changes to this can cause issues in ASAN. This is caused
   // by GrGLSLProgramBuilder's GrTAllocators requiring 16 byte alignment, but since
   // GrGLSLFragmentShaderBuilder has a virtual diamond hierarchy, ASAN requires all this pointers
@@ -129,7 +127,7 @@ class GrGLSLXPFragmentBuilder : virtual public GrGLSLFragmentBuilder {
   GrGLSLXPFragmentBuilder() : GrGLSLFragmentBuilder(nullptr) {}
 
   virtual bool hasCustomColorOutput() const = 0;
-  virtual bool hasSecondaryOutput() const = 0;
+  virtual bool hasSecondaryOutput() const noexcept = 0;
 
   /** Returns the variable name that holds the color of the destination pixel. This may be nullptr
    * if no effect advertised that it will read the destination. */
@@ -153,25 +151,27 @@ class GrGLSLFragmentShaderBuilder : public GrGLSLFPFragmentBuilder, public GrGLS
   GrGLSLFragmentShaderBuilder(GrGLSLProgramBuilder* program);
 
   // Shared GrGLSLFragmentBuilder interface.
-  virtual SkString ensureCoords2D(const GrShaderVar&) override;
+  virtual SkString ensureCoords2D(const GrShaderVar&, const SkSL::SampleMatrix& matrix) override;
 
   // GrGLSLFPFragmentBuilder interface.
   const char* sampleOffsets() override;
   void maskOffMultisampleCoverage(const char* mask, ScopeFlags) override;
   void applyFnToMultisampleMask(const char* fn, const char* grad, ScopeFlags) override;
-  const SkString& getMangleString() const override { return fMangleString; }
-  void onBeforeChildProcEmitCode() override;
-  void onAfterChildProcEmitCode() override;
   void forceHighPrecision() override { fForceHighPrecision = true; }
 
   // GrGLSLXPFragmentBuilder interface.
   bool hasCustomColorOutput() const override { return SkToBool(fCustomColorOutput); }
-  bool hasSecondaryOutput() const override { return fHasSecondaryOutput; }
+  bool hasSecondaryOutput() const noexcept override { return fHasSecondaryOutput; }
   const char* dstColor() override;
   void enableAdvancedBlendEquationIfNeeded(GrBlendEquation) override;
 
  private:
   using CustomFeatures = GrProcessor::CustomFeatures;
+
+  // GrGLSLFPFragmentBuilder private interface.
+  void onBeforeChildProcEmitCode() override;
+  void onAfterChildProcEmitCode() override;
+  const SkString& getMangleString() const override { return fMangleString; }
 
   // Private public interface, used by GrGLProgramBuilder to build a fragment shader
   void enableCustomOutput();

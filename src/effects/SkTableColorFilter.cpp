@@ -41,7 +41,7 @@ class SkTable_ColorFilter : public SkColorFilter {
  public:
   SkTable_ColorFilter(
       const uint8_t tableA[], const uint8_t tableR[], const uint8_t tableG[],
-      const uint8_t tableB[]) {
+      const uint8_t tableB[]) noexcept {
     fBitmap = nullptr;
     fFlags = 0;
 
@@ -270,7 +270,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   ~ColorTableEffect() override {}
 
-  const char* name() const override { return "ColorTableEffect"; }
+  const char* name() const noexcept override { return "ColorTableEffect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new ColorTableEffect(fTextureSampler.view()));
@@ -281,7 +281,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
 
   ColorTableEffect(GrSurfaceProxyView view)
       : INHERITED(
@@ -292,7 +292,7 @@ class ColorTableEffect : public GrFragmentProcessor {
     this->setTextureSamplerCnt(1);
   }
 
-  const TextureSampler& onTextureSampler(int) const override { return fTextureSampler; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
@@ -312,12 +312,12 @@ class GLColorTableEffect : public GrGLSLFragmentProcessor {
 };
 
 void GLColorTableEffect::emitCode(EmitArgs& args) {
-  static const float kColorScaleFactor = 255.0f / 256.0f;
-  static const float kColorOffsetFactor = 1.0f / 512.0f;
+  static constexpr float kColorScaleFactor = 255.0f / 256.0f;
+  static constexpr float kColorOffsetFactor = 1.0f / 512.0f;
   GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
   if (nullptr == args.fInputColor) {
     // the input color is solid white (all ones).
-    static const float kMaxValue = kColorScaleFactor + kColorOffsetFactor;
+    static constexpr float kMaxValue = kColorScaleFactor + kColorOffsetFactor;
     fragBuilder->codeAppendf(
         "\t\thalf4 coord = half4(%f, %f, %f, %f);\n", kMaxValue, kMaxValue, kMaxValue, kMaxValue);
 

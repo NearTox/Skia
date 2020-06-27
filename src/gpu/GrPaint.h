@@ -38,7 +38,7 @@ class GrXPFactory;
  */
 class GrPaint {
  public:
-  GrPaint() = default;
+  GrPaint() noexcept = default;
   ~GrPaint() = default;
 
   static GrPaint Clone(const GrPaint& src) { return GrPaint(src); }
@@ -61,7 +61,7 @@ class GrPaint {
   /**
    * Appends an additional color processor to the color computation.
    */
-  void addColorFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) {
+  void addColorFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
     SkASSERT(fp);
     fColorFragmentProcessors.push_back(std::move(fp));
     fTrivial = false;
@@ -70,7 +70,7 @@ class GrPaint {
   /**
    * Appends an additional coverage processor to the coverage computation.
    */
-  void addCoverageFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) {
+  void addCoverageFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
     SkASSERT(fp);
     fCoverageFragmentProcessors.push_back(std::move(fp));
     fTrivial = false;
@@ -120,7 +120,7 @@ class GrPaint {
   SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
-  SkDEBUGCODE(bool fAlive = true;)  // Set false after moved from.
+  SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.
 };
 
 #endif

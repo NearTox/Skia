@@ -67,7 +67,7 @@ static bool isLCD(const SkScalerContextRec& rec) {
   return SkMask::kLCD16_Format == rec.fMaskFormat;
 }
 
-static bool bothZero(SkScalar a, SkScalar b) noexcept { return 0 == a && 0 == b; }
+static bool bothZero(SkScalar a, SkScalar b) { return 0 == a && 0 == b; }
 
 // returns false if there is any non-90-rotation or skew
 static bool isAxisAligned(const SkScalerContextRec& rec) {
@@ -1084,70 +1084,70 @@ void SkScalerContext_GDI::generateImage(const SkGlyph& glyph) {
       sk_bzero(glyph.fImage, glyph.imageSize());
       return;
     }
-  }
-
-  if (!isBW) {
-    const uint8_t* table;
-    // The offscreen contains a GDI blit if isAA and kGenA8FromLCD_Flag is not set.
-    // Otherwise the offscreen contains a ClearType blit.
-    if (isAA && !(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag)) {
-      table = getInverseGammaTableGDI();
-    } else {
-      table = getInverseGammaTableClearType();
     }
-    // Note that the following cannot really be integrated into the
-    // pre-blend, since we may not be applying the pre-blend; when we aren't
-    // applying the pre-blend it means that a filter wants linear anyway.
-    // Other code may also be applying the pre-blend, so we'd need another
-    // one with this and one without.
-    SkGdiRGB* addr = (SkGdiRGB*)bits;
-    for (int y = 0; y < glyph.fHeight; ++y) {
-      for (int x = 0; x < glyph.width(); ++x) {
-        int r = (addr[x] >> 16) & 0xFF;
-        int g = (addr[x] >> 8) & 0xFF;
-        int b = (addr[x] >> 0) & 0xFF;
-        addr[x] = (table[r] << 16) | (table[g] << 8) | table[b];
+
+    if (!isBW) {
+      const uint8_t* table;
+      // The offscreen contains a GDI blit if isAA and kGenA8FromLCD_Flag is not set.
+      // Otherwise the offscreen contains a ClearType blit.
+      if (isAA && !(fRec.fFlags & SkScalerContext::kGenA8FromLCD_Flag)) {
+        table = getInverseGammaTableGDI();
+      } else {
+        table = getInverseGammaTableClearType();
       }
-      addr = SkTAddOffset<SkGdiRGB>(addr, srcRB);
+      // Note that the following cannot really be integrated into the
+      // pre-blend, since we may not be applying the pre-blend; when we aren't
+      // applying the pre-blend it means that a filter wants linear anyway.
+      // Other code may also be applying the pre-blend, so we'd need another
+      // one with this and one without.
+      SkGdiRGB* addr = (SkGdiRGB*)bits;
+      for (int y = 0; y < glyph.fHeight; ++y) {
+        for (int x = 0; x < glyph.width(); ++x) {
+          int r = (addr[x] >> 16) & 0xFF;
+          int g = (addr[x] >> 8) & 0xFF;
+          int b = (addr[x] >> 0) & 0xFF;
+          addr[x] = (table[r] << 16) | (table[g] << 8) | table[b];
+        }
+        addr = SkTAddOffset<SkGdiRGB>(addr, srcRB);
+      }
     }
-  }
 
-  size_t dstRB = glyph.rowBytes();
-  if (isBW) {
-    const uint8_t* src = (const uint8_t*)bits;
-    uint8_t* dst = (uint8_t*)((char*)glyph.fImage + (glyph.fHeight - 1) * dstRB);
-    for (int y = 0; y < glyph.fHeight; y++) {
-      memcpy(dst, src, dstRB);
-      src += srcRB;
-      dst -= dstRB;
-    }
+    size_t dstRB = glyph.rowBytes();
+    if (isBW) {
+      const uint8_t* src = (const uint8_t*)bits;
+      uint8_t* dst = (uint8_t*)((char*)glyph.fImage + (glyph.fHeight - 1) * dstRB);
+      for (int y = 0; y < glyph.fHeight; y++) {
+        memcpy(dst, src, dstRB);
+        src += srcRB;
+        dst -= dstRB;
+      }
 #  if SK_SHOW_TEXT_BLIT_COVERAGE
-    if (glyph.width() > 0 && glyph.fHeight > 0) {
-      int bitCount = glyph.width() & 7;
-      uint8_t* first = (uint8_t*)glyph.fImage;
-      uint8_t* last = (uint8_t*)((char*)glyph.fImage + glyph.height() * dstRB - 1);
-      *first |= 1 << 7;
-      *last |= bitCount == 0 ? 1 : 1 << (8 - bitCount);
-    }
+      if (glyph.width() > 0 && glyph.fHeight > 0) {
+        int bitCount = glyph.width() & 7;
+        uint8_t* first = (uint8_t*)glyph.fImage;
+        uint8_t* last = (uint8_t*)((char*)glyph.fImage + glyph.height() * dstRB - 1);
+        *first |= 1 << 7;
+        *last |= bitCount == 0 ? 1 : 1 << (8 - bitCount);
+      }
 #  endif
-  } else if (isAA) {
-    // since the caller may require A8 for maskfilters, we can't check for BW
-    // ... until we have the caller tell us that explicitly
-    const SkGdiRGB* src = (const SkGdiRGB*)bits;
-    if (fPreBlend.isApplicable()) {
-      RGBToA8<true>(src, srcRB, glyph, fPreBlend.fG);
-    } else {
-      RGBToA8<false>(src, srcRB, glyph, fPreBlend.fG);
+    } else if (isAA) {
+      // since the caller may require A8 for maskfilters, we can't check for BW
+      // ... until we have the caller tell us that explicitly
+      const SkGdiRGB* src = (const SkGdiRGB*)bits;
+      if (fPreBlend.isApplicable()) {
+        RGBToA8<true>(src, srcRB, glyph, fPreBlend.fG);
+      } else {
+        RGBToA8<false>(src, srcRB, glyph, fPreBlend.fG);
+      }
+    } else {  // LCD16
+      const SkGdiRGB* src = (const SkGdiRGB*)bits;
+      SkASSERT(SkMask::kLCD16_Format == glyph.fMaskFormat);
+      if (fPreBlend.isApplicable()) {
+        RGBToLcd16<true>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+      } else {
+        RGBToLcd16<false>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
+      }
     }
-  } else {  // LCD16
-    const SkGdiRGB* src = (const SkGdiRGB*)bits;
-    SkASSERT(SkMask::kLCD16_Format == glyph.fMaskFormat);
-    if (fPreBlend.isApplicable()) {
-      RGBToLcd16<true>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
-    } else {
-      RGBToLcd16<false>(src, srcRB, glyph, fPreBlend.fR, fPreBlend.fG, fPreBlend.fB);
-    }
-  }
 }
 
 namespace {

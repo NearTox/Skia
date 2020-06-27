@@ -12,6 +12,7 @@
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkColorSpaceXformSteps.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkTLazy.h"
@@ -27,13 +28,13 @@
 #  include "src/gpu/GrFragmentProcessor.h"
 #endif
 
-SkShaderBase::SkShaderBase(const SkMatrix* localMatrix)
+SkShaderBase::SkShaderBase(const SkMatrix* localMatrix) noexcept
     : fLocalMatrix(localMatrix ? *localMatrix : SkMatrix::I()) {
   // Pre-cache so future calls to fLocalMatrix.getType() are threadsafe.
   (void)fLocalMatrix.getType();
 }
 
-SkShaderBase::~SkShaderBase() {}
+SkShaderBase::~SkShaderBase() = default;
 
 void SkShaderBase::flatten(SkWriteBuffer& buffer) const {
   this->INHERITED::flatten(buffer);
@@ -151,7 +152,9 @@ bool SkShaderBase::onAppendStages(const SkStageRec& rec) const {
     opaquePaint.writable()->setAlpha(SK_AlphaOPAQUE);
   }
 
-  ContextRec cr(*opaquePaint, rec.fCTM, rec.fLocalM, rec.fDstColorType, sk_srgb_singleton());
+  ContextRec cr(
+      *opaquePaint, rec.fMatrixProvider.localToDevice(), rec.fLocalM, rec.fDstColorType,
+      sk_srgb_singleton());
 
   struct CallbackCtx : SkRasterPipeline_CallbackCtx {
     sk_sp<const SkShader> shader;

@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLTwoPointConicalGradientLayout : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLTwoPointConicalGradientLayout() {}
+  GrGLSLTwoPointConicalGradientLayout() noexcept = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrTwoPointConicalGradientLayout& _outer =
@@ -40,10 +40,10 @@ class GrGLSLTwoPointConicalGradientLayout : public GrGLSLFragmentProcessor {
     (void)isNativelyFocal;
     auto focalParams = _outer.focalParams;
     (void)focalParams;
-    focalParamsVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf2_GrSLType, "focalParams");
-    SkString sk_TransformedCoords2D_0 =
-        fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint);
+    focalParamsVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kHalf2_GrSLType, "focalParams");
+    SkString sk_TransformedCoords2D_0 = fragBuilder->ensureCoords2D(
+        args.fTransformedCoords[0].fVaryingPoint, _outer.sampleMatrix());
     fragBuilder->codeAppendf(
         "float2 p = %s;\nfloat t = -1.0;\nhalf v = 1.0;\n@switch (%d) {\n    case 1:\n     "
         "   {\n            half r0_2 = %s.y;\n            t = float(r0_2) - p.y * p.y;\n   "
@@ -112,7 +112,7 @@ void GrTwoPointConicalGradientLayout::onGetGLSLProcessorKey(
   b->add32((int32_t)isSwapped);
   b->add32((int32_t)isNativelyFocal);
 }
-bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrTwoPointConicalGradientLayout& that = other.cast<GrTwoPointConicalGradientLayout>();
   (void)that;
   if (gradientMatrix != that.gradientMatrix) return false;
@@ -126,7 +126,7 @@ bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other
   return true;
 }
 GrTwoPointConicalGradientLayout::GrTwoPointConicalGradientLayout(
-    const GrTwoPointConicalGradientLayout& src)
+    const GrTwoPointConicalGradientLayout& src) noexcept
     : INHERITED(kGrTwoPointConicalGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix),
@@ -223,7 +223,7 @@ std::unique_ptr<GrFragmentProcessor> GrTwoPointConicalGradientLayout::TestCreate
 
 // .fp files do not let you reference outside enum definitions, so we have to explicitly map
 // between the two compatible enum defs
-GrTwoPointConicalGradientLayout::Type convert_type(SkTwoPointConicalGradient::Type type) {
+GrTwoPointConicalGradientLayout::Type convert_type(SkTwoPointConicalGradient::Type type) noexcept {
   switch (type) {
     case SkTwoPointConicalGradient::Type::kRadial:
       return GrTwoPointConicalGradientLayout::Type::kRadial;

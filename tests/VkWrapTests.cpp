@@ -24,6 +24,7 @@
 #  include "src/gpu/vk/GrVkGpu.h"
 #  include "src/gpu/vk/GrVkMemory.h"
 #  include "tests/Test.h"
+#  include "tests/TestUtils.h"
 
 using sk_gpu_test::GrContextFactory;
 
@@ -34,9 +35,11 @@ const SkColorType kColorType = SkColorType::kRGBA_8888_SkColorType;
 void wrap_tex_test(skiatest::Reporter* reporter, GrContext* context) {
   GrGpu* gpu = context->priv().getGpu();
 
-  GrBackendTexture origBackendTex = context->createBackendTexture(
-      kW, kH, kColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kNo,
-      GrProtected::kNo);
+  GrBackendTexture origBackendTex;
+  CreateBackendTexture(
+      context, &origBackendTex, kW, kH, kColorType, SkColors::kTransparent, GrMipMapped::kNo,
+      GrRenderable::kNo, GrProtected::kNo);
+
   GrVkImageInfo imageInfo;
   SkAssertResult(origBackendTex.getVkImageInfo(&imageInfo));
 
@@ -84,9 +87,10 @@ void wrap_tex_test(skiatest::Reporter* reporter, GrContext* context) {
 void wrap_rt_test(skiatest::Reporter* reporter, GrContext* context) {
   GrGpu* gpu = context->priv().getGpu();
 
-  GrBackendTexture origBackendTex = context->createBackendTexture(
-      kW, kH, kColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kYes,
-      GrProtected::kNo);
+  GrBackendTexture origBackendTex;
+  CreateBackendTexture(
+      context, &origBackendTex, kW, kH, kColorType, SkColors::kTransparent, GrMipMapped::kNo,
+      GrRenderable::kYes, GrProtected::kNo);
 
   GrVkImageInfo imageInfo;
   SkAssertResult(origBackendTex.getVkImageInfo(&imageInfo));
@@ -123,9 +127,11 @@ void wrap_rt_test(skiatest::Reporter* reporter, GrContext* context) {
 void wrap_trt_test(skiatest::Reporter* reporter, GrContext* context) {
   GrGpu* gpu = context->priv().getGpu();
 
-  GrBackendTexture origBackendTex = context->createBackendTexture(
-      kW, kH, kColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kYes,
-      GrProtected::kNo);
+  GrBackendTexture origBackendTex;
+  CreateBackendTexture(
+      context, &origBackendTex, kW, kH, kColorType, SkColors::kTransparent, GrMipMapped::kNo,
+      GrRenderable::kYes, GrProtected::kNo);
+
   GrVkImageInfo imageInfo;
   SkAssertResult(origBackendTex.getVkImageInfo(&imageInfo));
 

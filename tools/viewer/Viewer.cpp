@@ -20,6 +20,7 @@
 #include "src/core/SkOSFile.h"
 #include "src/core/SkScan.h"
 #include "src/core/SkTaskGroup.h"
+#include "src/core/SkTextBlobPriv.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrPersistentCacheUtils.h"
@@ -133,6 +134,8 @@ static DEFINE_bool(redraw, false, "Toggle continuous redraw.");
 
 static DEFINE_bool(offscreen, false, "Force rendering to an offscreen surface.");
 static DEFINE_bool(skvm, false, "Try to use skvm blitters for raster.");
+static DEFINE_bool(dylib, false, "JIT via dylib (much slower compile but easier to debug/profile)");
+static DEFINE_bool(stats, false, "Display stats overlay on startup.");
 
 #ifndef SK_GL
 static_assert(false, "viewer requires GL backend for raster.")
@@ -223,21 +226,20 @@ class NullSlide : public Slide {
   void draw(SkCanvas* canvas) override { canvas->clear(0xffff11ff); }
 };
 
-const char* kName = "name";
-const char* kValue = "value";
-const char* kOptions = "options";
-const char* kSlideStateName = "Slide";
-const char* kBackendStateName = "Backend";
-const char* kMSAAStateName = "MSAA";
-const char* kPathRendererStateName = "Path renderer";
-const char* kSoftkeyStateName = "Softkey";
-const char* kSoftkeyHint = "Please select a softkey";
-const char* kFpsStateName = "FPS";
-const char* kON = "ON";
-const char* kOFF = "OFF";
-const char* kRefreshStateName = "Refresh";
+static const char kName[] = "name";
+static const char kValue[] = "value";
+static const char kOptions[] = "options";
+static const char kSlideStateName[] = "Slide";
+static const char kBackendStateName[] = "Backend";
+static const char kMSAAStateName[] = "MSAA";
+static const char kPathRendererStateName[] = "Path renderer";
+static const char kSoftkeyStateName[] = "Softkey";
+static const char kSoftkeyHint[] = "Please select a softkey";
+static const char kON[] = "ON";
+static const char kRefreshStateName[] = "Refresh";
 
 extern bool gUseSkVMBlitter;
+extern bool gSkVMJITViaDylib;
 
 Viewer::Viewer(int argc, char** argv, void* platformData)
     : fCurrentSlide(-1),
@@ -288,6 +290,7 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
 #endif
 
   gUseSkVMBlitter = FLAGS_skvm;
+  gSkVMJITViaDylib = FLAGS_dylib;
 
   ToolUtils::SetDefaultFontMgr();
 
@@ -309,7 +312,7 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
   fRefresh = FLAGS_redraw;
 
   // Configure timers
-  fStatsLayer.setActive(false);
+  fStatsLayer.setActive(FLAGS_stats);
   fAnimateTimer = fStatsLayer.addTimer("Animate", SK_ColorMAGENTA, 0xffff66ff);
   fPaintTimer = fStatsLayer.addTimer("Paint", SK_ColorGREEN);
   fFlushTimer = fStatsLayer.addTimer("Flush", SK_ColorRED, 0xffff6666);
@@ -730,10 +733,21 @@ void Viewer::initSlides() {
         addSlide(SkOSPath::Basename(flag.c_str()), flag, info.fFactory);
       } else {
         // directory
-        SkOSFile::Iter it(flag.c_str(), info.fExtension);
         SkString name;
+        SkTArray<SkString> sortedFilenames;
+        SkOSFile::Iter it(flag.c_str(), info.fExtension);
         while (it.next(&name)) {
-          addSlide(name, SkOSPath::Join(flag.c_str(), name.c_str()), info.fFactory);
+          sortedFilenames.push_back(name);
+        }
+        if (sortedFilenames.count()) {
+          SkTQSort(
+              sortedFilenames.begin(), sortedFilenames.end() - 1,
+              [](const SkString& a, const SkString& b) {
+                return strcmp(a.c_str(), b.c_str()) < 0;
+              });
+        }
+        for (const SkString& filename : sortedFilenames) {
+          addSlide(filename, SkOSPath::Join(flag.c_str(), filename.c_str()), info.fFactory);
         }
       }
       if (!dirSlides.empty()) {
@@ -1271,86 +1285,86 @@ void Viewer::drawSlide(SkSurface* surface) {
     slideCanvas = offscreenSurface->getCanvas();
   }
 
-    SkPictureRecorder recorder;
-    SkCanvas* recorderRestoreCanvas = nullptr;
-    if (fDrawViaSerialize) {
-      recorderRestoreCanvas = slideCanvas;
-      slideCanvas = recorder.beginRecording(SkRect::Make(fSlides[fCurrentSlide]->getDimensions()));
+  SkPictureRecorder recorder;
+  SkCanvas* recorderRestoreCanvas = nullptr;
+  if (fDrawViaSerialize) {
+    recorderRestoreCanvas = slideCanvas;
+    slideCanvas = recorder.beginRecording(SkRect::Make(fSlides[fCurrentSlide]->getDimensions()));
+  }
+
+  int count = slideCanvas->save();
+  slideCanvas->clear(SK_ColorWHITE);
+  // Time the painting logic of the slide
+  fStatsLayer.beginTiming(fPaintTimer);
+  if (fTiled) {
+    int tileW = SkScalarCeilToInt(fWindow->width() * fTileScale.width());
+    int tileH = SkScalarCeilToInt(fWindow->height() * fTileScale.height());
+    for (int y = 0; y < fWindow->height(); y += tileH) {
+      for (int x = 0; x < fWindow->width(); x += tileW) {
+        SkAutoCanvasRestore acr(slideCanvas, true);
+        slideCanvas->clipRect(SkRect::MakeXYWH(x, y, tileW, tileH));
+        fSlides[fCurrentSlide]->draw(slideCanvas);
+      }
     }
 
-    int count = slideCanvas->save();
-    slideCanvas->clear(SK_ColorWHITE);
-    // Time the painting logic of the slide
-    fStatsLayer.beginTiming(fPaintTimer);
-    if (fTiled) {
-      int tileW = SkScalarCeilToInt(fWindow->width() * fTileScale.width());
-      int tileH = SkScalarCeilToInt(fWindow->height() * fTileScale.height());
+    // Draw borders between tiles
+    if (fDrawTileBoundaries) {
+      SkPaint border;
+      border.setColor(0x60FF00FF);
+      border.setStyle(SkPaint::kStroke_Style);
       for (int y = 0; y < fWindow->height(); y += tileH) {
         for (int x = 0; x < fWindow->width(); x += tileW) {
-          SkAutoCanvasRestore acr(slideCanvas, true);
-          slideCanvas->clipRect(SkRect::MakeXYWH(x, y, tileW, tileH));
-          fSlides[fCurrentSlide]->draw(slideCanvas);
+          slideCanvas->drawRect(SkRect::MakeXYWH(x, y, tileW, tileH), border);
         }
       }
-
-      // Draw borders between tiles
-      if (fDrawTileBoundaries) {
-        SkPaint border;
-        border.setColor(0x60FF00FF);
-        border.setStyle(SkPaint::kStroke_Style);
-        for (int y = 0; y < fWindow->height(); y += tileH) {
-          for (int x = 0; x < fWindow->width(); x += tileW) {
-            slideCanvas->drawRect(SkRect::MakeXYWH(x, y, tileW, tileH), border);
-          }
-        }
-      }
-    } else {
-      slideCanvas->concat(this->computeMatrix());
-      if (kPerspective_Real == fPerspectiveMode) {
-        slideCanvas->clipRect(SkRect::MakeWH(fWindow->width(), fWindow->height()));
-      }
-      OveridePaintFilterCanvas filterCanvas(
-          slideCanvas, &fPaint, &fPaintOverrides, &fFont, &fFontOverrides);
-      fSlides[fCurrentSlide]->draw(&filterCanvas);
     }
-    fStatsLayer.endTiming(fPaintTimer);
-    slideCanvas->restoreToCount(count);
-
-    if (recorderRestoreCanvas) {
-      sk_sp<SkPicture> picture(recorder.finishRecordingAsPicture());
-      auto data = picture->serialize();
-      slideCanvas = recorderRestoreCanvas;
-      slideCanvas->drawPicture(SkPicture::MakeFromData(data.get()));
+  } else {
+    slideCanvas->concat(this->computeMatrix());
+    if (kPerspective_Real == fPerspectiveMode) {
+      slideCanvas->clipRect(SkRect::MakeWH(fWindow->width(), fWindow->height()));
     }
+    OveridePaintFilterCanvas filterCanvas(
+        slideCanvas, &fPaint, &fPaintOverrides, &fFont, &fFontOverrides);
+    fSlides[fCurrentSlide]->draw(&filterCanvas);
+  }
+  fStatsLayer.endTiming(fPaintTimer);
+  slideCanvas->restoreToCount(count);
 
-    // Force a flush so we can time that, too
-    fStatsLayer.beginTiming(fFlushTimer);
-    slideSurface->flush();
-    fStatsLayer.endTiming(fFlushTimer);
+  if (recorderRestoreCanvas) {
+    sk_sp<SkPicture> picture(recorder.finishRecordingAsPicture());
+    auto data = picture->serialize();
+    slideCanvas = recorderRestoreCanvas;
+    slideCanvas->drawPicture(SkPicture::MakeFromData(data.get()));
+  }
 
-    // If we rendered offscreen, snap an image and push the results to the window's canvas
-    if (offscreenSurface) {
-      fLastImage = offscreenSurface->makeImageSnapshot();
+  // Force a flush so we can time that, too
+  fStatsLayer.beginTiming(fFlushTimer);
+  slideSurface->flush();
+  fStatsLayer.endTiming(fFlushTimer);
 
-      SkCanvas* canvas = surface->getCanvas();
-      SkPaint paint;
-      paint.setBlendMode(SkBlendMode::kSrc);
-      int prePerspectiveCount = canvas->save();
-      if (kPerspective_Fake == fPerspectiveMode) {
-        paint.setFilterQuality(kHigh_SkFilterQuality);
-        canvas->clear(SK_ColorWHITE);
-        canvas->concat(this->computePerspectiveMatrix());
-      }
-      canvas->drawImage(fLastImage, 0, 0, &paint);
-      canvas->restoreToCount(prePerspectiveCount);
+  // If we rendered offscreen, snap an image and push the results to the window's canvas
+  if (offscreenSurface) {
+    fLastImage = offscreenSurface->makeImageSnapshot();
+
+    SkCanvas* canvas = surface->getCanvas();
+    SkPaint paint;
+    paint.setBlendMode(SkBlendMode::kSrc);
+    int prePerspectiveCount = canvas->save();
+    if (kPerspective_Fake == fPerspectiveMode) {
+      paint.setFilterQuality(kHigh_SkFilterQuality);
+      canvas->clear(SK_ColorWHITE);
+      canvas->concat(this->computePerspectiveMatrix());
     }
+    canvas->drawImage(fLastImage, 0, 0, &paint);
+    canvas->restoreToCount(prePerspectiveCount);
+  }
 
-    if (fShowSlideDimensions) {
-      SkRect r = SkRect::Make(fSlides[fCurrentSlide]->getDimensions());
-      SkPaint paint;
-      paint.setColor(0x40FFFF00);
-      surface->getCanvas()->drawRect(r, paint);
-    }
+  if (fShowSlideDimensions) {
+    SkRect r = SkRect::Make(fSlides[fCurrentSlide]->getDimensions());
+    SkPaint paint;
+    paint.setColor(0x40FFFF00);
+    surface->getCanvas()->drawRect(r, paint);
+  }
 }
 
 void Viewer::onBackendCreated() {
@@ -1593,16 +1607,26 @@ void Viewer::drawImGui() {
         }
 
         if (ctx) {
+          // Determine the context's max sample count for MSAA radio buttons.
           int sampleCount = fWindow->sampleCount();
-          ImGui::Text("MSAA: ");
-          ImGui::SameLine();
-          ImGui::RadioButton("1", &sampleCount, 1);
-          ImGui::SameLine();
-          ImGui::RadioButton("4", &sampleCount, 4);
-          ImGui::SameLine();
-          ImGui::RadioButton("8", &sampleCount, 8);
-          ImGui::SameLine();
-          ImGui::RadioButton("16", &sampleCount, 16);
+          int maxMSAA = (fBackendType != sk_app::Window::kRaster_BackendType)
+                            ? ctx->maxSurfaceSampleCountForColorType(kRGBA_8888_SkColorType)
+                            : 1;
+
+          // Only display the MSAA radio buttons when there are options above 1x MSAA.
+          if (maxMSAA >= 4) {
+            ImGui::Text("MSAA: ");
+
+            for (int curMSAA = 1; curMSAA <= maxMSAA; curMSAA *= 2) {
+              // 2x MSAA works, but doesn't offer much of a visual improvement, so we
+              // don't show it in the list.
+              if (curMSAA == 2) {
+                continue;
+              }
+              ImGui::SameLine();
+              ImGui::RadioButton(SkStringPrintf("%d", curMSAA).c_str(), &sampleCount, curMSAA);
+            }
+          }
 
           if (sampleCount != params.fMSAASampleCount) {
             params.fMSAASampleCount = sampleCount;

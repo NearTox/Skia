@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
 #include "include/core/SkSurfaceCharacterization.h"
 #include "include/gpu/GrContext.h"
@@ -27,11 +28,32 @@
 #  include "src/gpu/mtl/GrMtlCppUtil.h"
 #endif
 
+static void wait_on_backend_work_to_finish(GrContext* context, bool* finishedCreate) {
+  while (finishedCreate && !(*finishedCreate)) {
+    context->checkAsyncWorkCompletion();
+  }
+  if (finishedCreate) {
+    // The same boolean (pointed to by finishedCreate) is often used multiply and sequentially
+    // throughout our tests to create different backend textures.
+    // Reset it here so that it can be use to signal a future backend texture's creation
+    *finishedCreate = false;
+  }
+}
+
+static void delete_backend_texture(
+    GrContext* context, const GrBackendTexture& backendTexture, bool* finishedCreate) {
+  wait_on_backend_work_to_finish(context, finishedCreate);
+  context->deleteBackendTexture(backendTexture);
+}
+
+static void mark_signaled(void* context) { *(bool*)context = true; }
+
 // Test wrapping of GrBackendObjects in SkSurfaces and SkImages (non-static since used in Mtl test)
 void test_wrapping(
     GrContext* context, skiatest::Reporter* reporter,
     std::function<GrBackendTexture(GrContext*, GrMipMapped, GrRenderable)> create,
-    GrColorType grColorType, GrMipMapped mipMapped, GrRenderable renderable) {
+    GrColorType grColorType, GrMipMapped mipMapped, GrRenderable renderable,
+    bool* finishedBECreate) {
   GrResourceCache* cache = context->priv().getResourceCache();
 
   const int initialCount = cache->getResourceCount();
@@ -51,7 +73,7 @@ void test_wrapping(
 
   // Wrapping a backendTexture in an image requires an SkColorType
   if (kUnknown_SkColorType == skColorType) {
-    context->deleteBackendTexture(backendTex);
+    delete_backend_texture(context, backendTex, finishedBECreate);
     return;
   }
 
@@ -59,7 +81,9 @@ void test_wrapping(
     sk_sp<SkSurface> surf = SkSurface::MakeFromBackendTexture(
         context, backendTex, kTopLeft_GrSurfaceOrigin, 0, skColorType, nullptr, nullptr);
     if (!surf) {
-      ERRORF(reporter, "Couldn't make surface from backendTexture for colorType %d\n", skColorType);
+      ERRORF(
+          reporter, "Couldn't make surface from backendTexture for %s\n",
+          ToolUtils::colortype_name(skColorType));
     } else {
       REPORTER_ASSERT(reporter, initialCount + 1 == cache->getResourceCount());
     }
@@ -69,7 +93,9 @@ void test_wrapping(
     sk_sp<SkImage> img = SkImage::MakeFromTexture(
         context, backendTex, kTopLeft_GrSurfaceOrigin, skColorType, kPremul_SkAlphaType, nullptr);
     if (!img) {
-      ERRORF(reporter, "Couldn't make image from backendTexture for skColorType %d\n", skColorType);
+      ERRORF(
+          reporter, "Couldn't make image from backendTexture for %s\n",
+          ToolUtils::colortype_name(skColorType));
     } else {
       SkImage_Base* ib = as_IB(img);
 
@@ -86,10 +112,10 @@ void test_wrapping(
 
   REPORTER_ASSERT(reporter, initialCount == cache->getResourceCount());
 
-  context->deleteBackendTexture(backendTex);
+  delete_backend_texture(context, backendTex, finishedBECreate);
 }
 
-static bool isBGRA(const GrBackendFormat& format) {
+static bool isBGRA8(const GrBackendFormat& format) {
   switch (format.backend()) {
     case GrBackendApi::kOpenGL:
 #ifdef SK_GL
@@ -108,7 +134,7 @@ static bool isBGRA(const GrBackendFormat& format) {
     }
     case GrBackendApi::kMetal:
 #ifdef SK_METAL
-      return GrMtlFormatIsBGRA(format.asMtlFormat());
+      return GrMtlFormatIsBGRA8(format.asMtlFormat());
 #else
       return false;
 #endif
@@ -253,8 +279,8 @@ static void check_base_readbacks(
 void test_color_init(
     GrContext* context, skiatest::Reporter* reporter,
     std::function<GrBackendTexture(GrContext*, const SkColor4f&, GrMipMapped, GrRenderable)> create,
-    GrColorType grColorType, const SkColor4f& color, GrMipMapped mipMapped,
-    GrRenderable renderable) {
+    GrColorType grColorType, const SkColor4f& color, GrMipMapped mipMapped, GrRenderable renderable,
+    bool* finishedBECreate) {
   GrBackendTexture backendTex = create(context, color, mipMapped, renderable);
   if (!backendTex.isValid()) {
     // errors here should be reported by the test_wrapping test
@@ -266,20 +292,42 @@ void test_color_init(
   // Can't wrap backend textures in images and surfaces w/o an SkColorType
   if (kUnknown_SkColorType == skColorType) {
     // TODO: burrow in and scrappily check that data was uploaded!
-    context->deleteBackendTexture(backendTex);
+    delete_backend_texture(context, backendTex, finishedBECreate);
     return;
   }
 
-  if (mipMapped == GrMipMapped::kYes) {
-    SkColor4f expectedColor = get_expected_color(color, skColorType);
-    SkColor4f expectedColors[6] = {expectedColor, expectedColor, expectedColor,
-                                   expectedColor, expectedColor, expectedColor};
-    check_mipmaps(context, backendTex, skColorType, expectedColors, reporter, "colorinit");
-  }
+  auto checkBackendTexture = [&](const SkColor4f& testColor) {
+    if (mipMapped == GrMipMapped::kYes) {
+      SkColor4f expectedColor = get_expected_color(testColor, skColorType);
+      SkColor4f expectedColors[6] = {expectedColor, expectedColor, expectedColor,
+                                     expectedColor, expectedColor, expectedColor};
+      check_mipmaps(context, backendTex, skColorType, expectedColors, reporter, "colorinit");
+    }
 
-  // The last step in this test will dirty the mipmaps so do it last
-  check_base_readbacks(context, backendTex, skColorType, renderable, color, reporter, "colorinit");
-  context->deleteBackendTexture(backendTex);
+    // The last step in this test will dirty the mipmaps so do it last
+    check_base_readbacks(
+        context, backendTex, skColorType, renderable, testColor, reporter, "colorinit");
+  };
+
+  checkBackendTexture(color);
+
+  // Make sure the initial create work has finished so we can test the update independently.
+  wait_on_backend_work_to_finish(context, finishedBECreate);
+
+  SkColor4f newColor = {color.fB, color.fR, color.fG, color.fA};
+
+  // Reupload the new data and make sure everything still works. We test with an SkColorType so
+  // we may actually swizzle the input during the create path. The update does not do any swizzle
+  // of the passed in color. So we manually do it here so we get the same expected results.
+  SkColor4f swizzledColor = context->priv()
+                                .caps()
+                                ->getWriteSwizzle(backendTex.getBackendFormat(), grColorType)
+                                .applyTo(newColor);
+  context->updateBackendTexture(backendTex, swizzledColor, mark_signaled, finishedBECreate);
+
+  checkBackendTexture(newColor);
+
+  delete_backend_texture(context, backendTex, finishedBECreate);
 }
 
 // Draw the backend texture (wrapped in an SkImage) into an RGBA surface, attempting to access
@@ -374,7 +422,8 @@ static void test_pixmap_init(
     std::function<
         GrBackendTexture(GrContext*, const SkPixmap srcData[], int numLevels, GrRenderable)>
         create,
-    SkColorType skColorType, GrMipMapped mipMapped, GrRenderable renderable) {
+    SkColorType skColorType, GrMipMapped mipMapped, GrRenderable renderable,
+    bool* finishedBECreate) {
   SkAutoPixmapStorage pixmapMem[6];
   SkColor4f colors[6] = {
       {1.0f, 0.0f, 0.0f, 1.0f},  // R
@@ -400,27 +449,58 @@ static void test_pixmap_init(
     return;
   }
 
-  if (skColorType == kBGRA_8888_SkColorType && !isBGRA(backendTex.getBackendFormat())) {
+  if (skColorType == kBGRA_8888_SkColorType && !isBGRA8(backendTex.getBackendFormat())) {
     // When kBGRA is backed by an RGBA something goes wrong in the swizzling
+    delete_backend_texture(context, backendTex, finishedBECreate);
     return;
   }
 
-  if (mipMapped == GrMipMapped::kYes) {
-    SkColor4f expectedColors[6] = {
-        get_expected_color(colors[0], skColorType), get_expected_color(colors[1], skColorType),
-        get_expected_color(colors[2], skColorType), get_expected_color(colors[3], skColorType),
-        get_expected_color(colors[4], skColorType), get_expected_color(colors[5], skColorType),
-    };
+  auto checkBackendTexture = [&](SkColor4f colors[6]) {
+    if (mipMapped == GrMipMapped::kYes) {
+      SkColor4f expectedColors[6] = {
+          get_expected_color(colors[0], skColorType), get_expected_color(colors[1], skColorType),
+          get_expected_color(colors[2], skColorType), get_expected_color(colors[3], skColorType),
+          get_expected_color(colors[4], skColorType), get_expected_color(colors[5], skColorType),
+      };
 
-    check_mipmaps(context, backendTex, skColorType, expectedColors, reporter, "pixmap");
+      check_mipmaps(context, backendTex, skColorType, expectedColors, reporter, "pixmap");
+    }
+
+    // The last step in this test will dirty the mipmaps so do it last
+    check_base_readbacks(
+        context, backendTex, skColorType, renderable, colors[0], reporter, "pixmap");
+  };
+
+  checkBackendTexture(colors);
+
+  // Make sure the initial create work has finished so we can test the update independently.
+  wait_on_backend_work_to_finish(context, finishedBECreate);
+
+  SkColor4f colorsNew[6] = {
+      {1.0f, 1.0f, 0.0f, 0.2f},  // Y
+      {1.0f, 0.0f, 0.0f, 1.0f},  // R
+      {0.0f, 1.0f, 0.0f, 0.9f},  // G
+      {0.0f, 0.0f, 1.0f, 0.7f},  // B
+      {0.0f, 1.0f, 1.0f, 0.5f},  // C
+      {1.0f, 0.0f, 1.0f, 0.3f},  // M
+  };
+  make_pixmaps(skColorType, mipMapped, colorsNew, pixmapMem);
+  for (int i = 0; i < numMipLevels; ++i) {
+    pixmaps[i].reset(pixmapMem[i].info(), pixmapMem[i].addr(), pixmapMem[i].rowBytes());
   }
 
-  // The last step in this test will dirty the mipmaps so do it last
-  check_base_readbacks(context, backendTex, skColorType, renderable, colors[0], reporter, "pixmap");
-  context->deleteBackendTexture(backendTex);
+  // Upload new data and make sure everything still works
+  context->updateBackendTexture(backendTex, pixmaps, numMipLevels, mark_signaled, finishedBECreate);
+
+  checkBackendTexture(colorsNew);
+
+  delete_backend_texture(context, backendTex, finishedBECreate);
 }
 
-enum class VkLayout { kUndefined, kReadOnlyOptimal, kColorAttachmentOptimal };
+enum class VkLayout {
+  kUndefined,
+  kReadOnlyOptimal,
+};
 
 void check_vk_layout(const GrBackendTexture& backendTex, VkLayout layout) {
 #if defined(SK_VULKAN) && defined(SK_DEBUG)
@@ -429,9 +509,6 @@ void check_vk_layout(const GrBackendTexture& backendTex, VkLayout layout) {
   switch (layout) {
     case VkLayout::kUndefined: expected = VK_IMAGE_LAYOUT_UNDEFINED; break;
     case VkLayout::kReadOnlyOptimal: expected = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL; break;
-    case VkLayout::kColorAttachmentOptimal:
-      expected = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-      break;
     default: SkUNREACHABLE;
   }
 
@@ -498,9 +575,12 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(CharacterizationBackendAllocationTest, report
           }
 
           // Test out color-initialized path
+
           {
-            GrBackendTexture backendTex = context->createBackendTexture(c, SkColors::kRed);
-            check_vk_layout(backendTex, VkLayout::kColorAttachmentOptimal);
+            bool finished = false;
+            GrBackendTexture backendTex =
+                context->createBackendTexture(c, SkColors::kRed, mark_signaled, &finished);
+            check_vk_layout(backendTex, VkLayout::kReadOnlyOptimal);
             REPORTER_ASSERT(reporter, backendTex.isValid());
             REPORTER_ASSERT(reporter, c.isCompatible(backendTex));
 
@@ -515,7 +595,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(CharacterizationBackendAllocationTest, report
             REPORTER_ASSERT(reporter, s2->isCompatible(c));
 
             s2 = nullptr;
-            context->deleteBackendTexture(backendTex);
+            delete_backend_texture(context, backendTex, &finished);
           }
         }
       }
@@ -542,11 +622,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ColorTypeBackendAllocationTest, reporter, ctx
       {kRGB_888x_SkColorType, SkColors::kCyan},
       // TODO: readback is busted when alpha = 0.5f (perhaps premul vs. unpremul)
       {kBGRA_8888_SkColorType, {1, 0, 0, 1.0f}},
-      // TODO: readback is busted when alpha = 0.5f (perhaps premul vs. unpremul)
-      {kRGBA_1010102_SkColorType, {.25f, .5f, .75f, 1.0f}},
-      // RGB/BGR 101010x and BGRA 1010102 have no Ganesh correlate
+      // TODO: readback is busted for *10A2 when alpha = 0.5f (perhaps premul vs. unpremul)
+      {kRGBA_1010102_SkColorType, {0.25f, 0.5f, 0.75f, 1.0f}},
+      {kBGRA_1010102_SkColorType, {0.25f, 0.5f, 0.75f, 1.0f}},
+      // RGB/BGR 101010x have no Ganesh correlate
       {kRGB_101010x_SkColorType, {0, 0.5f, 0, 0.5f}},
-      {kBGRA_1010102_SkColorType, {0, 0.5f, 0, 0.5f}},
       {kBGR_101010x_SkColorType, {0, 0.5f, 0, 0.5f}},
       {kGray_8_SkColorType, kGrayCol},
       {kRGBA_F16Norm_SkColorType, SkColors::kLtGray},
@@ -609,18 +689,20 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ColorTypeBackendAllocationTest, reporter, ctx
 
           test_wrapping(
               context, reporter, uninitCreateMtd, SkColorTypeToGrColorType(colorType), mipMapped,
-              renderable);
+              renderable, nullptr);
         }
 
+        bool finishedBackendCreation = false;
+        bool* finishedPtr = &finishedBackendCreation;
+
         {
-          auto createWithColorMtd = [colorType](
+          auto createWithColorMtd = [colorType, finishedPtr](
                                         GrContext* context, const SkColor4f& color,
                                         GrMipMapped mipMapped, GrRenderable renderable) {
             auto result = context->createBackendTexture(
-                32, 32, colorType, color, mipMapped, renderable, GrProtected::kNo);
-            check_vk_layout(
-                result, GrRenderable::kYes == renderable ? VkLayout::kColorAttachmentOptimal
-                                                         : VkLayout::kReadOnlyOptimal);
+                32, 32, colorType, color, mipMapped, renderable, GrProtected::kNo, mark_signaled,
+                finishedPtr);
+            check_vk_layout(result, VkLayout::kReadOnlyOptimal);
 
 #ifdef SK_DEBUG
             {
@@ -642,25 +724,30 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ColorTypeBackendAllocationTest, reporter, ctx
           }
           test_color_init(
               context, reporter, createWithColorMtd, SkColorTypeToGrColorType(colorType), color,
-              mipMapped, renderable);
+              mipMapped, renderable, finishedPtr);
         }
 
-        auto createWithSrcDataMtd = [](GrContext* context, const SkPixmap srcData[], int numLevels,
-                                       GrRenderable renderable) {
-          SkASSERT(srcData && numLevels);
-          auto result =
-              context->createBackendTexture(srcData, numLevels, renderable, GrProtected::kNo);
-          check_vk_layout(result, VkLayout::kReadOnlyOptimal);
+        {
+          auto createWithSrcDataMtd = [finishedPtr](
+                                          GrContext* context, const SkPixmap srcData[],
+                                          int numLevels, GrRenderable renderable) {
+            SkASSERT(srcData && numLevels);
+            auto result = context->createBackendTexture(
+                srcData, numLevels, renderable, GrProtected::kNo, mark_signaled, finishedPtr);
+            check_vk_layout(result, VkLayout::kReadOnlyOptimal);
 #ifdef SK_DEBUG
-          {
-            auto format = context->defaultBackendFormat(srcData[0].colorType(), renderable);
-            SkASSERT(format == result.getBackendFormat());
-          }
+            {
+              auto format = context->defaultBackendFormat(srcData[0].colorType(), renderable);
+              SkASSERT(format == result.getBackendFormat());
+            }
 #endif
-          return result;
-        };
+            return result;
+          };
 
-        test_pixmap_init(context, reporter, createWithSrcDataMtd, colorType, mipMapped, renderable);
+          test_pixmap_init(
+              context, reporter, createWithSrcDataMtd, colorType, mipMapped, renderable,
+              finishedPtr);
+        }
       }
     }
   }
@@ -692,7 +779,8 @@ DEF_GPUTEST_FOR_ALL_GL_CONTEXTS(GLBackendAllocationTest, reporter, ctxInfo) {
       {GrColorType::kBGRA_8888, GR_GL_RGBA8, SkColors::kBlue},
       {GrColorType::kBGRA_8888, GR_GL_BGRA8, SkColors::kBlue},
       // TODO: readback is busted when alpha = 0.5f (perhaps premul vs. unpremul)
-      {GrColorType::kRGBA_1010102, GR_GL_RGB10_A2, {0.5f, 0, 0, 1.0f}},
+      {GrColorType::kRGBA_1010102, GR_GL_RGB10_A2, {0.25f, 0.5f, 0.75f, 1.f}},
+      {GrColorType::kBGRA_1010102, GR_GL_RGB10_A2, {0.25f, 0.5f, 0.75f, 1.f}},
       {GrColorType::kBGR_565, GR_GL_RGB565, SkColors::kRed},
       {GrColorType::kABGR_4444, GR_GL_RGBA4, SkColors::kGreen},
 
@@ -725,9 +813,11 @@ DEF_GPUTEST_FOR_ALL_GL_CONTEXTS(GLBackendAllocationTest, reporter, ctxInfo) {
       continue;
     }
 
-    if (GrColorType::kBGRA_8888 == combo.fColorType) {
-      // We allow using a GL_RGBA8 texture as BGRA on desktop GL but not ES.
-      if (GR_GL_RGBA8 == combo.fFormat && kGL_GrGLStandard != standard) {
+    if (GrColorType::kBGRA_8888 == combo.fColorType ||
+        GrColorType::kBGRA_1010102 == combo.fColorType) {
+      // We allow using a GL_RGBA8 or GR_GL_RGB10_A2 texture as BGRA on desktop GL but not ES
+      if (kGL_GrGLStandard != standard &&
+          (GR_GL_RGBA8 == combo.fFormat || GR_GL_RGB10_A2 == combo.fFormat)) {
         continue;
       }
     }
@@ -752,7 +842,7 @@ DEF_GPUTEST_FOR_ALL_GL_CONTEXTS(GLBackendAllocationTest, reporter, ctxInfo) {
               };
 
           test_wrapping(
-              context, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable);
+              context, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable, nullptr);
         }
 
         {
@@ -772,12 +862,16 @@ DEF_GPUTEST_FOR_ALL_GL_CONTEXTS(GLBackendAllocationTest, reporter, ctxInfo) {
             default: break;
           }
 
-          auto createWithColorMtd = [format, swizzle](
+          bool finishedBackendCreation = false;
+          bool* finishedPtr = &finishedBackendCreation;
+
+          auto createWithColorMtd = [format, swizzle, finishedPtr](
                                         GrContext* context, const SkColor4f& color,
                                         GrMipMapped mipMapped, GrRenderable renderable) {
             auto swizzledColor = swizzle.applyTo(color);
             return context->createBackendTexture(
-                32, 32, format, swizzledColor, mipMapped, renderable, GrProtected::kNo);
+                32, 32, format, swizzledColor, mipMapped, renderable, GrProtected::kNo,
+                mark_signaled, finishedPtr);
           };
           // We make our comparison color using SkPixmap::erase(color) on a pixmap of
           // combo.fColorType and then calling SkPixmap::readPixels(). erase() will premul
@@ -790,8 +884,8 @@ DEF_GPUTEST_FOR_ALL_GL_CONTEXTS(GLBackendAllocationTest, reporter, ctxInfo) {
           }
 
           test_color_init(
-              context, reporter, createWithColorMtd, combo.fColorType, color, mipMapped,
-              renderable);
+              context, reporter, createWithColorMtd, combo.fColorType, color, mipMapped, renderable,
+              finishedPtr);
         }
       }
     }
@@ -829,7 +923,8 @@ DEF_GPUTEST_FOR_VULKAN_CONTEXT(VkBackendAllocationTest, reporter, ctxInfo) {
 
       {GrColorType::kBGRA_8888, VK_FORMAT_B8G8R8A8_UNORM, SkColors::kBlue},
 
-      {GrColorType::kRGBA_1010102, VK_FORMAT_A2B10G10R10_UNORM_PACK32, {0.5f, 0, 0, 1.0f}},
+      {GrColorType::kRGBA_1010102, VK_FORMAT_A2B10G10R10_UNORM_PACK32, {0.25f, 0.5f, 0.75f, 1.0f}},
+      {GrColorType::kBGRA_1010102, VK_FORMAT_A2R10G10B10_UNORM_PACK32, {0.25f, 0.5f, 0.75f, 1.0f}},
       {GrColorType::kBGR_565, VK_FORMAT_R5G6B5_UNORM_PACK16, SkColors::kRed},
 
       {GrColorType::kABGR_4444, VK_FORMAT_R4G4B4A4_UNORM_PACK16, SkColors::kCyan},
@@ -886,7 +981,7 @@ DEF_GPUTEST_FOR_VULKAN_CONTEXT(VkBackendAllocationTest, reporter, ctxInfo) {
               };
 
           test_wrapping(
-              context, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable);
+              context, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable, nullptr);
         }
 
         {
@@ -919,20 +1014,23 @@ DEF_GPUTEST_FOR_VULKAN_CONTEXT(VkBackendAllocationTest, reporter, ctxInfo) {
               break;
             default: swizzle = GrSwizzle("rgba"); break;
           }
-          auto createWithColorMtd = [format, swizzle](
+
+          bool finishedBackendCreation = false;
+          bool* finishedPtr = &finishedBackendCreation;
+
+          auto createWithColorMtd = [format, swizzle, finishedPtr](
                                         GrContext* context, const SkColor4f& color,
                                         GrMipMapped mipMapped, GrRenderable renderable) {
             auto swizzledColor = swizzle.applyTo(color);
             GrBackendTexture beTex = context->createBackendTexture(
-                32, 32, format, swizzledColor, mipMapped, renderable, GrProtected::kNo);
-            check_vk_layout(
-                beTex, GrRenderable::kYes == renderable ? VkLayout::kColorAttachmentOptimal
-                                                        : VkLayout::kReadOnlyOptimal);
+                32, 32, format, swizzledColor, mipMapped, renderable, GrProtected::kNo,
+                mark_signaled, finishedPtr);
+            check_vk_layout(beTex, VkLayout::kReadOnlyOptimal);
             return beTex;
           };
           test_color_init(
               context, reporter, createWithColorMtd, combo.fColorType, combo.fColor, mipMapped,
-              renderable);
+              renderable, finishedPtr);
         }
       }
     }

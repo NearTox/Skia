@@ -9,7 +9,7 @@
 
 #ifdef SK_BUILD_FOR_WIN
 #  include "src/core/SkLeanWindows.h"
-SkThreadID SkGetThreadID() noexcept { return GetCurrentThreadId(); }
+SkThreadID SkGetThreadID() { return GetCurrentThreadId(); }
 #else
 #  include <pthread.h>
 SkThreadID SkGetThreadID() { return (int64_t)pthread_self(); }

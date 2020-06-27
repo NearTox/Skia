@@ -208,7 +208,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
 
   const auto add_draw = [this, &draws](sk_sp<sksg::RenderNode> draw, const ShapeRec& rec) {
     // All draws can have an optional blend mode.
-    draws.push_back(this->attachBlendMode(rec.fJson, std::move(draw)));
+    draws.emplace_back(this->attachBlendMode(rec.fJson, std::move(draw)));
   };
 
   for (auto rec = recs.rbegin(); rec != recs.rend(); ++rec) {
@@ -218,7 +218,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
       case ShapeType::kGeometry: {
         SkASSERT(rec->fInfo.fAttacherIndex < SK_ARRAY_COUNT(gGeometryAttachers));
         if (auto geo = gGeometryAttachers[rec->fInfo.fAttacherIndex](rec->fJson, this)) {
-          geos.push_back(std::move(geo));
+          geos.emplace_back(std::move(geo));
         }
       } break;
       case ShapeType::kGeometryEffect: {
@@ -323,7 +323,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
 
   // Push transformed local geometries to parent list, for subsequent paints.
   for (auto& geo : geos) {
-    ctx->fGeometryStack->push_back(
+    ctx->fGeometryStack->emplace_back(
         shape_transform ? sksg::GeometryTransform::Make(std::move(geo), shape_transform)
                         : std::move(geo));
   }

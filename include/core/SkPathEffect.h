@@ -160,7 +160,7 @@ class SK_API SkPathEffect : public SkFlattenable {
       PointData*, const SkPath&, const SkStrokeRec&, const SkMatrix&, const SkRect*) const {
     return false;
   }
-  virtual DashType onAsADash(DashInfo*) const noexcept { return kNone_DashType; }
+  virtual DashType onAsADash(DashInfo*) const { return kNone_DashType; }
 
  private:
   // illegal

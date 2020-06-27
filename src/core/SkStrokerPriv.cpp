@@ -46,7 +46,7 @@ static void SquareCapper(
 
 /////////////////////////////////////////////////////////////////////////////
 
-static bool is_clockwise(const SkVector& before, const SkVector& after) {
+static bool is_clockwise(const SkVector& before, const SkVector& after) noexcept {
   return before.fX * after.fY > before.fY * after.fX;
 }
 
@@ -57,7 +57,7 @@ enum AngleType {
   kNearlyLine_AngleType
 };
 
-static AngleType Dot2AngleType(SkScalar dot) {
+static AngleType Dot2AngleType(SkScalar dot) noexcept {
   // need more precise fixed normalization
   //  SkASSERT(SkScalarAbs(dot) <= SK_Scalar1 + SK_ScalarNearlyZero);
 

@@ -57,7 +57,7 @@ void SkColorMatrix::setScale(float rScale, float gScale, float bScale, float aSc
   fMat[kA_Scale] = aScale;
 }
 
-void SkColorMatrix::postTranslate(float dr, float dg, float db, float da) {
+void SkColorMatrix::postTranslate(float dr, float dg, float db, float da) noexcept {
   fMat[kR_Trans] += dr;
   fMat[kG_Trans] += dg;
   fMat[kB_Trans] += db;
@@ -72,15 +72,15 @@ void SkColorMatrix::setConcat(const SkColorMatrix& matA, const SkColorMatrix& ma
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void setrow(float row[], float r, float g, float b) {
+static void setrow(float row[], float r, float g, float b) noexcept {
   row[0] = r;
   row[1] = g;
   row[2] = b;
 }
 
-static const float kHueR = 0.213f;
-static const float kHueG = 0.715f;
-static const float kHueB = 0.072f;
+static constexpr float kHueR = 0.213f;
+static constexpr float kHueG = 0.715f;
+static constexpr float kHueB = 0.072f;
 
 void SkColorMatrix::setSaturation(float sat) {
   fMat.fill(0.0f);

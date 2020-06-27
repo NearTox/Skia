@@ -73,12 +73,14 @@ class SK_API SkAndroidCodec : SkNoncopyable {
 
   virtual ~SkAndroidCodec();
 
-  const SkImageInfo& getInfo() const { return fInfo; }
+  const SkImageInfo& getInfo() const noexcept { return fInfo; }
 
   /**
    * Return the ICC profile of the encoded data.
    */
-  const skcms_ICCProfile* getICCProfile() const { return fCodec->getEncodedInfo().profile(); }
+  const skcms_ICCProfile* getICCProfile() const noexcept {
+    return fCodec->getEncodedInfo().profile();
+  }
 
   /**
    *  Format of the encoded data.
@@ -96,7 +98,7 @@ class SK_API SkAndroidCodec : SkNoncopyable {
    *  Otherwise, this returns a color type that is an appropriate
    *  match for the the encoded data.
    */
-  SkColorType computeOutputColorType(SkColorType requestedColorType);
+  SkColorType computeOutputColorType(SkColorType requestedColorType) noexcept;
 
   /**
    *  @param requestedUnpremul  Indicates if the client requested
@@ -105,7 +107,7 @@ class SK_API SkAndroidCodec : SkNoncopyable {
    *  Returns the appropriate alpha type to decode to.  If the image
    *  has alpha, the value of requestedUnpremul will be honored.
    */
-  SkAlphaType computeOutputAlphaType(bool requestedUnpremul);
+  SkAlphaType computeOutputAlphaType(bool requestedUnpremul) noexcept;
 
   /**
    *  @param outputColorType Color type that the client will decode to.
@@ -269,7 +271,7 @@ class SK_API SkAndroidCodec : SkNoncopyable {
     return this->getAndroidPixels(info, pixels, rowBytes);
   }
 
-  SkCodec* codec() const { return fCodec.get(); }
+  SkCodec* codec() const noexcept { return fCodec.get(); }
 
  protected:
   SkAndroidCodec(SkCodec*, ExifOrientationBehavior = ExifOrientationBehavior::kIgnore);

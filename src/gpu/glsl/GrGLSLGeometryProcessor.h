@@ -44,6 +44,9 @@ class GrGLSLGeometryProcessor : public GrGLSLPrimitiveProcessor {
         vb, varyingHandler, uniformHandler, localCoordsVar, SkMatrix::I(), handler);
   }
 
+  // TODO: doc
+  void emitTransformCode(GrGLSLVertexBuilder* vb, GrGLSLUniformHandler* uniformHandler) override;
+
   struct GrGPArgs {
     // Used to specify the output variable used by the GP to store its device position. It can
     // either be a float2 or a float3 (in order to handle perspective). The subclass sets this
@@ -82,6 +85,15 @@ class GrGLSLGeometryProcessor : public GrGLSLPrimitiveProcessor {
   };
 
   SkTArray<TransformUniform, true> fInstalledTransforms;
+
+  struct TransformInfo {
+    const char* fName;
+    GrSLType fType;
+    SkString fMatrix;
+    SkString fLocalCoords;
+    const GrFragmentProcessor* fFP;
+  };
+  SkTArray<TransformInfo> fTransformInfos;
 
   typedef GrGLSLPrimitiveProcessor INHERITED;
 };

@@ -351,10 +351,6 @@ config("warnings") {
                   # clients of class 'type2'
       "/wd4275",  # non dll-interface class 'base' used as base for
                   # dll-interface class 'derived'
-
-      # It'd be nice to fix these and turn this on:
-      "/wd5041",  # out-of-line definition for constexpr static data member is
-                  # not needed and is deprecated in C++17
     ]
   } else {
     cflags += [

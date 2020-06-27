@@ -26,12 +26,12 @@ class SkLocalMatrixImageFilter : public SkImageFilter_Base {
       const SkIRect& src, const SkMatrix& ctm, MapDirection,
       const SkIRect* inputRect) const override;
 
-  bool onCanHandleComplexCTM() const override { return true; }
+  bool onCanHandleComplexCTM() const noexcept override { return true; }
 
  private:
   SK_FLATTENABLE_HOOKS(SkLocalMatrixImageFilter)
 
-  SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input);
+  SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input) noexcept;
 
   SkMatrix fLocalM;
 

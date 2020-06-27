@@ -14,7 +14,7 @@
 /**
  * SkBaseIStream
  */
-SkBaseIStream::SkBaseIStream() : _refcount(1) {}
+SkBaseIStream::SkBaseIStream() noexcept : _refcount(1) {}
 SkBaseIStream::~SkBaseIStream() {}
 
 SK_STDMETHODIMP SkBaseIStream::QueryInterface(REFIID iid, void** ppvObject) {
@@ -170,7 +170,7 @@ SK_STDMETHODIMP SkIStream::Stat(STATSTG* pStatstg, DWORD grfStatFlag) {
 /**
  * SkIWStream
  */
-SkWIStream::SkWIStream(SkWStream* stream) : SkBaseIStream(), fSkWStream(stream) {}
+SkWIStream::SkWIStream(SkWStream* stream) noexcept : SkBaseIStream(), fSkWStream(stream) {}
 
 SkWIStream::~SkWIStream() {
   if (this->fSkWStream) {

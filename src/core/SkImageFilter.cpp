@@ -148,7 +148,7 @@ static int32_t next_image_filter_unique_id() noexcept {
 }
 
 SkImageFilter_Base::SkImageFilter_Base(
-    sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect)
+    sk_sp<SkImageFilter> const* inputs, int inputCount, const CropRect* cropRect) noexcept
     : fUsesSrcInput(false), fUniqueID(next_image_filter_unique_id()) {
   fCropRect = cropRect ? *cropRect : CropRect(SkRect(), 0x0);
 

@@ -31,7 +31,7 @@ namespace SK_OPTS_NS {
 
 // This same basic packing scheme is used throughout the file.
 template <typename U32, typename Out>
-static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, Out* w) {
+static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, Out* w) noexcept {
   *v0 = (packed >> 18);       // Integer coordinate x0 or y0.
   *v1 = (packed & 0x3fff);    // Integer coordinate x1 or y1.
   *w = (packed >> 14) & 0xf;  // Lerp weight for v1; weight for v0 is 16-w.
@@ -129,9 +129,11 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
     // Get back to [0,255] by dividing by maximum weight 16x16 = 256.
     sum >>= 8;
 
-    // Scale by [0,256] alpha.
-    sum *= s.fAlphaScale;
-    sum >>= 8;
+    // Scale by alpha if needed.
+    if (s.fAlphaScale < 256) {
+      sum *= s.fAlphaScale;
+      sum >>= 8;
+    }
 
     // Pack back to 8-bit channels, undoing to_16x4().
     return skvx::bit_pun<skvx::Vec<8, uint32_t>>(skvx::cast<uint8_t>(sum));
@@ -167,7 +169,7 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
   // interpolate_in_x() is the crux of the SSSE3 implementation,
   // interpolating in X for up to two output pixels (A and B) using _mm_maddubs_epi16().
   auto interpolate_in_x = [](uint32_t A0, uint32_t A1, uint32_t B0, uint32_t B1,
-                             __m128i interlaced_x_weights) {
+                             __m128i interlaced_x_weights) noexcept {
     // _mm_maddubs_epi16() is a little idiosyncratic, but great as the core of a lerp.
     //
     // It takes two arguments interlaced byte-wise:
@@ -191,7 +193,7 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
   // Returns two pixels, with each color channel in a 16-bit lane of the __m128i.
   auto interpolate_in_x_and_y = [&](uint32_t A0, uint32_t A1, uint32_t A2, uint32_t A3, uint32_t B0,
                                     uint32_t B1, uint32_t B2, uint32_t B3,
-                                    __m128i interlaced_x_weights, int wy) {
+                                    __m128i interlaced_x_weights, int wy) noexcept {
     // Interpolate each row in X, leaving 16-bit lanes scaled by interlaced_x_weights.
     __m128i top = interpolate_in_x(A0, A1, B0, B1, interlaced_x_weights),
             bot = interpolate_in_x(A2, A3, B2, B3, interlaced_x_weights);
@@ -282,7 +284,7 @@ static void decode_packed_coordinates_and_weight(U32 packed, Out* v0, Out* v1, O
 #elif 1 && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
 
 /*not static*/ inline void S32_alpha_D32_filter_DX(
-    const SkBitmapProcState& s, const uint32_t* xy, int count, uint32_t* colors) {
+    const SkBitmapProcState& s, const uint32_t* xy, int count, uint32_t* colors) noexcept {
   SkASSERT(count > 0 && colors != nullptr);
   SkASSERT(s.fFilterQuality != kNone_SkFilterQuality);
   SkASSERT(kN32_SkColorType == s.fPixmap.colorType());

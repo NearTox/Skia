@@ -13,6 +13,7 @@
 #include "src/core/SkBlurPriv.h"
 #include "src/core/SkGpuBlurUtils.h"
 #include "src/core/SkMaskFilterBase.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkRRectPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkStringUtils.h"
@@ -32,7 +33,7 @@
 #  include "src/gpu/effects/generated/GrCircleBlurFragmentProcessor.h"
 #  include "src/gpu/effects/generated/GrRRectBlurEffect.h"
 #  include "src/gpu/effects/generated/GrRectBlurEffect.h"
-#  include "src/gpu/geometry/GrShape.h"
+#  include "src/gpu/geometry/GrStyledShape.h"
 #  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
@@ -41,26 +42,26 @@
 
 class SkBlurMaskFilterImpl : public SkMaskFilterBase {
  public:
-  SkBlurMaskFilterImpl(SkScalar sigma, SkBlurStyle, bool respectCTM);
+  SkBlurMaskFilterImpl(SkScalar sigma, SkBlurStyle, bool respectCTM) noexcept;
 
   // overrides from SkMaskFilter
-  SkMask::Format getFormat() const override;
+  SkMask::Format getFormat() const noexcept override;
   bool filterMask(SkMask* dst, const SkMask& src, const SkMatrix&, SkIPoint* margin) const override;
 
 #if SK_SUPPORT_GPU
   bool canFilterMaskGPU(
-      const GrShape& shape, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
+      const GrStyledShape& shape, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
       const SkMatrix& ctm, SkIRect* maskRect) const override;
   bool directFilterMaskGPU(
       GrRecordingContext*, GrRenderTargetContext* renderTargetContext, GrPaint&&, const GrClip&,
-      const SkMatrix& viewMatrix, const GrShape& shape) const override;
+      const SkMatrix& viewMatrix, const GrStyledShape& shape) const override;
   GrSurfaceProxyView filterMaskGPU(
       GrRecordingContext*, GrSurfaceProxyView srcView, GrColorType srcColorType,
       SkAlphaType srcAlphaType, const SkMatrix& ctm, const SkIRect& maskRect) const override;
 #endif
 
-  void computeFastBounds(const SkRect&, SkRect*) const override;
-  bool asABlur(BlurRec*) const override;
+  void computeFastBounds(const SkRect&, SkRect*) const noexcept override;
+  bool asABlur(BlurRec*) const noexcept override;
 
  protected:
   FilterReturn filterRectsToNine(
@@ -77,7 +78,7 @@ class SkBlurMaskFilterImpl : public SkMaskFilterBase {
       SkMask* dstM, const SkRRect& r, const SkMatrix& matrix, SkIPoint* margin,
       SkMask::CreateMode createMode) const;
 
-  bool ignoreXform() const { return !fRespectCTM; }
+  bool ignoreXform() const noexcept { return !fRespectCTM; }
 
  private:
   SK_FLATTENABLE_HOOKS(SkBlurMaskFilterImpl)
@@ -91,7 +92,7 @@ class SkBlurMaskFilterImpl : public SkMaskFilterBase {
   bool fRespectCTM;
 
   SkBlurMaskFilterImpl(SkReadBuffer&);
-  void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
 
   SkScalar computeXformedSigma(const SkMatrix& ctm) const {
     SkScalar xformedSigma = this->ignoreXform() ? fSigma : ctm.mapRadius(fSigma);
@@ -107,7 +108,7 @@ class SkBlurMaskFilterImpl : public SkMaskFilterBase {
 const SkScalar SkBlurMaskFilterImpl::kMAX_BLUR_SIGMA = SkIntToScalar(128);
 
 // linearly interpolate between y1 & y3 to match x2's position between x1 & x3
-static SkScalar interp(SkScalar x1, SkScalar x2, SkScalar x3, SkScalar y1, SkScalar y3) {
+static SkScalar interp(SkScalar x1, SkScalar x2, SkScalar x3, SkScalar y1, SkScalar y3) noexcept {
   SkASSERT(x1 <= x2 && x2 <= x3);
   SkASSERT(y1 <= y3);
 
@@ -246,15 +247,16 @@ bool SkComputeBlurredRRectParams(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkBlurMaskFilterImpl::SkBlurMaskFilterImpl(SkScalar sigma, SkBlurStyle style, bool respectCTM)
+SkBlurMaskFilterImpl::SkBlurMaskFilterImpl(
+    SkScalar sigma, SkBlurStyle style, bool respectCTM) noexcept
     : fSigma(sigma), fBlurStyle(style), fRespectCTM(respectCTM) {
   SkASSERT(fSigma > 0);
   SkASSERT((unsigned)style <= kLastEnum_SkBlurStyle);
 }
 
-SkMask::Format SkBlurMaskFilterImpl::getFormat() const { return SkMask::kA8_Format; }
+SkMask::Format SkBlurMaskFilterImpl::getFormat() const noexcept { return SkMask::kA8_Format; }
 
-bool SkBlurMaskFilterImpl::asABlur(BlurRec* rec) const {
+bool SkBlurMaskFilterImpl::asABlur(BlurRec* rec) const noexcept {
   if (this->ignoreXform()) {
     return false;
   }
@@ -290,7 +292,7 @@ bool SkBlurMaskFilterImpl::filterRRectMask(
 
 #include "include/core/SkCanvas.h"
 
-static bool prepare_to_draw_into_mask(const SkRect& bounds, SkMask* mask) {
+static bool prepare_to_draw_into_mask(const SkRect& bounds, SkMask* mask) noexcept {
   SkASSERT(mask != nullptr);
 
   mask->fBounds = bounds.roundOut();
@@ -353,7 +355,7 @@ static bool draw_rects_into_mask(const SkRect rects[], int count, SkMask* mask) 
   return true;
 }
 
-static bool rect_exceeds(const SkRect& r, SkScalar v) {
+static bool rect_exceeds(const SkRect& r, SkScalar v) noexcept {
   return r.fLeft < -v || r.fTop < -v || r.fRight > v || r.fBottom > v || r.width() > v ||
          r.height() > v;
 }
@@ -472,7 +474,7 @@ SkMaskFilterBase::FilterReturn SkBlurMaskFilterImpl::filterRRectToNine(
 
   // Extra space in the middle to ensure an unchanging piece for stretching. Use 3 to cover
   // any fractional space on either side plus 1 for the part to stretch.
-  const SkScalar stretchSize = SkIntToScalar(3);
+  constexpr SkScalar stretchSize = SkIntToScalar(3);
 
   const SkScalar totalSmallWidth = leftUnstretched + rightUnstretched + stretchSize;
   if (totalSmallWidth >= rrect.rect().width()) {
@@ -660,7 +662,7 @@ SkMaskFilterBase::FilterReturn SkBlurMaskFilterImpl::filterRectsToNine(
   return kTrue_FilterReturn;
 }
 
-void SkBlurMaskFilterImpl::computeFastBounds(const SkRect& src, SkRect* dst) const {
+void SkBlurMaskFilterImpl::computeFastBounds(const SkRect& src, SkRect* dst) const noexcept {
   SkScalar pad = 3.0f * fSigma;
 
   dst->setLTRB(src.fLeft - pad, src.fTop - pad, src.fRight + pad, src.fBottom + pad);
@@ -681,7 +683,7 @@ sk_sp<SkFlattenable> SkBlurMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {
   return SkMaskFilter::MakeBlur((SkBlurStyle)style, sigma, respectCTM);
 }
 
-void SkBlurMaskFilterImpl::flatten(SkWriteBuffer& buffer) const {
+void SkBlurMaskFilterImpl::flatten(SkWriteBuffer& buffer) const noexcept {
   buffer.writeScalar(fSigma);
   buffer.writeUInt(fBlurStyle);
   buffer.writeUInt(!fRespectCTM);  // historically we recorded ignoreCTM
@@ -691,7 +693,7 @@ void SkBlurMaskFilterImpl::flatten(SkWriteBuffer& buffer) const {
 
 bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
-    const GrClip& clip, const SkMatrix& viewMatrix, const GrShape& shape) const {
+    const GrClip& clip, const SkMatrix& viewMatrix, const GrStyledShape& shape) const {
   SkASSERT(renderTargetContext);
 
   if (fBlurStyle != kNormal_SkBlurStyle) {
@@ -775,7 +777,8 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     sk_sp<SkVertices> vertices = builder.detach();
 
     paint.addCoverageFragmentProcessor(std::move(fp));
-    renderTargetContext->drawVertices(clip, std::move(paint), viewMatrix, std::move(vertices));
+    SkSimpleMatrixProvider matrixProvider(viewMatrix);
+    renderTargetContext->drawVertices(clip, std::move(paint), matrixProvider, std::move(vertices));
   } else {
     SkMatrix inverse;
     if (!viewMatrix.invert(&inverse)) {
@@ -795,7 +798,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
 }
 
 bool SkBlurMaskFilterImpl::canFilterMaskGPU(
-    const GrShape& shape, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
+    const GrStyledShape& shape, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
     const SkMatrix& ctm, SkIRect* maskRect) const {
   SkScalar xformedSigma = this->computeXformedSigma(ctm);
   if (xformedSigma <= 0) {
@@ -818,8 +821,8 @@ bool SkBlurMaskFilterImpl::canFilterMaskGPU(
 
   // We prefer to blur paths with small blur radii on the CPU.
   if (ctm.rectStaysRect()) {
-    static const SkScalar kMIN_GPU_BLUR_SIZE = SkIntToScalar(64);
-    static const SkScalar kMIN_GPU_BLUR_SIGMA = SkIntToScalar(32);
+    static constexpr SkScalar kMIN_GPU_BLUR_SIZE = SkIntToScalar(64);
+    static constexpr SkScalar kMIN_GPU_BLUR_SIGMA = SkIntToScalar(32);
 
     if (devSpaceShapeBounds.width() <= kMIN_GPU_BLUR_SIZE &&
         devSpaceShapeBounds.height() <= kMIN_GPU_BLUR_SIZE && xformedSigma <= kMIN_GPU_BLUR_SIGMA) {

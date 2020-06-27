@@ -36,7 +36,7 @@ class SkOpGlobalState {
  public:
   SkOpGlobalState(
       SkOpContourHead* head, SkArenaAlloc* allocator SkDEBUGPARAMS(bool debugSkipAssert)
-                                 SkDEBUGPARAMS(const char* testName));
+                                 SkDEBUGPARAMS(const char* testName)) noexcept;
 
   enum { kMaxWindingTries = 10 };
 
@@ -253,8 +253,8 @@ inline bool AlmostBetweenUlps(double a, double b, double c) noexcept {
   return AlmostBetweenUlps(SkDoubleToScalar(a), SkDoubleToScalar(b), SkDoubleToScalar(c));
 }
 
-int UlpsDistance(float a, float b);
-inline int UlpsDistance(double a, double b) {
+int UlpsDistance(float a, float b) noexcept;
+inline int UlpsDistance(double a, double b) noexcept {
   return UlpsDistance(SkDoubleToScalar(a), SkDoubleToScalar(b));
 }
 
@@ -278,7 +278,7 @@ constexpr double BUMP_EPSILON = FLT_EPSILON * 4096;
 
 constexpr SkScalar INVERSE_NUMBER_RANGE = FLT_EPSILON_ORDERABLE_ERR;
 
-inline constexpr bool zero_or_one(double x) noexcept { return x == 0 || x == 1; }
+constexpr inline bool zero_or_one(double x) noexcept { return x == 0 || x == 1; }
 
 inline bool approximately_zero(double x) noexcept { return fabs(x) < FLT_EPSILON; }
 

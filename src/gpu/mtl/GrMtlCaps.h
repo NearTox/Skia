@@ -72,9 +72,6 @@ class GrMtlCaps : public GrCaps {
       GrSurface* dst, int dstSampleCount, GrSurface* src, int srcSampleCount,
       const SkIRect& srcRect, const SkIPoint& dstPoint) const;
 
-  GrColorType getYUVAColorTypeFromBackendFormat(
-      const GrBackendFormat&, bool isAlphaChannel) const override;
-
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
 
   MTLPixelFormat getFormatFromColorType(GrColorType colorType) const {
@@ -159,7 +156,7 @@ class GrMtlCaps : public GrCaps {
 #ifdef SK_BUILD_FOR_IOS
   static constexpr size_t kNumMtlFormats = 17;
 #else
-  static constexpr size_t kNumMtlFormats = 15;
+  static constexpr size_t kNumMtlFormats = 16;
 #endif
   static size_t GetFormatIndex(MTLPixelFormat);
   FormatInfo fFormatTable[kNumMtlFormats];

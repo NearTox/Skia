@@ -36,13 +36,14 @@ class CacheImpl : public SkImageFilterCache {
   }
   struct Value {
     Value(
-        const Key& key, const skif::FilterResult<For::kOutput>& image, const SkImageFilter* filter)
+        const Key& key, const skif::FilterResult<For::kOutput>& image,
+        const SkImageFilter* filter) noexcept
         : fKey(key), fImage(image), fFilter(filter) {}
 
     Key fKey;
     skif::FilterResult<For::kOutput> fImage;
     const SkImageFilter* fFilter;
-    static const Key& GetKey(const Value& v) { return v.fKey; }
+    static const Key& GetKey(const Value& v) noexcept { return v.fKey; }
     static uint32_t Hash(const Key& key) {
       return SkOpts::hash(reinterpret_cast<const uint32_t*>(&key), sizeof(Key));
     }
@@ -116,8 +117,10 @@ class CacheImpl : public SkImageFilterCache {
     fImageFilterValues.remove(filter);
   }
 
-  SkDEBUGCODE(int count() const override { return fLookup.count(); }) private
-      : void removeInternal(Value* v) {
+  SkDEBUGCODE(int count() const override { return fLookup.count(); });
+
+ private:
+  void removeInternal(Value* v) {
     if (v->fFilter) {
       if (auto* values = fImageFilterValues.find(v->fFilter)) {
         if (values->size() == 1 && (*values)[0] == v) {

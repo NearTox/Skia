@@ -109,7 +109,9 @@ void SymbolTable::markAllFunctionsBuiltin() {
         break;
       case Symbol::kUnresolvedFunction_Kind:
         for (auto& f : ((UnresolvedFunction&)*pair.second).fFunctions) {
-          ((FunctionDeclaration*)f)->fBuiltin = true;
+          if (!((FunctionDeclaration*)f)->fDefined) {
+            ((FunctionDeclaration*)f)->fBuiltin = true;
+          }
         }
         break;
       default: break;
@@ -117,11 +119,11 @@ void SymbolTable::markAllFunctionsBuiltin() {
   }
 }
 
-std::unordered_map<StringFragment, const Symbol*>::iterator SymbolTable::begin() {
+std::unordered_map<StringFragment, const Symbol*>::iterator SymbolTable::begin() noexcept {
   return fSymbols.begin();
 }
 
-std::unordered_map<StringFragment, const Symbol*>::iterator SymbolTable::end() {
+std::unordered_map<StringFragment, const Symbol*>::iterator SymbolTable::end() noexcept {
   return fSymbols.end();
 }
 

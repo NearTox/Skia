@@ -18,15 +18,15 @@
     implemented privately in GrTexture with a inline public method here). */
 class GrTexturePriv {
  public:
-  void markMipMapsDirty() { fTexture->markMipMapsDirty(); }
+  void markMipMapsDirty() noexcept { fTexture->markMipMapsDirty(); }
 
-  void markMipMapsClean() { fTexture->markMipMapsClean(); }
+  void markMipMapsClean() noexcept { fTexture->markMipMapsClean(); }
 
   GrMipMapsStatus mipMapsStatus() const noexcept { return fTexture->fMipMapsStatus; }
 
-  bool mipMapsAreDirty() const { return GrMipMapsStatus::kValid != this->mipMapsStatus(); }
+  bool mipMapsAreDirty() const noexcept { return GrMipMapsStatus::kValid != this->mipMapsStatus(); }
 
-  GrMipMapped mipMapped() const {
+  GrMipMapped mipMapped() const noexcept {
     if (GrMipMapsStatus::kNotAllocated != this->mipMapsStatus()) {
       return GrMipMapped::kYes;
     }
@@ -36,7 +36,7 @@ class GrTexturePriv {
   int maxMipMapLevel() const noexcept { return fTexture->fMaxMipMapLevel; }
 
   GrTextureType textureType() const noexcept { return fTexture->fTextureType; }
-  bool hasRestrictedSampling() const {
+  bool hasRestrictedSampling() const noexcept {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
 

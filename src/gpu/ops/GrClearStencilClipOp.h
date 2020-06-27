@@ -23,7 +23,7 @@ class GrClearStencilClipOp final : public GrOp {
       GrRecordingContext* context, const GrFixedClip& clip, bool insideStencilMask,
       GrRenderTargetProxy* proxy);
 
-  const char* name() const override { return "ClearStencilClip"; }
+  const char* name() const noexcept override { return "ClearStencilClip"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -43,7 +43,8 @@ class GrClearStencilClipOp final : public GrOp {
  private:
   friend class GrOpMemoryPool;  // for ctor
 
-  GrClearStencilClipOp(const GrFixedClip& clip, bool insideStencilMask, GrRenderTargetProxy* proxy)
+  GrClearStencilClipOp(
+      const GrFixedClip& clip, bool insideStencilMask, GrRenderTargetProxy* proxy) noexcept
       : INHERITED(ClassID()), fClip(clip), fInsideStencilMask(insideStencilMask) {
     const SkRect& bounds =
         fClip.scissorEnabled() ? SkRect::Make(fClip.scissorRect()) : proxy->getBoundsRect();
@@ -51,10 +52,10 @@ class GrClearStencilClipOp final : public GrOp {
   }
 
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) noexcept override {}
 
-  void onPrepare(GrOpFlushState*) override {}
+  void onPrepare(GrOpFlushState*) noexcept override {}
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 

@@ -13,7 +13,7 @@
 
 namespace SkDrawShadowMetrics {
 
-static SkScalar compute_z(SkScalar x, SkScalar y, const SkPoint3& params) {
+static SkScalar compute_z(SkScalar x, SkScalar y, const SkPoint3& params) noexcept {
   return x * params.fX + y * params.fY + params.fZ;
 }
 

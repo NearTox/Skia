@@ -16,6 +16,7 @@
 #include "include/core/SkStream.h"
 #include "include/private/SkTArray.h"
 #include "include/private/SkTo.h"
+#include "modules/skottie/include/ExternalLayer.h"
 #include "modules/skottie/include/SkottieProperty.h"
 #include "modules/skottie/src/Composition.h"
 #include "modules/skottie/src/SkottieJson.h"
@@ -134,7 +135,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachOpacity(
       return child_node;
     }
   } else {
-    fCurrentAnimatorScope->push_back(adapter);
+    fCurrentAnimatorScope->emplace_back(adapter);
   }
 
   return adapter->node();
@@ -153,13 +154,15 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachBlendMode(
 
 AnimationBuilder::AnimationBuilder(
     sk_sp<ResourceProvider> rp, sk_sp<SkFontMgr> fontmgr, sk_sp<PropertyObserver> pobserver,
-    sk_sp<Logger> logger, sk_sp<MarkerObserver> mobserver, Animation::Builder::Stats* stats,
-    const SkSize& comp_size, float duration, float framerate, uint32_t flags)
+    sk_sp<Logger> logger, sk_sp<MarkerObserver> mobserver, sk_sp<PrecompInterceptor> pi,
+    Animation::Builder::Stats* stats, const SkSize& comp_size, float duration, float framerate,
+    uint32_t flags)
     : fResourceProvider(std::move(rp)),
       fLazyFontMgr(std::move(fontmgr)),
       fPropertyObserver(std::move(pobserver)),
       fLogger(std::move(logger)),
       fMarkerObserver(std::move(mobserver)),
+      fPrecompInterceptor(std::move(pi)),
       fStats(stats),
       fCompSize(comp_size),
       fDuration(duration),
@@ -312,6 +315,11 @@ Animation::Builder& Animation::Builder::setMarkerObserver(sk_sp<MarkerObserver> 
   return *this;
 }
 
+Animation::Builder& Animation::Builder::setPrecompInterceptor(sk_sp<PrecompInterceptor> pi) {
+  fPrecompInterceptor = std::move(pi);
+  return *this;
+}
+
 sk_sp<Animation> Animation::Builder::make(SkStream* stream) {
   if (!stream->hasLength()) {
     // TODO: handle explicit buffering?
@@ -383,7 +391,8 @@ sk_sp<Animation> Animation::Builder::make(const char* data, size_t data_len) {
   SkASSERT(resolvedProvider);
   internal::AnimationBuilder builder(
       std::move(resolvedProvider), fFontMgr, std::move(fPropertyObserver), std::move(fLogger),
-      std::move(fMarkerObserver), &fStats, size, duration, fps, fFlags);
+      std::move(fMarkerObserver), std::move(fPrecompInterceptor), &fStats, size, duration, fps,
+      fFlags);
   auto ainfo = builder.parse(json);
 
   const auto t2 = std::chrono::steady_clock::now();

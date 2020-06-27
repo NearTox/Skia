@@ -29,7 +29,7 @@ struct SkScalerContextEffects;
 class SkStrikeForGPU {
  public:
   virtual ~SkStrikeForGPU() = default;
-  virtual const SkDescriptor& getDescriptor() const = 0;
+  virtual const SkDescriptor& getDescriptor() const noexcept = 0;
 
   virtual void prepareForMaskDrawing(
       SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects) = 0;
@@ -40,19 +40,19 @@ class SkStrikeForGPU {
   virtual void prepareForPathDrawing(
       SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects) = 0;
 
-  virtual const SkGlyphPositionRoundingSpec& roundingSpec() const = 0;
+  virtual const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept = 0;
 
   // Used with SkScopedStrikeForGPU to take action at the end of a scope.
   virtual void onAboutToExitScope() noexcept = 0;
 
   // Common categories for glyph types used by GPU.
-  static bool CanDrawAsMask(const SkGlyph& glyph);
-  static bool CanDrawAsSDFT(const SkGlyph& glyph);
-  static bool CanDrawAsPath(const SkGlyph& glyph);
-  static bool FitsInAtlas(const SkGlyph& glyph);
+  static bool CanDrawAsMask(const SkGlyph& glyph) noexcept;
+  static bool CanDrawAsSDFT(const SkGlyph& glyph) noexcept;
+  static bool CanDrawAsPath(const SkGlyph& glyph) noexcept;
+  static bool FitsInAtlas(const SkGlyph& glyph) noexcept;
 
   struct Deleter {
-    void operator()(SkStrikeForGPU* ptr) const { ptr->onAboutToExitScope(); }
+    void operator()(SkStrikeForGPU* ptr) const noexcept { ptr->onAboutToExitScope(); }
   };
 };
 

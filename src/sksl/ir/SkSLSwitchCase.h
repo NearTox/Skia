@@ -19,7 +19,7 @@ namespace SkSL {
 struct SwitchCase : public Statement {
   SwitchCase(
       int offset, std::unique_ptr<Expression> value,
-      std::vector<std::unique_ptr<Statement>> statements)
+      std::vector<std::unique_ptr<Statement>> statements) noexcept
       : INHERITED(offset, kSwitch_Kind),
         fValue(std::move(value)),
         fStatements(std::move(statements)) {}
@@ -33,7 +33,6 @@ struct SwitchCase : public Statement {
         new SwitchCase(fOffset, fValue ? fValue->clone() : nullptr, std::move(cloned)));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result;
     if (fValue) {
@@ -46,7 +45,6 @@ struct SwitchCase : public Statement {
     }
     return result;
   }
-#endif
 
   // null value implies "default" case
   std::unique_ptr<Expression> fValue;

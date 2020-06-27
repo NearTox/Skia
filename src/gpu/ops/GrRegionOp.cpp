@@ -99,7 +99,7 @@ class RegionOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp = make_gp(arena, fViewMatrix, fWideColor);
     if (!gp) {
@@ -108,7 +108,7 @@ class RegionOp final : public GrMeshDrawOp {
     }
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         GrPrimitiveType::kTriangles);
   }
 

@@ -31,8 +31,8 @@ class GrStencilAtlasOp : public GrDrawOp {
   };
 
   // GrDrawOp interface.
-  const char* name() const override { return "StencilAtlasOp (CCPR)"; }
-  FixedFunctionFlags fixedFunctionFlags() const override {
+  const char* name() const noexcept override { return "StencilAtlasOp (CCPR)"; }
+  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
     return FixedFunctionFlags::kUsesHWAA | FixedFunctionFlags::kUsesStencil;
   }
 
@@ -53,17 +53,20 @@ class GrStencilAtlasOp : public GrDrawOp {
 
  private:
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+  void drawResolve(
+      GrOpFlushState*, const GrPipeline&, const GrPrimitiveProcessor&,
+      const SkIRect& drawBounds) const;
 
   friend class ::GrOpMemoryPool;  // for ctor
 
   GrStencilAtlasOp(
       sk_sp<const GrCCPerFlushResources> resources, FillBatchID fillBatchID,
       StrokeBatchID strokeBatchID, int baseStencilResolveInstance, int endStencilResolveInstance,
-      const SkISize& drawBounds)
+      const SkISize& drawBounds) noexcept
       : GrDrawOp(ClassID()),
         fResources(std::move(resources)),
         fFillBatchID(fillBatchID),

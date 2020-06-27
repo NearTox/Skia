@@ -37,9 +37,9 @@ struct Modifiers {
     kVarying_Flag = 1 << 16,
   };
 
-  Modifiers() : fLayout(Layout()), fFlags(0) {}
+  Modifiers() noexcept = default;
 
-  Modifiers(const Layout& layout, int flags) : fLayout(layout), fFlags(flags) {}
+  Modifiers(const Layout& layout, int flags) noexcept : fLayout(layout), fFlags(flags) {}
 
   String description() const {
     String result = fLayout.description();
@@ -99,14 +99,14 @@ struct Modifiers {
     return result;
   }
 
-  bool operator==(const Modifiers& other) const {
+  bool operator==(const Modifiers& other) const noexcept {
     return fLayout == other.fLayout && fFlags == other.fFlags;
   }
 
-  bool operator!=(const Modifiers& other) const { return !(*this == other); }
+  bool operator!=(const Modifiers& other) const noexcept { return !(*this == other); }
 
-  Layout fLayout;
-  int fFlags;
+  Layout fLayout{};
+  int fFlags = 0;
 };
 
 }  // namespace SkSL

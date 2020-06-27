@@ -11,10 +11,11 @@
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkColor.h"
 #include "include/private/SkMacros.h"
+#include "include/private/SkTArray.h"
 #include "include/private/SkTHash.h"
 #include "src/core/SkSpan.h"
 #include "src/core/SkVM_fwd.h"
-#include <vector>      // std::vector
+#include <vector>  // std::vector
 
 class SkWStream;
 
@@ -22,13 +23,27 @@ class SkWStream;
 #  define SKVM_LLVM
 #endif
 
+// JIT code isn't MSAN-instrumented, so we won't see when it uses
+// uninitialized memory, and we'll not see the writes it makes as properly
+// initializing memory.  Instead force the interpreter, which should let
+// MSAN see everything our programs do properly.
+//
+// Similarly, we can't get ASAN's checks unless we let it instrument our interpreter.
+#if defined(__has_feature)
+#  if __has_feature(memory_sanitizer) || __has_feature(address_sanitizer)
+#    undef SKVM_JIT
+#  endif
+#endif
+
 namespace skvm {
+
+bool fma_supported() noexcept;
 
 class Assembler {
  public:
-  explicit Assembler(void* buf);
+  explicit Assembler(void* buf) noexcept;
 
-  size_t size() const;
+  size_t size() const noexcept;
 
   // Order matters... GP64, Xmm, Ymm values match 4-bit register encoding for each.
   enum GP64 {
@@ -120,6 +135,7 @@ class Assembler {
     x29,
     x30,
     xzr,
+    sp = xzr,
   };
   enum V {
     v0,
@@ -156,115 +172,183 @@ class Assembler {
     v31,
   };
 
-  void bytes(const void*, int);
-  void byte(uint8_t);
-  void word(uint32_t);
-
-  // x86-64
-
-  void align(int mod);
-
-  void int3();
-  void vzeroupper();
-  void ret();
-
-  void add(GP64, int imm);
-  void sub(GP64, int imm);
-
-  void movq(GP64 dst, GP64 src, int off);  // dst = *(src+off)
+  void bytes(const void*, int) noexcept;
+  void byte(uint8_t) noexcept;
+  void word(uint32_t) noexcept;
 
   struct Label {
     int offset = 0;
     enum { NotYetSet, ARMDisp19, X86Disp32 } kind = NotYetSet;
-    std::vector<int> references;
+    SkSTArray<2, int> references;
   };
 
-  struct YmmOrLabel {
-    Ymm ymm = ymm0;
-    Label* label = nullptr;
+  // x86-64
 
-    /*implicit*/ YmmOrLabel(Ymm y) noexcept : ymm(y) { SkASSERT(!label); }
-    /*implicit*/ YmmOrLabel(Label* l) noexcept : label(l) { SkASSERT(label); }
+  void align(int mod) noexcept;
+
+  void int3() noexcept;
+  void vzeroupper() noexcept;
+  void ret() noexcept;
+
+  // Mem represents a value at base + disp + scale*index,
+  // or simply at base + disp if index=rsp.
+  enum Scale { ONE, TWO, FOUR, EIGHT };
+  struct Mem {
+    GP64 base;
+    int disp = 0;
+    GP64 index = rsp;
+    Scale scale = ONE;
   };
 
-  // All dst = x op y.
-  using DstEqXOpY = void(Ymm dst, Ymm x, Ymm y);
-  DstEqXOpY vpandn, vpmulld, vpsubw, vpmullw, vdivps, vfmadd132ps, vfmadd213ps, vfmadd231ps,
-      vfmsub132ps, vfmsub213ps, vfmsub231ps, vfnmadd132ps, vfnmadd213ps, vfnmadd231ps, vpackusdw,
-      vpackuswb, vpcmpeqd, vpcmpgtd;
+  struct Operand {
+    union {
+      int reg;
+      Mem mem;
+      Label* label;
+    };
+    enum { REG, MEM, LABEL } kind;
 
-  using DstEqXOpYOrLabel = void(Ymm dst, Ymm x, YmmOrLabel y);
-  DstEqXOpYOrLabel vpand, vpor, vpxor, vpaddd, vpsubd, vaddps, vsubps, vmulps, vminps, vmaxps;
+    Operand(GP64 r) noexcept : reg(r), kind(REG) {}
+    Operand(Xmm r) noexcept : reg(r), kind(REG) {}
+    Operand(Ymm r) noexcept : reg(r), kind(REG) {}
+    Operand(Mem m) noexcept : mem(m), kind(MEM) {}
+    Operand(Label* l) noexcept : label(l), kind(LABEL) {}
+  };
 
-  // Floating point comparisons are all the same instruction with varying imm.
-  void vcmpps(Ymm dst, Ymm x, Ymm y, int imm);
-  void vcmpeqps(Ymm dst, Ymm x, Ymm y) { this->vcmpps(dst, x, y, 0); }
-  void vcmpltps(Ymm dst, Ymm x, Ymm y) { this->vcmpps(dst, x, y, 1); }
-  void vcmpleps(Ymm dst, Ymm x, Ymm y) { this->vcmpps(dst, x, y, 2); }
-  void vcmpneqps(Ymm dst, Ymm x, Ymm y) { this->vcmpps(dst, x, y, 4); }
+  void vpand(Ymm dst, Ymm x, Operand y);
+  void vpandn(Ymm dst, Ymm x, Operand y);
+  void vpor(Ymm dst, Ymm x, Operand y);
+  void vpxor(Ymm dst, Ymm x, Operand y);
 
-  using DstEqXOpImm = void(Ymm dst, Ymm x, int imm);
-  DstEqXOpImm vpslld, vpsrld, vpsrad, vpsrlw, vpermq, vroundps;
+  void vpaddd(Ymm dst, Ymm x, Operand y);
+  void vpsubd(Ymm dst, Ymm x, Operand y);
+  void vpmulld(Ymm dst, Ymm x, Operand y);
 
-  enum { NEAREST, FLOOR, CEIL, TRUNC };  // vroundps immediates
+  void vpsubw(Ymm dst, Ymm x, Operand y);
+  void vpmullw(Ymm dst, Ymm x, Operand y);
 
-  using DstEqOpX = void(Ymm dst, Ymm x);
-  DstEqOpX vmovdqa, vcvtdq2ps, vcvttps2dq, vcvtps2dq, vsqrtps;
+  void vaddps(Ymm dst, Ymm x, Operand y);
+  void vsubps(Ymm dst, Ymm x, Operand y);
+  void vmulps(Ymm dst, Ymm x, Operand y);
+  void vdivps(Ymm dst, Ymm x, Operand y);
+  void vminps(Ymm dst, Ymm x, Operand y);
+  void vmaxps(Ymm dst, Ymm x, Operand y);
 
-  void vpblendvb(Ymm dst, Ymm x, Ymm y, Ymm z);
+  void vsqrtps(Ymm dst, Operand x);
 
-  Label here();
-  void label(Label*);
+  void vfmadd132ps(Ymm dst, Ymm x, Operand y);
+  void vfmadd213ps(Ymm dst, Ymm x, Operand y);
+  void vfmadd231ps(Ymm dst, Ymm x, Operand y);
+
+  void vfmsub132ps(Ymm dst, Ymm x, Operand y);
+  void vfmsub213ps(Ymm dst, Ymm x, Operand y);
+  void vfmsub231ps(Ymm dst, Ymm x, Operand y);
+
+  void vfnmadd132ps(Ymm dst, Ymm x, Operand y);
+  void vfnmadd213ps(Ymm dst, Ymm x, Operand y);
+  void vfnmadd231ps(Ymm dst, Ymm x, Operand y);
+
+  void vpackusdw(Ymm dst, Ymm x, Operand y);
+  void vpackuswb(Ymm dst, Ymm x, Operand y);
+
+  void vpcmpeqd(Ymm dst, Ymm x, Operand y);
+  void vpcmpgtd(Ymm dst, Ymm x, Operand y);
+
+  void vcmpps(Ymm dst, Ymm x, Operand y, int imm);
+  void vcmpeqps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 0); }
+  void vcmpltps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 1); }
+  void vcmpleps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 2); }
+  void vcmpneqps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 4); }
+
+  // Sadly, the x parameter cannot be a general Operand for these shifts.
+  void vpslld(Ymm dst, Ymm x, int imm);
+  void vpsrld(Ymm dst, Ymm x, int imm);
+  void vpsrad(Ymm dst, Ymm x, int imm);
+  void vpsrlw(Ymm dst, Ymm x, int imm);
+
+  void vpermq(Ymm dst, Operand x, int imm);
+
+  enum Rounding { NEAREST, FLOOR, CEIL, TRUNC };
+  void vroundps(Ymm dst, Operand x, Rounding);
+
+  void vmovdqa(Ymm dst, Operand x);
+  void vmovups(Ymm dst, Operand x);
+  void vmovups(Operand dst, Ymm x);
+  void vmovups(Operand dst, Xmm x);
+
+  void vcvtdq2ps(Ymm dst, Operand x);
+  void vcvttps2dq(Ymm dst, Operand x);
+  void vcvtps2dq(Ymm dst, Operand x);
+
+  void vpblendvb(Ymm dst, Ymm x, Operand y, Ymm z);
+
+  void vpshufb(Ymm dst, Ymm x, Operand y);
+
+  void vptest(Ymm x, Operand y);
+
+  void vbroadcastss(Ymm dst, Operand y);
+
+  void vpmovzxwd(Ymm dst, Operand src);  // dst = src, 128-bit, uint16_t -> int
+  void vpmovzxbd(Ymm dst, Operand src);  // dst = src,  64-bit, uint8_t  -> int
+
+  void vmovq(Operand dst, Xmm src);  // dst = src,  64-bit
+  void vmovd(Operand dst, Xmm src);  // dst = src,  32-bit
+  void vmovd(Xmm dst, Operand src);  // dst = src,  32-bit
+
+  void vpinsrw(Xmm dst, Xmm src, Operand y, int imm);  // dst = src; dst[imm] = y, 16-bit
+  void vpinsrb(Xmm dst, Xmm src, Operand y, int imm);  // dst = src; dst[imm] = y,  8-bit
+
+  void vextracti128(Operand dst, Ymm src, int imm);  // dst = src[imm], 128-bit
+  void vpextrd(Operand dst, Xmm src, int imm);       // dst = src[imm],  32-bit
+  void vpextrw(Operand dst, Xmm src, int imm);       // dst = src[imm],  16-bit
+  void vpextrb(Operand dst, Xmm src, int imm);       // dst = src[imm],   8-bit
+
+  // if (mask & 0x8000'0000) {
+  //     dst = base[scale*ix];
+  // }
+  // mask = 0;
+  void vgatherdps(Ymm dst, Scale scale, Ymm ix, GP64 base, Ymm mask) noexcept;
+
+  void label(Label*) noexcept;
 
   void jmp(Label*);
   void je(Label*);
   void jne(Label*);
   void jl(Label*);
   void jc(Label*);
-  void cmp(GP64, int imm);
 
-  void vpshufb(Ymm dst, Ymm x, Label*);
-  void vptest(Ymm dst, Label*);
+  void add(Operand dst, int imm) noexcept;
+  void sub(Operand dst, int imm) noexcept;
+  void cmp(Operand dst, int imm) noexcept;
+  void mov(Operand dst, int imm) noexcept;
+  void movb(Operand dst, int imm) noexcept;
 
-  void vbroadcastss(Ymm dst, Label*);
-  void vbroadcastss(Ymm dst, Xmm src);
-  void vbroadcastss(Ymm dst, GP64 ptr, int off);  // dst = *(ptr+off)
+  void add(Operand dst, GP64 x) noexcept;
+  void sub(Operand dst, GP64 x) noexcept;
+  void cmp(Operand dst, GP64 x) noexcept;
+  void mov(Operand dst, GP64 x) noexcept;
+  void movb(Operand dst, GP64 x) noexcept;
 
-  void vmovups(Ymm dst, GP64 ptr);    // dst = *ptr, 256-bit
-  void vpmovzxwd(Ymm dst, GP64 ptr);  // dst = *ptr, 128-bit, each uint16_t expanded to int
-  void vpmovzxbd(Ymm dst, GP64 ptr);  // dst = *ptr,  64-bit, each uint8_t  expanded to int
-  void vmovd(Xmm dst, GP64 ptr);      // dst = *ptr,  32-bit
+  void add(GP64 dst, Operand x) noexcept;
+  void sub(GP64 dst, Operand x) noexcept;
+  void cmp(GP64 dst, Operand x) noexcept;
+  void mov(GP64 dst, Operand x) noexcept;
+  void movb(GP64 dst, Operand x) noexcept;
 
-  enum Scale { ONE, TWO, FOUR, EIGHT };
-  void vmovd(Xmm dst, Scale, GP64 index, GP64 base);  // dst = *(base + scale*index),  32-bit
+  // Disambiguators... choice is arbitrary (but generates different code!).
+  void add(GP64 dst, GP64 x) noexcept { this->add(Operand(dst), x); }
+  void sub(GP64 dst, GP64 x) noexcept { this->sub(Operand(dst), x); }
+  void cmp(GP64 dst, GP64 x) noexcept { this->cmp(Operand(dst), x); }
+  void mov(GP64 dst, GP64 x) noexcept { this->mov(Operand(dst), x); }
+  void movb(GP64 dst, GP64 x) noexcept { this->movb(Operand(dst), x); }
 
-  void vmovups(GP64 ptr, Ymm src);  // *ptr = src, 256-bit
-  void vmovups(GP64 ptr, Xmm src);  // *ptr = src, 128-bit
-  void vmovq(GP64 ptr, Xmm src);    // *ptr = src,  64-bit
-  void vmovd(GP64 ptr, Xmm src);    // *ptr = src,  32-bit
-
-  void movzbl(GP64 dst, GP64 ptr, int off);  // dst = *(ptr+off), uint8_t -> int
-  void movb(GP64 ptr, GP64 src);             // *ptr = src, 8-bit
-
-  void vmovd_direct(GP64 dst, Xmm src);  // dst = src, 32-bit
-  void vmovd_direct(Xmm dst, GP64 src);  // dst = src, 32-bit
-
-  void vpinsrw(Xmm dst, Xmm src, GP64 ptr, int imm);  // dst = src; dst[imm] = *ptr, 16-bit
-  void vpinsrb(Xmm dst, Xmm src, GP64 ptr, int imm);  // dst = src; dst[imm] = *ptr,  8-bit
-
-  void vpextrw(GP64 ptr, Xmm src, int imm);  // *dst = src[imm]           , 16-bit
-  void vpextrb(GP64 ptr, Xmm src, int imm);  // *dst = src[imm]           ,  8-bit
-
-  // if (mask & 0x8000'0000) {
-  //     dst = base[scale*ix];
-  // }
-  // mask = 0;
-  void vgatherdps(Ymm dst, Scale scale, Ymm ix, GP64 base, Ymm mask);
+  void movzbq(GP64 dst, Operand x) noexcept;  // dst = x, uint8_t  -> int
+  void movzwq(GP64 dst, Operand x) noexcept;  // dst = x, uint16_t -> int
 
   // aarch64
 
   // d = op(n,m)
-  using DOpNM = void(V d, V n, V m);
+  using DOpNM = void(V d, V n, V m) noexcept;
   DOpNM and16b, orr16b, eor16b, bic16b, bsl16b, add4s, sub4s, mul4s, cmeq4s, cmgt4s, sub8h, mul8h,
       fadd4s, fsub4s, fmul4s, fdiv4s, fmin4s, fmax4s, fcmeq4s, fcmgt4s, fcmge4s, tbl;
 
@@ -272,17 +356,17 @@ class Assembler {
   // and the register comparison > and >= can also compare absolute values.  Interesting.
 
   // d += n*m
-  void fmla4s(V d, V n, V m);
+  void fmla4s(V d, V n, V m) noexcept;
 
   // d -= n*m
-  void fmls4s(V d, V n, V m);
+  void fmls4s(V d, V n, V m) noexcept;
 
   // d = op(n,imm)
-  using DOpNImm = void(V d, V n, int imm);
+  using DOpNImm = void(V d, V n, int imm) noexcept;
   DOpNImm sli4s, shl4s, sshr4s, ushr4s, ushr8h;
 
   // d = op(n)
-  using DOpN = void(V d, V n);
+  using DOpN = void(V d, V n) noexcept;
   DOpN not16b,   // d = ~n
       fneg4s,    // d = -n
       scvtf4s,   // int -> float
@@ -294,11 +378,11 @@ class Assembler {
       uxtlh2s,   // u16 -> u32
       uminv4s;   // dst[0] = min(n[0],n[1],n[2],n[3]), n as unsigned
 
-  void brk(int imm16);
-  void ret(X);
-  void add(X d, X n, int imm12);
-  void sub(X d, X n, int imm12);
-  void subs(X d, X n, int imm12);  // subtract setting condition flags
+  void brk(int imm16) noexcept;
+  void ret(X) noexcept;
+  void add(X d, X n, int imm12) noexcept;
+  void sub(X d, X n, int imm12) noexcept;
+  void subs(X d, X n, int imm12) noexcept;  // subtract setting condition flags
 
   // There's another encoding for unconditional branches that can jump further,
   // but this one encoded as b.al is simple to implement and should be fine.
@@ -307,7 +391,7 @@ class Assembler {
   void blt(Label* l) { this->b(Condition::lt, l); }
 
   // "cmp ..." is just an assembler mnemonic for "subs xzr, ..."!
-  void cmp(X n, int imm12) { this->subs(xzr, n, imm12); }
+  void cmp(X n, int imm12) noexcept { this->subs(xzr, n, imm12); }
 
   // Compare and branch if zero/non-zero, as if
   //      cmp(t,0)
@@ -318,58 +402,61 @@ class Assembler {
 
   void ldrq(V dst, Label*);  // 128-bit PC-relative load
 
-  void ldrq(V dst, X src);  // 128-bit dst = *src
-  void ldrs(V dst, X src);  //  32-bit dst = *src
-  void ldrb(V dst, X src);  //   8-bit dst = *src
+  void ldrq(V dst, X src, int imm12 = 0) noexcept;  // 128-bit dst = *(src+imm12*16)
+  void ldrs(V dst, X src, int imm12 = 0) noexcept;  //  32-bit dst = *(src+imm12*4)
+  void ldrb(V dst, X src, int imm12 = 0) noexcept;  //   8-bit dst = *(src+imm12)
 
-  void strq(V src, X dst);  // 128-bit *dst = src
-  void strs(V src, X dst);  //  32-bit *dst = src
-  void strb(V src, X dst);  //   8-bit *dst = src
+  void strq(V src, X dst, int imm12 = 0) noexcept;  // 128-bit *(dst+imm12*16) = src
+  void strs(V src, X dst, int imm12 = 0) noexcept;  //  32-bit *(dst+imm12*4)  = src
+  void strb(V src, X dst, int imm12 = 0) noexcept;  //   8-bit *(dst+imm12)    = src
 
-  void fmovs(X dst, V src);  // dst = 32-bit src[0]
+  void fmovs(X dst, V src) noexcept;  // dst = 32-bit src[0]
 
  private:
-  // dst = op(dst, imm)
-  void op(int opcode, int opcode_ext, GP64 dst, int imm);
+  // TODO: can probably track two of these three?
+  uint8_t* fCode;
+  uint8_t* fCurr;
+  size_t fSize;
 
-  // dst = op(x,y) or op(x)
-  void op(int prefix, int map, int opcode, Ymm dst, Ymm x, Ymm y, bool W = false);
-  void op(int prefix, int map, int opcode, Ymm dst, Ymm x, bool W = false) {
-    // Two arguments ops seem to pass them in dst and y, forcing x to 0 so VEX.vvvv == 1111.
-    this->op(prefix, map, opcode, dst, (Ymm)0, x, W);
-  }
+  // x86-64
+  enum W { W0, W1 };      // Are the lanes 64-bit (W1) or default (W0)?  Intel Vol 2A 2.3.5.5
+  enum L { L128, L256 };  // Is this a 128- or 256-bit operation?        Intel Vol 2A 2.3.6.2
 
-  // dst = op(x,imm)
-  void op(int prefix, int map, int opcode, int opcode_ext, Ymm dst, Ymm x, int imm);
+  // Helpers for vector instructions.
+  void op(int prefix, int map, int opcode, int dst, int x, Operand y, W, L);
+  void op(int p, int m, int o, Ymm d, Ymm x, Operand y, W w = W0) { op(p, m, o, d, x, y, w, L256); }
+  void op(int p, int m, int o, Ymm d, Operand y, W w = W0) { op(p, m, o, d, 0, y, w, L256); }
+  void op(int p, int m, int o, Xmm d, Xmm x, Operand y, W w = W0) { op(p, m, o, d, x, y, w, L128); }
+  void op(int p, int m, int o, Xmm d, Operand y, W w = W0) { op(p, m, o, d, 0, y, w, L128); }
 
-  // dst = op(x,label) or op(label)
-  void op(int prefix, int map, int opcode, Ymm dst, Ymm x, Label* l);
-  void op(int prefix, int map, int opcode, Ymm dst, Ymm x, YmmOrLabel);
+  // Helpers for GP64 instructions.
+  void op(int opcode, Operand dst, GP64 x) noexcept;
+  void op(int opcode, int opcode_ext, Operand dst, int imm) noexcept;
 
-  // *ptr = ymm or ymm = *ptr, depending on opcode.
-  void load_store(int prefix, int map, int opcode, Ymm ymm, GP64 ptr);
+  void jump(uint8_t condition, Label*);
+  int disp32(Label*);
+  void imm_byte_after_operand(const Operand&, int byte) noexcept;
+
+  // aarch64
 
   // Opcode for 3-arguments ops is split between hi and lo:
   //    [11 bits hi] [5 bits m] [6 bits lo] [5 bits n] [5 bits d]
-  void op(uint32_t hi, V m, uint32_t lo, V n, V d);
+  void op(uint32_t hi, V m, uint32_t lo, V n, V d) noexcept;
 
-  // 2-argument ops, with or without an immediate.
-  void op(uint32_t op22, int imm, V n, V d);
-  void op(uint32_t op22, V n, V d) { this->op(op22, 0, n, d); }
-  void op(uint32_t op22, X x, V v) { this->op(op22, 0, (V)x, v); }
+  // 0,1,2-argument ops, with or without an immediate:
+  //    [ 22 bits op ] [5 bits n] [5 bits d]
+  // Any immediate falls in the middle somewhere overlapping with either op, n, or both.
+  void op(uint32_t op22, V n, V d, int imm = 0) noexcept;
+  void op(uint32_t op22, X n, V d, int imm = 0) noexcept { this->op(op22, (V)n, d, imm); }
+  void op(uint32_t op22, V n, X d, int imm = 0) noexcept { this->op(op22, n, (V)d, imm); }
+  void op(uint32_t op22, X n, X d, int imm = 0) noexcept { this->op(op22, (V)n, (V)d, imm); }
+  void op(uint32_t op22, int imm = 0) noexcept { this->op(op22, (V)0, (V)0, imm); }
+  // (1-argument ops don't seem to have a consistent convention of passing as n or d.)
 
   // Order matters... value is 4-bit encoding for condition code.
   enum class Condition { eq, ne, cs, cc, mi, pl, vs, vc, hi, ls, ge, lt, gt, le, al };
   void b(Condition, Label*);
-
-  void jump(uint8_t condition, Label*);
-
   int disp19(Label*);
-  int disp32(Label*);
-
-  uint8_t* fCode;
-  uint8_t* fCurr;
-  size_t fSize;
 };
 
 // Order matters a little: Ops <=store32 are treated as having side effects.
@@ -380,23 +467,34 @@ class Assembler {
   M(store32)                                                                                      \
   M(index)                                                                                        \
   M(load8)                                                                                        \
-  M(load16) M(load32) M(gather8) M(gather16) M(gather32) M(uniform8) M(uniform16) M(uniform32)    \
-      M(splat) M(add_f32) M(add_i32) M(add_i16x2) M(sub_f32) M(sub_i32) M(sub_i16x2) M(mul_f32)   \
-          M(mul_i32) M(mul_i16x2) M(div_f32) M(min_f32) M(max_f32) M(fma_f32) M(fms_f32)          \
-              M(fnma_f32) M(sqrt_f32) M(shl_i32) M(shl_i16x2) M(shr_i32) M(shr_i16x2) M(sra_i32)  \
-                  M(sra_i16x2) M(add_f32_imm) M(sub_f32_imm) M(mul_f32_imm) M(min_f32_imm)        \
-                      M(max_f32_imm) M(floor) M(trunc) M(round) M(to_f32) M(eq_f32) M(eq_i32)     \
-                          M(eq_i16x2) M(neq_f32) M(neq_i32) M(neq_i16x2) M(gt_f32) M(gt_i32)      \
-                              M(gt_i16x2) M(gte_f32) M(gte_i32) M(gte_i16x2) M(bit_and) M(bit_or) \
-                                  M(bit_xor) M(bit_clear) M(bit_and_imm) M(bit_or_imm)            \
-                                      M(bit_xor_imm) M(select) M(bytes)                           \
-                                          M(pack)  // End of SKVM_OPS
+  M(load16)                                                                                       \
+  M(load32)                                                                                       \
+  M(gather8)                                                                                      \
+  M(gather16)                                                                                     \
+  M(gather32)                                                                                     \
+  M(uniform8)                                                                                     \
+  M(uniform16)                                                                                    \
+  M(uniform32)                                                                                    \
+  M(splat)                                                                                        \
+  M(add_f32)                                                                                      \
+  M(add_i32)                                                                                      \
+  M(sub_f32)                                                                                      \
+  M(sub_i32)                                                                                      \
+  M(mul_f32) M(mul_i32) M(div_f32) M(min_f32) M(max_f32) M(fma_f32) M(fms_f32) M(fnma_f32)        \
+      M(sqrt_f32) M(shl_i32) M(shr_i32) M(sra_i32) M(floor) M(trunc) M(round) M(to_f32) M(eq_f32) \
+          M(eq_i32) M(neq_f32) M(gt_f32) M(gt_i32) M(gte_f32) M(bit_and) M(bit_or) M(bit_xor)     \
+              M(bit_clear) M(select) M(pack)  // End of SKVM_OPS
 
 enum class Op : int {
 #define M(op) op,
   SKVM_OPS(M)
 #undef M
 };
+
+static constexpr inline bool has_side_effect(Op op) noexcept { return op <= Op::store32; }
+static constexpr inline bool is_always_varying(Op op) noexcept {
+  return op <= Op::gather32 && op != Op::assert_true;
+}
 
 using Val = int;
 // We reserve an impossibe Val ID as a sentinel
@@ -437,7 +535,8 @@ struct I32a {
   I32a(I32 v) noexcept : SkDEBUGCODE(builder(v.builder), ) id(v.id) {}
   I32a(int v) noexcept : imm(v) {}
 
-  SkDEBUGCODE(Builder* builder = nullptr;) Val id = NA;
+  SkDEBUGCODE(Builder* builder = nullptr);
+  Val id = NA;
   int imm = 0;
 };
 
@@ -445,7 +544,8 @@ struct F32a {
   F32a(F32 v) noexcept : SkDEBUGCODE(builder(v.builder), ) id(v.id) {}
   F32a(float v) noexcept : imm(v) {}
 
-  SkDEBUGCODE(Builder* builder = nullptr;) Val id = NA;
+  SkDEBUGCODE(Builder* builder = nullptr);
+  Val id = NA;
   float imm = 0;
 };
 
@@ -513,7 +613,6 @@ struct OptimizedInstruction {
 
   Val death;
   bool can_hoist;
-  bool used_in_loop;
 };
 
 class Builder {
@@ -522,7 +621,7 @@ class Builder {
 
   // Mostly for debugging, tests, etc.
   std::vector<Instruction> program() const { return fProgram; }
-  std::vector<OptimizedInstruction> optimize(bool for_jit = false) const;
+  std::vector<OptimizedInstruction> optimize() const;
 
   // Declare an argument with given stride (use stride=0 for uniforms).
   // TODO: different types for varying and uniforms?
@@ -540,9 +639,9 @@ class Builder {
   // TODO: unsigned integer operations where relevant (just comparisons?)?
 
   // Assert cond is true, printing debug when not.
-  void assert_true(I32 cond, I32 debug);
-  void assert_true(I32 cond, F32 debug) { assert_true(cond, bit_cast(debug)); }
-  void assert_true(I32 cond) { assert_true(cond, cond); }
+  void assert_true(I32 cond, I32 debug) noexcept;
+  void assert_true(I32 cond, F32 debug) noexcept { assert_true(cond, bit_cast(debug)); }
+  void assert_true(I32 cond) noexcept { assert_true(cond, cond); }
 
   // Store {8,16,32}-bit varying.
   void store8(Arg ptr, I32 val);
@@ -586,7 +685,7 @@ class Builder {
 
   // Load an immediate constant.
   I32 splat(int n);
-  I32 splat(unsigned u) { return this->splat((int)u); }
+  I32 splat(unsigned u) { return splat((int)u); }
   F32 splat(float f);
 
   // float math, comparisons, etc.
@@ -615,6 +714,15 @@ class Builder {
   F32 approx_powf(F32 base, F32 exp);
   F32 approx_powf(F32a base, F32a exp) { return approx_powf(_(base), _(exp)); }
 
+  F32 approx_sin(F32 radians);
+  F32 approx_cos(F32 radians) { return approx_sin(add(radians, SK_ScalarPI / 2)); }
+  F32 approx_tan(F32 radians);
+
+  F32 approx_asin(F32 x);
+  F32 approx_acos(F32 x) { return sub(SK_ScalarPI / 2, approx_asin(x)); }
+  F32 approx_atan(F32 x);
+  F32 approx_atan2(F32 y, F32 x);
+
   F32 lerp(F32 lo, F32 hi, F32 t) { return mad(sub(hi, lo), t, lo); }
   F32 lerp(F32a lo, F32a hi, F32a t) { return lerp(_(lo), _(hi), _(t)); }
 
@@ -625,6 +733,7 @@ class Builder {
   F32 abs(F32 x) { return bit_cast(bit_and(bit_cast(x), 0x7fff'ffff)); }
   F32 fract(F32 x) { return sub(x, floor(x)); }
   F32 floor(F32);
+  I32 is_NaN(F32 x) { return neq(x, x); }
 
   I32 trunc(F32 x);
   I32 round(F32 x);  // Round to int using current rounding mode (as if lrintf()).
@@ -674,31 +783,6 @@ class Builder {
   F32 to_f32(I32 x);
   F32 bit_cast(I32 x) noexcept { return {x.builder, x.id}; }
 
-  // Treat each 32-bit lane as a pair of 16-bit ints.
-  I32 add_16x2(I32, I32);
-  I32 add_16x2(I32a x, I32a y) { return add_16x2(_(x), _(y)); }
-  I32 sub_16x2(I32, I32);
-  I32 sub_16x2(I32a x, I32a y) { return sub_16x2(_(x), _(y)); }
-  I32 mul_16x2(I32, I32);
-  I32 mul_16x2(I32a x, I32a y) { return mul_16x2(_(x), _(y)); }
-
-  I32 shl_16x2(I32 x, int bits);
-  I32 shr_16x2(I32 x, int bits);
-  I32 sra_16x2(I32 x, int bits);
-
-  I32 eq_16x2(I32, I32);
-  I32 eq_16x2(I32a x, I32a y) { return eq_16x2(_(x), _(y)); }
-  I32 neq_16x2(I32, I32);
-  I32 neq_16x2(I32a x, I32a y) { return neq_16x2(_(x), _(y)); }
-  I32 lt_16x2(I32, I32);
-  I32 lt_16x2(I32a x, I32a y) { return lt_16x2(_(x), _(y)); }
-  I32 lte_16x2(I32, I32);
-  I32 lte_16x2(I32a x, I32a y) { return lte_16x2(_(x), _(y)); }
-  I32 gt_16x2(I32, I32);
-  I32 gt_16x2(I32a x, I32a y) { return gt_16x2(_(x), _(y)); }
-  I32 gte_16x2(I32, I32);
-  I32 gte_16x2(I32a x, I32a y) { return gte_16x2(_(x), _(y)); }
-
   // Bitwise operations.
   I32 bit_and(I32, I32);
   I32 bit_and(I32a x, I32a y) { return bit_and(_(x), _(y)); }
@@ -709,42 +793,17 @@ class Builder {
   I32 bit_clear(I32, I32);
   I32 bit_clear(I32a x, I32a y) { return bit_clear(_(x), _(y)); }
 
-  I32 min(I32 x, I32 y) { return select(lt(x, y), x, y); }
-  I32 max(I32 x, I32 y) { return select(gt(x, y), x, y); }
+  I32 min(I32 x, I32 y) { return select(lte(x, y), x, y); }
+  I32 max(I32 x, I32 y) { return select(gte(x, y), x, y); }
 
   I32 min(I32a x, I32a y) { return min(_(x), _(y)); }
   I32 max(I32a x, I32a y) { return max(_(x), _(y)); }
 
   I32 select(I32 cond, I32 t, I32 f);  // cond ? t : f
-  F32 select(I32 cond, F32 t, F32 f) {
-    return this->bit_cast(this->select(cond, this->bit_cast(t), this->bit_cast(f)));
-  }
+  F32 select(I32 cond, F32 t, F32 f) { return bit_cast(select(cond, bit_cast(t), bit_cast(f))); }
 
   I32 select(I32a cond, I32a t, I32a f) { return select(_(cond), _(t), _(f)); }
   F32 select(I32a cond, F32a t, F32a f) { return select(_(cond), _(t), _(f)); }
-
-  // More complex operations...
-
-  // Shuffle the bytes in x according to each nibble of control, as if
-  //
-  //    uint8_t bytes[] = {
-  //        0,
-  //        ((uint32_t)x      ) & 0xff,
-  //        ((uint32_t)x >>  8) & 0xff,
-  //        ((uint32_t)x >> 16) & 0xff,
-  //        ((uint32_t)x >> 24) & 0xff,
-  //    };
-  //    return (uint32_t)bytes[(control >>  0) & 0xf] <<  0
-  //         | (uint32_t)bytes[(control >>  4) & 0xf] <<  8
-  //         | (uint32_t)bytes[(control >>  8) & 0xf] << 16
-  //         | (uint32_t)bytes[(control >> 12) & 0xf] << 24;
-  //
-  // So, e.g.,
-  //    - bytes(x, 0x1111) splats the low byte of x to all four bytes
-  //    - bytes(x, 0x4321) is x, an identity
-  //    - bytes(x, 0x0000) is 0
-  //    - bytes(x, 0x0404) transforms an RGBA pixel into an A0A0 bit pattern.
-  I32 bytes(I32 x, int control);
 
   I32 extract(I32 x, int bits, I32 z);  // (x>>bits) & z
   I32 pack(I32 x, I32 y, int bits);     // x | (y << bits), assuming (x & (y << bits)) == 0
@@ -778,7 +837,7 @@ class Builder {
   Color to_rgba(HSLA);
 
   void dump(SkWStream* = nullptr) const;
-  void dot(SkWStream* = nullptr, bool for_jit = false) const;
+  void dot(SkWStream* = nullptr) const;
 
   uint64_t hash() const;
 
@@ -794,7 +853,7 @@ class Builder {
       SkASSERT(x.builder == this);
       return {this, x.id};
     }
-    return this->splat(x.imm);
+    return splat(x.imm);
   }
 
   F32 _(F32a x) {
@@ -802,16 +861,16 @@ class Builder {
       SkASSERT(x.builder == this);
       return {this, x.id};
     }
-    return this->splat(x.imm);
+    return splat(x.imm);
   }
 
   bool allImm() const noexcept;
 
   template <typename T, typename... Rest>
-  bool allImm(Val, T* imm, Rest...) const;
+  bool allImm(Val, T* imm, Rest...) const noexcept;
 
   template <typename T>
-  bool isImm(Val id, T want) const {
+  bool isImm(Val id, T want) const noexcept {
     T imm = 0;
     return this->allImm(id, &imm) && imm == want;
   }
@@ -821,24 +880,22 @@ class Builder {
   std::vector<int> fStrides;
 };
 
+template <typename... Fs>
+void dump_instructions(
+    const std::vector<Instruction>& instructions, SkWStream* o = nullptr, Fs... fs);
+
 // Optimization passes and data structures normally used by Builder::optimize(),
 // extracted here so they can be unit tested.
-
-void specialize_for_jit(std::vector<Instruction>* program);
-
-// Fill live and sinks each if non-null:
-//    - (*live)[id]: notes whether each input instruction is live
-//    - *sinks:      an unsorted set of live instructions with side effects (stores, assert_true)
-// Returns the number of live instructions.
-int liveness_analysis(
-    const std::vector<Instruction>&, std::vector<bool>* live, std::vector<Val>* sinks);
+std::vector<Instruction> eliminate_dead_code(std::vector<Instruction>);
+std::vector<Instruction> schedule(std::vector<Instruction>);
+std::vector<OptimizedInstruction> finalize(std::vector<Instruction>);
 
 class Usage {
  public:
-  Usage(const std::vector<Instruction>&, const std::vector<bool>&);
+  Usage(const std::vector<Instruction>&);
 
   // Return a sorted span of Vals which use result of Instruction id.
-  SkSpan<const Val> users(Val id) const;
+  SkSpan<const Val> operator[](Val id) const;
 
  private:
   std::vector<int> fIndex;
@@ -863,11 +920,8 @@ struct InterpreterInstruction {
 
 class Program {
  public:
-  Program(const std::vector<OptimizedInstruction>& interpreter, const std::vector<int>& strides);
-
   Program(
-      const std::vector<OptimizedInstruction>& interpreter,
-      const std::vector<OptimizedInstruction>& jit, const std::vector<int>& strides,
+      const std::vector<OptimizedInstruction>& instructions, const std::vector<int>& strides,
       const char* debug_name);
 
   Program();
@@ -905,7 +959,7 @@ class Program {
   void setupJIT(const std::vector<OptimizedInstruction>&, const char* debug_name);
   void setupLLVM(const std::vector<OptimizedInstruction>&, const char* debug_name);
 
-  bool jit(const std::vector<OptimizedInstruction>&, bool try_hoisting, Assembler*) const;
+  bool jit(const std::vector<OptimizedInstruction>&, int* stack_hint, Assembler*) const;
 
   void waitForLLVM() const;
 
@@ -915,6 +969,11 @@ class Program {
 
 // TODO: control flow
 // TODO: 64-bit values?
+
+static inline I32 operator==(F32 x, F32 y) { return x->eq(x, y); }
+static inline I32 operator!=(F32 x, F32 y) { return x->neq(x, y); }
+static inline I32 operator==(I32 x, I32 y) { return x->eq(x, y); }
+static inline I32 operator!=(I32 x, I32 y) { return x->neq(x, y); }
 
 static inline I32 operator+(I32 x, I32a y) { return x->add(x, y); }
 static inline I32 operator+(int x, I32 y) { return y->add(x, y); }
@@ -969,6 +1028,7 @@ static inline F32 max(float x, F32 y) { return y->max(x, y); }
 
 static inline I32 operator==(F32 x, F32a y) { return x->eq(x, y); }
 static inline I32 operator==(float x, F32 y) { return y->eq(x, y); }
+static inline I32 operator==(F32 y, float x) { return y->eq(x, y); }
 
 static inline I32 operator!=(F32 x, F32a y) { return x->neq(x, y); }
 static inline I32 operator!=(float x, F32 y) { return y->neq(x, y); }
@@ -993,12 +1053,9 @@ static inline F32& operator+=(F32& x, F32a y) { return (x = x + y); }
 static inline F32& operator-=(F32& x, F32a y) { return (x = x - y); }
 static inline F32& operator*=(F32& x, F32a y) { return (x = x * y); }
 
-static inline I32 operator-(I32 x) { return 0 - x; }
-static inline F32 operator-(F32 x) { return 0 - x; }
-
-static inline void assert_true(I32 cond, I32 debug) { cond->assert_true(cond, debug); }
-static inline void assert_true(I32 cond, F32 debug) { cond->assert_true(cond, debug); }
-static inline void assert_true(I32 cond) { cond->assert_true(cond); }
+static inline void assert_true(I32 cond, I32 debug) noexcept { cond->assert_true(cond, debug); }
+static inline void assert_true(I32 cond, F32 debug) noexcept { cond->assert_true(cond, debug); }
+static inline void assert_true(I32 cond) noexcept { cond->assert_true(cond); }
 
 static inline void store8(Arg ptr, I32 val) { val->store8(ptr, val); }
 static inline void store16(Arg ptr, I32 val) { val->store16(ptr, val); }
@@ -1024,10 +1081,20 @@ static inline F32 approx_exp(F32 x) { return x->approx_exp(x); }
 static inline F32 approx_powf(F32 base, F32a exp) { return base->approx_powf(base, exp); }
 static inline F32 approx_powf(float base, F32 exp) { return exp->approx_powf(base, exp); }
 
+static inline F32 approx_sin(F32 radians) { return radians->approx_sin(radians); }
+static inline F32 approx_cos(F32 radians) { return radians->approx_cos(radians); }
+static inline F32 approx_tan(F32 radians) { return radians->approx_tan(radians); }
+
+static inline F32 approx_asin(F32 x) { return x->approx_asin(x); }
+static inline F32 approx_acos(F32 x) { return x->approx_acos(x); }
+static inline F32 approx_atan(F32 x) { return x->approx_atan(x); }
+static inline F32 approx_atan2(F32 y, F32 x) { return x->approx_atan2(y, x); }
+
 static inline F32 clamp01(F32 x) { return x->clamp01(x); }
 static inline F32 abs(F32 x) { return x->abs(x); }
 static inline F32 fract(F32 x) { return x->fract(x); }
 static inline F32 floor(F32 x) { return x->floor(x); }
+static inline I32 is_NaN(F32 x) { return x->is_NaN(x); }
 
 static inline I32 trunc(F32 x) { return x->trunc(x); }
 static inline I32 round(F32 x) { return x->round(x); }
@@ -1067,12 +1134,14 @@ static inline I32& operator^=(I32& x, I32a y) { return (x = x ^ y); }
 static inline I32 select(I32 cond, I32a t, I32a f) { return cond->select(cond, t, f); }
 static inline F32 select(I32 cond, F32a t, F32a f) { return cond->select(cond, t, f); }
 
-static inline I32 bytes(I32 x, int control) { return x->bytes(x, control); }
-
 static inline I32 extract(I32 x, int bits, I32a z) { return x->extract(x, bits, z); }
 static inline I32 extract(int x, int bits, I32 z) { return z->extract(x, bits, z); }
 static inline I32 pack(I32 x, I32a y, int bits) { return x->pack(x, y, bits); }
 static inline I32 pack(int x, I32 y, int bits) { return y->pack(x, y, bits); }
+
+static inline I32 operator~(I32 x) { return ~0 ^ x; }
+static inline I32 operator-(I32 x) { return 0 - x; }
+static inline F32 operator-(F32 x) { return 0 - x; }
 
 static inline F32 from_unorm(int bits, I32 x) { return x->from_unorm(bits, x); }
 static inline I32 to_unorm(int bits, F32 x) { return x->to_unorm(bits, x); }
@@ -1093,6 +1162,16 @@ static inline Color blend(SkBlendMode m, Color s, Color d) { return s->blend(m, 
 
 static inline HSLA to_hsla(Color c) { return c->to_hsla(c); }
 static inline Color to_rgba(HSLA c) { return c->to_rgba(c); }
+
+// Evaluate polynomials: ax^n + bx^(n-1) + ... for n >= 1
+template <typename... Rest>
+static inline F32 poly(F32 x, F32a a, F32a b, Rest... rest) {
+  if constexpr (sizeof...(rest) == 0) {
+    return x * a + b;
+  } else {
+    return poly(x, x * a + b, rest...);
+  }
+}
 }  // namespace skvm
 
 #endif  // SkVM_DEFINED

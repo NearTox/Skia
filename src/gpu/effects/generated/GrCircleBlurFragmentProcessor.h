@@ -19,9 +19,9 @@ class GrCircleBlurFragmentProcessor : public GrFragmentProcessor {
  public:
   static std::unique_ptr<GrFragmentProcessor> Make(
       GrRecordingContext*, const SkRect& circle, float sigma);
-  GrCircleBlurFragmentProcessor(const GrCircleBlurFragmentProcessor& src);
+  GrCircleBlurFragmentProcessor(const GrCircleBlurFragmentProcessor& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "CircleBlurFragmentProcessor"; }
+  const char* name() const noexcept override { return "CircleBlurFragmentProcessor"; }
   SkRect circleRect;
   float textureRadius;
   float solidRadius;
@@ -42,8 +42,8 @@ class GrCircleBlurFragmentProcessor : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
-  const TextureSampler& onTextureSampler(int) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  const TextureSampler& onTextureSampler(int) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

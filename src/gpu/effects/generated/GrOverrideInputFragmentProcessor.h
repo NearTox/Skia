@@ -18,7 +18,7 @@
 class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
  public:
   static OptimizationFlags OptFlags(
-      const std::unique_ptr<GrFragmentProcessor>& fp, const SkPMColor4f& color) {
+      const std::unique_ptr<GrFragmentProcessor>& fp, const SkPMColor4f& color) noexcept {
     auto childFlags = ProcessorOptimizationFlags(fp.get());
     auto flags = kNone_OptimizationFlags;
     if (childFlags & kConstantOutputForConstantInput_OptimizationFlag) {
@@ -41,7 +41,7 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
   }
   GrOverrideInputFragmentProcessor(const GrOverrideInputFragmentProcessor& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "OverrideInputFragmentProcessor"; }
+  const char* name() const noexcept override { return "OverrideInputFragmentProcessor"; }
   int fp_index = -1;
   bool useUniform;
   SkPMColor4f uniformColor;
@@ -50,7 +50,7 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
  private:
   GrOverrideInputFragmentProcessor(
       std::unique_ptr<GrFragmentProcessor> fp, bool useUniform, SkPMColor4f uniformColor,
-      SkPMColor4f literalColor)
+      SkPMColor4f literalColor) noexcept
       : INHERITED(
             kGrOverrideInputFragmentProcessor_ClassID,
             (OptimizationFlags)OptFlags(fp, useUniform ? uniformColor : literalColor)),
@@ -63,7 +63,7 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

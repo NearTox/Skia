@@ -310,7 +310,9 @@ bool SkRecorder::onDoSaveBehind(const SkRect* subset) {
 
 void SkRecorder::didRestore() { this->append<SkRecords::Restore>(this->getTotalMatrix()); }
 
-void SkRecorder::didConcat44(const SkScalar m[16]) { this->append<SkRecords::Concat44>(m); }
+void SkRecorder::onMarkCTM(const char* name) { this->append<SkRecords::MarkCTM>(SkString(name)); }
+
+void SkRecorder::didConcat44(const SkM44& m) { this->append<SkRecords::Concat44>(m); }
 
 void SkRecorder::didConcat(const SkMatrix& matrix) { this->append<SkRecords::Concat>(matrix); }
 

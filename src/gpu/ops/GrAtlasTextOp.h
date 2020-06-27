@@ -37,19 +37,14 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   };
 
   static std::unique_ptr<GrAtlasTextOp> MakeBitmap(
-      GrRecordingContext*, GrPaint&&, GrMaskFormat, int glyphCount, bool needsTransform);
+      GrRecordingContext* context, GrPaint&& paint, GrTextBlob::SubRun* subrun,
+      const SkMatrix& drawMatrix, SkPoint drawOrigin, const SkIRect& clipRect,
+      const SkPMColor4f& filteredColor);
 
   static std::unique_ptr<GrAtlasTextOp> MakeDistanceField(
-      GrRecordingContext*, GrPaint&&, int glyphCount, bool useGammaCorrectDistanceTable,
-      SkColor luminanceColor, const SkSurfaceProps&, bool isAntiAliased, bool useLCD);
-
-  // To avoid even the initial copy of the struct, we have a getter for the first item which
-  // is used to seed the op with its initial geometry.  After seeding, the client should call
-  // init() so the op can initialize itself
-  Geometry& geometry() { return fGeoData[0]; }
-
-  /** Called after this->geometry() has been configured. */
-  void init();
+      GrRecordingContext*, GrPaint&&, GrTextBlob::SubRun*, const SkMatrix& drawMatrix,
+      SkPoint drawOrigin, const SkIRect& clipRect, const SkPMColor4f& filteredColor,
+      bool useGammaCorrectDistanceTable, SkColor luminanceColor, const SkSurfaceProps&);
 
   const char* name() const override { return "AtlasTextOp"; }
 
@@ -74,7 +69,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     kLCDBGRDistanceField_MaskType,
   };
 
-  MaskType maskType() const { return fMaskType; }
+  MaskType maskType() const noexcept { return fMaskType; }
 
   void finalizeForTextTarget(uint32_t color, const GrCaps&);
   void executeForTextTarget(SkAtlasTextTarget*);
@@ -85,10 +80,10 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   // The minimum number of Geometry we will try to allocate.
   static constexpr auto kMinGeometryAllocated = 12;
 
-  GrAtlasTextOp(GrPaint&& paint)
-      : INHERITED(ClassID()),
-        fGeoDataAllocSize(kMinGeometryAllocated),
-        fProcessors(std::move(paint)) {}
+  GrAtlasTextOp(
+      MaskType maskType, GrPaint&& paint, GrTextBlob::SubRun* subrun, const SkMatrix& drawMatrix,
+      SkPoint drawOrigin, const SkIRect& clipRect, const SkPMColor4f& filteredColor,
+      SkColor luminanceColor, bool useGammaCorrectDistanceTable, uint32_t DFGPFlags);
 
   struct FlushInfo {
     sk_sp<const GrBuffer> fVertexBuffer;
@@ -106,13 +101,13 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   }
 
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) override {
     // TODO [PI]: implement
   }
 
   void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) override {
     // TODO [PI]: implement
   }
@@ -120,7 +115,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
-  GrMaskFormat maskFormat() const {
+  GrMaskFormat maskFormat() const noexcept {
     switch (fMaskType) {
       case kLCDCoverageMask_MaskType: return kA565_GrMaskFormat;
       case kColorBitmapMask_MaskType: return kARGB_GrMaskFormat;
@@ -133,13 +128,13 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     return kA8_GrMaskFormat;  // suppress warning
   }
 
-  bool usesDistanceFields() const {
+  bool usesDistanceFields() const noexcept {
     return kAliasedDistanceField_MaskType == fMaskType ||
            kGrayscaleDistanceField_MaskType == fMaskType ||
            kLCDDistanceField_MaskType == fMaskType || kLCDBGRDistanceField_MaskType == fMaskType;
   }
 
-  bool isLCD() const {
+  bool isLCD() const noexcept {
     return kLCDCoverageMask_MaskType == fMaskType || kLCDDistanceField_MaskType == fMaskType ||
            kLCDBGRDistanceField_MaskType == fMaskType;
   }
@@ -147,12 +142,12 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   inline void createDrawForGeneratedGlyphs(
       GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const;
 
-  const SkPMColor4f& color() const {
+  const SkPMColor4f& color() const noexcept {
     SkASSERT(fGeoCount > 0);
     return fGeoData[0].fColor;
   }
-  bool usesLocalCoords() const { return fUsesLocalCoords; }
-  int numGlyphs() const { return fNumGlyphs; }
+  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  int numGlyphs() const noexcept { return fNumGlyphs; }
 
   CombineResult onCombineIfPossible(
       GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override;
@@ -161,20 +156,18 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
       SkArenaAlloc*, const GrShaderCaps&, const GrSurfaceProxyView* views,
       unsigned int numActiveViews) const;
 
+  const MaskType fMaskType;
+  const bool fNeedsGlyphTransform;
+  const SkColor fLuminanceColor{0};
+  const bool fUseGammaCorrectDistanceTable{false};
+  // Distance field properties
+  const uint32_t fDFGPFlags;
   SkAutoSTMalloc<kMinGeometryAllocated, Geometry> fGeoData;
   int fGeoDataAllocSize;
   GrProcessorSet fProcessors;
-  struct {
-    uint32_t fUsesLocalCoords : 1;
-    uint32_t fUseGammaCorrectDistanceTable : 1;
-    uint32_t fNeedsGlyphTransform : 1;
-  };
+  bool fUsesLocalCoords;
   int fGeoCount;
   int fNumGlyphs;
-  MaskType fMaskType;
-  // Distance field properties
-  SkColor fLuminanceColor;
-  uint32_t fDFGPFlags = 0;
 
   typedef GrMeshDrawOp INHERITED;
 };

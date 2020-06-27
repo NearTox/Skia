@@ -277,7 +277,7 @@ class GrResourceCache {
     }
 
     static uint32_t Hash(const GrScratchKey& key) noexcept { return key.hash(); }
-    static void OnFree(GrGpuResource*) noexcept {}
+    static void OnFree(GrGpuResource*) {}
   };
   typedef SkTMultiMap<GrGpuResource, GrScratchKey, ScratchMapTraits> ScratchMap;
 

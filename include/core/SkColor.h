@@ -230,6 +230,20 @@ enum class SkColorChannel {
   kLastEnum = kA,
 };
 
+/** Used to represent the channels available in a color type or texture format as a mask. */
+enum SkColorChannelFlag : uint32_t {
+  kRed_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kR),
+  kGreen_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kG),
+  kBlue_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kB),
+  kAlpha_SkColorChannelFlag = 1 << static_cast<uint32_t>(SkColorChannel::kA),
+  kGray_SkColorChannelFlag = 0x10,
+  // Convenience values
+  kRG_SkColorChannelFlags = kRed_SkColorChannelFlag | kGreen_SkColorChannelFlag,
+  kRGB_SkColorChannelFlags = kRG_SkColorChannelFlags | kBlue_SkColorChannelFlag,
+  kRGBA_SkColorChannelFlags = kRGB_SkColorChannelFlags | kAlpha_SkColorChannelFlag,
+};
+static_assert(0 == (kGray_SkColorChannelFlag & kRGBA_SkColorChannelFlags), "bitfield conflict");
+
 /** \struct SkRGBA4f
     RGBA color value, holding four floating point components. Color components are always in
     a known order. kAT determines if the SkRGBA4f's R, G, and B components are premultiplied
@@ -260,21 +274,23 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f is not equal to other
   */
-  bool operator!=(const SkRGBA4f& other) const { return !(*this == other); }
+  bool operator!=(const SkRGBA4f& other) const noexcept { return !(*this == other); }
 
   /** Returns SkRGBA4f multiplied by scale.
 
       @param scale  value to multiply by
       @return       SkRGBA4f as (fR * scale, fG * scale, fB * scale, fA * scale)
   */
-  SkRGBA4f operator*(float scale) const { return {fR * scale, fG * scale, fB * scale, fA * scale}; }
+  SkRGBA4f operator*(float scale) const noexcept {
+    return {fR * scale, fG * scale, fB * scale, fA * scale};
+  }
 
   /** Returns SkRGBA4f multiplied component-wise by scale.
 
       @param scale  SkRGBA4f to multiply by
       @return       SkRGBA4f as (fR * scale.fR, fG * scale.fG, fB * scale.fB, fA * scale.fA)
   */
-  SkRGBA4f operator*(const SkRGBA4f& scale) const {
+  SkRGBA4f operator*(const SkRGBA4f& scale) const noexcept {
     return {fR * scale.fR, fG * scale.fG, fB * scale.fB, fA * scale.fA};
   }
 
@@ -295,7 +311,7 @@ struct SkRGBA4f {
       @param index  one of: 0 (fR), 1 (fG), 2 (fB), 3 (fA)
       @return       value corresponding to index
   */
-  float operator[](int index) const {
+  float operator[](int index) const noexcept {
     SkASSERT(index >= 0 && index < 4);
     return this->vec()[index];
   }
@@ -305,7 +321,7 @@ struct SkRGBA4f {
       @param index  one of: 0 (fR), 1 (fG), 2 (fB), 3 (fA)
       @return       value corresponding to index
   */
-  float& operator[](int index) {
+  float& operator[](int index) noexcept {
     SkASSERT(index >= 0 && index < 4);
     return this->vec()[index];
   }
@@ -354,7 +370,7 @@ struct SkRGBA4f {
 
       @return       premultiplied color
   */
-  SkRGBA4f<kPremul_SkAlphaType> premul() const {
+  SkRGBA4f<kPremul_SkAlphaType> premul() const noexcept {
     static_assert(kAT == kUnpremul_SkAlphaType, "");
     return {fR * fA, fG * fA, fB * fA, fA};
   }
@@ -364,7 +380,7 @@ struct SkRGBA4f {
 
       @return       unpremultiplied color
   */
-  SkRGBA4f<kUnpremul_SkAlphaType> unpremul() const {
+  SkRGBA4f<kUnpremul_SkAlphaType> unpremul() const noexcept {
     static_assert(kAT == kPremul_SkAlphaType, "");
 
     if (fA == 0.0f) {
@@ -379,7 +395,7 @@ struct SkRGBA4f {
   uint32_t toBytes_RGBA() const noexcept;
   static SkRGBA4f FromBytes_RGBA(uint32_t color) noexcept;
 
-  SkRGBA4f makeOpaque() const { return {fR, fG, fB, 1.0f}; }
+  SkRGBA4f makeOpaque() const noexcept { return {fR, fG, fB, 1.0f}; }
 };
 
 /** \struct SkColor4f

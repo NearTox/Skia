@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLSingleIntervalGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLSingleIntervalGradientColorizer() {}
+  GrGLSLSingleIntervalGradientColorizer() noexcept = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrSingleIntervalGradientColorizer& _outer =
@@ -28,8 +28,10 @@ class GrGLSLSingleIntervalGradientColorizer : public GrGLSLFragmentProcessor {
     (void)start;
     auto end = _outer.end;
     (void)end;
-    startVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "start");
-    endVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "end");
+    startVar =
+        args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "start");
+    endVar =
+        args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "end");
     fragBuilder->codeAppendf(
         "half t = %s.x;\n%s = (1.0 - t) * %s + t * %s;\n", args.fInputColor, args.fOutputColor,
         args.fUniformHandler->getUniformCStr(startVar),
@@ -63,7 +65,7 @@ GrGLSLFragmentProcessor* GrSingleIntervalGradientColorizer::onCreateGLSLInstance
 }
 void GrSingleIntervalGradientColorizer::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrSingleIntervalGradientColorizer& that = other.cast<GrSingleIntervalGradientColorizer>();
   (void)that;
   if (start != that.start) return false;
@@ -71,7 +73,7 @@ bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& oth
   return true;
 }
 GrSingleIntervalGradientColorizer::GrSingleIntervalGradientColorizer(
-    const GrSingleIntervalGradientColorizer& src)
+    const GrSingleIntervalGradientColorizer& src) noexcept
     : INHERITED(kGrSingleIntervalGradientColorizer_ClassID, src.optimizationFlags()),
       start(src.start),
       end(src.end) {}

@@ -35,10 +35,11 @@ class GrTextureResolveRenderTask final : public GrRenderTask {
   bool onExecute(GrOpFlushState*) override;
 
 #ifdef SK_DEBUG
-  SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;)
+  const char* name() const final { return "TextureResolve"; }
+  void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;
 #endif
 
-      struct Resolve {
+  struct Resolve {
     Resolve(sk_sp<GrSurfaceProxy> proxy, GrSurfaceProxy::ResolveFlags flags)
         : fProxy(std::move(proxy)), fFlags(flags) {}
     sk_sp<GrSurfaceProxy> fProxy;

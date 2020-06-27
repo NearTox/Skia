@@ -271,24 +271,15 @@ class ArcToView : public Sample {
     canvas->drawPath(path, fSkeletonPaint);
   }
 
-  bool onClick(Click* click) override {
-    int32_t index;
-    if (click->fMeta.findS32("index", &index)) {
-      SkASSERT((unsigned)index < N);
-      fPts[index] = click->fCurr;
-      return true;
-    }
-    return false;
-  }
-
   Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     const SkScalar tol = 4;
     const SkRect r = SkRect::MakeXYWH(x - tol, y - tol, tol * 2, tol * 2);
     for (int i = 0; i < N; ++i) {
       if (r.intersects(SkRect::MakeXYWH(fPts[i].fX, fPts[i].fY, 1, 1))) {
-        Click* click = new Click();
-        click->fMeta.setS32("index", i);
-        return click;
+        return new Click([this, i](Click* c) {
+          fPts[i] = c->fCurr;
+          return true;
+        });
       }
     }
     return nullptr;
@@ -398,24 +389,15 @@ class FatStroke : public Sample {
     canvas->drawPoints(SkCanvas::kPoints_PointMode, N, fPts, fPtsPaint);
   }
 
-  bool onClick(Click* click) override {
-    int32_t index;
-    if (click->fMeta.findS32("index", &index)) {
-      SkASSERT((unsigned)index < N);
-      fPts[index] = click->fCurr;
-      return true;
-    }
-    return false;
-  }
-
   Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     const SkScalar tol = 4;
     const SkRect r = SkRect::MakeXYWH(x - tol, y - tol, tol * 2, tol * 2);
     for (int i = 0; i < N; ++i) {
       if (r.intersects(SkRect::MakeXYWH(fPts[i].fX, fPts[i].fY, 1, 1))) {
-        Click* click = new Click();
-        click->fMeta.setS32("index", i);
-        return click;
+        return new Click([this, i](Click* c) {
+          fPts[i] = c->fCurr;
+          return true;
+        });
       }
     }
     return nullptr;
@@ -513,24 +495,15 @@ class CubicCurve : public Sample {
     }
   }
 
-  bool onClick(Click* click) override {
-    int32_t index;
-    if (click->fMeta.findS32("index", &index)) {
-      SkASSERT((unsigned)index < N);
-      fPts[index] = click->fCurr;
-      return true;
-    }
-    return false;
-  }
-
   Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     const SkScalar tol = 8;
     const SkRect r = SkRect::MakeXYWH(x - tol, y - tol, tol * 2, tol * 2);
     for (int i = 0; i < N; ++i) {
       if (r.intersects(SkRect::MakeXYWH(fPts[i].fX, fPts[i].fY, 1, 1))) {
-        Click* click = new Click();
-        click->fMeta.setS32("index", i);
-        return click;
+        return new Click([this, i](Click* c) {
+          fPts[i] = c->fCurr;
+          return true;
+        });
       }
     }
     return this->INHERITED::onFindClickHandler(x, y, modi);
@@ -704,24 +677,15 @@ class CubicCurve2 : public Sample {
     }
   }
 
-  bool onClick(Click* click) override {
-    int32_t index;
-    if (click->fMeta.findS32("index", &index)) {
-      SkASSERT((unsigned)index < N);
-      fPts[index] = click->fCurr;
-      return true;
-    }
-    return false;
-  }
-
   Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     const SkScalar tol = 8;
     const SkRect r = SkRect::MakeXYWH(x - tol, y - tol, tol * 2, tol * 2);
     for (int i = 0; i < N; ++i) {
       if (r.intersects(SkRect::MakeXYWH(fPts[i].fX, fPts[i].fY, 1, 1))) {
-        Click* click = new Click();
-        click->fMeta.setS32("index", i);
-        return click;
+        return new Click([this, i](Click* c) {
+          fPts[i] = c->fCurr;
+          return true;
+        });
       }
     }
     return this->INHERITED::onFindClickHandler(x, y, modi);

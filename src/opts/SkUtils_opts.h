@@ -49,15 +49,15 @@ static void rect_memsetT(T buffer[], T value, int count, size_t rowBytes, int he
 }
 
 /*not static*/ inline void rect_memset16(
-    uint16_t buffer[], uint16_t value, int count, size_t rowBytes, int height) noexcept {
+    uint16_t buffer[], uint16_t value, int count, size_t rowBytes, int height) {
   rect_memsetT(buffer, value, count, rowBytes, height);
 }
 /*not static*/ inline void rect_memset32(
-    uint32_t buffer[], uint32_t value, int count, size_t rowBytes, int height) noexcept {
+    uint32_t buffer[], uint32_t value, int count, size_t rowBytes, int height) {
   rect_memsetT(buffer, value, count, rowBytes, height);
 }
 /*not static*/ inline void rect_memset64(
-    uint64_t buffer[], uint64_t value, int count, size_t rowBytes, int height) noexcept {
+    uint64_t buffer[], uint64_t value, int count, size_t rowBytes, int height) {
   rect_memsetT(buffer, value, count, rowBytes, height);
 }
 

@@ -186,6 +186,7 @@ void SkShaper_CoreText::shape(
 
   // We have to compute RunInfos in a loop, and then reuse them in a 2nd loop,
   // so we store them in an array (we reuse the array's storage for each line).
+  std::vector<SkFont> fontStorage;
   std::vector<SkShaper::RunHandler::RunInfo> infos;
 
   LineBreakIter iter(typesetter.get(), width);
@@ -196,6 +197,7 @@ void SkShaper_CoreText::shape(
       continue;
     }
     handler->beginLine();
+    fontStorage.clear();
     infos.clear();
     for (CFIndex j = 0; j < runCount; ++j) {
       CTRunRef run = (CTRunRef)CFArrayGetValueAtIndex(run_array, j);
@@ -213,10 +215,10 @@ void SkShaper_CoreText::shape(
 
       CFRange range = CTRunGetStringRange(run);
 
-      SkFont run_font = run_to_font(run, font);
+      fontStorage.push_back(run_to_font(run, font));
       infos.push_back({
-          run_font,
-          0,  // need fBidiLevel
+          fontStorage.back(),  // info just stores a ref to the font
+          0,                   // need fBidiLevel
           {adv, 0},
           (size_t)runGlyphs,
           {(size_t)range.location, (size_t)range.length},

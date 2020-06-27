@@ -35,7 +35,7 @@ class SkBlurImageFilterImpl final : public SkImageFilter_Base {
  public:
   SkBlurImageFilterImpl(
       SkScalar sigmaX, SkScalar sigmaY, SkTileMode tileMode, sk_sp<SkImageFilter> input,
-      const CropRect* cropRect)
+      const CropRect* cropRect) noexcept
       : INHERITED(&input, 1, cropRect), fSigma{sigmaX, sigmaY}, fTileMode(tileMode) {}
 
   SkRect computeFastBounds(const SkRect&) const override;
@@ -65,7 +65,7 @@ class SkBlurImageFilterImpl final : public SkImageFilter_Base {
 
 }  // end namespace
 
-static SkTileMode to_sktilemode(SkBlurImageFilter::TileMode tileMode) {
+static SkTileMode to_sktilemode(SkBlurImageFilter::TileMode tileMode) noexcept {
   switch (tileMode) {
     case SkBlurImageFilter::kClamp_TileMode: return SkTileMode::kClamp;
     case SkBlurImageFilter::kRepeat_TileMode: return SkTileMode::kRepeat;
@@ -188,11 +188,11 @@ static int calculate_window(double sigma) {
 //
 // For a window of six, the border value is eight. In the even case the border is 3 *
 // (window/2) - 1.
-static int calculate_border(int window) {
+static int calculate_border(int window) noexcept {
   return (window & 1) == 1 ? 3 * ((window - 1) / 2) : 3 * (window / 2) - 1;
 }
 
-static int calculate_buffer(int window) {
+static int calculate_buffer(int window) noexcept {
   int bufferSize = window - 1;
   return (window & 1) == 1 ? 3 * bufferSize : 3 * bufferSize + 1;
 }

@@ -23,12 +23,12 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) {
+SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) noexcept {
   fColor = color;
   fMode = mode;
 }
 
-bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const {
+bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const noexcept {
   if (color) {
     *color = fColor;
   }
@@ -49,7 +49,7 @@ uint32_t SkModeColorFilter::getFlags() const noexcept {
   return flags;
 }
 
-void SkModeColorFilter::flatten(SkWriteBuffer& buffer) const {
+void SkModeColorFilter::flatten(SkWriteBuffer& buffer) const noexcept {
   buffer.writeColor(fColor);
   buffer.writeUInt((int)fMode);
 }

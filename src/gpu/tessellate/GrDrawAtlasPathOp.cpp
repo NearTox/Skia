@@ -40,11 +40,11 @@ class DrawAtlasPathShader : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const override { return "DrawAtlasPathShader"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+  const char* name() const noexcept override { return "DrawAtlasPathShader"; }
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
     b->add32(fUsesLocalCoords);
   }
-  const TextureSampler& onTextureSampler(int) const override { return fAtlasAccess; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fAtlasAccess; }
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
   const TextureSampler fAtlasAccess;
@@ -68,7 +68,7 @@ class DrawAtlasPathShader::Impl : public GrGLSLGeometryProcessor {
 
     const char* atlasAdjust;
     fAtlasAdjustUniform = args.fUniformHandler->addUniform(
-        kVertex_GrShaderFlag, kFloat2_GrSLType, "atlas_adjust", &atlasAdjust);
+        nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "atlas_adjust", &atlasAdjust);
 
     args.fVertBuilder->codeAppendf(
         R"(
@@ -143,7 +143,7 @@ GrOp::CombineResult GrDrawAtlasPathOp::onCombineIfPossible(
 }
 
 void GrDrawAtlasPathOp::onPrePrepare(
-    GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+    GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
     const GrXferProcessor::DstProxyView&) {}
 
 void GrDrawAtlasPathOp::onPrepare(GrOpFlushState* state) {
@@ -179,7 +179,7 @@ void GrDrawAtlasPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBoun
 
   GrProgramInfo programInfo(
       state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
-      state->proxy()->backendFormat(), state->outputView()->origin(), &pipeline, &shader,
+      state->proxy()->backendFormat(), state->writeView()->origin(), &pipeline, &shader,
       GrPrimitiveType::kTriangleStrip);
 
   state->bindPipelineAndScissorClip(programInfo, this->bounds());

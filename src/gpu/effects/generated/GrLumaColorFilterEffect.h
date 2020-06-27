@@ -27,18 +27,18 @@ class GrLumaColorFilterEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make() {
     return std::unique_ptr<GrFragmentProcessor>(new GrLumaColorFilterEffect());
   }
-  GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src);
+  GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "LumaColorFilterEffect"; }
+  const char* name() const noexcept override { return "LumaColorFilterEffect"; }
 
  private:
-  GrLumaColorFilterEffect()
+  GrLumaColorFilterEffect() noexcept
       : INHERITED(
             kGrLumaColorFilterEffect_ClassID,
             (OptimizationFlags)kConstantOutputForConstantInput_OptimizationFlag) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

@@ -28,7 +28,7 @@ class GrDisableColorXPFactory : public GrXPFactory {
   static sk_sp<const GrXferProcessor> MakeXferProcessor();
 
  private:
-  constexpr GrDisableColorXPFactory() {}
+  constexpr GrDisableColorXPFactory() noexcept = default;
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,

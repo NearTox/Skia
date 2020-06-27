@@ -56,15 +56,15 @@ class SkRBuffer : SkNoncopyable {
   /** Read the specified number of bytes from the data pointer. If buffer is not
       null, copy those bytes into buffer.
   */
-  bool read(void* buffer, size_t size);
-  bool skipToAlign4();
+  bool read(void* buffer, size_t size) noexcept;
+  bool skipToAlign4() noexcept;
 
-  bool readU8(uint8_t* x) { return this->read(x, 1); }
-  bool readS32(int32_t* x) { return this->read(x, 4); }
-  bool readU32(uint32_t* x) { return this->read(x, 4); }
+  bool readU8(uint8_t* x) noexcept { return this->read(x, 1); }
+  bool readS32(int32_t* x) noexcept { return this->read(x, 4); }
+  bool readU32(uint32_t* x) noexcept { return this->read(x, 4); }
 
   // returns nullptr on failure
-  const void* skip(size_t bytes);
+  const void* skip(size_t bytes) noexcept;
   template <typename T>
   const T* skipCount(size_t count) {
     return static_cast<const T*>(this->skip(SkSafeMath::Mul(count, sizeof(T))));
@@ -88,8 +88,8 @@ class SkRBuffer : SkNoncopyable {
 class SkWBuffer : SkNoncopyable {
  public:
   constexpr SkWBuffer() noexcept : fData(nullptr), fPos(nullptr), fStop(nullptr) {}
-  SkWBuffer(void* data) { reset(data); }
-  SkWBuffer(void* data, size_t size) { reset(data, size); }
+  SkWBuffer(void* data) noexcept { reset(data); }
+  SkWBuffer(void* data, size_t size) noexcept { reset(data, size); }
 
   void reset(void* data) noexcept {
     fData = (char*)data;
@@ -105,25 +105,25 @@ class SkWBuffer : SkNoncopyable {
   }
 
   size_t pos() const noexcept { return fPos - fData; }
-  void* skip(size_t size);  // return start of skipped data
+  void* skip(size_t size) noexcept;  // return start of skipped data
 
-  void write(const void* buffer, size_t size) {
+  void write(const void* buffer, size_t size) noexcept {
     if (size) {
       this->writeNoSizeCheck(buffer, size);
     }
   }
 
-  size_t padToAlign4();
+  size_t padToAlign4() noexcept;
 
-  void writePtr(const void* x) { this->writeNoSizeCheck(&x, sizeof(x)); }
-  void writeScalar(SkScalar x) { this->writeNoSizeCheck(&x, 4); }
-  void write32(int32_t x) { this->writeNoSizeCheck(&x, 4); }
-  void write16(int16_t x) { this->writeNoSizeCheck(&x, 2); }
-  void write8(int8_t x) { this->writeNoSizeCheck(&x, 1); }
-  void writeBool(bool x) { this->write8(x); }
+  void writePtr(const void* x) noexcept { this->writeNoSizeCheck(&x, sizeof(x)); }
+  void writeScalar(SkScalar x) noexcept { this->writeNoSizeCheck(&x, 4); }
+  void write32(int32_t x) noexcept { this->writeNoSizeCheck(&x, 4); }
+  void write16(int16_t x) noexcept { this->writeNoSizeCheck(&x, 2); }
+  void write8(int8_t x) noexcept { this->writeNoSizeCheck(&x, 1); }
+  void writeBool(bool x) noexcept { this->write8(x); }
 
  private:
-  void writeNoSizeCheck(const void* buffer, size_t size);
+  void writeNoSizeCheck(const void* buffer, size_t size) noexcept;
 
   char* fData;
   char* fPos;

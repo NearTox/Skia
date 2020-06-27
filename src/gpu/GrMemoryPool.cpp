@@ -26,7 +26,7 @@ std::unique_ptr<GrMemoryPool> GrMemoryPool::Make(size_t preallocSize, size_t min
   return std::unique_ptr<GrMemoryPool>(new (mem) GrMemoryPool(preallocSize, minAllocSize));
 }
 
-GrMemoryPool::GrMemoryPool(size_t preallocSize, size_t minAllocSize)
+GrMemoryPool::GrMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept
     : fAllocator(
           GrBlockAllocator::GrowthPolicy::kFixed, minAllocSize,
           preallocSize - offsetof(GrMemoryPool, fAllocator) - sizeof(GrBlockAllocator)) {

@@ -17,19 +17,17 @@ namespace SkSL {
  * A literal floating point number.
  */
 struct FloatLiteral : public Expression {
-  FloatLiteral(const Context& context, int offset, double value)
+  FloatLiteral(const Context& context, int offset, double value) noexcept
       : INHERITED(offset, kFloatLiteral_Kind, *context.fFloatLiteral_Type), fValue(value) {}
 
-  FloatLiteral(int offset, double value, const Type* type)
+  FloatLiteral(int offset, double value, const Type* type) noexcept
       : INHERITED(offset, kFloatLiteral_Kind, *type), fValue(value) {}
 
-#ifdef SK_DEBUG
   String description() const override { return to_string(fValue); }
-#endif
 
-  bool hasProperty(Property property) const override { return false; }
+  bool hasProperty(Property property) const noexcept override { return false; }
 
-  bool isConstant() const override { return true; }
+  bool isConstant() const noexcept override { return true; }
 
   int coercionCost(const Type& target) const override {
     if (target.isFloat()) {

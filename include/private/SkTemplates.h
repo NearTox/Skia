@@ -17,6 +17,7 @@
 #include <cstddef>
 #include <memory>
 #include <new>
+#include <type_traits>
 #include <utility>
 
 /** \file SkTemplates.h
@@ -36,7 +37,7 @@ inline constexpr void sk_ignore_unused_variable(const T&) noexcept {}
  *  Returns a pointer to a D which comes immediately after S[count].
  */
 template <typename D, typename S>
-static D* SkTAfter(S* ptr, size_t count = 1) {
+static D* SkTAfter(S* ptr, size_t count = 1) noexcept {
   return reinterpret_cast<D*>(ptr + count);
 }
 
@@ -44,7 +45,7 @@ static D* SkTAfter(S* ptr, size_t count = 1) {
  *  Returns a pointer to a D which comes byteOffset bytes after S.
  */
 template <typename D, typename S>
-static D* SkTAddOffset(S* ptr, size_t byteOffset) {
+static D* SkTAddOffset(S* ptr, size_t byteOffset) noexcept {
   // The intermediate char* has the same cv-ness as D as this produces better error messages.
   // This relies on the fact that reinterpret_cast can add constness, but cannot remove it.
   return reinterpret_cast<D*>(reinterpret_cast<sknonstd::same_cv_t<char, D>*>(ptr) + byteOffset);
@@ -69,12 +70,12 @@ struct SkFunctionWrapper {
 */
 template <typename T, void (*P)(T*)>
 class SkAutoTCallVProc
-    : public std::unique_ptr<T, SkFunctionWrapper<skstd::remove_pointer_t<decltype(P)>, P>> {
+    : public std::unique_ptr<T, SkFunctionWrapper<std::remove_pointer_t<decltype(P)>, P>> {
  public:
-  SkAutoTCallVProc(T* obj)
-      : std::unique_ptr<T, SkFunctionWrapper<skstd::remove_pointer_t<decltype(P)>, P>>(obj) {}
+  SkAutoTCallVProc(T* obj) noexcept
+      : std::unique_ptr<T, SkFunctionWrapper<std::remove_pointer_t<decltype(P)>, P>>(obj) {}
 
-  operator T*() const { return this->get(); }
+  operator T*() const noexcept { return this->get(); }
 };
 
 /** Allocate an array of T elements, and free the array in the destructor
@@ -142,7 +143,7 @@ class SkAutoSTArray {
 
   /** Allocate count number of T elements
    */
-  SkAutoSTArray(int count) {
+  SkAutoSTArray(int count) noexcept(std::is_nothrow_default_constructible_v<T>) {
     fArray = nullptr;
     fCount = 0;
     this->reset(count);
@@ -211,11 +212,11 @@ class SkAutoSTArray {
 #if defined(SK_BUILD_FOR_GOOGLE3)
   // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but some
   // functions have multiple large stack allocations.
-  static const int kMaxBytes = 4 * 1024;
-  static const int kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
-                                                                    : kCountRequested;
+  static constexpr int kMaxBytes = 4 * 1024;
+  static constexpr int kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
+                                                                        : kCountRequested;
 #else
-  static const int kCount = kCountRequested;
+  static constexpr int kCount = kCountRequested;
 #endif
 
   int fCount;
@@ -277,7 +278,7 @@ class SkAutoSTMalloc {
  public:
   SkAutoSTMalloc() noexcept : fPtr(fTStorage) {}
 
-  SkAutoSTMalloc(size_t count) {
+  SkAutoSTMalloc(size_t count) noexcept {
     if (count > kCount) {
       fPtr = (T*)sk_malloc_throw(count, sizeof(T));
     } else if (count) {
@@ -396,7 +397,7 @@ T* SkInPlaceNewCheck(void* storage, size_t size, Args&&... args) {
 template <size_t N>
 class SkAlignedSStorage {
  public:
-  SkAlignedSStorage() {}
+  SkAlignedSStorage() noexcept = default;
   SkAlignedSStorage(SkAlignedSStorage&&) = delete;
   SkAlignedSStorage(const SkAlignedSStorage&) = delete;
   SkAlignedSStorage& operator=(SkAlignedSStorage&&) = delete;
@@ -423,7 +424,7 @@ class SkAlignedSStorage {
 template <int N, typename T>
 class SkAlignedSTStorage {
  public:
-  SkAlignedSTStorage() {}
+  SkAlignedSTStorage() noexcept = default;
   SkAlignedSTStorage(SkAlignedSTStorage&&) = delete;
   SkAlignedSTStorage(const SkAlignedSTStorage&) = delete;
   SkAlignedSTStorage& operator=(SkAlignedSTStorage&&) = delete;
@@ -443,14 +444,14 @@ class SkAlignedSTStorage {
 using SkAutoFree = std::unique_ptr<void, SkFunctionWrapper<void(void*), sk_free>>;
 
 template <typename C, std::size_t... Is>
-constexpr auto SkMakeArrayFromIndexSequence(C c, skstd::index_sequence<Is...>) noexcept
-    -> std::array<skstd::result_of_t<C(std::size_t)>, sizeof...(Is)> {
+constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...>)
+    -> std::array<std::invoke_result<C(std::size_t)>, sizeof...(Is)> {
   return {{c(Is)...}};
 }
 
 template <size_t N, typename C>
-constexpr auto SkMakeArray(C c) noexcept -> std::array<skstd::result_of_t<C(std::size_t)>, N> {
-  return SkMakeArrayFromIndexSequence(c, skstd::make_index_sequence<N>{});
+constexpr auto SkMakeArray(C c) -> std::array<std::invoke_result<C(std::size_t)>, N> {
+  return SkMakeArrayFromIndexSequence(c, std::make_index_sequence<N>{});
 }
 
 #endif

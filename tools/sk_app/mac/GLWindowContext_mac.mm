@@ -33,11 +33,13 @@ public:
     void resize(int w, int h) override;
 
 private:
-    NSView*              fMainView;
-    NSOpenGLContext*     fGLContext;
-    NSOpenGLPixelFormat* fPixelFormat;
+ void teardownContext();
 
-    typedef GLWindowContext INHERITED;
+ NSView* fMainView;
+ NSOpenGLContext* fGLContext;
+ NSOpenGLPixelFormat* fPixelFormat;
+
+ typedef GLWindowContext INHERITED;
 };
 
 GLWindowContext_mac::GLWindowContext_mac(const MacWindowInfo& info, const DisplayParams& params)
@@ -50,7 +52,9 @@ GLWindowContext_mac::GLWindowContext_mac(const MacWindowInfo& info, const Displa
     this->initializeContext();
 }
 
-GLWindowContext_mac::~GLWindowContext_mac() {
+GLWindowContext_mac::~GLWindowContext_mac() { teardownContext(); }
+
+void GLWindowContext_mac::teardownContext() {
   [NSOpenGLContext clearCurrentContext];
   [fPixelFormat release];
   fPixelFormat = nil;
@@ -63,7 +67,7 @@ sk_sp<const GrGLInterface> GLWindowContext_mac::onInitializeContext() {
 
     if (!fGLContext) {
         // set up pixel format
-        constexpr int kMaxAttributes = 18;
+        constexpr int kMaxAttributes = 19;
         NSOpenGLPixelFormatAttribute attributes[kMaxAttributes];
         int numAttributes = 0;
         attributes[numAttributes++] = NSOpenGLPFAAccelerated;
@@ -80,10 +84,11 @@ sk_sp<const GrGLInterface> GLWindowContext_mac::onInitializeContext() {
         attributes[numAttributes++] = NSOpenGLPFAStencilSize;
         attributes[numAttributes++] = 8;
         if (fDisplayParams.fMSAASampleCount > 1) {
-            attributes[numAttributes++] = NSOpenGLPFASampleBuffers;
-            attributes[numAttributes++] = 1;
-            attributes[numAttributes++] = NSOpenGLPFASamples;
-            attributes[numAttributes++] = fDisplayParams.fMSAASampleCount;
+          attributes[numAttributes++] = NSOpenGLPFAMultisample;
+          attributes[numAttributes++] = NSOpenGLPFASampleBuffers;
+          attributes[numAttributes++] = 1;
+          attributes[numAttributes++] = NSOpenGLPFASamples;
+          attributes[numAttributes++] = fDisplayParams.fMSAASampleCount;
         } else {
             attributes[numAttributes++] = NSOpenGLPFASampleBuffers;
             attributes[numAttributes++] = 0;
@@ -140,10 +145,7 @@ sk_sp<const GrGLInterface> GLWindowContext_mac::onInitializeContext() {
 void GLWindowContext_mac::onDestroyContext() {
     // We only need to tear down the GLContext if we've changed the sample count.
     if (fGLContext && fSampleCount != fDisplayParams.fMSAASampleCount) {
-        [fPixelFormat release];
-        fPixelFormat = nil;
-        [fGLContext release];
-        fGLContext = nil;
+      teardownContext();
     }
 }
 

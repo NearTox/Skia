@@ -90,10 +90,10 @@ class GrPipeline {
   GrPipeline(
       GrScissorTest, sk_sp<const GrXferProcessor>, const GrSwizzle& writeSwizzle,
       InputFlags = InputFlags::kNone,
-      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused) noexcept;
 
-  GrPipeline(const InitArgs& args, sk_sp<const GrXferProcessor>, const GrAppliedHardClip&);
-  GrPipeline(const InitArgs&, GrProcessorSet&&, GrAppliedClip&&);
+  GrPipeline(const InitArgs& args, sk_sp<const GrXferProcessor>, const GrAppliedHardClip&) noexcept;
+  GrPipeline(const InitArgs&, GrProcessorSet&&, GrAppliedClip&&) noexcept;
 
   GrPipeline(const GrPipeline&) = delete;
   GrPipeline& operator=(const GrPipeline&) = delete;
@@ -109,7 +109,7 @@ class GrPipeline {
   }
   int numFragmentProcessors() const noexcept { return fFragmentProcessors.count(); }
 
-  const GrXferProcessor& getXferProcessor() const {
+  const GrXferProcessor& getXferProcessor() const noexcept {
     if (fXferProcessor) {
       return *fXferProcessor.get();
     } else {
@@ -159,7 +159,7 @@ class GrPipeline {
   /// @}
 
   const GrUserStencilSettings* getUserStencil() const noexcept { return fUserStencilSettings; }
-  void setUserStencil(const GrUserStencilSettings* stencil) {
+  void setUserStencil(const GrUserStencilSettings* stencil) noexcept {
     fUserStencilSettings = stencil;
     if (!fUserStencilSettings->isDisabled(fFlags & Flags::kHasStencilClip)) {
       fFlags |= Flags::kStencilEnabled;
@@ -172,10 +172,10 @@ class GrPipeline {
 
   const GrWindowRectsState& getWindowRectsState() const noexcept { return fWindowRectsState; }
 
-  bool isHWAntialiasState() const { return fFlags & InputFlags::kHWAntialias; }
-  bool usesConservativeRaster() const { return fFlags & InputFlags::kConservativeRaster; }
-  bool isWireframe() const { return fFlags & InputFlags::kWireframe; }
-  bool snapVerticesToPixelCenters() const {
+  bool isHWAntialiasState() const noexcept { return fFlags & InputFlags::kHWAntialias; }
+  bool usesConservativeRaster() const noexcept { return fFlags & InputFlags::kConservativeRaster; }
+  bool isWireframe() const noexcept { return fFlags & InputFlags::kWireframe; }
+  bool snapVerticesToPixelCenters() const noexcept {
     return fFlags & InputFlags::kSnapVerticesToPixelCenters;
   }
   bool hasStencilClip() const noexcept { return SkToBool(fFlags & Flags::kHasStencilClip); }
@@ -216,7 +216,7 @@ class GrPipeline {
 
   GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(Flags);
 
-  friend bool operator&(Flags, InputFlags);
+  friend bool operator&(Flags, InputFlags) noexcept;
 
   using FragmentProcessorArray = SkAutoSTArray<8, std::unique_ptr<const GrFragmentProcessor>>;
 
@@ -237,7 +237,7 @@ class GrPipeline {
 GR_MAKE_BITFIELD_CLASS_OPS(GrPipeline::InputFlags);
 GR_MAKE_BITFIELD_CLASS_OPS(GrPipeline::Flags);
 
-inline bool operator&(GrPipeline::Flags flags, GrPipeline::InputFlags inputFlag) {
+inline bool operator&(GrPipeline::Flags flags, GrPipeline::InputFlags inputFlag) noexcept {
   return (flags & (GrPipeline::Flags)inputFlag);
 }
 

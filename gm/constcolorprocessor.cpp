@@ -29,6 +29,7 @@
 #include "include/gpu/GrContext.h"
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkColorData.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/gpu/GrColor.h"
 #include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrPaint.h"
@@ -95,6 +96,7 @@ class ConstColorProcessor : public GpuGM {
           canvas->save();
           canvas->translate(x, y);
           const SkMatrix viewMatrix = SkMatrix::MakeTrans(x, y);
+          SkSimpleMatrixProvider matrixProvider(viewMatrix);
 
           // rect to draw
           SkRect renderRect = SkRect::MakeXYWH(0, 0, kRectSize, kRectSize);
@@ -107,7 +109,7 @@ class ConstColorProcessor : public GpuGM {
             skPaint.setColor(kPaintColors[paintType]);
           }
           SkAssertResult(SkPaintToGrPaint(
-              context, renderTargetContext->colorInfo(), skPaint, viewMatrix, &grPaint));
+              context, renderTargetContext->colorInfo(), skPaint, matrixProvider, &grPaint));
 
           GrConstColorProcessor::InputMode mode = (GrConstColorProcessor::InputMode)m;
           SkPMColor4f color = SkPMColor4f::FromBytes_RGBA(kColors[procColor]);

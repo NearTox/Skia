@@ -9,9 +9,9 @@
 #include "src/pathops/SkOpSegment.h"
 #include "src/pathops/SkPathWriter.h"
 
-bool SkOpPtT::alias() const { return this->span()->ptT() != this; }
+bool SkOpPtT::alias() const noexcept { return this->span()->ptT() != this; }
 
-const SkOpPtT* SkOpPtT::active() const {
+const SkOpPtT* SkOpPtT::active() const noexcept {
   if (!fDeleted) {
     return this;
   }
@@ -25,7 +25,7 @@ const SkOpPtT* SkOpPtT::active() const {
   return nullptr;  // should never return deleted; caller must abort
 }
 
-bool SkOpPtT::contains(const SkOpPtT* check) const {
+bool SkOpPtT::contains(const SkOpPtT* check) const noexcept {
   SkOPASSERT(this != check);
   const SkOpPtT* ptT = this;
   const SkOpPtT* stopPtT = ptT;
@@ -37,7 +37,7 @@ bool SkOpPtT::contains(const SkOpPtT* check) const {
   return false;
 }
 
-bool SkOpPtT::contains(const SkOpSegment* segment, const SkPoint& pt) const {
+bool SkOpPtT::contains(const SkOpSegment* segment, const SkPoint& pt) const noexcept {
   SkASSERT(this->segment() != segment);
   const SkOpPtT* ptT = this;
   const SkOpPtT* stopPtT = ptT;
@@ -49,7 +49,7 @@ bool SkOpPtT::contains(const SkOpSegment* segment, const SkPoint& pt) const {
   return false;
 }
 
-bool SkOpPtT::contains(const SkOpSegment* segment, double t) const {
+bool SkOpPtT::contains(const SkOpSegment* segment, double t) const noexcept {
   const SkOpPtT* ptT = this;
   const SkOpPtT* stopPtT = ptT;
   while ((ptT = ptT->next()) != stopPtT) {
@@ -60,7 +60,7 @@ bool SkOpPtT::contains(const SkOpSegment* segment, double t) const {
   return false;
 }
 
-const SkOpPtT* SkOpPtT::contains(const SkOpSegment* check) const {
+const SkOpPtT* SkOpPtT::contains(const SkOpSegment* check) const noexcept {
   SkASSERT(this->segment() != check);
   const SkOpPtT* ptT = this;
   const SkOpPtT* stopPtT = ptT;
@@ -72,9 +72,9 @@ const SkOpPtT* SkOpPtT::contains(const SkOpSegment* check) const {
   return nullptr;
 }
 
-SkOpContour* SkOpPtT::contour() const { return segment()->contour(); }
+SkOpContour* SkOpPtT::contour() const noexcept { return segment()->contour(); }
 
-const SkOpPtT* SkOpPtT::find(const SkOpSegment* segment) const {
+const SkOpPtT* SkOpPtT::find(const SkOpSegment* segment) const noexcept {
   const SkOpPtT* ptT = this;
   const SkOpPtT* stopPtT = ptT;
   do {
@@ -87,9 +87,9 @@ const SkOpPtT* SkOpPtT::find(const SkOpSegment* segment) const {
   return nullptr;
 }
 
-SkOpGlobalState* SkOpPtT::globalState() const { return contour()->globalState(); }
+SkOpGlobalState* SkOpPtT::globalState() const noexcept { return contour()->globalState(); }
 
-void SkOpPtT::init(SkOpSpanBase* span, double t, const SkPoint& pt, bool duplicate) {
+void SkOpPtT::init(SkOpSpanBase* span, double t, const SkPoint& pt, bool duplicate) noexcept {
   fT = t;
   fPt = pt;
   fSpan = span;
@@ -100,7 +100,7 @@ void SkOpPtT::init(SkOpSpanBase* span, double t, const SkPoint& pt, bool duplica
   SkDEBUGCODE(fID = span->globalState()->nextPtTID());
 }
 
-bool SkOpPtT::onEnd() const {
+bool SkOpPtT::onEnd() const noexcept {
   const SkOpSpanBase* span = this->span();
   if (span->ptT() != this) {
     return false;
@@ -109,7 +109,7 @@ bool SkOpPtT::onEnd() const {
   return span == segment->head() || span == segment->tail();
 }
 
-bool SkOpPtT::ptAlreadySeen(const SkOpPtT* check) const {
+bool SkOpPtT::ptAlreadySeen(const SkOpPtT* check) const noexcept {
   while (this != check) {
     if (this->fPt == check->fPt) {
       return true;
@@ -119,7 +119,7 @@ bool SkOpPtT::ptAlreadySeen(const SkOpPtT* check) const {
   return false;
 }
 
-SkOpPtT* SkOpPtT::prev() {
+SkOpPtT* SkOpPtT::prev() noexcept {
   SkOpPtT* result = this;
   SkOpPtT* next = this;
   while ((next = next->fNext) != this) {
@@ -129,11 +129,11 @@ SkOpPtT* SkOpPtT::prev() {
   return result;
 }
 
-const SkOpSegment* SkOpPtT::segment() const { return span()->segment(); }
+const SkOpSegment* SkOpPtT::segment() const noexcept { return span()->segment(); }
 
-SkOpSegment* SkOpPtT::segment() { return span()->segment(); }
+SkOpSegment* SkOpPtT::segment() noexcept { return span()->segment(); }
 
-void SkOpPtT::setDeleted() {
+void SkOpPtT::setDeleted() noexcept {
   SkASSERT(this->span()->debugDeleted() || this->span()->ptT() != this);
   SkOPASSERT(!fDeleted);
   fDeleted = true;
@@ -150,7 +150,7 @@ bool SkOpSpanBase::addOpp(SkOpSpanBase* opp) {
   return true;
 }
 
-SkOpSpanBase::Collapsed SkOpSpanBase::collapsed(double s, double e) const {
+SkOpSpanBase::Collapsed SkOpSpanBase::collapsed(double s, double e) const noexcept {
   const SkOpPtT* start = &fPtT;
   const SkOpPtT* startNext = nullptr;
   const SkOpPtT* walk = start;
@@ -178,7 +178,7 @@ SkOpSpanBase::Collapsed SkOpSpanBase::collapsed(double s, double e) const {
   return Collapsed::kNo;
 }
 
-bool SkOpSpanBase::contains(const SkOpSpanBase* span) const {
+bool SkOpSpanBase::contains(const SkOpSpanBase* span) const noexcept {
   const SkOpPtT* start = &fPtT;
   const SkOpPtT* check = &span->fPtT;
   SkOPASSERT(start != check);
@@ -191,7 +191,7 @@ bool SkOpSpanBase::contains(const SkOpSpanBase* span) const {
   return false;
 }
 
-const SkOpPtT* SkOpSpanBase::contains(const SkOpSegment* segment) const {
+const SkOpPtT* SkOpSpanBase::contains(const SkOpSegment* segment) const noexcept {
   const SkOpPtT* start = &fPtT;
   const SkOpPtT* walk = start;
   while ((walk = walk->next()) != start) {
@@ -205,7 +205,7 @@ const SkOpPtT* SkOpSpanBase::contains(const SkOpSegment* segment) const {
   return nullptr;
 }
 
-bool SkOpSpanBase::containsCoinEnd(const SkOpSegment* segment) const {
+bool SkOpSpanBase::containsCoinEnd(const SkOpSegment* segment) const noexcept {
   SkASSERT(this->segment() != segment);
   const SkOpSpanBase* next = this;
   while ((next = next->fCoinEnd) != this) {
@@ -216,11 +216,12 @@ bool SkOpSpanBase::containsCoinEnd(const SkOpSegment* segment) const {
   return false;
 }
 
-SkOpContour* SkOpSpanBase::contour() const { return segment()->contour(); }
+SkOpContour* SkOpSpanBase::contour() const noexcept { return segment()->contour(); }
 
-SkOpGlobalState* SkOpSpanBase::globalState() const { return contour()->globalState(); }
+SkOpGlobalState* SkOpSpanBase::globalState() const noexcept { return contour()->globalState(); }
 
-void SkOpSpanBase::initBase(SkOpSegment* segment, SkOpSpan* prev, double t, const SkPoint& pt) {
+void SkOpSpanBase::initBase(
+    SkOpSegment* segment, SkOpSpan* prev, double t, const SkPoint& pt) noexcept {
   fSegment = segment;
   fPtT.init(this, t, pt, false);
   fCoinEnd = this;
@@ -364,7 +365,7 @@ int SkOpSpan::computeWindSum() {
   return this->windSum();
 }
 
-bool SkOpSpan::containsCoincidence(const SkOpSegment* segment) const {
+bool SkOpSpan::containsCoincidence(const SkOpSegment* segment) const noexcept {
   SkASSERT(this->segment() != segment);
   const SkOpSpan* next = fCoincident;
   do {
@@ -375,7 +376,7 @@ bool SkOpSpan::containsCoincidence(const SkOpSegment* segment) const {
   return false;
 }
 
-void SkOpSpan::init(SkOpSegment* segment, SkOpSpan* prev, double t, const SkPoint& pt) {
+void SkOpSpan::init(SkOpSegment* segment, SkOpSpan* prev, double t, const SkPoint& pt) noexcept {
   SkASSERT(t != 1);
   initBase(segment, prev, t, pt);
   fCoincident = this;
@@ -449,7 +450,7 @@ void SkOpSpan::release(const SkOpPtT* kept) {
   } while ((testPtT = testPtT->next()) != stopPtT);
 }
 
-void SkOpSpan::setOppSum(int oppSum) {
+void SkOpSpan::setOppSum(int oppSum) noexcept {
   SkASSERT(!final());
   if (fOppSum != SK_MinS32 && fOppSum != oppSum) {
     this->globalState()->setWindingFailed();
@@ -459,7 +460,7 @@ void SkOpSpan::setOppSum(int oppSum) {
   fOppSum = oppSum;
 }
 
-void SkOpSpan::setWindSum(int windSum) {
+void SkOpSpan::setWindSum(int windSum) noexcept {
   SkASSERT(!final());
   if (fWindSum != SK_MinS32 && fWindSum != windSum) {
     this->globalState()->setWindingFailed();

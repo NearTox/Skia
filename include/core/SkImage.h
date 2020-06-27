@@ -249,7 +249,7 @@ class SK_API SkImage : public SkRefCnt {
 
   static constexpr int kCompressionTypeCount = static_cast<int>(CompressionType::kLast) + 1;
 
-  static constexpr CompressionType kETC1_CompressionType = CompressionType::kETC2_RGB8_UNORM;
+  static const CompressionType kETC1_CompressionType = CompressionType::kETC2_RGB8_UNORM;
 
   /** Creates a GPU-backed SkImage from compressed data.
 
@@ -1159,7 +1159,7 @@ class SK_API SkImage : public SkRefCnt {
   sk_sp<SkImage> reinterpretColorSpace(sk_sp<SkColorSpace> newColorSpace) const;
 
  private:
-  SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept;
+  SkImage(const SkImageInfo& info, uint32_t uniqueID);
   friend class SkImage_Base;
 
   SkImageInfo fInfo;

@@ -52,7 +52,7 @@ void SkBinaryWriteBuffer::writeIntArray(const int32_t* value, uint32_t count) no
 
 void SkBinaryWriteBuffer::writeUInt(uint32_t value) noexcept { fWriter.write32(value); }
 
-void SkBinaryWriteBuffer::writeString(const char* value) noexcept { fWriter.writeString(value); }
+void SkBinaryWriteBuffer::writeString(const char* value) { fWriter.writeString(value); }
 
 void SkBinaryWriteBuffer::writeColor(SkColor color) noexcept { fWriter.write32(color); }
 
@@ -94,9 +94,11 @@ void SkBinaryWriteBuffer::writeIRect(const SkIRect& rect) noexcept {
 
 void SkBinaryWriteBuffer::writeRect(const SkRect& rect) noexcept { fWriter.writeRect(rect); }
 
-void SkBinaryWriteBuffer::writeRegion(const SkRegion& region) { fWriter.writeRegion(region); }
+void SkBinaryWriteBuffer::writeRegion(const SkRegion& region) noexcept {
+  fWriter.writeRegion(region);
+}
 
-void SkBinaryWriteBuffer::writePath(const SkPath& path) { fWriter.writePath(path); }
+void SkBinaryWriteBuffer::writePath(const SkPath& path) noexcept { fWriter.writePath(path); }
 
 size_t SkBinaryWriteBuffer::writeStream(SkStream* stream, size_t length) {
   fWriter.write32(SkToU32(length));

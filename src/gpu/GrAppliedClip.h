@@ -81,7 +81,7 @@ class GrAppliedHardClip {
 class GrAppliedClip {
  public:
   GrAppliedClip() noexcept = default;
-  GrAppliedClip(GrAppliedClip&& that) = default;
+  GrAppliedClip(GrAppliedClip&& that) noexcept = default;
   GrAppliedClip(const GrAppliedClip&) = delete;
 
   const GrScissorState& scissorState() const noexcept { return fHardClip.scissorState(); }
@@ -103,7 +103,7 @@ class GrAppliedClip {
   const GrAppliedHardClip& hardClip() const noexcept { return fHardClip; }
   GrAppliedHardClip& hardClip() noexcept { return fHardClip; }
 
-  void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) {
+  void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
     SkASSERT(fp);
     fClipCoverageFPs.push_back(std::move(fp));
   }

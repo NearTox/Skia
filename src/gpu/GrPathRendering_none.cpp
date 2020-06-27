@@ -49,4 +49,4 @@ std::unique_ptr<GrOp> GrStencilPathOp::Make(
   return nullptr;
 }
 
-void GrPath::ComputeKey(const GrShape&, GrUniqueKey*, bool*) {}
+void GrPath::ComputeKey(const GrStyledShape&, GrUniqueKey*, bool*) {}

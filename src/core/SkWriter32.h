@@ -32,7 +32,7 @@ class SkWriter32 : SkNoncopyable {
    *  first time an allocation doesn't fit.  From then it will use dynamically allocated storage.
    *  This used to be optional behavior, but pipe now relies on it.
    */
-  SkWriter32(void* external = nullptr, size_t externalBytes = 0) {
+  SkWriter32(void* external = nullptr, size_t externalBytes = 0) noexcept {
     this->reset(external, externalBytes);
   }
 
@@ -83,7 +83,7 @@ class SkWriter32 : SkNoncopyable {
    *  was written atomically using the write methods below.
    */
   template <typename T>
-  void overwriteTAt(size_t offset, const T& value) noexcept {
+  void overwriteTAt(size_t offset, const T& value) {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset < fUsed);
     *(T*)(fData + offset) = value;
@@ -122,7 +122,7 @@ class SkWriter32 : SkNoncopyable {
     rrect.writeToMemory(this->reserve(SkRRect::kSizeInMemory));
   }
 
-  void writePath(const SkPath& path) {
+  void writePath(const SkPath& path) noexcept {
     size_t size = path.writeToMemory(nullptr);
     SkASSERT(SkAlign4(size) == size);
     path.writeToMemory(this->reserve(size));
@@ -130,7 +130,7 @@ class SkWriter32 : SkNoncopyable {
 
   void writeMatrix(const SkMatrix& matrix) noexcept;
 
-  void writeRegion(const SkRegion& rgn) {
+  void writeRegion(const SkRegion& rgn) noexcept {
     size_t size = rgn.writeToMemory(nullptr);
     SkASSERT(SkAlign4(size) == size);
     rgn.writeToMemory(this->reserve(size));
@@ -177,7 +177,7 @@ class SkWriter32 : SkNoncopyable {
    *
    *  If you write NULL, it will be read as "".
    */
-  void writeString(const char* str, size_t len = (size_t)-1) noexcept;
+  void writeString(const char* str, size_t len = (size_t)-1);
 
   /**
    *  Computes the size (aligned to multiple of 4) need to write the string
@@ -215,7 +215,7 @@ class SkWriter32 : SkNoncopyable {
 
   // read from the stream, and write up to length bytes. Return the actual
   // number of bytes written.
-  size_t readFromStream(SkStream* stream, size_t length) {
+  size_t readFromStream(SkStream* stream, size_t length) noexcept {
     return stream->read(this->reservePad(length), length);
   }
 
@@ -241,11 +241,11 @@ class SkWriter32 : SkNoncopyable {
  *  This wrapper ensures proper alignment rules are met for the storage.
  */
 template <size_t SIZE>
-class SkSWriter32 : public SkWriter32 {
+class SkSWriter32 final : public SkWriter32 {
  public:
-  SkSWriter32() { this->reset(); }
+  SkSWriter32() noexcept { this->reset(); }
 
-  void reset() { this->INHERITED::reset(fData.fStorage, SIZE); }
+  void reset() noexcept { this->INHERITED::reset(fData.fStorage, SIZE); }
 
  private:
   union {

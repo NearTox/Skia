@@ -15,9 +15,9 @@
 // Based, in part, on Jukka Jylanki's work at http://clb.demon.fi
 class GrRectanizerSkyline {
  public:
-  GrRectanizerSkyline(int w, int h) : fWidth{w}, fHeight{h} { this->reset(); }
+  GrRectanizerSkyline(int w, int h) noexcept : fWidth{w}, fHeight{h} { this->reset(); }
 
-  void reset() {
+  void reset() noexcept {
     fAreaSoFar = 0;
     fSkyline.reset();
     SkylineSegment* seg = fSkyline.append(1);
@@ -28,8 +28,8 @@ class GrRectanizerSkyline {
 
   bool addRect(int w, int h, SkIPoint16* loc);
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
 
  private:
   struct SkylineSegment {

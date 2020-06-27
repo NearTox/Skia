@@ -55,7 +55,7 @@ struct LocalCoords {
   LocalCoords(Type type, const SkMatrix* matrix) noexcept : fType(type), fMatrix(matrix) {
     SkASSERT(kUnused_Type != type);
   }
-  bool hasLocalMatrix() const { return nullptr != fMatrix; }
+  bool hasLocalMatrix() const noexcept { return nullptr != fMatrix; }
 
   Type fType;
   const SkMatrix* fMatrix;

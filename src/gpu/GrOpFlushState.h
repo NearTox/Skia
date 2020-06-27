@@ -61,7 +61,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     // TODO: why does OpArgs have the op we're going to pass it to as a member? Remove it.
     explicit OpArgs(
         GrOp* op, GrSurfaceProxyView* surfaceView, GrAppliedClip* appliedClip,
-        const GrXferProcessor::DstProxyView& dstProxyView)
+        const GrXferProcessor::DstProxyView& dstProxyView) noexcept
         : fOp(op),
           fSurfaceView(surfaceView),
           fRenderTargetProxy(surfaceView->asRenderTargetProxy()),
@@ -74,7 +74,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     GrSwizzle writeSwizzle() const noexcept { return fSurfaceView->swizzle(); }
 
     GrOp* op() noexcept { return fOp; }
-    const GrSurfaceProxyView* outputView() const noexcept { return fSurfaceView; }
+    const GrSurfaceProxyView* writeView() const noexcept { return fSurfaceView; }
     GrRenderTargetProxy* proxy() const noexcept { return fRenderTargetProxy; }
     GrAppliedClip* appliedClip() noexcept { return fAppliedClip; }
     const GrAppliedClip* appliedClip() const noexcept { return fAppliedClip; }
@@ -111,7 +111,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
 
   /** Overrides of GrDeferredUploadTarget. */
 
-  const GrTokenTracker* tokenTracker() final { return fTokenTracker; }
+  const GrTokenTracker* tokenTracker() noexcept final { return fTokenTracker; }
   GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) final;
   GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
 
@@ -128,24 +128,36 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   uint16_t* makeIndexSpaceAtLeast(
       int minIndexCount, int fallbackIndexCount, sk_sp<const GrBuffer>*, int* startIndex,
       int* actualIndexCount) final;
+  GrDrawIndirectCommand* makeDrawIndirectSpace(
+      int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offset) override {
+    return fDrawIndirectPool.makeSpace(drawCount, buffer, offset);
+  }
+  GrDrawIndexedIndirectCommand* makeDrawIndexedIndirectSpace(
+      int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offset) override {
+    return fDrawIndirectPool.makeIndexedSpace(drawCount, buffer, offset);
+  }
   void putBackIndices(int indexCount) final;
   void putBackVertices(int vertices, size_t vertexStride) final;
-  const GrSurfaceProxyView* outputView() const final { return this->drawOpArgs().outputView(); }
-  GrRenderTargetProxy* proxy() const final { return this->drawOpArgs().proxy(); }
-  const GrAppliedClip* appliedClip() const final { return this->drawOpArgs().appliedClip(); }
+  const GrSurfaceProxyView* writeView() const noexcept final {
+    return this->drawOpArgs().writeView();
+  }
+  GrRenderTargetProxy* proxy() const noexcept final { return this->drawOpArgs().proxy(); }
+  const GrAppliedClip* appliedClip() const noexcept final {
+    return this->drawOpArgs().appliedClip();
+  }
   const GrAppliedHardClip& appliedHardClip() const noexcept {
     return (fOpArgs->appliedClip()) ? fOpArgs->appliedClip()->hardClip()
                                     : GrAppliedHardClip::Disabled();
   }
   GrAppliedClip detachAppliedClip() final;
-  const GrXferProcessor::DstProxyView& dstProxyView() const final {
+  const GrXferProcessor::DstProxyView& dstProxyView() const noexcept final {
     return this->drawOpArgs().dstProxyView();
   }
-  GrDeferredUploadTarget* deferredUploadTarget() final { return this; }
+  GrDeferredUploadTarget* deferredUploadTarget() noexcept final { return this; }
   const GrCaps& caps() const final;
-  GrResourceProvider* resourceProvider() const final { return fResourceProvider; }
+  GrResourceProvider* resourceProvider() const noexcept final { return fResourceProvider; }
 
-  GrStrikeCache* glyphCache() const final;
+  GrStrikeCache* strikeCache() const final;
 
   // At this point we know we're flushing so full access to the GrAtlasManager is required (and
   // permissible).
@@ -208,6 +220,12 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     fOpsRenderPass->drawIndexedInstanced(
         indexCount, baseIndex, instanceCount, baseInstance, baseVertex);
   }
+  void drawIndirect(const GrBuffer* drawIndirectBuffer, size_t offset, int drawCount) {
+    fOpsRenderPass->drawIndirect(drawIndirectBuffer, offset, drawCount);
+  }
+  void drawIndexedIndirect(const GrBuffer* drawIndirectBuffer, size_t offset, int drawCount) {
+    fOpsRenderPass->drawIndexedIndirect(drawIndirectBuffer, offset, drawCount);
+  }
   void drawIndexPattern(
       int patternIndexCount, int patternRepeatCount, int maxPatternRepetitionsInIndexBuffer,
       int patternVertexCount, int baseVertex) {
@@ -248,6 +266,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // Store vertex and index data on behalf of ops that are flushed.
   GrVertexBufferAllocPool fVertexPool;
   GrIndexBufferAllocPool fIndexPool;
+  GrDrawIndirectBufferAllocPool fDrawIndirectPool;
 
   // Data stored on behalf of the ops being flushed.
   SkArenaAllocList<GrDeferredTextureUploadFn> fASAPUploads;

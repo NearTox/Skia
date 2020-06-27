@@ -30,15 +30,16 @@ class GrGLSLColorSpaceXformHelper : public SkNoncopyable {
       fFlags = colorSpaceXform->fSteps.flags;
       if (this->applySrcTF()) {
         fSrcTFVar = uniformHandler->addUniformArray(
-            visibility, kHalf_GrSLType, "SrcTF", kNumTransferFnCoeffs);
+            nullptr, visibility, kHalf_GrSLType, "SrcTF", kNumTransferFnCoeffs);
         fSrcTFKind = classify_transfer_fn(colorSpaceXform->fSteps.srcTF);
       }
       if (this->applyGamutXform()) {
-        fGamutXformVar = uniformHandler->addUniform(visibility, kHalf3x3_GrSLType, "ColorXform");
+        fGamutXformVar =
+            uniformHandler->addUniform(nullptr, visibility, kHalf3x3_GrSLType, "ColorXform");
       }
       if (this->applyDstTF()) {
         fDstTFVar = uniformHandler->addUniformArray(
-            visibility, kHalf_GrSLType, "DstTF", kNumTransferFnCoeffs);
+            nullptr, visibility, kHalf_GrSLType, "DstTF", kNumTransferFnCoeffs);
         fDstTFKind = classify_transfer_fn(colorSpaceXform->fSteps.dstTFInv);
       }
     }
@@ -56,20 +57,22 @@ class GrGLSLColorSpaceXformHelper : public SkNoncopyable {
     }
   }
 
-  bool isNoop() const { return (0 == fFlags.mask()); }
+  bool isNoop() const noexcept { return (0 == fFlags.mask()); }
 
-  bool applyUnpremul() const { return fFlags.unpremul; }
-  bool applySrcTF() const { return fFlags.linearize; }
-  bool applyGamutXform() const { return fFlags.gamut_transform; }
-  bool applyDstTF() const { return fFlags.encode; }
-  bool applyPremul() const { return fFlags.premul; }
+  bool applyUnpremul() const noexcept { return fFlags.unpremul; }
+  bool applySrcTF() const noexcept { return fFlags.linearize; }
+  bool applyGamutXform() const noexcept { return fFlags.gamut_transform; }
+  bool applyDstTF() const noexcept { return fFlags.encode; }
+  bool applyPremul() const noexcept { return fFlags.premul; }
 
-  TFKind srcTFKind() const { return fSrcTFKind; }
-  TFKind dstTFKind() const { return fDstTFKind; }
+  TFKind srcTFKind() const noexcept { return fSrcTFKind; }
+  TFKind dstTFKind() const noexcept { return fDstTFKind; }
 
-  GrGLSLProgramDataManager::UniformHandle srcTFUniform() const { return fSrcTFVar; }
-  GrGLSLProgramDataManager::UniformHandle gamutXformUniform() const { return fGamutXformVar; }
-  GrGLSLProgramDataManager::UniformHandle dstTFUniform() const { return fDstTFVar; }
+  GrGLSLProgramDataManager::UniformHandle srcTFUniform() const noexcept { return fSrcTFVar; }
+  GrGLSLProgramDataManager::UniformHandle gamutXformUniform() const noexcept {
+    return fGamutXformVar;
+  }
+  GrGLSLProgramDataManager::UniformHandle dstTFUniform() const noexcept { return fDstTFVar; }
 
  private:
   static const int kNumTransferFnCoeffs = 7;

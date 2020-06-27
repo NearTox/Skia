@@ -76,6 +76,6 @@ SK_API bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlend
 
     @return           C string
 */
-SK_API const char* SkBlendMode_Name(SkBlendMode blendMode);
+SK_API const char* SkBlendMode_Name(SkBlendMode blendMode) noexcept;
 
 #endif

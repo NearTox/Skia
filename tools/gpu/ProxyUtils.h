@@ -23,7 +23,7 @@ sk_sp<GrTextureProxy> MakeTextureProxyFromData(
     size_t rowBytes);
 
 GrProgramInfo* CreateProgramInfo(
-    const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+    const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
     const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, SkBlendMode, GrPrimitiveType,
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone,
     const GrUserStencilSettings* stencil = &GrUserStencilSettings::kUnused);

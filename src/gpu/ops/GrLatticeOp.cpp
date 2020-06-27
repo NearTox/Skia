@@ -35,9 +35,9 @@ class LatticeGP : public GrGeometryProcessor {
     return arena->make<LatticeGP>(view, std::move(csxf), filter, wideColor);
   }
 
-  const char* name() const override { return "LatticeGP"; }
+  const char* name() const noexcept override { return "LatticeGP"; }
 
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
     b->add32(GrColorSpaceXform::XformKey(fColorSpaceXform.get()));
   }
 
@@ -100,7 +100,7 @@ class LatticeGP : public GrGeometryProcessor {
     this->setVertexAttributes(&fInPosition, 4);
   }
 
-  const TextureSampler& onTextureSampler(int) const override { return fSampler; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fSampler; }
 
   Attribute fInPosition;
   Attribute fInTextureCoords;
@@ -150,7 +150,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     this->setTransformedBounds(patch.fDst, viewMatrix, HasAABloat::kNo, IsHairline::kNo);
   }
 
-  const char* name() const override { return "NonAALatticeOp"; }
+  const char* name() const noexcept override { return "NonAALatticeOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     bool mipped = (GrSamplerState::Filter::kMipMap == fFilter);
@@ -197,10 +197,10 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* programInfo() override { return fProgramInfo; }
+  GrProgramInfo* programInfo() noexcept override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     auto gp = LatticeGP::Make(arena, fView, fColorSpaceXform, fFilter, fWideColor);
     if (!gp) {
@@ -208,7 +208,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     }
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         fHelper.detachProcessorSet(), GrPrimitiveType::kTriangles, fHelper.pipelineFlags(),
         &GrUserStencilSettings::kUnused);
   }

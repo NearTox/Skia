@@ -172,17 +172,17 @@ void SkStrikeCache::purgeAll() {
   this->internalPurge(fTotalMemoryUsed);
 }
 
-size_t SkStrikeCache::getTotalMemoryUsed() const noexcept {
+size_t SkStrikeCache::getTotalMemoryUsed() const {
   SkAutoSpinlock ac(fLock);
   return fTotalMemoryUsed;
 }
 
-int SkStrikeCache::getCacheCountUsed() const noexcept {
+int SkStrikeCache::getCacheCountUsed() const {
   SkAutoSpinlock ac(fLock);
   return fCacheCount;
 }
 
-int SkStrikeCache::getCacheCountLimit() const noexcept {
+int SkStrikeCache::getCacheCountLimit() const {
   SkAutoSpinlock ac(fLock);
   return fCacheCountLimit;
 }
@@ -196,7 +196,7 @@ size_t SkStrikeCache::setCacheSizeLimit(size_t newLimit) {
   return prevLimit;
 }
 
-size_t SkStrikeCache::getCacheSizeLimit() const noexcept {
+size_t SkStrikeCache::getCacheSizeLimit() const {
   SkAutoSpinlock ac(fLock);
   return fCacheSizeLimit;
 }
@@ -214,12 +214,12 @@ int SkStrikeCache::setCacheCountLimit(int newCount) {
   return prevCount;
 }
 
-int SkStrikeCache::getCachePointSizeLimit() const noexcept {
+int SkStrikeCache::getCachePointSizeLimit() const {
   SkAutoSpinlock ac(fLock);
   return fPointSizeLimit;
 }
 
-int SkStrikeCache::setCachePointSizeLimit(int newLimit) noexcept {
+int SkStrikeCache::setCachePointSizeLimit(int newLimit) {
   if (newLimit < 0) {
     newLimit = 0;
   }
@@ -335,7 +335,7 @@ void SkStrikeCache::internalRemoveStrike(Strike* strike) {
   fStrikeLookup.remove(strike->getDescriptor());
 }
 
-void SkStrikeCache::validate() const noexcept {
+void SkStrikeCache::validate() const {
 #ifdef SK_DEBUG
   size_t computedBytes = 0;
   int computedCount = 0;
@@ -359,7 +359,7 @@ void SkStrikeCache::validate() const noexcept {
 #endif
 }
 
-void SkStrikeCache::Strike::updateDelta(size_t increase) noexcept {
+void SkStrikeCache::Strike::updateDelta(size_t increase) {
   if (increase != 0) {
     SkAutoSpinlock lock{fStrikeCache->fLock};
     fMemoryUsed += increase;

@@ -85,7 +85,7 @@ void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBoun
   GrRenderTargetProxy* proxy = flushState->proxy();
   GrProgramInfo programInfo(
       proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(),
-      flushState->outputView()->origin(), pipeline, pathProc.get(), GrPrimitiveType::kPath);
+      flushState->writeView()->origin(), pipeline, pathProc.get(), GrPrimitiveType::kPath);
 
   flushState->bindPipelineAndScissorClip(programInfo, this->bounds());
   flushState->bindTextures(programInfo.primProc(), nullptr, programInfo.pipeline());

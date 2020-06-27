@@ -68,7 +68,7 @@ std::tuple<const SkPath*, size_t> SkScalerCache::mergePath(SkGlyph* glyph, const
   return {glyph->path(), pathDelta};
 }
 
-const SkDescriptor& SkScalerCache::getDescriptor() const { return *fDesc.getDesc(); }
+const SkDescriptor& SkScalerCache::getDescriptor() const noexcept { return *fDesc.getDesc(); }
 
 int SkScalerCache::countCachedGlyphs() const {
   SkAutoMutexExclusive lock(fMu);

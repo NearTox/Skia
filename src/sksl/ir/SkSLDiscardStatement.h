@@ -23,9 +23,7 @@ struct DiscardStatement : public Statement {
     return std::unique_ptr<Statement>(new DiscardStatement(fOffset));
   }
 
-#ifdef SK_DEBUG
   String description() const override { return String("discard;"); }
-#endif
 
   typedef Statement INHERITED;
 };

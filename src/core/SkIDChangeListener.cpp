@@ -15,13 +15,13 @@
  * removed before the gen ID/unique ID is invalidated.
  */
 
-SkIDChangeListener::SkIDChangeListener() : fShouldDeregister(false) {}
+SkIDChangeListener::SkIDChangeListener() noexcept : fShouldDeregister(false) {}
 
 SkIDChangeListener::~SkIDChangeListener() = default;
 
 using List = SkIDChangeListener::List;
 
-List::List() = default;
+List::List() noexcept = default;
 
 List::~List() {
   // We don't need the mutex. No other thread should have this list while it's being

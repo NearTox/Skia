@@ -19,7 +19,7 @@ namespace SkSL {
 struct TernaryExpression : public Expression {
   TernaryExpression(
       int offset, std::unique_ptr<Expression> test, std::unique_ptr<Expression> ifTrue,
-      std::unique_ptr<Expression> ifFalse)
+      std::unique_ptr<Expression> ifFalse) noexcept
       : INHERITED(offset, kTernary_Kind, ifTrue->fType),
         fTest(std::move(test)),
         fIfTrue(std::move(ifTrue)),
@@ -27,9 +27,14 @@ struct TernaryExpression : public Expression {
     SkASSERT(fIfTrue->fType == fIfFalse->fType);
   }
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     return fTest->hasProperty(property) || fIfTrue->hasProperty(property) ||
            fIfFalse->hasProperty(property);
+  }
+
+  bool isConstantOrUniform() const noexcept override {
+    return fTest->isConstantOrUniform() && fIfTrue->isConstantOrUniform() &&
+           fIfFalse->isConstantOrUniform();
   }
 
   std::unique_ptr<Expression> clone() const override {
@@ -37,12 +42,10 @@ struct TernaryExpression : public Expression {
         new TernaryExpression(fOffset, fTest->clone(), fIfTrue->clone(), fIfFalse->clone()));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     return "(" + fTest->description() + " ? " + fIfTrue->description() + " : " +
            fIfFalse->description() + ")";
   }
-#endif
 
   std::unique_ptr<Expression> fTest;
   std::unique_ptr<Expression> fIfTrue;

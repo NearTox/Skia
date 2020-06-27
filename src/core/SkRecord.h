@@ -104,7 +104,7 @@ class SkRecord : public SkRefCnt {
 
   // Rearrange and resize this record to eliminate any NoOps.
   // May change count() and the indices of ops, but preserves their order.
-  void defrag();
+  void defrag() noexcept;
 
  private:
   // An SkRecord is structured as an array of pointers into a big chunk of memory where
@@ -125,21 +125,19 @@ class SkRecord : public SkRefCnt {
   // A mutator that can be used with replace to destroy canvas commands.
   struct Destroyer {
     template <typename T>
-    void operator()(T* record) {
+    void operator()(T* record) noexcept {
       record->~T();
     }
   };
 
   template <typename T>
-  SK_WHEN(std::is_empty<T>::value, T*)
-  allocCommand() {
+  std::enable_if_t<std::is_empty<T>::value, T*> allocCommand() {
     static T singleton = {};
     return &singleton;
   }
 
   template <typename T>
-  SK_WHEN(!std::is_empty<T>::value, T*)
-  allocCommand() {
+  std::enable_if_t<!std::is_empty<T>::value, T*> allocCommand() {
     return this->alloc<T>();
   }
 

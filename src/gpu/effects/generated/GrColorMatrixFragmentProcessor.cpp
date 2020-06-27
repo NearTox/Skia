@@ -33,8 +33,9 @@ class GrGLSLColorMatrixFragmentProcessor : public GrGLSLFragmentProcessor {
     (void)clampRGBOutput;
     auto premulOutput = _outer.premulOutput;
     (void)premulOutput;
-    mVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4x4_GrSLType, "m");
-    vVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "v");
+    mVar =
+        args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4x4_GrSLType, "m");
+    vVar = args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "v");
     fragBuilder->codeAppendf(
         "half4 inputColor = %s;\n@if (%s) {\n    half nonZeroAlpha = max(inputColor.w, "
         "9.9999997473787516e-05);\n    inputColor = half4(inputColor.xyz / nonZeroAlpha, "
@@ -78,7 +79,7 @@ void GrColorMatrixFragmentProcessor::onGetGLSLProcessorKey(
   b->add32((int32_t)clampRGBOutput);
   b->add32((int32_t)premulOutput);
 }
-bool GrColorMatrixFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrColorMatrixFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrColorMatrixFragmentProcessor& that = other.cast<GrColorMatrixFragmentProcessor>();
   (void)that;
   if (m != that.m) return false;
@@ -89,7 +90,7 @@ bool GrColorMatrixFragmentProcessor::onIsEqual(const GrFragmentProcessor& other)
   return true;
 }
 GrColorMatrixFragmentProcessor::GrColorMatrixFragmentProcessor(
-    const GrColorMatrixFragmentProcessor& src)
+    const GrColorMatrixFragmentProcessor& src) noexcept
     : INHERITED(kGrColorMatrixFragmentProcessor_ClassID, src.optimizationFlags()),
       m(src.m),
       v(src.v),

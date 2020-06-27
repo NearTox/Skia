@@ -12,6 +12,7 @@
 #include "src/core/SkConvertPixels.h"
 #include "src/core/SkCoreBlitters.h"
 #include "src/core/SkDraw.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkScan.h"
@@ -104,10 +105,6 @@ struct Matrix43 {
  private:
   float dot(int index, float x, float y) const { return fMat[index + 0] * x + fMat[index + 4] * y; }
 };
-
-static SkScan::HairRCProc ChooseHairProc(bool doAntiAlias) {
-  return doAntiAlias ? SkScan::AntiHairLine : SkScan::HairLine;
-}
 
 static bool SK_WARN_UNUSED_RESULT texture_to_matrix(
     const VertState& state, const SkPoint verts[], const SkPoint texs[], SkMatrix* matrix) {
@@ -296,45 +293,11 @@ void SkDraw::draw_fixed_vertices(
 
       To be safe, we just make that determination here, and pass it into the tricolorshader.
    */
-  const bool usePerspective = fMatrix->hasPerspective();
+  SkMatrix ctm = fMatrixProvider->localToDevice();
+  const bool usePerspective = ctm.hasPerspective();
 
   VertState state(vertexCount, indices, indexCount);
   VertState::Proc vertProc = state.chooseProc(info.mode());
-
-  // Draw hairlines to show the skeleton
-  if (!(colors || textures)) {
-    // no colors[] and no texture, stroke hairlines with paint's color.
-    SkPaint p;
-    p.setStyle(SkPaint::kStroke_Style);
-    SkAutoBlitterChoose blitter(*this, nullptr, p);
-    // Abort early if we failed to create a shader context.
-    if (blitter->isNullBlitter()) {
-      return;
-    }
-    SkScan::HairRCProc hairProc = ChooseHairProc(paint.isAntiAlias());
-    const SkRasterClip& clip = *fRC;
-    while (vertProc(&state)) {
-      if (dev3) {
-        SkPoint tmp[kMaxClippedTrianglePointCount + 2];
-        int idx[] = {state.f0, state.f1, state.f2};
-        if (int n = clip_triangle(tmp, idx, dev3)) {
-          tmp[n] = tmp[0];  // close the poly
-          if (n == 3) {
-            n = 4;
-          } else {
-            SkASSERT(n == 4);
-            tmp[5] = tmp[2];  // add diagonal
-            n = 6;
-          }
-          hairProc(tmp, n, clip, blitter.get());
-        }
-      } else {
-        SkPoint array[] = {dev2[state.f0], dev2[state.f1], dev2[state.f2], dev2[state.f0]};
-        hairProc(array, 4, clip, blitter.get());
-      }
-    }
-    return;
-  }
 
   SkTriColorShader* triShader = nullptr;
   SkPMColor4f* dstColors = nullptr;
@@ -354,19 +317,21 @@ void SkDraw::draw_fixed_vertices(
   p.setShader(sk_ref_sp(shader));
 
   if (!textures) {  // only tricolor shader
-    auto blitter =
-        SkCreateRasterPipelineBlitter(fDst, p, *fMatrix, outerAlloc, this->fRC->clipShader());
+    auto blitter = SkCreateRasterPipelineBlitter(
+        fDst, p, *fMatrixProvider, outerAlloc, this->fRC->clipShader());
     while (vertProc(&state)) {
-      if (triShader->update(ctmInv, positions, dstColors, state.f0, state.f1, state.f2)) {
-        fill_triangle(state, blitter, *fRC, dev2, dev3);
+      if (triShader &&
+          !triShader->update(ctmInv, positions, dstColors, state.f0, state.f1, state.f2)) {
+        continue;
       }
+      fill_triangle(state, blitter, *fRC, dev2, dev3);
     }
     return;
   }
 
   SkRasterPipeline pipeline(outerAlloc);
   SkStageRec rec = {&pipeline, outerAlloc, fDst.colorType(), fDst.colorSpace(),
-                    p,         nullptr,    *fMatrix};
+                    p,         nullptr,    *fMatrixProvider};
   if (auto updater = as_SB(shader)->appendUpdatableStages(rec)) {
     bool isOpaque = shader->isOpaque();
     if (triShader) {
@@ -383,8 +348,7 @@ void SkDraw::draw_fixed_vertices(
       }
 
       SkMatrix localM;
-      if (texture_to_matrix(state, positions, textures, &localM) &&
-          updater->update(*fMatrix, &localM)) {
+      if (texture_to_matrix(state, positions, textures, &localM) && updater->update(ctm, &localM)) {
         fill_triangle(state, blitter, *fRC, dev2, dev3);
       }
     }
@@ -398,19 +362,18 @@ void SkDraw::draw_fixed_vertices(
 
       SkSTArenaAlloc<2048> innerAlloc;
 
-      const SkMatrix* ctm = fMatrix;
-      SkMatrix tmpCtm;
+      const SkMatrixProvider* matrixProvider = fMatrixProvider;
+      SkTLazy<SkPreConcatMatrixProvider> preConcatMatrixProvider;
       if (textures) {
         SkMatrix localM;
         if (!texture_to_matrix(state, positions, textures, &localM)) {
           continue;
         }
-        tmpCtm = SkMatrix::Concat(*fMatrix, localM);
-        ctm = &tmpCtm;
+        matrixProvider = preConcatMatrixProvider.init(*matrixProvider, localM);
       }
 
-      auto blitter =
-          SkCreateRasterPipelineBlitter(fDst, p, *ctm, &innerAlloc, this->fRC->clipShader());
+      auto blitter = SkCreateRasterPipelineBlitter(
+          fDst, p, *matrixProvider, &innerAlloc, this->fRC->clipShader());
       fill_triangle(state, blitter, *fRC, dev2, dev3);
     }
   }
@@ -432,8 +395,9 @@ void SkDraw::drawVertices(
   if (vertexCount < 3 || (indexCount > 0 && indexCount < 3) || fRC->isEmpty()) {
     return;
   }
+  SkMatrix ctm = fMatrixProvider->localToDevice();
   SkMatrix ctmInv;
-  if (!fMatrix->invert(&ctmInv)) {
+  if (!ctm.invert(&ctmInv)) {
     return;
   }
 
@@ -445,16 +409,16 @@ void SkDraw::drawVertices(
   SkPoint* dev2 = nullptr;
   SkPoint3* dev3 = nullptr;
 
-  if (fMatrix->hasPerspective()) {
+  if (ctm.hasPerspective()) {
     dev3 = outerAlloc.makeArray<SkPoint3>(vertexCount);
-    fMatrix->mapHomogeneousPoints(dev3, info.positions(), vertexCount);
+    ctm.mapHomogeneousPoints(dev3, info.positions(), vertexCount);
     // similar to the bounds check for 2d points (below)
     if (!SkScalarsAreFinite((const SkScalar*)dev3, vertexCount * 3)) {
       return;
     }
   } else {
     dev2 = outerAlloc.makeArray<SkPoint>(vertexCount);
-    fMatrix->mapPoints(dev2, info.positions(), vertexCount);
+    ctm.mapPoints(dev2, info.positions(), vertexCount);
 
     SkRect bounds;
     // this also sets bounds to empty if we see a non-finite value

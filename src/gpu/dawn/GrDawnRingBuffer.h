@@ -36,14 +36,11 @@ class GrDawnRingBuffer : public SkRefCnt {
     void* fData;
   };
   Slice allocate(int size);
-  void flush();
 
  private:
   GrDawnGpu* fGpu;
   wgpu::BufferUsage fUsage;
   wgpu::Buffer fBuffer;
-  wgpu::Buffer fStagingBuffer;
-  void* fData;
   int fOffset = 0;
 };
 

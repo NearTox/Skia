@@ -29,7 +29,7 @@
 // a single writer.
 class SK_CAPABILITY("mutex") SkSharedMutex {
  public:
-  SkSharedMutex();
+  SkSharedMutex() noexcept;
   ~SkSharedMutex();
   // Acquire lock for exclusive use.
   void acquire() SK_ACQUIRE();

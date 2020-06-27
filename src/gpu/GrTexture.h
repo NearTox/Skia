@@ -75,7 +75,7 @@ class GrTexture : virtual public GrSurface {
 
   SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
 
-  void willRemoveLastRef() override {
+  void willRemoveLastRef() noexcept override {
     // We're about to be idle in the resource cache. Do our part to trigger the idle callbacks.
     fIdleProcs.reset();
   }
@@ -84,8 +84,8 @@ class GrTexture : virtual public GrSurface {
 
  private:
   size_t onGpuMemorySize() const override;
-  void markMipMapsDirty();
-  void markMipMapsClean();
+  void markMipMapsDirty() noexcept;
+  void markMipMapsClean() noexcept;
 
   GrTextureType fTextureType;
   GrMipMapsStatus fMipMapsStatus;

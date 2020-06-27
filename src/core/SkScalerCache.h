@@ -66,7 +66,7 @@ class SkScalerCache {
   // SkStrikeForGPU APIs
   const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept { return fRoundingSpec; }
 
-  const SkDescriptor& getDescriptor() const;
+  const SkDescriptor& getDescriptor() const noexcept;
 
   size_t prepareForMaskDrawing(SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects)
       SK_EXCLUDES(fMu);

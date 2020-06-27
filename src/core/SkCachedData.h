@@ -17,7 +17,7 @@ class SkDiscardableMemory;
 class SkCachedData : ::SkNoncopyable {
  public:
   SkCachedData(void* mallocData, size_t size) noexcept;
-  SkCachedData(size_t size, SkDiscardableMemory*);
+  SkCachedData(size_t size, SkDiscardableMemory*) noexcept;
   virtual ~SkCachedData();
 
   size_t size() const noexcept { return fSize; }

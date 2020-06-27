@@ -25,6 +25,8 @@ EffectBuilder::EffectBuilderT EffectBuilder::findBuilder(const skjson::ObjectVal
     const char* fName;
     EffectBuilderT fBuilder;
   } gBuilderInfo[] = {
+      {"ADBE Brightness & Contrast 2", &EffectBuilder::attachBrightnessContrastEffect},
+      {"ADBE Corner Pin", &EffectBuilder::attachCornerPinEffect},
       {"ADBE Drop Shadow", &EffectBuilder::attachDropShadowEffect},
       {"ADBE Easy Levels2", &EffectBuilder::attachEasyLevelsEffect},
       {"ADBE Fill", &EffectBuilder::attachFillEffect},
@@ -122,8 +124,11 @@ sk_sp<sksg::RenderNode> EffectBuilder::attachStyles(
   using StyleBuilder = sk_sp<sksg::RenderNode> (EffectBuilder::*)(
       const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
   static constexpr StyleBuilder gStyleBuilders[] = {
-      nullptr,                                // 'ty': 0 -> stroke
-      &EffectBuilder::attachDropShadowStyle,  // 'ty': 1 -> drop shadow
+      nullptr,                                 // 'ty': 0 -> stroke
+      &EffectBuilder::attachDropShadowStyle,   // 'ty': 1 -> drop shadow
+      &EffectBuilder::attachInnerShadowStyle,  // 'ty': 2 -> inner shadow
+      &EffectBuilder::attachOuterGlowStyle,    // 'ty': 3 -> outer glow
+      &EffectBuilder::attachInnerGlowStyle,    // 'ty': 4 -> inner glow
   };
 
   for (const skjson::ObjectValue* jstyle : jstyles) {

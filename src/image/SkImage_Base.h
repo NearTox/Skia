@@ -103,7 +103,7 @@ class SkImage_Base : public SkImage {
   virtual sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const = 0;
 
  protected:
-  SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept;
+  SkImage_Base(const SkImageInfo& info, uint32_t uniqueID);
 
  private:
   // Set true by caches when they cache content that's derived from the current pixels.

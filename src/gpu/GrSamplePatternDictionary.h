@@ -23,7 +23,7 @@ class GrSamplePatternDictionary {
 
   int findOrAssignSamplePatternKey(const SkTArray<SkPoint>& sampleLocations);
 
-  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const {
+  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const noexcept {
     return *fSampleLocationsArray[samplePatternKey];
   }
 

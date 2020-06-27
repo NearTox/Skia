@@ -21,12 +21,12 @@ class GrCCClipProcessor : public GrFragmentProcessor {
   GrCCClipProcessor(GrSurfaceProxyView, const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
   GrCCClipProcessor(const GrCaps&, const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
 
-  const char* name() const override { return "GrCCClipProcessor"; }
+  const char* name() const noexcept override { return "GrCCClipProcessor"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  const TextureSampler& onTextureSampler(int) const override { return fAtlasAccess; }
+  const TextureSampler& onTextureSampler(int) const noexcept override { return fAtlasAccess; }
 
  private:
   const GrCCClipPath* const fClipPath;

@@ -214,7 +214,7 @@ void GrVkTexture::callIdleProcsOnBehalfOfResource() {
   this->resource()->resetIdleProcs();
 }
 
-void GrVkTexture::willRemoveLastRef() {
+void GrVkTexture::willRemoveLastRef() noexcept {
   if (!fIdleProcs.count()) {
     return;
   }

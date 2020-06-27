@@ -33,7 +33,8 @@ class GrShaderVar {
   };
 
   /** Defaults to a void with no type modifier or layout qualifier. */
-  GrShaderVar() : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
+  GrShaderVar() noexcept
+      : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
 
   GrShaderVar(SkString name, GrSLType type, int arrayCount = kNonArray) noexcept
       : fType(type),
@@ -63,8 +64,8 @@ class GrShaderVar {
 
   GrShaderVar(const GrShaderVar&) = default;
   GrShaderVar& operator=(const GrShaderVar&) = default;
-  GrShaderVar(GrShaderVar&&) = default;
-  GrShaderVar& operator=(GrShaderVar&&) = default;
+  GrShaderVar(GrShaderVar&&) noexcept = default;
+  GrShaderVar& operator=(GrShaderVar&&) noexcept = default;
 
   /** Sets as a non-array. */
   void set(GrSLType type, const char* name) {
@@ -120,10 +121,6 @@ class GrShaderVar {
 
   /** Write a declaration of this variable to out. */
   void appendDecl(const GrShaderCaps*, SkString* out) const;
-
-  void appendArrayAccess(const char* indexName, SkString* out) const {
-    out->appendf("%s[%s]", this->getName().c_str(), indexName);
-  }
 
  private:
   GrSLType fType;

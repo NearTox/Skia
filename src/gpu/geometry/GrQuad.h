@@ -40,7 +40,7 @@ class GrQuad {
   static const int kTypeCount = static_cast<int>(Type::kLast) + 1;
 
   // This enforces W == 1 for non-perspective quads, but does not initialize X or Y.
-  GrQuad() noexcept = default;
+  GrQuad() = default;
 
   explicit GrQuad(const SkRect& rect) noexcept
       : fX{rect.fLeft, rect.fLeft, rect.fRight, rect.fRight},
@@ -98,10 +98,10 @@ class GrQuad {
   float w(int i) const noexcept { return fW[i]; }
   float iw(int i) const noexcept { return sk_ieee_float_divide(1.f, fW[i]); }
 
-  skvx::Vec<4, float> x4f() const { return skvx::Vec<4, float>::Load(fX); }
-  skvx::Vec<4, float> y4f() const { return skvx::Vec<4, float>::Load(fY); }
-  skvx::Vec<4, float> w4f() const { return skvx::Vec<4, float>::Load(fW); }
-  skvx::Vec<4, float> iw4f() const { return 1.f / this->w4f(); }
+  skvx::Vec<4, float> x4f() const noexcept { return skvx::Vec<4, float>::Load(fX); }
+  skvx::Vec<4, float> y4f() const noexcept { return skvx::Vec<4, float>::Load(fY); }
+  skvx::Vec<4, float> w4f() const noexcept { return skvx::Vec<4, float>::Load(fW); }
+  skvx::Vec<4, float> iw4f() const noexcept { return 1.f / this->w4f(); }
 
   Type quadType() const noexcept { return fType; }
 
@@ -141,7 +141,8 @@ class GrQuad {
   template <typename T>
   friend class GrQuadListBase;  // for access to fX, fY, fW
 
-  GrQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, Type type) : fType(type) {
+  GrQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, Type type) noexcept
+      : fType(type) {
     SkASSERT(type != Type::kPerspective);
     xs.store(fX);
     ys.store(fY);
@@ -149,7 +150,7 @@ class GrQuad {
 
   GrQuad(
       const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, const skvx::Vec<4, float>& ws,
-      Type type)
+      Type type) noexcept
       : fW{}  // Include fW in member initializer to avoid redundant default initializer
         ,
         fType(type) {

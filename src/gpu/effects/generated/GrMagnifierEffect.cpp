@@ -35,19 +35,20 @@ class GrGLSLMagnifierEffect : public GrGLSLFragmentProcessor {
     (void)xInvInset;
     auto yInvInset = _outer.yInvInset;
     (void)yInvInset;
-    boundsUniformVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "boundsUniform");
-    xInvZoomVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat_GrSLType, "xInvZoom");
-    yInvZoomVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat_GrSLType, "yInvZoom");
-    xInvInsetVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat_GrSLType, "xInvInset");
-    yInvInsetVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat_GrSLType, "yInvInset");
-    offsetVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf2_GrSLType, "offset");
-    SkString sk_TransformedCoords2D_0 =
-        fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint);
+    boundsUniformVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "boundsUniform");
+    xInvZoomVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat_GrSLType, "xInvZoom");
+    yInvZoomVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat_GrSLType, "yInvZoom");
+    xInvInsetVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat_GrSLType, "xInvInset");
+    yInvInsetVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat_GrSLType, "yInvInset");
+    offsetVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kHalf2_GrSLType, "offset");
+    SkString sk_TransformedCoords2D_0 = fragBuilder->ensureCoords2D(
+        args.fTransformedCoords[0].fVaryingPoint, _outer.sampleMatrix());
     fragBuilder->codeAppendf(
         "float2 coord = %s;\nfloat2 zoom_coord = float2(%s) + coord * float2(%s, "
         "%s);\nfloat2 delta = (coord - %s.xy) * %s.zw;\ndelta = min(delta, "
@@ -135,7 +136,7 @@ GrGLSLFragmentProcessor* GrMagnifierEffect::onCreateGLSLInstance() const {
 }
 void GrMagnifierEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrMagnifierEffect& that = other.cast<GrMagnifierEffect>();
   (void)that;
   if (src != that.src) return false;
@@ -163,7 +164,8 @@ GrMagnifierEffect::GrMagnifierEffect(const GrMagnifierEffect& src)
 std::unique_ptr<GrFragmentProcessor> GrMagnifierEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrMagnifierEffect(*this));
 }
-const GrFragmentProcessor::TextureSampler& GrMagnifierEffect::onTextureSampler(int index) const {
+const GrFragmentProcessor::TextureSampler& GrMagnifierEffect::onTextureSampler(
+    int index) const noexcept {
   return IthTextureSampler(index, src);
 }
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrMagnifierEffect);

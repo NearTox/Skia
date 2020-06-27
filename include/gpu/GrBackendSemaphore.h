@@ -21,15 +21,16 @@ class GrBackendSemaphore {
  public:
   // For convenience we just set the backend here to OpenGL. The GrBackendSemaphore cannot be used
   // until either initGL or initVulkan are called which will set the appropriate GrBackend.
-  GrBackendSemaphore() : fBackend(GrBackendApi::kOpenGL), fGLSync(0), fIsInitialized(false) {}
+  GrBackendSemaphore() noexcept
+      : fBackend(GrBackendApi::kOpenGL), fGLSync(0), fIsInitialized(false) {}
 
-  void initGL(GrGLsync sync) {
+  void initGL(GrGLsync sync) noexcept {
     fBackend = GrBackendApi::kOpenGL;
     fGLSync = sync;
     fIsInitialized = true;
   }
 
-  void initVulkan(VkSemaphore semaphore) {
+  void initVulkan(VkSemaphore semaphore) noexcept {
     fBackend = GrBackendApi::kVulkan;
     fVkSemaphore = semaphore;
 #ifdef SK_VULKAN
@@ -41,7 +42,7 @@ class GrBackendSemaphore {
 
   // It is the creator's responsibility to ref the MTLEvent passed in here, via __bridge_retained.
   // The other end will wrap this BackendSemaphore and take the ref, via __bridge_transfer.
-  void initMetal(GrMTLHandle event, uint64_t value) {
+  void initMetal(GrMTLHandle event, uint64_t value) noexcept {
     fBackend = GrBackendApi::kMetal;
     fMtlEvent = event;
     fMtlValue = value;
@@ -52,30 +53,30 @@ class GrBackendSemaphore {
 #endif
   }
 
-  bool isInitialized() const { return fIsInitialized; }
+  bool isInitialized() const noexcept { return fIsInitialized; }
 
-  GrGLsync glSync() const {
+  GrGLsync glSync() const noexcept {
     if (!fIsInitialized || GrBackendApi::kOpenGL != fBackend) {
       return 0;
     }
     return fGLSync;
   }
 
-  VkSemaphore vkSemaphore() const {
+  VkSemaphore vkSemaphore() const noexcept {
     if (!fIsInitialized || GrBackendApi::kVulkan != fBackend) {
       return VK_NULL_HANDLE;
     }
     return fVkSemaphore;
   }
 
-  GrMTLHandle mtlSemaphore() const {
+  GrMTLHandle mtlSemaphore() const noexcept {
     if (!fIsInitialized || GrBackendApi::kMetal != fBackend) {
       return nullptr;
     }
     return fMtlEvent;
   }
 
-  uint64_t mtlValue() const {
+  uint64_t mtlValue() const noexcept {
     if (!fIsInitialized || GrBackendApi::kMetal != fBackend) {
       return 0;
     }

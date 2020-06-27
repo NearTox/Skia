@@ -14,7 +14,7 @@ namespace sksg {
 // Paint nodes don't generate damage on their own, but via their aggregation ancestor Draw nodes.
 PaintNode::PaintNode() noexcept : INHERITED(kBubbleDamage_Trait) {}
 
-SkPaint PaintNode::makePaint() const {
+SkPaint PaintNode::makePaint() const noexcept {
   SkASSERT(!this->hasInval());
 
   SkPaint paint;
@@ -39,13 +39,13 @@ sk_sp<Color> Color::Make(SkColor c) { return sk_sp<Color>(new Color(c)); }
 
 Color::Color(SkColor c) noexcept : fColor(c) {}
 
-SkRect Color::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
+SkRect Color::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) noexcept {
   SkASSERT(this->hasInval());
 
   return SkRect::MakeEmpty();
 }
 
-void Color::onApplyToPaint(SkPaint* paint) const { paint->setColor(fColor); }
+void Color::onApplyToPaint(SkPaint* paint) const noexcept { paint->setColor(fColor); }
 
 sk_sp<ShaderPaint> ShaderPaint::Make(sk_sp<Shader> sh) {
   return sh ? sk_sp<ShaderPaint>(new ShaderPaint(std::move(sh))) : nullptr;
@@ -61,6 +61,8 @@ SkRect ShaderPaint::onRevalidate(InvalidationController* ic, const SkMatrix& ctm
   return fShader->revalidate(ic, ctm);
 }
 
-void ShaderPaint::onApplyToPaint(SkPaint* paint) const { paint->setShader(fShader->getShader()); }
+void ShaderPaint::onApplyToPaint(SkPaint* paint) const noexcept {
+  paint->setShader(fShader->getShader());
+}
 
 }  // namespace sksg

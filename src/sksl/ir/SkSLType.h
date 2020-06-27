@@ -27,7 +27,7 @@ class Context;
 class Type : public Symbol {
  public:
   struct Field {
-    Field(Modifiers modifiers, StringFragment name, const Type* type)
+    Field(Modifiers modifiers, StringFragment name, const Type* type) noexcept
         : fModifiers(modifiers), fName(name), fType(std::move(type)) {}
 
     const String description() const { return fType->displayName() + " " + fName + ";"; }
@@ -222,7 +222,7 @@ class Type : public Symbol {
     fName.fLength = fNameString.size();
   }
 
-  const String& name() const { return fNameString; }
+  const String& name() const noexcept { return fNameString; }
 
   const String displayName() const {
     if (fNameString == "$floatLiteral") {
@@ -234,49 +234,47 @@ class Type : public Symbol {
     return fNameString;
   }
 
-#ifdef SK_DEBUG
   String description() const override { return this->displayName(); }
-#endif
 
-  bool operator==(const Type& other) const { return fName == other.fName; }
+  bool operator==(const Type& other) const noexcept { return fName == other.fName; }
 
-  bool operator!=(const Type& other) const { return fName != other.fName; }
+  bool operator!=(const Type& other) const noexcept { return fName != other.fName; }
 
   /**
    * Returns the category (scalar, vector, matrix, etc.) of this type.
    */
-  Kind kind() const { return fTypeKind; }
+  Kind kind() const noexcept { return fTypeKind; }
 
   /**
    * Returns true if this is a numeric scalar type.
    */
-  bool isNumber() const { return fNumberKind != kNonnumeric_NumberKind; }
+  bool isNumber() const noexcept { return fNumberKind != kNonnumeric_NumberKind; }
 
   /**
    * Returns true if this is a floating-point scalar type (float, half, or double).
    */
-  bool isFloat() const { return fNumberKind == kFloat_NumberKind; }
+  bool isFloat() const noexcept { return fNumberKind == kFloat_NumberKind; }
 
   /**
    * Returns true if this is a signed scalar type (int or short).
    */
-  bool isSigned() const { return fNumberKind == kSigned_NumberKind; }
+  bool isSigned() const noexcept { return fNumberKind == kSigned_NumberKind; }
 
   /**
    * Returns true if this is an unsigned scalar type (uint or ushort).
    */
-  bool isUnsigned() const { return fNumberKind == kUnsigned_NumberKind; }
+  bool isUnsigned() const noexcept { return fNumberKind == kUnsigned_NumberKind; }
 
   /**
    * Returns true if this is a signed or unsigned integer.
    */
-  bool isInteger() const { return isSigned() || isUnsigned(); }
+  bool isInteger() const noexcept { return isSigned() || isUnsigned(); }
 
   /**
    * Returns the "priority" of a number type, in order of double > float > half > int > short.
    * When operating on two number types, the result is the higher-priority type.
    */
-  int priority() const { return fPriority; }
+  int priority() const noexcept { return fPriority; }
 
   /**
    * Returns true if an instance of this type can be freely coerced (implicitly converted) to
@@ -295,7 +293,7 @@ class Type : public Symbol {
    * For matrices and vectors, returns the type of individual cells (e.g. mat2 has a component
    * type of kFloat_Type). For all other types, causes an SkASSERTion failure.
    */
-  const Type& componentType() const {
+  const Type& componentType() const noexcept {
     SkASSERT(fComponentType);
     return *fComponentType;
   }
@@ -304,7 +302,7 @@ class Type : public Symbol {
    * For texturesamplers, returns the type of texture it samples (e.g., sampler2D has
    * a texture type of texture2D).
    */
-  const Type& textureType() const {
+  const Type& textureType() const noexcept {
     SkASSERT(fTextureType);
     return *fTextureType;
   }
@@ -312,7 +310,7 @@ class Type : public Symbol {
   /**
    * For nullable types, returns the base type, otherwise returns the type itself.
    */
-  const Type& nonnullable() const {
+  const Type& nonnullable() const noexcept {
     if (fTypeKind == kNullable_Kind) {
       return this->componentType();
     }
@@ -324,7 +322,7 @@ class Type : public Symbol {
    * For scalars, returns 1. For arrays, returns either the size of the array (if known) or -1.
    * For all other types, causes an SkASSERTion failure.
    */
-  int columns() const {
+  int columns() const noexcept {
     SkASSERT(
         fTypeKind == kScalar_Kind || fTypeKind == kVector_Kind || fTypeKind == kMatrix_Kind ||
         fTypeKind == kArray_Kind);
@@ -335,12 +333,12 @@ class Type : public Symbol {
    * For matrices, returns the number of rows (e.g. mat2x4 returns 4). For vectors and scalars,
    * returns 1. For all other types, causes an SkASSERTion failure.
    */
-  int rows() const {
+  int rows() const noexcept {
     SkASSERT(fRows > 0);
     return fRows;
   }
 
-  const std::vector<Field>& fields() const {
+  const std::vector<Field>& fields() const noexcept {
     SkASSERT(fTypeKind == kStruct_Kind || fTypeKind == kOther_Kind);
     return fFields;
   }
@@ -349,32 +347,32 @@ class Type : public Symbol {
    * For generic types, returns the types that this generic type can substitute for. For other
    * types, returns a list of other types that this type can be coerced into.
    */
-  const std::vector<const Type*>& coercibleTypes() const {
+  const std::vector<const Type*>& coercibleTypes() const noexcept {
     SkASSERT(fCoercibleTypes.size() > 0);
     return fCoercibleTypes;
   }
 
-  SpvDim_ dimensions() const {
+  SpvDim_ dimensions() const noexcept {
     SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fDimensions;
   }
 
-  bool isDepth() const {
+  bool isDepth() const noexcept {
     SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsDepth;
   }
 
-  bool isArrayed() const {
+  bool isArrayed() const noexcept {
     SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsArrayed;
   }
 
-  bool isMultisampled() const {
+  bool isMultisampled() const noexcept {
     SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsMultisampled;
   }
 
-  bool isSampled() const {
+  bool isSampled() const noexcept {
     SkASSERT(kSampler_Kind == fTypeKind || kTexture_Kind == fTypeKind);
     return fIsSampled;
   }

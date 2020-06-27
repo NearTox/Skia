@@ -71,17 +71,6 @@ static float adjust_sigma(float sigma, int maxTextureSize, int* scaleFactor, int
   return sigma;
 }
 
-static GrTextureDomain::Mode to_texture_domain_mode(SkTileMode tileMode) {
-  switch (tileMode) {
-    case SkTileMode::kClamp: return GrTextureDomain::kClamp_Mode;
-    case SkTileMode::kDecal: return GrTextureDomain::kDecal_Mode;
-    case SkTileMode::kMirror:
-      // TODO (michaelludwig) - Support mirror mode, treat as repeat for now
-    case SkTileMode::kRepeat: return GrTextureDomain::kRepeat_Mode;
-    default: SK_ABORT("Unsupported tile mode.");
-  }
-}
-
 /**
  * Draws 'rtcRect' into 'renderTargetContext' evaluating a 1D Gaussian over 'srcView'. The src rect
  * is 'rtcRect' offset by 'rtcToSrcOffset'. 'mode' and 'bounds' are applied to the src coords.
@@ -91,7 +80,7 @@ static void convolve_gaussian_1d(
     SkIVector rtcToSrcOffset, const SkIRect& rtcRect, SkAlphaType srcAlphaType, Direction direction,
     int radius, float sigma, SkTileMode mode, int bounds[2]) {
   GrPaint paint;
-  auto domainMode = to_texture_domain_mode(mode);
+  auto wm = SkTileModeToWrapMode(mode);
   int realBounds[2];
   if (bounds) {
     realBounds[0] = bounds[0];
@@ -102,7 +91,8 @@ static void convolve_gaussian_1d(
     realBounds[1] = direction == Direction::kX ? proxy->width() : proxy->height();
   }
   std::unique_ptr<GrFragmentProcessor> conv(GrGaussianConvolutionFragmentProcessor::Make(
-      std::move(srcView), srcAlphaType, direction, radius, sigma, domainMode, realBounds));
+      std::move(srcView), srcAlphaType, direction, radius, sigma, wm, realBounds,
+      *renderTargetContext->caps()));
   paint.addColorFragmentProcessor(std::move(conv));
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
   auto srcRect = SkRect::Make(rtcRect.makeOffset(rtcToSrcOffset));
@@ -124,10 +114,10 @@ static std::unique_ptr<GrRenderTargetContext> convolve_gaussian_2d(
   SkISize size = SkISize::Make(2 * radiusX + 1, 2 * radiusY + 1);
   SkIPoint kernelOffset = SkIPoint::Make(radiusX, radiusY);
   GrPaint paint;
-  auto domainMode = to_texture_domain_mode(mode);
+  auto wm = SkTileModeToWrapMode(mode);
   auto conv = GrMatrixConvolutionEffect::MakeGaussian(
-      std::move(srcView), srcBounds, size, 1.0, 0.0, kernelOffset, domainMode, true, sigmaX,
-      sigmaY);
+      context, std::move(srcView), srcBounds, size, 1.0, 0.0, kernelOffset, wm, true, sigmaX,
+      sigmaY, *renderTargetContext->caps());
   paint.addColorFragmentProcessor(std::move(conv));
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
@@ -198,8 +188,10 @@ static std::unique_ptr<GrRenderTargetContext> convolve_gaussian(
     left = {dstBounds.left(), mid.top(), mid.left(), mid.bottom()};
     right = {mid.right(), mid.top(), dstBounds.right(), mid.bottom()};
 
-    // The new 'contentRect' when we're done will be the area between the clears.
-    *contentRect = {dstBounds.left(), top.bottom(), dstBounds.right(), bottom.top()};
+    // The new 'contentRect' when we're done will be the area between the clears in the dst.
+    *contentRect = {
+        dstBounds.left(), std::max(contentRect->top(), dstBounds.top()), dstBounds.right(),
+        std::min(dstBounds.bottom(), contentRect->bottom())};
   } else {
     // This is the same as the x direction code if you turn your head 90 degrees CCW. Swap x and
     // y and swap top/bottom with left/right.
@@ -214,7 +206,9 @@ static std::unique_ptr<GrRenderTargetContext> convolve_gaussian(
     left = {mid.left(), dstBounds.top(), mid.right(), mid.top()};
     right = {mid.left(), mid.bottom(), mid.right(), dstBounds.bottom()};
 
-    *contentRect = {top.right(), dstBounds.top(), bottom.left(), dstBounds.bottom()};
+    *contentRect = {
+        std::max(contentRect->left(), dstBounds.left()), dstBounds.top(),
+        std::min(contentRect->right(), dstBounds.right()), dstBounds.bottom()};
   }
   // Move all the rects from 'srcView' coord system to 'dstRenderTargetContext' coord system.
   mid.offset(-rtcToSrcOffset);
@@ -287,14 +281,7 @@ static GrSurfaceProxyView decimate(
     GrPaint paint;
     std::unique_ptr<GrFragmentProcessor> fp;
     if (i == 1) {
-      GrSamplerState::WrapMode wrapMode;
-      if (mode == SkTileMode::kClamp) {
-        wrapMode = GrSamplerState::WrapMode::kClamp;
-      } else {
-        // GrTextureEffect does not support WrapMode::k[Mirror]Repeat with
-        // GrSamplerState::Filter::kBilerp. So we use kClampToBorder.
-        wrapMode = GrSamplerState::WrapMode::kClampToBorder;
-      }
+      GrSamplerState::WrapMode wrapMode = SkTileModeToWrapMode(mode);
       const auto& caps = *context->priv().caps();
       GrSamplerState sampler(wrapMode, GrSamplerState::Filter::kBilerp);
       fp = GrTextureEffect::MakeSubset(
@@ -424,7 +411,8 @@ std::unique_ptr<GrRenderTargetContext> GaussianBlur(
   if (scaleFactorX == 1 && scaleFactorY == 1) {
     // For really small blurs (certainly no wider than 5x5 on desktop GPUs) it is faster to just
     // launch a single non separable kernel vs two launches.
-    if (sigmaX > 0 && sigmaY > 0 && (2 * radiusX + 1) * (2 * radiusY + 1) <= MAX_KERNEL_SIZE) {
+    const int kernelSize = (2 * radiusX + 1) * (2 * radiusY + 1);
+    if (sigmaX > 0 && sigmaY > 0 && kernelSize <= GrMatrixConvolutionEffect::kMaxUniformSize) {
       // Apply the proxy offset to src bounds and offset directly
       return convolve_gaussian_2d(
           context, std::move(srcView), srcColorType, srcBounds, dstBounds, radiusX, radiusY, sigmaX,

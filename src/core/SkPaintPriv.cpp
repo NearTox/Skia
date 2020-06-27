@@ -13,7 +13,7 @@
 #include "src/shaders/SkColorFilterShader.h"
 #include "src/shaders/SkShaderBase.h"
 
-static bool changes_alpha(const SkPaint& paint) noexcept {
+static bool changes_alpha(const SkPaint& paint) {
   SkColorFilter* cf = paint.getColorFilter();
   return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
 }
@@ -44,7 +44,7 @@ bool SkPaintPriv::Overwrites(const SkPaint* paint, ShaderOverrideOpacity overrid
   return SkXfermode::IsOpaque(paint->getBlendMode(), opacityType);
 }
 
-bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) noexcept {
+bool SkPaintPriv::ShouldDither(const SkPaint& p, SkColorType dstCT) {
   // The paint dither flag can veto.
   if (!p.isDither()) {
     return false;

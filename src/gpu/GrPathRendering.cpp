@@ -15,7 +15,7 @@
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTarget.h"
 
-const GrUserStencilSettings& GrPathRendering::GetStencilPassSettings(FillType fill) {
+const GrUserStencilSettings& GrPathRendering::GetStencilPassSettings(FillType fill) noexcept {
   switch (fill) {
     default: SK_ABORT("Unexpected path fill.");
     case GrPathRendering::kWinding_FillType: {

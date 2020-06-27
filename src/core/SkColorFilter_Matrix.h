@@ -15,7 +15,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
  public:
   enum class Domain : uint8_t { kRGBA, kHSLA };
 
-  explicit SkColorFilter_Matrix(const float array[20], Domain);
+  explicit SkColorFilter_Matrix(const float array[20], Domain) noexcept;
 
   uint32_t getFlags() const noexcept override;
 
@@ -27,7 +27,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
   static void RegisterFlattenables();
 
  private:
-  void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
   bool onAsAColorMatrix(float matrix[20]) const override;
 
   SK_FLATTENABLE_HOOKS(SkColorFilter_Matrix)

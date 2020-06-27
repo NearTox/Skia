@@ -6,7 +6,7 @@
  */
 #include "src/pathops/SkPathOpsLine.h"
 
-SkDPoint SkDLine::ptAtT(double t) const {
+SkDPoint SkDLine::ptAtT(double t) const noexcept {
   if (0 == t) {
     return fPts[0];
   }
@@ -18,7 +18,7 @@ SkDPoint SkDLine::ptAtT(double t) const {
   return result;
 }
 
-double SkDLine::exactPoint(const SkDPoint& xy) const {
+double SkDLine::exactPoint(const SkDPoint& xy) const noexcept {
   if (xy == fPts[0]) {  // do cheapest test first
     return 0;
   }
@@ -28,7 +28,7 @@ double SkDLine::exactPoint(const SkDPoint& xy) const {
   return -1;
 }
 
-double SkDLine::nearPoint(const SkDPoint& xy, bool* unequal) const {
+double SkDLine::nearPoint(const SkDPoint& xy, bool* unequal) const noexcept {
   if (!AlmostBetweenUlps(fPts[0].fX, xy.fX, fPts[1].fX) ||
       !AlmostBetweenUlps(fPts[0].fY, xy.fY, fPts[1].fY)) {
     return -1;
@@ -62,7 +62,7 @@ double SkDLine::nearPoint(const SkDPoint& xy, bool* unequal) const {
   return t;
 }
 
-bool SkDLine::nearRay(const SkDPoint& xy) const {
+bool SkDLine::nearRay(const SkDPoint& xy) const noexcept {
   // project a perpendicular ray from the point to the line; find the T on the line
   SkDVector len = fPts[1] - fPts[0];                 // the x/y magnitudes of the line
   double denom = len.fX * len.fX + len.fY * len.fY;  // see DLine intersectRay
@@ -78,7 +78,7 @@ bool SkDLine::nearRay(const SkDPoint& xy) const {
   return RoughlyEqualUlps(largest, largest + dist);  // is the dist within ULPS tolerance?
 }
 
-double SkDLine::ExactPointH(const SkDPoint& xy, double left, double right, double y) {
+double SkDLine::ExactPointH(const SkDPoint& xy, double left, double right, double y) noexcept {
   if (xy.fY == y) {
     if (xy.fX == left) {
       return 0;
@@ -90,7 +90,7 @@ double SkDLine::ExactPointH(const SkDPoint& xy, double left, double right, doubl
   return -1;
 }
 
-double SkDLine::NearPointH(const SkDPoint& xy, double left, double right, double y) {
+double SkDLine::NearPointH(const SkDPoint& xy, double left, double right, double y) noexcept {
   if (!AlmostBequalUlps(xy.fY, y)) {
     return -1;
   }
@@ -113,7 +113,7 @@ double SkDLine::NearPointH(const SkDPoint& xy, double left, double right, double
   return t;
 }
 
-double SkDLine::ExactPointV(const SkDPoint& xy, double top, double bottom, double x) {
+double SkDLine::ExactPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept {
   if (xy.fX == x) {
     if (xy.fY == top) {
       return 0;
@@ -125,7 +125,7 @@ double SkDLine::ExactPointV(const SkDPoint& xy, double top, double bottom, doubl
   return -1;
 }
 
-double SkDLine::NearPointV(const SkDPoint& xy, double top, double bottom, double x) {
+double SkDLine::NearPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept {
   if (!AlmostBequalUlps(xy.fX, x)) {
     return -1;
   }

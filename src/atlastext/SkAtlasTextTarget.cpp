@@ -12,6 +12,7 @@
 #include "include/atlastext/SkAtlasTextRenderer.h"
 #include "src/atlastext/SkInternalAtlasTextContext.h"
 #include "src/core/SkGlyphRunPainter.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/gpu/GrClip.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
@@ -19,12 +20,13 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/ops/GrAtlasTextOp.h"
+#include "src/gpu/text/GrAtlasManager.h"
 #include "src/gpu/text/GrTextContext.h"
 
 static constexpr int kMaxBatchLookBack = 10;
 
 SkAtlasTextTarget::SkAtlasTextTarget(
-    sk_sp<SkAtlasTextContext> context, int width, int height, void* handle)
+    sk_sp<SkAtlasTextContext> context, int width, int height, void* handle) noexcept
     : fHandle(handle),
       fContext(std::move(context)),
       fWidth(width),
@@ -37,40 +39,46 @@ SkAtlasTextTarget::SkAtlasTextTarget(
 
 SkAtlasTextTarget::~SkAtlasTextTarget() { fContext->renderer()->targetDeleted(fHandle); }
 
-int SkAtlasTextTarget::save() {
+int SkAtlasTextTarget::save() noexcept {
   const auto& currCTM = this->ctm();
   *static_cast<SkMatrix*>(fMatrixStack.push_back()) = currCTM;
   return fSaveCnt++;
 }
 
-void SkAtlasTextTarget::restore() {
+void SkAtlasTextTarget::restore() noexcept {
   if (fSaveCnt) {
     fMatrixStack.pop_back();
     fSaveCnt--;
   }
 }
 
-void SkAtlasTextTarget::restoreToCount(int count) {
+void SkAtlasTextTarget::restoreToCount(int count) noexcept {
   while (fSaveCnt > count) {
     this->restore();
   }
 }
 
-void SkAtlasTextTarget::translate(SkScalar dx, SkScalar dy) {
+void SkAtlasTextTarget::translate(SkScalar dx, SkScalar dy) noexcept {
   this->accessCTM()->preTranslate(dx, dy);
 }
 
-void SkAtlasTextTarget::scale(SkScalar sx, SkScalar sy) { this->accessCTM()->preScale(sx, sy); }
+void SkAtlasTextTarget::scale(SkScalar sx, SkScalar sy) noexcept {
+  this->accessCTM()->preScale(sx, sy);
+}
 
-void SkAtlasTextTarget::rotate(SkScalar degrees) { this->accessCTM()->preRotate(degrees); }
+void SkAtlasTextTarget::rotate(SkScalar degrees) noexcept { this->accessCTM()->preRotate(degrees); }
 
-void SkAtlasTextTarget::rotate(SkScalar degrees, SkScalar px, SkScalar py) {
+void SkAtlasTextTarget::rotate(SkScalar degrees, SkScalar px, SkScalar py) noexcept {
   this->accessCTM()->preRotate(degrees, px, py);
 }
 
-void SkAtlasTextTarget::skew(SkScalar sx, SkScalar sy) { this->accessCTM()->preSkew(sx, sy); }
+void SkAtlasTextTarget::skew(SkScalar sx, SkScalar sy) noexcept {
+  this->accessCTM()->preSkew(sx, sy);
+}
 
-void SkAtlasTextTarget::concat(const SkMatrix& matrix) { this->accessCTM()->preConcat(matrix); }
+void SkAtlasTextTarget::concat(const SkMatrix& matrix) noexcept {
+  this->accessCTM()->preConcat(matrix);
+}
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -94,18 +102,18 @@ class SkInternalAtlasTextTarget : public GrTextTarget, public SkAtlasTextTarget 
   void addDrawOp(const GrClip&, std::unique_ptr<GrAtlasTextOp> op) override;
 
   void drawShape(
-      const GrClip&, const SkPaint&, const SkMatrix& viewMatrix, const GrShape&) override {
+      const GrClip&, const SkPaint&, const SkMatrixProvider&, const GrStyledShape&) override {
     SkDebugf("Path glyph??");
   }
 
   void makeGrPaint(
-      GrMaskFormat, const SkPaint& skPaint, const SkMatrix&, GrPaint* grPaint) override {
+      GrMaskFormat, const SkPaint& skPaint, const SkMatrixProvider&, GrPaint* grPaint) override {
     grPaint->setColor4f(skPaint.getColor4f().premul());
   }
 
-  GrContext* getContext() override { return this->context()->internal().grContext(); }
+  GrContext* getContext() noexcept override { return this->context()->internal().grContext(); }
 
-  SkGlyphRunListPainter* glyphPainter() override { return &fGlyphPainter; }
+  SkGlyphRunListPainter* glyphPainter() noexcept override { return &fGlyphPainter; }
 
   /** SkAtlasTextTarget overrides */
 
@@ -154,10 +162,11 @@ void SkInternalAtlasTextTarget::drawText(
   SkGlyphRunBuilder builder;
   builder.drawGlyphsWithPositions(
       paint, font.makeFont(), SkSpan<const SkGlyphID>{glyphs, SkTo<size_t>(glyphCnt)}, positions);
-  auto glyphRunList = builder.useGlyphRunList();
+  auto& glyphRunList = builder.useGlyphRunList();
   if (!glyphRunList.empty()) {
+    SkSimpleMatrixProvider matrixProvider(this->ctm());
     atlasTextContext->drawGlyphRunList(
-        grContext, this, GrNoClip(), this->ctm(), props, glyphRunList);
+        grContext, this, GrNoClip(), matrixProvider, props, glyphRunList);
   }
 }
 
@@ -226,11 +235,11 @@ void GrAtlasTextOp::executeForTextTarget(SkAtlasTextTarget* target) {
 
   for (int i = 0; i < fGeoCount; ++i) {
     auto subRun = fGeoData[i].fSubRunPtr;
+    subRun->prepareGrGlyphs(context.grContext()->priv().getGrStrikeCache());
     // TODO4F: Preserve float colors
     subRun->updateVerticesColorIfNeeded(fGeoData[i].fColor.toBytes_RGBA());
     subRun->translateVerticesIfNeeded(fGeoData[i].fDrawMatrix, fGeoData[i].fDrawOrigin);
-    GrTextBlob::VertexRegenerator regenerator(
-        resourceProvider, fGeoData[i].fSubRunPtr, &context, atlasManager);
+    GrTextBlob::VertexRegenerator regenerator(resourceProvider, subRun, &context, atlasManager);
     int subRunEnd = subRun->fGlyphs.count();
     for (int subRunIndex = 0; subRunIndex < subRunEnd;) {
       auto [ok, glyphsRegenerated] = regenerator.regenerate(subRunIndex, subRunEnd);

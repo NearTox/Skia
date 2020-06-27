@@ -42,12 +42,12 @@ class SkTArray {
   /**
    * Copies one array to another. The new array will be heap allocated.
    */
-  SkTArray(const SkTArray& that) {
+  SkTArray(const SkTArray& that) noexcept(MEM_MOVE || std::is_nothrow_copy_constructible_v<T>) {
     this->init(that.fCount);
     this->copy(that.fItemArray);
   }
 
-  SkTArray(SkTArray&& that) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  SkTArray(SkTArray&& that) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     // TODO: If 'that' owns its memory why don't we just steal the pointer?
     this->init(that.fCount);
     that.move(fItemArray);
@@ -59,12 +59,15 @@ class SkTArray {
    * array will be heap allocated. Be careful not to use this constructor
    * when you really want the (void*, int) version.
    */
-  SkTArray(const T* array, int count) {
+  SkTArray(const T* array, int count) noexcept(
+      MEM_MOVE || std::is_nothrow_copy_constructible_v<T>) {
     this->init(count);
     this->copy(array);
   }
 
-  SkTArray& operator=(const SkTArray& that) {
+  SkTArray& operator=(const SkTArray& that) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>)) {
     if (this == &that) {
       return *this;
     }
@@ -77,7 +80,8 @@ class SkTArray {
     this->copy(that.fItemArray);
     return *this;
   }
-  SkTArray& operator=(SkTArray&& that) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  SkTArray& operator=(SkTArray&& that) noexcept(
+      MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     if (this == &that) {
       return *this;
     }
@@ -104,7 +108,7 @@ class SkTArray {
   /**
    * Resets to count() == 0 and resets any reserve count.
    */
-  void reset() noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void reset() noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     this->pop_back_n(fCount);
     fReserved = false;
   }
@@ -112,7 +116,9 @@ class SkTArray {
   /**
    * Resets to count() = n newly constructed T objects and resets any reserve count.
    */
-  void reset(int n) {
+  void reset(int n) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_default_constructible_v<T>)) {
     SkASSERT(n >= 0);
     for (int i = 0; i < fCount; ++i) {
       fItemArray[i].~T();
@@ -146,7 +152,7 @@ class SkTArray {
    * until the array size grows above n and subsequently shrinks below n, any version of reset()
    * is called, or reserve() is called again.
    */
-  void reserve(int n) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void reserve(int n) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     SkASSERT(n >= 0);
     if (n > 0) {
       this->checkRealloc(n);
@@ -156,7 +162,7 @@ class SkTArray {
     }
   }
 
-  void removeShuffle(int n) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void removeShuffle(int n) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     SkASSERT(n < fCount);
     int newCount = fCount - 1;
     fCount = newCount;
@@ -181,7 +187,9 @@ class SkTArray {
    * the reference only remains valid until the next call that adds or removes
    * elements.
    */
-  T& push_back() {
+  T& push_back() noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_default_constructible_v<T>)) {
     void* newT = this->push_back_raw(1);
     return *new (newT) T;
   }
@@ -189,7 +197,9 @@ class SkTArray {
   /**
    * Version of above that uses a copy constructor to initialize the new item
    */
-  T& push_back(const T& t) {
+  T& push_back(const T& t) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>)) {
     void* newT = this->push_back_raw(1);
     return *new (newT) T(t);
   }
@@ -197,7 +207,7 @@ class SkTArray {
   /**
    * Version of above that uses a move constructor to initialize the new item
    */
-  T& push_back(T&& t) {
+  T& push_back(T&& t) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     void* newT = this->push_back_raw(1);
     return *new (newT) T(std::move(t));
   }
@@ -216,7 +226,9 @@ class SkTArray {
    * the start of that new range. Note: this address is only valid until the
    * next API call made on the array that might add or remove elements.
    */
-  T* push_back_n(int n) {
+  T* push_back_n(int n) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_default_constructible_v<T>)) {
     SkASSERT(n >= 0);
     void* newTs = this->push_back_raw(n);
     for (int i = 0; i < n; ++i) {
@@ -229,7 +241,9 @@ class SkTArray {
    * Version of above that uses a copy constructor to initialize all n items
    * to the same T.
    */
-  T* push_back_n(int n, const T& t) {
+  T* push_back_n(int n, const T& t) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>)) {
     SkASSERT(n >= 0);
     void* newTs = this->push_back_raw(n);
     for (int i = 0; i < n; ++i) {
@@ -242,7 +256,9 @@ class SkTArray {
    * Version of above that uses a copy constructor to initialize the n items
    * to separate T values.
    */
-  T* push_back_n(int n, const T t[]) {
+  T* push_back_n(int n, const T t[]) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>)) {
     SkASSERT(n >= 0);
     this->checkRealloc(n);
     for (int i = 0; i < n; ++i) {
@@ -255,7 +271,7 @@ class SkTArray {
   /**
    * Version of above that uses the move constructor to set n items.
    */
-  T* move_back_n(int n, T* t) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  T* move_back_n(int n, T* t) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     SkASSERT(n >= 0);
     this->checkRealloc(n);
     for (int i = 0; i < n; ++i) {
@@ -268,7 +284,7 @@ class SkTArray {
   /**
    * Removes the last element. Not safe to call when count() == 0.
    */
-  void pop_back() noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void pop_back() noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     SkASSERT(fCount > 0);
     --fCount;
     fItemArray[fCount].~T();
@@ -278,7 +294,7 @@ class SkTArray {
   /**
    * Removes the last n elements. Not safe to call when count() < n.
    */
-  void pop_back_n(int n) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void pop_back_n(int n) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     SkASSERT(n >= 0);
     SkASSERT(fCount >= n);
     fCount -= n;
@@ -292,7 +308,8 @@ class SkTArray {
    * Pushes or pops from the back to resize. Pushes will be default
    * initialized.
    */
-  void resize_back(int newCount) {
+  void resize_back(int newCount) noexcept((MEM_MOVE || std::is_nothrow_move_constructible_v<T>)&&(
+      MEM_MOVE || std::is_nothrow_default_constructible_v<T>)) {
     SkASSERT(newCount >= 0);
 
     if (newCount > fCount) {
@@ -304,7 +321,7 @@ class SkTArray {
 
   /** Swaps the contents of this array with that array. Does a pointer swap if possible,
       otherwise copies the T values. */
-  void swap(SkTArray& that) {
+  void swap(SkTArray& that) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     using std::swap;
     if (this == &that) {
       return;
@@ -328,7 +345,10 @@ class SkTArray {
   T* data() noexcept { return fItemArray; }
   const T* data() const noexcept { return fItemArray; }
   size_t size() const noexcept { return (size_t)fCount; }
-  void resize(size_t count) { this->resize_back((int)count); }
+  void resize(size_t count) noexcept((MEM_MOVE || std::is_nothrow_move_constructible_v<T>)&&(
+      MEM_MOVE || std::is_nothrow_default_constructible_v<T>)) {
+    this->resize_back((int)count);
+  }
 
   /**
    * Get the i^th element.
@@ -353,7 +373,7 @@ class SkTArray {
     return fItemArray[0];
   }
 
-  const T& front() const {
+  const T& front() const noexcept {
     SkASSERT(fCount > 0);
     return fItemArray[0];
   }
@@ -374,13 +394,13 @@ class SkTArray {
   /**
    * equivalent to operator[](count()-1-i)
    */
-  T& fromBack(int i) {
+  T& fromBack(int i) noexcept {
     SkASSERT(i >= 0);
     SkASSERT(i < fCount);
     return fItemArray[fCount - i - 1];
   }
 
-  const T& fromBack(int i) const {
+  const T& fromBack(int i) const noexcept {
     SkASSERT(i >= 0);
     SkASSERT(i < fCount);
     return fItemArray[fCount - i - 1];
@@ -420,7 +440,7 @@ class SkTArray {
    */
   template <int N>
   SkTArray(const SkTArray& array, SkAlignedSTStorage<N, T>* storage) noexcept(
-      std::is_nothrow_copy_constructible_v<T>) {
+      MEM_MOVE || std::is_nothrow_copy_constructible_v<T>) {
     this->initWithPreallocatedStorage(array.fCount, storage->get(), N);
     this->copy(array.fItemArray);
   }
@@ -432,7 +452,7 @@ class SkTArray {
    */
   template <int N>
   SkTArray(SkTArray&& array, SkAlignedSTStorage<N, T>* storage) noexcept(
-      std::is_nothrow_move_constructible_v<T>) {
+      MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     this->initWithPreallocatedStorage(array.fCount, storage->get(), N);
     array.move(fItemArray);
     array.fCount = 0;
@@ -445,7 +465,7 @@ class SkTArray {
    */
   template <int N>
   SkTArray(const T* array, int count, SkAlignedSTStorage<N, T>* storage) noexcept(
-      std::is_nothrow_copy_constructible_v<T>) {
+      MEM_MOVE || std::is_nothrow_copy_constructible_v<T>) {
     this->initWithPreallocatedStorage(count, storage->get(), N);
     this->copy(array);
   }
@@ -489,7 +509,7 @@ class SkTArray {
   /** In the following move and copy methods, 'dst' is assumed to be uninitialized raw storage.
    *  In the following move methods, 'src' is destroyed leaving behind uninitialized raw storage.
    */
-  void copy(const T* src) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+  void copy(const T* src) noexcept(MEM_MOVE || std::is_nothrow_copy_constructible_v<T>) {
     // Some types may be trivially copyable, in which case we *could* use memcopy; but
     // MEM_MOVE == true implies that the type is trivially movable, and not necessarily
     // trivially copyable (think sk_sp<>).  So short of adding another template arg, we
@@ -500,25 +520,23 @@ class SkTArray {
   }
 
   template <bool E = MEM_MOVE>
-  SK_WHEN(E, void)
-  move(int dst, int src) noexcept {
+  std::enable_if_t<E, void> move(int dst, int src) noexcept {
     memcpy(&fItemArray[dst], &fItemArray[src], sizeof(T));
   }
   template <bool E = MEM_MOVE>
-  SK_WHEN(E, void)
-  move(void* dst) noexcept {
+  std::enable_if_t<E, void> move(void* dst) noexcept {
     sk_careful_memcpy(dst, fItemArray, fCount * sizeof(T));
   }
 
   template <bool E = MEM_MOVE>
-  SK_WHEN(!E, void)
-  move(int dst, int src) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  std::enable_if_t<!E, void> move(int dst, int src) noexcept(
+      MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     new (&fItemArray[dst]) T(std::move(fItemArray[src]));
     fItemArray[src].~T();
   }
   template <bool E = MEM_MOVE>
-  SK_WHEN(!E, void)
-  move(void* dst) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  std::enable_if_t<!E, void> move(void* dst) noexcept(
+      MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     for (int i = 0; i < fCount; ++i) {
       new (static_cast<char*>(dst) + sizeof(T) * i) T(std::move(fItemArray[i]));
       fItemArray[i].~T();
@@ -529,14 +547,14 @@ class SkTArray {
 
   // Helper function that makes space for n objects, adjusts the count, but does not initialize
   // the new objects.
-  void* push_back_raw(int n) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void* push_back_raw(int n) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     this->checkRealloc(n);
     void* ptr = fItemArray + fCount;
     fCount += n;
     return ptr;
   }
 
-  void checkRealloc(int delta) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  void checkRealloc(int delta) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     SkASSERT(fCount >= 0);
     SkASSERT(fAllocCount >= 0);
     SkASSERT(-delta <= fCount);
@@ -583,12 +601,10 @@ class SkTArray {
 };
 
 template <typename T, bool M>
-static inline void swap(SkTArray<T, M>& a, SkTArray<T, M>& b) {
+static inline void swap(SkTArray<T, M>& a, SkTArray<T, M>& b) noexcept(
+    M || std::is_nothrow_move_constructible_v<T>) {
   a.swap(b);
 }
-
-template <typename T, bool MEM_MOVE>
-constexpr int SkTArray<T, MEM_MOVE>::kMinHeapAllocCount;
 
 /**
  * Subclass of SkTArray that contains a preallocated memory block for the array.
@@ -601,36 +617,48 @@ class SkSTArray : public SkTArray<T, MEM_MOVE> {
  public:
   SkSTArray() noexcept : INHERITED(&fStorage) {}
 
-  SkSTArray(const SkSTArray& array) : INHERITED(array, &fStorage) {}
+  SkSTArray(const SkSTArray& array) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>))
+      : INHERITED(array, &fStorage) {}
 
-  SkSTArray(SkSTArray&& array) noexcept(std::is_nothrow_copy_constructible_v<T>)
+  SkSTArray(SkSTArray&& array) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>)
       : INHERITED(std::move(array), &fStorage) {}
 
-  explicit SkSTArray(const INHERITED& array) : INHERITED(array, &fStorage) {}
+  explicit SkSTArray(const INHERITED& array) noexcept(
+      MEM_MOVE ||
+      (std::is_nothrow_move_constructible_v<T> && std::is_nothrow_copy_constructible_v<T>))
+      : INHERITED(array, &fStorage) {}
 
-  explicit SkSTArray(INHERITED&& array) noexcept(std::is_nothrow_copy_constructible_v<T>)
+  explicit SkSTArray(INHERITED&& array) noexcept(
+      MEM_MOVE || std::is_nothrow_move_constructible_v<T>)
       : INHERITED(std::move(array), &fStorage) {}
 
-  explicit SkSTArray(int reserveCount) : INHERITED(reserveCount) {}
+  explicit SkSTArray(int reserveCount) noexcept : INHERITED(reserveCount) {}
 
-  SkSTArray(const T* array, int count) : INHERITED(array, count, &fStorage) {}
+  SkSTArray(const T* array, int count) noexcept(MEM_MOVE || std::is_nothrow_copy_constructible_v<T>)
+      : INHERITED(array, count, &fStorage) {}
 
-  SkSTArray& operator=(const SkSTArray& array) {
+  SkSTArray& operator=(const SkSTArray& array) noexcept(
+      std::is_nothrow_copy_assignable_v<INHERITED>) {
     INHERITED::operator=(array);
     return *this;
   }
 
-  SkSTArray& operator=(SkSTArray&& array) noexcept(std::is_nothrow_move_assignable_v<INHERITED>) {
+  SkSTArray& operator=(SkSTArray&& array) noexcept(
+      MEM_MOVE || std::is_nothrow_move_assignable_v<INHERITED>) {
     INHERITED::operator=(std::move(array));
     return *this;
   }
 
-  SkSTArray& operator=(const INHERITED& array) {
+  SkSTArray& operator=(const INHERITED& array) noexcept(
+      std::is_nothrow_copy_assignable_v<INHERITED>) {
     INHERITED::operator=(array);
     return *this;
   }
 
-  SkSTArray& operator=(INHERITED&& array) noexcept(std::is_nothrow_move_assignable_v<INHERITED>) {
+  SkSTArray& operator=(INHERITED&& array) noexcept(
+      MEM_MOVE || std::is_nothrow_move_assignable_v<INHERITED>) {
     INHERITED::operator=(std::move(array));
     return *this;
   }

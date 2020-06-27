@@ -69,15 +69,15 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
      *      fColorMode == kDst_Mode
      *      fOffset == (0, 0)
      */
-    LayerInfo();
+    LayerInfo() noexcept;
   };
 
   SkDrawLooper::Context* makeContext(SkArenaAlloc*) const override;
 
-  bool asABlurShadow(BlurShadowRec* rec) const override;
+  bool asABlurShadow(BlurShadowRec* rec) const noexcept override;
 
  protected:
-  SkLayerDrawLooper();
+  SkLayerDrawLooper() noexcept;
 
   void flatten(SkWriteBuffer&) const override;
 
@@ -95,7 +95,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
   // state-machine during the init/next cycle
   class LayerDrawLooperContext : public SkDrawLooper::Context {
    public:
-    explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
+    explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper) noexcept;
 
    protected:
     bool next(Info*, SkPaint* paint) override;
@@ -111,7 +111,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
  public:
   class SK_API Builder {
    public:
-    Builder();
+    Builder() noexcept;
     ~Builder();
 
     /**

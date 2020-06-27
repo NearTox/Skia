@@ -178,7 +178,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& clip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp;
     {
@@ -194,7 +194,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
         (fStrokeWidth > 0) ? GrPrimitiveType::kTriangleStrip : GrPrimitiveType::kLineStrip;
 
     fProgramInfo = fHelper.createProgramInfo(
-        caps, arena, outputView, std::move(clip), dstProxyView, gp, primType);
+        caps, arena, writeView, std::move(clip), dstProxyView, gp, primType);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -442,7 +442,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&) override;
 
   void onPrepareDraws(Target*) override;
@@ -490,7 +490,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
 };
 
 void AAStrokeRectOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   GrGeometryProcessor* gp = create_aa_stroke_rect_gp(
       arena, fHelper.compatibleWithCoverageAsAlpha(), this->viewMatrix(), fHelper.usesLocalCoords(),
@@ -501,7 +501,7 @@ void AAStrokeRectOp::onCreateProgramInfo(
   }
 
   fProgramInfo = fHelper.createProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
       GrPrimitiveType::kTriangles);
 }
 

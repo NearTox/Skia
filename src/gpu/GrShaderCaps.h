@@ -35,7 +35,7 @@ class GrShaderCaps : public SkRefCnt {
     kLast_AdvBlendEqInteraction = kSpecificEnables_AdvBlendEqInteraction
   };
 
-  GrShaderCaps(const GrContextOptions&);
+  GrShaderCaps(const GrContextOptions&) noexcept;
 
   void dumpJSON(SkJSONWriter*) const;
 

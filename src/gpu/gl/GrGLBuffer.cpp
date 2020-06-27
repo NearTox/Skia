@@ -82,6 +82,7 @@ inline static GrGLenum gr_to_gl_access_pattern(
     switch (type) {
       case GrGpuBufferType::kVertex:
       case GrGpuBufferType::kIndex:
+      case GrGpuBufferType::kDrawIndirect:
       case GrGpuBufferType::kXferCpuToGpu: return drawUsage(pattern);
       case GrGpuBufferType::kXferGpuToCpu: return readUsage(pattern);
     }
@@ -120,7 +121,7 @@ GrGLBuffer::GrGLBuffer(
   }
 }
 
-inline GrGLGpu* GrGLBuffer::glGpu() const noexcept {
+inline GrGLGpu* GrGLBuffer::glGpu() const {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }

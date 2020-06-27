@@ -19,11 +19,11 @@ class GrVkSamplerYcbcrConversion : public GrVkManagedResource {
  public:
   static GrVkSamplerYcbcrConversion* Create(GrVkGpu* gpu, const GrVkYcbcrConversionInfo&);
 
-  VkSamplerYcbcrConversion ycbcrConversion() const { return fYcbcrConversion; }
+  VkSamplerYcbcrConversion ycbcrConversion() const noexcept { return fYcbcrConversion; }
 
   struct Key {
-    Key() : fVkFormat(VK_FORMAT_UNDEFINED), fExternalFormat(0), fConversionKey(0) {}
-    Key(VkFormat vkFormat, uint64_t externalFormat, uint8_t conversionKey) {
+    Key() noexcept : fVkFormat(VK_FORMAT_UNDEFINED), fExternalFormat(0), fConversionKey(0) {}
+    Key(VkFormat vkFormat, uint64_t externalFormat, uint8_t conversionKey) noexcept {
       memset(this, 0, sizeof(Key));
       fVkFormat = vkFormat;
       fExternalFormat = externalFormat;
@@ -34,7 +34,7 @@ class GrVkSamplerYcbcrConversion : public GrVkManagedResource {
     uint64_t fExternalFormat;
     uint8_t fConversionKey;
 
-    bool operator==(const Key& that) const {
+    bool operator==(const Key& that) const noexcept {
       return this->fVkFormat == that.fVkFormat && this->fExternalFormat == that.fExternalFormat &&
              this->fConversionKey == that.fConversionKey;
     }

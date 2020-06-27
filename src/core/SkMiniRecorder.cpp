@@ -20,11 +20,11 @@ using namespace SkRecords;
 
 class SkEmptyPicture final : public SkPicture {
  public:
-  void playback(SkCanvas*, AbortCallback*) const override {}
+  void playback(SkCanvas*, AbortCallback*) const noexcept override {}
 
-  size_t approximateBytesUsed() const override { return sizeof(*this); }
-  int approximateOpCount() const override { return 0; }
-  SkRect cullRect() const override { return SkRect::MakeEmpty(); }
+  size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
+  int approximateOpCount() const noexcept override { return 0; }
+  SkRect cullRect() const noexcept override { return SkRect::MakeEmpty(); }
 };
 
 // Calculate conservative bounds for each type of draw op that can be its own mini picture.
@@ -52,9 +52,9 @@ class SkMiniPicture final : public SkPicture {
     SkRecords::Draw(c, nullptr, nullptr, 0, nullptr)(fOp);
   }
 
-  size_t approximateBytesUsed() const override { return sizeof(*this); }
-  int approximateOpCount() const override { return 1; }
-  SkRect cullRect() const override { return fCull; }
+  size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
+  int approximateOpCount() const noexcept override { return 1; }
+  SkRect cullRect() const noexcept override { return fCull; }
 
  private:
   SkRect fCull;

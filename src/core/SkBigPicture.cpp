@@ -14,7 +14,7 @@
 
 SkBigPicture::SkBigPicture(
     const SkRect& cull, sk_sp<SkRecord> record, std::unique_ptr<SnapshotArray> drawablePicts,
-    sk_sp<SkBBoxHierarchy> bbh, size_t approxBytesUsedBySubPictures)
+    sk_sp<SkBBoxHierarchy> bbh, size_t approxBytesUsedBySubPictures) noexcept
     : fCullRect(cull),
       fApproxBytesUsedBySubPictures(approxBytesUsedBySubPictures),
       fRecord(std::move(record)),
@@ -39,9 +39,9 @@ void SkBigPicture::partialPlayback(
       *fRecord, canvas, this->drawablePicts(), this->drawableCount(), start, stop, initialCTM);
 }
 
-SkRect SkBigPicture::cullRect() const { return fCullRect; }
-int SkBigPicture::approximateOpCount() const { return fRecord->count(); }
-size_t SkBigPicture::approximateBytesUsed() const {
+SkRect SkBigPicture::cullRect() const noexcept { return fCullRect; }
+int SkBigPicture::approximateOpCount() const noexcept { return fRecord->count(); }
+size_t SkBigPicture::approximateBytesUsed() const noexcept {
   size_t bytes = sizeof(*this) + fRecord->bytesUsed() + fApproxBytesUsedBySubPictures;
   if (fBBH) {
     bytes += fBBH->bytesUsed();
@@ -49,8 +49,10 @@ size_t SkBigPicture::approximateBytesUsed() const {
   return bytes;
 }
 
-int SkBigPicture::drawableCount() const { return fDrawablePicts ? fDrawablePicts->count() : 0; }
+int SkBigPicture::drawableCount() const noexcept {
+  return fDrawablePicts ? fDrawablePicts->count() : 0;
+}
 
-SkPicture const* const* SkBigPicture::drawablePicts() const {
+SkPicture const* const* SkBigPicture::drawablePicts() const noexcept {
   return fDrawablePicts ? fDrawablePicts->begin() : nullptr;
 }

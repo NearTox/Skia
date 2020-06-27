@@ -25,7 +25,7 @@ class GrStencilPathOp final : public GrOp {
       GrRecordingContext* context, const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip,
       const GrScissorState& scissor, sk_sp<const GrPath> path);
 
-  const char* name() const override { return "StencilPathOp"; }
+  const char* name() const noexcept override { return "StencilPathOp"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -41,7 +41,7 @@ class GrStencilPathOp final : public GrOp {
 
   GrStencilPathOp(
       const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip, const GrScissorState& scissor,
-      sk_sp<const GrPath> path)
+      sk_sp<const GrPath> path) noexcept
       : INHERITED(ClassID()),
         fViewMatrix(viewMatrix),
         fUseHWAA(useHWAA),
@@ -52,10 +52,10 @@ class GrStencilPathOp final : public GrOp {
   }
 
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) noexcept override {}
 
-  void onPrepare(GrOpFlushState*) override {}
+  void onPrepare(GrOpFlushState*) noexcept override {}
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 

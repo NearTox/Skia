@@ -25,7 +25,8 @@ class GrGLSLMixerEffect : public GrGLSLFragmentProcessor {
     (void)_outer;
     auto weight = _outer.weight;
     (void)weight;
-    weightVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf_GrSLType, "weight");
+    weightVar =
+        args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "weight");
     SkString _input1278 = SkStringPrintf("%s", args.fInputColor);
     SkString _sample1278;
     _sample1278 = this->invokeChild(_outer.fp0_index, _input1278.c_str(), args);
@@ -55,7 +56,7 @@ GrGLSLFragmentProcessor* GrMixerEffect::onCreateGLSLInstance() const {
 }
 void GrMixerEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrMixerEffect& that = other.cast<GrMixerEffect>();
   (void)that;
   if (weight != that.weight) return false;
@@ -68,14 +69,16 @@ GrMixerEffect::GrMixerEffect(const GrMixerEffect& src)
       weight(src.weight) {
   {
     auto clone = src.childProcessor(fp0_index).clone();
-    clone->setSampledWithExplicitCoords(
-        src.childProcessor(fp0_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(fp0_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
   if (fp1_index >= 0) {
     auto clone = src.childProcessor(fp1_index).clone();
-    clone->setSampledWithExplicitCoords(
-        src.childProcessor(fp1_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(fp1_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
 }

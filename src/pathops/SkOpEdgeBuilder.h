@@ -13,7 +13,7 @@
 class SkOpEdgeBuilder {
  public:
   SkOpEdgeBuilder(
-      const SkPathWriter& path, SkOpContourHead* contours2, SkOpGlobalState* globalState)
+      const SkPathWriter& path, SkOpContourHead* contours2, SkOpGlobalState* globalState) noexcept
       : fGlobalState(globalState),
         fPath(path.nativePath()),
         fContourBuilder(contours2),
@@ -22,7 +22,8 @@ class SkOpEdgeBuilder {
     init();
   }
 
-  SkOpEdgeBuilder(const SkPath& path, SkOpContourHead* contours2, SkOpGlobalState* globalState)
+  SkOpEdgeBuilder(
+      const SkPath& path, SkOpContourHead* contours2, SkOpGlobalState* globalState) noexcept
       : fGlobalState(globalState),
         fPath(&path),
         fContourBuilder(contours2),
@@ -44,16 +45,16 @@ class SkOpEdgeBuilder {
 
   bool finish();
 
-  const SkOpContour* head() const { return fContoursHead; }
+  const SkOpContour* head() const noexcept { return fContoursHead; }
 
-  void init();
-  bool unparseable() const { return fUnparseable; }
-  SkPathOpsMask xorMask() const { return fXorMask[fOperand]; }
+  void init() noexcept;
+  bool unparseable() const noexcept { return fUnparseable; }
+  SkPathOpsMask xorMask() const noexcept { return fXorMask[fOperand]; }
 
  private:
-  void closeContour(const SkPoint& curveEnd, const SkPoint& curveStart);
+  void closeContour(const SkPoint& curveEnd, const SkPoint& curveStart) noexcept;
   bool close();
-  int preFetch();
+  int preFetch() noexcept;
   bool walk();
 
   SkOpGlobalState* fGlobalState;

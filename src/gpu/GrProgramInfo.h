@@ -19,16 +19,17 @@ class GrProgramInfo {
   GrProgramInfo(
       int numSamples, int numStencilSamples, const GrBackendFormat& backendFormat,
       GrSurfaceOrigin origin, const GrPipeline* pipeline, const GrPrimitiveProcessor* primProc,
-      GrPrimitiveType primitiveType, uint8_t tessellationPatchVertexCount = 0)
-      : fNumRasterSamples(pipeline->isStencilEnabled() ? numStencilSamples : numSamples),
-        fIsMixedSampled(fNumRasterSamples > numSamples),
+      GrPrimitiveType primitiveType, uint8_t tessellationPatchVertexCount = 0) noexcept
+      : fNumSamples(numSamples),
+        fNumStencilSamples(numStencilSamples),
+        fIsMixedSampled(pipeline->isStencilEnabled() && numStencilSamples > numSamples),
         fBackendFormat(backendFormat),
         fOrigin(origin),
         fPipeline(pipeline),
         fPrimProc(primProc),
         fPrimitiveType(primitiveType),
         fTessellationPatchVertexCount(tessellationPatchVertexCount) {
-    SkASSERT(fNumRasterSamples > 0);
+    SkASSERT(this->numRasterSamples() > 0);
     SkASSERT((GrPrimitiveType::kPatches == fPrimitiveType) == (fTessellationPatchVertexCount > 0));
     fRequestedFeatures = fPrimProc->requestedFeatures();
     for (int i = 0; i < fPipeline->numFragmentProcessors(); ++i) {
@@ -41,7 +42,12 @@ class GrProgramInfo {
 
   GrProcessor::CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }
 
-  int numRasterSamples() const noexcept { return fNumRasterSamples; }
+  int numSamples() const noexcept { return fNumSamples; }
+  int numStencilSamples() const noexcept { return fNumStencilSamples; }
+
+  int numRasterSamples() const noexcept {
+    return fPipeline->isStencilEnabled() ? fNumStencilSamples : fNumSamples;
+  }
   bool isMixedSampled() const noexcept { return fIsMixedSampled; }
   // The backend format of the destination render target [proxy]
   const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
@@ -79,7 +85,8 @@ class GrProgramInfo {
 #endif
 
  private:
-  const int fNumRasterSamples;
+  const int fNumSamples;
+  const int fNumStencilSamples;
   const bool fIsMixedSampled;
   const GrBackendFormat fBackendFormat;
   const GrSurfaceOrigin fOrigin;

@@ -22,17 +22,16 @@ class GrClipStackClip final : public GrClip {
  public:
   GrClipStackClip(const SkClipStack* stack = nullptr) { this->reset(stack); }
 
-  void reset(const SkClipStack* stack) { fStack = stack; }
+  void reset(const SkClipStack* stack) noexcept { fStack = stack; }
 
-  bool quickContains(const SkRect&) const final;
-  bool quickContains(const SkRRect&) const final;
-  void getConservativeBounds(
-      int width, int height, SkIRect* devResult, bool* isIntersectionOfRects) const final;
+  bool quickContains(const SkRect&) const noexcept final;
+  bool quickContains(const SkRRect&) const noexcept final;
+  SkIRect getConservativeBounds(int width, int height) const noexcept final;
   bool apply(
       GrRecordingContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
       GrAppliedClip* out, SkRect* bounds) const final;
 
-  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const override;
+  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const noexcept override;
 
   sk_sp<GrTextureProxy> testingOnly_createClipMask(GrContext*) const;
   static const char kMaskTestTag[];

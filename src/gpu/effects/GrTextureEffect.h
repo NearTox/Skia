@@ -56,7 +56,7 @@ class GrTextureEffect : public GrFragmentProcessor {
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  const char* name() const override { return "TextureEffect"; }
+  const char* name() const noexcept override { return "TextureEffect"; }
 
  private:
   enum class ShaderMode : uint16_t {
@@ -88,8 +88,10 @@ class GrTextureEffect : public GrFragmentProcessor {
   SkRect fSubset;
   SkRect fClamp;
   ShaderMode fShaderModes[2];
+  // true if we are dealing with a fully lazy proxy which can't be normalized until runtime
+  bool fLazyProxyNormalization;
 
-  inline GrTextureEffect(GrSurfaceProxyView, SkAlphaType, const SkMatrix&, const Sampling&);
+  inline GrTextureEffect(GrSurfaceProxyView, SkAlphaType, const Sampling&, bool);
 
   explicit GrTextureEffect(const GrTextureEffect& src);
 
@@ -97,9 +99,9 @@ class GrTextureEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
-  const TextureSampler& onTextureSampler(int) const override;
+  const TextureSampler& onTextureSampler(int) const noexcept override;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 

@@ -19,7 +19,7 @@ SkCachedData::SkCachedData(void* data, size_t size) noexcept
   fStorage.fMalloc = data;
 }
 
-SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm)
+SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm) noexcept
     : fData(dm->data()),
       fSize(size),
       fRefCnt(1),

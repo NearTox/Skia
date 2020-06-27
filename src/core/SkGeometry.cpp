@@ -1061,7 +1061,7 @@ bool SkConic::chopAt(SkScalar t, SkConic dst[2]) const noexcept {
   return SkScalarsAreFinite(&dst[0].fPts[0].fX, 7 * 2);
 }
 
-void SkConic::chopAt(SkScalar t1, SkScalar t2, SkConic* dst) const {
+void SkConic::chopAt(SkScalar t1, SkScalar t2, SkConic* dst) const noexcept {
   if (0 == t1 || 1 == t2) {
     if (0 == t1 && 1 == t2) {
       *dst = *this;
@@ -1224,7 +1224,7 @@ static constexpr bool between(SkScalar a, SkScalar b, SkScalar c) noexcept {
   return (a - b) * (c - b) <= 0;
 }
 
-static SkPoint* subdivide(const SkConic& src, SkPoint pts[], int level) {
+static SkPoint* subdivide(const SkConic& src, SkPoint pts[], int level) noexcept {
   SkASSERT(level >= 0);
 
   if (0 == level) {
@@ -1265,7 +1265,7 @@ static SkPoint* subdivide(const SkConic& src, SkPoint pts[], int level) {
   }
 }
 
-int SkConic::chopIntoQuadsPOW2(SkPoint pts[], int pow2) const {
+int SkConic::chopIntoQuadsPOW2(SkPoint pts[], int pow2) const noexcept {
   SkASSERT(pow2 >= 0);
   *pts = fPts[0];
   SkDEBUGCODE(SkPoint * endPts);
@@ -1366,7 +1366,7 @@ bool SkConic::findMaxCurvature(SkScalar* t) const {
 }
 #endif
 
-SkScalar SkConic::TransformW(const SkPoint pts[], SkScalar w, const SkMatrix& matrix) noexcept {
+SkScalar SkConic::TransformW(const SkPoint pts[], SkScalar w, const SkMatrix& matrix) {
   if (!matrix.hasPerspective()) {
     return w;
   }
@@ -1428,8 +1428,8 @@ int SkConic::BuildUnitArc(
     }
   }
 
-  static constexpr SkPoint quadrantPts[] = {{1, 0},  {1, 1},   {0, 1},  {-1, 1},
-                                            {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+  constexpr SkPoint quadrantPts[] = {{1, 0},  {1, 1},   {0, 1},  {-1, 1},
+                                     {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
   constexpr SkScalar quadrantWeight = SK_ScalarRoot2Over2;
 
   int conicCount = quadrant;

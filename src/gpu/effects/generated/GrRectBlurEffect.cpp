@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLRectBlurEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLRectBlurEffect() {}
+  GrGLSLRectBlurEffect() noexcept = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrRectBlurEffect& _outer = args.fFp.cast<GrRectBlurEffect>();
@@ -33,14 +33,15 @@ class GrGLSLRectBlurEffect : public GrGLSLFragmentProcessor {
              abs(rect.right()) > 16000.0) ||
             abs(rect.bottom()) > 16000.0;
     if (highp) {
-      rectFVar =
-          args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "rectF");
+      rectFVar = args.fUniformHandler->addUniform(
+          &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "rectF");
     }
     if (!highp) {
-      rectHVar = args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf4_GrSLType, "rectH");
+      rectHVar = args.fUniformHandler->addUniform(
+          &_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "rectH");
     }
-    invSixSigmaVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kHalf_GrSLType, "invSixSigma");
+    invSixSigmaVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "invSixSigma");
     fragBuilder->codeAppendf(
         "/* key */ bool highp = %s;\nhalf xCoverage, yCoverage;\n@if (%s) {\n    half x, "
         "y;\n    @if (highp) {\n        x = max(half(%s.x - sk_FragCoord.x), "
@@ -132,14 +133,14 @@ GrGLSLFragmentProcessor* GrRectBlurEffect::onCreateGLSLInstance() const {
   return new GrGLSLRectBlurEffect();
 }
 void GrRectBlurEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   bool highp =
       ((abs(rect.left()) > 16000.0 || abs(rect.top()) > 16000.0) || abs(rect.right()) > 16000.0) ||
       abs(rect.bottom()) > 16000.0;
   b->add32((int32_t)highp);
   b->add32((int32_t)isFast);
 }
-bool GrRectBlurEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrRectBlurEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrRectBlurEffect& that = other.cast<GrRectBlurEffect>();
   (void)that;
   if (rect != that.rect) return false;
@@ -148,7 +149,7 @@ bool GrRectBlurEffect::onIsEqual(const GrFragmentProcessor& other) const {
   if (isFast != that.isFast) return false;
   return true;
 }
-GrRectBlurEffect::GrRectBlurEffect(const GrRectBlurEffect& src)
+GrRectBlurEffect::GrRectBlurEffect(const GrRectBlurEffect& src) noexcept
     : INHERITED(kGrRectBlurEffect_ClassID, src.optimizationFlags()),
       rect(src.rect),
       integral(src.integral),
@@ -159,7 +160,8 @@ GrRectBlurEffect::GrRectBlurEffect(const GrRectBlurEffect& src)
 std::unique_ptr<GrFragmentProcessor> GrRectBlurEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrRectBlurEffect(*this));
 }
-const GrFragmentProcessor::TextureSampler& GrRectBlurEffect::onTextureSampler(int index) const {
+const GrFragmentProcessor::TextureSampler& GrRectBlurEffect::onTextureSampler(
+    int index) const noexcept {
   return IthTextureSampler(index, integral);
 }
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrRectBlurEffect);

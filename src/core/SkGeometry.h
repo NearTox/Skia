@@ -34,7 +34,8 @@ SkPoint SkEvalQuadTangentAt(const SkPoint src[3], SkScalar t) noexcept;
 /** Set pt to the point on the src quadratic specified by t. t must be
     0 <= t <= 1.0
 */
-void SkEvalQuadAt(const SkPoint src[3], SkScalar t, SkPoint* pt, SkVector* tangent = nullptr) noexcept;
+void SkEvalQuadAt(
+    const SkPoint src[3], SkScalar t, SkPoint* pt, SkVector* tangent = nullptr) noexcept;
 
 /** Given a src quadratic bezier, chop it at the specified t value,
     where 0 < t < 1, and return the two new quadratics in dst:
@@ -216,7 +217,7 @@ SkCubicType SkClassifyCubic(
 enum SkRotationDirection { kCW_SkRotationDirection, kCCW_SkRotationDirection };
 
 struct SkConic {
-  SkConic() {}
+  SkConic() noexcept = default;
   SkConic(const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w) noexcept {
     fPts[0] = p0;
     fPts[1] = p1;
@@ -252,7 +253,7 @@ struct SkConic {
    */
   void evalAt(SkScalar t, SkPoint* pos, SkVector* tangent = nullptr) const noexcept;
   bool SK_WARN_UNUSED_RESULT chopAt(SkScalar t, SkConic dst[2]) const noexcept;
-  void chopAt(SkScalar t1, SkScalar t2, SkConic* dst) const;
+  void chopAt(SkScalar t1, SkScalar t2, SkConic* dst) const noexcept;
   void chop(SkConic dst[2]) const noexcept;
 
   SkPoint evalAt(SkScalar t) const noexcept;
@@ -271,7 +272,7 @@ struct SkConic {
    *  Chop this conic into N quads, stored continguously in pts[], where
    *  N = 1 << pow2. The amount of storage needed is (1 + 2 * N)
    */
-  int SK_SPI SK_WARN_UNUSED_RESULT chopIntoQuadsPOW2(SkPoint pts[], int pow2) const;
+  int SK_SPI SK_WARN_UNUSED_RESULT chopIntoQuadsPOW2(SkPoint pts[], int pow2) const noexcept;
 
   bool findXExtrema(SkScalar* t) const noexcept;
   bool findYExtrema(SkScalar* t) const noexcept;
@@ -290,7 +291,7 @@ struct SkConic {
    */
   //    bool findMaxCurvature(SkScalar* t) const;  // unimplemented
 
-  static SkScalar TransformW(const SkPoint[3], SkScalar w, const SkMatrix&) noexcept;
+  static SkScalar TransformW(const SkPoint[3], SkScalar w, const SkMatrix&);
 
   enum { kMaxConicsForArc = 5 };
   static int BuildUnitArc(
@@ -305,7 +306,7 @@ namespace {  // NOLINT(google-build-namespaces)
  *  use for : eval(t) == A * t^2 + B * t + C
  */
 struct SkQuadCoeff {
-  SkQuadCoeff() {}
+  SkQuadCoeff() noexcept = default;
 
   SkQuadCoeff(const Sk2s& A, const Sk2s& B, const Sk2s& C) noexcept : fA(A), fB(B), fC(C) {}
 
@@ -392,7 +393,7 @@ struct SkCubicCoeff {
  */
 class SkAutoConicToQuads {
  public:
-  SkAutoConicToQuads() : fQuadCount(0) {}
+  SkAutoConicToQuads() noexcept : fQuadCount(0) {}
 
   /**
    *  Given a conic and a tolerance, return the array of points for the
@@ -406,7 +407,7 @@ class SkAutoConicToQuads {
    *      quad[2] == pts[4..6]
    *      quad[3] == pts[6..8]
    */
-  const SkPoint* computeQuads(const SkConic& conic, SkScalar tol) {
+  const SkPoint* computeQuads(const SkConic& conic, SkScalar tol) noexcept {
     int pow2 = conic.computeQuadPOW2(tol);
     fQuadCount = 1 << pow2;
     SkPoint* pts = fStorage.reset(1 + 2 * fQuadCount);
@@ -414,7 +415,7 @@ class SkAutoConicToQuads {
     return pts;
   }
 
-  const SkPoint* computeQuads(const SkPoint pts[3], SkScalar weight, SkScalar tol) {
+  const SkPoint* computeQuads(const SkPoint pts[3], SkScalar weight, SkScalar tol) noexcept {
     SkConic conic;
     conic.set(pts, weight);
     return computeQuads(conic, tol);

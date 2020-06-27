@@ -32,7 +32,7 @@ class SkWbmpCodec final : public SkCodec {
   bool usesColorXform() const noexcept override { return false; }
 
  private:
-  SkSampler* getSampler(bool createIfNecessary) override {
+  SkSampler* getSampler(bool createIfNecessary) noexcept override {
     SkASSERT(fSwizzler || !createIfNecessary);
     return fSwizzler.get();
   }

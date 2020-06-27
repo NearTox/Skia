@@ -16,7 +16,6 @@
 
 class SkParticleEffect;
 class SkParticleEffectParams;
-class SkRandom;
 
 namespace skresources {
 class ResourceProvider;
@@ -29,15 +28,13 @@ class Compiler;
 class SkParticleExternalValue : public SkSL::ExternalValue {
  public:
   SkParticleExternalValue(const char* name, SkSL::Compiler& compiler, const SkSL::Type& type)
-      : SkSL::ExternalValue(name, type), fCompiler(compiler), fRandom(nullptr), fEffect(nullptr) {}
+      : SkSL::ExternalValue(name, type), fCompiler(compiler), fEffect(nullptr) {}
 
-  void setRandom(SkRandom* random) { fRandom = random; }
   void setEffect(SkParticleEffect* effect) { fEffect = effect; }
 
  protected:
   SkSL::Compiler& fCompiler;
 
-  SkRandom* fRandom;
   SkParticleEffect* fEffect;
 };
 

@@ -31,8 +31,8 @@ class SkImage;
 
 class SkReadBuffer {
  public:
-  SkReadBuffer();
-  SkReadBuffer(const void* data, size_t size);
+  SkReadBuffer() noexcept;
+  SkReadBuffer(const void* data, size_t size) noexcept;
 
   /**
    *  Returns true IFF the version is older than the specified version.
@@ -97,7 +97,7 @@ class SkReadBuffer {
     return p;
   }
   void readPoint3(SkPoint3* point) noexcept;
-  void readMatrix(SkMatrix* matrix);
+  void readMatrix(SkMatrix* matrix) noexcept;
   void readIRect(SkIRect* rect) noexcept;
   void readRect(SkRect* rect) noexcept;
   void readRRect(SkRRect* rrect);
@@ -193,11 +193,11 @@ class SkReadBuffer {
   int32_t checkInt(int min, int max) noexcept;
 
   template <typename T>
-  T checkRange(T min, T max) {
+  T checkRange(T min, T max) noexcept {
     return static_cast<T>(this->checkInt(static_cast<int32_t>(min), static_cast<int32_t>(max)));
   }
 
-  SkFilterQuality checkFilterQuality();
+  SkFilterQuality checkFilterQuality() noexcept;
 
  private:
   const char* readString(size_t* length) noexcept;
@@ -230,7 +230,7 @@ class SkReadBuffer {
 
 class SkReadBuffer {
  public:
-  SkReadBuffer() {}
+  SkReadBuffer() noexcept = default;
   SkReadBuffer(const void*, size_t) {}
 
   bool isVersionLT(SkPicturePriv::Version) const { return false; }

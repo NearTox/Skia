@@ -179,9 +179,11 @@ bool SkPathWriter::changedSlopes(const SkOpPtT* ptT) const {
 
 class DistanceLessThan {
  public:
-  DistanceLessThan(double* distances) : fDistances(distances) {}
+  DistanceLessThan(double* distances) noexcept : fDistances(distances) {}
   double* fDistances;
-  bool operator()(const int one, const int two) { return fDistances[one] < fDistances[two]; }
+  bool operator()(const int one, const int two) noexcept {
+    return fDistances[one] < fDistances[two];
+  }
 };
 
 /*

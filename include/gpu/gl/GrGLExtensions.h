@@ -31,7 +31,7 @@ class SK_API GrGLExtensions {
 
   GrGLExtensions& operator=(const GrGLExtensions&);
 
-  void swap(GrGLExtensions* that) {
+  void swap(GrGLExtensions* that) noexcept {
     using std::swap;
     swap(fStrings, that->fStrings);
     swap(fInitialized, that->fInitialized);
@@ -47,7 +47,7 @@ class SK_API GrGLExtensions {
       GrGLFunction<GrGLGetStringiFn> getStringi, GrGLFunction<GrGLGetIntegervFn> getIntegerv,
       GrGLFunction<GrEGLQueryStringFn> queryString = nullptr, GrEGLDisplay eglDisplay = nullptr);
 
-  bool isInitialized() const { return fInitialized; }
+  bool isInitialized() const noexcept { return fInitialized; }
 
   /**
    * Queries whether an extension is present. This will fail if init() has not been called.

@@ -24,7 +24,7 @@
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrSurfaceContextPriv.h"
 #include "src/gpu/geometry/GrPathUtils.h"
-#include "src/gpu/geometry/GrShape.h"
+#include "src/gpu/geometry/GrStyledShape.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
@@ -35,7 +35,7 @@ GrDefaultPathRenderer::GrDefaultPathRenderer() {}
 
 #define STENCIL_OFF 0  // Always disable stencil (even when needed)
 
-static inline bool single_pass_shape(const GrShape& shape) {
+static inline bool single_pass_shape(const GrStyledShape& shape) {
 #if STENCIL_OFF
   return true;
 #else
@@ -54,7 +54,7 @@ static inline bool single_pass_shape(const GrShape& shape) {
 }
 
 GrPathRenderer::StencilSupport GrDefaultPathRenderer::onGetStencilSupport(
-    const GrShape& shape) const {
+    const GrStyledShape& shape) const {
   if (single_pass_shape(shape)) {
     return GrPathRenderer::kNoRestriction_StencilSupport;
   } else {
@@ -402,7 +402,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp;
     {
@@ -417,7 +417,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
     SkASSERT(gp->vertexStride() == sizeof(SkPoint));
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp, this->primType());
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->primType());
   }
 
   void onPrepareDraws(Target* target) override {
@@ -501,7 +501,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
 bool GrDefaultPathRenderer::internalDrawPath(
     GrRenderTargetContext* renderTargetContext, GrPaint&& paint, GrAAType aaType,
     const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
-    const SkMatrix& viewMatrix, const GrShape& shape, bool stencilOnly) {
+    const SkMatrix& viewMatrix, const GrStyledShape& shape, bool stencilOnly) {
   auto context = renderTargetContext->surfPriv().getContext();
 
   SkASSERT(GrAAType::kCoverage != aaType);

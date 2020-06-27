@@ -19,12 +19,15 @@ class GrProxyProvider;
  */
 class GrSoftwarePathRenderer : public GrPathRenderer {
  public:
+  const char* name() const final { return "SW"; }
+
   GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
       : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
   static bool GetShapeAndClipBounds(
-      GrRenderTargetContext*, const GrClip& clip, const GrShape& shape, const SkMatrix& matrix,
-      SkIRect* unclippedDevShapeBounds, SkIRect* clippedDevShapeBounds, SkIRect* devClipBounds);
+      GrRenderTargetContext*, const GrClip& clip, const GrStyledShape& shape,
+      const SkMatrix& matrix, SkIRect* unclippedDevShapeBounds, SkIRect* clippedDevShapeBounds,
+      SkIRect* devClipBounds);
 
  private:
   static void DrawNonAARect(
@@ -45,7 +48,7 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
       const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
       const SkIRect& deviceSpaceRectToDraw);
 
-  StencilSupport onGetStencilSupport(const GrShape&) const override {
+  StencilSupport onGetStencilSupport(const GrStyledShape&) const override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
 

@@ -17,14 +17,14 @@ class Type;
 
 class ExternalValue : public Symbol {
  public:
-  ExternalValue(const char* name, const Type& type)
+  ExternalValue(const char* name, const Type& type) noexcept
       : INHERITED(-1, kExternal_Kind, name), fType(type) {}
 
-  virtual bool canRead() const { return false; }
+  virtual bool canRead() const noexcept { return false; }
 
-  virtual bool canWrite() const { return false; }
+  virtual bool canWrite() const noexcept { return false; }
 
-  virtual bool canCall() const { return false; }
+  virtual bool canCall() const noexcept { return false; }
 
   /**
    * Returns the type for purposes of read and write operations.
@@ -78,9 +78,7 @@ class ExternalValue : public Symbol {
    */
   virtual ExternalValue* getChild(const char* name) const { return nullptr; }
 
-#ifdef SK_DEBUG
   String description() const override { return String("external<") + fName + ">"; }
-#endif
 
  private:
   typedef Symbol INHERITED;

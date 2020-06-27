@@ -185,7 +185,8 @@ bool SkROBuffer::Iter::next() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRWBuffer::SkRWBuffer(size_t initialCapacity) : fHead(nullptr), fTail(nullptr), fTotalUsed(0) {
+SkRWBuffer::SkRWBuffer(size_t initialCapacity) noexcept
+    : fHead(nullptr), fTail(nullptr), fTotalUsed(0) {
   if (initialCapacity) {
     fHead = SkBufferHead::Alloc(initialCapacity);
     fTail = &fHead->fBlock;
@@ -314,7 +315,7 @@ class SkROBufferStreamAsset : public SkStreamAsset {
 
   size_t getPosition() const noexcept override { return fGlobalOffset; }
 
-  bool seek(size_t position) override {
+  bool seek(size_t position) noexcept override {
     AUTO_VALIDATE
     if (position < fGlobalOffset) {
       this->rewind();
@@ -323,7 +324,7 @@ class SkROBufferStreamAsset : public SkStreamAsset {
     return true;
   }
 
-  bool move(long offset) override {
+  bool move(long offset) noexcept override {
     AUTO_VALIDATE
     offset += fGlobalOffset;
     if (offset <= 0) {

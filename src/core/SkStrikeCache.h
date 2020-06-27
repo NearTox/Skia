@@ -40,7 +40,7 @@ class SkStrikePinner {
 
 class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
  public:
-  SkStrikeCache() = default;
+  SkStrikeCache() noexcept = default;
 
   class Strike final : public SkRefCnt, public SkStrikeForGPU {
    public:
@@ -64,7 +64,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       return glyphPath;
     }
 
-    SkScalerContext* getScalerContext() const { return fScalerCache.getScalerContext(); }
+    SkScalerContext* getScalerContext() const noexcept { return fScalerCache.getScalerContext(); }
 
     void findIntercepts(
         const SkScalar bounds[2], SkScalar scale, SkScalar xPos, SkGlyph* glyph, SkScalar* array,
@@ -72,7 +72,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       fScalerCache.findIntercepts(bounds, scale, xPos, glyph, array, count);
     }
 
-    const SkFontMetrics& getFontMetrics() const { return fScalerCache.getFontMetrics(); }
+    const SkFontMetrics& getFontMetrics() const noexcept { return fScalerCache.getFontMetrics(); }
 
     SkSpan<const SkGlyph*> metrics(SkSpan<const SkGlyphID> glyphIDs, const SkGlyph* results[]) {
       auto [glyphs, increase] = fScalerCache.metrics(glyphIDs, results);
@@ -99,11 +99,13 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       this->updateDelta(increase);
     }
 
-    const SkGlyphPositionRoundingSpec& roundingSpec() const override {
+    const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept override {
       return fScalerCache.roundingSpec();
     }
 
-    const SkDescriptor& getDescriptor() const override { return fScalerCache.getDescriptor(); }
+    const SkDescriptor& getDescriptor() const noexcept override {
+      return fScalerCache.getDescriptor();
+    }
 
     void prepareForMaskDrawing(
         SkDrawableGlyphBuffer* drawbles, SkSourceGlyphBuffer* rejects) override {
@@ -125,7 +127,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
 
     void onAboutToExitScope() noexcept override { this->unref(); }
 
-    void updateDelta(size_t increase) noexcept;
+    void updateDelta(size_t increase);
 
     SkStrikeCache* const fStrikeCache;
     Strike* fNext{nullptr};
@@ -162,16 +164,16 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
 
   void purgeAll() SK_EXCLUDES(fLock);  // does not change budget
 
-  int getCacheCountLimit() const noexcept SK_EXCLUDES(fLock);
+  int getCacheCountLimit() const SK_EXCLUDES(fLock);
   int setCacheCountLimit(int limit) SK_EXCLUDES(fLock);
-  int getCacheCountUsed() const noexcept SK_EXCLUDES(fLock);
+  int getCacheCountUsed() const SK_EXCLUDES(fLock);
 
-  size_t getCacheSizeLimit() const noexcept SK_EXCLUDES(fLock);
+  size_t getCacheSizeLimit() const SK_EXCLUDES(fLock);
   size_t setCacheSizeLimit(size_t limit) SK_EXCLUDES(fLock);
-  size_t getTotalMemoryUsed() const noexcept SK_EXCLUDES(fLock);
+  size_t getTotalMemoryUsed() const SK_EXCLUDES(fLock);
 
-  int getCachePointSizeLimit() const noexcept SK_EXCLUDES(fLock);
-  int setCachePointSizeLimit(int limit) noexcept SK_EXCLUDES(fLock);
+  int getCachePointSizeLimit() const SK_EXCLUDES(fLock);
+  int setCachePointSizeLimit(int limit) SK_EXCLUDES(fLock);
 
  private:
   sk_sp<Strike> internalFindStrikeOrNull(const SkDescriptor& desc) SK_REQUIRES(fLock);
@@ -190,7 +192,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
   size_t internalPurge(size_t minBytesNeeded = 0) SK_REQUIRES(fLock);
 
   // A simple accounting of what each glyph cache reports and the strike cache total.
-  void validate() const noexcept SK_REQUIRES(fLock);
+  void validate() const SK_REQUIRES(fLock);
 
   void forEachStrike(std::function<void(const Strike&)> visitor) const SK_EXCLUDES(fLock);
 
@@ -198,10 +200,12 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
   Strike* fHead SK_GUARDED_BY(fLock){nullptr};
   Strike* fTail SK_GUARDED_BY(fLock){nullptr};
   struct StrikeTraits {
-    static const SkDescriptor& GetKey(const sk_sp<Strike>& strike) {
+    static const SkDescriptor& GetKey(const sk_sp<Strike>& strike) noexcept {
       return strike->getDescriptor();
     }
-    static uint32_t Hash(const SkDescriptor& descriptor) { return descriptor.getChecksum(); }
+    static uint32_t Hash(const SkDescriptor& descriptor) noexcept {
+      return descriptor.getChecksum();
+    }
   };
   SkTHashTable<sk_sp<Strike>, SkDescriptor, StrikeTraits> fStrikeLookup SK_GUARDED_BY(fLock);
 

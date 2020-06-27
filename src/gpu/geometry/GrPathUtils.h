@@ -42,7 +42,7 @@ uint32_t generateCubicPoints(
 // points of the quadratic.
 class QuadUVMatrix {
  public:
-  QuadUVMatrix() {}
+  QuadUVMatrix() noexcept = default;
   // Initialize the matrix from the control pts
   QuadUVMatrix(const SkPoint controlPts[3]) { this->set(controlPts); }
   void set(const SkPoint controlPts[3]);
@@ -55,7 +55,7 @@ class QuadUVMatrix {
    * stride is the size of each vertex.
    * uvOffset is the offset of the UV values within each vertex.
    */
-  void apply(void* vertices, int vertexCount, size_t stride, size_t uvOffset) const {
+  void apply(void* vertices, int vertexCount, size_t stride, size_t uvOffset) const noexcept {
     intptr_t xyPtr = reinterpret_cast<intptr_t>(vertices);
     intptr_t uvPtr = reinterpret_cast<intptr_t>(vertices) + uvOffset;
     float sx = fM[0];
@@ -192,9 +192,9 @@ int chopCubicAtLoopIntersection(
 // Above this value, the segment will be subdivided.
 // This value was chosen to approximate the supersampling accuracy of the raster path (16
 // samples, or one quarter pixel).
-static const SkScalar kDefaultTolerance = SkDoubleToScalar(0.25);
+static constexpr SkScalar kDefaultTolerance = SkDoubleToScalar(0.25);
 
 // We guarantee that no quad or cubic will ever produce more than this many points
-static const int kMaxPointsPerCurve = 1 << 10;
+static constexpr int kMaxPointsPerCurve = 1 << 10;
 };  // namespace GrPathUtils
 #endif

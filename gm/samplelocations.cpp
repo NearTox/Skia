@@ -229,25 +229,25 @@ class SampleLocationsTestOp : public GrDrawOp {
   }
 
   GrProgramInfo* createProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) const {
     GrGeometryProcessor* geomProc = SampleLocationsTestProcessor::Make(arena, fGradType);
 
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kHWAntialias;
 
     return sk_gpu_test::CreateProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, geomProc,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc,
         SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip, flags, &gStencilWrite);
   }
 
   GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) const {
     return this->createProgramInfo(
-        &flushState->caps(), flushState->allocator(), flushState->outputView(),
+        &flushState->caps(), flushState->allocator(), flushState->writeView(),
         flushState->detachAppliedClip(), flushState->dstProxyView());
   }
 
   void onPrePrepare(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) final {
     // We're going to create the GrProgramInfo (and the GrPipeline and geometry processor
     // it relies on) in the DDL-record-time arena.
@@ -257,7 +257,7 @@ class SampleLocationsTestOp : public GrDrawOp {
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
 
     fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
 
     context->priv().recordProgramInfo(fProgramInfo);
   }
@@ -299,6 +299,10 @@ DrawResult SampleLocationsGM::onDraw(
   }
   if (!ctx->priv().caps()->shaderCaps()->sampleMaskSupport()) {
     *errorMsg = "Requires support for sample mask.";
+    return DrawResult::kSkip;
+  }
+  if (!ctx->priv().caps()->drawInstancedSupport()) {
+    *errorMsg = "Requires support for instanced rendering.";
     return DrawResult::kSkip;
   }
   if (rtc->numSamples() <= 1 && !ctx->priv().caps()->mixedSamplesSupport()) {

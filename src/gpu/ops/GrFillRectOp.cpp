@@ -207,7 +207,7 @@ class FillRectOp final : public GrMeshDrawOp {
 
     return VertexSpec(
         fQuads.deviceQuadType(), fColorType, fQuads.localQuadType(), fHelper.usesLocalCoords(),
-        GrQuadPerEdgeAA::Domain::kNo, fHelper.aaType(), fHelper.compatibleWithCoverageAsAlpha(),
+        GrQuadPerEdgeAA::Subset::kNo, fHelper.aaType(), fHelper.compatibleWithCoverageAsAlpha(),
         indexBufferOption);
   }
 
@@ -218,7 +218,7 @@ class FillRectOp final : public GrMeshDrawOp {
   }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     const VertexSpec vertexSpec = this->vertexSpec();
 
@@ -226,12 +226,12 @@ class FillRectOp final : public GrMeshDrawOp {
     SkASSERT(gp->vertexStride() == vertexSpec.vertexSize());
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         vertexSpec.primitiveType());
   }
 
   void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* outputView, GrAppliedClip* clip,
+      GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
       const GrXferProcessor::DstProxyView& dstProxyView) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
@@ -243,7 +243,7 @@ class FillRectOp final : public GrMeshDrawOp {
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
 
     this->createProgramInfo(
-        context->priv().caps(), arena, outputView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
 
     context->priv().recordProgramInfo(fProgramInfo);
 

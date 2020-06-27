@@ -6,7 +6,6 @@
     <ClCompile Include="skottie\src\Skottie.cpp" />
     <ClCompile Include="skottie\src\SkottieJson.cpp" />
     <ClCompile Include="skottie\src\SkottieProperty.cpp" />
-    <ClCompile Include="skottie\src\SkottieValue.cpp" />
     <ClCompile Include="skottie\src\effects\DropShadowEffect.cpp" />
     <ClCompile Include="skottie\src\effects\Effects.cpp" />
     <ClCompile Include="skottie\src\effects\FillEffect.cpp" />
@@ -22,7 +21,6 @@
     <ClCompile Include="skottie\src\effects\TransformEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TritoneEffect.cpp" />
     <ClCompile Include="skottie\src\effects\VenetianBlindsEffect.cpp" />
-    <ClCompile Include="skottie\src\layers\ImageLayer.cpp" />
     <ClCompile Include="skottie\src\layers\NullLayer.cpp" />
     <ClCompile Include="skottie\src\layers\PrecompLayer.cpp" />
     <ClCompile Include="skottie\src\layers\SolidLayer.cpp" />
@@ -32,7 +30,6 @@
     <ClCompile Include="skottie\src\text\TextAdapter.cpp" />
     <ClCompile Include="skottie\src\text\TextAnimator.cpp" />
     <ClCompile Include="skottie\src\text\TextValue.cpp" />
-    <ClCompile Include="skottie\utils\SkottieUtils.cpp" />
     <ClCompile Include="skottie\src\effects\ShiftChannelsEffect.cpp" />
     <ClCompile Include="skottie\src\Camera.cpp" />
     <ClCompile Include="skottie\src\Transform.cpp" />
@@ -50,10 +47,16 @@
     <ClCompile Include="skresources\src\SkResources.cpp" />
     <ClCompile Include="skottie\src\Path.cpp" />
     <ClCompile Include="skottie\src\animator\Animator.cpp" />
-    <ClCompile Include="skottie\src\animator\Keyframe.cpp" />
-    <ClCompile Include="skottie\src\animator\Scalar.cpp" />
-    <ClCompile Include="skottie\src\animator\Shape.cpp" />
-    <ClCompile Include="skottie\src\animator\Vec2.cpp" />
-    <ClCompile Include="skottie\src\animator\Vector.cpp" />
+    <ClCompile Include="skottie\src\layers\FootageLayer.cpp" />
+    <ClCompile Include="skottie\src\effects\BrightnessContrastEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\CornerPinEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\GlowStyles.cpp" />
+    <ClCompile Include="skottie\src\effects\ShadowStyles.cpp" />
+    <ClCompile Include="skottie\src\animator\KeyframeAnimator.cpp" />
+    <ClCompile Include="skottie\src\animator\ScalarKeyframeAnimator.cpp" />
+    <ClCompile Include="skottie\src\animator\ShapeKeyframeAnimator.cpp" />
+    <ClCompile Include="skottie\src\animator\TextKeyframeAnimator.cpp" />
+    <ClCompile Include="skottie\src\animator\Vec2KeyframeAnimator.cpp" />
+    <ClCompile Include="skottie\src\animator\VectorKeyframeAnimator.cpp" />
   </ItemGroup>
 </Project>

@@ -33,6 +33,17 @@ class GrClearOp;
 class GrGpuBuffer;
 class GrRenderTargetProxy;
 
+/** Observer is notified when a GrOpsTask is closed. */
+class GrOpsTaskClosedObserver {
+ public:
+  virtual ~GrOpsTaskClosedObserver() = 0;
+  /**
+   * Called when the GrOpsTask is closed. Must not add/remove observers to 'task'.
+   * The GrOpsTask will remove all its observers after it finishes calling wasClosed().
+   */
+  virtual void wasClosed(const GrOpsTask& task) = 0;
+};
+
 class GrOpsTask : public GrRenderTask {
  private:
   using DstProxyView = GrXferProcessor::DstProxyView;
@@ -40,10 +51,17 @@ class GrOpsTask : public GrRenderTask {
  public:
   // The Arenas must outlive the GrOpsTask, either by preserving the context that owns
   // the pool, or by moving the pool to the DDL that takes over the GrOpsTask.
-  GrOpsTask(GrRecordingContext::Arenas, GrSurfaceProxyView, GrAuditTrail*);
+  GrOpsTask(GrRecordingContext::Arenas, GrSurfaceProxyView, GrAuditTrail*) noexcept;
   ~GrOpsTask() override;
 
-  GrOpsTask* asOpsTask() override { return this; }
+  GrOpsTask* asOpsTask() noexcept override { return this; }
+
+  void addClosedObserver(GrOpsTaskClosedObserver* observer) {
+    SkASSERT(observer);
+    fClosedObservers.push_back(observer);
+  }
+
+  void removeClosedObserver(GrOpsTaskClosedObserver* observer) noexcept;
 
   bool isEmpty() const noexcept { return fOpChains.empty(); }
 
@@ -111,9 +129,13 @@ class GrOpsTask : public GrRenderTask {
 
   void discard() noexcept;
 
-  SkDEBUGCODE(void dump(bool printDependencies) const override);
-  SkDEBUGCODE(int numClips() const override { return fNumClips; });
-  SkDEBUGCODE(void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override);
+#ifdef SK_DEBUG
+  void dump(bool printDependencies) const override;
+  const char* name() const final { return "Ops"; }
+  int numClips() const override { return fNumClips; }
+  void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;
+#endif
+
 #if GR_TEST_UTILS
   int numOpChains() const { return fOpChains.count(); }
   const GrOp* getChain(int index) const { return fOpChains[index].head(); }
@@ -219,10 +241,10 @@ class GrOpsTask : public GrRenderTask {
       GrOp* head() const noexcept { return fHead.get(); }
       GrOp* tail() const noexcept { return fTail; }
 
-      std::unique_ptr<GrOp> popHead();
+      std::unique_ptr<GrOp> popHead() noexcept;
       std::unique_ptr<GrOp> removeOp(GrOp* op);
-      void pushHead(std::unique_ptr<GrOp> op);
-      void pushTail(std::unique_ptr<GrOp>);
+      void pushHead(std::unique_ptr<GrOp> op) noexcept;
+      void pushTail(std::unique_ptr<GrOp>) noexcept;
 
       void validate() const noexcept;
 
@@ -231,7 +253,7 @@ class GrOpsTask : public GrRenderTask {
       GrOp* fTail = nullptr;
     };
 
-    void validate() const noexcept;
+    void validate() const;
 
     bool tryConcat(
         List*, GrProcessorSet::Analysis, const DstProxyView&, const GrAppliedClip*,
@@ -277,18 +299,19 @@ class GrOpsTask : public GrRenderTask {
   GrRecordingContext::Arenas fArenas;
   GrAuditTrail* fAuditTrail;
 
+  SkSTArray<2, GrOpsTaskClosedObserver*, true> fClosedObservers;
+
   GrLoadOp fColorLoadOp = GrLoadOp::kLoad;
   SkPMColor4f fLoadClearColor = SK_PMColor4fTRANSPARENT;
   StencilContent fInitialStencilContent = StencilContent::kDontCare;
   bool fMustPreserveStencil = false;
 
-  uint32_t fLastClipStackGenID;
+  uint32_t fLastClipStackGenID = SK_InvalidUniqueID;
   SkIRect fLastDevClipBounds;
   int fLastClipNumAnalyticFPs;
 
   // We must track if we have a wait op so that we don't delete the op when we have a full clear.
   bool fHasWaitOp = false;
-  ;
 
   // For ops/opsTask we have mean: 5 stdDev: 28
   SkSTArray<25, OpChain, true> fOpChains;

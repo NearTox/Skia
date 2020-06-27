@@ -22,20 +22,15 @@ class GrVkRenderPass : public GrVkManagedResource {
     VkAttachmentLoadOp fLoadOp;
     VkAttachmentStoreOp fStoreOp;
 
-    LoadStoreOps(VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp)
+    constexpr LoadStoreOps(VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp) noexcept
         : fLoadOp(loadOp), fStoreOp(storeOp) {}
 
-    bool operator==(const LoadStoreOps& right) const {
+    bool operator==(const LoadStoreOps& right) const noexcept {
       return fLoadOp == right.fLoadOp && fStoreOp == right.fStoreOp;
     }
 
-    bool operator!=(const LoadStoreOps& right) const { return !(*this == right); }
+    bool operator!=(const LoadStoreOps& right) const noexcept { return !(*this == right); }
   };
-
-  static GrVkRenderPass* CreateSimple(GrVkGpu* gpu, const GrVkRenderTarget& target);
-  static GrVkRenderPass* Create(
-      GrVkGpu* gpu, const GrVkRenderPass& compatibleRenderPass, const LoadStoreOps& colorOp,
-      const LoadStoreOps& stencilOp);
 
   // Used when importing an external render pass. In this case we have to explicitly be told the
   // color attachment index
@@ -53,17 +48,17 @@ class GrVkRenderPass : public GrVkManagedResource {
       int fSamples;
       LoadStoreOps fLoadStoreOps;
 
-      AttachmentDesc()
+      constexpr AttachmentDesc() noexcept
           : fFormat(VK_FORMAT_UNDEFINED),
             fSamples(0),
             fLoadStoreOps(VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE) {}
-      bool operator==(const AttachmentDesc& right) const {
+      bool operator==(const AttachmentDesc& right) const noexcept {
         return (
             fFormat == right.fFormat && fSamples == right.fSamples &&
             fLoadStoreOps == right.fLoadStoreOps);
       }
-      bool operator!=(const AttachmentDesc& right) const { return !(*this == right); }
-      bool isCompatible(const AttachmentDesc& desc) const {
+      bool operator!=(const AttachmentDesc& right) const noexcept { return !(*this == right); }
+      bool isCompatible(const AttachmentDesc& desc) const noexcept {
         return (fFormat == desc.fFormat && fSamples == desc.fSamples);
       }
     };
@@ -83,6 +78,11 @@ class GrVkRenderPass : public GrVkManagedResource {
   };
   GR_DECL_BITFIELD_OPS_FRIENDS(AttachmentFlags);
 
+  static GrVkRenderPass* CreateSimple(GrVkGpu*, AttachmentsDescriptor*, AttachmentFlags);
+  static GrVkRenderPass* Create(
+      GrVkGpu*, const GrVkRenderPass& compatibleRenderPass, const LoadStoreOps& colorOp,
+      const LoadStoreOps& stencilOp);
+
   // The following return the index of the render pass attachment array for the given attachment.
   // If the render pass does not have the given attachment it will return false and not set the
   // index value.
@@ -97,17 +97,19 @@ class GrVkRenderPass : public GrVkManagedResource {
 
   bool isCompatible(const GrVkRenderPass& renderPass) const;
 
+  bool isCompatible(const AttachmentsDescriptor&, const AttachmentFlags&) const;
+
   bool isCompatibleExternalRP(VkRenderPass) const;
 
   bool equalLoadStoreOps(const LoadStoreOps& colorOps, const LoadStoreOps& stencilOps) const;
 
-  VkRenderPass vkRenderPass() const { return fRenderPass; }
+  VkRenderPass vkRenderPass() const noexcept { return fRenderPass; }
 
-  const VkExtent2D& granularity() const { return fGranularity; }
+  const VkExtent2D& granularity() const noexcept { return fGranularity; }
 
   // Returns the number of clear colors needed to begin this render pass. Currently this will
   // either only be 0 or 1 since we only ever clear the color attachment.
-  uint32_t clearValueCount() const { return fClearValueCount; }
+  uint32_t clearValueCount() const noexcept { return fClearValueCount; }
 
   void genKey(GrProcessorKeyBuilder* b) const;
 
@@ -123,10 +125,8 @@ class GrVkRenderPass : public GrVkManagedResource {
       const VkExtent2D& granularity, uint32_t clearValueCount);
 
   static GrVkRenderPass* Create(
-      GrVkGpu* gpu, AttachmentFlags, AttachmentsDescriptor&, const LoadStoreOps& colorOps,
+      GrVkGpu* gpu, AttachmentFlags, AttachmentsDescriptor*, const LoadStoreOps& colorOps,
       const LoadStoreOps& stencilOps);
-
-  bool isCompatible(const AttachmentsDescriptor&, const AttachmentFlags&) const;
 
   void freeGPUData() const override;
 

@@ -34,6 +34,10 @@ class EffectBuilder final : public SkNoncopyable {
   using EffectBuilderT = sk_sp<sksg::RenderNode> (EffectBuilder::*)(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
 
+  sk_sp<sksg::RenderNode> attachBrightnessContrastEffect(
+      const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachCornerPinEffect(
+      const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachDropShadowEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachFillEffect(
@@ -68,6 +72,12 @@ class EffectBuilder final : public SkNoncopyable {
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
 
   sk_sp<sksg::RenderNode> attachDropShadowStyle(
+      const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachInnerShadowStyle(
+      const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachInnerGlowStyle(
+      const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachOuterGlowStyle(
       const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
 
   EffectBuilderT findBuilder(const skjson::ObjectValue&) const;

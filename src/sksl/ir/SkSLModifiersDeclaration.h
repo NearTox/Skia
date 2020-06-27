@@ -19,16 +19,14 @@ namespace SkSL {
  * layout(blend_support_all_equations) out;
  */
 struct ModifiersDeclaration : public ProgramElement {
-  ModifiersDeclaration(Modifiers modifiers)
+  ModifiersDeclaration(Modifiers modifiers) noexcept
       : INHERITED(-1, kModifiers_Kind), fModifiers(modifiers) {}
 
   std::unique_ptr<ProgramElement> clone() const override {
     return std::unique_ptr<ProgramElement>(new ModifiersDeclaration(fModifiers));
   }
 
-#ifdef SK_DEBUG
   String description() const override { return fModifiers.description() + ";"; }
-#endif
 
   Modifiers fModifiers;
 

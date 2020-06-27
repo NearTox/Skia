@@ -10,14 +10,14 @@
 
 #include <utility>
 
-SkCubicClipper::SkCubicClipper() noexcept : fClip(SkRect::MakeEmpty()) {}
+SkCubicClipper::SkCubicClipper() { fClip.setEmpty(); }
 
-void SkCubicClipper::setClip(const SkIRect& clip) noexcept {
+void SkCubicClipper::setClip(const SkIRect& clip) {
   // conver to scalars, since that's where we'll see the points
   fClip.set(clip);
 }
 
-bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) noexcept {
+bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) {
   SkScalar ycrv[4];
   ycrv[0] = pts[0].fY - y;
   ycrv[1] = pts[1].fY - y;
@@ -74,7 +74,7 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
     return true;
   }
 
-  constexpr SkScalar tol = SK_Scalar1 / 65536;  // 1 for fixed, 1e-5 for float.
+  const SkScalar tol = SK_Scalar1 / 65536;  // 1 for fixed, 1e-5 for float.
   int iters = 0;
   do {
     SkScalar tMid = (tPos + tNeg) / 2;

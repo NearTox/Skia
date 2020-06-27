@@ -25,7 +25,7 @@ class GrClearOp final : public GrOp {
   static std::unique_ptr<GrClearOp> Make(
       GrRecordingContext* context, const SkIRect& rect, const SkPMColor4f& color, bool fullScreen);
 
-  const char* name() const override { return "Clear"; }
+  const char* name() const noexcept override { return "Clear"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override {
@@ -51,7 +51,7 @@ class GrClearOp final : public GrOp {
 
   GrClearOp(const GrFixedClip& clip, const SkPMColor4f& color, GrSurfaceProxy* proxy);
 
-  GrClearOp(const SkIRect& rect, const SkPMColor4f& color, bool fullScreen)
+  GrClearOp(const SkIRect& rect, const SkPMColor4f& color, bool fullScreen) noexcept
       : INHERITED(ClassID()), fClip(GrFixedClip(rect)), fColor(color) {
     if (fullScreen) {
       fClip.disableScissor();
@@ -78,17 +78,17 @@ class GrClearOp final : public GrOp {
     return CombineResult::kCannotCombine;
   }
 
-  bool contains(const GrClearOp* that) const {
+  bool contains(const GrClearOp* that) const noexcept {
     // The constructor ensures that scissor gets disabled on any clip that fills the entire RT.
     return !fClip.scissorEnabled() || (that->fClip.scissorEnabled() &&
                                        fClip.scissorRect().contains(that->fClip.scissorRect()));
   }
 
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&) noexcept override {}
 
-  void onPrepare(GrOpFlushState*) override {}
+  void onPrepare(GrOpFlushState*) noexcept override {}
 
   void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override;
 

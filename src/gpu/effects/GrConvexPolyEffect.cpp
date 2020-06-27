@@ -42,7 +42,7 @@ void GrGLConvexPolyEffect::emitCode(EmitArgs& args) {
 
   const char* edgeArrayName;
   fEdgeUniform = args.fUniformHandler->addUniformArray(
-      kFragment_GrShaderFlag, kHalf3_GrSLType, "edges", cpe.getEdgeCount(), &edgeArrayName);
+      &cpe, kFragment_GrShaderFlag, kHalf3_GrSLType, "edges", cpe.getEdgeCount(), &edgeArrayName);
   GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
   fragBuilder->codeAppend("\t\thalf alpha = 1.0;\n");
   fragBuilder->codeAppend("\t\thalf edge;\n");
@@ -174,7 +174,8 @@ GrGLSLFragmentProcessor* GrConvexPolyEffect::onCreateGLSLInstance() const {
   return new GrGLConvexPolyEffect;
 }
 
-GrConvexPolyEffect::GrConvexPolyEffect(GrClipEdgeType edgeType, int n, const SkScalar edges[])
+GrConvexPolyEffect::GrConvexPolyEffect(
+    GrClipEdgeType edgeType, int n, const SkScalar edges[]) noexcept
     : INHERITED(kGrConvexPolyEffect_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fEdgeType(edgeType),
       fEdgeCount(n) {
@@ -188,7 +189,7 @@ GrConvexPolyEffect::GrConvexPolyEffect(GrClipEdgeType edgeType, int n, const SkS
   }
 }
 
-GrConvexPolyEffect::GrConvexPolyEffect(const GrConvexPolyEffect& that)
+GrConvexPolyEffect::GrConvexPolyEffect(const GrConvexPolyEffect& that) noexcept
     : INHERITED(kGrConvexPolyEffect_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fEdgeType(that.fEdgeType),
       fEdgeCount(that.fEdgeCount) {
@@ -199,7 +200,7 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrConvexPolyEffect(*this));
 }
 
-bool GrConvexPolyEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrConvexPolyEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrConvexPolyEffect& cpe = other.cast<GrConvexPolyEffect>();
   // ignore the fact that 0 == -0 and just use memcmp.
   return (

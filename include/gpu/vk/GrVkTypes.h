@@ -26,7 +26,7 @@ typedef intptr_t GrVkBackendMemory;
  * Vulkan textures are really const GrVkImageInfo*
  */
 struct GrVkAlloc {
-  GrVkAlloc()
+  constexpr GrVkAlloc() noexcept
       : fMemory(VK_NULL_HANDLE),
         fOffset(0),
         fSize(0),
@@ -66,7 +66,7 @@ struct GrVkAlloc {
 // This struct is used to pass in the necessary information to create a VkSamplerYcbcrConversion
 // object for an VkExternalFormatANDROID.
 struct GrVkYcbcrConversionInfo {
-  GrVkYcbcrConversionInfo()
+  GrVkYcbcrConversionInfo() noexcept
       : fFormat(VK_FORMAT_UNDEFINED),
         fExternalFormat(0),
         fYcbcrModel(VK_SAMPLER_YCBCR_MODEL_CONVERSION_RGB_IDENTITY),
@@ -99,7 +99,7 @@ struct GrVkYcbcrConversionInfo {
       VkSamplerYcbcrModelConversion ycbcrModel, VkSamplerYcbcrRange ycbcrRange,
       VkChromaLocation xChromaOffset, VkChromaLocation yChromaOffset, VkFilter chromaFilter,
       VkBool32 forceExplicitReconstruction, uint64_t externalFormat,
-      VkFormatFeatureFlags externalFormatFeatures)
+      VkFormatFeatureFlags externalFormatFeatures) noexcept
       : GrVkYcbcrConversionInfo(
             VK_FORMAT_UNDEFINED, externalFormat, ycbcrModel, ycbcrRange, xChromaOffset,
             yChromaOffset, chromaFilter, forceExplicitReconstruction, externalFormatFeatures) {}
@@ -153,7 +153,7 @@ struct GrVkImageInfo {
   GrProtected fProtected;
   GrVkYcbcrConversionInfo fYcbcrConversionInfo;
 
-  GrVkImageInfo()
+  GrVkImageInfo() noexcept
       : fImage(VK_NULL_HANDLE),
         fAlloc(),
         fImageTiling(VK_IMAGE_TILING_OPTIMAL),
@@ -168,7 +168,7 @@ struct GrVkImageInfo {
       VkImage image, GrVkAlloc alloc, VkImageTiling imageTiling, VkImageLayout layout,
       VkFormat format, uint32_t levelCount, uint32_t currentQueueFamily = VK_QUEUE_FAMILY_IGNORED,
       GrProtected isProtected = GrProtected::kNo,
-      GrVkYcbcrConversionInfo ycbcrConversionInfo = GrVkYcbcrConversionInfo())
+      GrVkYcbcrConversionInfo ycbcrConversionInfo = GrVkYcbcrConversionInfo()) noexcept
       : fImage(image),
         fAlloc(alloc),
         fImageTiling(imageTiling),

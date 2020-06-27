@@ -79,66 +79,84 @@ class GrVkCaps : public GrCaps {
 
   // On Adreno vulkan, they do not respect the imageOffset parameter at least in
   // copyImageToBuffer. This flag says that we must do the copy starting from the origin always.
-  bool mustDoCopiesFromOrigin() const { return fMustDoCopiesFromOrigin; }
+  bool mustDoCopiesFromOrigin() const noexcept { return fMustDoCopiesFromOrigin; }
 
   // Sometimes calls to QueueWaitIdle return before actually signalling the fences
   // on the command buffers even though they have completed. This causes an assert to fire when
   // destroying the command buffers. Therefore we add a sleep to make sure the fence signals.
-  bool mustSleepOnTearDown() const { return fMustSleepOnTearDown; }
+  bool mustSleepOnTearDown() const noexcept { return fMustSleepOnTearDown; }
 
   // Returns true if we should always make dedicated allocations for VkImages.
-  bool shouldAlwaysUseDedicatedImageMemory() const { return fShouldAlwaysUseDedicatedImageMemory; }
+  bool shouldAlwaysUseDedicatedImageMemory() const noexcept {
+    return fShouldAlwaysUseDedicatedImageMemory;
+  }
 
   // Always use a transfer buffer instead of vkCmdUpdateBuffer to upload data to a VkBuffer.
-  bool avoidUpdateBuffers() const { return fAvoidUpdateBuffers; }
+  bool avoidUpdateBuffers() const noexcept { return fAvoidUpdateBuffers; }
 
   /**
    * Returns both a supported and most preferred stencil format to use in draws.
    */
-  const StencilFormat& preferredStencilFormat() const { return fPreferredStencilFormat; }
+  const StencilFormat& preferredStencilFormat() const noexcept { return fPreferredStencilFormat; }
+
+  // Returns total number of bits used by stencil + depth + padding
+  static int GetStencilFormatTotalBitCount(VkFormat format) noexcept {
+    switch (format) {
+      case VK_FORMAT_S8_UINT: return 8;
+      case VK_FORMAT_D24_UNORM_S8_UINT: return 32;
+      case VK_FORMAT_D32_SFLOAT_S8_UINT:
+        // can optionally have 24 unused bits at the end so we assume the total bits is 64.
+        return 64;
+      default: SkASSERT(false); return 0;
+    }
+  }
 
   // Returns whether the device supports VK_KHR_Swapchain. Internally Skia never uses any of the
   // swapchain functions, but we may need to transition to and from the
   // VK_IMAGE_LAYOUT_PRESENT_SRC_KHR image layout, so we must know whether that layout is
   // supported.
-  bool supportsSwapchain() const { return fSupportsSwapchain; }
+  bool supportsSwapchain() const noexcept { return fSupportsSwapchain; }
 
   // Returns whether the device supports the ability to extend VkPhysicalDeviceProperties struct.
-  bool supportsPhysicalDeviceProperties2() const { return fSupportsPhysicalDeviceProperties2; }
+  bool supportsPhysicalDeviceProperties2() const noexcept {
+    return fSupportsPhysicalDeviceProperties2;
+  }
   // Returns whether the device supports the ability to extend VkMemoryRequirements struct.
-  bool supportsMemoryRequirements2() const { return fSupportsMemoryRequirements2; }
+  bool supportsMemoryRequirements2() const noexcept { return fSupportsMemoryRequirements2; }
 
   // Returns whether the device supports the ability to extend the vkBindMemory call.
-  bool supportsBindMemory2() const { return fSupportsBindMemory2; }
+  bool supportsBindMemory2() const noexcept { return fSupportsBindMemory2; }
 
   // Returns whether or not the device suports the various API maintenance fixes to Vulkan 1.0. In
   // Vulkan 1.1 all these maintenance are part of the core spec.
-  bool supportsMaintenance1() const { return fSupportsMaintenance1; }
-  bool supportsMaintenance2() const { return fSupportsMaintenance2; }
-  bool supportsMaintenance3() const { return fSupportsMaintenance3; }
+  bool supportsMaintenance1() const noexcept { return fSupportsMaintenance1; }
+  bool supportsMaintenance2() const noexcept { return fSupportsMaintenance2; }
+  bool supportsMaintenance3() const noexcept { return fSupportsMaintenance3; }
 
   // Returns true if the device supports passing in a flag to say we are using dedicated GPU when
   // allocating memory. For some devices this allows them to return more optimized memory knowning
   // they will never need to suballocate amonst multiple objects.
-  bool supportsDedicatedAllocation() const { return fSupportsDedicatedAllocation; }
+  bool supportsDedicatedAllocation() const noexcept { return fSupportsDedicatedAllocation; }
 
   // Returns true if the device supports importing of external memory into Vulkan memory.
-  bool supportsExternalMemory() const { return fSupportsExternalMemory; }
+  bool supportsExternalMemory() const noexcept { return fSupportsExternalMemory; }
   // Returns true if the device supports importing Android hardware buffers into Vulkan memory.
-  bool supportsAndroidHWBExternalMemory() const { return fSupportsAndroidHWBExternalMemory; }
+  bool supportsAndroidHWBExternalMemory() const noexcept {
+    return fSupportsAndroidHWBExternalMemory;
+  }
 
   // Returns true if it supports ycbcr conversion for samplers
-  bool supportsYcbcrConversion() const { return fSupportsYcbcrConversion; }
+  bool supportsYcbcrConversion() const noexcept { return fSupportsYcbcrConversion; }
 
   // Returns true if the device supports protected memory.
-  bool supportsProtectedMemory() const { return fSupportsProtectedMemory; }
+  bool supportsProtectedMemory() const noexcept { return fSupportsProtectedMemory; }
 
   // Returns whether we prefer to record draws directly into a primary command buffer.
-  bool preferPrimaryOverSecondaryCommandBuffers() const {
+  bool preferPrimaryOverSecondaryCommandBuffers() const noexcept {
     return fPreferPrimaryOverSecondaryCommandBuffers;
   }
 
-  bool mustInvalidatePrimaryCmdBufferStateAfterClearAttachments() const {
+  bool mustInvalidatePrimaryCmdBufferStateAfterClearAttachments() const noexcept {
     return fMustInvalidatePrimaryCmdBufferStateAfterClearAttachments;
   }
 
@@ -159,12 +177,9 @@ class GrVkCaps : public GrCaps {
       VkFormat dstConfig, int dstSampleCnt, bool dstHasYcbcr, VkFormat srcConfig, int srcSamplecnt,
       bool srcHasYcbcr) const;
 
-  GrColorType getYUVAColorTypeFromBackendFormat(
-      const GrBackendFormat&, bool isAlphaChannel) const override;
-
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
 
-  VkFormat getFormatFromColorType(GrColorType colorType) const {
+  VkFormat getFormatFromColorType(GrColorType colorType) const noexcept {
     int idx = static_cast<int>(colorType);
     return fColorTypeToFormatTable[idx];
   }
@@ -241,7 +256,7 @@ class GrVkCaps : public GrCaps {
   };
 
   struct FormatInfo {
-    uint32_t colorTypeFlags(GrColorType colorType) const {
+    uint32_t colorTypeFlags(GrColorType colorType) const noexcept {
       for (int i = 0; i < fColorTypeInfoCount; ++i) {
         if (fColorTypeInfos[i].fColorType == colorType) {
           return fColorTypeInfos[i].fFlags;
@@ -272,7 +287,7 @@ class GrVkCaps : public GrCaps {
     std::unique_ptr<ColorTypeInfo[]> fColorTypeInfos;
     int fColorTypeInfoCount = 0;
   };
-  static const size_t kNumVkFormats = 21;
+  static const size_t kNumVkFormats = 22;
   FormatInfo fFormatTable[kNumVkFormats];
 
   FormatInfo& getFormatInfo(VkFormat);

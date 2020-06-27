@@ -109,7 +109,7 @@ private:
 
     GrProgramInfo* programInfo() override { return fProgramInfo; }
     void onCreateProgramInfo(
-        const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* outputView, GrAppliedClip&&,
+        const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
         const GrXferProcessor::DstProxyView&) override;
 
     void onPrepareDraws(Target*) override;
@@ -167,10 +167,10 @@ TestRectOp::TestRectOp(const GrCaps* caps,
 }
 
 void TestRectOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
   fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-      caps, arena, outputView, std::move(appliedClip), dstProxyView, &fGP, std::move(fProcessorSet),
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, &fGP, std::move(fProcessorSet),
       GrPrimitiveType::kTriangles, GrPipeline::InputFlags::kNone);
 }
 

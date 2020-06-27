@@ -12,11 +12,11 @@
 
 namespace sksg {
 
-static bool is_inverted(sksg::MaskEffect::Mode mode) noexcept {
+static constexpr bool is_inverted(sksg::MaskEffect::Mode mode) noexcept {
   return static_cast<uint32_t>(mode) & 1;
 };
 
-static bool is_luma(sksg::MaskEffect::Mode mode) noexcept {
+static constexpr bool is_luma(sksg::MaskEffect::Mode mode) noexcept {
   return static_cast<uint32_t>(mode) & 2;
 }
 
@@ -82,7 +82,7 @@ const RenderNode* MaskEffect::onNodeAt(const SkPoint& p) const {
 SkRect MaskEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto maskBounds = fMaskNode->revalidate(ic, ctm);
+  const auto& maskBounds = fMaskNode->revalidate(ic, ctm);
   auto childBounds = this->INHERITED::onRevalidate(ic, ctm);
 
   return (is_inverted(fMaskMode) || childBounds.intersect(maskBounds)) ? childBounds

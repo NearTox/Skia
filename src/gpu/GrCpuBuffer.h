@@ -29,7 +29,7 @@ class GrCpuBuffer final : public GrNonAtomicRef<GrCpuBuffer>, public GrBuffer {
   static void operator delete(void* p) { ::operator delete(p); }
 
   void ref() const noexcept override { GrNonAtomicRef<GrCpuBuffer>::ref(); }
-  void unref() const override { GrNonAtomicRef<GrCpuBuffer>::unref(); }
+  void unref() const noexcept override { GrNonAtomicRef<GrCpuBuffer>::unref(); }
   size_t size() const noexcept override { return fSize; }
   bool isCpuBuffer() const noexcept override { return true; }
 

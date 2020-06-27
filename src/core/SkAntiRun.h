@@ -77,7 +77,7 @@ class SkAlphaRuns {
       runs += x + 1;
       alpha += x + 1;
       x = 0;
-      SkDEBUGCODE(this->validate();)
+      SkDEBUGCODE(this->validate());
     }
 
     if (middleCount) {
@@ -93,30 +93,33 @@ class SkAlphaRuns {
         runs += n;
         middleCount -= n;
       } while (middleCount > 0);
-      SkDEBUGCODE(this->validate();) lastAlpha = alpha;
+      SkDEBUGCODE(this->validate());
+      lastAlpha = alpha;
     }
 
     if (stopAlpha) {
       SkAlphaRuns::Break(runs, alpha, x, 1);
       alpha += x;
       alpha[0] = SkToU8(alpha[0] + stopAlpha);
-      SkDEBUGCODE(this->validate();) lastAlpha = alpha;
+      SkDEBUGCODE(this->validate());
+      lastAlpha = alpha;
     }
 
     return SkToS32(lastAlpha - fAlpha);  // new offsetX
   }
 
-  SkDEBUGCODE(void assertValid(int y, int maxStep) const;) SkDEBUGCODE(void dump() const;)
+  SkDEBUGCODE(void assertValid(int y, int maxStep) const);
+  SkDEBUGCODE(void dump() const);
 
-      /**
-       * Break the runs in the buffer at offsets x and x+count, properly
-       * updating the runs to the right and left.
-       *   i.e. from the state AAAABBBB, run-length encoded as A4B4,
-       *   Break(..., 2, 5) would produce AAAABBBB rle as A2A2B3B1.
-       * Allows add() to sum another run to some of the new sub-runs.
-       *   i.e. adding ..CCCCC. would produce AADDEEEB, rle as A2D2E3B1.
-       */
-      static void Break(int16_t runs[], uint8_t alpha[], int x, int count) {
+  /**
+   * Break the runs in the buffer at offsets x and x+count, properly
+   * updating the runs to the right and left.
+   *   i.e. from the state AAAABBBB, run-length encoded as A4B4,
+   *   Break(..., 2, 5) would produce AAAABBBB rle as A2A2B3B1.
+   * Allows add() to sum another run to some of the new sub-runs.
+   *   i.e. adding ..CCCCC. would produce AADDEEEB, rle as A2D2E3B1.
+   */
+  static void Break(int16_t runs[], uint8_t alpha[], int x, int count) {
     SkASSERT(count > 0 && x >= 0);
 
     //  SkAlphaRuns::BreakAt(runs, alpha, x);
@@ -187,7 +190,8 @@ class SkAlphaRuns {
   }
 
  private:
-  SkDEBUGCODE(int fWidth;) SkDEBUGCODE(void validate() const;)
+  SkDEBUGCODE(int fWidth);
+  SkDEBUGCODE(void validate() const);
 };
 
 #endif

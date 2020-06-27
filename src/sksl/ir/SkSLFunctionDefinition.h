@@ -29,11 +29,9 @@ struct FunctionDefinition : public ProgramElement {
         new FunctionDefinition(fOffset, fDeclaration, fBody->clone()));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     return fDeclaration.description() + " " + fBody->description();
   }
-#endif
 
   const FunctionDeclaration& fDeclaration;
   std::unique_ptr<Statement> fBody;

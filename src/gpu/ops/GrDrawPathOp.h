@@ -52,7 +52,7 @@ class GrDrawPathOpBase : public GrDrawOp {
 
  private:
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* outputView, GrAppliedClip*,
+      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&) final {}
 
   void onPrepare(GrOpFlushState*) final {}

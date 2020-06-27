@@ -27,7 +27,7 @@ using InvertStyle = SkHighContrastConfig::InvertStyle;
 
 class SkHighContrast_Filter : public SkColorFilter {
  public:
-  SkHighContrast_Filter(const SkHighContrastConfig& config) {
+  SkHighContrast_Filter(const SkHighContrastConfig& config) noexcept {
     fConfig = config;
     // Clamp contrast to just inside -1 to 1 to avoid division by zero.
     fConfig.fContrast = SkTPin(fConfig.fContrast, -1.0f + FLT_EPSILON, 1.0f - FLT_EPSILON);
@@ -45,7 +45,7 @@ class SkHighContrast_Filter : public SkColorFilter {
       skvm::Builder*, skvm::Color, SkColorSpace*, skvm::Uniforms*, SkArenaAlloc*) const override;
 
  protected:
-  void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkHighContrast_Filter)
@@ -183,7 +183,7 @@ skvm::Color SkHighContrast_Filter::onProgram(
   return p->premul(c);
 }
 
-void SkHighContrast_Filter::flatten(SkWriteBuffer& buffer) const {
+void SkHighContrast_Filter::flatten(SkWriteBuffer& buffer) const noexcept {
   buffer.writeBool(fConfig.fGrayscale);
   buffer.writeInt(static_cast<int>(fConfig.fInvertStyle));
   buffer.writeScalar(fConfig.fContrast);
@@ -217,15 +217,15 @@ class HighContrastFilterEffect : public GrFragmentProcessor {
     return std::unique_ptr<GrFragmentProcessor>(new HighContrastFilterEffect(config, linearize));
   }
 
-  const char* name() const override { return "HighContrastFilter"; }
+  const char* name() const noexcept override { return "HighContrastFilter"; }
 
-  const SkHighContrastConfig& config() const { return fConfig; }
-  bool linearize() const { return fLinearize; }
+  const SkHighContrastConfig& config() const noexcept { return fConfig; }
+  bool linearize() const noexcept { return fLinearize; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override { return Make(fConfig, fLinearize); }
 
  private:
-  HighContrastFilterEffect(const SkHighContrastConfig& config, bool linearize)
+  HighContrastFilterEffect(const SkHighContrastConfig& config, bool linearize) noexcept
       : INHERITED(kHighContrastFilterEffect_ClassID, kNone_OptimizationFlags),
         fConfig(config),
         fLinearize(linearize) {}
@@ -235,7 +235,7 @@ class HighContrastFilterEffect : public GrFragmentProcessor {
   virtual void onGetGLSLProcessorKey(
       const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const override {
+  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
     const HighContrastFilterEffect& that = other.cast<HighContrastFilterEffect>();
     return fConfig.fGrayscale == that.fConfig.fGrayscale &&
            fConfig.fInvertStyle == that.fConfig.fInvertStyle &&
@@ -291,7 +291,7 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
 
   const char* contrast;
   fContrastUni = args.fUniformHandler->addUniform(
-      kFragment_GrShaderFlag, kHalf_GrSLType, "contrast", &contrast);
+      &hcfe, kFragment_GrShaderFlag, kHalf_GrSLType, "contrast", &contrast);
 
   GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
 

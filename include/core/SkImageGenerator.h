@@ -166,7 +166,7 @@ class SK_API SkImageGenerator {
  protected:
   static constexpr int kNeedNewImageUniqueID = 0;
 
-  SkImageGenerator(const SkImageInfo& info, uint32_t uniqueId = kNeedNewImageUniqueID);
+  SkImageGenerator(const SkImageInfo& info, uint32_t uniqueId = kNeedNewImageUniqueID) noexcept;
 
   virtual sk_sp<SkData> onRefEncodedData() { return nullptr; }
   struct Options {};

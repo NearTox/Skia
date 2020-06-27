@@ -27,7 +27,7 @@ struct Variable : public Symbol {
 
   Variable(
       int offset, Modifiers modifiers, StringFragment name, const Type& type, Storage storage,
-      Expression* initialValue = nullptr)
+      Expression* initialValue = nullptr) noexcept
       : INHERITED(offset, kVariable_Kind, name),
         fModifiers(modifiers),
         fType(type),
@@ -44,13 +44,11 @@ struct Variable : public Symbol {
     SkASSERT(!fReadCount && !fWriteCount);
   }
 
-#ifdef SK_DEBUG
   virtual String description() const override {
     return fModifiers.description() + fType.fName + " " + fName;
   }
-#endif
 
-  bool dead() const {
+  bool dead() const noexcept {
     if ((fStorage != kLocal_Storage && fReadCount) ||
         (fModifiers.fFlags & (Modifiers::kIn_Flag | Modifiers::kOut_Flag |
                               Modifiers::kUniform_Flag | Modifiers::kVarying_Flag))) {

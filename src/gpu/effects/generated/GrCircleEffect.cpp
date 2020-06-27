@@ -30,8 +30,8 @@ class GrGLSLCircleEffect : public GrGLSLFragmentProcessor {
     auto radius = _outer.radius;
     (void)radius;
     prevRadius = -1.0;
-    circleVar =
-        args.fUniformHandler->addUniform(kFragment_GrShaderFlag, kFloat4_GrSLType, "circle");
+    circleVar = args.fUniformHandler->addUniform(
+        &_outer, kFragment_GrShaderFlag, kFloat4_GrSLType, "circle");
     fragBuilder->codeAppendf(
         "float2 prevCenter;\nfloat prevRadius = %f;\nhalf d;\n@if (%d == 2 || %d == 3) {\n "
         "   d = half((length((%s.xy - sk_FragCoord.xy) * %s.w) - 1.0) * %s.z);\n} else {\n "
@@ -87,7 +87,7 @@ void GrCircleEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)edgeType);
 }
-bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrCircleEffect& that = other.cast<GrCircleEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
@@ -95,7 +95,7 @@ bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const {
   if (radius != that.radius) return false;
   return true;
 }
-GrCircleEffect::GrCircleEffect(const GrCircleEffect& src)
+GrCircleEffect::GrCircleEffect(const GrCircleEffect& src) noexcept
     : INHERITED(kGrCircleEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),
       center(src.center),

@@ -449,7 +449,6 @@ class SkSpecialImage_Gpu : public SkSpecialImage_Base {
         fAlphaType);
   }
 
-  // TODO: move all the logic here into the subset-flavor GrSurfaceProxy::copy?
   sk_sp<SkImage> onAsImage(const SkIRect* subset) const override {
     GrSurfaceProxy* proxy = fView.proxy();
     if (subset) {
@@ -459,10 +458,9 @@ class SkSpecialImage_Gpu : public SkSpecialImage_Base {
         return wrap_proxy_in_image(fContext, fView, this->colorType(), fAlphaType, fColorSpace);
       }
 
-      GrSurfaceProxyView subsetView = GrSurfaceProxy::Copy(
-          fContext, proxy, fView.origin(), fColorType, GrMipMapped::kNo, *subset,
-          SkBackingFit::kExact, SkBudgeted::kYes);
-      if (!subsetView.proxy()) {
+      auto subsetView = GrSurfaceProxyView::Copy(
+          fContext, fView, GrMipMapped::kNo, *subset, SkBackingFit::kExact, SkBudgeted::kYes);
+      if (!subsetView) {
         return nullptr;
       }
       SkASSERT(subsetView.asTextureProxy());

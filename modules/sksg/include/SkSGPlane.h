@@ -23,11 +23,11 @@ class Plane final : public GeometryNode {
   static sk_sp<Plane> Make() { return sk_sp<Plane>(new Plane()); }
 
  protected:
-  void onClip(SkCanvas*, bool antiAlias) const override;
+  void onClip(SkCanvas*, bool antiAlias) const noexcept override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const override;
+  bool onContains(const SkPoint&) const noexcept override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
   SkPath onAsPath() const override;
 
  private:

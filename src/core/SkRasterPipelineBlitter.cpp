@@ -15,6 +15,7 @@
 #include "src/core/SkBlitter.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkColorSpaceXformSteps.h"
+#include "src/core/SkMatrixProvider.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkUtils.h"
@@ -74,8 +75,8 @@ class SkRasterPipelineBlitter final : public SkBlitter {
 };
 
 SkBlitter* SkCreateRasterPipelineBlitter(
-    const SkPixmap& dst, const SkPaint& paint, const SkMatrix& ctm, SkArenaAlloc* alloc,
-    sk_sp<SkShader> clipShader) {
+    const SkPixmap& dst, const SkPaint& paint, const SkMatrixProvider& matrixProvider,
+    SkArenaAlloc* alloc, sk_sp<SkShader> clipShader) {
   // For legacy to keep working, we need to sometimes still distinguish null dstCS from sRGB.
 #if 0
     SkColorSpace* dstCS = dst.colorSpace() ? dst.colorSpace()
@@ -102,7 +103,8 @@ SkBlitter* SkCreateRasterPipelineBlitter(
   bool is_opaque = shader->isOpaque() && paintColor.fA == 1.0f;
   bool is_constant = shader->isConstant();
 
-  if (shader->appendStages({&shaderPipeline, alloc, dstCT, dstCS, paint, nullptr, ctm})) {
+  if (shader->appendStages(
+          {&shaderPipeline, alloc, dstCT, dstCS, paint, nullptr, matrixProvider})) {
     if (paintColor.fA != 1.0f) {
       shaderPipeline.append(SkRasterPipeline::scale_1_float, alloc->make<float>(paintColor.fA));
     }
@@ -138,8 +140,8 @@ SkBlitter* SkRasterPipelineBlitter::Create(
     SkPaint clipPaint;  // just need default values
     SkColorType clipCT = kRGBA_8888_SkColorType;
     SkColorSpace* clipCS = nullptr;
-    SkMatrix clipM = SkMatrix::I();
-    SkStageRec rec = {clipP, alloc, clipCT, clipCS, clipPaint, nullptr, clipM};
+    SkSimpleMatrixProvider clipMatrixProvider(SkMatrix::I());
+    SkStageRec rec = {clipP, alloc, clipCT, clipCS, clipPaint, nullptr, clipMatrixProvider};
     if (as_SB(clipShader)->appendStages(rec)) {
       struct Storage {
         // large enough for highp (float) or lowp(U16)
@@ -157,8 +159,9 @@ SkBlitter* SkRasterPipelineBlitter::Create(
 
   // If there's a color filter it comes next.
   if (auto colorFilter = paint.getColorFilter()) {
+    SkSimpleMatrixProvider matrixProvider(SkMatrix::I());
     SkStageRec rec = {colorPipeline, alloc,   dst.colorType(), dst.colorSpace(),
-                      paint,         nullptr, SkMatrix::I()};
+                      paint,         nullptr, matrixProvider};
     colorFilter->appendStages(rec, is_opaque);
     is_opaque = is_opaque && (colorFilter->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
   }

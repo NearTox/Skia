@@ -65,7 +65,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
     return false;
   }
 
-  void willRemoveLastRef() override;
+  void willRemoveLastRef() noexcept override;
 
  private:
   GrVkTexture(

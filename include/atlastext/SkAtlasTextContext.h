@@ -13,7 +13,8 @@
 class SkAtlasTextRenderer;
 class SkInternalAtlasTextContext;
 
-SkAtlasTextRenderer* SkGetAtlasTextRendererFromInternalContext(class SkInternalAtlasTextContext&);
+SkAtlasTextRenderer* SkGetAtlasTextRendererFromInternalContext(
+    class SkInternalAtlasTextContext&) noexcept;
 
 /**
  * Class that Atlas Text client uses to register their SkAtlasTextRenderer implementation and
@@ -23,11 +24,11 @@ class SK_API SkAtlasTextContext : public SkRefCnt {
  public:
   static sk_sp<SkAtlasTextContext> Make(sk_sp<SkAtlasTextRenderer>);
 
-  SkAtlasTextRenderer* renderer() const {
+  SkAtlasTextRenderer* renderer() const noexcept {
     return SkGetAtlasTextRendererFromInternalContext(*fInternalContext);
   }
 
-  SkInternalAtlasTextContext& internal() { return *fInternalContext; }
+  SkInternalAtlasTextContext& internal() noexcept { return *fInternalContext; }
 
  private:
   SkAtlasTextContext() = delete;

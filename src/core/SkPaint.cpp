@@ -61,13 +61,13 @@ SkPaint::SkPaint(const SkColor4f& color, SkColorSpace* colorSpace) : SkPaint() {
   this->setColor(color, colorSpace);
 }
 
-SkPaint::SkPaint(const SkPaint& src) = default;
+SkPaint::SkPaint(const SkPaint& src) noexcept = default;
 
 SkPaint::SkPaint(SkPaint&& src) noexcept = default;
 
 SkPaint::~SkPaint() = default;
 
-SkPaint& SkPaint::operator=(const SkPaint& src) = default;
+SkPaint& SkPaint::operator=(const SkPaint& src) noexcept = default;
 
 SkPaint& SkPaint::operator=(SkPaint&& src) noexcept = default;
 
@@ -204,7 +204,7 @@ enum BitsPerField {
   kFlatFlags_BPF = 3,
 };
 
-static constexpr int BPF_Mask(int bits) noexcept { return (1 << bits) - 1; }
+static constexpr inline int BPF_Mask(int bits) noexcept { return (1 << bits) - 1; }
 
 // SkPaint originally defined flags, some of which now apply to SkFont. These are renames
 // of those flags, split into categories depending on which objects they (now) apply to.
@@ -501,7 +501,7 @@ const SkRect& SkPaint::doComputeFastBounds(
 ///////////////////////////////////////////////////////////////////////////////
 
 // return true if the filter exists, and may affect alpha
-static bool affects_alpha(const SkColorFilter* cf) {
+static bool affects_alpha(const SkColorFilter* cf) noexcept {
   return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
 }
 
@@ -512,7 +512,7 @@ static bool affects_alpha(const SkImageFilter* imf) noexcept {
   return imf != nullptr;
 }
 
-bool SkPaint::nothingToDraw() const {
+bool SkPaint::nothingToDraw() const noexcept {
   switch (this->getBlendMode()) {
     case SkBlendMode::kSrcOver:
     case SkBlendMode::kSrcATop:

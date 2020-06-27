@@ -25,6 +25,8 @@
 #  include "src/gpu/gl/GrGLUtil.h"
 #endif
 
+#include "tests/TestUtils.h"
+
 // Check that the surface proxy's member vars are set as expected
 static void check_surface(
     skiatest::Reporter* reporter, GrSurfaceProxy* proxy, int width, int height,
@@ -248,9 +250,10 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(WrappedProxyTest, reporter, ctxInfo) {
 
       // Tests wrapBackendRenderTarget with a GrBackendTexture
       {
-        GrBackendTexture backendTex = context->createBackendTexture(
-            kWidthHeight, kWidthHeight, colorType, SkColors::kTransparent, GrMipMapped::kNo,
-            GrRenderable::kYes, GrProtected::kNo);
+        GrBackendTexture backendTex;
+        CreateBackendTexture(
+            context, &backendTex, kWidthHeight, kWidthHeight, colorType, SkColors::kTransparent,
+            GrMipMapped::kNo, GrRenderable::kYes, GrProtected::kNo);
         sk_sp<GrSurfaceProxy> sProxy =
             proxyProvider->wrapBackendTextureAsRenderTarget(backendTex, supportedNumSamples);
         if (!sProxy) {
@@ -268,9 +271,10 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(WrappedProxyTest, reporter, ctxInfo) {
 
       // Tests wrapBackendTexture that is only renderable
       {
-        GrBackendTexture backendTex = context->createBackendTexture(
-            kWidthHeight, kWidthHeight, colorType, SkColors::kTransparent, GrMipMapped::kNo,
-            GrRenderable::kYes, GrProtected::kNo);
+        GrBackendTexture backendTex;
+        CreateBackendTexture(
+            context, &backendTex, kWidthHeight, kWidthHeight, colorType, SkColors::kTransparent,
+            GrMipMapped::kNo, GrRenderable::kYes, GrProtected::kNo);
 
         sk_sp<GrSurfaceProxy> sProxy = proxyProvider->wrapRenderableBackendTexture(
             backendTex, supportedNumSamples, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, nullptr,
@@ -291,9 +295,10 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(WrappedProxyTest, reporter, ctxInfo) {
       // Tests wrapBackendTexture that is only textureable
       {
         // Internal offscreen texture
-        GrBackendTexture backendTex = context->createBackendTexture(
-            kWidthHeight, kWidthHeight, colorType, SkColors::kTransparent, GrMipMapped::kNo,
-            GrRenderable::kNo, GrProtected::kNo);
+        GrBackendTexture backendTex;
+        CreateBackendTexture(
+            context, &backendTex, kWidthHeight, kWidthHeight, colorType, SkColors::kTransparent,
+            GrMipMapped::kNo, GrRenderable::kNo, GrProtected::kNo);
 
         sk_sp<GrSurfaceProxy> sProxy = proxyProvider->wrapBackendTexture(
             backendTex, kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType);

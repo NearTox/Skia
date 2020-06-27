@@ -20,7 +20,7 @@ template <typename T>
 class SkTDArray {
  public:
   constexpr SkTDArray() noexcept : fArray(nullptr), fReserve(0), fCount(0) {}
-  SkTDArray(const T src[], int count) {
+  SkTDArray(const T src[], int count) noexcept {
     SkASSERT(src || count == 0);
 
     fReserve = fCount = 0;
@@ -32,7 +32,7 @@ class SkTDArray {
     }
   }
   SkTDArray(const std::initializer_list<T>& list) : SkTDArray(list.begin(), list.size()) {}
-  SkTDArray(const SkTDArray<T>& src) : fArray(nullptr), fReserve(0), fCount(0) {
+  SkTDArray(const SkTDArray<T>& src) noexcept : fArray(nullptr), fReserve(0), fCount(0) {
     SkTDArray<T> tmp(src.fArray, src.fCount);
     this->swap(tmp);
   }
@@ -41,7 +41,7 @@ class SkTDArray {
   }
   ~SkTDArray() { sk_free(fArray); }
 
-  SkTDArray<T>& operator=(const SkTDArray<T>& src) {
+  SkTDArray<T>& operator=(const SkTDArray<T>& src) noexcept {
     if (this != &src) {
       if (src.fCount > fReserve) {
         SkTDArray<T> tmp(src.fArray, src.fCount);
@@ -236,7 +236,7 @@ class SkTDArray {
    * Copies up to max elements into dst. The number of items copied is
    * capped by count - index. The actual number copied is returned.
    */
-  int copyRange(T* dst, int index, int max) const {
+  int copyRange(T* dst, int index, int max) const noexcept {
     SkASSERT(max >= 0);
     SkASSERT(!max || dst);
     if (index >= fCount) {
@@ -247,12 +247,12 @@ class SkTDArray {
     return count;
   }
 
-  void copy(T* dst) const { this->copyRange(dst, 0, fCount); }
+  void copy(T* dst) const noexcept { this->copyRange(dst, 0, fCount); }
 
   // routines to treat the array like a stack
   void push_back(const T& v) noexcept(std::is_nothrow_copy_assignable_v<T>) { *this->append() = v; }
   T* push() { return this->append(); }
-  const T& top() const { return (*this)[fCount - 1]; }
+  const T& top() const noexcept { return (*this)[fCount - 1]; }
   T& top() noexcept { return (*this)[fCount - 1]; }
   void pop(T* elem) noexcept {
     SkASSERT(fCount > 0);
@@ -362,7 +362,7 @@ class SkTDArray {
 };
 
 template <typename T>
-static inline void swap(SkTDArray<T>& a, SkTDArray<T>& b) {
+static inline void swap(SkTDArray<T>& a, SkTDArray<T>& b) noexcept {
   a.swap(b);
 }
 

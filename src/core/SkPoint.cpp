@@ -84,7 +84,7 @@ bool SkPoint::setLength(float x, float y, float length) noexcept {
   return set_point_length<false>(this, x, y, length);
 }
 
-bool SkPointPriv::SetLengthFast(SkPoint* pt, float length) {
+bool SkPointPriv::SetLengthFast(SkPoint* pt, float length) noexcept {
   return set_point_length<true>(pt, pt->fX, pt->fY, length);
 }
 

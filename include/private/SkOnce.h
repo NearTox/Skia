@@ -22,7 +22,7 @@ class SkOnce {
   constexpr SkOnce() noexcept = default;
 
   template <typename Fn, typename... Args>
-  void operator()(Fn&& fn, Args&&... args) noexcept(std::is_nothrow_invocable_v<Fn, Args...>) {
+  void operator()(Fn&& fn, Args&&... args) /*noexcept(std::is_nothrow_invocable_v<Fn, Args...>)*/ {
     auto state = fState.load(std::memory_order_acquire);
 
     if (state == Done) {

@@ -80,7 +80,7 @@ class GrConicEffect : public GrGeometryProcessor {
 
   ~GrConicEffect() override;
 
-  const char* name() const override { return "Conic"; }
+  const char* name() const noexcept override { return "Conic"; }
 
   inline const Attribute& inPosition() const noexcept { return kAttributes[0]; }
   inline const Attribute& inConicCoeffs() const noexcept { return kAttributes[1]; }
@@ -102,7 +102,7 @@ class GrConicEffect : public GrGeometryProcessor {
 
   GrConicEffect(
       const SkPMColor4f&, const SkMatrix& viewMatrix, uint8_t coverage, GrClipEdgeType,
-      const SkMatrix& localMatrix, bool usesLocalCoords);
+      const SkMatrix& localMatrix, bool usesLocalCoords) noexcept;
 
   SkPMColor4f fColor;
   SkMatrix fViewMatrix;
@@ -154,7 +154,7 @@ class GrQuadEffect : public GrGeometryProcessor {
 
   ~GrQuadEffect() override;
 
-  const char* name() const override { return "Quad"; }
+  const char* name() const noexcept override { return "Quad"; }
 
   inline const Attribute& inPosition() const noexcept { return kAttributes[0]; }
   inline const Attribute& inHairQuadEdge() const noexcept { return kAttributes[1]; }
@@ -176,7 +176,7 @@ class GrQuadEffect : public GrGeometryProcessor {
 
   GrQuadEffect(
       const SkPMColor4f&, const SkMatrix& viewMatrix, uint8_t coverage, GrClipEdgeType,
-      const SkMatrix& localMatrix, bool usesLocalCoords);
+      const SkMatrix& localMatrix, bool usesLocalCoords) noexcept;
 
   SkPMColor4f fColor;
   SkMatrix fViewMatrix;

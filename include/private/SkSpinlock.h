@@ -16,7 +16,7 @@ class SK_CAPABILITY("mutex") SkSpinlock {
  public:
   constexpr SkSpinlock() noexcept = default;
 
-  void acquire() SK_ACQUIRE() {
+  void acquire() noexcept SK_ACQUIRE() {
     // To act as a mutex, we need an acquire barrier when we acquire the lock.
     if (fLocked.exchange(true, std::memory_order_acquire)) {
       // Lock was contended.  Fall back to an out-of-line spin loop.

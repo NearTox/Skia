@@ -21,15 +21,15 @@ namespace {
 
 class StencilResolveProcessor : public GrGeometryProcessor {
  public:
-  StencilResolveProcessor() : INHERITED(kStencilResolveProcessor_ClassID) {
+  StencilResolveProcessor() noexcept : INHERITED(kStencilResolveProcessor_ClassID) {
     static constexpr Attribute kIBounds = {"ibounds", kShort4_GrVertexAttribType, kShort4_GrSLType};
     this->setInstanceAttributes(&kIBounds, 1);
     SkASSERT(this->instanceStride() == sizeof(GrStencilAtlasOp::ResolveRectInstance));
   }
 
  private:
-  const char* name() const final { return "StencilResolveProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const final {}
+  const char* name() const noexcept final { return "StencilResolveProcessor"; }
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept final {}
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const final;
   class Impl;
 
@@ -59,7 +59,7 @@ class StencilResolveProcessor::Impl : public GrGLSLGeometryProcessor {
 
   void setData(
       const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-      const CoordTransformRange&) override {}
+      const CoordTransformRange&) noexcept override {}
 };
 
 GrGLSLPrimitiveProcessor* StencilResolveProcessor::createGLSLInstance(const GrShaderCaps&) const {
@@ -102,7 +102,20 @@ static constexpr GrUserStencilSettings kResolveStencilCoverageAndReset(
     GrUserStencilSettings::StaticInitSeparate<
         0x0000, 0x0000, GrUserStencilTest::kNotEqual, GrUserStencilTest::kNotEqual, 0xffff, 0x0001,
         GrUserStencilOp::kZero, GrUserStencilOp::kZero, GrUserStencilOp::kKeep,
+        GrUserStencilOp::kZero, 0xffff, 0xffff>());
+
+// Same as above, but done in two passes for D3D, which doesn't support mismatched refs or masks on
+// dual sided stencil settings.
+static constexpr GrUserStencilSettings kResolveWindingCoverageAndReset(
+    GrUserStencilSettings::StaticInitSeparate<
+        0x0000, 0x0000, GrUserStencilTest::kNotEqual, GrUserStencilTest::kNever, 0xffff, 0xffff,
+        GrUserStencilOp::kZero, GrUserStencilOp::kKeep, GrUserStencilOp::kKeep,
         GrUserStencilOp::kKeep, 0xffff, 0xffff>());
+static constexpr GrUserStencilSettings kResolveEvenOddCoverageAndReset(
+    GrUserStencilSettings::StaticInitSeparate<
+        0x0000, 0x0000, GrUserStencilTest::kNever, GrUserStencilTest::kNotEqual, 0x0001, 0x0001,
+        GrUserStencilOp::kKeep, GrUserStencilOp::kZero, GrUserStencilOp::kKeep,
+        GrUserStencilOp::kZero, 0xffff, 0xffff>());
 
 void GrStencilAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {
   SkIRect drawBoundsRect = SkIRect::MakeWH(fDrawBounds.width(), fDrawBounds.height());
@@ -123,27 +136,40 @@ void GrStencilAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chain
   // not necessary, and will even cause artifacts if using mixed samples.
   constexpr auto noHWAA = GrPipeline::InputFlags::kNone;
 
-  const auto* stencilResolveSettings =
-      (flushState->caps().discardStencilValuesAfterRenderPass())
-          // The next draw will be the final op in the renderTargetContext. So if Ganesh is
-          // planning to discard the stencil values anyway, we don't actually need to reset them
-          // back to zero.
-          ? &kResolveStencilCoverage
-          : &kResolveStencilCoverageAndReset;
-
   GrPipeline resolvePipeline(
-      GrScissorTest::kEnabled, SkBlendMode::kSrc, flushState->drawOpArgs().writeSwizzle(), noHWAA,
-      stencilResolveSettings);
-
+      GrScissorTest::kEnabled, SkBlendMode::kSrc, flushState->drawOpArgs().writeSwizzle(), noHWAA);
   StencilResolveProcessor primProc;
 
+  if (!flushState->caps().twoSidedStencilRefsAndMasksMustMatch()) {
+    if (flushState->caps().discardStencilValuesAfterRenderPass()) {
+      resolvePipeline.setUserStencil(&kResolveStencilCoverage);
+    } else {
+      resolvePipeline.setUserStencil(&kResolveStencilCoverageAndReset);
+    }
+    this->drawResolve(flushState, resolvePipeline, primProc, drawBoundsRect);
+    return;
+  }
+
+  // If this ever becomes true then we should add new per-fill-type stencil settings that also
+  // don't reset back to zero.
+  SkASSERT(!flushState->caps().discardStencilValuesAfterRenderPass());
+
+  resolvePipeline.setUserStencil(&kResolveWindingCoverageAndReset);
+  this->drawResolve(flushState, resolvePipeline, primProc, drawBoundsRect);
+
+  resolvePipeline.setUserStencil(&kResolveEvenOddCoverageAndReset);
+  this->drawResolve(flushState, resolvePipeline, primProc, drawBoundsRect);
+}
+
+void GrStencilAtlasOp::drawResolve(
+    GrOpFlushState* flushState, const GrPipeline& resolvePipeline,
+    const GrPrimitiveProcessor& primProc, const SkIRect& drawBounds) const {
   GrProgramInfo programInfo(
       flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-      flushState->proxy()->backendFormat(), flushState->outputView()->origin(), &resolvePipeline,
+      flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &resolvePipeline,
       &primProc, GrPrimitiveType::kTriangleStrip);
-
-  flushState->bindPipeline(programInfo, SkRect::Make(drawBoundsRect));
-  flushState->setScissorRect(drawBoundsRect);
+  flushState->bindPipeline(programInfo, SkRect::Make(drawBounds));
+  flushState->setScissorRect(drawBounds);
   flushState->bindBuffers(nullptr, fResources->stencilResolveBuffer(), nullptr);
   flushState->drawInstanced(
       fEndStencilResolveInstance - fBaseStencilResolveInstance, fBaseStencilResolveInstance, 4, 0);

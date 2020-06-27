@@ -30,12 +30,12 @@ class Image final : public RenderNode {
   SG_ATTRIBUTE(AntiAlias, bool, fAntiAlias)
 
  protected:
-  explicit Image(sk_sp<SkImage>);
+  explicit Image(sk_sp<SkImage>) noexcept;
 
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
 
  private:
   sk_sp<SkImage> fImage;

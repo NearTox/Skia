@@ -37,7 +37,7 @@ class sk_cf_obj {
  public:
   using element_type = T;
 
-  constexpr sk_cf_obj() : fObject(nullptr) {}
+  constexpr sk_cf_obj() noexcept : fObject(nullptr) {}
 
   /**
    *  Shares the underlying object by calling CFRetain(), so that both the argument and the newly

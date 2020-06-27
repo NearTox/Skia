@@ -53,7 +53,7 @@ void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKe
   b->add32(key);
 }
 
-bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const {
+bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const noexcept {
   const GrCCClipProcessor& that = fp.cast<GrCCClipProcessor>();
   // Each ClipPath path has a unique atlas proxy, so hasSameSamplersAndAccesses should have
   // already weeded out FPs with different ClipPaths.
@@ -77,7 +77,7 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
     if (proc.fMustCheckBounds) {
       const char* pathIBounds;
       fPathIBoundsUniform = uniHandler->addUniform(
-          kFragment_GrShaderFlag, kFloat4_GrSLType, "path_ibounds", &pathIBounds);
+          &proc, kFragment_GrShaderFlag, kFloat4_GrSLType, "path_ibounds", &pathIBounds);
       f->codeAppendf(
           "if (all(greaterThan(float4(sk_FragCoord.xy, %s.zw), "
           "float4(%s.xy, sk_FragCoord.xy)))) {",
@@ -86,7 +86,7 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
 
     const char* atlasTransform;
     fAtlasTransformUniform = uniHandler->addUniform(
-        kFragment_GrShaderFlag, kFloat4_GrSLType, "atlas_transform", &atlasTransform);
+        &proc, kFragment_GrShaderFlag, kFloat4_GrSLType, "atlas_transform", &atlasTransform);
     f->codeAppendf(
         "float2 texcoord = sk_FragCoord.xy * %s.xy + %s.zw;", atlasTransform, atlasTransform);
 

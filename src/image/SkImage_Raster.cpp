@@ -26,17 +26,17 @@
 #endif
 
 // fixes https://bug.skia.org/5096
-static bool is_not_subset(const SkBitmap& bm) {
+static bool is_not_subset(const SkBitmap& bm) noexcept {
   SkASSERT(bm.pixelRef());
   SkISize dim = SkISize::Make(bm.pixelRef()->width(), bm.pixelRef()->height());
   SkASSERT(dim != bm.dimensions() || bm.pixelRefOrigin().isZero());
   return dim == bm.dimensions();
 }
 
-class SkImage_Raster : public SkImage_Base {
+class SkImage_Raster final : public SkImage_Base {
  public:
   static bool ValidArgs(const SkImageInfo& info, size_t rowBytes, size_t* minSize) {
-    const int maxDimension = SK_MaxS32 >> 2;
+    constexpr int maxDimension = SK_MaxS32 >> 2;
 
     // TODO(mtklein): eliminate anything here that setInfo() has already checked.
     SkBitmap dummy;

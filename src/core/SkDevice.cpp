@@ -15,12 +15,12 @@
 #include "include/core/SkShader.h"
 #include "include/core/SkVertices.h"
 #include "include/private/SkTo.h"
-#include "src/core/SkCanvasMatrix.h"
 #include "src/core/SkDraw.h"
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkImageFilterCache.h"
 #include "src/core/SkImagePriv.h"
 #include "src/core/SkLatticeIter.h"
+#include "src/core/SkMarkerStack.h"
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkRasterClip.h"
@@ -32,16 +32,17 @@
 #include "src/shaders/SkLocalMatrixShader.h"
 #include "src/utils/SkPatchUtils.h"
 
-SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps)
-    : fInfo(info), fSurfaceProps(surfaceProps) {
+SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps) noexcept
+    : SkMatrixProvider(/* fLocalToDevice = */ SkMatrix::I()),
+      fInfo(info),
+      fSurfaceProps(surfaceProps) {
   fDeviceToGlobal.reset();
   fGlobalToDevice.reset();
-  fLocalToDevice.reset();
 }
 
 void SkBaseDevice::setDeviceCoordinateSystem(
-    const SkMatrix& deviceToGlobal, const SkMatrix& localToDevice, int bufferOriginX,
-    int bufferOriginY) {
+    const SkMatrix& deviceToGlobal, const SkM44& localToDevice, int bufferOriginX,
+    int bufferOriginY) noexcept {
   fDeviceToGlobal = deviceToGlobal;
   fDeviceToGlobal.normalizePerspective();
   SkAssertResult(deviceToGlobal.invert(&fGlobalToDevice));
@@ -53,23 +54,25 @@ void SkBaseDevice::setDeviceCoordinateSystem(
     fGlobalToDevice.postTranslate(-bufferOriginX, -bufferOriginY);
     fLocalToDevice.postTranslate(-bufferOriginX, -bufferOriginY);
   }
+  fLocalToDevice33 = fLocalToDevice.asM33();
 }
 
-void SkBaseDevice::setGlobalCTM(const SkCanvasMatrix& ctm) {
+void SkBaseDevice::setGlobalCTM(const SkM44& ctm) noexcept {
   fLocalToDevice = ctm;
   fLocalToDevice.normalizePerspective();
   if (!fGlobalToDevice.isIdentity()) {
     // Map from the global CTM state to this device's coordinate system.
-    fLocalToDevice.postConcat(fGlobalToDevice);
+    fLocalToDevice.postConcat(SkM44(fGlobalToDevice));
   }
+  fLocalToDevice33 = fLocalToDevice.asM33();
 }
 
-bool SkBaseDevice::isPixelAlignedToGlobal() const {
+bool SkBaseDevice::isPixelAlignedToGlobal() const noexcept {
   return fDeviceToGlobal.isTranslate() && SkScalarIsInt(fDeviceToGlobal.getTranslateX()) &&
          SkScalarIsInt(fDeviceToGlobal.getTranslateY());
 }
 
-SkIPoint SkBaseDevice::getOrigin() const {
+SkIPoint SkBaseDevice::getOrigin() const noexcept {
   // getOrigin() is deprecated, the old origin has been moved into the fDeviceToGlobal matrix.
   // This extracts the origin from the matrix, but asserts that a more complicated coordinate
   // space hasn't been set of the device. This function can be removed once existing use cases
@@ -82,25 +85,26 @@ SkIPoint SkBaseDevice::getOrigin() const {
       SkScalarFloorToInt(fDeviceToGlobal.getTranslateY()));
 }
 
-SkMatrix SkBaseDevice::getRelativeTransform(const SkBaseDevice& inputDevice) const {
+SkMatrix SkBaseDevice::getRelativeTransform(const SkBaseDevice& inputDevice) const noexcept {
   // To get the transform from the input's space to this space, transform from the input space to
   // the global space, and then from the global space back to this space.
   return SkMatrix::Concat(fGlobalToDevice, inputDevice.fDeviceToGlobal);
 }
 
-SkPixelGeometry SkBaseDevice::CreateInfo::AdjustGeometry(TileUsage tileUsage, SkPixelGeometry geo) {
-  switch (tileUsage) {
-    case kPossible_TileUsage:
-      // (we think) for compatibility with old clients, we assume this layer can support LCD
-      // even though they may not have marked it as opaque... seems like we should update
-      // our callers (reed/robertphilips).
-      break;
-    case kNever_TileUsage: geo = kUnknown_SkPixelGeometry; break;
+bool SkBaseDevice::getLocalToMarker(uint32_t id, SkM44* localToMarker) const {
+  // The marker stack stores CTM snapshots, which are "marker to global" matrices.
+  // We ask for the (cached) inverse, which is a "global to marker" matrix.
+  SkM44 globalToMarker;
+  if (fMarkerStack && fMarkerStack->findMarkerInverse(id, &globalToMarker)) {
+    if (localToMarker) {
+      *localToMarker = globalToMarker * SkM44(fDeviceToGlobal) * fLocalToDevice;
+    }
+    return true;
   }
-  return geo;
+  return false;
 }
 
-static inline bool is_int(float x) { return x == (float)sk_float_round2int(x); }
+static inline bool is_int(float x) noexcept { return x == (float)sk_float_round2int(x); }
 
 void SkBaseDevice::drawRegion(const SkRegion& region, const SkPaint& paint) {
   const SkMatrix& localToDevice = this->localToDevice();
@@ -190,7 +194,7 @@ void SkBaseDevice::drawImageLattice(
   }
 }
 
-static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) {
+static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) noexcept {
   tris[0] = quad[0];
   tris[1] = quad[1];
   tris[2] = quad[2];
@@ -260,7 +264,7 @@ void SkBaseDevice::drawEdgeAAImageSet(
   SkASSERT(!paint.getPathEffect());
 
   SkPaint entryPaint = paint;
-  const SkMatrix baseLocalToDevice = this->localToDevice();
+  const SkM44 baseLocalToDevice = this->localToDevice44();
   int clipIndex = 0;
   for (int i = 0; i < count; ++i) {
     // TODO: Handle per-edge AA. Right now this mirrors the SkiaRenderer component of Chrome
@@ -273,8 +277,7 @@ void SkBaseDevice::drawEdgeAAImageSet(
     SkASSERT(images[i].fMatrixIndex < 0 || preViewMatrices);
     if (images[i].fMatrixIndex >= 0) {
       this->save();
-      this->setLocalToDevice(
-          SkMatrix::Concat(baseLocalToDevice, preViewMatrices[images[i].fMatrixIndex]));
+      this->setLocalToDevice(baseLocalToDevice * SkM44(preViewMatrices[images[i].fMatrixIndex]));
       needsRestore = true;
     }
 
@@ -352,7 +355,7 @@ bool SkBaseDevice::peekPixels(SkPixmap* pmap) {
 void SkBaseDevice::drawGlyphRunRSXform(
     const SkFont& font, const SkGlyphID glyphs[], const SkRSXform xform[], int count,
     SkPoint origin, const SkPaint& paint) {
-  const SkMatrix originalLocalToDevice = this->localToDevice();
+  const SkM44 originalLocalToDevice = this->localToDevice44();
   if (!originalLocalToDevice.isFinite() || !SkScalarIsFinite(font.getSize()) ||
       !SkScalarIsFinite(font.getScaleX()) || !SkScalarIsFinite(font.getSkewX())) {
     return;
@@ -385,8 +388,7 @@ void SkBaseDevice::drawGlyphRunRSXform(
       }
     }
 
-    glyphToDevice.postConcat(originalLocalToDevice);
-    this->setLocalToDevice(glyphToDevice);
+    this->setLocalToDevice(originalLocalToDevice * SkM44(glyphToDevice));
 
     this->drawGlyphRunList(SkGlyphRunList{glyphRun, transformingPaint});
   }

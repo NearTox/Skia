@@ -68,9 +68,9 @@ class GrSkSLFP : public GrFragmentProcessor {
    */
   static std::unique_ptr<GrSkSLFP> Make(
       GrContext_Base* context, sk_sp<SkRuntimeEffect> effect, const char* name,
-      sk_sp<SkData> inputs, const SkMatrix* matrix = nullptr);
+      sk_sp<SkData> inputs);
 
-  const char* name() const override;
+  const char* name() const noexcept override;
 
   void addChild(std::unique_ptr<GrFragmentProcessor> child);
 
@@ -81,8 +81,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   GrSkSLFP(
       sk_sp<const GrShaderCaps> shaderCaps, ShaderErrorHandler* shaderErrorHandler,
-      sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs,
-      const SkMatrix* matrix);
+      sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs);
 
   GrSkSLFP(const GrSkSLFP& other);
 
@@ -90,7 +89,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
   sk_sp<const GrShaderCaps> fShaderCaps;
   ShaderErrorHandler* fShaderErrorHandler;

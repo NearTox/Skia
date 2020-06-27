@@ -10,7 +10,7 @@
 #include "include/core/SkPoint.h"
 #include "src/pathops/SkPathOpsTypes.h"
 
-inline bool AlmostEqualUlps(const SkPoint& pt1, const SkPoint& pt2) {
+inline bool AlmostEqualUlps(const SkPoint& pt1, const SkPoint& pt2) noexcept {
   return AlmostEqualUlps(pt1.fX, pt2.fX) && AlmostEqualUlps(pt1.fY, pt2.fY);
 }
 
@@ -58,14 +58,14 @@ struct SkDVector {
 
   // similar to cross, this bastardization considers nearly coincident to be zero
   // uses ulps epsilon == 16
-  double crossCheck(const SkDVector& a) const {
+  double crossCheck(const SkDVector& a) const noexcept {
     double xy = fX * a.fY;
     double yx = fY * a.fX;
     return AlmostEqualUlps(xy, yx) ? 0 : xy - yx;
   }
 
   // allow tinier numbers
-  double crossNoNormalCheck(const SkDVector& a) const {
+  double crossNoNormalCheck(const SkDVector& a) const noexcept {
     double xy = fX * a.fY;
     double yx = fY * a.fX;
     return AlmostEqualUlpsNoNormalCheck(xy, yx) ? 0 : xy - yx;
@@ -142,7 +142,7 @@ struct SkDPoint {
   // note: this can not be implemented with
   // return approximately_equal(a.fY, fY) && approximately_equal(a.fX, fX);
   // because that will not take the magnitude of the values into account
-  bool approximatelyDEqual(const SkDPoint& a) const {
+  bool approximatelyDEqual(const SkDPoint& a) const noexcept {
     if (approximately_equal(fX, a.fX) && approximately_equal(fY, a.fY)) {
       return true;
     }
@@ -156,13 +156,13 @@ struct SkDPoint {
     return AlmostDequalUlps(largest, largest + dist);  // is the dist within ULPS tolerance?
   }
 
-  bool approximatelyDEqual(const SkPoint& a) const {
+  bool approximatelyDEqual(const SkPoint& a) const noexcept {
     SkDPoint dA;
     dA.set(a);
     return approximatelyDEqual(dA);
   }
 
-  bool approximatelyEqual(const SkDPoint& a) const {
+  bool approximatelyEqual(const SkDPoint& a) const noexcept {
     if (approximately_equal(fX, a.fX) && approximately_equal(fY, a.fY)) {
       return true;
     }
@@ -176,13 +176,13 @@ struct SkDPoint {
     return AlmostPequalUlps(largest, largest + dist);  // is the dist within ULPS tolerance?
   }
 
-  bool approximatelyEqual(const SkPoint& a) const {
+  bool approximatelyEqual(const SkPoint& a) const noexcept {
     SkDPoint dA;
     dA.set(a);
     return approximatelyEqual(dA);
   }
 
-  static bool ApproximatelyEqual(const SkPoint& a, const SkPoint& b) {
+  static bool ApproximatelyEqual(const SkPoint& a, const SkPoint& b) noexcept {
     if (approximately_equal(a.fX, b.fX) && approximately_equal(a.fY, b.fY)) {
       return true;
     }
@@ -226,7 +226,7 @@ struct SkDPoint {
     return result;
   }
 
-  bool roughlyEqual(const SkDPoint& a) const {
+  bool roughlyEqual(const SkDPoint& a) const noexcept {
     if (roughly_equal(fX, a.fX) && roughly_equal(fY, a.fY)) {
       return true;
     }
@@ -237,7 +237,7 @@ struct SkDPoint {
     return RoughlyEqualUlps(largest, largest + dist);  // is the dist within ULPS tolerance?
   }
 
-  static bool RoughlyEqual(const SkPoint& a, const SkPoint& b) {
+  static bool RoughlyEqual(const SkPoint& a, const SkPoint& b) noexcept {
     if (!RoughlyEqualUlps(a.fX, b.fX) && !RoughlyEqualUlps(a.fY, b.fY)) {
       return false;
     }
@@ -252,7 +252,7 @@ struct SkDPoint {
   }
 
   // very light weight check, should only be used for inequality check
-  static bool WayRoughlyEqual(const SkPoint& a, const SkPoint& b) {
+  static bool WayRoughlyEqual(const SkPoint& a, const SkPoint& b) noexcept {
     float largestNumber =
         std::max(SkTAbs(a.fX), std::max(SkTAbs(a.fY), std::max(SkTAbs(b.fX), SkTAbs(b.fY))));
     SkVector diffs = a - b;

@@ -52,6 +52,7 @@
 #  include "experimental/svg/model/SkSVGDOM.h"
 #endif  // SK_XML
 
+#include <cinttypes>
 #include <stdlib.h>
 #include <thread>
 
@@ -185,7 +186,7 @@ static DEFINE_bool(
 static double now_ms() { return SkTime::GetNSecs() * 1e-6; }
 
 static SkString humanize(double ms) {
-  if (FLAGS_verbose) return SkStringPrintf("%llu", (uint64_t)(ms * 1e6));
+  if (FLAGS_verbose) return SkStringPrintf("%" PRIu64, (uint64_t)(ms * 1e6));
   return HumanizeMs(ms);
 }
 #define HUMANIZE(ms) humanize(ms).c_str()
@@ -282,6 +283,7 @@ struct GPUTarget : public Target {
   void dumpStats() override {
     this->contextInfo.grContext()->priv().printCacheStats();
     this->contextInfo.grContext()->priv().printGpuStats();
+    this->contextInfo.grContext()->priv().printContextStats();
   }
 };
 

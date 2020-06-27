@@ -22,14 +22,14 @@ class GrRadialGradientLayout : public GrFragmentProcessor {
  public:
   static std::unique_ptr<GrFragmentProcessor> Make(
       const SkRadialGradient& gradient, const GrFPArgs& args);
-  GrRadialGradientLayout(const GrRadialGradientLayout& src);
+  GrRadialGradientLayout(const GrRadialGradientLayout& src) noexcept;
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const override { return "RadialGradientLayout"; }
+  const char* name() const noexcept override { return "RadialGradientLayout"; }
   GrCoordTransform fCoordTransform0;
   SkMatrix gradientMatrix;
 
  private:
-  GrRadialGradientLayout(SkMatrix gradientMatrix)
+  GrRadialGradientLayout(SkMatrix gradientMatrix) noexcept
       : INHERITED(
             kGrRadialGradientLayout_ClassID,
             (OptimizationFlags)kPreservesOpaqueInput_OptimizationFlag),
@@ -39,7 +39,7 @@ class GrRadialGradientLayout : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const override;
+  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

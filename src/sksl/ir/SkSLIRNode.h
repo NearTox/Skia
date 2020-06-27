@@ -18,13 +18,11 @@ namespace SkSL {
  * version of the program (all types determined, everything validated), ready for code generation.
  */
 struct IRNode {
-  IRNode(int offset) : fOffset(offset) {}
+  constexpr IRNode(int offset) noexcept : fOffset(offset) {}
 
-  virtual ~IRNode() {}
+  virtual ~IRNode() = default;
 
-#ifdef SK_DEBUG
   virtual String description() const = 0;
-#endif
 
   // character offset of this element within the program being compiled, for error reporting
   // purposes

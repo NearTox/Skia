@@ -11,7 +11,7 @@
 #include <utility>
 
 template <typename T>
-T pin_unsorted(T value, T limit0, T limit1) {
+T pin_unsorted(T value, T limit0, T limit1) noexcept {
   if (limit1 < limit0) {
     using std::swap;
     swap(limit0, limit1);
@@ -28,7 +28,7 @@ T pin_unsorted(T value, T limit0, T limit1) {
 }
 
 // return X coordinate of intersection with horizontal line at Y
-static SkScalar sect_with_horizontal(const SkPoint src[2], SkScalar Y) {
+static SkScalar sect_with_horizontal(const SkPoint src[2], SkScalar Y) noexcept {
   SkScalar dy = src[1].fY - src[0].fY;
   if (SkScalarNearlyZero(dy)) {
     return SkScalarAve(src[0].fX, src[1].fX);
@@ -49,7 +49,7 @@ static SkScalar sect_with_horizontal(const SkPoint src[2], SkScalar Y) {
 }
 
 // return Y coordinate of intersection with vertical line at X
-static SkScalar sect_with_vertical(const SkPoint src[2], SkScalar X) {
+static SkScalar sect_with_vertical(const SkPoint src[2], SkScalar X) noexcept {
   SkScalar dx = src[1].fX - src[0].fX;
   if (SkScalarNearlyZero(dx)) {
     return SkScalarAve(src[0].fY, src[1].fY);
@@ -65,7 +65,7 @@ static SkScalar sect_with_vertical(const SkPoint src[2], SkScalar X) {
   }
 }
 
-static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) {
+static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) noexcept {
   SkScalar y = sect_with_vertical(src, x);
   // Our caller expects y to be between src[0].fY and src[1].fY (unsorted), but due to the
   // numerics of floats/doubles, we might have computed a value slightly outside of that,
@@ -76,13 +76,13 @@ static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) {
+static inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) noexcept {
   return a <= b && (a < b || dim > 0);
 }
 
 // returns true if outer contains inner, even if inner is empty.
 // note: outer.contains(inner) always returns false if inner is empty.
-static inline bool containsNoEmptyCheck(const SkRect& outer, const SkRect& inner) {
+static inline bool containsNoEmptyCheck(const SkRect& outer, const SkRect& inner) noexcept {
   return outer.fLeft <= inner.fLeft && outer.fTop <= inner.fTop && outer.fRight >= inner.fRight &&
          outer.fBottom >= inner.fBottom;
 }

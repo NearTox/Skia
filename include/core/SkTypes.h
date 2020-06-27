@@ -92,7 +92,7 @@
 #define SK_CPU_SSE_LEVEL_SSE42 42
 #define SK_CPU_SSE_LEVEL_AVX 51
 #define SK_CPU_SSE_LEVEL_AVX2 52
-#define SK_CPU_SSE_LEVEL_AVX512 60
+#define SK_CPU_SSE_LEVEL_SKX 60
 
 // When targetting iOS and using gyp to generate the build files, it is not
 // possible to select files to build depending on the architecture (i.e. it
@@ -106,8 +106,9 @@
 #ifndef SK_CPU_SSE_LEVEL
 // These checks must be done in descending order to ensure we set the highest
 // available SSE level.
-#  if defined(__AVX512F__)
-#    define SK_CPU_SSE_LEVEL SK_CPU_SSE_LEVEL_AVX512
+#  if defined(__AVX512F__) && defined(__AVX512DQ__) && defined(__AVX512CD__) && \
+      defined(__AVX512BW__) && defined(__AVX512VL__)
+#    define SK_CPU_SSE_LEVEL SK_CPU_SSE_LEVEL_SKX
 #  elif defined(__AVX2__)
 #    define SK_CPU_SSE_LEVEL SK_CPU_SSE_LEVEL_AVX2
 #  elif defined(__AVX__)
@@ -129,7 +130,10 @@
 #ifndef SK_CPU_SSE_LEVEL
 // These checks must be done in descending order to ensure we set the highest
 // available SSE level. 64-bit intel guarantees at least SSE2 support.
-#  if defined(__AVX2__)
+#  if defined(__AVX512F__) && defined(__AVX512DQ__) && defined(__AVX512CD__) && \
+      defined(__AVX512BW__) && defined(__AVX512VL__)
+#    define SK_CPU_SSE_LEVEL SK_CPU_SSE_LEVEL_SKX
+#  elif defined(__AVX2__)
 #    define SK_CPU_SSE_LEVEL SK_CPU_SSE_LEVEL_AVX2
 #  elif defined(__AVX__)
 #    define SK_CPU_SSE_LEVEL SK_CPU_SSE_LEVEL_AVX
@@ -392,14 +396,6 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  endif
 #endif
 
-#ifndef SK_SIZE_T_SPECIFIER
-#  if defined(_MSC_VER) && !defined(__clang__)
-#    define SK_SIZE_T_SPECIFIER "%Iu"
-#  else
-#    define SK_SIZE_T_SPECIFIER "%zu"
-#  endif
-#endif
-
 #ifndef SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
 #  define SK_ALLOW_STATIC_GLOBAL_INITIALIZERS 0
 #endif
@@ -503,7 +499,8 @@ typedef unsigned U16CPU;
 /** @return false or true based on the condition
  */
 template <typename T>
-static constexpr bool SkToBool(const T& x) noexcept(noexcept(0 != x)) {
+static constexpr bool SkToBool(const T& x) noexcept {
+  static_assert(noexcept(0 != x));
   return 0 != x;
 }
 
@@ -517,11 +514,11 @@ static constexpr int32_t SK_NaN32 = INT32_MIN;
 static constexpr int64_t SK_MaxS64 = INT64_MAX;
 static constexpr int64_t SK_MinS64 = -SK_MaxS64;
 
-static constexpr int32_t SkLeftShift(int32_t value, int32_t shift) noexcept {
+static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) noexcept {
   return (int32_t)((uint32_t)value << shift);
 }
 
-static constexpr int64_t SkLeftShift(int64_t value, int32_t shift) noexcept {
+static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) noexcept {
   return (int64_t)((uint64_t)value << shift);
 }
 
@@ -571,7 +568,7 @@ static constexpr bool SkIsAlignPtr(T x) noexcept {
 }
 
 typedef uint32_t SkFourByteTag;
-static constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
+static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
   return (((uint8_t)a << 24) | ((uint8_t)b << 16) | ((uint8_t)c << 8) | (uint8_t)d);
 }
 
@@ -602,7 +599,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static constexpr int32_t SkAbs32(int32_t value) noexcept {
+static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -611,7 +608,7 @@ static constexpr int32_t SkAbs32(int32_t value) noexcept {
 }
 
 template <typename T>
-static inline T SkTAbs(T value) {
+static constexpr inline T SkTAbs(T value) noexcept {
   if (value < 0) {
     value = -value;
   }
@@ -624,8 +621,8 @@ static inline T SkTAbs(T value) {
           floating point NaN. In that case, 'max' is returned.
 */
 template <typename T>
-static constexpr const T& SkTPin(const T& value, const T& min, const T& max) noexcept(
-    noexcept(value < min)) {
+static constexpr const T& SkTPin(const T& value, const T& min, const T& max) noexcept {
+  static_assert(noexcept(value < min));
   return value < min ? min : (value < max ? value : max);
 }
 

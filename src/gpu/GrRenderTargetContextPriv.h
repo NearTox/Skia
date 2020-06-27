@@ -82,7 +82,7 @@ class GrRenderTargetContextPriv {
    * This unique ID will not change for a given RenderTargetContext. However, it is _NOT_
    * guaranteed to match the uniqueID of the underlying GrRenderTarget - beware!
    */
-  GrSurfaceProxy::UniqueID uniqueID() const {
+  GrSurfaceProxy::UniqueID uniqueID() const noexcept {
     return fRenderTargetContext->asSurfaceProxy()->uniqueID();
   }
 
@@ -94,14 +94,14 @@ class GrRenderTargetContextPriv {
       const GrClip&, std::unique_ptr<GrDrawOp>,
       const std::function<WillAddOpFn>& = std::function<WillAddOpFn>());
 
-  bool refsWrappedObjects() const {
+  bool refsWrappedObjects() const noexcept {
     return fRenderTargetContext->asRenderTargetProxy()->refsWrappedObjects();
   }
 
  private:
-  explicit GrRenderTargetContextPriv(GrRenderTargetContext* renderTargetContext)
+  explicit GrRenderTargetContextPriv(GrRenderTargetContext* renderTargetContext) noexcept
       : fRenderTargetContext(renderTargetContext) {}
-  GrRenderTargetContextPriv(const GrRenderTargetPriv&) {}           // unimpl
+  GrRenderTargetContextPriv(const GrRenderTargetPriv&) noexcept {}  // unimpl
   GrRenderTargetContextPriv& operator=(const GrRenderTargetPriv&);  // unimpl
 
   // No taking addresses of this type.
@@ -113,11 +113,11 @@ class GrRenderTargetContextPriv {
   friend class GrRenderTargetContext;  // to construct/copy this type.
 };
 
-inline GrRenderTargetContextPriv GrRenderTargetContext::priv() {
+inline GrRenderTargetContextPriv GrRenderTargetContext::priv() noexcept {
   return GrRenderTargetContextPriv(this);
 }
 
-inline const GrRenderTargetContextPriv GrRenderTargetContext::priv() const {
+inline const GrRenderTargetContextPriv GrRenderTargetContext::priv() const noexcept {
   return GrRenderTargetContextPriv(const_cast<GrRenderTargetContext*>(this));
 }
 

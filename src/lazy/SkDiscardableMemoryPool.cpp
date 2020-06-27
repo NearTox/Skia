@@ -26,7 +26,7 @@ class PoolDiscardableMemory;
  */
 class DiscardableMemoryPool : public SkDiscardableMemoryPool {
  public:
-  DiscardableMemoryPool(size_t budget);
+  DiscardableMemoryPool(size_t budget) noexcept;
   ~DiscardableMemoryPool() override;
 
   std::unique_ptr<SkDiscardableMemory> make(size_t bytes);
@@ -56,7 +56,7 @@ class DiscardableMemoryPool : public SkDiscardableMemoryPool {
   SkTInternalLList<PoolDiscardableMemory> fList;
 
   /** Function called to free memory if needed */
-  void dumpDownTo(size_t budget);
+  void dumpDownTo(size_t budget) noexcept;
   /** called by DiscardableMemoryPool upon destruction */
   void removeFromPool(PoolDiscardableMemory* dm);
   /** called by DiscardableMemoryPool::lock() */
@@ -121,7 +121,7 @@ void PoolDiscardableMemory::unlock() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DiscardableMemoryPool::DiscardableMemoryPool(size_t budget) : fBudget(budget), fUsed(0) {
+DiscardableMemoryPool::DiscardableMemoryPool(size_t budget) noexcept : fBudget(budget), fUsed(0) {
 #if SK_LAZY_CACHE_STATS
   fCacheHits = 0;
   fCacheMisses = 0;
@@ -134,7 +134,7 @@ DiscardableMemoryPool::~DiscardableMemoryPool() {
   SkASSERT(fList.isEmpty());
 }
 
-void DiscardableMemoryPool::dumpDownTo(size_t budget) {
+void DiscardableMemoryPool::dumpDownTo(size_t budget) noexcept {
   fMutex.assertHeld();
   if (fUsed <= budget) {
     return;

@@ -15,7 +15,7 @@ static constexpr int kMaxKeyDataCountU32 = 256;  // 1kB of uint32_t's.
 
 DECLARE_SKMESSAGEBUS_MESSAGE(sk_sp<GrCCPathCache::Key>);
 
-static inline uint32_t next_path_cache_id() noexcept {
+static inline uint32_t next_path_cache_id() {
   static std::atomic<uint32_t> gNextID(1);
   for (;;) {
     uint32_t id = gNextID.fetch_add(+1, std::memory_order_acquire);
@@ -26,7 +26,7 @@ static inline uint32_t next_path_cache_id() noexcept {
 }
 
 static inline bool SkShouldPostMessageToBus(
-    const sk_sp<GrCCPathCache::Key>& key, uint32_t msgBusUniqueID) noexcept {
+    const sk_sp<GrCCPathCache::Key>& key, uint32_t msgBusUniqueID) {
   return key->pathCacheUniqueID() == msgBusUniqueID;
 }
 
@@ -76,12 +76,12 @@ sk_sp<GrCCPathCache::Key> GrCCPathCache::Key::Make(
 
 void GrCCPathCache::Key::operator delete(void* p) { ::operator delete(p); }
 
-const uint32_t* GrCCPathCache::Key::data() const noexcept {
+const uint32_t* GrCCPathCache::Key::data() const {
   // The shape key is a variable-length footer to the entry allocation.
   return reinterpret_cast<const uint32_t*>(reinterpret_cast<const char*>(this) + sizeof(Key));
 }
 
-uint32_t* GrCCPathCache::Key::data() noexcept {
+uint32_t* GrCCPathCache::Key::data() {
   // The shape key is a variable-length footer to the entry allocation.
   return reinterpret_cast<uint32_t*>(reinterpret_cast<char*>(this) + sizeof(Key));
 }
@@ -124,13 +124,13 @@ class WriteKeyHelper {
   static constexpr int kStrokeCapJoinIdx = 2;
   static constexpr int kShapeUnstyledKeyIdx = 3;
 
-  WriteKeyHelper(const GrShape& shape) : fShapeUnstyledKeyCount(shape.unstyledKeySize()) {}
+  WriteKeyHelper(const GrStyledShape& shape) : fShapeUnstyledKeyCount(shape.unstyledKeySize()) {}
 
   // Returns the total number of uint32_t's to allocate for the key.
-  int allocCountU32() const noexcept { return kShapeUnstyledKeyIdx + fShapeUnstyledKeyCount; }
+  int allocCountU32() const { return kShapeUnstyledKeyIdx + fShapeUnstyledKeyCount; }
 
   // Writes the key data to out[].
-  void write(const GrShape& shape, uint32_t* out) {
+  void write(const GrStyledShape& shape, uint32_t* out) {
     // Stroke key.
     // We don't use GrStyle::WriteKey() because it does not account for hairlines.
     // http://skbug.com/8273
@@ -159,8 +159,8 @@ class WriteKeyHelper {
 }  // namespace
 
 GrCCPathCache::OnFlushEntryRef GrCCPathCache::find(
-    GrOnFlushResourceProvider* onFlushRP, const GrShape& shape, const SkIRect& clippedDrawBounds,
-    const SkMatrix& viewMatrix, SkIVector* maskShift) {
+    GrOnFlushResourceProvider* onFlushRP, const GrStyledShape& shape,
+    const SkIRect& clippedDrawBounds, const SkMatrix& viewMatrix, SkIVector* maskShift) {
   if (!shape.hasUnstyledKey()) {
     return OnFlushEntryRef();
   }
@@ -425,7 +425,7 @@ GrCCPathCacheEntry::ReleaseAtlasResult GrCCCachedAtlas::invalidatePathPixels(
   return ReleaseAtlasResult::kNone;
 }
 
-void GrCCCachedAtlas::decrOnFlushRefCnt(int count) const noexcept {
+void GrCCCachedAtlas::decrOnFlushRefCnt(int count) const {
   SkASSERT(count > 0);
   fOnFlushRefCnt -= count;
   SkASSERT(fOnFlushRefCnt >= 0);

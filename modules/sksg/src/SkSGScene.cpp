@@ -19,7 +19,7 @@ std::unique_ptr<Scene> Scene::Make(sk_sp<RenderNode> root) {
   return root ? std::unique_ptr<Scene>(new Scene(std::move(root))) : nullptr;
 }
 
-Scene::Scene(sk_sp<RenderNode> root) : fRoot(std::move(root)) {}
+Scene::Scene(sk_sp<RenderNode> root) noexcept : fRoot(std::move(root)) {}
 
 Scene::~Scene() = default;
 

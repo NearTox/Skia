@@ -23,7 +23,7 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
       GrD3DGpu*, SkISize dimensions, GrWrapCacheable, GrIOType, const GrD3DTextureResourceInfo&,
       sk_sp<GrD3DResourceState>);
 
-  ~GrD3DTexture() override {}
+  ~GrD3DTexture() override = default;
 
   GrBackendTexture getBackendTexture() const override;
 

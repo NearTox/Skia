@@ -26,9 +26,8 @@ class SkRectPriv {
     return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
   }
 
-  static SkRect MakeLargeS32() noexcept {
-    SkRect r;
-    r.set(MakeILarge());
+  static constexpr SkRect MakeLargeS32() noexcept {
+    const SkRect r = SkRect::Make(MakeILarge());
     return r;
   }
 
@@ -57,6 +56,25 @@ class SkRectPriv {
   static bool Is16Bit(const SkIRect& r) noexcept {
     return SkTFitsIn<int16_t>(r.fLeft) && SkTFitsIn<int16_t>(r.fTop) &&
            SkTFitsIn<int16_t>(r.fRight) && SkTFitsIn<int16_t>(r.fBottom);
+  }
+
+  // Evaluate A-B. If the difference shape cannot be represented as a rectangle then false is
+  // returned and 'out' is set to the largest rectangle contained in said shape. If true is
+  // returned then A-B is representable as a rectangle, which is stored in 'out'.
+  static bool Subtract(const SkRect& a, const SkRect& b, SkRect* out) noexcept;
+  static bool Subtract(const SkIRect& a, const SkIRect& b, SkIRect* out) noexcept;
+
+  // Evaluate A-B, and return the largest rectangle contained in that shape (since the difference
+  // may not be representable as rectangle). The returned rectangle will not intersect B.
+  static SkRect Subtract(const SkRect& a, const SkRect& b) noexcept {
+    SkRect diff;
+    Subtract(a, b, &diff);
+    return diff;
+  }
+  static SkIRect Subtract(const SkIRect& a, const SkIRect& b) noexcept {
+    SkIRect diff;
+    Subtract(a, b, &diff);
+    return diff;
   }
 };
 

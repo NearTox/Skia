@@ -21,7 +21,8 @@ class SymbolTable;
 struct SwitchStatement : public Statement {
   SwitchStatement(
       int offset, bool isStatic, std::unique_ptr<Expression> value,
-      std::vector<std::unique_ptr<SwitchCase>> cases, const std::shared_ptr<SymbolTable> symbols)
+      std::vector<std::unique_ptr<SwitchCase>> cases,
+      const std::shared_ptr<SymbolTable> symbols) noexcept
       : INHERITED(offset, kSwitch_Kind),
         fIsStatic(isStatic),
         fValue(std::move(value)),
@@ -37,7 +38,6 @@ struct SwitchStatement : public Statement {
         new SwitchStatement(fOffset, fIsStatic, fValue->clone(), std::move(cloned), fSymbols));
   }
 
-#ifdef SK_DEBUG
   String description() const override {
     String result;
     if (fIsStatic) {
@@ -50,7 +50,6 @@ struct SwitchStatement : public Statement {
     result += "}";
     return result;
   }
-#endif
 
   bool fIsStatic;
   std::unique_ptr<Expression> fValue;

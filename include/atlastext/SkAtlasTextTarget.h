@@ -42,40 +42,42 @@ class SK_API SkAtlasTextTarget {
   /** Issues all queued text draws to SkAtlasTextRenderer. */
   virtual void flush() = 0;
 
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
 
-  void* handle() const { return fHandle; }
+  void* handle() const noexcept { return fHandle; }
 
-  SkAtlasTextContext* context() const { return fContext.get(); }
+  SkAtlasTextContext* context() const noexcept { return fContext.get(); }
 
   /** Saves the current matrix in a stack. Returns the prior depth of the saved matrix stack. */
-  int save();
+  int save() noexcept;
   /** Pops the top matrix on the stack if the stack is not empty. */
-  void restore();
+  void restore() noexcept;
   /**
    * Pops the matrix stack until the stack depth is count. Does nothing if the depth is already
    * less than count.
    */
-  void restoreToCount(int count);
+  void restoreToCount(int count) noexcept;
 
   /** Pre-translates the current CTM. */
-  void translate(SkScalar dx, SkScalar dy);
+  void translate(SkScalar dx, SkScalar dy) noexcept;
   /** Pre-scales the current CTM. */
-  void scale(SkScalar sx, SkScalar sy);
+  void scale(SkScalar sx, SkScalar sy) noexcept;
   /** Pre-rotates the current CTM about the origin. */
-  void rotate(SkScalar degrees);
+  void rotate(SkScalar degrees) noexcept;
   /** Pre-rotates the current CTM about the (px, py). */
-  void rotate(SkScalar degrees, SkScalar px, SkScalar py);
+  void rotate(SkScalar degrees, SkScalar px, SkScalar py) noexcept;
   /** Pre-skews the current CTM. */
-  void skew(SkScalar sx, SkScalar sy);
+  void skew(SkScalar sx, SkScalar sy) noexcept;
   /** Pre-concats the current CTM. */
-  void concat(const SkMatrix& matrix);
+  void concat(const SkMatrix& matrix) noexcept;
 
  protected:
-  SkAtlasTextTarget(sk_sp<SkAtlasTextContext>, int width, int height, void* handle);
+  SkAtlasTextTarget(sk_sp<SkAtlasTextContext>, int width, int height, void* handle) noexcept;
 
-  const SkMatrix& ctm() const { return *static_cast<const SkMatrix*>(fMatrixStack.back()); }
+  const SkMatrix& ctm() const noexcept {
+    return *static_cast<const SkMatrix*>(fMatrixStack.back());
+  }
 
   void* const fHandle;
   const sk_sp<SkAtlasTextContext> fContext;
@@ -86,7 +88,7 @@ class SK_API SkAtlasTextTarget {
   SkDeque fMatrixStack;
   int fSaveCnt;
 
-  SkMatrix* accessCTM() const {
+  SkMatrix* accessCTM() const noexcept {
     return static_cast<SkMatrix*>(const_cast<void*>(fMatrixStack.back()));
   }
 

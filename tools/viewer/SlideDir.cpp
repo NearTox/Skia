@@ -373,7 +373,7 @@ bool SlideDir::onChar(SkUnichar c) {
 bool SlideDir::onMouse(
     SkScalar x, SkScalar y, skui::InputState state, skui::ModifierKey modifiers) {
   modifiers &= ~skui::ModifierKey::kFirstPress;
-  if (state == skui::InputState::kMove || skstd::Any(modifiers)) return false;
+  if (state == skui::InputState::kMove || sknonstd::Any(modifiers)) return false;
 
   if (fFocusController->hasFocus()) {
     return fFocusController->onMouse(x, y, state, modifiers);

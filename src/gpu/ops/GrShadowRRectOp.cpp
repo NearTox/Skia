@@ -533,13 +533,13 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* outputView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
     GrGeometryProcessor* gp = GrRRectShadowGeoProc::Make(arena, fFalloffView);
     SkASSERT(sizeof(CircleVertex) == gp->vertexStride());
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-        caps, arena, outputView, std::move(appliedClip), dstProxyView, gp,
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangles, GrPipeline::InputFlags::kNone,
         &GrUserStencilSettings::kUnused);
   }

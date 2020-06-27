@@ -63,8 +63,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_copy_const_SkPath
   */
-  SkPath(const SkPath& path);
-  SkPath(SkPath&& path) noexcept;
+  SkPath(const SkPath& path) noexcept;
 
   /** Releases ownership of any shared data and deletes data if SkPath is sole owner.
 
@@ -86,8 +85,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_copy_operator
   */
-  SkPath& operator=(const SkPath& path);
-  SkPath& operator=(SkPath&& path) noexcept;
+  SkPath& operator=(const SkPath& path) noexcept;
 
   /** Compares a and b; returns true if SkPath::FillType, verb array, SkPoint array, and weights
       are equivalent.
@@ -170,7 +168,7 @@ class SK_API SkPath {
   /** Returns the comvexity type, computing if needed. Never returns kUnknown.
       @return  path's convexity type (convex or concave)
   */
-  SkPathConvexityType getConvexityType() const {
+  SkPathConvexityType getConvexityType() const noexcept {
     SkPathConvexityType convexity = this->getConvexityTypeOrUnknown();
     if (convexity != SkPathConvexityType::kUnknown) {
       return convexity;
@@ -198,7 +196,9 @@ class SK_API SkPath {
 
   /** Returns true if the path is convex. If necessary, it will first compute the convexity.
    */
-  bool isConvex() const { return SkPathConvexityType::kConvex == this->getConvexityType(); }
+  bool isConvex() const noexcept {
+    return SkPathConvexityType::kConvex == this->getConvexityType();
+  }
 
   /** Returns true if this path is recognized as an oval or circle.
 
@@ -225,7 +225,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isRRect
   */
-  bool isRRect(SkRRect* rrect) const;
+  bool isRRect(SkRRect* rrect) const noexcept;
 
   /** Sets SkPath to its initial state.
       Removes verb array, SkPoint array, and weights, and sets FillType to kWinding.
@@ -495,7 +495,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_conservativelyContainsRect
   */
-  bool conservativelyContainsRect(const SkRect& rect) const;
+  bool conservativelyContainsRect(const SkRect& rect) const noexcept;
 
   /** Grows SkPath verb array and SkPoint array to contain extraPtCount additional SkPoint.
       May improve performance and use less memory by
@@ -982,7 +982,8 @@ class SK_API SkPath {
       @return      number of quad curves written to pts
   */
   static int ConvertConicToQuads(
-      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[], int pow2);
+      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[],
+      int pow2) noexcept;
 
   /** Returns true if SkPath is equivalent to SkRect when filled.
       If false: rect, isClosed, and direction are unchanged.
@@ -998,7 +999,8 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isRect
   */
-  bool isRect(SkRect* rect, bool* isClosed = nullptr, SkPathDirection* direction = nullptr) const noexcept;
+  bool isRect(
+      SkRect* rect, bool* isClosed = nullptr, SkPathDirection* direction = nullptr) const noexcept;
 
   /** Adds SkRect to SkPath, appending kMove_Verb, three kLine_Verb, and kClose_Verb,
       starting with top-left corner of SkRect; followed by top-right, bottom-right,
@@ -1364,7 +1366,7 @@ class SK_API SkPath {
     kConic_Verb = static_cast<int>(SkPathVerb::kConic),
     kCubic_Verb = static_cast<int>(SkPathVerb::kCubic),
     kClose_Verb = static_cast<int>(SkPathVerb::kClose),
-    kDone_Verb = static_cast<int>(SkPathVerb::kDone),
+    kDone_Verb = kClose_Verb + 1
   };
 
   /** \class SkPath::Iter
@@ -1382,7 +1384,7 @@ class SK_API SkPath {
 
     example: https://fiddle.skia.org/c/@Path_Iter_Iter
     */
-    Iter();
+    Iter() noexcept;
 
     /** Sets SkPath::Iter to return elements of verb array, SkPoint array, and conic weight in
         path. If forceClose is true, SkPath::Iter will add kLine_Verb and kClose_Verb after each
@@ -1473,9 +1475,78 @@ class SK_API SkPath {
     Verb autoClose(SkPoint pts[2]) noexcept;
   };
 
+ private:
+  /** \class SkPath::RangeIter
+      Iterates through a raw range of path verbs, points, and conics. All values are returned
+      unaltered.
+
+      NOTE: This class will be moved into SkPathPriv once RangeIter is removed.
+  */
+  class RangeIter {
+   public:
+    constexpr RangeIter() noexcept = default;
+    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights) noexcept
+        : fVerb(verbs), fPoints(points), fWeights(weights) {
+      SkDEBUGCODE(fInitialPoints = fPoints);
+    }
+    bool operator!=(const RangeIter& that) const noexcept { return fVerb != that.fVerb; }
+    bool operator==(const RangeIter& that) const noexcept { return fVerb == that.fVerb; }
+    RangeIter& operator++() noexcept {
+      auto verb = static_cast<SkPathVerb>(*fVerb++);
+      fPoints += pts_advance_after_verb(verb);
+      if (verb == SkPathVerb::kConic) {
+        ++fWeights;
+      }
+      return *this;
+    }
+    RangeIter operator++(int) noexcept {
+      RangeIter copy = *this;
+      this->operator++();
+      return copy;
+    }
+    SkPathVerb peekVerb() const noexcept { return static_cast<SkPathVerb>(*fVerb); }
+    std::tuple<SkPathVerb, const SkPoint*, const SkScalar*> operator*() const noexcept {
+      SkPathVerb verb = this->peekVerb();
+      // We provide the starting point for beziers by peeking backwards from the current
+      // point, which works fine as long as there is always a kMove before any geometry.
+      // (SkPath::injectMoveToIfNeeded should have guaranteed this to be the case.)
+      int backset = pts_backset_for_verb(verb);
+      SkASSERT(fPoints + backset >= fInitialPoints);
+      return {verb, fPoints + backset, fWeights};
+    }
+
+   private:
+    constexpr static int pts_advance_after_verb(SkPathVerb verb) noexcept {
+      switch (verb) {
+        case SkPathVerb::kMove: return 1;
+        case SkPathVerb::kLine: return 1;
+        case SkPathVerb::kQuad: return 2;
+        case SkPathVerb::kConic: return 2;
+        case SkPathVerb::kCubic: return 3;
+        case SkPathVerb::kClose: return 0;
+      }
+      SkUNREACHABLE;
+    }
+    constexpr static int pts_backset_for_verb(SkPathVerb verb) noexcept {
+      switch (verb) {
+        case SkPathVerb::kMove: return 0;
+        case SkPathVerb::kLine: return -1;
+        case SkPathVerb::kQuad: return -1;
+        case SkPathVerb::kConic: return -1;
+        case SkPathVerb::kCubic: return -1;
+        case SkPathVerb::kClose: return 0;
+      }
+      SkUNREACHABLE;
+    }
+    const uint8_t* fVerb = nullptr;
+    const SkPoint* fPoints = nullptr;
+    const SkScalar* fWeights = nullptr;
+    SkDEBUGCODE(const SkPoint* fInitialPoints = nullptr);
+  };
+
+ public:
   /** \class SkPath::RawIter
-      Iterates through verb array, and associated SkPoint array and conic weight.
-      verb array, SkPoint array, and conic weight are returned unaltered.
+      Use Iter instead. This class will soon be removed and RangeIter will be made private.
   */
   class SK_API RawIter {
    public:
@@ -1484,7 +1555,7 @@ class SK_API SkPath {
 
         @return  RawIter of empty SkPath
     */
-    RawIter() noexcept = default;
+    constexpr RawIter() noexcept = default;
 
     /** Sets RawIter to return elements of verb array, SkPoint array, and conic weight in path.
 
@@ -1498,7 +1569,7 @@ class SK_API SkPath {
 
         @param path  SkPath to iterate
     */
-    void setPath(const SkPath& path) noexcept { fRawIter.setPathRef(*path.fPathRef.get()); }
+    void setPath(const SkPath&) noexcept;
 
     /** Returns next SkPath::Verb in verb array, and advances RawIter.
         When verb array is exhausted, returns kDone_Verb.
@@ -1507,13 +1578,15 @@ class SK_API SkPath {
         @param pts  storage for SkPoint data describing returned SkPath::Verb
         @return     next SkPath::Verb from verb array
     */
-    Verb next(SkPoint pts[4]) noexcept { return (Verb)fRawIter.next(pts); }
+    Verb next(SkPoint[4]);
 
     /** Returns next SkPath::Verb, but does not advance RawIter.
 
         @return  next SkPath::Verb from verb array
     */
-    Verb peek() const noexcept { return (Verb)fRawIter.peek(); }
+    Verb peek() const noexcept {
+      return (fIter != fEnd) ? static_cast<Verb>(std::get<0>(*fIter)) : kDone_Verb;
+    }
 
     /** Returns conic weight if next() returned kConic_Verb.
 
@@ -1522,10 +1595,12 @@ class SK_API SkPath {
 
         @return  conic weight for conic SkPoint returned by next()
     */
-    SkScalar conicWeight() const noexcept { return fRawIter.conicWeight(); }
+    SkScalar conicWeight() const noexcept { return fConicWeight; }
 
    private:
-    SkPathRef::Iter fRawIter;
+    RangeIter fIter;
+    RangeIter fEnd;
+    SkScalar fConicWeight = 0;
     friend class SkPath;
   };
 
@@ -1538,7 +1613,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_contains
   */
-  bool contains(SkScalar x, SkScalar y) const noexcept;
+  bool contains(SkScalar x, SkScalar y) const;
 
   /** Writes text representation of SkPath to stream. If stream is nullptr, writes to
       standard output. Set forceClose to true to get edges used to fill SkPath.
@@ -1587,7 +1662,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_writeToMemory
   */
-  size_t writeToMemory(void* buffer) const;
+  size_t writeToMemory(void* buffer) const noexcept;
 
   /** Writes SkPath to buffer, returning the buffer written to, wrapped in SkData.
 
@@ -1641,7 +1716,7 @@ class SK_API SkPath {
 
       @return  true if SkPath data is consistent
   */
-  bool isValid() const { return this->isValidImpl() && fPathRef->isValid(); }
+  bool isValid() const noexcept { return this->isValidImpl() && fPathRef->isValid(); }
 
  private:
   sk_sp<SkPathRef> fPathRef;
@@ -1663,7 +1738,7 @@ class SK_API SkPath {
    */
   void copyFields(const SkPath& that) noexcept;
 
-  size_t writeToMemoryAsRRect(void* buffer) const;
+  size_t writeToMemoryAsRRect(void* buffer) const noexcept;
   size_t readAsRRect(const void*, size_t);
   size_t readFromMemory_EQ4Or5(const void*, size_t);
 
@@ -1687,7 +1762,7 @@ class SK_API SkPath {
 
   inline bool hasOnlyMoveTos() const noexcept;
 
-  SkPathConvexityType internalGetConvexity() const;
+  SkPathConvexityType internalGetConvexity() const noexcept;
 
   /** Asserts if SkPath data is inconsistent.
       Debugging check intended for internal use only.

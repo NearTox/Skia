@@ -43,21 +43,23 @@ SkMatrix TransformAdapter2D::totalMatrix() const {
   return t;
 }
 
-SkPoint TransformAdapter2D::getAnchorPoint() const { return {fAnchorPoint.x, fAnchorPoint.y}; }
+SkPoint TransformAdapter2D::getAnchorPoint() const noexcept {
+  return {fAnchorPoint.x, fAnchorPoint.y};
+}
 
 void TransformAdapter2D::setAnchorPoint(const SkPoint& ap) {
   fAnchorPoint = {ap.x(), ap.y()};
   this->onSync();
 }
 
-SkPoint TransformAdapter2D::getPosition() const { return {fPosition.x, fPosition.y}; }
+SkPoint TransformAdapter2D::getPosition() const noexcept { return {fPosition.x, fPosition.y}; }
 
 void TransformAdapter2D::setPosition(const SkPoint& p) {
   fPosition = {p.x(), p.y()};
   this->onSync();
 }
 
-SkVector TransformAdapter2D::getScale() const { return {fScale.x, fScale.y}; }
+SkVector TransformAdapter2D::getScale() const noexcept { return {fScale.x, fScale.y}; }
 
 void TransformAdapter2D::setScale(const SkVector& s) {
   fScale = {s.x(), s.y()};
@@ -101,7 +103,7 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix2D(
     }
     adapter->seek(0);
   } else {
-    fCurrentAnimatorScope->push_back(adapter);
+    fCurrentAnimatorScope->emplace_back(adapter);
   }
 
   return sksg::Transform::MakeConcat(std::move(parent), adapter->node());
@@ -126,20 +128,18 @@ TransformAdapter3D::~TransformAdapter3D() = default;
 
 void TransformAdapter3D::onSync() { this->node()->setMatrix(this->totalMatrix()); }
 
-SkV3 TransformAdapter3D::anchor_point() const {
-  return ValueTraits<VectorValue>::As<SkV3>(fAnchorPoint);
-}
+SkV3 TransformAdapter3D::anchor_point() const { return fAnchorPoint; }
 
-SkV3 TransformAdapter3D::position() const { return ValueTraits<VectorValue>::As<SkV3>(fPosition); }
+SkV3 TransformAdapter3D::position() const { return fPosition; }
 
 SkV3 TransformAdapter3D::rotation() const {
   // orientation and axis-wise rotation map onto the same property.
-  return ValueTraits<VectorValue>::As<SkV3>(fOrientation) + SkV3{fRx, fRy, fRz};
+  return static_cast<SkV3>(fOrientation) + SkV3{fRx, fRy, fRz};
 }
 
 SkM44 TransformAdapter3D::totalMatrix() const {
   const auto anchor_point = this->anchor_point(), position = this->position(),
-             scale = ValueTraits<VectorValue>::As<SkV3>(fScale), rotation = this->rotation();
+             scale = static_cast<SkV3>(fScale), rotation = this->rotation();
 
   return SkM44::Translate(position.x, position.y, position.z) *
          SkM44::Rotate({1, 0, 0}, SkDegreesToRadians(rotation.x)) *
@@ -162,7 +162,7 @@ sk_sp<sksg::Transform> AnimationBuilder::attachMatrix3D(
     }
     adapter->seek(0);
   } else {
-    fCurrentAnimatorScope->push_back(adapter);
+    fCurrentAnimatorScope->emplace_back(adapter);
   }
 
   return sksg::Transform::MakeConcat(std::move(parent), adapter->node());

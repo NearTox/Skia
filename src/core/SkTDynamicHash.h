@@ -19,7 +19,7 @@
 template <typename T, typename Key, typename Traits = T>
 class SkTDynamicHash {
  public:
-  SkTDynamicHash() {}
+  SkTDynamicHash() noexcept = default;
 
   // It is not safe to call set() or remove() while iterating with either foreach().
   // If you mutate the entries be very careful not to change the Key.
@@ -40,8 +40,8 @@ class SkTDynamicHash {
   void add(T* entry) { fTable.set(entry); }
   void remove(const Key& key) { fTable.remove(key); }
 
-  void rewind() noexcept { fTable.reset(); }
-  void reset() noexcept { fTable.reset(); }
+  void rewind() { fTable.reset(); }
+  void reset() { fTable.reset(); }
 
  private:
   struct AdaptedTraits {

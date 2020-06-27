@@ -36,24 +36,24 @@ class GrCCClipPath {
     SkASSERT(!fAtlasLazyProxy || fAtlasLazyProxy->unique());
   }
 
-  bool isInitialized() const { return fAtlasLazyProxy != nullptr; }
+  bool isInitialized() const noexcept { return fAtlasLazyProxy != nullptr; }
   void init(
-      const SkPath& deviceSpacePath, const SkIRect& accessRect,
-      GrCCAtlas::CoverageType atlasCoverageType, const GrCaps&);
+      const SkPath& deviceSpacePath, const SkIRect& desc, GrCCAtlas::CoverageType atlasCoverageType,
+      const GrCaps&);
 
-  void addAccess(const SkIRect& accessRect) {
+  void addAccess(const SkIRect& accessRect) noexcept {
     SkASSERT(this->isInitialized());
     fAccessRect.join(accessRect);
   }
-  GrTextureProxy* atlasLazyProxy() const {
+  GrTextureProxy* atlasLazyProxy() const noexcept {
     SkASSERT(this->isInitialized());
     return fAtlasLazyProxy.get();
   }
-  const SkPath& deviceSpacePath() const {
+  const SkPath& deviceSpacePath() const noexcept {
     SkASSERT(this->isInitialized());
     return fDeviceSpacePath;
   }
-  const SkIRect& pathDevIBounds() const {
+  const SkIRect& pathDevIBounds() const noexcept {
     SkASSERT(this->isInitialized());
     return fPathDevIBounds;
   }
@@ -61,11 +61,11 @@ class GrCCClipPath {
   void accountForOwnPath(GrCCPerFlushResourceSpecs*) const;
   void renderPathInAtlas(GrCCPerFlushResources*, GrOnFlushResourceProvider*);
 
-  const SkVector& atlasScale() const {
+  const SkVector& atlasScale() const noexcept {
     SkASSERT(fHasAtlasTransform);
     return fAtlasScale;
   }
-  const SkVector& atlasTranslate() const {
+  const SkVector& atlasTranslate() const noexcept {
     SkASSERT(fHasAtlasTransform);
     return fAtlasTranslate;
   }
@@ -78,11 +78,11 @@ class GrCCClipPath {
 
   const GrCCAtlas* fAtlas = nullptr;
   SkIVector fDevToAtlasOffset;  // Translation from device space to location in atlas.
-  SkDEBUGCODE(bool fHasAtlas = false;)
+  SkDEBUGCODE(bool fHasAtlas = false);
 
-      SkVector fAtlasScale;
+  SkVector fAtlasScale;
   SkVector fAtlasTranslate;
-  SkDEBUGCODE(bool fHasAtlasTransform = false;)
+  SkDEBUGCODE(bool fHasAtlasTransform = false);
 };
 
 #endif

@@ -25,8 +25,8 @@ class GrTextureResolveRenderTask;
 // contents. (e.g., an opsTask that executes a command buffer, a task to regenerate mipmaps, etc.)
 class GrRenderTask : public SkRefCnt {
  public:
-  GrRenderTask();
-  GrRenderTask(GrSurfaceProxyView);
+  GrRenderTask() noexcept;
+  GrRenderTask(GrSurfaceProxyView) noexcept;
   ~GrRenderTask() override;
 
   void makeClosed(const GrCaps&);
@@ -66,13 +66,14 @@ class GrRenderTask : public SkRefCnt {
   /*
    * Safely cast this GrRenderTask to a GrOpsTask (if possible).
    */
-  virtual GrOpsTask* asOpsTask() { return nullptr; }
+  virtual GrOpsTask* asOpsTask() noexcept { return nullptr; }
 
 #ifdef SK_DEBUG
   /*
    * Dump out the GrRenderTask dependency DAG
    */
   virtual void dump(bool printDependencies) const;
+  virtual const char* name() const = 0;
 
   virtual int numClips() const { return 0; }
 
@@ -89,14 +90,14 @@ class GrRenderTask : public SkRefCnt {
  protected:
   // In addition to just the GrSurface being allocated, has the stencil buffer been allocated (if
   // it is required)?
-  bool isInstantiated() const;
+  bool isInstantiated() const noexcept;
 
-  SkDEBUGCODE(bool deferredProxiesAreInstantiated() const;)
+  SkDEBUGCODE(bool deferredProxiesAreInstantiated() const);
 
-      enum class ExpectedOutcome : bool {
-        kTargetUnchanged,
-        kTargetDirty,
-      };
+  enum class ExpectedOutcome : bool {
+    kTargetUnchanged,
+    kTargetDirty,
+  };
 
   // Performs any work to finalize this renderTask prior to execution. If returning
   // ExpectedOutcome::kTargetDiry, the caller is also responsible to fill out the area it will
@@ -140,7 +141,7 @@ class GrRenderTask : public SkRefCnt {
   // Feed proxy usage intervals to the GrResourceAllocator class
   virtual void gatherProxyIntervals(GrResourceAllocator*) const = 0;
 
-  static uint32_t CreateUniqueID();
+  static uint32_t CreateUniqueID() noexcept;
 
   enum Flags {
     kClosed_Flag = 0x01,  //!< This GrRenderTask can't accept any more dependencies.

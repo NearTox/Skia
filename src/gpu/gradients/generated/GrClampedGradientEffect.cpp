@@ -32,9 +32,9 @@ class GrGLSLClampedGradientEffect : public GrGLSLFragmentProcessor {
     auto colorsAreOpaque = _outer.colorsAreOpaque;
     (void)colorsAreOpaque;
     leftBorderColorVar = args.fUniformHandler->addUniform(
-        kFragment_GrShaderFlag, kHalf4_GrSLType, "leftBorderColor");
+        &_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "leftBorderColor");
     rightBorderColorVar = args.fUniformHandler->addUniform(
-        kFragment_GrShaderFlag, kHalf4_GrSLType, "rightBorderColor");
+        &_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "rightBorderColor");
     SkString _sample1099;
     _sample1099 = this->invokeChild(_outer.gradLayout_index, args);
     fragBuilder->codeAppendf(
@@ -82,7 +82,7 @@ void GrClampedGradientEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((int32_t)makePremul);
 }
-bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const {
+bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrClampedGradientEffect& that = other.cast<GrClampedGradientEffect>();
   (void)that;
   if (leftBorderColor != that.leftBorderColor) return false;
@@ -101,14 +101,16 @@ GrClampedGradientEffect::GrClampedGradientEffect(const GrClampedGradientEffect& 
       colorsAreOpaque(src.colorsAreOpaque) {
   {
     auto clone = src.childProcessor(colorizer_index).clone();
-    clone->setSampledWithExplicitCoords(
-        src.childProcessor(colorizer_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(colorizer_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
   {
     auto clone = src.childProcessor(gradLayout_index).clone();
-    clone->setSampledWithExplicitCoords(
-        src.childProcessor(gradLayout_index).isSampledWithExplicitCoords());
+    if (src.childProcessor(gradLayout_index).isSampledWithExplicitCoords()) {
+      clone->setSampledWithExplicitCoords();
+    }
     this->registerChildProcessor(std::move(clone));
   }
 }

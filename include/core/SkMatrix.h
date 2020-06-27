@@ -500,7 +500,7 @@ class SK_API SkMatrix {
       @param persp1  input y-axis values perspective factor to store
       @param persp2  perspective scale factor to store
   */
-  constexpr SkMatrix& setAll(
+  SkMatrix& setAll(
       SkScalar scaleX, SkScalar skewX, SkScalar transX, SkScalar skewY, SkScalar scaleY,
       SkScalar transY, SkScalar persp0, SkScalar persp1, SkScalar persp2) noexcept {
     fMat[kMScaleX] = scaleX;
@@ -1138,7 +1138,7 @@ class SK_API SkMatrix {
 
       example: https://fiddle.skia.org/c/@Matrix_setPolyToPoly
   */
-  bool setPolyToPoly(const SkPoint src[], const SkPoint dst[], int count) noexcept;
+  bool setPolyToPoly(const SkPoint src[], const SkPoint dst[], int count);
 
   /** Sets inverse to reciprocal matrix, returning true if SkMatrix can be inverted.
       Geometrically, if SkMatrix maps from source to destination, inverse SkMatrix
@@ -1673,7 +1673,7 @@ class SK_API SkMatrix {
   /** Sets internal cache to unknown state. Use to force update after repeated
       modifications to SkMatrix element reference returned by operator[](int index).
   */
-  constexpr void dirtyMatrixTypeCache() noexcept { this->setTypeMask(kUnknown_Mask); }
+  void dirtyMatrixTypeCache() noexcept { this->setTypeMask(kUnknown_Mask); }
 
   /** Initializes SkMatrix with scale and translate elements.
 
@@ -1686,7 +1686,7 @@ class SK_API SkMatrix {
       @param tx  horizontal translation to store
       @param ty  vertical translation to store
   */
-  constexpr void setScaleTranslate(SkScalar sx, SkScalar sy, SkScalar tx, SkScalar ty) noexcept {
+  void setScaleTranslate(SkScalar sx, SkScalar sy, SkScalar tx, SkScalar ty) noexcept {
     fMat[kMScaleX] = sx;
     fMat[kMSkewX] = 0;
     fMat[kMTransX] = tx;
@@ -1761,12 +1761,12 @@ class SK_API SkMatrix {
     fTypeMask = SkToU8(mask);
   }
 
-  void orTypeMask(int mask) noexcept {
+  constexpr void orTypeMask(int mask) noexcept {
     SkASSERT((mask & kORableMasks) == mask);
     fTypeMask = SkToU8(fTypeMask | mask);
   }
 
-  void clearTypeMask(int mask) noexcept {
+  constexpr void clearTypeMask(int mask) noexcept {
     // only allow a valid mask
     SkASSERT((mask & kAllMasks) == mask);
     fTypeMask = fTypeMask & ~mask;
@@ -1782,14 +1782,14 @@ class SK_API SkMatrix {
   /** Returns true if we already know that the matrix is identity;
       false otherwise.
   */
-  bool isTriviallyIdentity() const noexcept {
+  constexpr bool isTriviallyIdentity() const noexcept {
     if (fTypeMask & kUnknown_Mask) {
       return false;
     }
     return ((fTypeMask & 0xF) == 0);
   }
 
-  inline void updateTranslateMask() noexcept {
+  inline constexpr void updateTranslateMask() noexcept {
     if ((fMat[kMTransX] != 0) | (fMat[kMTransY] != 0)) {
       fTypeMask |= kTranslate_Mask;
     } else {
@@ -1834,7 +1834,7 @@ class SK_API SkMatrix {
   static void Identity_pts(const SkMatrix&, SkPoint[], const SkPoint[], int) noexcept;
   static void Trans_pts(const SkMatrix&, SkPoint dst[], const SkPoint[], int) noexcept;
   static void Scale_pts(const SkMatrix&, SkPoint dst[], const SkPoint[], int) noexcept;
-  static void ScaleTrans_pts(const SkMatrix&, SkPoint dst[], const SkPoint[], int count);
+  static void ScaleTrans_pts(const SkMatrix&, SkPoint dst[], const SkPoint[], int count) noexcept;
   static void Persp_pts(const SkMatrix&, SkPoint dst[], const SkPoint[], int) noexcept;
 
   static void Affine_vpts(const SkMatrix&, SkPoint dst[], const SkPoint[], int) noexcept;

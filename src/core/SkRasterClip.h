@@ -19,7 +19,7 @@ class SkConservativeClip {
   SkIRect fBounds;
   const SkIRect* fClipRestrictionRect;
 
-  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) {
+  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) noexcept {
     if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
       if (!bounds->intersect(*fClipRestrictionRect)) {
         bounds->setEmpty();
@@ -31,7 +31,7 @@ class SkConservativeClip {
   constexpr SkConservativeClip() noexcept
       : fBounds(SkIRect::MakeEmpty()), fClipRestrictionRect(nullptr) {}
 
-  bool isEmpty() const { return fBounds.isEmpty(); }
+  bool isEmpty() const noexcept { return fBounds.isEmpty(); }
   bool isRect() const noexcept { return true; }
   const SkIRect& getBounds() const noexcept { return fBounds; }
 
@@ -144,9 +144,9 @@ class SkRasterClip {
   // if present, this augments the clip, not replaces it
   sk_sp<SkShader> fShader;
 
-  bool computeIsEmpty() const { return fIsBW ? fBW.isEmpty() : fAA.isEmpty(); }
+  bool computeIsEmpty() const noexcept { return fIsBW ? fBW.isEmpty() : fAA.isEmpty(); }
 
-  bool computeIsRect() const { return fIsBW ? fBW.isRect() : fAA.isRect(); }
+  bool computeIsRect() const noexcept { return fIsBW ? fBW.isRect() : fAA.isRect(); }
 
   bool updateCacheAndReturnNonEmpty(bool detectAARect = true) {
     fIsEmpty = this->computeIsEmpty();
@@ -169,7 +169,7 @@ class SkRasterClip {
   bool op(const SkRasterClip&, SkRegion::Op);
   bool setConservativeRect(const SkRect& r, const SkIRect& clipR, bool isInverse);
 
-  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) {
+  inline void applyClipRestriction(SkRegion::Op op, SkIRect* bounds) noexcept {
     if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
       if (!bounds->intersect(*fClipRestrictionRect)) {
         bounds->setEmpty();
@@ -177,7 +177,7 @@ class SkRasterClip {
     }
   }
 
-  inline void applyClipRestriction(SkRegion::Op op, SkRect* bounds) {
+  inline void applyClipRestriction(SkRegion::Op op, SkRect* bounds) noexcept {
     if (op >= SkRegion::kUnion_Op && fClipRestrictionRect && !fClipRestrictionRect->isEmpty()) {
       if (!bounds->intersect(SkRect::Make(*fClipRestrictionRect))) {
         bounds->setEmpty();

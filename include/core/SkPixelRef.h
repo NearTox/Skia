@@ -32,7 +32,7 @@ class SkDiscardableMemory;
 */
 class SK_API SkPixelRef : public SkRefCnt {
  public:
-  SkPixelRef(int width, int height, void* addr, size_t rowBytes);
+  SkPixelRef(int width, int height, void* addr, size_t rowBytes) noexcept;
   ~SkPixelRef() override;
 
   SkISize dimensions() const noexcept { return {fWidth, fHeight}; }
@@ -114,7 +114,7 @@ class SK_API SkPixelRef : public SkRefCnt {
   friend class SkSurface_Raster;  // For the two methods above.
 
   void setImmutableWithID(uint32_t genID) noexcept;
-  friend void SkBitmapCache_setImmutableWithID(SkPixelRef*, uint32_t);
+  friend void SkBitmapCache_setImmutableWithID(SkPixelRef*, uint32_t) noexcept;
 
   typedef SkRefCnt INHERITED;
 };

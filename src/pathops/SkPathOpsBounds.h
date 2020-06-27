@@ -12,7 +12,7 @@
 
 // SkPathOpsBounds, unlike SkRect, does not consider a line to be empty.
 struct SkPathOpsBounds : public SkRect {
-  static bool Intersects(const SkPathOpsBounds& a, const SkPathOpsBounds& b) {
+  static bool Intersects(const SkPathOpsBounds& a, const SkPathOpsBounds& b) noexcept {
     return AlmostLessOrEqualUlps(a.fLeft, b.fRight) && AlmostLessOrEqualUlps(b.fLeft, a.fRight) &&
            AlmostLessOrEqualUlps(a.fTop, b.fBottom) && AlmostLessOrEqualUlps(b.fTop, a.fBottom);
   }
@@ -27,7 +27,7 @@ struct SkPathOpsBounds : public SkRect {
     if (bottom > fBottom) fBottom = bottom;
   }
 
-  void add(const SkPathOpsBounds& toAdd) {
+  void add(const SkPathOpsBounds& toAdd) noexcept {
     add(toAdd.fLeft, toAdd.fTop, toAdd.fRight, toAdd.fBottom);
   }
 
@@ -45,7 +45,7 @@ struct SkPathOpsBounds : public SkRect {
     if (pt.fY > fBottom) fBottom = SkDoubleToScalar(pt.fY);
   }
 
-  bool almostContains(const SkPoint& pt) const {
+  bool almostContains(const SkPoint& pt) const noexcept {
     return AlmostLessOrEqualUlps(fLeft, pt.fX) && AlmostLessOrEqualUlps(pt.fX, fRight) &&
            AlmostLessOrEqualUlps(fTop, pt.fY) && AlmostLessOrEqualUlps(pt.fY, fBottom);
   }

@@ -109,7 +109,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    *  Readable string representing the error code.
    */
-  static const char* ResultToString(Result);
+  static const char* ResultToString(Result) noexcept;
 
   /**
    * For container formats that contain both still images and image sequences,
@@ -591,7 +591,7 @@ class SK_API SkCodec : SkNoncopyable {
    *
    *  This is undefined before startScanlineDecode() is called.
    */
-  SkScanlineOrder getScanlineOrder() const noexcept { return this->onGetScanlineOrder(); }
+  SkScanlineOrder getScanlineOrder() const { return this->onGetScanlineOrder(); }
 
   /**
    *  Returns the y-coordinate of the next row to be returned by the scanline
@@ -800,7 +800,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    *  Most images types will be kTopDown and will not need to override this function.
    */
-  virtual SkScanlineOrder onGetScanlineOrder() const noexcept { return kTopDown_SkScanlineOrder; }
+  virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
 
   const SkImageInfo& dstInfo() const noexcept { return fDstInfo; }
 

@@ -30,13 +30,12 @@ class SkInternalAtlasTextContext : public GrDeferredUploadTarget {
 
   ~SkInternalAtlasTextContext() override;
 
-  SkAtlasTextRenderer* renderer() const { return fRenderer.get(); }
+  SkAtlasTextRenderer* renderer() const noexcept { return fRenderer.get(); }
 
-  GrContext* grContext() const { return fGrContext.get(); }
-  GrStrikeCache* glyphCache();
-  GrTextBlobCache* textBlobCache();
+  GrContext* grContext() const noexcept { return fGrContext.get(); }
+  GrTextBlobCache* textBlobCache() noexcept;
 
-  const GrTokenTracker* tokenTracker() final { return &fTokenTracker; }
+  const GrTokenTracker* tokenTracker() noexcept final { return &fTokenTracker; }
   GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) final;
   GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
 

@@ -76,7 +76,9 @@ class ArithmeticImageFilterImpl final : public SkImageFilter_Base {
   friend void SkArithmeticImageFilter::RegisterFlattenables();
   SK_FLATTENABLE_HOOKS(ArithmeticImageFilterImpl)
 
-  bool affectsTransparentBlack() const override { return !SkScalarNearlyZero(fInputs.fK[3]); }
+  bool affectsTransparentBlack() const noexcept override {
+    return !SkScalarNearlyZero(fInputs.fK[3]);
+  }
 
   ArithmeticFPInputs fInputs;
 

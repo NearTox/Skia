@@ -9,13 +9,13 @@
 #define GrContextPriv_DEFINED
 
 #include "include/gpu/GrContext.h"
-#include "src/gpu/GrSurfaceContext.h"
-#include "src/gpu/text/GrAtlasManager.h"
 
+class GrAtlasManager;
 class GrBackendFormat;
 class GrBackendRenderTarget;
 class GrOpMemoryPool;
 class GrOnFlushCallbackObject;
+class GrRenderTargetProxy;
 class GrSemaphore;
 class GrSurfaceProxy;
 
@@ -38,7 +38,7 @@ class GrContextPriv {
   sk_sp<const GrCaps> refCaps() const;
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
-  GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
+  GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
   GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   // from GrImageContext
@@ -51,14 +51,14 @@ class GrContextPriv {
   SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
 
   // from GrRecordingContext
-  GrDrawingManager* drawingManager() { return fContext->drawingManager(); }
+  GrDrawingManager* drawingManager() noexcept { return fContext->drawingManager(); }
 
   GrOpMemoryPool* opMemoryPool() { return fContext->arenas().opMemoryPool(); }
   SkArenaAlloc* recordTimeAllocator() { return fContext->arenas().recordTimeAllocator(); }
   GrRecordingContext::Arenas arenas() { return fContext->arenas(); }
 
-  GrStrikeCache* getGrStrikeCache() noexcept { return fContext->getGrStrikeCache(); }
-  GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
+  GrStrikeCache* getGrStrikeCache() noexcept { return fContext->fStrikeCache.get(); }
+  GrTextBlobCache* getTextBlobCache() noexcept { return fContext->getTextBlobCache(); }
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -122,7 +122,7 @@ class GrContextPriv {
   void moveRenderTasksToDDL(SkDeferredDisplayList*);
   void copyRenderTasksFromDDL(const SkDeferredDisplayList*, GrRenderTargetProxy* newDest);
 
-  void compile(const GrProgramDesc&, const GrProgramInfo&);
+  bool compile(const GrProgramDesc&, const GrProgramInfo&);
 
   GrContextOptions::PersistentCache* getPersistentCache() noexcept {
     return fContext->fPersistentCache;
@@ -148,6 +148,12 @@ class GrContextPriv {
   void dumpGpuStats(SkString*) const;
   void dumpGpuStatsKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values) const;
   void printGpuStats() const;
+
+  /** These are only active if GR_GPU_STATS == 1. */
+  void resetContextStats() const;
+  void dumpContextStats(SkString*) const;
+  void dumpContextStatsKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values) const;
+  void printContextStats() const;
 
   /** Specify the TextBlob cache limit. If the current cache exceeds this limit it will purge.
       this is for testing only */
