@@ -223,7 +223,7 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
   // Memory for objects of this class is created with sk_malloc rather than operator new and must
   // be freed with sk_free.
-  void operator delete(void* p);
+  void operator delete(void* p) noexcept;
   void* operator new(size_t);
   void* operator new(size_t, void* p);
 

@@ -205,7 +205,7 @@ class BackdropView : public Sample {
 
     SkPaint paint;
     paint.setAlpha(0xCC);
-    canvas->saveLayer({&bounds, &paint, fFilter.get(), nullptr, nullptr, 0});
+    canvas->saveLayer(SkCanvas::SaveLayerRec(&bounds, &paint, fFilter.get(), 0));
 
     canvas->restore();
   }

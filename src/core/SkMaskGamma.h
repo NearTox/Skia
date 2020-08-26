@@ -99,7 +99,8 @@ class SkTMaskGamma : public SkRefCnt {
    * @param paint The color space in which the paint color was chosen.
    * @param device The color space of the target device.
    */
-  SkTMaskGamma(SkScalar contrast, SkScalar paintGamma, SkScalar deviceGamma) : fIsLinear(false) {
+  SkTMaskGamma(SkScalar contrast, SkScalar paintGamma, SkScalar deviceGamma) noexcept
+      : fIsLinear(false) {
     const SkColorSpaceLuminance& paintConvert = SkColorSpaceLuminance::Fetch(paintGamma);
     const SkColorSpaceLuminance& deviceConvert = SkColorSpaceLuminance::Fetch(deviceGamma);
     for (U8CPU i = 0; i < (1 << MAX_LUM_BITS); ++i) {
@@ -110,7 +111,7 @@ class SkTMaskGamma : public SkRefCnt {
   }
 
   /** Given a color, returns the closest canonical color. */
-  static SkColor CanonicalColor(SkColor color) {
+  static SkColor CanonicalColor(SkColor color) noexcept {
     return SkColorSetRGB(
         sk_t_scale255<R_LUM_BITS>(SkColorGetR(color) >> (8 - R_LUM_BITS)),
         sk_t_scale255<G_LUM_BITS>(SkColorGetG(color) >> (8 - G_LUM_BITS)),
@@ -125,12 +126,12 @@ class SkTMaskGamma : public SkRefCnt {
    * values into gamma correcting alpha values when drawing the given color
    * through the mask. The destination color will be approximated.
    */
-  PreBlend preBlend(SkColor color) const;
+  PreBlend preBlend(SkColor color) const noexcept;
 
   /**
    * Get dimensions for the full table set, so it can be allocated as a block.
    */
-  void getGammaTableDimensions(int* tableWidth, int* numTables) const {
+  void getGammaTableDimensions(int* tableWidth, int* numTables) const noexcept {
     *tableWidth = 256;
     *numTables = (1 << MAX_LUM_BITS);
   }
@@ -140,7 +141,7 @@ class SkTMaskGamma : public SkRefCnt {
    * into a texture or analyzed in other ways.
    * Returns nullptr if fGammaTables hasn't been initialized.
    */
-  const uint8_t* getGammaTables() const {
+  const uint8_t* getGammaTables() const noexcept {
     return fIsLinear ? nullptr : (const uint8_t*)fGammaTables;
   }
 
@@ -182,7 +183,7 @@ class SkTMaskPreBlend {
    * This copy contructor exists for correctness, but should never be called
    * when return value optimization is enabled.
    */
-  SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that)
+  SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that) noexcept
       : fParent(that.fParent), fR(that.fR), fG(that.fG), fB(that.fB) {}
 
   ~SkTMaskPreBlend() = default;
@@ -197,7 +198,7 @@ class SkTMaskPreBlend {
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
 SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>
-SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const {
+SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const noexcept {
   return fIsLinear ? SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>()
                    : SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>(
                          sk_ref_sp(this), fGammaTables[SkColorGetR(color) >> (8 - MAX_LUM_BITS)],

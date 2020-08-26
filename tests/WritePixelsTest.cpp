@@ -121,10 +121,8 @@ static SkPMColor convert_to_PMColor(SkColorType ct, SkAlphaType at, uint32_t col
     color = premul(color);
   }
   switch (ct) {
-    case kRGBA_8888_SkColorType:
-    case kRGB_888x_SkColorType:  // fallthrough
-      color = SkSwizzle_RGBA_to_PMColor(color);
-      break;
+    case kRGBA_8888_SkColorType:  // fallthrough
+    case kRGB_888x_SkColorType: color = SkSwizzle_RGBA_to_PMColor(color); break;
     case kBGRA_8888_SkColorType: color = SkSwizzle_BGRA_to_PMColor(color); break;
     default: SkASSERT(0); break;
   }
@@ -426,6 +424,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(WritePixelsMSAA_Gpu, reporter, ctxInfo) {
 
 static void test_write_pixels_non_texture(
     skiatest::Reporter* reporter, GrContext* context, int sampleCnt) {
+  // Dawn currently doesn't support writePixels to a texture-as-render-target.
+  // See http://skbug.com/10336.
+  if (GrBackendApi::kDawn == context->backend()) {
+    return;
+  }
   for (auto& origin : {kTopLeft_GrSurfaceOrigin, kBottomLeft_GrSurfaceOrigin}) {
     GrBackendTexture backendTex;
     CreateBackendTexture(
@@ -458,7 +461,7 @@ static sk_sp<SkSurface> create_surf(GrContext* context, int width, int height) {
       SkImageInfo::Make(width, height, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
 
   sk_sp<SkSurface> surf = SkSurface::MakeRenderTarget(context, SkBudgeted::kYes, ii);
-  surf->flush();
+  surf->flushAndSubmit();
   return surf;
 }
 

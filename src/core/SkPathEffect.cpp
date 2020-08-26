@@ -93,7 +93,7 @@ class SkComposePathEffect : public SkPairPathEffect {
   }
 
  protected:
-  SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
+  SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner) noexcept
       : INHERITED(outer, inner) {}
 
   bool onFilterPath(
@@ -151,7 +151,7 @@ class SkSumPathEffect : public SkPairPathEffect {
   SK_FLATTENABLE_HOOKS(SkSumPathEffect)
 
  protected:
-  SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
+  SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second) noexcept
       : INHERITED(first, second) {}
 
   bool onFilterPath(

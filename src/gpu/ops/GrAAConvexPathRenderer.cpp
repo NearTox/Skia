@@ -63,7 +63,7 @@ struct Segment {
 
 typedef SkTArray<Segment, true> SegmentArray;
 
-static bool center_of_mass(const SegmentArray& segments, SkPoint* c) noexcept {
+static bool center_of_mass(const SegmentArray& segments, SkPoint* c) {
   SkScalar area = 0;
   SkPoint center = {0, 0};
   int count = segments.count();
@@ -115,7 +115,7 @@ static bool center_of_mass(const SegmentArray& segments, SkPoint* c) noexcept {
 
 static bool compute_vectors(
     SegmentArray* segments, SkPoint* fanPt, SkPathPriv::FirstDirection dir, int* vCount,
-    int* iCount) noexcept {
+    int* iCount) {
   if (!center_of_mass(*segments, fanPt)) {
     return false;
   }
@@ -205,6 +205,7 @@ static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) 
       if (SkScalarAbs(data->fLineNormal.dot(pt) + data->fLineC) > kClose) {
         data->fStage = DegenerateTestData::kNonDegenerate;
       }
+      break;
     case DegenerateTestData::kNonDegenerate: break;
     default: SK_ABORT("Unexpected degenerate test stage.");
   }
@@ -237,7 +238,7 @@ static inline void add_line_to_segment(const SkPoint& pt, SegmentArray* segments
   segments->back().fPts[0] = pt;
 }
 
-static inline void add_quad_segment(const SkPoint pts[3], SegmentArray* segments) noexcept {
+static inline void add_quad_segment(const SkPoint pts[3], SegmentArray* segments) {
   if (SkPointPriv::DistanceToLineSegmentBetweenSqd(pts[1], pts[0], pts[2]) < kCloseSqd) {
     if (pts[0] != pts[2]) {
       add_line_to_segment(pts[2], segments);
@@ -513,13 +514,13 @@ class QuadEdgeEffect : public GrGeometryProcessor {
     return arena->make<QuadEdgeEffect>(localMatrix, usesLocalCoords, wideColor);
   }
 
-  ~QuadEdgeEffect() override = default;
+  ~QuadEdgeEffect() override {}
 
   const char* name() const noexcept override { return "QuadEdge"; }
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
-    GLSLProcessor() noexcept = default;
+    GLSLProcessor() {}
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const QuadEdgeEffect& qe = args.fGP.cast<QuadEdgeEffect>();
@@ -541,11 +542,11 @@ class QuadEdgeEffect : public GrGeometryProcessor {
 
       // Setup position
       this->writeOutputPosition(vertBuilder, gpArgs, qe.fInPosition.name());
-
-      // emit transforms
-      this->emitTransforms(
-          vertBuilder, varyingHandler, uniformHandler, qe.fInPosition.asShaderVar(),
-          qe.fLocalMatrix, args.fFPCoordTransformHandler);
+      if (qe.fUsesLocalCoords) {
+        this->writeLocalCoord(
+            vertBuilder, uniformHandler, gpArgs, qe.fInPosition.asShaderVar(), qe.fLocalMatrix,
+            &fLocalMatrixUniform);
+      }
 
       fragBuilder->codeAppendf("half edgeAlpha;");
 
@@ -571,18 +572,24 @@ class QuadEdgeEffect : public GrGeometryProcessor {
     static inline void GenKey(
         const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
       const QuadEdgeEffect& qee = gp.cast<QuadEdgeEffect>();
-      b->add32(SkToBool(qee.fUsesLocalCoords && qee.fLocalMatrix.hasPerspective()));
+      uint32_t key = (uint32_t)qee.fUsesLocalCoords;
+      key |= ComputeMatrixKey(qee.fLocalMatrix) << 1;
+      b->add32(key);
     }
 
     void setData(
         const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
         const CoordTransformRange& transformRange) override {
       const QuadEdgeEffect& qe = gp.cast<QuadEdgeEffect>();
-      this->setTransformDataHelper(qe.fLocalMatrix, pdman, transformRange);
+      this->setTransformDataHelper(pdman, transformRange);
+      this->setTransform(pdman, fLocalMatrixUniform, qe.fLocalMatrix, &fLocalMatrix);
     }
 
    private:
     typedef GrGLSLGeometryProcessor INHERITED;
+
+    SkMatrix fLocalMatrix = SkMatrix::InvalidMatrix();
+    UniformHandle fLocalMatrixUniform;
   };
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
@@ -596,7 +603,7 @@ class QuadEdgeEffect : public GrGeometryProcessor {
  private:
   friend class ::SkArenaAlloc;  // for access to ctor
 
-  QuadEdgeEffect(const SkMatrix& localMatrix, bool usesLocalCoords, bool wideColor)
+  QuadEdgeEffect(const SkMatrix& localMatrix, bool usesLocalCoords, bool wideColor) noexcept
       : INHERITED(kQuadEdgeEffect_ClassID),
         fLocalMatrix(localMatrix),
         fUsesLocalCoords(usesLocalCoords) {
@@ -868,7 +875,7 @@ bool GrAAConvexPathRenderer::onDrawPath(const DrawPathArgs& args) {
 
   std::unique_ptr<GrDrawOp> op = AAConvexPathOp::Make(
       args.fContext, std::move(args.fPaint), *args.fViewMatrix, path, args.fUserStencilSettings);
-  args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
+  args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));
   return true;
 }
 

@@ -260,7 +260,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\wgl\PbufferSurfaceWGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\wgl\WindowSurfaceWGL.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\gl\wgl\wgl_utils.cpp" />
-    <ClCompile Include="angle2\src\third_party\systeminfo\SystemInfo.cpp" />
     <ClCompile Include="angle2\src\common\system_utils_win.cpp" />
     <ClCompile Include="..\angle2\debug2.cpp" />
     <ClCompile Include="..\angle2\compiler2.cpp" />
@@ -402,5 +401,8 @@
     <ClCompile Include="angle2\src\compiler\translator\tree_ops\EarlyFragmentTestsOptimization.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceClipDistanceVariable.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\ProgramPipelineImpl.cpp" />
+    <ClCompile Include="angle2\src\gpu_info_util\SystemInfo.cpp" />
+    <ClCompile Include="angle2\src\gpu_info_util\SystemInfo_win.cpp" />
+    <ClCompile Include="..\angle2\SystemInfo2.cpp" />
   </ItemGroup>
 </Project>

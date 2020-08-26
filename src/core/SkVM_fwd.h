@@ -16,6 +16,7 @@ struct Arg;
 struct I32;
 struct F32;
 struct Color;
+struct Coord;
 struct Uniforms;
 }  // namespace skvm
 

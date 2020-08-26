@@ -58,7 +58,7 @@ class GrGLSLGeometryBuilder : public GrGLSLVertexGeoBuilder {
   enum class OutputType { kPoints, kLineStrip, kTriangleStrip };
 
   void configure(InputType, OutputType, int maxVertices, int numInvocations = 1);
-  bool isConfigured() const noexcept { return fNumInvocations; }
+  bool isConfigured() const { return fNumInvocations; }
 
   void emitVertex(
       const char* devPos, const char* rtAdjustName,

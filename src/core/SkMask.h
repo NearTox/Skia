@@ -20,7 +20,7 @@
     the 3-channel 3D format. These are passed to SkMaskFilter objects.
 */
 struct SkMask {
-  SkMask() : fImage(nullptr) {}
+  SkMask() noexcept : fImage(nullptr) {}
 
   enum Format {
     kBW_Format,      //!< 1bit per pixel mask (e.g. monochrome)
@@ -50,13 +50,13 @@ struct SkMask {
       Does not account for k3D_Format. For that, use computeTotalImageSize().
       If there is an overflow of 32bits, then returns 0.
   */
-  size_t computeImageSize() const noexcept;
+  size_t computeImageSize() const;
 
   /** Return the byte size of the mask, taking into account
       any extra planes (e.g. k3D_Format).
       If there is an overflow of 32bits, then returns 0.
   */
-  size_t computeTotalImageSize() const noexcept;
+  size_t computeTotalImageSize() const;
 
   /** Returns the address of the byte that holds the specified bit.
       Asserts that the mask is kBW_Format, and that x,y are in range.
@@ -124,8 +124,8 @@ struct SkMask {
     kUninit_Alloc,
     kZeroInit_Alloc,
   };
-  static uint8_t* AllocImage(size_t bytes, AllocType = kUninit_Alloc) noexcept;
-  static void FreeImage(void* image) noexcept;
+  static uint8_t* AllocImage(size_t bytes, AllocType = kUninit_Alloc);
+  static void FreeImage(void* image);
 
   enum CreateMode {
     kJustComputeBounds_CreateMode,           //!< compute bounds and return

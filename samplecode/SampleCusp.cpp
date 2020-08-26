@@ -217,7 +217,7 @@ class CuspView : public Sample {
     p.setAntiAlias(true);
     p.setStyle(SkPaint::kStroke_Style);
     p.setStrokeWidth(20);
-#if 0    // enable to play through the stream above backwards.
+#if 0  // enable to play through the stream above backwards.
         SkPath path;
         int i;
 #  if 0  // disable to draw only one problematic cubic

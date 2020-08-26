@@ -16,6 +16,13 @@
 #include <initializer_list>
 #include <utility>
 
+/** SkTDArray<T> implements a std::vector-like array for raw data-only objects that do not require
+    construction or destruction. The constructor and destructor for T will not be called; T objects
+    will always be moved via raw memcpy. Newly created T objects will contain uninitialized memory.
+
+    In most cases, std::vector<T> can provide a similar level of performance for POD objects when
+    used with appropriate care. In new code, consider std::vector<T> instead.
+*/
 template <typename T>
 class SkTDArray {
  public:
@@ -31,7 +38,7 @@ class SkTDArray {
       fReserve = fCount = count;
     }
   }
-  SkTDArray(const std::initializer_list<T>& list) : SkTDArray(list.begin(), list.size()) {}
+  SkTDArray(const std::initializer_list<T>& list) noexcept : SkTDArray(list.begin(), list.size()) {}
   SkTDArray(const SkTDArray<T>& src) noexcept : fArray(nullptr), fReserve(0), fCount(0) {
     SkTDArray<T> tmp(src.fArray, src.fCount);
     this->swap(tmp);
@@ -203,7 +210,7 @@ class SkTDArray {
     }
   }
 
-  int find(const T& elem) const {
+  int find(const T& elem) const noexcept(noexcept(*fArray == *fArray)) {
     const T* iter = fArray;
     const T* stop = fArray + fCount;
 
@@ -215,7 +222,7 @@ class SkTDArray {
     return -1;
   }
 
-  int rfind(const T& elem) const {
+  int rfind(const T& elem) const noexcept(noexcept(*fArray == *fArray)) {
     const T* iter = fArray + fCount;
     const T* stop = fArray;
 
@@ -251,7 +258,7 @@ class SkTDArray {
 
   // routines to treat the array like a stack
   void push_back(const T& v) noexcept(std::is_nothrow_copy_assignable_v<T>) { *this->append() = v; }
-  T* push() { return this->append(); }
+  T* push() noexcept { return this->append(); }
   const T& top() const noexcept { return (*this)[fCount - 1]; }
   T& top() noexcept { return (*this)[fCount - 1]; }
   void pop(T* elem) noexcept {
@@ -357,7 +364,7 @@ class SkTDArray {
     SkASSERT_RELEASE(SkTFitsIn<int>(reserve));
 
     fReserve = SkTo<int>(reserve);
-    fArray = (T*)sk_realloc_throw(fArray, fReserve * sizeof(T));
+    fArray = (T*)sk_realloc_throw(fArray, (size_t)fReserve * sizeof(T));
   }
 };
 

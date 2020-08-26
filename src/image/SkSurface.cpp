@@ -21,7 +21,7 @@ static SkPixelGeometry compute_default_geometry() noexcept {
   } else {
     // Bit0 is RGB(0), BGR(1)
     // Bit1 is H(0), V(1)
-    constexpr SkPixelGeometry gGeo[] = {
+    const SkPixelGeometry gGeo[] = {
         kRGB_H_SkPixelGeometry,
         kBGR_H_SkPixelGeometry,
         kRGB_V_SkPixelGeometry,
@@ -67,7 +67,7 @@ SkSurface_Base::~SkSurface_Base() {
   }
 }
 
-GrContext* SkSurface_Base::onGetContext() { return nullptr; }
+GrContext* SkSurface_Base::onGetContext() noexcept { return nullptr; }
 
 GrBackendTexture SkSurface_Base::onGetBackendTexture(BackendHandleAccess) {
   return GrBackendTexture();  // invalid
@@ -409,42 +409,13 @@ bool SkSurface::replaceBackendTexture(
       backendTexture, origin, mode, textureReleaseProc, releaseContext);
 }
 
-void SkSurface::flushAndSubmit() { this->flush(BackendSurfaceAccess::kNoAccess, GrFlushInfo()); }
-
 GrSemaphoresSubmitted SkSurface::flush(BackendSurfaceAccess access, const GrFlushInfo& flushInfo) {
-  return asSB(this)->onFlush(access, flushInfo);
+  return asSB(this)->onFlush(access, flushInfo, nullptr);
 }
 
 GrSemaphoresSubmitted SkSurface::flush(
-    BackendSurfaceAccess access, GrFlushFlags flags, int numSemaphores,
-    GrBackendSemaphore signalSemaphores[], GrGpuFinishedProc finishedProc,
-    GrGpuFinishedContext finishedContext) {
-  GrFlushInfo info;
-  info.fFlags = flags;
-  info.fNumSemaphores = numSemaphores;
-  info.fSignalSemaphores = signalSemaphores;
-  info.fFinishedProc = finishedProc;
-  info.fFinishedContext = finishedContext;
-  return this->flush(access, info);
-}
-
-GrSemaphoresSubmitted SkSurface::flush(
-    BackendSurfaceAccess access, FlushFlags flags, int numSemaphores,
-    GrBackendSemaphore signalSemaphores[]) {
-  GrFlushFlags grFlags = flags == kSyncCpu_FlushFlag ? kSyncCpu_GrFlushFlag : kNone_GrFlushFlags;
-  GrFlushInfo info;
-  info.fFlags = grFlags;
-  info.fNumSemaphores = numSemaphores;
-  info.fSignalSemaphores = signalSemaphores;
-  return this->flush(access, info);
-}
-
-GrSemaphoresSubmitted SkSurface::flushAndSignalSemaphores(
-    int numSemaphores, GrBackendSemaphore signalSemaphores[]) {
-  GrFlushInfo info;
-  info.fNumSemaphores = numSemaphores;
-  info.fSignalSemaphores = signalSemaphores;
-  return this->flush(BackendSurfaceAccess::kNoAccess, info);
+    const GrFlushInfo& info, const GrBackendSurfaceMutableState* newState) {
+  return asSB(this)->onFlush(BackendSurfaceAccess::kNoAccess, info, newState);
 }
 
 bool SkSurface::wait(int numSemaphores, const GrBackendSemaphore* waitSemaphores) {
@@ -514,10 +485,6 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendRenderTarget(
   return nullptr;
 }
 
-sk_sp<SkSurface> SkSurface::MakeFromBackendTextureAsRenderTarget(
-    GrContext*, const GrBackendTexture&, GrSurfaceOrigin origin, int sampleCnt, SkColorType,
-    sk_sp<SkColorSpace>, const SkSurfaceProps*) {
-  return nullptr;
-}
+void SkSurface::flushAndSubmit() { this->flush(BackendSurfaceAccess::kNoAccess, GrFlushInfo()); }
 
 #endif

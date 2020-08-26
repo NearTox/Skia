@@ -59,7 +59,7 @@ class GrDawnGpu : public GrGpu {
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
 
   GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget*, GrSurfaceOrigin, const SkIRect& bounds,
+      GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
 

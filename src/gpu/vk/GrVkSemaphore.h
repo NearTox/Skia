@@ -43,15 +43,15 @@ class GrVkSemaphore : public GrSemaphore {
 
     ~Resource() override {}
 
-    VkSemaphore semaphore() const noexcept { return fSemaphore; }
+    VkSemaphore semaphore() const { return fSemaphore; }
 
-    bool shouldSignal() const noexcept { return !fHasBeenSubmittedToQueueForSignal; }
-    bool shouldWait() const noexcept { return !fHasBeenSubmittedToQueueForWait; }
+    bool shouldSignal() const { return !fHasBeenSubmittedToQueueForSignal; }
+    bool shouldWait() const { return !fHasBeenSubmittedToQueueForWait; }
 
-    void markAsSignaled() noexcept { fHasBeenSubmittedToQueueForSignal = true; }
-    void markAsWaited() noexcept { fHasBeenSubmittedToQueueForWait = true; }
+    void markAsSignaled() { fHasBeenSubmittedToQueueForSignal = true; }
+    void markAsWaited() { fHasBeenSubmittedToQueueForWait = true; }
 
-    void setIsOwned() noexcept { fIsOwned = true; }
+    void setIsOwned() { fIsOwned = true; }
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
     void dumpInfo() const override {
@@ -69,7 +69,7 @@ class GrVkSemaphore : public GrSemaphore {
     typedef GrVkManagedResource INHERITED;
   };
 
-  Resource* getResource() noexcept { return fResource; }
+  Resource* getResource() { return fResource; }
 
  private:
   GrVkSemaphore(

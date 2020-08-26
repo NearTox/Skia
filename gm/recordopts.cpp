@@ -167,7 +167,7 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize + 1) * 2, (kTestRectSize + 1) *
     TestVariantSequence drawTestSequence = funcs[k];
     drawTestSequence(canvas, shapeColor, no_detector_install);
     if (context) {
-      context->flush();
+      context->flushAndSubmit();
     }
     canvas->translate(SkIntToScalar(kTestRectSize) + SkIntToScalar(1), SkIntToScalar(0));
     {
@@ -177,7 +177,7 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize + 1) * 2, (kTestRectSize + 1) *
           shapeColor, no_detector_install);
       recorder.finishRecordingAsPicture()->playback(canvas);
       if (context) {
-        context->flush();
+        context->flushAndSubmit();
       }
     }
     canvas->restore();
@@ -210,7 +210,7 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize + 1) * 2, (kTestRectSize + 1) *
         canvas->save();
         drawTestSequence(canvas, shapeColor, detectorInstallFunc);
         if (context) {
-          context->flush();
+          context->flushAndSubmit();
         }
         canvas->translate(SkIntToScalar(kTestRectSize) + SkIntToScalar(1), SkIntToScalar(0));
         {
@@ -220,7 +220,7 @@ DEF_SIMPLE_GM(recordopts, canvas, (kTestRectSize + 1) * 2, (kTestRectSize + 1) *
               shapeColor, detectorInstallFunc);
           recorder.finishRecordingAsPicture()->playback(canvas);
           if (context) {
-            context->flush();
+            context->flushAndSubmit();
           }
         }
 

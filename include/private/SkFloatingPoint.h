@@ -58,9 +58,13 @@ static inline float sk_float_pow(float base, float exp) noexcept { return powf(b
 #define sk_float_exp(x) expf(x)
 #define sk_float_log(x) logf(x)
 
-constexpr float sk_float_degrees_to_radians(float degrees) { return degrees * (SK_FloatPI / 180); }
+constexpr float sk_float_degrees_to_radians(float degrees) noexcept {
+  return degrees * (SK_FloatPI / 180);
+}
 
-constexpr float sk_float_radians_to_degrees(float radians) { return radians * (180 / SK_FloatPI); }
+constexpr float sk_float_radians_to_degrees(float radians) noexcept {
+  return radians * (180 / SK_FloatPI);
+}
 
 #define sk_float_round(x) sk_float_floor((x) + 0.5f)
 
@@ -163,7 +167,7 @@ static constexpr inline int64_t sk_float_saturate2int64(float x) noexcept {
 
 // Returns false if any of the floats are outside of [0...1]
 // Returns true if count is 0
-bool sk_floats_are_unit(const float array[], size_t count);
+bool sk_floats_are_unit(const float array[], size_t count) noexcept;
 
 static inline float sk_float_rsqrt_portable(float x) noexcept {
   // Get initial estimate.

@@ -74,7 +74,7 @@ class GrManagedResource : SkNoncopyable {
 
   /** Default construct, initializing the reference count to 1.
    */
-  GrManagedResource() noexcept : fRefCnt(1) {
+  constexpr GrManagedResource() noexcept : fRefCnt(1) {
 #ifdef SK_TRACE_MANAGED_RESOURCES
     fKey = fKeyCounter.fetch_add(+1, std::memory_order_relaxed);
     GetTrace()->add(this);
@@ -222,7 +222,7 @@ class GrTextureResource : public GrManagedResource {
 
   ~GrTextureResource() override { SkASSERT(!fReleaseHelper); }
 
-  void setRelease(sk_sp<GrRefCntedCallback> releaseHelper) {
+  void setRelease(sk_sp<GrRefCntedCallback> releaseHelper) noexcept {
     fReleaseHelper = std::move(releaseHelper);
   }
 
@@ -233,17 +233,17 @@ class GrTextureResource : public GrManagedResource {
    * GrTextureResource calls them when the last command buffer reference goes away and the
    * GrTexture is purgeable.
    */
-  void addIdleProc(GrTexture*, sk_sp<GrRefCntedCallback>) const;
+  void addIdleProc(GrTexture*, sk_sp<GrRefCntedCallback>) const noexcept;
   int idleProcCnt() const noexcept;
   sk_sp<GrRefCntedCallback> idleProc(int) const noexcept;
   void resetIdleProcs() const noexcept;
-  void removeOwningTexture() const;
+  void removeOwningTexture() const noexcept;
 
   /**
    * We track how many outstanding references this GrTextureResource has in command buffers and
    * when the count reaches zero we call the idle proc.
    */
-  void notifyQueuedForWorkOnGpu() const override;
+  void notifyQueuedForWorkOnGpu() const noexcept override;
   void notifyFinishedWithWorkOnGpu() const override;
   bool isQueuedForWorkOnGpu() const noexcept { return fNumOwners > 0; }
 

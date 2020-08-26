@@ -25,9 +25,9 @@ class SkBitmapController : ::SkNoncopyable {
    public:
     State(const SkImage_Base*, const SkMatrix& inv, SkFilterQuality);
 
-    const SkPixmap& pixmap() const { return fPixmap; }
-    const SkMatrix& invMatrix() const { return fInvMatrix; }
-    SkFilterQuality quality() const { return fQuality; }
+    const SkPixmap& pixmap() const noexcept { return fPixmap; }
+    const SkMatrix& invMatrix() const noexcept { return fInvMatrix; }
+    SkFilterQuality quality() const noexcept { return fQuality; }
 
    private:
     bool processHighRequest(const SkImage_Base*);

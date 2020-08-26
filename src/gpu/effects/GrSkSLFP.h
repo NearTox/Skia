@@ -72,7 +72,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   const char* name() const noexcept override;
 
-  void addChild(std::unique_ptr<GrFragmentProcessor> child);
+  void addChild(std::unique_ptr<GrFragmentProcessor> child) noexcept;
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
@@ -81,13 +81,13 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   GrSkSLFP(
       sk_sp<const GrShaderCaps> shaderCaps, ShaderErrorHandler* shaderErrorHandler,
-      sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs);
+      sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs) noexcept;
 
-  GrSkSLFP(const GrSkSLFP& other);
+  GrSkSLFP(const GrSkSLFP& other) noexcept;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 

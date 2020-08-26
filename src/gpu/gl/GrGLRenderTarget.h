@@ -18,7 +18,7 @@ class GrGLStencilAttachment;
 
 class GrGLRenderTarget : public GrRenderTarget {
  public:
-  bool alwaysClearStencil() const override { return 0 == fRTFBOID; }
+  bool alwaysClearStencil() const noexcept override { return 0 == fRTFBOID; }
 
   // set fTexFBOID to this value to indicate that it is multisampled but
   // Gr doesn't know how to resolve it.
@@ -41,11 +41,11 @@ class GrGLRenderTarget : public GrRenderTarget {
   // FBO ID that has texture ID attached.
   GrGLuint textureFBOID() const noexcept { return fTexFBOID; }
 
-  GrBackendRenderTarget getBackendRenderTarget() const override;
+  GrBackendRenderTarget getBackendRenderTarget() const noexcept override;
 
-  GrBackendFormat backendFormat() const override;
+  GrBackendFormat backendFormat() const noexcept override;
 
-  bool canAttemptStencilAttachment() const override;
+  bool canAttemptStencilAttachment() const noexcept override;
 
   // GrGLRenderTarget overrides dumpMemoryStatistics so it can log its texture and renderbuffer
   // components seperately.
@@ -57,7 +57,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   // Constructor for subclasses.
   GrGLRenderTarget(GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&);
 
-  void init(GrGLFormat, const IDs&);
+  void init(GrGLFormat, const IDs&) noexcept;
 
   void onAbandon() override;
   void onRelease() override;
@@ -69,16 +69,16 @@ class GrGLRenderTarget : public GrRenderTarget {
   GrGLRenderTarget(
       GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&, GrGLStencilAttachment*);
 
-  void setFlags(const GrGLCaps&, const IDs&);
+  void setFlags(const GrGLCaps&, const IDs&) noexcept;
 
-  GrGLGpu* getGLGpu() const;
+  GrGLGpu* getGLGpu() const noexcept;
   bool completeStencilAttachment() override;
 
-  size_t onGpuMemorySize() const override;
+  size_t onGpuMemorySize() const noexcept override;
 
-  int msaaSamples() const;
+  int msaaSamples() const noexcept;
   // The number total number of samples, including both MSAA and resolve texture samples.
-  int totalSamples() const;
+  int totalSamples() const noexcept;
 
   GrGLuint fRTFBOID;
   GrGLuint fTexFBOID;

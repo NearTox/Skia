@@ -127,13 +127,47 @@ class GrGLSLUnrolledBinaryGradientColorizer : public GrGLSLFragmentProcessor {
     thresholds9_13Var = args.fUniformHandler->addUniform(
         &_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "thresholds9_13");
     fragBuilder->codeAppendf(
-        "half t = %s.x;\nfloat4 scale, bias;\nif (%d <= 4 || t < %s.w) {\n    if (%d <= 2 "
-        "|| t < %s.y) {\n        if (%d <= 1 || t < %s.x) {\n            scale = %s;\n     "
-        "       bias = %s;\n        } else {\n            scale = %s;\n            bias = "
-        "%s;\n        }\n    } else {\n        if (%d <= 3 || t < %s.z) {\n            "
-        "scale = %s;\n            bias = %s;\n        } else {\n            scale = %s;\n  "
-        "          bias = %s;\n        }\n    }\n} else {\n    if (%d <= 6 || t < %s.y) "
-        "{\n        if (%d <= 5 || t <",
+        R"SkSL(half t = %s.x;
+float4 scale, bias;
+if (%d <= 4 || t < %s.w) {
+    if (%d <= 2 || t < %s.y) {
+        if (%d <= 1 || t < %s.x) {
+            scale = %s;
+            bias = %s;
+        } else {
+            scale = %s;
+            bias = %s;
+        }
+    } else {
+        if (%d <= 3 || t < %s.z) {
+            scale = %s;
+            bias = %s;
+        } else {
+            scale = %s;
+            bias = %s;
+        }
+    }
+} else {
+    if (%d <= 6 || t < %s.y) {
+        if (%d <= 5 || t < %s.x) {
+            scale = %s;
+            bias = %s;
+        } else {
+            scale = %s;
+            bias = %s;
+        }
+    } else {
+        if (%d <= 7 || t < %s.z) {
+            scale = %s;
+            bias = %s;
+        } else {
+            scale = %s;
+            bias = %s;
+        }
+    }
+}
+%s = half4(float(t) * scale + bias);
+)SkSL",
         args.fInputColor, _outer.intervalCount,
         args.fUniformHandler->getUniformCStr(thresholds1_7Var), _outer.intervalCount,
         args.fUniformHandler->getUniformCStr(thresholds1_7Var), _outer.intervalCount,
@@ -148,14 +182,7 @@ class GrGLSLUnrolledBinaryGradientColorizer : public GrGLSLFragmentProcessor {
         scale6_7Var.isValid() ? args.fUniformHandler->getUniformCStr(scale6_7Var) : "float4(0)",
         bias6_7Var.isValid() ? args.fUniformHandler->getUniformCStr(bias6_7Var) : "float4(0)",
         _outer.intervalCount, args.fUniformHandler->getUniformCStr(thresholds9_13Var),
-        _outer.intervalCount);
-    fragBuilder->codeAppendf(
-        " %s.x) {\n            scale = %s;\n            bias = %s;\n        } else {\n     "
-        "       scale = %s;\n            bias = %s;\n        }\n    } else {\n        if "
-        "(%d <= 7 || t < %s.z) {\n            scale = %s;\n            bias = %s;\n        "
-        "} else {\n            scale = %s;\n            bias = %s;\n        }\n    "
-        "}\n}\n%s = half4(float(t) * scale + bias);\n",
-        args.fUniformHandler->getUniformCStr(thresholds9_13Var),
+        _outer.intervalCount, args.fUniformHandler->getUniformCStr(thresholds9_13Var),
         scale8_9Var.isValid() ? args.fUniformHandler->getUniformCStr(scale8_9Var) : "float4(0)",
         bias8_9Var.isValid() ? args.fUniformHandler->getUniformCStr(bias8_9Var) : "float4(0)",
         scale10_11Var.isValid() ? args.fUniformHandler->getUniformCStr(scale10_11Var) : "float4(0)",
@@ -244,7 +271,7 @@ GrGLSLFragmentProcessor* GrUnrolledBinaryGradientColorizer::onCreateGLSLInstance
   return new GrGLSLUnrolledBinaryGradientColorizer();
 }
 void GrUnrolledBinaryGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32((int32_t)intervalCount);
 }
 bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
@@ -272,7 +299,7 @@ bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& oth
   return true;
 }
 GrUnrolledBinaryGradientColorizer::GrUnrolledBinaryGradientColorizer(
-    const GrUnrolledBinaryGradientColorizer& src) noexcept
+    const GrUnrolledBinaryGradientColorizer& src)
     : INHERITED(kGrUnrolledBinaryGradientColorizer_ClassID, src.optimizationFlags()),
       intervalCount(src.intervalCount),
       scale0_1(src.scale0_1),
@@ -297,7 +324,7 @@ std::unique_ptr<GrFragmentProcessor> GrUnrolledBinaryGradientColorizer::clone() 
   return std::unique_ptr<GrFragmentProcessor>(new GrUnrolledBinaryGradientColorizer(*this));
 }
 
-static constexpr int kMaxIntervals = 8;
+static const int kMaxIntervals = 8;
 std::unique_ptr<GrFragmentProcessor> GrUnrolledBinaryGradientColorizer::Make(
     const SkPMColor4f* colors, const SkScalar* positions, int count) {
   // Depending on how the positions resolve into hard stops or regular stops, the number of

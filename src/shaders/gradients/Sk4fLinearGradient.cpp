@@ -184,7 +184,7 @@ void SkLinearGradient::LinearGradient4fContext::shadePremulSpan(
   switch (shader.fTileMode) {
     case SkTileMode::kDecal:
       SkASSERT(false);  // decal only supported via stages
-    // fall-through
+      [[fallthrough]];
     case SkTileMode::kClamp:
       this->shadeSpanInternal<premul, SkTileMode::kClamp>(x, y, dst, count, bias0, bias1);
       break;

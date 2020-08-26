@@ -33,15 +33,15 @@ class SkTDynamicHash {
     fTable.foreach ([&](T* entry) { fn(*entry); });
   }
 
-  int count() const { return fTable.count(); }
+  int count() const noexcept { return fTable.count(); }
 
   T* find(const Key& key) const { return fTable.findOrNull(key); }
 
   void add(T* entry) { fTable.set(entry); }
   void remove(const Key& key) { fTable.remove(key); }
 
-  void rewind() { fTable.reset(); }
-  void reset() { fTable.reset(); }
+  void rewind() noexcept { fTable.reset(); }
+  void reset() noexcept { fTable.reset(); }
 
  private:
   struct AdaptedTraits {

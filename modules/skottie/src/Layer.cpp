@@ -187,7 +187,7 @@ sk_sp<sksg::RenderNode> AttachMask(
     std::vector<sk_sp<sksg::RenderNode>> masks;
     masks.reserve(SkToSizeT(mask_stack.count()));
     for (auto& rec : mask_stack) {
-      masks.emplace_back(rec.mask_adapter->makeMask(std::move(rec.mask_path)));
+      masks.push_back(rec.mask_adapter->makeMask(std::move(rec.mask_path)));
     }
 
     maskNode = sksg::Group::Make(std::move(masks));
@@ -259,7 +259,8 @@ LayerBuilder::LayerBuilder(const skjson::ObjectValue& jlayer)
     : fJlayer(jlayer),
       fIndex(ParseDefault<int>(jlayer["ind"], -1)),
       fParentIndex(ParseDefault<int>(jlayer["parent"], -1)),
-      fType(ParseDefault<int>(jlayer["ty"], -1)) {
+      fType(ParseDefault<int>(jlayer["ty"], -1)),
+      fAutoOrient(ParseDefault<int>(jlayer["ao"], 0)) {
   if (this->isCamera() || ParseDefault<int>(jlayer["ddd"], 0)) {
     fFlags |= Flags::kIs3D;
   }
@@ -338,8 +339,9 @@ sk_sp<sksg::Transform> LayerBuilder::doAttachTransform(
         cbuilder->fSize);
   }
 
-  return this->is3D() ? abuilder.attachMatrix3D(*jtransform, std::move(parent_transform))
-                      : abuilder.attachMatrix2D(*jtransform, std::move(parent_transform));
+  return this->is3D()
+             ? abuilder.attachMatrix3D(*jtransform, std::move(parent_transform), fAutoOrient)
+             : abuilder.attachMatrix2D(*jtransform, std::move(parent_transform), fAutoOrient);
 }
 
 bool LayerBuilder::hasMotionBlur(const CompositionBuilder* cbuilder) const {
@@ -472,7 +474,7 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
     layer = std::move(motion_blur);
   }
 
-  abuilder.fCurrentAnimatorScope->emplace_back(std::move(controller));
+  abuilder.fCurrentAnimatorScope->push_back(std::move(controller));
 
   // Stash the content tree in case it is needed for later mattes.
   fContentTree = layer;

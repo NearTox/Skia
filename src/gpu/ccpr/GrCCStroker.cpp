@@ -27,10 +27,11 @@ struct LinearStrokeInstance {
   float fEndpoints[4];
   float fStrokeRadius;
 
-  inline void set(const SkPoint[2], float dx, float dy, float strokeRadius);
+  inline void set(const SkPoint[2], float dx, float dy, float strokeRadius) noexcept;
 };
 
-inline void LinearStrokeInstance::set(const SkPoint P[2], float dx, float dy, float strokeRadius) {
+inline void LinearStrokeInstance::set(
+    const SkPoint P[2], float dx, float dy, float strokeRadius) noexcept {
   Sk2f X, Y;
   Sk2f::Load2(P, &X, &Y);
   Sk2f::Store2(fEndpoints, X + dx, Y + dy);
@@ -43,20 +44,23 @@ struct CubicStrokeInstance {
   float fStrokeRadius;
   float fNumSegments;
 
-  inline void set(const SkPoint[4], float dx, float dy, float strokeRadius, int numSegments);
   inline void set(
-      const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius, int numSegments);
+      const SkPoint[4], float dx, float dy, float strokeRadius, int numSegments) noexcept;
+  inline void set(
+      const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius,
+      int numSegments) noexcept;
 };
 
 inline void CubicStrokeInstance::set(
-    const SkPoint P[4], float dx, float dy, float strokeRadius, int numSegments) {
+    const SkPoint P[4], float dx, float dy, float strokeRadius, int numSegments) noexcept {
   Sk4f X, Y;
   Sk4f::Load2(P, &X, &Y);
   this->set(X, Y, dx, dy, strokeRadius, numSegments);
 }
 
 inline void CubicStrokeInstance::set(
-    const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius, int numSegments) {
+    const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius,
+    int numSegments) noexcept {
   (X + dx).store(&fX);
   (Y + dy).store(&fY);
   fStrokeRadius = strokeRadius;
@@ -71,7 +75,7 @@ inline void CubicStrokeInstance::set(
 // for seamless integration with the connecting geometry.
 class LinearStrokeProcessor : public GrGeometryProcessor {
  public:
-  LinearStrokeProcessor() : INHERITED(kLinearStrokeProcessor_ClassID) {
+  LinearStrokeProcessor() noexcept : INHERITED(kLinearStrokeProcessor_ClassID) {
     this->setInstanceAttributes(kInstanceAttribs, 2);
 #ifdef SK_DEBUG
     using Instance = LinearStrokeInstance;
@@ -81,7 +85,7 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
 
  private:
   const char* name() const noexcept override { return "LinearStrokeProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
 
   static constexpr Attribute kInstanceAttribs[2] = {
       {"endpts", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
@@ -90,7 +94,7 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
   class Impl : public GrGLSLGeometryProcessor {
     void setData(
         const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-        const CoordTransformRange&) override {}
+        const CoordTransformRange&) noexcept override {}
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override;
   };
 
@@ -103,7 +107,6 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
 
 void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
   GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
-  GrGLSLUniformHandler* uniHandler = args.fUniformHandler;
 
   varyingHandler->emitAttributes(args.fGP.cast<LinearStrokeProcessor>());
 
@@ -140,9 +143,7 @@ void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
       edgeDistances.vsOut(), edgeDistances.vsOut());
 
   gpArgs->fPositionVar.set(kFloat2_GrSLType, "position");
-  this->emitTransforms(
-      v, varyingHandler, uniHandler, GrShaderVar("position", kFloat2_GrSLType), SkMatrix::I(),
-      args.fFPCoordTransformHandler);
+  // Leave fLocalCoordVar uninitialized; this GP is not combined with frag processors
 
   // Use the 4 edge distances to calculate coverage in the fragment shader.
   GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
@@ -168,7 +169,7 @@ constexpr GrPrimitiveProcessor::Attribute LinearStrokeProcessor::kInstanceAttrib
 // negative, and we use SkBlendMode::kPlus.
 class CubicStrokeProcessor : public GrGeometryProcessor {
  public:
-  CubicStrokeProcessor() : GrGeometryProcessor(kCubicStrokeProcessor_ClassID) {
+  CubicStrokeProcessor() noexcept : GrGeometryProcessor(kCubicStrokeProcessor_ClassID) {
     this->setInstanceAttributes(kInstanceAttribs, 3);
 #ifdef SK_DEBUG
     using Instance = CubicStrokeInstance;
@@ -178,7 +179,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
 
  private:
   const char* name() const noexcept override { return "CubicStrokeProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
 
   static constexpr Attribute kInstanceAttribs[3] = {
       {"X", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
@@ -188,7 +189,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
   class Impl : public GrGLSLGeometryProcessor {
     void setData(
         const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-        const CoordTransformRange&) override {}
+        const CoordTransformRange&) noexcept override {}
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override;
   };
 
@@ -199,7 +200,6 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
 
 void CubicStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
   GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
-  GrGLSLUniformHandler* uniHandler = args.fUniformHandler;
 
   varyingHandler->emitAttributes(args.fGP.cast<CubicStrokeProcessor>());
 
@@ -265,9 +265,7 @@ void CubicStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
       "%s.z = (0 == point_id || num_segments+2 == point_id) ? 0 : 1;", coverages.vsOut());
 
   gpArgs->fPositionVar.set(kFloat2_GrSLType, "position");
-  this->emitTransforms(
-      v, varyingHandler, uniHandler, GrShaderVar("position", kFloat2_GrSLType), SkMatrix::I(),
-      args.fFPCoordTransformHandler);
+  // Leave fLocalCoordVar uninitialized; this GP is not combined with frag processors
 
   // Use the 2 edge distances and interpolated butt cap AA to calculate fragment coverage.
   GrGLSLFPFragmentBuilder* f = args.fFragBuilder;
@@ -391,7 +389,7 @@ class GrCCStroker::InstanceBufferBuilder {
 
   bool isMapped() const { return fInstanceBuffer.isMapped(); }
 
-  void updateCurrentInfo(const PathInfo& pathInfo) {
+  void updateCurrentInfo(const PathInfo& pathInfo) noexcept {
     SkASSERT(this->isMapped());
     fCurrDX = static_cast<float>(pathInfo.fDevToAtlasOffset.x());
     fCurrDY = static_cast<float>(pathInfo.fDevToAtlasOffset.y());
@@ -569,7 +567,7 @@ class GrCCStroker::InstanceBufferBuilder {
   SkDEBUGCODE(InstanceTallies fEndInstances[2]);
 };
 
-GrCCStroker::BatchID GrCCStroker::closeCurrentBatch() {
+GrCCStroker::BatchID GrCCStroker::closeCurrentBatch() noexcept {
   if (!fHasOpenBatch) {
     return kEmptyBatchID;
   }
@@ -655,10 +653,10 @@ bool GrCCStroker::prepareToDraw(GrOnFlushResourceProvider* onFlushRP) {
       case Verb::kRoundJoin:
       case Verb::kInternalRoundJoin:
         conicWeight = params[paramsIdx++].fConicWeight;
-        // fallthru
+        [[fallthrough]];
       case Verb::kMiterJoin:
         miterCapHeightOverWidth = params[paramsIdx++].fMiterCapHeightOverWidth;
-        // fallthru
+        [[fallthrough]];
       case Verb::kBevelJoin:
       case Verb::kInternalBevelJoin:
         builder.appendJoin(

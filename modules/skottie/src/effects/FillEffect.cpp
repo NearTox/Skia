@@ -26,7 +26,7 @@ class FillAdapter final : public AnimatablePropertyContainer {
     return sk_sp<FillAdapter>(new FillAdapter(jprops, std::move(layer), abuilder));
   }
 
-  const auto& node() const noexcept { return fFilterNode; }
+  const auto& node() const { return fFilterNode; }
 
  private:
   FillAdapter(

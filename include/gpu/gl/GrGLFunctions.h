@@ -438,8 +438,8 @@ class GrGLFunction<R GR_GL_FUNCTION_TYPE(Args...)> {
  public:
   using Fn = R GR_GL_FUNCTION_TYPE(Args...);
   // Construct empty.
-  GrGLFunction() noexcept = default;
-  GrGLFunction(std::nullptr_t) noexcept {}
+  GrGLFunction() = default;
+  GrGLFunction(std::nullptr_t) {}
 
   // Construct from a simple function pointer.
   GrGLFunction(Fn* fn_ptr) {

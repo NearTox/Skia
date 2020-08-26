@@ -49,7 +49,7 @@ class GrCCFillGeometry {
     bool operator==(const PrimitiveTallies&) noexcept;
   };
 
-  GrCCFillGeometry(int numSkPoints = 0, int numSkVerbs = 0, int numConicWeights = 0) noexcept
+  GrCCFillGeometry(int numSkPoints = 0, int numSkVerbs = 0, int numConicWeights = 0)
       : fPoints(numSkPoints * 3)  // Reserve for a 3x expansion in points and verbs.
         ,
         fVerbs(numSkVerbs * 3),
@@ -68,14 +68,14 @@ class GrCCFillGeometry {
     return fConicWeights[idx];
   }
 
-  void reset() {
+  void reset() noexcept {
     SkASSERT(!fBuildingContour);
     fPoints.reset();
     fVerbs.reset();
   }
 
-  void beginPath();
-  void beginContour(const SkPoint&);
+  void beginPath() noexcept;
+  void beginContour(const SkPoint&) noexcept;
   void lineTo(const SkPoint P[2]);
   void quadraticTo(const SkPoint[3]);
 

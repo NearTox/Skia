@@ -23,7 +23,7 @@
 SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch) noexcept
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) {}
 
-SkTypeface::~SkTypeface() {}
+SkTypeface::~SkTypeface() = default;
 
 #ifdef SK_WHITELIST_SERIALIZED_TYPEFACES
 extern void WhitelistSerializeTypeface(const SkTypeface*, SkWStream*);
@@ -46,8 +46,10 @@ class SkEmptyTypeface : public SkTypeface {
  protected:
   SkEmptyTypeface() : SkTypeface(SkFontStyle(), true) {}
 
-  std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override { return nullptr; }
-  sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
+  std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const noexcept override {
+    return nullptr;
+  }
+  sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const noexcept override {
     return sk_ref_sp(this);
   }
   SkScalerContext* onCreateScalerContext(
@@ -55,37 +57,38 @@ class SkEmptyTypeface : public SkTypeface {
     return SkScalerContext::MakeEmptyContext(
         sk_ref_sp(const_cast<SkEmptyTypeface*>(this)), effects, desc);
   }
-  void onFilterRec(SkScalerContextRec*) const override {}
-  std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override {
+  void onFilterRec(SkScalerContextRec*) const noexcept override {}
+  std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const noexcept override {
     return nullptr;
   }
-  void onGetFontDescriptor(SkFontDescriptor*, bool*) const override {}
-  void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const override {
+  void onGetFontDescriptor(SkFontDescriptor*, bool*) const noexcept override {}
+  void onCharsToGlyphs(
+      const SkUnichar* chars, int count, SkGlyphID glyphs[]) const noexcept override {
     sk_bzero(glyphs, count * sizeof(glyphs[0]));
   }
-  int onCountGlyphs() const override { return 0; }
-  void getPostScriptGlyphNames(SkString*) const override {}
-  void getGlyphToUnicodeMap(SkUnichar*) const override {}
-  int onGetUPEM() const override { return 0; }
+  int onCountGlyphs() const noexcept override { return 0; }
+  void getPostScriptGlyphNames(SkString*) const noexcept override {}
+  void getGlyphToUnicodeMap(SkUnichar*) const noexcept override {}
+  int onGetUPEM() const noexcept override { return 0; }
   class EmptyLocalizedStrings : public SkTypeface::LocalizedStrings {
    public:
-    bool next(SkTypeface::LocalizedString*) override { return false; }
+    bool next(SkTypeface::LocalizedString*) noexcept override { return false; }
   };
-  void onGetFamilyName(SkString* familyName) const override { familyName->reset(); }
+  void onGetFamilyName(SkString* familyName) const noexcept override { familyName->reset(); }
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
     return new EmptyLocalizedStrings;
   }
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[],
-      int coordinateCount) const override {
+      int coordinateCount) const noexcept override {
     return 0;
   }
   int onGetVariationDesignParameters(
-      SkFontParameters::Variation::Axis parameters[], int parameterCount) const override {
+      SkFontParameters::Variation::Axis parameters[], int parameterCount) const noexcept override {
     return 0;
   }
-  int onGetTableTags(SkFontTableTag tags[]) const override { return 0; }
-  size_t onGetTableData(SkFontTableTag, size_t, size_t, void*) const override { return 0; }
+  int onGetTableTags(SkFontTableTag tags[]) const noexcept override { return 0; }
+  size_t onGetTableData(SkFontTableTag, size_t, size_t, void*) const noexcept override { return 0; }
 };
 
 }  // namespace

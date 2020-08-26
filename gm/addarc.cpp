@@ -38,7 +38,7 @@ class AddArcGM : public skiagm::GM {
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setStroke(true);
     paint.setStrokeWidth(15);
 
     const SkScalar inset = paint.getStrokeWidth() + 4;
@@ -82,7 +82,7 @@ DEF_SIMPLE_GM(addarc_meas, canvas, 2 * R + 40, 2 * R + 40) {
 
   SkPaint paint;
   paint.setAntiAlias(true);
-  paint.setStyle(SkPaint::kStroke_Style);
+  paint.setStroke(true);
 
   SkPaint measPaint;
   measPaint.setAntiAlias(true);
@@ -129,7 +129,7 @@ class StrokeCircleGM : public skiagm::GM {
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setStroke(true);
     paint.setStrokeWidth(SK_Scalar1 / 2);
 
     const SkScalar delta = paint.getStrokeWidth() * 3 / 2;
@@ -179,7 +179,7 @@ class FillCircleGM : public skiagm::GM {
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setStroke(true);
     paint.setStrokeWidth(SK_Scalar1 / 2);
 
     const SkScalar strokeWidth = paint.getStrokeWidth();
@@ -188,7 +188,7 @@ class FillCircleGM : public skiagm::GM {
     SkRandom rand;
 
     // Reset style to fill. We only need stroke stype for producing delta and strokeWidth
-    paint.setStyle(SkPaint::kFill_Style);
+    paint.setStroke(false);
 
     SkScalar sign = 1;
     while (r.width() > strokeWidth * 2) {
@@ -230,7 +230,7 @@ static void html_canvas_arc(
 DEF_SIMPLE_GM(manyarcs, canvas, 620, 330) {
   SkPaint paint;
   paint.setAntiAlias(true);
-  paint.setStyle(SkPaint::kStroke_Style);
+  paint.setStroke(true);
 
   canvas->translate(10, 10);
 
@@ -275,7 +275,7 @@ DEF_SIMPLE_GM(manyarcs, canvas, 620, 330) {
 DEF_SIMPLE_GM(tinyanglearcs, canvas, 620, 330) {
   SkPaint paint;
   paint.setAntiAlias(true);
-  paint.setStyle(SkPaint::kStroke_Style);
+  paint.setStroke(true);
 
   canvas->translate(50, 50);
 

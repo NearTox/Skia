@@ -37,10 +37,12 @@ class GrTextureProxy;
  */
 class GrDeferredUploadToken {
  public:
-  static GrDeferredUploadToken AlreadyFlushedToken() noexcept { return GrDeferredUploadToken(0); }
+  static constexpr GrDeferredUploadToken AlreadyFlushedToken() noexcept {
+    return GrDeferredUploadToken(0);
+  }
 
-  GrDeferredUploadToken(const GrDeferredUploadToken&) = default;
-  GrDeferredUploadToken& operator=(const GrDeferredUploadToken&) = default;
+  GrDeferredUploadToken(const GrDeferredUploadToken&) noexcept = default;
+  GrDeferredUploadToken& operator=(const GrDeferredUploadToken&) noexcept = default;
 
   bool operator==(const GrDeferredUploadToken& that) const noexcept {
     return fSequenceNumber == that.fSequenceNumber;
@@ -134,7 +136,7 @@ class GrDeferredUploadTarget {
  public:
   virtual ~GrDeferredUploadTarget() = default;
 
-  virtual const GrTokenTracker* tokenTracker() noexcept = 0;
+  virtual const GrTokenTracker* tokenTracker() = 0;
 
   /** Returns the token of the draw that this upload will occur before. */
   virtual GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) = 0;

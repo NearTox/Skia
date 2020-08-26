@@ -21,7 +21,7 @@
 
 GrOpFlushState::GrOpFlushState(
     GrGpu* gpu, GrResourceProvider* resourceProvider, GrTokenTracker* tokenTracker,
-    sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache)
+    sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache) noexcept
     : fVertexPool(gpu, cpuBufferCache),
       fIndexPool(gpu, cpuBufferCache),
       fDrawIndirectPool(gpu, std::move(cpuBufferCache)),
@@ -29,7 +29,7 @@ GrOpFlushState::GrOpFlushState(
       fResourceProvider(resourceProvider),
       fTokenTracker(tokenTracker) {}
 
-const GrCaps& GrOpFlushState::caps() const { return *fGpu->caps(); }
+const GrCaps& GrOpFlushState::caps() const noexcept { return *fGpu->caps(); }
 
 void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
     const GrOp* op, const SkRect& chainBounds, const GrPipeline* pipeline) {
@@ -183,15 +183,15 @@ void GrOpFlushState::putBackVertices(int vertices, size_t vertexStride) {
   fVertexPool.putBack(vertices * vertexStride);
 }
 
-GrAppliedClip GrOpFlushState::detachAppliedClip() {
-  return fOpArgs->appliedClip() ? std::move(*fOpArgs->appliedClip()) : GrAppliedClip();
+GrAppliedClip GrOpFlushState::detachAppliedClip() noexcept {
+  return fOpArgs->appliedClip() ? std::move(*fOpArgs->appliedClip()) : GrAppliedClip::Disabled();
 }
 
-GrStrikeCache* GrOpFlushState::strikeCache() const {
+GrStrikeCache* GrOpFlushState::strikeCache() const noexcept {
   return fGpu->getContext()->priv().getGrStrikeCache();
 }
 
-GrAtlasManager* GrOpFlushState::atlasManager() const {
+GrAtlasManager* GrOpFlushState::atlasManager() const noexcept {
   return fGpu->getContext()->priv().getAtlasManager();
 }
 

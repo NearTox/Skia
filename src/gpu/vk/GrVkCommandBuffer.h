@@ -101,7 +101,7 @@ class GrVkCommandBuffer {
 
   void freeGPUData(const GrGpu* gpu, VkCommandPool pool) const;
 
-  bool hasWork() const { return fHasWork; }
+  bool hasWork() const noexcept { return fHasWork; }
 
 #ifdef SK_DEBUG
   bool validateNoSharedImageResources(const GrVkCommandBuffer* other);
@@ -115,7 +115,7 @@ class GrVkCommandBuffer {
     this->invalidateState();
   }
 
-  bool isWrapped() const { return fIsWrapped; }
+  bool isWrapped() const noexcept { return fIsWrapped; }
 
   void addingWork(const GrVkGpu* gpu);
 
@@ -247,7 +247,7 @@ class GrVkPrimaryCommandBuffer : public GrVkCommandBuffer {
 
   void addFinishedProc(sk_sp<GrRefCntedCallback> finishedProc);
 
-  void callFinishedProcs() { fFinishedProcs.reset(); }
+  void callFinishedProcs() noexcept { fFinishedProcs.reset(); }
 
   void recycleSecondaryCommandBuffers(GrVkCommandPool* cmdPool);
 
@@ -278,7 +278,7 @@ class GrVkSecondaryCommandBuffer : public GrVkCommandBuffer {
 
   void recycle(GrVkCommandPool* cmdPool);
 
-  VkCommandBuffer vkCommandBuffer() { return fCmdBuffer; }
+  VkCommandBuffer vkCommandBuffer() noexcept { return fCmdBuffer; }
 
  private:
   explicit GrVkSecondaryCommandBuffer(VkCommandBuffer cmdBuffer, bool isWrapped)

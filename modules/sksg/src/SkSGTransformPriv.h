@@ -23,7 +23,7 @@ class TransformPriv final {
   static T As(const sk_sp<Transform>&) noexcept;
 
  private:
-  constexpr TransformPriv() noexcept = delete;
+  TransformPriv() = delete;
 };
 
 template <>

@@ -24,7 +24,7 @@ class SkWbmpCodec final : public SkCodec {
   static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
  protected:
-  SkEncodedImageFormat onGetEncodedFormat() const override;
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override;
   Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
   bool onRewind() override;
   bool conversionSupported(const SkImageInfo& dst, bool srcIsOpaque, bool needsXform) override;

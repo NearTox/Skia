@@ -17,7 +17,7 @@ class SkPathWriter;
 
 class SkOpContour {
  public:
-  SkOpContour() noexcept { reset(); }
+  SkOpContour() { reset(); }
 
   bool operator<(const SkOpContour& rh) const noexcept {
     return fBounds.fTop == rh.fBounds.fTop ? fBounds.fLeft < rh.fBounds.fLeft
@@ -55,7 +55,7 @@ class SkOpContour {
     } while ((segment = segment->next()));
   }
 
-  void complete() noexcept { setBounds(); }
+  void complete() { setBounds(); }
 
   int count() const noexcept { return fCount; }
 
@@ -256,7 +256,7 @@ class SkOpContour {
 
   bool reversed() const noexcept { return fReverse; }
 
-  void setBounds() noexcept {
+  void setBounds() {
     SkASSERT(fCount > 0);
     const SkOpSegment* segment = &fHead;
     fBounds = segment->bounds();

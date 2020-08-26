@@ -107,20 +107,21 @@ void SkDraw::paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) 
 }
 
 void SkDraw::paintPaths(
-    SkDrawableGlyphBuffer* drawables, SkScalar scale, const SkPaint& paint) const {
+    SkDrawableGlyphBuffer* drawables, SkScalar scale, SkPoint origin, const SkPaint& paint) const {
   for (auto [variant, pos] : drawables->drawable()) {
     const SkPath* path = variant.path();
     SkMatrix m;
-    m.setScaleTranslate(scale, scale, pos.x(), pos.y());
+    SkPoint translate = origin + pos;
+    m.setScaleTranslate(scale, scale, translate.x(), translate.y());
     this->drawPath(*path, paint, &m, false);
   }
 }
 
 void SkDraw::drawGlyphRunList(
     const SkGlyphRunList& glyphRunList, SkGlyphRunListPainter* glyphPainter) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  if (fRC->isEmpty()) {
+      if (fRC->isEmpty()) {
     return;
   }
 

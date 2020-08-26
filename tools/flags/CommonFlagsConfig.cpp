@@ -72,6 +72,7 @@ static const struct {
     { "gltestprecompile",      "gpu", "api=gl,testPrecompile=true" },
     { "glestestprecompile",    "gpu", "api=gles,testPrecompile=true" },
     { "glddl",                 "gpu", "api=gl,useDDLSink=true" },
+    { "glooprddl",             "gpu", "api=gl,OOPRish=true" },
     { "angle_d3d11_es2",       "gpu", "api=angle_d3d11_es2" },
     { "angle_d3d11_es3",       "gpu", "api=angle_d3d11_es3" },
     { "angle_d3d9_es2",        "gpu", "api=angle_d3d9_es2" },
@@ -103,6 +104,7 @@ static const struct {
     { "vkbert",                "gpu", "api=vulkan,surf=bert" },
     { "vktestpersistentcache", "gpu", "api=vulkan,testPersistentCache=1" },
     { "vkddl",                 "gpu", "api=vulkan,useDDLSink=true" },
+    { "vkooprddl",             "gpu", "api=vulkan,OOPRish=true" },
 #endif
 #ifdef SK_METAL
     { "mtl",                   "gpu", "api=metal" },
@@ -110,6 +112,7 @@ static const struct {
     { "mtlmsaa4",              "gpu", "api=metal,samples=4" },
     { "mtlmsaa8",              "gpu", "api=metal,samples=8" },
     { "mtlddl",                "gpu", "api=metal,useDDLSink=true" },
+    { "mtlooprddl",            "gpu", "api=metal,OOPRish=true" },
 #endif
 #ifdef SK_DIRECT3D
     { "d3d",                   "gpu", "api=direct3d" },
@@ -450,7 +453,7 @@ SkCommandLineConfigGpu::SkCommandLineConfigGpu(
     const SkString& tag, const SkTArray<SkString>& viaParts, ContextType contextType,
     bool useDIText, int samples, SkColorType colorType, SkAlphaType alphaType,
     sk_sp<SkColorSpace> colorSpace, bool useStencilBuffers, bool testThreading,
-    int testPersistentCache, bool testPrecompile, bool useDDLSink, SurfType surfType)
+    int testPersistentCache, bool testPrecompile, bool useDDLSink, bool OOPRish, SurfType surfType)
     : SkCommandLineConfig(tag, SkString("gpu"), viaParts),
       fContextType(contextType),
       fContextOverrides(ContextOverrides::kNone),
@@ -463,6 +466,7 @@ SkCommandLineConfigGpu::SkCommandLineConfigGpu(
       fTestPersistentCache(testPersistentCache),
       fTestPrecompile(testPrecompile),
       fUseDDLSink(useDDLSink),
+      fOOPRish(OOPRish),
       fSurfType(surfType) {
   if (!useStencilBuffers) {
     fContextOverrides |= ContextOverrides::kAvoidStencilBuffers;
@@ -484,6 +488,7 @@ SkCommandLineConfigGpu* parse_command_line_config_gpu(const SkString&           
     int                                 testPersistentCache = 0;
     bool                                testPrecompile      = false;
     bool useDDLs = false;
+    bool ooprish = false;
     SkCommandLineConfigGpu::SurfType    surfType = SkCommandLineConfigGpu::SurfType::kDefault;
 
     bool            parseSucceeded = false;
@@ -502,6 +507,7 @@ SkCommandLineConfigGpu* parse_command_line_config_gpu(const SkString&           
         extendedOptions.get_option_int("testPersistentCache", &testPersistentCache) &&
         extendedOptions.get_option_bool("testPrecompile", &testPrecompile) &&
         extendedOptions.get_option_bool("useDDLSink", &useDDLs) &&
+        extendedOptions.get_option_bool("OOPRish", &ooprish) &&
         extendedOptions.get_option_gpu_surf_type("surf", &surfType);
 
     // testing threading and the persistent cache are mutually exclusive.
@@ -511,7 +517,7 @@ SkCommandLineConfigGpu* parse_command_line_config_gpu(const SkString&           
 
     return new SkCommandLineConfigGpu(
         tag, vias, contextType, useDIText, samples, colorType, alphaType, colorSpace, useStencils,
-        testThreading, testPersistentCache, testPrecompile, useDDLs, surfType);
+        testThreading, testPersistentCache, testPrecompile, useDDLs, ooprish, surfType);
 }
 
 SkCommandLineConfigSvg::SkCommandLineConfigSvg(const SkString&           tag,

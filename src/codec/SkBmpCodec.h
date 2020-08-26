@@ -21,7 +21,7 @@
  */
 class SkBmpCodec : public SkCodec {
  public:
-  static bool IsBmp(const void*, size_t) noexcept;
+  static bool IsBmp(const void*, size_t);
 
   /*
    * Assumes IsBmp was called and returned true
@@ -39,9 +39,11 @@ class SkBmpCodec : public SkCodec {
  protected:
   SkBmpCodec(
       SkEncodedInfo&& info, std::unique_ptr<SkStream>, uint16_t bitsPerPixel,
-      SkCodec::SkScanlineOrder rowOrder) noexcept;
+      SkCodec::SkScanlineOrder rowOrder);
 
-  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kBMP; }
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+    return SkEncodedImageFormat::kBMP;
+  }
 
   /*
    * Read enough of the stream to initialize the SkBmpCodec.
@@ -54,7 +56,7 @@ class SkBmpCodec : public SkCodec {
   /*
    * Returns whether this BMP is part of an ICO image.
    */
-  bool inIco() const noexcept { return this->onInIco(); }
+  bool inIco() const { return this->onInIco(); }
 
   virtual bool onInIco() const noexcept { return false; }
 
@@ -69,13 +71,13 @@ class SkBmpCodec : public SkCodec {
    *               when we want to decode the full or one when we are
    *               sampling.
    */
-  int32_t getDstRow(int32_t y, int32_t height) const noexcept;
+  int32_t getDstRow(int32_t y, int32_t height) const;
 
   /*
    * Accessors used by subclasses
    */
   uint16_t bitsPerPixel() const noexcept { return fBitsPerPixel; }
-  SkScanlineOrder onGetScanlineOrder() const override { return fRowOrder; }
+  SkScanlineOrder onGetScanlineOrder() const noexcept override { return fRowOrder; }
   size_t srcRowBytes() const noexcept { return fSrcRowBytes; }
 
   /*

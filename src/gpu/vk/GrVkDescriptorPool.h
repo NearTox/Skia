@@ -22,7 +22,7 @@ class GrVkDescriptorPool : public GrVkManagedResource {
  public:
   static GrVkDescriptorPool* Create(GrVkGpu* gpu, VkDescriptorType type, uint32_t count);
 
-  VkDescriptorPool descPool() const { return fDescPool; }
+  VkDescriptorPool descPool() const noexcept { return fDescPool; }
 
   // Returns whether or not this descriptor pool could be used, assuming it gets fully reset and
   // not in use by another draw, to support the requested type and count.

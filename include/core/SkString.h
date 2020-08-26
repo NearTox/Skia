@@ -20,39 +20,39 @@
 #include <atomic>
 
 /*  Some helper functions for C strings */
-static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) {
+static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) noexcept {
   SkASSERT(string);
   SkASSERT(prefixStr);
   return !strncmp(string, prefixStr, strlen(prefixStr));
 }
-static inline bool SkStrStartsWith(const char string[], const char prefixChar) {
+static inline bool SkStrStartsWith(const char string[], const char prefixChar) noexcept {
   SkASSERT(string);
   return (prefixChar == *string);
 }
 
-bool SkStrEndsWith(const char string[], const char suffixStr[]);
-bool SkStrEndsWith(const char string[], const char suffixChar);
+bool SkStrEndsWith(const char string[], const char suffixStr[]) noexcept;
+bool SkStrEndsWith(const char string[], const char suffixChar) noexcept;
 
-int SkStrStartsWithOneOf(const char string[], const char prefixes[]);
+int SkStrStartsWithOneOf(const char string[], const char prefixes[]) noexcept;
 
-static inline int SkStrFind(const char string[], const char substring[]) {
+static inline int SkStrFind(const char string[], const char substring[]) noexcept {
   const char* first = strstr(string, substring);
   if (nullptr == first) return -1;
   return SkToInt(first - &string[0]);
 }
 
-static inline int SkStrFindLastOf(const char string[], const char subchar) {
+static inline int SkStrFindLastOf(const char string[], const char subchar) noexcept {
   const char* last = strrchr(string, subchar);
   if (nullptr == last) return -1;
   return SkToInt(last - &string[0]);
 }
 
-static inline bool SkStrContains(const char string[], const char substring[]) {
+static inline bool SkStrContains(const char string[], const char substring[]) noexcept {
   SkASSERT(string);
   SkASSERT(substring);
   return (-1 != SkStrFind(string, substring));
 }
-static inline bool SkStrContains(const char string[], const char subchar) {
+static inline bool SkStrContains(const char string[], const char subchar) noexcept {
   SkASSERT(string);
   char tmp[2];
   tmp[0] = subchar;
@@ -139,14 +139,26 @@ class SK_API SkString {
   bool equals(const char text[]) const noexcept;
   bool equals(const char text[], size_t len) const noexcept;
 
-  bool startsWith(const char prefixStr[]) const { return SkStrStartsWith(fRec->data(), prefixStr); }
-  bool startsWith(const char prefixChar) const { return SkStrStartsWith(fRec->data(), prefixChar); }
-  bool endsWith(const char suffixStr[]) const { return SkStrEndsWith(fRec->data(), suffixStr); }
-  bool endsWith(const char suffixChar) const { return SkStrEndsWith(fRec->data(), suffixChar); }
-  bool contains(const char substring[]) const { return SkStrContains(fRec->data(), substring); }
-  bool contains(const char subchar) const { return SkStrContains(fRec->data(), subchar); }
-  int find(const char substring[]) const { return SkStrFind(fRec->data(), substring); }
-  int findLastOf(const char subchar) const { return SkStrFindLastOf(fRec->data(), subchar); }
+  bool startsWith(const char prefixStr[]) const noexcept {
+    return SkStrStartsWith(fRec->data(), prefixStr);
+  }
+  bool startsWith(const char prefixChar) const noexcept {
+    return SkStrStartsWith(fRec->data(), prefixChar);
+  }
+  bool endsWith(const char suffixStr[]) const noexcept {
+    return SkStrEndsWith(fRec->data(), suffixStr);
+  }
+  bool endsWith(const char suffixChar) const noexcept {
+    return SkStrEndsWith(fRec->data(), suffixChar);
+  }
+  bool contains(const char substring[]) const noexcept {
+    return SkStrContains(fRec->data(), substring);
+  }
+  bool contains(const char subchar) const noexcept { return SkStrContains(fRec->data(), subchar); }
+  int find(const char substring[]) const noexcept { return SkStrFind(fRec->data(), substring); }
+  int findLastOf(const char subchar) const noexcept {
+    return SkStrFindLastOf(fRec->data(), subchar);
+  }
 
   friend bool operator==(const SkString& a, const SkString& b) noexcept { return a.equals(b); }
   friend bool operator!=(const SkString& a, const SkString& b) noexcept { return !a.equals(b); }
@@ -160,10 +172,12 @@ class SK_API SkString {
   char* writable_str();
   char& operator[](size_t n) { return this->writable_str()[n]; }
 
-  void reset();
-  /** Destructive resize, does not preserve contents. */
-  void resize(size_t len) { this->set(nullptr, len); }
-  void set(const SkString& src) { *this = src; }
+  void reset() noexcept;
+  /** String contents are preserved on resize. (For destructive resize, `set(nullptr, length)`.)
+   * `resize` automatically reserves an extra byte at the end of the buffer for a null terminator.
+   */
+  void resize(size_t len);
+  void set(const SkString& src) noexcept { *this = src; }
   void set(const char text[]);
   void set(const char text[], size_t len);
 
@@ -205,6 +219,7 @@ class SK_API SkString {
   void prependScalar(SkScalar value) { this->insertScalar((size_t)-1, value); }
 
   void printf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
+  void printVAList(const char format[], va_list);
   void appendf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
   void appendVAList(const char format[], va_list);
   void prependf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
@@ -234,19 +249,17 @@ class SK_API SkString {
  private:
   struct Rec {
    public:
-    constexpr Rec(uint32_t len, int32_t refCnt) noexcept
-        : fLength(len), fRefCnt(refCnt), fBeginningOfData(0) {}
+    constexpr Rec(uint32_t len, int32_t refCnt) noexcept : fLength(len), fRefCnt(refCnt) {}
     static sk_sp<Rec> Make(const char text[], size_t len);
-    uint32_t fLength;  // logically size_t, but we want it to stay 32bits
-    mutable std::atomic<int32_t> fRefCnt;
-    char fBeginningOfData;
-
     char* data() noexcept { return &fBeginningOfData; }
     const char* data() const noexcept { return &fBeginningOfData; }
-
     void ref() const noexcept;
     void unref() const noexcept;
     bool unique() const noexcept;
+
+    uint32_t fLength;  // logically size_t, but we want it to stay 32 bits
+    mutable std::atomic<int32_t> fRefCnt;
+    char fBeginningOfData = '\0';
 
    private:
     // Ensure the unsized delete is called.
@@ -257,6 +270,7 @@ class SK_API SkString {
 #ifdef SK_DEBUG
   const SkString& validate() const;
 #else
+  SkString& validate() noexcept { return *this; }
   const SkString& validate() const noexcept { return *this; }
 #endif
 

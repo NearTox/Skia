@@ -13,6 +13,7 @@
 #include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRegion.h"
+#include "include/core/SkShader.h"
 #include "include/private/SkDeque.h"
 #include "src/core/SkClipOpPriv.h"
 #include "src/core/SkMessageBus.h"
@@ -59,8 +60,10 @@ class SkClipStack {
       kRRect,
       //!< This element combines a device space path with the current clip.
       kPath,
+      //!< This element does not have geometry, but applies a shader to the clip
+      kShader,
 
-      kLastType = kPath
+      kLastType = kShader
     };
     static const int kTypeCnt = (int)DeviceSpaceType::kLastType + 1;
 
@@ -69,7 +72,7 @@ class SkClipStack {
       this->setEmpty();
     }
 
-    Element(const Element&);
+    Element(const Element&) noexcept;
 
     Element(const SkRect& rect, const SkMatrix& m, SkClipOp op, bool doAA) {
       this->initRect(0, rect, m, op, doAA);
@@ -82,6 +85,8 @@ class SkClipStack {
     Element(const SkPath& path, const SkMatrix& m, SkClipOp op, bool doAA) {
       this->initPath(0, path, m, op, doAA);
     }
+
+    Element(sk_sp<SkShader> shader) noexcept { this->initShader(0, std::move(shader)); }
 
     ~Element();
 
@@ -113,6 +118,10 @@ class SkClipStack {
           (fDeviceSpaceRRect.isRect() || fDeviceSpaceRRect.isEmpty()));
       return fDeviceSpaceRRect.getBounds();
     }
+
+    //!< Call if getDeviceSpaceType() is kShader to get a reference to the clip shader.
+    sk_sp<SkShader> refShader() const noexcept { return fShader; }
+    const SkShader* getShader() const noexcept { return fShader.get(); }
 
     //!< Call if getDeviceSpaceType() is not kEmpty to get the set operation used to combine
     //!< this element.
@@ -182,7 +191,7 @@ class SkClipStack {
      * the element is destroyed because their key is based on this element's gen ID.
      */
     void addResourceInvalidationMessage(
-        GrProxyProvider* proxyProvider, const GrUniqueKey& key) const {
+        GrProxyProvider* proxyProvider, const GrUniqueKey& key) const noexcept {
       SkASSERT(proxyProvider);
 
       if (!fProxyProvider) {
@@ -199,6 +208,7 @@ class SkClipStack {
 
     SkTLazy<SkPath> fDeviceSpacePath;
     SkRRect fDeviceSpaceRRect;
+    sk_sp<SkShader> fShader;
     int fSaveCount;  // save count of stack when this element was added.
     SkClipOp fOp;
     DeviceSpaceType fDeviceSpaceType;
@@ -243,11 +253,16 @@ class SkClipStack {
       this->initPath(saveCount, path, m, op, doAA);
     }
 
+    Element(int saveCount, sk_sp<SkShader> shader) noexcept {
+      this->initShader(saveCount, std::move(shader));
+    }
+
     void initCommon(int saveCount, SkClipOp op, bool doAA) noexcept;
     void initRect(int saveCount, const SkRect&, const SkMatrix&, SkClipOp, bool doAA);
     void initRRect(int saveCount, const SkRRect&, const SkMatrix&, SkClipOp, bool doAA);
     void initPath(int saveCount, const SkPath&, const SkMatrix&, SkClipOp, bool doAA);
     void initAsPath(int saveCount, const SkPath&, const SkMatrix&, SkClipOp, bool doAA);
+    void initShader(int saveCount, sk_sp<SkShader>) noexcept;
 
     void setEmpty() noexcept;
 
@@ -278,10 +293,10 @@ class SkClipStack {
 
   SkClipStack() noexcept;
   SkClipStack(void* storage, size_t size) noexcept;
-  SkClipStack(const SkClipStack& b);
+  SkClipStack(const SkClipStack& b) noexcept;
   ~SkClipStack();
 
-  SkClipStack& operator=(const SkClipStack& b);
+  SkClipStack& operator=(const SkClipStack& b) noexcept;
   bool operator==(const SkClipStack& b) const noexcept;
   bool operator!=(const SkClipStack& b) const noexcept { return !(*this == b); }
 
@@ -331,11 +346,11 @@ class SkClipStack {
    * by the clip. A return value of false does not guarantee that the (r)rect
    * is not contained by the clip.
    */
-  bool quickContains(const SkRect& devRect) const noexcept {
+  bool quickContains(const SkRect& devRect) const {
     return this->isWideOpen() || this->internalQuickContains(devRect);
   }
 
-  bool quickContains(const SkRRect& devRRect) const noexcept {
+  bool quickContains(const SkRRect& devRRect) const {
     return this->isWideOpen() || this->internalQuickContains(devRRect);
   }
 
@@ -347,6 +362,7 @@ class SkClipStack {
   void clipRect(const SkRect&, const SkMatrix& matrix, SkClipOp, bool doAA);
   void clipRRect(const SkRRect&, const SkMatrix& matrix, SkClipOp, bool doAA);
   void clipPath(const SkPath&, const SkMatrix& matrix, SkClipOp, bool doAA);
+  void clipShader(sk_sp<SkShader>);
   // An optimized version of clipDevRect(emptyRect, kIntersect, ...)
   void clipEmpty() noexcept;
   void setDeviceClipRestriction(const SkIRect& rect) noexcept {
@@ -372,7 +388,7 @@ class SkClipStack {
    *                 antialiased.
    * @return true if the stack is equivalent to a single rrect intersect clip, false otherwise.
    */
-  bool isRRect(const SkRect& bounds, SkRRect* rrect, bool* aa) const noexcept;
+  bool isRRect(const SkRect& bounds, SkRRect* rrect, bool* aa) const;
 
   /**
    * The generation ID has three reserved values to indicate special
@@ -485,8 +501,8 @@ class SkClipStack {
 
   SkRect fClipRestrictionRect = SkRect::MakeEmpty();
 
-  bool internalQuickContains(const SkRect& devRect) const noexcept;
-  bool internalQuickContains(const SkRRect& devRRect) const noexcept;
+  bool internalQuickContains(const SkRect& devRect) const;
+  bool internalQuickContains(const SkRRect& devRRect) const;
 
   /**
    * Helper for clipDevPath, etc.

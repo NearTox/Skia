@@ -237,8 +237,8 @@ static CanvasTest kCanvasTests[] = {
     [](SkCanvas* c, skiatest::Reporter* r) { c->scale(SkIntToScalar(1), SkIntToScalar(2)); },
     [](SkCanvas* c, skiatest::Reporter* r) { c->rotate(SkIntToScalar(1)); },
     [](SkCanvas* c, skiatest::Reporter* r) { c->skew(SkIntToScalar(1), SkIntToScalar(2)); },
-    [](SkCanvas* c, skiatest::Reporter* r) { c->concat(SkMatrix::MakeScale(2, 3)); },
-    [](SkCanvas* c, skiatest::Reporter* r) { c->setMatrix(SkMatrix::MakeScale(2, 3)); },
+    [](SkCanvas* c, skiatest::Reporter* r) { c->concat(SkMatrix::Scale(2, 3)); },
+    [](SkCanvas* c, skiatest::Reporter* r) { c->setMatrix(SkMatrix::Scale(2, 3)); },
     [](SkCanvas* c, skiatest::Reporter* r) { c->clipRect(kRect); },
     [](SkCanvas* c, skiatest::Reporter* r) {
       c->clipPath(make_path_from_rect(SkRect{0, 0, 2, 1}));

@@ -41,7 +41,7 @@ class GrStencilPathOp final : public GrOp {
 
   GrStencilPathOp(
       const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip, const GrScissorState& scissor,
-      sk_sp<const GrPath> path) noexcept
+      sk_sp<const GrPath> path)
       : INHERITED(ClassID()),
         fViewMatrix(viewMatrix),
         fUseHWAA(useHWAA),
@@ -53,9 +53,9 @@ class GrStencilPathOp final : public GrOp {
 
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) noexcept override {}
+      const GrXferProcessor::DstProxyView&) override {}
 
-  void onPrepare(GrOpFlushState*) noexcept override {}
+  void onPrepare(GrOpFlushState*) override {}
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 

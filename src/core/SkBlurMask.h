@@ -43,9 +43,9 @@ class SkBlurMask {
       SkScalar sigma, SkMask* dst, const SkMask& src, SkBlurStyle, SkIPoint* margin = nullptr);
 
   // If radius > 0, return the corresponding sigma, else return 0
-  static SkScalar SK_SPI ConvertRadiusToSigma(SkScalar radius) noexcept;
+  static SkScalar SK_SPI ConvertRadiusToSigma(SkScalar radius);
   // If sigma > 0.5, return the corresponding radius, else return 0
-  static SkScalar SK_SPI ConvertSigmaToRadius(SkScalar sigma) noexcept;
+  static SkScalar SK_SPI ConvertSigmaToRadius(SkScalar sigma);
 
   /* Helper functions for analytic rectangle blurs */
 
@@ -56,15 +56,14 @@ class SkBlurMask {
       @param blurred_width The width of the final, blurred rectangle
       @param sharp_width The width of the original, unblurred rectangle.
   */
-  static uint8_t ProfileLookup(
-      const uint8_t* profile, int loc, int blurredWidth, int sharpWidth) noexcept;
+  static uint8_t ProfileLookup(const uint8_t* profile, int loc, int blurredWidth, int sharpWidth);
 
   /** Populate the profile of a 1D blurred halfplane.
       @param profile The 1D table to fill in
       @param size    Should be 6*sigma bytes
       @param sigma   The standard deviation of the gaussian blur kernel
   */
-  static void ComputeBlurProfile(uint8_t* profile, int size, SkScalar sigma) noexcept;
+  static void ComputeBlurProfile(uint8_t* profile, int size, SkScalar sigma);
 
   /** Compute an entire scanline of a blurred step function.  This is a 1D helper that
       will produce both the horizontal and vertical profiles of the blurry rectangle.
@@ -76,7 +75,7 @@ class SkBlurMask {
   */
 
   static void ComputeBlurredScanline(
-      uint8_t* pixels, const uint8_t* profile, unsigned int width, SkScalar sigma) noexcept;
+      uint8_t* pixels, const uint8_t* profile, unsigned int width, SkScalar sigma);
 };
 
 #endif

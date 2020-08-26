@@ -22,7 +22,6 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
     const GrRRectShadowGeoProc& rsgp = args.fGP.cast<GrRRectShadowGeoProc>();
     GrGLSLVertexBuilder* vertBuilder = args.fVertBuilder;
     GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
-    GrGLSLUniformHandler* uniformHandler = args.fUniformHandler;
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
 
     // emit attributes
@@ -35,11 +34,7 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
 
     // Setup position
     this->writeOutputPosition(vertBuilder, gpArgs, rsgp.inPosition().name());
-
-    // emit transforms
-    this->emitTransforms(
-        vertBuilder, varyingHandler, uniformHandler, rsgp.inPosition().asShaderVar(),
-        args.fFPCoordTransformHandler);
+    // No need for local coordinates, this GP does not combine with fragment processors
 
     fragBuilder->codeAppend("half d = length(shadowParams.xy);");
     fragBuilder->codeAppend("float2 uv = float2(shadowParams.z * (1.0 - d), 0.5);");
@@ -52,7 +47,7 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
       const CoordTransformRange& transformRange) override {
-    this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
+    this->setTransformDataHelper(pdman, transformRange);
   }
 
  private:
@@ -61,7 +56,7 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrRRectShadowGeoProc::GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView)
+GrRRectShadowGeoProc::GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView) noexcept
     : INHERITED(kGrRRectShadowGeoProc_ClassID) {
   fInPosition = {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
   fInColor = {"inColor", kUByte4_norm_GrVertexAttribType, kHalf4_GrSLType};

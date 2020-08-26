@@ -41,7 +41,7 @@ void Draw::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   }
 }
 
-const RenderNode* Draw::onNodeAt(const SkPoint& p) const {
+const RenderNode* Draw::onNodeAt(const SkPoint& p) const noexcept {
   const auto paint = fPaint->makePaint();
 
   if (!paint.getAlpha()) {

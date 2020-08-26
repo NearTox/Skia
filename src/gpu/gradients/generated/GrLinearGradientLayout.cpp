@@ -28,26 +28,28 @@ class GrGLSLLinearGradientLayout : public GrGLSLFragmentProcessor {
     SkString sk_TransformedCoords2D_0 = fragBuilder->ensureCoords2D(
         args.fTransformedCoords[0].fVaryingPoint, _outer.sampleMatrix());
     fragBuilder->codeAppendf(
-        "half t = half(%s.x) + 9.9999997473787516e-06;\n%s = half4(t, 1.0, 0.0, 0.0);\n",
+        R"SkSL(half t = half(%s.x) + 9.9999997473787516e-06;
+%s = half4(t, 1.0, 0.0, 0.0);
+)SkSL",
         sk_TransformedCoords2D_0.c_str(), args.fOutputColor);
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrLinearGradientLayout::onCreateGLSLInstance() const {
   return new GrGLSLLinearGradientLayout();
 }
 void GrLinearGradientLayout::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrLinearGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrLinearGradientLayout& that = other.cast<GrLinearGradientLayout>();
   (void)that;
   if (gradientMatrix != that.gradientMatrix) return false;
   return true;
 }
-GrLinearGradientLayout::GrLinearGradientLayout(const GrLinearGradientLayout& src) noexcept
+GrLinearGradientLayout::GrLinearGradientLayout(const GrLinearGradientLayout& src)
     : INHERITED(kGrLinearGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix) {

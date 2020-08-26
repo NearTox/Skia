@@ -35,13 +35,13 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
   void onAbandon() override;
 
  private:
-  size_t onGpuMemorySize() const override;
+  size_t onGpuMemorySize() const noexcept override;
 
   GrVkStencilAttachment(
       GrVkGpu* gpu, const Format& format, const GrVkImage::ImageDesc&, const GrVkImageInfo&,
-      sk_sp<GrVkImageLayout> layout, const GrVkImageView* stencilView);
+      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* stencilView);
 
-  GrVkGpu* getVkGpu() const;
+  GrVkGpu* getVkGpu() const noexcept;
 
   const GrVkImageView* fStencilView;
 };

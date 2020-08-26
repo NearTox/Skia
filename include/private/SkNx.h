@@ -429,7 +429,7 @@ typedef SkNx<4, uint32_t> Sk4u;
 #  include "include/private/SkNx_neon.h"
 #else
 
-AI static Sk4i Sk4f_round(const Sk4f& x) {
+AI static Sk4i Sk4f_round(const Sk4f& x) noexcept {
   return {
       (int)lrintf(x[0]),
       (int)lrintf(x[1]),

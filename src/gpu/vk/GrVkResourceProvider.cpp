@@ -98,12 +98,12 @@ GrVkPipeline* GrVkResourceProvider::createPipeline(
 // only used for framebuffer creation. When we actually render we will create
 // RenderPasses as needed that are compatible with the framebuffer.
 const GrVkRenderPass* GrVkResourceProvider::findCompatibleRenderPass(
-    const GrVkRenderTarget& target, CompatibleRPHandle* compatibleHandle) {
+    const GrVkRenderTarget& target, CompatibleRPHandle* compatibleHandle, bool withStencil) {
   // Get attachment information from render target. This includes which attachments the render
   // target has (color, stencil) and the attachments format and sample count.
   GrVkRenderPass::AttachmentFlags attachmentFlags;
   GrVkRenderPass::AttachmentsDescriptor attachmentsDesc;
-  target.getAttachmentsDescriptor(&attachmentsDesc, &attachmentFlags);
+  target.getAttachmentsDescriptor(&attachmentsDesc, &attachmentFlags, withStencil);
 
   return this->findCompatibleRenderPass(&attachmentsDesc, attachmentFlags, compatibleHandle);
 }
@@ -156,11 +156,12 @@ const GrVkRenderPass* GrVkResourceProvider::findCompatibleExternalRenderPass(
 
 const GrVkRenderPass* GrVkResourceProvider::findRenderPass(
     GrVkRenderTarget* target, const GrVkRenderPass::LoadStoreOps& colorOps,
-    const GrVkRenderPass::LoadStoreOps& stencilOps, CompatibleRPHandle* compatibleHandle) {
+    const GrVkRenderPass::LoadStoreOps& stencilOps, CompatibleRPHandle* compatibleHandle,
+    bool withStencil) {
   GrVkResourceProvider::CompatibleRPHandle tempRPHandle;
   GrVkResourceProvider::CompatibleRPHandle* pRPHandle =
       compatibleHandle ? compatibleHandle : &tempRPHandle;
-  *pRPHandle = target->compatibleRenderPassHandle();
+  *pRPHandle = target->compatibleRenderPassHandle(withStencil);
   if (!pRPHandle->isValid()) {
     return nullptr;
   }
@@ -347,12 +348,11 @@ void GrVkResourceProvider::checkCommandBuffers() {
 }
 
 void GrVkResourceProvider::addFinishedProcToActiveCommandBuffers(
-    GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) {
-  sk_sp<GrRefCntedCallback> procRef(new GrRefCntedCallback(finishedProc, finishedContext));
+    sk_sp<GrRefCntedCallback> finishedCallback) {
   for (int i = 0; i < fActiveCommandPools.count(); ++i) {
     GrVkCommandPool* pool = fActiveCommandPools[i];
     GrVkPrimaryCommandBuffer* buffer = pool->getPrimaryCommandBuffer();
-    buffer->addFinishedProc(procRef);
+    buffer->addFinishedProc(finishedCallback);
   }
 }
 

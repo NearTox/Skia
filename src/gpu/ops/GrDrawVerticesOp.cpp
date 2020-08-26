@@ -36,8 +36,7 @@ enum class LocalCoordsType {
   kExplicit,
 };
 
-static GrVertexAttribType SkVerticesAttributeToGrVertexAttribType(
-    const SkVertices::Attribute& a) noexcept {
+static GrVertexAttribType SkVerticesAttributeToGrVertexAttribType(const SkVertices::Attribute& a) {
   switch (a.fType) {
     case SkVertices::Attribute::Type::kFloat: return kFloat_GrVertexAttribType;
     case SkVertices::Attribute::Type::kFloat2: return kFloat2_GrVertexAttribType;
@@ -48,7 +47,7 @@ static GrVertexAttribType SkVerticesAttributeToGrVertexAttribType(
   SkUNREACHABLE;
 }
 
-static GrSLType SkVerticesAttributeToGrSLType(const SkVertices::Attribute& a) noexcept {
+static GrSLType SkVerticesAttributeToGrSLType(const SkVertices::Attribute& a) {
   switch (a.fType) {
     case SkVertices::Attribute::Type::kFloat: return kFloat_GrSLType;
     case SkVertices::Attribute::Type::kFloat2: return kFloat2_GrSLType;
@@ -59,28 +58,36 @@ static GrSLType SkVerticesAttributeToGrSLType(const SkVertices::Attribute& a) no
   SkUNREACHABLE;
 }
 
+static bool AttributeUsesViewMatrix(const SkVertices::Attribute& attr) {
+  return (attr.fMarkerID == 0) && (attr.fUsage == SkVertices::Attribute::Usage::kVector ||
+                                   attr.fUsage == SkVertices::Attribute::Usage::kNormalVector ||
+                                   attr.fUsage == SkVertices::Attribute::Usage::kPosition);
+}
+
 // Container for a collection of [uint32_t, Matrix] pairs. For a GrDrawVerticesOp whose custom
 // attributes reference some set of IDs, this stores the actual values of those matrices,
 // at the time the Op is created.
 class MarkedMatrices {
  public:
-  // For each ID required by 'info', fetch the value of that matrix from 'matrixProvider'
+  // For each ID required by 'info', fetch the value of that matrix from 'matrixProvider'.
+  // For vectors/normals/positions, we let ID 0 refer to the canvas CTM matrix.
   void gather(const SkVerticesPriv& info, const SkMatrixProvider& matrixProvider) {
     for (int i = 0; i < info.attributeCount(); ++i) {
-      if (uint32_t id = info.attributes()[i].fMarkerID) {
+      uint32_t id = info.attributes()[i].fMarkerID;
+      if (id != 0 || AttributeUsesViewMatrix(info.attributes()[i])) {
         if (std::none_of(fMatrices.begin(), fMatrices.end(), [id](const auto& m) {
               return m.first == id;
             })) {
           SkM44 matrix;
-          // SkCanvas should guarantee that this succeeds
+          // SkCanvas should guarantee that this succeeds.
           SkAssertResult(matrixProvider.getLocalToMarker(id, &matrix));
-          fMatrices.push_back({id, matrix});
+          fMatrices.emplace_back(id, matrix);
         }
       }
     }
   }
 
-  SkM44 get(uint32_t id) const noexcept {
+  SkM44 get(uint32_t id) const {
     for (const auto& m : fMatrices) {
       if (m.first == id) {
         return m.second;
@@ -114,12 +121,12 @@ class VerticesGP : public GrGeometryProcessor {
 
   const char* name() const noexcept override { return "VerticesGP"; }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
+  const SkPMColor4f& color() const { return fColor; }
+  const SkMatrix& viewMatrix() const { return fViewMatrix; }
 
-  const Attribute& positionAttr() const noexcept { return fAttributes[kPositionIndex]; }
-  const Attribute& colorAttr() const noexcept { return fAttributes[kColorIndex]; }
-  const Attribute& localCoordsAttr() const noexcept { return fAttributes[kLocalCoordsIndex]; }
+  const Attribute& positionAttr() const { return fAttributes[kPositionIndex]; }
+  const Attribute& colorAttr() const { return fAttributes[kColorIndex]; }
+  const Attribute& localCoordsAttr() const { return fAttributes[kLocalCoordsIndex]; }
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
@@ -168,9 +175,7 @@ class VerticesGP : public GrGeometryProcessor {
       // emit transforms using either explicit local coords or positions
       const auto& coordsAttr =
           gp.localCoordsAttr().isInitialized() ? gp.localCoordsAttr() : gp.positionAttr();
-      this->emitTransforms(
-          vertBuilder, varyingHandler, uniformHandler, coordsAttr.asShaderVar(), SkMatrix::I(),
-          args.fFPCoordTransformHandler);
+      gpArgs->fLocalCoordVar = coordsAttr.asShaderVar();
 
       // Add varyings and globals for all custom attributes
       using Usage = SkVertices::Attribute::Usage;
@@ -183,7 +188,7 @@ class VerticesGP : public GrGeometryProcessor {
         SkString varyingIn(attr.name());
 
         UniformHandle matrixHandle;
-        if (customAttr.fMarkerID) {
+        if (customAttr.fMarkerID || AttributeUsesViewMatrix(customAttr)) {
           bool normal = customAttr.fUsage == Usage::kNormalVector;
           for (const MarkedUniform& matrixUni : fCustomMatrixUniforms) {
             if (matrixUni.fID == customAttr.fMarkerID && matrixUni.fNormal == normal) {
@@ -200,10 +205,6 @@ class VerticesGP : public GrGeometryProcessor {
             fCustomMatrixUniforms.push_back({customAttr.fMarkerID, normal, matrixHandle});
           }
         }
-
-        // TODO: For now, vectors/normals/positions with a 0 markerID get no transform.
-        // Those should use localToDevice instead. That means we need to change batching
-        // logic and then guarantee that we have the view matrix as a uniform here.
 
         switch (customAttr.fUsage) {
           case Usage::kRaw: break;
@@ -283,7 +284,7 @@ class VerticesGP : public GrGeometryProcessor {
       const VerticesGP& vgp = gp.cast<VerticesGP>();
       uint32_t key = 0;
       key |= (vgp.fColorArrayType == ColorArrayType::kSkColor) ? 0x1 : 0;
-      key |= ComputePosKey(vgp.viewMatrix()) << 20;
+      key |= ComputeMatrixKey(vgp.viewMatrix()) << 20;
       b->add32(key);
       b->add32(GrColorSpaceXform::XformKey(vgp.fColorSpaceXform.get()));
 
@@ -300,18 +301,13 @@ class VerticesGP : public GrGeometryProcessor {
         const CoordTransformRange& transformRange) override {
       const VerticesGP& vgp = gp.cast<VerticesGP>();
 
-      if (!vgp.viewMatrix().isIdentity() &&
-          !SkMatrixPriv::CheapEqual(fViewMatrix, vgp.viewMatrix())) {
-        fViewMatrix = vgp.viewMatrix();
-        pdman.setSkMatrix(fViewMatrixUniform, fViewMatrix);
-      }
+      this->setTransform(pdman, fViewMatrixUniform, vgp.viewMatrix(), &fViewMatrix);
+      this->setTransformDataHelper(pdman, transformRange);
 
       if (!vgp.colorAttr().isInitialized() && vgp.color() != fColor) {
         pdman.set4fv(fColorUniform, 1, vgp.color().vec());
         fColor = vgp.color();
       }
-
-      this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
 
       fColorSpaceHelper.setData(pdman, vgp.fColorSpaceXform.get());
 
@@ -449,7 +445,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
 
  private:
-  GrProgramInfo* programInfo() noexcept override { return fProgramInfo; }
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
@@ -460,8 +456,8 @@ class DrawVerticesOp final : public GrMeshDrawOp {
 
   GrGeometryProcessor* makeGP(SkArenaAlloc*);
 
-  GrPrimitiveType primitiveType() const noexcept { return fPrimitiveType; }
-  bool combinablePrimitive() const noexcept {
+  GrPrimitiveType primitiveType() const { return fPrimitiveType; }
+  bool combinablePrimitive() const {
     return GrPrimitiveType::kTriangles == fPrimitiveType ||
            GrPrimitiveType::kLines == fPrimitiveType || GrPrimitiveType::kPoints == fPrimitiveType;
   }
@@ -474,25 +470,21 @@ class DrawVerticesOp final : public GrMeshDrawOp {
     SkMatrix fViewMatrix;
     bool fIgnoreColors;
 
-    bool hasPerVertexColors() const noexcept {
-      return fVertices->priv().hasColors() && !fIgnoreColors;
-    }
+    bool hasPerVertexColors() const { return fVertices->priv().hasColors() && !fIgnoreColors; }
   };
 
-  bool isIndexed() const noexcept {
+  bool isIndexed() const {
     // Consistency enforced in onCombineIfPossible.
     return fMeshes[0].fVertices->priv().hasIndices();
   }
 
-  bool requiresPerVertexColors() const noexcept {
-    return fColorArrayType != ColorArrayType::kUnused;
-  }
+  bool requiresPerVertexColors() const { return fColorArrayType != ColorArrayType::kUnused; }
 
-  bool requiresPerVertexLocalCoords() const noexcept {
+  bool requiresPerVertexLocalCoords() const {
     return fLocalCoordsType == LocalCoordsType::kExplicit;
   }
 
-  size_t vertexStride() const noexcept {
+  size_t vertexStride() const {
     return sizeof(SkPoint) + (this->requiresPerVertexColors() ? sizeof(uint32_t) : 0) +
            (this->requiresPerVertexLocalCoords() ? sizeof(SkPoint) : 0) +
            fMeshes[0].fVertices->priv().customDataSize();

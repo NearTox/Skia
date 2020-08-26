@@ -15,7 +15,7 @@
 
 class GrGlyph {
  public:
-  static GrMaskFormat FormatFromSkGlyph(SkMask::Format format) {
+  static GrMaskFormat FormatFromSkGlyph(SkMask::Format format) noexcept {
     switch (format) {
       case SkMask::kBW_Format:
       case SkMask::kSDF_Format:

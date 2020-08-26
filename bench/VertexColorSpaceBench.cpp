@@ -305,7 +305,7 @@ class VertexColorSpaceBench : public Benchmark {
         rtc->priv().testingOnly_addDrawOp(std::move(op));
       }
 
-      context->flush();
+      context->flushAndSubmit();
     }
   }
 

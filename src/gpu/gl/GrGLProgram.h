@@ -47,15 +47,15 @@ class GrGLProgram : public SkRefCnt {
    * The attribute array consists of vertexAttributeCnt + instanceAttributeCnt elements with
    * the vertex attributes preceding the instance attributes.
    */
-  GrGLProgram(
+  static sk_sp<GrGLProgram> Make(
       GrGLGpu*, const GrGLSLBuiltinUniformHandles&, GrGLuint programID,
       const UniformInfoArray& uniforms, const UniformInfoArray& textureSamplers,
       const VaryingInfoArray&,  // used for NVPR only currently
       std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
       std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
-      int fragmentProcessorCnt, std::unique_ptr<Attribute[]>, int vertexAttributeCnt,
-      int instanceAttributeCnt, int vertexStride, int instanceStride);
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, int fragmentProcessorCnt,
+      std::unique_ptr<Attribute[]>, int vertexAttributeCnt, int instanceAttributeCnt,
+      int vertexStride, int instanceStride);
 
   ~GrGLProgram();
 
@@ -135,6 +135,16 @@ class GrGLProgram : public SkRefCnt {
   }
 
  private:
+  GrGLProgram(
+      GrGLGpu*, const GrGLSLBuiltinUniformHandles&, GrGLuint programID,
+      const UniformInfoArray& uniforms, const UniformInfoArray& textureSamplers,
+      const VaryingInfoArray&,  // used for NVPR only currently
+      std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
+      std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, int fragmentProcessorCnt,
+      std::unique_ptr<Attribute[]>, int vertexAttributeCnt, int instanceAttributeCnt,
+      int vertexStride, int instanceStride);
+
   // Helper for setData() that sets the view matrix and loads the render target height uniform
   void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&);
 

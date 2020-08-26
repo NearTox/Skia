@@ -140,9 +140,9 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
           },
           format, GrRenderable::kYes, 1, GrProtected::kNo, *proxyProvider->caps(),
           GrSurfaceProxy::UseAllocator::kYes);
-      fAccess.set(
-          GrSurfaceProxyView(fLazyProxy, kOrigin, readSwizzle), GrSamplerState::Filter::kNearest);
-      this->setTextureSamplerCnt(1);
+      auto atlasEffect =
+          GrTextureEffect::Make({fLazyProxy, kOrigin, readSwizzle}, kPremul_SkAlphaType);
+      this->registerChild(std::move(atlasEffect));
     }
 
    private:
@@ -153,14 +153,12 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
     GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return nullptr; }
     void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
     bool onIsEqual(const GrFragmentProcessor&) const override { return false; }
-    const TextureSampler& onTextureSampler(int) const override { return fAccess; }
 
     GrRecordingContext* const fContext;
     GrProxyProvider* const fProxyProvider;
     LazyProxyTest* const fTest;
     GrTextureProxy* const fAtlas;
     sk_sp<GrTextureProxy> fLazyProxy;
-    TextureSampler fAccess;
   };
 
   class Clip : public GrClip {
@@ -168,6 +166,8 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
     Clip(LazyProxyTest* test, GrTextureProxy* atlas) : fTest(test), fAtlas(atlas) {}
 
    private:
+    SkIRect getConservativeBounds() const final { return SkIRect::MakeSize(fAtlas->dimensions()); }
+
     bool apply(
         GrRecordingContext* context, GrRenderTargetContext*, bool useHWAA,
         bool hasUserStencilSettings, GrAppliedClip* out, SkRect* bounds) const override {
@@ -176,7 +176,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
       return true;
     }
     bool quickContains(const SkRect&) const final { return false; }
-    bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA*) const final { return false; }
+    bool isRRect(SkRRect* rr, GrAA*) const final { return false; }
 
     LazyProxyTest* const fTest;
     GrTextureProxy* fAtlas;
@@ -204,9 +204,9 @@ DEF_GPUTEST(LazyProxyTest, reporter, /* options */) {
     auto mockAtlas = GrRenderTargetContext::Make(
         ctx.get(), GrColorType::kAlpha_F16, nullptr, SkBackingFit::kExact, {10, 10});
     REPORTER_ASSERT(reporter, mockAtlas);
+    LazyProxyTest::Clip clip(&test, mockAtlas->asTextureProxy());
     rtc->priv().testingOnly_addDrawOp(
-        LazyProxyTest::Clip(&test, mockAtlas->asTextureProxy()),
-        LazyProxyTest::Op::Make(ctx.get(), proxyProvider, &test, nullTexture));
+        &clip, LazyProxyTest::Op::Make(ctx.get(), proxyProvider, &test, nullTexture));
     ctx->priv().testingOnly_flushAndRemoveOnFlushCallbackObject(&test);
   }
 }
@@ -371,14 +371,12 @@ DEF_GPUTEST(LazyProxyFailedInstantiationTest, reporter, /* options */) {
         ctx.get(), GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact, {100, 100});
     REPORTER_ASSERT(reporter, rtc);
 
-    rtc->clear(
-        nullptr, SkPMColor4f::FromBytes_RGBA(0xbaaaaaad),
-        GrRenderTargetContext::CanClearFullscreen::kYes);
+    rtc->clear(SkPMColor4f::FromBytes_RGBA(0xbaaaaaad));
 
     int executeTestValue = 0;
     rtc->priv().testingOnly_addDrawOp(LazyFailedInstantiationTestOp::Make(
         ctx.get(), proxyProvider, &executeTestValue, failInstantiation));
-    ctx->flush();
+    ctx->flushAndSubmit();
 
     if (failInstantiation) {
       REPORTER_ASSERT(reporter, 1 == executeTestValue);

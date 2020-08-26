@@ -23,7 +23,7 @@ class SkXMLParser;
 
 class SkDOM : public SkNoncopyable {
  public:
-  SkDOM();
+  SkDOM() noexcept;
   ~SkDOM();
 
   typedef SkDOMNode Node;
@@ -34,7 +34,7 @@ class SkDOM : public SkNoncopyable {
   const Node* build(SkStream&);
   const Node* copy(const SkDOM& dom, const Node* node);
 
-  const Node* getRootNode() const;
+  const Node* getRootNode() const noexcept;
 
   SkXMLParser* beginParsing();
   const Node* finishParsing();

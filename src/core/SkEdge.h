@@ -37,9 +37,9 @@ struct SkEdge {
   // call this version if you know you don't have a clip
   inline int setLine(const SkPoint& p0, const SkPoint& p1, int shiftUp);
   inline int updateLine(SkFixed ax, SkFixed ay, SkFixed bx, SkFixed by);
-  void chopLineWithClip(const SkIRect& clip);
+  void chopLineWithClip(const SkIRect& clip) noexcept;
 
-  inline bool intersectsClip(const SkIRect& clip) const {
+  inline bool intersectsClip(const SkIRect& clip) const noexcept {
     SkASSERT(fFirstY < clip.fBottom);
     return fLastY >= clip.fTop;
   }

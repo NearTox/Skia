@@ -32,7 +32,7 @@ class GrDisableColorXPFactory : public GrXPFactory {
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const override {
+      GrClampType) const noexcept override {
     return AnalysisProperties::kCompatibleWithCoverageAsAlpha |
            AnalysisProperties::kIgnoresInputColor;
   }

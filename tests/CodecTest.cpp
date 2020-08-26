@@ -832,7 +832,7 @@ DEF_TEST(Codec_pngChunkReader, r) {
   REPORTER_ASSERT(r, chunkReader.allHaveBeenSeen());
 }
 #  endif  // SK_PNG_DISABLE_TESTS
-#endif    // PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
+#endif  // PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
 
 // Stream that can only peek up to a limit
 class LimitedPeekingMemStream : public SkStream {

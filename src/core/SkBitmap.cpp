@@ -54,7 +54,7 @@ SkBitmap::SkBitmap(SkBitmap&& other) noexcept
   other.fFlags = 0;
 }
 
-SkBitmap::~SkBitmap() {}
+SkBitmap::~SkBitmap() = default;
 
 SkBitmap& SkBitmap::operator=(const SkBitmap& src) noexcept {
   if (this != &src) {
@@ -102,7 +102,7 @@ void SkBitmap::getBounds(SkIRect* bounds) const noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkBitmap::setInfo(const SkImageInfo& info, size_t rowBytes) {
+bool SkBitmap::setInfo(const SkImageInfo& info, size_t rowBytes) noexcept {
   SkAlphaType newAT = info.alphaType();
   if (!SkColorTypeValidateAlphaType(info.colorType(), info.alphaType(), &newAT)) {
     return reset_return_false(this);

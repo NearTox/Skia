@@ -175,13 +175,13 @@ class SkGlyph {
   SkFixed getSubXFixed() const noexcept { return fID.getSubXFixed(); }
   SkFixed getSubYFixed() const noexcept { return fID.getSubYFixed(); }
 
-  size_t rowBytes() const noexcept;
-  size_t rowBytesUsingFormat(SkMask::Format format) const noexcept;
+  size_t rowBytes() const;
+  size_t rowBytesUsingFormat(SkMask::Format format) const;
 
   // Call this to set all of the metrics fields to 0 (e.g. if the scaler
   // encounters an error measuring a glyph). Note: this does not alter the
   // fImage, fPath, fID, fMaskFormat fields.
-  void zeroMetrics() noexcept;
+  void zeroMetrics();
 
   SkMask mask() const;
 
@@ -212,7 +212,7 @@ class SkGlyph {
   }
 
   // Return the size of the image.
-  size_t imageSize() const noexcept;
+  size_t imageSize() const;
 
   // Path
   // If we haven't already tried to associate a path to this glyph
@@ -234,12 +234,12 @@ class SkGlyph {
 
   // Return a pointer to the path if it exists, otherwise return nullptr. Only works if the
   // path was previously set.
-  const SkPath* path() const noexcept;
+  const SkPath* path() const;
 
   // Format
   bool isColor() const noexcept { return fMaskFormat == SkMask::kARGB32_Format; }
   SkMask::Format maskFormat() const noexcept { return static_cast<SkMask::Format>(fMaskFormat); }
-  size_t formatAlignment() const noexcept;
+  size_t formatAlignment() const;
 
   // Bounds
   int maxDimension() const noexcept { return std::max(fWidth, fHeight); }

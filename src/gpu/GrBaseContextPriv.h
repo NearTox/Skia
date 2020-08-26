@@ -23,7 +23,7 @@ class GrBaseContextPriv {
   const GrContextOptions& options() const noexcept { return fContext->options(); }
 
   const GrCaps* caps() const noexcept { return fContext->caps(); }
-  sk_sp<const GrCaps> refCaps() const;
+  sk_sp<const GrCaps> refCaps() const noexcept;
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }

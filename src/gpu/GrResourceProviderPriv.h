@@ -15,11 +15,10 @@
     additional data members or virtual methods. */
 class GrResourceProviderPriv {
  public:
-  GrGpu* gpu() noexcept { return fResourceProvider->gpu(); }
+  GrGpu* gpu() { return fResourceProvider->gpu(); }
 
  private:
-  explicit GrResourceProviderPriv(GrResourceProvider* provider) noexcept
-      : fResourceProvider(provider) {}
+  explicit GrResourceProviderPriv(GrResourceProvider* provider) : fResourceProvider(provider) {}
   GrResourceProviderPriv(const GrResourceProviderPriv&);             // unimpl
   GrResourceProviderPriv& operator=(const GrResourceProviderPriv&);  // unimpl
 
@@ -31,11 +30,9 @@ class GrResourceProviderPriv {
   friend class GrResourceProvider;  // to construct/copy this type
 };
 
-inline GrResourceProviderPriv GrResourceProvider::priv() noexcept {
-  return GrResourceProviderPriv(this);
-}
+inline GrResourceProviderPriv GrResourceProvider::priv() { return GrResourceProviderPriv(this); }
 
-inline const GrResourceProviderPriv GrResourceProvider::priv() const noexcept {
+inline const GrResourceProviderPriv GrResourceProvider::priv() const {
   return GrResourceProviderPriv(const_cast<GrResourceProvider*>(this));
 }
 

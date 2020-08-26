@@ -30,7 +30,7 @@ void GrTexture::markMipMapsClean() noexcept {
   fMipMapsStatus = GrMipMapsStatus::kValid;
 }
 
-size_t GrTexture::onGpuMemorySize() const {
+size_t GrTexture::onGpuMemorySize() const noexcept {
   const GrCaps& caps = *this->getGpu()->caps();
   return GrSurface::ComputeSize(
       caps, this->backendFormat(), this->dimensions(), 1, this->texturePriv().mipMapped());
@@ -39,7 +39,7 @@ size_t GrTexture::onGpuMemorySize() const {
 /////////////////////////////////////////////////////////////////////////////
 GrTexture::GrTexture(
     GrGpu* gpu, const SkISize& dimensions, GrProtected isProtected, GrTextureType textureType,
-    GrMipMapsStatus mipMapsStatus)
+    GrMipMapsStatus mipMapsStatus) noexcept
     : INHERITED(gpu, dimensions, isProtected),
       fTextureType(textureType),
       fMipMapsStatus(mipMapsStatus) {

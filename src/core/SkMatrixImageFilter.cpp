@@ -15,7 +15,7 @@
 #include "src/core/SkWriteBuffer.h"
 
 SkMatrixImageFilter::SkMatrixImageFilter(
-    const SkMatrix& transform, SkFilterQuality filterQuality, sk_sp<SkImageFilter> input) noexcept
+    const SkMatrix& transform, SkFilterQuality filterQuality, sk_sp<SkImageFilter> input)
     : INHERITED(&input, 1, nullptr), fTransform(transform), fFilterQuality(filterQuality) {}
 
 sk_sp<SkImageFilter> SkMatrixImageFilter::Make(

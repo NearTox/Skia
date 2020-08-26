@@ -109,6 +109,8 @@ class GM {
 
   static constexpr char kErrorMsg_DrawSkippedGpuOnly[] = "This test is for GPU configs only.";
 
+  DrawResult gpuSetup(GrContext*, SkString* errorMsg);
+
   DrawResult draw(SkCanvas* canvas) {
     SkString errorMsg;
     return this->draw(canvas, &errorMsg);
@@ -147,8 +149,10 @@ class GM {
   virtual std::unique_ptr<verifiers::VerifierList> getVerifiers() const;
 
  protected:
+  // onGpuSetup is called once before any other processing with a direct context.
+  virtual DrawResult onGpuSetup(GrContext*, SkString*) { return DrawResult::kOk; }
   virtual void onOnceBeforeDraw();
-  virtual DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg);
+  virtual DrawResult onDraw(SkCanvas*, SkString* errorMsg);
   virtual void onDraw(SkCanvas*);
 
   virtual SkISize onISize() = 0;

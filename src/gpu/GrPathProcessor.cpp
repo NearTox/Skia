@@ -23,7 +23,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
   GrGLPathProcessor() : fColor(SK_PMColor4fILLEGAL) {}
 
   static void GenKey(
-      const GrPathProcessor& pathProc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+      const GrPathProcessor& pathProc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
     b->add32(SkToInt(pathProc.viewMatrix().hasPerspective()));
   }
 
@@ -176,7 +176,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
 };
 
 GrPathProcessor::GrPathProcessor(
-    const SkPMColor4f& color, const SkMatrix& viewMatrix, const SkMatrix& localMatrix)
+    const SkPMColor4f& color, const SkMatrix& viewMatrix, const SkMatrix& localMatrix) noexcept
     : INHERITED(kGrPathProcessor_ClassID),
       fColor(color),
       fViewMatrix(viewMatrix),

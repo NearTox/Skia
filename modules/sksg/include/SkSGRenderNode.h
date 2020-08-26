@@ -33,7 +33,7 @@ class RenderNode : public Node {
 
   // Perform a front-to-back hit-test, and return the RenderNode located at |point|.
   // Normally, hit-testing stops at leaf Draw nodes.
-  const RenderNode* nodeAt(const SkPoint& point) const;
+  const RenderNode* nodeAt(const SkPoint& point) const noexcept;
 
   // Controls the visibility of the render node.  Invisible nodes are not rendered,
   // but they still participate in revalidation.
@@ -44,7 +44,7 @@ class RenderNode : public Node {
   explicit RenderNode(uint32_t inval_traits = 0) noexcept;
 
   virtual void onRender(SkCanvas*, const RenderContext*) const = 0;
-  virtual const RenderNode* onNodeAt(const SkPoint& p) const = 0;
+  virtual const RenderNode* onNodeAt(const SkPoint& p) const noexcept = 0;
 
   // Paint property overrides.
   // These are deferred until we can determine whether they can be applied to the individual
@@ -88,7 +88,7 @@ class RenderNode : public Node {
     // Add (cumulative) paint overrides to a render node sub-DAG.
     ScopedRenderContext&& modulateOpacity(float opacity) noexcept;
     ScopedRenderContext&& modulateColorFilter(sk_sp<SkColorFilter>);
-    ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm);
+    ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm) noexcept;
     ScopedRenderContext&& modulateMaskShader(sk_sp<SkShader>, const SkMatrix& ms_ctm);
     ScopedRenderContext&& modulateBlendMode(SkBlendMode) noexcept;
 
@@ -134,7 +134,7 @@ class CustomRenderNode : public RenderNode {
 
   const std::vector<sk_sp<RenderNode>>& children() const noexcept { return fChildren; }
 
-  bool hasChildrenInval() const noexcept;
+  bool hasChildrenInval() const;
 
  private:
   std::vector<sk_sp<RenderNode>> fChildren;

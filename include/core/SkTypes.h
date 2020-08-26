@@ -258,12 +258,6 @@
 #  undef SK_DIRECT3D
 #endif
 
-#if !defined(SK_SUPPORT_ATLAS_TEXT)
-#  define SK_SUPPORT_ATLAS_TEXT 0
-#elif SK_SUPPORT_ATLAS_TEXT && !SK_SUPPORT_GPU
-#  error "SK_SUPPORT_ATLAS_TEXT requires SK_SUPPORT_GPU"
-#endif
-
 #if !defined(SkUNREACHABLE)
 #  if defined(_MSC_VER) && !defined(__clang__)
 #    define SkUNREACHABLE __assume(false)
@@ -280,24 +274,21 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 #  define SK_DUMP_GOOGLE3_STACK()
 #endif
 
-#ifdef SK_BUILD_FOR_WIN
-// Lets visual studio follow error back to source
-#  define SK_DUMP_LINE_FORMAT(message) \
-    SkDebugf(                          \
-        /*"%s(%d): fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
-#else
-#  define SK_DUMP_LINE_FORMAT(message) \
-    SkDebugf(                          \
-        /*"%s:%d: fatal error: \"%s\"\n", __FILE__, __LINE__*/ "fatal error: \"%s\"\n", message)
-#endif
-
 #ifndef SK_ABORT
-#  define SK_ABORT(message)         \
-    do {                            \
-      SK_DUMP_LINE_FORMAT(message); \
-      SK_DUMP_GOOGLE3_STACK();      \
-      sk_abort_no_print();          \
-      SkUNREACHABLE;                \
+#  ifdef SK_BUILD_FOR_WIN
+// This style lets Visual Studio follow errors back to the source file.
+#    define SK_DUMP_LINE_FORMAT "%s(%d)"
+#  else
+#    define SK_DUMP_LINE_FORMAT "%s:%d"
+#  endif
+#  define SK_ABORT(message, ...)                                                             \
+    do {                                                                                     \
+      SkDebugf(/*SK_DUMP_LINE_FORMAT ": fatal error: \"" message "\"\n", __FILE__, __LINE__, \
+               ##__VA_ARGS__*/                                                               \
+               ": fatal error: \"" message "\"\n");                                          \
+      SK_DUMP_GOOGLE3_STACK();                                                               \
+      sk_abort_no_print();                                                                   \
+      SkUNREACHABLE;                                                                         \
     } while (false)
 #endif
 
@@ -321,12 +312,7 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #define SK_A32_SHIFT 24
 
 /**
- * SK_PMCOLOR_BYTE_ORDER can be used to query the byte order of SkPMColor at compile time. The
- * relationship between the byte order and shift values depends on machine endianness. If the shift
- * order is R=0, G=8, B=16, A=24 then ((char*)&pmcolor)[0] will produce the R channel on a little
- * endian machine and the A channel on a big endian machine. Thus, given those shifts values,
- * SK_PMCOLOR_BYTE_ORDER(R,G,B,A) will be true on a little endian machine and
- * SK_PMCOLOR_BYTE_ORDER(A,B,G,R) will be true on a big endian machine.
+ * SK_PMCOLOR_BYTE_ORDER can be used to query the byte order of SkPMColor at compile time.
  */
 #ifdef SK_CPU_BENDIAN
 #  define SK_PMCOLOR_BYTE_ORDER(C0, C1, C2, C3)                                     \
@@ -453,17 +439,17 @@ SK_API void SkDebugf(const char format[], ...) noexcept;
 //               x - 4;
 //    }
 #define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(" #cond ")"); }())
+  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(%s)", #cond); }())
 
 #ifdef SK_DEBUG
 #  define SkASSERT(cond) SkASSERT_RELEASE(cond)
 #  define SkASSERTF(cond, fmt, ...)            \
     static_cast<void>((cond) ? (void)0 : [&] { \
       SkDebugf(fmt "\n", __VA_ARGS__);         \
-      SK_ABORT("assert(" #cond ")");           \
+      SK_ABORT("assert(%s)", #cond);           \
     }())
-#  define SkDEBUGFAIL(message) SK_ABORT(message)
-#  define SkDEBUGFAILF(fmt, ...) SkASSERTF(false, fmt, ##__VA_ARGS__)
+#  define SkDEBUGFAIL(message) SK_ABORT("%s", message)
+#  define SkDEBUGFAILF(fmt, ...) SK_ABORT(fmt, ##__VA_ARGS__)
 #  define SkDEBUGCODE(...) __VA_ARGS__
 #  define SkDEBUGF(...) SkDebugf(__VA_ARGS__)
 #  define SkAssertResult(cond) SkASSERT(cond)
@@ -569,7 +555,7 @@ static constexpr bool SkIsAlignPtr(T x) noexcept {
 
 typedef uint32_t SkFourByteTag;
 static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
-  return (((uint8_t)a << 24) | ((uint8_t)b << 16) | ((uint8_t)c << 8) | (uint8_t)d);
+  return (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,7 +608,6 @@ static constexpr inline T SkTAbs(T value) noexcept {
 */
 template <typename T>
 static constexpr const T& SkTPin(const T& value, const T& min, const T& max) noexcept {
-  static_assert(noexcept(value < min));
   return value < min ? min : (value < max ? value : max);
 }
 

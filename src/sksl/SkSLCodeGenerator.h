@@ -19,7 +19,7 @@ namespace SkSL {
  */
 class CodeGenerator {
  public:
-  CodeGenerator(const Program* program, ErrorReporter* errors, OutputStream* out)
+  CodeGenerator(const Program* program, ErrorReporter* errors, OutputStream* out) noexcept
       : fProgram(*program), fErrors(*errors), fOut(out) {
     SkASSERT(program->fIsOptimized);
   }

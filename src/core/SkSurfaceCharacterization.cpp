@@ -22,7 +22,7 @@ void SkSurfaceCharacterization::validate() const {
 }
 #  endif
 
-bool SkSurfaceCharacterization::operator==(const SkSurfaceCharacterization& other) const noexcept {
+bool SkSurfaceCharacterization::operator==(const SkSurfaceCharacterization& other) const {
   if (!this->isValid() || !other.isValid()) {
     return false;
   }

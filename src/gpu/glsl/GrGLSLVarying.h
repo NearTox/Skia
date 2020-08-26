@@ -34,7 +34,7 @@ class GrGLSLVarying {
  public:
   enum class Scope { kVertToFrag, kVertToGeo, kGeoToFrag };
 
-  constexpr GrGLSLVarying() noexcept = default;
+  GrGLSLVarying() noexcept = default;
   GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) noexcept
       : fType(type), fScope(scope) {
     // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
@@ -76,11 +76,11 @@ class GrGLSLVarying {
   friend class GrGLSLVaryingHandler;
 };
 
-static constexpr int kVaryingsPerBlock = 8;
+static const int kVaryingsPerBlock = 8;
 
 class GrGLSLVaryingHandler {
  public:
-  explicit GrGLSLVaryingHandler(GrGLSLProgramBuilder* program)
+  explicit GrGLSLVaryingHandler(GrGLSLProgramBuilder* program) noexcept
       : fVaryings(kVaryingsPerBlock),
         fVertexInputs(kVaryingsPerBlock),
         fVertexOutputs(kVaryingsPerBlock),

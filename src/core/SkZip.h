@@ -59,7 +59,7 @@ class SkZip {
 
  public:
   constexpr SkZip() noexcept : fPointers{nullify<Ts>...}, fSize{0} {}
-  constexpr SkZip(size_t) = delete;
+  constexpr SkZip(size_t) noexcept = delete;
   constexpr SkZip(size_t size, Ts*... ts) noexcept : fPointers{ts...}, fSize{size} {}
   constexpr SkZip(const SkZip& that) noexcept = default;
 
@@ -113,14 +113,14 @@ class SkZip {
   constexpr SkZip(size_t n, const std::tuple<Ts*...>& pointers) noexcept
       : fPointers{pointers}, fSize{n} {}
 
-  constexpr ReturnTuple index(size_t i) const {
+  constexpr ReturnTuple index(size_t i) const noexcept {
     SkASSERT(this->size() > 0);
     SkASSERT(i < this->size());
     return indexDetail(i, std::make_index_sequence<sizeof...(Ts)>{});
   }
 
   template <std::size_t... Is>
-  constexpr ReturnTuple indexDetail(size_t i, std::index_sequence<Is...>) const {
+  constexpr ReturnTuple indexDetail(size_t i, std::index_sequence<Is...>) const noexcept {
     return ReturnTuple((std::get<Is>(fPointers))[i]...);
   }
 
@@ -131,7 +131,8 @@ class SkZip {
   }
 
   template <std::size_t... Is>
-  constexpr std::tuple<Ts*...> pointersAtDetail(size_t i, std::index_sequence<Is...>) const {
+  constexpr std::tuple<Ts*...> pointersAtDetail(
+      size_t i, std::index_sequence<Is...>) const noexcept {
     return std::tuple<Ts*...>{&(std::get<Is>(fPointers))[i]...};
   }
 
@@ -153,29 +154,29 @@ class SkMakeZipDetail {
   template <typename T>
   struct ContiguousMemory<T*> {
     using value_type = T;
-    static constexpr value_type* Data(T* t) { return t; }
-    static constexpr size_t Size(T* s) { return SIZE_MAX; }
+    static constexpr value_type* Data(T* t) noexcept { return t; }
+    static constexpr size_t Size(T* s) noexcept { return SIZE_MAX; }
   };
   template <typename T, size_t N>
   struct ContiguousMemory<T (&)[N]> {
     using value_type = T;
-    static constexpr value_type* Data(T (&t)[N]) { return t; }
-    static constexpr size_t Size(T (&)[N]) { return N; }
+    static constexpr value_type* Data(T (&t)[N]) noexcept { return t; }
+    static constexpr size_t Size(T (&)[N]) noexcept { return N; }
   };
   // In general, we don't want r-value collections, but SkSpans are ok, because they are a view
   // onto an actual container.
   template <typename T>
   struct ContiguousMemory<SkSpan<T>> {
     using value_type = T;
-    static constexpr value_type* Data(SkSpan<T> s) { return s.data(); }
-    static constexpr size_t Size(SkSpan<T> s) { return s.size(); }
+    static constexpr value_type* Data(SkSpan<T> s) noexcept { return s.data(); }
+    static constexpr size_t Size(SkSpan<T> s) noexcept { return s.size(); }
   };
   // Only accept l-value references to collections.
   template <typename C>
   struct ContiguousMemory<C&> {
     using value_type = typename std::remove_pointer<decltype(std::declval<C>().data())>::type;
-    static constexpr value_type* Data(C& c) { return c.data(); }
-    static constexpr size_t Size(C& c) { return c.size(); }
+    static constexpr value_type* Data(C& c) noexcept { return c.data(); }
+    static constexpr size_t Size(C& c) noexcept { return c.size(); }
   };
   template <typename C>
   using Span = ContiguousMemory<DecayPointerT<C>>;
@@ -186,26 +187,26 @@ class SkMakeZipDetail {
   struct PickOneSize {};
   template <typename T, typename... Ts>
   struct PickOneSize<T*, Ts...> {
-    static constexpr size_t Size(T* t, Ts... ts) {
+    static constexpr size_t Size(T* t, Ts... ts) noexcept {
       return PickOneSize<Ts...>::Size(std::forward<Ts>(ts)...);
     }
   };
   template <typename T, typename... Ts, size_t N>
   struct PickOneSize<T (&)[N], Ts...> {
-    static constexpr size_t Size(T (&)[N], Ts...) { return N; }
+    static constexpr size_t Size(T (&)[N], Ts...) noexcept { return N; }
   };
   template <typename T, typename... Ts>
   struct PickOneSize<SkSpan<T>, Ts...> {
-    static constexpr size_t Size(SkSpan<T> s, Ts...) { return s.size(); }
+    static constexpr size_t Size(SkSpan<T> s, Ts...) noexcept { return s.size(); }
   };
   template <typename C, typename... Ts>
   struct PickOneSize<C&, Ts...> {
-    static constexpr size_t Size(C& c, Ts...) { return c.size(); }
+    static constexpr size_t Size(C& c, Ts...) noexcept { return c.size(); }
   };
 
  public:
   template <typename... Ts>
-  static constexpr auto MakeZip(Ts&&... ts) {
+  static constexpr auto MakeZip(Ts&&... ts) noexcept {
     // Pick the first collection that has a size, and use that for the size.
     size_t size = PickOneSize<DecayPointerT<Ts>...>::Size(std::forward<Ts>(ts)...);
 
@@ -231,7 +232,7 @@ template <typename T>
 constexpr T* SkZip<Ts...>::nullify;
 
 template <typename... Ts>
-inline constexpr auto SkMakeZip(Ts&&... ts) {
+inline constexpr auto SkMakeZip(Ts&&... ts) noexcept {
   return SkMakeZipDetail::MakeZip(std::forward<Ts>(ts)...);
 }
 #endif  // SkZip_DEFINED

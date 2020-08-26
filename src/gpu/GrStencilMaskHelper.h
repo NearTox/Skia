@@ -38,7 +38,7 @@ class GrStencilMaskHelper : SkNoncopyable {
   // set window rectangles. It will use the provided context and render target to draw into, both
   // of which must outlive the helper.
   GrStencilMaskHelper(GrRecordingContext* context, GrRenderTargetContext* rtc)
-      : fContext(context), fRTC(rtc) {}
+      : fContext(context), fRTC(rtc), fClip(rtc->dimensions()) {}
 
   // Returns true if the stencil mask must be redrawn
   bool init(

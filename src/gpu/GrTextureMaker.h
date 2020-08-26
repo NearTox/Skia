@@ -23,7 +23,8 @@ class GrTextureMaker : public GrTextureProducer {
       const GrSamplerState::Filter* filterOrNullForBicubic) override;
 
  protected:
-  GrTextureMaker(GrRecordingContext* context, const GrImageInfo& info) : INHERITED(context, info) {}
+  GrTextureMaker(GrRecordingContext* context, const GrImageInfo& info) noexcept
+      : INHERITED(context, info) {}
 
  private:
   /**

@@ -34,9 +34,9 @@ class TextAdapter final : public AnimatablePropertyContainer {
 
   ~TextAdapter() override;
 
-  const sk_sp<sksg::Group>& node() const noexcept { return fRoot; }
+  const sk_sp<sksg::Group>& node() const { return fRoot; }
 
-  const TextValue& getText() const noexcept { return fText.fCurrentValue; }
+  const TextValue& getText() const { return fText.fCurrentValue; }
   void setText(const TextValue&);
 
  protected:
@@ -99,7 +99,7 @@ class TextAdapter final : public AnimatablePropertyContainer {
       return false;
     }
 
-    const TextValue* operator->() const noexcept { return &fCurrentValue; }
+    const TextValue* operator->() const { return &fCurrentValue; }
 
    private:
     mutable TextValue fPrevValue;

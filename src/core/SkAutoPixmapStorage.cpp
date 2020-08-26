@@ -51,9 +51,7 @@ bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) noexcept {
   return true;
 }
 
-void SkAutoPixmapStorage::alloc(const SkImageInfo& info) noexcept {
-  SkASSERT_RELEASE(this->tryAlloc(info));
-}
+void SkAutoPixmapStorage::alloc(const SkImageInfo& info) { SkASSERT_RELEASE(this->tryAlloc(info)); }
 
 void* SkAutoPixmapStorage::detachPixels() noexcept {
   if (!fStorage) {

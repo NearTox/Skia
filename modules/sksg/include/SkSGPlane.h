@@ -27,8 +27,8 @@ class Plane final : public GeometryNode {
   void onDraw(SkCanvas*, const SkPaint&) const override;
   bool onContains(const SkPoint&) const noexcept override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const noexcept override;
 
  private:
   Plane() noexcept;

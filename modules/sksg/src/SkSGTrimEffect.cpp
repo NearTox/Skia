@@ -29,14 +29,16 @@ void TrimEffect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawPath(fTrimmedPath, paint);
 }
 
-bool TrimEffect::onContains(const SkPoint& p) const { return fTrimmedPath.contains(p.x(), p.y()); }
+bool TrimEffect::onContains(const SkPoint& p) const noexcept {
+  return fTrimmedPath.contains(p.x(), p.y());
+}
 
-SkPath TrimEffect::onAsPath() const { return fTrimmedPath; }
+SkPath TrimEffect::onAsPath() const noexcept { return fTrimmedPath; }
 
 SkRect TrimEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto& childbounds = fChild->revalidate(ic, ctm);
+  const auto childbounds = fChild->revalidate(ic, ctm);
   const auto path = fChild->asPath();
 
   if (auto trim = SkTrimPathEffect::Make(fStart, fStop, fMode)) {

@@ -18,6 +18,7 @@
 #include "include/effects/SkImageFilters.h"
 #include "include/effects/SkPerlinNoiseShader.h"
 #include "include/effects/SkTableColorFilter.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
@@ -475,6 +476,19 @@ static void test_cropRects(skiatest::Reporter* reporter, GrContext* context) {
   }
 }
 
+static bool special_image_to_bitmap(const SkSpecialImage* src, SkBitmap* dst) {
+  sk_sp<SkImage> img = src->asImage();
+  if (!img) {
+    return false;
+  }
+
+  if (!dst->tryAllocN32Pixels(src->width(), src->height())) {
+    return false;
+  }
+
+  return img->readPixels(dst->pixmap(), src->subset().fLeft, src->subset().fTop);
+}
+
 static void test_negative_blur_sigma(skiatest::Reporter* reporter, GrContext* context) {
   // Check that SkBlurImageFilter will accept a negative sigma, either in
   // the given arguments or after CTM application.
@@ -484,12 +498,9 @@ static void test_negative_blur_sigma(skiatest::Reporter* reporter, GrContext* co
   sk_sp<SkImageFilter> positiveFilter(SkImageFilters::Blur(kBlurSigma, kBlurSigma, nullptr));
   sk_sp<SkImageFilter> negativeFilter(SkImageFilters::Blur(-kBlurSigma, kBlurSigma, nullptr));
 
-  SkBitmap gradient = make_gradient_circle(kWidth, kHeight);
+  sk_sp<SkImage> gradient = SkImage::MakeFromBitmap(make_gradient_circle(kWidth, kHeight));
   sk_sp<SkSpecialImage> imgSrc(
-      SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(kWidth, kHeight), gradient));
-  if (context) {
-    imgSrc = imgSrc->makeTextureImage(context);
-  }
+      SkSpecialImage::MakeFromImage(context, SkIRect::MakeWH(kWidth, kHeight), gradient));
 
   SkIPoint offset;
   SkImageFilter_Base::Context ctx(
@@ -519,10 +530,10 @@ static void test_negative_blur_sigma(skiatest::Reporter* reporter, GrContext* co
   SkBitmap positiveResultBM1, positiveResultBM2;
   SkBitmap negativeResultBM1, negativeResultBM2;
 
-  REPORTER_ASSERT(reporter, positiveResult1->getROPixels(&positiveResultBM1));
-  REPORTER_ASSERT(reporter, positiveResult2->getROPixels(&positiveResultBM2));
-  REPORTER_ASSERT(reporter, negativeResult1->getROPixels(&negativeResultBM1));
-  REPORTER_ASSERT(reporter, negativeResult2->getROPixels(&negativeResultBM2));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(positiveResult1.get(), &positiveResultBM1));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(positiveResult2.get(), &positiveResultBM2));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(negativeResult1.get(), &negativeResultBM1));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(negativeResult2.get(), &negativeResultBM2));
 
   for (int y = 0; y < kHeight; y++) {
     int diffs = memcmp(
@@ -571,12 +582,9 @@ static void test_morphology_radius_with_mirror_ctm(
   SkPaint paint;
   paint.setColor(SK_ColorWHITE);
   canvas.drawRect(SkRect::MakeXYWH(kWidth / 4, kHeight / 4, kWidth / 2, kHeight / 2), paint);
-
+  sk_sp<SkImage> image = SkImage::MakeFromBitmap(bitmap);
   sk_sp<SkSpecialImage> imgSrc(
-      SkSpecialImage::MakeFromRaster(SkIRect::MakeWH(kWidth, kHeight), bitmap));
-  if (context) {
-    imgSrc = imgSrc->makeTextureImage(context);
-  }
+      SkSpecialImage::MakeFromImage(context, SkIRect::MakeWH(kWidth, kHeight), image));
 
   SkIPoint offset;
   SkImageFilter_Base::Context ctx(
@@ -607,9 +615,9 @@ static void test_morphology_radius_with_mirror_ctm(
 
   SkBitmap normalResultBM, mirrorXResultBM, mirrorYResultBM;
 
-  REPORTER_ASSERT(reporter, normalResult->getROPixels(&normalResultBM));
-  REPORTER_ASSERT(reporter, mirrorXResult->getROPixels(&mirrorXResultBM));
-  REPORTER_ASSERT(reporter, mirrorYResult->getROPixels(&mirrorYResultBM));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(normalResult.get(), &normalResultBM));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(mirrorXResult.get(), &mirrorXResultBM));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(mirrorYResult.get(), &mirrorYResultBM));
 
   for (int y = 0; y < kHeight; y++) {
     int diffs = memcmp(
@@ -656,7 +664,7 @@ static void test_zero_blur_sigma(skiatest::Reporter* reporter, GrContext* contex
 
   SkBitmap resultBM;
 
-  REPORTER_ASSERT(reporter, result->getROPixels(&resultBM));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(result.get(), &resultBM));
 
   for (int y = 0; y < resultBM.height(); y++) {
     for (int x = 0; x < resultBM.width(); x++) {
@@ -684,7 +692,7 @@ static void test_fail_affects_transparent_black(skiatest::Reporter* reporter, Gr
       SkMatrix::I(), SkIRect::MakeXYWH(0, 0, 1, 1), nullptr, kN32_SkColorType, nullptr,
       source.get());
   sk_sp<SkColorFilter> green(SkColorFilters::Blend(SK_ColorGREEN, SkBlendMode::kSrc));
-  SkASSERT(green->affectsTransparentBlack());
+  SkASSERT(as_CFB(green)->affectsTransparentBlack());
   sk_sp<SkImageFilter> greenFilter(
       SkImageFilters::ColorFilter(std::move(green), std::move(failFilter)));
   SkIPoint offset;
@@ -692,7 +700,7 @@ static void test_fail_affects_transparent_black(skiatest::Reporter* reporter, Gr
   REPORTER_ASSERT(reporter, nullptr != result.get());
   if (result.get()) {
     SkBitmap resultBM;
-    REPORTER_ASSERT(reporter, result->getROPixels(&resultBM));
+    REPORTER_ASSERT(reporter, special_image_to_bitmap(result.get(), &resultBM));
     REPORTER_ASSERT(reporter, *resultBM.getAddr32(0, 0) == SK_ColorGREEN);
   }
 }
@@ -1453,7 +1461,7 @@ static void test_composed_imagefilter_bounds(skiatest::Reporter* reporter, GrCon
   REPORTER_ASSERT(reporter, result->subset().size() == SkISize::Make(100, 100));
 
   SkBitmap resultBM;
-  REPORTER_ASSERT(reporter, result->getROPixels(&resultBM));
+  REPORTER_ASSERT(reporter, special_image_to_bitmap(result.get(), &resultBM));
   REPORTER_ASSERT(reporter, resultBM.getColor(50, 50) == SK_ColorGREEN);
 }
 
@@ -1479,7 +1487,7 @@ DEF_TEST(ImageFilterCanComputeFastBounds, reporter) {
       {
         SkColorFilter* grayCF;
         REPORTER_ASSERT(reporter, gray->asAColorFilter(&grayCF));
-        REPORTER_ASSERT(reporter, !grayCF->affectsTransparentBlack());
+        REPORTER_ASSERT(reporter, !as_CFB(grayCF)->affectsTransparentBlack());
         grayCF->unref();
       }
       REPORTER_ASSERT(reporter, gray->canComputeFastBounds());
@@ -1494,7 +1502,7 @@ DEF_TEST(ImageFilterCanComputeFastBounds, reporter) {
       sk_sp<SkColorFilter> greenCF(SkColorFilters::Matrix(greenMatrix));
       sk_sp<SkImageFilter> green(SkImageFilters::ColorFilter(greenCF, nullptr));
 
-      REPORTER_ASSERT(reporter, greenCF->affectsTransparentBlack());
+      REPORTER_ASSERT(reporter, as_CFB(greenCF)->affectsTransparentBlack());
       REPORTER_ASSERT(reporter, !green->canComputeFastBounds());
 
       sk_sp<SkImageFilter> greenBlur(
@@ -1511,13 +1519,13 @@ DEF_TEST(ImageFilterCanComputeFastBounds, reporter) {
     sk_sp<SkColorFilter> identityCF(
         SkTableColorFilter::MakeARGB(identity, identity, identity, allOne));
     sk_sp<SkImageFilter> identityFilter(SkImageFilters::ColorFilter(identityCF, nullptr));
-    REPORTER_ASSERT(reporter, !identityCF->affectsTransparentBlack());
+    REPORTER_ASSERT(reporter, !as_CFB(identityCF)->affectsTransparentBlack());
     REPORTER_ASSERT(reporter, identityFilter->canComputeFastBounds());
 
     sk_sp<SkColorFilter> forceOpaqueCF(
         SkTableColorFilter::MakeARGB(allOne, identity, identity, identity));
     sk_sp<SkImageFilter> forceOpaque(SkImageFilters::ColorFilter(forceOpaqueCF, nullptr));
-    REPORTER_ASSERT(reporter, forceOpaqueCF->affectsTransparentBlack());
+    REPORTER_ASSERT(reporter, as_CFB(forceOpaqueCF)->affectsTransparentBlack());
     REPORTER_ASSERT(reporter, !forceOpaque->canComputeFastBounds());
 }
 
@@ -1866,7 +1874,7 @@ DEF_TEST(ImageSourceBounds, reporter) {
   REPORTER_ASSERT(
       reporter, input == source1->filterBounds(
                              input, SkMatrix::I(), SkImageFilter::kReverse_MapDirection, &input));
-  SkMatrix scale(SkMatrix::MakeScale(2));
+  SkMatrix scale(SkMatrix::Scale(2, 2));
   SkIRect scaledBounds = SkIRect::MakeWH(128, 128);
   REPORTER_ASSERT(
       reporter, scaledBounds == source1->filterBounds(

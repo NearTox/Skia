@@ -313,38 +313,38 @@ static void draw_typeface_rendering_gm(SkCanvas* canvas, sk_sp<SkTypeface> face,
       {SkBlurStyle::kOuter_SkBlurStyle, 2.0f},  {SkBlurStyle::kInner_SkBlurStyle, 2.0f},
   };
 
-  {
-    SkPaint paint;
-
-    SkFont font(face, 16);
-
-    SkScalar x = 0;
     {
-      for (const AliasType& alias : aliasTypes) {
-        SkScalar dy = SkScalarCeilToScalar(font.getMetrics(nullptr));
-        y += dy;
-        x = 5;
+      SkPaint paint;
 
-        font.setEdging(alias.edging);
-        SkAutoCanvasRestore acr(canvas, false);
-        if (alias.inLayer) {
-          canvas->saveLayer(nullptr, &paint);
-        }
-        for (const MaskTests& mask : maskTypes) {
-          paint.setMaskFilter(SkMaskFilter::MakeBlur(mask.style, mask.sigma));
-          canvas->drawSimpleText(
-              &glyph, sizeof(glyph), SkTextEncoding::kGlyphID, x, y, font, paint);
+      SkFont font(face, 16);
 
-          SkScalar dx = SkScalarCeilToScalar(
-                            font.measureText(&glyph, sizeof(glyph), SkTextEncoding::kGlyphID)) +
-                        5;
-          x += dx;
+      SkScalar x = 0;
+      {
+        for (const AliasType& alias : aliasTypes) {
+          SkScalar dy = SkScalarCeilToScalar(font.getMetrics(nullptr));
+          y += dy;
+          x = 5;
+
+          font.setEdging(alias.edging);
+          SkAutoCanvasRestore acr(canvas, false);
+          if (alias.inLayer) {
+            canvas->saveLayer(nullptr, &paint);
+          }
+          for (const MaskTests& mask : maskTypes) {
+            paint.setMaskFilter(SkMaskFilter::MakeBlur(mask.style, mask.sigma));
+            canvas->drawSimpleText(
+                &glyph, sizeof(glyph), SkTextEncoding::kGlyphID, x, y, font, paint);
+
+            SkScalar dx = SkScalarCeilToScalar(
+                              font.measureText(&glyph, sizeof(glyph), SkTextEncoding::kGlyphID)) +
+                          5;
+            x += dx;
+          }
+          paint.setMaskFilter(nullptr);
         }
-        paint.setMaskFilter(nullptr);
+        y += 10;
       }
-      y += 10;
     }
-  }
 }
 
 DEF_SIMPLE_GM(typefacerendering, canvas, 640, 840) {

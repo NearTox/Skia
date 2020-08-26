@@ -13,7 +13,7 @@
 namespace SkSL {
 
 struct ASTFile {
-  ASTFile() : fRoot(ASTNode::ID::Invalid()) {}
+  ASTFile() noexcept : fRoot(ASTNode::ID::Invalid()) {}
 
   ASTNode& root() noexcept { return fNodes[fRoot.fValue]; }
 

@@ -82,24 +82,32 @@ DEF_TEST(PathOpsReduceOrderCubic, reporter) {
     run = RunComputedLines;
     firstTestIndex = 18;
 #endif
-  int firstPointDegeneratesTest =
-      run == RunAll ? 0 : run == RunPointDegenerates ? firstTestIndex : SK_MaxS32;
-  int firstNotPointDegeneratesTest =
-      run == RunAll ? 0 : run == RunNotPointDegenerates ? firstTestIndex : SK_MaxS32;
+  int firstPointDegeneratesTest = run == RunAll                ? 0
+                                  : run == RunPointDegenerates ? firstTestIndex
+                                                               : SK_MaxS32;
+  int firstNotPointDegeneratesTest = run == RunAll                   ? 0
+                                     : run == RunNotPointDegenerates ? firstTestIndex
+                                                                     : SK_MaxS32;
   int firstLinesTest = run == RunAll ? 0 : run == RunLines ? firstTestIndex : SK_MaxS32;
   int firstNotLinesTest = run == RunAll ? 0 : run == RunNotLines ? firstTestIndex : SK_MaxS32;
-  int firstModEpsilonTest =
-      run == RunAll ? 0 : run == RunModEpsilonLines ? firstTestIndex : SK_MaxS32;
-  int firstLessEpsilonTest =
-      run == RunAll ? 0 : run == RunLessEpsilonLines ? firstTestIndex : SK_MaxS32;
-  int firstNegEpsilonTest =
-      run == RunAll ? 0 : run == RunNegEpsilonLines ? firstTestIndex : SK_MaxS32;
-  int firstQuadraticPointTest =
-      run == RunAll ? 0 : run == RunQuadraticPoints ? firstTestIndex : SK_MaxS32;
-  int firstQuadraticLineTest =
-      run == RunAll ? 0 : run == RunQuadraticLines ? firstTestIndex : SK_MaxS32;
-  int firstQuadraticModLineTest =
-      run == RunAll ? 0 : run == RunQuadraticModLines ? firstTestIndex : SK_MaxS32;
+  int firstModEpsilonTest = run == RunAll               ? 0
+                            : run == RunModEpsilonLines ? firstTestIndex
+                                                        : SK_MaxS32;
+  int firstLessEpsilonTest = run == RunAll                ? 0
+                             : run == RunLessEpsilonLines ? firstTestIndex
+                                                          : SK_MaxS32;
+  int firstNegEpsilonTest = run == RunAll               ? 0
+                            : run == RunNegEpsilonLines ? firstTestIndex
+                                                        : SK_MaxS32;
+  int firstQuadraticPointTest = run == RunAll               ? 0
+                                : run == RunQuadraticPoints ? firstTestIndex
+                                                            : SK_MaxS32;
+  int firstQuadraticLineTest = run == RunAll              ? 0
+                               : run == RunQuadraticLines ? firstTestIndex
+                                                          : SK_MaxS32;
+  int firstQuadraticModLineTest = run == RunAll                 ? 0
+                                  : run == RunQuadraticModLines ? firstTestIndex
+                                                                : SK_MaxS32;
 #if 0
     int firstComputedLinesTest = run == RunAll ? 0 : run == RunComputedLines
             ? firstTestIndex : SK_MaxS32;

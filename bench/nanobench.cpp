@@ -11,7 +11,6 @@
 
 #include "bench/AndroidCodecBench.h"
 #include "bench/Benchmark.h"
-#include "bench/BitmapRegionDecoderBench.h"
 #include "bench/CodecBench.h"
 #include "bench/CodecBenchPriv.h"
 #include "bench/GMBench.h"
@@ -20,7 +19,6 @@
 #include "bench/SKPAnimationBench.h"
 #include "bench/SKPBench.h"
 #include "bench/SkGlyphCacheBench.h"
-#include "include/android/SkBitmapRegionDecoder.h"
 #include "include/codec/SkAndroidCodec.h"
 #include "include/codec/SkCodec.h"
 #include "include/core/SkCanvas.h"
@@ -51,6 +49,11 @@
 #ifdef SK_XML
 #  include "experimental/svg/model/SkSVGDOM.h"
 #endif  // SK_XML
+
+#ifdef SK_ENABLE_ANDROID_UTILS
+#  include "bench/BitmapRegionDecoderBench.h"
+#  include "client_utils/android/BitmapRegionDecoder.h"
+#endif
 
 #include <cinttypes>
 #include <stdlib.h>
@@ -217,6 +220,13 @@ struct GPUTarget : public Target {
   explicit GPUTarget(const Config& c) : Target(c) {}
   ContextInfo contextInfo;
   std::unique_ptr<GrContextFactory> factory;
+
+  ~GPUTarget() override {
+    // For Vulkan we need to release all our refs to the GrContext before destroy the vulkan
+    // context which happens at the end of this destructor. Thus we need to release the surface
+    // here which holds a ref to the GrContext.
+    surface.reset();
+  }
 
   void setup() override {
     this->contextInfo.testContext()->makeCurrent();
@@ -584,11 +594,11 @@ static Target* is_enabled(Benchmark* bench, const Config& config) {
 #  pragma warning(pop)
 #endif
 
+#ifdef SK_ENABLE_ANDROID_UTILS
 static bool valid_brd_bench(
     sk_sp<SkData> encoded, SkColorType colorType, uint32_t sampleSize, uint32_t minOutputSize,
     int* width, int* height) {
-  std::unique_ptr<SkBitmapRegionDecoder> brd(
-      SkBitmapRegionDecoder::Create(encoded, SkBitmapRegionDecoder::kAndroidCodec_Strategy));
+  auto brd = android::skia::BitmapRegionDecoder::Make(encoded);
   if (nullptr == brd.get()) {
     // This is indicates that subset decoding is not supported for a particular image format.
     return false;
@@ -606,6 +616,7 @@ static bool valid_brd_bench(
   *height = brd->height();
   return true;
 }
+#endif
 
 static void cleanup_run(Target* target) { delete target; }
 
@@ -960,6 +971,7 @@ class BenchmarkStream {
       fCurrentSampleSize = 0;
     }
 
+#ifdef SK_ENABLE_ANDROID_UTILS
     // Run the BRDBenches
     // We intend to create benchmarks that model the use cases in
     // android/libraries/social/tiledimage.  In this library, an image is decoded in 512x512
@@ -1038,6 +1050,7 @@ class BenchmarkStream {
       }
       fCurrentColorType = 0;
     }
+#endif  // SK_ENABLE_ANDROID_UTILS
 
     return nullptr;
   }
@@ -1067,6 +1080,7 @@ class BenchmarkStream {
   }
 
  private:
+#ifdef SK_ENABLE_ANDROID_UTILS
   enum SubsetType {
     kTopLeft_SubsetType = 0,
     kTopRight_SubsetType = 1,
@@ -1078,6 +1092,7 @@ class BenchmarkStream {
     kLast_SubsetType = kZoom_SubsetType,
     kLastSingle_SubsetType = kBottomRight_SubsetType,
   };
+#endif
 
   const BenchRegistry* fBenches;
   const skiagm::GMRegistry* fGMs;
@@ -1105,10 +1120,12 @@ class BenchmarkStream {
   int fCurrentUseMPD = 0;
   int fCurrentCodec = 0;
   int fCurrentAndroidCodec = 0;
+#ifdef SK_ENABLE_ANDROID_UTILS
   int fCurrentBRDImage = 0;
+  int fCurrentSubsetType = 0;
+#endif
   int fCurrentColorType = 0;
   int fCurrentAlphaType = 0;
-  int fCurrentSubsetType = 0;
   int fCurrentSampleSize = 0;
   int fCurrentAnimSKP = 0;
 };

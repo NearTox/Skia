@@ -25,11 +25,11 @@ class GrVkBuffer : public SkNoncopyable {
     delete[](unsigned char*) fMapPtr;
   }
 
-  VkBuffer buffer() const noexcept { return fResource->fBuffer; }
-  const GrVkAlloc& alloc() const noexcept { return fResource->fAlloc; }
-  const GrVkRecycledResource* resource() const noexcept { return fResource; }
-  size_t size() const noexcept { return fDesc.fSizeInBytes; }
-  VkDeviceSize offset() const noexcept { return fOffset; }
+  VkBuffer buffer() const { return fResource->fBuffer; }
+  const GrVkAlloc& alloc() const { return fResource->fAlloc; }
+  const GrVkRecycledResource* resource() const { return fResource; }
+  size_t size() const { return fDesc.fSizeInBytes; }
+  VkDeviceSize offset() const { return fOffset; }
 
   void addMemoryBarrier(
       const GrVkGpu* gpu, VkAccessFlags srcAccessMask, VkAccessFlags dstAccessMask,
@@ -78,7 +78,7 @@ class GrVkBuffer : public SkNoncopyable {
   // convenience routine for raw buffer creation
   static const Resource* Create(GrVkGpu* gpu, const Desc& descriptor);
 
-  GrVkBuffer(const Desc& desc, const GrVkBuffer::Resource* resource) noexcept
+  GrVkBuffer(const Desc& desc, const GrVkBuffer::Resource* resource)
       : fDesc(desc), fResource(resource), fOffset(0), fMapPtr(nullptr) {}
 
   void* vkMap(GrVkGpu* gpu) {

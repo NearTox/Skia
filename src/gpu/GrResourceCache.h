@@ -61,7 +61,7 @@ class GrResourceCache {
   ~GrResourceCache();
 
   // Default maximum number of bytes of gpu memory of budgeted resources in the cache.
-  static const size_t kDefaultMaxSize = 96 * (1 << 20);
+  static const size_t kDefaultMaxSize = 256 * (1 << 20);
 
   /** Used to access functionality needed by GrGpuResource for lifetime management. */
   class ResourceAccess;
@@ -272,12 +272,12 @@ class GrResourceCache {
   class AvailableForScratchUse;
 
   struct ScratchMapTraits {
-    static const GrScratchKey& GetKey(const GrGpuResource& r) noexcept {
+    static const GrScratchKey& GetKey(const GrGpuResource& r) {
       return r.resourcePriv().getScratchKey();
     }
 
     static uint32_t Hash(const GrScratchKey& key) noexcept { return key.hash(); }
-    static void OnFree(GrGpuResource*) {}
+    static void OnFree(GrGpuResource*) noexcept {}
   };
   typedef SkTMultiMap<GrGpuResource, GrScratchKey, ScratchMapTraits> ScratchMap;
 
@@ -344,8 +344,7 @@ class GrResourceCache {
 #endif
 
   // our current stats for all resources
-  SkDEBUGCODE(int fCount = 0);
-  size_t fBytes = 0;
+  SkDEBUGCODE(int fCount = 0;) size_t fBytes = 0;
 
   // our current stats for resources that count against the budget
   int fBudgetedCount = 0;
@@ -362,9 +361,9 @@ class GrResourceCache {
 
   // This resource is allowed to be in the nonpurgeable array for the sake of validate() because
   // we're in the midst of converting it to purgeable status.
-  SkDEBUGCODE(GrGpuResource* fNewlyPurgeableResourceForValidation = nullptr);
+  SkDEBUGCODE(GrGpuResource* fNewlyPurgeableResourceForValidation = nullptr;)
 
-  bool fPreferVRAMUseOverFlushes = false;
+      bool fPreferVRAMUseOverFlushes = false;
 };
 
 class GrResourceCache::ResourceAccess {

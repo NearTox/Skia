@@ -32,39 +32,49 @@ class GrReducedClip {
 
   enum class InitialState : bool { kAllIn, kAllOut };
 
-  InitialState initialState() const noexcept { return fInitialState; }
+  InitialState initialState() const { return fInitialState; }
 
   /**
    * If hasScissor() is true, the clip mask is not valid outside this rect and the caller must
    * enforce this scissor during draw.
    */
-  const SkIRect& scissor() const noexcept {
+  const SkIRect& scissor() const {
     SkASSERT(fHasScissor);
     return fScissor;
   }
-  int left() const noexcept { return this->scissor().left(); }
-  int top() const noexcept { return this->scissor().top(); }
-  int width() const noexcept { return this->scissor().width(); }
-  int height() const noexcept { return this->scissor().height(); }
+  int left() const { return this->scissor().left(); }
+  int top() const { return this->scissor().top(); }
+  int width() const { return this->scissor().width(); }
+  int height() const { return this->scissor().height(); }
 
   /**
    * Indicates whether scissor() is defined. It will always be defined if the maskElements() are
    * nonempty.
    */
-  bool hasScissor() const noexcept { return fHasScissor; }
+  bool hasScissor() const { return fHasScissor; }
+
+  /**
+   * Indicates if there is a clip shader, representing the merge of all shader elements of the
+   * original stack.
+   */
+  bool hasShader() const { return SkToBool(fShader); }
+  sk_sp<SkShader> shader() const {
+    SkASSERT(fShader);
+    return fShader;
+  }
 
   /**
    * If nonempty, the clip mask is not valid inside these windows and the caller must clip them
    * out using the window rectangles GPU extension.
    */
-  const GrWindowRectangles& windowRectangles() const noexcept { return fWindowRects; }
+  const GrWindowRectangles& windowRectangles() const { return fWindowRects; }
 
   /**
    * An ordered list of clip elements that could not be skipped or implemented by other means. If
    * nonempty, the caller must create an alpha and/or stencil mask for these elements and apply it
    * during draw.
    */
-  const ElementList& maskElements() const noexcept { return fMaskElements; }
+  const ElementList& maskElements() const { return fMaskElements; }
 
   /**
    * If maskElements() are nonempty, uniquely identifies the region of the clip mask that falls
@@ -76,7 +86,7 @@ class GrReducedClip {
    * FIXME: this prevents us from reusing a sub-rect of a perfectly good mask when that rect has
    * been assigned a less restrictive ID.
    */
-  uint32_t maskGenID() const noexcept {
+  uint32_t maskGenID() const {
     SkASSERT(!fMaskElements.isEmpty());
     return fMaskGenID;
   }
@@ -84,7 +94,7 @@ class GrReducedClip {
   /**
    * Indicates whether antialiasing is required to process any of the mask elements.
    */
-  bool maskRequiresAA() const noexcept {
+  bool maskRequiresAA() const {
     SkASSERT(!fMaskElements.isEmpty());
     return fMaskRequiresAA;
   }
@@ -92,7 +102,7 @@ class GrReducedClip {
   bool drawAlphaClipMask(GrRenderTargetContext*) const;
   bool drawStencilClipMask(GrRecordingContext*, GrRenderTargetContext*) const;
 
-  int numAnalyticFPs() const noexcept { return fAnalyticFPs.count() + fCCPRClipPaths.count(); }
+  int numAnalyticFPs() const;
 
   /**
    * Called once the client knows the ID of the opsTask that the clip FPs will operate in. This
@@ -104,7 +114,8 @@ class GrReducedClip {
    * may cause flushes or otherwise change which opsTask the actual draw is going into.
    */
   std::unique_ptr<GrFragmentProcessor> finishAndDetachAnalyticFPs(
-      GrCoverageCountingPathRenderer*, uint32_t opsTaskID);
+      GrRecordingContext*, const SkMatrixProvider& matrixProvider, GrCoverageCountingPathRenderer*,
+      uint32_t opsTaskID);
 
  private:
   void walkStack(const SkClipStack&, const SkRect& queryBounds);
@@ -123,7 +134,7 @@ class GrReducedClip {
 
   enum class Invert : bool { kNo = false, kYes = true };
 
-  static GrClipEdgeType GetClipEdgeType(Invert, GrAA) noexcept;
+  static GrClipEdgeType GetClipEdgeType(Invert, GrAA);
   ClipResult addAnalyticFP(const SkRect& deviceSpaceRect, Invert, GrAA);
   ClipResult addAnalyticFP(const SkRRect& deviceSpaceRRect, Invert, GrAA);
   ClipResult addAnalyticFP(const SkPath& deviceSpacePath, Invert, GrAA);
@@ -144,8 +155,11 @@ class GrReducedClip {
   ElementList fMaskElements;
   uint32_t fMaskGenID;
   bool fMaskRequiresAA;
-  SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> fAnalyticFPs;
+  std::unique_ptr<GrFragmentProcessor> fAnalyticFP;
   SkSTArray<4, SkPath> fCCPRClipPaths;  // Will convert to FPs once we have an opsTask ID for CCPR.
+  // Will be the combination of all kShader elements or null if there's no clip shader.
+  // Does not count against the analytic FP limit.
+  sk_sp<SkShader> fShader;
 };
 
 #endif

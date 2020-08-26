@@ -13,7 +13,7 @@
 #include "src/codec/SkSampledCodec.h"
 #include "src/core/SkPixmapPriv.h"
 
-static constexpr bool is_valid_sample_size(int sampleSize) noexcept {
+static bool is_valid_sample_size(int sampleSize) noexcept {
   // FIXME: As Leon has mentioned elsewhere, surely there is also a maximum sampleSize?
   return sampleSize > 0;
 }
@@ -71,7 +71,7 @@ SkAndroidCodec::SkAndroidCodec(SkCodec* codec, ExifOrientationBehavior orientati
       fOrientationBehavior(orientationBehavior),
       fCodec(codec) {}
 
-SkAndroidCodec::~SkAndroidCodec() {}
+SkAndroidCodec::~SkAndroidCodec() = default;
 
 std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromStream(
     std::unique_ptr<SkStream> stream, SkPngChunkReader* chunkReader) {

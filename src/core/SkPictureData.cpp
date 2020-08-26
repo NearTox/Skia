@@ -15,6 +15,7 @@
 #include "src/core/SkPictureRecord.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkTextBlobPriv.h"
+#include "src/core/SkVerticesPriv.h"
 #include "src/core/SkWriteBuffer.h"
 
 #include <new>
@@ -172,7 +173,7 @@ void SkPictureData::flattenToBuffer(SkWriteBuffer& buffer, bool textBlobsOnly) c
     if (!fVertices.empty()) {
       write_tag_size(buffer, SK_PICT_VERTICES_BUFFER_TAG, fVertices.count());
       for (const auto& vert : fVertices) {
-        buffer.writeDataAsByteArray(vert->encode().get());
+        vert->priv().encode(buffer);
       }
     }
 
@@ -225,9 +226,9 @@ void SkPictureData::serialize(
   // Dummy serialize our sub-pictures for the side effect of filling typefaceSet
   // with typefaces from sub-pictures.
   struct DevNull : public SkWStream {
-    DevNull() : fBytesWritten(0) {}
+    DevNull() noexcept : fBytesWritten(0) {}
     size_t fBytesWritten;
-    bool write(const void*, size_t size) override {
+    bool write(const void*, size_t size) noexcept override {
       fBytesWritten += size;
       return true;
     }
@@ -320,7 +321,12 @@ bool SkPictureData::parseStreamTag(
     case SK_PICT_TYPEFACE_TAG: {
       fTFPlayback.setCount(size);
       for (uint32_t i = 0; i < size; ++i) {
-        sk_sp<SkTypeface> tf(SkTypeface::MakeDeserialize(stream));
+        sk_sp<SkTypeface> tf;
+        if (procs.fTypefaceProc) {
+          tf = procs.fTypefaceProc(&stream, sizeof(stream), procs.fTypefaceCtx);
+        } else {
+          tf = SkTypeface::MakeDeserialize(stream);
+        }
         if (!tf.get()) {  // failed to deserialize
           // fTFPlayback asserts it never has a null, so we plop in
           // the default here.
@@ -378,10 +384,6 @@ bool SkPictureData::parseStreamTag(
 }
 
 static sk_sp<SkImage> create_image_from_buffer(SkReadBuffer& buffer) { return buffer.readImage(); }
-static sk_sp<SkVertices> create_vertices_from_buffer(SkReadBuffer& buffer) {
-  auto data = buffer.readByteArrayAsData();
-  return data ? SkVertices::Decode(data->data(), data->size()) : nullptr;
-}
 
 static sk_sp<SkDrawable> create_drawable_from_buffer(SkReadBuffer& buffer) {
   return sk_sp<SkDrawable>((SkDrawable*)buffer.readFlattenable(SkFlattenable::kSkDrawable_Type));
@@ -446,7 +448,7 @@ void SkPictureData::parseBufferTag(SkReadBuffer& buffer, uint32_t tag, uint32_t 
       new_array_from_buffer(buffer, size, fTextBlobs, SkTextBlobPriv::MakeFromBuffer);
       break;
     case SK_PICT_VERTICES_BUFFER_TAG:
-      new_array_from_buffer(buffer, size, fVertices, create_vertices_from_buffer);
+      new_array_from_buffer(buffer, size, fVertices, SkVerticesPriv::Decode);
       break;
     case SK_PICT_IMAGE_BUFFER_TAG:
       new_array_from_buffer(buffer, size, fImages, create_image_from_buffer);

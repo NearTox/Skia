@@ -21,7 +21,7 @@
 
 namespace SkSL {
 
-static constexpr int32_t SKSL_MAGIC = 0x0;  // FIXME: we should probably register a magic number
+static const int32_t SKSL_MAGIC = 0x0;  // FIXME: we should probably register a magic number
 
 void SPIRVCodeGenerator::setupIntrinsics() {
 #define ALL_GLSL(x) \
@@ -143,8 +143,7 @@ static bool is_float(const Context& context, const Type& type) {
   if (type.columns() > 1) {
     return is_float(context, type.componentType());
   }
-  return type == *context.fFloat_Type || type == *context.fHalf_Type ||
-         type == *context.fDouble_Type;
+  return type == *context.fFloat_Type || type == *context.fHalf_Type;
 }
 
 static bool is_signed(const Context& context, const Type& type) {
@@ -169,7 +168,7 @@ static bool is_bool(const Context& context, const Type& type) {
   return type == *context.fBool_Type;
 }
 
-static bool is_out(const Variable& var) noexcept {
+static bool is_out(const Variable& var) {
   return (var.fModifiers.fFlags & Modifiers::kOut_Flag) != 0;
 }
 
@@ -240,12 +239,8 @@ void SPIRVCodeGenerator::writeInstruction(SpvOp_ opCode, int32_t word1, OutputSt
 void SPIRVCodeGenerator::writeString(const char* string, size_t length, OutputStream& out) {
   out.write(string, length);
   switch (length % 4) {
-    case 1:
-      out.write8(0);
-      // fall through
-    case 2:
-      out.write8(0);
-      // fall through
+    case 1: out.write8(0); [[fallthrough]];
+    case 2: out.write8(0); [[fallthrough]];
     case 3: out.write8(0); break;
     default: this->writeWord(0, out);
   }
@@ -358,7 +353,7 @@ void SPIRVCodeGenerator::writeCapabilities(OutputStream& out) {
   }
 }
 
-SpvId SPIRVCodeGenerator::nextId() noexcept { return fIdCount++; }
+SpvId SPIRVCodeGenerator::nextId() { return fIdCount++; }
 
 void SPIRVCodeGenerator::writeStruct(
     const Type& type, const MemoryLayout& memoryLayout, SpvId resultId) {
@@ -477,8 +472,6 @@ SpvId SPIRVCodeGenerator::getType(const Type& rawType, const MemoryLayout& layou
             type == *fContext.fFloat_Type || type == *fContext.fHalf_Type ||
             type == *fContext.fFloatLiteral_Type) {
           this->writeInstruction(SpvOpTypeFloat, result, 32, fConstantBuffer);
-        } else if (type == *fContext.fDouble_Type) {
-          this->writeInstruction(SpvOpTypeFloat, result, 64, fConstantBuffer);
         } else {
           SkASSERT(false);
         }
@@ -1446,7 +1439,7 @@ SpvId SPIRVCodeGenerator::writeConstructor(const Constructor& c, OutputStream& o
   }
 }
 
-SpvStorageClass_ get_storage_class(const Modifiers& modifiers) noexcept {
+SpvStorageClass_ get_storage_class(const Modifiers& modifiers) {
   if (modifiers.fFlags & Modifiers::kIn_Flag) {
     SkASSERT(!(modifiers.fLayout.fFlags & Layout::kPushConstant_Flag));
     return SpvStorageClassInput;
@@ -1510,11 +1503,10 @@ std::vector<SpvId> SPIRVCodeGenerator::getAccessChain(const Expression& expr, Ou
 class PointerLValue : public SPIRVCodeGenerator::LValue {
  public:
   PointerLValue(
-      SPIRVCodeGenerator& gen, SpvId pointer, SpvId type,
-      SPIRVCodeGenerator::Precision precision) noexcept
+      SPIRVCodeGenerator& gen, SpvId pointer, SpvId type, SPIRVCodeGenerator::Precision precision)
       : fGen(gen), fPointer(pointer), fType(type), fPrecision(precision) {}
 
-  virtual SpvId getPointer() noexcept override { return fPointer; }
+  virtual SpvId getPointer() override { return fPointer; }
 
   virtual SpvId load(OutputStream& out) override {
     SpvId result = fGen.nextId();
@@ -1538,8 +1530,7 @@ class SwizzleLValue : public SPIRVCodeGenerator::LValue {
  public:
   SwizzleLValue(
       SPIRVCodeGenerator& gen, SpvId vecPointer, const std::vector<int>& components,
-      const Type& baseType, const Type& swizzleType,
-      SPIRVCodeGenerator::Precision precision) noexcept
+      const Type& baseType, const Type& swizzleType, SPIRVCodeGenerator::Precision precision)
       : fGen(gen),
         fVecPointer(vecPointer),
         fComponents(components),
@@ -1547,7 +1538,7 @@ class SwizzleLValue : public SPIRVCodeGenerator::LValue {
         fSwizzleType(swizzleType),
         fPrecision(precision) {}
 
-  virtual SpvId getPointer() noexcept override { return 0; }
+  virtual SpvId getPointer() override { return 0; }
 
   virtual SpvId load(OutputStream& out) override {
     SpvId base = fGen.nextId();
@@ -1710,77 +1701,110 @@ SpvId SPIRVCodeGenerator::writeVariableReference(const VariableReference& ref, O
   this->writeInstruction(SpvOpLoad, this->getType(ref.fVariable.fType), result, var, out);
   this->writePrecisionModifier(ref.fVariable.fType, result);
   if (ref.fVariable.fModifiers.fLayout.fBuiltin == SK_FRAGCOORD_BUILTIN &&
-      fProgram.fSettings.fFlipY) {
-    // need to remap to a top-left coordinate system
-    if (fRTHeightStructId == (SpvId)-1) {
-      // height variable hasn't been written yet
-      std::shared_ptr<SymbolTable> st(new SymbolTable(&fErrors));
-      SkASSERT(fRTHeightFieldIndex == (SpvId)-1);
-      std::vector<Type::Field> fields;
-      SkASSERT(fProgram.fSettings.fRTHeightOffset >= 0);
-      fields.emplace_back(
-          Modifiers(
-              Layout(
-                  0, -1, fProgram.fSettings.fRTHeightOffset, -1, -1, -1, -1, -1,
-                  Layout::Format::kUnspecified, Layout::kUnspecified_Primitive, -1, -1, "", "",
-                  Layout::kNo_Key, Layout::CType::kDefault),
-              0),
-          SKSL_RTHEIGHT_NAME, fContext.fFloat_Type.get());
-      StringFragment name("sksl_synthetic_uniforms");
-      Type intfStruct(-1, name, fields);
-
-      int binding = fProgram.fSettings.fRTHeightBinding;
-      int set = fProgram.fSettings.fRTHeightSet;
-      SkASSERT(binding != -1 && set != -1);
-
-      Layout layout(
-          0, -1, -1, binding, -1, set, -1, -1, Layout::Format::kUnspecified,
-          Layout::kUnspecified_Primitive, -1, -1, "", "", Layout::kNo_Key, Layout::CType::kDefault);
-      Variable* intfVar = (Variable*)fSynthetics.takeOwnership(std::unique_ptr<Symbol>(new Variable(
-          -1, Modifiers(layout, Modifiers::kUniform_Flag), name, intfStruct,
-          Variable::kGlobal_Storage)));
-      InterfaceBlock intf(
-          -1, intfVar, name, String(""), std::vector<std::unique_ptr<Expression>>(), st);
-      fRTHeightStructId = this->writeInterfaceBlock(intf);
-      fRTHeightFieldIndex = 0;
-    }
-    SkASSERT(fRTHeightFieldIndex != (SpvId)-1);
-    // write float4(gl_FragCoord.x, u_skRTHeight - gl_FragCoord.y, 0.0, gl_FragCoord.w)
+      (fProgram.fSettings.fFlipY || fProgram.fSettings.fInverseW)) {
+    // The x component never changes, so just grab it
     SpvId xId = this->nextId();
     this->writeInstruction(
         SpvOpCompositeExtract, this->getType(*fContext.fFloat_Type), xId, result, 0, out);
-    IntLiteral fieldIndex(fContext, -1, fRTHeightFieldIndex);
-    SpvId fieldIndexId = this->writeIntLiteral(fieldIndex);
-    SpvId heightPtr = this->nextId();
-    this->writeOpCode(SpvOpAccessChain, 5, out);
-    this->writeWord(this->getPointerType(*fContext.fFloat_Type, SpvStorageClassUniform), out);
-    this->writeWord(heightPtr, out);
-    this->writeWord(fRTHeightStructId, out);
-    this->writeWord(fieldIndexId, out);
-    SpvId heightRead = this->nextId();
-    this->writeInstruction(
-        SpvOpLoad, this->getType(*fContext.fFloat_Type), heightRead, heightPtr, out);
+
+    // Calculate the y component which may need to be flipped
     SpvId rawYId = this->nextId();
     this->writeInstruction(
         SpvOpCompositeExtract, this->getType(*fContext.fFloat_Type), rawYId, result, 1, out);
-    SpvId flippedYId = this->nextId();
-    this->writeInstruction(
-        SpvOpFSub, this->getType(*fContext.fFloat_Type), flippedYId, heightRead, rawYId, out);
+    SpvId flippedYId = 0;
+    if (fProgram.fSettings.fFlipY) {
+      // need to remap to a top-left coordinate system
+      if (fRTHeightStructId == (SpvId)-1) {
+        // height variable hasn't been written yet
+        std::shared_ptr<SymbolTable> st(new SymbolTable(&fErrors));
+        SkASSERT(fRTHeightFieldIndex == (SpvId)-1);
+        std::vector<Type::Field> fields;
+        SkASSERT(fProgram.fSettings.fRTHeightOffset >= 0);
+        fields.emplace_back(
+            Modifiers(
+                Layout(
+                    0, -1, fProgram.fSettings.fRTHeightOffset, -1, -1, -1, -1, -1,
+                    Layout::Format::kUnspecified, Layout::kUnspecified_Primitive, 1, -1, "", "",
+                    Layout::kNo_Key, Layout::CType::kDefault),
+                0),
+            SKSL_RTHEIGHT_NAME, fContext.fFloat_Type.get());
+        StringFragment name("sksl_synthetic_uniforms");
+        Type intfStruct(-1, name, fields);
+
+        int binding = fProgram.fSettings.fRTHeightBinding;
+        int set = fProgram.fSettings.fRTHeightSet;
+        SkASSERT(binding != -1 && set != -1);
+
+        Layout layout(
+            0, -1, -1, binding, -1, set, -1, -1, Layout::Format::kUnspecified,
+            Layout::kUnspecified_Primitive, -1, -1, "", "", Layout::kNo_Key,
+            Layout::CType::kDefault);
+        Variable* intfVar =
+            (Variable*)fSynthetics.takeOwnership(std::unique_ptr<Symbol>(new Variable(
+                -1, Modifiers(layout, Modifiers::kUniform_Flag), name, intfStruct,
+                Variable::kGlobal_Storage)));
+        InterfaceBlock intf(
+            -1, intfVar, name, String(""), std::vector<std::unique_ptr<Expression>>(), st);
+
+        fRTHeightStructId = this->writeInterfaceBlock(intf, false);
+        fRTHeightFieldIndex = 0;
+      }
+      SkASSERT(fRTHeightFieldIndex != (SpvId)-1);
+
+      IntLiteral fieldIndex(fContext, -1, fRTHeightFieldIndex);
+      SpvId fieldIndexId = this->writeIntLiteral(fieldIndex);
+      SpvId heightPtr = this->nextId();
+      this->writeOpCode(SpvOpAccessChain, 5, out);
+      this->writeWord(this->getPointerType(*fContext.fFloat_Type, SpvStorageClassUniform), out);
+      this->writeWord(heightPtr, out);
+      this->writeWord(fRTHeightStructId, out);
+      this->writeWord(fieldIndexId, out);
+      SpvId heightRead = this->nextId();
+      this->writeInstruction(
+          SpvOpLoad, this->getType(*fContext.fFloat_Type), heightRead, heightPtr, out);
+
+      flippedYId = this->nextId();
+      this->writeInstruction(
+          SpvOpFSub, this->getType(*fContext.fFloat_Type), flippedYId, heightRead, rawYId, out);
+    }
+
+    // The z component will always be zero so we just get an id to the 0 literal
     FloatLiteral zero(fContext, -1, 0.0);
     SpvId zeroId = writeFloatLiteral(zero);
-    FloatLiteral one(fContext, -1, 1.0);
-    SpvId wId = this->nextId();
+
+    // Calculate the w component which may need to be inverted
+    SpvId rawWId = this->nextId();
     this->writeInstruction(
-        SpvOpCompositeExtract, this->getType(*fContext.fFloat_Type), wId, result, 3, out);
-    SpvId flipped = this->nextId();
+        SpvOpCompositeExtract, this->getType(*fContext.fFloat_Type), rawWId, result, 3, out);
+    SpvId invWId = 0;
+    if (fProgram.fSettings.fInverseW) {
+      // We need to invert w
+      FloatLiteral one(fContext, -1, 1.0);
+      SpvId oneId = writeFloatLiteral(one);
+      invWId = this->nextId();
+      this->writeInstruction(
+          SpvOpFDiv, this->getType(*fContext.fFloat_Type), invWId, oneId, rawWId, out);
+    }
+
+    // Fill in the new fragcoord with the components from above
+    SpvId adjusted = this->nextId();
     this->writeOpCode(SpvOpCompositeConstruct, 7, out);
     this->writeWord(this->getType(*fContext.fFloat4_Type), out);
-    this->writeWord(flipped, out);
+    this->writeWord(adjusted, out);
     this->writeWord(xId, out);
-    this->writeWord(flippedYId, out);
+    if (fProgram.fSettings.fFlipY) {
+      this->writeWord(flippedYId, out);
+    } else {
+      this->writeWord(rawYId, out);
+    }
     this->writeWord(zeroId, out);
-    this->writeWord(wId, out);
-    return flipped;
+    if (fProgram.fSettings.fInverseW) {
+      this->writeWord(invWId, out);
+    } else {
+      this->writeWord(rawWId, out);
+    }
+
+    return adjusted;
   }
   if (ref.fVariable.fModifiers.fLayout.fBuiltin == SK_CLOCKWISE_BUILTIN &&
       !fProgram.fSettings.fFlipY) {
@@ -2391,7 +2415,6 @@ SpvId SPIRVCodeGenerator::writeIntLiteral(const IntLiteral& i) {
 }
 
 SpvId SPIRVCodeGenerator::writeFloatLiteral(const FloatLiteral& f) {
-  if (f.fType != *fContext.fDouble_Type) {
     ConstantType type;
     if (f.fType == *fContext.fHalf_Type) {
       type = ConstantType::kHalf;
@@ -2411,22 +2434,6 @@ SpvId SPIRVCodeGenerator::writeFloatLiteral(const FloatLiteral& f) {
       return result;
     }
     return entry->second;
-  } else {
-    std::pair<ConstantValue, ConstantType> key(f.fValue, ConstantType::kDouble);
-    auto entry = fNumberConstants.find(key);
-    if (entry == fNumberConstants.end()) {
-      SpvId result = this->nextId();
-      uint64_t bits;
-      SkASSERT(sizeof(bits) == sizeof(f.fValue));
-      memcpy(&bits, &f.fValue, sizeof(bits));
-      this->writeInstruction(
-          SpvOpConstant, this->getType(f.fType), result, bits & 0xffffffff, bits >> 32,
-          fConstantBuffer);
-      fNumberConstants[key] = result;
-      return result;
-    }
-    return entry->second;
-  }
 }
 
 SpvId SPIRVCodeGenerator::writeFunctionStart(const FunctionDeclaration& f, OutputStream& out) {
@@ -2529,7 +2536,7 @@ void SPIRVCodeGenerator::writeLayout(const Layout& layout, SpvId target, int mem
   }
 }
 
-static void update_sk_in_count(const Modifiers& m, int* outSkInCount) noexcept {
+static void update_sk_in_count(const Modifiers& m, int* outSkInCount) {
   switch (m.fLayout.fPrimitive) {
     case Layout::kPoints_Primitive: *outSkInCount = 1; break;
     case Layout::kLines_Primitive: *outSkInCount = 2; break;
@@ -2540,7 +2547,7 @@ static void update_sk_in_count(const Modifiers& m, int* outSkInCount) noexcept {
   }
 }
 
-SpvId SPIRVCodeGenerator::writeInterfaceBlock(const InterfaceBlock& intf) {
+SpvId SPIRVCodeGenerator::writeInterfaceBlock(const InterfaceBlock& intf, bool appendRTHeight) {
   bool isBuffer = (0 != (intf.fVariable.fModifiers.fFlags & Modifiers::kBuffer_Flag));
   bool pushConstant =
       (0 != (intf.fVariable.fModifiers.fLayout.fFlags & Layout::kPushConstant_Flag));
@@ -2548,7 +2555,7 @@ SpvId SPIRVCodeGenerator::writeInterfaceBlock(const InterfaceBlock& intf) {
       (pushConstant || isBuffer) ? MemoryLayout(MemoryLayout::k430_Standard) : fDefaultLayout;
   SpvId result = this->nextId();
   const Type* type = &intf.fVariable.fType;
-  if (fProgram.fInputs.fRTHeight) {
+  if (fProgram.fInputs.fRTHeight && appendRTHeight) {
     SkASSERT(fRTHeightStructId == (SpvId)-1);
     SkASSERT(fRTHeightFieldIndex == (SpvId)-1);
     std::vector<Type::Field> fields = type->fields();
@@ -2587,7 +2594,7 @@ SpvId SPIRVCodeGenerator::writeInterfaceBlock(const InterfaceBlock& intf) {
   }
   this->writeLayout(layout, result);
   fVariableMap[&intf.fVariable] = result;
-  if (fProgram.fInputs.fRTHeight) {
+  if (fProgram.fInputs.fRTHeight && appendRTHeight) {
     delete type;
   }
   return result;
@@ -2603,7 +2610,7 @@ void SPIRVCodeGenerator::writePrecisionModifier(Precision precision, SpvId id) {
   }
 }
 
-bool is_dead(const Variable& var) noexcept {
+bool is_dead(const Variable& var) {
   if (var.fReadCount || var.fWriteCount) {
     return false;
   }
@@ -2842,16 +2849,6 @@ void SPIRVCodeGenerator::writeWhileStatement(const WhileStatement& w, OutputStre
 }
 
 void SPIRVCodeGenerator::writeDoStatement(const DoStatement& d, OutputStream& out) {
-  // We believe the do loop code below will work, but Skia doesn't actually use them and
-  // adequately testing this code in the absence of Skia exercising it isn't straightforward. For
-  // the time being, we just fail with an error due to the lack of testing. If you encounter this
-  // message, simply remove the error call below to see whether our do loop support actually
-  // works.
-  fErrors.error(
-      d.fOffset,
-      "internal error: do loop support has been disabled in SPIR-V, see "
-      "SkSLSPIRVCodeGenerator.cpp for details");
-
   SpvId header = this->nextId();
   SpvId start = this->nextId();
   SpvId next = this->nextId();

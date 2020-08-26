@@ -88,7 +88,7 @@ class GrTextureProducer : public SkNoncopyable {
  protected:
   friend class GrTextureProducer_TestAccess;
 
-  GrTextureProducer(GrRecordingContext* context, const GrImageInfo& imageInfo)
+  GrTextureProducer(GrRecordingContext* context, const GrImageInfo& imageInfo) noexcept
       : fContext(context), fImageInfo(imageInfo) {}
 
   enum DomainMode { kNoDomain_DomainMode, kDomain_DomainMode, kTightCopy_DomainMode };

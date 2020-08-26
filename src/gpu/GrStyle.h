@@ -26,7 +26,7 @@ class GrStyle {
    * A style object that represents a fill with no path effect.
    * TODO: constexpr with C++14
    */
-  static const GrStyle& SimpleFill() {
+  static const GrStyle& SimpleFill() noexcept {
     static const GrStyle kFill(SkStrokeRec::kFill_InitStyle);
     return kFill;
   }
@@ -35,7 +35,7 @@ class GrStyle {
    * A style object that represents a hairline stroke with no path effect.
    * TODO: constexpr with C++14
    */
-  static const GrStyle& SimpleHairline() {
+  static const GrStyle& SimpleHairline() noexcept {
     static const GrStyle kHairline(SkStrokeRec::kHairline_InitStyle);
     return kHairline;
   }
@@ -70,15 +70,15 @@ class GrStyle {
    */
   static void WriteKey(uint32_t*, const GrStyle&, Apply, SkScalar scale, uint32_t flags = 0);
 
-  GrStyle() : GrStyle(SkStrokeRec::kFill_InitStyle) {}
+  GrStyle() noexcept : GrStyle(SkStrokeRec::kFill_InitStyle) {}
 
-  explicit GrStyle(SkStrokeRec::InitStyle initStyle) : fStrokeRec(initStyle) {}
+  explicit GrStyle(SkStrokeRec::InitStyle initStyle) noexcept : fStrokeRec(initStyle) {}
 
-  GrStyle(const SkStrokeRec& strokeRec, sk_sp<SkPathEffect> pe) : fStrokeRec(strokeRec) {
+  GrStyle(const SkStrokeRec& strokeRec, sk_sp<SkPathEffect> pe)  : fStrokeRec(strokeRec) {
     this->initPathEffect(std::move(pe));
   }
 
-  GrStyle(const GrStyle& that) = default;
+  GrStyle(const GrStyle& that) noexcept = default;
 
   explicit GrStyle(const SkPaint& paint) : fStrokeRec(paint) {
     this->initPathEffect(paint.refPathEffect());
@@ -89,14 +89,14 @@ class GrStyle {
     this->initPathEffect(paint.refPathEffect());
   }
 
-  GrStyle& operator=(const GrStyle& that) {
+  GrStyle& operator=(const GrStyle& that) noexcept {
     fPathEffect = that.fPathEffect;
     fDashInfo = that.fDashInfo;
     fStrokeRec = that.fStrokeRec;
     return *this;
   }
 
-  void resetToInitStyle(SkStrokeRec::InitStyle fillOrHairline) {
+  void resetToInitStyle(SkStrokeRec::InitStyle fillOrHairline) noexcept {
     fDashInfo.reset();
     fPathEffect.reset(nullptr);
     if (SkStrokeRec::kFill_InitStyle == fillOrHairline) {
@@ -113,7 +113,7 @@ class GrStyle {
   bool isSimpleHairline() const noexcept { return fStrokeRec.isHairlineStyle() && !fPathEffect; }
 
   SkPathEffect* pathEffect() const noexcept { return fPathEffect.get(); }
-  sk_sp<SkPathEffect> refPathEffect() const { return fPathEffect; }
+  sk_sp<SkPathEffect> refPathEffect() const noexcept { return fPathEffect; }
 
   bool hasPathEffect() const noexcept { return SkToBool(fPathEffect.get()); }
 
@@ -183,9 +183,9 @@ class GrStyle {
   void initPathEffect(sk_sp<SkPathEffect> pe);
 
   struct DashInfo {
-    DashInfo() : fType(SkPathEffect::kNone_DashType) {}
-    DashInfo(const DashInfo& that) { *this = that; }
-    DashInfo& operator=(const DashInfo& that) {
+    DashInfo() noexcept : fType(SkPathEffect::kNone_DashType) {}
+    DashInfo(const DashInfo& that) noexcept { *this = that; }
+    DashInfo& operator=(const DashInfo& that) noexcept {
       fType = that.fType;
       fPhase = that.fPhase;
       fIntervals.reset(that.fIntervals.count());
@@ -193,7 +193,7 @@ class GrStyle {
           fIntervals.get(), that.fIntervals.get(), sizeof(SkScalar) * that.fIntervals.count());
       return *this;
     }
-    void reset() {
+    void reset() noexcept {
       fType = SkPathEffect::kNone_DashType;
       fIntervals.reset(0);
     }

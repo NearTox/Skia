@@ -19,7 +19,7 @@
 
 class GrGLSLSkSLFP : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLSkSLFP(SkSL::PipelineStageArgs&& args) : fArgs(std::move(args)) {}
+  GrGLSLSkSLFP(SkSL::PipelineStageArgs&& args) noexcept : fArgs(std::move(args)) {}
 
   SkSL::String expandFormatArgs(
       const SkSL::String& raw, EmitArgs& args,
@@ -154,7 +154,7 @@ std::unique_ptr<GrSkSLFP> GrSkSLFP::Make(
 
 GrSkSLFP::GrSkSLFP(
     sk_sp<const GrShaderCaps> shaderCaps, ShaderErrorHandler* shaderErrorHandler,
-    sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs)
+    sk_sp<SkRuntimeEffect> effect, const char* name, sk_sp<SkData> inputs) noexcept
     : INHERITED(kGrSkSLFP_ClassID, kNone_OptimizationFlags),
       fShaderCaps(std::move(shaderCaps)),
       fShaderErrorHandler(shaderErrorHandler),
@@ -164,7 +164,7 @@ GrSkSLFP::GrSkSLFP(
   this->addCoordTransform(&fCoordTransform);
 }
 
-GrSkSLFP::GrSkSLFP(const GrSkSLFP& other)
+GrSkSLFP::GrSkSLFP(const GrSkSLFP& other) noexcept
     : INHERITED(kGrSkSLFP_ClassID, kNone_OptimizationFlags),
       fShaderCaps(other.fShaderCaps),
       fShaderErrorHandler(other.fShaderErrorHandler),
@@ -176,9 +176,8 @@ GrSkSLFP::GrSkSLFP(const GrSkSLFP& other)
 
 const char* GrSkSLFP::name() const noexcept { return fName; }
 
-void GrSkSLFP::addChild(std::unique_ptr<GrFragmentProcessor> child) {
-  child->setSampledWithExplicitCoords();
-  this->registerChildProcessor(std::move(child));
+void GrSkSLFP::addChild(std::unique_ptr<GrFragmentProcessor> child) noexcept {
+  this->registerExplicitlySampledChild(std::move(child));
 }
 
 GrGLSLFragmentProcessor* GrSkSLFP::onCreateGLSLInstance() const {
@@ -188,7 +187,8 @@ GrGLSLFragmentProcessor* GrSkSLFP::onCreateGLSLInstance() const {
   return new GrGLSLSkSLFP(std::move(args));
 }
 
-void GrSkSLFP::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+void GrSkSLFP::onGetGLSLProcessorKey(
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   // In the unlikely event of a hash collision, we also include the input size in the key.
   // That ensures that we will (at worst) use the wrong program, but one that expects the same
   // amount of input data.
@@ -234,6 +234,7 @@ GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrSkSLFP);
 #  include "include/effects/SkArithmeticImageFilter.h"
 #  include "include/effects/SkOverdrawColorFilter.h"
 #  include "include/gpu/GrContext.h"
+#  include "src/core/SkColorFilterBase.h"
 #  include "src/gpu/effects/generated/GrConstColorProcessor.h"
 
 extern const char* SKSL_ARITHMETIC_SRC;
@@ -260,7 +261,7 @@ std::unique_ptr<GrFragmentProcessor> GrSkSLFP::TestCreate(GrProcessorTestData* d
       auto result = GrSkSLFP::Make(
           d->context(), effect, "Arithmetic", SkData::MakeWithCopy(&inputs, sizeof(inputs)));
       result->addChild(GrConstColorProcessor::Make(
-          SK_PMColor4fWHITE, GrConstColorProcessor::InputMode::kIgnore));
+          /*inputFP=*/nullptr, SK_PMColor4fWHITE, GrConstColorProcessor::InputMode::kIgnore));
       return std::unique_ptr<GrFragmentProcessor>(result.release());
     }
     case 2: {
@@ -268,8 +269,8 @@ std::unique_ptr<GrFragmentProcessor> GrSkSLFP::TestCreate(GrProcessorTestData* d
       for (SkColor& c : colors) {
         c = d->fRandom->nextU();
       }
-      return SkOverdrawColorFilter::MakeWithSkColors(colors)->asFragmentProcessor(
-          d->context(), GrColorInfo{});
+      auto filter = SkOverdrawColorFilter::MakeWithSkColors(colors);
+      return as_CFB(filter)->asFragmentProcessor(d->context(), GrColorInfo{});
     }
   }
   SK_ABORT("unreachable");

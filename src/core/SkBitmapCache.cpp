@@ -82,7 +82,7 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
     sk_free(fMalloc);  // may be null
   }
 
-  const Key& getKey() const override { return fKey; }
+  const Key& getKey() const noexcept override { return fKey; }
   size_t bytesUsed() const noexcept override {
     return sizeof(fKey) + fInfo.computeByteSize(fRowBytes);
   }
@@ -94,8 +94,10 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
     SkAssertResult(this->install(static_cast<SkBitmap*>(payload)));
   }
 
-  const char* getCategory() const override { return "bitmap"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return fDM.get(); }
+  const char* getCategory() const noexcept override { return "bitmap"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
+    return fDM.get();
+  }
 
   static void ReleaseProc(void* addr, void* ctx) {
     Rec* rec = static_cast<Rec*>(ctx);
@@ -231,10 +233,10 @@ struct MipMapRec : public SkResourceCache::Rec {
 
   ~MipMapRec() override { fMipMap->detachFromCacheAndUnref(); }
 
-  const Key& getKey() const override { return fKey; }
+  const Key& getKey() const noexcept override { return fKey; }
   size_t bytesUsed() const noexcept override { return sizeof(fKey) + fMipMap->size(); }
-  const char* getCategory() const override { return "mipmap"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
+  const char* getCategory() const noexcept override { return "mipmap"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
     return fMipMap->diagnostic_only_getDiscardable();
   }
 

@@ -78,9 +78,17 @@ SkString GrGLSLFragmentShaderBuilder::ensureCoords2D(
   }
   switch (matrix.fKind) {
     case SkSL::SampleMatrix::Kind::kMixed:
-    case SkSL::SampleMatrix::Kind::kVariable:
-      result = SkStringPrintf("(_matrix * float3(%s, 1)).xy", result.c_str());
+    case SkSL::SampleMatrix::Kind::kVariable: {
+      SkString sampleCoords2D;
+      sampleCoords2D.printf("%s_sample", coords.c_str());
+      this->codeAppendf(
+          "\tfloat3 %s_3d = _matrix * %s.xy1;\n", sampleCoords2D.c_str(), result.c_str());
+      this->codeAppendf(
+          "\tfloat2 %s = %s_3d.xy / %s_3d.z;\n", sampleCoords2D.c_str(), sampleCoords2D.c_str(),
+          sampleCoords2D.c_str());
+      result = sampleCoords2D;
       break;
+    }
     default: break;
   }
   return result;
@@ -170,11 +178,15 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
     const GrShaderVar& transform = args.fTransformedCoords[0].fTransform;
     switch (transform.getType()) {
       case kFloat4_GrSLType:
+        // This is a scale+translate, so there's no perspective division needed
         this->codeAppendf(
             "_coords = _coords * %s.xz + %s.yw;\n", transform.c_str(), transform.c_str());
         break;
       case kFloat3x3_GrSLType:
-        this->codeAppendf("_coords = (%s * float3(_coords, 1)).xy;\n", transform.c_str());
+        this->codeAppend("{\n");
+        this->codeAppendf("float3 _coords3 = (%s * _coords.xy1);\n", transform.c_str());
+        this->codeAppend("_coords = _coords3.xy / _coords3.z;\n");
+        this->codeAppend("}\n");
         break;
       default: SkASSERT(transform.getType() == kVoid_GrSLType); break;
     }
@@ -182,8 +194,12 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
       SkASSERT(!hasVariableMatrix);
       this->codeAppend("{\n");
       args.fUniformHandler->writeUniformMappings(args.fFp.sampleMatrix().fOwner, this);
+      // FIXME This is not a variable matrix, we could key on the matrix type and skip
+      // perspective division; it may also be worth detecting if it was scale+translate and
+      // evaluating this similarly to the kFloat4 explicit coord case.
       this->codeAppendf(
-          "_coords = (%s * float3(_coords, 1)).xy;\n", args.fFp.sampleMatrix().fExpression.c_str());
+          "float3 _coords3 = (%s * _coords.xy1);\n", args.fFp.sampleMatrix().fExpression.c_str());
+      this->codeAppend("_coords = _coords3.xy / _coords3.z;\n");
       this->codeAppend("}\n");
     }
   }

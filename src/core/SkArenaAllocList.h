@@ -21,16 +21,16 @@ class SkArenaAllocList {
   struct Node;
 
  public:
-  constexpr SkArenaAllocList() noexcept = default;
+  SkArenaAllocList() noexcept = default;
 
-  constexpr void reset() noexcept { fHead = fTail = nullptr; }
+  void reset() noexcept { fHead = fTail = nullptr; }
 
   template <typename... Args>
   inline T& append(SkArenaAlloc* arena, Args... args);
 
   class Iter {
    public:
-    constexpr Iter() noexcept = default;
+    Iter() noexcept = default;
     inline Iter& operator++() noexcept;
     T& operator*() const noexcept { return fCurr->fT; }
     T* operator->() const noexcept { return &fCurr->fT; }

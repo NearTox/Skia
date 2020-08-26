@@ -593,7 +593,7 @@ static constexpr inline float muladdmul(float a, float b, float c, float d) noex
   return sk_double_to_float((double)a * b + (double)c * d);
 }
 
-static constexpr inline float rowcol3(const float row[], const float col[]) noexcept {
+static inline float rowcol3(const float row[], const float col[]) noexcept {
   return row[0] * col[0] + row[1] * col[3] + row[2] * col[6];
 }
 

@@ -31,18 +31,18 @@ class TransformAdapter2D final
       const AnimationBuilder&, const skjson::ObjectValue* janchor_point,
       const skjson::ObjectValue* jposition, const skjson::ObjectValue* jscale,
       const skjson::ObjectValue* jrotation, const skjson::ObjectValue* jskew,
-      const skjson::ObjectValue* jskew_axis);
+      const skjson::ObjectValue* jskew_axis, bool auto_orient = false);
   ~TransformAdapter2D() override;
 
   // Accessors needed for public property APIs.
   // TODO: introduce a separate public type.
-  SkPoint getAnchorPoint() const noexcept;
+  SkPoint getAnchorPoint() const;
   void setAnchorPoint(const SkPoint&);
 
-  SkPoint getPosition() const noexcept;
+  SkPoint getPosition() const;
   void setPosition(const SkPoint&);
 
-  SkVector getScale() const noexcept;
+  SkVector getScale() const;
   void setScale(const SkVector&);
 
   float getRotation() const noexcept { return fRotation; }
@@ -60,7 +60,8 @@ class TransformAdapter2D final
   void onSync() override;
 
   Vec2Value fAnchorPoint = {0, 0}, fPosition = {0, 0}, fScale = {100, 100};
-  ScalarValue fRotation = 0, fSkew = 0, fSkewAxis = 0;
+  ScalarValue fRotation = 0, fSkew = 0, fSkewAxis = 0,
+              fOrientation = 0;  // additional rotation component controlled by auto-orient
 
   using INHERITED = DiscardableAdapterBase<TransformAdapter2D, sksg::Matrix<SkMatrix>>;
 };

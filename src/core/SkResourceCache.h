@@ -226,11 +226,11 @@ class SkResourceCache {
    *  0 is no maximum at all; this is the default.
    *  setSingleAllocationByteLimit() returns the previous value.
    */
-  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize) noexcept;
-  size_t getSingleAllocationByteLimit() const noexcept;
+  size_t setSingleAllocationByteLimit(size_t maximumAllocationSize);
+  size_t getSingleAllocationByteLimit() const;
   // returns the logical single allocation size (pinning against the budget when the cache
   // is not backed by discardable memory.
-  size_t getEffectiveSingleAllocationByteLimit() const noexcept;
+  size_t getEffectiveSingleAllocationByteLimit() const;
 
   /**
    *  Set the maximum number of bytes available to this cache. If the current
@@ -272,9 +272,9 @@ class SkResourceCache {
   void purgeAsNeeded(bool forcePurge = false);
 
   // linklist management
-  void moveToHead(Rec*) noexcept;
-  void addToHead(Rec*) noexcept;
-  void release(Rec*) noexcept;
+  void moveToHead(Rec*);
+  void addToHead(Rec*);
+  void release(Rec*);
   void remove(Rec*);
 
   void init();  // called by constructors

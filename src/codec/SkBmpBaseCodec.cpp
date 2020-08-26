@@ -7,10 +7,10 @@
 #include "include/private/SkMalloc.h"
 #include "src/codec/SkBmpBaseCodec.h"
 
-SkBmpBaseCodec::~SkBmpBaseCodec() {}
+SkBmpBaseCodec::~SkBmpBaseCodec() = default;
 
 SkBmpBaseCodec::SkBmpBaseCodec(
     SkEncodedInfo&& info, std::unique_ptr<SkStream> stream, uint16_t bitsPerPixel,
-    SkCodec::SkScanlineOrder rowOrder) noexcept
+    SkCodec::SkScanlineOrder rowOrder)
     : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder),
       fSrcBuffer(sk_malloc_canfail(this->srcRowBytes())) {}

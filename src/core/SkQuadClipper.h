@@ -18,9 +18,9 @@
  */
 class SkQuadClipper {
  public:
-  SkQuadClipper() noexcept;
+  SkQuadClipper();
 
-  void setClip(const SkIRect& clip) noexcept;
+  void setClip(const SkIRect& clip);
 
   bool clipQuad(const SkPoint src[3], SkPoint dst[3]);
 

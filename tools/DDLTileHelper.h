@@ -41,6 +41,8 @@ class DDLTileHelper {
     // Create the DDL for this tile (i.e., fill in 'fDisplayList').
     void createDDL();
 
+    void dropDDL() { fDisplayList.reset(); }
+
     // Precompile all the programs required to draw this tile's DDL
     void precompile(GrContext*);
 
@@ -94,10 +96,9 @@ class DDLTileHelper {
       GrContext* context, const SkSurfaceCharacterization& dstChar, const SkIRect& viewport,
       int numDivisions);
 
-  void createSKPPerTile(SkData* compressedPictureData, const DDLPromiseImageHelper& helper);
+  void createSKPPerTile(SkData* compressedPictureData, const DDLPromiseImageHelper&);
 
-  void kickOffThreadedWork(
-      SkTaskGroup* recordingTaskGroup, SkTaskGroup* gpuTaskGroup, GrContext* gpuThreadContext);
+  void kickOffThreadedWork(SkTaskGroup* recordingTaskGroup, SkTaskGroup* gpuTaskGroup, GrContext*);
 
   void createDDLsInParallel();
 

@@ -41,7 +41,7 @@ class SK_API SkDeferredDisplayListRecorder {
   SkDeferredDisplayListRecorder(const SkSurfaceCharacterization&);
   ~SkDeferredDisplayListRecorder();
 
-  const SkSurfaceCharacterization& characterization() const noexcept { return fCharacterization; }
+  const SkSurfaceCharacterization& characterization() const { return fCharacterization; }
 
   // The backing canvas will become invalid (and this entry point will return
   // null) once 'detach' is called.
@@ -143,6 +143,7 @@ class SK_API SkDeferredDisplayListRecorder {
 
 #if SK_SUPPORT_GPU
   sk_sp<GrContext> fContext;
+  sk_sp<GrRenderTargetProxy> fTargetProxy;
   sk_sp<SkDeferredDisplayList::LazyProxyData> fLazyProxyData;
   sk_sp<SkSurface> fSurface;
 #endif

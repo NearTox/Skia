@@ -224,7 +224,7 @@ class SK_API SkM44 {
     return {fMat[i * 4 + 0], fMat[i * 4 + 1], fMat[i * 4 + 2], fMat[i * 4 + 3]};
   }
 
-  constexpr void setRow(int i, const SkV4& v) noexcept {
+  void setRow(int i, const SkV4& v) noexcept {
     SkASSERT(i >= 0 && i <= 3);
     fMat[i + 0] = v.x;
     fMat[i + 4] = v.y;
@@ -237,7 +237,7 @@ class SK_API SkM44 {
   }
 
   SkM44& setIdentity() noexcept {
-    *this = SkM44();
+    *this = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
     return *this;
   }
 

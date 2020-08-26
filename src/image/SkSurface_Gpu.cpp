@@ -5,12 +5,15 @@
  * found in the LICENSE file.
  */
 
+#include "src/image/SkSurface_Gpu.h"
+
 #include "include/core/SkCanvas.h"
 #include "include/core/SkDeferredDisplayList.h"
 #include "include/core/SkSurfaceCharacterization.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/private/GrRecordingContext.h"
 #include "src/core/SkImagePriv.h"
+#include "src/core/SkScopeExit.h"
 #include "src/gpu/GrAHardwareBufferUtils.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
@@ -24,7 +27,6 @@
 #include "src/image/SkImage_Base.h"
 #include "src/image/SkImage_Gpu.h"
 #include "src/image/SkSurface_Base.h"
-#include "src/image/SkSurface_Gpu.h"
 
 #if SK_SUPPORT_GPU
 
@@ -34,9 +36,9 @@ SkSurface_Gpu::SkSurface_Gpu(sk_sp<SkGpuDevice> device)
   SkASSERT(fDevice->accessRenderTargetContext()->asSurfaceProxy()->priv().isExact());
 }
 
-SkSurface_Gpu::~SkSurface_Gpu() {}
+SkSurface_Gpu::~SkSurface_Gpu() = default;
 
-GrContext* SkSurface_Gpu::onGetContext() { return fDevice->context(); }
+GrContext* SkSurface_Gpu::onGetContext() noexcept { return fDevice->context(); }
 
 static GrRenderTarget* prepare_rt_for_external_access(
     SkSurface_Gpu* surface, SkSurface::BackendHandleAccess access) {
@@ -50,7 +52,7 @@ static GrRenderTarget* prepare_rt_for_external_access(
   }
 
   // Grab the render target *after* firing notifications, as it may get switched if CoW kicks in.
-  surface->getDevice()->flush(SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo());
+  surface->getDevice()->flush(SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(), nullptr);
   GrRenderTargetContext* rtc = surface->getDevice()->accessRenderTargetContext();
   return rtc->accessRenderTarget();
 }
@@ -168,8 +170,10 @@ void SkSurface_Gpu::onCopyOnWrite(ContentChangeMode mode) {
 
 void SkSurface_Gpu::onDiscard() { fDevice->accessRenderTargetContext()->discard(); }
 
-GrSemaphoresSubmitted SkSurface_Gpu::onFlush(BackendSurfaceAccess access, const GrFlushInfo& info) {
-  return fDevice->flush(access, info);
+GrSemaphoresSubmitted SkSurface_Gpu::onFlush(
+    BackendSurfaceAccess access, const GrFlushInfo& info,
+    const GrBackendSurfaceMutableState* newState) {
+  return fDevice->flush(access, info, newState);
 }
 
 bool SkSurface_Gpu::onWait(int numSemaphores, const GrBackendSemaphore* waitSemaphores) {
@@ -214,7 +218,6 @@ void SkSurface_Gpu::onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPai
   // If the dst is also GPU we try to not force a new image snapshot (by calling the base class
   // onDraw) since that may not always perform the copy-on-write optimization.
   auto tryDraw = [&] {
-    SkASSERT(fDevice->context()->priv().asDirectContext());
     GrContext* context = fDevice->context();
     GrContext* canvasContext = canvas->getGrContext();
     if (!canvasContext) {
@@ -395,6 +398,12 @@ static bool validate_backend_texture(
 sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
     GrContext* context, const SkSurfaceCharacterization& c, const GrBackendTexture& backendTexture,
     TextureReleaseProc textureReleaseProc, ReleaseContext releaseContext) {
+  SkScopeExit callProc([&] {
+    if (textureReleaseProc) {
+      textureReleaseProc(releaseContext);
+    }
+  });
+
   if (!context || !c.isValid()) {
     return nullptr;
   }
@@ -425,6 +434,7 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
   if (!rtc) {
     return nullptr;
   }
+  callProc.clear();
 
   auto device = SkGpuDevice::Make(context, std::move(rtc), SkGpuDevice::kUninit_InitContents);
   if (!device) {
@@ -481,6 +491,12 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
     GrContext* context, const GrBackendTexture& tex, GrSurfaceOrigin origin, int sampleCnt,
     SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* props,
     SkSurface::TextureReleaseProc textureReleaseProc, SkSurface::ReleaseContext releaseContext) {
+  SkScopeExit callProc([&] {
+    if (textureReleaseProc) {
+      textureReleaseProc(releaseContext);
+    }
+  });
+
   if (!context) {
     return nullptr;
   }
@@ -502,6 +518,7 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
   if (!rtc) {
     return nullptr;
   }
+  callProc.clear();
 
   auto device = SkGpuDevice::Make(context, std::move(rtc), SkGpuDevice::kUninit_InitContents);
   if (!device) {
@@ -513,6 +530,12 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
 bool SkSurface_Gpu::onReplaceBackendTexture(
     const GrBackendTexture& backendTexture, GrSurfaceOrigin origin, ContentChangeMode mode,
     TextureReleaseProc releaseProc, ReleaseContext releaseContext) {
+  SkScopeExit callProc([&] {
+    if (releaseProc) {
+      releaseProc(releaseContext);
+    }
+  });
+
   auto context = this->fDevice->context();
   if (context->abandoned()) {
     return false;
@@ -555,6 +578,7 @@ bool SkSurface_Gpu::onReplaceBackendTexture(
   if (!rtc) {
     return false;
   }
+  callProc.clear();
   fDevice->replaceRenderTargetContext(std::move(rtc), mode);
   return true;
 }
@@ -575,6 +599,12 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendRenderTarget(
     GrContext* context, const GrBackendRenderTarget& rt, GrSurfaceOrigin origin,
     SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* props,
     SkSurface::RenderTargetReleaseProc relProc, SkSurface::ReleaseContext releaseContext) {
+  SkScopeExit callProc([&] {
+    if (relProc) {
+      relProc(releaseContext);
+    }
+  });
+
   if (!context) {
     return nullptr;
   }
@@ -594,6 +624,7 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendRenderTarget(
   if (!rtc) {
     return nullptr;
   }
+  callProc.clear();
 
   auto device = SkGpuDevice::Make(context, std::move(rtc), SkGpuDevice::kUninit_InitContents);
   if (!device) {
@@ -603,6 +634,7 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendRenderTarget(
   return sk_make_sp<SkSurface_Gpu>(std::move(device));
 }
 
+#  if GR_TEST_UTILS
 sk_sp<SkSurface> SkSurface::MakeFromBackendTextureAsRenderTarget(
     GrContext* context, const GrBackendTexture& tex, GrSurfaceOrigin origin, int sampleCnt,
     SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* props) {
@@ -632,6 +664,7 @@ sk_sp<SkSurface> SkSurface::MakeFromBackendTextureAsRenderTarget(
   }
   return sk_make_sp<SkSurface_Gpu>(std::move(device));
 }
+#  endif
 
 #  if defined(SK_BUILD_FOR_ANDROID) && __ANDROID_API__ >= 26
 sk_sp<SkSurface> SkSurface::MakeFromAHardwareBuffer(
@@ -688,5 +721,12 @@ sk_sp<SkSurface> SkSurface::MakeFromAHardwareBuffer(
   }
 }
 #  endif
+
+void SkSurface::flushAndSubmit() {
+  this->flush(BackendSurfaceAccess::kNoAccess, GrFlushInfo());
+  if (this->getContext()) {
+    this->getContext()->submit();
+  }
+}
 
 #endif

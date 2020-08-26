@@ -49,12 +49,12 @@ static constexpr SkScalar kMaxSize = 2 * kMaxMIP;
 
 class ShapeDataKey {
  public:
-  ShapeDataKey() {}
-  ShapeDataKey(const ShapeDataKey& that) { *this = that; }
+  ShapeDataKey() noexcept = default;
+  ShapeDataKey(const ShapeDataKey& that) noexcept { *this = that; }
   ShapeDataKey(const GrStyledShape& shape, uint32_t dim) { this->set(shape, dim); }
   ShapeDataKey(const GrStyledShape& shape, const SkMatrix& ctm) { this->set(shape, ctm); }
 
-  ShapeDataKey& operator=(const ShapeDataKey& that) {
+  ShapeDataKey& operator=(const ShapeDataKey& that) noexcept {
     fKey.reset(that.fKey.count());
     memcpy(fKey.get(), that.fKey.get(), fKey.count() * sizeof(uint32_t));
     return *this;
@@ -100,13 +100,13 @@ class ShapeDataKey {
     shape.writeUnstyledKey(&fKey[5]);
   }
 
-  bool operator==(const ShapeDataKey& that) const {
+  bool operator==(const ShapeDataKey& that) const noexcept {
     return fKey.count() == that.fKey.count() &&
            0 == memcmp(fKey.get(), that.fKey.get(), sizeof(uint32_t) * fKey.count());
   }
 
-  int count32() const { return fKey.count(); }
-  const uint32_t* data() const { return fKey.get(); }
+  int count32() const noexcept { return fKey.count(); }
+  const uint32_t* data() const noexcept { return fKey.get(); }
 
  private:
   // The key is composed of the GrStyledShape's key, and either the dimensions of the DF
@@ -123,7 +123,7 @@ class ShapeData {
 
   SK_DECLARE_INTERNAL_LLIST_INTERFACE(ShapeData);
 
-  static inline const ShapeDataKey& GetKey(const ShapeData& data) { return data.fKey; }
+  static inline const ShapeDataKey& GetKey(const ShapeData& data) noexcept { return data.fKey; }
 
   static inline uint32_t Hash(const ShapeDataKey& key) {
     return SkOpts::hash(key.data(), sizeof(uint32_t) * key.count32());
@@ -258,7 +258,7 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     fGammaCorrect = gammaCorrect;
   }
 
-  const char* name() const override { return "SmallPathOp"; }
+  const char* name() const noexcept override { return "SmallPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     fHelper.visitProxies(func);
@@ -302,20 +302,20 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     int fInstancesToFlush;
   };
 
-  GrProgramInfo* programInfo() override {
+  GrProgramInfo* programInfo() noexcept override {
     // TODO [PI]: implement
     return nullptr;
   }
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&) noexcept override {
     // TODO [PI]: implement
   }
 
   void onPrePrepareDraws(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&) noexcept override {
     // TODO [PI]: implement
   }
 
@@ -766,8 +766,8 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
   }
 
-  const SkPMColor4f& color() const { return fShapes[0].fColor; }
-  bool usesDistanceField() const { return fUsesDistanceField; }
+  const SkPMColor4f& color() const noexcept { return fShapes[0].fColor; }
+  bool usesDistanceField() const noexcept { return fUsesDistanceField; }
 
   CombineResult onCombineIfPossible(
       GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
@@ -852,7 +852,7 @@ bool GrSmallPathRenderer::onDrawPath(const DrawPathArgs& args) {
   std::unique_ptr<GrDrawOp> op = SmallPathOp::Make(
       args.fContext, std::move(args.fPaint), *args.fShape, *args.fViewMatrix, fAtlas.get(),
       &fShapeCache, &fShapeList, args.fGammaCorrect, args.fUserStencilSettings);
-  args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
+  args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));
 
   return true;
 }

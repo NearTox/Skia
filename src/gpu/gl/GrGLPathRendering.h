@@ -45,7 +45,7 @@ class GrGLPathRendering : public GrPathRendering {
    */
   void disconnect(GrGpu::DisconnectType);
 
-  bool shouldBindFragmentInputs() const noexcept { return fCaps.bindFragmentInputSupport; }
+  bool shouldBindFragmentInputs() const { return fCaps.bindFragmentInputSupport; }
 
   // Functions for "separable shader" texturing support.
   void setProgramPathFragmentInputTransform(
@@ -78,7 +78,7 @@ class GrGLPathRendering : public GrPathRendering {
     GrSurfaceOrigin fRenderTargetOrigin;
 
     MatrixState() { this->invalidate(); }
-    void invalidate() noexcept {
+    void invalidate() {
       fViewMatrix = SkMatrix::InvalidMatrix();
       fRenderTargetSize.fWidth = -1;
       fRenderTargetSize.fHeight = -1;
@@ -88,7 +88,7 @@ class GrGLPathRendering : public GrPathRendering {
     /**
      * Gets a matrix that goes from local coordinates to GL normalized device coords.
      */
-    void getRTAdjustedGLMatrix(float* destMatrix) noexcept {
+    void getRTAdjustedGLMatrix(float* destMatrix) {
       SkMatrix combined;
       if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
         combined.setAll(

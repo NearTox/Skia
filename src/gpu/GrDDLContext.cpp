@@ -20,10 +20,7 @@
  */
 class GrDDLContext final : public GrContext {
  public:
-  GrDDLContext(sk_sp<GrContextThreadSafeProxy> proxy)
-      : INHERITED(proxy->backend(), proxy->priv().options(), proxy->priv().contextID()) {
-    fThreadSafeProxy = std::move(proxy);
-  }
+  GrDDLContext(sk_sp<GrContextThreadSafeProxy> proxy) : INHERITED(std::move(proxy)) {}
 
   ~GrDDLContext() override {}
 
@@ -38,8 +35,8 @@ class GrDDLContext final : public GrContext {
   }
 
   void freeGpuResources() override {
-    SkASSERT(0);  // freeing resources in a DDL Recorder doesn't make a whole lot of sense
-    INHERITED::freeGpuResources();
+    // freeing resources in a DDL Recorder doesn't make a whole lot of sense but some of
+    // our tests do it anyways
   }
 
  private:
@@ -47,11 +44,8 @@ class GrDDLContext final : public GrContext {
   // GrRecordingContext!
   GrContext* asDirectContext() noexcept override { return nullptr; }
 
-  bool init(sk_sp<const GrCaps> caps) override {
-    SkASSERT(caps);
-    SkASSERT(fThreadSafeProxy);  // should've been set in the ctor
-
-    if (!INHERITED::init(std::move(caps))) {
+  bool init() override {
+    if (!INHERITED::init()) {
       return false;
     }
 
@@ -59,12 +53,10 @@ class GrDDLContext final : public GrContext {
     // splitting.
     this->setupDrawingManager(true, true);
 
-    SkASSERT(this->caps());
-
     return true;
   }
 
-  GrAtlasManager* onGetAtlasManager() override {
+  GrAtlasManager* onGetAtlasManager() noexcept override {
     SkASSERT(0);  // the DDL Recorders should never invoke this
     return nullptr;
   }
@@ -78,8 +70,8 @@ class GrDDLContext final : public GrContext {
     const GrCaps* caps = this->caps();
 
     if (this->backend() == GrBackendApi::kVulkan || this->backend() == GrBackendApi::kMetal ||
-        this->backend() == GrBackendApi::kDawn) {
-      // Currently, Vulkan, Metal and Dawn require a live renderTarget to
+        this->backend() == GrBackendApi::kDirect3D || this->backend() == GrBackendApi::kDawn) {
+      // Currently Vulkan, Metal, Direct3D, and Dawn require a live renderTarget to
       // compute the key
       return;
     }
@@ -112,7 +104,7 @@ class GrDDLContext final : public GrContext {
     // All the programInfo data should be stored in the record-time arena so there is no
     // need to ref them here or to delete them in the destructor.
     ProgramInfoMap() : fMap(10) {}
-    ~ProgramInfoMap() {}
+    ~ProgramInfoMap() = default;
 
     // TODO: this is doing a lot of reallocating of the ProgramDesc! Once the program descs
     // are allocated in the record-time area there won't be a problem.
@@ -150,10 +142,10 @@ class GrDDLContext final : public GrContext {
   typedef GrContext INHERITED;
 };
 
-sk_sp<GrContext> GrContextPriv::MakeDDL(const sk_sp<GrContextThreadSafeProxy>& proxy) {
-  sk_sp<GrContext> context(new GrDDLContext(proxy));
+sk_sp<GrContext> GrContextPriv::MakeDDL(sk_sp<GrContextThreadSafeProxy> proxy) {
+  sk_sp<GrContext> context(new GrDDLContext(std::move(proxy)));
 
-  if (!context->init(proxy->priv().refCaps())) {
+  if (!context->init()) {
     return nullptr;
   }
   return context;

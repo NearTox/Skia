@@ -13,7 +13,7 @@
 #include "src/gpu/mock/GrMockTexture.h"
 #include <atomic>
 
-int GrMockGpu::NextInternalTextureID() {
+int GrMockGpu::NextInternalTextureID() noexcept {
   static std::atomic<int> nextID{1};
   int id;
   do {
@@ -22,21 +22,21 @@ int GrMockGpu::NextInternalTextureID() {
   return id;
 }
 
-int GrMockGpu::NextExternalTextureID() {
+int GrMockGpu::NextExternalTextureID() noexcept {
   // We use negative ints for the "testing only external textures" so they can easily be
   // identified when debugging.
   static std::atomic<int> nextID{-1};
   return nextID--;
 }
 
-int GrMockGpu::NextInternalRenderTargetID() {
+int GrMockGpu::NextInternalRenderTargetID() noexcept {
   // We start off with large numbers to differentiate from texture IDs, even though they're
   // technically in a different space.
   static std::atomic<int> nextID{SK_MaxS32};
   return nextID--;
 }
 
-int GrMockGpu::NextExternalRenderTargetID() {
+int GrMockGpu::NextExternalRenderTargetID() noexcept {
   // We use large negative ints for the "testing only external render targets" so they can easily
   // be identified when debugging.
   static std::atomic<int> nextID{SK_MinS32};
@@ -53,7 +53,7 @@ sk_sp<GrGpu> GrMockGpu::Make(
 }
 
 GrOpsRenderPass* GrMockGpu::getOpsRenderPass(
-    GrRenderTarget* rt, GrSurfaceOrigin origin, const SkIRect& bounds,
+    GrRenderTarget* rt, GrStencilAttachment*, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo&,
     const SkTArray<GrSurfaceProxy*, true>& sampledProxies) {

@@ -165,7 +165,7 @@ bool is_asset_stream(const SkStream& stream) { return stream.hasLength() && stre
 
 class SkRawStream {
  public:
-  virtual ~SkRawStream() {}
+  virtual ~SkRawStream() = default;
 
   /*
    * Gets the length of the stream. Depending on the type of stream, this may require reading to
@@ -761,7 +761,7 @@ bool SkRawCodec::onDimensionsSupported(const SkISize& dim) {
   return sizeFloor == dim || sizeCeil == dim;
 }
 
-SkRawCodec::~SkRawCodec() {}
+SkRawCodec::~SkRawCodec() = default;
 
 SkRawCodec::SkRawCodec(SkDngImage* dngImage)
     : INHERITED(

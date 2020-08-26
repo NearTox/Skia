@@ -165,7 +165,7 @@ class ExternalImageFilter final : public ImageFilter {
  private:
   ExternalImageFilter();
 
-  sk_sp<SkImageFilter> onRevalidateFilter() override { return fImageFilter; }
+  sk_sp<SkImageFilter> onRevalidateFilter() noexcept override { return fImageFilter; }
 
   sk_sp<SkImageFilter> fImageFilter;
 };
@@ -236,7 +236,7 @@ class BlendModeEffect final : public EffectNode {
 
  protected:
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
 
  private:
   BlendModeEffect(sk_sp<RenderNode>, SkBlendMode);

@@ -20,18 +20,19 @@ class GrTextureProxy;
  */
 class GrClipStackClip final : public GrClip {
  public:
-  GrClipStackClip(const SkClipStack* stack = nullptr) { this->reset(stack); }
+  GrClipStackClip(
+      const SkISize& dimensions, const SkClipStack* stack = nullptr,
+      const SkMatrixProvider* matrixProvider = nullptr)
+      : fDeviceSize(dimensions), fStack(stack), fMatrixProvider(matrixProvider) {}
 
-  void reset(const SkClipStack* stack) noexcept { fStack = stack; }
-
-  bool quickContains(const SkRect&) const noexcept final;
-  bool quickContains(const SkRRect&) const noexcept final;
-  SkIRect getConservativeBounds(int width, int height) const noexcept final;
+  bool quickContains(const SkRect&) const final;
+  bool quickContains(const SkRRect&) const final;
+  SkIRect getConservativeBounds() const final;
   bool apply(
       GrRecordingContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
       GrAppliedClip* out, SkRect* bounds) const final;
 
-  bool isRRect(const SkRect& rtBounds, SkRRect* rr, GrAA* aa) const noexcept override;
+  bool isRRect(SkRRect* rr, GrAA* aa) const override;
 
   sk_sp<GrTextureProxy> testingOnly_createClipMask(GrContext*) const;
   static const char kMaskTestTag[];
@@ -58,7 +59,11 @@ class GrClipStackClip final : public GrClip {
       GrRecordingContext*, bool hasUserStencilSettings, const GrRenderTargetContext*,
       const GrReducedClip&);
 
+  // SkClipStack does not track device bounds explicitly, but it will refine these device bounds
+  // as clip elements are added to the stack.
+  SkISize fDeviceSize;
   const SkClipStack* fStack;
+  const SkMatrixProvider* fMatrixProvider;  // for applying clip shaders
 };
 
 #endif  // GrClipStackClip_DEFINED

@@ -36,19 +36,19 @@ class GrMockTexture : public GrTexture {
 
   ~GrMockTexture() override {}
 
-  GrBackendTexture getBackendTexture() const override {
+  GrBackendTexture getBackendTexture() const noexcept override {
     return GrBackendTexture(this->width(), this->height(), this->texturePriv().mipMapped(), fInfo);
   }
 
-  GrBackendFormat backendFormat() const override { return fInfo.getBackendFormat(); }
+  GrBackendFormat backendFormat() const noexcept override { return fInfo.getBackendFormat(); }
 
-  void textureParamsModified() override {}
+  void textureParamsModified() noexcept override {}
 
  protected:
   // constructor for subclasses
   GrMockTexture(
       GrMockGpu* gpu, const SkISize& dimensions, GrProtected isProtected,
-      GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& info)
+      GrMipMapsStatus mipMapsStatus, const GrMockTextureInfo& info) noexcept
       : GrSurface(gpu, dimensions, isProtected),
         INHERITED(gpu, dimensions, isProtected, GrTextureType::k2D, mipMapsStatus),
         fInfo(info) {}
@@ -57,7 +57,8 @@ class GrMockTexture : public GrTexture {
 
   void onAbandon() override { INHERITED::onAbandon(); }
 
-  bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) override {
+  bool onStealBackendTexture(
+      GrBackendTexture*, SkImage::BackendTextureReleaseProc*) noexcept override {
     return false;
   }
 
@@ -88,10 +89,10 @@ class GrMockRenderTarget : public GrRenderTarget {
     this->registerWithCacheWrapped(GrWrapCacheable::kNo);
   }
 
-  bool canAttemptStencilAttachment() const override { return true; }
-  bool completeStencilAttachment() override { return true; }
+  bool canAttemptStencilAttachment() const noexcept override { return true; }
+  bool completeStencilAttachment() noexcept override { return true; }
 
-  size_t onGpuMemorySize() const override {
+  size_t onGpuMemorySize() const noexcept override {
     int numColorSamples = this->numSamples();
     if (numColorSamples > 1) {
       // Add one to account for the resolve buffer.
@@ -110,7 +111,7 @@ class GrMockRenderTarget : public GrRenderTarget {
     return {this->width(), this->height(), this->numSamples(), numStencilBits, fInfo};
   }
 
-  GrBackendFormat backendFormat() const override { return fInfo.getBackendFormat(); }
+  GrBackendFormat backendFormat() const noexcept override { return fInfo.getBackendFormat(); }
 
  protected:
   // constructor for subclasses
@@ -156,7 +157,7 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
   const GrTexture* asTexture() const noexcept override { return this; }
   const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
-  GrBackendFormat backendFormat() const override { return GrMockTexture::backendFormat(); }
+  GrBackendFormat backendFormat() const noexcept override { return GrMockTexture::backendFormat(); }
 
  protected:
   // This avoids an inherits via dominance warning on MSVC.
@@ -173,7 +174,7 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
     GrMockTexture::onRelease();
   }
 
-  size_t onGpuMemorySize() const override {
+  size_t onGpuMemorySize() const noexcept override {
     int numColorSamples = this->numSamples();
     if (numColorSamples > 1) {
       // Add one to account for the resolve buffer.

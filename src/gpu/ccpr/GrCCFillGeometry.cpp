@@ -15,12 +15,12 @@
 
 static constexpr float kFlatnessThreshold = 1 / 16.f;  // 1/16 of a pixel.
 
-void GrCCFillGeometry::beginPath() {
+void GrCCFillGeometry::beginPath() noexcept {
   SkASSERT(!fBuildingContour);
   fVerbs.push_back(Verb::kBeginPath);
 }
 
-void GrCCFillGeometry::beginContour(const SkPoint& pt) {
+void GrCCFillGeometry::beginContour(const SkPoint& pt) noexcept {
   SkASSERT(!fBuildingContour);
   // Store the current verb count in the fTriangles field for now. When we close the contour we
   // will use this value to calculate the actual number of triangles in its fan.
@@ -90,7 +90,8 @@ static inline bool are_collinear(
   return std::abs(d) <= lwidth * tolerance;
 }
 
-static inline bool are_collinear(const SkPoint P[4], float tolerance = kFlatnessThreshold) {
+static inline bool are_collinear(
+    const SkPoint P[4], float tolerance = kFlatnessThreshold) noexcept {
   Sk4f Px, Py;               // |Px  Py|   |p0 - p3|
   Sk4f::Load2(P, &Px, &Py);  // |.   . | = |p1 - p3|
   Px -= Px[3];               // |.   . |   |p2 - p3|
@@ -117,7 +118,7 @@ static inline bool are_collinear(const SkPoint P[4], float tolerance = kFlatness
 
 // Returns whether the (convex) curve segment is monotonic with respect to [endPt - startPt].
 static inline bool is_convex_curve_monotonic(
-    const Sk2f& startPt, const Sk2f& tan0, const Sk2f& endPt, const Sk2f& tan1) {
+    const Sk2f& startPt, const Sk2f& tan0, const Sk2f& endPt, const Sk2f& tan1) noexcept {
   Sk2f v = endPt - startPt;
   float dot0 = dot(tan0, v);
   float dot1 = dot(tan1, v);
@@ -205,7 +206,7 @@ inline void GrCCFillGeometry::appendMonotonicQuadratic(
   ++fCurrContourTallies.fQuadratics;
 }
 
-static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) {
+static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) noexcept {
   Sk2f aa = a * a;
   aa += SkNx_shuffle<1, 0>(aa);
   SkASSERT(aa[0] == aa[1]);
@@ -218,14 +219,15 @@ static inline Sk2f first_unless_nearly_zero(const Sk2f& a, const Sk2f& b) {
 }
 
 static inline void get_cubic_tangents(
-    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, Sk2f* tan0, Sk2f* tan1) {
+    const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, Sk2f* tan0,
+    Sk2f* tan1) noexcept {
   *tan0 = first_unless_nearly_zero(p1 - p0, p2 - p0);
   *tan1 = first_unless_nearly_zero(p3 - p2, p3 - p1);
 }
 
 static inline bool is_cubic_nearly_quadratic(
     const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, const Sk2f& tan0,
-    const Sk2f& tan1, Sk2f* c) {
+    const Sk2f& tan1, Sk2f* c) noexcept {
   Sk2f c1 = SkNx_fma(Sk2f(1.5f), tan0, p0);
   Sk2f c2 = SkNx_fma(Sk2f(-1.5f), tan1, p3);
   *c = (c1 + c2) * .5f;  // Hopefully optimized out if not used?
@@ -245,7 +247,7 @@ enum class ExcludedTerm : bool { kQuadraticTerm, kLinearTerm };
 // for both in SIMD.
 static inline void find_chops_around_inflection_points(
     float padRadius, Sk2f tl, Sk2f sl, const Sk2f& C0, const Sk2f& C1, ExcludedTerm skipTerm,
-    float Cdet, SkSTArray<4, float>* chops) {
+    float Cdet, SkSTArray<4, float>* chops) noexcept {
   SkASSERT(chops->empty());
   SkASSERT(padRadius >= 0);
 
@@ -312,7 +314,7 @@ static inline void find_chops_around_inflection_points(
   }
 }
 
-static inline void swap_if_greater(float& a, float& b) {
+static inline void swap_if_greater(float& a, float& b) noexcept {
   if (a > b) {
     std::swap(a, b);
   }
@@ -329,7 +331,7 @@ static inline void swap_if_greater(float& a, float& b) {
 // padding for both in SIMD.
 static inline void find_chops_around_loop_intersection(
     float padRadius, Sk2f t2, Sk2f s2, const Sk2f& C0, const Sk2f& C1, ExcludedTerm skipTerm,
-    float Cdet, SkSTArray<4, float>* chops) {
+    float Cdet, SkSTArray<4, float>* chops) noexcept {
   SkASSERT(chops->empty());
   SkASSERT(padRadius >= 0);
 
@@ -521,7 +523,7 @@ void GrCCFillGeometry::cubicTo(const SkPoint P[4], float inflectPad, float loopI
 
 static inline void chop_cubic(
     const Sk2f& p0, const Sk2f& p1, const Sk2f& p2, const Sk2f& p3, float T, Sk2f* ab, Sk2f* abc,
-    Sk2f* abcd, Sk2f* bcd, Sk2f* cd) {
+    Sk2f* abcd, Sk2f* bcd, Sk2f* cd) noexcept {
   Sk2f TT = T;
   *ab = lerp(p0, p1, TT);
   Sk2f bc = lerp(p1, p2, TT);
@@ -628,7 +630,7 @@ void GrCCFillGeometry::appendCubics(
 // This function finds the T value whose tangent angle is halfway between the tangents at T=0 and
 // T=1 (tan0 and tan1).
 static inline float find_midtangent(
-    const Sk2f& tan0, const Sk2f& tan1, const Sk2f& C2, const Sk2f& C1, const Sk2f& C0) {
+    const Sk2f& tan0, const Sk2f& tan1, const Sk2f& C2, const Sk2f& C1, const Sk2f& C0) noexcept {
   // Tangents point in the direction of increasing T, so tan0 and -tan1 both point toward the
   // midtangent. 'n' will therefore bisect tan0 and -tan1, giving us the normal to the midtangent.
   //

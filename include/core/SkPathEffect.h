@@ -73,7 +73,7 @@ class SK_API SkPathEffect : public SkFlattenable {
   */
   class PointData {
    public:
-    PointData() noexcept : fFlags(0), fPoints(nullptr), fNumPoints(0) {
+    PointData() : fFlags(0), fPoints(nullptr), fNumPoints(0) {
       fSize.set(SK_Scalar1, SK_Scalar1);
       // 'asPoints' needs to initialize/fill-in 'fClipRect' if it sets
       // the kUseClip flag

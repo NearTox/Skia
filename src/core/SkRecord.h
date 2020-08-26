@@ -27,11 +27,11 @@
 
 class SkRecord : public SkRefCnt {
  public:
-  SkRecord() noexcept = default;
+  SkRecord() = default;
   ~SkRecord();
 
   // Returns the number of canvas commands in this SkRecord.
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   // Visit the i-th canvas command with a functor matching this interface:
   //   template <typename T>
@@ -85,26 +85,13 @@ class SkRecord : public SkRefCnt {
     return fRecords[i].set(this->allocCommand<T>());
   }
 
-  // Replace the i-th command with a new command of type T.
-  // You are expected to placement new an object of type T onto this pointer.
-  // You must show proof that you've already adopted the existing command.
-  template <typename T, typename Existing>
-  T* replace(int i, const SkRecords::Adopted<Existing>& proofOfAdoption) {
-    SkASSERT(i < this->count());
-
-    SkASSERT(Existing::kType == fRecords[i].type());
-    SkASSERT(proofOfAdoption == fRecords[i].ptr());
-
-    return fRecords[i].set(this->allocCommand<T>());
-  }
-
   // Does not return the bytes in any pointers embedded in the Records; callers
   // need to iterate with a visitor to measure those they care for.
   size_t bytesUsed() const noexcept;
 
   // Rearrange and resize this record to eliminate any NoOps.
   // May change count() and the indices of ops, but preserves their order.
-  void defrag() noexcept;
+  void defrag();
 
  private:
   // An SkRecord is structured as an array of pointers into a big chunk of memory where
@@ -125,7 +112,7 @@ class SkRecord : public SkRefCnt {
   // A mutator that can be used with replace to destroy canvas commands.
   struct Destroyer {
     template <typename T>
-    void operator()(T* record) noexcept {
+    void operator()(T* record) {
       record->~T();
     }
   };
@@ -157,8 +144,8 @@ class SkRecord : public SkRefCnt {
       return ptr;
     }
 
-    SkRecords::Type type() const noexcept { return fType; }
-    void* ptr() const noexcept { return fPtr; }
+    SkRecords::Type type() const { return fType; }
+    void* ptr() const { return fPtr; }
 
     // Visit this record with functor F (see public API above).
     template <typename F>

@@ -80,7 +80,7 @@ class SK_API SkPixelRef : public SkRefCnt {
   // to know automatically those entries can be purged when this pixelref is changed or deleted.
   void notifyAddedToCache() noexcept { fAddedToCache.store(true); }
 
-  virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const { return nullptr; }
+  virtual SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept { return nullptr; }
 
  protected:
   void android_only_reset(int width, int height, size_t rowBytes);

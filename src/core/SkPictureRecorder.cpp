@@ -23,7 +23,7 @@ SkPictureRecorder::SkPictureRecorder() {
   fRecorder.reset(new SkRecorder(nullptr, SkRect::MakeEmpty(), fMiniRecorder.get()));
 }
 
-SkPictureRecorder::~SkPictureRecorder() {}
+SkPictureRecorder::~SkPictureRecorder() = default;
 
 SkCanvas* SkPictureRecorder::beginRecording(
     const SkRect& userCullRect, sk_sp<SkBBoxHierarchy> bbh, uint32_t recordFlags /* = 0 */) {

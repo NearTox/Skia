@@ -17,7 +17,6 @@
 #if SK_SUPPORT_GPU
 #  include "include/private/GrRecordingContext.h"
 #  include "src/gpu/GrCaps.h"
-#  include "src/gpu/GrClip.h"
 #  include "src/gpu/GrColorSpaceXform.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/gpu/GrRenderTargetContext.h"
@@ -250,7 +249,7 @@ sk_sp<SkSpecialImage> SkXfermodeImageFilterImpl::filterImageGPU(
 
   if (backgroundView.asTextureProxy()) {
     SkRect bgSubset = SkRect::Make(background->subset());
-    SkMatrix bgMatrix = SkMatrix::MakeTrans(
+    SkMatrix bgMatrix = SkMatrix::Translate(
         SkIntToScalar(bgSubset.left() - backgroundOffset.fX),
         SkIntToScalar(bgSubset.top() - backgroundOffset.fY));
     bgFP = GrTextureEffect::MakeSubset(
@@ -259,12 +258,12 @@ sk_sp<SkSpecialImage> SkXfermodeImageFilterImpl::filterImageGPU(
         std::move(bgFP), background->getColorSpace(), background->alphaType(), ctx.colorSpace());
   } else {
     bgFP = GrConstColorProcessor::Make(
-        SK_PMColor4fTRANSPARENT, GrConstColorProcessor::InputMode::kIgnore);
+        /*inputFP=*/nullptr, SK_PMColor4fTRANSPARENT, GrConstColorProcessor::InputMode::kIgnore);
   }
 
   if (foregroundView.asTextureProxy()) {
     SkRect fgSubset = SkRect::Make(foreground->subset());
-    SkMatrix fgMatrix = SkMatrix::MakeTrans(
+    SkMatrix fgMatrix = SkMatrix::Translate(
         SkIntToScalar(fgSubset.left() - foregroundOffset.fX),
         SkIntToScalar(fgSubset.top() - foregroundOffset.fY));
     auto fgFP = GrTextureEffect::MakeSubset(
@@ -293,8 +292,7 @@ sk_sp<SkSpecialImage> SkXfermodeImageFilterImpl::filterImageGPU(
 
   SkMatrix matrix;
   matrix.setTranslate(SkIntToScalar(-bounds.left()), SkIntToScalar(-bounds.top()));
-  renderTargetContext->drawRect(
-      GrNoClip(), std::move(paint), GrAA::kNo, matrix, SkRect::Make(bounds));
+  renderTargetContext->drawRect(nullptr, std::move(paint), GrAA::kNo, matrix, SkRect::Make(bounds));
 
   return SkSpecialImage::MakeDeferredFromGpu(
       context, SkIRect::MakeWH(bounds.width(), bounds.height()), kNeedNewImageUniqueID_SpecialImage,

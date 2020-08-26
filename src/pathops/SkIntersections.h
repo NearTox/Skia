@@ -114,7 +114,7 @@ class SkIntersections {
     return fUsed > 0 && (fT[1][0] == t || fT[1][fUsed - 1] == t);
   }
 
-  int insertSwap(double one, double two, const SkDPoint& pt) noexcept {
+  int insertSwap(double one, double two, const SkDPoint& pt) {
     if (fSwap) {
       return insert(two, one, pt);
     } else {
@@ -213,11 +213,10 @@ class SkIntersections {
 
   void alignQuadPts(const SkPoint a[3], const SkPoint b[3]);
   int cleanUpCoincidence();
-  int closestTo(
-      double rangeStart, double rangeEnd, const SkDPoint& testPt, double* dist) const noexcept;
+  int closestTo(double rangeStart, double rangeEnd, const SkDPoint& testPt, double* dist) const;
   void cubicInsert(
       double one, double two, const SkDPoint& pt, const SkDCubic& c1, const SkDCubic& c2);
-  void flip() noexcept;
+  void flip();
   int horizontal(const SkDLine&, double left, double right, double y, bool flipped);
   int horizontal(const SkDQuad&, double left, double right, double y, bool flipped);
   int horizontal(const SkDQuad&, double left, double right, double y, double tRange[2]);
@@ -225,12 +224,12 @@ class SkIntersections {
   int horizontal(const SkDConic&, double left, double right, double y, bool flipped);
   int horizontal(const SkDCubic&, double left, double right, double y, bool flipped);
   int horizontal(const SkDCubic&, double left, double right, double y, double tRange[3]);
-  static double HorizontalIntercept(const SkDLine& line, double y) noexcept;
-  static int HorizontalIntercept(const SkDQuad& quad, SkScalar y, double* roots) noexcept;
-  static int HorizontalIntercept(const SkDConic& conic, SkScalar y, double* roots) noexcept;
+  static double HorizontalIntercept(const SkDLine& line, double y);
+  static int HorizontalIntercept(const SkDQuad& quad, SkScalar y, double* roots);
+  static int HorizontalIntercept(const SkDConic& conic, SkScalar y, double* roots);
   // FIXME : does not respect swap
-  int insert(double one, double two, const SkDPoint& pt) noexcept;
-  void insertNear(double one, double two, const SkDPoint& pt1, const SkDPoint& pt2) noexcept;
+  int insert(double one, double two, const SkDPoint& pt);
+  void insertNear(double one, double two, const SkDPoint& pt1, const SkDPoint& pt2);
   // start if index == 0 : end if index == 1
   int insertCoincident(double one, double two, const SkDPoint& pt);
   int intersect(const SkDLine&, const SkDLine&);
@@ -243,25 +242,25 @@ class SkIntersections {
   int intersect(const SkDCubic&, const SkDQuad&);
   int intersect(const SkDCubic&, const SkDConic&);
   int intersect(const SkDCubic&, const SkDCubic&);
-  int intersectRay(const SkDLine&, const SkDLine&) noexcept;
-  int intersectRay(const SkDQuad&, const SkDLine&) noexcept;
-  int intersectRay(const SkDConic&, const SkDLine&) noexcept;
-  int intersectRay(const SkDCubic&, const SkDLine&) noexcept;
-  int intersectRay(const SkTCurve& tCurve, const SkDLine& line) noexcept {
+  int intersectRay(const SkDLine&, const SkDLine&);
+  int intersectRay(const SkDQuad&, const SkDLine&);
+  int intersectRay(const SkDConic&, const SkDLine&);
+  int intersectRay(const SkDCubic&, const SkDLine&);
+  int intersectRay(const SkTCurve& tCurve, const SkDLine& line) {
     return tCurve.intersectRay(this, line);
   }
 
-  void merge(const SkIntersections&, int, const SkIntersections&, int) noexcept;
-  int mostOutside(double rangeStart, double rangeEnd, const SkDPoint& origin) const noexcept;
-  void removeOne(int index) noexcept;
-  void setCoincident(int index) noexcept;
+  void merge(const SkIntersections&, int, const SkIntersections&, int);
+  int mostOutside(double rangeStart, double rangeEnd, const SkDPoint& origin) const;
+  void removeOne(int index);
+  void setCoincident(int index);
   int vertical(const SkDLine&, double top, double bottom, double x, bool flipped);
   int vertical(const SkDQuad&, double top, double bottom, double x, bool flipped);
   int vertical(const SkDConic&, double top, double bottom, double x, bool flipped);
   int vertical(const SkDCubic&, double top, double bottom, double x, bool flipped);
-  static double VerticalIntercept(const SkDLine& line, double x) noexcept;
-  static int VerticalIntercept(const SkDQuad& quad, SkScalar x, double* roots) noexcept;
-  static int VerticalIntercept(const SkDConic& conic, SkScalar x, double* roots) noexcept;
+  static double VerticalIntercept(const SkDLine& line, double x);
+  static int VerticalIntercept(const SkDQuad& quad, SkScalar x, double* roots);
+  static int VerticalIntercept(const SkDConic& conic, SkScalar x, double* roots);
 
   int depth() const noexcept {
 #ifdef SK_DEBUG
@@ -288,7 +287,7 @@ class SkIntersections {
   bool cubicExactEnd(const SkDCubic& cubic1, bool start, const SkDCubic& cubic2);
   void cubicNearEnd(const SkDCubic& cubic1, bool start, const SkDCubic& cubic2, const SkDRect&);
   void cleanUpParallelLines(bool parallel);
-  void computePoints(const SkDLine& line, int used) noexcept;
+  void computePoints(const SkDLine& line, int used);
 
   SkDPoint fPt[13];  // FIXME: since scans store points as SkPoint, this should also
   SkDPoint fPt2[2];  // used by nearly same to store alternate intersection point

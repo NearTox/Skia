@@ -26,7 +26,7 @@ static constexpr size_t Max(size_t a, size_t b) noexcept { return a > b ? a : b;
 struct ASTNode {
   class ID {
    public:
-    static constexpr ID Invalid() noexcept { return ID(); }
+    static ID Invalid() noexcept { return ID(); }
 
     bool operator==(const ID& other) noexcept { return fValue == other.fValue; }
 
@@ -37,7 +37,7 @@ struct ASTNode {
    private:
     constexpr ID() noexcept : fValue(-1) {}
 
-    constexpr ID(int value) noexcept : fValue(value) {}
+    ID(int value) noexcept : fValue(value) {}
 
     int fValue;
 
@@ -170,7 +170,7 @@ struct ASTNode {
   struct TypeData {
     TypeData() noexcept = default;
 
-    TypeData(StringFragment name, bool isStructDeclaration, bool isNullable) noexcept
+    constexpr TypeData(StringFragment name, bool isStructDeclaration, bool isNullable) noexcept
         : fName(name), fIsStructDeclaration(isStructDeclaration), fIsNullable(isNullable) {}
 
     StringFragment fName;
@@ -181,7 +181,7 @@ struct ASTNode {
   struct ParameterData {
     ParameterData() noexcept = default;
 
-    ParameterData(Modifiers modifiers, StringFragment name, size_t sizeCount) noexcept
+    constexpr ParameterData(Modifiers modifiers, StringFragment name, size_t sizeCount) noexcept
         : fModifiers(modifiers), fName(name), fSizeCount(sizeCount) {}
 
     Modifiers fModifiers;
@@ -192,7 +192,8 @@ struct ASTNode {
   struct VarData {
     VarData() noexcept = default;
 
-    VarData(StringFragment name, size_t sizeCount) noexcept : fName(name), fSizeCount(sizeCount) {}
+    constexpr VarData(StringFragment name, size_t sizeCount) noexcept
+        : fName(name), fSizeCount(sizeCount) {}
 
     StringFragment fName;
     size_t fSizeCount;
@@ -379,7 +380,7 @@ struct ASTNode {
 
   operator bool() const noexcept { return fKind != Kind::kNull; }
 
-  Token getToken() const {
+  Token getToken() const noexcept {
     SkASSERT(fData.fKind == NodeData::Kind::kToken);
     Token result;
     memcpy(&result, fData.fBytes, sizeof(result));

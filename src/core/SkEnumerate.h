@@ -37,21 +37,21 @@ class SkEnumerate {
     using pointer = value_type*;
     using reference = value_type;
     using iterator_category = std::input_iterator_tag;
-    constexpr Iterator(ptrdiff_t index, Iter it) noexcept : fIndex{index}, fIt{it} {}
-    constexpr Iterator(const Iterator&) noexcept = default;
-    constexpr Iterator operator++() noexcept {
+    constexpr Iterator(ptrdiff_t index, Iter it) : fIndex{index}, fIt{it} {}
+    constexpr Iterator(const Iterator&) = default;
+    constexpr Iterator operator++() {
       ++fIndex;
       ++fIt;
       return *this;
     }
-    constexpr Iterator operator++(int) noexcept {
+    constexpr Iterator operator++(int) {
       Iterator tmp(*this);
       operator++();
       return tmp;
     }
-    constexpr bool operator==(const Iterator& rhs) const noexcept { return fIt == rhs.fIt; }
-    constexpr bool operator!=(const Iterator& rhs) const noexcept { return fIt != rhs.fIt; }
-    constexpr reference operator*() noexcept { return MakeResult(fIndex, *fIt); }
+    constexpr bool operator==(const Iterator& rhs) const { return fIt == rhs.fIt; }
+    constexpr bool operator!=(const Iterator& rhs) const { return fIt != rhs.fIt; }
+    constexpr reference operator*() { return MakeResult(fIndex, *fIt); }
 
    private:
     ptrdiff_t fIndex;
@@ -59,34 +59,34 @@ class SkEnumerate {
   };
 
  public:
-  constexpr SkEnumerate(Iter begin, Iter end) noexcept : SkEnumerate{0, begin, end} {}
-  explicit constexpr SkEnumerate(C&& c) noexcept
+  constexpr SkEnumerate(Iter begin, Iter end) : SkEnumerate{0, begin, end} {}
+  explicit constexpr SkEnumerate(C&& c)
       : fCollection{std::move(c)},
         fBeginIndex{0},
         fBegin{std::begin(fCollection)},
         fEnd{std::end(fCollection)} {}
-  constexpr SkEnumerate(const SkEnumerate& that) noexcept = default;
-  constexpr SkEnumerate& operator=(const SkEnumerate& that) noexcept {
+  constexpr SkEnumerate(const SkEnumerate& that) = default;
+  constexpr SkEnumerate& operator=(const SkEnumerate& that) {
     fBegin = that.fBegin;
     fEnd = that.fEnd;
     return *this;
   }
-  constexpr Iterator begin() const noexcept { return Iterator{fBeginIndex, fBegin}; }
-  constexpr Iterator end() const noexcept { return Iterator{fBeginIndex + this->ssize(), fEnd}; }
-  constexpr bool empty() const noexcept { return fBegin == fEnd; }
-  constexpr size_t size() const noexcept { return std::distance(fBegin, fEnd); }
-  constexpr ptrdiff_t ssize() const noexcept { return std::distance(fBegin, fEnd); }
-  constexpr SkEnumerate first(size_t n) noexcept {
+  constexpr Iterator begin() const { return Iterator{fBeginIndex, fBegin}; }
+  constexpr Iterator end() const { return Iterator{fBeginIndex + this->ssize(), fEnd}; }
+  constexpr bool empty() const { return fBegin == fEnd; }
+  constexpr size_t size() const { return std::distance(fBegin, fEnd); }
+  constexpr ptrdiff_t ssize() const { return std::distance(fBegin, fEnd); }
+  constexpr SkEnumerate first(size_t n) {
     SkASSERT(n <= this->size());
     ptrdiff_t deltaEnd = this->ssize() - n;
     return SkEnumerate{fBeginIndex, fBegin, std::prev(fEnd, deltaEnd)};
   }
-  constexpr SkEnumerate last(size_t n) noexcept {
+  constexpr SkEnumerate last(size_t n) {
     SkASSERT(n <= this->size());
     ptrdiff_t deltaBegin = this->ssize() - n;
     return SkEnumerate{fBeginIndex + deltaBegin, std::next(fBegin, deltaBegin), fEnd};
   }
-  constexpr SkEnumerate subspan(size_t offset, size_t count) noexcept {
+  constexpr SkEnumerate subspan(size_t offset, size_t count) {
     SkASSERT(offset < this->size());
     SkASSERT(count <= this->size() - offset);
     auto newBegin = std::next(fBegin, offset);
@@ -94,7 +94,7 @@ class SkEnumerate {
   }
 
  private:
-  constexpr SkEnumerate(ptrdiff_t beginIndex, Iter begin, Iter end) noexcept
+  constexpr SkEnumerate(ptrdiff_t beginIndex, Iter begin, Iter end)
       : fBeginIndex{beginIndex}, fBegin(begin), fEnd(end) {}
 
   C fCollection;

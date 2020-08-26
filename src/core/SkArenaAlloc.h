@@ -74,7 +74,7 @@ class SkArenaAlloc {
   template <typename T, typename... Args>
   T* make(Args&&... args) {
     uint32_t size = ToU32(sizeof(T));
-    constexpr uint32_t alignment = ToU32(alignof(T));
+    uint32_t alignment = ToU32(alignof(T));
     char* objStart;
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(size, alignment);
@@ -100,12 +100,9 @@ class SkArenaAlloc {
 
   template <typename T>
   T* makeArrayDefault(size_t count) {
-    AssertRelease(SkTFitsIn<uint32_t>(count));
-    uint32_t safeCount = ToU32(count);
-    T* array = (T*)this->commonArrayAlloc<T>(safeCount);
-
-    // If T is primitive then no initialization takes place.
-    for (size_t i = 0; i < safeCount; i++) {
+    T* array = this->allocUninitializedArray<T>(count);
+    for (size_t i = 0; i < count; i++) {
+      // Default initialization: if T is primitive then the value is left uninitialized.
       new (&array[i]) T;
     }
     return array;
@@ -113,14 +110,19 @@ class SkArenaAlloc {
 
   template <typename T>
   T* makeArray(size_t count) {
-    AssertRelease(SkTFitsIn<uint32_t>(count));
-    uint32_t safeCount = ToU32(count);
-    T* array = (T*)this->commonArrayAlloc<T>(safeCount);
-
-    // If T is primitive then the memory is initialized. For example, an array of chars will
-    // be zeroed.
-    for (size_t i = 0; i < safeCount; i++) {
+    T* array = this->allocUninitializedArray<T>(count);
+    for (size_t i = 0; i < count; i++) {
+      // Value initialization: if T is primitive then the value is zero-initialized.
       new (&array[i]) T();
+    }
+    return array;
+  }
+
+  template <typename T, typename Initializer>
+  T* makeInitializedArray(size_t count, Initializer initializer) {
+    T* array = this->allocUninitializedArray<T>(count);
+    for (size_t i = 0; i < count; i++) {
+      new (&array[i]) T(initializer(i));
     }
     return array;
   }
@@ -139,7 +141,7 @@ class SkArenaAlloc {
  private:
   static void AssertRelease(bool cond) noexcept {
     if (!cond) {
-      std::abort();
+      ::abort();
     }
   }
   static constexpr uint32_t ToU32(size_t v) noexcept {
@@ -175,13 +177,16 @@ class SkArenaAlloc {
   char* allocObjectWithFooter(uint32_t sizeIncludingFooter, uint32_t alignment);
 
   template <typename T>
-  char* commonArrayAlloc(uint32_t count) {
+  T* allocUninitializedArray(size_t countZ) {
+    AssertRelease(SkTFitsIn<uint32_t>(countZ));
+    uint32_t count = ToU32(countZ);
+
     char* objStart;
     AssertRelease(count <= std::numeric_limits<uint32_t>::max() / sizeof(T));
     uint32_t arraySize = ToU32(count * sizeof(T));
-    constexpr uint32_t alignment = ToU32(alignof(T));
+    uint32_t alignment = ToU32(alignof(T));
 
-    if (std::is_trivially_destructible_v<T>) {
+    if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(arraySize, alignment);
       fCursor = objStart + arraySize;
     } else {
@@ -210,7 +215,7 @@ class SkArenaAlloc {
           ToU32(count), padding);
     }
 
-    return objStart;
+    return (T*)objStart;
   }
 
   char* fDtorCursor;

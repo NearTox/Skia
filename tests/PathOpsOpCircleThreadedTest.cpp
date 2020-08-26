@@ -43,17 +43,17 @@ static void testOpCirclesMain(PathOpsThreadState* data) {
                   pathStr.appendf("    SkPath path, pathB;\n");
                   pathStr.appendf(
                       "    path.setFillType(SkPathFillType::k%s);\n",
-                      e == SkPathFillType::kWinding
-                          ? "Winding"
-                          : e == SkPathFillType::kEvenOdd ? "EvenOdd" : "?UNDEFINED");
+                      e == SkPathFillType::kWinding   ? "Winding"
+                      : e == SkPathFillType::kEvenOdd ? "EvenOdd"
+                                                      : "?UNDEFINED");
                   pathStr.appendf(
                       "    path.addCircle(%d, %d, %d, %s);\n", state.fA, state.fB, state.fC,
                       state.fD ? "SkPathDirection::kCW" : "SkPathDirection::kCCW");
                   pathStr.appendf(
                       "    pathB.setFillType(SkPathFillType::k%s);\n",
-                      f == SkPathFillType::kWinding
-                          ? "Winding"
-                          : f == SkPathFillType::kEvenOdd ? "EvenOdd" : "?UNDEFINED");
+                      f == SkPathFillType::kWinding   ? "Winding"
+                      : f == SkPathFillType::kEvenOdd ? "EvenOdd"
+                                                      : "?UNDEFINED");
                   pathStr.appendf(
                       "    pathB.addCircle(%d, %d, %d, %s);\n", a, b, c,
                       d ? "SkPathDirection::kCW" : "SkPathDirection::kCCW");

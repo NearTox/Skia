@@ -29,14 +29,16 @@ void RoundEffect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawPath(fRoundedPath, paint);
 }
 
-bool RoundEffect::onContains(const SkPoint& p) const { return fRoundedPath.contains(p.x(), p.y()); }
+bool RoundEffect::onContains(const SkPoint& p) const noexcept {
+  return fRoundedPath.contains(p.x(), p.y());
+}
 
-SkPath RoundEffect::onAsPath() const { return fRoundedPath; }
+SkPath RoundEffect::onAsPath() const noexcept { return fRoundedPath; }
 
 SkRect RoundEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto& childbounds = fChild->revalidate(ic, ctm);
+  const auto childbounds = fChild->revalidate(ic, ctm);
   const auto path = fChild->asPath();
 
   if (auto round = SkCornerPathEffect::Make(fRadius)) {

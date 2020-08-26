@@ -1781,7 +1781,7 @@ SkTypeface_FreeType::Scanner::~Scanner() {
 
 FT_Face SkTypeface_FreeType::Scanner::openFace(
     SkStreamAsset* stream, int ttcIndex, FT_Stream ftStream) const {
-  if (fLibrary == nullptr) {
+  if (fLibrary == nullptr || stream == nullptr) {
     return nullptr;
   }
 

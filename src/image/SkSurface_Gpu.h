@@ -25,7 +25,7 @@ class SkSurface_Gpu : public SkSurface_Base {
   static sk_sp<SkSurface> MakeWrappedRenderTarget(
       GrContext*, std::unique_ptr<GrRenderTargetContext>);
 
-  GrContext* onGetContext() override;
+  GrContext* onGetContext() noexcept override;
 
   GrBackendTexture onGetBackendTexture(BackendHandleAccess) override;
   GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess) override;
@@ -48,7 +48,9 @@ class SkSurface_Gpu : public SkSurface_Base {
 
   void onCopyOnWrite(ContentChangeMode) override;
   void onDiscard() override;
-  GrSemaphoresSubmitted onFlush(BackendSurfaceAccess access, const GrFlushInfo& info) override;
+  GrSemaphoresSubmitted onFlush(
+      BackendSurfaceAccess access, const GrFlushInfo& info,
+      const GrBackendSurfaceMutableState*) override;
   bool onWait(int numSemaphores, const GrBackendSemaphore* waitSemaphores) override;
   bool onCharacterize(SkSurfaceCharacterization*) const override;
   bool onIsCompatible(const SkSurfaceCharacterization&) const override;

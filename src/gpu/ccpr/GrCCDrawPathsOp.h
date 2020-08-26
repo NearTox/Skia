@@ -34,7 +34,7 @@ class GrCCDrawPathsOp : public GrDrawOp {
       GrPaint&&);
   ~GrCCDrawPathsOp() override;
 
-  const char* name() const override { return "GrCCDrawPathsOp"; }
+  const char* name() const noexcept override { return "GrCCDrawPathsOp"; }
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
   GrProcessorSet::Analysis finalize(
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;

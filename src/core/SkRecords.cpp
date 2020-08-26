@@ -18,7 +18,5 @@ PreCachedPath::PreCachedPath(const SkPath& path) : SkPath(path) {
 #endif
 }
 
-TypedMatrix::TypedMatrix(const SkMatrix& matrix) noexcept : SkMatrix(matrix) {
-  (void)this->getType();
+TypedMatrix::TypedMatrix(const SkMatrix& matrix) : SkMatrix(matrix) { (void)this->getType(); }
 }
-}  // namespace SkRecords

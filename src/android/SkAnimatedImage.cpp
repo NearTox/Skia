@@ -94,15 +94,15 @@ SkAnimatedImage::SkAnimatedImage(
   }
 
   if (!fSimple) {
-    fMatrix = SkMatrix::MakeTrans(-fCropRect.fLeft, -fCropRect.fTop);
+    fMatrix = SkMatrix::Translate(-fCropRect.fLeft, -fCropRect.fTop);
     float scaleX = (float)fScaledSize.width() / fDecodeInfo.width();
     float scaleY = (float)fScaledSize.height() / fDecodeInfo.height();
-    fMatrix.preConcat(SkMatrix::MakeScale(scaleX, scaleY));
+    fMatrix.preConcat(SkMatrix::Scale(scaleX, scaleY));
   }
   this->decodeNextFrame();
 }
 
-SkAnimatedImage::~SkAnimatedImage() {}
+SkAnimatedImage::~SkAnimatedImage() = default;
 
 SkRect SkAnimatedImage::onGetBounds() {
   return SkRect::MakeIWH(fCropRect.width(), fCropRect.height());

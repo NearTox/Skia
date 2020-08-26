@@ -35,9 +35,9 @@ class GrTextStrike : public SkNVRefCnt<GrTextStrike> {
  private:
   struct HashTraits {
     // GetKey and Hash for the the hash table.
-    static const SkPackedGlyphID& GetKey(const GrGlyph* glyph) { return glyph->fPackedID; }
+    static const SkPackedGlyphID& GetKey(const GrGlyph* glyph) noexcept { return glyph->fPackedID; }
 
-    static uint32_t Hash(SkPackedGlyphID key) { return SkChecksum::Mix(key.hash()); }
+    static uint32_t Hash(SkPackedGlyphID key) noexcept { return SkChecksum::Mix(key.hash()); }
   };
   SkTHashTable<GrGlyph*, SkPackedGlyphID, HashTraits> fCache;
   SkAutoDescriptor fFontScalerKey;
@@ -75,10 +75,10 @@ class GrStrikeCache {
   }
 
   struct DescriptorHashTraits {
-    static const SkDescriptor& GetKey(const sk_sp<GrTextStrike>& strike) {
+    static const SkDescriptor& GetKey(const sk_sp<GrTextStrike>& strike) noexcept {
       return *strike->fFontScalerKey.getDesc();
     }
-    static uint32_t Hash(const SkDescriptor& desc) { return desc.getChecksum(); }
+    static uint32_t Hash(const SkDescriptor& desc) noexcept { return desc.getChecksum(); }
   };
 
   using StrikeHash = SkTHashTable<sk_sp<GrTextStrike>, SkDescriptor, DescriptorHashTraits>;

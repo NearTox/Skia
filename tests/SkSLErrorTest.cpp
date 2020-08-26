@@ -351,7 +351,7 @@ DEF_TEST(SkSLUnreachable, r) {
   test_failure(
       r, "void main() { if (true) return; else discard; return; }",
       "error: 1: unreachable\n1 error\n");
-  test_failure(r, "void main() { return; while (true); }", "error: 1: unreachable\n1 error\n");
+  test_failure(r, "void main() { return; main(); }", "error: 1: unreachable\n1 error\n");
 }
 
 DEF_TEST(SkSLNoReturn, r) {

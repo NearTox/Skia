@@ -310,12 +310,14 @@ bool VulkanWindowContext::createSwapchain(int width, int height, const DisplayPa
     fDestroySwapchainKHR(fDevice, swapchainCreateInfo.oldSwapchain, nullptr);
   }
 
-  this->createBuffers(swapchainCreateInfo.imageFormat, colorType);
+  this->createBuffers(
+      swapchainCreateInfo.imageFormat, colorType, swapchainCreateInfo.imageSharingMode);
 
   return true;
 }
 
-void VulkanWindowContext::createBuffers(VkFormat format, SkColorType colorType) {
+void VulkanWindowContext::createBuffers(
+    VkFormat format, SkColorType colorType, VkSharingMode sharingMode) {
   fGetSwapchainImagesKHR(fDevice, fSwapchain, &fImageCount, nullptr);
   SkASSERT(fImageCount);
   fImages = new VkImage[fImageCount];
@@ -335,6 +337,7 @@ void VulkanWindowContext::createBuffers(VkFormat format, SkColorType colorType) 
     info.fFormat = format;
     info.fLevelCount = 1;
     info.fCurrentQueueFamily = fPresentQueueIndex;
+    info.fSharingMode = sharingMode;
 
     if (fSampleCount == 1) {
       GrBackendRenderTarget backendRT(fWidth, fHeight, fSampleCount, info);
@@ -508,7 +511,9 @@ void VulkanWindowContext::swapBuffers() {
   GrFlushInfo info;
   info.fNumSemaphores = 1;
   info.fSignalSemaphores = &beSemaphore;
-  surface->flush(SkSurface::BackendSurfaceAccess::kPresent, info);
+  GrBackendSurfaceMutableState presentState(VK_IMAGE_LAYOUT_PRESENT_SRC_KHR, fPresentQueueIndex);
+  surface->flush(info, &presentState);
+  surface->getContext()->submit();
 
   // Submit present operation to present queue
   const VkPresentInfoKHR presentInfo = {

@@ -11,7 +11,7 @@
 /**
  *  Divs must be in increasing order with no duplicates.
  */
-static bool valid_divs(const int* divs, int count, int start, int end) noexcept {
+static bool valid_divs(const int* divs, int count, int start, int end) {
   int prev = start - 1;
   for (int i = 0; i < count; i++) {
     if (prev >= divs[i] || divs[i] >= end) {
@@ -47,7 +47,7 @@ bool SkLatticeIter::Valid(int width, int height, const SkCanvas::Lattice& lattic
  *  Count the number of pixels that are in "scalable" patches.
  */
 static int count_scalable_pixels(
-    const int32_t* divs, int numDivs, bool firstIsScalable, int start, int end) noexcept {
+    const int32_t* divs, int numDivs, bool firstIsScalable, int start, int end) {
   if (0 == numDivs) {
     return firstIsScalable ? end - start : 0;
   }
@@ -78,7 +78,7 @@ static int count_scalable_pixels(
  */
 static void set_points(
     float* dst, int* src, const int* divs, int divCount, int srcFixed, int srcScalable,
-    int srcStart, int srcEnd, float dstStart, float dstEnd, bool isScalable) noexcept {
+    int srcStart, int srcEnd, float dstStart, float dstEnd, bool isScalable) {
   float dstLen = dstEnd - dstStart;
   float scale;
   if (srcFixed <= dstLen) {
@@ -111,7 +111,7 @@ static void set_points(
   dst[divCount + 1] = dstEnd;
 }
 
-SkLatticeIter::SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst) noexcept {
+SkLatticeIter::SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst) {
   const int* xDivs = lattice.fXDivs;
   const int origXCount = lattice.fXCount;
   const int* yDivs = lattice.fYDivs;
@@ -208,11 +208,11 @@ SkLatticeIter::SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst
   }
 }
 
-bool SkLatticeIter::Valid(int width, int height, const SkIRect& center) noexcept {
+bool SkLatticeIter::Valid(int width, int height, const SkIRect& center) {
   return !center.isEmpty() && SkIRect::MakeWH(width, height).contains(center);
 }
 
-SkLatticeIter::SkLatticeIter(int w, int h, const SkIRect& c, const SkRect& dst) noexcept {
+SkLatticeIter::SkLatticeIter(int w, int h, const SkIRect& c, const SkRect& dst) {
   SkASSERT(SkIRect::MakeWH(w, h).contains(c));
 
   fSrcX.reset(4);
@@ -287,7 +287,7 @@ bool SkLatticeIter::next(SkIRect* src, SkRect* dst, bool* isFixedColor, SkColor*
   return true;
 }
 
-void SkLatticeIter::mapDstScaleTranslate(const SkMatrix& matrix) noexcept {
+void SkLatticeIter::mapDstScaleTranslate(const SkMatrix& matrix) {
   SkASSERT(matrix.isScaleTranslate());
   SkScalar tx = matrix.getTranslateX();
   SkScalar sx = matrix.getScaleX();

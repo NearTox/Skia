@@ -78,9 +78,9 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   };
 
   struct LazyCallbackResult {
-    constexpr LazyCallbackResult() noexcept = default;
+    LazyCallbackResult() noexcept = default;
     LazyCallbackResult(const LazyCallbackResult&) noexcept = default;
-    LazyCallbackResult(LazyCallbackResult&& that) noexcept = default;
+    LazyCallbackResult(LazyCallbackResult&& that) = default;
     LazyCallbackResult(
         sk_sp<GrSurface> surf, bool releaseCallback = true,
         LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
@@ -89,7 +89,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
         : LazyCallbackResult(sk_sp<GrSurface>(std::move(tex))) {}
 
     LazyCallbackResult& operator=(const LazyCallbackResult&) noexcept = default;
-    LazyCallbackResult& operator=(LazyCallbackResult&&) noexcept = default;
+    LazyCallbackResult& operator=(LazyCallbackResult&&) = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -264,11 +264,6 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
     return fSurfaceFlags & GrInternalSurfaceFlags::kRequiresManualMSAAResolve;
   }
 
-  void setLastRenderTask(GrRenderTask*) noexcept;
-  GrRenderTask* getLastRenderTask() noexcept { return fLastRenderTask; }
-
-  GrOpsTask* getLastOpsTask() noexcept;
-
   /**
    * Retrieves the amount of GPU memory that will be or currently is used by this resource
    * in bytes. It is approximate since we aren't aware of additional padding or copies made
@@ -276,7 +271,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    *
    * @return the amount of GPU memory used in bytes
    */
-  size_t gpuMemorySize(const GrCaps& caps) const {
+  size_t gpuMemorySize(const GrCaps& caps) const noexcept {
     SkASSERT(!this->isFullyLazy());
     if (fTarget) {
       return fTarget->gpuMemorySize();
@@ -333,7 +328,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // Takes UseAllocator because even though this is already instantiated it still can participate
   // in allocation by having its backing resource recycled to other uninstantiated proxies or
   // not depending on UseAllocator.
-  GrSurfaceProxy(sk_sp<GrSurface>, SkBackingFit, UseAllocator);
+  GrSurfaceProxy(sk_sp<GrSurface>, SkBackingFit, UseAllocator) noexcept;
 
   friend class GrSurfaceProxyPriv;
 
@@ -399,9 +394,9 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
   SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; });
 
-  virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;
+  virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const noexcept = 0;
 
-  virtual LazySurfaceDesc callbackDesc() const = 0;
+  virtual LazySurfaceDesc callbackDesc() const noexcept = 0;
 
   bool fIgnoredByResourceAllocator = false;
   GrProtected fIsProtected;
@@ -411,15 +406,6 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // If the proxy computes its own answer that answer is checked (in debug mode) in
   // the instantiation method.
   mutable size_t fGpuMemorySize;
-
-  // The last GrRenderTask that wrote to or is currently going to write to this surface
-  // The GrRenderTask can be closed (e.g., no surface context is currently bound
-  // to this proxy).
-  // This back-pointer is required so that we can add a dependancy between
-  // the GrRenderTask used to create the current contents of this surface
-  // and the GrRenderTask of a destination surface to which this one is being drawn or copied.
-  // This pointer is unreffed. GrRenderTasks own a ref on their surface proxies.
-  GrRenderTask* fLastRenderTask = nullptr;
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrSurfaceProxy::ResolveFlags)

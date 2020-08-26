@@ -40,7 +40,7 @@ GrProcessorSet::GrProcessorSet(GrPaint&& paint) noexcept : fXP(paint.getXPFactor
     SkDebugf("Insane number of color fragment processors in paint. Dropping all processors.");
     fColorFragmentProcessorCnt = 0;
   }
-  SkDEBUGCODE(paint.fAlive = false;)
+  SkDEBUGCODE(paint.fAlive = false);
 }
 
 GrProcessorSet::GrProcessorSet(SkBlendMode mode) noexcept
@@ -68,8 +68,9 @@ GrProcessorSet::GrProcessorSet(GrProcessorSet&& that) noexcept
   for (int i = 0; i < fFragmentProcessors.count(); ++i) {
     fFragmentProcessors[i] = std::move(that.fFragmentProcessors[i + that.fFragmentProcessorOffset]);
   }
-  that.fColorFragmentProcessorCnt = 0;
   that.fFragmentProcessors.reset(0);
+  that.fColorFragmentProcessorCnt = 0;
+  that.fFragmentProcessorOffset = 0;
 }
 
 GrProcessorSet::~GrProcessorSet() {
@@ -130,7 +131,7 @@ SkString GrProcessorSet::dumpProcessors() const {
 }
 #endif
 
-bool GrProcessorSet::operator==(const GrProcessorSet& that) const {
+bool GrProcessorSet::operator==(const GrProcessorSet& that) const noexcept {
   SkASSERT(this->isFinalized());
   SkASSERT(that.isFinalized());
   int fpCount = this->numFragmentProcessors();

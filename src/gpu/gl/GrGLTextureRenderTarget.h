@@ -27,7 +27,7 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
       GrGLGpu* gpu, SkBudgeted budgeted, int sampleCount, const GrGLTexture::Desc& texDesc,
       const GrGLRenderTarget::IDs&, GrMipMapsStatus);
 
-  bool canAttemptStencilAttachment() const override;
+  bool canAttemptStencilAttachment() const noexcept override;
 
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
@@ -35,7 +35,7 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
       GrGLGpu* gpu, int sampleCount, const GrGLTexture::Desc&, sk_sp<GrGLTextureParameters>,
       const GrGLRenderTarget::IDs&, GrWrapCacheable, GrMipMapsStatus);
 
-  GrBackendFormat backendFormat() const override {
+  GrBackendFormat backendFormat() const noexcept override {
     // It doesn't matter if we take the texture or render target path, so just pick texture.
     return GrGLTexture::backendFormat();
   }
@@ -58,7 +58,7 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
       sk_sp<GrGLTextureParameters> parameters, const GrGLRenderTarget::IDs& ids, GrWrapCacheable,
       GrMipMapsStatus);
 
-  size_t onGpuMemorySize() const override;
+  size_t onGpuMemorySize() const noexcept override;
 };
 
 #ifdef SK_BUILD_FOR_WIN

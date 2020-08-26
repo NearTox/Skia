@@ -73,7 +73,7 @@ class SkLineParameters {
     fC = pts[s].fX * pts[e].fY - pts[e].fX * pts[s].fY;
   }
 
-  double cubicPart(const SkDCubic& part) noexcept {
+  double cubicPart(const SkDCubic& part) {
     cubicEndPoints(part);
     if (part[0] == part[1] || ((const SkDLine&)part[0]).nearRay(part[2])) {
       return pointDistance(part[3]);

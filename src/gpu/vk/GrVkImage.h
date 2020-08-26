@@ -12,9 +12,10 @@
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "include/private/GrTypesPriv.h"
+#include "include/private/GrVkTypesPriv.h"
+#include "src/gpu/GrBackendSurfaceMutableStateImpl.h"
 #include "src/gpu/GrManagedResource.h"
 #include "src/gpu/GrTexture.h"
-#include "src/gpu/vk/GrVkImageLayout.h"
 
 class GrVkGpu;
 class GrVkTexture;
@@ -25,22 +26,10 @@ class GrVkImage : SkNoncopyable {
 
  public:
   GrVkImage(
-      const GrVkGpu* gpu, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout,
-      GrBackendObjectOwnership ownership, bool forSecondaryCB = false)
-      : fInfo(info),
-        fInitialQueueFamily(info.fCurrentQueueFamily),
-        fLayout(std::move(layout)),
-        fIsBorrowed(GrBackendObjectOwnership::kBorrowed == ownership) {
-    SkASSERT(fLayout->getImageLayout() == fInfo.fImageLayout);
-    if (forSecondaryCB) {
-      fResource = nullptr;
-    } else if (fIsBorrowed) {
-      fResource = new BorrowedResource(gpu, info.fImage, info.fAlloc, info.fImageTiling);
-    } else {
-      SkASSERT(VK_NULL_HANDLE != info.fAlloc.fMemory);
-      fResource = new Resource(gpu, info.fImage, info.fAlloc, info.fImageTiling);
-    }
-  }
+      const GrVkGpu* gpu, const GrVkImageInfo& info,
+      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, GrBackendObjectOwnership ownership,
+      bool forSecondaryCB = false);
+
   virtual ~GrVkImage();
 
   VkImage image() const noexcept {
@@ -56,7 +45,7 @@ class GrVkImage : SkNoncopyable {
     return fInfo.fAlloc;
   }
   VkFormat imageFormat() const noexcept { return fInfo.fFormat; }
-  GrBackendFormat getBackendFormat() const {
+  GrBackendFormat getBackendFormat() const noexcept {
     if (fResource && this->ycbcrConversionInfo().isValid()) {
       SkASSERT(this->imageFormat() == this->ycbcrConversionInfo().fFormat);
       return GrBackendFormat::MakeVk(this->ycbcrConversionInfo());
@@ -83,13 +72,26 @@ class GrVkImage : SkNoncopyable {
   }
   bool isBorrowed() const noexcept { return fIsBorrowed; }
 
-  sk_sp<GrVkImageLayout> grVkImageLayout() const { return fLayout; }
+  sk_sp<GrBackendSurfaceMutableStateImpl> getMutableState() const noexcept { return fMutableState; }
 
-  VkImageLayout currentLayout() const noexcept { return fLayout->getImageLayout(); }
+  VkImageLayout currentLayout() const noexcept { return fMutableState->getImageLayout(); }
+
+  void setImageLayoutAndQueueIndex(
+      const GrVkGpu* gpu, VkImageLayout newLayout, VkAccessFlags dstAccessMask,
+      VkPipelineStageFlags dstStageMask, bool byRegion, uint32_t newQueueFamilyIndex);
 
   void setImageLayout(
       const GrVkGpu* gpu, VkImageLayout newLayout, VkAccessFlags dstAccessMask,
-      VkPipelineStageFlags dstStageMask, bool byRegion, bool releaseFamilyQueue = false);
+      VkPipelineStageFlags dstStageMask, bool byRegion) {
+    this->setImageLayoutAndQueueIndex(
+        gpu, newLayout, dstAccessMask, dstStageMask, byRegion, VK_QUEUE_FAMILY_IGNORED);
+  }
+
+  uint32_t currentQueueFamilyIndex() const noexcept { return fMutableState->getQueueFamilyIndex(); }
+
+  void setQueueFamilyIndex(uint32_t queueFamilyIndex) noexcept {
+    fMutableState->setQueueFamilyIndex(queueFamilyIndex);
+  }
 
   // Returns the image to its original queue family and changes the layout to present if the queue
   // family is not external or foreign.
@@ -105,7 +107,7 @@ class GrVkImage : SkNoncopyable {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
-    fLayout->setImageLayout(newLayout);
+    fMutableState->setImageLayout(newLayout);
   }
 
   struct ImageDesc {
@@ -120,7 +122,7 @@ class GrVkImage : SkNoncopyable {
     VkFlags fMemProps;
     GrProtected fIsProtected;
 
-    ImageDesc() noexcept
+    constexpr ImageDesc() noexcept
         : fImageType(VK_IMAGE_TYPE_2D),
           fFormat(VK_FORMAT_UNDEFINED),
           fWidth(0),
@@ -152,12 +154,12 @@ class GrVkImage : SkNoncopyable {
 #endif
 
  protected:
-  void releaseImage(GrVkGpu* gpu);
+  void releaseImage();
   bool hasResource() const noexcept { return fResource; }
 
   GrVkImageInfo fInfo;
   uint32_t fInitialQueueFamily;
-  sk_sp<GrVkImageLayout> fLayout;
+  sk_sp<GrBackendSurfaceMutableStateImpl> fMutableState;
   bool fIsBorrowed;
 
  private:
@@ -199,7 +201,7 @@ class GrVkImage : SkNoncopyable {
   class BorrowedResource : public Resource {
    public:
     BorrowedResource(
-        const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
+        const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling) noexcept
         : Resource(gpu, image, alloc, tiling) {}
 
    private:

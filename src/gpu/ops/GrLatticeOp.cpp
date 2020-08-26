@@ -37,7 +37,7 @@ class LatticeGP : public GrGeometryProcessor {
 
   const char* name() const noexcept override { return "LatticeGP"; }
 
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     b->add32(GrColorSpaceXform::XformKey(fColorSpaceXform.get()));
   }
 
@@ -48,7 +48,7 @@ class LatticeGP : public GrGeometryProcessor {
           const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
           const CoordTransformRange& transformRange) override {
         const auto& latticeGP = proc.cast<LatticeGP>();
-        this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
+        this->setTransformDataHelper(pdman, transformRange);
         fColorSpaceXformHelper.setData(pdman, latticeGP.fColorSpaceXform.get());
       }
 
@@ -60,9 +60,8 @@ class LatticeGP : public GrGeometryProcessor {
 
         args.fVaryingHandler->emitAttributes(latticeGP);
         this->writeOutputPosition(args.fVertBuilder, gpArgs, latticeGP.fInPosition.name());
-        this->emitTransforms(
-            args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler,
-            latticeGP.fInTextureCoords.asShaderVar(), args.fFPCoordTransformHandler);
+        gpArgs->fLocalCoordVar = latticeGP.fInTextureCoords.asShaderVar();
+
         args.fFragBuilder->codeAppend("float2 textureCoords;");
         args.fVaryingHandler->addPassThroughAttribute(latticeGP.fInTextureCoords, "textureCoords");
         args.fFragBuilder->codeAppend("float4 textureDomain;");
@@ -197,7 +196,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* programInfo() noexcept override { return fProgramInfo; }
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,

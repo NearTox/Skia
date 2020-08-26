@@ -72,7 +72,8 @@ void SkGradientShaderBase::Descriptor::flatten(SkWriteBuffer& buffer) const {
 }
 
 template <int N, typename T, bool MEM_MOVE>
-static bool validate_array(SkReadBuffer& buffer, size_t count, SkSTArray<N, T, MEM_MOVE>* array) {
+static bool validate_array(
+    SkReadBuffer& buffer, size_t count, SkSTArray<N, T, MEM_MOVE>* array) noexcept {
   if (!buffer.validateCanReadN<T>(count)) {
     return false;
   }
@@ -199,7 +200,7 @@ SkGradientShaderBase::SkGradientShaderBase(const Descriptor& desc, const SkMatri
   }
 }
 
-SkGradientShaderBase::~SkGradientShaderBase() {}
+SkGradientShaderBase::~SkGradientShaderBase() = default;
 
 void SkGradientShaderBase::flatten(SkWriteBuffer& buffer) const {
   Descriptor desc;
@@ -237,7 +238,7 @@ static void add_const_color(
 // the stop. Assume that the distance between stops is 1/gapCount.
 static void init_stop_evenly(
     SkRasterPipeline_GradientCtx* ctx, float gapCount, size_t stop, SkPMColor4f c_l,
-    SkPMColor4f c_r) {
+    SkPMColor4f c_r) noexcept {
   // Clankium's GCC 4.9 targeting ARMv7 is barfing when we use Sk4f math here, so go scalar...
   SkPMColor4f Fs = {
       (c_r.fR - c_l.fR) * gapCount,
@@ -258,7 +259,7 @@ static void init_stop_evenly(
 // for any t between stops n and n+1, the color we want is B[n] + F[n]*t.
 static void init_stop_pos(
     SkRasterPipeline_GradientCtx* ctx, size_t stop, float t_l, float t_r, SkPMColor4f c_l,
-    SkPMColor4f c_r) {
+    SkPMColor4f c_r) noexcept {
   // See note about Clankium's old compiler in init_stop_evenly().
   SkPMColor4f Fs = {
       (c_r.fR - c_l.fR) / (t_r - t_l),
@@ -301,7 +302,8 @@ bool SkGradientShaderBase::onAppendStages(const SkStageRec& rec) const {
       decal_ctx->limit_x = SkBits2Float(SkFloat2Bits(1.0f) + 1);
       // reuse mask + limit_x stage, or create a custom decal_1 that just stores the mask
       p->append(SkRasterPipeline::decal_x, decal_ctx);
-      // fall-through to clamp
+      [[fallthrough]];
+
     case SkTileMode::kClamp:
       if (!fOrigPos) {
         // We clamp only when the stops are evenly spaced.
@@ -420,20 +422,20 @@ bool SkGradientShaderBase::onAppendStages(const SkStageRec& rec) const {
 }
 
 skvm::Color SkGradientShaderBase::onProgram(
-    skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color /*paint*/, const SkMatrix& ctm,
-    const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dstInfo,
-    skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
+    skvm::Builder* p, skvm::Coord device, skvm::Coord local, skvm::Color /*paint*/,
+    const SkMatrixProvider& mats, const SkMatrix* localM, SkFilterQuality quality,
+    const SkColorInfo& dstInfo, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
   SkMatrix inv;
-  if (!this->computeTotalInverse(ctm, localM, &inv)) {
+  if (!this->computeTotalInverse(mats.localToDevice(), localM, &inv)) {
     return {};
   }
   inv.postConcat(fPtsToUnit);
   inv.normalizePerspective();
 
-  SkShaderBase::ApplyMatrix(p, inv, &x, &y, uniforms);
+  local = SkShaderBase::ApplyMatrix(p, inv, local, uniforms);
 
   skvm::I32 mask = p->splat(~0);
-  skvm::F32 t = this->transformT(p, uniforms, x, y, &mask);
+  skvm::F32 t = this->transformT(p, uniforms, local, &mask);
 
   // Perhaps unexpectedly, clamping is handled naturally by our search, so we
   // don't explicitly clamp t to [0,1].  That clamp would break hard stops
@@ -592,11 +594,11 @@ bool SkGradientShaderBase::isOpaque() const noexcept {
   return fColorsAreOpaque && (this->getTileMode() != SkTileMode::kDecal);
 }
 
-static unsigned rounded_divide(unsigned numer, unsigned denom) noexcept {
+static constexpr unsigned rounded_divide(unsigned numer, unsigned denom) noexcept {
   return (numer + (denom >> 1)) / denom;
 }
 
-bool SkGradientShaderBase::onAsLuminanceColor(SkColor* lum) const {
+bool SkGradientShaderBase::onAsLuminanceColor(SkColor* lum) const noexcept {
   // we just compute an average color.
   // possibly we could weight this based on the proportional width for each color
   //   assuming they are not evenly distributed in the fPos array.
@@ -632,7 +634,7 @@ SkColor4fXformer::SkColor4fXformer(
   }
 }
 
-void SkGradientShaderBase::commonAsAGradient(GradientInfo* info) const {
+void SkGradientShaderBase::commonAsAGradient(GradientInfo* info) const noexcept {
   if (info) {
     if (info->fColorCount >= fColorCount) {
       if (info->fColors) {

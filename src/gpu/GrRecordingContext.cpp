@@ -8,6 +8,7 @@
 #include "include/private/GrRecordingContext.h"
 
 #include "include/gpu/GrContext.h"
+#include "include/gpu/GrContextThreadSafeProxy.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrCaps.h"
@@ -22,9 +23,6 @@
 #include "src/gpu/effects/GrSkSLFP.h"
 #include "src/gpu/text/GrTextBlobCache.h"
 
-#define ASSERT_SINGLE_OWNER_PRIV \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
-
 GrRecordingContext::ProgramData::ProgramData(
     std::unique_ptr<const GrProgramDesc> desc, const GrProgramInfo* info) noexcept
     : fDesc(std::move(desc)), fInfo(info) {}
@@ -32,39 +30,30 @@ GrRecordingContext::ProgramData::ProgramData(
 GrRecordingContext::ProgramData::ProgramData(ProgramData&& other) noexcept
     : fDesc(std::move(other.fDesc)), fInfo(other.fInfo) {}
 
-GrRecordingContext::ProgramData::~ProgramData() {}
+GrRecordingContext::ProgramData::~ProgramData() = default;
 
-GrRecordingContext::GrRecordingContext(
-    GrBackendApi backend, const GrContextOptions& options, uint32_t contextID)
-    : INHERITED(backend, options, contextID), fAuditTrail(new GrAuditTrail()) {}
+GrRecordingContext::GrRecordingContext(sk_sp<GrContextThreadSafeProxy> proxy)
+    : INHERITED(std::move(proxy)), fAuditTrail(new GrAuditTrail()) {}
 
-GrRecordingContext::~GrRecordingContext() {}
+GrRecordingContext::~GrRecordingContext() = default;
 
-/**
- * TODO: move textblob draw calls below context (see comment below)
- */
-static void textblobcache_overbudget_CB(void* data) {
-  SkASSERT(data);
-  GrRecordingContext* context = reinterpret_cast<GrRecordingContext*>(data);
-
-  GrContext* direct = context->priv().asDirectContext();
-  if (!direct) {
-    return;
-  }
-
-  // TextBlobs are drawn at the SkGpuDevice level, therefore they cannot rely on
-  // GrRenderTargetContext to perform a necessary flush.  The solution is to move drawText calls
-  // to below the GrContext level, but this is not trivial because they call drawPath on
-  // SkGpuDevice.
-  direct->flush();
-}
-
-bool GrRecordingContext::init(sk_sp<const GrCaps> caps) {
-  if (!INHERITED::init(std::move(caps))) {
+bool GrRecordingContext::init() {
+  if (!INHERITED::init()) {
     return false;
   }
 
-  fTextBlobCache.reset(new GrTextBlobCache(textblobcache_overbudget_CB, this, this->contextID()));
+  auto overBudget = [this]() {
+    if (GrContext* direct = this->priv().asDirectContext(); direct != nullptr) {
+      // TODO: move text blob draw calls below context
+      // TextBlobs are drawn at the SkGpuDevice level, therefore they cannot rely on
+      // GrRenderTargetContext to perform a necessary flush. The solution is to move drawText
+      // calls to below the GrContext level, but this is not trivial because they call
+      // drawPath on SkGpuDevice.
+      direct->flushAndSubmit();
+    }
+  };
+
+  fTextBlobCache.reset(new GrTextBlobCache(overBudget, this->contextID()));
 
   return true;
 }
@@ -90,18 +79,8 @@ void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTa
     prcOptions.fGpuPathRenderers &= ~GpuPathRenderers::kSmall;
   }
 
-  GrTextContext::Options textContextOptions;
-  textContextOptions.fMaxDistanceFieldFontSize = this->options().fGlyphsAsPathsFontSize;
-  textContextOptions.fMinDistanceFieldFontSize = this->options().fMinDistanceFieldFontSize;
-  textContextOptions.fDistanceFieldVerticesAlwaysHaveW = false;
-#if SK_SUPPORT_ATLAS_TEXT
-  if (GrContextOptions::Enable::kYes == this->options().fDistanceFieldGlyphVerticesAlwaysHaveW) {
-    textContextOptions.fDistanceFieldVerticesAlwaysHaveW = true;
-  }
-#endif
-
-  fDrawingManager.reset(new GrDrawingManager(
-      this, prcOptions, textContextOptions, sortOpsTasks, reduceOpsTaskSplitting));
+  fDrawingManager.reset(
+      new GrDrawingManager(this, prcOptions, sortOpsTasks, reduceOpsTaskSplitting));
 }
 
 void GrRecordingContext::abandonContext() {
@@ -123,14 +102,11 @@ GrRecordingContext::Arenas::Arenas(
 // Must be defined here so that std::unique_ptr can see the sizes of the various pools, otherwise
 // it can't generate a default destructor for them.
 GrRecordingContext::OwnedArenas::OwnedArenas() noexcept = default;
-GrRecordingContext::OwnedArenas::~OwnedArenas() {}
+GrRecordingContext::OwnedArenas::~OwnedArenas() = default;
 
+GrRecordingContext::OwnedArenas::OwnedArenas(OwnedArenas&& a) noexcept = default;
 GrRecordingContext::OwnedArenas& GrRecordingContext::OwnedArenas::operator=(
-    OwnedArenas&& a) noexcept {
-  fOpMemoryPool = std::move(a.fOpMemoryPool);
-  fRecordTimeAllocator = std::move(a.fRecordTimeAllocator);
-  return *this;
-}
+    OwnedArenas&& a) noexcept = default;
 
 GrRecordingContext::Arenas GrRecordingContext::OwnedArenas::get() {
   if (!fOpMemoryPool) {
@@ -163,7 +139,7 @@ void GrRecordingContext::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlu
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrCaps> GrRecordingContextPriv::refCaps() const { return fContext->refCaps(); }
+sk_sp<const GrCaps> GrRecordingContextPriv::refCaps() const noexcept { return fContext->refCaps(); }
 
 void GrRecordingContextPriv::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {
   fContext->addOnFlushCallbackObject(onFlushCBObject);

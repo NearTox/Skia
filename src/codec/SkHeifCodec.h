@@ -36,12 +36,14 @@ class SkHeifCodec : public SkCodec {
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options& options,
       int* rowsDecoded) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kHEIF; }
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+    return SkEncodedImageFormat::kHEIF;
+  }
 
   int onGetFrameCount() override;
   bool onGetFrameInfo(int, FrameInfo*) const override;
   int onGetRepetitionCount() override;
-  const SkFrameHolder* getFrameHolder() const override { return &fFrameHolder; }
+  const SkFrameHolder* getFrameHolder() const noexcept override { return &fFrameHolder; }
 
   bool conversionSupported(const SkImageInfo&, bool, bool) override;
 
@@ -77,10 +79,10 @@ class SkHeifCodec : public SkCodec {
 
   class Frame : public SkFrame {
    public:
-    Frame(int i) : INHERITED(i) {}
+    Frame(int i) noexcept : INHERITED(i) {}
 
    protected:
-    SkEncodedInfo::Alpha onReportedAlpha() const override {
+    SkEncodedInfo::Alpha onReportedAlpha() const noexcept override {
       return SkEncodedInfo::Alpha::kOpaque_Alpha;
     }
 
@@ -90,15 +92,15 @@ class SkHeifCodec : public SkCodec {
 
   class FrameHolder : public SkFrameHolder {
    public:
-    ~FrameHolder() override = default;
-    void setScreenSize(int w, int h) {
+    ~FrameHolder() override {}
+    void setScreenSize(int w, int h) noexcept {
       fScreenWidth = w;
       fScreenHeight = h;
     }
     Frame* appendNewFrame();
     const Frame* frame(int i) const;
     Frame* editFrameAt(int i);
-    int size() const { return static_cast<int>(fFrames.size()); }
+    int size() const noexcept { return static_cast<int>(fFrames.size()); }
     void reserve(int size) { fFrames.reserve(size); }
 
    protected:

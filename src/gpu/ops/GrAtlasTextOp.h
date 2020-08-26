@@ -12,7 +12,6 @@
 #include "src/gpu/text/GrTextBlob.h"
 
 class GrRecordingContext;
-class SkAtlasTextTarget;
 
 class GrAtlasTextOp final : public GrMeshDrawOp {
  public:
@@ -34,6 +33,8 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     SkPoint fDrawOrigin;
     GrTextBlob::SubRun* fSubRunPtr;
     SkPMColor4f fColor;
+
+    void fillVertexData(void* dst, int offset, int count) const;
   };
 
   static std::unique_ptr<GrAtlasTextOp> MakeBitmap(
@@ -46,7 +47,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
       SkPoint drawOrigin, const SkIRect& clipRect, const SkPMColor4f& filteredColor,
       bool useGammaCorrectDistanceTable, SkColor luminanceColor, const SkSurfaceProps&);
 
-  const char* name() const override { return "AtlasTextOp"; }
+  const char* name() const noexcept override { return "AtlasTextOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override;
 
@@ -71,8 +72,11 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
 
   MaskType maskType() const noexcept { return fMaskType; }
 
-  void finalizeForTextTarget(uint32_t color, const GrCaps&);
-  void executeForTextTarget(SkAtlasTextTarget*);
+#if GR_TEST_UTILS
+  static std::unique_ptr<GrDrawOp> CreateOpTestingOnly(
+      GrRenderTargetContext* rtc, const SkPaint& skPaint, const SkFont& font,
+      const SkMatrixProvider& mtxProvider, const char* text, int x, int y);
+#endif
 
  private:
   friend class GrOpMemoryPool;  // for ctor
@@ -95,20 +99,20 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     int fNumDraws = 0;
   };
 
-  GrProgramInfo* programInfo() override {
+  GrProgramInfo* programInfo() noexcept override {
     // TODO [PI]: implement
     return nullptr;
   }
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&) noexcept override {
     // TODO [PI]: implement
   }
 
   void onPrePrepareDraws(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&) noexcept override {
     // TODO [PI]: implement
   }
 

@@ -33,7 +33,7 @@ struct GrMockTextureInfo {
            fID == that.fID;
   }
 
-  GrBackendFormat getBackendFormat() const;
+  GrBackendFormat getBackendFormat() const noexcept;
 
   SkImage::CompressionType compressionType() const noexcept { return fCompressionType; }
 
@@ -61,7 +61,7 @@ struct GrMockRenderTargetInfo {
     return fColorType == that.fColorType && fID == that.fID;
   }
 
-  GrBackendFormat getBackendFormat() const;
+  GrBackendFormat getBackendFormat() const noexcept;
 
   GrColorType colorType() const noexcept { return fColorType; }
 
@@ -76,7 +76,7 @@ struct GrMockRenderTargetInfo {
  * GrMockOptions is used.
  */
 struct GrMockOptions {
-  GrMockOptions() noexcept {
+  GrMockOptions() {
     using Renderability = ConfigOptions::Renderability;
     // By default RGBA_8888 and BGRA_8888 are textureable and renderable and
     // A8 and RGB565 are texturable.
@@ -101,12 +101,12 @@ struct GrMockOptions {
   // GrCaps options.
   bool fMipMapSupport = false;
   bool fDrawInstancedSupport = false;
-  bool fTessellationSupport = false;
   bool fHalfFloatVertexAttributeSupport = false;
   uint32_t fMapBufferFlags = 0;
   int fMaxTextureSize = 2048;
   int fMaxRenderTargetSize = 2048;
   int fMaxVertexAttributes = 16;
+  int fMaxTessellationSegments = 0;
   ConfigOptions fConfigOptions[kGrColorTypeCnt];
   ConfigOptions fCompressedOptions[SkImage::kCompressionTypeCount];
 

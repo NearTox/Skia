@@ -11,7 +11,7 @@
 
 #include <utility>
 
-GrStyledShape& GrStyledShape::operator=(const GrStyledShape& that) {
+GrStyledShape& GrStyledShape::operator=(const GrStyledShape& that) noexcept {
   fShape = that.fShape;
   fStyle = that.fStyle;
   fGenID = that.fGenID;
@@ -28,7 +28,8 @@ GrStyledShape& GrStyledShape::operator=(const GrStyledShape& that) {
   return *this;
 }
 
-static bool is_inverted(bool originalIsInverted, GrStyledShape::FillInversion inversion) noexcept {
+static constexpr bool is_inverted(
+    bool originalIsInverted, GrStyledShape::FillInversion inversion) noexcept {
   switch (inversion) {
     case GrStyledShape::FillInversion::kPreserve: return originalIsInverted;
     case GrStyledShape::FillInversion::kFlip: return !originalIsInverted;
@@ -126,7 +127,7 @@ static void write_path_key_from_data(const SkPath& path, uint32_t* origKey) noex
   SkASSERT(key - origKey == path_key_from_data_size(path));
 }
 
-int GrStyledShape::unstyledKeySize() const {
+int GrStyledShape::unstyledKeySize() const noexcept {
   if (fInheritedKey.count()) {
     return fInheritedKey.count();
   }
@@ -309,7 +310,7 @@ GrStyledShape GrStyledShape::MakeArc(
   return result;
 }
 
-GrStyledShape::GrStyledShape(const GrStyledShape& that)
+GrStyledShape::GrStyledShape(const GrStyledShape& that) noexcept
     : fShape(that.fShape), fStyle(that.fStyle), fGenID(that.fGenID), fSimplified(that.fSimplified) {
   fInheritedKey.reset(that.fInheritedKey.count());
   sk_careful_memcpy(
@@ -414,7 +415,7 @@ GrStyledShape::GrStyledShape(const GrStyledShape& parent, GrStyle::Apply apply, 
 }
 
 bool GrStyledShape::asRRect(
-    SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const {
+    SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const noexcept {
   if (!fShape.isRRect() && !fShape.isRect()) {
     return false;
   }
@@ -509,7 +510,7 @@ bool GrStyledShape::asLine(SkPoint pts[2], bool* inverted) const noexcept {
   return true;
 }
 
-bool GrStyledShape::asNestedRects(SkRect rects[2]) const {
+bool GrStyledShape::asNestedRects(SkRect rects[2]) const noexcept {
   if (!fShape.isPath()) {
     return false;
   }

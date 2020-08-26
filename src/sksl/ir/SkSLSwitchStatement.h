@@ -21,13 +21,20 @@ class SymbolTable;
 struct SwitchStatement : public Statement {
   SwitchStatement(
       int offset, bool isStatic, std::unique_ptr<Expression> value,
-      std::vector<std::unique_ptr<SwitchCase>> cases,
-      const std::shared_ptr<SymbolTable> symbols) noexcept
+      std::vector<std::unique_ptr<SwitchCase>> cases, const std::shared_ptr<SymbolTable> symbols)
       : INHERITED(offset, kSwitch_Kind),
         fIsStatic(isStatic),
         fValue(std::move(value)),
         fSymbols(std::move(symbols)),
         fCases(std::move(cases)) {}
+
+  int nodeCount() const noexcept override {
+    int result = 1 + fValue->nodeCount();
+    for (const auto& c : fCases) {
+      result += c->nodeCount();
+    }
+    return result;
+  }
 
   std::unique_ptr<Statement> clone() const override {
     std::vector<std::unique_ptr<SwitchCase>> cloned;

@@ -22,7 +22,6 @@
 #include "include/private/SkColorData.h"
 #include "src/gpu/GrBuffer.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrColorSpaceXform.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
@@ -254,7 +253,7 @@ class SampleLocationsTestOp : public GrDrawOp {
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
 
     // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
+    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip::Disabled();
 
     fProgramInfo = this->createProgramInfo(
         context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
@@ -328,7 +327,7 @@ DrawResult SampleLocationsGM::onDraw(
           0x0000, GrUserStencilTest::kNotEqual, 0xffff, GrUserStencilOp::kZero,
           GrUserStencilOp::kKeep, 0xffff>());
 
-  offscreenRTC->clear(nullptr, {0, 1, 0, 1}, GrRenderTargetContext::CanClearFullscreen::kYes);
+  offscreenRTC->clear({0, 1, 0, 1});
 
   // Stencil.
   offscreenRTC->priv().testingOnly_addDrawOp(
@@ -339,12 +338,12 @@ DrawResult SampleLocationsGM::onDraw(
   coverPaint.setColor4f({1, 0, 0, 1});
   coverPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrcOver));
   rtc->priv().stencilRect(
-      GrNoClip(), &kStencilCover, std::move(coverPaint), GrAA::kNo, SkMatrix::I(),
+      nullptr, &kStencilCover, std::move(coverPaint), GrAA::kNo, SkMatrix::I(),
       SkRect::MakeWH(200, 200));
 
   // Copy offscreen texture to canvas.
   rtc->drawTexture(
-      GrNoClip(), offscreenRTC->readSurfaceView(), offscreenRTC->colorInfo().alphaType(),
+      nullptr, offscreenRTC->readSurfaceView(), offscreenRTC->colorInfo().alphaType(),
       GrSamplerState::Filter::kNearest, SkBlendMode::kSrc, SK_PMColor4fWHITE, {0, 0, 200, 200},
       {0, 0, 200, 200}, GrAA::kNo, GrQuadAAFlags::kNone,
       SkCanvas::SrcRectConstraint::kStrict_SrcRectConstraint, SkMatrix::I(), nullptr);

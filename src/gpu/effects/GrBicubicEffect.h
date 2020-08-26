@@ -80,13 +80,13 @@ class GrBicubicEffect : public GrFragmentProcessor {
     kPremul,    // clamps a to 0..1 and rgb to 0..a
   };
 
-  GrBicubicEffect(std::unique_ptr<GrFragmentProcessor>, const SkMatrix&, Direction, Clamp) noexcept;
+  GrBicubicEffect(std::unique_ptr<GrFragmentProcessor>, const SkMatrix&, Direction, Clamp);
 
   explicit GrBicubicEffect(const GrBicubicEffect&);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 

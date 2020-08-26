@@ -89,8 +89,7 @@ class GrGLSLUniformHandler {
     GrSLType fType;
   };
 
-  explicit GrGLSLUniformHandler(GrGLSLProgramBuilder* program) noexcept
-      : fProgramBuilder(program) {}
+  explicit GrGLSLUniformHandler(GrGLSLProgramBuilder* program) : fProgramBuilder(program) {}
 
   // This is not owned by the class
   GrGLSLProgramBuilder* fProgramBuilder;

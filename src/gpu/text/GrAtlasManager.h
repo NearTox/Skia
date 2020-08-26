@@ -28,19 +28,6 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   GrAtlasManager(GrProxyProvider*, size_t maxTextureBytes, GrDrawOpAtlas::AllowMultitexturing);
   ~GrAtlasManager() override;
 
-  // Change an expected 565 mask format to 8888 if 565 is not supported (will happen when using
-  // Metal on macOS). The actual conversion of the data is handled in get_packed_glyph_image() in
-  // GrStrikeCache.cpp
-  GrMaskFormat resolveMaskFormat(GrMaskFormat format) const {
-    if (kA565_GrMaskFormat == format &&
-        !fProxyProvider->caps()
-             ->getDefaultBackendFormat(GrColorType::kBGR_565, GrRenderable::kNo)
-             .isValid()) {
-      format = kARGB_GrMaskFormat;
-    }
-    return format;
-  }
-
   // if getViews returns nullptr, the client must not try to use other functions on the
   // GrStrikeCache which use the atlas.  This function *must* be called first, before other
   // functions which use the atlas. Note that we can have proxies available but none active
@@ -58,6 +45,10 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   void freeAll();
 
   bool hasGlyph(GrMaskFormat, GrGlyph*);
+
+  GrDrawOpAtlas::ErrorCode addGlyphToAtlas(
+      const SkGlyph& skGlyph, int padding, GrGlyph* grGlyph, GrResourceProvider* resourceProvider,
+      GrDeferredUploadTarget* uploadTarget);
 
   // To ensure the GrDrawOpAtlas does not evict the Glyph Mask from its texture backing store,
   // the client must pass in the current op token along with the GrGlyph.
@@ -107,7 +98,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
 
   // The AtlasGlyph cache always survives freeGpuResources so we want it to remain in the active
   // OnFlushCallbackObject list
-  bool retainOnFreeGpuResources() override { return true; }
+  bool retainOnFreeGpuResources() noexcept override { return true; }
 
   ///////////////////////////////////////////////////////////////////////////
   // Functions intended debug only
@@ -120,12 +111,24 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
 
  private:
   bool initAtlas(GrMaskFormat);
+  // Change an expected 565 mask format to 8888 if 565 is not supported (will happen when using
+  // Metal on macOS). The actual conversion of the data is handled in get_packed_glyph_image() in
+  // GrStrikeCache.cpp
+  GrMaskFormat resolveMaskFormat(GrMaskFormat format) const {
+    if (kA565_GrMaskFormat == format &&
+        !fProxyProvider->caps()
+             ->getDefaultBackendFormat(GrColorType::kBGR_565, GrRenderable::kNo)
+             .isValid()) {
+      format = kARGB_GrMaskFormat;
+    }
+    return format;
+  }
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static constexpr int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
+  static int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
     return static_cast<int>(format);
   }
-  static constexpr GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
+  static GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
     return static_cast<GrMaskFormat>(idx);
   }
 

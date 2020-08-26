@@ -21,8 +21,8 @@ class GrVkSampler : public GrVkManagedResource {
  public:
   static GrVkSampler* Create(GrVkGpu* gpu, GrSamplerState, const GrVkYcbcrConversionInfo&);
 
-  VkSampler sampler() const noexcept { return fSampler; }
-  const VkSampler* samplerPtr() const noexcept { return &fSampler; }
+  VkSampler sampler() const { return fSampler; }
+  const VkSampler* samplerPtr() const { return &fSampler; }
 
   struct Key {
     Key(uint8_t samplerKey, const GrVkSamplerYcbcrConversion::Key& ycbcrKey) {
@@ -35,7 +35,7 @@ class GrVkSampler : public GrVkManagedResource {
     uint8_t fSamplerKey;
     GrVkSamplerYcbcrConversion::Key fYcbcrKey;
 
-    bool operator==(const Key& that) const noexcept {
+    bool operator==(const Key& that) const {
       return this->fSamplerKey == that.fSamplerKey && this->fYcbcrKey == that.fYcbcrKey;
     }
   };
@@ -48,7 +48,7 @@ class GrVkSampler : public GrVkManagedResource {
     return SkOpts::hash(reinterpret_cast<const uint32_t*>(&key), sizeof(Key));
   }
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
   void dumpInfo() const override {
@@ -67,7 +67,7 @@ class GrVkSampler : public GrVkManagedResource {
 
   void freeGPUData() const override;
 
-  static uint32_t GenID() noexcept {
+  static uint32_t GenID() {
     static std::atomic<uint32_t> nextID{1};
     uint32_t id;
     do {

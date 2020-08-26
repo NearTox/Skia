@@ -135,7 +135,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachOpacity(
       return child_node;
     }
   } else {
-    fCurrentAnimatorScope->emplace_back(adapter);
+    fCurrentAnimatorScope->push_back(adapter);
   }
 
   return adapter->node();

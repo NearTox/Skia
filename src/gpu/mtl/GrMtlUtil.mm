@@ -7,6 +7,7 @@
 
 #include "src/gpu/mtl/GrMtlUtil.h"
 
+#include "include/gpu/GrBackendSurface.h"
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkMutex.h"
 #include "src/gpu/GrSurface.h"
@@ -255,6 +256,11 @@ uint32_t GrMtlFormatChannels(GrMTLPixelFormat mtlFormat) {
 
     default: return 0;
   }
+}
+
+SkImage::CompressionType GrMtlBackendFormatToCompressionType(const GrBackendFormat& format) {
+  MTLPixelFormat mtlFormat = GrBackendFormatAsMTLPixelFormat(format);
+  return GrMtlFormatToCompressionType(mtlFormat);
 }
 
 bool GrMtlFormatIsCompressed(MTLPixelFormat mtlFormat) {

@@ -40,7 +40,7 @@ class GrQuad {
   static const int kTypeCount = static_cast<int>(Type::kLast) + 1;
 
   // This enforces W == 1 for non-perspective quads, but does not initialize X or Y.
-  GrQuad() = default;
+  GrQuad() noexcept = default;
 
   explicit GrQuad(const SkRect& rect) noexcept
       : fX{rect.fLeft, rect.fLeft, rect.fRight, rect.fRight},
@@ -53,7 +53,7 @@ class GrQuad {
   // bottom-left). The returned instance's point order will still be CCW tri-strip order.
   static GrQuad MakeFromSkQuad(const SkPoint pts[4], const SkMatrix&);
 
-  GrQuad& operator=(const GrQuad&) = default;
+  GrQuad& operator=(const GrQuad&) noexcept = default;
 
   SkPoint3 point3(int i) const noexcept { return {fX[i], fY[i], fW[i]}; }
 
@@ -65,17 +65,17 @@ class GrQuad {
     }
   }
 
-  SkRect bounds() const {
+  SkRect bounds() const noexcept {
     if (fType == GrQuad::Type::kPerspective) {
       return this->projectedBounds();
     }
     // Calculate min/max directly on the 4 floats, instead of loading/unloading into SIMD. Since
     // there's no horizontal min/max, it's not worth it. Defining non-perspective case in header
     // also leads to substantial performance boost due to inlining.
-    auto min = [](const float c[4]) {
+    auto min = [](const float c[4]) noexcept {
       return std::min(std::min(c[0], c[1]), std::min(c[2], c[3]));
     };
-    auto max = [](const float c[4]) {
+    auto max = [](const float c[4]) noexcept {
       return std::max(std::max(c[0], c[1]), std::max(c[2], c[3]));
     };
     return {min(fX), min(fY), max(fX), max(fY)};
@@ -160,7 +160,7 @@ class GrQuad {
   }
 
   // Defined in GrQuadUtils.cpp to share the coord clipping code
-  SkRect projectedBounds() const;
+  SkRect projectedBounds() const noexcept;
 
   float fX[4];
   float fY[4];

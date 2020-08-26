@@ -15,7 +15,7 @@ namespace SkSL {
 
 class OutputStream {
  public:
-  virtual bool isValid() const { return true; }
+  virtual bool isValid() const noexcept { return true; }
 
   virtual void write8(uint8_t b) = 0;
 

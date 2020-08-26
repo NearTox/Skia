@@ -135,7 +135,7 @@ sk_sp<SkPixelRef> SkMakePixelRefWithProc(
   struct PixelRef final : public SkPixelRef {
     void (*fReleaseProc)(void*, void*);
     void* fReleaseProcContext;
-    PixelRef(int w, int h, void* s, size_t r, void (*proc)(void*, void*), void* ctx) noexcept
+    PixelRef(int w, int h, void* s, size_t r, void (*proc)(void*, void*), void* ctx)
         : SkPixelRef(w, h, s, r), fReleaseProc(proc), fReleaseProcContext(ctx) {}
     ~PixelRef() override { fReleaseProc(this->pixels(), fReleaseProcContext); }
   };

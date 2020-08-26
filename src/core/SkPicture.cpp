@@ -40,7 +40,7 @@ SkPicture::SkPicture() noexcept {
   } while (fUniqueID == 0);
 }
 
-static constexpr char kMagic[] = {'s', 'k', 'i', 'a', 'p', 'i', 'c', 't'};
+static const char kMagic[] = {'s', 'k', 'i', 'a', 'p', 'i', 'c', 't'};
 
 SkPictInfo SkPicture::createHeader() const noexcept {
   SkPictInfo info;
@@ -204,7 +204,7 @@ sk_sp<SkPicture> SkPicture::MakeFromStream(
       }
       return procs.fPictureProc(data->data(), size, procs.fPictureCtx);
     }
-    default:  // fall through to error return
+    default:  // fall out to error return
       break;
   }
   return nullptr;

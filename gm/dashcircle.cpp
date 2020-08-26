@@ -48,7 +48,7 @@ class DashCircleGM : public skiagm::GM {
     SkPaint refPaint;
     refPaint.setAntiAlias(true);
     refPaint.setColor(0xFFbf3f7f);
-    refPaint.setStyle(SkPaint::kStroke_Style);
+    refPaint.setStroke(true);
     refPaint.setStrokeWidth(1);
     const SkScalar radius = 125;
     SkRect oval = SkRect::MakeLTRB(-radius - 20, -radius - 20, radius + 20, radius + 20);
@@ -83,7 +83,7 @@ class DashCircleGM : public skiagm::GM {
         canvas->restore();
         SkPaint p;
         p.setAntiAlias(true);
-        p.setStyle(SkPaint::kStroke_Style);
+        p.setStroke(true);
         p.setStrokeWidth(10);
         SkScalar intervals[4];
         int intervalCount = dashExample.length;
@@ -166,10 +166,10 @@ class DashCircle2GM : public skiagm::GM {
     rotate.setRotate(25.f);
     static const SkMatrix kMatrices[]{
         SkMatrix::I(),
-        SkMatrix::MakeScale(1.2f),
+        SkMatrix::Scale(1.2f, 1.2f),
         SkMatrix::MakeAll(1, 0, 0, 0, -1, 0, 0, 0, 1),  // y flipper
         SkMatrix::MakeAll(-1, 0, 0, 0, 1, 0, 0, 0, 1),  // x flipper
-        SkMatrix::MakeScale(0.7f),
+        SkMatrix::Scale(0.7f, 0.7f),
         rotate,
         SkMatrix::Concat(
             SkMatrix::Concat(SkMatrix::MakeAll(-1, 0, 0, 0, 1, 0, 0, 0, 1), rotate), rotate)};
@@ -177,7 +177,7 @@ class DashCircle2GM : public skiagm::GM {
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStrokeWidth(kStrokeWidth);
-    paint.setStyle(SkPaint::kStroke_Style);
+    paint.setStroke(true);
 
     // Compute the union of bounds of all of our test cases.
     SkRect bounds = SkRect::MakeEmpty();
@@ -231,7 +231,7 @@ DEF_SIMPLE_GM(maddash, canvas, 1600, 1600) {
   SkPaint p;
   p.setColor(SK_ColorRED);
   p.setAntiAlias(true);
-  p.setStyle(SkPaint::kStroke_Style);
+  p.setStroke(true);
   p.setStrokeWidth(380);
 
   SkScalar intvls[] = {2.5, 10 /* 1200 */};

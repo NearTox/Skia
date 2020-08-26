@@ -7,7 +7,6 @@
 
 #include "include/core/SkPaint.h"
 
-#include "include/core/SkColorFilter.h"
 #include "include/core/SkData.h"
 #include "include/core/SkGraphics.h"
 #include "include/core/SkImageFilter.h"
@@ -19,6 +18,7 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkMutex.h"
 #include "include/private/SkTo.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkColorSpaceXformSteps.h"
 #include "src/core/SkDraw.h"
@@ -80,7 +80,7 @@ bool operator==(const SkPaint& a, const SkPaint& b) noexcept {
 }
 
 #define DEFINE_REF_FOO(type) \
-  sk_sp<Sk##type> SkPaint::ref##type() const { return f##type; }
+  sk_sp<Sk##type> SkPaint::ref##type() const noexcept { return f##type; }
 DEFINE_REF_FOO(ColorFilter)
 DEFINE_REF_FOO(ImageFilter)
 DEFINE_REF_FOO(MaskFilter)
@@ -102,6 +102,10 @@ void SkPaint::setStyle(Style style) noexcept {
     SkDebugf("SkPaint::setStyle(%d) out of range\n", style);
 #endif
   }
+}
+
+void SkPaint::setStroke(bool isStroke) noexcept {
+  fBitfields.fStyle = isStroke ? kStroke_Style : kFill_Style;
 }
 
 void SkPaint::setColor(SkColor color) noexcept { fColor4f = SkColor4f::FromColor(color); }
@@ -281,7 +285,7 @@ static uint32_t pack_v68(const SkPaint& paint, unsigned flatFlags) noexcept {
   return packed;
 }
 
-static uint32_t unpack_v68(SkPaint* paint, uint32_t packed, SkSafeRange& safe) {
+static uint32_t unpack_v68(SkPaint* paint, uint32_t packed, SkSafeRange& safe) noexcept {
   paint->setAntiAlias((packed & 1) != 0);
   paint->setDither((packed & 2) != 0);
   packed >>= 8;
@@ -502,7 +506,7 @@ const SkRect& SkPaint::doComputeFastBounds(
 
 // return true if the filter exists, and may affect alpha
 static bool affects_alpha(const SkColorFilter* cf) noexcept {
-  return cf && !(cf->getFlags() & SkColorFilter::kAlphaUnchanged_Flag);
+  return cf && !as_CFB(cf)->isAlphaUnchanged();
 }
 
 // return true if the filter exists, and may affect alpha

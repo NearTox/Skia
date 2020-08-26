@@ -11,6 +11,7 @@
 #include <stack>
 #include <tuple>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "src/sksl/SkSLCodeGenerator.h"
 #include "src/sksl/SkSLMemoryLayout.h"
@@ -190,7 +191,8 @@ class MetalCodeGenerator : public CodeGenerator {
 
   void writeInverseHack(const Expression& mat);
 
-  String getMatrixConstructHelper(const Type& matrix, const Type& arg);
+  bool matrixConstructHelperIsNeeded(const Constructor& c);
+  String getMatrixConstructHelper(const Constructor& c);
 
   void writeMatrixTimesEqualHelper(const Type& left, const Type& right, const Type& result);
 
@@ -246,9 +248,9 @@ class MetalCodeGenerator : public CodeGenerator {
 
   Requirements requirements(const FunctionDeclaration& f);
 
-  Requirements requirements(const Expression& e);
+  Requirements requirements(const Expression* e);
 
-  Requirements requirements(const Statement& e);
+  Requirements requirements(const Statement* s);
 
   typedef std::pair<IntrinsicKind, int32_t> Intrinsic;
   std::unordered_map<String, Intrinsic> fIntrinsicMap;
@@ -279,7 +281,7 @@ class MetalCodeGenerator : public CodeGenerator {
   std::unordered_map<const FunctionDeclaration*, Requirements> fRequirements;
   bool fSetupFragPositionGlobal = false;
   bool fSetupFragPositionLocal = false;
-  std::unordered_map<String, String> fHelpers;
+  std::unordered_set<String> fHelpers;
   int fUniformBuffer = -1;
   String fRTHeightName;
 

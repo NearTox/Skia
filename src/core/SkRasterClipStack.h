@@ -82,15 +82,15 @@ class SkRasterClipStack : SkNoncopyable {
     rec.fRC.setRect(fRootBounds);
   }
 
-  const SkRasterClip& rc() const { return fStack.top().fRC; }
+  const SkRasterClip& rc() const noexcept { return fStack.top().fRC; }
 
-  void save() {
+  void save() noexcept {
     fCounter += 1;
     SkASSERT(fStack.top().fDeferredCount >= 0);
     fStack.top().fDeferredCount += 1;
   }
 
-  void restore() {
+  void restore() noexcept {
     fCounter -= 1;
     SkASSERT(fCounter >= 0);
     if (--fStack.top().fDeferredCount < 0) {
@@ -133,7 +133,7 @@ class SkRasterClipStack : SkNoncopyable {
     this->writable_rc().setDeviceClipRestriction(mutableClipRestriction);
   }
 
-  void validate() const {
+  void validate() const noexcept {
 #ifdef SK_DEBUG
     const SkRasterClip& clip = this->rc();
     if (fRootBounds.isEmpty()) {

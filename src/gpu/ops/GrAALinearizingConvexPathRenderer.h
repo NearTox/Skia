@@ -12,7 +12,7 @@
 
 class GrAALinearizingConvexPathRenderer : public GrPathRenderer {
  public:
-  const char* name() const final { return "AALinear"; }
+  const char* name() const noexcept final { return "AALinear"; }
 
   GrAALinearizingConvexPathRenderer();
 

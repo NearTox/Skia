@@ -275,8 +275,8 @@ class GrResourceProvider {
 
   static SkISize MakeApprox(SkISize) noexcept;
 
-  inline GrResourceProviderPriv priv() noexcept;
-  inline const GrResourceProviderPriv priv() const noexcept;
+  inline GrResourceProviderPriv priv();
+  inline const GrResourceProviderPriv priv() const;
 
  private:
   sk_sp<GrGpuResource> findResourceByUniqueKey(const GrUniqueKey&);

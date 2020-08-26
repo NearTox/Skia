@@ -151,7 +151,7 @@ void GrShape::simplifyRRect(
 }
 
 void GrShape::simplifyRect(
-    const SkRect& rect, SkPathDirection dir, unsigned start, unsigned flags) noexcept {
+    const SkRect& rect, SkPathDirection dir, unsigned start, unsigned flags) {
   if (!rect.width() || !rect.height()) {
     if (flags & kSimpleFill_Flag) {
       // A zero area, filled shape so go straight to empty
@@ -184,7 +184,7 @@ void GrShape::simplifyRect(
   }
 }
 
-void GrShape::simplifyLine(const SkPoint& p1, const SkPoint& p2, unsigned flags) noexcept {
+void GrShape::simplifyLine(const SkPoint& p1, const SkPoint& p2, unsigned flags) {
   if (flags & kSimpleFill_Flag) {
     this->setType(Type::kEmpty);
   } else if (p1 == p2) {
@@ -294,7 +294,7 @@ bool GrShape::closed() const noexcept {
   }
 }
 
-bool GrShape::convex(bool simpleFill) const noexcept {
+bool GrShape::convex(bool simpleFill) const {
   switch (this->type()) {
     case Type::kEmpty:  // fall through
     case Type::kRect:   // fall through

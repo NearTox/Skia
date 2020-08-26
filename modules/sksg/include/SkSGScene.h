@@ -38,7 +38,7 @@ class Scene final {
   const RenderNode* nodeAt(const SkPoint&) const;
 
  private:
-  explicit Scene(sk_sp<RenderNode> root) noexcept;
+  explicit Scene(sk_sp<RenderNode> root);
 
   const sk_sp<RenderNode> fRoot;
 };

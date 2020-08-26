@@ -112,7 +112,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachFootageAsset(
     // We don't know the intrinsic image size yet (plus, in the general case,
     // the size may change from frame to frame) -> we always prepare a scaling transform.
     image_transform = sksg::Matrix<SkMatrix>::Make(SkMatrix::I());
-    fCurrentAnimatorScope->emplace_back(sk_make_sp<FootageAnimator>(
+    fCurrentAnimatorScope->push_back(sk_make_sp<FootageAnimator>(
         asset_info->fAsset, image_node, image_transform, asset_info->fSize, -layer_info->fInPoint,
         1 / fFrameRate));
   } else {

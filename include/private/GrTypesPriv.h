@@ -96,6 +96,10 @@ static_assert(
  */
 enum class GrTexturable : bool { kNo = false, kYes = true };
 
+// A DDL recorder has its own proxy provider and proxy cache. This enum indicates if
+// a given proxy provider is one of these special ones.
+enum class GrDDLProvider : bool { kNo = false, kYes = true };
+
 /**
  *  Formats for masks, used by the font cache. Important that these are 0-based.
  */
@@ -111,18 +115,16 @@ static constexpr int kMaskFormatCount = kLast_GrMaskFormat + 1;
 /**
  *  Return the number of bytes-per-pixel for the specified mask format.
  */
-static inline int GrMaskFormatBytesPerPixel(GrMaskFormat format) noexcept {
+inline constexpr int GrMaskFormatBytesPerPixel(GrMaskFormat format) noexcept {
   SkASSERT(format < kMaskFormatCount);
   // kA8   (0) -> 1
   // kA565 (1) -> 2
   // kARGB (2) -> 4
-  static constexpr int sBytesPerPixel[] = {1, 2, 4};
-  static_assert(SK_ARRAY_COUNT(sBytesPerPixel) == kMaskFormatCount, "array_size_mismatch");
   static_assert(kA8_GrMaskFormat == 0, "enum_order_dependency");
   static_assert(kA565_GrMaskFormat == 1, "enum_order_dependency");
   static_assert(kARGB_GrMaskFormat == 2, "enum_order_dependency");
 
-  return sBytesPerPixel[(int)format];
+  return SkTo<int>(1u << format);
 }
 
 /** Ownership rules for external GPU resources imported into Skia. */
@@ -606,9 +608,8 @@ static inline GrClipEdgeType GrInvertProcessorEdgeType(const GrClipEdgeType edge
     case GrClipEdgeType::kFillAA: return GrClipEdgeType::kInverseFillAA;
     case GrClipEdgeType::kInverseFillBW: return GrClipEdgeType::kFillBW;
     case GrClipEdgeType::kInverseFillAA: return GrClipEdgeType::kFillAA;
-    case GrClipEdgeType::kHairlineAA: SK_ABORT("Hairline fill isn't invertible.");
   }
-  return GrClipEdgeType::kFillAA;  // suppress warning.
+  SkUNREACHABLE;
 }
 
 /**

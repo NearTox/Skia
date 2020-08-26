@@ -44,7 +44,7 @@ class SkShader;
     SkBitmap is not thread safe. Each thread must have its own copy of SkBitmap fields,
     although threads may share the underlying pixel array.
 */
-class SK_API SkBitmap final {
+class SK_API SkBitmap {
  public:
   class SK_API Allocator;
 
@@ -422,7 +422,7 @@ class SK_API SkBitmap final {
 
       example: https://fiddle.skia.org/c/@Bitmap_setInfo
   */
-  bool setInfo(const SkImageInfo& imageInfo, size_t rowBytes = 0);
+  bool setInfo(const SkImageInfo& imageInfo, size_t rowBytes = 0) noexcept;
 
   /** \enum SkBitmap::AllocFlags
       AllocFlags is obsolete.  We always zero pixel memory when allocated.
@@ -1152,7 +1152,7 @@ class SK_API SkBitmap final {
       memory from the heap. This is the default SkBitmap::Allocator invoked by
       allocPixels().
   */
-  class HeapAllocator final : public Allocator {
+  class HeapAllocator : public Allocator {
    public:
     /** Allocates the pixel memory for the bitmap, given its dimensions and
         SkColorType. Returns true on success, where success means either setPixels()

@@ -56,7 +56,7 @@ class ByteCodeGenerator : public CodeGenerator {
  public:
   class LValue {
    public:
-    LValue(ByteCodeGenerator& generator) noexcept : fGenerator(generator) {}
+    LValue(ByteCodeGenerator& generator) : fGenerator(generator) {}
 
     virtual ~LValue() = default;
 
@@ -143,13 +143,15 @@ class ByteCodeGenerator : public CodeGenerator {
     kMax,
     kMin,
     kMix,
+    kNormalize,
+    kSample,
     kSaturate,
   };
 
   struct Intrinsic {
-    Intrinsic(SpecialIntrinsic s) noexcept : is_special(true), special(s) {}
-    Intrinsic(ByteCodeInstruction i) noexcept : Intrinsic(i, i, i) {}
-    Intrinsic(ByteCodeInstruction f, ByteCodeInstruction s, ByteCodeInstruction u) noexcept
+    Intrinsic(SpecialIntrinsic s) : is_special(true), special(s) {}
+    Intrinsic(ByteCodeInstruction i) : Intrinsic(i, i, i) {}
+    Intrinsic(ByteCodeInstruction f, ByteCodeInstruction s, ByteCodeInstruction u)
         : is_special(false), inst_f(f), inst_s(s), inst_u(u) {}
 
     bool is_special;
@@ -165,6 +167,7 @@ class ByteCodeGenerator : public CodeGenerator {
     kLocal,    // include parameters
     kGlobal,   // non-uniform globals
     kUniform,  // uniform globals
+    kChildFP,  // child fragment processors
   };
 
   struct Location {
@@ -172,25 +175,29 @@ class ByteCodeGenerator : public CodeGenerator {
     Storage fStorage;
 
     // Not really invalid, but a "safe" placeholder to be more explicit at call-sites
-    static constexpr Location MakeInvalid() noexcept { return {0, Storage::kLocal}; }
+    static Location MakeInvalid() { return {0, Storage::kLocal}; }
 
-    Location makeOnStack() noexcept { return {-1, fStorage}; }
-    bool isOnStack() const noexcept { return fSlot < 0; }
+    Location makeOnStack() {
+      SkASSERT(fStorage != Storage::kChildFP);
+      return {-1, fStorage};
+    }
+    bool isOnStack() const { return fSlot < 0; }
 
-    Location operator+(int offset) noexcept {
+    Location operator+(int offset) {
+      SkASSERT(fStorage != Storage::kChildFP);
       SkASSERT(fSlot >= 0);
       return {fSlot + offset, fStorage};
     }
 
     ByteCodeInstruction selectLoad(
-        ByteCodeInstruction local, ByteCodeInstruction global,
-        ByteCodeInstruction uniform) const noexcept {
+        ByteCodeInstruction local, ByteCodeInstruction global, ByteCodeInstruction uniform) const {
       switch (fStorage) {
         case Storage::kLocal: return local;
         case Storage::kGlobal: return global;
         case Storage::kUniform: return uniform;
+        case Storage::kChildFP: ABORT("Trying to load an FP"); break;
       }
-      SkUNREACHABLE;
+      return local;
     }
 
     ByteCodeInstruction selectStore(ByteCodeInstruction local, ByteCodeInstruction global) const {
@@ -198,6 +205,7 @@ class ByteCodeGenerator : public CodeGenerator {
         case Storage::kLocal: return local;
         case Storage::kGlobal: return global;
         case Storage::kUniform: ABORT("Trying to store to a uniform"); break;
+        case Storage::kChildFP: ABORT("Trying to store an FP"); break;
       }
       return local;
     }
@@ -287,22 +295,22 @@ class ByteCodeGenerator : public CodeGenerator {
   // updates the current set of continues to branch to the current location
   void setContinueTargets();
 
-  void enterLoop() noexcept {
+  void enterLoop() {
     fLoopCount++;
     fMaxLoopCount = std::max(fMaxLoopCount, fLoopCount);
   }
 
-  void exitLoop() noexcept {
+  void exitLoop() {
     SkASSERT(fLoopCount > 0);
     fLoopCount--;
   }
 
-  void enterCondition() noexcept {
+  void enterCondition() {
     fConditionCount++;
     fMaxConditionCount = std::max(fMaxConditionCount, fConditionCount);
   }
 
-  void exitCondition() noexcept {
+  void exitCondition() {
     SkASSERT(fConditionCount > 0);
     fConditionCount--;
   }
@@ -339,7 +347,8 @@ class ByteCodeGenerator : public CodeGenerator {
   friend class ByteCodeSwizzleLValue;
 
   typedef CodeGenerator INHERITED;
-};  // namespace SkSL
+};
+
 }  // namespace SkSL
 
 #endif

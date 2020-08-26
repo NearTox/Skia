@@ -12,10 +12,10 @@
 
 #include <utility>
 
-static inline int is_even(int x) noexcept { return !(x & 1); }
+static inline int is_even(int x) { return !(x & 1); }
 
 static SkScalar find_first_interval(
-    const SkScalar intervals[], SkScalar phase, int32_t* index, int count) noexcept {
+    const SkScalar intervals[], SkScalar phase, int32_t* index, int count) {
   for (int i = 0; i < count; ++i) {
     SkScalar gap = intervals[i];
     if (phase > gap || (phase == gap && gap)) {

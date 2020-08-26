@@ -21,7 +21,7 @@ void OpacityEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   this->INHERITED::onRender(canvas, local_context);
 }
 
-const RenderNode* OpacityEffect::onNodeAt(const SkPoint& p) const {
+const RenderNode* OpacityEffect::onNodeAt(const SkPoint& p) const noexcept {
   return (fOpacity > 0) ? this->INHERITED::onNodeAt(p) : nullptr;
 }
 

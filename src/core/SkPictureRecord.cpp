@@ -27,7 +27,7 @@ enum {
 };
 
 // A lot of basic types get stored as a uint32_t: bools, ints, paint indices, etc.
-static int constexpr kUInt32Size = 4;
+static int const kUInt32Size = 4;
 
 SkPictureRecord::SkPictureRecord(const SkIRect& dimensions, uint32_t flags)
     : INHERITED(dimensions), fRecordFlags(flags), fInitialSaveCount(kNoInitialSave) {}
@@ -126,14 +126,6 @@ void SkPictureRecord::recordSaveLayer(const SaveLayerRec& rec) {
     flatFlags |= SAVELAYERREC_HAS_FLAGS;
     size += sizeof(uint32_t);
   }
-  if (rec.fClipMask) {
-    flatFlags |= SAVELAYERREC_HAS_CLIPMASK;
-    size += sizeof(uint32_t);  // clip image index
-  }
-  if (rec.fClipMatrix) {
-    flatFlags |= SAVELAYERREC_HAS_CLIPMATRIX;
-    size += SkMatrixPriv::WriteToMemory(*rec.fClipMatrix, nullptr);
-  }
 
   const size_t initialOffset = this->addDraw(SAVE_LAYER_SAVELAYERREC, &size);
   this->addInt(flatFlags);
@@ -151,12 +143,6 @@ void SkPictureRecord::recordSaveLayer(const SaveLayerRec& rec) {
   }
   if (flatFlags & SAVELAYERREC_HAS_FLAGS) {
     this->addInt(rec.fSaveLayerFlags);
-  }
-  if (flatFlags & SAVELAYERREC_HAS_CLIPMASK) {
-    this->addImage(rec.fClipMask);
-  }
-  if (flatFlags & SAVELAYERREC_HAS_CLIPMATRIX) {
-    this->addMatrix(*rec.fClipMatrix);
   }
   this->validate(initialOffset, size);
 }
@@ -237,12 +223,10 @@ void SkPictureRecord::didConcat44(const SkM44& m) {
   this->INHERITED::didConcat44(m);
 }
 
-void SkPictureRecord::didScale(SkScalar x, SkScalar y) {
-  this->didConcat(SkMatrix::MakeScale(x, y));
-}
+void SkPictureRecord::didScale(SkScalar x, SkScalar y) { this->didConcat(SkMatrix::Scale(x, y)); }
 
 void SkPictureRecord::didTranslate(SkScalar x, SkScalar y) {
-  this->didConcat(SkMatrix::MakeTrans(x, y));
+  this->didConcat(SkMatrix::Translate(x, y));
 }
 
 void SkPictureRecord::didConcat(const SkMatrix& matrix) {
@@ -273,7 +257,7 @@ void SkPictureRecord::didSetMatrix(const SkMatrix& matrix) {
   this->INHERITED::didSetMatrix(matrix);
 }
 
-static bool clipOpExpands(SkClipOp op) noexcept {
+static bool clipOpExpands(SkClipOp op) {
   switch (op) {
     case kUnion_SkClipOp:
     case kXOR_SkClipOp:
@@ -304,7 +288,7 @@ void SkPictureRecord::fillRestoreOffsetPlaceholdersForCurrentStackLevel(uint32_t
 #endif
 }
 
-void SkPictureRecord::beginRecording() noexcept {
+void SkPictureRecord::beginRecording() {
   // we have to call this *after* our constructor, to ensure that it gets
   // recorded. This is balanced by restoreToCount() call from endRecording,
   // which in-turn calls our overridden restore(), so those get recorded too.
@@ -832,12 +816,12 @@ void SkPictureRecord::onDrawEdgeAAImageSet(
 // De-duping helper.
 
 template <typename T>
-static bool equals(T* a, T* b) noexcept {
+static bool equals(T* a, T* b) {
   return a->uniqueID() == b->uniqueID();
 }
 
 template <>
-bool equals(SkDrawable* a, SkDrawable* b) noexcept {
+bool equals(SkDrawable* a, SkDrawable* b) {
   // SkDrawable's generationID is not a stable unique identifier.
   return a == b;
 }

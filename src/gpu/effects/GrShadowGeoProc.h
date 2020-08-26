@@ -32,15 +32,14 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
   const Attribute& inShadowParams() const noexcept { return fInShadowParams; }
   GrColor color() const noexcept { return fColor; }
 
-  void getGLSLProcessorKey(
-      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept override {}
+  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
 
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
  private:
   friend class ::SkArenaAlloc;  // for access to ctor
 
-  GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView);
+  GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView) noexcept;
 
   const TextureSampler& onTextureSampler(int i) const noexcept override {
     return fLUTTextureSampler;

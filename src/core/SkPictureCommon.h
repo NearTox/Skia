@@ -20,12 +20,12 @@
 // TODO: might be nicer to have operator() return an int (the number of slow paths) ?
 struct SkPathCounter {
   // Some ops have a paint, some have an optional paint.  Either way, get back a pointer.
-  static const SkPaint* AsPtr(const SkPaint& p) noexcept { return &p; }
-  static const SkPaint* AsPtr(const SkRecords::Optional<SkPaint>& p) noexcept { return p; }
+  static const SkPaint* AsPtr(const SkPaint& p) { return &p; }
+  static const SkPaint* AsPtr(const SkRecords::Optional<SkPaint>& p) { return p; }
 
-  SkPathCounter() noexcept : fNumSlowPathsAndDashEffects(0) {}
+  SkPathCounter() : fNumSlowPathsAndDashEffects(0) {}
 
-  void checkPaint(const SkPaint* paint) noexcept {
+  void checkPaint(const SkPaint* paint) {
     if (paint && paint->getPathEffect()) {
       // Initially assume it's slow.
       fNumSlowPathsAndDashEffects++;
@@ -45,7 +45,7 @@ struct SkPathCounter {
     }
   }
 
-  void operator()(const SkRecords::DrawPath& op) noexcept {
+  void operator()(const SkRecords::DrawPath& op) {
     this->checkPaint(&op.paint);
     if (op.paint.isAntiAlias() && !op.path.isConvex()) {
       SkPaint::Style paintStyle = op.paint.getStyle();
@@ -62,7 +62,7 @@ struct SkPathCounter {
     }
   }
 
-  void operator()(const SkRecords::ClipPath& op) noexcept {
+  void operator()(const SkRecords::ClipPath& op) {
     // TODO: does the SkRegion op matter?
     if (op.opAA.aa() && !op.path.isConvex()) {
       fNumSlowPathsAndDashEffects++;

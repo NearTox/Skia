@@ -14,11 +14,10 @@
  * This macro creates the member variables required by the SkTInternalLList class. It should be
  * placed in the private section of any class that will be stored in a double linked list.
  */
-#define SK_DECLARE_INTERNAL_LLIST_INTERFACE(ClassName)       \
-  friend class SkTInternalLList<ClassName>;                  \
-  /* back pointer to the owning list - for debugging */      \
-  SkDEBUGCODE(SkTInternalLList<ClassName>* fList = nullptr); \
-  ClassName* fPrev = nullptr;                                \
+#define SK_DECLARE_INTERNAL_LLIST_INTERFACE(ClassName)                                   \
+  friend class SkTInternalLList<ClassName>;                                              \
+  /* back pointer to the owning list - for debugging */                                  \
+  SkDEBUGCODE(SkTInternalLList<ClassName>* fList = nullptr;) ClassName* fPrev = nullptr; \
   ClassName* fNext = nullptr
 
 /**
@@ -29,7 +28,7 @@ class SkTInternalLList {
  public:
   constexpr SkTInternalLList() noexcept = default;
 
-  void reset() noexcept {
+  constexpr void reset() noexcept {
     fHead = nullptr;
     fTail = nullptr;
   }
@@ -103,7 +102,7 @@ class SkTInternalLList {
    * a member of this or any other list. If existingEntry is NULL then the new entry is added
    * at the tail.
    */
-  void addBefore(T* newEntry, T* existingEntry) {
+  void addBefore(T* newEntry, T* existingEntry) noexcept {
     SkASSERT(newEntry);
 
     if (nullptr == existingEntry) {
@@ -132,7 +131,7 @@ class SkTInternalLList {
    * a member of this or any other list. If existingEntry is NULL then the new entry is added
    * at the head.
    */
-  void addAfter(T* newEntry, T* existingEntry) {
+  void addAfter(T* newEntry, T* existingEntry) noexcept {
     SkASSERT(newEntry);
 
     if (nullptr == existingEntry) {
@@ -254,7 +253,7 @@ class SkTInternalLList {
   Iter end() const noexcept { return Iter(); }
 
 #ifdef SK_DEBUG
-  void validate() const {
+  void validate() const noexcept {
     SkASSERT(!fHead == !fTail);
     Iter iter;
     for (T* item = iter.init(*this, Iter::kHead_IterStart); item; item = iter.next()) {
@@ -276,12 +275,12 @@ class SkTInternalLList {
    * Debugging-only method that uses the list back pointer to check if 'entry' is indeed in 'this'
    * list.
    */
-  bool isInList(const T* entry) const { return entry->fList == this; }
+  bool isInList(const T* entry) const noexcept { return entry->fList == this; }
 
   /**
    * Debugging-only method that laboriously counts the list entries.
    */
-  int countEntries() const {
+  int countEntries() const noexcept {
     int count = 0;
     for (T* entry = fHead; entry; entry = entry->fNext) {
       ++count;

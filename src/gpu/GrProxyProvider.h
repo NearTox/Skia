@@ -100,8 +100,8 @@ class GrProxyProvider {
    * kRead or kRW.
    */
   sk_sp<GrTextureProxy> wrapBackendTexture(
-      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, GrIOType, ReleaseProc = nullptr,
-      ReleaseContext = nullptr);
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, GrIOType,
+      sk_sp<GrRefCntedCallback> = nullptr);
 
   sk_sp<GrTextureProxy> wrapCompressedBackendTexture(
       const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, ReleaseProc = nullptr,
@@ -183,6 +183,8 @@ class GrProxyProvider {
    * that it will never refer to the unique key again.
    */
   void processInvalidUniqueKey(const GrUniqueKey&, GrTextureProxy*, InvalidateGPUResource);
+
+  GrDDLProvider isDDLProvider() const;
 
   // TODO: remove these entry points - it is a bit sloppy to be getting context info from here
   uint32_t contextID() const;

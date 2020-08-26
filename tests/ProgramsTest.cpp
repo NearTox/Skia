@@ -124,7 +124,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
 
   BlockInputFragmentProcessor(std::unique_ptr<GrFragmentProcessor> child)
       : INHERITED(kBlockInputFragmentProcessor_ClassID, kNone_OptimizationFlags) {
-    this->registerChildProcessor(std::move(child));
+    this->registerChild(std::move(child));
   }
 
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
@@ -308,8 +308,7 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
   }
   // Flush everything, test passes if flush is successful(ie, no asserts are hit, no crashes)
   if (drawingManager->flush(
-          nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(),
-          GrPrepareForExternalIORequests())) {
+          nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(), nullptr)) {
     drawingManager->submitToGpu(false);
   }
 
@@ -335,8 +334,7 @@ bool GrDrawingManager::ProgramUnitTest(GrContext* context, int maxStages, int ma
       paint.addColorFragmentProcessor(std::move(blockFP));
       GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
       if (drawingManager->flush(
-              nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(),
-              GrPrepareForExternalIORequests())) {
+              nullptr, 0, SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(), nullptr)) {
         drawingManager->submitToGpu(false);
       }
     }

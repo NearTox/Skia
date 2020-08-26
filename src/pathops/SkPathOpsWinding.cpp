@@ -38,25 +38,17 @@ enum class SkOpRayDir {
 const char* gDebugRayDirName[] = {"kLeft", "kTop", "kRight", "kBottom"};
 #endif
 
-static constexpr int xy_index(SkOpRayDir dir) noexcept { return static_cast<int>(dir) & 1; }
+static int xy_index(SkOpRayDir dir) { return static_cast<int>(dir) & 1; }
 
-static constexpr SkScalar pt_xy(const SkPoint& pt, SkOpRayDir dir) noexcept {
-  return (&pt.fX)[xy_index(dir)];
-}
+static SkScalar pt_xy(const SkPoint& pt, SkOpRayDir dir) { return (&pt.fX)[xy_index(dir)]; }
 
-static constexpr SkScalar pt_yx(const SkPoint& pt, SkOpRayDir dir) noexcept {
-  return (&pt.fX)[!xy_index(dir)];
-}
+static SkScalar pt_yx(const SkPoint& pt, SkOpRayDir dir) { return (&pt.fX)[!xy_index(dir)]; }
 
-static constexpr double pt_dxdy(const SkDVector& v, SkOpRayDir dir) noexcept {
-  return (&v.fX)[xy_index(dir)];
-}
+static double pt_dxdy(const SkDVector& v, SkOpRayDir dir) { return (&v.fX)[xy_index(dir)]; }
 
-static constexpr double pt_dydx(const SkDVector& v, SkOpRayDir dir) noexcept {
-  return (&v.fX)[!xy_index(dir)];
-}
+static double pt_dydx(const SkDVector& v, SkOpRayDir dir) { return (&v.fX)[!xy_index(dir)]; }
 
-static constexpr SkScalar rect_side(const SkRect& r, SkOpRayDir dir) noexcept {
+static SkScalar rect_side(const SkRect& r, SkOpRayDir dir) {
   return (&r.fLeft)[static_cast<int>(dir)];
 }
 
@@ -65,11 +57,11 @@ static bool sideways_overlap(const SkRect& rect, const SkPoint& pt, SkOpRayDir d
   return approximately_between((&rect.fLeft)[i], (&pt.fX)[i], (&rect.fRight)[i]);
 }
 
-static constexpr bool less_than(SkOpRayDir dir) noexcept {
+static bool less_than(SkOpRayDir dir) {
   return static_cast<bool>((static_cast<int>(dir) & 2) == 0);
 }
 
-static bool ccw_dxdy(const SkDVector& v, SkOpRayDir dir) noexcept {
+static bool ccw_dxdy(const SkDVector& v, SkOpRayDir dir) {
   bool vPartPos = pt_dydx(v, dir) > 0;
   bool leftBottom = ((static_cast<int>(dir) + 1) & 2) != 0;
   return vPartPos == leftBottom;
@@ -194,23 +186,23 @@ SkOpSpan* SkOpSegment::windingSpanAtT(double tHit) {
   return nullptr;
 }
 
-static bool hit_compare_x(const SkOpRayHit* a, const SkOpRayHit* b) noexcept {
+static bool hit_compare_x(const SkOpRayHit* a, const SkOpRayHit* b) {
   return a->fPt.fX < b->fPt.fX;
 }
 
-static bool reverse_hit_compare_x(const SkOpRayHit* a, const SkOpRayHit* b) noexcept {
+static bool reverse_hit_compare_x(const SkOpRayHit* a, const SkOpRayHit* b) {
   return b->fPt.fX < a->fPt.fX;
 }
 
-static bool hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) noexcept {
+static bool hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) {
   return a->fPt.fY < b->fPt.fY;
 }
 
-static bool reverse_hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) noexcept {
+static bool reverse_hit_compare_y(const SkOpRayHit* a, const SkOpRayHit* b) {
   return b->fPt.fY < a->fPt.fY;
 }
 
-static double get_t_guess(int tTry, int* dirOffset) noexcept {
+static double get_t_guess(int tTry, int* dirOffset) {
   double t = 0.5;
   *dirOffset = tTry & 1;
   int tBase = tTry >> 1;

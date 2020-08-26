@@ -64,7 +64,7 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
     uint32_t fTtcIndex;     // key2
     SkTypeface* fTypeface;  // value: weak ref to typeface
 
-    DataEntry() {}
+    DataEntry() noexcept = default;
 
     DataEntry(DataEntry&& that)
         : fDataId(that.fDataId), fTtcIndex(that.fTtcIndex), fTypeface(that.fTypeface) {

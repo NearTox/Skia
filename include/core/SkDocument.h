@@ -59,7 +59,7 @@ class SK_API SkDocument : public SkRefCnt {
   void abort();
 
  protected:
-  SkDocument(SkWStream*) noexcept;
+  SkDocument(SkWStream*);
 
   // note: subclasses must call close() in their destructor, as the base class
   // cannot do this for them.
@@ -71,10 +71,10 @@ class SK_API SkDocument : public SkRefCnt {
   virtual void onAbort() = 0;
 
   // Allows subclasses to write to the stream as pages are written.
-  SkWStream* getStream() noexcept { return fStream; }
+  SkWStream* getStream() { return fStream; }
 
   enum State { kBetweenPages_State, kInPage_State, kClosed_State };
-  State getState() const noexcept { return fState; }
+  State getState() const { return fState; }
 
  private:
   SkWStream* fStream;

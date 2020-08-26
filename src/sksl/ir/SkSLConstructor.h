@@ -46,13 +46,21 @@ struct Constructor : public Expression {
     return nullptr;
   }
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     for (const auto& arg : fArguments) {
       if (arg->hasProperty(property)) {
         return true;
       }
     }
     return false;
+  }
+
+  int nodeCount() const noexcept override {
+    int result = 1;
+    for (const auto& a : fArguments) {
+      result += a->nodeCount();
+    }
+    return result;
   }
 
   std::unique_ptr<Expression> clone() const override {
@@ -84,7 +92,7 @@ struct Constructor : public Expression {
     return true;
   }
 
-  bool isConstantOrUniform() const noexcept override {
+  bool isConstantOrUniform() const override {
     for (size_t i = 0; i < fArguments.size(); i++) {
       if (!fArguments[i]->isConstantOrUniform()) {
         return false;

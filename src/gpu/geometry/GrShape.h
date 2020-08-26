@@ -252,7 +252,7 @@ class GrShape {
 
   // True if the underlying shape is known to be convex, assuming no other styles. If 'simpleFill'
   // is true, it is assumed the contours will be implicitly closed when drawn or used.
-  bool convex(bool simpleFill = true) const noexcept;
+  bool convex(bool simpleFill = true) const;
 
   // The bounding box of the shape.
   SkRect bounds() const noexcept;
@@ -286,14 +286,13 @@ class GrShape {
   // The simpler type classes do take the geometry because it may represent an in-progress
   // simplification that hasn't been set on the GrShape yet. The simpler types do not report
   // whether or not they were closed because it's implicit in their type.
-  void simplifyLine(const SkPoint& p1, const SkPoint& p2, unsigned flags) noexcept;
+  void simplifyLine(const SkPoint& p1, const SkPoint& p2, unsigned flags);
   void simplifyPoint(const SkPoint& point, unsigned flags) noexcept;
 
   // RRects and rects care about winding for path effects and will set the path winding state
   // of the shape as well.
   void simplifyRRect(const SkRRect& rrect, SkPathDirection dir, unsigned start, unsigned flags);
-  void simplifyRect(
-      const SkRect& rect, SkPathDirection dir, unsigned start, unsigned flags) noexcept;
+  void simplifyRect(const SkRect& rect, SkPathDirection dir, unsigned start, unsigned flags);
 
   union {
     SkPoint fPoint;

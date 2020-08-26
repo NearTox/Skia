@@ -31,7 +31,7 @@ class SkVertices;
 
 class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
  public:
-  SkDraw();
+  SkDraw() noexcept;
 
   void drawPaint(const SkPaint&) const;
   void drawPoints(
@@ -81,7 +81,8 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
   }
 
   void paintPaths(
-      SkDrawableGlyphBuffer* drawables, SkScalar scale, const SkPaint& paint) const override;
+      SkDrawableGlyphBuffer* drawables, SkScalar scale, SkPoint origin,
+      const SkPaint& paint) const override;
 
   void paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) const override;
 
@@ -113,7 +114,7 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
    */
   static RectType ComputeRectType(const SkPaint&, const SkMatrix&, SkPoint* strokeSize);
 
-  static SkScalar ComputeResScaleForStroking(const SkMatrix&);
+  static SkScalar ComputeResScaleForStroking(const SkMatrix&) noexcept;
 
  private:
   void drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;

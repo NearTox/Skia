@@ -7,7 +7,7 @@
 
 #include "include/effects/SkColorMatrixFilter.h"
 
-static SkScalar byte_to_unit_float(U8CPU byte) noexcept {
+static SkScalar byte_to_unit_float(U8CPU byte) {
   if (0xFF == byte) {
     // want to get this exact
     return 1;
@@ -17,7 +17,7 @@ static SkScalar byte_to_unit_float(U8CPU byte) noexcept {
 }
 
 sk_sp<SkColorFilter> SkColorMatrixFilter::MakeLightingFilter(SkColor mul, SkColor add) {
-  constexpr SkColor opaqueAlphaMask = SK_ColorBLACK;
+  const SkColor opaqueAlphaMask = SK_ColorBLACK;
   // omit the alpha and compare only the RGB values
   if (0 == (add & ~opaqueAlphaMask)) {
     return SkColorFilters::Blend(mul | opaqueAlphaMask, SkBlendMode::kModulate);

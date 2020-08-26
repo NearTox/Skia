@@ -14,6 +14,7 @@
     <ClCompile Include="..\angle2\compiler2.cpp" />
     <ClCompile Include="..\angle2\debug2.cpp" />
     <ClCompile Include="..\angle2\PoolAlloc2.cpp" />
+    <ClCompile Include="..\angle2\SystemInfo2.cpp" />
     <ClCompile Include="angle2\src\common\android_util.cpp" />
     <ClCompile Include="angle2\src\common\system_utils_win32.cpp" />
     <ClCompile Include="angle2\src\common\third_party\xxhash\xxhash.c" />
@@ -131,6 +132,8 @@
     <ClCompile Include="angle2\src\compiler\translator\tree_util\IntermTraverse.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceVariable.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\RunAtTheEndOfShader.cpp" />
+    <ClCompile Include="angle2\src\gpu_info_util\SystemInfo.cpp" />
+    <ClCompile Include="angle2\src\gpu_info_util\SystemInfo_win.cpp" />
     <ClCompile Include="angle2\src\libANGLE\BlobCache.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Context_gl.cpp" />
     <ClCompile Include="angle2\src\libANGLE\EGLSync.cpp" />
@@ -410,7 +413,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\VertexArray11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\VertexBuffer11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\win32\NativeWindow11Win32.cpp" />
-    <ClCompile Include="angle2\src\third_party\systeminfo\SystemInfo.cpp" />
     <ClCompile Include="angle2\src\common\system_utils_win.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
@@ -461,7 +463,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>_SILENCE_CLANG_CONCEPTS_MESSAGE;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\externals\zlib\google;$(SolutionDir)\third_party\externals\zlib;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -469,8 +471,9 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d9.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;DXGI.lib;zlib.lib;adler32_simd.obj;inffast_chunk.obj;inflate.obj;crc32_simd.obj;crc_folding.obj;fill_window_sse.obj;compression_utils_portable.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SetChecksum>true</SetChecksum>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\vs$(VisualStudioVersion)\$(PlatformTarget)\lib;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\google;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_adler32_simd;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_crc32_simd;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_inflate_chunk_simd;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_x86_simd</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -481,7 +484,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <PreprocessorDefinitions>_SILENCE_CLANG_CONCEPTS_MESSAGE;WIN32_LEAN_AND_MEAN;NOMINMAX;NDEBUG;GL_GLEXT_PROTOTYPES;EGL_EGLEXT_PROTOTYPES;LIBANGLE_IMPLEMENTATION;LIBGLESV2_IMPLEMENTATION;LIBEGL_IMPLEMENTATION;EGLAPI=;GL_API=;GL_APICALL=;ANGLE_ENABLE_ESSL;ANGLE_ENABLE_GLSL;ANGLE_ENABLE_OPENGL;ANGLE_ENABLE_HLSL;ANGLE_ENABLE_D3D11;ANGLE_ENABLE_D3D9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)\third_party/externals/angle2/src/third_party/khronos;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party\externals\zlib\google;$(SolutionDir)\third_party\externals\zlib;$(SolutionDir)\third_party\angle2;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -489,8 +492,9 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>d3d9.lib;DXGI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d9.lib;DXGI.lib;zlib.lib;adler32_simd.obj;inffast_chunk.obj;inflate.obj;crc32_simd.obj;crc_folding.obj;fill_window_sse.obj;compression_utils_portable.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SetChecksum>true</SetChecksum>
+      <AdditionalLibraryDirectories>$(SolutionDir)..\vs$(VisualStudioVersion)\$(PlatformTarget)\lib;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\google;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_adler32_simd;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_crc32_simd;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_inflate_chunk_simd;$(SolutionDir)..\v8\out\$(PlatformTarget)\obj\third_party\zlib\zlib_x86_simd</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

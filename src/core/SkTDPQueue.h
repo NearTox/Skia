@@ -78,8 +78,7 @@ class SkTDPQueue {
     int index = *INDEX(entry);
     SkASSERT(index >= 0 && index < fArray.count());
     this->validate();
-    SkDEBUGCODE(*INDEX(fArray[index]) = -1);
-    if (index == fArray.count() - 1) {
+    SkDEBUGCODE(*INDEX(fArray[index]) = -1;) if (index == fArray.count() - 1) {
       fArray.pop();
       return;
     }

@@ -18,7 +18,6 @@
 
 class SkData;
 class SkPictureRecord;
-class SkReader32;
 struct SkSerialProcs;
 class SkStream;
 class SkWStream;
@@ -71,7 +70,7 @@ struct SkPictInfo {
 #define SK_PICT_EOF_TAG SkSetFourByteTag('e', 'o', 'f', ' ')
 
 template <typename T>
-T* read_index_base_1_or_null(SkReadBuffer* reader, const SkTArray<sk_sp<T>>& array) {
+T* read_index_base_1_or_null(SkReadBuffer* reader, const SkTArray<sk_sp<T>>& array) noexcept {
   int index = reader->readInt();
   return reader->validate(index > 0 && index <= array.count()) ? array[index - 1].get() : nullptr;
 }
@@ -108,11 +107,11 @@ class SkPictureData {
     return reader->validate(index > 0 && index <= fPaths.count()) ? fPaths[index - 1] : fEmptyPath;
   }
 
-  const SkPicture* getPicture(SkReadBuffer* reader) const {
+  const SkPicture* getPicture(SkReadBuffer* reader) const noexcept {
     return read_index_base_1_or_null(reader, fPictures);
   }
 
-  SkDrawable* getDrawable(SkReadBuffer* reader) const {
+  SkDrawable* getDrawable(SkReadBuffer* reader) const noexcept {
     return read_index_base_1_or_null(reader, fDrawables);
   }
 
@@ -124,11 +123,11 @@ class SkPictureData {
     return reader->validate(index > 0 && index <= fPaints.count()) ? &fPaints[index - 1] : nullptr;
   }
 
-  const SkTextBlob* getTextBlob(SkReadBuffer* reader) const {
+  const SkTextBlob* getTextBlob(SkReadBuffer* reader) const noexcept {
     return read_index_base_1_or_null(reader, fTextBlobs);
   }
 
-  const SkVertices* getVertices(SkReadBuffer* reader) const {
+  const SkVertices* getVertices(SkReadBuffer* reader) const noexcept {
     return read_index_base_1_or_null(reader, fVertices);
   }
 

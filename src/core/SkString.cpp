@@ -19,55 +19,42 @@
 // number of bytes (on the stack) to receive the printf result
 static constexpr size_t kBufferSize = 1024;
 
-static const char* apply_format_string(
-    const char* format, va_list args, char* stackBuffer, size_t stackBufferSize, int* length,
-    SkString* heapBuffer) {
+struct StringBuffer {
+  char* fText;
+  int fLength;
+};
+
+template <int SIZE>
+static StringBuffer apply_format_string(
+    const char* format, va_list args, char (&stackBuffer)[SIZE], SkString* heapBuffer) {
+  // First, attempt to print directly to the stack buffer.
   va_list argsCopy;
   va_copy(argsCopy, args);
-  *length = std::vsnprintf(stackBuffer, stackBufferSize, format, args);
-  if (*length < 0) {
+  int outLength = std::vsnprintf(stackBuffer, SIZE, format, args);
+  if (outLength < 0) {
     SkDebugf("SkString: vsnprintf reported error.");
     va_end(argsCopy);
-    *length = 0;
-    return stackBuffer;
+    return {stackBuffer, 0};
   }
-  if (*length < SkToInt(stackBufferSize)) {
+  if (outLength < SIZE) {
     va_end(argsCopy);
-    return stackBuffer;
+    return {stackBuffer, outLength};
   }
-  heapBuffer->resize(*length);
-  SkDEBUGCODE(int check =)
-      std::vsnprintf(heapBuffer->writable_str(), *length + 1, format, argsCopy);
-  SkASSERT(check == *length);
+
+  // Our text was too long to fit on the stack! However, we now know how much space we need to
+  // format it. Format the string into our heap buffer. `set` automatically reserves an extra
+  // byte at the end of the buffer for a null terminator, so we don't need to add one here.
+  heapBuffer->set(nullptr, outLength);
+  char* heapBufferDest = heapBuffer->writable_str();
+  SkDEBUGCODE(int checkLength =) std::vsnprintf(heapBufferDest, outLength + 1, format, argsCopy);
+  SkASSERT(checkLength == outLength);
   va_end(argsCopy);
-  return heapBuffer->c_str();
+  return {heapBufferDest, outLength};
 }
-
-#define ARGS_TO_BUFFER(format, buffer, size, written, result)                      \
-  SkString overflow;                                                               \
-  do {                                                                             \
-    va_list args;                                                                  \
-    va_start(args, format);                                                        \
-    result = apply_format_string(format, args, buffer, size, &written, &overflow); \
-    va_end(args);                                                                  \
-  } while (0)
-
-#define V_SKSTRING_PRINTF(output, format)                                                   \
-  do {                                                                                      \
-    char buffer[kBufferSize];                                                               \
-    va_list args;                                                                           \
-    va_start(args, format);                                                                 \
-    int length;                                                                             \
-    auto result = apply_format_string(format, args, buffer, kBufferSize, &length, &output); \
-    SkASSERT(result == output.c_str() || result == buffer);                                 \
-    if (result == buffer) {                                                                 \
-      output.set(buffer, length);                                                           \
-    }                                                                                       \
-  } while (0)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkStrEndsWith(const char string[], const char suffixStr[]) {
+bool SkStrEndsWith(const char string[], const char suffixStr[]) noexcept {
   SkASSERT(string);
   SkASSERT(suffixStr);
   size_t strLen = strlen(string);
@@ -75,7 +62,7 @@ bool SkStrEndsWith(const char string[], const char suffixStr[]) {
   return strLen >= suffixLen && !strncmp(string + strLen - suffixLen, suffixStr, suffixLen);
 }
 
-bool SkStrEndsWith(const char string[], const char suffixChar) {
+bool SkStrEndsWith(const char string[], const char suffixChar) noexcept {
   SkASSERT(string);
   size_t strLen = strlen(string);
   if (0 == strLen) {
@@ -85,7 +72,7 @@ bool SkStrEndsWith(const char string[], const char suffixChar) {
   }
 }
 
-int SkStrStartsWithOneOf(const char string[], const char prefixes[]) {
+int SkStrStartsWithOneOf(const char string[], const char prefixes[]) noexcept {
   int index = 0;
   do {
     const char* limit = strchr(prefixes, '\0');
@@ -179,7 +166,7 @@ const SkString::Rec SkString::gEmptyRec(0, 0);
 
 #define SizeOfRec() (gEmptyRec.data() - (const char*)&gEmptyRec)
 
-static uint32_t trim_size_t_to_u32(size_t value) noexcept {
+static constexpr uint32_t trim_size_t_to_u32(size_t value) noexcept {
   if (sizeof(size_t) > sizeof(uint32_t)) {
     if (value > UINT32_MAX) {
       value = UINT32_MAX;
@@ -188,7 +175,7 @@ static uint32_t trim_size_t_to_u32(size_t value) noexcept {
   return (uint32_t)value;
 }
 
-static size_t check_add32(size_t base, size_t extra) noexcept {
+static constexpr size_t check_add32(size_t base, size_t extra) noexcept {
   SkASSERT(base <= UINT32_MAX);
   if (sizeof(size_t) > sizeof(uint32_t)) {
     if (base + extra > UINT32_MAX) {
@@ -274,8 +261,7 @@ SkString::SkString(const char text[], size_t len) { fRec = Rec::Make(text, len);
 
 SkString::SkString(const SkString& src) noexcept : fRec(src.validate().fRec) {}
 
-SkString::SkString(SkString&& src) noexcept
-    : fRec(std::move(const_cast<SkString&>(src.validate()).fRec)) {
+SkString::SkString(SkString&& src) noexcept : fRec(std::move(src.validate().fRec)) {
   src.fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }
 
@@ -315,7 +301,7 @@ SkString& SkString::operator=(const char text[]) {
   return *this = SkString(text);
 }
 
-void SkString::reset() {
+void SkString::reset() noexcept {
   this->validate();
   fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }
@@ -331,29 +317,38 @@ char* SkString::writable_str() {
   return fRec->data();
 }
 
+void SkString::resize(size_t len) {
+  len = trim_size_t_to_u32(len);
+  if (0 == len) {
+    this->reset();
+  } else if (fRec->unique() && ((len >> 2) <= (fRec->fLength >> 2))) {
+    // Use less of the buffer we have without allocating a smaller one.
+    char* p = this->writable_str();
+    p[len] = '\0';
+    fRec->fLength = SkToU32(len);
+  } else {
+    SkString newString(len);
+    char* dest = newString.writable_str();
+    int copyLen = std::min<uint32_t>(len, this->size());
+    memcpy(dest, this->c_str(), copyLen);
+    dest[copyLen] = '\0';
+    this->swap(newString);
+  }
+}
+
 void SkString::set(const char text[]) { this->set(text, text ? strlen(text) : 0); }
 
 void SkString::set(const char text[], size_t len) {
   len = trim_size_t_to_u32(len);
-  bool unique = fRec->unique();
   if (0 == len) {
     this->reset();
-  } else if (unique && len <= fRec->fLength) {
-    // should we resize if len <<<< fLength, to save RAM? (e.g. len < (fLength>>1))?
-    // just use less of the buffer without allocating a smaller one
+  } else if (fRec->unique() && ((len >> 2) <= (fRec->fLength >> 2))) {
+    // Use less of the buffer we have without allocating a smaller one.
     char* p = this->writable_str();
     if (text) {
       memcpy(p, text, len);
     }
-    p[len] = 0;
-    fRec->fLength = SkToU32(len);
-  } else if (unique && (fRec->fLength >> 2) == (len >> 2)) {
-    // we have spare room in the current allocation, so don't alloc a larger one
-    char* p = this->writable_str();
-    if (text) {
-      memcpy(p, text, len);
-    }
-    p[len] = 0;
+    p[len] = '\0';
     fRec->fLength = SkToU32(len);
   } else {
     SkString tmp(text, len);
@@ -477,40 +472,62 @@ void SkString::insertScalar(size_t offset, SkScalar value) {
   this->insert(offset, buffer, stop - buffer);
 }
 
-void SkString::printf(const char format[], ...) { V_SKSTRING_PRINTF((*this), format); }
+///////////////////////////////////////////////////////////////////////////////
+
+void SkString::printf(const char format[], ...) {
+  va_list args;
+  va_start(args, format);
+  this->printVAList(format, args);
+  va_end(args);
+}
+
+void SkString::printVAList(const char format[], va_list args) {
+  char stackBuffer[kBufferSize];
+  StringBuffer result = apply_format_string(format, args, stackBuffer, this);
+
+  if (result.fText == stackBuffer) {
+    this->set(result.fText, result.fLength);
+  }
+}
 
 void SkString::appendf(const char format[], ...) {
-  char buffer[kBufferSize];
-  int length;
-  const char* result;
-  ARGS_TO_BUFFER(format, buffer, kBufferSize, length, result);
-
-  this->append(result, length);
+  va_list args;
+  va_start(args, format);
+  this->appendVAList(format, args);
+  va_end(args);
 }
 
 void SkString::appendVAList(const char format[], va_list args) {
-  char buffer[kBufferSize];
-  int length = vsnprintf(buffer, kBufferSize, format, args);
-  SkASSERT(length >= 0 && length < SkToInt(kBufferSize));
+  if (this->isEmpty()) {
+    this->printVAList(format, args);
+    return;
+  }
 
-  this->append(buffer, length);
+  SkString overflow;
+  char stackBuffer[kBufferSize];
+  StringBuffer result = apply_format_string(format, args, stackBuffer, &overflow);
+
+  this->append(result.fText, result.fLength);
 }
 
 void SkString::prependf(const char format[], ...) {
-  char buffer[kBufferSize];
-  int length;
-  const char* result;
-  ARGS_TO_BUFFER(format, buffer, kBufferSize, length, result);
-
-  this->prepend(result, length);
+  va_list args;
+  va_start(args, format);
+  this->prependVAList(format, args);
+  va_end(args);
 }
 
 void SkString::prependVAList(const char format[], va_list args) {
-  char buffer[kBufferSize];
-  int length = vsnprintf(buffer, kBufferSize, format, args);
-  SkASSERT(length >= 0 && length < SkToInt(kBufferSize));
+  if (this->isEmpty()) {
+    this->printVAList(format, args);
+    return;
+  }
 
-  this->prepend(buffer, length);
+  SkString overflow;
+  char stackBuffer[kBufferSize];
+  StringBuffer result = apply_format_string(format, args, stackBuffer, &overflow);
+
+  this->prepend(result.fText, result.fLength);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -554,7 +571,10 @@ void SkString::swap(SkString& other) noexcept {
 
 SkString SkStringPrintf(const char* format, ...) {
   SkString formattedOutput;
-  V_SKSTRING_PRINTF(formattedOutput, format);
+  va_list args;
+  va_start(args, format);
+  formattedOutput.printVAList(format, args);
+  va_end(args);
   return formattedOutput;
 }
 

@@ -27,9 +27,9 @@ class GeometryNode : public Node {
   void clip(SkCanvas*, bool antiAlias) const;
   void draw(SkCanvas*, const SkPaint&) const;
 
-  bool contains(const SkPoint&) const;
+  bool contains(const SkPoint&) const noexcept;
 
-  SkPath asPath() const;
+  SkPath asPath() const noexcept;
 
  protected:
   GeometryNode() noexcept;
@@ -38,9 +38,9 @@ class GeometryNode : public Node {
 
   virtual void onDraw(SkCanvas*, const SkPaint&) const = 0;
 
-  virtual bool onContains(const SkPoint&) const = 0;
+  virtual bool onContains(const SkPoint&) const noexcept = 0;
 
-  virtual SkPath onAsPath() const = 0;
+  virtual SkPath onAsPath() const noexcept = 0;
 
  private:
   friend class Draw;  // wants to know the cached bounds.

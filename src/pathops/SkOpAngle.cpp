@@ -415,9 +415,9 @@ bool SkOpAngle::computeSector() {
           stepUp ? !checkEnd->final() ? checkEnd->upCast()->next() : nullptr : checkEnd->prev();
     } while (checkEnd);
 recomputeSector:
-  SkOpSpanBase* computedEnd = stepUp
-                                  ? checkEnd ? checkEnd->prev() : fEnd->segment()->head()
-                                  : checkEnd ? checkEnd->upCast()->next() : fEnd->segment()->tail();
+  SkOpSpanBase* computedEnd = stepUp     ? checkEnd ? checkEnd->prev() : fEnd->segment()->head()
+                                  : checkEnd ? checkEnd->upCast()->next()
+                                         : fEnd->segment()->tail();
   if (checkEnd == fEnd || computedEnd == fEnd || computedEnd == fStart) {
     fUnorderable = true;
     return false;
@@ -937,7 +937,7 @@ unorderable:
 
 // OPTIMIZE: if this shows up in a profile, add a previous pointer
 // as is, this should be rarely called
-SkOpAngle* SkOpAngle::previous() const noexcept {
+SkOpAngle* SkOpAngle::previous() const {
   SkOpAngle* last = fNext;
   do {
     SkOpAngle* next = last->fNext;

@@ -54,7 +54,7 @@ inline static bool operator!=(SkPDFIndirectReference u, SkPDFIndirectReference v
 */
 class SkPDFObject {
  public:
-  constexpr SkPDFObject() noexcept = default;
+  SkPDFObject() = default;
 
   /** Subclasses must implement this method to print the object to the
    *  PDF file.

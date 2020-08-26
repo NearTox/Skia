@@ -40,7 +40,7 @@ class GrSurface : public GrGpuResource {
    */
   SkRect getBoundsRect() const noexcept { return SkRect::Make(this->dimensions()); }
 
-  virtual GrBackendFormat backendFormat() const = 0;
+  virtual GrBackendFormat backendFormat() const noexcept = 0;
 
   void setRelease(sk_sp<GrRefCntedCallback> releaseHelper) {
     this->onSetRelease(releaseHelper);
@@ -74,7 +74,7 @@ class GrSurface : public GrGpuResource {
 
   static size_t ComputeSize(
       const GrCaps&, const GrBackendFormat&, SkISize dimensions, int colorSamplesPerPixel,
-      GrMipMapped, bool binSize = false);
+      GrMipMapped, bool binSize = false) noexcept;
 
   /**
    * The pixel values of this surface cannot be modified (e.g. doesn't support write pixels or
@@ -137,7 +137,7 @@ class GrSurface : public GrGpuResource {
   void onAbandon() override;
 
  private:
-  const char* getResourceType() const override { return "Surface"; }
+  const char* getResourceType() const noexcept override { return "Surface"; }
 
   // Unmanaged backends (e.g. Vulkan) may want to specially handle the release proc in order to
   // ensure it isn't called until GPU work related to the resource is completed.

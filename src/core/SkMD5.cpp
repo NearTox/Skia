@@ -29,7 +29,7 @@ static void encode(uint8_t output[8], const uint64_t input);
 /** Decodes input (4 little endian 32 bit values) into storage, if required. */
 static const uint32_t* decode(uint32_t storage[16], const uint8_t input[64]);
 
-SkMD5::SkMD5() : byteCount(0) {
+SkMD5::SkMD5() noexcept : byteCount(0) {
   // These are magic numbers from the specification.
   this->state[0] = 0x67452301;
   this->state[1] = 0xefcdab89;
@@ -37,7 +37,7 @@ SkMD5::SkMD5() : byteCount(0) {
   this->state[3] = 0x10325476;
 }
 
-bool SkMD5::write(const void* buf, size_t inputLength) {
+bool SkMD5::write(const void* buf, size_t inputLength) noexcept {
   const uint8_t* input = reinterpret_cast<const uint8_t*>(buf);
   unsigned int bufferIndex = (unsigned int)(this->byteCount & 0x3F);
   unsigned int bufferAvailable = 64 - bufferIndex;

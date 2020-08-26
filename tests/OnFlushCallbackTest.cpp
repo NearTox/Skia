@@ -10,7 +10,6 @@
 #include "include/core/SkBitmap.h"
 #include "include/gpu/GrBackendSemaphore.h"
 #include "src/core/SkPointPriv.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrImageInfo.h"
@@ -83,7 +82,7 @@ class NonAARectOp : public GrMeshDrawOp {
     GrProcessorAnalysisColor gpColor;
     gpColor.setToUnknown();
     // We ignore the clip so pass this rather than the GrAppliedClip param.
-    static GrAppliedClip kNoClip;
+    static GrAppliedClip kNoClip = GrAppliedClip::Disabled();
     return fHelper.finalizeProcessors(
         caps, &kNoClip, hasMixedSampledCoverage, clampType, GrProcessorAnalysisCoverage::kNone,
         &gpColor);
@@ -363,7 +362,7 @@ class AtlasObject final : public GrOnFlushCallbackObject {
         fAtlasView.refProxy(), fAtlasView.origin(), GrColorType::kRGBA_8888, nullptr, nullptr);
 
     // clear the atlas
-    rtc->clear(nullptr, SK_PMColor4fTRANSPARENT, GrRenderTargetContext::CanClearFullscreen::kYes);
+    rtc->clear(SK_PMColor4fTRANSPARENT);
 
     int blocksInAtlas = 0;
     for (int i = 0; i < lists.count(); ++i) {
@@ -373,7 +372,7 @@ class AtlasObject final : public GrOnFlushCallbackObject {
 
         // For now, we avoid the resource buffer issues and just use clears
 #if 1
-        rtc->clear(&r, op->color(), GrRenderTargetContext::CanClearFullscreen::kNo);
+        rtc->clear(r, op->color());
 #else
         GrPaint paint;
         paint.setColor4f(op->color());
@@ -437,7 +436,7 @@ static GrSurfaceProxyView make_upstream_image(
       context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox,
       {3 * kDrawnTileSize, kDrawnTileSize});
 
-  rtc->clear(nullptr, {1, 0, 0, 1}, GrRenderTargetContext::CanClearFullscreen::kYes);
+  rtc->clear({1, 0, 0, 1});
 
   for (int i = 0; i < 3; ++i) {
     SkRect r = SkRect::MakeXYWH(i * kDrawnTileSize, 0, kDrawnTileSize, kDrawnTileSize);
@@ -452,7 +451,7 @@ static GrSurfaceProxyView make_upstream_image(
 
     uint32_t opsTaskID;
     rtc->priv().testingOnly_addDrawOp(
-        GrNoClip(), std::move(op), [&opsTaskID](GrOp* op, uint32_t id) { opsTaskID = id; });
+        nullptr, std::move(op), [&opsTaskID](GrOp* op, uint32_t id) { opsTaskID = id; });
     SkASSERT(SK_InvalidUniqueID != opsTaskID);
 
     object->addOp(opsTaskID, sparePtr);
@@ -549,23 +548,23 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(OnFlushCallbackTest, reporter, ctxInfo) {
       context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox,
       {kFinalWidth, kFinalHeight});
 
-  rtc->clear(nullptr, SK_PMColor4fWHITE, GrRenderTargetContext::CanClearFullscreen::kYes);
+  rtc->clear(SK_PMColor4fWHITE);
 
   // Note that this doesn't include the third texture proxy
   for (int i = 0; i < kNumViews - 1; ++i) {
     SkRect r = SkRect::MakeXYWH(i * 3 * kDrawnTileSize, 0, 3 * kDrawnTileSize, kDrawnTileSize);
 
-    SkMatrix t = SkMatrix::MakeTrans(-i * 3 * kDrawnTileSize, 0);
+    SkMatrix t = SkMatrix::Translate(-i * 3 * kDrawnTileSize, 0);
 
     GrPaint paint;
     auto fp = GrTextureEffect::Make(std::move(views[i]), kPremul_SkAlphaType, t);
     paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
     paint.addColorFragmentProcessor(std::move(fp));
 
-    rtc->drawRect(GrNoClip(), std::move(paint), GrAA::kNo, SkMatrix::I(), r);
+    rtc->drawRect(nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(), r);
   }
 
-  rtc->flush(SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo());
+  rtc->flush(SkSurface::BackendSurfaceAccess::kNoAccess, GrFlushInfo(), nullptr);
 
   SkBitmap readBack;
   readBack.allocN32Pixels(kFinalWidth, kFinalHeight);

@@ -10,11 +10,13 @@
  **************************************************************************************************/
 #ifndef GrClampedGradientEffect_DEFINED
 #define GrClampedGradientEffect_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrClampedGradientEffect : public GrFragmentProcessor {
  public:
   static std::unique_ptr<GrFragmentProcessor> Make(
@@ -39,7 +41,7 @@ class GrClampedGradientEffect : public GrFragmentProcessor {
   GrClampedGradientEffect(
       std::unique_ptr<GrFragmentProcessor> colorizer,
       std::unique_ptr<GrFragmentProcessor> gradLayout, SkPMColor4f leftBorderColor,
-      SkPMColor4f rightBorderColor, bool makePremul, bool colorsAreOpaque) noexcept
+      SkPMColor4f rightBorderColor, bool makePremul, bool colorsAreOpaque)
       : INHERITED(
             kGrClampedGradientEffect_ClassID,
             (OptimizationFlags)kCompatibleWithCoverageAsAlpha_OptimizationFlag |
@@ -51,14 +53,12 @@ class GrClampedGradientEffect : public GrFragmentProcessor {
         makePremul(makePremul),
         colorsAreOpaque(colorsAreOpaque) {
     SkASSERT(colorizer);
-    colorizer_index = this->numChildProcessors();
-    this->registerChildProcessor(std::move(colorizer));
+    colorizer_index = this->registerChild(std::move(colorizer));
     SkASSERT(gradLayout);
-    gradLayout_index = this->numChildProcessors();
-    this->registerChildProcessor(std::move(gradLayout));
+    gradLayout_index = this->registerChild(std::move(gradLayout));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;

@@ -36,7 +36,7 @@ SkMaskFilterBase::NinePatch::~NinePatch() {
   }
 }
 
-bool SkMaskFilterBase::asABlur(BlurRec*) const noexcept { return false; }
+bool SkMaskFilterBase::asABlur(BlurRec*) const { return false; }
 
 static void extractMaskSubset(const SkMask& src, SkMask* dst) {
   SkASSERT(src.fBounds.contains(dst->fBounds));
@@ -249,7 +249,7 @@ bool SkMaskFilterBase::filterPath(
 
       case kUnimplemented_FilterReturn:
         SkASSERT(nullptr == patch.fMask.fImage);
-        // fall through
+        // fall out
         break;
     }
   }
@@ -321,7 +321,7 @@ bool SkMaskFilterBase::canFilterMaskGPU(
 }
 
 bool SkMaskFilterBase::directFilterMaskGPU(
-    GrRecordingContext*, GrRenderTargetContext*, GrPaint&&, const GrClip&,
+    GrRecordingContext*, GrRenderTargetContext*, GrPaint&&, const GrClip*,
     const SkMatrix& viewMatrix, const GrStyledShape&) const {
   return false;
 }

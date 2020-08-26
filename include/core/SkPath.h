@@ -47,7 +47,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_empty_constructor
   */
-  SkPath();
+  SkPath() noexcept;
 
   /** Constructs a copy of an existing path.
       Copy constructor makes two paths identical by value. Internally, path and
@@ -235,7 +235,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_reset
   */
-  SkPath& reset();
+  SkPath& reset() noexcept;
 
   /** Sets SkPath to its initial state, preserving internal storage.
       Removes verb array, SkPoint array, and weights, and sets FillType to kWinding.
@@ -480,7 +480,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_computeTightBounds
   */
-  SkRect computeTightBounds() const;
+  SkRect computeTightBounds() const noexcept;
 
   /** Returns true if rect is contained by SkPath.
       May return false when rect is contained by SkPath.
@@ -982,8 +982,7 @@ class SK_API SkPath {
       @return      number of quad curves written to pts
   */
   static int ConvertConicToQuads(
-      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[],
-      int pow2) noexcept;
+      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[], int pow2);
 
   /** Returns true if SkPath is equivalent to SkRect when filled.
       If false: rect, isClosed, and direction are unchanged.
@@ -1307,6 +1306,17 @@ class SK_API SkPath {
     this->transform(matrix, this, pc);
   }
 
+  SkPath makeTransform(
+      const SkMatrix& m, SkApplyPerspectiveClip pc = SkApplyPerspectiveClip::kYes) const {
+    SkPath dst;
+    this->transform(m, &dst, pc);
+    return dst;
+  }
+
+  SkPath makeScale(SkScalar sx, SkScalar sy) {
+    return this->makeTransform(SkMatrix::Scale(sx, sy), SkApplyPerspectiveClip::kNo);
+  }
+
   /** Returns last point on SkPath in lastPt. Returns false if SkPoint array is empty,
       storing (0, 0) if lastPt is not nullptr.
 
@@ -1613,7 +1623,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_contains
   */
-  bool contains(SkScalar x, SkScalar y) const;
+  bool contains(SkScalar x, SkScalar y) const noexcept;
 
   /** Writes text representation of SkPath to stream. If stream is nullptr, writes to
       standard output. Set forceClose to true to get edges used to fill SkPath.
@@ -1719,6 +1729,8 @@ class SK_API SkPath {
   bool isValid() const noexcept { return this->isValidImpl() && fPathRef->isValid(); }
 
  private:
+  SkPath(sk_sp<SkPathRef>, SkPathFillType, bool isVolatile) noexcept;
+
   sk_sp<SkPathRef> fPathRef;
   int fLastMoveToIndex;
   mutable std::atomic<uint8_t> fConvexity;       // SkPathConvexityType
@@ -1802,6 +1814,7 @@ class SK_API SkPath {
   friend class SkAutoPathBoundsUpdate;
   friend class SkAutoDisableOvalCheck;
   friend class SkAutoDisableDirectionCheck;
+  friend class SkPathBuilder;
   friend class SkPathEdgeIter;
   friend class SkPathWriter;
   friend class SkOpBuilder;

@@ -10,24 +10,12 @@ declare_args() {
 import("../third_party.gni")
 
 if (skia_use_system_libwebp) {
-  if (is_win) {
-    system("libwebp") {
-      include_dirs = [ "../../../vs16.0/" + target_cpu + "/include" ]
-      lib_dirs = [ "../../../vs16.0/" + target_cpu + "/lib" ]
-      libs = [
-        "libwebp.lib",
-        "libwebpdemux.lib",
-        "libwebpmux.lib",
-      ]
-    }
-  } else {
-    system("libwebp") {
-      libs = [
-        "webp",
-        "webpdemux",
-        "webpmux",
-      ]
-    }
+  system("libwebp") {
+    libs = [
+      "webp",
+      "webpdemux",
+      "webpmux",
+    ]
   }
 } else {
   config("libwebp_defines") {

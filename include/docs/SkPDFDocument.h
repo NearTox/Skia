@@ -88,9 +88,13 @@ class SK_API AttributeList : SkNoncopyable {
   // and then a value of the proper type according to the spec.
   void appendInt(const char* owner, const char* name, int value);
   void appendFloat(const char* owner, const char* name, float value);
-  void appendString(const char* owner, const char* name, const char* value);
+  void appendName(const char* owner, const char* attrName, const char* value);
+  void appendString(const char* owner, const char* attrName, const char* value);
   void appendFloatArray(const char* owner, const char* name, const std::vector<float>& value);
-  void appendStringArray(const char* owner, const char* name, const std::vector<SkString>& value);
+  // Deprecated.
+  void appendStringArray(
+      const char* owner, const char* attrName, const std::vector<SkString>& values);
+  void appendNodeIdArray(const char* owner, const char* attrName, const std::vector<int>& nodeIds);
 
  private:
   friend class ::SkPDFTagTree;
@@ -111,10 +115,6 @@ struct StructureElementNode {
   AttributeList fAttributes;
   SkString fAlt;
   SkString fLang;
-
-  // Deprecated. Use fChildVector instead.
-  StructureElementNode* fChildren = nullptr;
-  size_t fChildCount = 0;
 
   // Deprecated. Use fTypeString instead.
   DocumentStructureType fType = DocumentStructureType::kNonStruct;

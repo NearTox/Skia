@@ -50,10 +50,10 @@ class Merge final : public GeometryNode {
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const override;
+  bool onContains(const SkPoint&) const noexcept override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
-  SkPath onAsPath() const override;
+  SkPath onAsPath() const noexcept override;
 
  private:
   Merge(std::vector<Rec>&& recs);

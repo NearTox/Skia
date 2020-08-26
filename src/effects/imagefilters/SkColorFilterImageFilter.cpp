@@ -9,6 +9,7 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColorFilter.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
@@ -20,14 +21,14 @@ namespace {
 class SkColorFilterImageFilterImpl final : public SkImageFilter_Base {
  public:
   SkColorFilterImageFilterImpl(
-      sk_sp<SkColorFilter> cf, sk_sp<SkImageFilter> input, const CropRect* cropRect) noexcept
+      sk_sp<SkColorFilter> cf, sk_sp<SkImageFilter> input, const CropRect* cropRect)
       : INHERITED(&input, 1, cropRect), fColorFilter(std::move(cf)) {}
 
  protected:
   void flatten(SkWriteBuffer&) const override;
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
-  bool onIsColorFilterNode(SkColorFilter**) const noexcept override;
-  bool onCanHandleComplexCTM() const noexcept override { return true; }
+  bool onIsColorFilterNode(SkColorFilter**) const override;
+  bool onCanHandleComplexCTM() const override { return true; }
   bool affectsTransparentBlack() const override;
 
  private:
@@ -87,7 +88,7 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilterImpl::onFilterImage(
   sk_sp<SkSpecialImage> input(this->filterInput(0, ctx, &inputOffset));
 
   SkIRect inputBounds;
-  if (fColorFilter->affectsTransparentBlack()) {
+  if (as_CFB(fColorFilter)->affectsTransparentBlack()) {
     // If the color filter affects transparent black, the bounds are the entire clip.
     inputBounds = ctx.clipBounds();
   } else if (!input) {
@@ -117,7 +118,7 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilterImpl::onFilterImage(
 
   // TODO: it may not be necessary to clear or drawPaint inside the input bounds
   // (see skbug.com/5075)
-  if (fColorFilter->affectsTransparentBlack()) {
+  if (as_CFB(fColorFilter)->affectsTransparentBlack()) {
     // The subsequent input->draw() call may not fill the entire canvas. For filters which
     // affect transparent black, ensure that the filter is applied everywhere.
     paint.setColor(SK_ColorTRANSPARENT);
@@ -138,7 +139,7 @@ sk_sp<SkSpecialImage> SkColorFilterImageFilterImpl::onFilterImage(
   return surf->makeImageSnapshot();
 }
 
-bool SkColorFilterImageFilterImpl::onIsColorFilterNode(SkColorFilter** filter) const noexcept {
+bool SkColorFilterImageFilterImpl::onIsColorFilterNode(SkColorFilter** filter) const {
   SkASSERT(1 == this->countInputs());
   if (!this->cropRectIsSet()) {
     if (filter) {
@@ -150,5 +151,5 @@ bool SkColorFilterImageFilterImpl::onIsColorFilterNode(SkColorFilter** filter) c
 }
 
 bool SkColorFilterImageFilterImpl::affectsTransparentBlack() const {
-  return fColorFilter->affectsTransparentBlack();
+  return as_CFB(fColorFilter)->affectsTransparentBlack();
 }

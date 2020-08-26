@@ -82,7 +82,7 @@ class Type : public Symbol {
   }
 
   // Create a simple type.
-  Type(String name, Kind kind)
+  Type(String name, Kind kind) noexcept
       : INHERITED(-1, kType_Kind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kind),
@@ -103,7 +103,7 @@ class Type : public Symbol {
   }
 
   // Create a struct type with the given fields.
-  Type(int offset, String name, std::vector<Field> fields)
+  Type(int offset, String name, std::vector<Field> fields) noexcept
       : INHERITED(offset, kType_Kind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kStruct_Kind),
@@ -144,7 +144,7 @@ class Type : public Symbol {
   }
 
   // Create a nullable type.
-  Type(String name, Kind kind, const Type& componentType)
+  Type(String name, Kind kind, const Type& componentType) noexcept
       : INHERITED(-1, kType_Kind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kind),
@@ -162,7 +162,7 @@ class Type : public Symbol {
       : Type(name, kVector_Kind, componentType, columns) {}
 
   // Create a vector or array type.
-  Type(String name, Kind kind, const Type& componentType, int columns)
+  Type(String name, Kind kind, const Type& componentType, int columns) noexcept
       : INHERITED(-1, kType_Kind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kind),
@@ -251,7 +251,7 @@ class Type : public Symbol {
   bool isNumber() const noexcept { return fNumberKind != kNonnumeric_NumberKind; }
 
   /**
-   * Returns true if this is a floating-point scalar type (float, half, or double).
+   * Returns true if this is a floating-point scalar type (float or half).
    */
   bool isFloat() const noexcept { return fNumberKind == kFloat_NumberKind; }
 
@@ -271,7 +271,7 @@ class Type : public Symbol {
   bool isInteger() const noexcept { return isSigned() || isUnsigned(); }
 
   /**
-   * Returns the "priority" of a number type, in order of double > float > half > int > short.
+   * Returns the "priority" of a number type, in order of float > half > int > short.
    * When operating on two number types, the result is the higher-priority type.
    */
   int priority() const noexcept { return fPriority; }

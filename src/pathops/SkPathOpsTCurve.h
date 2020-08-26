@@ -20,17 +20,17 @@ class SkTCurve {
   virtual SkDPoint& operator[](int n) noexcept = 0;
 
   virtual bool collapsed() const noexcept = 0;
-  virtual bool controlsInside() const noexcept = 0;
+  virtual bool controlsInside() const = 0;
   virtual void debugInit() noexcept = 0;
 #if DEBUG_T_SECT
   virtual void dumpID(int id) const = 0;
 #endif
   virtual SkDVector dxdyAtT(double t) const noexcept = 0;
-  virtual bool hullIntersects(const SkDQuad&, bool* isLinear) const noexcept = 0;
-  virtual bool hullIntersects(const SkDConic&, bool* isLinear) const noexcept = 0;
-  virtual bool hullIntersects(const SkDCubic&, bool* isLinear) const noexcept = 0;
-  virtual bool hullIntersects(const SkTCurve&, bool* isLinear) const noexcept = 0;
-  virtual int intersectRay(SkIntersections* i, const SkDLine& line) const noexcept = 0;
+  virtual bool hullIntersects(const SkDQuad&, bool* isLinear) const = 0;
+  virtual bool hullIntersects(const SkDConic&, bool* isLinear) const = 0;
+  virtual bool hullIntersects(const SkDCubic&, bool* isLinear) const = 0;
+  virtual bool hullIntersects(const SkTCurve&, bool* isLinear) const = 0;
+  virtual int intersectRay(SkIntersections* i, const SkDLine& line) const = 0;
   virtual bool IsConic() const noexcept = 0;
   virtual SkTCurve* make(SkArenaAlloc&) const = 0;
   virtual int maxIntersections() const noexcept = 0;
@@ -38,8 +38,8 @@ class SkTCurve {
   virtual int pointCount() const noexcept = 0;
   virtual int pointLast() const noexcept = 0;
   virtual SkDPoint ptAtT(double t) const noexcept = 0;
-  virtual void setBounds(SkDRect*) const noexcept = 0;
-  virtual void subDivide(double t1, double t2, SkTCurve* curve) const noexcept = 0;
+  virtual void setBounds(SkDRect*) const = 0;
+  virtual void subDivide(double t1, double t2, SkTCurve* curve) const = 0;
 #ifdef SK_DEBUG
   virtual SkOpGlobalState* globalState() const = 0;
 #endif

@@ -27,14 +27,18 @@ struct TernaryExpression : public Expression {
     SkASSERT(fIfTrue->fType == fIfFalse->fType);
   }
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     return fTest->hasProperty(property) || fIfTrue->hasProperty(property) ||
            fIfFalse->hasProperty(property);
   }
 
-  bool isConstantOrUniform() const noexcept override {
+  bool isConstantOrUniform() const override {
     return fTest->isConstantOrUniform() && fIfTrue->isConstantOrUniform() &&
            fIfFalse->isConstantOrUniform();
+  }
+
+  int nodeCount() const noexcept override {
+    return 1 + fTest->nodeCount() + fIfTrue->nodeCount() + fIfFalse->nodeCount();
   }
 
   std::unique_ptr<Expression> clone() const override {

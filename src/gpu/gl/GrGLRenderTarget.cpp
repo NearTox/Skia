@@ -37,13 +37,13 @@ GrGLRenderTarget::GrGLRenderTarget(
   this->init(format, ids);
 }
 
-inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDs& idDesc) {
+inline void GrGLRenderTarget::setFlags(const GrGLCaps& glCaps, const IDs& idDesc) noexcept {
   if (!idDesc.fRTFBOID) {
     this->setGLRTFBOIDIs0();
   }
 }
 
-void GrGLRenderTarget::init(GrGLFormat format, const IDs& idDesc) {
+void GrGLRenderTarget::init(GrGLFormat format, const IDs& idDesc) noexcept {
   fRTFBOID = idDesc.fRTFBOID;
   fTexFBOID = idDesc.fTexFBOID;
   fMSColorRenderbufferID = idDesc.fMSColorRenderbufferID;
@@ -71,7 +71,7 @@ sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(
       new GrGLRenderTarget(gpu, dimensions, format, sampleCount, idDesc, sb));
 }
 
-GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const {
+GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const noexcept {
   GrGLFramebufferInfo fbi;
   fbi.fFBOID = fRTFBOID;
   fbi.fFormat = GrGLFormatToEnum(this->format());
@@ -84,13 +84,13 @@ GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const {
       this->width(), this->height(), this->numSamples(), numStencilBits, fbi);
 }
 
-GrBackendFormat GrGLRenderTarget::backendFormat() const {
+GrBackendFormat GrGLRenderTarget::backendFormat() const noexcept {
   // We should never have a GrGLRenderTarget (even a textureable one with a target that is not
   // texture 2D.
   return GrBackendFormat::MakeGL(GrGLFormatToEnum(fRTFormat), GR_GL_TEXTURE_2D);
 }
 
-size_t GrGLRenderTarget::onGpuMemorySize() const {
+size_t GrGLRenderTarget::onGpuMemorySize() const noexcept {
   const GrCaps& caps = *this->getGpu()->caps();
   return GrSurface::ComputeSize(
       caps, this->backendFormat(), this->dimensions(), fNumSamplesOwnedPerPixel, GrMipMapped::kNo);
@@ -175,12 +175,12 @@ void GrGLRenderTarget::onAbandon() {
   INHERITED::onAbandon();
 }
 
-GrGLGpu* GrGLRenderTarget::getGLGpu() const {
+GrGLGpu* GrGLRenderTarget::getGLGpu() const noexcept {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrGLGpu*>(this->getGpu());
 }
 
-bool GrGLRenderTarget::canAttemptStencilAttachment() const {
+bool GrGLRenderTarget::canAttemptStencilAttachment() const noexcept {
   if (this->getGpu()->getContext()->priv().caps()->avoidStencilBuffers()) {
     return false;
   }
@@ -226,7 +226,7 @@ void GrGLRenderTarget::dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) 
   }
 }
 
-int GrGLRenderTarget::msaaSamples() const {
+int GrGLRenderTarget::msaaSamples() const noexcept {
   if (fTexFBOID == kUnresolvableFBOID || fTexFBOID != fRTFBOID) {
     // If the render target's FBO is external (fTexFBOID == kUnresolvableFBOID), or if we own
     // the render target's FBO (fTexFBOID == fRTFBOID) then we use the provided sample count.
@@ -238,7 +238,7 @@ int GrGLRenderTarget::msaaSamples() const {
   return 0;
 }
 
-int GrGLRenderTarget::totalSamples() const {
+int GrGLRenderTarget::totalSamples() const noexcept {
   int total_samples = this->msaaSamples();
 
   if (fTexFBOID != kUnresolvableFBOID) {

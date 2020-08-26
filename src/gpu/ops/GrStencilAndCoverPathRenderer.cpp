@@ -7,7 +7,6 @@
 
 #include "include/private/GrRecordingContext.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrFixedClip.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrPath.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
@@ -76,21 +75,21 @@ static sk_sp<GrPath> get_gr_path(GrResourceProvider* resourceProvider, const GrS
   sk_sp<GrPath> path;
   if (!isVolatile) {
     path = resourceProvider->findByUniqueKey<GrPath>(key);
-  }
-  if (!path) {
-    SkPath skPath;
-    shape.asPath(&skPath);
-    path = resourceProvider->createPath(skPath, shape.style());
-    if (!isVolatile) {
-      resourceProvider->assignUniqueKeyToResource(key, path.get());
     }
-  } else {
+    if (!path) {
+      SkPath skPath;
+      shape.asPath(&skPath);
+      path = resourceProvider->createPath(skPath, shape.style());
+      if (!isVolatile) {
+        resourceProvider->assignUniqueKeyToResource(key, path.get());
+      }
+    } else {
 #ifdef SK_DEBUG
-    SkPath skPath;
-    shape.asPath(&skPath);
-    SkASSERT(path->isEqualTo(skPath, shape.style()));
+      SkPath skPath;
+      shape.asPath(&skPath);
+      SkASSERT(path->isEqualTo(skPath, shape.style()));
 #endif
-  }
+    }
     return path;
 }
 
@@ -99,7 +98,7 @@ void GrStencilAndCoverPathRenderer::onStencilPath(const StencilPathArgs& args) {
       args.fRenderTargetContext->auditTrail(), "GrStencilAndCoverPathRenderer::onStencilPath");
   sk_sp<GrPath> p(get_gr_path(fResourceProvider, *args.fShape));
   args.fRenderTargetContext->priv().stencilPath(
-      *args.fClip, args.fDoStencilMSAA, *args.fViewMatrix, std::move(p));
+      args.fClip, args.fDoStencilMSAA, *args.fViewMatrix, std::move(p));
 }
 
 bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
@@ -124,15 +123,16 @@ bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
         args.fRenderTargetContext->height());  // Inverse fill.
 
     // fake inverse with a stencil and cover
-    GrAppliedClip appliedClip;
-    if (!args.fClip->apply(
-            args.fContext, args.fRenderTargetContext, doStencilMSAA, true, &appliedClip,
-            &devBounds)) {
+    GrAppliedClip appliedClip(args.fRenderTargetContext->dimensions());
+    if (args.fClip && !args.fClip->apply(
+                          args.fContext, args.fRenderTargetContext, doStencilMSAA, true,
+                          &appliedClip, &devBounds)) {
       return true;
     }
-    GrStencilClip stencilClip(appliedClip.stencilStackID());
+    GrStencilClip stencilClip(
+        args.fRenderTargetContext->dimensions(), appliedClip.stencilStackID());
     if (appliedClip.scissorState().enabled()) {
-      stencilClip.fixedClip().setScissor(appliedClip.scissorState().rect());
+      SkAssertResult(stencilClip.fixedClip().setScissor(appliedClip.scissorState().rect()));
     }
     if (appliedClip.windowRectsState().enabled()) {
       stencilClip.fixedClip().setWindowRectangles(
@@ -141,7 +141,7 @@ bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
     // Just ignore the analytic FPs (if any) during the stencil pass. They will still clip the
     // final draw and it is meaningless to multiply by coverage when drawing to stencil.
     args.fRenderTargetContext->priv().stencilPath(
-        stencilClip, GrAA(doStencilMSAA), viewMatrix, std::move(path));
+        &stencilClip, GrAA(doStencilMSAA), viewMatrix, std::move(path));
 
     {
       static constexpr GrUserStencilSettings kInvertedCoverPass(
@@ -174,13 +174,13 @@ bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
         doStencilMSAA = GrAA::kYes;
       }
       args.fRenderTargetContext->priv().stencilRect(
-          *args.fClip, &kInvertedCoverPass, std::move(args.fPaint), doStencilMSAA, coverMatrix,
+          args.fClip, &kInvertedCoverPass, std::move(args.fPaint), doStencilMSAA, coverMatrix,
           coverBounds, &localMatrix);
     }
   } else {
     std::unique_ptr<GrDrawOp> op = GrDrawPathOp::Make(
         args.fContext, viewMatrix, std::move(args.fPaint), GrAA(doStencilMSAA), std::move(path));
-    args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
+    args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));
   }
 
   return true;

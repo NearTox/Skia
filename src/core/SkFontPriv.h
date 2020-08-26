@@ -37,7 +37,7 @@ class SkFontPriv {
    *  Return a matrix that applies the paint's text values: size, scale, skew
    */
   static SkMatrix MakeTextMatrix(SkScalar size, SkScalar scaleX, SkScalar skewX) {
-    SkMatrix m = SkMatrix::MakeScale(size * scaleX, size);
+    SkMatrix m = SkMatrix::Scale(size * scaleX, size);
     if (skewX) {
       m.postSkew(skewX, 0);
     }
@@ -63,13 +63,13 @@ class SkFontPriv {
    */
   static SkRect GetFontBounds(const SkFont&);
 
-  static bool IsFinite(const SkFont& font) {
+  static bool IsFinite(const SkFont& font) noexcept {
     return SkScalarIsFinite(font.getSize()) && SkScalarIsFinite(font.getScaleX()) &&
            SkScalarIsFinite(font.getSkewX());
   }
 
   // Returns the number of elements (characters or glyphs) in the array.
-  static int CountTextElements(const void* text, size_t byteLength, SkTextEncoding);
+  static int CountTextElements(const void* text, size_t byteLength, SkTextEncoding) noexcept;
 
   static void GlyphsToUnichars(const SkFont&, const uint16_t glyphs[], int count, SkUnichar[]);
 

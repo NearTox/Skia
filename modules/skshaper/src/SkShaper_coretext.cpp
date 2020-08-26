@@ -7,23 +7,23 @@
 
 #include "modules/skshaper/include/SkShaper.h"
 
-#if defined(SK_BUILD_FOR_MAC) || defined(SK_BUILD_FOR_IOS)
+#ifdef SK_BUILD_FOR_MAC
+#  import <ApplicationServices/ApplicationServices.h>
+#endif
 
-#  ifdef SK_BUILD_FOR_MAC
-#    import <ApplicationServices/ApplicationServices.h>
-#  endif
+#ifdef SK_BUILD_FOR_IOS
+#  include <CoreText/CoreText.h>
+#  include <CoreText/CTFontManager.h>
+#  include <CoreGraphics/CoreGraphics.h>
+#  include <CoreFoundation/CoreFoundation.h>
+#endif
 
-#  ifdef SK_BUILD_FOR_IOS
-#    include <CoreText/CoreText.h>
-#    include <CoreText/CTFontManager.h>
-#    include <CoreGraphics/CoreGraphics.h>
-#    include <CoreFoundation/CoreFoundation.h>
-#  endif
+#include "include/ports/SkTypeface_mac.h"
+#include "src/core/SkArenaAlloc.h"
+#include "src/utils/mac/SkCGBase.h"
+#include "src/utils/mac/SkUniqueCFRef.h"
 
-#  include "include/ports/SkTypeface_mac.h"
-#  include "src/core/SkArenaAlloc.h"
-
-#  include <vector>
+#include <vector>
 
 class SkShaper_CoreText : public SkShaper {
  public:
@@ -76,17 +76,6 @@ void SkShaper_CoreText::shape(
       utf8, utf8Bytes, font.currentFont(), (bidi.currentLevel() % 2) == 0, width, handler);
 }
 
-template <typename T>
-class AutoCF {
-  T fObj;
-
- public:
-  AutoCF(T obj) : fObj(obj) {}
-  ~AutoCF() { CFRelease(fObj); }
-
-  T get() const { return fObj; }
-};
-
 // CTFramesetter/CTFrame can do this, but require version 10.14
 class LineBreakIter {
   CTTypesetterRef fTypesetter;
@@ -108,28 +97,16 @@ class LineBreakIter {
 };
 
 static void dict_add_double(CFMutableDictionaryRef d, const void* name, double value) {
-  AutoCF<CFNumberRef> number = CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value);
+  SkUniqueCFRef<CFNumberRef> number(
+      CFNumberCreate(kCFAllocatorDefault, kCFNumberDoubleType, &value));
   CFDictionaryAddValue(d, name, number.get());
 }
 
-static void dump(CFDictionaryRef d) {
-  CFIndex count = CFDictionaryGetCount(d);
-  std::vector<const void*> keys(count);
-  std::vector<const void*> vals(count);
-
-  CFDictionaryGetKeysAndValues(d, keys.data(), vals.data());
-
-  for (CFIndex i = 0; i < count; ++i) {
-    CFStringRef kstr = (CFStringRef)keys[i];
-    const char* ckstr = CFStringGetCStringPtr(kstr, kCFStringEncodingUTF8);
-    SkDebugf("dict[%d] %s %p\n", i, ckstr, vals[i]);
-  }
-}
-
-static CTFontRef create_ctfont_from_font(const SkFont& font) {
+static SkUniqueCFRef<CTFontRef> create_ctfont_from_font(const SkFont& font) {
   auto typeface = font.getTypefaceOrDefault();
   auto ctfont = SkTypeface_GetCTFontRef(typeface);
-  return CTFontCreateCopyWithAttributes(ctfont, font.getSize(), nullptr, nullptr);
+  return SkUniqueCFRef<CTFontRef>(
+      CTFontCreateCopyWithAttributes(ctfont, font.getSize(), nullptr, nullptr));
 }
 
 static SkFont run_to_font(CTRunRef run, const SkFont& orig) {
@@ -137,7 +114,7 @@ static SkFont run_to_font(CTRunRef run, const SkFont& orig) {
   CTFontRef ct = (CTFontRef)CFDictionaryGetValue(attr, kCTFontAttributeName);
   if (!ct) {
     SkDebugf("no ctfont in Run Attributes\n");
-    dump(attr);
+    CFShow(attr);
     return orig;
   }
   // Do I need to add a local cache, or allow the caller to manage this lookup?
@@ -152,23 +129,13 @@ const CFStringRef kCTTracking_AttributeName = CFSTR("CTTracking");
 void SkShaper_CoreText::shape(
     const char* utf8, size_t utf8Bytes, const SkFont& font, bool /* leftToRight */, SkScalar width,
     RunHandler* handler) const {
-  auto cgfloat_to_scalar = [](CGFloat x) {
-    SkScalar s;
-    if (sizeof(CGFloat) == sizeof(double)) {
-      s = SkDoubleToScalar(x);
-    } else {
-      s = x;
-    }
-    return s;
-  };
+  SkUniqueCFRef<CFStringRef> textString(CFStringCreateWithBytes(
+      kCFAllocatorDefault, (const uint8_t*)utf8, utf8Bytes, kCFStringEncodingUTF8, false));
 
-  AutoCF<CFStringRef> textString = CFStringCreateWithBytes(
-      nullptr, (const uint8_t*)utf8, utf8Bytes, kCFStringEncodingUTF8, false);
+  SkUniqueCFRef<CTFontRef> ctfont = create_ctfont_from_font(font);
 
-  AutoCF<CTFontRef> ctfont = create_ctfont_from_font(font);
-
-  AutoCF<CFMutableDictionaryRef> attr = CFDictionaryCreateMutable(
-      kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks);
+  SkUniqueCFRef<CFMutableDictionaryRef> attr(CFDictionaryCreateMutable(
+      kCFAllocatorDefault, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks));
   CFDictionaryAddValue(attr.get(), kCTFontAttributeName, ctfont.get());
   if (false) {
     // trying to see what these affect
@@ -176,11 +143,11 @@ void SkShaper_CoreText::shape(
     dict_add_double(attr.get(), kCTKernAttributeName, 0.0);
   }
 
-  AutoCF<CFAttributedStringRef> attrString =
-      CFAttributedStringCreate(nullptr, textString.get(), attr.get());
+  SkUniqueCFRef<CFAttributedStringRef> attrString(
+      CFAttributedStringCreate(kCFAllocatorDefault, textString.get(), attr.get()));
 
-  AutoCF<CTTypesetterRef> typesetter =
-      CTTypesetterCreateWithAttributedStringAndOptions(attrString.get(), nullptr);
+  SkUniqueCFRef<CTTypesetterRef> typesetter(
+      CTTypesetterCreateWithAttributedString(attrString.get()));
 
   SkSTArenaAlloc<4096> arena;
 
@@ -248,7 +215,7 @@ void SkShaper_CoreText::shape(
 
       for (CFIndex k = 0; k < runGlyphs; ++k) {
         buffer.positions[k] = {
-            buffer.point.fX + cgfloat_to_scalar(positions[k].x),
+            buffer.point.fX + SkScalarFromCGFloat(positions[k].x),
             buffer.point.fY,
         };
         if (buffer.offsets) {
@@ -264,7 +231,3 @@ void SkShaper_CoreText::shape(
     handler->commitLine();
   }
 }
-
-#else
-std::unique_ptr<SkShaper> SkShaper::MakeCoreText() { return nullptr; }
-#endif

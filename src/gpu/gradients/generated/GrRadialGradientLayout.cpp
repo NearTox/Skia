@@ -28,26 +28,28 @@ class GrGLSLRadialGradientLayout : public GrGLSLFragmentProcessor {
     SkString sk_TransformedCoords2D_0 = fragBuilder->ensureCoords2D(
         args.fTransformedCoords[0].fVaryingPoint, _outer.sampleMatrix());
     fragBuilder->codeAppendf(
-        "half t = half(length(%s));\n%s = half4(t, 1.0, 0.0, 0.0);\n",
+        R"SkSL(half t = half(length(%s));
+%s = half4(t, 1.0, 0.0, 0.0);
+)SkSL",
         sk_TransformedCoords2D_0.c_str(), args.fOutputColor);
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrRadialGradientLayout::onCreateGLSLInstance() const {
   return new GrGLSLRadialGradientLayout();
 }
 void GrRadialGradientLayout::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrRadialGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrRadialGradientLayout& that = other.cast<GrRadialGradientLayout>();
   (void)that;
   if (gradientMatrix != that.gradientMatrix) return false;
   return true;
 }
-GrRadialGradientLayout::GrRadialGradientLayout(const GrRadialGradientLayout& src) noexcept
+GrRadialGradientLayout::GrRadialGradientLayout(const GrRadialGradientLayout& src)
     : INHERITED(kGrRadialGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix) {

@@ -32,9 +32,9 @@ void Merge::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawPath(fMerged, paint);
 }
 
-bool Merge::onContains(const SkPoint& p) const { return fMerged.contains(p.x(), p.y()); }
+bool Merge::onContains(const SkPoint& p) const noexcept { return fMerged.contains(p.x(), p.y()); }
 
-SkPath Merge::onAsPath() const { return fMerged; }
+SkPath Merge::onAsPath() const noexcept { return fMerged; }
 
 static SkPathOp mode_to_op(Merge::Mode mode) noexcept {
   switch (mode) {

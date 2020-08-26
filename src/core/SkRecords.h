@@ -86,17 +86,17 @@ namespace SkRecords {
 enum Type { SK_RECORD_TYPES(ENUM) };
 #undef ENUM
 
-#define ACT_AS_PTR(ptr)                        \
-  operator T*() const noexcept { return ptr; } \
-  T* operator->() const noexcept { return ptr; }
+#define ACT_AS_PTR(ptr)               \
+  operator T*() const { return ptr; } \
+  T* operator->() const { return ptr; }
 
 // An Optional doesn't own the pointer's memory, but may need to destroy non-POD data.
 template <typename T>
 class Optional {
  public:
-  constexpr Optional() noexcept : fPtr(nullptr) {}
-  Optional(T* ptr) noexcept : fPtr(ptr) {}
-  Optional(Optional&& o) noexcept : fPtr(o.fPtr) { o.fPtr = nullptr; }
+  Optional() : fPtr(nullptr) {}
+  Optional(T* ptr) : fPtr(ptr) {}
+  Optional(Optional&& o) : fPtr(o.fPtr) { o.fPtr = nullptr; }
   ~Optional() {
     if (fPtr) fPtr->~T();
   }
@@ -108,33 +108,12 @@ class Optional {
   Optional& operator=(const Optional&) = delete;
 };
 
-// Like Optional, but ptr must not be NULL.
-template <typename T>
-class Adopted {
- public:
-  Adopted(T* ptr) noexcept : fPtr(ptr) { SkASSERT(fPtr); }
-  Adopted(Adopted* source) noexcept {
-    // Transfer ownership from source to this.
-    fPtr = source->fPtr;
-    source->fPtr = NULL;
-  }
-  ~Adopted() {
-    if (fPtr) fPtr->~T();
-  }
-
-  ACT_AS_PTR(fPtr)
- private:
-  T* fPtr;
-  Adopted(const Adopted&) = delete;
-  Adopted& operator=(const Adopted&) = delete;
-};
-
 // PODArray doesn't own the pointer's memory, and we assume the data is POD.
 template <typename T>
 class PODArray {
  public:
   PODArray() noexcept = default;
-  PODArray(T* ptr) noexcept : fPtr(ptr) {}
+  PODArray(T* ptr) : fPtr(ptr) {}
   // Default copy and assign.
 
   ACT_AS_PTR(fPtr)
@@ -148,7 +127,7 @@ class PODArray {
 // SkPath::cheapComputeDirection() is similar.
 // Recording is a convenient time to cache these, or we can delay it to between record and playback.
 struct PreCachedPath : public SkPath {
-  PreCachedPath() {}
+  PreCachedPath() noexcept = default;
   PreCachedPath(const SkPath& path);
 };
 
@@ -156,7 +135,7 @@ struct PreCachedPath : public SkPath {
 // This may not cover all SkMatrices used by the picture (e.g. some could be hiding in a shader).
 struct TypedMatrix : public SkMatrix {
   TypedMatrix() noexcept = default;
-  TypedMatrix(const SkMatrix& matrix) noexcept;
+  TypedMatrix(const SkMatrix& matrix);
 };
 
 enum Tags {
@@ -182,8 +161,7 @@ RECORD(Restore, 0, TypedMatrix matrix);
 RECORD(Save, 0);
 
 RECORD(SaveLayer, kHasPaint_Tag, Optional<SkRect> bounds; Optional<SkPaint> paint;
-       sk_sp<const SkImageFilter> backdrop; sk_sp<const SkImage> clipMask;
-       Optional<SkMatrix> clipMatrix; SkCanvas::SaveLayerFlags saveLayerFlags);
+       sk_sp<const SkImageFilter> backdrop; SkCanvas::SaveLayerFlags saveLayerFlags);
 
 RECORD(SaveBehind, 0, Optional<SkRect> subset);
 
@@ -198,10 +176,10 @@ RECORD(Scale, 0, SkScalar sx; SkScalar sy);
 
 struct ClipOpAndAA {
   ClipOpAndAA() noexcept = default;
-  ClipOpAndAA(SkClipOp op, bool aa) noexcept : fOp(static_cast<unsigned>(op)), fAA(aa) {}
+  ClipOpAndAA(SkClipOp op, bool aa) : fOp(static_cast<unsigned>(op)), fAA(aa) {}
 
-  SkClipOp op() const noexcept { return static_cast<SkClipOp>(fOp); }
-  bool aa() const noexcept { return fAA != 0; }
+  SkClipOp op() const { return static_cast<SkClipOp>(fOp); }
+  bool aa() const { return fAA != 0; }
 
  private:
   unsigned fOp : 31;  // This really only needs to be 3, but there's no win today to do so.
@@ -238,7 +216,7 @@ RECORD(DrawPath, kDraw_Tag | kHasPaint_Tag, SkPaint paint; PreCachedPath path);
 RECORD(DrawPicture, kDraw_Tag | kHasPaint_Tag, Optional<SkPaint> paint;
        sk_sp<const SkPicture> picture; TypedMatrix matrix);
 RECORD(DrawPoints, kDraw_Tag | kHasPaint_Tag, SkPaint paint; SkCanvas::PointMode mode;
-       unsigned count; SkPoint * pts);
+       unsigned count; PODArray<SkPoint> pts);
 RECORD(DrawRRect, kDraw_Tag | kHasPaint_Tag, SkPaint paint; SkRRect rrect);
 RECORD(DrawRect, kDraw_Tag | kHasPaint_Tag, SkPaint paint; SkRect rect);
 RECORD(DrawRegion, kDraw_Tag | kHasPaint_Tag, SkPaint paint; SkRegion region);

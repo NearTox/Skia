@@ -15,12 +15,12 @@
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrBuffer.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrDefaultGeoProcFactory.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/GrProgramInfo.h"
+#include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/effects/GrBezierEffect.h"
@@ -785,7 +785,7 @@ class AAHairlineOp final : public GrMeshDrawOp {
     this->setTransformedBounds(path.getBounds(), viewMatrix, HasAABloat::kYes, IsHairline::kYes);
   }
 
-  const char* name() const override { return "AAHairlineOp"; }
+  const char* name() const noexcept override { return "AAHairlineOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     bool visited = false;
@@ -964,8 +964,8 @@ void AAHairlineOp::makeQuadProgramInfo(
   }
 
   GrGeometryProcessor* quadGP = GrQuadEffect::Make(
-      arena, this->color(), *geometryProcessorViewM, GrClipEdgeType::kHairlineAA, caps,
-      *geometryProcessorLocalM, fHelper.usesLocalCoords(), this->coverage());
+      arena, this->color(), *geometryProcessorViewM, caps, *geometryProcessorLocalM,
+      fHelper.usesLocalCoords(), this->coverage());
   SkASSERT(sizeof(BezierVertex) == quadGP->vertexStride());
 
   fProgramInfos[1] = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
@@ -981,8 +981,8 @@ void AAHairlineOp::makeConicProgramInfo(
   }
 
   GrGeometryProcessor* conicGP = GrConicEffect::Make(
-      arena, this->color(), *geometryProcessorViewM, GrClipEdgeType::kHairlineAA, caps,
-      *geometryProcessorLocalM, fHelper.usesLocalCoords(), this->coverage());
+      arena, this->color(), *geometryProcessorViewM, caps, *geometryProcessorLocalM,
+      fHelper.usesLocalCoords(), this->coverage());
   SkASSERT(sizeof(BezierVertex) == conicGP->vertexStride());
 
   fProgramInfos[2] = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
@@ -1057,7 +1057,7 @@ void AAHairlineOp::onPrePrepareDraws(
   const GrCaps* caps = context->priv().caps();
 
   // This is equivalent to a GrOpFlushState::detachAppliedClip
-  GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
+  GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip::Disabled();
 
   // Conservatively predict which programs will be required
   fCharacterization = this->predictPrograms(caps);
@@ -1211,14 +1211,12 @@ bool GrAAHairLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
       args.fRenderTargetContext->auditTrail(), "GrAAHairlinePathRenderer::onDrawPath");
   SkASSERT(args.fRenderTargetContext->numSamples() <= 1);
 
-  SkIRect devClipBounds = args.fClip->getConservativeBounds(
-      args.fRenderTargetContext->width(), args.fRenderTargetContext->height());
   SkPath path;
   args.fShape->asPath(&path);
   std::unique_ptr<GrDrawOp> op = AAHairlineOp::Make(
       args.fContext, std::move(args.fPaint), *args.fViewMatrix, path, args.fShape->style(),
-      devClipBounds, args.fUserStencilSettings);
-  args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
+      *args.fClipConservativeBounds, args.fUserStencilSettings);
+  args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));
   return true;
 }
 

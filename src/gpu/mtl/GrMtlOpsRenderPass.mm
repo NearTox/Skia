@@ -8,7 +8,6 @@
 #include "src/gpu/mtl/GrMtlOpsRenderPass.h"
 
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrFixedClip.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/mtl/GrMtlCommandBuffer.h"
 #include "src/gpu/mtl/GrMtlPipelineState.h"
@@ -28,7 +27,7 @@ GrMtlOpsRenderPass::GrMtlOpsRenderPass(
   this->setupRenderPass(colorInfo, stencilInfo);
 }
 
-GrMtlOpsRenderPass::~GrMtlOpsRenderPass() {}
+GrMtlOpsRenderPass::~GrMtlOpsRenderPass() = default;
 
 void GrMtlOpsRenderPass::precreateCmdEncoder() {
   // For clears, we may not have an associated draw. So we prepare a cmdEncoder that
@@ -117,7 +116,10 @@ bool GrMtlOpsRenderPass::onBindTextures(
   return true;
 }
 
-void GrMtlOpsRenderPass::onClear(const GrFixedClip& clip, const SkPMColor4f& color) {
+void GrMtlOpsRenderPass::onClear(const GrScissorState& scissor, const SkPMColor4f& color) {
+  // Partial clears are not supported
+  SkASSERT(!scissor.enabled());
+
   // Ideally we should never end up here since all clears should either be done as draws or
   // load ops in metal. However, if a client inserts a wait op we need to handle it.
   fRenderPassDesc.colorAttachments[0].clearColor =
@@ -129,8 +131,9 @@ void GrMtlOpsRenderPass::onClear(const GrFixedClip& clip, const SkPMColor4f& col
       fGpu->commandBuffer()->getRenderCommandEncoder(fRenderPassDesc, nullptr, this);
 }
 
-void GrMtlOpsRenderPass::onClearStencilClip(const GrFixedClip& clip, bool insideStencilMask) {
-  SkASSERT(!clip.hasWindowRectangles());
+void GrMtlOpsRenderPass::onClearStencilClip(const GrScissorState& scissor, bool insideStencilMask) {
+  // Partial clears are not supported
+  SkASSERT(!scissor.enabled());
 
   GrStencilAttachment* sb = fRenderTarget->renderTargetPriv().getStencilAttachment();
   // this should only be called internally when we know we have a

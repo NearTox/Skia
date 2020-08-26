@@ -55,7 +55,7 @@ SkPathRef::~SkPathRef() {
 
 static SkPathRef* gEmpty = nullptr;
 
-SkPathRef* SkPathRef::CreateEmpty() {
+SkPathRef* SkPathRef::CreateEmpty() noexcept {
   static SkOnce once;
   once([] {
     gEmpty = new SkPathRef;
@@ -121,7 +121,8 @@ static void transform_dir_and_start(
 
 void SkPathRef::CreateTransformedCopy(
     sk_sp<SkPathRef>* dst, const SkPathRef& src, const SkMatrix& matrix) {
-  SkDEBUGCODE(src.validate();) if (matrix.isIdentity()) {
+  SkDEBUGCODE(src.validate());
+  if (matrix.isIdentity()) {
     if (dst->get() != &src) {
       src.ref();
       dst->reset(const_cast<SkPathRef*>(&src));
@@ -203,7 +204,8 @@ void SkPathRef::CreateTransformedCopy(
 
 void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
   if ((*pathRef)->unique()) {
-    SkDEBUGCODE((*pathRef)->validate();)(*pathRef)->callGenIDChangeListeners();
+    SkDEBUGCODE((*pathRef)->validate());
+    (*pathRef)->callGenIDChangeListeners();
     (*pathRef)->fBoundsIsDirty = true;  // this also invalidates fIsFinite
     (*pathRef)->fGenerationID = 0;
     (*pathRef)->fPoints.rewind();
@@ -222,7 +224,8 @@ void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
 }
 
 bool SkPathRef::operator==(const SkPathRef& ref) const noexcept {
-  SkDEBUGCODE(this->validate();) SkDEBUGCODE(ref.validate());
+  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(ref.validate());
 
   // We explicitly check fSegmentMask as a quick-reject. We could skip it,
   // since it is only a cache of info in the fVerbs, but its a fast way to
@@ -385,8 +388,12 @@ SkPoint* SkPathRef::growForRepeatedVerb(
       break;
     case SkPath::kDone_Verb:
       SkDEBUGFAIL("growForRepeatedVerb called for kDone");
-      // fall through
-    default: SkDEBUGFAIL("default should not be reached"); pCnt = 0;
+      pCnt = 0;
+      break;
+    default:
+      SkDEBUGFAIL("default should not be reached");
+      pCnt = 0;
+      break;
   }
 
   fBoundsIsDirty = true;  // this also invalidates fIsFinite
@@ -400,11 +407,13 @@ SkPoint* SkPathRef::growForRepeatedVerb(
   }
   SkPoint* pts = fPoints.append(pCnt);
 
-  SkDEBUGCODE(this->validate();) return pts;
+  SkDEBUGCODE(this->validate());
+  return pts;
 }
 
 SkPoint* SkPathRef::growForVerb(int /* SkPath::Verb*/ verb, SkScalar weight) noexcept {
-  SkDEBUGCODE(this->validate();) int pCnt;
+  SkDEBUGCODE(this->validate());
+  int pCnt;
   unsigned mask = 0;
   switch (verb) {
     case SkPath::kMove_Verb: pCnt = 1; break;
@@ -427,8 +436,12 @@ SkPoint* SkPathRef::growForVerb(int /* SkPath::Verb*/ verb, SkScalar weight) noe
     case SkPath::kClose_Verb: pCnt = 0; break;
     case SkPath::kDone_Verb:
       SkDEBUGFAIL("growForVerb called for kDone");
-      // fall through
-    default: SkDEBUGFAIL("default is not reached"); pCnt = 0;
+      pCnt = 0;
+      break;
+    default:
+      SkDEBUGFAIL("default is not reached");
+      pCnt = 0;
+      break;
   }
 
   fSegmentMask |= mask;
@@ -442,7 +455,8 @@ SkPoint* SkPathRef::growForVerb(int /* SkPath::Verb*/ verb, SkScalar weight) noe
   }
   SkPoint* pts = fPoints.append(pCnt);
 
-  SkDEBUGCODE(this->validate();) return pts;
+  SkDEBUGCODE(this->validate());
+  return pts;
 }
 
 uint32_t SkPathRef::genID() const noexcept {
@@ -572,9 +586,7 @@ uint8_t SkPathRef::Iter::next(SkPoint pts[4]) noexcept {
       pts[1] = srcPts[0];
       srcPts += 1;
       break;
-    case SkPath::kConic_Verb:
-      fConicWeights += 1;
-      // fall-through
+    case SkPath::kConic_Verb: fConicWeights += 1; [[fallthrough]];
     case SkPath::kQuad_Verb:
       pts[0] = srcPts[-1];
       pts[1] = srcPts[0];

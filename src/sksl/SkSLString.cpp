@@ -33,7 +33,7 @@ void String::appendf(const char* fmt, ...) {
   va_end(args);
 }
 
-void String::reset() { this->clear(); }
+void String::reset() noexcept { this->clear(); }
 
 int String::findLastOf(const char c) const {
   // Rely on find_last_of and remap the output
@@ -182,9 +182,9 @@ bool StringFragment::operator<(StringFragment other) const {
   return fLength < other.fLength;
 }
 
-bool operator==(const char* s1, StringFragment s2) { return s2 == s1; }
+bool operator==(const char* s1, StringFragment s2) noexcept { return s2 == s1; }
 
-bool operator!=(const char* s1, StringFragment s2) { return s2 != s1; }
+bool operator!=(const char* s1, StringFragment s2) noexcept { return s2 != s1; }
 
 String to_string(int32_t value) { return SkSL::String::printf("%d", value); }
 

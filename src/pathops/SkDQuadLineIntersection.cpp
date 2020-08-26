@@ -103,7 +103,7 @@ class LineQuadraticIntersections {
 
   void allowNear(bool allow) noexcept { fAllowNear = allow; }
 
-  void checkCoincident() noexcept {
+  void checkCoincident() {
     int last = fIntersections->used() - 1;
     for (int index = 0; index < last;) {
       double quadMidT = ((*fIntersections)[0][index] + (*fIntersections)[0][index + 1]) / 2;
@@ -126,7 +126,7 @@ class LineQuadraticIntersections {
     }
   }
 
-  int intersectRay(double roots[2]) noexcept {
+  int intersectRay(double roots[2]) {
     /*
         solve by rotating line+quad so line is horizontal, then finding the roots
         set up matrix to rotate quad to x-axis
@@ -175,7 +175,7 @@ class LineQuadraticIntersections {
     return fIntersections->used();
   }
 
-  int horizontalIntersect(double axisIntercept, double roots[2]) noexcept {
+  int horizontalIntersect(double axisIntercept, double roots[2]) {
     double D = fQuad[2].fY;  // f
     double E = fQuad[1].fY;  // e
     double F = fQuad[0].fY;  // d
@@ -230,7 +230,7 @@ class LineQuadraticIntersections {
     return true;
   }
 
-  int verticalIntersect(double axisIntercept, double roots[2]) noexcept {
+  int verticalIntersect(double axisIntercept, double roots[2]) {
     double D = fQuad[2].fX;  // f
     double E = fQuad[1].fX;  // e
     double F = fQuad[0].fX;  // d
@@ -264,7 +264,7 @@ class LineQuadraticIntersections {
 
  protected:
   // add endpoints first to get zero and one t values exactly
-  void addExactEndPoints() noexcept {
+  void addExactEndPoints() {
     for (int qIndex = 0; qIndex < 3; qIndex += 2) {
       double lineT = fLine->exactPoint(fQuad[qIndex]);
       if (lineT < 0) {
@@ -305,7 +305,7 @@ class LineQuadraticIntersections {
     }
   }
 
-  void addExactHorizontalEndPoints(double left, double right, double y) noexcept {
+  void addExactHorizontalEndPoints(double left, double right, double y) {
     for (int qIndex = 0; qIndex < 3; qIndex += 2) {
       double lineT = SkDLine::ExactPointH(fQuad[qIndex], left, right, y);
       if (lineT < 0) {
@@ -331,7 +331,7 @@ class LineQuadraticIntersections {
     this->addLineNearEndPoints();
   }
 
-  void addExactVerticalEndPoints(double top, double bottom, double x) noexcept {
+  void addExactVerticalEndPoints(double top, double bottom, double x) {
     for (int qIndex = 0; qIndex < 3; qIndex += 2) {
       double lineT = SkDLine::ExactPointV(fQuad[qIndex], top, bottom, x);
       if (lineT < 0) {
@@ -367,7 +367,7 @@ class LineQuadraticIntersections {
     return (xy.fY - (*fLine)[0].fY) / dy;
   }
 
-  bool pinTs(double* quadT, double* lineT, SkDPoint* pt, PinTPoint ptSet) noexcept {
+  bool pinTs(double* quadT, double* lineT, SkDPoint* pt, PinTPoint ptSet) {
     if (!approximately_one_or_less_double(*lineT)) {
       return false;
     }
@@ -429,7 +429,7 @@ int SkIntersections::intersect(const SkDQuad& quad, const SkDLine& line) {
   return q.intersect();
 }
 
-int SkIntersections::intersectRay(const SkDQuad& quad, const SkDLine& line) noexcept {
+int SkIntersections::intersectRay(const SkDQuad& quad, const SkDLine& line) {
   LineQuadraticIntersections q(quad, line, this);
   fUsed = q.intersectRay(fT[0]);
   for (int index = 0; index < fUsed; ++index) {
@@ -438,22 +438,22 @@ int SkIntersections::intersectRay(const SkDQuad& quad, const SkDLine& line) noex
   return fUsed;
 }
 
-int SkIntersections::HorizontalIntercept(const SkDQuad& quad, SkScalar y, double* roots) noexcept {
+int SkIntersections::HorizontalIntercept(const SkDQuad& quad, SkScalar y, double* roots) {
   LineQuadraticIntersections q(quad);
   return q.horizontalIntersect(y, roots);
 }
 
-int SkIntersections::VerticalIntercept(const SkDQuad& quad, SkScalar x, double* roots) noexcept {
+int SkIntersections::VerticalIntercept(const SkDQuad& quad, SkScalar x, double* roots) {
   LineQuadraticIntersections q(quad);
   return q.verticalIntersect(x, roots);
 }
 
 // SkDQuad accessors to Intersection utilities
 
-int SkDQuad::horizontalIntersect(double yIntercept, double roots[2]) const noexcept {
+int SkDQuad::horizontalIntersect(double yIntercept, double roots[2]) const {
   return SkIntersections::HorizontalIntercept(*this, yIntercept, roots);
 }
 
-int SkDQuad::verticalIntersect(double xIntercept, double roots[2]) const noexcept {
+int SkDQuad::verticalIntersect(double xIntercept, double roots[2]) const {
   return SkIntersections::VerticalIntercept(*this, xIntercept, roots);
 }

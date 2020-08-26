@@ -67,7 +67,7 @@ namespace {
 class SkDebugfStream final : public SkWStream {
   size_t fBytesWritten = 0;
 
-  bool write(const void* buffer, size_t size) override {
+  bool write(const void* buffer, size_t size) noexcept override {
     SkDebugf("%.*s", size, buffer);
     fBytesWritten += size;
     return true;
@@ -259,6 +259,7 @@ static void write_one_instruction(Val id, const I& inst, SkWStream* o, Fs... fs)
     case Op::select: write(o, V{id}, "=", op, V{x}, V{y}, V{z}, fs(id)...); break;
     case Op::pack: write(o, V{id}, "=", op, V{x}, V{y}, Shift{immz}, fs(id)...); break;
 
+    case Op::ceil: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
     case Op::floor: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
     case Op::to_f32: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
     case Op::trunc: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
@@ -380,6 +381,7 @@ void Program::dump(SkWStream* o) const {
       case Op::select: write(o, R{d}, "=", op, R{x}, R{y}, R{z}); break;
       case Op::pack: write(o, R{d}, "=", op, R{x}, R{y}, Shift{immz}); break;
 
+      case Op::ceil: write(o, R{d}, "=", op, R{x}); break;
       case Op::floor: write(o, R{d}, "=", op, R{x}); break;
       case Op::to_f32: write(o, R{d}, "=", op, R{x}); break;
       case Op::trunc: write(o, R{d}, "=", op, R{x}); break;
@@ -656,7 +658,7 @@ F32 Builder::splat(float f) {
   return {this, push(Op::splat, NA, NA, NA, bits)};
 }
 
-bool fma_supported() noexcept {
+bool fma_supported() {
   static const bool supported =
 #if defined(SK_CPU_X86)
       SkCpu::Supports(SkCpu::HSW);
@@ -777,6 +779,9 @@ F32 Builder::approx_pow2(F32 x) {
 }
 
 F32 Builder::approx_powf(F32 x, F32 y) {
+  // TODO: assert this instead?  Sometimes x is very slightly negative.  See skia:10210.
+  x = max(0.0f, x);
+
   auto is_x = bit_or(eq(x, 0.0f), eq(x, 1.0f));
   return select(is_x, x, approx_pow2(mul(approx_log2(x), y)));
 }
@@ -1151,6 +1156,12 @@ I32 Builder::pack(I32 x, I32 y, int bits) {
   return {this, this->push(Op::pack, x.id, y.id, NA, 0, bits)};
 }
 
+F32 Builder::ceil(F32 x) {
+  if (float X; this->allImm(x.id, &X)) {
+    return splat(ceilf(X));
+  }
+  return {this, this->push(Op::ceil, x.id)};
+}
 F32 Builder::floor(F32 x) {
   if (float X; this->allImm(x.id, &X)) {
     return splat(floorf(X));
@@ -1302,7 +1313,7 @@ static void set_sat(skvm::F32* r, skvm::F32* g, skvm::F32* b, skvm::F32 s) {
   // Map min channel to 0, max channel to s, and scale the middle proportionally.
   auto scale = [&](auto c) {
     // TODO: better to divide and check for non-finite result?
-    return select(sat /*== 0.0f*/->eq(sat, 0.0f), 0.0f, ((c - mn) * s) / sat);
+    return select(sat == 0.0f, 0.0f, ((c - mn) * s) / sat);
   };
   *r = scale(*r);
   *g = scale(*g);
@@ -1359,24 +1370,25 @@ Color Builder::blend(SkBlendMode mode, Color src, Color dst) {
   };
 
   switch (mode) {
-    default: SkASSERT(false); /*but also, for safety, fallthrough*/
+    default: SkASSERT(false); [[fallthrough]]; /*but also, for safety, fallthrough*/
 
     case SkBlendMode::kClear: return {splat(0.0f), splat(0.0f), splat(0.0f), splat(0.0f)};
 
     case SkBlendMode::kSrc: return src;
     case SkBlendMode::kDst: return dst;
 
-    case SkBlendMode::kDstOver: std::swap(src, dst);  // fall-through
+    case SkBlendMode::kDstOver: std::swap(src, dst); [[fallthrough]];
     case SkBlendMode::kSrcOver:
       return apply_rgba([&](auto s, auto d) { return mad(d, 1 - src.a, s); });
 
-    case SkBlendMode::kDstIn: std::swap(src, dst);  // fall-through
+    case SkBlendMode::kDstIn: std::swap(src, dst); [[fallthrough]];
     case SkBlendMode::kSrcIn: return apply_rgba([&](auto s, auto d) { return s * dst.a; });
 
-    case SkBlendMode::kDstOut: std::swap(src, dst);  // fall-through
+    case SkBlendMode::kDstOut: std::swap(src, dst); [[fallthrough]];
+
     case SkBlendMode::kSrcOut: return apply_rgba([&](auto s, auto d) { return s * (1 - dst.a); });
 
-    case SkBlendMode::kDstATop: std::swap(src, dst);  // fall-through
+    case SkBlendMode::kDstATop: std::swap(src, dst); [[fallthrough]];
     case SkBlendMode::kSrcATop:
       return apply_rgba([&](auto s, auto d) { return mma(s, dst.a, d, 1 - src.a); });
 
@@ -1521,7 +1533,7 @@ Color Builder::blend(SkBlendMode mode, Color src, Color dst) {
 // The table is just those "is used by ..." I wrote out above in order,
 // and the index tracks where an Instruction's span of users starts, table[index[id]].
 // The span continues up until the start of the next Instruction, table[index[id+1]].
-SkSpan<const Val> Usage::operator[](Val id) const {
+SkSpan<const Val> Usage::operator[](Val id) const noexcept {
   int begin = fIndex[id];
   int end = fIndex[id + 1];
   return SkMakeSpan(fTable.data() + begin, end - begin);
@@ -1605,7 +1617,7 @@ static Mod mod(int imm) noexcept {
   return Mod::FourByteImm;
 }
 
-static int imm_bytes(Mod mod) noexcept {
+static constexpr int imm_bytes(Mod mod) noexcept {
   switch (mod) {
     case Mod::Indirect: return 0;
     case Mod::OneByteImm: return 1;
@@ -1777,42 +1789,80 @@ void Assembler::movb(GP64 dst, Operand x) noexcept { this->op(0x8A, x, dst); }
 void Assembler::movzbq(GP64 dst, Operand x) noexcept { this->op(0xB60F, x, dst); }
 void Assembler::movzwq(GP64 dst, Operand x) noexcept { this->op(0xB70F, x, dst); }
 
-void Assembler::vpaddd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xfe, dst, x, y); }
-void Assembler::vpsubd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xfa, dst, x, y); }
-void Assembler::vpmulld(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x40, dst, x, y); }
+void Assembler::vpaddd(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0xfe, dst, x, y);
+}
+void Assembler::vpsubd(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0xfa, dst, x, y);
+}
+void Assembler::vpmulld(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0x40, dst, x, y);
+}
 
-void Assembler::vpsubw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xf9, dst, x, y); }
-void Assembler::vpmullw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xd5, dst, x, y); }
+void Assembler::vpsubw(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0xf9, dst, x, y);
+}
+void Assembler::vpmullw(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0xd5, dst, x, y);
+}
 
-void Assembler::vpand(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xdb, dst, x, y); }
-void Assembler::vpor(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xeb, dst, x, y); }
-void Assembler::vpxor(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xef, dst, x, y); }
-void Assembler::vpandn(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xdf, dst, x, y); }
+void Assembler::vpand(Ymm dst, Ymm x, Operand y) noexcept { this->op(0x66, 0x0f, 0xdb, dst, x, y); }
+void Assembler::vpor(Ymm dst, Ymm x, Operand y) noexcept { this->op(0x66, 0x0f, 0xeb, dst, x, y); }
+void Assembler::vpxor(Ymm dst, Ymm x, Operand y) noexcept { this->op(0x66, 0x0f, 0xef, dst, x, y); }
+void Assembler::vpandn(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0xdf, dst, x, y);
+}
 
-void Assembler::vaddps(Ymm dst, Ymm x, Operand y) { this->op(0, 0x0f, 0x58, dst, x, y); }
-void Assembler::vsubps(Ymm dst, Ymm x, Operand y) { this->op(0, 0x0f, 0x5c, dst, x, y); }
-void Assembler::vmulps(Ymm dst, Ymm x, Operand y) { this->op(0, 0x0f, 0x59, dst, x, y); }
-void Assembler::vdivps(Ymm dst, Ymm x, Operand y) { this->op(0, 0x0f, 0x5e, dst, x, y); }
-void Assembler::vminps(Ymm dst, Ymm x, Operand y) { this->op(0, 0x0f, 0x5d, dst, x, y); }
-void Assembler::vmaxps(Ymm dst, Ymm x, Operand y) { this->op(0, 0x0f, 0x5f, dst, x, y); }
+void Assembler::vaddps(Ymm dst, Ymm x, Operand y) noexcept { this->op(0, 0x0f, 0x58, dst, x, y); }
+void Assembler::vsubps(Ymm dst, Ymm x, Operand y) noexcept { this->op(0, 0x0f, 0x5c, dst, x, y); }
+void Assembler::vmulps(Ymm dst, Ymm x, Operand y) noexcept { this->op(0, 0x0f, 0x59, dst, x, y); }
+void Assembler::vdivps(Ymm dst, Ymm x, Operand y) noexcept { this->op(0, 0x0f, 0x5e, dst, x, y); }
+void Assembler::vminps(Ymm dst, Ymm x, Operand y) noexcept { this->op(0, 0x0f, 0x5d, dst, x, y); }
+void Assembler::vmaxps(Ymm dst, Ymm x, Operand y) noexcept { this->op(0, 0x0f, 0x5f, dst, x, y); }
 
-void Assembler::vfmadd132ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x98, dst, x, y); }
-void Assembler::vfmadd213ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0xa8, dst, x, y); }
-void Assembler::vfmadd231ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0xb8, dst, x, y); }
+void Assembler::vfmadd132ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0x98, dst, x, y);
+}
+void Assembler::vfmadd213ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0xa8, dst, x, y);
+}
+void Assembler::vfmadd231ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0xb8, dst, x, y);
+}
 
-void Assembler::vfmsub132ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x9a, dst, x, y); }
-void Assembler::vfmsub213ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0xaa, dst, x, y); }
-void Assembler::vfmsub231ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0xba, dst, x, y); }
+void Assembler::vfmsub132ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0x9a, dst, x, y);
+}
+void Assembler::vfmsub213ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0xaa, dst, x, y);
+}
+void Assembler::vfmsub231ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0xba, dst, x, y);
+}
 
-void Assembler::vfnmadd132ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x9c, dst, x, y); }
-void Assembler::vfnmadd213ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0xac, dst, x, y); }
-void Assembler::vfnmadd231ps(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0xbc, dst, x, y); }
+void Assembler::vfnmadd132ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0x9c, dst, x, y);
+}
+void Assembler::vfnmadd213ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0xac, dst, x, y);
+}
+void Assembler::vfnmadd231ps(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0xbc, dst, x, y);
+}
 
-void Assembler::vpackusdw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x2b, dst, x, y); }
-void Assembler::vpackuswb(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x67, dst, x, y); }
+void Assembler::vpackusdw(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0x2b, dst, x, y);
+}
+void Assembler::vpackuswb(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0x67, dst, x, y);
+}
 
-void Assembler::vpcmpeqd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x76, dst, x, y); }
-void Assembler::vpcmpgtd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x66, dst, x, y); }
+void Assembler::vpcmpeqd(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0x76, dst, x, y);
+}
+void Assembler::vpcmpgtd(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x0f, 0x66, dst, x, y);
+}
 
 void Assembler::imm_byte_after_operand(const Operand& operand, int imm) noexcept {
   // When we've embedded a label displacement in the middle of an instruction,
@@ -1827,56 +1877,56 @@ void Assembler::imm_byte_after_operand(const Operand& operand, int imm) noexcept
   this->byte(imm);
 }
 
-void Assembler::vcmpps(Ymm dst, Ymm x, Operand y, int imm) {
+void Assembler::vcmpps(Ymm dst, Ymm x, Operand y, int imm) noexcept {
   this->op(0, 0x0f, 0xc2, dst, x, y);
   this->imm_byte_after_operand(y, imm);
 }
 
-void Assembler::vpblendvb(Ymm dst, Ymm x, Operand y, Ymm z) {
+void Assembler::vpblendvb(Ymm dst, Ymm x, Operand y, Ymm z) noexcept {
   this->op(0x66, 0x3a0f, 0x4c, dst, x, y);
   this->imm_byte_after_operand(y, z << 4);
 }
 
 // Shift instructions encode their opcode extension as "dst", dst as x, and x as y.
-void Assembler::vpslld(Ymm dst, Ymm x, int imm) {
+void Assembler::vpslld(Ymm dst, Ymm x, int imm) noexcept {
   this->op(0x66, 0x0f, 0x72, (Ymm)6, dst, x);
   this->byte(imm);
 }
-void Assembler::vpsrld(Ymm dst, Ymm x, int imm) {
+void Assembler::vpsrld(Ymm dst, Ymm x, int imm) noexcept {
   this->op(0x66, 0x0f, 0x72, (Ymm)2, dst, x);
   this->byte(imm);
 }
-void Assembler::vpsrad(Ymm dst, Ymm x, int imm) {
+void Assembler::vpsrad(Ymm dst, Ymm x, int imm) noexcept {
   this->op(0x66, 0x0f, 0x72, (Ymm)4, dst, x);
   this->byte(imm);
 }
-void Assembler::vpsrlw(Ymm dst, Ymm x, int imm) {
+void Assembler::vpsrlw(Ymm dst, Ymm x, int imm) noexcept {
   this->op(0x66, 0x0f, 0x71, (Ymm)2, dst, x);
   this->byte(imm);
 }
 
-void Assembler::vpermq(Ymm dst, Operand x, int imm) {
+void Assembler::vpermq(Ymm dst, Operand x, int imm) noexcept {
   // A bit unusual among the instructions we use, this is 64-bit operation, so we set W.
   this->op(0x66, 0x3a0f, 0x00, dst, x, W1);
   this->imm_byte_after_operand(x, imm);
 }
 
-void Assembler::vroundps(Ymm dst, Operand x, Rounding imm) {
+void Assembler::vroundps(Ymm dst, Operand x, Rounding imm) noexcept {
   this->op(0x66, 0x3a0f, 0x08, dst, x);
   this->imm_byte_after_operand(x, imm);
 }
 
-void Assembler::vmovdqa(Ymm dst, Operand src) { this->op(0x66, 0x0f, 0x6f, dst, src); }
-void Assembler::vmovups(Ymm dst, Operand src) { this->op(0, 0x0f, 0x10, dst, src); }
-void Assembler::vmovups(Operand dst, Ymm src) { this->op(0, 0x0f, 0x11, src, dst); }
-void Assembler::vmovups(Operand dst, Xmm src) { this->op(0, 0x0f, 0x11, src, dst); }
+void Assembler::vmovdqa(Ymm dst, Operand src) noexcept { this->op(0x66, 0x0f, 0x6f, dst, src); }
+void Assembler::vmovups(Ymm dst, Operand src) noexcept { this->op(0, 0x0f, 0x10, dst, src); }
+void Assembler::vmovups(Operand dst, Ymm src) noexcept { this->op(0, 0x0f, 0x11, src, dst); }
+void Assembler::vmovups(Operand dst, Xmm src) noexcept { this->op(0, 0x0f, 0x11, src, dst); }
 
-void Assembler::vcvtdq2ps(Ymm dst, Operand x) { this->op(0, 0x0f, 0x5b, dst, x); }
-void Assembler::vcvttps2dq(Ymm dst, Operand x) { this->op(0xf3, 0x0f, 0x5b, dst, x); }
-void Assembler::vcvtps2dq(Ymm dst, Operand x) { this->op(0x66, 0x0f, 0x5b, dst, x); }
-void Assembler::vsqrtps(Ymm dst, Operand x) { this->op(0, 0x0f, 0x51, dst, x); }
+void Assembler::vcvtdq2ps(Ymm dst, Operand x) noexcept { this->op(0, 0x0f, 0x5b, dst, x); }
+void Assembler::vcvttps2dq(Ymm dst, Operand x) noexcept { this->op(0xf3, 0x0f, 0x5b, dst, x); }
+void Assembler::vcvtps2dq(Ymm dst, Operand x) noexcept { this->op(0x66, 0x0f, 0x5b, dst, x); }
+void Assembler::vsqrtps(Ymm dst, Operand x) noexcept { this->op(0, 0x0f, 0x51, dst, x); }
 
-int Assembler::disp19(Label* l) {
+int Assembler::disp19(Label* l) noexcept {
   SkASSERT(l->kind == Label::NotYetSet || l->kind == Label::ARMDisp19);
   int here = (int)this->size();
   l->kind = Label::ARMDisp19;
@@ -1885,7 +1935,7 @@ int Assembler::disp19(Label* l) {
   return (l->offset - here) / 4;
 }
 
-int Assembler::disp32(Label* l) {
+int Assembler::disp32(Label* l) noexcept {
   SkASSERT(l->kind == Label::NotYetSet || l->kind == Label::X86Disp32);
   int here = (int)this->size();
   l->kind = Label::X86Disp32;
@@ -1894,7 +1944,7 @@ int Assembler::disp32(Label* l) {
   return l->offset - (here + 4);
 }
 
-void Assembler::op(int prefix, int map, int opcode, int dst, int x, Operand y, W w, L l) {
+void Assembler::op(int prefix, int map, int opcode, int dst, int x, Operand y, W w, L l) noexcept {
   switch (y.kind) {
     case Operand::REG: {
       VEX v = vex(w, dst >> 3, 0, y.reg >> 3, map, x, l, prefix);
@@ -1936,13 +1986,15 @@ void Assembler::op(int prefix, int map, int opcode, int dst, int x, Operand y, W
   }
 }
 
-void Assembler::vpshufb(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x00, dst, x, y); }
+void Assembler::vpshufb(Ymm dst, Ymm x, Operand y) noexcept {
+  this->op(0x66, 0x380f, 0x00, dst, x, y);
+}
 
-void Assembler::vptest(Ymm x, Operand y) { this->op(0x66, 0x380f, 0x17, x, y); }
+void Assembler::vptest(Ymm x, Operand y) noexcept { this->op(0x66, 0x380f, 0x17, x, y); }
 
-void Assembler::vbroadcastss(Ymm dst, Operand y) { this->op(0x66, 0x380f, 0x18, dst, y); }
+void Assembler::vbroadcastss(Ymm dst, Operand y) noexcept { this->op(0x66, 0x380f, 0x18, dst, y); }
 
-void Assembler::jump(uint8_t condition, Label* l) {
+void Assembler::jump(uint8_t condition, Label* l) noexcept {
   // These conditional jumps can be either 2 bytes (short) or 6 bytes (near):
   //    7?     one-byte-disp
   //    0F 8? four-byte-disp
@@ -1951,50 +2003,50 @@ void Assembler::jump(uint8_t condition, Label* l) {
   this->byte(condition);
   this->word(this->disp32(l));
 }
-void Assembler::je(Label* l) { this->jump(0x84, l); }
-void Assembler::jne(Label* l) { this->jump(0x85, l); }
-void Assembler::jl(Label* l) { this->jump(0x8c, l); }
-void Assembler::jc(Label* l) { this->jump(0x82, l); }
+void Assembler::je(Label* l) noexcept { this->jump(0x84, l); }
+void Assembler::jne(Label* l) noexcept { this->jump(0x85, l); }
+void Assembler::jl(Label* l) noexcept { this->jump(0x8c, l); }
+void Assembler::jc(Label* l) noexcept { this->jump(0x82, l); }
 
-void Assembler::jmp(Label* l) {
+void Assembler::jmp(Label* l) noexcept {
   // Like above in jump(), we could use 8-bit displacement here, but always use 32-bit.
   this->byte(0xe9);
   this->word(this->disp32(l));
 }
 
-void Assembler::vpmovzxwd(Ymm dst, Operand src) { this->op(0x66, 0x380f, 0x33, dst, src); }
-void Assembler::vpmovzxbd(Ymm dst, Operand src) { this->op(0x66, 0x380f, 0x31, dst, src); }
+void Assembler::vpmovzxwd(Ymm dst, Operand src) noexcept { this->op(0x66, 0x380f, 0x33, dst, src); }
+void Assembler::vpmovzxbd(Ymm dst, Operand src) noexcept { this->op(0x66, 0x380f, 0x31, dst, src); }
 
-void Assembler::vmovq(Operand dst, Xmm src) { this->op(0x66, 0x0f, 0xd6, src, dst); }
+void Assembler::vmovq(Operand dst, Xmm src) noexcept { this->op(0x66, 0x0f, 0xd6, src, dst); }
 
-void Assembler::vmovd(Operand dst, Xmm src) { this->op(0x66, 0x0f, 0x7e, src, dst); }
-void Assembler::vmovd(Xmm dst, Operand src) { this->op(0x66, 0x0f, 0x6e, dst, src); }
+void Assembler::vmovd(Operand dst, Xmm src) noexcept { this->op(0x66, 0x0f, 0x7e, src, dst); }
+void Assembler::vmovd(Xmm dst, Operand src) noexcept { this->op(0x66, 0x0f, 0x6e, dst, src); }
 
-void Assembler::vpinsrw(Xmm dst, Xmm src, Operand y, int imm) {
+void Assembler::vpinsrw(Xmm dst, Xmm src, Operand y, int imm) noexcept {
   this->op(0x66, 0x0f, 0xc4, dst, src, y);
   this->imm_byte_after_operand(y, imm);
 }
-void Assembler::vpinsrb(Xmm dst, Xmm src, Operand y, int imm) {
+void Assembler::vpinsrb(Xmm dst, Xmm src, Operand y, int imm) noexcept {
   this->op(0x66, 0x3a0f, 0x20, dst, src, y);
   this->imm_byte_after_operand(y, imm);
 }
 
-void Assembler::vextracti128(Operand dst, Ymm src, int imm) {
+void Assembler::vextracti128(Operand dst, Ymm src, int imm) noexcept {
   this->op(0x66, 0x3a0f, 0x39, src, dst);
   SkASSERT(dst.kind != Operand::LABEL);
   this->byte(imm);
 }
-void Assembler::vpextrd(Operand dst, Xmm src, int imm) {
+void Assembler::vpextrd(Operand dst, Xmm src, int imm) noexcept {
   this->op(0x66, 0x3a0f, 0x16, src, dst);
   SkASSERT(dst.kind != Operand::LABEL);
   this->byte(imm);
 }
-void Assembler::vpextrw(Operand dst, Xmm src, int imm) {
+void Assembler::vpextrw(Operand dst, Xmm src, int imm) noexcept {
   this->op(0x66, 0x3a0f, 0x15, src, dst);
   SkASSERT(dst.kind != Operand::LABEL);
   this->byte(imm);
 }
-void Assembler::vpextrb(Operand dst, Xmm src, int imm) {
+void Assembler::vpextrb(Operand dst, Xmm src, int imm) noexcept {
   this->op(0x66, 0x3a0f, 0x14, src, dst);
   SkASSERT(dst.kind != Operand::LABEL);
   this->byte(imm);
@@ -2133,15 +2185,15 @@ void Assembler::subs(X d, X n, int imm12) noexcept {
   this->op(0b1'1'1'10001'00'000000000000, n, d, (imm12 & 12_mask) << 10);
 }
 
-void Assembler::b(Condition cond, Label* l) {
+void Assembler::b(Condition cond, Label* l) noexcept {
   const int imm19 = this->disp19(l);
   this->op(0b0101010'0'00000000000000, (X)0, (V)cond, (imm19 & 19_mask) << 5);
 }
-void Assembler::cbz(X t, Label* l) {
+void Assembler::cbz(X t, Label* l) noexcept {
   const int imm19 = this->disp19(l);
   this->op(0b1'011010'0'00000000000000, (X)0, t, (imm19 & 19_mask) << 5);
 }
-void Assembler::cbnz(X t, Label* l) {
+void Assembler::cbnz(X t, Label* l) noexcept {
   const int imm19 = this->disp19(l);
   this->op(0b1'011010'1'00000000000000, (X)0, t, (imm19 & 19_mask) << 5);
 }
@@ -2170,7 +2222,7 @@ void Assembler::fmovs(X dst, V src) noexcept {
   this->op(0b0'0'0'11110'00'1'00'110'000000, src, dst);
 }
 
-void Assembler::ldrq(V dst, Label* l) {
+void Assembler::ldrq(V dst, Label* l) noexcept {
   const int imm19 = this->disp19(l);
   this->op(0b10'011'1'00'00000000000000, (V)0, dst, (imm19 & 19_mask) << 5);
 }
@@ -2435,6 +2487,7 @@ void Program::setupLLVM(
             llvm::Intrinsic::fma, {F32}, {b->CreateFNeg(F(vals[x])), F(vals[y]), F(vals[z])}));
         break;
 
+      case Op::ceil: vals[i] = I(b->CreateUnaryIntrinsic(llvm::Intrinsic::ceil, F(vals[x]))); break;
       case Op::floor:
         vals[i] = I(b->CreateUnaryIntrinsic(llvm::Intrinsic::floor, F(vals[x])));
         break;
@@ -2712,7 +2765,7 @@ Program::Program(
 }
 
 std::vector<InterpreterInstruction> Program::instructions() const { return fImpl->instructions; }
-int Program::nargs() const noexcept { return (int)fImpl->strides.size(); }  // namespace skvm
+int Program::nargs() const noexcept { return (int)fImpl->strides.size(); }
 int Program::nregs() const noexcept { return fImpl->regs; }
 int Program::loop() const noexcept { return fImpl->loop; }
 bool Program::empty() const noexcept { return fImpl->instructions.empty(); }
@@ -3377,6 +3430,14 @@ bool Program::jit(
       case Op::pack:
         a->vpslld(dst(y != x ? y : NA), r(y), immz);
         a->vpor(dst(), dst(), any(x));
+        break;
+
+      case Op::ceil:
+        if (in_reg(x)) {
+          a->vroundps(dst(x), r(x), Assembler::CEIL);
+        } else {
+          a->vroundps(dst(), any(x), Assembler::CEIL);
+        }
         break;
 
       case Op::floor:

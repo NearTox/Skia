@@ -116,7 +116,7 @@ sk_sp<sksg::RenderNode> CompositionBuilder::build(const AnimationBuilder& abuild
   LayerBuilder* prev_layer = nullptr;
   for (auto& lbuilder : fLayerBuilders) {
     if (auto layer = lbuilder.buildRenderTree(abuilder, this, prev_layer)) {
-      layers.emplace_back(std::move(layer));
+      layers.push_back(std::move(layer));
     }
     prev_layer = &lbuilder;
   }

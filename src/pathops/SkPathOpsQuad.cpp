@@ -82,11 +82,11 @@ bool SkDQuad::hullIntersects(const SkDQuad& q2, bool* isLinear) const noexcept {
   return true;
 }
 
-bool SkDQuad::hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept {
+bool SkDQuad::hullIntersects(const SkDConic& conic, bool* isLinear) const {
   return conic.hullIntersects(*this, isLinear);
 }
 
-bool SkDQuad::hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept {
+bool SkDQuad::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
   return cubic.hullIntersects(*this, isLinear);
 }
 
@@ -398,16 +398,16 @@ void SkDQuad::SetABC(const double* quad, double* a, double* b, double* c) noexce
   *b -= *c;          // b =     2*B - 2*C
 }
 
-int SkTQuad::intersectRay(SkIntersections* i, const SkDLine& line) const noexcept {
+int SkTQuad::intersectRay(SkIntersections* i, const SkDLine& line) const {
   return i->intersectRay(fQuad, line);
 }
 
-bool SkTQuad::hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept {
+bool SkTQuad::hullIntersects(const SkDConic& conic, bool* isLinear) const {
   return conic.hullIntersects(fQuad, isLinear);
 }
 
-bool SkTQuad::hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept {
+bool SkTQuad::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
   return cubic.hullIntersects(fQuad, isLinear);
 }
 
-void SkTQuad::setBounds(SkDRect* rect) const noexcept { rect->setBounds(fQuad); }
+void SkTQuad::setBounds(SkDRect* rect) const { rect->setBounds(fQuad); }

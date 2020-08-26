@@ -374,7 +374,7 @@ SkPngEncoder::SkPngEncoder(std::unique_ptr<SkPngEncoderMgr> encoderMgr, const Sk
     : INHERITED(src, encoderMgr->pngBytesPerPixel() * src.width()),
       fEncoderMgr(std::move(encoderMgr)) {}
 
-SkPngEncoder::~SkPngEncoder() {}
+SkPngEncoder::~SkPngEncoder() = default;
 
 bool SkPngEncoder::onEncodeRows(int numRows) {
   if (setjmp(png_jmpbuf(fEncoderMgr->pngPtr()))) {

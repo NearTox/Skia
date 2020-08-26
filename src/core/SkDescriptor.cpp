@@ -19,7 +19,7 @@ std::unique_ptr<SkDescriptor> SkDescriptor::Alloc(size_t length) {
   return std::unique_ptr<SkDescriptor>(new (allocation) SkDescriptor{});
 }
 
-void SkDescriptor::operator delete(void* p) { ::operator delete(p); }
+void SkDescriptor::operator delete(void* p) noexcept { ::operator delete(p); }
 void* SkDescriptor::operator new(size_t) {
   SK_ABORT("Descriptors are created with placement new.");
 }

@@ -29,7 +29,7 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
  public:
   using CoverageType = GrCCAtlas::CoverageType;
 
-  const char* name() const final { return "CCPR"; }
+  const char* name() const noexcept final { return "CCPR"; }
 
   static bool IsSupported(const GrCaps&, CoverageType* = nullptr);
 
@@ -60,7 +60,8 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
   }
 
   std::unique_ptr<GrFragmentProcessor> makeClipProcessor(
-      uint32_t oplistID, const SkPath& deviceSpacePath, const SkIRect& accessRect, const GrCaps&);
+      std::unique_ptr<GrFragmentProcessor> inputFP, uint32_t opsTaskID,
+      const SkPath& deviceSpacePath, const SkIRect& accessRect, const GrCaps& caps);
 
   // GrOnFlushCallbackObject overrides.
   void preFlush(GrOnFlushResourceProvider*, const uint32_t* opsTaskIDs, int numOpsTaskIDs) override;

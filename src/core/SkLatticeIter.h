@@ -22,11 +22,11 @@ class SK_SPI SkLatticeIter {
  public:
   static bool Valid(int imageWidth, int imageHeight, const SkCanvas::Lattice& lattice);
 
-  SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst) noexcept;
+  SkLatticeIter(const SkCanvas::Lattice& lattice, const SkRect& dst);
 
-  static bool Valid(int imageWidth, int imageHeight, const SkIRect& center) noexcept;
+  static bool Valid(int imageWidth, int imageHeight, const SkIRect& center);
 
-  SkLatticeIter(int imageWidth, int imageHeight, const SkIRect& center, const SkRect& dst) noexcept;
+  SkLatticeIter(int imageWidth, int imageHeight, const SkIRect& center, const SkRect& dst);
 
   /**
    *  While it returns true, use src/dst to draw the image/bitmap. Optional parameters
@@ -48,12 +48,12 @@ class SK_SPI SkLatticeIter {
   /**
    *  Apply a matrix to the dst points.
    */
-  void mapDstScaleTranslate(const SkMatrix& matrix) noexcept;
+  void mapDstScaleTranslate(const SkMatrix& matrix);
 
   /**
    *  Returns the number of rects that will actually be drawn.
    */
-  int numRectsToDraw() const noexcept { return fNumRectsToDraw; }
+  int numRectsToDraw() const { return fNumRectsToDraw; }
 
  private:
   SkTArray<int> fSrcX;

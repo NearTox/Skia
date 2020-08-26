@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLDualIntervalGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLDualIntervalGradientColorizer() noexcept = default;
+  GrGLSLDualIntervalGradientColorizer() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrDualIntervalGradientColorizer& _outer =
@@ -45,9 +45,17 @@ class GrGLSLDualIntervalGradientColorizer : public GrGLSLFragmentProcessor {
     thresholdVar = args.fUniformHandler->addUniform(
         &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "threshold");
     fragBuilder->codeAppendf(
-        "half t = %s.x;\nfloat4 scale, bias;\nif (t < %s) {\n    scale = %s;\n    bias = "
-        "%s;\n} else {\n    scale = %s;\n    bias = %s;\n}\n%s = half4(float(t) * scale + "
-        "bias);\n",
+        R"SkSL(half t = %s.x;
+float4 scale, bias;
+if (t < %s) {
+    scale = %s;
+    bias = %s;
+} else {
+    scale = %s;
+    bias = %s;
+}
+%s = half4(float(t) * scale + bias);
+)SkSL",
         args.fInputColor, args.fUniformHandler->getUniformCStr(thresholdVar),
         args.fUniformHandler->getUniformCStr(scale01Var),
         args.fUniformHandler->getUniformCStr(bias01Var),
@@ -101,7 +109,7 @@ GrGLSLFragmentProcessor* GrDualIntervalGradientColorizer::onCreateGLSLInstance()
   return new GrGLSLDualIntervalGradientColorizer();
 }
 void GrDualIntervalGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrDualIntervalGradientColorizer& that = other.cast<GrDualIntervalGradientColorizer>();
   (void)that;
@@ -113,7 +121,7 @@ bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other
   return true;
 }
 GrDualIntervalGradientColorizer::GrDualIntervalGradientColorizer(
-    const GrDualIntervalGradientColorizer& src) noexcept
+    const GrDualIntervalGradientColorizer& src)
     : INHERITED(kGrDualIntervalGradientColorizer_ClassID, src.optimizationFlags()),
       scale01(src.scale01),
       bias01(src.bias01),

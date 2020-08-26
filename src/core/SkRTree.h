@@ -68,7 +68,7 @@ class SkRTree : public SkBBoxHierarchy {
   Branch bulkLoad(std::vector<Branch>* branches, int level = 0);
 
   // How many times will bulkLoad() call allocateNodeAtLevel()?
-  static int CountNodes(int branches) noexcept;
+  static int CountNodes(int branches);
 
   Node* allocateNodeAtLevel(uint16_t level);
 

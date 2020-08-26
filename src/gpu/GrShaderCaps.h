@@ -74,8 +74,6 @@ class GrShaderCaps : public SkRefCnt {
 
   bool sampleMaskSupport() const noexcept { return fSampleMaskSupport; }
 
-  bool tessellationSupport() const noexcept { return fTessellationSupport; }
-
   bool externalTextureSupport() const noexcept { return fExternalTextureSupport; }
 
   bool vertexIDSupport() const noexcept { return fVertexIDSupport; }
@@ -183,6 +181,10 @@ class GrShaderCaps : public SkRefCnt {
   // http://skbug.com/8921
   bool canOnlyUseSampleMaskWithStencil() const noexcept { return fCanOnlyUseSampleMaskWithStencil; }
 
+  // ANGLE disallows do loops altogether, and we're seeing crashes on Tegra3 with do loops in at
+  // least some cases.
+  bool canUseDoLoops() const noexcept { return fCanUseDoLoops; }
+
   // Returns the string of an extension that must be enabled in the shader to support
   // derivatives. If nullptr is returned then no extension needs to be enabled. Before calling
   // this function, the caller should check that shaderDerivativeSupport exists.
@@ -254,6 +256,11 @@ class GrShaderCaps : public SkRefCnt {
 
   int maxFragmentSamplers() const noexcept { return fMaxFragmentSamplers; }
 
+  // Maximum number of segments a tessellation edge can be divided into.
+  int maxTessellationSegments() const noexcept { return fMaxTessellationSegments; }
+
+  bool tessellationSupport() const noexcept { return SkToBool(fMaxTessellationSegments); }
+
   bool textureSwizzleAppliedInShader() const noexcept { return fTextureSwizzleAppliedInShader; }
 
   GrGLSLGeneration generation() const noexcept { return fGLSLGeneration; }
@@ -277,7 +284,6 @@ class GrShaderCaps : public SkRefCnt {
   bool fPreferFlatInterpolation : 1;
   bool fNoPerspectiveInterpolationSupport : 1;
   bool fSampleMaskSupport : 1;
-  bool fTessellationSupport : 1;
   bool fExternalTextureSupport : 1;
   bool fVertexIDSupport : 1;
   bool fFPManipulationSupport : 1;
@@ -311,6 +317,7 @@ class GrShaderCaps : public SkRefCnt {
   bool fNoDefaultPrecisionForExternalSamplers : 1;
   bool fCanOnlyUseSampleMaskWithStencil : 1;
   bool fColorSpaceMathNeedsFloat : 1;
+  bool fCanUseDoLoops : 1;
 
   const char* fVersionDeclString;
 
@@ -329,6 +336,7 @@ class GrShaderCaps : public SkRefCnt {
   const char* fFBFetchExtensionString;
 
   int fMaxFragmentSamplers;
+  int fMaxTessellationSegments;
 
   AdvBlendEqInteraction fAdvBlendEqInteraction;
 

@@ -54,14 +54,16 @@ void DashEffect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawPath(fDashedPath, paint);
 }
 
-bool DashEffect::onContains(const SkPoint& p) const { return fDashedPath.contains(p.x(), p.y()); }
+bool DashEffect::onContains(const SkPoint& p) const noexcept {
+  return fDashedPath.contains(p.x(), p.y());
+}
 
-SkPath DashEffect::onAsPath() const { return fDashedPath; }
+SkPath DashEffect::onAsPath() const noexcept { return fDashedPath; }
 
 SkRect DashEffect::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   SkASSERT(this->hasInval());
 
-  const auto& child_bounds = fChild->revalidate(ic, ctm);
+  const auto child_bounds = fChild->revalidate(ic, ctm);
   const auto child_path = fChild->asPath();
 
   fDashedPath.reset();

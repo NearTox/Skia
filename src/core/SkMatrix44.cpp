@@ -435,7 +435,7 @@ void SkMatrix44::setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr bool bits_isonly(int value, int mask) noexcept { return 0 == (value & ~mask); }
+static bool bits_isonly(int value, int mask) noexcept { return 0 == (value & ~mask); }
 
 void SkMatrix44::setConcat(const SkMatrix44& a, const SkMatrix44& b) noexcept {
   const SkMatrix44::TypeMask a_mask = a.getType();

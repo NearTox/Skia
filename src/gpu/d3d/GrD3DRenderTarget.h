@@ -13,6 +13,7 @@
 
 #include "include/gpu/d3d/GrD3DTypes.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/d3d/GrD3DDescriptorHeap.h"
 #include "src/gpu/d3d/GrD3DResourceProvider.h"
 
 class GrD3DGpu;
@@ -35,13 +36,15 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
 
   GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
 
-  GrD3DTextureResource* msaaTextureResource() { return fMSAATextureResource.get(); }
+  GrD3DTextureResource* msaaTextureResource() const { return fMSAATextureResource.get(); }
 
   bool canAttemptStencilAttachment() const override { return true; }
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
 
-  D3D12_CPU_DESCRIPTOR_HANDLE colorRenderTargetView() { return fColorRenderTargetView; }
+  D3D12_CPU_DESCRIPTOR_HANDLE colorRenderTargetView() const {
+    return fColorRenderTargetView.fHandle;
+  }
 
   DXGI_FORMAT stencilDxgiFormat() const;
 
@@ -52,12 +55,13 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
-      sk_sp<GrD3DResourceState> msaaState, const D3D12_CPU_DESCRIPTOR_HANDLE& colorRenderTargetView,
-      const D3D12_CPU_DESCRIPTOR_HANDLE& resolveRenderTargetView);
+      sk_sp<GrD3DResourceState> msaaState,
+      const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
+      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView);
 
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state, const D3D12_CPU_DESCRIPTOR_HANDLE& renderTargetView);
+      sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& renderTargetView);
 
   void onAbandon() override;
   void onRelease() override;
@@ -80,12 +84,13 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
-      sk_sp<GrD3DResourceState> msaaState, const D3D12_CPU_DESCRIPTOR_HANDLE& colorRenderTargetView,
-      const D3D12_CPU_DESCRIPTOR_HANDLE& resolveRenderTargetView, Wrapped);
+      sk_sp<GrD3DResourceState> msaaState,
+      const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
+      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, Wrapped);
 
   GrD3DRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state, const D3D12_CPU_DESCRIPTOR_HANDLE& renderTargetView,
+      sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& renderTargetView,
       Wrapped);
 
   GrD3DGpu* getD3DGpu() const;
@@ -103,8 +108,8 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
 
   std::unique_ptr<GrD3DTextureResource> fMSAATextureResource;
 
-  D3D12_CPU_DESCRIPTOR_HANDLE fColorRenderTargetView;
-  D3D12_CPU_DESCRIPTOR_HANDLE fResolveRenderTargetView;
+  GrD3DDescriptorHeap::CPUHandle fColorRenderTargetView;
+  GrD3DDescriptorHeap::CPUHandle fResolveRenderTargetView;
 };
 
 #endif

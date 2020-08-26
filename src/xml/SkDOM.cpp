@@ -54,20 +54,20 @@ struct SkDOMNode {
   uint8_t fType;
   uint8_t fPad;
 
-  const SkDOMAttr* attrs() const { return fAttrs; }
+  const SkDOMAttr* attrs() const noexcept { return fAttrs; }
 
-  SkDOMAttr* attrs() { return fAttrs; }
+  SkDOMAttr* attrs() noexcept { return fAttrs; }
 };
 
 /////////////////////////////////////////////////////////////////////////
 
 #define kMinChunkSize 4096
 
-SkDOM::SkDOM() : fAlloc(kMinChunkSize), fRoot(nullptr) {}
+SkDOM::SkDOM() noexcept : fAlloc(kMinChunkSize), fRoot(nullptr) {}
 
-SkDOM::~SkDOM() {}
+SkDOM::~SkDOM() = default;
 
-const SkDOM::Node* SkDOM::getRootNode() const { return fRoot; }
+const SkDOM::Node* SkDOM::getRootNode() const noexcept { return fRoot; }
 
 const SkDOM::Node* SkDOM::getFirstChild(const Node* node, const char name[]) const {
   SkASSERT(node);
@@ -186,7 +186,7 @@ class SkDOMParser : public SkXMLParser {
     fLevel = 0;
     fNeedToFlush = true;
   }
-  SkDOM::Node* getRoot() const { return fRoot; }
+  SkDOM::Node* getRoot() const noexcept { return fRoot; }
   SkXMLParserError fParserError;
 
  protected:
@@ -286,8 +286,8 @@ class SkDOMParser : public SkXMLParser {
 const SkDOM::Node* SkDOM::build(SkStream& docStream) {
   SkDOMParser parser(&fAlloc);
   if (!parser.parse(docStream)) {
-    SkDEBUGCODE(SkDebugf("xml parse error, line %d\n", parser.fParserError.getLineNumber()));
-    fRoot = nullptr;
+    SkDEBUGCODE(SkDebugf("xml parse error, line %d\n", parser.fParserError.getLineNumber());)
+        fRoot = nullptr;
     fAlloc.reset();
     return nullptr;
   }

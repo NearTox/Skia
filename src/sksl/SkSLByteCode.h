@@ -34,6 +34,7 @@ enum class ByteCodeInstruction : uint16_t {
   // Followed by three bytes indicating: the number of argument slots, the number of return slots,
   // and the index of the external value to call
   kCallExternal,
+  VECTOR(kCeil),
   // For dynamic array access: Followed by byte indicating length of array
   kClampIndex,
   VECTOR(kCompareIEQ),
@@ -61,6 +62,7 @@ enum class ByteCodeInstruction : uint16_t {
   VECTOR(kDivideU),
   // Duplicates the top stack value
   VECTOR_MATRIX(kDup),
+  VECTOR(kFloor),
   VECTOR(kFract),
   kInverse2x2,
   kInverse3x3,
@@ -71,15 +73,13 @@ enum class ByteCodeInstruction : uint16_t {
   VECTOR(kLoad),
   VECTOR(kLoadGlobal),
   VECTOR(kLoadUniform),
-  // As kLoad/kLoadGlobal, then a count byte (1-4), and then one byte per swizzle component (0-3).
-  kLoadSwizzle,
-  kLoadSwizzleGlobal,
-  kLoadSwizzleUniform,
   // kLoadExtended* are fallback load ops when we lack a specialization. They are followed by a
   // count byte, and get the slot to load from the top of the stack.
   kLoadExtended,
   kLoadExtendedGlobal,
   kLoadExtendedUniform,
+  // Loads "sk_FragCoord" [X, Y, Z, 1/W]
+  kLoadFragCoord,
   // Followed by four bytes: srcCols, srcRows, dstCols, dstRows. Consumes the src matrix from the
   // stack, and replaces it with the dst matrix. Per GLSL rules, there are no restrictions on
   // dimensions. Any overlapping values are copied, and any other values are filled in with the
@@ -113,6 +113,11 @@ enum class ByteCodeInstruction : uint16_t {
   kReserve,
   // Followed by a byte indicating the number of slots being returned
   kReturn,
+  // kSampleExplicit/kSampleMatrix are followed by a byte indicating the FP slot to sample
+  // Expects stack to contain (X, Y), produces (R, G, B, A)
+  kSampleExplicit,
+  // Expects stack to contain a 3x3 matrix, produces (R, G, B, A)
+  kSampleMatrix,
   // Followed by two bytes indicating columns and rows of matrix (2, 3, or 4 each).
   // Takes a single value from the top of the stack, and converts to a CxR matrix with that value
   // replicated along the diagonal (and zero elsewhere), per the GLSL matrix construction rules.
@@ -129,14 +134,6 @@ enum class ByteCodeInstruction : uint16_t {
   // Fallback stores. Followed by count byte, and get the slot to store from the top of the stack
   kStoreExtended,
   kStoreExtendedGlobal,
-  // As kStore/kStoreGlobal, then a count byte (1-4), then one byte per swizzle component (0-3).
-  // Expects the stack to look like: ... v1 v2 v3 v4, where the number of 'v's is equal to the
-  // number of swizzle components. After the store, all v's are popped from the stack.
-  kStoreSwizzle,
-  kStoreSwizzleGlobal,
-  // As above, but gets the store slot from the top of the stack (before values to be stored)
-  kStoreSwizzleIndirect,
-  kStoreSwizzleIndirectGlobal,
   // Followed by two count bytes (1-4), and then one byte per swizzle component (0-3). The first
   // count byte provides the current vector size (the vector is the top n stack elements), and the
   // second count byte provides the swizzle component count.
@@ -167,12 +164,12 @@ enum class ByteCodeInstruction : uint16_t {
 
 class ByteCodeFunction {
  public:
-  int getParameterCount() const noexcept { return fParameterCount; }
-  int getReturnCount() const noexcept { return fReturnCount; }
-  int getLocalCount() const noexcept { return fLocalCount; }
+  int getParameterCount() const { return fParameterCount; }
+  int getReturnCount() const { return fReturnCount; }
+  int getLocalCount() const { return fLocalCount; }
 
-  const uint8_t* code() const noexcept { return fCode.data(); }
-  size_t size() const noexcept { return fCode.size(); }
+  const uint8_t* code() const { return fCode.data(); }
+  size_t size() const { return fCode.size(); }
 
   /**
    * Print bytecode disassembly to stdout.
@@ -214,7 +211,7 @@ class SK_API ByteCode {
  public:
   static constexpr int kVecWidth = 8;
 
-  ByteCode() noexcept = default;
+  ByteCode() = default;
 
   const ByteCodeFunction* getFunction(const char* name) const {
     for (const auto& f : fFunctions) {
@@ -262,8 +259,8 @@ class SK_API ByteCode {
     int fSlot;
   };
 
-  int getUniformSlotCount() const noexcept { return fUniformSlotCount; }
-  int getUniformCount() const noexcept { return fUniforms.size(); }
+  int getUniformSlotCount() const { return fUniformSlotCount; }
+  int getUniformCount() const { return fUniforms.size(); }
   int getUniformLocation(const char* name) const {
     for (int i = 0; i < (int)fUniforms.size(); ++i) {
       if (fUniforms[i].fName == name) {
@@ -272,7 +269,13 @@ class SK_API ByteCode {
     }
     return -1;
   }
-  const Uniform& getUniform(int i) const noexcept { return fUniforms[i]; }
+  const Uniform& getUniform(int i) const { return fUniforms[i]; }
+
+  /**
+   * Some byte code programs can't be executed by the interpreter, due to unsupported features.
+   * They may still be used to convert to other formats, or for reflection of uniforms.
+   */
+  bool canRun() const { return fChildFPCount == 0 && !fUsesFragCoord; }
 
  private:
   ByteCode(const ByteCode&) = delete;
@@ -283,6 +286,8 @@ class SK_API ByteCode {
 
   int fGlobalSlotCount = 0;
   int fUniformSlotCount = 0;
+  int fChildFPCount = 0;
+  bool fUsesFragCoord = false;
   std::vector<Uniform> fUniforms;
 
   std::vector<std::unique_ptr<ByteCodeFunction>> fFunctions;

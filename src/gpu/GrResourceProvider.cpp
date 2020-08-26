@@ -31,7 +31,7 @@
 
 const int GrResourceProvider::kMinScratchTextureSize = 16;
 
-#define ASSERT_SINGLE_OWNER SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(fSingleOwner);)
+#define ASSERT_SINGLE_OWNER GR_ASSERT_SINGLE_OWNER(fSingleOwner)
 
 GrResourceProvider::GrResourceProvider(
     GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* owner) noexcept
@@ -376,7 +376,7 @@ static constexpr int kIndicesPerNonAAQuad = 6;
 sk_sp<const GrGpuBuffer> GrResourceProvider::createNonAAQuadIndexBuffer() {
   static_assert(kVertsPerNonAAQuad * kMaxNumNonAAQuads <= 65535);  // indices fit in a uint16_t
 
-  static constexpr uint16_t kNonAAQuadIndexPattern[] = {0, 1, 2, 2, 1, 3};
+  static const uint16_t kNonAAQuadIndexPattern[] = {0, 1, 2, 2, 1, 3};
 
   static_assert(SK_ARRAY_COUNT(kNonAAQuadIndexPattern) == kIndicesPerNonAAQuad);
 

@@ -13,14 +13,14 @@
 
 class GrVkImageLayout : public SkRefCnt {
  public:
-  GrVkImageLayout(VkImageLayout layout) noexcept : fLayout(layout) {}
+  GrVkImageLayout(VkImageLayout layout) : fLayout(layout) {}
 
-  void setImageLayout(VkImageLayout layout) noexcept {
+  void setImageLayout(VkImageLayout layout) {
     // Defaulting to use std::memory_order_seq_cst
     fLayout.store(layout);
   }
 
-  VkImageLayout getImageLayout() const noexcept {
+  VkImageLayout getImageLayout() const {
     // Defaulting to use std::memory_order_seq_cst
     return fLayout.load();
   }

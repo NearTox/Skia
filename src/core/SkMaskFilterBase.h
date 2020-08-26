@@ -112,7 +112,7 @@ class SkMaskFilterBase : public SkMaskFilter {
    *  successful. If false is returned then paint is unmodified.
    */
   virtual bool directFilterMaskGPU(
-      GrRecordingContext*, GrRenderTargetContext*, GrPaint&& paint, const GrClip&,
+      GrRecordingContext*, GrRenderTargetContext*, GrPaint&& paint, const GrClip*,
       const SkMatrix& viewMatrix, const GrStyledShape& shape) const;
 
   /**
@@ -149,10 +149,10 @@ class SkMaskFilterBase : public SkMaskFilter {
    *  provided BlurRec parameter. If this effect cannot be represented as a BlurRec, return false
    *  and ignore the BlurRec parameter.
    */
-  virtual bool asABlur(BlurRec*) const noexcept;
+  virtual bool asABlur(BlurRec*) const;
 
  protected:
-  SkMaskFilterBase() noexcept = default;
+  constexpr SkMaskFilterBase() noexcept = default;
 
 #if SK_SUPPORT_GPU
   virtual std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&) const;

@@ -8,16 +8,15 @@
 #ifndef SkColorFilter_Matrix_DEFINED
 #define SkColorFilter_Matrix_DEFINED
 
-#include "include/core/SkColorFilter.h"
-#include "include/core/SkFlattenable.h"
+#include "src/core/SkColorFilterBase.h"
 
-class SkColorFilter_Matrix : public SkColorFilter {
+class SkColorFilter_Matrix : public SkColorFilterBase {
  public:
   enum class Domain : uint8_t { kRGBA, kHSLA };
 
-  explicit SkColorFilter_Matrix(const float array[20], Domain) noexcept;
+  explicit SkColorFilter_Matrix(const float array[20], Domain);
 
-  uint32_t getFlags() const noexcept override;
+  uint32_t onGetFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -27,7 +26,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
   static void RegisterFlattenables();
 
  private:
-  void flatten(SkWriteBuffer&) const noexcept override;
+  void flatten(SkWriteBuffer&) const override;
   bool onAsAColorMatrix(float matrix[20]) const override;
 
   SK_FLATTENABLE_HOOKS(SkColorFilter_Matrix)
@@ -41,7 +40,7 @@ class SkColorFilter_Matrix : public SkColorFilter {
   uint16_t fFlags;
   Domain fDomain;
 
-  typedef SkColorFilter INHERITED;
+  typedef SkColorFilterBase INHERITED;
 };
 
 #endif

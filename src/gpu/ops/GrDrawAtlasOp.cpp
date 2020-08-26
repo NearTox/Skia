@@ -33,7 +33,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
       const Helper::MakeArgs&, const SkPMColor4f& color, const SkMatrix& viewMatrix, GrAAType,
       int spriteCount, const SkRSXform* xforms, const SkRect* rects, const SkColor* colors);
 
-  const char* name() const override { return "DrawAtlasOp"; }
+  const char* name() const noexcept override { return "DrawAtlasOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {

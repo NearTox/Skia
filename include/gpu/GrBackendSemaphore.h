@@ -21,8 +21,7 @@ class GrBackendSemaphore {
  public:
   // For convenience we just set the backend here to OpenGL. The GrBackendSemaphore cannot be used
   // until either initGL or initVulkan are called which will set the appropriate GrBackend.
-  GrBackendSemaphore() noexcept
-      : fBackend(GrBackendApi::kOpenGL), fGLSync(0), fIsInitialized(false) {}
+  GrBackendSemaphore() : fBackend(GrBackendApi::kOpenGL), fGLSync(0), fIsInitialized(false) {}
 
   void initGL(GrGLsync sync) noexcept {
     fBackend = GrBackendApi::kOpenGL;

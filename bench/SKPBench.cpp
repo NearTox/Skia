@@ -110,7 +110,7 @@ void SKPBench::onDraw(int loops, SkCanvas* canvas) {
     }
     // Ensure the GrContext doesn't combine ops across draw loops.
     if (GrContext* context = canvas->getGrContext()) {
-      context->flush();
+      context->flushAndSubmit();
     }
   }
 }
@@ -122,7 +122,7 @@ void SKPBench::drawMPDPicture() {
 void SKPBench::drawPicture() {
   for (int j = 0; j < fTileRects.count(); ++j) {
     const SkMatrix trans =
-        SkMatrix::MakeTrans(-fTileRects[j].fLeft / fScale, -fTileRects[j].fTop / fScale);
+        SkMatrix::Translate(-fTileRects[j].fLeft / fScale, -fTileRects[j].fTop / fScale);
     fSurfaces[j]->getCanvas()->drawPicture(fPic.get(), &trans, nullptr);
   }
 
@@ -153,7 +153,7 @@ void SKPBench::getGpuStats(SkCanvas* canvas, SkTArray<SkString>* keys, SkTArray<
   }
 
   // TODO refactor this out if we want to test other subclasses of skpbench
-  context->flush();
+  context->flushAndSubmit();
   context->freeGpuResources();
   context->resetContext();
   context->priv().getGpu()->resetShaderCacheForTesting();

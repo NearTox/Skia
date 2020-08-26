@@ -17,8 +17,10 @@ namespace SkSL {
  * A lone expression being used as a statement.
  */
 struct ExpressionStatement : public Statement {
-  ExpressionStatement(std::unique_ptr<Expression> expression)
+  ExpressionStatement(std::unique_ptr<Expression> expression) noexcept
       : INHERITED(expression->fOffset, kExpression_Kind), fExpression(std::move(expression)) {}
+
+  int nodeCount() const noexcept override { return 1 + fExpression->nodeCount(); }
 
   std::unique_ptr<Statement> clone() const override {
     return std::unique_ptr<Statement>(new ExpressionStatement(fExpression->clone()));

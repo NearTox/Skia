@@ -63,24 +63,9 @@ class SK_API SkMatrix {
       @param sy  vertical scale factor
       @return    SkMatrix with scale
   */
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar sx, SkScalar sy) noexcept {
+  static SkMatrix SK_WARN_UNUSED_RESULT Scale(SkScalar sx, SkScalar sy) noexcept {
     SkMatrix m;
     m.setScale(sx, sy);
-    return m;
-  }
-
-  /** Sets SkMatrix to scale by (scale, scale). Returned matrix is:
-
-          | scale   0   0 |
-          |   0   scale 0 |
-          |   0     0   1 |
-
-      @param scale  horizontal and vertical scale factor
-      @return       SkMatrix with scale
-  */
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar scale) noexcept {
-    SkMatrix m;
-    m.setScale(scale, scale);
     return m;
   }
 
@@ -94,27 +79,45 @@ class SK_API SkMatrix {
       @param dy  vertical translation
       @return    SkMatrix with translation
   */
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkScalar dx, SkScalar dy) noexcept {
+  static SkMatrix SK_WARN_UNUSED_RESULT Translate(SkScalar dx, SkScalar dy) noexcept {
     SkMatrix m;
     m.setTranslate(dx, dy);
     return m;
   }
+  static SkMatrix SK_WARN_UNUSED_RESULT Translate(SkVector t) noexcept {
+    return Translate(t.x(), t.y());
+  }
+  static SkMatrix SK_WARN_UNUSED_RESULT Translate(SkIVector t) noexcept {
+    return Translate(SkIntToScalar(t.x()), SkIntToFloat(t.y()));
+  }
 
-  /** Sets SkMatrix to translate by (t.x(), t.y()). Returned matrix is:
+  /** Sets SkMatrix to rotate by |deg| about a pivot point at (0, 0).
 
-          | 1 0 t.x() |
-          | 0 1 t.y() |
-          | 0 0 1     |
-
-      @param t  translation vector
-      @return   SkMatrix with translation
+      @param deg  rotation angle in degrees (positive rotates clockwise)
+      @return     SkMatrix with rotation
   */
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkVector t) noexcept {
-    return MakeTrans(t.x(), t.y());
+  static SkMatrix SK_WARN_UNUSED_RESULT RotateDeg(SkScalar deg) noexcept {
+    SkMatrix m;
+    m.setRotate(deg);
+    return m;
   }
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkIVector t) noexcept {
-    return MakeTrans(t.x(), t.y());
+  static SkMatrix SK_WARN_UNUSED_RESULT RotateRad(SkScalar rad) noexcept {
+    return RotateDeg(SkRadiansToDegrees(rad));
   }
+
+#ifdef SK_SUPPORT_LEGACY_MATRIX_FACTORIES
+  // DEPRECATED
+  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkScalar dx, SkScalar dy) {
+    return Translate(dx, dy);
+  }
+  static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar sx, SkScalar sy) {
+    return Scale(sx, sy);
+  }
+  static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar scale) { return Scale(scale, scale); }
+  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkVector t) { return MakeTrans(t.x(), t.y()); }
+  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkIVector t) { return MakeTrans(t.x(), t.y()); }
+  // end DEPRECATED
+#endif
 
   /** Sets SkMatrix to:
 
@@ -427,7 +430,7 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @param value  scalar to store in SkMatrix
   */
-  constexpr SkMatrix& set(int index, SkScalar value) noexcept {
+  SkMatrix& set(int index, SkScalar value) noexcept {
     SkASSERT((unsigned)index < 9);
     fMat[index] = value;
     this->setTypeMask(kUnknown_Mask);
@@ -500,7 +503,7 @@ class SK_API SkMatrix {
       @param persp1  input y-axis values perspective factor to store
       @param persp2  perspective scale factor to store
   */
-  SkMatrix& setAll(
+  constexpr SkMatrix& setAll(
       SkScalar scaleX, SkScalar skewX, SkScalar transX, SkScalar skewY, SkScalar scaleY,
       SkScalar transY, SkScalar persp0, SkScalar persp1, SkScalar persp2) noexcept {
     fMat[kMScaleX] = scaleX;
@@ -1670,6 +1673,8 @@ class SK_API SkMatrix {
     return result;
   }
 
+  friend SkMatrix operator*(const SkMatrix& a, const SkMatrix& b) noexcept { return Concat(a, b); }
+
   /** Sets internal cache to unknown state. Use to force update after repeated
       modifications to SkMatrix element reference returned by operator[](int index).
   */
@@ -1699,7 +1704,7 @@ class SK_API SkMatrix {
     fMat[kMPersp1] = 0;
     fMat[kMPersp2] = 1;
 
-    unsigned mask = 0;
+    int mask = 0;
     if (sx != 1 || sy != 1) {
       mask |= kScale_Mask;
     }
@@ -1739,11 +1744,11 @@ class SK_API SkMatrix {
       kTranslate_Mask | kScale_Mask | kAffine_Mask | kPerspective_Mask | kRectStaysRect_Mask;
 
   SkScalar fMat[9];
-  mutable uint32_t fTypeMask;
+  mutable int32_t fTypeMask;
 
   constexpr SkMatrix(
       SkScalar sx, SkScalar kx, SkScalar tx, SkScalar ky, SkScalar sy, SkScalar ty, SkScalar p0,
-      SkScalar p1, SkScalar p2, uint32_t typeMask) noexcept
+      SkScalar p1, SkScalar p2, int typeMask) noexcept
       : fMat{sx, kx, tx, ky, sy, ty, p0, p1, p2}, fTypeMask(typeMask) {}
 
   static void ComputeInv(
@@ -1758,18 +1763,18 @@ class SK_API SkMatrix {
         kUnknown_Mask == mask || (mask & kAllMasks) == mask ||
         ((kUnknown_Mask | kOnlyPerspectiveValid_Mask) & mask) ==
             (kUnknown_Mask | kOnlyPerspectiveValid_Mask));
-    fTypeMask = SkToU8(mask);
+    fTypeMask = mask;
   }
 
-  constexpr void orTypeMask(int mask) noexcept {
+  void orTypeMask(int mask) noexcept {
     SkASSERT((mask & kORableMasks) == mask);
-    fTypeMask = SkToU8(fTypeMask | mask);
+    fTypeMask |= mask;
   }
 
-  constexpr void clearTypeMask(int mask) noexcept {
+  void clearTypeMask(int mask) noexcept {
     // only allow a valid mask
     SkASSERT((mask & kAllMasks) == mask);
-    fTypeMask = fTypeMask & ~mask;
+    fTypeMask &= ~mask;
   }
 
   TypeMask getPerspectiveTypeMaskOnly() const noexcept {
@@ -1782,14 +1787,14 @@ class SK_API SkMatrix {
   /** Returns true if we already know that the matrix is identity;
       false otherwise.
   */
-  constexpr bool isTriviallyIdentity() const noexcept {
+  bool isTriviallyIdentity() const noexcept {
     if (fTypeMask & kUnknown_Mask) {
       return false;
     }
     return ((fTypeMask & 0xF) == 0);
   }
 
-  inline constexpr void updateTranslateMask() noexcept {
+  inline void updateTranslateMask() noexcept {
     if ((fMat[kMTransX] != 0) | (fMat[kMTransY] != 0)) {
       fTypeMask |= kTranslate_Mask;
     } else {
@@ -1859,7 +1864,6 @@ class SK_API SkMatrix {
 
   friend class SkPerspIter;
   friend class SkMatrixPriv;
-  friend class SkReader32;
   friend class SerializationTest;
 };
 SK_END_REQUIRE_DENSE

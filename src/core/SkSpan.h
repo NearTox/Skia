@@ -27,14 +27,14 @@ class SkSpan {
   constexpr T& operator[](size_t i) const noexcept { return fPtr[i]; }
   constexpr T& front() const noexcept { return fPtr[0]; }
   constexpr T& back() const noexcept { return fPtr[fSize - 1]; }
-  constexpr T* begin() const noexcept { return fPtr; }
+  constexpr T* begin() const { return fPtr; }
   constexpr T* end() const noexcept { return fPtr + fSize; }
   constexpr const T* cbegin() const noexcept { return fPtr; }
   constexpr const T* cend() const noexcept { return fPtr + fSize; }
-  constexpr auto rbegin() const { return std::make_reverse_iterator(this->end()); }
-  constexpr auto rend() const { return std::make_reverse_iterator(this->begin()); }
-  constexpr auto crbegin() const { return std::make_reverse_iterator(this->cend()); }
-  constexpr auto crend() const { return std::make_reverse_iterator(this->cbegin()); }
+  constexpr auto rbegin() const noexcept { return std::make_reverse_iterator(this->end()); }
+  constexpr auto rend() const noexcept { return std::make_reverse_iterator(this->begin()); }
+  constexpr auto crbegin() const noexcept { return std::make_reverse_iterator(this->cend()); }
+  constexpr auto crend() const noexcept { return std::make_reverse_iterator(this->cbegin()); }
   constexpr T* data() const noexcept { return fPtr; }
   constexpr int count() const noexcept { return SkTo<int>(fSize); }
   constexpr size_t size() const noexcept { return fSize; }

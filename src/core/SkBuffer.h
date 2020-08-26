@@ -66,7 +66,7 @@ class SkRBuffer : SkNoncopyable {
   // returns nullptr on failure
   const void* skip(size_t bytes) noexcept;
   template <typename T>
-  const T* skipCount(size_t count) {
+  const T* skipCount(size_t count) noexcept {
     return static_cast<const T*>(this->skip(SkSafeMath::Mul(count, sizeof(T))));
   }
 

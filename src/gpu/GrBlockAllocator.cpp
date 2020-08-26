@@ -38,7 +38,7 @@ GrBlockAllocator::Block::Block(Block* prev, int allocationSize) noexcept
 
 GrBlockAllocator::Block::~Block() {
   SkASSERT(fSentinel == kAssignedMarker);
-  SkDEBUGCODE(fSentinel = kFreedMarker;)  // FWIW
+  SkDEBUGCODE(fSentinel = kFreedMarker);  // FWIW
 }
 
 size_t GrBlockAllocator::totalSize() const noexcept {

@@ -203,6 +203,7 @@ static void gpu_tests(GrContext* context, skiatest::Reporter* reporter, const Te
           GrProtected::kNo, markFinished, &finishedBECreate);
     }
     REPORTER_ASSERT(reporter, backendTex.isValid());
+    context->submit();
     while (backendTex.isValid() && !finishedBECreate) {
       context->checkAsyncWorkCompletion();
     }
@@ -283,7 +284,7 @@ static void gpu_tests(GrContext* context, skiatest::Reporter* reporter, const Te
     }
 
     img.reset();
-    context->flush();
+    context->flushAndSubmit();
     context->deleteBackendTexture(backendTex);
   }
 }

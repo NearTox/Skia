@@ -83,16 +83,16 @@ struct Expression : public IRNode {
    * Returns true if, given fixed values for uniforms, this expression always evaluates to the
    * same result with no side effects.
    */
-  virtual bool isConstantOrUniform() const noexcept {
+  virtual bool isConstantOrUniform() const {
     SkASSERT(!this->isConstant() || !this->hasSideEffects());
     return this->isConstant();
   }
 
-  virtual bool hasProperty(Property property) const noexcept = 0;
+  virtual bool hasProperty(Property property) const = 0;
 
-  bool hasSideEffects() const noexcept { return this->hasProperty(Property::kSideEffects); }
+  bool hasSideEffects() const { return this->hasProperty(Property::kSideEffects); }
 
-  bool containsRTAdjust() const noexcept { return this->hasProperty(Property::kContainsRTAdjust); }
+  bool containsRTAdjust() const { return this->hasProperty(Property::kContainsRTAdjust); }
 
   /**
    * Given a map of known constant variable values, substitute them in for references to those

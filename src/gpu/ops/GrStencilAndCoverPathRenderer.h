@@ -19,7 +19,7 @@ class GrResourceProvider;
  */
 class GrStencilAndCoverPathRenderer : public GrPathRenderer {
  public:
-  const char* name() const final { return "NVPR"; }
+  const char* name() const noexcept final { return "NVPR"; }
 
   static GrPathRenderer* Create(GrResourceProvider*, const GrCaps&);
 

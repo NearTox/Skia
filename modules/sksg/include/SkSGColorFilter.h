@@ -28,7 +28,7 @@ class ColorFilter : public EffectNode {
   explicit ColorFilter(sk_sp<RenderNode>);
 
   void onRender(SkCanvas*, const RenderContext*) const final;
-  const RenderNode* onNodeAt(const SkPoint&) const final;
+  const RenderNode* onNodeAt(const SkPoint&) const noexcept final;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) final;
 

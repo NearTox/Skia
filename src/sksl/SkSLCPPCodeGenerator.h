@@ -124,7 +124,9 @@ class CPPCodeGenerator : public GLSLCodeGenerator {
   std::vector<String> fExtraEmitCodeBlocks;
 
   std::vector<String> fFormatArgs;
-  std::set<int> fWrittenTransformedCoords;
+  // true if the sksl referenced sk_TransformedCoords[0]
+  bool fAccessLocalCoordsDirectly = false;
+
   // if true, we are writing a C++ expression instead of a GLSL expression
   bool fCPPMode = false;
   bool fInMain = false;

@@ -57,9 +57,9 @@ static void testPathOpsRectsMain(PathOpsThreadState* data) {
                   pathStr.appendf("    SkPath path, pathB;");
                   pathStr.appendf(
                       "    path.setFillType(SkPathFillType::k%s);\n",
-                      e == SkPathFillType::kWinding
-                          ? "Winding"
-                          : e == SkPathFillType::kEvenOdd ? "EvenOdd" : "?UNDEFINED");
+                      e == SkPathFillType::kWinding   ? "Winding"
+                      : e == SkPathFillType::kEvenOdd ? "EvenOdd"
+                                                      : "?UNDEFINED");
                   pathStr.appendf(
                       "    path.addRect(%d, %d, %d, %d,"
                       " SkPathDirection::kCW);\n",
@@ -70,9 +70,9 @@ static void testPathOpsRectsMain(PathOpsThreadState* data) {
                       state.fC, state.fC, state.fD, state.fD);
                   pathStr.appendf(
                       "    pathB.setFillType(SkPathFillType::k%s);\n",
-                      f == SkPathFillType::kWinding
-                          ? "Winding"
-                          : f == SkPathFillType::kEvenOdd ? "EvenOdd" : "?UNDEFINED");
+                      f == SkPathFillType::kWinding   ? "Winding"
+                      : f == SkPathFillType::kEvenOdd ? "EvenOdd"
+                                                      : "?UNDEFINED");
                   pathStr.appendf(
                       "    pathB.addRect(%d, %d, %d, %d,"
                       " SkPathDirection::kCW);\n",

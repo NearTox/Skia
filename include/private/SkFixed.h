@@ -62,7 +62,7 @@ inline SkFixed SkIntToFixed(int n) {
   SkASSERT(n >= -32768 && n <= 32767);
   // Left shifting a negative value has undefined behavior in C, so we cast to unsigned before
   // shifting.
-  return (unsigned)n << 16;
+  return (SkFixed)((unsigned)n << 16);
 }
 #else
 // Left shifting a negative value has undefined behavior in C, so we cast to unsigned before
@@ -76,12 +76,14 @@ inline SkFixed SkIntToFixed(int n) {
 #define SkFixedFloorToInt(x) ((x) >> 16)
 
 static constexpr inline SkFixed SkFixedRoundToFixed(SkFixed x) noexcept {
-  return (x + SK_FixedHalf) & 0xFFFF0000;
+  return (SkFixed)((uint32_t)(x + SK_FixedHalf) & 0xFFFF0000);
 }
 static constexpr inline SkFixed SkFixedCeilToFixed(SkFixed x) noexcept {
-  return (x + SK_Fixed1 - 1) & 0xFFFF0000;
+  return (SkFixed)((uint32_t)(x + SK_Fixed1 - 1) & 0xFFFF0000);
 }
-static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept { return x & 0xFFFF0000; }
+static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept {
+  return (SkFixed)((uint32_t)x & 0xFFFF0000);
+}
 
 #define SkFixedAbs(x) SkAbs32(x)
 #define SkFixedAve(a, b) (((a) + (b)) >> 1)

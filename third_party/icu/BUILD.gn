@@ -12,34 +12,9 @@ declare_args() {
 }
 
 if (skia_use_system_icu) {
-  if (is_win) {
-    system("icu") {
-      libs = [ "icuuc.lib", "icui18n.lib" ]
-      lib_dirs = [ "../../../vs16.0/" + target_cpu + "/lib" ]
-      defines = [
-        "U_USING_ICU_NAMESPACE=0",
-        "U_ENABLE_DYLOAD=0",
-        "USE_CHROMIUM_ICU=1",
-        "U_STATIC_IMPLEMENTATION",
-        "ICU_UTIL_DATA_IMPL=ICU_UTIL_DATA_FILE",
-        "UCHAR_TYPE=wchar_t",
-      ]
-      include_dirs = [
-        "../externals/icu/source/common",
-        "../externals/icu/source/i18n",
-        ".",
-      ]
-    }
-  } else {
-    system("icu") {
-      libs = [ "icuuc" ]
-      defines = [ "U_USING_ICU_NAMESPACE=0" ]
-      include_dirs = [
-        "../externals/icu/source/common",
-        "../externals/icu/source/i18n",
-        ".",
-      ]
-    }
+  system("icu") {
+    libs = [ "icuuc" ]
+    defines = [ "U_USING_ICU_NAMESPACE=0" ]
   }
 } else {
   if (target_cpu == "wasm") {
@@ -93,6 +68,7 @@ if (skia_use_system_icu) {
     ]
     public_defines = [
       "U_USING_ICU_NAMESPACE=0",
+      "U_DISABLE_RENAMING",
       "SK_USING_THIRD_PARTY_ICU",
     ]
     configs -= [ "//gn:no_rtti" ]

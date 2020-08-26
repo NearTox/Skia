@@ -19,20 +19,21 @@ class ScalarKeyframeAnimator final : public KeyframeAnimator {
  public:
   class Builder final : public KeyframeAnimatorBuilder {
    public:
+    explicit Builder(ScalarValue* target) : fTarget(target) {}
+
     sk_sp<KeyframeAnimator> make(
-        const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs,
-        void* target_value) override {
+        const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs) override {
       SkASSERT(jkfs.size() > 0);
       if (!this->parseKeyframes(abuilder, jkfs)) {
         return nullptr;
       }
 
-      return sk_sp<ScalarKeyframeAnimator>(new ScalarKeyframeAnimator(
-          std::move(fKFs), std::move(fCMs), static_cast<ScalarValue*>(target_value)));
+      return sk_sp<ScalarKeyframeAnimator>(
+          new ScalarKeyframeAnimator(std::move(fKFs), std::move(fCMs), fTarget));
     }
 
-    bool parseValue(const AnimationBuilder&, const skjson::Value& jv, void* v) const override {
-      return Parse(jv, static_cast<float*>(v));
+    bool parseValue(const AnimationBuilder&, const skjson::Value& jv) const override {
+      return Parse(jv, fTarget);
     }
 
    private:
@@ -41,6 +42,8 @@ class ScalarKeyframeAnimator final : public KeyframeAnimator {
         Keyframe::Value* v) override {
       return Parse(jv, &v->flt);
     }
+
+    ScalarValue* fTarget;
   };
 
  private:
@@ -67,9 +70,9 @@ class ScalarKeyframeAnimator final : public KeyframeAnimator {
 template <>
 bool AnimatablePropertyContainer::bind<ScalarValue>(
     const AnimationBuilder& abuilder, const skjson::ObjectValue* jprop, ScalarValue* v) {
-  ScalarKeyframeAnimator::Builder builder;
+  ScalarKeyframeAnimator::Builder builder(v);
 
-  return this->bindImpl(abuilder, jprop, builder, v);
+  return this->bindImpl(abuilder, jprop, builder);
 }
 
 }  // namespace skottie::internal

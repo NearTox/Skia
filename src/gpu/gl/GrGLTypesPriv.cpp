@@ -47,7 +47,7 @@ void GrGLTextureParameters::invalidate() noexcept {
 
 void GrGLTextureParameters::set(
     const SamplerOverriddenState* samplerState, const NonsamplerState& nonsamplerState,
-    ResetTimestamp currTimestamp) {
+    ResetTimestamp currTimestamp) noexcept {
   if (samplerState) {
     fSamplerOverriddenState = *samplerState;
   }

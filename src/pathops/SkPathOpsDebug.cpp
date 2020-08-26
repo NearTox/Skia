@@ -702,7 +702,7 @@ void SkDConic::debugSet(const SkDPoint* pts, SkScalar weight) {
   fWeight = weight;
 }
 
-void SkDRect::debugInit() noexcept { fLeft = fTop = fRight = fBottom = SK_ScalarNaN; }
+void SkDRect::debugInit() { fLeft = fTop = fRight = fBottom = SK_ScalarNaN; }
 
 #include "src/pathops/SkOpAngle.h"
 #include "src/pathops/SkOpSegment.h"
@@ -2984,10 +2984,12 @@ static void debug_scale_matrix(const SkPath& one, const SkPath* two, SkMatrix& s
   larger.fRight *= hScale;
   larger.fTop *= vScale;
   larger.fBottom *= vScale;
-  SkScalar dx = -16000 > larger.fLeft ? -16000 - larger.fLeft
-                                      : 16000 < larger.fRight ? 16000 - larger.fRight : 0;
-  SkScalar dy = -16000 > larger.fTop ? -16000 - larger.fTop
-                                     : 16000 < larger.fBottom ? 16000 - larger.fBottom : 0;
+  SkScalar dx = -16000 > larger.fLeft   ? -16000 - larger.fLeft
+                : 16000 < larger.fRight ? 16000 - larger.fRight
+                                        : 0;
+  SkScalar dy = -16000 > larger.fTop     ? -16000 - larger.fTop
+                : 16000 < larger.fBottom ? 16000 - larger.fBottom
+                                         : 0;
   scale.preTranslate(dx, dy);
 }
 

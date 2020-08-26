@@ -58,7 +58,7 @@ class GrIORef : public SkNoncopyable {
   }
 
 #if GR_TEST_UTILS
-  int32_t testingOnly_getRefCnt() const noexcept { return this->getRefCnt(); }
+  int32_t testingOnly_getRefCnt() const { return this->getRefCnt(); }
 #endif
 
  protected:
@@ -116,7 +116,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    *
    * @return the amount of GPU memory used in bytes
    */
-  size_t gpuMemorySize() const {
+  size_t gpuMemorySize() const noexcept {
     if (kInvalidGpuMemorySize == fGpuMemorySize) {
       fGpuMemorySize = this->onGpuMemorySize();
       SkASSERT(kInvalidGpuMemorySize != fGpuMemorySize);
@@ -128,7 +128,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    public:
     constexpr UniqueID() noexcept = default;
 
-    explicit UniqueID(uint32_t id) noexcept : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
     uint32_t asUInt() const noexcept { return fID; }
 
@@ -255,7 +255,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    */
   void release();
 
-  virtual size_t onGpuMemorySize() const = 0;
+  virtual size_t onGpuMemorySize() const noexcept = 0;
 
   /**
    * Called by GrIORef when a resource is about to lose its last ref

@@ -17,7 +17,7 @@
 
 class GrSurfaceProxyView {
  public:
-  GrSurfaceProxyView() noexcept = default;
+  constexpr GrSurfaceProxyView() noexcept = default;
 
   GrSurfaceProxyView(
       sk_sp<GrSurfaceProxy> proxy, GrSurfaceOrigin origin, GrSwizzle swizzle) noexcept

@@ -7,6 +7,7 @@
 
 #include "include/gpu/GrContext.h"
 #include "src/core/SkCompressedDataUtils.h"
+#include "src/gpu/GrBackendUtils.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrSurface.h"
@@ -18,7 +19,7 @@
 
 size_t GrSurface::ComputeSize(
     const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, int colorSamplesPerPixel,
-    GrMipMapped mipMapped, bool binSize) {
+    GrMipMapped mipMapped, bool binSize) noexcept {
   // For external formats we do not actually know the real size of the resource so we just return
   // 0 here to indicate this.
   if (format.textureType() == GrTextureType::kExternal) {
@@ -31,7 +32,7 @@ size_t GrSurface::ComputeSize(
     dimensions = GrResourceProvider::MakeApprox(dimensions);
   }
 
-  SkImage::CompressionType compressionType = caps.compressionType(format);
+  SkImage::CompressionType compressionType = GrBackendFormatToCompressionType(format);
   if (compressionType != SkImage::CompressionType::kNone) {
     colorSize =
         SkCompressedFormatDataSize(compressionType, dimensions, mipMapped == GrMipMapped::kYes);

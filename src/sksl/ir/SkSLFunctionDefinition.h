@@ -21,8 +21,13 @@ struct ASTNode;
  */
 struct FunctionDefinition : public ProgramElement {
   FunctionDefinition(
-      int offset, const FunctionDeclaration& declaration, std::unique_ptr<Statement> body)
+      int offset, const FunctionDeclaration& declaration, std::unique_ptr<Statement> body) noexcept
       : INHERITED(offset, kFunction_Kind), fDeclaration(declaration), fBody(std::move(body)) {}
+
+  bool canBeInlined() const noexcept {
+    static const int INLINE_THRESHOLD = 50;  // chosen arbitrarily, feel free to adjust
+    return fBody->nodeCount() < INLINE_THRESHOLD;
+  }
 
   std::unique_ptr<ProgramElement> clone() const override {
     return std::unique_ptr<ProgramElement>(

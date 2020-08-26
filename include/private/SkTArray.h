@@ -20,10 +20,15 @@
 #include <new>
 #include <utility>
 
-/** When MEM_MOVE is true T will be bit copied when moved.
-    When MEM_MOVE is false, T will be copy constructed / destructed.
-    In all cases T will be default-initialized on allocation,
-    and its destructor will be called from this object's destructor.
+/** SkTArray<T> implements a typical, mostly std::vector-like array.
+    Each T will be default-initialized on allocation, and ~T will be called on destruction.
+
+    MEM_MOVE controls the behavior when a T needs to be moved (e.g. when the array is resized)
+      - true: T will be bit-copied via memcpy.
+      - false: T will be moved via move-constructors.
+
+    Modern implementations of std::vector<T> will generally provide similar performance
+    characteristics when used with appropriate care. Consider using std::vector<T> in new code.
 */
 template <typename T, bool MEM_MOVE = false>
 class SkTArray {
@@ -48,10 +53,23 @@ class SkTArray {
   }
 
   SkTArray(SkTArray&& that) noexcept(MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
-    // TODO: If 'that' owns its memory why don't we just steal the pointer?
-    this->init(that.fCount);
-    that.move(fItemArray);
-    that.fCount = 0;
+    if (that.fOwnMemory) {
+      fItemArray = that.fItemArray;
+      fCount = that.fCount;
+      fAllocCount = that.fAllocCount;
+      fOwnMemory = true;
+      fReserved = that.fReserved;
+
+      that.fItemArray = nullptr;
+      that.fCount = 0;
+      that.fAllocCount = 0;
+      that.fOwnMemory = true;
+      that.fReserved = false;
+    } else {
+      this->init(that.fCount);
+      that.move(fItemArray);
+      that.fCount = 0;
+    }
   }
 
   /**
@@ -365,6 +383,9 @@ class SkTArray {
     return fItemArray[i];
   }
 
+  T& at(int i) noexcept { return (*this)[i]; }
+  const T& at(int i) const noexcept { return (*this)[i]; }
+
   /**
    * equivalent to operator[](0)
    */
@@ -482,7 +503,7 @@ class SkTArray {
       fReserved = false;
     } else {
       fAllocCount = std::max(count, std::max(kMinHeapAllocCount, reserveCount));
-      fItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
+      fItemArray = (T*)sk_malloc_throw((size_t)fAllocCount, sizeof(T));
       fOwnMemory = true;
       fReserved = reserveCount > 0;
     }
@@ -538,7 +559,7 @@ class SkTArray {
   std::enable_if_t<!E, void> move(void* dst) noexcept(
       MEM_MOVE || std::is_nothrow_move_constructible_v<T>) {
     for (int i = 0; i < fCount; ++i) {
-      new (static_cast<char*>(dst) + sizeof(T) * i) T(std::move(fItemArray[i]));
+      new (static_cast<char*>(dst) + sizeof(T) * (size_t)i) T(std::move(fItemArray[i]));
       fItemArray[i].~T();
     }
   }
@@ -583,7 +604,7 @@ class SkTArray {
 
     fAllocCount = Sk64_pin_to_s32(newAllocCount);
     SkASSERT(fAllocCount >= newCount);
-    T* newItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
+    T* newItemArray = (T*)sk_malloc_throw((size_t)fAllocCount, sizeof(T));
     this->move(newItemArray);
     if (fOwnMemory) {
       sk_free(fItemArray);

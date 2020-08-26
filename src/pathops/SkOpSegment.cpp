@@ -58,7 +58,7 @@ SkOpAngle* SkOpSegment::activeAngle(
 }
 
 SkOpAngle* SkOpSegment::activeAngleInner(
-    SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done) noexcept {
+    SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done) {
   SkOpSpan* upSpan = start->upCastable();
   if (upSpan) {
     if (upSpan->windValue() || upSpan->oppValue()) {
@@ -158,7 +158,7 @@ bool SkOpSegment::activeWinding(SkOpSpanBase* start, SkOpSpanBase* end) {
   return activeWinding(start, end, &sumWinding);
 }
 
-bool SkOpSegment::activeWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* sumWinding) noexcept {
+bool SkOpSegment::activeWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* sumWinding) {
   int maxWinding;
   setUpWinding(start, end, &maxWinding, sumWinding);
   bool from = maxWinding != 0;
@@ -328,7 +328,7 @@ void SkOpSegment::clearOne(SkOpSpan* span) {
   this->markDone(span);
 }
 
-SkOpSpanBase::Collapsed SkOpSegment::collapsed(double s, double e) const {
+SkOpSpanBase::Collapsed SkOpSegment::collapsed(double s, double e) const noexcept {
   const SkOpSpanBase* span = &fHead;
   do {
     SkOpSpanBase::Collapsed result = span->collapsed(s, e);
@@ -482,7 +482,7 @@ int SkOpSegment::computeSum(
   return start->starter(end)->windSum();
 }
 
-bool SkOpSegment::contains(double newT) const {
+bool SkOpSegment::contains(double newT) const noexcept {
   const SkOpSpanBase* spanBase = &fHead;
   do {
     if (spanBase->ptT()->contains(this, newT)) {
@@ -1135,7 +1135,7 @@ SkOpSegment* SkOpSegment::nextChase(
 }
 
 // Please keep this in sync with DebugClearVisited()
-void SkOpSegment::ClearVisited(SkOpSpanBase* span) {
+void SkOpSegment::ClearVisited(SkOpSpanBase* span) noexcept {
   // reset visited flag back to false
   do {
     SkOpPtT *ptT = span->ptT(), *stopPtT = ptT;

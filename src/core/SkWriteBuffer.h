@@ -26,10 +26,8 @@ class SkWriteBuffer {
 
   virtual void writePad32(const void* buffer, size_t bytes) noexcept = 0;
 
-  virtual void writeByteArray(const void* data, size_t size) noexcept = 0;
-  void writeDataAsByteArray(SkData* data) noexcept {
-    this->writeByteArray(data->data(), data->size());
-  }
+  virtual void writeByteArray(const void* data, size_t size) = 0;
+  void writeDataAsByteArray(SkData* data) { this->writeByteArray(data->data(), data->size()); }
   virtual void writeBool(bool value) noexcept = 0;
   virtual void writeScalar(SkScalar value) noexcept = 0;
   virtual void writeScalarArray(const SkScalar* value, uint32_t count) noexcept = 0;
@@ -41,11 +39,11 @@ class SkWriteBuffer {
 
   virtual void writeFlattenable(const SkFlattenable* flattenable) = 0;
   virtual void writeColor(SkColor color) noexcept = 0;
-  virtual void writeColorArray(const SkColor* color, uint32_t count) = 0;
+  virtual void writeColorArray(const SkColor* color, uint32_t count) noexcept = 0;
   virtual void writeColor4f(const SkColor4f& color) noexcept = 0;
   virtual void writeColor4fArray(const SkColor4f* color, uint32_t count) noexcept = 0;
   virtual void writePoint(const SkPoint& point) noexcept = 0;
-  virtual void writePointArray(const SkPoint* point, uint32_t count) = 0;
+  virtual void writePointArray(const SkPoint* point, uint32_t count) noexcept = 0;
   virtual void writePoint3(const SkPoint3& point) noexcept = 0;
   virtual void writeMatrix(const SkMatrix& matrix) noexcept = 0;
   virtual void writeIRect(const SkIRect& rect) noexcept = 0;
@@ -118,6 +116,7 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
 
   bool writeToStream(SkWStream*) const;
   void writeToMemory(void* dst) const noexcept { fWriter.flatten(dst); }
+  sk_sp<SkData> snapshotAsData() const { return fWriter.snapshotAsData(); }
 
   void setFactoryRecorder(sk_sp<SkFactorySet>) noexcept;
   void setTypefaceRecorder(sk_sp<SkRefCntSet>) noexcept;
@@ -129,7 +128,7 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
   SkWriter32 fWriter;
 
   // Only used if we do not have an fFactorySet
-  SkTHashMap<SkFlattenable::Factory, uint32_t> fFlattenableDict;
+  SkTHashMap<const char*, uint32_t> fFlattenableDict;
 };
 
 #endif  // SkWriteBuffer_DEFINED

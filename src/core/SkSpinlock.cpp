@@ -35,7 +35,7 @@ static void debug_trace() noexcept {}
 #  include <emmintrin.h>
 static void do_pause() noexcept { _mm_pause(); }
 #else
-static void do_pause() { /*spin*/
+static void do_pause() noexcept { /*spin*/
 }
 #endif
 

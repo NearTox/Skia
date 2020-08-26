@@ -110,6 +110,12 @@ bool SkImage_GpuYUVA::setupMipmapsForPlanes(GrRecordingContext* context) const {
 
 GrSemaphoresSubmitted SkImage_GpuYUVA::onFlush(GrContext* context, const GrFlushInfo& info) {
   if (!context || !fContext->priv().matches(context) || fContext->abandoned()) {
+    if (info.fSubmittedProc) {
+      info.fSubmittedProc(info.fSubmittedContext, false);
+    }
+    if (info.fFinishedProc) {
+      info.fFinishedProc(info.fFinishedContext);
+    }
     return GrSemaphoresSubmitted::kNo;
   }
 
@@ -220,7 +226,13 @@ sk_sp<SkImage> SkImage_GpuYUVA::onReinterpretColorSpace(sk_sp<SkColorSpace> newC
 sk_sp<SkImage> SkImage::MakeFromYUVATextures(
     GrContext* ctx, SkYUVColorSpace colorSpace, const GrBackendTexture yuvaTextures[],
     const SkYUVAIndex yuvaIndices[4], SkISize imageSize, GrSurfaceOrigin imageOrigin,
-    sk_sp<SkColorSpace> imageColorSpace) {
+    sk_sp<SkColorSpace> imageColorSpace, TextureReleaseProc textureReleaseProc,
+    ReleaseContext releaseContext) {
+  sk_sp<GrRefCntedCallback> releaseHelper;
+  if (textureReleaseProc) {
+    releaseHelper.reset(new GrRefCntedCallback(textureReleaseProc, releaseContext));
+  }
+
   int numTextures;
   if (!SkYUVAIndex::AreValidIndices(yuvaIndices, &numTextures)) {
     return nullptr;
@@ -228,7 +240,8 @@ sk_sp<SkImage> SkImage::MakeFromYUVATextures(
 
   GrSurfaceProxyView tempViews[4];
   if (!SkImage_GpuBase::MakeTempTextureProxies(
-          ctx, yuvaTextures, numTextures, yuvaIndices, imageOrigin, tempViews)) {
+          ctx, yuvaTextures, numTextures, yuvaIndices, imageOrigin, tempViews,
+          std::move(releaseHelper))) {
     return nullptr;
   }
 

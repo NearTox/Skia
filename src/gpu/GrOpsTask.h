@@ -51,12 +51,12 @@ class GrOpsTask : public GrRenderTask {
  public:
   // The Arenas must outlive the GrOpsTask, either by preserving the context that owns
   // the pool, or by moving the pool to the DDL that takes over the GrOpsTask.
-  GrOpsTask(GrRecordingContext::Arenas, GrSurfaceProxyView, GrAuditTrail*) noexcept;
+  GrOpsTask(GrDrawingManager*, GrRecordingContext::Arenas, GrSurfaceProxyView, GrAuditTrail*);
   ~GrOpsTask() override;
 
   GrOpsTask* asOpsTask() noexcept override { return this; }
 
-  void addClosedObserver(GrOpsTaskClosedObserver* observer) {
+  void addClosedObserver(GrOpsTaskClosedObserver* observer) noexcept {
     SkASSERT(observer);
     fClosedObservers.push_back(observer);
   }
@@ -68,7 +68,7 @@ class GrOpsTask : public GrRenderTask {
   /**
    * Empties the draw buffer of any queued up draws.
    */
-  void endFlush() override;
+  void endFlush(GrDrawingManager*) override;
 
   void onPrePrepare(GrRecordingContext*) override;
   /**
@@ -78,7 +78,7 @@ class GrOpsTask : public GrRenderTask {
   void onPrepare(GrOpFlushState* flushState) override;
   bool onExecute(GrOpFlushState* flushState) override;
 
-  void addSampledTexture(GrSurfaceProxy* proxy) {
+  void addSampledTexture(GrSurfaceProxy* proxy) noexcept {
     // This function takes a GrSurfaceProxy because all subsequent uses of the proxy do not
     // require the specifics of GrTextureProxy, so this avoids a number of unnecessary virtual
     // asTextureProxy() calls. However, sampling the proxy implicitly requires that the proxy
@@ -89,10 +89,11 @@ class GrOpsTask : public GrRenderTask {
   }
 
   void addOp(
-      std::unique_ptr<GrOp> op, GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
-    auto addDependency = [textureResolveManager, &caps, this](
+      GrDrawingManager* drawingMgr, std::unique_ptr<GrOp> op,
+      GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
+    auto addDependency = [drawingMgr, textureResolveManager, &caps, this](
                              GrSurfaceProxy* p, GrMipMapped mipmapped) {
-      this->addDependency(p, mipmapped, textureResolveManager, caps);
+      this->addDependency(drawingMgr, p, mipmapped, textureResolveManager, caps);
     };
 
     op->visitProxies(addDependency);
@@ -101,19 +102,21 @@ class GrOpsTask : public GrRenderTask {
   }
 
   void addWaitOp(
-      std::unique_ptr<GrOp> op, GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
+      GrDrawingManager* drawingMgr, std::unique_ptr<GrOp> op,
+      GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
     fHasWaitOp = true;
-    this->addOp(std::move(op), textureResolveManager, caps);
+    this->addOp(drawingMgr, std::move(op), textureResolveManager, caps);
   }
 
   void addDrawOp(
-      std::unique_ptr<GrDrawOp> op, const GrProcessorSet::Analysis& processorAnalysis,
-      GrAppliedClip&& clip, const DstProxyView& dstProxyView,
-      GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
-    auto addDependency = [textureResolveManager, &caps, this](
+      GrDrawingManager* drawingMgr, std::unique_ptr<GrDrawOp> op,
+      const GrProcessorSet::Analysis& processorAnalysis, GrAppliedClip&& clip,
+      const DstProxyView& dstProxyView, GrTextureResolveManager textureResolveManager,
+      const GrCaps& caps) {
+    auto addDependency = [drawingMgr, textureResolveManager, &caps, this](
                              GrSurfaceProxy* p, GrMipMapped mipmapped) {
       this->addSampledTexture(p);
-      this->addDependency(p, mipmapped, textureResolveManager, caps);
+      this->addDependency(drawingMgr, p, mipmapped, textureResolveManager, caps);
     };
 
     op->visitProxies(addDependency);
@@ -131,7 +134,7 @@ class GrOpsTask : public GrRenderTask {
 
 #ifdef SK_DEBUG
   void dump(bool printDependencies) const override;
-  const char* name() const final { return "Ops"; }
+  const char* name() const noexcept final { return "Ops"; }
   int numClips() const override { return fNumClips; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;
 #endif
@@ -196,7 +199,9 @@ class GrOpsTask : public GrRenderTask {
    public:
     OpChain(const OpChain&) = delete;
     OpChain& operator=(const OpChain&) = delete;
-    OpChain(std::unique_ptr<GrOp>, GrProcessorSet::Analysis, GrAppliedClip*, const DstProxyView*);
+    OpChain(
+        std::unique_ptr<GrOp>, GrProcessorSet::Analysis, GrAppliedClip*,
+        const DstProxyView*) noexcept;
 
     ~OpChain() {
       // The ops are stored in a GrMemoryPool and must be explicitly deleted via the pool.
@@ -232,7 +237,7 @@ class GrOpsTask : public GrRenderTask {
    private:
     class List {
      public:
-      constexpr List() noexcept = default;
+      List() noexcept = default;
       List(std::unique_ptr<GrOp>) noexcept;
       List(List&&) noexcept;
       List& operator=(List&& that) noexcept;
@@ -242,7 +247,7 @@ class GrOpsTask : public GrRenderTask {
       GrOp* tail() const noexcept { return fTail; }
 
       std::unique_ptr<GrOp> popHead() noexcept;
-      std::unique_ptr<GrOp> removeOp(GrOp* op);
+      std::unique_ptr<GrOp> removeOp(GrOp* op) noexcept;
       void pushHead(std::unique_ptr<GrOp> op) noexcept;
       void pushTail(std::unique_ptr<GrOp>) noexcept;
 
@@ -253,7 +258,7 @@ class GrOpsTask : public GrRenderTask {
       GrOp* fTail = nullptr;
     };
 
-    void validate() const;
+    void validate() const noexcept;
 
     bool tryConcat(
         List*, GrProcessorSet::Analysis, const DstProxyView&, const GrAppliedClip*,

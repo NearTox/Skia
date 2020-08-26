@@ -55,7 +55,7 @@ class SkGpuDevice : public SkClipStackDevice {
       GrContext*, SkBudgeted, const SkImageInfo&, int sampleCount, GrSurfaceOrigin,
       const SkSurfaceProps*, GrMipMapped mipMapped, InitContents);
 
-  ~SkGpuDevice() override = default;
+  ~SkGpuDevice() override {}
 
   GrContext* context() const noexcept override { return fContext.get(); }
 
@@ -101,8 +101,7 @@ class SkGpuDevice : public SkClipStackDevice {
 
   void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
 
-  void drawSpecial(
-      SkSpecialImage*, int left, int top, const SkPaint& paint, SkImage*, const SkMatrix&) override;
+  void drawSpecial(SkSpecialImage*, int left, int top, const SkPaint&) override;
 
   void drawEdgeAAQuad(
       const SkRect& rect, const SkPoint clip[4], SkCanvas::QuadAAFlags aaFlags,
@@ -116,7 +115,9 @@ class SkGpuDevice : public SkClipStackDevice {
   sk_sp<SkSpecialImage> snapSpecial(const SkIRect&, bool = false) override;
 
   void flush() override;
-  GrSemaphoresSubmitted flush(SkSurface::BackendSurfaceAccess access, const GrFlushInfo&);
+  GrSemaphoresSubmitted flush(
+      SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
+      const GrBackendSurfaceMutableState*);
   bool wait(int numSemaphores, const GrBackendSemaphore* waitSemaphores);
 
   bool onAccessPixels(SkPixmap*) override;
@@ -131,6 +132,7 @@ class SkGpuDevice : public SkClipStackDevice {
   // We want these unreffed in RenderTargetContext, GrContext order.
   sk_sp<GrContext> fContext;
   std::unique_ptr<GrRenderTargetContext> fRenderTargetContext;
+  GrClipStackClip fClip;
 
   enum Flags {
     kNeedClear_Flag = 1 << 0,  //!< Surface requires an initial clear
@@ -150,7 +152,7 @@ class SkGpuDevice : public SkClipStackDevice {
 
   bool forceConservativeRasterClip() const override { return true; }
 
-  GrClipStackClip clip() const { return GrClipStackClip(&this->cs()); }
+  const GrClip* clip() const { return &fClip; }
 
   sk_sp<SkSpecialImage> filterTexture(
       SkSpecialImage*, int left, int top, SkIPoint* offset, const SkImageFilter* filter);

@@ -174,11 +174,11 @@ void GrBufferAllocPool::validate(bool unusedBlockAllowed) const {
 }
 #endif
 
-static inline size_t align_up_pad(size_t x, size_t alignment) noexcept {
+static constexpr inline size_t align_up_pad(size_t x, size_t alignment) noexcept {
   return (alignment - x % alignment) % alignment;
 }
 
-static inline size_t align_down(size_t x, uint32_t alignment) noexcept {
+static constexpr inline size_t align_down(size_t x, uint32_t alignment) noexcept {
   return (x / alignment) * alignment;
 }
 
@@ -375,7 +375,7 @@ bool GrBufferAllocPool::createBlock(size_t requestSize) {
   return true;
 }
 
-void GrBufferAllocPool::destroyBlock() {
+void GrBufferAllocPool::destroyBlock() noexcept {
   SkASSERT(!fBlocks.empty());
   SkASSERT(
       fBlocks.back().fBuffer->isCpuBuffer() ||

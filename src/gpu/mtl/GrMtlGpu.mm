@@ -11,6 +11,7 @@
 #include "src/core/SkCompressedDataUtils.h"
 #include "src/core/SkConvertPixels.h"
 #include "src/core/SkMipMap.h"
+#include "src/gpu/GrBackendUtils.h"
 #include "src/gpu/GrDataUtils.h"
 #include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/GrTexturePriv.h"
@@ -161,8 +162,8 @@ void GrMtlGpu::destroyResources() {
 }
 
 GrOpsRenderPass* GrMtlGpu::getOpsRenderPass(
-    GrRenderTarget* renderTarget, GrSurfaceOrigin origin, const SkIRect& bounds,
-    const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
+    GrRenderTarget* renderTarget, GrStencilAttachment*, GrSurfaceOrigin origin,
+    const SkIRect& bounds, const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo,
     const SkTArray<GrSurfaceProxy*, true>& sampledProxies) {
   return new GrMtlOpsRenderPass(this, renderTarget, origin, colorInfo, stencilInfo);
@@ -531,7 +532,7 @@ sk_sp<GrTexture> GrMtlGpu::onCreateCompressedTexture(
   id<MTLTexture> mtlTexture = tex->mtlTexture();
   SkASSERT(mtlTexture);
 
-  auto compressionType = GrMtlFormatToCompressionType(mtlTexture.pixelFormat);
+  auto compressionType = GrBackendFormatToCompressionType(format);
   SkASSERT(compressionType != SkImage::CompressionType::kNone);
 
   SkTArray<size_t> individualMipOffsets(numMipLevels);
@@ -819,7 +820,8 @@ bool GrMtlGpu::onUpdateBackendTexture(
   int numMipLevels = mtlTexture.mipmapLevelCount;
   GrMipMapped mipMapped = numMipLevels > 1 ? GrMipMapped::kYes : GrMipMapped::kNo;
 
-  SkImage::CompressionType compression = GrMtlFormatToCompressionType(mtlFormat);
+  SkImage::CompressionType compression =
+      GrBackendFormatToCompressionType(backendTexture.getBackendFormat());
 
   // Create a transfer buffer and fill with data.
   SkSTArray<16, size_t> individualMipOffsets;

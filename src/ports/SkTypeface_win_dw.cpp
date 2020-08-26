@@ -85,7 +85,7 @@ int DWriteFontTypeface::onGetUPEM() const {
 class LocalizedStrings_IDWriteLocalizedStrings : public SkTypeface::LocalizedStrings {
  public:
   /** Takes ownership of the IDWriteLocalizedStrings. */
-  explicit LocalizedStrings_IDWriteLocalizedStrings(IDWriteLocalizedStrings* strings) noexcept
+  explicit LocalizedStrings_IDWriteLocalizedStrings(IDWriteLocalizedStrings* strings)
       : fIndex(0), fStrings(strings) {}
 
   bool next(SkTypeface::LocalizedString* localizedString) override {
@@ -283,7 +283,7 @@ sk_sp<SkData> DWriteFontTypeface::onCopyTableData(SkFontTableTag tag) const {
       new Context(lock, fDWriteFontFace.get()));
 }
 
-inline void DWriteFontTypeface::weak_dispose() const noexcept {
+void DWriteFontTypeface::weak_dispose() const noexcept {
   fLoaders.reset();
 
   // SkTypefaceCache::Remove(this);

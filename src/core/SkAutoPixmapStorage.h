@@ -11,7 +11,7 @@
 #include "include/core/SkPixmap.h"
 #include "include/private/SkMalloc.h"
 
-class SkAutoPixmapStorage final : public SkPixmap {
+class SkAutoPixmapStorage : public SkPixmap {
  public:
   SkAutoPixmapStorage() noexcept;
   ~SkAutoPixmapStorage();
@@ -39,7 +39,7 @@ class SkAutoPixmapStorage final : public SkPixmap {
    *
    *  If the memory cannot be allocated, calls SK_ABORT().
    */
-  void alloc(const SkImageInfo&) noexcept;
+  void alloc(const SkImageInfo&);
 
   /**
    * Gets the size and optionally the rowBytes that would be allocated by SkAutoPixmapStorage if

@@ -9,6 +9,7 @@
 #include "include/private/SkMacros.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBlendModePriv.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkColorSpaceXformSteps.h"
 #include "src/core/SkCoreBlitters.h"
@@ -40,7 +41,7 @@ struct Params {
   SkBlendMode blendMode;
   Coverage coverage;
   SkFilterQuality quality;
-  SkMatrix ctm;
+  const SkMatrixProvider& matrices;
 
   Params withCoverage(Coverage c) const {
     Params p = *this;
@@ -54,7 +55,7 @@ struct Key {
   uint64_t shader, clip, colorSpace;
   uint8_t colorType, alphaType, blendMode, coverage;
   uint32_t padding{0};
-  // Params::quality and Params::ctm are only passed to {shader,clip}->program(),
+  // Params::quality and Params::matrices are only passed to {shader,clip}->program(),
   // not used here by the blitter itself.  No need to include them in the key;
   // they'll be folded into the shader key if used.
 
@@ -102,7 +103,7 @@ static Key cache_key(
 
     skvm::I32 dx = p.uniform32(uniforms->base, offsetof(BlitterUniforms, right)) - p.index(),
               dy = p.uniform32(uniforms->base, offsetof(BlitterUniforms, y));
-    skvm::F32 x = to_f32(dx) + 0.5f, y = to_f32(dy) + 0.5f;
+    skvm::Coord device = {to_f32(dx) + 0.5f, to_f32(dy) + 0.5f}, local = device;
 
     skvm::Color paint = {
         p.uniformF(uniforms->base, offsetof(BlitterUniforms, paint.fR)),
@@ -113,8 +114,8 @@ static Key cache_key(
 
     uint64_t hash = 0;
     if (auto c = sb->program(
-            &p, x, y, paint, params.ctm, /*localM=*/nullptr, params.quality, params.dst, uniforms,
-            alloc)) {
+            &p, device, local, paint, params.matrices, /*localM=*/nullptr, params.quality,
+            params.dst, uniforms, alloc)) {
       hash = p.hash();
       // p.hash() folds in all instructions to produce r,g,b,a but does not know
       // precisely which value we'll treat as which channel.  Imagine the shader
@@ -177,7 +178,7 @@ static void build_program(
 
   skvm::I32 dx = p->uniform32(uniforms->base, offsetof(BlitterUniforms, right)) - p->index(),
             dy = p->uniform32(uniforms->base, offsetof(BlitterUniforms, y));
-  skvm::F32 x = to_f32(dx) + 0.5f, y = to_f32(dy) + 0.5f;
+  skvm::Coord device = {to_f32(dx) + 0.5f, to_f32(dy) + 0.5f}, local = device;
 
   skvm::Color paint = {
       p->uniformF(uniforms->base, offsetof(BlitterUniforms, paint.fR)),
@@ -188,8 +189,8 @@ static void build_program(
 
   skvm::Color src = as_SB(params.shader)
                         ->program(
-                            p, x, y, paint, params.ctm, /*localM=*/nullptr, params.quality,
-                            params.dst, uniforms, alloc);
+                            p, device, local, paint, params.matrices, /*localM=*/nullptr,
+                            params.quality, params.dst, uniforms, alloc);
   SkASSERT(src);
   if (params.coverage == Coverage::Mask3D) {
     skvm::F32 M = from_unorm(8, p->load8(p->varying<uint8_t>())),
@@ -224,11 +225,10 @@ static void build_program(
   // and how coverage is applied, and to complicate things, LCD coverage
   // needs to know dst.a.  We're careful to assert it's loaded in time.
   skvm::Color dst;
-  SkDEBUGCODE(bool dst_loaded = false);
+  SkDEBUGCODE(bool dst_loaded = false;)
 
-  // load_coverage() returns false when there's no need to apply coverage.
-  auto load_coverage =
-      [&](skvm::Color* cov) {
+      // load_coverage() returns false when there's no need to apply coverage.
+      auto load_coverage = [&](skvm::Color* cov) {
         bool partial_coverage = true;
         switch (params.coverage) {
           case Coverage::Full:
@@ -256,8 +256,8 @@ static void build_program(
         if (params.clip) {
           skvm::Color clip = as_SB(params.clip)
                                  ->program(
-                                     p, x, y, paint, params.ctm, /*localM=*/nullptr, params.quality,
-                                     params.dst, uniforms, alloc);
+                                     p, device, local, paint, params.matrices, /*localM=*/nullptr,
+                                     params.quality, params.dst, uniforms, alloc);
           SkAssertResult(clip);
           cov->r *= clip.a;  // We use the alpha channel of clip for all four.
           cov->g *= clip.a;
@@ -379,7 +379,7 @@ static void build_program(
   }
 }
 
-struct NoopColorFilter : public SkColorFilter {
+struct NoopColorFilter : public SkColorFilterBase {
   skvm::Color onProgram(
       skvm::Builder*, skvm::Color c, SkColorSpace*, skvm::Uniforms*, SkArenaAlloc*) const override {
     return c;
@@ -389,7 +389,7 @@ struct NoopColorFilter : public SkColorFilter {
 
   // Only created here, should never be flattened / unflattened.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return "NoopColorFilter"; }
+  const char* getTypeName() const noexcept override { return "NoopColorFilter"; }
 };
 
 struct DitherShader : public SkShaderBase {
@@ -399,17 +399,17 @@ struct DitherShader : public SkShaderBase {
 
   // Only created here temporarily... never serialized.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return "DitherShader"; }
+  const char* getTypeName() const noexcept override { return "DitherShader"; }
 
   bool isOpaque() const noexcept override { return fShader->isOpaque(); }
 
   skvm::Color onProgram(
-      skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override {
+      skvm::Builder* p, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider& matrices, const SkMatrix* localM, SkFilterQuality quality,
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override {
     // Run our wrapped shader.
-    skvm::Color c =
-        as_SB(fShader)->program(p, x, y, paint, ctm, localM, quality, dst, uniforms, alloc);
+    skvm::Color c = as_SB(fShader)->program(
+        p, device, local, paint, matrices, localM, quality, dst, uniforms, alloc);
     if (!c) {
       return {};
     }
@@ -442,7 +442,9 @@ struct DitherShader : public SkShaderBase {
 
     // See SkRasterPipeline dither stage.
     // This is 8x8 ordered dithering.  From here we'll only need dx and dx^dy.
-    skvm::I32 X = trunc(x - 0.5f), Y = X ^ trunc(y - 0.5f);
+    SkASSERT(local.x.id == device.x.id);
+    SkASSERT(local.y.id == device.y.id);
+    skvm::I32 X = trunc(device.x - 0.5f), Y = X ^ trunc(device.y - 0.5f);
 
     // If X's low bits are abc and Y's def, M is fcebda,
     // 6 bits producing all values [0,63] shuffled over an 8x8 grid.
@@ -469,7 +471,8 @@ struct DitherShader : public SkShaderBase {
 };
 
 static Params effective_params(
-    const SkPixmap& device, const SkPaint& paint, const SkMatrix& ctm, sk_sp<SkShader> clip) {
+    const SkPixmap& device, const SkPaint& paint, const SkMatrixProvider& matrices,
+    sk_sp<SkShader> clip) {
   // Color filters have been handled for us by SkBlitter::Choose().
   SkASSERT(!paint.getColorFilter());
 
@@ -513,18 +516,18 @@ static Params effective_params(
       blendMode,
       Coverage::Full,  // Placeholder... withCoverage() will change as needed.
       paint.getFilterQuality(),
-      ctm,
+      matrices,
   };
 }
 
 class Blitter final : public SkBlitter {
  public:
   Blitter(
-      const SkPixmap& device, const SkPaint& paint, const SkMatrix& ctm, sk_sp<SkShader> clip,
-      bool* ok)
+      const SkPixmap& device, const SkPaint& paint, const SkMatrixProvider& matrices,
+      sk_sp<SkShader> clip, bool* ok)
       : fDevice(device),
         fUniforms(kBlitterUniformsCount),
-        fParams(effective_params(device, paint, ctm, std::move(clip))),
+        fParams(effective_params(device, paint, matrices, std::move(clip))),
         fKey(cache_key(fParams, &fUniforms, &fAlloc, ok)),
         fPaint([&] {
           SkColor4f color = paint.getColor4f();
@@ -694,9 +697,9 @@ class Blitter final : public SkBlitter {
 }  // namespace
 
 SkBlitter* SkCreateSkVMBlitter(
-    const SkPixmap& device, const SkPaint& paint, const SkMatrix& ctm, SkArenaAlloc* alloc,
-    sk_sp<SkShader> clip) {
+    const SkPixmap& device, const SkPaint& paint, const SkMatrixProvider& matrices,
+    SkArenaAlloc* alloc, sk_sp<SkShader> clip) {
   bool ok = true;
-  auto blitter = alloc->make<Blitter>(device, paint, ctm, std::move(clip), &ok);
+  auto blitter = alloc->make<Blitter>(device, paint, matrices, std::move(clip), &ok);
   return ok ? blitter : nullptr;
 }

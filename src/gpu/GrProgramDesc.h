@@ -22,7 +22,7 @@ class GrShaderCaps;
  */
 class GrProgramDesc {
  public:
-  GrProgramDesc(const GrProgramDesc& other) : fKey(other.fKey) {}  // for SkLRUCache
+  GrProgramDesc(const GrProgramDesc& other) noexcept : fKey(other.fKey) {}  // for SkLRUCache
 
   bool isValid() const noexcept { return !fKey.empty(); }
 
@@ -35,7 +35,7 @@ class GrProgramDesc {
     return fKey.count();
   }
 
-  GrProgramDesc& operator=(const GrProgramDesc& other) {
+  GrProgramDesc& operator=(const GrProgramDesc& other) noexcept {
     uint32_t keyLength = other.keyLength();
     fKey.reset(SkToInt(keyLength));
     memcpy(fKey.begin(), other.fKey.begin(), keyLength);
@@ -61,7 +61,7 @@ class GrProgramDesc {
 
   bool operator!=(const GrProgramDesc& other) const noexcept { return !(*this == other); }
 
-  uint32_t initialKeyLength() const { return this->header().fInitialKeyLength; }
+  uint32_t initialKeyLength() const noexcept { return this->header().fInitialKeyLength; }
 
  protected:
   friend class GrDawnCaps;
@@ -88,7 +88,7 @@ class GrProgramDesc {
 
   // This is strictly an OpenGL call since the other backends have additional data in their
   // keys
-  static bool BuildFromData(GrProgramDesc* desc, const void* keyData, size_t keyLength) {
+  static bool BuildFromData(GrProgramDesc* desc, const void* keyData, size_t keyLength) noexcept {
     if (!SkTFitsIn<int>(keyLength)) {
       return false;
     }
@@ -114,15 +114,15 @@ class GrProgramDesc {
   };
   static_assert(sizeof(KeyHeader) == 8);
 
-  const KeyHeader& header() const { return *this->atOffset<KeyHeader, kHeaderOffset>(); }
+  const KeyHeader& header() const noexcept { return *this->atOffset<KeyHeader, kHeaderOffset>(); }
 
   template <typename T, size_t OFFSET>
-  T* atOffset() {
+  T* atOffset() noexcept {
     return reinterpret_cast<T*>(reinterpret_cast<intptr_t>(fKey.begin()) + OFFSET);
   }
 
   template <typename T, size_t OFFSET>
-  const T* atOffset() const {
+  const T* atOffset() const noexcept {
     return reinterpret_cast<const T*>(reinterpret_cast<intptr_t>(fKey.begin()) + OFFSET);
   }
 

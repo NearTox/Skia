@@ -120,6 +120,10 @@ class SkAutoTArray {
     return fArray[index];
   }
 
+  // aliases matching other types like std::vector
+  const T* data() const noexcept { return fArray; }
+  T* data() noexcept { return fArray; }
+
  private:
   std::unique_ptr<T[]> fArray;
   SkDEBUGCODE(int fCount = 0);
@@ -207,6 +211,11 @@ class SkAutoSTArray {
     SkASSERT(index < fCount);
     return fArray[index];
   }
+
+  // aliases matching other types like std::vector
+  const T* data() const noexcept { return fArray; }
+  T* data() noexcept { return fArray; }
+  size_t size() const noexcept { return fCount; }
 
  private:
 #if defined(SK_BUILD_FOR_GOOGLE3)
@@ -444,13 +453,13 @@ class SkAlignedSTStorage {
 using SkAutoFree = std::unique_ptr<void, SkFunctionWrapper<void(void*), sk_free>>;
 
 template <typename C, std::size_t... Is>
-constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...>)
+constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...>) noexcept
     -> std::array<std::invoke_result<C(std::size_t)>, sizeof...(Is)> {
   return {{c(Is)...}};
 }
 
 template <size_t N, typename C>
-constexpr auto SkMakeArray(C c) -> std::array<std::invoke_result<C(std::size_t)>, N> {
+constexpr auto SkMakeArray(C c) noexcept -> std::array<std::invoke_result<C(std::size_t)>, N> {
   return SkMakeArrayFromIndexSequence(c, std::make_index_sequence<N>{});
 }
 

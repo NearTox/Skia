@@ -22,9 +22,9 @@ namespace {  // NOLINT(google-build-namespaces)
 // 1, 2 or 4 SkPMColors, generally vectorized.
 class Sk4px : public Sk16b {
  public:
-  Sk4px(const Sk16b& v) noexcept : INHERITED(v) {}
+  Sk4px(const Sk16b& v) : INHERITED(v) {}
 
-  static Sk4px DupPMColor(SkPMColor c) noexcept {
+  static Sk4px DupPMColor(SkPMColor c) {
     Sk4u splat(c);
 
     Sk4px v;
@@ -32,74 +32,72 @@ class Sk4px : public Sk16b {
     return v;
   }
 
-  Sk4px alphas() const noexcept;  // ARGB argb XYZW xyzw -> AAAA aaaa XXXX xxxx
-  Sk4px inv() const noexcept { return Sk16b(255) - *this; }
+  Sk4px alphas() const;  // ARGB argb XYZW xyzw -> AAAA aaaa XXXX xxxx
+  Sk4px inv() const { return Sk16b(255) - *this; }
 
   // When loading or storing fewer than 4 SkPMColors, we use the low lanes.
-  static Sk4px Load4(const SkPMColor px[4]) noexcept {
+  static Sk4px Load4(const SkPMColor px[4]) {
     Sk4px v;
     memcpy((void*)&v, px, 16);
     return v;
   }
-  static Sk4px Load2(const SkPMColor px[2]) noexcept {
+  static Sk4px Load2(const SkPMColor px[2]) {
     Sk4px v;
     memcpy((void*)&v, px, 8);
     return v;
   }
-  static Sk4px Load1(const SkPMColor px[1]) noexcept {
+  static Sk4px Load1(const SkPMColor px[1]) {
     Sk4px v;
     memcpy((void*)&v, px, 4);
     return v;
   }
 
   // Ditto for Alphas... Load2Alphas fills the low two lanes of Sk4px.
-  static Sk4px Load4Alphas(const SkAlpha[4]) noexcept;  // AaXx -> AAAA aaaa XXXX xxxx
-  static Sk4px Load2Alphas(const SkAlpha[2]) noexcept;  // Aa   -> AAAA aaaa ???? ????
+  static Sk4px Load4Alphas(const SkAlpha[4]);  // AaXx -> AAAA aaaa XXXX xxxx
+  static Sk4px Load2Alphas(const SkAlpha[2]);  // Aa   -> AAAA aaaa ???? ????
 
-  void store4(SkPMColor px[4]) const noexcept { memcpy(px, this, 16); }
-  void store2(SkPMColor px[2]) const noexcept { memcpy(px, this, 8); }
-  void store1(SkPMColor px[1]) const noexcept { memcpy(px, this, 4); }
+  void store4(SkPMColor px[4]) const { memcpy(px, this, 16); }
+  void store2(SkPMColor px[2]) const { memcpy(px, this, 8); }
+  void store1(SkPMColor px[1]) const { memcpy(px, this, 4); }
 
   // 1, 2, or 4 SkPMColors with 16-bit components.
   // This is most useful as the result of a multiply, e.g. from mulWiden().
   class Wide : public Sk16h {
    public:
-    Wide(const Sk16h& v) noexcept : Sk16h(v) {}
+    Wide(const Sk16h& v) : Sk16h(v) {}
 
     // Add, then pack the top byte of each component back down into 4 SkPMColors.
-    Sk4px addNarrowHi(const Sk16h&) const noexcept;
+    Sk4px addNarrowHi(const Sk16h&) const;
 
     // Rounds, i.e. (x+127) / 255.
-    Sk4px div255() const noexcept;
+    Sk4px div255() const;
 
     // These just keep the types as Wide so the user doesn't have to keep casting.
-    Wide operator*(const Wide& o) const noexcept { return INHERITED::operator*(o); }
-    Wide operator+(const Wide& o) const noexcept { return INHERITED::operator+(o); }
-    Wide operator-(const Wide& o) const noexcept { return INHERITED::operator-(o); }
-    Wide operator>>(int bits) const noexcept { return INHERITED::operator>>(bits); }
-    Wide operator<<(int bits) const noexcept { return INHERITED::operator<<(bits); }
+    Wide operator*(const Wide& o) const { return INHERITED::operator*(o); }
+    Wide operator+(const Wide& o) const { return INHERITED::operator+(o); }
+    Wide operator-(const Wide& o) const { return INHERITED::operator-(o); }
+    Wide operator>>(int bits) const { return INHERITED::operator>>(bits); }
+    Wide operator<<(int bits) const { return INHERITED::operator<<(bits); }
 
    private:
     typedef Sk16h INHERITED;
   };
 
-  Wide widen() const noexcept;                 // Widen 8-bit values to low 8-bits of 16-bit lanes.
-  Wide mulWiden(const Sk16b&) const noexcept;  // 8-bit x 8-bit -> 16-bit components.
+  Wide widen() const;                 // Widen 8-bit values to low 8-bits of 16-bit lanes.
+  Wide mulWiden(const Sk16b&) const;  // 8-bit x 8-bit -> 16-bit components.
 
   // The only 8-bit multiply we use is 8-bit x 8-bit -> 16-bit.  Might as well make it pithy.
-  Wide operator*(const Sk4px& o) const noexcept { return this->mulWiden(o); }
+  Wide operator*(const Sk4px& o) const { return this->mulWiden(o); }
 
   // These just keep the types as Sk4px so the user doesn't have to keep casting.
-  Sk4px operator+(const Sk4px& o) const noexcept { return INHERITED::operator+(o); }
-  Sk4px operator-(const Sk4px& o) const noexcept { return INHERITED::operator-(o); }
-  Sk4px operator<(const Sk4px& o) const noexcept { return INHERITED::operator<(o); }
-  Sk4px thenElse(const Sk4px& t, const Sk4px& e) const noexcept {
-    return INHERITED::thenElse(t, e);
-  }
+  Sk4px operator+(const Sk4px& o) const { return INHERITED::operator+(o); }
+  Sk4px operator-(const Sk4px& o) const { return INHERITED::operator-(o); }
+  Sk4px operator<(const Sk4px& o) const { return INHERITED::operator<(o); }
+  Sk4px thenElse(const Sk4px& t, const Sk4px& e) const { return INHERITED::thenElse(t, e); }
 
   // Generally faster than (*this * o).div255().
   // May be incorrect by +-1, but is always exactly correct when *this or o is 0 or 255.
-  Sk4px approxMulDiv255(const Sk16b& o) const noexcept {
+  Sk4px approxMulDiv255(const Sk16b& o) const {
     // (x*y + x) / 256 meets these criteria.  (As of course does (x*y + y) / 256 by symmetry.)
     // FYI: (x*y + 255) / 256 also meets these criteria.  In my brief testing, it was slower.
     return this->widen().addNarrowHi(*this * o);
@@ -256,7 +254,7 @@ class Sk4px : public Sk16b {
   }
 
  private:
-  Sk4px() noexcept = default;
+  Sk4px() = default;
 
   typedef Sk16b INHERITED;
 };

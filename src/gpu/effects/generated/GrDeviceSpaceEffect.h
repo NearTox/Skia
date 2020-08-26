@@ -10,31 +10,33 @@
  **************************************************************************************************/
 #ifndef GrDeviceSpaceEffect_DEFINED
 #define GrDeviceSpaceEffect_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrDeviceSpaceEffect : public GrFragmentProcessor {
  public:
-  static std::unique_ptr<GrFragmentProcessor> Make(std::unique_ptr<GrFragmentProcessor> fp) {
-    return std::unique_ptr<GrFragmentProcessor>(new GrDeviceSpaceEffect(std::move(fp)));
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      std::unique_ptr<GrFragmentProcessor> fp, const SkMatrix& matrix = SkMatrix::I()) {
+    return std::unique_ptr<GrFragmentProcessor>(new GrDeviceSpaceEffect(std::move(fp), matrix));
   }
   GrDeviceSpaceEffect(const GrDeviceSpaceEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "DeviceSpaceEffect"; }
   int fp_index = -1;
+  SkMatrix matrix;
 
  private:
-  GrDeviceSpaceEffect(std::unique_ptr<GrFragmentProcessor> fp) noexcept
-      : INHERITED(kGrDeviceSpaceEffect_ClassID, kNone_OptimizationFlags) {
+  GrDeviceSpaceEffect(std::unique_ptr<GrFragmentProcessor> fp, SkMatrix matrix)
+      : INHERITED(kGrDeviceSpaceEffect_ClassID, kNone_OptimizationFlags), matrix(matrix) {
     SkASSERT(fp);
-    fp_index = this->numChildProcessors();
-    fp->setSampledWithExplicitCoords();
-    this->registerChildProcessor(std::move(fp));
+    fp_index = this->registerExplicitlySampledChild(std::move(fp));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;

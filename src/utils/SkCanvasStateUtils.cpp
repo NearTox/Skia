@@ -244,11 +244,10 @@ static std::unique_ptr<SkCanvas> make_canvas_from_canvas_layer(
   SkASSERT(kRaster_CanvasBackend == layerState.type);
 
   SkBitmap bitmap;
-  SkColorType colorType = layerState.raster.config == kARGB_8888_RasterConfig
-                              ? kN32_SkColorType
-                              : layerState.raster.config == kRGB_565_RasterConfig
-                                    ? kRGB_565_SkColorType
-                                    : kUnknown_SkColorType;
+  SkColorType colorType = layerState.raster.config == kARGB_8888_RasterConfig ? kN32_SkColorType
+                          : layerState.raster.config == kRGB_565_RasterConfig
+                              ? kRGB_565_SkColorType
+                              : kUnknown_SkColorType;
 
   if (colorType == kUnknown_SkColorType) {
     return nullptr;

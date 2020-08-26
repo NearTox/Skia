@@ -114,7 +114,7 @@ GrGLSLFragmentProcessor* GrGLSLFragmentProcessor::Iter::operator->() const noexc
   return fFPStack.back();
 }
 
-GrGLSLFragmentProcessor::Iter& GrGLSLFragmentProcessor::Iter::operator++() {
+GrGLSLFragmentProcessor::Iter& GrGLSLFragmentProcessor::Iter::operator++() noexcept {
   SkASSERT(!fFPStack.empty());
   const GrGLSLFragmentProcessor* back = fFPStack.back();
   fFPStack.pop_back();

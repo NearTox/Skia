@@ -21,12 +21,12 @@ class SkColorShader : public SkShaderBase {
       specified color. Note: like all shaders, at draw time the paint's alpha
       will be respected, and is applied to the specified color.
   */
-  explicit SkColorShader(SkColor c);
+  explicit SkColorShader(SkColor c) noexcept;
 
   bool isOpaque() const noexcept override;
   bool isConstant() const noexcept override { return true; }
 
-  GradientType asAGradient(GradientInfo* info) const override;
+  GradientType asAGradient(GradientInfo* info) const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -35,9 +35,9 @@ class SkColorShader : public SkShaderBase {
  private:
   SK_FLATTENABLE_HOOKS(SkColorShader)
 
-  void flatten(SkWriteBuffer&) const override;
+  void flatten(SkWriteBuffer&) const noexcept override;
 
-  bool onAsLuminanceColor(SkColor* lum) const override {
+  bool onAsLuminanceColor(SkColor* lum) const noexcept override {
     *lum = fColor;
     return true;
   }
@@ -45,16 +45,16 @@ class SkColorShader : public SkShaderBase {
   bool onAppendStages(const SkStageRec&) const override;
 
   skvm::Color onProgram(
-      skvm::Builder*, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-      skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+      skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
 
   SkColor fColor;
 };
 
 class SkColor4Shader : public SkShaderBase {
  public:
-  SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>);
+  SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>) noexcept;
 
   bool isOpaque() const noexcept override { return fColor.isOpaque(); }
   bool isConstant() const noexcept override { return true; }
@@ -70,9 +70,9 @@ class SkColor4Shader : public SkShaderBase {
   bool onAppendStages(const SkStageRec&) const override;
 
   skvm::Color onProgram(
-      skvm::Builder*, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-      skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+      skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
 
   sk_sp<SkColorSpace> fColorSpace;
   const SkColor4f fColor;

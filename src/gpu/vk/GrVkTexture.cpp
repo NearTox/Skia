@@ -21,9 +21,10 @@
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 GrVkTexture::GrVkTexture(
     GrVkGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrVkImageInfo& info,
-    sk_sp<GrVkImageLayout> layout, const GrVkImageView* view, GrMipMapsStatus mipMapsStatus)
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* view,
+    GrMipMapsStatus mipMapsStatus)
     : GrSurface(gpu, dimensions, info.fProtected),
-      GrVkImage(gpu, info, std::move(layout), GrBackendObjectOwnership::kOwned),
+      GrVkImage(gpu, info, std::move(mutableState), GrBackendObjectOwnership::kOwned),
       INHERITED(gpu, dimensions, info.fProtected, GrTextureType::k2D, mipMapsStatus),
       fTextureView(view),
       fDescSetCache(kMaxCachedDescSets) {
@@ -37,11 +38,12 @@ GrVkTexture::GrVkTexture(
 }
 
 GrVkTexture::GrVkTexture(
-    GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout,
-    const GrVkImageView* view, GrMipMapsStatus mipMapsStatus, GrBackendObjectOwnership ownership,
-    GrWrapCacheable cacheable, GrIOType ioType, bool isExternal)
+    GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info,
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* view,
+    GrMipMapsStatus mipMapsStatus, GrBackendObjectOwnership ownership, GrWrapCacheable cacheable,
+    GrIOType ioType, bool isExternal)
     : GrSurface(gpu, dimensions, info.fProtected),
-      GrVkImage(gpu, info, std::move(layout), ownership),
+      GrVkImage(gpu, info, std::move(mutableState), ownership),
       INHERITED(
           gpu, dimensions, info.fProtected,
           isExternal ? GrTextureType::kExternal : GrTextureType::k2D, mipMapsStatus),
@@ -56,10 +58,11 @@ GrVkTexture::GrVkTexture(
 
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 GrVkTexture::GrVkTexture(
-    GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout,
-    const GrVkImageView* view, GrMipMapsStatus mipMapsStatus, GrBackendObjectOwnership ownership)
+    GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info,
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* view,
+    GrMipMapsStatus mipMapsStatus, GrBackendObjectOwnership ownership)
     : GrSurface(gpu, dimensions, info.fProtected),
-      GrVkImage(gpu, info, layout, ownership),
+      GrVkImage(gpu, info, std::move(mutableState), ownership),
       INHERITED(gpu, dimensions, info.fProtected, GrTextureType::k2D, mipMapsStatus),
       fTextureView(view),
       fDescSetCache(kMaxCachedDescSets) {
@@ -86,15 +89,16 @@ sk_sp<GrVkTexture> GrVkTexture::MakeNewTexture(
     GrVkImage::DestroyImageInfo(gpu, &info);
     return nullptr;
   }
-  sk_sp<GrVkImageLayout> layout(new GrVkImageLayout(info.fImageLayout));
-
+  sk_sp<GrBackendSurfaceMutableStateImpl> mutableState(
+      new GrBackendSurfaceMutableStateImpl(info.fImageLayout, info.fCurrentQueueFamily));
   return sk_sp<GrVkTexture>(new GrVkTexture(
-      gpu, budgeted, dimensions, info, std::move(layout), imageView, mipMapsStatus));
+      gpu, budgeted, dimensions, info, std::move(mutableState), imageView, mipMapsStatus));
 }
 
 sk_sp<GrVkTexture> GrVkTexture::MakeWrappedTexture(
     GrVkGpu* gpu, SkISize dimensions, GrWrapOwnership wrapOwnership, GrWrapCacheable cacheable,
-    GrIOType ioType, const GrVkImageInfo& info, sk_sp<GrVkImageLayout> layout) {
+    GrIOType ioType, const GrVkImageInfo& info,
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState) {
   // Adopted textures require both image and allocation because we're responsible for freeing
   SkASSERT(
       VK_NULL_HANDLE != info.fImage &&
@@ -116,8 +120,8 @@ sk_sp<GrVkTexture> GrVkTexture::MakeWrappedTexture(
   bool isExternal =
       info.fYcbcrConversionInfo.isValid() && (info.fYcbcrConversionInfo.fExternalFormat != 0);
   return sk_sp<GrVkTexture>(new GrVkTexture(
-      gpu, dimensions, info, std::move(layout), imageView, mipMapsStatus, ownership, cacheable,
-      ioType, isExternal));
+      gpu, dimensions, info, std::move(mutableState), imageView, mipMapsStatus, ownership,
+      cacheable, ioType, isExternal));
 }
 
 GrVkTexture::~GrVkTexture() {
@@ -141,13 +145,13 @@ void GrVkTexture::onRelease() {
 
   fDescSetCache.reset();
 
-  this->releaseImage(this->getVkGpu());
+  this->releaseImage();
 
   INHERITED::onRelease();
 }
 
 struct GrVkTexture::DescriptorCacheEntry {
-  DescriptorCacheEntry(const GrVkDescriptorSet* fDescSet, GrVkGpu* gpu)
+  DescriptorCacheEntry(const GrVkDescriptorSet* fDescSet, GrVkGpu* gpu) noexcept
       : fDescriptorSet(fDescSet), fGpu(gpu) {}
   ~DescriptorCacheEntry() {
     if (fDescriptorSet) {
@@ -175,20 +179,20 @@ void GrVkTexture::onAbandon() {
 
   fDescSetCache.reset();
 
-  this->releaseImage(this->getVkGpu());
+  this->releaseImage();
   INHERITED::onAbandon();
 }
 
-GrBackendTexture GrVkTexture::getBackendTexture() const {
-  return GrBackendTexture(this->width(), this->height(), fInfo, this->grVkImageLayout());
+GrBackendTexture GrVkTexture::getBackendTexture() const noexcept {
+  return GrBackendTexture(this->width(), this->height(), fInfo, this->getMutableState());
 }
 
-GrVkGpu* GrVkTexture::getVkGpu() const {
+GrVkGpu* GrVkTexture::getVkGpu() const noexcept {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrVkGpu*>(this->getGpu());
 }
 
-const GrVkImageView* GrVkTexture::textureView() { return fTextureView; }
+const GrVkImageView* GrVkTexture::textureView() noexcept { return fTextureView; }
 
 void GrVkTexture::addIdleProc(sk_sp<GrRefCntedCallback> idleProc, IdleState type) {
   INHERITED::addIdleProc(idleProc, type);
@@ -199,7 +203,7 @@ void GrVkTexture::addIdleProc(sk_sp<GrRefCntedCallback> idleProc, IdleState type
   }
 }
 
-void GrVkTexture::callIdleProcsOnBehalfOfResource() {
+void GrVkTexture::callIdleProcsOnBehalfOfResource() noexcept {
   // If we got here then the resource is being removed from its last command buffer and the
   // texture is idle in the cache. Any kFlush idle procs should already have been called. So
   // the texture and resource should have the same set of procs.
@@ -240,7 +244,7 @@ void GrVkTexture::willRemoveLastRef() noexcept {
   }
 }
 
-void GrVkTexture::removeFinishIdleProcs() {
+void GrVkTexture::removeFinishIdleProcs() noexcept {
   // This should only be called by onRelease/onAbandon when we have already checked for a
   // resource.
   const auto* resource = this->resource();

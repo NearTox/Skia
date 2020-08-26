@@ -27,15 +27,15 @@ GrPaint::GrPaint(const GrPaint& that)
   }
 }
 
-void GrPaint::setPorterDuffXPFactory(SkBlendMode mode) {
+void GrPaint::setPorterDuffXPFactory(SkBlendMode mode) noexcept {
   this->setXPFactory(GrPorterDuffXPFactory::Get(mode));
 }
 
-void GrPaint::setCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage) {
+void GrPaint::setCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage) noexcept {
   this->setXPFactory(GrCoverageSetOpXPFactory::Get(regionOp, invertCoverage));
 }
 
-bool GrPaint::isConstantBlendedColor(SkPMColor4f* constantColor) const {
+bool GrPaint::isConstantBlendedColor(SkPMColor4f* constantColor) const noexcept {
   // This used to do a more sophisticated analysis but now it just explicitly looks for common
   // cases.
   static const GrXPFactory* kSrc = GrPorterDuffXPFactory::Get(SkBlendMode::kSrc);

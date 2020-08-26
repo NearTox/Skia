@@ -18,7 +18,6 @@
 #if SK_SUPPORT_GPU
 #  include "include/effects/SkRuntimeEffect.h"
 #  include "include/private/GrRecordingContext.h"
-#  include "src/gpu/GrClip.h"
 #  include "src/gpu/GrColorSpaceXform.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/gpu/GrRenderTargetContext.h"
@@ -76,9 +75,7 @@ class ArithmeticImageFilterImpl final : public SkImageFilter_Base {
   friend void SkArithmeticImageFilter::RegisterFlattenables();
   SK_FLATTENABLE_HOOKS(ArithmeticImageFilterImpl)
 
-  bool affectsTransparentBlack() const noexcept override {
-    return !SkScalarNearlyZero(fInputs.fK[3]);
-  }
+  bool affectsTransparentBlack() const override { return !SkScalarNearlyZero(fInputs.fK[3]); }
 
   ArithmeticFPInputs fInputs;
 
@@ -345,7 +342,7 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
 
   if (background) {
     SkRect bgSubset = SkRect::Make(background->subset());
-    SkMatrix backgroundMatrix = SkMatrix::MakeTrans(
+    SkMatrix backgroundMatrix = SkMatrix::Translate(
         SkIntToScalar(bgSubset.left() - backgroundOffset.fX),
         SkIntToScalar(bgSubset.top() - backgroundOffset.fY));
     bgFP = GrTextureEffect::MakeSubset(
@@ -355,12 +352,12 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
         std::move(bgFP), background->getColorSpace(), background->alphaType(), ctx.colorSpace());
   } else {
     bgFP = GrConstColorProcessor::Make(
-        SK_PMColor4fTRANSPARENT, GrConstColorProcessor::InputMode::kIgnore);
+        /*inputFP=*/nullptr, SK_PMColor4fTRANSPARENT, GrConstColorProcessor::InputMode::kIgnore);
   }
 
   if (foreground) {
     SkRect fgSubset = SkRect::Make(foreground->subset());
-    SkMatrix foregroundMatrix = SkMatrix::MakeTrans(
+    SkMatrix foregroundMatrix = SkMatrix::Translate(
         SkIntToScalar(fgSubset.left() - foregroundOffset.fX),
         SkIntToScalar(fgSubset.top() - foregroundOffset.fY));
     auto fgFP = GrTextureEffect::MakeSubset(
@@ -393,8 +390,7 @@ sk_sp<SkSpecialImage> ArithmeticImageFilterImpl::filterImageGPU(
 
   SkMatrix matrix;
   matrix.setTranslate(SkIntToScalar(-bounds.left()), SkIntToScalar(-bounds.top()));
-  renderTargetContext->drawRect(
-      GrNoClip(), std::move(paint), GrAA::kNo, matrix, SkRect::Make(bounds));
+  renderTargetContext->drawRect(nullptr, std::move(paint), GrAA::kNo, matrix, SkRect::Make(bounds));
 
   return SkSpecialImage::MakeDeferredFromGpu(
       context, SkIRect::MakeWH(bounds.width(), bounds.height()), kNeedNewImageUniqueID_SpecialImage,

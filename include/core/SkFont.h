@@ -185,7 +185,7 @@ class SK_API SkFont {
       @param size  typographic height of text
       @return      initialized SkFont
    */
-  SkFont makeWithSize(SkScalar size) const;
+  SkFont makeWithSize(SkScalar size) const noexcept;
 
   /** Returns SkTypeface if set, or nullptr.
       Does not alter SkTypeface SkRefCnt.
@@ -226,7 +226,7 @@ class SK_API SkFont {
 
       @return  SkTypeface if previously set, nullptr otherwise
   */
-  sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
+  sk_sp<SkTypeface> refTypeface() const noexcept { return fTypeface; }
 
   /** Increases SkTypeface SkRefCnt by one.
 
@@ -241,7 +241,7 @@ class SK_API SkFont {
 
       @param tf  font and style used to draw text
   */
-  void setTypeface(sk_sp<SkTypeface> tf) { fTypeface = tf; }
+  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = std::move(tf); }
 
   /** Sets text size in points.
       Has no effect if textSize is not greater than or equal to zero.

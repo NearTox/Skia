@@ -24,7 +24,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
    *  position and tangent.
    */
   bool SK_WARN_UNUSED_RESULT
-  getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) const;
+  getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) const noexcept;
 
   enum MatrixFlags {
     kGetPosition_MatrixFlag = 0x01,
@@ -38,7 +38,8 @@ class SK_API SkContourMeasure : public SkRefCnt {
    matrix is unchanged.
    */
   bool SK_WARN_UNUSED_RESULT getMatrix(
-      SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag) const;
+      SkScalar distance, SkMatrix* matrix,
+      MatrixFlags flags = kGetPosAndTan_MatrixFlag) const noexcept;
 
   /** Given a start and stop distance, return in dst the intervening segment(s).
    If the segment is zero-length, return false, else return true.

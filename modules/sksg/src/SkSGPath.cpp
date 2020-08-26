@@ -13,7 +13,7 @@
 
 namespace sksg {
 
-Path::Path(const SkPath& path) : fPath(path) {}
+Path::Path(const SkPath& path) noexcept : fPath(path) {}
 
 void Path::onClip(SkCanvas* canvas, bool antiAlias) const {
   canvas->clipPath(fPath, SkClipOp::kIntersect, antiAlias);
@@ -21,9 +21,9 @@ void Path::onClip(SkCanvas* canvas, bool antiAlias) const {
 
 void Path::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawPath(fPath, paint); }
 
-bool Path::onContains(const SkPoint& p) const { return fPath.contains(p.x(), p.y()); }
+bool Path::onContains(const SkPoint& p) const noexcept { return fPath.contains(p.x(), p.y()); }
 
-SkRect Path::onRevalidate(InvalidationController*, const SkMatrix&) {
+SkRect Path::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   SkASSERT(this->hasInval());
 
   const auto ft = fPath.getFillType();
@@ -34,6 +34,6 @@ SkRect Path::onRevalidate(InvalidationController*, const SkMatrix&) {
              : SkRectPriv::MakeLargeS32();
 }
 
-SkPath Path::onAsPath() const { return fPath; }
+SkPath Path::onAsPath() const noexcept { return fPath; }
 
 }  // namespace sksg

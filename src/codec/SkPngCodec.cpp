@@ -421,7 +421,7 @@ std::unique_ptr<SkEncodedInfo::ICCProfile> read_color_profile(
   skcms_SetXYZD50(&skcmsProfile, &toXYZD50);
 
   return SkEncodedInfo::ICCProfile::Make(skcmsProfile);
-#else   // LIBPNG >= 1.6
+#else  // LIBPNG >= 1.6
   return nullptr;
 #endif  // LIBPNG >= 1.6
 }
@@ -1004,8 +1004,7 @@ SkCodec::Result SkPngCodec::initializeXforms(const SkImageInfo& dstInfo, const O
       if (this->getEncodedInfo().bitsPerComponent() != 16) {
         break;
       }
-
-      // Fall through
+      [[fallthrough]];
     case SkEncodedInfo::kRGBA_Color:
     case SkEncodedInfo::kGray_Color: skipFormatConversion = this->colorXform(); break;
     default: break;

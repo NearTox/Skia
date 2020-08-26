@@ -119,10 +119,11 @@ void CoverageSetOpXP::onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) cons
 ///////////////////////////////////////////////////////////////////////////////
 
 constexpr GrCoverageSetOpXPFactory::GrCoverageSetOpXPFactory(
-    SkRegion::Op regionOp, bool invertCoverage)
+    SkRegion::Op regionOp, bool invertCoverage) noexcept
     : fRegionOp(regionOp), fInvertCoverage(invertCoverage) {}
 
-const GrXPFactory* GrCoverageSetOpXPFactory::Get(SkRegion::Op regionOp, bool invertCoverage) {
+const GrXPFactory* GrCoverageSetOpXPFactory::Get(
+    SkRegion::Op regionOp, bool invertCoverage) noexcept {
   // If these objects are constructed as static constexpr by cl.exe (2015 SP2) the vtables are
   // null.
 #ifdef SK_BUILD_FOR_WIN

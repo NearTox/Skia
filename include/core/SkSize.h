@@ -75,9 +75,7 @@ struct SkSize {
   constexpr SkScalar width() const noexcept { return fWidth; }
   constexpr SkScalar height() const noexcept { return fHeight; }
 
-  constexpr bool equals(SkScalar w, SkScalar h) const noexcept {
-    return fWidth == w && fHeight == h;
-  }
+  bool equals(SkScalar w, SkScalar h) const noexcept { return fWidth == w && fHeight == h; }
 
   SkISize toRound() const noexcept {
     return {SkScalarRoundToInt(fWidth), SkScalarRoundToInt(fHeight)};

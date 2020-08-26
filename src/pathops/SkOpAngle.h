@@ -67,7 +67,7 @@ class SkOpAngle {
 
   SkOpAngle* next() const noexcept { return fNext; }
 
-  SkOpAngle* previous() const noexcept;
+  SkOpAngle* previous() const;
   SkOpSegment* segment() const;
   void set(SkOpSpanBase* start, SkOpSpanBase* end);
 

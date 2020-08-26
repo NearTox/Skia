@@ -122,6 +122,7 @@ static GrBackendTexture create_yuva_texture(
   auto beTex = context->createBackendTexture(
       &pm, 1, GrRenderable::kNo, GrProtected::kNo, markFinished, &finishedBECreate);
   if (beTex.isValid()) {
+    context->submit();
     while (!finishedBECreate) {
       context->checkAsyncWorkCompletion();
     }
@@ -167,6 +168,7 @@ void DDLPromiseImageHelper::CreateBETexturesForPromiseImage(
         mipLevels.get(), info->numMipLevels(), GrRenderable::kNo, GrProtected::kNo, markFinished,
         &finishedBECreate);
     SkASSERT(backendTex.isValid());
+    context->submit();
     while (!finishedBECreate) {
       context->checkAsyncWorkCompletion();
     }

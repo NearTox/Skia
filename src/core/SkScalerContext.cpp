@@ -91,7 +91,7 @@ SkScalerContext::SkScalerContext(
 #endif
 }
 
-SkScalerContext::~SkScalerContext() {}
+SkScalerContext::~SkScalerContext() = default;
 
 /**
  * In order to call cachedDeviceLuminance, cachedPaintLuminance, or
@@ -279,7 +279,7 @@ SK_ERROR:
 
 #define SK_SHOW_TEXT_BLIT_COVERAGE 0
 
-static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) {
+static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) noexcept {
   uint8_t* SK_RESTRICT dst = (uint8_t*)mask.fImage;
   unsigned rowBytes = mask.fRowBytes;
 
@@ -293,7 +293,7 @@ static void applyLUTToA8Mask(const SkMask& mask, const uint8_t* lut) {
 
 static void pack4xHToLCD16(
     const SkPixmap& src, const SkMask& dst, const SkMaskGamma::PreBlend& maskPreBlend,
-    const bool doBGR, const bool doVert) {
+    const bool doBGR, const bool doVert) noexcept {
 #define SAMPLES_PER_PIXEL 4
 #define LCD_PER_PIXEL 3
   SkASSERT(kAlpha_8_SkColorType == src.colorType());
@@ -308,142 +308,142 @@ static void pack4xHToLCD16(
     SkASSERT(src.height() == dst.fBounds.height());
   }
 
-    const int sample_width = src.width();
-    const int height = src.height();
+  const int sample_width = src.width();
+  const int height = src.height();
 
-    uint16_t* dstImage = (uint16_t*)dst.fImage;
-    size_t dstRB = dst.fRowBytes;
-    // An N tap FIR is defined by
-    // out[n] = coeff[0]*x[n] + coeff[1]*x[n-1] + ... + coeff[N]*x[n-N]
-    // or
-    // out[n] = sum(i, 0, N, coeff[i]*x[n-i])
+  uint16_t* dstImage = (uint16_t*)dst.fImage;
+  size_t dstRB = dst.fRowBytes;
+  // An N tap FIR is defined by
+  // out[n] = coeff[0]*x[n] + coeff[1]*x[n-1] + ... + coeff[N]*x[n-N]
+  // or
+  // out[n] = sum(i, 0, N, coeff[i]*x[n-i])
 
-    // The strategy is to use one FIR (different coefficients) for each of r, g, and b.
-    // This means using every 4th FIR output value of each FIR and discarding the rest.
-    // The FIRs are aligned, and the coefficients reach 5 samples to each side of their 'center'.
-    // (For r and b this is technically incorrect, but the coeffs outside round to zero anyway.)
+  // The strategy is to use one FIR (different coefficients) for each of r, g, and b.
+  // This means using every 4th FIR output value of each FIR and discarding the rest.
+  // The FIRs are aligned, and the coefficients reach 5 samples to each side of their 'center'.
+  // (For r and b this is technically incorrect, but the coeffs outside round to zero anyway.)
 
-    // These are in some fixed point repesentation.
-    // Adding up to more than one simulates ink spread.
-    // For implementation reasons, these should never add up to more than two.
+  // These are in some fixed point repesentation.
+  // Adding up to more than one simulates ink spread.
+  // For implementation reasons, these should never add up to more than two.
 
-    // Coefficients determined by a gausian where 5 samples = 3 std deviations (0x110 'contrast').
-    // Calculated using tools/generate_fir_coeff.py
-    // With this one almost no fringing is ever seen, but it is imperceptibly blurry.
-    // The lcd smoothed text is almost imperceptibly different from gray,
-    // but is still sharper on small stems and small rounded corners than gray.
-    // This also seems to be about as wide as one can get and only have a three pixel kernel.
-    // TODO: calculate these at runtime so parameters can be adjusted (esp contrast).
-    static const unsigned int coefficients[LCD_PER_PIXEL][SAMPLES_PER_PIXEL * 3] = {
-        // The red subpixel is centered inside the first sample (at 1/6 pixel), and is shifted.
-        {
-            0x03,
-            0x0b,
-            0x1c,
-            0x33,
-            0x40,
-            0x39,
-            0x24,
-            0x10,
-            0x05,
-            0x01,
-            0x00,
-            0x00,
-        },
-        // The green subpixel is centered between two samples (at 1/2 pixel), so is symetric
-        {
-            0x00,
-            0x02,
-            0x08,
-            0x16,
-            0x2b,
-            0x3d,
-            0x3d,
-            0x2b,
-            0x16,
-            0x08,
-            0x02,
-            0x00,
-        },
-        // The blue subpixel is centered inside the last sample (at 5/6 pixel), and is shifted.
-        {
-            0x00,
-            0x00,
-            0x01,
-            0x05,
-            0x10,
-            0x24,
-            0x39,
-            0x40,
-            0x33,
-            0x1c,
-            0x0b,
-            0x03,
-        },
-    };
+  // Coefficients determined by a gausian where 5 samples = 3 std deviations (0x110 'contrast').
+  // Calculated using tools/generate_fir_coeff.py
+  // With this one almost no fringing is ever seen, but it is imperceptibly blurry.
+  // The lcd smoothed text is almost imperceptibly different from gray,
+  // but is still sharper on small stems and small rounded corners than gray.
+  // This also seems to be about as wide as one can get and only have a three pixel kernel.
+  // TODO: calculate these at runtime so parameters can be adjusted (esp contrast).
+  static const unsigned int coefficients[LCD_PER_PIXEL][SAMPLES_PER_PIXEL * 3] = {
+      // The red subpixel is centered inside the first sample (at 1/6 pixel), and is shifted.
+      {
+          0x03,
+          0x0b,
+          0x1c,
+          0x33,
+          0x40,
+          0x39,
+          0x24,
+          0x10,
+          0x05,
+          0x01,
+          0x00,
+          0x00,
+      },
+      // The green subpixel is centered between two samples (at 1/2 pixel), so is symetric
+      {
+          0x00,
+          0x02,
+          0x08,
+          0x16,
+          0x2b,
+          0x3d,
+          0x3d,
+          0x2b,
+          0x16,
+          0x08,
+          0x02,
+          0x00,
+      },
+      // The blue subpixel is centered inside the last sample (at 5/6 pixel), and is shifted.
+      {
+          0x00,
+          0x00,
+          0x01,
+          0x05,
+          0x10,
+          0x24,
+          0x39,
+          0x40,
+          0x33,
+          0x1c,
+          0x0b,
+          0x03,
+      },
+  };
 
-    for (int y = 0; y < height; ++y) {
-      uint16_t* dstP;
-      size_t dstPDelta;
-      if (doVert) {
-        dstP = dstImage + y;
-        dstPDelta = dstRB;
-      } else {
-        dstP = SkTAddOffset<uint16_t>(dstImage, dstRB * y);
-        dstPDelta = sizeof(uint16_t);
-      }
-
-      const uint8_t* srcP = src.addr8(0, y);
-
-      // TODO: this fir filter implementation is straight forward, but slow.
-      // It should be possible to make it much faster.
-      for (int sample_x = -4; sample_x < sample_width + 4; sample_x += 4) {
-        int fir[LCD_PER_PIXEL] = {0};
-        for (int sample_index = std::max(0, sample_x - 4),
-                 coeff_index = sample_index - (sample_x - 4);
-             sample_index < std::min(sample_x + 8, sample_width); ++sample_index, ++coeff_index) {
-          int sample_value = srcP[sample_index];
-          for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
-            fir[subpxl_index] += coefficients[subpxl_index][coeff_index] * sample_value;
-          }
-        }
-        for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
-          fir[subpxl_index] /= 0x100;
-          fir[subpxl_index] = std::min(fir[subpxl_index], 255);
-        }
-
-        U8CPU r, g, b;
-        if (doBGR) {
-          r = fir[2];
-          g = fir[1];
-          b = fir[0];
-        } else {
-          r = fir[0];
-          g = fir[1];
-          b = fir[2];
-        }
-        if (maskPreBlend.isApplicable()) {
-          r = maskPreBlend.fR[r];
-          g = maskPreBlend.fG[g];
-          b = maskPreBlend.fB[b];
-        }
-#if SK_SHOW_TEXT_BLIT_COVERAGE
-        r = std::max(r, 10);
-        g = std::max(g, 10);
-        b = std::max(b, 10);
-#endif
-        *dstP = SkPack888ToRGB16(r, g, b);
-        dstP = SkTAddOffset<uint16_t>(dstP, dstPDelta);
-      }
+  for (int y = 0; y < height; ++y) {
+    uint16_t* dstP;
+    size_t dstPDelta;
+    if (doVert) {
+      dstP = dstImage + y;
+      dstPDelta = dstRB;
+    } else {
+      dstP = SkTAddOffset<uint16_t>(dstImage, dstRB * y);
+      dstPDelta = sizeof(uint16_t);
     }
+
+    const uint8_t* srcP = src.addr8(0, y);
+
+    // TODO: this fir filter implementation is straight forward, but slow.
+    // It should be possible to make it much faster.
+    for (int sample_x = -4; sample_x < sample_width + 4; sample_x += 4) {
+      int fir[LCD_PER_PIXEL] = {0};
+      for (int sample_index = std::max(0, sample_x - 4),
+               coeff_index = sample_index - (sample_x - 4);
+           sample_index < std::min(sample_x + 8, sample_width); ++sample_index, ++coeff_index) {
+        int sample_value = srcP[sample_index];
+        for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
+          fir[subpxl_index] += coefficients[subpxl_index][coeff_index] * sample_value;
+        }
+      }
+      for (int subpxl_index = 0; subpxl_index < LCD_PER_PIXEL; ++subpxl_index) {
+        fir[subpxl_index] /= 0x100;
+        fir[subpxl_index] = std::min(fir[subpxl_index], 255);
+      }
+
+      U8CPU r, g, b;
+      if (doBGR) {
+        r = fir[2];
+        g = fir[1];
+        b = fir[0];
+      } else {
+        r = fir[0];
+        g = fir[1];
+        b = fir[2];
+      }
+      if (maskPreBlend.isApplicable()) {
+        r = maskPreBlend.fR[r];
+        g = maskPreBlend.fG[g];
+        b = maskPreBlend.fB[b];
+      }
+#if SK_SHOW_TEXT_BLIT_COVERAGE
+      r = std::max(r, 10);
+      g = std::max(g, 10);
+      b = std::max(b, 10);
+#endif
+      *dstP = SkPack888ToRGB16(r, g, b);
+      dstP = SkTAddOffset<uint16_t>(dstP, dstPDelta);
+    }
+  }
 }
 
-static inline int convert_8_to_1(unsigned byte) {
+static inline int convert_8_to_1(unsigned byte) noexcept {
   SkASSERT(byte <= 0xFF);
   return byte >> 7;
 }
 
-static uint8_t pack_8_to_1(const uint8_t alpha[8]) {
+static uint8_t pack_8_to_1(const uint8_t alpha[8]) noexcept {
   unsigned bits = 0;
   for (int i = 0; i < 8; ++i) {
     bits <<= 1;
@@ -452,7 +452,7 @@ static uint8_t pack_8_to_1(const uint8_t alpha[8]) {
   return SkToU8(bits);
 }
 
-static void packA8ToA1(const SkMask& mask, const uint8_t* src, size_t srcRB) {
+static void packA8ToA1(const SkMask& mask, const uint8_t* src, size_t srcRB) noexcept {
   const int height = mask.fBounds.height();
   const int width = mask.fBounds.width();
   const int octs = width >> 3;
@@ -720,7 +720,7 @@ bool SkScalerContext::internalGetPath(SkPackedGlyphID glyphID, SkPath* devPath) 
   return true;
 }
 
-void SkScalerContextRec::getMatrixFrom2x2(SkMatrix* dst) const {
+void SkScalerContextRec::getMatrixFrom2x2(SkMatrix* dst) const noexcept {
   dst->setAll(fPost2x2[0][0], fPost2x2[0][1], 0, fPost2x2[1][0], fPost2x2[1][1], 0, 0, 0, 1);
 }
 
@@ -849,11 +849,11 @@ bool SkScalerContextRec::computeMatrices(
   return true;
 }
 
-SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() const {
+SkAxisAlignment SkScalerContext::computeAxisAlignmentForHText() const noexcept {
   return fRec.computeAxisAlignmentForHText();
 }
 
-SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const {
+SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const noexcept {
   // Why fPost2x2 can be used here.
   // getSingleMatrix multiplies in getLocalMatrix, which consists of
   // * fTextSize (a scale, which has no effect)
@@ -876,7 +876,7 @@ SkAxisAlignment SkScalerContextRec::computeAxisAlignmentForHText() const {
   return kNone_SkAxisAlignment;
 }
 
-void SkScalerContextRec::setLuminanceColor(SkColor c) {
+void SkScalerContextRec::setLuminanceColor(SkColor c) noexcept {
   fLumBits =
       SkMaskGamma::CanonicalColor(SkColorSetRGB(SkColorGetR(c), SkColorGetG(c), SkColorGetB(c)));
 }
@@ -895,12 +895,12 @@ std::unique_ptr<SkScalerContext> SkTypeface::createScalerContext(
  *  that vary only slightly when we create our key into the font cache, since the font scaler
  *  typically returns the same looking resuts for tiny changes in the matrix.
  */
-static SkScalar sk_relax(SkScalar x) {
+static SkScalar sk_relax(SkScalar x) noexcept {
   SkScalar n = SkScalarRoundToScalar(x * 1024);
   return n / 1024.0f;
 }
 
-static SkMask::Format compute_mask_format(const SkFont& font) {
+static SkMask::Format compute_mask_format(const SkFont& font) noexcept {
   switch (font.getEdging()) {
     case SkFont::Edging::kAlias: return SkMask::kBW_Format;
     case SkFont::Edging::kAntiAlias: return SkMask::kA8_Format;
@@ -916,9 +916,9 @@ static SkMask::Format compute_mask_format(const SkFont& font) {
 #  define SK_MAX_SIZE_FOR_LCDTEXT 48
 #endif
 
-const SkScalar gMaxSize2ForLCDText = SK_MAX_SIZE_FOR_LCDTEXT * SK_MAX_SIZE_FOR_LCDTEXT;
+constexpr SkScalar gMaxSize2ForLCDText = SK_MAX_SIZE_FOR_LCDTEXT * SK_MAX_SIZE_FOR_LCDTEXT;
 
-static bool too_big_for_lcd(const SkScalerContextRec& rec, bool checkPost2x2) {
+static bool too_big_for_lcd(const SkScalerContextRec& rec, bool checkPost2x2) noexcept {
   if (checkPost2x2) {
     SkScalar area =
         rec.fPost2x2[0][0] * rec.fPost2x2[1][1] - rec.fPost2x2[1][0] * rec.fPost2x2[0][1];
@@ -1168,7 +1168,7 @@ SkScalerContext* SkScalerContext::MakeEmptyContext(
         : SkScalerContext(std::move(typeface), effects, desc) {}
 
    protected:
-    unsigned generateGlyphCount() override { return 0; }
+    unsigned generateGlyphCount() noexcept override { return 0; }
     bool generateAdvance(SkGlyph* glyph) override {
       glyph->zeroMetrics();
       return true;
@@ -1177,12 +1177,12 @@ SkScalerContext* SkScalerContext::MakeEmptyContext(
       glyph->fMaskFormat = fRec.fMaskFormat;
       glyph->zeroMetrics();
     }
-    void generateImage(const SkGlyph& glyph) override {}
-    bool generatePath(SkGlyphID glyph, SkPath* path) override {
+    void generateImage(const SkGlyph& glyph) noexcept override {}
+    bool generatePath(SkGlyphID glyph, SkPath* path) noexcept override {
       path->reset();
       return false;
     }
-    void generateFontMetrics(SkFontMetrics* metrics) override {
+    void generateFontMetrics(SkFontMetrics* metrics) noexcept override {
       if (metrics) {
         sk_bzero(metrics, sizeof(*metrics));
       }

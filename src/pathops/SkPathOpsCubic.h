@@ -53,8 +53,8 @@ struct SkDCubic {
   SkDCubicPair chopAt(double t) const noexcept;
   static void Coefficients(
       const double* cubic, double* A, double* B, double* C, double* D) noexcept;
-  static int ComplexBreak(const SkPoint pts[4], SkScalar* t) noexcept;
-  int convexHull(char order[kPointCount]) const noexcept;
+  static int ComplexBreak(const SkPoint pts[4], SkScalar* t);
+  int convexHull(char order[kPointCount]) const;
 
   void debugInit() noexcept { sk_bzero(fPts, sizeof(fPts)); }
 
@@ -73,16 +73,16 @@ struct SkDCubic {
     return cubic.set(a).findInflections(tValues);
   }
 
-  int findMaxCurvature(double tValues[]) const noexcept;
+  int findMaxCurvature(double tValues[]) const;
 
 #ifdef SK_DEBUG
   SkOpGlobalState* globalState() const { return fDebugGlobalState; }
 #endif
 
-  bool hullIntersects(const SkDCubic& c2, bool* isLinear) const noexcept;
-  bool hullIntersects(const SkDConic& c, bool* isLinear) const noexcept;
-  bool hullIntersects(const SkDQuad& c2, bool* isLinear) const noexcept;
-  bool hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const noexcept;
+  bool hullIntersects(const SkDCubic& c2, bool* isLinear) const;
+  bool hullIntersects(const SkDConic& c, bool* isLinear) const;
+  bool hullIntersects(const SkDQuad& c2, bool* isLinear) const;
+  bool hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const;
   bool isLinear(int startIndex, int endIndex) const noexcept;
   static int maxIntersections() noexcept { return kMaxIntersections; }
   bool monotonicInX() const noexcept;
@@ -97,19 +97,19 @@ struct SkDCubic {
 
   int searchRoots(
       double extremes[6], int extrema, double axisIntercept, SearchAxis xAxis,
-      double* validRoots) const noexcept;
+      double* validRoots) const;
 
   bool toFloatPoints(SkPoint*) const noexcept;
   /**
    *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
    *  specified horizontal line.
    */
-  int horizontalIntersect(double yIntercept, double roots[3]) const noexcept;
+  int horizontalIntersect(double yIntercept, double roots[3]) const;
   /**
    *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
    *  specified vertical line.
    */
-  int verticalIntersect(double xIntercept, double roots[3]) const noexcept;
+  int verticalIntersect(double xIntercept, double roots[3]) const;
 
   // add debug only global pointer so asserts can be skipped by fuzzers
   const SkDCubic& set(
@@ -140,7 +140,7 @@ struct SkDCubic {
     cubic.set(pts).subDivide(a, d, t1, t2, p);
   }
 
-  double top(const SkDCubic& dCurve, double startT, double endT, SkDPoint* topPt) const noexcept;
+  double top(const SkDCubic& dCurve, double startT, double endT, SkDPoint* topPt) const;
   SkDQuad toQuad() const;
 
   static const int gPrecisionUnit;
@@ -186,7 +186,7 @@ struct SkDCubicPair {
   SkDPoint pts[7];
 };
 
-class SkTCubic final : public SkTCurve {
+class SkTCubic : public SkTCurve {
  public:
   SkDCubic fCubic;
 
@@ -194,7 +194,7 @@ class SkTCubic final : public SkTCurve {
 
   SkTCubic(const SkDCubic& c) noexcept : fCubic(c) {}
 
-  ~SkTCubic() override = default;
+  ~SkTCubic() override {}
 
   const SkDPoint& operator[](int n) const noexcept override { return fCubic[n]; }
   SkDPoint& operator[](int n) noexcept override { return fCubic[n]; }
@@ -209,18 +209,18 @@ class SkTCubic final : public SkTCurve {
 #ifdef SK_DEBUG
   SkOpGlobalState* globalState() const override { return fCubic.globalState(); }
 #endif
-  bool hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept override;
-  bool hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept override;
+  bool hullIntersects(const SkDQuad& quad, bool* isLinear) const override;
+  bool hullIntersects(const SkDConic& conic, bool* isLinear) const override;
 
-  bool hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept override {
+  bool hullIntersects(const SkDCubic& cubic, bool* isLinear) const override {
     return cubic.hullIntersects(fCubic, isLinear);
   }
 
-  bool hullIntersects(const SkTCurve& curve, bool* isLinear) const noexcept override {
+  bool hullIntersects(const SkTCurve& curve, bool* isLinear) const override {
     return curve.hullIntersects(fCubic, isLinear);
   }
 
-  int intersectRay(SkIntersections* i, const SkDLine& line) const noexcept override;
+  int intersectRay(SkIntersections* i, const SkDLine& line) const override;
   bool IsConic() const noexcept override { return false; }
   SkTCurve* make(SkArenaAlloc& heap) const override { return heap.make<SkTCubic>(); }
 
@@ -233,7 +233,7 @@ class SkTCubic final : public SkTCurve {
   int pointCount() const noexcept override { return SkDCubic::kPointCount; }
   int pointLast() const noexcept override { return SkDCubic::kPointLast; }
   SkDPoint ptAtT(double t) const noexcept override { return fCubic.ptAtT(t); }
-  void setBounds(SkDRect*) const noexcept override;
+  void setBounds(SkDRect*) const override;
 
   void subDivide(double t1, double t2, SkTCurve* curve) const noexcept override {
     ((SkTCubic*)curve)->fCubic = fCubic.subDivide(t1, t2);

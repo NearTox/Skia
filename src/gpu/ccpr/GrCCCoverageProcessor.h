@@ -96,7 +96,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
     return SkStringPrintf("%s\n%s", this->name(), this->INHERITED::dumpInfo().c_str());
   }
 #endif
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     SkDEBUGCODE(this->getDebugBloatKey(b));
     b->add32((int)fPrimitiveType);
   }
@@ -202,14 +202,14 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
 
     // Returns the name of a Shader's internal varying at the point where where its value is
     // assigned. This is intended to work whether called for a vertex or a geometry shader.
-    const char* OutName(const GrGLSLVarying& varying) const noexcept {
+    const char* OutName(const GrGLSLVarying& varying) const {
       using Scope = GrGLSLVarying::Scope;
       SkASSERT(Scope::kVertToGeo != varying.scope());
       return Scope::kGeoToFrag == varying.scope() ? varying.gsOut() : varying.vsOut();
     }
 
     // Our friendship with GrGLSLShaderBuilder does not propagate to subclasses.
-    inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) noexcept { return s->code(); }
+    inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) { return s->code(); }
   };
 
  protected:
@@ -224,7 +224,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
   virtual GrGLSLPrimitiveProcessor* onCreateGLSLInstance(std::unique_ptr<Shader>) const = 0;
 
   // Our friendship with GrGLSLShaderBuilder does not propagate to subclasses.
-  inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) noexcept { return s->code(); }
+  inline static SkString& AccessCodeString(GrGLSLShaderBuilder* s) { return s->code(); }
 
   PrimitiveType fPrimitiveType;
   SkDEBUGCODE(float fDebugBloat = 0);

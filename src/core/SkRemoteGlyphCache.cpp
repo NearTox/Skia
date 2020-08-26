@@ -28,8 +28,9 @@
 #include "src/core/SkZip.h"
 
 #if SK_SUPPORT_GPU
+#  include "include/gpu/GrContextOptions.h"
 #  include "src/gpu/GrDrawOpAtlas.h"
-#  include "src/gpu/text/GrTextContext.h"
+#  include "src/gpu/text/GrSDFTOptions.h"
 #endif
 
 static SkDescriptor* auto_descriptor_from_desc(
@@ -69,21 +70,19 @@ static const SkDescriptor* create_descriptor(
 }
 
 // -- Serializer -----------------------------------------------------------------------------------
-constexpr size_t pad(size_t size, size_t alignment) noexcept {
-  return (size + (alignment - 1)) & ~(alignment - 1);
-}
+size_t pad(size_t size, size_t alignment) { return (size + (alignment - 1)) & ~(alignment - 1); }
 
 // Alignment between x86 and x64 differs for some types, in particular
 // int64_t and doubles have 4 and 8-byte alignment, respectively.
 // Be consistent even when writing and reading across different architectures.
 template <typename T>
-constexpr size_t serialization_alignment() noexcept {
+size_t serialization_alignment() {
   return sizeof(T) == 8 ? 8 : alignof(T);
 }
 
 class Serializer {
  public:
-  explicit Serializer(std::vector<uint8_t>* buffer) noexcept : fBuffer{buffer} {}
+  explicit Serializer(std::vector<uint8_t>* buffer) : fBuffer{buffer} {}
 
   template <typename T, typename... Args>
   T* emplace(Args&&... args) {
@@ -123,11 +122,11 @@ class Serializer {
 // Note that the Deserializer is reading untrusted data, we need to guard against invalid data.
 class Deserializer {
  public:
-  Deserializer(const volatile char* memory, size_t memorySize) noexcept
+  Deserializer(const volatile char* memory, size_t memorySize)
       : fMemory(memory), fMemorySize(memorySize) {}
 
   template <typename T>
-  bool read(T* val) noexcept {
+  bool read(T* val) {
     auto* result = this->ensureAtLeast(sizeof(T), serialization_alignment<T>());
     if (!result) return false;
 
@@ -151,14 +150,14 @@ class Deserializer {
     return ad->getDesc()->isValid();
   }
 
-  const volatile void* read(size_t size, size_t alignment) noexcept {
+  const volatile void* read(size_t size, size_t alignment) {
     return this->ensureAtLeast(size, alignment);
   }
 
-  size_t bytesRead() const noexcept { return fBytesRead; }
+  size_t bytesRead() const { return fBytesRead; }
 
  private:
-  const volatile char* ensureAtLeast(size_t size, size_t alignment) noexcept {
+  const volatile char* ensureAtLeast(size_t size, size_t alignment) {
     size_t padded = pad(fBytesRead, alignment);
 
     // Not enough data.
@@ -182,12 +181,12 @@ bool SkFuzzDeserializeSkDescriptor(sk_sp<SkData> bytes, SkAutoDescriptor* ad) {
 }
 
 // Paths use a SkWriter32 which requires 4 byte alignment.
-static constexpr size_t kPathAlignment = 4u;
+static const size_t kPathAlignment = 4u;
 
 // -- StrikeSpec -----------------------------------------------------------------------------------
 struct StrikeSpec {
-  constexpr StrikeSpec() noexcept = default;
-  StrikeSpec(SkFontID typefaceID_, SkDiscardableHandleId discardableHandleId_) noexcept
+  StrikeSpec() = default;
+  StrikeSpec(SkFontID typefaceID_, SkDiscardableHandleId discardableHandleId_)
       : typefaceID{typefaceID_}, discardableHandleId(discardableHandleId_) {}
   SkFontID typefaceID = 0u;
   SkDiscardableHandleId discardableHandleId = 0u;
@@ -236,15 +235,13 @@ class SkStrikeServer::RemoteStrike final : public SkStrikeForGPU {
   ~RemoteStrike() override;
 
   void writePendingGlyphs(Serializer* serializer);
-  SkDiscardableHandleId discardableHandleId() const noexcept { return fDiscardableHandleId; }
+  SkDiscardableHandleId discardableHandleId() const { return fDiscardableHandleId; }
 
-  const SkDescriptor& getDescriptor() const noexcept override { return *fDescriptor.getDesc(); }
+  const SkDescriptor& getDescriptor() const override { return *fDescriptor.getDesc(); }
 
-  void setTypefaceAndEffects(const SkTypeface* typeface, SkScalerContextEffects effects) noexcept;
+  void setTypefaceAndEffects(const SkTypeface* typeface, SkScalerContextEffects effects);
 
-  const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept override {
-    return fRoundingSpec;
-  }
+  const SkGlyphPositionRoundingSpec& roundingSpec() const override { return fRoundingSpec; }
 
   void prepareForMaskDrawing(
       SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects) override;
@@ -255,11 +252,11 @@ class SkStrikeServer::RemoteStrike final : public SkStrikeForGPU {
   void prepareForPathDrawing(
       SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects) override;
 
-  void onAboutToExitScope() noexcept override {}
+  void onAboutToExitScope() override {}
 
-  bool hasPendingGlyphs() const noexcept { return !fMasksToSend.empty() || !fPathsToSend.empty(); }
+  bool hasPendingGlyphs() const { return !fMasksToSend.empty() || !fPathsToSend.empty(); }
 
-  void resetScalerContext() noexcept;
+  void resetScalerContext();
 
  private:
   template <typename Rejector>
@@ -279,11 +276,9 @@ class SkStrikeServer::RemoteStrike final : public SkStrikeForGPU {
   };
 
   struct MaskSummaryTraits {
-    static SkPackedGlyphID GetKey(MaskSummary summary) noexcept {
-      return SkPackedGlyphID{summary.packedID};
-    }
+    static SkPackedGlyphID GetKey(MaskSummary summary) { return SkPackedGlyphID{summary.packedID}; }
 
-    static uint32_t Hash(SkPackedGlyphID packedID) noexcept { return packedID.hash(); }
+    static uint32_t Hash(SkPackedGlyphID packedID) { return packedID.hash(); }
   };
 
   // Same thing as MaskSummary, but for paths.
@@ -296,11 +291,9 @@ class SkStrikeServer::RemoteStrike final : public SkStrikeForGPU {
   };
 
   struct PathSummaryTraits {
-    static constexpr SkGlyphID GetKey(PathSummary summary) noexcept { return summary.glyphID; }
+    static SkGlyphID GetKey(PathSummary summary) { return summary.glyphID; }
 
-    static constexpr uint32_t Hash(SkGlyphID packedID) noexcept {
-      return SkChecksum::CheapMix(packedID);
-    }
+    static uint32_t Hash(SkGlyphID packedID) { return SkChecksum::CheapMix(packedID); }
   };
 
   void writeGlyphPath(const SkGlyph& glyph, Serializer* serializer) const;
@@ -355,12 +348,11 @@ SkStrikeServer::RemoteStrike::RemoteStrike(
 
 SkStrikeServer::RemoteStrike::~RemoteStrike() = default;
 
-size_t SkStrikeServer::MapOps::operator()(const SkDescriptor* key) const noexcept {
+size_t SkStrikeServer::MapOps::operator()(const SkDescriptor* key) const {
   return key->getChecksum();
 }
 
-bool SkStrikeServer::MapOps::operator()(
-    const SkDescriptor* lhs, const SkDescriptor* rhs) const noexcept {
+bool SkStrikeServer::MapOps::operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const {
   return *lhs == *rhs;
 }
 
@@ -384,13 +376,14 @@ class SkTextBlobCacheDiffCanvas::TrackLayerDevice final : public SkNoPixelsDevic
         fDFTSupport);
   }
 
-  SkStrikeServer* strikeServer() noexcept { return fStrikeServer; }
+  SkStrikeServer* strikeServer() { return fStrikeServer; }
 
  protected:
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override {
 #if SK_SUPPORT_GPU
-    GrTextContext::Options options;
-    GrTextContext::SanitizeOptions(&options);
+    GrContextOptions ctxOptions;
+    GrSDFTOptions options = {
+        ctxOptions.fMinDistanceFieldFontSize, ctxOptions.fGlyphsAsPathsFontSize};
 
 #  ifdef SK_CAPTURE_DRAW_TEXT_BLOB
     if (SkTextBlobTrace::Capture* capture = fStrikeServer->fCapture.get()) {
@@ -451,8 +444,8 @@ void SkTextBlobCacheDiffCanvas::onDrawTextBlob(
 
 // -- WireTypeface ---------------------------------------------------------------------------------
 struct WireTypeface {
-  constexpr WireTypeface() noexcept = default;
-  WireTypeface(SkFontID typeface_id, int glyph_count, SkFontStyle style, bool is_fixed) noexcept
+  WireTypeface() = default;
+  WireTypeface(SkFontID typeface_id, int glyph_count, SkFontStyle style, bool is_fixed)
       : typefaceID(typeface_id), glyphCount(glyph_count), style(style), isFixed(is_fixed) {}
 
   SkFontID typefaceID{0};
@@ -490,7 +483,7 @@ sk_sp<SkData> SkStrikeServer::serializeTypeface(SkTypeface* tf) {
 
 void SkStrikeServer::writeStrikeData(std::vector<uint8_t>* memory) {
   size_t strikesToSend = 0;
-  fRemoteStrikesToSend.foreach ([&](RemoteStrike* strike) noexcept {
+  fRemoteStrikesToSend.foreach ([&](RemoteStrike* strike) {
     if (strike->hasPendingGlyphs()) {
       strikesToSend++;
     } else {
@@ -690,13 +683,13 @@ void SkStrikeServer::RemoteStrike::ensureScalerContext() {
   }
 }
 
-void SkStrikeServer::RemoteStrike::resetScalerContext() noexcept {
+void SkStrikeServer::RemoteStrike::resetScalerContext() {
   fContext.reset();
   fTypeface = nullptr;
 }
 
 void SkStrikeServer::RemoteStrike::setTypefaceAndEffects(
-    const SkTypeface* typeface, SkScalerContextEffects effects) noexcept {
+    const SkTypeface* typeface, SkScalerContextEffects effects) {
   fTypeface = typeface;
   fEffects = effects;
 }
@@ -826,7 +819,7 @@ void SkStrikeServer::RemoteStrike::prepareForPathDrawing(
 class SkStrikeClient::DiscardableStrikePinner : public SkStrikePinner {
  public:
   DiscardableStrikePinner(
-      SkDiscardableHandleId discardableHandleId, sk_sp<DiscardableHandleManager> manager) noexcept
+      SkDiscardableHandleId discardableHandleId, sk_sp<DiscardableHandleManager> manager)
       : fDiscardableHandleId(discardableHandleId), fManager(std::move(manager)) {}
 
   ~DiscardableStrikePinner() override = default;

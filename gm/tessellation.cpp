@@ -94,15 +94,18 @@ class TessellationTestTriShader : public GrGeometryProcessor {
   }
 
   SkString getTessControlShaderGLSL(
-      const char* versionAndExtensionDecls, const GrShaderCaps&) const override;
+      const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+      const GrGLSLUniformHandler&, const GrShaderCaps&) const override;
   SkString getTessEvaluationShaderGLSL(
-      const char* versionAndExtensionDecls, const GrShaderCaps&) const override;
+      const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+      const GrGLSLUniformHandler&, const GrShaderCaps&) const override;
 
   const SkMatrix fViewMatrix;
 };
 
 SkString TessellationTestTriShader::getTessControlShaderGLSL(
-    const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+    const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+    const GrGLSLUniformHandler&, const GrShaderCaps&) const {
   SkString code(versionAndExtensionDecls);
   code.append(R"(
             layout(vertices = 3) out;
@@ -120,7 +123,8 @@ SkString TessellationTestTriShader::getTessControlShaderGLSL(
 }
 
 SkString TessellationTestTriShader::getTessEvaluationShaderGLSL(
-    const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+    const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+    const GrGLSLUniformHandler&, const GrShaderCaps&) const {
   SkString code(versionAndExtensionDecls);
   code.append(R"(
             layout(triangles, equal_spacing, cw) in;
@@ -208,15 +212,18 @@ class TessellationTestRectShader : public GrGeometryProcessor {
   }
 
   SkString getTessControlShaderGLSL(
-      const char* versionAndExtensionDecls, const GrShaderCaps&) const override;
+      const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+      const GrGLSLUniformHandler&, const GrShaderCaps&) const override;
   SkString getTessEvaluationShaderGLSL(
-      const char* versionAndExtensionDecls, const GrShaderCaps&) const override;
+      const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+      const GrGLSLUniformHandler&, const GrShaderCaps&) const override;
 
   const SkMatrix fViewMatrix;
 };
 
 SkString TessellationTestRectShader::getTessControlShaderGLSL(
-    const char* versionAndExtensionDecls, const GrShaderCaps& caps) const {
+    const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+    const GrGLSLUniformHandler&, const GrShaderCaps& caps) const {
   SkString code(versionAndExtensionDecls);
   code.append(R"(
             layout(vertices = 1) out;
@@ -238,7 +245,8 @@ SkString TessellationTestRectShader::getTessControlShaderGLSL(
 }
 
 SkString TessellationTestRectShader::getTessEvaluationShaderGLSL(
-    const char* versionAndExtensionDecls, const GrShaderCaps& caps) const {
+    const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+    const GrGLSLUniformHandler&, const GrShaderCaps& caps) const {
   SkString code(versionAndExtensionDecls);
   code.appendf(
       R"(

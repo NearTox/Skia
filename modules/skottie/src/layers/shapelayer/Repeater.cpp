@@ -47,7 +47,7 @@ class RepeaterAdapter final : public DiscardableAdapterBase<RepeaterAdapter, sks
       const auto t = fOffset + index;
 
       // Position, scale & rotation are "scaled" by index/offset.
-      SkMatrix m = SkMatrix::MakeTrans(-fAnchorPoint.x, -fAnchorPoint.y);
+      SkMatrix m = SkMatrix::Translate(-fAnchorPoint.x, -fAnchorPoint.y);
       m.postScale(std::pow(fScale.x * .01f, fOffset), std::pow(fScale.y * .01f, fOffset));
       m.postRotate(t * fRotation);
       m.postTranslate(t * fPosition.x + fAnchorPoint.x, t * fPosition.y + fAnchorPoint.y);
@@ -94,7 +94,7 @@ std::vector<sk_sp<sksg::RenderNode>> ShapeBuilder::AttachRepeaterDrawEffect(
     auto repeater_root = abuilder->attachDiscardableAdapter<RepeaterAdapter>(
         jrepeater, *jtransform, *abuilder, std::move(repeater_node));
     repeater_draws.reserve(1);
-    repeater_draws.emplace_back(std::move(repeater_root));
+    repeater_draws.push_back(std::move(repeater_root));
   } else {
     repeater_draws = std::move(draws);
   }

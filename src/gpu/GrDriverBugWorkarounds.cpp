@@ -12,7 +12,7 @@
 GrDriverBugWorkarounds::GrDriverBugWorkarounds() noexcept = default;
 
 GrDriverBugWorkarounds::GrDriverBugWorkarounds(
-    const std::vector<int>& enabled_driver_bug_workarounds) {
+    const std::vector<int>& enabled_driver_bug_workarounds) noexcept {
   for (auto id : enabled_driver_bug_workarounds) {
     switch (id) {
 #define GPU_OP(type, name) \

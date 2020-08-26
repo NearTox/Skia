@@ -32,7 +32,7 @@ void GeometryTransform::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawPath(fTransformedPath, paint);
 }
 
-bool GeometryTransform::onContains(const SkPoint& p) const {
+bool GeometryTransform::onContains(const SkPoint& p) const noexcept {
   return fTransformedPath.contains(p.x(), p.y());
 }
 
@@ -52,6 +52,6 @@ SkRect GeometryTransform::onRevalidate(InvalidationController* ic, const SkMatri
   return bounds;
 }
 
-SkPath GeometryTransform::onAsPath() const { return fTransformedPath; }
+SkPath GeometryTransform::onAsPath() const noexcept { return fTransformedPath; }
 
 }  // namespace sksg

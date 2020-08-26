@@ -23,7 +23,7 @@ class GrGLStencilAttachment : public GrStencilAttachment {
   };
 
   struct IDDesc {
-    constexpr IDDesc() noexcept : fRenderbufferID(0) {}
+    IDDesc() : fRenderbufferID(0) {}
     GrGLuint fRenderbufferID;
   };
 
@@ -47,7 +47,7 @@ class GrGLStencilAttachment : public GrStencilAttachment {
       SkTraceMemoryDump* traceMemoryDump, const SkString& dumpName) const override;
 
  private:
-  size_t onGpuMemorySize() const override;
+  size_t onGpuMemorySize() const noexcept override;
 
   Format fFormat;
   // may be zero for external SBs associated with external RTs

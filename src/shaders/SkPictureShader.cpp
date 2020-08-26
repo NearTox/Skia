@@ -77,7 +77,7 @@ struct BitmapShaderKey : public SkResourceCache::Key {
 };
 
 struct BitmapShaderRec : public SkResourceCache::Rec {
-  BitmapShaderRec(const BitmapShaderKey& key, SkShader* tileShader) noexcept
+  BitmapShaderRec(const BitmapShaderKey& key, SkShader* tileShader)
       : fKey(key), fShader(SkRef(tileShader)) {}
 
   BitmapShaderKey fKey;
@@ -192,7 +192,7 @@ sk_sp<SkShader> SkPictureShader::refBitmapShader(
       SkSize::Make(SkScalarAbs(scale.x() * fTile.width()), SkScalarAbs(scale.y() * fTile.height()));
 
   // Clamp the tile size to about 4M pixels
-  static constexpr SkScalar kMaxTileArea = 2048 * 2048;
+  static const SkScalar kMaxTileArea = 2048 * 2048;
   SkScalar tileArea = scaledSize.width() * scaledSize.height();
   if (tileArea > kMaxTileArea) {
     SkScalar clampScale = SkScalarSqrt(kMaxTileArea / tileArea);
@@ -271,19 +271,21 @@ bool SkPictureShader::onAppendStages(const SkStageRec& rec) const {
 }
 
 skvm::Color SkPictureShader::onProgram(
-    skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-    const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-    skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
+    skvm::Builder* p, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+    const SkMatrixProvider& matrices, const SkMatrix* localM, SkFilterQuality quality,
+    const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
   auto lm = this->totalLocalMatrix(localM);
 
   // Keep bitmapShader alive by using alloc instead of stack memory
   auto& bitmapShader = *alloc->make<sk_sp<SkShader>>();
-  bitmapShader = this->refBitmapShader(ctm, &lm, dst.colorType(), dst.colorSpace());
+  bitmapShader =
+      this->refBitmapShader(matrices.localToDevice(), &lm, dst.colorType(), dst.colorSpace());
   if (!bitmapShader) {
     return {};
   }
 
-  return as_SB(bitmapShader)->program(p, x, y, paint, ctm, lm, quality, dst, uniforms, alloc);
+  return as_SB(bitmapShader)
+      ->program(p, device, local, paint, matrices, lm, quality, dst, uniforms, alloc);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////

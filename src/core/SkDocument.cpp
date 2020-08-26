@@ -9,7 +9,7 @@
 #include "include/core/SkDocument.h"
 #include "include/core/SkStream.h"
 
-SkDocument::SkDocument(SkWStream* stream) noexcept : fStream(stream), fState(kBetweenPages_State) {}
+SkDocument::SkDocument(SkWStream* stream) : fStream(stream), fState(kBetweenPages_State) {}
 
 SkDocument::~SkDocument() { this->close(); }
 

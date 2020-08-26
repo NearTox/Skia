@@ -147,7 +147,7 @@ class TexelSubset : public GpuGM {
           static constexpr SkVector kT = {-100, 300};
           if (auto op = sk_gpu_test::test_ops::MakeRect(
                   context, std::move(fp1), drawRect, localRect.makeOffset(kT),
-                  SkMatrix::MakeTrans(-kT))) {
+                  SkMatrix::Translate(-kT))) {
             renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
           }
 
@@ -157,7 +157,7 @@ class TexelSubset : public GpuGM {
           // rather than a texture subset as a comparison.
           drawRect = localRect.makeOffset(x, y);
           SkMatrix subsetTextureMatrix =
-              SkMatrix::Concat(SkMatrix::MakeTrans(-texelSubset.topLeft()), textureMatrices[tm]);
+              SkMatrix::Concat(SkMatrix::Translate(-texelSubset.topLeft()), textureMatrices[tm]);
 
           auto fp2 = GrTextureEffect::Make(
               subsetView, fBitmap.alphaType(), subsetTextureMatrix,

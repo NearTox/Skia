@@ -1366,7 +1366,7 @@ bool SkConic::findMaxCurvature(SkScalar* t) const {
 }
 #endif
 
-SkScalar SkConic::TransformW(const SkPoint pts[], SkScalar w, const SkMatrix& matrix) {
+SkScalar SkConic::TransformW(const SkPoint pts[], SkScalar w, const SkMatrix& matrix) noexcept {
   if (!matrix.hasPerspective()) {
     return w;
   }
@@ -1428,8 +1428,8 @@ int SkConic::BuildUnitArc(
     }
   }
 
-  constexpr SkPoint quadrantPts[] = {{1, 0},  {1, 1},   {0, 1},  {-1, 1},
-                                     {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+  constexpr static SkPoint quadrantPts[] = {{1, 0},  {1, 1},   {0, 1},  {-1, 1},
+                                            {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
   constexpr SkScalar quadrantWeight = SK_ScalarRoot2Over2;
 
   int conicCount = quadrant;

@@ -35,7 +35,7 @@ typedef const void* GrMTLHandle;
  */
 struct GrMtlTextureInfo {
  public:
-  GrMtlTextureInfo() {}
+  GrMtlTextureInfo() noexcept = default;
 
   sk_cf_obj<const void*> fTexture;
 

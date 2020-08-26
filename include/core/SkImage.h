@@ -460,21 +460,27 @@ class SK_API SkImage : public SkRefCnt {
   /** Creates an SkImage by storing the specified YUVA planes into an image, to be rendered
       via multitexturing.
 
-      @param context         GPU context
-      @param yuvColorSpace   How the YUV values are converted to RGB
-      @param yuvaTextures    array of (up to four) YUVA textures on GPU which contain the,
-                             possibly interleaved, YUVA planes
-      @param yuvaIndices     array indicating which texture in yuvaTextures, and channel
-                             in that texture, maps to each component of YUVA.
-      @param imageSize       size of the resulting image
-      @param imageOrigin     origin of the resulting image.
-      @param imageColorSpace range of colors of the resulting image; may be nullptr
-      @return                created SkImage, or nullptr
+      When all the provided backend textures can be released 'textureReleaseProc' will be called
+      with 'releaseContext'. It will be called even if this method fails.
+
+      @param context            GPU context
+      @param yuvColorSpace      How the YUV values are converted to RGB
+      @param yuvaTextures       array of (up to four) YUVA textures on GPU which contain the,
+                                possibly interleaved, YUVA planes
+      @param yuvaIndices        array indicating which texture in yuvaTextures, and channel
+                                in that texture, maps to each component of YUVA.
+      @param imageSize          size of the resulting image
+      @param imageOrigin        origin of the resulting image.
+      @param imageColorSpace    range of colors of the resulting image; may be nullptr
+      @param textureReleaseProc called when the backend textures can be released
+      @param releaseContext     state passed to textureReleaseProc
+      @return                   created SkImage, or nullptr
   */
   static sk_sp<SkImage> MakeFromYUVATextures(
       GrContext* context, SkYUVColorSpace yuvColorSpace, const GrBackendTexture yuvaTextures[],
       const SkYUVAIndex yuvaIndices[4], SkISize imageSize, GrSurfaceOrigin imageOrigin,
-      sk_sp<SkColorSpace> imageColorSpace = nullptr);
+      sk_sp<SkColorSpace> imageColorSpace = nullptr,
+      TextureReleaseProc textureReleaseProc = nullptr, ReleaseContext releaseContext = nullptr);
 
   /** Creates SkImage from pixmap array representing YUVA data.
       SkImage is uploaded to GPU back-end using context.
@@ -696,7 +702,7 @@ class SK_API SkImage : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Image_refColorSpace
   */
-  sk_sp<SkColorSpace> refColorSpace() const;
+  sk_sp<SkColorSpace> refColorSpace() const noexcept;
 
   /** Returns true if SkImage pixels represent transparency only. If true, each pixel
       is packed in 8 bits as defined by kAlpha_8_SkColorType.
@@ -717,6 +723,9 @@ class SK_API SkImage : public SkRefCnt {
       SkTileMode rules to fill drawn area outside SkImage. localMatrix permits
       transforming SkImage before SkCanvas matrix is applied.
 
+      Note: since no filter-quality is specified, it will be determined at draw time using
+            the paint.
+
       @param tmx          tiling in the x direction
       @param tmy          tiling in the y direction
       @param localMatrix  SkImage transformation, or nullptr
@@ -727,6 +736,9 @@ class SK_API SkImage : public SkRefCnt {
   sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy, const SkMatrix& localMatrix) const {
     return this->makeShader(tmx, tmy, &localMatrix);
   }
+
+  sk_sp<SkShader> makeShader(
+      SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix, SkFilterQuality) const;
 
   /** Creates SkShader from SkImage. SkShader dimensions are taken from SkImage. SkShader uses
       SkShader::kClamp_TileMode to fill drawn area outside SkImage. localMatrix permits
@@ -790,8 +802,13 @@ class SK_API SkImage : public SkRefCnt {
    */
   GrSemaphoresSubmitted flush(GrContext* context, const GrFlushInfo& flushInfo);
 
-  /** Version of flush() that uses a default GrFlushInfo. */
-  void flush(GrContext*);
+  /** Version of flush() that uses a default GrFlushInfo. Also submits the flushed work to the
+      GPU.
+  */
+  void flushAndSubmit(GrContext*);
+
+  /** Deprecated. */
+  void flush(GrContext* context) { this->flushAndSubmit(context); }
 
   /** Retrieves the back-end texture. If SkImage has no back-end texture, an invalid
       object is returned. Call GrBackendTexture::isValid to determine if the result
@@ -1159,7 +1176,7 @@ class SK_API SkImage : public SkRefCnt {
   sk_sp<SkImage> reinterpretColorSpace(sk_sp<SkColorSpace> newColorSpace) const;
 
  private:
-  SkImage(const SkImageInfo& info, uint32_t uniqueID);
+  SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept;
   friend class SkImage_Base;
 
   SkImageInfo fInfo;

@@ -61,7 +61,7 @@ class SK_API SkMatrix44 {
 
   SkMatrix44(Uninitialized_Constructor) noexcept {}  // ironically, cannot be constexpr
 
-  constexpr SkMatrix44(Identity_Constructor)noexcept
+  constexpr SkMatrix44(Identity_Constructor) noexcept
         : fMat{{ 1, 0, 0, 0, },
                { 0, 1, 0, 0, },
                { 0, 0, 1, 0, },

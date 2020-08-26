@@ -51,7 +51,9 @@ class SkPngCodec : public SkCodec {
       int bitDepth);
 
   Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
-  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kPNG; }
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+    return SkEncodedImageFormat::kPNG;
+  }
   bool onRewind() override;
 
   SkSampler* getSampler(bool createIfNecessary) override;

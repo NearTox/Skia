@@ -38,7 +38,7 @@ class GrProcessorKeyBuilder {
 
   /** Inserts count uint32_ts into the key. The returned pointer is only valid until the next
       add*() call. */
-  uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) {
+  uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) noexcept {
     SkASSERT(count > 0);
     fCount += count;
     return reinterpret_cast<uint32_t*>(fData->push_back_n(4 * count));
@@ -125,7 +125,6 @@ class GrProcessor {
     kGrPathProcessor_ClassID,
     kGrPerlinNoise2Effect_ClassID,
     kGrPipelineDynamicStateTestProcessor_ClassID,
-    kGrPremulInputFragmentProcessor_ClassID,
     kGrQuadEffect_ClassID,
     kGrRadialGradientLayout_ClassID,
     kGrRectBlurEffect_ClassID,
@@ -162,9 +161,10 @@ class GrProcessor {
     kTessellate_GrFillBoundingBoxShader_ClassID,
     kTessellate_GrFillCubicHullShader_ClassID,
     kTessellate_GrFillTriangleShader_ClassID,
-    kTessellate_GrStencilCubicShader_ClassID,
+    kTessellate_GrMiddleOutCubicShader_ClassID,
     kTessellate_GrStencilTriangleShader_ClassID,
-    kTessellate_GrStencilWedgeShader_ClassID,
+    kTessellate_GrTessellateCubicShader_ClassID,
+    kTessellate_GrTessellateWedgeShader_ClassID,
     kTestFP_ClassID,
     kTestRectOp_ClassID,
     kFlatNormalsFP_ClassID,

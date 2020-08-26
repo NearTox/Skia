@@ -180,7 +180,7 @@ class ComposeShaderBitmapGM : public skiagm::GM {
   void onDraw(SkCanvas* canvas) override {
     SkBlendMode mode = SkBlendMode::kDstOver;
 
-    SkMatrix lm = SkMatrix::MakeTrans(0, squareLength * 0.5f);
+    SkMatrix lm = SkMatrix::Translate(0, squareLength * 0.5f);
 
     sk_sp<SkShader> shaders[] = {
         // gradient should appear over color bitmap

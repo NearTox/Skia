@@ -146,7 +146,7 @@ class GrSimpleMeshDrawOpHelper {
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
 
-  GrProcessorSet detachProcessorSet() {
+  GrProcessorSet detachProcessorSet() noexcept {
     return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
   }
 

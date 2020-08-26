@@ -49,7 +49,7 @@ class Transform : public Node {
  *
  *   auto m33 = Matrix<SkMatrix>::Make(SkMatrix::I());
  *   ...
- *   m33->setMatrix(SkMatrix::MakeTrans(10, 10));
+ *   m33->setMatrix(SkMatrix::Translate(10, 10));
  *
  */
 template <typename T>
@@ -102,7 +102,7 @@ class TransformEffect final : public EffectNode {
 
  protected:
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 

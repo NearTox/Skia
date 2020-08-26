@@ -153,7 +153,8 @@ SkTextBlob::~SkTextBlob() {
   const auto* run = RunRecord::First(this);
   do {
     const auto* nextRun = RunRecord::Next(run);
-    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize);) run->~RunRecord();
+    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize));
+    run->~RunRecord();
     run = nextRun;
   } while (run);
 }
@@ -191,7 +192,7 @@ unsigned SkTextBlob::ScalarsPerGlyph(GlyphPositioning pos) noexcept {
   return gScalarsPerPositioning[pos];
 }
 
-void SkTextBlob::operator delete(void* p) { sk_free(p); }
+void SkTextBlob::operator delete(void* p) noexcept { sk_free(p); }
 
 void* SkTextBlob::operator new(size_t) { SK_ABORT("All blobs are created by placement new."); }
 
@@ -206,8 +207,8 @@ void SkTextBlobRunIterator::next() noexcept {
   SkASSERT(!this->done());
 
   if (!this->done()) {
-    SkDEBUGCODE(fCurrentRun->validate(fStorageTop);) fCurrentRun =
-        SkTextBlob::RunRecord::Next(fCurrentRun);
+    SkDEBUGCODE(fCurrentRun->validate(fStorageTop));
+    fCurrentRun = SkTextBlob::RunRecord::Next(fCurrentRun);
   }
 }
 

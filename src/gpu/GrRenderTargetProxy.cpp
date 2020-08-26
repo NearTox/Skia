@@ -24,7 +24,7 @@
 GrRenderTargetProxy::GrRenderTargetProxy(
     const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, int sampleCount,
     SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator) noexcept
     : INHERITED(format, dimensions, fit, budgeted, isProtected, surfaceFlags, useAllocator),
       fSampleCnt(sampleCount),
       fWrapsVkSecondaryCB(WrapsVkSecondaryCB::kNo) {}
@@ -34,7 +34,7 @@ GrRenderTargetProxy::GrRenderTargetProxy(
     LazyInstantiateCallback&& callback, const GrBackendFormat& format, SkISize dimensions,
     int sampleCount, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
     GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator,
-    WrapsVkSecondaryCB wrapsVkSecondaryCB)
+    WrapsVkSecondaryCB wrapsVkSecondaryCB) noexcept
     : INHERITED(
           std::move(callback), format, dimensions, fit, budgeted, isProtected, surfaceFlags,
           useAllocator),
@@ -43,7 +43,8 @@ GrRenderTargetProxy::GrRenderTargetProxy(
 
 // Wrapped version
 GrRenderTargetProxy::GrRenderTargetProxy(
-    sk_sp<GrSurface> surf, UseAllocator useAllocator, WrapsVkSecondaryCB wrapsVkSecondaryCB)
+    sk_sp<GrSurface> surf, UseAllocator useAllocator,
+    WrapsVkSecondaryCB wrapsVkSecondaryCB) noexcept
     : INHERITED(std::move(surf), SkBackingFit::kExact, useAllocator),
       fSampleCnt(fTarget->asRenderTarget()->numSamples()),
       fWrapsVkSecondaryCB(wrapsVkSecondaryCB) {
@@ -77,7 +78,7 @@ bool GrRenderTargetProxy::instantiate(GrResourceProvider* resourceProvider) {
   return true;
 }
 
-bool GrRenderTargetProxy::canChangeStencilAttachment() const {
+bool GrRenderTargetProxy::canChangeStencilAttachment() const noexcept {
   if (!fTarget) {
     // If we aren't instantiated, then we definitely are an internal render target. Ganesh is
     // free to change stencil attachments on internal render targets.
@@ -97,7 +98,7 @@ sk_sp<GrSurface> GrRenderTargetProxy::createSurface(GrResourceProvider* resource
   return surface;
 }
 
-size_t GrRenderTargetProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) const {
+size_t GrRenderTargetProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) const noexcept {
   int colorSamplesPerPixel = this->numSamples();
   if (colorSamplesPerPixel > 1) {
     // Add one for the resolve buffer.
@@ -119,7 +120,7 @@ bool GrRenderTargetProxy::refsWrappedObjects() const noexcept {
   return surface->resourcePriv().refsWrappedObjects();
 }
 
-GrSurfaceProxy::LazySurfaceDesc GrRenderTargetProxy::callbackDesc() const {
+GrSurfaceProxy::LazySurfaceDesc GrRenderTargetProxy::callbackDesc() const noexcept {
   // We only expect exactly sized lazy RT proxies.
   SkASSERT(!this->isFullyLazy());
   SkASSERT(this->isFunctionallyExact());

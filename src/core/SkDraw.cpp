@@ -47,7 +47,7 @@ static SkPaint make_paint_with_image(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkDraw::SkDraw() {}
+SkDraw::SkDraw() noexcept = default;
 
 bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
   if (fRC->isEmpty()) {
@@ -69,9 +69,9 @@ bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkDraw::drawPaint(const SkPaint& paint) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  if (fRC->isEmpty()) {
+      if (fRC->isEmpty()) {
     return;
   }
 
@@ -96,7 +96,8 @@ struct PtProcRec {
 
   typedef void (*Proc)(const PtProcRec&, const SkPoint devPts[], int count, SkBlitter*);
 
-  bool init(SkCanvas::PointMode, const SkPaint&, const SkMatrix* matrix, const SkRasterClip*);
+  bool init(
+      SkCanvas::PointMode, const SkPaint&, const SkMatrix* matrix, const SkRasterClip*) noexcept;
   Proc chooseProc(SkBlitter** blitter);
 
  private:
@@ -196,11 +197,11 @@ static void aa_poly_hair_proc(
 
 // square procs (strokeWidth > 0 but matrix is square-scale (sx == sy)
 
-static SkRect make_square_rad(SkPoint center, SkScalar radius) {
+static constexpr SkRect make_square_rad(SkPoint center, SkScalar radius) noexcept {
   return {center.fX - radius, center.fY - radius, center.fX + radius, center.fY + radius};
 }
 
-static SkXRect make_xrect(const SkRect& r) {
+static SkXRect make_xrect(const SkRect& r) noexcept {
   SkASSERT(SkRectPriv::FitsInFixed(r));
   return {
       SkScalarToFixed(r.fLeft), SkScalarToFixed(r.fTop), SkScalarToFixed(r.fRight),
@@ -230,7 +231,7 @@ static void aa_square_proc(
 // If this guy returns true, then chooseProc() must return a valid proc
 bool PtProcRec::init(
     SkCanvas::PointMode mode, const SkPaint& paint, const SkMatrix* matrix,
-    const SkRasterClip* rc) {
+    const SkRasterClip* rc) noexcept {
   if ((unsigned)mode > (unsigned)SkCanvas::kPolygon_PointMode) {
     return false;
   }
@@ -336,10 +337,10 @@ void SkDraw::drawPoints(
   }
 
   SkASSERT(pts != nullptr);
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  // nothing to draw
-  if (fRC->isEmpty()) {
+      // nothing to draw
+      if (fRC->isEmpty()) {
     return;
   }
 
@@ -496,7 +497,7 @@ void SkDraw::drawPoints(
             break;
           }
         }
-        // couldn't take fast path so fall through!
+        [[fallthrough]];  // couldn't take fast path
       case SkCanvas::kPolygon_PointMode: {
         count -= 1;
         SkPath path;
@@ -565,9 +566,11 @@ SkDraw::RectType SkDraw::ComputeRectType(
   return rtype;
 }
 
-static const SkPoint* rect_points(const SkRect& r) { return reinterpret_cast<const SkPoint*>(&r); }
+static const SkPoint* rect_points(const SkRect& r) noexcept {
+  return reinterpret_cast<const SkPoint*>(&r);
+}
 
-static SkPoint* rect_points(SkRect& r) { return reinterpret_cast<SkPoint*>(&r); }
+static SkPoint* rect_points(SkRect& r) noexcept { return reinterpret_cast<SkPoint*>(&r); }
 
 static void draw_rect_as_path(
     const SkDraw& orig, const SkRect& prePaintRect, const SkPaint& paint,
@@ -583,10 +586,10 @@ static void draw_rect_as_path(
 void SkDraw::drawRect(
     const SkRect& prePaintRect, const SkPaint& paint, const SkMatrix* paintMatrix,
     const SkRect* postPaintRect) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  // nothing to draw
-  if (fRC->isEmpty()) {
+      // nothing to draw
+      if (fRC->isEmpty()) {
     return;
   }
 
@@ -705,7 +708,7 @@ void SkDraw::drawDevMask(const SkMask& srcM, const SkPaint& paint) const {
   blitter->blitMaskRegion(*mask, *clipRgn);
 }
 
-static SkScalar fast_len(const SkVector& vec) {
+static SkScalar fast_len(const SkVector& vec) noexcept {
   SkScalar x = SkScalarAbs(vec.fX);
   SkScalar y = SkScalarAbs(vec.fY);
   if (x < y) {
@@ -779,7 +782,7 @@ DRAW_PATH:
   this->drawPath(path, paint, nullptr, true);
 }
 
-SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) {
+SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) noexcept {
   // Not sure how to handle perspective differently, so we just don't try (yet)
   SkScalar sx = SkPoint::Length(matrix[SkMatrix::kMScaleX], matrix[SkMatrix::kMSkewY]);
   SkScalar sy = SkPoint::Length(matrix[SkMatrix::kMSkewX], matrix[SkMatrix::kMScaleY]);
@@ -846,10 +849,10 @@ void SkDraw::drawDevPath(
 void SkDraw::drawPath(
     const SkPath& origSrcPath, const SkPaint& origPaint, const SkMatrix* prePathMatrix,
     bool pathIsMutable, bool drawCoverage, SkBlitter* customBlitter) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  // nothing to draw
-  if (fRC->isEmpty()) {
+      // nothing to draw
+      if (fRC->isEmpty()) {
     return;
   }
 
@@ -876,9 +879,10 @@ void SkDraw::drawPath(
     }
   }
   // at this point we're done with prePathMatrix
-  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001);
+  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001;)
 
-  SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
+      SkTCopyOnFirstWrite<SkPaint>
+          paint(origPaint);
 
   {
     SkScalar coverage;
@@ -1022,18 +1026,19 @@ static bool clipped_out(const SkMatrix& matrix, const SkRasterClip& clip, int wi
   return clipped_out(matrix, clip, r);
 }
 
-static bool clipHandlesSprite(const SkRasterClip& clip, int x, int y, const SkPixmap& pmap) {
+static bool clipHandlesSprite(
+    const SkRasterClip& clip, int x, int y, const SkPixmap& pmap) noexcept {
   return clip.isBW() || clip.quickContains(x, y, x + pmap.width(), y + pmap.height());
 }
 
 void SkDraw::drawBitmap(
     const SkBitmap& bitmap, const SkMatrix& prematrix, const SkRect* dstBounds,
     const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  // nothing to draw
-  if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
-      bitmap.colorType() == kUnknown_SkColorType) {
+      // nothing to draw
+      if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
+          bitmap.colorType() == kUnknown_SkColorType) {
     return;
   }
 
@@ -1093,11 +1098,11 @@ void SkDraw::drawBitmap(
 }
 
 void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
-  // nothing to draw
-  if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
-      bitmap.colorType() == kUnknown_SkColorType) {
+      // nothing to draw
+      if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
+          bitmap.colorType() == kUnknown_SkColorType) {
     return;
   }
 
@@ -1194,7 +1199,7 @@ bool SkDraw::ComputeMaskBounds(
     // like handsets, etc.). Need to balance this invented value between
     // quality of large filters like blurs, and the corresponding memory
     // requests.
-    static const int MAX_MARGIN = 128;
+    static constexpr int MAX_MARGIN = 128;
     if (!bounds->intersect(clipBounds->makeOutset(
             std::min(margin.fX, MAX_MARGIN), std::min(margin.fY, MAX_MARGIN)))) {
       return false;

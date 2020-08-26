@@ -10,8 +10,9 @@
  **************************************************************************************************/
 #ifndef GrRRectBlurEffect_DEFINED
 #define GrRRectBlurEffect_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "include/gpu/GrContext.h"
 #include "include/private/GrRecordingContext.h"
@@ -19,18 +20,19 @@
 #include "src/core/SkGpuBlurUtils.h"
 #include "src/core/SkRRectPriv.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrPaint.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrStyle.h"
+#include "src/gpu/effects/GrTextureEffect.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrRRectBlurEffect : public GrFragmentProcessor {
  public:
-  static GrSurfaceProxyView find_or_create_rrect_blur_mask(
+  static std::unique_ptr<GrFragmentProcessor> find_or_create_rrect_blur_mask_fp(
       GrRecordingContext* context, const SkRRect& rrectToDraw, const SkISize& dimensions,
       float xformedSigma) {
     static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
@@ -48,31 +50,37 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
     }
     builder.finish();
 
+    // It seems like we could omit this matrix and modify the shader code to not normalize
+    // the coords used to sample the texture effect. However, the "proxyDims" value in the
+    // shader is not always the actual the proxy dimensions. This is because 'dimensions' here
+    // was computed using integer corner radii as determined in
+    // SkComputeBlurredRRectParams whereas the shader code uses the float radius to compute
+    // 'proxyDims'. Why it draws correctly with these unequal values is a mystery for the ages.
+    auto m = SkMatrix::Scale(dimensions.width(), dimensions.height());
     static constexpr auto kMaskOrigin = kBottomLeft_GrSurfaceOrigin;
     GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
     if (auto view = proxyProvider->findCachedProxyWithColorTypeFallback(
             key, kMaskOrigin, GrColorType::kAlpha_8, 1)) {
-      return view;
+      return GrTextureEffect::Make(std::move(view), kPremul_SkAlphaType, m);
     }
 
     auto rtc = GrRenderTargetContext::MakeWithFallback(
         context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kExact, dimensions, 1,
         GrMipMapped::kNo, GrProtected::kNo, kMaskOrigin);
     if (!rtc) {
-      return {};
+      return nullptr;
     }
 
     GrPaint paint;
 
-    rtc->clear(nullptr, SK_PMColor4fTRANSPARENT, GrRenderTargetContext::CanClearFullscreen::kYes);
+    rtc->clear(SK_PMColor4fTRANSPARENT);
     rtc->drawRRect(
-        GrNoClip(), std::move(paint), GrAA::kYes, SkMatrix::I(), rrectToDraw,
-        GrStyle::SimpleFill());
+        nullptr, std::move(paint), GrAA::kYes, SkMatrix::I(), rrectToDraw, GrStyle::SimpleFill());
 
     GrSurfaceProxyView srcView = rtc->readSurfaceView();
     if (!srcView) {
-      return {};
+      return nullptr;
     }
     SkASSERT(srcView.asTextureProxy());
     auto rtc2 = SkGpuBlurUtils::GaussianBlur(
@@ -80,47 +88,52 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
         nullptr, SkIRect::MakeSize(dimensions), SkIRect::MakeSize(dimensions), xformedSigma,
         xformedSigma, SkTileMode::kClamp, SkBackingFit::kExact);
     if (!rtc2) {
-      return {};
+      return nullptr;
     }
 
     GrSurfaceProxyView mask = rtc2->readSurfaceView();
     if (!mask) {
-      return {};
+      return nullptr;
     }
     SkASSERT(mask.asTextureProxy());
-    SkASSERT(mask.origin() == kBottomLeft_GrSurfaceOrigin);
+    SkASSERT(mask.origin() == kMaskOrigin);
     proxyProvider->assignUniqueKeyToProxy(key, mask.asTextureProxy());
-
-    return mask;
+    return GrTextureEffect::Make(std::move(mask), kPremul_SkAlphaType, m);
   }
 
   static std::unique_ptr<GrFragmentProcessor> Make(
-      GrRecordingContext* context, float sigma, float xformedSigma, const SkRRect& srcRRect,
-      const SkRRect& devRRect);
-  GrRRectBlurEffect(const GrRRectBlurEffect& src) noexcept;
+      std::unique_ptr<GrFragmentProcessor> inputFP, GrRecordingContext* context, float sigma,
+      float xformedSigma, const SkRRect& srcRRect, const SkRRect& devRRect);
+  GrRRectBlurEffect(const GrRRectBlurEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "RRectBlurEffect"; }
+  int inputFP_index = -1;
   float sigma;
   SkRect rect;
   float cornerRadius;
-  TextureSampler ninePatchSampler;
+  int ninePatchFP_index = -1;
 
  private:
   GrRRectBlurEffect(
-      float sigma, SkRect rect, float cornerRadius, GrSurfaceProxyView ninePatchSampler) noexcept
+      std::unique_ptr<GrFragmentProcessor> inputFP, float sigma, SkRect rect, float cornerRadius,
+      std::unique_ptr<GrFragmentProcessor> ninePatchFP)
       : INHERITED(
             kGrRRectBlurEffect_ClassID,
-            (OptimizationFlags)kCompatibleWithCoverageAsAlpha_OptimizationFlag),
+            (OptimizationFlags)(
+                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+                kCompatibleWithCoverageAsAlpha_OptimizationFlag),
         sigma(sigma),
         rect(rect),
-        cornerRadius(cornerRadius),
-        ninePatchSampler(std::move(ninePatchSampler)) {
-    this->setTextureSamplerCnt(1);
+        cornerRadius(cornerRadius) {
+    if (inputFP) {
+      inputFP_index = this->registerChild(std::move(inputFP));
+    }
+    SkASSERT(ninePatchFP);
+    ninePatchFP_index = this->registerExplicitlySampledChild(std::move(ninePatchFP));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
-  const TextureSampler& onTextureSampler(int) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

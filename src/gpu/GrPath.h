@@ -21,7 +21,7 @@ class GrPath : public GrGpuResource {
   /**
    * Initialize to a path with a fixed stroke. Stroke must not be hairline.
    */
-  GrPath(GrGpu* gpu, const SkPath& skPath, const GrStyle& style) noexcept
+  GrPath(GrGpu* gpu, const SkPath& skPath, const GrStyle& style)
       : INHERITED(gpu),
         fBounds(SkRect::MakeEmpty()),
         fFillType(GrPathRendering::kWinding_FillType)
@@ -35,9 +35,9 @@ class GrPath : public GrGpuResource {
 
   static void ComputeKey(const GrStyledShape&, GrUniqueKey* key, bool* outIsVolatile);
 
-  const SkRect& getBounds() const noexcept { return fBounds; }
+  const SkRect& getBounds() const { return fBounds; }
 
-  GrPathRendering::FillType getFillType() const noexcept { return fFillType; }
+  GrPathRendering::FillType getFillType() const { return fFillType; }
 #ifdef SK_DEBUG
   bool isEqualTo(const SkPath& path, const GrStyle& style) const;
 #endif

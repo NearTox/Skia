@@ -210,7 +210,8 @@ bool EGLTestHelper::init(skiatest::Reporter* reporter) {
 }
 
 bool EGLTestHelper::importHardwareBuffer(skiatest::Reporter* reporter, AHardwareBuffer* buffer) {
-  GrGLClearErr(fGLCtx->gl());
+  while (fGLCtx->gl()->fFunctions.fGetError() != GR_GL_NO_ERROR) {
+  }
 
   EGLClientBuffer eglClientBuffer = fEGLGetNativeClientBufferANDROID(buffer);
   EGLint eglAttribs[] = {EGL_IMAGE_PRESERVED_KHR, EGL_TRUE, EGL_NONE};
@@ -228,15 +229,14 @@ bool EGLTestHelper::importHardwareBuffer(skiatest::Reporter* reporter, AHardware
     return false;
   }
   GR_GL_CALL_NOERRCHECK(fGLCtx->gl(), BindTexture(GR_GL_TEXTURE_2D, fTexID));
-  if (GR_GL_GET_ERROR(fGLCtx->gl()) != GR_GL_NO_ERROR) {
+  if (fGLCtx->gl()->fFunctions.fGetError() != GR_GL_NO_ERROR) {
     ERRORF(reporter, "Failed to bind GL Texture");
     return false;
   }
 
   fEGLImageTargetTexture2DOES(GL_TEXTURE_2D, fImage);
-  GLenum status = GL_NO_ERROR;
-  if ((status = glGetError()) != GL_NO_ERROR) {
-    ERRORF(reporter, "EGLImageTargetTexture2DOES failed (%#x)", (int)status);
+  if (GrGLenum error = fGLCtx->gl()->fFunctions.fGetError(); error != GR_GL_NO_ERROR) {
+    ERRORF(reporter, "EGLImageTargetTexture2DOES failed (%#x)", (int)error);
     return false;
   }
 
@@ -303,7 +303,7 @@ bool EGLTestHelper::flushSurfaceAndSignalSemaphore(
     return false;
   }
 
-  surface->flush();
+  surface->flushAndSubmit();
   GR_GL_CALL(fGLCtx->gl(), Flush());
   fFdHandle = fEGLDupNativeFenceFDANDROID(eglDisplay, eglsync);
 
@@ -342,6 +342,7 @@ void EGLTestHelper::doClientSync() {
   GrFlushInfo flushInfo;
   flushInfo.fFlags = kSyncCpu_GrFlushFlag;
   this->grContext()->flush(flushInfo);
+  this->grContext()->submit(true);
 }
 #  endif  // SK_GL
 
@@ -800,7 +801,7 @@ sk_sp<SkImage> VulkanTestHelper::importHardwareBufferForRead(
 
 bool VulkanTestHelper::flushSurfaceAndSignalSemaphore(
     skiatest::Reporter* reporter, sk_sp<SkSurface> surface) {
-  surface->flush();
+  surface->flushAndSubmit();
   surface.reset();
   GrBackendSemaphore semaphore;
   if (!this->setupSemaphoreForSignaling(reporter, &semaphore)) {
@@ -810,6 +811,7 @@ bool VulkanTestHelper::flushSurfaceAndSignalSemaphore(
   info.fNumSemaphores = 1;
   info.fSignalSemaphores = &semaphore;
   GrSemaphoresSubmitted submitted = fGrContext->flush(info);
+  fGrContext->submit();
   if (GrSemaphoresSubmitted::kNo == submitted) {
     ERRORF(reporter, "Failing call to flush on GrContext");
     return false;

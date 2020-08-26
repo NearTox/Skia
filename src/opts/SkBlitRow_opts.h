@@ -14,16 +14,16 @@
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SKX
 #  include <immintrin.h>
 
-static inline __m512i SkPMSrcOver_SKX(const __m512i& src, const __m512i& dst) noexcept {
+static inline __m512i SkPMSrcOver_SKX(const __m512i& src, const __m512i& dst) {
   // Detailed explanations in SkPMSrcOver_AVX2
   // b = s + (d*(256-srcA)) >> 8
 
   // Shuffle each pixel's srcA to the low byte of each 16-bit half of the pixel.
-  constexpr uint8_t _ = -1;  // fills a literal 0 byte.
-  constexpr uint8_t mask[64] = {3,  _, 3,  _, 7,  _, 7,  _, 11, _, 11, _, 15, _, 15, _,
-                                19, _, 19, _, 23, _, 23, _, 27, _, 27, _, 31, _, 31, _,
-                                35, _, 35, _, 39, _, 39, _, 43, _, 43, _, 47, _, 47, _,
-                                51, _, 51, _, 55, _, 55, _, 59, _, 59, _, 63, _, 63, _};
+  const uint8_t _ = -1;  // fills a literal 0 byte.
+  const uint8_t mask[64] = {3,  _, 3,  _, 7,  _, 7,  _, 11, _, 11, _, 15, _, 15, _,
+                            19, _, 19, _, 23, _, 23, _, 27, _, 27, _, 31, _, 31, _,
+                            35, _, 35, _, 39, _, 39, _, 43, _, 43, _, 47, _, 47, _,
+                            51, _, 51, _, 55, _, 55, _, 59, _, 59, _, 63, _, 63, _};
   __m512i srcA_x2 = _mm512_shuffle_epi8(src, _mm512_loadu_si512(mask));
   __m512i scale_x2 = _mm512_sub_epi16(_mm512_set1_epi16(256), srcA_x2);
 
@@ -92,7 +92,7 @@ static inline __m256i SkPMSrcOver_AVX2(const __m256i& src, const __m256i& dst) {
 #  include <immintrin.h>
 
 static inline __m128i SkPMSrcOver_SSE2(const __m128i& src, const __m128i& dst) {
-  auto SkAlphaMulQ_SSE2 = [](const __m128i& c, const __m128i& scale) noexcept {
+  auto SkAlphaMulQ_SSE2 = [](const __m128i& c, const __m128i& scale) {
     const __m128i mask = _mm_set1_epi32(0xFF00FF);
     __m128i s = _mm_or_si128(_mm_slli_epi32(scale, 16), scale);
 

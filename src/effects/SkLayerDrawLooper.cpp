@@ -20,14 +20,14 @@
 #include "src/core/SkWriteBuffer.h"
 #include "src/core/SkXfermodePriv.h"
 
-SkLayerDrawLooper::LayerInfo::LayerInfo() noexcept {
+SkLayerDrawLooper::LayerInfo::LayerInfo() {
   fPaintBits = 0;                  // ignore our paint fields
   fColorMode = SkBlendMode::kDst;  // ignore our color
   fOffset.set(0, 0);
   fPostTranslate = false;
 }
 
-SkLayerDrawLooper::SkLayerDrawLooper() noexcept : fRecs(nullptr), fCount(0) {}
+SkLayerDrawLooper::SkLayerDrawLooper() : fRecs(nullptr), fCount(0) {}
 
 SkLayerDrawLooper::~SkLayerDrawLooper() {
   Rec* rec = fRecs;
@@ -123,8 +123,7 @@ void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
 #endif
 }
 
-SkLayerDrawLooper::LayerDrawLooperContext::LayerDrawLooperContext(
-    const SkLayerDrawLooper* looper) noexcept
+SkLayerDrawLooper::LayerDrawLooperContext::LayerDrawLooperContext(const SkLayerDrawLooper* looper)
     : fCurrRec(looper->fRecs) {}
 
 bool SkLayerDrawLooper::LayerDrawLooperContext::next(Info* info, SkPaint* paint) {
@@ -142,7 +141,7 @@ bool SkLayerDrawLooper::LayerDrawLooperContext::next(Info* info, SkPaint* paint)
   return true;
 }
 
-bool SkLayerDrawLooper::asABlurShadow(BlurShadowRec* bsRec) const noexcept {
+bool SkLayerDrawLooper::asABlurShadow(BlurShadowRec* bsRec) const {
   if (fCount != 2) {
     return false;
   }
@@ -226,7 +225,7 @@ sk_sp<SkFlattenable> SkLayerDrawLooper::CreateProc(SkReadBuffer& buffer) {
   return builder.detach();
 }
 
-SkLayerDrawLooper::Builder::Builder() noexcept : fRecs(nullptr), fTopRec(nullptr), fCount(0) {}
+SkLayerDrawLooper::Builder::Builder() : fRecs(nullptr), fTopRec(nullptr), fCount(0) {}
 
 SkLayerDrawLooper::Builder::~Builder() {
   Rec* rec = fRecs;

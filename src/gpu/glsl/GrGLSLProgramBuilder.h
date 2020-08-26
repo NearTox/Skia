@@ -142,7 +142,7 @@ class GrGLSLProgramBuilder {
 
   class AutoStageAdvance {
    public:
-    AutoStageAdvance(GrGLSLProgramBuilder* pb) : fPB(pb) {
+    AutoStageAdvance(GrGLSLProgramBuilder* pb) noexcept : fPB(pb) {
       fPB->reset();
       // Each output to the fragment processor gets its own code section
       fPB->fFS.nextStage();

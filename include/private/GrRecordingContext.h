@@ -68,6 +68,7 @@ class GrRecordingContext : public GrImageContext {
 
     Arenas get();
 
+    OwnedArenas(OwnedArenas&&) noexcept;
     OwnedArenas& operator=(OwnedArenas&&) noexcept;
 
    private:
@@ -75,8 +76,8 @@ class GrRecordingContext : public GrImageContext {
     std::unique_ptr<SkArenaAlloc> fRecordTimeAllocator;
   };
 
-  GrRecordingContext(GrBackendApi, const GrContextOptions&, uint32_t contextID);
-  bool init(sk_sp<const GrCaps>) override;
+  GrRecordingContext(sk_sp<GrContextThreadSafeProxy>);
+  bool init() override;
   void setupDrawingManager(bool sortOpsTasks, bool reduceOpsTaskSplitting);
 
   void abandonContext() override;
@@ -133,7 +134,7 @@ class GrRecordingContext : public GrImageContext {
 
   class Stats {
    public:
-    constexpr Stats() noexcept = default;
+    Stats() noexcept = default;
 
 #if GR_GPU_STATS
     void reset() noexcept { *this = {}; }

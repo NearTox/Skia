@@ -44,9 +44,9 @@ struct StringFragment {
   size_t fLength;
 };
 
-bool operator==(const char* s1, StringFragment s2);
+bool operator==(const char* s1, StringFragment s2) noexcept;
 
-bool operator!=(const char* s1, StringFragment s2);
+bool operator!=(const char* s1, StringFragment s2) noexcept;
 
 class SK_API String : public std::string {
  public:
@@ -66,7 +66,7 @@ class SK_API String : public std::string {
 
   void appendf(const char* fmt, ...);
   // For API compatibility with SkString's reset (vs. std:string's clear)
-  void reset();
+  void reset() noexcept;
   // For API compatibility with SkString's findLastOf(vs. find_last_of -> size_t)
   int findLastOf(const char c) const;
 

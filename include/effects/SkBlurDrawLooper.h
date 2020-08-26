@@ -11,8 +11,7 @@
 #include "include/core/SkDrawLooper.h"
 
 /**
- *  Draws a shadow of the object (possibly offset), and then draws the original object in
- *  its original position.
+ *  DEPRECATED: No longer supported in Skia.
  */
 namespace SkBlurDrawLooper {
 sk_sp<SkDrawLooper> SK_API

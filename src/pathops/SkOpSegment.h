@@ -28,7 +28,7 @@ class SkOpSegment {
   SkOpAngle* activeAngle(
       SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done);
   SkOpAngle* activeAngleInner(
-      SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done) noexcept;
+      SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done);
   SkOpAngle* activeAngleOther(
       SkOpSpanBase* start, SkOpSpanBase** startPtr, SkOpSpanBase** endPtr, bool* done);
   bool activeOp(SkOpSpanBase* start, SkOpSpanBase* end, int xorMiMask, int xorSuMask, SkPathOp op);
@@ -37,7 +37,7 @@ class SkOpSegment {
       int* sumMiWinding, int* sumSuWinding);
 
   bool activeWinding(SkOpSpanBase* start, SkOpSpanBase* end);
-  bool activeWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* sumWinding) noexcept;
+  bool activeWinding(SkOpSpanBase* start, SkOpSpanBase* end, int* sumWinding);
 
   SkOpSegment* addConic(SkPoint pts[3], SkScalar weight, SkOpContour* parent) {
     init(pts, weight, parent, SkPath::kConic_Verb);
@@ -98,7 +98,7 @@ class SkOpSegment {
   void bumpCount() noexcept { ++fCount; }
 
   void calcAngles();
-  SkOpSpanBase::Collapsed collapsed(double startT, double endT) const;
+  SkOpSpanBase::Collapsed collapsed(double startT, double endT) const noexcept;
   static bool ComputeOneSum(
       const SkOpAngle* baseAngle, SkOpAngle* nextAngle, SkOpAngle::IncludeType);
   static bool ComputeOneSumReverse(
@@ -107,8 +107,8 @@ class SkOpSegment {
 
   void clearAll();
   void clearOne(SkOpSpan* span);
-  static void ClearVisited(SkOpSpanBase* span);
-  bool contains(double t) const;
+  static void ClearVisited(SkOpSpanBase* span) noexcept;
+  bool contains(double t) const noexcept;
 
   SkOpContour* contour() const noexcept { return fContour; }
 

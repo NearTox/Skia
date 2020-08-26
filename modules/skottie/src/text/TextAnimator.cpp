@@ -78,13 +78,13 @@ sk_sp<TextAnimator> TextAnimator::Make(
     selectors.reserve(jselectors->size());
     for (const skjson::ObjectValue* jselector : *jselectors) {
       if (auto sel = RangeSelector::Make(*jselector, abuilder, acontainer)) {
-        selectors.emplace_back(std::move(sel));
+        selectors.push_back(std::move(sel));
       }
     }
   } else {
     if (auto sel = RangeSelector::Make((*janimator)["s"], abuilder, acontainer)) {
       selectors.reserve(1);
-      selectors.emplace_back(std::move(sel));
+      selectors.push_back(std::move(sel));
     }
   }
 

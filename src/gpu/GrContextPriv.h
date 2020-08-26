@@ -73,7 +73,7 @@ class GrContextPriv {
   /**
    * Create a GrContext without a resource cache
    */
-  static sk_sp<GrContext> MakeDDL(const sk_sp<GrContextThreadSafeProxy>&);
+  static sk_sp<GrContext> MakeDDL(sk_sp<GrContextThreadSafeProxy>);
 
   /**
    * Finalizes all pending reads and writes to the surfaces and also performs an MSAA resolves
@@ -117,7 +117,7 @@ class GrContextPriv {
   const GrGpu* getGpu() const noexcept { return fContext->fGpu.get(); }
 
   // This accessor should only ever be called by the GrOpFlushState.
-  GrAtlasManager* getAtlasManager() { return fContext->onGetAtlasManager(); }
+  GrAtlasManager* getAtlasManager() noexcept { return fContext->onGetAtlasManager(); }
 
   void moveRenderTasksToDDL(SkDeferredDisplayList*);
   void copyRenderTasksFromDDL(const SkDeferredDisplayList*, GrRenderTargetProxy* newDest);

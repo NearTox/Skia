@@ -41,9 +41,9 @@ class BlurIgnoreXformGM : public skiagm::GM {
   SkString onShortName() override {
     SkString name;
     name.printf(
-        "blur_ignore_xform_%s", DrawType::kCircle == fDrawType
-                                    ? "circle"
-                                    : DrawType::kRect == fDrawType ? "rect" : "rrect");
+        "blur_ignore_xform_%s", DrawType::kCircle == fDrawType ? "circle"
+                                : DrawType::kRect == fDrawType ? "rect"
+                                                               : "rrect");
     return name;
   }
 

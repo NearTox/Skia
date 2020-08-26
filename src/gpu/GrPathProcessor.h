@@ -33,10 +33,11 @@ class GrPathProcessor : public GrPrimitiveProcessor {
 
   virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
 
-  virtual bool isPathRendering() const override { return true; }
+  virtual bool isPathRendering() const noexcept override { return true; }
 
  private:
-  GrPathProcessor(const SkPMColor4f&, const SkMatrix& viewMatrix, const SkMatrix& localMatrix);
+  GrPathProcessor(
+      const SkPMColor4f&, const SkMatrix& viewMatrix, const SkMatrix& localMatrix) noexcept;
 
   SkPMColor4f fColor;
   const SkMatrix fViewMatrix;

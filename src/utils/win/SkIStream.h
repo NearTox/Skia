@@ -48,7 +48,7 @@ class SkBaseIStream : public IStream {
   SK_STDMETHODIMP Stat(STATSTG* pStatstg, DWORD grfStatFlag) override;
 
  protected:
-  explicit SkBaseIStream() noexcept;
+  explicit SkBaseIStream();
   virtual ~SkBaseIStream();
 
  private:
@@ -90,7 +90,7 @@ class SkWIStream : public SkBaseIStream {
  private:
   SkWStream* fSkWStream;
 
-  SkWIStream(SkWStream* stream) noexcept;
+  SkWIStream(SkWStream* stream);
   ~SkWIStream() override;
 };
 

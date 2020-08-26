@@ -20,7 +20,7 @@
  */
 class GrGLSLColorSpaceXformHelper : public SkNoncopyable {
  public:
-  GrGLSLColorSpaceXformHelper() {}
+  GrGLSLColorSpaceXformHelper() noexcept = default;
 
   void emitCode(
       GrGLSLUniformHandler* uniformHandler, const GrColorSpaceXform* colorSpaceXform,
@@ -57,22 +57,20 @@ class GrGLSLColorSpaceXformHelper : public SkNoncopyable {
     }
   }
 
-  bool isNoop() const noexcept { return (0 == fFlags.mask()); }
+  bool isNoop() const { return (0 == fFlags.mask()); }
 
-  bool applyUnpremul() const noexcept { return fFlags.unpremul; }
-  bool applySrcTF() const noexcept { return fFlags.linearize; }
-  bool applyGamutXform() const noexcept { return fFlags.gamut_transform; }
-  bool applyDstTF() const noexcept { return fFlags.encode; }
-  bool applyPremul() const noexcept { return fFlags.premul; }
+  bool applyUnpremul() const { return fFlags.unpremul; }
+  bool applySrcTF() const { return fFlags.linearize; }
+  bool applyGamutXform() const { return fFlags.gamut_transform; }
+  bool applyDstTF() const { return fFlags.encode; }
+  bool applyPremul() const { return fFlags.premul; }
 
-  TFKind srcTFKind() const noexcept { return fSrcTFKind; }
-  TFKind dstTFKind() const noexcept { return fDstTFKind; }
+  TFKind srcTFKind() const { return fSrcTFKind; }
+  TFKind dstTFKind() const { return fDstTFKind; }
 
-  GrGLSLProgramDataManager::UniformHandle srcTFUniform() const noexcept { return fSrcTFVar; }
-  GrGLSLProgramDataManager::UniformHandle gamutXformUniform() const noexcept {
-    return fGamutXformVar;
-  }
-  GrGLSLProgramDataManager::UniformHandle dstTFUniform() const noexcept { return fDstTFVar; }
+  GrGLSLProgramDataManager::UniformHandle srcTFUniform() const { return fSrcTFVar; }
+  GrGLSLProgramDataManager::UniformHandle gamutXformUniform() const { return fGamutXformVar; }
+  GrGLSLProgramDataManager::UniformHandle dstTFUniform() const { return fDstTFVar; }
 
  private:
   static const int kNumTransferFnCoeffs = 7;

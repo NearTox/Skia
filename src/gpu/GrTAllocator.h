@@ -16,14 +16,14 @@ class GrTAllocator {
   /**
    * Create an allocator that defaults to using StartingItems as heap increment.
    */
-  GrTAllocator() : fTotalCount(0), fAllocator(GrBlockAllocator::GrowthPolicy::kFixed) {}
+  GrTAllocator() noexcept : fTotalCount(0), fAllocator(GrBlockAllocator::GrowthPolicy::kFixed) {}
 
   /**
    * Create an allocator
    *
    * @param   itemsPerBlock   the number of items to allocate at once
    */
-  explicit GrTAllocator(int itemsPerBlock)
+  explicit GrTAllocator(int itemsPerBlock) noexcept
       : fTotalCount(0),
         fAllocator(
             GrBlockAllocator::GrowthPolicy::kFixed,
@@ -90,7 +90,7 @@ class GrTAllocator {
   /**
    * Returns the item count.
    */
-  int count() const {
+  int count() const noexcept {
 #ifdef SK_DEBUG
     // Confirm total count matches sum of block counts
     int count = 0;
@@ -107,7 +107,7 @@ class GrTAllocator {
   /**
    * Is the count 0?
    */
-  bool empty() const { return this->count() == 0; }
+  bool empty() const noexcept { return this->count() == 0; }
 
   /**
    * Access first item, only call if count() != 0

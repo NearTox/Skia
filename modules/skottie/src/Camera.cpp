@@ -110,7 +110,7 @@ sk_sp<sksg::Transform> AnimationBuilder::attachCamera(
   if (adapter->isStatic()) {
     adapter->seek(0);
   } else {
-    fCurrentAnimatorScope->emplace_back(adapter);
+    fCurrentAnimatorScope->push_back(adapter);
   }
 
   return sksg::Transform::MakeConcat(adapter->node(), std::move(parent));

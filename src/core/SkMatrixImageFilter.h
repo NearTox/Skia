@@ -32,8 +32,7 @@ class SkMatrixImageFilter : public SkImageFilter_Base {
   SkRect computeFastBounds(const SkRect&) const override;
 
  protected:
-  SkMatrixImageFilter(
-      const SkMatrix& transform, SkFilterQuality, sk_sp<SkImageFilter> input) noexcept;
+  SkMatrixImageFilter(const SkMatrix& transform, SkFilterQuality, sk_sp<SkImageFilter> input);
   void flatten(SkWriteBuffer&) const override;
 
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;

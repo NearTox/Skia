@@ -30,9 +30,9 @@
 bool gUseSkVMBlitter{false};
 bool gSkForceRasterPipelineBlitter{false};
 
-SkBlitter::~SkBlitter() {}
+SkBlitter::~SkBlitter() = default;
 
-bool SkBlitter::isNullBlitter() const noexcept { return false; }
+bool SkBlitter::isNullBlitter() const { return false; }
 
 const SkPixmap* SkBlitter::justAnOpaqueColor(uint32_t* value) { return nullptr; }
 
@@ -48,7 +48,7 @@ void SkBlitter::blitAntiH(int x, int y, const SkAlpha antialias[],
 }
  */
 
-inline constexpr static SkAlpha ScalarToAlpha(SkScalar a) noexcept {
+inline static SkAlpha ScalarToAlpha(SkScalar a) {
   SkAlpha alpha = (SkAlpha)(a * 255);
   return alpha > 247 ? 0xFF : alpha < 8 ? 0 : alpha;
 }
@@ -183,7 +183,7 @@ static inline void bits_to_runs(
 }
 
 // maskBitCount is the number of 1's to place in the mask. It must be in the range between 1 and 8.
-static uint8_t generate_right_mask(int maskBitCount) noexcept {
+static uint8_t generate_right_mask(int maskBitCount) {
   return static_cast<uint8_t>((0xFF00U >> maskBitCount) & 0xFF);
 }
 
@@ -313,11 +313,11 @@ void SkNullBlitter::blitMask(const SkMask& mask, const SkIRect& clip) {}
 
 const SkPixmap* SkNullBlitter::justAnOpaqueColor(uint32_t* value) { return nullptr; }
 
-bool SkNullBlitter::isNullBlitter() const noexcept { return true; }
+bool SkNullBlitter::isNullBlitter() const { return true; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static int compute_anti_width(const int16_t runs[]) noexcept {
+static int compute_anti_width(const int16_t runs[]) {
   int width = 0;
 
   for (;;) {
@@ -333,11 +333,11 @@ static int compute_anti_width(const int16_t runs[]) noexcept {
   return width;
 }
 
-static inline bool y_in_rect(int y, const SkIRect& rect) noexcept {
+static inline bool y_in_rect(int y, const SkIRect& rect) {
   return (unsigned)(y - rect.fTop) < (unsigned)rect.height();
 }
 
-static inline bool x_in_rect(int x, const SkIRect& rect) noexcept {
+static inline bool x_in_rect(int x, const SkIRect& rect) {
   return (unsigned)(x - rect.fLeft) < (unsigned)rect.width();
 }
 
@@ -488,9 +488,9 @@ void SkRgnClipBlitter::blitAntiH(int x, int y, const SkAlpha aa[], const int16_t
   int width = compute_anti_width(runs);
   SkRegion::Spanerator span(*fRgn, y, x, x + width);
   int left, right;
-  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds());
+  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds();)
 
-  int prevRite = x;
+      int prevRite = x;
   while (span.next(&left, &right)) {
     SkASSERT(x <= left);
     SkASSERT(left < right);
@@ -640,9 +640,8 @@ bool SkBlitter::UseRasterPipelineBlitter(
   const SkMaskFilterBase* mf = as_MFB(paint.getMaskFilter());
 
   // The legacy blitters cannot handle any of these complex features (anymore).
-  if (device.alphaType() == kUnpremul_SkAlphaType || matrix.hasPerspective() ||
-      paint.getColorFilter() || paint.getBlendMode() > SkBlendMode::kLastCoeffMode ||
-      paint.getFilterQuality() == kHigh_SkFilterQuality ||
+  if (device.alphaType() == kUnpremul_SkAlphaType ||
+      paint.getBlendMode() > SkBlendMode::kLastCoeffMode ||
       (mf && mf->getFormat() == SkMask::k3D_Format)) {
     return true;
   }
@@ -717,18 +716,29 @@ SkBlitter* SkBlitter::Choose(
     paint.writable()->setDither(false);
   }
 
-  SkMatrix ctm = matrixProvider.localToDevice();
   if (gUseSkVMBlitter) {
-    if (auto blitter = SkCreateSkVMBlitter(device, *paint, ctm, alloc, clipShader)) {
+    if (auto blitter = SkCreateSkVMBlitter(device, *paint, matrixProvider, alloc, clipShader)) {
       return blitter;
     }
   }
 
+  // Same basic idea used a few times: try SkRP, then try SkVM, then give up with a null-blitter.
+  // (Setting gUseSkVMBlitter is the only way we prefer SkVM over SkRP at the moment.)
+  auto create_SkRP_or_SkVMBlitter = [&]() -> SkBlitter* {
+    if (auto blitter =
+            SkCreateRasterPipelineBlitter(device, *paint, matrixProvider, alloc, clipShader)) {
+      return blitter;
+    }
+    if (auto blitter = SkCreateSkVMBlitter(device, *paint, matrixProvider, alloc, clipShader)) {
+      return blitter;
+    }
+    return alloc->make<SkNullBlitter>();
+  };
+
+  SkMatrix ctm = matrixProvider.localToDevice();
   // We'll end here for many interesting cases: color spaces, color filters, most color types.
   if (UseRasterPipelineBlitter(device, *paint, ctm) || clipShader) {
-    auto blitter = SkCreateRasterPipelineBlitter(device, *paint, matrixProvider, alloc, clipShader);
-    SkASSERT(blitter);
-    return blitter;
+    return create_SkRP_or_SkVMBlitter();
   }
 
   // Everything but legacy kN32_SkColorType and kRGB_565_SkColorType should already be handled.
@@ -744,12 +754,9 @@ SkBlitter* SkBlitter::Choose(
         as_SB(paint->getShader())
             ->makeContext({*paint, ctm, nullptr, device.colorType(), device.colorSpace()}, alloc);
 
-    // Creating the context isn't always possible... we'll just fall back to raster pipeline.
+    // Creating the context isn't always possible... try fallbacks before giving up.
     if (!shaderContext) {
-      auto blitter =
-          SkCreateRasterPipelineBlitter(device, *paint, matrixProvider, alloc, clipShader);
-      SkASSERT(blitter);
-      return blitter;
+      return create_SkRP_or_SkVMBlitter();
     }
   }
 
@@ -769,7 +776,7 @@ SkBlitter* SkBlitter::Choose(
       if (shaderContext && SkRGB565_Shader_Blitter::Supports(device, *paint)) {
         return alloc->make<SkRGB565_Shader_Blitter>(device, *paint, shaderContext);
       } else {
-        return SkCreateRasterPipelineBlitter(device, *paint, matrixProvider, alloc, clipShader);
+        return create_SkRP_or_SkVMBlitter();
       }
 
     default: SkASSERT(false); return alloc->make<SkNullBlitter>();

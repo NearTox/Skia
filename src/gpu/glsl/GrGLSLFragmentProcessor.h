@@ -173,7 +173,7 @@ class GrGLSLFragmentProcessor {
 
     GrGLSLFragmentProcessor& operator*() const noexcept;
     GrGLSLFragmentProcessor* operator->() const noexcept;
-    Iter& operator++();
+    Iter& operator++() noexcept;
     operator bool() const noexcept { return !fFPStack.empty(); }
 
     // Because each iterator carries a stack we want to avoid copies.

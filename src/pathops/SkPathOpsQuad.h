@@ -80,11 +80,11 @@ struct SkDQuad {
    *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
    *  specified horizontal line.
    */
-  int horizontalIntersect(double yIntercept, double roots[2]) const noexcept;
+  int horizontalIntersect(double yIntercept, double roots[2]) const;
 
   bool hullIntersects(const SkDQuad&, bool* isLinear) const noexcept;
-  bool hullIntersects(const SkDConic&, bool* isLinear) const noexcept;
-  bool hullIntersects(const SkDCubic&, bool* isLinear) const noexcept;
+  bool hullIntersects(const SkDConic&, bool* isLinear) const;
+  bool hullIntersects(const SkDCubic&, bool* isLinear) const;
   bool isLinear(int startIndex, int endIndex) const noexcept;
   static int maxIntersections() noexcept { return kMaxIntersections; }
   bool monotonicInX() const noexcept;
@@ -118,7 +118,7 @@ struct SkDQuad {
    *  Return the number of valid roots (0 < root < 1) for this cubic intersecting the
    *  specified vertical line.
    */
-  int verticalIntersect(double xIntercept, double roots[2]) const noexcept;
+  int verticalIntersect(double xIntercept, double roots[2]) const;
 
   SkDCubic debugToCubic() const;
   // utilities callable by the user from the debugger when the implementation code is linked in
@@ -129,7 +129,7 @@ struct SkDQuad {
   SkDEBUGCODE(SkOpGlobalState* fDebugGlobalState);
 };
 
-class SkTQuad final : public SkTCurve {
+class SkTQuad : public SkTCurve {
  public:
   SkDQuad fQuad;
 
@@ -137,7 +137,7 @@ class SkTQuad final : public SkTCurve {
 
   SkTQuad(const SkDQuad& q) noexcept : fQuad(q) {}
 
-  ~SkTQuad() override = default;
+  ~SkTQuad() override {}
 
   const SkDPoint& operator[](int n) const noexcept override { return fQuad[n]; }
   SkDPoint& operator[](int n) noexcept override { return fQuad[n]; }
@@ -157,14 +157,14 @@ class SkTQuad final : public SkTCurve {
     return quad.hullIntersects(fQuad, isLinear);
   }
 
-  bool hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept override;
-  bool hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept override;
+  bool hullIntersects(const SkDConic& conic, bool* isLinear) const override;
+  bool hullIntersects(const SkDCubic& cubic, bool* isLinear) const override;
 
-  bool hullIntersects(const SkTCurve& curve, bool* isLinear) const noexcept override {
+  bool hullIntersects(const SkTCurve& curve, bool* isLinear) const override {
     return curve.hullIntersects(fQuad, isLinear);
   }
 
-  int intersectRay(SkIntersections* i, const SkDLine& line) const noexcept override;
+  int intersectRay(SkIntersections* i, const SkDLine& line) const override;
   bool IsConic() const noexcept override { return false; }
   SkTCurve* make(SkArenaAlloc& heap) const override { return heap.make<SkTQuad>(); }
 
@@ -177,7 +177,7 @@ class SkTQuad final : public SkTCurve {
   int pointCount() const noexcept override { return SkDQuad::kPointCount; }
   int pointLast() const noexcept override { return SkDQuad::kPointLast; }
   SkDPoint ptAtT(double t) const noexcept override { return fQuad.ptAtT(t); }
-  void setBounds(SkDRect*) const noexcept override;
+  void setBounds(SkDRect*) const override;
 
   void subDivide(double t1, double t2, SkTCurve* curve) const noexcept override {
     ((SkTQuad*)curve)->fQuad = fQuad.subDivide(t1, t2);

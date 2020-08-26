@@ -16,7 +16,7 @@
 #include <new>
 
 // Force small chunks to be a page's worth
-static constexpr size_t kMinAllocSize = 4096;
+static const size_t kMinAllocSize = 4096;
 
 struct SkBufferBlock {
   SkBufferBlock* fNext;  // updated by the writer
@@ -58,7 +58,7 @@ struct SkBufferBlock {
   }
 
  private:
-  static size_t LengthToCapacity(size_t length) noexcept {
+  static constexpr size_t LengthToCapacity(size_t length) noexcept {
     constexpr size_t minSize = kMinAllocSize - sizeof(SkBufferBlock);
     return std::max(length, minSize);
   }
@@ -70,7 +70,7 @@ struct SkBufferHead {
 
   SkBufferHead(size_t capacity) noexcept : fRefCnt(1), fBlock(capacity) {}
 
-  static size_t LengthToCapacity(size_t length) noexcept {
+  static constexpr size_t LengthToCapacity(size_t length) noexcept {
     constexpr size_t minSize = kMinAllocSize - sizeof(SkBufferHead);
     return std::max(length, minSize);
   }
@@ -185,8 +185,7 @@ bool SkROBuffer::Iter::next() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRWBuffer::SkRWBuffer(size_t initialCapacity) noexcept
-    : fHead(nullptr), fTail(nullptr), fTotalUsed(0) {
+SkRWBuffer::SkRWBuffer(size_t initialCapacity) : fHead(nullptr), fTail(nullptr), fTotalUsed(0) {
   if (initialCapacity) {
     fHead = SkBufferHead::Alloc(initialCapacity);
     fTail = &fHead->fBlock;
@@ -204,7 +203,7 @@ SkRWBuffer::~SkRWBuffer() {
 // next, since our reader will be using fCapacity (min'd against its total available) to know how
 // many bytes to read from a given block.
 //
-void SkRWBuffer::append(const void* src, size_t length, size_t reserve) noexcept {
+void SkRWBuffer::append(const void* src, size_t length, size_t reserve) {
   this->validate();
   if (0 == length) {
     return;

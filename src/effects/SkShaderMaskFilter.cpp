@@ -22,7 +22,7 @@ class SkShaderMF : public SkMaskFilterBase {
 
   void computeFastBounds(const SkRect& src, SkRect* dst) const override { *dst = src; }
 
-  bool asABlur(BlurRec*) const noexcept override { return false; }
+  bool asABlur(BlurRec*) const override { return false; }
 
  protected:
 #if SK_SUPPORT_GPU

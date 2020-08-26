@@ -28,18 +28,18 @@ extern int gMaxRecursion[];
 */
 class SkStroke {
  public:
-  SkStroke() noexcept;
-  SkStroke(const SkPaint&) noexcept;
-  SkStroke(const SkPaint&, SkScalar width) noexcept;  // width overrides paint.getStrokeWidth()
+  SkStroke();
+  SkStroke(const SkPaint&);
+  SkStroke(const SkPaint&, SkScalar width);  // width overrides paint.getStrokeWidth()
 
   SkPaint::Cap getCap() const noexcept { return (SkPaint::Cap)fCap; }
-  void setCap(SkPaint::Cap) noexcept;
+  void setCap(SkPaint::Cap);
 
   SkPaint::Join getJoin() const noexcept { return (SkPaint::Join)fJoin; }
-  void setJoin(SkPaint::Join) noexcept;
+  void setJoin(SkPaint::Join);
 
-  void setMiterLimit(SkScalar) noexcept;
-  void setWidth(SkScalar) noexcept;
+  void setMiterLimit(SkScalar);
+  void setWidth(SkScalar);
 
   bool getDoFill() const noexcept { return SkToBool(fDoFill); }
   void setDoFill(bool doFill) noexcept { fDoFill = SkToU8(doFill); }

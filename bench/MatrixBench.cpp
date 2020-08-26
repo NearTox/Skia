@@ -267,7 +267,7 @@ DEF_BENCH(return new InvertMapRectMatrixBench(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static SkMatrix make_trans() { return SkMatrix::MakeTrans(2, 3); }
+static SkMatrix make_trans() { return SkMatrix::Translate(2, 3); }
 static SkMatrix make_scale() {
   SkMatrix m(make_trans());
   m.postScale(1.5f, 0.5f);

@@ -20,7 +20,7 @@
 namespace {
 
 struct LocalMatrixStageRec final : public SkStageRec {
-  LocalMatrixStageRec(const SkStageRec& rec, const SkMatrix& lm) noexcept : INHERITED(rec) {
+  LocalMatrixStageRec(const SkStageRec& rec, const SkMatrix& lm) : INHERITED(rec) {
     if (!lm.isIdentity()) {
       if (fLocalM) {
         fStorage.setConcat(lm, *fLocalM);
@@ -127,12 +127,12 @@ bool SkShader_Blend::onAppendStages(const SkStageRec& orig_rec) const {
 }
 
 skvm::Color SkShader_Blend::onProgram(
-    skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-    const SkMatrix* localM, SkFilterQuality q, const SkColorInfo& dst, skvm::Uniforms* uniforms,
-    SkArenaAlloc* alloc) const {
+    skvm::Builder* p, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+    const SkMatrixProvider& mats, const SkMatrix* localM, SkFilterQuality q, const SkColorInfo& dst,
+    skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
   skvm::Color d, s;
-  if ((d = as_SB(fDst)->program(p, x, y, paint, ctm, localM, q, dst, uniforms, alloc)) &&
-      (s = as_SB(fSrc)->program(p, x, y, paint, ctm, localM, q, dst, uniforms, alloc))) {
+  if ((d = as_SB(fDst)->program(p, device, local, paint, mats, localM, q, dst, uniforms, alloc)) &&
+      (s = as_SB(fSrc)->program(p, device, local, paint, mats, localM, q, dst, uniforms, alloc))) {
     return p->blend(fMode, s, d);
   }
   return {};
@@ -165,12 +165,12 @@ bool SkShader_Lerp::onAppendStages(const SkStageRec& orig_rec) const {
 }
 
 skvm::Color SkShader_Lerp::onProgram(
-    skvm::Builder* p, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-    const SkMatrix* localM, SkFilterQuality q, const SkColorInfo& dst, skvm::Uniforms* uniforms,
-    SkArenaAlloc* alloc) const {
+    skvm::Builder* p, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+    const SkMatrixProvider& mats, const SkMatrix* localM, SkFilterQuality q, const SkColorInfo& dst,
+    skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
   skvm::Color d, s;
-  if ((d = as_SB(fDst)->program(p, x, y, paint, ctm, localM, q, dst, uniforms, alloc)) &&
-      (s = as_SB(fSrc)->program(p, x, y, paint, ctm, localM, q, dst, uniforms, alloc))) {
+  if ((d = as_SB(fDst)->program(p, device, local, paint, mats, localM, q, dst, uniforms, alloc)) &&
+      (s = as_SB(fSrc)->program(p, device, local, paint, mats, localM, q, dst, uniforms, alloc))) {
     auto t = p->uniformF(uniforms->pushF(fWeight));
     return {
         p->lerp(d.r, s.r, t),

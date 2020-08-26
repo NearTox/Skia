@@ -27,7 +27,7 @@ bool FilterDashPath(
     SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*,
     const SkPathEffect::DashInfo& info);
 
-constexpr SkScalar kMaxDashCount = 1000000;
+const SkScalar kMaxDashCount = 1000000;
 
 /** See comments for InternalFilter */
 enum class StrokeRecApplication {

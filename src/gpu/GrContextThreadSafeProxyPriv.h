@@ -9,6 +9,7 @@
 #define GrContextThreadSafeProxyPriv_DEFINED
 
 #include "include/gpu/GrContextThreadSafeProxy.h"
+#include "include/private/GrContext_Base.h"
 
 #include "src/gpu/GrCaps.h"
 
@@ -19,19 +20,24 @@
  */
 class GrContextThreadSafeProxyPriv {
  public:
-  // from GrContext_Base
-  uint32_t contextID() const noexcept { return fProxy->contextID(); }
+  void init(sk_sp<const GrCaps> caps) const noexcept { fProxy->init(std::move(caps)); }
 
-  bool matches(GrContext_Base* candidate) const noexcept { return fProxy->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const {
+    return fProxy == candidate->threadSafeProxy().get();
+  }
 
-  const GrContextOptions& options() const noexcept { return fProxy->options(); }
+  GrBackend backend() const noexcept { return fProxy->fBackend; }
+  const GrContextOptions& options() const noexcept { return fProxy->fOptions; }
+  uint32_t contextID() const noexcept { return fProxy->fContextID; }
 
-  const GrCaps* caps() const { return fProxy->caps(); }
-  sk_sp<const GrCaps> refCaps() const { return fProxy->refCaps(); }
+  const GrCaps* caps() const noexcept { return fProxy->fCaps.get(); }
+  sk_sp<const GrCaps> refCaps() const noexcept { return fProxy->fCaps; }
+
+  void abandonContext() noexcept { fProxy->abandonContext(); }
+  bool abandoned() const noexcept { return fProxy->abandoned(); }
 
   // GrContextThreadSafeProxyPriv
-  static sk_sp<GrContextThreadSafeProxy> Make(
-      GrBackendApi, const GrContextOptions&, uint32_t contextID, sk_sp<const GrCaps>);
+  static sk_sp<GrContextThreadSafeProxy> Make(GrBackendApi, const GrContextOptions&);
 
  private:
   explicit GrContextThreadSafeProxyPriv(GrContextThreadSafeProxy* proxy) noexcept : fProxy(proxy) {}

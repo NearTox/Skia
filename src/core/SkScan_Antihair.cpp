@@ -96,7 +96,7 @@ static void call_hline_blitter(SkBlitter* blitter, int x, int y, int count, U8CP
 class SkAntiHairBlitter {
  public:
   SkAntiHairBlitter() : fBlitter(nullptr) {}
-  virtual ~SkAntiHairBlitter() {}
+  virtual ~SkAntiHairBlitter() = default;
 
   SkBlitter* getBlitter() const { return fBlitter; }
 

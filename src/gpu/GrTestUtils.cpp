@@ -340,7 +340,7 @@ TestAsFPArgs::TestAsFPArgs(GrProcessorTestData* d)
           GrColorType::kRGBA_8888, kPremul_SkAlphaType, TestColorSpace(d->fRandom))),
       fArgs(d->context(), fMatrixProvider, kNone_SkFilterQuality, fColorInfoStorage.get()) {}
 
-TestAsFPArgs::~TestAsFPArgs() {}
+TestAsFPArgs::~TestAsFPArgs() = default;
 
 }  // namespace GrTest
 

@@ -29,7 +29,7 @@ class SK_CAPABILITY("mutex") SkMutex {
     fSemaphore.signal();
   }
 
-  void assertHeld() noexcept SK_ASSERT_CAPABILITY(this) { SkASSERT(fOwner == SkGetThreadID()); }
+  void assertHeld() SK_ASSERT_CAPABILITY(this) { SkASSERT(fOwner == SkGetThreadID()); }
 
  private:
   SkSemaphore fSemaphore{1};

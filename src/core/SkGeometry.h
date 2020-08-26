@@ -291,7 +291,7 @@ struct SkConic {
    */
   //    bool findMaxCurvature(SkScalar* t) const;  // unimplemented
 
-  static SkScalar TransformW(const SkPoint[3], SkScalar w, const SkMatrix&);
+  static SkScalar TransformW(const SkPoint[3], SkScalar w, const SkMatrix&) noexcept;
 
   enum { kMaxConicsForArc = 5 };
   static int BuildUnitArc(

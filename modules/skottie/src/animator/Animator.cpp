@@ -40,14 +40,14 @@ void AnimatablePropertyContainer::attachDiscardableAdapter(
     return;
   }
 
-  fAnimators.emplace_back(std::move(child));
+  fAnimators.push_back(child);
 }
 
 void AnimatablePropertyContainer::shrink_to_fit() { fAnimators.shrink_to_fit(); }
 
 bool AnimatablePropertyContainer::bindImpl(
     const AnimationBuilder& abuilder, const skjson::ObjectValue* jprop,
-    KeyframeAnimatorBuilder& builder, void* target_value) {
+    KeyframeAnimatorBuilder& builder) {
   if (!jprop) {
     return false;
   }
@@ -62,7 +62,7 @@ bool AnimatablePropertyContainer::bindImpl(
   // Older Json versions don't have an "a" animation marker.
   // For those, we attempt to parse both ways.
   if (!ParseDefault<bool>(jpropA, false)) {
-    if (builder.parseValue(abuilder, jpropK, target_value)) {
+    if (builder.parseValue(abuilder, jpropK)) {
       // Static property.
       return true;
     }
@@ -77,7 +77,7 @@ bool AnimatablePropertyContainer::bindImpl(
   sk_sp<KeyframeAnimator> animator;
   const skjson::ArrayValue* jkfs = jpropK;
   if (jkfs && jkfs->size() > 0) {
-    animator = builder.make(abuilder, *jkfs, target_value);
+    animator = builder.make(abuilder, *jkfs);
   }
 
   if (!animator) {
@@ -90,7 +90,7 @@ bool AnimatablePropertyContainer::bindImpl(
     // as an animated property - apply immediately and discard the animator.
     animator->seek(0);
   } else {
-    fAnimators.emplace_back(std::move(animator));
+    fAnimators.push_back(std::move(animator));
   }
 
   return true;

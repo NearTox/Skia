@@ -14,6 +14,7 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "modules/skottie/include/ExternalLayer.h"
+#include "modules/skottie/include/SkottieProperty.h"
 #include "modules/skresources/include/SkResources.h"
 
 #include <memory>
@@ -43,8 +44,6 @@ class Animator;
 using ImageAsset = skresources::ImageAsset;
 using ResourceProvider = skresources::ResourceProvider;
 
-class PropertyObserver;
-
 /**
  * A Logger subclass can be used to receive Animation::Builder parsing errors and warnings.
  */
@@ -72,9 +71,11 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
   class Builder final {
    public:
     enum Flags : uint32_t {
-      kDeferImageLoading = 0x01,  // Normally, all static image frames are resolved at
-                                  // load time via ImageAsset::getFrame(0).  With this flag,
-                                  // frames are only resolved when needed, at seek() time.
+      kDeferImageLoading = 0x01,    // Normally, all static image frames are resolved at
+                                    // load time via ImageAsset::getFrame(0).  With this flag,
+                                    // frames are only resolved when needed, at seek() time.
+      kPreferEmbeddedFonts = 0x02,  // Attempt to use the embedded fonts (glyph paths,
+                                    // normally used as fallback) over native Skia typefaces.
     };
 
     explicit Builder(uint32_t flags = 0);
@@ -93,7 +94,7 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
      *
      * @return Stats (see above).
      */
-    const Stats& getStats() const noexcept { return fStats; }
+    const Stats& getStats() const { return fStats; }
 
     /**
      * Specify a loader for external resources (images, etc.).
@@ -213,15 +214,15 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
   /**
    * Returns the animation duration in seconds.
    */
-  double duration() const noexcept { return fDuration; }
+  double duration() const { return fDuration; }
 
   /**
    * Returns the animation frame rate (frames / second).
    */
-  double fps() const noexcept { return fFPS; }
+  double fps() const { return fFPS; }
 
-  const SkString& version() const noexcept { return fVersion; }
-  const SkSize& size() const noexcept { return fSize; }
+  const SkString& version() const { return fVersion; }
+  const SkSize& size() const { return fSize; }
 
  private:
   enum Flags : uint32_t {

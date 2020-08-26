@@ -22,7 +22,7 @@ namespace {
 
 class SkPictureImageFilterImpl final : public SkImageFilter_Base {
  public:
-  SkPictureImageFilterImpl(sk_sp<SkPicture> picture, const SkRect& cropRect) noexcept
+  SkPictureImageFilterImpl(sk_sp<SkPicture> picture, const SkRect& cropRect)
       : INHERITED(nullptr, 0, nullptr), fPicture(std::move(picture)), fCropRect(cropRect) {}
 
  protected:

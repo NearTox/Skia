@@ -34,7 +34,6 @@ class GrVkCaps : public GrCaps {
       GrProtected isProtected = GrProtected::kNo);
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
-  SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isVkFormatTexturable(VkFormat) const;
@@ -49,11 +48,11 @@ class GrVkCaps : public GrCaps {
   int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat&) const override;
   int getRenderTargetSampleCount(int requestedCount, VkFormat) const;
 
-  int maxRenderTargetSampleCount(const GrBackendFormat&) const override;
-  int maxRenderTargetSampleCount(VkFormat format) const;
+  int maxRenderTargetSampleCount(const GrBackendFormat&) const noexcept override;
+  int maxRenderTargetSampleCount(VkFormat format) const noexcept;
 
-  size_t bytesPerPixel(const GrBackendFormat&) const override;
-  size_t bytesPerPixel(VkFormat format) const;
+  size_t bytesPerPixel(const GrBackendFormat&) const noexcept override;
+  size_t bytesPerPixel(VkFormat format) const noexcept;
 
   SupportedWrite supportedWritePixelsColorType(
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
@@ -61,17 +60,17 @@ class GrVkCaps : public GrCaps {
 
   SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const override;
 
-  bool isVkFormatTexturableLinearly(VkFormat format) const {
+  bool isVkFormatTexturableLinearly(VkFormat format) const noexcept {
     return SkToBool(FormatInfo::kTexturable_Flag & this->getFormatInfo(format).fLinearFlags);
   }
 
-  bool formatCanBeDstofBlit(VkFormat format, bool linearTiled) const {
+  bool formatCanBeDstofBlit(VkFormat format, bool linearTiled) const noexcept {
     const FormatInfo& info = this->getFormatInfo(format);
     const uint16_t& flags = linearTiled ? info.fLinearFlags : info.fOptimalFlags;
     return SkToBool(FormatInfo::kBlitDst_Flag & flags);
   }
 
-  bool formatCanBeSrcofBlit(VkFormat format, bool linearTiled) const {
+  bool formatCanBeSrcofBlit(VkFormat format, bool linearTiled) const noexcept {
     const FormatInfo& info = this->getFormatInfo(format);
     const uint16_t& flags = linearTiled ? info.fLinearFlags : info.fOptimalFlags;
     return SkToBool(FormatInfo::kBlitSrc_Flag & flags);
@@ -184,13 +183,12 @@ class GrVkCaps : public GrCaps {
     return fColorTypeToFormatTable[idx];
   }
 
-  GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
-  int getFragmentUniformBinding() const;
-  int getFragmentUniformSet() const;
+  int getFragmentUniformBinding() const noexcept;
+  int getFragmentUniformSet() const noexcept;
 
   void addExtraSamplerKey(
       GrProcessorKeyBuilder*, GrSamplerState, const GrBackendFormat&) const override;
@@ -226,7 +224,7 @@ class GrVkCaps : public GrCaps {
 
   void applyDriverCorrectnessWorkarounds(const VkPhysicalDeviceProperties&);
 
-  bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
+  bool onSurfaceSupportsWritePixels(const GrSurface*) const noexcept override;
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
@@ -236,6 +234,8 @@ class GrVkCaps : public GrCaps {
 
   SupportedRead onSupportedReadPixelsColorType(
       GrColorType, const GrBackendFormat&, GrColorType) const override;
+
+  GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   // ColorTypeInfo for a specific format
   struct ColorTypeInfo {
@@ -266,7 +266,7 @@ class GrVkCaps : public GrCaps {
     }
 
     void init(const GrVkInterface*, VkPhysicalDevice, const VkPhysicalDeviceProperties&, VkFormat);
-    static void InitFormatFlags(VkFormatFeatureFlags, uint16_t* flags);
+    static void InitFormatFlags(VkFormatFeatureFlags, uint16_t* flags) noexcept;
     void initSampleCounts(
         const GrVkInterface*, VkPhysicalDevice, const VkPhysicalDeviceProperties&, VkFormat);
 
@@ -290,8 +290,8 @@ class GrVkCaps : public GrCaps {
   static const size_t kNumVkFormats = 22;
   FormatInfo fFormatTable[kNumVkFormats];
 
-  FormatInfo& getFormatInfo(VkFormat);
-  const FormatInfo& getFormatInfo(VkFormat) const;
+  FormatInfo& getFormatInfo(VkFormat) noexcept;
+  const FormatInfo& getFormatInfo(VkFormat) const noexcept;
 
   VkFormat fColorTypeToFormatTable[kGrColorTypeCnt];
   void setColorType(GrColorType, std::initializer_list<VkFormat> formats);

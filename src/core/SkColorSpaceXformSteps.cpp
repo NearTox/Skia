@@ -69,9 +69,6 @@ SkColorSpaceXformSteps::SkColorSpaceXformSteps(
   src->transferFn(&this->srcTF);
   dst->invTransferFn(&this->dstTFInv);
 
-  this->srcTF_is_sRGB = src->gammaCloseToSRGB();
-  this->dstTF_is_sRGB = dst->gammaCloseToSRGB();
-
   // If we linearize then immediately reencode with the same transfer function, skip both.
   if (this->flags.linearize && !this->flags.gamut_transform && this->flags.encode &&
       src->transferFnHash() == dst->transferFnHash()) {
@@ -93,7 +90,7 @@ SkColorSpaceXformSteps::SkColorSpaceXformSteps(
   }
 }
 
-void SkColorSpaceXformSteps::apply(float* rgba) const noexcept {
+void SkColorSpaceXformSteps::apply(float* rgba) const {
   if (flags.unpremul) {
     // I don't know why isfinite(x) stopped working on the Chromecast bots...
     auto is_finite = [](float x) { return x * 0 == 0; };
@@ -127,29 +124,18 @@ void SkColorSpaceXformSteps::apply(float* rgba) const noexcept {
   }
 }
 
-void SkColorSpaceXformSteps::apply(SkRasterPipeline* p, bool src_is_normalized) const {
-#if defined(SK_LEGACY_SRGB_STAGE_CHOICE)
-  src_is_normalized = true;
-#endif
+void SkColorSpaceXformSteps::apply(SkRasterPipeline* p) const {
   if (flags.unpremul) {
     p->append(SkRasterPipeline::unpremul);
   }
   if (flags.linearize) {
-    if (src_is_normalized && srcTF_is_sRGB) {
-      p->append(SkRasterPipeline::from_srgb);
-    } else {
-      p->append_transfer_function(srcTF);
-    }
+    p->append_transfer_function(srcTF);
   }
   if (flags.gamut_transform) {
     p->append(SkRasterPipeline::matrix_3x3, &src_to_dst_matrix);
   }
   if (flags.encode) {
-    if (src_is_normalized && dstTF_is_sRGB) {
-      p->append(SkRasterPipeline::to_srgb);
-    } else {
-      p->append_transfer_function(dstTFInv);
-    }
+    p->append_transfer_function(dstTFInv);
   }
   if (flags.premul) {
     p->append(SkRasterPipeline::premul);

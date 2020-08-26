@@ -13,11 +13,11 @@
 
 class SkClipStackDevice : public SkBaseDevice {
  public:
-  SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props) noexcept
+  SkClipStackDevice(const SkImageInfo& info, const SkSurfaceProps& props)
       : SkBaseDevice(info, props), fClipStack(fStorage, sizeof(fStorage)) {}
 
-  SkClipStack& cs() noexcept { return fClipStack; }
-  const SkClipStack& cs() const noexcept { return fClipStack; }
+  SkClipStack& cs() { return fClipStack; }
+  const SkClipStack& cs() const { return fClipStack; }
 
  protected:
   void onSave() override;
@@ -25,6 +25,7 @@ class SkClipStackDevice : public SkBaseDevice {
   void onClipRect(const SkRect& rect, SkClipOp, bool aa) override;
   void onClipRRect(const SkRRect& rrect, SkClipOp, bool aa) override;
   void onClipPath(const SkPath& path, SkClipOp, bool aa) override;
+  void onClipShader(sk_sp<SkShader>) override;
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
   void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override;
   bool onClipIsAA() const override;

@@ -19,15 +19,14 @@ namespace {
 
 class SkMergeImageFilterImpl final : public SkImageFilter_Base {
  public:
-  SkMergeImageFilterImpl(
-      sk_sp<SkImageFilter>* const filters, int count, const CropRect* cropRect) noexcept
+  SkMergeImageFilterImpl(sk_sp<SkImageFilter>* const filters, int count, const CropRect* cropRect)
       : INHERITED(filters, count, cropRect) {
     SkASSERT(count >= 0);
   }
 
  protected:
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
-  bool onCanHandleComplexCTM() const noexcept override { return true; }
+  bool onCanHandleComplexCTM() const override { return true; }
 
  private:
   friend void SkMergeImageFilter::RegisterFlattenables();

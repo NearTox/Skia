@@ -90,10 +90,10 @@ class GrPipeline {
   GrPipeline(
       GrScissorTest, sk_sp<const GrXferProcessor>, const GrSwizzle& writeSwizzle,
       InputFlags = InputFlags::kNone,
-      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused) noexcept;
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
-  GrPipeline(const InitArgs& args, sk_sp<const GrXferProcessor>, const GrAppliedHardClip&) noexcept;
-  GrPipeline(const InitArgs&, GrProcessorSet&&, GrAppliedClip&&) noexcept;
+  GrPipeline(const InitArgs& args, sk_sp<const GrXferProcessor>, const GrAppliedHardClip&);
+  GrPipeline(const InitArgs&, GrProcessorSet&&, GrAppliedClip&&);
 
   GrPipeline(const GrPipeline&) = delete;
   GrPipeline& operator=(const GrPipeline&) = delete;

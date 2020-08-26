@@ -16,7 +16,7 @@
 #include "src/core/SkTextBlobPriv.h"
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/text/GrTextContext.h"
+#  include "src/gpu/text/GrSDFTOptions.h"
 class GrColorInfo;
 class GrRenderTargetContext;
 #endif
@@ -69,7 +69,8 @@ class SkGlyphRunListPainter {
     virtual ~BitmapDevicePainter() = default;
 
     virtual void paintPaths(
-        SkDrawableGlyphBuffer* drawables, SkScalar scale, const SkPaint& paint) const = 0;
+        SkDrawableGlyphBuffer* drawables, SkScalar scale, SkPoint origin,
+        const SkPaint& paint) const = 0;
 
     virtual void paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) const = 0;
   };
@@ -83,7 +84,7 @@ class SkGlyphRunListPainter {
   // callbacks will be called.
   void processGlyphRunList(
       const SkGlyphRunList& glyphRunList, const SkMatrix& drawMatrix, const SkSurfaceProps& props,
-      bool contextSupportsDistanceFieldText, const GrTextContext::Options& options,
+      bool contextSupportsDistanceFieldText, const GrSDFTOptions& options,
       SkGlyphRunPainterInterface* process);
 #endif  // SK_SUPPORT_GPU
 

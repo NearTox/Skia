@@ -42,7 +42,7 @@ class GrStyledShape {
   // to have to worry about this. This value is exposed for unit tests.
   static constexpr int kMaxKeyFromDataVerbCnt = 10;
 
-  GrStyledShape() {}
+  GrStyledShape() noexcept = default;
 
   explicit GrStyledShape(const SkPath& path) : GrStyledShape(path, GrStyle::SimpleFill()) {}
 
@@ -78,13 +78,13 @@ class GrStyledShape {
     this->simplify();
   }
 
-  GrStyledShape(const GrStyledShape&);
+  GrStyledShape(const GrStyledShape&) noexcept;
 
   static GrStyledShape MakeArc(
       const SkRect& oval, SkScalar startAngleDegrees, SkScalar sweepAngleDegrees, bool useCenter,
       const GrStyle& style);
 
-  GrStyledShape& operator=(const GrStyledShape& that);
+  GrStyledShape& operator=(const GrStyledShape& that) noexcept;
 
   /**
    * Informs MakeFilled on how to modify that shape's fill rule when making a simple filled
@@ -122,7 +122,8 @@ class GrStyledShape {
   }
 
   /** Returns the unstyled geometry as a rrect if possible. */
-  bool asRRect(SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const;
+  bool asRRect(
+      SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const noexcept;
 
   /**
    * If the unstyled shape is a straight line segment, returns true and sets pts to the endpoints.
@@ -131,7 +132,7 @@ class GrStyledShape {
   bool asLine(SkPoint pts[2], bool* inverted) const noexcept;
 
   // Can this shape be drawn as a pair of filled nested rectangles?
-  bool asNestedRects(SkRect rects[2]) const;
+  bool asNestedRects(SkRect rects[2]) const noexcept;
 
   /** Returns the unstyled geometry as a path. */
   void asPath(SkPath* out) const { fShape.asPath(out, fStyle.isSimpleFill()); }
@@ -159,7 +160,7 @@ class GrStyledShape {
    * convex path is considered to be closed if they styling reflects a fill and not otherwise.
    * This is because filling closes all contours in the path.
    */
-  bool knownToBeConvex() const noexcept { return fShape.convex(fStyle.isSimpleFill()); }
+  bool knownToBeConvex() const { return fShape.convex(fStyle.isSimpleFill()); }
 
   /**
    * Does the shape have a known winding direction. Some degenerate convex shapes may not have
@@ -214,9 +215,9 @@ class GrStyledShape {
    * Gets the size of the key for the shape represented by this GrStyledShape (ignoring its
    * styling). A negative value is returned if the shape has no key (shouldn't be cached).
    */
-  int unstyledKeySize() const;
+  int unstyledKeySize() const noexcept;
 
-  bool hasUnstyledKey() const { return this->unstyledKeySize() >= 0; }
+  bool hasUnstyledKey() const noexcept { return this->unstyledKeySize() >= 0; }
 
   /**
    * Writes unstyledKeySize() bytes into the provided pointer. Assumes that there is enough

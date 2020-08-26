@@ -23,31 +23,46 @@ class GrGLSLHSLToRGBFilterEffect : public GrGLSLFragmentProcessor {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrHSLToRGBFilterEffect& _outer = args.fFp.cast<GrHSLToRGBFilterEffect>();
     (void)_outer;
+    SkString _input523(args.fInputColor);
+    SkString _sample523;
+    if (_outer.inputFP_index >= 0) {
+      _sample523 = this->invokeChild(_outer.inputFP_index, _input523.c_str(), args);
+    } else {
+      _sample523.swap(_input523);
+    }
     fragBuilder->codeAppendf(
-        "half3 hsl = %s.xyz;\nhalf C = (1.0 - abs(2.0 * hsl.z - 1.0)) * hsl.y;\nhalf3 p = "
-        "hsl.xxx + half3(0.0, 0.66666666666666663, 0.33333333333333331);\nhalf3 q = "
-        "clamp(abs(fract(p) * 6.0 - 3.0) - 1.0, 0.0, 1.0);\nhalf3 rgb = (q - 0.5) * C + "
-        "hsl.z;\n%s = clamp(half4(rgb, %s.w), 0.0, 1.0);\n%s.xyz *= %s.w;\n",
-        args.fInputColor, args.fOutputColor, args.fInputColor, args.fOutputColor,
-        args.fOutputColor);
+        R"SkSL(half4 inputColor = %s;
+half3 hsl = inputColor.xyz;
+half C = (1.0 - abs(2.0 * hsl.z - 1.0)) * hsl.y;
+half3 p = hsl.xxx + half3(0.0, 0.66666666666666663, 0.33333333333333331);
+half3 q = clamp(abs(fract(p) * 6.0 - 3.0) - 1.0, 0.0, 1.0);
+half3 rgb = (q - 0.5) * C + hsl.z;
+%s = clamp(half4(rgb, inputColor.w), 0.0, 1.0);
+%s.xyz *= %s.w;
+)SkSL",
+        _sample523.c_str(), args.fOutputColor, args.fOutputColor, args.fOutputColor);
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrHSLToRGBFilterEffect::onCreateGLSLInstance() const {
   return new GrGLSLHSLToRGBFilterEffect();
 }
 void GrHSLToRGBFilterEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrHSLToRGBFilterEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrHSLToRGBFilterEffect& that = other.cast<GrHSLToRGBFilterEffect>();
   (void)that;
   return true;
 }
-GrHSLToRGBFilterEffect::GrHSLToRGBFilterEffect(const GrHSLToRGBFilterEffect& src) noexcept
-    : INHERITED(kGrHSLToRGBFilterEffect_ClassID, src.optimizationFlags()) {}
+GrHSLToRGBFilterEffect::GrHSLToRGBFilterEffect(const GrHSLToRGBFilterEffect& src)
+    : INHERITED(kGrHSLToRGBFilterEffect_ClassID, src.optimizationFlags()) {
+  if (src.inputFP_index >= 0) {
+    inputFP_index = this->cloneAndRegisterChildProcessor(src.childProcessor(src.inputFP_index));
+  }
+}
 std::unique_ptr<GrFragmentProcessor> GrHSLToRGBFilterEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrHSLToRGBFilterEffect(*this));
 }

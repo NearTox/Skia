@@ -10,7 +10,7 @@
 #include "include/private/SkTDArray.h"
 #include "include/utils/SkRandom.h"
 
-#include "src/core/SkMathPriv.h"
+#include "src/gpu/GrRectanizerPow2.h"
 #include "src/gpu/GrRectanizerSkyline.h"
 
 /**
@@ -29,14 +29,20 @@ class RectanizerBench : public Benchmark {
   static const int kHeight = 1024;
 
   enum RectanizerType {
+    kPow2_RectanizerType,
     kSkyline_RectanizerType,
   };
 
   enum RectType { kRand_RectType, kRandPow2_RectType, kSmallPow2_RectType };
 
   RectanizerBench(RectanizerType rectanizerType, RectType rectType)
-      : fName("rectanizer_"), fRectType(rectType) {
-    fName.append("skyline_");
+      : fName("rectanizer_"), fRectanizerType(rectanizerType), fRectType(rectType) {
+    if (kPow2_RectanizerType == fRectanizerType) {
+      fName.append("pow2_");
+    } else {
+      SkASSERT(kSkyline_RectanizerType == fRectanizerType);
+      fName.append("skyline_");
+    }
 
     if (kRand_RectType == fRectType) {
       fName.append("rand");
@@ -56,7 +62,12 @@ class RectanizerBench : public Benchmark {
   void onDelayedSetup() override {
     SkASSERT(nullptr == fRectanizer.get());
 
-    fRectanizer.reset(new GrRectanizerSkyline(kWidth, kHeight));
+    if (kPow2_RectanizerType == fRectanizerType) {
+      fRectanizer.reset(new GrRectanizerPow2(kWidth, kHeight));
+    } else {
+      SkASSERT(kSkyline_RectanizerType == fRectanizerType);
+      fRectanizer.reset(new GrRectanizerSkyline(kWidth, kHeight));
+    }
   }
 
   void onDraw(int loops, SkCanvas* canvas) override {
@@ -89,14 +100,21 @@ class RectanizerBench : public Benchmark {
 
  private:
   SkString fName;
+  RectanizerType fRectanizerType;
   RectType fRectType;
-  std::unique_ptr<GrRectanizerSkyline> fRectanizer;
+  std::unique_ptr<GrRectanizer> fRectanizer;
 
   typedef Benchmark INHERITED;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
+DEF_BENCH(return new RectanizerBench(
+                     RectanizerBench::kPow2_RectanizerType, RectanizerBench::kRand_RectType);)
+DEF_BENCH(return new RectanizerBench(
+                     RectanizerBench::kPow2_RectanizerType, RectanizerBench::kRandPow2_RectType);)
+DEF_BENCH(return new RectanizerBench(
+                     RectanizerBench::kPow2_RectanizerType, RectanizerBench::kSmallPow2_RectType);)
 DEF_BENCH(return new RectanizerBench(
                      RectanizerBench::kSkyline_RectanizerType, RectanizerBench::kRand_RectType);)
 DEF_BENCH(return new RectanizerBench(

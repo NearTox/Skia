@@ -61,7 +61,7 @@ sk_sp<SkShader> SkTwoPointConicalGradient::Create(
     }
     // Concentric case: we can pretend we're radial (with a tiny twist).
     const SkScalar scale = sk_ieee_float_divide(1, std::max(r0, r1));
-    gradientMatrix = SkMatrix::MakeTrans(-c1.x(), -c1.y());
+    gradientMatrix = SkMatrix::Translate(-c1.x(), -c1.y());
     gradientMatrix.postScale(scale, scale);
 
     gradientType = Type::kRadial;
@@ -184,8 +184,7 @@ void SkTwoPointConicalGradient::appendGradientStages(
     auto scale = std::max(fRadius1, fRadius2) / dRadius;
     auto bias = -fRadius1 / dRadius;
 
-    p->append_matrix(
-        alloc, SkMatrix::Concat(SkMatrix::MakeTrans(bias, 0), SkMatrix::MakeScale(scale, 1)));
+    p->append_matrix(alloc, SkMatrix::Translate(bias, 0) * SkMatrix::Scale(scale, 1));
     return;
   }
 
@@ -231,11 +230,12 @@ void SkTwoPointConicalGradient::appendGradientStages(
 }
 
 skvm::F32 SkTwoPointConicalGradient::transformT(
-    skvm::Builder* p, skvm::Uniforms* uniforms, skvm::F32 x, skvm::F32 y, skvm::I32* mask) const {
+    skvm::Builder* p, skvm::Uniforms* uniforms, skvm::Coord coord, skvm::I32* mask) const {
   // See https://skia.org/dev/design/conical, and onAppendStages() above.
   // There's a lot going on here, and I'm not really sure what's independent
   // or disjoint, what can be reordered, simplified, etc.  Tweak carefully.
 
+  const skvm::F32 x = coord.x, y = coord.y;
   if (fType == Type::kRadial) {
     float denom = 1.0f / (fRadius2 - fRadius1), scale = std::max(fRadius1, fRadius2) * denom,
           bias = -fRadius1 * denom;

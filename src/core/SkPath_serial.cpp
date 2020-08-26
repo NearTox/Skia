@@ -37,15 +37,15 @@ enum SerializationVersions {
 
 enum SerializationType { kGeneral = 0, kRRect = 1 };
 
-static constexpr unsigned extract_version(uint32_t packed) noexcept {
+static unsigned extract_version(uint32_t packed) noexcept {
   return packed & kVersion_SerializationMask;
 }
 
-static constexpr SkPathFillType extract_filltype(uint32_t packed) noexcept {
+static SkPathFillType extract_filltype(uint32_t packed) noexcept {
   return static_cast<SkPathFillType>((packed >> kFillType_SerializationShift) & 0x3);
 }
 
-static constexpr SerializationType extract_serializationtype(uint32_t packed) noexcept {
+static SerializationType extract_serializationtype(uint32_t packed) noexcept {
   return static_cast<SerializationType>((packed >> kType_SerializationShift) & 0xF);
 }
 
@@ -199,7 +199,7 @@ size_t SkPath::readFromMemory_EQ4Or5(const void* storage, size_t length) {
 
   switch (extract_serializationtype(packed)) {
     case SerializationType::kRRect: return this->readAsRRect(storage, length);
-    case SerializationType::kGeneral: break;  // fall through
+    case SerializationType::kGeneral: break;  // fall out
     default: return 0;
   }
 

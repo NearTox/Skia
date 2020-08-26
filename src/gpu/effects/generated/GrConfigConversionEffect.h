@@ -10,18 +10,19 @@
  **************************************************************************************************/
 #ifndef GrConfigConversionEffect_DEFINED
 #define GrConfigConversionEffect_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "include/gpu/GrContext.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrRenderTargetContext.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrConfigConversionEffect : public GrFragmentProcessor {
  public:
   static bool TestForPreservingPMConversions(GrContext* context) {
@@ -93,7 +94,7 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     paint1.addColorFragmentProcessor(pmToUPM->clone());
     paint1.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
-    readRTC->fillRectToRect(GrNoClip(), std::move(paint1), GrAA::kNo, SkMatrix::I(), kRect, kRect);
+    readRTC->fillRectToRect(nullptr, std::move(paint1), GrAA::kNo, SkMatrix::I(), kRect, kRect);
     if (!readRTC->readPixels(ii, firstRead, 0, {0, 0})) {
       return false;
     }
@@ -107,14 +108,14 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     paint2.addColorFragmentProcessor(std::move(upmToPM));
     paint2.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
-    tempRTC->fillRectToRect(GrNoClip(), std::move(paint2), GrAA::kNo, SkMatrix::I(), kRect, kRect);
+    tempRTC->fillRectToRect(nullptr, std::move(paint2), GrAA::kNo, SkMatrix::I(), kRect, kRect);
 
     paint3.addColorFragmentProcessor(
         GrTextureEffect::Make(tempRTC->readSurfaceView(), kPremul_SkAlphaType));
     paint3.addColorFragmentProcessor(std::move(pmToUPM));
     paint3.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
-    readRTC->fillRectToRect(GrNoClip(), std::move(paint3), GrAA::kNo, SkMatrix::I(), kRect, kRect);
+    readRTC->fillRectToRect(nullptr, std::move(paint3), GrAA::kNo, SkMatrix::I(), kRect, kRect);
 
     if (!readRTC->readPixels(ii, secondRead, 0, {0, 0})) {
       return false;
@@ -140,17 +141,17 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
     std::unique_ptr<GrFragmentProcessor> fpPipeline[] = {std::move(fp), std::move(ccFP)};
     return GrFragmentProcessor::RunInSeries(fpPipeline, 2);
   }
-  GrConfigConversionEffect(const GrConfigConversionEffect& src) noexcept;
+  GrConfigConversionEffect(const GrConfigConversionEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "ConfigConversionEffect"; }
   PMConversion pmConversion;
 
  private:
-  GrConfigConversionEffect(PMConversion pmConversion) noexcept
+  GrConfigConversionEffect(PMConversion pmConversion)
       : INHERITED(kGrConfigConversionEffect_ClassID, kNone_OptimizationFlags),
         pmConversion(pmConversion) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;

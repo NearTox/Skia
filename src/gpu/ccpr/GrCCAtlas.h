@@ -34,7 +34,7 @@ class GrCCAtlas : public GrDynamicAtlas {
 
   enum class CoverageType { kFP16_CoverageCount, kA8_Multisample, kA8_LiteralCoverage };
 
-  static constexpr GrColorType CoverageTypeToColorType(CoverageType coverageType) {
+  static constexpr GrColorType CoverageTypeToColorType(CoverageType coverageType) noexcept {
     switch (coverageType) {
       case CoverageType::kFP16_CoverageCount: return GrColorType::kAlpha_F16;
       case CoverageType::kA8_Multisample:
@@ -44,7 +44,7 @@ class GrCCAtlas : public GrDynamicAtlas {
   }
 
   static constexpr InternalMultisample CoverageTypeHasInternalMultisample(
-      CoverageType coverageType) {
+      CoverageType coverageType) noexcept {
     switch (coverageType) {
       case CoverageType::kFP16_CoverageCount:
       case CoverageType::kA8_LiteralCoverage: return InternalMultisample::kNo;
@@ -54,7 +54,7 @@ class GrCCAtlas : public GrDynamicAtlas {
   }
 
   static constexpr GrCCPathProcessor::CoverageMode CoverageTypeToPathCoverageMode(
-      CoverageType coverageType) {
+      CoverageType coverageType) noexcept {
     return (GrCCAtlas::CoverageType::kFP16_CoverageCount == coverageType)
                ? GrCCPathProcessor::CoverageMode::kCoverageCount
                : GrCCPathProcessor::CoverageMode::kLiteral;
@@ -73,11 +73,11 @@ class GrCCAtlas : public GrDynamicAtlas {
 
   // This is an optional space for the caller to jot down user-defined instance data to use when
   // rendering atlas content.
-  void setFillBatchID(int id);
+  void setFillBatchID(int id) noexcept;
   int getFillBatchID() const noexcept { return fFillBatchID; }
-  void setStrokeBatchID(int id);
+  void setStrokeBatchID(int id) noexcept;
   int getStrokeBatchID() const noexcept { return fStrokeBatchID; }
-  void setEndStencilResolveInstance(int idx);
+  void setEndStencilResolveInstance(int idx) noexcept;
   int getEndStencilResolveInstance() const noexcept { return fEndStencilResolveInstance; }
 
   sk_sp<GrCCCachedAtlas> refOrMakeCachedAtlas(GrOnFlushResourceProvider*);
@@ -99,11 +99,12 @@ class GrCCAtlasStack {
   using CoverageType = GrCCAtlas::CoverageType;
   using CCAtlasAllocator = GrTAllocator<GrCCAtlas, 4>;
 
-  GrCCAtlasStack(CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps)
+  GrCCAtlasStack(
+      CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps) noexcept 
       : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
   CoverageType coverageType() const noexcept { return fCoverageType; }
-  bool empty() const { return fAtlases.empty(); }
+  bool empty() const noexcept { return fAtlases.empty(); }
   const GrCCAtlas& front() const {
     SkASSERT(!this->empty());
     return fAtlases.front();

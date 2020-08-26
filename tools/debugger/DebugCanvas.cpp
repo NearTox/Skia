@@ -322,10 +322,10 @@ void DebugCanvas::didConcat44(const SkM44& m) {
   this->INHERITED::didConcat44(m);
 }
 
-void DebugCanvas::didScale(SkScalar x, SkScalar y) { this->didConcat(SkMatrix::MakeScale(x, y)); }
+void DebugCanvas::didScale(SkScalar x, SkScalar y) { this->didConcat(SkMatrix::Scale(x, y)); }
 
 void DebugCanvas::didTranslate(SkScalar x, SkScalar y) {
-  this->didConcat(SkMatrix::MakeTrans(x, y));
+  this->didConcat(SkMatrix::Translate(x, y));
 }
 
 void DebugCanvas::didConcat(const SkMatrix& matrix) {

@@ -74,7 +74,7 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext*, const SkMatrix& viewMatrix, GrPaint&&, GrAA, sk_sp<const GrPath>);
 
-  const char* name() const override { return "DrawPath"; }
+  const char* name() const noexcept override { return "DrawPath"; }
 
 #ifdef SK_DEBUG
   SkString dumpInfo() const override;

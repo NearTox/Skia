@@ -637,10 +637,10 @@ static void calculate_distance_field_data(
         const float distSq = dataPtr[idx].fDistSq;
 
         // Optimization for not calculating some points.
-        int dilation =
-            distSq < 1.5f * 1.5f
-                ? 1
-                : distSq < 2.5f * 2.5f ? 2 : distSq < 3.5f * 3.5f ? 3 : SK_DistanceFieldPad;
+        int dilation = distSq < 1.5f * 1.5f   ? 1
+                       : distSq < 2.5f * 2.5f ? 2
+                       : distSq < 3.5f * 3.5f ? 3
+                                              : SK_DistanceFieldPad;
         if (dilation < SK_DistanceFieldPad &&
             !segBB.roundOut().makeOutset(dilation, dilation).contains(col, row)) {
           continue;

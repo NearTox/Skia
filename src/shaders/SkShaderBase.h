@@ -171,7 +171,7 @@ class SkShaderBase : public SkShader {
    *  Note: if this returns true, the returned color will always be opaque, as only the RGB
    *  components are used to compute luminance.
    */
-  bool asLuminanceColor(SkColor*) const;
+  bool asLuminanceColor(SkColor*) const noexcept;
 
   // If this returns false, then we draw nothing (do not fall back to shader context)
   bool appendStages(const SkStageRec&) const;
@@ -185,7 +185,7 @@ class SkShaderBase : public SkShader {
   //
   SkTCopyOnFirstWrite<SkMatrix> totalLocalMatrix(const SkMatrix* preLocalMatrix) const;
 
-  virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
+  virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const noexcept { return nullptr; }
 
   virtual SkRuntimeEffect* asRuntimeEffect() const noexcept { return nullptr; }
 
@@ -210,9 +210,9 @@ class SkShaderBase : public SkShader {
   }
 
   skvm::Color program(
-      skvm::Builder*, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
+      skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
 
  protected:
   SkShaderBase(const SkMatrix* localMatrix = nullptr) noexcept;
@@ -227,7 +227,7 @@ class SkShaderBase : public SkShader {
   virtual Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const { return nullptr; }
 #endif
 
-  virtual bool onAsLuminanceColor(SkColor*) const { return false; }
+  virtual bool onAsLuminanceColor(SkColor*) const noexcept { return false; }
 
   // Default impl creates shadercontext and calls that (not very efficient)
   virtual bool onAppendStages(const SkStageRec&) const;
@@ -235,17 +235,16 @@ class SkShaderBase : public SkShader {
   virtual SkStageUpdater* onAppendUpdatableStages(const SkStageRec&) const { return nullptr; }
 
  protected:
-  static void ApplyMatrix(
-      skvm::Builder*, const SkMatrix&, skvm::F32* x, skvm::F32* y, skvm::Uniforms*);
+  static skvm::Coord ApplyMatrix(skvm::Builder*, const SkMatrix&, skvm::Coord, skvm::Uniforms*);
 
  private:
   // This is essentially const, but not officially so it can be modified in constructors.
   SkMatrix fLocalMatrix;
 
   virtual skvm::Color onProgram(
-      skvm::Builder*, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
+      skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
 
   typedef SkShader INHERITED;
 };

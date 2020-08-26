@@ -66,7 +66,7 @@ class SkTScopedComPtr {
    * Must only be used on instances currently pointing to NULL,
    * and only to initialize the instance.
    */
-  T** operator&() {
+  T** operator&() noexcept {
     SkASSERT(fPtr == nullptr);
     return &fPtr;
   }

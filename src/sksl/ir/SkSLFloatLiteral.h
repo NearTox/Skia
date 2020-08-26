@@ -36,12 +36,14 @@ struct FloatLiteral : public Expression {
     return INHERITED::coercionCost(target);
   }
 
-  bool compareConstant(const Context& context, const Expression& other) const override {
+  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
     FloatLiteral& f = (FloatLiteral&)other;
     return fValue == f.fValue;
   }
 
-  double getConstantFloat() const override { return fValue; }
+  double getConstantFloat() const noexcept override { return fValue; }
+
+  int nodeCount() const noexcept override { return 1; }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new FloatLiteral(fOffset, fValue, &fType));

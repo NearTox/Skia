@@ -48,7 +48,7 @@ bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXfo
   return true;
 }
 
-SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) noexcept {
+SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) {
   SkColor4f result = srcColor;
   fSteps.apply(result.vec());
   return result;
@@ -94,11 +94,11 @@ class GrGLColorSpaceXformEffect : public GrGLSLFragmentProcessor {
 //////////////////////////////////////////////////////////////////////////////
 
 GrColorSpaceXformEffect::GrColorSpaceXformEffect(
-    std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform)
+    std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform) noexcept
     : INHERITED(kGrColorSpaceXformEffect_ClassID, OptFlags(child.get())),
       fColorXform(std::move(colorXform)) {
   if (child) {
-    this->registerChildProcessor(std::move(child));
+    this->registerChild(std::move(child));
   }
 }
 
@@ -115,7 +115,7 @@ bool GrColorSpaceXformEffect::onIsEqual(const GrFragmentProcessor& s) const noex
 }
 
 void GrColorSpaceXformEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   b->add32(GrColorSpaceXform::XformKey(fColorXform.get()));
 }
 
@@ -124,7 +124,7 @@ GrGLSLFragmentProcessor* GrColorSpaceXformEffect::onCreateGLSLInstance() const {
 }
 
 GrFragmentProcessor::OptimizationFlags GrColorSpaceXformEffect::OptFlags(
-    const GrFragmentProcessor* child) {
+    const GrFragmentProcessor* child) noexcept {
   if (child) {
     OptimizationFlags flags = kNone_OptimizationFlags;
     if (child->compatibleWithCoverageAsAlpha()) {

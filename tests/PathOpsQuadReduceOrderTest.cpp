@@ -35,10 +35,12 @@ static void standardTestCases(skiatest::Reporter* reporter) {
     run = RunQuadraticLines;
     firstTestIndex = 1;
 #endif
-  int firstQuadraticLineTest =
-      run == RunAll ? 0 : run == RunQuadraticLines ? firstTestIndex : SK_MaxS32;
-  int firstQuadraticModLineTest =
-      run == RunAll ? 0 : run == RunQuadraticModLines ? firstTestIndex : SK_MaxS32;
+  int firstQuadraticLineTest = run == RunAll              ? 0
+                               : run == RunQuadraticLines ? firstTestIndex
+                                                          : SK_MaxS32;
+  int firstQuadraticModLineTest = run == RunAll                 ? 0
+                                  : run == RunQuadraticModLines ? firstTestIndex
+                                                                : SK_MaxS32;
 
   for (index = firstQuadraticLineTest; index < quadraticLines_count; ++index) {
     const QuadPts& q = quadraticLines[index];

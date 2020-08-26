@@ -205,17 +205,16 @@ SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::ReadFileFragment(
   return S_OK;
 }
 
-SK_STDMETHODIMP_(void)
-SkDWriteFontFileStreamWrapper::ReleaseFileFragment(void* fragmentContext) noexcept {
+SK_STDMETHODIMP_(void) SkDWriteFontFileStreamWrapper::ReleaseFileFragment(void* fragmentContext) {
   sk_free(fragmentContext);
 }
 
-SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::GetFileSize(UINT64* fileSize) noexcept {
+SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::GetFileSize(UINT64* fileSize) {
   *fileSize = fStream->getLength();
   return S_OK;
 }
 
-SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::GetLastWriteTime(UINT64* lastWriteTime) noexcept {
+SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::GetLastWriteTime(UINT64* lastWriteTime) {
   // The concept of last write time does not apply to this loader.
   *lastWriteTime = 0;
   return E_NOTIMPL;

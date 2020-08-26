@@ -15,7 +15,7 @@
 
 class GrSDFMaskFilterImpl : public SkMaskFilterBase {
  public:
-  GrSDFMaskFilterImpl();
+  GrSDFMaskFilterImpl() noexcept;
 
   // overrides from SkMaskFilterBase
   //  This method is not exported to java.
@@ -35,7 +35,7 @@ class GrSDFMaskFilterImpl : public SkMaskFilterBase {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrSDFMaskFilterImpl::GrSDFMaskFilterImpl() {}
+GrSDFMaskFilterImpl::GrSDFMaskFilterImpl() noexcept = default;
 
 SkMask::Format GrSDFMaskFilterImpl::getFormat() const { return SkMask::kSDF_Format; }
 

@@ -14,7 +14,6 @@
 #  include "include/core/SkPath.h"
 #  include "samplecode/Sample.h"
 #  include "src/core/SkRectPriv.h"
-#  include "src/gpu/GrClip.h"
 #  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/GrGpu.h"
 #  include "src/gpu/GrMemoryPool.h"
@@ -199,8 +198,7 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
     auto ccbuff = GrRenderTargetContext::Make(
         ctx, GrColorType::kAlpha_F16, nullptr, SkBackingFit::kApprox, {width, height});
     SkASSERT(ccbuff);
-    ccbuff->clear(
-        nullptr, SK_PMColor4fTRANSPARENT, GrRenderTargetContext::CanClearFullscreen::kYes);
+    ccbuff->clear(SK_PMColor4fTRANSPARENT);
     ccbuff->priv().testingOnly_addDrawOp(pool->allocate<DrawCoverageCountOp>(this));
 
     // Visualize coverage count in main canvas.
@@ -210,7 +208,7 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
     paint.addColorFragmentProcessor(std::make_unique<VisualizeCoverageCountFP>());
     paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
     rtc->drawRect(
-        GrNoClip(), std::move(paint), GrAA::kNo, SkMatrix::I(),
+        nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(),
         SkRect::MakeIWH(this->width(), this->height()));
 
     // Add label.

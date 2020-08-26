@@ -69,7 +69,7 @@ void SkLuaCanvas::pushThis() { SkLua(fL).pushCanvas(this); }
 SkLuaCanvas::SkLuaCanvas(int width, int height, lua_State* L, const char func[])
     : INHERITED(width, height), fL(L), fFunc(func) {}
 
-SkLuaCanvas::~SkLuaCanvas() {}
+SkLuaCanvas::~SkLuaCanvas() = default;
 
 void SkLuaCanvas::willSave() {
   AUTO_LUA("save");
@@ -103,9 +103,9 @@ void SkLuaCanvas::willRestore() {
 void SkLuaCanvas::didConcat44(const SkM44&) {
   // TODO
 }
-void SkLuaCanvas::didScale(SkScalar x, SkScalar y) { this->didConcat(SkMatrix::MakeScale(x, y)); }
+void SkLuaCanvas::didScale(SkScalar x, SkScalar y) { this->didConcat(SkMatrix::Scale(x, y)); }
 void SkLuaCanvas::didTranslate(SkScalar x, SkScalar y) {
-  this->didConcat(SkMatrix::MakeTrans(x, y));
+  this->didConcat(SkMatrix::Translate(x, y));
 }
 void SkLuaCanvas::didConcat(const SkMatrix& matrix) {
   switch (matrix.getType()) {

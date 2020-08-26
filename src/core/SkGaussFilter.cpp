@@ -16,7 +16,7 @@ static constexpr double kGoodEnough = 1.0 / 100.0;
 
 // Normalize the values of gauss to 1.0, and make sure they add to one.
 // NB if n == 1, then this will force gauss[0] == 1.
-static void normalize(int n, double* gauss) noexcept {
+static void normalize(int n, double* gauss) {
   // Carefully add from smallest to largest to calculate the normalizing sum.
   double sum = 0;
   for (int i = n - 1; i >= 1; i--) {
@@ -39,7 +39,7 @@ static void normalize(int n, double* gauss) noexcept {
   gauss[0] = 1 - sum;
 }
 
-static int calculate_bessel_factors(double sigma, double* gauss) noexcept {
+static int calculate_bessel_factors(double sigma, double* gauss) {
   auto var = sigma * sigma;
 
   // The two functions below come from the equations in "Handbook of Mathematical Functions"
@@ -47,7 +47,7 @@ static int calculate_bessel_factors(double sigma, double* gauss) noexcept {
   // explicitly as 9.6.12
   // BesselI_0 for 0 <= sigma < 2.
   // NB the k = 0 factor is just sum = 1.0.
-  auto besselI_0 = [](double t) noexcept -> double {
+  auto besselI_0 = [](double t) -> double {
     auto tSquaredOver4 = t * t / 4.0;
     auto sum = 1.0;
     auto factor = 1.0;
@@ -62,7 +62,7 @@ static int calculate_bessel_factors(double sigma, double* gauss) noexcept {
     return sum;
   };
   // BesselI_1 for 0 <= sigma < 2.
-  auto besselI_1 = [](double t) noexcept -> double {
+  auto besselI_1 = [](double t) -> double {
     auto tSquaredOver4 = t * t / 4.0;
     auto sum = t / 2.0;
     auto factor = sum;
@@ -101,7 +101,7 @@ static int calculate_bessel_factors(double sigma, double* gauss) noexcept {
   return n;
 }
 
-SkGaussFilter::SkGaussFilter(double sigma) noexcept {
+SkGaussFilter::SkGaussFilter(double sigma) {
   SkASSERT(0 <= sigma && sigma < 2);
 
   fN = calculate_bessel_factors(sigma, fBasis);

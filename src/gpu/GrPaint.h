@@ -54,9 +54,9 @@ class GrPaint {
     fTrivial &= !SkToBool(xpFactory);
   }
 
-  void setPorterDuffXPFactory(SkBlendMode mode);
+  void setPorterDuffXPFactory(SkBlendMode mode) noexcept;
 
-  void setCoverageSetOpXPFactory(SkRegion::Op, bool invertCoverage = false);
+  void setCoverageSetOpXPFactory(SkRegion::Op, bool invertCoverage = false) noexcept;
 
   /**
    * Appends an additional color processor to the color computation.
@@ -97,7 +97,7 @@ class GrPaint {
    * coverage and color, so the actual values written to pixels with partial coverage may still
    * not seem constant, even if this function returns true.
    */
-  bool isConstantBlendedColor(SkPMColor4f* constantColor) const;
+  bool isConstantBlendedColor(SkPMColor4f* constantColor) const noexcept;
 
   /**
    * A trivial paint is one that uses src-over and has no fragment processors.

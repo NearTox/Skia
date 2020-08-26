@@ -35,7 +35,7 @@ class SkAAClip {
   bool setRect(const SkIRect&) noexcept;
   bool setRect(const SkRect&, bool doAA = true);
   bool setPath(const SkPath&, const SkRegion* clip = nullptr, bool doAA = true);
-  bool setRegion(const SkRegion&);
+  bool setRegion(const SkRegion&) noexcept;
   bool set(const SkAAClip&) noexcept;
 
   bool op(const SkAAClip&, const SkAAClip&, SkRegion::Op);
@@ -45,8 +45,8 @@ class SkAAClip {
   bool op(const SkRect&, SkRegion::Op, bool doAA);
   bool op(const SkAAClip&, SkRegion::Op);
 
-  bool translate(int dx, int dy, SkAAClip* dst) const;
-  bool translate(int dx, int dy) { return this->translate(dx, dy, this); }
+  bool translate(int dx, int dy, SkAAClip* dst) const noexcept;
+  bool translate(int dx, int dy) noexcept { return this->translate(dx, dy, this); }
 
   /**
    *  Allocates a mask the size of the aaclip, and expands its data into
@@ -56,13 +56,13 @@ class SkAAClip {
 
   // called internally
 
-  bool quickContains(int left, int top, int right, int bottom) const;
-  bool quickContains(const SkIRect& r) const {
+  bool quickContains(int left, int top, int right, int bottom) const noexcept;
+  bool quickContains(const SkIRect& r) const noexcept {
     return this->quickContains(r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
 
-  const uint8_t* findRow(int y, int* lastYForRow = nullptr) const;
-  const uint8_t* findX(const uint8_t data[], int x, int* initialCount = nullptr) const;
+  const uint8_t* findRow(int y, int* lastYForRow = nullptr) const noexcept;
+  const uint8_t* findX(const uint8_t data[], int x, int* initialCount = nullptr) const noexcept;
 
   class Iter;
   struct RunHead;
@@ -82,9 +82,9 @@ class SkAAClip {
   RunHead* fRunHead;
 
   void freeRuns() noexcept;
-  bool trimBounds();
-  bool trimTopBottom();
-  bool trimLeftRight();
+  bool trimBounds() noexcept;
+  bool trimTopBottom() noexcept;
+  bool trimLeftRight() noexcept;
 
   friend class Builder;
   class BuilderBlitter;

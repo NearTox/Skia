@@ -25,15 +25,16 @@ struct FieldAccess : public Expression {
   };
 
   FieldAccess(
-      std::unique_ptr<Expression> base, int fieldIndex, OwnerKind ownerKind = kDefault_OwnerKind)
+      std::unique_ptr<Expression> base, int fieldIndex,
+      OwnerKind ownerKind = kDefault_OwnerKind) noexcept
       : INHERITED(base->fOffset, kFieldAccess_Kind, *base->fType.fields()[fieldIndex].fType),
         fBase(std::move(base)),
         fFieldIndex(fieldIndex),
         fOwnerKind(ownerKind) {}
 
-  bool hasProperty(Property property) const noexcept override {
-    return fBase->hasProperty(property);
-  }
+  bool hasProperty(Property property) const override { return fBase->hasProperty(property); }
+
+  int nodeCount() const noexcept override { return 1 + fBase->nodeCount(); }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new FieldAccess(fBase->clone(), fFieldIndex, fOwnerKind));

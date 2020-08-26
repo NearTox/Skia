@@ -14,11 +14,11 @@
 /* Calculate a 128-bit MD5 message-digest of the bytes sent to this stream. */
 class SkMD5 : public SkWStream {
  public:
-  SkMD5();
+  SkMD5() noexcept;
 
   /** Processes input, adding it to the digest.
       Calling this after finish is undefined.  */
-  bool write(const void* buffer, size_t size) final;
+  bool write(const void* buffer, size_t size) noexcept final;
 
   size_t bytesWritten() const noexcept final { return SkToSizeT(this->byteCount); }
 

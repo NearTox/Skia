@@ -50,7 +50,7 @@ class Draw : SkNoncopyable {
  public:
   explicit Draw(
       SkCanvas* canvas, SkPicture const* const drawablePicts[], SkDrawable* const drawables[],
-      int drawableCount, const SkMatrix* initialCTM = nullptr) noexcept
+      int drawableCount, const SkMatrix* initialCTM = nullptr)
       : fInitialCTM(initialCTM ? *initialCTM : canvas->getTotalMatrix()),
         fCanvas(canvas),
         fDrawablePicts(drawablePicts),
@@ -66,8 +66,8 @@ class Draw : SkNoncopyable {
   }
 
  protected:
-  SkPicture const* const* drawablePicts() const noexcept { return fDrawablePicts; }
-  int drawableCount() const noexcept { return fDrawableCount; }
+  SkPicture const* const* drawablePicts() const { return fDrawablePicts; }
+  int drawableCount() const { return fDrawableCount; }
 
  private:
   // No base case, so we'll be compile-time checked that we implement all possibilities.

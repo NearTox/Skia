@@ -49,11 +49,11 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
       const SkImageInfo& info, GrTexture*, GrSurfaceOrigin, uint32_t owningContextID,
       std::unique_ptr<GrSemaphore>, const GrBackendTexture&);
 
-  static void ReleaseRefHelper_TextureReleaseProc(void* ctx);
+  static void ReleaseRefHelper_TextureReleaseProc(void* ctx) noexcept;
 
   class RefHelper : public SkNVRefCnt<RefHelper> {
    public:
-    RefHelper(GrTexture*, uint32_t owningContextID, std::unique_ptr<GrSemaphore>);
+    RefHelper(GrTexture*, uint32_t owningContextID, std::unique_ptr<GrSemaphore>) noexcept;
 
     ~RefHelper();
 

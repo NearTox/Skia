@@ -101,7 +101,7 @@ class SK_API SkOpBuilder {
   bool resolve(SkPath* result);
 
  private:
-  SkTArray<SkPath, false> fPathRefs;
+  SkTArray<SkPath> fPathRefs;
   SkTDArray<SkPathOp> fOps;
 
   static bool FixWinding(SkPath* path);

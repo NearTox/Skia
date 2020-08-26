@@ -26,7 +26,7 @@ class SkDescriptor : SkNoncopyable {
 
   //
   // Ensure the unsized delete is called.
-  void operator delete(void* p);
+  void operator delete(void* p) noexcept;
   void* operator new(size_t);
   void* operator new(size_t, void* p) { return p; }
 

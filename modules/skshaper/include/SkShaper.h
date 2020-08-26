@@ -54,12 +54,13 @@ class SKSHAPER_API SkShaper {
   static std::unique_ptr<SkShaper> MakeShapeThenWrap(sk_sp<SkFontMgr> = nullptr);
   static std::unique_ptr<SkShaper> MakeShapeDontWrapOrReorder(sk_sp<SkFontMgr> = nullptr);
 #endif
-  // Returns nullptr if not supported
+#ifdef SK_SHAPER_CORETEXT_AVAILABLE
   static std::unique_ptr<SkShaper> MakeCoreText();
+#endif
 
   static std::unique_ptr<SkShaper> Make(sk_sp<SkFontMgr> = nullptr);
 
-  SkShaper();
+  SkShaper() noexcept;
   virtual ~SkShaper();
 
   class RunIterator {
@@ -68,18 +69,18 @@ class SKSHAPER_API SkShaper {
     /** Set state to that of current run and move iterator to end of that run. */
     virtual void consume() = 0;
     /** Offset to one past the last (utf8) element in the current run. */
-    virtual size_t endOfCurrentRun() const = 0;
+    virtual size_t endOfCurrentRun() const noexcept = 0;
     /** Return true if consume should no longer be called. */
-    virtual bool atEnd() const = 0;
+    virtual bool atEnd() const noexcept = 0;
   };
   class FontRunIterator : public RunIterator {
    public:
-    virtual const SkFont& currentFont() const = 0;
+    virtual const SkFont& currentFont() const noexcept = 0;
   };
   class BiDiRunIterator : public RunIterator {
    public:
     /** The unicode bidi embedding level (even ltr, odd rtl) */
-    virtual uint8_t currentLevel() const = 0;
+    virtual uint8_t currentLevel() const noexcept = 0;
   };
   class ScriptRunIterator : public RunIterator {
    public:
@@ -89,7 +90,7 @@ class SKSHAPER_API SkShaper {
   class LanguageRunIterator : public RunIterator {
    public:
     /** Should be BCP-47, c locale names may also work. */
-    virtual const char* currentLanguage() const = 0;
+    virtual const char* currentLanguage() const noexcept = 0;
   };
   struct Feature {
     SkFourByteTag tag;
@@ -103,13 +104,13 @@ class SKSHAPER_API SkShaper {
   class TrivialRunIterator : public RunIteratorSubclass {
    public:
     static_assert(std::is_base_of<RunIterator, RunIteratorSubclass>::value, "");
-    TrivialRunIterator(size_t utf8Bytes) : fEnd(utf8Bytes), fAtEnd(fEnd == 0) {}
-    void consume() override {
+    TrivialRunIterator(size_t utf8Bytes) noexcept : fEnd(utf8Bytes), fAtEnd(fEnd == 0) {}
+    void consume() noexcept override {
       SkASSERT(!fAtEnd);
       fAtEnd = true;
     }
-    size_t endOfCurrentRun() const override { return fAtEnd ? fEnd : 0; }
-    bool atEnd() const override { return fAtEnd; }
+    size_t endOfCurrentRun() const noexcept override { return fAtEnd ? fEnd : 0; }
+    bool atEnd() const noexcept override { return fAtEnd; }
 
    private:
     size_t fEnd;
@@ -124,9 +125,9 @@ class SKSHAPER_API SkShaper {
       const char* requestName, SkFontStyle requestStyle, const SkShaper::LanguageRunIterator*);
   class TrivialFontRunIterator : public TrivialRunIterator<FontRunIterator> {
    public:
-    TrivialFontRunIterator(const SkFont& font, size_t utf8Bytes)
+    TrivialFontRunIterator(const SkFont& font, size_t utf8Bytes) noexcept
         : TrivialRunIterator(utf8Bytes), fFont(font) {}
-    const SkFont& currentFont() const override { return fFont; }
+    const SkFont& currentFont() const noexcept override { return fFont; }
 
    private:
     SkFont fFont;
@@ -140,9 +141,9 @@ class SKSHAPER_API SkShaper {
 #endif
   class TrivialBiDiRunIterator : public TrivialRunIterator<BiDiRunIterator> {
    public:
-    TrivialBiDiRunIterator(uint8_t bidiLevel, size_t utf8Bytes)
+    TrivialBiDiRunIterator(uint8_t bidiLevel, size_t utf8Bytes) noexcept
         : TrivialRunIterator(utf8Bytes), fBidiLevel(bidiLevel) {}
-    uint8_t currentLevel() const override { return fBidiLevel; }
+    uint8_t currentLevel() const noexcept override { return fBidiLevel; }
 
    private:
     uint8_t fBidiLevel;
@@ -156,9 +157,9 @@ class SKSHAPER_API SkShaper {
 #endif
   class TrivialScriptRunIterator : public TrivialRunIterator<ScriptRunIterator> {
    public:
-    TrivialScriptRunIterator(SkFourByteTag script, size_t utf8Bytes)
+    TrivialScriptRunIterator(SkFourByteTag script, size_t utf8Bytes) noexcept
         : TrivialRunIterator(utf8Bytes), fScript(script) {}
-    SkFourByteTag currentScript() const override { return fScript; }
+    SkFourByteTag currentScript() const noexcept override { return fScript; }
 
    private:
     SkFourByteTag fScript;
@@ -170,7 +171,7 @@ class SKSHAPER_API SkShaper {
    public:
     TrivialLanguageRunIterator(const char* language, size_t utf8Bytes)
         : TrivialRunIterator(utf8Bytes), fLanguage(language) {}
-    const char* currentLanguage() const override { return fLanguage.c_str(); }
+    const char* currentLanguage() const noexcept override { return fLanguage.c_str(); }
 
    private:
     SkString fLanguage;
@@ -181,13 +182,13 @@ class SKSHAPER_API SkShaper {
     virtual ~RunHandler() = default;
 
     struct Range {
-      constexpr Range() : fBegin(0), fSize(0) {}
-      constexpr Range(size_t begin, size_t size) : fBegin(begin), fSize(size) {}
+      constexpr Range() noexcept : fBegin(0), fSize(0) {}
+      constexpr Range(size_t begin, size_t size) noexcept : fBegin(begin), fSize(size) {}
       size_t fBegin;
       size_t fSize;
-      constexpr size_t begin() const { return fBegin; }
-      constexpr size_t end() const { return begin() + size(); }
-      constexpr size_t size() const { return fSize; }
+      constexpr size_t begin() const noexcept { return fBegin; }
+      constexpr size_t end() const noexcept { return begin() + size(); }
+      constexpr size_t size() const noexcept { return fSize; }
     };
 
     struct RunInfo {
@@ -214,7 +215,7 @@ class SKSHAPER_API SkShaper {
     virtual void runInfo(const RunInfo&) = 0;
 
     /** Called after all runInfo calls for a line. */
-    virtual void commitRunInfo() = 0;
+    virtual void commitRunInfo() noexcept = 0;
 
     /** Called for each run in a line after commitRunInfo. The buffer will be filled out. */
     virtual Buffer runBuffer(const RunInfo&) = 0;
@@ -223,7 +224,7 @@ class SKSHAPER_API SkShaper {
     virtual void commitRunBuffer(const RunInfo&) = 0;
 
     /** Called when ending a line. */
-    virtual void commitLine() = 0;
+    virtual void commitLine() noexcept = 0;
   };
 
   virtual void shape(
@@ -249,17 +250,17 @@ class SKSHAPER_API SkShaper {
  */
 class SKSHAPER_API SkTextBlobBuilderRunHandler final : public SkShaper::RunHandler {
  public:
-  SkTextBlobBuilderRunHandler(const char* utf8Text, SkPoint offset)
+  SkTextBlobBuilderRunHandler(const char* utf8Text, SkPoint offset) noexcept
       : fUtf8Text(utf8Text), fOffset(offset) {}
   sk_sp<SkTextBlob> makeBlob();
-  SkPoint endPoint() { return fOffset; }
+  SkPoint endPoint() noexcept { return fOffset; }
 
-  void beginLine() override;
+  void beginLine() noexcept override;
   void runInfo(const RunInfo&) override;
-  void commitRunInfo() override;
+  void commitRunInfo() noexcept override;
   Buffer runBuffer(const RunInfo&) override;
-  void commitRunBuffer(const RunInfo&) override;
-  void commitLine() override;
+  void commitRunBuffer(const RunInfo&) noexcept override;
+  void commitLine() noexcept override;
 
  private:
   SkTextBlobBuilder fBuilder;

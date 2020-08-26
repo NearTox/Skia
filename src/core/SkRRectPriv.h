@@ -53,7 +53,7 @@ class SkRRectPriv {
   // intersection is too complicated. This is conservative, it may not always detect that an
   // intersection could be represented as a round rect. However, when it does return a round rect
   // that intersection will be exact (i.e. it is NOT just a subset of the actual intersection).
-  static SkRRect ConservativeIntersect(const SkRRect& a, const SkRRect& b) noexcept;
+  static SkRRect ConservativeIntersect(const SkRRect& a, const SkRRect& b);
 };
 
 #endif

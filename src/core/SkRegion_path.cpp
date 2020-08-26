@@ -16,8 +16,7 @@
 
 // The rgnbuilder caller *seems* to pass short counts, possible often seens early failure, so
 // we may not want to promote this to a "std" routine just yet.
-static bool sk_memeq32(
-    const int32_t* SK_RESTRICT a, const int32_t* SK_RESTRICT b, int count) noexcept {
+static bool sk_memeq32(const int32_t* SK_RESTRICT a, const int32_t* SK_RESTRICT b, int count) {
   for (int i = 0; i < count; ++i) {
     if (a[i] != b[i]) {
       return false;
@@ -32,7 +31,7 @@ class SkRgnBuilder : public SkBlitter {
   ~SkRgnBuilder() override;
 
   // returns true if it could allocate the working storage needed
-  bool init(int maxHeight, int maxTransitions, bool pathIsInverse) noexcept;
+  bool init(int maxHeight, int maxTransitions, bool pathIsInverse);
 
   void done() {
     if (fCurrScanline != nullptr) {
@@ -43,7 +42,7 @@ class SkRgnBuilder : public SkBlitter {
     }
   }
 
-  int computeRunCount() const noexcept;
+  int computeRunCount() const;
   void copyToRect(SkIRect*) const;
   void copyToRgn(SkRegion::RunType runs[]) const;
 
@@ -84,8 +83,8 @@ class SkRgnBuilder : public SkBlitter {
     SkRegion::RunType fLastY;
     SkRegion::RunType fXCount;
 
-    SkRegion::RunType* firstX() const noexcept { return (SkRegion::RunType*)(this + 1); }
-    Scanline* nextScanline() const noexcept {
+    SkRegion::RunType* firstX() const { return (SkRegion::RunType*)(this + 1); }
+    Scanline* nextScanline() const {
       // add final +1 for the x-sentinel
       return (Scanline*)((SkRegion::RunType*)(this + 1) + fXCount + 1);
     }
@@ -115,7 +114,7 @@ SkRgnBuilder::SkRgnBuilder() : fStorage(nullptr) {}
 
 SkRgnBuilder::~SkRgnBuilder() { sk_free(fStorage); }
 
-bool SkRgnBuilder::init(int maxHeight, int maxTransitions, bool pathIsInverse) noexcept {
+bool SkRgnBuilder::init(int maxHeight, int maxTransitions, bool pathIsInverse) {
   if ((maxHeight | maxTransitions) < 0) {
     return false;
   }
@@ -192,7 +191,7 @@ void SkRgnBuilder::blitH(int x, int y, int width) {
   SkASSERT(fCurrXPtr - fStorage < fStorageCount);
 }
 
-int SkRgnBuilder::computeRunCount() const noexcept {
+int SkRgnBuilder::computeRunCount() const {
   if (fCurrScanline == nullptr) {
     return 0;
   }
@@ -402,7 +401,7 @@ struct Edge {
     fY0 = (SkRegionPriv::RunType)(y0);
     fY1 = (SkRegionPriv::RunType)(y1);
     fFlags = 0;
-    SkDEBUGCODE(fNext = nullptr);
+    SkDEBUGCODE(fNext = nullptr;)
   }
 
   int top() const { return std::min(fY0, fY1); }

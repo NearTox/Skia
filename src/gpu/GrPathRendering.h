@@ -73,7 +73,7 @@ class GrPathRendering {
     kEvenOdd_FillType,
   };
 
-  static const GrUserStencilSettings& GetStencilPassSettings(FillType) noexcept;
+  static const GrUserStencilSettings& GetStencilPassSettings(FillType);
 
   /**
    * Creates a new gpu path, based on the specified path and stroke and returns it.

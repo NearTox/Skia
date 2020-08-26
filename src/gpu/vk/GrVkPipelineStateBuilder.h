@@ -19,7 +19,7 @@
 class GrProgramDesc;
 class GrVkGpu;
 class GrVkRenderPass;
-class SkReader32;
+class SkReadBuffer;
 
 class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
  public:
@@ -35,7 +35,7 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
 
   const GrCaps* caps() const override;
 
-  GrVkGpu* gpu() const noexcept { return fGpu; }
+  GrVkGpu* gpu() const { return fGpu; }
 
   void finalizeFragmentOutputColor(GrShaderVar& outputColor) override;
   void finalizeFragmentSecondaryColor(GrShaderVar& outputColor) override;
@@ -47,7 +47,7 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
 
   // returns number of shader stages
   int loadShadersFromCache(
-      SkReader32* cached, VkShaderModule outShaderModules[],
+      SkReadBuffer* cached, VkShaderModule outShaderModules[],
       VkPipelineShaderStageCreateInfo* outStageInfo);
 
   void storeShadersInCache(

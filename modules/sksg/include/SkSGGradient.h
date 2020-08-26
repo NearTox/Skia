@@ -43,7 +43,7 @@ class Gradient : public Shader {
       const std::vector<SkColor4f>& colors, const std::vector<SkScalar>& positions) const = 0;
 
  protected:
-  Gradient() noexcept = default;
+  Gradient() = default;
 
  private:
   std::vector<ColorStop> fColorStops;

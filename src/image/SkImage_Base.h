@@ -43,7 +43,7 @@ class SkImage_Base : public SkImage {
       const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY,
       CachingHint) const = 0;
 
-  virtual GrContext* context() const { return nullptr; }
+  virtual GrContext* context() const noexcept { return nullptr; }
 
 #if SK_SUPPORT_GPU
   virtual GrSemaphoresSubmitted onFlush(GrContext* context, const GrFlushInfo&) {
@@ -65,7 +65,7 @@ class SkImage_Base : public SkImage {
   virtual GrSurfaceProxyView refPinnedView(GrRecordingContext*, uint32_t* uniqueID) const {
     return {};
   }
-  virtual bool isYUVA() const { return false; }
+  virtual bool isYUVA() const noexcept { return false; }
 #endif
   virtual GrBackendTexture onGetBackendTexture(
       bool flushPendingGrContextIO, GrSurfaceOrigin* origin) const;
@@ -103,7 +103,7 @@ class SkImage_Base : public SkImage {
   virtual sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const = 0;
 
  protected:
-  SkImage_Base(const SkImageInfo& info, uint32_t uniqueID);
+  SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept;
 
  private:
   // Set true by caches when they cache content that's derived from the current pixels.

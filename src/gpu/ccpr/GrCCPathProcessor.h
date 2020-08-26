@@ -42,7 +42,8 @@ class GrCCPathProcessor : public GrGeometryProcessor {
     void set(
         const GrOctoBounds&, const SkIVector& devToAtlasOffset, const SkPMColor4f&,
         GrFillRule) noexcept;
-    void set(const GrCCPathCacheEntry&, const SkIVector& shift, const SkPMColor4f&, GrFillRule);
+    void set(
+        const GrCCPathCacheEntry&, const SkIVector& shift, const SkPMColor4f&, GrFillRule) noexcept;
   };
 
   static_assert(4 * 14 == sizeof(Instance));
@@ -61,9 +62,8 @@ class GrCCPathProcessor : public GrGeometryProcessor {
       const SkMatrix& viewMatrixIfUsingLocalCoords = SkMatrix::I());
 
   const char* name() const noexcept override { return "GrCCPathProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
-    b->add32((uint32_t)fCoverageMode);
-  }
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override;
+
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
   void drawPaths(

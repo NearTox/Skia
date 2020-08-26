@@ -113,7 +113,7 @@ size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool sk_floats_are_unit(const float array[], size_t count) {
+bool sk_floats_are_unit(const float array[], size_t count) noexcept {
   bool is_unit = true;
   for (size_t i = 0; i < count; ++i) {
     is_unit &= (array[i] >= 0) & (array[i] <= 1);

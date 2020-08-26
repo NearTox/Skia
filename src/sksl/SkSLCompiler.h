@@ -153,13 +153,13 @@ class SK_API Compiler : public ErrorReporter {
 
   void writeErrorCount();
 
-  int errorCount() override { return fErrorCount; }
+  int errorCount() noexcept override { return fErrorCount; }
 
   Context& context() noexcept { return *fContext; }
 
   static const char* OperatorName(Token::Kind token);
 
-  static bool IsAssignment(Token::Kind token) noexcept;
+  static bool IsAssignment(Token::Kind token);
 
  private:
   void processIncludeFile(
@@ -198,8 +198,8 @@ class SK_API Compiler : public ErrorReporter {
 
   Position position(int offset);
 
-  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
-  std::map<StringFragment, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
+  std::map<String, std::pair<std::unique_ptr<ProgramElement>, bool>> fGPUIntrinsics;
+  std::map<String, std::pair<std::unique_ptr<ProgramElement>, bool>> fInterpreterIntrinsics;
   std::unique_ptr<ASTFile> fGpuIncludeSource;
   std::shared_ptr<SymbolTable> fGpuSymbolTable;
   std::vector<std::unique_ptr<ProgramElement>> fVertexInclude;

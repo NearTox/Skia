@@ -22,14 +22,14 @@ class GrVkRenderPass : public GrVkManagedResource {
     VkAttachmentLoadOp fLoadOp;
     VkAttachmentStoreOp fStoreOp;
 
-    constexpr LoadStoreOps(VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp) noexcept
+    LoadStoreOps(VkAttachmentLoadOp loadOp, VkAttachmentStoreOp storeOp)
         : fLoadOp(loadOp), fStoreOp(storeOp) {}
 
-    bool operator==(const LoadStoreOps& right) const noexcept {
+    bool operator==(const LoadStoreOps& right) const {
       return fLoadOp == right.fLoadOp && fStoreOp == right.fStoreOp;
     }
 
-    bool operator!=(const LoadStoreOps& right) const noexcept { return !(*this == right); }
+    bool operator!=(const LoadStoreOps& right) const { return !(*this == right); }
   };
 
   // Used when importing an external render pass. In this case we have to explicitly be told the
@@ -48,17 +48,17 @@ class GrVkRenderPass : public GrVkManagedResource {
       int fSamples;
       LoadStoreOps fLoadStoreOps;
 
-      constexpr AttachmentDesc() noexcept
+      AttachmentDesc()
           : fFormat(VK_FORMAT_UNDEFINED),
             fSamples(0),
             fLoadStoreOps(VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE) {}
-      bool operator==(const AttachmentDesc& right) const noexcept {
+      bool operator==(const AttachmentDesc& right) const {
         return (
             fFormat == right.fFormat && fSamples == right.fSamples &&
             fLoadStoreOps == right.fLoadStoreOps);
       }
-      bool operator!=(const AttachmentDesc& right) const noexcept { return !(*this == right); }
-      bool isCompatible(const AttachmentDesc& desc) const noexcept {
+      bool operator!=(const AttachmentDesc& right) const { return !(*this == right); }
+      bool isCompatible(const AttachmentDesc& desc) const {
         return (fFormat == desc.fFormat && fSamples == desc.fSamples);
       }
     };
@@ -88,6 +88,7 @@ class GrVkRenderPass : public GrVkManagedResource {
   // index value.
   bool colorAttachmentIndex(uint32_t* index) const;
   bool stencilAttachmentIndex(uint32_t* index) const;
+  bool hasStencilAttachment() const { return fAttachmentFlags & kStencil_AttachmentFlag; }
 
   // Returns whether or not the structure of a RenderTarget matches that of the VkRenderPass in
   // this object. Specifically this compares that the number of attachments, format of
@@ -103,13 +104,13 @@ class GrVkRenderPass : public GrVkManagedResource {
 
   bool equalLoadStoreOps(const LoadStoreOps& colorOps, const LoadStoreOps& stencilOps) const;
 
-  VkRenderPass vkRenderPass() const noexcept { return fRenderPass; }
+  VkRenderPass vkRenderPass() const { return fRenderPass; }
 
-  const VkExtent2D& granularity() const noexcept { return fGranularity; }
+  const VkExtent2D& granularity() const { return fGranularity; }
 
   // Returns the number of clear colors needed to begin this render pass. Currently this will
   // either only be 0 or 1 since we only ever clear the color attachment.
-  uint32_t clearValueCount() const noexcept { return fClearValueCount; }
+  uint32_t clearValueCount() const { return fClearValueCount; }
 
   void genKey(GrProcessorKeyBuilder* b) const;
 

@@ -24,7 +24,7 @@ class GrProxyProvider;
  */
 class GrCCClipPath {
  public:
-  GrCCClipPath() = default;
+  GrCCClipPath() noexcept = default;
   GrCCClipPath(const GrCCClipPath&) = delete;
 
   ~GrCCClipPath() {
@@ -61,13 +61,9 @@ class GrCCClipPath {
   void accountForOwnPath(GrCCPerFlushResourceSpecs*) const;
   void renderPathInAtlas(GrCCPerFlushResources*, GrOnFlushResourceProvider*);
 
-  const SkVector& atlasScale() const noexcept {
-    SkASSERT(fHasAtlasTransform);
-    return fAtlasScale;
-  }
-  const SkVector& atlasTranslate() const noexcept {
-    SkASSERT(fHasAtlasTransform);
-    return fAtlasTranslate;
+  const SkIVector& atlasTranslate() const noexcept {
+    SkASSERT(fHasAtlasTranslate);
+    return fDevToAtlasOffset;
   }
 
  private:
@@ -79,10 +75,7 @@ class GrCCClipPath {
   const GrCCAtlas* fAtlas = nullptr;
   SkIVector fDevToAtlasOffset;  // Translation from device space to location in atlas.
   SkDEBUGCODE(bool fHasAtlas = false);
-
-  SkVector fAtlasScale;
-  SkVector fAtlasTranslate;
-  SkDEBUGCODE(bool fHasAtlasTransform = false);
+  SkDEBUGCODE(bool fHasAtlasTranslate = false);
 };
 
 #endif

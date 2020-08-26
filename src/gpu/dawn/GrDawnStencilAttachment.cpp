@@ -38,7 +38,7 @@ GrDawnStencilAttachment* GrDawnStencilAttachment::Create(
   return new GrDawnStencilAttachment(gpu, width, height, 8, sampleCnt, texture, view);
 }
 
-GrDawnStencilAttachment::~GrDawnStencilAttachment() {}
+GrDawnStencilAttachment::~GrDawnStencilAttachment() = default;
 
 size_t GrDawnStencilAttachment::onGpuMemorySize() const {
   uint64_t size = this->width();

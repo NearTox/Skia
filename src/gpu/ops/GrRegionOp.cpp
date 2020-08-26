@@ -59,7 +59,7 @@ class RegionOp final : public GrMeshDrawOp {
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kNo, IsHairline::kNo);
   }
 
-  const char* name() const override { return "GrRegionOp"; }
+  const char* name() const noexcept override { return "GrRegionOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {

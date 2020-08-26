@@ -35,7 +35,9 @@ class SkRawCodec : public SkCodec {
   Result onGetPixels(
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&, int*) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kDNG; }
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+    return SkEncodedImageFormat::kDNG;
+  }
 
   SkISize onGetScaledDimensions(float desiredScale) const override;
 

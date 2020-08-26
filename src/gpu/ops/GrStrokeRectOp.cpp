@@ -88,7 +88,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  const char* name() const override { return "NonAAStrokeRectOp"; }
+  const char* name() const noexcept override { return "NonAAStrokeRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -398,7 +398,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const override { return "AAStrokeRect"; }
+  const char* name() const noexcept override { return "AAStrokeRect"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {

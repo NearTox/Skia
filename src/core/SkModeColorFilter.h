@@ -8,41 +8,40 @@
 #ifndef SkModeColorFilter_DEFINED
 #define SkModeColorFilter_DEFINED
 
-#include "include/core/SkColorFilter.h"
-#include "include/core/SkFlattenable.h"
+#include "src/core/SkColorFilterBase.h"
 
-class SkModeColorFilter : public SkColorFilter {
+class SkModeColorFilter : public SkColorFilterBase {
  public:
   static sk_sp<SkColorFilter> Make(SkColor color, SkBlendMode mode) {
     return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
   }
 
-  uint32_t getFlags() const noexcept override;
+  uint32_t onGetFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
       GrRecordingContext*, const GrColorInfo&) const override;
 #endif
 
- protected:
-  SkModeColorFilter(SkColor color, SkBlendMode mode) noexcept;
+  SK_FLATTENABLE_HOOKS(SkModeColorFilter)
 
-  void flatten(SkWriteBuffer&) const noexcept override;
-  bool onAsAColorMode(SkColor*, SkBlendMode*) const noexcept override;
+ protected:
+  SkModeColorFilter(SkColor color, SkBlendMode mode);
+
+  void flatten(SkWriteBuffer&) const override;
+  bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
   skvm::Color onProgram(
       skvm::Builder*, skvm::Color, SkColorSpace*, skvm::Uniforms*, SkArenaAlloc*) const override;
 
  private:
-  SK_FLATTENABLE_HOOKS(SkModeColorFilter)
-
   SkColor fColor;
   SkBlendMode fMode;
 
   friend class SkColorFilter;
 
-  typedef SkColorFilter INHERITED;
+  typedef SkColorFilterBase INHERITED;
 };
 
 #endif

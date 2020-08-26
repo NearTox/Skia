@@ -41,7 +41,7 @@ constexpr int kRunArrayStackCount = 256;
 // Measurement:  for the `region_union_16` benchmark, this is 6% faster.
 class RunArray {
  public:
-  RunArray() noexcept { fPtr = fStack; }
+  RunArray() { fPtr = fStack; }
 #ifdef SK_DEBUG
   int count() const { return fCount; }
 #endif

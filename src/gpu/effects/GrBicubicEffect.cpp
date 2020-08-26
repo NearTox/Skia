@@ -156,14 +156,13 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
 
 GrBicubicEffect::GrBicubicEffect(
     std::unique_ptr<GrFragmentProcessor> fp, const SkMatrix& matrix, Direction direction,
-    Clamp clamp) noexcept
+    Clamp clamp)
     : INHERITED(kGrBicubicEffect_ClassID, ProcessorOptimizationFlags(fp.get())),
       fCoordTransform(matrix),
       fDirection(direction),
       fClamp(clamp) {
-  fp->setSampledWithExplicitCoords();
   this->addCoordTransform(&fCoordTransform);
-  this->registerChildProcessor(std::move(fp));
+  this->registerExplicitlySampledChild(std::move(fp));
 }
 
 GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that)
@@ -172,13 +171,11 @@ GrBicubicEffect::GrBicubicEffect(const GrBicubicEffect& that)
       fDirection(that.fDirection),
       fClamp(that.fClamp) {
   this->addCoordTransform(&fCoordTransform);
-  auto child = that.childProcessor(0).clone();
-  child->setSampledWithExplicitCoords();
-  this->registerChildProcessor(std::move(child));
+  this->cloneAndRegisterAllChildProcessors(that);
 }
 
 void GrBicubicEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   uint32_t key = static_cast<uint32_t>(fDirection) | (static_cast<uint32_t>(fClamp) << 2);
   b->add32(key);
 }

@@ -12,7 +12,7 @@
 #include "include/private/SkTo.h"
 #include "src/core/SkMathPriv.h"
 
-static inline int nonzero_to_one(int x) noexcept {
+static inline int nonzero_to_one(int x) {
 #if 0
     return x != 0;
 #else
@@ -20,7 +20,7 @@ static inline int nonzero_to_one(int x) noexcept {
 #endif
 }
 
-static inline int neq_to_one(int x, int max) noexcept {
+static inline int neq_to_one(int x, int max) {
 #if 0
     return x != max;
 #else
@@ -29,7 +29,7 @@ static inline int neq_to_one(int x, int max) noexcept {
 #endif
 }
 
-static inline int neq_to_mask(int x, int max) noexcept {
+static inline int neq_to_mask(int x, int max) {
 #if 0
     return -(x != max);
 #else
@@ -38,7 +38,7 @@ static inline int neq_to_mask(int x, int max) noexcept {
 #endif
 }
 
-static inline unsigned div255(unsigned x) noexcept {
+static inline unsigned div255(unsigned x) {
   SkASSERT(x <= (255 * 255));
   return x * ((1 << 24) / 255) >> 24;
 }

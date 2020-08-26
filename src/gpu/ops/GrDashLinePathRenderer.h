@@ -14,7 +14,7 @@ class GrGpu;
 
 class GrDashLinePathRenderer : public GrPathRenderer {
  private:
-  const char* name() const final { return "DashLine"; }
+  const char* name() const noexcept final { return "DashLine"; }
 
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 

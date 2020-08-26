@@ -93,7 +93,7 @@ void SkFont::setSize(SkScalar size) noexcept { fSize = valid_size(size); }
 void SkFont::setScaleX(SkScalar scale) noexcept { fScaleX = scale; }
 void SkFont::setSkewX(SkScalar skew) noexcept { fSkewX = skew; }
 
-SkFont SkFont::makeWithSize(SkScalar newSize) const {
+SkFont SkFont::makeWithSize(SkScalar newSize) const noexcept {
   SkFont font = *this;
   font.setSize(newSize);
   return font;
@@ -137,7 +137,7 @@ class SkConvertToUTF32 {
  public:
   SkConvertToUTF32() noexcept = default;
 
-  const SkUnichar* convert(const void* text, size_t byteLength, SkTextEncoding encoding) {
+  const SkUnichar* convert(const void* text, size_t byteLength, SkTextEncoding encoding) noexcept {
     const SkUnichar* uni;
     switch (encoding) {
       case SkTextEncoding::kUTF8: {
@@ -249,7 +249,7 @@ void SkFont::getWidthsBounds(
   SkScalar scale = strikeSpec.strikeToSourceRatio();
 
   if (bounds) {
-    SkMatrix scaleMat = SkMatrix::MakeScale(scale);
+    SkMatrix scaleMat = SkMatrix::Scale(scale, scale);
     SkRect* cursor = bounds;
     for (auto glyph : glyphs) {
       scaleMat.mapRectScaleTranslate(cursor++, glyph->rect());
@@ -295,7 +295,7 @@ void SkFont::getPaths(
     void* ctx) const {
   SkFont font(*this);
   SkScalar scale = font.setupForAsPaths(nullptr);
-  const SkMatrix mx = SkMatrix::MakeScale(scale);
+  const SkMatrix mx = SkMatrix::Scale(scale, scale);
 
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakeWithNoDevice(font);
   SkBulkGlyphMetricsAndPaths paths{strikeSpec};
@@ -382,7 +382,8 @@ SkRect SkFontPriv::GetFontBounds(const SkFont& font) {
   return bounds;
 }
 
-int SkFontPriv::CountTextElements(const void* text, size_t byteLength, SkTextEncoding encoding) {
+int SkFontPriv::CountTextElements(
+    const void* text, size_t byteLength, SkTextEncoding encoding) noexcept {
   switch (encoding) {
     case SkTextEncoding::kUTF8:
       return SkUTF::CountUTF8(reinterpret_cast<const char*>(text), byteLength);

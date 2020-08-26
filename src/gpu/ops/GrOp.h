@@ -68,7 +68,7 @@ class GrOp : private SkNoncopyable {
  public:
   virtual ~GrOp() = default;
 
-  virtual const char* name() const = 0;
+  virtual const char* name() const noexcept = 0;
 
   using VisitProxyFunc = std::function<void(GrSurfaceProxy*, GrMipMapped)>;
 
@@ -134,13 +134,13 @@ class GrOp : private SkNoncopyable {
    * Helper for safely down-casting to a GrOp subclass
    */
   template <typename T>
-  const T& cast() const {
+  const T& cast() const noexcept {
     SkASSERT(T::ClassID() == this->classID());
     return *static_cast<const T*>(this);
   }
 
   template <typename T>
-  T* cast() {
+  T* cast() noexcept {
     SkASSERT(T::ClassID() == this->classID());
     return static_cast<T*>(this);
   }

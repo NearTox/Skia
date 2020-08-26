@@ -153,27 +153,27 @@ class GrTRecorder<TBase>::IterImpl {
   using T = typename std::conditional<IsConst, const TBase, TBase>::type;
 
  public:
-  IterImpl() noexcept = default;
+  IterImpl() = default;
 
-  IterImpl operator++() noexcept {
+  IterImpl operator++() {
     fCurr = fCurr->fNext;
     return *this;
   }
 
-  IterImpl operator++(int) noexcept {
+  IterImpl operator++(int) {
     auto old = fCurr;
     fCurr = fCurr->fNext;
     return {old};
   }
 
-  T& operator*() const noexcept { return *fCurr->get(); }
-  T* operator->() const noexcept { return fCurr->get(); }
+  T& operator*() const { return *fCurr->get(); }
+  T* operator->() const { return fCurr->get(); }
 
-  bool operator==(const IterImpl& that) const noexcept { return fCurr == that.fCurr; }
-  bool operator!=(const IterImpl& that) const noexcept { return !(*this == that); }
+  bool operator==(const IterImpl& that) const { return fCurr == that.fCurr; }
+  bool operator!=(const IterImpl& that) const { return !(*this == that); }
 
  private:
-  IterImpl(Header* curr) noexcept : fCurr(curr) {}
+  IterImpl(Header* curr) : fCurr(curr) {}
   Header* fCurr = nullptr;
 
   friend class GrTRecorder<TBase>;  // To construct from Header.

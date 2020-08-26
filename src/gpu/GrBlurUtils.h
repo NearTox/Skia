@@ -34,7 +34,7 @@ namespace GrBlurUtils {
  * Draw a shape handling the mask filter if present.
  */
 void drawShapeWithMaskFilter(
-    GrRecordingContext*, GrRenderTargetContext*, const GrClip&, const SkPaint&,
+    GrRecordingContext*, GrRenderTargetContext*, const GrClip*, const SkPaint&,
     const SkMatrixProvider&, const GrStyledShape&);
 
 /**
@@ -42,7 +42,7 @@ void drawShapeWithMaskFilter(
  * The GrPaint will be modified after return.
  */
 void drawShapeWithMaskFilter(
-    GrRecordingContext*, GrRenderTargetContext*, const GrClip&, const GrStyledShape&, GrPaint&&,
+    GrRecordingContext*, GrRenderTargetContext*, const GrClip*, const GrStyledShape&, GrPaint&&,
     const SkMatrix& viewMatrix, const SkMaskFilter*);
 };  // namespace GrBlurUtils
 

@@ -39,7 +39,7 @@ static void fill_rect(
   }
 }
 
-static void load_color(SkRasterPipeline_UniformColorCtx* ctx, const float rgba[]) {
+static void load_color(SkRasterPipeline_UniformColorCtx* ctx, const float rgba[]) noexcept {
   // only need one of these. can I query the pipeline to know if its lowp or highp?
   ctx->rgba[0] = SkScalarRoundToInt(rgba[0] * 255);
   ctx->r = rgba[0];
@@ -106,24 +106,25 @@ void SkDraw::drawAtlas(
     isOpaque = false;
   }
 
-  auto blitter =
-      SkCreateRasterPipelineBlitter(fDst, p, pipeline, isOpaque, &alloc, fRC->clipShader());
-  SkPath scratchPath;
+  if (auto blitter =
+          SkCreateRasterPipelineBlitter(fDst, p, pipeline, isOpaque, &alloc, fRC->clipShader())) {
+    SkPath scratchPath;
 
-  for (int i = 0; i < count; ++i) {
-    if (colors) {
-      SkColor4f c4 = SkColor4f::FromColor(colors[i]);
-      steps.apply(c4.vec());
-      load_color(uniformCtx, c4.premul().vec());
-    }
+    for (int i = 0; i < count; ++i) {
+      if (colors) {
+        SkColor4f c4 = SkColor4f::FromColor(colors[i]);
+        steps.apply(c4.vec());
+        load_color(uniformCtx, c4.premul().vec());
+      }
 
-    SkMatrix mx;
-    mx.setRSXform(xform[i]);
-    mx.preTranslate(-textures[i].fLeft, -textures[i].fTop);
-    mx.postConcat(fMatrixProvider->localToDevice());
+      SkMatrix mx;
+      mx.setRSXform(xform[i]);
+      mx.preTranslate(-textures[i].fLeft, -textures[i].fTop);
+      mx.postConcat(fMatrixProvider->localToDevice());
 
-    if (updator->update(mx, nullptr)) {
-      fill_rect(mx, *fRC, textures[i], blitter, &scratchPath);
+      if (updator->update(mx, nullptr)) {
+        fill_rect(mx, *fRC, textures[i], blitter, &scratchPath);
+      }
     }
   }
 }

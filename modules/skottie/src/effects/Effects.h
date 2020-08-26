@@ -91,7 +91,7 @@ class EffectBinder {
  public:
   EffectBinder(
       const skjson::ArrayValue& jprops, const AnimationBuilder& abuilder,
-      AnimatablePropertyContainer* acontainer) noexcept
+      AnimatablePropertyContainer* acontainer)
       : fProps(jprops), fBuilder(abuilder), fContainer(acontainer) {}
 
   template <typename T>
@@ -112,12 +112,12 @@ class EffectBinder {
  */
 class MaskShaderEffectBase : public AnimatablePropertyContainer {
  public:
-  const sk_sp<sksg::MaskShaderEffect>& node() const noexcept { return fMaskEffectNode; }
+  const sk_sp<sksg::MaskShaderEffect>& node() const { return fMaskEffectNode; }
 
  protected:
   MaskShaderEffectBase(sk_sp<sksg::RenderNode>, const SkSize&);
 
-  const SkSize& layerSize() const noexcept { return fLayerSize; }
+  const SkSize& layerSize() const { return fLayerSize; }
 
   struct MaskInfo {
     sk_sp<SkShader> fMaskShader;

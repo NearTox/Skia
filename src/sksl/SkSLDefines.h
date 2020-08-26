@@ -25,6 +25,23 @@
     do {                 \
       if (!(x)) abort(); \
     } while (false)
+#  define SkASSERTF(x, __VA_ARGS__) \
+    do {                            \
+      if (!(x)) {                   \
+        printf(__VA_ARGS__);        \
+        abort();                    \
+      }                             \
+    } while (false)
+#  define SkDEBUGFAIL(x) \
+    do {                 \
+      printf("%s", x);   \
+      abort();           \
+    } while (false)
+#  define SkDEBUGFAILF(fmt, ...) \
+    do {                         \
+      printf(__VA_ARGS__);       \
+      abort();                   \
+    } while (false)
 #  define SkAssertResult(x) \
     do {                    \
       if (!(x)) abort();    \

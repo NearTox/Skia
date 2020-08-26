@@ -99,6 +99,11 @@ VKAPI_ATTR VkBool32 VKAPI_CALL DebugReportCallback(
     size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage,
     void* pUserData) {
   if (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) {
+    // See https://github.com/KhronosGroup/Vulkan-ValidationLayers/issues/1887
+    if (strstr(pMessage, "VUID-VkGraphicsPipelineCreateInfo-pDynamicStates-01521") ||
+        strstr(pMessage, "VUID-VkGraphicsPipelineCreateInfo-pDynamicStates-01522")) {
+      return VK_FALSE;
+    }
     SkDebugf("Vulkan error [%s]: code: %d: %s\n", pLayerPrefix, messageCode, pMessage);
     print_backtrace();
     SkDEBUGFAIL("Vulkan debug layer error");

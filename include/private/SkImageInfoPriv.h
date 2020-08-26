@@ -11,7 +11,7 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkImageInfo.h"
 
-static inline uint32_t SkColorTypeChannelFlags(SkColorType ct) noexcept {
+static constexpr inline uint32_t SkColorTypeChannelFlags(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return kAlpha_SkColorChannelFlag;
@@ -38,7 +38,7 @@ static inline uint32_t SkColorTypeChannelFlags(SkColorType ct) noexcept {
   SkUNREACHABLE;
 }
 
-static inline bool SkColorTypeIsAlphaOnly(SkColorType ct) noexcept {
+static constexpr inline bool SkColorTypeIsAlphaOnly(SkColorType ct) noexcept {
   return SkColorTypeChannelFlags(ct) == kAlpha_SkColorChannelFlag;
 }
 
@@ -46,7 +46,7 @@ static constexpr inline bool SkAlphaTypeIsValid(unsigned value) noexcept {
   return value <= kLastEnum_SkAlphaType;
 }
 
-static int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
+static constexpr int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 0;
@@ -74,7 +74,7 @@ static int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
 }
 
 static inline size_t SkColorTypeMinRowBytes(SkColorType ct, int width) noexcept {
-  return width * SkColorTypeBytesPerPixel(ct);
+  return (size_t)(width * SkColorTypeBytesPerPixel(ct));
 }
 
 static constexpr inline bool SkColorTypeIsValid(unsigned value) noexcept {
@@ -86,7 +86,7 @@ static inline size_t SkColorTypeComputeOffset(
   if (kUnknown_SkColorType == ct) {
     return 0;
   }
-  return y * rowBytes + (x << SkColorTypeShiftPerPixel(ct));
+  return (size_t)y * rowBytes + ((size_t)x << SkColorTypeShiftPerPixel(ct));
 }
 
 static inline bool SkColorTypeIsNormalized(SkColorType ct) noexcept {

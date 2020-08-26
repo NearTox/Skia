@@ -19,6 +19,8 @@ class SkLocalMatrixImageFilter : public SkImageFilter_Base {
  public:
   static sk_sp<SkImageFilter> Make(const SkMatrix& localM, sk_sp<SkImageFilter> input);
 
+  SkRect computeFastBounds(const SkRect&) const override;
+
  protected:
   void flatten(SkWriteBuffer&) const override;
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
@@ -26,12 +28,12 @@ class SkLocalMatrixImageFilter : public SkImageFilter_Base {
       const SkIRect& src, const SkMatrix& ctm, MapDirection,
       const SkIRect* inputRect) const override;
 
-  bool onCanHandleComplexCTM() const noexcept override { return true; }
+  bool onCanHandleComplexCTM() const override { return true; }
 
  private:
   SK_FLATTENABLE_HOOKS(SkLocalMatrixImageFilter)
 
-  SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input) noexcept;
+  SkLocalMatrixImageFilter(const SkMatrix& localM, sk_sp<SkImageFilter> input);
 
   SkMatrix fLocalM;
 

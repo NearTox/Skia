@@ -25,15 +25,15 @@ class GrGLTexture : public GrTexture {
     GrBackendObjectOwnership fOwnership = GrBackendObjectOwnership::kOwned;
   };
 
-  static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget);
+  static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget) noexcept;
 
   GrGLTexture(GrGLGpu*, SkBudgeted, const Desc&, GrMipMapsStatus);
 
-  ~GrGLTexture() override = default;
+  ~GrGLTexture() override {}
 
-  GrBackendTexture getBackendTexture() const override;
+  GrBackendTexture getBackendTexture() const noexcept override;
 
-  GrBackendFormat backendFormat() const override;
+  GrBackendFormat backendFormat() const noexcept override;
 
   // TODO: Remove once clients are no longer calling this.
   void textureParamsModified() override { fParameters->invalidate(); }
@@ -42,7 +42,7 @@ class GrGLTexture : public GrTexture {
 
   GrGLuint textureID() const noexcept { return fID; }
 
-  GrGLenum target() const;
+  GrGLenum target() const noexcept;
 
   GrGLFormat format() const noexcept { return fFormat; }
 
@@ -64,7 +64,7 @@ class GrGLTexture : public GrTexture {
       GrGLGpu*, const Desc&, GrMipMapsStatus, sk_sp<GrGLTextureParameters>, GrWrapCacheable,
       GrIOType);
 
-  void init(const Desc&);
+  void init(const Desc&) noexcept;
 
   void onAbandon() override;
   void onRelease() override;

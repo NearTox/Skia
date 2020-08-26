@@ -69,7 +69,7 @@ class GrTexture : virtual public GrSurface {
   inline const GrTexturePriv texturePriv() const noexcept;
 
  protected:
-  GrTexture(GrGpu*, const SkISize&, GrProtected, GrTextureType, GrMipMapsStatus);
+  GrTexture(GrGpu*, const SkISize&, GrProtected, GrTextureType, GrMipMapsStatus) noexcept;
 
   virtual bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) = 0;
 
@@ -83,7 +83,7 @@ class GrTexture : virtual public GrSurface {
   void computeScratchKey(GrScratchKey*) const override;
 
  private:
-  size_t onGpuMemorySize() const override;
+  size_t onGpuMemorySize() const noexcept override;
   void markMipMapsDirty() noexcept;
   void markMipMapsClean() noexcept;
 

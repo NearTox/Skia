@@ -10,16 +10,21 @@
  **************************************************************************************************/
 #ifndef GrRGBToHSLFilterEffect_DEFINED
 #define GrRGBToHSLFilterEffect_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrRGBToHSLFilterEffect : public GrFragmentProcessor {
  public:
 #include "include/private/SkColorData.h"
 
-  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& c) const noexcept override {
+  SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& inColor) const override {
+    SkPMColor4f c = this->numChildProcessors()
+                        ? ConstantOutputForConstantInput(this->childProcessor(0), inColor)
+                        : inColor;
     const auto p = (c.fG < c.fB) ? SkPMColor4f{c.fB, c.fG, -1, 2 / 3.f}
                                  : SkPMColor4f{c.fG, c.fB, 0, -1 / 3.f},
                q = (c.fR < p[0]) ? SkPMColor4f{p[0], c.fR, p[1], p[3]}
@@ -32,21 +37,28 @@ class GrRGBToHSLFilterEffect : public GrFragmentProcessor {
 
     return {H, S, L, c.fA};
   }
-  static std::unique_ptr<GrFragmentProcessor> Make() {
-    return std::unique_ptr<GrFragmentProcessor>(new GrRGBToHSLFilterEffect());
+  static std::unique_ptr<GrFragmentProcessor> Make(std::unique_ptr<GrFragmentProcessor> inputFP) {
+    return std::unique_ptr<GrFragmentProcessor>(new GrRGBToHSLFilterEffect(std::move(inputFP)));
   }
-  GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src) noexcept;
+  GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "RGBToHSLFilterEffect"; }
+  int inputFP_index = -1;
 
  private:
-  GrRGBToHSLFilterEffect() noexcept
+  GrRGBToHSLFilterEffect(std::unique_ptr<GrFragmentProcessor> inputFP)
       : INHERITED(
-            kGrRGBToHSLFilterEffect_ClassID, (OptimizationFlags)(
-                                                 kConstantOutputForConstantInput_OptimizationFlag |
-                                                 kPreservesOpaqueInput_OptimizationFlag)) {}
+            kGrRGBToHSLFilterEffect_ClassID,
+            (OptimizationFlags)(
+                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+                (kConstantOutputForConstantInput_OptimizationFlag |
+                 kPreservesOpaqueInput_OptimizationFlag)) {
+    if (inputFP) {
+      inputFP_index = this->registerChild(std::move(inputFP));
+    }
+  }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;

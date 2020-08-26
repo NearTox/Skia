@@ -108,6 +108,7 @@ void DDLTileHelper::createComposeDDL() {
   }
 
   fComposeDDL = recorder.detach();
+  SkASSERT(fComposeDDL);
 }
 
 void DDLTileHelper::TileData::precompile(GrContext* context) {
@@ -277,6 +278,11 @@ static void do_gpu_stuff(GrContext* context, DDLTileHelper::TileData* tile) {
   tile->precompile(context);
 
   tile->draw(context);
+
+  // TODO: remove this flush once DDLs are reffed by the drawing manager
+  context->flushAndSubmit();
+
+  tile->dropDDL();
 }
 
 // We expect to have more than one recording thread but just one gpu thread
@@ -302,6 +308,7 @@ void DDLTileHelper::kickOffThreadedWork(
   recordingTaskGroup->add([this] { this->createComposeDDL(); });
 }
 
+// Only called from ViaDDL
 void DDLTileHelper::precompileAndDrawAllTiles(GrContext* context) {
   for (int i = 0; i < this->numTiles(); ++i) {
     fTiles[i].precompile(context);
@@ -309,6 +316,7 @@ void DDLTileHelper::precompileAndDrawAllTiles(GrContext* context) {
   }
 }
 
+// Only called from skpbench
 void DDLTileHelper::interleaveDDLCreationAndDraw(GrContext* context) {
   for (int i = 0; i < this->numTiles(); ++i) {
     fTiles[i].createDDL();
@@ -316,6 +324,7 @@ void DDLTileHelper::interleaveDDLCreationAndDraw(GrContext* context) {
   }
 }
 
+// Only called from skpbench
 void DDLTileHelper::drawAllTilesDirectly(GrContext* context) {
   for (int i = 0; i < this->numTiles(); ++i) {
     fTiles[i].drawSKPDirectly(context);

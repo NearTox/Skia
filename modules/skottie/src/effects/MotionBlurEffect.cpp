@@ -19,7 +19,7 @@ namespace internal {
 
 class MotionBlurEffect::AutoInvalBlocker {
  public:
-  AutoInvalBlocker(const MotionBlurEffect* mb, const sk_sp<RenderNode>& child) noexcept
+  AutoInvalBlocker(const MotionBlurEffect* mb, const sk_sp<RenderNode>& child)
       : fMBNode(const_cast<MotionBlurEffect*>(mb)), fChild(child) {
     fMBNode->unobserveInval(fChild);
   }
@@ -55,7 +55,9 @@ MotionBlurEffect::MotionBlurEffect(
       fPhase(phase),
       fDT(dt) {}
 
-const sksg::RenderNode* MotionBlurEffect::onNodeAt(const SkPoint&) const { return nullptr; }
+const sksg::RenderNode* MotionBlurEffect::onNodeAt(const SkPoint&) const noexcept {
+  return nullptr;
+}
 
 SkRect MotionBlurEffect::seekToSample(size_t sample_idx, const SkMatrix& ctm) const {
   SkASSERT(sample_idx < fSampleCount);
@@ -117,10 +119,10 @@ void MotionBlurEffect::renderToRaster8888Pow2Samples(
     }
     needs_clear = true;
     child->render(canvas, ctx);
-    SkDEBUGCODE(frames_rendered++);
+    SkDEBUGCODE(frames_rendered++;)
 
-    // Pluck out the pixels we've drawn in the layer.
-    const uint32_t* src = layer;
+        // Pluck out the pixels we've drawn in the layer.
+        const uint32_t* src = layer;
     uint64_t* dst = accum.data();
 
     for (int y = 0; y < info.height(); y++) {

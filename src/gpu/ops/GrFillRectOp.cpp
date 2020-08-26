@@ -104,7 +104,7 @@ class FillRectOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const override { return "FillRectOp"; }
+  const char* name() const noexcept override { return "FillRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -240,7 +240,7 @@ class FillRectOp final : public GrMeshDrawOp {
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
 
     // This is equivalent to a GrOpFlushState::detachAppliedClip
-    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip();
+    GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip::Disabled();
 
     this->createProgramInfo(
         context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
@@ -504,7 +504,7 @@ std::unique_ptr<GrDrawOp> GrFillRectOp::MakeOp(
 }
 
 void GrFillRectOp::AddFillRectOps(
-    GrRenderTargetContext* rtc, const GrClip& clip, GrRecordingContext* context, GrPaint&& paint,
+    GrRenderTargetContext* rtc, const GrClip* clip, GrRecordingContext* context, GrPaint&& paint,
     GrAAType aaType, const SkMatrix& viewMatrix, const GrRenderTargetContext::QuadSetEntry quads[],
     int cnt, const GrUserStencilSettings* stencilSettings) {
   int offset = 0;

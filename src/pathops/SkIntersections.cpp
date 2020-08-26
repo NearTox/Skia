@@ -8,8 +8,7 @@
 #include "src/pathops/SkIntersections.h"
 
 int SkIntersections::closestTo(
-    double rangeStart, double rangeEnd, const SkDPoint& testPt,
-    double* closestDist) const noexcept {
+    double rangeStart, double rangeEnd, const SkDPoint& testPt, double* closestDist) const {
   int closest = -1;
   *closestDist = SK_ScalarMax;
   for (int index = 0; index < fUsed; ++index) {
@@ -26,13 +25,13 @@ int SkIntersections::closestTo(
   return closest;
 }
 
-void SkIntersections::flip() noexcept {
+void SkIntersections::flip() {
   for (int index = 0; index < fUsed; ++index) {
     fT[1][index] = 1 - fT[1][index];
   }
 }
 
-int SkIntersections::insert(double one, double two, const SkDPoint& pt) noexcept {
+int SkIntersections::insert(double one, double two, const SkDPoint& pt) {
   if (fIsCoincident[0] == 3 && between(fT[0][0], one, fT[0][1])) {
     // For now, don't allow a mix of coincident and non-coincident intersections
     return -1;
@@ -105,8 +104,7 @@ int SkIntersections::insert(double one, double two, const SkDPoint& pt) noexcept
   return index;
 }
 
-void SkIntersections::insertNear(
-    double one, double two, const SkDPoint& pt1, const SkDPoint& pt2) noexcept {
+void SkIntersections::insertNear(double one, double two, const SkDPoint& pt1, const SkDPoint& pt2) {
   SkASSERT(one == 0 || one == 1);
   SkASSERT(two == 0 || two == 1);
   SkASSERT(pt1 != pt2);
@@ -123,7 +121,7 @@ int SkIntersections::insertCoincident(double one, double two, const SkDPoint& pt
   return index;
 }
 
-void SkIntersections::setCoincident(int index) noexcept {
+void SkIntersections::setCoincident(int index) {
   SkASSERT(index >= 0);
   int bit = 1 << index;
   fIsCoincident[0] |= bit;
@@ -131,7 +129,7 @@ void SkIntersections::setCoincident(int index) noexcept {
 }
 
 void SkIntersections::merge(
-    const SkIntersections& a, int aIndex, const SkIntersections& b, int bIndex) noexcept {
+    const SkIntersections& a, int aIndex, const SkIntersections& b, int bIndex) {
   this->reset();
   fT[0][0] = a.fT[0][aIndex];
   fT[1][0] = b.fT[0][bIndex];
@@ -140,8 +138,7 @@ void SkIntersections::merge(
   fUsed = 1;
 }
 
-int SkIntersections::mostOutside(
-    double rangeStart, double rangeEnd, const SkDPoint& origin) const noexcept {
+int SkIntersections::mostOutside(double rangeStart, double rangeEnd, const SkDPoint& origin) const {
   int result = -1;
   for (int index = 0; index < fUsed; ++index) {
     if (!between(rangeStart, fT[0][index], rangeEnd)) {
@@ -160,7 +157,7 @@ int SkIntersections::mostOutside(
   return result;
 }
 
-void SkIntersections::removeOne(int index) noexcept {
+void SkIntersections::removeOne(int index) {
   int remaining = --fUsed - index;
   if (remaining <= 0) {
     return;

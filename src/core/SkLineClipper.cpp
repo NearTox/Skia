@@ -76,7 +76,7 @@ static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) noexc
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) noexcept {
+static constexpr inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) noexcept {
   return a <= b && (a < b || dim > 0);
 }
 
@@ -87,7 +87,8 @@ static inline bool containsNoEmptyCheck(const SkRect& outer, const SkRect& inner
          outer.fBottom >= inner.fBottom;
 }
 
-bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip, SkPoint dst[2]) {
+bool SkLineClipper::IntersectLine(
+    const SkPoint src[2], const SkRect& clip, SkPoint dst[2]) noexcept {
   SkRect bounds;
 
   bounds.set(src[0], src[1]);
@@ -171,7 +172,7 @@ static bool is_between_unsorted(SkScalar value, SkScalar limit0, SkScalar limit1
 #endif
 
 int SkLineClipper::ClipLine(
-    const SkPoint pts[], const SkRect& clip, SkPoint lines[], bool canCullToTheRight) {
+    const SkPoint pts[], const SkRect& clip, SkPoint lines[], bool canCullToTheRight) noexcept {
   int index0, index1;
 
   if (pts[0].fY < pts[1].fY) {

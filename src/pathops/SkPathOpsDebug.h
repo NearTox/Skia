@@ -87,8 +87,8 @@ DummyClasses(Cubic, Cubic);
 #  define DEBUG_ALIGNMENT 0
 #  define DEBUG_ANGLE 0
 #  define DEBUG_ASSEMBLE 0
-#  define DEBUG_COINCIDENCE 0        // sanity checking
-#  define DEBUG_COINCIDENCE_DUMP 0   // accumulate and dump which algorithms fired
+#  define DEBUG_COINCIDENCE 0  // sanity checking
+#  define DEBUG_COINCIDENCE_DUMP 0  // accumulate and dump which algorithms fired
 #  define DEBUG_COINCIDENCE_ORDER 0  // for well behaved curves, check if pairs match up in t-order
 #  define DEBUG_COINCIDENCE_VERBOSE 0  // usually whether the next function generates coincidence
 #  define DEBUG_CUBIC_BINARY_SEARCH 0
@@ -131,7 +131,7 @@ DummyClasses(Cubic, Cubic);
 #  define DEBUG_PATH_CONSTRUCTION 1
 #  define DEBUG_PERP 1
 #  define DEBUG_SORT 1
-#  define DEBUG_T_SECT 0       // enabling may trigger validate asserts even though op does not fail
+#  define DEBUG_T_SECT 0  // enabling may trigger validate asserts even though op does not fail
 #  define DEBUG_T_SECT_DUMP 0  // Use 1 normally. Use 2 to number segments, 3 for script output
 #  define DEBUG_T_SECT_LOOP_COUNT 0
 #  define DEBUG_VALIDATE 1

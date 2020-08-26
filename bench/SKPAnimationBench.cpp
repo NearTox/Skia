@@ -27,7 +27,7 @@ void SKPAnimationBench::onPerCanvasPreDraw(SkCanvas* canvas) {
 void SKPAnimationBench::drawPicture() {
   for (int j = 0; j < this->tileRects().count(); ++j) {
     SkMatrix trans =
-        SkMatrix::MakeTrans(-1.f * this->tileRects()[j].fLeft, -1.f * this->tileRects()[j].fTop);
+        SkMatrix::Translate(-1.f * this->tileRects()[j].fLeft, -1.f * this->tileRects()[j].fTop);
     fAnimation->preConcatFrameMatrix(fAnimationTime.nextRangeF(0, 1000), fDevBounds, &trans);
     this->surfaces()[j]->getCanvas()->drawPicture(this->picture(), &trans, nullptr);
   }

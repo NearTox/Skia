@@ -72,7 +72,7 @@ class GrDistanceFieldA8TextGeoProc : public GrGeometryProcessor {
   }
 #endif
 
-  ~GrDistanceFieldA8TextGeoProc() override = default;
+  ~GrDistanceFieldA8TextGeoProc() override {}
 
   const char* name() const noexcept override { return "DistanceFieldA8Text"; }
 
@@ -141,7 +141,7 @@ class GrDistanceFieldPathGeoProc : public GrGeometryProcessor {
         caps, matrix, wideColor, views, numActiveViews, params, flags);
   }
 
-  ~GrDistanceFieldPathGeoProc() override = default;
+  ~GrDistanceFieldPathGeoProc() override {}
 
   const char* name() const noexcept override { return "DistanceFieldPath"; }
 
@@ -215,7 +215,7 @@ class GrDistanceFieldLCDTextGeoProc : public GrGeometryProcessor {
         caps, views, numActiveViews, params, distanceAdjust, flags, localMatrixIfUsesLocalCoords);
   }
 
-  ~GrDistanceFieldLCDTextGeoProc() override = default;
+  ~GrDistanceFieldLCDTextGeoProc() override {}
 
   const char* name() const noexcept override { return "DistanceFieldLCDText"; }
 
@@ -223,7 +223,7 @@ class GrDistanceFieldLCDTextGeoProc : public GrGeometryProcessor {
   const Attribute& inColor() const noexcept { return fInColor; }
   const Attribute& inTextureCoords() const noexcept { return fInTextureCoords; }
   DistanceAdjust getDistanceAdjust() const noexcept { return fDistanceAdjust; }
-  uint32_t getFlags() const { return fFlags; }
+  uint32_t getFlags() const noexcept { return fFlags; }
   const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
   const SkISize& atlasDimensions() const noexcept { return fAtlasDimensions; }
 

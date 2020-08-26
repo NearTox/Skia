@@ -29,7 +29,7 @@ void SkMarkerStack::setMarker(uint32_t id, const SkM44& mx, void* boundary) {
   fStack.push_back({boundary, mx, inv, id});
 }
 
-bool SkMarkerStack::findMarker(uint32_t id, SkM44* mx) const noexcept {
+bool SkMarkerStack::findMarker(uint32_t id, SkM44* mx) const {
   // search from top to bottom, so we find the most recent id
   for (auto it = fStack.rbegin(); it != fStack.rend(); ++it) {
     if (it->fID == id) {
@@ -42,7 +42,7 @@ bool SkMarkerStack::findMarker(uint32_t id, SkM44* mx) const noexcept {
   return false;
 }
 
-bool SkMarkerStack::findMarkerInverse(uint32_t id, SkM44* mx) const noexcept {
+bool SkMarkerStack::findMarkerInverse(uint32_t id, SkM44* mx) const {
   // search from top to bottom, so we find the most recent id
   for (auto it = fStack.rbegin(); it != fStack.rend(); ++it) {
     if (it->fID == id) {

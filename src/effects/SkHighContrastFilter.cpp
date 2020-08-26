@@ -9,6 +9,7 @@
 #include "include/effects/SkHighContrastFilter.h"
 #include "include/private/SkColorData.h"
 #include "src/core/SkArenaAlloc.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkEffectPriv.h"
 #include "src/core/SkRasterPipeline.h"
@@ -25,9 +26,9 @@
 
 using InvertStyle = SkHighContrastConfig::InvertStyle;
 
-class SkHighContrast_Filter : public SkColorFilter {
+class SkHighContrast_Filter : public SkColorFilterBase {
  public:
-  SkHighContrast_Filter(const SkHighContrastConfig& config) noexcept {
+  SkHighContrast_Filter(const SkHighContrastConfig& config) {
     fConfig = config;
     // Clamp contrast to just inside -1 to 1 to avoid division by zero.
     fConfig.fContrast = SkTPin(fConfig.fContrast, -1.0f + FLT_EPSILON, 1.0f - FLT_EPSILON);
@@ -45,7 +46,7 @@ class SkHighContrast_Filter : public SkColorFilter {
       skvm::Builder*, skvm::Color, SkColorSpace*, skvm::Uniforms*, SkArenaAlloc*) const override;
 
  protected:
-  void flatten(SkWriteBuffer&) const noexcept override;
+  void flatten(SkWriteBuffer&) const override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkHighContrast_Filter)
@@ -183,7 +184,7 @@ skvm::Color SkHighContrast_Filter::onProgram(
   return p->premul(c);
 }
 
-void SkHighContrast_Filter::flatten(SkWriteBuffer& buffer) const noexcept {
+void SkHighContrast_Filter::flatten(SkWriteBuffer& buffer) const {
   buffer.writeBool(fConfig.fGrayscale);
   buffer.writeInt(static_cast<int>(fConfig.fInvertStyle));
   buffer.writeScalar(fConfig.fContrast);
@@ -233,7 +234,7 @@ class HighContrastFilterEffect : public GrFragmentProcessor {
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
   virtual void onGetGLSLProcessorKey(
-      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept override;
 
   bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
     const HighContrastFilterEffect& that = other.cast<HighContrastFilterEffect>();
@@ -250,7 +251,7 @@ class HighContrastFilterEffect : public GrFragmentProcessor {
 
 class GLHighContrastFilterEffect : public GrGLSLFragmentProcessor {
  public:
-  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -267,7 +268,7 @@ GrGLSLFragmentProcessor* HighContrastFilterEffect::onCreateGLSLInstance() const 
 }
 
 void HighContrastFilterEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   GLHighContrastFilterEffect::GenKey(*this, caps, b);
 }
 
@@ -278,7 +279,7 @@ void GLHighContrastFilterEffect::onSetData(
 }
 
 void GLHighContrastFilterEffect::GenKey(
-    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const HighContrastFilterEffect& hcfe = proc.cast<HighContrastFilterEffect>();
   b->add32(static_cast<uint32_t>(hcfe.config().fGrayscale));
   b->add32(static_cast<uint32_t>(hcfe.config().fInvertStyle));
@@ -297,9 +298,8 @@ void GLHighContrastFilterEffect::emitCode(EmitArgs& args) {
 
   fragBuilder->codeAppendf("half4 color = %s;", args.fInputColor);
 
-  // Unpremultiply. The max() is to guard against 0 / 0.
-  fragBuilder->codeAppendf("half nonZeroAlpha = max(color.a, 0.0001);");
-  fragBuilder->codeAppendf("color = half4(color.rgb / nonZeroAlpha, nonZeroAlpha);");
+  // Unpremultiply.
+  fragBuilder->codeAppendf("color = unpremul(color);");
 
   if (hcfe.linearize()) {
     fragBuilder->codeAppend("color.rgb = color.rgb * color.rgb;");

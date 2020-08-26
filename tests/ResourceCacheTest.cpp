@@ -221,7 +221,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceCacheWrappedResources, reporter, ctxI
   borrowed.reset(nullptr);
   adopted.reset(nullptr);
 
-  context->flush();
+  context->flushAndSubmit();
 
   bool borrowedIsAlive = gpu->isTestingOnlyBackendTexture(backendTextures[0]);
   bool adoptedIsAlive = gpu->isTestingOnlyBackendTexture(backendTextures[1]);
@@ -1249,7 +1249,7 @@ static void test_time_purge(skiatest::Reporter* reporter) {
 
     // Verify that calling flush() on a GrContext with nothing to do will not trigger resource
     // eviction
-    context->flush();
+    context->flushAndSubmit();
     for (int i = 0; i < 10; ++i) {
       TestResource* r = new TestResource(gpu);
       GrUniqueKey k;
@@ -1258,7 +1258,7 @@ static void test_time_purge(skiatest::Reporter* reporter) {
       r->unref();
     }
     REPORTER_ASSERT(reporter, 10 == cache->getResourceCount());
-    context->flush();
+    context->flushAndSubmit();
     REPORTER_ASSERT(reporter, 10 == cache->getResourceCount());
     cache->purgeResourcesNotUsedSince(nowish());
     REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
@@ -1701,8 +1701,8 @@ DEF_GPUTEST_FOR_MOCK_CONTEXT(OverbudgetFlush, reporter, ctxInfo) {
   drawToSurf(surf2.get());
 
   // Flush each surface once to ensure that their backing stores are allocated.
-  surf1->flush();
-  surf2->flush();
+  surf1->flushAndSubmit();
+  surf2->flushAndSubmit();
   REPORTER_ASSERT(reporter, overbudget());
   getFlushCountDelta();
 
@@ -1714,7 +1714,7 @@ DEF_GPUTEST_FOR_MOCK_CONTEXT(OverbudgetFlush, reporter, ctxInfo) {
   REPORTER_ASSERT(reporter, overbudget());
 
   // Make surf1 purgeable. Drawing to surf2 should flush.
-  surf1->flush();
+  surf1->flushAndSubmit();
   surf1.reset();
   drawToSurf(surf2.get());
   REPORTER_ASSERT(reporter, getFlushCountDelta());

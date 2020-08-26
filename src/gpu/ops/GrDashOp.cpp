@@ -39,7 +39,7 @@ using AAMode = GrDashOp::AAMode;
 
 // Returns whether or not the gpu can fast path the dash line effect.
 bool GrDashOp::CanDrawDashLine(
-    const SkPoint pts[2], const GrStyle& style, const SkMatrix& viewMatrix) noexcept {
+    const SkPoint pts[2], const GrStyle& style, const SkMatrix& viewMatrix) {
   // Pts must be either horizontal or vertical in src space
   if (pts[0].fX != pts[1].fX && pts[0].fY != pts[1].fY) {
     return false;
@@ -119,7 +119,7 @@ static void align_to_x_axis(
 }
 
 // Assumes phase < sum of all intervals
-static SkScalar calc_start_adjustment(const SkScalar intervals[2], SkScalar phase) noexcept {
+static SkScalar calc_start_adjustment(const SkScalar intervals[2], SkScalar phase) {
   SkASSERT(phase < intervals[0] + intervals[1]);
   if (phase >= intervals[0] && phase != 0) {
     SkScalar srcIntervalLen = intervals[0] + intervals[1];
@@ -129,8 +129,7 @@ static SkScalar calc_start_adjustment(const SkScalar intervals[2], SkScalar phas
 }
 
 static SkScalar calc_end_adjustment(
-    const SkScalar intervals[2], const SkPoint pts[2], SkScalar phase,
-    SkScalar* endingInt) noexcept {
+    const SkScalar intervals[2], const SkPoint pts[2], SkScalar phase, SkScalar* endingInt) {
   if (pts[1].fX <= pts[0].fX) {
     return 0;
   }
@@ -248,7 +247,7 @@ class DashOp final : public GrMeshDrawOp {
   }
 #endif
 
-  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
+  FixedFunctionFlags fixedFunctionFlags() const override {
     FixedFunctionFlags flags = FixedFunctionFlags::kNone;
     if (AAMode::kCoverageWithMSAA == fAAMode) {
       flags |= FixedFunctionFlags::kUsesHWAA;
@@ -297,12 +296,12 @@ class DashOp final : public GrMeshDrawOp {
     combinedMatrix.postConcat(geometry.fViewMatrix);
 
     IsHairline zeroArea = geometry.fSrcStrokeWidth ? IsHairline::kNo : IsHairline::kYes;
-    HasAABloat aaBloat = (aaMode == AAMode::kNone) ? HasAABloat ::kNo : HasAABloat::kYes;
+    HasAABloat aaBloat = (aaMode == AAMode::kNone) ? HasAABloat::kNo : HasAABloat::kYes;
     this->setTransformedBounds(bounds, combinedMatrix, aaBloat, zeroArea);
   }
 
   struct DashDraw {
-    DashDraw(const LineData& geo) noexcept {
+    DashDraw(const LineData& geo) {
       memcpy(fPtsRot, geo.fPtsRot, sizeof(geo.fPtsRot));
       memcpy(fIntervals, geo.fIntervals, sizeof(geo.fIntervals));
       fPhase = geo.fPhase;
@@ -320,7 +319,7 @@ class DashOp final : public GrMeshDrawOp {
     bool fHasEndRect;
   };
 
-  GrProgramInfo* programInfo() noexcept override { return fProgramInfo; }
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
@@ -375,7 +374,7 @@ class DashOp final : public GrMeshDrawOp {
     // We do two passes over all of the dashes.  First we setup the start, end, and bounds,
     // rectangles.  We preserve all of this work in the rects / draws arrays below.  Then we
     // iterate again over these decomposed dashes to generate vertices
-    static constexpr int kNumStackDashes = 128;
+    static const int kNumStackDashes = 128;
     SkSTArray<kNumStackDashes, SkRect, true> rects;
     SkSTArray<kNumStackDashes, DashDraw, true> draws;
 
@@ -389,18 +388,15 @@ class DashOp final : public GrMeshDrawOp {
 
       bool hasCap = SkPaint::kButt_Cap != cap;
 
-      // We always want to at least stroke out half a pixel on each side in device space
-      // so 0.5f / perpScale gives us this min in src space
-      SkScalar halfSrcStroke =
-          std::max(args.fSrcStrokeWidth * 0.5f, 0.5f / args.fPerpendicularScale);
-
-      SkScalar strokeAdj;
-      if (!hasCap) {
-        strokeAdj = 0.f;
-      } else {
-        strokeAdj = halfSrcStroke;
+      SkScalar halfSrcStroke = args.fSrcStrokeWidth * 0.5f;
+      if (halfSrcStroke == 0.0f || this->aaMode() != AAMode::kCoverageWithMSAA) {
+        // In the non-MSAA case, we always want to at least stroke out half a pixel on each
+        // side in device space. 0.5f / fPerpendicularScale gives us this min in src space.
+        // This is also necessary when the stroke width is zero, to allow hairlines to draw.
+        halfSrcStroke = std::max(halfSrcStroke, 0.5f / args.fPerpendicularScale);
       }
 
+      SkScalar strokeAdj = hasCap ? halfSrcStroke : 0.0f;
       SkScalar startAdj = 0;
 
       bool lineDone = false;
@@ -505,14 +501,19 @@ class DashOp final : public GrMeshDrawOp {
       }
       SkScalar startOffset = devIntervals[1] * 0.5f + devPhase;
 
-      // For EdgeAA, we bloat in X & Y for both square and round caps.
-      // For MSAA, we don't bloat at all for square caps, and bloat in Y only for round caps.
-      SkScalar devBloatX = this->aaMode() == AAMode::kCoverage ? 0.5f : 0.0f;
-      SkScalar devBloatY;
-      if (SkPaint::kRound_Cap == cap && this->aaMode() == AAMode::kCoverageWithMSAA) {
-        devBloatY = 0.5f;
-      } else {
-        devBloatY = devBloatX;
+      SkScalar devBloatX = 0.0f;
+      SkScalar devBloatY = 0.0f;
+      switch (this->aaMode()) {
+        case AAMode::kNone: break;
+        case AAMode::kCoverage:
+          // For EdgeAA, we bloat in X & Y for both square and round caps.
+          devBloatX = 0.5f;
+          devBloatY = 0.5f;
+          break;
+        case AAMode::kCoverageWithMSAA:
+          // For MSAA, we only bloat in Y for round caps.
+          devBloatY = (cap == SkPaint::kRound_Cap) ? 0.5f : 0.0f;
+          break;
       }
 
       SkScalar bloatX = devBloatX / args.fParallelScale;
@@ -678,11 +679,11 @@ class DashOp final : public GrMeshDrawOp {
     return CombineResult::kMerged;
   }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  const SkMatrix& viewMatrix() const noexcept { return fLines[0].fViewMatrix; }
-  AAMode aaMode() const noexcept { return fAAMode; }
-  bool fullDash() const noexcept { return fFullDash; }
-  SkPaint::Cap cap() const noexcept { return fCap; }
+  const SkPMColor4f& color() const { return fColor; }
+  const SkMatrix& viewMatrix() const { return fLines[0].fViewMatrix; }
+  AAMode aaMode() const { return fAAMode; }
+  bool fullDash() const { return fFullDash; }
+  SkPaint::Cap cap() const { return fCap; }
 
   static const int kVertsPerDash = 4;
   static const int kIndicesPerDash = 6;
@@ -743,7 +744,7 @@ std::unique_ptr<GrDrawOp> GrDashOp::MakeDashLineOp(
   SkScalar strokeWidth = lineData.fSrcStrokeWidth * lineData.fPerpendicularScale;
 
   if (SkPaint::kSquare_Cap == cap && 0 != lineData.fSrcStrokeWidth) {
-    // add cap to on interveal and remove from off interval
+    // add cap to on interval and remove from off interval
     offInterval -= strokeWidth;
   }
 
@@ -781,13 +782,13 @@ class DashingCircleEffect : public GrGeometryProcessor {
 
   const char* name() const noexcept override { return "DashingCircleEffect"; }
 
-  AAMode aaMode() const noexcept { return fAAMode; }
+  AAMode aaMode() const { return fAAMode; }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
+  const SkPMColor4f& color() const { return fColor; }
 
-  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
 
-  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  bool usesLocalCoords() const { return fUsesLocalCoords; }
 
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override;
 
@@ -798,8 +799,7 @@ class DashingCircleEffect : public GrGeometryProcessor {
   friend class ::SkArenaAlloc;  // for access to ctor
 
   DashingCircleEffect(
-      const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix,
-      bool usesLocalCoords) noexcept;
+      const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
 
   SkPMColor4f fColor;
   SkMatrix fLocalMatrix;
@@ -833,14 +833,19 @@ class GLDashingCircleEffect : public GrGLSLGeometryProcessor {
  private:
   UniformHandle fParamUniform;
   UniformHandle fColorUniform;
+  UniformHandle fLocalMatrixUniform;
+
+  SkMatrix fLocalMatrix;
   SkPMColor4f fColor;
   SkScalar fPrevRadius;
   SkScalar fPrevCenterX;
   SkScalar fPrevIntervalLength;
+
   typedef GrGLSLGeometryProcessor INHERITED;
 };
 
 GLDashingCircleEffect::GLDashingCircleEffect() {
+  fLocalMatrix = SkMatrix::InvalidMatrix();
   fColor = SK_PMColor4fILLEGAL;
   fPrevRadius = SK_ScalarMin;
   fPrevCenterX = SK_ScalarMin;
@@ -872,11 +877,11 @@ void GLDashingCircleEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 
   // Setup position
   this->writeOutputPosition(vertBuilder, gpArgs, dce.fInPosition.name());
-
-  // emit transforms
-  this->emitTransforms(
-      vertBuilder, varyingHandler, uniformHandler, dce.fInPosition.asShaderVar(), dce.localMatrix(),
-      args.fFPCoordTransformHandler);
+  if (dce.usesLocalCoords()) {
+    this->writeLocalCoord(
+        vertBuilder, uniformHandler, gpArgs, dce.fInPosition.asShaderVar(), dce.localMatrix(),
+        &fLocalMatrixUniform);
+  }
 
   // transforms all points so that we can compare them to our test circle
   fragBuilder->codeAppendf(
@@ -905,15 +910,17 @@ void GLDashingCircleEffect::setData(
     pdman.set4fv(fColorUniform, 1, dce.color().vec());
     fColor = dce.color();
   }
-  this->setTransformDataHelper(dce.localMatrix(), pdman, transformRange);
+  this->setTransformDataHelper(pdman, transformRange);
+  this->setTransform(pdman, fLocalMatrixUniform, dce.localMatrix(), &fLocalMatrix);
 }
 
 void GLDashingCircleEffect::GenKey(
     const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const DashingCircleEffect& dce = gp.cast<DashingCircleEffect>();
   uint32_t key = 0;
-  key |= dce.usesLocalCoords() && dce.localMatrix().hasPerspective() ? 0x1 : 0x0;
+  key |= dce.usesLocalCoords() ? 0x1 : 0x0;
   key |= static_cast<uint32_t>(dce.aaMode()) << 1;
+  key |= ComputeMatrixKey(dce.localMatrix()) << 3;
   b->add32(key);
 }
 
@@ -935,8 +942,7 @@ GrGLSLPrimitiveProcessor* DashingCircleEffect::createGLSLInstance(const GrShader
 }
 
 DashingCircleEffect::DashingCircleEffect(
-    const SkPMColor4f& color, AAMode aaMode, const SkMatrix& localMatrix,
-    bool usesLocalCoords) noexcept
+    const SkPMColor4f& color, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords)
     : INHERITED(kDashingCircleEffect_ClassID),
       fColor(color),
       fLocalMatrix(localMatrix),
@@ -982,13 +988,13 @@ class DashingLineEffect : public GrGeometryProcessor {
 
   const char* name() const noexcept override { return "DashingEffect"; }
 
-  AAMode aaMode() const noexcept { return fAAMode; }
+  AAMode aaMode() const { return fAAMode; }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
+  const SkPMColor4f& color() const { return fColor; }
 
-  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
 
-  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  bool usesLocalCoords() const { return fUsesLocalCoords; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
@@ -999,8 +1005,7 @@ class DashingLineEffect : public GrGeometryProcessor {
   friend class ::SkArenaAlloc;  // for access to ctor
 
   DashingLineEffect(
-      const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix,
-      bool usesLocalCoords) noexcept;
+      const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
 
   SkPMColor4f fColor;
   SkMatrix fLocalMatrix;
@@ -1034,6 +1039,10 @@ class GLDashingLineEffect : public GrGLSLGeometryProcessor {
  private:
   SkPMColor4f fColor;
   UniformHandle fColorUniform;
+
+  SkMatrix fLocalMatrix;
+  UniformHandle fLocalMatrixUniform;
+
   typedef GrGLSLGeometryProcessor INHERITED;
 };
 
@@ -1066,11 +1075,11 @@ void GLDashingLineEffect::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
 
   // Setup position
   this->writeOutputPosition(vertBuilder, gpArgs, de.fInPosition.name());
-
-  // emit transforms
-  this->emitTransforms(
-      vertBuilder, varyingHandler, uniformHandler, de.fInPosition.asShaderVar(), de.localMatrix(),
-      args.fFPCoordTransformHandler);
+  if (de.usesLocalCoords()) {
+    this->writeLocalCoord(
+        vertBuilder, uniformHandler, gpArgs, de.fInPosition.asShaderVar(), de.localMatrix(),
+        &fLocalMatrixUniform);
+  }
 
   // transforms all points so that we can compare them to our test rect
   fragBuilder->codeAppendf(
@@ -1122,15 +1131,17 @@ void GLDashingLineEffect::setData(
     pdman.set4fv(fColorUniform, 1, de.color().vec());
     fColor = de.color();
   }
-  this->setTransformDataHelper(de.localMatrix(), pdman, transformRange);
+  this->setTransformDataHelper(pdman, transformRange);
+  this->setTransform(pdman, fLocalMatrixUniform, de.localMatrix(), &fLocalMatrix);
 }
 
 void GLDashingLineEffect::GenKey(
     const GrGeometryProcessor& gp, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const DashingLineEffect& de = gp.cast<DashingLineEffect>();
   uint32_t key = 0;
-  key |= de.usesLocalCoords() && de.localMatrix().hasPerspective() ? 0x1 : 0x0;
-  key |= static_cast<int>(de.aaMode()) << 8;
+  key |= de.usesLocalCoords() ? 0x1 : 0x0;
+  key |= static_cast<int>(de.aaMode()) << 1;
+  key |= ComputeMatrixKey(de.localMatrix()) << 3;
   b->add32(key);
 }
 
@@ -1152,8 +1163,7 @@ GrGLSLPrimitiveProcessor* DashingLineEffect::createGLSLInstance(const GrShaderCa
 }
 
 DashingLineEffect::DashingLineEffect(
-    const SkPMColor4f& color, AAMode aaMode, const SkMatrix& localMatrix,
-    bool usesLocalCoords) noexcept
+    const SkPMColor4f& color, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords)
     : INHERITED(kDashingLineEffect_ClassID),
       fColor(color),
       fLocalMatrix(localMatrix),

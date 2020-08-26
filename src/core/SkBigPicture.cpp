@@ -14,7 +14,7 @@
 
 SkBigPicture::SkBigPicture(
     const SkRect& cull, sk_sp<SkRecord> record, std::unique_ptr<SnapshotArray> drawablePicts,
-    sk_sp<SkBBoxHierarchy> bbh, size_t approxBytesUsedBySubPictures) noexcept
+    sk_sp<SkBBoxHierarchy> bbh, size_t approxBytesUsedBySubPictures)
     : fCullRect(cull),
       fApproxBytesUsedBySubPictures(approxBytesUsedBySubPictures),
       fRecord(std::move(record)),
@@ -49,10 +49,8 @@ size_t SkBigPicture::approximateBytesUsed() const noexcept {
   return bytes;
 }
 
-int SkBigPicture::drawableCount() const noexcept {
-  return fDrawablePicts ? fDrawablePicts->count() : 0;
-}
+int SkBigPicture::drawableCount() const { return fDrawablePicts ? fDrawablePicts->count() : 0; }
 
-SkPicture const* const* SkBigPicture::drawablePicts() const noexcept {
+SkPicture const* const* SkBigPicture::drawablePicts() const {
   return fDrawablePicts ? fDrawablePicts->begin() : nullptr;
 }

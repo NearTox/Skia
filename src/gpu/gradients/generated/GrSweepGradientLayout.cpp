@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLSweepGradientLayout : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLSweepGradientLayout() noexcept = default;
+  GrGLSLSweepGradientLayout() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrSweepGradientLayout& _outer = args.fFp.cast<GrSweepGradientLayout>();
@@ -36,10 +36,15 @@ class GrGLSLSweepGradientLayout : public GrGLSLFragmentProcessor {
     SkString sk_TransformedCoords2D_0 = fragBuilder->ensureCoords2D(
         args.fTransformedCoords[0].fVaryingPoint, _outer.sampleMatrix());
     fragBuilder->codeAppendf(
-        "half angle;\nif (sk_Caps.atan2ImplementedAsAtanYOverX) {\n    angle = half(2.0 * "
-        "atan(-%s.y, length(%s) - %s.x));\n} else {\n    angle = half(atan(-%s.y, "
-        "-%s.x));\n}\nhalf t = ((angle * 0.15915493667125702 + 0.5) + %s) * %s;\n%s = "
-        "half4(t, 1.0, 0.0, 0.0);\n",
+        R"SkSL(half angle;
+if (sk_Caps.atan2ImplementedAsAtanYOverX) {
+    angle = half(2.0 * atan(-%s.y, length(%s) - %s.x));
+} else {
+    angle = half(atan(-%s.y, -%s.x));
+}
+half t = ((angle * 0.15915493667125702 + 0.5) + %s) * %s;
+%s = half4(t, 1.0, 0.0, 0.0);
+)SkSL",
         sk_TransformedCoords2D_0.c_str(), sk_TransformedCoords2D_0.c_str(),
         sk_TransformedCoords2D_0.c_str(), sk_TransformedCoords2D_0.c_str(),
         sk_TransformedCoords2D_0.c_str(), args.fUniformHandler->getUniformCStr(biasVar),
@@ -71,7 +76,7 @@ GrGLSLFragmentProcessor* GrSweepGradientLayout::onCreateGLSLInstance() const {
   return new GrGLSLSweepGradientLayout();
 }
 void GrSweepGradientLayout::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrSweepGradientLayout& that = other.cast<GrSweepGradientLayout>();
   (void)that;
@@ -80,7 +85,7 @@ bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const no
   if (scale != that.scale) return false;
   return true;
 }
-GrSweepGradientLayout::GrSweepGradientLayout(const GrSweepGradientLayout& src) noexcept
+GrSweepGradientLayout::GrSweepGradientLayout(const GrSweepGradientLayout& src)
     : INHERITED(kGrSweepGradientLayout_ClassID, src.optimizationFlags()),
       fCoordTransform0(src.fCoordTransform0),
       gradientMatrix(src.gradientMatrix),

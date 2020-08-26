@@ -32,7 +32,7 @@
 #endif
 #include "include/gpu/GrBackendSurface.h"
 
-SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID)
+SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {
   SkASSERT(info.width() > 0);
   SkASSERT(info.height() > 0);
@@ -80,11 +80,20 @@ SkAlphaType SkImage::alphaType() const noexcept { return fInfo.alphaType(); }
 
 SkColorSpace* SkImage::colorSpace() const noexcept { return fInfo.colorSpace(); }
 
-sk_sp<SkColorSpace> SkImage::refColorSpace() const { return fInfo.refColorSpace(); }
+sk_sp<SkColorSpace> SkImage::refColorSpace() const noexcept { return fInfo.refColorSpace(); }
 
 sk_sp<SkShader> SkImage::makeShader(
     SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix) const {
-  return SkImageShader::Make(sk_ref_sp(const_cast<SkImage*>(this)), tmx, tmy, localMatrix);
+  return SkImageShader::Make(
+      sk_ref_sp(const_cast<SkImage*>(this)), tmx, tmy, localMatrix,
+      SkImageShader::kInheritFromPaint);
+}
+
+sk_sp<SkShader> SkImage::makeShader(
+    SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix, SkFilterQuality filtering) const {
+  return SkImageShader::Make(
+      sk_ref_sp(const_cast<SkImage*>(this)), tmx, tmy, localMatrix,
+      SkImageShader::FilterEnum(filtering));
 }
 
 sk_sp<SkData> SkImage::encodeToData(SkEncodedImageFormat type, int quality) const {
@@ -157,7 +166,10 @@ GrSemaphoresSubmitted SkImage::flush(GrContext* context, const GrFlushInfo& flus
   return as_IB(this)->onFlush(context, flushInfo);
 }
 
-void SkImage::flush(GrContext* context) { as_IB(this)->onFlush(context, {}); }
+void SkImage::flushAndSubmit(GrContext* context) {
+  this->flush(context, {});
+  context->submit();
+}
 
 #else
 
@@ -179,13 +191,13 @@ GrSemaphoresSubmitted SkImage::flush(GrContext*, const GrFlushInfo&) {
   return GrSemaphoresSubmitted::kNo;
 }
 
-void SkImage::flush(GrContext*) {}
+void SkImage::flushAndSubmit(GrContext*) {}
 
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID)
+SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept
     : INHERITED(info, uniqueID), fAddedToRasterCache(false) {}
 
 SkImage_Base::~SkImage_Base() {
@@ -277,7 +289,7 @@ sk_sp<SkImage> SkImage::makeWithFilter(
   // original coordinate system, so configure the CTM to correct crop rects and explicitly adjust
   // the clip bounds (since it is assumed to already be in image space).
   SkImageFilter_Base::Context context(
-      SkMatrix::MakeTrans(-subset.x(), -subset.y()), clipBounds.makeOffset(-subset.topLeft()),
+      SkMatrix::Translate(-subset.x(), -subset.y()), clipBounds.makeOffset(-subset.topLeft()),
       cache.get(), fInfo.colorType(), fInfo.colorSpace(), srcSpecialImage.get());
 
   sk_sp<SkSpecialImage> result = as_IFB(filter)->filterImage(context).imageAndOffset(offset);

@@ -131,7 +131,7 @@ struct GrUserStencilSettings {
   template <
       uint16_t Ref, GrUserStencilTest Test, uint16_t TestMask, GrUserStencilOp PassOp,
       GrUserStencilOp FailOp, uint16_t WriteMask>
-  constexpr static Init<Ref, Test, TestMask, PassOp, FailOp, WriteMask> StaticInit() noexcept {
+  constexpr static Init<Ref, Test, TestMask, PassOp, FailOp, WriteMask> StaticInit() {
     return Init<Ref, Test, TestMask, PassOp, FailOp, WriteMask>();
   }
 
@@ -143,7 +143,7 @@ struct GrUserStencilSettings {
   constexpr static InitSeparate<
       CWRef, CCWRef, CWTest, CCWTest, CWTestMask, CCWTestMask, CWPassOp, CCWPassOp, CWFailOp,
       CCWFailOp, CWWriteMask, CCWWriteMask>
-  StaticInitSeparate() noexcept {
+  StaticInitSeparate() {
     return InitSeparate<
         CWRef, CCWRef, CWTest, CCWTest, CWTestMask, CCWTestMask, CWPassOp, CCWPassOp, CWFailOp,
         CCWFailOp, CWWriteMask, CCWWriteMask>();
@@ -155,7 +155,7 @@ struct GrUserStencilSettings {
       uint16_t Ref, GrUserStencilTest Test, uint16_t TestMask, GrUserStencilOp PassOp,
       GrUserStencilOp FailOp, uint16_t WriteMask, typename Attrs = Attrs<Test, PassOp, FailOp>>
   constexpr explicit GrUserStencilSettings(
-      const Init<Ref, Test, TestMask, PassOp, FailOp, WriteMask>&) noexcept
+      const Init<Ref, Test, TestMask, PassOp, FailOp, WriteMask>&)
       : fCWFlags{(uint16_t)(Attrs::Flags(false) | kSingleSided_StencilFlag), (uint16_t)(Attrs::Flags(true) | kSingleSided_StencilFlag)},
         fCWFace{Ref,    Test,   Attrs::EffectiveTestMask(TestMask),
                 PassOp, FailOp, Attrs::EffectiveWriteMask(WriteMask)},
@@ -175,7 +175,7 @@ struct GrUserStencilSettings {
   constexpr explicit GrUserStencilSettings(
       const InitSeparate<
           CWRef, CCWRef, CWTest, CCWTest, CWTestMask, CCWTestMask, CWPassOp, CCWPassOp, CWFailOp,
-          CCWFailOp, CWWriteMask, CCWWriteMask>&) noexcept
+          CCWFailOp, CWWriteMask, CCWWriteMask>&)
       : fCWFlags{CWAttrs::Flags(false), CWAttrs::Flags(true)},
         fCWFace{CWRef,    CWTest,   CWAttrs::EffectiveTestMask(CWTestMask),
                 CWPassOp, CWFailOp, CWAttrs::EffectiveWriteMask(CWWriteMask)},
@@ -224,36 +224,36 @@ struct GrUserStencilSettings::Attrs {
       GrUserStencilOp::kKeep == PassOp || GrUserStencilOp::kKeep == FailOp ||
       (PassOp <= kLastClipOnlyStencilOp) == (FailOp <= kLastClipOnlyStencilOp));
 
-  constexpr static bool TestAlwaysPasses(bool hasStencilClip) noexcept {
+  constexpr static bool TestAlwaysPasses(bool hasStencilClip) {
     return (!hasStencilClip && GrUserStencilTest::kAlwaysIfInClip == Test) ||
            GrUserStencilTest::kAlways == Test;
   }
-  constexpr static bool DoesNotModifyStencil(bool hasStencilClip) noexcept {
+  constexpr static bool DoesNotModifyStencil(bool hasStencilClip) {
     return (GrUserStencilTest::kNever == Test || GrUserStencilOp::kKeep == PassOp) &&
            (TestAlwaysPasses(hasStencilClip) || GrUserStencilOp::kKeep == FailOp);
   }
-  constexpr static bool IsDisabled(bool hasStencilClip) noexcept {
+  constexpr static bool IsDisabled(bool hasStencilClip) {
     return TestAlwaysPasses(hasStencilClip) && DoesNotModifyStencil(hasStencilClip);
   }
-  constexpr static bool UsesWrapOps() noexcept {
+  constexpr static bool UsesWrapOps() {
     return GrUserStencilOp::kIncWrap == PassOp || GrUserStencilOp::kDecWrap == PassOp ||
            GrUserStencilOp::kIncWrap == FailOp || GrUserStencilOp::kDecWrap == FailOp;
   }
-  constexpr static bool TestIgnoresRef() noexcept {
+  constexpr static bool TestIgnoresRef() {
     return (
         GrUserStencilTest::kAlwaysIfInClip == Test || GrUserStencilTest::kAlways == Test ||
         GrUserStencilTest::kNever == Test);
   }
-  constexpr static uint16_t Flags(bool hasStencilClip) noexcept {
+  constexpr static uint16_t Flags(bool hasStencilClip) {
     return (IsDisabled(hasStencilClip) ? kDisabled_StencilFlag : 0) |
            (TestAlwaysPasses(hasStencilClip) ? kTestAlwaysPasses_StencilFlag : 0) |
            (DoesNotModifyStencil(hasStencilClip) ? kNoModifyStencil_StencilFlag : 0) |
            (UsesWrapOps() ? 0 : kNoWrapOps_StencilFlag);
   }
-  constexpr static uint16_t EffectiveTestMask(uint16_t testMask) noexcept {
+  constexpr static uint16_t EffectiveTestMask(uint16_t testMask) {
     return TestIgnoresRef() ? 0 : testMask;
   }
-  constexpr static uint16_t EffectiveWriteMask(uint16_t writeMask) noexcept {
+  constexpr static uint16_t EffectiveWriteMask(uint16_t writeMask) {
     // We don't modify the mask differently when hasStencilClip=false because either the entire
     // face gets disabled in that case (e.g. Test=kAlwaysIfInClip, PassOp=kKeep), or else the
     // effective mask stays the same either way.

@@ -8,7 +8,6 @@
 #include "src/gpu/ccpr/GrCCPerFlushResources.h"
 
 #include "include/private/GrRecordingContext.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
@@ -78,7 +77,7 @@ class CopyAtlasOp : public AtlasOp {
         std::move(resources), std::move(copyProxy), baseInstance, endInstance, drawBounds);
   }
 
-  const char* name() const override { return "CopyAtlasOp (CCPR)"; }
+  const char* name() const noexcept override { return "CopyAtlasOp (CCPR)"; }
 
   void visitProxies(const VisitProxyFunc& fn) const override {
     fn(fSrcProxy.get(), GrMipMapped::kNo);
@@ -95,8 +94,11 @@ class CopyAtlasOp : public AtlasOp {
     GrCCPathProcessor pathProc(
         coverageMode, fSrcProxy->peekTexture(), swizzle, GrCCAtlas::kTextureOrigin);
 
+    bool hasScissor =
+        flushState->appliedClip() && flushState->appliedClip()->scissorState().enabled();
     GrPipeline pipeline(
-        GrScissorTest::kDisabled, SkBlendMode::kSrc, flushState->drawOpArgs().writeSwizzle());
+        hasScissor ? GrScissorTest::kEnabled : GrScissorTest::kDisabled, SkBlendMode::kSrc,
+        flushState->drawOpArgs().writeSwizzle());
 
     pathProc.drawPaths(
         flushState, pipeline, *fSrcProxy, *fResources, fBaseInstance, fEndInstance, this->bounds());
@@ -133,7 +135,7 @@ class RenderAtlasOp : public AtlasOp {
   }
 
   // GrDrawOp interface.
-  const char* name() const override { return "RenderAtlasOp (CCPR)"; }
+  const char* name() const noexcept override { return "RenderAtlasOp (CCPR)"; }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
     ProcessorType proc;
@@ -540,7 +542,7 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
         auto op = CopyAtlasOp::Make(
             rtc->surfPriv().getContext(), sk_ref_sp(this), copyRange.fSrcProxy, baseCopyInstance,
             endCopyInstance, atlas.drawBounds());
-        rtc->addDrawOp(GrNoClip(), std::move(op));
+        rtc->addDrawOp(nullptr, std::move(op));
       }
       baseCopyInstance = endCopyInstance;
     }
@@ -579,7 +581,7 @@ bool GrCCPerFlushResources::finalize(GrOnFlushResourceProvider* onFlushRP) {
             rtc->surfPriv().getContext(), sk_ref_sp(this), atlas.getFillBatchID(),
             atlas.getStrokeBatchID(), atlas.drawBounds());
       }
-      rtc->addDrawOp(GrNoClip(), std::move(op));
+      rtc->addDrawOp(nullptr, std::move(op));
       if (rtc->asSurfaceProxy()->requiresManualMSAAResolve()) {
         onFlushRP->addTextureResolveTask(
             sk_ref_sp(rtc->asTextureProxy()), GrSurfaceProxy::ResolveFlags::kMSAA);

@@ -203,7 +203,7 @@ static void convert_with_pipeline(
 
   SkRasterPipeline_<256> pipeline;
   pipeline.append_load(srcInfo.colorType(), &src);
-  steps.apply(&pipeline, srcInfo.colorType());
+  steps.apply(&pipeline);
 
   pipeline.append_gamut_clamp_if_normalized(dstInfo);
 

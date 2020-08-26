@@ -12,9 +12,9 @@
 
 class GrAAHairLinePathRenderer : public GrPathRenderer {
  public:
-  GrAAHairLinePathRenderer() {}
+  GrAAHairLinePathRenderer() noexcept = default;
 
-  const char* name() const final { return "AAHairline"; }
+  const char* name() const noexcept final { return "AAHairline"; }
 
   typedef SkTArray<SkPoint, true> PtArray;
   typedef SkTArray<int, true> IntArray;

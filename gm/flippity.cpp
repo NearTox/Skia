@@ -194,16 +194,13 @@ class FlippityGM : public skiagm::GpuGM {
     canvas->restore();
   }
 
-  void drawRow(
-      GrContext* context, SkCanvas* canvas, bool bottomLeftImage, bool drawSubset,
-      bool drawScaled) {
-    sk_sp<SkImage> referenceImage = make_reference_image(context, fLabels, bottomLeftImage);
-
+  void drawRow(SkCanvas* canvas, bool bottomLeftImage, bool drawSubset, bool drawScaled) {
     canvas->save();
     canvas->translate(kLabelSize, kLabelSize);
 
     for (int i = 0; i < kNumMatrices; ++i) {
-      this->drawImageWithMatrixAndLabels(canvas, referenceImage.get(), i, drawSubset, drawScaled);
+      this->drawImageWithMatrixAndLabels(
+          canvas, fReferenceImages[bottomLeftImage].get(), i, drawSubset, drawScaled);
       canvas->translate(kCellSize, 0);
     }
     canvas->restore();
@@ -225,28 +222,46 @@ class FlippityGM : public skiagm::GpuGM {
     SkASSERT(kNumLabels == fLabels.count());
   }
 
-  void onDraw(GrContext* context, GrRenderTargetContext*, SkCanvas* canvas) override {
+  DrawResult onGpuSetup(GrContext* context, SkString* errorMsg) override {
+    if (!context || context->abandoned()) {
+      return DrawResult::kSkip;
+    }
+
+    SkASSERT(context->priv().asDirectContext());
+
     this->makeLabels(context);
+    fReferenceImages[0] = make_reference_image(context, fLabels, false);
+    fReferenceImages[1] = make_reference_image(context, fLabels, true);
+    if (!fReferenceImages[0] || !fReferenceImages[1]) {
+      *errorMsg = "Failed to create reference images.";
+      return DrawResult::kFail;
+    }
+
+    return DrawResult::kOk;
+  }
+
+  void onDraw(GrContext*, GrRenderTargetContext*, SkCanvas* canvas) override {
+    SkASSERT(fReferenceImages[0] && fReferenceImages[1]);
 
     canvas->save();
 
     // Top row gets TL image
-    this->drawRow(context, canvas, false, false, false);
+    this->drawRow(canvas, false, false, false);
 
     canvas->translate(0, kCellSize);
 
     // Bottom row gets BL image
-    this->drawRow(context, canvas, true, false, false);
+    this->drawRow(canvas, true, false, false);
 
     canvas->translate(0, kCellSize);
 
     // Third row gets subsets of BL images
-    this->drawRow(context, canvas, true, true, false);
+    this->drawRow(canvas, true, true, false);
 
     canvas->translate(0, kCellSize);
 
     // Fourth row gets scaled subsets of BL images
-    this->drawRow(context, canvas, true, true, true);
+    this->drawRow(canvas, true, true, true);
 
     canvas->restore();
 
@@ -261,6 +276,7 @@ class FlippityGM : public skiagm::GpuGM {
 
  private:
   SkTArray<sk_sp<SkImage>> fLabels;
+  sk_sp<SkImage> fReferenceImages[2];
 
   typedef GM INHERITED;
 };

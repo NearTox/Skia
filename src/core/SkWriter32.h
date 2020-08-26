@@ -72,7 +72,7 @@ class SkWriter32 : SkNoncopyable {
    *  was written atomically using the write methods below.
    */
   template <typename T>
-  const T& readTAt(size_t offset) const {
+  const T& readTAt(size_t offset) const noexcept {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset < fUsed);
     return *(T*)(fData + offset);
@@ -83,7 +83,7 @@ class SkWriter32 : SkNoncopyable {
    *  was written atomically using the write methods below.
    */
   template <typename T>
-  void overwriteTAt(size_t offset, const T& value) {
+  void overwriteTAt(size_t offset, const T& value) noexcept {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset < fUsed);
     *(T*)(fData + offset) = value;
@@ -101,12 +101,6 @@ class SkWriter32 : SkNoncopyable {
   void write16(int32_t value) noexcept { *(int32_t*)this->reserve(sizeof(value)) = value & 0xFFFF; }
 
   void write32(int32_t value) noexcept { *(int32_t*)this->reserve(sizeof(value)) = value; }
-
-  void writePtr(void* value) noexcept {
-    // this->reserve() only returns 4-byte aligned pointers,
-    // so this may be an under-aligned write if we were to do this like the others.
-    memcpy(this->reserve(sizeof(value)), &value, sizeof(value));
-  }
 
   void writeScalar(SkScalar value) noexcept { *(SkScalar*)this->reserve(sizeof(value)) = value; }
 
@@ -170,14 +164,13 @@ class SkWriter32 : SkNoncopyable {
   }
 
   /**
-   *  Writes a string to the writer, which can be retrieved with
-   *  SkReader32::readString().
-   *  The length can be specified, or if -1 is passed, it will be computed by
-   *  calling strlen(). The length must be < max size_t.
+   *  Writes a string to the writer, which can be retrieved with SkReadBuffer::readString().
+   *  The length can be specified, or if -1 is passed, it will be computed by calling strlen().
+   *  The length must be < max size_t.
    *
    *  If you write NULL, it will be read as "".
    */
-  void writeString(const char* str, size_t len = (size_t)-1);
+  void writeString(const char* str, size_t len = (size_t)-1) noexcept;
 
   /**
    *  Computes the size (aligned to multiple of 4) need to write the string
@@ -215,7 +208,7 @@ class SkWriter32 : SkNoncopyable {
 
   // read from the stream, and write up to length bytes. Return the actual
   // number of bytes written.
-  size_t readFromStream(SkStream* stream, size_t length) noexcept {
+  size_t readFromStream(SkStream* stream, size_t length) {
     return stream->read(this->reservePad(length), length);
   }
 
@@ -241,11 +234,11 @@ class SkWriter32 : SkNoncopyable {
  *  This wrapper ensures proper alignment rules are met for the storage.
  */
 template <size_t SIZE>
-class SkSWriter32 final : public SkWriter32 {
+class SkSWriter32 : public SkWriter32 {
  public:
-  SkSWriter32() noexcept { this->reset(); }
+  SkSWriter32() { this->reset(); }
 
-  void reset() noexcept { this->INHERITED::reset(fData.fStorage, SIZE); }
+  void reset() { this->INHERITED::reset(fData.fStorage, SIZE); }
 
  private:
   union {

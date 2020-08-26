@@ -65,7 +65,7 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
   // objects.
   void set(
       const SamplerOverriddenState* samplerState, const NonsamplerState& nonsamplerState,
-      ResetTimestamp currTimestamp);
+      ResetTimestamp currTimestamp) noexcept;
 
  private:
   static constexpr ResetTimestamp kExpiredTimestamp = 0;

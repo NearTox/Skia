@@ -21,7 +21,7 @@ void SkShaperJSONWriter::beginLine() {}
 
 void SkShaperJSONWriter::runInfo(const SkShaper::RunHandler::RunInfo& info) {}
 
-void SkShaperJSONWriter::commitRunInfo() {}
+void SkShaperJSONWriter::commitRunInfo() noexcept {}
 
 SkShaper::RunHandler::Buffer SkShaperJSONWriter::runBuffer(
     const SkShaper::RunHandler::RunInfo& info) {

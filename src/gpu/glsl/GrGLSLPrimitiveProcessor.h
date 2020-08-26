@@ -63,18 +63,19 @@ class GrGLSLPrimitiveProcessor {
         GrShaderVar transformVar, GrShaderVar varyingVar) noexcept {
       SkASSERT(!fAddedCoord);
       fTransformedCoordVars->push_back({transformVar, varyingVar});
-      SkDEBUGCODE(fAddedCoord = true;)
+      SkDEBUGCODE(fAddedCoord = true);
     }
 
     void omitCoordsForCurrCoordTransform() {
       SkASSERT(!fAddedCoord);
       fTransformedCoordVars->push_back();
-      SkDEBUGCODE(fAddedCoord = true;)
+      SkDEBUGCODE(fAddedCoord = true);
     }
 
    private:
     GrFragmentProcessor::CoordTransformIter fIter;
-    SkDEBUGCODE(bool fAddedCoord = false;) SkTArray<TransformVar>* fTransformedCoordVars;
+    SkDEBUGCODE(bool fAddedCoord = false);
+    SkTArray<TransformVar>* fTransformedCoordVars;
   };
 
   struct EmitArgs {

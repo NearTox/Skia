@@ -31,7 +31,7 @@ struct IntLiteral : public Expression {
 
   bool isConstant() const noexcept override { return true; }
 
-  bool compareConstant(const Context& context, const Expression& other) const override {
+  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
     IntLiteral& i = (IntLiteral&)other;
     return fValue == i.fValue;
   }
@@ -44,7 +44,9 @@ struct IntLiteral : public Expression {
     return INHERITED::coercionCost(target);
   }
 
-  int64_t getConstantInt() const override { return fValue; }
+  int64_t getConstantInt() const noexcept override { return fValue; }
+
+  int nodeCount() const noexcept override { return 1; }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new IntLiteral(fOffset, fValue, &fType));

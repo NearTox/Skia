@@ -31,16 +31,16 @@ class GrTextTarget {
 
   const GrColorInfo& colorInfo() const noexcept { return fColorInfo; }
 
-  virtual void addDrawOp(const GrClip&, std::unique_ptr<GrAtlasTextOp> op) = 0;
+  virtual void addDrawOp(const GrClip*, std::unique_ptr<GrAtlasTextOp> op) = 0;
 
   virtual void drawShape(
-      const GrClip&, const SkPaint&, const SkMatrixProvider&, const GrStyledShape&) = 0;
+      const GrClip*, const SkPaint&, const SkMatrixProvider&, const GrStyledShape&) = 0;
 
   virtual void makeGrPaint(GrMaskFormat, const SkPaint&, const SkMatrixProvider&, GrPaint*) = 0;
 
-  virtual GrRecordingContext* getContext() noexcept = 0;
+  virtual GrRecordingContext* getContext() = 0;
 
-  virtual SkGlyphRunListPainter* glyphPainter() noexcept = 0;
+  virtual SkGlyphRunListPainter* glyphPainter() = 0;
 
  protected:
   GrTextTarget(int width, int height, const GrColorInfo& colorInfo) noexcept

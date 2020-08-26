@@ -20,7 +20,7 @@ struct VarDeclarationsStatement : public Statement {
   VarDeclarationsStatement(std::unique_ptr<VarDeclarations> decl)
       : INHERITED(decl->fOffset, kVarDeclarations_Kind), fDeclaration(std::move(decl)) {}
 
-  bool isEmpty() const override {
+  bool isEmpty() const noexcept override {
     for (const auto& s : fDeclaration->fVars) {
       if (!s->isEmpty()) {
         return false;
@@ -28,6 +28,8 @@ struct VarDeclarationsStatement : public Statement {
     }
     return true;
   }
+
+  int nodeCount() const noexcept override { return 1 + fDeclaration->nodeCount(); }
 
   std::unique_ptr<Statement> clone() const override {
     std::unique_ptr<VarDeclarations> cloned((VarDeclarations*)fDeclaration->clone().release());

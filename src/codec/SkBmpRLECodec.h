@@ -36,11 +36,11 @@ class SkBmpRLECodec : public SkBmpCodec {
    */
   SkBmpRLECodec(
       SkEncodedInfo&& info, std::unique_ptr<SkStream>, uint16_t bitsPerPixel, uint32_t numColors,
-      uint32_t bytesPerColor, uint32_t offset, SkCodec::SkScanlineOrder rowOrder) noexcept;
+      uint32_t bytesPerColor, uint32_t offset, SkCodec::SkScanlineOrder rowOrder);
 
-  int setSampleX(int) noexcept;
+  int setSampleX(int);
 
-  int fillWidth() const noexcept;
+  int fillWidth() const;
 
  protected:
   Result onGetPixels(
@@ -56,7 +56,7 @@ class SkBmpRLECodec : public SkBmpCodec {
    */
   bool createColorTable(SkColorType dstColorType);
 
-  bool initializeStreamBuffer() noexcept;
+  bool initializeStreamBuffer();
 
   /*
    * Before signalling kIncompleteInput, we should attempt to load the

@@ -112,7 +112,7 @@ class SK_API SkPixmap {
       @param area    bounds to intersect with SkPixmap
       @return        true if intersection of SkPixmap and area is not empty
   */
-  bool SK_WARN_UNUSED_RESULT extractSubset(SkPixmap* subset, const SkIRect& area) const;
+  bool SK_WARN_UNUSED_RESULT extractSubset(SkPixmap* subset, const SkIRect& area) const noexcept;
 
   /** Returns width, height, SkAlphaType, SkColorType, and SkColorSpace.
 
@@ -366,7 +366,7 @@ class SK_API SkPixmap {
   const uint8_t* addr8(int x, int y) const noexcept {
     SkASSERT((unsigned)x < (unsigned)fInfo.width());
     SkASSERT((unsigned)y < (unsigned)fInfo.height());
-    return (const uint8_t*)((const char*)this->addr8() + y * fRowBytes + (x << 0));
+    return (const uint8_t*)((const char*)this->addr8() + (size_t)y * fRowBytes + (x << 0));
   }
 
   /** Returns readable pixel address at (x, y).
@@ -384,7 +384,7 @@ class SK_API SkPixmap {
   const uint16_t* addr16(int x, int y) const noexcept {
     SkASSERT((unsigned)x < (unsigned)fInfo.width());
     SkASSERT((unsigned)y < (unsigned)fInfo.height());
-    return (const uint16_t*)((const char*)this->addr16() + y * fRowBytes + (x << 1));
+    return (const uint16_t*)((const char*)this->addr16() + (size_t)y * fRowBytes + (x << 1));
   }
 
   /** Returns readable pixel address at (x, y).
@@ -402,7 +402,7 @@ class SK_API SkPixmap {
   const uint32_t* addr32(int x, int y) const noexcept {
     SkASSERT((unsigned)x < (unsigned)fInfo.width());
     SkASSERT((unsigned)y < (unsigned)fInfo.height());
-    return (const uint32_t*)((const char*)this->addr32() + y * fRowBytes + (x << 2));
+    return (const uint32_t*)((const char*)this->addr32() + (size_t)y * fRowBytes + (x << 2));
   }
 
   /** Returns readable pixel address at (x, y).
@@ -420,7 +420,7 @@ class SK_API SkPixmap {
   const uint64_t* addr64(int x, int y) const noexcept {
     SkASSERT((unsigned)x < (unsigned)fInfo.width());
     SkASSERT((unsigned)y < (unsigned)fInfo.height());
-    return (const uint64_t*)((const char*)this->addr64() + y * fRowBytes + (x << 3));
+    return (const uint64_t*)((const char*)this->addr64() + (size_t)y * fRowBytes + (x << 3));
   }
 
   /** Returns readable pixel address at (x, y).

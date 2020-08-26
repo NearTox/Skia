@@ -250,7 +250,7 @@ enum {
   kWaitingSharedMask = ((1 << kLogThreadCount) - 1) << kWaitingSharedOffset,
 };
 
-SkSharedMutex::SkSharedMutex() noexcept : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
+SkSharedMutex::SkSharedMutex() : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
 SkSharedMutex::~SkSharedMutex() { ANNOTATE_RWLOCK_DESTROY(this); }
 void SkSharedMutex::acquire() {
   // Increment the count of exclusive queue waiters.

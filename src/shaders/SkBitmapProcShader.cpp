@@ -11,7 +11,7 @@
 #include "src/core/SkBitmapProcState.h"
 #include "src/core/SkXfermodePriv.h"
 
-static bool only_scale_and_translate(const SkMatrix& matrix) noexcept {
+static bool only_scale_and_translate(const SkMatrix& matrix) {
   unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
   return (matrix.getType() & ~mask) == 0;
 }

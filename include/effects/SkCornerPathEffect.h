@@ -28,8 +28,8 @@ class SK_API SkCornerPathEffect : public SkPathEffect {
  protected:
   ~SkCornerPathEffect() override;
 
-  explicit SkCornerPathEffect(SkScalar radius) noexcept;
-  void flatten(SkWriteBuffer&) const noexcept override;
+  explicit SkCornerPathEffect(SkScalar radius);
+  void flatten(SkWriteBuffer&) const override;
   bool onFilterPath(SkPath* dst, const SkPath& src, SkStrokeRec*, const SkRect*) const override;
 
  private:

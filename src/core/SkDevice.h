@@ -125,7 +125,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
    */
   SkMatrix getRelativeTransform(const SkBaseDevice&) const noexcept;
 
-  virtual void* getRasterHandle() const noexcept { return nullptr; }
+  virtual void* getRasterHandle() const { return nullptr; }
 
   SkMarkerStack* markerStack() const noexcept { return fMarkerStack; }
   void setMarkerStack(SkMarkerStack* ms) noexcept { fMarkerStack = ms; }
@@ -271,9 +271,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
 
   virtual void drawDrawable(SkDrawable*, const SkMatrix*, SkCanvas*);
 
-  virtual void drawSpecial(
-      SkSpecialImage*, int x, int y, const SkPaint&, SkImage* clipImage,
-      const SkMatrix& clipMatrix);
+  virtual void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&);
   virtual sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&);
   virtual sk_sp<SkSpecialImage> makeSpecial(const SkImage*);
   // Get a view of the entire device's current contents as an image.
@@ -386,7 +384,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
       int bufferOriginY) noexcept;
   // Convenience to configure the device to be axis-aligned with the root canvas, but with a
   // unique origin.
-  void setOrigin(const SkM44& globalCTM, int x, int y) noexcept {
+  void setOrigin(const SkM44& globalCTM, int x, int y) {
     this->setDeviceCoordinateSystem(SkMatrix::I(), globalCTM, x, y);
   }
 
@@ -398,7 +396,9 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
 
   friend class SkNoPixelsDevice;
   friend class SkBitmapDevice;
-  void privateResize(int w, int h) { *const_cast<SkImageInfo*>(&fInfo) = fInfo.makeWH(w, h); }
+  void privateResize(int w, int h) noexcept {
+    *const_cast<SkImageInfo*>(&fInfo) = fInfo.makeWH(w, h);
+  }
 
   SkMarkerStack* fMarkerStack = nullptr;  // does not own this, set in setMarkerStack()
 
@@ -419,8 +419,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
 class SkNoPixelsDevice : public SkBaseDevice {
  public:
   SkNoPixelsDevice(
-      const SkIRect& bounds, const SkSurfaceProps& props,
-      sk_sp<SkColorSpace> colorSpace = nullptr) noexcept
+      const SkIRect& bounds, const SkSurfaceProps& props, sk_sp<SkColorSpace> colorSpace = nullptr)
       : SkBaseDevice(
             SkImageInfo::Make(
                 bounds.size(), kUnknown_SkColorType, kUnknown_SkAlphaType, std::move(colorSpace)),

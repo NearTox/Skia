@@ -51,7 +51,7 @@ class GrColorSpaceXform : public SkRefCnt {
 
   static bool Equals(const GrColorSpaceXform* a, const GrColorSpaceXform* b) noexcept;
 
-  SkColor4f apply(const SkColor4f& srcColor) noexcept;
+  SkColor4f apply(const SkColor4f& srcColor);
 
  private:
   friend class GrGLSLColorSpaceXformHelper;
@@ -89,13 +89,13 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
 
  private:
   GrColorSpaceXformEffect(
-      std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform);
+      std::unique_ptr<GrFragmentProcessor> child, sk_sp<GrColorSpaceXform> colorXform) noexcept;
 
-  static OptimizationFlags OptFlags(const GrFragmentProcessor* child);
+  static OptimizationFlags OptFlags(const GrFragmentProcessor* child) noexcept;
   SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override;
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
   sk_sp<GrColorSpaceXform> fColorXform;

@@ -18,21 +18,23 @@ class GrCCClipProcessor : public GrFragmentProcessor {
 
   enum class MustCheckBounds : bool { kNo = false, kYes = true };
 
-  GrCCClipProcessor(GrSurfaceProxyView, const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
-  GrCCClipProcessor(const GrCaps&, const GrCCClipPath*, IsCoverageCount, MustCheckBounds);
+  GrCCClipProcessor(
+      std::unique_ptr<GrFragmentProcessor>, const GrCaps&, const GrCCClipPath*, IsCoverageCount,
+      MustCheckBounds);
 
   const char* name() const noexcept override { return "GrCCClipProcessor"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fAtlasAccess; }
+  bool hasInputFP() const noexcept;
 
  private:
+  explicit GrCCClipProcessor(const GrCCClipProcessor&);
+
   const GrCCClipPath* const fClipPath;
   const bool fIsCoverageCount;
   const bool fMustCheckBounds;
-  const TextureSampler fAtlasAccess;
 
   class Impl;
 

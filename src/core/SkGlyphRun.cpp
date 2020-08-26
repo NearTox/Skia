@@ -29,23 +29,23 @@ SkGlyphRun::SkGlyphRun(const SkGlyphRun& that, const SkFont& font)
     : fSource{that.fSource}, fText{that.fText}, fClusters{that.fClusters}, fFont{font} {}
 
 // -- SkGlyphRunList -------------------------------------------------------------------------------
-SkGlyphRunList::SkGlyphRunList() noexcept = default;
+SkGlyphRunList::SkGlyphRunList() = default;
 SkGlyphRunList::SkGlyphRunList(
     const SkPaint& paint, const SkTextBlob* blob, SkPoint origin,
-    SkSpan<const SkGlyphRun> glyphRunList) noexcept
+    SkSpan<const SkGlyphRun> glyphRunList)
     : fGlyphRuns{glyphRunList}, fOriginalPaint{&paint}, fOriginalTextBlob{blob}, fOrigin{origin} {}
 
-SkGlyphRunList::SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint) noexcept
+SkGlyphRunList::SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint)
     : fGlyphRuns{SkSpan<const SkGlyphRun>{&glyphRun, 1}},
       fOriginalPaint{&paint},
       fOriginalTextBlob{nullptr},
       fOrigin{SkPoint::Make(0, 0)} {}
 
-uint64_t SkGlyphRunList::uniqueID() const noexcept {
+uint64_t SkGlyphRunList::uniqueID() const {
   return fOriginalTextBlob != nullptr ? fOriginalTextBlob->uniqueID() : SK_InvalidUniqueID;
 }
 
-bool SkGlyphRunList::anyRunsLCD() const noexcept {
+bool SkGlyphRunList::anyRunsLCD() const {
   for (const auto& r : fGlyphRuns) {
     if (r.font().getEdging() == SkFont::Edging::kSubpixelAntiAlias) {
       return true;
@@ -54,7 +54,7 @@ bool SkGlyphRunList::anyRunsLCD() const noexcept {
   return false;
 }
 
-bool SkGlyphRunList::anyRunsSubpixelPositioned() const noexcept {
+bool SkGlyphRunList::anyRunsSubpixelPositioned() const {
   for (const auto& r : fGlyphRuns) {
     if (r.font().isSubpixel()) {
       return true;
@@ -72,7 +72,7 @@ bool SkGlyphRunList::allFontsFinite() const {
   return true;
 }
 
-void SkGlyphRunList::temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const noexcept {
+void SkGlyphRunList::temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const {
   SkASSERT(fOriginalTextBlob != nullptr);
   fOriginalTextBlob->notifyAddedToCache(cacheID);
 }
@@ -247,9 +247,9 @@ void SkGlyphRunBuilder::drawGlyphsWithPositions(
   }
 }
 
-const SkGlyphRunList& SkGlyphRunBuilder::useGlyphRunList() noexcept { return fGlyphRunList; }
+const SkGlyphRunList& SkGlyphRunBuilder::useGlyphRunList() { return fGlyphRunList; }
 
-void SkGlyphRunBuilder::initialize(size_t totalRunSize) noexcept {
+void SkGlyphRunBuilder::initialize(size_t totalRunSize) {
   if (totalRunSize > fMaxTotalRunSize) {
     fMaxTotalRunSize = totalRunSize;
     fPositions.reset(fMaxTotalRunSize);

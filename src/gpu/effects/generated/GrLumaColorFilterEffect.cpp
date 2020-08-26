@@ -23,28 +23,42 @@ class GrGLSLLumaColorFilterEffect : public GrGLSLFragmentProcessor {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrLumaColorFilterEffect& _outer = args.fFp.cast<GrLumaColorFilterEffect>();
     (void)_outer;
+    SkString _input953(args.fInputColor);
+    SkString _sample953;
+    if (_outer.inputFP_index >= 0) {
+      _sample953 = this->invokeChild(_outer.inputFP_index, _input953.c_str(), args);
+    } else {
+      _sample953.swap(_input953);
+    }
     fragBuilder->codeAppendf(
-        "\nhalf luma = clamp(dot(half3(0.2125999927520752, 0.71520000696182251, "
-        "0.072200000286102295), %s.xyz), 0.0, 1.0);\n%s = half4(0.0, 0.0, 0.0, luma);\n",
-        args.fInputColor, args.fOutputColor);
+        R"SkSL(half4 inputColor = %s;
+
+half luma = clamp(dot(half3(0.2125999927520752, 0.71520000696182251, 0.072200000286102295), inputColor.xyz), 0.0, 1.0);
+%s = half4(0.0, 0.0, 0.0, luma);
+)SkSL",
+        _sample953.c_str(), args.fOutputColor);
   }
 
  private:
-  void onSetData(
-      const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& _proc) override {
+  }
 };
 GrGLSLFragmentProcessor* GrLumaColorFilterEffect::onCreateGLSLInstance() const {
   return new GrGLSLLumaColorFilterEffect();
 }
 void GrLumaColorFilterEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrLumaColorFilterEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrLumaColorFilterEffect& that = other.cast<GrLumaColorFilterEffect>();
   (void)that;
   return true;
 }
-GrLumaColorFilterEffect::GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src) noexcept
-    : INHERITED(kGrLumaColorFilterEffect_ClassID, src.optimizationFlags()) {}
+GrLumaColorFilterEffect::GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src)
+    : INHERITED(kGrLumaColorFilterEffect_ClassID, src.optimizationFlags()) {
+  if (src.inputFP_index >= 0) {
+    inputFP_index = this->cloneAndRegisterChildProcessor(src.childProcessor(src.inputFP_index));
+  }
+}
 std::unique_ptr<GrFragmentProcessor> GrLumaColorFilterEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrLumaColorFilterEffect(*this));
 }

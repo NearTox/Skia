@@ -54,7 +54,9 @@ class D3DTestContextImpl : public sk_gpu_test::D3DTestContext {
 
  private:
   D3DTestContextImpl(const GrD3DBackendContext& backendContext, bool ownsContext)
-      : D3DTestContext(backendContext, ownsContext) {}
+      : D3DTestContext(backendContext, ownsContext) {
+    fFenceSupport = true;
+  }
 
   void onPlatformMakeNotCurrent() const override {}
   void onPlatformMakeCurrent() const override {}

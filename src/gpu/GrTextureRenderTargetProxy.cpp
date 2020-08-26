@@ -23,7 +23,8 @@
 GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
     const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, int sampleCnt,
     GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus, SkBackingFit fit, SkBudgeted budgeted,
-    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
+    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator,
+    GrDDLProvider creatingProvider)
     : GrSurfaceProxy(format, dimensions, fit, budgeted, isProtected, surfaceFlags, useAllocator)
       // for now textures w/ data are always wrapped
       ,
@@ -32,7 +33,7 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
           useAllocator),
       GrTextureProxy(
           format, dimensions, mipMapped, mipMapsStatus, fit, budgeted, isProtected, surfaceFlags,
-          useAllocator) {
+          useAllocator, creatingProvider) {
   this->initSurfaceFlags(caps);
 }
 
@@ -41,7 +42,7 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
     const GrCaps& caps, LazyInstantiateCallback&& callback, const GrBackendFormat& format,
     SkISize dimensions, int sampleCnt, GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus,
     SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator, GrDDLProvider creatingProvider)
     : GrSurfaceProxy(
           std::move(callback), format, dimensions, fit, budgeted, isProtected, surfaceFlags,
           useAllocator)
@@ -53,7 +54,7 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
           surfaceFlags, useAllocator, WrapsVkSecondaryCB::kNo),
       GrTextureProxy(
           LazyInstantiateCallback(), format, dimensions, mipMapped, mipMapsStatus, fit, budgeted,
-          isProtected, surfaceFlags, useAllocator) {
+          isProtected, surfaceFlags, useAllocator, creatingProvider) {
   this->initSurfaceFlags(caps);
 }
 
@@ -61,10 +62,10 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
 // This class is virtually derived from GrSurfaceProxy (via both GrTextureProxy and
 // GrRenderTargetProxy) so its constructor must be explicitly called.
 GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
-    sk_sp<GrSurface> surf, UseAllocator useAllocator)
+    sk_sp<GrSurface> surf, UseAllocator useAllocator, GrDDLProvider creatingProvider)
     : GrSurfaceProxy(surf, SkBackingFit::kExact, useAllocator),
       GrRenderTargetProxy(surf, useAllocator),
-      GrTextureProxy(surf, useAllocator) {
+      GrTextureProxy(surf, useAllocator, creatingProvider) {
   SkASSERT(surf->asTexture());
   SkASSERT(surf->asRenderTarget());
   SkASSERT(fSurfaceFlags == fTarget->surfacePriv().flags());
@@ -74,7 +75,7 @@ GrTextureRenderTargetProxy::GrTextureRenderTargetProxy(
       this->requiresManualMSAAResolve());
 }
 
-void GrTextureRenderTargetProxy::initSurfaceFlags(const GrCaps& caps) {
+void GrTextureRenderTargetProxy::initSurfaceFlags(const GrCaps& caps) noexcept {
   // FBO 0 should never be wrapped as a texture render target.
   SkASSERT(!this->rtPriv().glRTFBOIDIs0());
   if (this->numSamples() > 1 && !caps.msaaResolvesAutomatically()) {
@@ -89,7 +90,8 @@ void GrTextureRenderTargetProxy::initSurfaceFlags(const GrCaps& caps) {
   }
 }
 
-size_t GrTextureRenderTargetProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) const {
+size_t GrTextureRenderTargetProxy::onUninstantiatedGpuMemorySize(
+    const GrCaps& caps) const noexcept {
   int colorSamplesPerPixel = this->numSamples();
   if (colorSamplesPerPixel > 1) {
     // Add one to account for the resolve buffer.
@@ -137,7 +139,7 @@ sk_sp<GrSurface> GrTextureRenderTargetProxy::createSurface(
   return surface;
 }
 
-GrSurfaceProxy::LazySurfaceDesc GrTextureRenderTargetProxy::callbackDesc() const {
+GrSurfaceProxy::LazySurfaceDesc GrTextureRenderTargetProxy::callbackDesc() const noexcept {
   SkISize dims;
   SkBackingFit fit;
   if (this->isFullyLazy()) {

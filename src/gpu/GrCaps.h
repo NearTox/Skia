@@ -13,6 +13,7 @@
 #include "include/core/SkString.h"
 #include "include/gpu/GrDriverBugWorkarounds.h"
 #include "include/private/GrTypesPriv.h"
+#include "src/core/SkCompressedDataUtils.h"
 #include "src/gpu/GrBlend.h"
 #include "src/gpu/GrSamplerState.h"
 #include "src/gpu/GrShaderCaps.h"
@@ -34,7 +35,7 @@ class SkJSONWriter;
  */
 class GrCaps : public SkRefCnt {
  public:
-  GrCaps(const GrContextOptions&);
+  GrCaps(const GrContextOptions&) noexcept;
 
   void dumpJSON(SkJSONWriter*) const;
 
@@ -193,12 +194,7 @@ class GrCaps : public SkRefCnt {
 
   virtual bool isFormatSRGB(const GrBackendFormat&) const = 0;
 
-  // This will return SkImage::CompressionType::kNone if the backend format is not compressed.
-  virtual SkImage::CompressionType compressionType(const GrBackendFormat&) const = 0;
-
-  bool isFormatCompressed(const GrBackendFormat& format) const {
-    return this->compressionType(format) != SkImage::CompressionType::kNone;
-  }
+  bool isFormatCompressed(const GrBackendFormat& format) const noexcept;
 
   // Can a texture be made with the GrBackendFormat, and then be bound and sampled in a shader.
   virtual bool isFormatTexturable(const GrBackendFormat&) const = 0;
@@ -208,11 +204,11 @@ class GrCaps : public SkRefCnt {
 
   // Returns the maximum supported sample count for a format. 0 means the format is not renderable
   // 1 means the format is renderable but doesn't support MSAA.
-  virtual int maxRenderTargetSampleCount(const GrBackendFormat&) const = 0;
+  virtual int maxRenderTargetSampleCount(const GrBackendFormat&) const noexcept = 0;
 
   // Returns the number of samples to use when performing internal draws to the given config with
   // MSAA or mixed samples. If 0, Ganesh should not attempt to use internal multisampling.
-  int internalMultisampleCount(const GrBackendFormat& format) const {
+  int internalMultisampleCount(const GrBackendFormat& format) const noexcept {
     return std::min(fInternalMultisampleCount, this->maxRenderTargetSampleCount(format));
   }
 
@@ -229,7 +225,7 @@ class GrCaps : public SkRefCnt {
 
   // Returns the number of bytes per pixel for the given GrBackendFormat. This is only supported
   // for "normal" formats. For compressed formats this will return 0.
-  virtual size_t bytesPerPixel(const GrBackendFormat&) const = 0;
+  virtual size_t bytesPerPixel(const GrBackendFormat&) const noexcept = 0;
 
   /**
    * Backends may have restrictions on what types of surfaces support GrGpu::writePixels().
@@ -403,13 +399,7 @@ class GrCaps : public SkRefCnt {
       const SkISize&, const GrBackendFormat&, GrRenderable renderable, int renderTargetSampleCnt,
       GrMipMapped) const;
 
-  bool areColorTypeAndFormatCompatible(GrColorType grCT, const GrBackendFormat& format) const {
-    if (GrColorType::kUnknown == grCT) {
-      return false;
-    }
-
-    return this->onAreColorTypeAndFormatCompatible(grCT, format);
-  }
+  bool areColorTypeAndFormatCompatible(GrColorType grCT, const GrBackendFormat& format) const;
 
   /** These are used when creating a new texture internally. */
   GrBackendFormat getDefaultBackendFormat(GrColorType, GrRenderable) const;
@@ -426,7 +416,7 @@ class GrCaps : public SkRefCnt {
    * Returns the GrSwizzle to use when sampling or reading back from a texture with the passed in
    * GrBackendFormat and GrColorType.
    */
-  virtual GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const = 0;
+  GrSwizzle getReadSwizzle(const GrBackendFormat& format, GrColorType colorType) const;
 
   /**
    * Returns the GrSwizzle to use when writing colors to a surface with the passed in
@@ -562,6 +552,8 @@ class GrCaps : public SkRefCnt {
   virtual SupportedRead onSupportedReadPixelsColorType(
       GrColorType srcColorType, const GrBackendFormat& srcFormat,
       GrColorType dstColorType) const = 0;
+
+  virtual GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const = 0;
 
   bool fSuppressPrints : 1;
   bool fWireframeMode : 1;

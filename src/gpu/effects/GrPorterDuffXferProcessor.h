@@ -54,8 +54,7 @@ class GrPorterDuffXPFactory : public GrXPFactory {
       GrClampType) const override;
 
   GR_DECLARE_XP_FACTORY_TEST
-  static void TestGetXPOutputTypes(
-      const GrXferProcessor*, int* outPrimary, int* outSecondary) noexcept;
+  static void TestGetXPOutputTypes(const GrXferProcessor*, int* outPrimary, int* outSecondary);
 
   SkBlendMode fBlendMode;
 

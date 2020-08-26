@@ -517,7 +517,7 @@ enum class Usage {
 template <Usage kU>
 class FilterResult {
  public:
-  FilterResult() : fImage(nullptr), fOrigin(SkIPoint::Make(0, 0)) {}
+  FilterResult() noexcept : fImage(nullptr), fOrigin(SkIPoint::Make(0, 0)) {}
 
   FilterResult(sk_sp<SkSpecialImage> image, const LayerSpace<SkIPoint>& origin) noexcept
       : fImage(std::move(image)), fOrigin(origin) {}
@@ -566,7 +566,7 @@ class FilterResult {
   // SkImageFilter_Base::filterImage() have been updated to work in the new type system
   // (which comes later as SkDevice, SkCanvas, etc. need to be modified, and coordinate space
   // tagging needs to be added).
-  sk_sp<SkSpecialImage> imageAndOffset(SkIPoint* offset) const {
+  sk_sp<SkSpecialImage> imageAndOffset(SkIPoint* offset) const noexcept {
     if (fImage) {
       *offset = SkIPoint(fOrigin);
       return fImage;
@@ -608,7 +608,8 @@ class Context {
 
   Context(
       const Mapping& mapping, const LayerSpace<SkIRect>& desiredOutput, SkImageFilterCache* cache,
-      SkColorType colorType, SkColorSpace* colorSpace, const FilterResult<For::kInput>& source)
+      SkColorType colorType, SkColorSpace* colorSpace,
+      const FilterResult<For::kInput>& source) noexcept
       : fMapping(mapping),
         fDesiredOutput(desiredOutput),
         fCache(cache),
@@ -685,11 +686,11 @@ class Context {
   }
 
   // Create a new context that matches this context, but with an overridden layer space.
-  Context withNewMapping(const Mapping& mapping) const {
+  Context withNewMapping(const Mapping& mapping) const noexcept {
     return Context(mapping, fDesiredOutput, fCache, fColorType, fColorSpace, fSource);
   }
   // Create a new context that matches this context, but with an overridden desired output rect.
-  Context withNewDesiredOutput(const LayerSpace<SkIRect>& desiredOutput) const {
+  Context withNewDesiredOutput(const LayerSpace<SkIRect>& desiredOutput) const noexcept {
     return Context(fMapping, desiredOutput, fCache, fColorType, fColorSpace, fSource);
   }
 

@@ -8,33 +8,22 @@
 #include "include/private/GrImageContext.h"
 
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextThreadSafeProxyPriv.h"
 #include "src/gpu/GrImageContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/effects/GrSkSLFP.h"
 
-#define ASSERT_SINGLE_OWNER \
-  SkDEBUGCODE(GrSingleOwner::AutoEnforce debug_SingleOwner(this->singleOwner());)
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-GrImageContext::GrImageContext(
-    GrBackendApi backend, const GrContextOptions& options, uint32_t contextID)
-    : INHERITED(backend, options, contextID) {
+GrImageContext::GrImageContext(sk_sp<GrContextThreadSafeProxy> proxy)
+    : INHERITED(std::move(proxy)) {
   fProxyProvider.reset(new GrProxyProvider(this));
 }
 
-GrImageContext::~GrImageContext() {}
+GrImageContext::~GrImageContext() = default;
 
-void GrImageContext::abandonContext() {
-  ASSERT_SINGLE_OWNER
+void GrImageContext::abandonContext() { fThreadSafeProxy->priv().abandonContext(); }
 
-  fAbandoned = true;
-}
-
-bool GrImageContext::abandoned() {
-  ASSERT_SINGLE_OWNER
-
-  return fAbandoned;
-}
+bool GrImageContext::abandoned() { return fThreadSafeProxy->priv().abandoned(); }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 sk_sp<const GrCaps> GrImageContextPriv::refCaps() const { return fContext->refCaps(); }

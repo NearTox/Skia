@@ -30,7 +30,7 @@ namespace {
 class CacheImpl : public SkImageFilterCache {
  public:
   typedef SkImageFilterCacheKey Key;
-  CacheImpl(size_t maxBytes) : fMaxBytes(maxBytes), fCurrentBytes(0) {}
+  CacheImpl(size_t maxBytes) noexcept : fMaxBytes(maxBytes), fCurrentBytes(0) {}
   ~CacheImpl() override {
     fLookup.foreach ([&](Value* v) noexcept { delete v; });
   }

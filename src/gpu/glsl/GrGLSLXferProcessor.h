@@ -20,7 +20,7 @@ class GrTexture;
 
 class GrGLSLXferProcessor {
  public:
-  GrGLSLXferProcessor() {}
+  GrGLSLXferProcessor() noexcept = default;
   virtual ~GrGLSLXferProcessor() = default;
 
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;

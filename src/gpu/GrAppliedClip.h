@@ -21,13 +21,21 @@
 class GrAppliedHardClip {
  public:
   static const GrAppliedHardClip& Disabled() noexcept {
-    static GrAppliedHardClip kDisabled;
+    // The size doesn't really matter here since it's returned as const& so an actual scissor
+    // will never be set on it, and applied clips are not used to query or bounds test like
+    // the GrClip is.
+    static const GrAppliedHardClip kDisabled({1 << 29, 1 << 29});
     return kDisabled;
   }
 
-  GrAppliedHardClip() noexcept = default;
+  GrAppliedHardClip(const SkISize& rtDims) noexcept : fScissorState(rtDims) {}
+  GrAppliedHardClip(const SkISize& logicalRTDims, const SkISize& backingStoreDims) noexcept
+      : fScissorState(backingStoreDims) {
+    fScissorState.set(SkIRect::MakeSize(logicalRTDims));
+  }
+
   GrAppliedHardClip(GrAppliedHardClip&& that) noexcept = default;
-  GrAppliedHardClip(const GrAppliedHardClip&) = delete;
+  GrAppliedHardClip(const GrAppliedHardClip&) noexcept = delete;
 
   const GrScissorState& scissorState() const noexcept { return fScissorState; }
   const GrWindowRectsState& windowRectsState() const noexcept { return fWindowRectsState; }
@@ -80,9 +88,14 @@ class GrAppliedHardClip {
  */
 class GrAppliedClip {
  public:
-  GrAppliedClip() noexcept = default;
+  static GrAppliedClip Disabled() noexcept { return GrAppliedClip({1 << 29, 1 << 29}); }
+
+  GrAppliedClip(const SkISize& rtDims) noexcept : fHardClip(rtDims) {}
+  GrAppliedClip(const SkISize& logicalRTDims, const SkISize& backingStoreDims) noexcept
+      : fHardClip(logicalRTDims, backingStoreDims) {}
+
   GrAppliedClip(GrAppliedClip&& that) noexcept = default;
-  GrAppliedClip(const GrAppliedClip&) = delete;
+  GrAppliedClip(const GrAppliedClip&) noexcept = delete;
 
   const GrScissorState& scissorState() const noexcept { return fHardClip.scissorState(); }
   const GrWindowRectsState& windowRectsState() const noexcept {

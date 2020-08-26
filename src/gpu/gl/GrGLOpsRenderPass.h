@@ -34,10 +34,10 @@ class GrGLOpsRenderPass : public GrOpsRenderPass {
       GrRenderTarget*, const SkIRect& contentBounds, GrSurfaceOrigin, const LoadAndStoreInfo&,
       const StencilLoadAndStoreInfo&);
 
-  void reset() { fRenderTarget = nullptr; }
+  void reset() noexcept { fRenderTarget = nullptr; }
 
  private:
-  GrGpu* gpu() override { return fGpu; }
+  GrGpu* gpu() noexcept override { return fGpu; }
 
   void bindInstanceBuffer(const GrBuffer*, int baseInstance);
   void bindVertexBuffer(const GrBuffer*, int baseVertex);
@@ -71,8 +71,8 @@ class GrGLOpsRenderPass : public GrOpsRenderPass {
   void onDrawIndirect(const GrBuffer* drawIndirectBuffer, size_t offset, int drawCount) override;
   void onDrawIndexedIndirect(
       const GrBuffer* drawIndirectBuffer, size_t offset, int drawCount) override;
-  void onClear(const GrFixedClip& clip, const SkPMColor4f& color) override;
-  void onClearStencilClip(const GrFixedClip& clip, bool insideStencilMask) override;
+  void onClear(const GrScissorState& scissor, const SkPMColor4f& color) override;
+  void onClearStencilClip(const GrScissorState& scissor, bool insideStencilMask) override;
 
   GrGLGpu* fGpu;
   SkIRect fContentBounds;

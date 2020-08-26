@@ -667,7 +667,7 @@ struct SK_API SkRect {
 
       @return  true if width() or height() are zero or negative
   */
-  bool isEmpty() const noexcept {
+  constexpr bool isEmpty() const noexcept {
     // We write it as the NOT of a non-empty rect, so we will return true if any values
     // are NaN.
     return !(fLeft < fRight && fTop < fBottom);
@@ -679,7 +679,7 @@ struct SK_API SkRect {
 
       @return  true if width() or height() are zero or positive
   */
-  bool isSorted() const noexcept { return fLeft <= fRight && fTop <= fBottom; }
+  constexpr bool isSorted() const noexcept { return fLeft <= fRight && fTop <= fBottom; }
 
   /** Returns true if all values in the rectangle are finite: SK_ScalarMin or larger,
       and SK_ScalarMax or smaller.
@@ -706,56 +706,56 @@ struct SK_API SkRect {
 
       @return  fLeft
   */
-  SkScalar x() const noexcept { return fLeft; }
+  constexpr SkScalar x() const noexcept { return fLeft; }
 
   /** Returns top edge of SkRect, if sorted. Call isEmpty() to see if SkRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fTop
   */
-  SkScalar y() const noexcept { return fTop; }
+  constexpr SkScalar y() const noexcept { return fTop; }
 
   /** Returns left edge of SkRect, if sorted. Call isSorted() to see if SkRect is valid.
       Call sort() to reverse fLeft and fRight if needed.
 
       @return  fLeft
   */
-  SkScalar left() const noexcept { return fLeft; }
+  constexpr SkScalar left() const noexcept { return fLeft; }
 
   /** Returns top edge of SkRect, if sorted. Call isEmpty() to see if SkRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fTop
   */
-  SkScalar top() const noexcept { return fTop; }
+  constexpr SkScalar top() const noexcept { return fTop; }
 
   /** Returns right edge of SkRect, if sorted. Call isSorted() to see if SkRect is valid.
       Call sort() to reverse fLeft and fRight if needed.
 
       @return  fRight
   */
-  SkScalar right() const noexcept { return fRight; }
+  constexpr SkScalar right() const noexcept { return fRight; }
 
   /** Returns bottom edge of SkRect, if sorted. Call isEmpty() to see if SkRect may be invalid,
       and sort() to reverse fTop and fBottom if needed.
 
       @return  fBottom
   */
-  SkScalar bottom() const noexcept { return fBottom; }
+  constexpr SkScalar bottom() const noexcept { return fBottom; }
 
   /** Returns span on the x-axis. This does not check if SkRect is sorted, or if
       result fits in 32-bit float; result may be negative or infinity.
 
       @return  fRight minus fLeft
   */
-  SkScalar width() const noexcept { return fRight - fLeft; }
+  constexpr SkScalar width() const noexcept { return fRight - fLeft; }
 
   /** Returns span on the y-axis. This does not check if SkRect is sorted, or if
       result fits in 32-bit float; result may be negative or infinity.
 
       @return  fBottom minus fTop
   */
-  SkScalar height() const noexcept { return fBottom - fTop; }
+  constexpr SkScalar height() const noexcept { return fBottom - fTop; }
 
   /** Returns average of left edge and right edge. Result does not change if SkRect
       is sorted. Result may overflow to infinity if SkRect is far from the origin.
@@ -845,7 +845,7 @@ struct SK_API SkRect {
       @param right   stored in fRight
       @param bottom  stored in fBottom
   */
-  void setLTRB(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
+  constexpr void setLTRB(SkScalar left, SkScalar top, SkScalar right, SkScalar bottom) noexcept {
     fLeft = left;
     fTop = top;
     fRight = right;
@@ -911,7 +911,7 @@ struct SK_API SkRect {
       @param width   added to x and stored in fRight
       @param height  added to y and stored in fBottom
   */
-  void setXYWH(SkScalar x, SkScalar y, SkScalar width, SkScalar height) noexcept {
+  constexpr void setXYWH(SkScalar x, SkScalar y, SkScalar width, SkScalar height) noexcept {
     fLeft = x;
     fTop = y;
     fRight = x + width;
@@ -924,7 +924,7 @@ struct SK_API SkRect {
       @param width   stored in fRight
       @param height  stored in fBottom
   */
-  void setWH(SkScalar width, SkScalar height) noexcept {
+  constexpr void setWH(SkScalar width, SkScalar height) noexcept {
     fLeft = 0;
     fTop = 0;
     fRight = width;
@@ -967,7 +967,7 @@ struct SK_API SkRect {
       @param dy  added to fTop and subtracted from fBottom
       @return    SkRect inset symmetrically left and right, top and bottom
   */
-  SkRect makeInset(SkScalar dx, SkScalar dy) const noexcept {
+  constexpr SkRect makeInset(SkScalar dx, SkScalar dy) const noexcept {
     return MakeLTRB(fLeft + dx, fTop + dy, fRight - dx, fBottom - dy);
   }
 
@@ -982,7 +982,7 @@ struct SK_API SkRect {
       @param dy  subtracted to fTop and added from fBottom
       @return    SkRect outset symmetrically left and right, top and bottom
   */
-  SkRect makeOutset(SkScalar dx, SkScalar dy) const noexcept {
+  constexpr SkRect makeOutset(SkScalar dx, SkScalar dy) const noexcept {
     return MakeLTRB(fLeft - dx, fTop - dy, fRight + dx, fBottom + dy);
   }
 
@@ -996,7 +996,7 @@ struct SK_API SkRect {
       @param dx  offset added to fLeft and fRight
       @param dy  offset added to fTop and fBottom
   */
-  void offset(SkScalar dx, SkScalar dy) noexcept {
+  constexpr void offset(SkScalar dx, SkScalar dy) noexcept {
     fLeft += dx;
     fTop += dy;
     fRight += dx;
@@ -1021,7 +1021,7 @@ struct SK_API SkRect {
       @param newX  stored in fLeft, preserving width()
       @param newY  stored in fTop, preserving height()
   */
-  void offsetTo(SkScalar newX, SkScalar newY) noexcept {
+  constexpr void offsetTo(SkScalar newX, SkScalar newY) noexcept {
     fRight += newX - fLeft;
     fBottom += newY - fTop;
     fLeft = newX;
@@ -1038,7 +1038,7 @@ struct SK_API SkRect {
       @param dx  added to fLeft and subtracted from fRight
       @param dy  added to fTop and subtracted from fBottom
   */
-  void inset(SkScalar dx, SkScalar dy) noexcept {
+  constexpr void inset(SkScalar dx, SkScalar dy) noexcept {
     fLeft += dx;
     fTop += dy;
     fRight -= dx;
@@ -1098,7 +1098,7 @@ struct SK_API SkRect {
    @param r  SkRect to intersect
    @return   true if r and SkRect have area in common
    */
-  bool intersects(const SkRect& r) const noexcept {
+  constexpr bool intersects(const SkRect& r) const noexcept {
     return Intersects(fLeft, fTop, fRight, fBottom, r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
 
@@ -1109,7 +1109,7 @@ struct SK_API SkRect {
       @param b  SkRect to intersect
       @return   true if a and b have area in common
   */
-  static bool Intersects(const SkRect& a, const SkRect& b) noexcept {
+  constexpr static bool Intersects(const SkRect& a, const SkRect& b) noexcept {
     return Intersects(a.fLeft, a.fTop, a.fRight, a.fBottom, b.fLeft, b.fTop, b.fRight, b.fBottom);
   }
 
@@ -1163,7 +1163,7 @@ struct SK_API SkRect {
       @param y  test SkPoint y-coordinate
       @return   true if (x, y) is inside SkRect
   */
-  bool contains(SkScalar x, SkScalar y) const noexcept {
+  constexpr bool contains(SkScalar x, SkScalar y) const noexcept {
     return x >= fLeft && x < fRight && y >= fTop && y < fBottom;
   }
 
@@ -1175,7 +1175,7 @@ struct SK_API SkRect {
       @param r  SkRect contained
       @return   true if all sides of SkRect are outside r
   */
-  bool contains(const SkRect& r) const noexcept {
+  constexpr bool contains(const SkRect& r) const noexcept {
     // todo: can we eliminate the this->isEmpty check?
     return !r.isEmpty() && !this->isEmpty() && fLeft <= r.fLeft && fTop <= r.fTop &&
            fRight >= r.fRight && fBottom >= r.fBottom;

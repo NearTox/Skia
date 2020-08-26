@@ -191,7 +191,7 @@ void TransformEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const
   this->INHERITED::onRender(canvas, ctx);
 }
 
-const RenderNode* TransformEffect::onNodeAt(const SkPoint& p) const {
+const RenderNode* TransformEffect::onNodeAt(const SkPoint& p) const noexcept {
   const auto p4 = TransformPriv::As<SkM44>(fTransform).map(p.fX, p.fY, 0, 0);
 
   return this->INHERITED::onNodeAt({p4.x, p4.y});

@@ -39,7 +39,8 @@ class SK_API SkPathMeasure {
       Returns false if there is no path, or a zero-length path was specified, in which case
       position and tangent are unchanged.
   */
-  bool SK_WARN_UNUSED_RESULT getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent);
+  bool SK_WARN_UNUSED_RESULT
+  getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) noexcept;
 
   enum MatrixFlags {
     kGetPosition_MatrixFlag = 0x01,
@@ -52,8 +53,8 @@ class SK_API SkPathMeasure {
       Returns false if there is no path, or a zero-length path was specified, in which case
       matrix is unchanged.
   */
-  bool SK_WARN_UNUSED_RESULT
-  getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag);
+  bool SK_WARN_UNUSED_RESULT getMatrix(
+      SkScalar distance, SkMatrix* matrix, MatrixFlags flags = kGetPosAndTan_MatrixFlag) noexcept;
 
   /** Given a start and stop distance, return in dst the intervening segment(s).
       If the segment is zero-length, return false, else return true.

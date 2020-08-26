@@ -86,7 +86,7 @@ class LineCubicIntersections {
 
   void allowNear(bool allow) noexcept { fAllowNear = allow; }
 
-  void checkCoincident() noexcept {
+  void checkCoincident() {
     int last = fIntersections->used() - 1;
     for (int index = 0; index < last;) {
       double cubicMidT = ((*fIntersections)[0][index] + (*fIntersections)[0][index + 1]) / 2;
@@ -110,7 +110,7 @@ class LineCubicIntersections {
   }
 
   // see parallel routine in line quadratic intersections
-  int intersectRay(double roots[3]) noexcept {
+  int intersectRay(double roots[3]) {
     double adj = fLine[1].fX - fLine[0].fX;
     double opp = fLine[1].fY - fLine[0].fY;
     SkDCubic c;
@@ -155,8 +155,7 @@ class LineCubicIntersections {
     return fIntersections->used();
   }
 
-  static int HorizontalIntersect(
-      const SkDCubic& c, double axisIntercept, double roots[3]) noexcept {
+  static int HorizontalIntersect(const SkDCubic& c, double axisIntercept, double roots[3]) {
     double A, B, C, D;
     SkDCubic::Coefficients(&c[0].fY, &A, &B, &C, &D);
     D -= axisIntercept;
@@ -218,7 +217,7 @@ class LineCubicIntersections {
     return true;
   }
 
-  static int VerticalIntersect(const SkDCubic& c, double axisIntercept, double roots[3]) noexcept {
+  static int VerticalIntersect(const SkDCubic& c, double axisIntercept, double roots[3]) {
     double A, B, C, D;
     SkDCubic::Coefficients(&c[0].fX, &A, &B, &C, &D);
     D -= axisIntercept;
@@ -258,7 +257,7 @@ class LineCubicIntersections {
   }
 
  protected:
-  void addExactEndPoints() noexcept {
+  void addExactEndPoints() {
     for (int cIndex = 0; cIndex < 4; cIndex += 3) {
       double lineT = fLine.exactPoint(fCubic[cIndex]);
       if (lineT < 0) {
@@ -301,7 +300,7 @@ class LineCubicIntersections {
     }
   }
 
-  void addExactHorizontalEndPoints(double left, double right, double y) noexcept {
+  void addExactHorizontalEndPoints(double left, double right, double y) {
     for (int cIndex = 0; cIndex < 4; cIndex += 3) {
       double lineT = SkDLine::ExactPointH(fCubic[cIndex], left, right, y);
       if (lineT < 0) {
@@ -327,7 +326,7 @@ class LineCubicIntersections {
     this->addLineNearEndPoints();
   }
 
-  void addExactVerticalEndPoints(double top, double bottom, double x) noexcept {
+  void addExactVerticalEndPoints(double top, double bottom, double x) {
     for (int cIndex = 0; cIndex < 4; cIndex += 3) {
       double lineT = SkDLine::ExactPointV(fCubic[cIndex], top, bottom, x);
       if (lineT < 0) {
@@ -363,7 +362,7 @@ class LineCubicIntersections {
     return (xy.fY - fLine[0].fY) / dy;
   }
 
-  bool pinTs(double* cubicT, double* lineT, SkDPoint* pt, PinTPoint ptSet) noexcept {
+  bool pinTs(double* cubicT, double* lineT, SkDPoint* pt, PinTPoint ptSet) {
     if (!approximately_one_or_less(*lineT)) {
       return false;
     }
@@ -425,7 +424,7 @@ int SkIntersections::intersect(const SkDCubic& cubic, const SkDLine& line) {
   return c.intersect();
 }
 
-int SkIntersections::intersectRay(const SkDCubic& cubic, const SkDLine& line) noexcept {
+int SkIntersections::intersectRay(const SkDCubic& cubic, const SkDLine& line) {
   LineCubicIntersections c(cubic, line, this);
   fUsed = c.intersectRay(fT[0]);
   for (int index = 0; index < fUsed; ++index) {
@@ -436,10 +435,10 @@ int SkIntersections::intersectRay(const SkDCubic& cubic, const SkDLine& line) no
 
 // SkDCubic accessors to Intersection utilities
 
-int SkDCubic::horizontalIntersect(double yIntercept, double roots[3]) const noexcept {
+int SkDCubic::horizontalIntersect(double yIntercept, double roots[3]) const {
   return LineCubicIntersections::HorizontalIntersect(*this, yIntercept, roots);
 }
 
-int SkDCubic::verticalIntersect(double xIntercept, double roots[3]) const noexcept {
+int SkDCubic::verticalIntersect(double xIntercept, double roots[3]) const {
   return LineCubicIntersections::VerticalIntersect(*this, xIntercept, roots);
 }

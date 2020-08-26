@@ -21,7 +21,7 @@
 
 enum { kSamplerOrImageTypeKeyBits = 4 };
 
-static inline uint16_t texture_type_key(GrTextureType type) {
+static inline uint16_t texture_type_key(GrTextureType type) noexcept {
   int value = UINT16_MAX;
   switch (type) {
     case GrTextureType::k2D: value = 0; break;
@@ -37,7 +37,7 @@ static inline uint16_t texture_type_key(GrTextureType type) {
 }
 
 static uint32_t sampler_key(
-    GrTextureType textureType, const GrSwizzle& swizzle, const GrCaps& caps) {
+    GrTextureType textureType, const GrSwizzle& swizzle, const GrCaps& caps) noexcept {
   int samplerTypeKey = texture_type_key(textureType);
 
   static_assert(2 == sizeof(swizzle.asKey()));
@@ -98,7 +98,7 @@ static bool gen_fp_meta_key(
   uint32_t classID = fp.classID();
 
   // Currently we allow 16 bits for the class id and the overall processor key size.
-  static const uint32_t kMetaKeyInvalidMask = ~((uint32_t)UINT16_MAX);
+  static constexpr uint32_t kMetaKeyInvalidMask = ~((uint32_t)UINT16_MAX);
   if ((processorKeySize | classID) & kMetaKeyInvalidMask) {
     return false;
   }
@@ -118,7 +118,7 @@ static bool gen_pp_meta_key(
   uint32_t classID = pp.classID();
 
   // Currently we allow 16 bits for the class id and the overall processor key size.
-  static const uint32_t kMetaKeyInvalidMask = ~((uint32_t)UINT16_MAX);
+  static constexpr uint32_t kMetaKeyInvalidMask = ~((uint32_t)UINT16_MAX);
   if ((processorKeySize | classID) & kMetaKeyInvalidMask) {
     return false;
   }
@@ -131,12 +131,12 @@ static bool gen_pp_meta_key(
   return true;
 }
 
-static bool gen_xp_meta_key(const GrXferProcessor& xp, GrProcessorKeyBuilder* b) {
+static bool gen_xp_meta_key(const GrXferProcessor& xp, GrProcessorKeyBuilder* b) noexcept {
   size_t processorKeySize = b->size();
   uint32_t classID = xp.classID();
 
   // Currently we allow 16 bits for the class id and the overall processor key size.
-  static const uint32_t kMetaKeyInvalidMask = ~((uint32_t)UINT16_MAX);
+  static constexpr uint32_t kMetaKeyInvalidMask = ~((uint32_t)UINT16_MAX);
   if ((processorKeySize | classID) & kMetaKeyInvalidMask) {
     return false;
   }

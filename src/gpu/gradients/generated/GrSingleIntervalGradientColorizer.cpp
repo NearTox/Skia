@@ -18,7 +18,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLSingleIntervalGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLSingleIntervalGradientColorizer() noexcept = default;
+  GrGLSLSingleIntervalGradientColorizer() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrSingleIntervalGradientColorizer& _outer =
@@ -33,8 +33,10 @@ class GrGLSLSingleIntervalGradientColorizer : public GrGLSLFragmentProcessor {
     endVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "end");
     fragBuilder->codeAppendf(
-        "half t = %s.x;\n%s = (1.0 - t) * %s + t * %s;\n", args.fInputColor, args.fOutputColor,
-        args.fUniformHandler->getUniformCStr(startVar),
+        R"SkSL(half t = %s.x;
+%s = (1.0 - t) * %s + t * %s;
+)SkSL",
+        args.fInputColor, args.fOutputColor, args.fUniformHandler->getUniformCStr(startVar),
         args.fUniformHandler->getUniformCStr(endVar));
   }
 
@@ -64,7 +66,7 @@ GrGLSLFragmentProcessor* GrSingleIntervalGradientColorizer::onCreateGLSLInstance
   return new GrGLSLSingleIntervalGradientColorizer();
 }
 void GrSingleIntervalGradientColorizer::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
 bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrSingleIntervalGradientColorizer& that = other.cast<GrSingleIntervalGradientColorizer>();
   (void)that;
@@ -73,7 +75,7 @@ bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& oth
   return true;
 }
 GrSingleIntervalGradientColorizer::GrSingleIntervalGradientColorizer(
-    const GrSingleIntervalGradientColorizer& src) noexcept
+    const GrSingleIntervalGradientColorizer& src)
     : INHERITED(kGrSingleIntervalGradientColorizer_ClassID, src.optimizationFlags()),
       start(src.start),
       end(src.end) {}

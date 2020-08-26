@@ -30,7 +30,7 @@ class GrSmallPathRenderer : public GrPathRenderer,
   GrSmallPathRenderer();
   ~GrSmallPathRenderer() override;
 
-  const char* name() const final { return "Small"; }
+  const char* name() const noexcept final { return "Small"; }
 
   // GrOnFlushCallbackObject overrides
   //

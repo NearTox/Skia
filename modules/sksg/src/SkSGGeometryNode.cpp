@@ -24,12 +24,12 @@ void GeometryNode::draw(SkCanvas* canvas, const SkPaint& paint) const {
   this->onDraw(canvas, paint);
 }
 
-bool GeometryNode::contains(const SkPoint& p) const {
+bool GeometryNode::contains(const SkPoint& p) const noexcept {
   SkASSERT(!this->hasInval());
   return this->bounds().contains(p.x(), p.y()) ? this->onContains(p) : false;
 }
 
-SkPath GeometryNode::asPath() const {
+SkPath GeometryNode::asPath() const noexcept {
   SkASSERT(!this->hasInval());
   return this->onAsPath();
 }

@@ -107,7 +107,7 @@ static void write_2d_color(
 static void write_2d_uv(
     GrVertexWriter* vb, const GrQuadPerEdgeAA::VertexSpec& spec, const GrQuad* deviceQuad,
     const GrQuad* localQuad, const float coverage[4], const SkPMColor4f& color,
-    const SkRect& geomSubset, const SkRect& texSubset) noexcept {
+    const SkRect& geomSubset, const SkRect& texSubset) {
   // Assert assumptions about VertexSpec
   SkASSERT(spec.deviceQuadType() != GrQuad::Type::kPerspective);
   SkASSERT(spec.hasLocalCoords() && spec.localQuadType() != GrQuad::Type::kPerspective);
@@ -250,7 +250,7 @@ static void write_2d_cov_uv_strict(
 
 namespace GrQuadPerEdgeAA {
 
-IndexBufferOption CalcIndexBufferOption(GrAAType aa, int numQuads) noexcept {
+IndexBufferOption CalcIndexBufferOption(GrAAType aa, int numQuads) {
   if (aa == GrAAType::kCoverage) {
     return IndexBufferOption::kPictureFramed;
   } else if (numQuads > 1) {
@@ -261,7 +261,7 @@ IndexBufferOption CalcIndexBufferOption(GrAAType aa, int numQuads) noexcept {
 }
 
 // This is a more elaborate version of fitsInBytes() that allows "no color" for white
-ColorType MinColorType(SkPMColor4f color) noexcept {
+ColorType MinColorType(SkPMColor4f color) {
   if (color == SK_PMColor4fWHITE) {
     return ColorType::kNone;
   } else {
@@ -461,15 +461,15 @@ void IssueDraw(
 
 ////////////////// VertexSpec Implementation
 
-int VertexSpec::deviceDimensionality() const noexcept {
+int VertexSpec::deviceDimensionality() const {
   return this->deviceQuadType() == GrQuad::Type::kPerspective ? 3 : 2;
 }
 
-int VertexSpec::localDimensionality() const noexcept {
+int VertexSpec::localDimensionality() const {
   return fHasLocalCoords ? (this->localQuadType() == GrQuad::Type::kPerspective ? 3 : 2) : 0;
 }
 
-CoverageMode VertexSpec::coverageMode() const noexcept {
+CoverageMode VertexSpec::coverageMode() const {
   if (this->usesCoverageAA()) {
     if (this->compatibleWithCoverageAsAlpha() && this->hasVertexColors() &&
         !this->requiresGeometrySubset()) {
@@ -579,7 +579,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
           const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
           const CoordTransformRange& transformRange) override {
         const auto& gp = proc.cast<QuadPerEdgeAAGeometryProcessor>();
-        this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
+        this->setTransformDataHelper(pdman, transformRange);
         fTextureColorSpaceXformHelper.setData(pdman, gp.fTextureColorSpaceXform.get());
       }
 
@@ -609,16 +609,10 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
           gpArgs->fPositionVar = gp.fPosition.asShaderVar();
         }
 
-        // Handle local coordinates if they exist. This is required even when the op
-        // isn't providing local coords but there are FPs called with explicit coords.
-        // It installs the uniforms that transform their coordinates in the fragment
-        // shader.
-        // NOTE: If the only usage of local coordinates is for the inline texture fetch
-        // before FPs, then there are no registered FPCoordTransforms and this ends up
-        // emitting nothing, so there isn't a duplication of local coordinates
-        this->emitTransforms(
-            args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler,
-            gp.fLocalCoord.asShaderVar(), args.fFPCoordTransformHandler);
+        // This attribute will be uninitialized if earlier FP analysis determined no
+        // local coordinates are needed (and this will not include the inline texture
+        // fetch this GP does before invoking FPs).
+        gpArgs->fLocalCoordVar = gp.fLocalCoord.asShaderVar();
 
         // Solid color before any texturing gets modulated in
         if (gp.fColor.isInitialized()) {

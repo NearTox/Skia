@@ -229,7 +229,7 @@ class SK_API SkStreamMemory : public SkStreamAsset {
 
 class SK_API SkWStream {
  public:
-  virtual ~SkWStream() = default;
+  virtual ~SkWStream();
   constexpr SkWStream() noexcept = default;
 
   /** Called to write bytes to a SkWStream. Returns true on success
@@ -237,40 +237,40 @@ class SK_API SkWStream {
       @param size The number of bytes in buffer to write to the stream
       @return true on success
   */
-  virtual bool write(const void* buffer, size_t size) = 0;
+  virtual bool write(const void* buffer, size_t size) noexcept = 0;
   virtual void flush();
 
   virtual size_t bytesWritten() const noexcept = 0;
 
   // helpers
 
-  bool write8(U8CPU value) {
+  bool write8(U8CPU value) noexcept {
     uint8_t v = SkToU8(value);
     return this->write(&v, 1);
   }
-  bool write16(U16CPU value) {
+  bool write16(U16CPU value) noexcept {
     uint16_t v = SkToU16(value);
     return this->write(&v, 2);
   }
-  bool write32(uint32_t v) { return this->write(&v, 4); }
+  bool write32(uint32_t v) noexcept { return this->write(&v, 4); }
 
-  bool writeText(const char text[]) {
+  bool writeText(const char text[]) noexcept {
     SkASSERT(text);
     return this->write(text, strlen(text));
   }
 
-  bool newline() { return this->write("\n", strlen("\n")); }
+  bool newline() noexcept { return this->write("\n", strlen("\n")); }
 
   bool writeDecAsText(int32_t);
   bool writeBigDecAsText(int64_t, int minDigits = 0);
   bool writeHexAsText(uint32_t, int minDigits = 0);
   bool writeScalarAsText(SkScalar);
 
-  bool writeBool(bool v) { return this->write8(v); }
-  bool writeScalar(SkScalar);
-  bool writePackedUInt(size_t);
+  bool writeBool(bool v) noexcept { return this->write8(v); }
+  bool writeScalar(SkScalar) noexcept;
+  bool writePackedUInt(size_t) noexcept;
 
-  bool writeStream(SkStream* input, size_t length);
+  bool writeStream(SkStream* input, size_t length) noexcept;
 
   /**
    * This returns the number of bytes in the stream required to store
@@ -398,11 +398,11 @@ class SK_API SkMemoryStream : public SkStreamMemory {
   */
   void setMemoryOwned(const void* data, size_t length);
 
-  sk_sp<SkData> asData() const { return fData; }
+  sk_sp<SkData> asData() const noexcept { return fData; }
   void setData(sk_sp<SkData> data);
 
   void skipToAlign4() noexcept;
-  const void* getAtPos();
+  const void* getAtPos() noexcept;
 
   size_t read(void* buffer, size_t size) noexcept override;
   bool isAtEnd() const noexcept override;
@@ -448,8 +448,8 @@ class SK_API SkFILEWStream : public SkWStream {
    */
   bool isValid() const noexcept { return fFILE != nullptr; }
 
-  bool write(const void* buffer, size_t size) override;
-  void flush() override;
+  bool write(const void* buffer, size_t size) noexcept override;
+  void flush() noexcept override;
   void fsync();
   size_t bytesWritten() const noexcept override;
 
@@ -461,25 +461,25 @@ class SK_API SkFILEWStream : public SkWStream {
 
 class SK_API SkDynamicMemoryWStream : public SkWStream {
  public:
-  constexpr SkDynamicMemoryWStream() noexcept = default;
+  SkDynamicMemoryWStream() noexcept = default;
   SkDynamicMemoryWStream(SkDynamicMemoryWStream&&) noexcept;
   SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&) noexcept;
   ~SkDynamicMemoryWStream() override;
 
-  bool write(const void* buffer, size_t size) override;
+  bool write(const void* buffer, size_t size) noexcept override;
   size_t bytesWritten() const noexcept override;
 
   bool read(void* buffer, size_t offset, size_t size) noexcept;
 
   /** More efficient version of read(dst, 0, bytesWritten()). */
   void copyTo(void* dst) const noexcept;
-  bool writeToStream(SkWStream* dst) const;
+  bool writeToStream(SkWStream* dst) const noexcept;
 
   /** Equivalent to copyTo() followed by reset(), but may save memory use. */
   void copyToAndReset(void* dst) noexcept;
 
   /** Equivalent to writeToStream() followed by reset(), but may save memory use. */
-  bool writeToAndReset(SkWStream* dst);
+  bool writeToAndReset(SkWStream* dst) noexcept;
 
   /** Equivalent to writeToStream() followed by reset(), but may save memory use.
       When the dst is also a SkDynamicMemoryWStream, the implementation is constant time. */

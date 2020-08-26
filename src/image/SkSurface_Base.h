@@ -19,7 +19,7 @@ class SkSurface_Base : public SkSurface {
   SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*) noexcept;
   virtual ~SkSurface_Base();
 
-  virtual GrContext* onGetContext();
+  virtual GrContext* onGetContext() noexcept;
 
   virtual GrBackendTexture onGetBackendTexture(BackendHandleAccess);
   virtual GrBackendRenderTarget onGetBackendRenderTarget(BackendHandleAccess);
@@ -97,7 +97,8 @@ class SkSurface_Base : public SkSurface {
    * Inserts the requested number of semaphores for the gpu to signal when work is complete on the
    * gpu and inits the array of GrBackendSemaphores with the signaled semaphores.
    */
-  virtual GrSemaphoresSubmitted onFlush(BackendSurfaceAccess access, const GrFlushInfo&) {
+  virtual GrSemaphoresSubmitted onFlush(
+      BackendSurfaceAccess access, const GrFlushInfo&, const GrBackendSurfaceMutableState*) {
     return GrSemaphoresSubmitted::kNo;
   }
 

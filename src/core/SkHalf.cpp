@@ -64,7 +64,7 @@ SkHalf SkFloatToHalf(float f) noexcept {
 // based on Fabien Giesen's half_to_float_fast2()
 // see https://fgiesen.wordpress.com/2012/03/28/half-to-float-done-quic/
 float SkHalfToFloat(SkHalf h) noexcept {
-  static constexpr FloatUIntUnion magic = {126 << 23};
+  static const FloatUIntUnion magic = {126 << 23};
   FloatUIntUnion o;
 
   if (halfExponent(h) == 0) {

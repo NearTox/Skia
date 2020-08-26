@@ -61,6 +61,9 @@ class Window {
 #ifdef SK_METAL
     kMetal_BackendType,
 #endif
+#ifdef SK_DIRECT3D
+    kDirect3D_BackendType,
+#endif
     kRaster_BackendType,
 
     kLast_BackendType = kRaster_BackendType

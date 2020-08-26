@@ -115,7 +115,8 @@ static constexpr inline SkPMColor SkPackARGB32NoCheck(U8CPU a, U8CPU r, U8CPU g,
   return (a << SK_A32_SHIFT) | (r << SK_R32_SHIFT) | (g << SK_G32_SHIFT) | (b << SK_B32_SHIFT);
 }
 
-static inline SkPMColor SkPremultiplyARGBInline(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
+static constexpr inline SkPMColor SkPremultiplyARGBInline(
+    U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   SkA32Assert(a);
   SkR32Assert(r);
   SkG32Assert(g);

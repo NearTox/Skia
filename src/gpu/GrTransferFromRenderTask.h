@@ -25,7 +25,7 @@ class GrTransferFromRenderTask final : public GrRenderTask {
 
  private:
   bool onIsUsed(GrSurfaceProxy* proxy) const override {
-    SkASSERT(!fTargetView.proxy());
+    SkASSERT(0 == this->numTargets());
     return proxy == fSrcProxy.get();
   }
   // If fSrcProxy is uninstantiated at flush time we simply will skip doing the transfer.
@@ -39,7 +39,7 @@ class GrTransferFromRenderTask final : public GrRenderTask {
   bool onExecute(GrOpFlushState*) override;
 
 #ifdef SK_DEBUG
-  const char* name() const final { return "TransferFrom"; }
+  const char* name() const noexcept final { return "TransferFrom"; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const override {
     fn(fSrcProxy.get(), GrMipMapped::kNo);
   }

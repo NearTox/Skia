@@ -47,18 +47,18 @@ static void testOpCubicsMain(PathOpsThreadState* data) {
                   pathStr.appendf("    SkPath path, pathB;\n");
                   pathStr.appendf(
                       "    path.setFillType(SkPathFillType::k%s);\n",
-                      e == SkPathFillType::kWinding
-                          ? "Winding"
-                          : e == SkPathFillType::kEvenOdd ? "EvenOdd" : "?UNDEFINED");
+                      e == SkPathFillType::kWinding   ? "Winding"
+                      : e == SkPathFillType::kEvenOdd ? "EvenOdd"
+                                                      : "?UNDEFINED");
                   pathStr.appendf("    path.moveTo(%d,%d);\n", state.fA, state.fB);
                   pathStr.appendf(
                       "    path.cubicTo(%d,%d, %d,%d, %d,%d);\n", state.fC, state.fD, b, a, d, c);
                   pathStr.appendf("    path.close();\n");
                   pathStr.appendf(
                       "    pathB.setFillType(SkPathFillType::k%s);\n",
-                      f == SkPathFillType::kWinding
-                          ? "Winding"
-                          : f == SkPathFillType::kEvenOdd ? "EvenOdd" : "?UNDEFINED");
+                      f == SkPathFillType::kWinding   ? "Winding"
+                      : f == SkPathFillType::kEvenOdd ? "EvenOdd"
+                                                      : "?UNDEFINED");
                   pathStr.appendf("    pathB.moveTo(%d,%d);\n", a, b);
                   pathStr.appendf(
                       "    pathB.cubicTo(%d,%d, %d,%d, %d,%d);\n", c, d, state.fB, state.fA,

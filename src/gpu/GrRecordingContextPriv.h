@@ -9,6 +9,7 @@
 #define GrRecordingContextPriv_DEFINED
 
 #include "include/private/GrRecordingContext.h"
+#include "src/gpu/text/GrSDFTOptions.h"
 
 /** Class that exposes methods to GrRecordingContext that are only intended for use internal to
     Skia. This class is purely a privileged window into GrRecordingContext. It should never have
@@ -23,7 +24,7 @@ class GrRecordingContextPriv {
   const GrContextOptions& options() const noexcept { return fContext->options(); }
 
   const GrCaps* caps() const noexcept { return fContext->caps(); }
-  sk_sp<const GrCaps> refCaps() const;
+  sk_sp<const GrCaps> refCaps() const noexcept;
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
@@ -88,7 +89,7 @@ class GrRecordingContextPriv {
   void decrSuppressWarningMessages() { --fContext->fSuppressWarningMessages; }
 #endif
 
-  void printWarningMessage(const char* msg) const {
+  void printWarningMessage(const char* msg) const noexcept {
 #if GR_TEST_UTILS
     if (fContext->fSuppressWarningMessages > 0) {
       return;
@@ -98,6 +99,10 @@ class GrRecordingContextPriv {
   }
 
   GrRecordingContext::Stats* stats() noexcept { return &fContext->fStats; }
+
+  GrSDFTOptions SDFTOptions() const {
+    return {this->options().fMinDistanceFieldFontSize, this->options().fGlyphsAsPathsFontSize};
+  }
 
  private:
   explicit GrRecordingContextPriv(GrRecordingContext* context) noexcept : fContext(context) {}

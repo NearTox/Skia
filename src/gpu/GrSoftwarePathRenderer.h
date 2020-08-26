@@ -19,24 +19,24 @@ class GrProxyProvider;
  */
 class GrSoftwarePathRenderer : public GrPathRenderer {
  public:
-  const char* name() const final { return "SW"; }
+  const char* name() const noexcept final { return "SW"; }
 
   GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
       : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
   static bool GetShapeAndClipBounds(
-      GrRenderTargetContext*, const GrClip& clip, const GrStyledShape& shape,
+      GrRenderTargetContext*, const GrClip* clip, const GrStyledShape& shape,
       const SkMatrix& matrix, SkIRect* unclippedDevShapeBounds, SkIRect* clippedDevShapeBounds,
       SkIRect* devClipBounds);
 
  private:
   static void DrawNonAARect(
       GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
-      const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
+      const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
       const SkMatrix& viewMatrix, const SkRect& rect, const SkMatrix& localMatrix);
   static void DrawAroundInvPath(
       GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
-      const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
+      const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
       const SkMatrix& viewMatrix, const SkIRect& devClipBounds, const SkIRect& devPathBounds);
 
   // This utility draws a path mask using a provided paint. The rectangle is drawn in device
@@ -44,11 +44,11 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
   // any fragment processors in the paint.
   static void DrawToTargetWithShapeMask(
       GrSurfaceProxyView, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
-      const GrUserStencilSettings& userStencilSettings, const GrClip& clip,
+      const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
       const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
       const SkIRect& deviceSpaceRectToDraw);
 
-  StencilSupport onGetStencilSupport(const GrStyledShape&) const override {
+  StencilSupport onGetStencilSupport(const GrStyledShape&) const noexcept override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
 

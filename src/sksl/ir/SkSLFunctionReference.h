@@ -23,7 +23,7 @@ struct FunctionReference : public Expression {
       const Context& context, int offset, std::vector<const FunctionDeclaration*> function)
       : INHERITED(offset, kFunctionReference_Kind, *context.fInvalid_Type), fFunctions(function) {}
 
-  bool hasProperty(Property property) const noexcept override { return false; }
+  bool hasProperty(Property property) const override { return false; }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new FunctionReference(fOffset, fFunctions, &fType));

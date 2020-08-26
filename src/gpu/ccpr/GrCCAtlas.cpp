@@ -7,10 +7,11 @@
 
 #include "src/gpu/ccpr/GrCCAtlas.h"
 
+#include "src/core/SkIPoint16.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/ccpr/GrCCPathCache.h"
 
-static SkISize choose_initial_atlas_size(const GrCCAtlas::Specs& specs) {
+static SkISize choose_initial_atlas_size(const GrCCAtlas::Specs& specs) noexcept {
   // Begin with the first pow2 dimensions whose area is theoretically large enough to contain the
   // pending paths, favoring height over width if necessary.
   int log2area = SkNextLog2(std::max(specs.fApproxNumPixels, 1));
@@ -23,7 +24,7 @@ static SkISize choose_initial_atlas_size(const GrCCAtlas::Specs& specs) {
   return SkISize::Make(width, height);
 }
 
-static int choose_max_atlas_size(const GrCCAtlas::Specs& specs, const GrCaps& caps) {
+static int choose_max_atlas_size(const GrCCAtlas::Specs& specs, const GrCaps& caps) noexcept {
   return (std::max(specs.fMinHeight, specs.fMinWidth) <= specs.fMaxPreferredTextureSize)
              ? specs.fMaxPreferredTextureSize
              : caps.maxRenderTargetSize();
@@ -37,27 +38,27 @@ GrCCAtlas::GrCCAtlas(CoverageType coverageType, const Specs& specs, const GrCaps
   SkASSERT(specs.fMaxPreferredTextureSize > 0);
 }
 
-GrCCAtlas::~GrCCAtlas() {}
+GrCCAtlas::~GrCCAtlas() = default;
 
-void GrCCAtlas::setFillBatchID(int id) {
+void GrCCAtlas::setFillBatchID(int id) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!this->isInstantiated());
   fFillBatchID = id;
 }
 
-void GrCCAtlas::setStrokeBatchID(int id) {
+void GrCCAtlas::setStrokeBatchID(int id) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!this->isInstantiated());
   fStrokeBatchID = id;
 }
 
-void GrCCAtlas::setEndStencilResolveInstance(int idx) {
+void GrCCAtlas::setEndStencilResolveInstance(int idx) noexcept {
   // This can't be called anymore once makeRenderTargetContext() has been called.
   SkASSERT(!this->isInstantiated());
   fEndStencilResolveInstance = idx;
 }
 
-static uint32_t next_atlas_unique_id() {
+static uint32_t next_atlas_unique_id() noexcept {
   static std::atomic<uint32_t> nextID;
   return nextID++;
 }
@@ -84,13 +85,16 @@ sk_sp<GrCCCachedAtlas> GrCCAtlas::refOrMakeCachedAtlas(GrOnFlushResourceProvider
 
 GrCCAtlas* GrCCAtlasStack::addRect(const SkIRect& devIBounds, SkIVector* devToAtlasOffset) {
   GrCCAtlas* retiredAtlas = nullptr;
-  if (fAtlases.empty() || !fAtlases.back().addRect(devIBounds, devToAtlasOffset)) {
+  SkIPoint16 location;
+  if (fAtlases.empty() ||
+      !fAtlases.back().addRect(devIBounds.width(), devIBounds.height(), &location)) {
     // The retired atlas is out of room and can't grow any bigger.
     retiredAtlas = !fAtlases.empty() ? &fAtlases.back() : nullptr;
     fAtlases.emplace_back(fCoverageType, fSpecs, *fCaps);
     SkASSERT(devIBounds.width() <= fSpecs.fMinWidth);
     SkASSERT(devIBounds.height() <= fSpecs.fMinHeight);
-    SkAssertResult(fAtlases.back().addRect(devIBounds, devToAtlasOffset));
+    SkAssertResult(fAtlases.back().addRect(devIBounds.width(), devIBounds.height(), &location));
   }
+  devToAtlasOffset->set(location.x() - devIBounds.left(), location.y() - devIBounds.top());
   return retiredAtlas;
 }

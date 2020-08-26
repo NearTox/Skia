@@ -48,7 +48,9 @@ class SkJpegCodec : public SkCodec {
   Result onGetYUV8Planes(
       const SkYUVASizeInfo& sizeInfo, void* planes[SkYUVASizeInfo::kMaxCount]) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kJPEG; }
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+    return SkEncodedImageFormat::kJPEG;
+  }
 
   bool onRewind() override;
 

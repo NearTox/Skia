@@ -46,8 +46,8 @@ struct GrVertexWriter {
   struct Skip {};
 
   template <typename T, typename... Args>
-  void write(const T& val, const Args&... remainder) noexcept {
-    static_assert(std::is_trivially_copyable<T>::value, "");
+  void write(const T& val, const Args&... remainder) {
+    static_assert(std::is_pod<T>::value, "");
     // This assert is barely related to what we're trying to check - that our vertex data
     // matches our attribute layouts, where each attribute is aligned to four bytes. If this
     // becomes a problem, just remove it.
@@ -58,8 +58,8 @@ struct GrVertexWriter {
   }
 
   template <typename T, size_t N, typename... Args>
-  void write(const T (&val)[N], const Args&... remainder) noexcept {
-    static_assert(std::is_trivially_copyable<T>::value, "");
+  void write(const T (&val)[N], const Args&... remainder) {
+    static_assert(std::is_pod<T>::value, "");
     static_assert(alignof(T) <= 4, "");
     memcpy(fPtr, val, N * sizeof(T));
     fPtr = SkTAddOffset<void>(fPtr, N * sizeof(T));

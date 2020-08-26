@@ -21,7 +21,7 @@ class GrProgramInfo;
 class GrMtlCaps;
 class GrMtlGpu;
 class GrMtlPipelineState;
-class SkReader32;
+class SkReadBuffer;
 
 class GrMtlPipelineStateBuilder : public GrGLSLProgramBuilder {
  public:
@@ -52,7 +52,7 @@ class GrMtlPipelineStateBuilder : public GrGLSLProgramBuilder {
   id<MTLLibrary> compileMtlShaderLibrary(const SkSL::String& shader, SkSL::Program::Inputs inputs);
   void storeShadersInCache(
       const SkSL::String shaders[], const SkSL::Program::Inputs inputs[], bool isSkSL);
-  void loadShadersFromCache(SkReader32* cached, __strong id<MTLLibrary> outLibraries[]);
+  bool loadShadersFromCache(SkReadBuffer* cached, __strong id<MTLLibrary> outLibraries[]);
 
   GrGLSLUniformHandler* uniformHandler() override { return &fUniformHandler; }
   const GrGLSLUniformHandler* uniformHandler() const override { return &fUniformHandler; }

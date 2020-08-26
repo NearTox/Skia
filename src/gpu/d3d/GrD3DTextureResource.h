@@ -49,6 +49,9 @@ class GrD3DTextureResource : SkNoncopyable {
 
   void setResourceState(const GrD3DGpu* gpu, D3D12_RESOURCE_STATES newResourceState);
 
+  // Changes the layout to present
+  void prepareForPresent(GrD3DGpu* gpu);
+
   unsigned int sampleQualityLevel() const { return fInfo.fSampleQualityLevel; }
 
   // This simply updates our tracking of the resourceState and does not actually do any gpu work.
@@ -99,7 +102,7 @@ class GrD3DTextureResource : SkNoncopyable {
 
     Resource(const gr_cp<ID3D12Resource>& textureResource) : fResource(textureResource) {}
 
-    ~Resource() override = default;
+    ~Resource() override {}
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
     void dumpInfo() const override {

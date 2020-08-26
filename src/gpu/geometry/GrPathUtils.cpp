@@ -173,6 +173,7 @@ int GrPathUtils::worstCasePointCount(const SkPath& path, int* subpaths, SkScalar
         for (int i = 0; i < converter.countQuads(); ++i) {
           pointCount += quadraticPointCount(quadPts + 2 * i, tol);
         }
+        [[fallthrough]];
       }
       case SkPath::kQuad_Verb: pointCount += quadraticPointCount(pts, tol); break;
       case SkPath::kCubic_Verb: pointCount += cubicPointCount(pts, tol); break;
@@ -773,7 +774,7 @@ SkCubicType GrPathUtils::getCubicKLM(
   switch (type) {
     case SkCubicType::kCuspAtInfinity:
       SkASSERT(1 == t1 && 0 == s1);  // Infinity.
-                                     // fallthru.
+      [[fallthrough]];
     case SkCubicType::kLocalCusp:
     case SkCubicType::kSerpentine:
       calc_serp_kcoeffs(t0, s0, t1, s1, skipTerm, &klmCoeffs[0]);

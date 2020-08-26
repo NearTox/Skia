@@ -18,9 +18,10 @@ class TextKeyframeAnimator final : public KeyframeAnimator {
  public:
   class Builder final : public KeyframeAnimatorBuilder {
    public:
+    explicit Builder(TextValue* target) : fTarget(target) {}
+
     sk_sp<KeyframeAnimator> make(
-        const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs,
-        void* target_value) override {
+        const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs) override {
       SkASSERT(jkfs.size() > 0);
 
       fValues.reserve(jkfs.size());
@@ -29,14 +30,12 @@ class TextKeyframeAnimator final : public KeyframeAnimator {
       }
       fValues.shrink_to_fit();
 
-      return sk_sp<TextKeyframeAnimator>(new TextKeyframeAnimator(
-          std::move(fKFs), std::move(fCMs), std::move(fValues),
-          static_cast<TextValue*>(target_value)));
+      return sk_sp<TextKeyframeAnimator>(
+          new TextKeyframeAnimator(std::move(fKFs), std::move(fCMs), std::move(fValues), fTarget));
     }
 
-    bool parseValue(
-        const AnimationBuilder& abuilder, const skjson::Value& jv, void* v) const override {
-      return Parse(jv, abuilder, static_cast<TextValue*>(v));
+    bool parseValue(const AnimationBuilder& abuilder, const skjson::Value& jv) const override {
+      return Parse(jv, abuilder, fTarget);
     }
 
    private:
@@ -50,7 +49,7 @@ class TextKeyframeAnimator final : public KeyframeAnimator {
 
       // TODO: full deduping?
       if (fValues.empty() || val != fValues.back()) {
-        fValues.emplace_back(std::move(val));
+        fValues.push_back(std::move(val));
       }
 
       v->idx = SkToU32(fValues.size() - 1);
@@ -59,6 +58,7 @@ class TextKeyframeAnimator final : public KeyframeAnimator {
     }
 
     std::vector<TextValue> fValues;
+    TextValue* fTarget;
   };
 
  private:
@@ -90,8 +90,8 @@ class TextKeyframeAnimator final : public KeyframeAnimator {
 template <>
 bool AnimatablePropertyContainer::bind<TextValue>(
     const AnimationBuilder& abuilder, const skjson::ObjectValue* jprop, TextValue* v) {
-  TextKeyframeAnimator::Builder builder;
-  return this->bindImpl(abuilder, jprop, builder, v);
+  TextKeyframeAnimator::Builder builder(v);
+  return this->bindImpl(abuilder, jprop, builder);
 }
 
 }  // namespace skottie::internal

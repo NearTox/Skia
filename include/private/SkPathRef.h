@@ -43,6 +43,22 @@ class SkWBuffer;
 
 class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
  public:
+  SkPathRef(
+      SkTDArray<SkPoint> points, SkTDArray<uint8_t> verbs, SkTDArray<SkScalar> weights,
+      unsigned segmentMask) noexcept
+      : fPoints(std::move(points)), fVerbs(std::move(verbs)), fConicWeights(std::move(weights)) {
+    fBoundsIsDirty = true;  // this also invalidates fIsFinite
+    fGenerationID = kEmptyGenID;
+    fSegmentMask = segmentMask;
+    fIsOval = false;
+    fIsRRect = false;
+    // The next two values don't matter unless fIsOval or fIsRRect are true.
+    fRRectOrOvalIsCCW = false;
+    fRRectOrOvalStartIdx = 0xAC;
+    SkDEBUGCODE(fEditorsAttached.store(0));
+    SkDEBUGCODE(this->validate());
+  }
+
   class Editor {
    public:
     Editor(sk_sp<SkPathRef>* pathRef, int incReserveVerbs = 0, int incReservePoints = 0);
@@ -153,7 +169,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   /**
    * Gets a path ref with no verbs or points.
    */
-  static SkPathRef* CreateEmpty();
+  static SkPathRef* CreateEmpty() noexcept;
 
   /**
    *  Returns true if all of the points in this path are finite, meaning there

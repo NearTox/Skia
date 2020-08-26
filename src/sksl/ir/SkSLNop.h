@@ -17,11 +17,13 @@ namespace SkSL {
  * A no-op statement that does nothing.
  */
 struct Nop : public Statement {
-  constexpr Nop() noexcept : INHERITED(-1, kNop_Kind) {}
+  Nop() noexcept : INHERITED(-1, kNop_Kind) {}
 
-  virtual bool isEmpty() const override { return true; }
+  virtual bool isEmpty() const noexcept override { return true; }
 
   String description() const override { return String(";"); }
+
+  int nodeCount() const noexcept override { return 0; }
 
   std::unique_ptr<Statement> clone() const override {
     return std::unique_ptr<Statement>(new Nop());

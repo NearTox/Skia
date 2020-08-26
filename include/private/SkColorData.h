@@ -185,7 +185,7 @@ static constexpr inline SkPMColor SkFourByteInterp(
 /**
  * 0xAARRGGBB -> 0x00AA00GG, 0x00RR00BB
  */
-static constexpr inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept {
+static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept {
   constexpr uint32_t mask = 0x00FF00FF;
   *ag = (color >> 8) & mask;
   *rb = color & mask;
@@ -237,7 +237,7 @@ static inline SkPMColor SkFastFourByteInterp256_32(
   return SkUnsplay(ret_ag, ret_rb);
 }
 
-static constexpr inline SkPMColor SkFastFourByteInterp256_64(
+static inline SkPMColor SkFastFourByteInterp256_64(
     SkPMColor src, SkPMColor dst, unsigned scale) noexcept {
   SkASSERT(scale <= 256);
   // Four 8-bit blends in one 64-bit register, with space to make sure the math doesn't collide.
@@ -303,15 +303,15 @@ static constexpr inline SkPMColor SkBlendARGB32(SkPMColor src, SkPMColor dst, U8
 #define SkB32ToB16_MACRO(b) ((unsigned)(b) >> (SK_B32_BITS - SK_B16_BITS))
 
 #ifdef SK_DEBUG
-static inline unsigned SkR32ToR16(unsigned r) {
+static inline unsigned SkR32ToR16(unsigned r) noexcept {
   SkR32Assert(r);
   return SkR32ToR16_MACRO(r);
 }
-static inline unsigned SkG32ToG16(unsigned g) {
+static inline unsigned SkG32ToG16(unsigned g) noexcept {
   SkG32Assert(g);
   return SkG32ToG16_MACRO(g);
 }
-static inline unsigned SkB32ToB16(unsigned b) {
+static inline unsigned SkB32ToB16(unsigned b) noexcept {
   SkB32Assert(b);
   return SkB32ToB16_MACRO(b);
 }
@@ -432,6 +432,7 @@ static inline uint32_t Sk4f_toL32(const Sk4f& px) noexcept {
 using SkPMColor4f = SkRGBA4f<kPremul_SkAlphaType>;
 
 constexpr SkPMColor4f SK_PMColor4fTRANSPARENT = {0, 0, 0, 0};
+constexpr SkPMColor4f SK_PMColor4fBLACK = {0, 0, 0, 1};
 constexpr SkPMColor4f SK_PMColor4fWHITE = {1, 1, 1, 1};
 constexpr SkPMColor4f SK_PMColor4fILLEGAL = {
     SK_FloatNegativeInfinity, SK_FloatNegativeInfinity, SK_FloatNegativeInfinity,

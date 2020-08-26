@@ -18,7 +18,7 @@ const int kDefaultSize = 32 * 1024;
 GrDawnRingBuffer::GrDawnRingBuffer(GrDawnGpu* gpu, wgpu::BufferUsage usage)
     : fGpu(gpu), fUsage(usage) {}
 
-GrDawnRingBuffer::~GrDawnRingBuffer() {}
+GrDawnRingBuffer::~GrDawnRingBuffer() = default;
 
 GrDawnRingBuffer::Slice GrDawnRingBuffer::allocate(int size) {
   if (!fBuffer || fOffset + size > kDefaultSize) {

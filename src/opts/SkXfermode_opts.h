@@ -82,7 +82,7 @@ XFERMODE_AA(Plus) {  // [ clamp( (1-AA)D + (AA)(S+D) ) == clamp(D + AA*S) ]
 // even if the implementation branches based on bytes from dst (e.g. asserts in Debug mode).
 // For those modes, just lie to MSAN that dst is always intialized.
 template <typename Xfermode>
-static void mark_dst_initialized_if_safe(void*, void*) noexcept {}
+static void mark_dst_initialized_if_safe(void*, void*) {}
 template <>
 void mark_dst_initialized_if_safe<Src>(void* dst, void* end) {
   sk_msan_mark_initialized(dst, end, "Src doesn't read dst.");

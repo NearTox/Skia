@@ -89,7 +89,9 @@ SkWbmpCodec::SkWbmpCodec(SkEncodedInfo&& info, std::unique_ptr<SkStream> stream)
       fSrcRowBytes(get_src_row_bytes(this->dimensions().width())),
       fSwizzler(nullptr) {}
 
-SkEncodedImageFormat SkWbmpCodec::onGetEncodedFormat() const { return SkEncodedImageFormat::kWBMP; }
+SkEncodedImageFormat SkWbmpCodec::onGetEncodedFormat() const noexcept {
+  return SkEncodedImageFormat::kWBMP;
+}
 
 bool SkWbmpCodec::conversionSupported(
     const SkImageInfo& dst, bool srcIsOpaque, bool /*needsColorXform*/) {

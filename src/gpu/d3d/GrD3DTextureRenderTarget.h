@@ -52,28 +52,31 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
   GrD3DTextureRenderTarget(
       GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
       const GrD3DTextureResourceInfo& info, sk_sp<GrD3DResourceState> state,
+      const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
       const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
-      const D3D12_CPU_DESCRIPTOR_HANDLE& colorRenderTargetView,
-      const D3D12_CPU_DESCRIPTOR_HANDLE& resolveRenderTargetView, GrMipMapsStatus);
+      const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
+      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipMapsStatus);
 
   // non-MSAA, not-wrapped
   GrD3DTextureRenderTarget(
       GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state, const D3D12_CPU_DESCRIPTOR_HANDLE& renderTargetView,
-      GrMipMapsStatus);
+      sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
+      const GrD3DDescriptorHeap::CPUHandle& renderTargetView, GrMipMapsStatus);
 
   // MSAA, wrapped
   GrD3DTextureRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
-      sk_sp<GrD3DResourceState> msaaState, const D3D12_CPU_DESCRIPTOR_HANDLE& colorRenderTargetView,
-      const D3D12_CPU_DESCRIPTOR_HANDLE& resolveRenderTargetView, GrMipMapsStatus, GrWrapCacheable);
+      sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
+      const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
+      const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
+      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipMapsStatus,
+      GrWrapCacheable);
 
   // non-MSAA, wrapped
   GrD3DTextureRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
-      sk_sp<GrD3DResourceState> state, const D3D12_CPU_DESCRIPTOR_HANDLE& renderTargetView,
-      GrMipMapsStatus, GrWrapCacheable);
+      sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
+      const GrD3DDescriptorHeap::CPUHandle& renderTargetView, GrMipMapsStatus, GrWrapCacheable);
 
   // GrGLRenderTarget accounts for the texture's memory and any MSAA renderbuffer's memory.
   size_t onGpuMemorySize() const override;

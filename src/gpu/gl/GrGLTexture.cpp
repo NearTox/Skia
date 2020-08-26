@@ -15,7 +15,7 @@
 #define GPUGL static_cast<GrGLGpu*>(this->getGpu())
 #define GL_CALL(X) GR_GL_CALL(GPUGL->glInterface(), X)
 
-GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) {
+GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) noexcept {
   switch (target) {
     case GR_GL_TEXTURE_2D: return GrTextureType::k2D;
     case GR_GL_TEXTURE_RECTANGLE: return GrTextureType::kRectangle;
@@ -24,7 +24,7 @@ GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) {
   SK_ABORT("Unexpected texture target");
 }
 
-static inline GrGLenum target_from_texture_type(GrTextureType type) {
+static inline GrGLenum target_from_texture_type(GrTextureType type) noexcept {
   switch (type) {
     case GrTextureType::k2D: return GR_GL_TEXTURE_2D;
     case GrTextureType::kRectangle: return GR_GL_TEXTURE_RECTANGLE;
@@ -74,7 +74,7 @@ GrGLTexture::GrGLTexture(
   this->init(desc);
 }
 
-void GrGLTexture::init(const Desc& desc) {
+void GrGLTexture::init(const Desc& desc) noexcept {
   SkASSERT(0 != desc.fID);
   SkASSERT(GrGLFormat::kUnknown != desc.fFormat);
   fID = desc.fID;
@@ -82,7 +82,7 @@ void GrGLTexture::init(const Desc& desc) {
   fTextureIDOwnership = desc.fOwnership;
 }
 
-GrGLenum GrGLTexture::target() const {
+GrGLenum GrGLTexture::target() const noexcept {
   return target_from_texture_type(this->texturePriv().textureType());
 }
 
@@ -103,7 +103,7 @@ void GrGLTexture::onAbandon() {
   INHERITED::onAbandon();
 }
 
-GrBackendTexture GrGLTexture::getBackendTexture() const {
+GrBackendTexture GrGLTexture::getBackendTexture() const noexcept {
   GrGLTextureInfo info;
   info.fTarget = target_from_texture_type(this->texturePriv().textureType());
   info.fID = fID;
@@ -112,7 +112,7 @@ GrBackendTexture GrGLTexture::getBackendTexture() const {
       this->width(), this->height(), this->texturePriv().mipMapped(), info, fParameters);
 }
 
-GrBackendFormat GrGLTexture::backendFormat() const {
+GrBackendFormat GrGLTexture::backendFormat() const noexcept {
   return GrBackendFormat::MakeGL(
       GrGLFormatToEnum(fFormat), target_from_texture_type(this->texturePriv().textureType()));
 }
@@ -128,7 +128,7 @@ bool GrGLTexture::onStealBackendTexture(
     GrBackendTexture* backendTexture, SkImage::BackendTextureReleaseProc* releaseProc) {
   *backendTexture = this->getBackendTexture();
   // Set the release proc to a no-op function. GL doesn't require any special cleanup.
-  *releaseProc = [](GrBackendTexture) {};
+  *releaseProc = [](GrBackendTexture) noexcept {};
 
   // It's important that we only abandon this texture's objects, not subclass objects such as
   // those held by GrGLTextureRenderTarget. Those objects are not being stolen and need to be

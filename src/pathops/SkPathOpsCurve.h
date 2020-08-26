@@ -95,7 +95,7 @@ class SkDCurveSweep {
 extern SkDPoint (SkDCurve::*const Top[])(
     const SkPoint curve[], SkScalar cWeight, double tStart, double tEnd, double* topT);
 
-static SkDPoint dline_xy_at_t(const SkPoint a[2], SkScalar, double t) noexcept {
+static SkDPoint dline_xy_at_t(const SkPoint a[2], SkScalar, double t) {
   SkDLine line;
   line.set(a);
   return line.ptAtT(t);
@@ -122,7 +122,7 @@ static SkDPoint dcubic_xy_at_t(const SkPoint a[4], SkScalar, double t) noexcept 
 static SkDPoint (*const CurveDPointAtT[])(const SkPoint[], SkScalar, double) = {
     nullptr, dline_xy_at_t, dquad_xy_at_t, dconic_xy_at_t, dcubic_xy_at_t};
 
-static SkDPoint ddline_xy_at_t(const SkDCurve& c, double t) noexcept { return c.fLine.ptAtT(t); }
+static SkDPoint ddline_xy_at_t(const SkDCurve& c, double t) { return c.fLine.ptAtT(t); }
 
 static SkDPoint ddquad_xy_at_t(const SkDCurve& c, double t) noexcept { return c.fQuad.ptAtT(t); }
 
@@ -133,7 +133,7 @@ static SkDPoint ddcubic_xy_at_t(const SkDCurve& c, double t) noexcept { return c
 static SkDPoint (*const CurveDDPointAtT[])(const SkDCurve&, double) = {
     nullptr, ddline_xy_at_t, ddquad_xy_at_t, ddconic_xy_at_t, ddcubic_xy_at_t};
 
-static SkPoint fline_xy_at_t(const SkPoint a[2], SkScalar weight, double t) noexcept {
+static SkPoint fline_xy_at_t(const SkPoint a[2], SkScalar weight, double t) {
   return dline_xy_at_t(a, weight, t).asSkPoint();
 }
 
@@ -217,7 +217,7 @@ static SkVector fcubic_dxdy_at_t(const SkPoint a[4], SkScalar weight, double t) 
 static SkVector (*const CurveSlopeAtT[])(const SkPoint[], SkScalar, double) = {
     nullptr, fline_dxdy_at_t, fquad_dxdy_at_t, fconic_dxdy_at_t, fcubic_dxdy_at_t};
 
-static bool line_is_vertical(const SkPoint a[2], SkScalar, double startT, double endT) noexcept {
+static bool line_is_vertical(const SkPoint a[2], SkScalar, double startT, double endT) {
   SkDLine line;
   line.set(a);
   SkDPoint dst[2] = {line.ptAtT(startT), line.ptAtT(endT)};
@@ -251,28 +251,28 @@ static bool (*const CurveIsVertical[])(const SkPoint[], SkScalar, double, double
     nullptr, line_is_vertical, quad_is_vertical, conic_is_vertical, cubic_is_vertical};
 
 static void line_intersect_ray(
-    const SkPoint a[2], SkScalar, const SkDLine& ray, SkIntersections* i) noexcept {
+    const SkPoint a[2], SkScalar, const SkDLine& ray, SkIntersections* i) {
   SkDLine line;
   line.set(a);
   i->intersectRay(line, ray);
 }
 
 static void quad_intersect_ray(
-    const SkPoint a[3], SkScalar, const SkDLine& ray, SkIntersections* i) noexcept {
+    const SkPoint a[3], SkScalar, const SkDLine& ray, SkIntersections* i) {
   SkDQuad quad;
   quad.set(a);
   i->intersectRay(quad, ray);
 }
 
 static void conic_intersect_ray(
-    const SkPoint a[3], SkScalar weight, const SkDLine& ray, SkIntersections* i) noexcept {
+    const SkPoint a[3], SkScalar weight, const SkDLine& ray, SkIntersections* i) {
   SkDConic conic;
   conic.set(a, weight);
   i->intersectRay(conic, ray);
 }
 
 static void cubic_intersect_ray(
-    const SkPoint a[4], SkScalar, const SkDLine& ray, SkIntersections* i) noexcept {
+    const SkPoint a[4], SkScalar, const SkDLine& ray, SkIntersections* i) {
   SkDCubic cubic;
   cubic.set(a);
   i->intersectRay(cubic, ray);
@@ -282,30 +282,26 @@ static void (*const CurveIntersectRay[])(
     const SkPoint[], SkScalar, const SkDLine&, SkIntersections*) = {
     nullptr, line_intersect_ray, quad_intersect_ray, conic_intersect_ray, cubic_intersect_ray};
 
-static void dline_intersect_ray(
-    const SkDCurve& c, const SkDLine& ray, SkIntersections* i) noexcept {
+static void dline_intersect_ray(const SkDCurve& c, const SkDLine& ray, SkIntersections* i) {
   i->intersectRay(c.fLine, ray);
 }
 
-static void dquad_intersect_ray(
-    const SkDCurve& c, const SkDLine& ray, SkIntersections* i) noexcept {
+static void dquad_intersect_ray(const SkDCurve& c, const SkDLine& ray, SkIntersections* i) {
   i->intersectRay(c.fQuad, ray);
 }
 
-static void dconic_intersect_ray(
-    const SkDCurve& c, const SkDLine& ray, SkIntersections* i) noexcept {
+static void dconic_intersect_ray(const SkDCurve& c, const SkDLine& ray, SkIntersections* i) {
   i->intersectRay(c.fConic, ray);
 }
 
-static void dcubic_intersect_ray(
-    const SkDCurve& c, const SkDLine& ray, SkIntersections* i) noexcept {
+static void dcubic_intersect_ray(const SkDCurve& c, const SkDLine& ray, SkIntersections* i) {
   i->intersectRay(c.fCubic, ray);
 }
 
 static void (*const CurveDIntersectRay[])(const SkDCurve&, const SkDLine&, SkIntersections*) = {
     nullptr, dline_intersect_ray, dquad_intersect_ray, dconic_intersect_ray, dcubic_intersect_ray};
 
-static int line_intercept_h(const SkPoint a[2], SkScalar, SkScalar y, double* roots) noexcept {
+static int line_intercept_h(const SkPoint a[2], SkScalar, SkScalar y, double* roots) {
   if (a[0].fY == a[1].fY) {
     return false;
   }
@@ -314,7 +310,7 @@ static int line_intercept_h(const SkPoint a[2], SkScalar, SkScalar y, double* ro
   return between(0, roots[0], 1);
 }
 
-static int line_intercept_v(const SkPoint a[2], SkScalar, SkScalar x, double* roots) noexcept {
+static int line_intercept_v(const SkPoint a[2], SkScalar, SkScalar x, double* roots) {
   if (a[0].fX == a[1].fX) {
     return false;
   }
@@ -323,32 +319,32 @@ static int line_intercept_v(const SkPoint a[2], SkScalar, SkScalar x, double* ro
   return between(0, roots[0], 1);
 }
 
-static int quad_intercept_h(const SkPoint a[2], SkScalar, SkScalar y, double* roots) noexcept {
+static int quad_intercept_h(const SkPoint a[2], SkScalar, SkScalar y, double* roots) {
   SkDQuad quad;
   return SkIntersections::HorizontalIntercept(quad.set(a), y, roots);
 }
 
-static int quad_intercept_v(const SkPoint a[2], SkScalar, SkScalar x, double* roots) noexcept {
+static int quad_intercept_v(const SkPoint a[2], SkScalar, SkScalar x, double* roots) {
   SkDQuad quad;
   return SkIntersections::VerticalIntercept(quad.set(a), x, roots);
 }
 
-static int conic_intercept_h(const SkPoint a[2], SkScalar w, SkScalar y, double* roots) noexcept {
+static int conic_intercept_h(const SkPoint a[2], SkScalar w, SkScalar y, double* roots) {
   SkDConic conic;
   return SkIntersections::HorizontalIntercept(conic.set(a, w), y, roots);
 }
 
-static int conic_intercept_v(const SkPoint a[2], SkScalar w, SkScalar x, double* roots) noexcept {
+static int conic_intercept_v(const SkPoint a[2], SkScalar w, SkScalar x, double* roots) {
   SkDConic conic;
   return SkIntersections::VerticalIntercept(conic.set(a, w), x, roots);
 }
 
-static int cubic_intercept_h(const SkPoint a[3], SkScalar, SkScalar y, double* roots) noexcept {
+static int cubic_intercept_h(const SkPoint a[3], SkScalar, SkScalar y, double* roots) {
   SkDCubic cubic;
   return cubic.set(a).horizontalIntersect(y, roots);
 }
 
-static int cubic_intercept_v(const SkPoint a[3], SkScalar, SkScalar x, double* roots) noexcept {
+static int cubic_intercept_v(const SkPoint a[3], SkScalar, SkScalar x, double* roots) {
   SkDCubic cubic;
   return cubic.set(a).verticalIntersect(x, roots);
 }

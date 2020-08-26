@@ -109,35 +109,34 @@ class GrGLCaps : public GrCaps {
       const GrContextOptions& contextOptions, const GrGLContextInfo& ctxInfo,
       const GrGLInterface* glInterface);
 
-  bool isFormatSRGB(const GrBackendFormat&) const override;
-  SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
+  bool isFormatSRGB(const GrBackendFormat&) const noexcept override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
-  bool isFormatTexturable(GrGLFormat) const;
+  bool isFormatTexturable(GrGLFormat) const noexcept;
 
   bool isFormatAsColorTypeRenderable(
-      GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const override;
-  bool isFormatRenderable(const GrBackendFormat& format, int sampleCount) const override;
-  bool isFormatRenderable(GrGLFormat format, int sampleCount) const {
+      GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const noexcept override;
+  bool isFormatRenderable(const GrBackendFormat& format, int sampleCount) const noexcept override;
+  bool isFormatRenderable(GrGLFormat format, int sampleCount) const noexcept {
     return sampleCount <= this->maxRenderTargetSampleCount(format);
   }
 
   int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat& format) const override {
     return this->getRenderTargetSampleCount(requestedCount, format.asGLFormat());
   }
-  int getRenderTargetSampleCount(int requestedCount, GrGLFormat) const;
+  int getRenderTargetSampleCount(int requestedCount, GrGLFormat) const noexcept;
 
-  int maxRenderTargetSampleCount(const GrBackendFormat& format) const override {
+  int maxRenderTargetSampleCount(const GrBackendFormat& format) const noexcept override {
     return this->maxRenderTargetSampleCount(format.asGLFormat());
   }
-  int maxRenderTargetSampleCount(GrGLFormat) const;
+  int maxRenderTargetSampleCount(GrGLFormat) const noexcept;
 
-  size_t bytesPerPixel(GrGLFormat) const;
-  size_t bytesPerPixel(const GrBackendFormat&) const override;
+  size_t bytesPerPixel(GrGLFormat) const noexcept;
+  size_t bytesPerPixel(const GrBackendFormat&) const noexcept override;
 
-  bool isFormatCopyable(const GrBackendFormat&) const override;
+  bool isFormatCopyable(const GrBackendFormat&) const noexcept override;
 
-  bool canFormatBeFBOColorAttachment(GrGLFormat) const;
+  bool canFormatBeFBOColorAttachment(GrGLFormat) const noexcept;
 
   GrGLFormat getFormatFromColorType(GrColorType colorType) const noexcept {
     int idx = static_cast<int>(colorType);
@@ -157,7 +156,7 @@ class GrGLCaps : public GrCaps {
    * uninitialized texture. See getTexImageOrStorageInternalFormat() for the internal format.
    */
   void getTexImageExternalFormatAndType(
-      GrGLFormat surfaceFormat, GrGLenum* externalFormat, GrGLenum* externalType) const;
+      GrGLFormat surfaceFormat, GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
 
   /**
    * Given a src data color type and a color type interpretation for a texture of a given format
@@ -166,7 +165,7 @@ class GrGLCaps : public GrCaps {
    */
   void getTexSubImageExternalFormatAndType(
       GrGLFormat surfaceFormat, GrColorType surfaceColorType, GrColorType memoryColorType,
-      GrGLenum* externalFormat, GrGLenum* externalType) const;
+      GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
 
   /**
    * Gets the external format, type, and bytes per pixel to use when uploading solid color data
@@ -174,11 +173,11 @@ class GrGLCaps : public GrCaps {
    */
   void getTexSubImageDefaultFormatTypeAndColorType(
       GrGLFormat format, GrGLenum* externalFormat, GrGLenum* externalType,
-      GrColorType* colorType) const;
+      GrColorType* colorType) const noexcept;
 
   void getReadPixelsFormat(
       GrGLFormat surfaceFormat, GrColorType surfaceColorType, GrColorType memoryColorType,
-      GrGLenum* externalFormat, GrGLenum* externalType) const;
+      GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
 
   /**
    * Gets an array of legal stencil formats. These formats are not guaranteed
@@ -187,13 +186,13 @@ class GrGLCaps : public GrCaps {
    */
   const SkTArray<StencilFormat, true>& stencilFormats() const noexcept { return fStencilFormats; }
 
-  bool formatSupportsTexStorage(GrGLFormat) const;
+  bool formatSupportsTexStorage(GrGLFormat) const noexcept;
 
   /**
    * Would it be useful to check GL_IMPLEMENTATION_READ_FORMAT and _TYPE for this format to
    * detect more efficient glReadPixels arguments?
    */
-  bool shouldQueryImplementationReadSupport(GrGLFormat format) const;
+  bool shouldQueryImplementationReadSupport(GrGLFormat format) const noexcept;
 
   /**
    * Let caps know the result of GL_IMPLEMENTATION_READ_FORMAT and _TYPE query for a format
@@ -239,7 +238,7 @@ class GrGLCaps : public GrCaps {
    * If index is >= 0 this records an index into stencilFormats() as the best stencil format for
    * the format. If < 0 it records that the format has no supported stencil format index.
    */
-  void setStencilFormatIndexForFormat(GrGLFormat, int index);
+  void setStencilFormatIndexForFormat(GrGLFormat, int index) noexcept;
 
   /**
    * Reports the type of MSAA FBO support.
@@ -404,13 +403,13 @@ class GrGLCaps : public GrCaps {
   bool canCopyTexSubImage(
       GrGLFormat dstFormat, bool dstHasMSAARenderBuffer, const GrTextureType* dstTypeIfTexture,
       GrGLFormat srcFormat, bool srcHasMSAARenderBuffer,
-      const GrTextureType* srcTypeIfTexture) const;
+      const GrTextureType* srcTypeIfTexture) const noexcept;
   bool canCopyAsBlit(
       GrGLFormat dstFormat, int dstSampleCnt, const GrTextureType* dstTypeIfTexture,
       GrGLFormat srcFormat, int srcSampleCnt, const GrTextureType* srcTypeIfTexture,
       const SkRect& srcBounds, bool srcBoundsExact, const SkIRect& srcRect,
-      const SkIPoint& dstPoint) const;
-  bool canCopyAsDraw(GrGLFormat dstFormat, bool srcIsTexturable) const;
+      const SkIPoint& dstPoint) const noexcept;
+  bool canCopyAsDraw(GrGLFormat dstFormat, bool srcIsTexturable) const noexcept;
 
   DstCopyRestrictions getDstCopyRestrictions(
       const GrRenderTargetProxy* src, GrColorType) const override;
@@ -432,7 +431,6 @@ class GrGLCaps : public GrCaps {
 
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
 
-  GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
@@ -452,7 +450,7 @@ class GrGLCaps : public GrCaps {
   };
   void getExternalFormat(
       GrGLFormat surfaceFormat, GrColorType surfaceColorType, GrColorType memoryColorType,
-      ExternalFormatUsage usage, GrGLenum* externalFormat, GrGLenum* externalType) const;
+      ExternalFormatUsage usage, GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
 
   void init(const GrContextOptions&, const GrGLContextInfo&, const GrGLInterface*);
   void initGLSL(const GrGLContextInfo&, const GrGLInterface*);
@@ -473,7 +471,7 @@ class GrGLCaps : public GrCaps {
       const GrGLContextInfo&, const GrContextOptions&, const GrGLInterface*, GrShaderCaps*,
       FormatWorkarounds*);
 
-  void onApplyOptionsOverrides(const GrContextOptions& options) override;
+  void onApplyOptionsOverrides(const GrContextOptions& options) noexcept override;
 
   bool onIsWindowRectanglesSupportedForRT(const GrBackendRenderTarget&) const override;
 
@@ -484,7 +482,7 @@ class GrGLCaps : public GrCaps {
   // This must be called after initFSAASupport().
   void initFormatTable(const GrGLContextInfo&, const GrGLInterface*, const FormatWorkarounds&);
   void setupSampleCounts(const GrGLContextInfo&, const GrGLInterface*);
-  bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
+  bool onSurfaceSupportsWritePixels(const GrSurface*) const noexcept override;
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
@@ -493,6 +491,8 @@ class GrGLCaps : public GrCaps {
 
   SupportedRead onSupportedReadPixelsColorType(
       GrColorType, const GrBackendFormat&, GrColorType) const override;
+
+  GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   GrGLStandard fStandard = kNone_GrGLStandard;
 
@@ -550,7 +550,7 @@ class GrGLCaps : public GrCaps {
   uint32_t fBlitFramebufferFlags = kNoSupport_BlitFramebufferFlag;
 
   struct ReadPixelsFormat {
-    constexpr ReadPixelsFormat() noexcept : fFormat(0), fType(0) {}
+    ReadPixelsFormat() : fFormat(0), fType(0) {}
     GrGLenum fFormat;
     GrGLenum fType;
   };
@@ -723,7 +723,7 @@ class GrGLCaps : public GrCaps {
   }
 
   GrGLFormat fColorTypeToFormatTable[kGrColorTypeCnt];
-  void setColorTypeFormat(GrColorType, GrGLFormat);
+  void setColorTypeFormat(GrColorType, GrGLFormat) noexcept;
 
   typedef GrCaps INHERITED;
 };

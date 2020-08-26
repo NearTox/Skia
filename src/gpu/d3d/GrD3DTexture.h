@@ -11,6 +11,7 @@
 #include "src/core/SkLRUCache.h"
 #include "src/gpu/GrSamplerState.h"
 #include "src/gpu/GrTexture.h"
+#include "src/gpu/d3d/GrD3DDescriptorHeap.h"
 #include "src/gpu/d3d/GrD3DTextureResource.h"
 
 class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
@@ -23,11 +24,12 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
       GrD3DGpu*, SkISize dimensions, GrWrapCacheable, GrIOType, const GrD3DTextureResourceInfo&,
       sk_sp<GrD3DResourceState>);
 
-  ~GrD3DTexture() override = default;
+  ~GrD3DTexture() override {}
 
   GrBackendTexture getBackendTexture() const override;
 
   GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
+  D3D12_CPU_DESCRIPTOR_HANDLE shaderResourceView() { return fShaderResourceView.fHandle; }
 
   void textureParamsModified() override {}
 
@@ -37,7 +39,7 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
  protected:
   GrD3DTexture(
       GrD3DGpu*, SkISize dimensions, const GrD3DTextureResourceInfo&, sk_sp<GrD3DResourceState>,
-      GrMipMapsStatus);
+      const GrD3DDescriptorHeap::CPUHandle& shaderResourceView, GrMipMapsStatus);
 
   GrD3DGpu* getD3DGpu() const;
 
@@ -53,10 +55,12 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
  private:
   GrD3DTexture(
       GrD3DGpu*, SkBudgeted, SkISize dimensions, const GrD3DTextureResourceInfo&,
-      sk_sp<GrD3DResourceState>, GrMipMapsStatus);
+      sk_sp<GrD3DResourceState>, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
+      GrMipMapsStatus);
   GrD3DTexture(
       GrD3DGpu*, SkISize dimensions, const GrD3DTextureResourceInfo&, sk_sp<GrD3DResourceState>,
-      GrMipMapsStatus, GrWrapCacheable, GrIOType);
+      const GrD3DDescriptorHeap::CPUHandle& shaderResourceView, GrMipMapsStatus, GrWrapCacheable,
+      GrIOType);
 
   // In D3D we call the release proc after we are finished with the underlying
   // GrSurfaceResource::Resource object (which occurs after the GPU has finished all work on it).
@@ -70,6 +74,8 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
   struct SamplerHash {
     uint32_t operator()(GrSamplerState state) const { return GrSamplerState::GenerateKey(state); }
   };
+
+  GrD3DDescriptorHeap::CPUHandle fShaderResourceView;
 
   typedef GrTexture INHERITED;
 };

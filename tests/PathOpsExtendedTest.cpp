@@ -102,10 +102,12 @@ static void scaleMatrix(const SkPath& one, const SkPath& two, SkMatrix& scale) {
   larger.fRight *= hScale;
   larger.fTop *= vScale;
   larger.fBottom *= vScale;
-  SkScalar dx = -16000 > larger.fLeft ? -16000 - larger.fLeft
-                                      : 16000 < larger.fRight ? 16000 - larger.fRight : 0;
-  SkScalar dy = -16000 > larger.fTop ? -16000 - larger.fTop
-                                     : 16000 < larger.fBottom ? 16000 - larger.fBottom : 0;
+  SkScalar dx = -16000 > larger.fLeft   ? -16000 - larger.fLeft
+                : 16000 < larger.fRight ? 16000 - larger.fRight
+                                        : 0;
+  SkScalar dy = -16000 > larger.fTop     ? -16000 - larger.fTop
+                : 16000 < larger.fBottom ? 16000 - larger.fBottom
+                                         : 0;
   scale.postTranslate(dx, dy);
 }
 
@@ -368,15 +370,18 @@ bool testSimplify(
 static void json_status(ExpectSuccess expectSuccess, ExpectMatch expectMatch, bool opSucceeded) {
   fprintf(
       PathOpsDebug::gOut, "  \"expectSuccess\": \"%s\",\n",
-      ExpectSuccess::kNo == expectSuccess ? "no"
-                                          : ExpectSuccess::kYes == expectSuccess ? "yes" : "flaky");
+      ExpectSuccess::kNo == expectSuccess    ? "no"
+      : ExpectSuccess::kYes == expectSuccess ? "yes"
+                                             : "flaky");
   if (PathOpsDebug::gMarkJsonFlaky) {
     expectMatch = ExpectMatch::kFlaky;
     PathOpsDebug::gMarkJsonFlaky = false;
   }
   fprintf(
       PathOpsDebug::gOut, "  \"expectMatch\": \"%s\",\n",
-      ExpectMatch::kNo == expectMatch ? "no" : ExpectMatch::kYes == expectMatch ? "yes" : "flaky");
+      ExpectMatch::kNo == expectMatch    ? "no"
+      : ExpectMatch::kYes == expectMatch ? "yes"
+                                         : "flaky");
   fprintf(PathOpsDebug::gOut, "  \"succeeded\": %s,\n", opSucceeded ? "true" : "false");
 }
 

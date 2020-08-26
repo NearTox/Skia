@@ -15,9 +15,9 @@
 
 GrVkStencilAttachment::GrVkStencilAttachment(
     GrVkGpu* gpu, const Format& format, const GrVkImage::ImageDesc& desc, const GrVkImageInfo& info,
-    sk_sp<GrVkImageLayout> layout, const GrVkImageView* stencilView)
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* stencilView)
     : GrStencilAttachment(gpu, desc.fWidth, desc.fHeight, format.fStencilBits, desc.fSamples),
-      GrVkImage(gpu, info, std::move(layout), GrBackendObjectOwnership::kOwned),
+      GrVkImage(gpu, info, std::move(mutableState), GrBackendObjectOwnership::kOwned),
       fStencilView(stencilView) {
   this->registerWithCache(SkBudgeted::kYes);
   stencilView->ref();
@@ -50,9 +50,10 @@ GrVkStencilAttachment* GrVkStencilAttachment::Create(
     return nullptr;
   }
 
-  sk_sp<GrVkImageLayout> layout(new GrVkImageLayout(info.fImageLayout));
+  sk_sp<GrBackendSurfaceMutableStateImpl> mutableState(
+      new GrBackendSurfaceMutableStateImpl(info.fImageLayout, info.fCurrentQueueFamily));
   GrVkStencilAttachment* stencil =
-      new GrVkStencilAttachment(gpu, format, imageDesc, info, std::move(layout), imageView);
+      new GrVkStencilAttachment(gpu, format, imageDesc, info, std::move(mutableState), imageView);
   imageView->unref();
 
   return stencil;
@@ -63,7 +64,7 @@ GrVkStencilAttachment::~GrVkStencilAttachment() {
   SkASSERT(!fStencilView);
 }
 
-size_t GrVkStencilAttachment::onGpuMemorySize() const {
+size_t GrVkStencilAttachment::onGpuMemorySize() const noexcept {
   uint64_t size = this->width();
   size *= this->height();
   size *= GrVkCaps::GetStencilFormatTotalBitCount(this->imageFormat());
@@ -72,8 +73,7 @@ size_t GrVkStencilAttachment::onGpuMemorySize() const {
 }
 
 void GrVkStencilAttachment::onRelease() {
-  GrVkGpu* gpu = this->getVkGpu();
-  this->releaseImage(gpu);
+  this->releaseImage();
   fStencilView->unref();
   fStencilView = nullptr;
 
@@ -81,15 +81,14 @@ void GrVkStencilAttachment::onRelease() {
 }
 
 void GrVkStencilAttachment::onAbandon() {
-  GrVkGpu* gpu = this->getVkGpu();
-  this->releaseImage(gpu);
+  this->releaseImage();
   fStencilView->unref();
   fStencilView = nullptr;
 
   GrStencilAttachment::onAbandon();
 }
 
-GrVkGpu* GrVkStencilAttachment::getVkGpu() const {
+GrVkGpu* GrVkStencilAttachment::getVkGpu() const noexcept {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrVkGpu*>(this->getGpu());
 }

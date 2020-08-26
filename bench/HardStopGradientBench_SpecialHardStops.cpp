@@ -75,8 +75,9 @@ class HardStopGradientBench_SpecialHardStops : public Benchmark {
         1.0f,
     };
 
-    SkScalar* positions =
-        fKind == Kind::k001 ? pos_001 : fKind == Kind::k011 ? pos_011 : pos_centered;
+    SkScalar* positions = fKind == Kind::k001   ? pos_001
+                          : fKind == Kind::k011 ? pos_011
+                                                : pos_centered;
 
     int count = fKind == Kind::kCentered ? 4 : 3;
 

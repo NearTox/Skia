@@ -209,7 +209,7 @@ void BlendModeEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const
   this->INHERITED::onRender(canvas, local_ctx);
 }
 
-const RenderNode* BlendModeEffect::onNodeAt(const SkPoint& p) const {
+const RenderNode* BlendModeEffect::onNodeAt(const SkPoint& p) const noexcept {
   // TODO: we likely need to do something more sophisticated than delegate to descendants here.
   return this->INHERITED::onNodeAt(p);
 }

@@ -34,7 +34,14 @@ static void test_hittest(SkCanvas* canvas, const SkPath& path) {
   }
 }
 
-DEF_SIMPLE_GM(hittestpath, canvas, 700, 460) {
+DEF_SIMPLE_GM_CAN_FAIL(hittestpath, canvas, errorMsg, 700, 460) {
+  if (canvas->getGrContext()) {
+    // GPU rasterization results vary greatly from platform to platform. We can't use them as
+    // an expected result for our internal SkPath::contains().
+    *errorMsg = "This test is for CPU configs only.";
+    return skiagm::DrawResult::kSkip;
+  }
+
   SkPath path;
   SkRandom rand;
 
@@ -61,4 +68,5 @@ DEF_SIMPLE_GM(hittestpath, canvas, 700, 460) {
   path.setFillType(SkPathFillType::kWinding);
 
   test_hittest(canvas, path);
+  return skiagm::DrawResult::kOk;
 }

@@ -246,11 +246,12 @@ class GrDrawOpAtlas {
   class BulkUseTokenUpdater {
    public:
     BulkUseTokenUpdater() { memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated)); }
-    BulkUseTokenUpdater(const BulkUseTokenUpdater& that) : fPlotsToUpdate(that.fPlotsToUpdate) {
+    BulkUseTokenUpdater(const BulkUseTokenUpdater& that) noexcept
+        : fPlotsToUpdate(that.fPlotsToUpdate) {
       memcpy(fPlotAlreadyUpdated, that.fPlotAlreadyUpdated, sizeof(fPlotAlreadyUpdated));
     }
 
-    bool add(const AtlasLocator& atlasLocator) {
+    bool add(const AtlasLocator& atlasLocator) noexcept {
       int plotIdx = atlasLocator.plotIndex();
       int pageIdx = atlasLocator.pageIndex();
       if (this->find(pageIdx, plotIdx)) {
@@ -277,7 +278,7 @@ class GrDrawOpAtlas {
       return (fPlotAlreadyUpdated[pageIdx] >> index) & 1;
     }
 
-    void set(int pageIdx, int index) {
+    void set(int pageIdx, int index) noexcept {
       SkASSERT(!this->find(pageIdx, index));
       fPlotAlreadyUpdated[pageIdx] |= (1 << index);
       fPlotsToUpdate.push_back(PlotData(pageIdx, index));
@@ -291,7 +292,8 @@ class GrDrawOpAtlas {
     friend class GrDrawOpAtlas;
   };
 
-  void setLastUseTokenBulk(const BulkUseTokenUpdater& updater, GrDeferredUploadToken token) {
+  void setLastUseTokenBulk(
+      const BulkUseTokenUpdater& updater, GrDeferredUploadToken token) noexcept {
     int count = updater.fPlotsToUpdate.count();
     for (int i = 0; i < count; i++) {
       const BulkUseTokenUpdater::PlotData& pd = updater.fPlotsToUpdate[i];

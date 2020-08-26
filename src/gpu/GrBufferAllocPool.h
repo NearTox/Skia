@@ -146,7 +146,7 @@ class GrBufferAllocPool : SkNoncopyable {
   };
 
   bool createBlock(size_t requestSize);
-  void destroyBlock();
+  void destroyBlock() noexcept;
   void deleteBlocks();
   void flushCpuData(const BufferBlock& block, size_t flushSize);
   void resetCpuData(size_t newSize);

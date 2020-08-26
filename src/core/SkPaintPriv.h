@@ -34,9 +34,9 @@ class SkPaintPriv {
    *  Note: returns conservative true, meaning it may return false even though the paint might
    *        in fact overwrite its pixels.
    */
-  static bool Overwrites(const SkPaint* paint, ShaderOverrideOpacity);
+  static bool Overwrites(const SkPaint* paint, ShaderOverrideOpacity) noexcept;
 
-  static bool ShouldDither(const SkPaint&, SkColorType);
+  static bool ShouldDither(const SkPaint&, SkColorType) noexcept;
 
   /*
    * The luminance color is used to determine which Gamma Canonical color to map to.  This is

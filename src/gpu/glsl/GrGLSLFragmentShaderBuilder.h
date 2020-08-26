@@ -127,7 +127,7 @@ class GrGLSLXPFragmentBuilder : virtual public GrGLSLFragmentBuilder {
   GrGLSLXPFragmentBuilder() : GrGLSLFragmentBuilder(nullptr) {}
 
   virtual bool hasCustomColorOutput() const = 0;
-  virtual bool hasSecondaryOutput() const noexcept = 0;
+  virtual bool hasSecondaryOutput() const = 0;
 
   /** Returns the variable name that holds the color of the destination pixel. This may be nullptr
    * if no effect advertised that it will read the destination. */
@@ -157,10 +157,10 @@ class GrGLSLFragmentShaderBuilder : public GrGLSLFPFragmentBuilder, public GrGLS
   const char* sampleOffsets() override;
   void maskOffMultisampleCoverage(const char* mask, ScopeFlags) override;
   void applyFnToMultisampleMask(const char* fn, const char* grad, ScopeFlags) override;
-  void forceHighPrecision() override { fForceHighPrecision = true; }
+  void forceHighPrecision() noexcept override { fForceHighPrecision = true; }
 
   // GrGLSLXPFragmentBuilder interface.
-  bool hasCustomColorOutput() const override { return SkToBool(fCustomColorOutput); }
+  bool hasCustomColorOutput() const noexcept override { return SkToBool(fCustomColorOutput); }
   bool hasSecondaryOutput() const noexcept override { return fHasSecondaryOutput; }
   const char* dstColor() override;
   void enableAdvancedBlendEquationIfNeeded(GrBlendEquation) override;
@@ -171,7 +171,7 @@ class GrGLSLFragmentShaderBuilder : public GrGLSLFPFragmentBuilder, public GrGLS
   // GrGLSLFPFragmentBuilder private interface.
   void onBeforeChildProcEmitCode() override;
   void onAfterChildProcEmitCode() override;
-  const SkString& getMangleString() const override { return fMangleString; }
+  const SkString& getMangleString() const noexcept override { return fMangleString; }
 
   // Private public interface, used by GrGLProgramBuilder to build a fragment shader
   void enableCustomOutput();

@@ -38,7 +38,7 @@ class GrStencilAttachment : public GrGpuResource {
       : INHERITED(gpu), fWidth(width), fHeight(height), fBits(bits), fSampleCnt(sampleCnt) {}
 
  private:
-  const char* getResourceType() const override { return "Stencil"; }
+  const char* getResourceType() const noexcept override { return "Stencil"; }
 
   int fWidth;
   int fHeight;

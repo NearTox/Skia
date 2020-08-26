@@ -66,8 +66,8 @@ class GrProcessorSet {
   }
 
   /** Comparisons are only legal on finalized processor sets. */
-  bool operator==(const GrProcessorSet& that) const;
-  bool operator!=(const GrProcessorSet& that) const { return !(*this == that); }
+  bool operator==(const GrProcessorSet& that) const noexcept;
+  bool operator!=(const GrProcessorSet& that) const noexcept { return !(*this == that); }
 
   /**
    * This is used to report results of processor analysis when a processor set is finalized (see
@@ -75,8 +75,8 @@ class GrProcessorSet {
    */
   class Analysis {
    public:
-    Analysis(const Analysis&) = default;
-    Analysis() { *reinterpret_cast<uint32_t*>(this) = 0; }
+    Analysis(const Analysis&) noexcept = default;
+    Analysis() noexcept { *reinterpret_cast<uint32_t*>(this) = 0; }
 
     bool isInitialized() const noexcept { return fIsInitialized; }
     bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
@@ -146,7 +146,7 @@ class GrProcessorSet {
   /** These are valid only for non-LCD coverage. */
   static const GrProcessorSet& EmptySet() noexcept;
   static GrProcessorSet MakeEmptySet() noexcept;
-  static constexpr const Analysis EmptySetAnalysis() { return Analysis(Empty::kEmpty); }
+  static constexpr const Analysis EmptySetAnalysis() noexcept { return Analysis(Empty::kEmpty); }
 
 #ifdef SK_DEBUG
   SkString dumpProcessors() const;

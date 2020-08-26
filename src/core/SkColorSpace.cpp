@@ -16,13 +16,13 @@ bool SkColorSpacePrimaries::toXYZD50(skcms_Matrix3x3* toXYZ_D50) const {
 }
 
 SkColorSpace::SkColorSpace(
-    const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZD50)
+    const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZD50) noexcept
     : fTransferFn(transferFn), fToXYZD50(toXYZD50) {
   fTransferFnHash = SkOpts::hash_fn(&fTransferFn, 7 * sizeof(float), 0);
   fToXYZD50Hash = SkOpts::hash_fn(&fToXYZD50, 9 * sizeof(float), 0);
 }
 
-static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) {
+static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) noexcept {
   for (int r = 0; r < 3; ++r) {
     for (int c = 0; c < 3; ++c) {
       if (!color_space_almost_equal(mA.vals[r][c], mB.vals[r][c])) {
@@ -109,7 +109,7 @@ bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const {
   return classify_transfer_fn(*coeffs) == sRGBish_TF;
 }
 
-void SkColorSpace::transferFn(float gabcdef[7]) const {
+void SkColorSpace::transferFn(float gabcdef[7]) const noexcept {
   memcpy(gabcdef, &fTransferFn, 7 * sizeof(float));
 }
 
@@ -132,12 +132,12 @@ void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* sr
 
 bool SkColorSpace::isSRGB() const { return sk_srgb_singleton() == this; }
 
-bool SkColorSpace::gammaCloseToSRGB() const {
+bool SkColorSpace::gammaCloseToSRGB() const noexcept {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(&fTransferFn, &SkNamedTransferFn::kSRGB, 7 * sizeof(float)) == 0;
 }
 
-bool SkColorSpace::gammaIsLinear() const {
+bool SkColorSpace::gammaIsLinear() const noexcept {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(&fTransferFn, &SkNamedTransferFn::kLinear, 7 * sizeof(float)) == 0;
 }

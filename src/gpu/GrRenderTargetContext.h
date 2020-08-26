@@ -14,6 +14,7 @@
 #include "include/core/SkSurface.h"
 #include "include/core/SkSurfaceProps.h"
 #include "include/private/GrTypesPriv.h"
+#include "src/core/SkGlyphRunPainter.h"
 #include "src/gpu/GrOpsTask.h"
 #include "src/gpu/GrPaint.h"
 #include "src/gpu/GrRenderTargetProxy.h"
@@ -28,7 +29,6 @@ class GrClip;
 class GrColorSpaceXform;
 class GrCoverageCountingPathRenderer;
 class GrDrawOp;
-class GrFixedClip;
 class GrOp;
 class GrRenderTarget;
 class GrRenderTargetContextPriv;
@@ -114,7 +114,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   ~GrRenderTargetContext() override;
 
-  virtual void drawGlyphRunList(const GrClip&, const SkMatrixProvider&, const SkGlyphRunList&);
+  virtual void drawGlyphRunList(const GrClip*, const SkMatrixProvider&, const SkGlyphRunList&);
 
   /**
    * Provides a perfomance hint that the render target's contents are allowed
@@ -122,25 +122,19 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    */
   void discard();
 
-  enum class CanClearFullscreen : bool { kNo = false, kYes = true };
-
   /**
-   * Clear the entire or rect of the render target, ignoring any clips.
-   * @param rect  the rect to clear or the whole thing if rect is NULL.
+   * Clear the rect of the render target to the given color.
+   * @param rect  the rect to clear to
    * @param color the color to clear to.
-   * @param CanClearFullscreen allows partial clears to be converted to fullscreen clears on
-   *                           tiling platforms where that is an optimization.
    */
-  void clear(const SkIRect* rect, const SkPMColor4f& color, CanClearFullscreen);
-
-  void clear(const SkPMColor4f& color) {
-    return this->clear(nullptr, color, CanClearFullscreen::kYes);
-  }
+  void clear(const SkIRect& rect, const SkPMColor4f& color) { this->internalClear(&rect, color); }
+  // Clears the entire render target to the color.
+  void clear(const SkPMColor4f& color) { this->internalClear(nullptr, color); }
 
   /**
    *  Draw everywhere (respecting the clip) with the paint.
    */
-  void drawPaint(const GrClip&, GrPaint&&, const SkMatrix& viewMatrix);
+  void drawPaint(const GrClip*, GrPaint&&, const SkMatrix& viewMatrix);
 
   /**
    * Draw the rect using a paint.
@@ -152,7 +146,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * The rects coords are used to access the paint (through texture matrix)
    */
   void drawRect(
-      const GrClip&, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect&,
+      const GrClip*, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect&,
       const GrStyle* style = nullptr);
 
   /**
@@ -165,7 +159,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param localRect    the rectangle of shader coordinates applied to rectToDraw
    */
   void fillRectToRect(
-      const GrClip& clip, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix,
+      const GrClip* clip, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix,
       const SkRect& rectToDraw, const SkRect& localRect) {
     DrawQuad quad{
         GrQuad::MakeFromRect(rectToDraw, viewMatrix), GrQuad(localRect),
@@ -177,7 +171,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * Fills a rect with a paint and a localMatrix.
    */
   void fillRectWithLocalMatrix(
-      const GrClip& clip, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix, const SkRect& rect,
+      const GrClip* clip, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix, const SkRect& rect,
       const SkMatrix& localMatrix) {
     DrawQuad quad{
         GrQuad::MakeFromRect(rect, viewMatrix), GrQuad::MakeFromRect(rect, localMatrix),
@@ -192,7 +186,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * the geometry is a rectangle affords more optimizations.
    */
   void fillRectWithEdgeAA(
-      const GrClip& clip, GrPaint&& paint, GrAA aa, GrQuadAAFlags edgeAA,
+      const GrClip* clip, GrPaint&& paint, GrAA aa, GrQuadAAFlags edgeAA,
       const SkMatrix& viewMatrix, const SkRect& rect, const SkRect* optionalLocalRect = nullptr) {
     const SkRect& localRect = optionalLocalRect ? *optionalLocalRect : rect;
     DrawQuad quad{GrQuad::MakeFromRect(rect, viewMatrix), GrQuad(localRect), edgeAA};
@@ -212,7 +206,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * necessary.
    */
   void fillQuadWithEdgeAA(
-      const GrClip& clip, GrPaint&& paint, GrAA aa, GrQuadAAFlags edgeAA,
+      const GrClip* clip, GrPaint&& paint, GrAA aa, GrQuadAAFlags edgeAA,
       const SkMatrix& viewMatrix, const SkPoint points[4], const SkPoint optionalLocalPoints[4]) {
     const SkPoint* localPoints = optionalLocalPoints ? optionalLocalPoints : points;
     DrawQuad quad{
@@ -231,7 +225,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   // TODO(michaelludwig) - remove if the bulk API is not useful for SkiaRenderer
   void drawQuadSet(
-      const GrClip& clip, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix,
+      const GrClip* clip, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix,
       const QuadSetEntry[], int cnt);
 
   /**
@@ -241,7 +235,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * device space.
    */
   void drawTexture(
-      const GrClip& clip, GrSurfaceProxyView view, SkAlphaType srcAlphaType,
+      const GrClip* clip, GrSurfaceProxyView view, SkAlphaType srcAlphaType,
       GrSamplerState::Filter filter, SkBlendMode mode, const SkPMColor4f& color,
       const SkRect& srcRect, const SkRect& dstRect, GrAA aa, GrQuadAAFlags edgeAA,
       SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
@@ -261,7 +255,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * provided, the strict src rect constraint is applied using 'subset'.
    */
   void drawTextureQuad(
-      const GrClip& clip, GrSurfaceProxyView view, GrColorType srcColorType,
+      const GrClip* clip, GrSurfaceProxyView view, GrColorType srcColorType,
       SkAlphaType srcAlphaType, GrSamplerState::Filter filter, SkBlendMode mode,
       const SkPMColor4f& color, const SkPoint srcQuad[4], const SkPoint dstQuad[4], GrAA aa,
       GrQuadAAFlags edgeAA, const SkRect* subset, const SkMatrix& viewMatrix,
@@ -297,7 +291,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * by SkGpuDevice, so no need to incur another iteration over the array.
    */
   void drawTextureSet(
-      const GrClip&, TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
+      const GrClip*, TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
       SkBlendMode mode, GrAA aa, SkCanvas::SrcRectConstraint, const SkMatrix& viewMatrix,
       sk_sp<GrColorSpaceXform> texXform);
 
@@ -311,7 +305,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param style       style to apply to the rrect. Currently path effects are not allowed.
    */
   void drawRRect(
-      const GrClip&, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const SkRRect& rrect,
+      const GrClip*, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const SkRRect& rrect,
       const GrStyle& style);
 
   /**
@@ -323,7 +317,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param rec          parameters for shadow rendering
    */
   bool drawFastShadow(
-      const GrClip&, const SkMatrix& viewMatrix, const SkPath& path, const SkDrawShadowRec& rec);
+      const GrClip*, const SkMatrix& viewMatrix, const SkPath& path, const SkDrawShadowRec& rec);
 
   /**
    * Shortcut for filling a SkPath consisting of nested rrects using a paint. The result is
@@ -336,7 +330,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param inner        the inner roundrect
    */
   void drawDRRect(
-      const GrClip&, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const SkRRect& outer,
+      const GrClip*, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const SkRRect& outer,
       const SkRRect& inner);
 
   /**
@@ -349,7 +343,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param style         style to apply to the path.
    */
   void drawPath(
-      const GrClip&, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const SkPath&, const GrStyle&);
+      const GrClip*, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const SkPath&, const GrStyle&);
 
   /**
    * Draws a shape.
@@ -359,7 +353,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param viewMatrix    transformation matrix
    * @param shape         the shape to draw
    */
-  void drawShape(const GrClip&, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const GrStyledShape&);
+  void drawShape(const GrClip*, GrPaint&&, GrAA, const SkMatrix& viewMatrix, const GrStyledShape&);
 
   /**
    * Draws vertices with a paint.
@@ -371,7 +365,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param   effect           runtime effect that will handle custom vertex attributes.
    */
   void drawVertices(
-      const GrClip&, GrPaint&& paint, const SkMatrixProvider& matrixProvider,
+      const GrClip*, GrPaint&& paint, const SkMatrixProvider& matrixProvider,
       sk_sp<SkVertices> vertices, GrPrimitiveType* overridePrimType = nullptr,
       const SkRuntimeEffect* effect = nullptr);
 
@@ -388,7 +382,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    *                          the paint's color field.
    */
   void drawAtlas(
-      const GrClip&, GrPaint&& paint, const SkMatrix& viewMatrix, int spriteCount,
+      const GrClip*, GrPaint&& paint, const SkMatrix& viewMatrix, int spriteCount,
       const SkRSXform xform[], const SkRect texRect[], const SkColor colors[]);
 
   /**
@@ -401,7 +395,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param style         style to apply to the region
    */
   void drawRegion(
-      const GrClip&, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix, const SkRegion& region,
+      const GrClip*, GrPaint&& paint, GrAA aa, const SkMatrix& viewMatrix, const SkRegion& region,
       const GrStyle& style, const GrUserStencilSettings* ss = nullptr);
 
   /**
@@ -414,7 +408,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param style         style to apply to the oval. Currently path effects are not allowed.
    */
   void drawOval(
-      const GrClip&, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect& oval,
+      const GrClip*, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect& oval,
       const GrStyle& style);
   /**
    * Draws a partial arc of an oval.
@@ -432,14 +426,14 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * @param style         style to apply to the oval.
    */
   void drawArc(
-      const GrClip&, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect& oval,
+      const GrClip*, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect& oval,
       SkScalar startAngle, SkScalar sweepAngle, bool useCenter, const GrStyle& style);
 
   /**
    * Draw the image as a set of rects, specified by |iter|.
    */
   void drawImageLattice(
-      const GrClip&, GrPaint&&, const SkMatrix& viewMatrix, GrSurfaceProxyView,
+      const GrClip*, GrPaint&&, const SkMatrix& viewMatrix, GrSurfaceProxyView,
       SkAlphaType alphaType, sk_sp<GrColorSpaceXform>, GrSamplerState::Filter,
       std::unique_ptr<SkLatticeIter>, const SkRect& dst);
 
@@ -474,7 +468,9 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    * After this returns any pending surface IO will be issued to the backend 3D API and
    * if the surface has MSAA it will be resolved.
    */
-  GrSemaphoresSubmitted flush(SkSurface::BackendSurfaceAccess access, const GrFlushInfo&);
+  GrSemaphoresSubmitted flush(
+      SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
+      const GrBackendSurfaceMutableState*);
 
   /**
    *  The next time this GrRenderTargetContext is flushed, the gpu will wait on the passed in
@@ -491,7 +487,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
   // make a copy (which refs the proxy) if needed.
-  GrSurfaceProxyView writeSurfaceView() { return fWriteView; }
+  GrSurfaceProxyView writeSurfaceView() noexcept { return fWriteView; }
 
   // This entry point should only be called if the backing GPU object is known to be
   // instantiated.
@@ -521,13 +517,12 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   GrAAType chooseAAType(GrAA);
 
-  friend class GrAtlasTextBlob;            // for access to add[Mesh]DrawOp
   friend class GrClipStackClip;            // for access to getOpsTask
   friend class GrOnFlushResourceProvider;  // for access to getOpsTask (http://skbug.com/9357)
 
   friend class GrRenderTargetContextPriv;
 
-  // All the path renderers currently make their own ops
+  // All the path and text renderers/ops currently make their own ops
   friend class GrSoftwarePathRenderer;             // for access to add[Mesh]DrawOp
   friend class GrAAConvexPathRenderer;             // for access to add[Mesh]DrawOp
   friend class GrDashLinePathRenderer;             // for access to add[Mesh]DrawOp
@@ -542,18 +537,19 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   friend class GrFillRectOp;                       // for access to addDrawOp
   friend class GrTessellationPathRenderer;         // for access to addDrawOp
   friend class GrTextureOp;                        // for access to addDrawOp
+  friend class GrAtlasTextOp;                      // for access to addDrawOp
 
-  SkDEBUGCODE(void onValidate() const override);
+  SkDEBUGCODE(void onValidate() const override;)
 
-  GrOpsTask::CanDiscardPreviousOps canDiscardPreviousOpsOnFullClear() const;
+      GrOpsTask::CanDiscardPreviousOps canDiscardPreviousOpsOnFullClear() const;
   void setNeedsStencil(bool useMixedSamplesIfNotMSAA);
 
-  void internalClear(const GrFixedClip&, const SkPMColor4f&, CanClearFullscreen);
-  void internalStencilClear(const GrFixedClip&, bool insideStencilMask);
+  void internalClear(const SkIRect* scissor, const SkPMColor4f&, bool upgradePartialToFull = false);
+  void internalStencilClear(const SkIRect* scissor, bool insideStencilMask);
 
   // Only consumes the GrPaint if successful.
   bool drawFilledDRRect(
-      const GrClip& clip, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix,
+      const GrClip* clip, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix,
       const SkRRect& origOuter, const SkRRect& origInner);
 
   // If the drawn quad's paint is a const blended color, provide it as a non-null pointer to
@@ -566,7 +562,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   // 'stencilSettings' are provided merely for decision making purposes; When non-null,
   // optimization strategies that submit special ops are avoided.
   QuadOptimization attemptQuadOptimization(
-      const GrClip& clip, const SkPMColor4f* constColor,
+      const GrClip* clip, const SkPMColor4f* constColor,
       const GrUserStencilSettings* stencilSettings, GrAA* aa, DrawQuad* quad);
 
   // If stencil settings, 'ss', are non-null, AA controls MSAA or no AA. If they are null, then AA
@@ -574,13 +570,13 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   // quad optimizations, so all quad/rect public APIs should rely on this function for consistent
   // clipping behavior. 'quad' will be modified in place to reflect final rendered geometry.
   void drawFilledQuad(
-      const GrClip& clip, GrPaint&& paint, GrAA aa, DrawQuad* quad,
+      const GrClip* clip, GrPaint&& paint, GrAA aa, DrawQuad* quad,
       const GrUserStencilSettings* ss = nullptr);
 
   // Like drawFilledQuad but does not require using a GrPaint or FP for texturing.
   // 'quad' may be modified in place to reflect final geometry.
   void drawTexturedQuad(
-      const GrClip& clip, GrSurfaceProxyView proxyView, SkAlphaType alphaType,
+      const GrClip* clip, GrSurfaceProxyView proxyView, SkAlphaType alphaType,
       sk_sp<GrColorSpaceXform> textureXform, GrSamplerState::Filter filter,
       const SkPMColor4f& color, SkBlendMode blendMode, GrAA aa, DrawQuad* quad,
       const SkRect* subset = nullptr);
@@ -588,7 +584,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   // If 'attemptShapeFallback' is true, and the original shape had been simplfied, this
   // will re-route through drawShape() to see if we can avoid path rendering one more time.
   void drawShapeUsingPathRenderer(
-      const GrClip&, GrPaint&&, GrAA, const SkMatrix&, const GrStyledShape&,
+      const GrClip*, GrPaint&&, GrAA, const SkMatrix&, const GrStyledShape&,
       bool attemptShapeFallback = true);
 
   void addOp(std::unique_ptr<GrOp>);
@@ -599,15 +595,19 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   // op list. Before adding the op to an op list the WillAddOpFn is called. Note that it
   // will not be called in the event that the op is discarded. Moreover, the op may merge into
   // another op after the function is called (either before addDrawOp returns or some time later).
+  //
+  // If the clip pointer is null, no clipping will be performed.
   void addDrawOp(
-      const GrClip&, std::unique_ptr<GrDrawOp>,
+      const GrClip*, std::unique_ptr<GrDrawOp>,
       const std::function<WillAddOpFn>& = std::function<WillAddOpFn>());
 
   // Makes a copy of the proxy if it is necessary for the draw and places the texture that should
   // be used by GrXferProcessor to access the destination color in 'result'. If the return
   // value is false then a texture copy could not be made.
+  //
+  // The op should have already had setClippedBounds called on it.
   bool SK_WARN_UNUSED_RESULT
-  setupDstProxyView(const GrClip&, const GrOp& op, GrXferProcessor::DstProxyView* result);
+  setupDstProxyView(const GrOp& op, GrXferProcessor::DstProxyView* result);
 
   class AsyncReadResult;
 
@@ -617,6 +617,8 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
       ReadPixelsContext context);
 
   GrOpsTask* getOpsTask();
+
+  SkGlyphRunListPainter* glyphPainter() noexcept { return &fGlyphPainter; }
 
   std::unique_ptr<GrTextTarget> fTextTarget;
 
@@ -633,7 +635,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 #if GR_TEST_UTILS
   bool fPreserveOpsOnFullClear_TestingOnly = false;
 #endif
-
+  SkGlyphRunListPainter fGlyphPainter;
   typedef GrSurfaceContext INHERITED;
 };
 

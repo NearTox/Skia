@@ -13,7 +13,7 @@
 #include "src/core/SkStrikeForGPU.h"
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/text/GrTextContext.h"
+#  include "src/gpu/text/GrSDFTOptions.h"
 class GrStrikeCache;
 class GrTextStrike;
 #endif
@@ -56,7 +56,7 @@ class SkStrikeSpec {
   // Create a strike spec for scaled distance field text.
   static std::tuple<SkStrikeSpec, SkScalar, SkScalar> MakeSDFT(
       const SkFont& font, const SkPaint& paint, const SkSurfaceProps& surfaceProps,
-      const SkMatrix& deviceMatrix, const GrTextContext::Options& options);
+      const SkMatrix& deviceMatrix, const GrSDFTOptions& options);
 
   sk_sp<GrTextStrike> findOrCreateGrStrike(GrStrikeCache* cache) const;
 #endif

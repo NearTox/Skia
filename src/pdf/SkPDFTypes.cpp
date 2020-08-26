@@ -213,7 +213,7 @@ SkPDFUnion SkPDFUnion::Ref(SkPDFIndirectReference ref) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0   // Enable if needed.
+#if 0  // Enable if needed.
 void SkPDFAtom::emitObject(SkWStream* stream) const {
     fValue.emitObject(stream);
 }
@@ -221,9 +221,9 @@ void SkPDFAtom::emitObject(SkWStream* stream) const {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-SkPDFArray::SkPDFArray() {}
+SkPDFArray::SkPDFArray() noexcept = default;
 
-SkPDFArray::~SkPDFArray() {}
+SkPDFArray::~SkPDFArray() = default;
 
 size_t SkPDFArray::size() const { return fValues.size(); }
 
@@ -270,7 +270,7 @@ void SkPDFArray::appendRef(SkPDFIndirectReference ref) { this->append(SkPDFUnion
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPDFDict::~SkPDFDict() {}
+SkPDFDict::~SkPDFDict() = default;
 
 SkPDFDict::SkPDFDict(const char type[]) {
   if (type) {

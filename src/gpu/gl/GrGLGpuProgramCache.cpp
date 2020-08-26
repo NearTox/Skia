@@ -27,7 +27,7 @@ struct GrGLGpu::ProgramCache::Entry {
 GrGLGpu::ProgramCache::ProgramCache(GrGLGpu* gpu)
     : fMap(gpu->getContext()->priv().options().fRuntimeProgramCacheSize), fGpu(gpu) {}
 
-GrGLGpu::ProgramCache::~ProgramCache() {}
+GrGLGpu::ProgramCache::~ProgramCache() = default;
 
 void GrGLGpu::ProgramCache::abandon() {
   fMap.foreach ([](GrProgramDesc*, std::unique_ptr<Entry>* e) {

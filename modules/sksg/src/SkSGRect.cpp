@@ -29,7 +29,7 @@ SkRect Rect::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   return fRect;
 }
 
-SkPath Rect::onAsPath() const {
+SkPath Rect::onAsPath() const noexcept {
   SkPath path;
   path.addRect(fRect, this->getDirection(), this->getInitialPointIndex());
   return path;
@@ -66,7 +66,7 @@ SkRect RRect::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
   return fRRect.getBounds();
 }
 
-SkPath RRect::onAsPath() const {
+SkPath RRect::onAsPath() const noexcept {
   SkPath path;
   path.addRRect(fRRect, this->getDirection(), this->getInitialPointIndex());
   return path;

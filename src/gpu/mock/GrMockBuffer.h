@@ -21,13 +21,13 @@ class GrMockBuffer : public GrGpuBuffer {
   }
 
  private:
-  void onMap() override {
+  void onMap() noexcept override {
     if (GrCaps::kNone_MapFlags != this->getGpu()->caps()->mapBufferFlags()) {
       fMapPtr = sk_malloc_throw(this->size());
     }
   }
-  void onUnmap() override { sk_free(fMapPtr); }
-  bool onUpdateData(const void* src, size_t srcSizeInBytes) override { return true; }
+  void onUnmap() noexcept override { sk_free(fMapPtr); }
+  bool onUpdateData(const void* src, size_t srcSizeInBytes) noexcept override { return true; }
 
   typedef GrGpuBuffer INHERITED;
 };

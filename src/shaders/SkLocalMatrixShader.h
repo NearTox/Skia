@@ -42,14 +42,14 @@ class SkLocalMatrixShader final : public SkShaderBase {
   Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
 
-  SkImage* onIsAImage(SkMatrix* matrix, SkTileMode* mode) const override;
+  SkImage* onIsAImage(SkMatrix* matrix, SkTileMode* mode) const noexcept override;
 
   bool onAppendStages(const SkStageRec&) const override;
 
   skvm::Color onProgram(
-      skvm::Builder*, skvm::F32 x, skvm::F32 y, skvm::Color paint, const SkMatrix& ctm,
-      const SkMatrix* localM, SkFilterQuality quality, const SkColorInfo& dst,
-      skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+      skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
 
  private:
   SK_FLATTENABLE_HOOKS(SkLocalMatrixShader)

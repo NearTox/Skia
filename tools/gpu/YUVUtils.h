@@ -11,6 +11,7 @@
 #include "include/core/SkImage.h"
 #include "include/core/SkYUVAIndex.h"
 #include "include/core/SkYUVASizeInfo.h"
+#include "include/gpu/GrBackendSurface.h"
 #include "src/core/SkAutoMalloc.h"
 
 class SkData;
@@ -47,6 +48,44 @@ class LazyYUVImage {
   bool reset(sk_sp<SkData> data);
 
   bool ensureYUVImage(GrContext* context);
+};
+
+// A helper for managing the lifetime of backend textures for YUVA images.
+class YUVABackendReleaseContext {
+ public:
+  // A stock 'TextureReleaseProc' to use with this class
+  static void Release(void* releaseContext) {
+    auto beContext = reinterpret_cast<YUVABackendReleaseContext*>(releaseContext);
+
+    delete beContext;
+  }
+
+  // Given how and when backend textures are created, just deleting this object often
+  // isn't enough. This helper encapsulates the extra work needed.
+  static void Unwind(GrContext* context, YUVABackendReleaseContext* beContext);
+
+  YUVABackendReleaseContext(GrContext* context);
+  ~YUVABackendReleaseContext();
+
+  void set(int index, const GrBackendTexture& beTex) {
+    SkASSERT(index >= 0 && index < 4);
+    SkASSERT(!fBETextures[index].isValid());
+    SkASSERT(beTex.isValid());
+
+    fBETextures[index] = beTex;
+  }
+
+  const GrBackendTexture* beTextures() const { return fBETextures; }
+
+  const GrBackendTexture& beTexture(int index) {
+    SkASSERT(index >= 0 && index < 4);
+    SkASSERT(fBETextures[index].isValid());
+    return fBETextures[index];
+  }
+
+ private:
+  GrContext* fContext;
+  GrBackendTexture fBETextures[4];
 };
 
 }  // namespace sk_gpu_test

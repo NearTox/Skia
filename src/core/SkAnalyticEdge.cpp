@@ -287,9 +287,9 @@ bool SkAnalyticEdge::setLine(const SkPoint& p0, const SkPoint& p1) {
   fY = y0;
   fUpperY = y0;
   fLowerY = y1;
-  fDY = dx == 0 || slope == 0
-            ? SK_MaxS32
-            : absSlope < kInverseTableSize ? quick_inverse(absSlope) : SkAbs32(quick_div(dy, dx));
+  fDY = dx == 0 || slope == 0          ? SK_MaxS32
+        : absSlope < kInverseTableSize ? quick_inverse(absSlope)
+                                       : SkAbs32(quick_div(dy, dx));
   fCurveCount = 0;
   fWinding = SkToS8(winding);
   fCurveShift = 0;
@@ -335,9 +335,9 @@ bool SkAnalyticEdge::updateLine(SkFixed x0, SkFixed y0, SkFixed x1, SkFixed y1, 
   fY = y0;
   fUpperY = y0;
   fLowerY = y1;
-  fDY = (dx == 0 || slope == 0)
-            ? SK_MaxS32
-            : absSlope < kInverseTableSize ? quick_inverse(absSlope) : SkAbs32(quick_div(dy, dx));
+  fDY = (dx == 0 || slope == 0)        ? SK_MaxS32
+        : absSlope < kInverseTableSize ? quick_inverse(absSlope)
+                                       : SkAbs32(quick_div(dy, dx));
 
   return true;
 }

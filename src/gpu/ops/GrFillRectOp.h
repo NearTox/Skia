@@ -44,7 +44,7 @@ class GrFillRectOp {
   // Bulk API for drawing quads with a single op
   // TODO(michaelludwig) - remove if the bulk API is not useful for SkiaRenderer
   static void AddFillRectOps(
-      GrRenderTargetContext*, const GrClip& clip, GrRecordingContext*, GrPaint&&, GrAAType,
+      GrRenderTargetContext*, const GrClip* clip, GrRecordingContext*, GrPaint&&, GrAAType,
       const SkMatrix& viewMatrix, const GrRenderTargetContext::QuadSetEntry quads[], int quadCount,
       const GrUserStencilSettings* = nullptr);
 

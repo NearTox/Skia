@@ -56,11 +56,11 @@ std::unique_ptr<SkShaper::ScriptRunIterator> SkShaper::MakeScriptRunIterator(
   return std::make_unique<SkShaper::TrivialScriptRunIterator>(scriptTag, utf8Bytes);
 }
 
-SkShaper::SkShaper() {}
-SkShaper::~SkShaper() {}
+SkShaper::SkShaper() noexcept = default;
+SkShaper::~SkShaper() = default;
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
-static inline SkUnichar utf8_next(const char** ptr, const char* end) {
+static inline SkUnichar utf8_next(const char** ptr, const char* end) noexcept {
   SkUnichar val = SkUTF::NextUTF8(ptr, end);
   return val < 0 ? 0xFFFD : val;
 }
@@ -136,10 +136,10 @@ class FontMgrRunIterator final : public SkShaper::FontRunIterator {
       }
     }
   }
-  size_t endOfCurrentRun() const override { return fCurrent - fBegin; }
-  bool atEnd() const override { return fCurrent == fEnd; }
+  size_t endOfCurrentRun() const noexcept override { return fCurrent - fBegin; }
+  bool atEnd() const noexcept override { return fCurrent == fEnd; }
 
-  const SkFont& currentFont() const override { return *fCurrentFont; }
+  const SkFont& currentFont() const noexcept override { return *fCurrentFont; }
 
  private:
   char const* fCurrent;
@@ -172,7 +172,7 @@ std::unique_ptr<SkShaper::LanguageRunIterator> SkShaper::MakeStdLanguageRunItera
   return std::make_unique<TrivialLanguageRunIterator>(std::locale().name().c_str(), utf8Bytes);
 }
 
-void SkTextBlobBuilderRunHandler::beginLine() {
+void SkTextBlobBuilderRunHandler::beginLine() noexcept {
   fCurrentPosition = fOffset;
   fMaxRunAscent = 0;
   fMaxRunDescent = 0;
@@ -186,7 +186,7 @@ void SkTextBlobBuilderRunHandler::runInfo(const RunInfo& info) {
   fMaxRunLeading = std::max(fMaxRunLeading, metrics.fLeading);
 }
 
-void SkTextBlobBuilderRunHandler::commitRunInfo() { fCurrentPosition.fY -= fMaxRunAscent; }
+void SkTextBlobBuilderRunHandler::commitRunInfo() noexcept { fCurrentPosition.fY -= fMaxRunAscent; }
 
 SkShaper::RunHandler::Buffer SkTextBlobBuilderRunHandler::runBuffer(const RunInfo& info) {
   int glyphCount = SkTFitsIn<int>(info.glyphCount) ? info.glyphCount : INT_MAX;
@@ -204,7 +204,7 @@ SkShaper::RunHandler::Buffer SkTextBlobBuilderRunHandler::runBuffer(const RunInf
   return {runBuffer.glyphs, runBuffer.points(), nullptr, runBuffer.clusters, fCurrentPosition};
 }
 
-void SkTextBlobBuilderRunHandler::commitRunBuffer(const RunInfo& info) {
+void SkTextBlobBuilderRunHandler::commitRunBuffer(const RunInfo& info) noexcept {
   SkASSERT(0 <= fClusterOffset);
   for (int i = 0; i < fGlyphCount; ++i) {
     SkASSERT(fClusters[i] >= (unsigned)fClusterOffset);
@@ -212,7 +212,7 @@ void SkTextBlobBuilderRunHandler::commitRunBuffer(const RunInfo& info) {
   }
   fCurrentPosition += info.fAdvance;
 }
-void SkTextBlobBuilderRunHandler::commitLine() {
+void SkTextBlobBuilderRunHandler::commitLine() noexcept {
   fOffset += {0, fMaxRunDescent + fMaxRunLeading - fMaxRunAscent};
 }
 

@@ -23,8 +23,8 @@ class SkDrawableList : SkNoncopyable {
   SkDrawableList() noexcept = default;
   ~SkDrawableList();
 
-  int count() const noexcept { return fArray.count(); }
-  SkDrawable* const* begin() const noexcept { return fArray.begin(); }
+  int count() const { return fArray.count(); }
+  SkDrawable* const* begin() const { return fArray.begin(); }
 
   void append(SkDrawable* drawable);
 
@@ -51,10 +51,10 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   };
   void reset(SkRecord*, const SkRect& bounds, DrawPictureMode, SkMiniRecorder* = nullptr);
 
-  size_t approxBytesUsedBySubPictures() const noexcept { return fApproxBytesUsedBySubPictures; }
+  size_t approxBytesUsedBySubPictures() const { return fApproxBytesUsedBySubPictures; }
 
-  SkDrawableList* getDrawableList() const noexcept { return fDrawableList.get(); }
-  std::unique_ptr<SkDrawableList> detachDrawableList() noexcept { return std::move(fDrawableList); }
+  SkDrawableList* getDrawableList() const { return fDrawableList.get(); }
+  std::unique_ptr<SkDrawableList> detachDrawableList() { return std::move(fDrawableList); }
 
   // Make SkRecorder forget entirely about its SkRecord*; all calls to SkRecorder will fail.
   void forgetRecord();
@@ -64,7 +64,7 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void willSave() override;
   SaveLayerStrategy getSaveLayerStrategy(const SaveLayerRec&) override;
   bool onDoSaveBehind(const SkRect*) override;
-  void willRestore() noexcept override {}
+  void willRestore() override {}
   void didRestore() override;
 
   void onMarkCTM(const char*) override;

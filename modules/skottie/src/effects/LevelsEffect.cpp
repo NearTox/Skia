@@ -29,7 +29,7 @@ struct ClipInfo {
 struct ChannelMapper {
   ScalarValue fInBlack = 0, fInWhite = 1, fOutBlack = 0, fOutWhite = 1, fGamma = 1;
 
-  const uint8_t* build_lut(std::array<uint8_t, 256>& lut_storage, const ClipInfo& clip_info) const noexcept {
+  const uint8_t* build_lut(std::array<uint8_t, 256>& lut_storage, const ClipInfo& clip_info) const {
     auto in_0 = fInBlack, in_1 = fInWhite, out_0 = fOutBlack, out_1 = fOutWhite,
          g = sk_ieee_float_divide(1, std::max(fGamma, 0.0f));
 

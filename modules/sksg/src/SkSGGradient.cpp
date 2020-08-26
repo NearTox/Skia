@@ -24,9 +24,9 @@ sk_sp<SkShader> Gradient::onRevalidateShader() {
 
   SkScalar position = 0;
   for (const auto& stop : fColorStops) {
-    colors.emplace_back(stop.fColor);
+    colors.push_back(stop.fColor);
     position = SkTPin(stop.fPosition, position, 1.0f);
-    positions.emplace_back(position);
+    positions.push_back(position);
   }
 
   // TODO: detect even stop distributions, pass null for positions.

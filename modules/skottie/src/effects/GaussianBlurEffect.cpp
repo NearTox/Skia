@@ -25,7 +25,7 @@ class GaussianBlurEffectAdapter final : public AnimatablePropertyContainer {
         new GaussianBlurEffectAdapter(jprops, std::move(layer), abuilder));
   }
 
-  const sk_sp<sksg::RenderNode>& node() const noexcept { return fImageFilterEffect; }
+  const sk_sp<sksg::RenderNode>& node() const { return fImageFilterEffect; }
 
  private:
   GaussianBlurEffectAdapter(

@@ -158,7 +158,7 @@ void SkRecordNoopSaveRestores(SkRecord* record) {
 }
 
 #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
-static bool effectively_srcover(const SkPaint* paint) noexcept {
+static bool effectively_srcover(const SkPaint* paint) {
   if (!paint || paint->isSrcOver()) {
     return true;
   }
@@ -173,8 +173,8 @@ struct SaveLayerDrawRestoreNooper {
   typedef Pattern<Is<SaveLayer>, IsDraw, Is<Restore>> Match;
 
   bool onMatch(SkRecord* record, Match* match, int begin, int end) {
-    if (match->first<SaveLayer>()->backdrop || match->first<SaveLayer>()->clipMask) {
-      // can't throw away the layer if we have a backdrop or clip mask
+    if (match->first<SaveLayer>()->backdrop) {
+      // can't throw away the layer if we have a backdrop
       return false;
     }
 

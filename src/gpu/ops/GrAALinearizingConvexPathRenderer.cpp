@@ -157,7 +157,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kYes, IsHairline::kNo);
   }
 
-  const char* name() const override { return "AAFlatteningConvexPathOp"; }
+  const char* name() const noexcept override { return "AAFlatteningConvexPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -379,7 +379,7 @@ bool GrAALinearizingConvexPathRenderer::onDrawPath(const DrawPathArgs& args) {
   std::unique_ptr<GrDrawOp> op = AAFlatteningConvexPathOp::Make(
       args.fContext, std::move(args.fPaint), *args.fViewMatrix, path, strokeWidth,
       stroke.getStyle(), join, miterLimit, args.fUserStencilSettings);
-  args.fRenderTargetContext->addDrawOp(*args.fClip, std::move(op));
+  args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));
   return true;
 }
 

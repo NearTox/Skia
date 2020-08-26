@@ -37,8 +37,9 @@ static const int kPtCount[] = {1, 1, 2, 2, 3, 0};
 static const int kPtIndex[] = {0, 1, 1, 1, 1, 0};
 
 static Contour::Direction to_direction(SkScalar dy) {
-  return dy > 0 ? Contour::Direction::kCCW
-                : dy < 0 ? Contour::Direction::kCW : Contour::Direction::kNone;
+  return dy > 0   ? Contour::Direction::kCCW
+         : dy < 0 ? Contour::Direction::kCW
+                  : Contour::Direction::kNone;
 }
 
 static int contains_edge(SkPoint pts[4], SkPath::Verb verb, SkScalar weight, const SkPoint& edge) {

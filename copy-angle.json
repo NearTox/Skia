@@ -238,6 +238,7 @@
   "third_party/externals/angle2/src/libANGLE/validationGL44.cpp",
   "third_party/externals/angle2/src/libANGLE/validationGL45.cpp",
   "third_party/externals/angle2/src/libANGLE/validationGL46.cpp",
+  "third_party/externals/angle2/src/gpu_info_util/SystemInfo.cpp",
   "third_party/externals/angle2/src/libANGLE/Overlay.cpp",
   "third_party/externals/angle2/src/libANGLE/OverlayWidgets.cpp",
   "third_party/externals/angle2/src/libANGLE/Overlay_autogen.cpp",
@@ -399,5 +400,6 @@
   "third_party/externals/angle2/src/libANGLE/renderer/d3d/d3d11/texture_format_table_autogen.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/d3d/d3d11/converged/CompositorNativeWindow11.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/d3d/d3d11/win32/NativeWindow11Win32.cpp",
-  "third_party/externals/angle2/src/third_party/systeminfo/SystemInfo.cpp"
+  "third_party/externals/angle2/src/third_party/systeminfo/SystemInfo.cpp",
+  "third_party/externals/angle2/src/gpu_info_util/SystemInfo_win.cpp"
 ]

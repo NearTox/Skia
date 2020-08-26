@@ -68,8 +68,7 @@ class SkTHashTable {
   }
 
   // If there is an entry in the table with this key, return a pointer to it.  If not, null.
-  T* find(const K& key) const
-      noexcept(noexcept(Traits::GetKey(fSlots[0].val)) && noexcept(Hash(key))) {
+  T* find(const K& key) const {
     uint32_t hash = Hash(key);
     int index = hash & (fCapacity - 1);
     for (int n = 0; n < fCapacity; n++) {
@@ -88,7 +87,7 @@ class SkTHashTable {
 
   // If there is an entry in the table with this key, return it.  If not, null.
   // This only works for pointer type T, and cannot be used to find an nullptr entry.
-  T findOrNull(const K& key) const noexcept(noexcept(find(key))) {
+  T findOrNull(const K& key) const {
     if (T* p = this->find(key)) {
       return *p;
     }
@@ -136,8 +135,7 @@ class SkTHashTable {
   }
 
  private:
-  T* uncheckedSet(T&& val) noexcept(std::is_nothrow_move_assignable_v<T>&& noexcept(
-      Traits::GetKey(val)) && noexcept(Hash(Traits::GetKey(val)))) {
+  T* uncheckedSet(T&& val) {
     const K& key = Traits::GetKey(val);
     uint32_t hash = Hash(key);
     int index = hash & (fCapacity - 1);
@@ -221,17 +219,16 @@ class SkTHashTable {
     return index;
   }
 
-  static uint32_t Hash(const K& key) noexcept(noexcept(Traits::Hash(key))) {
+  static uint32_t Hash(const K& key) {
     uint32_t hash = Traits::Hash(key) & 0xffffffff;
     return hash ? hash : 1;  // We reserve hash 0 to mark empty.
   }
 
   struct Slot {
-    Slot() noexcept(std::is_nothrow_default_constructible_v<T>) : val{}, hash(0) {}
-    Slot(T&& v, uint32_t h) noexcept(std::is_nothrow_move_constructible_v<T>)
-        : val(std::move(v)), hash(h) {}
-    Slot(Slot&& o) noexcept(std::is_nothrow_move_assignable_v<T>) { *this = std::move(o); }
-    Slot& operator=(Slot&& o) noexcept(std::is_nothrow_move_assignable_v<T>) {
+    Slot() : val{}, hash(0) {}
+    Slot(T&& v, uint32_t h) : val(std::move(v)), hash(h) {}
+    Slot(Slot&& o) { *this = std::move(o); }
+    Slot& operator=(Slot&& o) {
       val = std::move(o.val);
       hash = o.hash;
       return *this;
@@ -315,7 +312,7 @@ class SkTHashMap {
   struct Pair {
     K key;
     V val;
-    static const K& GetKey(const Pair& p) noexcept { return p.key; }
+    static const K& GetKey(const Pair& p) { return p.key; }
     static auto Hash(const K& key) { return HashK()(key); }
   };
 
@@ -369,7 +366,7 @@ class SkTHashSet {
 
  private:
   struct Traits {
-    static const T& GetKey(const T& item) noexcept { return item; }
+    static const T& GetKey(const T& item) { return item; }
     static auto Hash(const T& item) { return HashT()(item); }
   };
   SkTHashTable<T, T, Traits> fTable;

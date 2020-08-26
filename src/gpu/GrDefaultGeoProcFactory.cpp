@@ -42,18 +42,21 @@ class DefaultGeoProc : public GrGeometryProcessor {
 
   const char* name() const noexcept override { return "DefaultGeometryProcessor"; }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  bool hasVertexColor() const noexcept { return fInColor.isInitialized(); }
-  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
-  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
-  bool localCoordsWillBeRead() const noexcept { return fLocalCoordsWillBeRead; }
-  uint8_t coverage() const noexcept { return fCoverage; }
-  bool hasVertexCoverage() const noexcept { return fInCoverage.isInitialized(); }
+  const SkPMColor4f& color() const { return fColor; }
+  bool hasVertexColor() const { return fInColor.isInitialized(); }
+  const SkMatrix& viewMatrix() const { return fViewMatrix; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
+  bool localCoordsWillBeRead() const { return fLocalCoordsWillBeRead; }
+  uint8_t coverage() const { return fCoverage; }
+  bool hasVertexCoverage() const { return fInCoverage.isInitialized(); }
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
     GLSLProcessor()
-        : fViewMatrix(SkMatrix::InvalidMatrix()), fColor(SK_PMColor4fILLEGAL), fCoverage(0xff) {}
+        : fViewMatrix(SkMatrix::InvalidMatrix()),
+          fLocalMatrix(SkMatrix::InvalidMatrix()),
+          fColor(SK_PMColor4fILLEGAL),
+          fCoverage(0xff) {}
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const DefaultGeoProc& gp = args.fGP.cast<DefaultGeoProc>();
@@ -99,11 +102,14 @@ class DefaultGeoProc : public GrGeometryProcessor {
           &fViewMatrixUniform);
 
       // emit transforms using either explicit local coords or positions
-      const auto& coordsAttr =
-          gp.fInLocalCoords.isInitialized() ? gp.fInLocalCoords : gp.fInPosition;
-      this->emitTransforms(
-          vertBuilder, varyingHandler, uniformHandler, coordsAttr.asShaderVar(), gp.localMatrix(),
-          args.fFPCoordTransformHandler);
+      if (gp.fInLocalCoords.isInitialized()) {
+        SkASSERT(gp.localMatrix().isIdentity());
+        gpArgs->fLocalCoordVar = gp.fInLocalCoords.asShaderVar();
+      } else if (gp.fLocalCoordsWillBeRead) {
+        this->writeLocalCoord(
+            vertBuilder, uniformHandler, gpArgs, gp.fInPosition.asShaderVar(), gp.localMatrix(),
+            &fLocalMatrixUniform);
+      }
 
       // Setup coverage as pass through
       if (gp.hasVertexCoverage() && !tweakAlpha) {
@@ -125,8 +131,11 @@ class DefaultGeoProc : public GrGeometryProcessor {
       const DefaultGeoProc& def = gp.cast<DefaultGeoProc>();
       uint32_t key = def.fFlags;
       key |= (def.coverage() == 0xff) ? 0x80 : 0;
-      key |= (def.localCoordsWillBeRead() && def.localMatrix().hasPerspective()) ? 0x100 : 0;
-      key |= ComputePosKey(def.viewMatrix()) << 20;
+      key |= def.localCoordsWillBeRead() ? 0x100 : 0;
+
+      bool usesLocalMatrix = def.localCoordsWillBeRead() && !def.fInLocalCoords.isInitialized();
+      key =
+          AddMatrixKeys(key, def.viewMatrix(), usesLocalMatrix ? def.localMatrix() : SkMatrix::I());
       b->add32(key);
     }
 
@@ -135,11 +144,9 @@ class DefaultGeoProc : public GrGeometryProcessor {
         const CoordTransformRange& transformRange) override {
       const DefaultGeoProc& dgp = gp.cast<DefaultGeoProc>();
 
-      if (!dgp.viewMatrix().isIdentity() &&
-          !SkMatrixPriv::CheapEqual(fViewMatrix, dgp.viewMatrix())) {
-        fViewMatrix = dgp.viewMatrix();
-        pdman.setSkMatrix(fViewMatrixUniform, fViewMatrix);
-      }
+      this->setTransform(pdman, fViewMatrixUniform, dgp.viewMatrix(), &fViewMatrix);
+      this->setTransform(pdman, fLocalMatrixUniform, dgp.localMatrix(), &fLocalMatrix);
+      this->setTransformDataHelper(pdman, transformRange);
 
       if (!dgp.hasVertexColor() && dgp.color() != fColor) {
         pdman.set4fv(fColorUniform, 1, dgp.color().vec());
@@ -150,14 +157,15 @@ class DefaultGeoProc : public GrGeometryProcessor {
         pdman.set1f(fCoverageUniform, GrNormalizeByteToFloat(dgp.coverage()));
         fCoverage = dgp.coverage();
       }
-      this->setTransformDataHelper(dgp.fLocalMatrix, pdman, transformRange);
     }
 
    private:
     SkMatrix fViewMatrix;
+    SkMatrix fLocalMatrix;
     SkPMColor4f fColor;
     uint8_t fCoverage;
     UniformHandle fViewMatrixUniform;
+    UniformHandle fLocalMatrixUniform;
     UniformHandle fColorUniform;
     UniformHandle fCoverageUniform;
 
@@ -177,7 +185,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
 
   DefaultGeoProc(
       uint32_t gpTypeFlags, const SkPMColor4f& color, const SkMatrix& viewMatrix,
-      const SkMatrix& localMatrix, uint8_t coverage, bool localCoordsWillBeRead) noexcept
+      const SkMatrix& localMatrix, uint8_t coverage, bool localCoordsWillBeRead)
       : INHERITED(kDefaultGeoProc_ClassID),
         fColor(color),
         fViewMatrix(viewMatrix),
@@ -222,23 +230,23 @@ GrGeometryProcessor* DefaultGeoProc::TestCreate(GrProcessorTestData* d) {
   if (d->fRandom->nextBool()) {
     flags |= kColorAttribute_GPFlag;
   }
-  if (d->fRandom->nextBool()) {
-    flags |= kColorAttributeIsWide_GPFlag;
-  }
-  if (d->fRandom->nextBool()) {
-    flags |= kCoverageAttribute_GPFlag;
     if (d->fRandom->nextBool()) {
-      flags |= kCoverageAttributeTweak_GPFlag;
+      flags |= kColorAttributeIsWide_GPFlag;
     }
-  }
-  if (d->fRandom->nextBool()) {
-    flags |= kLocalCoordAttribute_GPFlag;
-  }
+    if (d->fRandom->nextBool()) {
+      flags |= kCoverageAttribute_GPFlag;
+      if (d->fRandom->nextBool()) {
+        flags |= kCoverageAttributeTweak_GPFlag;
+      }
+    }
+    if (d->fRandom->nextBool()) {
+      flags |= kLocalCoordAttribute_GPFlag;
+    }
 
-  return DefaultGeoProc::Make(
-      d->allocator(), flags, SkPMColor4f::FromBytes_RGBA(GrRandomColor(d->fRandom)),
-      GrTest::TestMatrix(d->fRandom), GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
-      GrRandomCoverage(d->fRandom));
+    return DefaultGeoProc::Make(
+        d->allocator(), flags, SkPMColor4f::FromBytes_RGBA(GrRandomColor(d->fRandom)),
+        GrTest::TestMatrix(d->fRandom), GrTest::TestMatrix(d->fRandom), d->fRandom->nextBool(),
+        GrRandomCoverage(d->fRandom));
 }
 #endif
 

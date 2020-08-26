@@ -22,7 +22,7 @@ namespace SkSL {
 
 class AutoDepth {
  public:
-  AutoDepth(Parser* p) noexcept : fParser(p), fDepth(0) {}
+  AutoDepth(Parser* p) : fParser(p), fDepth(0) {}
 
   ~AutoDepth() { fParser->fDepth -= fDepth; }
 
@@ -188,7 +188,7 @@ Token Parser::nextToken() {
   return token;
 }
 
-void Parser::pushback(Token t) noexcept {
+void Parser::pushback(Token t) {
   SkASSERT(fPushback.fKind == Token::Kind::TK_INVALID);
   fPushback = std::move(t);
 }
@@ -538,38 +538,6 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
     }
     ++vd.fSizeCount;
-  }
-  getNode(currentVar).setVarData(vd);
-  if (this->checkNext(Token::Kind::TK_EQ)) {
-    ASTNode::ID value = this->assignmentExpression();
-    if (!value) {
-      return ASTNode::ID::Invalid();
-    }
-    getNode(currentVar).addChild(value);
-  }
-  while (this->checkNext(Token::Kind::TK_COMMA)) {
-    Token name;
-    if (!this->expect(Token::Kind::TK_IDENTIFIER, "an identifier", &name)) {
-      return ASTNode::ID::Invalid();
-    }
-    currentVar = ASTNode::ID(fFile->fNodes.size());
-    vd = ASTNode::VarData(this->text(name), 0);
-    fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
-    getNode(result).addChild(currentVar);
-    while (this->checkNext(Token::Kind::TK_LBRACKET)) {
-      if (this->checkNext(Token::Kind::TK_RBRACKET)) {
-        CREATE_EMPTY_CHILD(currentVar);
-      } else {
-        ASTNode::ID size = this->expression();
-        if (!size) {
-          return ASTNode::ID::Invalid();
-        }
-        getNode(currentVar).addChild(size);
-        if (!this->expect(Token::Kind::TK_RBRACKET, "']'")) {
-          return ASTNode::ID::Invalid();
-        }
-      }
-      ++vd.fSizeCount;
     }
     getNode(currentVar).setVarData(vd);
     if (this->checkNext(Token::Kind::TK_EQ)) {
@@ -579,11 +547,43 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
       getNode(currentVar).addChild(value);
     }
-  }
-  if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
-    return ASTNode::ID::Invalid();
-  }
-  return result;
+    while (this->checkNext(Token::Kind::TK_COMMA)) {
+      Token name;
+      if (!this->expect(Token::Kind::TK_IDENTIFIER, "an identifier", &name)) {
+        return ASTNode::ID::Invalid();
+      }
+      currentVar = ASTNode::ID(fFile->fNodes.size());
+      vd = ASTNode::VarData(this->text(name), 0);
+      fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
+      getNode(result).addChild(currentVar);
+      while (this->checkNext(Token::Kind::TK_LBRACKET)) {
+        if (this->checkNext(Token::Kind::TK_RBRACKET)) {
+          CREATE_EMPTY_CHILD(currentVar);
+        } else {
+          ASTNode::ID size = this->expression();
+          if (!size) {
+            return ASTNode::ID::Invalid();
+          }
+          getNode(currentVar).addChild(size);
+          if (!this->expect(Token::Kind::TK_RBRACKET, "']'")) {
+            return ASTNode::ID::Invalid();
+          }
+        }
+        ++vd.fSizeCount;
+      }
+      getNode(currentVar).setVarData(vd);
+      if (this->checkNext(Token::Kind::TK_EQ)) {
+        ASTNode::ID value = this->assignmentExpression();
+        if (!value) {
+          return ASTNode::ID::Invalid();
+        }
+        getNode(currentVar).addChild(value);
+      }
+    }
+    if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
+      return ASTNode::ID::Invalid();
+    }
+    return result;
 }
 
 /* modifiers type IDENTIFIER (LBRACKET INT_LITERAL RBRACKET)? */
@@ -962,7 +962,7 @@ ASTNode::ID Parser::statement() {
       if (this->isType(this->text(start))) {
         return this->varDeclarations();
       }
-      // fall through
+      [[fallthrough]];
     default: return this->expressionStatement();
   }
 }
@@ -1262,7 +1262,8 @@ ASTNode::ID Parser::forStatement() {
         getNode(result).addChild(initializer);
         break;
       }
-    }  // fall through
+      [[fallthrough]];
+    }
     default:
       initializer = this->expressionStatement();
       if (!initializer) {
@@ -1837,7 +1838,7 @@ ASTNode::ID Parser::postfixExpression() {
         if (this->text(t)[0] != '.') {
           return result;
         }
-        // fall through
+        [[fallthrough]];
       case Token::Kind::TK_LBRACKET:
       case Token::Kind::TK_DOT:
       case Token::Kind::TK_LPAREN:
@@ -1892,6 +1893,7 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
         getNode(result).addChild(base);
         return result;
       }
+      [[fallthrough]];  // FIXME(ethannicholas)
     }
     case Token::Kind::TK_FLOAT_LITERAL: {
       // Swizzles that start with a constant number, e.g. '.000r', will be tokenized as
@@ -1958,6 +1960,7 @@ ASTNode::ID Parser::term() {
       if (this->identifier(&text)) {
         RETURN_NODE(t.fOffset, ASTNode::Kind::kIdentifier, std::move(text));
       }
+      break;
     }
     case Token::Kind::TK_INT_LITERAL: {
       SKSL_INT i;

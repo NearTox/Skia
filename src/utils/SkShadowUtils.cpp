@@ -17,6 +17,7 @@
 #include "include/private/SkIDChangeListener.h"
 #include "include/utils/SkRandom.h"
 #include "src/core/SkBlurMask.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkColorFilterPriv.h"
 #include "src/core/SkDevice.h"
 #include "src/core/SkDrawShadowInfo.h"
@@ -40,9 +41,9 @@
  *                           Final result is black with alpha of Gaussian(B)*G.
  *                           The assumption is that the original color's alpha is 1.
  */
-class SkGaussianColorFilter : public SkColorFilter {
+class SkGaussianColorFilter : public SkColorFilterBase {
  public:
-  SkGaussianColorFilter() noexcept : INHERITED() {}
+  SkGaussianColorFilter() : INHERITED() {}
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
@@ -50,7 +51,7 @@ class SkGaussianColorFilter : public SkColorFilter {
 #endif
 
  protected:
-  void flatten(SkWriteBuffer&) const override {}
+  void flatten(SkWriteBuffer&) const noexcept override {}
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override {
     rec.fPipeline->append(SkRasterPipeline::gauss_a_to_rgba);
     return true;
@@ -74,7 +75,7 @@ class SkGaussianColorFilter : public SkColorFilter {
  private:
   SK_FLATTENABLE_HOOKS(SkGaussianColorFilter)
 
-  typedef SkColorFilter INHERITED;
+  typedef SkColorFilterBase INHERITED;
 };
 
 sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) {
@@ -85,7 +86,8 @@ sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) {
 
 std::unique_ptr<GrFragmentProcessor> SkGaussianColorFilter::asFragmentProcessor(
     GrRecordingContext*, const GrColorInfo&) const {
-  return GrBlurredEdgeFragmentProcessor::Make(GrBlurredEdgeFragmentProcessor::Mode::kGaussian);
+  return GrBlurredEdgeFragmentProcessor::Make(
+      /*inputFP=*/nullptr, GrBlurredEdgeFragmentProcessor::Mode::kGaussian);
 }
 #endif
 
@@ -97,7 +99,7 @@ sk_sp<SkColorFilter> SkColorFilterPriv::MakeGaussian() {
 
 namespace {
 
-constexpr uint64_t resource_cache_shared_id() noexcept {
+uint64_t resource_cache_shared_id() noexcept {
   return 0x2020776f64616873llu;  // 'shadow  '
 }
 
@@ -301,15 +303,15 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
     memcpy(fKey.get(), &key, key.size());
   }
 
-  const Key& getKey() const override {
+  const Key& getKey() const noexcept override {
     return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
   }
 
   size_t bytesUsed() const noexcept override { return fTessellations->size(); }
 
-  const char* getCategory() const override { return "tessellated shadow masks"; }
+  const char* getCategory() const noexcept override { return "tessellated shadow masks"; }
 
-  sk_sp<CachedTessellations> refTessellations() const { return fTessellations; }
+  sk_sp<CachedTessellations> refTessellations() const noexcept { return fTessellations; }
 
   template <typename FACTORY>
   sk_sp<SkVertices> find(
@@ -330,7 +332,7 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
  */
 template <typename FACTORY>
 struct FindContext {
-  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory) noexcept
+  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
       : fViewMatrix(viewMatrix), fFactory(factory) {}
   const SkMatrix* const fViewMatrix;
   // If this is valid after Find is called then we found the vertices and they should be drawn
@@ -412,12 +414,12 @@ class ShadowInvalidator : public SkIDChangeListener {
   }
 
  private:
-  const SkResourceCache::Key& getKey() const {
+  const SkResourceCache::Key& getKey() const noexcept {
     return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
   }
 
   // always purge
-  static bool FindVisitor(const SkResourceCache::Rec&, void*) { return false; }
+  static bool FindVisitor(const SkResourceCache::Rec&, void*) noexcept { return false; }
 
   void changed() override {
     SkResourceCache::Find(this->getKey(), ShadowInvalidator::FindVisitor, nullptr);
@@ -493,7 +495,7 @@ bool draw_shadow(
 }
 }  // namespace
 
-static bool tilted(const SkPoint3& zPlaneParams) noexcept {
+static bool tilted(const SkPoint3& zPlaneParams) {
   return !SkScalarNearlyZero(zPlaneParams.fX) || !SkScalarNearlyZero(zPlaneParams.fY);
 }
 
@@ -505,8 +507,7 @@ static SkPoint3 map(const SkMatrix& m, const SkPoint3& pt) {
 }
 
 void SkShadowUtils::ComputeTonalColors(
-    SkColor inAmbientColor, SkColor inSpotColor, SkColor* outAmbientColor,
-    SkColor* outSpotColor) noexcept {
+    SkColor inAmbientColor, SkColor inSpotColor, SkColor* outAmbientColor, SkColor* outSpotColor) {
   // For tonal color we only compute color values for the spot shadow.
   // The ambient shadow is greyscale only.
 
@@ -593,9 +594,8 @@ void SkBaseDevice::drawShadow(const SkPath& path, const SkDrawShadowRec& rec) {
       // and we can't translate it without changing it. Otherwise we concat the
       // change in translation from the cached version.
       SkAutoDeviceTransformRestore adr(
-          this, hasPerspective
-                    ? SkMatrix::I()
-                    : SkMatrix::Concat(this->localToDevice(), SkMatrix::MakeTrans(tx, ty)));
+          this,
+          hasPerspective ? SkMatrix::I() : this->localToDevice() * SkMatrix::Translate(tx, ty));
       this->drawVertices(vertices, mode, paint);
     }
   };

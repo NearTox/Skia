@@ -28,7 +28,7 @@ struct BinaryExpression : public Expression {
         fOperator(op),
         fRight(std::move(right)) {}
 
-  bool isConstantOrUniform() const noexcept override {
+  bool isConstantOrUniform() const override {
     return fLeft->isConstantOrUniform() && fRight->isConstantOrUniform();
   }
 
@@ -37,12 +37,14 @@ struct BinaryExpression : public Expression {
     return irGenerator.constantFold(*fLeft, fOperator, *fRight);
   }
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects && Compiler::IsAssignment(fOperator)) {
       return true;
     }
     return fLeft->hasProperty(property) || fRight->hasProperty(property);
   }
+
+  int nodeCount() const noexcept override { return 1 + fLeft->nodeCount() + fRight->nodeCount(); }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(

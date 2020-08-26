@@ -122,7 +122,7 @@ void SkContourMeasure_segTo(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline int tspan_big_enough(int tspan) noexcept {
+static constexpr inline int tspan_big_enough(int tspan) noexcept {
   SkASSERT((unsigned)tspan <= kMaxTValue);
   return tspan >> 10;
 }
@@ -422,7 +422,7 @@ SkContourMeasure* SkContourMeasureIter::Impl::buildSegments() {
 }
 
 static void compute_pos_tan(
-    const SkPoint pts[], unsigned segType, SkScalar t, SkPoint* pos, SkVector* tangent) {
+    const SkPoint pts[], unsigned segType, SkScalar t, SkPoint* pos, SkVector* tangent) noexcept {
   switch (segType) {
     case kLine_SegType:
       if (pos) {
@@ -464,7 +464,7 @@ SkContourMeasureIter::SkContourMeasureIter(
   this->reset(path, forceClosed, resScale);
 }
 
-SkContourMeasureIter::~SkContourMeasureIter() {}
+SkContourMeasureIter::~SkContourMeasureIter() = default;
 
 /** Assign a new path, or null to have none.
  */
@@ -557,7 +557,8 @@ const SkContourMeasure::Segment* SkContourMeasure::distanceToSegment(
   return seg;
 }
 
-bool SkContourMeasure::getPosTan(SkScalar distance, SkPoint* pos, SkVector* tangent) const {
+bool SkContourMeasure::getPosTan(
+    SkScalar distance, SkPoint* pos, SkVector* tangent) const noexcept {
   if (SkScalarIsNaN(distance)) {
     return false;
   }
@@ -583,7 +584,8 @@ bool SkContourMeasure::getPosTan(SkScalar distance, SkPoint* pos, SkVector* tang
   return true;
 }
 
-bool SkContourMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) const {
+bool SkContourMeasure::getMatrix(
+    SkScalar distance, SkMatrix* matrix, MatrixFlags flags) const noexcept {
   SkPoint position;
   SkVector tangent;
 

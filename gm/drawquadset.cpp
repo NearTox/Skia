@@ -25,7 +25,6 @@
 #include "include/gpu/GrContext.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/core/SkMatrixProvider.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrPaint.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/SkGr.h"
@@ -88,12 +87,12 @@ static void draw_gradient_tiles(SkCanvas* canvas, bool alignGradients) {
         GrPaint grPaint;
         SkPaintToGrPaint(context, rtc->colorInfo(), paint, matrixProvider, &grPaint);
         rtc->fillRectWithEdgeAA(
-            GrNoClip(), std::move(grPaint), GrAA::kYes, static_cast<GrQuadAAFlags>(aa), view, tile);
+            nullptr, std::move(grPaint), GrAA::kYes, static_cast<GrQuadAAFlags>(aa), view, tile);
       } else {
         // Fallback to solid color on raster backend since the public API only has color
-        SkColor color = alignGradients
-                            ? SK_ColorBLUE
-                            : (i * kColCount + j) % 2 == 0 ? SK_ColorBLUE : SK_ColorWHITE;
+        SkColor color = alignGradients                 ? SK_ColorBLUE
+                        : (i * kColCount + j) % 2 == 0 ? SK_ColorBLUE
+                                                       : SK_ColorWHITE;
         canvas->experimental_DrawEdgeAAQuad(
             tile, nullptr, static_cast<SkCanvas::QuadAAFlags>(aa), color, SkBlendMode::kSrcOver);
       }

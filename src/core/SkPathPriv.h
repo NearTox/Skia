@@ -209,7 +209,7 @@ class SkPathPriv {
 
       @return       true if pts represent a convex geometry
   */
-  static bool IsConvex(const SkPoint pts[], int count);
+  static bool IsConvex(const SkPoint pts[], int count) noexcept;
 
   /** Returns true if the underlying SkPathRef has one single owner. */
   static bool TestingOnly_unique(const SkPath& path) noexcept { return path.fPathRef->unique(); }

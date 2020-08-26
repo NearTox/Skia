@@ -710,7 +710,7 @@ struct PositionedGlyph {
 
 static SkRect get_glyph_bounds_device_space(
     const SkGlyph* glyph, SkScalar xScale, SkScalar yScale, SkPoint xy, const SkMatrix& ctm) {
-  SkRect glyphBounds = SkMatrix::MakeScale(xScale, yScale).mapRect(glyph->rect());
+  SkRect glyphBounds = SkMatrix::Scale(xScale, yScale).mapRect(glyph->rect());
   glyphBounds.offset(xy);
   ctm.mapRect(&glyphBounds);  // now in dev space.
   return glyphBounds;
@@ -963,7 +963,7 @@ void SkPDFDevice::drawDevice(SkBaseDevice* device, int x, int y, const SkPaint& 
     return;
   }
 
-  SkMatrix matrix = SkMatrix::MakeTrans(SkIntToScalar(x), SkIntToScalar(y));
+  SkMatrix matrix = SkMatrix::Translate(SkIntToScalar(x), SkIntToScalar(y));
   ScopedContentEntry content(this, &this->cs(), matrix, paint);
   if (!content) {
     return;
@@ -1583,7 +1583,7 @@ void SkPDFDevice::internalDrawImageRect(
     canvas->setMatrix(offsetMatrix);
     canvas->drawImage(imageSubset.image(), 0, 0);
     // Make sure the final bits are in the bitmap.
-    surface->flush();
+    surface->flushAndSubmit();
 
     // In the new space, we use the identity matrix translated
     // and scaled to reflect DPI.
@@ -1646,9 +1646,7 @@ void SkPDFDevice::internalDrawImageRect(
 #include "include/core/SkImageFilter.h"
 #include "src/core/SkSpecialImage.h"
 
-void SkPDFDevice::drawSpecial(
-    SkSpecialImage* srcImg, int x, int y, const SkPaint& paint, SkImage* clipImage,
-    const SkMatrix& clipMatrix) {
+void SkPDFDevice::drawSpecial(SkSpecialImage* srcImg, int x, int y, const SkPaint& paint) {
   if (this->hasEmptyClip()) {
     return;
   }

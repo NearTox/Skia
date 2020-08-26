@@ -122,10 +122,8 @@ class SkStrikeServer final : public SkStrikeForGPUCacheInterface {
   static void AddGlyphForTesting(
       RemoteStrike* strike, SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects);
 
-  void setMaxEntriesInDescriptorMapForTesting(size_t count) noexcept {
-    fMaxEntriesInDescriptorMap = count;
-  }
-  size_t remoteStrikeMapSizeForTesting() const noexcept { return fDescToRemoteStrike.size(); }
+  void setMaxEntriesInDescriptorMapForTesting(size_t count) { fMaxEntriesInDescriptorMap = count; }
+  size_t remoteStrikeMapSizeForTesting() const { return fDescToRemoteStrike.size(); }
 
 #ifdef SK_CAPTURE_DRAW_TEXT_BLOB
   // DrawTextBlob trace capture.
@@ -141,8 +139,8 @@ class SkStrikeServer final : public SkStrikeForGPUCacheInterface {
       const SkDescriptor& desc, const SkTypeface& typeface, SkScalerContextEffects effects);
 
   struct MapOps {
-    size_t operator()(const SkDescriptor* key) const noexcept;
-    bool operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const noexcept;
+    size_t operator()(const SkDescriptor* key) const;
+    bool operator()(const SkDescriptor* lhs, const SkDescriptor* rhs) const;
   };
   using DescToRemoteStrike =
       std::unordered_map<const SkDescriptor*, std::unique_ptr<RemoteStrike>, MapOps, MapOps>;

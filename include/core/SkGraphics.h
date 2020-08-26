@@ -24,7 +24,7 @@ class SK_API SkGraphics {
   static void Init();
 
   // We're in the middle of cleaning this up.
-  static void Term() {}
+  static void Term() noexcept {}
 
   /**
    *  Return the max number of bytes that should be used by the font cache.

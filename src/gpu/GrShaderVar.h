@@ -33,8 +33,7 @@ class GrShaderVar {
   };
 
   /** Defaults to a void with no type modifier or layout qualifier. */
-  GrShaderVar() noexcept
-      : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
+  GrShaderVar() : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
 
   GrShaderVar(SkString name, GrSLType type, int arrayCount = kNonArray) noexcept
       : fType(type),

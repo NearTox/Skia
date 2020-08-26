@@ -24,10 +24,10 @@ struct FunctionDeclaration;
  */
 class SymbolTable {
  public:
-  SymbolTable(ErrorReporter* errorReporter) noexcept : fErrorReporter(*errorReporter) {}
+  SymbolTable(ErrorReporter* errorReporter) : fErrorReporter(*errorReporter) {}
 
-  SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter) noexcept
-      : fParent(std::move(parent)), fErrorReporter(*errorReporter) {}
+  SymbolTable(std::shared_ptr<SymbolTable> parent, ErrorReporter* errorReporter)
+      : fParent(parent), fErrorReporter(*errorReporter) {}
 
   const Symbol* operator[](StringFragment name);
 
@@ -39,11 +39,13 @@ class SymbolTable {
 
   IRNode* takeOwnership(std::unique_ptr<IRNode> n);
 
+  String* takeOwnership(std::unique_ptr<String> n);
+
   void markAllFunctionsBuiltin();
 
-  std::unordered_map<StringFragment, const Symbol*>::iterator begin() noexcept;
+  std::unordered_map<StringFragment, const Symbol*>::iterator begin();
 
-  std::unordered_map<StringFragment, const Symbol*>::iterator end() noexcept;
+  std::unordered_map<StringFragment, const Symbol*>::iterator end();
 
   const std::shared_ptr<SymbolTable> fParent;
 
@@ -53,6 +55,8 @@ class SymbolTable {
   std::vector<std::unique_ptr<Symbol>> fOwnedSymbols;
 
   std::vector<std::unique_ptr<IRNode>> fOwnedNodes;
+
+  std::vector<std::unique_ptr<String>> fOwnedStrings;
 
   std::unordered_map<StringFragment, const Symbol*> fSymbols;
 

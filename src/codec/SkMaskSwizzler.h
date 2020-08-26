@@ -32,14 +32,14 @@ class SkMaskSwizzler : public SkSampler {
    */
   void swizzle(void* dst, const uint8_t* SK_RESTRICT src);
 
-  int fillWidth() const noexcept override { return fDstWidth; }
+  int fillWidth() const override { return fDstWidth; }
 
   /**
    *  Returns the byte offset at which we write to destination memory, taking
    *  scaling, subsetting, and partial frames into account.
    *  A similar function exists on SkSwizzler.
    */
-  int swizzleWidth() const noexcept { return fDstWidth; }
+  int swizzleWidth() const { return fDstWidth; }
 
  private:
   /*
@@ -49,7 +49,7 @@ class SkMaskSwizzler : public SkSampler {
       void* dstRow, const uint8_t* srcRow, int width, SkMasks* masks, uint32_t startX,
       uint32_t sampleX);
 
-  SkMaskSwizzler(SkMasks* masks, RowProc proc, int subsetWidth, int srcOffset) noexcept;
+  SkMaskSwizzler(SkMasks* masks, RowProc proc, int subsetWidth, int srcOffset);
 
   int onSetSampleX(int) override;
 

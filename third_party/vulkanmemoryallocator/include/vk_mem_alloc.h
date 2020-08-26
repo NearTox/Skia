@@ -1975,7 +1975,7 @@ extern PFN_vkBindBufferMemory2 vkBindBufferMemory2;
 extern PFN_vkBindImageMemory2 vkBindImageMemory2;
 extern PFN_vkGetPhysicalDeviceMemoryProperties2 vkGetPhysicalDeviceMemoryProperties2;
 #  endif  // #if VMA_VULKAN_VERSION >= 1001000
-#endif    // #if defined(__ANDROID__) && VMA_STATIC_VULKAN_FUNCTIONS && VK_NO_PROTOTYPES
+#endif  // #if defined(__ANDROID__) && VMA_STATIC_VULKAN_FUNCTIONS && VK_NO_PROTOTYPES
 
 #ifndef VULKAN_H_
 // For skia we don't include vulkan.h here. Before including this header we always include
@@ -4002,7 +4002,7 @@ Library has its own container implementation.
 Following headers are used in this CONFIGURATION section only, so feel free to
 remove them if not needed.
 */
-#include <cassert>    // for assert
+#include <cassert>  // for assert
 #include <algorithm>  // for min, max
 #include <mutex>
 
@@ -4183,7 +4183,7 @@ class VmaRWMutex {
 };
 #    define VMA_RW_MUTEX VmaRWMutex
 #  endif  // #if VMA_USE_STL_SHARED_MUTEX
-#endif    // #ifndef VMA_RW_MUTEX
+#endif  // #ifndef VMA_RW_MUTEX
 
 /*
 If providing your own implementation, you need to implement a subset of std::atomic.

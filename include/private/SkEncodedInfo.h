@@ -145,11 +145,10 @@ struct SkEncodedInfo {
    * TODO: Leave this up to the client.
    */
   SkImageInfo makeImageInfo() const {
-    auto ct = kGray_Color == fColor
-                  ? kGray_8_SkColorType
-                  : kXAlpha_Color == fColor
-                        ? kAlpha_8_SkColorType
-                        : k565_Color == fColor ? kRGB_565_SkColorType : kN32_SkColorType;
+    auto ct = kGray_Color == fColor     ? kGray_8_SkColorType
+              : kXAlpha_Color == fColor ? kAlpha_8_SkColorType
+              : k565_Color == fColor    ? kRGB_565_SkColorType
+                                        : kN32_SkColorType;
     auto alpha = kOpaque_Alpha == fAlpha ? kOpaque_SkAlphaType : kUnpremul_SkAlphaType;
     sk_sp<SkColorSpace> cs = fProfile ? SkColorSpace::Make(*fProfile->profile()) : nullptr;
     if (!cs) {

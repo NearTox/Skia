@@ -25,8 +25,8 @@ class SkCoincidentSpans {
   SkOpPtT* coinPtTEndWritable() const noexcept { return const_cast<SkOpPtT*>(fCoinPtTEnd); }
   SkOpPtT* coinPtTStartWritable() const noexcept { return const_cast<SkOpPtT*>(fCoinPtTStart); }
 
-  bool collapsed(const SkOpPtT*) const;
-  bool contains(const SkOpPtT* s, const SkOpPtT* e) const;
+  bool collapsed(const SkOpPtT*) const noexcept;
+  bool contains(const SkOpPtT* s, const SkOpPtT* e) const noexcept;
   void correctEnds();
   void correctOneEnd(
       const SkOpPtT* (SkCoincidentSpans::*getEnd)() const,
@@ -69,8 +69,8 @@ class SkCoincidentSpans {
   SkCoincidentSpans* next() noexcept { return fNext; }
   const SkCoincidentSpans* next() const noexcept { return fNext; }
   SkCoincidentSpans** nextPtr() noexcept { return &fNext; }
-  const SkOpPtT* oppPtTStart() const;
-  const SkOpPtT* oppPtTEnd() const;
+  const SkOpPtT* oppPtTStart() const noexcept;
+  const SkOpPtT* oppPtTEnd() const noexcept;
   // These return non-const pointers so that, as copies, they can be added
   // to a new span pair
   SkOpPtT* oppPtTStartWritable() const noexcept { return const_cast<SkOpPtT*>(fOppPtTStart); }
@@ -232,7 +232,7 @@ class SkOpCoincidence {
   }
 
   static bool Ordered(const SkOpSegment* coin, const SkOpSegment* opp);
-  void release(const SkOpSegment*);
+  void release(const SkOpSegment*) noexcept;
   void releaseDeleted();
 
  private:
@@ -281,8 +281,8 @@ class SkOpCoincidence {
   void markCollapsed(SkCoincidentSpans* head, SkOpPtT* test);
   bool overlap(
       const SkOpPtT* coinStart1, const SkOpPtT* coinEnd1, const SkOpPtT* coinStart2,
-      const SkOpPtT* coinEnd2, double* overS, double* overE) const;
-  bool release(SkCoincidentSpans* coin, SkCoincidentSpans*);
+      const SkOpPtT* coinEnd2, double* overS, double* overE) const noexcept;
+  bool release(SkCoincidentSpans* coin, SkCoincidentSpans*) noexcept;
   void releaseDeleted(SkCoincidentSpans*);
   void restoreHead();
   // return coinPtT->segment()->t mapped from overS->fT <= t <= overE->fT

@@ -676,34 +676,6 @@ class SK_API SkCanvas {
         SaveLayerFlags saveLayerFlags) noexcept
         : fBounds(bounds), fPaint(paint), fBackdrop(backdrop), fSaveLayerFlags(saveLayerFlags) {}
 
-    /** Experimental. Not ready for general use.
-        Sets fBounds, fPaint, fBackdrop, fClipMask, fClipMatrix, and fSaveLayerFlags.
-        clipMatrix uses alpha channel of image, transformed by clipMatrix, to clip
-        layer when drawn to SkCanvas.
-
-        @param bounds          layer dimensions; may be nullptr
-        @param paint           graphics state applied to layer when overlaying prior
-                               layer; may be nullptr
-        @param backdrop        If not null, this causes the current layer to be filtered by
-                               backdrop, and then drawn into the new layer
-                               (respecting the current clip).
-                               If null, the new layer is initialized with transparent-black.
-        @param clipMask        clip applied to layer; may be nullptr
-        @param clipMatrix      matrix applied to clipMask; may be nullptr to use
-                               identity matrix
-        @param saveLayerFlags  SaveLayerRec options to modify layer
-        @return                SaveLayerRec fully specified
-    */
-    SaveLayerRec(
-        const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        const SkImage* clipMask, const SkMatrix* clipMatrix, SaveLayerFlags saveLayerFlags) noexcept
-        : fBounds(bounds),
-          fPaint(paint),
-          fBackdrop(backdrop),
-          fClipMask(clipMask),
-          fClipMatrix(clipMatrix),
-          fSaveLayerFlags(saveLayerFlags) {}
-
     /** hints at layer size limit */
     const SkRect* fBounds = nullptr;
 
@@ -717,12 +689,6 @@ class SK_API SkCanvas {
      *  This is then filtered by fBackdrop (respecting the current clip).
      */
     const SkImageFilter* fBackdrop = nullptr;
-
-    /** clips layer with mask alpha */
-    const SkImage* fClipMask = nullptr;
-
-    /** transforms mask alpha used to clip */
-    const SkMatrix* fClipMatrix = nullptr;
 
     /** preserves LCD text, creates with prior layer contents */
     SaveLayerFlags fSaveLayerFlags = 0;
@@ -1115,14 +1081,31 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_drawColor
   */
-  void drawColor(SkColor color, SkBlendMode mode = SkBlendMode::kSrcOver);
+  void drawColor(SkColor color, SkBlendMode mode = SkBlendMode::kSrcOver) {
+    this->drawColor(SkColor4f::FromColor(color), mode);
+  }
+
+  /** Fills clip with color color.
+      mode determines how ARGB is combined with destination.
+
+      @param color  SkColor4f representing unpremultiplied color.
+      @param mode   SkBlendMode used to combine source color and destination
+  */
+  void drawColor(const SkColor4f& color, SkBlendMode mode = SkBlendMode::kSrcOver);
 
   /** Fills clip with color color using SkBlendMode::kSrc.
       This has the effect of replacing all pixels contained by clip with color.
 
       @param color  unpremultiplied ARGB
   */
-  void clear(SkColor color) { this->drawColor(color, SkBlendMode::kSrc); }
+  void clear(SkColor color) { this->clear(SkColor4f::FromColor(color)); }
+
+  /** Fills clip with color color using SkBlendMode::kSrc.
+      This has the effect of replacing all pixels contained by clip with color.
+
+      @param color  SkColor4f representing unpremultiplied color.
+  */
+  void clear(const SkColor4f& color) { this->drawColor(color, SkBlendMode::kSrc); }
 
   /** Makes SkCanvas contents undefined. Subsequent calls that read SkCanvas pixels,
       such as drawing with SkBlendMode, return undefined results. discard() does
@@ -1467,8 +1450,8 @@ class SK_API SkCanvas {
   /** Draws SkRect src of SkImage image, scaled and translated to fill SkRect dst.
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds.
 
       If generated mask extends beyond image bounds, replicate image edge colors, just
@@ -1499,8 +1482,8 @@ class SK_API SkCanvas {
       boundaries. Additionally transform draw using clip, SkMatrix, and optional SkPaint
       paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds.
 
       If generated mask extends beyond image bounds, replicate image edge colors, just
@@ -1529,8 +1512,8 @@ class SK_API SkCanvas {
   /** Draws SkImage image, scaled and translated to fill SkRect dst, using clip, SkMatrix,
       and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds.
 
       If generated mask extends beyond image bounds, replicate image edge colors, just
@@ -1553,8 +1536,8 @@ class SK_API SkCanvas {
   /** Draws SkRect src of SkImage image, scaled and translated to fill SkRect dst.
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds.
 
       If generated mask extends beyond image bounds, replicate image edge colors, just
@@ -1582,8 +1565,8 @@ class SK_API SkCanvas {
       isrc is on integer pixel boundaries; dst may include fractional boundaries.
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds.
 
       If generated mask extends beyond image bounds, replicate image edge colors, just
@@ -1614,8 +1597,8 @@ class SK_API SkCanvas {
   /** Draws SkImage image, scaled and translated to fill SkRect dst,
       using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds.
 
       If generated mask extends beyond image bounds, replicate image edge colors, just
@@ -1625,10 +1608,6 @@ class SK_API SkCanvas {
       When using a shader or shader mask filter, its coordinate system is based on the
       current CTM, so will reflect the dst rect geometry and is equivalent to
       drawRect(dst).
-
-      constraint set to kStrict_SrcRectConstraint limits SkPaint SkFilterQuality to
-      sample within image; set to kFast_SrcRectConstraint allows sampling outside to
-      improve performance.
 
       @param image       SkImage containing pixels, dimensions, and format
       @param dst         destination SkRect of image to draw to
@@ -1646,8 +1625,8 @@ class SK_API SkCanvas {
 
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds. If paint
       SkFilterQuality set to kNone_SkFilterQuality, disable pixel filtering. For all
       other values of paint SkFilterQuality, use kLow_SkFilterQuality to filter pixels.
@@ -1674,8 +1653,8 @@ class SK_API SkCanvas {
 
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds. If paint
       SkFilterQuality set to kNone_SkFilterQuality, disable pixel filtering. For all
       other values of paint SkFilterQuality, use kLow_SkFilterQuality to filter pixels.
@@ -1700,8 +1679,8 @@ class SK_API SkCanvas {
   /** Draws SkBitmap bitmap, with its top-left corner at (left, top),
       using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is not nullptr, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If bitmap is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is not nullptr, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If bitmap is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from bitmap bounds.
 
       If generated mask extends beyond bitmap bounds, replicate bitmap edge colors,
@@ -1721,8 +1700,8 @@ class SK_API SkCanvas {
   /** Draws SkRect src of SkBitmap bitmap, scaled and translated to fill SkRect dst.
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If bitmap is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If bitmap is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from bitmap bounds.
 
       If generated mask extends beyond bitmap bounds, replicate bitmap edge colors,
@@ -1749,8 +1728,8 @@ class SK_API SkCanvas {
       isrc is on integer pixel boundaries; dst may include fractional boundaries.
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If bitmap is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If bitmap is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from bitmap bounds.
 
       If generated mask extends beyond bitmap bounds, replicate bitmap edge colors,
@@ -1777,8 +1756,8 @@ class SK_API SkCanvas {
       bitmap bounds is on integer pixel boundaries; dst may include fractional boundaries.
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If bitmap is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If bitmap is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from bitmap bounds.
 
       If generated mask extends beyond bitmap bounds, replicate bitmap edge colors,
@@ -1839,8 +1818,8 @@ class SK_API SkCanvas {
 
       Additionally transform draw using clip, SkMatrix, and optional SkPaint paint.
 
-      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter,
-      SkBlendMode, and SkDrawLooper. If image is kAlpha_8_SkColorType, apply SkShader.
+      If SkPaint paint is supplied, apply SkColorFilter, alpha, SkImageFilter, and
+      SkBlendMode. If image is kAlpha_8_SkColorType, apply SkShader.
       If paint contains SkMaskFilter, generate mask from image bounds. If paint
       SkFilterQuality set to kNone_SkFilterQuality, disable pixel filtering. For all
       other values of paint SkFilterQuality, use kLow_SkFilterQuality to filter pixels.
@@ -1975,7 +1954,7 @@ class SK_API SkCanvas {
       size is 12 point.
 
       All elements of paint: SkPathEffect, SkMaskFilter, SkShader,
-      SkColorFilter, SkImageFilter, and SkDrawLooper; apply to text. By
+      SkColorFilter, and SkImageFilter; apply to text. By
       default, draws filled black glyphs.
 
       @param text        character code points or glyphs drawn
@@ -2004,7 +1983,7 @@ class SK_API SkCanvas {
       size is 12 point.
 
       All elements of paint: SkPathEffect, SkMaskFilter, SkShader,
-      SkColorFilter, SkImageFilter, and SkDrawLooper; apply to text. By
+      SkColorFilter, and SkImageFilter; apply to text. By
       default, draws filled black glyphs.
 
       @param str     character code points drawn,
@@ -2033,7 +2012,7 @@ class SK_API SkCanvas {
       size is 12 point.
 
       All elements of paint: SkPathEffect, SkMaskFilter, SkShader,
-      SkColorFilter, SkImageFilter, and SkDrawLooper; apply to text. By
+      SkColorFilter, and SkImageFilter; apply to text. By
       default, draws filled black glyphs.
 
       @param str     character code points drawn,
@@ -2059,7 +2038,7 @@ class SK_API SkCanvas {
       SkTextEncoding must be set to SkTextEncoding::kGlyphID.
 
       Elements of paint: anti-alias, SkBlendMode, color including alpha,
-      SkColorFilter, SkPaint dither, SkDrawLooper, SkMaskFilter, SkPathEffect, SkShader, and
+      SkColorFilter, SkPaint dither, SkMaskFilter, SkPathEffect, SkShader, and
       SkPaint::Style; apply to blob. If SkPaint contains SkPaint::kStroke_Style:
       SkPaint miter limit, SkPaint::Cap, SkPaint::Join, and SkPaint stroke width;
       apply to SkPath created from blob.
@@ -2084,7 +2063,7 @@ class SK_API SkCanvas {
       SkTextEncoding must be set to SkTextEncoding::kGlyphID.
 
       Elements of paint: SkPathEffect, SkMaskFilter, SkShader, SkColorFilter,
-      SkImageFilter, and SkDrawLooper; apply to blob.
+      and SkImageFilter; apply to blob.
 
       @param blob   glyphs, positions, and their paints' text size, typeface, and so on
       @param x      horizontal offset applied to blob
@@ -2148,8 +2127,11 @@ class SK_API SkCanvas {
   }
 
   /** Draws SkVertices vertices, a triangle mesh, using clip and SkMatrix.
-      If vertices texs and vertices colors are defined in vertices, and SkPaint paint
-      contains SkShader, SkBlendMode mode combines vertices colors with SkShader.
+      If paint contains an SkShader and vertices does not contain texCoords, the shader
+      is mapped using the vertices' positions.
+
+      If vertices colors are defined in vertices, and SkPaint paint contains SkShader,
+      SkBlendMode mode combines vertices colors with SkShader.
 
       @param vertices  triangle mesh to draw
       @param mode      combines vertices colors with SkShader, if both are present
@@ -2167,8 +2149,11 @@ class SK_API SkCanvas {
   }
 
   /** Draws SkVertices vertices, a triangle mesh, using clip and SkMatrix.
-      If vertices texs and vertices colors are defined in vertices, and SkPaint paint
-      contains SkShader, SkBlendMode mode combines vertices colors with SkShader.
+      If paint contains an SkShader and vertices does not contain texCoords, the shader
+      is mapped using the vertices' positions.
+
+      If vertices colors are defined in vertices, and SkPaint paint contains SkShader,
+      SkBlendMode mode combines vertices colors with SkShader.
 
       @param vertices  triangle mesh to draw
       @param mode      combines vertices colors with SkShader, if both are present
@@ -2201,7 +2186,8 @@ class SK_API SkCanvas {
       bottom-right, bottom-left order.
 
       If paint contains SkShader, SkPoint array texCoords maps SkShader as texture to
-      corners in top-left, top-right, bottom-right, bottom-left order.
+      corners in top-left, top-right, bottom-right, bottom-left order. If texCoords is
+      nullptr, SkShader is mapped using positions (derived from cubics).
 
       @param cubics     SkPath cubic array, sharing common points
       @param colors     color array, one for each corner
@@ -2230,7 +2216,8 @@ class SK_API SkCanvas {
       bottom-right, bottom-left order.
 
       If paint contains SkShader, SkPoint array texCoords maps SkShader as texture to
-      corners in top-left, top-right, bottom-right, bottom-left order.
+      corners in top-left, top-right, bottom-right, bottom-left order. If texCoords is
+      nullptr, SkShader is mapped using positions (derived from cubics).
 
       @param cubics     SkPath cubic array, sharing common points
       @param colors     color array, one for each corner
@@ -2722,8 +2709,7 @@ class SK_API SkCanvas {
   void internalDrawPaint(const SkPaint& paint);
   void internalSaveLayer(const SaveLayerRec&, SaveLayerStrategy);
   void internalSaveBehind(const SkRect*);
-  void internalDrawDevice(
-      SkBaseDevice*, const SkPaint*, SkImage* clipImage, const SkMatrix& clipMatrix);
+  void internalDrawDevice(SkBaseDevice*, const SkPaint*);
 
   void internalConcat44(const SkM44&);
 
@@ -2749,7 +2735,9 @@ class SK_API SkCanvas {
    */
   bool androidFramework_isClipAA() const;
 
-  virtual SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const { return nullptr; }
+  virtual SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const noexcept {
+    return nullptr;
+  }
 
   /**
    *  Keep track of the device clip bounds and if the matrix is scale-translate.  This allows

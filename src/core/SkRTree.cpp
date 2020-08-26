@@ -54,7 +54,7 @@ SkRTree::Node* SkRTree::allocateNodeAtLevel(uint16_t level) {
 }
 
 // This function parallels bulkLoad, but just counts how many nodes bulkLoad would allocate.
-int SkRTree::CountNodes(int branches) noexcept {
+int SkRTree::CountNodes(int branches) {
   if (branches == 1) {
     return 1;
   }

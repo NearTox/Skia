@@ -9,7 +9,7 @@
 #include "src/pathops/SkOpEdgeBuilder.h"
 #include "src/pathops/SkReduceOrder.h"
 
-void SkOpEdgeBuilder::init() noexcept {
+void SkOpEdgeBuilder::init() {
   fOperand = false;
   fXorMask[0] = fXorMask[1] =
       ((int)fPath->getFillType() & 1) ? kEvenOdd_PathOpsMask : kWinding_PathOpsMask;
@@ -18,7 +18,7 @@ void SkOpEdgeBuilder::init() noexcept {
 }
 
 // very tiny points cause numerical instability : don't allow them
-static SkPoint force_small_to_zero(const SkPoint& pt) noexcept {
+static SkPoint force_small_to_zero(const SkPoint& pt) {
   SkPoint ret = pt;
   if (SkScalarAbs(ret.fX) < FLT_EPSILON_ORDERABLE_ERR) {
     ret.fX = 0;
@@ -29,7 +29,7 @@ static SkPoint force_small_to_zero(const SkPoint& pt) noexcept {
   return ret;
 }
 
-static bool can_add_curve(SkPath::Verb verb, SkPoint* curve) noexcept {
+static bool can_add_curve(SkPath::Verb verb, SkPoint* curve) {
   if (SkPath::kMove_Verb == verb) {
     return false;
   }
@@ -60,7 +60,7 @@ bool SkOpEdgeBuilder::finish() {
   return true;
 }
 
-void SkOpEdgeBuilder::closeContour(const SkPoint& curveEnd, const SkPoint& curveStart) noexcept {
+void SkOpEdgeBuilder::closeContour(const SkPoint& curveEnd, const SkPoint& curveStart) {
   if (!SkDPoint::ApproximatelyEqual(curveEnd, curveStart)) {
     *fPathVerbs.append() = SkPath::kLine_Verb;
     *fPathPts.append() = curveStart;
@@ -77,7 +77,7 @@ void SkOpEdgeBuilder::closeContour(const SkPoint& curveEnd, const SkPoint& curve
   *fPathVerbs.append() = SkPath::kClose_Verb;
 }
 
-int SkOpEdgeBuilder::preFetch() noexcept {
+int SkOpEdgeBuilder::preFetch() {
   if (!fPath->isFinite()) {
     fUnparseable = true;
     return 0;

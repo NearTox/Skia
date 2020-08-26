@@ -27,15 +27,15 @@ struct SkDLine {
     return *this;
   }
 
-  double exactPoint(const SkDPoint& xy) const noexcept;
-  static double ExactPointH(const SkDPoint& xy, double left, double right, double y) noexcept;
-  static double ExactPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept;
+  double exactPoint(const SkDPoint& xy) const;
+  static double ExactPointH(const SkDPoint& xy, double left, double right, double y);
+  static double ExactPointV(const SkDPoint& xy, double top, double bottom, double x);
 
-  double nearPoint(const SkDPoint& xy, bool* unequal) const noexcept;
-  bool nearRay(const SkDPoint& xy) const noexcept;
-  static double NearPointH(const SkDPoint& xy, double left, double right, double y) noexcept;
-  static double NearPointV(const SkDPoint& xy, double top, double bottom, double x) noexcept;
-  SkDPoint ptAtT(double t) const noexcept;
+  double nearPoint(const SkDPoint& xy, bool* unequal) const;
+  bool nearRay(const SkDPoint& xy) const;
+  static double NearPointH(const SkDPoint& xy, double left, double right, double y);
+  static double NearPointV(const SkDPoint& xy, double top, double bottom, double x);
+  SkDPoint ptAtT(double t) const;
 
   void dump() const;
   void dumpID(int) const;

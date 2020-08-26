@@ -29,7 +29,7 @@ class SkStrokeRec;
  */
 class GrCCStroker {
  public:
-  GrCCStroker(int numPaths, int numSkPoints, int numSkVerbs)
+  GrCCStroker(int numPaths, int numSkPoints, int numSkVerbs) noexcept
       : fGeometry(numSkPoints, numSkVerbs), fPathInfos(numPaths) {}
 
   // Parses a device-space SkPath into the current batch, using the SkPath's original verbs with
@@ -47,7 +47,7 @@ class GrCCStroker {
 
   // Compiles the outstanding parsed paths into a batch, and returns an ID that can be used to
   // draw their strokes in the future.
-  BatchID closeCurrentBatch();
+  BatchID closeCurrentBatch() noexcept;
 
   // Builds an internal GPU buffer and prepares for calls to drawStrokes(). Caller must close the
   // current batch before calling this method, and cannot parse new paths afer.

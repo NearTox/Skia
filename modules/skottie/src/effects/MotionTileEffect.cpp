@@ -52,7 +52,9 @@ class TileRenderNode final : public sksg::CustomRenderNode {
   SG_ATTRIBUTE(HorizontalPhase, bool, fHorizontalPhase)
 
  protected:
-  const RenderNode* onNodeAt(const SkPoint&) const override { return nullptr; }  // no hit-testing
+  const RenderNode* onNodeAt(const SkPoint&) const noexcept override {
+    return nullptr;
+  }  // no hit-testing
 
   SkRect onRevalidate(sksg::InvalidationController* ic, const SkMatrix& ctm) override {
     // Re-record the layer picture if needed.
@@ -91,7 +93,7 @@ class TileRenderNode final : public sksg::CustomRenderNode {
                                    phase_vec.fX / layerShaderMatrix.getScaleX(),
                                    phase_vec.fY / layerShaderMatrix.getScaleY()) *
                                std::fmod(fPhase * (1 / 360.0f), 1);
-      const auto phase_shader_matrix = SkMatrix::MakeTrans(phase_shift.x(), phase_shift.y());
+      const auto phase_shader_matrix = SkMatrix::Translate(phase_shift.x(), phase_shift.y());
 
       // The mask is generated using a step gradient shader, spanning 2 x tile width/height,
       // and perpendicular to the phase vector.

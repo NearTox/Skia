@@ -17,7 +17,7 @@
 
 class SkBitSet {
  public:
-  explicit SkBitSet(size_t size)
+  explicit SkBitSet(size_t size) noexcept
       : fSize(size)
         // May http://wg21.link/p0593 be accepted.
         ,
@@ -25,10 +25,10 @@ class SkBitSet {
 
   SkBitSet(const SkBitSet&) = delete;
   SkBitSet& operator=(const SkBitSet&) = delete;
-  SkBitSet(SkBitSet&& that) : fSize(that.fSize), fChunks(std::move(that.fChunks)) {
+  SkBitSet(SkBitSet&& that) noexcept : fSize(that.fSize), fChunks(std::move(that.fChunks)) {
     that.fSize = 0;
   }
-  SkBitSet& operator=(SkBitSet&& that) {
+  SkBitSet& operator=(SkBitSet&& that) noexcept {
     this->fSize = that.fSize;
     this->fChunks = std::move(that.fChunks);
     that.fSize = 0;
@@ -37,23 +37,23 @@ class SkBitSet {
   ~SkBitSet() = default;
 
   /** Set the value of the index-th bit to true. */
-  void set(size_t index) {
+  void set(size_t index) noexcept {
     SkASSERT(index < fSize);
     *this->chunkFor(index) |= chunkMaskFor(index);
   }
 
   /** Set the value of the index-th bit to false.  */
-  void reset(size_t index) {
+  void reset(size_t index) noexcept {
     SkASSERT(index < fSize);
     *this->chunkFor(index) &= ~chunkMaskFor(index);
   }
 
-  bool test(size_t index) const {
+  bool test(size_t index) const noexcept {
     SkASSERT(index < fSize);
     return SkToBool(*this->chunkFor(index) & chunkMaskFor(index));
   }
 
-  size_t size() const { return fSize; }
+  size_t size() const noexcept { return fSize; }
 
   // Calls f(size_t index) for each set index.
   template <typename FN>
@@ -83,18 +83,18 @@ class SkBitSet {
 
     constexpr size_t* operator->() noexcept { return &fValue; }
     constexpr const size_t* operator->() const noexcept { return &fValue; }
-    constexpr size_t& operator*() & { return fValue; }
-    constexpr const size_t& operator*() const& { return fValue; }
-    constexpr size_t&& operator*() && { return std::move(fValue); }
-    constexpr const size_t&& operator*() const&& { return std::move(fValue); }
+    constexpr size_t& operator*() & noexcept { return fValue; }
+    constexpr const size_t& operator*() const& noexcept { return fValue; }
+    constexpr size_t&& operator*() && noexcept { return std::move(fValue); }
+    constexpr const size_t&& operator*() const&& noexcept { return std::move(fValue); }
 
     constexpr explicit operator bool() const noexcept { return fHasValue; }
     constexpr bool has_value() const noexcept { return fHasValue; }
 
-    constexpr size_t& value() & { return fValue; }
-    constexpr const size_t& value() const& { return fValue; }
-    constexpr size_t&& value() && { return std::move(fValue); }
-    constexpr const size_t&& value() const&& { return std::move(fValue); }
+    constexpr size_t& value() & noexcept { return fValue; }
+    constexpr const size_t& value() const& noexcept { return fValue; }
+    constexpr size_t&& value() && noexcept { return std::move(fValue); }
+    constexpr const size_t&& value() const&& noexcept { return std::move(fValue); }
 
     template <typename U>
     constexpr size_t value_or(U&& defaultValue) const& {
@@ -106,7 +106,7 @@ class SkBitSet {
     }
   };
   // If any bits are set returns the index of the first.
-  OptionalIndex findFirst() {
+  OptionalIndex findFirst() noexcept {
     const Chunk* chunks = fChunks.get();
     const size_t numChunks = numChunksFor(fSize);
     for (size_t i = 0; i < numChunks; ++i) {
@@ -127,13 +127,15 @@ class SkBitSet {
   static_assert(ChunkBits == sizeof(Chunk) * CHAR_BIT, "It would work, but don't waste bits.");
   std::unique_ptr<Chunk, SkFunctionWrapper<void(void*), sk_free>> fChunks;
 
-  Chunk* chunkFor(size_t index) const { return fChunks.get() + (index / ChunkBits); }
+  Chunk* chunkFor(size_t index) const noexcept { return fChunks.get() + (index / ChunkBits); }
 
-  static constexpr Chunk chunkMaskFor(size_t index) {
+  static constexpr Chunk chunkMaskFor(size_t index) noexcept {
     return (Chunk)1 << (index & (ChunkBits - 1));
   }
 
-  static constexpr size_t numChunksFor(size_t size) { return (size + (ChunkBits - 1)) / ChunkBits; }
+  static constexpr size_t numChunksFor(size_t size) noexcept {
+    return (size + (ChunkBits - 1)) / ChunkBits;
+  }
 };
 
 #endif

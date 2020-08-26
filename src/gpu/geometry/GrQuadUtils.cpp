@@ -27,11 +27,11 @@ static constexpr float kInvDistTolerance = 1.f / kDistTolerance;
 
 // These rotate the points/edge values either clockwise or counterclockwise assuming tri strip
 // order.
-static AI V4f next_cw(const V4f& v) { return skvx::shuffle<2, 0, 3, 1>(v); }
+static AI V4f next_cw(const V4f& v) noexcept { return skvx::shuffle<2, 0, 3, 1>(v); }
 
-static AI V4f next_ccw(const V4f& v) { return skvx::shuffle<1, 3, 0, 2>(v); }
+static AI V4f next_ccw(const V4f& v) noexcept { return skvx::shuffle<1, 3, 0, 2>(v); }
 
-static AI V4f next_diag(const V4f& v) {
+static AI V4f next_diag(const V4f& v) noexcept {
   // Same as next_ccw(next_ccw(v)), or next_cw(next_cw(v)), e.g. two rotations either direction.
   return skvx::shuffle<3, 2, 1, 0>(v);
 }
@@ -63,7 +63,7 @@ static AI void correct_bad_coords(const M4f& bad, V4f* c1, V4f* c2, V4f* c3) {
 // Since the local quad may not be type kRect, this uses the opposites for each vertex when
 // interpolating, and calculates new ws in addition to new xs, ys.
 static void interpolate_local(
-    float alpha, int v0, int v1, int v2, int v3, float lx[4], float ly[4], float lw[4]) {
+    float alpha, int v0, int v1, int v2, int v3, float lx[4], float ly[4], float lw[4]) noexcept {
   SkASSERT(v0 >= 0 && v0 < 4);
   SkASSERT(v1 >= 0 && v1 < 4);
   SkASSERT(v2 >= 0 && v2 < 4);
@@ -172,7 +172,7 @@ static GrQuadAAFlags crop_rect(
 // Similar to crop_rect, but assumes that both the device coordinates and optional local coordinates
 // geometrically match the TL, BL, TR, BR vertex ordering, i.e. axis-aligned but not flipped, etc.
 static GrQuadAAFlags crop_simple_rect(
-    const SkRect& clipDevRect, float x[4], float y[4], float lx[4], float ly[4]) {
+    const SkRect& clipDevRect, float x[4], float y[4], float lx[4], float ly[4]) noexcept {
   GrQuadAAFlags clipEdgeFlags = GrQuadAAFlags::kNone;
 
   // Update local coordinates proportionately to how much the device rect edge was clipped
@@ -219,7 +219,7 @@ static GrQuadAAFlags crop_simple_rect(
 }
 // Consistent with GrQuad::asRect()'s return value but requires fewer operations since we don't need
 // to calculate the bounds of the quad.
-static bool is_simple_rect(const GrQuad& quad) {
+static bool is_simple_rect(const GrQuad& quad) noexcept {
   if (quad.quadType() != GrQuad::Type::kAxisAligned) {
     return false;
   }
@@ -234,7 +234,7 @@ static bool is_simple_rect(const GrQuad& quad) {
 // (x0,y0) - (x1,y1) - (x2, y2) and stores them in u, v, w.
 static bool barycentric_coords(
     float x0, float y0, float x1, float y1, float x2, float y2, const V4f& testX, const V4f& testY,
-    V4f* u, V4f* v, V4f* w) {
+    V4f* u, V4f* v, V4f* w) noexcept {
   // The 32-bit calculations can have catastrophic cancellation if the device-space coordinates
   // are really big, and this code needs to handle that because we evaluate barycentric coords
   // pre-cropping to the render target bounds. This preserves some precision by shrinking the
@@ -304,13 +304,13 @@ static bool barycentric_coords(
   return true;
 }
 
-static M4f inside_triangle(const V4f& u, const V4f& v, const V4f& w) {
+static M4f inside_triangle(const V4f& u, const V4f& v, const V4f& w) noexcept {
   return ((u >= 0.f) & (u <= 1.f)) & ((v >= 0.f) & (v <= 1.f)) & ((w >= 0.f) & (w <= 1.f));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRect GrQuad::projectedBounds() const {
+SkRect GrQuad::projectedBounds() const noexcept {
   V4f xs = this->x4f();
   V4f ys = this->y4f();
   V4f ws = this->w4f();

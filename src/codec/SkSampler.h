@@ -62,7 +62,7 @@ class SkSampler : public SkNoncopyable {
   static void Fill(
       const SkImageInfo& info, void* dst, size_t rowBytes, SkCodec::ZeroInitialized zeroInit);
 
-  virtual int fillWidth() const noexcept = 0;
+  virtual int fillWidth() const = 0;
 
   constexpr SkSampler() noexcept : fSampleY(1) {}
 

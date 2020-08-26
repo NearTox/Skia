@@ -26,7 +26,7 @@ class SkTextBlobRunIterator;
 
 class SkGlyphRun {
  public:
-  SkGlyphRun() noexcept = default;
+  SkGlyphRun() = default;
   SkGlyphRun(
       const SkFont& font, SkSpan<const SkPoint> positions, SkSpan<const SkGlyphID> glyphIDs,
       SkSpan<const char> text, SkSpan<const uint32_t> clusters);
@@ -55,22 +55,22 @@ class SkGlyphRunList {
   SkSpan<const SkGlyphRun> fGlyphRuns;
 
  public:
-  SkGlyphRunList() noexcept;
+  SkGlyphRunList();
   // Blob maybe null.
   SkGlyphRunList(
       const SkPaint& paint, const SkTextBlob* blob, SkPoint origin,
-      SkSpan<const SkGlyphRun> glyphRunList) noexcept;
+      SkSpan<const SkGlyphRun> glyphRunList);
 
-  SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint) noexcept;
+  SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint);
 
-  uint64_t uniqueID() const noexcept;
-  bool anyRunsLCD() const noexcept;
-  bool anyRunsSubpixelPositioned() const noexcept;
-  void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const noexcept;
+  uint64_t uniqueID() const;
+  bool anyRunsLCD() const;
+  bool anyRunsSubpixelPositioned() const;
+  void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const;
 
   bool canCache() const noexcept { return fOriginalTextBlob != nullptr; }
   size_t runCount() const noexcept { return fGlyphRuns.size(); }
-  size_t totalGlyphCount() const noexcept {
+  size_t totalGlyphCount() const {
     size_t glyphCount = 0;
     for (const auto& run : fGlyphRuns) {
       glyphCount += run.runSize();
@@ -121,12 +121,12 @@ class SkGlyphRunBuilder {
   void textBlobToGlyphRunListIgnoringRSXForm(
       const SkPaint& paint, const SkTextBlob& blob, SkPoint origin);
 
-  const SkGlyphRunList& useGlyphRunList() noexcept;
+  const SkGlyphRunList& useGlyphRunList();
 
   bool empty() const noexcept { return fGlyphRunListStorage.empty(); }
 
  private:
-  void initialize(size_t totalRunSize) noexcept;
+  void initialize(size_t totalRunSize);
   SkSpan<const SkGlyphID> textToGlyphIDs(
       const SkFont& font, const void* bytes, size_t byteLength, SkTextEncoding);
 

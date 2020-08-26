@@ -66,7 +66,7 @@ class SkScalerCache {
   // SkStrikeForGPU APIs
   const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept { return fRoundingSpec; }
 
-  const SkDescriptor& getDescriptor() const noexcept;
+  const SkDescriptor& getDescriptor() const;
 
   size_t prepareForMaskDrawing(SkDrawableGlyphBuffer* drawables, SkSourceGlyphBuffer* rejects)
       SK_EXCLUDES(fMu);
@@ -84,7 +84,7 @@ class SkScalerCache {
  private:
   class GlyphMapHashTraits {
    public:
-    static SkPackedGlyphID GetKey(const SkGlyph* glyph) { return glyph->getPackedID(); }
+    static SkPackedGlyphID GetKey(const SkGlyph* glyph) noexcept { return glyph->getPackedID(); }
     static uint32_t Hash(SkPackedGlyphID glyphId) { return glyphId.hash(); }
   };
 

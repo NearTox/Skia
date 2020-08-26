@@ -26,10 +26,7 @@ class SkRectPriv {
     return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
   }
 
-  static constexpr SkRect MakeLargeS32() noexcept {
-    const SkRect r = SkRect::Make(MakeILarge());
-    return r;
-  }
+  static constexpr SkRect MakeLargeS32() noexcept { return SkRect::Make(MakeILarge()); }
 
   static constexpr SkRect MakeLargest() noexcept {
     return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};
@@ -48,7 +45,7 @@ class SkRectPriv {
 
   // Conservative check if r can be expressed in fixed-point.
   // Will return false for very large values that might have fit
-  static bool FitsInFixed(const SkRect& r) {
+  static bool FitsInFixed(const SkRect& r) noexcept {
     return SkFitsInFixed(r.fLeft) && SkFitsInFixed(r.fTop) && SkFitsInFixed(r.fRight) &&
            SkFitsInFixed(r.fBottom);
   }

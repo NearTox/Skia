@@ -138,10 +138,18 @@ class SkAutoPathBoundsUpdate {
 // flag to require a moveTo if we begin with something else, like lineTo etc.
 #define INITIAL_LASTMOVETOINDEX_VALUE ~0
 
-SkPath::SkPath() : fPathRef(SkPathRef::CreateEmpty()) {
+SkPath::SkPath() noexcept : fPathRef(SkPathRef::CreateEmpty()) {
   this->resetFields();
   fIsVolatile = false;
 }
+
+SkPath::SkPath(sk_sp<SkPathRef> pr, SkPathFillType ft, bool isVolatile) noexcept
+    : fPathRef(std::move(pr)),
+      fLastMoveToIndex(INITIAL_LASTMOVETOINDEX_VALUE),
+      fConvexity((uint8_t)SkPathConvexityType::kUnknown),
+      fFirstDirection(SkPathPriv::kUnknown_FirstDirection),
+      fFillType((unsigned)ft),
+      fIsVolatile(isVolatile) {}
 
 void SkPath::resetFields() noexcept {
   // fPathRef is assumed to have been emptied by the caller.
@@ -350,7 +358,7 @@ uint32_t SkPath::getGenerationID() const noexcept {
   return genID;
 }
 
-SkPath& SkPath::reset() {
+SkPath& SkPath::reset() noexcept {
   SkDEBUGCODE(this->validate());
 
   fPathRef.reset(SkPathRef::CreateEmpty());
@@ -1754,9 +1762,7 @@ SkPath::Verb SkPath::Iter::next(SkPoint ptsParam[4]) noexcept {
       fCloseLine = false;
       srcPts += 1;
       break;
-    case kConic_Verb:
-      fConicWeights += 1;
-      // fall-through
+    case kConic_Verb: fConicWeights += 1; [[fallthrough]];
     case kQuad_Verb:
       pts[0] = this->cons_moveTo();
       memcpy(&pts[1], srcPts, 2 * sizeof(SkPoint));
@@ -2178,7 +2184,7 @@ SkPathConvexityType SkPath::internalGetConvexity() const noexcept {
   return setComputedConvexity(SkPathConvexityType::kConvex);
 }
 
-bool SkPathPriv::IsConvex(const SkPoint points[], int count) {
+bool SkPathPriv::IsConvex(const SkPoint points[], int count) noexcept {
   SkPathConvexityType convexity = Convexicator::BySign(points, count);
   if (SkPathConvexityType::kConvex != convexity) {
     return false;
@@ -2251,9 +2257,7 @@ void ContourIter::next() noexcept {
     switch (*verbs) {
       case SkPath::kMove_Verb: goto CONTOUR_END;
       case SkPath::kLine_Verb: ptCount += 1; break;
-      case SkPath::kConic_Verb:
-        fCurrConicWeight += 1;
-        // fall-through
+      case SkPath::kConic_Verb: fCurrConicWeight += 1; [[fallthrough]];
       case SkPath::kQuad_Verb: ptCount += 2; break;
       case SkPath::kCubic_Verb: ptCount += 3; break;
       case SkPath::kClose_Verb: break;
@@ -2484,7 +2488,8 @@ static bool checkOnCurve(
   }
 }
 
-static int winding_mono_cubic(const SkPoint pts[], SkScalar x, SkScalar y, int* onCurveCount) {
+static int winding_mono_cubic(
+    const SkPoint pts[], SkScalar x, SkScalar y, int* onCurveCount) noexcept {
   SkScalar y0 = pts[0].fY;
   SkScalar y3 = pts[3].fY;
 
@@ -2530,7 +2535,7 @@ static int winding_mono_cubic(const SkPoint pts[], SkScalar x, SkScalar y, int* 
   return xt < x ? dir : 0;
 }
 
-static int winding_cubic(const SkPoint pts[], SkScalar x, SkScalar y, int* onCurveCount) {
+static int winding_cubic(const SkPoint pts[], SkScalar x, SkScalar y, int* onCurveCount) noexcept {
   SkPoint dst[10];
   int n = SkChopCubicAtYExtrema(pts, dst);
   int w = 0;
@@ -2744,7 +2749,7 @@ static int winding_line(const SkPoint pts[], SkScalar x, SkScalar y, int* onCurv
 }
 
 static void tangent_cubic(
-    const SkPoint pts[], SkScalar x, SkScalar y, SkTDArray<SkVector>* tangents) {
+    const SkPoint pts[], SkScalar x, SkScalar y, SkTDArray<SkVector>* tangents) noexcept {
   if (!between(pts[0].fY, y, pts[1].fY) && !between(pts[1].fY, y, pts[2].fY) &&
       !between(pts[2].fY, y, pts[3].fY)) {
     return;
@@ -2772,7 +2777,8 @@ static void tangent_cubic(
 }
 
 static void tangent_conic(
-    const SkPoint pts[], SkScalar x, SkScalar y, SkScalar w, SkTDArray<SkVector>* tangents) {
+    const SkPoint pts[], SkScalar x, SkScalar y, SkScalar w,
+    SkTDArray<SkVector>* tangents) noexcept {
   if (!between(pts[0].fY, y, pts[1].fY) && !between(pts[1].fY, y, pts[2].fY)) {
     return;
   }
@@ -2799,7 +2805,7 @@ static void tangent_conic(
 }
 
 static void tangent_quad(
-    const SkPoint pts[], SkScalar x, SkScalar y, SkTDArray<SkVector>* tangents) {
+    const SkPoint pts[], SkScalar x, SkScalar y, SkTDArray<SkVector>* tangents) noexcept {
   if (!between(pts[0].fY, y, pts[1].fY) && !between(pts[1].fY, y, pts[2].fY)) {
     return;
   }
@@ -2848,7 +2854,7 @@ static bool contains_inclusive(const SkRect& r, SkScalar x, SkScalar y) noexcept
   return r.fLeft <= x && x <= r.fRight && r.fTop <= y && y <= r.fBottom;
 }
 
-bool SkPath::contains(SkScalar x, SkScalar y) const {
+bool SkPath::contains(SkScalar x, SkScalar y) const noexcept {
   bool isInverse = this->isInverseFillType();
   if (this->isEmpty()) {
     return isInverse;
@@ -2930,8 +2936,7 @@ bool SkPath::contains(SkScalar x, SkScalar y) const {
 }
 
 int SkPath::ConvertConicToQuads(
-    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[],
-    int pow2) noexcept {
+    const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[], int pow2) {
   const SkConic conic(p0, p1, p2, w);
   return conic.chopIntoQuadsPOW2(pts, pow2);
 }
@@ -3126,7 +3131,7 @@ static int compute_cubic_extremas(const SkPoint src[4], SkPoint extremas[5]) noe
   return n + 1;
 }
 
-SkRect SkPath::computeTightBounds() const {
+SkRect SkPath::computeTightBounds() const noexcept {
   if (0 == this->countVerbs()) {
     return SkRect::MakeEmpty();
   }
@@ -3215,6 +3220,7 @@ bool SkPathPriv::IsRectContour(
         savePts = pts;
         autoClose = true;
         insertClose = false;
+        [[fallthrough]];
       case SkPath::kLine_Verb: {
         if (SkPath::kClose_Verb != verb) {
           lastPt = pts;

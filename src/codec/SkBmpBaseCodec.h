@@ -22,14 +22,14 @@ class SkBmpBaseCodec : public SkBmpCodec {
    *
    * If false, this Codec must not be used.
    */
-  bool didCreateSrcBuffer() const noexcept { return fSrcBuffer != nullptr; }
+  bool didCreateSrcBuffer() const { return fSrcBuffer != nullptr; }
 
  protected:
   SkBmpBaseCodec(
       SkEncodedInfo&& info, std::unique_ptr<SkStream>, uint16_t bitsPerPixel,
-      SkCodec::SkScanlineOrder rowOrder) noexcept;
+      SkCodec::SkScanlineOrder rowOrder);
 
-  uint8_t* srcBuffer() noexcept { return reinterpret_cast<uint8_t*>(fSrcBuffer.get()); }
+  uint8_t* srcBuffer() { return reinterpret_cast<uint8_t*>(fSrcBuffer.get()); }
 
  private:
   SkAutoFree fSrcBuffer;

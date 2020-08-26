@@ -17,11 +17,10 @@ class GrGLSLVertexBuilder;
 class GrFillPathShader : public GrPathShader {
  public:
   GrFillPathShader(
-      ClassID classID, const SkMatrix& viewMatrix, SkPMColor4f color,
-      GrPrimitiveType primitiveType) noexcept
+      ClassID classID, const SkMatrix& viewMatrix, SkPMColor4f color, GrPrimitiveType primitiveType)
       : GrPathShader(classID, viewMatrix, primitiveType, 0), fColor(color) {}
 
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const final;
 
  protected:
@@ -37,7 +36,7 @@ class GrFillPathShader : public GrPathShader {
 // Fills a simple array of triangles.
 class GrFillTriangleShader : public GrFillPathShader {
  public:
-  GrFillTriangleShader(const SkMatrix& viewMatrix, SkPMColor4f color) noexcept
+  GrFillTriangleShader(const SkMatrix& viewMatrix, SkPMColor4f color)
       : GrFillPathShader(
             kTessellate_GrFillTriangleShader_ClassID, viewMatrix, color,
             GrPrimitiveType::kTriangles) {
@@ -55,7 +54,7 @@ class GrFillTriangleShader : public GrFillPathShader {
 // Fills an array of convex hulls surrounding 4-point cubic instances.
 class GrFillCubicHullShader : public GrFillPathShader {
  public:
-  GrFillCubicHullShader(const SkMatrix& viewMatrix, SkPMColor4f color) noexcept
+  GrFillCubicHullShader(const SkMatrix& viewMatrix, SkPMColor4f color)
       : GrFillPathShader(
             kTessellate_GrFillCubicHullShader_ClassID, viewMatrix, color,
             GrPrimitiveType::kTriangleStrip) {
@@ -76,8 +75,7 @@ class GrFillCubicHullShader : public GrFillPathShader {
 // NOTE: The emitted geometry may not be axis-aligned, depending on the view matrix.
 class GrFillBoundingBoxShader : public GrFillPathShader {
  public:
-  GrFillBoundingBoxShader(
-      const SkMatrix& viewMatrix, SkPMColor4f color, const SkRect& pathBounds) noexcept
+  GrFillBoundingBoxShader(const SkMatrix& viewMatrix, SkPMColor4f color, const SkRect& pathBounds)
       : GrFillPathShader(
             kTessellate_GrFillBoundingBoxShader_ClassID, viewMatrix, color,
             GrPrimitiveType::kTriangleStrip),

@@ -35,12 +35,12 @@ class GrMockCaps : public GrCaps {
     fShaderCaps->fShaderDerivativeSupport = options.fShaderDerivativeSupport;
     fShaderCaps->fDualSourceBlendingSupport = options.fDualSourceBlendingSupport;
     fShaderCaps->fSampleMaskSupport = true;
-    fShaderCaps->fTessellationSupport = options.fTessellationSupport;
+    fShaderCaps->fMaxTessellationSegments = options.fMaxTessellationSegments;
 
     this->finishInitialization(contextOptions);
   }
 
-  bool isFormatSRGB(const GrBackendFormat& format) const override {
+  bool isFormatSRGB(const GrBackendFormat& format) const noexcept override {
     SkImage::CompressionType compression = format.asMockCompressionType();
     if (compression != SkImage::CompressionType::kNone) {
       return false;
@@ -50,11 +50,7 @@ class GrMockCaps : public GrCaps {
     return GrGetColorTypeDesc(ct).encoding() == GrColorTypeEncoding::kSRGBUnorm;
   }
 
-  SkImage::CompressionType compressionType(const GrBackendFormat& format) const override {
-    return format.asMockCompressionType();
-  }
-
-  bool isFormatTexturable(const GrBackendFormat& format) const override {
+  bool isFormatTexturable(const GrBackendFormat& format) const noexcept override {
     SkImage::CompressionType compression = format.asMockCompressionType();
     if (compression != SkImage::CompressionType::kNone) {
       return fOptions.fCompressedOptions[(int)compression].fTexturable;
@@ -64,7 +60,7 @@ class GrMockCaps : public GrCaps {
     return fOptions.fConfigOptions[index].fTexturable;
   }
 
-  bool isFormatCopyable(const GrBackendFormat& format) const override { return false; }
+  bool isFormatCopyable(const GrBackendFormat& format) const noexcept override { return false; }
 
   bool isFormatAsColorTypeRenderable(
       GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const override {
@@ -77,7 +73,7 @@ class GrMockCaps : public GrCaps {
     return this->isFormatRenderable(format, sampleCount);
   }
 
-  bool isFormatRenderable(const GrBackendFormat& format, int sampleCount) const override {
+  bool isFormatRenderable(const GrBackendFormat& format, int sampleCount) const noexcept override {
     if (format.asMockCompressionType() != SkImage::CompressionType::kNone) {
       return false;  // compressed formats are never renderable
     }
@@ -85,7 +81,7 @@ class GrMockCaps : public GrCaps {
     return sampleCount <= this->maxRenderTargetSampleCount(format.asMockColorType());
   }
 
-  int getRenderTargetSampleCount(int requestCount, GrColorType ct) const {
+  int getRenderTargetSampleCount(int requestCount, GrColorType ct) const noexcept {
     requestCount = std::max(requestCount, 1);
 
     switch (fOptions.fConfigOptions[(int)ct].fRenderability) {
@@ -97,7 +93,8 @@ class GrMockCaps : public GrCaps {
     return 0;
   }
 
-  int getRenderTargetSampleCount(int requestCount, const GrBackendFormat& format) const override {
+  int getRenderTargetSampleCount(
+      int requestCount, const GrBackendFormat& format) const noexcept override {
     SkImage::CompressionType compression = format.asMockCompressionType();
     if (compression != SkImage::CompressionType::kNone) {
       return 0;  // no compressed format is renderable
@@ -106,7 +103,7 @@ class GrMockCaps : public GrCaps {
     return this->getRenderTargetSampleCount(requestCount, format.asMockColorType());
   }
 
-  int maxRenderTargetSampleCount(GrColorType ct) const {
+  int maxRenderTargetSampleCount(GrColorType ct) const noexcept {
     switch (fOptions.fConfigOptions[(int)ct].fRenderability) {
       case GrMockOptions::ConfigOptions::Renderability::kNo: return 0;
       case GrMockOptions::ConfigOptions::Renderability::kNonMSAA: return 1;
@@ -115,7 +112,7 @@ class GrMockCaps : public GrCaps {
     return 0;
   }
 
-  int maxRenderTargetSampleCount(const GrBackendFormat& format) const override {
+  int maxRenderTargetSampleCount(const GrBackendFormat& format) const noexcept override {
     SkImage::CompressionType compression = format.asMockCompressionType();
     if (compression != SkImage::CompressionType::kNone) {
       return 0;  // no compressed format is renderable
@@ -124,7 +121,7 @@ class GrMockCaps : public GrCaps {
     return this->maxRenderTargetSampleCount(format.asMockColorType());
   }
 
-  size_t bytesPerPixel(const GrBackendFormat& format) const override {
+  size_t bytesPerPixel(const GrBackendFormat& format) const noexcept override {
     SkImage::CompressionType compression = format.asMockCompressionType();
     if (compression != SkImage::CompressionType::kNone) {
       return 0;
@@ -135,22 +132,19 @@ class GrMockCaps : public GrCaps {
 
   SupportedWrite supportedWritePixelsColorType(
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
-      GrColorType srcColorType) const override {
+      GrColorType srcColorType) const noexcept override {
     return {surfaceColorType, 1};
   }
 
-  SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const override {
+  SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const noexcept override {
     return SurfaceReadPixelsSupport::kSupported;
   }
 
-  GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override {
+  GrBackendFormat getBackendFormatFromCompressionType(
+      SkImage::CompressionType) const noexcept override {
     return {};
   }
 
-  GrSwizzle getReadSwizzle(const GrBackendFormat& format, GrColorType ct) const override {
-    SkASSERT(this->areColorTypeAndFormatCompatible(ct, format));
-    return GrSwizzle("rgba");
-  }
   GrSwizzle getWriteSwizzle(const GrBackendFormat& format, GrColorType ct) const override {
     SkASSERT(this->areColorTypeAndFormatCompatible(ct, format));
     return GrSwizzle("rgba");
@@ -165,18 +159,18 @@ class GrMockCaps : public GrCaps {
 #endif
 
  private:
-  bool onSurfaceSupportsWritePixels(const GrSurface*) const override { return true; }
+  bool onSurfaceSupportsWritePixels(const GrSurface*) const noexcept override { return true; }
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override {
     return true;
   }
-  GrBackendFormat onGetDefaultBackendFormat(GrColorType ct) const override {
+  GrBackendFormat onGetDefaultBackendFormat(GrColorType ct) const noexcept override {
     return GrBackendFormat::MakeMock(ct, SkImage::CompressionType::kNone);
   }
 
   bool onAreColorTypeAndFormatCompatible(
-      GrColorType ct, const GrBackendFormat& format) const override {
+      GrColorType ct, const GrBackendFormat& format) const noexcept override {
     if (ct == GrColorType::kUnknown) {
       return false;
     }
@@ -194,8 +188,14 @@ class GrMockCaps : public GrCaps {
   }
 
   SupportedRead onSupportedReadPixelsColorType(
-      GrColorType srcColorType, const GrBackendFormat&, GrColorType) const override {
+      GrColorType srcColorType, const GrBackendFormat&, GrColorType) const noexcept override {
     return SupportedRead{srcColorType, 1};
+  }
+
+  GrSwizzle onGetReadSwizzle(
+      const GrBackendFormat& format, GrColorType ct) const noexcept override {
+    SkASSERT(this->areColorTypeAndFormatCompatible(ct, format));
+    return GrSwizzle("rgba");
   }
 
   static const int kMaxSampleCnt = 16;

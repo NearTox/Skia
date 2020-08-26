@@ -68,9 +68,9 @@ class SkDWriteFontFileStreamWrapper : public IDWriteFontFileStream {
       void const** fragmentStart, UINT64 fileOffset, UINT64 fragmentSize,
       void** fragmentContext) override;
 
-  SK_STDMETHODIMP_(void) ReleaseFileFragment(void* fragmentContext) noexcept override;
-  SK_STDMETHODIMP GetFileSize(UINT64* fileSize) noexcept override;
-  SK_STDMETHODIMP GetLastWriteTime(UINT64* lastWriteTime) noexcept override;
+  SK_STDMETHODIMP_(void) ReleaseFileFragment(void* fragmentContext) override;
+  SK_STDMETHODIMP GetFileSize(UINT64* fileSize) override;
+  SK_STDMETHODIMP GetLastWriteTime(UINT64* lastWriteTime) override;
 
   static HRESULT Create(
       SkStreamAsset* stream, SkDWriteFontFileStreamWrapper** streamFontFileStream);

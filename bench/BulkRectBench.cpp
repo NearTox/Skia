@@ -12,7 +12,6 @@
 #include "include/gpu/GrContext.h"
 #include "include/utils/SkRandom.h"
 
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/SkGr.h"
 
@@ -151,7 +150,7 @@ class BulkRectBench : public Benchmark {
     SkSimpleMatrixProvider matrixProvider(view);
     GrPaint grPaint;
     SkPaintToGrPaint(context, rtc->colorInfo(), paint, matrixProvider, &grPaint);
-    rtc->drawQuadSet(GrNoClip(), std::move(grPaint), GrAA::kYes, view, batch, kRectCount);
+    rtc->drawQuadSet(nullptr, std::move(grPaint), GrAA::kYes, view, batch, kRectCount);
   }
 
   void drawSolidColorsRef(SkCanvas* canvas) const {
@@ -225,6 +224,15 @@ class BulkRectBench : public Benchmark {
       auto image = SkImage::MakeFromBitmap(bm);
 
       fImages[i] = context ? image->makeTextureImage(context) : std::move(image);
+    }
+  }
+
+  void onPerCanvasPostDraw(SkCanvas* canvas) override {
+    for (int i = 0; i < kImageCount; ++i) {
+      // For Vulkan we need to make sure the bench isn't holding onto any refs to the
+      // GrContext when we go to delete the vulkan context (which happens before the bench is
+      // deleted). So reset all the images here so they aren't holding GrContext refs.
+      fImages[i].reset();
     }
   }
 

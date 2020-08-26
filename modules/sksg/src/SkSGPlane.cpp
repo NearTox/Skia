@@ -20,13 +20,13 @@ void Plane::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawP
 
 bool Plane::onContains(const SkPoint&) const noexcept { return true; }
 
-SkRect Plane::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
+SkRect Plane::onRevalidate(InvalidationController*, const SkMatrix&) {
   SkASSERT(this->hasInval());
 
   return SkRect::MakeLTRB(SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax);
 }
 
-SkPath Plane::onAsPath() const {
+SkPath Plane::onAsPath() const noexcept {
   SkPath path;
   path.setFillType(SkPathFillType::kInverseWinding);
 

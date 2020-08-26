@@ -10,14 +10,14 @@
 
 #include <utility>
 
-SkCubicClipper::SkCubicClipper() { fClip.setEmpty(); }
+SkCubicClipper::SkCubicClipper() noexcept { fClip.setEmpty(); }
 
-void SkCubicClipper::setClip(const SkIRect& clip) {
+void SkCubicClipper::setClip(const SkIRect& clip) noexcept {
   // conver to scalars, since that's where we'll see the points
   fClip.set(clip);
 }
 
-bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) {
+bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) noexcept {
   SkScalar ycrv[4];
   ycrv[0] = pts[0].fY - y;
   ycrv[1] = pts[1].fY - y;
@@ -57,7 +57,7 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
   if (t1 < 0 || t1 > SK_Scalar1) return false;  // This shouldn't happen, but check anyway.
   return converged;
 
-#else   // BISECTION    // Linear convergence, typically 16 iterations.
+#else  // BISECTION    // Linear convergence, typically 16 iterations.
 
   // Check that the endpoints straddle zero.
   SkScalar tNeg, tPos;  // Negative and positive function parameters.
@@ -74,7 +74,7 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
     return true;
   }
 
-  const SkScalar tol = SK_Scalar1 / 65536;  // 1 for fixed, 1e-5 for float.
+  constexpr SkScalar tol = SK_Scalar1 / 65536;  // 1 for fixed, 1e-5 for float.
   int iters = 0;
   do {
     SkScalar tMid = (tPos + tNeg) / 2;
@@ -100,7 +100,7 @@ bool SkCubicClipper::ChopMonoAtY(const SkPoint pts[4], SkScalar y, SkScalar* t) 
 #endif  // BISECTION
 }
 
-bool SkCubicClipper::clipCubic(const SkPoint srcPts[4], SkPoint dst[4]) {
+bool SkCubicClipper::clipCubic(const SkPoint srcPts[4], SkPoint dst[4]) noexcept {
   bool reverse;
 
   // we need the data to be monotonically descending in Y

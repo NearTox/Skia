@@ -19,12 +19,13 @@ namespace SkSL {
 struct Block : public Statement {
   Block(
       int offset, std::vector<std::unique_ptr<Statement>> statements,
-      const std::shared_ptr<SymbolTable> symbols = nullptr)
+      std::shared_ptr<SymbolTable> symbols = nullptr, bool isScope = true) noexcept
       : INHERITED(offset, kBlock_Kind),
         fSymbols(std::move(symbols)),
-        fStatements(std::move(statements)) {}
+        fStatements(std::move(statements)),
+        fIsScope(isScope) {}
 
-  bool isEmpty() const override {
+  bool isEmpty() const noexcept override {
     for (const auto& s : fStatements) {
       if (!s->isEmpty()) {
         return false;
@@ -33,12 +34,20 @@ struct Block : public Statement {
     return true;
   }
 
+  int nodeCount() const noexcept override {
+    int result = 1;
+    for (const auto& s : fStatements) {
+      result += s->nodeCount();
+    }
+    return result;
+  }
+
   std::unique_ptr<Statement> clone() const override {
     std::vector<std::unique_ptr<Statement>> cloned;
     for (const auto& s : fStatements) {
       cloned.push_back(s->clone());
     }
-    return std::unique_ptr<Statement>(new Block(fOffset, std::move(cloned), fSymbols));
+    return std::unique_ptr<Statement>(new Block(fOffset, std::move(cloned), fSymbols, fIsScope));
   }
 
   String description() const override {
@@ -55,6 +64,10 @@ struct Block : public Statement {
   // because destroying statements can modify reference counts in symbols
   const std::shared_ptr<SymbolTable> fSymbols;
   std::vector<std::unique_ptr<Statement>> fStatements;
+  // if isScope is false, this is just a group of statements rather than an actual language-level
+  // block. This allows us to pass around multiple statements as if they were a single unit, with
+  // no semantic impact.
+  bool fIsScope;
 
   typedef Statement INHERITED;
 };

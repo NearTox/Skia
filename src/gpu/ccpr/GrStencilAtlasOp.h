@@ -66,7 +66,7 @@ class GrStencilAtlasOp : public GrDrawOp {
   GrStencilAtlasOp(
       sk_sp<const GrCCPerFlushResources> resources, FillBatchID fillBatchID,
       StrokeBatchID strokeBatchID, int baseStencilResolveInstance, int endStencilResolveInstance,
-      const SkISize& drawBounds) noexcept
+      const SkISize& drawBounds)
       : GrDrawOp(ClassID()),
         fResources(std::move(resources)),
         fFillBatchID(fillBatchID),

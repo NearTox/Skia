@@ -5,7 +5,6 @@
  * found in the LICENSE file.
  */
 #include "src/core/SkBlendModePriv.h"
-#include "src/gpu/GrClip.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRenderTargetContext.h"
@@ -52,7 +51,7 @@ static void bulk_fill_rect_create_test(
   GrPaint paint;
   paint.setXPFactory(SkBlendMode_AsXPFactory(blendMode));
   GrFillRectOp::AddFillRectOps(
-      rtc.get(), GrNoClip(), context, std::move(paint), overallAA, SkMatrix::I(), quads,
+      rtc.get(), nullptr, context, std::move(paint), overallAA, SkMatrix::I(), quads,
       requestedTotNumQuads);
 
   GrOpsTask* opsTask = rtc->testingOnly_PeekLastOpsTask();
@@ -70,7 +69,7 @@ static void bulk_fill_rect_create_test(
   REPORTER_ASSERT(reporter, expectedNumOps == actualNumOps);
   REPORTER_ASSERT(reporter, requestedTotNumQuads == actualTotNumQuads);
 
-  context->flush();
+  context->flushAndSubmit();
 
   delete[] quads;
 }
@@ -102,7 +101,7 @@ static void bulk_texture_rect_create_test(
   }
 
   GrTextureOp::AddTextureSetOps(
-      rtc.get(), GrNoClip(), context, set, requestedTotNumQuads,
+      rtc.get(), nullptr, context, set, requestedTotNumQuads,
       requestedTotNumQuads,  // We alternate so proxyCnt == cnt
       GrSamplerState::Filter::kNearest, GrTextureOp::Saturate::kYes, blendMode, overallAA,
       SkCanvas::kStrict_SrcRectConstraint, SkMatrix::I(), nullptr);
@@ -131,7 +130,7 @@ static void bulk_texture_rect_create_test(
   REPORTER_ASSERT(reporter, expectedNumOps == actualNumOps);
   REPORTER_ASSERT(reporter, requestedTotNumQuads == actualTotNumQuads);
 
-  context->flush();
+  context->flushAndSubmit();
 
   delete[] set;
 }

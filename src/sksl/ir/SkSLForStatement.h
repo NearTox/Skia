@@ -21,7 +21,7 @@ struct ForStatement : public Statement {
   ForStatement(
       int offset, std::unique_ptr<Statement> initializer, std::unique_ptr<Expression> test,
       std::unique_ptr<Expression> next, std::unique_ptr<Statement> statement,
-      std::shared_ptr<SymbolTable> symbols)
+      std::shared_ptr<SymbolTable> symbols) noexcept
       : INHERITED(offset, kFor_Kind),
         fSymbols(symbols),
         fInitializer(std::move(initializer)),
@@ -29,16 +29,33 @@ struct ForStatement : public Statement {
         fNext(std::move(next)),
         fStatement(std::move(statement)) {}
 
+  int nodeCount() const noexcept override {
+    int result = 1;
+    if (fInitializer) {
+      result += fInitializer->nodeCount();
+    }
+    if (fTest) {
+      result += fTest->nodeCount();
+    }
+    if (fNext) {
+      result += fNext->nodeCount();
+    }
+    result += fStatement->nodeCount();
+    return result;
+  }
+
   std::unique_ptr<Statement> clone() const override {
     return std::unique_ptr<Statement>(new ForStatement(
-        fOffset, fInitializer->clone(), fTest->clone(), fNext->clone(), fStatement->clone(),
-        fSymbols));
+        fOffset, fInitializer ? fInitializer->clone() : nullptr, fTest ? fTest->clone() : nullptr,
+        fNext ? fNext->clone() : nullptr, fStatement->clone(), fSymbols));
   }
 
   String description() const override {
     String result("for (");
     if (fInitializer) {
       result += fInitializer->description();
+    } else {
+      result += ";";
     }
     result += " ";
     if (fTest) {

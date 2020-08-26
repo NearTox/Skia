@@ -55,7 +55,7 @@ class StreamFontFileLoader : public IDWriteFontFileLoader {
  private:
   StreamFontFileLoader(std::unique_ptr<SkStreamAsset> stream)
       : fStream(std::move(stream)), fRefCount(1) {}
-  virtual ~StreamFontFileLoader() {}
+  virtual ~StreamFontFileLoader() = default;
 
   std::unique_ptr<SkStreamAsset> fStream;
   ULONG fRefCount;
@@ -116,7 +116,7 @@ class StreamFontFileEnumerator : public IDWriteFontFileEnumerator {
 
  private:
   StreamFontFileEnumerator(IDWriteFactory* factory, IDWriteFontFileLoader* fontFileLoader);
-  virtual ~StreamFontFileEnumerator() {}
+  virtual ~StreamFontFileEnumerator() = default;
 
   ULONG fRefCount;
 
@@ -212,7 +212,7 @@ class StreamFontCollectionLoader : public IDWriteFontCollectionLoader {
  private:
   StreamFontCollectionLoader(IDWriteFontFileLoader* fontFileLoader)
       : fRefCount(1), fFontFileLoader(SkRefComPtr(fontFileLoader)) {}
-  virtual ~StreamFontCollectionLoader() {}
+  virtual ~StreamFontCollectionLoader() = default;
 
   ULONG fRefCount;
   SkTScopedComPtr<IDWriteFontFileLoader> fFontFileLoader;
@@ -600,7 +600,7 @@ class FontFallbackRenderer : public IDWriteTextRenderer {
   sk_sp<SkTypeface> ConsumeFallbackTypeface() { return std::move(fResolvedTypeface); }
 
  private:
-  virtual ~FontFallbackRenderer() {}
+  virtual ~FontFallbackRenderer() = default;
 
   ULONG fRefCount;
   sk_sp<const SkFontMgr_DirectWrite> fOuter;
@@ -684,7 +684,7 @@ class FontFallbackSource : public IDWriteTextAnalysisSource {
   }
 
  private:
-  virtual ~FontFallbackSource() {}
+  virtual ~FontFallbackSource() = default;
 
   ULONG fRefCount;
   const WCHAR* fString;

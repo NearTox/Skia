@@ -257,7 +257,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    *  Format of the encoded data.
    */
-  SkEncodedImageFormat getEncodedFormat() const { return this->onGetEncodedFormat(); }
+  SkEncodedImageFormat getEncodedFormat() const noexcept { return this->onGetEncodedFormat(); }
 
   /**
    *  Whether or not the memory passed to getPixels is zero initialized.
@@ -746,7 +746,7 @@ class SK_API SkCodec : SkNoncopyable {
    */
   virtual bool onDimensionsSupported(const SkISize&) { return false; }
 
-  virtual SkEncodedImageFormat onGetEncodedFormat() const = 0;
+  virtual SkEncodedImageFormat onGetEncodedFormat() const noexcept = 0;
 
   /**
    * @param rowsDecoded When the encoded image stream is incomplete, this function

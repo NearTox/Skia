@@ -27,7 +27,7 @@ static double conic_eval_tan(const double coord[], SkScalar w, double t) noexcep
   return t * (t * coeff[0] + coeff[1]) + coeff[2];
 }
 
-int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) noexcept {
+int SkDConic::FindExtrema(const double src[], SkScalar w, double t[1]) {
   double coeff[3];
   conic_deriv_coeff(src, w, coeff);
 
@@ -76,7 +76,7 @@ static constexpr double conic_eval_denominator(SkScalar w, double t) noexcept {
   return (A * t + B) * t + C;
 }
 
-bool SkDConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept {
+bool SkDConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
   return cubic.hullIntersects(*this, isLinear);
 }
 
@@ -162,22 +162,22 @@ SkDConic SkDConic::subDivide(double t1, double t2) const noexcept {
 }
 
 SkDPoint SkDConic::subDivide(
-    const SkDPoint& a, const SkDPoint& c, double t1, double t2, SkScalar* weight) const noexcept {
+    const SkDPoint& a, const SkDPoint& c, double t1, double t2, SkScalar* weight) const {
   SkDConic chopped = this->subDivide(t1, t2);
   *weight = chopped.fWeight;
   return chopped[1];
 }
 
-int SkTConic::intersectRay(SkIntersections* i, const SkDLine& line) const noexcept {
+int SkTConic::intersectRay(SkIntersections* i, const SkDLine& line) const {
   return i->intersectRay(fConic, line);
 }
 
-bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept {
+bool SkTConic::hullIntersects(const SkDQuad& quad, bool* isLinear) const {
   return quad.hullIntersects(fConic, isLinear);
 }
 
-bool SkTConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const noexcept {
+bool SkTConic::hullIntersects(const SkDCubic& cubic, bool* isLinear) const {
   return cubic.hullIntersects(fConic, isLinear);
 }
 
-void SkTConic::setBounds(SkDRect* rect) const noexcept { rect->setBounds(fConic); }
+void SkTConic::setBounds(SkDRect* rect) const { rect->setBounds(fConic); }

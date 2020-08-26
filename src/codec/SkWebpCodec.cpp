@@ -131,7 +131,7 @@ std::unique_ptr<SkCodec> SkWebpCodec::MakeFromStream(
       // sense to guess kBGRA which is likely closer to the final
       // output.  Otherwise, we might end up converting
       // BGRA->YUVA->BGRA.
-      // Fallthrough:
+      [[fallthrough]];
     case 2:
       // This is the lossless format (BGRA).
       if (hasAlpha) {
@@ -204,9 +204,7 @@ int SkWebpCodec::onGetRepetitionCount() {
     return kRepetitionCountInfinite;
   }
 
-#ifndef SK_LEGACY_WEBP_LOOP_COUNT
   loopCount--;
-#endif
   return loopCount;
 }
 

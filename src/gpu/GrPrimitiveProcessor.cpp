@@ -24,7 +24,8 @@ enum MatrixType {
 
 GrPrimitiveProcessor::GrPrimitiveProcessor(ClassID classID) noexcept : GrProcessor(classID) {}
 
-const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler(int i) const {
+const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler(
+    int i) const noexcept {
   SkASSERT(i >= 0 && i < this->numTextureSamplers());
   return this->onTextureSampler(i);
 }
@@ -67,12 +68,14 @@ static inline GrSamplerState::Filter clamp_filter(
 }
 
 GrPrimitiveProcessor::TextureSampler::TextureSampler(
-    GrSamplerState samplerState, const GrBackendFormat& backendFormat, const GrSwizzle& swizzle) {
+    GrSamplerState samplerState, const GrBackendFormat& backendFormat,
+    const GrSwizzle& swizzle) noexcept {
   this->reset(samplerState, backendFormat, swizzle);
 }
 
 void GrPrimitiveProcessor::TextureSampler::reset(
-    GrSamplerState samplerState, const GrBackendFormat& backendFormat, const GrSwizzle& swizzle) {
+    GrSamplerState samplerState, const GrBackendFormat& backendFormat,
+    const GrSwizzle& swizzle) noexcept {
   fSamplerState = samplerState;
   fSamplerState.setFilterMode(clamp_filter(backendFormat.textureType(), samplerState.filter()));
   fBackendFormat = backendFormat;

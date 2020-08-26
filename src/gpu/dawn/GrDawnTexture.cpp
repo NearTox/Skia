@@ -95,7 +95,7 @@ sk_sp<GrDawnTexture> GrDawnTexture::MakeWrapped(
   return tex;
 }
 
-GrDawnTexture::~GrDawnTexture() {}
+GrDawnTexture::~GrDawnTexture() = default;
 
 GrDawnGpu* GrDawnTexture::getDawnGpu() const {
   SkASSERT(!this->wasDestroyed());

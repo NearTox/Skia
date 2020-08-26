@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="skshaper\src\SkShaper.cpp" />
-    <ClCompile Include="skshaper\src\SkShaper_coretext.cpp" />
     <ClCompile Include="skshaper\src\SkShaper_harfbuzz.cpp" />
     <ClCompile Include="skshaper\src\SkShaper_primitive.cpp" />
   </ItemGroup>

@@ -84,7 +84,7 @@ class SkTextBlob::RunRecord {
  public:
   RunRecord(
       uint32_t count, uint32_t textSize, const SkPoint& offset, const SkFont& font,
-      GlyphPositioning pos)
+      GlyphPositioning pos) noexcept
       : fFont(font), fCount(count), fOffset(offset), fFlags(pos) {
     SkASSERT(static_cast<unsigned>(pos) <= Flags::kPositioning_Mask);
 

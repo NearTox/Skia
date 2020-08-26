@@ -37,7 +37,7 @@ struct Modifiers {
     kVarying_Flag = 1 << 16,
   };
 
-  Modifiers() noexcept = default;
+  constexpr Modifiers() noexcept : fLayout(Layout()), fFlags(0) {}
 
   Modifiers(const Layout& layout, int flags) noexcept : fLayout(layout), fFlags(flags) {}
 
@@ -105,8 +105,8 @@ struct Modifiers {
 
   bool operator!=(const Modifiers& other) const noexcept { return !(*this == other); }
 
-  Layout fLayout{};
-  int fFlags = 0;
+  Layout fLayout;
+  int fFlags;
 };
 
 }  // namespace SkSL

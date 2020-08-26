@@ -26,7 +26,6 @@ class GrMtlCaps : public GrCaps {
   GrMtlCaps(const GrContextOptions& contextOptions, id<MTLDevice> device, MTLFeatureSet featureSet);
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
-  SkImage::CompressionType compressionType(const GrBackendFormat&) const override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isFormatTexturable(MTLPixelFormat) const;
@@ -79,7 +78,6 @@ class GrMtlCaps : public GrCaps {
     return fColorTypeToFormatTable[idx];
   }
 
-  GrSwizzle getReadSwizzle(const GrBackendFormat&, GrColorType) const override;
   GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
@@ -110,6 +108,8 @@ class GrMtlCaps : public GrCaps {
 
   SupportedRead onSupportedReadPixelsColorType(
       GrColorType, const GrBackendFormat&, GrColorType) const override;
+
+  GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const override;
 
   // ColorTypeInfo for a specific format
   struct ColorTypeInfo {

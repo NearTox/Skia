@@ -33,11 +33,12 @@ class Group : public RenderNode {
   void clear() noexcept;
 
  protected:
+  Group() noexcept;
   explicit Group(std::vector<sk_sp<RenderNode>>);
   ~Group() override;
 
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const override;
+  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 

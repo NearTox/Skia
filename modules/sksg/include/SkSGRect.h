@@ -41,7 +41,7 @@ class Rect final : public GeometryNode {
   bool onContains(const SkPoint&) const noexcept override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const override;
+  SkPath onAsPath() const noexcept override;
 
  private:
   explicit Rect(const SkRect&) noexcept;
@@ -84,7 +84,7 @@ class RRect final : public GeometryNode {
   bool onContains(const SkPoint&) const noexcept override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const override;
+  SkPath onAsPath() const noexcept override;
 
  private:
   explicit RRect(const SkRRect&) noexcept;

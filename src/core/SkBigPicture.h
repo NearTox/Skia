@@ -41,7 +41,7 @@ class SkBigPicture final : public SkPicture {
 
   SkBigPicture(
       const SkRect& cull, sk_sp<SkRecord>, std::unique_ptr<SnapshotArray>, sk_sp<SkBBoxHierarchy>,
-      size_t approxBytesUsedBySubPictures) noexcept;
+      size_t approxBytesUsedBySubPictures);
 
   // SkPicture overrides
   void playback(SkCanvas*, AbortCallback*) const override;
@@ -57,8 +57,8 @@ class SkBigPicture final : public SkPicture {
   const SkRecord* record() const noexcept { return fRecord.get(); }
 
  private:
-  int drawableCount() const noexcept;
-  SkPicture const* const* drawablePicts() const noexcept;
+  int drawableCount() const;
+  SkPicture const* const* drawablePicts() const;
 
   const SkRect fCullRect;
   const size_t fApproxBytesUsedBySubPictures;

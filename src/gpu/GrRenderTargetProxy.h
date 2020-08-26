@@ -29,7 +29,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // Actually instantiate the backing rendertarget, if necessary.
   bool instantiate(GrResourceProvider*) override;
 
-  bool canUseMixedSamples(const GrCaps& caps) const {
+  bool canUseMixedSamples(const GrCaps& caps) const noexcept {
     return caps.mixedSamplesSupport() && !this->glRTFBOIDIs0() &&
            caps.internalMultisampleCount(this->backendFormat()) > 0 &&
            this->canChangeStencilAttachment();
@@ -62,7 +62,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   }
 
   void markMSAADirty(const SkIRect& dirtyRect, GrSurfaceOrigin origin) noexcept {
-    SkASSERT(SkIRect::MakeSize(this->dimensions()).contains(dirtyRect));
+    SkASSERT(SkIRect::MakeSize(this->backingStoreDimensions()).contains(dirtyRect));
     SkASSERT(this->requiresManualMSAAResolve());
     auto nativeRect =
         GrNativeRect::MakeRelativeTo(origin, this->backingStoreDimensions().height(), dirtyRect);
@@ -95,7 +95,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // Deferred version
   GrRenderTargetProxy(
       const GrCaps&, const GrBackendFormat&, SkISize, int sampleCount, SkBackingFit, SkBudgeted,
-      GrProtected, GrInternalSurfaceFlags, UseAllocator);
+      GrProtected, GrInternalSurfaceFlags, UseAllocator) noexcept;
 
   enum class WrapsVkSecondaryCB : bool { kNo = false, kYes = true };
 
@@ -111,10 +111,11 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // know the final size until flush time.
   GrRenderTargetProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, int sampleCount, SkBackingFit,
-      SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator, WrapsVkSecondaryCB);
+      SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator, WrapsVkSecondaryCB) noexcept;
 
   // Wrapped version
-  GrRenderTargetProxy(sk_sp<GrSurface>, UseAllocator, WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo);
+  GrRenderTargetProxy(
+      sk_sp<GrSurface>, UseAllocator, WrapsVkSecondaryCB = WrapsVkSecondaryCB::kNo) noexcept;
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
@@ -123,12 +124,12 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   bool glRTFBOIDIs0() const noexcept {
     return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0;
   }
-  bool canChangeStencilAttachment() const;
+  bool canChangeStencilAttachment() const noexcept;
 
-  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
+  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const noexcept override;
   SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 
-  LazySurfaceDesc callbackDesc() const override;
+  LazySurfaceDesc callbackDesc() const noexcept override;
 
   // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
   // when instantiating GrTextureRenderTargetProxy. The std::function in GrSurfaceProxy makes

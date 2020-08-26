@@ -111,7 +111,7 @@ class SkBlitter {
    *  from Choose() if the request cannot be fulfilled. Default impl
    *  returns false.
    */
-  virtual bool isNullBlitter() const noexcept;
+  virtual bool isNullBlitter() const;
 
   /**
    * Special methods for blitters that can blit more than one row at a time.
@@ -119,7 +119,7 @@ class SkBlitter {
    * process at a time. It is still required to support blitting one scanline
    * at a time.
    */
-  virtual int requestRowsPreserved() const { return 1; }
+  virtual int requestRowsPreserved() const noexcept { return 1; }
 
   /**
    * This function allocates memory for the blitter that the blitter then owns.
@@ -165,7 +165,7 @@ class SkNullBlitter : public SkBlitter {
   void blitRect(int x, int y, int width, int height) override;
   void blitMask(const SkMask&, const SkIRect& clip) override;
   const SkPixmap* justAnOpaqueColor(uint32_t* value) override;
-  bool isNullBlitter() const noexcept override;
+  bool isNullBlitter() const override;
 };
 
 /** Wraps another (real) blitter, and ensures that the real blitter is only
@@ -189,7 +189,7 @@ class SkRectClipBlitter : public SkBlitter {
   void blitMask(const SkMask&, const SkIRect& clip) override;
   const SkPixmap* justAnOpaqueColor(uint32_t* value) override;
 
-  int requestRowsPreserved() const override { return fBlitter->requestRowsPreserved(); }
+  int requestRowsPreserved() const noexcept override { return fBlitter->requestRowsPreserved(); }
 
   void* allocBlitMemory(size_t sz) override { return fBlitter->allocBlitMemory(sz); }
 
@@ -219,7 +219,7 @@ class SkRgnClipBlitter : public SkBlitter {
   void blitMask(const SkMask&, const SkIRect& clip) override;
   const SkPixmap* justAnOpaqueColor(uint32_t* value) override;
 
-  int requestRowsPreserved() const override { return fBlitter->requestRowsPreserved(); }
+  int requestRowsPreserved() const noexcept override { return fBlitter->requestRowsPreserved(); }
 
   void* allocBlitMemory(size_t sz) override { return fBlitter->allocBlitMemory(sz); }
 
@@ -297,7 +297,7 @@ class SkPairBlitter : public SkBlitter {
     SHARD(blitAntiRect(x, y, width, height, leftAlpha, rightAlpha))
   }
   void blitMask(const SkMask& mask, const SkIRect& clip) override { SHARD(blitMask(mask, clip)) }
-  const SkPixmap* justAnOpaqueColor(uint32_t* value) override { return nullptr; }
+  const SkPixmap* justAnOpaqueColor(uint32_t* value) noexcept override { return nullptr; }
   void blitAntiH2(int x, int y, U8CPU a0, U8CPU a1) override { SHARD(blitAntiH2(x, y, a0, a1)) }
   void blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) override { SHARD(blitAntiV2(x, y, a0, a1)) }
 };

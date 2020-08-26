@@ -115,7 +115,7 @@ class Parser {
    * of pushback is supported (that is, it is an error to call pushback() twice in a row without
    * an intervening nextToken()).
    */
-  void pushback(Token t) noexcept;
+  void pushback(Token t);
 
   /**
    * Returns the next non-whitespace token without consuming it from the stream.

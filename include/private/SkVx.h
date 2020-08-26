@@ -574,20 +574,20 @@ static inline Vec<N, uint8_t> approx_scale(
 
 #if !defined(SKNX_NO_SIMD) && defined(__ARM_NEON)
 // With NEON we can do eight u8*u8 -> u16 in one instruction, vmull_u8 (read, mul-long).
-static inline Vec<8, uint16_t> mull(const Vec<8, uint8_t>& x, const Vec<8, uint8_t>& y) {
+static inline Vec<8, uint16_t> mull(const Vec<8, uint8_t>& x, const Vec<8, uint8_t>& y) noexcept {
   return to_vec<8, uint16_t>(vmull_u8(to_vext(x), to_vext(y)));
 }
 
 template <int N>
 static inline typename std::enable_if<(N < 8), Vec<N, uint16_t>>::type mull(
-    const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) {
+    const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) noexcept {
   // N < 8 --> double up data until N == 8, returning the part we need.
   return mull(join(x, x), join(y, y)).lo;
 }
 
 template <int N>
 static inline typename std::enable_if<(N > 8), Vec<N, uint16_t>>::type mull(
-    const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) {
+    const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) noexcept {
   // N > 8 --> usual join(lo,hi) strategy to recurse down to N == 8.
   return join(mull(x.lo, y.lo), mull(x.hi, y.hi));
 }
@@ -661,7 +661,7 @@ static inline Vec<4, float> if_then_else(
 }
 #  elif defined(__ARM_NEON)
 static inline Vec<4, float> if_then_else(
-    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) {
+    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) noexcept {
   return bit_pun<Vec<4, float>>(
       vbslq_f32(bit_pun<uint32x4_t>(c), bit_pun<float32x4_t>(t), bit_pun<float32x4_t>(e)));
 }
@@ -681,7 +681,7 @@ static inline Vec<8, float> fma(
 }
 #  elif defined(__aarch64__)
 static inline Vec<4, float> fma(
-    const Vec<4, float>& x, const Vec<4, float>& y, const Vec<4, float>& z) {
+    const Vec<4, float>& x, const Vec<4, float>& y, const Vec<4, float>& z) noexcept {
   // These instructions tend to work like z += xy, so the order here is z,x,y.
   return bit_pun<Vec<4, float>>(
       vfmaq_f32(bit_pun<float32x4_t>(z), bit_pun<float32x4_t>(x), bit_pun<float32x4_t>(y)));

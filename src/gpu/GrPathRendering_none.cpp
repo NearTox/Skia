@@ -27,7 +27,7 @@ GrPathRenderer* GrStencilAndCoverPathRenderer::Create(
 GrGLPathRendering::GrGLPathRendering(GrGLGpu* gpu)
     : GrPathRendering(gpu), fPreallocatedPathCount(0) {}
 
-GrGLPathRendering::~GrGLPathRendering() {}
+GrGLPathRendering::~GrGLPathRendering() = default;
 
 void GrGLPathRendering::disconnect(GrGpu::DisconnectType) {}
 

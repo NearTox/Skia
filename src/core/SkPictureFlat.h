@@ -132,8 +132,8 @@ enum SaveLayerRecFlatFlags {
   SAVELAYERREC_HAS_PAINT = 1 << 1,
   SAVELAYERREC_HAS_BACKDROP = 1 << 2,
   SAVELAYERREC_HAS_FLAGS = 1 << 3,
-  SAVELAYERREC_HAS_CLIPMASK = 1 << 4,
-  SAVELAYERREC_HAS_CLIPMATRIX = 1 << 5,
+  SAVELAYERREC_HAS_CLIPMASK_OBSOLETE = 1 << 4,    // 6/13/2020
+  SAVELAYERREC_HAS_CLIPMATRIX_OBSOLETE = 1 << 5,  // 6/13/2020
 };
 
 enum SaveBehindFlatFlags {
@@ -144,13 +144,13 @@ enum SaveBehindFlatFlags {
 // clipparams are packed in 5 bits
 //  doAA:1 | clipOp:4
 
-static constexpr inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
+static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
   unsigned doAABit = doAA ? 1 : 0;
   return (doAABit << 4) | static_cast<int>(op);
 }
 
 template <typename T>
-T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) {
+T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) noexcept {
   if (buffer->validate(candidate <= static_cast<uint32_t>(T::kMax_EnumValue))) {
     return static_cast<T>(candidate);
   }
@@ -158,11 +158,11 @@ T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) {
   return T::kMax_EnumValue;
 }
 
-static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t packed) {
+static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t packed) noexcept {
   return asValidEnum<SkClipOp>(buffer, packed & 0xF);
 }
 
-static constexpr inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
+static inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
   return SkToBool((packed >> 4) & 1);
 }
 

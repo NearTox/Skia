@@ -228,6 +228,11 @@ class SK_API SkPaint {
   */
   void setStyle(Style style) noexcept;
 
+  /**
+   *  Set paint's style to kStroke if true, or kFill if false.
+   */
+  void setStroke(bool) noexcept;
+
   /** Retrieves alpha and RGB, unpremultiplied, packed into 32 bits.
       Use helpers SkColorGetA(), SkColorGetR(), SkColorGetG(), and SkColorGetB() to extract
       a color component.
@@ -307,9 +312,10 @@ class SK_API SkPaint {
   */
   SkScalar getStrokeWidth() const noexcept { return fWidth; }
 
-  /** Sets the thickness of the pen used by the paint to
-      outline the shape.
-      Has no effect if width is less than zero.
+  /** Sets the thickness of the pen used by the paint to outline the shape.
+      A stroke-width of zero is treated as "hairline" width. Hairlines are always exactly one
+      pixel wide in device space (their thickness does not change as the canvas is scaled).
+      Negative stroke-widths are invalid; setting a negative width will have no effect.
 
       @param width  zero thickness for hairline; greater than zero for pen thickness
 
@@ -436,7 +442,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refShader
   */
-  sk_sp<SkShader> refShader() const;
+  sk_sp<SkShader> refShader() const noexcept;
 
   /** Sets optional colors used when filling a path, such as a gradient.
 
@@ -464,7 +470,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refColorFilter
   */
-  sk_sp<SkColorFilter> refColorFilter() const;
+  sk_sp<SkColorFilter> refColorFilter() const noexcept;
 
   /** Sets SkColorFilter to filter, decreasing SkRefCnt of the previous
       SkColorFilter. Pass nullptr to clear SkColorFilter.
@@ -514,7 +520,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refPathEffect
   */
-  sk_sp<SkPathEffect> refPathEffect() const;
+  sk_sp<SkPathEffect> refPathEffect() const noexcept;
 
   /** Sets SkPathEffect to pathEffect, decreasing SkRefCnt of the previous
       SkPathEffect. Pass nullptr to leave the path geometry unaltered.
@@ -543,7 +549,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refMaskFilter
   */
-  sk_sp<SkMaskFilter> refMaskFilter() const;
+  sk_sp<SkMaskFilter> refMaskFilter() const noexcept;
 
   /** Sets SkMaskFilter to maskFilter, decreasing SkRefCnt of the previous
       SkMaskFilter. Pass nullptr to clear SkMaskFilter and leave SkMaskFilter effect on
@@ -572,7 +578,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refImageFilter
   */
-  sk_sp<SkImageFilter> refImageFilter() const;
+  sk_sp<SkImageFilter> refImageFilter() const noexcept;
 
   /** Sets SkImageFilter to imageFilter, decreasing SkRefCnt of the previous
       SkImageFilter. Pass nullptr to clear SkImageFilter, and remove SkImageFilter effect
@@ -582,7 +588,6 @@ class SK_API SkPaint {
 
       @param imageFilter  how SkImage is sampled when transformed
 
-      example: https://fiddle.skia.org/c/@Draw_Looper_Methods
       example: https://fiddle.skia.org/c/@Paint_setImageFilter
   */
   void setImageFilter(sk_sp<SkImageFilter> imageFilter) noexcept;

@@ -40,7 +40,7 @@ class GrGLPath : public GrPath {
 
  private:
   // TODO: Figure out how to get an approximate size of the path in Gpu memory.
-  size_t onGpuMemorySize() const override { return 100; }
+  size_t onGpuMemorySize() const noexcept override { return 100; }
 
   GrGLuint fPathID;
   bool fShouldStroke;

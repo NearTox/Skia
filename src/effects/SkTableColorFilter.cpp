@@ -13,6 +13,7 @@
 #include "include/private/SkColorData.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkArenaAlloc.h"
+#include "src/core/SkColorFilterBase.h"
 #include "src/core/SkEffectPriv.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkReadBuffer.h"
@@ -37,11 +38,11 @@ static const uint8_t gIdentityTable[] = {
     0xE0, 0xE1, 0xE2, 0xE3, 0xE4, 0xE5, 0xE6, 0xE7, 0xE8, 0xE9, 0xEA, 0xEB, 0xEC, 0xED, 0xEE, 0xEF,
     0xF0, 0xF1, 0xF2, 0xF3, 0xF4, 0xF5, 0xF6, 0xF7, 0xF8, 0xF9, 0xFA, 0xFB, 0xFC, 0xFD, 0xFE, 0xFF};
 
-class SkTable_ColorFilter : public SkColorFilter {
+class SkTable_ColorFilter : public SkColorFilterBase {
  public:
   SkTable_ColorFilter(
       const uint8_t tableA[], const uint8_t tableR[], const uint8_t tableG[],
-      const uint8_t tableB[]) noexcept {
+      const uint8_t tableB[]) {
     fBitmap = nullptr;
     fFlags = 0;
 
@@ -258,10 +259,9 @@ void SkTable_ColorFilter::getTableAsBitmap(SkBitmap* table) const {
 #  include "src/gpu/GrFragmentProcessor.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/gpu/SkGr.h"
+#  include "src/gpu/effects/GrTextureEffect.h"
 #  include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
 class ColorTableEffect : public GrFragmentProcessor {
  public:
@@ -273,89 +273,55 @@ class ColorTableEffect : public GrFragmentProcessor {
   const char* name() const noexcept override { return "ColorTableEffect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
-    return std::unique_ptr<GrFragmentProcessor>(new ColorTableEffect(fTextureSampler.view()));
+    return std::unique_ptr<GrFragmentProcessor>(new ColorTableEffect(*this));
   }
 
  private:
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
 
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
 
-  ColorTableEffect(GrSurfaceProxyView view)
-      : INHERITED(
-            kColorTableEffect_ClassID,
-            kNone_OptimizationFlags)  // Not bothering with table-specific optimizations.
-        ,
-        fTextureSampler(std::move(view)) {
-    this->setTextureSamplerCnt(1);
-  }
+  ColorTableEffect(GrSurfaceProxyView view);
 
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fTextureSampler; }
+  explicit ColorTableEffect(const ColorTableEffect& that);
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
-
-  TextureSampler fTextureSampler;
 
   typedef GrFragmentProcessor INHERITED;
 };
 
-class GLColorTableEffect : public GrGLSLFragmentProcessor {
- public:
-  void emitCode(EmitArgs&) override;
-
-  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) {}
-
- private:
-  typedef GrGLSLFragmentProcessor INHERITED;
-};
-
-void GLColorTableEffect::emitCode(EmitArgs& args) {
-  static constexpr float kColorScaleFactor = 255.0f / 256.0f;
-  static constexpr float kColorOffsetFactor = 1.0f / 512.0f;
-  GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-  if (nullptr == args.fInputColor) {
-    // the input color is solid white (all ones).
-    static constexpr float kMaxValue = kColorScaleFactor + kColorOffsetFactor;
-    fragBuilder->codeAppendf(
-        "\t\thalf4 coord = half4(%f, %f, %f, %f);\n", kMaxValue, kMaxValue, kMaxValue, kMaxValue);
-
-  } else {
-    fragBuilder->codeAppendf("\t\thalf nonZeroAlpha = max(%s.a, .0001);\n", args.fInputColor);
-    fragBuilder->codeAppendf(
-        "\t\thalf4 coord = half4(%s.rgb / nonZeroAlpha, nonZeroAlpha);\n", args.fInputColor);
-    fragBuilder->codeAppendf(
-        "\t\tcoord = coord * %f + half4(%f, %f, %f, %f);\n", kColorScaleFactor, kColorOffsetFactor,
-        kColorOffsetFactor, kColorOffsetFactor, kColorOffsetFactor);
-  }
-
-  SkString coord;
-
-  fragBuilder->codeAppendf("\t\t%s.a = ", args.fOutputColor);
-  coord.printf("half2(coord.a, 0.125)");
-  fragBuilder->appendTextureLookup(args.fTexSamplers[0], coord.c_str());
-  fragBuilder->codeAppend(".a;\n");
-
-  fragBuilder->codeAppendf("\t\t%s.r = ", args.fOutputColor);
-  coord.printf("half2(coord.r, 0.375)");
-  fragBuilder->appendTextureLookup(args.fTexSamplers[0], coord.c_str());
-  fragBuilder->codeAppend(".a;\n");
-
-  fragBuilder->codeAppendf("\t\t%s.g = ", args.fOutputColor);
-  coord.printf("half2(coord.g, 0.625)");
-  fragBuilder->appendTextureLookup(args.fTexSamplers[0], coord.c_str());
-  fragBuilder->codeAppend(".a;\n");
-
-  fragBuilder->codeAppendf("\t\t%s.b = ", args.fOutputColor);
-  coord.printf("half2(coord.b, 0.875)");
-  fragBuilder->appendTextureLookup(args.fTexSamplers[0], coord.c_str());
-  fragBuilder->codeAppend(".a;\n");
-
-  fragBuilder->codeAppendf("\t\t%s.rgb *= %s.a;\n", args.fOutputColor, args.fOutputColor);
+ColorTableEffect::ColorTableEffect(GrSurfaceProxyView view)
+    // Not bothering with table-specific optimizations.
+    : INHERITED(kColorTableEffect_ClassID, kNone_OptimizationFlags) {
+  auto te = GrTextureEffect::Make(std::move(view), kUnknown_SkAlphaType);
+  this->registerExplicitlySampledChild(std::move(te));
 }
 
-///////////////////////////////////////////////////////////////////////////////
+ColorTableEffect::ColorTableEffect(const ColorTableEffect& that)
+    : INHERITED(kColorTableEffect_ClassID, that.optimizationFlags()) {
+  this->cloneAndRegisterAllChildProcessors(that);
+}
+
+GrGLSLFragmentProcessor* ColorTableEffect::onCreateGLSLInstance() const {
+  class Impl : public GrGLSLFragmentProcessor {
+   public:
+    void emitCode(EmitArgs& args) override {
+      GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
+      fragBuilder->codeAppendf("\t\thalf4 coord = 255*unpremul(%s) + 0.5;\n", args.fInputColor);
+      SkString a = this->invokeChild(0, args, "half2(coord.a, 0.5)");
+      SkString r = this->invokeChild(0, args, "half2(coord.r, 1.5)");
+      SkString g = this->invokeChild(0, args, "half2(coord.g, 2.5)");
+      SkString b = this->invokeChild(0, args, "half2(coord.b, 3.5)");
+      fragBuilder->codeAppendf(
+          "%s = half4(half3(%s.a, %s.a, %s.a) * %s.a, %s.a);", args.fOutputColor, r.c_str(),
+          g.c_str(), b.c_str(), a.c_str(), a.c_str());
+    }
+  };
+  return new Impl;
+}
+
 std::unique_ptr<GrFragmentProcessor> ColorTableEffect::Make(
     GrRecordingContext* context, const SkBitmap& bitmap) {
   SkASSERT(kPremul_SkAlphaType == bitmap.alphaType());
@@ -367,15 +333,6 @@ std::unique_ptr<GrFragmentProcessor> ColorTableEffect::Make(
   }
 
   return std::unique_ptr<GrFragmentProcessor>(new ColorTableEffect(std::move(view)));
-}
-
-void ColorTableEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
-  GLColorTableEffect::GenKey(*this, caps, b);
-}
-
-GrGLSLFragmentProcessor* ColorTableEffect::onCreateGLSLInstance() const {
-  return new GLColorTableEffect;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -405,7 +362,7 @@ std::unique_ptr<GrFragmentProcessor> ColorTableEffect::TestCreate(GrProcessorTes
       (flags & (1 << 0)) ? luts[0] : nullptr, (flags & (1 << 1)) ? luts[1] : nullptr,
       (flags & (1 << 2)) ? luts[2] : nullptr, (flags & (1 << 3)) ? luts[3] : nullptr));
   sk_sp<SkColorSpace> colorSpace = GrTest::TestColorSpace(d->fRandom);
-  auto fp = filter->asFragmentProcessor(
+  auto fp = as_CFB(filter)->asFragmentProcessor(
       d->context(),
       GrColorInfo(GrColorType::kRGBA_8888, kUnknown_SkAlphaType, std::move(colorSpace)));
   SkASSERT(fp);

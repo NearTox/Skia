@@ -22,9 +22,13 @@ struct FunctionCall : public Expression {
       std::vector<std::unique_ptr<Expression>> arguments)
       : INHERITED(offset, kFunctionCall_Kind, type),
         fFunction(std::move(function)),
-        fArguments(std::move(arguments)) {}
+        fArguments(std::move(arguments)) {
+    ++fFunction.fCallCount;
+  }
 
-  bool hasProperty(Property property) const noexcept override {
+  ~FunctionCall() override { --fFunction.fCallCount; }
+
+  bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects &&
         (fFunction.fModifiers.fFlags & Modifiers::kHasSideEffects_Flag)) {
       return true;
@@ -35,6 +39,14 @@ struct FunctionCall : public Expression {
       }
     }
     return false;
+  }
+
+  int nodeCount() const noexcept override {
+    int result = 1;
+    for (const auto& a : fArguments) {
+      result += a->nodeCount();
+    }
+    return result;
   }
 
   std::unique_ptr<Expression> clone() const override {

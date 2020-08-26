@@ -29,7 +29,7 @@ class GrRenderTarget : virtual public GrSurface {
   using GrSurface::requiresManualMSAAResolve;
   using GrSurface::setRequiresManualMSAAResolve;
 
-  virtual bool alwaysClearStencil() const { return false; }
+  virtual bool alwaysClearStencil() const noexcept { return false; }
 
   // GrSurface overrides
   GrRenderTarget* asRenderTarget() noexcept override { return this; }
@@ -43,7 +43,7 @@ class GrRenderTarget : virtual public GrSurface {
   virtual GrBackendRenderTarget getBackendRenderTarget() const = 0;
 
   // Checked when this object is asked to attach a stencil buffer.
-  virtual bool canAttemptStencilAttachment() const = 0;
+  virtual bool canAttemptStencilAttachment() const noexcept = 0;
 
   // Provides access to functions that aren't part of the public API.
   GrRenderTargetPriv renderTargetPriv() noexcept;

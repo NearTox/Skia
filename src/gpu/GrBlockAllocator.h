@@ -131,12 +131,12 @@ class GrBlockAllocator final : SkNoncopyable {
 
     // Get fCursor, but aligned such that ptr(rval) satisfies Align.
     template <size_t Align, size_t Padding>
-    int cursor() const noexcept {
+    int cursor() const {
       return this->alignedOffset<Align, Padding>(fCursor);
     }
 
     template <size_t Align, size_t Padding>
-    int alignedOffset(int offset) const noexcept;
+    int alignedOffset(int offset) const;
 
     SkDEBUGCODE(int fSentinel);  // known value to check for bad back pointers to blocks
 
@@ -390,10 +390,10 @@ class GrSBlockAllocator : SkNoncopyable {
   ~GrSBlockAllocator() { this->allocator()->~GrBlockAllocator(); }
 
   GrBlockAllocator* operator->() noexcept { return this->allocator(); }
-  const GrBlockAllocator* operator->() const noexcept { return this->allocator(); }
+  const GrBlockAllocator* operator->() const { return this->allocator(); }
 
   GrBlockAllocator* allocator() noexcept { return reinterpret_cast<GrBlockAllocator*>(fStorage); }
-  const GrBlockAllocator* allocator() const noexcept {
+  const GrBlockAllocator* allocator() const {
     return reinterpret_cast<const GrBlockAllocator*>(fStorage);
   }
 
@@ -442,7 +442,7 @@ GrBlockAllocator::ByteRange GrBlockAllocator::allocate(size_t size) {
       <= std::numeric_limits<int32_t>::max());
 
   if (size > kMaxAllocationSize) {
-    SK_ABORT("Allocation too large");
+    SK_ABORT("Allocation too large (%zu bytes requested)", size);
   }
 
   int iSize = (int)size;
@@ -476,7 +476,7 @@ GrBlockAllocator::Block* GrBlockAllocator::owningBlock(const void* p, int start)
   // Masking these terms by ~(Align-1) reconstructs 'block' if the alignment of the block is
   // greater than or equal to Align (since block & ~(Align-1) == (block + Align-1) & ~(Align-1)
   // in that case). Overalignment does not reduce to inequality unfortunately.
-  if /* constexpr */ (Align <= alignof(std::max_align_t)) {
+  if constexpr (Align <= alignof(std::max_align_t)) {
     Block* block =
         reinterpret_cast<Block*>((reinterpret_cast<uintptr_t>(p) - start - Padding) & ~(Align - 1));
     SkASSERT(block->fSentinel == kAssignedMarker);
@@ -489,14 +489,14 @@ GrBlockAllocator::Block* GrBlockAllocator::owningBlock(const void* p, int start)
 }
 
 template <size_t Align, size_t Padding>
-int GrBlockAllocator::Block::alignedOffset(int offset) const noexcept {
+int GrBlockAllocator::Block::alignedOffset(int offset) const {
   static_assert(SkIsPow2(Align));
   // Aligning adds (Padding + Align - 1) as an intermediate step, so ensure that can't overflow
   static_assert(
       MaxBlockSize<Align, Padding>() + Padding + Align - 1 <=
       (size_t)std::numeric_limits<int32_t>::max());
 
-  if /* constexpr */ (Align <= alignof(std::max_align_t)) {
+  if constexpr (Align <= alignof(std::max_align_t)) {
     // Same as GrAlignTo, but operates on ints instead of size_t
     return (offset + Padding + Align - 1) & ~(Align - 1);
   } else {
@@ -551,7 +551,7 @@ class GrBlockAllocator::BlockIter {
   using AllocatorT =
       typename std::conditional<Const, const GrBlockAllocator, GrBlockAllocator>::type;
 
-  constexpr BlockIter(AllocatorT* allocator) noexcept : fAllocator(allocator) {}
+  BlockIter(AllocatorT* allocator) noexcept : fAllocator(allocator) {}
 
   class Item {
    public:
@@ -559,7 +559,7 @@ class GrBlockAllocator::BlockIter {
 
     BlockT* operator*() const noexcept { return fBlock; }
 
-    constexpr Item& operator++() noexcept {
+    Item& operator++() noexcept {
       fBlock = Forward ? fBlock->fNext : fBlock->fPrev;
       return *this;
     }
@@ -567,15 +567,13 @@ class GrBlockAllocator::BlockIter {
    private:
     friend BlockIter;
 
-    constexpr Item(BlockT* block) noexcept : fBlock(block) {}
+    Item(BlockT* block) noexcept : fBlock(block) {}
 
     BlockT* fBlock;
   };
 
-  constexpr Item begin() const noexcept {
-    return Item(Forward ? &fAllocator->fHead : fAllocator->fTail);
-  }
-  constexpr Item end() const noexcept { return Item(nullptr); }
+  Item begin() const noexcept { return Item(Forward ? &fAllocator->fHead : fAllocator->fTail); }
+  Item end() const noexcept { return Item(nullptr); }
 
  private:
   AllocatorT* fAllocator;

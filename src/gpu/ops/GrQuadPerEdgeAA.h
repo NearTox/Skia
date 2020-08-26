@@ -31,7 +31,7 @@ using Saturate = GrTextureOp::Saturate;
 enum class CoverageMode { kNone, kWithPosition, kWithColor };
 enum class Subset : bool { kNo = false, kYes = true };
 enum class ColorType { kNone, kByte, kFloat, kLast = kFloat };
-static constexpr int kColorTypeCount = static_cast<int>(ColorType::kLast) + 1;
+static const int kColorTypeCount = static_cast<int>(ColorType::kLast) + 1;
 
 enum class IndexBufferOption {
   kPictureFramed,  // geometrically AA'd   -> 8 verts/quad + an index buffer
@@ -39,12 +39,12 @@ enum class IndexBufferOption {
   kTriStrips,      // non-AA'd             -> 4 verts/quad but no index buffer
   kLast = kTriStrips
 };
-static constexpr int kIndexBufferOptionCount = static_cast<int>(IndexBufferOption::kLast) + 1;
+static const int kIndexBufferOptionCount = static_cast<int>(IndexBufferOption::kLast) + 1;
 
-IndexBufferOption CalcIndexBufferOption(GrAAType aa, int numQuads) noexcept;
+IndexBufferOption CalcIndexBufferOption(GrAAType aa, int numQuads);
 
 // Gets the minimum ColorType that can represent a color.
-ColorType MinColorType(SkPMColor4f) noexcept;
+ColorType MinColorType(SkPMColor4f);
 
 // Specifies the vertex configuration for an op that renders per-edge AA quads. The vertex
 // order (when enabled) is device position, color, local position, subset, aa edge equations.
@@ -52,7 +52,7 @@ ColorType MinColorType(SkPMColor4f) noexcept;
 // GPAttributes maintains. If hasLocalCoords is false, then the local quad type can be ignored.
 struct VertexSpec {
  public:
-  VertexSpec() noexcept
+  VertexSpec()
       : fDeviceQuadType(0)  // kAxisAligned
         ,
         fLocalQuadType(0)  // kAxisAligned
@@ -70,7 +70,7 @@ struct VertexSpec {
   VertexSpec(
       GrQuad::Type deviceQuadType, ColorType colorType, GrQuad::Type localQuadType,
       bool hasLocalCoords, Subset subset, GrAAType aa, bool coverageAsAlpha,
-      IndexBufferOption indexBufferOption) noexcept
+      IndexBufferOption indexBufferOption)
       : fDeviceQuadType(static_cast<unsigned>(deviceQuadType)),
         fLocalQuadType(static_cast<unsigned>(localQuadType)),
         fIndexBufferOption(static_cast<unsigned>(indexBufferOption)),
@@ -82,35 +82,33 @@ struct VertexSpec {
         fRequiresGeometrySubset(
             aa == GrAAType::kCoverage && deviceQuadType > GrQuad::Type::kRectilinear) {}
 
-  GrQuad::Type deviceQuadType() const noexcept {
-    return static_cast<GrQuad::Type>(fDeviceQuadType);
-  }
-  GrQuad::Type localQuadType() const noexcept { return static_cast<GrQuad::Type>(fLocalQuadType); }
-  IndexBufferOption indexBufferOption() const noexcept {
+  GrQuad::Type deviceQuadType() const { return static_cast<GrQuad::Type>(fDeviceQuadType); }
+  GrQuad::Type localQuadType() const { return static_cast<GrQuad::Type>(fLocalQuadType); }
+  IndexBufferOption indexBufferOption() const {
     return static_cast<IndexBufferOption>(fIndexBufferOption);
   }
-  bool hasLocalCoords() const noexcept { return fHasLocalCoords; }
-  ColorType colorType() const noexcept { return static_cast<ColorType>(fColorType); }
-  bool hasVertexColors() const noexcept { return ColorType::kNone != this->colorType(); }
-  bool hasSubset() const noexcept { return fHasSubset; }
-  bool usesCoverageAA() const noexcept { return fUsesCoverageAA; }
-  bool compatibleWithCoverageAsAlpha() const noexcept { return fCompatibleWithCoverageAsAlpha; }
-  bool requiresGeometrySubset() const noexcept { return fRequiresGeometrySubset; }
+  bool hasLocalCoords() const { return fHasLocalCoords; }
+  ColorType colorType() const { return static_cast<ColorType>(fColorType); }
+  bool hasVertexColors() const { return ColorType::kNone != this->colorType(); }
+  bool hasSubset() const { return fHasSubset; }
+  bool usesCoverageAA() const { return fUsesCoverageAA; }
+  bool compatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
+  bool requiresGeometrySubset() const { return fRequiresGeometrySubset; }
   // Will always be 2 or 3
-  int deviceDimensionality() const noexcept;
+  int deviceDimensionality() const;
   // Will always be 0 if hasLocalCoords is false, otherwise will be 2 or 3
-  int localDimensionality() const noexcept;
+  int localDimensionality() const;
 
-  int verticesPerQuad() const noexcept { return fUsesCoverageAA ? 8 : 4; }
+  int verticesPerQuad() const { return fUsesCoverageAA ? 8 : 4; }
 
-  CoverageMode coverageMode() const noexcept;
+  CoverageMode coverageMode() const;
   size_t vertexSize() const;
 
-  bool needsIndexBuffer() const noexcept {
+  bool needsIndexBuffer() const {
     return this->indexBufferOption() != IndexBufferOption::kTriStrips;
   }
 
-  GrPrimitiveType primitiveType() const noexcept {
+  GrPrimitiveType primitiveType() const {
     switch (this->indexBufferOption()) {
       case IndexBufferOption::kPictureFramed: return GrPrimitiveType::kTriangles;
       case IndexBufferOption::kIndexedRects: return GrPrimitiveType::kTriangles;
@@ -154,17 +152,17 @@ class Tessellator {
       GrQuad* deviceQuad, GrQuad* localQuad, const SkPMColor4f& color, const SkRect& uvSubset,
       GrQuadAAFlags aaFlags);
 
-  SkDEBUGCODE(char* vertices() const { return (char*)fVertexWriter.fPtr; });
+  SkDEBUGCODE(char* vertices() const { return (char*)fVertexWriter.fPtr; })
 
- private:
-  // VertexSpec defines many unique ways to write vertex attributes, which can be handled
-  // generically by branching per-quad based on the VertexSpec. However, there are several
-  // specs that appear in the wild far more frequently, so they use explicit WriteQuadProcs
-  // that have no branches.
-  typedef void (*WriteQuadProc)(
-      GrVertexWriter* vertices, const VertexSpec& spec, const GrQuad* deviceQuad,
-      const GrQuad* localQuad, const float coverage[4], const SkPMColor4f& color,
-      const SkRect& geomSubset, const SkRect& texSubset);
+      private :
+      // VertexSpec defines many unique ways to write vertex attributes, which can be handled
+      // generically by branching per-quad based on the VertexSpec. However, there are several
+      // specs that appear in the wild far more frequently, so they use explicit WriteQuadProcs
+      // that have no branches.
+      typedef void (*WriteQuadProc)(
+          GrVertexWriter* vertices, const VertexSpec& spec, const GrQuad* deviceQuad,
+          const GrQuad* localQuad, const float coverage[4], const SkPMColor4f& color,
+          const SkRect& geomSubset, const SkRect& texSubset);
   static WriteQuadProc GetWriteQuadProc(const VertexSpec& spec);
 
   GrQuadUtils::TessellationHelper fAAHelper;

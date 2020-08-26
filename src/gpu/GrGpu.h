@@ -54,7 +54,7 @@ class GrGpu : public SkRefCnt {
    * Gets the capabilities of the draw target.
    */
   const GrCaps* caps() const noexcept { return fCaps.get(); }
-  sk_sp<const GrCaps> refCaps() const { return fCaps; }
+  sk_sp<const GrCaps> refCaps() const noexcept { return fCaps; }
 
   GrPathRendering* pathRendering() noexcept { return fPathRendering.get(); }
 
@@ -72,7 +72,7 @@ class GrGpu : public SkRefCnt {
 
   // Called by GrContext::isContextLost. Returns true if the backend Gpu object has gotten into an
   // unrecoverable, lost state.
-  virtual bool isDeviceLost() const noexcept { return false; }
+  virtual bool isDeviceLost() const { return false; }
 
   /**
    * The GrGpu object normally assumes that no outsider is setting state
@@ -329,15 +329,19 @@ class GrGpu : public SkRefCnt {
   // by-product, the actual number of samples in use. (This may differ from the number of samples
   // requested by the render target.) Sample locations are returned as 0..1 offsets relative to
   // the top-left corner of the pixel.
-  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const noexcept {
+  const SkTArray<SkPoint>& retrieveSampleLocations(int samplePatternKey) const {
     return fSamplePatternDictionary.retrieveSampleLocations(samplePatternKey);
   }
 
   // Returns a GrOpsRenderPass which GrOpsTasks send draw commands to instead of directly
   // to the Gpu object. The 'bounds' rect is the content rect of the renderTarget.
+  // If a 'stencil' is provided it will be the one bound to 'renderTarget'. If one is not
+  // provided but 'renderTarget' has a stencil buffer then that is a signal that the
+  // render target's stencil buffer should be ignored.
   virtual GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget* renderTarget, GrSurfaceOrigin, const SkIRect& bounds,
-      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      GrRenderTarget* renderTarget, GrStencilAttachment* stencil, GrSurfaceOrigin,
+      const SkIRect& bounds, const GrOpsRenderPass::LoadAndStoreInfo&,
+      const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies) = 0;
 
   // Called by GrDrawingManager when flushing.
@@ -346,7 +350,7 @@ class GrGpu : public SkRefCnt {
   // inserted semaphores.
   void executeFlushInfo(
       GrSurfaceProxy*[], int numProxies, SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
-      const GrPrepareForExternalIORequests&);
+      const GrBackendSurfaceMutableState* newState);
 
   bool submitToGpu(bool syncCpu);
 
@@ -364,6 +368,12 @@ class GrGpu : public SkRefCnt {
   virtual void waitSemaphore(GrSemaphore* semaphore) = 0;
 
   virtual void checkFinishProcs() = 0;
+
+  /**
+   * Checks if we detected an OOM from the underlying 3D API and if so returns true and resets
+   * the internal OOM state to false. Otherwise, returns false.
+   */
+  bool checkAndResetOOMed() noexcept;
 
   /**
    *  Put this texture in a safe and known state for use across multiple GrContexts. Depending on
@@ -390,7 +400,7 @@ class GrGpu : public SkRefCnt {
 #if GR_GPU_STATS
     constexpr Stats() noexcept = default;
 
-    constexpr void reset() noexcept { *this = {}; }
+    void reset() noexcept { *this = {}; }
 
     int renderTargetBinds() const noexcept { return fRenderTargetBinds; }
     void incRenderTargetBinds() noexcept { fRenderTargetBinds++; }
@@ -581,7 +591,7 @@ class GrGpu : public SkRefCnt {
       SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected);
 
   bool updateBackendTexture(
-      const GrBackendTexture&, GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext,
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
       const BackendTextureData*);
 
   /**
@@ -590,8 +600,19 @@ class GrGpu : public SkRefCnt {
    */
   GrBackendTexture createCompressedBackendTexture(
       SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext,
-      const BackendTextureData*);
+      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*);
+
+  virtual bool setBackendTextureState(
+      const GrBackendTexture&, const GrBackendSurfaceMutableState&,
+      sk_sp<GrRefCntedCallback> finishedCallback) {
+    return false;
+  }
+
+  virtual bool setBackendRenderTargetState(
+      const GrBackendRenderTarget&, const GrBackendSurfaceMutableState&,
+      sk_sp<GrRefCntedCallback> finishedCallback) {
+    return false;
+  }
 
   /**
    * Frees a texture created by createBackendTexture(). If ownership of the backend
@@ -680,6 +701,8 @@ class GrGpu : public SkRefCnt {
   void didWriteToSurface(
       GrSurface* surface, GrSurfaceOrigin origin, const SkIRect* bounds,
       uint32_t mipLevels = 1) const;
+
+  void setOOMed() noexcept { fOOMed = true; }
 
   typedef SkTInternalLList<GrStagingBuffer> StagingBufferList;
   const StagingBufferList& availableStagingBuffers() noexcept { return fAvailableStagingBuffers; }
@@ -775,9 +798,9 @@ class GrGpu : public SkRefCnt {
   virtual void addFinishedProc(
       GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) = 0;
 
-  virtual void prepareSurfacesForBackendAccessAndExternalIO(
+  virtual void prepareSurfacesForBackendAccessAndStateUpdates(
       GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
-      const GrPrepareForExternalIORequests& externalRequests) {}
+      const GrBackendSurfaceMutableState* newState) {}
 
   virtual bool onSubmitToGpu(bool syncCpu) = 0;
 
@@ -798,6 +821,8 @@ class GrGpu : public SkRefCnt {
   void validateStagingBuffers() const;
 #endif
 
+  void callSubmittedProcs(bool success);
+
   uint32_t fResetBits;
   // The context owns us, not vice-versa, so this ptr is not ref'ed by Gpu.
   GrContext* fContext;
@@ -808,6 +833,17 @@ class GrGpu : public SkRefCnt {
   StagingBufferList fAvailableStagingBuffers;
   StagingBufferList fActiveStagingBuffers;
   StagingBufferList fBusyStagingBuffers;
+
+  struct SubmittedProc {
+    SubmittedProc(GrGpuSubmittedProc proc, GrGpuSubmittedContext context) noexcept
+        : fProc(proc), fContext(context) {}
+
+    GrGpuSubmittedProc fProc;
+    GrGpuSubmittedContext fContext;
+  };
+  SkSTArray<4, SubmittedProc> fSubmittedProcs;
+
+  bool fOOMed = false;
 
   friend class GrPathRendering;
   typedef SkRefCnt INHERITED;

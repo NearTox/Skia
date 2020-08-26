@@ -8,6 +8,8 @@
 #ifndef GrFragmentProcessor_DEFINED
 #define GrFragmentProcessor_DEFINED
 
+#include <tuple>
+
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrProcessor.h"
 #include "src/gpu/ops/GrOp.h"
@@ -149,16 +151,7 @@ class GrFragmentProcessor : public GrProcessor {
     return SkToBool(fFlags & kSampledWithExplicitCoords);
   }
 
-  void setSampledWithExplicitCoords() noexcept {
-    fFlags |= kSampledWithExplicitCoords;
-    for (auto& child : fChildProcessors) {
-      child->setSampledWithExplicitCoords();
-    }
-  }
-
   SkSL::SampleMatrix sampleMatrix() const { return fMatrix; }
-
-  void setSampleMatrix(SkSL::SampleMatrix matrix);
 
   /**
    * A GrDrawOp may premultiply its antialiasing coverage into its GrGeometryProcessor's color
@@ -206,7 +199,7 @@ class GrFragmentProcessor : public GrProcessor {
       A return value of true from isEqual() should not be used to test whether the processor would
       generate the same shader code. To test for identical code generation use getGLSLProcessorKey
    */
-  bool isEqual(const GrFragmentProcessor& that) const;
+  bool isEqual(const GrFragmentProcessor& that) const noexcept;
 
   void visitProxies(const GrOp::VisitProxyFunc& func);
 
@@ -324,6 +317,11 @@ class GrFragmentProcessor : public GrProcessor {
   // Sentinel type for range-for using FPItemIter.
   class FPItemEndIter {};
 
+  // FIXME This should be private, but SkGr needs to mark the dither effect as sampled explicitly
+  // even though it's not added to another FP. Once varying generation doesn't add a redundant
+  // varying for it, this can be fully private.
+  void temporary_SetExplicitlySampled() noexcept { this->setSampledWithExplicitCoords(); }
+
  protected:
   enum OptimizationFlags : uint32_t {
     kNone_OptimizationFlags,
@@ -417,8 +415,38 @@ class GrFragmentProcessor : public GrProcessor {
    * colors will be combined somehow to produce its output color.  Registering these child
    * processors will allow the ProgramBuilder to automatically handle their transformed coords and
    * texture accesses and mangle their uniform and output color names.
+   *
+   * Depending on the 2nd and 3rd parameters, this corresponds to the following SkSL sample calls:
+   *  - sample(child): Keep default arguments
+   *  - sample(child, matrix): Provide approprate SampleMatrix matching SkSL
+   *  - sample(child, float2): SampleMatrix() and 'true', or use 'registerExplicitlySampledChild'
+   *  - sample(child, matrix)+sample(child, float2): Appropriate SampleMatrix and 'true'
    */
-  int registerChildProcessor(std::unique_ptr<GrFragmentProcessor> child) noexcept;
+  int registerChild(
+      std::unique_ptr<GrFragmentProcessor> child,
+      SkSL::SampleMatrix sampleMatrix = SkSL::SampleMatrix(),
+      bool explicitlySampled = false) noexcept;
+
+  /**
+   * A helper for use when the child is only invoked with sample(float2), and not sample()
+   * or sample(matrix).
+   */
+  int registerExplicitlySampledChild(std::unique_ptr<GrFragmentProcessor> child) noexcept {
+    return this->registerChild(std::move(child), SkSL::SampleMatrix(), true);
+  }
+
+  /**
+   * This method takes an existing fragment processor, clones it, registers it as a child of this
+   * fragment processor, and returns its child index. It also takes care of any boilerplate in the
+   * cloning process.
+   */
+  int cloneAndRegisterChildProcessor(const GrFragmentProcessor& fp);
+
+  /**
+   * This method takes an existing fragment processor, clones all of its children, and registers
+   * the clones as children of this fragment processor.
+   */
+  void cloneAndRegisterAllChildProcessors(const GrFragmentProcessor& src);
 
   void setTextureSamplerCnt(int cnt) noexcept {
     SkASSERT(cnt >= 0);
@@ -451,7 +479,8 @@ class GrFragmentProcessor : public GrProcessor {
   virtual GrGLSLFragmentProcessor* onCreateGLSLInstance() const = 0;
 
   /** Implemented using GLFragmentProcessor::GenKey as described in this class's comment. */
-  virtual void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const = 0;
+  virtual void onGetGLSLProcessorKey(
+      const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept = 0;
 
   /**
    * Subclass implements this to support isEqual(). It will only be called if it is known that
@@ -466,6 +495,10 @@ class GrFragmentProcessor : public GrProcessor {
   }
 
   bool hasSameTransforms(const GrFragmentProcessor&) const noexcept;
+
+  void setSampledWithExplicitCoords() noexcept;
+
+  void setSampleMatrix(SkSL::SampleMatrix matrix) noexcept;
 
   enum PrivateFlags {
     kFirstPrivateFlag = kAll_OptimizationFlags + 1,
@@ -500,11 +533,11 @@ class GrFragmentProcessor::TextureSampler {
    */
   explicit TextureSampler(const TextureSampler&) noexcept = default;
 
-  TextureSampler(GrSurfaceProxyView, GrSamplerState = {}) noexcept;
+  TextureSampler(GrSurfaceProxyView, GrSamplerState = {});
 
   TextureSampler(TextureSampler&&) noexcept = default;
   TextureSampler& operator=(TextureSampler&&) noexcept = default;
-  TextureSampler& operator=(const TextureSampler&) noexcept = delete;
+  TextureSampler& operator=(const TextureSampler&) = delete;
 
   bool operator==(const TextureSampler& that) const noexcept {
     return fView == that.fView && fSamplerState == that.fSamplerState;
@@ -557,10 +590,10 @@ class GrFragmentProcessor::IterBase {
   bool operator!=(const EndIter&) noexcept { return (bool)*this; }
 
   // Hopefully this does not actually get called because of RVO.
-  IterBase(const IterBase&) = default;
+  IterBase(const IterBase&) noexcept = default;
 
   // Because each iterator carries a stack we want to avoid copies.
-  IterBase& operator=(const IterBase&) = delete;
+  IterBase& operator=(const IterBase&) noexcept = delete;
 
  protected:
   void increment() noexcept;
@@ -676,5 +709,19 @@ class GrFragmentProcessor::FPItemRange {
  private:
   Src& fSrc;
 };
+
+/**
+ * Some fragment-processor creation methods have preconditions that might not be satisfied by the
+ * calling code. Those methods can return a `GrFPResult` from their factory methods. If creation
+ * succeeds, the new fragment processor is created and `success` is true. If a precondition is not
+ * met, `success` is set to false and the input FP is returned unchanged.
+ */
+using GrFPResult = std::tuple<bool /*success*/, std::unique_ptr<GrFragmentProcessor>>;
+static inline GrFPResult GrFPFailure(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
+  return {false, std::move(fp)};
+}
+static inline GrFPResult GrFPSuccess(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
+  return {true, std::move(fp)};
+}
 
 #endif

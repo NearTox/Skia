@@ -35,8 +35,8 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
   const SkV2 kernelOffset() const noexcept { return fKernelOffset; }
   bool kernelIsSampled() const noexcept { return fKernel.isSampled(); }
   const float* kernel() const noexcept { return fKernel.array().data(); }
-  float kernelSampleGain() const noexcept { return fKernel.scalableSampler().fGain; }
-  float kernelSampleBias() const noexcept { return fKernel.scalableSampler().fBias; }
+  float kernelSampleGain() const noexcept { return fKernel.biasAndGain().fGain; }
+  float kernelSampleBias() const noexcept { return fKernel.biasAndGain().fBias; }
   float gain() const noexcept { return fGain; }
   float bias() const noexcept { return fBias; }
   bool convolveAlpha() const noexcept { return fConvolveAlpha; }
@@ -53,33 +53,22 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
    */
   class KernelWrapper {
    public:
-    struct ScalableSampler {
-      TextureSampler fSampler;
+    struct BiasAndGain {
       // Only used in A8 mode. Applied before any other math.
-      float fBias = 0.0f;
+      float fBias;
       // Only used in A8 mode. Premultiplied in with user gain to save time.
-      float fGain = 1.0f;
-      bool operator==(const ScalableSampler&) const noexcept;
+      float fGain;
+      bool operator==(const BiasAndGain&) const noexcept;
     };
-    static KernelWrapper Make(GrRecordingContext*, SkISize, const GrCaps&, const float* values);
+    using MakeResult = std::tuple<KernelWrapper, std::unique_ptr<GrFragmentProcessor>>;
+    static MakeResult Make(GrRecordingContext*, SkISize, const GrCaps&, const float* values);
 
-    KernelWrapper(KernelWrapper&& that) noexcept : fSize(that.fSize) {
-      if (that.isSampled()) {
-        new (&fScalableSampler) ScalableSampler(std::move(that.fScalableSampler));
-      } else {
-        new (&fArray) std::array<float, kMaxUniformSize>(std::move(that.fArray));
-      }
-    }
+    KernelWrapper() = default;
     KernelWrapper(const KernelWrapper& that) noexcept : fSize(that.fSize) {
       if (that.isSampled()) {
-        new (&fScalableSampler) ScalableSampler(that.fScalableSampler);
+        fBiasAndGain = that.fBiasAndGain;
       } else {
         new (&fArray) std::array<float, kMaxUniformSize>(that.fArray);
-      }
-    }
-    ~KernelWrapper() {
-      if (this->isSampled()) {
-        fScalableSampler.~ScalableSampler();
       }
     }
 
@@ -90,40 +79,38 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
       SkASSERT(!this->isSampled());
       return fArray;
     }
-    const ScalableSampler& scalableSampler() const noexcept {
+    const BiasAndGain& biasAndGain() const noexcept {
       SkASSERT(this->isSampled());
-      return fScalableSampler;
+      return fBiasAndGain;
     }
-    bool operator==(const KernelWrapper&) const noexcept;
+    bool operator==(const KernelWrapper&) const;
 
    private:
-    KernelWrapper() : fSize({}) {}
-    KernelWrapper(SkISize size) : fSize(size) {
+    KernelWrapper(SkISize size) noexcept : fSize(size) {
       if (this->isSampled()) {
-        new (&fScalableSampler) ScalableSampler;
+        fBiasAndGain = {0.f, 1.f};
       }
     }
 
-    SkISize fSize;
+    SkISize fSize = {};
     union {
       std::array<float, kMaxUniformSize> fArray;
-      ScalableSampler fScalableSampler;
+      BiasAndGain fBiasAndGain;
     };
   };
 
   GrMatrixConvolutionEffect(
-      std::unique_ptr<GrFragmentProcessor> child, KernelWrapper kernel, SkScalar gain,
-      SkScalar bias, const SkIPoint& kernelOffset, bool convolveAlpha);
+      std::unique_ptr<GrFragmentProcessor> child, const KernelWrapper& kernel,
+      std::unique_ptr<GrFragmentProcessor> kernelFP, SkScalar gain, SkScalar bias,
+      const SkIPoint& kernelOffset, bool convolveAlpha);
 
   explicit GrMatrixConvolutionEffect(const GrMatrixConvolutionEffect&);
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
 
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
-
-  const GrFragmentProcessor::TextureSampler& onTextureSampler(int index) const noexcept override;
 
   // We really just want the unaltered local coords, but the only way to get that right now is
   // an identity coord transform.

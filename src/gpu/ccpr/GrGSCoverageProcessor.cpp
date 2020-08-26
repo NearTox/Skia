@@ -21,12 +21,12 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
  protected:
   Impl(std::unique_ptr<Shader> shader) : fShader(std::move(shader)) {}
 
-  virtual bool hasCoverage(const GrGSCoverageProcessor& proc) const noexcept { return false; }
+  virtual bool hasCoverage(const GrGSCoverageProcessor& proc) const { return false; }
 
   void setData(
       const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor&,
       const CoordTransformRange& transformRange) final {
-    this->setTransformDataHelper(SkMatrix::I(), pdman, transformRange);
+    this->setTransformDataHelper(pdman, transformRange);
   }
 
   void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) final {
@@ -164,7 +164,7 @@ class GrGSCoverageProcessor::TriangleHullImpl : public GrGSCoverageProcessor::Im
  public:
   TriangleHullImpl(std::unique_ptr<Shader> shader) : Impl(std::move(shader)) {}
 
-  bool hasCoverage(const GrGSCoverageProcessor& proc) const noexcept override { return true; }
+  bool hasCoverage(const GrGSCoverageProcessor& proc) const override { return true; }
 
   void onEmitGeometryShader(
       const GrGSCoverageProcessor&, GrGLSLGeometryBuilder* g, const GrShaderVar& wind,
@@ -333,9 +333,7 @@ class GrGSCoverageProcessor::CornerImpl : public GrGSCoverageProcessor::Impl {
  public:
   CornerImpl(std::unique_ptr<Shader> shader) : Impl(std::move(shader)) {}
 
-  bool hasCoverage(const GrGSCoverageProcessor& proc) const noexcept override {
-    return proc.isTriangles();
-  }
+  bool hasCoverage(const GrGSCoverageProcessor& proc) const override { return proc.isTriangles(); }
 
   void onEmitGeometryShader(
       const GrGSCoverageProcessor& proc, GrGLSLGeometryBuilder* g, const GrShaderVar& wind,
@@ -431,7 +429,7 @@ class GrGSCoverageProcessor::CornerImpl : public GrGSCoverageProcessor::Impl {
 };
 
 void GrGSCoverageProcessor::reset(
-    PrimitiveType primitiveType, int subpassIdx, GrResourceProvider*) noexcept {
+    PrimitiveType primitiveType, int subpassIdx, GrResourceProvider*) {
   fPrimitiveType = primitiveType;  // This will affect the return values for numInputPoints, etc.
 
   if (4 == this->numInputPoints() || this->hasInputWeight()) {

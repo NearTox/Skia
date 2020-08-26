@@ -29,7 +29,7 @@ class SkCachedData;
  */
 class GrYUVProvider {
  public:
-  virtual ~GrYUVProvider() {}
+  virtual ~GrYUVProvider() = default;
 
   /**
    *  On success, this returns a texture proxy that has converted the YUV data from the provider

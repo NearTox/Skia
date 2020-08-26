@@ -41,7 +41,7 @@ std::vector<sk_sp<sksg::GeometryNode>> ShapeBuilder::AttachMergeGeometryEffect(
       ParseDefault<size_t>(jmerge["mm"], 1) - 1, SK_ARRAY_COUNT(gModes) - 1)];
 
   std::vector<sk_sp<sksg::GeometryNode>> merged;
-  merged.emplace_back(ShapeBuilder::MergeGeometry(std::move(geos), mode));
+  merged.push_back(ShapeBuilder::MergeGeometry(std::move(geos), mode));
 
   return merged;
 }

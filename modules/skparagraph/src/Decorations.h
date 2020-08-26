@@ -14,7 +14,7 @@ class Decorations {
  public:
   void paint(
       SkCanvas* canvas, const TextStyle& textStyle, const TextLine::ClipContext& context,
-      SkScalar baseline, SkScalar shift);
+      SkScalar baseline, SkPoint offset);
 
  private:
   void calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> typeface);
@@ -22,8 +22,7 @@ class Decorations {
   void calculatePaint(const TextStyle& textStyle);
   void calculateWaves(const TextStyle& textStyle, SkRect clip);
   void calculateGaps(
-      const TextLine::ClipContext& context, SkScalar x0, SkScalar x1, SkScalar y0, SkScalar y1,
-      SkScalar baseline, SkScalar halo);
+      const TextLine::ClipContext& context, const SkRect& rect, SkScalar baseline, SkScalar halo);
 
   SkScalar fThickness;
   SkScalar fPosition;

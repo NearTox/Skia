@@ -147,7 +147,7 @@ bool SkDCubic::endsAreExtremaInXOrY() const noexcept {
 /* if returning true, check contains true if cubic's hull collapsed, making the cubic linear
    if returning false, check contains true if the the cubic pair have only the end point in common
 */
-bool SkDCubic::hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const noexcept {
+bool SkDCubic::hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const {
   bool linear = true;
   char hullOrder[4];
   int hullCount = convexHull(hullOrder);
@@ -196,15 +196,15 @@ bool SkDCubic::hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) 
   return true;
 }
 
-bool SkDCubic::hullIntersects(const SkDCubic& c2, bool* isLinear) const noexcept {
+bool SkDCubic::hullIntersects(const SkDCubic& c2, bool* isLinear) const {
   return hullIntersects(c2.fPts, c2.kPointCount, isLinear);
 }
 
-bool SkDCubic::hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept {
+bool SkDCubic::hullIntersects(const SkDQuad& quad, bool* isLinear) const {
   return hullIntersects(quad.fPts, quad.kPointCount, isLinear);
 }
 
-bool SkDCubic::hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept {
+bool SkDCubic::hullIntersects(const SkDConic& conic, bool* isLinear) const {
   return hullIntersects(conic.fPts, isLinear);
 }
 
@@ -256,7 +256,7 @@ static double derivative_at_t(const double* src, double t) noexcept {
   return 3 * ((b - a) * one_t * one_t + 2 * (c - b) * t * one_t + (d - c) * t * t);
 }
 
-int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) noexcept {
+int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) {
   SkDCubic cubic;
   cubic.set(pointsPtr);
   if (cubic.monotonicInX() && cubic.monotonicInY()) {
@@ -272,7 +272,7 @@ int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) noexcept {
         return (int)(t[0] > 0 && t[0] < 1);
       }
     }
-    // fall through if no t value found
+      [[fallthrough]];  // fall through if no t value found
     case SkCubicType::kSerpentine:
     case SkCubicType::kLocalCusp:
     case SkCubicType::kCuspAtInfinity: {
@@ -328,8 +328,9 @@ int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) noexcept {
         }
         return resultCount;
       }
+      break;
     }
-    default:;
+    default: break;
   }
   return 0;
 }
@@ -353,7 +354,7 @@ void SkDCubic::otherPts(int index, const SkDPoint* o1Pts[kPointCount - 1]) const
 
 int SkDCubic::searchRoots(
     double extremeTs[6], int extrema, double axisIntercept, SearchAxis xAxis,
-    double* validRoots) const noexcept {
+    double* validRoots) const {
   extrema += findInflections(&extremeTs[extrema]);
   extremeTs[extrema++] = 0;
   extremeTs[extrema] = 1;
@@ -575,7 +576,7 @@ int SkDCubic::FindExtrema(const double src[], double tValues[2]) noexcept {
 
     F' dot F'' -> CCt^3 + 3BCt^2 + (2BB + CA)t + AB
 */
-int SkDCubic::findMaxCurvature(double tValues[]) const noexcept {
+int SkDCubic::findMaxCurvature(double tValues[]) const {
   double coeffX[4], coeffY[4];
   int i;
   formulate_F1DotF2(&fPts[0].fX, coeffX);
@@ -731,8 +732,7 @@ bool SkDCubic::toFloatPoints(SkPoint* pts) const noexcept {
   return SkScalarsAreFinite(&pts->fX, kPointCount * 2);
 }
 
-double SkDCubic::top(
-    const SkDCubic& dCurve, double startT, double endT, SkDPoint* topPt) const noexcept {
+double SkDCubic::top(const SkDCubic& dCurve, double startT, double endT, SkDPoint* topPt) const {
   double extremeTs[2];
   double topT = -1;
   int roots = SkDCubic::FindExtrema(&fPts[0].fY, extremeTs);
@@ -747,16 +747,16 @@ double SkDCubic::top(
   return topT;
 }
 
-int SkTCubic::intersectRay(SkIntersections* i, const SkDLine& line) const noexcept {
+int SkTCubic::intersectRay(SkIntersections* i, const SkDLine& line) const {
   return i->intersectRay(fCubic, line);
 }
 
-bool SkTCubic::hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept {
+bool SkTCubic::hullIntersects(const SkDQuad& quad, bool* isLinear) const {
   return quad.hullIntersects(fCubic, isLinear);
 }
 
-bool SkTCubic::hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept {
+bool SkTCubic::hullIntersects(const SkDConic& conic, bool* isLinear) const {
   return conic.hullIntersects(fCubic, isLinear);
 }
 
-void SkTCubic::setBounds(SkDRect* rect) const noexcept { rect->setBounds(fCubic); }
+void SkTCubic::setBounds(SkDRect* rect) const { rect->setBounds(fCubic); }

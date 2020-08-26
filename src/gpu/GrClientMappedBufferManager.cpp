@@ -41,7 +41,7 @@ void GrClientMappedBufferManager::process() {
   }
 }
 
-void GrClientMappedBufferManager::abandon() noexcept {
+void GrClientMappedBufferManager::abandon() {
   fAbandoned = true;
   fClientHeldBuffers.clear();
 }
@@ -66,6 +66,6 @@ void GrClientMappedBufferManager::remove(const sk_sp<GrGpuBuffer>& b) {
 DECLARE_SKMESSAGEBUS_MESSAGE(GrClientMappedBufferManager::BufferFinishedMessage)
 
 bool SkShouldPostMessageToBus(
-    const GrClientMappedBufferManager::BufferFinishedMessage& m, uint32_t msgBusUniqueID) noexcept {
+    const GrClientMappedBufferManager::BufferFinishedMessage& m, uint32_t msgBusUniqueID) {
   return m.fInboxID == msgBusUniqueID;
 }

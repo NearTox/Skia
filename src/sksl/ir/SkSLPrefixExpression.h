@@ -29,7 +29,7 @@ struct PrefixExpression : public Expression {
     return fOperator == Token::Kind::TK_MINUS && fOperand->isConstant();
   }
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects &&
         (fOperator == Token::Kind::TK_PLUSPLUS || fOperator == Token::Kind::TK_MINUSMINUS)) {
       return true;
@@ -60,6 +60,8 @@ struct PrefixExpression : public Expression {
     SkASSERT(fOperator == Token::Kind::TK_MINUS);
     return -fOperand->getMatComponent(col, row);
   }
+
+  int nodeCount() const noexcept override { return 1 + fOperand->nodeCount(); }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new PrefixExpression(fOperator, fOperand->clone()));

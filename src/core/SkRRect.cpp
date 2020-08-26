@@ -757,9 +757,9 @@ SkRect SkRRectPriv::InnerBounds(const SkRRect& rr) noexcept {
   return innerBounds;
 }
 
-SkRRect SkRRectPriv::ConservativeIntersect(const SkRRect& a, const SkRRect& b) noexcept {
+SkRRect SkRRectPriv::ConservativeIntersect(const SkRRect& a, const SkRRect& b) {
   // Returns the coordinate of the rect matching the corner enum.
-  auto getCorner = [](const SkRect& r, SkRRect::Corner corner) noexcept -> SkPoint {
+  auto getCorner = [](const SkRect& r, SkRRect::Corner corner) -> SkPoint {
     switch (corner) {
       case SkRRect::kUpperLeft_Corner: return {r.fLeft, r.fTop};
       case SkRRect::kUpperRight_Corner: return {r.fRight, r.fTop};
@@ -771,7 +771,7 @@ SkRRect SkRRectPriv::ConservativeIntersect(const SkRRect& a, const SkRRect& b) n
   // Returns true if shape A's extreme point is contained within shape B's extreme point, relative
   // to the 'corner' location. If the two shapes' corners have the same ellipse radii, this
   // is sufficient for A's ellipse arc to be contained by B's ellipse arc.
-  auto insideCorner = [](SkRRect::Corner corner, const SkPoint& a, const SkPoint& b) noexcept {
+  auto insideCorner = [](SkRRect::Corner corner, const SkPoint& a, const SkPoint& b) {
     switch (corner) {
       case SkRRect::kUpperLeft_Corner: return a.fX >= b.fX && a.fY >= b.fY;
       case SkRRect::kUpperRight_Corner: return a.fX <= b.fX && a.fY >= b.fY;
@@ -781,8 +781,7 @@ SkRRect SkRRectPriv::ConservativeIntersect(const SkRRect& a, const SkRRect& b) n
     }
   };
 
-  auto getIntersectionRadii = [&](const SkRect& r, SkRRect::Corner corner,
-                                  SkVector* radii) noexcept {
+  auto getIntersectionRadii = [&](const SkRect& r, SkRRect::Corner corner, SkVector* radii) {
     SkPoint test = getCorner(r, corner);
     SkPoint aCorner = getCorner(a.rect(), corner);
     SkPoint bCorner = getCorner(b.rect(), corner);
@@ -822,7 +821,7 @@ SkRRect SkRRectPriv::ConservativeIntersect(const SkRRect& a, const SkRRect& b) n
     return SkRRect::MakeEmpty();
   }
 
-  constexpr SkRRect::Corner corners[] = {
+  const SkRRect::Corner corners[] = {
       SkRRect::kUpperLeft_Corner, SkRRect::kUpperRight_Corner, SkRRect::kLowerRight_Corner,
       SkRRect::kLowerLeft_Corner};
   // By definition, edges is contained in the bounds of 'a' and 'b', but now we need to consider

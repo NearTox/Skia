@@ -10,16 +10,18 @@
  **************************************************************************************************/
 #ifndef GrMixerEffect_DEFINED
 #define GrMixerEffect_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrMixerEffect : public GrFragmentProcessor {
  public:
   static OptimizationFlags OptFlags(
       const std::unique_ptr<GrFragmentProcessor>& fp0,
-      const std::unique_ptr<GrFragmentProcessor>& fp1) noexcept {
+      const std::unique_ptr<GrFragmentProcessor>& fp1) {
     auto flags = ProcessorOptimizationFlags(fp0.get());
     if (fp1) {
       flags &= ProcessorOptimizationFlags(fp1.get());
@@ -52,18 +54,16 @@ class GrMixerEffect : public GrFragmentProcessor {
  private:
   GrMixerEffect(
       std::unique_ptr<GrFragmentProcessor> fp0, std::unique_ptr<GrFragmentProcessor> fp1,
-      float weight) noexcept
+      float weight)
       : INHERITED(kGrMixerEffect_ClassID, (OptimizationFlags)OptFlags(fp0, fp1)), weight(weight) {
     SkASSERT(fp0);
-    fp0_index = this->numChildProcessors();
-    this->registerChildProcessor(std::move(fp0));
+    fp0_index = this->registerChild(std::move(fp0));
     if (fp1) {
-      fp1_index = this->numChildProcessors();
-      this->registerChildProcessor(std::move(fp1));
+      fp1_index = this->registerChild(std::move(fp1));
     }
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;

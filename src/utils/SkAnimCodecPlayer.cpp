@@ -34,7 +34,7 @@ SkAnimCodecPlayer::SkAnimCodecPlayer(std::unique_ptr<SkCodec> codec) : fCodec(st
   }
 }
 
-SkAnimCodecPlayer::~SkAnimCodecPlayer() {}
+SkAnimCodecPlayer::~SkAnimCodecPlayer() = default;
 
 SkISize SkAnimCodecPlayer::dimensions() { return {fImageInfo.width(), fImageInfo.height()}; }
 

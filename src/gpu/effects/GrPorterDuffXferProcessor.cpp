@@ -433,7 +433,7 @@ static void append_color_output(
 
 class GLPorterDuffXferProcessor : public GrGLSLXferProcessor {
  public:
-  static void GenKey(const GrProcessor& processor, GrProcessorKeyBuilder* b) noexcept {
+  static void GenKey(const GrProcessor& processor, GrProcessorKeyBuilder* b) {
     const PorterDuffXferProcessor& xp = processor.cast<PorterDuffXferProcessor>();
     b->add32(xp.getBlendFormula().primaryOutput() | (xp.getBlendFormula().secondaryOutput() << 3));
     static_assert(BlendFormula::kLast_OutputType < 8);
@@ -503,7 +503,7 @@ class ShaderPDXferProcessor : public GrXferProcessor {
 
 class GLShaderPDXferProcessor : public GrGLSLXferProcessor {
  public:
-  static void GenKey(const GrProcessor& processor, GrProcessorKeyBuilder* b) noexcept {
+  static void GenKey(const GrProcessor& processor, GrProcessorKeyBuilder* b) {
     const ShaderPDXferProcessor& xp = processor.cast<ShaderPDXferProcessor>();
     b->add32((int)xp.getXfermode());
   }
@@ -582,7 +582,7 @@ class PDLCDXferProcessor : public GrXferProcessor {
 
 class GLPDLCDXferProcessor : public GrGLSLXferProcessor {
  public:
-  GLPDLCDXferProcessor(const GrProcessor&) : fLastAlpha(SK_FloatNaN) {}
+  GLPDLCDXferProcessor(const GrProcessor&) noexcept : fLastAlpha(SK_FloatNaN) {}
 
   ~GLPDLCDXferProcessor() override {}
 
@@ -638,7 +638,7 @@ sk_sp<const GrXferProcessor> PDLCDXferProcessor::Make(
   return sk_sp<GrXferProcessor>(new PDLCDXferProcessor(blendConstantPM, alpha));
 }
 
-PDLCDXferProcessor::~PDLCDXferProcessor() {}
+PDLCDXferProcessor::~PDLCDXferProcessor() = default;
 
 void PDLCDXferProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
@@ -813,7 +813,7 @@ const GrXPFactory* GrPorterDuffXPFactory::TestGet(GrProcessorTestData* d) {
 #endif
 
 void GrPorterDuffXPFactory::TestGetXPOutputTypes(
-    const GrXferProcessor* xp, int* outPrimary, int* outSecondary) noexcept {
+    const GrXferProcessor* xp, int* outPrimary, int* outSecondary) {
   if (!!strcmp(xp->name(), "Porter Duff")) {
     *outPrimary = *outSecondary = -1;
     return;

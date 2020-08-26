@@ -33,7 +33,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
         caps, color, wideColor, views, numActiveViews, p, format, localMatrix, usesW);
   }
 
-  ~GrBitmapTextGeoProc() override = default;
+  ~GrBitmapTextGeoProc() override {}
 
   const char* name() const noexcept override { return "Texture"; }
 

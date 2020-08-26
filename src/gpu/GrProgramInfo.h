@@ -37,13 +37,14 @@ class GrProgramInfo {
     }
     fRequestedFeatures |= fPipeline->getXferProcessor().requestedFeatures();
 
-    SkDEBUGCODE(this->validate(false));
+    SkDEBUGCODE(this->validate(false);)
   }
 
   GrProcessor::CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }
 
   int numSamples() const noexcept { return fNumSamples; }
   int numStencilSamples() const noexcept { return fNumStencilSamples; }
+  bool isStencilEnabled() const noexcept { return fPipeline->isStencilEnabled(); }
 
   int numRasterSamples() const noexcept {
     return fPipeline->isStencilEnabled() ? fNumStencilSamples : fNumSamples;

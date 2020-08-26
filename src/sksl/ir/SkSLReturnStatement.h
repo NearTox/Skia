@@ -22,6 +22,8 @@ struct ReturnStatement : public Statement {
   ReturnStatement(std::unique_ptr<Expression> expression) noexcept
       : INHERITED(expression->fOffset, kReturn_Kind), fExpression(std::move(expression)) {}
 
+  int nodeCount() const noexcept override { return 1 + fExpression->nodeCount(); }
+
   std::unique_ptr<Statement> clone() const override {
     if (fExpression) {
       return std::unique_ptr<Statement>(new ReturnStatement(fExpression->clone()));

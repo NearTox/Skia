@@ -59,7 +59,7 @@ static constexpr inline int32_t SkApplySign(int32_t n, int32_t sign) noexcept {
 }
 
 /** Return x with the sign of y */
-static constexpr inline int32_t SkCopySign32(int32_t x, int32_t y) {
+static constexpr inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
   return SkApplySign(x, SkExtractSign(x ^ y));
 }
 
@@ -247,7 +247,7 @@ static inline uint32_t GrNextPow2(uint32_t n) noexcept {
 /**
  * Returns the next power of 2 >= n or n if the next power of 2 can't be represented by size_t.
  */
-static constexpr inline size_t GrNextSizePow2(size_t n) noexcept {
+static inline size_t GrNextSizePow2(size_t n) noexcept {
   constexpr int kNumSizeTBits = 8 * sizeof(size_t);
   constexpr size_t kHighBitSet = size_t(1) << (kNumSizeTBits - 1);
 
@@ -268,7 +268,7 @@ static constexpr inline size_t GrNextSizePow2(size_t n) noexcept {
 
 // conservative check. will return false for very large values that "could" fit
 template <typename T>
-static inline bool SkFitsInFixed(T x) {
+static inline bool SkFitsInFixed(T x) noexcept {
   return SkTAbs(x) <= 32767.0f;
 }
 

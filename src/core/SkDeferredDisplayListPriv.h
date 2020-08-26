@@ -19,6 +19,8 @@ class SkDeferredDisplayListPriv {
 #if SK_SUPPORT_GPU
   int numRenderTasks() const { return fDDL->fRenderTasks.count(); }
 
+  GrRenderTargetProxy* targetProxy() const { return fDDL->fTargetProxy.get(); }
+
   const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const {
     return fDDL->fLazyProxyData.get();
   }

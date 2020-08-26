@@ -60,7 +60,7 @@ void SkPixmap::setColorSpace(sk_sp<SkColorSpace> cs) noexcept {
   fInfo = fInfo.makeColorSpace(std::move(cs));
 }
 
-bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const {
+bool SkPixmap::extractSubset(SkPixmap* result, const SkIRect& subset) const noexcept {
   SkIRect srcRect, r;
   srcRect.setWH(this->width(), this->height());
   if (!r.intersect(srcRect, subset)) {
@@ -231,7 +231,7 @@ bool SkPixmap::scalePixels(const SkPixmap& actualDst, SkFilterQuality quality) c
   // We'll create a shader to do this draw so we have control over the bicubic clamp.
   sk_sp<SkShader> shader = SkImageShader::Make(
       SkImage::MakeFromBitmap(bitmap), SkTileMode::kClamp, SkTileMode::kClamp, &scale,
-      clampAsIfUnpremul);
+      (SkImageShader::FilterEnum)quality, clampAsIfUnpremul);
 
   sk_sp<SkSurface> surface =
       SkSurface::MakeRasterDirect(dst.info(), dst.writable_addr(), dst.rowBytes());

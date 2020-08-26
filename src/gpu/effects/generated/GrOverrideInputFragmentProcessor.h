@@ -10,11 +10,13 @@
  **************************************************************************************************/
 #ifndef GrOverrideInputFragmentProcessor_DEFINED
 #define GrOverrideInputFragmentProcessor_DEFINED
-#include "include/core/SkTypes.h"
+
 #include "include/core/SkM44.h"
+#include "include/core/SkTypes.h"
 
 #include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
+
 class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
  public:
   static OptimizationFlags OptFlags(
@@ -50,7 +52,7 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
  private:
   GrOverrideInputFragmentProcessor(
       std::unique_ptr<GrFragmentProcessor> fp, bool useUniform, SkPMColor4f uniformColor,
-      SkPMColor4f literalColor) noexcept
+      SkPMColor4f literalColor)
       : INHERITED(
             kGrOverrideInputFragmentProcessor_ClassID,
             (OptimizationFlags)OptFlags(fp, useUniform ? uniformColor : literalColor)),
@@ -58,11 +60,10 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
         uniformColor(uniformColor),
         literalColor(literalColor) {
     SkASSERT(fp);
-    fp_index = this->numChildProcessors();
-    this->registerChildProcessor(std::move(fp));
+    fp_index = this->registerChild(std::move(fp));
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;

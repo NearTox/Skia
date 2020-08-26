@@ -103,9 +103,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       return fScalerCache.roundingSpec();
     }
 
-    const SkDescriptor& getDescriptor() const noexcept override {
-      return fScalerCache.getDescriptor();
-    }
+    const SkDescriptor& getDescriptor() const override { return fScalerCache.getDescriptor(); }
 
     void prepareForMaskDrawing(
         SkDrawableGlyphBuffer* drawbles, SkSourceGlyphBuffer* rejects) override {
@@ -200,12 +198,10 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
   Strike* fHead SK_GUARDED_BY(fLock){nullptr};
   Strike* fTail SK_GUARDED_BY(fLock){nullptr};
   struct StrikeTraits {
-    static const SkDescriptor& GetKey(const sk_sp<Strike>& strike) noexcept {
+    static const SkDescriptor& GetKey(const sk_sp<Strike>& strike) {
       return strike->getDescriptor();
     }
-    static uint32_t Hash(const SkDescriptor& descriptor) noexcept {
-      return descriptor.getChecksum();
-    }
+    static uint32_t Hash(const SkDescriptor& descriptor) { return descriptor.getChecksum(); }
   };
   SkTHashTable<sk_sp<Strike>, SkDescriptor, StrikeTraits> fStrikeLookup SK_GUARDED_BY(fLock);
 

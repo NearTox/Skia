@@ -14,6 +14,7 @@
 class SKPSlide : public Slide {
  public:
   SKPSlide(const SkString& name, const SkString& path);
+  SKPSlide(const SkString& name, std::unique_ptr<SkStream>);
   ~SKPSlide() override;
 
   SkISize getDimensions() const override { return fCullRect.size(); }
@@ -23,7 +24,7 @@ class SKPSlide : public Slide {
   void unload() override;
 
  private:
-  SkString fPath;
+  std::unique_ptr<SkStream> fStream;
   sk_sp<const SkPicture> fPic;
   SkIRect fCullRect;
 };

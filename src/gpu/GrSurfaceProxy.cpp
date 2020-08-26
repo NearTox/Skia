@@ -82,7 +82,7 @@ GrSurfaceProxy::GrSurfaceProxy(
 
 // Wrapped version
 GrSurfaceProxy::GrSurfaceProxy(
-    sk_sp<GrSurface> surface, SkBackingFit fit, UseAllocator useAllocator)
+    sk_sp<GrSurface> surface, SkBackingFit fit, UseAllocator useAllocator) noexcept
     : fTarget(std::move(surface)),
       fSurfaceFlags(fTarget->surfacePriv().flags()),
       fFormat(fTarget->backendFormat()),
@@ -99,11 +99,7 @@ GrSurfaceProxy::GrSurfaceProxy(
   SkASSERT(fFormat.isValid());
 }
 
-GrSurfaceProxy::~GrSurfaceProxy() {
-  // For this to be deleted the opsTask that held a ref on it (if there was one) must have been
-  // deleted. Which would have cleared out this back pointer.
-  SkASSERT(!fLastRenderTask);
-}
+GrSurfaceProxy::~GrSurfaceProxy() = default;
 
 sk_sp<GrSurface> GrSurfaceProxy::createSurfaceImpl(
     GrResourceProvider* resourceProvider, int sampleCnt, GrRenderable renderable,
@@ -213,21 +209,6 @@ void GrSurfaceProxy::computeScratchKey(const GrCaps& caps, GrScratchKey* key) co
       mipMapped, fIsProtected, key);
 }
 
-void GrSurfaceProxy::setLastRenderTask(GrRenderTask* renderTask) noexcept {
-#ifdef SK_DEBUG
-  if (fLastRenderTask) {
-    SkASSERT(fLastRenderTask->isClosed());
-  }
-#endif
-
-  // Un-reffed
-  fLastRenderTask = renderTask;
-}
-
-GrOpsTask* GrSurfaceProxy::getLastOpsTask() noexcept {
-  return fLastRenderTask ? fLastRenderTask->asOpsTask() : nullptr;
-}
-
 SkISize GrSurfaceProxy::backingStoreDimensions() const noexcept {
   SkASSERT(!this->isFullyLazy());
   if (fTarget) {
@@ -252,7 +233,7 @@ bool GrSurfaceProxy::isFormatCompressed(const GrCaps* caps) const {
 #ifdef SK_DEBUG
 void GrSurfaceProxy::validate(GrContext_Base* context) const {
   if (fTarget) {
-    SkASSERT(fTarget->getContext() == context);
+    SkASSERT(fTarget->getContext()->priv().matches(context));
   }
 }
 #endif

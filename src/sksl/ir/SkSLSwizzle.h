@@ -17,10 +17,10 @@
 namespace SkSL {
 
 // represents a swizzle component of constant 0, as in x.rgb0
-constexpr int SKSL_SWIZZLE_0 = -2;
+const int SKSL_SWIZZLE_0 = -2;
 
 // represents a swizzle component of constant 1, as in x.rgb1
-constexpr int SKSL_SWIZZLE_1 = -1;
+const int SKSL_SWIZZLE_1 = -1;
 
 /**
  * Given a type and a swizzle component count, returns the type that will result from swizzling. For
@@ -43,12 +43,6 @@ static const Type& get_type(const Context& context, Expression& value, size_t co
       case 2: return *context.fHalf2_Type;
       case 3: return *context.fHalf3_Type;
       case 4: return *context.fHalf4_Type;
-    }
-  } else if (base == *context.fDouble_Type) {
-    switch (count) {
-      case 2: return *context.fDouble2_Type;
-      case 3: return *context.fDouble3_Type;
-      case 4: return *context.fDouble4_Type;
     }
   } else if (base == *context.fInt_Type) {
     switch (count) {
@@ -103,9 +97,7 @@ static const Type& get_type(const Context& context, Expression& value, size_t co
  * Represents a vector swizzle operation such as 'float2(1, 2, 3).zyx'.
  */
 struct Swizzle : public Expression {
-  Swizzle(
-      const Context& context, std::unique_ptr<Expression> base,
-      std::vector<int> components) noexcept
+  Swizzle(const Context& context, std::unique_ptr<Expression> base, std::vector<int> components)
       : INHERITED(base->fOffset, kSwizzle_Kind, get_type(context, *base, components.size())),
         fBase(std::move(base)),
         fComponents(std::move(components)) {
@@ -130,9 +122,9 @@ struct Swizzle : public Expression {
     return nullptr;
   }
 
-  bool hasProperty(Property property) const noexcept override {
-    return fBase->hasProperty(property);
-  }
+  bool hasProperty(Property property) const override { return fBase->hasProperty(property); }
+
+  int nodeCount() const noexcept override { return 1 + fBase->nodeCount(); }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new Swizzle(fType, fBase->clone(), fComponents));

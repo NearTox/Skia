@@ -29,12 +29,12 @@ struct GrVkInterface : public SkRefCnt {
   template <typename FNPTR_TYPE>
   class VkPtr {
    public:
-    constexpr VkPtr() noexcept : fPtr(NULL) {}
-    constexpr VkPtr operator=(FNPTR_TYPE ptr) noexcept {
+    VkPtr() : fPtr(NULL) {}
+    VkPtr operator=(FNPTR_TYPE ptr) {
       fPtr = ptr;
       return *this;
     }
-    constexpr operator FNPTR_TYPE() const noexcept { return fPtr; }
+    operator FNPTR_TYPE() const { return fPtr; }
 
    private:
     FNPTR_TYPE fPtr;

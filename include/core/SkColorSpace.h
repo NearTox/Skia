@@ -84,8 +84,6 @@ static constexpr skcms_Matrix3x3 kDisplayP3 = {{
     {0.241182f, 0.692236f, 0.0665819f},
     {-0.00104941f, 0.0418818f, 0.784378f},
 }};
-// TODO: skia:9792 We originally misnamed this matrix... delete this incorrect alias?
-static constexpr skcms_Matrix3x3 kDCIP3 = kDisplayP3;
 
 static constexpr skcms_Matrix3x3 kRec2020 = {{
     {0.673459f, 0.165661f, 0.125100f},
@@ -132,12 +130,12 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
   /**
    *  Returns true if the color space gamma is near enough to be approximated as sRGB.
    */
-  bool gammaCloseToSRGB() const;
+  bool gammaCloseToSRGB() const noexcept;
 
   /**
    *  Returns true if the color space gamma is linear.
    */
-  bool gammaIsLinear() const;
+  bool gammaIsLinear() const noexcept;
 
   /**
    *  Sets |fn| to the transfer function from this color space. Returns true if the transfer
@@ -216,7 +214,8 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    */
   static bool Equals(const SkColorSpace*, const SkColorSpace*) noexcept;
 
-  void transferFn(float gabcdef[7]) const;  // DEPRECATED: Remove when webview usage is gone
+  void transferFn(
+      float gabcdef[7]) const noexcept;  // DEPRECATED: Remove when webview usage is gone
   void transferFn(skcms_TransferFunction* fn) const;
   void invTransferFn(skcms_TransferFunction* fn) const;
   void gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* src_to_dst) const;
@@ -227,7 +226,7 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
  private:
   friend class SkColorSpaceSingletonFactory;
 
-  SkColorSpace(const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZ);
+  SkColorSpace(const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZ) noexcept;
 
   void computeLazyDstFields() const;
 

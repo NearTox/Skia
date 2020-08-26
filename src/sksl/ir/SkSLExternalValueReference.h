@@ -20,9 +20,9 @@ struct ExternalValueReference : public Expression {
   ExternalValueReference(int offset, ExternalValue* ev)
       : INHERITED(offset, kExternalValue_Kind, ev->type()), fValue(ev) {}
 
-  bool hasProperty(Property property) const noexcept override {
-    return property == Property::kSideEffects;
-  }
+  bool hasProperty(Property property) const override { return property == Property::kSideEffects; }
+
+  int nodeCount() const noexcept override { return 1; }
 
   String description() const override { return String(fValue->fName); }
 

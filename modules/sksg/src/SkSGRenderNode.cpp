@@ -43,7 +43,7 @@ void RenderNode::render(SkCanvas* canvas, const RenderContext* ctx) const {
   SkASSERT(!this->hasInval());
 }
 
-const RenderNode* RenderNode::nodeAt(const SkPoint& p) const {
+const RenderNode* RenderNode::nodeAt(const SkPoint& p) const noexcept {
   return this->bounds().contains(p.x(), p.y()) ? this->onNodeAt(p) : nullptr;
 }
 
@@ -52,7 +52,7 @@ static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) noexcept {
 }
 
 static sk_sp<SkShader> LocalShader(
-    const sk_sp<SkShader>& shader, const SkMatrix& base, const SkMatrix& ctm) {
+    const sk_sp<SkShader> shader, const SkMatrix& base, const SkMatrix& ctm) {
   // Mask filters / shaders are declared to operate under a specific transform, but due to the
   // deferral mechanism, other transformations might have been pushed to the state.
   // We want to undo these transforms (T):
@@ -132,7 +132,7 @@ RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateColor
 }
 
 RenderNode::ScopedRenderContext&& RenderNode::ScopedRenderContext::modulateShader(
-    sk_sp<SkShader> sh, const SkMatrix& shader_ctm) {
+    sk_sp<SkShader> sh, const SkMatrix& shader_ctm) noexcept {
   // Topmost shader takes precedence.
   if (!fCtx.fShader) {
     fCtx.fShader = std::move(sh);
@@ -222,7 +222,7 @@ CustomRenderNode::~CustomRenderNode() {
   }
 }
 
-bool CustomRenderNode::hasChildrenInval() const noexcept {
+bool CustomRenderNode::hasChildrenInval() const {
   for (const auto& child : fChildren) {
     if (NodePriv::HasInval(child)) {
       return true;

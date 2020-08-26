@@ -12,17 +12,17 @@
 
 #include <utility>
 
-static bool quick_reject(const SkRect& bounds, const SkRect& clip) {
+static bool quick_reject(const SkRect& bounds, const SkRect& clip) noexcept {
   return bounds.fTop >= clip.fBottom || bounds.fBottom <= clip.fTop;
 }
 
-static inline void clamp_le(SkScalar& value, SkScalar max) {
+static inline void clamp_le(SkScalar& value, SkScalar max) noexcept {
   if (value > max) {
     value = max;
   }
 }
 
-static inline void clamp_ge(SkScalar& value, SkScalar min) {
+static inline void clamp_ge(SkScalar& value, SkScalar min) noexcept {
   if (value < min) {
     value = min;
   }
@@ -32,7 +32,7 @@ static inline void clamp_ge(SkScalar& value, SkScalar min) {
  it to be increasing in Y. If it had to reverse the order of the points,
  it returns true, otherwise it returns false
  */
-static bool sort_increasing_Y(SkPoint dst[], const SkPoint src[], int count) {
+static bool sort_increasing_Y(SkPoint dst[], const SkPoint src[], int count) noexcept {
   // we need the data to be monotonically increasing in Y
   if (src[0].fY > src[count - 1].fY) {
     for (int i = 0; i < count; i++) {
@@ -45,7 +45,7 @@ static bool sort_increasing_Y(SkPoint dst[], const SkPoint src[], int count) {
   }
 }
 
-bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) {
+bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) noexcept {
   fCurrPoint = fPoints;
   fCurrVerb = fVerbs;
 
@@ -64,7 +64,8 @@ bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) {
+static bool chopMonoQuadAt(
+    SkScalar c0, SkScalar c1, SkScalar c2, SkScalar target, SkScalar* t) noexcept {
   /* Solve F(t) = y where F(t) := [0](1-t)^2 + 2[1]t(1-t) + [2]t^2
    *  We solve for t, using quadratic equation, hence we have to rearrange
    * our cooefficents to look like At^2 + Bt + C
@@ -82,16 +83,16 @@ static bool chopMonoQuadAt(SkScalar c0, SkScalar c1, SkScalar c2, SkScalar targe
   return false;
 }
 
-static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) {
+static bool chopMonoQuadAtY(SkPoint pts[3], SkScalar y, SkScalar* t) noexcept {
   return chopMonoQuadAt(pts[0].fY, pts[1].fY, pts[2].fY, y, t);
 }
 
-static bool chopMonoQuadAtX(SkPoint pts[3], SkScalar x, SkScalar* t) {
+static bool chopMonoQuadAtX(SkPoint pts[3], SkScalar x, SkScalar* t) noexcept {
   return chopMonoQuadAt(pts[0].fX, pts[1].fX, pts[2].fX, x, t);
 }
 
 // Modify pts[] in place so that it is clipped in Y to the clip rect
-static void chop_quad_in_Y(SkPoint pts[3], const SkRect& clip) {
+static void chop_quad_in_Y(SkPoint pts[3], const SkRect& clip) noexcept {
   SkScalar t;
   SkPoint tmp[5];  // for SkChopQuadAt
 
@@ -140,7 +141,7 @@ static void chop_quad_in_Y(SkPoint pts[3], const SkRect& clip) {
 }
 
 // srcPts[] must be monotonic in X and Y
-void SkEdgeClipper::clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip) {
+void SkEdgeClipper::clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip) noexcept {
   SkPoint pts[3];
   bool reverse = sort_increasing_Y(pts, srcPts, 3);
 
@@ -217,7 +218,7 @@ void SkEdgeClipper::clipMonoQuad(const SkPoint srcPts[3], const SkRect& clip) {
   }
 }
 
-bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
+bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) noexcept {
   fCurrPoint = fPoints;
   fCurrVerb = fVerbs;
 
@@ -246,7 +247,7 @@ bool SkEdgeClipper::clipQuad(const SkPoint srcPts[3], const SkRect& clip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static SkScalar mono_cubic_closestT(const SkScalar src[], SkScalar x) {
+static SkScalar mono_cubic_closestT(const SkScalar src[], SkScalar x) noexcept {
   SkScalar t = 0.5f;
   SkScalar lastT;
   SkScalar bestT SK_INIT_TO_AVOID_WARNING;
@@ -395,20 +396,20 @@ void SkEdgeClipper::clipMonoCubic(const SkPoint src[4], const SkRect& clip) {
   }
 }
 
-static SkRect compute_cubic_bounds(const SkPoint pts[4]) {
+static SkRect compute_cubic_bounds(const SkPoint pts[4]) noexcept {
   SkRect r;
   r.setBounds(pts, 4);
   return r;
 }
 
-static bool too_big_for_reliable_float_math(const SkRect& r) {
+static bool too_big_for_reliable_float_math(const SkRect& r) noexcept {
   // limit set as the largest float value for which we can still reliably compute things like
   // - chopping at XY extrema
   // - chopping at Y or X values for clipping
   //
   // Current value chosen just by experiment. Larger (and still succeeds) is always better.
   //
-  const SkScalar limit = 1 << 22;
+  constexpr SkScalar limit = 1 << 22;
   return r.fLeft < -limit || r.fTop < -limit || r.fRight > limit || r.fBottom > limit;
 }
 
@@ -450,14 +451,14 @@ bool SkEdgeClipper::clipCubic(const SkPoint srcPts[4], const SkRect& clip) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkEdgeClipper::appendLine(SkPoint p0, SkPoint p1) {
+void SkEdgeClipper::appendLine(SkPoint p0, SkPoint p1) noexcept {
   *fCurrVerb++ = SkPath::kLine_Verb;
   fCurrPoint[0] = p0;
   fCurrPoint[1] = p1;
   fCurrPoint += 2;
 }
 
-void SkEdgeClipper::appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool reverse) {
+void SkEdgeClipper::appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool reverse) noexcept {
   *fCurrVerb++ = SkPath::kLine_Verb;
 
   if (reverse) {
@@ -469,7 +470,7 @@ void SkEdgeClipper::appendVLine(SkScalar x, SkScalar y0, SkScalar y1, bool rever
   fCurrPoint += 2;
 }
 
-void SkEdgeClipper::appendQuad(const SkPoint pts[3], bool reverse) {
+void SkEdgeClipper::appendQuad(const SkPoint pts[3], bool reverse) noexcept {
   *fCurrVerb++ = SkPath::kQuad_Verb;
 
   if (reverse) {
@@ -483,7 +484,7 @@ void SkEdgeClipper::appendQuad(const SkPoint pts[3], bool reverse) {
   fCurrPoint += 3;
 }
 
-void SkEdgeClipper::appendCubic(const SkPoint pts[4], bool reverse) {
+void SkEdgeClipper::appendCubic(const SkPoint pts[4], bool reverse) noexcept {
   *fCurrVerb++ = SkPath::kCubic_Verb;
 
   if (reverse) {
@@ -496,7 +497,7 @@ void SkEdgeClipper::appendCubic(const SkPoint pts[4], bool reverse) {
   fCurrPoint += 4;
 }
 
-SkPath::Verb SkEdgeClipper::next(SkPoint pts[]) {
+SkPath::Verb SkEdgeClipper::next(SkPoint pts[]) noexcept {
   SkPath::Verb verb = *fCurrVerb;
 
   switch (verb) {
@@ -561,7 +562,7 @@ void SkEdgeClipper::ClipPath(
   SkASSERT(path.isFinite());
 
   SkAutoConicToQuads quadder;
-  const SkScalar conicTol = SK_Scalar1 / 4;
+  constexpr SkScalar conicTol = SK_Scalar1 / 4;
 
   SkPathEdgeIter iter(path);
   SkEdgeClipper clipper(canCullToTheRight);

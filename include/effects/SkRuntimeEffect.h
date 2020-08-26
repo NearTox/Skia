@@ -93,8 +93,6 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
       sk_sp<SkData> inputs, sk_sp<SkShader> children[], size_t childCount,
       const SkMatrix* localMatrix, bool isOpaque);
 
-  sk_sp<SkColorFilter> makeColorFilter(
-      sk_sp<SkData> inputs, sk_sp<SkColorFilter> children[], size_t childCount);
   sk_sp<SkColorFilter> makeColorFilter(sk_sp<SkData> inputs);
 
   const SkString& source() const noexcept { return fSkSL; }
@@ -119,9 +117,11 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   // makeShader, provide an SkData of this size, containing values for all of those variables.
   size_t inputSize() const;
 
-  ConstIterable<Variable> inputs() const { return ConstIterable<Variable>(fInAndUniformVars); }
-  ConstIterable<SkString> children() const { return ConstIterable<SkString>(fChildren); }
-  ConstIterable<Varying> varyings() const { return ConstIterable<Varying>(fVaryings); }
+  ConstIterable<Variable> inputs() const noexcept {
+    return ConstIterable<Variable>(fInAndUniformVars);
+  }
+  ConstIterable<SkString> children() const noexcept { return ConstIterable<SkString>(fChildren); }
+  ConstIterable<Varying> varyings() const noexcept { return ConstIterable<Varying>(fVaryings); }
 
   // Returns pointer to the named in/uniform variable's description, or nullptr if not found
   const Variable* findInput(const char* name) const;

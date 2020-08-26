@@ -36,6 +36,7 @@ class GrCoordTransform;
  */
 
 class GrGLSLPrimitiveProcessor;
+class GrGLSLUniformHandler;
 
 /**
  * GrPrimitiveProcessor defines an interface which all subclasses must implement.  All
@@ -54,12 +55,14 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    public:
     constexpr Attribute() noexcept = default;
     constexpr Attribute(const char* name, GrVertexAttribType cpuType, GrSLType gpuType) noexcept
-        : fName(name), fCPUType(cpuType), fGPUType(gpuType) {}
+        : fName(name), fCPUType(cpuType), fGPUType(gpuType) {
+      SkASSERT(name && gpuType != kVoid_GrSLType);
+    }
     constexpr Attribute(const Attribute&) noexcept = default;
 
     Attribute& operator=(const Attribute&) noexcept = default;
 
-    constexpr bool isInitialized() const noexcept { return SkToBool(fName); }
+    constexpr bool isInitialized() const noexcept { return fGPUType != kVoid_GrSLType; }
 
     constexpr const char* name() const noexcept { return fName; }
     constexpr GrVertexAttribType cpuType() const noexcept { return fCPUType; }
@@ -73,12 +76,12 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    private:
     const char* fName = nullptr;
     GrVertexAttribType fCPUType = kFloat_GrVertexAttribType;
-    GrSLType fGPUType = kFloat_GrSLType;
+    GrSLType fGPUType = kVoid_GrSLType;
   };
 
   class Iter {
    public:
-    Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
+    constexpr Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
     Iter(const Iter& iter) noexcept : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
     Iter& operator=(const Iter& iter) noexcept {
       fCurr = iter.fCurr;
@@ -144,7 +147,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
   GrPrimitiveProcessor(ClassID) noexcept;
 
   int numTextureSamplers() const noexcept { return fTextureSamplerCnt; }
-  const TextureSampler& textureSampler(int index) const;
+  const TextureSampler& textureSampler(int index) const noexcept;
   int numVertexAttributes() const noexcept { return fVertexAttributes.fCount; }
   const AttributeSet& vertexAttributes() const noexcept { return fVertexAttributes; }
   int numInstanceAttributes() const noexcept { return fInstanceAttributes.fCount; }
@@ -201,16 +204,18 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
       the object. */
   virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const = 0;
 
-  virtual bool isPathRendering() const { return false; }
+  virtual bool isPathRendering() const noexcept { return false; }
 
   // We use these methods as a temporary back door to inject OpenGL tessellation code. Once
   // tessellation is supported by SkSL we can remove these.
   virtual SkString getTessControlShaderGLSL(
-      const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+      const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+      const GrGLSLUniformHandler&, const GrShaderCaps&) const {
     SK_ABORT("Not implemented.");
   }
   virtual SkString getTessEvaluationShaderGLSL(
-      const char* versionAndExtensionDecls, const GrShaderCaps&) const {
+      const GrGLSLPrimitiveProcessor*, const char* versionAndExtensionDecls,
+      const GrGLSLUniformHandler&, const GrShaderCaps&) const {
     SK_ABORT("Not implemented.");
   }
 
@@ -268,12 +273,12 @@ class GrPrimitiveProcessor::TextureSampler {
  public:
   TextureSampler() noexcept = default;
 
-  TextureSampler(GrSamplerState, const GrBackendFormat&, const GrSwizzle&);
+  TextureSampler(GrSamplerState, const GrBackendFormat&, const GrSwizzle&) noexcept;
 
   TextureSampler(const TextureSampler&) = delete;
   TextureSampler& operator=(const TextureSampler&) = delete;
 
-  void reset(GrSamplerState, const GrBackendFormat&, const GrSwizzle&);
+  void reset(GrSamplerState, const GrBackendFormat&, const GrSwizzle&) noexcept;
 
   const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
   GrTextureType textureType() const noexcept { return fBackendFormat.textureType(); }

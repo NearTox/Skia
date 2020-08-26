@@ -89,7 +89,7 @@ bool SkColorTypeValidateAlphaType(
       if (kUnpremul_SkAlphaType == alphaType) {
         alphaType = kPremul_SkAlphaType;
       }
-      // fall-through
+      [[fallthrough]];
     case kARGB_4444_SkColorType:
     case kRGBA_8888_SkColorType:
     case kBGRA_8888_SkColorType:

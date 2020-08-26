@@ -23,7 +23,7 @@
 
 // Defined in SkCodec.cpp
 bool sk_select_xform_format(
-    SkColorType colorType, bool forColorTable, skcms_PixelFormat* outFormat) noexcept;
+    SkColorType colorType, bool forColorTable, skcms_PixelFormat* outFormat);
 
 // FIXME: Consider sharing with dm, nanbench, and tools.
 static constexpr inline float get_scale_from_sample_size(int sampleSize) noexcept {
@@ -144,13 +144,13 @@ static inline size_t compute_row_bytes(int width, uint32_t bitsPerPixel) noexcep
  * Get a byte from a buffer
  * This method is unsafe, the caller is responsible for performing a check
  */
-static inline uint8_t get_byte(uint8_t* buffer, uint32_t i) noexcept { return buffer[i]; }
+static inline uint8_t get_byte(const uint8_t* buffer, uint32_t i) noexcept { return buffer[i]; }
 
 /*
  * Get a short from a buffer
  * This method is unsafe, the caller is responsible for performing a check
  */
-static inline uint16_t get_short(uint8_t* buffer, uint32_t i) noexcept {
+static inline uint16_t get_short(const uint8_t* buffer, uint32_t i) noexcept {
   uint16_t result;
   memcpy(&result, &(buffer[i]), 2);
 #ifdef SK_CPU_BENDIAN
@@ -164,7 +164,7 @@ static inline uint16_t get_short(uint8_t* buffer, uint32_t i) noexcept {
  * Get an int from a buffer
  * This method is unsafe, the caller is responsible for performing a check
  */
-static inline uint32_t get_int(uint8_t* buffer, uint32_t i) noexcept {
+static inline uint32_t get_int(const uint8_t* buffer, uint32_t i) noexcept {
   uint32_t result;
   memcpy(&result, &(buffer[i]), 4);
 #ifdef SK_CPU_BENDIAN
@@ -231,7 +231,7 @@ static constexpr inline bool is_rgba(SkColorType colorType) noexcept {
 // Method for coverting to a 32 bit pixel.
 typedef uint32_t (*PackColorProc)(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
 
-static inline PackColorProc choose_pack_color_proc(bool isPremul, SkColorType colorType) noexcept {
+static inline PackColorProc choose_pack_color_proc(bool isPremul, SkColorType colorType) {
   bool isRGBA = is_rgba(colorType);
   if (isPremul) {
     if (isRGBA) {

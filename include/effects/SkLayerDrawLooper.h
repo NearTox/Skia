@@ -13,6 +13,9 @@
 #include "include/core/SkPaint.h"
 #include "include/core/SkPoint.h"
 
+/**
+ *  DEPRECATED: No longer supported by Skia.
+ */
 class SK_API SkLayerDrawLooper : public SkDrawLooper {
  public:
   ~SkLayerDrawLooper() override;
@@ -69,15 +72,15 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
      *      fColorMode == kDst_Mode
      *      fOffset == (0, 0)
      */
-    LayerInfo() noexcept;
+    LayerInfo();
   };
 
   SkDrawLooper::Context* makeContext(SkArenaAlloc*) const override;
 
-  bool asABlurShadow(BlurShadowRec* rec) const noexcept override;
+  bool asABlurShadow(BlurShadowRec* rec) const override;
 
  protected:
-  SkLayerDrawLooper() noexcept;
+  SkLayerDrawLooper();
 
   void flatten(SkWriteBuffer&) const override;
 
@@ -95,7 +98,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
   // state-machine during the init/next cycle
   class LayerDrawLooperContext : public SkDrawLooper::Context {
    public:
-    explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper) noexcept;
+    explicit LayerDrawLooperContext(const SkLayerDrawLooper* looper);
 
    protected:
     bool next(Info*, SkPaint* paint) override;
@@ -111,7 +114,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
  public:
   class SK_API Builder {
    public:
-    Builder() noexcept;
+    Builder();
     ~Builder();
 
     /**

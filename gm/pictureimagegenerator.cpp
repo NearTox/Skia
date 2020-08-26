@@ -146,7 +146,7 @@ class PictureGeneratorGM : public skiagm::GM {
       SkPaint p;
       p.setAlphaf(configs[i].opacity);
 
-      SkMatrix m = SkMatrix::MakeScale(configs[i].scaleX, configs[i].scaleY);
+      SkMatrix m = SkMatrix::Scale(configs[i].scaleX, configs[i].scaleY);
       if (configs[i].scaleX < 0) {
         m.postTranslate(SkIntToScalar(configs[i].size.width()), 0);
       }

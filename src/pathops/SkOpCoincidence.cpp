@@ -11,7 +11,7 @@
 #include <utility>
 
 // returns true if coincident span's start and end are the same
-bool SkCoincidentSpans::collapsed(const SkOpPtT* test) const {
+bool SkCoincidentSpans::collapsed(const SkOpPtT* test) const noexcept {
   return (fCoinPtTStart == test && fCoinPtTEnd->contains(test)) ||
          (fCoinPtTEnd == test && fCoinPtTStart->contains(test)) ||
          (fOppPtTStart == test && fOppPtTEnd->contains(test)) ||
@@ -117,7 +117,7 @@ void SkCoincidentSpans::set(
 }
 
 // returns true if both points are inside this
-bool SkCoincidentSpans::contains(const SkOpPtT* s, const SkOpPtT* e) const {
+bool SkCoincidentSpans::contains(const SkOpPtT* s, const SkOpPtT* e) const noexcept {
   if (s->fT > e->fT) {
     using std::swap;
     swap(s, e);
@@ -137,10 +137,10 @@ bool SkCoincidentSpans::contains(const SkOpPtT* s, const SkOpPtT* e) const {
 }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::oppPtTStart() const { return fOppPtTStart; }
+const SkOpPtT* SkCoincidentSpans::oppPtTStart() const noexcept { return fOppPtTStart; }
 
 // out of line since this function is referenced by address
-const SkOpPtT* SkCoincidentSpans::oppPtTEnd() const { return fOppPtTEnd; }
+const SkOpPtT* SkCoincidentSpans::oppPtTEnd() const noexcept { return fOppPtTEnd; }
 
 // A coincident span is unordered if the pairs of points in the main and opposite curves'
 // t values do not ascend or descend. For instance, if a tightly arced quadratic is
@@ -1137,7 +1137,7 @@ bool SkOpCoincidence::apply(DEBUG_COIN_DECLARE_ONLY_PARAMS()) {
 }
 
 // Please keep this in sync with debugRelease()
-bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove) {
+bool SkOpCoincidence::release(SkCoincidentSpans* coin, SkCoincidentSpans* remove) noexcept {
   SkCoincidentSpans* head = coin;
   SkCoincidentSpans* prev = nullptr;
   SkCoincidentSpans* next;
@@ -1413,7 +1413,7 @@ bool SkOpCoincidence::Ordered(const SkOpSegment* coinSeg, const SkOpSegment* opp
 
 bool SkOpCoincidence::overlap(
     const SkOpPtT* coin1s, const SkOpPtT* coin1e, const SkOpPtT* coin2s, const SkOpPtT* coin2e,
-    double* overS, double* overE) const {
+    double* overS, double* overE) const noexcept {
   SkASSERT(coin1s->segment() == coin2s->segment());
   *overS = std::max(std::min(coin1s->fT, coin1e->fT), std::min(coin2s->fT, coin2e->fT));
   *overE = std::min(std::max(coin1s->fT, coin1e->fT), std::max(coin2s->fT, coin2e->fT));
@@ -1421,7 +1421,7 @@ bool SkOpCoincidence::overlap(
 }
 
 // Commented-out lines keep this in sync with debugRelease()
-void SkOpCoincidence::release(const SkOpSegment* deleted) {
+void SkOpCoincidence::release(const SkOpSegment* deleted) noexcept {
   SkCoincidentSpans* coin = fHead;
   if (!coin) {
     return;

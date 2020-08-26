@@ -41,11 +41,13 @@ class SkIcoCodec : public SkCodec {
   Result onGetPixels(
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&, int*) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kICO; }
+  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
+    return SkEncodedImageFormat::kICO;
+  }
 
   SkScanlineOrder onGetScanlineOrder() const override;
 
-  bool conversionSupported(const SkImageInfo&, bool, bool) override {
+  bool conversionSupported(const SkImageInfo&, bool, bool) noexcept override {
     // This will be checked by the embedded codec.
     return true;
   }
@@ -83,7 +85,9 @@ class SkIcoCodec : public SkCodec {
    * Constructor called by NewFromStream
    * @param embeddedCodecs codecs for the embedded images, takes ownership
    */
-  SkIcoCodec(SkEncodedInfo&& info, SkTArray<std::unique_ptr<SkCodec>, true>* embeddedCodecs);
+  SkIcoCodec(
+      SkEncodedInfo&& info, std::unique_ptr<SkStream>,
+      SkTArray<std::unique_ptr<SkCodec>, true>* embeddedCodecs);
 
   std::unique_ptr<SkTArray<std::unique_ptr<SkCodec>, true>> fEmbeddedCodecs;
 

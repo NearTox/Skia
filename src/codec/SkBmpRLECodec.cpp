@@ -16,8 +16,7 @@
  */
 SkBmpRLECodec::SkBmpRLECodec(
     SkEncodedInfo&& info, std::unique_ptr<SkStream> stream, uint16_t bitsPerPixel,
-    uint32_t numColors, uint32_t bytesPerColor, uint32_t offset,
-    SkCodec::SkScanlineOrder rowOrder) noexcept
+    uint32_t numColors, uint32_t bytesPerColor, uint32_t offset, SkCodec::SkScanlineOrder rowOrder)
     : INHERITED(std::move(info), std::move(stream), bitsPerPixel, rowOrder),
       fColorTable(nullptr),
       fNumColors(numColors),
@@ -119,7 +118,7 @@ bool SkBmpRLECodec::createColorTable(SkColorType dstColorType) {
   return true;
 }
 
-bool SkBmpRLECodec::initializeStreamBuffer() noexcept {
+bool SkBmpRLECodec::initializeStreamBuffer() {
   fBytesBuffered = this->stream()->read(fStreamBuffer, kBufferSize);
   if (fBytesBuffered == 0) {
     SkCodecPrintf("Error: could not read RLE image data.\n");
@@ -517,9 +516,9 @@ bool SkBmpRLECodec::skipRows(int count) {
 //        It currently is a hybrid that needs to know what SkScaledCodec is doing.
 class SkBmpRLESampler : public SkSampler {
  public:
-  SkBmpRLESampler(SkBmpRLECodec* codec) noexcept : fCodec(codec) { SkASSERT(fCodec); }
+  SkBmpRLESampler(SkBmpRLECodec* codec) : fCodec(codec) { SkASSERT(fCodec); }
 
-  int fillWidth() const noexcept override { return fCodec->fillWidth(); }
+  int fillWidth() const override { return fCodec->fillWidth(); }
 
  private:
   int onSetSampleX(int sampleX) override { return fCodec->setSampleX(sampleX); }
@@ -536,11 +535,11 @@ SkSampler* SkBmpRLECodec::getSampler(bool createIfNecessary) {
   return fSampler.get();
 }
 
-int SkBmpRLECodec::setSampleX(int sampleX) noexcept {
+int SkBmpRLECodec::setSampleX(int sampleX) {
   fSampleX = sampleX;
   return this->fillWidth();
 }
 
-int SkBmpRLECodec::fillWidth() const noexcept {
+int SkBmpRLECodec::fillWidth() const {
   return get_scaled_dimension(this->dimensions().width(), fSampleX);
 }

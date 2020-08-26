@@ -14,6 +14,7 @@
 #include "src/core/SkMathPriv.h"
 #include "src/core/SkMipMap.h"
 #include "src/gpu/GrAuditTrail.h"
+#include "src/gpu/GrBackendUtils.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDataUtils.h"
@@ -34,13 +35,16 @@
 #include "src/gpu/GrTracing.h"
 #include "src/utils/SkJSONWriter.h"
 
-static const size_t kMinStagingBufferSize = 32 * 1024;
+static constexpr size_t kMinStagingBufferSize = 32 * 1024;
 
 ////////////////////////////////////////////////////////////////////////////////
 
 GrGpu::GrGpu(GrContext* context) : fResetBits(kAll_GrBackendState), fContext(context) {}
 
-GrGpu::~GrGpu() { SkASSERT(fBusyStagingBuffers.isEmpty()); }
+GrGpu::~GrGpu() {
+  this->callSubmittedProcs(false);
+  SkASSERT(fBusyStagingBuffers.isEmpty());
+}
 
 void GrGpu::disconnect(DisconnectType type) {
   if (DisconnectType::kAbandon == type) {
@@ -238,7 +242,7 @@ sk_sp<GrTexture> GrGpu::createCompressedTexture(
   }
 
   // TODO: expand CompressedDataIsCorrect to work here too
-  SkImage::CompressionType compressionType = this->caps()->compressionType(format);
+  SkImage::CompressionType compressionType = GrBackendFormatToCompressionType(format);
 
   if (dataSize <
       SkCompressedDataSize(compressionType, dimensions, nullptr, mipMapped == GrMipMapped::kYes)) {
@@ -631,7 +635,7 @@ void GrGpu::validateStagingBuffers() const {
 
 void GrGpu::executeFlushInfo(
     GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
-    const GrFlushInfo& info, const GrPrepareForExternalIORequests& externalRequests) {
+    const GrFlushInfo& info, const GrBackendSurfaceMutableState* newState) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
   GrResourceProvider* resourceProvider = fContext->priv().resourceProvider();
@@ -658,7 +662,17 @@ void GrGpu::executeFlushInfo(
   if (info.fFinishedProc) {
     this->addFinishedProc(info.fFinishedProc, info.fFinishedContext);
   }
-  this->prepareSurfacesForBackendAccessAndExternalIO(proxies, numProxies, access, externalRequests);
+
+  if (info.fSubmittedProc) {
+    fSubmittedProcs.emplace_back(info.fSubmittedProc, info.fSubmittedContext);
+  }
+
+  // We currently don't support passing in new surface state for multiple proxies here. The only
+  // time we have multiple proxies is if we are flushing a yuv SkImage which won't have state
+  // updates anyways.
+  SkASSERT(!newState || numProxies == 1);
+  SkASSERT(!newState || access == SkSurface::BackendSurfaceAccess::kNoAccess);
+  this->prepareSurfacesForBackendAccessAndStateUpdates(proxies, numProxies, access, newState);
 }
 
 bool GrGpu::submitToGpu(bool syncCpu) {
@@ -671,7 +685,24 @@ bool GrGpu::submitToGpu(bool syncCpu) {
 
   bool submitted = this->onSubmitToGpu(syncCpu);
 
+  this->callSubmittedProcs(submitted);
+
   return submitted;
+}
+
+bool GrGpu::checkAndResetOOMed() noexcept {
+  if (fOOMed) {
+    fOOMed = false;
+    return true;
+  }
+  return false;
+}
+
+void GrGpu::callSubmittedProcs(bool success) {
+  for (int i = 0; i < fSubmittedProcs.count(); ++i) {
+    fSubmittedProcs[i].fProc(fSubmittedProcs[i].fContext, success);
+  }
+  fSubmittedProcs.reset();
 }
 
 #ifdef SK_ENABLE_DUMP_GPU
@@ -756,7 +787,7 @@ void GrGpu::Stats::dumpKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>*
 }
 
 #  endif  // GR_GPU_STATS
-#endif    // GR_TEST_UTILS
+#endif  // GR_TEST_UTILS
 
 bool GrGpu::MipMapsAreCorrect(
     SkISize dimensions, GrMipMapped mipMapped, const BackendTextureData* data) {
@@ -838,15 +869,10 @@ GrBackendTexture GrGpu::createBackendTexture(
 }
 
 bool GrGpu::updateBackendTexture(
-    const GrBackendTexture& backendTexture, GrGpuFinishedProc finishedProc,
-    GrGpuFinishedContext finishedContext, const BackendTextureData* data) {
+    const GrBackendTexture& backendTexture, sk_sp<GrRefCntedCallback> finishedCallback,
+    const BackendTextureData* data) {
   SkASSERT(data);
   const GrCaps* caps = this->caps();
-
-  sk_sp<GrRefCntedCallback> callback;
-  if (finishedProc) {
-    callback.reset(new GrRefCntedCallback(finishedProc, finishedContext));
-  }
 
   if (!backendTexture.isValid()) {
     return false;
@@ -868,25 +894,20 @@ bool GrGpu::updateBackendTexture(
     return false;
   }
 
-  return this->onUpdateBackendTexture(backendTexture, std::move(callback), data);
+  return this->onUpdateBackendTexture(backendTexture, std::move(finishedCallback), data);
 }
 
 GrBackendTexture GrGpu::createCompressedBackendTexture(
     SkISize dimensions, const GrBackendFormat& format, GrMipMapped mipMapped,
-    GrProtected isProtected, GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext,
+    GrProtected isProtected, sk_sp<GrRefCntedCallback> finishedCallback,
     const BackendTextureData* data) {
-  sk_sp<GrRefCntedCallback> callback;
-  if (finishedProc) {
-    callback.reset(new GrRefCntedCallback(finishedProc, finishedContext));
-  }
-
   const GrCaps* caps = this->caps();
 
   if (!format.isValid()) {
     return {};
   }
 
-  SkImage::CompressionType compressionType = caps->compressionType(format);
+  SkImage::CompressionType compressionType = GrBackendFormatToCompressionType(format);
   if (compressionType == SkImage::CompressionType::kNone) {
     // Uncompressed formats must go through the createBackendTexture API
     return {};
@@ -906,7 +927,7 @@ GrBackendTexture GrGpu::createCompressedBackendTexture(
   }
 
   return this->onCreateCompressedBackendTexture(
-      dimensions, format, mipMapped, isProtected, std::move(callback), data);
+      dimensions, format, mipMapped, isProtected, std::move(finishedCallback), data);
 }
 
 GrStagingBuffer* GrGpu::findStagingBuffer(size_t size) {

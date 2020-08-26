@@ -150,6 +150,7 @@ void surface_semaphore_test(
     case FlushType::kImage: blueImage->flush(mainCtx, info); break;
     case FlushType::kContext: mainCtx->flush(info); break;
   }
+  mainCtx->submit();
 
   sk_sp<SkImage> mainImage = mainSurface->makeImageSnapshot();
   GrBackendTexture backendTexture = mainImage->getBackendTexture(false);
@@ -222,11 +223,16 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(EmptySurfaceSemaphoreTest, reporter, ctxInfo)
       SkSurface::MakeRenderTarget(ctx, SkBudgeted::kNo, ii, 0, kTopLeft_GrSurfaceOrigin, nullptr));
 
   // Flush surface once without semaphores to make sure there is no peneding IO for it.
-  mainSurface->flush();
+  mainSurface->flushAndSubmit();
 
   GrBackendSemaphore semaphore;
-  GrSemaphoresSubmitted submitted = mainSurface->flushAndSignalSemaphores(1, &semaphore);
+  GrFlushInfo flushInfo;
+  flushInfo.fNumSemaphores = 1;
+  flushInfo.fSignalSemaphores = &semaphore;
+  GrSemaphoresSubmitted submitted =
+      mainSurface->flush(SkSurface::BackendSurfaceAccess::kNoAccess, flushInfo);
   REPORTER_ASSERT(reporter, GrSemaphoresSubmitted::kYes == submitted);
+  ctx->submit();
 
 #ifdef SK_GL
   if (GrBackendApi::kOpenGL == ctxInfo.backend()) {

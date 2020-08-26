@@ -9,7 +9,7 @@
 #include "src/gpu/gl/GrGLGpu.h"
 #include "src/gpu/gl/GrGLStencilAttachment.h"
 
-size_t GrGLStencilAttachment::onGpuMemorySize() const {
+size_t GrGLStencilAttachment::onGpuMemorySize() const noexcept {
   uint64_t size = this->width();
   size *= this->height();
   size *= fFormat.fTotalBits;

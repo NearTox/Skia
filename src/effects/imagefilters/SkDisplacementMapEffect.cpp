@@ -17,7 +17,6 @@
 #if SK_SUPPORT_GPU
 #  include "include/private/GrRecordingContext.h"
 #  include "src/gpu/GrCaps.h"
-#  include "src/gpu/GrClip.h"
 #  include "src/gpu/GrColorSpaceXform.h"
 #  include "src/gpu/GrCoordTransform.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
@@ -37,7 +36,7 @@ class SkDisplacementMapEffectImpl final : public SkImageFilter_Base {
  public:
   SkDisplacementMapEffectImpl(
       SkColorChannel xChannelSelector, SkColorChannel yChannelSelector, SkScalar scale,
-      sk_sp<SkImageFilter> inputs[2], const CropRect* cropRect) noexcept
+      sk_sp<SkImageFilter> inputs[2], const CropRect* cropRect)
       : INHERITED(inputs, 2, cropRect),
         fXChannelSelector(xChannelSelector),
         fYChannelSelector(yChannelSelector),
@@ -64,8 +63,8 @@ class SkDisplacementMapEffectImpl final : public SkImageFilter_Base {
   SkColorChannel fYChannelSelector;
   SkScalar fScale;
 
-  const SkImageFilter* getDisplacementInput() const noexcept { return getInput(0); }
-  const SkImageFilter* getColorInput() const noexcept { return getInput(1); }
+  const SkImageFilter* getDisplacementInput() const { return getInput(0); }
+  const SkImageFilter* getColorInput() const { return getInput(1); }
 
   typedef SkImageFilter_Base INHERITED;
 };
@@ -205,7 +204,8 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void onGetGLSLProcessorKey(
+      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept override;
 
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
@@ -231,7 +231,7 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
 
 static void compute_displacement(
     Extractor ex, const SkVector& scale, SkBitmap* dst, const SkBitmap& displ,
-    const SkIPoint& offset, const SkBitmap& src, const SkIRect& bounds) noexcept {
+    const SkIPoint& offset, const SkBitmap& src, const SkIRect& bounds) {
   static constexpr SkScalar Inv8bit = SkScalarInvert(255);
   const int srcW = src.width();
   const int srcH = src.height();
@@ -323,7 +323,7 @@ sk_sp<SkSpecialImage> SkDisplacementMapEffectImpl::onFilterImage(
     }
     const auto isProtected = colorView.proxy()->isProtected();
 
-    SkMatrix offsetMatrix = SkMatrix::MakeTrans(
+    SkMatrix offsetMatrix = SkMatrix::Translate(
         SkIntToScalar(colorOffset.fX - displOffset.fX),
         SkIntToScalar(colorOffset.fY - displOffset.fY));
 
@@ -347,7 +347,7 @@ sk_sp<SkSpecialImage> SkDisplacementMapEffectImpl::onFilterImage(
     }
 
     renderTargetContext->drawRect(
-        GrNoClip(), std::move(paint), GrAA::kNo, matrix, SkRect::Make(colorBounds));
+        nullptr, std::move(paint), GrAA::kNo, matrix, SkRect::Make(colorBounds));
 
     offset->fX = bounds.left();
     offset->fY = bounds.top();
@@ -420,7 +420,8 @@ class GrDisplacementMapEffect::Impl : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
+  static inline void GenKey(
+      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -442,10 +443,10 @@ std::unique_ptr<GrFragmentProcessor> GrDisplacementMapEffect::Make(
   static constexpr GrSamplerState kColorSampler(
       GrSamplerState::WrapMode::kClampToBorder, GrSamplerState::Filter::kNearest);
   auto colorEffect = GrTextureEffect::MakeSubset(
-      std::move(color), kPremul_SkAlphaType, SkMatrix::MakeTrans(colorSubset.topLeft()),
+      std::move(color), kPremul_SkAlphaType, SkMatrix::Translate(colorSubset.topLeft()),
       kColorSampler, SkRect::Make(colorSubset), caps);
 
-  auto dispM = SkMatrix::Concat(SkMatrix::MakeTrans(displSubset.topLeft()), offsetMatrix);
+  auto dispM = SkMatrix::Concat(SkMatrix::Translate(displSubset.topLeft()), offsetMatrix);
   auto dispEffect = GrTextureEffect::Make(
       std::move(displacement), kPremul_SkAlphaType, dispM, GrSamplerState::Filter::kNearest);
 
@@ -458,7 +459,7 @@ GrGLSLFragmentProcessor* GrDisplacementMapEffect::onCreateGLSLInstance() const {
 }
 
 void GrDisplacementMapEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
   Impl::GenKey(*this, caps, b);
 }
 
@@ -470,9 +471,8 @@ GrDisplacementMapEffect::GrDisplacementMapEffect(
       fXChannelSelector(xChannelSelector),
       fYChannelSelector(yChannelSelector),
       fScale(scale) {
-  this->registerChildProcessor(std::move(displacement));
-  color->setSampledWithExplicitCoords();
-  this->registerChildProcessor(std::move(color));
+  this->registerChild(std::move(displacement));
+  this->registerExplicitlySampledChild(std::move(color));
   this->addCoordTransform(&fCoordTransform);
 }
 
@@ -481,19 +481,11 @@ GrDisplacementMapEffect::GrDisplacementMapEffect(const GrDisplacementMapEffect& 
       fXChannelSelector(that.fXChannelSelector),
       fYChannelSelector(that.fYChannelSelector),
       fScale(that.fScale) {
-  auto displacement = that.childProcessor(0).clone();
-  if (that.childProcessor(0).isSampledWithExplicitCoords()) {
-    displacement->setSampledWithExplicitCoords();
-  }
-  this->registerChildProcessor(std::move(displacement));
-
-  auto color = that.childProcessor(1).clone();
-  color->setSampledWithExplicitCoords();
-  this->registerChildProcessor(std::move(color));
+  this->cloneAndRegisterAllChildProcessors(that);
   this->addCoordTransform(&fCoordTransform);
 }
 
-GrDisplacementMapEffect::~GrDisplacementMapEffect() {}
+GrDisplacementMapEffect::~GrDisplacementMapEffect() = default;
 
 std::unique_ptr<GrFragmentProcessor> GrDisplacementMapEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrDisplacementMapEffect(*this));
@@ -583,7 +575,7 @@ void GrDisplacementMapEffect::Impl::onSetData(
 }
 
 void GrDisplacementMapEffect::Impl::GenKey(
-    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
+    const GrProcessor& proc, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
   const GrDisplacementMapEffect& displacementMap = proc.cast<GrDisplacementMapEffect>();
 
   static constexpr int kChannelSelectorKeyBits = 2;  // Max value is 3, so 2 bits are required

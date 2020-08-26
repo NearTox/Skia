@@ -10,6 +10,9 @@
 
 #include "include/core/SkVertices.h"
 
+class SkReadBuffer;
+class SkWriteBuffer;
+
 struct SkVertices_DeprecatedBone {
   float values[6];
 };
@@ -42,6 +45,9 @@ class SkVerticesPriv {
 
   // Never called due to RVO in priv(), but must exist for MSVC 2017.
   SkVerticesPriv(const SkVerticesPriv&) = default;
+
+  void encode(SkWriteBuffer&) const;
+  static sk_sp<SkVertices> Decode(SkReadBuffer&);
 
  private:
   explicit SkVerticesPriv(SkVertices* vertices) noexcept : fVertices(vertices) {}

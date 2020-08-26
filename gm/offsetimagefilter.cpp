@@ -80,7 +80,7 @@ class OffsetImageFilterGM : public skiagm::GM {
 
     // Draw a boundary rect around the intersection of the clip rect and crop rect.
     SkRect cropRectFloat;
-    SkMatrix::MakeScale(scale, scale).mapRect(&cropRectFloat, SkRect::Make(cropRect));
+    SkMatrix::Scale(scale, scale).mapRect(&cropRectFloat, SkRect::Make(cropRect));
     if (clipRect.intersect(cropRectFloat)) {
       SkPaint strokePaint;
       strokePaint.setStyle(SkPaint::kStroke_Style);

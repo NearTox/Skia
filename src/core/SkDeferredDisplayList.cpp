@@ -20,10 +20,12 @@ class SkSurfaceCharacterization;
 #endif
 
 SkDeferredDisplayList::SkDeferredDisplayList(
-    const SkSurfaceCharacterization& characterization, sk_sp<LazyProxyData> lazyProxyData)
+    const SkSurfaceCharacterization& characterization, sk_sp<GrRenderTargetProxy> targetProxy,
+    sk_sp<LazyProxyData> lazyProxyData)
     : fCharacterization(characterization)
 #if SK_SUPPORT_GPU
       ,
+      fTargetProxy(std::move(targetProxy)),
       fLazyProxyData(std::move(lazyProxyData))
 #endif
 {
@@ -44,7 +46,7 @@ SkDeferredDisplayList::ProgramIterator::ProgramIterator(
     GrContext* context, SkDeferredDisplayList* ddl)
     : fContext(context), fProgramData(ddl->programData()), fIndex(0) {}
 
-SkDeferredDisplayList::ProgramIterator::~ProgramIterator() {}
+SkDeferredDisplayList::ProgramIterator::~ProgramIterator() = default;
 
 bool SkDeferredDisplayList::ProgramIterator::compile() {
   if (!fContext || fIndex < 0 || fIndex >= (int)fProgramData.size()) {

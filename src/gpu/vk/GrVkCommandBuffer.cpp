@@ -277,6 +277,7 @@ void GrVkCommandBuffer::drawIndirect(
   SkASSERT(fActiveRenderPass);
   SkASSERT(!indirectBuffer->isCpuBuffer());
   this->addingWork(gpu);
+  this->addResource(indirectBuffer->resource());
   GR_VK_CALL(
       gpu->vkInterface(),
       CmdDrawIndirect(fCmdBuffer, indirectBuffer->buffer(), offset, drawCount, stride));
@@ -289,6 +290,7 @@ void GrVkCommandBuffer::drawIndexedIndirect(
   SkASSERT(fActiveRenderPass);
   SkASSERT(!indirectBuffer->isCpuBuffer());
   this->addingWork(gpu);
+  this->addResource(indirectBuffer->resource());
   GR_VK_CALL(
       gpu->vkInterface(),
       CmdDrawIndexedIndirect(fCmdBuffer, indirectBuffer->buffer(), offset, drawCount, stride));
@@ -422,7 +424,7 @@ bool GrVkPrimaryCommandBuffer::beginRenderPass(
   SkASSERT(!fActiveRenderPass);
   SkASSERT(renderPass->isCompatible(*target));
 
-  const GrVkFramebuffer* framebuffer = target->getFramebuffer();
+  const GrVkFramebuffer* framebuffer = target->getFramebuffer(renderPass->hasStencilAttachment());
   if (!framebuffer) {
     return false;
   }
@@ -449,7 +451,7 @@ bool GrVkPrimaryCommandBuffer::beginRenderPass(
   GR_VK_CALL(gpu->vkInterface(), CmdBeginRenderPass(fCmdBuffer, &beginInfo, contents));
   fActiveRenderPass = renderPass;
   this->addResource(renderPass);
-  target->addResources(*this);
+  target->addResources(*this, renderPass->hasStencilAttachment());
   return true;
 }
 

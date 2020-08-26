@@ -165,7 +165,7 @@ SkCodec::SkCodec(
       fCurrScanline(-1),
       fStartedIncrementalDecode(false) {}
 
-SkCodec::~SkCodec() {}
+SkCodec::~SkCodec() = default;
 
 bool SkCodec::conversionSupported(const SkImageInfo& dst, bool srcIsOpaque, bool needsColorXform) {
   if (!valid_alpha(dst.alphaType(), srcIsOpaque)) {
@@ -580,8 +580,9 @@ void SkCodec::fillIncompleteImage(
   const int linesRemaining = linesRequested - linesDecoded;
   SkSampler* sampler = this->getSampler(false);
 
-  const int fillWidth =
-      sampler ? sampler->fillWidth() : fOptions.fSubset ? fOptions.fSubset->width() : info.width();
+  const int fillWidth = sampler            ? sampler->fillWidth()
+                        : fOptions.fSubset ? fOptions.fSubset->width()
+                                           : info.width();
   void* fillDst = this->getScanlineOrder() == kBottomUp_SkScanlineOrder
                       ? dst
                       : SkTAddOffset<void>(dst, linesDecoded * rowBytes);
@@ -590,7 +591,7 @@ void SkCodec::fillIncompleteImage(
 }
 
 bool sk_select_xform_format(
-    SkColorType colorType, bool forColorTable, skcms_PixelFormat* outFormat) noexcept {
+    SkColorType colorType, bool forColorTable, skcms_PixelFormat* outFormat) {
   SkASSERT(outFormat);
 
   switch (colorType) {
@@ -706,11 +707,11 @@ const char* SkCodec::ResultToString(Result result) noexcept {
   }
 }
 
-static bool independent(const SkFrame& frame) {
+static bool independent(const SkFrame& frame) noexcept {
   return frame.getRequiredFrame() == SkCodec::kNoFrame;
 }
 
-static bool restore_bg(const SkFrame& frame) {
+static bool restore_bg(const SkFrame& frame) noexcept {
   return frame.getDisposalMethod() == SkCodecAnimation::DisposalMethod::kRestoreBGColor;
 }
 

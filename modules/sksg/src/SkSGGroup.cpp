@@ -13,6 +13,8 @@
 
 namespace sksg {
 
+Group::Group() noexcept = default;
+
 Group::Group(std::vector<sk_sp<RenderNode>> children) : fChildren(std::move(children)) {
   for (const auto& child : fChildren) {
     this->observeInval(child);
@@ -65,7 +67,7 @@ void Group::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   }
 }
 
-const RenderNode* Group::onNodeAt(const SkPoint& p) const {
+const RenderNode* Group::onNodeAt(const SkPoint& p) const noexcept {
   for (auto it = fChildren.crbegin(); it != fChildren.crend(); ++it) {
     if (const auto* node = (*it)->nodeAt(p)) {
       return node;
@@ -82,7 +84,7 @@ SkRect Group::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   fRequiresIsolation = false;
 
   for (size_t i = 0; i < fChildren.size(); ++i) {
-    const auto& child_bounds = fChildren[i]->revalidate(ic, ctm);
+    const auto child_bounds = fChildren[i]->revalidate(ic, ctm);
 
     // If any of the child nodes overlap, group effects require layer isolation.
     if (!fRequiresIsolation && i > 0 && child_bounds.intersects(bounds)) {

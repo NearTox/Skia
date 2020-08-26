@@ -7,9 +7,8 @@
 
 #include "src/gpu/ccpr/GrCCClipProcessor.h"
 
-#include "src/gpu/GrTexture.h"
-#include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/ccpr/GrCCClipPath.h"
+#include "src/gpu/effects/GrTextureEffect.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 
@@ -21,31 +20,35 @@ static GrSurfaceProxyView make_view(
 }
 
 GrCCClipProcessor::GrCCClipProcessor(
-    GrSurfaceProxyView view, const GrCCClipPath* clipPath, IsCoverageCount isCoverageCount,
-    MustCheckBounds mustCheckBounds)
+    std::unique_ptr<GrFragmentProcessor> inputFP, const GrCaps& caps, const GrCCClipPath* clipPath,
+    IsCoverageCount isCoverageCount, MustCheckBounds mustCheckBounds)
     : INHERITED(kGrCCClipProcessor_ClassID, kCompatibleWithCoverageAsAlpha_OptimizationFlag),
       fClipPath(clipPath),
       fIsCoverageCount(IsCoverageCount::kYes == isCoverageCount),
-      fMustCheckBounds(MustCheckBounds::kYes == mustCheckBounds),
-      fAtlasAccess(std::move(view)) {
-  SkASSERT(fAtlasAccess.view());
-  this->setTextureSamplerCnt(1);
+      fMustCheckBounds(MustCheckBounds::kYes == mustCheckBounds) {
+  auto view = make_view(caps, clipPath->atlasLazyProxy(), fIsCoverageCount);
+  auto texEffect = GrTextureEffect::Make(std::move(view), kUnknown_SkAlphaType);
+  this->registerExplicitlySampledChild(std::move(texEffect));
+
+  if (inputFP != nullptr) {
+    this->registerChild(std::move(inputFP));
+  }
 }
 
-GrCCClipProcessor::GrCCClipProcessor(
-    const GrCaps& caps, const GrCCClipPath* clipPath, IsCoverageCount isCoverageCount,
-    MustCheckBounds mustCheckBounds)
-    : GrCCClipProcessor(
-          make_view(caps, clipPath->atlasLazyProxy(), IsCoverageCount::kYes == isCoverageCount),
-          clipPath, isCoverageCount, mustCheckBounds) {}
+GrCCClipProcessor::GrCCClipProcessor(const GrCCClipProcessor& that)
+    : INHERITED(kGrCCClipProcessor_ClassID, that.optimizationFlags()),
+      fClipPath(that.fClipPath),
+      fIsCoverageCount(that.fIsCoverageCount),
+      fMustCheckBounds(that.fMustCheckBounds) {
+  this->cloneAndRegisterAllChildProcessors(that);
+}
 
 std::unique_ptr<GrFragmentProcessor> GrCCClipProcessor::clone() const {
-  return std::make_unique<GrCCClipProcessor>(
-      fAtlasAccess.view(), fClipPath, IsCoverageCount(fIsCoverageCount),
-      MustCheckBounds(fMustCheckBounds));
+  return std::unique_ptr<GrFragmentProcessor>(new GrCCClipProcessor(*this));
 }
 
-void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const {
+void GrCCClipProcessor::onGetGLSLProcessorKey(
+    const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept {
   const SkPath& clipPath = fClipPath->deviceSpacePath();
   uint32_t key = (fIsCoverageCount) ? (uint32_t)GrFillRuleForSkPath(clipPath) : 0;
   key = (key << 1) | ((clipPath.isInverseFillType()) ? 1 : 0);
@@ -55,14 +58,17 @@ void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKe
 
 bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const noexcept {
   const GrCCClipProcessor& that = fp.cast<GrCCClipProcessor>();
-  // Each ClipPath path has a unique atlas proxy, so hasSameSamplersAndAccesses should have
-  // already weeded out FPs with different ClipPaths.
-  SkASSERT(
-      that.fClipPath->deviceSpacePath().getGenerationID() ==
-      fClipPath->deviceSpacePath().getGenerationID());
-  return that.fClipPath->deviceSpacePath().getFillType() ==
+  return that.fClipPath->deviceSpacePath().getGenerationID() ==
+             fClipPath->deviceSpacePath().getGenerationID() &&
+         that.fClipPath->deviceSpacePath().getFillType() ==
              fClipPath->deviceSpacePath().getFillType() &&
          that.fIsCoverageCount == fIsCoverageCount && that.fMustCheckBounds == fMustCheckBounds;
+}
+
+bool GrCCClipProcessor::hasInputFP() const noexcept {
+  // We always have a `texEffect`, and this accounts for one child.
+  // The second child will be the input FP, if we have one.
+  return this->numChildProcessors() > 1;
 }
 
 class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
@@ -84,15 +90,14 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
           pathIBounds, pathIBounds);
     }
 
-    const char* atlasTransform;
-    fAtlasTransformUniform = uniHandler->addUniform(
-        &proc, kFragment_GrShaderFlag, kFloat4_GrSLType, "atlas_transform", &atlasTransform);
-    f->codeAppendf(
-        "float2 texcoord = sk_FragCoord.xy * %s.xy + %s.zw;", atlasTransform, atlasTransform);
-
-    f->codeAppend("coverage = ");
-    f->appendTextureLookup(args.fTexSamplers[0], "texcoord");
-    f->codeAppend(".a;");
+    const char* atlasTranslate;
+    fAtlasTranslateUniform = uniHandler->addUniform(
+        &proc, kFragment_GrShaderFlag, kFloat2_GrSLType, "atlas_translate", &atlasTranslate);
+    SkString coord;
+    coord.printf("sk_FragCoord.xy + %s.xy", atlasTranslate);
+    constexpr int kTexEffectFPIndex = 0;
+    SkString sample = this->invokeChild(kTexEffectFPIndex, args, coord.c_str());
+    f->codeAppendf("coverage = %s.a;", sample.c_str());
 
     if (proc.fIsCoverageCount) {
       auto fillRule = GrFillRuleForSkPath(proc.fClipPath->deviceSpacePath());
@@ -115,7 +120,12 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
       f->codeAppend("coverage = 1 - coverage;");
     }
 
-    f->codeAppendf("%s = %s * coverage;", args.fOutputColor, args.fInputColor);
+    constexpr int kInputFPIndex = 1;
+    SkString inputColor = proc.hasInputFP()
+                              ? this->invokeChild(kInputFPIndex, args.fInputColor, args)
+                              : SkString(args.fInputColor);
+
+    f->codeAppendf("%s = %s * coverage;", args.fOutputColor, inputColor.c_str());
   }
 
   void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& fp) override {
@@ -126,14 +136,13 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
           fPathIBoundsUniform, pathIBounds.left(), pathIBounds.top(), pathIBounds.right(),
           pathIBounds.bottom());
     }
-    const SkVector& scale = proc.fClipPath->atlasScale();
-    const SkVector& trans = proc.fClipPath->atlasTranslate();
-    pdman.set4f(fAtlasTransformUniform, scale.x(), scale.y(), trans.x(), trans.y());
+    const SkIVector& trans = proc.fClipPath->atlasTranslate();
+    pdman.set2f(fAtlasTranslateUniform, trans.x(), trans.y());
   }
 
  private:
   UniformHandle fPathIBoundsUniform;
-  UniformHandle fAtlasTransformUniform;
+  UniformHandle fAtlasTranslateUniform;
 };
 
 GrGLSLFragmentProcessor* GrCCClipProcessor::onCreateGLSLInstance() const { return new Impl(); }

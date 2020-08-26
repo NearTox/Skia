@@ -23,12 +23,14 @@ struct PostfixExpression : public Expression {
         fOperand(std::move(operand)),
         fOperator(op) {}
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects) {
       return true;
     }
     return fOperand->hasProperty(property);
   }
+
+  int nodeCount() const noexcept override { return 1 + fOperand->nodeCount(); }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new PostfixExpression(fOperand->clone(), fOperator));

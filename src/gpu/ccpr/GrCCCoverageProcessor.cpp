@@ -44,7 +44,7 @@ class GrCCCoverageProcessor::TriangleShader : public GrCCCoverageProcessor::Shad
     }
   }
 
-  void emitSampleMaskCode(GrGLSLFPFragmentBuilder*) const noexcept override { return; }
+  void emitSampleMaskCode(GrGLSLFPFragmentBuilder*) const override { return; }
 
   GrGLSLVarying fCoverages;
 };

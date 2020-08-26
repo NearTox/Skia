@@ -15,7 +15,7 @@
  */
 class GrSampleMaskProcessor : public GrCCCoverageProcessor {
  public:
-  GrSampleMaskProcessor() noexcept : GrCCCoverageProcessor(kGrSampleMaskProcessor_ClassID) {}
+  GrSampleMaskProcessor() : GrCCCoverageProcessor(kGrSampleMaskProcessor_ClassID) {}
 
  private:
   GrPrimitiveType primType() const final;

@@ -31,7 +31,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // vertices/indices when a buffer larger than kDefaultBufferSize is required.
   GrOpFlushState(
       GrGpu*, GrResourceProvider*, GrTokenTracker*,
-      sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr);
+      sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr) noexcept;
 
   ~GrOpFlushState() final { this->reset(); }
 
@@ -107,7 +107,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     fSampledProxies = sampledProxies;
   }
 
-  SkTArray<GrSurfaceProxy*, true>* sampledProxyArray() override { return fSampledProxies; }
+  SkTArray<GrSurfaceProxy*, true>* sampledProxyArray() noexcept override { return fSampledProxies; }
 
   /** Overrides of GrDeferredUploadTarget. */
 
@@ -149,22 +149,22 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     return (fOpArgs->appliedClip()) ? fOpArgs->appliedClip()->hardClip()
                                     : GrAppliedHardClip::Disabled();
   }
-  GrAppliedClip detachAppliedClip() final;
+  GrAppliedClip detachAppliedClip() noexcept final;
   const GrXferProcessor::DstProxyView& dstProxyView() const noexcept final {
     return this->drawOpArgs().dstProxyView();
   }
   GrDeferredUploadTarget* deferredUploadTarget() noexcept final { return this; }
-  const GrCaps& caps() const final;
+  const GrCaps& caps() const noexcept final;
   GrResourceProvider* resourceProvider() const noexcept final { return fResourceProvider; }
 
-  GrStrikeCache* strikeCache() const final;
+  GrStrikeCache* strikeCache() const noexcept final;
 
   // At this point we know we're flushing so full access to the GrAtlasManager is required (and
   // permissible).
-  GrAtlasManager* atlasManager() const final;
+  GrAtlasManager* atlasManager() const noexcept final;
 
   /** GrMeshDrawOp::Target override. */
-  SkArenaAlloc* allocator() override { return &fArena; }
+  SkArenaAlloc* allocator() noexcept override { return &fArena; }
 
   // This is a convenience method that binds the given pipeline, and then, if our applied clip has
   // a scissor, sets the scissor rect from the applied clip.

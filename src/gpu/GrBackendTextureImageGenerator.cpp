@@ -25,7 +25,7 @@
 #include "src/gpu/gl/GrGLTexture.h"
 
 GrBackendTextureImageGenerator::RefHelper::RefHelper(
-    GrTexture* texture, uint32_t owningContextID, std::unique_ptr<GrSemaphore> semaphore)
+    GrTexture* texture, uint32_t owningContextID, std::unique_ptr<GrSemaphore> semaphore) noexcept
     : fOriginalTexture(texture),
       fOwningContextID(owningContextID),
       fBorrowingContextReleaseProc(nullptr),
@@ -77,7 +77,7 @@ GrBackendTextureImageGenerator::~GrBackendTextureImageGenerator() { fRefHelper->
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-void GrBackendTextureImageGenerator::ReleaseRefHelper_TextureReleaseProc(void* ctx) {
+void GrBackendTextureImageGenerator::ReleaseRefHelper_TextureReleaseProc(void* ctx) noexcept {
   RefHelper* refHelper = static_cast<RefHelper*>(ctx);
   SkASSERT(refHelper);
 

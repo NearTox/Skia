@@ -15,7 +15,7 @@ std::atomic<uint32_t> GrManagedResource::fKeyCounter{0};
 #endif
 
 void GrTextureResource::addIdleProc(
-    GrTexture* owningTexture, sk_sp<GrRefCntedCallback> idleProc) const {
+    GrTexture* owningTexture, sk_sp<GrRefCntedCallback> idleProc) const noexcept {
   SkASSERT(!fOwningTexture || fOwningTexture == owningTexture);
   fOwningTexture = owningTexture;
   fIdleProcs.push_back(std::move(idleProc));
@@ -29,9 +29,9 @@ sk_sp<GrRefCntedCallback> GrTextureResource::idleProc(int i) const noexcept {
 
 void GrTextureResource::resetIdleProcs() const noexcept { fIdleProcs.reset(); }
 
-void GrTextureResource::removeOwningTexture() const { fOwningTexture = nullptr; }
+void GrTextureResource::removeOwningTexture() const noexcept { fOwningTexture = nullptr; }
 
-void GrTextureResource::notifyQueuedForWorkOnGpu() const { ++fNumOwners; }
+void GrTextureResource::notifyQueuedForWorkOnGpu() const noexcept { ++fNumOwners; }
 
 void GrTextureResource::notifyFinishedWithWorkOnGpu() const {
   SkASSERT(fNumOwners);

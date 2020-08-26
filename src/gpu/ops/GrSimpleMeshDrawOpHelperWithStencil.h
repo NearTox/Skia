@@ -74,7 +74,7 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   SkString dumpInfo() const;
 #endif
 
-  const GrUserStencilSettings* stencilSettings() const noexcept { return fStencilSettings; }
+  const GrUserStencilSettings* stencilSettings() const { return fStencilSettings; }
 
  private:
   const GrUserStencilSettings* fStencilSettings;

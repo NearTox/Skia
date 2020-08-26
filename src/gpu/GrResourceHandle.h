@@ -17,7 +17,7 @@ class GrResourceHandle {
  public:
   GrResourceHandle(int value) noexcept : fValue(value) { SkASSERT(this->isValid()); }
 
-  GrResourceHandle() noexcept : fValue(kInvalid_ResourceHandle) {}
+  constexpr GrResourceHandle() noexcept : fValue(kInvalid_ResourceHandle) {}
 
   bool operator==(const GrResourceHandle& other) const noexcept { return other.fValue == fValue; }
   bool isValid() const noexcept { return kInvalid_ResourceHandle != fValue; }

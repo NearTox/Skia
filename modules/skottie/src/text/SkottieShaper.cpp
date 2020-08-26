@@ -86,7 +86,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     fLastLineDescent = std::max(fLastLineDescent, metrics.fDescent);
   }
 
-  void commitRunInfo() override {}
+  void commitRunInfo() noexcept override {}
 
   Buffer runBuffer(const RunInfo& info) override {
     const auto run_start_index = fLineGlyphCount;
@@ -106,7 +106,7 @@ class BlobMaker final : public SkShaper::RunHandler {
 
   void commitRunBuffer(const RunInfo& info) override { fCurrentPosition += info.fAdvance; }
 
-  void commitLine() override {
+  void commitLine() noexcept override {
     fOffset.fY += fDesc.fLineHeight;
 
     // TODO: justification adjustments

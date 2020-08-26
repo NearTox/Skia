@@ -19,10 +19,12 @@
 GrTextureProxy::GrTextureProxy(
     const GrBackendFormat& format, SkISize dimensions, GrMipMapped mipMapped,
     GrMipMapsStatus mipMapsStatus, SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator) noexcept
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator,
+    GrDDLProvider creatingProvider) noexcept
     : INHERITED(format, dimensions, fit, budgeted, isProtected, surfaceFlags, useAllocator),
       fMipMapped(mipMapped),
       fMipMapsStatus(mipMapsStatus) SkDEBUGCODE(, fInitialMipMapsStatus(fMipMapsStatus)),
+      fCreatingProvider(creatingProvider),
       fProxyProvider(nullptr),
       fDeferredUploader(nullptr) {
   SkASSERT(!(fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly));
@@ -32,24 +34,27 @@ GrTextureProxy::GrTextureProxy(
 GrTextureProxy::GrTextureProxy(
     LazyInstantiateCallback&& callback, const GrBackendFormat& format, SkISize dimensions,
     GrMipMapped mipMapped, GrMipMapsStatus mipMapsStatus, SkBackingFit fit, SkBudgeted budgeted,
-    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags,
-    UseAllocator useAllocator) noexcept
+    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator,
+    GrDDLProvider creatingProvider) noexcept
     : INHERITED(
           std::move(callback), format, dimensions, fit, budgeted, isProtected, surfaceFlags,
           useAllocator),
       fMipMapped(mipMapped),
       fMipMapsStatus(mipMapsStatus) SkDEBUGCODE(, fInitialMipMapsStatus(fMipMapsStatus)),
+      fCreatingProvider(creatingProvider),
       fProxyProvider(nullptr),
       fDeferredUploader(nullptr) {
   SkASSERT(!(fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly));
 }
 
 // Wrapped version
-GrTextureProxy::GrTextureProxy(sk_sp<GrSurface> surf, UseAllocator useAllocator)
+GrTextureProxy::GrTextureProxy(
+    sk_sp<GrSurface> surf, UseAllocator useAllocator, GrDDLProvider creatingProvider)
     : INHERITED(std::move(surf), SkBackingFit::kExact, useAllocator),
       fMipMapped(fTarget->asTexture()->texturePriv().mipMapped()),
       fMipMapsStatus(fTarget->asTexture()->texturePriv().mipMapsStatus())
           SkDEBUGCODE(, fInitialMipMapsStatus(fMipMapsStatus)),
+      fCreatingProvider(creatingProvider),
       fProxyProvider(nullptr),
       fDeferredUploader(nullptr) {
   if (fTarget->getUniqueKey().isValid()) {
@@ -126,7 +131,7 @@ GrMipMapped GrTextureProxy::mipMapped() const noexcept {
   return fMipMapped;
 }
 
-size_t GrTextureProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) const {
+size_t GrTextureProxy::onUninstantiatedGpuMemorySize(const GrCaps& caps) const noexcept {
   return GrSurface::ComputeSize(
       caps, this->backendFormat(), this->dimensions(), 1, this->proxyMipMapped(),
       !this->priv().isExact());
@@ -165,7 +170,7 @@ void GrTextureProxy::clearUniqueKey() noexcept {
   fProxyProvider = nullptr;
 }
 
-GrSurfaceProxy::LazySurfaceDesc GrTextureProxy::callbackDesc() const {
+GrSurfaceProxy::LazySurfaceDesc GrTextureProxy::callbackDesc() const noexcept {
   SkISize dims;
   SkBackingFit fit;
   if (this->isFullyLazy()) {

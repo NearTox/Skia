@@ -25,7 +25,6 @@ struct Statement : public IRNode {
     kDo_Kind,
     kExpression_Kind,
     kFor_Kind,
-    kGroup_Kind,
     kIf_Kind,
     kNop_Kind,
     kReturn_Kind,
@@ -35,9 +34,9 @@ struct Statement : public IRNode {
     kWhile_Kind
   };
 
-  constexpr Statement(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
+  Statement(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
 
-  virtual bool isEmpty() const { return false; }
+  virtual bool isEmpty() const noexcept { return false; }
 
   virtual std::unique_ptr<Statement> clone() const = 0;
 

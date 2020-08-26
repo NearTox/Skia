@@ -377,9 +377,9 @@ bool ShouldSkipImpl(const Strings& strings, const char* name) {
       matchLen--;
     }
     if (matchStart ? (!matchEnd || matchLen == testLen) && strncmp(name, matchName, matchLen) == 0
-                   : matchEnd ? matchLen <= testLen &&
-                                    strncmp(name + testLen - matchLen, matchName, matchLen) == 0
-                              : strstr(name, matchName) != nullptr) {
+        : matchEnd
+            ? matchLen <= testLen && strncmp(name + testLen - matchLen, matchName, matchLen) == 0
+            : strstr(name, matchName) != nullptr) {
       return matchExclude;
     }
   }

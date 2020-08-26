@@ -73,7 +73,8 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
    */
   const GrUniqueKey& getUniqueKey() const noexcept {
 #ifdef SK_DEBUG
-    if (this->isInstantiated() && fUniqueKey.isValid() && fSyncTargetKey) {
+    if (this->isInstantiated() && fUniqueKey.isValid() && fSyncTargetKey &&
+        fCreatingProvider == GrDDLProvider::kNo) {
       GrSurface* surface = this->peekSurface();
       SkASSERT(surface);
 
@@ -100,6 +101,8 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   GrTextureProxyPriv texPriv() noexcept;
   const GrTextureProxyPriv texPriv() const noexcept;
 
+  SkDEBUGCODE(GrDDLProvider creatingProvider() const { return fCreatingProvider; });
+
  protected:
   // DDL TODO: rm the GrSurfaceProxy friending
   friend class GrSurfaceProxy;   // for ctors
@@ -110,7 +113,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // Deferred version - no data.
   GrTextureProxy(
       const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus, SkBackingFit, SkBudgeted,
-      GrProtected, GrInternalSurfaceFlags, UseAllocator) noexcept;
+      GrProtected, GrInternalSurfaceFlags, UseAllocator, GrDDLProvider creatingProvider) noexcept;
 
   // Lazy-callback version
   // There are two main use cases for lazily-instantiated proxies:
@@ -124,15 +127,19 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // know the final size until flush time.
   GrTextureProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, GrMipMapped, GrMipMapsStatus,
-      SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator) noexcept;
+      SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator,
+      GrDDLProvider creatingProvider) noexcept;
 
   // Wrapped version
-  GrTextureProxy(sk_sp<GrSurface>, UseAllocator);
+  GrTextureProxy(sk_sp<GrSurface>, UseAllocator, GrDDLProvider creatingProvider);
 
   ~GrTextureProxy() override;
 
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
+  // By default uniqueKeys are propagated from a textureProxy to its backing GrTexture.
+  // Setting syncTargetKey to false disables this behavior and only keeps the unique key
+  // on the proxy.
   void setTargetKeySync(bool sync) noexcept { fSyncTargetKey = sync; }
 
  private:
@@ -160,17 +167,23 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
 
   bool fSyncTargetKey = true;  // Should target's unique key be sync'ed with ours.
 
+  // For GrTextureProxies created in a DDL recording thread it is possible for the uniqueKey
+  // to be cleared on the backing GrTexture while the uniqueKey remains on the proxy.
+  // A fCreatingProvider of DDLProvider::kYes loosens up asserts that the key of an instantiated
+  // uniquely-keyed textureProxy is also always set on the backing GrTexture.
+  GrDDLProvider fCreatingProvider = GrDDLProvider::kNo;
+
   GrUniqueKey fUniqueKey;
   GrProxyProvider* fProxyProvider;  // only set when fUniqueKey is valid
 
-  LazySurfaceDesc callbackDesc() const override;
+  LazySurfaceDesc callbackDesc() const noexcept override;
 
   // Only used for proxies whose contents are being prepared on a worker thread. This object
   // stores the texture data, allowing the proxy to remain uninstantiated until flush. At that
   // point, the proxy is instantiated, and this data is used to perform an ASAP upload.
   std::unique_ptr<GrDeferredProxyUploader> fDeferredUploader;
 
-  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
+  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const noexcept override;
 
   // Methods made available via GrTextureProxy::CacheAccess
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);

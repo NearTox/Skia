@@ -19,7 +19,8 @@ sk_sp<Text> Text::Make(sk_sp<SkTypeface> tf, const SkString& text) {
   return sk_sp<Text>(new Text(std::move(tf), text));
 }
 
-Text::Text(sk_sp<SkTypeface> tf, const SkString& text) : fTypeface(std::move(tf)), fText(text) {}
+Text::Text(sk_sp<SkTypeface> tf, const SkString& text) noexcept
+    : fTypeface(std::move(tf)), fText(text) {}
 
 Text::~Text() = default;
 
@@ -66,9 +67,11 @@ void Text::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawTextBlob(fBlob, aligned_pos.x(), aligned_pos.y(), paint);
 }
 
-bool Text::onContains(const SkPoint& p) const { return this->asPath().contains(p.x(), p.y()); }
+bool Text::onContains(const SkPoint& p) const noexcept {
+  return this->asPath().contains(p.x(), p.y());
+}
 
-SkPath Text::onAsPath() const {
+SkPath Text::onAsPath() const noexcept {
   // TODO
   return SkPath();
 }
@@ -93,9 +96,11 @@ void TextBlob::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawTextBlob(fBlob, fPosition.x(), fPosition.y(), paint);
 }
 
-bool TextBlob::onContains(const SkPoint& p) const { return this->asPath().contains(p.x(), p.y()); }
+bool TextBlob::onContains(const SkPoint& p) const noexcept {
+  return this->asPath().contains(p.x(), p.y());
+}
 
-SkPath TextBlob::onAsPath() const {
+SkPath TextBlob::onAsPath() const noexcept {
   // TODO
   return SkPath();
 }

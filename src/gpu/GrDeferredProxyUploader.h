@@ -74,7 +74,7 @@ class GrDeferredProxyUploader : public SkNoncopyable {
     fPixelsReady.signal();
   }
 
-  SkAutoPixmapStorage* getPixels() noexcept { return &fPixels; }
+  SkAutoPixmapStorage* getPixels() { return &fPixels; }
 
  protected:
   void wait() {

@@ -24,7 +24,7 @@ class InvertEffectAdapter final : public AnimatablePropertyContainer {
     return sk_sp<InvertEffectAdapter>(new InvertEffectAdapter(jprops, std::move(layer), abuilder));
   }
 
-  const sk_sp<sksg::ExternalColorFilter>& node() const noexcept { return fColorFilter; }
+  const sk_sp<sksg::ExternalColorFilter>& node() const { return fColorFilter; }
 
  private:
   InvertEffectAdapter(
@@ -44,7 +44,7 @@ class InvertEffectAdapter final : public AnimatablePropertyContainer {
       bool hsla;
     };
 
-    const auto stcm = [this]() noexcept -> STColorMatrix {
+    const auto stcm = [this]() -> STColorMatrix {
       // https://helpx.adobe.com/after-effects/using/channel-effects.html#invert_effect
       enum : uint8_t {
         kRGB_Channel = 1,

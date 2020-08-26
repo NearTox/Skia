@@ -98,7 +98,7 @@ struct GrVkYcbcrConversionInfo {
   GrVkYcbcrConversionInfo(
       VkSamplerYcbcrModelConversion ycbcrModel, VkSamplerYcbcrRange ycbcrRange,
       VkChromaLocation xChromaOffset, VkChromaLocation yChromaOffset, VkFilter chromaFilter,
-      VkBool32 forceExplicitReconstruction, uint64_t externalFormat,
+      VkBool32 forceExplicitReconstruction, int64_t externalFormat,
       VkFormatFeatureFlags externalFormatFeatures) noexcept
       : GrVkYcbcrConversionInfo(
             VK_FORMAT_UNDEFINED, externalFormat, ycbcrModel, ycbcrRange, xChromaOffset,
@@ -128,7 +128,7 @@ struct GrVkYcbcrConversionInfo {
 
   // The external format. Must be non-zero for external images, zero otherwise.
   // Should be compatible to be used in a VkExternalFormatANDROID struct.
-  uint64_t fExternalFormat;
+  int64_t fExternalFormat;
 
   VkSamplerYcbcrModelConversion fYcbcrModel;
   VkSamplerYcbcrRange fYcbcrRange;
@@ -142,6 +142,12 @@ struct GrVkYcbcrConversionInfo {
   VkFormatFeatureFlags fFormatFeatures;
 };
 
+/*
+ * When wrapping a GrBackendTexture or GrBackendRendenderTarget, the fCurrentQueueFamily should
+ * either be VK_QUEUE_FAMILY_IGNORED, VK_QUEUE_FAMILY_EXTERNAL, or VK_QUEUE_FAMILY_FOREIGN_EXT. If
+ * fSharingMode is VK_SHARING_MODE_EXCLUSIVE then fCurrentQueueFamily can also be the graphics
+ * queue index passed into Skia.
+ */
 struct GrVkImageInfo {
   VkImage fImage;
   GrVkAlloc fAlloc;
@@ -152,6 +158,7 @@ struct GrVkImageInfo {
   uint32_t fCurrentQueueFamily;
   GrProtected fProtected;
   GrVkYcbcrConversionInfo fYcbcrConversionInfo;
+  VkSharingMode fSharingMode;
 
   GrVkImageInfo() noexcept
       : fImage(VK_NULL_HANDLE),
@@ -162,13 +169,15 @@ struct GrVkImageInfo {
         fLevelCount(0),
         fCurrentQueueFamily(VK_QUEUE_FAMILY_IGNORED),
         fProtected(GrProtected::kNo),
-        fYcbcrConversionInfo() {}
+        fYcbcrConversionInfo(),
+        fSharingMode(VK_SHARING_MODE_EXCLUSIVE) {}
 
   GrVkImageInfo(
       VkImage image, GrVkAlloc alloc, VkImageTiling imageTiling, VkImageLayout layout,
       VkFormat format, uint32_t levelCount, uint32_t currentQueueFamily = VK_QUEUE_FAMILY_IGNORED,
       GrProtected isProtected = GrProtected::kNo,
-      GrVkYcbcrConversionInfo ycbcrConversionInfo = GrVkYcbcrConversionInfo()) noexcept
+      GrVkYcbcrConversionInfo ycbcrConversionInfo = GrVkYcbcrConversionInfo(),
+      VkSharingMode sharingMode = VK_SHARING_MODE_EXCLUSIVE) noexcept
       : fImage(image),
         fAlloc(alloc),
         fImageTiling(imageTiling),
@@ -177,25 +186,28 @@ struct GrVkImageInfo {
         fLevelCount(levelCount),
         fCurrentQueueFamily(currentQueueFamily),
         fProtected(isProtected),
-        fYcbcrConversionInfo(ycbcrConversionInfo) {}
+        fYcbcrConversionInfo(ycbcrConversionInfo),
+        fSharingMode(sharingMode) {}
 
-  GrVkImageInfo(const GrVkImageInfo& info, VkImageLayout layout) noexcept
+  GrVkImageInfo(const GrVkImageInfo& info, VkImageLayout layout, uint32_t familyQueueIndex) noexcept
       : fImage(info.fImage),
         fAlloc(info.fAlloc),
         fImageTiling(info.fImageTiling),
         fImageLayout(layout),
         fFormat(info.fFormat),
         fLevelCount(info.fLevelCount),
-        fCurrentQueueFamily(info.fCurrentQueueFamily),
+        fCurrentQueueFamily(familyQueueIndex),
         fProtected(info.fProtected),
-        fYcbcrConversionInfo(info.fYcbcrConversionInfo) {}
+        fYcbcrConversionInfo(info.fYcbcrConversionInfo),
+        fSharingMode(info.fSharingMode) {}
 
 #if GR_TEST_UTILS
   bool operator==(const GrVkImageInfo& that) const {
     return fImage == that.fImage && fAlloc == that.fAlloc && fImageTiling == that.fImageTiling &&
            fImageLayout == that.fImageLayout && fFormat == that.fFormat &&
            fLevelCount == that.fLevelCount && fCurrentQueueFamily == that.fCurrentQueueFamily &&
-           fProtected == that.fProtected && fYcbcrConversionInfo == that.fYcbcrConversionInfo;
+           fProtected == that.fProtected && fYcbcrConversionInfo == that.fYcbcrConversionInfo &&
+           fSharingMode == that.fSharingMode;
   }
 #endif
 };
