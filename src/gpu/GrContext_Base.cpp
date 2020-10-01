@@ -55,7 +55,7 @@ sk_sp<GrContextThreadSafeProxy> GrContext_Base::threadSafeProxy() noexcept {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const noexcept { return fContext->refCaps(); }
+sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const { return fContext->refCaps(); }
 
 GrContextOptions::ShaderErrorHandler* GrBaseContextPriv::getShaderErrorHandler() const {
   const GrContextOptions& options(this->options());

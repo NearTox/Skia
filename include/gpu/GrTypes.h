@@ -78,8 +78,7 @@ constexpr GrTFlagsMask<TFlags> operator|(TFlags a, GrTFlagsMask<TFlags> b) noexc
   return GrTFlagsMask<TFlags>(static_cast<int>(a) | b.value());
 }
 template <typename TFlags>
-constexpr inline GrTFlagsMask<TFlags>& operator|=(
-    GrTFlagsMask<TFlags>& a, GrTFlagsMask<TFlags> b) noexcept {
+inline GrTFlagsMask<TFlags>& operator|=(GrTFlagsMask<TFlags>& a, GrTFlagsMask<TFlags> b) noexcept {
   return (a = a | b);
 }
 
@@ -97,7 +96,7 @@ constexpr TFlags operator&(TFlags a, GrTFlagsMask<TFlags> b) noexcept {
   return static_cast<TFlags>(static_cast<int>(a) & b.value());
 }
 template <typename TFlags>
-constexpr inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) noexcept {
+inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) noexcept {
   return (a = a & b);
 }
 
@@ -105,22 +104,22 @@ constexpr inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) noexcept 
  * Defines bitwise operators that make it possible to use an enum class as a
  * basic bitfield.
  */
-#define GR_MAKE_BITFIELD_CLASS_OPS(X)                                        \
-  constexpr GrTFlagsMask<X> operator~(X a) noexcept {                        \
-    return GrTFlagsMask<X>(~static_cast<int>(a));                            \
-  }                                                                          \
-  constexpr X operator|(X a, X b) noexcept {                                 \
-    return static_cast<X>(static_cast<int>(a) | static_cast<int>(b));        \
-  }                                                                          \
-  constexpr inline X& operator|=(X& a, X b) noexcept { return (a = a | b); } \
-  constexpr bool operator&(X a, X b) noexcept {                              \
-    return SkToBool(static_cast<int>(a) & static_cast<int>(b));              \
+#define GR_MAKE_BITFIELD_CLASS_OPS(X)                                 \
+  constexpr GrTFlagsMask<X> operator~(X a) noexcept {                 \
+    return GrTFlagsMask<X>(~static_cast<int>(a));                     \
+  }                                                                   \
+  constexpr X operator|(X a, X b) noexcept {                          \
+    return static_cast<X>(static_cast<int>(a) | static_cast<int>(b)); \
+  }                                                                   \
+  inline X& operator|=(X& a, X b) noexcept { return (a = a | b); }    \
+  constexpr bool operator&(X a, X b) noexcept {                       \
+    return SkToBool(static_cast<int>(a) & static_cast<int>(b));       \
   }
 
 #define GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(X)             \
   friend constexpr GrTFlagsMask<X> operator~(X) noexcept; \
   friend constexpr X operator|(X, X) noexcept;            \
-  friend constexpr X& operator|=(X&, X) noexcept;         \
+  friend X& operator|=(X&, X) noexcept;                   \
   friend constexpr bool operator&(X, X) noexcept
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -162,7 +161,9 @@ static constexpr GrBackendApi kMock_GrBackend = GrBackendApi::kMock;
 /**
  * Used to say whether a texture has mip levels allocated or not.
  */
-enum class GrMipMapped : bool { kNo = false, kYes = true };
+enum class GrMipmapped : bool { kNo = false, kYes = true };
+/** Deprecated legacy alias of GrMipmapped. */
+using GrMipMapped = GrMipmapped;
 
 /*
  * Can a GrBackendObject be rendered to?
@@ -212,12 +213,6 @@ enum GrGLBackendState {
  */
 static constexpr uint32_t kAll_GrBackendState = 0xffffffff;
 
-enum GrFlushFlags {
-  kNone_GrFlushFlags = 0,
-  // Deprecated: Use syncCpu call on submit instead.
-  kSyncCpu_GrFlushFlag = 0x1,
-};
-
 typedef void* GrGpuFinishedContext;
 typedef void (*GrGpuFinishedProc)(GrGpuFinishedContext finishedContext);
 
@@ -260,7 +255,6 @@ typedef void (*GrGpuSubmittedProc)(GrGpuSubmittedContext submittedContext, bool 
  * backend APIs the same in terms of how the submitted procs are treated.
  */
 struct GrFlushInfo {
-  GrFlushFlags fFlags = kNone_GrFlushFlags;
   int fNumSemaphores = 0;
   GrBackendSemaphore* fSignalSemaphores = nullptr;
   GrGpuFinishedProc fFinishedProc = nullptr;

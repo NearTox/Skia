@@ -33,7 +33,7 @@ sk_sp<SkImage> make_gradient_circle(int width, int height);
 void draw(
     SkCanvas* canvas, const SkBitmap& bitmap, const SkIRect& rect, sk_sp<SkImageFilter> filter);
 
-};  // namespace
+}  // namespace
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -163,4 +163,4 @@ void draw(
 
   canvas->translate(SkIntToScalar(80), 0);
 }
-};  // namespace
+}  // namespace

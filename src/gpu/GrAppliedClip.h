@@ -51,6 +51,8 @@ class GrAppliedHardClip {
     return fScissorState.intersect(irect) && clippedDrawBounds->intersect(SkRect::Make(irect));
   }
 
+  void setScissor(const SkIRect& irect) noexcept { fScissorState.set(irect); }
+
   void addWindowRectangles(const GrWindowRectsState& windowState) noexcept {
     SkASSERT(!fWindowRectsState.enabled());
     fWindowRectsState = windowState;
@@ -103,56 +105,51 @@ class GrAppliedClip {
   }
   uint32_t stencilStackID() const noexcept { return fHardClip.stencilStackID(); }
   bool hasStencilClip() const noexcept { return fHardClip.hasStencilClip(); }
-  int numClipCoverageFragmentProcessors() const noexcept { return fClipCoverageFPs.count(); }
-  const GrFragmentProcessor* clipCoverageFragmentProcessor(int i) const noexcept {
-    SkASSERT(fClipCoverageFPs[i]);
-    return fClipCoverageFPs[i].get();
+  int hasCoverageFragmentProcessor() const noexcept { return fCoverageFP != nullptr; }
+  const GrFragmentProcessor* coverageFragmentProcessor() const noexcept {
+    SkASSERT(fCoverageFP != nullptr);
+    return fCoverageFP.get();
   }
-  std::unique_ptr<const GrFragmentProcessor> detachClipCoverageFragmentProcessor(int i) noexcept {
-    SkASSERT(fClipCoverageFPs[i]);
-    return std::move(fClipCoverageFPs[i]);
+  std::unique_ptr<GrFragmentProcessor> detachCoverageFragmentProcessor() noexcept {
+    SkASSERT(fCoverageFP != nullptr);
+    return std::move(fCoverageFP);
   }
 
   const GrAppliedHardClip& hardClip() const noexcept { return fHardClip; }
   GrAppliedHardClip& hardClip() noexcept { return fHardClip; }
 
-  void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
-    SkASSERT(fp);
-    fClipCoverageFPs.push_back(std::move(fp));
+  void addCoverageFP(std::unique_ptr<GrFragmentProcessor> fp) {
+    if (fCoverageFP == nullptr) {
+      fCoverageFP = std::move(fp);
+    } else {
+      // Compose this coverage FP with the previously-added coverage.
+      fCoverageFP = GrFragmentProcessor::Compose(std::move(fCoverageFP), std::move(fp));
+    }
   }
 
-  bool doesClip() const noexcept { return fHardClip.doesClip() || !fClipCoverageFPs.empty(); }
+  bool doesClip() const noexcept { return fHardClip.doesClip() || fCoverageFP != nullptr; }
 
-  bool operator==(const GrAppliedClip& that) const {
-    if (fHardClip != that.fHardClip || fClipCoverageFPs.count() != that.fClipCoverageFPs.count()) {
+  bool operator==(const GrAppliedClip& that) const noexcept {
+    if (fHardClip != that.fHardClip ||
+        this->hasCoverageFragmentProcessor() != that.hasCoverageFragmentProcessor()) {
       return false;
     }
-    for (int i = 0; i < fClipCoverageFPs.count(); ++i) {
-      if (!fClipCoverageFPs[i] || !that.fClipCoverageFPs[i]) {
-        if (fClipCoverageFPs[i] == that.fClipCoverageFPs[i]) {
-          continue;  // Both are null.
-        }
-        return false;
-      }
-      if (!fClipCoverageFPs[i]->isEqual(*that.fClipCoverageFPs[i])) {
-        return false;
-      }
+    if (fCoverageFP != nullptr && !fCoverageFP->isEqual(*that.fCoverageFP)) {
+      return false;
     }
     return true;
   }
-  bool operator!=(const GrAppliedClip& that) const { return !(*this == that); }
+  bool operator!=(const GrAppliedClip& that) const noexcept { return !(*this == that); }
 
   void visitProxies(const GrOp::VisitProxyFunc& func) const {
-    for (const std::unique_ptr<GrFragmentProcessor>& fp : fClipCoverageFPs) {
-      if (fp) {  // This might be called after detach.
-        fp->visitProxies(func);
-      }
+    if (fCoverageFP != nullptr) {
+      fCoverageFP->visitProxies(func);
     }
   }
 
  private:
   GrAppliedHardClip fHardClip;
-  SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> fClipCoverageFPs;
+  std::unique_ptr<GrFragmentProcessor> fCoverageFP;
 };
 
 #endif

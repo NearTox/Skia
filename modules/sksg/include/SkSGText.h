@@ -45,15 +45,15 @@ class Text final : public GeometryNode {
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const noexcept override;
+  bool onContains(const SkPoint&) const override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
-  SkPath onAsPath() const noexcept override;
+  SkPath onAsPath() const override;
 
  private:
-  Text(sk_sp<SkTypeface>, const SkString&) noexcept;
+  Text(sk_sp<SkTypeface>, const SkString&);
 
-  SkPoint alignedPosition(SkScalar advance) const noexcept;
+  SkPoint alignedPosition(SkScalar advance) const;
 
   sk_sp<SkTypeface> fTypeface;
   SkString fText;
@@ -84,13 +84,13 @@ class TextBlob final : public GeometryNode {
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const noexcept override;
+  bool onContains(const SkPoint&) const override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const noexcept override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
  private:
-  explicit TextBlob(sk_sp<SkTextBlob>) noexcept;
+  explicit TextBlob(sk_sp<SkTextBlob>);
 
   sk_sp<SkTextBlob> fBlob;
   SkPoint fPosition = SkPoint::Make(0, 0);

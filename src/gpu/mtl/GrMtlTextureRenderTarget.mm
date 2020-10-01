@@ -15,36 +15,36 @@
 
 GrMtlTextureRenderTarget::GrMtlTextureRenderTarget(
     GrMtlGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
-    id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture, GrMipMapsStatus mipMapsStatus)
+    id<MTLTexture> colorTexture, id<MTLTexture> resolveTexture, GrMipmapStatus mipmapStatus)
     : GrSurface(gpu, dimensions, GrProtected::kNo),
-      GrMtlTexture(gpu, dimensions, resolveTexture, mipMapsStatus),
+      GrMtlTexture(gpu, dimensions, resolveTexture, mipmapStatus),
       GrMtlRenderTarget(gpu, dimensions, sampleCnt, colorTexture, resolveTexture) {
   this->registerWithCache(budgeted);
 }
 
 GrMtlTextureRenderTarget::GrMtlTextureRenderTarget(
     GrMtlGpu* gpu, SkBudgeted budgeted, SkISize dimensions, id<MTLTexture> colorTexture,
-    GrMipMapsStatus mipMapsStatus)
+    GrMipmapStatus mipmapStatus)
     : GrSurface(gpu, dimensions, GrProtected::kNo),
-      GrMtlTexture(gpu, dimensions, colorTexture, mipMapsStatus),
+      GrMtlTexture(gpu, dimensions, colorTexture, mipmapStatus),
       GrMtlRenderTarget(gpu, dimensions, colorTexture) {
   this->registerWithCache(budgeted);
 }
 
 GrMtlTextureRenderTarget::GrMtlTextureRenderTarget(
     GrMtlGpu* gpu, SkISize dimensions, int sampleCnt, id<MTLTexture> colorTexture,
-    id<MTLTexture> resolveTexture, GrMipMapsStatus mipMapsStatus, GrWrapCacheable cacheable)
+    id<MTLTexture> resolveTexture, GrMipmapStatus mipmapStatus, GrWrapCacheable cacheable)
     : GrSurface(gpu, dimensions, GrProtected::kNo),
-      GrMtlTexture(gpu, dimensions, resolveTexture, mipMapsStatus),
+      GrMtlTexture(gpu, dimensions, resolveTexture, mipmapStatus),
       GrMtlRenderTarget(gpu, dimensions, sampleCnt, colorTexture, resolveTexture) {
   this->registerWithCacheWrapped(cacheable);
 }
 
 GrMtlTextureRenderTarget::GrMtlTextureRenderTarget(
-    GrMtlGpu* gpu, SkISize dimensions, id<MTLTexture> colorTexture, GrMipMapsStatus mipMapsStatus,
+    GrMtlGpu* gpu, SkISize dimensions, id<MTLTexture> colorTexture, GrMipmapStatus mipmapStatus,
     GrWrapCacheable cacheable)
     : GrSurface(gpu, dimensions, GrProtected::kNo),
-      GrMtlTexture(gpu, dimensions, colorTexture, mipMapsStatus),
+      GrMtlTexture(gpu, dimensions, colorTexture, mipmapStatus),
       GrMtlRenderTarget(gpu, dimensions, colorTexture) {
   this->registerWithCacheWrapped(cacheable);
 }
@@ -73,7 +73,7 @@ id<MTLTexture> create_msaa_texture(
 
 sk_sp<GrMtlTextureRenderTarget> GrMtlTextureRenderTarget::MakeNewTextureRenderTarget(
     GrMtlGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
-    MTLTextureDescriptor* texDesc, GrMipMapsStatus mipMapsStatus) {
+    MTLTextureDescriptor* texDesc, GrMipmapStatus mipmapStatus) {
   id<MTLTexture> texture = [gpu->device() newTextureWithDescriptor:texDesc];
   if (!texture) {
     return nullptr;
@@ -92,10 +92,10 @@ sk_sp<GrMtlTextureRenderTarget> GrMtlTextureRenderTarget::MakeNewTextureRenderTa
       SkASSERT((MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget) & colorTexture.usage);
     }
     return sk_sp<GrMtlTextureRenderTarget>(new GrMtlTextureRenderTarget(
-        gpu, budgeted, dimensions, sampleCnt, colorTexture, texture, mipMapsStatus));
+        gpu, budgeted, dimensions, sampleCnt, colorTexture, texture, mipmapStatus));
   } else {
     return sk_sp<GrMtlTextureRenderTarget>(
-        new GrMtlTextureRenderTarget(gpu, budgeted, dimensions, texture, mipMapsStatus));
+        new GrMtlTextureRenderTarget(gpu, budgeted, dimensions, texture, mipmapStatus));
   }
 }
 
@@ -106,8 +106,8 @@ sk_sp<GrMtlTextureRenderTarget> GrMtlTextureRenderTarget::MakeWrappedTextureRend
   if (@available(macOS 10.11, iOS 9.0, *)) {
     SkASSERT((MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget) & texture.usage);
   }
-  GrMipMapsStatus mipMapsStatus =
-      texture.mipmapLevelCount > 1 ? GrMipMapsStatus::kDirty : GrMipMapsStatus::kNotAllocated;
+  GrMipmapStatus mipmapStatus =
+      texture.mipmapLevelCount > 1 ? GrMipmapStatus::kDirty : GrMipmapStatus::kNotAllocated;
   if (sampleCnt > 1) {
     id<MTLTexture> colorTexture =
         create_msaa_texture(gpu, dimensions, texture.pixelFormat, sampleCnt);
@@ -118,9 +118,9 @@ sk_sp<GrMtlTextureRenderTarget> GrMtlTextureRenderTarget::MakeWrappedTextureRend
       SkASSERT((MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget) & colorTexture.usage);
     }
     return sk_sp<GrMtlTextureRenderTarget>(new GrMtlTextureRenderTarget(
-        gpu, dimensions, sampleCnt, colorTexture, texture, mipMapsStatus, cacheable));
+        gpu, dimensions, sampleCnt, colorTexture, texture, mipmapStatus, cacheable));
   } else {
     return sk_sp<GrMtlTextureRenderTarget>(
-        new GrMtlTextureRenderTarget(gpu, dimensions, texture, mipMapsStatus, cacheable));
+        new GrMtlTextureRenderTarget(gpu, dimensions, texture, mipmapStatus, cacheable));
   }
 }

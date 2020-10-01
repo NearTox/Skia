@@ -21,9 +21,8 @@ struct Color {
     kPremulGrColorAttribute_Type,
     kPremulWideColorAttribute_Type,
   };
-  explicit Color(const SkPMColor4f& color) noexcept
-      : fType(kPremulGrColorUniform_Type), fColor(color) {}
-  Color(Type type) noexcept : fType(type), fColor(SK_PMColor4fILLEGAL) {
+  explicit Color(const SkPMColor4f& color) : fType(kPremulGrColorUniform_Type), fColor(color) {}
+  Color(Type type) : fType(type), fColor(SK_PMColor4fILLEGAL) {
     SkASSERT(type != kPremulGrColorUniform_Type);
   }
 
@@ -38,8 +37,8 @@ struct Coverage {
     kAttribute_Type,
     kAttributeTweakAlpha_Type,
   };
-  explicit Coverage(uint8_t coverage) noexcept : fType(kUniform_Type), fCoverage(coverage) {}
-  Coverage(Type type) noexcept : fType(type), fCoverage(0xff) { SkASSERT(type != kUniform_Type); }
+  explicit Coverage(uint8_t coverage) : fType(kUniform_Type), fCoverage(coverage) {}
+  Coverage(Type type) : fType(type), fCoverage(0xff) { SkASSERT(type != kUniform_Type); }
 
   Type fType;
   uint8_t fCoverage;
@@ -51,11 +50,11 @@ struct LocalCoords {
     kUsePosition_Type,
     kHasExplicit_Type,
   };
-  LocalCoords(Type type) noexcept : fType(type), fMatrix(nullptr) {}
-  LocalCoords(Type type, const SkMatrix* matrix) noexcept : fType(type), fMatrix(matrix) {
+  LocalCoords(Type type) : fType(type), fMatrix(nullptr) {}
+  LocalCoords(Type type, const SkMatrix* matrix) : fType(type), fMatrix(matrix) {
     SkASSERT(kUnused_Type != type);
   }
-  bool hasLocalMatrix() const noexcept { return nullptr != fMatrix; }
+  bool hasLocalMatrix() const { return nullptr != fMatrix; }
 
   Type fType;
   const SkMatrix* fMatrix;
@@ -71,6 +70,6 @@ GrGeometryProcessor* Make(
  */
 GrGeometryProcessor* MakeForDeviceSpace(
     SkArenaAlloc*, const Color&, const Coverage&, const LocalCoords&, const SkMatrix& viewMatrix);
-};  // namespace GrDefaultGeoProcFactory
+}  // namespace GrDefaultGeoProcFactory
 
 #endif

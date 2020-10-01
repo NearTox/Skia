@@ -72,9 +72,7 @@ class GrGLBitmapTextGeoProc : public GrGLSLGeometryProcessor {
     }
   }
 
-  void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
-      const CoordTransformRange& transformRange) override {
+  void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp) override {
     const GrBitmapTextGeoProc& btgp = gp.cast<GrBitmapTextGeoProc>();
     if (btgp.color() != fColor && !btgp.hasVertexColor()) {
       pdman.set4fv(fColorUniform, 1, btgp.color().vec());
@@ -92,7 +90,6 @@ class GrGLBitmapTextGeoProc : public GrGLSLGeometryProcessor {
     }
 
     this->setTransform(pdman, fLocalMatrixUniform, btgp.localMatrix(), &fLocalMatrix);
-    this->setTransformDataHelper(pdman, transformRange);
   }
 
   static inline void GenKey(
@@ -204,7 +201,7 @@ GrGeometryProcessor* GrBitmapTextGeoProc::TestCreate(GrProcessorTestData* d) {
   GrTest::TestWrapModes(d->fRandom, wrapModes);
   GrSamplerState samplerState(
       wrapModes,
-      d->fRandom->nextBool() ? GrSamplerState::Filter::kBilerp : GrSamplerState::Filter::kNearest);
+      d->fRandom->nextBool() ? GrSamplerState::Filter::kLinear : GrSamplerState::Filter::kNearest);
 
   GrMaskFormat format;
   switch (ct) {

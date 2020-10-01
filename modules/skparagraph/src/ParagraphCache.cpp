@@ -1,4 +1,6 @@
 // Copyright 2019 Google LLC.
+#include <memory>
+
 #include "modules/skparagraph/include/ParagraphCache.h"
 #include "modules/skparagraph/src/ParagraphImpl.h"
 
@@ -6,7 +8,7 @@ namespace skia {
 namespace textlayout {
 
 namespace {
-SkScalar relax(SkScalar a) {
+SkScalar relax(SkScalar a) noexcept {
   // This rounding is done to match Flutter tests. Must be removed..
   if (SkScalarIsFinite(a)) {
     auto threshold = SkIntToScalar(1 << 12);
@@ -15,7 +17,7 @@ SkScalar relax(SkScalar a) {
     return a;
   }
 }
-}
+}  // namespace
 
 class ParagraphCacheKey {
  public:
@@ -50,12 +52,12 @@ class ParagraphCacheValue {
   // ICU results
   SkTArray<CodeUnitFlags> fCodeUnitProperties;
   std::vector<size_t> fWords;
-  SkTArray<BidiRegion> fBidiRegions;
+  std::vector<BidiRegion> fBidiRegions;
   SkTArray<TextIndex, true> fUTF8IndexForUTF16Index;
   SkTArray<size_t, true> fUTF16IndexForUTF8Index;
 };
 
-uint32_t ParagraphCache::KeyHash::mix(uint32_t hash, uint32_t data) const {
+uint32_t ParagraphCache::KeyHash::mix(uint32_t hash, uint32_t data) const noexcept {
   hash += data;
   hash += (hash << 10);
   hash ^= (hash >> 6);
@@ -182,11 +184,11 @@ bool operator==(const ParagraphCacheKey& a, const ParagraphCacheKey& b) {
 }
 
 struct ParagraphCache::Entry {
-  Entry(ParagraphCacheValue* value) : fValue(value) {}
+  Entry(ParagraphCacheValue* value) noexcept : fValue(value) {}
   std::unique_ptr<ParagraphCacheValue> fValue;
 };
 
-ParagraphCache::ParagraphCache()
+ParagraphCache::ParagraphCache() noexcept
     : fChecker([](ParagraphImpl* impl, const char*, bool) {}),
       fLRUCacheMap(kMaxEntries),
       fCacheIsOn(true)
@@ -199,7 +201,7 @@ ParagraphCache::ParagraphCache()
 {
 }
 
-ParagraphCache::~ParagraphCache() {}
+ParagraphCache::~ParagraphCache() = default;
 
 void ParagraphCache::updateTo(ParagraphImpl* paragraph, const Entry* entry) {
   paragraph->fRuns.reset();
@@ -210,7 +212,7 @@ void ParagraphCache::updateTo(ParagraphImpl* paragraph, const Entry* entry) {
   paragraph->fUTF8IndexForUTF16Index = entry->fValue->fUTF8IndexForUTF16Index;
   paragraph->fUTF16IndexForUTF8Index = entry->fValue->fUTF16IndexForUTF8Index;
   for (auto& run : paragraph->fRuns) {
-    run.setMaster(paragraph);
+    run.setOwner(paragraph);
   }
 }
 
@@ -278,7 +280,7 @@ bool ParagraphCache::updateParagraph(ParagraphImpl* paragraph) {
   std::unique_ptr<Entry>* entry = fLRUCacheMap.find(key);
   if (!entry) {
     ParagraphCacheValue* value = new ParagraphCacheValue(paragraph);
-    fLRUCacheMap.insert(key, std::unique_ptr<Entry>(new Entry(value)));
+    fLRUCacheMap.insert(key, std::make_unique<Entry>(value));
     fChecker(paragraph, "addedParagraph", true);
     return true;
   } else {

@@ -53,10 +53,10 @@ class SkXfermode : public SkRefCnt {
     kUnknown_SrcColorOpacity = 3
   };
 
-  static bool IsOpaque(SkBlendMode, SrcColorOpacity) noexcept;
+  static bool IsOpaque(SkBlendMode, SrcColorOpacity);
 
  protected:
-  constexpr SkXfermode() noexcept = default;
+  SkXfermode() noexcept = default;
 };
 
 #endif

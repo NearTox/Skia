@@ -30,7 +30,7 @@ GrMemoryPool::GrMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept
     : fAllocator(
           GrBlockAllocator::GrowthPolicy::kFixed, minAllocSize,
           preallocSize - offsetof(GrMemoryPool, fAllocator) - sizeof(GrBlockAllocator)) {
-  SkDEBUGCODE(fAllocationCount = 0;)
+  SkDEBUGCODE(fAllocationCount = 0);
 }
 
 GrMemoryPool::~GrMemoryPool() {
@@ -53,9 +53,9 @@ GrMemoryPool::~GrMemoryPool() {
 
 void* GrMemoryPool::allocate(size_t size) {
   static_assert(alignof(Header) <= kAlignment);
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      GrBlockAllocator::ByteRange alloc = fAllocator.allocate<kAlignment, sizeof(Header)>(size);
+  GrBlockAllocator::ByteRange alloc = fAllocator.allocate<kAlignment, sizeof(Header)>(size);
 
   // Initialize GrMemoryPool's custom header at the start of the allocation
   Header* header = static_cast<Header*>(alloc.fBlock->ptr(alloc.fAlignedOffset - sizeof(Header)));
@@ -81,7 +81,7 @@ void* GrMemoryPool::allocate(size_t size) {
   return alloc.fBlock->ptr(alloc.fAlignedOffset);
 }
 
-void GrMemoryPool::release(void* p) {
+void GrMemoryPool::release(void* p) noexcept {
   // NOTE: if we needed it, (p - block) would equal the original alignedOffset value returned by
   // GrBlockAllocator::allocate()
   Header* header = reinterpret_cast<Header*>(reinterpret_cast<intptr_t>(p) - sizeof(Header));
@@ -133,7 +133,7 @@ std::unique_ptr<GrOpMemoryPool> GrOpMemoryPool::Make(size_t preallocSize, size_t
   return std::unique_ptr<GrOpMemoryPool>(new (mem) GrOpMemoryPool(preallocSize, minAllocSize));
 }
 
-void GrOpMemoryPool::release(std::unique_ptr<GrOp> op) {
+void GrOpMemoryPool::release(std::unique_ptr<GrOp> op) noexcept {
   GrOp* tmp = op.release();
   SkASSERT(tmp);
   tmp->~GrOp();

@@ -27,8 +27,6 @@
 
 #include <initializer_list>
 
-class GrContext;
-
 /**
  * This GM tests reusing the same text blobs with distance fields rendering using various
  * combinations of perspective and non-perspetive matrices, scissor clips, and different x,y params
@@ -59,7 +57,7 @@ class DFTextBlobPerspGM : public skiagm::GM {
 
   void onDraw(SkCanvas* inputCanvas) override {
     // set up offscreen rendering with distance field text
-    GrContext* ctx = inputCanvas->getGrContext();
+    auto ctx = inputCanvas->recordingContext();
     SkISize size = this->onISize();
     if (!inputCanvas->getBaseLayerSize().isEmpty()) {
       size = inputCanvas->getBaseLayerSize();

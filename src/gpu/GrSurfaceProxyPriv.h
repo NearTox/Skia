@@ -34,7 +34,7 @@ class GrSurfaceProxyPriv {
   bool isExact() const noexcept { return SkBackingFit::kExact == fProxy->fFit; }
 
   // Don't. Just don't.
-  void exactify(bool allocatedCaseOnly) noexcept;
+  void exactify(bool allocatedCaseOnly);
 
   void setLazyDimensions(SkISize dimensions) noexcept { fProxy->setLazyDimensions(dimensions); }
 
@@ -42,8 +42,8 @@ class GrSurfaceProxyPriv {
 
  private:
   explicit GrSurfaceProxyPriv(GrSurfaceProxy* proxy) noexcept : fProxy(proxy) {}
-  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) noexcept {}  // unimpl
-  GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&);  // unimpl
+  GrSurfaceProxyPriv(const GrSurfaceProxyPriv&) = delete;
+  GrSurfaceProxyPriv& operator=(const GrSurfaceProxyPriv&) = delete;
 
   // No taking addresses of this type.
   const GrSurfaceProxyPriv* operator&() const;
@@ -56,7 +56,8 @@ class GrSurfaceProxyPriv {
 
 inline GrSurfaceProxyPriv GrSurfaceProxy::priv() noexcept { return GrSurfaceProxyPriv(this); }
 
-inline const GrSurfaceProxyPriv GrSurfaceProxy::priv() const noexcept {
+inline const GrSurfaceProxyPriv GrSurfaceProxy::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrSurfaceProxyPriv(const_cast<GrSurfaceProxy*>(this));
 }
 

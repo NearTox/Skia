@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="skparagraph\src\Decorations.cpp" />
+    <ClCompile Include="skparagraph\src\FontCollection.cpp" />
+    <ClCompile Include="skparagraph\src\OneLineShaper.cpp" />
+    <ClCompile Include="skparagraph\src\ParagraphBuilderImpl.cpp" />
+    <ClCompile Include="skparagraph\src\ParagraphCache.cpp" />
+    <ClCompile Include="skparagraph\src\ParagraphImpl.cpp" />
+    <ClCompile Include="skparagraph\src\ParagraphStyle.cpp" />
+    <ClCompile Include="skparagraph\src\ParagraphUtil.cpp" />
+    <ClCompile Include="skparagraph\src\Run.cpp" />
+    <ClCompile Include="skparagraph\src\TextLine.cpp" />
+    <ClCompile Include="skparagraph\src\TextShadow.cpp" />
+    <ClCompile Include="skparagraph\src\TextStyle.cpp" />
+    <ClCompile Include="skparagraph\src\TextWrapper.cpp" />
+    <ClCompile Include="skparagraph\src\TypefaceFontProvider.cpp" />
+  </ItemGroup>
+</Project>

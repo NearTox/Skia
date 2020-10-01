@@ -39,9 +39,9 @@ static constexpr inline bool transfer_fn_almost_equal(float a, float b) noexcept
 // and repurpose the other fields to hold the parameters of the HDR functions.
 enum TFKind { Bad_TF, sRGBish_TF, PQish_TF, HLGish_TF, HLGinvish_TF };
 
-static constexpr inline TFKind classify_transfer_fn(const skcms_TransferFunction& tf) noexcept {
+static inline TFKind classify_transfer_fn(const skcms_TransferFunction& tf) noexcept {
   if (tf.g < 0 && (int)tf.g == tf.g) {
-    // TODO: sanity checks for PQ/HLG like we do for sRGBish.
+    // TODO: safety checks for PQ/HLG like we do for sRGBish.
     switch ((int)tf.g) {
       case -PQish_TF: return PQish_TF;
       case -HLGish_TF: return HLGish_TF;
@@ -50,7 +50,7 @@ static constexpr inline TFKind classify_transfer_fn(const skcms_TransferFunction
     return Bad_TF;
   }
 
-  // Basic sanity checks for sRGBish transfer functions.
+  // Basic safety checks for sRGBish transfer functions.
   if (sk_float_isfinite(tf.a + tf.b + tf.c + tf.d + tf.e + tf.f + tf.g)
       // a,c,d,g should be non-negative to make any sense.
       && tf.a >= 0 && tf.c >= 0 && tf.d >= 0 &&
@@ -63,7 +63,7 @@ static constexpr inline TFKind classify_transfer_fn(const skcms_TransferFunction
   return Bad_TF;
 }
 
-static constexpr inline bool is_almost_srgb(const skcms_TransferFunction& coeffs) noexcept {
+static inline bool is_almost_srgb(const skcms_TransferFunction& coeffs) noexcept {
   return transfer_fn_almost_equal(SkNamedTransferFn::kSRGB.a, coeffs.a) &&
          transfer_fn_almost_equal(SkNamedTransferFn::kSRGB.b, coeffs.b) &&
          transfer_fn_almost_equal(SkNamedTransferFn::kSRGB.c, coeffs.c) &&
@@ -73,13 +73,13 @@ static constexpr inline bool is_almost_srgb(const skcms_TransferFunction& coeffs
          transfer_fn_almost_equal(SkNamedTransferFn::kSRGB.g, coeffs.g);
 }
 
-static constexpr inline bool is_almost_2dot2(const skcms_TransferFunction& coeffs) noexcept {
+static inline bool is_almost_2dot2(const skcms_TransferFunction& coeffs) noexcept {
   return transfer_fn_almost_equal(1.0f, coeffs.a) && transfer_fn_almost_equal(0.0f, coeffs.b) &&
          transfer_fn_almost_equal(0.0f, coeffs.e) && transfer_fn_almost_equal(2.2f, coeffs.g) &&
          coeffs.d <= 0.0f;
 }
 
-static constexpr inline bool is_almost_linear(const skcms_TransferFunction& coeffs) noexcept {
+static inline bool is_almost_linear(const skcms_TransferFunction& coeffs) noexcept {
   // OutputVal = InputVal ^ 1.0f
   const bool linearExp = transfer_fn_almost_equal(1.0f, coeffs.a) &&
                          transfer_fn_almost_equal(0.0f, coeffs.b) &&

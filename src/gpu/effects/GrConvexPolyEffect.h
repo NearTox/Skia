@@ -70,8 +70,6 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
 
   const SkScalar* getEdges() const noexcept { return fEdges; }
 
-  bool hasInputFP() const noexcept { return numChildProcessors() > 0; }
-
  private:
   GrConvexPolyEffect(
       std::unique_ptr<GrFragmentProcessor> inputFP, GrClipEdgeType edgeType, int n,
@@ -80,7 +78,7 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
 

@@ -26,7 +26,7 @@ class SkPngCodec : public SkCodec {
       std::unique_ptr<SkStream>, Result*, SkPngChunkReader* = nullptr);
 
   // FIXME (scroggo): Temporarily needed by AutoCleanPng.
-  void setIdatLength(size_t len) noexcept { fIdatLength = len; }
+  void setIdatLength(size_t len) { fIdatLength = len; }
 
   ~SkPngCodec() override;
 
@@ -34,14 +34,14 @@ class SkPngCodec : public SkCodec {
   // We hold the png_ptr and info_ptr as voidp to avoid having to include png.h
   // or forward declare their types here.  voidp auto-casts to the real pointer types.
   struct voidp {
-    voidp(void* ptr) noexcept : fPtr(ptr) {}
+    voidp(void* ptr) : fPtr(ptr) {}
 
     template <typename T>
-    operator T*() const noexcept {
+    operator T*() const {
       return (T*)fPtr;
     }
 
-    explicit operator bool() const noexcept { return fPtr != nullptr; }
+    explicit operator bool() const { return fPtr != nullptr; }
 
     void* fPtr;
   };
@@ -51,18 +51,16 @@ class SkPngCodec : public SkCodec {
       int bitDepth);
 
   Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-    return SkEncodedImageFormat::kPNG;
-  }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kPNG; }
   bool onRewind() override;
 
   SkSampler* getSampler(bool createIfNecessary) override;
   void applyXformRow(void* dst, const void* src);
 
-  voidp png_ptr() noexcept { return fPng_ptr; }
-  voidp info_ptr() noexcept { return fInfo_ptr; }
+  voidp png_ptr() { return fPng_ptr; }
+  voidp info_ptr() { return fInfo_ptr; }
 
-  SkSwizzler* swizzler() noexcept { return fSwizzler.get(); }
+  SkSwizzler* swizzler() { return fSwizzler.get(); }
 
   // Initialize variables used by applyXformRow.
   void initializeXformParams();

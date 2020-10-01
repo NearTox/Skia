@@ -19,6 +19,7 @@ class GrAtlasManager;
 class GrCaps;
 class GrStrikeCache;
 class GrOpFlushState;
+class GrSmallPathAtlasMgr;
 
 /**
  * Base class for mesh-drawing GrDrawOps.
@@ -28,7 +29,7 @@ class GrMeshDrawOp : public GrDrawOp {
   /** Abstract interface that represents a destination for a GrMeshDrawOp. */
   class Target;
 
-  static bool CanUpgradeAAOnMerge(GrAAType aa1, GrAAType aa2) noexcept {
+  static constexpr bool CanUpgradeAAOnMerge(GrAAType aa1, GrAAType aa2) noexcept {
     return (aa1 == GrAAType::kNone && aa2 == GrAAType::kCoverage) ||
            (aa1 == GrAAType::kCoverage && aa2 == GrAAType::kNone);
   }
@@ -198,7 +199,7 @@ class GrMeshDrawOp::Target {
     return this->allocator()->makeArray<const GrSurfaceProxy*>(n);
   }
 
-  virtual GrRenderTargetProxy* proxy() const noexcept = 0;
+  virtual GrRenderTargetProxy* proxy() const = 0;
   virtual const GrSurfaceProxyView* writeView() const = 0;
 
   virtual const GrAppliedClip* appliedClip() const = 0;
@@ -209,15 +210,16 @@ class GrMeshDrawOp::Target {
   virtual GrResourceProvider* resourceProvider() const = 0;
   uint32_t contextUniqueID() const { return this->resourceProvider()->contextUniqueID(); }
 
-  virtual GrStrikeCache* strikeCache() const noexcept = 0;
-  virtual GrAtlasManager* atlasManager() const noexcept = 0;
+  virtual GrStrikeCache* strikeCache() const = 0;
+  virtual GrAtlasManager* atlasManager() const = 0;
+  virtual GrSmallPathAtlasMgr* smallPathAtlasManager() const = 0;
 
   // This should be called during onPrepare of a GrOp. The caller should add any proxies to the
   // array it will use that it did not access during a call to visitProxies. This is usually the
   // case for atlases.
   virtual SkTArray<GrSurfaceProxy*, true>* sampledProxyArray() = 0;
 
-  virtual const GrCaps& caps() const noexcept = 0;
+  virtual const GrCaps& caps() const = 0;
 
   virtual GrDeferredUploadTarget* deferredUploadTarget() = 0;
 

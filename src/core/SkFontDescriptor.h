@@ -13,14 +13,25 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkFixed.h"
 #include "include/private/SkNoncopyable.h"
+#include "include/private/SkTemplates.h"
 
 class SkFontData {
  public:
   /** Makes a copy of the data in 'axis'. */
-  SkFontData(std::unique_ptr<SkStreamAsset> stream, int index, const SkFixed axis[], int axisCount)
+  SkFontData(
+      std::unique_ptr<SkStreamAsset> stream, int index, const SkFixed* axis, int axisCount) noexcept
       : fStream(std::move(stream)), fIndex(index), fAxisCount(axisCount), fAxis(axisCount) {
     for (int i = 0; i < axisCount; ++i) {
       fAxis[i] = axis[i];
+    }
+  }
+  SkFontData(std::unique_ptr<SkStreamAsset> stream, SkFontArguments args) noexcept
+      : fStream(std::move(stream)),
+        fIndex(args.getCollectionIndex()),
+        fAxisCount(args.getVariationDesignPosition().coordinateCount),
+        fAxis(args.getVariationDesignPosition().coordinateCount) {
+    for (int i = 0; i < fAxisCount; ++i) {
+      fAxis[i] = SkFloatToFixed(args.getVariationDesignPosition().coordinates[i].value);
     }
   }
   SkFontData(const SkFontData& that)
@@ -32,13 +43,13 @@ class SkFontData {
       fAxis[i] = that.fAxis[i];
     }
   }
-  bool hasStream() const { return fStream.get() != nullptr; }
-  std::unique_ptr<SkStreamAsset> detachStream() { return std::move(fStream); }
-  SkStreamAsset* getStream() { return fStream.get(); }
-  SkStreamAsset const* getStream() const { return fStream.get(); }
-  int getIndex() const { return fIndex; }
-  int getAxisCount() const { return fAxisCount; }
-  const SkFixed* getAxis() const { return fAxis.get(); }
+  bool hasStream() const noexcept { return fStream != nullptr; }
+  std::unique_ptr<SkStreamAsset> detachStream() noexcept { return std::move(fStream); }
+  SkStreamAsset* getStream() noexcept { return fStream.get(); }
+  SkStreamAsset const* getStream() const noexcept { return fStream.get(); }
+  int getIndex() const noexcept { return fIndex; }
+  int getAxisCount() const noexcept { return fAxisCount; }
+  const SkFixed* getAxis() const noexcept { return fAxis.get(); }
 
  private:
   std::unique_ptr<SkStreamAsset> fStream;
@@ -55,28 +66,48 @@ class SkFontDescriptor : SkNoncopyable {
 
   void serialize(SkWStream*) const;
 
-  SkFontStyle getStyle() const { return fStyle; }
-  void setStyle(SkFontStyle style) { fStyle = style; }
+  SkFontStyle getStyle() const noexcept { return fStyle; }
+  void setStyle(SkFontStyle style) noexcept { fStyle = style; }
 
-  const char* getFamilyName() const { return fFamilyName.c_str(); }
-  const char* getFullName() const { return fFullName.c_str(); }
-  const char* getPostscriptName() const { return fPostscriptName.c_str(); }
-  bool hasFontData() const { return fFontData.get() != nullptr; }
-  std::unique_ptr<SkFontData> detachFontData() { return std::move(fFontData); }
+  const char* getFamilyName() const noexcept { return fFamilyName.c_str(); }
+  const char* getFullName() const noexcept { return fFullName.c_str(); }
+  const char* getPostscriptName() const noexcept { return fPostscriptName.c_str(); }
 
   void setFamilyName(const char* name) { fFamilyName.set(name); }
   void setFullName(const char* name) { fFullName.set(name); }
   void setPostscriptName(const char* name) { fPostscriptName.set(name); }
-  /** Set the font data only if it is necessary for serialization. */
-  void setFontData(std::unique_ptr<SkFontData> data) { fFontData = std::move(data); }
+
+  bool hasStream() const noexcept { return bool(fStream); }
+  std::unique_ptr<SkStreamAsset> dupStream() const { return fStream->duplicate(); }
+  int getCollectionIndex() const noexcept { return fCollectionIndex; }
+  int getVariationCoordinateCount() const noexcept { return fCoordinateCount; }
+  const SkFontArguments::VariationPosition::Coordinate* getVariation() const noexcept {
+    return fVariation.get();
+  }
+
+  std::unique_ptr<SkStreamAsset> detachStream() noexcept { return std::move(fStream); }
+  void setStream(std::unique_ptr<SkStreamAsset> stream) noexcept { fStream = std::move(stream); }
+  void setCollectionIndex(int collectionIndex) noexcept { fCollectionIndex = collectionIndex; }
+  SkFontArguments::VariationPosition::Coordinate* setVariationCoordinates(
+      int coordinateCount) noexcept {
+    fCoordinateCount = coordinateCount;
+    return fVariation.reset(coordinateCount);
+  }
+
+  std::unique_ptr<SkFontData> maybeAsSkFontData();
 
  private:
   SkString fFamilyName;
   SkString fFullName;
   SkString fPostscriptName;
-  std::unique_ptr<SkFontData> fFontData;
-
   SkFontStyle fStyle;
+
+  std::unique_ptr<SkStreamAsset> fStream;
+  int fCollectionIndex = 0;
+  using Coordinates = SkAutoSTMalloc<4, SkFontArguments::VariationPosition::Coordinate>;
+  bool fVariationDataIsOldAndBad = false;
+  int fCoordinateCount = 0;
+  Coordinates fVariation;
 };
 
 #endif  // SkFontDescriptor_DEFINED

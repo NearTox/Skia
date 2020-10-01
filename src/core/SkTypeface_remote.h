@@ -59,9 +59,6 @@ class SkTypefaceProxy : public SkTypeface {
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override {
     SK_ABORT("Should never be called.");
   }
-  std::unique_ptr<SkFontData> onMakeFontData() const override {
-    SK_ABORT("Should never be called.");
-  }
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
     SK_ABORT("Should never be called.");
   }

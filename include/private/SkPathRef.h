@@ -9,6 +9,7 @@
 #define SkPathRef_DEFINED
 
 #include "include/core/SkMatrix.h"
+#include "include/core/SkPathTypes.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
@@ -23,6 +24,7 @@
 #include <limits>
 #include <tuple>
 
+struct SkPathView;
 class SkRBuffer;
 class SkWBuffer;
 
@@ -48,7 +50,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
       unsigned segmentMask) noexcept
       : fPoints(std::move(points)), fVerbs(std::move(verbs)), fConicWeights(std::move(weights)) {
     fBoundsIsDirty = true;  // this also invalidates fIsFinite
-    fGenerationID = kEmptyGenID;
+    fGenerationID = 0;      // recompute
     fSegmentMask = segmentMask;
     fIsOval = false;
     fIsRRect = false;
@@ -323,7 +325,9 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   int genIDChangeListenerCount();                          // Threadsafe
 
   bool isValid() const noexcept;
-  SkDEBUGCODE(void validate() const { SkASSERT(this->isValid()); });
+  SkDEBUGCODE(void validate() const noexcept { SkASSERT(this->isValid()); });
+
+  SkPathView view(SkPathFillType, SkPathConvexityType) const noexcept;
 
  private:
   enum SerializationOffsets {
@@ -497,6 +501,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   friend class PathRefTest_Private;
   friend class ForceIsRRect_Private;  // unit test isRRect
   friend class SkPath;
+  friend class SkPathBuilder;
   friend class SkPathPriv;
 };
 

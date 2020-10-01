@@ -38,7 +38,7 @@ class GrGLTextureParameters;
 class GrD3DResourceState;
 #endif
 
-#if GR_TEST_UTILS
+#if defined(SK_DEBUG) || GR_TEST_UTILS
 class SkString;
 #endif
 
@@ -47,23 +47,23 @@ class SkString;
 // SkSurfaceCharacterization always needs a minimal version of this
 class SK_API GrBackendFormat {
  public:
-  bool isValid() const { return false; }
+  bool isValid() const noexcept { return false; }
 };
 
 // SkSurface and SkImage rely on a minimal version of these always being available
 class SK_API GrBackendTexture {
  public:
-  GrBackendTexture() noexcept = default;
+  constexpr GrBackendTexture() noexcept = default;
 
-  bool isValid() const { return false; }
+  bool isValid() const noexcept { return false; }
 };
 
 class SK_API GrBackendRenderTarget {
  public:
-  GrBackendRenderTarget() noexcept = default;
+  constexpr GrBackendRenderTarget() noexcept = default;
 
-  bool isValid() const { return false; }
-  bool isFramebufferOnly() const { return false; }
+  bool isValid() const noexcept { return false; }
+  bool isFramebufferOnly() const noexcept { return false; }
 };
 #else
 
@@ -162,12 +162,12 @@ class SK_API GrBackendFormat {
   // If possible, copies the GrBackendFormat and forces the texture type to be Texture2D. If the
   // GrBackendFormat was for Vulkan and it originally had a GrVkYcbcrConversionInfo, we will
   // remove the conversion and set the format to be VK_FORMAT_R8G8B8A8_UNORM.
-  GrBackendFormat makeTexture2D() const noexcept;
+  GrBackendFormat makeTexture2D() const;
 
   // Returns true if the backend format has been initialized.
   bool isValid() const noexcept { return fValid; }
 
-#  if GR_TEST_UTILS
+#  if defined(SK_DEBUG) || GR_TEST_UTILS
   SkString toStr() const;
 #  endif
 
@@ -221,17 +221,17 @@ class SK_API GrBackendFormat {
 class SK_API GrBackendTexture {
  public:
   // Creates an invalid backend texture.
-  GrBackendTexture();
+  GrBackendTexture() noexcept;
 
   // The GrGLTextureInfo must have a valid fFormat.
-  GrBackendTexture(int width, int height, GrMipMapped, const GrGLTextureInfo& glInfo);
+  GrBackendTexture(int width, int height, GrMipmapped, const GrGLTextureInfo& glInfo);
 
 #  ifdef SK_VULKAN
   GrBackendTexture(int width, int height, const GrVkImageInfo& vkInfo);
 #  endif
 
 #  ifdef SK_METAL
-  GrBackendTexture(int width, int height, GrMipMapped, const GrMtlTextureInfo& mtlInfo);
+  GrBackendTexture(int width, int height, GrMipmapped, const GrMtlTextureInfo& mtlInfo);
 #  endif
 
 #  ifdef SK_DIRECT3D
@@ -242,7 +242,7 @@ class SK_API GrBackendTexture {
   GrBackendTexture(int width, int height, const GrDawnTextureInfo& dawnInfo);
 #  endif
 
-  GrBackendTexture(int width, int height, GrMipMapped, const GrMockTextureInfo& mockInfo) noexcept;
+  GrBackendTexture(int width, int height, GrMipmapped, const GrMockTextureInfo& mockInfo) noexcept;
 
   GrBackendTexture(const GrBackendTexture& that) noexcept;
 
@@ -253,16 +253,18 @@ class SK_API GrBackendTexture {
   SkISize dimensions() const noexcept { return {fWidth, fHeight}; }
   int width() const noexcept { return fWidth; }
   int height() const noexcept { return fHeight; }
-  bool hasMipMaps() const noexcept { return GrMipMapped::kYes == fMipMapped; }
+  bool hasMipmaps() const noexcept { return fMipmapped == GrMipmapped::kYes; }
+  /** deprecated alias of hasMipmaps(). */
+  bool hasMipMaps() const noexcept { return this->hasMipmaps(); }
   GrBackendApi backend() const noexcept { return fBackend; }
 
   // If the backend API is GL, copies a snapshot of the GrGLTextureInfo struct into the passed in
   // pointer and returns true. Otherwise returns false if the backend API is not GL.
-  bool getGLTextureInfo(GrGLTextureInfo*) const noexcept;
+  bool getGLTextureInfo(GrGLTextureInfo*) const;
 
   // Call this to indicate that the texture parameters have been modified in the GL context
   // externally to GrContext.
-  void glTextureParametersModified() noexcept;
+  void glTextureParametersModified();
 
 #  ifdef SK_DAWN
   // If the backend API is Dawn, copies a snapshot of the GrDawnTextureInfo struct into the passed
@@ -301,17 +303,17 @@ class SK_API GrBackendTexture {
 
   // If the backend API is Mock, copies a snapshot of the GrMockTextureInfo struct into the passed
   // in pointer and returns true. Otherwise returns false if the backend API is not Mock.
-  bool getMockTextureInfo(GrMockTextureInfo*) const noexcept;
+  bool getMockTextureInfo(GrMockTextureInfo*) const;
 
   // If the client changes any of the mutable backend of the GrBackendTexture they should call
   // this function to inform Skia that those values have changed. The backend API specific state
   // that can be set from this function are:
   //
   // Vulkan: VkImageLayout and QueueFamilyIndex
-  void setMutableState(const GrBackendSurfaceMutableState&) noexcept;
+  void setMutableState(const GrBackendSurfaceMutableState&);
 
   // Returns true if we are working with protected content.
-  bool isProtected() const noexcept;
+  bool isProtected() const;
 
   // Returns true if the backend texture has been initialized.
   bool isValid() const noexcept { return fIsValid; }
@@ -331,7 +333,7 @@ class SK_API GrBackendTexture {
   friend class GrGLTexture;
   friend class GrGLGpu;  // for getGLTextureParams
   GrBackendTexture(
-      int width, int height, GrMipMapped, const GrGLTextureInfo,
+      int width, int height, GrMipmapped, const GrGLTextureInfo,
       sk_sp<GrGLTextureParameters>) noexcept;
   sk_sp<GrGLTextureParameters> getGLTextureParams() const noexcept;
 #  endif
@@ -358,7 +360,7 @@ class SK_API GrBackendTexture {
   bool fIsValid;
   int fWidth;   //<! width in pixels
   int fHeight;  //<! height in pixels
-  GrMipMapped fMipMapped;
+  GrMipmapped fMipmapped;
   GrBackendApi fBackend;
 
   union {
@@ -432,7 +434,7 @@ class SK_API GrBackendRenderTarget {
 
   // If the backend API is GL, copies a snapshot of the GrGLFramebufferInfo struct into the passed
   // in pointer and returns true. Otherwise returns false if the backend API is not GL.
-  bool getGLFramebufferInfo(GrGLFramebufferInfo*) const noexcept;
+  bool getGLFramebufferInfo(GrGLFramebufferInfo*) const;
 
 #  ifdef SK_DAWN
   // If the backend API is Dawn, copies a snapshot of the GrDawnRenderTargetInfo struct into the
@@ -447,7 +449,7 @@ class SK_API GrBackendRenderTarget {
 
   // Anytime the client changes the VkImageLayout of the VkImage captured by this
   // GrBackendRenderTarget, they must call this function to notify Skia of the changed layout.
-  void setVkImageLayout(VkImageLayout) noexcept;
+  void setVkImageLayout(VkImageLayout);
 
 #  ifdef SK_METAL
   // If the backend API is Metal, copies a snapshot of the GrMtlTextureInfo struct into the passed
@@ -491,7 +493,7 @@ class SK_API GrBackendRenderTarget {
 
  private:
   friend class GrVkGpu;  // for getMutableState
-  sk_sp<GrBackendSurfaceMutableStateImpl> getMutableState() const noexcept;
+  sk_sp<GrBackendSurfaceMutableStateImpl> getMutableState() const;
 
 #  ifdef SK_VULKAN
   friend class GrVkRenderTarget;

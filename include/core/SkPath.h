@@ -18,7 +18,11 @@
 class SkAutoPathBoundsUpdate;
 class SkData;
 class SkRRect;
+struct SkPathView;
 class SkWStream;
+
+// WIP -- define this locally, and fix call-sites to use SkPathBuilder (skbug.com/9000)
+//#define SK_HIDE_PATH_EDIT_METHODS
 
 /** \class SkPath
     SkPath contain geometry. SkPath may be empty, or contain one or more verbs that
@@ -40,6 +44,48 @@ class SkWStream;
 */
 class SK_API SkPath {
  public:
+  /**
+   *  Create a new path with the specified segments.
+   *
+   *  The points and weights arrays are read in order, based on the sequence of verbs.
+   *
+   *  Move    1 point
+   *  Line    1 point
+   *  Quad    2 points
+   *  Conic   2 points and 1 weight
+   *  Cubic   3 points
+   *  Close   0 points
+   *
+   *  If an illegal sequence of verbs is encountered, or the specified number of points
+   *  or weights is not sufficient given the verbs, an empty Path is returned.
+   *
+   *  A legal sequence of verbs consists of any number of Contours. A contour always begins
+   *  with a Move verb, followed by 0 or more segments: Line, Quad, Conic, Cubic, followed
+   *  by an optional Close.
+   */
+  static SkPath Make(
+      const SkPoint[], int pointCount, const uint8_t[], int verbCount, const SkScalar[],
+      int conicWeightCount, SkPathFillType, bool isVolatile = false);
+
+  static SkPath Rect(const SkRect&, SkPathDirection dir = SkPathDirection::kCW);
+  static SkPath Oval(const SkRect&, SkPathDirection dir = SkPathDirection::kCW);
+  static SkPath Circle(
+      SkScalar center_x, SkScalar center_y, SkScalar radius,
+      SkPathDirection dir = SkPathDirection::kCW);
+  static SkPath RRect(const SkRRect&, SkPathDirection dir = SkPathDirection::kCW);
+
+  static SkPath Polygon(
+      const SkPoint pts[], int count, bool isClosed, SkPathFillType = SkPathFillType::kWinding,
+      bool isVolatile = false);
+
+  static SkPath Polygon(
+      const std::initializer_list<SkPoint>& list, bool isClosed,
+      SkPathFillType fillType = SkPathFillType::kWinding, bool isVolatile = false) {
+    return Polygon(list.begin(), SkToInt(list.size()), isClosed, fillType, isVolatile);
+  }
+
+  static SkPath Line(const SkPoint a, const SkPoint b) { return Polygon({a, b}, false); }
+
   /** Constructs an empty SkPath. By default, SkPath has no verbs, no SkPoint, and no weights.
       FillType is set to kWinding.
 
@@ -64,6 +110,7 @@ class SK_API SkPath {
       example: https://fiddle.skia.org/c/@Path_copy_const_SkPath
   */
   SkPath(const SkPath& path) noexcept;
+  SkPath(SkPath&& path) noexcept;
 
   /** Releases ownership of any shared data and deletes data if SkPath is sole owner.
 
@@ -86,6 +133,7 @@ class SK_API SkPath {
       example: https://fiddle.skia.org/c/@Path_copy_operator
   */
   SkPath& operator=(const SkPath& path) noexcept;
+  SkPath& operator=(SkPath&& path) noexcept;
 
   /** Compares a and b; returns true if SkPath::FillType, verb array, SkPoint array, and weights
       are equivalent.
@@ -480,7 +528,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_computeTightBounds
   */
-  SkRect computeTightBounds() const noexcept;
+  SkRect computeTightBounds() const;
 
   /** Returns true if rect is contained by SkPath.
       May return false when rect is contained by SkPath.
@@ -511,6 +559,10 @@ class SK_API SkPath {
       May reduce the heap overhead for SkPath known to be fully constructed.
   */
   void shrinkToFit() noexcept;
+
+#ifdef SK_HIDE_PATH_EDIT_METHODS
+ private:
+#endif
 
   /** Adds beginning of contour at SkPoint (x, y).
 
@@ -955,6 +1007,10 @@ class SK_API SkPath {
   */
   SkPath& close();
 
+#ifdef SK_HIDE_PATH_EDIT_METHODS
+ public:
+#endif
+
   /** Approximates conic with quad array. Conic is constructed from start SkPoint p0,
       control SkPoint p1, end SkPoint p2, and weight w.
       Quad array is stored in pts; this storage is supplied by caller.
@@ -982,7 +1038,8 @@ class SK_API SkPath {
       @return      number of quad curves written to pts
   */
   static int ConvertConicToQuads(
-      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[], int pow2);
+      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[],
+      int pow2) noexcept;
 
   /** Returns true if SkPath is equivalent to SkRect when filled.
       If false: rect, isClosed, and direction are unchanged.
@@ -1485,6 +1542,8 @@ class SK_API SkPath {
     Verb autoClose(SkPoint pts[2]) noexcept;
   };
 
+  SkPathView view() const noexcept;
+
  private:
   /** \class SkPath::RangeIter
       Iterates through a raw range of path verbs, points, and conics. All values are returned
@@ -1494,7 +1553,7 @@ class SK_API SkPath {
   */
   class RangeIter {
    public:
-    constexpr RangeIter() noexcept = default;
+    RangeIter() noexcept = default;
     RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights) noexcept
         : fVerb(verbs), fPoints(points), fWeights(weights) {
       SkDEBUGCODE(fInitialPoints = fPoints);
@@ -1565,7 +1624,7 @@ class SK_API SkPath {
 
         @return  RawIter of empty SkPath
     */
-    constexpr RawIter() noexcept = default;
+    RawIter() noexcept = default;
 
     /** Sets RawIter to return elements of verb array, SkPoint array, and conic weight in path.
 
@@ -1623,7 +1682,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_contains
   */
-  bool contains(SkScalar x, SkScalar y) const noexcept;
+  bool contains(SkScalar x, SkScalar y) const;
 
   /** Writes text representation of SkPath to stream. If stream is nullptr, writes to
       standard output. Set forceClose to true to get edges used to fill SkPath.
@@ -1729,7 +1788,7 @@ class SK_API SkPath {
   bool isValid() const noexcept { return this->isValidImpl() && fPathRef->isValid(); }
 
  private:
-  SkPath(sk_sp<SkPathRef>, SkPathFillType, bool isVolatile) noexcept;
+  SkPath(sk_sp<SkPathRef>, SkPathFillType, bool isVolatile, SkPathConvexityType) noexcept;
 
   sk_sp<SkPathRef> fPathRef;
   int fLastMoveToIndex;

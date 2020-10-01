@@ -98,7 +98,7 @@ class SkBulkGlyphMetrics {
 class SkBulkGlyphMetricsAndPaths {
  public:
   explicit SkBulkGlyphMetricsAndPaths(const SkStrikeSpec& spec);
-  explicit SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike) noexcept;
+  explicit SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike);
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkGlyphID> glyphIDs);
   const SkGlyph* glyph(SkGlyphID glyphID);
   void findIntercepts(
@@ -114,7 +114,7 @@ class SkBulkGlyphMetricsAndPaths {
 class SkBulkGlyphMetricsAndImages {
  public:
   explicit SkBulkGlyphMetricsAndImages(const SkStrikeSpec& spec);
-  explicit SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike) noexcept;
+  explicit SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike);
   SkSpan<const SkGlyph*> glyphs(SkSpan<const SkPackedGlyphID> packedIDs);
   const SkGlyph* glyph(SkPackedGlyphID packedID);
   const SkDescriptor& descriptor() const;

@@ -49,7 +49,7 @@ constexpr static int kHeight = (int)kRect.fBottom + 21;
 class TessellationGM : public GpuGM {
   SkString onShortName() override { return SkString("tessellation"); }
   SkISize onISize() override { return {kWidth, kHeight}; }
-  DrawResult onDraw(GrContext*, GrRenderTargetContext*, SkCanvas*, SkString*) override;
+  DrawResult onDraw(GrRecordingContext*, GrRenderTargetContext*, SkCanvas*, SkString*) override;
 };
 
 class TessellationTestTriShader : public GrGeometryProcessor {
@@ -81,9 +81,7 @@ class TessellationTestTriShader : public GrGeometryProcessor {
       this->writeFragmentShader(args.fFragBuilder, args.fOutputColor, args.fOutputCoverage);
     }
     void writeFragmentShader(GrGLSLFPFragmentBuilder*, const char* color, const char* coverage);
-    void setData(
-        const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-        const CoordTransformRange&) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {
       pdman.setSkMatrix(fViewMatrixUniform, proc.cast<TessellationTestTriShader>().fViewMatrix);
     }
     GrGLSLUniformHandler::UniformHandle fViewMatrixUniform;
@@ -199,9 +197,7 @@ class TessellationTestRectShader : public GrGeometryProcessor {
       this->writeFragmentShader(args.fFragBuilder, args.fOutputColor, args.fOutputCoverage);
     }
     void writeFragmentShader(GrGLSLFPFragmentBuilder*, const char* color, const char* coverage);
-    void setData(
-        const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-        const CoordTransformRange&) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {
       pdman.setSkMatrix(fViewMatrixUniform, proc.cast<TessellationTestRectShader>().fViewMatrix);
     }
     GrGLSLUniformHandler::UniformHandle fViewMatrixUniform;
@@ -349,7 +345,7 @@ class TessellationTestOp : public GrDrawOp {
         GrPrimitiveType::kPatches, tessellationPatchVertexCount);
 
     state->bindPipeline(programInfo, SkRect::MakeIWH(kWidth, kHeight));
-    state->bindBuffers(nullptr, nullptr, fVertexBuffer.get());
+    state->bindBuffers(nullptr, nullptr, std::move(fVertexBuffer));
     state->draw(tessellationPatchVertexCount, fBaseVertex);
   }
 
@@ -379,7 +375,7 @@ static SkPath build_outset_triangle(const std::array<float, 3>* tri) {
 }
 
 DrawResult TessellationGM::onDraw(
-    GrContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas, SkString* errorMsg) {
+    GrRecordingContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas, SkString* errorMsg) {
   if (!ctx->priv().caps()->shaderCaps()->tessellationSupport()) {
     *errorMsg = "Requires GPU tessellation support.";
     return DrawResult::kSkip;

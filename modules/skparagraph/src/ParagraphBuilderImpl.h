@@ -56,7 +56,7 @@ class ParagraphBuilderImpl : public ParagraphBuilder {
   std::unique_ptr<Paragraph> Build() override;
 
  private:
-  void endRunIfNeeded();
+  void endRunIfNeeded() noexcept;
   void addPlaceholder(const PlaceholderStyle& placeholderStyle, bool lastOne);
 
   SkString fUtf8;

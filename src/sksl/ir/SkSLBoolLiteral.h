@@ -17,16 +17,18 @@ namespace SkSL {
  * Represents 'true' or 'false'.
  */
 struct BoolLiteral : public Expression {
+  static constexpr Kind kExpressionKind = kBoolLiteral_Kind;
+
   BoolLiteral(const Context& context, int offset, bool value) noexcept
-      : INHERITED(offset, kBoolLiteral_Kind, *context.fBool_Type), fValue(value) {}
+      : INHERITED(offset, kExpressionKind, *context.fBool_Type), fValue(value) {}
 
   String description() const override { return String(fValue ? "true" : "false"); }
 
   bool hasProperty(Property property) const noexcept override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isCompileTimeConstant() const noexcept override { return true; }
 
-  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
+  bool compareConstant(const Context& context, const Expression& other) const override {
     BoolLiteral& b = (BoolLiteral&)other;
     return fValue == b.fValue;
   }
@@ -43,7 +45,7 @@ struct BoolLiteral : public Expression {
 
  private:
   BoolLiteral(int offset, bool value, const Type* type) noexcept
-      : INHERITED(offset, kBoolLiteral_Kind, *type), fValue(value) {}
+      : INHERITED(offset, kExpressionKind, *type), fValue(value) {}
 };
 
 }  // namespace SkSL

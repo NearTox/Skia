@@ -18,7 +18,7 @@ class Decorations {
 
  private:
   void calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> typeface);
-  void calculatePosition(TextDecoration decoration, SkScalar ascent);
+  void calculatePosition(TextDecoration decoration, SkScalar ascent) noexcept;
   void calculatePaint(const TextStyle& textStyle);
   void calculateWaves(const TextStyle& textStyle, SkRect clip);
   void calculateGaps(

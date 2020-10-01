@@ -85,7 +85,7 @@ SkMatrix& SkMatrix::setAffine(const SkScalar buffer[]) noexcept {
   return *this;
 }
 
-// this guy aligns with the masks, so we can compute a mask from a varaible 0/1
+// this aligns with the masks, so we can compute a mask from a variable 0/1
 enum { kTranslate_Shift, kScale_Shift, kAffine_Shift, kPerspective_Shift, kRectStaysRect_Shift };
 
 static constexpr int32_t kScalar1Int = 0x3f800000;
@@ -378,7 +378,7 @@ SkMatrix& SkMatrix::postScale(SkScalar sx, SkScalar sy) noexcept {
   return this->postConcat(m);
 }
 
-// this guy perhaps can go away, if we have a fract/high-precision way to
+// this perhaps can go away, if we have a fract/high-precision way to
 // scale matrices
 bool SkMatrix::postIDiv(int divx, int divy) noexcept {
   if (divx == 0 || divy == 0) {
@@ -1366,7 +1366,7 @@ bool SkMatrix::Poly4Proc(const SkPoint srcPt[], SkMatrix* dst) noexcept {
   return true;
 }
 
-typedef bool (*PolyMapProc)(const SkPoint[], SkMatrix*) noexcept;
+typedef bool (*PolyMapProc)(const SkPoint[], SkMatrix*);
 
 /*  Adapted from Rob Johnson's original sample code in QuickDraw GX
  */
@@ -1484,7 +1484,6 @@ bool get_scale_factor(
   // Due to the floating point inaccuracy, there might be an error in a, b, c
   // calculated by sdot, further deepened by subsequent arithmetic operations
   // on them. Therefore, we allow and cap the nearly-zero negative values.
-  SkASSERT(results[0] >= -SK_ScalarNearlyZero);
   if (results[0] < 0) {
     results[0] = 0;
   }
@@ -1493,7 +1492,6 @@ bool get_scale_factor(
     if (!SkScalarIsFinite(results[1])) {
       return false;
     }
-    SkASSERT(results[1] >= -SK_ScalarNearlyZero);
     if (results[1] < 0) {
       results[1] = 0;
     }
@@ -1599,15 +1597,13 @@ bool SkTreatAsSprite(const SkMatrix& mat, const SkISize& size, const SkPaint& pa
   // more slightly fractional cases to fall into the fast (sprite) case.
   static constexpr unsigned kAntiAliasSubpixelBits = 4;
 
-  const unsigned subpixelBits = paint.isAntiAlias() ? kAntiAliasSubpixelBits : 0;
-
   // quick reject on affine or perspective
   if (mat.getType() & ~(SkMatrix::kScale_Mask | SkMatrix::kTranslate_Mask)) {
     return false;
   }
 
   // quick success check
-  if (!subpixelBits && !(mat.getType() & ~SkMatrix::kTranslate_Mask)) {
+  if (!paint.isAntiAlias() && !(mat.getType() & ~SkMatrix::kTranslate_Mask)) {
     return true;
   }
 
@@ -1628,13 +1624,13 @@ bool SkTreatAsSprite(const SkMatrix& mat, const SkISize& size, const SkPaint& pa
   // just apply the translate to isrc
   isrc.offset(SkScalarRoundToInt(mat.getTranslateX()), SkScalarRoundToInt(mat.getTranslateY()));
 
-  if (subpixelBits) {
-    isrc.fLeft = SkLeftShift(isrc.fLeft, subpixelBits);
-    isrc.fTop = SkLeftShift(isrc.fTop, subpixelBits);
-    isrc.fRight = SkLeftShift(isrc.fRight, subpixelBits);
-    isrc.fBottom = SkLeftShift(isrc.fBottom, subpixelBits);
+  if (paint.isAntiAlias()) {
+    isrc.fLeft = SkLeftShift(isrc.fLeft, kAntiAliasSubpixelBits);
+    isrc.fTop = SkLeftShift(isrc.fTop, kAntiAliasSubpixelBits);
+    isrc.fRight = SkLeftShift(isrc.fRight, kAntiAliasSubpixelBits);
+    isrc.fBottom = SkLeftShift(isrc.fBottom, kAntiAliasSubpixelBits);
 
-    const float scale = 1 << subpixelBits;
+    constexpr float scale = 1 << kAntiAliasSubpixelBits;
     dst.fLeft *= scale;
     dst.fTop *= scale;
     dst.fRight *= scale;
@@ -1789,12 +1785,14 @@ void SkRSXform::toTriStrip(SkScalar width, SkScalar height, SkPoint strip[4]) co
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 SkFilterQuality SkMatrixPriv::AdjustHighQualityFilterLevel(
-    const SkMatrix& matrix, bool matrixIsInverse) {
+    const SkMatrix& matrix, bool matrixIsInverse) noexcept {
   if (matrix.isIdentity()) {
     return kNone_SkFilterQuality;
   }
 
-  auto is_minimizing = [&](SkScalar scale) { return matrixIsInverse ? scale > 1 : scale < 1; };
+  auto is_minimizing = [&](SkScalar scale) noexcept {
+    return matrixIsInverse ? scale > 1 : scale < 1;
+  };
 
   SkScalar scales[2];
   if (!matrix.getMinMaxScales(scales) || is_minimizing(scales[0])) {

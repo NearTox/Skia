@@ -35,14 +35,14 @@ class GrProgramDesc {
     return fKey.count();
   }
 
-  GrProgramDesc& operator=(const GrProgramDesc& other) noexcept {
+  GrProgramDesc& operator=(const GrProgramDesc& other) {
     uint32_t keyLength = other.keyLength();
     fKey.reset(SkToInt(keyLength));
     memcpy(fKey.begin(), other.fKey.begin(), keyLength);
     return *this;
   }
 
-  bool operator==(const GrProgramDesc& that) const noexcept {
+  bool operator==(const GrProgramDesc& that) const {
     if (this->keyLength() != that.keyLength()) {
       return false;
     }
@@ -59,9 +59,9 @@ class GrProgramDesc {
     return true;
   }
 
-  bool operator!=(const GrProgramDesc& other) const noexcept { return !(*this == other); }
+  bool operator!=(const GrProgramDesc& other) const { return !(*this == other); }
 
-  uint32_t initialKeyLength() const noexcept { return this->header().fInitialKeyLength; }
+  uint32_t initialKeyLength() const { return this->header().fInitialKeyLength; }
 
  protected:
   friend class GrDawnCaps;
@@ -84,11 +84,10 @@ class GrProgramDesc {
    * @param programInfo   Program information need to build the key
    * @param caps          the caps
    **/
-  static bool Build(GrProgramDesc*, const GrRenderTarget*, const GrProgramInfo&, const GrCaps&);
+  static bool Build(GrProgramDesc*, GrRenderTarget*, const GrProgramInfo&, const GrCaps&);
 
-  // This is strictly an OpenGL call since the other backends have additional data in their
-  // keys
-  static bool BuildFromData(GrProgramDesc* desc, const void* keyData, size_t keyLength) noexcept {
+  // This is strictly an OpenGL call since the other backends have additional data in their keys.
+  static bool BuildFromData(GrProgramDesc* desc, const void* keyData, size_t keyLength) {
     if (!SkTFitsIn<int>(keyLength)) {
       return false;
     }
@@ -114,10 +113,10 @@ class GrProgramDesc {
   };
   static_assert(sizeof(KeyHeader) == 8);
 
-  const KeyHeader& header() const noexcept { return *this->atOffset<KeyHeader, kHeaderOffset>(); }
+  const KeyHeader& header() const { return *this->atOffset<KeyHeader, kHeaderOffset>(); }
 
   template <typename T, size_t OFFSET>
-  T* atOffset() noexcept {
+  T* atOffset() {
     return reinterpret_cast<T*>(reinterpret_cast<intptr_t>(fKey.begin()) + OFFSET);
   }
 
@@ -132,7 +131,7 @@ class GrProgramDesc {
   enum KeyOffsets {
     kHeaderOffset = 0,
     kHeaderSize = SkAlign4(sizeof(KeyHeader)),
-    // This is the offset into the backenend specific part of the key, which includes
+    // This is the offset into the backend-specific part of the key, which includes
     // per-processor keys.
     kProcessorKeysOffset = kHeaderOffset + kHeaderSize,
   };

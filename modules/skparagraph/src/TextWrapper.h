@@ -14,16 +14,16 @@ class ParagraphImpl;
 class TextWrapper {
   class ClusterPos {
    public:
-    ClusterPos() : fCluster(nullptr), fPos(0) {}
-    ClusterPos(Cluster* cluster, size_t pos) : fCluster(cluster), fPos(pos) {}
-    inline Cluster* cluster() const { return fCluster; }
-    inline size_t position() const { return fPos; }
-    inline void setPosition(size_t pos) { fPos = pos; }
-    void clean() {
+    constexpr ClusterPos() noexcept : fCluster(nullptr), fPos(0) {}
+    ClusterPos(Cluster* cluster, size_t pos) noexcept : fCluster(cluster), fPos(pos) {}
+    inline Cluster* cluster() const noexcept { return fCluster; }
+    inline size_t position() const noexcept { return fPos; }
+    inline void setPosition(size_t pos) noexcept { fPos = pos; }
+    void clean() noexcept {
       fCluster = nullptr;
       fPos = 0;
     }
-    void move(bool up) {
+    void move(bool up) noexcept {
       fCluster += up ? 1 : -1;
       fPos = up ? 0 : fCluster->endPos();
     }
@@ -34,8 +34,8 @@ class TextWrapper {
   };
   class TextStretch {
    public:
-    TextStretch() : fStart(), fEnd(), fWidth(0), fWidthWithGhostSpaces(0) {}
-    TextStretch(Cluster* s, Cluster* e, bool forceStrut)
+    TextStretch() noexcept : fStart(), fEnd(), fWidth(0), fWidthWithGhostSpaces(0) {}
+    TextStretch(Cluster* s, Cluster* e, bool forceStrut) noexcept
         : fStart(s, 0),
           fEnd(e, e->endPos()),
           fMetrics(forceStrut),
@@ -48,33 +48,33 @@ class TextWrapper {
       }
     }
 
-    inline SkScalar width() const { return fWidth; }
-    SkScalar widthWithGhostSpaces() const { return fWidthWithGhostSpaces; }
-    inline Cluster* startCluster() const { return fStart.cluster(); }
-    inline Cluster* endCluster() const { return fEnd.cluster(); }
-    inline Cluster* breakCluster() const { return fBreak.cluster(); }
-    inline InternalLineMetrics& metrics() { return fMetrics; }
-    inline size_t startPos() const { return fStart.position(); }
-    inline size_t endPos() const { return fEnd.position(); }
-    bool endOfCluster() { return fEnd.position() == fEnd.cluster()->endPos(); }
+    inline SkScalar width() const noexcept { return fWidth; }
+    SkScalar widthWithGhostSpaces() const noexcept { return fWidthWithGhostSpaces; }
+    inline Cluster* startCluster() const noexcept { return fStart.cluster(); }
+    inline Cluster* endCluster() const noexcept { return fEnd.cluster(); }
+    inline Cluster* breakCluster() const noexcept { return fBreak.cluster(); }
+    inline InternalLineMetrics& metrics() noexcept { return fMetrics; }
+    inline size_t startPos() const noexcept { return fStart.position(); }
+    inline size_t endPos() const noexcept { return fEnd.position(); }
+    bool endOfCluster() noexcept { return fEnd.position() == fEnd.cluster()->endPos(); }
     bool endOfWord() {
       return endOfCluster() && (fEnd.cluster()->isHardBreak() || fEnd.cluster()->isSoftBreak());
     }
 
-    void extend(TextStretch& stretch) {
+    void extend(TextStretch& stretch) noexcept {
       fMetrics.add(stretch.fMetrics);
       fEnd = stretch.fEnd;
       fWidth += stretch.fWidth;
       stretch.clean();
     }
 
-    bool empty() {
+    bool empty() noexcept {
       return fStart.cluster() == fEnd.cluster() && fStart.position() == fEnd.position();
     }
 
-    void setMetrics(const InternalLineMetrics& metrics) { fMetrics = metrics; }
+    void setMetrics(const InternalLineMetrics& metrics) noexcept { fMetrics = metrics; }
 
-    void extend(Cluster* cluster) {
+    void extend(Cluster* cluster) noexcept {
       if (fStart.cluster() == nullptr) {
         fStart = ClusterPos(cluster, cluster->startPos());
       }
@@ -86,14 +86,14 @@ class TextWrapper {
       fWidth += cluster->width();
     }
 
-    void extend(Cluster* cluster, size_t pos) {
+    void extend(Cluster* cluster, size_t pos) noexcept {
       fEnd = ClusterPos(cluster, pos);
       if (cluster->run() != nullptr) {
         fMetrics.add(cluster->run());
       }
     }
 
-    void startFrom(Cluster* cluster, size_t pos) {
+    void startFrom(Cluster* cluster, size_t pos) noexcept {
       fStart = ClusterPos(cluster, pos);
       fEnd = ClusterPos(cluster, pos);
       if (cluster->run() != nullptr) {
@@ -102,25 +102,25 @@ class TextWrapper {
       fWidth = 0;
     }
 
-    void saveBreak() {
+    void saveBreak() noexcept {
       fWidthWithGhostSpaces = fWidth;
       fBreak = fEnd;
     }
 
-    void restoreBreak() {
+    void restoreBreak() noexcept {
       fWidth = fWidthWithGhostSpaces;
       fEnd = fBreak;
     }
 
     void trim() {
-      if (fEnd.cluster() != nullptr && fEnd.cluster()->master() != nullptr &&
+      if (fEnd.cluster() != nullptr && fEnd.cluster()->owner() != nullptr &&
           fEnd.cluster()->run() != nullptr &&
           fEnd.cluster()->run()->placeholderStyle() == nullptr && fWidth > 0) {
         fWidth -= (fEnd.cluster()->width() - fEnd.cluster()->trimmedWidth(fEnd.position()));
       }
     }
 
-    void trim(Cluster* cluster) {
+    void trim(Cluster* cluster) noexcept {
       SkASSERT(fEnd.cluster() == cluster);
       if (fEnd.cluster() > fStart.cluster()) {
         fEnd.move(false);
@@ -130,7 +130,7 @@ class TextWrapper {
       }
     }
 
-    void clean() {
+    void clean() noexcept {
       fStart.clean();
       fEnd.clean();
       fWidth = 0;
@@ -147,7 +147,7 @@ class TextWrapper {
   };
 
  public:
-  TextWrapper() {
+  TextWrapper() noexcept {
     fLineNumber = 1;
     fHardLineBreak = false;
     fExceededMaxLines = false;
@@ -161,10 +161,10 @@ class TextWrapper {
   void breakTextIntoLines(
       ParagraphImpl* parent, SkScalar maxWidth, const AddLineToParagraph& addLine);
 
-  SkScalar height() const { return fHeight; }
-  SkScalar minIntrinsicWidth() const { return fMinIntrinsicWidth; }
-  SkScalar maxIntrinsicWidth() const { return fMaxIntrinsicWidth; }
-  bool exceededMaxLines() const { return fExceededMaxLines; }
+  SkScalar height() const noexcept { return fHeight; }
+  SkScalar minIntrinsicWidth() const noexcept { return fMinIntrinsicWidth; }
+  SkScalar maxIntrinsicWidth() const noexcept { return fMaxIntrinsicWidth; }
+  bool exceededMaxLines() const noexcept { return fExceededMaxLines; }
 
  private:
   TextStretch fWords;
@@ -182,7 +182,7 @@ class TextWrapper {
   SkScalar fMinIntrinsicWidth;
   SkScalar fMaxIntrinsicWidth;
 
-  void reset() {
+  void reset() noexcept {
     fWords.clean();
     fClusters.clean();
     fClip.clean();

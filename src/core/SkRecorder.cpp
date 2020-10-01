@@ -15,6 +15,7 @@
 #include "src/core/SkCanvasPriv.h"
 #include "src/utils/SkPatchUtils.h"
 
+#include <memory>
 #include <new>
 
 SkDrawableList::~SkDrawableList() { fArray.unrefAll(); }
@@ -58,7 +59,7 @@ void SkRecorder::reset(
   fMiniRecorder = mr;
 }
 
-void SkRecorder::forgetRecord() {
+void SkRecorder::forgetRecord() noexcept {
   fDrawableList.reset(nullptr);
   fApproxBytesUsedBySubPictures = 0;
   fRecord = nullptr;
@@ -169,7 +170,7 @@ void SkRecorder::onDrawDRRect(const SkRRect& outer, const SkRRect& inner, const 
 void SkRecorder::onDrawDrawable(SkDrawable* drawable, const SkMatrix* matrix) {
   if (fDrawPictureMode == Record_DrawPictureMode) {
     if (!fDrawableList) {
-      fDrawableList.reset(new SkDrawableList);
+      fDrawableList = std::make_unique<SkDrawableList>();
     }
     fDrawableList->append(drawable);
     this->append<SkRecords::DrawDrawable>(

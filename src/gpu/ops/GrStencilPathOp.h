@@ -27,15 +27,6 @@ class GrStencilPathOp final : public GrOp {
 
   const char* name() const noexcept override { return "StencilPathOp"; }
 
-#ifdef SK_DEBUG
-  SkString dumpInfo() const override {
-    SkString string;
-    string.printf("Path: 0x%p, AA: %d", fPath.get(), fUseHWAA);
-    string.append(INHERITED::dumpInfo());
-    return string;
-  }
-#endif
-
  private:
   friend class GrOpMemoryPool;  // for ctor
 
@@ -58,6 +49,12 @@ class GrStencilPathOp final : public GrOp {
   void onPrepare(GrOpFlushState*) override {}
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override {
+    return SkStringPrintf("Path: 0x%p, AA: %d", fPath.get(), fUseHWAA);
+  }
+#endif
 
   SkMatrix fViewMatrix;
   bool fUseHWAA;

@@ -29,12 +29,12 @@ class SkVerticesPriv {
   bool hasTexCoords() const noexcept { return SkToBool(fVertices->fTexs); }
   bool hasIndices() const noexcept { return SkToBool(fVertices->fIndices); }
 
-  bool hasUsage(SkVertices::Attribute::Usage) const noexcept;
+  bool hasUsage(SkVertices::Attribute::Usage) const;
 
   int vertexCount() const noexcept { return fVertices->fVertexCount; }
   int indexCount() const noexcept { return fVertices->fIndexCount; }
   int attributeCount() const noexcept { return fVertices->fAttributeCount; }
-  size_t customDataSize() const noexcept;
+  size_t customDataSize() const;
 
   const SkPoint* positions() const noexcept { return fVertices->fPositions; }
   const void* customData() const noexcept { return fVertices->fCustomData; }
@@ -64,7 +64,8 @@ class SkVerticesPriv {
 
 inline SkVerticesPriv SkVertices::priv() noexcept { return SkVerticesPriv(this); }
 
-inline const SkVerticesPriv SkVertices::priv() const noexcept {
+inline const SkVerticesPriv SkVertices::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return SkVerticesPriv(const_cast<SkVertices*>(this));
 }
 

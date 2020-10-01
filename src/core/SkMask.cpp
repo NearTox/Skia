@@ -47,7 +47,7 @@ uint8_t* SkMask::AllocImage(size_t size, AllocType at) {
 /** We explicitly use this allocator for SkBimap pixels, so that we can
     freely assign memory allocated by one class to the other.
 */
-void SkMask::FreeImage(void* image) { sk_free(image); }
+void SkMask::FreeImage(void* image) noexcept { sk_free(image); }
 
 SkMask SkMask::PrepareDestination(int radiusX, int radiusY, const SkMask& src) {
   SkSafeMath safe;

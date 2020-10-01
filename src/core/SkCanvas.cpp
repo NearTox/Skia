@@ -47,10 +47,10 @@
 #include "src/image/SkSurface_Base.h"
 #include "src/utils/SkPatchUtils.h"
 
+#include <memory>
 #include <new>
 
 #if SK_SUPPORT_GPU
-#  include "include/gpu/GrContext.h"
 #  include "src/gpu/SkGr.h"
 #endif
 
@@ -221,7 +221,7 @@ struct DeviceCM {
         fPaint(paint ? std::make_unique<SkPaint>(*paint) : nullptr),
         fStashedMatrix(stashed) {}
 
-  void reset(const SkIRect& bounds) {
+  void reset(const SkIRect& bounds) noexcept {
     SkASSERT(!fPaint);
     SkASSERT(!fNext);
     SkASSERT(fDevice);
@@ -235,7 +235,7 @@ struct BackImage {
   sk_sp<SkSpecialImage> fImage;
   SkIPoint fLoc;
 };
-}
+}  // namespace
 
 /*  This is the record we keep for each save/restore level in the stack.
     Since a level optionally copies the matrix and/or stack, we have pointers
@@ -281,7 +281,7 @@ class SkCanvas::MCRec {
     dec_rec();
   }
 
-  void reset(const SkIRect& bounds) {
+  void reset(const SkIRect& bounds) noexcept {
     SkASSERT(fLayer);
     SkASSERT(fDeferredSaveCount == 0);
 
@@ -761,7 +761,7 @@ void SkCanvas::restore() {
 }
 
 void SkCanvas::restoreToCount(int count) {
-  // sanity check
+  // safety check
   if (count < 1) {
     count = 1;
   }
@@ -1064,8 +1064,7 @@ void SkCanvas::DrawDeviceWithFilter(
   }
 }
 
-static SkImageInfo make_layer_info(
-    const SkImageInfo& prev, int w, int h, const SkPaint* paint) noexcept {
+static SkImageInfo make_layer_info(const SkImageInfo& prev, int w, int h, const SkPaint* paint) {
   SkColorType ct = prev.colorType();
   if (prev.bytesPerPixel() <= 4 && prev.colorType() != kRGBA_8888_SkColorType &&
       prev.colorType() != kBGRA_8888_SkColorType) {
@@ -1249,7 +1248,8 @@ void SkCanvas::internalSaveBehind(const SkRect* localBounds) {
   // we really need the save, so we can wack the fMCRec
   this->checkForDeferredSave();
 
-  fMCRec->fBackImage.reset(new BackImage{std::move(backImage), devBounds.topLeft()});
+  fMCRec->fBackImage =
+      std::make_unique<BackImage>(BackImage{std::move(backImage), devBounds.topLeft()});
 
   SkPaint paint;
   paint.setBlendMode(SkBlendMode::kClear);
@@ -1579,6 +1579,14 @@ void SkCanvas::androidFramework_setDeviceClipRestriction(const SkIRect& rect) {
   }
 }
 
+void SkCanvas::androidFramework_replaceClip(const SkIRect& rect) {
+  this->checkForDeferredSave();
+  FOR_EACH_TOP_DEVICE(device->replaceClip(rect));
+  AutoValidateClip avc(this);
+  fMCRec->fRasterClip.setRect(rect);
+  fDeviceClipBounds = qr_clip_bounds(fMCRec->fRasterClip.getBounds());
+}
+
 void SkCanvas::clipRRect(const SkRRect& rrect, SkClipOp op, bool doAA) {
   this->checkForDeferredSave();
   ClipEdgeStyle edgeStyle = doAA ? kSoft_ClipEdgeStyle : kHard_ClipEdgeStyle;
@@ -1702,7 +1710,7 @@ class RgnAccumulator {
 
  public:
   RgnAccumulator(SkRegion* total) noexcept : fRgn(total) {}
-  void accumulate(SkBaseDevice* device, SkRegion* rgn) {
+  void accumulate(SkBaseDevice* device, SkRegion* rgn) noexcept {
     SkIPoint origin = device->getOrigin();
     if (origin.x() | origin.y()) {
       rgn->translate(origin.x(), origin.y());
@@ -1738,7 +1746,7 @@ bool SkCanvas::isClipRect() const {
   return dev && dev->onGetClipType() == SkBaseDevice::ClipType::kRect;
 }
 
-static inline bool is_nan_or_clipped(const Sk4f& devRect, const Sk4f& devClip) noexcept {
+static inline bool is_nan_or_clipped(const Sk4f& devRect, const Sk4f& devClip) {
 #if !defined(SKNX_NO_SIMD) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
   __m128 lLtT = _mm_unpacklo_ps(devRect.fVec, devClip.fVec);
   __m128 RrBb = _mm_unpackhi_ps(devClip.fVec, devRect.fVec);
@@ -1841,7 +1849,7 @@ SkMatrix SkCanvas::getTotalMatrix() const noexcept { return fMCRec->fMatrix.asM3
 
 SkM44 SkCanvas::getLocalToDevice() const noexcept { return fMCRec->fMatrix; }
 
-GrRenderTargetContext* SkCanvas::internal_private_accessTopLayerRenderTargetContext() {
+GrRenderTargetContext* SkCanvas::internal_private_accessTopLayerRenderTargetContext() noexcept {
   SkBaseDevice* dev = this->getTopDevice();
   return dev ? dev->accessRenderTargetContext() : nullptr;
 }
@@ -1849,6 +1857,11 @@ GrRenderTargetContext* SkCanvas::internal_private_accessTopLayerRenderTargetCont
 GrContext* SkCanvas::getGrContext() noexcept {
   SkBaseDevice* device = this->getTopDevice();
   return device ? device->context() : nullptr;
+}
+
+GrRecordingContext* SkCanvas::recordingContext() noexcept {
+  SkBaseDevice* device = this->getTopDevice();
+  return device ? device->recordingContext() : nullptr;
 }
 
 void SkCanvas::drawDRRect(const SkRRect& outer, const SkRRect& inner, const SkPaint& paint) {
@@ -2011,7 +2024,7 @@ void SkCanvas::drawImageRect(const SkImage* image, const SkRect& dst, const SkPa
 namespace {
 class LatticePaint : SkNoncopyable {
  public:
-  LatticePaint(const SkPaint* origPaint) : fPaint(origPaint) {
+  LatticePaint(const SkPaint* origPaint) noexcept : fPaint(origPaint) {
     if (!origPaint) {
       return;
     }
@@ -2026,7 +2039,7 @@ class LatticePaint : SkNoncopyable {
     }
   }
 
-  const SkPaint* get() const { return fPaint; }
+  const SkPaint* get() const noexcept { return fPaint; }
 
  private:
   SkTCopyOnFirstWrite<SkPaint> fPaint;
@@ -2867,14 +2880,6 @@ void SkCanvas::drawPicture(const SkPicture* picture, const SkMatrix* matrix, con
 void SkCanvas::onDrawPicture(
     const SkPicture* picture, const SkMatrix* matrix, const SkPaint* paint) {}
 #else
-/**
- *  This constant is trying to balance the speed of ref'ing a subpicture into a parent picture,
- *  against the playback cost of recursing into the subpicture to get at its actual ops.
- *
- *  For now we pick a conservatively small value, though measurement (and other heuristics like
- *  the type of ops contained) may justify changing this value.
- */
-#  define kMaxPictureOpsToUnrollInsteadOfRef 1
 
 void SkCanvas::drawPicture(const SkPicture* picture, const SkMatrix* matrix, const SkPaint* paint) {
   TRACE_EVENT0("skia", TRACE_FUNC);

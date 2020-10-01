@@ -46,21 +46,20 @@ static constexpr int kGrStencilOpCount = 1 + (int)GrStencilOp::kDecClamp;
  */
 class GrStencilSettings {
  public:
-  GrStencilSettings() noexcept { this->setDisabled(); }
-  GrStencilSettings(
-      const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) noexcept {
+  GrStencilSettings() { this->setDisabled(); }
+  GrStencilSettings(const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) {
     this->reset(user, hasStencilClip, numStencilBits);
   }
-  GrStencilSettings(const GrStencilSettings& that) noexcept { this->reset(that); }
-  GrStencilSettings& operator=(const GrStencilSettings& that) noexcept {
+  GrStencilSettings(const GrStencilSettings& that) { this->reset(that); }
+  GrStencilSettings& operator=(const GrStencilSettings& that) {
     this->reset(that);
     return *this;
   }
 
   void invalidate() noexcept { fFlags |= kInvalid_PrivateFlag; }
   void setDisabled() noexcept { fFlags = kAll_StencilFlags; }
-  void reset(const GrUserStencilSettings&, bool hasStencilClip, int numStencilBits) noexcept;
-  void reset(const GrStencilSettings&) noexcept;
+  void reset(const GrUserStencilSettings&, bool hasStencilClip, int numStencilBits);
+  void reset(const GrStencilSettings&);
 
   bool isValid() const noexcept { return !(fFlags & kInvalid_PrivateFlag); }
   bool isDisabled() const noexcept {
@@ -82,13 +81,12 @@ class GrStencilSettings {
 
   void genKey(GrProcessorKeyBuilder* b, bool includeRefsAndMasks) const;
 
-  bool operator!=(const GrStencilSettings& that) const noexcept { return !(*this == that); }
-  bool operator==(const GrStencilSettings&) const noexcept;
+  bool operator!=(const GrStencilSettings& that) const { return !(*this == that); }
+  bool operator==(const GrStencilSettings&) const;
 
   struct Face : public GrTStencilFaceSettings<GrStencilTest, GrStencilOp> {
-    void reset(
-        const GrUserStencilSettings::Face&, bool useStencilClip, int numStencilBits) noexcept;
-    void setDisabled() noexcept;
+    void reset(const GrUserStencilSettings::Face&, bool useStencilClip, int numStencilBits);
+    void setDisabled();
   };
 
   const Face& singleSidedFace() const noexcept {
@@ -112,7 +110,7 @@ class GrStencilSettings {
   }
 
   /** Gets the user stencil settings to directly set the clip bit. */
-  static const GrUserStencilSettings* SetClipBitSettings(bool setToInside) noexcept;
+  static const GrUserStencilSettings* SetClipBitSettings(bool setToInside);
 
  private:
   // Internal flag for backends to optionally mark their tracked stencil state as invalid.

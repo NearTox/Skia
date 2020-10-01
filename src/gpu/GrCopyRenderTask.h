@@ -31,10 +31,12 @@ class GrCopyRenderTask final : public GrRenderTask {
   }
   bool onExecute(GrOpFlushState*) override;
 
+#if GR_TEST_UTILS
+  const char* name() const final { return "Copy"; }
+#endif
 #ifdef SK_DEBUG
-  const char* name() const noexcept final { return "Copy"; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const override {
-    fn(fSrcView.proxy(), GrMipMapped::kNo);
+    fn(fSrcView.proxy(), GrMipmapped::kNo);
   }
 #endif
 

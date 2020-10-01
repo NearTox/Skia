@@ -24,13 +24,16 @@ class SkSpan {
     fSize = that.fSize;
     return *this;
   }
-  constexpr T& operator[](size_t i) const noexcept { return fPtr[i]; }
+  constexpr T& operator[](size_t i) const noexcept {
+    SkASSERT(i < this->size());
+    return fPtr[i];
+  }
   constexpr T& front() const noexcept { return fPtr[0]; }
   constexpr T& back() const noexcept { return fPtr[fSize - 1]; }
-  constexpr T* begin() const { return fPtr; }
+  constexpr T* begin() const noexcept { return fPtr; }
   constexpr T* end() const noexcept { return fPtr + fSize; }
-  constexpr const T* cbegin() const noexcept { return fPtr; }
-  constexpr const T* cend() const noexcept { return fPtr + fSize; }
+  constexpr const T* cbegin() const noexcept { return this->begin(); }
+  constexpr const T* cend() const noexcept { return this->end(); }
   constexpr auto rbegin() const noexcept { return std::make_reverse_iterator(this->end()); }
   constexpr auto rend() const noexcept { return std::make_reverse_iterator(this->begin()); }
   constexpr auto crbegin() const noexcept { return std::make_reverse_iterator(this->cend()); }
@@ -42,24 +45,15 @@ class SkSpan {
   constexpr size_t size_bytes() const noexcept { return fSize * sizeof(T); }
   constexpr SkSpan<T> first(size_t prefixLen) const noexcept {
     SkASSERT(prefixLen <= this->size());
-    if (prefixLen == 0) {
-      return SkSpan{};
-    }
     return SkSpan{fPtr, prefixLen};
   }
   constexpr SkSpan<T> last(size_t postfixLen) const noexcept {
     SkASSERT(postfixLen <= this->size());
-    if (postfixLen == 0) {
-      return SkSpan{};
-    }
     return SkSpan{fPtr + (this->size() - postfixLen), postfixLen};
   }
   constexpr SkSpan<T> subspan(size_t offset, size_t count) const noexcept {
     SkASSERT(offset <= this->size());
     SkASSERT(count <= this->size() - offset);
-    if (count == 0) {
-      return SkSpan{};
-    }
     return SkSpan{fPtr + offset, count};
   }
 

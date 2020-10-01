@@ -17,19 +17,17 @@ class TextStyle;
 class Paragraph;
 class FontCollection : public SkRefCnt {
  public:
-  FontCollection();
-
-  ~FontCollection() = default;
+  FontCollection() noexcept;
 
   size_t getFontManagersCount() const;
 
-  void setAssetFontManager(sk_sp<SkFontMgr> fontManager);
-  void setDynamicFontManager(sk_sp<SkFontMgr> fontManager);
-  void setTestFontManager(sk_sp<SkFontMgr> fontManager);
-  void setDefaultFontManager(sk_sp<SkFontMgr> fontManager);
+  void setAssetFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
+  void setDynamicFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
+  void setTestFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
+  void setDefaultFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
   void setDefaultFontManager(sk_sp<SkFontMgr> fontManager, const char defaultFamilyName[]);
 
-  sk_sp<SkFontMgr> getFallbackManager() const { return fDefaultFontManager; }
+  sk_sp<SkFontMgr> getFallbackManager() const noexcept { return fDefaultFontManager; }
 
   std::vector<sk_sp<SkTypeface>> findTypefaces(
       const std::vector<SkString>& familyNames, SkFontStyle fontStyle);
@@ -38,11 +36,11 @@ class FontCollection : public SkRefCnt {
       SkUnichar unicode, SkFontStyle fontStyle, const SkString& locale);
   sk_sp<SkTypeface> defaultFallback();
 
-  void disableFontFallback();
-  void enableFontFallback();
-  bool fontFallbackEnabled() { return fEnableFontFallback; }
+  void disableFontFallback() noexcept;
+  void enableFontFallback() noexcept;
+  bool fontFallbackEnabled() noexcept { return fEnableFontFallback; }
 
-  ParagraphCache* getParagraphCache() { return &fParagraphCache; }
+  ParagraphCache* getParagraphCache() noexcept { return &fParagraphCache; }
 
  private:
   std::vector<sk_sp<SkFontMgr>> getFontManagerOrder() const;
@@ -53,15 +51,15 @@ class FontCollection : public SkRefCnt {
     FamilyKey(const std::vector<SkString>& familyNames, SkFontStyle style)
         : fFamilyNames(familyNames), fFontStyle(style) {}
 
-    FamilyKey() {}
+    FamilyKey() noexcept = default;
 
     std::vector<SkString> fFamilyNames;
     SkFontStyle fFontStyle;
 
-    bool operator==(const FamilyKey& other) const;
+    bool operator==(const FamilyKey& other) const noexcept;
 
     struct Hasher {
-      size_t operator()(const FamilyKey& key) const;
+      size_t operator()(const FamilyKey& key) const noexcept;
     };
   };
 

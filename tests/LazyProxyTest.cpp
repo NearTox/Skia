@@ -60,7 +60,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
     }
 
     void visitProxies(const VisitProxyFunc& func) const override {
-      func(fProxy.get(), GrMipMapped::kNo);
+      func(fProxy.get(), GrMipmapped::kNo);
     }
 
     void onExecute(GrOpFlushState*, const SkRect& chainBounds) override {
@@ -86,7 +86,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
             } else {
               static constexpr SkISize kDimensions = {1234, 567};
               sk_sp<GrTexture> texture = rp->createTexture(
-                  kDimensions, desc.fFormat, desc.fRenderable, desc.fSampleCnt, desc.fMipMapped,
+                  kDimensions, desc.fFormat, desc.fRenderable, desc.fSampleCnt, desc.fMipmapped,
                   desc.fBudgeted, desc.fProtected);
               REPORTER_ASSERT(fTest->fReporter, texture);
               return texture;
@@ -167,16 +167,13 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
 
    private:
     SkIRect getConservativeBounds() const final { return SkIRect::MakeSize(fAtlas->dimensions()); }
-
-    bool apply(
-        GrRecordingContext* context, GrRenderTargetContext*, bool useHWAA,
-        bool hasUserStencilSettings, GrAppliedClip* out, SkRect* bounds) const override {
+    Effect apply(
+        GrRecordingContext* context, GrRenderTargetContext*, GrAAType, bool hasUserStencilSettings,
+        GrAppliedClip* out, SkRect* bounds) const override {
       GrProxyProvider* proxyProvider = context->priv().proxyProvider();
       out->addCoverageFP(std::make_unique<ClipFP>(context, proxyProvider, fTest, fAtlas));
-      return true;
+      return Effect::kClipped;
     }
-    bool quickContains(const SkRect&) const final { return false; }
-    bool isRRect(SkRRect* rr, GrAA*) const final { return false; }
 
     LazyProxyTest* const fTest;
     GrTextureProxy* fAtlas;
@@ -193,7 +190,7 @@ DEF_GPUTEST(LazyProxyTest, reporter, /* options */) {
   mockOptions.fConfigOptions[(int)GrColorType::kAlpha_F16].fRenderability =
       GrMockOptions::ConfigOptions::Renderability::kNonMSAA;
   mockOptions.fConfigOptions[(int)GrColorType::kAlpha_F16].fTexturable = true;
-  sk_sp<GrContext> ctx = GrContext::MakeMock(&mockOptions, GrContextOptions());
+  sk_sp<GrDirectContext> ctx = GrDirectContext::MakeMock(&mockOptions, GrContextOptions());
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
   for (bool nullTexture : {false, true}) {
     LazyProxyTest test(reporter);
@@ -215,7 +212,7 @@ static const int kSize = 16;
 
 DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
   GrMockOptions mockOptions;
-  sk_sp<GrContext> ctx = GrContext::MakeMock(&mockOptions, GrContextOptions());
+  sk_sp<GrDirectContext> ctx = GrDirectContext::MakeMock(&mockOptions, GrContextOptions());
   auto proxyProvider = ctx->priv().proxyProvider();
   const GrCaps* caps = ctx->priv().caps();
 
@@ -223,7 +220,7 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
       caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
   auto tex = ctx->priv().resourceProvider()->createTexture(
-      {kSize, kSize}, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo,
+      {kSize, kSize}, format, GrRenderable::kNo, 1, GrMipmapped::kNo, SkBudgeted::kNo,
       GrProtected::kNo);
   using LazyInstantiationResult = GrSurfaceProxy::LazyCallbackResult;
   for (bool doInstantiate : {true, false}) {
@@ -263,7 +260,7 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
       };
       sk_sp<GrTextureProxy> proxy = proxyProvider->createLazyProxy(
           TestCallback(&testCount, releaseCallback, tex), format, {kSize, kSize}, GrRenderable::kNo,
-          1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated, GrInternalSurfaceFlags::kNone,
+          1, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated, GrInternalSurfaceFlags::kNone,
           SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
           GrSurfaceProxy::UseAllocator::kYes);
 
@@ -294,28 +291,28 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
   DEFINE_OP_CLASS_ID
 
   static std::unique_ptr<GrDrawOp> Make(
-      GrContext* context, GrProxyProvider* proxyProvider, int* testExecuteValue,
+      GrRecordingContext* rContext, GrProxyProvider* proxyProvider, int* testExecuteValue,
       bool shouldFailInstantiation) {
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
+    GrOpMemoryPool* pool = rContext->priv().opMemoryPool();
 
     return pool->allocate<LazyFailedInstantiationTestOp>(
-        context, proxyProvider, testExecuteValue, shouldFailInstantiation);
+        rContext->priv().caps(), proxyProvider, testExecuteValue, shouldFailInstantiation);
   }
 
   void visitProxies(const VisitProxyFunc& func) const override {
-    func(fLazyProxy.get(), GrMipMapped::kNo);
+    func(fLazyProxy.get(), GrMipmapped::kNo);
   }
 
  private:
   friend class GrOpMemoryPool;  // for ctor
 
   LazyFailedInstantiationTestOp(
-      GrContext* ctx, GrProxyProvider* proxyProvider, int* testExecuteValue,
+      const GrCaps* caps, GrProxyProvider* proxyProvider, int* testExecuteValue,
       bool shouldFailInstantiation)
       : INHERITED(ClassID()), fTestExecuteValue(testExecuteValue) {
     SkISize dims = {kSize, kSize};
     GrBackendFormat format =
-        ctx->priv().caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
+        caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
 
     fLazyProxy = proxyProvider->createLazyProxy(
         [testExecuteValue, shouldFailInstantiation](
@@ -328,10 +325,10 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
           return {
               rp->createTexture(
                   desc.fDimensions, desc.fFormat, desc.fRenderable, desc.fSampleCnt,
-                  desc.fMipMapped, desc.fBudgeted, desc.fProtected),
+                  desc.fMipmapped, desc.fBudgeted, desc.fProtected),
               true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
-        format, dims, GrRenderable::kNo, 1, GrMipMapped::kNo, GrMipMapsStatus::kNotAllocated,
+        format, dims, GrRenderable::kNo, 1, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated,
         GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
         GrSurfaceProxy::UseAllocator::kYes);
 
@@ -364,7 +361,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
 // associated with.
 DEF_GPUTEST(LazyProxyFailedInstantiationTest, reporter, /* options */) {
   GrMockOptions mockOptions;
-  sk_sp<GrContext> ctx = GrContext::MakeMock(&mockOptions, GrContextOptions());
+  sk_sp<GrDirectContext> ctx = GrDirectContext::MakeMock(&mockOptions, GrContextOptions());
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
   for (bool failInstantiation : {false, true}) {
     auto rtc = GrRenderTargetContext::Make(

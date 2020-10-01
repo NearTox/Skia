@@ -35,6 +35,7 @@
 
 #include <chrono>
 #include <cmath>
+#include <memory>
 
 #include "stdlib.h"
 
@@ -230,7 +231,7 @@ bool AnimationBuilder::dispatchColorProperty(const sk_sp<sksg::Color>& c) const 
   if (fPropertyObserver) {
     fPropertyObserver->onColorProperty(fPropertyObserverContext, [&]() {
       dispatched = true;
-      return std::unique_ptr<ColorPropertyHandle>(new ColorPropertyHandle(c));
+      return std::make_unique<ColorPropertyHandle>(c);
     });
   }
 
@@ -243,7 +244,7 @@ bool AnimationBuilder::dispatchOpacityProperty(const sk_sp<sksg::OpacityEffect>&
   if (fPropertyObserver) {
     fPropertyObserver->onOpacityProperty(fPropertyObserverContext, [&]() {
       dispatched = true;
-      return std::unique_ptr<OpacityPropertyHandle>(new OpacityPropertyHandle(o));
+      return std::make_unique<OpacityPropertyHandle>(o);
     });
   }
 
@@ -256,7 +257,7 @@ bool AnimationBuilder::dispatchTextProperty(const sk_sp<TextAdapter>& t) const {
   if (fPropertyObserver) {
     fPropertyObserver->onTextProperty(fPropertyObserverContext, [&]() {
       dispatched = true;
-      return std::unique_ptr<TextPropertyHandle>(new TextPropertyHandle(t));
+      return std::make_unique<TextPropertyHandle>(t);
     });
   }
 
@@ -269,7 +270,7 @@ bool AnimationBuilder::dispatchTransformProperty(const sk_sp<TransformAdapter2D>
   if (fPropertyObserver) {
     fPropertyObserver->onTransformProperty(fPropertyObserverContext, [&]() {
       dispatched = true;
-      return std::unique_ptr<TransformPropertyHandle>(new TransformPropertyHandle(t));
+      return std::make_unique<TransformPropertyHandle>(t);
     });
   }
 
@@ -451,7 +452,9 @@ void Animation::render(SkCanvas* canvas, const SkRect* dstR, RenderFlags renderF
     canvas->concat(SkMatrix::MakeRectToRect(srcR, *dstR, SkMatrix::kCenter_ScaleToFit));
   }
 
-  canvas->clipRect(srcR);
+  if (!(renderFlags & RenderFlag::kDisableTopLevelClipping)) {
+    canvas->clipRect(srcR);
+  }
 
   if ((fFlags & Flags::kRequiresTopLevelIsolation) &&
       !(renderFlags & RenderFlag::kSkipTopLevelIsolation)) {

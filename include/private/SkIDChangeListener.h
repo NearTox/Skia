@@ -23,7 +23,7 @@
  */
 class SkIDChangeListener : public SkRefCnt {
  public:
-  constexpr SkIDChangeListener() noexcept : fShouldDeregister(false) {}
+  SkIDChangeListener();
 
   ~SkIDChangeListener() override;
 

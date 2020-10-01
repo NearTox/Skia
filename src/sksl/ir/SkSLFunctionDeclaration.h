@@ -25,17 +25,19 @@ struct FunctionDefinition;
  * A function declaration (not a definition -- does not contain a body).
  */
 struct FunctionDeclaration : public Symbol {
+  static constexpr Kind kSymbolKind = kFunctionDeclaration_Kind;
+
   FunctionDeclaration(
       int offset, Modifiers modifiers, StringFragment name, std::vector<const Variable*> parameters,
-      const Type& returnType) noexcept
-      : INHERITED(offset, kFunctionDeclaration_Kind, std::move(name)),
+      const Type& returnType, bool builtin) noexcept
+      : INHERITED(offset, kSymbolKind, std::move(name)),
         fDefinition(nullptr),
-        fBuiltin(false),
+        fBuiltin(builtin),
         fModifiers(modifiers),
         fParameters(std::move(parameters)),
         fReturnType(returnType) {}
 
-  String declaration() const {
+  String description() const override {
     String result = fReturnType.displayName() + " " + fName + "(";
     String separator;
     for (auto p : fParameters) {
@@ -46,8 +48,6 @@ struct FunctionDeclaration : public Symbol {
     result += ")";
     return result;
   }
-
-  String description() const override { return this->declaration(); }
 
   bool matches(const FunctionDeclaration& f) const noexcept {
     if (fName != f.fName) {

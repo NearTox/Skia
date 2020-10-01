@@ -23,7 +23,7 @@
 #endif
 class GrPorterDuffXPFactory : public GrXPFactory {
  public:
-  static const GrXPFactory* Get(SkBlendMode blendMode) noexcept;
+  static const GrXPFactory* Get(SkBlendMode blendMode);
 
   /** Because src-over is so common we special case it for performance reasons. If this returns
       null then the SimpleSrcOverXP() below should be used. */
@@ -43,7 +43,7 @@ class GrPorterDuffXPFactory : public GrXPFactory {
       GrClampType);
 
  private:
-  constexpr GrPorterDuffXPFactory(SkBlendMode) noexcept;
+  constexpr GrPorterDuffXPFactory(SkBlendMode);
 
   sk_sp<const GrXferProcessor> makeXferProcessor(
       const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,

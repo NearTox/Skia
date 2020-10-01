@@ -74,7 +74,7 @@ class GrStyle {
 
   explicit GrStyle(SkStrokeRec::InitStyle initStyle) noexcept : fStrokeRec(initStyle) {}
 
-  GrStyle(const SkStrokeRec& strokeRec, sk_sp<SkPathEffect> pe)  : fStrokeRec(strokeRec) {
+  GrStyle(const SkStrokeRec& strokeRec, sk_sp<SkPathEffect> pe) : fStrokeRec(strokeRec) {
     this->initPathEffect(std::move(pe));
   }
 
@@ -140,7 +140,7 @@ class GrStyle {
     return this->pathEffect() || (!fStrokeRec.isFillStyle() && !fStrokeRec.isHairlineStyle());
   }
 
-  static SkScalar MatrixToScaleFactor(const SkMatrix& matrix) noexcept {
+  static SkScalar MatrixToScaleFactor(const SkMatrix& matrix) {
     // getMaxScale will return -1 if the matrix has perspective. In that case we can use a scale
     // factor of 1. This isn't necessarily a good choice and in the future we might consider
     // taking a bounds here for the perspective case.

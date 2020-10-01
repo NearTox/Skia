@@ -14,7 +14,6 @@
 #include "include/core/SkM44.h"
 #include "include/core/SkTypes.h"
 
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
 class GrAARectEffect : public GrFragmentProcessor {
@@ -27,13 +26,11 @@ class GrAARectEffect : public GrFragmentProcessor {
   GrAARectEffect(const GrAARectEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "AARectEffect"; }
-  int inputFP_index = -1;
   GrClipEdgeType edgeType;
   SkRect rect;
 
  private:
-  GrAARectEffect(
-      std::unique_ptr<GrFragmentProcessor> inputFP, GrClipEdgeType edgeType, SkRect rect) noexcept
+  GrAARectEffect(std::unique_ptr<GrFragmentProcessor> inputFP, GrClipEdgeType edgeType, SkRect rect)
       : INHERITED(
             kGrAARectEffect_ClassID,
             (OptimizationFlags)(
@@ -41,13 +38,14 @@ class GrAARectEffect : public GrFragmentProcessor {
                 kCompatibleWithCoverageAsAlpha_OptimizationFlag),
         edgeType(edgeType),
         rect(rect) {
-    if (inputFP) {
-      inputFP_index = this->registerChild(std::move(inputFP));
-    }
+    this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

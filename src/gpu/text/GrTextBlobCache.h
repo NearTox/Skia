@@ -9,6 +9,7 @@
 #define GrTextBlobCache_DEFINED
 
 #include "include/core/SkRefCnt.h"
+#include "include/private/SkMutex.h"
 #include "include/private/SkTArray.h"
 #include "include/private/SkTHash.h"
 #include "src/core/SkMessageBus.h"
@@ -19,28 +20,20 @@
 
 class GrTextBlobCache {
  public:
-  // The callback function used by the cache when it is still over budget after a purge.
-  using PurgeMore = std::function<void()>;
-
-  GrTextBlobCache(PurgeMore purgeMore, uint32_t messageBusID);
-  ~GrTextBlobCache();
+  GrTextBlobCache(uint32_t messageBusID);
 
   sk_sp<GrTextBlob> makeCachedBlob(
       const SkGlyphRunList& glyphRunList, const GrTextBlob::Key& key,
-      const SkMaskFilterBase::BlurRec& blurRec, const SkMatrix& viewMatrix);
+      const SkMaskFilterBase::BlurRec& blurRec, const SkMatrix& viewMatrix) SK_EXCLUDES(fSpinLock);
 
-  sk_sp<GrTextBlob> find(const GrTextBlob::Key& key) const;
+  sk_sp<GrTextBlob> find(const GrTextBlob::Key& key) SK_EXCLUDES(fSpinLock);
 
-  void remove(GrTextBlob* blob);
+  void remove(GrTextBlob* blob) SK_EXCLUDES(fSpinLock);
 
-  void makeMRU(GrTextBlob* blob) noexcept;
-
-  void freeAll() noexcept;
-
-  void setBudget(size_t budget);
+  void freeAll() SK_EXCLUDES(fSpinLock);
 
   struct PurgeBlobMessage {
-    PurgeBlobMessage(uint32_t blobID, uint32_t contextUniqueID) noexcept 
+    PurgeBlobMessage(uint32_t blobID, uint32_t contextUniqueID)
         : fBlobID(blobID), fContextID(contextUniqueID) {}
 
     uint32_t fBlobID;
@@ -49,11 +42,14 @@ class GrTextBlobCache {
 
   static void PostPurgeBlobMessage(uint32_t blobID, uint32_t cacheID);
 
-  void purgeStaleBlobs();
+  void purgeStaleBlobs() SK_EXCLUDES(fSpinLock);
 
-  size_t usedBytes() const noexcept;
+  size_t usedBytes() const SK_EXCLUDES(fSpinLock);
+
+  bool isOverBudget() const SK_EXCLUDES(fSpinLock);
 
  private:
+  friend class GrTextBlobTestingPeer;
   using TextBlobList = SkTInternalLList<GrTextBlob>;
 
   struct BlobIDCacheEntry {
@@ -76,24 +72,24 @@ class GrTextBlobCache {
     SkSTArray<1, sk_sp<GrTextBlob>> fBlobs;
   };
 
-  void internalPurgeStaleBlobs();
+  void internalPurgeStaleBlobs() SK_REQUIRES(fSpinLock);
 
-  void internalAdd(sk_sp<GrTextBlob> blob);
-  void internalRemove(GrTextBlob* blob);
+  void internalAdd(sk_sp<GrTextBlob> blob) SK_REQUIRES(fSpinLock);
+  void internalRemove(GrTextBlob* blob) SK_REQUIRES(fSpinLock);
 
-  void internalCheckPurge(GrTextBlob* blob = nullptr);
+  void internalCheckPurge(GrTextBlob* blob = nullptr) SK_REQUIRES(fSpinLock);
 
   static const int kDefaultBudget = 1 << 22;
 
-  TextBlobList fBlobList;
-  SkTHashMap<uint32_t, BlobIDCacheEntry> fBlobIDCache;
-  PurgeMore fPurgeMore;
-  size_t fSizeBudget;
-  size_t fCurrentSize{0};
+  mutable SkSpinlock fSpinLock;
+  TextBlobList fBlobList SK_GUARDED_BY(fSpinLock);
+  SkTHashMap<uint32_t, BlobIDCacheEntry> fBlobIDCache SK_GUARDED_BY(fSpinLock);
+  size_t fSizeBudget SK_GUARDED_BY(fSpinLock);
+  size_t fCurrentSize SK_GUARDED_BY(fSpinLock){0};
 
   // In practice 'messageBusID' is always the unique ID of the owning GrContext
-  uint32_t fMessageBusID;
-  SkMessageBus<PurgeBlobMessage>::Inbox fPurgeBlobInbox;
+  const uint32_t fMessageBusID;
+  SkMessageBus<PurgeBlobMessage>::Inbox fPurgeBlobInbox SK_GUARDED_BY(fSpinLock);
 };
 
 #endif

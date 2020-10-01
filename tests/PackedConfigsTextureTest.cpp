@@ -13,7 +13,7 @@
 
 #include "tests/Test.h"
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrProxyProvider.h"
@@ -98,7 +98,7 @@ static void check_565(
 }
 
 static void run_test(
-    skiatest::Reporter* reporter, GrContext* context, int arraySize, SkColorType colorType) {
+    skiatest::Reporter* reporter, GrDirectContext* dContext, int arraySize, SkColorType colorType) {
   SkTDArray<uint16_t> controlPixelData;
   // We will read back into an 8888 buffer since 565/4444 read backs aren't supported
   SkTDArray<GrColor> readBuffer;
@@ -115,20 +115,16 @@ static void run_test(
 
   for (auto origin : {kTopLeft_GrSurfaceOrigin, kBottomLeft_GrSurfaceOrigin}) {
     auto grColorType = SkColorTypeToGrColorType(colorType);
-    auto proxy = sk_gpu_test::MakeTextureProxyFromData(
-        context, GrRenderable::kNo, origin,
+    auto view = sk_gpu_test::MakeTextureProxyViewFromData(
+        dContext, GrRenderable::kNo, origin,
         {grColorType, kPremul_SkAlphaType, nullptr, DEV_W, DEV_H}, controlPixelData.begin(), 0);
-    SkASSERT(proxy);
+    SkASSERT(view);
 
-    GrSwizzle readSwizzle =
-        context->priv().caps()->getReadSwizzle(proxy->backendFormat(), grColorType);
+    GrSurfaceContext sContext(dContext, std::move(view), grColorType, kPremul_SkAlphaType, nullptr);
 
-    GrSurfaceProxyView view(std::move(proxy), origin, readSwizzle);
-    GrSurfaceContext sContext(context, std::move(view), grColorType, kPremul_SkAlphaType, nullptr);
-
-    if (!sContext.readPixels(dstInfo, readBuffer.begin(), 0, {0, 0})) {
+    if (!sContext.readPixels(dContext, dstInfo, readBuffer.begin(), 0, {0, 0})) {
       // We only require this to succeed if the format is renderable.
-      REPORTER_ASSERT(reporter, !context->colorTypeSupportedAsSurface(colorType));
+      REPORTER_ASSERT(reporter, !dContext->colorTypeSupportedAsSurface(colorType));
       return;
     }
 
@@ -144,13 +140,17 @@ static void run_test(
 static const int CONTROL_ARRAY_SIZE = DEV_W * DEV_H;
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(RGBA4444TextureTest, reporter, ctxInfo) {
-  if (ctxInfo.grContext()->colorTypeSupportedAsImage(kARGB_4444_SkColorType)) {
-    run_test(reporter, ctxInfo.grContext(), CONTROL_ARRAY_SIZE, kARGB_4444_SkColorType);
+  auto direct = ctxInfo.directContext();
+
+  if (direct->colorTypeSupportedAsImage(kARGB_4444_SkColorType)) {
+    run_test(reporter, direct, CONTROL_ARRAY_SIZE, kARGB_4444_SkColorType);
   }
 }
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(RGB565TextureTest, reporter, ctxInfo) {
-  if (ctxInfo.grContext()->colorTypeSupportedAsImage(kRGB_565_SkColorType)) {
-    run_test(reporter, ctxInfo.grContext(), CONTROL_ARRAY_SIZE, kRGB_565_SkColorType);
+  auto direct = ctxInfo.directContext();
+
+  if (direct->colorTypeSupportedAsImage(kRGB_565_SkColorType)) {
+    run_test(reporter, direct, CONTROL_ARRAY_SIZE, kRGB_565_SkColorType);
   }
 }

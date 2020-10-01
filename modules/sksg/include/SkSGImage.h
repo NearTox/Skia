@@ -10,8 +10,8 @@
 
 #include "modules/sksg/include/SkSGRenderNode.h"
 
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkFilterQuality.h"
 
 namespace sksg {
 
@@ -33,7 +33,7 @@ class Image final : public RenderNode {
   explicit Image(sk_sp<SkImage>);
 
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 

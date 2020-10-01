@@ -26,7 +26,7 @@ class SK_API SkEncoder : SkNoncopyable {
  protected:
   virtual bool onEncodeRows(int numRows) = 0;
 
-  SkEncoder(const SkPixmap& src, size_t storageBytes) noexcept
+  SkEncoder(const SkPixmap& src, size_t storageBytes)
       : fSrc(src), fCurrRow(0), fStorage(storageBytes) {}
 
   const SkPixmap& fSrc;

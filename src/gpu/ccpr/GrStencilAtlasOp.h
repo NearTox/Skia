@@ -32,7 +32,7 @@ class GrStencilAtlasOp : public GrDrawOp {
 
   // GrDrawOp interface.
   const char* name() const noexcept override { return "StencilAtlasOp (CCPR)"; }
-  FixedFunctionFlags fixedFunctionFlags() const noexcept override {
+  FixedFunctionFlags fixedFunctionFlags() const override {
     return FixedFunctionFlags::kUsesHWAA | FixedFunctionFlags::kUsesStencil;
   }
 

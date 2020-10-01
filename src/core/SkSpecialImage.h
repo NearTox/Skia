@@ -52,11 +52,11 @@ class SkSpecialImage : public SkRefCnt {
   int width() const noexcept { return fSubset.width(); }
   int height() const noexcept { return fSubset.height(); }
   const SkIRect& subset() const noexcept { return fSubset; }
-  SkColorSpace* getColorSpace() const;
+  SkColorSpace* getColorSpace() const noexcept;
 
   uint32_t uniqueID() const noexcept { return fUniqueID; }
-  virtual SkAlphaType alphaType() const = 0;
-  virtual SkColorType colorType() const = 0;
+  virtual SkAlphaType alphaType() const noexcept = 0;
+  virtual SkColorType colorType() const noexcept = 0;
   virtual size_t getSize() const = 0;
 
   /**
@@ -114,12 +114,12 @@ class SkSpecialImage : public SkRefCnt {
   /**
    *  If the SpecialImage is backed by a gpu texture, return true.
    */
-  bool isTextureBacked() const;
+  bool isTextureBacked() const noexcept;
 
   /**
    * Return the GrRecordingContext if the SkSpecialImage is GrTexture-backed
    */
-  GrRecordingContext* getContext() const;
+  GrRecordingContext* getContext() const noexcept;
 
 #if SK_SUPPORT_GPU
   /**
@@ -139,7 +139,7 @@ class SkSpecialImage : public SkRefCnt {
   bool getROPixels(SkBitmap*) const;
 
  protected:
-  SkSpecialImage(const SkIRect& subset, uint32_t uniqueID, const SkSurfaceProps*);
+  SkSpecialImage(const SkIRect& subset, uint32_t uniqueID, const SkSurfaceProps*) noexcept;
 
  private:
   const SkSurfaceProps fProps;

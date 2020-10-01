@@ -14,7 +14,7 @@
 struct SkSemaphore::OSSemaphore {
   dispatch_semaphore_t fSemaphore;
 
-  OSSemaphore() { fSemaphore = dispatch_semaphore_create(0 /*initial count*/); }
+  OSSemaphore() noexcept { fSemaphore = dispatch_semaphore_create(0 /*initial count*/); }
   ~OSSemaphore() { dispatch_release(fSemaphore); }
 
   void signal(int n) {
@@ -67,13 +67,13 @@ struct SkSemaphore::OSSemaphore {
 
 SkSemaphore::~SkSemaphore() { delete fOSSemaphore; }
 
-void SkSemaphore::osSignal(int n) {
-  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+void SkSemaphore::osSignal(int n) noexcept {
+  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->signal(n);
 }
 
-void SkSemaphore::osWait() {
-  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+void SkSemaphore::osWait() noexcept {
+  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->wait();
 }
 

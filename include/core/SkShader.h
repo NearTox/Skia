@@ -51,11 +51,9 @@ class SK_API SkShader : public SkFlattenable {
    *  Iff this shader is backed by a single SkImage, return its ptr (the caller must ref this
    *  if they want to keep it longer than the lifetime of the shader). If not, return nullptr.
    */
-  SkImage* isAImage(SkMatrix* localMatrix, SkTileMode xy[2]) const noexcept;
+  SkImage* isAImage(SkMatrix* localMatrix, SkTileMode xy[2]) const;
 
-  bool isAImage() const noexcept {
-    return this->isAImage(nullptr, (SkTileMode*)nullptr) != nullptr;
-  }
+  bool isAImage() const { return this->isAImage(nullptr, (SkTileMode*)nullptr) != nullptr; }
 
   /**
    *  If the shader subclass can be represented as a gradient, asAGradient
@@ -128,7 +126,7 @@ class SK_API SkShader : public SkFlattenable {
   sk_sp<SkShader> makeWithColorFilter(sk_sp<SkColorFilter>) const;
 
  private:
-  constexpr SkShader() noexcept = default;
+  SkShader() = default;
   friend class SkShaderBase;
 
   typedef SkFlattenable INHERITED;

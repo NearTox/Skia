@@ -12,6 +12,7 @@
 
 #if SK_SUPPORT_GPU
 #  include "src/gpu/GrFragmentProcessor.h"
+#  include "src/gpu/effects/GrMatrixEffect.h"
 #  include "src/gpu/effects/generated/GrDeviceSpaceEffect.h"
 #endif
 
@@ -53,7 +54,7 @@ SkShaderBase::Context* SkLocalMatrixShader::onMakeContext(
 }
 #endif
 
-SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, SkTileMode* mode) const noexcept {
+SkImage* SkLocalMatrixShader::onIsAImage(SkMatrix* outMatrix, SkTileMode* mode) const {
   SkMatrix imageMatrix;
   SkImage* image = fProxyShader->isAImage(&imageMatrix, mode);
   if (image && outMatrix) {
@@ -129,12 +130,10 @@ class SkCTMShader final : public SkShaderBase {
 #endif
 
  protected:
-  void flatten(SkWriteBuffer&) const noexcept override { SkASSERT(false); }
+  void flatten(SkWriteBuffer&) const override { SkASSERT(false); }
 
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
-  Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const noexcept override {
-    return nullptr;
-  }
+  Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override { return nullptr; }
 #endif
 
   bool onAppendStages(const SkStageRec& rec) const override {
@@ -182,7 +181,7 @@ std::unique_ptr<GrFragmentProcessor> SkCTMShader::asFragmentProcessor(const GrFP
   // In order for the shader to be evaluated with the original CTM, we explicitly evaluate it
   // at sk_FragCoord, and pass that through the inverse of the original CTM. This avoids requiring
   // local coords for the shader and mapping from the draw's local to device and then back.
-  return GrDeviceSpaceEffect::Make(std::move(base), ctmInv);
+  return GrDeviceSpaceEffect::Make(GrMatrixEffect::Make(ctmInv, std::move(base)));
 }
 #endif
 

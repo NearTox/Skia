@@ -45,11 +45,8 @@ public:
 private:
     class GLSLGP : public GrGLSLGeometryProcessor {
      public:
-      void setData(
-          const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& pp,
-          const CoordTransformRange& transformRange) override {
+      void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& pp) override {
         const auto& gp = pp.cast<GP>();
-        this->setTransformDataHelper(pdman, transformRange);
         this->setTransform(pdman, fLocalMatrixUni, gp.fLocalMatrix);
       }
 
@@ -222,7 +219,7 @@ std::unique_ptr<GrDrawOp> MakeRect(GrRecordingContext* context,
                                    const SkRect& localRect,
                                    const SkMatrix& localM) {
     GrPaint paint;
-    paint.addColorFragmentProcessor(std::move(fp));
+    paint.setColorFragmentProcessor(std::move(fp));
     return TestRectOp::Make(context, std::move(paint), drawRect, localRect, localM);
 }
 

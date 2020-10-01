@@ -15,9 +15,21 @@ namespace SkSL {
 
 class OutputStream {
  public:
-  virtual bool isValid() const noexcept { return true; }
+  virtual bool isValid() const { return true; }
 
   virtual void write8(uint8_t b) = 0;
+
+  void write16(uint16_t i) {
+    this->write8((uint8_t)i);
+    this->write8((uint8_t)(i >> 8));
+  }
+
+  void write32(uint32_t i) {
+    this->write8((uint8_t)i);
+    this->write8((uint8_t)(i >> 8));
+    this->write8((uint8_t)(i >> 16));
+    this->write8((uint8_t)(i >> 24));
+  }
 
   virtual void writeText(const char* s) = 0;
 

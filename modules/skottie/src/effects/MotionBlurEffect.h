@@ -27,7 +27,7 @@ class MotionBlurEffect final : public sksg::CustomRenderNode {
  private:
   class AutoInvalBlocker;
 
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
   SkRect onRevalidate(sksg::InvalidationController* ic, const SkMatrix& ctm) override;
 

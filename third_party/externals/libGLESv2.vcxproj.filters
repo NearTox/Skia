@@ -404,5 +404,6 @@
     <ClCompile Include="angle2\src\gpu_info_util\SystemInfo.cpp" />
     <ClCompile Include="angle2\src\gpu_info_util\SystemInfo_win.cpp" />
     <ClCompile Include="..\angle2\SystemInfo2.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\BufferImpl.cpp" />
   </ItemGroup>
 </Project>

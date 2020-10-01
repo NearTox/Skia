@@ -200,13 +200,13 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
       const uint16_t* fGlyphIndices;
     };
 
-    Iter(const SkTextBlob&) noexcept;
+    Iter(const SkTextBlob&);
 
     /**
      * Returns true for each "run" inside the textblob, setting the Run fields (if not null).
      * If this returns false, there are no more runs, and the Run parameter will be ignored.
      */
-    bool next(Run*) noexcept;
+    bool next(Run*);
 
    private:
     const RunRecord* fRunRecord;
@@ -217,17 +217,17 @@ class SK_API SkTextBlob final : public SkNVRefCnt<SkTextBlob> {
 
   enum GlyphPositioning : uint8_t;
 
-  explicit SkTextBlob(const SkRect& bounds) noexcept;
+  explicit SkTextBlob(const SkRect& bounds);
 
   ~SkTextBlob();
 
   // Memory for objects of this class is created with sk_malloc rather than operator new and must
   // be freed with sk_free.
-  void operator delete(void* p) noexcept;
+  void operator delete(void* p);
   void* operator new(size_t);
   void* operator new(size_t, void* p);
 
-  static unsigned ScalarsPerGlyph(GlyphPositioning pos) noexcept;
+  static unsigned ScalarsPerGlyph(GlyphPositioning pos);
 
   // Call when this blob is part of the key to a cache entry. This allows the cache
   // to know automatically those entries can be purged when this SkTextBlob is deleted.
@@ -262,7 +262,7 @@ class SK_API SkTextBlobBuilder {
 
       example: https://fiddle.skia.org/c/@TextBlobBuilder_empty_constructor
   */
-  SkTextBlobBuilder() noexcept;
+  SkTextBlobBuilder();
 
   /** Deletes data allocated internally by SkTextBlobBuilder.
    */
@@ -389,13 +389,12 @@ class SK_API SkTextBlobBuilder {
       const SkFont& font, int count, int textByteCount, SkString lang,
       const SkRect* bounds = nullptr);
 
-  void reserve(size_t size) noexcept;
+  void reserve(size_t size);
   void allocInternal(
       const SkFont& font, SkTextBlob::GlyphPositioning positioning, int count, int textBytes,
       SkPoint offset, const SkRect* bounds);
   bool mergeRun(
-      const SkFont& font, SkTextBlob::GlyphPositioning positioning, uint32_t count,
-      SkPoint offset) noexcept;
+      const SkFont& font, SkTextBlob::GlyphPositioning positioning, uint32_t count, SkPoint offset);
   void updateDeferredBounds();
 
   static SkRect ConservativeRunBounds(const SkTextBlob::RunRecord&);

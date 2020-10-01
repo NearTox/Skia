@@ -18,7 +18,7 @@
 #include "include/core/SkSurface.h"
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrCaps.h"
@@ -112,7 +112,7 @@ DEF_TEST(Blend_byte_multiply, r) {
 
 namespace {
 static sk_sp<SkSurface> create_gpu_surface_backend_texture_as_render_target(
-    GrContext* context, int sampleCnt, SkISize dimensions, SkColorType colorType,
+    GrDirectContext* context, int sampleCnt, SkISize dimensions, SkColorType colorType,
     GrSurfaceOrigin origin, sk_sp<GrTexture>* backingSurface) {
   auto ct = SkColorTypeToGrColorType(colorType);
   auto format = context->priv().caps()->getDefaultBackendFormat(ct, GrRenderable::kYes);
@@ -120,7 +120,7 @@ static sk_sp<SkSurface> create_gpu_surface_backend_texture_as_render_target(
   auto resourceProvider = context->priv().resourceProvider();
 
   *backingSurface = resourceProvider->createTexture(
-      dimensions, format, GrRenderable::kYes, sampleCnt, GrMipMapped::kNo, SkBudgeted::kNo,
+      dimensions, format, GrRenderable::kYes, sampleCnt, GrMipmapped::kNo, SkBudgeted::kNo,
       GrProtected::kNo);
   if (!(*backingSurface)) {
     return nullptr;
@@ -137,7 +137,7 @@ static sk_sp<SkSurface> create_gpu_surface_backend_texture_as_render_target(
 
 // Tests blending to a surface with no texture available.
 DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(ES2BlendWithNoTexture, reporter, ctxInfo) {
-  GrContext* context = ctxInfo.grContext();
+  auto context = ctxInfo.directContext();
   static constexpr SkISize kDimensions{10, 10};
   const SkColorType kColorType = kRGBA_8888_SkColorType;
 

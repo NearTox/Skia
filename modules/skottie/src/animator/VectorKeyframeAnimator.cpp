@@ -93,7 +93,7 @@ class VectorKeyframeAnimator final : public KeyframeAnimator {
     auto* dst = fTarget->data();
 
     if (lerp_info.isConstant()) {
-      if (std::memcmp(dst, v0, fVecLen * sizeof(float))) {
+      if (0 != std::memcmp(dst, v0, fVecLen * sizeof(float))) {
         std::copy(v0, v0 + fVecLen, dst);
         return true;
       }

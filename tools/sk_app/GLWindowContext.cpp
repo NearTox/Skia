@@ -9,7 +9,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkMathPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
@@ -29,7 +29,8 @@ void GLWindowContext::initializeContext() {
   SkASSERT(!fContext);
 
   fBackendContext = this->onInitializeContext();
-  fContext = GrContext::MakeGL(fBackendContext, fDisplayParams.fGrContextOptions);
+
+  fContext = GrDirectContext::MakeGL(fBackendContext, fDisplayParams.fGrContextOptions);
   if (!fContext && fDisplayParams.fMSAASampleCount > 1) {
     fDisplayParams.fMSAASampleCount /= 2;
     this->initializeContext();
@@ -41,7 +42,7 @@ void GLWindowContext::destroyContext() {
   fSurface.reset(nullptr);
 
   if (fContext) {
-    // in case we have outstanding refs to this guy (lua?)
+    // in case we have outstanding refs to this (lua?)
     fContext->abandonContext();
     fContext.reset();
   }

@@ -25,8 +25,7 @@ class GrGaussianConvolutionFragmentProcessor::Impl : public GrGLSLFragmentProces
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -58,12 +57,10 @@ void GrGaussianConvolutionFragmentProcessor::Impl::emitCode(EmitArgs& args) {
       &ce, kFragment_GrShaderFlag, kHalf4_GrSLType, "Kernel", arrayCount, &kernel);
 
   GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-  auto coords2D =
-      fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint, ce.sampleMatrix());
 
   fragBuilder->codeAppendf("%s = half4(0, 0, 0, 0);", args.fOutputColor);
 
-  fragBuilder->codeAppendf("float2 coord = %s - %d.0 * %s;", coords2D.c_str(), ce.fRadius, inc);
+  fragBuilder->codeAppendf("float2 coord = %s - %d.0 * %s;", args.fSampleCoord, ce.fRadius, inc);
   fragBuilder->codeAppend("float2 coordSampled = half2(0, 0);");
 
   // Manually unroll loop because some drivers don't; yields 20-30% speedup.
@@ -98,7 +95,7 @@ void GrGaussianConvolutionFragmentProcessor::Impl::onSetData(
 }
 
 void GrGaussianConvolutionFragmentProcessor::Impl::GenKey(
-    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const auto& conv = processor.cast<GrGaussianConvolutionFragmentProcessor>();
   b->add32(conv.fRadius);
 }
@@ -162,10 +159,10 @@ GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
           kGrGaussianConvolutionFragmentProcessor_ClassID, ProcessorOptimizationFlags(child.get())),
       fRadius(radius),
       fDirection(direction) {
-  this->registerExplicitlySampledChild(std::move(child));
+  this->registerChild(std::move(child), SkSL::SampleUsage::Explicit());
   SkASSERT(radius <= kMaxKernelRadius);
   fill_in_1D_gaussian_kernel(fKernel, gaussianSigma, fRadius);
-  this->addCoordTransform(&fCoordTransform);
+  this->setUsesSampleCoordsDirectly();
 }
 
 GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
@@ -175,11 +172,11 @@ GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
       fDirection(that.fDirection) {
   this->cloneAndRegisterAllChildProcessors(that);
   memcpy(fKernel, that.fKernel, radius_to_width(fRadius) * sizeof(float));
-  this->addCoordTransform(&fCoordTransform);
+  this->setUsesSampleCoordsDirectly();
 }
 
 void GrGaussianConvolutionFragmentProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   Impl::GenKey(*this, caps, b);
 }
 

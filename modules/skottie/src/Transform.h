@@ -45,13 +45,13 @@ class TransformAdapter2D final
   SkVector getScale() const;
   void setScale(const SkVector&);
 
-  float getRotation() const noexcept { return fRotation; }
+  float getRotation() const { return fRotation; }
   void setRotation(float r);
 
-  float getSkew() const noexcept { return fSkew; }
+  float getSkew() const { return fSkew; }
   void setSkew(float sk);
 
-  float getSkewAxis() const noexcept { return fSkewAxis; }
+  float getSkewAxis() const { return fSkewAxis; }
   void setSkewAxis(float sa);
 
   SkMatrix totalMatrix() const;

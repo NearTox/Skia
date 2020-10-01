@@ -20,14 +20,13 @@
 #  include "src/gpu/GrFragmentProcessor.h"
 #  include "src/gpu/effects/GrCustomXfermode.h"
 #  include "src/gpu/effects/GrPorterDuffXferProcessor.h"
-#  include "src/gpu/effects/GrXfermodeFragmentProcessor.h"
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 class SkProcCoeffXfermode : public SkXfermode {
  public:
-  SkProcCoeffXfermode(SkBlendMode mode) noexcept : fMode(mode) {}
+  SkProcCoeffXfermode(SkBlendMode mode) : fMode(mode) {}
 
   void xfer32(
       SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const override {
@@ -87,7 +86,7 @@ sk_sp<SkXfermode> SkXfermode::Make(SkBlendMode mode) {
     return nullptr;
   }
 
-  constexpr int COUNT_BLENDMODES = (int)SkBlendMode::kLastMode + 1;
+  const int COUNT_BLENDMODES = (int)SkBlendMode::kLastMode + 1;
 
   static SkOnce once[COUNT_BLENDMODES];
   static SkXfermode* cached[COUNT_BLENDMODES];
@@ -104,7 +103,7 @@ sk_sp<SkXfermode> SkXfermode::Make(SkBlendMode mode) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) noexcept {
+bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) {
   SkBlendModeCoeff src, dst;
   if (!SkBlendMode_AsCoeff(mode, &src, &dst)) {
     return false;
@@ -131,7 +130,7 @@ bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) noexcep
 }
 
 #if SK_SUPPORT_GPU
-const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode mode) noexcept {
+const GrXPFactory* SkBlendMode_AsXPFactory(SkBlendMode mode) {
   if (SkBlendMode_AsCoeff(mode, nullptr, nullptr)) {
     const GrXPFactory* result = GrPorterDuffXPFactory::Get(mode);
     SkASSERT(result);

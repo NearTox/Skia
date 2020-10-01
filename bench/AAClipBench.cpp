@@ -36,8 +36,8 @@ class AAClipBench : public Benchmark {
   }
 
  protected:
-  virtual const char* onGetName() { return fName.c_str(); }
-  virtual void onDraw(int loops, SkCanvas* canvas) {
+  const char* onGetName() override { return fName.c_str(); }
+  void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint;
     this->setupPaint(&paint);
 
@@ -103,7 +103,7 @@ class NestedAAClipBench : public Benchmark {
   }
 
  protected:
-  virtual const char* onGetName() { return fName.c_str(); }
+  const char* onGetName() override { return fName.c_str(); }
 
   void recurse(SkCanvas* canvas, int depth, const SkPoint& offset) {
     canvas->save();
@@ -141,7 +141,7 @@ class NestedAAClipBench : public Benchmark {
     canvas->restore();
   }
 
-  virtual void onDraw(int loops, SkCanvas* canvas) {
+  void onDraw(int loops, SkCanvas* canvas) override {
     for (int i = 0; i < loops; ++i) {
       SkPoint offset = SkPoint::Make(0, 0);
       this->recurse(canvas, 0, offset);
@@ -175,8 +175,8 @@ class AAClipBuilderBench : public Benchmark {
   }
 
  protected:
-  virtual const char* onGetName() { return fName.c_str(); }
-  virtual void onDraw(int loops, SkCanvas*) {
+  const char* onGetName() override { return fName.c_str(); }
+  void onDraw(int loops, SkCanvas*) override {
     SkPaint paint;
     this->setupPaint(&paint);
 
@@ -211,8 +211,8 @@ class AAClipRegionBench : public Benchmark {
   }
 
  protected:
-  virtual const char* onGetName() { return "aaclip_setregion"; }
-  virtual void onDraw(int loops, SkCanvas*) {
+  const char* onGetName() override { return "aaclip_setregion"; }
+  void onDraw(int loops, SkCanvas*) override {
     for (int i = 0; i < loops; ++i) {
       SkAAClip clip;
       clip.setRegion(fRegion);

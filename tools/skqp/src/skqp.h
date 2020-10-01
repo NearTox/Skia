@@ -22,11 +22,11 @@ class sk_sp;
 
 namespace skiagm {
 class GM;
-}
+}  // namespace skiagm
 
 namespace skiatest {
 struct Test;
-}
+}  // namespace skiatest
 
 class SkStreamAsset;
 

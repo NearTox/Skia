@@ -69,9 +69,9 @@ bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkDraw::drawPaint(const SkPaint& paint) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      if (fRC->isEmpty()) {
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -96,8 +96,7 @@ struct PtProcRec {
 
   typedef void (*Proc)(const PtProcRec&, const SkPoint devPts[], int count, SkBlitter*);
 
-  bool init(
-      SkCanvas::PointMode, const SkPaint&, const SkMatrix* matrix, const SkRasterClip*) noexcept;
+  bool init(SkCanvas::PointMode, const SkPaint&, const SkMatrix* matrix, const SkRasterClip*);
   Proc chooseProc(SkBlitter** blitter);
 
  private:
@@ -197,11 +196,11 @@ static void aa_poly_hair_proc(
 
 // square procs (strokeWidth > 0 but matrix is square-scale (sx == sy)
 
-static constexpr SkRect make_square_rad(SkPoint center, SkScalar radius) noexcept {
+static SkRect make_square_rad(SkPoint center, SkScalar radius) {
   return {center.fX - radius, center.fY - radius, center.fX + radius, center.fY + radius};
 }
 
-static SkXRect make_xrect(const SkRect& r) noexcept {
+static SkXRect make_xrect(const SkRect& r) {
   SkASSERT(SkRectPriv::FitsInFixed(r));
   return {
       SkScalarToFixed(r.fLeft), SkScalarToFixed(r.fTop), SkScalarToFixed(r.fRight),
@@ -228,10 +227,10 @@ static void aa_square_proc(
   }
 }
 
-// If this guy returns true, then chooseProc() must return a valid proc
+// If this returns true, then chooseProc() must return a valid proc
 bool PtProcRec::init(
     SkCanvas::PointMode mode, const SkPaint& paint, const SkMatrix* matrix,
-    const SkRasterClip* rc) noexcept {
+    const SkRasterClip* rc) {
   if ((unsigned)mode > (unsigned)SkCanvas::kPolygon_PointMode) {
     return false;
   }
@@ -337,10 +336,10 @@ void SkDraw::drawPoints(
   }
 
   SkASSERT(pts != nullptr);
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -586,10 +585,10 @@ static void draw_rect_as_path(
 void SkDraw::drawRect(
     const SkRect& prePaintRect, const SkPaint& paint, const SkMatrix* paintMatrix,
     const SkRect* postPaintRect) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -708,7 +707,7 @@ void SkDraw::drawDevMask(const SkMask& srcM, const SkPaint& paint) const {
   blitter->blitMaskRegion(*mask, *clipRgn);
 }
 
-static SkScalar fast_len(const SkVector& vec) noexcept {
+static SkScalar fast_len(const SkVector& vec) {
   SkScalar x = SkScalarAbs(vec.fX);
   SkScalar y = SkScalarAbs(vec.fY);
   if (x < y) {
@@ -782,7 +781,7 @@ DRAW_PATH:
   this->drawPath(path, paint, nullptr, true);
 }
 
-SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) noexcept {
+SkScalar SkDraw::ComputeResScaleForStroking(const SkMatrix& matrix) {
   // Not sure how to handle perspective differently, so we just don't try (yet)
   SkScalar sx = SkPoint::Length(matrix[SkMatrix::kMScaleX], matrix[SkMatrix::kMSkewY]);
   SkScalar sy = SkPoint::Length(matrix[SkMatrix::kMSkewX], matrix[SkMatrix::kMScaleY]);
@@ -818,7 +817,7 @@ void SkDraw::drawDevPath(
     }
   }
 
-  void (*proc)(const SkPath&, const SkRasterClip&, SkBlitter*);
+  void (*proc)(const SkPathView&, const SkRasterClip&, SkBlitter*);
   if (doFill) {
     if (paint.isAntiAlias()) {
       proc = SkScan::AntiFillPath;
@@ -843,16 +842,16 @@ void SkDraw::drawDevPath(
     }
   }
 
-  proc(devPath, *fRC, blitter);
+  proc(devPath.view(), *fRC, blitter);
 }
 
 void SkDraw::drawPath(
     const SkPath& origSrcPath, const SkPaint& origPaint, const SkMatrix* prePathMatrix,
     bool pathIsMutable, bool drawCoverage, SkBlitter* customBlitter) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty()) {
+  // nothing to draw
+  if (fRC->isEmpty()) {
     return;
   }
 
@@ -879,10 +878,9 @@ void SkDraw::drawPath(
     }
   }
   // at this point we're done with prePathMatrix
-  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001;)
+  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001);
 
-      SkTCopyOnFirstWrite<SkPaint>
-          paint(origPaint);
+  SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
 
   {
     SkScalar coverage;
@@ -1026,19 +1024,18 @@ static bool clipped_out(const SkMatrix& matrix, const SkRasterClip& clip, int wi
   return clipped_out(matrix, clip, r);
 }
 
-static bool clipHandlesSprite(
-    const SkRasterClip& clip, int x, int y, const SkPixmap& pmap) noexcept {
+static bool clipHandlesSprite(const SkRasterClip& clip, int x, int y, const SkPixmap& pmap) {
   return clip.isBW() || clip.quickContains(x, y, x + pmap.width(), y + pmap.height());
 }
 
 void SkDraw::drawBitmap(
     const SkBitmap& bitmap, const SkMatrix& prematrix, const SkRect* dstBounds,
     const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
-          bitmap.colorType() == kUnknown_SkColorType) {
+  // nothing to draw
+  if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
+      bitmap.colorType() == kUnknown_SkColorType) {
     return;
   }
 
@@ -1098,11 +1095,11 @@ void SkDraw::drawBitmap(
 }
 
 void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(this->validate());
 
-      // nothing to draw
-      if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
-          bitmap.colorType() == kUnknown_SkColorType) {
+  // nothing to draw
+  if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
+      bitmap.colorType() == kUnknown_SkColorType) {
     return;
   }
 
@@ -1199,7 +1196,7 @@ bool SkDraw::ComputeMaskBounds(
     // like handsets, etc.). Need to balance this invented value between
     // quality of large filters like blurs, and the corresponding memory
     // requests.
-    static constexpr int MAX_MARGIN = 128;
+    static const int MAX_MARGIN = 128;
     if (!bounds->intersect(clipBounds->makeOutset(
             std::min(margin.fX, MAX_MARGIN), std::min(margin.fY, MAX_MARGIN)))) {
       return false;

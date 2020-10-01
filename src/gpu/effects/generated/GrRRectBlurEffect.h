@@ -14,8 +14,7 @@
 #include "include/core/SkM44.h"
 #include "include/core/SkTypes.h"
 
-#include "include/gpu/GrContext.h"
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkBlurPriv.h"
 #include "src/core/SkGpuBlurUtils.h"
 #include "src/core/SkRRectPriv.h"
@@ -27,7 +26,6 @@
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/effects/GrTextureEffect.h"
 
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
 class GrRRectBlurEffect : public GrFragmentProcessor {
@@ -67,7 +65,7 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
 
     auto rtc = GrRenderTargetContext::MakeWithFallback(
         context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kExact, dimensions, 1,
-        GrMipMapped::kNo, GrProtected::kNo, kMaskOrigin);
+        GrMipmapped::kNo, GrProtected::kNo, kMaskOrigin);
     if (!rtc) {
       return nullptr;
     }
@@ -107,11 +105,9 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
   GrRRectBlurEffect(const GrRRectBlurEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "RRectBlurEffect"; }
-  int inputFP_index = -1;
   float sigma;
   SkRect rect;
   float cornerRadius;
-  int ninePatchFP_index = -1;
 
  private:
   GrRRectBlurEffect(
@@ -125,15 +121,16 @@ class GrRRectBlurEffect : public GrFragmentProcessor {
         sigma(sigma),
         rect(rect),
         cornerRadius(cornerRadius) {
-    if (inputFP) {
-      inputFP_index = this->registerChild(std::move(inputFP));
-    }
+    this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
     SkASSERT(ninePatchFP);
-    ninePatchFP_index = this->registerExplicitlySampledChild(std::move(ninePatchFP));
+    this->registerChild(std::move(ninePatchFP), SkSL::SampleUsage::Explicit());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

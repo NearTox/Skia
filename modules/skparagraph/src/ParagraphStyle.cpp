@@ -7,7 +7,7 @@
 namespace skia {
 namespace textlayout {
 
-StrutStyle::StrutStyle() {
+StrutStyle::StrutStyle() noexcept {
   fFontStyle = SkFontStyle::Normal();
   fFontSize = 14;
   fHeight = 1;
@@ -17,7 +17,7 @@ StrutStyle::StrutStyle() {
   fEnabled = false;
 }
 
-ParagraphStyle::ParagraphStyle() {
+ParagraphStyle::ParagraphStyle() noexcept {
   fTextAlign = TextAlign::kStart;
   fTextDirection = TextDirection::kLtr;
   fLinesLimit = std::numeric_limits<size_t>::max();
@@ -26,7 +26,7 @@ ParagraphStyle::ParagraphStyle() {
   fHintingIsOn = true;
 }
 
-TextAlign ParagraphStyle::effective_align() const {
+TextAlign ParagraphStyle::effective_align() const noexcept {
   if (fTextAlign == TextAlign::kStart) {
     return (fTextDirection == TextDirection::kLtr) ? TextAlign::kLeft : TextAlign::kRight;
   } else if (fTextAlign == TextAlign::kEnd) {

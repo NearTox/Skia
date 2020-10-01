@@ -14,7 +14,6 @@
 #include "include/core/SkM44.h"
 #include "include/core/SkTypes.h"
 
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
 class GrSingleIntervalGradientColorizer : public GrFragmentProcessor {
@@ -32,10 +31,15 @@ class GrSingleIntervalGradientColorizer : public GrFragmentProcessor {
   GrSingleIntervalGradientColorizer(SkPMColor4f start, SkPMColor4f end)
       : INHERITED(kGrSingleIntervalGradientColorizer_ClassID, kNone_OptimizationFlags),
         start(start),
-        end(end) {}
+        end(end) {
+    this->setUsesSampleCoordsDirectly();
+  }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

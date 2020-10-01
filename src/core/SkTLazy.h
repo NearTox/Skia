@@ -57,11 +57,30 @@ class SkTLazy {
    *  instance is always returned.
    */
   template <typename... Args>
-  T* init(Args&&... args) {
+  T* init(Args&&... args) noexcept(std::is_nothrow_constructible_v<Args...>) {
     this->reset();
     fPtr = new (&fStorage) T(std::forward<Args>(args)...);
     return fPtr;
   }
+
+  T* init() noexcept(std::is_nothrow_default_constructible_v<T>) {
+    this->reset();
+    fPtr = new (&fStorage) T();
+    return fPtr;
+  }
+
+  /*template <>
+  T* init<const T&>(const T& copy) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+    this->reset();
+    fPtr = new (&fStorage) T(copy);
+    return fPtr;
+  }
+  template <>
+  T* init<T&&>(T&& move) noexcept(std::is_nothrow_move_constructible_v<T>) {
+    this->reset();
+    fPtr = new (&fStorage) T(std::move(move));
+    return fPtr;
+  }*/
 
   /**
    *  Copy src into this, and return a pointer to a copy of it. Note this
@@ -160,23 +179,31 @@ class SkTCopyOnFirstWrite {
   // Constructor for delayed initialization.
   SkTCopyOnFirstWrite() noexcept : fObj(nullptr) {}
 
-  SkTCopyOnFirstWrite(const SkTCopyOnFirstWrite& that) { *this = that; }
-  SkTCopyOnFirstWrite(SkTCopyOnFirstWrite&& that) { *this = std::move(that); }
+  SkTCopyOnFirstWrite(const SkTCopyOnFirstWrite& that) noexcept(
+      std::is_nothrow_copy_assignable_v<SkTLazy<T>>) {
+    *this = that;
+  }
+  SkTCopyOnFirstWrite(SkTCopyOnFirstWrite&& that) noexcept(
+      std::is_nothrow_move_assignable_v<SkTLazy<T>>) {
+    *this = std::move(that);
+  }
 
-  SkTCopyOnFirstWrite& operator=(const SkTCopyOnFirstWrite& that) {
+  SkTCopyOnFirstWrite& operator=(const SkTCopyOnFirstWrite& that) noexcept(
+      std::is_nothrow_copy_assignable_v<SkTLazy<T>>) {
     fLazy = that.fLazy;
     fObj = fLazy.isValid() ? fLazy.get() : that.fObj;
     return *this;
   }
 
-  SkTCopyOnFirstWrite& operator=(SkTCopyOnFirstWrite&& that) {
+  SkTCopyOnFirstWrite& operator=(SkTCopyOnFirstWrite&& that) noexcept(
+      std::is_nothrow_move_assignable_v<SkTLazy<T>>) {
     fLazy = std::move(that.fLazy);
     fObj = fLazy.isValid() ? fLazy.get() : that.fObj;
     return *this;
   }
 
   // Should only be called once, and only if the default constructor was used.
-  void init(const T& initial) {
+  void init(const T& initial) noexcept {
     SkASSERT(nullptr == fObj);
     SkASSERT(!fLazy.isValid());
     fObj = &initial;
@@ -185,7 +212,8 @@ class SkTCopyOnFirstWrite {
   /**
    * Returns a writable T*. The first time this is called the initial object is cloned.
    */
-  T* writable() {
+  T* writable() noexcept(
+      std::is_nothrow_copy_constructible_v<T>&& std::is_nothrow_copy_assignable_v<T>) {
     SkASSERT(fObj);
     if (!fLazy.isValid()) {
       fLazy.set(*fObj);
@@ -194,17 +222,17 @@ class SkTCopyOnFirstWrite {
     return const_cast<T*>(fObj);
   }
 
-  const T* get() const { return fObj; }
+  const T* get() const noexcept { return fObj; }
 
   /**
    * Operators for treating this as though it were a const pointer.
    */
 
-  const T* operator->() const { return fObj; }
+  const T* operator->() const noexcept { return fObj; }
 
-  operator const T*() const { return fObj; }
+  operator const T*() const noexcept { return fObj; }
 
-  const T& operator*() const { return *fObj; }
+  const T& operator*() const noexcept { return *fObj; }
 
  private:
   const T* fObj;

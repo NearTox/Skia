@@ -9,7 +9,7 @@
 #define GrCCAtlas_DEFINED
 
 #include "src/gpu/GrDynamicAtlas.h"
-#include "src/gpu/GrTAllocator.h"
+#include "src/gpu/GrTBlockList.h"
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
 
 class GrCCCachedAtlas;
@@ -97,10 +97,10 @@ class GrCCAtlas : public GrDynamicAtlas {
 class GrCCAtlasStack {
  public:
   using CoverageType = GrCCAtlas::CoverageType;
-  using CCAtlasAllocator = GrTAllocator<GrCCAtlas, 4>;
+  using CCAtlasAllocator = GrTBlockList<GrCCAtlas, 4>;
 
   GrCCAtlasStack(
-      CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps) noexcept 
+      CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps) noexcept
       : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
   CoverageType coverageType() const noexcept { return fCoverageType; }
@@ -113,13 +113,13 @@ class GrCCAtlasStack {
     SkASSERT(!this->empty());
     return fAtlases.front();
   }
-  GrCCAtlas& current() {
+  GrCCAtlas& current() noexcept {
     SkASSERT(!this->empty());
     return fAtlases.back();
   }
 
-  CCAtlasAllocator::Iter atlases() { return fAtlases.items(); }
-  CCAtlasAllocator::CIter atlases() const { return fAtlases.items(); }
+  CCAtlasAllocator::Iter atlases() noexcept { return fAtlases.items(); }
+  CCAtlasAllocator::CIter atlases() const noexcept { return fAtlases.items(); }
 
   // Adds a rect to the current atlas and returns the offset from device space to atlas space.
   // Call current() to get the atlas it was added to.

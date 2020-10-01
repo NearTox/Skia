@@ -59,7 +59,7 @@ class SK_API SkMatrix44 {
   enum Identity_Constructor { kIdentity_Constructor };
   enum NaN_Constructor { kNaN_Constructor };
 
-  SkMatrix44(Uninitialized_Constructor) noexcept {}  // ironically, cannot be constexpr
+  SkMatrix44(Uninitialized_Constructor) {}  // ironically, cannot be constexpr
 
   constexpr SkMatrix44(Identity_Constructor) noexcept
         : fMat{{ 1, 0, 0, 0, },
@@ -78,7 +78,7 @@ class SK_API SkMatrix44 {
 
   SkMatrix44& operator=(const SkMatrix44& src) noexcept = default;
 
-  SkMatrix44(const SkMatrix44& a, const SkMatrix44& b) noexcept { this->setConcat(a, b); }
+  SkMatrix44(const SkMatrix44& a, const SkMatrix44& b) { this->setConcat(a, b); }
 
   bool operator==(const SkMatrix44& other) const noexcept;
   bool operator!=(const SkMatrix44& other) const noexcept { return !(other == *this); }
@@ -193,10 +193,10 @@ class SK_API SkMatrix44 {
    *  contiguously in memory.  Row major indicates that consecutive elements
    *  of rows will be stored contiguously in memory.
    */
-  void asColMajorf(float[]) const noexcept;
-  void asColMajord(double[]) const noexcept;
-  void asRowMajorf(float[]) const noexcept;
-  void asRowMajord(double[]) const noexcept;
+  void asColMajorf(float[]) const;
+  void asColMajord(double[]) const;
+  void asRowMajorf(float[]) const;
+  void asRowMajord(double[]) const;
 
   /** These methods allow one to efficiently set all matrix entries from an
    *  array. The given array must have room for exactly 16 entries. Whenever
@@ -208,13 +208,13 @@ class SK_API SkMatrix44 {
    *  indicates that input memory will be treated as if consecutive elements
    *  of rows are stored contiguously in memory.
    */
-  void setColMajorf(const float[]) noexcept;
-  void setColMajord(const double[]) noexcept;
-  void setRowMajorf(const float[]) noexcept;
-  void setRowMajord(const double[]) noexcept;
+  void setColMajorf(const float[]);
+  void setColMajord(const double[]);
+  void setRowMajorf(const float[]);
+  void setRowMajord(const double[]);
 
-  void setColMajor(const SkScalar data[]) noexcept { this->setColMajorf(data); }
-  void setRowMajor(const SkScalar data[]) noexcept { this->setRowMajorf(data); }
+  void setColMajor(const SkScalar data[]) { this->setColMajorf(data); }
+  void setRowMajor(const SkScalar data[]) { this->setRowMajorf(data); }
 
   /* This sets the top-left of the matrix and clears the translation and
    * perspective components (with [3][3] set to 1).  m_ij is interpreted
@@ -222,57 +222,49 @@ class SK_API SkMatrix44 {
   void set3x3(
       SkScalar m_00, SkScalar m_10, SkScalar m_20, SkScalar m_01, SkScalar m_11, SkScalar m_21,
       SkScalar m_02, SkScalar m_12, SkScalar m_22) noexcept;
-  void set3x3RowMajorf(const float[]) noexcept;
+  void set3x3RowMajorf(const float[]);
 
   void set4x4(
       SkScalar m_00, SkScalar m_10, SkScalar m_20, SkScalar m_30, SkScalar m_01, SkScalar m_11,
       SkScalar m_21, SkScalar m_31, SkScalar m_02, SkScalar m_12, SkScalar m_22, SkScalar m_32,
-      SkScalar m_03, SkScalar m_13, SkScalar m_23, SkScalar m_33) noexcept;
+      SkScalar m_03, SkScalar m_13, SkScalar m_23, SkScalar m_33);
 
-  SkMatrix44& setTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noexcept;
-  SkMatrix44& preTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noexcept;
-  SkMatrix44& postTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noexcept;
+  SkMatrix44& setTranslate(SkScalar dx, SkScalar dy, SkScalar dz);
+  SkMatrix44& preTranslate(SkScalar dx, SkScalar dy, SkScalar dz);
+  SkMatrix44& postTranslate(SkScalar dx, SkScalar dy, SkScalar dz);
 
-  SkMatrix44& setScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept;
-  SkMatrix44& preScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept;
-  SkMatrix44& postScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept;
+  SkMatrix44& setScale(SkScalar sx, SkScalar sy, SkScalar sz);
+  SkMatrix44& preScale(SkScalar sx, SkScalar sy, SkScalar sz);
+  SkMatrix44& postScale(SkScalar sx, SkScalar sy, SkScalar sz);
 
-  inline SkMatrix44& setScale(SkScalar scale) noexcept {
-    return this->setScale(scale, scale, scale);
-  }
-  inline SkMatrix44& preScale(SkScalar scale) noexcept {
-    return this->preScale(scale, scale, scale);
-  }
-  inline SkMatrix44& postScale(SkScalar scale) noexcept {
-    return this->postScale(scale, scale, scale);
-  }
+  inline SkMatrix44& setScale(SkScalar scale) { return this->setScale(scale, scale, scale); }
+  inline SkMatrix44& preScale(SkScalar scale) { return this->preScale(scale, scale, scale); }
+  inline SkMatrix44& postScale(SkScalar scale) { return this->postScale(scale, scale, scale); }
 
-  void setRotateDegreesAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar degrees) noexcept {
+  void setRotateDegreesAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar degrees) {
     this->setRotateAbout(x, y, z, degrees * SK_ScalarPI / 180);
   }
 
   /** Rotate about the vector [x,y,z]. If that vector is not unit-length,
       it will be automatically resized.
    */
-  void setRotateAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar radians) noexcept;
+  void setRotateAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar radians);
   /** Rotate about the vector [x,y,z]. Does not check the length of the
       vector, assuming it is unit-length.
    */
-  void setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar radians) noexcept;
+  void setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar radians);
 
-  void setConcat(const SkMatrix44& a, const SkMatrix44& b) noexcept;
-  inline void preConcat(const SkMatrix44& m) noexcept { this->setConcat(*this, m); }
-  inline void postConcat(const SkMatrix44& m) noexcept { this->setConcat(m, *this); }
+  void setConcat(const SkMatrix44& a, const SkMatrix44& b);
+  inline void preConcat(const SkMatrix44& m) { this->setConcat(*this, m); }
+  inline void postConcat(const SkMatrix44& m) { this->setConcat(m, *this); }
 
-  friend SkMatrix44 operator*(const SkMatrix44& a, const SkMatrix44& b) noexcept {
-    return SkMatrix44(a, b);
-  }
+  friend SkMatrix44 operator*(const SkMatrix44& a, const SkMatrix44& b) { return SkMatrix44(a, b); }
 
   /** If this is invertible, return that in inverse and return true. If it is
       not invertible, return false and leave the inverse parameter in an
       unspecified state.
    */
-  bool invert(SkMatrix44* inverse) const noexcept;
+  bool invert(SkMatrix44* inverse) const;
 
   /** Transpose this matrix in place. */
   void transpose() noexcept;
@@ -280,10 +272,10 @@ class SK_API SkMatrix44 {
   /** Apply the matrix to the src vector, returning the new vector in dst.
       It is legal for src and dst to point to the same memory.
    */
-  void mapScalars(const SkScalar src[4], SkScalar dst[4]) const noexcept;
-  inline void mapScalars(SkScalar vec[4]) const noexcept { this->mapScalars(vec, vec); }
+  void mapScalars(const SkScalar src[4], SkScalar dst[4]) const;
+  inline void mapScalars(SkScalar vec[4]) const { this->mapScalars(vec, vec); }
 
-  friend SkVector4 operator*(const SkMatrix44& m, const SkVector4& src) noexcept {
+  friend SkVector4 operator*(const SkMatrix44& m, const SkVector4& src) {
     SkVector4 dst;
     m.mapScalars(src.fData, dst.fData);
     return dst;
@@ -310,11 +302,11 @@ class SK_API SkMatrix44 {
       a 90-degree rotation can still end up with 10^-17 of
       "non-axis-aligned" result.
    */
-  bool preserves2dAxisAlignment(SkScalar epsilon = SK_ScalarNearlyZero) const noexcept;
+  bool preserves2dAxisAlignment(SkScalar epsilon = SK_ScalarNearlyZero) const;
 
   void dump() const;
 
-  double determinant() const noexcept;
+  double determinant() const;
 
  private:
   /* This is indexed by [col][row]. */
@@ -323,8 +315,8 @@ class SK_API SkMatrix44 {
 
   static constexpr int kAllPublic_Masks = 0xF;
 
-  void as3x4RowMajorf(float[]) const noexcept;
-  void set3x4RowMajorf(const float[]) noexcept;
+  void as3x4RowMajorf(float[]) const;
+  void set3x4RowMajorf(const float[]);
 
   SkScalar transX() const noexcept { return fMat[3][0]; }
   SkScalar transY() const noexcept { return fMat[3][1]; }

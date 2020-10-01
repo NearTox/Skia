@@ -241,7 +241,7 @@ class SK_API SkFont {
 
       @param tf  font and style used to draw text
   */
-  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = std::move(tf); }
+  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = tf; }
 
   /** Sets text size in points.
       Has no effect if textSize is not greater than or equal to zero.
@@ -508,6 +508,7 @@ class SK_API SkFont {
   SkScalar setupForAsPaths(SkPaint*) noexcept;
   bool hasSomeAntiAliasing() const noexcept;
 
+  friend class GrSDFTSubRun;
   friend class GrTextBlob;
   friend class SkFontPriv;
   friend class SkGlyphRunListPainter;

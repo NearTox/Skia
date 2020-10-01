@@ -61,7 +61,7 @@ class SkSwizzler : public SkSampler {
    */
   void swizzle(void* dst, const uint8_t* SK_RESTRICT src);
 
-  int fillWidth() const noexcept override { return fAllocatedWidth; }
+  int fillWidth() const override { return fAllocatedWidth; }
 
   /**
    *  If fSampleX > 1, the swizzler is sampling every fSampleX'th pixel and
@@ -71,19 +71,19 @@ class SkSwizzler : public SkSampler {
    *  Ideally, the subclasses of SkCodec would have no knowledge of sampling, but
    *  this allows us to apply a transparency mask to pixels after swizzling.
    */
-  int sampleX() const noexcept { return fSampleX; }
+  int sampleX() const { return fSampleX; }
 
   /**
    *  Returns the actual number of pixels written to destination memory, taking
    *  scaling, subsetting, and partial frames into account.
    */
-  int swizzleWidth() const noexcept { return fSwizzleWidth; }
+  int swizzleWidth() const { return fSwizzleWidth; }
 
   /**
    *  Returns the byte offset at which we write to destination memory, taking
    *  scaling, subsetting, and partial frames into account.
    */
-  size_t swizzleOffsetBytes() const noexcept { return fDstOffsetBytes; }
+  size_t swizzleOffsetBytes() const { return fDstOffsetBytes; }
 
  private:
   /**

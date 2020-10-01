@@ -148,7 +148,7 @@ class GrResourceAllocator {
     }
 
     // Used when recycling an interval
-    void resetTo(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) {
+    void resetTo(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) noexcept {
       SkASSERT(proxy);
       SkASSERT(!fProxy && !fNext);
 
@@ -220,17 +220,16 @@ class GrResourceAllocator {
 
   class IntervalList {
    public:
-    IntervalList() noexcept = default;
-    ~IntervalList() {
-      // The only time we delete an IntervalList is in the GrResourceAllocator dtor.
-      // Since the arena allocator will clean up for us we don't bother here.
-    }
+    constexpr IntervalList() noexcept = default;
+    // The only time we delete an IntervalList is in the GrResourceAllocator dtor.
+    // Since the arena allocator will clean up for us we don't bother here.
+    // ~IntervalList() = default;
 
     bool empty() const noexcept {
       SkASSERT(SkToBool(fHead) == SkToBool(fTail));
       return !SkToBool(fHead);
     }
-    const Interval* peekHead() const noexcept { return fHead; }
+    const Interval* peekHead() const { return fHead; }
     Interval* peekHead() noexcept { return fHead; }
     Interval* popHead();
     void insertByIncreasingStart(Interval*);

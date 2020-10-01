@@ -85,8 +85,8 @@ class ComplexClip2GM : public GM {
     fRectColors[4] = SK_ColorCYAN;
 
     const SkClipOp ops[] = {
-        kDifference_SkClipOp, kIntersect_SkClipOp,         kUnion_SkClipOp,
-        kXOR_SkClipOp,        kReverseDifference_SkClipOp, kReplace_SkClipOp,
+        kDifference_SkClipOp,
+        kIntersect_SkClipOp,
     };
 
     SkRandom r;

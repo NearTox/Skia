@@ -19,8 +19,9 @@ class SkColorFilter_Matrix : public SkColorFilterBase {
   uint32_t onGetFlags() const noexcept override;
 
 #if SK_SUPPORT_GPU
-  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-      GrRecordingContext*, const GrColorInfo&) const override;
+  GrFPResult asFragmentProcessor(
+      std::unique_ptr<GrFragmentProcessor> inputFP, GrRecordingContext*,
+      const GrColorInfo&) const override;
 #endif
 
   static void RegisterFlattenables();

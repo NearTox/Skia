@@ -16,11 +16,11 @@ bool GrDawnFormatIsRenderable(wgpu::TextureFormat format);
 bool GrColorTypeToDawnFormat(GrColorType colorType, wgpu::TextureFormat* format);
 bool GrDawnFormatToGrColorType(wgpu::TextureFormat format, GrColorType* colorType);
 size_t GrDawnRoundRowBytes(size_t rowBytes);
-#if GR_TEST_UTILS
+#if defined(SK_DEBUG) || GR_TEST_UTILS
 const char* GrDawnFormatToStr(wgpu::TextureFormat format);
 #endif
 
-static constexpr uint32_t GrDawnFormatChannels(wgpu::TextureFormat format) {
+static constexpr uint32_t GrDawnFormatChannels(wgpu::TextureFormat format) noexcept {
   switch (format) {
     case wgpu::TextureFormat::RGBA8Unorm: return kRGBA_SkColorChannelFlags;
     case wgpu::TextureFormat::BGRA8Unorm: return kRGBA_SkColorChannelFlags;

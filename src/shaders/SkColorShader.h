@@ -21,12 +21,12 @@ class SkColorShader : public SkShaderBase {
       specified color. Note: like all shaders, at draw time the paint's alpha
       will be respected, and is applied to the specified color.
   */
-  explicit SkColorShader(SkColor c) noexcept;
+  explicit SkColorShader(SkColor c);
 
   bool isOpaque() const noexcept override;
   bool isConstant() const noexcept override { return true; }
 
-  GradientType asAGradient(GradientInfo* info) const noexcept override;
+  GradientType asAGradient(GradientInfo* info) const override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -35,7 +35,7 @@ class SkColorShader : public SkShaderBase {
  private:
   SK_FLATTENABLE_HOOKS(SkColorShader)
 
-  void flatten(SkWriteBuffer&) const noexcept override;
+  void flatten(SkWriteBuffer&) const override;
 
   bool onAsLuminanceColor(SkColor* lum) const noexcept override {
     *lum = fColor;
@@ -54,7 +54,7 @@ class SkColorShader : public SkShaderBase {
 
 class SkColor4Shader : public SkShaderBase {
  public:
-  SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>) noexcept;
+  SkColor4Shader(const SkColor4f&, sk_sp<SkColorSpace>);
 
   bool isOpaque() const noexcept override { return fColor.isOpaque(); }
   bool isConstant() const noexcept override { return true; }

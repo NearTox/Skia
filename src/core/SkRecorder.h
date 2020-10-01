@@ -20,11 +20,11 @@ class SkBBHFactory;
 
 class SkDrawableList : SkNoncopyable {
  public:
-  SkDrawableList() noexcept = default;
+  constexpr SkDrawableList() noexcept = default;
   ~SkDrawableList();
 
-  int count() const { return fArray.count(); }
-  SkDrawable* const* begin() const { return fArray.begin(); }
+  int count() const noexcept { return fArray.count(); }
+  SkDrawable* const* begin() const noexcept { return fArray.begin(); }
 
   void append(SkDrawable* drawable);
 
@@ -51,13 +51,13 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   };
   void reset(SkRecord*, const SkRect& bounds, DrawPictureMode, SkMiniRecorder* = nullptr);
 
-  size_t approxBytesUsedBySubPictures() const { return fApproxBytesUsedBySubPictures; }
+  size_t approxBytesUsedBySubPictures() const noexcept { return fApproxBytesUsedBySubPictures; }
 
-  SkDrawableList* getDrawableList() const { return fDrawableList.get(); }
-  std::unique_ptr<SkDrawableList> detachDrawableList() { return std::move(fDrawableList); }
+  SkDrawableList* getDrawableList() const noexcept { return fDrawableList.get(); }
+  std::unique_ptr<SkDrawableList> detachDrawableList() noexcept { return std::move(fDrawableList); }
 
   // Make SkRecorder forget entirely about its SkRecord*; all calls to SkRecorder will fail.
-  void forgetRecord();
+  void forgetRecord() noexcept;
 
   void onFlush() override;
 

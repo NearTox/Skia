@@ -31,6 +31,6 @@ std::unique_ptr<GrDrawOp> Make(
     GrRecordingContext*, GrPaint&&, sk_sp<SkVertices>, const SkMatrixProvider&, GrAAType,
     sk_sp<GrColorSpaceXform>, GrPrimitiveType* overridePrimType, const SkRuntimeEffect*);
 
-};  // namespace GrDrawVerticesOp
+}  // namespace GrDrawVerticesOp
 
 #endif

@@ -13,10 +13,8 @@
 
 class SkSVGClipPath final : public SkSVGHiddenContainer {
  public:
-  virtual ~SkSVGClipPath() = default;
   static sk_sp<SkSVGClipPath> Make() { return sk_sp<SkSVGClipPath>(new SkSVGClipPath()); }
 
- protected:
  private:
   SkSVGClipPath();
 

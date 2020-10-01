@@ -38,7 +38,7 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
   static sk_sp<GrCoverageCountingPathRenderer> CreateIfSupported(
       const GrCaps&, AllowCaching, uint32_t contextUniqueID);
 
-  CoverageType coverageType() const { return fCoverageType; }
+  CoverageType coverageType() const noexcept { return fCoverageType; }
 
   using PendingPathsMap = std::map<uint32_t, sk_sp<GrCCPerOpsTaskPaths>>;
 

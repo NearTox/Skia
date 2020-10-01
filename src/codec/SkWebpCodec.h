@@ -31,9 +31,7 @@ class SkWebpCodec final : public SkScalingCodec {
 
  protected:
   Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-    return SkEncodedImageFormat::kWEBP;
-  }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kWEBP; }
 
   bool onGetValidSubset(SkIRect* /* desiredSubset */) const override;
 
@@ -41,7 +39,7 @@ class SkWebpCodec final : public SkScalingCodec {
   bool onGetFrameInfo(int, FrameInfo*) const override;
   int onGetRepetitionCount() override;
 
-  const SkFrameHolder* getFrameHolder() const noexcept override { return &fFrameHolder; }
+  const SkFrameHolder* getFrameHolder() const override { return &fFrameHolder; }
 
  private:
   SkWebpCodec(
@@ -58,7 +56,7 @@ class SkWebpCodec final : public SkScalingCodec {
     Frame(int i, SkEncodedInfo::Alpha alpha) : INHERITED(i), fReportedAlpha(alpha) {}
 
    protected:
-    SkEncodedInfo::Alpha onReportedAlpha() const noexcept override { return fReportedAlpha; }
+    SkEncodedInfo::Alpha onReportedAlpha() const override { return fReportedAlpha; }
 
    private:
     const SkEncodedInfo::Alpha fReportedAlpha;
@@ -69,13 +67,13 @@ class SkWebpCodec final : public SkScalingCodec {
   class FrameHolder : public SkFrameHolder {
    public:
     ~FrameHolder() override {}
-    void setScreenSize(int w, int h) noexcept {
+    void setScreenSize(int w, int h) {
       fScreenWidth = w;
       fScreenHeight = h;
     }
     Frame* appendNewFrame(bool hasAlpha);
     const Frame* frame(int i) const;
-    int size() const noexcept { return static_cast<int>(fFrames.size()); }
+    int size() const { return static_cast<int>(fFrames.size()); }
     void reserve(int size) { fFrames.reserve(size); }
 
    protected:

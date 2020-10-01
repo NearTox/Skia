@@ -103,7 +103,7 @@ class SkShaderBase : public SkShader {
 
   class Context : public ::SkNoncopyable {
    public:
-    Context(const SkShaderBase& shader, const ContextRec&);
+    Context(const SkShaderBase& shader, const ContextRec&) noexcept;
 
     virtual ~Context();
 
@@ -171,21 +171,22 @@ class SkShaderBase : public SkShader {
    *  Note: if this returns true, the returned color will always be opaque, as only the RGB
    *  components are used to compute luminance.
    */
-  bool asLuminanceColor(SkColor*) const noexcept;
+  bool asLuminanceColor(SkColor*) const;
 
   // If this returns false, then we draw nothing (do not fall back to shader context)
+  SK_WARN_UNUSED_RESULT
   bool appendStages(const SkStageRec&) const;
 
   bool SK_WARN_UNUSED_RESULT computeTotalInverse(
-      const SkMatrix& ctm, const SkMatrix* outerLocalMatrix, SkMatrix* totalInverse) const;
+      const SkMatrix& ctm, const SkMatrix* outerLocalMatrix, SkMatrix* totalInverse) const noexcept;
 
   // Returns the total local matrix for this shader:
   //
   //   M = postLocalMatrix x shaderLocalMatrix x preLocalMatrix
   //
-  SkTCopyOnFirstWrite<SkMatrix> totalLocalMatrix(const SkMatrix* preLocalMatrix) const;
+  SkTCopyOnFirstWrite<SkMatrix> totalLocalMatrix(const SkMatrix* preLocalMatrix) const noexcept;
 
-  virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const noexcept { return nullptr; }
+  virtual SkImage* onIsAImage(SkMatrix*, SkTileMode[2]) const { return nullptr; }
 
   virtual SkRuntimeEffect* asRuntimeEffect() const noexcept { return nullptr; }
 
@@ -209,13 +210,14 @@ class SkShaderBase : public SkShader {
     return this->onAppendUpdatableStages(rec);
   }
 
+  SK_WARN_UNUSED_RESULT
   skvm::Color program(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
       const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
       const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
 
  protected:
-  SkShaderBase(const SkMatrix* localMatrix = nullptr) noexcept;
+  SkShaderBase(const SkMatrix* localMatrix = nullptr);
 
   void flatten(SkWriteBuffer&) const override;
 
@@ -227,7 +229,7 @@ class SkShaderBase : public SkShader {
   virtual Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const { return nullptr; }
 #endif
 
-  virtual bool onAsLuminanceColor(SkColor*) const noexcept { return false; }
+  virtual bool onAsLuminanceColor(SkColor*) const { return false; }
 
   // Default impl creates shadercontext and calls that (not very efficient)
   virtual bool onAppendStages(const SkStageRec&) const;

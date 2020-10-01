@@ -20,13 +20,12 @@
 #include "src/shaders/SkBitmapProcShader.h"
 
 #if SK_SUPPORT_GPU
-#  include "include/gpu/GrContext.h"
 #  include "src/gpu/GrTextureAdjuster.h"
 #  include "src/gpu/SkGr.h"
 #endif
 
 // fixes https://bug.skia.org/5096
-static bool is_not_subset(const SkBitmap& bm) {
+static bool is_not_subset(const SkBitmap& bm) noexcept {
   SkASSERT(bm.pixelRef());
   SkISize dim = SkISize::Make(bm.pixelRef()->width(), bm.pixelRef()->height());
   SkASSERT(dim != bm.dimensions() || bm.pixelRefOrigin().isZero());
@@ -36,7 +35,7 @@ static bool is_not_subset(const SkBitmap& bm) {
 class SkImage_Raster : public SkImage_Base {
  public:
   static bool ValidArgs(const SkImageInfo& info, size_t rowBytes, size_t* minSize) {
-    const int maxDimension = SK_MaxS32 >> 2;
+    constexpr int maxDimension = SK_MaxS32 >> 2;
 
     // TODO(mtklein): eliminate anything here that setInfo() has already checked.
     SkBitmap dummy;
@@ -84,13 +83,13 @@ class SkImage_Raster : public SkImage_Base {
   const SkBitmap* onPeekBitmap() const override { return &fBitmap; }
 
 #if SK_SUPPORT_GPU
-  GrSurfaceProxyView refView(GrRecordingContext*, GrMipMapped) const override;
+  GrSurfaceProxyView refView(GrRecordingContext*, GrMipmapped) const override;
 #endif
 
   bool getROPixels(SkBitmap*, CachingHint) const override;
-  sk_sp<SkImage> onMakeSubset(GrRecordingContext*, const SkIRect&) const override;
+  sk_sp<SkImage> onMakeSubset(const SkIRect&, GrDirectContext*) const override;
 
-  SkPixelRef* getPixelRef() const { return fBitmap.pixelRef(); }
+  SkPixelRef* getPixelRef() const noexcept { return fBitmap.pixelRef(); }
 
   bool onAsLegacyBitmap(SkBitmap*) const override;
 
@@ -102,11 +101,11 @@ class SkImage_Raster : public SkImage_Base {
   }
 
   sk_sp<SkImage> onMakeColorTypeAndColorSpace(
-      GrRecordingContext*, SkColorType, sk_sp<SkColorSpace>) const override;
+      SkColorType, sk_sp<SkColorSpace>, GrDirectContext*) const override;
 
   sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const override;
 
-  bool onIsValid(GrContext* context) const override { return true; }
+  bool onIsValid(GrRecordingContext* context) const override { return true; }
   void notifyAddedToRasterCache() const override {
     // We explicitly DON'T want to call INHERITED::notifyAddedToRasterCache. That ties the
     // lifetime of derived/cached resources to the image. In this case, we only want cached
@@ -117,9 +116,21 @@ class SkImage_Raster : public SkImage_Base {
 
 #if SK_SUPPORT_GPU
   GrSurfaceProxyView refPinnedView(GrRecordingContext* context, uint32_t* uniqueID) const override;
-  bool onPinAsTexture(GrContext*) const override;
-  void onUnpinAsTexture(GrContext*) const override;
+  bool onPinAsTexture(GrRecordingContext*) const override;
+  void onUnpinAsTexture(GrRecordingContext*) const override;
 #endif
+
+  SkMipmap* onPeekMips() const override { return fBitmap.fMips.get(); }
+
+  sk_sp<SkImage> onMakeWithMipmaps(sk_sp<SkMipmap> mips) const override {
+    auto img = new SkImage_Raster(fBitmap);
+    if (mips) {
+      img->fBitmap.fMips = std::move(mips);
+    } else {
+      img->fBitmap.fMips.reset(SkMipmap::Build(fBitmap.pixmap(), nullptr));
+    }
+    return sk_sp<SkImage>(img);
+  }
 
  private:
   SkBitmap fBitmap;
@@ -135,7 +146,7 @@ class SkImage_Raster : public SkImage_Base {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void release_data(void* addr, void* context) {
+static void release_data(void* addr, void* context) noexcept {
   SkData* data = static_cast<SkData*>(context);
   data->unref();
 }
@@ -171,7 +182,7 @@ bool SkImage_Raster::getROPixels(SkBitmap* dst, CachingHint) const {
 
 #if SK_SUPPORT_GPU
 GrSurfaceProxyView SkImage_Raster::refView(
-    GrRecordingContext* context, GrMipMapped mipMapped) const {
+    GrRecordingContext* context, GrMipmapped mipMapped) const {
   if (!context) {
     return {};
   }
@@ -199,14 +210,14 @@ GrSurfaceProxyView SkImage_Raster::refPinnedView(GrRecordingContext*, uint32_t* 
   return {};
 }
 
-bool SkImage_Raster::onPinAsTexture(GrContext* ctx) const {
+bool SkImage_Raster::onPinAsTexture(GrRecordingContext* rContext) const {
   if (fPinnedView) {
     SkASSERT(fPinnedCount > 0);
     SkASSERT(fPinnedUniqueID != 0);
   } else {
     SkASSERT(fPinnedCount == 0);
     SkASSERT(fPinnedUniqueID == 0);
-    fPinnedView = GrRefCachedBitmapView(ctx, fBitmap, GrMipMapped::kNo);
+    fPinnedView = GrRefCachedBitmapView(rContext, fBitmap, GrMipmapped::kNo);
     if (!fPinnedView) {
       return false;
     }
@@ -218,7 +229,7 @@ bool SkImage_Raster::onPinAsTexture(GrContext* ctx) const {
   return true;
 }
 
-void SkImage_Raster::onUnpinAsTexture(GrContext* ctx) const {
+void SkImage_Raster::onUnpinAsTexture(GrRecordingContext*) const {
   // Note: we always decrement, even if fPinnedTexture is null
   SkASSERT(fPinnedCount > 0);
   SkASSERT(fPinnedUniqueID != 0);
@@ -230,7 +241,7 @@ void SkImage_Raster::onUnpinAsTexture(GrContext* ctx) const {
 }
 #endif
 
-sk_sp<SkImage> SkImage_Raster::onMakeSubset(GrRecordingContext*, const SkIRect& subset) const {
+sk_sp<SkImage> SkImage_Raster::onMakeSubset(const SkIRect& subset, GrDirectContext*) const {
   SkImageInfo info = fBitmap.info().makeDimensions(subset.size());
   SkBitmap bitmap;
   if (!bitmap.tryAllocPixels(info)) {
@@ -367,7 +378,7 @@ bool SkImage_Raster::onAsLegacyBitmap(SkBitmap* bitmap) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 sk_sp<SkImage> SkImage_Raster::onMakeColorTypeAndColorSpace(
-    GrRecordingContext*, SkColorType targetCT, sk_sp<SkColorSpace> targetCS) const {
+    SkColorType targetCT, sk_sp<SkColorSpace> targetCS, GrDirectContext*) const {
   SkPixmap src;
   SkAssertResult(fBitmap.peekPixels(&src));
 

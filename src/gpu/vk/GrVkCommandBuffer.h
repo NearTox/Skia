@@ -39,9 +39,9 @@ class GrVkCommandBuffer {
       const GrVkGpu* gpu, const GrManagedResource* resource, VkPipelineStageFlags srcStageMask,
       VkPipelineStageFlags dstStageMask, bool byRegion, BarrierType barrierType, void* barrier);
 
-  void bindInputBuffer(GrVkGpu* gpu, uint32_t binding, const GrVkMeshBuffer* vbuffer);
+  void bindInputBuffer(GrVkGpu* gpu, uint32_t binding, sk_sp<const GrBuffer> buffer);
 
-  void bindIndexBuffer(GrVkGpu* gpu, const GrVkMeshBuffer* ibuffer);
+  void bindIndexBuffer(GrVkGpu* gpu, sk_sp<const GrBuffer> buffer);
 
   void bindPipeline(const GrVkGpu* gpu, const GrVkPipeline* pipeline);
 
@@ -97,15 +97,15 @@ class GrVkCommandBuffer {
     fTrackedRecycledResources.append(1, &resource);
   }
 
+  void addGrBuffer(sk_sp<const GrBuffer> buffer) {
+    fTrackedGpuBuffers.push_back(std::move(buffer));
+  }
+
   void releaseResources();
 
   void freeGPUData(const GrGpu* gpu, VkCommandPool pool) const;
 
-  bool hasWork() const noexcept { return fHasWork; }
-
-#ifdef SK_DEBUG
-  bool validateNoSharedImageResources(const GrVkCommandBuffer* other);
-#endif
+  bool hasWork() const { return fHasWork; }
 
  protected:
   GrVkCommandBuffer(VkCommandBuffer cmdBuffer, bool isWrapped = false)
@@ -115,14 +115,15 @@ class GrVkCommandBuffer {
     this->invalidateState();
   }
 
-  bool isWrapped() const noexcept { return fIsWrapped; }
+  bool isWrapped() const { return fIsWrapped; }
 
   void addingWork(const GrVkGpu* gpu);
 
-  void submitPipelineBarriers(const GrVkGpu* gpu);
+  void submitPipelineBarriers(const GrVkGpu* gpu, bool forSelfDependency = false);
 
   SkTDArray<const GrManagedResource*> fTrackedResources;
   SkTDArray<const GrRecycledResource*> fTrackedRecycledResources;
+  SkSTArray<16, sk_sp<const GrBuffer>> fTrackedGpuBuffers;
 
   // Tracks whether we are in the middle of a command buffer begin/end calls and thus can add
   // new commands to the buffer;
@@ -247,7 +248,7 @@ class GrVkPrimaryCommandBuffer : public GrVkCommandBuffer {
 
   void addFinishedProc(sk_sp<GrRefCntedCallback> finishedProc);
 
-  void callFinishedProcs() noexcept { fFinishedProcs.reset(); }
+  void callFinishedProcs() { fFinishedProcs.reset(); }
 
   void recycleSecondaryCommandBuffers(GrVkCommandPool* cmdPool);
 
@@ -278,7 +279,7 @@ class GrVkSecondaryCommandBuffer : public GrVkCommandBuffer {
 
   void recycle(GrVkCommandPool* cmdPool);
 
-  VkCommandBuffer vkCommandBuffer() noexcept { return fCmdBuffer; }
+  VkCommandBuffer vkCommandBuffer() { return fCmdBuffer; }
 
  private:
   explicit GrVkSecondaryCommandBuffer(VkCommandBuffer cmdBuffer, bool isWrapped)

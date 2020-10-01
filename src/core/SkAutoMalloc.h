@@ -78,7 +78,6 @@ class SkAutoMalloc : SkNoncopyable {
   std::unique_ptr<void, WrapFree> fPtr;
   size_t fSize;  // can be larger than the requested size (see kReuse)
 };
-#define SkAutoMalloc(...) SK_REQUIRE_LOCAL_VAR(SkAutoMalloc)
 
 /**
  *  Manage an allocated block of memory. If the requested size is <= kSizeRequested (or slightly
@@ -93,7 +92,7 @@ class SkAutoSMalloc : SkNoncopyable {
    *  Creates initially empty storage. get() returns a ptr, but it is to a zero-byte allocation.
    *  Must call reset(size) to return an allocated block.
    */
-  SkAutoSMalloc() {
+  SkAutoSMalloc() noexcept {
     fPtr = fStorage;
     fSize = kSize;
   }
@@ -102,7 +101,7 @@ class SkAutoSMalloc : SkNoncopyable {
    *  Allocate a block of the specified size. If size <= kSizeRequested (or slightly more), then
    *  the allocation will come from the stack, otherwise it will be dynamically allocated.
    */
-  explicit SkAutoSMalloc(size_t size) {
+  explicit SkAutoSMalloc(size_t size) noexcept {
     fPtr = fStorage;
     fSize = kSize;
     this->reset(size);

@@ -8,7 +8,7 @@
 #ifndef GrContextPriv_DEFINED
 #define GrContextPriv_DEFINED
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 
 class GrAtlasManager;
 class GrBackendFormat;
@@ -39,13 +39,10 @@ class GrContextPriv {
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
-  GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   // from GrImageContext
   GrProxyProvider* proxyProvider() noexcept { return fContext->proxyProvider(); }
   const GrProxyProvider* proxyProvider() const noexcept { return fContext->proxyProvider(); }
-
-  bool abandoned() const { return fContext->abandoned(); }
 
   /** This is only useful for debug purposes */
   SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
@@ -58,7 +55,7 @@ class GrContextPriv {
   GrRecordingContext::Arenas arenas() { return fContext->arenas(); }
 
   GrStrikeCache* getGrStrikeCache() noexcept { return fContext->fStrikeCache.get(); }
-  GrTextBlobCache* getTextBlobCache() noexcept { return fContext->getTextBlobCache(); }
+  GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -69,11 +66,6 @@ class GrContextPriv {
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
   GrAuditTrail* auditTrail() noexcept { return fContext->auditTrail(); }
-
-  /**
-   * Create a GrContext without a resource cache
-   */
-  static sk_sp<GrContext> MakeDDL(sk_sp<GrContextThreadSafeProxy>);
 
   /**
    * Finalizes all pending reads and writes to the surfaces and also performs an MSAA resolves
@@ -117,10 +109,12 @@ class GrContextPriv {
   const GrGpu* getGpu() const noexcept { return fContext->fGpu.get(); }
 
   // This accessor should only ever be called by the GrOpFlushState.
-  GrAtlasManager* getAtlasManager() noexcept { return fContext->onGetAtlasManager(); }
+  GrAtlasManager* getAtlasManager() { return fContext->onGetAtlasManager(); }
 
-  void moveRenderTasksToDDL(SkDeferredDisplayList*);
-  void copyRenderTasksFromDDL(const SkDeferredDisplayList*, GrRenderTargetProxy* newDest);
+  // This accessor should only ever be called by the GrOpFlushState.
+  GrSmallPathAtlasMgr* getSmallPathAtlasMgr() { return fContext->onGetSmallPathAtlasMgr(); }
+
+  void copyRenderTasksFromDDL(sk_sp<const SkDeferredDisplayList>, GrRenderTargetProxy* newDest);
 
   bool compile(const GrProgramDesc&, const GrProgramInfo&);
 
@@ -155,10 +149,6 @@ class GrContextPriv {
   void dumpContextStatsKeyValuePairs(SkTArray<SkString>* keys, SkTArray<double>* values) const;
   void printContextStats() const;
 
-  /** Specify the TextBlob cache limit. If the current cache exceeds this limit it will purge.
-      this is for testing only */
-  void testingOnly_setTextBlobCacheLimit(size_t bytes);
-
   /** Get pointer to atlas texture for given mask format. Note that this wraps an
       actively mutating texture in an SkImage. This could yield unexpected results
       if it gets cached or used more generally. */
@@ -176,8 +166,8 @@ class GrContextPriv {
 
  private:
   explicit GrContextPriv(GrContext* context) noexcept : fContext(context) {}
-  GrContextPriv(const GrContextPriv&);             // unimpl
-  GrContextPriv& operator=(const GrContextPriv&);  // unimpl
+  GrContextPriv(const GrContextPriv&) = delete;
+  GrContextPriv& operator=(const GrContextPriv&) = delete;
 
   // No taking addresses of this type.
   const GrContextPriv* operator&() const;
@@ -190,7 +180,8 @@ class GrContextPriv {
 
 inline GrContextPriv GrContext::priv() noexcept { return GrContextPriv(this); }
 
-inline const GrContextPriv GrContext::priv() const noexcept {
+inline const GrContextPriv GrContext::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrContextPriv(const_cast<GrContext*>(this));
 }
 

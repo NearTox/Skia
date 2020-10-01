@@ -165,6 +165,10 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
     // this flag to avoid some unnecessary compositing overhead for
     // animations using layer blend modes.
     kSkipTopLevelIsolation = 0x01,
+    // By default, content is clipped to the intrinsic animation
+    // bounds (as determined by its size).  If this flag is set,
+    // then the animation can draw outside of the bounds.
+    kDisableTopLevelClipping = 0x02,
   };
   using RenderFlags = uint32_t;
 
@@ -220,6 +224,16 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
    * Returns the animation frame rate (frames / second).
    */
   double fps() const { return fFPS; }
+
+  /**
+   * Animation in point, in frame index units.
+   */
+  double inPoint() const { return fInPoint; }
+
+  /**
+   * Animation out point, in frame index units.
+   */
+  double outPoint() const { return fOutPoint; }
 
   const SkString& version() const { return fVersion; }
   const SkSize& size() const { return fSize; }

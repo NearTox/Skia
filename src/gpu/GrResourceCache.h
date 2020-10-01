@@ -253,8 +253,8 @@ class GrResourceCache {
 
   void refAndMakeResourceMRU(GrGpuResource*);
   void processFreedGpuResources();
-  void addToNonpurgeableArray(GrGpuResource*) noexcept;
-  void removeFromNonpurgeableArray(GrGpuResource*) noexcept;
+  void addToNonpurgeableArray(GrGpuResource*);
+  void removeFromNonpurgeableArray(GrGpuResource*);
 
   bool wouldFit(size_t bytes) const noexcept { return fBudgetedBytes + bytes <= fMaxBytes; }
 
@@ -276,15 +276,15 @@ class GrResourceCache {
       return r.resourcePriv().getScratchKey();
     }
 
-    static uint32_t Hash(const GrScratchKey& key) noexcept { return key.hash(); }
-    static void OnFree(GrGpuResource*) noexcept {}
+    static uint32_t Hash(const GrScratchKey& key) { return key.hash(); }
+    static void OnFree(GrGpuResource*) {}
   };
   typedef SkTMultiMap<GrGpuResource, GrScratchKey, ScratchMapTraits> ScratchMap;
 
   struct UniqueHashTraits {
-    static const GrUniqueKey& GetKey(const GrGpuResource& r) noexcept { return r.getUniqueKey(); }
+    static const GrUniqueKey& GetKey(const GrGpuResource& r) { return r.getUniqueKey(); }
 
-    static uint32_t Hash(const GrUniqueKey& key) noexcept { return key.hash(); }
+    static uint32_t Hash(const GrUniqueKey& key) { return key.hash(); }
   };
   typedef SkTDynamicHash<GrGpuResource, GrUniqueKey, UniqueHashTraits> UniqueHash;
 
@@ -344,7 +344,8 @@ class GrResourceCache {
 #endif
 
   // our current stats for all resources
-  SkDEBUGCODE(int fCount = 0;) size_t fBytes = 0;
+  SkDEBUGCODE(int fCount = 0);
+  size_t fBytes = 0;
 
   // our current stats for resources that count against the budget
   int fBudgetedCount = 0;
@@ -361,16 +362,16 @@ class GrResourceCache {
 
   // This resource is allowed to be in the nonpurgeable array for the sake of validate() because
   // we're in the midst of converting it to purgeable status.
-  SkDEBUGCODE(GrGpuResource* fNewlyPurgeableResourceForValidation = nullptr;)
+  SkDEBUGCODE(GrGpuResource* fNewlyPurgeableResourceForValidation = nullptr);
 
-      bool fPreferVRAMUseOverFlushes = false;
+  bool fPreferVRAMUseOverFlushes = false;
 };
 
 class GrResourceCache::ResourceAccess {
  private:
   ResourceAccess(GrResourceCache* cache) noexcept : fCache(cache) {}
   ResourceAccess(const ResourceAccess& that) noexcept : fCache(that.fCache) {}
-  ResourceAccess& operator=(const ResourceAccess&);  // unimpl
+  ResourceAccess& operator=(const ResourceAccess&) = delete;
 
   /**
    * Insert a resource into the cache.

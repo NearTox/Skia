@@ -25,15 +25,15 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
   // constructor must be explicitly called.
   GrGLTextureRenderTarget(
       GrGLGpu* gpu, SkBudgeted budgeted, int sampleCount, const GrGLTexture::Desc& texDesc,
-      const GrGLRenderTarget::IDs&, GrMipMapsStatus);
+      const GrGLRenderTarget::IDs&, GrMipmapStatus);
 
-  bool canAttemptStencilAttachment() const noexcept override;
+  bool canAttemptStencilAttachment() const override;
 
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
   static sk_sp<GrGLTextureRenderTarget> MakeWrapped(
       GrGLGpu* gpu, int sampleCount, const GrGLTexture::Desc&, sk_sp<GrGLTextureParameters>,
-      const GrGLRenderTarget::IDs&, GrWrapCacheable, GrMipMapsStatus);
+      const GrGLRenderTarget::IDs&, GrWrapCacheable, GrMipmapStatus);
 
   GrBackendFormat backendFormat() const noexcept override {
     // It doesn't matter if we take the texture or render target path, so just pick texture.
@@ -56,9 +56,9 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
   GrGLTextureRenderTarget(
       GrGLGpu* gpu, int sampleCount, const GrGLTexture::Desc& texDesc,
       sk_sp<GrGLTextureParameters> parameters, const GrGLRenderTarget::IDs& ids, GrWrapCacheable,
-      GrMipMapsStatus);
+      GrMipmapStatus);
 
-  size_t onGpuMemorySize() const noexcept override;
+  size_t onGpuMemorySize() const override;
 };
 
 #ifdef SK_BUILD_FOR_WIN

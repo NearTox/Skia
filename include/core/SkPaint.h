@@ -602,7 +602,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_nothingToDraw
   */
-  bool nothingToDraw() const noexcept;
+  bool nothingToDraw() const;
 
   /**     (to be made private)
       Returns true if SkPaint does not include elements requiring extensive computation

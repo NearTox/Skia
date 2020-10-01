@@ -11,7 +11,7 @@
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/GrSamplerState.h"
 #include "src/gpu/GrShaderVar.h"
-#include "src/gpu/GrTAllocator.h"
+#include "src/gpu/GrTBlockList.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #include "src/gpu/vk/GrVkSampler.h"
 
@@ -37,7 +37,7 @@ class GrVkUniformHandler : public GrGLSLUniformHandler {
     // fImmutableSampler is used for sampling an image with a ycbcr conversion.
     const GrVkSampler* fImmutableSampler = nullptr;
   };
-  typedef GrTAllocator<VkUniformInfo> UniformInfoArray;
+  typedef GrTBlockList<VkUniformInfo> UniformInfoArray;
 
   ~GrVkUniformHandler() override;
 
@@ -57,6 +57,7 @@ class GrVkUniformHandler : public GrGLSLUniformHandler {
   int numUniforms() const override { return fUniforms.count(); }
 
   UniformInfo& uniform(int idx) override { return fUniforms.item(idx); }
+  const UniformInfo& uniform(int idx) const override { return fUniforms.item(idx); }
 
  private:
   explicit GrVkUniformHandler(GrGLSLProgramBuilder* program)

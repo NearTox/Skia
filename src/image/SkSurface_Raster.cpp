@@ -25,7 +25,7 @@ class SkSurface_Raster : public SkSurface_Base {
   void onWritePixels(const SkPixmap&, int x, int y) override;
   void onDraw(SkCanvas*, SkScalar x, SkScalar y, const SkPaint*) override;
   void onCopyOnWrite(ContentChangeMode) override;
-  void onRestoreBackingMutability() noexcept override;
+  void onRestoreBackingMutability() override;
 
  private:
   SkBitmap fBitmap;
@@ -36,16 +36,8 @@ class SkSurface_Raster : public SkSurface_Base {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkSurfaceValidateRasterInfo(const SkImageInfo& info, size_t rowBytes) noexcept {
+bool SkSurfaceValidateRasterInfo(const SkImageInfo& info, size_t rowBytes) {
   if (!SkImageInfoIsValid(info)) {
-    return false;
-  }
-
-  if (info.colorType() == kR8G8_unorm_SkColorType ||
-      info.colorType() == kR16G16_unorm_SkColorType ||
-      info.colorType() == kR16G16_float_SkColorType || info.colorType() == kA16_unorm_SkColorType ||
-      info.colorType() == kA16_float_SkColorType ||
-      info.colorType() == kR16G16B16A16_unorm_SkColorType) {
     return false;
   }
 
@@ -58,7 +50,7 @@ bool SkSurfaceValidateRasterInfo(const SkImageInfo& info, size_t rowBytes) noexc
   }
 
   uint64_t size = sk_64_mul(info.height(), rowBytes);
-  static constexpr size_t kMaxTotalSize = SK_MaxS32;
+  static const size_t kMaxTotalSize = SK_MaxS32;
   if (size > kMaxTotalSize) {
     return false;
   }
@@ -122,7 +114,7 @@ void SkSurface_Raster::onWritePixels(const SkPixmap& src, int x, int y) {
   fBitmap.writePixels(src, x, y);
 }
 
-void SkSurface_Raster::onRestoreBackingMutability() noexcept {
+void SkSurface_Raster::onRestoreBackingMutability() {
   SkASSERT(!this->hasCachedImage());  // Shouldn't be any snapshots out there.
   if (SkPixelRef* pr = fBitmap.pixelRef()) {
     pr->restoreMutability();

@@ -5,12 +5,13 @@
  * found in the LICENSE file.
  */
 
+#include "src/gpu/gl/GrGLTexture.h"
+
 #include "include/core/SkTraceMemoryDump.h"
 #include "src/gpu/GrSemaphore.h"
 #include "src/gpu/GrShaderCaps.h"
-#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/gl/GrGLGpu.h"
-#include "src/gpu/gl/GrGLTexture.h"
 
 #define GPUGL static_cast<GrGLGpu*>(this->getGpu())
 #define GL_CALL(X) GR_GL_CALL(GPUGL->glInterface(), X)
@@ -36,10 +37,10 @@ static inline GrGLenum target_from_texture_type(GrTextureType type) noexcept {
 
 // Because this class is virtually derived from GrSurface we must explicitly call its constructor.
 GrGLTexture::GrGLTexture(
-    GrGLGpu* gpu, SkBudgeted budgeted, const Desc& desc, GrMipMapsStatus mipMapsStatus)
+    GrGLGpu* gpu, SkBudgeted budgeted, const Desc& desc, GrMipmapStatus mipmapStatus)
     : GrSurface(gpu, desc.fSize, GrProtected::kNo),
       INHERITED(
-          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipMapsStatus),
+          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipmapStatus),
       fParameters(sk_make_sp<GrGLTextureParameters>()) {
   this->init(desc);
   this->registerWithCache(budgeted);
@@ -49,11 +50,11 @@ GrGLTexture::GrGLTexture(
 }
 
 GrGLTexture::GrGLTexture(
-    GrGLGpu* gpu, const Desc& desc, GrMipMapsStatus mipMapsStatus,
+    GrGLGpu* gpu, const Desc& desc, GrMipmapStatus mipmapStatus,
     sk_sp<GrGLTextureParameters> parameters, GrWrapCacheable cacheable, GrIOType ioType)
     : GrSurface(gpu, desc.fSize, GrProtected::kNo),
       INHERITED(
-          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipMapsStatus),
+          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipmapStatus),
       fParameters(std::move(parameters)) {
   SkASSERT(fParameters);
   this->init(desc);
@@ -65,16 +66,16 @@ GrGLTexture::GrGLTexture(
 
 GrGLTexture::GrGLTexture(
     GrGLGpu* gpu, const Desc& desc, sk_sp<GrGLTextureParameters> parameters,
-    GrMipMapsStatus mipMapsStatus)
+    GrMipmapStatus mipmapStatus)
     : GrSurface(gpu, desc.fSize, GrProtected::kNo),
       INHERITED(
-          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipMapsStatus) {
+          gpu, desc.fSize, GrProtected::kNo, TextureTypeFromTarget(desc.fTarget), mipmapStatus) {
   SkASSERT(parameters || desc.fOwnership == GrBackendObjectOwnership::kOwned);
   fParameters = parameters ? std::move(parameters) : sk_make_sp<GrGLTextureParameters>();
   this->init(desc);
 }
 
-void GrGLTexture::init(const Desc& desc) noexcept {
+void GrGLTexture::init(const Desc& desc) {
   SkASSERT(0 != desc.fID);
   SkASSERT(GrGLFormat::kUnknown != desc.fFormat);
   fID = desc.fID;
@@ -82,9 +83,7 @@ void GrGLTexture::init(const Desc& desc) noexcept {
   fTextureIDOwnership = desc.fOwnership;
 }
 
-GrGLenum GrGLTexture::target() const noexcept {
-  return target_from_texture_type(this->texturePriv().textureType());
-}
+GrGLenum GrGLTexture::target() const { return target_from_texture_type(this->textureType()); }
 
 void GrGLTexture::onRelease() {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
@@ -105,30 +104,29 @@ void GrGLTexture::onAbandon() {
 
 GrBackendTexture GrGLTexture::getBackendTexture() const noexcept {
   GrGLTextureInfo info;
-  info.fTarget = target_from_texture_type(this->texturePriv().textureType());
+  info.fTarget = target_from_texture_type(this->textureType());
   info.fID = fID;
   info.fFormat = GrGLFormatToEnum(fFormat);
-  return GrBackendTexture(
-      this->width(), this->height(), this->texturePriv().mipMapped(), info, fParameters);
+  return GrBackendTexture(this->width(), this->height(), this->mipmapped(), info, fParameters);
 }
 
 GrBackendFormat GrGLTexture::backendFormat() const noexcept {
   return GrBackendFormat::MakeGL(
-      GrGLFormatToEnum(fFormat), target_from_texture_type(this->texturePriv().textureType()));
+      GrGLFormatToEnum(fFormat), target_from_texture_type(this->textureType()));
 }
 
 sk_sp<GrGLTexture> GrGLTexture::MakeWrapped(
-    GrGLGpu* gpu, GrMipMapsStatus mipMapsStatus, const Desc& desc,
+    GrGLGpu* gpu, GrMipmapStatus mipmapStatus, const Desc& desc,
     sk_sp<GrGLTextureParameters> parameters, GrWrapCacheable cacheable, GrIOType ioType) {
   return sk_sp<GrGLTexture>(
-      new GrGLTexture(gpu, desc, mipMapsStatus, std::move(parameters), cacheable, ioType));
+      new GrGLTexture(gpu, desc, mipmapStatus, std::move(parameters), cacheable, ioType));
 }
 
 bool GrGLTexture::onStealBackendTexture(
     GrBackendTexture* backendTexture, SkImage::BackendTextureReleaseProc* releaseProc) {
   *backendTexture = this->getBackendTexture();
   // Set the release proc to a no-op function. GL doesn't require any special cleanup.
-  *releaseProc = [](GrBackendTexture) noexcept {};
+  *releaseProc = [](GrBackendTexture) {};
 
   // It's important that we only abandon this texture's objects, not subclass objects such as
   // those held by GrGLTextureRenderTarget. Those objects are not being stolen and need to be

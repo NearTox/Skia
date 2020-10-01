@@ -122,7 +122,7 @@ bool SkColorTypeValidateAlphaType(
 
 #include "src/image/SkReadPixelsRec.h"
 
-bool SkReadPixelsRec::trim(int srcWidth, int srcHeight) noexcept {
+bool SkReadPixelsRec::trim(int srcWidth, int srcHeight) {
   if (nullptr == fPixels || fRowBytes < fInfo.minRowBytes()) {
     return false;
   }
@@ -159,7 +159,7 @@ bool SkReadPixelsRec::trim(int srcWidth, int srcHeight) noexcept {
 
 #include "src/core/SkWritePixelsRec.h"
 
-bool SkWritePixelsRec::trim(int dstWidth, int dstHeight) noexcept {
+bool SkWritePixelsRec::trim(int dstWidth, int dstHeight) {
   if (nullptr == fPixels || fRowBytes < fInfo.minRowBytes()) {
     return false;
   }

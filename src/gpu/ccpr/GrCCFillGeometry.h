@@ -74,8 +74,8 @@ class GrCCFillGeometry {
     fVerbs.reset();
   }
 
-  void beginPath() noexcept;
-  void beginContour(const SkPoint&) noexcept;
+  void beginPath();
+  void beginContour(const SkPoint&);
   void lineTo(const SkPoint P[2]);
   void quadraticTo(const SkPoint[3]);
 

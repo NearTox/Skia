@@ -17,7 +17,7 @@ void SkPtrSet::reset() {
   fList.reset();
 }
 
-bool SkPtrSet::Less(const Pair& a, const Pair& b) noexcept { return (char*)a.fPtr < (char*)b.fPtr; }
+bool SkPtrSet::Less(const Pair& a, const Pair& b) { return (char*)a.fPtr < (char*)b.fPtr; }
 
 uint32_t SkPtrSet::find(void* ptr) const {
   if (nullptr == ptr) {

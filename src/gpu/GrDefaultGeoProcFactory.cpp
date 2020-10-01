@@ -139,14 +139,11 @@ class DefaultGeoProc : public GrGeometryProcessor {
       b->add32(key);
     }
 
-    void setData(
-        const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
-        const CoordTransformRange& transformRange) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp) override {
       const DefaultGeoProc& dgp = gp.cast<DefaultGeoProc>();
 
       this->setTransform(pdman, fViewMatrixUniform, dgp.viewMatrix(), &fViewMatrix);
       this->setTransform(pdman, fLocalMatrixUniform, dgp.localMatrix(), &fLocalMatrix);
-      this->setTransformDataHelper(pdman, transformRange);
 
       if (!dgp.hasVertexColor() && dgp.color() != fColor) {
         pdman.set4fv(fColorUniform, 1, dgp.color().vec());

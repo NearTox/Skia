@@ -21,6 +21,7 @@
 
 // bestXY is initialized by caller with basePt
 
+#include "src/core/SkTSort.h"
 #include "src/pathops/SkOpContour.h"
 #include "src/pathops/SkOpSegment.h"
 #include "src/pathops/SkPathOpsCurve.h"
@@ -249,7 +250,7 @@ bool SkOpSpan::sortableTop(SkOpContour* contourHead) {
   }
   int count = sorted.count();
   SkTQSort(
-      sorted.begin(), sorted.end() - 1,
+      sorted.begin(), sorted.end(),
       xy_index(dir)    ? less_than(dir) ? hit_compare_y : reverse_hit_compare_y
       : less_than(dir) ? hit_compare_x
                        : reverse_hit_compare_x);

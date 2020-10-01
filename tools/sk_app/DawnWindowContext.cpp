@@ -7,7 +7,7 @@
 
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkAutoMalloc.h"
 #include "tools/sk_app/DawnWindowContext.h"
 
@@ -31,14 +31,16 @@ DawnWindowContext::DawnWindowContext(const DisplayParams& params,
 }
 
 void DawnWindowContext::initializeContext(int width, int height) {
-    fWidth = width;
-    fHeight = height;
-    fDevice = onInitializeContext();
-    fContext = GrContext::MakeDawn(fDevice, fDisplayParams.fGrContextOptions);
+  SkASSERT(!fContext);
 
-    if (!fContext) {
-        return;
-    }
+  fWidth = width;
+  fHeight = height;
+  fDevice = onInitializeContext();
+
+  fContext = GrDirectContext::MakeDawn(fDevice, fDisplayParams.fGrContextOptions);
+  if (!fContext) {
+    return;
+  }
     fSwapChainImplementation = this->createSwapChainImplementation(-1, -1, fDisplayParams);
     wgpu::SwapChainDescriptor swapChainDesc;
     swapChainDesc.implementation = reinterpret_cast<int64_t>(&fSwapChainImplementation);

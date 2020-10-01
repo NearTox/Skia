@@ -50,7 +50,8 @@ class LinearWipeAdapter final : public MaskShaderEffectBase {
   MaskInfo onMakeMask() const override {
     if (fCompletion >= 100) {
       // The layer is fully disabled.
-      return {nullptr, false};
+      // TODO: fix layer controller visibility clash and pass a null shader instead.
+      return {SkShaders::Color(SK_ColorTRANSPARENT), false};
     }
 
     if (fCompletion <= 0) {

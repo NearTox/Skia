@@ -173,7 +173,7 @@ static constexpr inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar
     search is used.
 */
 SkScalar SkScalarInterpFunc(
-    SkScalar searchKey, const SkScalar keys[], const SkScalar values[], int length) noexcept;
+    SkScalar searchKey, const SkScalar keys[], const SkScalar values[], int length);
 
 /*
  *  Helper to compare an array of scalars.

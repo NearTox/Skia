@@ -15,7 +15,7 @@ void SkWriter32::writeMatrix(const SkMatrix& matrix) noexcept {
   SkMatrixPriv::WriteToMemory(matrix, this->reserve(size));
 }
 
-void SkWriter32::writeString(const char str[], size_t len) noexcept {
+void SkWriter32::writeString(const char str[], size_t len) {
   if (nullptr == str) {
     str = "";
     len = 0;

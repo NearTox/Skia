@@ -12,7 +12,7 @@
 #include "src/pathops/SkPathOpsRect.h"
 
 // from blackpawn.com/texts/pointinpoly
-static bool pointInTriangle(const SkDPoint fPts[3], const SkDPoint& test) noexcept {
+static bool pointInTriangle(const SkDPoint fPts[3], const SkDPoint& test) {
   SkDVector v0 = fPts[2] - fPts[0];
   SkDVector v1 = fPts[1] - fPts[0];
   SkDVector v2 = test - fPts[0];
@@ -32,7 +32,7 @@ static bool pointInTriangle(const SkDPoint fPts[3], const SkDPoint& test) noexce
   return u <= 0 && v <= 0 && u + v > denom;
 }
 
-static bool matchesEnd(const SkDPoint fPts[3], const SkDPoint& test) noexcept {
+static bool matchesEnd(const SkDPoint fPts[3], const SkDPoint& test) {
   return fPts[0] == test || fPts[2] == test;
 }
 
@@ -44,7 +44,7 @@ static bool matchesEnd(const SkDPoint fPts[3], const SkDPoint& test) noexcept {
 /* if returning true, check contains true if quad's hull collapsed, making the cubic linear
    if returning false, check contains true if the the quad pair have only the end point in common
 */
-bool SkDQuad::hullIntersects(const SkDQuad& q2, bool* isLinear) const noexcept {
+bool SkDQuad::hullIntersects(const SkDQuad& q2, bool* isLinear) const {
   bool linear = true;
   for (int oddMan = 0; oddMan < kPointCount; ++oddMan) {
     const SkDPoint* endPt[2];
@@ -99,7 +99,7 @@ oddMan    opp   x=oddMan^opp  x=x-oddMan  m=x>>2   x&~m
     2       1         3            1         0       1
             2         0           -2        -1       0
 */
-void SkDQuad::otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept {
+void SkDQuad::otherPts(int oddMan, const SkDPoint* endPt[2]) const {
   for (int opp = 1; opp < kPointCount; ++opp) {
     int end = (oddMan ^ opp) - oddMan;  // choose a value not equal to oddMan
     end &= ~(end >> 2);                 // if the value went negative, set it to zero
@@ -107,7 +107,7 @@ void SkDQuad::otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept {
   }
 }
 
-int SkDQuad::AddValidTs(double s[], int realRoots, double* t) noexcept {
+int SkDQuad::AddValidTs(double s[], int realRoots, double* t) {
   int foundRoots = 0;
   for (int index = 0; index < realRoots; ++index) {
     double tValue = s[index];
@@ -134,14 +134,14 @@ int SkDQuad::AddValidTs(double s[], int realRoots, double* t) noexcept {
 //  analysis of the quadratic equation, suggesting why the following looks at
 //  the sign of B -- and further suggesting that the greatest loss of precision
 //  is in b squared less two a c
-int SkDQuad::RootsValidT(double A, double B, double C, double t[2]) noexcept {
+int SkDQuad::RootsValidT(double A, double B, double C, double t[2]) {
   double s[2];
   int realRoots = RootsReal(A, B, C, s);
   int foundRoots = AddValidTs(s, realRoots, t);
   return foundRoots;
 }
 
-static int handle_zero(const double B, const double C, double s[2]) noexcept {
+static int handle_zero(const double B, const double C, double s[2]) {
   if (approximately_zero(B)) {
     s[0] = 0;
     return C == 0;
@@ -158,7 +158,7 @@ and using the roots
       t2 = C / Q
 */
 // this does not discard real roots <= 0 or >= 1
-int SkDQuad::RootsReal(const double A, const double B, const double C, double s[2]) noexcept {
+int SkDQuad::RootsReal(const double A, const double B, const double C, double s[2]) {
   if (!A) {
     return handle_zero(B, C, s);
   }
@@ -181,7 +181,7 @@ int SkDQuad::RootsReal(const double A, const double B, const double C, double s[
   return 1 + !AlmostDequalUlps(s[0], s[1]);
 }
 
-bool SkDQuad::isLinear(int startIndex, int endIndex) const noexcept {
+bool SkDQuad::isLinear(int startIndex, int endIndex) const {
   SkLineParameters lineParameters;
   lineParameters.quadEndPoints(*this, startIndex, endIndex);
   // FIXME: maybe it's possible to avoid this and compare non-normalized
@@ -199,7 +199,7 @@ bool SkDQuad::isLinear(int startIndex, int endIndex) const noexcept {
   return approximately_zero_when_compared_to(distance, largest);
 }
 
-SkDVector SkDQuad::dxdyAtT(double t) const noexcept {
+SkDVector SkDQuad::dxdyAtT(double t) const {
   double a = t - 1;
   double b = 1 - 2 * t;
   double c = t;
@@ -218,7 +218,7 @@ SkDVector SkDQuad::dxdyAtT(double t) const noexcept {
 }
 
 // OPTIMIZE: assert if caller passes in t == 0 / t == 1 ?
-SkDPoint SkDQuad::ptAtT(double t) const noexcept {
+SkDPoint SkDQuad::ptAtT(double t) const {
   if (0 == t) {
     return fPts[0];
   }
@@ -235,7 +235,7 @@ SkDPoint SkDQuad::ptAtT(double t) const noexcept {
   return result;
 }
 
-static double interp_quad_coords(const double* src, double t) noexcept {
+static double interp_quad_coords(const double* src, double t) {
   if (0 == t) {
     return src[0];
   }
@@ -248,9 +248,9 @@ static double interp_quad_coords(const double* src, double t) noexcept {
   return abc;
 }
 
-bool SkDQuad::monotonicInX() const noexcept { return between(fPts[0].fX, fPts[1].fX, fPts[2].fX); }
+bool SkDQuad::monotonicInX() const { return between(fPts[0].fX, fPts[1].fX, fPts[2].fX); }
 
-bool SkDQuad::monotonicInY() const noexcept { return between(fPts[0].fY, fPts[1].fY, fPts[2].fY); }
+bool SkDQuad::monotonicInY() const { return between(fPts[0].fY, fPts[1].fY, fPts[2].fY); }
 
 /*
 Given a quadratic q, t1, and t2, find a small quadratic segment.
@@ -276,7 +276,7 @@ B   = D*2 - A/2 - C/2
 */
 
 // OPTIMIZE? : special case  t1 = 1 && t2 = 0
-SkDQuad SkDQuad::subDivide(double t1, double t2) const noexcept {
+SkDQuad SkDQuad::subDivide(double t1, double t2) const {
   if (0 == t1 && 1 == t2) {
     return *this;
   }
@@ -292,7 +292,7 @@ SkDQuad SkDQuad::subDivide(double t1, double t2) const noexcept {
   return dst;
 }
 
-void SkDQuad::align(int endIndex, SkDPoint* dstPt) const noexcept {
+void SkDQuad::align(int endIndex, SkDPoint* dstPt) const {
   if (fPts[endIndex].fX == fPts[1].fX) {
     dstPt->fX = fPts[endIndex].fX;
   }
@@ -335,7 +335,7 @@ SkDPoint SkDQuad::subDivide(const SkDPoint& a, const SkDPoint& c, double t1, dou
 }
 
 /* classic one t subdivision */
-static void interp_quad_coords(const double* src, double* dst, double t) noexcept {
+static void interp_quad_coords(const double* src, double* dst, double t) {
   double ab = SkDInterp(src[0], src[2], t);
   double bc = SkDInterp(src[2], src[4], t);
   dst[0] = src[0];
@@ -345,14 +345,14 @@ static void interp_quad_coords(const double* src, double* dst, double t) noexcep
   dst[8] = src[4];
 }
 
-SkDQuadPair SkDQuad::chopAt(double t) const noexcept {
+SkDQuadPair SkDQuad::chopAt(double t) const {
   SkDQuadPair dst;
   interp_quad_coords(&fPts[0].fX, &dst.pts[0].fX, t);
   interp_quad_coords(&fPts[0].fY, &dst.pts[0].fY, t);
   return dst;
 }
 
-static int valid_unit_divide(double numer, double denom, double* ratio) noexcept {
+static int valid_unit_divide(double numer, double denom, double* ratio) {
   if (numer < 0) {
     numer = -numer;
     denom = -denom;
@@ -373,7 +373,7 @@ static int valid_unit_divide(double numer, double denom, double* ratio) noexcept
     B = 2(b - a)
     Solve for t, only if it fits between 0 < t < 1
 */
-int SkDQuad::FindExtrema(const double src[], double tValue[1]) noexcept {
+int SkDQuad::FindExtrema(const double src[], double tValue[1]) {
   /*  At + B == 0
       t = -B / A
   */
@@ -389,7 +389,7 @@ int SkDQuad::FindExtrema(const double src[], double tValue[1]) noexcept {
  * b =     2*B - 2*C
  * c =             C
  */
-void SkDQuad::SetABC(const double* quad, double* a, double* b, double* c) noexcept {
+void SkDQuad::SetABC(const double* quad, double* a, double* b, double* c) {
   *a = quad[0];      // a = A
   *b = 2 * quad[2];  // b =     2*B
   *c = quad[4];      // c =             C

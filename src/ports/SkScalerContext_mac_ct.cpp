@@ -24,7 +24,7 @@
 #  include "include/core/SkFontMetrics.h"
 #  include "include/core/SkFontTypes.h"
 #  include "include/core/SkMatrix.h"
-#  include "include/core/SkPath.h"
+#  include "include/core/SkPathBuilder.h"
 #  include "include/core/SkPoint.h"
 #  include "include/core/SkRect.h"
 #  include "include/core/SkScalar.h"
@@ -344,7 +344,7 @@ void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph) {
   glyph->fHeight = SkToU16(skIBounds.height());
 }
 
-static constexpr uint8_t sk_pow2_table(size_t i) { return SkToU8(((i * i + 128) / 255)); }
+static constexpr uint8_t sk_pow2_table(size_t i) noexcept { return SkToU8(((i * i + 128) / 255)); }
 
 /**
  *  This will invert the gamma applied by CoreGraphics, so we can get linear
@@ -523,14 +523,14 @@ void SkScalerContext_Mac::generateImage(const SkGlyph& glyph) {
 
 namespace {
 class SkCTPathGeometrySink {
-  SkPath* fPath;
+  SkPathBuilder fBuilder;
   bool fStarted;
   CGPoint fCurrent;
 
   void goingTo(const CGPoint pt) {
     if (!fStarted) {
       fStarted = true;
-      fPath->moveTo(fCurrent.x, -fCurrent.y);
+      fBuilder.moveTo(fCurrent.x, -fCurrent.y);
     }
     fCurrent = pt;
   }
@@ -538,7 +538,10 @@ class SkCTPathGeometrySink {
   bool currentIsNot(const CGPoint pt) { return fCurrent.x != pt.x || fCurrent.y != pt.y; }
 
  public:
-  SkCTPathGeometrySink(SkPath* path) : fPath{path}, fStarted{false}, fCurrent{0, 0} {}
+  SkCTPathGeometrySink() : fStarted{false}, fCurrent{0, 0} {}
+
+  SkPath detach() { return fBuilder.detach(); }
+
   static void ApplyElement(void* ctx, const CGPathElement* element) {
     SkCTPathGeometrySink& self = *(SkCTPathGeometrySink*)ctx;
     CGPoint* points = element->points;
@@ -552,14 +555,14 @@ class SkCTPathGeometrySink {
       case kCGPathElementAddLineToPoint:
         if (self.currentIsNot(points[0])) {
           self.goingTo(points[0]);
-          self.fPath->lineTo(points[0].x, -points[0].y);
+          self.fBuilder.lineTo(points[0].x, -points[0].y);
         }
         break;
 
       case kCGPathElementAddQuadCurveToPoint:
         if (self.currentIsNot(points[0]) || self.currentIsNot(points[1])) {
           self.goingTo(points[1]);
-          self.fPath->quadTo(points[0].x, -points[0].y, points[1].x, -points[1].y);
+          self.fBuilder.quadTo(points[0].x, -points[0].y, points[1].x, -points[1].y);
         }
         break;
 
@@ -567,14 +570,14 @@ class SkCTPathGeometrySink {
         if (self.currentIsNot(points[0]) || self.currentIsNot(points[1]) ||
             self.currentIsNot(points[2])) {
           self.goingTo(points[2]);
-          self.fPath->cubicTo(
+          self.fBuilder.cubicTo(
               points[0].x, -points[0].y, points[1].x, -points[1].y, points[2].x, -points[2].y);
         }
         break;
 
       case kCGPathElementCloseSubpath:
         if (self.fStarted) {
-          self.fPath->close();
+          self.fBuilder.close();
         }
         break;
 
@@ -632,8 +635,9 @@ bool SkScalerContext_Mac::generatePath(SkGlyphID glyph, SkPath* path) {
     return false;
   }
 
-  SkCTPathGeometrySink sink(path);
+  SkCTPathGeometrySink sink;
   CGPathApply(cgPath.get(), &sink, SkCTPathGeometrySink::ApplyElement);
+  *path = sink.detach();
   if (fDoSubPosition) {
     SkMatrix m;
     m.setScale(SkScalarInvert(scaleX), SkScalarInvert(scaleY));

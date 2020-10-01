@@ -9249,9 +9249,9 @@ static void bug8380(skiatest::Reporter* reporter, const char* filename) {
   testPathOp(reporter, path, path2, kIntersect_SkPathOp, filename);
 }
 
-static void (*skipTest)(skiatest::Reporter*, const char* filename) = 0;
-static void (*firstTest)(skiatest::Reporter*, const char* filename) = 0;
-static void (*stopTest)(skiatest::Reporter*, const char* filename) = 0;
+static void (*skipTest)(skiatest::Reporter*, const char* filename) = nullptr;
+static void (*firstTest)(skiatest::Reporter*, const char* filename) = nullptr;
+static void (*stopTest)(skiatest::Reporter*, const char* filename) = nullptr;
 
 #define TEST(name) \
   { name, #name }

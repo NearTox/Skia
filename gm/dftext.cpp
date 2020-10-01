@@ -32,8 +32,6 @@
 
 #include <string.h>
 
-class GrContext;
-
 class DFTextGM : public skiagm::GM {
  public:
   DFTextGM() { this->setBGColor(0xFFFFFFFF); }
@@ -48,12 +46,12 @@ class DFTextGM : public skiagm::GM {
 
   SkISize onISize() override { return SkISize::Make(1024, 768); }
 
-  virtual void onDraw(SkCanvas* inputCanvas) override {
+  void onDraw(SkCanvas* inputCanvas) override {
     SkScalar textSizes[] = {9.0f, 9.0f * 2.0f, 9.0f * 5.0f, 9.0f * 2.0f * 5.0f};
     SkScalar scales[] = {2.0f * 5.0f, 5.0f, 2.0f, 1.0f};
 
     // set up offscreen rendering with distance field text
-    GrContext* ctx = inputCanvas->getGrContext();
+    auto ctx = inputCanvas->recordingContext();
     SkISize size = onISize();
     SkImageInfo info = SkImageInfo::MakeN32(
         size.width(), size.height(), kPremul_SkAlphaType, inputCanvas->imageInfo().refColorSpace());

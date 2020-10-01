@@ -222,7 +222,7 @@ void GrShape::simplifyPoint(const SkPoint& point, unsigned flags) noexcept {
 }
 
 bool GrShape::simplify(unsigned flags) {
-  // Sanity check that winding parameters are valid for the current type.
+  // Verify that winding parameters are valid for the current type.
   SkASSERT(
       (fType == Type::kRect || fType == Type::kRRect) ||
       (this->dir() == kDefaultDir && this->startIndex() == kDefaultStart));
@@ -311,7 +311,7 @@ bool GrShape::convex(bool simpleFill) const {
   }
 }
 
-SkRect GrShape::bounds() const noexcept {
+SkRect GrShape::bounds() const {
   // Bounds where left == bottom or top == right can indicate a line or point shape. We return
   // inverted bounds for a truly empty shape.
   static constexpr SkRect kInverted = SkRect::MakeLTRB(1, 1, -1, -1);
@@ -331,7 +331,7 @@ SkRect GrShape::bounds() const noexcept {
   }
 }
 
-uint32_t GrShape::segmentMask() const noexcept {
+uint32_t GrShape::segmentMask() const {
   // In order to match what a path would report, this has to inspect the shapes slightly
   // to reflect what they might simplify to.
   switch (this->type()) {

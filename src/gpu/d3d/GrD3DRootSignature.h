@@ -20,8 +20,11 @@ class GrD3DRootSignature : public GrManagedResource {
   enum class ParamIndex {
     kConstantBufferView = 0,
     kSamplerDescriptorTable = 1,
-    kTextureDescriptorTable = 2
+    kTextureDescriptorTable = 2,
+
+    kLast = kTextureDescriptorTable
   };
+  static constexpr unsigned int kParamIndexCount = (unsigned int)(ParamIndex::kLast) + 1;
 
   bool isCompatible(int numTextureSamplers) const;
 
@@ -44,7 +47,6 @@ class GrD3DRootSignature : public GrManagedResource {
   // release the fRootSignature cause the gr_cp will handle that in the dtor.
   void freeGPUData() const override {}
 
-  // mutable needed so we can release the resource in freeGPUData
   gr_cp<ID3D12RootSignature> fRootSignature;
   int fNumTextureSamplers;
 };

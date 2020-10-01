@@ -64,7 +64,7 @@ GrVkStencilAttachment::~GrVkStencilAttachment() {
   SkASSERT(!fStencilView);
 }
 
-size_t GrVkStencilAttachment::onGpuMemorySize() const noexcept {
+size_t GrVkStencilAttachment::onGpuMemorySize() const {
   uint64_t size = this->width();
   size *= this->height();
   size *= GrVkCaps::GetStencilFormatTotalBitCount(this->imageFormat());
@@ -88,7 +88,7 @@ void GrVkStencilAttachment::onAbandon() {
   GrStencilAttachment::onAbandon();
 }
 
-GrVkGpu* GrVkStencilAttachment::getVkGpu() const noexcept {
+GrVkGpu* GrVkStencilAttachment::getVkGpu() const {
   SkASSERT(!this->wasDestroyed());
   return static_cast<GrVkGpu*>(this->getGpu());
 }

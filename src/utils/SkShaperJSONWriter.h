@@ -23,9 +23,9 @@ class SkShaperJSONWriter final : public SkShaper::RunHandler {
  public:
   SkShaperJSONWriter(SkJSONWriter* JSONWriter, const char* utf8, size_t size);
 
-  void beginLine() override;
+  void beginLine() noexcept override;
   void runInfo(const RunInfo& info) override;
-  void commitRunInfo() noexcept override;
+  void commitRunInfo() override;
 
   Buffer runBuffer(const RunInfo& info) override;
 

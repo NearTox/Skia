@@ -92,16 +92,16 @@ class LineQuadraticIntersections {
  public:
   enum PinTPoint { kPointUninitialized, kPointInitialized };
 
-  LineQuadraticIntersections(const SkDQuad& q, const SkDLine& l, SkIntersections* i) noexcept
+  LineQuadraticIntersections(const SkDQuad& q, const SkDLine& l, SkIntersections* i)
       : fQuad(q), fLine(&l), fIntersections(i), fAllowNear(true) {
     i->setMax(5);  // allow short partial coincidence plus discrete intersections
   }
 
-  LineQuadraticIntersections(const SkDQuad& q) noexcept
+  LineQuadraticIntersections(const SkDQuad& q)
       : fQuad(q) SkDEBUGPARAMS(fLine(nullptr)) SkDEBUGPARAMS(fIntersections(nullptr))
             SkDEBUGPARAMS(fAllowNear(false)) {}
 
-  void allowNear(bool allow) noexcept { fAllowNear = allow; }
+  void allowNear(bool allow) { fAllowNear = allow; }
 
   void checkCoincident() {
     int last = fIntersections->used() - 1;
@@ -207,7 +207,7 @@ class LineQuadraticIntersections {
     return fIntersections->used();
   }
 
-  bool uniqueAnswer(double quadT, const SkDPoint& pt) noexcept {
+  bool uniqueAnswer(double quadT, const SkDPoint& pt) {
     for (int inner = 0; inner < fIntersections->used(); ++inner) {
       if (fIntersections->pt(inner) != pt) {
         continue;
@@ -357,7 +357,7 @@ class LineQuadraticIntersections {
     this->addLineNearEndPoints();
   }
 
-  double findLineT(double t) noexcept {
+  double findLineT(double t) {
     SkDPoint xy = fQuad.ptAtT(t);
     double dx = (*fLine)[1].fX - (*fLine)[0].fX;
     double dy = (*fLine)[1].fY - (*fLine)[0].fY;

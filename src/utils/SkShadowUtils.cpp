@@ -46,12 +46,13 @@ class SkGaussianColorFilter : public SkColorFilterBase {
   SkGaussianColorFilter() : INHERITED() {}
 
 #if SK_SUPPORT_GPU
-  std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(
-      GrRecordingContext*, const GrColorInfo&) const override;
+  GrFPResult asFragmentProcessor(
+      std::unique_ptr<GrFragmentProcessor> inputFP, GrRecordingContext*,
+      const GrColorInfo&) const override;
 #endif
 
  protected:
-  void flatten(SkWriteBuffer&) const noexcept override {}
+  void flatten(SkWriteBuffer&) const override {}
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override {
     rec.fPipeline->append(SkRasterPipeline::gauss_a_to_rgba);
     return true;
@@ -84,10 +85,10 @@ sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) {
 
 #if SK_SUPPORT_GPU
 
-std::unique_ptr<GrFragmentProcessor> SkGaussianColorFilter::asFragmentProcessor(
-    GrRecordingContext*, const GrColorInfo&) const {
-  return GrBlurredEdgeFragmentProcessor::Make(
-      /*inputFP=*/nullptr, GrBlurredEdgeFragmentProcessor::Mode::kGaussian);
+GrFPResult SkGaussianColorFilter::asFragmentProcessor(
+    std::unique_ptr<GrFragmentProcessor> inputFP, GrRecordingContext*, const GrColorInfo&) const {
+  return GrFPSuccess(GrBlurredEdgeFragmentProcessor::Make(
+      std::move(inputFP), GrBlurredEdgeFragmentProcessor::Mode::kGaussian));
 }
 #endif
 
@@ -99,7 +100,7 @@ sk_sp<SkColorFilter> SkColorFilterPriv::MakeGaussian() {
 
 namespace {
 
-uint64_t resource_cache_shared_id() noexcept {
+constexpr uint64_t resource_cache_shared_id() noexcept {
   return 0x2020776f64616873llu;  // 'shadow  '
 }
 
@@ -150,7 +151,7 @@ struct SpotVerticesFactory {
   SkScalar fLightRadius;
   OccluderType fOccluderType;
 
-  bool isCompatible(const SpotVerticesFactory& that, SkVector* translate) const noexcept {
+  bool isCompatible(const SpotVerticesFactory& that, SkVector* translate) const {
     if (fOccluderHeight != that.fOccluderHeight || fDevLightPos.fZ != that.fDevLightPos.fZ ||
         fLightRadius != that.fLightRadius || fOccluderType != that.fOccluderType) {
       return false;
@@ -332,7 +333,7 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
  */
 template <typename FACTORY>
 struct FindContext {
-  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
+  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory) noexcept
       : fViewMatrix(viewMatrix), fFactory(factory) {}
   const SkMatrix* const fViewMatrix;
   // If this is valid after Find is called then we found the vertices and they should be drawn
@@ -419,7 +420,7 @@ class ShadowInvalidator : public SkIDChangeListener {
   }
 
   // always purge
-  static bool FindVisitor(const SkResourceCache::Rec&, void*) noexcept { return false; }
+  static bool FindVisitor(const SkResourceCache::Rec&, void*) { return false; }
 
   void changed() override {
     SkResourceCache::Find(this->getKey(), ShadowInvalidator::FindVisitor, nullptr);
@@ -580,7 +581,7 @@ void SkShadowUtils::DrawShadow(
   canvas->private_draw_shadow_rec(path, rec);
 }
 
-static bool validate_rec(const SkDrawShadowRec& rec) noexcept {
+static bool validate_rec(const SkDrawShadowRec& rec) {
   return rec.fLightPos.isFinite() && rec.fZPlaneParams.isFinite() &&
          SkScalarIsFinite(rec.fLightRadius);
 }

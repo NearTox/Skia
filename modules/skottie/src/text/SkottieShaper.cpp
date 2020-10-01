@@ -62,7 +62,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     fFont.setEdging(SkFont::Edging::kAntiAlias);
   }
 
-  void beginLine() override {
+  void beginLine() noexcept override {
     fLineGlyphs.reset(0);
     fLinePos.reset(0);
     fLineClusters.reset(0);
@@ -86,7 +86,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     fLastLineDescent = std::max(fLastLineDescent, metrics.fDescent);
   }
 
-  void commitRunInfo() noexcept override {}
+  void commitRunInfo() override {}
 
   Buffer runBuffer(const RunInfo& info) override {
     const auto run_start_index = fLineGlyphCount;
@@ -104,7 +104,7 @@ class BlobMaker final : public SkShaper::RunHandler {
         fLineClusters.get() + run_start_index, fCurrentPosition + alignmentOffset};
   }
 
-  void commitRunBuffer(const RunInfo& info) override { fCurrentPosition += info.fAdvance; }
+  void commitRunBuffer(const RunInfo& info) noexcept override { fCurrentPosition += info.fAdvance; }
 
   void commitLine() noexcept override {
     fOffset.fY += fDesc.fLineHeight;
@@ -146,7 +146,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     //
     //   b) leading/trailing empty lines are still taken into account for alignment purposes
 
-    auto extent_box = [&]() {
+    auto extent_box = [&]() -> SkRect {
       auto box = fResult.computeVisualBounds();
 
       // By default, first line is vertically-aligned on a baseline of 0.
@@ -299,7 +299,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     sk_careful_memcpy(blob_buffer.pos, pos, rec.fGlyphCount * sizeof(SkPoint));
   }
 
-  static float HAlignFactor(SkTextUtils::Align align) {
+  static float HAlignFactor(SkTextUtils::Align align) noexcept {
     switch (align) {
       case SkTextUtils::kLeft_Align: return 0.0f;
       case SkTextUtils::kCenter_Align: return -0.5f;
@@ -308,7 +308,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     return 0.0f;  // go home, msvc...
   }
 
-  SkScalar ascent() const {
+  SkScalar ascent() const noexcept {
     // Use the explicit ascent, when specified.
     // Note: ascent values are negative (relative to the baseline).
     return fDesc.fAscent ? fDesc.fAscent : fFirstLineAscent;

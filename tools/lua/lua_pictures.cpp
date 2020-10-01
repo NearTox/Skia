@@ -142,18 +142,17 @@ int main(int argc, char** argv) {
             }
 
             auto pic(load_picture(path));
-            if (pic.get()) {
-                std::unique_ptr<SkLuaCanvas> canvas(
-                                    new SkLuaCanvas(SkScalarCeilToInt(pic->cullRect().width()),
-                                                    SkScalarCeilToInt(pic->cullRect().height()),
-                                                    L.get(), gAccumulateFunc));
+            if (pic) {
+              std::unique_ptr<SkLuaCanvas> canvas(new SkLuaCanvas(
+                  SkScalarCeilToInt(pic->cullRect().width()),
+                  SkScalarCeilToInt(pic->cullRect().height()), L.get(), gAccumulateFunc));
 
-                call_canvas(L.get(), canvas.get(), path, gStartCanvasFunc);
-                canvas->drawPicture(pic);
-                call_canvas(L.get(), canvas.get(), path, gEndCanvasFunc);
+              call_canvas(L.get(), canvas.get(), path, gStartCanvasFunc);
+              canvas->drawPicture(pic);
+              call_canvas(L.get(), canvas.get(), path, gEndCanvasFunc);
 
             } else {
-                SkDebugf("failed to load\n");
+              SkDebugf("failed to load\n");
             }
         }
     }

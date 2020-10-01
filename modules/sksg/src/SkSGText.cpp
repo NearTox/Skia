@@ -19,12 +19,11 @@ sk_sp<Text> Text::Make(sk_sp<SkTypeface> tf, const SkString& text) {
   return sk_sp<Text>(new Text(std::move(tf), text));
 }
 
-Text::Text(sk_sp<SkTypeface> tf, const SkString& text) noexcept
-    : fTypeface(std::move(tf)), fText(text) {}
+Text::Text(sk_sp<SkTypeface> tf, const SkString& text) : fTypeface(std::move(tf)), fText(text) {}
 
 Text::~Text() = default;
 
-SkPoint Text::alignedPosition(SkScalar advance) const noexcept {
+SkPoint Text::alignedPosition(SkScalar advance) const {
   auto aligned = fPosition;
 
   switch (fAlign) {
@@ -67,11 +66,9 @@ void Text::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawTextBlob(fBlob, aligned_pos.x(), aligned_pos.y(), paint);
 }
 
-bool Text::onContains(const SkPoint& p) const noexcept {
-  return this->asPath().contains(p.x(), p.y());
-}
+bool Text::onContains(const SkPoint& p) const { return this->asPath().contains(p.x(), p.y()); }
 
-SkPath Text::onAsPath() const noexcept {
+SkPath Text::onAsPath() const {
   // TODO
   return SkPath();
 }
@@ -84,11 +81,11 @@ sk_sp<TextBlob> TextBlob::Make(sk_sp<SkTextBlob> blob) {
   return sk_sp<TextBlob>(new TextBlob(std::move(blob)));
 }
 
-TextBlob::TextBlob(sk_sp<SkTextBlob> blob) noexcept : fBlob(std::move(blob)) {}
+TextBlob::TextBlob(sk_sp<SkTextBlob> blob) : fBlob(std::move(blob)) {}
 
 TextBlob::~TextBlob() = default;
 
-SkRect TextBlob::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
+SkRect TextBlob::onRevalidate(InvalidationController*, const SkMatrix&) {
   return fBlob ? fBlob->bounds().makeOffset(fPosition.x(), fPosition.y()) : SkRect::MakeEmpty();
 }
 
@@ -96,11 +93,9 @@ void TextBlob::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawTextBlob(fBlob, fPosition.x(), fPosition.y(), paint);
 }
 
-bool TextBlob::onContains(const SkPoint& p) const noexcept {
-  return this->asPath().contains(p.x(), p.y());
-}
+bool TextBlob::onContains(const SkPoint& p) const { return this->asPath().contains(p.x(), p.y()); }
 
-SkPath TextBlob::onAsPath() const noexcept {
+SkPath TextBlob::onAsPath() const {
   // TODO
   return SkPath();
 }

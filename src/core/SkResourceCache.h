@@ -71,7 +71,6 @@ class SkResourceCache {
 
   struct Rec {
     typedef SkResourceCache::Key Key;
-
     Rec() noexcept = default;
     virtual ~Rec() = default;
 

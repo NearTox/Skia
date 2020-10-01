@@ -5,11 +5,12 @@
  * found in the LICENSE file.
  */
 
+#include <memory>
+
 #include "include/gpu/GrContextThreadSafeProxy.h"
 #include "src/gpu/GrContextThreadSafeProxyPriv.h"
 
 #include "include/core/SkSurfaceCharacterization.h"
-#include "include/gpu/GrContext.h"
 #include "src/gpu/GrBaseContextPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/effects/GrSkSLFP.h"
@@ -19,7 +20,7 @@
 #  include "src/gpu/vk/GrVkCaps.h"
 #endif
 
-static int32_t next_id() noexcept {
+static int32_t next_id() {
   static std::atomic<int32_t> nextID{1};
   int32_t id;
   do {
@@ -29,12 +30,15 @@ static int32_t next_id() noexcept {
 }
 
 GrContextThreadSafeProxy::GrContextThreadSafeProxy(
-    GrBackendApi backend, const GrContextOptions& options) noexcept
+    GrBackendApi backend, const GrContextOptions& options)
     : fBackend(backend), fOptions(options), fContextID(next_id()) {}
 
-GrContextThreadSafeProxy::~GrContextThreadSafeProxy() noexcept = default;
+GrContextThreadSafeProxy::~GrContextThreadSafeProxy() = default;
 
-void GrContextThreadSafeProxy::init(sk_sp<const GrCaps> caps) noexcept { fCaps = std::move(caps); }
+void GrContextThreadSafeProxy::init(sk_sp<const GrCaps> caps) {
+  fCaps = std::move(caps);
+  fTextBlobCache = std::make_unique<GrTextBlobCache>(fContextID);
+}
 
 SkSurfaceCharacterization GrContextThreadSafeProxy::createCharacterization(
     size_t cacheMaxResourceBytes, const SkImageInfo& ii, const GrBackendFormat& backendFormat,
@@ -42,45 +46,50 @@ SkSurfaceCharacterization GrContextThreadSafeProxy::createCharacterization(
     bool willUseGLFBO0, bool isTextureable, GrProtected isProtected) {
   SkASSERT(fCaps);
   if (!backendFormat.isValid()) {
-    return SkSurfaceCharacterization();  // return an invalid characterization
+    return {};
   }
 
   SkASSERT(isTextureable || !isMipMapped);
 
   if (GrBackendApi::kOpenGL != backendFormat.backend() && willUseGLFBO0) {
     // The willUseGLFBO0 flags can only be used for a GL backend.
-    return SkSurfaceCharacterization();  // return an invalid characterization
+    return {};
   }
 
-  if (!fCaps->mipMapSupport()) {
+  if (!fCaps->mipmapSupport()) {
     isMipMapped = false;
+  }
+
+  if (ii.width() < 1 || ii.width() > fCaps->maxRenderTargetSize() || ii.height() < 1 ||
+      ii.height() > fCaps->maxRenderTargetSize()) {
+    return {};
   }
 
   GrColorType grColorType = SkColorTypeToGrColorType(ii.colorType());
 
   if (!fCaps->areColorTypeAndFormatCompatible(grColorType, backendFormat)) {
-    return SkSurfaceCharacterization();  // return an invalid characterization
+    return {};
   }
 
   if (!fCaps->isFormatAsColorTypeRenderable(grColorType, backendFormat, sampleCnt)) {
-    return SkSurfaceCharacterization();  // return an invalid characterization
+    return {};
   }
 
   sampleCnt = fCaps->getRenderTargetSampleCount(sampleCnt, backendFormat);
   SkASSERT(sampleCnt);
 
   if (willUseGLFBO0 && isTextureable) {
-    return SkSurfaceCharacterization();  // return an invalid characterization
+    return {};
   }
 
   if (isTextureable && !fCaps->isFormatTexturable(backendFormat)) {
     // Skia doesn't agree that this is textureable.
-    return SkSurfaceCharacterization();  // return an invalid characterization
+    return {};
   }
 
   if (GrBackendApi::kVulkan == backendFormat.backend()) {
     if (GrBackendApi::kVulkan != fBackend) {
-      return SkSurfaceCharacterization();  // return an invalid characterization
+      return {};
     }
 
 #ifdef SK_VULKAN
@@ -88,7 +97,7 @@ SkSurfaceCharacterization GrContextThreadSafeProxy::createCharacterization(
 
     // The protection status of the characterization and the context need to match
     if (isProtected != GrProtected(vkCaps->supportsProtectedMemory())) {
-      return SkSurfaceCharacterization();  // return an invalid characterization
+      return {};
     }
 #endif
   }
@@ -117,13 +126,13 @@ GrBackendFormat GrContextThreadSafeProxy::defaultBackendFormat(
   return format;
 }
 
-void GrContextThreadSafeProxy::abandonContext() noexcept {
-  fAbandoned.store(true, std::memory_order_relaxed);
+void GrContextThreadSafeProxy::abandonContext() {
+  if (!fAbandoned.exchange(true)) {
+    fTextBlobCache->freeAll();
+  }
 }
 
-bool GrContextThreadSafeProxy::abandoned() const noexcept {
-  return fAbandoned.load(std::memory_order_relaxed);
-}
+bool GrContextThreadSafeProxy::abandoned() const { return fAbandoned; }
 
 ////////////////////////////////////////////////////////////////////////////////
 sk_sp<GrContextThreadSafeProxy> GrContextThreadSafeProxyPriv::Make(

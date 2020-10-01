@@ -17,23 +17,24 @@ namespace SkSL {
  * A literal integer.
  */
 struct IntLiteral : public Expression {
+  static constexpr Kind kExpressionKind = kIntLiteral_Kind;
+
   // FIXME: we will need to revisit this if/when we add full support for both signed and unsigned
   // 64-bit integers, but for right now an int64_t will hold every value we care about
-  IntLiteral(const Context& context, int offset, int64_t value) noexcept
-      : INHERITED(offset, kIntLiteral_Kind, *context.fInt_Type), fValue(value) {}
+  IntLiteral(const Context& context, int offset, int64_t value)
+      : INHERITED(offset, kExpressionKind, *context.fInt_Type), fValue(value) {}
 
-  IntLiteral(int offset, int64_t value, const Type* type = nullptr) noexcept
-      : INHERITED(offset, kIntLiteral_Kind, *type), fValue(value) {}
+  IntLiteral(int offset, int64_t value, const Type* type = nullptr)
+      : INHERITED(offset, kExpressionKind, *type), fValue(value) {}
 
   String description() const override { return to_string(fValue); }
 
   bool hasProperty(Property property) const noexcept override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isCompileTimeConstant() const noexcept override { return true; }
 
-  bool compareConstant(const Context& context, const Expression& other) const noexcept override {
-    IntLiteral& i = (IntLiteral&)other;
-    return fValue == i.fValue;
+  bool compareConstant(const Context& context, const Expression& other) const override {
+    return fValue == other.as<IntLiteral>().fValue;
   }
 
   int coercionCost(const Type& target) const override {

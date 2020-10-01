@@ -8,6 +8,7 @@
 #include "src/gpu/GrContextPriv.h"
 
 #include "include/gpu/GrContextThreadSafeProxy.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrContextThreadSafeProxyPriv.h"
 #include "src/gpu/GrDrawingManager.h"
@@ -16,7 +17,6 @@
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/GrSurfaceContextPriv.h"
-#include "src/gpu/GrSurfacePriv.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrSkSLFP.h"
@@ -60,13 +60,9 @@ void GrContextPriv::flushSurface(GrSurfaceProxy* proxy) {
   this->flushSurfaces(proxy ? &proxy : nullptr, proxy ? 1 : 0, {});
 }
 
-void GrContextPriv::moveRenderTasksToDDL(SkDeferredDisplayList* ddl) {
-  fContext->drawingManager()->moveRenderTasksToDDL(ddl);
-}
-
 void GrContextPriv::copyRenderTasksFromDDL(
-    const SkDeferredDisplayList* ddl, GrRenderTargetProxy* newDest) {
-  fContext->drawingManager()->copyRenderTasksFromDDL(ddl, newDest);
+    sk_sp<const SkDeferredDisplayList> ddl, GrRenderTargetProxy* newDest) {
+  fContext->drawingManager()->copyRenderTasksFromDDL(std::move(ddl), newDest);
 }
 
 bool GrContextPriv::compile(const GrProgramDesc& desc, const GrProgramInfo& info) {
@@ -153,10 +149,6 @@ void GrContextPriv::printContextStats() const {
 }
 
 /////////////////////////////////////////////////
-void GrContextPriv::testingOnly_setTextBlobCacheLimit(size_t bytes) {
-  fContext->priv().getTextBlobCache()->setBudget(bytes);
-}
-
 sk_sp<SkImage> GrContextPriv::testingOnly_getFontAtlasImage(
     GrMaskFormat format, unsigned int index) {
   auto atlasManager = this->getAtlasManager();
@@ -190,9 +182,14 @@ void GrContextPriv::testingOnly_flushAndRemoveOnFlushCallbackObject(GrOnFlushCal
 
 bool GrContextPriv::validPMUPMConversionExists() {
   ASSERT_SINGLE_OWNER
+
+  // CONTEXT TODO: remove this downcast when this class becomes GrDirectContextPriv
+  auto direct = GrAsDirectContext(fContext);
+  SkASSERT(direct);
+
   if (!fContext->fDidTestPMConversions) {
     fContext->fPMUPMConversionsRoundTrip =
-        GrConfigConversionEffect::TestForPreservingPMConversions(fContext);
+        GrConfigConversionEffect::TestForPreservingPMConversions(direct);
     fContext->fDidTestPMConversions = true;
   }
 

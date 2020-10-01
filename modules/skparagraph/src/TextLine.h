@@ -35,39 +35,37 @@ class TextLine {
     bool clippingNeeded;
   };
 
-  TextLine() = default;
+  TextLine() noexcept = default;
   TextLine(const TextLine&) = delete;
   TextLine& operator=(const TextLine&) = delete;
-  TextLine(TextLine&&) = default;
-  TextLine& operator=(TextLine&&) = default;
+  TextLine(TextLine&&) noexcept = default;
+  TextLine& operator=(TextLine&&) noexcept = default;
   ~TextLine() = default;
 
   TextLine(
-      ParagraphImpl* master, SkVector offset, SkVector advance, BlockRange blocks, TextRange text,
+      ParagraphImpl* owner, SkVector offset, SkVector advance, BlockRange blocks, TextRange text,
       TextRange textWithSpaces, ClusterRange clusters, ClusterRange clustersWithGhosts,
       SkScalar widthWithSpaces, InternalLineMetrics sizes);
 
-  void setMaster(ParagraphImpl* master) { fMaster = master; }
+  TextRange trimmedText() const noexcept { return fTextRange; }
+  TextRange textWithSpaces() const noexcept { return fTextWithWhitespacesRange; }
+  ClusterRange clusters() const noexcept { return fClusterRange; }
+  ClusterRange clustersWithSpaces() noexcept { return fGhostClusterRange; }
+  Run* ellipsis() const noexcept { return fEllipsis.get(); }
+  InternalLineMetrics sizes() const noexcept { return fSizes; }
+  bool empty() const noexcept { return fTextRange.empty(); }
 
-  TextRange trimmedText() const { return fTextRange; }
-  TextRange textWithSpaces() const { return fTextWithWhitespacesRange; }
-  ClusterRange clusters() const { return fClusterRange; }
-  ClusterRange clustersWithSpaces() { return fGhostClusterRange; }
-  Run* ellipsis() const { return fEllipsis.get(); }
-  InternalLineMetrics sizes() const { return fSizes; }
-  bool empty() const { return fTextRange.empty(); }
-
-  SkScalar spacesWidth() { return fWidthWithSpaces - width(); }
-  SkScalar height() const { return fAdvance.fY; }
-  SkScalar width() const {
+  SkScalar spacesWidth() noexcept { return fWidthWithSpaces - width(); }
+  SkScalar height() const noexcept { return fAdvance.fY; }
+  SkScalar width() const noexcept {
     return fAdvance.fX + (fEllipsis != nullptr ? fEllipsis->fAdvance.fX : 0);
   }
-  SkScalar shift() const { return fShift; }
-  SkVector offset() const;
+  SkScalar shift() const noexcept { return fShift; }
+  SkVector offset() const noexcept;
 
-  SkScalar alphabeticBaseline() const { return fSizes.alphabeticBaseline(); }
-  SkScalar ideographicBaseline() const { return fSizes.ideographicBaseline(); }
-  SkScalar baseline() const { return fSizes.baseline(); }
+  SkScalar alphabeticBaseline() const noexcept { return fSizes.alphabeticBaseline(); }
+  SkScalar ideographicBaseline() const noexcept { return fSizes.ideographicBaseline(); }
+  SkScalar baseline() const noexcept { return fSizes.baseline(); }
 
   using RunVisitor =
       std::function<bool(const Run* run, SkScalar runOffset, TextRange textRange, SkScalar* width)>;
@@ -90,11 +88,11 @@ class TextLine {
   // For testing internal structures
   void scanStyles(StyleType style, const RunStyleVisitor& visitor);
 
-  void setMaxRunMetrics(const InternalLineMetrics& metrics) { fMaxRunMetrics = metrics; }
-  InternalLineMetrics getMaxRunMetrics() const { return fMaxRunMetrics; }
+  void setMaxRunMetrics(const InternalLineMetrics& metrics) noexcept { fMaxRunMetrics = metrics; }
+  InternalLineMetrics getMaxRunMetrics() const noexcept { return fMaxRunMetrics; }
 
-  bool isFirstLine();
-  bool isLastLine();
+  bool isFirstLine() noexcept;
+  bool isLastLine() noexcept;
   void getRectsForRange(
       TextRange textRange, RectHeightStyle rectHeightStyle, RectWidthStyle rectWidthStyle,
       std::vector<TextBox>& boxes);
@@ -109,10 +107,10 @@ class TextLine {
 
   SkRect calculateBoundaries();
 
-  SkRect extendHeight(const ClipContext& context) const;
+  SkRect extendHeight(const ClipContext& context) const noexcept;
 
   SkScalar metricsWithoutMultiplier(TextHeightBehavior correction);
-  void shiftVertically(SkScalar shift) { fOffset.fY += shift; }
+  void shiftVertically(SkScalar shift) noexcept { fOffset.fY += shift; }
 
   bool endsWithHardLineBreak() const;
 
@@ -135,7 +133,7 @@ class TextLine {
 
   void shiftCluster(const Cluster* cluster, SkScalar shift, SkScalar prevShift);
 
-  ParagraphImpl* fMaster;
+  ParagraphImpl* fOwner;
   BlockRange fBlockRange;
   TextRange fTextRange;
   TextRange fTextWithWhitespacesRange;

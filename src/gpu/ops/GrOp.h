@@ -11,7 +11,7 @@
 #include "include/core/SkMatrix.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkString.h"
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/GrGpuResource.h"
 #include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/GrTracing.h"
@@ -70,7 +70,7 @@ class GrOp : private SkNoncopyable {
 
   virtual const char* name() const noexcept = 0;
 
-  using VisitProxyFunc = std::function<void(GrSurfaceProxy*, GrMipMapped)>;
+  using VisitProxyFunc = std::function<void(GrSurfaceProxy*, GrMipmapped)>;
 
   virtual void visitProxies(const VisitProxyFunc&) const {
     // This default implementation assumes the op has no proxies
@@ -182,16 +182,12 @@ class GrOp : private SkNoncopyable {
   }
 
   /** Used for spewing information about ops when debugging. */
-#ifdef SK_DEBUG
-  virtual SkString dumpInfo() const {
-    SkString string;
-    string.appendf(
-        "OpBounds: [L: %.2f, T: %.2f, R: %.2f, B: %.2f]\n", fBounds.fLeft, fBounds.fTop,
-        fBounds.fRight, fBounds.fBottom);
-    return string;
+#if GR_TEST_UTILS
+  virtual SkString dumpInfo() const final {
+    return SkStringPrintf(
+        "%s\nOpBounds: [L: %.2f, T: %.2f, R: %.2f, B: %.2f]", this->onDumpInfo().c_str(),
+        fBounds.fLeft, fBounds.fTop, fBounds.fRight, fBounds.fBottom);
   }
-#else
-  SkString dumpInfo() const { return SkString("<Op information unavailable>"); }
 #endif
 
   /**
@@ -245,7 +241,7 @@ class GrOp : private SkNoncopyable {
   SkDEBUGCODE(void validateChain(GrOp* expectedTail = nullptr) const);
 
 #ifdef SK_DEBUG
-  virtual void validate() const {}
+  virtual void validate() const noexcept {}
 #endif
 
  protected:
@@ -301,6 +297,9 @@ class GrOp : private SkNoncopyable {
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.
   // Otherwise, this op's bounds.
   virtual void onExecute(GrOpFlushState*, const SkRect& chainBounds) = 0;
+#if GR_TEST_UTILS
+  virtual SkString onDumpInfo() const { return SkString(); }
+#endif
 
   static uint32_t GenID(std::atomic<uint32_t>* idCounter) noexcept {
     uint32_t id = (*idCounter)++;

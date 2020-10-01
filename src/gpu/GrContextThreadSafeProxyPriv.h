@@ -12,6 +12,7 @@
 #include "include/private/GrContext_Base.h"
 
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/text/GrTextBlobCache.h"
 
 /**
  * Class that adds methods to GrContextThreadSafeProxy that are only intended for use internal to
@@ -20,9 +21,9 @@
  */
 class GrContextThreadSafeProxyPriv {
  public:
-  void init(sk_sp<const GrCaps> caps) const noexcept { fProxy->init(std::move(caps)); }
+  void init(sk_sp<const GrCaps> caps) const { fProxy->init(std::move(caps)); }
 
-  bool matches(GrContext_Base* candidate) const {
+  bool matches(GrContext_Base* candidate) const noexcept {
     return fProxy == candidate->threadSafeProxy().get();
   }
 
@@ -33,8 +34,11 @@ class GrContextThreadSafeProxyPriv {
   const GrCaps* caps() const noexcept { return fProxy->fCaps.get(); }
   sk_sp<const GrCaps> refCaps() const noexcept { return fProxy->fCaps; }
 
-  void abandonContext() noexcept { fProxy->abandonContext(); }
-  bool abandoned() const noexcept { return fProxy->abandoned(); }
+  GrTextBlobCache* getTextBlobCache() noexcept { return fProxy->fTextBlobCache.get(); }
+  const GrTextBlobCache* getTextBlobCache() const noexcept { return fProxy->fTextBlobCache.get(); }
+
+  void abandonContext() { fProxy->abandonContext(); }
+  bool abandoned() const { return fProxy->abandoned(); }
 
   // GrContextThreadSafeProxyPriv
   static sk_sp<GrContextThreadSafeProxy> Make(GrBackendApi, const GrContextOptions&);
@@ -57,7 +61,8 @@ inline GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() noexcept {
   return GrContextThreadSafeProxyPriv(this);
 }
 
-inline const GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() const noexcept {
+inline const GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrContextThreadSafeProxyPriv(const_cast<GrContextThreadSafeProxy*>(this));
 }
 

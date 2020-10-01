@@ -11,7 +11,6 @@
 #include "src/gpu/GrOpsTask.h"
 #include "src/gpu/GrRenderTargetProxy.h"
 #include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/GrSurfacePriv.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
 #include "src/gpu/GrTextureProxy.h"
@@ -365,7 +364,7 @@ bool GrResourceAllocator::assign(int* startIndex, int* stopIndex, AssignError* o
   SkDebugf("\n");
 #endif
 
-  SkDEBUGCODE(fAssigned = true;)
+  SkDEBUGCODE(fAssigned = true);
 
 #if GR_ALLOCATION_SPEW
       this->dumpIntervals();

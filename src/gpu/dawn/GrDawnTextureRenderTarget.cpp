@@ -8,15 +8,14 @@
 #include "src/gpu/dawn/GrDawnTextureRenderTarget.h"
 
 #include "include/core/SkTraceMemoryDump.h"
-#include "include/gpu/GrContext.h"
-#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/dawn/GrDawnGpu.h"
 
 GrDawnTextureRenderTarget::GrDawnTextureRenderTarget(
     GrDawnGpu* gpu, SkISize dimensions, wgpu::TextureView textureView, int sampleCnt,
-    const GrDawnTextureInfo& textureInfo, GrMipMapsStatus mipMapsStatus)
+    const GrDawnTextureInfo& textureInfo, GrMipmapStatus mipmapStatus)
     : GrSurface(gpu, dimensions, GrProtected::kNo),
-      GrDawnTexture(gpu, dimensions, textureView, textureInfo, mipMapsStatus),
+      GrDawnTexture(gpu, dimensions, textureView, textureInfo, mipmapStatus),
       GrDawnRenderTarget(gpu, dimensions, sampleCnt, GrDawnRenderTargetInfo(textureInfo)) {}
 
 bool GrDawnTextureRenderTarget::canAttemptStencilAttachment() const { return true; }
@@ -26,5 +25,5 @@ size_t GrDawnTextureRenderTarget::onGpuMemorySize() const {
   return GrSurface::ComputeSize(
       caps, this->backendFormat(), this->dimensions(),
       1,  // FIXME: for MSAA
-      this->texturePriv().mipMapped());
+      this->mipmapped());
 }

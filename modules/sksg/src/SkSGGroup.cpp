@@ -13,7 +13,7 @@
 
 namespace sksg {
 
-Group::Group() noexcept = default;
+Group::Group() = default;
 
 Group::Group(std::vector<sk_sp<RenderNode>> children) : fChildren(std::move(children)) {
   for (const auto& child : fChildren) {
@@ -27,7 +27,7 @@ Group::~Group() {
   }
 }
 
-void Group::clear() noexcept {
+void Group::clear() {
   for (const auto& child : fChildren) {
     this->unobserveInval(child);
   }
@@ -48,7 +48,7 @@ void Group::addChild(sk_sp<RenderNode> node) {
   this->invalidate();
 }
 
-void Group::removeChild(const sk_sp<RenderNode>& node) noexcept {
+void Group::removeChild(const sk_sp<RenderNode>& node) {
   SkDEBUGCODE(const auto origSize = fChildren.size());
   fChildren.erase(std::remove(fChildren.begin(), fChildren.end(), node), fChildren.end());
   SkASSERT(fChildren.size() == origSize - 1);
@@ -67,7 +67,7 @@ void Group::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   }
 }
 
-const RenderNode* Group::onNodeAt(const SkPoint& p) const noexcept {
+const RenderNode* Group::onNodeAt(const SkPoint& p) const {
   for (auto it = fChildren.crbegin(); it != fChildren.crend(); ++it) {
     if (const auto* node = (*it)->nodeAt(p)) {
       return node;

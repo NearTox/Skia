@@ -25,30 +25,30 @@ class SkBitSet {
 
   SkBitSet(const SkBitSet&) = delete;
   SkBitSet& operator=(const SkBitSet&) = delete;
-  SkBitSet(SkBitSet&& that) noexcept : fSize(that.fSize), fChunks(std::move(that.fChunks)) {
-    that.fSize = 0;
-  }
+  SkBitSet(SkBitSet&& that) noexcept { *this = std::move(that); }
   SkBitSet& operator=(SkBitSet&& that) noexcept {
-    this->fSize = that.fSize;
-    this->fChunks = std::move(that.fChunks);
-    that.fSize = 0;
+    if (this != &that) {
+      this->fSize = that.fSize;
+      this->fChunks = std::move(that.fChunks);
+      that.fSize = 0;
+    }
     return *this;
   }
   ~SkBitSet() = default;
 
   /** Set the value of the index-th bit to true. */
-  void set(size_t index) noexcept {
+  void set(size_t index) {
     SkASSERT(index < fSize);
     *this->chunkFor(index) |= chunkMaskFor(index);
   }
 
   /** Set the value of the index-th bit to false.  */
-  void reset(size_t index) noexcept {
+  void reset(size_t index) {
     SkASSERT(index < fSize);
     *this->chunkFor(index) &= ~chunkMaskFor(index);
   }
 
-  bool test(size_t index) const noexcept {
+  bool test(size_t index) const {
     SkASSERT(index < fSize);
     return SkToBool(*this->chunkFor(index) & chunkMaskFor(index));
   }
@@ -97,16 +97,16 @@ class SkBitSet {
     constexpr const size_t&& value() const&& noexcept { return std::move(fValue); }
 
     template <typename U>
-    constexpr size_t value_or(U&& defaultValue) const& {
+    constexpr size_t value_or(U&& defaultValue) const& noexcept {
       return bool(*this) ? **this : static_cast<size_t>(std::forward<U>(defaultValue));
     }
     template <typename U>
-    constexpr size_t value_or(U&& defaultValue) && {
+    constexpr size_t value_or(U&& defaultValue) && noexcept {
       return bool(*this) ? std::move(**this) : static_cast<size_t>(std::forward<U>(defaultValue));
     }
   };
   // If any bits are set returns the index of the first.
-  OptionalIndex findFirst() noexcept {
+  OptionalIndex findFirst() {
     const Chunk* chunks = fChunks.get();
     const size_t numChunks = numChunksFor(fSize);
     for (size_t i = 0; i < numChunks; ++i) {
@@ -127,7 +127,7 @@ class SkBitSet {
   static_assert(ChunkBits == sizeof(Chunk) * CHAR_BIT, "It would work, but don't waste bits.");
   std::unique_ptr<Chunk, SkFunctionWrapper<void(void*), sk_free>> fChunks;
 
-  Chunk* chunkFor(size_t index) const noexcept { return fChunks.get() + (index / ChunkBits); }
+  Chunk* chunkFor(size_t index) const { return fChunks.get() + (index / ChunkBits); }
 
   static constexpr Chunk chunkMaskFor(size_t index) noexcept {
     return (Chunk)1 << (index & (ChunkBits - 1));

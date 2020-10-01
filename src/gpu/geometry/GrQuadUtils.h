@@ -96,7 +96,7 @@ class TessellationHelper {
 
     void reset(
         const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, const skvx::Vec<4, float>& ws,
-        GrQuad::Type quadType);
+        GrQuad::Type quadType) noexcept;
   };
 
   struct EdgeEquations {
@@ -106,7 +106,7 @@ class TessellationHelper {
     void reset(const EdgeVectors& edgeVectors);
 
     skvx::Vec<4, float> estimateCoverage(
-        const skvx::Vec<4, float>& x2d, const skvx::Vec<4, float>& y2d) const;
+        const skvx::Vec<4, float>& x2d, const skvx::Vec<4, float>& y2d) const noexcept;
 
     // Outsets or insets 'x2d' and 'y2d' in place. To be used when the interior is very
     // small, edges are near parallel, or edges are very short/zero-length. Returns number
@@ -129,7 +129,7 @@ class TessellationHelper {
 
     void reset(
         const EdgeVectors& edgeVectors, GrQuad::Type quadType,
-        const skvx::Vec<4, float>& edgeDistances);
+        const skvx::Vec<4, float>& edgeDistances) noexcept;
   };
 
   struct Vertices {
@@ -140,10 +140,11 @@ class TessellationHelper {
     skvx::Vec<4, float> fU, fV, fR;
     int fUVRCount;
 
-    void reset(const GrQuad& deviceQuad, const GrQuad* localQuad);
+    void reset(const GrQuad& deviceQuad, const GrQuad* localQuad) noexcept;
 
     void asGrQuads(
-        GrQuad* deviceOut, GrQuad::Type deviceType, GrQuad* localOut, GrQuad::Type localType) const;
+        GrQuad* deviceOut, GrQuad::Type deviceType, GrQuad* localOut,
+        GrQuad::Type localType) const noexcept;
 
     // Update the device and optional local coordinates by moving the corners along their
     // edge vectors such that the new edges have moved 'signedEdgeDistances' from their

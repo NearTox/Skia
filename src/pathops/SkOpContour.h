@@ -8,7 +8,6 @@
 #define SkOpContour_DEFINED
 
 #include "include/private/SkTDArray.h"
-#include "src/core/SkTSort.h"
 #include "src/pathops/SkOpSegment.h"
 
 enum class SkOpRayDir;
@@ -19,7 +18,7 @@ class SkOpContour {
  public:
   SkOpContour() { reset(); }
 
-  bool operator<(const SkOpContour& rh) const noexcept {
+  bool operator<(const SkOpContour& rh) const {
     return fBounds.fTop == rh.fBounds.fTop ? fBounds.fLeft < rh.fBounds.fLeft
                                            : fBounds.fTop < rh.fBounds.fTop;
   }
@@ -45,7 +44,7 @@ class SkOpContour {
     return *result;
   }
 
-  const SkPathOpsBounds& bounds() const noexcept { return fBounds; }
+  const SkPathOpsBounds& bounds() const { return fBounds; }
 
   void calcAngles() {
     SkASSERT(fCount > 0);
@@ -57,25 +56,23 @@ class SkOpContour {
 
   void complete() { setBounds(); }
 
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
-  int debugID() const noexcept { return SkDEBUGRELEASE(fID, -1); }
+  int debugID() const { return SkDEBUGRELEASE(fID, -1); }
 
-  int debugIndent() const noexcept { return SkDEBUGRELEASE(fDebugIndent, 0); }
+  int debugIndent() const { return SkDEBUGRELEASE(fDebugIndent, 0); }
 
-  const SkOpAngle* debugAngle(int id) const noexcept {
+  const SkOpAngle* debugAngle(int id) const {
     return SkDEBUGRELEASE(this->globalState()->debugAngle(id), nullptr);
   }
 
-  const SkOpCoincidence* debugCoincidence() const noexcept {
-    return this->globalState()->coincidence();
-  }
+  const SkOpCoincidence* debugCoincidence() const { return this->globalState()->coincidence(); }
 
 #if DEBUG_COIN
   void debugCheckHealth(SkPathOpsDebug::GlitchLog*) const;
 #endif
 
-  SkOpContour* debugContour(int id) const noexcept {
+  SkOpContour* debugContour(int id) const {
     return SkDEBUGRELEASE(this->globalState()->debugContour(id), nullptr);
   }
 
@@ -85,11 +82,11 @@ class SkOpContour {
   void debugMoveNearby(SkPathOpsDebug::GlitchLog* log) const;
 #endif
 
-  const SkOpPtT* debugPtT(int id) const noexcept {
+  const SkOpPtT* debugPtT(int id) const {
     return SkDEBUGRELEASE(this->globalState()->debugPtT(id), nullptr);
   }
 
-  const SkOpSegment* debugSegment(int id) const noexcept {
+  const SkOpSegment* debugSegment(int id) const {
     return SkDEBUGRELEASE(this->globalState()->debugSegment(id), nullptr);
   }
 
@@ -102,13 +99,13 @@ class SkOpContour {
   }
 #endif
 
-  const SkOpSpanBase* debugSpan(int id) const noexcept {
+  const SkOpSpanBase* debugSpan(int id) const {
     return SkDEBUGRELEASE(this->globalState()->debugSpan(id), nullptr);
   }
 
-  SkOpGlobalState* globalState() const noexcept { return fState; }
+  SkOpGlobalState* globalState() const { return fState; }
 
-  void debugValidate() const noexcept {
+  void debugValidate() const {
 #if DEBUG_VALIDATE
     const SkOpSegment* segment = &fHead;
     const SkOpSegment* prior = nullptr;
@@ -121,7 +118,7 @@ class SkOpContour {
 #endif
   }
 
-  bool done() const noexcept { return fDone; }
+  bool done() const { return fDone; }
 
   void dump() const;
   void dumpAll() const;
@@ -142,34 +139,34 @@ class SkOpContour {
   void dumpSpan(int) const;
   void dumpSpans() const;
 
-  const SkPoint& end() const noexcept { return fTail->pts()[SkPathOpsVerbToPoints(fTail->verb())]; }
+  const SkPoint& end() const { return fTail->pts()[SkPathOpsVerbToPoints(fTail->verb())]; }
 
   SkOpSpan* findSortableTop(SkOpContour*);
 
-  SkOpSegment* first() noexcept {
+  SkOpSegment* first() {
     SkASSERT(fCount > 0);
     return &fHead;
   }
 
-  const SkOpSegment* first() const noexcept {
+  const SkOpSegment* first() const {
     SkASSERT(fCount > 0);
     return &fHead;
   }
 
-  void indentDump() const noexcept { SkDEBUGCODE(fDebugIndent += 2); }
+  void indentDump() const { SkDEBUGCODE(fDebugIndent += 2); }
 
-  void init(SkOpGlobalState* globalState, bool operand, bool isXor) noexcept {
+  void init(SkOpGlobalState* globalState, bool operand, bool isXor) {
     fState = globalState;
     fOperand = operand;
     fXor = isXor;
     SkDEBUGCODE(fID = globalState->nextContourID());
   }
 
-  int isCcw() const noexcept { return fCcw; }
+  int isCcw() const { return fCcw; }
 
-  bool isXor() const noexcept { return fXor; }
+  bool isXor() const { return fXor; }
 
-  void joinSegments() noexcept {
+  void joinSegments() {
     SkOpSegment* segment = &fHead;
     SkOpSegment* next;
     do {
@@ -221,19 +218,19 @@ class SkOpContour {
     return true;
   }
 
-  SkOpContour* next() noexcept { return fNext; }
+  SkOpContour* next() { return fNext; }
 
-  const SkOpContour* next() const noexcept { return fNext; }
+  const SkOpContour* next() const { return fNext; }
 
-  bool operand() const noexcept { return fOperand; }
+  bool operand() const { return fOperand; }
 
-  bool oppXor() const noexcept { return fOppXor; }
+  bool oppXor() const { return fOppXor; }
 
-  void outdentDump() const noexcept { SkDEBUGCODE(fDebugIndent -= 2); }
+  void outdentDump() const { SkDEBUGCODE(fDebugIndent -= 2); }
 
   void rayCheck(const SkOpRayHit& base, SkOpRayDir dir, SkOpRayHit** hits, SkArenaAlloc*);
 
-  void reset() noexcept {
+  void reset() {
     fTail = nullptr;
     fNext = nullptr;
     fCount = 0;
@@ -243,7 +240,7 @@ class SkOpContour {
     SkDEBUGCODE(fDebugIndent = 0);
   }
 
-  void resetReverse() noexcept {
+  void resetReverse() {
     SkOpContour* next = this;
     do {
       if (!next->count()) {
@@ -254,7 +251,7 @@ class SkOpContour {
     } while ((next = next->next()));
   }
 
-  bool reversed() const noexcept { return fReverse; }
+  bool reversed() const { return fReverse; }
 
   void setBounds() {
     SkASSERT(fCount > 0);
@@ -265,22 +262,22 @@ class SkOpContour {
     }
   }
 
-  void setCcw(int ccw) noexcept { fCcw = ccw; }
+  void setCcw(int ccw) { fCcw = ccw; }
 
-  void setGlobalState(SkOpGlobalState* state) noexcept { fState = state; }
+  void setGlobalState(SkOpGlobalState* state) { fState = state; }
 
-  void setNext(SkOpContour* contour) noexcept {
+  void setNext(SkOpContour* contour) {
     //        SkASSERT(!fNext == !!contour);
     fNext = contour;
   }
 
-  void setOperand(bool isOp) noexcept { fOperand = isOp; }
+  void setOperand(bool isOp) { fOperand = isOp; }
 
-  void setOppXor(bool isOppXor) noexcept { fOppXor = isOppXor; }
+  void setOppXor(bool isOppXor) { fOppXor = isOppXor; }
 
-  void setReverse() noexcept { fReverse = true; }
+  void setReverse() { fReverse = true; }
 
-  void setXor(bool isXor) noexcept { fXor = isXor; }
+  void setXor(bool isXor) { fXor = isXor; }
 
   bool sortAngles() {
     SkASSERT(fCount > 0);
@@ -291,7 +288,7 @@ class SkOpContour {
     return true;
   }
 
-  const SkPoint& start() const noexcept { return fHead.pts()[0]; }
+  const SkPoint& start() const { return fHead.pts()[0]; }
 
   void toPartialBackward(SkPathWriter* path) const {
     const SkOpSegment* segment = fTail;
@@ -343,7 +340,7 @@ class SkOpContourHead : public SkOpContour {
     return contour;
   }
 
-  void joinAllSegments() noexcept {
+  void joinAllSegments() {
     SkOpContour* next = this;
     do {
       if (!next->count()) {
@@ -353,7 +350,7 @@ class SkOpContourHead : public SkOpContour {
     } while ((next = next->next()));
   }
 
-  void remove(SkOpContour* contour) noexcept {
+  void remove(SkOpContour* contour) {
     if (contour == this) {
       SkASSERT(this->count() == 0);
       return;
@@ -372,7 +369,7 @@ class SkOpContourHead : public SkOpContour {
 
 class SkOpContourBuilder {
  public:
-  SkOpContourBuilder(SkOpContour* contour) noexcept : fContour(contour), fLastIsLine(false) {}
+  SkOpContourBuilder(SkOpContour* contour) : fContour(contour), fLastIsLine(false) {}
 
   void addConic(SkPoint pts[3], SkScalar weight);
   void addCubic(SkPoint pts[4]);
@@ -380,7 +377,7 @@ class SkOpContourBuilder {
   void addLine(const SkPoint pts[2]);
   void addQuad(SkPoint pts[3]);
   void flush();
-  SkOpContour* contour() noexcept { return fContour; }
+  SkOpContour* contour() { return fContour; }
   void setContour(SkOpContour* contour) {
     flush();
     fContour = contour;

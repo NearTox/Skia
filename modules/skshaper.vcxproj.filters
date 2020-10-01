@@ -4,5 +4,6 @@
     <ClCompile Include="skshaper\src\SkShaper.cpp" />
     <ClCompile Include="skshaper\src\SkShaper_harfbuzz.cpp" />
     <ClCompile Include="skshaper\src\SkShaper_primitive.cpp" />
+    <ClCompile Include="skshaper\src\SkUnicode_icu.cpp" />
   </ItemGroup>
 </Project>

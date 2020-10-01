@@ -7,6 +7,7 @@
 
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkData.h"
+#include "include/private/SkTemplates.h"
 #include "include/third_party/skcms/skcms.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkOpts.h"
@@ -16,13 +17,13 @@ bool SkColorSpacePrimaries::toXYZD50(skcms_Matrix3x3* toXYZ_D50) const {
 }
 
 SkColorSpace::SkColorSpace(
-    const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZD50) noexcept
+    const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZD50)
     : fTransferFn(transferFn), fToXYZD50(toXYZD50) {
   fTransferFnHash = SkOpts::hash_fn(&fTransferFn, 7 * sizeof(float), 0);
   fToXYZD50Hash = SkOpts::hash_fn(&fToXYZD50, 9 * sizeof(float), 0);
 }
 
-static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) noexcept {
+static bool xyz_almost_equal(const skcms_Matrix3x3& mA, const skcms_Matrix3x3& mB) {
   for (int r = 0; r < 3; ++r) {
     for (int c = 0; c < 3; ++c) {
       if (!color_space_almost_equal(mA.vals[r][c], mB.vals[r][c])) {
@@ -109,7 +110,7 @@ bool SkColorSpace::isNumericalTransferFn(skcms_TransferFunction* coeffs) const {
   return classify_transfer_fn(*coeffs) == sRGBish_TF;
 }
 
-void SkColorSpace::transferFn(float gabcdef[7]) const noexcept {
+void SkColorSpace::transferFn(float gabcdef[7]) const {
   memcpy(gabcdef, &fTransferFn, 7 * sizeof(float));
 }
 
@@ -132,12 +133,12 @@ void SkColorSpace::gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* sr
 
 bool SkColorSpace::isSRGB() const { return sk_srgb_singleton() == this; }
 
-bool SkColorSpace::gammaCloseToSRGB() const noexcept {
+bool SkColorSpace::gammaCloseToSRGB() const {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(&fTransferFn, &SkNamedTransferFn::kSRGB, 7 * sizeof(float)) == 0;
 }
 
-bool SkColorSpace::gammaIsLinear() const noexcept {
+bool SkColorSpace::gammaIsLinear() const {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(&fTransferFn, &SkNamedTransferFn::kLinear, 7 * sizeof(float)) == 0;
 }
@@ -356,14 +357,25 @@ bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) noexcept
   }
 
   if (x->hash() == y->hash()) {
+#if defined(SK_DEBUG)
+    // Do these floats function equivalently?
+    // This returns true more often than simple float comparison   (NaN vs. NaN) and,
+    // also returns true more often than simple bitwise comparison (+0 vs. -0) and,
+    // even returns true more often than those two OR'd together   (two different NaNs).
+    auto equiv = [](float X, float Y) {
+      return (X == Y) || (sk_float_isnan(X) && sk_float_isnan(Y));
+    };
+
     for (int i = 0; i < 7; i++) {
-      SkASSERT((&x->fTransferFn.g)[i] == (&y->fTransferFn.g)[i] && "Hash collsion");
+      float X = (&x->fTransferFn.g)[i], Y = (&y->fTransferFn.g)[i];
+      SkASSERTF(equiv(X, Y), "Hash collision at tf[%d], !equiv(%g,%g)\n", i, X, Y);
     }
-    for (int r = 0; r < 3; r++) {
-      for (int c = 0; c < 3; ++c) {
-        SkASSERT(x->fToXYZD50.vals[r][c] == y->fToXYZD50.vals[r][c] && "Hash collsion");
+    for (int r = 0; r < 3; r++)
+      for (int c = 0; c < 3; c++) {
+        float X = x->fToXYZD50.vals[r][c], Y = y->fToXYZD50.vals[r][c];
+        SkASSERTF(equiv(X, Y), "Hash collision at toXYZD50[%d][%d], !equiv(%g,%g)\n", r, c, X, Y);
       }
-    }
+#endif
     return true;
   }
   return false;

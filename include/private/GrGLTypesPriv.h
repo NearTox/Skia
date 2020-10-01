@@ -50,10 +50,10 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
 
     uint32_t fSwizzleKey;
     GrGLint fBaseMipMapLevel;
-    GrGLint fMaxMipMapLevel;
+    GrGLint fMaxMipmapLevel;
   };
 
-  void invalidate() noexcept;
+  void invalidate();
 
   ResetTimestamp resetTimestamp() const noexcept { return fResetTimestamp; }
   const SamplerOverriddenState& samplerOverriddenState() const noexcept {

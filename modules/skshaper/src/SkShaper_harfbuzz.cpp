@@ -77,7 +77,7 @@ using ICUBiDi = resource<UBiDi, decltype(ubidi_close), ubidi_close>;
 using ICUBrk = resource<UBreakIterator, decltype(ubrk_close), ubrk_close>;
 using ICUUText = resource<UText, decltype(utext_close), utext_close>;
 
-hb_position_t skhb_position(SkScalar value) {
+hb_position_t skhb_position(SkScalar value) noexcept {
   // Treat HarfBuzz hb_position_t as 16.16 fixed-point.
   constexpr int kHbPosition1 = 1 << 16;
   return SkScalarRoundToInt(value * kHbPosition1);
@@ -244,7 +244,7 @@ HBBlob stream_to_blob(std::unique_ptr<SkStreamAsset> asset) {
   if (const void* base = asset->getMemoryBase()) {
     blob.reset(hb_blob_create(
         (char*)base, SkToUInt(size), HB_MEMORY_MODE_READONLY, asset.release(),
-        [](void* p) { delete (SkStreamAsset*)p; }));
+        [](void* p) noexcept { delete (SkStreamAsset*)p; }));
   } else {
     // SkDebugf("Extra SkStreamAsset copy\n");
     void* ptr = size ? sk_malloc_throw(size) : nullptr;
@@ -256,9 +256,9 @@ HBBlob stream_to_blob(std::unique_ptr<SkStreamAsset> asset) {
   return blob;
 }
 
-SkDEBUGCODE(static hb_user_data_key_t gDataIdKey;)
+SkDEBUGCODE(static hb_user_data_key_t gDataIdKey);
 
-    HBFace create_hb_face(const SkTypeface& typeface) {
+HBFace create_hb_face(const SkTypeface& typeface) {
   int index;
   std::unique_ptr<SkStreamAsset> typefaceAsset = typeface.openStream(&index);
   HBFace face;
@@ -278,16 +278,16 @@ SkDEBUGCODE(static hb_user_data_key_t gDataIdKey;)
   hb_face_set_upem(face.get(), typeface.getUnitsPerEm());
 
   SkDEBUGCODE(hb_face_set_user_data(
-                  face.get(), &gDataIdKey, const_cast<SkTypeface*>(&typeface), nullptr, false);)
+      face.get(), &gDataIdKey, const_cast<SkTypeface*>(&typeface), nullptr, false));
 
-      return face;
+  return face;
 }
 
 HBFont create_hb_font(const SkFont& font, const HBFace& face) {
   SkDEBUGCODE(void* dataId = hb_face_get_user_data(face.get(), &gDataIdKey);
-              SkASSERT(dataId == font.getTypeface());)
+              SkASSERT(dataId == font.getTypeface()));
 
-      HBFont otFont(hb_font_create(face.get()));
+  HBFont otFont(hb_font_create(face.get()));
   SkASSERT(otFont);
   if (!otFont) {
     return nullptr;
@@ -307,7 +307,7 @@ HBFont create_hb_font(const SkFont& font, const HBFace& face) {
   HBFont skFont(hb_font_create_sub_font(otFont.get()));
   hb_font_set_funcs(
       skFont.get(), skhb_get_font_funcs(), reinterpret_cast<void*>(new SkFont(font)),
-      [](void* user_data) { delete reinterpret_cast<SkFont*>(user_data); });
+      [](void* user_data) noexcept { delete reinterpret_cast<SkFont*>(user_data); });
   int scale = skhb_position(font.getSize());
   hb_font_set_scale(skFont.get(), scale, scale);
 
@@ -315,7 +315,7 @@ HBFont create_hb_font(const SkFont& font, const HBFace& face) {
 }
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
-static inline SkUnichar utf8_next(const char** ptr, const char* end) noexcept {
+static inline SkUnichar utf8_next(const char** ptr, const char* end) {
   SkUnichar val = SkUTF::NextUTF8(ptr, end);
   return val < 0 ? 0xFFFD : val;
 }
@@ -364,7 +364,7 @@ class IcuBiDiRunIterator final : public SkShaper::BiDiRunIterator {
 
 class HbIcuScriptRunIterator final : public SkShaper::ScriptRunIterator {
  public:
-  HbIcuScriptRunIterator(const char* utf8, size_t utf8Bytes)
+  HbIcuScriptRunIterator(const char* utf8, size_t utf8Bytes) noexcept
       : fCurrent(utf8),
         fBegin(utf8),
         fEnd(fCurrent + utf8Bytes),
@@ -405,7 +405,7 @@ class HbIcuScriptRunIterator final : public SkShaper::ScriptRunIterator {
   size_t endOfCurrentRun() const noexcept override { return fCurrent - fBegin; }
   bool atEnd() const noexcept override { return fCurrent == fEnd; }
 
-  SkFourByteTag currentScript() const override {
+  SkFourByteTag currentScript() const noexcept override {
     return SkSetFourByteTag(HB_UNTAG(fCurrentScript));
   }
 
@@ -500,7 +500,7 @@ struct ShapedLine {
   SkVector fAdvance = {0, 0};
 };
 
-constexpr bool is_LTR(UBiDiLevel level) { return (level & 1) == 0; }
+constexpr bool is_LTR(UBiDiLevel level) noexcept { return (level & 1) == 0; }
 
 void append(
     SkShaper::RunHandler* handler, const SkShaper::RunHandler::RunInfo& runInfo,
@@ -566,15 +566,15 @@ void emit(const ShapedLine& line, SkShaper::RunHandler* handler) {
 }
 
 struct ShapedRunGlyphIterator {
-  ShapedRunGlyphIterator(const SkTArray<ShapedRun>& origRuns)
+  ShapedRunGlyphIterator(const SkTArray<ShapedRun>& origRuns) noexcept
       : fRuns(&origRuns), fRunIndex(0), fGlyphIndex(0) {}
 
   ShapedRunGlyphIterator(const ShapedRunGlyphIterator& that) = default;
   ShapedRunGlyphIterator& operator=(const ShapedRunGlyphIterator& that) = default;
-  bool operator==(const ShapedRunGlyphIterator& that) const {
+  bool operator==(const ShapedRunGlyphIterator& that) const noexcept {
     return fRuns == that.fRuns && fRunIndex == that.fRunIndex && fGlyphIndex == that.fGlyphIndex;
   }
-  bool operator!=(const ShapedRunGlyphIterator& that) const {
+  bool operator!=(const ShapedRunGlyphIterator& that) const noexcept {
     return fRuns != that.fRuns || fRunIndex != that.fRunIndex || fGlyphIndex != that.fGlyphIndex;
   }
 
@@ -809,7 +809,7 @@ void ShaperDrivenWrapper::wrap(
         modelGlyphOffset = 0;
 
         SkVector advance = {0, 0};
-        modelText.reset(new TextProps[utf8runLength + 1]());
+        modelText = std::make_unique<TextProps[]>(utf8runLength + 1);
         size_t modelStartCluster = utf8Start - utf8;
         for (size_t i = 0; i < model.fNumGlyphs; ++i) {
           SkASSERT(modelStartCluster <= model.fGlyphs[i].fCluster);
@@ -893,7 +893,7 @@ void ShaperDrivenWrapper::wrap(
         line.fAdvance = {0, 0};
       } else {
         if (bestUsesModelForGlyphs) {
-          best.fGlyphs.reset(new ShapedGlyph[best.fNumGlyphs]);
+          best.fGlyphs = std::make_unique<ShapedGlyph[]>(best.fNumGlyphs);
           memcpy(
               best.fGlyphs.get(), model.fGlyphs.get() + modelGlyphOffset,
               best.fNumGlyphs * sizeof(ShapedGlyph));
@@ -1104,7 +1104,7 @@ void ShapeThenWrap::wrap(
             (logicalIndex == current.fRunIndex) ? current.fGlyphIndex + 1 : run.fNumGlyphs;
         return SubRun{run, startGlyphIndex, endGlyphIndex};
       };
-      auto makeRunInfo = [](const SubRun& sub) {
+      auto makeRunInfo = [](const SubRun& sub) noexcept {
         uint32_t startUtf8 = sub.run.fGlyphs[sub.startGlyphIndex].fCluster;
         uint32_t endUtf8 = (sub.endGlyphIndex < sub.run.fNumGlyphs)
                                ? sub.run.fGlyphs[sub.endGlyphIndex].fCluster

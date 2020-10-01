@@ -125,7 +125,7 @@ struct SkMask {
     kZeroInit_Alloc,
   };
   static uint8_t* AllocImage(size_t bytes, AllocType = kUninit_Alloc);
-  static void FreeImage(void* image);
+  static void FreeImage(void* image) noexcept;
 
   enum CreateMode {
     kJustComputeBounds_CreateMode,           //!< compute bounds and return
@@ -262,6 +262,5 @@ struct SkMask::AlphaIter<SkMask::kLCD16_Format> {
  */
 using SkAutoMaskFreeImage =
     std::unique_ptr<uint8_t, SkFunctionWrapper<decltype(SkMask::FreeImage), SkMask::FreeImage>>;
-#define SkAutoMaskFreeImage(...) SK_REQUIRE_LOCAL_VAR(SkAutoMaskFreeImage)
 
 #endif

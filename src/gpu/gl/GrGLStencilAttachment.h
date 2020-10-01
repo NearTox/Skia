@@ -47,7 +47,7 @@ class GrGLStencilAttachment : public GrStencilAttachment {
       SkTraceMemoryDump* traceMemoryDump, const SkString& dumpName) const override;
 
  private:
-  size_t onGpuMemorySize() const noexcept override;
+  size_t onGpuMemorySize() const override;
 
   Format fFormat;
   // may be zero for external SBs associated with external RTs

@@ -68,7 +68,7 @@ class SK_API SkColorFilter : public SkFlattenable {
   static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
 
  private:
-  SkColorFilter() noexcept = default;
+  constexpr SkColorFilter() noexcept = default;
   friend class SkColorFilterBase;
 
   typedef SkFlattenable INHERITED;
@@ -92,7 +92,7 @@ class SK_API SkColorFilters {
   static sk_sp<SkColorFilter> Lerp(float t, sk_sp<SkColorFilter> dst, sk_sp<SkColorFilter> src);
 
  private:
-  SkColorFilters() = delete;
+  SkColorFilters() noexcept = delete;
 };
 
 #endif

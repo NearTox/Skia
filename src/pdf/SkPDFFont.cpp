@@ -165,7 +165,7 @@ const std::vector<SkUnichar>& SkPDFFont::GetUnicodeMap(
 }
 
 SkAdvancedTypefaceMetrics::FontType SkPDFFont::FontType(const SkAdvancedTypefaceMetrics& metrics) {
-  if (SkToBool(metrics.fFlags & SkAdvancedTypefaceMetrics::kMultiMaster_FontFlag) ||
+  if (SkToBool(metrics.fFlags & SkAdvancedTypefaceMetrics::kVariable_FontFlag) ||
       SkToBool(metrics.fFlags & SkAdvancedTypefaceMetrics::kNotEmbeddable_FontFlag)) {
     // force Type3 fallback.
     return SkAdvancedTypefaceMetrics::kOther_Font;

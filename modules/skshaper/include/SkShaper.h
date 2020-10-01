@@ -60,7 +60,7 @@ class SKSHAPER_API SkShaper {
 
   static std::unique_ptr<SkShaper> Make(sk_sp<SkFontMgr> = nullptr);
 
-  SkShaper() noexcept;
+  SkShaper();
   virtual ~SkShaper();
 
   class RunIterator {
@@ -69,13 +69,13 @@ class SKSHAPER_API SkShaper {
     /** Set state to that of current run and move iterator to end of that run. */
     virtual void consume() = 0;
     /** Offset to one past the last (utf8) element in the current run. */
-    virtual size_t endOfCurrentRun() const noexcept = 0;
+    virtual size_t endOfCurrentRun() const = 0;
     /** Return true if consume should no longer be called. */
-    virtual bool atEnd() const noexcept = 0;
+    virtual bool atEnd() const = 0;
   };
   class FontRunIterator : public RunIterator {
    public:
-    virtual const SkFont& currentFont() const noexcept = 0;
+    virtual const SkFont& currentFont() const = 0;
   };
   class BiDiRunIterator : public RunIterator {
    public:
@@ -90,7 +90,7 @@ class SKSHAPER_API SkShaper {
   class LanguageRunIterator : public RunIterator {
    public:
     /** Should be BCP-47, c locale names may also work. */
-    virtual const char* currentLanguage() const noexcept = 0;
+    virtual const char* currentLanguage() const = 0;
   };
   struct Feature {
     SkFourByteTag tag;
@@ -209,13 +209,13 @@ class SKSHAPER_API SkShaper {
     };
 
     /** Called when beginning a line. */
-    virtual void beginLine() = 0;
+    virtual void beginLine() noexcept = 0;
 
     /** Called once for each run in a line. Can compute baselines and offsets. */
     virtual void runInfo(const RunInfo&) = 0;
 
     /** Called after all runInfo calls for a line. */
-    virtual void commitRunInfo() noexcept = 0;
+    virtual void commitRunInfo() = 0;
 
     /** Called for each run in a line after commitRunInfo. The buffer will be filled out. */
     virtual Buffer runBuffer(const RunInfo&) = 0;
@@ -250,7 +250,7 @@ class SKSHAPER_API SkShaper {
  */
 class SKSHAPER_API SkTextBlobBuilderRunHandler final : public SkShaper::RunHandler {
  public:
-  SkTextBlobBuilderRunHandler(const char* utf8Text, SkPoint offset) noexcept
+  SkTextBlobBuilderRunHandler(const char* utf8Text, SkPoint offset)
       : fUtf8Text(utf8Text), fOffset(offset) {}
   sk_sp<SkTextBlob> makeBlob();
   SkPoint endPoint() noexcept { return fOffset; }

@@ -17,10 +17,12 @@ namespace SkSL {
  * A function invocation.
  */
 struct FunctionCall : public Expression {
+  static constexpr Kind kExpressionKind = kFunctionCall_Kind;
+
   FunctionCall(
       int offset, const Type& type, const FunctionDeclaration& function,
       std::vector<std::unique_ptr<Expression>> arguments)
-      : INHERITED(offset, kFunctionCall_Kind, type),
+      : INHERITED(offset, kExpressionKind, type),
         fFunction(std::move(function)),
         fArguments(std::move(arguments)) {
     ++fFunction.fCallCount;
@@ -28,7 +30,7 @@ struct FunctionCall : public Expression {
 
   ~FunctionCall() override { --fFunction.fCallCount; }
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     if (property == Property::kSideEffects &&
         (fFunction.fModifiers.fFlags & Modifiers::kHasSideEffects_Flag)) {
       return true;

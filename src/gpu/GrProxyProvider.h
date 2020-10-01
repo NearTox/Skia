@@ -73,14 +73,14 @@ class GrProxyProvider {
    * The bitmap is uploaded to the texture proxy assuming a kTopLeft_GrSurfaceOrigin.
    */
   sk_sp<GrTextureProxy> createProxyFromBitmap(
-      const SkBitmap&, GrMipMapped, SkBackingFit, SkBudgeted);
+      const SkBitmap&, GrMipmapped, SkBackingFit, SkBudgeted);
 
   /*
    * Create a GrSurfaceProxy without any data.
    */
   sk_sp<GrTextureProxy> createProxy(
       const GrBackendFormat&, SkISize dimensions, GrRenderable, int renderTargetSampleCnt,
-      GrMipMapped, SkBackingFit, SkBudgeted, GrProtected,
+      GrMipmapped, SkBackingFit, SkBudgeted, GrProtected,
       GrInternalSurfaceFlags = GrInternalSurfaceFlags::kNone,
       UseAllocator useAllocator = UseAllocator::kYes);
 
@@ -88,7 +88,7 @@ class GrProxyProvider {
    * Create a texture proxy from compressed texture data.
    */
   sk_sp<GrTextureProxy> createCompressedTextureProxy(
-      SkISize dimensions, SkBudgeted, GrMipMapped, GrProtected, SkImage::CompressionType,
+      SkISize dimensions, SkBudgeted, GrMipmapped, GrProtected, SkImage::CompressionType,
       sk_sp<SkData> data);
 
   // These match the definitions in SkImage & GrTexture.h, for whence they came
@@ -104,21 +104,21 @@ class GrProxyProvider {
       sk_sp<GrRefCntedCallback> = nullptr);
 
   sk_sp<GrTextureProxy> wrapCompressedBackendTexture(
-      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable, ReleaseProc = nullptr,
-      ReleaseContext = nullptr);
+      const GrBackendTexture&, GrWrapOwnership, GrWrapCacheable,
+      sk_sp<GrRefCntedCallback> releaseHelper);
 
   /*
    * Create a texture proxy that wraps a backend texture and is both texture-able and renderable
    */
   sk_sp<GrTextureProxy> wrapRenderableBackendTexture(
       const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable,
-      ReleaseProc = nullptr, ReleaseContext = nullptr);
+      sk_sp<GrRefCntedCallback> releaseHelper);
 
   /*
    * Create a render target proxy that wraps a backend render target
    */
   sk_sp<GrSurfaceProxy> wrapBackendRenderTarget(
-      const GrBackendRenderTarget&, ReleaseProc = nullptr, ReleaseContext = nullptr);
+      const GrBackendRenderTarget&, sk_sp<GrRefCntedCallback> releaseHelper);
 
   /*
    * Create a render target proxy that wraps a backend texture
@@ -134,7 +134,7 @@ class GrProxyProvider {
   using LazyInstantiateCallback = GrSurfaceProxy::LazyInstantiateCallback;
 
   struct TextureInfo {
-    GrMipMapped fMipMapped;
+    GrMipmapped fMipmapped;
     GrTextureType fTextureType;
   };
 
@@ -150,13 +150,13 @@ class GrProxyProvider {
    */
   sk_sp<GrTextureProxy> createLazyProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize dimensions, GrRenderable,
-      int renderTargetSampleCnt, GrMipMapped, GrMipMapsStatus, GrInternalSurfaceFlags, SkBackingFit,
+      int renderTargetSampleCnt, GrMipmapped, GrMipmapStatus, GrInternalSurfaceFlags, SkBackingFit,
       SkBudgeted, GrProtected, UseAllocator);
 
   /** A null TextureInfo indicates a non-textureable render target. */
   sk_sp<GrRenderTargetProxy> createLazyRenderTargetProxy(
       LazyInstantiateCallback&&, const GrBackendFormat&, SkISize dimensions,
-      int renderTargetSampleCnt, GrInternalSurfaceFlags, const TextureInfo*, GrMipMapsStatus,
+      int renderTargetSampleCnt, GrInternalSurfaceFlags, const TextureInfo*, GrMipmapStatus,
       SkBackingFit, SkBudgeted, GrProtected, bool wrapsVkSecondaryCB, UseAllocator useAllocator);
 
   /**

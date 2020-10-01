@@ -21,7 +21,7 @@ bool GrCoverageCountingPathRenderer::IsSupported(const GrCaps& caps, CoverageTyp
   const GrShaderCaps& shaderCaps = *caps.shaderCaps();
   GrBackendFormat defaultA8Format =
       caps.getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kYes);
-  if (caps.driverBlacklistCCPR() || !shaderCaps.integerSupport() || !caps.drawInstancedSupport() ||
+  if (caps.driverDisableCCPR() || !shaderCaps.integerSupport() || !caps.drawInstancedSupport() ||
       !shaderCaps.floatIs32Bits() ||
       !defaultA8Format.isValid() ||  // This checks both texturable and renderable
       !caps.halfFloatVertexAttributeSupport()) {
@@ -38,7 +38,7 @@ bool GrCoverageCountingPathRenderer::IsSupported(const GrCaps& caps, CoverageTyp
     return true;
   }
 
-  if (!caps.driverBlacklistMSAACCPR() && caps.internalMultisampleCount(defaultA8Format) > 1 &&
+  if (!caps.driverDisableMSAACCPR() && caps.internalMultisampleCount(defaultA8Format) > 1 &&
       caps.sampleLocationsSupport() && shaderCaps.sampleMaskSupport()) {
     if (coverageType) {
       *coverageType = CoverageType::kA8_Multisample;

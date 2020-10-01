@@ -85,14 +85,13 @@ class LineBreakIter {
  public:
   LineBreakIter(CTTypesetterRef ts, SkScalar width) : fTypesetter(ts), fWidth(width) { fStart = 0; }
 
-  CTLineRef nextLine() {
-    CFIndex count = CTTypesetterSuggestLineBreak(fTypesetter, fStart, fWidth);
-    if (count == 0) {
+  SkUniqueCFRef<CTLineRef> nextLine() {
+    CFRange stringRange{fStart, CTTypesetterSuggestLineBreak(fTypesetter, fStart, fWidth)};
+    if (stringRange.length == 0) {
       return nullptr;
     }
-    auto line = CTTypesetterCreateLine(fTypesetter, {fStart, count});
-    fStart += count;
-    return line;
+    fStart += stringRange.length;
+    return SkUniqueCFRef<CTLineRef>(CTTypesetterCreateLine(fTypesetter, stringRange));
   }
 };
 
@@ -149,7 +148,7 @@ void SkShaper_CoreText::shape(
   SkUniqueCFRef<CTTypesetterRef> typesetter(
       CTTypesetterCreateWithAttributedString(attrString.get()));
 
-  SkSTArenaAlloc<4096> arena;
+  SkSTArenaAllocWithReset<4096> arena;
 
   // We have to compute RunInfos in a loop, and then reuse them in a 2nd loop,
   // so we store them in an array (we reuse the array's storage for each line).
@@ -157,8 +156,8 @@ void SkShaper_CoreText::shape(
   std::vector<SkShaper::RunHandler::RunInfo> infos;
 
   LineBreakIter iter(typesetter.get(), width);
-  while (CTLineRef line = iter.nextLine()) {
-    CFArrayRef run_array = CTLineGetGlyphRuns(line);
+  while (SkUniqueCFRef<CTLineRef> line = iter.nextLine()) {
+    CFArrayRef run_array = CTLineGetGlyphRuns(line.get());
     CFIndex runCount = CFArrayGetCount(run_array);
     if (runCount == 0) {
       continue;

@@ -10,7 +10,7 @@
 
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkNx.h"
-#include "src/gpu/GrTAllocator.h"
+#include "src/gpu/GrTBlockList.h"
 #include "src/gpu/ccpr/GrCCStrokeGeometry.h"
 
 class GrGpuBuffer;
@@ -29,7 +29,7 @@ class SkStrokeRec;
  */
 class GrCCStroker {
  public:
-  GrCCStroker(int numPaths, int numSkPoints, int numSkVerbs) noexcept
+  GrCCStroker(int numPaths, int numSkPoints, int numSkVerbs)
       : fGeometry(numSkPoints, numSkVerbs), fPathInfos(numPaths) {}
 
   // Parses a device-space SkPath into the current batch, using the SkPath's original verbs with
@@ -47,7 +47,7 @@ class GrCCStroker {
 
   // Compiles the outstanding parsed paths into a batch, and returns an ID that can be used to
   // draw their strokes in the future.
-  BatchID closeCurrentBatch() noexcept;
+  BatchID closeCurrentBatch();
 
   // Builds an internal GPU buffer and prepares for calls to drawStrokes(). Caller must close the
   // current batch before calling this method, and cannot parse new paths afer.
@@ -62,7 +62,7 @@ class GrCCStroker {
   static constexpr BatchID kEmptyBatchID = -1;
   using Verb = GrCCStrokeGeometry::Verb;
   using InstanceTallies = GrCCStrokeGeometry::InstanceTallies;
-  using InstanceTalliesAllocator = GrTAllocator<InstanceTallies, 128>;
+  using InstanceTalliesAllocator = GrTBlockList<InstanceTallies, 128>;
 
   // Every kBeginPath verb has a corresponding PathInfo entry.
   struct PathInfo {
@@ -119,7 +119,7 @@ class GrCCStroker {
   InstanceTalliesAllocator fTalliesAllocator;
   const InstanceTallies* fInstanceCounts[kNumScissorModes] = {&fZeroTallies, &fZeroTallies};
 
-  sk_sp<GrGpuBuffer> fInstanceBuffer;
+  sk_sp<const GrGpuBuffer> fInstanceBuffer;
   // The indices stored in batches are relative to these base instances.
   InstanceTallies fBaseInstances[kNumScissorModes];
 };

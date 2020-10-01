@@ -44,7 +44,7 @@ class GrClientMappedBufferManager final {
   GrClientMappedBufferManager& operator=(GrClientMappedBufferManager&&) = delete;
 
   /** Initialize BufferFinishedMessage::fInboxID to this value. */
-  uint32_t inboxID() const { return fFinishedBufferInbox.uniqueID(); }
+  uint32_t inboxID() const noexcept { return fFinishedBufferInbox.uniqueID(); }
 
   /**
    * Let the manager know to expect a message with buffer 'b'. It's illegal for a buffer to be

@@ -17,6 +17,7 @@
 #include "include/core/SkTileMode.h"
 
 struct SkMask;
+class SkMipmap;
 struct SkIRect;
 struct SkRect;
 class SkPaint;
@@ -50,7 +51,7 @@ class SK_API SkBitmap {
 
   /** Creates an empty SkBitmap without pixels, with kUnknown_SkColorType,
       kUnknown_SkAlphaType, and with a width and height of zero. SkPixelRef origin is
-      set to (0, 0). SkBitmap is not volatile.
+      set to (0, 0).
 
       Use setInfo() to associate SkColorType, SkAlphaType, width, and height
       after SkBitmap has been created.
@@ -298,30 +299,6 @@ class SK_API SkBitmap {
       @return  true if SkImageInfo SkAlphaType is kOpaque_SkAlphaType
   */
   bool isOpaque() const noexcept { return SkAlphaTypeIsOpaque(this->alphaType()); }
-
-  /** Provides a hint to caller that pixels should not be cached. Only true if
-      setIsVolatile() has been called to mark as volatile.
-
-      Volatile state is not shared by other bitmaps sharing the same SkPixelRef.
-
-      @return  true if marked volatile
-
-      example: https://fiddle.skia.org/c/@Bitmap_isVolatile
-  */
-  bool isVolatile() const noexcept;
-
-  /** Sets if pixels should be read from SkPixelRef on every access. SkBitmap are not
-      volatile by default; a GPU back end may upload pixel values expecting them to be
-      accessed repeatedly. Marking temporary SkBitmap as volatile provides a hint to
-      SkBaseDevice that the SkBitmap pixels should not be cached. This can
-      improve performance by avoiding overhead and reducing resource
-      consumption on SkBaseDevice.
-
-      @param isVolatile  true if backing pixels are temporary
-
-      example: https://fiddle.skia.org/c/@Bitmap_setIsVolatile
-  */
-  void setIsVolatile(bool isVolatile) noexcept;
 
   /** Resets to its initial state; all fields are set to zero, as if SkBitmap had
       been initialized by SkBitmap().
@@ -908,8 +885,7 @@ class SK_API SkBitmap {
 
       subset may be larger than bounds(). Any area outside of bounds() is ignored.
 
-      Any contents of dst are discarded. isVolatile() setting is copied to dst.
-      dst is set to colorType(), alphaType(), and colorSpace().
+      Any contents of dst are discarded.
 
       Return false if:
       - dst is nullptr
@@ -922,7 +898,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_extractSubset
   */
-  bool extractSubset(SkBitmap* dst, const SkIRect& subset) const;
+  bool extractSubset(SkBitmap* dst, const SkIRect& subset) const noexcept;
 
   /** Copies a SkRect of pixels from SkBitmap to dstPixels. Copy starts at (srcX, srcY),
       and does not exceed SkBitmap (width(), height()).
@@ -1167,14 +1143,11 @@ class SK_API SkBitmap {
   };
 
  private:
-  enum Flags {
-    kImageIsVolatile_Flag = 0x02,
-  };
-
   sk_sp<SkPixelRef> fPixelRef;
   SkPixmap fPixmap;
-  uint8_t fFlags;
+  sk_sp<SkMipmap> fMips;
 
+  friend class SkImage_Raster;
   friend class SkReadBuffer;  // unflatten
 };
 

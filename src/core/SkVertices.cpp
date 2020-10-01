@@ -35,7 +35,7 @@ SkVertices::Attribute::Attribute(Type t, Usage u, const char* markerName)
   SkASSERT(!fMarkerName || fMarkerID != 0);
 }
 
-int SkVertices::Attribute::channelCount() const noexcept {
+int SkVertices::Attribute::channelCount() const {
   SkASSERT(this->isValid());
   switch (fUsage) {
     case Usage::kRaw: break;
@@ -54,7 +54,7 @@ int SkVertices::Attribute::channelCount() const noexcept {
   SkUNREACHABLE;
 }
 
-size_t SkVertices::Attribute::bytesPerVertex() const noexcept {
+size_t SkVertices::Attribute::bytesPerVertex() const {
   switch (fType) {
     case Type::kFloat: return 1 * sizeof(float);
     case Type::kFloat2: return 2 * sizeof(float);
@@ -81,7 +81,7 @@ bool SkVertices::Attribute::isValid() const {
   SkUNREACHABLE;
 }
 
-static size_t custom_data_size(const SkVertices::Attribute* attrs, int attrCount) noexcept {
+static size_t custom_data_size(const SkVertices::Attribute* attrs, int attrCount) {
   size_t size = 0;
   for (int i = 0; i < attrCount; ++i) {
     size += attrs[i].bytesPerVertex();
@@ -97,7 +97,7 @@ struct SkVertices::Desc {
   const Attribute* fAttributes;
   int fAttributeCount;
 
-  void validate() const noexcept { SkASSERT(fAttributeCount == 0 || (!fHasTexs && !fHasColors)); }
+  void validate() const { SkASSERT(fAttributeCount == 0 || (!fHasTexs && !fHasColors)); }
 };
 
 struct SkVertices::Sizes {
@@ -113,7 +113,7 @@ struct SkVertices::Sizes {
         return;
       }
       if (attr.fMarkerName) {
-        fNameSize = safe.add(fNameSize, strlen(attr.fMarkerName));
+        fNameSize = safe.add(fNameSize, strlen(attr.fMarkerName) + 1 /*null terminator*/);
       }
     }
     fNameSize = SkAlign4(fNameSize);
@@ -162,12 +162,12 @@ struct SkVertices::Sizes {
     }
   }
 
-  bool isValid() const noexcept { return fTotal != 0; }
+  bool isValid() const { return fTotal != 0; }
 
-  size_t fTotal;     // size of entire SkVertices allocation (obj + arrays)
-  size_t fAttrSize;  // size of attributes
-  size_t fNameSize;  // size of attribute marker names
-  size_t fArrays;    // size of all the data arrays (V + D + T + C + I)
+  size_t fTotal = 0;  // size of entire SkVertices allocation (obj + arrays)
+  size_t fAttrSize;   // size of attributes
+  size_t fNameSize;   // size of attribute marker names
+  size_t fArrays;     // size of all the data arrays (V + D + T + C + I)
   size_t fVSize;
   size_t fDSize;  // size of all customData = [customDataSize * fVertexCount]
   size_t fTSize;
@@ -233,7 +233,7 @@ void SkVertices::Builder::init(const Desc& desc) {
     Attribute& attr(fVertices->fAttributes[i]);
     if (attr.fMarkerName) {
       attr.fMarkerName = strcpy(markerNames, attr.fMarkerName);
-      markerNames += (strlen(markerNames) + 1);
+      markerNames += (strlen(markerNames) + 1 /*null terminator*/);
     }
   }
 
@@ -251,11 +251,11 @@ void SkVertices::Builder::init(const Desc& desc) {
   // We defer assigning fBounds and fUniqueID until detach() is called
 }
 
-sk_sp<SkVertices> SkVertices::Builder::detach() noexcept {
+sk_sp<SkVertices> SkVertices::Builder::detach() {
   if (fVertices) {
     fVertices->fBounds.setBounds(fVertices->fPositions, fVertices->fVertexCount);
     if (fVertices->fMode == kTriangleFan_VertexMode) {
-      if (fIntermediateFanIndices.get()) {
+      if (fIntermediateFanIndices) {
         SkASSERT(fVertices->fIndexCount);
         auto tempIndices = this->indices();
         for (int t = 0; t < fVertices->fIndexCount - 2; ++t) {
@@ -281,23 +281,23 @@ sk_sp<SkVertices> SkVertices::Builder::detach() noexcept {
   return nullptr;
 }
 
-SkPoint* SkVertices::Builder::positions() noexcept {
+SkPoint* SkVertices::Builder::positions() {
   return fVertices ? const_cast<SkPoint*>(fVertices->fPositions) : nullptr;
 }
 
-void* SkVertices::Builder::customData() noexcept {
+void* SkVertices::Builder::customData() {
   return fVertices ? const_cast<void*>(fVertices->fCustomData) : nullptr;
 }
 
-SkPoint* SkVertices::Builder::texCoords() noexcept {
+SkPoint* SkVertices::Builder::texCoords() {
   return fVertices ? const_cast<SkPoint*>(fVertices->fTexs) : nullptr;
 }
 
-SkColor* SkVertices::Builder::colors() noexcept {
+SkColor* SkVertices::Builder::colors() {
   return fVertices ? const_cast<SkColor*>(fVertices->fColors) : nullptr;
 }
 
-uint16_t* SkVertices::Builder::indices() noexcept {
+uint16_t* SkVertices::Builder::indices() {
   if (!fVertices) {
     return nullptr;
   }
@@ -337,11 +337,11 @@ SkVertices::Sizes SkVertices::getSizes() const {
   return sizes;
 }
 
-size_t SkVerticesPriv::customDataSize() const noexcept {
+size_t SkVerticesPriv::customDataSize() const {
   return custom_data_size(fVertices->fAttributes, fVertices->fAttributeCount);
 }
 
-bool SkVerticesPriv::hasUsage(SkVertices::Attribute::Usage u) const noexcept {
+bool SkVerticesPriv::hasUsage(SkVertices::Attribute::Usage u) const {
   for (int i = 0; i < fVertices->fAttributeCount; ++i) {
     if (fVertices->fAttributes[i].fUsage == u) {
       return true;

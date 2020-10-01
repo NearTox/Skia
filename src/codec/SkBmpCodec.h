@@ -41,9 +41,7 @@ class SkBmpCodec : public SkCodec {
       SkEncodedInfo&& info, std::unique_ptr<SkStream>, uint16_t bitsPerPixel,
       SkCodec::SkScanlineOrder rowOrder);
 
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-    return SkEncodedImageFormat::kBMP;
-  }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kBMP; }
 
   /*
    * Read enough of the stream to initialize the SkBmpCodec.
@@ -58,7 +56,7 @@ class SkBmpCodec : public SkCodec {
    */
   bool inIco() const { return this->onInIco(); }
 
-  virtual bool onInIco() const noexcept { return false; }
+  virtual bool onInIco() const { return false; }
 
   /*
    * Get the destination row number corresponding to the encoded row number.
@@ -76,9 +74,9 @@ class SkBmpCodec : public SkCodec {
   /*
    * Accessors used by subclasses
    */
-  uint16_t bitsPerPixel() const noexcept { return fBitsPerPixel; }
-  SkScanlineOrder onGetScanlineOrder() const noexcept override { return fRowOrder; }
-  size_t srcRowBytes() const noexcept { return fSrcRowBytes; }
+  uint16_t bitsPerPixel() const { return fBitsPerPixel; }
+  SkScanlineOrder onGetScanlineOrder() const override { return fRowOrder; }
+  size_t srcRowBytes() const { return fSrcRowBytes; }
 
   /*
    * To be overriden by bmp subclasses, which provide unique implementations.
@@ -92,7 +90,7 @@ class SkBmpCodec : public SkCodec {
       const SkImageInfo& dstInfo, const SkCodec::Options& options) = 0;
   SkCodec::Result prepareToDecode(const SkImageInfo& dstInfo, const SkCodec::Options& options);
 
-  uint32_t* xformBuffer() const noexcept { return fXformBuffer.get(); }
+  uint32_t* xformBuffer() const { return fXformBuffer.get(); }
   void resetXformBuffer(int count) { fXformBuffer.reset(new uint32_t[count]); }
 
   /*

@@ -33,7 +33,7 @@ static inline bool SkShouldPostMessageToBus(
 // The maximum number of cache entries we allow in our own cache.
 static constexpr int kMaxCacheCount = 1 << 16;
 
-GrCCPathCache::MaskTransform::MaskTransform(const SkMatrix& m, SkIVector* shift) noexcept 
+GrCCPathCache::MaskTransform::MaskTransform(const SkMatrix& m, SkIVector* shift) noexcept
     : fMatrix2x2{m.getScaleX(), m.getSkewX(), m.getSkewY(), m.getScaleY()} {
   SkASSERT(!m.hasPerspective());
   Sk2f translate = Sk2f(m.getTranslateX(), m.getTranslateY());
@@ -104,7 +104,7 @@ GrCCPathCache::~GrCCPathCache() {
 
   // Now take all the atlas textures we just invalidated and purge them from the GrResourceCache.
   // We just purge via message bus since we don't have any access to the resource cache right now.
-  for (sk_sp<GrTextureProxy>& proxy : fInvalidatedProxies) {
+  for (const sk_sp<GrTextureProxy>& proxy : fInvalidatedProxies) {
     SkMessageBus<GrUniqueKeyInvalidatedMessage>::Post(
         GrUniqueKeyInvalidatedMessage(proxy->getUniqueKey(), fContextUniqueID));
   }
@@ -124,8 +124,7 @@ class WriteKeyHelper {
   static constexpr int kStrokeCapJoinIdx = 2;
   static constexpr int kShapeUnstyledKeyIdx = 3;
 
-  WriteKeyHelper(const GrStyledShape& shape) noexcept
-      : fShapeUnstyledKeyCount(shape.unstyledKeySize()) {}
+  WriteKeyHelper(const GrStyledShape& shape) : fShapeUnstyledKeyCount(shape.unstyledKeySize()) {}
 
   // Returns the total number of uint32_t's to allocate for the key.
   int allocCountU32() const noexcept { return kShapeUnstyledKeyIdx + fShapeUnstyledKeyCount; }
@@ -294,7 +293,7 @@ void GrCCPathCache::purgeEntriesOlderThan(
 }
 
 void GrCCPathCache::purgeInvalidatedAtlasTextures(GrOnFlushResourceProvider* onFlushRP) {
-  for (sk_sp<GrTextureProxy>& proxy : fInvalidatedProxies) {
+  for (const sk_sp<GrTextureProxy>& proxy : fInvalidatedProxies) {
     onFlushRP->removeUniqueKeyFromProxy(proxy.get());
   }
   fInvalidatedProxies.reset();
@@ -306,7 +305,7 @@ void GrCCPathCache::purgeInvalidatedAtlasTextures(GrOnFlushResourceProvider* onF
 }
 
 void GrCCPathCache::purgeInvalidatedAtlasTextures(GrProxyProvider* proxyProvider) {
-  for (sk_sp<GrTextureProxy>& proxy : fInvalidatedProxies) {
+  for (const sk_sp<GrTextureProxy>& proxy : fInvalidatedProxies) {
     proxyProvider->removeUniqueKeyFromProxy(proxy.get());
   }
   fInvalidatedProxies.reset();

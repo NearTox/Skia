@@ -11,16 +11,6 @@
 #include <cstdint>
 
 #ifdef SKSL_STANDALONE
-#  if defined(_WIN32) || defined(__SYMBIAN32__)
-#    define SKSL_BUILD_FOR_WIN
-#  endif
-#else
-#  ifdef SK_BUILD_FOR_WIN
-#    define SKSL_BUILD_FOR_WIN
-#  endif  // SK_BUILD_FOR_WIN
-#endif    // SKSL_STANDALONE
-
-#ifdef SKSL_STANDALONE
 #  define SkASSERT(x)    \
     do {                 \
       if (!(x)) abort(); \
@@ -39,7 +29,7 @@
     } while (false)
 #  define SkDEBUGFAILF(fmt, ...) \
     do {                         \
-      printf(__VA_ARGS__);       \
+      printf(fmt, __VA_ARGS__);  \
       abort();                   \
     } while (false)
 #  define SkAssertResult(x) \

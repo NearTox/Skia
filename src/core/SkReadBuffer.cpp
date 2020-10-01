@@ -142,7 +142,7 @@ void SkReadBuffer::readString(SkString* string) {
   string->reset();
 }
 
-void SkReadBuffer::readColor4f(SkColor4f* color) noexcept {
+void SkReadBuffer::readColor4f(SkColor4f* color) {
   if (!this->readPad32(color, sizeof(SkColor4f))) {
     *color = {0, 0, 0, 0};
   }
@@ -153,8 +153,17 @@ void SkReadBuffer::readPoint(SkPoint* point) noexcept {
   point->fY = this->readScalar();
 }
 
-void SkReadBuffer::readPoint3(SkPoint3* point) noexcept {
-  this->readPad32(point, sizeof(SkPoint3));
+void SkReadBuffer::readPoint3(SkPoint3* point) { this->readPad32(point, sizeof(SkPoint3)); }
+
+void SkReadBuffer::read(SkM44* matrix) noexcept {
+  if (this->isValid()) {
+    if (const float* m = (const float*)this->skip(sizeof(float) * 16)) {
+      *matrix = SkM44::ColMajor(m);
+    }
+  }
+  if (!this->isValid()) {
+    *matrix = SkM44();
+  }
 }
 
 void SkReadBuffer::readMatrix(SkMatrix* matrix) {
@@ -169,13 +178,13 @@ void SkReadBuffer::readMatrix(SkMatrix* matrix) {
   (void)this->skip(size);
 }
 
-void SkReadBuffer::readIRect(SkIRect* rect) noexcept {
+void SkReadBuffer::readIRect(SkIRect* rect) {
   if (!this->readPad32(rect, sizeof(SkIRect))) {
     rect->setEmpty();
   }
 }
 
-void SkReadBuffer::readRect(SkRect* rect) noexcept {
+void SkReadBuffer::readRect(SkRect* rect) {
   if (!this->readPad32(rect, sizeof(SkRect))) {
     rect->setEmpty();
   }
@@ -214,33 +223,33 @@ void SkReadBuffer::readPath(SkPath* path) {
   (void)this->skip(size);
 }
 
-bool SkReadBuffer::readArray(void* value, size_t size, size_t elementSize) noexcept {
+bool SkReadBuffer::readArray(void* value, size_t size, size_t elementSize) {
   const uint32_t count = this->readUInt();
   return this->validate(size == count) &&
          this->readPad32(value, SkSafeMath::Mul(size, elementSize));
 }
 
-bool SkReadBuffer::readByteArray(void* value, size_t size) noexcept {
+bool SkReadBuffer::readByteArray(void* value, size_t size) {
   return this->readArray(value, size, sizeof(uint8_t));
 }
 
-bool SkReadBuffer::readColorArray(SkColor* colors, size_t size) noexcept {
+bool SkReadBuffer::readColorArray(SkColor* colors, size_t size) {
   return this->readArray(colors, size, sizeof(SkColor));
 }
 
-bool SkReadBuffer::readColor4fArray(SkColor4f* colors, size_t size) noexcept {
+bool SkReadBuffer::readColor4fArray(SkColor4f* colors, size_t size) {
   return this->readArray(colors, size, sizeof(SkColor4f));
 }
 
-bool SkReadBuffer::readIntArray(int32_t* values, size_t size) noexcept {
+bool SkReadBuffer::readIntArray(int32_t* values, size_t size) {
   return this->readArray(values, size, sizeof(int32_t));
 }
 
-bool SkReadBuffer::readPointArray(SkPoint* points, size_t size) noexcept {
+bool SkReadBuffer::readPointArray(SkPoint* points, size_t size) {
   return this->readArray(points, size, sizeof(SkPoint));
 }
 
-bool SkReadBuffer::readScalarArray(SkScalar* values, size_t size) noexcept {
+bool SkReadBuffer::readScalarArray(SkScalar* values, size_t size) {
   return this->readArray(values, size, sizeof(SkScalar));
 }
 
@@ -280,15 +289,12 @@ uint32_t SkReadBuffer::getArrayCount() noexcept {
  *  size (31bits)
  *  data [ encoded, with raw width/height ]
  */
-sk_sp<SkImage> SkReadBuffer::readImage() {
+sk_sp<SkImage> SkReadBuffer::readImage_preV78() {
+  SkASSERT(this->isVersionLT(SkPicturePriv::kSerializeMipmaps_Version));
+
   SkIRect bounds;
-  if (this->isVersionLT(SkPicturePriv::kStoreImageBounds_Version)) {
-    bounds.fLeft = bounds.fTop = 0;
-    bounds.fRight = this->read32();
-    bounds.fBottom = this->read32();
-  } else {
-    this->readIRect(&bounds);
-  }
+  this->readIRect(&bounds);
+
   const int width = bounds.width();
   const int height = bounds.height();
   if (width <= 0 || height <= 0) {  // SkImage never has a zero dimension
@@ -327,10 +333,6 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
     this->validate(false);
     return nullptr;
   }
-  if (this->isVersionLT(SkPicturePriv::kDontNegateImageSize_Version)) {
-    (void)this->read32();  // originX
-    (void)this->read32();  // originY
-  }
 
   sk_sp<SkImage> image;
   if (fProcs.fImageProc) {
@@ -347,6 +349,61 @@ sk_sp<SkImage> SkReadBuffer::readImage() {
   // Question: are we correct to return an "empty" image instead of nullptr, if the decoder
   //           failed for some reason?
   return image ? image : MakeEmptyImage(width, height);
+}
+
+#include "src/core/SkMipmap.h"
+
+// If we see a corrupt stream, we return null (fail). If we just fail trying to decode
+// the image, we don't fail, but return a dummy image.
+sk_sp<SkImage> SkReadBuffer::readImage() {
+  if (this->isVersionLT(SkPicturePriv::kSerializeMipmaps_Version)) {
+    return this->readImage_preV78();
+  }
+
+  uint32_t flags = this->read32();
+
+  sk_sp<SkImage> image;
+  {
+    sk_sp<SkData> data = this->readByteArrayAsData();
+    if (!data) {
+      this->validate(false);
+      return nullptr;
+    }
+    if (fProcs.fImageProc) {
+      image = fProcs.fImageProc(data->data(), data->size(), fProcs.fImageCtx);
+    }
+    if (!image) {
+      image = SkImage::MakeFromEncoded(std::move(data));
+    }
+  }
+
+  if (flags & SkWriteBufferImageFlags::kHasSubsetRect) {
+    SkIRect subset;
+    this->readIRect(&subset);
+    if (image) {
+      image = image->makeSubset(subset);
+    }
+  }
+
+  if (flags & SkWriteBufferImageFlags::kHasMipmap) {
+    sk_sp<SkData> data = this->readByteArrayAsData();
+    if (!data) {
+      this->validate(false);
+      return nullptr;
+    }
+    if (image) {
+      SkMipmapBuilder builder(image->imageInfo());
+      if (SkMipmap::Deserialize(&builder, data->data(), data->size())) {
+        // TODO: need to make lazy images support mips
+        if (auto ri = image->makeRasterImage()) {
+          image = ri;
+        }
+        image = image->withMipmaps(builder.detach());
+        SkASSERT(image);  // withMipmaps should never return null
+      }
+    }
+  }
+  return image ? image : MakeEmptyImage(1, 1);
 }
 
 sk_sp<SkTypeface> SkReadBuffer::readTypeface() {

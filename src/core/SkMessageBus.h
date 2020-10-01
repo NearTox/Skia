@@ -50,7 +50,7 @@ class SkMessageBus : SkNoncopyable {
   };
 
  private:
-  SkMessageBus() noexcept;
+  SkMessageBus();
   static SkMessageBus* Get();
 
   SkTDArray<Inbox*> fInboxes;
@@ -109,7 +109,7 @@ void SkMessageBus<Message>::Inbox::poll(SkTArray<Message>* messages) {
 //   ----------------------- Implementation of SkMessageBus -----------------------
 
 template <typename Message>
-SkMessageBus<Message>::SkMessageBus() noexcept = default;
+SkMessageBus<Message>::SkMessageBus() {}
 
 template <typename Message>
 /*static*/ void SkMessageBus<Message>::Post(const Message& m) {

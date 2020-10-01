@@ -26,7 +26,7 @@ class SkPictureImageGenerator : public SkImageGenerator {
 
 #if SK_SUPPORT_GPU
   GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped,
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipmapped,
       GrImageTexGenPolicy) override;
 #endif
 
@@ -88,11 +88,11 @@ bool SkPictureImageGenerator::onGetPixels(
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrRecordingContext.h"
+#  include "include/gpu/GrRecordingContext.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 
 GrSurfaceProxyView SkPictureImageGenerator::onGenerateTexture(
-    GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin, GrMipMapped mipMapped,
+    GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin, GrMipmapped mipMapped,
     GrImageTexGenPolicy texGenPolicy) {
   SkASSERT(ctx);
 
@@ -101,10 +101,8 @@ GrSurfaceProxyView SkPictureImageGenerator::onGenerateTexture(
   SkBudgeted budgeted = texGenPolicy == GrImageTexGenPolicy::kNew_Uncached_Unbudgeted
                             ? SkBudgeted::kNo
                             : SkBudgeted::kYes;
-  // CONTEXT TODO: remove this use of 'backdoor' to create an SkSkSurface
   auto surface = SkSurface::MakeRenderTarget(
-      ctx->priv().backdoor(), budgeted, info, 0, kTopLeft_GrSurfaceOrigin, &props,
-      mipMapped == GrMipMapped::kYes);
+      ctx, budgeted, info, 0, kTopLeft_GrSurfaceOrigin, &props, mipMapped == GrMipmapped::kYes);
   if (!surface) {
     return {};
   }
@@ -120,7 +118,7 @@ GrSurfaceProxyView SkPictureImageGenerator::onGenerateTexture(
   const GrSurfaceProxyView* view = as_IB(image)->view(ctx);
   SkASSERT(view);
   SkASSERT(
-      mipMapped == GrMipMapped::kNo || view->asTextureProxy()->mipMapped() == GrMipMapped::kYes);
+      mipMapped == GrMipmapped::kNo || view->asTextureProxy()->mipmapped() == GrMipmapped::kYes);
   return *view;
 }
 #endif

@@ -59,7 +59,7 @@ class SK_API SkROBuffer : public SkRefCnt {
 
  private:
   SkROBuffer(const SkBufferHead* head, size_t available, const SkBufferBlock* fTail) noexcept;
-  virtual ~SkROBuffer();
+  ~SkROBuffer() override;
 
   const SkBufferHead* fHead;
   const size_t fAvailable;
@@ -76,7 +76,7 @@ class SK_API SkROBuffer : public SkRefCnt {
  */
 class SK_API SkRWBuffer {
  public:
-  SkRWBuffer(size_t initialCapacity = 0);
+  SkRWBuffer(size_t initialCapacity = 0) noexcept;
   ~SkRWBuffer();
 
   size_t size() const noexcept { return fTotalUsed; }
@@ -88,7 +88,7 @@ class SK_API SkRWBuffer {
    *  pass a |reserve| hint (representing the number of upcoming bytes *in addition* to the
    *  current append), to minimize the number of internal allocations.
    */
-  void append(const void* buffer, size_t length, size_t reserve = 0);
+  void append(const void* buffer, size_t length, size_t reserve = 0) noexcept;
 
   sk_sp<SkROBuffer> makeROBufferSnapshot() const {
     return sk_sp<SkROBuffer>(new SkROBuffer(fHead, fTotalUsed, fTail));

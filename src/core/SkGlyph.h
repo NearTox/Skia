@@ -80,7 +80,7 @@ struct SkPackedGlyphID {
 
   SkFixed getSubYFixed() const noexcept { return this->subToFixed(kSubPixelY); }
 
-  uint32_t hash() const noexcept { return SkChecksum::CheapMix(fID); }
+  uint32_t hash() const { return SkChecksum::CheapMix(fID); }
 
   SkString dump() const {
     SkString str;

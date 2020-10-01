@@ -102,7 +102,7 @@ void ParagraphBuilderImpl::addPlaceholder(const PlaceholderStyle& placeholderSty
   fPlaceholders.emplace_back(start, end, placeholderStyle, topStyle, stylesBefore, textBefore);
 }
 
-void ParagraphBuilderImpl::endRunIfNeeded() {
+void ParagraphBuilderImpl::endRunIfNeeded() noexcept {
   if (fStyledBlocks.empty()) {
     return;
   }

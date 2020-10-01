@@ -1360,13 +1360,13 @@ void SkConic::computeTightBounds(SkRect* bounds) const noexcept {
 void SkConic::computeFastBounds(SkRect* bounds) const noexcept { bounds->setBounds(fPts, 3); }
 
 #if 0  // unimplemented
-bool SkConic::findMaxCurvature(SkScalar* t) const {
+bool SkConic::findMaxCurvature(SkScalar* t) const noexcept {
     // TODO: Implement me
     return false;
 }
 #endif
 
-SkScalar SkConic::TransformW(const SkPoint pts[], SkScalar w, const SkMatrix& matrix) noexcept {
+SkScalar SkConic::TransformW(const SkPoint pts[], SkScalar w, const SkMatrix& matrix) {
   if (!matrix.hasPerspective()) {
     return w;
   }
@@ -1428,8 +1428,8 @@ int SkConic::BuildUnitArc(
     }
   }
 
-  constexpr static SkPoint quadrantPts[] = {{1, 0},  {1, 1},   {0, 1},  {-1, 1},
-                                            {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
+  constexpr SkPoint quadrantPts[] = {{1, 0},  {1, 1},   {0, 1},  {-1, 1},
+                                     {-1, 0}, {-1, -1}, {0, -1}, {1, -1}};
   constexpr SkScalar quadrantWeight = SK_ScalarRoot2Over2;
 
   int conicCount = quadrant;

@@ -34,7 +34,7 @@ struct SkReadPixelsRec {
    *  On false, leaves self unchanged, but indicates that it does not overlap src, or
    *  is not valid (e.g. bad fInfo) for readPixels().
    */
-  bool trim(int srcWidth, int srcHeight) noexcept;
+  bool trim(int srcWidth, int srcHeight);
 };
 
 #endif

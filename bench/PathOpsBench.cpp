@@ -176,7 +176,7 @@ class PathBuilderBench : public Benchmark {
       case MakeType::kArray: {
         //    ArrayPath<N*12> arrays;
         //    run_builder(arrays, false, N);
-        return SkPathBuilder::Make(
+        return SkPath::Make(
             fArrays.fPts, fArrays.fPIndex, fArrays.fVbs, fArrays.fVIndex, nullptr, 0,
             SkPathFillType::kWinding);
       }

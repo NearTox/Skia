@@ -56,7 +56,7 @@ struct GrWindowRectangles::Rec : public GrNonAtomicRef<Rec> {
   SkIRect fData[kMaxWindows];
 };
 
-inline GrWindowRectangles::~GrWindowRectangles() { SkSafeUnref(this->rec()); }
+inline GrWindowRectangles ::~GrWindowRectangles() { SkSafeUnref(this->rec()); }
 
 inline const SkIRect* GrWindowRectangles::data() const noexcept {
   return fCount <= 1 ? &fLocalWindow : fRec->fData;

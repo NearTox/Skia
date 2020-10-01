@@ -85,7 +85,7 @@ void GrAuditTrail::opsCombined(const GrOp* consumer, const GrOp* consumed) {
   fIDLookup.remove(consumed->uniqueID());
 }
 
-void GrAuditTrail::copyOutFromOpsTask(OpInfo* outOpInfo, int opsTaskID) noexcept {
+void GrAuditTrail::copyOutFromOpsTask(OpInfo* outOpInfo, int opsTaskID) {
   SkASSERT(opsTaskID < fOpsTask.count());
   const OpNode* bn = fOpsTask[opsTaskID].get();
   SkASSERT(bn);

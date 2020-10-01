@@ -76,5 +76,6 @@
     <ClCompile Include="libjpeg-turbo\jaricom.c" />
     <ClCompile Include="libjpeg-turbo\jcarith.c" />
     <ClCompile Include="libjpeg-turbo\jdarith.c" />
+    <ClCompile Include="libjpeg-turbo\jpeg_nbits_table.c" />
   </ItemGroup>
 </Project>

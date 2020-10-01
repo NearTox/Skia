@@ -49,6 +49,8 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
 
   sk_sp<SkTypeface> onMakeFromStreamIndex(
       std::unique_ptr<SkStreamAsset>, int ttcIndex) const override;
+  sk_sp<SkTypeface> onMakeFromStreamArgs(
+      std::unique_ptr<SkStreamAsset> stream, const SkFontArguments& args) const override;
   sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override;
   sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int ttcIndex) const override;
   sk_sp<SkTypeface> onLegacyMakeTypeface(const char familyName[], SkFontStyle) const override;
@@ -64,13 +66,20 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
     uint32_t fTtcIndex;     // key2
     SkTypeface* fTypeface;  // value: weak ref to typeface
 
-    DataEntry() noexcept = default;
+    DataEntry() = default;
 
-    DataEntry(DataEntry&& that)
-        : fDataId(that.fDataId), fTtcIndex(that.fTtcIndex), fTypeface(that.fTypeface) {
-      SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId);
-      SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef);
-      that.fTypeface = nullptr;
+    DataEntry(DataEntry&& that) { *this = std::move(that); }
+    DataEntry& operator=(DataEntry&& that) {
+      if (this != &that) {
+        fDataId = that.fDataId;
+        fTtcIndex = that.fTtcIndex;
+        fTypeface = that.fTypeface;
+
+        SkDEBUGCODE(that.fDataId = SkFontIdentity::kInvalidDataId);
+        SkDEBUGCODE(that.fTtcIndex = 0xbbadbeef);
+        that.fTypeface = nullptr;
+      }
+      return *this;
     }
 
     ~DataEntry() {

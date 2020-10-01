@@ -16,7 +16,7 @@
 
 const int SkDCubic::gPrecisionUnit = 256;  // FIXME: test different values in test framework
 
-void SkDCubic::align(int endIndex, int ctrlIndex, SkDPoint* dstPt) const noexcept {
+void SkDCubic::align(int endIndex, int ctrlIndex, SkDPoint* dstPt) const {
   if (fPts[endIndex].fX == fPts[ctrlIndex].fX) {
     dstPt->fX = fPts[endIndex].fX;
   }
@@ -28,7 +28,7 @@ void SkDCubic::align(int endIndex, int ctrlIndex, SkDPoint* dstPt) const noexcep
 // give up when changing t no longer moves point
 // also, copy point rather than recompute it when it does change
 double SkDCubic::binarySearch(
-    double min, double max, double axisIntercept, SearchAxis xAxis) const noexcept {
+    double min, double max, double axisIntercept, SearchAxis xAxis) const {
   double t = (min + max) / 2;
   double step = (t - min) / 2;
   SkDPoint cubicAtT = ptAtT(t);
@@ -76,14 +76,14 @@ double SkDCubic::binarySearch(
 }
 
 // get the rough scale of the cubic; used to determine if curvature is extreme
-double SkDCubic::calcPrecision() const noexcept {
+double SkDCubic::calcPrecision() const {
   return ((fPts[1] - fPts[0]).length() + (fPts[2] - fPts[1]).length() +
           (fPts[3] - fPts[2]).length()) /
          gPrecisionUnit;
 }
 
 /* classic one t subdivision */
-static void interp_cubic_coords(const double* src, double* dst, double t) noexcept {
+static void interp_cubic_coords(const double* src, double* dst, double t) {
   double ab = SkDInterp(src[0], src[2], t);
   double bc = SkDInterp(src[2], src[4], t);
   double cd = SkDInterp(src[4], src[6], t);
@@ -100,7 +100,7 @@ static void interp_cubic_coords(const double* src, double* dst, double t) noexce
   dst[12] = src[6];
 }
 
-SkDCubicPair SkDCubic::chopAt(double t) const noexcept {
+SkDCubicPair SkDCubic::chopAt(double t) const {
   SkDCubicPair dst;
   if (t == 0.5) {
     dst.pts[0] = fPts[0];
@@ -122,8 +122,7 @@ SkDCubicPair SkDCubic::chopAt(double t) const noexcept {
   return dst;
 }
 
-void SkDCubic::Coefficients(
-    const double* src, double* A, double* B, double* C, double* D) noexcept {
+void SkDCubic::Coefficients(const double* src, double* A, double* B, double* C, double* D) {
   *A = src[6];            // d
   *B = src[4] * 3;        // 3*c
   *C = src[2] * 3;        // 3*b
@@ -133,7 +132,7 @@ void SkDCubic::Coefficients(
   *C -= 3 * *D;           // C = -3*a + 3*b
 }
 
-bool SkDCubic::endsAreExtremaInXOrY() const noexcept {
+bool SkDCubic::endsAreExtremaInXOrY() const {
   return (between(fPts[0].fX, fPts[1].fX, fPts[3].fX) &&
           between(fPts[0].fX, fPts[2].fX, fPts[3].fX)) ||
          (between(fPts[0].fY, fPts[1].fY, fPts[3].fY) &&
@@ -197,18 +196,18 @@ bool SkDCubic::hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) 
 }
 
 bool SkDCubic::hullIntersects(const SkDCubic& c2, bool* isLinear) const {
-  return hullIntersects(c2.fPts, c2.kPointCount, isLinear);
+  return hullIntersects(c2.fPts, SkDCubic::kPointCount, isLinear);
 }
 
 bool SkDCubic::hullIntersects(const SkDQuad& quad, bool* isLinear) const {
-  return hullIntersects(quad.fPts, quad.kPointCount, isLinear);
+  return hullIntersects(quad.fPts, SkDQuad::kPointCount, isLinear);
 }
 
 bool SkDCubic::hullIntersects(const SkDConic& conic, bool* isLinear) const {
   return hullIntersects(conic.fPts, isLinear);
 }
 
-bool SkDCubic::isLinear(int startIndex, int endIndex) const noexcept {
+bool SkDCubic::isLinear(int startIndex, int endIndex) const {
   if (fPts[0].approximatelyDEqual(fPts[3])) {
     return ((const SkDQuad*)this)->isLinear(0, 2);
   }
@@ -247,7 +246,7 @@ bool SkDCubic::isLinear(int startIndex, int endIndex) const noexcept {
 // c(t)  = a(1-t)^3 + 3bt(1-t)^2 + 3c(1-t)t^2 + dt^3
 // c'(t) = -3a(1-t)^2 + 3b((1-t)^2 - 2t(1-t)) + 3c(2t(1-t) - t^2) + 3dt^2
 //       = 3(b-a)(1-t)^2 + 6(c-b)t(1-t) + 3(d-c)t^2
-static double derivative_at_t(const double* src, double t) noexcept {
+static double derivative_at_t(const double* src, double t) {
   double one_t = 1 - t;
   double a = src[0];
   double b = src[2];
@@ -335,17 +334,17 @@ int SkDCubic::ComplexBreak(const SkPoint pointsPtr[4], SkScalar* t) {
   return 0;
 }
 
-bool SkDCubic::monotonicInX() const noexcept {
+bool SkDCubic::monotonicInX() const {
   return precisely_between(fPts[0].fX, fPts[1].fX, fPts[3].fX) &&
          precisely_between(fPts[0].fX, fPts[2].fX, fPts[3].fX);
 }
 
-bool SkDCubic::monotonicInY() const noexcept {
+bool SkDCubic::monotonicInY() const {
   return precisely_between(fPts[0].fY, fPts[1].fY, fPts[3].fY) &&
          precisely_between(fPts[0].fY, fPts[2].fY, fPts[3].fY);
 }
 
-void SkDCubic::otherPts(int index, const SkDPoint* o1Pts[kPointCount - 1]) const noexcept {
+void SkDCubic::otherPts(int index, const SkDPoint* o1Pts[kPointCount - 1]) const {
   int offset = (int)!SkToBool(index);
   o1Pts[0] = &fPts[offset];
   o1Pts[1] = &fPts[++offset];
@@ -359,7 +358,7 @@ int SkDCubic::searchRoots(
   extremeTs[extrema++] = 0;
   extremeTs[extrema] = 1;
   SkASSERT(extrema < 6);
-  SkTQSort(extremeTs, extremeTs + extrema);
+  SkTQSort(extremeTs, extremeTs + extrema + 1);
   int validCount = 0;
   for (int index = 0; index < extrema;) {
     double min = extremeTs[index];
@@ -380,10 +379,10 @@ int SkDCubic::searchRoots(
 
 // cubic roots
 
-static constexpr double PI = 3.141592653589793;
+static const double PI = 3.141592653589793;
 
 // from SkGeometry.cpp (and Numeric Solutions, 5.6)
-int SkDCubic::RootsValidT(double A, double B, double C, double D, double t[3]) noexcept {
+int SkDCubic::RootsValidT(double A, double B, double C, double D, double t[3]) {
   double s[3];
   int realRoots = RootsReal(A, B, C, D, s);
   int foundRoots = SkDQuad::AddValidTs(s, realRoots, t);
@@ -411,7 +410,7 @@ int SkDCubic::RootsValidT(double A, double B, double C, double D, double t[3]) n
   return foundRoots;
 }
 
-int SkDCubic::RootsReal(double A, double B, double C, double D, double s[3]) noexcept {
+int SkDCubic::RootsReal(double A, double B, double C, double D, double s[3]) {
 #ifdef SK_DEBUG
   // create a string mathematica understands
   // GDB set print repe 15 # if repeated digits is a bother
@@ -506,7 +505,7 @@ int SkDCubic::RootsReal(double A, double B, double C, double D, double s[3]) noe
 }
 
 // OPTIMIZE? compute t^2, t(1-t), and (1-t)^2 and pass them to another version of derivative at t?
-SkDVector SkDCubic::dxdyAtT(double t) const noexcept {
+SkDVector SkDCubic::dxdyAtT(double t) const {
   SkDVector result = {derivative_at_t(&fPts[0].fX, t), derivative_at_t(&fPts[0].fY, t)};
   if (result.fX == 0 && result.fY == 0) {
     if (t == 0) {
@@ -525,7 +524,7 @@ SkDVector SkDCubic::dxdyAtT(double t) const noexcept {
 }
 
 // OPTIMIZE? share code with formulate_F1DotF2
-int SkDCubic::findInflections(double tValues[]) const noexcept {
+int SkDCubic::findInflections(double tValues[]) const {
   double Ax = fPts[1].fX - fPts[0].fX;
   double Ay = fPts[1].fY - fPts[0].fY;
   double Bx = fPts[2].fX - 2 * fPts[1].fX + fPts[0].fX;
@@ -535,7 +534,7 @@ int SkDCubic::findInflections(double tValues[]) const noexcept {
   return SkDQuad::RootsValidT(Bx * Cy - By * Cx, Ax * Cy - Ay * Cx, Ax * By - Ay * Bx, tValues);
 }
 
-static void formulate_F1DotF2(const double src[], double coeff[4]) noexcept {
+static void formulate_F1DotF2(const double src[], double coeff[4]) {
   double a = src[2] - src[0];
   double b = src[4] - 2 * src[2] + src[0];
   double c = src[6] + 3 * (src[2] - src[4]) - src[0];
@@ -551,7 +550,7 @@ static void formulate_F1DotF2(const double src[], double coeff[4]) noexcept {
     C = 3(b - a)
     Solve for t, keeping only those that fit between 0 < t < 1
 */
-int SkDCubic::FindExtrema(const double src[], double tValues[2]) noexcept {
+int SkDCubic::FindExtrema(const double src[], double tValues[2]) {
   // we divide A,B,C by 3 to simplify
   double a = src[0];
   double b = src[2];
@@ -587,7 +586,7 @@ int SkDCubic::findMaxCurvature(double tValues[]) const {
   return RootsValidT(coeffX[0], coeffX[1], coeffX[2], coeffX[3], tValues);
 }
 
-SkDPoint SkDCubic::ptAtT(double t) const noexcept {
+SkDPoint SkDCubic::ptAtT(double t) const {
   if (0 == t) {
     return fPts[0];
   }
@@ -653,7 +652,7 @@ Group the known values on one side:
  C       = (N*2 - M)/18
  */
 
-static double interp_cubic_coords(const double* src, double t) noexcept {
+static double interp_cubic_coords(const double* src, double t) {
   double ab = SkDInterp(src[0], src[2], t);
   double bc = SkDInterp(src[2], src[4], t);
   double cd = SkDInterp(src[4], src[6], t);
@@ -663,7 +662,7 @@ static double interp_cubic_coords(const double* src, double t) noexcept {
   return abcd;
 }
 
-SkDCubic SkDCubic::subDivide(double t1, double t2) const noexcept {
+SkDCubic SkDCubic::subDivide(double t1, double t2) const {
   if (t1 == 0 || t2 == 1) {
     if (t1 == 0 && t2 == 1) {
       return *this;
@@ -694,7 +693,7 @@ SkDCubic SkDCubic::subDivide(double t1, double t2) const noexcept {
 }
 
 void SkDCubic::subDivide(
-    const SkDPoint& a, const SkDPoint& d, double t1, double t2, SkDPoint dst[2]) const noexcept {
+    const SkDPoint& a, const SkDPoint& d, double t1, double t2, SkDPoint dst[2]) const {
   SkASSERT(t1 != t2);
   // this approach assumes that the control points computed directly are accurate enough
   SkDCubic sub = subDivide(t1, t2);
@@ -720,7 +719,7 @@ void SkDCubic::subDivide(
   }
 }
 
-bool SkDCubic::toFloatPoints(SkPoint* pts) const noexcept {
+bool SkDCubic::toFloatPoints(SkPoint* pts) const {
   const double* dCubic = &fPts[0].fX;
   SkScalar* cubic = &pts[0].fX;
   for (int index = 0; index < kPointCount * 2; ++index) {

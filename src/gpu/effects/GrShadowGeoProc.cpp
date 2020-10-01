@@ -16,7 +16,7 @@
 
 class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
  public:
-  GrGLSLRRectShadowGeoProc() {}
+  GrGLSLRRectShadowGeoProc() noexcept = default;
 
   void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
     const GrRRectShadowGeoProc& rsgp = args.fGP.cast<GrRRectShadowGeoProc>();
@@ -44,11 +44,7 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
     fragBuilder->codeAppendf("%s = half4(factor);", args.fOutputCoverage);
   }
 
-  void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-      const CoordTransformRange& transformRange) override {
-    this->setTransformDataHelper(pdman, transformRange);
-  }
+  void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {}
 
  private:
   typedef GrGLSLGeometryProcessor INHERITED;
@@ -56,7 +52,7 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-GrRRectShadowGeoProc::GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView) noexcept
+GrRRectShadowGeoProc::GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView)
     : INHERITED(kGrRRectShadowGeoProc_ClassID) {
   fInPosition = {"inPosition", kFloat2_GrVertexAttribType, kFloat2_GrSLType};
   fInColor = {"inColor", kUByte4_norm_GrVertexAttribType, kHalf4_GrSLType};
@@ -65,7 +61,7 @@ GrRRectShadowGeoProc::GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView) no
 
   SkASSERT(lutView.proxy());
   fLUTTextureSampler.reset(
-      GrSamplerState::Filter::kBilerp, lutView.proxy()->backendFormat(), lutView.swizzle());
+      GrSamplerState::Filter::kLinear, lutView.proxy()->backendFormat(), lutView.swizzle());
   this->setTextureSamplerCnt(1);
 }
 

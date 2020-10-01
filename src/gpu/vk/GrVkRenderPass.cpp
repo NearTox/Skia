@@ -22,6 +22,7 @@ void setup_vk_attachment_description(
   SkAssertResult(GrSampleCountToVkSampleCount(desc.fSamples, &attachment->samples));
   switch (layout) {
     case VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL:
+    case VK_IMAGE_LAYOUT_GENERAL:
       attachment->loadOp = desc.fLoadStoreOps.fLoadOp;
       attachment->storeOp = desc.fLoadStoreOps.fStoreOp;
       attachment->stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -41,12 +42,14 @@ void setup_vk_attachment_description(
 }
 
 GrVkRenderPass* GrVkRenderPass::CreateSimple(
-    GrVkGpu* gpu, AttachmentsDescriptor* attachmentsDescriptor, AttachmentFlags attachmentFlags) {
+    GrVkGpu* gpu, AttachmentsDescriptor* attachmentsDescriptor, AttachmentFlags attachmentFlags,
+    bool needsSelfDependency) {
   static const GrVkRenderPass::LoadStoreOps kBasicLoadStoreOps(
       VK_ATTACHMENT_LOAD_OP_LOAD, VK_ATTACHMENT_STORE_OP_STORE);
 
   return Create(
-      gpu, attachmentFlags, attachmentsDescriptor, kBasicLoadStoreOps, kBasicLoadStoreOps);
+      gpu, attachmentFlags, attachmentsDescriptor, kBasicLoadStoreOps, kBasicLoadStoreOps,
+      needsSelfDependency);
 }
 
 GrVkRenderPass* GrVkRenderPass::Create(
@@ -54,12 +57,21 @@ GrVkRenderPass* GrVkRenderPass::Create(
     const LoadStoreOps& stencilOp) {
   AttachmentFlags attachmentFlags = compatibleRenderPass.fAttachmentFlags;
   AttachmentsDescriptor attachmentsDescriptor = compatibleRenderPass.fAttachmentsDescriptor;
-  return Create(gpu, attachmentFlags, &attachmentsDescriptor, colorOp, stencilOp);
+  bool needsSelfDependency = compatibleRenderPass.fHasSelfDependency;
+  return Create(
+      gpu, attachmentFlags, &attachmentsDescriptor, colorOp, stencilOp, needsSelfDependency);
 }
 
 GrVkRenderPass* GrVkRenderPass::Create(
     GrVkGpu* gpu, AttachmentFlags attachmentFlags, AttachmentsDescriptor* attachmentsDescriptor,
-    const LoadStoreOps& colorOp, const LoadStoreOps& stencilOp) {
+    const LoadStoreOps& colorOp, const LoadStoreOps& stencilOp, bool needsSelfDependency) {
+  // TODO: We need to create a subpass where we have a color attachment ref and an input
+  // attachment ref. Both refs will point to the same color attachment on the render pass. We also
+  // need to create a self dependency for that subpass so that we can use barriers. Finally, the
+  // color attachment will need to be set to the GENERAL layout since it will be used for reading
+  // and writing here.
+  SkASSERT(!needsSelfDependency || gpu->caps()->advancedBlendEquationSupport());
+
   uint32_t numAttachments = attachmentsDescriptor->fAttachmentCount;
   // Attachment descriptions to be set on the render pass
   SkTArray<VkAttachmentDescription> attachments(numAttachments);
@@ -84,16 +96,50 @@ GrVkRenderPass* GrVkRenderPass::Create(
 
   uint32_t clearValueCount = 0;
 
+  VkSubpassDependency dependency;
+  int numDependecies = 0;
+
   if (attachmentFlags & kColor_AttachmentFlag) {
     // set up color attachment
+    bool needsGeneralLayout = needsSelfDependency && !gpu->caps()->advancedBlendEquationSupport();
+    VkImageLayout layout =
+        needsGeneralLayout ? VK_IMAGE_LAYOUT_GENERAL : VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
     attachmentsDescriptor->fColor.fLoadStoreOps = colorOp;
     setup_vk_attachment_description(
-        &attachments[currentAttachment], attachmentsDescriptor->fColor,
-        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
+        &attachments[currentAttachment], attachmentsDescriptor->fColor, layout);
     // setup subpass use of attachment
     colorRef.attachment = currentAttachment++;
-    colorRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorRef.layout = layout;
     subpassDesc.colorAttachmentCount = 1;
+
+    if (needsSelfDependency) {
+      numDependecies = 1;
+      dependency.srcSubpass = 0;
+      dependency.dstSubpass = 0;
+      dependency.dependencyFlags = VK_DEPENDENCY_BY_REGION_BIT;
+      if (gpu->caps()->advancedBlendEquationSupport()) {
+        // If we have coherent support we shouldn't be needing a self dependency
+        SkASSERT(!gpu->caps()->advancedCoherentBlendEquationSupport());
+
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT |
+                                   VK_ACCESS_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT;
+        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_NONCOHERENT_BIT_EXT;
+      } else {
+        SkASSERT(gpu->vkCaps().maxInputAttachmentDescriptors());
+
+        subpassDesc.inputAttachmentCount = 1;
+        subpassDesc.pInputAttachments = &colorRef;
+
+        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        dependency.dstStageMask = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+        dependency.srcAccessMask =
+            VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+        dependency.dstAccessMask = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT;
+      }
+    }
 
     if (VK_ATTACHMENT_LOAD_OP_CLEAR == colorOp.fLoadOp) {
       clearValueCount = colorRef.attachment + 1;
@@ -101,10 +147,12 @@ GrVkRenderPass* GrVkRenderPass::Create(
   } else {
     // I don't think there should ever be a time where we don't have a color attachment
     SkASSERT(false);
+    SkASSERT(!needsSelfDependency);
     colorRef.attachment = VK_ATTACHMENT_UNUSED;
     colorRef.layout = VK_IMAGE_LAYOUT_UNDEFINED;
     subpassDesc.colorAttachmentCount = 0;
   }
+
   subpassDesc.pColorAttachments = &colorRef;
 
   if (attachmentFlags & kStencil_AttachmentFlag) {
@@ -140,8 +188,8 @@ GrVkRenderPass* GrVkRenderPass::Create(
   createInfo.pAttachments = attachments.begin();
   createInfo.subpassCount = 1;
   createInfo.pSubpasses = &subpassDesc;
-  createInfo.dependencyCount = 0;
-  createInfo.pDependencies = nullptr;
+  createInfo.dependencyCount = numDependecies;
+  createInfo.pDependencies = &dependency;
 
   VkResult result;
   VkRenderPass renderPass;
@@ -156,17 +204,19 @@ GrVkRenderPass* GrVkRenderPass::Create(
   GR_VK_CALL(gpu->vkInterface(), GetRenderAreaGranularity(gpu->device(), renderPass, &granularity));
 
   return new GrVkRenderPass(
-      gpu, renderPass, attachmentFlags, *attachmentsDescriptor, granularity, clearValueCount);
+      gpu, renderPass, attachmentFlags, *attachmentsDescriptor, needsSelfDependency, granularity,
+      clearValueCount);
 }
 
 GrVkRenderPass::GrVkRenderPass(
     const GrVkGpu* gpu, VkRenderPass renderPass, AttachmentFlags flags,
-    const AttachmentsDescriptor& descriptor, const VkExtent2D& granularity,
+    const AttachmentsDescriptor& descriptor, bool hasSelfDependency, const VkExtent2D& granularity,
     uint32_t clearValueCount)
     : INHERITED(gpu),
       fRenderPass(renderPass),
       fAttachmentFlags(flags),
       fAttachmentsDescriptor(descriptor),
+      fHasSelfDependency(hasSelfDependency),
       fGranularity(granularity),
       fClearValueCount(clearValueCount) {}
 
@@ -185,7 +235,7 @@ bool GrVkRenderPass::colorAttachmentIndex(uint32_t* index) const {
 }
 
 // Works under the assumption that stencil attachment will always be after the color and resolve
-// attachment.
+// attachments.
 bool GrVkRenderPass::stencilAttachmentIndex(uint32_t* index) const {
   *index = 0;
   if (fAttachmentFlags & kColor_AttachmentFlag) {
@@ -198,7 +248,7 @@ bool GrVkRenderPass::stencilAttachmentIndex(uint32_t* index) const {
 }
 
 bool GrVkRenderPass::isCompatible(
-    const AttachmentsDescriptor& desc, const AttachmentFlags& flags) const {
+    const AttachmentsDescriptor& desc, const AttachmentFlags& flags, bool hasSelfDependency) const {
   SkASSERT(!(fAttachmentFlags & kExternal_AttachmentFlag));
   if (flags != fAttachmentFlags) {
     return false;
@@ -215,22 +265,28 @@ bool GrVkRenderPass::isCompatible(
     }
   }
 
+  if (fHasSelfDependency != hasSelfDependency) {
+    return false;
+  }
+
   return true;
 }
 
-bool GrVkRenderPass::isCompatible(const GrVkRenderTarget& target) const {
+bool GrVkRenderPass::isCompatible(const GrVkRenderTarget& target, bool hasSelfDependency) const {
   SkASSERT(!(fAttachmentFlags & kExternal_AttachmentFlag));
 
   AttachmentsDescriptor desc;
   AttachmentFlags flags;
   target.getAttachmentsDescriptor(&desc, &flags, this->hasStencilAttachment());
 
-  return this->isCompatible(desc, flags);
+  return this->isCompatible(desc, flags, hasSelfDependency);
 }
 
 bool GrVkRenderPass::isCompatible(const GrVkRenderPass& renderPass) const {
   SkASSERT(!(fAttachmentFlags & kExternal_AttachmentFlag));
-  return this->isCompatible(renderPass.fAttachmentsDescriptor, renderPass.fAttachmentFlags);
+  return this->isCompatible(
+      renderPass.fAttachmentsDescriptor, renderPass.fAttachmentFlags,
+      renderPass.fHasSelfDependency);
 }
 
 bool GrVkRenderPass::isCompatibleExternalRP(VkRenderPass renderPass) const {
@@ -255,19 +311,28 @@ bool GrVkRenderPass::equalLoadStoreOps(
 }
 
 void GrVkRenderPass::genKey(GrProcessorKeyBuilder* b) const {
-  b->add32(fAttachmentFlags);
-  if (fAttachmentFlags & kColor_AttachmentFlag) {
-    b->add32(fAttachmentsDescriptor.fColor.fFormat);
-    b->add32(fAttachmentsDescriptor.fColor.fSamples);
+  GenKey(b, fAttachmentFlags, fAttachmentsDescriptor, fHasSelfDependency, (uint64_t)fRenderPass);
+}
+
+void GrVkRenderPass::GenKey(
+    GrProcessorKeyBuilder* b, AttachmentFlags attachmentFlags,
+    const AttachmentsDescriptor& attachmentsDescriptor, bool hasSelfDependency,
+    uint64_t externalRenderPass) {
+  b->add32(attachmentFlags);
+  if (attachmentFlags & kColor_AttachmentFlag) {
+    b->add32(attachmentsDescriptor.fColor.fFormat);
+    b->add32(attachmentsDescriptor.fColor.fSamples);
   }
-  if (fAttachmentFlags & kStencil_AttachmentFlag) {
-    b->add32(fAttachmentsDescriptor.fStencil.fFormat);
-    b->add32(fAttachmentsDescriptor.fStencil.fSamples);
+  if (attachmentFlags & kStencil_AttachmentFlag) {
+    b->add32(attachmentsDescriptor.fStencil.fFormat);
+    b->add32(attachmentsDescriptor.fStencil.fSamples);
   }
-  if (fAttachmentFlags & kExternal_AttachmentFlag) {
-    SkASSERT(!(fAttachmentFlags & ~kExternal_AttachmentFlag));
-    uint64_t handle = (uint64_t)fRenderPass;
-    b->add32((uint32_t)(handle & 0xFFFFFFFF));
-    b->add32((uint32_t)(handle >> 32));
+
+  b->add32(hasSelfDependency);
+
+  if (attachmentFlags & kExternal_AttachmentFlag) {
+    SkASSERT(!(attachmentFlags & ~kExternal_AttachmentFlag));
+    b->add32((uint32_t)(externalRenderPass & 0xFFFFFFFF));
+    b->add32((uint32_t)(externalRenderPass >> 32));
   }
 }

@@ -15,7 +15,7 @@
 class SkDeferredDisplayListPriv;
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrRecordingContext.h"
+#  include "include/gpu/GrRecordingContext.h"
 #  include "include/private/SkTArray.h"
 #  include <map>
 class GrRenderTask;
@@ -29,11 +29,13 @@ using GrRenderTargetProxy = SkRefCnt;
  * This class contains pre-processed gpu operations that can be replayed into
  * an SkSurface via SkSurface::draw(SkDeferredDisplayList*).
  */
-class SkDeferredDisplayList {
+class SkDeferredDisplayList : public SkNVRefCnt<SkDeferredDisplayList> {
  public:
   SK_API ~SkDeferredDisplayList();
 
-  SK_API const SkSurfaceCharacterization& characterization() const { return fCharacterization; }
+  SK_API const SkSurfaceCharacterization& characterization() const noexcept {
+    return fCharacterization;
+  }
 
 #if SK_SUPPORT_GPU
   /**
@@ -41,7 +43,7 @@ class SkDeferredDisplayList {
    */
   class SK_API ProgramIterator {
    public:
-    ProgramIterator(GrContext*, SkDeferredDisplayList*);
+    ProgramIterator(GrDirectContext*, SkDeferredDisplayList*);
     ~ProgramIterator();
 
     // This returns true if any work was done. Getting a cache hit does not count as work.
@@ -50,15 +52,15 @@ class SkDeferredDisplayList {
     void next();
 
    private:
-    GrContext* fContext;
+    GrDirectContext* fDContext;
     const SkTArray<GrRecordingContext::ProgramData>& fProgramData;
     int fIndex;
   };
 #endif
 
   // Provides access to functions that aren't part of the public API.
-  SkDeferredDisplayListPriv priv();
-  const SkDeferredDisplayListPriv priv() const;
+  SkDeferredDisplayListPriv priv() noexcept;
+  const SkDeferredDisplayListPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
 
  private:
   friend class GrDrawingManager;  // for access to 'fRenderTasks', 'fLazyProxyData', 'fArenas'
@@ -87,7 +89,9 @@ class SkDeferredDisplayList {
       sk_sp<LazyProxyData>);
 
 #if SK_SUPPORT_GPU
-  const SkTArray<GrRecordingContext::ProgramData>& programData() const { return fProgramData; }
+  const SkTArray<GrRecordingContext::ProgramData>& programData() const noexcept {
+    return fProgramData;
+  }
 #endif
 
   const SkSurfaceCharacterization fCharacterization;

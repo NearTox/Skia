@@ -24,7 +24,7 @@ class SK_API SkGraphics {
   static void Init();
 
   // We're in the middle of cleaning this up.
-  static void Term() noexcept {}
+  static void Term() {}
 
   /**
    *  Return the max number of bytes that should be used by the font cache.
@@ -165,7 +165,12 @@ class SK_API SkGraphics {
    *  Returns the previous factory (which could be NULL).
    */
   static ImageGeneratorFromEncodedDataFactory SetImageGeneratorFromEncodedDataFactory(
-      ImageGeneratorFromEncodedDataFactory);
+      ImageGeneratorFromEncodedDataFactory) noexcept;
+
+  /**
+   *  Call early in main() to allow Skia to use a JIT to accelerate CPU-bound operations.
+   */
+  static void AllowJIT();
 };
 
 class SkAutoGraphics {

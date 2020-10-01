@@ -116,7 +116,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
       SkCanvas* canvas, const SkPaint& paint, std::function<void(SkCanvas*, const SkPaint&)>);
 
  protected:
-  SkDrawLooper() noexcept = default;
+  constexpr SkDrawLooper() noexcept = default;
 
  private:
   typedef SkFlattenable INHERITED;

@@ -32,11 +32,11 @@ class SkMatrixPriv {
   typedef SkMatrix::MapXYProc MapXYProc;
   typedef SkMatrix::MapPtsProc MapPtsProc;
 
-  static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) {
+  static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) noexcept {
     return SkMatrix::GetMapPtsProc(matrix.getType());
   }
 
-  static MapXYProc GetMapXYProc(const SkMatrix& matrix) {
+  static MapXYProc GetMapXYProc(const SkMatrix& matrix) noexcept {
     return SkMatrix::GetMapXYProc(matrix.getType());
   }
 
@@ -151,7 +151,7 @@ class SkMatrixPriv {
 
   // Returns the recommended filterquality, assuming the caller originally wanted kHigh (bicubic)
   static SkFilterQuality AdjustHighQualityFilterLevel(
-      const SkMatrix&, bool matrixIsInverse = false);
+      const SkMatrix&, bool matrixIsInverse = false) noexcept;
 
   static bool PostIDiv(SkMatrix* matrix, int divx, int divy) noexcept {
     return matrix->postIDiv(divx, divy);

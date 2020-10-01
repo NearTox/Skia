@@ -26,7 +26,7 @@ struct SkDQuad {
 
   SkDPoint fPts[kPointCount];
 
-  bool collapsed() const noexcept {
+  bool collapsed() const {
     return fPts[0].approximatelyEqual(fPts[1]) && fPts[0].approximatelyEqual(fPts[2]);
   }
 
@@ -49,7 +49,7 @@ struct SkDQuad {
   static bool IsConic() noexcept { return false; }
 
   const SkDQuad& set(
-      const SkPoint pts[kPointCount] SkDEBUGPARAMS(SkOpGlobalState* state = nullptr)) noexcept {
+      const SkPoint pts[kPointCount] SkDEBUGPARAMS(SkOpGlobalState* state = nullptr)) {
     fPts[0] = pts[0];
     fPts[1] = pts[1];
     fPts[2] = pts[2];
@@ -66,11 +66,11 @@ struct SkDQuad {
     return fPts[n];
   }
 
-  static int AddValidTs(double s[], int realRoots, double* t) noexcept;
-  void align(int endIndex, SkDPoint* dstPt) const noexcept;
-  SkDQuadPair chopAt(double t) const noexcept;
-  SkDVector dxdyAtT(double t) const noexcept;
-  static int FindExtrema(const double src[], double tValue[1]) noexcept;
+  static int AddValidTs(double s[], int realRoots, double* t);
+  void align(int endIndex, SkDPoint* dstPt) const;
+  SkDQuadPair chopAt(double t) const;
+  SkDVector dxdyAtT(double t) const;
+  static int FindExtrema(const double src[], double tValue[1]);
 
 #ifdef SK_DEBUG
   SkOpGlobalState* globalState() const { return fDebugGlobalState; }
@@ -82,26 +82,24 @@ struct SkDQuad {
    */
   int horizontalIntersect(double yIntercept, double roots[2]) const;
 
-  bool hullIntersects(const SkDQuad&, bool* isLinear) const noexcept;
+  bool hullIntersects(const SkDQuad&, bool* isLinear) const;
   bool hullIntersects(const SkDConic&, bool* isLinear) const;
   bool hullIntersects(const SkDCubic&, bool* isLinear) const;
-  bool isLinear(int startIndex, int endIndex) const noexcept;
+  bool isLinear(int startIndex, int endIndex) const;
   static int maxIntersections() noexcept { return kMaxIntersections; }
-  bool monotonicInX() const noexcept;
-  bool monotonicInY() const noexcept;
-  void otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept;
+  bool monotonicInX() const;
+  bool monotonicInY() const;
+  void otherPts(int oddMan, const SkDPoint* endPt[2]) const;
   static int pointCount() noexcept { return kPointCount; }
   static int pointLast() noexcept { return kPointLast; }
-  SkDPoint ptAtT(double t) const noexcept;
-  static int RootsReal(double A, double B, double C, double t[2]) noexcept;
-  static int RootsValidT(const double A, const double B, const double C, double s[2]) noexcept;
-  static void SetABC(const double* quad, double* a, double* b, double* c) noexcept;
-  SkDQuad subDivide(double t1, double t2) const noexcept;
-  void subDivide(double t1, double t2, SkDQuad* quad) const noexcept {
-    *quad = this->subDivide(t1, t2);
-  }
+  SkDPoint ptAtT(double t) const;
+  static int RootsReal(double A, double B, double C, double t[2]);
+  static int RootsValidT(const double A, const double B, const double C, double s[2]);
+  static void SetABC(const double* quad, double* a, double* b, double* c);
+  SkDQuad subDivide(double t1, double t2) const;
+  void subDivide(double t1, double t2, SkDQuad* quad) const { *quad = this->subDivide(t1, t2); }
 
-  static SkDQuad SubDivide(const SkPoint a[kPointCount], double t1, double t2) noexcept {
+  static SkDQuad SubDivide(const SkPoint a[kPointCount], double t1, double t2) {
     SkDQuad quad;
     quad.set(a);
     return quad.subDivide(t1, t2);
@@ -132,7 +130,6 @@ struct SkDQuad {
 class SkTQuad : public SkTCurve {
  public:
   SkDQuad fQuad;
-
   SkTQuad() noexcept = default;
 
   SkTQuad(const SkDQuad& q) noexcept : fQuad(q) {}
@@ -142,18 +139,18 @@ class SkTQuad : public SkTCurve {
   const SkDPoint& operator[](int n) const noexcept override { return fQuad[n]; }
   SkDPoint& operator[](int n) noexcept override { return fQuad[n]; }
 
-  bool collapsed() const noexcept override { return fQuad.collapsed(); }
+  bool collapsed() const override { return fQuad.collapsed(); }
   bool controlsInside() const noexcept override { return fQuad.controlsInside(); }
-  void debugInit() noexcept override { return fQuad.debugInit(); }
+  void debugInit() override { return fQuad.debugInit(); }
 #if DEBUG_T_SECT
   void dumpID(int id) const override { return fQuad.dumpID(id); }
 #endif
-  SkDVector dxdyAtT(double t) const noexcept override { return fQuad.dxdyAtT(t); }
+  SkDVector dxdyAtT(double t) const override { return fQuad.dxdyAtT(t); }
 #ifdef SK_DEBUG
   SkOpGlobalState* globalState() const override { return fQuad.globalState(); }
 #endif
 
-  bool hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept override {
+  bool hullIntersects(const SkDQuad& quad, bool* isLinear) const override {
     return quad.hullIntersects(fQuad, isLinear);
   }
 
@@ -170,16 +167,16 @@ class SkTQuad : public SkTCurve {
 
   int maxIntersections() const noexcept override { return SkDQuad::kMaxIntersections; }
 
-  void otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept override {
+  void otherPts(int oddMan, const SkDPoint* endPt[2]) const override {
     fQuad.otherPts(oddMan, endPt);
   }
 
   int pointCount() const noexcept override { return SkDQuad::kPointCount; }
   int pointLast() const noexcept override { return SkDQuad::kPointLast; }
-  SkDPoint ptAtT(double t) const noexcept override { return fQuad.ptAtT(t); }
+  SkDPoint ptAtT(double t) const override { return fQuad.ptAtT(t); }
   void setBounds(SkDRect*) const override;
 
-  void subDivide(double t1, double t2, SkTCurve* curve) const noexcept override {
+  void subDivide(double t1, double t2, SkTCurve* curve) const override {
     ((SkTQuad*)curve)->fQuad = fQuad.subDivide(t1, t2);
   }
 };

@@ -79,12 +79,12 @@ class LineCubicIntersections {
  public:
   enum PinTPoint { kPointUninitialized, kPointInitialized };
 
-  LineCubicIntersections(const SkDCubic& c, const SkDLine& l, SkIntersections* i) noexcept
+  LineCubicIntersections(const SkDCubic& c, const SkDLine& l, SkIntersections* i)
       : fCubic(c), fLine(l), fIntersections(i), fAllowNear(true) {
     i->setMax(4);
   }
 
-  void allowNear(bool allow) noexcept { fAllowNear = allow; }
+  void allowNear(bool allow) { fAllowNear = allow; }
 
   void checkCoincident() {
     int last = fIntersections->used() - 1;
@@ -194,7 +194,7 @@ class LineCubicIntersections {
     return fIntersections->used();
   }
 
-  bool uniqueAnswer(double cubicT, const SkDPoint& pt) noexcept {
+  bool uniqueAnswer(double cubicT, const SkDPoint& pt) {
     for (int inner = 0; inner < fIntersections->used(); ++inner) {
       if (fIntersections->pt(inner) != pt) {
         continue;
@@ -352,7 +352,7 @@ class LineCubicIntersections {
     this->addLineNearEndPoints();
   }
 
-  double findLineT(double t) noexcept {
+  double findLineT(double t) {
     SkDPoint xy = fCubic.ptAtT(t);
     double dx = fLine[1].fX - fLine[0].fX;
     double dy = fLine[1].fY - fLine[0].fY;

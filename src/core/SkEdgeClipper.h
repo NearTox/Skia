@@ -9,6 +9,7 @@
 #define SkEdgeClipper_DEFINED
 
 #include "include/core/SkPath.h"
+#include "src/core/SkPathView.h"
 
 /** This is basically an iterator. It is initialized with an edge and a clip,
     and then next() is called until it returns kDone_Verb.
@@ -17,7 +18,7 @@ class SkEdgeClipper {
  public:
   SkEdgeClipper(bool canCullToTheRight) noexcept : fCanCullToTheRight(canCullToTheRight) {}
 
-  bool clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) noexcept;
+  bool clipLine(SkPoint p0, SkPoint p1, const SkRect& clip);
   bool clipQuad(const SkPoint pts[3], const SkRect& clip) noexcept;
   bool clipCubic(const SkPoint pts[4], const SkRect& clip);
 
@@ -30,7 +31,7 @@ class SkEdgeClipper {
    *  consume proc.
    */
   static void ClipPath(
-      const SkPath& path, const SkRect& clip, bool canCullToTheRight,
+      const SkPathView& path, const SkRect& clip, bool canCullToTheRight,
       void (*consume)(SkEdgeClipper*, bool newCtr, void* ctx), void* ctx);
 
  private:

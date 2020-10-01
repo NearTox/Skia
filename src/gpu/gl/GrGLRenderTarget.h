@@ -41,11 +41,11 @@ class GrGLRenderTarget : public GrRenderTarget {
   // FBO ID that has texture ID attached.
   GrGLuint textureFBOID() const noexcept { return fTexFBOID; }
 
-  GrBackendRenderTarget getBackendRenderTarget() const noexcept override;
+  GrBackendRenderTarget getBackendRenderTarget() const override;
 
   GrBackendFormat backendFormat() const noexcept override;
 
-  bool canAttemptStencilAttachment() const noexcept override;
+  bool canAttemptStencilAttachment() const override;
 
   // GrGLRenderTarget overrides dumpMemoryStatistics so it can log its texture and renderbuffer
   // components seperately.
@@ -57,7 +57,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   // Constructor for subclasses.
   GrGLRenderTarget(GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&);
 
-  void init(GrGLFormat, const IDs&) noexcept;
+  void init(GrGLFormat, const IDs&);
 
   void onAbandon() override;
   void onRelease() override;
@@ -69,16 +69,16 @@ class GrGLRenderTarget : public GrRenderTarget {
   GrGLRenderTarget(
       GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&, GrGLStencilAttachment*);
 
-  void setFlags(const GrGLCaps&, const IDs&) noexcept;
+  void setFlags(const GrGLCaps&, const IDs&);
 
-  GrGLGpu* getGLGpu() const noexcept;
+  GrGLGpu* getGLGpu() const;
   bool completeStencilAttachment() override;
 
-  size_t onGpuMemorySize() const noexcept override;
+  size_t onGpuMemorySize() const override;
 
-  int msaaSamples() const noexcept;
+  int msaaSamples() const;
   // The number total number of samples, including both MSAA and resolve texture samples.
-  int totalSamples() const noexcept;
+  int totalSamples() const;
 
   GrGLuint fRTFBOID;
   GrGLuint fTexFBOID;

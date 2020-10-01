@@ -19,7 +19,7 @@ class GrRectanizerSkyline final : public GrRectanizer {
  public:
   GrRectanizerSkyline(int w, int h) noexcept : INHERITED(w, h) { this->reset(); }
 
-  ~GrRectanizerSkyline() final = default;
+  ~GrRectanizerSkyline() final {}
 
   void reset() noexcept final {
     fAreaSoFar = 0;

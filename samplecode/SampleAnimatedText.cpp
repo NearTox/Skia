@@ -17,7 +17,7 @@
 #include "src/utils/SkUTF.h"
 
 #if SK_SUPPORT_GPU
-#  include "include/gpu/GrContext.h"
+#  include "include/gpu/GrDirectContext.h"
 #  include "src/gpu/GrContextPriv.h"
 #endif
 
@@ -69,10 +69,10 @@ class AnimatedTextView : public Sample {
     canvas->save();
 
 #if SK_SUPPORT_GPU
-    GrContext* grContext = canvas->getGrContext();
-    if (grContext) {
+    auto direct = GrAsDirectContext(canvas->recordingContext());
+    if (direct) {
       sk_sp<SkImage> image =
-          grContext->priv().testingOnly_getFontAtlasImage(GrMaskFormat::kA8_GrMaskFormat);
+          direct->priv().testingOnly_getFontAtlasImage(GrMaskFormat::kA8_GrMaskFormat);
       canvas->drawImageRect(image, SkRect::MakeXYWH(512.0f, 10.0f, 512.0f, 512.0f), &paint);
     }
 #endif

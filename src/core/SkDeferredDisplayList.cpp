@@ -43,17 +43,17 @@ SkDeferredDisplayList::~SkDeferredDisplayList() {
 #if SK_SUPPORT_GPU
 
 SkDeferredDisplayList::ProgramIterator::ProgramIterator(
-    GrContext* context, SkDeferredDisplayList* ddl)
-    : fContext(context), fProgramData(ddl->programData()), fIndex(0) {}
+    GrDirectContext* dContext, SkDeferredDisplayList* ddl)
+    : fDContext(dContext), fProgramData(ddl->programData()), fIndex(0) {}
 
 SkDeferredDisplayList::ProgramIterator::~ProgramIterator() = default;
 
 bool SkDeferredDisplayList::ProgramIterator::compile() {
-  if (!fContext || fIndex < 0 || fIndex >= (int)fProgramData.size()) {
+  if (!fDContext || fIndex < 0 || fIndex >= (int)fProgramData.size()) {
     return false;
   }
 
-  return fContext->priv().compile(fProgramData[fIndex].desc(), fProgramData[fIndex].info());
+  return fDContext->priv().compile(fProgramData[fIndex].desc(), fProgramData[fIndex].info());
 }
 
 bool SkDeferredDisplayList::ProgramIterator::done() const {

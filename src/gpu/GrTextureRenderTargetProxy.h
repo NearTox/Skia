@@ -29,26 +29,26 @@ class GrTextureRenderTargetProxy : public GrRenderTargetProxy, public GrTextureP
 
   // Deferred version
   GrTextureRenderTargetProxy(
-      const GrCaps&, const GrBackendFormat&, SkISize, int sampleCnt, GrMipMapped, GrMipMapsStatus,
+      const GrCaps&, const GrBackendFormat&, SkISize, int sampleCnt, GrMipmapped, GrMipmapStatus,
       SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags, UseAllocator,
       GrDDLProvider creatingProvider);
 
   // Lazy-callback version
   GrTextureRenderTargetProxy(
       const GrCaps&, LazyInstantiateCallback&&, const GrBackendFormat&, SkISize, int sampleCnt,
-      GrMipMapped, GrMipMapsStatus, SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags,
+      GrMipmapped, GrMipmapStatus, SkBackingFit, SkBudgeted, GrProtected, GrInternalSurfaceFlags,
       UseAllocator, GrDDLProvider creatingProvider);
 
   // Wrapped version
   GrTextureRenderTargetProxy(sk_sp<GrSurface>, UseAllocator, GrDDLProvider creatingProvider);
 
-  void initSurfaceFlags(const GrCaps&) noexcept;
+  void initSurfaceFlags(const GrCaps&);
 
   bool instantiate(GrResourceProvider*) override;
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
-  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const noexcept override;
-  LazySurfaceDesc callbackDesc() const noexcept override;
+  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
+  LazySurfaceDesc callbackDesc() const override;
   SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
 };
 

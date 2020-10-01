@@ -12,7 +12,7 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkStrokeRec.h"
 #include "include/core/SkTypes.h"
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "include/private/SkColorData.h"
 #include "include/private/SkTArray.h"
 #include "include/private/SkTDArray.h"
@@ -92,7 +92,7 @@ class GrOpsTask : public GrRenderTask {
       GrDrawingManager* drawingMgr, std::unique_ptr<GrOp> op,
       GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
     auto addDependency = [drawingMgr, textureResolveManager, &caps, this](
-                             GrSurfaceProxy* p, GrMipMapped mipmapped) {
+                             GrSurfaceProxy* p, GrMipmapped mipmapped) {
       this->addDependency(drawingMgr, p, mipmapped, textureResolveManager, caps);
     };
 
@@ -101,20 +101,13 @@ class GrOpsTask : public GrRenderTask {
     this->recordOp(std::move(op), GrProcessorSet::EmptySetAnalysis(), nullptr, nullptr, caps);
   }
 
-  void addWaitOp(
-      GrDrawingManager* drawingMgr, std::unique_ptr<GrOp> op,
-      GrTextureResolveManager textureResolveManager, const GrCaps& caps) {
-    fHasWaitOp = true;
-    this->addOp(drawingMgr, std::move(op), textureResolveManager, caps);
-  }
-
   void addDrawOp(
       GrDrawingManager* drawingMgr, std::unique_ptr<GrDrawOp> op,
       const GrProcessorSet::Analysis& processorAnalysis, GrAppliedClip&& clip,
       const DstProxyView& dstProxyView, GrTextureResolveManager textureResolveManager,
       const GrCaps& caps) {
     auto addDependency = [drawingMgr, textureResolveManager, &caps, this](
-                             GrSurfaceProxy* p, GrMipMapped mipmapped) {
+                             GrSurfaceProxy* p, GrMipmapped mipmapped) {
       this->addSampledTexture(p);
       this->addDependency(drawingMgr, p, mipmapped, textureResolveManager, caps);
     };
@@ -123,8 +116,15 @@ class GrOpsTask : public GrRenderTask {
     clip.visitProxies(addDependency);
     if (dstProxyView.proxy()) {
       this->addSampledTexture(dstProxyView.proxy());
-      addDependency(dstProxyView.proxy(), GrMipMapped::kNo);
+      addDependency(dstProxyView.proxy(), GrMipmapped::kNo);
+      if (this->target(0).asTextureProxy() == dstProxyView.proxy()) {
+        // Since we are sampling and drawing to the same surface we will need to use
+        // texture barriers.
+        fUsesXferBarriers |= true;
+      }
     }
+
+    fUsesXferBarriers |= processorAnalysis.usesNonCoherentHWBlending();
 
     this->recordOp(
         std::move(op), processorAnalysis, clip.doesClip() ? &clip : nullptr, &dstProxyView, caps);
@@ -133,13 +133,13 @@ class GrOpsTask : public GrRenderTask {
   void discard() noexcept;
 
 #ifdef SK_DEBUG
-  void dump(bool printDependencies) const override;
-  const char* name() const noexcept final { return "Ops"; }
   int numClips() const override { return fNumClips; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;
 #endif
 
 #if GR_TEST_UTILS
+  void dump(bool printDependencies) const override;
+  const char* name() const final { return "Ops"; }
   int numOpChains() const { return fOpChains.count(); }
   const GrOp* getChain(int index) const { return fOpChains[index].head(); }
 #endif
@@ -154,7 +154,7 @@ class GrOpsTask : public GrRenderTask {
     return fOpChains.empty() && GrLoadOp::kLoad == fColorLoadOp;
   }
 
-  void deleteOps();
+  void deleteOps() noexcept;
 
   enum class StencilContent {
     kDontCare,
@@ -193,20 +193,22 @@ class GrOpsTask : public GrRenderTask {
   // Perform book-keeping for a fullscreen clear, regardless of how the clear is implemented later
   // (i.e. setColorLoadOp(), adding a ClearOp, or adding a GrFillRectOp that covers the device).
   // Returns true if the clear can be converted into a load op (barring device caps).
-  bool resetForFullscreenClear(CanDiscardPreviousOps);
+  bool resetForFullscreenClear(CanDiscardPreviousOps) noexcept;
 
   class OpChain {
    public:
-    OpChain(const OpChain&) = delete;
-    OpChain& operator=(const OpChain&) = delete;
     OpChain(
         std::unique_ptr<GrOp>, GrProcessorSet::Analysis, GrAppliedClip*,
         const DstProxyView*) noexcept;
-
     ~OpChain() {
       // The ops are stored in a GrMemoryPool and must be explicitly deleted via the pool.
       SkASSERT(fList.empty());
     }
+
+    OpChain(const OpChain&) = delete;
+    OpChain& operator=(const OpChain&) = delete;
+    OpChain(OpChain&&) noexcept = default;
+    OpChain& operator=(OpChain&&) noexcept = default;
 
     void visitProxies(const GrOp::VisitProxyFunc&) const;
 
@@ -217,7 +219,7 @@ class GrOpsTask : public GrRenderTask {
     const SkRect& bounds() const noexcept { return fBounds; }
 
     // Deletes all the ops in the chain via the pool.
-    void deleteOps(GrOpMemoryPool* pool);
+    void deleteOps(GrOpMemoryPool* pool) noexcept;
 
     // Attempts to move the ops from the passed chain to this chain at the head. Also attempts
     // to merge ops between the chains. Upon success the passed chain is empty.
@@ -237,7 +239,7 @@ class GrOpsTask : public GrRenderTask {
    private:
     class List {
      public:
-      List() noexcept = default;
+      constexpr List() noexcept = default;
       List(std::unique_ptr<GrOp>) noexcept;
       List(List&&) noexcept;
       List& operator=(List&& that) noexcept;
@@ -290,6 +292,7 @@ class GrOpsTask : public GrRenderTask {
 
   ExpectedOutcome onMakeClosed(const GrCaps& caps, SkIRect* targetUpdateBounds) override;
 
+  friend class OpsTaskTestingAccess;
   friend class GrRenderTargetContextPriv;  // for stencil clip state. TODO: this is invasive
 
   // The RTC and OpsTask have to work together to handle buffer clears. In most cases, buffer
@@ -313,17 +316,16 @@ class GrOpsTask : public GrRenderTask {
 
   uint32_t fLastClipStackGenID = SK_InvalidUniqueID;
   SkIRect fLastDevClipBounds;
-  int fLastClipNumAnalyticFPs;
+  int fLastClipNumAnalyticElements;
 
-  // We must track if we have a wait op so that we don't delete the op when we have a full clear.
-  bool fHasWaitOp = false;
+  bool fUsesXferBarriers = false;
 
   // For ops/opsTask we have mean: 5 stdDev: 28
-  SkSTArray<25, OpChain, true> fOpChains;
+  SkSTArray<25, OpChain> fOpChains;
 
   // MDB TODO: 4096 for the first allocation of the clip space will be huge overkill.
   // Gather statistics to determine the correct size.
-  SkArenaAlloc fClipAllocator{4096};
+  SkArenaAllocWithReset fClipAllocator{4096};
   SkDEBUGCODE(int fNumClips);
 
   // TODO: We could look into this being a set if we find we're adding a lot of duplicates that

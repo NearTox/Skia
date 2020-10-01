@@ -8,7 +8,6 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
 #include "include/gpu/mtl/GrMtlTypes.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
@@ -42,7 +41,7 @@ sk_sp<SkSurface> SkSurface::MakeFromCAMetalLayer(
   SkISize dims = {(int)metalLayer.drawableSize.width, (int)metalLayer.drawableSize.height};
 
   GrProxyProvider::TextureInfo texInfo;
-  texInfo.fMipMapped = GrMipMapped::kNo;
+  texInfo.fMipmapped = GrMipmapped::kNo;
   texInfo.fTextureType = GrTextureType::k2D;
 
   sk_sp<GrRenderTargetProxy> proxy = proxyProvider->createLazyRenderTargetProxy(
@@ -71,7 +70,7 @@ sk_sp<SkSurface> SkSurface::MakeFromCAMetalLayer(
       backendFormat, dims, sampleCnt,
       sampleCnt > 1 ? GrInternalSurfaceFlags::kRequiresManualMSAAResolve
                     : GrInternalSurfaceFlags::kNone,
-      metalLayer.framebufferOnly ? nullptr : &texInfo, GrMipMapsStatus::kNotAllocated,
+      metalLayer.framebufferOnly ? nullptr : &texInfo, GrMipmapStatus::kNotAllocated,
       SkBackingFit::kExact, SkBudgeted::kYes, GrProtected::kNo, false,
       GrSurfaceProxy::UseAllocator::kYes);
 
@@ -102,7 +101,7 @@ sk_sp<SkSurface> SkSurface::MakeFromMTKView(
   SkISize dims = {(int)mtkView.drawableSize.width, (int)mtkView.drawableSize.height};
 
   GrProxyProvider::TextureInfo texInfo;
-  texInfo.fMipMapped = GrMipMapped::kNo;
+  texInfo.fMipmapped = GrMipmapped::kNo;
   texInfo.fTextureType = GrTextureType::k2D;
 
   sk_sp<GrRenderTargetProxy> proxy = proxyProvider->createLazyRenderTargetProxy(
@@ -129,7 +128,7 @@ sk_sp<SkSurface> SkSurface::MakeFromMTKView(
       backendFormat, dims, sampleCnt,
       sampleCnt > 1 ? GrInternalSurfaceFlags::kRequiresManualMSAAResolve
                     : GrInternalSurfaceFlags::kNone,
-      mtkView.framebufferOnly ? nullptr : &texInfo, GrMipMapsStatus::kNotAllocated,
+      mtkView.framebufferOnly ? nullptr : &texInfo, GrMipmapStatus::kNotAllocated,
       SkBackingFit::kExact, SkBudgeted::kYes, GrProtected::kNo, false,
       GrSurfaceProxy::UseAllocator::kYes);
 

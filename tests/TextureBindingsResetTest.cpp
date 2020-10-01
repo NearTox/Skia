@@ -6,6 +6,7 @@
  */
 
 #include "include/core/SkSurface.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/gl/GrGLDefines.h"
 #include "src/gpu/gl/GrGLGpu.h"
@@ -17,9 +18,9 @@
 DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(TextureBindingsResetTest, reporter, ctxInfo) {
 #define GL(F) GR_GL_CALL(ctxInfo.glContext()->gl(), F)
 
-  GrContext* context = ctxInfo.grContext();
-  GrGpu* gpu = context->priv().getGpu();
-  GrGLGpu* glGpu = static_cast<GrGLGpu*>(context->priv().getGpu());
+  auto dContext = ctxInfo.directContext();
+  GrGpu* gpu = dContext->priv().getGpu();
+  GrGLGpu* glGpu = static_cast<GrGLGpu*>(dContext->priv().getGpu());
 
   struct Target {
     GrGLenum fName;
@@ -69,25 +70,25 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(TextureBindingsResetTest, reporter, ctxInf
   };
 
   // Initialize texture unit/target combo bindings to 0.
-  context->flushAndSubmit();
+  dContext->flushAndSubmit();
   resetBindings();
-  context->resetContext();
+  dContext->resetContext();
 
   // Test creating a texture and then resetting bindings.
   static constexpr SkISize kDims = {10, 10};
   auto format = gpu->caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
   auto tex = gpu->createTexture(
-      kDims, format, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBudgeted::kNo, GrProtected::kNo);
+      kDims, format, GrRenderable::kNo, 1, GrMipmapped::kNo, SkBudgeted::kNo, GrProtected::kNo);
   REPORTER_ASSERT(reporter, tex);
-  context->resetGLTextureBindings();
+  dContext->resetGLTextureBindings();
   checkBindings();
   resetBindings();
-  context->resetContext();
+  dContext->resetContext();
 
   // Test drawing and then resetting bindings. This should force a MIP regeneration if MIP
   // maps are supported as well.
   auto info = SkImageInfo::Make(10, 10, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-  auto surf = SkSurface::MakeRenderTarget(context, SkBudgeted::kYes, info, 1, nullptr);
+  auto surf = SkSurface::MakeRenderTarget(dContext, SkBudgeted::kYes, info, 1, nullptr);
   surf->getCanvas()->clear(0x80FF0000);
   auto img = surf->makeImageSnapshot();
   surf->getCanvas()->clear(SK_ColorBLUE);
@@ -98,14 +99,14 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(TextureBindingsResetTest, reporter, ctxInf
   surf->getCanvas()->drawImage(img, 0, 0, &paint);
   surf->getCanvas()->restore();
   surf->flushAndSubmit();
-  context->resetGLTextureBindings();
+  dContext->resetGLTextureBindings();
   checkBindings();
   resetBindings();
-  context->resetContext();
+  dContext->resetContext();
 
   if (supportExternal) {
-    GrBackendTexture texture2D = context->createBackendTexture(
-        10, 10, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipMapped::kNo, GrRenderable::kNo,
+    GrBackendTexture texture2D = dContext->createBackendTexture(
+        10, 10, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipmapped::kNo, GrRenderable::kNo,
         GrProtected::kNo);
     GrGLTextureInfo info2D;
     REPORTER_ASSERT(reporter, texture2D.getGLTextureInfo(&info2D));
@@ -116,42 +117,42 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(TextureBindingsResetTest, reporter, ctxInf
     infoExternal.fTarget = GR_GL_TEXTURE_EXTERNAL;
     infoExternal.fFormat = info2D.fFormat;
     REPORTER_ASSERT(reporter, infoExternal.fID);
-    GrBackendTexture backendTexture(10, 10, GrMipMapped::kNo, infoExternal);
+    GrBackendTexture backendTexture(10, 10, GrMipmapped::kNo, infoExternal);
     // Above texture creation will have messed with GL state and bindings.
     resetBindings();
-    context->resetContext();
+    dContext->resetContext();
     img = SkImage::MakeFromTexture(
-        context, backendTexture, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
+        dContext, backendTexture, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
         kPremul_SkAlphaType, nullptr);
     REPORTER_ASSERT(reporter, img);
     surf->getCanvas()->drawImage(img, 0, 0);
     img.reset();
     surf->flushAndSubmit();
-    context->resetGLTextureBindings();
+    dContext->resetGLTextureBindings();
     checkBindings();
     resetBindings();
     GL(DeleteTextures(1, &infoExternal.fID));
     ctxInfo.glContext()->destroyEGLImage(eglImage);
-    context->deleteBackendTexture(texture2D);
-    context->resetContext();
+    dContext->deleteBackendTexture(texture2D);
+    dContext->resetContext();
   }
 
   if (supportRectangle) {
     auto format = GrBackendFormat::MakeGL(GR_GL_RGBA8, GR_GL_TEXTURE_RECTANGLE);
     GrBackendTexture rectangleTexture =
-        context->createBackendTexture(10, 10, format, GrMipMapped::kNo, GrRenderable::kNo);
+        dContext->createBackendTexture(10, 10, format, GrMipmapped::kNo, GrRenderable::kNo);
     if (rectangleTexture.isValid()) {
       img = SkImage::MakeFromTexture(
-          context, rectangleTexture, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
+          dContext, rectangleTexture, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
           kPremul_SkAlphaType, nullptr);
       REPORTER_ASSERT(reporter, img);
       surf->getCanvas()->drawImage(img, 0, 0);
       img.reset();
       surf->flushAndSubmit();
-      context->resetGLTextureBindings();
+      dContext->resetGLTextureBindings();
       checkBindings();
       resetBindings();
-      context->deleteBackendTexture(rectangleTexture);
+      dContext->deleteBackendTexture(rectangleTexture);
     }
   }
 

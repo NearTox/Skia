@@ -44,19 +44,20 @@ int GrMockGpu::NextExternalRenderTargetID() noexcept {
 }
 
 sk_sp<GrGpu> GrMockGpu::Make(
-    const GrMockOptions* mockOptions, const GrContextOptions& contextOptions, GrContext* context) {
+    const GrMockOptions* mockOptions, const GrContextOptions& contextOptions,
+    GrDirectContext* direct) {
   static const GrMockOptions kDefaultOptions = GrMockOptions();
   if (!mockOptions) {
     mockOptions = &kDefaultOptions;
   }
-  return sk_sp<GrGpu>(new GrMockGpu(context, *mockOptions, contextOptions));
+  return sk_sp<GrGpu>(new GrMockGpu(direct, *mockOptions, contextOptions));
 }
 
 GrOpsRenderPass* GrMockGpu::getOpsRenderPass(
     GrRenderTarget* rt, GrStencilAttachment*, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-    const SkTArray<GrSurfaceProxy*, true>& sampledProxies) {
+    const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) {
   return new GrMockOpsRenderPass(this, rt, origin, colorInfo);
 }
 
@@ -68,8 +69,8 @@ void GrMockGpu::submit(GrOpsRenderPass* renderPass) {
 }
 
 GrMockGpu::GrMockGpu(
-    GrContext* context, const GrMockOptions& options, const GrContextOptions& contextOptions)
-    : INHERITED(context), fMockOptions(options) {
+    GrDirectContext* direct, const GrMockOptions& options, const GrContextOptions& contextOptions)
+    : INHERITED(direct), fMockOptions(options) {
   fCaps.reset(new GrMockCaps(contextOptions, options));
 }
 
@@ -142,22 +143,22 @@ sk_sp<GrTexture> GrMockGpu::onCreateTexture(
   GrColorType ct = format.asMockColorType();
   SkASSERT(ct != GrColorType::kUnknown);
 
-  GrMipMapsStatus mipMapsStatus =
-      mipLevelCount > 1 ? GrMipMapsStatus::kDirty : GrMipMapsStatus::kNotAllocated;
+  GrMipmapStatus mipmapStatus =
+      mipLevelCount > 1 ? GrMipmapStatus::kDirty : GrMipmapStatus::kNotAllocated;
   GrMockTextureInfo texInfo(ct, SkImage::CompressionType::kNone, NextInternalTextureID());
   if (renderable == GrRenderable::kYes) {
     GrMockRenderTargetInfo rtInfo(ct, NextInternalRenderTargetID());
     return sk_sp<GrTexture>(new GrMockTextureRenderTarget(
-        this, budgeted, dimensions, renderTargetSampleCnt, isProtected, mipMapsStatus, texInfo,
+        this, budgeted, dimensions, renderTargetSampleCnt, isProtected, mipmapStatus, texInfo,
         rtInfo));
   }
   return sk_sp<GrTexture>(
-      new GrMockTexture(this, budgeted, dimensions, isProtected, mipMapsStatus, texInfo));
+      new GrMockTexture(this, budgeted, dimensions, isProtected, mipmapStatus, texInfo));
 }
 
 // TODO: why no 'isProtected' ?!
 sk_sp<GrTexture> GrMockGpu::onCreateCompressedTexture(
-    SkISize dimensions, const GrBackendFormat& format, SkBudgeted budgeted, GrMipMapped mipMapped,
+    SkISize dimensions, const GrBackendFormat& format, SkBudgeted budgeted, GrMipmapped mipMapped,
     GrProtected isProtected, const void* data, size_t dataSize) {
   if (fMockOptions.fFailTextureAllocations) {
     return nullptr;
@@ -169,13 +170,13 @@ sk_sp<GrTexture> GrMockGpu::onCreateCompressedTexture(
   SkASSERT(compression != SkImage::CompressionType::kNone);
 #endif
 
-  GrMipMapsStatus mipMapsStatus =
-      (mipMapped == GrMipMapped::kYes) ? GrMipMapsStatus::kValid : GrMipMapsStatus::kNotAllocated;
+  GrMipmapStatus mipmapStatus =
+      (mipMapped == GrMipmapped::kYes) ? GrMipmapStatus::kValid : GrMipmapStatus::kNotAllocated;
   GrMockTextureInfo texInfo(
       GrColorType::kUnknown, format.asMockCompressionType(), NextInternalTextureID());
 
   return sk_sp<GrTexture>(
-      new GrMockTexture(this, budgeted, dimensions, isProtected, mipMapsStatus, texInfo));
+      new GrMockTexture(this, budgeted, dimensions, isProtected, mipmapStatus, texInfo));
 }
 
 sk_sp<GrTexture> GrMockGpu::onWrapBackendTexture(
@@ -189,11 +190,11 @@ sk_sp<GrTexture> GrMockGpu::onWrapBackendTexture(
     return nullptr;
   }
 
-  GrMipMapsStatus mipMapsStatus =
-      tex.hasMipMaps() ? GrMipMapsStatus::kValid : GrMipMapsStatus::kNotAllocated;
+  GrMipmapStatus mipmapStatus =
+      tex.hasMipmaps() ? GrMipmapStatus::kValid : GrMipmapStatus::kNotAllocated;
   auto isProtected = GrProtected(tex.isProtected());
   return sk_sp<GrTexture>(new GrMockTexture(
-      this, tex.dimensions(), isProtected, mipMapsStatus, texInfo, wrapType, ioType));
+      this, tex.dimensions(), isProtected, mipmapStatus, texInfo, wrapType, ioType));
 }
 
 sk_sp<GrTexture> GrMockGpu::onWrapCompressedBackendTexture(
@@ -208,15 +209,15 @@ sk_sp<GrTexture> GrMockGpu::onWrapRenderableBackendTexture(
   SkAssertResult(tex.getMockTextureInfo(&texInfo));
   SkASSERT(texInfo.compressionType() == SkImage::CompressionType::kNone);
 
-  GrMipMapsStatus mipMapsStatus =
-      tex.hasMipMaps() ? GrMipMapsStatus::kValid : GrMipMapsStatus::kNotAllocated;
+  GrMipmapStatus mipmapStatus =
+      tex.hasMipmaps() ? GrMipmapStatus::kValid : GrMipmapStatus::kNotAllocated;
 
   // The client gave us the texture ID but we supply the render target ID.
   GrMockRenderTargetInfo rtInfo(texInfo.colorType(), NextInternalRenderTargetID());
 
   auto isProtected = GrProtected(tex.isProtected());
   return sk_sp<GrTexture>(new GrMockTextureRenderTarget(
-      this, tex.dimensions(), sampleCnt, isProtected, mipMapsStatus, texInfo, rtInfo, cacheable));
+      this, tex.dimensions(), sampleCnt, isProtected, mipmapStatus, texInfo, rtInfo, cacheable));
 }
 
 sk_sp<GrRenderTarget> GrMockGpu::onWrapBackendRenderTarget(const GrBackendRenderTarget& rt) {
@@ -256,7 +257,7 @@ GrStencilAttachment* GrMockGpu::createStencilAttachmentForRenderTarget(
 }
 
 GrBackendTexture GrMockGpu::onCreateBackendTexture(
-    SkISize dimensions, const GrBackendFormat& format, GrRenderable, GrMipMapped mipMapped,
+    SkISize dimensions, const GrBackendFormat& format, GrRenderable, GrMipmapped mipMapped,
     GrProtected) {
   SkImage::CompressionType compression = format.asMockCompressionType();
   if (compression != SkImage::CompressionType::kNone) {
@@ -275,8 +276,7 @@ GrBackendTexture GrMockGpu::onCreateBackendTexture(
 }
 
 GrBackendTexture GrMockGpu::onCreateCompressedBackendTexture(
-    SkISize dimensions, const GrBackendFormat& format, GrMipMapped mipMapped, GrProtected,
-    sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) {
+    SkISize dimensions, const GrBackendFormat& format, GrMipmapped mipMapped, GrProtected) {
   SkImage::CompressionType compression = format.asMockCompressionType();
   if (compression == SkImage::CompressionType::kNone) {
     return {};  // should go through onCreateBackendTexture

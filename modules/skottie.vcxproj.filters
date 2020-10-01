@@ -58,5 +58,8 @@
     <ClCompile Include="skottie\src\animator\TextKeyframeAnimator.cpp" />
     <ClCompile Include="skottie\src\animator\Vec2KeyframeAnimator.cpp" />
     <ClCompile Include="skottie\src\animator\VectorKeyframeAnimator.cpp" />
+    <ClCompile Include="skottie\src\layers\AudioLayer.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\OffsetPaths.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\PuckerBloat.cpp" />
   </ItemGroup>
 </Project>

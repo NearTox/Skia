@@ -53,7 +53,7 @@ class SkSafeMath {
   }
 
   template <typename T>
-  T castTo(size_t value) {
+  T castTo(size_t value) noexcept {
     if (!SkTFitsIn<T>(value)) {
       fOK = false;
     }

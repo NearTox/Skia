@@ -154,7 +154,7 @@ std::unique_ptr<SkCodec> SkCodec::MakeFromData(sk_sp<SkData> data, SkPngChunkRea
 
 SkCodec::SkCodec(
     SkEncodedInfo&& info, XformFormat srcFormat, std::unique_ptr<SkStream> stream,
-    SkEncodedOrigin origin) noexcept
+    SkEncodedOrigin origin)
     : fEncodedInfo(std::move(info)),
       fSrcXformFormat(srcFormat),
       fStream(std::move(stream)),
@@ -210,7 +210,7 @@ bool SkCodec::rewindIfNeeded() {
   return this->onRewind();
 }
 
-static SkIRect frame_rect_on_screen(SkIRect frameRect, const SkIRect& screenRect) noexcept {
+static SkIRect frame_rect_on_screen(SkIRect frameRect, const SkIRect& screenRect) {
   if (!frameRect.intersect(screenRect)) {
     return SkIRect::MakeEmpty();
   }
@@ -664,7 +664,7 @@ bool SkCodec::initializeColorXform(
   return true;
 }
 
-void SkCodec::applyColorXform(void* dst, const void* src, int count) const noexcept {
+void SkCodec::applyColorXform(void* dst, const void* src, int count) const {
   // It is okay for srcProfile to be null. This will use sRGB.
   const auto* srcProfile = fEncodedInfo.profile();
   SkAssertResult(skcms_Transform(
@@ -691,7 +691,7 @@ std::vector<SkCodec::FrameInfo> SkCodec::getFrameInfo() {
   return result;
 }
 
-const char* SkCodec::ResultToString(Result result) noexcept {
+const char* SkCodec::ResultToString(Result result) {
   switch (result) {
     case kSuccess: return "success";
     case kIncompleteInput: return "incomplete input";
@@ -707,11 +707,11 @@ const char* SkCodec::ResultToString(Result result) noexcept {
   }
 }
 
-static bool independent(const SkFrame& frame) noexcept {
+static bool independent(const SkFrame& frame) {
   return frame.getRequiredFrame() == SkCodec::kNoFrame;
 }
 
-static bool restore_bg(const SkFrame& frame) noexcept {
+static bool restore_bg(const SkFrame& frame) {
   return frame.getDisposalMethod() == SkCodecAnimation::DisposalMethod::kRestoreBGColor;
 }
 

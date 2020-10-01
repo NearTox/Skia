@@ -108,16 +108,13 @@ int main(int argc, char** argv) {
         // lazily allocate the surfaces
         if (!surf) {
             if (FLAGS_gpu) {
-                context = factory.getContextInfo(contextType).grContext();
-                surf = SkSurface::MakeRenderTarget(context,
-                                                   SkBudgeted::kNo,
-                                                   info,
-                                                   0,
-                                                   GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin,
-                                                   nullptr);
-                if (!surf) {
-                    context = nullptr;
-                }
+              context = factory.getContextInfo(contextType).directContext();
+              surf = SkSurface::MakeRenderTarget(
+                  context, SkBudgeted::kNo, info, 0, GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin,
+                  nullptr);
+              if (!surf) {
+                context = nullptr;
+              }
             }
             if (!surf) {
                 surf = SkSurface::MakeRaster(info);

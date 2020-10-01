@@ -17,7 +17,9 @@ namespace SkSL {
  * A 'break' statement.
  */
 struct BreakStatement : public Statement {
-  BreakStatement(int offset) : INHERITED(offset, kBreak_Kind) {}
+  static constexpr Kind kStatementKind = kBreak_Kind;
+
+  BreakStatement(int offset) : INHERITED(offset, kStatementKind) {}
 
   int nodeCount() const noexcept override { return 1; }
 

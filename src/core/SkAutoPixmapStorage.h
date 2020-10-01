@@ -30,7 +30,7 @@ class SkAutoPixmapStorage : public SkPixmap {
    *
    *  On failure, return false and reset() the pixmap to empty.
    */
-  bool tryAlloc(const SkImageInfo&) noexcept;
+  bool tryAlloc(const SkImageInfo&);
 
   /**
    *  Allocate memory for the pixels needed to match the specified Info and fill out the pixmap
@@ -45,7 +45,7 @@ class SkAutoPixmapStorage : public SkPixmap {
    * Gets the size and optionally the rowBytes that would be allocated by SkAutoPixmapStorage if
    * alloc/tryAlloc was called.
    */
-  static size_t AllocSize(const SkImageInfo& info, size_t* rowBytes) noexcept;
+  static size_t AllocSize(const SkImageInfo& info, size_t* rowBytes);
 
   /**
    * Returns a void* of the allocated pixel memory and resets the pixmap. If the storage hasn't

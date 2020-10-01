@@ -38,9 +38,9 @@ class SK_API SkNWayCanvas : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void didTranslate(SkScalar, SkScalar) override;
 
   void onDrawDRRect(const SkRRect&, const SkRRect&, const SkPaint&) override;
-  virtual void onDrawTextBlob(
+  void onDrawTextBlob(
       const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) override;
-  virtual void onDrawPatch(
+  void onDrawPatch(
       const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4], SkBlendMode,
       const SkPaint& paint) override;
 

@@ -13,11 +13,11 @@
 /**
  *  Return the integer square root of value, with a bias of bitBias
  */
-int32_t SkSqrtBits(int32_t value, int bitBias);
+int32_t SkSqrtBits(int32_t value, int bitBias) noexcept;
 
 /** Return the integer square root of n, treated as a SkFixed (16.16)
  */
-static inline int32_t SkSqrt32(int32_t n) { return SkSqrtBits(n, 15); }
+static inline int32_t SkSqrt32(int32_t n) noexcept { return SkSqrtBits(n, 15); }
 
 /**
  *  Returns (value < 0 ? 0 : value) efficiently (i.e. no compares or branches)
@@ -130,7 +130,7 @@ static inline uint32_t SkBSwap32(uint32_t v) noexcept { return __builtin_bswap32
 #endif
 
 //! Returns the number of leading zero bits (0...32)
-int SkCLZ_portable(uint32_t);
+int SkCLZ_portable(uint32_t) noexcept;
 
 #ifndef SkCLZ
 #  if defined(SK_BUILD_FOR_WIN)
@@ -159,7 +159,7 @@ static inline int SkCLZ(uint32_t mask) { return SkCLZ_portable(mask); }
 #endif
 
 //! Returns the number of trailing zero bits (0...32)
-int SkCTZ_portable(uint32_t);
+int SkCTZ_portable(uint32_t) noexcept;
 
 #ifndef SkCTZ
 #  if defined(SK_BUILD_FOR_WIN)

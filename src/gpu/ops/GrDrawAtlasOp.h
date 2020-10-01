@@ -20,6 +20,6 @@ namespace GrDrawAtlasOp {
 std::unique_ptr<GrDrawOp> Make(
     GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, GrAAType, int spriteCount,
     const SkRSXform* xforms, const SkRect* rects, const SkColor* colors);
-};
+}  // namespace GrDrawAtlasOp
 
 #endif

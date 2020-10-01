@@ -239,7 +239,7 @@ class RectsGM : public GM {
   }
 
   // position the current test on the canvas
-  static void position(SkCanvas* canvas, int testCount) {
+  static void Position(SkCanvas* canvas, int testCount) {
     canvas->translate(
         SK_Scalar1 * 100 * (testCount % 10) + SK_Scalar1 / 4,
         SK_Scalar1 * 100 * (testCount / 10) + 3 * SK_Scalar1 / 4);
@@ -253,7 +253,7 @@ class RectsGM : public GM {
     for (int i = 0; i < fPaints.count(); ++i) {
       for (int j = 0; j < fRects.count(); ++j, ++testCount) {
         canvas->save();
-        this->position(canvas, testCount);
+        Position(canvas, testCount);
         SkPaint p = fPaints[i];
         if (p.getColor() == kLooperColorSentinel) {
           p.setColor(SK_ColorWHITE);
@@ -273,7 +273,7 @@ class RectsGM : public GM {
     for (int i = 0; i < fMatrices.count(); ++i) {
       for (int j = 0; j < fRects.count(); ++j, ++testCount) {
         canvas->save();
-        this->position(canvas, testCount);
+        Position(canvas, testCount);
         canvas->concat(fMatrices[i]);
         canvas->drawRect(fRects[j], paint);
         canvas->restore();

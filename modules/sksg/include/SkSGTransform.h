@@ -27,12 +27,12 @@ class Transform : public Node {
   static sk_sp<Transform> MakeInverse(sk_sp<Transform> t);
 
  protected:
-  Transform() noexcept;
+  Transform();
 
-  virtual bool is44() const noexcept = 0;
+  virtual bool is44() const = 0;
 
-  virtual SkMatrix asMatrix() const noexcept = 0;
-  virtual SkM44 asM44() const noexcept = 0;
+  virtual SkMatrix asMatrix() const = 0;
+  virtual SkM44 asM44() const = 0;
 
  private:
   friend class TransformPriv;
@@ -64,16 +64,16 @@ class Matrix final : public Transform {
   SG_ATTRIBUTE(Matrix, T, fMatrix)
 
  protected:
-  explicit Matrix(const T& m) noexcept : fMatrix(m) {}
+  explicit Matrix(const T& m) : fMatrix(m) {}
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override {
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override {
     return SkRect::MakeEmpty();
   }
 
-  bool is44() const noexcept override { return std::is_same<T, SkM44>::value; }
+  bool is44() const override { return std::is_same<T, SkM44>::value; }
 
-  SkMatrix asMatrix() const noexcept override;
-  SkM44 asM44() const noexcept override;
+  SkMatrix asMatrix() const override;
+  SkM44 asM44() const override;
 
  private:
   T fMatrix;
@@ -98,11 +98,11 @@ class TransformEffect final : public EffectNode {
 
   ~TransformEffect() override;
 
-  const sk_sp<Transform>& getTransform() const noexcept { return fTransform; }
+  const sk_sp<Transform>& getTransform() const { return fTransform; }
 
  protected:
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 

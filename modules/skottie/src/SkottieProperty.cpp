@@ -14,7 +14,7 @@
 
 namespace skottie {
 
-bool TextPropertyValue::operator==(const TextPropertyValue& other) const {
+bool TextPropertyValue::operator==(const TextPropertyValue& other) const noexcept {
   return fTypeface == other.fTypeface && fText == other.fText && fTextSize == other.fTextSize &&
          fStrokeWidth == other.fStrokeWidth && fLineHeight == other.fLineHeight &&
          fHAlign == other.fHAlign && fVAlign == other.fVAlign && fResize == other.fResize &&
@@ -23,17 +23,17 @@ bool TextPropertyValue::operator==(const TextPropertyValue& other) const {
          fHasStroke == other.fHasStroke;
 }
 
-bool TextPropertyValue::operator!=(const TextPropertyValue& other) const {
+bool TextPropertyValue::operator!=(const TextPropertyValue& other) const noexcept {
   return !(*this == other);
 }
 
-bool TransformPropertyValue::operator==(const TransformPropertyValue& other) const {
+bool TransformPropertyValue::operator==(const TransformPropertyValue& other) const noexcept {
   return this->fAnchorPoint == other.fAnchorPoint && this->fPosition == other.fPosition &&
          this->fScale == other.fScale && this->fSkew == other.fSkew &&
          this->fSkewAxis == other.fSkewAxis;
 }
 
-bool TransformPropertyValue::operator!=(const TransformPropertyValue& other) const {
+bool TransformPropertyValue::operator!=(const TransformPropertyValue& other) const noexcept {
   return !(*this == other);
 }
 

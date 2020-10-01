@@ -201,7 +201,7 @@ class GrVkImage : SkNoncopyable {
   class BorrowedResource : public Resource {
    public:
     BorrowedResource(
-        const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling) noexcept
+        const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
         : Resource(gpu, image, alloc, tiling) {}
 
    private:

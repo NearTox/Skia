@@ -22,9 +22,9 @@ GrVkPipelineStateDataManager::GrVkPipelineStateDataManager(
         GrShaderVar::kNonArray == uniformInfo.fVariable.getArrayCount() ||
         uniformInfo.fVariable.getArrayCount() > 0);
     SkDEBUGCODE(uniform.fArrayCount = uniformInfo.fVariable.getArrayCount();
-                uniform.fType = uniformInfo.fVariable.getType();)
+                uniform.fType = uniformInfo.fVariable.getType());
 
-        uniform.fOffset = uniformInfo.fUBOffset;
+    uniform.fOffset = uniformInfo.fUBOffset;
     ++i;
   }
 }

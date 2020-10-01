@@ -15,6 +15,8 @@
  * removed before the gen ID/unique ID is invalidated.
  */
 
+SkIDChangeListener::SkIDChangeListener() : fShouldDeregister(false) {}
+
 SkIDChangeListener::~SkIDChangeListener() = default;
 
 using List = SkIDChangeListener::List;
@@ -38,7 +40,7 @@ void List::add(sk_sp<SkIDChangeListener> listener, bool singleThreaded) {
   }
   SkASSERT(!listener->shouldDeregister());
 
-  auto add = [&]() noexcept {
+  auto add = [&] {
     // Clean out any stale listeners before we append the new one.
     for (int i = 0; i < fListeners.count(); ++i) {
       if (fListeners[i]->shouldDeregister()) {

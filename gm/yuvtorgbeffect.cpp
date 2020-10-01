@@ -21,7 +21,6 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "include/core/SkYUVAIndex.h"
-#include "include/gpu/GrContext.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrContextPriv.h"
@@ -89,13 +88,13 @@ class YUVtoRGBEffect : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
+      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
       SkString* errorMsg) override {
     GrSurfaceProxyView views[3];
 
     for (int i = 0; i < 3; ++i) {
       GrBitmapTextureMaker maker(context, fBitmaps[i], GrImageTexGenPolicy::kDraw);
-      views[i] = maker.view(GrMipMapped::kNo);
+      views[i] = maker.view(GrMipmapped::kNo);
       if (!views[i]) {
         *errorMsg = "Failed to create proxy";
         return DrawResult::kFail;
@@ -125,7 +124,7 @@ class YUVtoRGBEffect : public GpuGM {
         if (fp) {
           GrPaint grPaint;
           grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-          grPaint.addColorFragmentProcessor(std::move(fp));
+          grPaint.setColorFragmentProcessor(std::move(fp));
           SkMatrix viewMatrix;
           viewMatrix.setTranslate(x, y);
           renderTargetContext->priv().testingOnly_addDrawOp(
@@ -199,13 +198,13 @@ class YUVNV12toRGBEffect : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
+      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
       SkString* errorMsg) override {
     GrSurfaceProxyView views[2];
 
     for (int i = 0; i < 2; ++i) {
       GrBitmapTextureMaker maker(context, fBitmaps[i], GrImageTexGenPolicy::kDraw);
-      views[i] = maker.view(GrMipMapped::kNo);
+      views[i] = maker.view(GrMipmapped::kNo);
       if (!views[i]) {
         *errorMsg = "Failed to create proxy";
         return DrawResult::kFail;
@@ -235,7 +234,7 @@ class YUVNV12toRGBEffect : public GpuGM {
       if (fp) {
         SkMatrix viewMatrix;
         viewMatrix.setTranslate(x, y);
-        grPaint.addColorFragmentProcessor(std::move(fp));
+        grPaint.setColorFragmentProcessor(std::move(fp));
         std::unique_ptr<GrDrawOp> op(
             GrFillRectOp::MakeNonAARect(context, std::move(grPaint), viewMatrix, renderRect));
         renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
@@ -278,16 +277,18 @@ class YUVtoRGBSubsetEffect : public GpuGM {
     SkImageInfo vinfo = SkImageInfo::MakeA8(VSIZE, VSIZE);
     fBitmaps[2].allocPixels(vinfo);
 
-    int innerY = 149;
+    unsigned char innerY[16] = {149, 160, 130, 105, 160, 130, 105, 149,
+                                130, 105, 149, 160, 105, 149, 160, 130};
     unsigned char innerU[4] = {43, 75, 145, 200};
     unsigned char innerV[4] = {88, 180, 200, 43};
     int outerYUV[] = {128, 128, 128};
     for (int i = 0; i < 3; ++i) {
       fBitmaps[i].eraseColor(SkColorSetARGB(outerYUV[i], 0, 0, 0));
     }
-    fBitmaps[0].eraseARGB(innerY, 0, 0, 0);
+    SkPixmap innerYPM(SkImageInfo::MakeA8(4, 4), innerY, 4);
     SkPixmap innerUPM(SkImageInfo::MakeA8(2, 2), innerU, 2);
     SkPixmap innerVPM(SkImageInfo::MakeA8(2, 2), innerV, 2);
+    fBitmaps[0].writePixels(innerYPM, 2, 2);
     fBitmaps[1].writePixels(innerUPM, 1, 1);
     fBitmaps[2].writePixels(innerVPM, 1, 1);
     for (auto& fBitmap : fBitmaps) {
@@ -296,13 +297,13 @@ class YUVtoRGBSubsetEffect : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
+      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
       SkString* errorMsg) override {
     GrSurfaceProxyView views[3];
 
     for (int i = 0; i < 3; ++i) {
       GrBitmapTextureMaker maker(context, fBitmaps[i], GrImageTexGenPolicy::kDraw);
-      views[i] = maker.view(GrMipMapped::kNo);
+      views[i] = maker.view(GrMipmapped::kNo);
       if (!views[i]) {
         *errorMsg = "Failed to create proxy";
         return DrawResult::kFail;
@@ -310,7 +311,7 @@ class YUVtoRGBSubsetEffect : public GpuGM {
     }
 
     static const GrSamplerState::Filter kFilters[] = {
-        GrSamplerState::Filter::kNearest, GrSamplerState::Filter::kBilerp};
+        GrSamplerState::Filter::kNearest, GrSamplerState::Filter::kLinear};
     static const SkRect kColorRect = SkRect::MakeLTRB(2.f, 2.f, 6.f, 6.f);
 
     SkYUVAIndex yuvaIndices[4] = {
@@ -344,7 +345,7 @@ class YUVtoRGBSubsetEffect : public GpuGM {
             views, yuvaIndices, kJPEG_SkYUVColorSpace, samplerState, caps, SkMatrix::I(), subset));
         if (fp) {
           GrPaint grPaint;
-          grPaint.addColorFragmentProcessor(std::move(fp));
+          grPaint.setColorFragmentProcessor(std::move(fp));
           renderTargetContext->drawRect(nullptr, std::move(grPaint), GrAA::kYes, ctm, rect);
         }
         x += rect.width() + kTestPad;

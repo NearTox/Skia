@@ -27,10 +27,10 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
 
   const char* name() const noexcept override { return "RRectShadow"; }
 
-  const Attribute& inPosition() const noexcept { return fInPosition; }
-  const Attribute& inColor() const noexcept { return fInColor; }
-  const Attribute& inShadowParams() const noexcept { return fInShadowParams; }
-  GrColor color() const noexcept { return fColor; }
+  const Attribute& inPosition() const { return fInPosition; }
+  const Attribute& inColor() const { return fInColor; }
+  const Attribute& inShadowParams() const { return fInShadowParams; }
+  GrColor color() const { return fColor; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
 
@@ -39,7 +39,7 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
  private:
   friend class ::SkArenaAlloc;  // for access to ctor
 
-  GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView) noexcept;
+  GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView);
 
   const TextureSampler& onTextureSampler(int i) const noexcept override {
     return fLUTTextureSampler;

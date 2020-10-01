@@ -53,7 +53,7 @@ class GrQuad {
   // bottom-left). The returned instance's point order will still be CCW tri-strip order.
   static GrQuad MakeFromSkQuad(const SkPoint pts[4], const SkMatrix&);
 
-  GrQuad& operator=(const GrQuad&) noexcept = default;
+  GrQuad& operator=(const GrQuad&) = default;
 
   SkPoint3 point3(int i) const noexcept { return {fX[i], fY[i], fW[i]}; }
 
@@ -72,10 +72,10 @@ class GrQuad {
     // Calculate min/max directly on the 4 floats, instead of loading/unloading into SIMD. Since
     // there's no horizontal min/max, it's not worth it. Defining non-perspective case in header
     // also leads to substantial performance boost due to inlining.
-    auto min = [](const float c[4]) noexcept {
+    auto min = [](const float c[4]) {
       return std::min(std::min(c[0], c[1]), std::min(c[2], c[3]));
     };
-    auto max = [](const float c[4]) noexcept {
+    auto max = [](const float c[4]) {
       return std::max(std::max(c[0], c[1]), std::max(c[2], c[3]));
     };
     return {min(fX), min(fY), max(fX), max(fY)};

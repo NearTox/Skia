@@ -10,19 +10,18 @@
 #include "include/core/SkImage.h"
 #include "include/core/SkPixmap.h"
 #include "include/core/SkSurface.h"
+#include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkAutoPixmapStorage.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkSpecialSurface.h"
-#include "tests/Test.h"
-
-#include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/SkGr.h"
+#include "tests/Test.h"
 
 // This test creates backing resources exactly sized to [kFullSize x kFullSize].
 // It then wraps them in an SkSpecialImage with only the center (red) region being active.
@@ -60,7 +59,7 @@ static SkBitmap create_bm() {
 
 // Basic test of the SkSpecialImage public API (e.g., peekTexture, peekPixels & draw)
 static void test_image(
-    const sk_sp<SkSpecialImage>& img, skiatest::Reporter* reporter, GrContext* context,
+    const sk_sp<SkSpecialImage>& img, skiatest::Reporter* reporter, GrRecordingContext* rContext,
     bool isGPUBacked) {
   const SkIRect subset = img->subset();
   REPORTER_ASSERT(reporter, kPad == subset.left());
@@ -74,8 +73,8 @@ static void test_image(
 
   //--------------
   // Test view - as long as there is a context this should succeed
-  if (context) {
-    GrSurfaceProxyView view = img->view(context);
+  if (rContext) {
+    GrSurfaceProxyView view = img->view(rContext);
     REPORTER_ASSERT(reporter, view.asTextureProxy());
   }
 
@@ -182,10 +181,10 @@ static void test_specialimage_image(skiatest::Reporter* reporter) {
 DEF_TEST(SpecialImage_Image_Legacy, reporter) { test_specialimage_image(reporter); }
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SpecialImage_Gpu, reporter, ctxInfo) {
-  GrContext* context = ctxInfo.grContext();
+  auto context = ctxInfo.directContext();
   SkBitmap bm = create_bm();
   GrBitmapTextureMaker maker(context, bm, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-  auto view = maker.view(GrMipMapped::kNo);
+  auto view = maker.view(GrMipmapped::kNo);
   if (!view.proxy()) {
     return;
   }

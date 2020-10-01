@@ -59,7 +59,7 @@ bool SkImageGenerator::getYUVA8Planes(
 #  include "src/gpu/GrSurfaceProxyView.h"
 
 GrSurfaceProxyView SkImageGenerator::generateTexture(
-    GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin, GrMipMapped mipMapped,
+    GrRecordingContext* ctx, const SkImageInfo& info, const SkIPoint& origin, GrMipmapped mipMapped,
     GrImageTexGenPolicy texGenPolicy) {
   SkIRect srcRect = SkIRect::MakeXYWH(origin.x(), origin.y(), info.width(), info.height());
   if (!SkIRect::MakeWH(fInfo.width(), fInfo.height()).contains(srcRect)) {
@@ -69,7 +69,7 @@ GrSurfaceProxyView SkImageGenerator::generateTexture(
 }
 
 GrSurfaceProxyView SkImageGenerator::onGenerateTexture(
-    GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped, GrImageTexGenPolicy) {
+    GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipmapped, GrImageTexGenPolicy) {
   return {};
 }
 #endif
@@ -84,7 +84,8 @@ GrSurfaceProxyView SkImageGenerator::onGenerateTexture(
 static SkGraphics::ImageGeneratorFromEncodedDataFactory gFactory;
 
 SkGraphics::ImageGeneratorFromEncodedDataFactory
-SkGraphics::SetImageGeneratorFromEncodedDataFactory(ImageGeneratorFromEncodedDataFactory factory) {
+SkGraphics::SetImageGeneratorFromEncodedDataFactory(
+    ImageGeneratorFromEncodedDataFactory factory) noexcept {
   ImageGeneratorFromEncodedDataFactory prev = gFactory;
   gFactory = factory;
   return prev;

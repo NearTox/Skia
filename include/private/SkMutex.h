@@ -18,18 +18,18 @@ class SK_CAPABILITY("mutex") SkMutex {
  public:
   constexpr SkMutex() noexcept = default;
 
-  void acquire() SK_ACQUIRE() {
+  void acquire() noexcept SK_ACQUIRE() {
     fSemaphore.wait();
     SkDEBUGCODE(fOwner = SkGetThreadID());
   }
 
-  void release() SK_RELEASE_CAPABILITY() {
+  void release() noexcept SK_RELEASE_CAPABILITY() {
     this->assertHeld();
     SkDEBUGCODE(fOwner = kIllegalThreadID);
     fSemaphore.signal();
   }
 
-  void assertHeld() SK_ASSERT_CAPABILITY(this) { SkASSERT(fOwner == SkGetThreadID()); }
+  void assertHeld() noexcept SK_ASSERT_CAPABILITY(this) { SkASSERT(fOwner == SkGetThreadID()); }
 
  private:
   SkSemaphore fSemaphore{1};
@@ -38,13 +38,13 @@ class SK_CAPABILITY("mutex") SkMutex {
 
 class SK_SCOPED_CAPABILITY SkAutoMutexExclusive {
  public:
-  SkAutoMutexExclusive(SkMutex& mutex) SK_ACQUIRE(mutex) : fMutex(mutex) { fMutex.acquire(); }
+  SkAutoMutexExclusive(SkMutex& mutex) noexcept SK_ACQUIRE(mutex) : fMutex(mutex) {
+    fMutex.acquire();
+  }
   ~SkAutoMutexExclusive() SK_RELEASE_CAPABILITY() { fMutex.release(); }
 
  private:
   SkMutex& fMutex;
 };
-
-#define SkAutoMutexExclusive(...) SK_REQUIRE_LOCAL_VAR(SkAutoMutexExclusive)
 
 #endif  // SkMutex_DEFINED

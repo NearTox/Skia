@@ -341,9 +341,9 @@ class GrUniqueKeyInvalidatedMessage {
     SkASSERT(SK_InvalidUniqueID != contextUniqueID);
   }
 
-  GrUniqueKeyInvalidatedMessage(const GrUniqueKeyInvalidatedMessage&) = default;
+  GrUniqueKeyInvalidatedMessage(const GrUniqueKeyInvalidatedMessage&) noexcept = default;
 
-  GrUniqueKeyInvalidatedMessage& operator=(const GrUniqueKeyInvalidatedMessage&) = default;
+  GrUniqueKeyInvalidatedMessage& operator=(const GrUniqueKeyInvalidatedMessage&) noexcept = default;
 
   const GrUniqueKey& key() const noexcept { return fKey; }
   uint32_t contextID() const noexcept { return fContextID; }

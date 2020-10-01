@@ -120,6 +120,15 @@ class SkTDArray {
 
   T& getAt(int index) noexcept { return (*this)[index]; }
 
+  const T& back() const noexcept {
+    SkASSERT(fCount > 0);
+    return fArray[fCount - 1];
+  }
+  T& back() noexcept {
+    SkASSERT(fCount > 0);
+    return fArray[fCount - 1];
+  }
+
   void reset() noexcept {
     if (fArray) {
       sk_free(fArray);
@@ -210,7 +219,7 @@ class SkTDArray {
     }
   }
 
-  int find(const T& elem) const noexcept(noexcept(*fArray == *fArray)) {
+  int find(const T& elem) const {
     const T* iter = fArray;
     const T* stop = fArray + fCount;
 
@@ -222,7 +231,7 @@ class SkTDArray {
     return -1;
   }
 
-  int rfind(const T& elem) const noexcept(noexcept(*fArray == *fArray)) {
+  int rfind(const T& elem) const {
     const T* iter = fArray + fCount;
     const T* stop = fArray;
 
@@ -291,7 +300,7 @@ class SkTDArray {
     this->reset();
   }
 
-  void unrefAll() {
+  void unrefAll() noexcept(noexcept(fArray[0]->unref())) {
     T* iter = fArray;
     T* stop = fArray + fCount;
     while (iter < stop) {
@@ -301,7 +310,7 @@ class SkTDArray {
     this->reset();
   }
 
-  void safeUnrefAll() {
+  void safeUnrefAll() noexcept(noexcept(fArray[0]->unref())) {
     T* iter = fArray;
     T* stop = fArray + fCount;
     while (iter < stop) {

@@ -25,8 +25,8 @@ class SkCachedData : ::SkNoncopyable {
 
   void* writable_data() noexcept { return fData; }
 
-  void ref() const { this->internalRef(false); }
-  void unref() const { this->internalUnref(false); }
+  void ref() const noexcept { this->internalRef(false); }
+  void unref() const noexcept { this->internalUnref(false); }
 
   int testing_only_getRefCnt() const noexcept { return fRefCnt; }
   bool testing_only_isLocked() const noexcept { return fIsLocked; }
@@ -56,8 +56,8 @@ class SkCachedData : ::SkNoncopyable {
   bool fInCache;
   bool fIsLocked;
 
-  void internalRef(bool fromCache) const;
-  void internalUnref(bool fromCache) const;
+  void internalRef(bool fromCache) const noexcept;
+  void internalUnref(bool fromCache) const noexcept;
 
   void inMutexRef(bool fromCache);
   bool inMutexUnref(bool fromCache);  // returns true if we should delete "this"
@@ -98,13 +98,13 @@ class SkCachedData : ::SkNoncopyable {
    *  Call when adding this instance to a SkResourceCache::Rec subclass
    *  (typically in the Rec's constructor).
    */
-  void attachToCacheAndRef() const { this->internalRef(true); }
+  void attachToCacheAndRef() const noexcept { this->internalRef(true); }
 
   /*
    *  Call when removing this instance from a SkResourceCache::Rec subclass
    *  (typically in the Rec's destructor).
    */
-  void detachFromCacheAndUnref() const { this->internalUnref(true); }
+  void detachFromCacheAndUnref() const noexcept { this->internalUnref(true); }
 };
 
 #endif

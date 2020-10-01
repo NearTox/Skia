@@ -27,5 +27,5 @@ DEF_TEST(crbug_ossfuzz_21688_interfaceblock, reporter) {
   REPORTER_ASSERT(reporter, program == nullptr);
   REPORTER_ASSERT(
       reporter, compiler.errorText().find("interface block 'testBlock' must "
-                                          "contain at least one member") != -1);
+                                          "contain at least one member") != SkSL::String::npos);
 }

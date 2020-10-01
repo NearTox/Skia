@@ -103,15 +103,15 @@ class GrPipeline {
   ///////////////////////////////////////////////////////////////////////////
   /// @name GrFragmentProcessors
 
-  int numColorFragmentProcessors() const noexcept { return fNumColorProcessors; }
-  int numCoverageFragmentProcessors() const noexcept {
-    return fFragmentProcessors.count() - fNumColorProcessors;
-  }
   int numFragmentProcessors() const noexcept { return fFragmentProcessors.count(); }
+  bool isColorFragmentProcessor(int idx) const noexcept { return idx < fNumColorProcessors; }
+  bool isCoverageFragmentProcessor(int idx) const noexcept { return idx >= fNumColorProcessors; }
 
-  const GrXferProcessor& getXferProcessor() const noexcept {
+  void visitTextureEffects(const std::function<void(const GrTextureEffect&)>&) const;
+
+  const GrXferProcessor& getXferProcessor() const {
     if (fXferProcessor) {
-      return *fXferProcessor.get();
+      return *fXferProcessor;
     } else {
       // A null xp member means the common src-over case. GrXferProcessor's ref'ing
       // mechanism is not thread safe so we do not hold a ref on this global.
@@ -142,24 +142,14 @@ class GrPipeline {
     return nullptr;
   }
 
-  const GrFragmentProcessor& getColorFragmentProcessor(int idx) const noexcept {
-    SkASSERT(idx < this->numColorFragmentProcessors());
-    return *fFragmentProcessors[idx].get();
-  }
-
-  const GrFragmentProcessor& getCoverageFragmentProcessor(int idx) const noexcept {
-    SkASSERT(idx < this->numCoverageFragmentProcessors());
-    return *fFragmentProcessors[fNumColorProcessors + idx].get();
-  }
-
   const GrFragmentProcessor& getFragmentProcessor(int idx) const noexcept {
-    return *fFragmentProcessors[idx].get();
+    return *fFragmentProcessors[idx];
   }
 
   /// @}
 
   const GrUserStencilSettings* getUserStencil() const noexcept { return fUserStencilSettings; }
-  void setUserStencil(const GrUserStencilSettings* stencil) noexcept {
+  void setUserStencil(const GrUserStencilSettings* stencil) {
     fUserStencilSettings = stencil;
     if (!fUserStencilSettings->isDisabled(fFlags & Flags::kHasStencilClip)) {
       fFlags |= Flags::kStencilEnabled;
@@ -218,7 +208,8 @@ class GrPipeline {
 
   friend bool operator&(Flags, InputFlags) noexcept;
 
-  using FragmentProcessorArray = SkAutoSTArray<8, std::unique_ptr<const GrFragmentProcessor>>;
+  // A pipeline can contain up to three processors: color, paint coverage, and clip coverage.
+  using FragmentProcessorArray = SkAutoSTArray<3, std::unique_ptr<const GrFragmentProcessor>>;
 
   GrSurfaceProxyView fDstProxyView;
   SkIPoint fDstTextureOffset;

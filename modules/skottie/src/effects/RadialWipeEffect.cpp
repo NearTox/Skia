@@ -32,9 +32,7 @@ class RWipeRenderNode final : public sksg::CustomRenderNode {
   SG_ATTRIBUTE(Feather, float, fFeather)
 
  protected:
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override {
-    return nullptr;
-  }  // no hit-testing
+  const RenderNode* onNodeAt(const SkPoint&) const override { return nullptr; }  // no hit-testing
 
   SkRect onRevalidate(sksg::InvalidationController* ic, const SkMatrix& ctm) override {
     SkASSERT(this->children().size() == 1ul);

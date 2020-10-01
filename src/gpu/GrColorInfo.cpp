@@ -20,7 +20,8 @@ GrColorInfo::GrColorInfo(
 GrColorInfo::GrColorInfo(const SkColorInfo& ci)
     : GrColorInfo(SkColorTypeToGrColorType(ci.colorType()), ci.alphaType(), ci.refColorSpace()) {}
 
-GrColorInfo::GrColorInfo(const GrColorInfo&) noexcept = default;
 GrColorInfo::GrColorInfo(GrColorInfo&&) noexcept = default;
-GrColorInfo& GrColorInfo::operator=(const GrColorInfo&) noexcept = default;
 GrColorInfo& GrColorInfo::operator=(GrColorInfo&&) noexcept = default;
+
+GrColorInfo::GrColorInfo(const GrColorInfo&) noexcept = default;
+GrColorInfo& GrColorInfo::operator=(const GrColorInfo&) noexcept = default;

@@ -18,11 +18,7 @@ class GrVSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
       : fShader(std::move(shader)), fNumSides(numSides) {}
 
  private:
-  void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor&,
-      const CoordTransformRange& transformRange) final {
-    this->setTransformDataHelper(pdman, transformRange);
-  }
+  void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor&) final {}
 
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
@@ -45,19 +41,19 @@ static constexpr int kVertexData_IsHullBit = 1 << 2;
 
 static constexpr int32_t pack_vertex_data(
     int32_t leftNeighborID, int32_t rightNeighborID, int32_t bloatIdx, int32_t cornerID,
-    int32_t extraData = 0) {
+    int32_t extraData = 0) noexcept {
   return (leftNeighborID << kVertexData_LeftNeighborIdShift) |
          (rightNeighborID << kVertexData_RightNeighborIdShift) |
          (bloatIdx << kVertexData_BloatIdxShift) | cornerID | extraData;
 }
 
-static constexpr int32_t hull_vertex_data(int32_t cornerID, int32_t bloatIdx, int n) {
+static constexpr int32_t hull_vertex_data(int32_t cornerID, int32_t bloatIdx, int n) noexcept {
   return pack_vertex_data(
       (cornerID + n - 1) % n, (cornerID + 1) % n, bloatIdx, cornerID, kVertexData_IsHullBit);
 }
 
 static constexpr int32_t edge_vertex_data(
-    int32_t edgeID, int32_t endptIdx, int32_t bloatIdx, int n) {
+    int32_t edgeID, int32_t endptIdx, int32_t bloatIdx, int n) noexcept {
   return pack_vertex_data(
       0 == endptIdx ? (edgeID + 1) % n : edgeID, 0 == endptIdx ? (edgeID + 1) % n : edgeID,
       bloatIdx, 0 == endptIdx ? edgeID : (edgeID + 1) % n,
@@ -65,7 +61,7 @@ static constexpr int32_t edge_vertex_data(
 }
 
 static constexpr int32_t corner_vertex_data(
-    int32_t leftID, int32_t cornerID, int32_t rightID, int32_t bloatIdx) {
+    int32_t leftID, int32_t cornerID, int32_t rightID, int32_t bloatIdx) noexcept {
   return pack_vertex_data(leftID, rightID, bloatIdx, cornerID, kVertexData_IsCornerBit);
 }
 
@@ -640,12 +636,12 @@ void GrVSCoverageProcessor::reset(
 }
 
 void GrVSCoverageProcessor::bindBuffers(
-    GrOpsRenderPass* renderPass, const GrBuffer* instanceBuffer) const {
+    GrOpsRenderPass* renderPass, sk_sp<const GrBuffer> instanceBuffer) const {
   SkASSERT(
       fTriangleType == GrPrimitiveType::kTriangles ||
       fTriangleType == GrPrimitiveType::kTriangleStrip);
   renderPass->bindBuffers(
-      fIndexBuffer.get(), instanceBuffer, fVertexBuffer.get(),
+      fIndexBuffer, std::move(instanceBuffer), fVertexBuffer,
       GrPrimitiveRestart(GrPrimitiveType::kTriangleStrip == fTriangleType));
 }
 

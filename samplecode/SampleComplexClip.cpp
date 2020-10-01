@@ -75,12 +75,11 @@ class ComplexClipView : public Sample {
     static const struct {
       SkClipOp fOp;
       const char* fName;
-    } gOps[] = {// extra spaces in names for measureText
-                {kIntersect_SkClipOp, "Isect "},
-                {kDifference_SkClipOp, "Diff "},
-                {kUnion_SkClipOp, "Union "},
-                {kXOR_SkClipOp, "Xor "},
-                {kReverseDifference_SkClipOp, "RDiff "}};
+    } gOps[] = {
+        // extra spaces in names for measureText
+        {kIntersect_SkClipOp, "Isect "},
+        {kDifference_SkClipOp, "Diff "},
+    };
 
     canvas->translate(0, SkIntToScalar(40));
     canvas->scale(3 * SK_Scalar1 / 4, 3 * SK_Scalar1 / 4);

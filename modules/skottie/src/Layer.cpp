@@ -41,11 +41,9 @@ const MaskInfo* GetMaskInfo(char mode) {
   static constexpr MaskInfo k_add_info = {SkBlendMode::kSrcOver, sksg::Merge::Mode::kUnion, false};
   static constexpr MaskInfo k_int_info = {
       SkBlendMode::kSrcIn, sksg::Merge::Mode::kIntersect, false};
-  // AE 'subtract' is the same as 'intersect' + inverted geometry
-  // (draws the opacity-adjusted paint *outside* the shape).
-  static constexpr MaskInfo k_sub_info = {SkBlendMode::kSrcIn, sksg::Merge::Mode::kIntersect, true};
-  static constexpr MaskInfo k_dif_info = {
-      SkBlendMode::kDifference, sksg::Merge::Mode::kDifference, false};
+  static constexpr MaskInfo k_sub_info = {
+      SkBlendMode::kDstOut, sksg::Merge::Mode::kDifference, true};
+  static constexpr MaskInfo k_dif_info = {SkBlendMode::kXor, sksg::Merge::Mode::kXOR, false};
 
   switch (mode) {
     case 'a': return &k_add_info;
@@ -61,9 +59,12 @@ const MaskInfo* GetMaskInfo(char mode) {
 class MaskAdapter final : public AnimatablePropertyContainer {
  public:
   MaskAdapter(const skjson::ObjectValue& jmask, const AnimationBuilder& abuilder, SkBlendMode bm)
-      : fMaskPaint(sksg::Color::Make(SK_ColorBLACK)) {
+      : fMaskPaint(sksg::Color::Make(SK_ColorBLACK)), fBlendMode(bm) {
     fMaskPaint->setAntiAlias(true);
-    fMaskPaint->setBlendMode(bm);
+    if (!this->requires_isolation()) {
+      // We can mask at draw time.
+      fMaskPaint->setBlendMode(bm);
+    }
 
     this->bind(abuilder, jmask["o"], fOpacity);
 
@@ -75,10 +76,16 @@ class MaskAdapter final : public AnimatablePropertyContainer {
   bool hasEffect() const { return !this->isStatic() || fOpacity < 100 || fFeather != SkV2{0, 0}; }
 
   sk_sp<sksg::RenderNode> makeMask(sk_sp<sksg::Path> mask_path) const {
-    auto mask = sksg::Draw::Make(std::move(mask_path), fMaskPaint);
+    sk_sp<sksg::RenderNode> mask = sksg::Draw::Make(std::move(mask_path), fMaskPaint);
 
     // Optional mask blur (feather).
-    return sksg::ImageFilterEffect::Make(std::move(mask), fMaskFilter);
+    mask = sksg::ImageFilterEffect::Make(std::move(mask), fMaskFilter);
+
+    if (this->requires_isolation()) {
+      mask = sksg::LayerEffect::Make(std::move(mask), fBlendMode);
+    }
+
+    return mask;
   }
 
  private:
@@ -91,7 +98,23 @@ class MaskAdapter final : public AnimatablePropertyContainer {
     }
   }
 
+  bool requires_isolation() const {
+    SkASSERT(
+        fBlendMode == SkBlendMode::kSrc || fBlendMode == SkBlendMode::kSrcOver ||
+        fBlendMode == SkBlendMode::kSrcIn || fBlendMode == SkBlendMode::kDstOut ||
+        fBlendMode == SkBlendMode::kXor);
+
+    // Some mask modes touch pixels outside the immediate draw geometry.
+    // These require a layer.
+    switch (fBlendMode) {
+      case (SkBlendMode::kSrcIn): return true;
+      default: return false;
+    }
+    SkUNREACHABLE;
+  }
+
   const sk_sp<sksg::PaintNode> fMaskPaint;
+  const SkBlendMode fBlendMode;
   sk_sp<sksg::BlurImageFilter> fMaskFilter;  // optional "feather"
 
   Vec2Value fFeather = {0, 0};
@@ -139,18 +162,28 @@ sk_sp<sksg::RenderNode> AttachMask(
       continue;
     }
 
-    // "inv" is cumulative with mask info fInvertGeometry
-    const auto inverted = (mask_info->fInvertGeometry != ParseDefault<bool>((*m)["inv"], false));
-    mask_path->setFillType(inverted ? SkPathFillType::kInverseWinding : SkPathFillType::kWinding);
+    auto mask_blend_mode = mask_info->fBlendMode;
+    auto mask_merge_mode = mask_info->fMergeMode;
+    auto mask_inverted = ParseDefault<bool>((*m)["inv"], false);
 
-    const auto blend_mode = mask_stack.empty() ? SkBlendMode::kSrc : mask_info->fBlendMode;
+    if (mask_stack.empty()) {
+      // First mask adjustments:
+      //   - always draw in source mode
+      //   - invert geometry if needed
+      mask_blend_mode = SkBlendMode::kSrc;
+      mask_merge_mode = sksg::Merge::Mode::kMerge;
+      mask_inverted = mask_inverted != mask_info->fInvertGeometry;
+    }
 
-    auto mask_adapter = sk_make_sp<MaskAdapter>(*m, *abuilder, blend_mode);
+    mask_path->setFillType(
+        mask_inverted ? SkPathFillType::kInverseWinding : SkPathFillType::kWinding);
+
+    auto mask_adapter = sk_make_sp<MaskAdapter>(*m, *abuilder, mask_blend_mode);
     abuilder->attachDiscardableAdapter(mask_adapter);
 
     has_effect |= mask_adapter->hasEffect();
 
-    mask_stack.push_back({std::move(mask_path), std::move(mask_adapter), mask_info->fMergeMode});
+    mask_stack.push_back({std::move(mask_path), std::move(mask_adapter), mask_merge_mode});
   }
 
   if (mask_stack.empty()) return childNode;
@@ -168,8 +201,7 @@ sk_sp<sksg::RenderNode> AttachMask(
       merge_recs.reserve(SkToSizeT(mask_stack.count()));
 
       for (auto& mask : mask_stack) {
-        const auto mode = merge_recs.empty() ? sksg::Merge::Mode::kMerge : mask.merge_mode;
-        merge_recs.push_back({std::move(mask.mask_path), mode});
+        merge_recs.push_back({std::move(mask.mask_path), mask.merge_mode});
       }
       clip_node = sksg::Merge::Make(std::move(merge_recs));
     }
@@ -376,7 +408,8 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
   // former category (effects are subject to transformation), while the remaining types are in
   // the latter.
   enum : uint32_t {
-    kTransformEffects = 1,  // The layer transform also applies to its effects.
+    kTransformEffects = 0x01,  // The layer transform also applies to its effects.
+    kForceSeek = 0x02,         // Dispatch all seek() events even when the layer is inactive.
   };
 
   static constexpr struct {
@@ -389,7 +422,7 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
       {&AnimationBuilder::attachNullLayer, 0},                     // 'ty':  3 -> null
       {&AnimationBuilder::attachShapeLayer, 0},                    // 'ty':  4 -> shape
       {&AnimationBuilder::attachTextLayer, 0},                     // 'ty':  5 -> text
-      {nullptr, 0},                                                // 'ty':  6 -> audio
+      {&AnimationBuilder::attachAudioLayer, kForceSeek},           // 'ty':  6 -> audio
       {nullptr, 0},                                                // 'ty':  7 -> pholderVideo
       {nullptr, 0},                                                // 'ty':  8 -> imageSeq
       {&AnimationBuilder::attachFootageLayer, kTransformEffects},  // 'ty':  9 -> video
@@ -460,9 +493,12 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
   }
 
   const auto has_animators = !abuilder.fCurrentAnimatorScope->empty();
+  const auto force_seek_count = build_info.fFlags & kForceSeek
+                                    ? abuilder.fCurrentAnimatorScope->size()
+                                    : fTransformAnimatorCount;
 
   sk_sp<Animator> controller = sk_make_sp<LayerController>(
-      ascope.release(), layer, fTransformAnimatorCount, layer_info.fInPoint, layer_info.fOutPoint);
+      ascope.release(), layer, force_seek_count, layer_info.fInPoint, layer_info.fOutPoint);
 
   // Optional motion blur.
   if (layer && has_animators && this->hasMotionBlur(cbuilder)) {

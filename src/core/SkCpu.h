@@ -48,13 +48,13 @@ struct SkCpu {
   };
 
   static void CacheRuntimeFeatures();
-  static bool Supports(uint32_t) noexcept;
+  static bool Supports(uint32_t);
 
  private:
   static uint32_t gCachedFeatures;
 };
 
-inline bool SkCpu::Supports(uint32_t mask) noexcept {
+inline bool SkCpu::Supports(uint32_t mask) {
   uint32_t features = gCachedFeatures;
 
   // If we mask in compile-time known lower limits, the compiler can

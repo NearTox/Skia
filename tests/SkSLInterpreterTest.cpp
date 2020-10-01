@@ -112,7 +112,7 @@ void vec_test(skiatest::Reporter* r, const char* src) {
   // Transpose striped outputs back
   transpose(out_v);
 
-  if (memcmp(out_s, out_v, sizeof(out_s)) != 0) {
+  if (0 != memcmp(out_s, out_v, sizeof(out_s))) {
     printf("for program: %s\n", src);
     for (int i = 0; i < 4; ++i) {
       printf(
@@ -1065,7 +1065,7 @@ class JSONExternalValue : public SkSL::ExternalValue {
 
   bool canRead() const override { return type() != *fCompiler.context().fVoid_Type; }
 
-  void read(int /*unusedIndex*/, float* target) override {
+  void read(int /*unusedIndex*/, float* target) const override {
     if (type() == *fCompiler.context().fInt_Type) {
       *(int*)target = *fValue.as<skjson::NumberValue>();
     } else if (type() == *fCompiler.context().fFloat_Type) {
@@ -1103,9 +1103,9 @@ class PointerExternalValue : public SkSL::ExternalValue {
 
   bool canWrite() const override { return true; }
 
-  void read(int /*unusedIndex*/, float* target) override { memcpy(target, fData, fSize); }
+  void read(int /*unusedIndex*/, float* target) const override { memcpy(target, fData, fSize); }
 
-  void write(int /*unusedIndex*/, float* src) override { memcpy(fData, src, fSize); }
+  void write(int /*unusedIndex*/, float* src) const override { memcpy(fData, src, fSize); }
 
  private:
   void* fData;
@@ -1197,7 +1197,7 @@ class FunctionExternalValue : public SkSL::ExternalValue {
     outTypes[0] = fCompiler.context().fFloat_Type.get();
   }
 
-  void call(int /*unusedIndex*/, float* arguments, float* outReturn) override {
+  void call(int /*unusedIndex*/, float* arguments, float* outReturn) const override {
     outReturn[0] = fFunction(arguments[0]);
   }
 
@@ -1254,7 +1254,7 @@ class VectorFunctionExternalValue : public SkSL::ExternalValue {
     outTypes[0] = fCompiler.context().fFloat4_Type.get();
   }
 
-  void call(int /*unusedIndex*/, float* arguments, float* outReturn) override {
+  void call(int /*unusedIndex*/, float* arguments, float* outReturn) const override {
     fFunction(arguments, outReturn);
   }
 

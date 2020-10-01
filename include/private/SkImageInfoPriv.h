@@ -46,7 +46,7 @@ static constexpr inline bool SkAlphaTypeIsValid(unsigned value) noexcept {
   return value <= kLastEnum_SkAlphaType;
 }
 
-static constexpr int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
+static int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 0;

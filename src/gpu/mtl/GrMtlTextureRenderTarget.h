@@ -14,7 +14,7 @@
 class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
  public:
   static sk_sp<GrMtlTextureRenderTarget> MakeNewTextureRenderTarget(
-      GrMtlGpu*, SkBudgeted, SkISize, int sampleCnt, MTLTextureDescriptor*, GrMipMapsStatus);
+      GrMtlGpu*, SkBudgeted, SkISize, int sampleCnt, MTLTextureDescriptor*, GrMipmapStatus);
 
   static sk_sp<GrMtlTextureRenderTarget> MakeWrappedTextureRenderTarget(
       GrMtlGpu*, SkISize, int sampleCnt, id<MTLTexture>, GrWrapCacheable);
@@ -34,17 +34,17 @@ class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
  private:
   GrMtlTextureRenderTarget(
       GrMtlGpu* gpu, SkBudgeted budgeted, SkISize, int sampleCnt, id<MTLTexture> colorTexture,
-      id<MTLTexture> resolveTexture, GrMipMapsStatus);
+      id<MTLTexture> resolveTexture, GrMipmapStatus);
 
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkBudgeted budgeted, SkISize, id<MTLTexture> colorTexture, GrMipMapsStatus);
+      GrMtlGpu* gpu, SkBudgeted budgeted, SkISize, id<MTLTexture> colorTexture, GrMipmapStatus);
 
   GrMtlTextureRenderTarget(
       GrMtlGpu* gpu, SkISize, int sampleCnt, id<MTLTexture> colorTexture,
-      id<MTLTexture> resolveTexture, GrMipMapsStatus, GrWrapCacheable cacheable);
+      id<MTLTexture> resolveTexture, GrMipmapStatus, GrWrapCacheable cacheable);
 
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkISize, id<MTLTexture> colorTexture, GrMipMapsStatus,
+      GrMtlGpu* gpu, SkISize, id<MTLTexture> colorTexture, GrMipmapStatus,
       GrWrapCacheable cacheable);
 
   size_t onGpuMemorySize() const override {
@@ -57,7 +57,7 @@ class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
     }
     const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipMapped::kNo);
+        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
   }
 };
 

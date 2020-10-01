@@ -48,4 +48,4 @@ void Init_hsw() {
 
   interpret_skvm = SK_OPTS_NS::interpret_skvm;
 }
-}
+}  // namespace SkOpts

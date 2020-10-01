@@ -13,12 +13,21 @@
 #include "include/gpu/d3d/GrD3DTypes.h"
 #include "include/private/GrTypesPriv.h"
 
+#define GR_D3D_CALL_ERRCHECK(X)                                  \
+  do {                                                           \
+    HRESULT result = X;                                          \
+    SkASSERT(SUCCEEDED(result));                                 \
+    if (!SUCCEEDED(result)) {                                    \
+      SkDebugf("Failed Direct3D call. Error: 0x%08x\n", result); \
+    }                                                            \
+  } while (false)
+
 /**
  * Returns true if the format is compressed.
  */
 bool GrDxgiFormatIsCompressed(DXGI_FORMAT);
 
-static constexpr uint32_t GrDxgiFormatChannels(DXGI_FORMAT vkFormat) {
+static constexpr uint32_t GrDxgiFormatChannels(DXGI_FORMAT vkFormat) noexcept {
   switch (vkFormat) {
     case DXGI_FORMAT_R8G8B8A8_UNORM: return kRGBA_SkColorChannelFlags;
     case DXGI_FORMAT_R8_UNORM: return kRed_SkColorChannelFlag;
@@ -41,7 +50,7 @@ static constexpr uint32_t GrDxgiFormatChannels(DXGI_FORMAT vkFormat) {
   }
 }
 
-#if GR_TEST_UTILS
+#if defined(SK_DEBUG) || GR_TEST_UTILS
 static constexpr const char* GrDxgiFormatToStr(DXGI_FORMAT dxgiFormat) {
   switch (dxgiFormat) {
     case DXGI_FORMAT_R8G8B8A8_UNORM: return "R8G8B8A8_UNORM";
@@ -63,6 +72,11 @@ static constexpr const char* GrDxgiFormatToStr(DXGI_FORMAT dxgiFormat) {
 
     default: return "Unknown";
   }
+}
+
+static constexpr bool operator==(
+    const D3D12_CPU_DESCRIPTOR_HANDLE& first, const D3D12_CPU_DESCRIPTOR_HANDLE& second) {
+  return first.ptr == second.ptr;
 }
 
 #endif

@@ -77,12 +77,12 @@ void BaseOption::Init(const std::vector<BaseOption*> &option_list,
 }
 
 struct DoubleOption : Option<double> {
-    virtual void set(std::string _value) { value = atof(_value.c_str()); }
-    virtual std::string valueToString() {
-        std::ostringstream stm;
-        stm << value;
-        return stm.str();
-    }
+  void set(std::string _value) override { value = atof(_value.c_str()); }
+  std::string valueToString() override {
+    std::ostringstream stm;
+    stm << value;
+    return stm.str();
+  }
     DoubleOption(std::string _selector,
                  std::string _description,
                  double defaultValue)
@@ -90,12 +90,10 @@ struct DoubleOption : Option<double> {
 };
 
 struct StringOption : Option<std::string> {
-    virtual void set(std::string _value) { value = _value; }
-    virtual std::string valueToString() { return value; }
-    StringOption(std::string _selector,
-                 std::string _description,
-                 std::string defaultValue)
-        : Option<std::string>(_selector, _description, defaultValue) {}
+  void set(std::string _value) override { value = _value; }
+  std::string valueToString() override { return value; }
+  StringOption(std::string _selector, std::string _description, std::string defaultValue)
+      : Option<std::string>(_selector, _description, defaultValue) {}
 };
 
 // Config //////////////////////////////////////////////////////////////////////

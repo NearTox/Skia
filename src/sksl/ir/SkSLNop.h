@@ -17,9 +17,11 @@ namespace SkSL {
  * A no-op statement that does nothing.
  */
 struct Nop : public Statement {
-  Nop() noexcept : INHERITED(-1, kNop_Kind) {}
+  static constexpr Kind kStatementKind = kNop_Kind;
 
-  virtual bool isEmpty() const noexcept override { return true; }
+  Nop() noexcept : INHERITED(-1, kStatementKind) {}
+
+  bool isEmpty() const noexcept override { return true; }
 
   String description() const override { return String(";"); }
 

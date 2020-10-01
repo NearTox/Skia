@@ -33,12 +33,12 @@ class GrVkCaps : public GrCaps {
       uint32_t physicalDeviceVersion, const GrVkExtensions& extensions,
       GrProtected isProtected = GrProtected::kNo);
 
-  bool isFormatSRGB(const GrBackendFormat&) const override;
+  bool isFormatSRGB(const GrBackendFormat&) const noexcept override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isVkFormatTexturable(VkFormat) const;
 
-  bool isFormatCopyable(const GrBackendFormat&) const override { return true; }
+  bool isFormatCopyable(const GrBackendFormat&) const noexcept override { return true; }
 
   bool isFormatAsColorTypeRenderable(
       GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const override;
@@ -48,11 +48,11 @@ class GrVkCaps : public GrCaps {
   int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat&) const override;
   int getRenderTargetSampleCount(int requestedCount, VkFormat) const;
 
-  int maxRenderTargetSampleCount(const GrBackendFormat&) const noexcept override;
-  int maxRenderTargetSampleCount(VkFormat format) const noexcept;
+  int maxRenderTargetSampleCount(const GrBackendFormat&) const override;
+  int maxRenderTargetSampleCount(VkFormat format) const;
 
-  size_t bytesPerPixel(const GrBackendFormat&) const noexcept override;
-  size_t bytesPerPixel(VkFormat format) const noexcept;
+  size_t bytesPerPixel(const GrBackendFormat&) const override;
+  size_t bytesPerPixel(VkFormat format) const;
 
   SupportedWrite supportedWritePixelsColorType(
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
@@ -60,25 +60,21 @@ class GrVkCaps : public GrCaps {
 
   SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const override;
 
-  bool isVkFormatTexturableLinearly(VkFormat format) const noexcept {
+  bool isVkFormatTexturableLinearly(VkFormat format) const {
     return SkToBool(FormatInfo::kTexturable_Flag & this->getFormatInfo(format).fLinearFlags);
   }
 
-  bool formatCanBeDstofBlit(VkFormat format, bool linearTiled) const noexcept {
+  bool formatCanBeDstofBlit(VkFormat format, bool linearTiled) const {
     const FormatInfo& info = this->getFormatInfo(format);
     const uint16_t& flags = linearTiled ? info.fLinearFlags : info.fOptimalFlags;
     return SkToBool(FormatInfo::kBlitDst_Flag & flags);
   }
 
-  bool formatCanBeSrcofBlit(VkFormat format, bool linearTiled) const noexcept {
+  bool formatCanBeSrcofBlit(VkFormat format, bool linearTiled) const {
     const FormatInfo& info = this->getFormatInfo(format);
     const uint16_t& flags = linearTiled ? info.fLinearFlags : info.fOptimalFlags;
     return SkToBool(FormatInfo::kBlitSrc_Flag & flags);
   }
-
-  // On Adreno vulkan, they do not respect the imageOffset parameter at least in
-  // copyImageToBuffer. This flag says that we must do the copy starting from the origin always.
-  bool mustDoCopiesFromOrigin() const noexcept { return fMustDoCopiesFromOrigin; }
 
   // Sometimes calls to QueueWaitIdle return before actually signalling the fences
   // on the command buffers even though they have completed. This causes an assert to fire when
@@ -155,6 +151,12 @@ class GrVkCaps : public GrCaps {
     return fPreferPrimaryOverSecondaryCommandBuffers;
   }
 
+  int maxPerPoolCachedSecondaryCommandBuffers() const noexcept {
+    return fMaxPerPoolCachedSecondaryCommandBuffers;
+  }
+
+  uint32_t maxInputAttachmentDescriptors() const noexcept { return fMaxInputAttachmentDescriptors; }
+
   bool mustInvalidatePrimaryCmdBufferStateAfterClearAttachments() const noexcept {
     return fMustInvalidatePrimaryCmdBufferStateAfterClearAttachments;
   }
@@ -187,13 +189,13 @@ class GrVkCaps : public GrCaps {
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
-  int getFragmentUniformBinding() const noexcept;
-  int getFragmentUniformSet() const noexcept;
+  int getFragmentUniformBinding() const;
+  int getFragmentUniformSet() const;
 
   void addExtraSamplerKey(
       GrProcessorKeyBuilder*, GrSamplerState, const GrBackendFormat&) const override;
 
-  GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const override;
+  GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const override;
 
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;
@@ -224,7 +226,7 @@ class GrVkCaps : public GrCaps {
 
   void applyDriverCorrectnessWorkarounds(const VkPhysicalDeviceProperties&);
 
-  bool onSurfaceSupportsWritePixels(const GrSurface*) const noexcept override;
+  bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
@@ -266,7 +268,7 @@ class GrVkCaps : public GrCaps {
     }
 
     void init(const GrVkInterface*, VkPhysicalDevice, const VkPhysicalDeviceProperties&, VkFormat);
-    static void InitFormatFlags(VkFormatFeatureFlags, uint16_t* flags) noexcept;
+    static void InitFormatFlags(VkFormatFeatureFlags, uint16_t* flags);
     void initSampleCounts(
         const GrVkInterface*, VkPhysicalDevice, const VkPhysicalDeviceProperties&, VkFormat);
 
@@ -290,8 +292,8 @@ class GrVkCaps : public GrCaps {
   static const size_t kNumVkFormats = 22;
   FormatInfo fFormatTable[kNumVkFormats];
 
-  FormatInfo& getFormatInfo(VkFormat) noexcept;
-  const FormatInfo& getFormatInfo(VkFormat) const noexcept;
+  FormatInfo& getFormatInfo(VkFormat);
+  const FormatInfo& getFormatInfo(VkFormat) const;
 
   VkFormat fColorTypeToFormatTable[kGrColorTypeCnt];
   void setColorType(GrColorType, std::initializer_list<VkFormat> formats);
@@ -300,7 +302,6 @@ class GrVkCaps : public GrCaps {
 
   SkSTArray<1, GrVkYcbcrConversionInfo> fYcbcrInfos;
 
-  bool fMustDoCopiesFromOrigin = false;
   bool fMustSleepOnTearDown = false;
   bool fShouldAlwaysUseDedicatedImageMemory = false;
 
@@ -325,6 +326,13 @@ class GrVkCaps : public GrCaps {
 
   bool fPreferPrimaryOverSecondaryCommandBuffers = true;
   bool fMustInvalidatePrimaryCmdBufferStateAfterClearAttachments = false;
+
+  // We default this to 100 since we already cap the max render tasks at 100 before doing a
+  // submission in the GrDrawingManager, so we shouldn't be going over 100 secondary command
+  // buffers per primary anyways.
+  int fMaxPerPoolCachedSecondaryCommandBuffers = 100;
+
+  uint32_t fMaxInputAttachmentDescriptors = 0;
 
   typedef GrCaps INHERITED;
 };

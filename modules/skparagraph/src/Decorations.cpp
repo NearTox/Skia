@@ -18,7 +18,7 @@ static void draw_line_as_rect(
 namespace skia {
 namespace textlayout {
 
-static const float kDoubleDecorationSpacing = 3.0f;
+static constexpr float kDoubleDecorationSpacing = 3.0f;
 void Decorations::paint(
     SkCanvas* canvas, const TextStyle& textStyle, const TextLine::ClipContext& context,
     SkScalar baseline, SkPoint offset) {
@@ -151,7 +151,7 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
 }
 
 // This is how flutter calculates the positioning
-void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) {
+void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) noexcept {
   switch (decoration) {
     case TextDecoration::kUnderline:
       if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kUnderlinePositionIsValid_Flag) &&

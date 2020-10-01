@@ -10,7 +10,7 @@
 
 #include "include/core/SkBlendMode.h"
 
-class GrGLSLFragmentBuilder;
+class GrGLSLShaderBuilder;
 
 namespace GrGLSLBlend {
 /*
@@ -26,8 +26,8 @@ const char* BlendFuncName(SkBlendMode mode);
  * variables to the outColor variable.
  */
 void AppendMode(
-    GrGLSLFragmentBuilder* fsBuilder, const char* srcColor, const char* dstColor,
+    GrGLSLShaderBuilder* fsBuilder, const char* srcColor, const char* dstColor,
     const char* outColor, SkBlendMode mode);
-};  // namespace GrGLSLBlend
+}  // namespace GrGLSLBlend
 
 #endif

@@ -28,13 +28,11 @@ class KeyframeAnimatorBuilder;
 
 class Animator : public SkRefCnt {
  public:
-  virtual ~Animator() = default;
-
   using StateChanged = bool;
   StateChanged seek(float t) { return this->onSeek(t); }
 
  protected:
-  constexpr Animator() noexcept = default;
+  Animator() = default;
 
   virtual StateChanged onSeek(float t) = 0;
 
@@ -62,7 +60,7 @@ class AnimatablePropertyContainer : public Animator {
       const AnimationBuilder& abuilder, const skjson::ObjectValue* jobject, SkV2* v,
       float* orientation);
 
-  bool isStatic() const noexcept { return fAnimators.empty(); }
+  bool isStatic() const { return fAnimators.empty(); }
 
  protected:
   virtual void onSync() = 0;

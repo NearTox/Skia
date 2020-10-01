@@ -27,7 +27,7 @@ size_t SkRecord::bytesUsed() const noexcept {
   return bytes;
 }
 
-void SkRecord::defrag() {
+void SkRecord::defrag() noexcept {
   // Remove all the NoOps, preserving the order of other ops, e.g.
   //      Save, ClipRect, NoOp, DrawRect, NoOp, NoOp, Restore
   //  ->  Save, ClipRect, DrawRect, Restore

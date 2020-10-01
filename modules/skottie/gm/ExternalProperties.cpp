@@ -22,7 +22,7 @@ namespace {
 static constexpr char kWebFontResource[] = "fonts/Roboto-Regular.ttf";
 static constexpr char kSkottieResource[] = "skottie/skottie_sample_webfont.json";
 
-// Dummy web font loader which serves a single local font (checked in under resources/).
+// Mock web font loader which serves a single local font (checked in under resources/).
 class FakeWebFontProvider final : public skresources::ResourceProvider {
  public:
   FakeWebFontProvider()
@@ -126,4 +126,4 @@ class SkottieExternalPropsGM : public skiagm::GM {
   using INHERITED = skiagm::GM;
 };
 
-DEF_GM(return new SkottieExternalPropsGM;)
+DEF_GM(return new SkottieExternalPropsGM);

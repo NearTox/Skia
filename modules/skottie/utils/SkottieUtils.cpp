@@ -15,21 +15,21 @@ class CustomPropertyManager::PropertyInterceptor final : public skottie::Propert
 
   void onColorProperty(
       const char node_name[], const LazyHandle<skottie::ColorPropertyHandle>& c) override {
-    const auto markedKey = fMgr->acceptKey(node_name);
+    const auto markedKey = CustomPropertyManager::AcceptKey(node_name);
     const auto key = markedKey.empty() ? markedKey : fMgr->fCurrentNode + ".Color";
     fMgr->fColorMap[key].push_back(c());
   }
 
   void onOpacityProperty(
       const char node_name[], const LazyHandle<skottie::OpacityPropertyHandle>& o) override {
-    const auto markedKey = fMgr->acceptKey(node_name);
+    const auto markedKey = CustomPropertyManager::AcceptKey(node_name);
     const auto key = markedKey.empty() ? markedKey : fMgr->fCurrentNode + ".Opacity";
     fMgr->fOpacityMap[key].push_back(o());
   }
 
   void onTransformProperty(
       const char node_name[], const LazyHandle<skottie::TransformPropertyHandle>& t) override {
-    const auto markedKey = fMgr->acceptKey(node_name);
+    const auto markedKey = CustomPropertyManager::AcceptKey(node_name);
     const auto key = markedKey.empty() ? markedKey : fMgr->fCurrentNode + ".Transform";
     fMgr->fTransformMap[key].push_back(t());
   }
@@ -49,7 +49,7 @@ class CustomPropertyManager::PropertyInterceptor final : public skottie::Propert
 
   void onTextProperty(
       const char node_name[], const LazyHandle<skottie::TextPropertyHandle>& t) override {
-    const auto key = fMgr->acceptKey(node_name);
+    const auto key = CustomPropertyManager::AcceptKey(node_name);
     if (!key.empty()) {
       fMgr->fTextMap[key].push_back(t());
     }
@@ -64,7 +64,7 @@ class CustomPropertyManager::MarkerInterceptor final : public skottie::MarkerObs
   explicit MarkerInterceptor(CustomPropertyManager* mgr) : fMgr(mgr) {}
 
   void onMarker(const char name[], float t0, float t1) override {
-    const auto key = fMgr->acceptKey(name);
+    const auto key = CustomPropertyManager::AcceptKey(name);
     if (!key.empty()) {
       fMgr->fMarkers.push_back({std::move(key), t0, t1});
     }
@@ -201,7 +201,7 @@ ExternalAnimationPrecompInterceptor::~ExternalAnimationPrecompInterceptor() = de
 
 sk_sp<skottie::ExternalLayer> ExternalAnimationPrecompInterceptor::onLoadPrecomp(
     const char[], const char name[], const SkSize& size) {
-  if (strncmp(name, fPrefix.c_str(), fPrefix.size())) {
+  if (0 != strncmp(name, fPrefix.c_str(), fPrefix.size())) {
     return nullptr;
   }
 

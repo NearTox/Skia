@@ -9,7 +9,7 @@
 #include "include/core/SkPixelRef.h"
 #include "include/core/SkRect.h"
 #include "src/core/SkBitmapCache.h"
-#include "src/core/SkMipMap.h"
+#include "src/core/SkMipmap.h"
 #include "src/core/SkResourceCache.h"
 #include "src/image/SkImage_Base.h"
 
@@ -82,7 +82,7 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
     sk_free(fMalloc);  // may be null
   }
 
-  const Key& getKey() const noexcept override { return fKey; }
+  const Key& getKey() const override { return fKey; }
   size_t bytesUsed() const noexcept override {
     return sizeof(fKey) + fInfo.computeByteSize(fRowBytes);
   }
@@ -94,10 +94,8 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
     SkAssertResult(this->install(static_cast<SkBitmap*>(payload)));
   }
 
-  const char* getCategory() const noexcept override { return "bitmap"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
-    return fDM.get();
-  }
+  const char* getCategory() const override { return "bitmap"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return fDM.get(); }
 
   static void ReleaseProc(void* addr, void* ctx) {
     Rec* rec = static_cast<Rec*>(ctx);
@@ -227,22 +225,22 @@ struct MipMapKey : public SkResourceCache::Key {
 };
 
 struct MipMapRec : public SkResourceCache::Rec {
-  MipMapRec(const SkBitmapCacheDesc& desc, const SkMipMap* result) : fKey(desc), fMipMap(result) {
+  MipMapRec(const SkBitmapCacheDesc& desc, const SkMipmap* result) : fKey(desc), fMipMap(result) {
     fMipMap->attachToCacheAndRef();
   }
 
   ~MipMapRec() override { fMipMap->detachFromCacheAndUnref(); }
 
-  const Key& getKey() const noexcept override { return fKey; }
+  const Key& getKey() const override { return fKey; }
   size_t bytesUsed() const noexcept override { return sizeof(fKey) + fMipMap->size(); }
-  const char* getCategory() const noexcept override { return "mipmap"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
+  const char* getCategory() const override { return "mipmap"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fMipMap->diagnostic_only_getDiscardable();
   }
 
   static bool Finder(const SkResourceCache::Rec& baseRec, void* contextMip) {
     const MipMapRec& rec = static_cast<const MipMapRec&>(baseRec);
-    const SkMipMap* mm = SkRef(rec.fMipMap);
+    const SkMipmap* mm = SkRef(rec.fMipMap);
     // the call to ref() above triggers a "lock" in the case of discardable memory,
     // which means we can now check for null (in case the lock failed).
     if (nullptr == mm->data()) {
@@ -250,20 +248,20 @@ struct MipMapRec : public SkResourceCache::Rec {
       return false;
     }
     // the call must call unref() when they are done.
-    *(const SkMipMap**)contextMip = mm;
+    *(const SkMipmap**)contextMip = mm;
     return true;
   }
 
  private:
   MipMapKey fKey;
-  const SkMipMap* fMipMap;
+  const SkMipmap* fMipMap;
 };
 }  // namespace
 
-const SkMipMap* SkMipMapCache::FindAndRef(
+const SkMipmap* SkMipmapCache::FindAndRef(
     const SkBitmapCacheDesc& desc, SkResourceCache* localCache) {
   MipMapKey key(desc);
-  const SkMipMap* result;
+  const SkMipmap* result;
 
   if (!CHECK_LOCAL(localCache, find, Find, key, MipMapRec::Finder, &result)) {
     result = nullptr;
@@ -272,17 +270,16 @@ const SkMipMap* SkMipMapCache::FindAndRef(
 }
 
 static SkResourceCache::DiscardableFactory get_fact(SkResourceCache* localCache) {
-  return localCache ? localCache->GetDiscardableFactory()
-                    : SkResourceCache::GetDiscardableFactory();
+  return localCache ? localCache->discardableFactory() : SkResourceCache::GetDiscardableFactory();
 }
 
-const SkMipMap* SkMipMapCache::AddAndRef(const SkImage_Base* image, SkResourceCache* localCache) {
+const SkMipmap* SkMipmapCache::AddAndRef(const SkImage_Base* image, SkResourceCache* localCache) {
   SkBitmap src;
   if (!image->getROPixels(&src)) {
     return nullptr;
   }
 
-  SkMipMap* mipmap = SkMipMap::Build(src, get_fact(localCache));
+  SkMipmap* mipmap = SkMipmap::Build(src, get_fact(localCache));
   if (mipmap) {
     MipMapRec* rec = new MipMapRec(SkBitmapCacheDesc::Make(image), mipmap);
     CHECK_LOCAL(localCache, add, Add, rec);

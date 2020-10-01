@@ -19,6 +19,7 @@
 #include "bench/SKPAnimationBench.h"
 #include "bench/SKPBench.h"
 #include "bench/SkGlyphCacheBench.h"
+#include "bench/SkSLBench.h"
 #include "include/codec/SkAndroidCodec.h"
 #include "include/codec/SkCodec.h"
 #include "include/core/SkCanvas.h"
@@ -57,10 +58,12 @@
 
 #include <cinttypes>
 #include <stdlib.h>
+#include <memory>
 #include <thread>
 
 extern bool gSkForceRasterPipelineBlitter;
 extern bool gUseSkVMBlitter;
+extern bool gSkVMAllowJIT;
 extern bool gSkVMJITViaDylib;
 
 #ifndef SK_BUILD_FOR_WIN
@@ -68,6 +71,7 @@ extern bool gSkVMJITViaDylib;
 
 #endif
 
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/SkGr.h"
@@ -137,13 +141,14 @@ static DEFINE_string(
     "piping, playback, skcodec, etc.");
 
 static DEFINE_bool(forceRasterPipeline, false, "sets gSkForceRasterPipelineBlitter");
-static DEFINE_bool(skvm, false, "sets gUseSkVMBlitter and gSkVMJITViaDylib");
+static DEFINE_bool(skvm, false, "sets gUseSkVMBlitter");
+static DEFINE_bool(jit, true, "sets gSkVMAllowJIT and gSkVMJITViaDylib");
 
 static DEFINE_bool2(
     pre_log, p, false, "Log before running each test. May be incomprehensible when threading");
 
-static DEFINE_bool(cpu, true, "master switch for running CPU-bound work.");
-static DEFINE_bool(gpu, true, "master switch for running GPU-bound work.");
+static DEFINE_bool(cpu, true, "Run CPU-bound work?");
+static DEFINE_bool(gpu, true, "Run GPU-bound work?");
 static DEFINE_bool(
     dryRun, false, "just print the tests that would be run, without actually running them.");
 static DEFINE_string(
@@ -235,7 +240,7 @@ struct GPUTarget : public Target {
   }
   void endTiming() override {
     if (this->contextInfo.testContext()) {
-      this->contextInfo.testContext()->flushAndWaitOnSync(contextInfo.grContext());
+      this->contextInfo.testContext()->flushAndWaitOnSync(contextInfo.directContext());
     }
   }
   void fence() override { this->contextInfo.testContext()->finish(); }
@@ -250,7 +255,7 @@ struct GPUTarget : public Target {
   bool init(SkImageInfo info, Benchmark* bench) override {
     GrContextOptions options = grContextOpts;
     bench->modifyGrContextOptions(&options);
-    this->factory.reset(new GrContextFactory(options));
+    this->factory = std::make_unique<GrContextFactory>(options);
     uint32_t flags = this->config.useDFText ? SkSurfaceProps::kUseDeviceIndependentFonts_Flag : 0;
     SkSurfaceProps props(flags, SkSurfaceProps::kLegacyFontHost_InitType);
     this->surface = SkSurface::MakeRenderTarget(
@@ -258,7 +263,7 @@ struct GPUTarget : public Target {
         this->config.samples, &props);
     this->contextInfo =
         this->factory->getContextInfo(this->config.ctxType, this->config.ctxOverrides);
-    if (!this->surface.get()) {
+    if (!this->surface) {
       return false;
     }
     if (!this->contextInfo.testContext()->fenceSyncSupport()) {
@@ -274,7 +279,7 @@ struct GPUTarget : public Target {
     const GrGLubyte* version;
     if (this->contextInfo.backend() == GrBackendApi::kOpenGL) {
       const GrGLInterface* gl =
-          static_cast<GrGLGpu*>(this->contextInfo.grContext()->priv().getGpu())->glInterface();
+          static_cast<GrGLGpu*>(this->contextInfo.directContext()->priv().getGpu())->glInterface();
       GR_GL_CALL_RET(gl, version, GetString(GR_GL_VERSION));
       log.appendString("GL_VERSION", (const char*)(version));
 
@@ -291,9 +296,11 @@ struct GPUTarget : public Target {
   }
 
   void dumpStats() override {
-    this->contextInfo.grContext()->priv().printCacheStats();
-    this->contextInfo.grContext()->priv().printGpuStats();
-    this->contextInfo.grContext()->priv().printContextStats();
+    auto context = this->contextInfo.directContext();
+
+    context->priv().printCacheStats();
+    context->priv().printGpuStats();
+    context->priv().printContextStats();
   }
 };
 
@@ -480,7 +487,7 @@ static void create_config(const SkCommandLineConfig* config, SkTArray<Config>* c
     }
 
     GrContextFactory factory(grContextOpts);
-    if (const GrContext* ctx = factory.get(ctxType, ctxOverrides)) {
+    if (const auto ctx = factory.get(ctxType, ctxOverrides)) {
       GrBackendFormat format = ctx->defaultBackendFormat(colorType, GrRenderable::kYes);
       int supportedSampleCount =
           ctx->priv().caps()->getRenderTargetSampleCount(sampleCount, format);
@@ -599,7 +606,7 @@ static bool valid_brd_bench(
     sk_sp<SkData> encoded, SkColorType colorType, uint32_t sampleSize, uint32_t minOutputSize,
     int* width, int* height) {
   auto brd = android::skia::BitmapRegionDecoder::Make(encoded);
-  if (nullptr == brd.get()) {
+  if (nullptr == brd) {
     // This is indicates that subset decoding is not supported for a particular image format.
     return false;
   }
@@ -1235,12 +1242,9 @@ int main(int argc, char** argv) {
 
   SetAnalyticAAFromCommonFlags();
 
-  if (FLAGS_forceRasterPipeline) {
-    gSkForceRasterPipelineBlitter = true;
-  }
-  if (FLAGS_skvm) {
-    gUseSkVMBlitter = gSkVMJITViaDylib = true;
-  }
+  gSkForceRasterPipelineBlitter = FLAGS_forceRasterPipeline;
+  gUseSkVMBlitter = FLAGS_skvm;
+  gSkVMAllowJIT = gSkVMJITViaDylib = FLAGS_jit;
 
   int runs = 0;
   BenchmarkStream benchStream;
@@ -1434,6 +1438,8 @@ int main(int argc, char** argv) {
   log.appendS32("max_rss_mb", sk_tools::getMaxResidentSetSizeMB());
   log.endObject();  // config
   log.endBench();
+
+  RunSkSLMemoryBenchmarks(&log);
 
   log.endObject();  // results
   log.endObject();  // root

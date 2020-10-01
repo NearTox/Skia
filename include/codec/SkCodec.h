@@ -33,7 +33,7 @@ class SkSampler;
 namespace DM {
 class CodecSrc;
 class ColorCodecSrc;
-}
+}  // namespace DM
 
 /**
  *  Abstraction layer directly on top of an image codec.
@@ -109,7 +109,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    *  Readable string representing the error code.
    */
-  static const char* ResultToString(Result) noexcept;
+  static const char* ResultToString(Result);
 
   /**
    * For container formats that contain both still images and image sequences,
@@ -257,7 +257,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    *  Format of the encoded data.
    */
-  SkEncodedImageFormat getEncodedFormat() const noexcept { return this->onGetEncodedFormat(); }
+  SkEncodedImageFormat getEncodedFormat() const { return this->onGetEncodedFormat(); }
 
   /**
    *  Whether or not the memory passed to getPixels is zero initialized.
@@ -732,7 +732,7 @@ class SK_API SkCodec : SkNoncopyable {
 
   SkCodec(
       SkEncodedInfo&&, XformFormat srcFormat, std::unique_ptr<SkStream>,
-      SkEncodedOrigin = kTopLeft_SkEncodedOrigin) noexcept;
+      SkEncodedOrigin = kTopLeft_SkEncodedOrigin);
 
   virtual SkISize onGetScaledDimensions(float /*desiredScale*/) const {
     // By default, scaling is not supported.
@@ -746,7 +746,7 @@ class SK_API SkCodec : SkNoncopyable {
    */
   virtual bool onDimensionsSupported(const SkISize&) { return false; }
 
-  virtual SkEncodedImageFormat onGetEncodedFormat() const noexcept = 0;
+  virtual SkEncodedImageFormat onGetEncodedFormat() const = 0;
 
   /**
    * @param rowsDecoded When the encoded image stream is incomplete, this function
@@ -826,8 +826,8 @@ class SK_API SkCodec : SkNoncopyable {
   // Some classes never need a colorXform e.g.
   // - ICO uses its embedded codec's colorXform
   // - WBMP is just Black/White
-  virtual bool usesColorXform() const noexcept { return true; }
-  void applyColorXform(void* dst, const void* src, int count) const noexcept;
+  virtual bool usesColorXform() const { return true; }
+  void applyColorXform(void* dst, const void* src, int count) const;
 
   bool colorXform() const noexcept { return fXformTime != kNo_XformTime; }
   bool xformOnDecode() const noexcept { return fXformTime == kDecodeRow_XformTime; }

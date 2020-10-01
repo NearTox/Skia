@@ -45,7 +45,7 @@ class SkSpecialSurface : public SkRefCnt {
    *
    *  The canvas will be invalid after 'newImageSnapshot' is called.
    */
-  SkCanvas* getCanvas();
+  SkCanvas* getCanvas() noexcept;
 
   /**
    *  Returns an image of the current state of the surface pixels up to this
@@ -82,7 +82,7 @@ class SkSpecialSurface : public SkRefCnt {
   static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&, const SkSurfaceProps* = nullptr);
 
  protected:
-  SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*);
+  SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*) noexcept;
 
   // For testing only
   friend class TestingSpecialSurfaceAccess;

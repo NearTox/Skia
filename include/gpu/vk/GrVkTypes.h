@@ -26,7 +26,7 @@ typedef intptr_t GrVkBackendMemory;
  * Vulkan textures are really const GrVkImageInfo*
  */
 struct GrVkAlloc {
-  constexpr GrVkAlloc() noexcept
+  GrVkAlloc() noexcept
       : fMemory(VK_NULL_HANDLE),
         fOffset(0),
         fSize(0),
@@ -77,7 +77,7 @@ struct GrVkYcbcrConversionInfo {
         fForceExplicitReconstruction(false) {}
 
   GrVkYcbcrConversionInfo(
-      VkFormat format, int64_t externalFormat, VkSamplerYcbcrModelConversion ycbcrModel,
+      VkFormat format, uint64_t externalFormat, VkSamplerYcbcrModelConversion ycbcrModel,
       VkSamplerYcbcrRange ycbcrRange, VkChromaLocation xChromaOffset,
       VkChromaLocation yChromaOffset, VkFilter chromaFilter, VkBool32 forceExplicitReconstruction,
       VkFormatFeatureFlags formatFeatures) noexcept
@@ -98,7 +98,7 @@ struct GrVkYcbcrConversionInfo {
   GrVkYcbcrConversionInfo(
       VkSamplerYcbcrModelConversion ycbcrModel, VkSamplerYcbcrRange ycbcrRange,
       VkChromaLocation xChromaOffset, VkChromaLocation yChromaOffset, VkFilter chromaFilter,
-      VkBool32 forceExplicitReconstruction, int64_t externalFormat,
+      VkBool32 forceExplicitReconstruction, uint64_t externalFormat,
       VkFormatFeatureFlags externalFormatFeatures) noexcept
       : GrVkYcbcrConversionInfo(
             VK_FORMAT_UNDEFINED, externalFormat, ycbcrModel, ycbcrRange, xChromaOffset,
@@ -128,7 +128,7 @@ struct GrVkYcbcrConversionInfo {
 
   // The external format. Must be non-zero for external images, zero otherwise.
   // Should be compatible to be used in a VkExternalFormatANDROID struct.
-  int64_t fExternalFormat;
+  uint64_t fExternalFormat;
 
   VkSamplerYcbcrModelConversion fYcbcrModel;
   VkSamplerYcbcrRange fYcbcrRange;

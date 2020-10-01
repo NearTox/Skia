@@ -100,7 +100,7 @@ struct Layout {
     kGrFragmentProcessor,
   };
 
-  static const char* FormatToStr(Format format) {
+  static const char* FormatToStr(Format format) noexcept {
     switch (format) {
       case Format::kUnspecified: return "";
       case Format::kRGBA32F: return "rgba32f";
@@ -117,7 +117,7 @@ struct Layout {
     ABORT("Unexpected format");
   }
 
-  static bool ReadFormat(const String& str, Format* format) noexcept {
+  static bool ReadFormat(String str, Format* format) noexcept {
     if (str == "rgba32f") {
       *format = Format::kRGBA32F;
       return true;
@@ -208,6 +208,12 @@ struct Layout {
         fInvocations(-1),
         fKey(kNo_Key),
         fCType(CType::kDefault) {}
+
+  static Layout builtin(int builtin) noexcept {
+    Layout result;
+    result.fBuiltin = builtin;
+    return result;
+  }
 
   String description() const {
     String result;

@@ -112,8 +112,8 @@ class ScrollGmailBench : public Benchmark {
   ScrollGmailBench() {}
 
  protected:
-  virtual const char* onGetName() { return "chrome_scrollGmail"; }
-  virtual void onDraw(int loops, SkCanvas* canvas) {
+  const char* onGetName() override { return "chrome_scrollGmail"; }
+  void onDraw(int loops, SkCanvas* canvas) override {
     SkDEBUGCODE(this->validateBounds(canvas));
     SkPaint paint;
     this->setupPaint(&paint);
@@ -125,7 +125,7 @@ class ScrollGmailBench : public Benchmark {
       }
     }
   }
-  virtual SkIPoint onGetSize() { return SkIPoint::Make(W, H); }
+  SkIPoint onGetSize() override { return SkIPoint::Make(W, H); }
 
   void setRectangle(SkRect& current, int i) {
     current.setWH(

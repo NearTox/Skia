@@ -37,8 +37,7 @@ class GrMtlPipelineState {
       uint32_t uniformBufferSize, uint32_t numSamplers,
       std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
       std::unique_ptr<GrGLSLXferProcessor> xferPRocessor,
-      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
-      int fFragmentProcessorCnt);
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors);
 
   id<MTLRenderPipelineState> mtlPipelineState() { return fPipelineState; }
 
@@ -123,7 +122,6 @@ class GrMtlPipelineState {
   std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
   std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
   std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
-  int fFragmentProcessorCnt;
 
   GrMtlPipelineStateDataManager fDataManager;
 };

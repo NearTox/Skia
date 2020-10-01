@@ -7,7 +7,7 @@
 
 #include "src/gpu/gl/builders/GrGLProgramBuilder.h"
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkATrace.h"
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkReadBuffer.h"
@@ -15,7 +15,6 @@
 #include "src/core/SkWriteBuffer.h"
 #include "src/gpu/GrAutoLocaleSetter.h"
 #include "src/gpu/GrContextPriv.h"
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrPersistentCacheUtils.h"
 #include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/GrShaderCaps.h"
@@ -24,6 +23,8 @@
 #include "src/gpu/gl/GrGLGpu.h"
 #include "src/gpu/gl/GrGLProgram.h"
 #include "src/gpu/gl/builders/GrGLProgramBuilder.h"
+
+#include <memory>
 #include "src/gpu/gl/builders/GrGLShaderStringBuilder.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
@@ -103,7 +104,8 @@ void GrGLProgramBuilder::computeCountsAndStrides(
     GrGLuint programID, const GrPrimitiveProcessor& primProc, bool bindAttribLocations) {
   fVertexAttributeCnt = primProc.numVertexAttributes();
   fInstanceAttributeCnt = primProc.numInstanceAttributes();
-  fAttributes.reset(new GrGLProgram::Attribute[fVertexAttributeCnt + fInstanceAttributeCnt]);
+  fAttributes =
+      std::make_unique<GrGLProgram::Attribute[]>(fVertexAttributeCnt + fInstanceAttributeCnt);
   auto addAttr = [&](int i, const auto& a, size_t* stride) {
     fAttributes[i].fCPUType = a.cpuType();
     fAttributes[i].fGPUType = a.gpuType();
@@ -530,9 +532,8 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::createProgram(GrGLuint programID) {
   return GrGLProgram::Make(
       fGpu, fUniformHandles, programID, fUniformHandler.fUniforms, fUniformHandler.fSamplers,
       fVaryingHandler.fPathProcVaryingInfos, std::move(fGeometryProcessor),
-      std::move(fXferProcessor), std::move(fFragmentProcessors), fFragmentProcessorCnt,
-      std::move(fAttributes), fVertexAttributeCnt, fInstanceAttributeCnt, fVertexStride,
-      fInstanceStride);
+      std::move(fXferProcessor), std::move(fFragmentProcessors), std::move(fAttributes),
+      fVertexAttributeCnt, fInstanceAttributeCnt, fVertexStride, fInstanceStride);
 }
 
 bool GrGLProgramBuilder::PrecompileProgram(

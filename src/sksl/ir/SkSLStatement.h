@@ -36,6 +36,22 @@ struct Statement : public IRNode {
 
   Statement(int offset, Kind kind) noexcept : INHERITED(offset), fKind(kind) {}
 
+  /**
+   *  Use as<T> to downcast statements.
+   *  e.g. replace `(ReturnStatement&) s` with `s.as<ReturnStatement>()`.
+   */
+  template <typename T>
+  const T& as() const noexcept {
+    SkASSERT(this->fKind == T::kStatementKind);
+    return static_cast<const T&>(*this);
+  }
+
+  template <typename T>
+  T& as() noexcept {
+    SkASSERT(this->fKind == T::kStatementKind);
+    return static_cast<T&>(*this);
+  }
+
   virtual bool isEmpty() const noexcept { return false; }
 
   virtual std::unique_ptr<Statement> clone() const = 0;

@@ -83,14 +83,14 @@ void SkMatrix44::recomputeTypeMask() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkMatrix44::asColMajorf(float dst[]) const noexcept {
+void SkMatrix44::asColMajorf(float dst[]) const {
   const SkScalar* src = &fMat[0][0];
   for (int i = 0; i < 16; ++i) {
     dst[i] = src[i];
   }
 }
 
-void SkMatrix44::as3x4RowMajorf(float dst[]) const noexcept {
+void SkMatrix44::as3x4RowMajorf(float dst[]) const {
   dst[0] = fMat[0][0];
   dst[1] = fMat[1][0];
   dst[2] = fMat[2][0];
@@ -105,14 +105,14 @@ void SkMatrix44::as3x4RowMajorf(float dst[]) const noexcept {
   dst[11] = fMat[3][2];
 }
 
-void SkMatrix44::asColMajord(double dst[]) const noexcept {
+void SkMatrix44::asColMajord(double dst[]) const {
   const SkScalar* src = &fMat[0][0];
   for (int i = 0; i < 16; ++i) {
     dst[i] = src[i];
   }
 }
 
-void SkMatrix44::asRowMajorf(float dst[]) const noexcept {
+void SkMatrix44::asRowMajorf(float dst[]) const {
   const SkScalar* src = &fMat[0][0];
   for (int i = 0; i < 4; ++i) {
     dst[0] = float(src[0]);
@@ -124,7 +124,7 @@ void SkMatrix44::asRowMajorf(float dst[]) const noexcept {
   }
 }
 
-void SkMatrix44::asRowMajord(double dst[]) const noexcept {
+void SkMatrix44::asRowMajord(double dst[]) const {
   const SkScalar* src = &fMat[0][0];
   for (int i = 0; i < 4; ++i) {
     dst[0] = src[0];
@@ -136,7 +136,7 @@ void SkMatrix44::asRowMajord(double dst[]) const noexcept {
   }
 }
 
-void SkMatrix44::setColMajorf(const float src[]) noexcept {
+void SkMatrix44::setColMajorf(const float src[]) {
   SkScalar* dst = &fMat[0][0];
   for (int i = 0; i < 16; ++i) {
     dst[i] = src[i];
@@ -145,7 +145,7 @@ void SkMatrix44::setColMajorf(const float src[]) noexcept {
   this->recomputeTypeMask();
 }
 
-void SkMatrix44::setColMajord(const double src[]) noexcept {
+void SkMatrix44::setColMajord(const double src[]) {
   SkScalar* dst = &fMat[0][0];
   for (int i = 0; i < 16; ++i) {
     dst[i] = SkScalar(src[i]);
@@ -154,7 +154,7 @@ void SkMatrix44::setColMajord(const double src[]) noexcept {
   this->recomputeTypeMask();
 }
 
-void SkMatrix44::setRowMajorf(const float src[]) noexcept {
+void SkMatrix44::setRowMajorf(const float src[]) {
   SkScalar* dst = &fMat[0][0];
   for (int i = 0; i < 4; ++i) {
     dst[0] = src[0];
@@ -167,7 +167,7 @@ void SkMatrix44::setRowMajorf(const float src[]) noexcept {
   this->recomputeTypeMask();
 }
 
-void SkMatrix44::setRowMajord(const double src[]) noexcept {
+void SkMatrix44::setRowMajord(const double src[]) {
   SkScalar* dst = &fMat[0][0];
   for (int i = 0; i < 4; ++i) {
     dst[0] = SkScalar(src[0]);
@@ -229,7 +229,7 @@ void SkMatrix44::set3x3(
   this->recomputeTypeMask();
 }
 
-void SkMatrix44::set3x3RowMajorf(const float src[]) noexcept {
+void SkMatrix44::set3x3RowMajorf(const float src[]) {
   fMat[0][0] = src[0];
   fMat[0][1] = src[3];
   fMat[0][2] = src[6];
@@ -249,7 +249,7 @@ void SkMatrix44::set3x3RowMajorf(const float src[]) noexcept {
   this->recomputeTypeMask();
 }
 
-void SkMatrix44::set3x4RowMajorf(const float src[]) noexcept {
+void SkMatrix44::set3x4RowMajorf(const float src[]) {
   fMat[0][0] = src[0];
   fMat[1][0] = src[1];
   fMat[2][0] = src[2];
@@ -272,7 +272,7 @@ void SkMatrix44::set3x4RowMajorf(const float src[]) noexcept {
 void SkMatrix44::set4x4(
     SkScalar m_00, SkScalar m_10, SkScalar m_20, SkScalar m_30, SkScalar m_01, SkScalar m_11,
     SkScalar m_21, SkScalar m_31, SkScalar m_02, SkScalar m_12, SkScalar m_22, SkScalar m_32,
-    SkScalar m_03, SkScalar m_13, SkScalar m_23, SkScalar m_33) noexcept {
+    SkScalar m_03, SkScalar m_13, SkScalar m_23, SkScalar m_33) {
   fMat[0][0] = m_00;
   fMat[0][1] = m_10;
   fMat[0][2] = m_20;
@@ -294,7 +294,7 @@ void SkMatrix44::set4x4(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkMatrix44& SkMatrix44::setTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noexcept {
+SkMatrix44& SkMatrix44::setTranslate(SkScalar dx, SkScalar dy, SkScalar dz) {
   this->setIdentity();
 
   if (!dx && !dy && !dz) {
@@ -308,7 +308,7 @@ SkMatrix44& SkMatrix44::setTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noex
   return *this;
 }
 
-SkMatrix44& SkMatrix44::preTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noexcept {
+SkMatrix44& SkMatrix44::preTranslate(SkScalar dx, SkScalar dy, SkScalar dz) {
   if (!dx && !dy && !dz) {
     return *this;
   }
@@ -320,7 +320,7 @@ SkMatrix44& SkMatrix44::preTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noex
   return *this;
 }
 
-SkMatrix44& SkMatrix44::postTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noexcept {
+SkMatrix44& SkMatrix44::postTranslate(SkScalar dx, SkScalar dy, SkScalar dz) {
   if (!dx && !dy && !dz) {
     return *this;
   }
@@ -342,7 +342,7 @@ SkMatrix44& SkMatrix44::postTranslate(SkScalar dx, SkScalar dy, SkScalar dz) noe
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkMatrix44& SkMatrix44::setScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept {
+SkMatrix44& SkMatrix44::setScale(SkScalar sx, SkScalar sy, SkScalar sz) {
   this->setIdentity();
 
   if (1 == sx && 1 == sy && 1 == sz) {
@@ -356,7 +356,7 @@ SkMatrix44& SkMatrix44::setScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept
   return *this;
 }
 
-SkMatrix44& SkMatrix44::preScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept {
+SkMatrix44& SkMatrix44::preScale(SkScalar sx, SkScalar sy, SkScalar sz) {
   if (1 == sx && 1 == sy && 1 == sz) {
     return *this;
   }
@@ -373,7 +373,7 @@ SkMatrix44& SkMatrix44::preScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept
   return *this;
 }
 
-SkMatrix44& SkMatrix44::postScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcept {
+SkMatrix44& SkMatrix44::postScale(SkScalar sx, SkScalar sy, SkScalar sz) {
   if (1 == sx && 1 == sy && 1 == sz) {
     return *this;
   }
@@ -389,7 +389,7 @@ SkMatrix44& SkMatrix44::postScale(SkScalar sx, SkScalar sy, SkScalar sz) noexcep
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkMatrix44::setRotateAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar radians) noexcept {
+void SkMatrix44::setRotateAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar radians) {
   double len2 = (double)x * x + (double)y * y + (double)z * z;
   if (1 != len2) {
     if (0 == len2) {
@@ -404,7 +404,7 @@ void SkMatrix44::setRotateAbout(SkScalar x, SkScalar y, SkScalar z, SkScalar rad
   this->setRotateAboutUnit(x, y, z, radians);
 }
 
-void SkMatrix44::setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar radians) noexcept {
+void SkMatrix44::setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar radians) {
   double c = cos(radians);
   double s = sin(radians);
   double C = 1 - c;
@@ -437,7 +437,7 @@ void SkMatrix44::setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar
 
 static bool bits_isonly(int value, int mask) noexcept { return 0 == (value & ~mask); }
 
-void SkMatrix44::setConcat(const SkMatrix44& a, const SkMatrix44& b) noexcept {
+void SkMatrix44::setConcat(const SkMatrix44& a, const SkMatrix44& b) {
   const SkMatrix44::TypeMask a_mask = a.getType();
   const SkMatrix44::TypeMask b_mask = b.getType();
 
@@ -490,7 +490,7 @@ void SkMatrix44::setConcat(const SkMatrix44& a, const SkMatrix44& b) noexcept {
     precision along the way. This relies on the compiler automatically
     promoting our SkScalar values to double (if needed).
  */
-double SkMatrix44::determinant() const noexcept {
+double SkMatrix44::determinant() const {
   if (this->isIdentity()) {
     return 1;
   }
@@ -534,7 +534,7 @@ double SkMatrix44::determinant() const noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool is_matrix_finite(const SkMatrix44& matrix) noexcept {
+static bool is_matrix_finite(const SkMatrix44& matrix) {
   SkScalar accumulator = 0;
   for (int row = 0; row < 4; ++row) {
     for (int col = 0; col < 4; ++col) {
@@ -544,7 +544,7 @@ static bool is_matrix_finite(const SkMatrix44& matrix) noexcept {
   return accumulator == 0;
 }
 
-bool SkMatrix44::invert(SkMatrix44* storage) const noexcept {
+bool SkMatrix44::invert(SkMatrix44* storage) const {
   if (this->isIdentity()) {
     if (storage) {
       storage->setIdentity();
@@ -768,7 +768,7 @@ void SkMatrix44::transpose() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkMatrix44::mapScalars(const SkScalar src[4], SkScalar dst[4]) const noexcept {
+void SkMatrix44::mapScalars(const SkScalar src[4], SkScalar dst[4]) const {
   SkScalar storage[4];
   SkScalar* result = (src == dst) ? storage : dst;
 
@@ -789,8 +789,7 @@ typedef void (*Map2Procf)(const SkScalar mat[][4], const float src2[], int count
 typedef void (*Map2Procd)(const SkScalar mat[][4], const double src2[], int count, double dst4[]);
 
 static void map2_if(
-    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count,
-    float* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count, float* SK_RESTRICT dst4) {
   for (int i = 0; i < count; ++i) {
     dst4[0] = src2[0];
     dst4[1] = src2[1];
@@ -802,8 +801,7 @@ static void map2_if(
 }
 
 static void map2_id(
-    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count,
-    double* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count, double* SK_RESTRICT dst4) {
   for (int i = 0; i < count; ++i) {
     dst4[0] = src2[0];
     dst4[1] = src2[1];
@@ -815,8 +813,7 @@ static void map2_id(
 }
 
 static void map2_tf(
-    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count,
-    float* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count, float* SK_RESTRICT dst4) {
   const float mat30 = float(mat[3][0]);
   const float mat31 = float(mat[3][1]);
   const float mat32 = float(mat[3][2]);
@@ -831,8 +828,7 @@ static void map2_tf(
 }
 
 static void map2_td(
-    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count,
-    double* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count, double* SK_RESTRICT dst4) {
   for (int n = 0; n < count; ++n) {
     dst4[0] = src2[0] + mat[3][0];
     dst4[1] = src2[1] + mat[3][1];
@@ -844,8 +840,7 @@ static void map2_td(
 }
 
 static void map2_sf(
-    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count,
-    float* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count, float* SK_RESTRICT dst4) {
   const float mat32 = float(mat[3][2]);
   for (int n = 0; n < count; ++n) {
     dst4[0] = float(mat[0][0] * src2[0] + mat[3][0]);
@@ -858,8 +853,7 @@ static void map2_sf(
 }
 
 static void map2_sd(
-    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count,
-    double* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count, double* SK_RESTRICT dst4) {
   for (int n = 0; n < count; ++n) {
     dst4[0] = mat[0][0] * src2[0] + mat[3][0];
     dst4[1] = mat[1][1] * src2[1] + mat[3][1];
@@ -871,8 +865,7 @@ static void map2_sd(
 }
 
 static void map2_af(
-    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count,
-    float* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count, float* SK_RESTRICT dst4) {
   SkScalar r;
   for (int n = 0; n < count; ++n) {
     SkScalar sx = src2[0];
@@ -890,8 +883,7 @@ static void map2_af(
 }
 
 static void map2_ad(
-    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count,
-    double* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count, double* SK_RESTRICT dst4) {
   for (int n = 0; n < count; ++n) {
     double sx = src2[0];
     double sy = src2[1];
@@ -905,8 +897,7 @@ static void map2_ad(
 }
 
 static void map2_pf(
-    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count,
-    float* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const float* SK_RESTRICT src2, int count, float* SK_RESTRICT dst4) {
   SkScalar r;
   for (int n = 0; n < count; ++n) {
     SkScalar sx = src2[0];
@@ -921,8 +912,7 @@ static void map2_pf(
 }
 
 static void map2_pd(
-    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count,
-    double* SK_RESTRICT dst4) noexcept {
+    const SkScalar mat[][4], const double* SK_RESTRICT src2, int count, double* SK_RESTRICT dst4) {
   for (int n = 0; n < count; ++n) {
     double sx = src2[0];
     double sy = src2[1];
@@ -952,7 +942,7 @@ void SkMatrix44::map2(const double src2[], int count, double dst4[]) const {
   proc(fMat, src2, count, dst4);
 }
 
-bool SkMatrix44::preserves2dAxisAlignment(SkScalar epsilon) const noexcept {
+bool SkMatrix44::preserves2dAxisAlignment(SkScalar epsilon) const {
   // Can't check (mask & kPerspective_Mask) because Z isn't relevant here.
   if (0 != perspX() || 0 != perspY()) return false;
 

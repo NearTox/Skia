@@ -20,16 +20,18 @@ namespace SkSL {
  * An expression modified by a unary operator appearing before it, such as '!flag'.
  */
 struct PrefixExpression : public Expression {
-  PrefixExpression(Token::Kind op, std::unique_ptr<Expression> operand) noexcept
-      : INHERITED(operand->fOffset, kPrefix_Kind, operand->fType),
+  static constexpr Kind kExpressionKind = kPrefix_Kind;
+
+  PrefixExpression(Token::Kind op, std::unique_ptr<Expression> operand)
+      : INHERITED(operand->fOffset, kExpressionKind, operand->fType),
         fOperand(std::move(operand)),
         fOperator(op) {}
 
-  bool isConstant() const noexcept override {
-    return fOperator == Token::Kind::TK_MINUS && fOperand->isConstant();
+  bool isCompileTimeConstant() const noexcept override {
+    return fOperator == Token::Kind::TK_MINUS && fOperand->isCompileTimeConstant();
   }
 
-  bool hasProperty(Property property) const override {
+  bool hasProperty(Property property) const noexcept override {
     if (property == Property::kSideEffects &&
         (fOperator == Token::Kind::TK_PLUSPLUS || fOperator == Token::Kind::TK_MINUSMINUS)) {
       return true;
@@ -41,7 +43,7 @@ struct PrefixExpression : public Expression {
       const IRGenerator& irGenerator, const DefinitionMap& definitions) override {
     if (fOperand->fKind == Expression::kFloatLiteral_Kind) {
       return std::unique_ptr<Expression>(
-          new FloatLiteral(irGenerator.fContext, fOffset, -((FloatLiteral&)*fOperand).fValue));
+          new FloatLiteral(irGenerator.fContext, fOffset, -fOperand->as<FloatLiteral>().fValue));
     }
     return nullptr;
   }

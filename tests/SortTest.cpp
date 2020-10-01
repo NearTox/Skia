@@ -54,7 +54,7 @@ DEF_TEST(Sort, reporter) {
     check_sort(reporter, "Heap", workingArray, sortedArray, count);
 
     memcpy(workingArray, randomArray, sizeof(randomArray));
-    SkTQSort<int>(workingArray, workingArray + count - 1);
+    SkTQSort<int>(workingArray, workingArray + count);
     check_sort(reporter, "Quick", workingArray, sortedArray, count);
   }
 }

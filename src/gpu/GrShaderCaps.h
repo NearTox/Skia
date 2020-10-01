@@ -15,7 +15,7 @@
 
 namespace SkSL {
 class ShaderCapsFactory;
-}
+}  // namespace SkSL
 
 struct GrContextOptions;
 class SkJSONWriter;
@@ -35,7 +35,7 @@ class GrShaderCaps : public SkRefCnt {
     kLast_AdvBlendEqInteraction = kSpecificEnables_AdvBlendEqInteraction
   };
 
-  GrShaderCaps(const GrContextOptions&) noexcept;
+  GrShaderCaps(const GrContextOptions&);
 
   void dumpJSON(SkJSONWriter*) const;
 

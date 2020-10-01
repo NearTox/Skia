@@ -185,7 +185,7 @@ static const size_t kPathAlignment = 4u;
 
 // -- StrikeSpec -----------------------------------------------------------------------------------
 struct StrikeSpec {
-  StrikeSpec() = default;
+  StrikeSpec() noexcept = default;
   StrikeSpec(SkFontID typefaceID_, SkDiscardableHandleId discardableHandleId_)
       : typefaceID{typefaceID_}, discardableHandleId(discardableHandleId_) {}
   SkFontID typefaceID = 0u;
@@ -328,7 +328,7 @@ class SkStrikeServer::RemoteStrike final : public SkStrikeForGPU {
   std::vector<SkGlyph> fPathsToSend;
 
   // Alloc for storing bits and pieces of paths, Cleared after diffs are serialized.
-  SkArenaAlloc fPathAlloc{256};
+  SkArenaAllocWithReset fPathAlloc{256};
 };
 
 SkStrikeServer::RemoteStrike::RemoteStrike(

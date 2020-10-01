@@ -50,6 +50,7 @@ class gr_cp {
   using element_type = T;
 
   constexpr gr_cp() noexcept : fObject(nullptr) {}
+  constexpr gr_cp(std::nullptr_t) noexcept : fObject(nullptr) {}
 
   /**
    *  Shares the underlying object by calling AddRef(), so that both the argument and the newly
@@ -62,13 +63,13 @@ class gr_cp {
    *  the new gr_cp will have a reference to the object, and the argument will point to null.
    *  No call to AddRef() or Release() will be made.
    */
-  gr_cp(gr_cp<T>&& that) : fObject(that.release()) {}
+  gr_cp(gr_cp<T>&& that) noexcept : fObject(that.release()) {}
 
   /**
    *  Adopt the bare object into the newly created gr_cp.
    *  No call to AddRef() or Release() will be made.
    */
-  explicit gr_cp(T* obj) { fObject = obj; }
+  explicit gr_cp(T* obj) noexcept { fObject = obj; }
 
   /**
    *  Calls Release() on the underlying object pointer.
@@ -100,9 +101,11 @@ class gr_cp {
     return *this;
   }
 
-  T* get() const { return fObject; }
-  T* operator->() const { return fObject; }
-  T** operator&() { return &fObject; }
+  explicit operator bool() const noexcept { return this->get() != nullptr; }
+
+  T* get() const noexcept { return fObject; }
+  T* operator->() const noexcept { return fObject; }
+  T** operator&() noexcept { return &fObject; }
 
   /**
    *  Adopt the new object, and call Release() on any previously held object (if not null).
@@ -129,7 +132,7 @@ class gr_cp {
    *  The caller must assume ownership of the object, and manage its reference count directly.
    *  No call to Release() will be made.
    */
-  T* SK_WARN_UNUSED_RESULT release() {
+  T* SK_WARN_UNUSED_RESULT release() noexcept {
     T* obj = fObject;
     fObject = nullptr;
     return obj;
@@ -157,7 +160,7 @@ struct GrD3DTextureResourceInfo {
   D3D12_RESOURCE_STATES fResourceState;
   DXGI_FORMAT fFormat;
   uint32_t fLevelCount;
-  unsigned int fSampleQualityLevel;
+  unsigned int fSampleQualityPattern;
   GrProtected fProtected;
 
   GrD3DTextureResourceInfo()
@@ -165,7 +168,7 @@ struct GrD3DTextureResourceInfo {
         fResourceState(D3D12_RESOURCE_STATE_COMMON),
         fFormat(DXGI_FORMAT_UNKNOWN),
         fLevelCount(0),
-        fSampleQualityLevel(0),
+        fSampleQualityPattern(DXGI_STANDARD_MULTISAMPLE_QUALITY_PATTERN),
         fProtected(GrProtected::kNo) {}
 
   GrD3DTextureResourceInfo(
@@ -176,7 +179,7 @@ struct GrD3DTextureResourceInfo {
         fResourceState(resourceState),
         fFormat(format),
         fLevelCount(levelCount),
-        fSampleQualityLevel(sampleQualityLevel),
+        fSampleQualityPattern(sampleQualityLevel),
         fProtected(isProtected) {}
 
   GrD3DTextureResourceInfo(
@@ -185,16 +188,23 @@ struct GrD3DTextureResourceInfo {
         fResourceState(static_cast<D3D12_RESOURCE_STATES>(resourceState)),
         fFormat(info.fFormat),
         fLevelCount(info.fLevelCount),
-        fSampleQualityLevel(info.fSampleQualityLevel),
+        fSampleQualityPattern(info.fSampleQualityPattern),
         fProtected(info.fProtected) {}
 
 #if GR_TEST_UTILS
   bool operator==(const GrD3DTextureResourceInfo& that) const {
     return fResource == that.fResource && fResourceState == that.fResourceState &&
            fFormat == that.fFormat && fLevelCount == that.fLevelCount &&
-           fSampleQualityLevel == that.fSampleQualityLevel && fProtected == that.fProtected;
+           fSampleQualityPattern == that.fSampleQualityPattern && fProtected == that.fProtected;
   }
 #endif
+};
+
+struct GrD3DFenceInfo {
+  GrD3DFenceInfo() : fFence(nullptr), fValue(0) {}
+
+  gr_cp<ID3D12Fence> fFence;
+  uint64_t fValue;  // signal value for the fence
 };
 
 #endif

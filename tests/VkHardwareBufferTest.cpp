@@ -15,7 +15,7 @@
 #  include "include/core/SkImage.h"
 #  include "include/core/SkSurface.h"
 #  include "include/gpu/GrBackendSemaphore.h"
-#  include "include/gpu/GrContext.h"
+#  include "include/gpu/GrDirectContext.h"
 #  include "include/gpu/vk/GrVkBackendContext.h"
 #  include "include/gpu/vk/GrVkExtensions.h"
 #  include "src/core/SkAutoMalloc.h"
@@ -60,7 +60,7 @@ class BaseTestHelper {
 
   virtual void makeCurrent() = 0;
 
-  virtual GrContext* grContext() = 0;
+  virtual GrDirectContext* directContext() = 0;
 
   int getFdHandle() { return fFdHandle; }
 
@@ -108,7 +108,7 @@ class EGLTestHelper : public BaseTestHelper {
 
   void makeCurrent() override { fGLCtx->makeCurrent(); }
 
-  GrContext* grContext() override { return fGrContext; }
+  GrDirectContext* directContext() override { return fDirectContext; }
 
  private:
   bool importHardwareBuffer(skiatest::Reporter* reporter, AHardwareBuffer* buffer);
@@ -134,14 +134,14 @@ class EGLTestHelper : public BaseTestHelper {
   sk_gpu_test::ContextInfo fGLESContextInfo;
 
   sk_gpu_test::GLTestContext* fGLCtx = nullptr;
-  GrContext* fGrContext = nullptr;
+  GrDirectContext* fDirectContext = nullptr;
 };
 
 bool EGLTestHelper::init(skiatest::Reporter* reporter) {
   fGLESContextInfo = fFactory.getContextInfo(sk_gpu_test::GrContextFactory::kGLES_ContextType);
-  fGrContext = fGLESContextInfo.grContext();
+  fDirectContext = fGLESContextInfo.directContext();
   fGLCtx = fGLESContextInfo.glContext();
-  if (!fGrContext || !fGLCtx) {
+  if (!fDirectContext || !fGLCtx) {
     return false;
   }
 
@@ -240,7 +240,7 @@ bool EGLTestHelper::importHardwareBuffer(skiatest::Reporter* reporter, AHardware
     return false;
   }
 
-  fGrContext->resetContext(kTextureBinding_GrGLBackendState);
+  fDirectContext->resetContext(kTextureBinding_GrGLBackendState);
   return true;
 }
 
@@ -254,12 +254,12 @@ sk_sp<SkImage> EGLTestHelper::importHardwareBufferForRead(
   textureInfo.fID = fTexID;
   textureInfo.fFormat = GR_GL_RGBA8;
 
-  GrBackendTexture backendTex(DEV_W, DEV_H, GrMipMapped::kNo, textureInfo);
+  GrBackendTexture backendTex(DEV_W, DEV_H, GrMipmapped::kNo, textureInfo);
   REPORTER_ASSERT(reporter, backendTex.isValid());
 
   sk_sp<SkImage> image = SkImage::MakeFromTexture(
-      fGrContext, backendTex, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
-      nullptr);
+      fDirectContext, backendTex, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
+      kPremul_SkAlphaType, nullptr);
 
   if (!image) {
     ERRORF(reporter, "Failed to make wrapped GL SkImage");
@@ -279,11 +279,11 @@ sk_sp<SkSurface> EGLTestHelper::importHardwareBufferForWrite(
   textureInfo.fID = fTexID;
   textureInfo.fFormat = GR_GL_RGBA8;
 
-  GrBackendTexture backendTex(DEV_W, DEV_H, GrMipMapped::kNo, textureInfo);
+  GrBackendTexture backendTex(DEV_W, DEV_H, GrMipmapped::kNo, textureInfo);
   REPORTER_ASSERT(reporter, backendTex.isValid());
 
   sk_sp<SkSurface> surface = SkSurface::MakeFromBackendTexture(
-      fGrContext, backendTex, kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType, nullptr,
+      fDirectContext, backendTex, kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType, nullptr,
       nullptr);
 
   if (!surface) {
@@ -339,10 +339,8 @@ bool EGLTestHelper::importAndWaitOnSemaphore(
 }
 
 void EGLTestHelper::doClientSync() {
-  GrFlushInfo flushInfo;
-  flushInfo.fFlags = kSyncCpu_GrFlushFlag;
-  this->grContext()->flush(flushInfo);
-  this->grContext()->submit(true);
+  this->directContext()->flush();
+  this->directContext()->submit(true);
 }
 #  endif  // SK_GL
 
@@ -388,7 +386,7 @@ class VulkanTestHelper : public BaseTestHelper {
     }
   }
   void cleanup() override {
-    fGrContext.reset();
+    fDirectContext.reset();
     this->releaseImage();
     if (fSignalSemaphore != VK_NULL_HANDLE) {
       fVkDestroySemaphore(fDevice, fSignalSemaphore, nullptr);
@@ -419,11 +417,11 @@ class VulkanTestHelper : public BaseTestHelper {
   bool init(skiatest::Reporter* reporter) override;
 
   void doClientSync() override {
-    if (!fGrContext) {
+    if (!fDirectContext) {
       return;
     }
 
-    fGrContext->priv().getGpu()->testingOnly_flushGpuAndSync();
+    fDirectContext->priv().getGpu()->testingOnly_flushGpuAndSync();
   }
 
   bool flushSurfaceAndSignalSemaphore(skiatest::Reporter* reporter, sk_sp<SkSurface>) override;
@@ -438,7 +436,7 @@ class VulkanTestHelper : public BaseTestHelper {
 
   void makeCurrent() override {}
 
-  GrContext* grContext() override { return fGrContext.get(); }
+  GrDirectContext* directContext() override { return fDirectContext.get(); }
 
  private:
   bool checkOptimalHardwareBuffer(skiatest::Reporter* reporter);
@@ -487,7 +485,7 @@ class VulkanTestHelper : public BaseTestHelper {
   VkDevice fDevice = VK_NULL_HANDLE;
 
   GrVkBackendContext fBackendContext;
-  sk_sp<GrContext> fGrContext;
+  sk_sp<GrDirectContext> fDirectContext;
 };
 
 bool VulkanTestHelper::init(skiatest::Reporter* reporter) {
@@ -561,9 +559,9 @@ bool VulkanTestHelper::init(skiatest::Reporter* reporter) {
   ACQUIRE_DEVICE_VK_PROC(ImportSemaphoreFdKHR);
   ACQUIRE_DEVICE_VK_PROC(DestroySemaphore);
 
-  fGrContext = GrContext::MakeVulkan(fBackendContext);
-  REPORTER_ASSERT(reporter, fGrContext.get());
-  if (!fGrContext) {
+  fDirectContext = GrDirectContext::MakeVulkan(fBackendContext);
+  REPORTER_ASSERT(reporter, fDirectContext.get());
+  if (!fDirectContext) {
     return false;
   }
 
@@ -788,7 +786,7 @@ sk_sp<SkImage> VulkanTestHelper::importHardwareBufferForRead(
   GrBackendTexture backendTex(DEV_W, DEV_H, imageInfo);
 
   sk_sp<SkImage> wrappedImage = SkImage::MakeFromTexture(
-      fGrContext.get(), backendTex, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
+      fDirectContext.get(), backendTex, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
       kPremul_SkAlphaType, nullptr);
 
   if (!wrappedImage.get()) {
@@ -810,10 +808,10 @@ bool VulkanTestHelper::flushSurfaceAndSignalSemaphore(
   GrFlushInfo info;
   info.fNumSemaphores = 1;
   info.fSignalSemaphores = &semaphore;
-  GrSemaphoresSubmitted submitted = fGrContext->flush(info);
-  fGrContext->submit();
+  GrSemaphoresSubmitted submitted = fDirectContext->flush(info);
+  fDirectContext->submit();
   if (GrSemaphoresSubmitted::kNo == submitted) {
-    ERRORF(reporter, "Failing call to flush on GrContext");
+    ERRORF(reporter, "Failing call to flush on GrDirectContext");
     return false;
   }
   SkASSERT(semaphore.isInitialized());
@@ -947,8 +945,8 @@ sk_sp<SkSurface> VulkanTestHelper::importHardwareBufferForWrite(
   GrBackendTexture backendTex(DEV_W, DEV_H, imageInfo);
 
   sk_sp<SkSurface> surface = SkSurface::MakeFromBackendTexture(
-      fGrContext.get(), backendTex, kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType, nullptr,
-      nullptr);
+      fDirectContext.get(), backendTex, kTopLeft_GrSurfaceOrigin, 0, kRGBA_8888_SkColorType,
+      nullptr, nullptr);
 
   if (!surface.get()) {
     ERRORF(reporter, "Failed to create wrapped Vulkan SkSurface");
@@ -1210,14 +1208,14 @@ void run_test(
     return;
   }
 
-  GrContext* grContext = dstHelper->grContext();
+  auto direct = dstHelper->directContext();
 
   // Make SkSurface to render wrapped HWB into.
   SkImageInfo imageInfo =
       SkImageInfo::Make(DEV_W, DEV_H, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);
 
   sk_sp<SkSurface> dstSurf = SkSurface::MakeRenderTarget(
-      grContext, SkBudgeted::kNo, imageInfo, 0, kTopLeft_GrSurfaceOrigin, nullptr, false);
+      direct, SkBudgeted::kNo, imageInfo, 0, kTopLeft_GrSurfaceOrigin, nullptr, false);
   if (!dstSurf.get()) {
     ERRORF(reporter, "Failed to create destination SkSurface");
     wrappedImage.reset();

@@ -56,7 +56,7 @@ class GrCCPathCache {
     static void operator delete(void* p);
 
    private:
-    Key(uint32_t pathCacheUniqueID, int dataCountU32) noexcept
+    Key(uint32_t pathCacheUniqueID, int dataCountU32)
         : fPathCacheUniqueID(pathCacheUniqueID),
           fDataSizeInBytes(dataCountU32 * sizeof(uint32_t))
               SkDEBUGCODE(, fDataReserveCountU32(dataCountU32)) {
@@ -87,7 +87,7 @@ class GrCCPathCache {
   class OnFlushEntryRef : SkNoncopyable {
    public:
     static OnFlushEntryRef OnFlushRef(GrCCPathCacheEntry*) noexcept;
-    OnFlushEntryRef() noexcept = default;
+    constexpr OnFlushEntryRef() noexcept = default;
     OnFlushEntryRef(OnFlushEntryRef&& ref) noexcept : fEntry(std::exchange(ref.fEntry, nullptr)) {}
     ~OnFlushEntryRef();
 
@@ -130,12 +130,12 @@ class GrCCPathCache {
   // the hash table. We take that opportunity to remove it from the LRU list and do some cleanup.
   class HashNode : SkNoncopyable {
    public:
-    static const Key& GetKey(const HashNode&) noexcept;
+    static const Key& GetKey(const HashNode&);
     inline static uint32_t Hash(const Key& key) {
       return GrResourceKeyHash(key.data(), key.dataSizeInBytes());
     }
 
-    HashNode() noexcept = default;
+    constexpr HashNode() noexcept = default;
     HashNode(GrCCPathCache*, sk_sp<Key>, const MaskTransform&, const GrStyledShape&);
     HashNode(HashNode&& node) noexcept
         : fPathCache(node.fPathCache), fEntry(std::move(node.fEntry)) {
@@ -270,7 +270,7 @@ class GrCCPathCacheEntry : public GrNonAtomicRef<GrCCPathCacheEntry> {
 
   friend class GrCCPathCache;
   friend void GrCCPathProcessor::Instance::set(
-      const GrCCPathCacheEntry&, const SkIVector&, const SkPMColor4f&, GrFillRule) noexcept;
+      const GrCCPathCacheEntry&, const SkIVector&, const SkPMColor4f&, GrFillRule);
 
  public:
   int testingOnly_peekOnFlushRefCnt() const;
@@ -345,7 +345,7 @@ inline GrCCPathCache::HashNode::HashNode(
 }
 
 inline const GrCCPathCache::Key& GrCCPathCache::HashNode::GetKey(
-    const GrCCPathCache::HashNode& node) noexcept {
+    const GrCCPathCache::HashNode& node) {
   return *node.entry()->fCacheKey;
 }
 
@@ -360,7 +360,7 @@ inline void GrCCPathCache::HashNode::operator=(HashNode&& node) noexcept {
 
 inline void GrCCPathProcessor::Instance::set(
     const GrCCPathCacheEntry& entry, const SkIVector& shift, const SkPMColor4f& color,
-    GrFillRule fillRule) noexcept {
+    GrFillRule fillRule) {
   float dx = (float)shift.fX, dy = (float)shift.fY;
   this->set(entry.fOctoBounds.makeOffset(dx, dy), entry.fAtlasOffset - shift, color, fillRule);
 }

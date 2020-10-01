@@ -55,9 +55,7 @@ MotionBlurEffect::MotionBlurEffect(
       fPhase(phase),
       fDT(dt) {}
 
-const sksg::RenderNode* MotionBlurEffect::onNodeAt(const SkPoint&) const noexcept {
-  return nullptr;
-}
+const sksg::RenderNode* MotionBlurEffect::onNodeAt(const SkPoint&) const { return nullptr; }
 
 SkRect MotionBlurEffect::seekToSample(size_t sample_idx, const SkMatrix& ctm) const {
   SkASSERT(sample_idx < fSampleCount);
@@ -119,10 +117,10 @@ void MotionBlurEffect::renderToRaster8888Pow2Samples(
     }
     needs_clear = true;
     child->render(canvas, ctx);
-    SkDEBUGCODE(frames_rendered++;)
+    SkDEBUGCODE(frames_rendered++);
 
-        // Pluck out the pixels we've drawn in the layer.
-        const uint32_t* src = layer;
+    // Pluck out the pixels we've drawn in the layer.
+    const uint32_t* src = layer;
     uint64_t* dst = accum.data();
 
     for (int y = 0; y < info.height(); y++) {
@@ -236,7 +234,7 @@ void MotionBlurEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) cons
     }
 
     child->render(canvas, frame_ctx);
-    SkDEBUGCODE(frames_rendered++;)
+    SkDEBUGCODE(frames_rendered++);
   }
 
   SkASSERT(frames_rendered == fVisibleSampleCount);

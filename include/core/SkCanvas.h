@@ -33,6 +33,7 @@
 #include <vector>
 
 class GrContext;
+class GrRecordingContext;
 class GrRenderTargetContext;
 class SkBaseDevice;
 class SkBitmap;
@@ -287,6 +288,11 @@ class SK_API SkCanvas {
       example: https://fiddle.skia.org/c/@Canvas_getGrContext
   */
   virtual GrContext* getGrContext() noexcept;
+
+  /**
+   * Experimental. SkCanvases can actually only guarantee a GrRecordingContext.
+   */
+  virtual GrRecordingContext* recordingContext() noexcept;
 
   /** Sometimes a canvas is owned by a surface. If it is, getSurface() will return a bare
    *  pointer to that surface, else this will return nullptr.
@@ -907,6 +913,8 @@ class SK_API SkCanvas {
 
       Pass an empty rect to disable maximum clip.
       This private API is for use by Android framework only.
+
+      DEPRECATED: Replace usage with SkAndroidFrameworkUtils::replaceClip()
 
       @param rect  maximum allowed clip in device coordinates
   */
@@ -2426,7 +2434,7 @@ class SK_API SkCanvas {
   ///////////////////////////////////////////////////////////////////////////
 
   // don't call
-  virtual GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext();
+  virtual GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext() noexcept;
   SkIRect internal_private_getTopLayerBounds() const { return getTopLayerBounds(); }
 
   // TEMP helpers until we switch virtual over to const& for src-rect
@@ -2735,6 +2743,13 @@ class SK_API SkCanvas {
    */
   bool androidFramework_isClipAA() const;
 
+  /**
+   * Reset the clip to be just the intersection with the global-space 'rect'. This operates within
+   * the save/restore stack of the canvas, so restore() will bring back any saved clip. However,
+   * since 'rect' is already in global space, it is not modified by the canvas matrix.
+   */
+  void androidFramework_replaceClip(const SkIRect& rect);
+
   virtual SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const noexcept {
     return nullptr;
   }
@@ -2823,8 +2838,5 @@ class SkAutoCanvasRestore {
   SkAutoCanvasRestore& operator=(SkAutoCanvasRestore&&) = delete;
   SkAutoCanvasRestore& operator=(const SkAutoCanvasRestore&) = delete;
 };
-
-// Private
-#define SkAutoCanvasRestore(...) SK_REQUIRE_LOCAL_VAR(SkAutoCanvasRestore)
 
 #endif

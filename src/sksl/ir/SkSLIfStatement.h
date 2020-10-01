@@ -17,10 +17,12 @@ namespace SkSL {
  * An 'if' statement.
  */
 struct IfStatement : public Statement {
+  static constexpr Kind kStatementKind = kIf_Kind;
+
   IfStatement(
       int offset, bool isStatic, std::unique_ptr<Expression> test,
-      std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse) noexcept
-      : INHERITED(offset, kIf_Kind),
+      std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse)
+      : INHERITED(offset, kStatementKind),
         fIsStatic(isStatic),
         fTest(std::move(test)),
         fIfTrue(std::move(ifTrue)),

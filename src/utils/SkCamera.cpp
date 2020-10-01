@@ -8,8 +8,7 @@
 #include "include/utils/SkCamera.h"
 
 static SkScalar SkScalarDotDiv(
-    int count, const SkScalar a[], int step_a, const SkScalar b[], int step_b,
-    SkScalar denom) noexcept {
+    int count, const SkScalar a[], int step_a, const SkScalar b[], int step_b, SkScalar denom) {
   SkScalar prod = 0;
   for (int i = 0; i < count; i++) {
     prod += a[0] * b[0];
@@ -21,15 +20,15 @@ static SkScalar SkScalarDotDiv(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPatch3D::SkPatch3D() noexcept { this->reset(); }
+SkPatch3D::SkPatch3D() { this->reset(); }
 
-void SkPatch3D::reset() noexcept {
+void SkPatch3D::reset() {
   fOrigin = {0, 0, 0};
   fU = {SK_Scalar1, 0, 0};
   fV = {0, -SK_Scalar1, 0};
 }
 
-void SkPatch3D::transform(const SkM44& m, SkPatch3D* dst) const noexcept {
+void SkPatch3D::transform(const SkM44& m, SkPatch3D* dst) const {
   if (dst == nullptr) {
     dst = (SkPatch3D*)this;
   }
@@ -39,7 +38,7 @@ void SkPatch3D::transform(const SkM44& m, SkPatch3D* dst) const noexcept {
   dst->fOrigin = {x, y, z};
 }
 
-SkScalar SkPatch3D::dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const noexcept {
+SkScalar SkPatch3D::dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const {
   SkScalar cx = fU.y * fV.z - fU.z * fV.y;
   SkScalar cy = fU.z * fV.x - fU.x * fV.y;
   SkScalar cz = fU.x * fV.y - fU.y * fV.x;
@@ -49,9 +48,9 @@ SkScalar SkPatch3D::dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const noexcep
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkCamera3D::SkCamera3D() noexcept { this->reset(); }
+SkCamera3D::SkCamera3D() { this->reset(); }
 
-void SkCamera3D::reset() noexcept {
+void SkCamera3D::reset() {
   fLocation = {0, 0, -SkIntToScalar(576)};  // 8 inches backward
   fAxis = {0, 0, SK_Scalar1};               // forward
   fZenith = {0, -SK_Scalar1, 0};            // up
@@ -61,9 +60,9 @@ void SkCamera3D::reset() noexcept {
   fNeedToUpdate = true;
 }
 
-void SkCamera3D::update() noexcept { fNeedToUpdate = true; }
+void SkCamera3D::update() { fNeedToUpdate = true; }
 
-void SkCamera3D::doUpdate() const noexcept {
+void SkCamera3D::doUpdate() const {
   SkV3 axis, zenith, cross;
 
   // construct a orthonormal basis of cross (x), zenith (y), and axis (z)
@@ -104,7 +103,7 @@ void SkCamera3D::doUpdate() const noexcept {
   }
 }
 
-void SkCamera3D::patchToMatrix(const SkPatch3D& quilt, SkMatrix* matrix) const noexcept {
+void SkCamera3D::patchToMatrix(const SkPatch3D& quilt, SkMatrix* matrix) const {
   if (fNeedToUpdate) {
     this->doUpdate();
     fNeedToUpdate = false;
@@ -143,7 +142,7 @@ void SkCamera3D::patchToMatrix(const SkPatch3D& quilt, SkMatrix* matrix) const n
 
 ///////////////////////////////////////////////////////////////////////////////
 
-Sk3DView::Sk3DView() noexcept { fRec = &fInitialRec; }
+Sk3DView::Sk3DView() { fRec = &fInitialRec; }
 
 Sk3DView::~Sk3DView() {
   Rec* rec = fRec;
@@ -161,7 +160,7 @@ void Sk3DView::save() {
   fRec = rec;
 }
 
-void Sk3DView::restore() noexcept {
+void Sk3DView::restore() {
   SkASSERT(fRec != &fInitialRec);
   Rec* next = fRec->fNext;
   delete fRec;
@@ -184,29 +183,29 @@ SkScalar Sk3DView::getCameraLocationY() const { return fCamera.fLocation.y / 72.
 SkScalar Sk3DView::getCameraLocationZ() const { return fCamera.fLocation.z / 72.0f; }
 #endif
 
-void Sk3DView::translate(SkScalar x, SkScalar y, SkScalar z) noexcept {
+void Sk3DView::translate(SkScalar x, SkScalar y, SkScalar z) {
   fRec->fMatrix.preTranslate(x, y, z);
 }
 
-void Sk3DView::rotateX(SkScalar deg) noexcept {
+void Sk3DView::rotateX(SkScalar deg) {
   fRec->fMatrix.preConcat(SkM44::Rotate({1, 0, 0}, deg * SK_ScalarPI / 180));
 }
 
-void Sk3DView::rotateY(SkScalar deg) noexcept {
+void Sk3DView::rotateY(SkScalar deg) {
   fRec->fMatrix.preConcat(SkM44::Rotate({0, -1, 0}, deg * SK_ScalarPI / 180));
 }
 
-void Sk3DView::rotateZ(SkScalar deg) noexcept {
+void Sk3DView::rotateZ(SkScalar deg) {
   fRec->fMatrix.preConcat(SkM44::Rotate({0, 0, 1}, deg * SK_ScalarPI / 180));
 }
 
-SkScalar Sk3DView::dotWithNormal(SkScalar x, SkScalar y, SkScalar z) const noexcept {
+SkScalar Sk3DView::dotWithNormal(SkScalar x, SkScalar y, SkScalar z) const {
   SkPatch3D patch;
   patch.transform(fRec->fMatrix);
   return patch.dotWith(x, y, z);
 }
 
-void Sk3DView::getMatrix(SkMatrix* matrix) const noexcept {
+void Sk3DView::getMatrix(SkMatrix* matrix) const {
   if (matrix != nullptr) {
     SkPatch3D patch;
     patch.transform(fRec->fMatrix);

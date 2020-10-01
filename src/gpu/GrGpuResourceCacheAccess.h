@@ -13,7 +13,7 @@
 
 namespace skiatest {
 class Reporter;
-}
+}  // namespace skiatest
 
 /**
  * This class allows GrResourceCache increased privileged access to GrGpuResource objects.
@@ -56,7 +56,7 @@ class GrGpuResource::CacheAccess {
   void setUniqueKey(const GrUniqueKey& key) noexcept { fResource->fUniqueKey = key; }
 
   /** Is the resource ref'ed */
-  bool hasRef() const noexcept { return fResource->hasRef(); }
+  bool hasRef() const { return fResource->hasRef(); }
 
   /** Called by the cache to make the unique key invalid. */
   void removeUniqueKey() noexcept { fResource->fUniqueKey.reset(); }
@@ -81,7 +81,7 @@ class GrGpuResource::CacheAccess {
 
   CacheAccess(GrGpuResource* resource) noexcept : fResource(resource) {}
   CacheAccess(const CacheAccess& that) noexcept : fResource(that.fResource) {}
-  CacheAccess& operator=(const CacheAccess&);  // unimpl
+  CacheAccess& operator=(const CacheAccess&) = delete;
 
   // No taking addresses of this type.
   const CacheAccess* operator&() const = delete;
@@ -98,7 +98,8 @@ inline GrGpuResource::CacheAccess GrGpuResource::cacheAccess() noexcept {
   return CacheAccess(this);
 }
 
-inline const GrGpuResource::CacheAccess GrGpuResource::cacheAccess() const noexcept {
+inline const GrGpuResource::CacheAccess GrGpuResource::cacheAccess()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return CacheAccess(const_cast<GrGpuResource*>(this));
 }
 

@@ -108,7 +108,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
         fBoolFalse(0),
         fSetupFragPosition(false),
         fCurrentBlock(0),
-        fSynthetics(nullptr, errors) {
+        fSynthetics(errors) {
     this->setupIntrinsics();
   }
 

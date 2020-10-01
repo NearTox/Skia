@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkDrawProcs.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrPaint.h"
@@ -33,8 +34,9 @@ void GrPathRenderer::StencilPathArgs::validate() const {
 GrPathRenderer::GrPathRenderer() noexcept = default;
 
 GrPathRenderer::StencilSupport GrPathRenderer::getStencilSupport(const GrStyledShape& shape) const {
-  SkDEBUGCODE(SkPath path;) SkDEBUGCODE(shape.asPath(&path);)
-      SkASSERT(shape.style().isSimpleFill());
+  SkDEBUGCODE(SkPath path);
+  SkDEBUGCODE(shape.asPath(&path));
+  SkASSERT(shape.style().isSimpleFill());
   SkASSERT(!path.isInverseFillType());
   return this->onGetStencilSupport(shape);
 }

@@ -55,12 +55,12 @@ class SK_API SkStream {
    *  @param size the number of bytes to skip or copy
    *  @return the number of bytes actually read.
    */
-  virtual size_t read(void* buffer, size_t size) noexcept = 0;
+  virtual size_t read(void* buffer, size_t size) = 0;
 
   /** Skip size number of bytes.
    *  @return the actual number bytes that could be skipped.
    */
-  size_t skip(size_t size) noexcept { return this->read(nullptr, size); }
+  size_t skip(size_t size) { return this->read(nullptr, size); }
 
   /**
    *  Attempt to peek at size bytes.
@@ -75,23 +75,23 @@ class SK_API SkStream {
    *  @param size Number of bytes to copy.
    *  @return The number of bytes peeked/copied.
    */
-  virtual size_t peek(void* /*buffer*/, size_t /*size*/) const noexcept { return 0; }
+  virtual size_t peek(void* /*buffer*/, size_t /*size*/) const { return 0; }
 
   /** Returns true when all the bytes in the stream have been read.
    *  This may return true early (when there are no more bytes to be read)
    *  or late (after the first unsuccessful read).
    */
-  virtual bool isAtEnd() const noexcept = 0;
+  virtual bool isAtEnd() const = 0;
 
-  bool SK_WARN_UNUSED_RESULT readS8(int8_t*) noexcept;
-  bool SK_WARN_UNUSED_RESULT readS16(int16_t*) noexcept;
-  bool SK_WARN_UNUSED_RESULT readS32(int32_t*) noexcept;
+  bool SK_WARN_UNUSED_RESULT readS8(int8_t*);
+  bool SK_WARN_UNUSED_RESULT readS16(int16_t*);
+  bool SK_WARN_UNUSED_RESULT readS32(int32_t*);
 
-  bool SK_WARN_UNUSED_RESULT readU8(uint8_t* i) noexcept { return this->readS8((int8_t*)i); }
-  bool SK_WARN_UNUSED_RESULT readU16(uint16_t* i) noexcept { return this->readS16((int16_t*)i); }
-  bool SK_WARN_UNUSED_RESULT readU32(uint32_t* i) noexcept { return this->readS32((int32_t*)i); }
+  bool SK_WARN_UNUSED_RESULT readU8(uint8_t* i) { return this->readS8((int8_t*)i); }
+  bool SK_WARN_UNUSED_RESULT readU16(uint16_t* i) { return this->readS16((int16_t*)i); }
+  bool SK_WARN_UNUSED_RESULT readU32(uint32_t* i) { return this->readS32((int32_t*)i); }
 
-  bool SK_WARN_UNUSED_RESULT readBool(bool* b) noexcept {
+  bool SK_WARN_UNUSED_RESULT readBool(bool* b) {
     uint8_t i;
     if (!this->readU8(&i)) {
       return false;
@@ -99,8 +99,8 @@ class SK_API SkStream {
     *b = (i != 0);
     return true;
   }
-  bool SK_WARN_UNUSED_RESULT readScalar(SkScalar*) noexcept;
-  bool SK_WARN_UNUSED_RESULT readPackedUInt(size_t*) noexcept;
+  bool SK_WARN_UNUSED_RESULT readScalar(SkScalar*);
+  bool SK_WARN_UNUSED_RESULT readPackedUInt(size_t*);
 
   // SkStreamRewindable
   /** Rewinds to the beginning of the stream. Returns true if the stream is known
@@ -129,13 +129,13 @@ class SK_API SkStream {
    *  If an attempt is made to seek past the end of the stream, the position will be set
    *  to the end of the stream.
    */
-  virtual bool seek(size_t /*position*/) noexcept { return false; }
+  virtual bool seek(size_t /*position*/) { return false; }
 
   /** Seeks to an relative offset in the stream. If this cannot be done, returns false.
    *  If an attempt is made to move to a position outside the stream, the position will be set
    *  to the closest point within the stream (beginning or end).
    */
-  virtual bool move(long /*offset*/) noexcept { return false; }
+  virtual bool move(long /*offset*/) { return false; }
 
   // SkStreamAsset
   /** Returns true if this stream can report it's total length. */
@@ -180,8 +180,8 @@ class SK_API SkStreamSeekable : public SkStreamRewindable {
 
   bool hasPosition() const noexcept override { return true; }
   size_t getPosition() const noexcept override = 0;
-  bool seek(size_t position) noexcept override = 0;
-  bool move(long offset) noexcept override = 0;
+  bool seek(size_t position) override = 0;
+  bool move(long offset) override = 0;
 
   std::unique_ptr<SkStreamSeekable> fork() const {
     return std::unique_ptr<SkStreamSeekable>(this->onFork());
@@ -270,7 +270,7 @@ class SK_API SkWStream {
   bool writeScalar(SkScalar) noexcept;
   bool writePackedUInt(size_t) noexcept;
 
-  bool writeStream(SkStream* input, size_t length) noexcept;
+  bool writeStream(SkStream* input, size_t length);
 
   /**
    * This returns the number of bytes in the stream required to store
@@ -291,7 +291,7 @@ class SK_API SkNullWStream : public SkWStream {
     fBytesWritten += n;
     return true;
   }
-  void flush() noexcept override {}
+  void flush() override {}
   size_t bytesWritten() const noexcept override { return fBytesWritten; }
 
  private:
@@ -330,8 +330,8 @@ class SK_API SkFILEStream : public SkStreamAsset {
   /** Close this SkFILEStream. */
   void close() noexcept;
 
-  size_t read(void* buffer, size_t size) noexcept override;
-  bool isAtEnd() const noexcept override;
+  size_t read(void* buffer, size_t size) override;
+  bool isAtEnd() const override;
 
   bool rewind() noexcept override;
   std::unique_ptr<SkStreamAsset> duplicate() const {
@@ -339,8 +339,8 @@ class SK_API SkFILEStream : public SkStreamAsset {
   }
 
   size_t getPosition() const noexcept override;
-  bool seek(size_t position) noexcept override;
-  bool move(long offset) noexcept override;
+  bool seek(size_t position) override;
+  bool move(long offset) override;
 
   std::unique_ptr<SkStreamAsset> fork() const {
     return std::unique_ptr<SkStreamAsset>(this->onFork());
@@ -407,7 +407,7 @@ class SK_API SkMemoryStream : public SkStreamMemory {
   size_t read(void* buffer, size_t size) noexcept override;
   bool isAtEnd() const noexcept override;
 
-  size_t peek(void* buffer, size_t size) const noexcept override;
+  size_t peek(void* buffer, size_t size) const override;
 
   bool rewind() noexcept override;
 
@@ -417,7 +417,7 @@ class SK_API SkMemoryStream : public SkStreamMemory {
 
   size_t getPosition() const noexcept override;
   bool seek(size_t position) noexcept override;
-  bool move(long offset) noexcept override;
+  bool move(long offset) override;
 
   std::unique_ptr<SkMemoryStream> fork() const {
     return std::unique_ptr<SkMemoryStream>(this->onFork());
@@ -449,7 +449,7 @@ class SK_API SkFILEWStream : public SkWStream {
   bool isValid() const noexcept { return fFILE != nullptr; }
 
   bool write(const void* buffer, size_t size) noexcept override;
-  void flush() noexcept override;
+  void flush() override;
   void fsync();
   size_t bytesWritten() const noexcept override;
 
@@ -461,7 +461,7 @@ class SK_API SkFILEWStream : public SkWStream {
 
 class SK_API SkDynamicMemoryWStream : public SkWStream {
  public:
-  SkDynamicMemoryWStream() noexcept = default;
+  constexpr SkDynamicMemoryWStream() noexcept = default;
   SkDynamicMemoryWStream(SkDynamicMemoryWStream&&) noexcept;
   SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&) noexcept;
   ~SkDynamicMemoryWStream() override;
@@ -469,17 +469,17 @@ class SK_API SkDynamicMemoryWStream : public SkWStream {
   bool write(const void* buffer, size_t size) noexcept override;
   size_t bytesWritten() const noexcept override;
 
-  bool read(void* buffer, size_t offset, size_t size) noexcept;
+  bool read(void* buffer, size_t offset, size_t size);
 
   /** More efficient version of read(dst, 0, bytesWritten()). */
-  void copyTo(void* dst) const noexcept;
-  bool writeToStream(SkWStream* dst) const noexcept;
+  void copyTo(void* dst) const;
+  bool writeToStream(SkWStream* dst) const;
 
   /** Equivalent to copyTo() followed by reset(), but may save memory use. */
-  void copyToAndReset(void* dst) noexcept;
+  void copyToAndReset(void* dst);
 
   /** Equivalent to writeToStream() followed by reset(), but may save memory use. */
-  bool writeToAndReset(SkWStream* dst) noexcept;
+  bool writeToAndReset(SkWStream* dst);
 
   /** Equivalent to writeToStream() followed by reset(), but may save memory use.
       When the dst is also a SkDynamicMemoryWStream, the implementation is constant time. */
@@ -496,7 +496,7 @@ class SK_API SkDynamicMemoryWStream : public SkWStream {
 
   /** Reset the stream to its original, empty, state. */
   void reset() noexcept;
-  void padToAlign4() noexcept;
+  void padToAlign4();
 
  private:
   struct Block;

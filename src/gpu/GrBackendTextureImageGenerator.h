@@ -36,12 +36,15 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
   ~GrBackendTextureImageGenerator() override;
 
  protected:
-  // NOTE: We would like to validate that the owning context hasn't been abandoned, but we can't
-  // do that safely (we might be on another thread). So assume everything is fine.
-  bool onIsValid(GrContext*) const override { return true; }
+  bool onIsValid(GrRecordingContext* context) const override {
+    if (context && context->abandoned()) {
+      return false;
+    }
+    return true;
+  }
 
   GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped mipMapped,
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipmapped mipMapped,
       GrImageTexGenPolicy) override;
 
  private:
@@ -49,11 +52,11 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
       const SkImageInfo& info, GrTexture*, GrSurfaceOrigin, uint32_t owningContextID,
       std::unique_ptr<GrSemaphore>, const GrBackendTexture&);
 
-  static void ReleaseRefHelper_TextureReleaseProc(void* ctx) noexcept;
+  static void ReleaseRefHelper_TextureReleaseProc(void* ctx);
 
   class RefHelper : public SkNVRefCnt<RefHelper> {
    public:
-    RefHelper(GrTexture*, uint32_t owningContextID, std::unique_ptr<GrSemaphore>) noexcept;
+    RefHelper(GrTexture*, uint32_t owningContextID, std::unique_ptr<GrSemaphore>);
 
     ~RefHelper();
 

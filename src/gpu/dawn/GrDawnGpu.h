@@ -14,12 +14,14 @@
 #include "src/core/SkLRUCache.h"
 #include "src/gpu/GrFinishCallbacks.h"
 #include "src/gpu/GrProgramDesc.h"
+#include "src/gpu/GrStagingBufferManager.h"
 #include "src/gpu/dawn/GrDawnRingBuffer.h"
 
 #include <unordered_map>
 
 class GrDawnOpsRenderPass;
 class GrDawnStagingBuffer;
+class GrDirectContext;
 class GrPipeline;
 struct GrDawnProgram;
 
@@ -29,12 +31,14 @@ class Compiler;
 
 class GrDawnGpu : public GrGpu {
  public:
-  static sk_sp<GrGpu> Make(const wgpu::Device& device, const GrContextOptions&, GrContext*);
-  GrDawnGpu(GrContext* context, const GrContextOptions& options, const wgpu::Device& device);
+  static sk_sp<GrGpu> Make(const wgpu::Device&, const GrContextOptions&, GrDirectContext*);
 
   ~GrDawnGpu() override;
 
   void disconnect(DisconnectType) override;
+
+  GrStagingBufferManager* stagingBufferManager() override { return &fStagingBufferManager; }
+  void takeOwnershipOfBuffer(sk_sp<GrGpuBuffer>) override;
 
   const wgpu::Device& device() const { return fDevice; }
   const wgpu::Queue& queue() const { return fQueue; }
@@ -53,7 +57,6 @@ class GrDawnGpu : public GrGpu {
 
   void testingOnly_flushGpuAndSync() override;
 #endif
-  std::unique_ptr<GrStagingBuffer> createStagingBuffer(size_t size) override;
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget*, int width, int height, int numStencilSamples) override;
@@ -61,7 +64,7 @@ class GrDawnGpu : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
 
   SkSL::Compiler* shaderCompiler() const { return fCompiler.get(); }
 
@@ -90,7 +93,11 @@ class GrDawnGpu : public GrGpu {
   void flushCopyEncoder();
   void appendCommandBuffer(wgpu::CommandBuffer commandBuffer);
 
+  void waitOnAllBusyStagingBuffers();
+
  private:
+  GrDawnGpu(GrDirectContext*, const GrContextOptions&, const wgpu::Device&);
+
   void onResetContext(uint32_t resetBits) override {}
 
   virtual void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>*) override {}
@@ -100,7 +107,7 @@ class GrDawnGpu : public GrGpu {
       GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
 
   sk_sp<GrTexture> onCreateCompressedTexture(
-      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipmapped, GrProtected,
       const void* data, size_t dataSize) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
@@ -115,15 +122,18 @@ class GrDawnGpu : public GrGpu {
       const GrBackendTexture&, int sampleCnt) override;
 
   GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
 
   bool onUpdateBackendTexture(
       const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
       const BackendTextureData*) override;
 
   GrBackendTexture onCreateCompressedBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) override;
+      SkISize dimensions, const GrBackendFormat&, GrMipmapped, GrProtected) override;
+
+  bool onUpdateCompressedBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
+      const BackendTextureData*) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(
       size_t size, GrGpuBufferType type, GrAccessPattern, const void* data) override;
@@ -146,7 +156,7 @@ class GrDawnGpu : public GrGpu {
       GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
       GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset) override;
 
-  void onResolveRenderTarget(GrRenderTarget*, const SkIRect&, ForExternalIO) override {}
+  void onResolveRenderTarget(GrRenderTarget*, const SkIRect&) override {}
 
   bool onRegenerateMipMapLevels(GrTexture*) override;
 
@@ -158,7 +168,8 @@ class GrDawnGpu : public GrGpu {
 
   bool onSubmitToGpu(bool syncCpu) override;
 
-  void mapStagingBuffers();
+  void moveStagingBuffersToBusyAndMapAsync();
+  void checkForCompletedStagingBuffers();
 
   wgpu::Device fDevice;
   wgpu::Queue fQueue;
@@ -167,6 +178,12 @@ class GrDawnGpu : public GrGpu {
   GrDawnRingBuffer fUniformRingBuffer;
   wgpu::CommandEncoder fCopyEncoder;
   std::vector<wgpu::CommandBuffer> fCommandBuffers;
+  GrStagingBufferManager fStagingBufferManager;
+  std::list<sk_sp<GrGpuBuffer>> fBusyStagingBuffers;
+  // Temporary array of staging buffers to hold refs on the staging buffers between detaching
+  // from the GrStagingManager and moving them to the busy list which must happen after
+  // submission.
+  std::vector<sk_sp<GrGpuBuffer>> fSubmittedStagingBuffers;
 
   struct ProgramDescHash {
     uint32_t operator()(const GrProgramDesc& desc) const {

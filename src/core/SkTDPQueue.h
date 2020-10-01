@@ -110,7 +110,7 @@ class SkTDPQueue {
    */
   void sort() {
     if (fArray.count() > 1) {
-      SkTQSort<T>(fArray.begin(), fArray.end() - 1, LESS);
+      SkTQSort<T>(fArray.begin(), fArray.end(), LESS);
       for (int i = 0; i < fArray.count(); i++) {
         this->setIndex(i);
       }
@@ -119,11 +119,11 @@ class SkTDPQueue {
   }
 
  private:
-  static constexpr int LeftOf(int x) noexcept {
+  static int LeftOf(int x) noexcept {
     SkASSERT(x >= 0);
     return 2 * x + 1;
   }
-  static constexpr int ParentOf(int x) noexcept {
+  static int ParentOf(int x) noexcept {
     SkASSERT(x > 0);
     return (x - 1) >> 1;
   }

@@ -54,7 +54,7 @@ class SK_API SkImageGenerator {
    *  Can this generator be used to produce images that will be drawable to the specified context
    *  (or to CPU, if context is nullptr)?
    */
-  bool isValid(GrContext* context) const { return this->onIsValid(context); }
+  bool isValid(GrRecordingContext* context) const { return this->onIsValid(context); }
 
   /**
    *  Decode into the given pixels, a block of memory of size at
@@ -79,6 +79,10 @@ class SK_API SkImageGenerator {
    *  @return true on success.
    */
   bool getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes);
+
+  bool getPixels(const SkPixmap& pm) {
+    return this->getPixels(pm.info(), pm.writable_addr(), pm.rowBytes());
+  }
 
   /**
    *  If decoding to YUV is supported, this returns true.  Otherwise, this
@@ -126,7 +130,7 @@ class SK_API SkImageGenerator {
    *          return false;
    *      }
    *
-   *  Regarding the GrContext parameter:
+   *  Regarding the GrRecordingContext parameter:
    *
    *  It must be non-NULL. The generator should only succeed if:
    *  - its internal context is the same
@@ -142,7 +146,7 @@ class SK_API SkImageGenerator {
    *  retained by the generator (kDraw).
    */
   GrSurfaceProxyView generateTexture(
-      GrRecordingContext*, const SkImageInfo& info, const SkIPoint& origin, GrMipMapped,
+      GrRecordingContext*, const SkImageInfo& info, const SkIPoint& origin, GrMipmapped,
       GrImageTexGenPolicy);
 
 #endif
@@ -171,7 +175,7 @@ class SK_API SkImageGenerator {
   virtual sk_sp<SkData> onRefEncodedData() { return nullptr; }
   struct Options {};
   virtual bool onGetPixels(const SkImageInfo&, void*, size_t, const Options&) { return false; }
-  virtual bool onIsValid(GrContext*) const { return true; }
+  virtual bool onIsValid(GrRecordingContext*) const { return true; }
   virtual bool onQueryYUVA8(
       SkYUVASizeInfo*, SkYUVAIndex[SkYUVAIndex::kIndexCount], SkYUVColorSpace*) const {
     return false;
@@ -183,7 +187,7 @@ class SK_API SkImageGenerator {
 #if SK_SUPPORT_GPU
   // returns nullptr
   virtual GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped, GrImageTexGenPolicy);
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipmapped, GrImageTexGenPolicy);
 #endif
 
  private:

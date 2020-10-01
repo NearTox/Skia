@@ -26,12 +26,12 @@ class SkColorSpaceLuminance : SkNoncopyable {
   virtual ~SkColorSpaceLuminance() = default;
 
   /** Converts a color component luminance in the color space to a linear luma. */
-  virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const noexcept = 0;
+  virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const = 0;
   /** Converts a linear luma to a color component luminance in the color space. */
-  virtual SkScalar fromLuma(SkScalar gamma, SkScalar luma) const noexcept = 0;
+  virtual SkScalar fromLuma(SkScalar gamma, SkScalar luma) const = 0;
 
   /** Converts a color to a luminance value. */
-  static U8CPU computeLuminance(SkScalar gamma, SkColor c) noexcept {
+  static U8CPU computeLuminance(SkScalar gamma, SkColor c) {
     const SkColorSpaceLuminance& luminance = Fetch(gamma);
     SkScalar r = luminance.toLuma(gamma, SkIntToScalar(SkColorGetR(c)) / 255);
     SkScalar g = luminance.toLuma(gamma, SkIntToScalar(SkColorGetG(c)) / 255);
@@ -42,7 +42,7 @@ class SkColorSpaceLuminance : SkNoncopyable {
   }
 
   /** Retrieves the SkColorSpaceLuminance for the given gamma. */
-  static const SkColorSpaceLuminance& Fetch(SkScalar gamma) noexcept;
+  static const SkColorSpaceLuminance& Fetch(SkScalar gamma);
 };
 
 ///@{
@@ -52,7 +52,7 @@ class SkColorSpaceLuminance : SkNoncopyable {
  * @param base the number to be scaled to [0, 255].
  */
 template <U8CPU N>
-static inline U8CPU sk_t_scale255(U8CPU base) noexcept {
+static constexpr inline U8CPU sk_t_scale255(U8CPU base) noexcept {
   base <<= (8 - N);
   U8CPU lum = base;
   for (unsigned int i = N; i < 8; i += N) {
@@ -60,10 +60,22 @@ static inline U8CPU sk_t_scale255(U8CPU base) noexcept {
   }
   return lum;
 }
-template <> /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) noexcept { return base * 0xFF; }
-template <> /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) noexcept { return base * 0x55; }
-template <> /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) noexcept { return base * 0x11; }
-template <> /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) noexcept { return base; }
+template <>
+constexpr /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) noexcept {
+  return base * 0xFF;
+}
+template <>
+constexpr /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) noexcept {
+  return base * 0x55;
+}
+template <>
+constexpr /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) noexcept {
+  return base * 0x11;
+}
+template <>
+constexpr /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) noexcept {
+  return base;
+}
 ///@}
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
@@ -71,7 +83,7 @@ class SkTMaskPreBlend;
 
 void SkTMaskGamma_build_correcting_lut(
     uint8_t table[256], U8CPU srcI, SkScalar contrast, const SkColorSpaceLuminance& srcConvert,
-    SkScalar srcGamma, const SkColorSpaceLuminance& dstConvert, SkScalar dstGamma) noexcept;
+    SkScalar srcGamma, const SkColorSpaceLuminance& dstConvert, SkScalar dstGamma);
 
 /**
  * A regular mask contains linear alpha values. A gamma correcting mask
@@ -99,8 +111,7 @@ class SkTMaskGamma : public SkRefCnt {
    * @param paint The color space in which the paint color was chosen.
    * @param device The color space of the target device.
    */
-  SkTMaskGamma(SkScalar contrast, SkScalar paintGamma, SkScalar deviceGamma) noexcept
-      : fIsLinear(false) {
+  SkTMaskGamma(SkScalar contrast, SkScalar paintGamma, SkScalar deviceGamma) : fIsLinear(false) {
     const SkColorSpaceLuminance& paintConvert = SkColorSpaceLuminance::Fetch(paintGamma);
     const SkColorSpaceLuminance& deviceConvert = SkColorSpaceLuminance::Fetch(deviceGamma);
     for (U8CPU i = 0; i < (1 << MAX_LUM_BITS); ++i) {
@@ -111,7 +122,7 @@ class SkTMaskGamma : public SkRefCnt {
   }
 
   /** Given a color, returns the closest canonical color. */
-  static SkColor CanonicalColor(SkColor color) noexcept {
+  static constexpr SkColor CanonicalColor(SkColor color) noexcept {
     return SkColorSetRGB(
         sk_t_scale255<R_LUM_BITS>(SkColorGetR(color) >> (8 - R_LUM_BITS)),
         sk_t_scale255<G_LUM_BITS>(SkColorGetG(color) >> (8 - G_LUM_BITS)),
@@ -126,12 +137,12 @@ class SkTMaskGamma : public SkRefCnt {
    * values into gamma correcting alpha values when drawing the given color
    * through the mask. The destination color will be approximated.
    */
-  PreBlend preBlend(SkColor color) const noexcept;
+  PreBlend preBlend(SkColor color) const;
 
   /**
    * Get dimensions for the full table set, so it can be allocated as a block.
    */
-  void getGammaTableDimensions(int* tableWidth, int* numTables) const noexcept {
+  void getGammaTableDimensions(int* tableWidth, int* numTables) const {
     *tableWidth = 256;
     *numTables = (1 << MAX_LUM_BITS);
   }
@@ -185,7 +196,6 @@ class SkTMaskPreBlend {
    */
   SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that) noexcept
       : fParent(that.fParent), fR(that.fR), fG(that.fG), fB(that.fB) {}
-
   ~SkTMaskPreBlend() = default;
 
   /** True if this PreBlend should be applied. When false, fR, fG, and fB are nullptr. */
@@ -198,7 +208,7 @@ class SkTMaskPreBlend {
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
 SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>
-SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const noexcept {
+SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const {
   return fIsLinear ? SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>()
                    : SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>(
                          sk_ref_sp(this), fGammaTables[SkColorGetR(color) >> (8 - MAX_LUM_BITS)],

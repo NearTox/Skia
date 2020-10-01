@@ -22,7 +22,7 @@ class GrRenderTask;
  */
 class GrTextureResolveManager {
  public:
-  explicit GrTextureResolveManager(GrDrawingManager* drawingManager)
+  explicit GrTextureResolveManager(GrDrawingManager* drawingManager) noexcept
       : fDrawingManager(drawingManager) {}
 
   GrTextureResolveRenderTask* newTextureResolveRenderTask(const GrCaps& caps) const {

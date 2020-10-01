@@ -24,18 +24,18 @@ class SkCanvas;
 // DEPRECATED
 class SkPatch3D {
  public:
-  SkPatch3D() noexcept;
+  SkPatch3D();
 
-  void reset() noexcept;
-  void transform(const SkM44&, SkPatch3D* dst = nullptr) const noexcept;
+  void reset();
+  void transform(const SkM44&, SkPatch3D* dst = nullptr) const;
 
   // dot a unit vector with the patch's normal
-  SkScalar dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const noexcept;
-  SkScalar dotWith(const SkV3& v) const noexcept { return this->dotWith(v.x, v.y, v.z); }
+  SkScalar dotWith(SkScalar dx, SkScalar dy, SkScalar dz) const;
+  SkScalar dotWith(const SkV3& v) const { return this->dotWith(v.x, v.y, v.z); }
 
   // deprecated, but still here for animator (for now)
-  void rotate(SkScalar /*x*/, SkScalar /*y*/, SkScalar /*z*/) noexcept {}
-  void rotateDegrees(SkScalar /*x*/, SkScalar /*y*/, SkScalar /*z*/) noexcept {}
+  void rotate(SkScalar /*x*/, SkScalar /*y*/, SkScalar /*z*/) {}
+  void rotateDegrees(SkScalar /*x*/, SkScalar /*y*/, SkScalar /*z*/) {}
 
  private:
  public:  // make public for SkDraw3D for now
@@ -48,11 +48,11 @@ class SkPatch3D {
 // DEPRECATED
 class SkCamera3D {
  public:
-  SkCamera3D() noexcept;
+  SkCamera3D();
 
-  void reset() noexcept;
-  void update() noexcept;
-  void patchToMatrix(const SkPatch3D&, SkMatrix* matrix) const noexcept;
+  void reset();
+  void update();
+  void patchToMatrix(const SkPatch3D&, SkMatrix* matrix) const;
 
   SkV3 fLocation;  // origin of the camera's space
   SkV3 fAxis;      // view direction
@@ -63,22 +63,22 @@ class SkCamera3D {
   mutable SkMatrix fOrientation;
   mutable bool fNeedToUpdate;
 
-  void doUpdate() const noexcept;
+  void doUpdate() const;
 };
 
 // DEPRECATED
 class SK_API Sk3DView : SkNoncopyable {
  public:
-  Sk3DView() noexcept;
+  Sk3DView();
   ~Sk3DView();
 
   void save();
-  void restore() noexcept;
+  void restore();
 
-  void translate(SkScalar x, SkScalar y, SkScalar z) noexcept;
-  void rotateX(SkScalar deg) noexcept;
-  void rotateY(SkScalar deg) noexcept;
-  void rotateZ(SkScalar deg) noexcept;
+  void translate(SkScalar x, SkScalar y, SkScalar z);
+  void rotateX(SkScalar deg);
+  void rotateY(SkScalar deg);
+  void rotateZ(SkScalar deg);
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
   void setCameraLocation(SkScalar x, SkScalar y, SkScalar z);
@@ -87,10 +87,10 @@ class SK_API Sk3DView : SkNoncopyable {
   SkScalar getCameraLocationZ() const;
 #endif
 
-  void getMatrix(SkMatrix*) const noexcept;
+  void getMatrix(SkMatrix*) const;
   void applyToCanvas(SkCanvas*) const;
 
-  SkScalar dotWithNormal(SkScalar dx, SkScalar dy, SkScalar dz) const noexcept;
+  SkScalar dotWithNormal(SkScalar dx, SkScalar dy, SkScalar dz) const;
 
  private:
   struct Rec {

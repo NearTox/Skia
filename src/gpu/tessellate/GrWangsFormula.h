@@ -9,6 +9,7 @@
 #define GrWangsFormula_DEFINED
 
 #include "include/core/SkPoint.h"
+#include "include/private/SkFloatingPoint.h"
 #include "include/private/SkNx.h"
 #include "src/gpu/tessellate/GrVectorXform.h"
 
@@ -23,7 +24,7 @@ SK_ALWAYS_INLINE static float length(const Sk2f& n) {
 }
 
 // Constant term for the quatratic formula.
-constexpr float quadratic_k(float intolerance) { return .25f * intolerance; }
+constexpr float quadratic_k(float intolerance) noexcept { return .25f * intolerance; }
 
 // Returns the minimum number of evenly spaced (in the parametric sense) line segments that the
 // quadratic must be chopped into in order to guarantee all lines stay within a distance of
@@ -37,7 +38,7 @@ SK_ALWAYS_INLINE static float quadratic(float intolerance, const SkPoint pts[]) 
 }
 
 // Constant term for the cubic formula.
-constexpr float cubic_k(float intolerance) { return .75f * intolerance; }
+constexpr float cubic_k(float intolerance) noexcept { return .75f * intolerance; }
 
 // Returns the minimum number of evenly spaced (in the parametric sense) line segments that the
 // cubic must be chopped into in order to guarantee all lines stay within a distance of
@@ -59,25 +60,8 @@ SK_ALWAYS_INLINE static float worst_case_cubic(float intolerance, float devWidth
   return SkScalarSqrt(2 * k * SkVector::Length(devWidth, devHeight));
 }
 
-// Returns the log2 of the provided value, were that value to be rounded up to the next power of 2.
-// Returns 0 if value <= 0:
-// Never returns a negative number, even if value is NaN.
-//
-//     nextlog2((-inf..1]) -> 0
-//     nextlog2((1..2]) -> 1
-//     nextlog2((2..4]) -> 2
-//     nextlog2((4..8]) -> 3
-//     ...
-SK_ALWAYS_INLINE static int nextlog2(float value) {
-  uint32_t bits;
-  memcpy(&bits, &value, 4);
-  bits += (1u << 23) - 1u;  // Increment the exponent for non-powers-of-2.
-  int exp = ((int32_t)bits >> 23) - 127;
-  return exp & ~(exp >> 31);  // Return 0 for negative or denormalized floats, and exponents < 0.
-}
-
 SK_ALWAYS_INLINE static int ceil_log2_sqrt_sqrt(float f) {
-  return (nextlog2(f) + 3) >> 2;  // i.e., "ceil(log2(sqrt(sqrt(f))))
+  return (sk_float_nextlog2(f) + 3) >> 2;  // i.e., "ceil(log2(sqrt(sqrt(f))))
 }
 
 // Returns the minimum log2 number of evenly spaced (in the parametric sense) line segments that the

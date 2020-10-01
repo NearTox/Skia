@@ -83,6 +83,12 @@ class GrDrawOpAtlas {
 
     bool isValid() const noexcept { return fGenID != 0 || fPlotIndex != 0 || fPageIndex != 0; }
 
+    void makeInvalid() noexcept {
+      fGenID = 0;
+      fPlotIndex = 0;
+      fPageIndex = 0;
+    }
+
     bool operator==(const PlotLocator& other) const noexcept {
       return fGenID == other.fGenID && fPlotIndex == other.fPlotIndex &&
              fPageIndex == other.fPageIndex;
@@ -102,7 +108,15 @@ class GrDrawOpAtlas {
 
   class AtlasLocator {
    public:
-    std::array<uint16_t, 4> getUVs(int padding) const;
+    std::array<uint16_t, 4> getUVs() const {
+      // We pack the 2bit page index in the low bit of the u and v texture coords
+      uint32_t pageIndex = this->pageIndex();
+      auto [left, top] = PackIndexInTexCoords(fRect.fLeft, fRect.fTop, pageIndex);
+      auto [right, bottom] = PackIndexInTexCoords(fRect.fRight, fRect.fBottom, pageIndex);
+      return {left, top, right, bottom};
+    }
+
+    void invalidatePlotLocator() noexcept { fPlotLocator.makeInvalid(); }
 
     // TODO: Remove the small path renderer's use of this for eviction
     PlotLocator plotLocator() const noexcept { return fPlotLocator; }
@@ -113,16 +127,24 @@ class GrDrawOpAtlas {
 
     uint64_t genID() const noexcept { return fPlotLocator.genID(); }
 
+    void insetSrc(int padding) noexcept {
+      fRect.fLeft += padding;
+      fRect.fTop += padding;
+      fRect.fRight -= padding;
+      fRect.fBottom -= padding;
+    }
+
+    GrIRect16 rect() const noexcept { return fRect; }
+
    private:
     friend class GrDrawOpAtlas;
 
     SkDEBUGCODE(void validate(const GrDrawOpAtlas*) const);
 
-    PlotLocator fPlotLocator;
-    GrIRect16 fRect{0, 0, 0, 0};
+    PlotLocator fPlotLocator{0, 0, 0};
 
-    // TODO: the inset to the actual data w/in 'fRect' could also be stored in this class
-    // This would simplify the 'getUVs' call. The valid values would be 0, 1, 2 & 4.
+    // The inset padded bounds in the atlas.
+    GrIRect16 fRect{0, 0, 0, 0};
   };
 
   /**
@@ -177,7 +199,20 @@ class GrDrawOpAtlas {
                          Must be in the range [0, 3].
    *  @return    The new u and v coordinates with the packed value
    */
-  static std::pair<uint16_t, uint16_t> PackIndexInTexCoords(uint16_t u, uint16_t v, int pageIndex);
+  static std::pair<uint16_t, uint16_t> PackIndexInTexCoords(
+      uint16_t u, uint16_t v, int pageIndex) noexcept {
+    // The two bits that make up the texture index are packed into the lower bits of the u and v
+    // coordinate respectively.
+    SkASSERT(pageIndex >= 0 && pageIndex < 4);
+    uint16_t uBit = (pageIndex >> 1u) & 0x1u;
+    uint16_t vBit = pageIndex & 0x1u;
+    u <<= 1u;
+    u |= uBit;
+    v <<= 1u;
+    v |= vBit;
+    return std::make_pair(u, v);
+  }
+
   /**
    * Unpacks a texture atlas page index from uint16 texture coordinates.
    *  @param u      Packed U texture coordinate
@@ -225,7 +260,7 @@ class GrDrawOpAtlas {
   }
 
   /** To ensure the atlas does not evict a given entry, the client must set the last use token. */
-  void setLastUseToken(const AtlasLocator& atlasLocator, GrDeferredUploadToken token) noexcept {
+  void setLastUseToken(const AtlasLocator& atlasLocator, GrDeferredUploadToken token) {
     SkASSERT(this->hasID(atlasLocator.plotLocator()));
     uint32_t plotIdx = atlasLocator.plotIndex();
     SkASSERT(plotIdx < fNumPlots);
@@ -245,13 +280,13 @@ class GrDrawOpAtlas {
    */
   class BulkUseTokenUpdater {
    public:
-    BulkUseTokenUpdater() { memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated)); }
+    BulkUseTokenUpdater() noexcept { memset(fPlotAlreadyUpdated, 0, sizeof(fPlotAlreadyUpdated)); }
     BulkUseTokenUpdater(const BulkUseTokenUpdater& that) noexcept
         : fPlotsToUpdate(that.fPlotsToUpdate) {
       memcpy(fPlotAlreadyUpdated, that.fPlotAlreadyUpdated, sizeof(fPlotAlreadyUpdated));
     }
 
-    bool add(const AtlasLocator& atlasLocator) noexcept {
+    bool add(const AtlasLocator& atlasLocator) {
       int plotIdx = atlasLocator.plotIndex();
       int pageIdx = atlasLocator.pageIndex();
       if (this->find(pageIdx, plotIdx)) {
@@ -292,8 +327,7 @@ class GrDrawOpAtlas {
     friend class GrDrawOpAtlas;
   };
 
-  void setLastUseTokenBulk(
-      const BulkUseTokenUpdater& updater, GrDeferredUploadToken token) noexcept {
+  void setLastUseTokenBulk(const BulkUseTokenUpdater& updater, GrDeferredUploadToken token) {
     int count = updater.fPlotsToUpdate.count();
     for (int i = 0; i < count; i++) {
       const BulkUseTokenUpdater::PlotData& pd = updater.fPlotsToUpdate[i];
@@ -346,7 +380,7 @@ class GrDrawOpAtlas {
       SkASSERT(fPlotLocator.isValid());
       return fPlotLocator;
     }
-    SkDEBUGCODE(size_t bpp() const { return fBytesPerPixel; });
+    SkDEBUGCODE(size_t bpp() const noexcept { return fBytesPerPixel; });
 
     bool addSubImage(int width, int height, const void* image, GrIRect16* rect);
 

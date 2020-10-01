@@ -33,7 +33,8 @@ class GrShaderVar {
   };
 
   /** Defaults to a void with no type modifier or layout qualifier. */
-  GrShaderVar() : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
+  GrShaderVar() noexcept
+      : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
 
   GrShaderVar(SkString name, GrSLType type, int arrayCount = kNonArray) noexcept
       : fType(type),
@@ -61,8 +62,8 @@ class GrShaderVar {
         fLayoutQualifier(std::move(layoutQualifier)),
         fExtraModifiers(std::move(extraModifier)) {}
 
-  GrShaderVar(const GrShaderVar&) = default;
-  GrShaderVar& operator=(const GrShaderVar&) = default;
+  GrShaderVar(const GrShaderVar&) noexcept = default;
+  GrShaderVar& operator=(const GrShaderVar&) noexcept = default;
   GrShaderVar(GrShaderVar&&) noexcept = default;
   GrShaderVar& operator=(GrShaderVar&&) noexcept = default;
 

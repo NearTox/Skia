@@ -19,7 +19,7 @@ using std::abs;
 struct Float4 {
   constexpr Float4(float x, float y, float z, float w) noexcept : fX(x), fY(y), fZ(z), fW(w) {}
 
-  operator SkRect() const noexcept { return SkRect::MakeLTRB(fX, fY, fZ, fW); }
+  constexpr operator SkRect() const noexcept { return SkRect::MakeLTRB(fX, fY, fZ, fW); }
 
  private:
   float fX;

@@ -5,9 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrContext.h"
 #include "include/private/SkSpinlock.h"
-#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrProcessor.h"
@@ -27,7 +25,7 @@ class MemoryPoolAccessor {
  public:
 // We know in the Android framework there is only one GrContext.
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-  MemoryPoolAccessor() {}
+  MemoryPoolAccessor() noexcept = default;
   ~MemoryPoolAccessor() = default;
 #else
   MemoryPoolAccessor() { gProcessorSpinlock.acquire(); }

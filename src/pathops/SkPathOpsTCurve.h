@@ -19,13 +19,13 @@ class SkTCurve {
   virtual const SkDPoint& operator[](int n) const noexcept = 0;
   virtual SkDPoint& operator[](int n) noexcept = 0;
 
-  virtual bool collapsed() const noexcept = 0;
+  virtual bool collapsed() const = 0;
   virtual bool controlsInside() const = 0;
-  virtual void debugInit() noexcept = 0;
+  virtual void debugInit() = 0;
 #if DEBUG_T_SECT
   virtual void dumpID(int id) const = 0;
 #endif
-  virtual SkDVector dxdyAtT(double t) const noexcept = 0;
+  virtual SkDVector dxdyAtT(double t) const = 0;
   virtual bool hullIntersects(const SkDQuad&, bool* isLinear) const = 0;
   virtual bool hullIntersects(const SkDConic&, bool* isLinear) const = 0;
   virtual bool hullIntersects(const SkDCubic&, bool* isLinear) const = 0;
@@ -34,10 +34,10 @@ class SkTCurve {
   virtual bool IsConic() const noexcept = 0;
   virtual SkTCurve* make(SkArenaAlloc&) const = 0;
   virtual int maxIntersections() const noexcept = 0;
-  virtual void otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept = 0;
+  virtual void otherPts(int oddMan, const SkDPoint* endPt[2]) const = 0;
   virtual int pointCount() const noexcept = 0;
   virtual int pointLast() const noexcept = 0;
-  virtual SkDPoint ptAtT(double t) const noexcept = 0;
+  virtual SkDPoint ptAtT(double t) const = 0;
   virtual void setBounds(SkDRect*) const = 0;
   virtual void subDivide(double t1, double t2, SkTCurve* curve) const = 0;
 #ifdef SK_DEBUG

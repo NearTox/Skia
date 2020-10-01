@@ -33,18 +33,18 @@ class RenderNode : public Node {
 
   // Perform a front-to-back hit-test, and return the RenderNode located at |point|.
   // Normally, hit-testing stops at leaf Draw nodes.
-  const RenderNode* nodeAt(const SkPoint& point) const noexcept;
+  const RenderNode* nodeAt(const SkPoint& point) const;
 
   // Controls the visibility of the render node.  Invisible nodes are not rendered,
   // but they still participate in revalidation.
-  bool isVisible() const noexcept;
-  void setVisible(bool) noexcept;
+  bool isVisible() const;
+  void setVisible(bool);
 
  protected:
-  explicit RenderNode(uint32_t inval_traits = 0) noexcept;
+  explicit RenderNode(uint32_t inval_traits = 0);
 
   virtual void onRender(SkCanvas*, const RenderContext*) const = 0;
-  virtual const RenderNode* onNodeAt(const SkPoint& p) const noexcept = 0;
+  virtual const RenderNode* onNodeAt(const SkPoint& p) const = 0;
 
   // Paint property overrides.
   // These are deferred until we can determine whether they can be applied to the individual
@@ -58,19 +58,19 @@ class RenderNode : public Node {
     SkBlendMode fBlendMode = SkBlendMode::kSrcOver;
 
     // Returns true if the paint overrides require a layer when applied to non-atomic draws.
-    bool requiresIsolation() const noexcept;
+    bool requiresIsolation() const;
 
     void modulatePaint(const SkMatrix& ctm, SkPaint*, bool is_layer_paint = false) const;
   };
 
   class ScopedRenderContext final {
    public:
-    ScopedRenderContext(SkCanvas*, const RenderContext*) noexcept;
+    ScopedRenderContext(SkCanvas*, const RenderContext*);
     ~ScopedRenderContext();
 
-    ScopedRenderContext(ScopedRenderContext&& that) noexcept { *this = std::move(that); }
+    ScopedRenderContext(ScopedRenderContext&& that) { *this = std::move(that); }
 
-    ScopedRenderContext& operator=(ScopedRenderContext&& that) noexcept {
+    ScopedRenderContext& operator=(ScopedRenderContext&& that) {
       fCanvas = that.fCanvas;
       fCtx = std::move(that.fCtx);
       fMaskShader = std::move(that.fMaskShader);
@@ -86,11 +86,11 @@ class RenderNode : public Node {
     const RenderContext* operator->() const noexcept { return &fCtx; }
 
     // Add (cumulative) paint overrides to a render node sub-DAG.
-    ScopedRenderContext&& modulateOpacity(float opacity) noexcept;
+    ScopedRenderContext&& modulateOpacity(float opacity);
     ScopedRenderContext&& modulateColorFilter(sk_sp<SkColorFilter>);
-    ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm) noexcept;
+    ScopedRenderContext&& modulateShader(sk_sp<SkShader>, const SkMatrix& shader_ctm);
     ScopedRenderContext&& modulateMaskShader(sk_sp<SkShader>, const SkMatrix& ms_ctm);
-    ScopedRenderContext&& modulateBlendMode(SkBlendMode) noexcept;
+    ScopedRenderContext&& modulateBlendMode(SkBlendMode);
 
     // Force content isolation for a node sub-DAG by applying the RenderContext
     // overrides via a layer.
@@ -132,7 +132,7 @@ class CustomRenderNode : public RenderNode {
   explicit CustomRenderNode(std::vector<sk_sp<RenderNode>>&& children);
   ~CustomRenderNode() override;
 
-  const std::vector<sk_sp<RenderNode>>& children() const noexcept { return fChildren; }
+  const std::vector<sk_sp<RenderNode>>& children() const { return fChildren; }
 
   bool hasChildrenInval() const;
 

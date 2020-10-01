@@ -27,7 +27,7 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
  public:
   static sk_sp<GrVkTextureRenderTarget> MakeNewTextureRenderTarget(
       GrVkGpu*, SkBudgeted, SkISize dimensions, int sampleCnt, const GrVkImage::ImageDesc&,
-      GrMipMapsStatus);
+      GrMipmapStatus);
 
   static sk_sp<GrVkTextureRenderTarget> MakeWrappedTextureRenderTarget(
       GrVkGpu*, SkISize dimensions, int sampleCnt, GrWrapOwnership, GrWrapCacheable,
@@ -56,13 +56,13 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
       const GrVkImageView* texView, const GrVkImageInfo& msaaInfo,
       sk_sp<GrBackendSurfaceMutableStateImpl> msaaMutableState,
       const GrVkImageView* colorAttachmentView, const GrVkImageView* resolveAttachmentView,
-      GrMipMapsStatus);
+      GrMipmapStatus);
 
   // non-MSAA, not-wrapped
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrVkImageInfo& info,
       sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* texView,
-      const GrVkImageView* colorAttachmentView, GrMipMapsStatus);
+      const GrVkImageView* colorAttachmentView, GrMipmapStatus);
 
   // MSAA, wrapped
   GrVkTextureRenderTarget(
@@ -70,17 +70,17 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
       sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* texView,
       const GrVkImageInfo& msaaInfo, sk_sp<GrBackendSurfaceMutableStateImpl> msaaMutableState,
       const GrVkImageView* colorAttachmentView, const GrVkImageView* resolveAttachmentView,
-      GrMipMapsStatus, GrBackendObjectOwnership, GrWrapCacheable);
+      GrMipmapStatus, GrBackendObjectOwnership, GrWrapCacheable);
 
   // non-MSAA, wrapped
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info,
       sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* texView,
-      const GrVkImageView* colorAttachmentView, GrMipMapsStatus, GrBackendObjectOwnership,
+      const GrVkImageView* colorAttachmentView, GrMipmapStatus, GrBackendObjectOwnership,
       GrWrapCacheable);
 
   // GrGLRenderTarget accounts for the texture's memory and any MSAA renderbuffer's memory.
-  size_t onGpuMemorySize() const noexcept override;
+  size_t onGpuMemorySize() const override;
 
   // In Vulkan we call the release proc after we are finished with the underlying
   // GrVkImage::Resource object (which occurs after the GPU has finished all work on it).

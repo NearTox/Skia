@@ -18,11 +18,11 @@ struct SkDConic {
   SkDQuad fPts;
   SkScalar fWeight;
 
-  bool collapsed() const noexcept { return fPts.collapsed(); }
+  bool collapsed() const { return fPts.collapsed(); }
 
   bool controlsInside() const noexcept { return fPts.controlsInside(); }
 
-  void debugInit() noexcept {
+  void debugInit() {
     fPts.debugInit();
     fWeight = 0;
   }
@@ -43,7 +43,7 @@ struct SkDConic {
 
   const SkDConic& set(
       const SkPoint pts[kPointCount],
-      SkScalar weight SkDEBUGPARAMS(SkOpGlobalState* state = nullptr)) noexcept {
+      SkScalar weight SkDEBUGPARAMS(SkOpGlobalState* state = nullptr)) {
     fPts.set(pts SkDEBUGPARAMS(state));
     fWeight = weight;
     return *this;
@@ -52,56 +52,51 @@ struct SkDConic {
   const SkDPoint& operator[](int n) const noexcept { return fPts[n]; }
   SkDPoint& operator[](int n) noexcept { return fPts[n]; }
 
-  static int AddValidTs(double s[], int realRoots, double* t) noexcept {
+  static int AddValidTs(double s[], int realRoots, double* t) {
     return SkDQuad::AddValidTs(s, realRoots, t);
   }
 
-  void align(int endIndex, SkDPoint* dstPt) const noexcept { fPts.align(endIndex, dstPt); }
+  void align(int endIndex, SkDPoint* dstPt) const { fPts.align(endIndex, dstPt); }
 
-  SkDVector dxdyAtT(double t) const noexcept;
+  SkDVector dxdyAtT(double t) const;
   static int FindExtrema(const double src[], SkScalar weight, double tValue[1]);
 
-  bool hullIntersects(const SkDQuad& quad, bool* isLinear) const noexcept {
+  bool hullIntersects(const SkDQuad& quad, bool* isLinear) const {
     return fPts.hullIntersects(quad, isLinear);
   }
 
-  bool hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept {
+  bool hullIntersects(const SkDConic& conic, bool* isLinear) const {
     return fPts.hullIntersects(conic.fPts, isLinear);
   }
 
   bool hullIntersects(const SkDCubic& cubic, bool* isLinear) const;
 
-  bool isLinear(int startIndex, int endIndex) const noexcept {
-    return fPts.isLinear(startIndex, endIndex);
-  }
+  bool isLinear(int startIndex, int endIndex) const { return fPts.isLinear(startIndex, endIndex); }
 
   static int maxIntersections() noexcept { return kMaxIntersections; }
 
-  bool monotonicInX() const noexcept { return fPts.monotonicInX(); }
+  bool monotonicInX() const { return fPts.monotonicInX(); }
 
-  bool monotonicInY() const noexcept { return fPts.monotonicInY(); }
+  bool monotonicInY() const { return fPts.monotonicInY(); }
 
-  void otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept {
-    fPts.otherPts(oddMan, endPt);
-  }
+  void otherPts(int oddMan, const SkDPoint* endPt[2]) const { fPts.otherPts(oddMan, endPt); }
 
   static int pointCount() noexcept { return kPointCount; }
   static int pointLast() noexcept { return kPointLast; }
-  SkDPoint ptAtT(double t) const noexcept;
+  SkDPoint ptAtT(double t) const;
 
-  static int RootsReal(double A, double B, double C, double t[2]) noexcept {
+  static int RootsReal(double A, double B, double C, double t[2]) {
     return SkDQuad::RootsReal(A, B, C, t);
   }
 
-  static int RootsValidT(const double A, const double B, const double C, double s[2]) noexcept {
+  static int RootsValidT(const double A, const double B, const double C, double s[2]) {
     return SkDQuad::RootsValidT(A, B, C, s);
   }
 
-  SkDConic subDivide(double t1, double t2) const noexcept;
-  void subDivide(double t1, double t2, SkDConic* c) const noexcept { *c = this->subDivide(t1, t2); }
+  SkDConic subDivide(double t1, double t2) const;
+  void subDivide(double t1, double t2, SkDConic* c) const { *c = this->subDivide(t1, t2); }
 
-  static SkDConic SubDivide(
-      const SkPoint a[kPointCount], SkScalar weight, double t1, double t2) noexcept {
+  static SkDConic SubDivide(const SkPoint a[kPointCount], SkScalar weight, double t1, double t2) {
     SkDConic conic;
     conic.set(a, weight);
     return conic.subDivide(t1, t2);
@@ -127,7 +122,6 @@ struct SkDConic {
 class SkTConic : public SkTCurve {
  public:
   SkDConic fConic;
-
   SkTConic() noexcept = default;
 
   SkTConic(const SkDConic& c) noexcept : fConic(c) {}
@@ -137,19 +131,19 @@ class SkTConic : public SkTCurve {
   const SkDPoint& operator[](int n) const noexcept override { return fConic[n]; }
   SkDPoint& operator[](int n) noexcept override { return fConic[n]; }
 
-  bool collapsed() const noexcept override { return fConic.collapsed(); }
+  bool collapsed() const override { return fConic.collapsed(); }
   bool controlsInside() const noexcept override { return fConic.controlsInside(); }
-  void debugInit() noexcept override { return fConic.debugInit(); }
+  void debugInit() override { return fConic.debugInit(); }
 #if DEBUG_T_SECT
   void dumpID(int id) const override { return fConic.dumpID(id); }
 #endif
-  SkDVector dxdyAtT(double t) const noexcept override { return fConic.dxdyAtT(t); }
+  SkDVector dxdyAtT(double t) const override { return fConic.dxdyAtT(t); }
 #ifdef SK_DEBUG
   SkOpGlobalState* globalState() const override { return fConic.globalState(); }
 #endif
   bool hullIntersects(const SkDQuad& quad, bool* isLinear) const override;
 
-  bool hullIntersects(const SkDConic& conic, bool* isLinear) const noexcept override {
+  bool hullIntersects(const SkDConic& conic, bool* isLinear) const override {
     return conic.hullIntersects(fConic, isLinear);
   }
 
@@ -165,16 +159,16 @@ class SkTConic : public SkTCurve {
 
   int maxIntersections() const noexcept override { return SkDConic::kMaxIntersections; }
 
-  void otherPts(int oddMan, const SkDPoint* endPt[2]) const noexcept override {
+  void otherPts(int oddMan, const SkDPoint* endPt[2]) const override {
     fConic.otherPts(oddMan, endPt);
   }
 
   int pointCount() const noexcept override { return SkDConic::kPointCount; }
   int pointLast() const noexcept override { return SkDConic::kPointLast; }
-  SkDPoint ptAtT(double t) const noexcept override { return fConic.ptAtT(t); }
+  SkDPoint ptAtT(double t) const override { return fConic.ptAtT(t); }
   void setBounds(SkDRect*) const override;
 
-  void subDivide(double t1, double t2, SkTCurve* curve) const noexcept override {
+  void subDivide(double t1, double t2, SkTCurve* curve) const override {
     ((SkTConic*)curve)->fConic = fConic.subDivide(t1, t2);
   }
 };

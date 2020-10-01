@@ -116,7 +116,7 @@ class SK_API SkRefCnt : public SkRefCntBase {
 // "#include SK_REF_CNT_MIXIN_INCLUDE" doesn't work with this build system.
 #  if defined(SK_BUILD_FOR_GOOGLE3)
  public:
-  void deref() const { this->unref(); }
+  void deref() const noexcept { this->unref(); }
 #  endif
 };
 #endif
@@ -236,16 +236,16 @@ class sk_sp {
    *  the new sk_sp will have a reference to the object, and the argument will point to null.
    *  No call to ref() or unref() will be made.
    */
-  sk_sp(sk_sp<T>&& that) noexcept : fPtr(that.release()) {}
+  constexpr sk_sp(sk_sp<T>&& that) noexcept : fPtr(that.release()) {}
   template <
       typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-  sk_sp(sk_sp<U>&& that) noexcept : fPtr(that.release()) {}
+  constexpr sk_sp(sk_sp<U>&& that) noexcept : fPtr(that.release()) {}
 
   /**
    *  Adopt the bare pointer into the newly created sk_sp.
    *  No call to ref() or unref() will be made.
    */
-  explicit sk_sp(T* obj) noexcept : fPtr(obj) {}
+  constexpr explicit sk_sp(T* obj) noexcept : fPtr(obj) {}
 
   /**
    *  Calls unref() on the underlying object pointer.
@@ -255,7 +255,7 @@ class sk_sp {
     SkDEBUGCODE(fPtr = nullptr);
   }
 
-  sk_sp<T>& operator=(std::nullptr_t) noexcept(noexcept(reset())) {
+  sk_sp<T>& operator=(std::nullptr_t) noexcept(noexcept(this->reset())) {
     this->reset();
     return *this;
   }
@@ -266,7 +266,7 @@ class sk_sp {
    *  object.
    */
   sk_sp<T>& operator=(const sk_sp<T>& that) noexcept(
-      noexcept(reset()) && noexcept(SkSafeRef(that.get()))) {
+      noexcept(this->reset()) && noexcept(SkSafeRef(that.get()))) {
     if (this != &that) {
       this->reset(SkSafeRef(that.get()));
     }
@@ -275,7 +275,7 @@ class sk_sp {
   template <
       typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
   sk_sp<T>& operator=(const sk_sp<U>& that) noexcept(
-      noexcept(reset()) && noexcept(SkSafeRef(that.get()))) {
+      noexcept(this->reset()) && noexcept(SkSafeRef(that.get()))) {
     this->reset(SkSafeRef(that.get()));
     return *this;
   }
@@ -324,7 +324,7 @@ class sk_sp {
    *  The caller must assume ownership of the object, and manage its reference count directly.
    *  No call to unref() will be made.
    */
-  T* SK_WARN_UNUSED_RESULT release() noexcept {
+  constexpr T* SK_WARN_UNUSED_RESULT release() noexcept {
     T* ptr = fPtr;
     fPtr = nullptr;
     return ptr;

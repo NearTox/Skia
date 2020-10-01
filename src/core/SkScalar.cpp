@@ -9,7 +9,7 @@
 #include "include/core/SkScalar.h"
 
 SkScalar SkScalarInterpFunc(
-    SkScalar searchKey, const SkScalar keys[], const SkScalar values[], int length) noexcept {
+    SkScalar searchKey, const SkScalar keys[], const SkScalar values[], int length) {
   SkASSERT(length > 0);
   SkASSERT(keys != nullptr);
   SkASSERT(values != nullptr);

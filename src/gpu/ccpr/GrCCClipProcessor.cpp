@@ -28,11 +28,8 @@ GrCCClipProcessor::GrCCClipProcessor(
       fMustCheckBounds(MustCheckBounds::kYes == mustCheckBounds) {
   auto view = make_view(caps, clipPath->atlasLazyProxy(), fIsCoverageCount);
   auto texEffect = GrTextureEffect::Make(std::move(view), kUnknown_SkAlphaType);
-  this->registerExplicitlySampledChild(std::move(texEffect));
-
-  if (inputFP != nullptr) {
-    this->registerChild(std::move(inputFP));
-  }
+  this->registerChild(std::move(texEffect), SkSL::SampleUsage::Explicit());
+  this->registerChild(std::move(inputFP));
 }
 
 GrCCClipProcessor::GrCCClipProcessor(const GrCCClipProcessor& that)
@@ -47,8 +44,7 @@ std::unique_ptr<GrFragmentProcessor> GrCCClipProcessor::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrCCClipProcessor(*this));
 }
 
-void GrCCClipProcessor::onGetGLSLProcessorKey(
-    const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept {
+void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const {
   const SkPath& clipPath = fClipPath->deviceSpacePath();
   uint32_t key = (fIsCoverageCount) ? (uint32_t)GrFillRuleForSkPath(clipPath) : 0;
   key = (key << 1) | ((clipPath.isInverseFillType()) ? 1 : 0);
@@ -63,12 +59,6 @@ bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const noexcept 
          that.fClipPath->deviceSpacePath().getFillType() ==
              fClipPath->deviceSpacePath().getFillType() &&
          that.fIsCoverageCount == fIsCoverageCount && that.fMustCheckBounds == fMustCheckBounds;
-}
-
-bool GrCCClipProcessor::hasInputFP() const noexcept {
-  // We always have a `texEffect`, and this accounts for one child.
-  // The second child will be the input FP, if we have one.
-  return this->numChildProcessors() > 1;
 }
 
 class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
@@ -121,9 +111,7 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
     }
 
     constexpr int kInputFPIndex = 1;
-    SkString inputColor = proc.hasInputFP()
-                              ? this->invokeChild(kInputFPIndex, args.fInputColor, args)
-                              : SkString(args.fInputColor);
+    SkString inputColor = this->invokeChild(kInputFPIndex, args);
 
     f->codeAppendf("%s = %s * coverage;", args.fOutputColor, inputColor.c_str());
   }

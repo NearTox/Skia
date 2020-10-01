@@ -23,7 +23,7 @@
  */
 class SkFrame : public SkNoncopyable {
  public:
-  SkFrame(int id) noexcept
+  SkFrame(int id)
       : fId(id),
         fHasAlpha(false),
         fRequiredFrame(kUninitialized),
@@ -49,7 +49,7 @@ class SkFrame : public SkNoncopyable {
   /**
    *  0-based index of the frame in the image sequence.
    */
-  int frameId() const noexcept { return fId; }
+  int frameId() const { return fId; }
 
   /**
    *  How this frame reports its alpha.
@@ -64,25 +64,25 @@ class SkFrame : public SkNoncopyable {
    *  Cached value representing whether the frame has alpha,
    *  after compositing with the prior frame.
    */
-  bool hasAlpha() const noexcept { return fHasAlpha; }
+  bool hasAlpha() const { return fHasAlpha; }
 
   /**
    *  Cache whether the finished frame has alpha.
    */
-  void setHasAlpha(bool alpha) noexcept { fHasAlpha = alpha; }
+  void setHasAlpha(bool alpha) { fHasAlpha = alpha; }
 
   /**
    *  Whether enough of the frame has been read to determine
    *  fRequiredFrame and fHasAlpha.
    */
-  bool reachedStartOfData() const noexcept { return fRequiredFrame != kUninitialized; }
+  bool reachedStartOfData() const { return fRequiredFrame != kUninitialized; }
 
   /**
    *  The frame this one depends on.
    *
    *  Must not be called until fRequiredFrame has been set properly.
    */
-  int getRequiredFrame() const noexcept {
+  int getRequiredFrame() const {
     SkASSERT(this->reachedStartOfData());
     return fRequiredFrame;
   }
@@ -90,42 +90,42 @@ class SkFrame : public SkNoncopyable {
   /**
    *  Set the frame that this frame depends on.
    */
-  void setRequiredFrame(int req) noexcept { fRequiredFrame = req; }
+  void setRequiredFrame(int req) { fRequiredFrame = req; }
 
   /**
    *  Set the rectangle that is updated by this frame.
    */
-  void setXYWH(int x, int y, int width, int height) noexcept { fRect.setXYWH(x, y, width, height); }
+  void setXYWH(int x, int y, int width, int height) { fRect.setXYWH(x, y, width, height); }
 
   /**
    *  The rectangle that is updated by this frame.
    */
-  SkIRect frameRect() const noexcept { return fRect; }
+  SkIRect frameRect() const { return fRect; }
 
-  int xOffset() const noexcept { return fRect.x(); }
-  int yOffset() const noexcept { return fRect.y(); }
-  int width() const noexcept { return fRect.width(); }
-  int height() const noexcept { return fRect.height(); }
+  int xOffset() const { return fRect.x(); }
+  int yOffset() const { return fRect.y(); }
+  int width() const { return fRect.width(); }
+  int height() const { return fRect.height(); }
 
-  SkCodecAnimation::DisposalMethod getDisposalMethod() const noexcept { return fDisposalMethod; }
+  SkCodecAnimation::DisposalMethod getDisposalMethod() const { return fDisposalMethod; }
 
-  void setDisposalMethod(SkCodecAnimation::DisposalMethod disposalMethod) noexcept {
+  void setDisposalMethod(SkCodecAnimation::DisposalMethod disposalMethod) {
     fDisposalMethod = disposalMethod;
   }
 
   /**
    * Set the duration (in ms) to show this frame.
    */
-  void setDuration(int duration) noexcept { fDuration = duration; }
+  void setDuration(int duration) { fDuration = duration; }
 
   /**
    *  Duration in ms to show this frame.
    */
-  int getDuration() const noexcept { return fDuration; }
+  int getDuration() const { return fDuration; }
 
-  void setBlend(SkCodecAnimation::Blend blend) noexcept { fBlend = blend; }
+  void setBlend(SkCodecAnimation::Blend blend) { fBlend = blend; }
 
-  SkCodecAnimation::Blend getBlend() const noexcept { return fBlend; }
+  SkCodecAnimation::Blend getBlend() const { return fBlend; }
 
  protected:
   virtual SkEncodedInfo::Alpha onReportedAlpha() const = 0;
@@ -148,7 +148,7 @@ class SkFrame : public SkNoncopyable {
  */
 class SkFrameHolder : public SkNoncopyable {
  public:
-  constexpr SkFrameHolder() noexcept : fScreenWidth(0), fScreenHeight(0) {}
+  SkFrameHolder() : fScreenWidth(0), fScreenHeight(0) {}
 
   virtual ~SkFrameHolder() = default;
 
@@ -156,8 +156,8 @@ class SkFrameHolder : public SkNoncopyable {
    *  Size of the image. Each frame will be contained in
    *  these dimensions (possibly after clipping).
    */
-  int screenWidth() const noexcept { return fScreenWidth; }
-  int screenHeight() const noexcept { return fScreenHeight; }
+  int screenWidth() const { return fScreenWidth; }
+  int screenHeight() const { return fScreenHeight; }
 
   /**
    *  Compute the opacity and required frame, based on

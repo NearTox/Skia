@@ -24,15 +24,15 @@ class SkWbmpCodec final : public SkCodec {
   static std::unique_ptr<SkCodec> MakeFromStream(std::unique_ptr<SkStream>, Result*);
 
  protected:
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override;
+  SkEncodedImageFormat onGetEncodedFormat() const override;
   Result onGetPixels(const SkImageInfo&, void*, size_t, const Options&, int*) override;
   bool onRewind() override;
   bool conversionSupported(const SkImageInfo& dst, bool srcIsOpaque, bool needsXform) override;
   // No need to Xform; all pixels are either black or white.
-  bool usesColorXform() const noexcept override { return false; }
+  bool usesColorXform() const override { return false; }
 
  private:
-  SkSampler* getSampler(bool createIfNecessary) noexcept override {
+  SkSampler* getSampler(bool createIfNecessary) override {
     SkASSERT(fSwizzler || !createIfNecessary);
     return fSwizzler.get();
   }

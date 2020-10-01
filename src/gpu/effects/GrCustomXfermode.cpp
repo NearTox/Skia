@@ -8,7 +8,6 @@
 #include "src/gpu/effects/GrCustomXfermode.h"
 
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrProcessor.h"
@@ -20,7 +19,7 @@
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"
 
-bool GrCustomXfermode::IsSupportedMode(SkBlendMode mode) noexcept {
+bool GrCustomXfermode::IsSupportedMode(SkBlendMode mode) {
   return (int)mode > (int)SkBlendMode::kLastCoeffMode && (int)mode <= (int)SkBlendMode::kLastMode;
 }
 
@@ -54,14 +53,14 @@ static constexpr GrBlendEquation hw_blend_equation(SkBlendMode mode) noexcept {
 }
 
 static bool can_use_hw_blend_equation(
-    GrBlendEquation equation, GrProcessorAnalysisCoverage coverage, const GrCaps& caps) noexcept {
+    GrBlendEquation equation, GrProcessorAnalysisCoverage coverage, const GrCaps& caps) {
   if (!caps.advancedBlendEquationSupport()) {
     return false;
   }
   if (GrProcessorAnalysisCoverage::kLCD == coverage) {
     return false;  // LCD coverage must be applied after the blend equation.
   }
-  if (caps.isAdvancedBlendEquationBlacklisted(equation)) {
+  if (caps.isAdvancedBlendEquationDisabled(equation)) {
     return false;
   }
   return true;
@@ -73,10 +72,10 @@ static bool can_use_hw_blend_equation(
 
 class CustomXP : public GrXferProcessor {
  public:
-  CustomXP(SkBlendMode mode, GrBlendEquation hwBlendEquation) noexcept
+  CustomXP(SkBlendMode mode, GrBlendEquation hwBlendEquation)
       : INHERITED(kCustomXP_ClassID), fMode(mode), fHWBlendEquation(hwBlendEquation) {}
 
-  CustomXP(bool hasMixedSamples, SkBlendMode mode, GrProcessorAnalysisCoverage coverage) noexcept
+  CustomXP(bool hasMixedSamples, SkBlendMode mode, GrProcessorAnalysisCoverage coverage)
       : INHERITED(kCustomXP_ClassID, true, hasMixedSamples, coverage),
         fMode(mode),
         fHWBlendEquation(kIllegal_GrBlendEquation) {}
@@ -85,20 +84,20 @@ class CustomXP : public GrXferProcessor {
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  SkBlendMode mode() const noexcept { return fMode; }
-  bool hasHWBlendEquation() const noexcept { return kIllegal_GrBlendEquation != fHWBlendEquation; }
+  SkBlendMode mode() const { return fMode; }
+  bool hasHWBlendEquation() const { return kIllegal_GrBlendEquation != fHWBlendEquation; }
 
-  GrBlendEquation hwBlendEquation() const noexcept {
+  GrBlendEquation hwBlendEquation() const {
     SkASSERT(this->hasHWBlendEquation());
     return fHWBlendEquation;
   }
 
-  GrXferBarrierType xferBarrierType(const GrCaps&) const noexcept override;
+  GrXferBarrierType xferBarrierType(const GrCaps&) const override;
 
  private:
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  void onGetBlendInfo(BlendInfo*) const noexcept override;
+  void onGetBlendInfo(BlendInfo*) const override;
 
   bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override;
 
@@ -157,7 +156,7 @@ class GLCustomXP : public GrGLSLXferProcessor {
         fragBuilder, srcCoverage, dstColor, outColor, outColorSecondary, xp);
   }
 
-  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
   typedef GrGLSLXferProcessor INHERITED;
 };
@@ -178,14 +177,14 @@ bool CustomXP::onIsEqual(const GrXferProcessor& other) const noexcept {
   return fMode == s.fMode && fHWBlendEquation == s.fHWBlendEquation;
 }
 
-GrXferBarrierType CustomXP::xferBarrierType(const GrCaps& caps) const noexcept {
+GrXferBarrierType CustomXP::xferBarrierType(const GrCaps& caps) const {
   if (this->hasHWBlendEquation() && !caps.advancedCoherentBlendEquationSupport()) {
     return kBlend_GrXferBarrierType;
   }
   return kNone_GrXferBarrierType;
 }
 
-void CustomXP::onGetBlendInfo(BlendInfo* blendInfo) const noexcept {
+void CustomXP::onGetBlendInfo(BlendInfo* blendInfo) const {
   if (this->hasHWBlendEquation()) {
     blendInfo->fEquation = this->hwBlendEquation();
   }
@@ -214,7 +213,7 @@ class CustomXPFactory : public GrXPFactory {
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const noexcept override;
+      GrClampType) const override;
 
   GR_DECLARE_XP_FACTORY_TEST
 
@@ -242,7 +241,7 @@ sk_sp<const GrXferProcessor> CustomXPFactory::makeXferProcessor(
 
 GrXPFactory::AnalysisProperties CustomXPFactory::analysisProperties(
     const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage& coverage,
-    const GrCaps& caps, GrClampType clampType) const noexcept {
+    const GrCaps& caps, GrClampType clampType) const {
   /*
     The general SVG blend equation is defined in the spec as follows:
 
@@ -343,7 +342,8 @@ GrXPFactory::AnalysisProperties CustomXPFactory::analysisProperties(
       return AnalysisProperties::kCompatibleWithCoverageAsAlpha;
     } else {
       return AnalysisProperties::kCompatibleWithCoverageAsAlpha |
-             AnalysisProperties::kRequiresNonOverlappingDraws;
+             AnalysisProperties::kRequiresNonOverlappingDraws |
+             AnalysisProperties::kUsesNonCoherentHWBlending;
     }
   }
   return AnalysisProperties::kCompatibleWithCoverageAsAlpha | AnalysisProperties::kReadsDstInShader;
@@ -361,29 +361,21 @@ const GrXPFactory* CustomXPFactory::TestGet(GrProcessorTestData* d) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const GrXPFactory* GrCustomXfermode::Get(SkBlendMode mode) noexcept {
-  // If these objects are constructed as static constexpr by cl.exe (2015 SP2) the vtables are
-  // null.
-#ifdef SK_BUILD_FOR_WIN
-#  define _CONSTEXPR_
-#else
-#  define _CONSTEXPR_ constexpr
-#endif
-  static _CONSTEXPR_ const CustomXPFactory gOverlay(SkBlendMode::kOverlay);
-  static _CONSTEXPR_ const CustomXPFactory gDarken(SkBlendMode::kDarken);
-  static _CONSTEXPR_ const CustomXPFactory gLighten(SkBlendMode::kLighten);
-  static _CONSTEXPR_ const CustomXPFactory gColorDodge(SkBlendMode::kColorDodge);
-  static _CONSTEXPR_ const CustomXPFactory gColorBurn(SkBlendMode::kColorBurn);
-  static _CONSTEXPR_ const CustomXPFactory gHardLight(SkBlendMode::kHardLight);
-  static _CONSTEXPR_ const CustomXPFactory gSoftLight(SkBlendMode::kSoftLight);
-  static _CONSTEXPR_ const CustomXPFactory gDifference(SkBlendMode::kDifference);
-  static _CONSTEXPR_ const CustomXPFactory gExclusion(SkBlendMode::kExclusion);
-  static _CONSTEXPR_ const CustomXPFactory gMultiply(SkBlendMode::kMultiply);
-  static _CONSTEXPR_ const CustomXPFactory gHue(SkBlendMode::kHue);
-  static _CONSTEXPR_ const CustomXPFactory gSaturation(SkBlendMode::kSaturation);
-  static _CONSTEXPR_ const CustomXPFactory gColor(SkBlendMode::kColor);
-  static _CONSTEXPR_ const CustomXPFactory gLuminosity(SkBlendMode::kLuminosity);
-#undef _CONSTEXPR_
+const GrXPFactory* GrCustomXfermode::Get(SkBlendMode mode) {
+  static constexpr const CustomXPFactory gOverlay(SkBlendMode::kOverlay);
+  static constexpr const CustomXPFactory gDarken(SkBlendMode::kDarken);
+  static constexpr const CustomXPFactory gLighten(SkBlendMode::kLighten);
+  static constexpr const CustomXPFactory gColorDodge(SkBlendMode::kColorDodge);
+  static constexpr const CustomXPFactory gColorBurn(SkBlendMode::kColorBurn);
+  static constexpr const CustomXPFactory gHardLight(SkBlendMode::kHardLight);
+  static constexpr const CustomXPFactory gSoftLight(SkBlendMode::kSoftLight);
+  static constexpr const CustomXPFactory gDifference(SkBlendMode::kDifference);
+  static constexpr const CustomXPFactory gExclusion(SkBlendMode::kExclusion);
+  static constexpr const CustomXPFactory gMultiply(SkBlendMode::kMultiply);
+  static constexpr const CustomXPFactory gHue(SkBlendMode::kHue);
+  static constexpr const CustomXPFactory gSaturation(SkBlendMode::kSaturation);
+  static constexpr const CustomXPFactory gColor(SkBlendMode::kColor);
+  static constexpr const CustomXPFactory gLuminosity(SkBlendMode::kLuminosity);
   switch (mode) {
     case SkBlendMode::kOverlay: return &gOverlay;
     case SkBlendMode::kDarken: return &gDarken;

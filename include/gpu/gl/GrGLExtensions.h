@@ -64,7 +64,7 @@ class SK_API GrGLExtensions {
    */
   void add(const char[]);
 
-  void reset() noexcept { fStrings.reset(); }
+  void reset() { fStrings.reset(); }
 
   void dumpJSON(SkJSONWriter*) const;
 

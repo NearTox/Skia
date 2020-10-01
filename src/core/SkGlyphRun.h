@@ -26,11 +26,11 @@ class SkTextBlobRunIterator;
 
 class SkGlyphRun {
  public:
-  SkGlyphRun() = default;
+  SkGlyphRun() noexcept = default;
   SkGlyphRun(
       const SkFont& font, SkSpan<const SkPoint> positions, SkSpan<const SkGlyphID> glyphIDs,
-      SkSpan<const char> text, SkSpan<const uint32_t> clusters);
-  SkGlyphRun(const SkGlyphRun& glyphRun, const SkFont& font);
+      SkSpan<const char> text, SkSpan<const uint32_t> clusters) noexcept;
+  SkGlyphRun(const SkGlyphRun& glyphRun, const SkFont& font) noexcept;
 
   size_t runSize() const noexcept { return fSource.size(); }
   SkSpan<const SkPoint> positions() const noexcept { return fSource.get<1>(); }
@@ -55,29 +55,29 @@ class SkGlyphRunList {
   SkSpan<const SkGlyphRun> fGlyphRuns;
 
  public:
-  SkGlyphRunList();
+  SkGlyphRunList() noexcept;
   // Blob maybe null.
   SkGlyphRunList(
       const SkPaint& paint, const SkTextBlob* blob, SkPoint origin,
-      SkSpan<const SkGlyphRun> glyphRunList);
+      SkSpan<const SkGlyphRun> glyphRunList) noexcept;
 
-  SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint);
+  SkGlyphRunList(const SkGlyphRun& glyphRun, const SkPaint& paint) noexcept;
 
-  uint64_t uniqueID() const;
-  bool anyRunsLCD() const;
-  bool anyRunsSubpixelPositioned() const;
-  void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const;
+  uint64_t uniqueID() const noexcept;
+  bool anyRunsLCD() const noexcept;
+  bool anyRunsSubpixelPositioned() const noexcept;
+  void temporaryShuntBlobNotifyAddedToCache(uint32_t cacheID) const noexcept;
 
   bool canCache() const noexcept { return fOriginalTextBlob != nullptr; }
   size_t runCount() const noexcept { return fGlyphRuns.size(); }
-  size_t totalGlyphCount() const {
+  size_t totalGlyphCount() const noexcept {
     size_t glyphCount = 0;
     for (const auto& run : fGlyphRuns) {
       glyphCount += run.runSize();
     }
     return glyphCount;
   }
-  bool allFontsFinite() const;
+  bool allFontsFinite() const noexcept;
 
   SkPoint origin() const noexcept { return fOrigin; }
   const SkPaint& paint() const noexcept { return *fOriginalPaint; }
@@ -121,12 +121,12 @@ class SkGlyphRunBuilder {
   void textBlobToGlyphRunListIgnoringRSXForm(
       const SkPaint& paint, const SkTextBlob& blob, SkPoint origin);
 
-  const SkGlyphRunList& useGlyphRunList();
+  const SkGlyphRunList& useGlyphRunList() noexcept;
 
   bool empty() const noexcept { return fGlyphRunListStorage.empty(); }
 
  private:
-  void initialize(size_t totalRunSize);
+  void initialize(size_t totalRunSize) noexcept;
   SkSpan<const SkGlyphID> textToGlyphIDs(
       const SkFont& font, const void* bytes, size_t byteLength, SkTextEncoding);
 

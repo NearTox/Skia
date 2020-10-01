@@ -21,7 +21,7 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkColorData.h"
 #include "src/core/SkClipOpPriv.h"
@@ -29,7 +29,6 @@
 #include "src/gpu/GrAppliedClip.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrClip.h"
-#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrPaint.h"
 #include "src/gpu/GrRecordingContextPriv.h"
@@ -153,24 +152,17 @@ class WindowRectanglesMaskGM : public WindowRectanglesBaseGM {
   constexpr static int kMaskCheckerSize = 5;
   SkString onShortName() final { return SkString("windowrectangles_mask"); }
   DrawResult onCoverClipStack(const SkClipStack&, SkCanvas*, SkString* errorMsg) final;
-  void visualizeAlphaMask(GrContext*, GrRenderTargetContext*, const GrReducedClip&, GrPaint&&);
-  void visualizeStencilMask(GrContext*, GrRenderTargetContext*, const GrReducedClip&, GrPaint&&);
+  void visualizeAlphaMask(
+      GrRecordingContext*, GrRenderTargetContext*, const GrReducedClip&, GrPaint&&);
+  void visualizeStencilMask(
+      GrRecordingContext*, GrRenderTargetContext*, const GrReducedClip&, GrPaint&&);
   void stencilCheckerboard(GrRenderTargetContext*, bool flip);
-};
-
-/**
- * Base class for GrClips that visualize a clip mask.
- */
-class MaskOnlyClipBase : public GrClip {
- private:
-  bool quickContains(const SkRect&) const final { return false; }
-  bool isRRect(SkRRect* rr, GrAA*) const final { return false; }
 };
 
 /**
  * This class clips a cover by an alpha mask. We use it to visualize the alpha clip mask.
  */
-class AlphaOnlyClip final : public MaskOnlyClipBase {
+class AlphaOnlyClip final : public GrClip {
  public:
   AlphaOnlyClip(GrSurfaceProxyView mask, int x, int y) : fMask(std::move(mask)), fX(x), fY(y) {}
 
@@ -178,9 +170,8 @@ class AlphaOnlyClip final : public MaskOnlyClipBase {
   SkIRect getConservativeBounds() const final {
     return SkIRect::MakeXYWH(fX, fY, fMask.width(), fMask.height());
   }
-
-  bool apply(
-      GrRecordingContext* ctx, GrRenderTargetContext*, bool, bool, GrAppliedClip* out,
+  Effect apply(
+      GrRecordingContext* ctx, GrRenderTargetContext*, GrAAType, bool, GrAppliedClip* out,
       SkRect* bounds) const override {
     GrSamplerState samplerState(
         GrSamplerState::WrapMode::kClampToBorder, GrSamplerState::Filter::kNearest);
@@ -191,7 +182,7 @@ class AlphaOnlyClip final : public MaskOnlyClipBase {
         fMask, kPremul_SkAlphaType, m, samplerState, subset, domain, *ctx->priv().caps());
     fp = GrDeviceSpaceEffect::Make(std::move(fp));
     out->addCoverageFP(std::move(fp));
-    return true;
+    return Effect::kClipped;
   }
   GrSurfaceProxyView fMask;
   int fX;
@@ -207,7 +198,7 @@ static GrStencilClip make_stencil_only_clip(GrRenderTargetContext* rtc) {
 
 DrawResult WindowRectanglesMaskGM::onCoverClipStack(
     const SkClipStack& stack, SkCanvas* canvas, SkString* errorMsg) {
-  GrContext* ctx = canvas->getGrContext();
+  auto ctx = canvas->recordingContext();
   GrRenderTargetContext* rtc = canvas->internal_private_accessTopLayerRenderTargetContext();
   if (!ctx || !rtc) {
     *errorMsg = kErrorMsg_DrawSkippedGpuOnly;
@@ -234,7 +225,8 @@ DrawResult WindowRectanglesMaskGM::onCoverClipStack(
 }
 
 void WindowRectanglesMaskGM::visualizeAlphaMask(
-    GrContext* ctx, GrRenderTargetContext* rtc, const GrReducedClip& reducedClip, GrPaint&& paint) {
+    GrRecordingContext* ctx, GrRenderTargetContext* rtc, const GrReducedClip& reducedClip,
+    GrPaint&& paint) {
   const int padRight = (kDeviceRect.right() - kCoverRect.right()) / 2;
   const int padBottom = (kDeviceRect.bottom() - kCoverRect.bottom()) / 2;
   auto maskRTC = GrRenderTargetContext::MakeWithFallback(
@@ -268,7 +260,8 @@ void WindowRectanglesMaskGM::visualizeAlphaMask(
 }
 
 void WindowRectanglesMaskGM::visualizeStencilMask(
-    GrContext* ctx, GrRenderTargetContext* rtc, const GrReducedClip& reducedClip, GrPaint&& paint) {
+    GrRecordingContext* ctx, GrRenderTargetContext* rtc, const GrReducedClip& reducedClip,
+    GrPaint&& paint) {
   if (ctx->abandoned()) {
     // GrReducedClip assumes the context hasn't been abandoned, which is reasonable since it is
     // only ever used if a draw op is made. Since this GM calls it directly, it has to be taken

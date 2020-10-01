@@ -28,16 +28,6 @@ static BufferUsage get_buffer_usage(GrVkBuffer::Type type, bool dynamic) {
   SK_ABORT("Invalid GrVkBuffer::Type");
 }
 
-static bool check_result(GrVkGpu* gpu, VkResult result) {
-  if (result != VK_SUCCESS) {
-    if (result == VK_ERROR_DEVICE_LOST) {
-      gpu->setDeviceLost();
-    }
-    return false;
-  }
-  return true;
-}
-
 bool GrVkMemory::AllocAndBindBufferMemory(
     GrVkGpu* gpu, VkBuffer buffer, GrVkBuffer::Type type, bool dynamic, GrVkAlloc* alloc) {
   GrVkMemoryAllocator* allocator = gpu->memoryAllocator();
@@ -62,7 +52,7 @@ bool GrVkMemory::AllocAndBindBufferMemory(
   }
 
   VkResult result = allocator->allocateBufferMemory(buffer, usage, propFlags, &memory);
-  if (!check_result(gpu, result)) {
+  if (!gpu->checkVkResult(result)) {
     return false;
   }
   allocator->getAllocInfo(memory, alloc);
@@ -109,7 +99,7 @@ bool GrVkMemory::AllocAndBindImageMemory(
   }
 
   VkResult result = allocator->allocateImageMemory(image, propFlags, &memory);
-  if (!check_result(gpu, result)) {
+  if (!gpu->checkVkResult(result)) {
     return false;
   }
 
@@ -139,7 +129,7 @@ void* GrVkMemory::MapAlloc(GrVkGpu* gpu, const GrVkAlloc& alloc) {
   GrVkMemoryAllocator* allocator = gpu->memoryAllocator();
   void* mapPtr;
   VkResult result = allocator->mapMemory(alloc.fBackendMemory, &mapPtr);
-  if (!check_result(gpu, result)) {
+  if (!gpu->checkVkResult(result)) {
     return nullptr;
   }
   return mapPtr;
@@ -182,7 +172,7 @@ void GrVkMemory::FlushMappedAlloc(
     SkASSERT(alloc.fBackendMemory);
     GrVkMemoryAllocator* allocator = gpu->memoryAllocator();
     VkResult result = allocator->flushMemory(alloc.fBackendMemory, offset, size);
-    check_result(gpu, result);
+    gpu->checkVkResult(result);
   }
 }
 
@@ -194,6 +184,6 @@ void GrVkMemory::InvalidateMappedAlloc(
     SkASSERT(alloc.fBackendMemory);
     GrVkMemoryAllocator* allocator = gpu->memoryAllocator();
     VkResult result = allocator->invalidateMemory(alloc.fBackendMemory, offset, size);
-    check_result(gpu, result);
+    gpu->checkVkResult(result);
   }
 }

@@ -14,7 +14,6 @@
 #include "include/core/SkM44.h"
 #include "include/core/SkTypes.h"
 
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
 class GrMagnifierEffect : public GrFragmentProcessor {
@@ -28,8 +27,6 @@ class GrMagnifierEffect : public GrFragmentProcessor {
   GrMagnifierEffect(const GrMagnifierEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "MagnifierEffect"; }
-  GrCoordTransform fCoordTransform0;
-  int src_index = -1;
   SkIRect bounds;
   SkRect srcRect;
   float xInvZoom;
@@ -42,20 +39,22 @@ class GrMagnifierEffect : public GrFragmentProcessor {
       std::unique_ptr<GrFragmentProcessor> src, SkIRect bounds, SkRect srcRect, float xInvZoom,
       float yInvZoom, float xInvInset, float yInvInset)
       : INHERITED(kGrMagnifierEffect_ClassID, kNone_OptimizationFlags),
-        fCoordTransform0(SkMatrix::I()),
         bounds(bounds),
         srcRect(srcRect),
         xInvZoom(xInvZoom),
         yInvZoom(yInvZoom),
         xInvInset(xInvInset),
         yInvInset(yInvInset) {
+    this->setUsesSampleCoordsDirectly();
     SkASSERT(src);
-    src_index = this->registerExplicitlySampledChild(std::move(src));
-    this->addCoordTransform(&fCoordTransform0);
+    this->registerChild(std::move(src), SkSL::SampleUsage::Explicit());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

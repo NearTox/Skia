@@ -137,7 +137,7 @@ class SkConvertToUTF32 {
  public:
   SkConvertToUTF32() noexcept = default;
 
-  const SkUnichar* convert(const void* text, size_t byteLength, SkTextEncoding encoding) noexcept {
+  const SkUnichar* convert(const void* text, size_t byteLength, SkTextEncoding encoding) {
     const SkUnichar* uni;
     switch (encoding) {
       case SkTextEncoding::kUTF8: {

@@ -35,10 +35,10 @@ class SK_API GrVkExtensions {
     uint32_t fSpecVersion;
 
     struct Less {
-      bool operator()(const Info& a, const SkString& b) {
+      bool operator()(const Info& a, const SkString& b) const noexcept {
         return strcmp(a.fName.c_str(), b.c_str()) < 0;
       }
-      bool operator()(const SkString& a, const GrVkExtensions::Info& b) {
+      bool operator()(const SkString& a, const GrVkExtensions::Info& b) const noexcept {
         return strcmp(a.c_str(), b.fName.c_str()) < 0;
       }
     };

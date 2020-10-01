@@ -31,7 +31,7 @@ size_t GrComputeTightCombinedBufferSize(
     int mipLevelCount);
 
 void GrFillInCompressedData(
-    SkImage::CompressionType, SkISize dimensions, GrMipMapped, char* dest, const SkColor4f& color);
+    SkImage::CompressionType, SkISize dimensions, GrMipmapped, char* dest, const SkColor4f& color);
 
 // Swizzle param is applied after loading and before converting from srcInfo to dstInfo.
 bool GrConvertPixels(

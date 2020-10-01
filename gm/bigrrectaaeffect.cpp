@@ -17,7 +17,6 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/gpu/GrContext.h"
 #include "include/private/GrSharedEnums.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrCaps.h"
@@ -66,7 +65,8 @@ class BigRRectAAEffectGM : public GpuGM {
   SkISize onISize() override { return SkISize::Make(fWidth, fHeight); }
 
   void onDraw(
-      GrContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas) override {
+      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext,
+      SkCanvas* canvas) override {
     SkPaint paint;
 
     int y = kPad;
@@ -96,7 +96,7 @@ class BigRRectAAEffectGM : public GpuGM {
         GrPaint grPaint;
         grPaint.setColor4f({0, 0, 0, 1.f});
         grPaint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-        grPaint.addCoverageFragmentProcessor(std::move(fp));
+        grPaint.setCoverageFragmentProcessor(std::move(fp));
 
         SkRect bounds = testBounds;
         bounds.offset(SkIntToScalar(x), SkIntToScalar(y));

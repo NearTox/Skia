@@ -88,7 +88,7 @@ class SK_API SkMatrix {
     return Translate(t.x(), t.y());
   }
   static SkMatrix SK_WARN_UNUSED_RESULT Translate(SkIVector t) noexcept {
-    return Translate(SkIntToScalar(t.x()), SkIntToFloat(t.y()));
+    return Translate(t.x(), t.y());
   }
 
   /** Sets SkMatrix to rotate by |deg| about a pivot point at (0, 0).
@@ -136,7 +136,7 @@ class SK_API SkMatrix {
       @param pers2   perspective scale factor
       @return        SkMatrix constructed from parameters
   */
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeAll(
+  static constexpr SkMatrix SK_WARN_UNUSED_RESULT MakeAll(
       SkScalar scaleX, SkScalar skewX, SkScalar transX, SkScalar skewY, SkScalar scaleY,
       SkScalar transY, SkScalar pers0, SkScalar pers1, SkScalar pers2) noexcept {
     SkMatrix m;
@@ -1804,21 +1804,21 @@ class SK_API SkMatrix {
 
   typedef void (*MapXYProc)(const SkMatrix& mat, SkScalar x, SkScalar y, SkPoint* result);
 
-  static MapXYProc GetMapXYProc(TypeMask mask) {
+  static MapXYProc GetMapXYProc(TypeMask mask) noexcept {
     SkASSERT((mask & ~kAllMasks) == 0);
     return gMapXYProcs[mask & kAllMasks];
   }
 
-  MapXYProc getMapXYProc() const { return GetMapXYProc(this->getType()); }
+  MapXYProc getMapXYProc() const noexcept { return GetMapXYProc(this->getType()); }
 
   typedef void (*MapPtsProc)(const SkMatrix& mat, SkPoint dst[], const SkPoint src[], int count);
 
-  static MapPtsProc GetMapPtsProc(TypeMask mask) {
+  static MapPtsProc GetMapPtsProc(TypeMask mask) noexcept {
     SkASSERT((mask & ~kAllMasks) == 0);
     return gMapPtsProcs[mask & kAllMasks];
   }
 
-  MapPtsProc getMapPtsProc() const { return GetMapPtsProc(this->getType()); }
+  MapPtsProc getMapPtsProc() const noexcept { return GetMapPtsProc(this->getType()); }
 
   bool SK_WARN_UNUSED_RESULT invertNonIdentity(SkMatrix* inverse) const noexcept;
 

@@ -206,9 +206,7 @@ class RegionView : public Sample {
     this->build_rgn(&rgn, op);
 
     {
-      SkRegion tmp, tmp2(rgn);
-
-      tmp = tmp2;
+      SkRegion tmp = rgn;
       tmp.translate(5, -3);
 
       {
@@ -314,8 +312,7 @@ class RegionView : public Sample {
     }
   }
 
-  virtual Sample::Click* onFindClickHandler(
-      SkScalar x, SkScalar y, skui::ModifierKey modi) override {
+  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
     return fRect.contains(SkScalarRoundToInt(x), SkScalarRoundToInt(y)) ? new Click() : nullptr;
   }
 

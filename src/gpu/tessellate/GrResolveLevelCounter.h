@@ -9,7 +9,7 @@
 #define GrResolveLevelCounter_DEFINED
 
 #include "src/core/SkPathPriv.h"
-#include "src/gpu/tessellate/GrStencilPathShader.h"
+#include "src/gpu/tessellate/GrTessellationPathRenderer.h"
 #include "src/gpu/tessellate/GrWangsFormula.h"
 
 // This class helps bin cubics by log2 "resolveLevel" when we don't use hardware tessellation. It is
@@ -19,7 +19,7 @@ class GrResolveLevelCounter {
  public:
   void reset() {
     memset(fInstanceCounts, 0, sizeof(fInstanceCounts));
-    SkDEBUGCODE(fHasCalledReset = true;)
+    SkDEBUGCODE(fHasCalledReset = true);
   }
 
   void reset(const SkPath& path, const SkMatrix& viewMatrix, float intolerance) {
@@ -46,7 +46,7 @@ class GrResolveLevelCounter {
       // Cubics with 2^0=1 segments are empty (zero area). We ignore them completely.
       return;
     }
-    resolveLevel = std::min(resolveLevel, GrMiddleOutCubicShader::kMaxResolveLevel);
+    resolveLevel = std::min(resolveLevel, GrTessellationPathRenderer::kMaxResolveLevel);
     if (!fInstanceCounts[resolveLevel]++) {
       ++fTotalCubicIndirectDrawCount;
     }
@@ -56,7 +56,7 @@ class GrResolveLevelCounter {
   int operator[](int resolveLevel) const {
     SkASSERT(fHasCalledReset);
     SkASSERT(resolveLevel > 0);  // Empty cubics with 2^0=1 segments do not need to be drawn.
-    SkASSERT(resolveLevel <= GrMiddleOutCubicShader::kMaxResolveLevel);
+    SkASSERT(resolveLevel <= GrTessellationPathRenderer::kMaxResolveLevel);
     return fInstanceCounts[resolveLevel];
   }
   int totalCubicInstanceCount() const { return fTotalCubicInstanceCount; }
@@ -64,7 +64,7 @@ class GrResolveLevelCounter {
 
  private:
   SkDEBUGCODE(bool fHasCalledReset =
-                  false;) int fInstanceCounts[GrMiddleOutCubicShader::kMaxResolveLevel + 1];
+                  false;) int fInstanceCounts[GrTessellationPathRenderer::kMaxResolveLevel + 1];
   int fTotalCubicInstanceCount = 0;
   int fTotalCubicIndirectDrawCount = 0;
 };

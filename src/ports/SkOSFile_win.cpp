@@ -20,7 +20,7 @@
 #  include <stdio.h>
 #  include <sys/stat.h>
 
-bool sk_exists(const char* path, SkFILE_Flags flags) noexcept {
+bool sk_exists(const char* path, SkFILE_Flags flags) {
   int mode = 0;  // existence
   if (flags & kRead_SkFILE_Flag) {
     mode |= 4;  // read
@@ -37,7 +37,7 @@ typedef struct {
   ULONGLONG fMsbSize;
 } SkFILEID;
 
-static bool sk_ino(FILE* f, SkFILEID* id) noexcept {
+static bool sk_ino(FILE* f, SkFILEID* id) {
   int fileno = _fileno((FILE*)f);
   if (fileno < 0) {
     return false;
@@ -60,7 +60,7 @@ static bool sk_ino(FILE* f, SkFILEID* id) noexcept {
   return true;
 }
 
-bool sk_fidentical(FILE* a, FILE* b) noexcept {
+bool sk_fidentical(FILE* a, FILE* b) {
   SkFILEID aID, bID;
   return sk_ino(a, &aID) && sk_ino(b, &bID) && aID.fLsbSize == bID.fLsbSize &&
          aID.fMsbSize == bID.fMsbSize && aID.fVolume == bID.fVolume;
@@ -68,19 +68,19 @@ bool sk_fidentical(FILE* a, FILE* b) noexcept {
 
 class SkAutoNullKernelHandle : SkNoncopyable {
  public:
-  SkAutoNullKernelHandle(const HANDLE handle) noexcept : fHandle(handle) {}
+  SkAutoNullKernelHandle(const HANDLE handle) : fHandle(handle) {}
   ~SkAutoNullKernelHandle() { CloseHandle(fHandle); }
-  operator HANDLE() const noexcept { return fHandle; }
-  bool isValid() const noexcept { return SkToBool(fHandle); }
+  operator HANDLE() const { return fHandle; }
+  bool isValid() const { return SkToBool(fHandle); }
 
  private:
   HANDLE fHandle;
 };
 typedef SkAutoNullKernelHandle SkAutoWinMMap;
 
-void sk_fmunmap(const void* addr, size_t) noexcept { UnmapViewOfFile(addr); }
+void sk_fmunmap(const void* addr, size_t) { UnmapViewOfFile(addr); }
 
-void* sk_fdmmap(int fileno, size_t* length) noexcept {
+void* sk_fdmmap(int fileno, size_t* length) {
   HANDLE file = (HANDLE)_get_osfhandle(fileno);
   if (INVALID_HANDLE_VALUE == file) {
     return nullptr;
@@ -112,9 +112,9 @@ void* sk_fdmmap(int fileno, size_t* length) noexcept {
   return addr;
 }
 
-int sk_fileno(FILE* f) noexcept { return _fileno((FILE*)f); }
+int sk_fileno(FILE* f) { return _fileno((FILE*)f); }
 
-void* sk_fmmap(FILE* f, size_t* length) noexcept {
+void* sk_fmmap(FILE* f, size_t* length) {
   int fileno = sk_fileno(f);
   if (fileno < 0) {
     return nullptr;
@@ -123,7 +123,7 @@ void* sk_fmmap(FILE* f, size_t* length) noexcept {
   return sk_fdmmap(fileno, length);
 }
 
-size_t sk_qread(FILE* file, void* buffer, size_t count, size_t offset) noexcept {
+size_t sk_qread(FILE* file, void* buffer, size_t count, size_t offset) {
   int fileno = sk_fileno(file);
   HANDLE fileHandle = (HANDLE)_get_osfhandle(fileno);
   if (INVALID_HANDLE_VALUE == file) {
@@ -154,13 +154,13 @@ size_t sk_qread(FILE* file, void* buffer, size_t count, size_t offset) noexcept 
 ////////////////////////////////////////////////////////////////////////////
 
 struct SkOSFileIterData {
-  constexpr SkOSFileIterData() noexcept : fHandle(0), fPath16(nullptr) {}
+  SkOSFileIterData() : fHandle(0), fPath16(nullptr) {}
   HANDLE fHandle;
   uint16_t* fPath16;
 };
 static_assert(sizeof(SkOSFileIterData) <= SkOSFile::Iter::kStorageSize, "not_enough_space");
 
-static uint16_t* concat_to_16(const char src[], const char suffix[]) noexcept {
+static uint16_t* concat_to_16(const char src[], const char suffix[]) {
   size_t i, len = strlen(src);
   size_t len2 = 3 + (suffix ? strlen(suffix) : 0);
   uint16_t* dst = (uint16_t*)sk_malloc_throw((len + len2) * sizeof(uint16_t));
@@ -185,9 +185,9 @@ static uint16_t* concat_to_16(const char src[], const char suffix[]) noexcept {
   return dst;
 }
 
-SkOSFile::Iter::Iter() noexcept { new (fSelf.get()) SkOSFileIterData; }
+SkOSFile::Iter::Iter() { new (fSelf.get()) SkOSFileIterData; }
 
-SkOSFile::Iter::Iter(const char path[], const char suffix[]) noexcept {
+SkOSFile::Iter::Iter(const char path[], const char suffix[]) {
   new (fSelf.get()) SkOSFileIterData;
   this->reset(path, suffix);
 }
@@ -201,7 +201,7 @@ SkOSFile::Iter::~Iter() {
   self.~SkOSFileIterData();
 }
 
-void SkOSFile::Iter::reset(const char path[], const char suffix[]) noexcept {
+void SkOSFile::Iter::reset(const char path[], const char suffix[]) {
   SkOSFileIterData& self = *static_cast<SkOSFileIterData*>(fSelf.get());
   if (self.fHandle) {
     ::FindClose(self.fHandle);
@@ -215,7 +215,7 @@ void SkOSFile::Iter::reset(const char path[], const char suffix[]) noexcept {
   self.fPath16 = concat_to_16(path, suffix);
 }
 
-static bool is_magic_dir(const uint16_t dir[]) noexcept {
+static bool is_magic_dir(const uint16_t dir[]) {
   // return true for "." and ".."
   return dir[0] == '.' && (dir[1] == 0 || (dir[1] == '.' && dir[2] == 0));
 }

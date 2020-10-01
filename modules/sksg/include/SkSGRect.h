@@ -38,13 +38,13 @@ class Rect final : public GeometryNode {
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const noexcept override;
+  bool onContains(const SkPoint&) const override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const noexcept override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
  private:
-  explicit Rect(const SkRect&) noexcept;
+  explicit Rect(const SkRect&);
 
   SkRect fRect;
 
@@ -52,13 +52,11 @@ class Rect final : public GeometryNode {
     uint8_t fDirection : 1;
     uint8_t fInitialPointIndex : 2;
 
-    SkPathDirection getDirection() const noexcept {
-      return static_cast<SkPathDirection>(fDirection);
-    }
-    void setDirection(SkPathDirection dir) noexcept { fDirection = SkTo<uint8_t>(dir); }
+    SkPathDirection getDirection() const { return static_cast<SkPathDirection>(fDirection); }
+    void setDirection(SkPathDirection dir) { fDirection = SkTo<uint8_t>(dir); }
 
-    uint8_t getInitialPointIndex() const noexcept { return fInitialPointIndex; }
-    void setInitialPointIndex(uint8_t idx) noexcept { fInitialPointIndex = idx; }
+    uint8_t getInitialPointIndex() const { return fInitialPointIndex; }
+    void setInitialPointIndex(uint8_t idx) { fInitialPointIndex = idx; }
   };
   AttrContainer fAttrContaier = {(int)SkPathDirection::kCW, 0};
 
@@ -81,13 +79,13 @@ class RRect final : public GeometryNode {
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const noexcept override;
+  bool onContains(const SkPoint&) const override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const noexcept override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
  private:
-  explicit RRect(const SkRRect&) noexcept;
+  explicit RRect(const SkRRect&);
 
   SkRRect fRRect;
 
@@ -95,13 +93,11 @@ class RRect final : public GeometryNode {
     uint8_t fDirection : 1;
     uint8_t fInitialPointIndex : 2;
 
-    SkPathDirection getDirection() const noexcept {
-      return static_cast<SkPathDirection>(fDirection);
-    }
-    void setDirection(SkPathDirection dir) noexcept { fDirection = SkTo<uint8_t>(dir); }
+    SkPathDirection getDirection() const { return static_cast<SkPathDirection>(fDirection); }
+    void setDirection(SkPathDirection dir) { fDirection = SkTo<uint8_t>(dir); }
 
-    uint8_t getInitialPointIndex() const noexcept { return fInitialPointIndex; }
-    void setInitialPointIndex(uint8_t idx) noexcept { fInitialPointIndex = idx; }
+    uint8_t getInitialPointIndex() const { return fInitialPointIndex; }
+    void setInitialPointIndex(uint8_t idx) { fInitialPointIndex = idx; }
   };
   AttrContainer fAttrContaier = {(int)SkPathDirection::kCW, 0};
 

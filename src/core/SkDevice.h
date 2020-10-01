@@ -155,6 +155,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
     this->onClipShader(std::move(sh));
   }
   void clipRegion(const SkRegion& region, SkClipOp op) { this->onClipRegion(region, op); }
+  void replaceClip(const SkIRect& rect) { this->onReplaceClip(rect); }
   void androidFramework_setDeviceClipRestriction(SkIRect* mutableClipRestriction) {
     this->onSetDeviceClipRestriction(mutableClipRestriction);
   }
@@ -186,6 +187,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   virtual void onClipPath(const SkPath& path, SkClipOp, bool aa) {}
   virtual void onClipShader(sk_sp<SkShader>) {}
   virtual void onClipRegion(const SkRegion& deviceRgn, SkClipOp) {}
+  virtual void onReplaceClip(const SkIRect& rect) {}
   virtual void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) {}
   virtual bool onClipIsAA() const = 0;
   virtual bool onClipIsWideOpen() const = 0;
@@ -289,6 +291,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   ///////////////////////////////////////////////////////////////////////////
 
   virtual GrContext* context() const noexcept { return nullptr; }
+  virtual GrRecordingContext* recordingContext() const noexcept { return nullptr; }
 
   virtual sk_sp<SkSurface> makeSurface(const SkImageInfo&, const SkSurfaceProps&);
   virtual bool onPeekPixels(SkPixmap*) { return false; }
@@ -364,12 +367,12 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   // TODO: move to SkBitmapDevice
   virtual void replaceBitmapBackendForRasterSurface(const SkBitmap&) {}
 
-  virtual bool forceConservativeRasterClip() const { return false; }
+  virtual bool forceConservativeRasterClip() const noexcept { return false; }
 
   /**
    * Don't call this!
    */
-  virtual GrRenderTargetContext* accessRenderTargetContext() { return nullptr; }
+  virtual GrRenderTargetContext* accessRenderTargetContext() noexcept { return nullptr; }
 
   // Configure the device's coordinate spaces, specifying both how its device image maps back to
   // the global space (via 'deviceToGlobal') and the initial CTM of the device (via
@@ -381,7 +384,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   // local-to-device matrix will have a post-translation of T(-deviceOriginX, -deviceOriginY).
   void setDeviceCoordinateSystem(
       const SkMatrix& deviceToGlobal, const SkM44& localToDevice, int bufferOriginX,
-      int bufferOriginY) noexcept;
+      int bufferOriginY);
   // Convenience to configure the device to be axis-aligned with the root canvas, but with a
   // unique origin.
   void setOrigin(const SkM44& globalCTM, int x, int y) {

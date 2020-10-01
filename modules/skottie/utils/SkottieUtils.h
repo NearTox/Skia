@@ -70,7 +70,7 @@ class CustomPropertyManager final {
   class PropertyInterceptor;
   class MarkerInterceptor;
 
-  static std::string acceptKey(const char* name) {
+  static std::string AcceptKey(const char* name) {
     static constexpr char kPrefix = '$';
 
     return (name[0] == kPrefix && name[1] != '\0') ? std::string(name + 1) : std::string();

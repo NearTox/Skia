@@ -18,41 +18,42 @@
 #include <stdarg.h>
 #include <string.h>
 #include <atomic>
+#include <string>
 
 /*  Some helper functions for C strings */
-static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) noexcept {
+static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) {
   SkASSERT(string);
   SkASSERT(prefixStr);
   return !strncmp(string, prefixStr, strlen(prefixStr));
 }
-static inline bool SkStrStartsWith(const char string[], const char prefixChar) noexcept {
+static inline bool SkStrStartsWith(const char string[], const char prefixChar) {
   SkASSERT(string);
   return (prefixChar == *string);
 }
 
-bool SkStrEndsWith(const char string[], const char suffixStr[]) noexcept;
-bool SkStrEndsWith(const char string[], const char suffixChar) noexcept;
+bool SkStrEndsWith(const char string[], const char suffixStr[]);
+bool SkStrEndsWith(const char string[], const char suffixChar);
 
-int SkStrStartsWithOneOf(const char string[], const char prefixes[]) noexcept;
+int SkStrStartsWithOneOf(const char string[], const char prefixes[]);
 
-static inline int SkStrFind(const char string[], const char substring[]) noexcept {
+static inline int SkStrFind(const char string[], const char substring[]) {
   const char* first = strstr(string, substring);
   if (nullptr == first) return -1;
   return SkToInt(first - &string[0]);
 }
 
-static inline int SkStrFindLastOf(const char string[], const char subchar) noexcept {
+static inline int SkStrFindLastOf(const char string[], const char subchar) {
   const char* last = strrchr(string, subchar);
   if (nullptr == last) return -1;
   return SkToInt(last - &string[0]);
 }
 
-static inline bool SkStrContains(const char string[], const char substring[]) noexcept {
+static inline bool SkStrContains(const char string[], const char substring[]) {
   SkASSERT(string);
   SkASSERT(substring);
   return (-1 != SkStrFind(string, substring));
 }
-static inline bool SkStrContains(const char string[], const char subchar) noexcept {
+static inline bool SkStrContains(const char string[], const char subchar) {
   SkASSERT(string);
   char tmp[2];
   tmp[0] = subchar;
@@ -60,38 +61,32 @@ static inline bool SkStrContains(const char string[], const char subchar) noexce
   return (-1 != SkStrFind(string, tmp));
 }
 
-static inline char* SkStrDup(const char string[]) {
-  char* ret = (char*)sk_malloc_throw(strlen(string) + 1);
-  memcpy(ret, string, strlen(string) + 1);
-  return ret;
-}
-
 /*
  *  The SkStrAppend... methods will write into the provided buffer, assuming it is large enough.
- *  Each method has an associated const (e.g. SkStrAppendU32_MaxSize) which will be the largest
+ *  Each method has an associated const (e.g. kSkStrAppendU32_MaxSize) which will be the largest
  *  value needed for that method's buffer.
  *
- *  char storage[SkStrAppendU32_MaxSize];
+ *  char storage[kSkStrAppendU32_MaxSize];
  *  SkStrAppendU32(storage, value);
  *
  *  Note : none of the SkStrAppend... methods write a terminating 0 to their buffers. Instead,
  *  the methods return the ptr to the end of the written part of the buffer. This can be used
  *  to compute the length, and/or know where to write a 0 if that is desired.
  *
- *  char storage[SkStrAppendU32_MaxSize + 1];
+ *  char storage[kSkStrAppendU32_MaxSize + 1];
  *  char* stop = SkStrAppendU32(storage, value);
  *  size_t len = stop - storage;
  *  *stop = 0;   // valid, since storage was 1 byte larger than the max.
  */
 
-#define SkStrAppendU32_MaxSize 10
+static constexpr int kSkStrAppendU32_MaxSize = 10;
 char* SkStrAppendU32(char buffer[], uint32_t);
-#define SkStrAppendU64_MaxSize 20
+static constexpr int kSkStrAppendU64_MaxSize = 20;
 char* SkStrAppendU64(char buffer[], uint64_t, int minDigits);
 
-#define SkStrAppendS32_MaxSize (SkStrAppendU32_MaxSize + 1)
+static constexpr int kSkStrAppendS32_MaxSize = kSkStrAppendU32_MaxSize + 1;
 char* SkStrAppendS32(char buffer[], int32_t);
-#define SkStrAppendS64_MaxSize (SkStrAppendU64_MaxSize + 1)
+static constexpr int kSkStrAppendS64_MaxSize = kSkStrAppendU64_MaxSize + 1;
 char* SkStrAppendS64(char buffer[], int64_t, int minDigits);
 
 /**
@@ -101,18 +96,16 @@ char* SkStrAppendS64(char buffer[], int64_t, int minDigits);
  *  In theory we should only expect up to 2 digits for the exponent, but on
  *  some platforms we have seen 3 (as in the example above).
  */
-#define SkStrAppendScalar_MaxSize 15
+static constexpr int kSkStrAppendScalar_MaxSize = 15;
 
 /**
- *  Write the scaler in decimal format into buffer, and return a pointer to
+ *  Write the scalar in decimal format into buffer, and return a pointer to
  *  the next char after the last one written. Note: a terminating 0 is not
- *  written into buffer, which must be at least SkStrAppendScalar_MaxSize.
+ *  written into buffer, which must be at least kSkStrAppendScalar_MaxSize.
  *  Thus if the caller wants to add a 0 at the end, buffer must be at least
- *  SkStrAppendScalar_MaxSize + 1 bytes large.
+ *  kSkStrAppendScalar_MaxSize + 1 bytes large.
  */
-#define SkStrAppendScalar SkStrAppendFloat
-
-char* SkStrAppendFloat(char buffer[], float);
+char* SkStrAppendScalar(char buffer[], SkScalar);
 
 /** \class SkString
 
@@ -128,7 +121,12 @@ class SK_API SkString {
   SkString(const char text[], size_t len);
   SkString(const SkString&) noexcept;
   SkString(SkString&&) noexcept;
+  explicit SkString(const std::string&);
   ~SkString();
+
+  operator std::string_view() const noexcept {
+    return std::string_view(this->c_str(), this->size());
+  }
 
   bool isEmpty() const noexcept { return 0 == fRec->fLength; }
   size_t size() const noexcept { return (size_t)fRec->fLength; }
@@ -139,26 +137,14 @@ class SK_API SkString {
   bool equals(const char text[]) const noexcept;
   bool equals(const char text[], size_t len) const noexcept;
 
-  bool startsWith(const char prefixStr[]) const noexcept {
-    return SkStrStartsWith(fRec->data(), prefixStr);
-  }
-  bool startsWith(const char prefixChar) const noexcept {
-    return SkStrStartsWith(fRec->data(), prefixChar);
-  }
-  bool endsWith(const char suffixStr[]) const noexcept {
-    return SkStrEndsWith(fRec->data(), suffixStr);
-  }
-  bool endsWith(const char suffixChar) const noexcept {
-    return SkStrEndsWith(fRec->data(), suffixChar);
-  }
-  bool contains(const char substring[]) const noexcept {
-    return SkStrContains(fRec->data(), substring);
-  }
-  bool contains(const char subchar) const noexcept { return SkStrContains(fRec->data(), subchar); }
-  int find(const char substring[]) const noexcept { return SkStrFind(fRec->data(), substring); }
-  int findLastOf(const char subchar) const noexcept {
-    return SkStrFindLastOf(fRec->data(), subchar);
-  }
+  bool startsWith(const char prefixStr[]) const { return SkStrStartsWith(fRec->data(), prefixStr); }
+  bool startsWith(const char prefixChar) const { return SkStrStartsWith(fRec->data(), prefixChar); }
+  bool endsWith(const char suffixStr[]) const { return SkStrEndsWith(fRec->data(), suffixStr); }
+  bool endsWith(const char suffixChar) const { return SkStrEndsWith(fRec->data(), suffixChar); }
+  bool contains(const char substring[]) const { return SkStrContains(fRec->data(), substring); }
+  bool contains(const char subchar) const { return SkStrContains(fRec->data(), subchar); }
+  int find(const char substring[]) const { return SkStrFind(fRec->data(), substring); }
+  int findLastOf(const char subchar) const { return SkStrFindLastOf(fRec->data(), subchar); }
 
   friend bool operator==(const SkString& a, const SkString& b) noexcept { return a.equals(b); }
   friend bool operator!=(const SkString& a, const SkString& b) noexcept { return !a.equals(b); }
@@ -270,8 +256,8 @@ class SK_API SkString {
 #ifdef SK_DEBUG
   const SkString& validate() const;
 #else
-  SkString& validate() noexcept { return *this; }
   const SkString& validate() const noexcept { return *this; }
+  SkString& validate() noexcept { return *this; }
 #endif
 
   static const Rec gEmptyRec;

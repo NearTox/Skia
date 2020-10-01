@@ -23,7 +23,7 @@ class SkEmptyPicture final : public SkPicture {
   void playback(SkCanvas*, AbortCallback*) const noexcept override {}
 
   size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
-  int approximateOpCount() const noexcept override { return 0; }
+  int approximateOpCount(bool) const noexcept override { return 0; }
   SkRect cullRect() const noexcept override { return SkRect::MakeEmpty(); }
 };
 
@@ -53,7 +53,7 @@ class SkMiniPicture final : public SkPicture {
   }
 
   size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
-  int approximateOpCount() const noexcept override { return 1; }
+  int approximateOpCount(bool) const noexcept override { return 1; }
   SkRect cullRect() const noexcept override { return fCull; }
 
  private:

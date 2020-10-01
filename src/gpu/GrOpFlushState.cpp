@@ -7,6 +7,7 @@
 
 #include "src/gpu/GrOpFlushState.h"
 
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkConvertPixels.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDataUtils.h"
@@ -21,7 +22,7 @@
 
 GrOpFlushState::GrOpFlushState(
     GrGpu* gpu, GrResourceProvider* resourceProvider, GrTokenTracker* tokenTracker,
-    sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache) noexcept
+    sk_sp<GrBufferAllocPool::CpuBufferCache> cpuBufferCache)
     : fVertexPool(gpu, cpuBufferCache),
       fIndexPool(gpu, cpuBufferCache),
       fDrawIndirectPool(gpu, std::move(cpuBufferCache)),
@@ -183,26 +184,29 @@ void GrOpFlushState::putBackVertices(int vertices, size_t vertexStride) {
   fVertexPool.putBack(vertices * vertexStride);
 }
 
-GrAppliedClip GrOpFlushState::detachAppliedClip() noexcept {
+GrAppliedClip GrOpFlushState::detachAppliedClip() {
   return fOpArgs->appliedClip() ? std::move(*fOpArgs->appliedClip()) : GrAppliedClip::Disabled();
 }
 
-GrStrikeCache* GrOpFlushState::strikeCache() const noexcept {
+GrStrikeCache* GrOpFlushState::strikeCache() const {
   return fGpu->getContext()->priv().getGrStrikeCache();
 }
 
-GrAtlasManager* GrOpFlushState::atlasManager() const noexcept {
+GrAtlasManager* GrOpFlushState::atlasManager() const {
   return fGpu->getContext()->priv().getAtlasManager();
+}
+
+GrSmallPathAtlasMgr* GrOpFlushState::smallPathAtlasManager() const {
+  return fGpu->getContext()->priv().getSmallPathAtlasMgr();
 }
 
 void GrOpFlushState::drawMesh(const GrSimpleMesh& mesh) {
   SkASSERT(mesh.fIsInitialized);
   if (!mesh.fIndexBuffer) {
-    this->bindBuffers(nullptr, nullptr, mesh.fVertexBuffer.get());
+    this->bindBuffers(nullptr, nullptr, mesh.fVertexBuffer);
     this->draw(mesh.fVertexCount, mesh.fBaseVertex);
   } else {
-    this->bindBuffers(
-        mesh.fIndexBuffer.get(), nullptr, mesh.fVertexBuffer.get(), mesh.fPrimitiveRestart);
+    this->bindBuffers(mesh.fIndexBuffer, nullptr, mesh.fVertexBuffer, mesh.fPrimitiveRestart);
     if (0 == mesh.fPatternRepeatCount) {
       this->drawIndexed(
           mesh.fIndexCount, mesh.fBaseIndex, mesh.fMinIndexValue, mesh.fMaxIndexValue,

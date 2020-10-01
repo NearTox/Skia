@@ -81,7 +81,7 @@ class GrDynamicAtlas {
   int fHeight;
   SkISize fDrawBounds;
 
-  SkSTArenaAlloc<512> fNodeAllocator;
+  SkSTArenaAllocWithReset<512> fNodeAllocator;
   Node* fTopNode = nullptr;
 
   sk_sp<GrTextureProxy> fTextureProxy;

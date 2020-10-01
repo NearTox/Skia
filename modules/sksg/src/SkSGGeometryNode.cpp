@@ -12,7 +12,7 @@
 namespace sksg {
 
 // Geometry nodes don't generate damage on their own, but via their aggregation ancestor Draw nodes.
-GeometryNode::GeometryNode() noexcept : INHERITED(kBubbleDamage_Trait) {}
+GeometryNode::GeometryNode() : INHERITED(kBubbleDamage_Trait) {}
 
 void GeometryNode::clip(SkCanvas* canvas, bool aa) const {
   SkASSERT(!this->hasInval());
@@ -24,12 +24,12 @@ void GeometryNode::draw(SkCanvas* canvas, const SkPaint& paint) const {
   this->onDraw(canvas, paint);
 }
 
-bool GeometryNode::contains(const SkPoint& p) const noexcept {
+bool GeometryNode::contains(const SkPoint& p) const {
   SkASSERT(!this->hasInval());
   return this->bounds().contains(p.x(), p.y()) ? this->onContains(p) : false;
 }
 
-SkPath GeometryNode::asPath() const noexcept {
+SkPath GeometryNode::asPath() const {
   SkASSERT(!this->hasInval());
   return this->onAsPath();
 }

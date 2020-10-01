@@ -13,6 +13,10 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkTFitsIn.h"
 #include "modules/skshaper/include/SkShaper.h"
+
+#ifdef SK_UNICODE_AVAILABLE
+#  include "modules/skshaper/src/SkUnicode.h"
+#endif
 #include "src/core/SkTextBlobPriv.h"
 #include "src/utils/SkUTF.h"
 
@@ -56,11 +60,11 @@ std::unique_ptr<SkShaper::ScriptRunIterator> SkShaper::MakeScriptRunIterator(
   return std::make_unique<SkShaper::TrivialScriptRunIterator>(scriptTag, utf8Bytes);
 }
 
-SkShaper::SkShaper() noexcept = default;
+SkShaper::SkShaper() {}
 SkShaper::~SkShaper() = default;
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
-static inline SkUnichar utf8_next(const char** ptr, const char* end) noexcept {
+static inline SkUnichar utf8_next(const char** ptr, const char* end) {
   SkUnichar val = SkUTF::NextUTF8(ptr, end);
   return val < 0 ? 0xFFFD : val;
 }

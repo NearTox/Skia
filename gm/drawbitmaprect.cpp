@@ -29,6 +29,7 @@
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
 #include "include/effects/SkGradientShader.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkBlurMask.h"
 #include "src/core/SkMathPriv.h"
 #include "tools/ToolUtils.h"
@@ -132,7 +133,8 @@ static void imagesubsetproc(
     return;
   }
 
-  if (sk_sp<SkImage> subset = image->makeSubset(srcR)) {
+  auto direct = GrAsDirectContext(canvas->recordingContext());
+  if (sk_sp<SkImage> subset = image->makeSubset(srcR, direct)) {
     canvas->drawImageRect(subset, dstR, paint);
   }
 }
@@ -165,7 +167,7 @@ class DrawBitmapRectGM : public skiagm::GM {
   void setupImage(SkCanvas* canvas) { fImage = makebm(canvas, &fLargeBitmap, gBmpSize, gBmpSize); }
 
   void onDraw(SkCanvas* canvas) override {
-    if (!fImage || !fImage->isValid(canvas->getGrContext())) {
+    if (!fImage || !fImage->isValid(canvas->recordingContext())) {
       this->setupImage(canvas);
     }
 

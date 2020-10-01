@@ -24,10 +24,9 @@ class GrCCClipProcessor : public GrFragmentProcessor {
 
   const char* name() const noexcept override { return "GrCCClipProcessor"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  bool hasInputFP() const noexcept;
 
  private:
   explicit GrCCClipProcessor(const GrCCClipProcessor&);

@@ -17,8 +17,10 @@ class Type;
 
 class ExternalValue : public Symbol {
  public:
+  static constexpr Kind kSymbolKind = kExternal_Kind;
+
   ExternalValue(const char* name, const Type& type)
-      : INHERITED(-1, kExternal_Kind, name), fType(type) {}
+      : INHERITED(-1, kSymbolKind, name), fType(type) {}
 
   virtual bool canRead() const { return false; }
 
@@ -50,14 +52,14 @@ class ExternalValue : public Symbol {
    * in this external value.
    * 'index' is the element index ([0 .. N-1]) within a call to ByteCode::run()
    */
-  virtual void read(int index, float* target) { SkASSERT(false); }
+  virtual void read(int index, float* target) const { SkASSERT(false); }
 
   /**
    * Copies the value in src into this external value. The caller must ensure that src is a
    * pointer to the type of data expected by this external value.
    * 'index' is the element index ([0 .. N-1]) within a call to ByteCode::run()
    */
-  virtual void write(int index, float* src) { SkASSERT(false); }
+  virtual void write(int index, float* src) const { SkASSERT(false); }
 
   /**
    * Calls the value as a function with the specified parameters. arguments must be a pointer to
@@ -66,7 +68,7 @@ class ExternalValue : public Symbol {
    * value.
    * 'index' is the element index ([0 .. N-1]) within a call to ByteCode::run()
    */
-  virtual void call(int index, float* arguments, float* outResult) { SkASSERT(false); }
+  virtual void call(int index, float* arguments, float* outResult) const { SkASSERT(false); }
 
   /**
    * Resolves 'name' within this context and returns an ExternalValue which represents it, or

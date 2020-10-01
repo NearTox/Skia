@@ -91,10 +91,12 @@ DEF_TEST(StreamBuffer, r) {
     writer.write(gText, size);
   }
 
-  struct {
+  struct Factory {
     std::function<std::unique_ptr<SkStream>()> createStream;
     bool skipIfNoTmpDir;
-  } factories[] = {
+  };
+
+  Factory factories[] = {
       {[&data]() { return std::make_unique<SkMemoryStream>(data); }, false},
       {[&data]() { return std::make_unique<NotAssetMemStream>(data); }, false},
       {[&path]() {
@@ -103,7 +105,7 @@ DEF_TEST(StreamBuffer, r) {
        true},
   };
 
-  for (auto f : factories) {
+  for (const Factory& f : factories) {
     if (tmpDir.isEmpty() && f.skipIfNoTmpDir) {
       continue;
     }

@@ -15,7 +15,7 @@ namespace sksg {
 // Helper for accessing implementation-private Node methods.
 class NodePriv final {
  public:
-  static bool HasInval(const sk_sp<Node>& node) noexcept { return node->hasInval(); }
+  static bool HasInval(const sk_sp<Node>& node) { return node->hasInval(); }
 
  private:
   NodePriv() = delete;

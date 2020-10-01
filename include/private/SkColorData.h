@@ -81,7 +81,7 @@ static constexpr inline uint32_t SkPackARGB_as_BGRA(U8CPU a, U8CPU r, U8CPU g, U
          (b << SK_BGRA_B32_SHIFT);
 }
 
-static inline SkPMColor SkSwizzle_RGBA_to_PMColor(uint32_t c) noexcept {
+static constexpr inline SkPMColor SkSwizzle_RGBA_to_PMColor(uint32_t c) noexcept {
 #ifdef SK_PMCOLOR_IS_RGBA
   return c;
 #else
@@ -89,7 +89,7 @@ static inline SkPMColor SkSwizzle_RGBA_to_PMColor(uint32_t c) noexcept {
 #endif
 }
 
-static inline SkPMColor SkSwizzle_BGRA_to_PMColor(uint32_t c) noexcept {
+static constexpr inline SkPMColor SkSwizzle_BGRA_to_PMColor(uint32_t c) noexcept {
 #ifdef SK_PMCOLOR_IS_BGRA
   return c;
 #else
@@ -237,7 +237,7 @@ static inline SkPMColor SkFastFourByteInterp256_32(
   return SkUnsplay(ret_ag, ret_rb);
 }
 
-static inline SkPMColor SkFastFourByteInterp256_64(
+static constexpr inline SkPMColor SkFastFourByteInterp256_64(
     SkPMColor src, SkPMColor dst, unsigned scale) noexcept {
   SkASSERT(scale <= 256);
   // Four 8-bit blends in one 64-bit register, with space to make sure the math doesn't collide.
@@ -303,15 +303,15 @@ static constexpr inline SkPMColor SkBlendARGB32(SkPMColor src, SkPMColor dst, U8
 #define SkB32ToB16_MACRO(b) ((unsigned)(b) >> (SK_B32_BITS - SK_B16_BITS))
 
 #ifdef SK_DEBUG
-static inline unsigned SkR32ToR16(unsigned r) noexcept {
+static inline unsigned SkR32ToR16(unsigned r) {
   SkR32Assert(r);
   return SkR32ToR16_MACRO(r);
 }
-static inline unsigned SkG32ToG16(unsigned g) noexcept {
+static inline unsigned SkG32ToG16(unsigned g) {
   SkG32Assert(g);
   return SkG32ToG16_MACRO(g);
 }
-static inline unsigned SkB32ToB16(unsigned b) noexcept {
+static inline unsigned SkB32ToB16(unsigned b) {
   SkB32Assert(b);
   return SkB32ToB16_MACRO(b);
 }
@@ -338,7 +338,7 @@ static constexpr inline U16CPU SkPack888ToRGB16(U8CPU r, U8CPU g, U8CPU b) noexc
 /*  SrcOver the 32bit src color with the 16bit dst, returning a 16bit value
     (with dirt in the high 16bits, so caller beware).
 */
-static inline U16CPU SkSrcOver32To16(SkPMColor src, uint16_t dst) noexcept {
+static constexpr inline U16CPU SkSrcOver32To16(SkPMColor src, uint16_t dst) noexcept {
   unsigned sr = SkGetPackedR32(src);
   unsigned sg = SkGetPackedG32(src);
   unsigned sb = SkGetPackedB32(src);

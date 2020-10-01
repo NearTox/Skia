@@ -7,7 +7,10 @@
 
 #include "tools/skiaserve/Request.h"
 
+#include <memory>
+
 #include "include/core/SkPictureRecorder.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/utils/SkJSONWriter.h"
 #include "tools/ToolUtils.h"
 
@@ -97,14 +100,14 @@ sk_sp<SkData> Request::writeOutSkp() {
     return recorder.finishRecordingAsPicture()->serialize();
 }
 
-GrContext* Request::getContext() {
-    GrContext* result = fContextFactory->get(GrContextFactory::kGL_ContextType,
-                                             GrContextFactory::ContextOverrides::kNone);
-    if (!result) {
-        result = fContextFactory->get(GrContextFactory::kGLES_ContextType,
-                                      GrContextFactory::ContextOverrides::kNone);
-    }
-    return result;
+GrDirectContext* Request::directContext() {
+  auto result = fContextFactory->get(
+      GrContextFactory::kGL_ContextType, GrContextFactory::ContextOverrides::kNone);
+  if (!result) {
+    result = fContextFactory->get(
+        GrContextFactory::kGLES_ContextType, GrContextFactory::ContextOverrides::kNone);
+  }
+  return result;
 }
 
 SkIRect Request::getBounds() {
@@ -112,9 +115,9 @@ SkIRect Request::getBounds() {
     if (fPicture) {
         bounds = fPicture->cullRect().roundOut();
         if (fGPUEnabled) {
-            int maxRTSize = this->getContext()->maxRenderTargetSize();
-            bounds = SkIRect::MakeWH(
-                std::min(bounds.width(), maxRTSize), std::min(bounds.height(), maxRTSize));
+          int maxRTSize = this->directContext()->maxRenderTargetSize();
+          bounds = SkIRect::MakeWH(
+              std::min(bounds.width(), maxRTSize), std::min(bounds.height(), maxRTSize));
         }
     } else {
         bounds = SkIRect::MakeWH(kDefaultWidth, kDefaultHeight);
@@ -140,7 +143,7 @@ ColorAndProfile ColorModes[] = {
     { kRGBA_F16_SkColorType,  true },
 };
 
-}
+}  // namespace
 
 SkSurface* Request::createCPUSurface() {
     SkIRect bounds = this->getBounds();
@@ -154,16 +157,15 @@ SkSurface* Request::createCPUSurface() {
 }
 
 SkSurface* Request::createGPUSurface() {
-    GrContext* context = this->getContext();
-    SkIRect bounds = this->getBounds();
-    ColorAndProfile cap = ColorModes[fColorMode];
-    auto colorSpace = kRGBA_F16_SkColorType == cap.fColorType
-                    ? SkColorSpace::MakeSRGBLinear()
-                    : SkColorSpace::MakeSRGB();
-    SkImageInfo info = SkImageInfo::Make(bounds.size(), cap.fColorType, kPremul_SkAlphaType,
-                                         cap.fSRGB ? colorSpace : nullptr);
-    SkSurface* surface = SkSurface::MakeRenderTarget(context, SkBudgeted::kNo, info).release();
-    return surface;
+  auto context = this->directContext();
+  SkIRect bounds = this->getBounds();
+  ColorAndProfile cap = ColorModes[fColorMode];
+  auto colorSpace = kRGBA_F16_SkColorType == cap.fColorType ? SkColorSpace::MakeSRGBLinear()
+                                                            : SkColorSpace::MakeSRGB();
+  SkImageInfo info = SkImageInfo::Make(
+      bounds.size(), cap.fColorType, kPremul_SkAlphaType, cap.fSRGB ? colorSpace : nullptr);
+  SkSurface* surface = SkSurface::MakeRenderTarget(context, SkBudgeted::kNo, info).release();
+  return surface;
 }
 
 bool Request::setOverdraw(bool enable) {
@@ -213,7 +215,7 @@ bool Request::initPictureFromStream(SkStream* stream) {
 
     // pour picture into debug canvas
     SkIRect bounds = this->getBounds();
-    fDebugCanvas.reset(new DebugCanvas(bounds.width(), bounds.height()));
+    fDebugCanvas = std::make_unique<DebugCanvas>(bounds.width(), bounds.height());
     fDebugCanvas->drawPicture(fPicture);
 
     // for some reason we need to 'flush' the debug canvas by drawing all of the ops

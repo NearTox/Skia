@@ -15,7 +15,6 @@
 #include "include/private/SkNoncopyable.h"
 #include "include/private/SkTArray.h"
 
-class GrContext;
 class GrCoverageCountingPathRenderer;
 
 /**
@@ -50,7 +49,7 @@ class GrPathRendererChain : public SkNoncopyable {
 
   /** Returns a direct pointer to the coverage counting path renderer, or null if it is not in the
       chain. */
-  GrCoverageCountingPathRenderer* getCoverageCountingPathRenderer() {
+  GrCoverageCountingPathRenderer* getCoverageCountingPathRenderer() noexcept {
     return fCoverageCountingPathRenderer;
   }
 

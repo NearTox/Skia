@@ -38,7 +38,7 @@ GrColorFragmentProcessorAnalysis::GrColorFragmentProcessorAnalysis(
       if (fCompatibleWithCoverageAsAlpha && !fp->compatibleWithCoverageAsAlpha()) {
         fCompatibleWithCoverageAsAlpha = false;
       }
-      if (fp->usesLocalCoords()) {
+      if (fp->usesVaryingCoords()) {
         fUsesLocalCoords = true;
       }
     }

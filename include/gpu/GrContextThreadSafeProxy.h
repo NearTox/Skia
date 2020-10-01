@@ -18,6 +18,7 @@
 class GrBackendFormat;
 class GrCaps;
 class GrContextThreadSafeProxyPriv;
+class GrTextBlobCache;
 class SkSurfaceCharacterization;
 class SkSurfaceProps;
 
@@ -27,7 +28,7 @@ class SkSurfaceProps;
  */
 class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadSafeProxy> {
  public:
-  ~GrContextThreadSafeProxy() noexcept;
+  ~GrContextThreadSafeProxy();
 
   /**
    *  Create a surface characterization for a DDL that will be replayed into the GrContext
@@ -88,26 +89,28 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
 
   // Provides access to functions that aren't part of the public API.
   GrContextThreadSafeProxyPriv priv() noexcept;
-  const GrContextThreadSafeProxyPriv priv() const noexcept;
+  const GrContextThreadSafeProxyPriv priv()
+      const noexcept;  // NOLINT(readability-const-return-type)
 
  private:
   friend class GrContextThreadSafeProxyPriv;  // for ctor and hidden methods
 
   // DDL TODO: need to add unit tests for backend & maybe options
-  GrContextThreadSafeProxy(GrBackendApi, const GrContextOptions&) noexcept;
+  GrContextThreadSafeProxy(GrBackendApi, const GrContextOptions&);
 
-  void abandonContext() noexcept;
-  bool abandoned() const noexcept;
+  void abandonContext();
+  bool abandoned() const;
 
   // TODO: This should be part of the constructor but right now we have a chicken-and-egg problem
   // with GrContext where we get the caps by creating a GPU which requires a context (see the
   // `init` method on GrContext_Base).
-  void init(sk_sp<const GrCaps>) noexcept;
+  void init(sk_sp<const GrCaps>);
 
   const GrBackendApi fBackend;
   const GrContextOptions fOptions;
   const uint32_t fContextID;
   sk_sp<const GrCaps> fCaps;
+  std::unique_ptr<GrTextBlobCache> fTextBlobCache;
   std::atomic<bool> fAbandoned{false};
 };
 

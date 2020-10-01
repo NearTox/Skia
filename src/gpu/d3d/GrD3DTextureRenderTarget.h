@@ -26,7 +26,7 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
  public:
   static sk_sp<GrD3DTextureRenderTarget> MakeNewTextureRenderTarget(
       GrD3DGpu*, SkBudgeted, SkISize dimensions, int sampleCnt, const D3D12_RESOURCE_DESC&,
-      GrProtected isProtected, GrMipMapsStatus);
+      GrProtected isProtected, GrMipmapStatus);
 
   static sk_sp<GrD3DTextureRenderTarget> MakeWrappedTextureRenderTarget(
       GrD3DGpu*, SkISize dimensions, int sampleCnt, GrWrapCacheable,
@@ -55,13 +55,13 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
       const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
       const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
       const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
-      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipMapsStatus);
+      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipmapStatus);
 
   // non-MSAA, not-wrapped
   GrD3DTextureRenderTarget(
       GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
-      const GrD3DDescriptorHeap::CPUHandle& renderTargetView, GrMipMapsStatus);
+      const GrD3DDescriptorHeap::CPUHandle& renderTargetView, GrMipmapStatus);
 
   // MSAA, wrapped
   GrD3DTextureRenderTarget(
@@ -69,14 +69,14 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
       sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
       const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
       const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
-      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipMapsStatus,
+      const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipmapStatus,
       GrWrapCacheable);
 
   // non-MSAA, wrapped
   GrD3DTextureRenderTarget(
       GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
-      const GrD3DDescriptorHeap::CPUHandle& renderTargetView, GrMipMapsStatus, GrWrapCacheable);
+      const GrD3DDescriptorHeap::CPUHandle& renderTargetView, GrMipmapStatus, GrWrapCacheable);
 
   // GrGLRenderTarget accounts for the texture's memory and any MSAA renderbuffer's memory.
   size_t onGpuMemorySize() const override;

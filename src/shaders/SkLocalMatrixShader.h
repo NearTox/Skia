@@ -42,7 +42,7 @@ class SkLocalMatrixShader final : public SkShaderBase {
   Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
 #endif
 
-  SkImage* onIsAImage(SkMatrix* matrix, SkTileMode* mode) const noexcept override;
+  SkImage* onIsAImage(SkMatrix* matrix, SkTileMode* mode) const override;
 
   bool onAppendStages(const SkStageRec&) const override;
 

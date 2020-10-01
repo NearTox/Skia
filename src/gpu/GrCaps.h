@@ -35,7 +35,7 @@ class SkJSONWriter;
  */
 class GrCaps : public SkRefCnt {
  public:
-  GrCaps(const GrContextOptions&) noexcept;
+  GrCaps(const GrContextOptions&);
 
   void dumpJSON(SkJSONWriter*) const;
 
@@ -45,7 +45,7 @@ class GrCaps : public SkRefCnt {
   bool npotTextureTileSupport() const noexcept { return fNPOTTextureTileSupport; }
   /** To avoid as-yet-unnecessary complexity we don't allow any partial support of MIP Maps (e.g.
       only for POT textures) */
-  bool mipMapSupport() const noexcept { return fMipMapSupport; }
+  bool mipmapSupport() const noexcept { return fMipmapSupport; }
 
   bool gpuTracingSupport() const noexcept { return fGpuTracingSupport; }
   bool oversizedStencilSupport() const noexcept { return fOversizedStencilSupport; }
@@ -57,6 +57,16 @@ class GrCaps : public SkRefCnt {
   // as it can polyfill them with instanced calls, but this cap tells us if they are supported
   // natively.)
   bool nativeDrawIndirectSupport() const noexcept { return fNativeDrawIndirectSupport; }
+  bool useClientSideIndirectBuffers() const noexcept {
+#ifdef SK_DEBUG
+    if (!fNativeDrawIndirectSupport || fNativeDrawIndexedIndirectIsBroken) {
+      // We might implement indirect draws with a polyfill, so the commands need to reside in
+      // CPU memory.
+      SkASSERT(fUseClientSideIndirectBuffers);
+    }
+#endif
+    return fUseClientSideIndirectBuffers;
+  }
   bool mixedSamplesSupport() const noexcept { return fMixedSamplesSupport; }
   bool conservativeRasterSupport() const noexcept { return fConservativeRasterSupport; }
   bool wireframeSupport() const noexcept { return fWireframeSupport; }
@@ -79,9 +89,13 @@ class GrCaps : public SkRefCnt {
   // Should we discard stencil values after a render pass? (Tilers get better performance if we
   // always load stencil buffers with a "clear" op, and then discard the content when finished.)
   bool discardStencilValuesAfterRenderPass() const noexcept {
-    // This method is actually just a duplicate of preferFullscreenClears(), with a descriptive
-    // name for the sake of readability.
-    return this->preferFullscreenClears();
+    // b/160958008
+    return false;
+#if 0
+        // This method is actually just a duplicate of preferFullscreenClears(), with a descriptive
+        // name for the sake of readability.
+        return this->preferFullscreenClears();
+#endif
   }
 
   // D3D does not allow the refs or masks to differ on a two-sided stencil draw.
@@ -131,10 +145,10 @@ class GrCaps : public SkRefCnt {
     return kAdvancedCoherent_BlendEquationSupport == fBlendEquationSupport;
   }
 
-  bool isAdvancedBlendEquationBlacklisted(GrBlendEquation equation) const noexcept {
+  bool isAdvancedBlendEquationDisabled(GrBlendEquation equation) const noexcept {
     SkASSERT(GrBlendEquationIsAdvanced(equation));
     SkASSERT(this->advancedBlendEquationSupport());
-    return SkToBool(fAdvBlendEqBlacklist & (1 << equation));
+    return SkToBool(fAdvBlendEqDisableFlags & (1 << equation));
   }
 
   // On some GPUs it is a performance win to disable blending instead of doing src-over with a src
@@ -192,9 +206,9 @@ class GrCaps : public SkRefCnt {
     return this->maxWindowRectangles() > 0 && this->onIsWindowRectanglesSupportedForRT(rt);
   }
 
-  virtual bool isFormatSRGB(const GrBackendFormat&) const = 0;
+  virtual bool isFormatSRGB(const GrBackendFormat&) const noexcept = 0;
 
-  bool isFormatCompressed(const GrBackendFormat& format) const noexcept;
+  bool isFormatCompressed(const GrBackendFormat& format) const;
 
   // Can a texture be made with the GrBackendFormat, and then be bound and sampled in a shader.
   virtual bool isFormatTexturable(const GrBackendFormat&) const = 0;
@@ -204,11 +218,11 @@ class GrCaps : public SkRefCnt {
 
   // Returns the maximum supported sample count for a format. 0 means the format is not renderable
   // 1 means the format is renderable but doesn't support MSAA.
-  virtual int maxRenderTargetSampleCount(const GrBackendFormat&) const noexcept = 0;
+  virtual int maxRenderTargetSampleCount(const GrBackendFormat&) const = 0;
 
   // Returns the number of samples to use when performing internal draws to the given config with
   // MSAA or mixed samples. If 0, Ganesh should not attempt to use internal multisampling.
-  int internalMultisampleCount(const GrBackendFormat& format) const noexcept {
+  int internalMultisampleCount(const GrBackendFormat& format) const {
     return std::min(fInternalMultisampleCount, this->maxRenderTargetSampleCount(format));
   }
 
@@ -225,7 +239,7 @@ class GrCaps : public SkRefCnt {
 
   // Returns the number of bytes per pixel for the given GrBackendFormat. This is only supported
   // for "normal" formats. For compressed formats this will return 0.
-  virtual size_t bytesPerPixel(const GrBackendFormat&) const noexcept = 0;
+  virtual size_t bytesPerPixel(const GrBackendFormat&) const = 0;
 
   /**
    * Backends may have restrictions on what types of surfaces support GrGpu::writePixels().
@@ -372,8 +386,8 @@ class GrCaps : public SkRefCnt {
   bool allowCoverageCounting() const noexcept { return fAllowCoverageCounting; }
 
   // Should we disable the CCPR code due to a faulty driver?
-  bool driverBlacklistCCPR() const noexcept { return fDriverBlacklistCCPR; }
-  bool driverBlacklistMSAACCPR() const noexcept { return fDriverBlacklistMSAACCPR; }
+  bool driverDisableCCPR() const noexcept { return fDriverDisableCCPR; }
+  bool driverDisableMSAACCPR() const noexcept { return fDriverDisableMSAACCPR; }
 
   /**
    * This is used to try to ensure a successful copy a dst in order to perform shader-based
@@ -397,7 +411,7 @@ class GrCaps : public SkRefCnt {
 
   bool validateSurfaceParams(
       const SkISize&, const GrBackendFormat&, GrRenderable renderable, int renderTargetSampleCnt,
-      GrMipMapped) const;
+      GrMipmapped) const;
 
   bool areColorTypeAndFormatCompatible(GrColorType grCT, const GrBackendFormat& format) const;
 
@@ -436,7 +450,7 @@ class GrCaps : public SkRefCnt {
   virtual void addExtraSamplerKey(
       GrProcessorKeyBuilder*, GrSamplerState, const GrBackendFormat&) const {}
 
-  virtual GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const = 0;
+  virtual GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const = 0;
 
 #if GR_TEST_UTILS
   struct TestFormatColorTypeCombination {
@@ -456,7 +470,7 @@ class GrCaps : public SkRefCnt {
   sk_sp<GrShaderCaps> fShaderCaps;
 
   bool fNPOTTextureTileSupport : 1;
-  bool fMipMapSupport : 1;
+  bool fMipmapSupport : 1;
   bool fReuseScratchTextures : 1;
   bool fReuseScratchBuffers : 1;
   bool fGpuTracingSupport : 1;
@@ -466,6 +480,7 @@ class GrCaps : public SkRefCnt {
   bool fMultisampleDisableSupport : 1;
   bool fDrawInstancedSupport : 1;
   bool fNativeDrawIndirectSupport : 1;
+  bool fUseClientSideIndirectBuffers : 1;
   bool fMixedSamplesSupport : 1;
   bool fConservativeRasterSupport : 1;
   bool fWireframeSupport : 1;
@@ -491,8 +506,8 @@ class GrCaps : public SkRefCnt {
   bool fShouldCollapseSrcOverToSrcWhenAble : 1;
 
   // Driver workaround
-  bool fDriverBlacklistCCPR : 1;
-  bool fDriverBlacklistMSAACCPR : 1;
+  bool fDriverDisableCCPR : 1;
+  bool fDriverDisableMSAACCPR : 1;
   bool fAvoidStencilBuffers : 1;
   bool fAvoidWritePixelsFastPath : 1;
   bool fRequiresManualFBBarrierAfterTessellatedStencilDraw : 1;
@@ -514,7 +529,7 @@ class GrCaps : public SkRefCnt {
   bool fDynamicStateArrayGeometryProcessorTextureSupport : 1;
 
   BlendEquationSupport fBlendEquationSupport;
-  uint32_t fAdvBlendEqBlacklist;
+  uint32_t fAdvBlendEqDisableFlags;
   static_assert(kLast_GrBlendEquation < 32);
 
   uint32_t fMapBufferFlags;

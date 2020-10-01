@@ -15,9 +15,7 @@
 namespace SkSL {
 
 VariableReference::VariableReference(int offset, const Variable& variable, RefKind refKind)
-    : INHERITED(offset, kVariableReference_Kind, variable.fType),
-      fVariable(variable),
-      fRefKind(refKind) {
+    : INHERITED(offset, kExpressionKind, variable.fType), fVariable(variable), fRefKind(refKind) {
   if (refKind != kRead_RefKind) {
     fVariable.fWriteCount++;
   }
@@ -53,7 +51,7 @@ void VariableReference::setRefKind(RefKind refKind) {
 
 std::unique_ptr<Expression> VariableReference::copy_constant(
     const IRGenerator& irGenerator, const Expression* expr) {
-  SkASSERT(expr->isConstant());
+  SkASSERT(expr->isCompileTimeConstant());
   switch (expr->fKind) {
     case Expression::kIntLiteral_Kind:
       return std::unique_ptr<Expression>(
@@ -86,18 +84,13 @@ std::unique_ptr<Expression> VariableReference::constantPropagate(
   if (fRefKind != kRead_RefKind) {
     return nullptr;
   }
-  if (irGenerator.fKind == Program::kPipelineStage_Kind &&
-      fVariable.fStorage == Variable::kGlobal_Storage &&
-      (fVariable.fModifiers.fFlags & Modifiers::kIn_Flag) &&
-      !(fVariable.fModifiers.fFlags & Modifiers::kUniform_Flag)) {
-    return irGenerator.getArg(fOffset, fVariable.fName);
-  }
   if ((fVariable.fModifiers.fFlags & Modifiers::kConst_Flag) && fVariable.fInitialValue &&
-      fVariable.fInitialValue->isConstant() && fType.kind() != Type::kArray_Kind) {
+      fVariable.fInitialValue->isCompileTimeConstant() && fType.kind() != Type::kArray_Kind) {
     return copy_constant(irGenerator, fVariable.fInitialValue);
   }
   auto exprIter = definitions.find(&fVariable);
-  if (exprIter != definitions.end() && exprIter->second && (*exprIter->second)->isConstant()) {
+  if (exprIter != definitions.end() && exprIter->second &&
+      (*exprIter->second)->isCompileTimeConstant()) {
     return copy_constant(irGenerator, exprIter->second->get());
   }
   return nullptr;

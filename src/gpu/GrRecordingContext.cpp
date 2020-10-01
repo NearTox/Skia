@@ -5,13 +5,13 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 
-#include "include/gpu/GrContext.h"
 #include "include/gpu/GrContextThreadSafeProxy.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/gpu/GrAuditTrail.h"
 #include "src/gpu/GrCaps.h"
+#include "src/gpu/GrContextThreadSafeProxyPriv.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrProgramDesc.h"
@@ -37,25 +37,10 @@ GrRecordingContext::GrRecordingContext(sk_sp<GrContextThreadSafeProxy> proxy)
 
 GrRecordingContext::~GrRecordingContext() = default;
 
-bool GrRecordingContext::init() {
-  if (!INHERITED::init()) {
-    return false;
-  }
-
-  auto overBudget = [this]() {
-    if (GrContext* direct = this->priv().asDirectContext(); direct != nullptr) {
-      // TODO: move text blob draw calls below context
-      // TextBlobs are drawn at the SkGpuDevice level, therefore they cannot rely on
-      // GrRenderTargetContext to perform a necessary flush. The solution is to move drawText
-      // calls to below the GrContext level, but this is not trivial because they call
-      // drawPath on SkGpuDevice.
-      direct->flushAndSubmit();
-    }
-  };
-
-  fTextBlobCache.reset(new GrTextBlobCache(overBudget, this->contextID()));
-
-  return true;
+int GrRecordingContext::maxSurfaceSampleCountForColorType(SkColorType colorType) const {
+  GrBackendFormat format = this->caps()->getDefaultBackendFormat(
+      SkColorTypeToGrColorType(colorType), GrRenderable::kYes);
+  return this->caps()->maxRenderTargetSampleCount(format);
 }
 
 void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTaskSplitting) {
@@ -72,13 +57,6 @@ void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTa
     prcOptions.fGpuPathRenderers &= ~GpuPathRenderers::kSmall;
   }
 
-  if (!this->proxyProvider()->renderingDirectly()) {
-    // DDL TODO: remove this crippling of the path renderer chain
-    // Disable the small path renderer bc of the proxies in the atlas. They need to be
-    // unified when the opsTasks are added back to the destination drawing manager.
-    prcOptions.fGpuPathRenderers &= ~GpuPathRenderers::kSmall;
-  }
-
   fDrawingManager.reset(
       new GrDrawingManager(this, prcOptions, sortOpsTasks, reduceOpsTaskSplitting));
 }
@@ -86,13 +64,14 @@ void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTa
 void GrRecordingContext::abandonContext() {
   INHERITED::abandonContext();
 
-  fTextBlobCache->freeAll();
+  this->destroyDrawingManager();
 }
 
 GrDrawingManager* GrRecordingContext::drawingManager() noexcept { return fDrawingManager.get(); }
 
-GrRecordingContext::Arenas::Arenas(
-    GrOpMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator) noexcept
+void GrRecordingContext::destroyDrawingManager() noexcept { fDrawingManager.reset(); }
+
+GrRecordingContext::Arenas::Arenas(GrOpMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator)
     : fOpMemoryPool(opMemoryPool), fRecordTimeAllocator(recordTimeAllocator) {
   // OwnedArenas should instantiate these before passing the bare pointer off to this struct.
   SkASSERT(opMemoryPool);
@@ -102,11 +81,15 @@ GrRecordingContext::Arenas::Arenas(
 // Must be defined here so that std::unique_ptr can see the sizes of the various pools, otherwise
 // it can't generate a default destructor for them.
 GrRecordingContext::OwnedArenas::OwnedArenas() noexcept = default;
+GrRecordingContext::OwnedArenas::OwnedArenas(OwnedArenas&&) noexcept = default;
 GrRecordingContext::OwnedArenas::~OwnedArenas() = default;
 
-GrRecordingContext::OwnedArenas::OwnedArenas(OwnedArenas&& a) noexcept = default;
 GrRecordingContext::OwnedArenas& GrRecordingContext::OwnedArenas::operator=(
-    OwnedArenas&& a) noexcept = default;
+    OwnedArenas&& a) noexcept {
+  fOpMemoryPool = std::move(a.fOpMemoryPool);
+  fRecordTimeAllocator = std::move(a.fRecordTimeAllocator);
+  return *this;
+}
 
 GrRecordingContext::Arenas GrRecordingContext::OwnedArenas::get() {
   if (!fOpMemoryPool) {
@@ -128,10 +111,12 @@ GrRecordingContext::OwnedArenas&& GrRecordingContext::detachArenas() noexcept {
   return std::move(fArenas);
 }
 
-GrTextBlobCache* GrRecordingContext::getTextBlobCache() noexcept { return fTextBlobCache.get(); }
+GrTextBlobCache* GrRecordingContext::getTextBlobCache() noexcept {
+  return fThreadSafeProxy->priv().getTextBlobCache();
+}
 
 const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const noexcept {
-  return fTextBlobCache.get();
+  return fThreadSafeProxy->priv().getTextBlobCache();
 }
 
 void GrRecordingContext::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {

@@ -69,7 +69,7 @@ class SkBitmapDevice : public SkBaseDevice {
   }
 
  protected:
-  void* getRasterHandle() const noexcept override { return fRasterHandle; }
+  void* getRasterHandle() const override { return fRasterHandle; }
 
   /** These are called inside the per-device-layer loop for each draw call.
    When these are called, we have already applied any saveLayer operations,
@@ -107,7 +107,7 @@ class SkBitmapDevice : public SkBaseDevice {
   sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
   sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
   sk_sp<SkSpecialImage> snapSpecial(const SkIRect&, bool = false) override;
-  void setImmutable() noexcept override { fBitmap.setImmutable(); }
+  void setImmutable() override { fBitmap.setImmutable(); }
 
   ///////////////////////////////////////////////////////////////////////////
 
@@ -123,6 +123,7 @@ class SkBitmapDevice : public SkBaseDevice {
   void onClipPath(const SkPath& path, SkClipOp, bool aa) override;
   void onClipShader(sk_sp<SkShader>) override;
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
+  void onReplaceClip(const SkIRect& rect) override;
   void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override;
   bool onClipIsAA() const override;
   bool onClipIsWideOpen() const override;
@@ -166,7 +167,7 @@ class SkBitmapDevice : public SkBaseDevice {
 class SkBitmapDeviceFilteredSurfaceProps {
  public:
   SkBitmapDeviceFilteredSurfaceProps(
-      const SkBitmap& bitmap, const SkPaint& paint, const SkSurfaceProps& surfaceProps)
+      const SkBitmap& bitmap, const SkPaint& paint, const SkSurfaceProps& surfaceProps) noexcept
       : fSurfaceProps(
             (kN32_SkColorType != bitmap.colorType() || !paint.isSrcOver())
                 ? fLazy.init(surfaceProps.flags(), kUnknown_SkPixelGeometry)

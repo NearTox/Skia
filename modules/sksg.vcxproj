@@ -13,11 +13,10 @@
   <ItemGroup>
     <ClCompile Include="sksg\src\SkSGClipEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGColorFilter.cpp" />
-    <ClCompile Include="sksg\src\SkSGDashEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGDraw.cpp" />
     <ClCompile Include="sksg\src\SkSGEffectNode.cpp" />
+    <ClCompile Include="sksg\src\SkSGGeometryEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGGeometryNode.cpp" />
-    <ClCompile Include="sksg\src\SkSGGeometryTransform.cpp" />
     <ClCompile Include="sksg\src\SkSGGradient.cpp" />
     <ClCompile Include="sksg\src\SkSGGroup.cpp" />
     <ClCompile Include="sksg\src\SkSGImage.cpp" />
@@ -32,11 +31,9 @@
     <ClCompile Include="sksg\src\SkSGRect.cpp" />
     <ClCompile Include="sksg\src\SkSGRenderEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGRenderNode.cpp" />
-    <ClCompile Include="sksg\src\SkSGRoundEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGScene.cpp" />
     <ClCompile Include="sksg\src\SkSGText.cpp" />
     <ClCompile Include="sksg\src\SkSGTransform.cpp" />
-    <ClCompile Include="sksg\src\SkSGTrimEffect.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -117,7 +114,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>

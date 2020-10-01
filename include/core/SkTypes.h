@@ -240,17 +240,7 @@
 #  define SK_SUPPORT_GPU 1
 #endif
 
-/**
- * If GPU is enabled but no GPU backends are enabled then enable GL by default.
- * Traditionally clients have relied on Skia always building with the GL backend
- * and opting in to additional backends. TODO: Require explicit opt in for GL.
- */
-#if SK_SUPPORT_GPU
-#  if !defined(SK_GL) && !defined(SK_VULKAN) && !defined(SK_METAL) && !defined(SK_DAWN) && \
-      !defined(SK_DIRECT3D)
-#    define SK_GL
-#  endif
-#else
+#if !SK_SUPPORT_GPU
 #  undef SK_GL
 #  undef SK_VULKAN
 #  undef SK_METAL
@@ -260,9 +250,15 @@
 
 #if !defined(SkUNREACHABLE)
 #  if defined(_MSC_VER) && !defined(__clang__)
-#    define SkUNREACHABLE __assume(false)
+#    include <intrin.h>
+#    define FAST_FAIL_INVALID_ARG 5
+// See
+// https://developercommunity.visualstudio.com/content/problem/1128631/code-flow-doesnt-see-noreturn-with-extern-c.html
+// for why this is wrapped. Hopefully removable after msvc++ 19.27 is no longer supported.
+[[noreturn]] static inline void sk_fast_fail() noexcept { __fastfail(FAST_FAIL_INVALID_ARG); }
+#    define SkUNREACHABLE sk_fast_fail()
 #  else
-#    define SkUNREACHABLE __builtin_unreachable()
+#    define SkUNREACHABLE __builtin_trap()
 #  endif
 #endif
 
@@ -288,7 +284,6 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
                ": fatal error: \"" message "\"\n");                                          \
       SK_DUMP_GOOGLE3_STACK();                                                               \
       sk_abort_no_print();                                                                   \
-      SkUNREACHABLE;                                                                         \
     } while (false)
 #endif
 
@@ -422,7 +417,7 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-SK_API extern void sk_abort_no_print(void) noexcept;
+[[noreturn]] SK_API extern void sk_abort_no_print(void) noexcept;
 
 #ifndef SkDebugf
 SK_API void SkDebugf(const char format[], ...) noexcept;
@@ -486,8 +481,7 @@ typedef unsigned U16CPU;
  */
 template <typename T>
 static constexpr bool SkToBool(const T& x) noexcept {
-  static_assert(noexcept(0 != x));
-  return 0 != x;
+  return 0 != x;  // NOLINT(modernize-use-nullptr)
 }
 
 static constexpr int16_t SK_MaxS16 = INT16_MAX;

@@ -32,7 +32,7 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
 
   const SkIRect& bounds() const noexcept { return fBounds; }
   SkISize kernelSize() const noexcept { return fKernel.size(); }
-  const SkV2 kernelOffset() const noexcept { return fKernelOffset; }
+  SkVector kernelOffset() const noexcept { return fKernelOffset; }
   bool kernelIsSampled() const noexcept { return fKernel.isSampled(); }
   const float* kernel() const noexcept { return fKernel.array().data(); }
   float kernelSampleGain() const noexcept { return fKernel.biasAndGain().fGain; }
@@ -63,7 +63,7 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
     using MakeResult = std::tuple<KernelWrapper, std::unique_ptr<GrFragmentProcessor>>;
     static MakeResult Make(GrRecordingContext*, SkISize, const GrCaps&, const float* values);
 
-    KernelWrapper() = default;
+    KernelWrapper() noexcept = default;
     KernelWrapper(const KernelWrapper& that) noexcept : fSize(that.fSize) {
       if (that.isSampled()) {
         fBiasAndGain = that.fBiasAndGain;
@@ -83,7 +83,7 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
       SkASSERT(this->isSampled());
       return fBiasAndGain;
     }
-    bool operator==(const KernelWrapper&) const;
+    bool operator==(const KernelWrapper&) const noexcept;
 
    private:
     KernelWrapper(SkISize size) noexcept : fSize(size) {
@@ -108,18 +108,15 @@ class GrMatrixConvolutionEffect : public GrFragmentProcessor {
 
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
 
-  // We really just want the unaltered local coords, but the only way to get that right now is
-  // an identity coord transform.
-  GrCoordTransform fCoordTransform = {};
   SkIRect fBounds;
   KernelWrapper fKernel;
   float fGain;
   float fBias;
-  SkV2 fKernelOffset;
+  SkVector fKernelOffset;
   bool fConvolveAlpha;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST

@@ -87,21 +87,20 @@ class AnimationBuilder final : public SkNoncopyable {
   sk_sp<sksg::RenderNode> attachOpacity(const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::Path> attachPath(const skjson::Value&) const;
 
-  bool hasNontrivialBlending() const noexcept { return fHasNontrivialBlending; }
+  bool hasNontrivialBlending() const { return fHasNontrivialBlending; }
 
   class AutoScope final {
    public:
-    explicit AutoScope(const AnimationBuilder* builder) noexcept
-        : AutoScope(builder, AnimatorScope()) {}
+    explicit AutoScope(const AnimationBuilder* builder) : AutoScope(builder, AnimatorScope()) {}
 
-    AutoScope(const AnimationBuilder* builder, AnimatorScope&& scope) noexcept
+    AutoScope(const AnimationBuilder* builder, AnimatorScope&& scope)
         : fBuilder(builder),
           fCurrentScope(std::move(scope)),
           fPrevScope(fBuilder->fCurrentAnimatorScope) {
       fBuilder->fCurrentAnimatorScope = &fCurrentScope;
     }
 
-    AnimatorScope release() noexcept {
+    AnimatorScope release() {
       fBuilder->fCurrentAnimatorScope = fPrevScope;
       SkDEBUGCODE(fBuilder = nullptr);
 
@@ -191,7 +190,8 @@ class AnimationBuilder final : public SkNoncopyable {
   sk_sp<sksg::RenderNode> attachBlendMode(
       const skjson::ObjectValue&, sk_sp<sksg::RenderNode>) const;
 
-  sk_sp<sksg::RenderNode> attachShape(const skjson::ArrayValue*, AttachShapeContext*) const;
+  sk_sp<sksg::RenderNode> attachShape(
+      const skjson::ArrayValue*, AttachShapeContext*, bool suppress_draws = false) const;
   const FootageAssetInfo* loadFootageAsset(const skjson::ObjectValue&) const;
   sk_sp<sksg::RenderNode> attachFootageAsset(const skjson::ObjectValue&, LayerInfo*) const;
 
@@ -204,10 +204,11 @@ class AnimationBuilder final : public SkNoncopyable {
   sk_sp<sksg::RenderNode> attachShapeLayer(const skjson::ObjectValue&, LayerInfo*) const;
   sk_sp<sksg::RenderNode> attachSolidLayer(const skjson::ObjectValue&, LayerInfo*) const;
   sk_sp<sksg::RenderNode> attachTextLayer(const skjson::ObjectValue&, LayerInfo*) const;
+  sk_sp<sksg::RenderNode> attachAudioLayer(const skjson::ObjectValue&, LayerInfo*) const;
 
   // Delay resolving the fontmgr until it is actually needed.
   struct LazyResolveFontMgr {
-    LazyResolveFontMgr(sk_sp<SkFontMgr> fontMgr) noexcept : fFontMgr(std::move(fontMgr)) {}
+    LazyResolveFontMgr(sk_sp<SkFontMgr> fontMgr) : fFontMgr(std::move(fontMgr)) {}
 
     const sk_sp<SkFontMgr>& get() {
       if (!fFontMgr) {
@@ -217,7 +218,7 @@ class AnimationBuilder final : public SkNoncopyable {
       return fFontMgr;
     }
 
-    const sk_sp<SkFontMgr>& getMaybeNull() const noexcept { return fFontMgr; }
+    const sk_sp<SkFontMgr>& getMaybeNull() const { return fFontMgr; }
 
    private:
     sk_sp<SkFontMgr> fFontMgr;
@@ -262,9 +263,9 @@ class AnimationBuilder final : public SkNoncopyable {
       }
     }
 
-    operator bool() const noexcept { return !!fInfo; }
+    operator bool() const { return !!fInfo; }
 
-    const skjson::ObjectValue& operator*() const noexcept { return *fInfo->fAsset; }
+    const skjson::ObjectValue& operator*() const { return *fInfo->fAsset; }
 
    private:
     const AssetInfo* fInfo = nullptr;

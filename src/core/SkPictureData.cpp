@@ -20,18 +20,14 @@
 
 #include <new>
 
-#if SK_SUPPORT_GPU
-#  include "include/gpu/GrContext.h"
-#endif
-
 template <typename T>
 int SafeCount(const T* obj) {
   return obj ? obj->count() : 0;
 }
 
-SkPictureData::SkPictureData(const SkPictInfo& info) : fInfo(info) {}
+SkPictureData::SkPictureData(const SkPictInfo& info) noexcept : fInfo(info) {}
 
-void SkPictureData::initForPlayback() const {
+void SkPictureData::initForPlayback() const noexcept {
   // ensure that the paths bounds are pre-computed
   for (int i = 0; i < fPaths.count(); i++) {
     fPaths[i].updateBoundsCache();
@@ -81,12 +77,12 @@ static size_t compute_chunk_size(SkFlattenable::Factory* array, int count) {
   return size;
 }
 
-static void write_tag_size(SkWriteBuffer& buffer, uint32_t tag, size_t size) {
+static void write_tag_size(SkWriteBuffer& buffer, uint32_t tag, size_t size) noexcept {
   buffer.writeUInt(tag);
   buffer.writeUInt(SkToU32(size));
 }
 
-static void write_tag_size(SkWStream* stream, uint32_t tag, size_t size) {
+static void write_tag_size(SkWStream* stream, uint32_t tag, size_t size) noexcept {
   stream->write32(tag);
   stream->write32(SkToU32(size));
 }
@@ -191,7 +187,7 @@ void SkPictureData::flattenToBuffer(SkWriteBuffer& buffer, bool textBlobsOnly) c
 // call that custom typefaceproc on *every* typeface, not just on the unique ones. To avoid this,
 // we ignore the custom proc (here) when we serialize the paints, and then do respect it when
 // we serialize the typefaces.
-static SkSerialProcs skip_typeface_proc(const SkSerialProcs& procs) {
+static SkSerialProcs skip_typeface_proc(const SkSerialProcs& procs) noexcept {
   SkSerialProcs newProcs = procs;
   newProcs.fTypefaceProc = nullptr;
   newProcs.fTypefaceCtx = nullptr;
@@ -223,10 +219,10 @@ void SkPictureData::serialize(
   buffer.setTypefaceRecorder(sk_ref_sp(typefaceSet));
   this->flattenToBuffer(buffer, textBlobsOnly);
 
-  // Dummy serialize our sub-pictures for the side effect of filling typefaceSet
+  // Pretend to serialize our sub-pictures for the side effect of filling typefaceSet
   // with typefaces from sub-pictures.
   struct DevNull : public SkWStream {
-    DevNull() noexcept : fBytesWritten(0) {}
+    constexpr DevNull() noexcept : fBytesWritten(0) {}
     size_t fBytesWritten;
     bool write(const void*, size_t size) noexcept override {
       fBytesWritten += size;
@@ -239,7 +235,7 @@ void SkPictureData::serialize(
   }
   if (textBlobsOnly) {
     return;
-  }  // return early from dummy serialize
+  }  // return early from fake serialize
 
   // We need to write factories before we write the buffer.
   // We need to write typefaces before we write the buffer or any sub-picture.
@@ -327,7 +323,7 @@ bool SkPictureData::parseStreamTag(
         } else {
           tf = SkTypeface::MakeDeserialize(stream);
         }
-        if (!tf.get()) {  // failed to deserialize
+        if (!tf) {  // failed to deserialize
           // fTFPlayback asserts it never has a null, so we plop in
           // the default here.
           tf = SkTypeface::MakeDefault();
@@ -541,4 +537,21 @@ bool SkPictureData::parseBuffer(SkReadBuffer& buffer) {
     return false;
   }
   return true;
+}
+
+const SkPaint* SkPictureData::optionalPaint(SkReadBuffer* reader) const {
+  int index = reader->readInt();
+  if (index == 0) {
+    return nullptr;  // recorder wrote a zero for no paint (likely drawimage)
+  }
+  return reader->validate(index > 0 && index <= fPaints.count()) ? &fPaints[index - 1] : nullptr;
+}
+
+const SkPaint& SkPictureData::requiredPaint(SkReadBuffer* reader) const {
+  const SkPaint* paint = this->optionalPaint(reader);
+  if (reader->validate(paint != nullptr)) {
+    return *paint;
+  }
+  static const SkPaint& stub = *(new SkPaint);
+  return stub;
 }

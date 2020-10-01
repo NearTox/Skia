@@ -105,10 +105,6 @@ SkTypeface* SkFontMgr::matchFamilyStyleCharacter(
   return this->onMatchFamilyStyleCharacter(familyName, style, bcp47, bcp47Count, character);
 }
 
-SkTypeface* SkFontMgr::matchFaceStyle(const SkTypeface* face, const SkFontStyle& fs) const {
-  return this->onMatchFaceStyle(face, fs);
-}
-
 sk_sp<SkTypeface> SkFontMgr::makeFromData(sk_sp<SkData> data, int ttcIndex) const {
   if (nullptr == data) {
     return nullptr;
@@ -150,10 +146,6 @@ sk_sp<SkTypeface> SkFontMgr::legacyMakeTypeface(const char familyName[], SkFontS
   return this->onLegacyMakeTypeface(familyName, style);
 }
 
-sk_sp<SkTypeface> SkFontMgr::onMakeFromStreamArgs(
-    std::unique_ptr<SkStreamAsset> stream, const SkFontArguments& args) const {
-  return this->makeFromStream(std::move(stream), args.getCollectionIndex());
-}
 sk_sp<SkTypeface> SkFontMgr::onMakeFromFontData(std::unique_ptr<SkFontData> data) const {
   return this->makeFromStream(data->detachStream(), data->getIndex());
 }

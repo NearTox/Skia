@@ -15,9 +15,7 @@ class GrSampleMaskProcessor::Impl : public GrGLSLGeometryProcessor {
   Impl(std::unique_ptr<Shader> shader) : fShader(std::move(shader)) {}
 
  private:
-  void setData(
-      const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-      const CoordTransformRange&) override {}
+  void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&) override {}
 
   void onEmitCode(EmitArgs&, GrGPArgs*) override;
 
@@ -110,19 +108,19 @@ GrPrimitiveType GrSampleMaskProcessor::primType() const {
 }
 
 void GrSampleMaskProcessor::bindBuffers(
-    GrOpsRenderPass* renderPass, const GrBuffer* instanceBuffer) const {
+    GrOpsRenderPass* renderPass, sk_sp<const GrBuffer> instanceBuffer) const {
   SkASSERT(PrimitiveType::kWeightedTriangles != fPrimitiveType);
 
   switch (fPrimitiveType) {
     case PrimitiveType::kTriangles:
     case PrimitiveType::kWeightedTriangles: {
-      renderPass->bindBuffers(nullptr, nullptr, instanceBuffer);
+      renderPass->bindBuffers(nullptr, nullptr, std::move(instanceBuffer));
       break;
     }
     case PrimitiveType::kQuadratics:
     case PrimitiveType::kCubics:
     case PrimitiveType::kConics: {
-      renderPass->bindBuffers(nullptr, instanceBuffer, nullptr);
+      renderPass->bindBuffers(nullptr, std::move(instanceBuffer), nullptr);
       break;
     }
   }

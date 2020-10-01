@@ -25,11 +25,9 @@
 class GrMemoryPool {
  public:
 #ifdef SK_FORCE_8_BYTE_ALIGNMENT
-  // This is an issue for WASM builds using emscripten, which had
-  // std::max_align_t = 16, but was returning pointers only aligned to 8
-  // bytes. https://github.com/emscripten-core/emscripten/issues/10072
-  // Since Skia does not use "long double" (16 bytes), we should be ok to
-  // force it back to 8 bytes until emscripten is fixed.
+  // https://github.com/emscripten-core/emscripten/issues/10072
+  // Since Skia does not use "long double" (16 bytes), we should be ok to force it back to 8 bytes
+  // until emscripten is fixed.
   static constexpr size_t kAlignment = 8;
 #else
   // Guaranteed alignment of pointer returned by allocate().
@@ -61,7 +59,7 @@ class GrMemoryPool {
   /**
    * p must have been returned by allocate().
    */
-  void release(void* p);
+  void release(void* p) noexcept;
 
   /**
    * Returns true if there are no unreleased allocations.
@@ -69,7 +67,8 @@ class GrMemoryPool {
   bool isEmpty() const noexcept {
     // If size is the same as preallocSize, there aren't any heap blocks, so currentBlock()
     // is the inline head block.
-    return 0 == this->size() && 0 == fAllocator.currentBlock()->metadata();
+    return fAllocator.currentBlock() == fAllocator.headBlock() &&
+           fAllocator.currentBlock()->metadata() == 0;
   }
 
   /**
@@ -128,7 +127,7 @@ class GrOpMemoryPool {
 
   void* allocate(size_t size) { return fPool.allocate(size); }
 
-  void release(std::unique_ptr<GrOp> op);
+  void release(std::unique_ptr<GrOp> op) noexcept;
 
   bool isEmpty() const noexcept { return fPool.isEmpty(); }
 

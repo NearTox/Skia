@@ -321,7 +321,7 @@ class OpAsWinding {
     SkPathPriv::Iterate iterate(fPath);
     auto iter = iterate.begin();
     int verbCount = 0;
-    for (auto contour : contours) {
+    for (const Contour& contour : contours) {
       SkPath reverse;
       SkPath* temp = contour.fReverse ? &reverse : result;
       for (; iter != iterate.end() && verbCount < contour.fVerbEnd; ++iter, ++verbCount) {

@@ -41,7 +41,7 @@ class SK_API SkUnPreMultiply {
     return (scale * component + (1 << 23)) >> 24;
   }
 
-  static SkColor PMColorToColor(SkPMColor c) noexcept;
+  static SkColor PMColorToColor(SkPMColor c);
 
  private:
   static const uint32_t gTable[256];

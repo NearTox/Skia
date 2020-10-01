@@ -10,9 +10,9 @@
 #  include "src/core/SkLeanWindows.h"
 #  include "src/ports/SkOSLibrary.h"
 
-void* DynamicLoadLibrary(const char* libraryName) { return LoadLibraryA(libraryName); }
+void* SkLoadDynamicLibrary(const char* libraryName) { return LoadLibraryA(libraryName); }
 
-void* GetProcedureAddress(void* library, const char* functionName) {
+void* SkGetProcedureAddress(void* library, const char* functionName) {
   return reinterpret_cast<void*>(::GetProcAddress((HMODULE)library, functionName));
 }
 

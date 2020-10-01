@@ -13,7 +13,6 @@
 #include "include/gpu/GrTypes.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrTRecorder.h"
 #include "src/gpu/vk/GrVkPipelineState.h"
 
 class GrVkGpu;
@@ -35,7 +34,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   bool set(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies);
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers);
   void reset();
 
   void submit();
@@ -55,7 +54,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
 
   bool wrapsSecondaryCommandBuffer() const;
 
-  GrGpu* gpu() noexcept override;
+  GrGpu* gpu() override;
 
   GrVkCommandBuffer* currentCommandBuffer();
 
@@ -67,8 +66,8 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
       const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
       const GrPipeline&) override;
   void onBindBuffers(
-      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
-      GrPrimitiveRestart) override;
+      sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
+      sk_sp<const GrBuffer> vertexBuffer, GrPrimitiveRestart) override;
   void onDraw(int vertexCount, int baseVertex) override {
     this->onDrawInstanced(1, 0, vertexCount, baseVertex);
   }
@@ -97,6 +96,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   GrVkPipelineState* fCurrentPipelineState = nullptr;
   bool fCurrentCBIsEmpty = true;
   SkIRect fBounds;
+  bool fUsesXferBarriers = false;
   GrVkGpu* fGpu;
 
 #ifdef SK_DEBUG

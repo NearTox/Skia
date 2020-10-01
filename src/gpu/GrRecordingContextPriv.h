@@ -8,8 +8,10 @@
 #ifndef GrRecordingContextPriv_DEFINED
 #define GrRecordingContextPriv_DEFINED
 
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/text/GrSDFTOptions.h"
+
+class SkDeferredDisplayList;
 
 /** Class that exposes methods to GrRecordingContext that are only intended for use internal to
     Skia. This class is purely a privileged window into GrRecordingContext. It should never have
@@ -28,13 +30,10 @@ class GrRecordingContextPriv {
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
-  GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
 
   // from GrImageContext
   GrProxyProvider* proxyProvider() noexcept { return fContext->proxyProvider(); }
   const GrProxyProvider* proxyProvider() const noexcept { return fContext->proxyProvider(); }
-
-  bool abandoned() const { return fContext->abandoned(); }
 
   /** This is only useful for debug purposes */
   SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
@@ -56,7 +55,9 @@ class GrRecordingContextPriv {
     fContext->detachProgramData(dst);
   }
 
-  GrTextBlobCache* getTextBlobCache() noexcept { return fContext->getTextBlobCache(); }
+  GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
+
+  void moveRenderTasksToDDL(SkDeferredDisplayList*);
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -100,14 +101,19 @@ class GrRecordingContextPriv {
 
   GrRecordingContext::Stats* stats() noexcept { return &fContext->fStats; }
 
-  GrSDFTOptions SDFTOptions() const {
+  GrSDFTOptions SDFTOptions() const noexcept {
     return {this->options().fMinDistanceFieldFontSize, this->options().fGlyphsAsPathsFontSize};
   }
 
+  /**
+   * Create a GrRecordingContext without a resource cache
+   */
+  static sk_sp<GrRecordingContext> MakeDDL(sk_sp<GrContextThreadSafeProxy>);
+
  private:
   explicit GrRecordingContextPriv(GrRecordingContext* context) noexcept : fContext(context) {}
-  GrRecordingContextPriv(const GrRecordingContextPriv&);             // unimpl
-  GrRecordingContextPriv& operator=(const GrRecordingContextPriv&);  // unimpl
+  GrRecordingContextPriv(const GrRecordingContextPriv&) = delete;
+  GrRecordingContextPriv& operator=(const GrRecordingContextPriv&) = delete;
 
   // No taking addresses of this type.
   const GrRecordingContextPriv* operator&() const;
@@ -122,7 +128,8 @@ inline GrRecordingContextPriv GrRecordingContext::priv() noexcept {
   return GrRecordingContextPriv(this);
 }
 
-inline const GrRecordingContextPriv GrRecordingContext::priv() const noexcept {
+inline const GrRecordingContextPriv GrRecordingContext::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrRecordingContextPriv(const_cast<GrRecordingContext*>(this));
 }
 

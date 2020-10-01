@@ -48,7 +48,7 @@ class SkBaseIStream : public IStream {
   SK_STDMETHODIMP Stat(STATSTG* pStatstg, DWORD grfStatFlag) override;
 
  protected:
-  explicit SkBaseIStream();
+  explicit SkBaseIStream() noexcept;
   virtual ~SkBaseIStream();
 
  private:

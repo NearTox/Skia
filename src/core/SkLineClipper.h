@@ -26,8 +26,7 @@ class SkLineClipper {
           3rd segment: lines[2]..lines[3]
    */
   static int ClipLine(
-      const SkPoint pts[2], const SkRect& clip, SkPoint lines[kMaxPoints],
-      bool canCullToTheRight) noexcept;
+      const SkPoint pts[2], const SkRect& clip, SkPoint lines[kMaxPoints], bool canCullToTheRight);
 
   /*  Intersect the line segment against the rect. If there is a non-empty
       resulting segment, return true and set dst[] to that segment. If not,
@@ -37,7 +36,7 @@ class SkLineClipper {
       segments on the sides to show where the line extended beyond the
       left or right sides. IntersectLine does not.
    */
-  static bool IntersectLine(const SkPoint src[2], const SkRect& clip, SkPoint dst[2]) noexcept;
+  static bool IntersectLine(const SkPoint src[2], const SkRect& clip, SkPoint dst[2]);
 };
 
 #endif

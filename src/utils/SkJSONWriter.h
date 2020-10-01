@@ -331,12 +331,12 @@ class SkJSONWriter : SkNoncopyable {
     }
   }
 
-  Scope scope() const noexcept {
+  Scope scope() const {
     SkASSERT(!fScopeStack.empty());
     return fScopeStack.back();
   }
 
-  bool multiline() const noexcept {
+  bool multiline() const {
     SkASSERT(!fNewlineStack.empty());
     return fNewlineStack.back();
   }

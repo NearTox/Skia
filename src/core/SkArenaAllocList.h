@@ -21,7 +21,7 @@ class SkArenaAllocList {
   struct Node;
 
  public:
-  SkArenaAllocList() noexcept = default;
+  constexpr SkArenaAllocList() noexcept = default;
 
   void reset() noexcept { fHead = fTail = nullptr; }
 
@@ -30,7 +30,7 @@ class SkArenaAllocList {
 
   class Iter {
    public:
-    Iter() noexcept = default;
+    constexpr Iter() noexcept = default;
     inline Iter& operator++() noexcept;
     T& operator*() const noexcept { return fCurr->fT; }
     T* operator->() const noexcept { return &fCurr->fT; }

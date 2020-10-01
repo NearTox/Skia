@@ -22,7 +22,9 @@
 #include "src/gpu/GrSurfaceProxyView.h"
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/geometry/GrQuad.h"
-#include "src/gpu/text/GrTextTarget.h"
+#include "src/gpu/text/GrTextBlob.h"
+
+#include <tuple>
 
 class GrBackendSemaphore;
 class GrClip;
@@ -65,13 +67,13 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   static std::unique_ptr<GrRenderTargetContext> Make(
       GrRecordingContext*, GrColorType, sk_sp<SkColorSpace>, SkBackingFit, SkISize dimensions,
-      const GrBackendFormat&, int sampleCnt, GrMipMapped, GrProtected, GrSurfaceOrigin, SkBudgeted,
+      const GrBackendFormat&, int sampleCnt, GrMipmapped, GrProtected, GrSurfaceOrigin, SkBudgeted,
       const SkSurfaceProps*);
 
   // Same as above but will use the default GrBackendFormat for the given GrColorType
   static std::unique_ptr<GrRenderTargetContext> Make(
       GrRecordingContext*, GrColorType, sk_sp<SkColorSpace>, SkBackingFit, SkISize dimensions,
-      int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo, GrProtected = GrProtected::kNo,
+      int sampleCnt = 1, GrMipmapped = GrMipmapped::kNo, GrProtected = GrProtected::kNo,
       GrSurfaceOrigin = kBottomLeft_GrSurfaceOrigin, SkBudgeted = SkBudgeted::kYes,
       const SkSurfaceProps* = nullptr);
 
@@ -84,7 +86,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   // SRGB-ness will be preserved.
   static std::unique_ptr<GrRenderTargetContext> MakeWithFallback(
       GrRecordingContext*, GrColorType, sk_sp<SkColorSpace>, SkBackingFit, SkISize dimensions,
-      int sampleCnt = 1, GrMipMapped = GrMipMapped::kNo, GrProtected = GrProtected::kNo,
+      int sampleCnt = 1, GrMipmapped = GrMipmapped::kNo, GrProtected = GrProtected::kNo,
       GrSurfaceOrigin = kBottomLeft_GrSurfaceOrigin, SkBudgeted = SkBudgeted::kYes,
       const SkSurfaceProps* = nullptr);
 
@@ -95,7 +97,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   // Creates a GrRenderTargetContext that wraps the passed in GrBackendTexture.
   static std::unique_ptr<GrRenderTargetContext> MakeFromBackendTexture(
       GrRecordingContext*, GrColorType, sk_sp<SkColorSpace>, const GrBackendTexture&, int sampleCnt,
-      GrSurfaceOrigin, const SkSurfaceProps*, ReleaseProc releaseProc, ReleaseContext releaseCtx);
+      GrSurfaceOrigin, const SkSurfaceProps*, sk_sp<GrRefCntedCallback> releaseHelper);
 
   static std::unique_ptr<GrRenderTargetContext> MakeFromBackendTextureAsRenderTarget(
       GrRecordingContext*, GrColorType, sk_sp<SkColorSpace>, const GrBackendTexture&, int sampleCnt,
@@ -113,8 +115,6 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
       sk_sp<SkColorSpace>, const SkSurfaceProps*, bool managedOpsTask = true);
 
   ~GrRenderTargetContext() override;
-
-  virtual void drawGlyphRunList(const GrClip*, const SkMatrixProvider&, const SkGlyphRunList&);
 
   /**
    * Provides a perfomance hint that the render target's contents are allowed
@@ -236,16 +236,16 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    */
   void drawTexture(
       const GrClip* clip, GrSurfaceProxyView view, SkAlphaType srcAlphaType,
-      GrSamplerState::Filter filter, SkBlendMode mode, const SkPMColor4f& color,
-      const SkRect& srcRect, const SkRect& dstRect, GrAA aa, GrQuadAAFlags edgeAA,
-      SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
+      GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm, SkBlendMode mode,
+      const SkPMColor4f& color, const SkRect& srcRect, const SkRect& dstRect, GrAA aa,
+      GrQuadAAFlags edgeAA, SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
       sk_sp<GrColorSpaceXform> texXform) {
     const SkRect* subset = constraint == SkCanvas::kStrict_SrcRectConstraint ? &srcRect : nullptr;
     DrawQuad quad{GrQuad::MakeFromRect(dstRect, viewMatrix), GrQuad(srcRect), edgeAA};
 
     this->drawTexturedQuad(
-        clip, std::move(view), srcAlphaType, std::move(texXform), filter, color, mode, aa, &quad,
-        subset);
+        clip, std::move(view), srcAlphaType, std::move(texXform), filter, mm, color, mode, aa,
+        &quad, subset);
   }
 
   /**
@@ -256,16 +256,16 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    */
   void drawTextureQuad(
       const GrClip* clip, GrSurfaceProxyView view, GrColorType srcColorType,
-      SkAlphaType srcAlphaType, GrSamplerState::Filter filter, SkBlendMode mode,
-      const SkPMColor4f& color, const SkPoint srcQuad[4], const SkPoint dstQuad[4], GrAA aa,
-      GrQuadAAFlags edgeAA, const SkRect* subset, const SkMatrix& viewMatrix,
-      sk_sp<GrColorSpaceXform> texXform) {
+      SkAlphaType srcAlphaType, GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm,
+      SkBlendMode mode, const SkPMColor4f& color, const SkPoint srcQuad[4],
+      const SkPoint dstQuad[4], GrAA aa, GrQuadAAFlags edgeAA, const SkRect* subset,
+      const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> texXform) {
     DrawQuad quad{
         GrQuad::MakeFromSkQuad(dstQuad, viewMatrix), GrQuad::MakeFromSkQuad(srcQuad, SkMatrix::I()),
         edgeAA};
     this->drawTexturedQuad(
-        clip, std::move(view), srcAlphaType, std::move(texXform), filter, color, mode, aa, &quad,
-        subset);
+        clip, std::move(view), srcAlphaType, std::move(texXform), filter, mm, color, mode, aa,
+        &quad, subset);
   }
 
   /** Used with drawTextureSet */
@@ -276,7 +276,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
     SkRect fDstRect;
     const SkPoint* fDstClipQuad;     // Must be null, or point to an array of 4 points
     const SkMatrix* fPreViewMatrix;  // If not null, entry's CTM is 'viewMatrix' * fPreViewMatrix
-    float fAlpha;
+    SkPMColor4f fColor;  // {a,a,a,a} for rgb textures, {r,g,b,a} for alpha-only textures
     GrQuadAAFlags fAAFlags;
   };
   /**
@@ -292,8 +292,8 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    */
   void drawTextureSet(
       const GrClip*, TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
-      SkBlendMode mode, GrAA aa, SkCanvas::SrcRectConstraint, const SkMatrix& viewMatrix,
-      sk_sp<GrColorSpaceXform> texXform);
+      GrSamplerState::MipmapMode, SkBlendMode mode, GrAA aa, SkCanvas::SrcRectConstraint,
+      const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> texXform);
 
   /**
    * Draw a roundrect using a paint.
@@ -410,6 +410,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   void drawOval(
       const GrClip*, GrPaint&& paint, GrAA, const SkMatrix& viewMatrix, const SkRect& oval,
       const GrStyle& style);
+
   /**
    * Draws a partial arc of an oval.
    *
@@ -438,6 +439,15 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
       std::unique_ptr<SkLatticeIter>, const SkRect& dst);
 
   /**
+   * Draw the text specified by the SkGlyphRunList.
+   *
+   * @param viewMatrix      transformationMatrix
+   * @param glyphRunList    text, text positions, and paint.
+   */
+  void drawGlyphRunList(
+      const GrClip*, const SkMatrixProvider& viewMatrix, const SkGlyphRunList& glyphRunList);
+
+  /**
    * Draws the src texture with no matrix. The dstRect is the dstPoint with the width and height
    * of the srcRect. The srcRect and dstRect are clipped to the bounds of the src and dst surfaces
    * respectively.
@@ -450,40 +460,19 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
    */
   void drawDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>, const SkRect& bounds);
 
-  using ReadPixelsCallback = SkSurface::ReadPixelsCallback;
-  using ReadPixelsContext = SkSurface::ReadPixelsContext;
-  using RescaleGamma = SkSurface::RescaleGamma;
-
-  // GPU implementation for SkSurface::asyncRescaleAndReadPixels.
-  void asyncRescaleAndReadPixels(
-      const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
-      SkFilterQuality rescaleQuality, ReadPixelsCallback callback, ReadPixelsContext context);
-  // GPU implementation for SkSurface::asyncRescaleAndReadPixelsYUV420.
-  void asyncRescaleAndReadPixelsYUV420(
-      SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-      SkISize dstSize, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
-      ReadPixelsCallback callback, ReadPixelsContext context);
-
-  /**
-   * After this returns any pending surface IO will be issued to the backend 3D API and
-   * if the surface has MSAA it will be resolved.
-   */
-  GrSemaphoresSubmitted flush(
-      SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
-      const GrBackendSurfaceMutableState*);
-
   /**
    *  The next time this GrRenderTargetContext is flushed, the gpu will wait on the passed in
    *  semaphores before executing any commands.
    */
-  bool waitOnSemaphores(int numSemaphores, const GrBackendSemaphore waitSemaphores[]);
+  bool waitOnSemaphores(
+      int numSemaphores, const GrBackendSemaphore waitSemaphores[], bool deleteSemaphoresAfterWait);
 
   int numSamples() const noexcept { return this->asRenderTargetProxy()->numSamples(); }
   const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
   bool wrapsVkSecondaryCB() const noexcept {
     return this->asRenderTargetProxy()->wrapsVkSecondaryCB();
   }
-  GrMipMapped mipMapped() const;
+  GrMipmapped mipmapped() const;
 
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
   // make a copy (which refs the proxy) if needed.
@@ -499,9 +488,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   // Provides access to functions that aren't part of the public API.
   GrRenderTargetContextPriv priv() noexcept;
-  const GrRenderTargetContextPriv priv() const noexcept;
-
-  GrTextTarget* textTarget() noexcept { return fTextTarget.get(); }
+  const GrRenderTargetContextPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
 
   void wasClosed(const GrOpsTask& task) override;
 
@@ -512,7 +499,6 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 #endif
 
  private:
-  class TextTarget;
   enum class QuadOptimization;
 
   GrAAType chooseAAType(GrAA);
@@ -537,11 +523,10 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   friend class GrFillRectOp;                       // for access to addDrawOp
   friend class GrTessellationPathRenderer;         // for access to addDrawOp
   friend class GrTextureOp;                        // for access to addDrawOp
-  friend class GrAtlasTextOp;                      // for access to addDrawOp
 
-  SkDEBUGCODE(void onValidate() const override;)
+  SkDEBUGCODE(void onValidate() const override);
 
-      GrOpsTask::CanDiscardPreviousOps canDiscardPreviousOpsOnFullClear() const;
+  GrOpsTask::CanDiscardPreviousOps canDiscardPreviousOpsOnFullClear() const;
   void setNeedsStencil(bool useMixedSamplesIfNotMSAA);
 
   void internalClear(const SkIRect* scissor, const SkPMColor4f&, bool upgradePartialToFull = false);
@@ -578,8 +563,8 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   void drawTexturedQuad(
       const GrClip* clip, GrSurfaceProxyView proxyView, SkAlphaType alphaType,
       sk_sp<GrColorSpaceXform> textureXform, GrSamplerState::Filter filter,
-      const SkPMColor4f& color, SkBlendMode blendMode, GrAA aa, DrawQuad* quad,
-      const SkRect* subset = nullptr);
+      GrSamplerState::MipmapMode, const SkPMColor4f& color, SkBlendMode blendMode, GrAA aa,
+      DrawQuad* quad, const SkRect* subset = nullptr);
 
   // If 'attemptShapeFallback' is true, and the original shape had been simplfied, this
   // will re-route through drawShape() to see if we can avoid path rendering one more time.
@@ -609,18 +594,9 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   bool SK_WARN_UNUSED_RESULT
   setupDstProxyView(const GrOp& op, GrXferProcessor::DstProxyView* result);
 
-  class AsyncReadResult;
-
-  // The async read step of asyncRescaleAndReadPixels()
-  void asyncReadPixels(
-      const SkIRect& rect, SkColorType colorType, ReadPixelsCallback callback,
-      ReadPixelsContext context);
-
   GrOpsTask* getOpsTask();
 
   SkGlyphRunListPainter* glyphPainter() noexcept { return &fGlyphPainter; }
-
-  std::unique_ptr<GrTextTarget> fTextTarget;
 
   GrSurfaceProxyView fWriteView;
 

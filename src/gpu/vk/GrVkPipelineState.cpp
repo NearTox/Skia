@@ -5,12 +5,12 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrContext.h"
-#include "src/core/SkMipMap.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/vk/GrVkPipelineState.h"
+
+#include "src/core/SkMipmap.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrRenderTarget.h"
-#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLXferProcessor.h"
@@ -21,7 +21,6 @@
 #include "src/gpu/vk/GrVkImageView.h"
 #include "src/gpu/vk/GrVkMemory.h"
 #include "src/gpu/vk/GrVkPipeline.h"
-#include "src/gpu/vk/GrVkPipelineState.h"
 #include "src/gpu/vk/GrVkSampler.h"
 #include "src/gpu/vk/GrVkTexture.h"
 #include "src/gpu/vk/GrVkUniformBuffer.h"
@@ -32,15 +31,13 @@ GrVkPipelineState::GrVkPipelineState(
     uint32_t uniformSize, const UniformInfoArray& samplers,
     std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
     std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-    std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors,
-    int fragmentProcessorCnt)
+    std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors)
     : fPipeline(pipeline),
       fSamplerDSHandle(samplerDSHandle),
       fBuiltinUniformHandles(builtinUniformHandles),
       fGeometryProcessor(std::move(geometryProcessor)),
       fXferProcessor(std::move(xferProcessor)),
       fFragmentProcessors(std::move(fragmentProcessors)),
-      fFragmentProcessorCnt(fragmentProcessorCnt),
       fDataManager(uniforms, uniformSize) {
   fUniformBuffer.reset(GrVkUniformBuffer::Create(gpu, uniformSize));
 
@@ -57,14 +54,14 @@ GrVkPipelineState::~GrVkPipelineState() {
   SkASSERT(!fPipeline);
 }
 
-void GrVkPipelineState::freeGPUResources() {
+void GrVkPipelineState::freeGPUResources(GrVkGpu* gpu) {
   if (fPipeline) {
     fPipeline->unref();
     fPipeline = nullptr;
   }
 
   if (fUniformBuffer) {
-    fUniformBuffer->release();
+    fUniformBuffer->release(gpu);
     fUniformBuffer.reset();
   }
 }
@@ -74,14 +71,14 @@ bool GrVkPipelineState::setAndBindUniforms(
     GrVkCommandBuffer* commandBuffer) {
   this->setRenderTargetState(renderTarget, programInfo.origin());
 
-  GrFragmentProcessor::PipelineCoordTransformRange transformRange(programInfo.pipeline());
-  fGeometryProcessor->setData(fDataManager, programInfo.primProc(), transformRange);
-  GrFragmentProcessor::CIter fpIter(programInfo.pipeline());
-  GrGLSLFragmentProcessor::Iter glslIter(fFragmentProcessors.get(), fFragmentProcessorCnt);
-  for (; fpIter && glslIter; ++fpIter, ++glslIter) {
-    glslIter->setData(fDataManager, *fpIter);
+  fGeometryProcessor->setData(fDataManager, programInfo.primProc());
+  for (int i = 0; i < programInfo.pipeline().numFragmentProcessors(); ++i) {
+    auto& pipelineFP = programInfo.pipeline().getFragmentProcessor(i);
+    auto& baseGLSLFP = *fFragmentProcessors[i];
+    for (auto [fp, glslFP] : GrGLSLFragmentProcessor::ParallelRange(pipelineFP, baseGLSLFP)) {
+      glslFP.setData(fDataManager, fp);
+    }
   }
-  SkASSERT(!fpIter && !glslIter);
 
   {
     SkIPoint offset;
@@ -122,16 +119,11 @@ bool GrVkPipelineState::setAndBindTextures(
     samplerBindings[currTextureBinding++] = {sampler.samplerState(), texture};
   }
 
-  GrFragmentProcessor::CIter fpIter(pipeline);
-  GrGLSLFragmentProcessor::Iter glslIter(fFragmentProcessors.get(), fFragmentProcessorCnt);
-  for (; fpIter && glslIter; ++fpIter, ++glslIter) {
-    for (int i = 0; i < fpIter->numTextureSamplers(); ++i) {
-      const auto& sampler = fpIter->textureSampler(i);
-      samplerBindings[currTextureBinding++] = {
-          sampler.samplerState(), static_cast<GrVkTexture*>(sampler.peekTexture())};
-    }
-  }
-  SkASSERT(!fpIter && !glslIter);
+  pipeline.visitTextureEffects([&](const GrTextureEffect& te) {
+    GrSamplerState samplerState = te.samplerState();
+    auto* texture = static_cast<GrVkTexture*>(te.texture());
+    samplerBindings[currTextureBinding++] = {samplerState, texture};
+  });
 
   if (GrTexture* dstTexture = pipeline.peekDstTexture()) {
     samplerBindings[currTextureBinding++] = {
@@ -219,27 +211,6 @@ bool GrVkPipelineState::setAndBindTextures(
     descriptorSet->recycle();
   }
   return true;
-}
-
-void set_uniform_descriptor_writes(
-    VkWriteDescriptorSet* descriptorWrite, VkDescriptorBufferInfo* bufferInfo,
-    const GrVkUniformBuffer* buffer, VkDescriptorSet descriptorSet) {
-  memset(bufferInfo, 0, sizeof(VkDescriptorBufferInfo));
-  bufferInfo->buffer = buffer->buffer();
-  bufferInfo->offset = buffer->offset();
-  bufferInfo->range = buffer->size();
-
-  memset(descriptorWrite, 0, sizeof(VkWriteDescriptorSet));
-  descriptorWrite->sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-  descriptorWrite->pNext = nullptr;
-  descriptorWrite->dstSet = descriptorSet;
-  descriptorWrite->dstBinding = GrVkUniformHandler::kUniformBinding;
-  descriptorWrite->dstArrayElement = 0;
-  descriptorWrite->descriptorCount = 1;
-  descriptorWrite->descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  descriptorWrite->pImageInfo = nullptr;
-  descriptorWrite->pBufferInfo = bufferInfo;
-  descriptorWrite->pTexelBufferView = nullptr;
 }
 
 void GrVkPipelineState::setRenderTargetState(const GrRenderTarget* rt, GrSurfaceOrigin origin) {

@@ -23,7 +23,8 @@
 #include "include/core/SkSurface.h"
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkTArray.h"
 #include "src/gpu/GrContextPriv.h"
@@ -64,7 +65,7 @@ static const SkMatrix kUVMatrices[kNumMatrices] = {
     SkMatrix::MakeAll(1, 0, 0, 0, 1, 0, 0, 0, 1)};
 
 // Create a fixed size text label like "LL" or "LR".
-static sk_sp<SkImage> make_text_image(GrContext* context, const char* text, SkColor color) {
+static sk_sp<SkImage> make_text_image(GrDirectContext* direct, const char* text, SkColor color) {
   SkPaint paint;
   paint.setAntiAlias(true);
   paint.setColor(color);
@@ -90,13 +91,13 @@ static sk_sp<SkImage> make_text_image(GrContext* context, const char* text, SkCo
 
   sk_sp<SkImage> image = surf->makeImageSnapshot();
 
-  return image->makeTextureImage(context);
+  return image->makeTextureImage(direct);
 }
 
 // Create an image with each corner marked w/ "LL", "LR", etc., with the origin either bottom-left
 // or top-left.
 static sk_sp<SkImage> make_reference_image(
-    GrContext* context, const SkTArray<sk_sp<SkImage>>& labels, bool bottomLeftOrigin) {
+    GrDirectContext* context, const SkTArray<sk_sp<SkImage>>& labels, bool bottomLeftOrigin) {
   SkASSERT(kNumLabels == labels.count());
 
   SkImageInfo ii =
@@ -114,16 +115,12 @@ static sk_sp<SkImage> make_reference_image(
 
   auto origin = bottomLeftOrigin ? kBottomLeft_GrSurfaceOrigin : kTopLeft_GrSurfaceOrigin;
 
-  // TODO: make MakeTextureProxyFromData return a GrSurfaceProxyView
-  auto proxy = sk_gpu_test::MakeTextureProxyFromData(
+  auto view = sk_gpu_test::MakeTextureProxyViewFromData(
       context, GrRenderable::kNo, origin, bm.info(), bm.getPixels(), bm.rowBytes());
-  if (!proxy) {
+  if (!view) {
     return nullptr;
   }
 
-  GrSwizzle swizzle =
-      context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kRGBA_8888);
-  GrSurfaceProxyView view(std::move(proxy), origin, swizzle);
   return sk_make_sp<SkImage_Gpu>(
       sk_ref_sp(context), kNeedNewImageUniqueID, std::move(view), ii.colorType(),
       kOpaque_SkAlphaType, nullptr);
@@ -206,7 +203,7 @@ class FlippityGM : public skiagm::GpuGM {
     canvas->restore();
   }
 
-  void makeLabels(GrContext* context) {
+  void makeLabels(GrDirectContext* direct) {
     if (fLabels.count()) {
       return;
     }
@@ -217,17 +214,15 @@ class FlippityGM : public skiagm::GpuGM {
         SK_ColorRED, SK_ColorGREEN, SK_ColorBLUE, SK_ColorCYAN};
 
     for (int i = 0; i < kNumLabels; ++i) {
-      fLabels.push_back(make_text_image(context, kLabelText[i], kLabelColors[i]));
+      fLabels.push_back(make_text_image(direct, kLabelText[i], kLabelColors[i]));
     }
     SkASSERT(kNumLabels == fLabels.count());
   }
 
-  DrawResult onGpuSetup(GrContext* context, SkString* errorMsg) override {
+  DrawResult onGpuSetup(GrDirectContext* context, SkString* errorMsg) override {
     if (!context || context->abandoned()) {
       return DrawResult::kSkip;
     }
-
-    SkASSERT(context->priv().asDirectContext());
 
     this->makeLabels(context);
     fReferenceImages[0] = make_reference_image(context, fLabels, false);
@@ -240,7 +235,12 @@ class FlippityGM : public skiagm::GpuGM {
     return DrawResult::kOk;
   }
 
-  void onDraw(GrContext*, GrRenderTargetContext*, SkCanvas* canvas) override {
+  void onGpuTeardown() override {
+    fLabels.reset();
+    fReferenceImages[0] = fReferenceImages[1] = nullptr;
+  }
+
+  void onDraw(GrRecordingContext*, GrRenderTargetContext*, SkCanvas* canvas) override {
     SkASSERT(fReferenceImages[0] && fReferenceImages[1]);
 
     canvas->save();

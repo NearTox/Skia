@@ -45,7 +45,7 @@ static bool sort_increasing_Y(SkPoint dst[], const SkPoint src[], int count) noe
   }
 }
 
-bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) noexcept {
+bool SkEdgeClipper::clipLine(SkPoint p0, SkPoint p1, const SkRect& clip) {
   fCurrPoint = fPoints;
   fCurrVerb = fVerbs;
 
@@ -557,14 +557,13 @@ void sk_assert_monotonic_x(const SkPoint pts[], int count) {
 #include "src/core/SkPathPriv.h"
 
 void SkEdgeClipper::ClipPath(
-    const SkPath& path, const SkRect& clip, bool canCullToTheRight,
+    const SkPathView& view, const SkRect& clip, bool canCullToTheRight,
     void (*consume)(SkEdgeClipper*, bool newCtr, void* ctx), void* ctx) {
-  SkASSERT(path.isFinite());
-
+  SkASSERT(view.isFinite());
   SkAutoConicToQuads quadder;
   constexpr SkScalar conicTol = SK_Scalar1 / 4;
 
-  SkPathEdgeIter iter(path);
+  SkPathEdgeIter iter(view);
   SkEdgeClipper clipper(canCullToTheRight);
 
   while (auto e = iter.next()) {

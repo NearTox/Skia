@@ -26,11 +26,13 @@ class Context;
  */
 class Type : public Symbol {
  public:
+  static constexpr Kind kSymbolKind = kType_Kind;
+
   struct Field {
     Field(Modifiers modifiers, StringFragment name, const Type* type) noexcept
         : fModifiers(modifiers), fName(name), fType(std::move(type)) {}
 
-    const String description() const { return fType->displayName() + " " + fName + ";"; }
+    String description() const { return fType->displayName() + " " + fName + ";"; }
 
     Modifiers fModifiers;
     StringFragment fName;
@@ -62,7 +64,7 @@ class Type : public Symbol {
   // Create an "other" (special) type with the given name. These types cannot be directly
   // referenced from user code.
   Type(const char* name)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kOther_Kind),
         fNumberKind(kNonnumeric_NumberKind) {
@@ -72,7 +74,7 @@ class Type : public Symbol {
 
   // Create an "other" (special) type that supports field access.
   Type(const char* name, std::vector<Field> fields)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kOther_Kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -83,7 +85,7 @@ class Type : public Symbol {
 
   // Create a simple type.
   Type(String name, Kind kind) noexcept
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kind),
         fNumberKind(kNonnumeric_NumberKind) {
@@ -93,7 +95,7 @@ class Type : public Symbol {
 
   // Create a generic type which maps to the listed types.
   Type(const char* name, std::vector<const Type*> types)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kGeneric_Kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -104,7 +106,7 @@ class Type : public Symbol {
 
   // Create a struct type with the given fields.
   Type(int offset, String name, std::vector<Field> fields) noexcept
-      : INHERITED(offset, kType_Kind, StringFragment()),
+      : INHERITED(offset, kSymbolKind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kStruct_Kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -115,7 +117,7 @@ class Type : public Symbol {
 
   // Create a scalar type.
   Type(const char* name, NumberKind numberKind, int priority, bool highPrecision = false)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kScalar_Kind),
         fNumberKind(numberKind),
@@ -131,7 +133,7 @@ class Type : public Symbol {
   Type(
       const char* name, NumberKind numberKind, int priority,
       std::vector<const Type*> coercibleTypes)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kScalar_Kind),
         fNumberKind(numberKind),
@@ -145,7 +147,7 @@ class Type : public Symbol {
 
   // Create a nullable type.
   Type(String name, Kind kind, const Type& componentType) noexcept
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -163,7 +165,7 @@ class Type : public Symbol {
 
   // Create a vector or array type.
   Type(String name, Kind kind, const Type& componentType, int columns) noexcept
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(std::move(name)),
         fTypeKind(kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -177,7 +179,7 @@ class Type : public Symbol {
 
   // Create a matrix type.
   Type(const char* name, const Type& componentType, int columns, int rows)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kMatrix_Kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -193,7 +195,7 @@ class Type : public Symbol {
   Type(
       const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayed, bool isMultisampled,
       bool isSampled)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kTexture_Kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -208,7 +210,7 @@ class Type : public Symbol {
 
   // Create a sampler type.
   Type(const char* name, const Type& textureType)
-      : INHERITED(-1, kType_Kind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, StringFragment()),
         fNameString(name),
         fTypeKind(kSampler_Kind),
         fNumberKind(kNonnumeric_NumberKind),
@@ -224,7 +226,7 @@ class Type : public Symbol {
 
   const String& name() const noexcept { return fNameString; }
 
-  const String displayName() const {
+  String displayName() const {
     if (fNameString == "$floatLiteral") {
       return "float";
     }
@@ -377,7 +379,7 @@ class Type : public Symbol {
     return fIsSampled;
   }
 
-  bool highPrecision() const {
+  bool highPrecision() const noexcept {
     if (fComponentType) {
       return fComponentType->highPrecision();
     }

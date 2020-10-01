@@ -33,7 +33,7 @@
 #include "src/utils/SkPatchUtils.h"
 
 SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps) noexcept
-    : SkMatrixProvider(/* fLocalToDevice = */ SkMatrix::I()),
+    : SkMatrixProvider(/* localToDevice = */ SkMatrix::I()),
       fInfo(info),
       fSurfaceProps(surfaceProps) {
   fDeviceToGlobal.reset();
@@ -42,7 +42,7 @@ SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfac
 
 void SkBaseDevice::setDeviceCoordinateSystem(
     const SkMatrix& deviceToGlobal, const SkM44& localToDevice, int bufferOriginX,
-    int bufferOriginY) noexcept {
+    int bufferOriginY) {
   fDeviceToGlobal = deviceToGlobal;
   fDeviceToGlobal.normalizePerspective();
   SkAssertResult(deviceToGlobal.invert(&fGlobalToDevice));
@@ -196,7 +196,7 @@ void SkBaseDevice::drawImageLattice(
   }
 }
 
-static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) noexcept {
+static SkPoint* quad_to_tris(SkPoint tris[6], const SkPoint quad[4]) {
   tris[0] = quad[0];
   tris[1] = quad[1];
   tris[2] = quad[2];

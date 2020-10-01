@@ -25,16 +25,16 @@ class GrGLBuffer : public GrGpuBuffer {
     SkASSERT(0 == fBufferID);
   }
 
-  GrGLuint bufferID() const { return fBufferID; }
+  GrGLuint bufferID() const noexcept { return fBufferID; }
 
   /**
    * Returns the actual size of the underlying GL buffer object. In certain cases we may make this
    * smaller than the size reported by GrGpuBuffer.
    */
-  size_t glSizeInBytes() const { return fGLSizeInBytes; }
+  size_t glSizeInBytes() const noexcept { return fGLSizeInBytes; }
 
-  void setHasAttachedToTexture() { fHasAttachedToTexture = true; }
-  bool hasAttachedToTexture() const { return fHasAttachedToTexture; }
+  void setHasAttachedToTexture() noexcept { fHasAttachedToTexture = true; }
+  bool hasAttachedToTexture() const noexcept { return fHasAttachedToTexture; }
 
  protected:
   GrGLBuffer(

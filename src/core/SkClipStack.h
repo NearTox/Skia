@@ -102,7 +102,7 @@ class SkClipStack {
     //!< Call if getDeviceSpaceType() is kPath to get the path.
     const SkPath& getDeviceSpacePath() const noexcept {
       SkASSERT(DeviceSpaceType::kPath == fDeviceSpaceType);
-      return *fDeviceSpacePath.get();
+      return *fDeviceSpacePath;
     }
 
     //!< Call if getDeviceSpaceType() is kRRect to get the round-rect.
@@ -166,15 +166,14 @@ class SkClipStack {
      * Conservatively checks whether the clip shape contains the rect/rrect. (Whether the shape
      * is inverse filled is not considered.)
      */
-    bool contains(const SkRect& rect) const noexcept;
-    bool contains(const SkRRect& rrect) const noexcept;
+    bool contains(const SkRect& rect) const;
+    bool contains(const SkRRect& rrect) const;
 
     /**
      * Is the clip shape inverse filled.
      */
     bool isInverseFilled() const noexcept {
-      return DeviceSpaceType::kPath == fDeviceSpaceType &&
-             fDeviceSpacePath.get()->isInverseFillType();
+      return DeviceSpaceType::kPath == fDeviceSpaceType && fDeviceSpacePath->isInverseFillType();
     }
 
 #ifdef SK_DEBUG
@@ -275,7 +274,7 @@ class SkClipStack {
     bool rectRectIntersectAllowed(const SkRect& newR, bool newAA) const noexcept;
     /** Determines possible finite bounds for the Element given the previous element of the
         stack */
-    void updateBoundAndGenID(const Element* prior) noexcept;
+    void updateBoundAndGenID(const Element* prior);
     // The different combination of fill & inverse fill when combining bounding boxes
     enum FillCombo {
       kPrev_Cur_FillCombo,
@@ -284,11 +283,11 @@ class SkClipStack {
       kInvPrev_InvCur_FillCombo
     };
     // per-set operation functions used by updateBoundAndGenID().
-    inline void combineBoundsDiff(FillCombo combination, const SkRect& prevFinite) noexcept;
-    inline void combineBoundsXOR(int combination, const SkRect& prevFinite) noexcept;
-    inline void combineBoundsUnion(int combination, const SkRect& prevFinite) noexcept;
-    inline void combineBoundsIntersection(int combination, const SkRect& prevFinite) noexcept;
-    inline void combineBoundsRevDiff(int combination, const SkRect& prevFinite) noexcept;
+    inline void combineBoundsDiff(FillCombo combination, const SkRect& prevFinite);
+    inline void combineBoundsXOR(int combination, const SkRect& prevFinite);
+    inline void combineBoundsUnion(int combination, const SkRect& prevFinite);
+    inline void combineBoundsIntersection(int combination, const SkRect& prevFinite);
+    inline void combineBoundsRevDiff(int combination, const SkRect& prevFinite);
   };
 
   SkClipStack() noexcept;
@@ -335,11 +334,10 @@ class SkClipStack {
    * that is true if 'canvFiniteBound' resulted from an intersection of rects.
    */
   void getBounds(
-      SkRect* canvFiniteBound, BoundsType* boundType,
-      bool* isIntersectionOfRects = nullptr) const noexcept;
+      SkRect* canvFiniteBound, BoundsType* boundType, bool* isIntersectionOfRects = nullptr) const;
 
-  SkRect bounds(const SkIRect& deviceBounds) const noexcept;
-  bool isEmpty(const SkIRect& deviceBounds) const noexcept;
+  SkRect bounds(const SkIRect& deviceBounds) const;
+  bool isEmpty(const SkIRect& deviceBounds) const;
 
   /**
    * Returns true if the input (r)rect in device space is entirely contained
@@ -436,7 +434,7 @@ class SkClipStack {
      * Moves the iterator to the topmost element with the specified RegionOp and returns that
      * element. If no clip element with that op is found, the first element is returned.
      */
-    const Element* skipToTopmost(SkClipOp op) noexcept;
+    const Element* skipToTopmost(SkClipOp op);
 
     /**
      * Restarts the iterator on a clip stack.
@@ -491,7 +489,7 @@ class SkClipStack {
    */
   void getConservativeBounds(
       int offsetX, int offsetY, int maxWidth, int maxHeight, SkRect* devBounds,
-      bool* isIntersectionOfRects = nullptr) const noexcept;
+      bool* isIntersectionOfRects = nullptr) const;
 
  private:
   friend class Iter;

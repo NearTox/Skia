@@ -29,7 +29,7 @@
  */
 class SkRTree : public SkBBoxHierarchy {
  public:
-  SkRTree() noexcept;
+  SkRTree();
 
   void insert(const SkRect[], int N) override;
   void search(const SkRect& query, std::vector<int>* results) const override;

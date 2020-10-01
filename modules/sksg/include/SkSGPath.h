@@ -30,9 +30,9 @@ class Path : public GeometryNode {
   // Temporarily inlined for SkPathFillType staging
   // SG_MAPPED_ATTRIBUTE(FillType, SkPathFillType, fPath)
 
-  SkPathFillType getFillType() const noexcept { return fPath.getFillType(); }
+  SkPathFillType getFillType() const { return fPath.getFillType(); }
 
-  void setFillType(SkPathFillType fillType) noexcept {
+  void setFillType(SkPathFillType fillType) {
     if (fillType != fPath.getFillType()) {
       fPath.setFillType(fillType);
       this->invalidate();
@@ -42,13 +42,13 @@ class Path : public GeometryNode {
  protected:
   void onClip(SkCanvas*, bool antiAlias) const override;
   void onDraw(SkCanvas*, const SkPaint&) const override;
-  bool onContains(const SkPoint&) const noexcept override;
+  bool onContains(const SkPoint&) const override;
 
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
-  SkPath onAsPath() const noexcept override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
+  SkPath onAsPath() const override;
 
  private:
-  explicit Path(const SkPath&) noexcept;
+  explicit Path(const SkPath&);
 
   SkPath fPath;
 

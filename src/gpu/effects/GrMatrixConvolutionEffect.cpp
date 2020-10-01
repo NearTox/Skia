@@ -23,8 +23,7 @@ class GrGLMatrixConvolutionEffect : public GrGLSLFragmentProcessor {
  public:
   void emitCode(EmitArgs&) override;
 
-  static inline void GenKey(
-      const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*) noexcept;
+  static inline void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
@@ -119,7 +118,7 @@ GrMatrixConvolutionEffect::KernelWrapper::MakeResult GrMatrixConvolutionEffect::
     }
     bm.setImmutable();
     GrBitmapTextureMaker maker(context, bm, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-    view = maker.view(GrMipMapped::kNo);
+    view = maker.view(GrMipmapped::kNo);
     if (!view) {
       return {};
     }
@@ -131,7 +130,7 @@ GrMatrixConvolutionEffect::KernelWrapper::MakeResult GrMatrixConvolutionEffect::
   return {result, std::move(kernelFP)};
 }
 
-bool GrMatrixConvolutionEffect::KernelWrapper::operator==(const KernelWrapper& k) const {
+bool GrMatrixConvolutionEffect::KernelWrapper::operator==(const KernelWrapper& k) const noexcept {
   if (fSize != k.fSize) {
     return false;
   } else if (this->isSampled()) {
@@ -216,10 +215,8 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
   const char* bias = uniformHandler->getUniformCStr(fBiasUni);
 
   GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
-  SkString coords2D =
-      fragBuilder->ensureCoords2D(args.fTransformedCoords[0].fVaryingPoint, mce.sampleMatrix());
   fragBuilder->codeAppend("half4 sum = half4(0, 0, 0, 0);");
-  fragBuilder->codeAppendf("float2 coord = %s - %s;", coords2D.c_str(), kernelOffset);
+  fragBuilder->codeAppendf("float2 coord = %s - %s;", args.fSampleCoord, kernelOffset);
 
   if (mce.kernelIsSampled()) {
     this->emitKernelBlock(args, {});
@@ -238,7 +235,7 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
         "%s.rgb = clamp(%s.rgb, 0.0, %s.a);", args.fOutputColor, args.fOutputColor,
         args.fOutputColor);
   } else {
-    auto sample = this->invokeChild(0, args, coords2D.c_str());
+    auto sample = this->invokeChild(0, args);
     fragBuilder->codeAppendf("half4 c = %s;", sample.c_str());
     fragBuilder->codeAppendf("%s.a = c.a;", args.fOutputColor);
     fragBuilder->codeAppendf(
@@ -249,7 +246,7 @@ void GrGLMatrixConvolutionEffect::emitCode(EmitArgs& args) {
 }
 
 void GrGLMatrixConvolutionEffect::GenKey(
-    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) noexcept {
+    const GrProcessor& processor, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
   const GrMatrixConvolutionEffect& m = processor.cast<GrMatrixConvolutionEffect>();
   SkASSERT(m.kernelSize().width() <= 0x7FFF && m.kernelSize().height() <= 0xFFFF);
   uint32_t key = m.kernelSize().width() << 16 | m.kernelSize().height();
@@ -260,7 +257,7 @@ void GrGLMatrixConvolutionEffect::GenKey(
 void GrGLMatrixConvolutionEffect::onSetData(
     const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor) {
   const GrMatrixConvolutionEffect& conv = processor.cast<GrMatrixConvolutionEffect>();
-  pdman.set2fv(fKernelOffsetUni, 1, conv.kernelOffset().ptr());
+  pdman.set2f(fKernelOffsetUni, conv.kernelOffset().fX, conv.kernelOffset().fY);
   float totalGain = conv.gain();
   if (conv.kernelIsSampled()) {
     totalGain *= conv.kernelSampleGain();
@@ -286,12 +283,10 @@ GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(
       fGain(SkScalarToFloat(gain)),
       fBias(SkScalarToFloat(bias) / 255.0f),
       fConvolveAlpha(convolveAlpha) {
-  this->registerExplicitlySampledChild(std::move(child));
-  if (kernelFP) {
-    this->registerExplicitlySampledChild(std::move(kernelFP));
-  }
+  this->registerChild(std::move(child), SkSL::SampleUsage::Explicit());
+  this->registerChild(std::move(kernelFP), SkSL::SampleUsage::Explicit());
   fKernelOffset = {static_cast<float>(kernelOffset.x()), static_cast<float>(kernelOffset.y())};
-  this->addCoordTransform(&fCoordTransform);
+  this->setUsesSampleCoordsDirectly();
 }
 
 GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(const GrMatrixConvolutionEffect& that)
@@ -302,7 +297,7 @@ GrMatrixConvolutionEffect::GrMatrixConvolutionEffect(const GrMatrixConvolutionEf
       fKernelOffset(that.fKernelOffset),
       fConvolveAlpha(that.fConvolveAlpha) {
   this->cloneAndRegisterAllChildProcessors(that);
-  this->addCoordTransform(&fCoordTransform);
+  this->setUsesSampleCoordsDirectly();
 }
 
 std::unique_ptr<GrFragmentProcessor> GrMatrixConvolutionEffect::clone() const {
@@ -310,7 +305,7 @@ std::unique_ptr<GrFragmentProcessor> GrMatrixConvolutionEffect::clone() const {
 }
 
 void GrMatrixConvolutionEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLMatrixConvolutionEffect::GenKey(*this, caps, b);
 }
 
@@ -464,7 +459,7 @@ std::unique_ptr<GrFragmentProcessor> GrMatrixConvolutionEffect::TestCreate(GrPro
       d->fRandom->nextULessThan(GrSamplerState::kWrapModeCount));
   bool convolveAlpha = d->fRandom->nextBool();
   return GrMatrixConvolutionEffect::Make(
-      d->context()->priv().asRecordingContext(), std::move(view), bounds, kernelSize, kernel.get(),
-      gain, bias, kernelOffset, wm, convolveAlpha, *d->caps());
+      d->context(), std::move(view), bounds, kernelSize, kernel.get(), gain, bias, kernelOffset, wm,
+      convolveAlpha, *d->caps());
 }
 #endif

@@ -19,12 +19,12 @@ std::unique_ptr<SkDescriptor> SkDescriptor::Alloc(size_t length) {
   return std::unique_ptr<SkDescriptor>(new (allocation) SkDescriptor{});
 }
 
-void SkDescriptor::operator delete(void* p) noexcept { ::operator delete(p); }
+void SkDescriptor::operator delete(void* p) { ::operator delete(p); }
 void* SkDescriptor::operator new(size_t) {
   SK_ABORT("Descriptors are created with placement new.");
 }
 
-void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) noexcept {
+void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) {
   SkASSERT(tag);
   SkASSERT(SkAlign4(length) == length);
   SkASSERT(this->findEntry(tag, nullptr) == nullptr);
@@ -43,7 +43,7 @@ void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) noex
 
 void SkDescriptor::computeChecksum() { fChecksum = SkDescriptor::ComputeChecksum(this); }
 
-const void* SkDescriptor::findEntry(uint32_t tag, uint32_t* length) const noexcept {
+const void* SkDescriptor::findEntry(uint32_t tag, uint32_t* length) const {
   const Entry* entry = (const Entry*)(this + 1);
   int count = fCount;
 
@@ -65,7 +65,7 @@ std::unique_ptr<SkDescriptor> SkDescriptor::copy() const {
   return desc;
 }
 
-bool SkDescriptor::operator==(const SkDescriptor& other) const noexcept {
+bool SkDescriptor::operator==(const SkDescriptor& other) const {
   // the first value we should look at is the checksum, so this loop
   // should terminate early if they descriptors are different.
   // NOTE: if we wrote a sentinel value at the end of each, we could
@@ -85,7 +85,7 @@ uint32_t SkDescriptor::ComputeChecksum(const SkDescriptor* desc) {
   return SkOpts::hash(ptr, len);
 }
 
-bool SkDescriptor::isValid() const noexcept {
+bool SkDescriptor::isValid() const {
   uint32_t count = fCount;
   size_t lengthRemaining = this->fLength;
   if (lengthRemaining < sizeof(SkDescriptor)) {

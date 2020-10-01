@@ -19,8 +19,8 @@ enum {
 
   // These count backwards from 0xFF, so as not to collide with the SFNT
   // defines for names in its 'name' table.
-  kFontAxes = 0xFB,
-  kFontAxes_bad = 0xFC,  // Broken negative axes, remove when MIN_PICTURE_VERSION > 62.
+  kFontVariation = 0xFA,
+  kFontAxes = 0xFB,  // Only picture version 79 and eariler.
   kFontIndex = 0xFD,
   kSentinel = 0xFF,
 };
@@ -53,12 +53,22 @@ static bool write_uint(SkWStream* stream, size_t n, uint32_t id) noexcept {
   return stream->writePackedUInt(id) && stream->writePackedUInt(n);
 }
 
-static size_t SK_WARN_UNUSED_RESULT read_id(SkStream* stream) noexcept {
+static size_t SK_WARN_UNUSED_RESULT read_id(SkStream* stream) {
   size_t i;
   if (!stream->readPackedUInt(&i)) {
     return kInvalid;
   }
   return i;
+}
+
+std::unique_ptr<SkFontData> SkFontDescriptor::maybeAsSkFontData() {
+  if (!fVariationDataIsOldAndBad) {
+    return nullptr;
+  }
+  SkFontArguments args;
+  args.setCollectionIndex(this->getCollectionIndex());
+  args.setVariationDesignPosition({this->getVariation(), this->getVariationCoordinateCount()});
+  return std::make_unique<SkFontData>(this->dupStream(), args);
 }
 
 bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
@@ -69,10 +79,16 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
   result->fStyle = SkFontStyle(
       (styleBits >> 16) & 0xFFFF, (styleBits >> 8) & 0xFF,
       static_cast<SkFontStyle::Slant>(styleBits & 0xFF));
+  bool variationDataIsNewAndGood = false;
+  result->fVariationDataIsOldAndBad = false;
+  SkFixed oldBadVariationValue;
 
-  SkAutoSTMalloc<4, SkFixed> axis;
-  size_t axisCount = 0;
-  size_t index = 0;
+  size_t coordinateCount;
+  using CoordinateCountType = decltype(result->fCoordinateCount);
+
+  size_t index;
+  using CollectionIndexType = decltype(result->fCollectionIndex);
+
   for (size_t id; (id = read_id(stream)) != kSentinel;) {
     switch (id) {
       case kFontFamilyName:
@@ -91,33 +107,64 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
         }
         break;
       case kFontAxes:
-        if (!stream->readPackedUInt(&axisCount)) {
-          return false;
-        }
-        axis.reset(axisCount);
-        for (size_t i = 0; i < axisCount; ++i) {
-          if (!stream->readS32(&axis[i])) {
+        if (variationDataIsNewAndGood) {
+          if (!stream->readPackedUInt(&coordinateCount)) {
             return false;
           }
+          for (size_t i = 0; i < coordinateCount; ++i) {
+            if (!stream->readS32(&oldBadVariationValue)) {
+              return false;
+            }
+          }
+        } else {
+          if (!stream->readPackedUInt(&coordinateCount)) {
+            return false;
+          }
+          if (!SkTFitsIn<CoordinateCountType>(coordinateCount)) {
+            return false;
+          }
+          result->fCoordinateCount = SkTo<CoordinateCountType>(coordinateCount);
+
+          result->fVariation.reset(coordinateCount);
+          for (size_t i = 0; i < coordinateCount; ++i) {
+            if (!stream->readS32(&oldBadVariationValue)) {
+              return false;
+            }
+            result->fVariation[i].axis = 0;
+            result->fVariation[i].value = SkFixedToScalar(oldBadVariationValue);
+          }
+          result->fVariationDataIsOldAndBad = true;
         }
         break;
-      case kFontAxes_bad:
-        if (!stream->readPackedUInt(&axisCount)) {
+      case kFontVariation:
+        if (!stream->readPackedUInt(&coordinateCount)) {
           return false;
         }
-        axis.reset(axisCount);
-        for (size_t i = 0; i < axisCount; ++i) {
-          size_t packedAxis;
-          if (!stream->readPackedUInt(&packedAxis)) {
+        if (!SkTFitsIn<CoordinateCountType>(coordinateCount)) {
+          return false;
+        }
+        result->fCoordinateCount = SkTo<CoordinateCountType>(coordinateCount);
+
+        result->fVariation.reset(coordinateCount);
+        for (size_t i = 0; i < coordinateCount; ++i) {
+          if (!stream->readU32(&result->fVariation[i].axis)) {
             return false;
           }
-          axis[i] = packedAxis;
+          if (!stream->readScalar(&result->fVariation[i].value)) {
+            return false;
+          }
         }
+        variationDataIsNewAndGood = true;
+        result->fVariationDataIsOldAndBad = false;
         break;
       case kFontIndex:
         if (!stream->readPackedUInt(&index)) {
           return false;
         }
+        if (!SkTFitsIn<CollectionIndexType>(index)) {
+          return false;
+        }
+        result->fCollectionIndex = SkTo<CollectionIndexType>(index);
         break;
       default: SkDEBUGFAIL("Unknown id used by a font descriptor"); return false;
     }
@@ -133,8 +180,7 @@ bool SkFontDescriptor::Deserialize(SkStream* stream, SkFontDescriptor* result) {
       SkDEBUGFAIL("Could not read font data");
       return false;
     }
-    result->fFontData =
-        std::make_unique<SkFontData>(SkMemoryStream::Make(std::move(data)), index, axis, axisCount);
+    result->fStream = SkMemoryStream::Make(std::move(data));
   }
   return true;
 }
@@ -146,22 +192,22 @@ void SkFontDescriptor::serialize(SkWStream* stream) const {
   write_string(stream, fFamilyName, kFontFamilyName);
   write_string(stream, fFullName, kFullName);
   write_string(stream, fPostscriptName, kPostscriptName);
-  if (fFontData.get()) {
-    if (fFontData->getIndex()) {
-      write_uint(stream, fFontData->getIndex(), kFontIndex);
-    }
-    if (fFontData->getAxisCount()) {
-      write_uint(stream, fFontData->getAxisCount(), kFontAxes);
-      for (int i = 0; i < fFontData->getAxisCount(); ++i) {
-        stream->write32(fFontData->getAxis()[i]);
-      }
+
+  if (fCollectionIndex) {
+    write_uint(stream, fCollectionIndex, kFontIndex);
+  }
+  if (fCoordinateCount) {
+    write_uint(stream, fCoordinateCount, kFontVariation);
+    for (int i = 0; i < fCoordinateCount; ++i) {
+      stream->write32(fVariation[i].axis);
+      stream->writeScalar(fVariation[i].value);
     }
   }
 
   stream->writePackedUInt(kSentinel);
 
-  if (fFontData.get() && fFontData->hasStream()) {
-    std::unique_ptr<SkStreamAsset> fontStream = fFontData->detachStream();
+  if (fStream) {
+    std::unique_ptr<SkStreamAsset> fontStream = fStream->duplicate();
     size_t length = fontStream->getLength();
     stream->writePackedUInt(length);
     stream->writeStream(fontStream.get(), length);

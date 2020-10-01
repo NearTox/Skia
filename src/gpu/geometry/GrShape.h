@@ -58,7 +58,6 @@ class GrShape {
   static constexpr unsigned kDefaultStart = 0;
   // The fill rule that is used by asPath() for shapes that aren't already a path.
   static constexpr SkPathFillType kDefaultFillType = SkPathFillType::kEvenOdd;
-
   GrShape() noexcept {}
   explicit GrShape(const SkPoint& point) noexcept { this->setPoint(point); }
   explicit GrShape(const SkRect& rect) noexcept { this->setRect(rect); }
@@ -122,7 +121,7 @@ class GrShape {
         fPath.toggleInverseFillType();
       }
     } else {
-      fInverted = static_cast<uint16_t>(inverted);
+      fInverted = inverted;
     }
   }
 
@@ -221,7 +220,7 @@ class GrShape {
     this->setPathWindingParams(kDefaultDir, kDefaultStart);
     fInverted = path.isInverseFillType();
   }
-  void reset() noexcept { this->setType(Type::kEmpty); }
+  void reset() noexcept { this->reset(Type::kEmpty); }
 
   // Flags that enable more aggressive, "destructive" simplifications to the geometry
   enum SimplifyFlags : unsigned {
@@ -255,10 +254,10 @@ class GrShape {
   bool convex(bool simpleFill = true) const;
 
   // The bounding box of the shape.
-  SkRect bounds() const noexcept;
+  SkRect bounds() const;
 
   // The segment masks that describe the shape, were it to be converted to an SkPath
-  uint32_t segmentMask() const noexcept;
+  uint32_t segmentMask() const;
 
   // Convert the shape into a path that describes the same geometry.
   void asPath(SkPath* out, bool simpleFill = true) const;
@@ -266,6 +265,7 @@ class GrShape {
  private:
   void setType(Type type) noexcept {
     if (this->isPath() && type != Type::kPath) {
+      fInverted = fPath.isInverseFillType();
       fPath.~SkPath();
     }
     fType = type;

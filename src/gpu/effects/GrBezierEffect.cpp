@@ -24,8 +24,7 @@ class GrGLConicEffect : public GrGLSLGeometryProcessor {
       const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
   void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
-      const CoordTransformRange& transformRange) override {
+      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc) override {
     const GrConicEffect& ce = primProc.cast<GrConicEffect>();
 
     this->setTransform(pdman, fViewMatrixUniform, ce.viewMatrix(), &fViewMatrix);
@@ -40,7 +39,6 @@ class GrGLConicEffect : public GrGLSLGeometryProcessor {
       pdman.set1f(fCoverageScaleUniform, GrNormalizeByteToFloat(ce.coverageScale()));
       fCoverageScale = ce.coverageScale();
     }
-    this->setTransformDataHelper(pdman, transformRange);
   }
 
  private:
@@ -205,8 +203,7 @@ class GrGLQuadEffect : public GrGLSLGeometryProcessor {
       const GrGeometryProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder*);
 
   void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
-      const CoordTransformRange& transformRange) override {
+      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc) override {
     const GrQuadEffect& qe = primProc.cast<GrQuadEffect>();
 
     this->setTransform(pdman, fViewMatrixUniform, qe.viewMatrix(), &fViewMatrix);
@@ -221,7 +218,6 @@ class GrGLQuadEffect : public GrGLSLGeometryProcessor {
       pdman.set1f(fCoverageScaleUniform, GrNormalizeByteToFloat(qe.coverageScale()));
       fCoverageScale = qe.coverageScale();
     }
-    this->setTransformDataHelper(pdman, transformRange);
   }
 
  private:

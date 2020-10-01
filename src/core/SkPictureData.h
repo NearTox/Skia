@@ -66,11 +66,11 @@ struct SkPictInfo {
 #define SK_PICT_VERTICES_BUFFER_TAG SkSetFourByteTag('v', 'e', 'r', 't')
 #define SK_PICT_IMAGE_BUFFER_TAG SkSetFourByteTag('i', 'm', 'a', 'g')
 
-// Always write this guy last (with no length field afterwards)
+// Always write this last (with no length field afterwards)
 #define SK_PICT_EOF_TAG SkSetFourByteTag('e', 'o', 'f', ' ')
 
 template <typename T>
-T* read_index_base_1_or_null(SkReadBuffer* reader, const SkTArray<sk_sp<T>>& array) noexcept {
+T* read_index_base_1_or_null(SkReadBuffer* reader, const SkTArray<sk_sp<T>>& array) {
   int index = reader->readInt();
   return reader->validate(index > 0 && index <= array.count()) ? array[index - 1].get() : nullptr;
 }
@@ -89,7 +89,7 @@ class SkPictureData {
   const sk_sp<SkData>& opData() const noexcept { return fOpData; }
 
  protected:
-  explicit SkPictureData(const SkPictInfo& info);
+  explicit SkPictureData(const SkPictInfo& info) noexcept;
 
   // Does not affect ownership of SkStream.
   bool parseStream(SkStream*, const SkDeserialProcs&, SkTypefacePlayback*);
@@ -107,27 +107,26 @@ class SkPictureData {
     return reader->validate(index > 0 && index <= fPaths.count()) ? fPaths[index - 1] : fEmptyPath;
   }
 
-  const SkPicture* getPicture(SkReadBuffer* reader) const noexcept {
+  const SkPicture* getPicture(SkReadBuffer* reader) const {
     return read_index_base_1_or_null(reader, fPictures);
   }
 
-  SkDrawable* getDrawable(SkReadBuffer* reader) const noexcept {
+  SkDrawable* getDrawable(SkReadBuffer* reader) const {
     return read_index_base_1_or_null(reader, fDrawables);
   }
 
-  const SkPaint* getPaint(SkReadBuffer* reader) const noexcept {
-    int index = reader->readInt();
-    if (index == 0) {
-      return nullptr;  // recorder wrote a zero for no paint (likely drawimage)
-    }
-    return reader->validate(index > 0 && index <= fPaints.count()) ? &fPaints[index - 1] : nullptr;
-  }
+  // Return a paint if one was used for this op, or nullptr if none was used.
+  const SkPaint* optionalPaint(SkReadBuffer* reader) const;
 
-  const SkTextBlob* getTextBlob(SkReadBuffer* reader) const noexcept {
+  // Return the paint used for this op, invalidating the SkReadBuffer if there appears to be none.
+  // The returned paint is always safe to use.
+  const SkPaint& requiredPaint(SkReadBuffer* reader) const;
+
+  const SkTextBlob* getTextBlob(SkReadBuffer* reader) const {
     return read_index_base_1_or_null(reader, fTextBlobs);
   }
 
-  const SkVertices* getVertices(SkReadBuffer* reader) const noexcept {
+  const SkVertices* getVertices(SkReadBuffer* reader) const {
     return read_index_base_1_or_null(reader, fVertices);
   }
 
@@ -161,7 +160,7 @@ class SkPictureData {
   static void WriteFactories(SkWStream* stream, const SkFactorySet& rec);
   static void WriteTypefaces(SkWStream* stream, const SkRefCntSet& rec, const SkSerialProcs&);
 
-  void initForPlayback() const;
+  void initForPlayback() const noexcept;
 };
 
 #endif

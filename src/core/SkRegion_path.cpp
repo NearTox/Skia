@@ -357,7 +357,7 @@ bool SkRegion::setPath(const SkPath& path, const SkRegion& clip) {
     return this->setEmpty();
   }
 
-  SkScan::FillPath(path, clip, &builder);
+  SkScan::FillPath(path.view(), clip, &builder);
   builder.done();
 
   int count = builder.computeRunCount();
@@ -401,7 +401,7 @@ struct Edge {
     fY0 = (SkRegionPriv::RunType)(y0);
     fY1 = (SkRegionPriv::RunType)(y1);
     fFlags = 0;
-    SkDEBUGCODE(fNext = nullptr;)
+    SkDEBUGCODE(fNext = nullptr);
   }
 
   int top() const { return std::min(fY0, fY1); }
@@ -515,7 +515,7 @@ bool SkRegion::getBoundaryPath(SkPath* path) const {
   int count = edges.count();
   Edge* start = edges.begin();
   Edge* stop = start + count;
-  SkTQSort<Edge>(start, stop - 1, EdgeLT());
+  SkTQSort<Edge>(start, stop, EdgeLT());
 
   Edge* e;
   for (e = start; e != stop; e++) {

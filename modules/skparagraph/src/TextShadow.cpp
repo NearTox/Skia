@@ -5,11 +5,11 @@
 namespace skia {
 namespace textlayout {
 
-TextShadow::TextShadow() = default;
-TextShadow::TextShadow(SkColor color, SkPoint offset, double blurRadius)
+TextShadow::TextShadow() noexcept = default;
+TextShadow::TextShadow(SkColor color, SkPoint offset, double blurRadius) noexcept
     : fColor(color), fOffset(offset), fBlurRadius(blurRadius) {}
 
-bool TextShadow::operator==(const TextShadow& other) const {
+bool TextShadow::operator==(const TextShadow& other) const noexcept {
   if (fColor != other.fColor) return false;
   if (fOffset != other.fOffset) return false;
   if (fBlurRadius != other.fBlurRadius) return false;
@@ -17,9 +17,9 @@ bool TextShadow::operator==(const TextShadow& other) const {
   return true;
 }
 
-bool TextShadow::operator!=(const TextShadow& other) const { return !(*this == other); }
+bool TextShadow::operator!=(const TextShadow& other) const noexcept { return !(*this == other); }
 
-bool TextShadow::hasShadow() const {
+bool TextShadow::hasShadow() const noexcept {
   if (!fOffset.isZero()) return true;
   if (fBlurRadius != 0.0) return true;
 

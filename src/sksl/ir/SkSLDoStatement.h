@@ -17,8 +17,12 @@ namespace SkSL {
  * A 'do' statement.
  */
 struct DoStatement : public Statement {
+  static constexpr Kind kStatementKind = kDo_Kind;
+
   DoStatement(int offset, std::unique_ptr<Statement> statement, std::unique_ptr<Expression> test)
-      : INHERITED(offset, kDo_Kind), fStatement(std::move(statement)), fTest(std::move(test)) {}
+      : INHERITED(offset, kStatementKind),
+        fStatement(std::move(statement)),
+        fTest(std::move(test)) {}
 
   int nodeCount() const noexcept override {
     return 1 + fStatement->nodeCount() + fTest->nodeCount();

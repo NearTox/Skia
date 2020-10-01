@@ -112,29 +112,29 @@ class GrGLCaps : public GrCaps {
   bool isFormatSRGB(const GrBackendFormat&) const noexcept override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
-  bool isFormatTexturable(GrGLFormat) const noexcept;
+  bool isFormatTexturable(GrGLFormat) const;
 
   bool isFormatAsColorTypeRenderable(
-      GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const noexcept override;
-  bool isFormatRenderable(const GrBackendFormat& format, int sampleCount) const noexcept override;
-  bool isFormatRenderable(GrGLFormat format, int sampleCount) const noexcept {
+      GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const override;
+  bool isFormatRenderable(const GrBackendFormat& format, int sampleCount) const override;
+  bool isFormatRenderable(GrGLFormat format, int sampleCount) const {
     return sampleCount <= this->maxRenderTargetSampleCount(format);
   }
 
   int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat& format) const override {
     return this->getRenderTargetSampleCount(requestedCount, format.asGLFormat());
   }
-  int getRenderTargetSampleCount(int requestedCount, GrGLFormat) const noexcept;
+  int getRenderTargetSampleCount(int requestedCount, GrGLFormat) const;
 
-  int maxRenderTargetSampleCount(const GrBackendFormat& format) const noexcept override {
+  int maxRenderTargetSampleCount(const GrBackendFormat& format) const override {
     return this->maxRenderTargetSampleCount(format.asGLFormat());
   }
-  int maxRenderTargetSampleCount(GrGLFormat) const noexcept;
+  int maxRenderTargetSampleCount(GrGLFormat) const;
 
   size_t bytesPerPixel(GrGLFormat) const noexcept;
-  size_t bytesPerPixel(const GrBackendFormat&) const noexcept override;
+  size_t bytesPerPixel(const GrBackendFormat&) const override;
 
-  bool isFormatCopyable(const GrBackendFormat&) const noexcept override;
+  bool isFormatCopyable(const GrBackendFormat&) const override;
 
   bool canFormatBeFBOColorAttachment(GrGLFormat) const noexcept;
 
@@ -156,7 +156,7 @@ class GrGLCaps : public GrCaps {
    * uninitialized texture. See getTexImageOrStorageInternalFormat() for the internal format.
    */
   void getTexImageExternalFormatAndType(
-      GrGLFormat surfaceFormat, GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
+      GrGLFormat surfaceFormat, GrGLenum* externalFormat, GrGLenum* externalType) const;
 
   /**
    * Given a src data color type and a color type interpretation for a texture of a given format
@@ -165,7 +165,7 @@ class GrGLCaps : public GrCaps {
    */
   void getTexSubImageExternalFormatAndType(
       GrGLFormat surfaceFormat, GrColorType surfaceColorType, GrColorType memoryColorType,
-      GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
+      GrGLenum* externalFormat, GrGLenum* externalType) const;
 
   /**
    * Gets the external format, type, and bytes per pixel to use when uploading solid color data
@@ -173,11 +173,11 @@ class GrGLCaps : public GrCaps {
    */
   void getTexSubImageDefaultFormatTypeAndColorType(
       GrGLFormat format, GrGLenum* externalFormat, GrGLenum* externalType,
-      GrColorType* colorType) const noexcept;
+      GrColorType* colorType) const;
 
   void getReadPixelsFormat(
       GrGLFormat surfaceFormat, GrColorType surfaceColorType, GrColorType memoryColorType,
-      GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
+      GrGLenum* externalFormat, GrGLenum* externalType) const;
 
   /**
    * Gets an array of legal stencil formats. These formats are not guaranteed
@@ -192,7 +192,7 @@ class GrGLCaps : public GrCaps {
    * Would it be useful to check GL_IMPLEMENTATION_READ_FORMAT and _TYPE for this format to
    * detect more efficient glReadPixels arguments?
    */
-  bool shouldQueryImplementationReadSupport(GrGLFormat format) const noexcept;
+  bool shouldQueryImplementationReadSupport(GrGLFormat format) const;
 
   /**
    * Let caps know the result of GL_IMPLEMENTATION_READ_FORMAT and _TYPE query for a format
@@ -238,7 +238,7 @@ class GrGLCaps : public GrCaps {
    * If index is >= 0 this records an index into stencilFormats() as the best stencil format for
    * the format. If < 0 it records that the format has no supported stencil format index.
    */
-  void setStencilFormatIndexForFormat(GrGLFormat, int index) noexcept;
+  void setStencilFormatIndexForFormat(GrGLFormat, int index);
 
   /**
    * Reports the type of MSAA FBO support.
@@ -299,6 +299,9 @@ class GrGLCaps : public GrCaps {
   /// Is there support for ES2 compatability?
   bool ES2CompatibilitySupport() const noexcept { return fES2CompatibilitySupport; }
 
+  /// Is there support for GL_ANGLE_base_vertex_base_instance?
+  bool ANGLEMultiDrawSupport() const noexcept { return fANGLEMultiDrawSupport; }
+
   /// Is there support for glMultiDraw*Indirect? Note that the baseInstance fields of indirect
   /// draw commands cannot be used unless we have base instance support.
   bool multiDrawIndirectSupport() const noexcept { return fMultiDrawIndirectSupport; }
@@ -330,7 +333,7 @@ class GrGLCaps : public GrCaps {
   /// Are textures with GL_TEXTURE_RECTANGLE type supported.
   bool rectangleTextureSupport() const noexcept { return fRectangleTextureSupport; }
 
-  bool mipMapLevelAndLodControlSupport() const noexcept { return fMipMapLevelAndLodControlSupport; }
+  bool mipmapLevelAndLodControlSupport() const noexcept { return fMipmapLevelAndLodControlSupport; }
 
   bool doManualMipmapping() const noexcept { return fDoManualMipmapping; }
 
@@ -388,8 +391,8 @@ class GrGLCaps : public GrCaps {
   bool neverDisableColorWrites() const noexcept { return fNeverDisableColorWrites; }
 
   // Texture parameters must be used to enable MIP mapping even when a sampler object is used.
-  bool mustSetTexParameterMinFilterToEnableMipMapping() const noexcept {
-    return fMustSetTexParameterMinFilterToEnableMipMapping;
+  bool mustSetAnyTexParameterToEnableMipmapping() const noexcept {
+    return fMustSetAnyTexParameterToEnableMipmapping;
   }
 
   // Returns the observed maximum number of instances the driver can handle in a single draw call
@@ -403,13 +406,13 @@ class GrGLCaps : public GrCaps {
   bool canCopyTexSubImage(
       GrGLFormat dstFormat, bool dstHasMSAARenderBuffer, const GrTextureType* dstTypeIfTexture,
       GrGLFormat srcFormat, bool srcHasMSAARenderBuffer,
-      const GrTextureType* srcTypeIfTexture) const noexcept;
+      const GrTextureType* srcTypeIfTexture) const;
   bool canCopyAsBlit(
       GrGLFormat dstFormat, int dstSampleCnt, const GrTextureType* dstTypeIfTexture,
       GrGLFormat srcFormat, int srcSampleCnt, const GrTextureType* srcTypeIfTexture,
       const SkRect& srcBounds, bool srcBoundsExact, const SkIRect& srcRect,
-      const SkIPoint& dstPoint) const noexcept;
-  bool canCopyAsDraw(GrGLFormat dstFormat, bool srcIsTexturable) const noexcept;
+      const SkIPoint& dstPoint) const;
+  bool canCopyAsDraw(GrGLFormat dstFormat, bool srcIsTexturable) const;
 
   DstCopyRestrictions getDstCopyRestrictions(
       const GrRenderTargetProxy* src, GrColorType) const override;
@@ -433,9 +436,9 @@ class GrGLCaps : public GrCaps {
 
   GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
-  uint64_t computeFormatKey(const GrBackendFormat&) const override;
+  uint64_t computeFormatKey(const GrBackendFormat&) const noexcept override;
 
-  GrProgramDesc makeDesc(const GrRenderTarget*, const GrProgramInfo&) const override;
+  GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const override;
 
 #if GR_TEST_UTILS
   GrGLStandard standard() const { return fStandard; }
@@ -450,7 +453,7 @@ class GrGLCaps : public GrCaps {
   };
   void getExternalFormat(
       GrGLFormat surfaceFormat, GrColorType surfaceColorType, GrColorType memoryColorType,
-      ExternalFormatUsage usage, GrGLenum* externalFormat, GrGLenum* externalType) const noexcept;
+      ExternalFormatUsage usage, GrGLenum* externalFormat, GrGLenum* externalType) const;
 
   void init(const GrContextOptions&, const GrGLContextInfo&, const GrGLInterface*);
   void initGLSL(const GrGLContextInfo&, const GrGLInterface*);
@@ -471,7 +474,7 @@ class GrGLCaps : public GrCaps {
       const GrGLContextInfo&, const GrContextOptions&, const GrGLInterface*, GrShaderCaps*,
       FormatWorkarounds*);
 
-  void onApplyOptionsOverrides(const GrContextOptions& options) noexcept override;
+  void onApplyOptionsOverrides(const GrContextOptions& options) override;
 
   bool onIsWindowRectanglesSupportedForRT(const GrBackendRenderTarget&) const override;
 
@@ -482,7 +485,7 @@ class GrGLCaps : public GrCaps {
   // This must be called after initFSAASupport().
   void initFormatTable(const GrGLContextInfo&, const GrGLInterface*, const FormatWorkarounds&);
   void setupSampleCounts(const GrGLContextInfo&, const GrGLInterface*);
-  bool onSurfaceSupportsWritePixels(const GrSurface*) const noexcept override;
+  bool onSurfaceSupportsWritePixels(const GrSurface*) const override;
   bool onCanCopySurface(
       const GrSurfaceProxy* dst, const GrSurfaceProxy* src, const SkIRect& srcRect,
       const SkIPoint& dstPoint) const override;
@@ -513,6 +516,7 @@ class GrGLCaps : public GrCaps {
   bool fDebugSupport : 1;
   bool fES2CompatibilitySupport : 1;
   bool fDrawRangeElementsSupport : 1;
+  bool fANGLEMultiDrawSupport : 1;
   bool fMultiDrawIndirectSupport : 1;
   bool fBaseVertexBaseInstanceSupport : 1;
   bool fUseNonVBOVertexAndIndexDynamicData : 1;
@@ -522,7 +526,7 @@ class GrGLCaps : public GrCaps {
   bool fPartialFBOReadIsSlow : 1;
   bool fBindUniformLocationSupport : 1;
   bool fRectangleTextureSupport : 1;
-  bool fMipMapLevelAndLodControlSupport : 1;
+  bool fMipmapLevelAndLodControlSupport : 1;
   bool fRGBAToBGRAReadbackConversionsAreSlow : 1;
   bool fUseBufferDataNullHint : 1;
   bool fClearTextureSupport : 1;
@@ -544,7 +548,7 @@ class GrGLCaps : public GrCaps {
   bool fDetachStencilFromMSAABuffersBeforeReadPixels : 1;
   bool fDontSetBaseOrMaxLevelForExternalTextures : 1;
   bool fNeverDisableColorWrites : 1;
-  bool fMustSetTexParameterMinFilterToEnableMipMapping : 1;
+  bool fMustSetAnyTexParameterToEnableMipmapping : 1;
   int fMaxInstancesPerDrawWithoutCrashing = 0;
 
   uint32_t fBlitFramebufferFlags = kNoSupport_BlitFramebufferFlag;
@@ -723,7 +727,7 @@ class GrGLCaps : public GrCaps {
   }
 
   GrGLFormat fColorTypeToFormatTable[kGrColorTypeCnt];
-  void setColorTypeFormat(GrColorType, GrGLFormat) noexcept;
+  void setColorTypeFormat(GrColorType, GrGLFormat);
 
   typedef GrCaps INHERITED;
 };

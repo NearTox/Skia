@@ -209,7 +209,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_setRects
   */
-  bool setRects(const SkIRect rects[], int count) noexcept;
+  bool setRects(const SkIRect rects[], int count);
 
   /** Constructs a copy of an existing region.
       Makes two regions identical by value. Internally, region and
@@ -586,7 +586,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_writeToMemory
   */
-  size_t writeToMemory(void* buffer) const noexcept;
+  size_t writeToMemory(void* buffer) const;
 
   /** Constructs SkRegion from buffer of size length. Returns bytes read.
       Returned value will be multiple of four or zero if length was too small.
@@ -597,7 +597,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_readFromMemory
   */
-  size_t readFromMemory(const void* buffer, size_t length) noexcept;
+  size_t readFromMemory(const void* buffer, size_t length);
 
  private:
   static constexpr int kOpCount = kReplace_Op + 1;
@@ -636,7 +636,7 @@ class SK_API SkRegion {
   // (inside ComputeRunBounds).
   bool setRuns(RunType runs[], int count) noexcept;
 
-  int count_runtype_values(int* itop, int* ibot) const noexcept;
+  int count_runtype_values(int* itop, int* ibot) const;
 
   bool isValid() const noexcept;
 

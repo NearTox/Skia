@@ -147,7 +147,7 @@ class SkWGLPbufferContext : public SkRefCnt {
   static sk_sp<SkWGLPbufferContext> Create(
       HDC parentDC, SkWGLContextRequest contextType, HGLRC shareContext);
 
-  virtual ~SkWGLPbufferContext();
+  ~SkWGLPbufferContext() override;
 
   HDC getDC() const { return fDC; }
   HGLRC getGLRC() const { return fGLRC; }

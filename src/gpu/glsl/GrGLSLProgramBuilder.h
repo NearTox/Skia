@@ -12,7 +12,6 @@
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTarget.h"
-#include "src/gpu/GrRenderTargetPriv.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
@@ -37,32 +36,26 @@ class GrGLSLProgramBuilder {
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
 
-  GrSurfaceOrigin origin() const noexcept { return fProgramInfo.origin(); }
-  const GrPipeline& pipeline() const noexcept { return fProgramInfo.pipeline(); }
-  const GrPrimitiveProcessor& primitiveProcessor() const noexcept {
-    return fProgramInfo.primProc();
-  }
-  GrProcessor::CustomFeatures processorFeatures() const noexcept {
-    return fProgramInfo.requestedFeatures();
-  }
-  bool snapVerticesToPixelCenters() const noexcept {
+  GrSurfaceOrigin origin() const { return fProgramInfo.origin(); }
+  const GrPipeline& pipeline() const { return fProgramInfo.pipeline(); }
+  const GrPrimitiveProcessor& primitiveProcessor() const { return fProgramInfo.primProc(); }
+  GrProcessor::CustomFeatures processorFeatures() const { return fProgramInfo.requestedFeatures(); }
+  bool snapVerticesToPixelCenters() const {
     return fProgramInfo.pipeline().snapVerticesToPixelCenters();
   }
-  bool hasPointSize() const noexcept {
-    return fProgramInfo.primitiveType() == GrPrimitiveType::kPoints;
-  }
+  bool hasPointSize() const { return fProgramInfo.primitiveType() == GrPrimitiveType::kPoints; }
 
   // TODO: stop passing in the renderTarget for just the sampleLocations
-  int effectiveSampleCnt() const {
+  int effectiveSampleCnt() {
     SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & fProgramInfo.requestedFeatures());
-    return fRenderTarget->renderTargetPriv().getSampleLocations().count();
+    return fRenderTarget->getSampleLocations().count();
   }
-  const SkTArray<SkPoint>& getSampleLocations() const {
+  const SkTArray<SkPoint>& getSampleLocations() {
     SkASSERT(GrProcessor::CustomFeatures::kSampleLocations & fProgramInfo.requestedFeatures());
-    return fRenderTarget->renderTargetPriv().getSampleLocations();
+    return fRenderTarget->getSampleLocations();
   }
 
-  const GrProgramDesc& desc() const noexcept { return fDesc; }
+  const GrProgramDesc& desc() const { return fDesc; }
 
   void appendUniformDecls(GrShaderFlags visibility, SkString*) const;
 
@@ -108,7 +101,7 @@ class GrGLSLProgramBuilder {
 
   int fStageIndex;
 
-  const GrRenderTarget* fRenderTarget;  // TODO: remove this
+  GrRenderTarget* fRenderTarget;  // TODO: remove this
   const GrProgramDesc& fDesc;
   const GrProgramInfo& fProgramInfo;
 
@@ -117,7 +110,6 @@ class GrGLSLProgramBuilder {
   std::unique_ptr<GrGLSLPrimitiveProcessor> fGeometryProcessor;
   std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
   std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
-  int fFragmentProcessorCnt;
 
  protected:
   explicit GrGLSLProgramBuilder(GrRenderTarget*, const GrProgramDesc&, const GrProgramInfo&);
@@ -134,15 +126,15 @@ class GrGLSLProgramBuilder {
   // reset is called by program creator between each processor's emit code.  It increments the
   // stage offset for variable name mangling, and also ensures verfication variables in the
   // fragment shader are cleared.
-  void reset() noexcept {
+  void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
   }
-  void addStage() noexcept { fStageIndex++; }
+  void addStage() { fStageIndex++; }
 
   class AutoStageAdvance {
    public:
-    AutoStageAdvance(GrGLSLProgramBuilder* pb) noexcept : fPB(pb) {
+    AutoStageAdvance(GrGLSLProgramBuilder* pb) : fPB(pb) {
       fPB->reset();
       // Each output to the fragment processor gets its own code section
       fPB->fFS.nextStage();
@@ -158,9 +150,9 @@ class GrGLSLProgramBuilder {
 
   void emitAndInstallPrimProc(SkString* outputColor, SkString* outputCoverage);
   void emitAndInstallFragProcs(SkString* colorInOut, SkString* coverageInOut);
-  SkString emitAndInstallFragProc(
-      const GrFragmentProcessor&, int index, int transformedCoordVarsIdx, const SkString& input,
-      SkString output, SkTArray<std::unique_ptr<GrGLSLFragmentProcessor>>*);
+  SkString emitFragProc(
+      const GrFragmentProcessor&, GrGLSLFragmentProcessor&, int transformedCoordVarsIdx,
+      const SkString& input, SkString output);
   void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
   SamplerHandle emitSampler(
       const GrBackendFormat&, GrSamplerState, const GrSwizzle&, const char* name);
@@ -174,7 +166,7 @@ class GrGLSLProgramBuilder {
 
   // These are used to check that we don't excede the allowable number of resources in a shader.
   int fNumFragmentSamplers;
-  SkSTArray<4, GrGLSLPrimitiveProcessor::TransformVar> fTransformedCoordVars;
+  SkSTArray<4, GrShaderVar> fTransformedCoordVars;
 };
 
 #endif

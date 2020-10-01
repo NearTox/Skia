@@ -132,11 +132,6 @@ class SK_API SkTypeface : public SkWeakRefCnt {
    */
   static sk_sp<SkTypeface> MakeFromData(sk_sp<SkData>, int index = 0);
 
-  /** Return a new typeface given font data and configuration. If the data
-      is not valid font data, returns nullptr.
-  */
-  static sk_sp<SkTypeface> MakeFromFontData(std::unique_ptr<SkFontData>);
-
   /** Return a new typeface based on this typeface but parameterized as specified in the
       SkFontArguments. If the SkFontArguments does not supply an argument for a parameter
       in the font then the value from this typeface will be used as the value for that
@@ -311,13 +306,8 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   std::unique_ptr<SkStreamAsset> openStream(int* ttcIndex) const;
 
   /**
-   *  Return the font data, or nullptr on failure.
-   */
-  std::unique_ptr<SkFontData> makeFontData() const;
-
-  /**
    *  Return a scalercontext for the given descriptor. It may return a
-   *  dummy scalercontext that will not crash, but will draw nothing.
+   *  stub scalercontext that will not crash, but will draw nothing.
    */
   std::unique_ptr<SkScalerContext> createScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const;
@@ -339,10 +329,8 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   void* internal_private_getCTFontRef() const { return this->onGetCTFontRef(); }
 
  protected:
-  /** uniqueID must be unique and non-zero
-   */
-  SkTypeface(const SkFontStyle& style, bool isFixedPitch = false) noexcept;
-  virtual ~SkTypeface();
+  explicit SkTypeface(const SkFontStyle& style, bool isFixedPitch = false) noexcept;
+  ~SkTypeface() override;
 
   virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const = 0;
 
@@ -370,8 +358,6 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   virtual void getGlyphToUnicodeMap(SkUnichar* dstArray) const = 0;
 
   virtual std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const = 0;
-  // TODO: make pure virtual.
-  virtual std::unique_ptr<SkFontData> onMakeFontData() const;
 
   virtual int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[], int coordinateCount) const = 0;

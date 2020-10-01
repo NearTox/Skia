@@ -66,7 +66,7 @@ class GrImageInfo {
 
   size_t bpp() const noexcept { return GrColorTypeBytesPerPixel(this->colorType()); }
 
-  size_t minRowBytes() const noexcept { return this->bpp() * this->width(); }
+  size_t minRowBytes() const { return this->bpp() * this->width(); }
 
   /**
    * Place this image rect in a surface of dimensions surfaceWidth x surfaceHeight size offset at
@@ -76,7 +76,9 @@ class GrImageInfo {
    * reflect the clipped rectangle.
    */
   template <typename T>
-  bool clip(int surfaceWidth, int surfaceHeight, SkIPoint* surfacePt, T** data, size_t rowBytes) {
+  bool clip(
+      int surfaceWidth, int surfaceHeight, SkIPoint* surfacePt, T** data,
+      size_t rowBytes) noexcept {
     auto bounds = SkIRect::MakeWH(surfaceWidth, surfaceHeight);
     auto rect = SkIRect::MakeXYWH(surfacePt->fX, surfacePt->fY, this->width(), this->height());
     if (!rect.intersect(bounds)) {

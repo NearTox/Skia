@@ -24,7 +24,7 @@ namespace sksg {
  */
 class InvalidationController {
  public:
-  InvalidationController() noexcept;
+  InvalidationController();
   InvalidationController(const InvalidationController&) = delete;
   InvalidationController& operator=(const InvalidationController&) = delete;
 
@@ -35,7 +35,7 @@ class InvalidationController {
   auto begin() const noexcept { return fRects.cbegin(); }
   auto end() const noexcept { return fRects.cend(); }
 
-  void reset() noexcept;
+  void reset();
 
  private:
   std::vector<SkRect> fRects;

@@ -210,12 +210,12 @@ static bool update_edge(SkEdge* edge, int last_y) {
 }
 
 // Unexpected conditions for which we need to return
-#define ASSERT_RETURN(cond) \
-  do {                      \
-    if (!(cond)) {          \
-      SkASSERT(false);      \
-      return;               \
-    }                       \
+#define ASSERT_RETURN(cond)              \
+  do {                                   \
+    if (!(cond)) {                       \
+      SkDEBUGFAILF("assert(%s)", #cond); \
+      return;                            \
+    }                                    \
   } while (0)
 
 // Needs Y to only change once (looser than convex in X)
@@ -301,7 +301,7 @@ static void walk_simple_edges(SkEdge* prevHead, SkBlitter* blitter, int start_y,
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// this guy overrides blitH, and will call its proxy blitter with the inverse
+// this overrides blitH, and will call its proxy blitter with the inverse
 // of the spans it is given (clipped to the left/right of the cliprect)
 //
 // used to implement inverse filltypes on paths
@@ -375,7 +375,7 @@ static bool operator<(const SkEdge& a, const SkEdge& b) {
 }
 
 static SkEdge* sort_edges(SkEdge* list[], int count, SkEdge** last) {
-  SkTQSort(list, list + count - 1);
+  SkTQSort(list, list + count);
 
   // now make the edges linked in sorted order
   for (int i = 1; i < count; i++) {
@@ -387,9 +387,11 @@ static SkEdge* sort_edges(SkEdge* list[], int count, SkEdge** last) {
   return list[0];
 }
 
+#include "src/core/SkPathView.h"
+
 // clipRect has not been shifted up
 void sk_fill_path(
-    const SkPath& path, const SkIRect& clipRect, SkBlitter* blitter, int start_y, int stop_y,
+    const SkPathView& path, const SkIRect& clipRect, SkBlitter* blitter, int start_y, int stop_y,
     int shiftEdgesUp, bool pathContainedInClip) {
   SkASSERT(blitter);
 
@@ -466,7 +468,7 @@ void sk_fill_path(
   if (path.isConvex() && (nullptr == proc) && count >= 2) {
     walk_simple_edges(&headEdge, blitter, start_y, stop_y);
   } else {
-    walk_edges(&headEdge, path.getFillType(), blitter, start_y, stop_y, proc, shiftedClip.right());
+    walk_edges(&headEdge, path.fFillType, blitter, start_y, stop_y, proc, shiftedClip.right());
   }
 }
 
@@ -608,7 +610,7 @@ static SkIRect conservative_round_to_int(const SkRect& src) {
   };
 }
 
-void SkScan::FillPath(const SkPath& path, const SkRegion& origClip, SkBlitter* blitter) {
+void SkScan::FillPath(const SkPathView& path, const SkRegion& origClip, SkBlitter* blitter) {
   if (origClip.isEmpty()) {
     return;
   }
@@ -625,7 +627,7 @@ void SkScan::FillPath(const SkPath& path, const SkRegion& origClip, SkBlitter* b
   }
   // don't reference "origClip" any more, just use clipPtr
 
-  SkRect bounds = path.getBounds();
+  SkRect bounds = path.fBounds;
   bool irPreClipped = false;
   if (!SkRectPriv::MakeLargeS32().contains(bounds)) {
     if (!bounds.intersect(SkRectPriv::MakeLargeS32())) {
@@ -663,7 +665,7 @@ void SkScan::FillPath(const SkPath& path, const SkRegion& origClip, SkBlitter* b
   }
 }
 
-void SkScan::FillPath(const SkPath& path, const SkIRect& ir, SkBlitter* blitter) {
+void SkScan::FillPath(const SkPathView& path, const SkIRect& ir, SkBlitter* blitter) {
   SkRegion rgn(ir);
   FillPath(path, rgn, blitter);
 }
@@ -740,9 +742,7 @@ void SkScan::FillTriangle(const SkPoint pts[], const SkRasterClip& clip, SkBlitt
   // Use FixedMax/2 as the limit so we can subtract two edges and still store that in Fixed.
   const SkScalar limit = SK_MaxS16 >> 1;
   if (!SkRect::MakeLTRB(-limit, -limit, limit, limit).contains(r)) {
-    SkPath path;
-    path.addPoly(pts, 3, false);
-    FillPath(path, clip, blitter);
+    FillPath(SkPathView_triangle(pts, r), clip, blitter);
     return;
   }
 

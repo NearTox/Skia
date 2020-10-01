@@ -19,7 +19,7 @@ static_assert(kAll_StencilFlags == (gUnused.fCWFlags[0] & gUnused.fCCWFlags[0]))
 const GrUserStencilSettings& GrUserStencilSettings::kUnused = gUnused;
 
 void GrStencilSettings::reset(
-    const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) noexcept {
+    const GrUserStencilSettings& user, bool hasStencilClip, int numStencilBits) {
   uint16_t cwFlags = user.fCWFlags[hasStencilClip];
   if (cwFlags & kSingleSided_StencilFlag) {
     SkASSERT(cwFlags == user.fCCWFlags[hasStencilClip]);
@@ -47,7 +47,7 @@ void GrStencilSettings::reset(
   }
 }
 
-void GrStencilSettings::reset(const GrStencilSettings& that) noexcept {
+void GrStencilSettings::reset(const GrStencilSettings& that) {
   fFlags = that.fFlags;
   if ((kInvalid_PrivateFlag | kDisabled_StencilFlag) & fFlags) {
     return;
@@ -62,7 +62,7 @@ void GrStencilSettings::reset(const GrStencilSettings& that) noexcept {
   }
 }
 
-bool GrStencilSettings::operator==(const GrStencilSettings& that) const noexcept {
+bool GrStencilSettings::operator==(const GrStencilSettings& that) const {
   if ((kInvalid_PrivateFlag | kDisabled_StencilFlag) & (fFlags | that.fFlags)) {
     // At least one is invalid and/or disabled.
     if (kInvalid_PrivateFlag & (fFlags | that.fFlags)) {
@@ -155,7 +155,7 @@ static_assert(11 == (int)GrUserStencilOp::kSetClipAndReplaceUserBits);
 static_assert(12 == (int)GrUserStencilOp::kZeroClipAndUserBits);
 
 void GrStencilSettings::Face::reset(
-    const GrUserStencilSettings::Face& user, bool hasStencilClip, int numStencilBits) noexcept {
+    const GrUserStencilSettings::Face& user, bool hasStencilClip, int numStencilBits) {
   SkASSERT(user.fTest < (GrUserStencilTest)kGrUserStencilTestCount);
   SkASSERT(user.fPassOp < (GrUserStencilOp)kGrUserStencilOpCount);
   SkASSERT(user.fFailOp < (GrUserStencilOp)kGrUserStencilOpCount);
@@ -164,20 +164,18 @@ void GrStencilSettings::Face::reset(
   int userMask = clipBit - 1;
 
   GrUserStencilOp maxOp = std::max(user.fPassOp, user.fFailOp);
-  SkDEBUGCODE(GrUserStencilOp otherOp =
-                  std::min(user.fPassOp, user.fFailOp);) if (maxOp <= kLastUserOnlyStencilOp) {
+  SkDEBUGCODE(GrUserStencilOp otherOp = std::min(user.fPassOp, user.fFailOp));
+  if (maxOp <= kLastUserOnlyStencilOp) {
     // Ops that only modify user bits.
     fWriteMask = user.fWriteMask & userMask;
     SkASSERT(otherOp <= kLastUserOnlyStencilOp);
-  }
-  else if (maxOp <= kLastClipOnlyStencilOp) {
+  } else if (maxOp <= kLastClipOnlyStencilOp) {
     // Ops that only modify the clip bit.
     fWriteMask = clipBit;
     SkASSERT(
         GrUserStencilOp::kKeep == otherOp ||
         (otherOp > kLastUserOnlyStencilOp && otherOp <= kLastClipOnlyStencilOp));
-  }
-  else {
+  } else {
     // Ops that modify both clip and user bits.
     fWriteMask = clipBit | (user.fWriteMask & userMask);
     SkASSERT(GrUserStencilOp::kKeep == otherOp || otherOp > kLastClipOnlyStencilOp);
@@ -203,7 +201,7 @@ void GrStencilSettings::Face::reset(
   fRef = (clipBit | user.fRef) & (fTestMask | fWriteMask);
 }
 
-void GrStencilSettings::Face::setDisabled() noexcept {
+void GrStencilSettings::Face::setDisabled() {
   memset(this, 0, sizeof(*this));
   static_assert(0 == (int)GrStencilTest::kAlways);
   static_assert(0 == (int)GrStencilOp::kKeep);
@@ -218,7 +216,7 @@ static constexpr GrUserStencilSettings gSetStencilClipBit(
         0x0000, GrUserStencilTest::kAlways, 0xffff, GrUserStencilOp::kSetClipBit,
         GrUserStencilOp::kSetClipBit, 0x0000>());
 
-const GrUserStencilSettings* GrStencilSettings::SetClipBitSettings(bool setToInside) noexcept {
+const GrUserStencilSettings* GrStencilSettings::SetClipBitSettings(bool setToInside) {
   return setToInside ? &gSetStencilClipBit : &gZeroStencilClipBit;
 }
 

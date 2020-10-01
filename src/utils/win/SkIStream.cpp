@@ -14,7 +14,7 @@
 /**
  * SkBaseIStream
  */
-SkBaseIStream::SkBaseIStream() : _refcount(1) {}
+SkBaseIStream::SkBaseIStream() noexcept : _refcount(1) {}
 SkBaseIStream::~SkBaseIStream() = default;
 
 SK_STDMETHODIMP SkBaseIStream::QueryInterface(REFIID iid, void** ppvObject) {

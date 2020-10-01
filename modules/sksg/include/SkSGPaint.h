@@ -25,7 +25,7 @@ class Shader;
  */
 class PaintNode : public Node {
  public:
-  SkPaint makePaint() const noexcept;
+  SkPaint makePaint() const;
 
   SG_ATTRIBUTE(AntiAlias, bool, fAntiAlias)
   SG_ATTRIBUTE(Opacity, SkScalar, fOpacity)
@@ -39,7 +39,7 @@ class PaintNode : public Node {
  protected:
   PaintNode() noexcept;
 
-  virtual void onApplyToPaint(SkPaint*) const noexcept = 0;
+  virtual void onApplyToPaint(SkPaint*) const = 0;
 
  private:
   SkScalar fOpacity = 1, fStrokeWidth = 1, fStrokeMiter = 4;
@@ -62,12 +62,12 @@ class Color : public PaintNode {
   SG_ATTRIBUTE(Color, SkColor, fColor)
 
  protected:
-  SkRect onRevalidate(InvalidationController*, const SkMatrix&) noexcept override;
+  SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-  void onApplyToPaint(SkPaint*) const noexcept override;
+  void onApplyToPaint(SkPaint*) const override;
 
  private:
-  explicit Color(SkColor) noexcept;
+  explicit Color(SkColor);
 
   SkColor fColor;
 };
@@ -84,7 +84,7 @@ class ShaderPaint final : public PaintNode {
  protected:
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-  void onApplyToPaint(SkPaint*) const noexcept override;
+  void onApplyToPaint(SkPaint*) const override;
 
  private:
   explicit ShaderPaint(sk_sp<Shader>);

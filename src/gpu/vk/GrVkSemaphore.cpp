@@ -35,6 +35,7 @@ std::unique_ptr<GrVkSemaphore> GrVkSemaphore::Make(GrVkGpu* gpu, bool isOwned) {
 std::unique_ptr<GrVkSemaphore> GrVkSemaphore::MakeWrapped(
     GrVkGpu* gpu, VkSemaphore semaphore, WrapType wrapType, GrWrapOwnership ownership) {
   if (VK_NULL_HANDLE == semaphore) {
+    SkDEBUGFAIL("Trying to wrap an invalid VkSemaphore");
     return nullptr;
   }
   bool prohibitSignal = WrapType::kWillWait == wrapType;

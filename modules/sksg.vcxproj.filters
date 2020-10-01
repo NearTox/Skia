@@ -7,7 +7,6 @@
     <ClCompile Include="sksg\src\SkSGDraw.cpp" />
     <ClCompile Include="sksg\src\SkSGEffectNode.cpp" />
     <ClCompile Include="sksg\src\SkSGGeometryNode.cpp" />
-    <ClCompile Include="sksg\src\SkSGGeometryTransform.cpp" />
     <ClCompile Include="sksg\src\SkSGGradient.cpp" />
     <ClCompile Include="sksg\src\SkSGGroup.cpp" />
     <ClCompile Include="sksg\src\SkSGImage.cpp" />
@@ -21,11 +20,9 @@
     <ClCompile Include="sksg\src\SkSGRect.cpp" />
     <ClCompile Include="sksg\src\SkSGRenderEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGRenderNode.cpp" />
-    <ClCompile Include="sksg\src\SkSGRoundEffect.cpp" />
     <ClCompile Include="sksg\src\SkSGScene.cpp" />
     <ClCompile Include="sksg\src\SkSGText.cpp" />
     <ClCompile Include="sksg\src\SkSGTransform.cpp" />
-    <ClCompile Include="sksg\src\SkSGTrimEffect.cpp" />
-    <ClCompile Include="sksg\src\SkSGDashEffect.cpp" />
+    <ClCompile Include="sksg\src\SkSGGeometryEffect.cpp" />
   </ItemGroup>
 </Project>

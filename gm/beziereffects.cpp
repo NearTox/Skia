@@ -20,8 +20,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/gpu/GrContext.h"
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "include/private/GrSharedEnums.h"
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkColorData.h"
@@ -209,7 +208,8 @@ class BezierConicEffects : public GpuGM {
   SkISize onISize() override { return SkISize::Make(kCellWidth, kNumConics * kCellHeight); }
 
   void onDraw(
-      GrContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas) override {
+      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext,
+      SkCanvas* canvas) override {
     const SkScalar w = kCellWidth, h = kCellHeight;
     const SkPMColor4f kOpaqueBlack = SkPMColor4f::FromBytes_RGBA(0xff000000);
 
@@ -398,7 +398,8 @@ class BezierQuadEffects : public GpuGM {
   SkISize onISize() override { return SkISize::Make(kCellWidth, kNumQuads * kCellHeight); }
 
   void onDraw(
-      GrContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas) override {
+      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext,
+      SkCanvas* canvas) override {
     const SkScalar w = kCellWidth, h = kCellHeight;
     const SkPMColor4f kOpaqueBlack = SkPMColor4f::FromBytes_RGBA(0xff000000);
 

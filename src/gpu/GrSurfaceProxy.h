@@ -70,7 +70,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
     SkISize fDimensions;
     SkBackingFit fFit;
     GrRenderable fRenderable;
-    GrMipMapped fMipMapped;
+    GrMipmapped fMipmapped;
     int fSampleCnt;
     const GrBackendFormat& fFormat;
     GrProtected fProtected;
@@ -80,7 +80,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   struct LazyCallbackResult {
     LazyCallbackResult() noexcept = default;
     LazyCallbackResult(const LazyCallbackResult&) noexcept = default;
-    LazyCallbackResult(LazyCallbackResult&& that) = default;
+    LazyCallbackResult(LazyCallbackResult&& that) noexcept = default;
     LazyCallbackResult(
         sk_sp<GrSurface> surf, bool releaseCallback = true,
         LazyInstantiationKeyMode mode = LazyInstantiationKeyMode::kSynced) noexcept
@@ -89,7 +89,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
         : LazyCallbackResult(sk_sp<GrSurface>(std::move(tex))) {}
 
     LazyCallbackResult& operator=(const LazyCallbackResult&) noexcept = default;
-    LazyCallbackResult& operator=(LazyCallbackResult&&) = default;
+    LazyCallbackResult& operator=(LazyCallbackResult&&) noexcept = default;
 
     sk_sp<GrSurface> fSurface;
     LazyInstantiationKeyMode fKeyMode = LazyInstantiationKeyMode::kSynced;
@@ -133,7 +133,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   int width() const noexcept { return this->dimensions().width(); }
   int height() const noexcept { return this->dimensions().height(); }
 
-  SkISize backingStoreDimensions() const noexcept;
+  SkISize backingStoreDimensions() const;
 
   /**
    * Helper that gets the width and height of the proxy as a bounding rectangle.
@@ -141,14 +141,12 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   SkRect getBoundsRect() const noexcept { return SkRect::Make(this->dimensions()); }
 
   /* A perhaps faster check for this->dimensions() == this->backingStoreDimensions(). */
-  bool isFunctionallyExact() const noexcept;
+  bool isFunctionallyExact() const;
 
   /**
    * Helper that gets the dimensions the backing GrSurface will have as a bounding rectangle.
    */
-  SkRect backingStoreBoundsRect() const noexcept {
-    return SkRect::Make(this->backingStoreDimensions());
-  }
+  SkRect backingStoreBoundsRect() const { return SkRect::Make(this->backingStoreDimensions()); }
 
   const GrBackendFormat& backendFormat() const noexcept { return fFormat; }
 
@@ -156,23 +154,25 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
 
   class UniqueID {
    public:
-    static UniqueID InvalidID() noexcept { return UniqueID(uint32_t(SK_InvalidUniqueID)); }
+    static constexpr UniqueID InvalidID() noexcept {
+      return UniqueID(uint32_t(SK_InvalidUniqueID));
+    }
 
     // wrapped
     explicit UniqueID(const GrGpuResource::UniqueID& id) noexcept : fID(id.asUInt()) {}
     // deferred and lazy-callback
     UniqueID() noexcept : fID(GrGpuResource::CreateUniqueID()) {}
 
-    uint32_t asUInt() const noexcept { return fID; }
+    constexpr uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
+    constexpr bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    constexpr bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
+    constexpr void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    constexpr bool isInvalid() const noexcept { return SK_InvalidUniqueID == fID; }
 
    private:
-    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
+    explicit constexpr UniqueID(uint32_t id) noexcept : fID(id) {}
 
     uint32_t fID;
   };
@@ -271,7 +271,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
    *
    * @return the amount of GPU memory used in bytes
    */
-  size_t gpuMemorySize(const GrCaps& caps) const noexcept {
+  size_t gpuMemorySize(const GrCaps& caps) const {
     SkASSERT(!this->isFullyLazy());
     if (fTarget) {
       return fTarget->gpuMemorySize();
@@ -293,12 +293,12 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // will be the same as the src. Therefore, the copy can be used in a view with the same swizzle
   // as the original for use with a given color type.
   static sk_sp<GrSurfaceProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrMipMapped, SkIRect srcRect,
+      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrMipmapped, SkIRect srcRect,
       SkBackingFit, SkBudgeted, RectsMustMatch = RectsMustMatch::kNo);
 
   // Same as above Copy but copies the entire 'src'
   static sk_sp<GrSurfaceProxy> Copy(
-      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrMipMapped, SkBackingFit,
+      GrRecordingContext*, GrSurfaceProxy* src, GrSurfaceOrigin, GrMipmapped, SkBackingFit,
       SkBudgeted);
 
 #if GR_TEST_UTILS
@@ -310,7 +310,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
 
   // Provides access to functions that aren't part of the public API.
   inline GrSurfaceProxyPriv priv() noexcept;
-  inline const GrSurfaceProxyPriv priv() const noexcept;
+  inline const GrSurfaceProxyPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
 
   GrProtected isProtected() const noexcept { return fIsProtected; }
 
@@ -328,7 +328,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   // Takes UseAllocator because even though this is already instantiated it still can participate
   // in allocation by having its backing resource recycled to other uninstantiated proxies or
   // not depending on UseAllocator.
-  GrSurfaceProxy(sk_sp<GrSurface>, SkBackingFit, UseAllocator) noexcept;
+  GrSurfaceProxy(sk_sp<GrSurface>, SkBackingFit, UseAllocator);
 
   friend class GrSurfaceProxyPriv;
 
@@ -342,7 +342,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   void assign(sk_sp<GrSurface> surface);
 
   sk_sp<GrSurface> createSurfaceImpl(
-      GrResourceProvider*, int sampleCnt, GrRenderable, GrMipMapped) const;
+      GrResourceProvider*, int sampleCnt, GrRenderable, GrMipmapped) const;
 
   // Once the dimensions of a fully-lazy proxy are decided, and before it gets instantiated, the
   // client can use this optional method to specify the proxy's dimensions. (A proxy's dimensions
@@ -355,7 +355,7 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   }
 
   bool instantiateImpl(
-      GrResourceProvider* resourceProvider, int sampleCnt, GrRenderable, GrMipMapped,
+      GrResourceProvider* resourceProvider, int sampleCnt, GrRenderable, GrMipmapped,
       const GrUniqueKey*);
 
   // For deferred proxies this will be null until the proxy is instantiated.
@@ -394,9 +394,9 @@ class GrSurfaceProxy : public SkNVRefCnt<GrSurfaceProxy> {
   static const size_t kInvalidGpuMemorySize = ~static_cast<size_t>(0);
   SkDEBUGCODE(size_t getRawGpuMemorySize_debugOnly() const { return fGpuMemorySize; });
 
-  virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const noexcept = 0;
+  virtual size_t onUninstantiatedGpuMemorySize(const GrCaps&) const = 0;
 
-  virtual LazySurfaceDesc callbackDesc() const noexcept = 0;
+  virtual LazySurfaceDesc callbackDesc() const = 0;
 
   bool fIgnoredByResourceAllocator = false;
   GrProtected fIsProtected;

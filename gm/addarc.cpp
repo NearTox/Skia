@@ -10,6 +10,7 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkPath.h"
+#include "include/core/SkPathBuilder.h"
 #include "include/core/SkPathMeasure.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
@@ -216,7 +217,7 @@ DEF_GM(return new FillCircleGM;)
 //////////////////////
 
 static void html_canvas_arc(
-    SkPath* path, SkScalar x, SkScalar y, SkScalar r, SkScalar start, SkScalar end, bool ccw,
+    SkPathBuilder* path, SkScalar x, SkScalar y, SkScalar r, SkScalar start, SkScalar end, bool ccw,
     bool callArcTo) {
   SkRect bounds = {x - r, y - r, x + r, y + r};
   SkScalar sweep = ccw ? end - start : start - end;
@@ -258,12 +259,12 @@ DEF_SIMPLE_GM(manyarcs, canvas, 620, 330) {
     SkScalar startAngle = startAngles[i % SK_ARRAY_COUNT(startAngles)] * sign;
     canvas->save();
     for (size_t j = 0; j < SK_ARRAY_COUNT(sweepAngles); ++j) {
-      SkPath path;
+      SkPathBuilder path;
       path.moveTo(0, 2);
       html_canvas_arc(
           &path, 18, 15, 10, startAngle, startAngle + (sweepAngles[j] * sign), anticlockwise, true);
       path.lineTo(0, 28);
-      canvas->drawPath(path, paint);
+      canvas->drawPath(path.detach(), paint);
       canvas->translate(30, 0);
     }
     canvas->restore();
@@ -287,7 +288,7 @@ DEF_SIMPLE_GM(tinyanglearcs, canvas, 620, 330) {
   SkScalar sweepAngle = 10.0f / outerRadius;
 
   for (size_t i = 0; i < SK_ARRAY_COUNT(startAngles); ++i) {
-    SkPath path;
+    SkPathBuilder path;
     SkScalar endAngle = startAngles[i] + sweepAngle;
     path.moveTo(
         centerX + innerRadius * sk_float_cos(startAngles[i]),
@@ -305,7 +306,7 @@ DEF_SIMPLE_GM(tinyanglearcs, canvas, 620, 330) {
     html_canvas_arc(
         &path, centerX, outerRadius, innerRadius, endAngle * 180 / SK_ScalarPI,
         startAngles[i] * 180 / SK_ScalarPI, true, false);
-    canvas->drawPath(path, paint);
+    canvas->drawPath(path.detach(), paint);
     canvas->translate(20, 0);
   }
 }

@@ -9,10 +9,10 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkSurface.h"
+#include "include/gpu/GrDirectContext.h"
+#include "src/gpu/GrContextPriv.h"
 #include "tools/ToolUtils.h"
 
-#include "include/gpu/GrContext.h"
-#include "src/gpu/GrContextPriv.h"
 
 #include <utility>
 
@@ -43,7 +43,7 @@ static void draw_image(SkCanvas* canvas, SkImage* img) {
 void set_cache_budget(SkCanvas* canvas, int approxImagesInBudget) {
   // This is inexact but we attempt to figure out a baseline number of resources GrContext needs
   // to render an SkImage and add one additional resource for each image we'd like to fit.
-  GrContext* context = canvas->getGrContext();
+  auto context = canvas->recordingContext()->asDirectContext();
   SkASSERT(context);
   context->flushAndSubmit();
   context->priv().testingOnly_purgeAllUnlockedResources();
@@ -83,7 +83,7 @@ class ImageCacheBudgetBench : public Benchmark {
   const char* onGetName() override { return fName.c_str(); }
 
   void onPerCanvasPreDraw(SkCanvas* canvas) override {
-    GrContext* context = canvas->getGrContext();
+    auto context = canvas->recordingContext()->asDirectContext();
     SkASSERT(context);
     fOldBytes = context->getResourceCacheLimit();
     set_cache_budget(canvas, fBudgetSize);
@@ -106,7 +106,7 @@ class ImageCacheBudgetBench : public Benchmark {
   }
 
   void onPerCanvasPostDraw(SkCanvas* canvas) override {
-    GrContext* context = canvas->getGrContext();
+    auto context = canvas->recordingContext()->asDirectContext();
     SkASSERT(context);
     context->setResourceCacheLimit(fOldBytes);
     for (int i = 0; i < kImagesToDraw; ++i) {
@@ -192,7 +192,7 @@ class ImageCacheBudgetDynamicBench : public Benchmark {
   }
 
   void onPerCanvasPreDraw(SkCanvas* canvas) override {
-    GrContext* context = canvas->getGrContext();
+    auto context = canvas->recordingContext()->asDirectContext();
     SkASSERT(context);
     context->getResourceCacheLimits(&fOldCount, &fOldBytes);
     make_images(fImages, kMaxImagesToDraw);
@@ -200,7 +200,7 @@ class ImageCacheBudgetDynamicBench : public Benchmark {
   }
 
   void onPerCanvasPostDraw(SkCanvas* canvas) override {
-    GrContext* context = canvas->getGrContext();
+    auto context = canvas->recordingContext()->asDirectContext();
     SkASSERT(context);
     context->setResourceCacheLimits(fOldCount, fOldBytes);
     for (int i = 0; i < kMaxImagesToDraw; ++i) {

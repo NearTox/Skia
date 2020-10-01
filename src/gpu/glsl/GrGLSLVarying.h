@@ -11,7 +11,7 @@
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrShaderVar.h"
-#include "src/gpu/GrTAllocator.h"
+#include "src/gpu/GrTBlockList.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
 class GrGLSLProgramBuilder;
@@ -34,7 +34,7 @@ class GrGLSLVarying {
  public:
   enum class Scope { kVertToFrag, kVertToGeo, kGeoToFrag };
 
-  GrGLSLVarying() noexcept = default;
+  constexpr GrGLSLVarying() noexcept = default;
   GrGLSLVarying(GrSLType type, Scope scope = Scope::kVertToFrag) noexcept
       : fType(type), fScope(scope) {
     // Metal doesn't support varying matrices, so we disallow them everywhere for consistency
@@ -76,7 +76,7 @@ class GrGLSLVarying {
   friend class GrGLSLVaryingHandler;
 };
 
-static const int kVaryingsPerBlock = 8;
+static constexpr int kVaryingsPerBlock = 8;
 
 class GrGLSLVaryingHandler {
  public:
@@ -149,8 +149,8 @@ class GrGLSLVaryingHandler {
     GrShaderFlags fVisibility;
   };
 
-  typedef GrTAllocator<VaryingInfo> VaryingList;
-  typedef GrTAllocator<GrShaderVar> VarArray;
+  typedef GrTBlockList<VaryingInfo> VaryingList;
+  typedef GrTBlockList<GrShaderVar> VarArray;
   typedef GrGLSLProgramDataManager::VaryingHandle VaryingHandle;
 
   VaryingList fVaryings;

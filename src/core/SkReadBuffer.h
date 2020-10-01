@@ -29,7 +29,7 @@ class SkImage;
 
 class SkReadBuffer {
  public:
-  constexpr SkReadBuffer() noexcept = default;
+  SkReadBuffer() noexcept = default;
   SkReadBuffer(const void* data, size_t size) noexcept { this->setMemory(data, size); }
 
   void setMemory(const void*, size_t) noexcept;
@@ -89,17 +89,18 @@ class SkReadBuffer {
   void readString(SkString* string);
 
   // common data structures
-  void readColor4f(SkColor4f* color) noexcept;
+  void readColor4f(SkColor4f* color);
   void readPoint(SkPoint* point) noexcept;
   SkPoint readPoint() noexcept {
     SkPoint p;
     this->readPoint(&p);
     return p;
   }
-  void readPoint3(SkPoint3* point) noexcept;
+  void readPoint3(SkPoint3* point);
+  void read(SkM44*) noexcept;
   void readMatrix(SkMatrix* matrix);
-  void readIRect(SkIRect* rect) noexcept;
-  void readRect(SkRect* rect) noexcept;
+  void readIRect(SkIRect* rect);
+  void readRect(SkRect* rect);
   void readRRect(SkRRect* rrect) noexcept;
   void readRegion(SkRegion* region);
 
@@ -125,12 +126,12 @@ class SkReadBuffer {
   bool readPad32(void* buffer, size_t bytes) noexcept;
 
   // binary data and arrays
-  bool readByteArray(void* value, size_t size) noexcept;
-  bool readColorArray(SkColor* colors, size_t size) noexcept;
-  bool readColor4fArray(SkColor4f* colors, size_t size) noexcept;
-  bool readIntArray(int32_t* values, size_t size) noexcept;
-  bool readPointArray(SkPoint* points, size_t size) noexcept;
-  bool readScalarArray(SkScalar* values, size_t size) noexcept;
+  bool readByteArray(void* value, size_t size);
+  bool readColorArray(SkColor* colors, size_t size);
+  bool readColor4fArray(SkColor4f* colors, size_t size);
+  bool readIntArray(int32_t* values, size_t size);
+  bool readPointArray(SkPoint* points, size_t size);
+  bool readScalarArray(SkScalar* values, size_t size);
 
   const void* skipByteArray(size_t* size) noexcept;
 
@@ -195,7 +196,7 @@ class SkReadBuffer {
   int32_t checkInt(int min, int max) noexcept;
 
   template <typename T>
-  T checkRange(T min, T max) noexcept {
+  T checkRange(T min, T max) {
     return static_cast<T>(this->checkInt(static_cast<int32_t>(min), static_cast<int32_t>(max)));
   }
 
@@ -205,8 +206,10 @@ class SkReadBuffer {
   const char* readString(size_t* length);
 
   void setInvalid() noexcept;
-  bool readArray(void* value, size_t size, size_t elementSize) noexcept;
+  bool readArray(void* value, size_t size, size_t elementSize);
   bool isAvailable(size_t size) const noexcept { return size <= this->available(); }
+
+  sk_sp<SkImage> readImage_preV78();
 
   // These are always 4-byte aligned
   const char* fCurr = nullptr;  // current position within buffer

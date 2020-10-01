@@ -19,4 +19,4 @@ PreCachedPath::PreCachedPath(const SkPath& path) : SkPath(path) {
 }
 
 TypedMatrix::TypedMatrix(const SkMatrix& matrix) : SkMatrix(matrix) { (void)this->getType(); }
-}
+}  // namespace SkRecords

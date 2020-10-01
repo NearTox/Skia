@@ -34,6 +34,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "skshaper", "modules\skshape
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sksg", "modules\sksg.vcxproj", "{55D4C7E2-21B9-445D-97C5-8FEBE9D44654}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "skparagraph", "modules\skparagraph.vcxproj", "{0FAB5AB3-F4E7-48D7-9D44-EF66EECA5790}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Release|x64 = Release|x64
@@ -80,6 +82,10 @@ Global
 		{55D4C7E2-21B9-445D-97C5-8FEBE9D44654}.Release|x64.Build.0 = Release|x64
 		{55D4C7E2-21B9-445D-97C5-8FEBE9D44654}.Release|x86.ActiveCfg = Release|Win32
 		{55D4C7E2-21B9-445D-97C5-8FEBE9D44654}.Release|x86.Build.0 = Release|Win32
+		{0FAB5AB3-F4E7-48D7-9D44-EF66EECA5790}.Release|x64.ActiveCfg = Release|x64
+		{0FAB5AB3-F4E7-48D7-9D44-EF66EECA5790}.Release|x64.Build.0 = Release|x64
+		{0FAB5AB3-F4E7-48D7-9D44-EF66EECA5790}.Release|x86.ActiveCfg = Release|Win32
+		{0FAB5AB3-F4E7-48D7-9D44-EF66EECA5790}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -96,6 +102,7 @@ Global
 		{F6D49C09-A3A1-44FE-9FD5-2883C9F425F5} = {193A0569-4926-4EFD-9331-62DA97CE53ED}
 		{D7F9B2BE-DCBE-4B43-A5F7-10C5B6285748} = {193A0569-4926-4EFD-9331-62DA97CE53ED}
 		{55D4C7E2-21B9-445D-97C5-8FEBE9D44654} = {193A0569-4926-4EFD-9331-62DA97CE53ED}
+		{0FAB5AB3-F4E7-48D7-9D44-EF66EECA5790} = {193A0569-4926-4EFD-9331-62DA97CE53ED}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {6A26A788-74BB-4F6F-8E49-484E0E55E0DE}

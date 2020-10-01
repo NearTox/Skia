@@ -26,7 +26,7 @@ SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other)
   return *this;
 }
 
-size_t SkAutoPixmapStorage::AllocSize(const SkImageInfo& info, size_t* rowBytes) noexcept {
+size_t SkAutoPixmapStorage::AllocSize(const SkImageInfo& info, size_t* rowBytes) {
   size_t rb = info.minRowBytes();
   if (rowBytes) {
     *rowBytes = rb;
@@ -34,7 +34,7 @@ size_t SkAutoPixmapStorage::AllocSize(const SkImageInfo& info, size_t* rowBytes)
   return info.computeByteSize(rb);
 }
 
-bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) noexcept {
+bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) {
   this->freeStorage();
 
   size_t rb;

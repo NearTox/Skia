@@ -81,7 +81,7 @@ class GrFillBoundingBoxShader : public GrFillPathShader {
             GrPrimitiveType::kTriangleStrip),
         fPathBounds(pathBounds) {}
 
-  const SkRect& pathBounds() const noexcept { return fPathBounds; }
+  const SkRect& pathBounds() const { return fPathBounds; }
 
  private:
   const char* name() const noexcept override { return "GrFillBoundingBoxShader"; }

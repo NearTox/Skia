@@ -114,7 +114,7 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
    */
   static RectType ComputeRectType(const SkPaint&, const SkMatrix&, SkPoint* strokeSize);
 
-  static SkScalar ComputeResScaleForStroking(const SkMatrix&) noexcept;
+  static SkScalar ComputeResScaleForStroking(const SkMatrix&);
 
  private:
   void drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;

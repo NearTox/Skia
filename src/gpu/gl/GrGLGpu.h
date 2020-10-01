@@ -32,7 +32,7 @@ class GrSwizzle;
 
 class GrGLGpu final : public GrGpu {
  public:
-  static sk_sp<GrGpu> Make(sk_sp<const GrGLInterface>, const GrContextOptions&, GrContext*);
+  static sk_sp<GrGpu> Make(sk_sp<const GrGLInterface>, const GrContextOptions&, GrDirectContext*);
   ~GrGLGpu() override;
 
   void disconnect(DisconnectType) override;
@@ -122,9 +122,9 @@ class GrGLGpu final : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
 
-  void invalidateBoundRenderTarget() noexcept { fHWBoundRenderTargetUniqueID.makeInvalid(); }
+  void invalidateBoundRenderTarget() { fHWBoundRenderTargetUniqueID.makeInvalid(); }
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
       const GrRenderTarget* rt, int width, int height, int numStencilSamples) override;
@@ -184,17 +184,20 @@ class GrGLGpu final : public GrGpu {
   void flushProgram(GrGLuint);
 
  private:
-  GrGLGpu(std::unique_ptr<GrGLContext>, GrContext*);
+  GrGLGpu(std::unique_ptr<GrGLContext>, GrDirectContext*);
 
   // GrGpu overrides
   GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
 
   GrBackendTexture onCreateCompressedBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) override;
+      SkISize dimensions, const GrBackendFormat&, GrMipmapped, GrProtected) override;
 
   bool onUpdateBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
+      const BackendTextureData*) override;
+
+  bool onUpdateCompressedBackendTexture(
       const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
       const BackendTextureData*) override;
 
@@ -210,7 +213,7 @@ class GrGLGpu final : public GrGpu {
       SkISize dimensions, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
       SkBudgeted, GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
-      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipmapped, GrProtected,
       const void* data, size_t dataSize) override;
 
   sk_sp<GrGpuBuffer> onCreateBuffer(
@@ -241,8 +244,8 @@ class GrGLGpu final : public GrGpu {
       GrGLTextureParameters::SamplerOverriddenState*, int mipLevelCount);
 
   GrGLuint createCompressedTexture2D(
-      SkISize dimensions, SkImage::CompressionType compression, GrGLFormat, GrMipMapped,
-      GrGLTextureParameters::SamplerOverriddenState*, const void* data, size_t dataSize);
+      SkISize dimensions, SkImage::CompressionType compression, GrGLFormat, GrMipmapped,
+      GrGLTextureParameters::SamplerOverriddenState*);
 
   bool onReadPixels(
       GrSurface*, int left, int top, int width, int height, GrColorType surfaceColorType,
@@ -268,8 +271,7 @@ class GrGLGpu final : public GrGpu {
   // PIXEL_UNPACK_BUFFER is unbound.
   void unbindCpuToGpuXferBuffer();
 
-  void onResolveRenderTarget(
-      GrRenderTarget* target, const SkIRect& resolveRect, ForExternalIO) override;
+  void onResolveRenderTarget(GrRenderTarget* target, const SkIRect& resolveRect) override;
 
   bool onRegenerateMipMapLevels(GrTexture*) override;
 
@@ -410,7 +412,7 @@ class GrGLGpu final : public GrGpu {
   // Helper for onCreateCompressedTexture. Compressed textures are read-only so we only use this
   // to populate a new texture. Returns false if we failed to create and upload the texture.
   bool uploadCompressedTexData(
-      SkImage::CompressionType compressionType, GrGLFormat, SkISize dimensions, GrMipMapped,
+      SkImage::CompressionType compressionType, GrGLFormat, SkISize dimensions, GrMipmapped,
       GrGLenum target, const void* data, size_t dataSize);
 
   // Calls one of various versions of renderBufferStorageMultisample.

@@ -23,7 +23,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
  public:
   static sk_sp<GrVkTexture> MakeNewTexture(
       GrVkGpu*, SkBudgeted budgeted, SkISize dimensions, const GrVkImage::ImageDesc&,
-      GrMipMapsStatus);
+      GrMipmapStatus);
 
   static sk_sp<GrVkTexture> MakeWrappedTexture(
       GrVkGpu*, SkISize dimensions, GrWrapOwnership, GrWrapCacheable, GrIOType,
@@ -39,7 +39,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
 
   const GrVkImageView* textureView() noexcept;
 
-  void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) override;
+  void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) noexcept override;
   void callIdleProcsOnBehalfOfResource() noexcept override;
 
   // For each GrVkTexture, there is a cache of GrVkDescriptorSets which only contain a single
@@ -54,7 +54,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
  protected:
   GrVkTexture(
       GrVkGpu*, SkISize dimensions, const GrVkImageInfo&, sk_sp<GrBackendSurfaceMutableStateImpl>,
-      const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership);
+      const GrVkImageView*, GrMipmapStatus, GrBackendObjectOwnership);
 
   GrVkGpu* getVkGpu() const noexcept;
 
@@ -70,10 +70,10 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
  private:
   GrVkTexture(
       GrVkGpu*, SkBudgeted, SkISize, const GrVkImageInfo&, sk_sp<GrBackendSurfaceMutableStateImpl>,
-      const GrVkImageView* imageView, GrMipMapsStatus);
+      const GrVkImageView* imageView, GrMipmapStatus);
   GrVkTexture(
       GrVkGpu*, SkISize, const GrVkImageInfo&, sk_sp<GrBackendSurfaceMutableStateImpl>,
-      const GrVkImageView*, GrMipMapsStatus, GrBackendObjectOwnership, GrWrapCacheable, GrIOType,
+      const GrVkImageView*, GrMipmapStatus, GrBackendObjectOwnership, GrWrapCacheable, GrIOType,
       bool isExternal);
 
   // In Vulkan we call the release proc after we are finished with the underlying
@@ -83,12 +83,12 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
     this->setResourceRelease(std::move(releaseHelper));
   }
 
-  void removeFinishIdleProcs() noexcept;
+  void removeFinishIdleProcs();
 
   const GrVkImageView* fTextureView;
 
   struct SamplerHash {
-    uint32_t operator()(GrSamplerState state) const { return GrSamplerState::GenerateKey(state); }
+    uint32_t operator()(GrSamplerState state) const noexcept { return state.asIndex(); }
   };
   struct DescriptorCacheEntry;
   SkLRUCache<const GrSamplerState, std::unique_ptr<DescriptorCacheEntry>, SamplerHash>

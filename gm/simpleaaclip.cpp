@@ -134,7 +134,7 @@ class SimpleClipGM : public GM {
     return str;
   }
 
-  SkISize onISize() override { return SkISize::Make(640, 480); }
+  SkISize onISize() override { return SkISize::Make(500, 240); }
 
   void onDraw(SkCanvas* canvas) override {
     const struct {
@@ -144,10 +144,6 @@ class SimpleClipGM : public GM {
     } gOps[] = {
         {SK_ColorBLACK, "Difference", kDifference_SkClipOp},
         {SK_ColorRED, "Intersect", kIntersect_SkClipOp},
-        {ToolUtils::color_to_565(0xFF008800), "Union", kUnion_SkClipOp},
-        {SK_ColorGREEN, "Rev Diff", kReverseDifference_SkClipOp},
-        {SK_ColorYELLOW, "Replace", kReplace_SkClipOp},
-        {SK_ColorBLUE, "XOR", kXOR_SkClipOp},
     };
 
     SkPaint textPaint;

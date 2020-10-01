@@ -70,7 +70,7 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
       const GrSimpleMeshDrawOpHelperWithStencil& that, const GrCaps&, const SkRect& thisBounds,
       const SkRect& thatBounds, bool ignoreAAType = false) const;
 
-#ifdef SK_DEBUG
+#if GR_TEST_UTILS
   SkString dumpInfo() const;
 #endif
 

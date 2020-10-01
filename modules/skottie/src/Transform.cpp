@@ -29,7 +29,7 @@ TransformAdapter2D::TransformAdapter2D(
   this->bindAutoOrientable(abuilder, jposition, &fPosition, auto_orient ? &fOrientation : nullptr);
 }
 
-TransformAdapter2D::~TransformAdapter2D() {}
+TransformAdapter2D::~TransformAdapter2D() = default;
 
 void TransformAdapter2D::onSync() { this->node()->setMatrix(this->totalMatrix()); }
 

@@ -37,7 +37,7 @@ inline constexpr void sk_ignore_unused_variable(const T&) noexcept {}
  *  Returns a pointer to a D which comes immediately after S[count].
  */
 template <typename D, typename S>
-static D* SkTAfter(S* ptr, size_t count = 1) noexcept {
+static constexpr D* SkTAfter(S* ptr, size_t count = 1) noexcept {
   return reinterpret_cast<D*>(ptr + count);
 }
 
@@ -45,7 +45,7 @@ static D* SkTAfter(S* ptr, size_t count = 1) noexcept {
  *  Returns a pointer to a D which comes byteOffset bytes after S.
  */
 template <typename D, typename S>
-static D* SkTAddOffset(S* ptr, size_t byteOffset) noexcept {
+static constexpr D* SkTAddOffset(S* ptr, size_t byteOffset) noexcept {
   // The intermediate char* has the same cv-ness as D as this produces better error messages.
   // This relies on the fact that reinterpret_cast can add constness, but cannot remove it.
   return reinterpret_cast<D*>(reinterpret_cast<sknonstd::same_cv_t<char, D>*>(ptr) + byteOffset);
@@ -147,7 +147,7 @@ class SkAutoSTArray {
 
   /** Allocate count number of T elements
    */
-  SkAutoSTArray(int count) noexcept(std::is_nothrow_default_constructible_v<T>) {
+  SkAutoSTArray(int count) noexcept {
     fArray = nullptr;
     fCount = 0;
     this->reset(count);
@@ -221,11 +221,11 @@ class SkAutoSTArray {
 #if defined(SK_BUILD_FOR_GOOGLE3)
   // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but some
   // functions have multiple large stack allocations.
-  static constexpr int kMaxBytes = 4 * 1024;
-  static constexpr int kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
-                                                                        : kCountRequested;
+  static const int kMaxBytes = 4 * 1024;
+  static const int kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
+                                                                    : kCountRequested;
 #else
-  static constexpr int kCount = kCountRequested;
+  static const int kCount = kCountRequested;
 #endif
 
   int fCount;
@@ -338,7 +338,7 @@ class SkAutoSTMalloc {
     if (count > kCount) {
       if (fPtr == fTStorage) {
         fPtr = (T*)sk_malloc_throw(count, sizeof(T));
-        memcpy(fPtr, fTStorage, kCount * sizeof(T));
+        memcpy((void*)fPtr, fTStorage, kCount * sizeof(T));
       } else {
         fPtr = (T*)sk_realloc_throw(fPtr, count, sizeof(T));
       }
@@ -353,15 +353,15 @@ class SkAutoSTMalloc {
 
  private:
   // Since we use uint32_t storage, we might be able to get more elements for free.
-  static constexpr size_t kCountWithPadding = SkAlign4(kCountRequested * sizeof(T)) / sizeof(T);
+  static const size_t kCountWithPadding = SkAlign4(kCountRequested * sizeof(T)) / sizeof(T);
 #if defined(SK_BUILD_FOR_GOOGLE3)
   // Stack frame size is limited for SK_BUILD_FOR_GOOGLE3. 4k is less than the actual max, but some
   // functions have multiple large stack allocations.
-  static constexpr size_t kMaxBytes = 4 * 1024;
-  static constexpr size_t kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
-                                                                           : kCountWithPadding;
+  static const size_t kMaxBytes = 4 * 1024;
+  static const size_t kCount = kCountRequested * sizeof(T) > kMaxBytes ? kMaxBytes / sizeof(T)
+                                                                       : kCountWithPadding;
 #else
-  static constexpr size_t kCount = kCountWithPadding;
+  static const size_t kCount = kCountWithPadding;
 #endif
 
   T* fPtr;
@@ -406,7 +406,7 @@ T* SkInPlaceNewCheck(void* storage, size_t size, Args&&... args) {
 template <size_t N>
 class SkAlignedSStorage {
  public:
-  SkAlignedSStorage() noexcept = default;
+  constexpr SkAlignedSStorage() noexcept = default;
   SkAlignedSStorage(SkAlignedSStorage&&) = delete;
   SkAlignedSStorage(const SkAlignedSStorage&) = delete;
   SkAlignedSStorage& operator=(SkAlignedSStorage&&) = delete;
@@ -433,7 +433,7 @@ class SkAlignedSStorage {
 template <int N, typename T>
 class SkAlignedSTStorage {
  public:
-  SkAlignedSTStorage() noexcept = default;
+  constexpr SkAlignedSTStorage() noexcept = default;
   SkAlignedSTStorage(SkAlignedSTStorage&&) = delete;
   SkAlignedSTStorage(const SkAlignedSTStorage&) = delete;
   SkAlignedSTStorage& operator=(SkAlignedSTStorage&&) = delete;

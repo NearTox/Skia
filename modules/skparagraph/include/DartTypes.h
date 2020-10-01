@@ -66,15 +66,15 @@ struct PositionWithAffinity {
   int32_t position;
   Affinity affinity;
 
-  PositionWithAffinity() : position(0), affinity(kDownstream) {}
-  PositionWithAffinity(int32_t p, Affinity a) : position(p), affinity(a) {}
+  constexpr PositionWithAffinity() noexcept : position(0), affinity(kDownstream) {}
+  constexpr PositionWithAffinity(int32_t p, Affinity a) noexcept : position(p), affinity(a) {}
 };
 
 struct TextBox {
   SkRect rect;
   TextDirection direction;
 
-  TextBox(SkRect r, TextDirection d) : rect(r), direction(d) {}
+  TextBox(SkRect r, TextDirection d) noexcept : rect(r), direction(d) {}
 };
 
 // -------------------------------------------------------------------
@@ -86,39 +86,41 @@ UnaryFunction directional_for_each(C& c, bool forwards, UnaryFunction f) {
                   : std::for_each(std::rbegin(c), std::rend(c), f);
 }
 
-const size_t EMPTY_INDEX = std::numeric_limits<size_t>::max();
+constexpr size_t EMPTY_INDEX = std::numeric_limits<size_t>::max();
 template <typename T>
 struct SkRange {
-  SkRange() : start(), end() {}
-  SkRange(T s, T e) : start(s), end(e) {}
+  SkRange() noexcept : start(), end() {}
+  constexpr SkRange(T s, T e) noexcept : start(s), end(e) {}
 
   T start, end;
 
-  bool operator==(const SkRange<T>& other) const {
+  bool operator==(const SkRange<T>& other) const noexcept {
     return start == other.start && end == other.end;
   }
 
-  T width() const { return end - start; }
+  T width() const noexcept { return end - start; }
 
-  void Shift(T delta) {
+  void Shift(T delta) noexcept {
     start += delta;
     end += delta;
   }
 
-  bool contains(SkRange<size_t> other) const { return start <= other.start && end >= other.end; }
+  bool contains(SkRange<size_t> other) const noexcept {
+    return start <= other.start && end >= other.end;
+  }
 
-  bool intersects(SkRange<size_t> other) const {
+  bool intersects(SkRange<size_t> other) const noexcept {
     return std::max(start, other.start) <= std::min(end, other.end);
   }
 
-  SkRange<size_t> intersection(SkRange<size_t> other) const {
+  SkRange<size_t> intersection(SkRange<size_t> other) const noexcept {
     return SkRange<size_t>(std::max(start, other.start), std::min(end, other.end));
   }
 
-  bool empty() const { return start == EMPTY_INDEX && end == EMPTY_INDEX; }
+  bool empty() const noexcept { return start == EMPTY_INDEX && end == EMPTY_INDEX; }
 };
 
-const SkRange<size_t> EMPTY_RANGE = SkRange<size_t>(EMPTY_INDEX, EMPTY_INDEX);
+constexpr SkRange<size_t> EMPTY_RANGE = SkRange<size_t>(EMPTY_INDEX, EMPTY_INDEX);
 
 enum class TextBaseline {
   kAlphabetic,

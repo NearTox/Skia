@@ -10,10 +10,11 @@
 #include "include/core/SkDrawable.h"
 #include "include/core/SkRect.h"
 #include "include/gpu/GrBackendDrawableInfo.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrPipeline.h"
-#include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/vk/GrVkCommandBuffer.h"
 #include "src/gpu/vk/GrVkCommandPool.h"
 #include "src/gpu/vk/GrVkGpu.h"
@@ -70,8 +71,7 @@ bool GrVkOpsRenderPass::init(
 
   // If we are using a stencil attachment we also need to update its layout
   if (withStencil) {
-    GrVkStencilAttachment* vkStencil =
-        (GrVkStencilAttachment*)fRenderTarget->renderTargetPriv().getStencilAttachment();
+    auto* vkStencil = static_cast<GrVkStencilAttachment*>(fRenderTarget->getStencilAttachment());
     SkASSERT(vkStencil);
 
     // We need the write and read access bits since we may load and store the stencil.
@@ -84,13 +84,13 @@ bool GrVkOpsRenderPass::init(
   }
 
   const GrVkResourceProvider::CompatibleRPHandle& rpHandle =
-      vkRT->compatibleRenderPassHandle(withStencil);
+      vkRT->compatibleRenderPassHandle(withStencil, fUsesXferBarriers);
   if (rpHandle.isValid()) {
     fCurrentRenderPass =
         fGpu->resourceProvider().findRenderPass(rpHandle, vkColorOps, vkStencilOps);
   } else {
     fCurrentRenderPass = fGpu->resourceProvider().findRenderPass(
-        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil);
+        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil, fUsesXferBarriers);
   }
   if (!fCurrentRenderPass) {
     return false;
@@ -110,7 +110,7 @@ bool GrVkOpsRenderPass::init(
       return false;
     }
     fCurrentSecondaryCommandBuffer->begin(
-        fGpu, vkRT->getFramebuffer(withStencil), fCurrentRenderPass);
+        fGpu, vkRT->getFramebuffer(withStencil, fUsesXferBarriers), fCurrentRenderPass);
   }
 
   if (!fGpu->beginRenderPass(
@@ -143,12 +143,15 @@ bool GrVkOpsRenderPass::initWrapped() {
 
 GrVkOpsRenderPass::~GrVkOpsRenderPass() { this->reset(); }
 
-GrGpu* GrVkOpsRenderPass::gpu() noexcept { return fGpu; }
+GrGpu* GrVkOpsRenderPass::gpu() { return fGpu; }
 
 GrVkCommandBuffer* GrVkOpsRenderPass::currentCommandBuffer() {
   if (fCurrentSecondaryCommandBuffer) {
     return fCurrentSecondaryCommandBuffer.get();
   }
+  // We checked this when we setup the GrVkOpsRenderPass and it should not have changed while we
+  // are still using this object.
+  SkASSERT(fGpu->currentCommandBuffer());
   return fGpu->currentCommandBuffer();
 }
 
@@ -181,13 +184,20 @@ bool GrVkOpsRenderPass::set(
     GrRenderTarget* rt, GrStencilAttachment* stencil, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo,
-    const SkTArray<GrSurfaceProxy*, true>& sampledProxies) {
+    const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) {
   SkASSERT(!fRenderTarget);
   SkASSERT(fGpu == rt->getContext()->priv().getGpu());
 
 #ifdef SK_DEBUG
   fIsActive = true;
 #endif
+
+  // We check to make sure the GrVkGpu has a valid current command buffer instead of each time we
+  // access it. If the command buffer is valid here should be valid throughout the use of the
+  // render pass since nothing should trigger a submit while this render pass is active.
+  if (!fGpu->currentCommandBuffer()) {
+    return false;
+  }
 
   this->INHERITED::set(rt, origin);
 
@@ -204,6 +214,8 @@ bool GrVkOpsRenderPass::set(
 
   SkASSERT(bounds.isEmpty() || SkIRect::MakeWH(rt->width(), rt->height()).contains(bounds));
   fBounds = bounds;
+
+  fUsesXferBarriers = usesXferBarriers;
 
   if (this->wrapsSecondaryCommandBuffer()) {
     return this->initWrapped();
@@ -245,7 +257,7 @@ void GrVkOpsRenderPass::onClearStencilClip(const GrScissorState& scissor, bool i
     return;
   }
 
-  GrStencilAttachment* sb = fRenderTarget->renderTargetPriv().getStencilAttachment();
+  GrStencilAttachment* sb = fRenderTarget->getStencilAttachment();
   // this should only be called internally when we know we have a
   // stencil buffer.
   SkASSERT(sb);
@@ -353,7 +365,7 @@ void GrVkOpsRenderPass::addAdditionalRenderPass(bool mustUseSecondaryCommandBuff
   bool withStencil = fCurrentRenderPass->hasStencilAttachment();
 
   const GrVkResourceProvider::CompatibleRPHandle& rpHandle =
-      vkRT->compatibleRenderPassHandle(withStencil);
+      vkRT->compatibleRenderPassHandle(withStencil, fUsesXferBarriers);
   SkASSERT(fCurrentRenderPass);
   fCurrentRenderPass->unref();
   if (rpHandle.isValid()) {
@@ -361,7 +373,7 @@ void GrVkOpsRenderPass::addAdditionalRenderPass(bool mustUseSecondaryCommandBuff
         fGpu->resourceProvider().findRenderPass(rpHandle, vkColorOps, vkStencilOps);
   } else {
     fCurrentRenderPass = fGpu->resourceProvider().findRenderPass(
-        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil);
+        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil, fUsesXferBarriers);
   }
   if (!fCurrentRenderPass) {
     return;
@@ -378,7 +390,7 @@ void GrVkOpsRenderPass::addAdditionalRenderPass(bool mustUseSecondaryCommandBuff
       return;
     }
     fCurrentSecondaryCommandBuffer->begin(
-        fGpu, vkRT->getFramebuffer(withStencil), fCurrentRenderPass);
+        fGpu, vkRT->getFramebuffer(withStencil, fUsesXferBarriers), fCurrentRenderPass);
   }
 
   // We use the same fBounds as the whole GrVkOpsRenderPass since we have no way of tracking the
@@ -491,10 +503,8 @@ bool GrVkOpsRenderPass::onBindTextures(
   for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
     check_sampled_texture(primProcTextures[i]->peekTexture(), fRenderTarget, fGpu);
   }
-  GrFragmentProcessor::PipelineTextureSamplerRange textureSamplerRange(pipeline);
-  for (auto [sampler, fp] : textureSamplerRange) {
-    check_sampled_texture(sampler.peekTexture(), fRenderTarget, fGpu);
-  }
+  pipeline.visitTextureEffects(
+      [&](const GrTextureEffect& te) { check_sampled_texture(te.texture(), fRenderTarget, fGpu); });
   if (GrTexture* dstTexture = pipeline.peekDstTexture()) {
     check_sampled_texture(dstTexture, fRenderTarget, fGpu);
   }
@@ -504,8 +514,8 @@ bool GrVkOpsRenderPass::onBindTextures(
 }
 
 void GrVkOpsRenderPass::onBindBuffers(
-    const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
-    GrPrimitiveRestart primRestart) {
+    sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
+    sk_sp<const GrBuffer> vertexBuffer, GrPrimitiveRestart primRestart) {
   SkASSERT(GrPrimitiveRestart::kNo == primRestart);
   if (!fCurrentRenderPass) {
     SkASSERT(fGpu->isDeviceLost());
@@ -525,20 +535,20 @@ void GrVkOpsRenderPass::onBindBuffers(
   // Here our vertex and instance inputs need to match the same 0-based bindings they were
   // assigned in GrVkPipeline. That is, vertex first (if any) followed by instance.
   uint32_t binding = 0;
-  if (auto* vkVertexBuffer = static_cast<const GrVkMeshBuffer*>(vertexBuffer)) {
+  if (auto* vkVertexBuffer = static_cast<const GrVkMeshBuffer*>(vertexBuffer.get())) {
     SkASSERT(!vkVertexBuffer->isCpuBuffer());
     SkASSERT(!vkVertexBuffer->isMapped());
-    currCmdBuf->bindInputBuffer(fGpu, binding++, vkVertexBuffer);
+    currCmdBuf->bindInputBuffer(fGpu, binding++, std::move(vertexBuffer));
   }
-  if (auto* vkInstanceBuffer = static_cast<const GrVkMeshBuffer*>(instanceBuffer)) {
+  if (auto* vkInstanceBuffer = static_cast<const GrVkMeshBuffer*>(instanceBuffer.get())) {
     SkASSERT(!vkInstanceBuffer->isCpuBuffer());
     SkASSERT(!vkInstanceBuffer->isMapped());
-    currCmdBuf->bindInputBuffer(fGpu, binding++, vkInstanceBuffer);
+    currCmdBuf->bindInputBuffer(fGpu, binding++, std::move(instanceBuffer));
   }
-  if (auto* vkIndexBuffer = static_cast<const GrVkMeshBuffer*>(indexBuffer)) {
+  if (auto* vkIndexBuffer = static_cast<const GrVkMeshBuffer*>(indexBuffer.get())) {
     SkASSERT(!vkIndexBuffer->isCpuBuffer());
     SkASSERT(!vkIndexBuffer->isMapped());
-    currCmdBuf->bindIndexBuffer(fGpu, vkIndexBuffer);
+    currCmdBuf->bindIndexBuffer(fGpu, std::move(indexBuffer));
   }
 }
 

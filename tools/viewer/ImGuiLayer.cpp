@@ -105,6 +105,7 @@ void ImGuiLayer::onPrePaint() {
   io.KeyAlt = io.KeysDown[static_cast<int>(skui::Key::kOption)];
   io.KeyCtrl = io.KeysDown[static_cast<int>(skui::Key::kCtrl)];
   io.KeyShift = io.KeysDown[static_cast<int>(skui::Key::kShift)];
+  io.KeySuper = io.KeysDown[static_cast<int>(skui::Key::kSuper)];
 
   ImGui::NewFrame();
 }

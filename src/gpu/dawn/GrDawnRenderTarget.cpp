@@ -29,7 +29,7 @@ size_t GrDawnRenderTarget::onGpuMemorySize() const {
   int numSamples = this->numSamples() + 1;
   const GrCaps& caps = *getGpu()->caps();
   return GrSurface::ComputeSize(
-      caps, this->backendFormat(), this->dimensions(), numSamples, GrMipMapped::kNo);
+      caps, this->backendFormat(), this->dimensions(), numSamples, GrMipmapped::kNo);
 }
 
 bool GrDawnRenderTarget::completeStencilAttachment() { return true; }

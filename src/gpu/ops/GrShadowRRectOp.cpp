@@ -7,7 +7,7 @@
 
 #include "src/gpu/ops/GrShadowRRectOp.h"
 
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkRRectPriv.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrDrawOpTest.h"
@@ -229,22 +229,6 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
   }
 
   const char* name() const noexcept override { return "ShadowCircularRRectOp"; }
-
-#ifdef SK_DEBUG
-  SkString dumpInfo() const override {
-    SkString string;
-    for (int i = 0; i < fGeoData.count(); ++i) {
-      string.appendf(
-          "Color: 0x%08x Rect [L: %.2f, T: %.2f, R: %.2f, B: %.2f],"
-          "OuterRad: %.2f, Umbra: %.2f, InnerRad: %.2f, BlurRad: %.2f\n",
-          fGeoData[i].fColor, fGeoData[i].fDevBounds.fLeft, fGeoData[i].fDevBounds.fTop,
-          fGeoData[i].fDevBounds.fRight, fGeoData[i].fDevBounds.fBottom, fGeoData[i].fOuterRadius,
-          fGeoData[i].fUmbraInset, fGeoData[i].fInnerRadius, fGeoData[i].fBlurRadius);
-    }
-    string.append(INHERITED::dumpInfo());
-    return string;
-  }
-#endif
 
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
@@ -623,8 +607,23 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
     return CombineResult::kMerged;
   }
 
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override {
+    SkString string;
+    for (int i = 0; i < fGeoData.count(); ++i) {
+      string.appendf(
+          "Color: 0x%08x Rect [L: %.2f, T: %.2f, R: %.2f, B: %.2f],"
+          "OuterRad: %.2f, Umbra: %.2f, InnerRad: %.2f, BlurRad: %.2f\n",
+          fGeoData[i].fColor, fGeoData[i].fDevBounds.fLeft, fGeoData[i].fDevBounds.fTop,
+          fGeoData[i].fDevBounds.fRight, fGeoData[i].fDevBounds.fBottom, fGeoData[i].fOuterRadius,
+          fGeoData[i].fUmbraInset, fGeoData[i].fInnerRadius, fGeoData[i].fBlurRadius);
+    }
+    return string;
+  }
+#endif
+
   void visitProxies(const VisitProxyFunc& func) const override {
-    func(fFalloffView.proxy(), GrMipMapped(false));
+    func(fFalloffView.proxy(), GrMipmapped(false));
     if (fProgramInfo) {
       fProgramInfo->visitFPProxies(func);
     }
@@ -676,7 +675,7 @@ static GrSurfaceProxyView create_falloff_texture(GrRecordingContext* context) {
   bitmap.setImmutable();
 
   GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-  auto view = maker.view(GrMipMapped::kNo);
+  auto view = maker.view(GrMipmapped::kNo);
   SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
 
   if (view) {
@@ -717,7 +716,7 @@ std::unique_ptr<GrDrawOp> Make(
       color, bounds, scaledRadius, rrect.isOval(), blurWidth, scaledInsetWidth,
       std::move(falloffView));
 }
-}
+}  // namespace GrShadowRRectOp
 
 ///////////////////////////////////////////////////////////////////////////////
 

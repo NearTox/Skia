@@ -8,6 +8,7 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "src/core/SkGeometry.h"
+#include "src/core/SkMatrixPriv.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkPointPriv.h"
 #include "src/gpu/GrAuditTrail.h"
@@ -47,15 +48,15 @@ struct Segment {
   // sharp. If so, fMid is a normalized bisector facing outward.
   SkVector fMid;
 
-  int countPoints() noexcept {
+  int countPoints() {
     static_assert(0 == kLine && 1 == kQuad);
     return fType + 1;
   }
-  const SkPoint& endPt() const noexcept {
+  const SkPoint& endPt() const {
     static_assert(0 == kLine && 1 == kQuad);
     return fPts[fType];
   }
-  const SkPoint& endNorm() const noexcept {
+  const SkPoint& endNorm() const {
     static_assert(0 == kLine && 1 == kQuad);
     return fNorms[fType];
   }
@@ -175,18 +176,18 @@ static bool compute_vectors(
 }
 
 struct DegenerateTestData {
-  DegenerateTestData() noexcept { fStage = kInitial; }
-  bool isDegenerate() const noexcept { return kNonDegenerate != fStage; }
+  DegenerateTestData() { fStage = kInitial; }
+  bool isDegenerate() const { return kNonDegenerate != fStage; }
   enum { kInitial, kPoint, kLine, kNonDegenerate } fStage;
   SkPoint fFirstPoint;
   SkVector fLineNormal;
   SkScalar fLineC;
 };
 
-static constexpr SkScalar kClose = (SK_Scalar1 / 16);
-static constexpr SkScalar kCloseSqd = kClose * kClose;
+static const SkScalar kClose = (SK_Scalar1 / 16);
+static const SkScalar kCloseSqd = kClose * kClose;
 
-static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) noexcept {
+static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) {
   switch (data->fStage) {
     case DegenerateTestData::kInitial:
       data->fFirstPoint = pt;
@@ -212,7 +213,7 @@ static void update_degenerate_test(DegenerateTestData* data, const SkPoint& pt) 
 }
 
 static inline bool get_direction(
-    const SkPath& path, const SkMatrix& m, SkPathPriv::FirstDirection* dir) noexcept {
+    const SkPath& path, const SkMatrix& m, SkPathPriv::FirstDirection* dir) {
   // At this point, we've already returned true from canDraw(), which checked that the path's
   // direction could be determined, so this should just be fetching the cached direction.
   // However, if perspective is involved, we're operating on a transformed path, which may no
@@ -232,7 +233,7 @@ static inline bool get_direction(
   return true;
 }
 
-static inline void add_line_to_segment(const SkPoint& pt, SegmentArray* segments) noexcept {
+static inline void add_line_to_segment(const SkPoint& pt, SegmentArray* segments) {
   segments->push_back();
   segments->back().fType = Segment::kLine;
   segments->back().fPts[0] = pt;
@@ -448,7 +449,7 @@ static void create_vertices(
       // We need a negative value that is very large that it won't effect results if it is
       // interpolated with. However, the value can't be too large of a negative that it
       // effects numerical precision on less powerful GPUs.
-      static constexpr SkScalar kStableLargeNegativeValue = -SK_ScalarMax / 1000000;
+      static const SkScalar kStableLargeNegativeValue = -SK_ScalarMax / 1000000;
       verts.write(
           qpts[0] + segb.fNorms[0], color, skipUVs, kStableLargeNegativeValue,
           kStableLargeNegativeValue);
@@ -520,7 +521,7 @@ class QuadEdgeEffect : public GrGeometryProcessor {
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
-    GLSLProcessor() {}
+    GLSLProcessor() noexcept = default;
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const QuadEdgeEffect& qe = args.fGP.cast<QuadEdgeEffect>();
@@ -577,11 +578,8 @@ class QuadEdgeEffect : public GrGeometryProcessor {
       b->add32(key);
     }
 
-    void setData(
-        const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
-        const CoordTransformRange& transformRange) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp) override {
       const QuadEdgeEffect& qe = gp.cast<QuadEdgeEffect>();
-      this->setTransformDataHelper(pdman, transformRange);
       this->setTransform(pdman, fLocalMatrixUniform, qe.fLocalMatrix, &fLocalMatrix);
     }
 
@@ -603,7 +601,7 @@ class QuadEdgeEffect : public GrGeometryProcessor {
  private:
   friend class ::SkArenaAlloc;  // for access to ctor
 
-  QuadEdgeEffect(const SkMatrix& localMatrix, bool usesLocalCoords, bool wideColor) noexcept
+  QuadEdgeEffect(const SkMatrix& localMatrix, bool usesLocalCoords, bool wideColor)
       : INHERITED(kQuadEdgeEffect_ClassID),
         fLocalMatrix(localMatrix),
         fUsesLocalCoords(usesLocalCoords) {
@@ -687,16 +685,6 @@ class AAConvexPathOp final : public GrMeshDrawOp {
     }
   }
 
-#ifdef SK_DEBUG
-  SkString dumpInfo() const override {
-    SkString string;
-    string.appendf("Count: %d\n", fPaths.count());
-    string += fHelper.dumpInfo();
-    string += INHERITED::dumpInfo();
-    return string;
-  }
-#endif
-
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
@@ -708,7 +696,7 @@ class AAConvexPathOp final : public GrMeshDrawOp {
   }
 
  private:
-  GrProgramInfo* programInfo() noexcept override { return fProgramInfo; }
+  GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
@@ -841,6 +829,12 @@ class AAConvexPathOp final : public GrMeshDrawOp {
     return CombineResult::kMerged;
   }
 
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override {
+    return SkStringPrintf("Count: %d\n%s", fPaths.count(), fHelper.dumpInfo().c_str());
+  }
+#endif
+
   struct PathData {
     SkMatrix fViewMatrix;
     SkPath fPath;
@@ -885,7 +879,7 @@ bool GrAAConvexPathRenderer::onDrawPath(const DrawPathArgs& args) {
 
 GR_DRAW_OP_TEST_DEFINE(AAConvexPathOp) {
   SkMatrix viewMatrix = GrTest::TestMatrixInvertible(random);
-  SkPath path = GrTest::TestPathConvex(random);
+  const SkPath& path = GrTest::TestPathConvex(random);
   const GrUserStencilSettings* stencilSettings = GrGetRandomStencil(random, context);
   return AAConvexPathOp::Make(context, std::move(paint), viewMatrix, path, stencilSettings);
 }

@@ -14,7 +14,7 @@ struct SkIPoint16;
 
 class GrRectanizer {
  public:
-  constexpr GrRectanizer(int width, int height) noexcept : fWidth(width), fHeight(height) {
+  GrRectanizer(int width, int height) noexcept : fWidth(width), fHeight(height) {
     SkASSERT(width >= 0);
     SkASSERT(height >= 0);
   }

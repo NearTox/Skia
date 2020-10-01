@@ -10,7 +10,7 @@
 
 class EmptyFontLoader : public SkFontMgr_Custom::SystemFontLoader {
  public:
-  EmptyFontLoader() {}
+  EmptyFontLoader() noexcept = default;
 
   void loadSystemFonts(
       const SkTypeface_FreeType::Scanner& scanner,

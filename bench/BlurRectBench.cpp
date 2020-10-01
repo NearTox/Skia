@@ -39,13 +39,13 @@ class BlurRectBench : public Benchmark {
   }
 
  protected:
-  virtual const char* onGetName() { return fName.c_str(); }
+  const char* onGetName() override { return fName.c_str(); }
 
   SkScalar radius() const { return fRadius; }
 
   void setName(const SkString& name) { fName = name; }
 
-  virtual void onDraw(int loops, SkCanvas*) {
+  void onDraw(int loops, SkCanvas*) override {
     SkPaint paint;
     this->setupPaint(&paint);
 

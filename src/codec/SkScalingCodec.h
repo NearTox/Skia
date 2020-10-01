@@ -14,10 +14,10 @@ class SkScalingCodec : public SkCodec {
  protected:
   SkScalingCodec(
       SkEncodedInfo&& info, XformFormat srcFormat, std::unique_ptr<SkStream> stream,
-      SkEncodedOrigin origin = kTopLeft_SkEncodedOrigin) noexcept
+      SkEncodedOrigin origin = kTopLeft_SkEncodedOrigin)
       : INHERITED(std::move(info), srcFormat, std::move(stream), origin) {}
 
-  SkISize onGetScaledDimensions(float desiredScale) const noexcept override {
+  SkISize onGetScaledDimensions(float desiredScale) const override {
     SkISize dim = this->dimensions();
     // SkCodec treats zero dimensional images as errors, so the minimum size
     // that we will recommend is 1x1.
@@ -26,7 +26,7 @@ class SkScalingCodec : public SkCodec {
     return dim;
   }
 
-  bool onDimensionsSupported(const SkISize& requested) noexcept override {
+  bool onDimensionsSupported(const SkISize& requested) override {
     SkISize dim = this->dimensions();
     int w = requested.width();
     int h = requested.height();

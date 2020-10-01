@@ -16,23 +16,19 @@
 struct GrIRect16 {
   int16_t fLeft, fTop, fRight, fBottom;
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT MakeEmpty() noexcept {
-    GrIRect16 r;
-    r.setEmpty();
-    return r;
+  static constexpr GrIRect16 SK_WARN_UNUSED_RESULT MakeEmpty() noexcept {
+    // GrIRect16 r;
+    // r.setEmpty();
+    return MakeWH(0, 0);
   }
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT MakeWH(int16_t w, int16_t h) noexcept {
-    GrIRect16 r;
-    r.set(0, 0, w, h);
-    return r;
+  static constexpr GrIRect16 SK_WARN_UNUSED_RESULT MakeWH(int16_t w, int16_t h) noexcept {
+    return GrIRect16{0, 0, w, h};
   }
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT
+  static constexpr GrIRect16 SK_WARN_UNUSED_RESULT
   MakeXYWH(int16_t x, int16_t y, int16_t w, int16_t h) noexcept {
-    GrIRect16 r;
-    r.set(x, y, x + w, y + h);
-    return r;
+    return GrIRect16{x, y, SkToS16(x + w), SkToS16(y + h)};
   }
 
   static GrIRect16 SK_WARN_UNUSED_RESULT Make(const SkIRect& ir) noexcept {
@@ -41,28 +37,28 @@ struct GrIRect16 {
     return r;
   }
 
-  int width() const noexcept { return fRight - fLeft; }
-  int height() const noexcept { return fBottom - fTop; }
-  int area() const noexcept { return this->width() * this->height(); }
+  constexpr int width() const noexcept { return fRight - fLeft; }
+  constexpr int height() const noexcept { return fBottom - fTop; }
+  constexpr int area() const noexcept { return this->width() * this->height(); }
   bool isEmpty() const noexcept { return fLeft >= fRight || fTop >= fBottom; }
 
   void setEmpty() noexcept { memset(this, 0, sizeof(*this)); }
 
-  void set(int16_t left, int16_t top, int16_t right, int16_t bottom) noexcept {
+  constexpr void set(int16_t left, int16_t top, int16_t right, int16_t bottom) noexcept {
     fLeft = left;
     fTop = top;
     fRight = right;
     fBottom = bottom;
   }
 
-  void set(const SkIRect& r) noexcept {
+  constexpr void set(const SkIRect& r) noexcept {
     fLeft = SkToS16(r.fLeft);
     fTop = SkToS16(r.fTop);
     fRight = SkToS16(r.fRight);
     fBottom = SkToS16(r.fBottom);
   }
 
-  void offset(int16_t dx, int16_t dy) noexcept {
+  constexpr void offset(int16_t dx, int16_t dy) noexcept {
     fLeft += dx;
     fTop += dy;
     fRight += dx;

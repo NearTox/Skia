@@ -26,7 +26,7 @@ using Vec2Value = SkV2;
 
 class VectorValue final : public std::vector<float> {
  public:
-  VectorValue() noexcept = default;
+  VectorValue() = default;
 
   VectorValue(std::initializer_list<float> l) : INHERITED(l) {}
 

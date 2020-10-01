@@ -138,11 +138,11 @@ bool SkStrikeSpec::ShouldDrawAsPath(
   SkMatrix textMatrix = SkFontPriv::MakeTextMatrix(font);
   textMatrix.postConcat(viewMatrix);
 
-  // we have a self-imposed maximum, just for memory-usage sanity
+  // we have a self-imposed maximum, just to limit memory-usage
   SkScalar limit = std::min(SkGraphics::GetFontCachePointSizeLimit(), 1024);
   SkScalar maxSizeSquared = limit * limit;
 
-  auto distance = [&textMatrix](int XIndex, int YIndex) noexcept {
+  auto distance = [&textMatrix](int XIndex, int YIndex) {
     return textMatrix[XIndex] * textMatrix[XIndex] + textMatrix[YIndex] * textMatrix[YIndex];
   };
 
@@ -238,7 +238,7 @@ const SkGlyph* SkBulkGlyphMetrics::glyph(SkGlyphID glyphID) {
 SkBulkGlyphMetricsAndPaths::SkBulkGlyphMetricsAndPaths(const SkStrikeSpec& spec)
     : fStrike{spec.findOrCreateStrike()} {}
 
-SkBulkGlyphMetricsAndPaths::SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike) noexcept
+SkBulkGlyphMetricsAndPaths::SkBulkGlyphMetricsAndPaths(sk_sp<SkStrike>&& strike)
     : fStrike{std::move(strike)} {}
 
 SkSpan<const SkGlyph*> SkBulkGlyphMetricsAndPaths::glyphs(SkSpan<const SkGlyphID> glyphIDs) {
@@ -261,7 +261,7 @@ void SkBulkGlyphMetricsAndPaths::findIntercepts(
 SkBulkGlyphMetricsAndImages::SkBulkGlyphMetricsAndImages(const SkStrikeSpec& spec)
     : fStrike{spec.findOrCreateStrike()} {}
 
-SkBulkGlyphMetricsAndImages::SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike) noexcept
+SkBulkGlyphMetricsAndImages::SkBulkGlyphMetricsAndImages(sk_sp<SkStrike>&& strike)
     : fStrike{std::move(strike)} {}
 
 SkSpan<const SkGlyph*> SkBulkGlyphMetricsAndImages::glyphs(SkSpan<const SkPackedGlyphID> glyphIDs) {

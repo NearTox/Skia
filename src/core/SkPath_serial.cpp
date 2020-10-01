@@ -37,15 +37,15 @@ enum SerializationVersions {
 
 enum SerializationType { kGeneral = 0, kRRect = 1 };
 
-static unsigned extract_version(uint32_t packed) noexcept {
+static constexpr unsigned extract_version(uint32_t packed) noexcept {
   return packed & kVersion_SerializationMask;
 }
 
-static SkPathFillType extract_filltype(uint32_t packed) noexcept {
+static constexpr SkPathFillType extract_filltype(uint32_t packed) noexcept {
   return static_cast<SkPathFillType>((packed >> kFillType_SerializationShift) & 0x3);
 }
 
-static SerializationType extract_serializationtype(uint32_t packed) noexcept {
+static constexpr SerializationType extract_serializationtype(uint32_t packed) noexcept {
   return static_cast<SerializationType>((packed >> kType_SerializationShift) & 0xF);
 }
 

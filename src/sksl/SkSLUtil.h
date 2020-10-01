@@ -17,6 +17,7 @@
 
 #ifndef SKSL_STANDALONE
 #  include "include/core/SkTypes.h"
+#  include "include/private/GrTypesPriv.h"
 #  if SK_SUPPORT_GPU
 #    include "include/gpu/GrContextOptions.h"
 #    include "src/gpu/GrShaderCaps.h"
@@ -27,8 +28,10 @@ class GrShaderCaps;
 
 namespace SkSL {
 
+class Context;
 class OutputStream;
 class StringStream;
+class Type;
 
 #if defined(SKSL_STANDALONE) || !SK_SUPPORT_GPU
 
@@ -319,6 +322,10 @@ class ShaderCapsFactory {
 };
 #endif
 
+#if !defined(SKSL_STANDALONE)
+bool type_to_grsltype(const Context& context, const Type& type, GrSLType* outType);
+#endif
+
 void write_stringstream(const StringStream& d, OutputStream& out);
 
 // Returns true if op is '=' or any compound assignment operator ('+=', '-=', etc.)
@@ -328,7 +335,7 @@ bool is_assignment(Token::Kind op);
 // '+=' becomes '+')
 Token::Kind remove_assignment(Token::Kind op);
 
-NORETURN void sksl_abort();
+NORETURN void sksl_abort() noexcept;
 
 }  // namespace SkSL
 

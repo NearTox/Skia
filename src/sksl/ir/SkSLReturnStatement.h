@@ -17,10 +17,12 @@ namespace SkSL {
  * A 'return' statement.
  */
 struct ReturnStatement : public Statement {
-  ReturnStatement(int offset) noexcept : INHERITED(offset, kReturn_Kind) {}
+  static constexpr Kind kStatementKind = kReturn_Kind;
 
-  ReturnStatement(std::unique_ptr<Expression> expression) noexcept
-      : INHERITED(expression->fOffset, kReturn_Kind), fExpression(std::move(expression)) {}
+  ReturnStatement(int offset) : INHERITED(offset, kStatementKind) {}
+
+  ReturnStatement(std::unique_ptr<Expression> expression)
+      : INHERITED(expression->fOffset, kStatementKind), fExpression(std::move(expression)) {}
 
   int nodeCount() const noexcept override { return 1 + fExpression->nodeCount(); }
 

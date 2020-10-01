@@ -76,7 +76,7 @@ static void draw_text_set(SkCanvas* canvas, const SkPaint& paint, const SkFont& 
 
 namespace {
 enum { kBelowThreshold_TextSize = 255, kAboveThreshold_TextSize = 257 };
-}
+}  // namespace
 
 DEF_SIMPLE_GM(stroketext, canvas, 1200, 480) {
   if (true) {

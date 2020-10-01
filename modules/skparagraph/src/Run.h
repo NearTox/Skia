@@ -30,12 +30,12 @@ class InternalLineMetrics;
 class ParagraphImpl;
 
 typedef size_t RunIndex;
-const size_t EMPTY_RUN = EMPTY_INDEX;
+constexpr size_t EMPTY_RUN = EMPTY_INDEX;
 
 typedef size_t ClusterIndex;
 typedef SkRange<size_t> ClusterRange;
-const size_t EMPTY_CLUSTER = EMPTY_INDEX;
-const SkRange<size_t> EMPTY_CLUSTERS = EMPTY_RANGE;
+constexpr size_t EMPTY_CLUSTER = EMPTY_INDEX;
+constexpr SkRange<size_t> EMPTY_CLUSTERS = EMPTY_RANGE;
 
 typedef size_t GraphemeIndex;
 typedef SkRange<GraphemeIndex> GraphemeRange;
@@ -46,85 +46,92 @@ typedef SkRange<GlyphIndex> GlyphRange;
 // LTR: [start: end) where start <= end
 // RTL: [end: start) where start >= end
 class DirText {
-  DirText(bool dir, size_t s, size_t e) : start(s), end(e) {}
-  bool isLeftToRight() const { return start <= end; }
+  DirText(bool dir, size_t s, size_t e) noexcept : start(s), end(e) {}
+  bool isLeftToRight() const noexcept { return start <= end; }
   size_t start;
   size_t end;
 };
 
 class Run {
  public:
-  Run(ParagraphImpl* master, const SkShaper::RunHandler::RunInfo& info, size_t firstChar,
+  Run(ParagraphImpl* owner, const SkShaper::RunHandler::RunInfo& info, size_t firstChar,
       SkScalar heightMultiplier, size_t index, SkScalar shiftX);
   Run(const Run&) = default;
   Run& operator=(const Run&) = delete;
-  Run(Run&&) = default;
+  Run(Run&&) noexcept = default;
   Run& operator=(Run&&) = delete;
   ~Run() = default;
 
-  void setMaster(ParagraphImpl* master) { fMaster = master; }
+  void setOwner(ParagraphImpl* owner) noexcept { fOwner = owner; }
 
-  SkShaper::RunHandler::Buffer newRunBuffer();
+  SkShaper::RunHandler::Buffer newRunBuffer() noexcept;
 
-  SkScalar posX(size_t index) const { return fPositions[index].fX; }
-  void addX(size_t index, SkScalar shift) { fPositions[index].fX += shift; }
-  SkScalar posY(size_t index) const { return fPositions[index].fY; }
-  size_t size() const { return fGlyphs.size(); }
-  void setWidth(SkScalar width) { fAdvance.fX = width; }
-  void setHeight(SkScalar height) { fAdvance.fY = height; }
-  void shift(SkScalar shiftX, SkScalar shiftY) {
+  SkScalar posX(size_t index) const noexcept { return fPositions[index].fX; }
+  void addX(size_t index, SkScalar shift) noexcept { fPositions[index].fX += shift; }
+  SkScalar posY(size_t index) const noexcept { return fPositions[index].fY; }
+  size_t size() const noexcept { return fGlyphs.size(); }
+  void setWidth(SkScalar width) noexcept { fAdvance.fX = width; }
+  void setHeight(SkScalar height) noexcept { fAdvance.fY = height; }
+  void shift(SkScalar shiftX, SkScalar shiftY) noexcept {
     fOffset.fX += shiftX;
     fOffset.fY += shiftY;
   }
-  SkVector advance() const {
+  SkVector advance() const noexcept {
     return SkVector::Make(
         fAdvance.fX, fFontMetrics.fDescent - fFontMetrics.fAscent + fFontMetrics.fLeading);
   }
-  SkVector offset() const { return fOffset; }
-  SkScalar ascent() const { return fFontMetrics.fAscent; }
-  SkScalar descent() const { return fFontMetrics.fDescent; }
-  SkScalar leading() const { return fFontMetrics.fLeading; }
-  SkScalar correctAscent() const { return fCorrectAscent; }
-  SkScalar correctDescent() const { return fCorrectDescent; }
-  SkScalar correctLeading() const { return fCorrectLeading; }
-  const SkFont& font() const { return fFont; }
-  bool leftToRight() const { return fBidiLevel % 2 == 0; }
-  TextDirection getTextDirection() const {
+  SkVector offset() const noexcept { return fOffset; }
+  SkScalar ascent() const noexcept { return fFontMetrics.fAscent; }
+  SkScalar descent() const noexcept { return fFontMetrics.fDescent; }
+  SkScalar leading() const noexcept { return fFontMetrics.fLeading; }
+  SkScalar correctAscent() const noexcept { return fCorrectAscent; }
+  SkScalar correctDescent() const noexcept { return fCorrectDescent; }
+  SkScalar correctLeading() const noexcept { return fCorrectLeading; }
+  const SkFont& font() const noexcept { return fFont; }
+  bool leftToRight() const noexcept { return fBidiLevel % 2 == 0; }
+  TextDirection getTextDirection() const noexcept {
     return leftToRight() ? TextDirection::kLtr : TextDirection::kRtl;
   }
-  size_t index() const { return fIndex; }
-  SkScalar heightMultiplier() const { return fHeightMultiplier; }
-  PlaceholderStyle* placeholderStyle() const;
-  bool isPlaceholder() const { return fPlaceholderIndex != std::numeric_limits<size_t>::max(); }
-  size_t clusterIndex(size_t pos) const { return fClusterIndexes[pos]; }
-  size_t globalClusterIndex(size_t pos) const { return fClusterStart + fClusterIndexes[pos]; }
-  SkScalar positionX(size_t pos) const;
+  size_t index() const noexcept { return fIndex; }
+  SkScalar heightMultiplier() const noexcept { return fHeightMultiplier; }
+  PlaceholderStyle* placeholderStyle() const noexcept;
+  bool isPlaceholder() const noexcept {
+    return fPlaceholderIndex != std::numeric_limits<size_t>::max();
+  }
+  size_t clusterIndex(size_t pos) const noexcept { return fClusterIndexes[pos]; }
+  size_t globalClusterIndex(size_t pos) const noexcept {
+    return fClusterStart + fClusterIndexes[pos];
+  }
+  SkScalar positionX(size_t pos) const noexcept;
 
-  TextRange textRange() const { return fTextRange; }
-  ClusterRange clusterRange() const { return fClusterRange; }
+  TextRange textRange() const noexcept { return fTextRange; }
+  ClusterRange clusterRange() const noexcept { return fClusterRange; }
 
-  ParagraphImpl* master() const { return fMaster; }
+  ParagraphImpl* owner() const noexcept { return fOwner; }
 
-  bool isEllipsis() const { return fEllipsis; }
+  bool isEllipsis() const noexcept { return fEllipsis; }
 
-  void calculateMetrics();
+  void calculateMetrics() noexcept;
   void updateMetrics(InternalLineMetrics* endlineMetrics);
 
-  void setClusterRange(size_t from, size_t to) { fClusterRange = ClusterRange(from, to); }
-  SkRect clip() const { return SkRect::MakeXYWH(fOffset.fX, fOffset.fY, fAdvance.fX, fAdvance.fY); }
+  void setClusterRange(size_t from, size_t to) noexcept { fClusterRange = ClusterRange(from, to); }
+  SkRect clip() const noexcept {
+    return SkRect::MakeXYWH(fOffset.fX, fOffset.fY, fAdvance.fX, fAdvance.fY);
+  }
 
-  SkScalar addSpacesAtTheEnd(SkScalar space, Cluster* cluster);
+  SkScalar addSpacesAtTheEnd(SkScalar space, Cluster* cluster) noexcept;
   SkScalar addSpacesEvenly(SkScalar space, Cluster* cluster);
-  void shift(const Cluster* cluster, SkScalar offset);
+  void shift(const Cluster* cluster, SkScalar offset) noexcept;
 
-  SkScalar calculateHeight(LineMetricStyle ascentStyle, LineMetricStyle descentStyle) const {
+  SkScalar calculateHeight(
+      LineMetricStyle ascentStyle, LineMetricStyle descentStyle) const noexcept {
     auto ascent =
         ascentStyle == LineMetricStyle::Typographic ? this->ascent() : this->correctAscent();
     auto descent =
         descentStyle == LineMetricStyle::Typographic ? this->descent() : this->correctDescent();
     return descent - ascent;
   }
-  SkScalar calculateWidth(size_t start, size_t end, bool clip) const;
+  SkScalar calculateWidth(size_t start, size_t end, bool clip) const noexcept;
 
   void copyTo(SkTextBlobBuilder& builder, size_t pos, size_t size) const;
 
@@ -137,31 +144,31 @@ class Run {
   void iterateThroughClusters(const ClusterVisitor& visitor);
 
   std::tuple<bool, ClusterIndex, ClusterIndex> findLimitingClusters(TextRange text) const;
-  SkSpan<const SkGlyphID> glyphs() const {
+  SkSpan<const SkGlyphID> glyphs() const noexcept {
     return SkSpan<const SkGlyphID>(fGlyphs.begin(), fGlyphs.size());
   }
-  SkSpan<const SkPoint> positions() const {
+  SkSpan<const SkPoint> positions() const noexcept {
     return SkSpan<const SkPoint>(fPositions.begin(), fPositions.size());
   }
-  SkSpan<const uint32_t> clusterIndexes() const {
+  SkSpan<const uint32_t> clusterIndexes() const noexcept {
     return SkSpan<const uint32_t>(fClusterIndexes.begin(), fClusterIndexes.size());
   }
-  SkSpan<const SkScalar> shifts() const {
+  SkSpan<const SkScalar> shifts() const noexcept {
     return SkSpan<const SkScalar>(fShifts.begin(), fShifts.size());
   }
 
   void commit();
 
-  SkRect getBounds(size_t pos) const { return fBounds[pos]; }
+  SkRect getBounds(size_t pos) const noexcept { return fBounds[pos]; }
 
-  void resetShifts() {
+  void resetShifts() noexcept {
     for (auto& r : fShifts) {
       r = 0;
     }
     fSpaced = false;
   }
 
-  void resetJustificationShifts() { fJustificationShifts.reset(); }
+  void resetJustificationShifts() noexcept { fJustificationShifts.reset(); }
 
  private:
   friend class ParagraphImpl;
@@ -170,7 +177,7 @@ class Run {
   friend class ParagraphCache;
   friend class OneLineShaper;
 
-  ParagraphImpl* fMaster;
+  ParagraphImpl* fOwner;
   TextRange fTextRange;
   ClusterRange fClusterRange;
 
@@ -210,8 +217,8 @@ class Cluster {
     HardLineBreak,  // calculated for all clusters (UBRK_LINE)
   };
 
-  Cluster()
-      : fMaster(nullptr),
+  Cluster() noexcept
+      : fOwner(nullptr),
         fRunIndex(EMPTY_RUN),
         fTextRange(EMPTY_TEXT),
         fGraphemeRange(EMPTY_RANGE),
@@ -223,62 +230,65 @@ class Cluster {
         fHalfLetterSpacing(0.0) {}
 
   Cluster(
-      ParagraphImpl* master, RunIndex runIndex, size_t start, size_t end, SkSpan<const char> text,
+      ParagraphImpl* owner, RunIndex runIndex, size_t start, size_t end, SkSpan<const char> text,
       SkScalar width, SkScalar height);
 
-  Cluster(TextRange textRange) : fTextRange(textRange), fGraphemeRange(EMPTY_RANGE) {}
+  Cluster(TextRange textRange) noexcept : fTextRange(textRange), fGraphemeRange(EMPTY_RANGE) {}
 
   ~Cluster() = default;
 
-  void setMaster(ParagraphImpl* master) { fMaster = master; }
-  SkScalar sizeToChar(TextIndex ch) const;
-  SkScalar sizeFromChar(TextIndex ch) const;
+  SkScalar sizeToChar(TextIndex ch) const noexcept;
+  SkScalar sizeFromChar(TextIndex ch) const noexcept;
 
-  size_t roundPos(SkScalar s) const;
+  size_t roundPos(SkScalar s) const noexcept;
 
-  void space(SkScalar shift, SkScalar space) {
+  void space(SkScalar shift, SkScalar space) noexcept {
     fSpacing += space;
     fWidth += shift;
   }
 
-  bool isWhitespaces() const { return fIsWhiteSpaces; }
+  bool isWhitespaces() const noexcept { return fIsWhiteSpaces; }
   bool isHardBreak() const;
   bool isSoftBreak() const;
   bool isGraphemeBreak() const;
   bool canBreakLineAfter() const { return isHardBreak() || isSoftBreak(); }
-  size_t startPos() const { return fStart; }
-  size_t endPos() const { return fEnd; }
-  SkScalar width() const { return fWidth; }
-  SkScalar height() const { return fHeight; }
-  size_t size() const { return fEnd - fStart; }
+  size_t startPos() const noexcept { return fStart; }
+  size_t endPos() const noexcept { return fEnd; }
+  SkScalar width() const noexcept { return fWidth; }
+  SkScalar height() const noexcept { return fHeight; }
+  size_t size() const noexcept { return fEnd - fStart; }
 
-  void setHalfLetterSpacing(SkScalar halfLetterSpacing) { fHalfLetterSpacing = halfLetterSpacing; }
-  SkScalar getHalfLetterSpacing() const { return fHalfLetterSpacing; }
+  void setHalfLetterSpacing(SkScalar halfLetterSpacing) noexcept {
+    fHalfLetterSpacing = halfLetterSpacing;
+  }
+  SkScalar getHalfLetterSpacing() const noexcept { return fHalfLetterSpacing; }
 
-  TextRange textRange() const { return fTextRange; }
+  TextRange textRange() const noexcept { return fTextRange; }
 
-  RunIndex runIndex() const { return fRunIndex; }
-  ParagraphImpl* master() const { return fMaster; }
+  RunIndex runIndex() const noexcept { return fRunIndex; }
+  ParagraphImpl* owner() const noexcept { return fOwner; }
 
-  Run* run() const;
-  SkFont font() const;
+  Run* run() const noexcept;
+  SkFont font() const noexcept;
 
-  SkScalar trimmedWidth(size_t pos) const;
+  SkScalar trimmedWidth(size_t pos) const noexcept;
 
-  bool contains(TextIndex ch) const { return ch >= fTextRange.start && ch < fTextRange.end; }
+  bool contains(TextIndex ch) const noexcept {
+    return ch >= fTextRange.start && ch < fTextRange.end;
+  }
 
-  bool belongs(TextRange text) const {
+  bool belongs(TextRange text) const noexcept {
     return fTextRange.start >= text.start && fTextRange.end <= text.end;
   }
 
-  bool startsIn(TextRange text) const {
+  bool startsIn(TextRange text) const noexcept {
     return fTextRange.start >= text.start && fTextRange.start < text.end;
   }
 
  private:
   friend ParagraphImpl;
 
-  ParagraphImpl* fMaster;
+  ParagraphImpl* fOwner;
   RunIndex fRunIndex;
   TextRange fTextRange;
   GraphemeRange fGraphemeRange;
@@ -294,17 +304,17 @@ class Cluster {
 
 class InternalLineMetrics {
  public:
-  InternalLineMetrics() {
+  InternalLineMetrics() noexcept {
     clean();
     fForceStrut = false;
   }
 
-  InternalLineMetrics(bool forceStrut) {
+  InternalLineMetrics(bool forceStrut) noexcept {
     clean();
     fForceStrut = forceStrut;
   }
 
-  InternalLineMetrics(SkScalar a, SkScalar d, SkScalar l) {
+  InternalLineMetrics(SkScalar a, SkScalar d, SkScalar l) noexcept {
     fAscent = a;
     fDescent = d;
     fLeading = l;
@@ -320,7 +330,7 @@ class InternalLineMetrics {
     fForceStrut = forceStrut;
   }
 
-  void add(Run* run) {
+  void add(Run* run) noexcept {
     if (fForceStrut) {
       return;
     }
@@ -330,20 +340,20 @@ class InternalLineMetrics {
     fLeading = std::max(fLeading, run->correctLeading());
   }
 
-  void add(InternalLineMetrics other) {
+  void add(InternalLineMetrics other) noexcept {
     fAscent = std::min(fAscent, other.fAscent);
     fDescent = std::max(fDescent, other.fDescent);
     fLeading = std::max(fLeading, other.fLeading);
   }
-  void clean() {
+  void clean() noexcept {
     fAscent = 0;
     fDescent = 0;
     fLeading = 0;
   }
 
-  SkScalar delta() const { return height() - ideographicBaseline(); }
+  SkScalar delta() const noexcept { return height() - ideographicBaseline(); }
 
-  void updateLineMetrics(InternalLineMetrics& metrics) {
+  void updateLineMetrics(InternalLineMetrics& metrics) noexcept {
     if (metrics.fForceStrut) {
       metrics.fAscent = fAscent;
       metrics.fDescent = fDescent;
@@ -355,23 +365,23 @@ class InternalLineMetrics {
     }
   }
 
-  SkScalar runTop(const Run* run, LineMetricStyle ascentStyle) const {
+  SkScalar runTop(const Run* run, LineMetricStyle ascentStyle) const noexcept {
     return fLeading / 2 - fAscent +
            (ascentStyle == LineMetricStyle::Typographic ? run->ascent() : run->correctAscent()) +
            delta();
   }
 
-  SkScalar height() const { return ::round((double)fDescent - fAscent + fLeading); }
+  SkScalar height() const noexcept { return ::round((double)fDescent - fAscent + fLeading); }
 
-  SkScalar alphabeticBaseline() const { return fLeading / 2 - fAscent; }
-  SkScalar ideographicBaseline() const { return fDescent - fAscent + fLeading; }
-  SkScalar deltaBaselines() const { return fLeading / 2 + fDescent; }
-  SkScalar baseline() const { return fLeading / 2 - fAscent; }
-  SkScalar ascent() const { return fAscent; }
-  SkScalar descent() const { return fDescent; }
-  SkScalar leading() const { return fLeading; }
-  void setForceStrut(bool value) { fForceStrut = value; }
-  bool getForceStrut() const { return fForceStrut; }
+  SkScalar alphabeticBaseline() const noexcept { return fLeading / 2 - fAscent; }
+  SkScalar ideographicBaseline() const noexcept { return fDescent - fAscent + fLeading; }
+  SkScalar deltaBaselines() const noexcept { return fLeading / 2 + fDescent; }
+  SkScalar baseline() const noexcept { return fLeading / 2 - fAscent; }
+  SkScalar ascent() const noexcept { return fAscent; }
+  SkScalar descent() const noexcept { return fDescent; }
+  SkScalar leading() const noexcept { return fLeading; }
+  void setForceStrut(bool value) noexcept { fForceStrut = value; }
+  bool getForceStrut() const noexcept { return fForceStrut; }
 
  private:
   friend class TextWrapper;

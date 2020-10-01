@@ -74,7 +74,7 @@ class ScopedOutputMarkedContentTags {
   ScopedOutputMarkedContentTags(int nodeId, SkPDFDocument* document, SkDynamicMemoryWStream* out)
       : fOut(out), fMarkId(-1) {
     if (nodeId) {
-      fMarkId = document->getMarkIdForNodeId(nodeId);
+      fMarkId = document->createMarkIdForNodeId(nodeId);
     }
 
     if (fMarkId != -1) {

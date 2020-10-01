@@ -41,10 +41,10 @@ struct RRectBlurRec : public SkResourceCache::Rec {
   RRectBlurKey fKey;
   MaskValue fValue;
 
-  const Key& getKey() const noexcept override { return fKey; }
+  const Key& getKey() const override { return fKey; }
   size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
-  const char* getCategory() const noexcept override { return "rrect-blur"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
+  const char* getCategory() const override { return "rrect-blur"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fValue.fData->diagnostic_only_getDiscardable();
   }
 
@@ -126,10 +126,10 @@ struct RectsBlurRec : public SkResourceCache::Rec {
   RectsBlurKey fKey;
   MaskValue fValue;
 
-  const Key& getKey() const noexcept override { return fKey; }
+  const Key& getKey() const override { return fKey; }
   size_t bytesUsed() const noexcept override { return sizeof(*this) + fValue.fData->size(); }
-  const char* getCategory() const noexcept override { return "rects-blur"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override {
+  const char* getCategory() const override { return "rects-blur"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fValue.fData->diagnostic_only_getDiscardable();
   }
 

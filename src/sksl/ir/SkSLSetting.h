@@ -18,11 +18,13 @@ namespace SkSL {
  * collapsed down to their constant representations during the compilation process.
  */
 struct Setting : public Expression {
-  Setting(int offset, String name, std::unique_ptr<Expression> value)
-      : INHERITED(offset, kSetting_Kind, value->fType),
+  static constexpr Kind kExpressionKind = kSetting_Kind;
+
+  Setting(int offset, String name, std::unique_ptr<Expression> value) noexcept
+      : INHERITED(offset, kExpressionKind, value->fType),
         fName(std::move(name)),
         fValue(std::move(value)) {
-    SkASSERT(fValue->isConstant());
+    SkASSERT(fValue->isCompileTimeConstant());
   }
 
   std::unique_ptr<Expression> constantPropagate(
@@ -38,7 +40,7 @@ struct Setting : public Expression {
 
   bool hasProperty(Property property) const noexcept override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isCompileTimeConstant() const noexcept override { return true; }
 
   const String fName;
   std::unique_ptr<Expression> fValue;

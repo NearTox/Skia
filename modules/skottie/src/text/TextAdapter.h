@@ -71,9 +71,9 @@ class TextAdapter final : public AnimatablePropertyContainer {
       const TextAnimator::ResolvedProps&, const FragmentRec&, const SkV2&,
       const TextAnimator::DomainSpan*) const;
 
-  void adjustLineTracking(
+  void adjustLineProps(
       const TextAnimator::ModulatorBuffer&, const TextAnimator::DomainSpan&,
-      float line_tracking) const;
+      const SkV2& line_offset, float line_tracking) const;
 
   SkV2 fragmentAnchorPoint(const FragmentRec&, const SkV2&, const TextAnimator::DomainSpan*) const;
   uint32_t shaperFlags() const;

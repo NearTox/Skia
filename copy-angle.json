@@ -199,6 +199,7 @@
   "third_party/externals/angle2/src/libANGLE/formatutils.cpp",
   "third_party/externals/angle2/src/libANGLE/queryconversions.cpp",
   "third_party/externals/angle2/src/libANGLE/queryutils.cpp",
+  "third_party/externals/angle2/src/libANGLE/renderer/BufferImpl.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/ContextImpl.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/DeviceImpl.cpp",
   "third_party/externals/angle2/src/libANGLE/renderer/DisplayImpl.cpp",

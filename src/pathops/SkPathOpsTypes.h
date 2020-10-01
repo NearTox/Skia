@@ -77,7 +77,7 @@ class SkOpGlobalState {
 #endif
 
 #if DEBUG_COINCIDENCE
-  void debugSetCheckHealth(bool check) { fDebugCheckHealth = check; }
+  void debugSetCheckHealth(bool check) noexcept { fDebugCheckHealth = check; }
   bool debugCheckHealth() const { return fDebugCheckHealth; }
 #endif
 
@@ -88,7 +88,7 @@ class SkOpGlobalState {
 #if DEBUG_COIN
   void debugAddToCoinChangedDict();
   void debugAddToGlobalCoinDicts();
-  SkPathOpsDebug::CoinDict* debugCoinChangedDict() { return &fCoinChangedDict; }
+  SkPathOpsDebug::CoinDict* debugCoinChangedDict() noexcept { return &fCoinChangedDict; }
   const SkPathOpsDebug::CoinDictEntry& debugCoinDictEntry() const { return fCoinDictEntry; }
 
   static void DumpCoinDict();
@@ -97,17 +97,17 @@ class SkOpGlobalState {
   int nested() const noexcept { return fNested; }
 
 #ifdef SK_DEBUG
-  int nextAngleID() { return ++fAngleID; }
+  int nextAngleID() noexcept { return ++fAngleID; }
 
-  int nextCoinID() { return ++fCoinID; }
+  int nextCoinID() noexcept { return ++fCoinID; }
 
-  int nextContourID() { return ++fContourID; }
+  int nextContourID() noexcept { return ++fContourID; }
 
-  int nextPtTID() { return ++fPtTID; }
+  int nextPtTID() noexcept { return ++fPtTID; }
 
-  int nextSegmentID() { return ++fSegmentID; }
+  int nextSegmentID() noexcept { return ++fSegmentID; }
 
-  int nextSpanID() { return ++fSpanID; }
+  int nextSpanID() noexcept { return ++fSpanID; }
 #endif
 
   SkOpPhase phase() const noexcept { return fPhase; }

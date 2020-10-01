@@ -16,14 +16,12 @@
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrSurface.h"
 
-class GrTexturePriv;
-
 class GrTexture : virtual public GrSurface {
  public:
   GrTexture* asTexture() noexcept override { return this; }
   const GrTexture* asTexture() const noexcept override { return this; }
 
-  virtual GrBackendTexture getBackendTexture() const = 0;
+  virtual GrBackendTexture getBackendTexture() const noexcept = 0;
 
   /**
    * This function indicates that the texture parameters (wrap mode, filtering, ...) have been
@@ -53,7 +51,7 @@ class GrTexture : virtual public GrSurface {
    * If the API is unmanaged (e.g. Vulkan) then kFinished has the additional constraint that the
    * work flushed to the GPU is finished.
    */
-  virtual void addIdleProc(sk_sp<GrRefCntedCallback> idleProc, IdleState) {
+  virtual void addIdleProc(sk_sp<GrRefCntedCallback> idleProc, IdleState) noexcept {
     // This is the default implementation for the managed case where the IdleState can be
     // ignored. Unmanaged backends, e.g. Vulkan, must override this to consider IdleState.
     fIdleProcs.push_back(std::move(idleProc));
@@ -64,12 +62,26 @@ class GrTexture : virtual public GrSurface {
     this->addIdleProc(sk_make_sp<GrRefCntedCallback>(callback, context), state);
   }
 
-  /** Access methods that are only to be used within Skia code. */
-  inline GrTexturePriv texturePriv() noexcept;
-  inline const GrTexturePriv texturePriv() const noexcept;
+  GrTextureType textureType() const noexcept { return fTextureType; }
+  bool hasRestrictedSampling() const noexcept {
+    return GrTextureTypeHasRestrictedSampling(this->textureType());
+  }
+
+  void markMipmapsDirty();
+  void markMipmapsClean();
+  GrMipmapped mipmapped() const noexcept {
+    return GrMipmapped(fMipmapStatus != GrMipmapStatus::kNotAllocated);
+  }
+  bool mipmapsAreDirty() const noexcept { return fMipmapStatus != GrMipmapStatus::kValid; }
+  GrMipmapStatus mipmapStatus() const noexcept { return fMipmapStatus; }
+  int maxMipmapLevel() const noexcept { return fMaxMipmapLevel; }
+
+  static void ComputeScratchKey(
+      const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, GrRenderable,
+      int sampleCnt, GrMipmapped, GrProtected, GrScratchKey* key);
 
  protected:
-  GrTexture(GrGpu*, const SkISize&, GrProtected, GrTextureType, GrMipMapsStatus) noexcept;
+  GrTexture(GrGpu*, const SkISize&, GrProtected, GrTextureType, GrMipmapStatus);
 
   virtual bool onStealBackendTexture(GrBackendTexture*, SkImage::BackendTextureReleaseProc*) = 0;
 
@@ -83,14 +95,11 @@ class GrTexture : virtual public GrSurface {
   void computeScratchKey(GrScratchKey*) const override;
 
  private:
-  size_t onGpuMemorySize() const noexcept override;
-  void markMipMapsDirty() noexcept;
-  void markMipMapsClean() noexcept;
+  size_t onGpuMemorySize() const override;
 
   GrTextureType fTextureType;
-  GrMipMapsStatus fMipMapsStatus;
-  int fMaxMipMapLevel;
-  friend class GrTexturePriv;
+  GrMipmapStatus fMipmapStatus;
+  int fMaxMipmapLevel;
   friend class GrTextureResource;
 
   typedef GrSurface INHERITED;

@@ -15,9 +15,8 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "include/gpu/GrTypes.h"
-#include "include/private/GrRecordingContext.h"
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkColorData.h"
 #include "src/gpu/GrBuffer.h"
@@ -81,7 +80,8 @@ class SampleLocationsGM : public GpuGM {
   }
 
   SkISize onISize() override { return SkISize::Make(200, 200); }
-  DrawResult onDraw(GrContext*, GrRenderTargetContext*, SkCanvas*, SkString* errorMsg) override;
+  DrawResult onDraw(
+      GrRecordingContext*, GrRenderTargetContext*, SkCanvas*, SkString* errorMsg) override;
 
   const GradType fGradType;
   const GrSurfaceOrigin fOrigin;
@@ -185,9 +185,7 @@ class SampleLocationsTestProcessor::Impl : public GrGLSLGeometryProcessor {
     f->codeAppendf("}");
   }
 
-  void setData(
-      const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-      const CoordTransformRange&) override {}
+  void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&) override {}
 };
 
 GrGLSLPrimitiveProcessor* SampleLocationsTestProcessor::createGLSLInstance(
@@ -291,7 +289,7 @@ class SampleLocationsTestOp : public GrDrawOp {
 // Test.
 
 DrawResult SampleLocationsGM::onDraw(
-    GrContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas, SkString* errorMsg) {
+    GrRecordingContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas, SkString* errorMsg) {
   if (!ctx->priv().caps()->sampleLocationsSupport()) {
     *errorMsg = "Requires support for sample locations.";
     return DrawResult::kSkip;
@@ -311,7 +309,7 @@ DrawResult SampleLocationsGM::onDraw(
 
   auto offscreenRTC = GrRenderTargetContext::Make(
       ctx, rtc->colorInfo().colorType(), nullptr, SkBackingFit::kExact, {200, 200},
-      rtc->numSamples(), GrMipMapped::kNo, GrProtected::kNo, fOrigin);
+      rtc->numSamples(), GrMipmapped::kNo, GrProtected::kNo, fOrigin);
   if (!offscreenRTC) {
     *errorMsg = "Failed to create offscreen render target.";
     return DrawResult::kFail;
@@ -344,8 +342,8 @@ DrawResult SampleLocationsGM::onDraw(
   // Copy offscreen texture to canvas.
   rtc->drawTexture(
       nullptr, offscreenRTC->readSurfaceView(), offscreenRTC->colorInfo().alphaType(),
-      GrSamplerState::Filter::kNearest, SkBlendMode::kSrc, SK_PMColor4fWHITE, {0, 0, 200, 200},
-      {0, 0, 200, 200}, GrAA::kNo, GrQuadAAFlags::kNone,
+      GrSamplerState::Filter::kNearest, GrSamplerState::MipmapMode::kNone, SkBlendMode::kSrc,
+      SK_PMColor4fWHITE, {0, 0, 200, 200}, {0, 0, 200, 200}, GrAA::kNo, GrQuadAAFlags::kNone,
       SkCanvas::SrcRectConstraint::kStrict_SrcRectConstraint, SkMatrix::I(), nullptr);
 
   return skiagm::DrawResult::kOk;

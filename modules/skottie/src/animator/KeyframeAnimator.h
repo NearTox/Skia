@@ -34,10 +34,10 @@ struct Keyframe {
       float flt;
     };
 
-    bool operator==(const Value& other) const noexcept {
+    bool operator==(const Value& other) const {
       return idx == other.idx || flt == other.flt;  // +/-0
     }
-    bool operator!=(const Value& other) const noexcept { return !((*this) == other); }
+    bool operator!=(const Value& other) const { return !((*this) == other); }
   };
 
   float t;
@@ -54,9 +54,9 @@ struct Keyframe {
 
 class KeyframeAnimator : public Animator {
  public:
-  virtual ~KeyframeAnimator() override;
+  ~KeyframeAnimator() override;
 
-  bool isConstant() const noexcept {
+  bool isConstant() const {
     SkASSERT(!fKFs.empty());
 
     // parseKeyFrames() ensures we only keep a single frame for constant properties.
@@ -64,14 +64,14 @@ class KeyframeAnimator : public Animator {
   }
 
  protected:
-  KeyframeAnimator(std::vector<Keyframe> kfs, std::vector<SkCubicMap> cms) noexcept
+  KeyframeAnimator(std::vector<Keyframe> kfs, std::vector<SkCubicMap> cms)
       : fKFs(std::move(kfs)), fCMs(std::move(cms)) {}
 
   struct LERPInfo {
     float weight;  // vrec0/vrec1 weight [0..1]
     Keyframe::Value vrec0, vrec1;
 
-    bool isConstant() const noexcept { return vrec0 == vrec1; }
+    bool isConstant() const { return vrec0 == vrec1; }
   };
 
   // Main entry point: |t| -> LERPInfo
@@ -83,7 +83,7 @@ class KeyframeAnimator : public Animator {
     const Keyframe* kf0;
     const Keyframe* kf1;
 
-    bool contains(float t) const noexcept {
+    bool contains(float t) const {
       SkASSERT(!!kf0 == !!kf1);
       SkASSERT(!kf0 || kf1 == kf0 + 1);
 

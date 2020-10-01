@@ -261,7 +261,7 @@ static size_t print_permil_as_decimal(int x, char* result, unsigned places) {
   return j + 1;
 }
 
-static constexpr int int_pow(int base, unsigned exp, int acc = 1) {
+static constexpr int int_pow(int base, unsigned exp, int acc = 1) noexcept {
   return exp < 1 ? acc : int_pow(base * base, exp / 2, (exp % 2) ? acc * base : acc);
 }
 

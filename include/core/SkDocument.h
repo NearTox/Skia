@@ -63,7 +63,7 @@ class SK_API SkDocument : public SkRefCnt {
 
   // note: subclasses must call close() in their destructor, as the base class
   // cannot do this for them.
-  virtual ~SkDocument();
+  ~SkDocument() override;
 
   virtual SkCanvas* onBeginPage(SkScalar width, SkScalar height) = 0;
   virtual void onEndPage() = 0;

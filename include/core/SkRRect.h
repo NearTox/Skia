@@ -41,14 +41,14 @@ class SK_API SkRRect {
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect(const SkRRect& rrect) noexcept = default;
+  constexpr SkRRect(const SkRRect& rrect) noexcept = default;
 
   /** Copies rrect bounds and corner radii.
 
       @param rrect  bounds and corner to copy
       @return       copy of rrect
   */
-  SkRRect& operator=(const SkRRect& rrect) noexcept = default;
+  constexpr SkRRect& operator=(const SkRRect& rrect) noexcept = default;
 
   /** \enum SkRRect::Type
       Type describes possible specializations of SkRRect. Each Type is
@@ -67,12 +67,12 @@ class SK_API SkRRect {
     kLastType = kComplex_Type,  //!< largest Type value
   };
 
-  Type getType() const noexcept {
+  constexpr Type getType() const noexcept {
     SkASSERT(this->isValid());
     return static_cast<Type>(fType);
   }
 
-  Type type() const noexcept { return this->getType(); }
+  constexpr Type type() const noexcept { return this->getType(); }
 
   inline bool isEmpty() const noexcept { return kEmpty_Type == this->getType(); }
   inline bool isRect() const noexcept { return kRect_Type == this->getType(); }
@@ -107,7 +107,7 @@ class SK_API SkRRect {
   /** Sets bounds to zero width and height at (0, 0), the origin. Sets
       corner radii to zero and sets type to kEmpty_Type.
   */
-  void setEmpty() noexcept { *this = SkRRect(); }
+  constexpr void setEmpty() noexcept { *this = SkRRect(); }
 
   /** Sets bounds to sorted rect, and sets corner radii to zero.
       If set bounds has width and height, and sets type to kRect_Type;
@@ -393,7 +393,7 @@ class SK_API SkRRect {
       @param dy  offset added to rect().fTop and rect().fBottom
       @return    SkRRect bounds offset by (dx, dy), with unchanged corner radii
   */
-  SkRRect SK_WARN_UNUSED_RESULT makeOffset(SkScalar dx, SkScalar dy) const noexcept {
+  constexpr SkRRect SK_WARN_UNUSED_RESULT makeOffset(SkScalar dx, SkScalar dy) const noexcept {
     return SkRRect(fRect.makeOffset(dx, dy), fRadii, fType);
   }
 

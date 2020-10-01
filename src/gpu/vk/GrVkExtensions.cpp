@@ -35,14 +35,12 @@ void GrVkExtensions::init(
     GrVkGetProc getProc, VkInstance instance, VkPhysicalDevice physDev,
     uint32_t instanceExtensionCount, const char* const* instanceExtensions,
     uint32_t deviceExtensionCount, const char* const* deviceExtensions) {
-  SkTLessFunctionToFunctorAdaptor<GrVkExtensions::Info, extension_compare> cmp;
-
   for (uint32_t i = 0; i < instanceExtensionCount; ++i) {
     const char* extension = instanceExtensions[i];
     // if not already in the list, add it
     if (find_info(fExtensions, extension) < 0) {
       fExtensions.push_back() = Info(extension);
-      SkTQSort(&fExtensions.front(), &fExtensions.back(), cmp);
+      SkTQSort(fExtensions.begin(), fExtensions.end(), extension_compare);
     }
   }
   for (uint32_t i = 0; i < deviceExtensionCount; ++i) {
@@ -50,7 +48,7 @@ void GrVkExtensions::init(
     // if not already in the list, add it
     if (find_info(fExtensions, extension) < 0) {
       fExtensions.push_back() = Info(extension);
-      SkTQSort(&fExtensions.front(), &fExtensions.back(), cmp);
+      SkTQSort(fExtensions.begin(), fExtensions.end(), extension_compare);
     }
   }
   this->getSpecVersions(getProc, instance, physDev);

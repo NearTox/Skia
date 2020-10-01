@@ -12,6 +12,7 @@
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrSemaphore.h"
+#include "src/gpu/GrStagingBufferManager.h"
 #include "src/gpu/d3d/GrD3DCaps.h"
 #include "src/gpu/d3d/GrD3DCommandList.h"
 #include "src/gpu/d3d/GrD3DResourceProvider.h"
@@ -31,7 +32,7 @@ class Compiler;
 class GrD3DGpu : public GrGpu {
  public:
   static sk_sp<GrGpu> Make(
-      const GrD3DBackendContext& backendContext, const GrContextOptions&, GrContext*);
+      const GrD3DBackendContext& backendContext, const GrContextOptions&, GrDirectContext*);
 
   ~GrD3DGpu() override;
 
@@ -43,6 +44,11 @@ class GrD3DGpu : public GrGpu {
   ID3D12CommandQueue* queue() const { return fQueue.get(); }
 
   GrD3DDirectCommandList* currentCommandList() const { return fCurrentDirectCommandList.get(); }
+
+  GrStagingBufferManager* stagingBufferManager() override { return &fStagingBufferManager; }
+  void takeOwnershipOfBuffer(sk_sp<GrGpuBuffer>) override;
+
+  GrRingBuffer* uniformsRingBuffer() override { return &fConstantsRingBuffer; }
 
   bool protectedContext() const { return false; }
 
@@ -76,26 +82,25 @@ class GrD3DGpu : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
 
   void addResourceBarriers(
       sk_sp<GrManagedResource> resource, int numBarriers,
       D3D12_RESOURCE_TRANSITION_BARRIER* barriers) const;
 
-  GrFence SK_WARN_UNUSED_RESULT insertFence() override { return 0; }
-  bool waitFence(GrFence) override { return true; }
+  void addBufferResourceBarriers(
+      GrD3DBuffer* buffer, int numBarriers, D3D12_RESOURCE_TRANSITION_BARRIER* barriers) const;
+
+  GrFence SK_WARN_UNUSED_RESULT insertFence() override;
+  bool waitFence(GrFence) override;
   void deleteFence(GrFence) const override {}
 
-  std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned) override {
-    return nullptr;
-  }
+  std::unique_ptr<GrSemaphore> SK_WARN_UNUSED_RESULT makeSemaphore(bool isOwned) override;
   std::unique_ptr<GrSemaphore> wrapBackendSemaphore(
       const GrBackendSemaphore& semaphore, GrResourceProvider::SemaphoreWrapType wrapType,
-      GrWrapOwnership ownership) override {
-    return nullptr;
-  }
-  void insertSemaphore(GrSemaphore* semaphore) override {}
-  void waitSemaphore(GrSemaphore* semaphore) override {}
+      GrWrapOwnership ownership) override;
+  void insertSemaphore(GrSemaphore* semaphore) override;
+  void waitSemaphore(GrSemaphore* semaphore) override;
   std::unique_ptr<GrSemaphore> prepareTextureForCrossContextUsage(GrTexture*) override {
     return nullptr;
   }
@@ -109,7 +114,7 @@ class GrD3DGpu : public GrGpu {
  private:
   enum class SyncQueue { kForce, kSkip };
 
-  GrD3DGpu(GrContext* context, const GrContextOptions&, const GrD3DBackendContext&);
+  GrD3DGpu(GrDirectContext*, const GrContextOptions&, const GrD3DBackendContext&);
 
   void destroyResources();
 
@@ -120,7 +125,7 @@ class GrD3DGpu : public GrGpu {
       GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
 
   sk_sp<GrTexture> onCreateCompressedTexture(
-      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipmapped, GrProtected,
       const void* data, size_t dataSize) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
@@ -164,7 +169,7 @@ class GrD3DGpu : public GrGpu {
 
   bool onRegenerateMipMapLevels(GrTexture*) override { return true; }
 
-  void onResolveRenderTarget(GrRenderTarget* target, const SkIRect&, ForExternalIO) override {}
+  void onResolveRenderTarget(GrRenderTarget* target, const SkIRect&) override;
 
   void addFinishedProc(
       GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) override;
@@ -177,15 +182,18 @@ class GrD3DGpu : public GrGpu {
   bool onSubmitToGpu(bool syncCpu) override;
 
   GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
 
   bool onUpdateBackendTexture(
       const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
       const BackendTextureData*) override;
 
   GrBackendTexture onCreateCompressedBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      sk_sp<GrRefCntedCallback> finishedCallback, const BackendTextureData*) override;
+      SkISize dimensions, const GrBackendFormat&, GrMipmapped, GrProtected) override;
+
+  bool onUpdateCompressedBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
+      const BackendTextureData*) override;
 
   bool submitDirectCommandList(SyncQueue sync);
 
@@ -198,6 +206,12 @@ class GrD3DGpu : public GrGpu {
 
   void copySurfaceAsResolve(
       GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint);
+  void resolveTexture(
+      GrSurface* dst, int32_t dstX, int32_t dstY, GrD3DRenderTarget* src, const SkIRect& srcRect);
+
+  sk_sp<GrD3DTexture> createD3DTexture(
+      SkISize, DXGI_FORMAT, GrRenderable, int renderTargetSampleCnt, SkBudgeted, GrProtected,
+      int mipLevelCount, GrMipmapStatus);
 
   bool uploadToTexture(
       GrD3DTexture* tex, int left, int top, int width, int height, GrColorType colorType,
@@ -205,12 +219,14 @@ class GrD3DGpu : public GrGpu {
 
   bool createTextureResourceForBackendSurface(
       DXGI_FORMAT dxgiFormat, SkISize dimensions, GrTexturable texturable, GrRenderable renderable,
-      GrMipMapped mipMapped, GrD3DTextureResourceInfo* info, GrProtected isProtected);
+      GrMipmapped mipMapped, GrD3DTextureResourceInfo* info, GrProtected isProtected);
 
   gr_cp<ID3D12Device> fDevice;
   gr_cp<ID3D12CommandQueue> fQueue;
 
   GrD3DResourceProvider fResourceProvider;
+  GrStagingBufferManager fStagingBufferManager;
+  GrRingBuffer fConstantsRingBuffer;
 
   gr_cp<ID3D12Fence> fFence;
   uint64_t fCurrentFenceValue = 0;

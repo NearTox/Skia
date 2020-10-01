@@ -69,14 +69,14 @@ class GrGpuResource::ResourcePriv {
    */
   void removeScratchKey() const { fResource->removeScratchKey(); }
 
-  bool isPurgeable() const noexcept { return fResource->isPurgeable(); }
+  bool isPurgeable() const { return fResource->isPurgeable(); }
 
-  bool hasRef() const noexcept { return fResource->hasRef(); }
+  bool hasRef() const { return fResource->hasRef(); }
 
  protected:
   ResourcePriv(GrGpuResource* resource) noexcept : fResource(resource) {}
   ResourcePriv(const ResourcePriv& that) noexcept : fResource(that.fResource) {}
-  ResourcePriv& operator=(const CacheAccess&);  // unimpl
+  ResourcePriv& operator=(const CacheAccess&) = delete;
 
   // No taking addresses of this type.
   const ResourcePriv* operator&() const;
@@ -91,7 +91,8 @@ inline GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() noexcept {
   return ResourcePriv(this);
 }
 
-inline const GrGpuResource::ResourcePriv GrGpuResource::resourcePriv() const noexcept {
+inline const GrGpuResource::ResourcePriv GrGpuResource::resourcePriv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return ResourcePriv(const_cast<GrGpuResource*>(this));
 }
 

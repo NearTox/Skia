@@ -24,7 +24,7 @@ class GrRectanizerPow2 final : public GrRectanizer {
  public:
   GrRectanizerPow2(int w, int h) noexcept : INHERITED(w, h) { this->reset(); }
 
-  ~GrRectanizerPow2() final = default;
+  ~GrRectanizerPow2() final {}
 
   void reset() noexcept final {
     fNextStripY = 0;

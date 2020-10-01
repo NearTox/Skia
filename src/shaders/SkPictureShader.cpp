@@ -22,7 +22,8 @@
 #include <atomic>
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrRecordingContext.h"
+#  include "include/gpu/GrDirectContext.h"
+#  include "include/gpu/GrRecordingContext.h"
 #  include "src/gpu/GrCaps.h"
 #  include "src/gpu/GrColorInfo.h"
 #  include "src/gpu/GrFragmentProcessor.h"
@@ -54,16 +55,15 @@ struct BitmapShaderKey : public SkResourceCache::Key {
         fColorSpaceTransferFnHash(colorSpace->transferFnHash()),
         fBitDepth(bitDepth),
         fScale(scale) {
-    static constexpr size_t keySize = sizeof(fColorSpaceXYZHash) +
-                                      sizeof(fColorSpaceTransferFnHash) + sizeof(fBitDepth) +
-                                      sizeof(fScale);
+    static const size_t keySize = sizeof(fColorSpaceXYZHash) + sizeof(fColorSpaceTransferFnHash) +
+                                  sizeof(fBitDepth) + sizeof(fScale);
     // This better be packed.
     SkASSERT(sizeof(uint32_t) * (&fEndOfStruct - &fColorSpaceXYZHash) == keySize);
     this->init(&gBitmapShaderKeyNamespaceLabel, MakeSharedID(shaderID), keySize);
   }
 
-  static constexpr uint64_t MakeSharedID(uint32_t shaderID) noexcept {
-    constexpr uint64_t sharedID = SkSetFourByteTag('p', 's', 'd', 'r');
+  static uint64_t MakeSharedID(uint32_t shaderID) {
+    uint64_t sharedID = SkSetFourByteTag('p', 's', 'd', 'r');
     return (sharedID << 32) | shaderID;
   }
 
@@ -73,7 +73,7 @@ struct BitmapShaderKey : public SkResourceCache::Key {
   SkImage::BitDepth fBitDepth;
   SkSize fScale;
 
-  SkDEBUGCODE(uint32_t fEndOfStruct;)
+  SkDEBUGCODE(uint32_t fEndOfStruct);
 };
 
 struct BitmapShaderRec : public SkResourceCache::Rec {
@@ -83,13 +83,13 @@ struct BitmapShaderRec : public SkResourceCache::Rec {
   BitmapShaderKey fKey;
   sk_sp<SkShader> fShader;
 
-  const Key& getKey() const noexcept override { return fKey; }
+  const Key& getKey() const override { return fKey; }
   size_t bytesUsed() const noexcept override {
     // Just the record overhead -- the actual pixels are accounted by SkImage_Lazy.
     return sizeof(fKey) + sizeof(SkImageShader);
   }
-  const char* getCategory() const noexcept override { return "bitmap-shader"; }
-  SkDiscardableMemory* diagnostic_only_getDiscardable() const noexcept override { return nullptr; }
+  const char* getCategory() const override { return "bitmap-shader"; }
+  SkDiscardableMemory* diagnostic_only_getDiscardable() const override { return nullptr; }
 
   static bool Visitor(const SkResourceCache::Rec& baseRec, void* contextShader) {
     const BitmapShaderRec& rec = static_cast<const BitmapShaderRec&>(baseRec);
@@ -103,7 +103,7 @@ struct BitmapShaderRec : public SkResourceCache::Rec {
   }
 };
 
-uint32_t next_id() noexcept {
+uint32_t next_id() {
   static std::atomic<uint32_t> nextID{1};
 
   uint32_t id;
@@ -333,8 +333,6 @@ void SkPictureShader::PictureShaderContext::shadeSpan(int x, int y, SkPMColor ds
 }
 
 #if SK_SUPPORT_GPU
-#  include "include/gpu/GrContext.h"
-#  include "src/gpu/GrContextPriv.h"
 
 std::unique_ptr<GrFragmentProcessor> SkPictureShader::asFragmentProcessor(
     const GrFPArgs& args) const {

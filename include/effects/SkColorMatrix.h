@@ -28,7 +28,7 @@ class SK_API SkColorMatrix {
   void setIdentity();
   void setScale(float rScale, float gScale, float bScale, float aScale = 1.0f);
 
-  void postTranslate(float dr, float dg, float db, float da) noexcept;
+  void postTranslate(float dr, float dg, float db, float da);
 
   void setConcat(const SkColorMatrix& a, const SkColorMatrix& b);
   void preConcat(const SkColorMatrix& mat) { this->setConcat(*this, mat); }

@@ -35,9 +35,7 @@ class SkRawCodec : public SkCodec {
   Result onGetPixels(
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&, int*) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-    return SkEncodedImageFormat::kDNG;
-  }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kDNG; }
 
   SkISize onGetScaledDimensions(float desiredScale) const override;
 
@@ -45,7 +43,7 @@ class SkRawCodec : public SkCodec {
 
   // SkCodec only applies the colorXform if it's necessary for color space
   // conversion. SkRawCodec will always convert, so tell SkCodec not to.
-  bool usesColorXform() const noexcept override { return false; }
+  bool usesColorXform() const override { return false; }
 
  private:
   /*

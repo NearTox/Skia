@@ -29,7 +29,7 @@ void ClipEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   this->INHERITED::onRender(canvas, ctx);
 }
 
-const RenderNode* ClipEffect::onNodeAt(const SkPoint& p) const noexcept {
+const RenderNode* ClipEffect::onNodeAt(const SkPoint& p) const {
   return fClipNode->contains(p) ? this->INHERITED::onNodeAt(p) : nullptr;
 }
 

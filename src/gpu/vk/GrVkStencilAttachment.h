@@ -27,21 +27,21 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
 
   ~GrVkStencilAttachment() override;
 
-  const GrManagedResource* imageResource() const noexcept { return this->resource(); }
-  const GrVkImageView* stencilView() const noexcept { return fStencilView; }
+  const GrManagedResource* imageResource() const { return this->resource(); }
+  const GrVkImageView* stencilView() const { return fStencilView; }
 
  protected:
   void onRelease() override;
   void onAbandon() override;
 
  private:
-  size_t onGpuMemorySize() const noexcept override;
+  size_t onGpuMemorySize() const override;
 
   GrVkStencilAttachment(
       GrVkGpu* gpu, const Format& format, const GrVkImage::ImageDesc&, const GrVkImageInfo&,
       sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* stencilView);
 
-  GrVkGpu* getVkGpu() const noexcept;
+  GrVkGpu* getVkGpu() const;
 
   const GrVkImageView* fStencilView;
 };

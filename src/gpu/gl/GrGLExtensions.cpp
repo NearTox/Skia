@@ -111,8 +111,7 @@ bool GrGLExtensions::init(
     eat_space_sep_strings(&fStrings, extensions);
   }
   if (!fStrings.empty()) {
-    SkTLessFunctionToFunctorAdaptor<SkString, extension_compare> cmp;
-    SkTQSort(&fStrings.front(), &fStrings.back(), cmp);
+    SkTQSort(fStrings.begin(), fStrings.end(), extension_compare);
   }
   fInitialized = true;
   return true;
@@ -134,8 +133,7 @@ bool GrGLExtensions::remove(const char ext[]) {
   // most a handful of times when our test programs start.
   fStrings.removeShuffle(idx);
   if (idx != fStrings.count()) {
-    SkTLessFunctionToFunctorAdaptor<SkString, extension_compare> cmp;
-    SkTInsertionSort(&(fStrings.operator[](idx)), &fStrings.back(), cmp);
+    SkTInsertionSort(fStrings.begin() + idx, fStrings.size() - idx, extension_compare);
   }
   return true;
 }
@@ -146,8 +144,7 @@ void GrGLExtensions::add(const char ext[]) {
     // This is not the most effecient approach since we end up looking at all of the
     // extensions after the add
     fStrings.emplace_back(ext);
-    SkTLessFunctionToFunctorAdaptor<SkString, extension_compare> cmp;
-    SkTInsertionSort(&fStrings.front(), &fStrings.back(), cmp);
+    SkTInsertionSort(fStrings.begin(), fStrings.size(), extension_compare);
   }
 }
 

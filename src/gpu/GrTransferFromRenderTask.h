@@ -38,10 +38,12 @@ class GrTransferFromRenderTask final : public GrRenderTask {
 
   bool onExecute(GrOpFlushState*) override;
 
+#if GR_TEST_UTILS
+  const char* name() const final { return "TransferFrom"; }
+#endif
 #ifdef SK_DEBUG
-  const char* name() const noexcept final { return "TransferFrom"; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const override {
-    fn(fSrcProxy.get(), GrMipMapped::kNo);
+    fn(fSrcProxy.get(), GrMipmapped::kNo);
   }
 #endif
 

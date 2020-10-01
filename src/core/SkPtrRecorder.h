@@ -89,7 +89,7 @@ class SkPtrSet : public SkRefCnt {
   // is not related to its "index".
   SkTDArray<Pair> fList;
 
-  static bool Less(const Pair& a, const Pair& b) noexcept;
+  static bool Less(const Pair& a, const Pair& b);
 
   typedef SkRefCnt INHERITED;
 };
@@ -117,12 +117,12 @@ class SkTPtrSet : public SkPtrSet {
  */
 class SkRefCntSet : public SkTPtrSet<SkRefCnt*> {
  public:
-  virtual ~SkRefCntSet();
+  ~SkRefCntSet() override;
 
  protected:
   // overrides
-  virtual void incPtr(void*);
-  virtual void decPtr(void*);
+  void incPtr(void*) override;
+  void decPtr(void*) override;
 };
 
 class SkFactorySet : public SkTPtrSet<SkFlattenable::Factory> {};

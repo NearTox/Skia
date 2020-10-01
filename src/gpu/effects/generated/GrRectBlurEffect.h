@@ -17,8 +17,7 @@
 #include <cmath>
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
-#include "include/gpu/GrContext.h"
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkBlurMask.h"
 #include "src/core/SkMathPriv.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
@@ -27,7 +26,6 @@
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/effects/GrTextureEffect.h"
 
-#include "src/gpu/GrCoordTransform.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
 class GrRectBlurEffect : public GrFragmentProcessor {
@@ -56,7 +54,7 @@ class GrRectBlurEffect : public GrFragmentProcessor {
           context->priv().caps()->getReadSwizzle(proxy->backendFormat(), GrColorType::kAlpha_8);
       GrSurfaceProxyView view{std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle};
       return GrTextureEffect::Make(
-          std::move(view), kPremul_SkAlphaType, m, GrSamplerState::Filter::kBilerp);
+          std::move(view), kPremul_SkAlphaType, m, GrSamplerState::Filter::kLinear);
     }
 
     SkBitmap bitmap;
@@ -75,14 +73,14 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     bitmap.setImmutable();
 
     GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-    auto view = maker.view(GrMipMapped::kNo);
+    auto view = maker.view(GrMipmapped::kNo);
     if (!view) {
       return {};
     }
     SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
     proxyProvider->assignUniqueKeyToProxy(key, view.asTextureProxy());
     return GrTextureEffect::Make(
-        std::move(view), kPremul_SkAlphaType, m, GrSamplerState::Filter::kBilerp);
+        std::move(view), kPremul_SkAlphaType, m, GrSamplerState::Filter::kLinear);
   }
 
   static std::unique_ptr<GrFragmentProcessor> Make(
@@ -121,14 +119,12 @@ class GrRectBlurEffect : public GrFragmentProcessor {
     bool isFast = insetRect.isSorted();
     return std::unique_ptr<GrFragmentProcessor>(new GrRectBlurEffect(
         std::move(inputFP), insetRect, std::move(integral), isFast,
-        GrSamplerState::Filter::kBilerp));
+        GrSamplerState::Filter::kLinear));
   }
   GrRectBlurEffect(const GrRectBlurEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const noexcept override { return "RectBlurEffect"; }
-  int inputFP_index = -1;
   SkRect rect;
-  int integral_index = -1;
   bool isFast;
 
  private:
@@ -142,15 +138,16 @@ class GrRectBlurEffect : public GrFragmentProcessor {
                 kCompatibleWithCoverageAsAlpha_OptimizationFlag),
         rect(rect),
         isFast(isFast) {
-    if (inputFP) {
-      inputFP_index = this->registerChild(std::move(inputFP));
-    }
+    this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
     SkASSERT(integral);
-    integral_index = this->registerExplicitlySampledChild(std::move(integral));
+    this->registerChild(std::move(integral), SkSL::SampleUsage::Explicit());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override;
+  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
   typedef GrFragmentProcessor INHERITED;
 };

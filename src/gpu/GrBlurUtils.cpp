@@ -7,7 +7,7 @@
 
 #include "src/gpu/GrBlurUtils.h"
 
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrFixedClip.h"
@@ -28,7 +28,7 @@
 #include "src/core/SkTLazy.h"
 #include "src/gpu/SkGr.h"
 
-static bool clip_bounds_quick_reject(const SkIRect& clipBounds, const SkIRect& rect) noexcept {
+static bool clip_bounds_quick_reject(const SkIRect& clipBounds, const SkIRect& rect) {
   return clipBounds.isEmpty() || rect.isEmpty() || !SkIRect::Intersects(clipBounds, rect);
 }
 
@@ -52,7 +52,7 @@ static bool draw_mask(
   SkMatrix matrix =
       SkMatrix::Translate(-SkIntToScalar(maskRect.fLeft), -SkIntToScalar(maskRect.fTop));
   matrix.preConcat(viewMatrix);
-  paint.addCoverageFragmentProcessor(
+  paint.setCoverageFragmentProcessor(
       GrTextureEffect::Make(std::move(mask), kUnknown_SkAlphaType, matrix));
 
   renderTargetContext->fillRectWithLocalMatrix(
@@ -143,7 +143,7 @@ static bool sw_draw_with_mask_filter(
     bm.setImmutable();
 
     GrBitmapTextureMaker maker(context, bm, SkBackingFit::kApprox);
-    filteredMaskView = maker.view(GrMipMapped::kNo);
+    filteredMaskView = maker.view(GrMipmapped::kNo);
     if (!filteredMaskView.proxy()) {
       return false;
     }
@@ -178,7 +178,7 @@ static std::unique_ptr<GrRenderTargetContext> create_mask_GPU(
   auto approxSize = GrResourceProvider::MakeApprox(maskRect.size());
   auto rtContext = GrRenderTargetContext::MakeWithFallback(
       context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kExact, approxSize, sampleCnt,
-      GrMipMapped::kNo, GrProtected::kNo, kMaskOrigin);
+      GrMipmapped::kNo, GrProtected::kNo, kMaskOrigin);
   if (!rtContext) {
     return nullptr;
   }
@@ -258,7 +258,7 @@ static void draw_shape_with_mask_filter(
     }
 
     tmpShape.init(origShape.applyStyle(GrStyle::Apply::kPathEffectAndStrokeRec, styleScale));
-    if (tmpShape.get()->isEmpty()) {
+    if (tmpShape->isEmpty()) {
       return;
     }
 
@@ -416,7 +416,7 @@ void GrBlurUtils::drawShapeWithMaskFilter(
 void GrBlurUtils::drawShapeWithMaskFilter(
     GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, const GrClip* clip,
     const SkPaint& paint, const SkMatrixProvider& matrixProvider, const GrStyledShape& shape) {
-  if (context->priv().abandoned()) {
+  if (context->abandoned()) {
     return;
   }
 

@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#include <memory>
+
 #include "bench/Benchmark.h"
 #include "include/core/SkSize.h"
 #include "include/private/SkTDArray.h"
@@ -25,8 +27,8 @@
  */
 class RectanizerBench : public Benchmark {
  public:
-  static const int kWidth = 1024;
-  static const int kHeight = 1024;
+  static constexpr int kWidth = 1024;
+  static constexpr int kHeight = 1024;
 
   enum RectanizerType {
     kPow2_RectanizerType,
@@ -63,10 +65,10 @@ class RectanizerBench : public Benchmark {
     SkASSERT(nullptr == fRectanizer.get());
 
     if (kPow2_RectanizerType == fRectanizerType) {
-      fRectanizer.reset(new GrRectanizerPow2(kWidth, kHeight));
+      fRectanizer = std::make_unique<GrRectanizerPow2>(kWidth, kHeight);
     } else {
       SkASSERT(kSkyline_RectanizerType == fRectanizerType);
-      fRectanizer.reset(new GrRectanizerSkyline(kWidth, kHeight));
+      fRectanizer = std::make_unique<GrRectanizerSkyline>(kWidth, kHeight);
     }
   }
 

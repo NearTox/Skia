@@ -130,12 +130,12 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
   /**
    *  Returns true if the color space gamma is near enough to be approximated as sRGB.
    */
-  bool gammaCloseToSRGB() const noexcept;
+  bool gammaCloseToSRGB() const;
 
   /**
    *  Returns true if the color space gamma is linear.
    */
-  bool gammaIsLinear() const noexcept;
+  bool gammaIsLinear() const;
 
   /**
    *  Sets |fn| to the transfer function from this color space. Returns true if the transfer
@@ -214,8 +214,7 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
    */
   static bool Equals(const SkColorSpace*, const SkColorSpace*) noexcept;
 
-  void transferFn(
-      float gabcdef[7]) const noexcept;  // DEPRECATED: Remove when webview usage is gone
+  void transferFn(float gabcdef[7]) const;  // DEPRECATED: Remove when webview usage is gone
   void transferFn(skcms_TransferFunction* fn) const;
   void invTransferFn(skcms_TransferFunction* fn) const;
   void gamutTransformTo(const SkColorSpace* dst, skcms_Matrix3x3* src_to_dst) const;
@@ -226,7 +225,7 @@ class SK_API SkColorSpace : public SkNVRefCnt<SkColorSpace> {
  private:
   friend class SkColorSpaceSingletonFactory;
 
-  SkColorSpace(const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZ) noexcept;
+  SkColorSpace(const skcms_TransferFunction& transferFn, const skcms_Matrix3x3& toXYZ);
 
   void computeLazyDstFields() const;
 

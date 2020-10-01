@@ -26,12 +26,12 @@ class SkDWriteFontFileStream : public SkStreamMemory {
   explicit SkDWriteFontFileStream(IDWriteFontFileStream* fontFileStream);
   ~SkDWriteFontFileStream() override;
 
-  size_t read(void* buffer, size_t size) noexcept override;
-  bool isAtEnd() const noexcept override;
+  size_t read(void* buffer, size_t size) override;
+  bool isAtEnd() const override;
   bool rewind() noexcept override;
   size_t getPosition() const noexcept override;
-  bool seek(size_t position) noexcept override;
-  bool move(long offset) noexcept override;
+  bool seek(size_t position) override;
+  bool move(long offset) override;
   size_t getLength() const noexcept override;
   const void* getMemoryBase() noexcept override;
 
@@ -76,7 +76,7 @@ class SkDWriteFontFileStreamWrapper : public IDWriteFontFileStream {
       SkStreamAsset* stream, SkDWriteFontFileStreamWrapper** streamFontFileStream);
 
  private:
-  explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream) noexcept;
+  explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream);
   virtual ~SkDWriteFontFileStreamWrapper() = default;
 
   ULONG fRefCount;

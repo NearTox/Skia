@@ -36,13 +36,10 @@ class CircularClipsGM : public skiagm::GM {
 
   SkString onShortName() override { return SkString("circular-clips"); }
 
-  SkISize onISize() override { return SkISize::Make(800, 600); }
+  SkISize onISize() override { return SkISize::Make(800, 200); }
 
   void onDraw(SkCanvas* canvas) override {
-    const SkClipOp ops[] = {
-        kDifference_SkClipOp, kIntersect_SkClipOp,         kUnion_SkClipOp,
-        kXOR_SkClipOp,        kReverseDifference_SkClipOp, kReplace_SkClipOp,
-    };
+    const SkClipOp ops[] = {kDifference_SkClipOp, kIntersect_SkClipOp};
 
     SkRect rect = SkRect::MakeLTRB(fX1 - fR, fY - fR, fX2 + fR, fY + fR);
 

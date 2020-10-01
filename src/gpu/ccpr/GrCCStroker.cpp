@@ -27,11 +27,10 @@ struct LinearStrokeInstance {
   float fEndpoints[4];
   float fStrokeRadius;
 
-  inline void set(const SkPoint[2], float dx, float dy, float strokeRadius) noexcept;
+  inline void set(const SkPoint[2], float dx, float dy, float strokeRadius);
 };
 
-inline void LinearStrokeInstance::set(
-    const SkPoint P[2], float dx, float dy, float strokeRadius) noexcept {
+inline void LinearStrokeInstance::set(const SkPoint P[2], float dx, float dy, float strokeRadius) {
   Sk2f X, Y;
   Sk2f::Load2(P, &X, &Y);
   Sk2f::Store2(fEndpoints, X + dx, Y + dy);
@@ -44,23 +43,20 @@ struct CubicStrokeInstance {
   float fStrokeRadius;
   float fNumSegments;
 
+  inline void set(const SkPoint[4], float dx, float dy, float strokeRadius, int numSegments);
   inline void set(
-      const SkPoint[4], float dx, float dy, float strokeRadius, int numSegments) noexcept;
-  inline void set(
-      const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius,
-      int numSegments) noexcept;
+      const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius, int numSegments);
 };
 
 inline void CubicStrokeInstance::set(
-    const SkPoint P[4], float dx, float dy, float strokeRadius, int numSegments) noexcept {
+    const SkPoint P[4], float dx, float dy, float strokeRadius, int numSegments) {
   Sk4f X, Y;
   Sk4f::Load2(P, &X, &Y);
   this->set(X, Y, dx, dy, strokeRadius, numSegments);
 }
 
 inline void CubicStrokeInstance::set(
-    const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius,
-    int numSegments) noexcept {
+    const Sk4f& X, const Sk4f& Y, float dx, float dy, float strokeRadius, int numSegments) {
   (X + dx).store(&fX);
   (Y + dy).store(&fY);
   fStrokeRadius = strokeRadius;
@@ -75,7 +71,7 @@ inline void CubicStrokeInstance::set(
 // for seamless integration with the connecting geometry.
 class LinearStrokeProcessor : public GrGeometryProcessor {
  public:
-  LinearStrokeProcessor() noexcept : INHERITED(kLinearStrokeProcessor_ClassID) {
+  LinearStrokeProcessor() : INHERITED(kLinearStrokeProcessor_ClassID) {
     this->setInstanceAttributes(kInstanceAttribs, 2);
 #ifdef SK_DEBUG
     using Instance = LinearStrokeInstance;
@@ -85,16 +81,14 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
 
  private:
   const char* name() const noexcept override { return "LinearStrokeProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[2] = {
       {"endpts", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
       {"stroke_radius", kFloat_GrVertexAttribType, kFloat_GrSLType}};
 
   class Impl : public GrGLSLGeometryProcessor {
-    void setData(
-        const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-        const CoordTransformRange&) noexcept override {}
+    void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&) override {}
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override;
   };
 
@@ -169,7 +163,7 @@ constexpr GrPrimitiveProcessor::Attribute LinearStrokeProcessor::kInstanceAttrib
 // negative, and we use SkBlendMode::kPlus.
 class CubicStrokeProcessor : public GrGeometryProcessor {
  public:
-  CubicStrokeProcessor() noexcept : GrGeometryProcessor(kCubicStrokeProcessor_ClassID) {
+  CubicStrokeProcessor() : GrGeometryProcessor(kCubicStrokeProcessor_ClassID) {
     this->setInstanceAttributes(kInstanceAttribs, 3);
 #ifdef SK_DEBUG
     using Instance = CubicStrokeInstance;
@@ -179,7 +173,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
 
  private:
   const char* name() const noexcept override { return "CubicStrokeProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[3] = {
       {"X", kFloat4_GrVertexAttribType, kFloat4_GrSLType},
@@ -187,9 +181,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
       {"stroke_info", kFloat2_GrVertexAttribType, kFloat2_GrSLType}};
 
   class Impl : public GrGLSLGeometryProcessor {
-    void setData(
-        const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-        const CoordTransformRange&) noexcept override {}
+    void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&) override {}
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override;
   };
 
@@ -381,7 +373,7 @@ class GrCCStroker::InstanceBufferBuilder {
 
     int endConicsIdx = stroker->fBaseInstances[1].fConics + stroker->fInstanceCounts[1]->fConics;
     fInstanceBuffer.resetAndMapBuffer(onFlushRP, endConicsIdx * sizeof(ConicInstance));
-    if (!fInstanceBuffer.gpuBuffer()) {
+    if (!fInstanceBuffer.hasGpuBuffer()) {
       SkDebugf("WARNING: failed to allocate CCPR stroke instance buffer.\n");
       return;
     }
@@ -389,7 +381,7 @@ class GrCCStroker::InstanceBufferBuilder {
 
   bool isMapped() const { return fInstanceBuffer.isMapped(); }
 
-  void updateCurrentInfo(const PathInfo& pathInfo) noexcept {
+  void updateCurrentInfo(const PathInfo& pathInfo) {
     SkASSERT(this->isMapped());
     fCurrDX = static_cast<float>(pathInfo.fDevToAtlasOffset.x());
     fCurrDY = static_cast<float>(pathInfo.fDevToAtlasOffset.y());
@@ -517,12 +509,12 @@ class GrCCStroker::InstanceBufferBuilder {
     }
   }
 
-  sk_sp<GrGpuBuffer> finish() {
+  sk_sp<const GrGpuBuffer> finish() {
     SkASSERT(this->isMapped());
     SkASSERT(!memcmp(fNextInstances, fEndInstances, sizeof(fNextInstances)));
     fInstanceBuffer.unmapBuffer();
     SkASSERT(!this->isMapped());
-    return sk_ref_sp(fInstanceBuffer.gpuBuffer());
+    return fInstanceBuffer.gpuBuffer();
   }
 
  private:
@@ -567,7 +559,7 @@ class GrCCStroker::InstanceBufferBuilder {
   SkDEBUGCODE(InstanceTallies fEndInstances[2]);
 };
 
-GrCCStroker::BatchID GrCCStroker::closeCurrentBatch() noexcept {
+GrCCStroker::BatchID GrCCStroker::closeCurrentBatch() {
   if (!fHasOpenBatch) {
     return kEmptyBatchID;
   }
@@ -744,7 +736,7 @@ void GrCCStroker::drawLog2Strokes(
       &processor, GrPrimitiveType::kTriangleStrip);
 
   flushState->bindPipeline(programInfo, SkRect::Make(drawBounds));
-  flushState->bindBuffers(nullptr, fInstanceBuffer.get(), nullptr);
+  flushState->bindBuffers(nullptr, fInstanceBuffer, nullptr);
 
   // Linear strokes draw a quad. Cubic strokes emit a strip with normals at "numSegments"
   // evenly-spaced points along the curve, plus one more for the final endpoint, plus two more for
@@ -782,7 +774,7 @@ void GrCCStroker::drawConnectingGeometry(
     const Batch& batch, const InstanceTallies* startIndices[2], int startScissorSubBatch,
     const SkIRect& drawBounds) const {
   processor.bindPipeline(flushState, pipeline, SkRect::Make(drawBounds));
-  processor.bindBuffers(flushState->opsRenderPass(), fInstanceBuffer.get());
+  processor.bindBuffers(flushState->opsRenderPass(), fInstanceBuffer);
 
   // Append non-scissored meshes.
   int baseInstance = fBaseInstances[(int)GrScissorTest::kDisabled].*InstanceType;

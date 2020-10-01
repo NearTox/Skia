@@ -139,20 +139,32 @@ SK_API bool SkColorTypeValidateAlphaType(
     YUV to RGB.
 
     JPEG YUV values encode the full range of 0 to 255 for all three components.
-    Video YUV values range from 16 to 235 for Y and from 16 to 240 for U and V.
+    Video YUV values often range from 16 to 235 for Y and from 16 to 240 for U and V (limited).
     Details of encoding and conversion to RGB are described in YCbCr color space.
 
     The identity colorspace exists to provide a utility mapping from Y to R, U to G and V to B.
     It can be used to visualize the YUV planes or to explicitly post process the YUV channels.
 */
 enum SkYUVColorSpace {
-  kJPEG_SkYUVColorSpace,      //!< describes full range
-  kRec601_SkYUVColorSpace,    //!< describes SDTV range
-  kRec709_SkYUVColorSpace,    //!< describes HDTV range
-  kBT2020_SkYUVColorSpace,    //!< describes UHDTV range, non-constant-luminance
+  kJPEG_Full_SkYUVColorSpace,       //!< describes full range
+  kRec601_Limited_SkYUVColorSpace,  //!< describes SDTV range
+  kRec709_Full_SkYUVColorSpace,     //!< describes HDTV range
+  kRec709_Limited_SkYUVColorSpace,
+  kBT2020_8bit_Full_SkYUVColorSpace,  //!< describes UHDTV range, non-constant-luminance
+  kBT2020_8bit_Limited_SkYUVColorSpace,
+  kBT2020_10bit_Full_SkYUVColorSpace,
+  kBT2020_10bit_Limited_SkYUVColorSpace,
+  kBT2020_12bit_Full_SkYUVColorSpace,
+  kBT2020_12bit_Limited_SkYUVColorSpace,
   kIdentity_SkYUVColorSpace,  //!< maps Y->R, U->G, V->B
 
   kLastEnum_SkYUVColorSpace = kIdentity_SkYUVColorSpace,  //!< last valid value
+
+  // Legacy (deprecated) names:
+  kJPEG_SkYUVColorSpace = kJPEG_Full_SkYUVColorSpace,
+  kRec601_SkYUVColorSpace = kRec601_Limited_SkYUVColorSpace,
+  kRec709_SkYUVColorSpace = kRec709_Limited_SkYUVColorSpace,
+  kBT2020_SkYUVColorSpace = kBT2020_8bit_Limited_SkYUVColorSpace,
 };
 
 /** \struct SkColorInfo
@@ -198,7 +210,7 @@ class SK_API SkColorInfo {
     return SkAlphaTypeIsOpaque(fAlphaType) || SkColorTypeIsAlwaysOpaque(fColorType);
   }
 
-  bool gammaCloseToSRGB() const noexcept { return fColorSpace && fColorSpace->gammaCloseToSRGB(); }
+  bool gammaCloseToSRGB() const { return fColorSpace && fColorSpace->gammaCloseToSRGB(); }
 
   /** Does other represent the same color type, alpha type, and color space? */
   bool operator==(const SkColorInfo& other) const noexcept {
@@ -506,7 +518,7 @@ struct SK_API SkImageInfo {
 
       @return  true if SkColorSpace gamma is approximately the same as sRGB
   */
-  bool gammaCloseToSRGB() const noexcept { return fColorInfo.gammaCloseToSRGB(); }
+  bool gammaCloseToSRGB() const { return fColorInfo.gammaCloseToSRGB(); }
 
   /** Creates SkImageInfo with the same SkColorType, SkColorSpace, and SkAlphaType,
       with dimensions set to width and height.

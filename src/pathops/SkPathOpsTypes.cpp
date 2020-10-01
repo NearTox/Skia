@@ -26,7 +26,8 @@ static bool equal_ulps(float a, float b, int epsilon, int depsilon) noexcept {
   return aBits < bBits + epsilon && bBits < aBits + epsilon;
 }
 
-static bool equal_ulps_no_normal_check(float a, float b, int epsilon, int depsilon) noexcept {
+static constexpr bool equal_ulps_no_normal_check(
+    float a, float b, int epsilon, int depsilon) noexcept {
   int aBits = SkFloatAs2sCompliment(a);
   int bBits = SkFloatAs2sCompliment(b);
   // Find the difference in ULPs.
@@ -46,7 +47,7 @@ static bool equal_ulps_pin(float a, float b, int epsilon, int depsilon) noexcept
   return aBits < bBits + epsilon && bBits < aBits + epsilon;
 }
 
-static bool d_equal_ulps(float a, float b, int epsilon) noexcept {
+static constexpr bool d_equal_ulps(float a, float b, int epsilon) noexcept {
   int aBits = SkFloatAs2sCompliment(a);
   int bBits = SkFloatAs2sCompliment(b);
   // Find the difference in ULPs.
@@ -76,7 +77,7 @@ static bool not_equal_ulps_pin(float a, float b, int epsilon) noexcept {
   return aBits >= bBits + epsilon || bBits >= aBits + epsilon;
 }
 
-static bool d_not_equal_ulps(float a, float b, int epsilon) noexcept {
+static constexpr bool d_not_equal_ulps(float a, float b, int epsilon) noexcept {
   int aBits = SkFloatAs2sCompliment(a);
   int bBits = SkFloatAs2sCompliment(b);
   // Find the difference in ULPs.
@@ -203,7 +204,7 @@ static double cbrt_5d(double d) noexcept {
 }
 
 // iterative cube root approximation using Halley's method (double)
-static double cbrta_halleyd(const double a, const double R) noexcept {
+static constexpr double cbrta_halleyd(const double a, const double R) noexcept {
   const double a3 = a * a * a;
   const double b = a * (a3 + R + R) / (a3 + a3 + R);
   return b;

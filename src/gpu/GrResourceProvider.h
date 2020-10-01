@@ -37,7 +37,7 @@ class SkTypeface;
  */
 class GrResourceProvider {
  public:
-  GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*) noexcept;
+  GrResourceProvider(GrGpu*, GrResourceCache*, GrSingleOwner*);
 
   /**
    * Finds a resource in the cache, based on the specified key. Prior to calling this, the caller
@@ -66,7 +66,7 @@ class GrResourceProvider {
   /** Create an exact fit texture with no initial data to upload. */
   sk_sp<GrTexture> createTexture(
       SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
-      int renderTargetSampleCnt, GrMipMapped mipMapped, SkBudgeted budgeted,
+      int renderTargetSampleCnt, GrMipmapped mipMapped, SkBudgeted budgeted,
       GrProtected isProtected);
 
   /**
@@ -93,7 +93,7 @@ class GrResourceProvider {
    * It will not be renderable.
    */
   sk_sp<GrTexture> createCompressedTexture(
-      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipmapped, GrProtected,
       SkData* data);
 
   ///////////////////////////////////////////////////////////////////////////
@@ -276,7 +276,7 @@ class GrResourceProvider {
   static SkISize MakeApprox(SkISize) noexcept;
 
   inline GrResourceProviderPriv priv();
-  inline const GrResourceProviderPriv priv() const;
+  inline const GrResourceProviderPriv priv() const;  // NOLINT(readability-const-return-type)
 
  private:
   sk_sp<GrGpuResource> findResourceByUniqueKey(const GrUniqueKey&);
@@ -285,7 +285,7 @@ class GrResourceProvider {
   // it returns null. If non-null, the resulting texture is always budgeted.
   sk_sp<GrTexture> refScratchTexture(
       SkISize dimensions, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
-      GrMipMapped, GrProtected);
+      GrMipmapped, GrProtected);
 
   /*
    * Try to find an existing scratch texture that exactly matches 'desc'. If successful
@@ -293,7 +293,7 @@ class GrResourceProvider {
    */
   sk_sp<GrTexture> getExactScratch(
       SkISize dimensions, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt,
-      SkBudgeted, GrMipMapped, GrProtected);
+      SkBudgeted, GrMipmapped, GrProtected);
 
   // Used to perform any conversions necessary to texel data before creating a texture with
   // existing data or uploading to a scratch texture.

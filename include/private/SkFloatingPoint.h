@@ -154,8 +154,8 @@ static constexpr inline int64_t sk_float_saturate2int64(float x) noexcept {
 // Cast double to float, ignoring any warning about too-large finite values being cast to float.
 // Clang thinks this is undefined, but it's actually implementation defined to return either
 // the largest float or infinity (one of the two bracketing representable floats).  Good enough!
-[[clang::no_sanitize("float-cast-overflow")]] static constexpr inline float sk_double_to_float(
-    double x) noexcept {
+SK_ATTRIBUTE(no_sanitize("float-cast-overflow"))
+static constexpr inline float sk_double_to_float(double x) noexcept {
   return static_cast<float>(x);
 }
 
@@ -209,6 +209,22 @@ static inline float sk_float_rsqrt(float x) noexcept {
 #endif
 }
 
+// Returns the log2 of the provided value, were that value to be rounded up to the next power of 2.
+// Returns 0 if value <= 0:
+// Never returns a negative number, even if value is NaN.
+//
+//     sk_float_nextlog2((-inf..1]) -> 0
+//     sk_float_nextlog2((1..2]) -> 1
+//     sk_float_nextlog2((2..4]) -> 2
+//     sk_float_nextlog2((4..8]) -> 3
+//     ...
+static constexpr inline int sk_float_nextlog2(float x) noexcept {
+  uint32_t bits = (uint32_t)SkFloat2Bits(x);
+  bits += (1u << 23) - 1u;  // Increment the exponent for non-powers-of-2.
+  int exp = ((int32_t)bits >> 23) - 127;
+  return exp & ~(exp >> 31);  // Return 0 for negative or denormalized floats, and exponents < 0.
+}
+
 // This is the number of significant digits we can print in a string such that when we read that
 // string back we get the floating point number we expect.  The minimum value C requires is 6, but
 // most compilers support 9
@@ -221,13 +237,13 @@ static inline float sk_float_rsqrt(float x) noexcept {
 // IEEE defines how float divide behaves for non-finite values and zero-denoms, but C does not
 // so we have a helper that suppresses the possible undefined-behavior warnings.
 
-[[clang::no_sanitize("float-divide-by-zero")]] static constexpr inline float sk_ieee_float_divide(
-    float numer, float denom) noexcept {
+SK_ATTRIBUTE(no_sanitize("float-divide-by-zero"))
+static constexpr inline float sk_ieee_float_divide(float numer, float denom) noexcept {
   return numer / denom;
 }
 
-[[clang::no_sanitize("float-divide-by-zero")]] static constexpr inline double sk_ieee_double_divide(
-    double numer, double denom) noexcept {
+SK_ATTRIBUTE(no_sanitize("float-divide-by-zero"))
+static constexpr inline double sk_ieee_double_divide(double numer, double denom) noexcept {
   return numer / denom;
 }
 
@@ -238,12 +254,16 @@ static constexpr inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_H
 }
 static constexpr inline float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
     double n, double d) noexcept {
-  return static_cast<float>(sk_ieee_double_divide(n, d));
+  return sk_ieee_double_divide(n, d);
 }
 
-static inline float sk_fmaf(float f, float m, float a) noexcept {
+static constexpr inline float sk_fmaf(float f, float m, float a) noexcept {
 #if defined(FP_FAST_FMA)
-  return std::fmaf(f, m, a);
+  if (std::is_constant_evaluated()) {
+    return f * m + a;
+  } else {
+    return std::fmaf(f, m, a);
+  }
 #else
   return f * m + a;
 #endif

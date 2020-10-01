@@ -68,6 +68,9 @@ class CPPCodeGenerator : public GLSLCodeGenerator {
 
   // writes a printf escape that will be filled in at runtime by the given C++ expression string
   void writeRuntimeValue(const Type& type, const Layout& layout, const String& cppCode);
+  String formatRuntimeValue(
+      const Type& type, const Layout& layout, const String& cppCode,
+      std::vector<String>* formatArgs);
 
   void writeVarInitializer(const Variable& var, const Expression& value) override;
 
@@ -88,6 +91,8 @@ class CPPCodeGenerator : public GLSLCodeGenerator {
   void writeOnTextureSampler();
 
   void writeClone();
+
+  void writeDumpInfo();
 
   void writeTest();
 
@@ -124,8 +129,9 @@ class CPPCodeGenerator : public GLSLCodeGenerator {
   std::vector<String> fExtraEmitCodeBlocks;
 
   std::vector<String> fFormatArgs;
-  // true if the sksl referenced sk_TransformedCoords[0]
-  bool fAccessLocalCoordsDirectly = false;
+  // true if the sksl declared its main() function with a float2 parameter AND referenced that
+  // parameter in its body.
+  bool fAccessSampleCoordsDirectly = false;
 
   // if true, we are writing a C++ expression instead of a GLSL expression
   bool fCPPMode = false;

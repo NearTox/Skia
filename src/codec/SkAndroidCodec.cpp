@@ -13,7 +13,7 @@
 #include "src/codec/SkSampledCodec.h"
 #include "src/core/SkPixmapPriv.h"
 
-static bool is_valid_sample_size(int sampleSize) noexcept {
+static bool is_valid_sample_size(int sampleSize) {
   // FIXME: As Leon has mentioned elsewhere, surely there is also a maximum sampleSize?
   return sampleSize > 0;
 }
@@ -21,7 +21,7 @@ static bool is_valid_sample_size(int sampleSize) noexcept {
 /**
  *  Loads the gamut as a set of three points (triangle).
  */
-static void load_gamut(SkPoint rgb[], const skcms_Matrix3x3& xyz) noexcept {
+static void load_gamut(SkPoint rgb[], const skcms_Matrix3x3& xyz) {
   // rx = rX / (rX + rY + rZ)
   // ry = rY / (rX + rY + rZ)
   // gx, gy, bx, and gy are calulcated similarly.
@@ -35,7 +35,7 @@ static void load_gamut(SkPoint rgb[], const skcms_Matrix3x3& xyz) noexcept {
 /**
  *  Calculates the area of the triangular gamut.
  */
-static float calculate_area(SkPoint abc[]) noexcept {
+static float calculate_area(SkPoint abc[]) {
   SkPoint a = abc[0];
   SkPoint b = abc[1];
   SkPoint c = abc[2];
@@ -44,7 +44,7 @@ static float calculate_area(SkPoint abc[]) noexcept {
 
 static constexpr float kSRGB_D50_GamutArea = 0.084f;
 
-static bool is_wide_gamut(const skcms_ICCProfile& profile) noexcept {
+static bool is_wide_gamut(const skcms_ICCProfile& profile) {
   // Determine if the source image has a gamut that is wider than sRGB.  If so, we
   // will use P3 as the output color space to avoid clipping the gamut.
   if (profile.has_toXYZD50) {
@@ -122,7 +122,7 @@ std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromData(
   return MakeFromStream(SkMemoryStream::Make(std::move(data)), chunkReader);
 }
 
-SkColorType SkAndroidCodec::computeOutputColorType(SkColorType requestedColorType) noexcept {
+SkColorType SkAndroidCodec::computeOutputColorType(SkColorType requestedColorType) {
   bool highPrecision = fCodec->getEncodedInfo().bitsPerComponent() > 8;
   switch (requestedColorType) {
     case kARGB_4444_SkColorType: return kN32_SkColorType;
@@ -149,7 +149,7 @@ SkColorType SkAndroidCodec::computeOutputColorType(SkColorType requestedColorTyp
   return highPrecision ? kRGBA_F16_SkColorType : kN32_SkColorType;
 }
 
-SkAlphaType SkAndroidCodec::computeOutputAlphaType(bool requestedUnpremul) noexcept {
+SkAlphaType SkAndroidCodec::computeOutputAlphaType(bool requestedUnpremul) {
   if (kOpaque_SkAlphaType == this->getInfo().alphaType()) {
     return kOpaque_SkAlphaType;
   }
@@ -197,12 +197,12 @@ static bool supports_any_down_scale(const SkCodec* codec) {
 // returns true if either dimensions of a is < that of b.
 // computeSampleSize also uses the opposite, which means that both
 // dimensions of a >= b.
-static inline bool smaller_than(const SkISize& a, const SkISize& b) noexcept {
+static inline bool smaller_than(const SkISize& a, const SkISize& b) {
   return a.width() < b.width() || a.height() < b.height();
 }
 
 // Both dimensions of a > that of b.
-static inline bool strictly_bigger_than(const SkISize& a, const SkISize& b) noexcept {
+static inline bool strictly_bigger_than(const SkISize& a, const SkISize& b) {
   return a.width() > b.width() && a.height() > b.height();
 }
 
@@ -335,7 +335,7 @@ SkISize SkAndroidCodec::getSampledSubsetDimensions(int sampleSize, const SkIRect
       get_scaled_dimension(subset.height(), sampleSize)};
 }
 
-static bool acceptable_result(SkCodec::Result result) noexcept {
+static bool acceptable_result(SkCodec::Result result) {
   switch (result) {
     // These results mean a partial or complete image. They should be considered
     // a success by SkPixmapPriv.

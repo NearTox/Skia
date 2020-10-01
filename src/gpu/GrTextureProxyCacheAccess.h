@@ -19,11 +19,11 @@ class GrTextureProxy::CacheAccess {
     fTextureProxy->setUniqueKey(proxyProvider, key);
   }
 
-  void clearUniqueKey() noexcept { fTextureProxy->clearUniqueKey(); }
+  void clearUniqueKey() { fTextureProxy->clearUniqueKey(); }
 
   explicit CacheAccess(GrTextureProxy* textureProxy) noexcept : fTextureProxy(textureProxy) {}
-  CacheAccess(const CacheAccess&) noexcept {}  // unimpl
-  CacheAccess& operator=(const CacheAccess&);  // unimpl
+  CacheAccess(const CacheAccess&) = delete;
+  CacheAccess& operator=(const CacheAccess&) = delete;
 
   // No taking addresses of this type.
   const CacheAccess* operator&() const;
@@ -39,7 +39,8 @@ inline GrTextureProxy::CacheAccess GrTextureProxy::cacheAccess() noexcept {
   return CacheAccess(this);
 }
 
-inline const GrTextureProxy::CacheAccess GrTextureProxy::cacheAccess() const noexcept {
+inline const GrTextureProxy::CacheAccess GrTextureProxy::cacheAccess()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return CacheAccess(const_cast<GrTextureProxy*>(this));
 }
 

@@ -14,7 +14,7 @@
 
 // Cheaper than SkGoodHash and good enough for UniqueID tables.
 struct GrCheapHash {
-  uint32_t operator()(uint32_t val) noexcept { return SkChecksum::CheapMix(val); }
+  uint32_t operator()(uint32_t val) { return SkChecksum::CheapMix(val); }
 };
 
 /** A hash map that caches the most recently accessed entry.

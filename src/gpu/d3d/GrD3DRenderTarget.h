@@ -75,7 +75,7 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
     }
     const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipMapped::kNo);
+        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
   }
 
  private:

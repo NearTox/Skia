@@ -29,10 +29,10 @@
  */
 class GrCoverageSetOpXPFactory : public GrXPFactory {
  public:
-  static const GrXPFactory* Get(SkRegion::Op regionOp, bool invertCoverage = false) noexcept;
+  static const GrXPFactory* Get(SkRegion::Op regionOp, bool invertCoverage = false);
 
  private:
-  constexpr GrCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage) noexcept;
+  constexpr GrCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage);
 
   sk_sp<const GrXferProcessor> makeXferProcessor(
       const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
@@ -40,7 +40,7 @@ class GrCoverageSetOpXPFactory : public GrXPFactory {
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const noexcept override {
+      GrClampType) const override {
     return AnalysisProperties::kIgnoresInputColor;
   }
 

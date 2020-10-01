@@ -17,23 +17,24 @@
 class GrTextureMaker : public GrTextureProducer {
  public:
   std::unique_ptr<GrFragmentProcessor> createFragmentProcessor(
-      const SkMatrix& textureMatrix, const SkRect& constraintRect,
-      FilterConstraint filterConstraint, bool coordsLimitedToConstraintRect,
-      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
-      const GrSamplerState::Filter* filterOrNullForBicubic) override;
+      const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
+      GrSamplerState) override;
+
+  std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessor(
+      const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
+      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) override;
 
  protected:
-  GrTextureMaker(GrRecordingContext* context, const GrImageInfo& info) noexcept
-      : INHERITED(context, info) {}
+  GrTextureMaker(GrRecordingContext* context, const GrImageInfo& info) : INHERITED(context, info) {}
 
  private:
   /**
    *  Return the maker's "original" texture. It is the responsibility of the maker to handle any
    *  caching of the original if desired.
    */
-  virtual GrSurfaceProxyView refOriginalTextureProxyView(GrMipMapped) = 0;
+  virtual GrSurfaceProxyView refOriginalTextureProxyView(GrMipmapped) = 0;
 
-  GrSurfaceProxyView onView(GrMipMapped) final;
+  GrSurfaceProxyView onView(GrMipmapped) final;
 
   typedef GrTextureProducer INHERITED;
 };

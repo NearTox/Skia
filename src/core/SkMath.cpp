@@ -16,7 +16,7 @@
   zeros -= n;                  \
   x >>= n
 
-int SkCLZ_portable(uint32_t x) {
+int SkCLZ_portable(uint32_t x) noexcept {
   if (x == 0) {
     return 32;
   }
@@ -45,7 +45,7 @@ int SkCLZ_portable(uint32_t x) {
   zeros += n;                  \
   x >>= n
 
-int SkCTZ_portable(uint32_t x) {
+int SkCTZ_portable(uint32_t x) noexcept {
   if (x == 0) {
     return 32;
   }
@@ -74,7 +74,7 @@ int SkCTZ_portable(uint32_t x) {
 
 /* www.worldserver.com/turk/computergraphics/FixedSqrt.pdf
  */
-int32_t SkSqrtBits(int32_t x, int count) {
+int32_t SkSqrtBits(int32_t x, int count) noexcept {
   SkASSERT(x >= 0 && count > 0 && (unsigned)count <= 30);
 
   uint32_t root = 0;

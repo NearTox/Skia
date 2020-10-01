@@ -23,14 +23,20 @@ void Image::onRender(SkCanvas* canvas, const RenderContext* ctx) const {
   paint.setAntiAlias(fAntiAlias);
   paint.setFilterQuality(fQuality);
 
+  sksg::RenderNode::ScopedRenderContext local_ctx(canvas, ctx);
   if (ctx) {
-    ctx->modulatePaint(canvas->getTotalMatrix(), &paint);
+    if (ctx->fMaskShader) {
+      // Mask shaders cannot be applied via drawImage - we need layer isolation.
+      // TODO: remove after clipShader conversion.
+      local_ctx.setIsolation(this->bounds(), canvas->getTotalMatrix(), true);
+    }
+    local_ctx->modulatePaint(canvas->getTotalMatrix(), &paint);
   }
 
   canvas->drawImage(fImage, 0, 0, &paint);
 }
 
-const RenderNode* Image::onNodeAt(const SkPoint& p) const noexcept {
+const RenderNode* Image::onNodeAt(const SkPoint& p) const {
   SkASSERT(this->bounds().contains(p.x(), p.y()));
   return this;
 }

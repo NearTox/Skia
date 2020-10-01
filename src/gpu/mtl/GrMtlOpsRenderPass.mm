@@ -8,7 +8,7 @@
 #include "src/gpu/mtl/GrMtlOpsRenderPass.h"
 
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/mtl/GrMtlCommandBuffer.h"
 #include "src/gpu/mtl/GrMtlPipelineState.h"
 #include "src/gpu/mtl/GrMtlPipelineStateBuilder.h"
@@ -135,7 +135,7 @@ void GrMtlOpsRenderPass::onClearStencilClip(const GrScissorState& scissor, bool 
   // Partial clears are not supported
   SkASSERT(!scissor.enabled());
 
-  GrStencilAttachment* sb = fRenderTarget->renderTargetPriv().getStencilAttachment();
+  GrStencilAttachment* sb = fRenderTarget->getStencilAttachment();
   // this should only be called internally when we know we have a
   // stencil buffer.
   SkASSERT(sb);
@@ -206,8 +206,7 @@ void GrMtlOpsRenderPass::setupRenderPass(
   renderPassDesc.colorAttachments[0].storeAction =
       mtlStoreAction[static_cast<int>(colorInfo.fStoreOp)];
 
-  const GrMtlStencilAttachment* stencil = static_cast<GrMtlStencilAttachment*>(
-      fRenderTarget->renderTargetPriv().getStencilAttachment());
+  auto* stencil = static_cast<GrMtlStencilAttachment*>(fRenderTarget->getStencilAttachment());
   if (stencil) {
     renderPassDesc.stencilAttachment.texture = stencil->stencilView();
   }
@@ -241,25 +240,29 @@ void GrMtlOpsRenderPass::setupRenderPass(
 }
 
 void GrMtlOpsRenderPass::onBindBuffers(
-    const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
-    GrPrimitiveRestart primRestart) {
+    sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
+    sk_sp<const GrBuffer> vertexBuffer, GrPrimitiveRestart primRestart) {
   SkASSERT(GrPrimitiveRestart::kNo == primRestart);
   int inputBufferIndex = 0;
   if (vertexBuffer) {
     SkASSERT(!vertexBuffer->isCpuBuffer());
-    SkASSERT(!static_cast<const GrGpuBuffer*>(vertexBuffer)->isMapped());
-    fActiveVertexBuffer = sk_ref_sp(static_cast<const GrMtlBuffer*>(vertexBuffer));
+    SkASSERT(!static_cast<const GrGpuBuffer*>(vertexBuffer.get())->isMapped());
+    fActiveVertexBuffer = std::move(vertexBuffer);
+    fGpu->commandBuffer()->addGrBuffer(fActiveVertexBuffer);
     ++inputBufferIndex;
   }
   if (instanceBuffer) {
     SkASSERT(!instanceBuffer->isCpuBuffer());
-    SkASSERT(!static_cast<const GrGpuBuffer*>(instanceBuffer)->isMapped());
-    this->setVertexBuffer(fActiveRenderCmdEncoder, instanceBuffer, 0, inputBufferIndex++);
+    SkASSERT(!static_cast<const GrGpuBuffer*>(instanceBuffer.get())->isMapped());
+    this->setVertexBuffer(fActiveRenderCmdEncoder, instanceBuffer.get(), 0, inputBufferIndex++);
+    fActiveInstanceBuffer = std::move(instanceBuffer);
+    fGpu->commandBuffer()->addGrBuffer(fActiveInstanceBuffer);
   }
   if (indexBuffer) {
     SkASSERT(!indexBuffer->isCpuBuffer());
-    SkASSERT(!static_cast<const GrGpuBuffer*>(indexBuffer)->isMapped());
-    fActiveIndexBuffer = sk_ref_sp(static_cast<const GrMtlBuffer*>(indexBuffer));
+    SkASSERT(!static_cast<const GrGpuBuffer*>(indexBuffer.get())->isMapped());
+    fActiveIndexBuffer = std::move(indexBuffer);
+    fGpu->commandBuffer()->addGrBuffer(fActiveIndexBuffer);
   }
 }
 
@@ -354,7 +357,8 @@ void GrMtlOpsRenderPass::setVertexBuffer(
     if (@available(macOS 10.11, iOS 8.3, *)) {
       [encoder setVertexBufferOffset:offset atIndex:index];
     } else {
-      [encoder setVertexBuffer:mtlVertexBuffer offset:offset atIndex:index];
+      // We only support iOS 9.0+, so we should never hit this
+      SK_ABORT("Missing interface. Skia only supports Metal on iOS 9.0 and higher");
     }
     fBufferBindings[index].fOffset = offset;
   }

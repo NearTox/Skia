@@ -42,6 +42,7 @@
     <ClCompile Include="skottie\src\effects\TritoneEffect.cpp" />
     <ClCompile Include="skottie\src\effects\VenetianBlindsEffect.cpp" />
     <ClCompile Include="skottie\src\Layer.cpp" />
+    <ClCompile Include="skottie\src\layers\AudioLayer.cpp" />
     <ClCompile Include="skottie\src\layers\FootageLayer.cpp" />
     <ClCompile Include="skottie\src\layers\NullLayer.cpp" />
     <ClCompile Include="skottie\src\layers\PrecompLayer.cpp" />
@@ -49,7 +50,9 @@
     <ClCompile Include="skottie\src\layers\shapelayer\FillStroke.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\Gradient.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\MergePaths.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\OffsetPaths.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\Polystar.cpp" />
+    <ClCompile Include="skottie\src\layers\shapelayer\PuckerBloat.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\Rectangle.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\Repeater.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\RoundCorners.cpp" />
@@ -147,7 +150,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>

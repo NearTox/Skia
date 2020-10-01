@@ -28,7 +28,7 @@ class Gradient : public Shader {
     SkScalar fPosition;
     SkColor4f fColor;
 
-    bool operator==(const ColorStop& other) const noexcept {
+    bool operator==(const ColorStop& other) const {
       return fPosition == other.fPosition && fColor == other.fColor;
     }
   };

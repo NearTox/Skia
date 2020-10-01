@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrAutoLocaleSetter.h"
 #include "src/gpu/GrContextPriv.h"
@@ -161,7 +161,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
   VkPipelineLayoutCreateInfo layoutCreateInfo;
   memset(&layoutCreateInfo, 0, sizeof(VkPipelineLayoutCreateFlags));
   layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  layoutCreateInfo.pNext = 0;
+  layoutCreateInfo.pNext = nullptr;
   layoutCreateInfo.flags = 0;
   layoutCreateInfo.setLayoutCount = 2;
   layoutCreateInfo.pSetLayouts = dsLayout;
@@ -302,5 +302,5 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
   return new GrVkPipelineState(
       fGpu, pipeline, samplerDSHandle, fUniformHandles, fUniformHandler.fUniforms,
       fUniformHandler.fCurrentUBOOffset, fUniformHandler.fSamplers, std::move(fGeometryProcessor),
-      std::move(fXferProcessor), std::move(fFragmentProcessors), fFragmentProcessorCnt);
+      std::move(fXferProcessor), std::move(fFragmentProcessors));
 }

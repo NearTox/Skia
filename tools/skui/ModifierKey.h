@@ -14,7 +14,7 @@ enum class ModifierKey {
   kCommand = 1 << 3,
   kFirstPress = 1 << 4,
 };
-}
+}  // namespace skui
 
 namespace sknonstd {
 template <>

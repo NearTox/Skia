@@ -8,13 +8,11 @@
 #include "src/gpu/GrResourceProvider.h"
 
 #include "include/gpu/GrBackendSemaphore.h"
-#include "include/gpu/GrContext.h"
 #include "include/private/GrResourceKey.h"
 #include "include/private/GrSingleOwner.h"
 #include "src/core/SkConvertPixels.h"
 #include "src/core/SkMathPriv.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDataUtils.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrGpuBuffer.h"
@@ -22,19 +20,18 @@
 #include "src/gpu/GrPath.h"
 #include "src/gpu/GrPathRendering.h"
 #include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRenderTargetPriv.h"
+#include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrResourceCache.h"
 #include "src/gpu/GrSemaphore.h"
 #include "src/gpu/GrStencilAttachment.h"
-#include "src/gpu/GrTexturePriv.h"
+#include "src/gpu/GrTexture.h"
 #include "src/gpu/SkGr.h"
 
 const int GrResourceProvider::kMinScratchTextureSize = 16;
 
 #define ASSERT_SINGLE_OWNER GR_ASSERT_SINGLE_OWNER(fSingleOwner)
 
-GrResourceProvider::GrResourceProvider(
-    GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* owner) noexcept
+GrResourceProvider::GrResourceProvider(GrGpu* gpu, GrResourceCache* cache, GrSingleOwner* owner)
     : fCache(cache),
       fGpu(gpu)
 #ifdef SK_DEBUG
@@ -57,7 +54,7 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
     return nullptr;
   }
 
-  GrMipMapped mipMapped = mipLevelCount > 1 ? GrMipMapped::kYes : GrMipMapped::kNo;
+  GrMipmapped mipMapped = mipLevelCount > 1 ? GrMipmapped::kYes : GrMipmapped::kNo;
   if (!fCaps->validateSurfaceParams(
           dimensions, format, renderable, renderTargetSampleCnt, mipMapped)) {
     return nullptr;
@@ -89,7 +86,7 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
 
 sk_sp<GrTexture> GrResourceProvider::getExactScratch(
     SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
-    int renderTargetSampleCnt, SkBudgeted budgeted, GrMipMapped mipMapped,
+    int renderTargetSampleCnt, SkBudgeted budgeted, GrMipmapped mipMapped,
     GrProtected isProtected) {
   sk_sp<GrTexture> tex(this->refScratchTexture(
       dimensions, format, renderable, renderTargetSampleCnt, mipMapped, isProtected));
@@ -115,7 +112,7 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
       return nullptr;
     }
     if (!fCaps->validateSurfaceParams(
-            dimensions, format, renderable, renderTargetSampleCnt, GrMipMapped::kNo)) {
+            dimensions, format, renderable, renderTargetSampleCnt, GrMipmapped::kNo)) {
       return nullptr;
     }
 
@@ -133,7 +130,7 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
 }
 
 sk_sp<GrTexture> GrResourceProvider::createCompressedTexture(
-    SkISize dimensions, const GrBackendFormat& format, SkBudgeted budgeted, GrMipMapped mipMapped,
+    SkISize dimensions, const GrBackendFormat& format, SkBudgeted budgeted, GrMipmapped mipMapped,
     GrProtected isProtected, SkData* data) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
@@ -145,7 +142,7 @@ sk_sp<GrTexture> GrResourceProvider::createCompressedTexture(
 
 sk_sp<GrTexture> GrResourceProvider::createTexture(
     SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
-    int renderTargetSampleCnt, GrMipMapped mipMapped, SkBudgeted budgeted,
+    int renderTargetSampleCnt, GrMipmapped mipMapped, SkBudgeted budgeted,
     GrProtected isProtected) {
   ASSERT_SINGLE_OWNER
   if (this->isAbandoned()) {
@@ -161,7 +158,7 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
   // textures should be created through the createCompressedTexture function.
   SkASSERT(!this->caps()->isFormatCompressed(format));
 
-  // TODO: Support GrMipMapped::kYes in scratch texture lookup here.
+  // TODO: Support GrMipmapped::kYes in scratch texture lookup here.
   sk_sp<GrTexture> tex = this->getExactScratch(
       dimensions, format, renderable, renderTargetSampleCnt, budgeted, mipMapped, isProtected);
   if (tex) {
@@ -215,37 +212,37 @@ sk_sp<GrTexture> GrResourceProvider::createApproxTexture(
   SkASSERT(!this->caps()->isFormatCompressed(format));
 
   if (!fCaps->validateSurfaceParams(
-          dimensions, format, renderable, renderTargetSampleCnt, GrMipMapped::kNo)) {
+          dimensions, format, renderable, renderTargetSampleCnt, GrMipmapped::kNo)) {
     return nullptr;
   }
 
   auto copyDimensions = MakeApprox(dimensions);
 
   if (auto tex = this->refScratchTexture(
-          copyDimensions, format, renderable, renderTargetSampleCnt, GrMipMapped::kNo,
+          copyDimensions, format, renderable, renderTargetSampleCnt, GrMipmapped::kNo,
           isProtected)) {
     return tex;
   }
 
   return fGpu->createTexture(
-      copyDimensions, format, renderable, renderTargetSampleCnt, GrMipMapped::kNo, SkBudgeted::kYes,
+      copyDimensions, format, renderable, renderTargetSampleCnt, GrMipmapped::kNo, SkBudgeted::kYes,
       isProtected);
 }
 
 sk_sp<GrTexture> GrResourceProvider::refScratchTexture(
     SkISize dimensions, const GrBackendFormat& format, GrRenderable renderable,
-    int renderTargetSampleCnt, GrMipMapped mipMapped, GrProtected isProtected) {
+    int renderTargetSampleCnt, GrMipmapped mipMapped, GrProtected isProtected) {
   ASSERT_SINGLE_OWNER
   SkASSERT(!this->isAbandoned());
   SkASSERT(!this->caps()->isFormatCompressed(format));
   SkASSERT(fCaps->validateSurfaceParams(
-      dimensions, format, renderable, renderTargetSampleCnt, GrMipMapped::kNo));
+      dimensions, format, renderable, renderTargetSampleCnt, GrMipmapped::kNo));
 
   // We could make initial clears work with scratch textures but it is a rare case so we just opt
   // to fall back to making a new texture.
   if (fGpu->caps()->reuseScratchTextures() || renderable == GrRenderable::kYes) {
     GrScratchKey key;
-    GrTexturePriv::ComputeScratchKey(
+    GrTexture::ComputeScratchKey(
         *this->caps(), format, dimensions, renderable, renderTargetSampleCnt, mipMapped,
         isProtected, &key);
     GrGpuResource* resource = fCache->findAndRefScratchResource(key);
@@ -370,8 +367,8 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createPatternedIndexBuffer(
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static constexpr int kMaxNumNonAAQuads = 1 << 12;  // max possible: (1 << 14) - 1;
-static constexpr int kVertsPerNonAAQuad = 4;
-static constexpr int kIndicesPerNonAAQuad = 6;
+static const int kVertsPerNonAAQuad = 4;
+static const int kIndicesPerNonAAQuad = 6;
 
 sk_sp<const GrGpuBuffer> GrResourceProvider::createNonAAQuadIndexBuffer() {
   static_assert(kVertsPerNonAAQuad * kMaxNumNonAAQuads <= 65535);  // indices fit in a uint16_t
@@ -390,14 +387,14 @@ int GrResourceProvider::NumIndicesPerNonAAQuad() noexcept { return kIndicesPerNo
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static constexpr int kMaxNumAAQuads = 1 << 9;  // max possible: (1 << 13) - 1;
-static constexpr int kVertsPerAAQuad = 8;
-static constexpr int kIndicesPerAAQuad = 30;
+static const int kVertsPerAAQuad = 8;
+static const int kIndicesPerAAQuad = 30;
 
 sk_sp<const GrGpuBuffer> GrResourceProvider::createAAQuadIndexBuffer() {
   static_assert(kVertsPerAAQuad * kMaxNumAAQuads <= 65535);  // indices fit in a uint16_t
 
   // clang-format off
-    static constexpr uint16_t kAAQuadIndexPattern[] = {
+    static const uint16_t kAAQuadIndexPattern[] = {
         0, 1, 2, 1, 3, 2,
         0, 4, 1, 4, 5, 1,
         0, 6, 4, 0, 2, 6,
@@ -434,9 +431,13 @@ sk_sp<GrGpuBuffer> GrResourceProvider::createBuffer(
   if (kDynamic_GrAccessPattern != accessPattern) {
     return this->gpu()->createBuffer(size, intendedType, accessPattern, data);
   }
-  // bin by pow2 with a reasonable min
-  static constexpr size_t MIN_SIZE = 1 << 12;
-  size_t allocSize = std::max(MIN_SIZE, GrNextSizePow2(size));
+  // bin by pow2+midpoint with a reasonable min
+  static const size_t MIN_SIZE = 1 << 12;
+  size_t allocSize = std::max(size, MIN_SIZE);
+  size_t ceilPow2 = GrNextSizePow2(allocSize);
+  size_t floorPow2 = ceilPow2 >> 1;
+  size_t mid = floorPow2 + (floorPow2 >> 1);
+  allocSize = (allocSize <= mid) ? mid : ceilPow2;
 
   GrScratchKey key;
   GrGpuBuffer::ComputeScratchKeyForDynamicVBO(allocSize, intendedType, &key);
@@ -456,7 +457,7 @@ sk_sp<GrGpuBuffer> GrResourceProvider::createBuffer(
 
 bool GrResourceProvider::attachStencilAttachment(GrRenderTarget* rt, int numStencilSamples) {
   SkASSERT(rt);
-  GrStencilAttachment* stencil = rt->renderTargetPriv().getStencilAttachment();
+  GrStencilAttachment* stencil = rt->getStencilAttachment();
   if (stencil && stencil->numSamples() == numStencilSamples) {
     return true;
   }
@@ -484,10 +485,10 @@ bool GrResourceProvider::attachStencilAttachment(GrRenderTarget* rt, int numSten
       }
       this->assignUniqueKeyToResource(sbKey, stencil.get());
     }
-    rt->renderTargetPriv().attachStencilAttachment(std::move(stencil));
+    rt->attachStencilAttachment(std::move(stencil));
   }
 
-  if (GrStencilAttachment* stencil = rt->renderTargetPriv().getStencilAttachment()) {
+  if (GrStencilAttachment* stencil = rt->getStencilAttachment()) {
     return stencil->numSamples() == numStencilSamples;
   }
   return false;

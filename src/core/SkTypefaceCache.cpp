@@ -18,7 +18,7 @@ void SkTypefaceCache::add(sk_sp<SkTypeface> face) noexcept {
     this->purge(TYPEFACE_CACHE_LIMIT >> 2);
   }
 
-  fTypefaces.push_back(std::move(face));
+  fTypefaces.emplace_back(std::move(face));
 }
 
 sk_sp<SkTypeface> SkTypefaceCache::findByProcAndRef(FindProc proc, void* ctx) const {

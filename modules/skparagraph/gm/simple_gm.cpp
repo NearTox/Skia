@@ -34,7 +34,7 @@ enum ParaFlags {
   kTimeLayout = 1 << 0,
   kUseUnderline = 1 << 1,
 };
-}
+}  // namespace
 
 class ParagraphGM : public skiagm::GM {
   std::unique_ptr<skia::textlayout::Paragraph> fPara;
@@ -115,6 +115,6 @@ class ParagraphGM : public skiagm::GM {
  private:
   typedef skiagm::GM INHERITED;
 };
-DEF_GM(return new ParagraphGM(0);)
-DEF_GM(return new ParagraphGM(kTimeLayout);)
-DEF_GM(return new ParagraphGM(kUseUnderline);)
+DEF_GM(return new ParagraphGM(0));
+DEF_GM(return new ParagraphGM(kTimeLayout));
+DEF_GM(return new ParagraphGM(kUseUnderline));

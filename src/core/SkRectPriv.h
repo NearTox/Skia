@@ -26,7 +26,11 @@ class SkRectPriv {
     return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
   }
 
-  static constexpr SkRect MakeLargeS32() noexcept { return SkRect::Make(MakeILarge()); }
+  static SkRect MakeLargeS32() noexcept {
+    SkRect r;
+    r.set(MakeILarge());
+    return r;
+  }
 
   static constexpr SkRect MakeLargest() noexcept {
     return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};

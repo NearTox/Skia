@@ -70,7 +70,8 @@ enum class SkBlendModeCoeff {
  * Returns true if 'mode' is a coefficient-based blend mode (<= kLastCoeffMode). If true is
  * returned, the mode's src and dst coefficient functions are set in 'src' and 'dst'.
  */
-SK_API bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) noexcept;
+SK_API bool SkBlendMode_AsCoeff(
+    SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) noexcept;
 
 /** Returns name of blendMode as null-terminated C string.
 

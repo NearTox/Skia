@@ -7,10 +7,9 @@
 
 #include "src/gpu/GrDrawOpAtlas.h"
 
-#include "include/gpu/GrContext.h"
+#include <memory>
+
 #include "src/core/SkOpts.h"
-#include "src/gpu/GrContextPriv.h"
-#include "src/gpu/GrGpu.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProxyProvider.h"
@@ -23,19 +22,6 @@
 #ifdef DUMP_ATLAS_DATA
 static bool gDumpAtlasData = false;
 #endif
-
-std::array<uint16_t, 4> GrDrawOpAtlas::AtlasLocator::getUVs(int padding) const {
-  uint16_t left = fRect.fLeft + padding;
-  uint16_t top = fRect.fTop + padding;
-  uint16_t right = fRect.fRight - padding;
-  uint16_t bottom = fRect.fBottom - padding;
-
-  // We pack the 2bit page index in the low bit of the u and v texture coords
-  uint32_t pageIndex = this->pageIndex();
-  std::tie(left, bottom) = GrDrawOpAtlas::PackIndexInTexCoords(left, bottom, pageIndex);
-  std::tie(right, top) = GrDrawOpAtlas::PackIndexInTexCoords(right, top, pageIndex);
-  return {left, top, right, bottom};
-}
 
 #ifdef SK_DEBUG
 void GrDrawOpAtlas::AtlasLocator::validate(const GrDrawOpAtlas* drawOpAtlas) const {
@@ -84,20 +70,6 @@ std::unique_ptr<GrDrawOpAtlas> GrDrawOpAtlas::Make(
     atlas->fEvictionCallbacks.emplace_back(evictor);
   }
   return atlas;
-}
-
-// The two bits that make up the texture index are packed into the lower bits of the u and v
-// coordinate respectively.
-std::pair<uint16_t, uint16_t> GrDrawOpAtlas::PackIndexInTexCoords(
-    uint16_t u, uint16_t v, int pageIndex) {
-  SkASSERT(pageIndex >= 0 && pageIndex < 4);
-  uint16_t uBit = (pageIndex >> 1u) & 0x1u;
-  uint16_t vBit = pageIndex & 0x1u;
-  u <<= 1u;
-  u |= uBit;
-  v <<= 1u;
-  v |= vBit;
-  return std::make_pair(u, v);
 }
 
 std::tuple<uint16_t, uint16_t, int> GrDrawOpAtlas::UnpackIndexFromTexCoords(
@@ -184,9 +156,9 @@ bool GrDrawOpAtlas::Plot::addSubImage(int width, int height, const void* image, 
   fDirtyRect.join({rect->fLeft, rect->fTop, rect->fRight, rect->fBottom});
 
   rect->offset(fOffset.fX, fOffset.fY);
-  SkDEBUGCODE(fDirty = true;)
+  SkDEBUGCODE(fDirty = true);
 
-      return true;
+  return true;
 }
 
 void GrDrawOpAtlas::Plot::uploadToTexture(
@@ -210,7 +182,7 @@ void GrDrawOpAtlas::Plot::uploadToTexture(
       proxy, fOffset.fX + fDirtyRect.fLeft, fOffset.fY + fDirtyRect.fTop, fDirtyRect.width(),
       fDirtyRect.height(), fColorType, dataPtr, rowBytes);
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false;)
+  SkDEBUGCODE(fDirty = false);
 }
 
 void GrDrawOpAtlas::Plot::resetRects() {
@@ -227,7 +199,7 @@ void GrDrawOpAtlas::Plot::resetRects() {
   }
 
   fDirtyRect.setEmpty();
-  SkDEBUGCODE(fDirty = false;)
+  SkDEBUGCODE(fDirty = false);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -260,7 +232,7 @@ GrDrawOpAtlas::GrDrawOpAtlas(
 }
 
 inline void GrDrawOpAtlas::processEviction(PlotLocator plotLocator) {
-  for (auto evictor : fEvictionCallbacks) {
+  for (EvictionCallback* evictor : fEvictionCallbacks) {
     evictor->evict(plotLocator);
   }
 
@@ -289,7 +261,8 @@ inline bool GrDrawOpAtlas::updatePlot(
     plot->setLastUploadToken(lastUploadToken);
   }
   atlasLocator->fPlotLocator = plot->plotLocator();
-  SkDEBUGCODE(atlasLocator->validate(this);) return true;
+  SkDEBUGCODE(atlasLocator->validate(this));
+  return true;
 }
 
 bool GrDrawOpAtlas::uploadToPage(
@@ -424,9 +397,9 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
   newPlot->setLastUploadToken(lastUploadToken);
 
   atlasLocator->fPlotLocator = newPlot->plotLocator();
-  SkDEBUGCODE(atlasLocator->validate(this);)
+  SkDEBUGCODE(atlasLocator->validate(this));
 
-      return ErrorCode::kSucceeded;
+  return ErrorCode::kSucceeded;
 }
 
 void GrDrawOpAtlas::compact(GrDeferredUploadToken startTokenForNextFlush) {
@@ -592,7 +565,7 @@ bool GrDrawOpAtlas::createPages(
   for (uint32_t i = 0; i < this->maxPages(); ++i) {
     GrSwizzle swizzle = proxyProvider->caps()->getReadSwizzle(fFormat, fColorType);
     sk_sp<GrSurfaceProxy> proxy = proxyProvider->createProxy(
-        fFormat, dims, GrRenderable::kNo, 1, GrMipMapped::kNo, SkBackingFit::kExact,
+        fFormat, dims, GrRenderable::kNo, 1, GrMipmapped::kNo, SkBackingFit::kExact,
         SkBudgeted::kYes, GrProtected::kNo, GrInternalSurfaceFlags::kNone,
         GrSurfaceProxy::UseAllocator::kNo);
     if (!proxy) {
@@ -601,7 +574,7 @@ bool GrDrawOpAtlas::createPages(
     fViews[i] = GrSurfaceProxyView(std::move(proxy), kTopLeft_GrSurfaceOrigin, swizzle);
 
     // set up allocated plots
-    fPages[i].fPlotArray.reset(new sk_sp<Plot>[numPlotsX * numPlotsY]);
+    fPages[i].fPlotArray = std::make_unique<sk_sp<Plot>[]>(numPlotsX * numPlotsY);
 
     sk_sp<Plot>* currPlot = fPages[i].fPlotArray.get();
     for (int y = numPlotsY - 1, r = 0; y >= 0; --y, ++r) {

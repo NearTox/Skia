@@ -32,13 +32,13 @@ class Shader : public Node {
  public:
   ~Shader() override;
 
-  const sk_sp<SkShader>& getShader() const noexcept {
+  const sk_sp<SkShader>& getShader() const {
     SkASSERT(!this->hasInval());
     return fShader;
   }
 
  protected:
-  Shader() noexcept;
+  Shader();
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) final;
 
@@ -57,7 +57,7 @@ class ShaderEffect final : public EffectNode {
  public:
   ~ShaderEffect() override;
 
-  static sk_sp<ShaderEffect> Make(sk_sp<RenderNode> child, sk_sp<Shader> shader = 0);
+  static sk_sp<ShaderEffect> Make(sk_sp<RenderNode> child, sk_sp<Shader> shader = nullptr);
 
   void setShader(sk_sp<Shader>);
 
@@ -101,13 +101,13 @@ class ImageFilter : public Node {
  public:
   ~ImageFilter() override;
 
-  const sk_sp<SkImageFilter>& getFilter() const noexcept {
+  const sk_sp<SkImageFilter>& getFilter() const {
     SkASSERT(!this->hasInval());
     return fFilter;
   }
 
  protected:
-  explicit ImageFilter(sk_sp<ImageFilter> input = 0);
+  explicit ImageFilter(sk_sp<ImageFilter> input = nullptr);
 
   using InputsT = std::vector<sk_sp<ImageFilter>>;
   explicit ImageFilter(std::unique_ptr<InputsT> inputs);
@@ -137,7 +137,7 @@ class ImageFilterEffect final : public EffectNode {
 
  protected:
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
@@ -165,7 +165,7 @@ class ExternalImageFilter final : public ImageFilter {
  private:
   ExternalImageFilter();
 
-  sk_sp<SkImageFilter> onRevalidateFilter() noexcept override { return fImageFilter; }
+  sk_sp<SkImageFilter> onRevalidateFilter() override { return fImageFilter; }
 
   sk_sp<SkImageFilter> fImageFilter;
 };
@@ -236,10 +236,28 @@ class BlendModeEffect final : public EffectNode {
 
  protected:
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
  private:
   BlendModeEffect(sk_sp<RenderNode>, SkBlendMode);
+
+  SkBlendMode fMode;
+
+  using INHERITED = EffectNode;
+};
+
+class LayerEffect final : public EffectNode {
+ public:
+  ~LayerEffect() override;
+
+  static sk_sp<LayerEffect> Make(sk_sp<RenderNode> child, SkBlendMode mode = SkBlendMode::kSrcOver);
+
+  SG_ATTRIBUTE(Mode, SkBlendMode, fMode)
+
+ private:
+  LayerEffect(sk_sp<RenderNode> child, SkBlendMode mode);
+
+  void onRender(SkCanvas*, const RenderContext*) const override;
 
   SkBlendMode fMode;
 

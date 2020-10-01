@@ -28,7 +28,7 @@
 #  include "src/gpu/GrFragmentProcessor.h"
 #endif
 
-SkShaderBase::SkShaderBase(const SkMatrix* localMatrix) noexcept
+SkShaderBase::SkShaderBase(const SkMatrix* localMatrix)
     : fLocalMatrix(localMatrix ? *localMatrix : SkMatrix::I()) {
   // Pre-cache so future calls to fLocalMatrix.getType() are threadsafe.
   (void)fLocalMatrix.getType();
@@ -45,7 +45,8 @@ void SkShaderBase::flatten(SkWriteBuffer& buffer) const {
   }
 }
 
-SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(const SkMatrix* preLocalMatrix) const {
+SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(
+    const SkMatrix* preLocalMatrix) const noexcept {
   SkTCopyOnFirstWrite<SkMatrix> m(fLocalMatrix);
 
   if (preLocalMatrix) {
@@ -56,11 +57,11 @@ SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(const SkMatrix* pre
 }
 
 bool SkShaderBase::computeTotalInverse(
-    const SkMatrix& ctm, const SkMatrix* outerLocalMatrix, SkMatrix* totalInverse) const {
+    const SkMatrix& ctm, const SkMatrix* outerLocalMatrix, SkMatrix* totalInverse) const noexcept {
   return SkMatrix::Concat(ctm, *this->totalLocalMatrix(outerLocalMatrix)).invert(totalInverse);
 }
 
-bool SkShaderBase::asLuminanceColor(SkColor* colorPtr) const noexcept {
+bool SkShaderBase::asLuminanceColor(SkColor* colorPtr) const {
   SkColor storage;
   if (nullptr == colorPtr) {
     colorPtr = &storage;
@@ -87,7 +88,7 @@ SkShaderBase::Context* SkShaderBase::makeContext(const ContextRec& rec, SkArenaA
 #endif
 }
 
-SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec)
+SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec) noexcept
     : fShader(shader), fCTM(*rec.fMatrix) {
   // We should never use a context with perspective.
   SkASSERT(!rec.fMatrix->hasPerspective());
@@ -111,7 +112,7 @@ bool SkShaderBase::ContextRec::isLegacyCompatible(SkColorSpace* shaderColorSpace
          SkColorSpaceXformSteps{shaderColorSpace, shaderAT, fDstColorSpace, dstAT}.flags.mask();
 }
 
-SkImage* SkShader::isAImage(SkMatrix* localMatrix, SkTileMode xy[2]) const noexcept {
+SkImage* SkShader::isAImage(SkMatrix* localMatrix, SkTileMode xy[2]) const {
   return as_SB(this)->onIsAImage(localMatrix, xy);
 }
 
@@ -191,6 +192,11 @@ skvm::Color SkShaderBase::program(
     skvm::Builder* p, skvm::Coord device, skvm::Coord local, skvm::Color paint,
     const SkMatrixProvider& matrices, const SkMatrix* localM, SkFilterQuality quality,
     const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const {
+  // Shader subclasses should always act as if the destination were premul or opaque.
+  // SkVMBlitter handles all the coordination of unpremul itself, via premul.
+  SkColorInfo tweaked =
+      dst.alphaType() == kUnpremul_SkAlphaType ? dst.makeAlphaType(kPremul_SkAlphaType) : dst;
+
   // Force opaque alpha for all opaque shaders.
   //
   // This is primarily nice in that we usually have a 1.0f constant splat
@@ -204,7 +210,7 @@ skvm::Color SkShaderBase::program(
   // that bit to make decisions when constructing an SkVMBlitter, like doing
   // SrcOver -> Src strength reduction.
   if (auto color = this->onProgram(
-          p, device, local, paint, matrices, localM, quality, dst, uniforms, alloc)) {
+          p, device, local, paint, matrices, localM, quality, tweaked, uniforms, alloc)) {
     if (this->isOpaque()) {
       color.a = p->splat(1.0f);
     }
@@ -248,8 +254,8 @@ skvm::Coord SkShaderBase::ApplyMatrix(
     x = dot(0);
     y = dot(1);
     if (m.hasPerspective()) {
-      x = p->div(x, dot(2));
-      y = p->div(y, dot(2));
+      x = x * (1.0f / dot(2));
+      y = y * (1.0f / dot(2));
     }
   }
   return {x, y};

@@ -18,23 +18,23 @@ class GrBaseContextPriv {
   // from GrContext_Base
   uint32_t contextID() const noexcept { return fContext->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const noexcept { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
 
   const GrContextOptions& options() const noexcept { return fContext->options(); }
 
   const GrCaps* caps() const noexcept { return fContext->caps(); }
-  sk_sp<const GrCaps> refCaps() const noexcept;
+  sk_sp<const GrCaps> refCaps() const;
 
   GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
   GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
-  GrContext* asDirectContext() noexcept { return fContext->asDirectContext(); }
+  GrDirectContext* asDirectContext() { return fContext->asDirectContext(); }
 
   GrContextOptions::ShaderErrorHandler* getShaderErrorHandler() const;
 
  private:
   explicit GrBaseContextPriv(GrContext_Base* context) noexcept : fContext(context) {}
-  GrBaseContextPriv(const GrBaseContextPriv&);             // unimpl
-  GrBaseContextPriv& operator=(const GrBaseContextPriv&);  // unimpl
+  GrBaseContextPriv(const GrBaseContextPriv&) = delete;
+  GrBaseContextPriv& operator=(const GrBaseContextPriv&) = delete;
 
   // No taking addresses of this type.
   const GrBaseContextPriv* operator&() const;
@@ -47,7 +47,8 @@ class GrBaseContextPriv {
 
 inline GrBaseContextPriv GrContext_Base::priv() noexcept { return GrBaseContextPriv(this); }
 
-inline const GrBaseContextPriv GrContext_Base::priv() const noexcept {
+inline const GrBaseContextPriv GrContext_Base::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrBaseContextPriv(const_cast<GrContext_Base*>(this));
 }
 

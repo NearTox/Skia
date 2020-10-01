@@ -31,7 +31,7 @@ void GrTextureResource::resetIdleProcs() const noexcept { fIdleProcs.reset(); }
 
 void GrTextureResource::removeOwningTexture() const noexcept { fOwningTexture = nullptr; }
 
-void GrTextureResource::notifyQueuedForWorkOnGpu() const noexcept { ++fNumOwners; }
+void GrTextureResource::notifyQueuedForWorkOnGpu() const { ++fNumOwners; }
 
 void GrTextureResource::notifyFinishedWithWorkOnGpu() const {
   SkASSERT(fNumOwners);

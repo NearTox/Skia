@@ -35,9 +35,9 @@ struct Bounder {
     }
   }
 
-  bool hasBounds() const { return fHasBounds; }
-  const SkRect* bounds() const { return fHasBounds ? &fBounds : nullptr; }
-  operator const SkRect*() const { return this->bounds(); }
+  bool hasBounds() const noexcept { return fHasBounds; }
+  const SkRect* bounds() const noexcept { return fHasBounds ? &fBounds : nullptr; }
+  operator const SkRect*() const noexcept { return this->bounds(); }
 };
 
 class SkDrawTiler {
@@ -61,7 +61,7 @@ class SkDrawTiler {
   bool fDone, fNeedsTiling;
 
  public:
-  static bool NeedsTiling(SkBitmapDevice* dev) {
+  static bool NeedsTiling(SkBitmapDevice* dev) noexcept {
     return dev->width() > kMaxDim || dev->height() > kMaxDim;
   }
 
@@ -120,7 +120,7 @@ class SkDrawTiler {
     }
   }
 
-  bool needsTiling() const { return fNeedsTiling; }
+  bool needsTiling() const noexcept { return fNeedsTiling; }
 
   const SkDraw* next() {
     if (fDone) {
@@ -195,7 +195,7 @@ class SkBitmapDevice::BDDraw : public SkDraw {
   }
 };
 
-static bool valid_for_bitmap_device(const SkImageInfo& info, SkAlphaType* newAlphaType) {
+static bool valid_for_bitmap_device(const SkImageInfo& info, SkAlphaType* newAlphaType) noexcept {
   if (info.width() < 0 || info.height() < 0 || kUnknown_SkColorType == info.colorType()) {
     return false;
   }
@@ -562,8 +562,7 @@ void SkBitmapDevice::drawDevice(SkBaseDevice* device, int x, int y, const SkPain
     draw.fRC = &fRCStack.rc();
     paint.writable()->setShader(src->fBitmap.makeShader());
     draw.drawBitmap(
-        *src->fCoverage.get(), SkMatrix::Translate(SkIntToScalar(x), SkIntToScalar(y)), nullptr,
-        *paint);
+        *src->fCoverage, SkMatrix::Translate(SkIntToScalar(x), SkIntToScalar(y)), nullptr, *paint);
   } else {
     BDDraw(this).drawSprite(src->fBitmap, x, y, *paint);
   }
@@ -674,6 +673,12 @@ void SkBitmapDevice::onClipRegion(const SkRegion& rgn, SkClipOp op) {
     ptr = &tmp;
   }
   fRCStack.clipRegion(*ptr, op);
+}
+
+void SkBitmapDevice::onReplaceClip(const SkIRect& rect) {
+  // Transform from "global/canvas" coordinates to relative to this device
+  SkIRect deviceRect = this->globalToDevice().mapRect(SkRect::Make(rect)).round();
+  fRCStack.replaceClip(deviceRect);
 }
 
 void SkBitmapDevice::onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) {

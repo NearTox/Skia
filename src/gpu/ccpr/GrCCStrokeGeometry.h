@@ -23,7 +23,7 @@ class GrCCStrokeGeometry {
  public:
   static constexpr int kMaxNumLinearSegmentsLog2 = 15;
 
-  GrCCStrokeGeometry(int numSkPoints = 0, int numSkVerbs = 0) noexcept
+  GrCCStrokeGeometry(int numSkPoints = 0, int numSkVerbs = 0)
       : fVerbs(numSkVerbs * 5 / 2)  // Reserve for a 2.5x expansion in verbs. (Joins get their
                                     // own separate verb in our representation.)
         ,
@@ -63,7 +63,7 @@ class GrCCStrokeGeometry {
 
     kEndContour  // Instructs the iterator to advance its internal point and normal ptrs.
   };
-  static bool IsInternalJoinVerb(Verb verb) noexcept;
+  static bool IsInternalJoinVerb(Verb verb);
 
   // Some verbs require additional parameters(s).
   union Parameter {
@@ -173,7 +173,7 @@ inline GrCCStrokeGeometry::InstanceTallies GrCCStrokeGeometry::InstanceTallies::
   return ret;
 }
 
-inline bool GrCCStrokeGeometry::IsInternalJoinVerb(Verb verb) noexcept {
+inline bool GrCCStrokeGeometry::IsInternalJoinVerb(Verb verb) {
   switch (verb) {
     case Verb::kInternalBevelJoin:
     case Verb::kInternalRoundJoin: return true;

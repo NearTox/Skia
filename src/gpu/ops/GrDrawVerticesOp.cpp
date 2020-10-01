@@ -9,6 +9,7 @@
 #include "include/effects/SkRuntimeEffect.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkDevice.h"
+#include "src/core/SkMatrixPriv.h"
 #include "src/core/SkVerticesPriv.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProgramInfo.h"
@@ -296,13 +297,10 @@ class VerticesGP : public GrGeometryProcessor {
       b->add32(usageBits);
     }
 
-    void setData(
-        const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp,
-        const CoordTransformRange& transformRange) override {
+    void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& gp) override {
       const VerticesGP& vgp = gp.cast<VerticesGP>();
 
       this->setTransform(pdman, fViewMatrixUniform, vgp.viewMatrix(), &fViewMatrix);
-      this->setTransformDataHelper(pdman, transformRange);
 
       if (!vgp.colorAttr().isInitialized() && vgp.color() != fColor) {
         pdman.set4fv(fColorUniform, 1, vgp.color().vec());
@@ -435,10 +433,6 @@ class DrawVerticesOp final : public GrMeshDrawOp {
     }
   }
 
-#ifdef SK_DEBUG
-  SkString dumpInfo() const override;
-#endif
-
   FixedFunctionFlags fixedFunctionFlags() const override;
 
   GrProcessorSet::Analysis finalize(
@@ -453,6 +447,9 @@ class DrawVerticesOp final : public GrMeshDrawOp {
 
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
 
   GrGeometryProcessor* makeGP(SkArenaAlloc*);
 
@@ -545,15 +542,11 @@ DrawVerticesOp::DrawVerticesOp(
   this->setTransformedBounds(mesh.fVertices->bounds(), mesh.fViewMatrix, HasAABloat::kNo, zeroArea);
 }
 
-#ifdef SK_DEBUG
-SkString DrawVerticesOp::dumpInfo() const {
-  SkString string;
-  string.appendf(
-      "PrimType: %d, MeshCount %d, VCount: %d, ICount: %d\n", (int)fPrimitiveType, fMeshes.count(),
-      fVertexCount, fIndexCount);
-  string += fHelper.dumpInfo();
-  string += INHERITED::dumpInfo();
-  return string;
+#if GR_TEST_UTILS
+SkString DrawVerticesOp::onDumpInfo() const {
+  return SkStringPrintf(
+      "PrimType: %d, MeshCount %d, VCount: %d, ICount: %d\n%s", (int)fPrimitiveType,
+      fMeshes.count(), fVertexCount, fIndexCount, fHelper.dumpInfo().c_str());
 }
 #endif
 

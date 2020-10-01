@@ -117,6 +117,9 @@ class MetalCodeGenerator : public CodeGenerator {
     kGreaterThanEqual_MetalIntrinsic,
   };
 
+  class GlobalStructVisitor;
+  void visitGlobalStruct(GlobalStructVisitor* visitor);
+
   void setupIntrinsics();
 
   void write(const char* s);
@@ -148,6 +151,7 @@ class MetalCodeGenerator : public CodeGenerator {
   int alignment(const Type* type, bool isPacked) const;
 
   void writeGlobalStruct();
+  void writeGlobalInit();
 
   void writePrecisionModifier();
 
@@ -168,8 +172,6 @@ class MetalCodeGenerator : public CodeGenerator {
   void writeLayout(const Layout& layout);
 
   void writeModifiers(const Modifiers& modifiers, bool globalContext);
-
-  void writeGlobalVars(const VarDeclaration& vs);
 
   void writeVarInitializer(const Variable& var, const Expression& value);
 
@@ -193,6 +195,9 @@ class MetalCodeGenerator : public CodeGenerator {
 
   bool matrixConstructHelperIsNeeded(const Constructor& c);
   String getMatrixConstructHelper(const Constructor& c);
+  void assembleMatrixFromMatrix(const Type& sourceMatrix, int rows, int columns);
+  void assembleMatrixFromExpressions(
+      const std::vector<std::unique_ptr<Expression>>& args, int rows, int columns);
 
   void writeMatrixTimesEqualHelper(const Type& left, const Type& right, const Type& result);
 
@@ -255,13 +260,10 @@ class MetalCodeGenerator : public CodeGenerator {
   typedef std::pair<IntrinsicKind, int32_t> Intrinsic;
   std::unordered_map<String, Intrinsic> fIntrinsicMap;
   std::unordered_set<String> fReservedWords;
-  std::vector<const VarDeclaration*> fInitNonConstGlobalVars;
-  std::vector<const Variable*> fTextures;
   std::unordered_map<const Type::Field*, const InterfaceBlock*> fInterfaceBlockMap;
   std::unordered_map<const InterfaceBlock*, String> fInterfaceBlockNameMap;
   int fAnonInterfaceCount = 0;
   int fPaddingCount = 0;
-  bool fNeedsGlobalStructInit = false;
   const char* fLineEnding;
   const Context& fContext;
   StringStream fHeader;

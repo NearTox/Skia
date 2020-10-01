@@ -69,7 +69,7 @@ class UrlDataManager {
  private:
   struct LookupTrait {
     // We use the data as a hash, this is not really optimal but is fine until proven otherwise
-    static const SkData& GetKey(const UrlData& data) { return *data.fData.get(); }
+    static const SkData& GetKey(const UrlData& data) { return *data.fData; }
 
     static uint32_t Hash(const SkData& key) { return SkOpts::hash(key.bytes(), key.size()); }
   };

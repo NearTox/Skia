@@ -17,9 +17,12 @@ namespace SkSL {
  * A 'while' loop.
  */
 struct WhileStatement : public Statement {
-  WhileStatement(
-      int offset, std::unique_ptr<Expression> test, std::unique_ptr<Statement> statement) noexcept
-      : INHERITED(offset, kWhile_Kind), fTest(std::move(test)), fStatement(std::move(statement)) {}
+  static constexpr Kind kStatementKind = kWhile_Kind;
+
+  WhileStatement(int offset, std::unique_ptr<Expression> test, std::unique_ptr<Statement> statement)
+      : INHERITED(offset, kStatementKind),
+        fTest(std::move(test)),
+        fStatement(std::move(statement)) {}
 
   int nodeCount() const noexcept override {
     return 1 + fTest->nodeCount() + fStatement->nodeCount();

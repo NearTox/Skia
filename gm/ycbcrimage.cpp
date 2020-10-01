@@ -15,8 +15,7 @@
 #  include "include/core/SkPaint.h"
 #  include "include/core/SkSize.h"
 #  include "include/core/SkString.h"
-#  include "include/gpu/GrContext.h"
-#  include "src/gpu/GrContextPriv.h"
+#  include "include/gpu/GrDirectContext.h"
 #  include "tools/gpu/vk/VkYcbcrSamplerHelper.h"
 
 static void release_ycbcrhelper(void* releaseContext) {
@@ -36,8 +35,8 @@ class YCbCrImageGM : public GpuGM {
 
   SkISize onISize() override { return SkISize::Make(2 * kPad + kImageSize, 2 * kPad + kImageSize); }
 
-  DrawResult createYCbCrImage(GrContext* context, SkString* errorMsg) {
-    std::unique_ptr<VkYcbcrSamplerHelper> ycbcrHelper(new VkYcbcrSamplerHelper(context));
+  DrawResult createYCbCrImage(GrDirectContext* dContext, SkString* errorMsg) {
+    std::unique_ptr<VkYcbcrSamplerHelper> ycbcrHelper(new VkYcbcrSamplerHelper(dContext));
 
     if (!ycbcrHelper->isYCbCrSupported()) {
       *errorMsg = "YCbCr sampling not supported.";
@@ -51,7 +50,7 @@ class YCbCrImageGM : public GpuGM {
 
     SkASSERT(!fYCbCrImage);
     fYCbCrImage = SkImage::MakeFromTexture(
-        context, ycbcrHelper->backendTexture(), kTopLeft_GrSurfaceOrigin, kRGB_888x_SkColorType,
+        dContext, ycbcrHelper->backendTexture(), kTopLeft_GrSurfaceOrigin, kRGB_888x_SkColorType,
         kPremul_SkAlphaType, nullptr, release_ycbcrhelper, ycbcrHelper.get());
     if (!fYCbCrImage) {
       *errorMsg = "Failed to create I420 image.";
@@ -62,12 +61,10 @@ class YCbCrImageGM : public GpuGM {
     return DrawResult::kOk;
   }
 
-  DrawResult onGpuSetup(GrContext* context, SkString* errorMsg) override {
+  DrawResult onGpuSetup(GrDirectContext* context, SkString* errorMsg) override {
     if (!context || context->abandoned()) {
       return DrawResult::kSkip;
     }
-
-    SkASSERT(context->priv().asDirectContext());
 
     if (context->backend() != GrBackendApi::kVulkan) {
       *errorMsg = "This GM requires a Vulkan context.";
@@ -82,7 +79,10 @@ class YCbCrImageGM : public GpuGM {
     return DrawResult::kOk;
   }
 
-  DrawResult onDraw(GrContext*, GrRenderTargetContext*, SkCanvas* canvas, SkString*) override {
+  void onGpuTeardown() override { fYCbCrImage = nullptr; }
+
+  DrawResult onDraw(
+      GrRecordingContext*, GrRenderTargetContext*, SkCanvas* canvas, SkString*) override {
     SkASSERT(fYCbCrImage);
 
     SkPaint paint;

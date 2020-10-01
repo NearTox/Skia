@@ -144,7 +144,7 @@ class GrAuditTrail {
   };
   typedef SkTArray<std::unique_ptr<OpNode>, true> OpsTask;
 
-  void copyOutFromOpsTask(OpInfo* outOpInfo, int opsTask) noexcept;
+  void copyOutFromOpsTask(OpInfo* outOpInfo, int opsTask);
 
   template <typename T>
   static void JsonifyTArray(SkJSONWriter& writer, const char* name, const T& array);

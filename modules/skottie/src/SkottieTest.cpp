@@ -301,12 +301,12 @@ DEF_TEST(Skottie_Properties, reporter) {
   REPORTER_ASSERT(reporter, texts.size() == 1);
   REPORTER_ASSERT(reporter, texts[0].node_name.equals("layer_1"));
   REPORTER_ASSERT(
-      reporter,
-      texts[0].handle->get() ==
-          skottie::TextPropertyValue(
-              {test_typeface, SkString("inline_text"), 100, 0, 120, 0, SkTextUtils::kLeft_Align,
-               Shaper::VAlign::kTopBaseline, Shaper::ResizePolicy::kNone, SkRect::MakeEmpty(),
-               SK_ColorTRANSPARENT, SK_ColorTRANSPARENT, false, false}));
+      reporter, texts[0].handle->get() ==
+                    skottie::TextPropertyValue(
+                        {test_typeface, SkString("inline_text"), 100, 0, 120, 0,
+                         SkTextUtils::kLeft_Align, Shaper::VAlign::kTopBaseline,
+                         Shaper::ResizePolicy::kNone, SkRect::MakeEmpty(), SK_ColorTRANSPARENT,
+                         SK_ColorTRANSPARENT, TextPaintOrder::kFillStroke, false, false}));
 }
 
 DEF_TEST(Skottie_Annotations, reporter) {
@@ -360,6 +360,9 @@ DEF_TEST(Skottie_Annotations, reporter) {
   auto animation = skottie::Animation::Builder().setMarkerObserver(observer).make(&stream);
 
   REPORTER_ASSERT(reporter, animation);
+  REPORTER_ASSERT(reporter, animation->duration() == 10);
+  REPORTER_ASSERT(reporter, animation->inPoint() == 0.0);
+  REPORTER_ASSERT(reporter, animation->outPoint() == 100.0);
 
   REPORTER_ASSERT(reporter, observer->fMarkers.size() == 2ul);
   REPORTER_ASSERT(reporter, std::get<0>(observer->fMarkers[0]) == "marker_1");
@@ -658,7 +661,8 @@ DEF_TEST(Skottie_Image_Loading, reporter) {
         : fSingleFrameAsset(std::move(single_asset)), fMultiFrameAsset(std::move(multi_asset)) {}
 
    private:
-    sk_sp<ImageAsset> loadImageAsset(const char path[], const char name[], const char id[]) const {
+    sk_sp<ImageAsset> loadImageAsset(
+        const char path[], const char name[], const char id[]) const override {
       return strcmp(id, "single_frame") ? fMultiFrameAsset : fSingleFrameAsset;
     }
 

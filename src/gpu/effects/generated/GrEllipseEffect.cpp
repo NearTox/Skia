@@ -10,6 +10,7 @@
  **************************************************************************************************/
 #include "GrEllipseEffect.h"
 
+#include "src/core/SkUtils.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
@@ -18,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLEllipseEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLEllipseEffect() {}
+  GrGLSLEllipseEffect() noexcept = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrEllipseEffect& _outer = args.fFp.cast<GrEllipseEffect>();
@@ -80,13 +81,7 @@ half alpha;
         args.fUniformHandler->getUniformCStr(ellipseVar),
         scaleVar.isValid() ? args.fUniformHandler->getUniformCStr(scaleVar) : "float2(0)",
         (int)_outer.edgeType);
-    SkString _input4481(args.fInputColor);
-    SkString _sample4481;
-    if (_outer.inputFP_index >= 0) {
-      _sample4481 = this->invokeChild(_outer.inputFP_index, _input4481.c_str(), args);
-    } else {
-      _sample4481.swap(_input4481);
-    }
+    SkString _sample4481 = this->invokeChild(0, args);
     fragBuilder->codeAppendf(
         R"SkSL(
 half4 inputColor = %s;
@@ -144,8 +139,8 @@ GrGLSLFragmentProcessor* GrEllipseEffect::onCreateGLSLInstance() const {
   return new GrGLSLEllipseEffect();
 }
 void GrEllipseEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {
-  b->add32((int32_t)edgeType);
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+  b->add32((uint32_t)edgeType);
 }
 bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrEllipseEffect& that = other.cast<GrEllipseEffect>();
@@ -160,13 +155,18 @@ GrEllipseEffect::GrEllipseEffect(const GrEllipseEffect& src)
       edgeType(src.edgeType),
       center(src.center),
       radii(src.radii) {
-  if (src.inputFP_index >= 0) {
-    inputFP_index = this->cloneAndRegisterChildProcessor(src.childProcessor(src.inputFP_index));
-  }
+  this->cloneAndRegisterAllChildProcessors(src);
 }
 std::unique_ptr<GrFragmentProcessor> GrEllipseEffect::clone() const {
-  return std::unique_ptr<GrFragmentProcessor>(new GrEllipseEffect(*this));
+  return std::make_unique<GrEllipseEffect>(*this);
 }
+#if GR_TEST_UTILS
+SkString GrEllipseEffect::onDumpInfo() const {
+  return SkStringPrintf(
+      "(edgeType=%d, center=float2(%f, %f), radii=float2(%f, %f))", (int)edgeType, center.fX,
+      center.fY, radii.fX, radii.fY);
+}
+#endif
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(GrEllipseEffect);
 #if GR_TEST_UTILS
 std::unique_ptr<GrFragmentProcessor> GrEllipseEffect::TestCreate(GrProcessorTestData* testData) {
@@ -176,11 +176,11 @@ std::unique_ptr<GrFragmentProcessor> GrEllipseEffect::TestCreate(GrProcessorTest
   SkScalar rx = testData->fRandom->nextRangeF(0.f, 1000.f);
   SkScalar ry = testData->fRandom->nextRangeF(0.f, 1000.f);
   bool success;
-  std::unique_ptr<GrFragmentProcessor> fp;
+  std::unique_ptr<GrFragmentProcessor> fp = testData->inputFP();
   do {
     GrClipEdgeType et = (GrClipEdgeType)testData->fRandom->nextULessThan(kGrClipEdgeTypeCnt);
     std::tie(success, fp) = GrEllipseEffect::Make(
-        /*inputFP=*/nullptr, et, center, SkPoint::Make(rx, ry), *testData->caps()->shaderCaps());
+        std::move(fp), et, center, SkPoint::Make(rx, ry), *testData->caps()->shaderCaps());
   } while (!success);
   return fp;
 }

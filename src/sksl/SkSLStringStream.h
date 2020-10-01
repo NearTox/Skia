@@ -66,6 +66,6 @@ class StringStream : public OutputStream {
 
 #endif  // SKSL_STANDALONE
 
-}  // namespace
+}  // namespace SkSL
 
 #endif

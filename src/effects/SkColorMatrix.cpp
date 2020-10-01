@@ -57,7 +57,7 @@ void SkColorMatrix::setScale(float rScale, float gScale, float bScale, float aSc
   fMat[kA_Scale] = aScale;
 }
 
-void SkColorMatrix::postTranslate(float dr, float dg, float db, float da) noexcept {
+void SkColorMatrix::postTranslate(float dr, float dg, float db, float da) {
   fMat[kR_Trans] += dr;
   fMat[kG_Trans] += dg;
   fMat[kB_Trans] += db;

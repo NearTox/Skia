@@ -30,10 +30,10 @@ class TimeRemapper final : public AnimatablePropertyContainer {
     this->bind(*abuilder, jtm, fT);
   }
 
-  float t() const noexcept { return fT * fScale; }
+  float t() const { return fT * fScale; }
 
  private:
-  void onSync() noexcept override {
+  void onSync() override {
     // nothing to sync - we just track t
   }
 
@@ -47,7 +47,7 @@ class CompTimeMapper final : public Animator {
  public:
   CompTimeMapper(
       AnimatorScope&& layer_animators, sk_sp<TimeRemapper> remapper, float time_bias,
-      float time_scale) noexcept
+      float time_scale)
       : fAnimators(std::move(layer_animators)),
         fRemapper(std::move(remapper)),
         fTimeBias(time_bias),
@@ -77,53 +77,6 @@ class CompTimeMapper final : public Animator {
   const float fTimeBias, fTimeScale;
 };
 
-// Attaches an ExternalLayer implementation to the animation scene graph.
-class SGAdapter final : public sksg::RenderNode {
- public:
-  SG_ATTRIBUTE(T, float, fCurrentT)
-
-  SGAdapter(sk_sp<ExternalLayer> external, const SkSize& layer_size) noexcept
-      : fExternal(std::move(external)), fSize(layer_size) {}
-
- private:
-  SkRect onRevalidate(sksg::InvalidationController*, const SkMatrix&) noexcept override {
-    return SkRect::MakeSize(fSize);
-  }
-
-  void onRender(SkCanvas* canvas, const RenderContext* ctx) const override {
-    // Commit all pending effects via a layer if needed,
-    // since we don't have knowledge of the external content.
-    const auto local_scope = ScopedRenderContext(canvas, ctx)
-                                 .setIsolation(this->bounds(), canvas->getTotalMatrix(), true);
-    fExternal->render(canvas, static_cast<double>(fCurrentT));
-  }
-
-  const RenderNode* onNodeAt(const SkPoint& pt) const noexcept override {
-    SkASSERT(this->bounds().contains(pt.fX, pt.fY));
-    return this;
-  }
-
-  const sk_sp<ExternalLayer> fExternal;
-  const SkSize fSize;
-  float fCurrentT = 0;
-};
-
-// Connects an SGAdapter to the animator tree and dispatches seek events.
-class AnimatorAdapter final : public Animator {
- public:
-  AnimatorAdapter(sk_sp<SGAdapter> sg_adapter, float fps) noexcept
-      : fSGAdapter(std::move(sg_adapter)), fFps(fps) {}
-
- private:
-  StateChanged onSeek(float t) noexcept {
-    fSGAdapter->setT(t / fFps);
-
-    return true;
-  }
-
-  const sk_sp<SGAdapter> fSGAdapter;
-  const float fFps;
-};
 }  // namespace
 
 sk_sp<sksg::RenderNode> AnimationBuilder::attachExternalPrecompLayer(
@@ -144,6 +97,54 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachExternalPrecompLayer(
   if (!external_layer) {
     return nullptr;
   }
+
+  // Attaches an ExternalLayer implementation to the animation scene graph.
+  class SGAdapter final : public sksg::RenderNode {
+   public:
+    SG_ATTRIBUTE(T, float, fCurrentT)
+
+    SGAdapter(sk_sp<ExternalLayer> external, const SkSize& layer_size)
+        : fExternal(std::move(external)), fSize(layer_size) {}
+
+   private:
+    SkRect onRevalidate(sksg::InvalidationController*, const SkMatrix&) override {
+      return SkRect::MakeSize(fSize);
+    }
+
+    void onRender(SkCanvas* canvas, const RenderContext* ctx) const override {
+      // Commit all pending effects via a layer if needed,
+      // since we don't have knowledge of the external content.
+      const auto local_scope = ScopedRenderContext(canvas, ctx)
+                                   .setIsolation(this->bounds(), canvas->getTotalMatrix(), true);
+      fExternal->render(canvas, static_cast<double>(fCurrentT));
+    }
+
+    const RenderNode* onNodeAt(const SkPoint& pt) const override {
+      SkASSERT(this->bounds().contains(pt.fX, pt.fY));
+      return this;
+    }
+
+    const sk_sp<ExternalLayer> fExternal;
+    const SkSize fSize;
+    float fCurrentT = 0;
+  };
+
+  // Connects an SGAdapter to the animator tree and dispatches seek events.
+  class AnimatorAdapter final : public Animator {
+   public:
+    AnimatorAdapter(sk_sp<SGAdapter> sg_adapter, float fps)
+        : fSGAdapter(std::move(sg_adapter)), fFps(fps) {}
+
+   private:
+    StateChanged onSeek(float t) override {
+      fSGAdapter->setT(t / fFps);
+
+      return true;
+    }
+
+    const sk_sp<SGAdapter> fSGAdapter;
+    const float fFps;
+  };
 
   auto sg_adapter = sk_make_sp<SGAdapter>(std::move(external_layer), layer_info.fSize);
 

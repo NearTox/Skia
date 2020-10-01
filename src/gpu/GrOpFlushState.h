@@ -31,7 +31,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   // vertices/indices when a buffer larger than kDefaultBufferSize is required.
   GrOpFlushState(
       GrGpu*, GrResourceProvider*, GrTokenTracker*,
-      sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr) noexcept;
+      sk_sp<GrBufferAllocPool::CpuBufferCache> = nullptr);
 
   ~GrOpFlushState() final { this->reset(); }
 
@@ -81,7 +81,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     const GrXferProcessor::DstProxyView& dstProxyView() const noexcept { return fDstProxyView; }
 
 #ifdef SK_DEBUG
-    void validate() const {
+    void validate() const noexcept {
       SkASSERT(fOp);
       SkASSERT(fSurfaceView);
     }
@@ -149,7 +149,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     return (fOpArgs->appliedClip()) ? fOpArgs->appliedClip()->hardClip()
                                     : GrAppliedHardClip::Disabled();
   }
-  GrAppliedClip detachAppliedClip() noexcept final;
+  GrAppliedClip detachAppliedClip() final;
   const GrXferProcessor::DstProxyView& dstProxyView() const noexcept final {
     return this->drawOpArgs().dstProxyView();
   }
@@ -157,14 +157,15 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   const GrCaps& caps() const noexcept final;
   GrResourceProvider* resourceProvider() const noexcept final { return fResourceProvider; }
 
-  GrStrikeCache* strikeCache() const noexcept final;
+  GrStrikeCache* strikeCache() const final;
 
-  // At this point we know we're flushing so full access to the GrAtlasManager is required (and
-  // permissible).
-  GrAtlasManager* atlasManager() const noexcept final;
+  // At this point we know we're flushing so full access to the GrAtlasManager and
+  // GrSmallPathAtlasMgr is required (and permissible).
+  GrAtlasManager* atlasManager() const final;
+  GrSmallPathAtlasMgr* smallPathAtlasManager() const final;
 
   /** GrMeshDrawOp::Target override. */
-  SkArenaAlloc* allocator() noexcept override { return &fArena; }
+  SkArenaAlloc* allocator() override { return &fArena; }
 
   // This is a convenience method that binds the given pipeline, and then, if our applied clip has
   // a scissor, sets the scissor rect from the applied clip.
@@ -202,9 +203,12 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     fOpsRenderPass->bindTextures(primProc, primProcTextures, pipeline);
   }
   void bindBuffers(
-      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
+      sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
+      sk_sp<const GrBuffer> vertexBuffer,
       GrPrimitiveRestart primitiveRestart = GrPrimitiveRestart::kNo) {
-    fOpsRenderPass->bindBuffers(indexBuffer, instanceBuffer, vertexBuffer, primitiveRestart);
+    fOpsRenderPass->bindBuffers(
+        std::move(indexBuffer), std::move(instanceBuffer), std::move(vertexBuffer),
+        primitiveRestart);
   }
   void draw(int vertexCount, int baseVertex) { fOpsRenderPass->draw(vertexCount, baseVertex); }
   void drawIndexed(
@@ -261,7 +265,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   };
 
   // Storage for ops' pipelines, draws, and inline uploads.
-  SkArenaAlloc fArena{sizeof(GrPipeline) * 100};
+  SkArenaAllocWithReset fArena{sizeof(GrPipeline) * 100};
 
   // Store vertex and index data on behalf of ops that are flushed.
   GrVertexBufferAllocPool fVertexPool;

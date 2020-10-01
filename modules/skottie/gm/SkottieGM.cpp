@@ -22,7 +22,7 @@ namespace {
 static constexpr char kWebFontResource[] = "fonts/Roboto-Regular.ttf";
 static constexpr char kSkottieResource[] = "skottie/skottie_sample_webfont.json";
 
-// Dummy web font loader which serves a single local font (checked in under resources/).
+// Mock web font loader which serves a single local font (checked in under resources/).
 class FakeWebFontProvider final : public skresources::ResourceProvider {
  public:
   FakeWebFontProvider()
@@ -82,7 +82,7 @@ class SkottieWebFontGM : public skiagm::GM {
   using INHERITED = skiagm::GM;
 };
 
-DEF_GM(return new SkottieWebFontGM;)
+DEF_GM(return new SkottieWebFontGM);
 
 class SkottieColorizeGM : public skiagm::GM {
  protected:
@@ -148,7 +148,7 @@ class SkottieColorizeGM : public skiagm::GM {
   using INHERITED = skiagm::GM;
 };
 
-DEF_GM(return new SkottieColorizeGM;)
+DEF_GM(return new SkottieColorizeGM);
 
 class SkottieMultiFrameGM : public skiagm::GM {
  public:
@@ -203,4 +203,4 @@ class SkottieMultiFrameGM : public skiagm::GM {
   using INHERITED = skiagm::GM;
 };
 
-DEF_GM(return new SkottieMultiFrameGM;)
+DEF_GM(return new SkottieMultiFrameGM);

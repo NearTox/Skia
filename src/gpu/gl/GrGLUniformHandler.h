@@ -30,6 +30,7 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
   int numUniforms() const override { return fUniforms.count(); }
 
   UniformInfo& uniform(int idx) override { return fUniforms.item(idx); }
+  const UniformInfo& uniform(int idx) const override { return fUniforms.item(idx); }
 
  private:
   explicit GrGLUniformHandler(GrGLSLProgramBuilder* program)

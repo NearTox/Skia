@@ -107,4 +107,4 @@ class EncodeJpegAlphaOptsGM : public GM {
 
 DEF_GM(return new EncodeJpegAlphaOptsGM;)
 
-};  // namespace skiagm
+}  // namespace skiagm

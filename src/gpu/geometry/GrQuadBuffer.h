@@ -60,7 +60,7 @@ class GrQuadBuffer {
           fBuffer(buffer),
           fCurrentEntry(nullptr),
           fNextEntry(buffer->fData.begin()) {
-      SkDEBUGCODE(fExpectedCount = buffer->count();)
+      SkDEBUGCODE(fExpectedCount = buffer->count());
     }
 
     bool next();
@@ -102,11 +102,9 @@ class GrQuadBuffer {
     // automatically while unpacking the quad data.
     const char* fNextEntry;
 
-    SkDEBUGCODE(int fExpectedCount;)
+    SkDEBUGCODE(int fExpectedCount);
 
-        void validate() const {
-      SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount);)
-    }
+    void validate() const { SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount)); }
   };
 
   Iter iterator() const { return Iter(this); }
@@ -117,7 +115,7 @@ class GrQuadBuffer {
   class MetadataIter {
    public:
     MetadataIter(GrQuadBuffer<T>* list) : fBuffer(list), fCurrentEntry(nullptr) {
-      SkDEBUGCODE(fExpectedCount = list->count();)
+      SkDEBUGCODE(fExpectedCount = list->count());
     }
 
     bool next();
@@ -136,11 +134,9 @@ class GrQuadBuffer {
     GrQuadBuffer<T>* fBuffer;
     char* fCurrentEntry;
 
-    SkDEBUGCODE(int fExpectedCount;)
+    SkDEBUGCODE(int fExpectedCount);
 
-        void validate() const {
-      SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount);)
-    }
+    void validate() const { SkDEBUGCODE(fBuffer->validate(fCurrentEntry, fExpectedCount)); }
   };
 
   MetadataIter metadata() { return MetadataIter(this); }
@@ -151,7 +147,7 @@ class GrQuadBuffer {
     unsigned fLocalType : 2;  // Ignore if fHasLocals is false
     unsigned fHasLocals : 1;
     // Known value to detect if iteration doesn't properly advance through the buffer
-    SkDEBUGCODE(unsigned fSentinel : 27;)
+    SkDEBUGCODE(unsigned fSentinel : 27);
   };
   static_assert(sizeof(Header) == sizeof(int32_t), "Header should be 4 bytes");
 
@@ -279,10 +275,10 @@ void GrQuadBuffer<T>::append(const GrQuad& deviceQuad, T&& metadata, const GrQua
   h->fHasLocals = static_cast<unsigned>(localQuad != nullptr);
   h->fLocalType =
       static_cast<unsigned>(localQuad ? localQuad->quadType() : GrQuad::Type::kAxisAligned);
-  SkDEBUGCODE(h->fSentinel = static_cast<unsigned>(kSentinel);)
+  SkDEBUGCODE(h->fSentinel = static_cast<unsigned>(kSentinel));
 
-      // Second, the fixed-size metadata
-      static_assert(alignof(T) == 4, "Metadata must be 4 byte aligned");
+  // Second, the fixed-size metadata
+  static_assert(alignof(T) == 4, "Metadata must be 4 byte aligned");
   *(this->metadata(entry)) = std::move(metadata);
 
   // Then the variable blocks of x, y, and w float coordinates

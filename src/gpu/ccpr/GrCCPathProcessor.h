@@ -40,10 +40,8 @@ class GrCCPathProcessor : public GrGeometryProcessor {
     SkPMColor4f fColor;           // Color always stored as 4 x fp32
 
     void set(
-        const GrOctoBounds&, const SkIVector& devToAtlasOffset, const SkPMColor4f&,
-        GrFillRule) noexcept;
-    void set(
-        const GrCCPathCacheEntry&, const SkIVector& shift, const SkPMColor4f&, GrFillRule) noexcept;
+        const GrOctoBounds&, const SkIVector& devToAtlasOffset, const SkPMColor4f&, GrFillRule);
+    void set(const GrCCPathCacheEntry&, const SkIVector& shift, const SkPMColor4f&, GrFillRule);
   };
 
   static_assert(4 * 14 == sizeof(Instance));
@@ -95,7 +93,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
 inline void GrCCPathProcessor::Instance::set(
     const GrOctoBounds& octoBounds, const SkIVector& devToAtlasOffset, const SkPMColor4f& color,
-    GrFillRule fillRule) noexcept {
+    GrFillRule fillRule) {
   if (GrFillRule::kNonzero == fillRule) {
     // We cover "nonzero" paths with clockwise triangles, which is the default result from
     // normal octo bounds.

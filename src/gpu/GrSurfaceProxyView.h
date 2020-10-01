@@ -17,7 +17,7 @@
 
 class GrSurfaceProxyView {
  public:
-  constexpr GrSurfaceProxyView() noexcept = default;
+  GrSurfaceProxyView() noexcept = default;
 
   GrSurfaceProxyView(
       sk_sp<GrSurfaceProxy> proxy, GrSurfaceOrigin origin, GrSwizzle swizzle) noexcept
@@ -77,7 +77,7 @@ class GrSurfaceProxyView {
   // Helper that copies a rect of a src view'' proxy and then creates a view for the copy with
   // the same origin and swizzle as the src view.
   static GrSurfaceProxyView Copy(
-      GrRecordingContext* context, GrSurfaceProxyView src, GrMipMapped mipMapped, SkIRect srcRect,
+      GrRecordingContext* context, GrSurfaceProxyView src, GrMipmapped mipMapped, SkIRect srcRect,
       SkBackingFit fit, SkBudgeted budgeted) {
     auto origin = src.origin();
     auto* proxy = src.proxy();

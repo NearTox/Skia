@@ -73,7 +73,7 @@ class SkRasterClipStack : SkNoncopyable {
     SkASSERT(fStack.count() == 1);
   }
 
-  void setNewSize(int w, int h) {
+  void setNewSize(int w, int h) noexcept {
     fRootBounds.setXYWH(0, 0, w, h);
 
     SkASSERT(fStack.count() == 1);
@@ -128,6 +128,8 @@ class SkRasterClipStack : SkNoncopyable {
     this->trimIfExpanding(op);
     this->validate();
   }
+
+  void replaceClip(const SkIRect& rect) { this->writable_rc().setRect(rect); }
 
   void setDeviceClipRestriction(SkIRect* mutableClipRestriction) {
     this->writable_rc().setDeviceClipRestriction(mutableClipRestriction);

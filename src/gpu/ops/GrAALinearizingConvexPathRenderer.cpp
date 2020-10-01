@@ -167,21 +167,6 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     }
   }
 
-#ifdef SK_DEBUG
-  SkString dumpInfo() const override {
-    SkString string;
-    for (const auto& path : fPaths) {
-      string.appendf(
-          "Color: 0x%08x, StrokeWidth: %.2f, Style: %d, Join: %d, "
-          "MiterLimit: %.2f\n",
-          path.fColor.toBytes_RGBA(), path.fStrokeWidth, path.fStyle, path.fJoin, path.fMiterLimit);
-    }
-    string += fHelper.dumpInfo();
-    string += INHERITED::dumpInfo();
-    return string;
-  }
-#endif
-
   FixedFunctionFlags fixedFunctionFlags() const override { return fHelper.fixedFunctionFlags(); }
 
   GrProcessorSet::Analysis finalize(
@@ -339,6 +324,20 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     return CombineResult::kMerged;
   }
 
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override {
+    SkString string;
+    for (const auto& path : fPaths) {
+      string.appendf(
+          "Color: 0x%08x, StrokeWidth: %.2f, Style: %d, Join: %d, "
+          "MiterLimit: %.2f\n",
+          path.fColor.toBytes_RGBA(), path.fStrokeWidth, path.fStyle, path.fJoin, path.fMiterLimit);
+    }
+    string += fHelper.dumpInfo();
+    return string;
+  }
+#endif
+
   struct PathData {
     SkMatrix fViewMatrix;
     SkPath fPath;
@@ -389,7 +388,7 @@ bool GrAALinearizingConvexPathRenderer::onDrawPath(const DrawPathArgs& args) {
 
 GR_DRAW_OP_TEST_DEFINE(AAFlatteningConvexPathOp) {
   SkMatrix viewMatrix = GrTest::TestMatrixPreservesRightAngles(random);
-  SkPath path = GrTest::TestPathConvex(random);
+  const SkPath& path = GrTest::TestPathConvex(random);
 
   SkStrokeRec::Style styles[3] = {
       SkStrokeRec::kFill_Style, SkStrokeRec::kStroke_Style, SkStrokeRec::kStrokeAndFill_Style};

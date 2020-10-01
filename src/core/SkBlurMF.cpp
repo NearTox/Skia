@@ -20,7 +20,7 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrRecordingContext.h"
+#  include "include/gpu/GrRecordingContext.h"
 #  include "src/gpu/GrFragmentProcessor.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/gpu/GrRenderTargetContext.h"
@@ -673,11 +673,6 @@ sk_sp<SkFlattenable> SkBlurMaskFilterImpl::CreateProc(SkReadBuffer& buffer) {
   uint32_t flags = buffer.read32LE(0x3);  // historically we only recorded 2 bits
   bool respectCTM = !(flags & 1);         // historically we stored ignoreCTM in low bit
 
-  if (buffer.isVersionLT(SkPicturePriv::kRemoveOccluderFromBlurMaskFilter)) {
-    SkRect unused;
-    buffer.readRect(&unused);
-  }
-
   return SkMaskFilter::MakeBlur((SkBlurStyle)style, sigma, respectCTM);
 }
 
@@ -742,7 +737,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     if (!fp) {
       return false;
     }
-    paint.addCoverageFragmentProcessor(std::move(fp));
+    paint.setCoverageFragmentProcessor(std::move(fp));
 
     SkRect srcProxyRect = srcRRect.rect();
     SkScalar outsetX = 3.0f * fSigma;
@@ -777,7 +772,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     memcpy(builder.indices(), fullIndices, sizeof(fullIndices));
     sk_sp<SkVertices> vertices = builder.detach();
 
-    paint.addCoverageFragmentProcessor(std::move(fp));
+    paint.setCoverageFragmentProcessor(std::move(fp));
     SkSimpleMatrixProvider matrixProvider(viewMatrix);
     renderTargetContext->drawVertices(clip, std::move(paint), matrixProvider, std::move(vertices));
   } else {
@@ -790,7 +785,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     SkRect proxyRect = devRRect.rect();
     proxyRect.outset(extra, extra);
 
-    paint.addCoverageFragmentProcessor(std::move(fp));
+    paint.setCoverageFragmentProcessor(std::move(fp));
     renderTargetContext->fillRectWithLocalMatrix(
         clip, std::move(paint), GrAA::kNo, SkMatrix::I(), proxyRect, inverse);
   }
@@ -855,7 +850,7 @@ GrSurfaceProxyView SkBlurMaskFilterImpl::filterMaskGPU(
   if (!isNormalBlur) {
     GrPaint paint;
     // Blend pathTexture over blurTexture.
-    paint.addCoverageFragmentProcessor(GrTextureEffect::Make(std::move(srcView), srcAlphaType));
+    paint.setCoverageFragmentProcessor(GrTextureEffect::Make(std::move(srcView), srcAlphaType));
     if (kInner_SkBlurStyle == fBlurStyle) {
       // inner:  dst = dst * src
       paint.setCoverageSetOpXPFactory(SkRegion::kIntersect_Op);

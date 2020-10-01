@@ -31,6 +31,11 @@ namespace skottie {
 using ColorPropertyValue = SkColor;
 using OpacityPropertyValue = float;
 
+enum class TextPaintOrder : uint8_t {
+  kFillStroke,
+  kStrokeFill,
+};
+
 struct TextPropertyValue {
   sk_sp<SkTypeface> fTypeface;
   SkString fText;
@@ -40,10 +45,11 @@ struct TextPropertyValue {
   Shaper::ResizePolicy fResize = Shaper::ResizePolicy::kNone;
   SkRect fBox = SkRect::MakeEmpty();
   SkColor fFillColor = SK_ColorTRANSPARENT, fStrokeColor = SK_ColorTRANSPARENT;
+  TextPaintOrder fPaintOrder = TextPaintOrder::kFillStroke;
   bool fHasFill = false, fHasStroke = false;
 
-  bool operator==(const TextPropertyValue& other) const;
-  bool operator!=(const TextPropertyValue& other) const;
+  bool operator==(const TextPropertyValue& other) const noexcept;
+  bool operator!=(const TextPropertyValue& other) const noexcept;
 };
 
 struct TransformPropertyValue {
@@ -51,8 +57,8 @@ struct TransformPropertyValue {
   SkVector fScale;
   SkScalar fRotation, fSkew, fSkewAxis;
 
-  bool operator==(const TransformPropertyValue& other) const;
-  bool operator!=(const TransformPropertyValue& other) const;
+  bool operator==(const TransformPropertyValue& other) const noexcept;
+  bool operator!=(const TransformPropertyValue& other) const noexcept;
 };
 
 namespace internal {
@@ -66,7 +72,7 @@ class AnimationBuilder;
 template <typename ValueT, typename NodeT>
 class SK_API PropertyHandle final {
  public:
-  explicit PropertyHandle(sk_sp<NodeT> node) : fNode(std::move(node)) {}
+  explicit PropertyHandle(sk_sp<NodeT> node) noexcept : fNode(std::move(node)) {}
   ~PropertyHandle();
 
   ValueT get() const;

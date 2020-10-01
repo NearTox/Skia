@@ -84,7 +84,7 @@ class SkTextBlob::RunRecord {
  public:
   RunRecord(
       uint32_t count, uint32_t textSize, const SkPoint& offset, const SkFont& font,
-      GlyphPositioning pos) noexcept
+      GlyphPositioning pos)
       : fFont(font), fCount(count), fOffset(offset), fFlags(pos) {
     SkASSERT(static_cast<unsigned>(pos) <= Flags::kPositioning_Mask);
 
@@ -130,14 +130,14 @@ class SkTextBlob::RunRecord {
     return reinterpret_cast<SkRSXform*>(this->posBuffer());
   }
 
-  uint32_t textSize() const noexcept { return isExtended() ? *this->textSizePtr() : 0; }
+  uint32_t textSize() const { return isExtended() ? *this->textSizePtr() : 0; }
 
-  uint32_t* clusterBuffer() const noexcept {
+  uint32_t* clusterBuffer() const {
     // clusters follow the textSize.
     return isExtended() ? 1 + this->textSizePtr() : nullptr;
   }
 
-  char* textBuffer() const noexcept {
+  char* textBuffer() const {
     return isExtended() ? reinterpret_cast<char*>(this->clusterBuffer() + fCount) : nullptr;
   }
 
@@ -145,13 +145,13 @@ class SkTextBlob::RunRecord {
 
   static size_t StorageSize(
       uint32_t glyphCount, uint32_t textSize, SkTextBlob::GlyphPositioning positioning,
-      SkSafeMath* safe) noexcept;
+      SkSafeMath* safe);
 
-  static const RunRecord* First(const SkTextBlob* blob) noexcept;
+  static const RunRecord* First(const SkTextBlob* blob);
 
-  static const RunRecord* Next(const RunRecord* run) noexcept;
+  static const RunRecord* Next(const RunRecord* run);
 
-  void validate(const uint8_t* storageTop) const noexcept;
+  void validate(const uint8_t* storageTop) const;
 
  private:
   friend class SkTextBlobBuilder;
@@ -162,14 +162,14 @@ class SkTextBlob::RunRecord {
     kExtended_Flag = 0x08,     // set for runs with text/cluster info
   };
 
-  static const RunRecord* NextUnchecked(const RunRecord* run) noexcept;
+  static const RunRecord* NextUnchecked(const RunRecord* run);
 
   static size_t PosCount(
-      uint32_t glyphCount, SkTextBlob::GlyphPositioning positioning, SkSafeMath* safe) noexcept;
+      uint32_t glyphCount, SkTextBlob::GlyphPositioning positioning, SkSafeMath* safe);
 
-  uint32_t* textSizePtr() const noexcept;
+  uint32_t* textSizePtr() const;
 
-  void grow(uint32_t count) noexcept;
+  void grow(uint32_t count);
 
   bool isExtended() const noexcept { return fFlags & kExtended_Flag; }
 
@@ -189,7 +189,7 @@ class SkTextBlob::RunRecord {
  */
 class SkTextBlobRunIterator {
  public:
-  SkTextBlobRunIterator(const SkTextBlob* blob) noexcept;
+  SkTextBlobRunIterator(const SkTextBlob* blob);
 
   enum GlyphPositioning : uint8_t {
     kDefault_Positioning = 0,     // Default glyph advances -- zero scalars per glyph.
@@ -199,7 +199,7 @@ class SkTextBlobRunIterator {
   };
 
   bool done() const noexcept { return !fCurrentRun; }
-  void next() noexcept;
+  void next();
 
   uint32_t glyphCount() const noexcept {
     SkASSERT(!this->done());
@@ -225,21 +225,21 @@ class SkTextBlobRunIterator {
     SkASSERT(!this->done());
     return fCurrentRun->font();
   }
-  GlyphPositioning positioning() const noexcept;
-  uint32_t* clusters() const noexcept {
+  GlyphPositioning positioning() const;
+  uint32_t* clusters() const {
     SkASSERT(!this->done());
     return fCurrentRun->clusterBuffer();
   }
-  uint32_t textSize() const noexcept {
+  uint32_t textSize() const {
     SkASSERT(!this->done());
     return fCurrentRun->textSize();
   }
-  char* text() const noexcept {
+  char* text() const {
     SkASSERT(!this->done());
     return fCurrentRun->textBuffer();
   }
 
-  bool isLCD() const noexcept;
+  bool isLCD() const;
 
  private:
   const SkTextBlob::RunRecord* fCurrentRun;

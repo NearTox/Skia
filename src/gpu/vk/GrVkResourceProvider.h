@@ -13,6 +13,7 @@
 #include "src/core/SkLRUCache.h"
 #include "src/core/SkTDynamicHash.h"
 #include "src/core/SkTInternalLList.h"
+#include "src/gpu/GrGpu.h"
 #include "src/gpu/GrManagedResource.h"
 #include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/GrResourceHandle.h"
@@ -55,10 +56,11 @@ class GrVkResourceProvider {
   // non null it will be set to a handle that can be used in the furutre to quickly return a
   // compatible GrVkRenderPasses without the need inspecting a GrVkRenderTarget.
   const GrVkRenderPass* findCompatibleRenderPass(
-      const GrVkRenderTarget& target, CompatibleRPHandle* compatibleHandle, bool withStencil);
+      const GrVkRenderTarget& target, CompatibleRPHandle* compatibleHandle, bool withStencil,
+      bool needsSelfDependency);
   const GrVkRenderPass* findCompatibleRenderPass(
       GrVkRenderPass::AttachmentsDescriptor*, GrVkRenderPass::AttachmentFlags,
-      CompatibleRPHandle* compatibleHandle = nullptr);
+      bool needsSelfDependency, CompatibleRPHandle* compatibleHandle = nullptr);
 
   const GrVkRenderPass* findCompatibleExternalRenderPass(
       VkRenderPass, uint32_t colorAttachmentIndex);
@@ -71,7 +73,7 @@ class GrVkResourceProvider {
   const GrVkRenderPass* findRenderPass(
       GrVkRenderTarget* target, const GrVkRenderPass::LoadStoreOps& colorOps,
       const GrVkRenderPass::LoadStoreOps& stencilOps, CompatibleRPHandle* compatibleHandle,
-      bool withStencil);
+      bool withStencil, bool needsSelfDependency);
 
   // The CompatibleRPHandle must be a valid handle previously set by a call to findRenderPass or
   // findCompatibleRenderPass.
@@ -212,7 +214,8 @@ class GrVkResourceProvider {
     CompatibleRenderPassSet(GrVkRenderPass* renderPass);
 
     bool isCompatible(
-        const GrVkRenderPass::AttachmentsDescriptor&, GrVkRenderPass::AttachmentFlags) const;
+        const GrVkRenderPass::AttachmentsDescriptor&, GrVkRenderPass::AttachmentFlags,
+        bool needsSelfDependency) const;
 
     const GrVkRenderPass* getCompatibleRenderPass() const {
       // The first GrVkRenderpass should always exist since we create the basic load store

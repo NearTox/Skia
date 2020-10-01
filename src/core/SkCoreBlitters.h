@@ -35,7 +35,7 @@ class SkShaderBlitter : public SkRasterBlitter {
    */
   SkShaderBlitter(
       const SkPixmap& device, const SkPaint& paint, SkShaderBase::Context* shaderContext);
-  virtual ~SkShaderBlitter();
+  ~SkShaderBlitter() override;
 
  protected:
   uint32_t fShaderFlags;
@@ -173,7 +173,11 @@ SkBlitter* SkCreateRasterPipelineBlitter(
     SkArenaAlloc*, sk_sp<SkShader> clipShader);
 
 SkBlitter* SkCreateSkVMBlitter(
-    const SkPixmap&, const SkPaint&, const SkMatrixProvider&, SkArenaAlloc*,
+    const SkPixmap& dst, const SkPaint&, const SkMatrixProvider&, SkArenaAlloc*,
+    sk_sp<SkShader> clipShader);
+
+SkBlitter* SkCreateSkVMSpriteBlitter(
+    const SkPixmap& dst, const SkPaint&, const SkPixmap& sprite, int left, int top, SkArenaAlloc*,
     sk_sp<SkShader> clipShader);
 
 #endif

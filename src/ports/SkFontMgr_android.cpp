@@ -71,7 +71,7 @@ class SkTypeface_AndroidSystem : public SkTypeface_Android {
     return SkStream::MakeFromFile(fPathName.c_str());
   }
 
-  virtual void onGetFontDescriptor(SkFontDescriptor* desc, bool* serialize) const override {
+  void onGetFontDescriptor(SkFontDescriptor* desc, bool* serialize) const override {
     SkASSERT(desc);
     SkASSERT(serialize);
     desc->setFamilyName(fFamilyName.c_str());
@@ -112,7 +112,7 @@ class SkTypeface_AndroidStream : public SkTypeface_Android {
       const SkString& familyName)
       : INHERITED(style, isFixedPitch, familyName), fData(std::move(data)) {}
 
-  virtual void onGetFontDescriptor(SkFontDescriptor* desc, bool* serialize) const override {
+  void onGetFontDescriptor(SkFontDescriptor* desc, bool* serialize) const override {
     SkASSERT(desc);
     SkASSERT(serialize);
     desc->setFamilyName(fFamilyName.c_str());
@@ -317,13 +317,12 @@ class SkFontMgr_Android : public SkFontMgr {
     return nullptr;
   }
 
-  virtual SkTypeface* onMatchFamilyStyle(
-      const char familyName[], const SkFontStyle& style) const override {
+  SkTypeface* onMatchFamilyStyle(const char familyName[], const SkFontStyle& style) const override {
     sk_sp<SkFontStyleSet> sset(this->matchFamily(familyName));
     return sset->matchStyle(style);
   }
 
-  virtual SkTypeface* onMatchFaceStyle(
+  SkTypeface* onMatchFaceStyle(
       const SkTypeface* typeface, const SkFontStyle& style) const override {
     for (int i = 0; i < fStyleSets.count(); ++i) {
       for (int j = 0; j < fStyleSets[i]->fStyles.count(); ++j) {
@@ -363,7 +362,7 @@ class SkFontMgr_Android : public SkFontMgr {
     return nullptr;
   }
 
-  virtual SkTypeface* onMatchFamilyStyleCharacter(
+  SkTypeface* onMatchFamilyStyleCharacter(
       const char familyName[], const SkFontStyle& style, const char* bcp47[], int bcp47Count,
       SkUnichar character) const override {
     // The variant 'elegant' is 'not squashed', 'compact' is 'stays in ascent/descent'.
@@ -406,7 +405,7 @@ class SkFontMgr_Android : public SkFontMgr {
 
   sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override {
     std::unique_ptr<SkStreamAsset> stream = SkStream::MakeFromFile(path);
-    return stream.get() ? this->makeFromStream(std::move(stream), ttcIndex) : nullptr;
+    return stream ? this->makeFromStream(std::move(stream), ttcIndex) : nullptr;
   }
 
   sk_sp<SkTypeface> onMakeFromStreamIndex(
@@ -506,7 +505,7 @@ class SkFontMgr_Android : public SkFontMgr {
       addFamily(*family, isolated, familyIndex++);
       family->fallbackFamilies.foreach (
           [this, isolated, &familyIndex](SkString, std::unique_ptr<FontFamily>* fallbackFamily) {
-            addFamily(*(*fallbackFamily).get(), isolated, familyIndex++);
+            addFamily(**fallbackFamily, isolated, familyIndex++);
           });
     }
   }

@@ -20,8 +20,6 @@ class SkColorSpace;
 #include "include/gpu/GrBackendSurface.h"
 
 #if SK_SUPPORT_GPU
-// TODO: remove the GrContext.h include once Flutter is updated
-#  include "include/gpu/GrContext.h"
 #  include "include/gpu/GrContextThreadSafeProxy.h"
 
 /** \class SkSurfaceCharacterization
@@ -55,8 +53,10 @@ class SK_API SkSurfaceCharacterization {
 
   SkSurfaceCharacterization(const SkSurfaceCharacterization&) noexcept = default;
   SkSurfaceCharacterization& operator=(const SkSurfaceCharacterization& other) noexcept = default;
-  bool operator==(const SkSurfaceCharacterization& other) const;
-  bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
+  bool operator==(const SkSurfaceCharacterization& other) const noexcept;
+  bool operator!=(const SkSurfaceCharacterization& other) const noexcept {
+    return !(*this == other);
+  }
 
   /*
    * Return a new surface characterization with the only difference being a different width
@@ -123,7 +123,7 @@ class SK_API SkSurfaceCharacterization {
       const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
       int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
       VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
-      const SkSurfaceProps& surfaceProps) noexcept
+      const SkSurfaceProps& surfaceProps)
       : fContextInfo(std::move(contextInfo)),
         fCacheMaxResourceBytes(cacheMaxResourceBytes),
         fImageInfo(ii),
@@ -144,7 +144,7 @@ class SK_API SkSurfaceCharacterization {
       const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
       int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
       VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
-      const SkSurfaceProps& surfaceProps) noexcept {
+      const SkSurfaceProps& surfaceProps) {
     SkASSERT(MipMapped::kNo == isMipMapped || Textureable::kYes == isTextureable);
     SkASSERT(Textureable::kNo == isTextureable || UsesGLFBO0::kNo == usesGLFBO0);
 
@@ -193,33 +193,36 @@ class SK_API SkSurfaceCharacterization {
  public:
   SkSurfaceCharacterization() : fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
-  SkSurfaceCharacterization createResized(int width, int height) const { return *this; }
+  SkSurfaceCharacterization createResized(int width, int height) const noexcept { return *this; }
 
-  SkSurfaceCharacterization createColorSpace(sk_sp<SkColorSpace>) const { return *this; }
+  SkSurfaceCharacterization createColorSpace(sk_sp<SkColorSpace>) const noexcept { return *this; }
 
-  SkSurfaceCharacterization createBackendFormat(SkColorType, const GrBackendFormat&) const {
+  SkSurfaceCharacterization createBackendFormat(
+      SkColorType, const GrBackendFormat&) const noexcept {
     return *this;
   }
 
-  SkSurfaceCharacterization createFBO0(bool usesGLFBO0) const { return *this; }
+  SkSurfaceCharacterization createFBO0(bool usesGLFBO0) const noexcept { return *this; }
 
-  bool operator==(const SkSurfaceCharacterization& other) const { return false; }
-  bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
+  bool operator==(const SkSurfaceCharacterization& other) const noexcept { return false; }
+  bool operator!=(const SkSurfaceCharacterization& other) const noexcept {
+    return !(*this == other);
+  }
 
-  size_t cacheMaxResourceBytes() const { return 0; }
+  size_t cacheMaxResourceBytes() const noexcept { return 0; }
 
-  bool isValid() const { return false; }
+  bool isValid() const noexcept { return false; }
 
-  int width() const { return 0; }
-  int height() const { return 0; }
-  int stencilCount() const { return 0; }
-  bool isTextureable() const { return false; }
-  bool isMipMapped() const { return false; }
-  bool usesGLFBO0() const { return false; }
-  bool vulkanSecondaryCBCompatible() const { return false; }
-  SkColorSpace* colorSpace() const { return nullptr; }
-  sk_sp<SkColorSpace> refColorSpace() const { return nullptr; }
-  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
+  int width() const noexcept { return 0; }
+  int height() const noexcept { return 0; }
+  int stencilCount() const noexcept { return 0; }
+  bool isTextureable() const noexcept { return false; }
+  bool isMipMapped() const noexcept { return false; }
+  bool usesGLFBO0() const noexcept { return false; }
+  bool vulkanSecondaryCBCompatible() const noexcept { return false; }
+  SkColorSpace* colorSpace() const noexcept { return nullptr; }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return nullptr; }
+  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
 
  private:
   SkSurfaceProps fSurfaceProps;

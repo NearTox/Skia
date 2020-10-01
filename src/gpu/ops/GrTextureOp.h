@@ -41,8 +41,8 @@ class GrTextureOp {
    */
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext*, GrSurfaceProxyView, SkAlphaType srcAlphaType, sk_sp<GrColorSpaceXform>,
-      GrSamplerState::Filter, const SkPMColor4f&, Saturate, SkBlendMode, GrAAType, DrawQuad*,
-      const SkRect* subset = nullptr);
+      GrSamplerState::Filter, GrSamplerState::MipmapMode, const SkPMColor4f&, Saturate, SkBlendMode,
+      GrAAType, DrawQuad*, const SkRect* subset = nullptr);
 
   // Automatically falls back to using one GrFillRectOp per entry if dynamic states are not
   // supported, or if the blend mode is not src-over. 'cnt' is the size of the entry array.
@@ -50,8 +50,8 @@ class GrTextureOp {
   static void AddTextureSetOps(
       GrRenderTargetContext*, const GrClip* clip, GrRecordingContext*,
       GrRenderTargetContext::TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
-      Saturate, SkBlendMode, GrAAType, SkCanvas::SrcRectConstraint, const SkMatrix& viewMatrix,
-      sk_sp<GrColorSpaceXform> textureXform);
+      GrSamplerState::MipmapMode, Saturate, SkBlendMode, GrAAType, SkCanvas::SrcRectConstraint,
+      const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureXform);
 
 #if GR_TEST_UTILS
   static uint32_t ClassID();

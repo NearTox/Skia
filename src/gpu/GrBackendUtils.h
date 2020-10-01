@@ -16,8 +16,7 @@
 #  include "src/gpu/mtl/GrMtlCppUtil.h"
 #endif
 
-static SkImage::CompressionType GrBackendFormatToCompressionType(
-    const GrBackendFormat& format) noexcept {
+static SkImage::CompressionType GrBackendFormatToCompressionType(const GrBackendFormat& format) {
   switch (format.backend()) {
     case GrBackendApi::kOpenGL: {
 #ifdef SK_GL

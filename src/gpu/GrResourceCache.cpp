@@ -7,7 +7,7 @@
 
 #include "src/gpu/GrResourceCache.h"
 #include <atomic>
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "include/private/GrSingleOwner.h"
 #include "include/private/SkTo.h"
 #include "include/utils/SkRandom.h"
@@ -277,7 +277,7 @@ class GrResourceCache::AvailableForScratchUse {
  public:
   AvailableForScratchUse() noexcept = default;
 
-  bool operator()(const GrGpuResource* resource) const noexcept {
+  bool operator()(const GrGpuResource* resource) const {
     SkASSERT(
         !resource->getUniqueKey().isValid() && resource->resourcePriv().getScratchKey().isValid());
 
@@ -453,7 +453,8 @@ void GrResourceCache::notifyRefCntReachedZero(GrGpuResource* resource) {
     }
   }
 
-  SkDEBUGCODE(int beforeCount = this->getResourceCount();) resource->cacheAccess().release();
+  SkDEBUGCODE(int beforeCount = this->getResourceCount());
+  resource->cacheAccess().release();
   // We should at least free this resource, perhaps dependent resources as well.
   SkASSERT(this->getResourceCount() < beforeCount);
   this->validate();
@@ -649,13 +650,13 @@ void GrResourceCache::processFreedGpuResources() {
   }
 }
 
-void GrResourceCache::addToNonpurgeableArray(GrGpuResource* resource) noexcept {
+void GrResourceCache::addToNonpurgeableArray(GrGpuResource* resource) {
   int index = fNonpurgeableResources.count();
   *fNonpurgeableResources.append() = resource;
   *resource->cacheAccess().accessCacheIndex() = index;
 }
 
-void GrResourceCache::removeFromNonpurgeableArray(GrGpuResource* resource) noexcept {
+void GrResourceCache::removeFromNonpurgeableArray(GrGpuResource* resource) {
   int* index = resource->cacheAccess().accessCacheIndex();
   // Fill the whole we will create in the array with the tail object, adjust its index, and
   // then pop the array
@@ -684,7 +685,7 @@ uint32_t GrResourceCache::getNextTimestamp() {
         fPurgeableQueue.pop();
       }
 
-      SkTQSort(fNonpurgeableResources.begin(), fNonpurgeableResources.end() - 1, CompareTimestamp);
+      SkTQSort(fNonpurgeableResources.begin(), fNonpurgeableResources.end(), CompareTimestamp);
 
       // Pick resources out of the purgeable and non-purgeable arrays based on lowest
       // timestamp and assign new timestamps.

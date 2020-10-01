@@ -242,7 +242,7 @@ class SampleCubeBase : public Sample3DView {
   virtual void drawContent(SkCanvas* canvas, SkColor, int index, bool drawFront) = 0;
 
   void onDrawContent(SkCanvas* canvas) override {
-    if (!canvas->getGrContext() && !(fFlags & kCanRunOnCPU)) {
+    if (!canvas->recordingContext() && !(fFlags & kCanRunOnCPU)) {
       return;
     }
 
@@ -388,7 +388,7 @@ class SampleBump3D : public SampleCubeBase {
     }
 
     SkRuntimeShaderBuilder builder(fEffect);
-    builder.input("lightPos") = fLight.computeWorldPos(fSphere);
+    builder.uniform("lightPos") = fLight.computeWorldPos(fSphere);
     // localToWorld matrices are automatically populated, via layout(marker)
 
     builder.child("color_map") = fImgShader;
@@ -472,7 +472,7 @@ class SampleVerts3D : public SampleCubeBase {
     }
 
     SkRuntimeShaderBuilder builder(fEffect);
-    builder.input("lightPos") = fLight.computeWorldPos(fSphere);
+    builder.uniform("lightPos") = fLight.computeWorldPos(fSphere);
 
     SkPaint paint;
     paint.setColor(color);

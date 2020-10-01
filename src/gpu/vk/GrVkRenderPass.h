@@ -39,6 +39,7 @@ class GrVkRenderPass : public GrVkManagedResource {
       : INHERITED(gpu),
         fRenderPass(renderPass),
         fAttachmentFlags(kExternal_AttachmentFlag),
+        fHasSelfDependency(false),
         fClearValueCount(0),
         fColorAttachmentIndex(colorAttachmentIndex) {}
 
@@ -78,7 +79,8 @@ class GrVkRenderPass : public GrVkManagedResource {
   };
   GR_DECL_BITFIELD_OPS_FRIENDS(AttachmentFlags);
 
-  static GrVkRenderPass* CreateSimple(GrVkGpu*, AttachmentsDescriptor*, AttachmentFlags);
+  static GrVkRenderPass* CreateSimple(
+      GrVkGpu*, AttachmentsDescriptor*, AttachmentFlags, bool needsSelfDependency);
   static GrVkRenderPass* Create(
       GrVkGpu*, const GrVkRenderPass& compatibleRenderPass, const LoadStoreOps& colorOp,
       const LoadStoreOps& stencilOp);
@@ -90,19 +92,24 @@ class GrVkRenderPass : public GrVkManagedResource {
   bool stencilAttachmentIndex(uint32_t* index) const;
   bool hasStencilAttachment() const { return fAttachmentFlags & kStencil_AttachmentFlag; }
 
+  bool hasSelfDependency() const { return fHasSelfDependency; }
+
   // Returns whether or not the structure of a RenderTarget matches that of the VkRenderPass in
   // this object. Specifically this compares that the number of attachments, format of
   // attachments, and sample counts are all the same. This function is used in the creation of
   // basic RenderPasses that can be used when creating a VkFrameBuffer object.
-  bool isCompatible(const GrVkRenderTarget& target) const;
+  bool isCompatible(const GrVkRenderTarget& target, bool hasInputSelfDependency) const;
 
   bool isCompatible(const GrVkRenderPass& renderPass) const;
 
-  bool isCompatible(const AttachmentsDescriptor&, const AttachmentFlags&) const;
+  bool isCompatible(
+      const AttachmentsDescriptor&, const AttachmentFlags&, bool hasInputSelfDependency) const;
 
   bool isCompatibleExternalRP(VkRenderPass) const;
 
-  bool equalLoadStoreOps(const LoadStoreOps& colorOps, const LoadStoreOps& stencilOps) const;
+  SkDEBUGCODE(bool isExternal() const { return fAttachmentFlags & kExternal_AttachmentFlag; })
+
+      bool equalLoadStoreOps(const LoadStoreOps& colorOps, const LoadStoreOps& stencilOps) const;
 
   VkRenderPass vkRenderPass() const { return fRenderPass; }
 
@@ -112,7 +119,11 @@ class GrVkRenderPass : public GrVkManagedResource {
   // either only be 0 or 1 since we only ever clear the color attachment.
   uint32_t clearValueCount() const { return fClearValueCount; }
 
-  void genKey(GrProcessorKeyBuilder* b) const;
+  void genKey(GrProcessorKeyBuilder*) const;
+
+  static void GenKey(
+      GrProcessorKeyBuilder*, AttachmentFlags, const AttachmentsDescriptor&, bool hasSelfDependency,
+      uint64_t externalRenderPass);
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
   void dumpInfo() const override {
@@ -123,17 +134,18 @@ class GrVkRenderPass : public GrVkManagedResource {
  private:
   GrVkRenderPass(
       const GrVkGpu*, VkRenderPass, AttachmentFlags, const AttachmentsDescriptor&,
-      const VkExtent2D& granularity, uint32_t clearValueCount);
+      bool hasInputSelfDependency, const VkExtent2D& granularity, uint32_t clearValueCount);
 
   static GrVkRenderPass* Create(
       GrVkGpu* gpu, AttachmentFlags, AttachmentsDescriptor*, const LoadStoreOps& colorOps,
-      const LoadStoreOps& stencilOps);
+      const LoadStoreOps& stencilOps, bool needsSelfDependency);
 
   void freeGPUData() const override;
 
   VkRenderPass fRenderPass;
   AttachmentFlags fAttachmentFlags;
   AttachmentsDescriptor fAttachmentsDescriptor;
+  bool fHasSelfDependency;
   VkExtent2D fGranularity;
   uint32_t fClearValueCount;
   // For internally created render passes we assume the color attachment index is always 0.

@@ -48,7 +48,7 @@ class ComplexClipGM : public GM {
     return str;
   }
 
-  SkISize onISize() override { return SkISize::Make(970, 780); }
+  SkISize onISize() override { return SkISize::Make(388, 780); }
 
   void onDraw(SkCanvas* canvas) override {
     SkPath path;
@@ -86,12 +86,11 @@ class ComplexClipGM : public GM {
     constexpr struct {
       SkClipOp fOp;
       const char* fName;
-    } gOps[] = {// extra spaces in names for measureText
-                {kIntersect_SkClipOp, "Isect "},
-                {kDifference_SkClipOp, "Diff "},
-                {kUnion_SkClipOp, "Union "},
-                {kXOR_SkClipOp, "Xor "},
-                {kReverseDifference_SkClipOp, "RDiff "}};
+    } gOps[] = {
+        // extra spaces in names for measureText
+        {kIntersect_SkClipOp, "Isect "},
+        {kDifference_SkClipOp, "Diff "},
+    };
 
     canvas->translate(20, 20);
     canvas->scale(3 * SK_Scalar1 / 4, 3 * SK_Scalar1 / 4);

@@ -41,7 +41,6 @@ class GrStyledShape {
   // Keys for paths may be extracted from the path data for small paths. Clients aren't supposed
   // to have to worry about this. This value is exposed for unit tests.
   static constexpr int kMaxKeyFromDataVerbCnt = 10;
-
   GrStyledShape() noexcept = default;
 
   explicit GrStyledShape(const SkPath& path) : GrStyledShape(path, GrStyle::SimpleFill()) {}
@@ -78,13 +77,13 @@ class GrStyledShape {
     this->simplify();
   }
 
-  GrStyledShape(const GrStyledShape&) noexcept;
+  GrStyledShape(const GrStyledShape&);
 
   static GrStyledShape MakeArc(
       const SkRect& oval, SkScalar startAngleDegrees, SkScalar sweepAngleDegrees, bool useCenter,
       const GrStyle& style);
 
-  GrStyledShape& operator=(const GrStyledShape& that) noexcept;
+  GrStyledShape& operator=(const GrStyledShape& that);
 
   /**
    * Informs MakeFilled on how to modify that shape's fill rule when making a simple filled
@@ -122,17 +121,16 @@ class GrStyledShape {
   }
 
   /** Returns the unstyled geometry as a rrect if possible. */
-  bool asRRect(
-      SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const noexcept;
+  bool asRRect(SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const;
 
   /**
    * If the unstyled shape is a straight line segment, returns true and sets pts to the endpoints.
    * An inverse filled line path is still considered a line.
    */
-  bool asLine(SkPoint pts[2], bool* inverted) const noexcept;
+  bool asLine(SkPoint pts[2], bool* inverted) const;
 
   // Can this shape be drawn as a pair of filled nested rectangles?
-  bool asNestedRects(SkRect rects[2]) const noexcept;
+  bool asNestedRects(SkRect rects[2]) const;
 
   /** Returns the unstyled geometry as a path. */
   void asPath(SkPath* out) const { fShape.asPath(out, fStyle.isSimpleFill()); }
@@ -147,7 +145,7 @@ class GrStyledShape {
    * Gets the bounds of the geometry without reflecting the shape's styling. This ignores
    * the inverse fill nature of the geometry.
    */
-  SkRect bounds() const noexcept { return fShape.bounds(); }
+  SkRect bounds() const { return fShape.bounds(); }
 
   /**
    * Gets the bounds of the geometry reflecting the shape's styling (ignoring inverse fill
@@ -206,7 +204,7 @@ class GrStyledShape {
     return fShape.closed();
   }
 
-  uint32_t segmentMask() const noexcept {
+  uint32_t segmentMask() const {
     // This refers to the base shape and does not depend on invertedness.
     return fShape.segmentMask();
   }
@@ -215,9 +213,9 @@ class GrStyledShape {
    * Gets the size of the key for the shape represented by this GrStyledShape (ignoring its
    * styling). A negative value is returned if the shape has no key (shouldn't be cached).
    */
-  int unstyledKeySize() const noexcept;
+  int unstyledKeySize() const;
 
-  bool hasUnstyledKey() const noexcept { return this->unstyledKeySize() >= 0; }
+  bool hasUnstyledKey() const { return this->unstyledKeySize() >= 0; }
 
   /**
    * Writes unstyledKeySize() bytes into the provided pointer. Assumes that there is enough
@@ -260,7 +258,7 @@ class GrStyledShape {
   bool simplifyStroke(bool originallyClosed);
 
   /** Gets the path that gen id listeners should be added to. */
-  const SkPath* originalPathForListeners() const noexcept;
+  const SkPath* originalPathForListeners() const;
 
   GrShape fShape;
   GrStyle fStyle;

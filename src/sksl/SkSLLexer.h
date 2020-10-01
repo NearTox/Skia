@@ -119,7 +119,7 @@ struct Token {
 
   constexpr Token() noexcept : fKind(Kind::TK_INVALID), fOffset(-1), fLength(-1) {}
 
-  constexpr Token(Kind kind, int32_t offset, int32_t length) noexcept
+  Token(Kind kind, int32_t offset, int32_t length) noexcept
       : fKind(kind), fOffset(offset), fLength(length) {}
 
   Kind fKind;

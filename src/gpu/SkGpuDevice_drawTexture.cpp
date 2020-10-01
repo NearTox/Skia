@@ -8,6 +8,8 @@
 #include "src/gpu/SkGpuDevice.h"
 
 #include "include/core/SkYUVAIndex.h"
+#include "include/gpu/GrDirectContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkDraw.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
@@ -15,12 +17,14 @@
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrColorSpaceXform.h"
 #include "src/gpu/GrImageTextureMaker.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrTextureAdjuster.h"
 #include "src/gpu/GrTextureMaker.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrBicubicEffect.h"
+#include "src/gpu/effects/GrBlendFragmentProcessor.h"
 #include "src/gpu/effects/GrTextureEffect.h"
 #include "src/gpu/geometry/GrStyledShape.h"
 #include "src/image/SkImage_Base.h"
@@ -32,7 +36,7 @@ static inline bool use_shader(bool textureIsAlphaOnly, const SkPaint& paint) {
 }
 
 //////////////////////////////////////////////////////////////////////////////
-//  Helper functions for dropping src rect constraint in bilerp mode.
+//  Helper functions for dropping src rect subset with GrSamplerState::Filter::kLinear.
 
 static const SkScalar kColorBleedTolerance = 0.001f;
 
@@ -76,16 +80,16 @@ static bool may_color_bleed(
   return inner != outer;
 }
 
-static bool can_ignore_bilerp_constraint(
-    const GrTextureProducer& producer, const SkRect& srcRect, const SkMatrix& srcRectToDeviceSpace,
-    int numSamples) {
+static bool can_ignore_linear_filtering_subset(
+    const GrTextureProducer& producer, const SkRect& srcSubset,
+    const SkMatrix& srcRectToDeviceSpace, int numSamples) {
   if (srcRectToDeviceSpace.rectStaysRect()) {
     // sampling is axis-aligned
     SkRect transformedRect;
-    srcRectToDeviceSpace.mapRect(&transformedRect, srcRect);
+    srcRectToDeviceSpace.mapRect(&transformedRect, srcSubset);
 
-    if (has_aligned_samples(srcRect, transformedRect) ||
-        !may_color_bleed(srcRect, transformedRect, srcRectToDeviceSpace, numSamples)) {
+    if (has_aligned_samples(srcSubset, transformedRect) ||
+        !may_color_bleed(srcSubset, transformedRect, srcRectToDeviceSpace, numSamples)) {
       return true;
     }
   }
@@ -149,7 +153,7 @@ static SkIRect determine_clipped_src_rect(
 
 // tileSize and clippedSubset are valid if true is returned
 static bool should_tile_image_id(
-    GrContext* context, SkISize rtSize, const GrClip* clip, uint32_t imageID,
+    GrRecordingContext* context, SkISize rtSize, const GrClip* clip, uint32_t imageID,
     const SkISize& imageSize, const SkMatrix& ctm, const SkMatrix& srcToDst, const SkRect* src,
     int maxTileSize, int* tileSize, SkIRect* clippedSubset) {
   // if it's larger than the max tile size, then we have no choice but tiling.
@@ -173,14 +177,15 @@ static bool should_tile_image_id(
   // and theoretically, the resource cache's limits could be being changed on another thread, so
   // even having access to just the limit wouldn't be a reliable test during recording here.
   // Instead, we will just upload the entire image to be on the safe side and not tile.
-  if (!context->priv().asDirectContext()) {
+  auto direct = context->asDirectContext();
+  if (!direct) {
     return false;
   }
 
   // assumption here is that sw bitmap size is a good proxy for its size as
   // a texture
   size_t bmpSize = area * sizeof(SkPMColor);  // assume 32bit pixels
-  size_t cacheSize = context->getResourceCacheLimit();
+  size_t cacheSize = direct->getResourceCacheLimit();
   if (bmpSize < cacheSize / 2) {
     return false;
   }
@@ -305,6 +310,18 @@ static bool can_use_draw_texture(const SkPaint& paint) {
       !paint.getImageFilter() && paint.getFilterQuality() < kMedium_SkFilterQuality);
 }
 
+static SkPMColor4f texture_color(
+    SkColor4f paintColor, float entryAlpha, GrColorType srcColorType,
+    const GrColorInfo& dstColorInfo) {
+  paintColor.fA *= entryAlpha;
+  if (GrColorTypeIsAlphaOnly(srcColorType)) {
+    return SkColor4fPrepForDst(paintColor, dstColorInfo).premul();
+  } else {
+    float paintAlpha = SkTPin(paintColor.fA, 0.f, 1.f);
+    return {paintAlpha, paintAlpha, paintAlpha, paintAlpha};
+  }
+}
+
 // Assumes srcRect and dstRect have already been optimized to fit the proxy
 static void draw_texture(
     GrRenderTargetContext* rtc, const GrClip* clip, const SkMatrix& ctm, const SkPaint& paint,
@@ -318,7 +335,7 @@ static void draw_texture(
   GrSamplerState::Filter filter;
   switch (paint.getFilterQuality()) {
     case kNone_SkFilterQuality: filter = GrSamplerState::Filter::kNearest; break;
-    case kLow_SkFilterQuality: filter = GrSamplerState::Filter::kBilerp; break;
+    case kLow_SkFilterQuality: filter = GrSamplerState::Filter::kLinear; break;
     case kMedium_SkFilterQuality:
     case kHigh_SkFilterQuality: SK_ABORT("Quality level not allowed.");
   }
@@ -327,22 +344,16 @@ static void draw_texture(
   // rect would access pixels outside the proxy's content area without the constraint.
   if (constraint != SkCanvas::kStrict_SrcRectConstraint && !proxy->isFunctionallyExact()) {
     // Conservative estimate of how much a coord could be outset from src rect:
-    // 1/2 pixel for AA and 1/2 pixel for bilerp
-    float buffer = 0.5f * (aa == GrAA::kYes) + 0.5f * (filter == GrSamplerState::Filter::kBilerp);
+    // 1/2 pixel for AA and 1/2 pixel for linear filtering
+    float buffer = 0.5f * (aa == GrAA::kYes) + 0.5f * (filter == GrSamplerState::Filter::kLinear);
     SkRect safeBounds = proxy->getBoundsRect();
     safeBounds.inset(buffer, buffer);
     if (!safeBounds.contains(srcRect)) {
       constraint = SkCanvas::kStrict_SrcRectConstraint;
     }
   }
-  SkPMColor4f color;
-  if (GrColorTypeIsAlphaOnly(srcColorInfo.colorType())) {
-    color = SkColor4fPrepForDst(paint.getColor4f(), dstInfo).premul();
-  } else {
-    float paintAlpha = paint.getColor4f().fA;
-    color = {paintAlpha, paintAlpha, paintAlpha, paintAlpha};
-  }
 
+  SkPMColor4f color = texture_color(paint.getColor4f(), 1.f, srcColorInfo.colorType(), dstInfo);
   if (dstClip) {
     // Get source coords corresponding to dstClip
     SkPoint srcQuad[4];
@@ -350,29 +361,31 @@ static void draw_texture(
 
     rtc->drawTextureQuad(
         clip, std::move(view), srcColorInfo.colorType(), srcColorInfo.alphaType(), filter,
-        paint.getBlendMode(), color, srcQuad, dstClip, aa, aaFlags,
-        constraint == SkCanvas::kStrict_SrcRectConstraint ? &srcRect : nullptr, ctm,
+        GrSamplerState::MipmapMode::kNone, paint.getBlendMode(), color, srcQuad, dstClip, aa,
+        aaFlags, constraint == SkCanvas::kStrict_SrcRectConstraint ? &srcRect : nullptr, ctm,
         std::move(textureXform));
   } else {
     rtc->drawTexture(
-        clip, std::move(view), srcColorInfo.alphaType(), filter, paint.getBlendMode(), color,
-        srcRect, dstRect, aa, aaFlags, constraint, ctm, std::move(textureXform));
+        clip, std::move(view), srcColorInfo.alphaType(), filter, GrSamplerState::MipmapMode::kNone,
+        paint.getBlendMode(), color, srcRect, dstRect, aa, aaFlags, constraint, ctm,
+        std::move(textureXform));
   }
 }
 
 // Assumes srcRect and dstRect have already been optimized to fit the proxy.
 static void draw_texture_producer(
-    GrContext* context, GrRenderTargetContext* rtc, const GrClip* clip,
+    GrRecordingContext* context, GrRenderTargetContext* rtc, const GrClip* clip,
     const SkMatrixProvider& matrixProvider, const SkPaint& paint, GrTextureProducer* producer,
     const SkRect& src, const SkRect& dst, const SkPoint dstClip[4], const SkMatrix& srcToDst,
-    GrAA aa, GrQuadAAFlags aaFlags, SkCanvas::SrcRectConstraint constraint,
-    GrSamplerState::WrapMode wm, GrSamplerState::Filter fm, bool doBicubic) {
+    GrAA aa, GrQuadAAFlags aaFlags, SkCanvas::SrcRectConstraint constraint, GrSamplerState sampler,
+    bool doBicubic) {
   const SkMatrix& ctm(matrixProvider.localToDevice());
-  if (wm == GrSamplerState::WrapMode::kClamp && !producer->isPlanar() &&
+  if (sampler.wrapModeX() == GrSamplerState::WrapMode::kClamp &&
+      sampler.wrapModeY() == GrSamplerState::WrapMode::kClamp && !producer->isPlanar() &&
       can_use_draw_texture(paint)) {
     // We've done enough checks above to allow us to pass ClampNearest() and not check for
     // scaling adjustments.
-    auto view = producer->view(GrMipMapped::kNo);
+    auto view = producer->view(GrMipmapped::kNo);
     if (!view) {
       return;
     }
@@ -397,28 +410,21 @@ static void draw_texture_producer(
   if (mf && as_MFB(mf)->hasFragmentProcessor()) {
     mf = nullptr;
   }
-  const GrSamplerState::Filter* filterMode = doBicubic ? nullptr : &fm;
 
-  GrTextureProducer::FilterConstraint constraintMode;
-  if (SkCanvas::kFast_SrcRectConstraint == constraint) {
-    constraintMode = GrTextureAdjuster::kNo_FilterConstraint;
-  } else {
-    constraintMode = GrTextureAdjuster::kYes_FilterConstraint;
-  }
+  bool restrictToSubset = SkCanvas::kStrict_SrcRectConstraint == constraint;
 
   // If we have to outset for AA then we will generate texture coords outside the src rect. The
   // same happens for any mask filter that extends the bounds rendered in the dst.
   // This is conservative as a mask filter does not have to expand the bounds rendered.
   bool coordsAllInsideSrcRect = aaFlags == GrQuadAAFlags::kNone && !mf;
 
-  // Check for optimization to drop the src rect constraint when on bilerp.
-  if (filterMode && GrSamplerState::Filter::kBilerp == *filterMode &&
-      GrTextureAdjuster::kYes_FilterConstraint == constraintMode && coordsAllInsideSrcRect &&
-      !producer->isPlanar()) {
+  // Check for optimization to drop the src rect constraint when using linear filtering.
+  if (!doBicubic && sampler.filter() == GrSamplerState::Filter::kLinear && restrictToSubset &&
+      sampler.mipmapped() == GrMipmapped::kNo && coordsAllInsideSrcRect && !producer->isPlanar()) {
     SkMatrix combinedMatrix;
     combinedMatrix.setConcat(ctm, srcToDst);
-    if (can_ignore_bilerp_constraint(*producer, src, combinedMatrix, rtc->numSamples())) {
-      constraintMode = GrTextureAdjuster::kNo_FilterConstraint;
+    if (can_ignore_linear_filtering_subset(*producer, src, combinedMatrix, rtc->numSamples())) {
+      restrictToSubset = false;
     }
   }
 
@@ -430,13 +436,22 @@ static void draw_texture_producer(
       return;
     }
   }
-  auto fp = producer->createFragmentProcessor(
-      textureMatrix, src, constraintMode, coordsAllInsideSrcRect, wm, wm, filterMode);
-  fp = GrColorSpaceXformEffect::Make(
-      std::move(fp), producer->colorSpace(), producer->alphaType(), rtc->colorInfo().colorSpace());
+  const SkRect* subset = restrictToSubset ? &src : nullptr;
+  const SkRect* domain = coordsAllInsideSrcRect ? &src : nullptr;
+  std::unique_ptr<GrFragmentProcessor> fp;
+  if (doBicubic) {
+    fp = producer->createBicubicFragmentProcessor(
+        textureMatrix, subset, domain, sampler.wrapModeX(), sampler.wrapModeY());
+  } else {
+    fp = producer->createFragmentProcessor(textureMatrix, subset, domain, sampler);
+  }
   if (!fp) {
     return;
   }
+  fp = GrColorSpaceXformEffect::Make(
+      std::move(fp), producer->colorSpace(), producer->alphaType(), rtc->colorInfo().colorSpace(),
+      kPremul_SkAlphaType);
+  fp = GrBlendFragmentProcessor::Make(std::move(fp), nullptr, SkBlendMode::kModulate);
 
   GrPaint grPaint;
   if (!SkPaintToGrPaintWithTexture(
@@ -481,10 +496,10 @@ static void draw_texture_producer(
 }
 
 void draw_tiled_bitmap(
-    GrContext* context, GrRenderTargetContext* rtc, const GrClip* clip, const SkBitmap& bitmap,
-    int tileSize, const SkMatrixProvider& matrixProvider, const SkMatrix& srcToDst,
-    const SkRect& srcRect, const SkIRect& clippedSrcIRect, const SkPaint& paint, GrAA aa,
-    SkCanvas::SrcRectConstraint constraint, GrSamplerState::WrapMode wm, GrSamplerState::Filter fm,
+    GrRecordingContext* context, GrRenderTargetContext* rtc, const GrClip* clip,
+    const SkBitmap& bitmap, int tileSize, const SkMatrixProvider& matrixProvider,
+    const SkMatrix& srcToDst, const SkRect& srcRect, const SkIRect& clippedSrcIRect,
+    const SkPaint& paint, GrAA aa, SkCanvas::SrcRectConstraint constraint, GrSamplerState sampler,
     bool doBicubic) {
   SkRect clippedSrcRect = SkRect::Make(clippedSrcIRect);
 
@@ -511,7 +526,7 @@ void draw_tiled_bitmap(
       SkVector offset = SkPoint::Make(SkIntToScalar(iTileR.fLeft), SkIntToScalar(iTileR.fTop));
       SkRect rectToDraw = tileR;
       srcToDst.mapRect(&rectToDraw);
-      if (fm != GrSamplerState::Filter::kNearest || doBicubic) {
+      if (sampler.filter() != GrSamplerState::Filter::kNearest || doBicubic) {
         SkIRect iClampRect;
 
         if (SkCanvas::kFast_SrcRectConstraint == constraint) {
@@ -562,10 +577,9 @@ void draw_tiled_bitmap(
         tileR.offset(-offset.fX, -offset.fY);
         SkMatrix offsetSrcToDst = srcToDst;
         offsetSrcToDst.preTranslate(offset.fX, offset.fY);
-
         draw_texture_producer(
             context, rtc, clip, matrixProvider, paint, &tileProducer, tileR, rectToDraw, nullptr,
-            offsetSrcToDst, aa, aaFlags, constraint, wm, fm, doBicubic);
+            offsetSrcToDst, aa, aaFlags, constraint, sampler, doBicubic);
       }
     }
   }
@@ -602,10 +616,9 @@ void SkGpuDevice::drawImageQuad(
       this->asMatrixProvider(), preViewMatrix ? *preViewMatrix : SkMatrix::I());
   const SkMatrix& ctm(matrixProvider.localToDevice());
 
-  bool doBicubic;
-  GrSamplerState::Filter fm = GrSkFilterQualityToGrFilterMode(
-      image->width(), image->height(), paint.getFilterQuality(), ctm, srcToDst,
-      fContext->priv().options().fSharpenMipmappedTextures, &doBicubic);
+  bool sharpenMM = fContext->priv().options().fSharpenMipmappedTextures;
+  auto [fm, mm, bicubic] = GrInterpretFilterQuality(
+      image->dimensions(), paint.getFilterQuality(), ctm, srcToDst, sharpenMM);
 
   auto clip = this->clip();
 
@@ -619,14 +632,15 @@ void SkGpuDevice::drawImageQuad(
     GrYUVAImageTextureMaker maker(fContext.get(), image);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), clip, matrixProvider, paint, &maker, src, dst,
-        dstClip, srcToDst, aa, aaFlags, constraint, wrapMode, fm, doBicubic);
+        dstClip, srcToDst, aa, aaFlags, constraint, {wrapMode, fm, mm}, bicubic);
     return;
   }
 
   // Pinned texture proxies can be rendered directly as textures, or with relatively simple
   // adjustments applied to the image content (scaling, mipmaps, color space, etc.)
   uint32_t pinnedUniqueID;
-  if (GrSurfaceProxyView view = as_IB(image)->refPinnedView(this->context(), &pinnedUniqueID)) {
+  if (GrSurfaceProxyView view =
+          as_IB(image)->refPinnedView(this->recordingContext(), &pinnedUniqueID)) {
     SK_HISTOGRAM_BOOLEAN("DrawTiled", false);
     LogDrawScaleFactor(ctm, srcToDst, paint.getFilterQuality());
 
@@ -643,7 +657,7 @@ void SkGpuDevice::drawImageQuad(
     GrTextureAdjuster adjuster(fContext.get(), std::move(view), colorInfo, pinnedUniqueID);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), clip, matrixProvider, paint, &adjuster, src,
-        dst, dstClip, srcToDst, aa, aaFlags, constraint, wrapMode, fm, doBicubic);
+        dst, dstClip, srcToDst, aa, aaFlags, constraint, {wrapMode, fm, mm}, bicubic);
     return;
   }
 
@@ -653,7 +667,7 @@ void SkGpuDevice::drawImageQuad(
     SkASSERT(!image->isTextureBacked());
 
     int tileFilterPad;
-    if (doBicubic) {
+    if (bicubic) {
       tileFilterPad = GrBicubicEffect::kFilterTexelPad;
     } else if (GrSamplerState::Filter::kNearest == fm) {
       tileFilterPad = 0;
@@ -677,7 +691,7 @@ void SkGpuDevice::drawImageQuad(
         LogDrawScaleFactor(ctm, srcToDst, paint.getFilterQuality());
         draw_tiled_bitmap(
             fContext.get(), fRenderTargetContext.get(), clip, bm, tileSize, matrixProvider,
-            srcToDst, src, clippedSubset, paint, aa, constraint, wrapMode, fm, doBicubic);
+            srcToDst, src, clippedSubset, paint, aa, constraint, {wrapMode, fm, mm}, bicubic);
         return;
       }
     }
@@ -693,7 +707,7 @@ void SkGpuDevice::drawImageQuad(
     GrImageTextureMaker maker(fContext.get(), image, GrImageTexGenPolicy::kDraw);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), clip, matrixProvider, paint, &maker, src, dst,
-        dstClip, srcToDst, aa, aaFlags, constraint, wrapMode, fm, doBicubic);
+        dstClip, srcToDst, aa, aaFlags, constraint, {wrapMode, fm, mm}, bicubic);
     return;
   }
 
@@ -702,7 +716,7 @@ void SkGpuDevice::drawImageQuad(
     GrBitmapTextureMaker maker(fContext.get(), bm, GrImageTexGenPolicy::kDraw);
     draw_texture_producer(
         fContext.get(), fRenderTargetContext.get(), clip, matrixProvider, paint, &maker, src, dst,
-        dstClip, srcToDst, aa, aaFlags, constraint, wrapMode, fm, doBicubic);
+        dstClip, srcToDst, aa, aaFlags, constraint, {wrapMode, fm, mm}, bicubic);
   }
 
   // Otherwise don't know how to draw it
@@ -740,7 +754,7 @@ void SkGpuDevice::drawEdgeAAImageSet(
 
   GrSamplerState::Filter filter = kNone_SkFilterQuality == paint.getFilterQuality()
                                       ? GrSamplerState::Filter::kNearest
-                                      : GrSamplerState::Filter::kBilerp;
+                                      : GrSamplerState::Filter::kLinear;
   SkBlendMode mode = paint.getBlendMode();
 
   SkAutoTArray<GrRenderTargetContext::TextureSetEntry> textures(count);
@@ -754,8 +768,8 @@ void SkGpuDevice::drawEdgeAAImageSet(
           set[base].fImage->colorSpace(), set[base].fImage->alphaType(),
           fRenderTargetContext->colorInfo().colorSpace(), kPremul_SkAlphaType);
       fRenderTargetContext->drawTextureSet(
-          this->clip(), textures.get() + base, n, p, filter, mode, GrAA::kYes, constraint,
-          this->localToDevice(), std::move(textureXform));
+          this->clip(), textures.get() + base, n, p, filter, GrSamplerState::MipmapMode::kNone,
+          mode, GrAA::kYes, constraint, this->localToDevice(), std::move(textureXform));
     }
     base = nextBase;
     n = 0;
@@ -784,9 +798,9 @@ void SkGpuDevice::drawEdgeAAImageSet(
     // drawImageQuad and the proper effect to dynamically sample their planes.
     if (!image->isYUVA()) {
       uint32_t uniqueID;
-      view = image->refPinnedView(this->context(), &uniqueID);
+      view = image->refPinnedView(this->recordingContext(), &uniqueID);
       if (!view) {
-        view = image->refView(this->context(), GrMipMapped::kNo);
+        view = image->refView(this->recordingContext(), GrMipmapped::kNo);
       }
     }
 
@@ -814,7 +828,9 @@ void SkGpuDevice::drawEdgeAAImageSet(
     textures[i].fDstClipQuad = clip;
     textures[i].fPreViewMatrix =
         set[i].fMatrixIndex < 0 ? nullptr : preViewMatrices + set[i].fMatrixIndex;
-    textures[i].fAlpha = set[i].fAlpha * paint.getAlphaf();
+    textures[i].fColor = texture_color(
+        paint.getColor4f(), set[i].fAlpha, SkColorTypeToGrColorType(image->colorType()),
+        fRenderTargetContext->colorInfo());
     textures[i].fAAFlags = SkToGrQuadAAFlags(set[i].fAAFlags);
 
     if (n > 0 &&

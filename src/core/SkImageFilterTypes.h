@@ -74,10 +74,8 @@ struct Vector {
 template <typename T>
 class ParameterSpace {
  public:
-  explicit ParameterSpace(const T& data) noexcept(std::is_nothrow_copy_constructible_v<T>)
-      : fData(data) {}
-  explicit ParameterSpace(T&& data) noexcept(std::is_nothrow_move_constructible_v<T>)
-      : fData(std::move(data)) {}
+  explicit ParameterSpace(const T& data) : fData(data) {}
+  explicit ParameterSpace(T&& data) : fData(std::move(data)) {}
 
   explicit operator const T&() const noexcept { return fData; }
 
@@ -94,10 +92,8 @@ class ParameterSpace {
 template <typename T>
 class DeviceSpace {
  public:
-  explicit DeviceSpace(const T& data) noexcept(std::is_nothrow_copy_constructible_v<T>)
-      : fData(data) {}
-  explicit DeviceSpace(T&& data) noexcept(std::is_nothrow_move_constructible_v<T>)
-      : fData(std::move(data)) {}
+  explicit DeviceSpace(const T& data) : fData(data) {}
+  explicit DeviceSpace(T&& data) : fData(std::move(data)) {}
 
   explicit operator const T&() const noexcept { return fData; }
 
@@ -225,7 +221,7 @@ class LayerSpace<SkIPoint> {
  public:
   LayerSpace() noexcept = default;
   explicit LayerSpace(const SkIPoint& geometry) noexcept : fData(geometry) {}
-  explicit LayerSpace(SkIPoint&& geometry) noexcept : fData(std::move(geometry)) {}
+  constexpr explicit LayerSpace(SkIPoint&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkIPoint&() const noexcept { return fData; }
 
   // Parrot the SkIPoint API while preserving coordinate space.
@@ -661,9 +657,9 @@ class Context {
   const SkSpecialImage* sourceImage() const noexcept { return fSource.image(); }
 
   // True if image filtering should occur on the GPU if possible.
-  bool gpuBacked() const { return fSource.image()->isTextureBacked(); }
+  bool gpuBacked() const noexcept { return fSource.image()->isTextureBacked(); }
   // The recording context to use when computing the filter with the GPU.
-  GrRecordingContext* getContext() const { return fSource.image()->getContext(); }
+  GrRecordingContext* getContext() const noexcept { return fSource.image()->getContext(); }
 
   /**
    *  Since a context can be built directly, its constructor has no chance to "return null" if

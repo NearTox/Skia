@@ -16,6 +16,7 @@
 
 class SkFactorySet;
 class SkImage;
+class SkM44;
 class SkPath;
 class SkRefCntSet;
 
@@ -24,10 +25,17 @@ class SkWriteBuffer {
   constexpr SkWriteBuffer() noexcept = default;
   virtual ~SkWriteBuffer() = default;
 
-  virtual void writePad32(const void* buffer, size_t bytes) noexcept = 0;
+  virtual void writePad32(const void* buffer, size_t bytes) = 0;
 
-  virtual void writeByteArray(const void* data, size_t size) = 0;
-  void writeDataAsByteArray(SkData* data) { this->writeByteArray(data->data(), data->size()); }
+  virtual void writeByteArray(const void* data, size_t size) noexcept = 0;
+  void writeDataAsByteArray(SkData* data) noexcept {
+    if (!data) {
+      this->write32(0);
+    } else {
+      this->writeByteArray(data->data(), data->size());
+    }
+  }
+
   virtual void writeBool(bool value) noexcept = 0;
   virtual void writeScalar(SkScalar value) noexcept = 0;
   virtual void writeScalarArray(const SkScalar* value, uint32_t count) noexcept = 0;
@@ -45,11 +53,12 @@ class SkWriteBuffer {
   virtual void writePoint(const SkPoint& point) noexcept = 0;
   virtual void writePointArray(const SkPoint* point, uint32_t count) noexcept = 0;
   virtual void writePoint3(const SkPoint3& point) noexcept = 0;
+  virtual void write(const SkM44&) noexcept = 0;
   virtual void writeMatrix(const SkMatrix& matrix) noexcept = 0;
   virtual void writeIRect(const SkIRect& rect) noexcept = 0;
   virtual void writeRect(const SkRect& rect) noexcept = 0;
-  virtual void writeRegion(const SkRegion& region) noexcept = 0;
-  virtual void writePath(const SkPath& path) noexcept = 0;
+  virtual void writeRegion(const SkRegion& region) = 0;
+  virtual void writePath(const SkPath& path) = 0;
   virtual size_t writeStream(SkStream* stream, size_t length) = 0;
   virtual void writeImage(const SkImage*) = 0;
   virtual void writeTypeface(SkTypeface* typeface) = 0;
@@ -104,17 +113,18 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
   void writePoint(const SkPoint& point) noexcept override;
   void writePointArray(const SkPoint* point, uint32_t count) noexcept override;
   void writePoint3(const SkPoint3& point) noexcept override;
+  void write(const SkM44&) noexcept override;
   void writeMatrix(const SkMatrix& matrix) noexcept override;
   void writeIRect(const SkIRect& rect) noexcept override;
   void writeRect(const SkRect& rect) noexcept override;
-  void writeRegion(const SkRegion& region) noexcept override;
-  void writePath(const SkPath& path) noexcept override;
+  void writeRegion(const SkRegion& region) override;
+  void writePath(const SkPath& path) override;
   size_t writeStream(SkStream* stream, size_t length) override;
   void writeImage(const SkImage*) override;
   void writeTypeface(SkTypeface* typeface) override;
   void writePaint(const SkPaint& paint) override;
 
-  bool writeToStream(SkWStream*) const;
+  bool writeToStream(SkWStream*) const noexcept;
   void writeToMemory(void* dst) const noexcept { fWriter.flatten(dst); }
   sk_sp<SkData> snapshotAsData() const { return fWriter.snapshotAsData(); }
 
@@ -129,6 +139,14 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
 
   // Only used if we do not have an fFactorySet
   SkTHashMap<const char*, uint32_t> fFlattenableDict;
+};
+
+enum SkWriteBufferImageFlags {
+  kVersion_bits = 8,
+  kCurrVersion = 0,
+
+  kHasSubsetRect = 1 << 8,
+  kHasMipmap = 1 << 9,
 };
 
 #endif  // SkWriteBuffer_DEFINED

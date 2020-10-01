@@ -24,15 +24,18 @@ struct FieldAccess : public Expression {
     kAnonymousInterfaceBlock_OwnerKind
   };
 
+  static constexpr Kind kExpressionKind = kFieldAccess_Kind;
+
   FieldAccess(
-      std::unique_ptr<Expression> base, int fieldIndex,
-      OwnerKind ownerKind = kDefault_OwnerKind) noexcept
-      : INHERITED(base->fOffset, kFieldAccess_Kind, *base->fType.fields()[fieldIndex].fType),
+      std::unique_ptr<Expression> base, int fieldIndex, OwnerKind ownerKind = kDefault_OwnerKind)
+      : INHERITED(base->fOffset, kExpressionKind, *base->fType.fields()[fieldIndex].fType),
         fBase(std::move(base)),
         fFieldIndex(fieldIndex),
         fOwnerKind(ownerKind) {}
 
-  bool hasProperty(Property property) const override { return fBase->hasProperty(property); }
+  bool hasProperty(Property property) const noexcept override {
+    return fBase->hasProperty(property);
+  }
 
   int nodeCount() const noexcept override { return 1 + fBase->nodeCount(); }
 

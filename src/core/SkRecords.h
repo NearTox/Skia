@@ -94,9 +94,9 @@ enum Type { SK_RECORD_TYPES(ENUM) };
 template <typename T>
 class Optional {
  public:
-  Optional() : fPtr(nullptr) {}
-  Optional(T* ptr) : fPtr(ptr) {}
-  Optional(Optional&& o) : fPtr(o.fPtr) { o.fPtr = nullptr; }
+  constexpr Optional() noexcept : fPtr(nullptr) {}
+  constexpr Optional(T* ptr) noexcept : fPtr(ptr) {}
+  constexpr Optional(Optional&& o) noexcept : fPtr(o.fPtr) { o.fPtr = nullptr; }
   ~Optional() {
     if (fPtr) fPtr->~T();
   }
@@ -113,7 +113,7 @@ template <typename T>
 class PODArray {
  public:
   PODArray() noexcept = default;
-  PODArray(T* ptr) : fPtr(ptr) {}
+  PODArray(T* ptr) noexcept : fPtr(ptr) {}
   // Default copy and assign.
 
   ACT_AS_PTR(fPtr)
@@ -176,10 +176,10 @@ RECORD(Scale, 0, SkScalar sx; SkScalar sy);
 
 struct ClipOpAndAA {
   ClipOpAndAA() noexcept = default;
-  ClipOpAndAA(SkClipOp op, bool aa) : fOp(static_cast<unsigned>(op)), fAA(aa) {}
+  ClipOpAndAA(SkClipOp op, bool aa) noexcept : fOp(static_cast<unsigned>(op)), fAA(aa) {}
 
-  SkClipOp op() const { return static_cast<SkClipOp>(fOp); }
-  bool aa() const { return fAA != 0; }
+  SkClipOp op() const noexcept { return static_cast<SkClipOp>(fOp); }
+  bool aa() const noexcept { return fAA != 0; }
 
  private:
   unsigned fOp : 31;  // This really only needs to be 3, but there's no win today to do so.

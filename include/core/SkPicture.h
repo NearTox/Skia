@@ -193,11 +193,13 @@ class SK_API SkPicture : public SkRefCnt {
       recorded: some calls may be recorded as more than one operation, other
       calls may be optimized away.
 
+      @param nested  if true, include the op-counts of nested pictures as well, else
+                     just return count the ops in the top-level picture.
       @return  approximate operation count
 
       example: https://fiddle.skia.org/c/@Picture_approximateOpCount
   */
-  virtual int approximateOpCount() const noexcept = 0;
+  virtual int approximateOpCount(bool nested = false) const = 0;
 
   /** Returns the approximate byte size of SkPicture. Does not include large objects
       referenced by SkPicture.
@@ -226,7 +228,7 @@ class SK_API SkPicture : public SkRefCnt {
       SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix = nullptr) const;
 
  private:
-  // Subclass whitelist.
+  // Allowed subclasses.
   SkPicture() noexcept;
   friend class SkBigPicture;
   friend class SkEmptyPicture;
@@ -249,9 +251,9 @@ class SK_API SkPicture : public SkRefCnt {
    intended for stand alone tools.
    If false is returned, SkPictInfo is unmodified.
    */
-  static bool StreamIsSKP(SkStream*, struct SkPictInfo*) noexcept;
-  static bool BufferIsSKP(class SkReadBuffer*, struct SkPictInfo*) noexcept;
-  friend bool SkPicture_StreamIsSKP(SkStream*, struct SkPictInfo*) noexcept;
+  static bool StreamIsSKP(SkStream*, struct SkPictInfo*);
+  static bool BufferIsSKP(class SkReadBuffer*, struct SkPictInfo*);
+  friend bool SkPicture_StreamIsSKP(SkStream*, struct SkPictInfo*);
 
   // Returns NULL if this is not an SkBigPicture.
   virtual const class SkBigPicture* asSkBigPicture() const noexcept { return nullptr; }

@@ -220,7 +220,6 @@ class SkAutoHDC {
   HFONT fFont;
   HFONT fSavefont;
 };
-#  define SkAutoHDC(...) SK_REQUIRE_LOCAL_VAR(SkAutoHDC)
 
 class LogFontTypeface : public SkTypeface {
  public:
@@ -328,7 +327,7 @@ static bool FindByLogFont(SkTypeface* face, void* ctx) {
 }
 
 /**
- *  This guy is public. It first searches the cache, and if a match is not found,
+ *  This is public. It first searches the cache, and if a match is not found,
  *  it creates a new face.
  */
 SkTypeface* SkCreateTypefaceFromLOGFONT(const LOGFONT& origLF) {
@@ -354,7 +353,7 @@ sk_sp<SkTypeface> SkCreateFontMemResourceTypefaceFromLOGFONT(
 }
 
 /**
- *  This guy is public
+ *  This is public
  */
 void SkLOGFONTFromTypeface(const SkTypeface* face, LOGFONT* lf) {
   if (nullptr == face) {
@@ -2234,6 +2233,11 @@ class SkFontMgrGDI : public SkFontMgr {
       return nullptr;
     }
     return create_from_stream(std::move(stream));
+  }
+
+  sk_sp<SkTypeface> onMakeFromStreamArgs(
+      std::unique_ptr<SkStreamAsset> stream, const SkFontArguments& args) const override {
+    return this->makeFromStream(std::move(stream), args.getCollectionIndex());
   }
 
   sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData> data, int ttcIndex) const override {

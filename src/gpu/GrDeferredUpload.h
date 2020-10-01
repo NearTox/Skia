@@ -80,7 +80,7 @@ class GrDeferredUploadToken {
 
  private:
   GrDeferredUploadToken() = delete;
-  constexpr explicit GrDeferredUploadToken(uint64_t sequenceNumber) noexcept
+  explicit constexpr GrDeferredUploadToken(uint64_t sequenceNumber) noexcept
       : fSequenceNumber(sequenceNumber) {}
   uint64_t fSequenceNumber;
 };

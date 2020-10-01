@@ -22,8 +22,7 @@
 #include "src/core/SkScan.h"
 
 static void fill_rect(
-    const SkMatrix& ctm, const SkRasterClip& rc, const SkRect& r, SkBlitter* blitter,
-    SkPath* scratchPath) {
+    const SkMatrix& ctm, const SkRasterClip& rc, const SkRect& r, SkBlitter* blitter) {
   if (ctm.rectStaysRect()) {
     SkRect dr;
     ctm.mapRect(&dr, r);
@@ -33,13 +32,14 @@ static void fill_rect(
     r.toQuad(pts);
     ctm.mapPoints(pts, pts, 4);
 
-    scratchPath->rewind();
-    scratchPath->addPoly(pts, 4, true);
-    SkScan::FillPath(*scratchPath, rc, blitter);
+    SkRect bounds;
+    bounds.setBounds(pts, 4);
+
+    SkScan::FillPath(SkPathView_quad(pts, bounds), rc, blitter);
   }
 }
 
-static void load_color(SkRasterPipeline_UniformColorCtx* ctx, const float rgba[]) noexcept {
+static void load_color(SkRasterPipeline_UniformColorCtx* ctx, const float rgba[]) {
   // only need one of these. can I query the pipeline to know if its lowp or highp?
   ctx->rgba[0] = SkScalarRoundToInt(rgba[0] * 255);
   ctx->r = rgba[0];
@@ -108,8 +108,6 @@ void SkDraw::drawAtlas(
 
   if (auto blitter =
           SkCreateRasterPipelineBlitter(fDst, p, pipeline, isOpaque, &alloc, fRC->clipShader())) {
-    SkPath scratchPath;
-
     for (int i = 0; i < count; ++i) {
       if (colors) {
         SkColor4f c4 = SkColor4f::FromColor(colors[i]);
@@ -123,7 +121,7 @@ void SkDraw::drawAtlas(
       mx.postConcat(fMatrixProvider->localToDevice());
 
       if (updator->update(mx, nullptr)) {
-        fill_rect(mx, *fRC, textures[i], blitter, &scratchPath);
+        fill_rect(mx, *fRC, textures[i], blitter);
       }
     }
   }

@@ -21,7 +21,7 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
  public:
   const char* name() const noexcept final { return "SW"; }
 
-  GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
+  GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching) noexcept
       : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
   static bool GetShapeAndClipBounds(
@@ -48,7 +48,7 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
       const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
       const SkIRect& deviceSpaceRectToDraw);
 
-  StencilSupport onGetStencilSupport(const GrStyledShape&) const noexcept override {
+  StencilSupport onGetStencilSupport(const GrStyledShape&) const override {
     return GrPathRenderer::kNoSupport_StencilSupport;
   }
 

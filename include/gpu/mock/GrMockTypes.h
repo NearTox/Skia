@@ -76,7 +76,7 @@ struct GrMockRenderTargetInfo {
  * GrMockOptions is used.
  */
 struct GrMockOptions {
-  GrMockOptions() {
+  GrMockOptions() noexcept {
     using Renderability = ConfigOptions::Renderability;
     // By default RGBA_8888 and BGRA_8888 are textureable and renderable and
     // A8 and RGB565 are texturable.
@@ -99,7 +99,7 @@ struct GrMockOptions {
   };
 
   // GrCaps options.
-  bool fMipMapSupport = false;
+  bool fMipmapSupport = false;
   bool fDrawInstancedSupport = false;
   bool fHalfFloatVertexAttributeSupport = false;
   uint32_t fMapBufferFlags = 0;

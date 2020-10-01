@@ -11,7 +11,7 @@
 #include <utility>
 
 template <typename T>
-T pin_unsorted(T value, T limit0, T limit1) noexcept {
+T pin_unsorted(T value, T limit0, T limit1) {
   if (limit1 < limit0) {
     using std::swap;
     swap(limit0, limit1);
@@ -28,7 +28,7 @@ T pin_unsorted(T value, T limit0, T limit1) noexcept {
 }
 
 // return X coordinate of intersection with horizontal line at Y
-static SkScalar sect_with_horizontal(const SkPoint src[2], SkScalar Y) noexcept {
+static SkScalar sect_with_horizontal(const SkPoint src[2], SkScalar Y) {
   SkScalar dy = src[1].fY - src[0].fY;
   if (SkScalarNearlyZero(dy)) {
     return SkScalarAve(src[0].fX, src[1].fX);
@@ -49,7 +49,7 @@ static SkScalar sect_with_horizontal(const SkPoint src[2], SkScalar Y) noexcept 
 }
 
 // return Y coordinate of intersection with vertical line at X
-static SkScalar sect_with_vertical(const SkPoint src[2], SkScalar X) noexcept {
+static SkScalar sect_with_vertical(const SkPoint src[2], SkScalar X) {
   SkScalar dx = src[1].fX - src[0].fX;
   if (SkScalarNearlyZero(dx)) {
     return SkScalarAve(src[0].fY, src[1].fY);
@@ -65,7 +65,7 @@ static SkScalar sect_with_vertical(const SkPoint src[2], SkScalar X) noexcept {
   }
 }
 
-static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) noexcept {
+static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) {
   SkScalar y = sect_with_vertical(src, x);
   // Our caller expects y to be between src[0].fY and src[1].fY (unsorted), but due to the
   // numerics of floats/doubles, we might have computed a value slightly outside of that,
@@ -76,19 +76,18 @@ static SkScalar sect_clamp_with_vertical(const SkPoint src[2], SkScalar x) noexc
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) noexcept {
+static inline bool nestedLT(SkScalar a, SkScalar b, SkScalar dim) {
   return a <= b && (a < b || dim > 0);
 }
 
 // returns true if outer contains inner, even if inner is empty.
 // note: outer.contains(inner) always returns false if inner is empty.
-static inline bool containsNoEmptyCheck(const SkRect& outer, const SkRect& inner) noexcept {
+static inline bool containsNoEmptyCheck(const SkRect& outer, const SkRect& inner) {
   return outer.fLeft <= inner.fLeft && outer.fTop <= inner.fTop && outer.fRight >= inner.fRight &&
          outer.fBottom >= inner.fBottom;
 }
 
-bool SkLineClipper::IntersectLine(
-    const SkPoint src[2], const SkRect& clip, SkPoint dst[2]) noexcept {
+bool SkLineClipper::IntersectLine(const SkPoint src[2], const SkRect& clip, SkPoint dst[2]) {
   SkRect bounds;
 
   bounds.set(src[0], src[1]);
@@ -172,7 +171,7 @@ static bool is_between_unsorted(SkScalar value, SkScalar limit0, SkScalar limit1
 #endif
 
 int SkLineClipper::ClipLine(
-    const SkPoint pts[], const SkRect& clip, SkPoint lines[], bool canCullToTheRight) noexcept {
+    const SkPoint pts[], const SkRect& clip, SkPoint lines[], bool canCullToTheRight) {
   int index0, index1;
 
   if (pts[0].fY < pts[1].fY) {

@@ -293,7 +293,7 @@ DEF_SAMPLE(return new ArcToView;)
 /////////////
 
 class FatStroke : public Sample {
-  bool fClosed, fShowStroke, fShowHidden, fShowSkeleton;
+  bool fClosed, fShowStroke, fShowHidden, fShowSkeleton, fAsCurves = false;
   int fJoinType, fCapType;
   float fWidth = 30;
   SkPaint fPtsPaint, fHiddenPaint, fSkeletonPaint, fStrokePaint;
@@ -348,6 +348,7 @@ class FatStroke : public Sample {
       case '4': this->toggle3(fJoinType); return true;
       case '5': this->toggle3(fCapType); return true;
       case '6': this->toggle(fClosed); return true;
+      case 'c': this->toggle(fAsCurves); return true;
       case '-': fWidth -= 5; return true;
       case '=': fWidth += 5; return true;
       default: break;
@@ -357,8 +358,15 @@ class FatStroke : public Sample {
 
   void makePath(SkPath* path) {
     path->moveTo(fPts[0]);
-    for (int i = 1; i < N; ++i) {
-      path->lineTo(fPts[i]);
+    if (fAsCurves) {
+      for (int i = 1; i < N - 2; ++i) {
+        path->quadTo(fPts[i], (fPts[i + 1] + fPts[i]) * 0.5f);
+      }
+      path->quadTo(fPts[N - 2], fPts[N - 1]);
+    } else {
+      for (int i = 1; i < N; ++i) {
+        path->lineTo(fPts[i]);
+      }
     }
     if (fClosed) {
       path->close();

@@ -21,19 +21,19 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkStream::readS8(int8_t* i) noexcept { return this->read(i, sizeof(*i)) == sizeof(*i); }
+bool SkStream::readS8(int8_t* i) { return this->read(i, sizeof(*i)) == sizeof(*i); }
 
-bool SkStream::readS16(int16_t* i) noexcept { return this->read(i, sizeof(*i)) == sizeof(*i); }
+bool SkStream::readS16(int16_t* i) { return this->read(i, sizeof(*i)) == sizeof(*i); }
 
-bool SkStream::readS32(int32_t* i) noexcept { return this->read(i, sizeof(*i)) == sizeof(*i); }
+bool SkStream::readS32(int32_t* i) { return this->read(i, sizeof(*i)) == sizeof(*i); }
 
-bool SkStream::readScalar(SkScalar* i) noexcept { return this->read(i, sizeof(*i)) == sizeof(*i); }
+bool SkStream::readScalar(SkScalar* i) { return this->read(i, sizeof(*i)) == sizeof(*i); }
 
 #define SK_MAX_BYTE_FOR_U8 0xFD
 #define SK_BYTE_SENTINEL_FOR_U16 0xFE
 #define SK_BYTE_SENTINEL_FOR_U32 0xFF
 
-bool SkStream::readPackedUInt(size_t* i) noexcept {
+bool SkStream::readPackedUInt(size_t* i) {
   uint8_t byte;
   if (!this->read(&byte, 1)) {
     return false;
@@ -63,13 +63,13 @@ SkWStream::~SkWStream() = default;
 void SkWStream::flush() {}
 
 bool SkWStream::writeDecAsText(int32_t dec) {
-  char buffer[SkStrAppendS32_MaxSize];
+  char buffer[kSkStrAppendS32_MaxSize];
   char* stop = SkStrAppendS32(buffer, dec);
   return this->write(buffer, stop - buffer);
 }
 
 bool SkWStream::writeBigDecAsText(int64_t dec, int minDigits) {
-  char buffer[SkStrAppendU64_MaxSize];
+  char buffer[kSkStrAppendU64_MaxSize];
   char* stop = SkStrAppendU64(buffer, dec, minDigits);
   return this->write(buffer, stop - buffer);
 }
@@ -81,7 +81,7 @@ bool SkWStream::writeHexAsText(uint32_t hex, int digits) {
 }
 
 bool SkWStream::writeScalarAsText(SkScalar value) {
-  char buffer[SkStrAppendScalar_MaxSize];
+  char buffer[kSkStrAppendScalar_MaxSize];
   char* stop = SkStrAppendScalar(buffer, value);
   return this->write(buffer, stop - buffer);
 }
@@ -117,7 +117,7 @@ bool SkWStream::writePackedUInt(size_t value) noexcept {
   return this->write(data, len);
 }
 
-bool SkWStream::writeStream(SkStream* stream, size_t length) noexcept {
+bool SkWStream::writeStream(SkStream* stream, size_t length) {
   char scratch[1024];
   constexpr size_t MAX = sizeof(scratch);
 
@@ -163,7 +163,7 @@ void SkFILEStream::close() noexcept {
   fOffset = 0;
 }
 
-size_t SkFILEStream::read(void* buffer, size_t size) noexcept {
+size_t SkFILEStream::read(void* buffer, size_t size) {
   if (size > fSize - fOffset) {
     size = fSize - fOffset;
   }
@@ -178,7 +178,7 @@ size_t SkFILEStream::read(void* buffer, size_t size) noexcept {
   return bytesRead;
 }
 
-bool SkFILEStream::isAtEnd() const noexcept {
+bool SkFILEStream::isAtEnd() const {
   if (fOffset == fSize) {
     return true;
   }
@@ -199,12 +199,12 @@ size_t SkFILEStream::getPosition() const noexcept {
   return fOffset - fOriginalOffset;
 }
 
-bool SkFILEStream::seek(size_t position) noexcept {
+bool SkFILEStream::seek(size_t position) {
   fOffset = std::min(SkSafeMath::Add(position, fOriginalOffset), fSize);
   return true;
 }
 
-bool SkFILEStream::move(long offset) noexcept {
+bool SkFILEStream::move(long offset) {
   if (offset < 0) {
     if (offset == std::numeric_limits<long>::min() || !SkTFitsIn<size_t>(-offset) ||
         (size_t)(-offset) >= this->getPosition()) {
@@ -309,7 +309,7 @@ size_t SkMemoryStream::read(void* buffer, size_t size) noexcept {
   return size;
 }
 
-size_t SkMemoryStream::peek(void* buffer, size_t size) const noexcept {
+size_t SkMemoryStream::peek(void* buffer, size_t size) const {
   SkASSERT(buffer != nullptr);
 
   const size_t currentOffset = fOffset;
@@ -335,7 +335,7 @@ bool SkMemoryStream::seek(size_t position) noexcept {
   return true;
 }
 
-bool SkMemoryStream::move(long offset) noexcept { return this->seek(fOffset + offset); }
+bool SkMemoryStream::move(long offset) { return this->seek(fOffset + offset); }
 
 SkMemoryStream* SkMemoryStream::onFork() const {
   std::unique_ptr<SkMemoryStream> that(this->duplicate());
@@ -368,14 +368,15 @@ bool SkFILEWStream::write(const void* buffer, size_t size) noexcept {
   }
 
   if (sk_fwrite(buffer, size, fFILE) != size) {
-    SkDEBUGCODE(SkDebugf("SkFILEWStream failed writing %d bytes\n", size);) sk_fclose(fFILE);
+    SkDEBUGCODE(SkDebugf("SkFILEWStream failed writing %d bytes\n", size));
+    sk_fclose(fFILE);
     fFILE = nullptr;
     return false;
   }
   return true;
 }
 
-void SkFILEWStream::flush() noexcept {
+void SkFILEWStream::flush() {
   if (fFILE) {
     sk_fflush(fFILE);
   }
@@ -536,7 +537,7 @@ void SkDynamicMemoryWStream::prependToAndReset(SkDynamicMemoryWStream* dst) noex
   return;
 }
 
-bool SkDynamicMemoryWStream::read(void* buffer, size_t offset, size_t count) noexcept {
+bool SkDynamicMemoryWStream::read(void* buffer, size_t offset, size_t count) {
   if (offset + count > this->bytesWritten()) {
     return false;  // test does not partially modify
   }
@@ -558,7 +559,7 @@ bool SkDynamicMemoryWStream::read(void* buffer, size_t offset, size_t count) noe
   return false;
 }
 
-void SkDynamicMemoryWStream::copyTo(void* dst) const noexcept {
+void SkDynamicMemoryWStream::copyTo(void* dst) const {
   SkASSERT(dst);
   Block* block = fHead;
   while (block != nullptr) {
@@ -569,7 +570,7 @@ void SkDynamicMemoryWStream::copyTo(void* dst) const noexcept {
   }
 }
 
-bool SkDynamicMemoryWStream::writeToStream(SkWStream* dst) const noexcept {
+bool SkDynamicMemoryWStream::writeToStream(SkWStream* dst) const {
   SkASSERT(dst);
   for (Block* block = fHead; block != nullptr; block = block->fNext) {
     if (!dst->write(block->start(), block->written())) {
@@ -579,7 +580,7 @@ bool SkDynamicMemoryWStream::writeToStream(SkWStream* dst) const noexcept {
   return true;
 }
 
-void SkDynamicMemoryWStream::padToAlign4() noexcept {
+void SkDynamicMemoryWStream::padToAlign4() {
   // The contract is to write zeros until the entire stream has written a multiple of 4 bytes.
   // Our Blocks are guaranteed always be (a) full (except the tail) and (b) a multiple of 4
   // so it is sufficient to just examine the tail (if present).
@@ -594,7 +595,7 @@ void SkDynamicMemoryWStream::padToAlign4() noexcept {
   }
 }
 
-void SkDynamicMemoryWStream::copyToAndReset(void* ptr) noexcept {
+void SkDynamicMemoryWStream::copyToAndReset(void* ptr) {
   if (!ptr) {
     this->reset();
     return;
@@ -615,7 +616,7 @@ void SkDynamicMemoryWStream::copyToAndReset(void* ptr) noexcept {
   fBytesWrittenBeforeTail = 0;
 }
 
-bool SkDynamicMemoryWStream::writeToAndReset(SkWStream* dst) noexcept {
+bool SkDynamicMemoryWStream::writeToAndReset(SkWStream* dst) {
   SkASSERT(dst);
   // By looping through the source and freeing as we copy, we
   // can reduce real memory use with large streams.
@@ -670,7 +671,7 @@ class SkBlockMemoryRefCnt : public SkRefCnt {
  public:
   explicit SkBlockMemoryRefCnt(SkDynamicMemoryWStream::Block* head) noexcept : fHead(head) {}
 
-  virtual ~SkBlockMemoryRefCnt() {
+  ~SkBlockMemoryRefCnt() override {
     SkDynamicMemoryWStream::Block* block = fHead;
     while (block != nullptr) {
       SkDynamicMemoryWStream::Block* next = block->fNext;
@@ -691,7 +692,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
         fOffset(0),
         fCurrentOffset(0) {}
 
-  size_t read(void* buffer, size_t rawCount) noexcept override {
+  size_t read(void* buffer, size_t rawCount) override {
     size_t count = rawCount;
     if (fOffset + count > fSize) {
       count = fSize - fOffset;
@@ -719,7 +720,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
 
   bool isAtEnd() const noexcept override { return fOffset == fSize; }
 
-  size_t peek(void* buff, size_t bytesToPeek) const noexcept override {
+  size_t peek(void* buff, size_t bytesToPeek) const override {
     SkASSERT(buff != nullptr);
 
     bytesToPeek = std::min(bytesToPeek, fSize - fOffset);
@@ -753,7 +754,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
 
   size_t getPosition() const noexcept override { return fOffset; }
 
-  bool seek(size_t position) noexcept override {
+  bool seek(size_t position) override {
     // If possible, skip forward.
     if (position >= fOffset) {
       size_t skipAmount = position - fOffset;
@@ -770,7 +771,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
     return this->rewind() && this->skip(position) == position;
   }
 
-  bool move(long offset) noexcept override { return seek(fOffset + offset); }
+  bool move(long offset) override { return seek(fOffset + offset); }
 
   SkBlockMemoryStream* onFork() const override {
     SkBlockMemoryStream* that = this->onDuplicate();

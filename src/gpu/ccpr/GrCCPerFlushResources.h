@@ -31,7 +31,7 @@ struct GrCCRenderedPathStats {
   int fNumTotalSkVerbs = 0;
   int fNumTotalConicWeights = 0;
 
-  void statPath(const SkPath&);
+  void statPath(const SkPath&) noexcept;
 };
 
 /**
@@ -53,7 +53,7 @@ struct GrCCPerFlushResourceSpecs {
   GrCCRenderedPathStats fRenderedPathStats[2];
   GrCCAtlas::Specs fRenderedAtlasSpecs;
 
-  bool isEmpty() const {
+  bool isEmpty() const noexcept {
     return 0 == fNumCachedPaths + fNumCopiedPaths[kFillIdx] + fNumCopiedPaths[kStrokeIdx] +
                     fNumRenderedPaths[kFillIdx] + fNumRenderedPaths[kStrokeIdx] + fNumClipPaths;
   }
@@ -71,9 +71,9 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   GrCCPerFlushResources(
       GrOnFlushResourceProvider*, GrCCAtlas::CoverageType, const GrCCPerFlushResourceSpecs&);
 
-  bool isMapped() const { return fPathInstanceBuffer.isMapped(); }
+  bool isMapped() const noexcept { return fPathInstanceBuffer.isMapped(); }
 
-  GrCCAtlas::CoverageType renderedPathCoverageType() const {
+  GrCCAtlas::CoverageType renderedPathCoverageType() const noexcept {
     return fRenderedAtlasStack.coverageType();
   }
 
@@ -96,7 +96,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
 
   // Returns the index in instanceBuffer() of the next instance that will be added by
   // appendDrawPathInstance().
-  int nextPathInstanceIdx() const { return fNextPathInstanceIdx; }
+  int nextPathInstanceIdx() const noexcept { return fNextPathInstanceIdx; }
 
   // Appends an instance to instanceBuffer() that will draw a path to the destination render
   // target. The caller is responsible to call set() on the returned instance, to keep track of
@@ -111,27 +111,27 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   bool finalize(GrOnFlushResourceProvider*);
 
   // Accessors used by draw calls, once the resources have been finalized.
-  const GrCCFiller& filler() const {
+  const GrCCFiller& filler() const noexcept {
     SkASSERT(!this->isMapped());
     return fFiller;
   }
-  const GrCCStroker& stroker() const {
+  const GrCCStroker& stroker() const noexcept {
     SkASSERT(!this->isMapped());
     return fStroker;
   }
-  const GrGpuBuffer* indexBuffer() const {
+  sk_sp<const GrGpuBuffer> indexBuffer() const {
     SkASSERT(!this->isMapped());
-    return fIndexBuffer.get();
+    return fIndexBuffer;
   }
-  const GrGpuBuffer* instanceBuffer() const {
+  sk_sp<const GrGpuBuffer> instanceBuffer() const noexcept {
     SkASSERT(!this->isMapped());
     return fPathInstanceBuffer.gpuBuffer();
   }
-  const GrGpuBuffer* vertexBuffer() const {
+  sk_sp<const GrGpuBuffer> vertexBuffer() const {
     SkASSERT(!this->isMapped());
-    return fVertexBuffer.get();
+    return fVertexBuffer;
   }
-  const GrGpuBuffer* stencilResolveBuffer() const {
+  sk_sp<const GrGpuBuffer> stencilResolveBuffer() const noexcept {
     SkASSERT(!this->isMapped());
     return fStencilResolveBuffer.gpuBuffer();
   }
@@ -198,7 +198,7 @@ class GrCCPerFlushResources : public GrNonAtomicRef<GrCCPerFlushResources> {
   const GrTexture* testingOnly_frontRenderedAtlasTexture() const;
 };
 
-inline void GrCCRenderedPathStats::statPath(const SkPath& path) {
+inline void GrCCRenderedPathStats::statPath(const SkPath& path) noexcept {
   fMaxPointsPerPath = std::max(fMaxPointsPerPath, path.countPoints());
   fNumTotalSkPoints += path.countPoints();
   fNumTotalSkVerbs += path.countVerbs();

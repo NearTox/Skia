@@ -12,13 +12,13 @@
 
 namespace sksg {
 
-Plane::Plane() noexcept = default;
+Plane::Plane() = default;
 
-void Plane::onClip(SkCanvas*, bool) const noexcept {}
+void Plane::onClip(SkCanvas*, bool) const {}
 
 void Plane::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawPaint(paint); }
 
-bool Plane::onContains(const SkPoint&) const noexcept { return true; }
+bool Plane::onContains(const SkPoint&) const { return true; }
 
 SkRect Plane::onRevalidate(InvalidationController*, const SkMatrix&) {
   SkASSERT(this->hasInval());
@@ -26,7 +26,7 @@ SkRect Plane::onRevalidate(InvalidationController*, const SkMatrix&) {
   return SkRect::MakeLTRB(SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax);
 }
 
-SkPath Plane::onAsPath() const noexcept {
+SkPath Plane::onAsPath() const {
   SkPath path;
   path.setFillType(SkPathFillType::kInverseWinding);
 

@@ -9,7 +9,7 @@
 
 #include "src/gpu/d3d/GrD3DPipelineStateBuilder.h"
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "include/gpu/d3d/GrD3DTypes.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrAutoLocaleSetter.h"
@@ -21,6 +21,7 @@
 #include "src/gpu/d3d/GrD3DGpu.h"
 #include "src/gpu/d3d/GrD3DRenderTarget.h"
 #include "src/gpu/d3d/GrD3DRootSignature.h"
+#include "src/gpu/d3d/GrD3DUtil.h"
 #include "src/sksl/SkSLCompiler.h"
 
 #include <d3dcompiler.h>
@@ -388,7 +389,7 @@ gr_cp<ID3D12PipelineState> create_pipeline_state(
     GrD3DGpu* gpu, const GrProgramInfo& programInfo, const sk_sp<GrD3DRootSignature>& rootSig,
     gr_cp<ID3DBlob> vertexShader, gr_cp<ID3DBlob> geometryShader, gr_cp<ID3DBlob> pixelShader,
     DXGI_FORMAT renderTargetFormat, DXGI_FORMAT depthStencilFormat,
-    unsigned int sampleQualityLevel) {
+    unsigned int sampleQualityPattern) {
   D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 
   psoDesc.pRootSignature = rootSig->rootSignature();
@@ -432,7 +433,7 @@ gr_cp<ID3D12PipelineState> create_pipeline_state(
   psoDesc.DSVFormat = depthStencilFormat;
 
   unsigned int numRasterSamples = programInfo.numRasterSamples();
-  psoDesc.SampleDesc = {numRasterSamples, sampleQualityLevel};
+  psoDesc.SampleDesc = {numRasterSamples, sampleQualityPattern};
 
   // Only used for multi-adapter systems.
   psoDesc.NodeMask = 0;
@@ -441,9 +442,8 @@ gr_cp<ID3D12PipelineState> create_pipeline_state(
   psoDesc.Flags = D3D12_PIPELINE_STATE_FLAG_NONE;
 
   gr_cp<ID3D12PipelineState> pipelineState;
-  SkDEBUGCODE(HRESULT hr =) gpu->device()->CreateGraphicsPipelineState(
-      &psoDesc, IID_PPV_ARGS(&pipelineState));
-  SkASSERT(SUCCEEDED(hr));
+  GR_D3D_CALL_ERRCHECK(
+      gpu->device()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipelineState)));
 
   return pipelineState;
 }
@@ -557,11 +557,11 @@ sk_sp<GrD3DPipelineState> GrD3DPipelineStateBuilder::finalize() {
   gr_cp<ID3D12PipelineState> pipelineState = create_pipeline_state(
       fGpu, fProgramInfo, rootSig, std::move(shaders[kVertex_GrShaderType]),
       std::move(shaders[kGeometry_GrShaderType]), std::move(shaders[kFragment_GrShaderType]),
-      rt->dxgiFormat(), rt->stencilDxgiFormat(), rt->sampleQualityLevel());
+      rt->dxgiFormat(), rt->stencilDxgiFormat(), rt->sampleQualityPattern());
 
   return sk_sp<GrD3DPipelineState>(new GrD3DPipelineState(
       std::move(pipelineState), std::move(rootSig), fUniformHandles, fUniformHandler.fUniforms,
       fUniformHandler.fCurrentUBOOffset, fUniformHandler.fSamplers.count(),
       std::move(fGeometryProcessor), std::move(fXferProcessor), std::move(fFragmentProcessors),
-      fFragmentProcessorCnt, primProc.vertexStride(), primProc.instanceStride()));
+      primProc.vertexStride(), primProc.instanceStride()));
 }

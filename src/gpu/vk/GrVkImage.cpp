@@ -191,7 +191,7 @@ void GrVkImage::setImageLayoutAndQueueIndex(
       fInfo.fImage,                              // image
       {aspectFlags, 0, fInfo.fLevelCount, 0, 1}  // subresourceRange
   };
-
+  SkASSERT(srcAccessMask == imageMemoryBarrier.srcAccessMask);
   gpu->addImageMemoryBarrier(
       this->resource(), srcStageMask, dstStageMask, byRegion, &imageMemoryBarrier);
 
@@ -239,7 +239,7 @@ bool GrVkImage::InitImageInfo(GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImag
       imageDesc.fUsageFlags,                     // VkImageUsageFlags
       VK_SHARING_MODE_EXCLUSIVE,                 // VkSharingMode
       0,                                         // queueFamilyCount
-      0,                                         // pQueueFamilyIndices
+      nullptr,                                   // pQueueFamilyIndices
       initialLayout                              // initialLayout
   };
 

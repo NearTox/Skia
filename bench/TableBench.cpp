@@ -29,9 +29,9 @@ class TableBench : public Benchmark {
   static const int kNumCols = 32;
 
  protected:
-  virtual const char* onGetName() { return "tablebench"; }
+  const char* onGetName() override { return "tablebench"; }
 
-  virtual void onDraw(int loops, SkCanvas* canvas) {
+  void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint cellPaint;
     cellPaint.setColor(0xFFFFFFF);
 

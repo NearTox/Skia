@@ -6,7 +6,7 @@
  */
 
 #include "include/core/SkTraceMemoryDump.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrGpuResource.h"
@@ -93,14 +93,14 @@ void GrGpuResource::dumpMemoryStatisticsPriv(
   this->setMemoryBacking(traceMemoryDump, resourceName);
 }
 
-bool GrGpuResource::isPurgeable() const noexcept {
+bool GrGpuResource::isPurgeable() const {
   // Resources in the kUnbudgetedCacheable state are never purgeable when they have a unique
   // key. The key must be removed/invalidated to make them purgeable.
   return !this->hasRef() &&
          !(fBudgetedType == GrBudgetedType::kUnbudgetedCacheable && fUniqueKey.isValid());
 }
 
-bool GrGpuResource::hasRef() const noexcept { return this->internalHasRef(); }
+bool GrGpuResource::hasRef() const { return this->internalHasRef(); }
 
 SkString GrGpuResource::getResourceName() const {
   // Dump resource as "skia/gpu_resources/resource_#".
@@ -109,7 +109,7 @@ SkString GrGpuResource::getResourceName() const {
   return resourceName;
 }
 
-const GrContext* GrGpuResource::getContext() const noexcept {
+const GrDirectContext* GrGpuResource::getContext() const noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -117,7 +117,7 @@ const GrContext* GrGpuResource::getContext() const noexcept {
   }
 }
 
-GrContext* GrGpuResource::getContext() noexcept {
+GrDirectContext* GrGpuResource::getContext() noexcept {
   if (fGpu) {
     return fGpu->getContext();
   } else {

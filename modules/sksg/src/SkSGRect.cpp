@@ -13,7 +13,7 @@
 
 namespace sksg {
 
-Rect::Rect(const SkRect& rect) noexcept : fRect(rect) {}
+Rect::Rect(const SkRect& rect) : fRect(rect) {}
 
 void Rect::onClip(SkCanvas* canvas, bool antiAlias) const {
   canvas->clipRect(fRect, SkClipOp::kIntersect, antiAlias);
@@ -21,21 +21,21 @@ void Rect::onClip(SkCanvas* canvas, bool antiAlias) const {
 
 void Rect::onDraw(SkCanvas* canvas, const SkPaint& paint) const { canvas->drawRect(fRect, paint); }
 
-bool Rect::onContains(const SkPoint& p) const noexcept { return fRect.contains(p.x(), p.y()); }
+bool Rect::onContains(const SkPoint& p) const { return fRect.contains(p.x(), p.y()); }
 
-SkRect Rect::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
+SkRect Rect::onRevalidate(InvalidationController*, const SkMatrix&) {
   SkASSERT(this->hasInval());
 
   return fRect;
 }
 
-SkPath Rect::onAsPath() const noexcept {
+SkPath Rect::onAsPath() const {
   SkPath path;
   path.addRect(fRect, this->getDirection(), this->getInitialPointIndex());
   return path;
 }
 
-RRect::RRect(const SkRRect& rr) noexcept : fRRect(rr) {}
+RRect::RRect(const SkRRect& rr) : fRRect(rr) {}
 
 void RRect::onClip(SkCanvas* canvas, bool antiAlias) const {
   canvas->clipRRect(fRRect, SkClipOp::kIntersect, antiAlias);
@@ -45,7 +45,7 @@ void RRect::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawRRect(fRRect, paint);
 }
 
-bool RRect::onContains(const SkPoint& p) const noexcept {
+bool RRect::onContains(const SkPoint& p) const {
   if (!fRRect.rect().contains(p.x(), p.y())) {
     return false;
   }
@@ -60,13 +60,13 @@ bool RRect::onContains(const SkPoint& p) const noexcept {
       p.y() + SK_ScalarNearlyZero));
 }
 
-SkRect RRect::onRevalidate(InvalidationController*, const SkMatrix&) noexcept {
+SkRect RRect::onRevalidate(InvalidationController*, const SkMatrix&) {
   SkASSERT(this->hasInval());
 
   return fRRect.getBounds();
 }
 
-SkPath RRect::onAsPath() const noexcept {
+SkPath RRect::onAsPath() const {
   SkPath path;
   path.addRRect(fRRect, this->getDirection(), this->getInitialPointIndex());
   return path;

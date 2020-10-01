@@ -85,7 +85,7 @@ class GrProcessorAnalysisColor {
 enum class GrProcessorAnalysisCoverage { kNone, kSingleChannel, kLCD };
 
 /**
- * GrColorFragmentProcessorAnalysis gathers invariant data from a set of color fragment processor.
+ * GrColorFragmentProcessorAnalysis gathers invariant data from a set of color fragment processors.
  * It is used to recognize optimizations that can simplify the generated shader or make blending
  * more effecient.
  */

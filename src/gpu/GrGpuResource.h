@@ -12,7 +12,6 @@
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkNoncopyable.h"
 
-class GrContext;
 class GrGpu;
 class GrResourceCache;
 class SkTraceMemoryDump;
@@ -66,7 +65,7 @@ class GrIORef : public SkNoncopyable {
 
   constexpr GrIORef() noexcept : fRefCnt(1) {}
 
-  bool internalHasRef() const noexcept { return SkToBool(this->getRefCnt()); }
+  bool internalHasRef() const { return SkToBool(this->getRefCnt()); }
 
   // Privileged method that allows going from ref count = 0 to ref count = 1.
   void addInitialRef() const noexcept {
@@ -106,8 +105,8 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    * they no longer have an owning context. Destroying a GrContext
    * automatically releases all its resources.
    */
-  const GrContext* getContext() const noexcept;
-  GrContext* getContext() noexcept;
+  const GrDirectContext* getContext() const noexcept;
+  GrDirectContext* getContext() noexcept;
 
   /**
    * Retrieves the amount of GPU memory used by this resource in bytes. It is
@@ -116,7 +115,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    *
    * @return the amount of GPU memory used in bytes
    */
-  size_t gpuMemorySize() const noexcept {
+  size_t gpuMemorySize() const {
     if (kInvalidGpuMemorySize == fGpuMemorySize) {
       fGpuMemorySize = this->onGpuMemorySize();
       SkASSERT(kInvalidGpuMemorySize != fGpuMemorySize);
@@ -130,13 +129,13 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
 
     constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
-    uint32_t asUInt() const noexcept { return fID; }
+    constexpr uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
+    constexpr bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    constexpr bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const noexcept { return fID == SK_InvalidUniqueID; }
+    constexpr void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    constexpr bool isInvalid() const noexcept { return fID == SK_InvalidUniqueID; }
 
    protected:
     uint32_t fID = SK_InvalidUniqueID;
@@ -158,7 +157,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    */
   class CacheAccess;
   inline CacheAccess cacheAccess() noexcept;
-  inline const CacheAccess cacheAccess() const noexcept;
+  inline const CacheAccess cacheAccess() const noexcept;  // NOLINT(readability-const-return-type)
 
   /**
    * Internal-only helper class used for manipulations of the resource by GrSurfaceProxy.
@@ -171,7 +170,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    */
   class ResourcePriv;
   inline ResourcePriv resourcePriv() noexcept;
-  inline const ResourcePriv resourcePriv() const noexcept;
+  inline const ResourcePriv resourcePriv() const noexcept;  // NOLINT(readability-const-return-type)
 
   /**
    * Dumps memory usage information for this GrGpuResource to traceMemoryDump.
@@ -187,7 +186,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    *
    * The value returned is expected to be long lived and will not be copied by the caller.
    */
-  virtual const char* getResourceType() const = 0;
+  virtual const char* getResourceType() const noexcept = 0;
 
   static uint32_t CreateUniqueID() noexcept;
 
@@ -233,8 +232,8 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
       size_t size) const;
 
  private:
-  bool isPurgeable() const noexcept;
-  bool hasRef() const noexcept;
+  bool isPurgeable() const;
+  bool hasRef() const;
 
   /**
    * Called by the registerWithCache if the resource is available to be used as scratch.
@@ -255,7 +254,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    */
   void release();
 
-  virtual size_t onGpuMemorySize() const noexcept = 0;
+  virtual size_t onGpuMemorySize() const = 0;
 
   /**
    * Called by GrIORef when a resource is about to lose its last ref

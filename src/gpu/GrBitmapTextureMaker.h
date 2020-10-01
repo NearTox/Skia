@@ -26,7 +26,7 @@ class GrBitmapTextureMaker final : public GrTextureMaker {
  private:
   GrBitmapTextureMaker(GrRecordingContext*, const SkBitmap&, GrImageTexGenPolicy, SkBackingFit);
 
-  GrSurfaceProxyView refOriginalTextureProxyView(GrMipMapped) override;
+  GrSurfaceProxyView refOriginalTextureProxyView(GrMipmapped) override;
 
   const SkBitmap fBitmap;
   const SkBackingFit fFit;

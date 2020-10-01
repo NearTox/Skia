@@ -7,13 +7,14 @@
 
 #include "include/private/SkImageInfoPriv.h"
 #include "include/private/SkNx.h"
+#include "include/private/SkTemplates.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include <algorithm>
 
-SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) noexcept : fAlloc(alloc) { this->reset(); }
-void SkRasterPipeline::reset() noexcept {
+SkRasterPipeline::SkRasterPipeline(SkArenaAlloc* alloc) : fAlloc(alloc) { this->reset(); }
+void SkRasterPipeline::reset() {
   fStages = nullptr;
   fNumStages = 0;
   fSlotsNeeded = 1;  // We always need one extra slot for just_return().

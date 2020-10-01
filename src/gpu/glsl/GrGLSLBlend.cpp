@@ -47,7 +47,7 @@ const char* BlendFuncName(SkBlendMode mode) {
 }
 
 void AppendMode(
-    GrGLSLFragmentBuilder* fsBuilder, const char* srcColor, const char* dstColor,
+    GrGLSLShaderBuilder* fsBuilder, const char* srcColor, const char* dstColor,
     const char* outColor, SkBlendMode mode) {
   fsBuilder->codeAppendf("%s = %s(%s, %s);", outColor, BlendFuncName(mode), srcColor, dstColor);
 }

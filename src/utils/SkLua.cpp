@@ -1256,7 +1256,7 @@ static SkString segment_masks_to_str(uint32_t segmentMasks) {
   if (SkPath::kLine_SegmentMask & segmentMasks) {
     result.append("line");
     first = false;
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kLine_SegmentMask;)
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kLine_SegmentMask);
   }
   if (SkPath::kQuad_SegmentMask & segmentMasks) {
     if (!first) {
@@ -1264,7 +1264,7 @@ static SkString segment_masks_to_str(uint32_t segmentMasks) {
     }
     result.append("quad");
     first = false;
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kQuad_SegmentMask;)
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kQuad_SegmentMask);
   }
   if (SkPath::kConic_SegmentMask & segmentMasks) {
     if (!first) {
@@ -1272,14 +1272,14 @@ static SkString segment_masks_to_str(uint32_t segmentMasks) {
     }
     result.append("conic");
     first = false;
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kConic_SegmentMask;)
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kConic_SegmentMask);
   }
   if (SkPath::kCubic_SegmentMask & segmentMasks) {
     if (!first) {
       result.append(" ");
     }
     result.append("cubic");
-    SkDEBUGCODE(segmentMasks &= ~SkPath::kCubic_SegmentMask;)
+    SkDEBUGCODE(segmentMasks &= ~SkPath::kCubic_SegmentMask);
   }
   SkASSERT(0 == segmentMasks);
   return result;

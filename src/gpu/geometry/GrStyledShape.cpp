@@ -11,7 +11,7 @@
 
 #include <utility>
 
-GrStyledShape& GrStyledShape::operator=(const GrStyledShape& that) noexcept {
+GrStyledShape& GrStyledShape::operator=(const GrStyledShape& that) {
   fShape = that.fShape;
   fStyle = that.fStyle;
   fGenID = that.fGenID;
@@ -21,15 +21,14 @@ GrStyledShape& GrStyledShape::operator=(const GrStyledShape& that) noexcept {
   sk_careful_memcpy(
       fInheritedKey.get(), that.fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
   if (that.fInheritedPathForListeners.isValid()) {
-    fInheritedPathForListeners.set(*that.fInheritedPathForListeners.get());
+    fInheritedPathForListeners.set(*that.fInheritedPathForListeners);
   } else {
     fInheritedPathForListeners.reset();
   }
   return *this;
 }
 
-static constexpr bool is_inverted(
-    bool originalIsInverted, GrStyledShape::FillInversion inversion) noexcept {
+static bool is_inverted(bool originalIsInverted, GrStyledShape::FillInversion inversion) {
   switch (inversion) {
     case GrStyledShape::FillInversion::kPreserve: return originalIsInverted;
     case GrStyledShape::FillInversion::kFlip: return !originalIsInverted;
@@ -49,7 +48,7 @@ GrStyledShape GrStyledShape::MakeFilled(const GrStyledShape& original, FillInver
   GrStyledShape result;
   SkASSERT(result.fStyle.isSimpleFill());
   if (original.fInheritedPathForListeners.isValid()) {
-    result.fInheritedPathForListeners.set(*original.fInheritedPathForListeners.get());
+    result.fInheritedPathForListeners.set(*original.fInheritedPathForListeners);
   }
 
   result.fShape = original.fShape;
@@ -67,7 +66,7 @@ GrStyledShape GrStyledShape::MakeFilled(const GrStyledShape& original, FillInver
     result.fSimplified = true;
   }
 
-  // Sanity check that lines/points were converted to empty by the style change
+  // Verify that lines/points were converted to empty by the style change
   SkASSERT((!original.fShape.isLine() && !original.fShape.isPoint()) || result.fShape.isEmpty());
 
   // We don't copy the inherited key since it can contain path effect information that we just
@@ -86,7 +85,7 @@ SkRect GrStyledShape::styledBounds() const {
 }
 
 // If the path is small enough to be keyed from its data this returns key length, otherwise -1.
-static int path_key_from_data_size(const SkPath& path) noexcept {
+static int path_key_from_data_size(const SkPath& path) {
   const int verbCnt = path.countVerbs();
   if (verbCnt > GrStyledShape::kMaxKeyFromDataVerbCnt) {
     return -1;
@@ -102,7 +101,7 @@ static int path_key_from_data_size(const SkPath& path) noexcept {
 }
 
 // Writes the path data key into the passed pointer.
-static void write_path_key_from_data(const SkPath& path, uint32_t* origKey) noexcept {
+static void write_path_key_from_data(const SkPath& path, uint32_t* origKey) {
   uint32_t* key = origKey;
   // The check below should take care of negative values casted positive.
   const int verbCnt = path.countVerbs();
@@ -127,7 +126,7 @@ static void write_path_key_from_data(const SkPath& path, uint32_t* origKey) noex
   SkASSERT(key - origKey == path_key_from_data_size(path));
 }
 
-int GrStyledShape::unstyledKeySize() const noexcept {
+int GrStyledShape::unstyledKeySize() const {
   if (fInheritedKey.count()) {
     return fInheritedKey.count();
   }
@@ -177,7 +176,7 @@ void GrStyledShape::writeUnstyledKey(uint32_t* key) const {
   SkASSERT(this->unstyledKeySize());
   SkDEBUGCODE(uint32_t* origKey = key;) if (fInheritedKey.count()) {
     memcpy(key, fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
-    SkDEBUGCODE(key += fInheritedKey.count();)
+    SkDEBUGCODE(key += fInheritedKey.count());
   }
   else {
     // Dir and start are only used for rect and rrect shapes, so are not included in other
@@ -285,7 +284,7 @@ void GrStyledShape::setInheritedKey(
   }
 }
 
-const SkPath* GrStyledShape::originalPathForListeners() const noexcept {
+const SkPath* GrStyledShape::originalPathForListeners() const {
   if (fInheritedPathForListeners.isValid()) {
     return fInheritedPathForListeners.get();
   } else if (fShape.isPath() && !fShape.path().isVolatile()) {
@@ -310,13 +309,13 @@ GrStyledShape GrStyledShape::MakeArc(
   return result;
 }
 
-GrStyledShape::GrStyledShape(const GrStyledShape& that) noexcept
+GrStyledShape::GrStyledShape(const GrStyledShape& that)
     : fShape(that.fShape), fStyle(that.fStyle), fGenID(that.fGenID), fSimplified(that.fSimplified) {
   fInheritedKey.reset(that.fInheritedKey.count());
   sk_careful_memcpy(
       fInheritedKey.get(), that.fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
   if (that.fInheritedPathForListeners.isValid()) {
-    fInheritedPathForListeners.set(*that.fInheritedPathForListeners.get());
+    fInheritedPathForListeners.set(*that.fInheritedPathForListeners);
   }
 }
 
@@ -353,7 +352,7 @@ GrStyledShape::GrStyledShape(const GrStyledShape& parent, GrStyle::Apply apply, 
     if (!parent.fStyle.applyPathEffectToPath(
             &fShape.path(), &strokeRec, *srcForPathEffect, scale)) {
       tmpParent.init(*srcForPathEffect, GrStyle(strokeRec, nullptr));
-      *this = tmpParent.get()->applyStyle(apply, scale);
+      *this = tmpParent->applyStyle(apply, scale);
       return;
     }
     // A path effect has access to change the res scale but we aren't expecting it to and it
@@ -368,17 +367,17 @@ GrStyledShape::GrStyledShape(const GrStyledShape& parent, GrStyle::Apply apply, 
       // the simpler shape so that applying both path effect and the strokerec all at
       // once produces the same key.
       tmpParent.init(fShape.path(), GrStyle(strokeRec, nullptr));
-      tmpParent.get()->setInheritedKey(parent, GrStyle::Apply::kPathEffectOnly, scale);
+      tmpParent->setInheritedKey(parent, GrStyle::Apply::kPathEffectOnly, scale);
       if (!tmpPath.isValid()) {
         tmpPath.init();
       }
-      tmpParent.get()->asPath(tmpPath.get());
+      tmpParent->asPath(tmpPath.get());
       SkStrokeRec::InitStyle fillOrHairline;
       // The parent shape may have simplified away the strokeRec, check for that here.
-      if (tmpParent.get()->style().applies()) {
+      if (tmpParent->style().applies()) {
         SkAssertResult(tmpParent.get()->style().applyToPath(
             &fShape.path(), &fillOrHairline, *tmpPath.get(), scale));
-      } else if (tmpParent.get()->style().isSimpleFill()) {
+      } else if (tmpParent->style().isSimpleFill()) {
         fillOrHairline = SkStrokeRec::kFill_InitStyle;
       } else {
         SkASSERT(tmpParent.get()->style().isSimpleHairline());
@@ -406,7 +405,7 @@ GrStyledShape::GrStyledShape(const GrStyledShape& parent, GrStyle::Apply apply, 
   }
 
   if (parent.fInheritedPathForListeners.isValid()) {
-    fInheritedPathForListeners.set(*parent.fInheritedPathForListeners.get());
+    fInheritedPathForListeners.set(*parent.fInheritedPathForListeners);
   } else if (parent.fShape.isPath() && !parent.fShape.path().isVolatile()) {
     fInheritedPathForListeners.set(parent.fShape.path());
   }
@@ -415,12 +414,12 @@ GrStyledShape::GrStyledShape(const GrStyledShape& parent, GrStyle::Apply apply, 
 }
 
 bool GrStyledShape::asRRect(
-    SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const noexcept {
+    SkRRect* rrect, SkPathDirection* dir, unsigned* start, bool* inverted) const {
   if (!fShape.isRRect() && !fShape.isRect()) {
     return false;
   }
 
-  // Sanity check here, if we don't have a path effect on the style, we should have passed
+  // Validity check here, if we don't have a path effect on the style, we should have passed
   // appropriate flags to GrShape::simplify() to have reset these parameters.
   SkASSERT(
       fStyle.hasPathEffect() ||
@@ -495,7 +494,7 @@ bool GrStyledShape::asRRect(
   return true;
 }
 
-bool GrStyledShape::asLine(SkPoint pts[2], bool* inverted) const noexcept {
+bool GrStyledShape::asLine(SkPoint pts[2], bool* inverted) const {
   if (!fShape.isLine()) {
     return false;
   }
@@ -510,7 +509,7 @@ bool GrStyledShape::asLine(SkPoint pts[2], bool* inverted) const noexcept {
   return true;
 }
 
-bool GrStyledShape::asNestedRects(SkRect rects[2]) const noexcept {
+bool GrStyledShape::asNestedRects(SkRect rects[2]) const {
   if (!fShape.isPath()) {
     return false;
   }

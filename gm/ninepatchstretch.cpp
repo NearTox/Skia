@@ -67,7 +67,7 @@ class NinePatchStretchGM : public skiagm::GM {
   SkISize onISize() override { return SkISize::Make(760, 800); }
 
   void onDraw(SkCanvas* canvas) override {
-    if (!fImage || !fImage->isValid(canvas->getGrContext())) {
+    if (!fImage || !fImage->isValid(canvas->recordingContext())) {
       fImage = make_image(canvas, &fCenter);
     }
 

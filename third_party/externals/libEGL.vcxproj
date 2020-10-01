@@ -82,7 +82,7 @@
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party\externals\angle2\src;$(SolutionDir)\third_party\externals\angle2\include;$(SolutionDir)\third_party/externals/angle2/src/common/third_party/base;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
     </ClCompile>
     <Link>

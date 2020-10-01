@@ -268,7 +268,7 @@ void SkBlitter::blitMask(const SkMask& mask, const SkIRect& clip) {
   }
 }
 
-/////////////////////// these guys are not virtual, just a helpers
+/////////////////////// these are not virtual, just helpers
 
 void SkBlitter::blitMaskRegion(const SkMask& mask, const SkRegion& clip) {
   if (clip.quickReject(mask.fBounds)) {
@@ -488,9 +488,9 @@ void SkRgnClipBlitter::blitAntiH(int x, int y, const SkAlpha aa[], const int16_t
   int width = compute_anti_width(runs);
   SkRegion::Spanerator span(*fRgn, y, x, x + width);
   int left, right;
-  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds();)
+  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds());
 
-      int prevRite = x;
+  int prevRite = x;
   while (span.next(&left, &right)) {
     SkASSERT(x <= left);
     SkASSERT(left < right);
@@ -830,10 +830,8 @@ void SkRectClipCheckBlitter::blitAntiRect(
     int x, int y, int width, int height, SkAlpha leftAlpha, SkAlpha rightAlpha) {
   bool skipLeft = !leftAlpha;
   bool skipRight = !rightAlpha;
-#  ifdef SK_DEBUG
   SkIRect r = SkIRect::MakeXYWH(x + skipLeft, y, width + 2 - skipRight - skipLeft, height);
   SkASSERT(r.isEmpty() || fClipRect.contains(r));
-#  endif
   fBlitter->blitAntiRect(x, y, width, height, leftAlpha, rightAlpha);
 }
 

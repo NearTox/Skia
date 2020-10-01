@@ -286,9 +286,9 @@ class Gradient2Bench : public Benchmark {
   }
 
  protected:
-  virtual const char* onGetName() { return fName.c_str(); }
+  const char* onGetName() override { return fName.c_str(); }
 
-  virtual void onDraw(int loops, SkCanvas* canvas) {
+  void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint;
     this->setupPaint(&paint);
 

@@ -53,16 +53,15 @@ class GrGLProgram : public SkRefCnt {
       const VaryingInfoArray&,  // used for NVPR only currently
       std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
       std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, int fragmentProcessorCnt,
-      std::unique_ptr<Attribute[]>, int vertexAttributeCnt, int instanceAttributeCnt,
-      int vertexStride, int instanceStride);
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, std::unique_ptr<Attribute[]>,
+      int vertexAttributeCnt, int instanceAttributeCnt, int vertexStride, int instanceStride);
 
-  ~GrGLProgram();
+  ~GrGLProgram() override;
 
   /**
    * Call to abandon GL objects owned by this program.
    */
-  void abandon();
+  void abandon() noexcept;
 
   /**
    * Gets the GL program ID for this program.
@@ -75,15 +74,11 @@ class GrGLProgram : public SkRefCnt {
    * them.
    */
   struct RenderTargetState {
-    SkISize fRenderTargetSize;
-    GrSurfaceOrigin fRenderTargetOrigin;
+    SkISize fRenderTargetSize = SkISize::Make(-1, -1);
+    GrSurfaceOrigin fRenderTargetOrigin = (GrSurfaceOrigin)-1;
 
-    RenderTargetState() { this->invalidate(); }
-    void invalidate() noexcept {
-      fRenderTargetSize.fWidth = -1;
-      fRenderTargetSize.fHeight = -1;
-      fRenderTargetOrigin = (GrSurfaceOrigin)-1;
-    }
+    constexpr RenderTargetState() noexcept = default;
+    void invalidate() noexcept { *this = {}; }
 
     /**
      * Gets a float4 that adjusts the position from Skia device coords to GL's normalized device
@@ -141,9 +136,8 @@ class GrGLProgram : public SkRefCnt {
       const VaryingInfoArray&,  // used for NVPR only currently
       std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
       std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, int fragmentProcessorCnt,
-      std::unique_ptr<Attribute[]>, int vertexAttributeCnt, int instanceAttributeCnt,
-      int vertexStride, int instanceStride);
+      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, std::unique_ptr<Attribute[]>,
+      int vertexAttributeCnt, int instanceAttributeCnt, int vertexStride, int instanceStride);
 
   // Helper for setData() that sets the view matrix and loads the render target height uniform
   void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&);
@@ -157,7 +151,6 @@ class GrGLProgram : public SkRefCnt {
   std::unique_ptr<GrGLSLPrimitiveProcessor> fPrimitiveProcessor;
   std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
   std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
-  int fFragmentProcessorCnt;
 
   std::unique_ptr<Attribute[]> fAttributes;
   int fVertexAttributeCnt;

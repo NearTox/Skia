@@ -5,9 +5,12 @@
  * found in the LICENSE file.
  */
 
+#include "src/codec/SkBmpCodec.h"
+
+#include <memory>
+
 #include "include/core/SkStream.h"
 #include "include/private/SkColorData.h"
-#include "src/codec/SkBmpCodec.h"
 #include "src/codec/SkBmpMaskCodec.h"
 #include "src/codec/SkBmpRLECodec.h"
 #include "src/codec/SkBmpStandardCodec.h"
@@ -468,9 +471,9 @@ SkCodec::Result SkBmpCodec::ReadHeader(
 
         // Set the image info and create a codec.
         auto info = SkEncodedInfo::Make(width, height, color, alpha, bitsPerComponent);
-        codecOut->reset(new SkBmpStandardCodec(
+        *codecOut = std::make_unique<SkBmpStandardCodec>(
             std::move(info), std::unique_ptr<SkStream>(stream), bitsPerPixel, numColors,
-            bytesPerColor, offset - bytesRead, rowOrder, isOpaque, inIco));
+            bytesPerColor, offset - bytesRead, rowOrder, isOpaque, inIco);
         return static_cast<SkBmpStandardCodec*>(codecOut->get())->didCreateSrcBuffer()
                    ? kSuccess
                    : kInvalidInput;
@@ -525,9 +528,9 @@ SkCodec::Result SkBmpCodec::ReadHeader(
           alpha = SkEncodedInfo::kOpaque_Alpha;
         }
         auto info = SkEncodedInfo::Make(width, height, color, alpha, 8);
-        codecOut->reset(new SkBmpMaskCodec(
+        *codecOut = std::make_unique<SkBmpMaskCodec>(
             std::move(info), std::unique_ptr<SkStream>(stream), bitsPerPixel, masks.release(),
-            rowOrder));
+            rowOrder);
         return static_cast<SkBmpMaskCodec*>(codecOut->get())->didCreateSrcBuffer() ? kSuccess
                                                                                    : kInvalidInput;
       }
@@ -557,9 +560,9 @@ SkCodec::Result SkBmpCodec::ReadHeader(
         // For that reason, we always indicate that we are kBGRA.
         auto info = SkEncodedInfo::Make(
             width, height, SkEncodedInfo::kBGRA_Color, SkEncodedInfo::kBinary_Alpha, 8);
-        codecOut->reset(new SkBmpRLECodec(
+        *codecOut = std::make_unique<SkBmpRLECodec>(
             std::move(info), std::unique_ptr<SkStream>(stream), bitsPerPixel, numColors,
-            bytesPerColor, offset - bytesRead, rowOrder));
+            bytesPerColor, offset - bytesRead, rowOrder);
       }
       return kSuccess;
     }

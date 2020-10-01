@@ -125,7 +125,7 @@ class SkRandom {
   // Initialize state variables with LCG.
   // We must ensure that both J and K are non-zero, otherwise the
   // multiply-with-carry step will forevermore return zero.
-  constexpr void init(uint32_t seed) noexcept {
+  void init(uint32_t seed) noexcept {
     fK = NextLCG(seed);
     if (0 == fK) {
       fK = NextLCG(fK);

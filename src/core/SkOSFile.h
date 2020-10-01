@@ -13,6 +13,7 @@
 #include <stdio.h>
 
 #include "include/core/SkString.h"
+#include "include/private/SkTemplates.h"
 
 enum SkFILE_Flags {
   kRead_SkFILE_Flag = 0x01,
@@ -23,12 +24,12 @@ enum SkFILE_Flags {
 FILE* sk_fopen(const char path[], SkFILE_Flags);
 void sk_fclose(FILE*) noexcept;
 
-size_t sk_fgetsize(FILE*) noexcept;
+size_t sk_fgetsize(FILE*);
 
 size_t sk_fwrite(const void* buffer, size_t byteCount, FILE*) noexcept;
 
 void sk_fflush(FILE*) noexcept;
-void sk_fsync(FILE*) noexcept;
+void sk_fsync(FILE*);
 
 size_t sk_ftell(FILE*) noexcept;
 
@@ -36,54 +37,54 @@ size_t sk_ftell(FILE*) noexcept;
  *  The mapping is read only.
  *  When finished with the mapping, free the returned pointer with sk_fmunmap.
  */
-void* sk_fmmap(FILE* f, size_t* length) noexcept;
+void* sk_fmmap(FILE* f, size_t* length);
 
 /** Maps a file descriptor into memory. Returns the address and length on success, NULL otherwise.
  *  The mapping is read only.
  *  When finished with the mapping, free the returned pointer with sk_fmunmap.
  */
-void* sk_fdmmap(int fd, size_t* length) noexcept;
+void* sk_fdmmap(int fd, size_t* length);
 
 /** Unmaps a file previously mapped by sk_fmmap or sk_fdmmap.
  *  The length parameter must be the same as returned from sk_fmmap.
  */
-void sk_fmunmap(const void* addr, size_t length) noexcept;
+void sk_fmunmap(const void* addr, size_t length);
 
 /** Returns true if the two point at the exact same filesystem object. */
-bool sk_fidentical(FILE* a, FILE* b) noexcept;
+bool sk_fidentical(FILE* a, FILE* b);
 
 /** Returns the underlying file descriptor for the given file.
  *  The return value will be < 0 on failure.
  */
-int sk_fileno(FILE* f) noexcept;
+int sk_fileno(FILE* f);
 
 /** Returns true if something (file, directory, ???) exists at this path,
  *  and has the specified access flags.
  */
-bool sk_exists(const char* path, SkFILE_Flags = (SkFILE_Flags)0) noexcept;
+bool sk_exists(const char* path, SkFILE_Flags = (SkFILE_Flags)0);
 
 // Returns true if a directory exists at this path.
 bool sk_isdir(const char* path) noexcept;
 
 // Like pread, but may affect the file position marker.
 // Returns the number of bytes read or SIZE_MAX if failed.
-size_t sk_qread(FILE*, void* buffer, size_t count, size_t offset) noexcept;
+size_t sk_qread(FILE*, void* buffer, size_t count, size_t offset);
 
 // Create a new directory at this path; returns true if successful.
 // If the directory already existed, this will return true.
 // Description of the error, if any, will be written to stderr.
-bool sk_mkdir(const char* path) noexcept;
+bool sk_mkdir(const char* path);
 
 class SkOSFile {
  public:
   class Iter {
    public:
     // SPI for module use.
-    SK_SPI Iter() noexcept;
-    SK_SPI Iter(const char path[], const char suffix[] = nullptr) noexcept;
+    SK_SPI Iter();
+    SK_SPI Iter(const char path[], const char suffix[] = nullptr);
     SK_SPI ~Iter();
 
-    SK_SPI void reset(const char path[], const char suffix[] = nullptr) noexcept;
+    SK_SPI void reset(const char path[], const char suffix[] = nullptr);
     /** If getDir is true, only returns directories.
         Results are undefined if true and false calls are
         interleaved on a single iterator.

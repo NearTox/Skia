@@ -180,14 +180,14 @@ DEF_TEST(ImageFilterCache_RasterBacked, reporter) {
 
 // Shared test code for both the raster and gpu-backed image cases
 static void test_image_backed(
-    skiatest::Reporter* reporter, GrContext* context, const sk_sp<SkImage>& srcImage) {
+    skiatest::Reporter* reporter, GrRecordingContext* rContext, const sk_sp<SkImage>& srcImage) {
   const SkIRect& full = SkIRect::MakeWH(kFullSize, kFullSize);
 
-  sk_sp<SkSpecialImage> fullImg(SkSpecialImage::MakeFromImage(context, full, srcImage));
+  sk_sp<SkSpecialImage> fullImg(SkSpecialImage::MakeFromImage(rContext, full, srcImage));
 
   const SkIRect& subset = SkIRect::MakeXYWH(kPad, kPad, kSmallerSize, kSmallerSize);
 
-  sk_sp<SkSpecialImage> subsetImg(SkSpecialImage::MakeFromImage(context, subset, srcImage));
+  sk_sp<SkSpecialImage> subsetImg(SkSpecialImage::MakeFromImage(rContext, subset, srcImage));
 
   test_find_existing(reporter, fullImg, subsetImg);
   test_dont_find_if_diff_key(reporter, fullImg, subsetImg);
@@ -203,7 +203,7 @@ DEF_TEST(ImageFilterCache_ImageBackedRaster, reporter) {
   test_image_backed(reporter, nullptr, srcImage);
 }
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
@@ -212,21 +212,21 @@ DEF_TEST(ImageFilterCache_ImageBackedRaster, reporter) {
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTextureProxy.h"
 
-static GrSurfaceProxyView create_proxy_view(GrRecordingContext* context) {
+static GrSurfaceProxyView create_proxy_view(GrRecordingContext* rContext) {
   SkBitmap srcBM = create_bm();
-  GrBitmapTextureMaker maker(context, srcBM, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-  return maker.view(GrMipMapped::kNo);
+  GrBitmapTextureMaker maker(rContext, srcBM, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
+  return maker.view(GrMipmapped::kNo);
 }
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ImageFilterCache_ImageBackedGPU, reporter, ctxInfo) {
-  GrContext* context = ctxInfo.grContext();
+  auto dContext = ctxInfo.directContext();
 
-  GrSurfaceProxyView srcView = create_proxy_view(context);
+  GrSurfaceProxyView srcView = create_proxy_view(dContext);
   if (!srcView.proxy()) {
     return;
   }
 
-  if (!srcView.proxy()->instantiate(context->priv().resourceProvider())) {
+  if (!srcView.proxy()->instantiate(dContext->priv().resourceProvider())) {
     return;
   }
   GrTexture* tex = srcView.proxy()->peekTexture();
@@ -235,8 +235,8 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ImageFilterCache_ImageBackedGPU, reporter, ct
 
   GrSurfaceOrigin texOrigin = kTopLeft_GrSurfaceOrigin;
   sk_sp<SkImage> srcImage(SkImage::MakeFromTexture(
-      context, backendTex, texOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr, nullptr,
-      nullptr));
+      dContext, backendTex, texOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr,
+      nullptr, nullptr));
   if (!srcImage) {
     return;
   }
@@ -253,13 +253,13 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ImageFilterCache_ImageBackedGPU, reporter, ct
   }
   REPORTER_ASSERT(reporter, readBackOrigin == texOrigin);
 
-  test_image_backed(reporter, context, srcImage);
+  test_image_backed(reporter, dContext, srcImage);
 }
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ImageFilterCache_GPUBacked, reporter, ctxInfo) {
-  GrContext* context = ctxInfo.grContext();
+  auto dContext = ctxInfo.directContext();
 
-  GrSurfaceProxyView srcView = create_proxy_view(context);
+  GrSurfaceProxyView srcView = create_proxy_view(dContext);
   if (!srcView.proxy()) {
     return;
   }
@@ -267,13 +267,13 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ImageFilterCache_GPUBacked, reporter, ctxInfo
   const SkIRect& full = SkIRect::MakeWH(kFullSize, kFullSize);
 
   sk_sp<SkSpecialImage> fullImg(SkSpecialImage::MakeDeferredFromGpu(
-      context, full, kNeedNewImageUniqueID_SpecialImage, srcView, GrColorType::kRGBA_8888,
+      dContext, full, kNeedNewImageUniqueID_SpecialImage, srcView, GrColorType::kRGBA_8888,
       nullptr));
 
   const SkIRect& subset = SkIRect::MakeXYWH(kPad, kPad, kSmallerSize, kSmallerSize);
 
   sk_sp<SkSpecialImage> subsetImg(SkSpecialImage::MakeDeferredFromGpu(
-      context, subset, kNeedNewImageUniqueID_SpecialImage, std::move(srcView),
+      dContext, subset, kNeedNewImageUniqueID_SpecialImage, std::move(srcView),
       GrColorType::kRGBA_8888, nullptr));
 
   test_find_existing(reporter, fullImg, subsetImg);

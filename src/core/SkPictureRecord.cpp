@@ -61,7 +61,7 @@ void SkPictureRecord::recordSave() {
 }
 
 void SkPictureRecord::onMarkCTM(const char* name) {
-  size_t nameLen = fWriter.WriteStringSize(name);
+  size_t nameLen = SkWriter32::WriteStringSize(name);
   size_t size = sizeof(kUInt32Size) + nameLen;  // op + name
   size_t initialOffset = this->addDraw(MARK_CTM, &size);
   fWriter.writeString(name);
@@ -257,7 +257,7 @@ void SkPictureRecord::didSetMatrix(const SkMatrix& matrix) {
   this->INHERITED::didSetMatrix(matrix);
 }
 
-static bool clipOpExpands(SkClipOp op) {
+static bool clipOpExpands(SkClipOp op) noexcept {
   switch (op) {
     case kUnion_SkClipOp:
     case kXOR_SkClipOp:
@@ -288,7 +288,7 @@ void SkPictureRecord::fillRestoreOffsetPlaceholdersForCurrentStackLevel(uint32_t
 #endif
 }
 
-void SkPictureRecord::beginRecording() {
+void SkPictureRecord::beginRecording() noexcept {
   // we have to call this *after* our constructor, to ensure that it gets
   // recorded. This is balanced by restoreToCount() call from endRecording,
   // which in-turn calls our overridden restore(), so those get recorded too.
@@ -747,8 +747,8 @@ void SkPictureRecord::onDrawShadowRec(const SkPath& path, const SkDrawShadowRec&
 }
 
 void SkPictureRecord::onDrawAnnotation(const SkRect& rect, const char key[], SkData* value) {
-  size_t keyLen = fWriter.WriteStringSize(key);
-  size_t valueLen = fWriter.WriteDataSize(value);
+  size_t keyLen = SkWriter32::WriteStringSize(key);
+  size_t valueLen = SkWriter32::WriteDataSize(value);
   size_t size = 4 + sizeof(SkRect) + keyLen + valueLen;
 
   size_t initialOffset = this->addDraw(DRAW_ANNOTATION, &size);
@@ -816,12 +816,12 @@ void SkPictureRecord::onDrawEdgeAAImageSet(
 // De-duping helper.
 
 template <typename T>
-static bool equals(T* a, T* b) {
+static bool equals(T* a, T* b) noexcept {
   return a->uniqueID() == b->uniqueID();
 }
 
 template <>
-bool equals(SkDrawable* a, SkDrawable* b) {
+bool equals(SkDrawable* a, SkDrawable* b) noexcept {
   // SkDrawable's generationID is not a stable unique identifier.
   return a == b;
 }

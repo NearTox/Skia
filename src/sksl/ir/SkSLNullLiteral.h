@@ -17,16 +17,18 @@ namespace SkSL {
  * Represents 'null'.
  */
 struct NullLiteral : public Expression {
-  NullLiteral(const Context& context, int offset)
-      : INHERITED(offset, kNullLiteral_Kind, *context.fNull_Type) {}
+  static constexpr Kind kExpressionKind = kNullLiteral_Kind;
 
-  NullLiteral(int offset, const Type& type) noexcept : INHERITED(offset, kNullLiteral_Kind, type) {}
+  NullLiteral(const Context& context, int offset) noexcept
+      : INHERITED(offset, kExpressionKind, *context.fNull_Type) {}
+
+  NullLiteral(int offset, const Type& type) noexcept : INHERITED(offset, kExpressionKind, type) {}
 
   String description() const override { return "null"; }
 
   bool hasProperty(Property property) const noexcept override { return false; }
 
-  bool isConstant() const noexcept override { return true; }
+  bool isCompileTimeConstant() const noexcept override { return true; }
 
   bool compareConstant(const Context& context, const Expression& other) const override {
     return true;

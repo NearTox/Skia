@@ -15,20 +15,20 @@
  */
 class GrRenderTargetProxyPriv {
  public:
-  void setGLRTFBOIDIs0() noexcept {
+  void setGLRTFBOIDIs0() {
     // FBO0 should never be wrapped as a texture render target.
     SkASSERT(!fRenderTargetProxy->requiresManualMSAAResolve());
     SkASSERT(!fRenderTargetProxy->asTextureProxy());
     fRenderTargetProxy->setGLRTFBOIDIs0();
   }
 
-  bool glRTFBOIDIs0() const noexcept { return fRenderTargetProxy->glRTFBOIDIs0(); }
+  bool glRTFBOIDIs0() const { return fRenderTargetProxy->glRTFBOIDIs0(); }
 
  private:
   explicit GrRenderTargetProxyPriv(GrRenderTargetProxy* renderTargetProxy) noexcept
       : fRenderTargetProxy(renderTargetProxy) {}
-  GrRenderTargetProxyPriv(const GrRenderTargetProxyPriv&) noexcept {}  // unimpl
-  GrRenderTargetProxyPriv& operator=(const GrRenderTargetProxyPriv&);  // unimpl
+  GrRenderTargetProxyPriv(const GrRenderTargetProxyPriv&) = delete;
+  GrRenderTargetProxyPriv& operator=(const GrRenderTargetProxyPriv&) = delete;
 
   // No taking addresses of this type.
   const GrRenderTargetProxyPriv* operator&() const;
@@ -43,7 +43,8 @@ inline GrRenderTargetProxyPriv GrRenderTargetProxy::rtPriv() noexcept {
   return GrRenderTargetProxyPriv(this);
 }
 
-inline const GrRenderTargetProxyPriv GrRenderTargetProxy::rtPriv() const noexcept {
+inline const GrRenderTargetProxyPriv GrRenderTargetProxy::rtPriv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrRenderTargetProxyPriv(const_cast<GrRenderTargetProxy*>(this));
 }
 

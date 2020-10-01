@@ -39,10 +39,10 @@ class GrAHardwareBufferImageGenerator : public SkImageGenerator {
   static void DeleteGLTexture(void* ctx);
 
  protected:
-  bool onIsValid(GrContext*) const override;
+  bool onIsValid(GrRecordingContext*) const override;
 
   GrSurfaceProxyView onGenerateTexture(
-      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipMapped,
+      GrRecordingContext*, const SkImageInfo&, const SkIPoint&, GrMipmapped,
       GrImageTexGenPolicy) override;
 
  private:

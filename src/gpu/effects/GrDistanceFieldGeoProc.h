@@ -194,12 +194,8 @@ class GrDistanceFieldLCDTextGeoProc : public GrGeometryProcessor {
 
   struct DistanceAdjust {
     SkScalar fR, fG, fB;
-    static DistanceAdjust Make(SkScalar r, SkScalar g, SkScalar b) noexcept {
-      DistanceAdjust result;
-      result.fR = r;
-      result.fG = g;
-      result.fB = b;
-      return result;
+    static constexpr DistanceAdjust Make(SkScalar r, SkScalar g, SkScalar b) noexcept {
+      return DistanceAdjust{r, g, b};
     }
     bool operator==(const DistanceAdjust& wa) const noexcept {
       return (fR == wa.fR && fG == wa.fG && fB == wa.fB);

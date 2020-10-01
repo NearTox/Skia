@@ -24,11 +24,11 @@ void SkPathMeasure::setPath(const SkPath* path, bool forceClosed) {
 
 SkScalar SkPathMeasure::getLength() noexcept { return fContour ? fContour->length() : 0; }
 
-bool SkPathMeasure::getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) noexcept {
+bool SkPathMeasure::getPosTan(SkScalar distance, SkPoint* position, SkVector* tangent) {
   return fContour && fContour->getPosTan(distance, position, tangent);
 }
 
-bool SkPathMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) noexcept {
+bool SkPathMeasure::getMatrix(SkScalar distance, SkMatrix* matrix, MatrixFlags flags) {
   return fContour && fContour->getMatrix(distance, matrix, (SkContourMeasure::MatrixFlags)flags);
 }
 

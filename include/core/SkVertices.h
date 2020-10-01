@@ -100,8 +100,8 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     // Number of channels that will be produced for the SkRuntimeEffect to consume.
     // May not match the number of channels in fType. For example, kVector Attributes always
     // produce three channels, even if the input is kFloat2.
-    int channelCount() const noexcept;
-    size_t bytesPerVertex() const noexcept;
+    int channelCount() const;
+    size_t bytesPerVertex() const;
     bool isValid() const;
 
     Type fType;
@@ -124,18 +124,18 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
 
     bool isValid() const noexcept { return fVertices != nullptr; }
 
-    SkPoint* positions() noexcept;
-    uint16_t* indices() noexcept;  // returns null if there are no indices
+    SkPoint* positions();
+    uint16_t* indices();  // returns null if there are no indices
 
     // if we have texCoords or colors, this will always be null
-    void* customData() noexcept;  // returns null if there are no custom attributes
+    void* customData();  // returns null if there are no custom attributes
 
     // If we have custom attributes, these will always be null
-    SkPoint* texCoords() noexcept;  // returns null if there are no texCoords
-    SkColor* colors() noexcept;     // returns null if there are no colors
+    SkPoint* texCoords();  // returns null if there are no texCoords
+    SkColor* colors();     // returns null if there are no colors
 
     // Detach the built vertices object. After the first call, this will always return null.
-    sk_sp<SkVertices> detach() noexcept;
+    sk_sp<SkVertices> detach();
 
    private:
     Builder(const Desc&);
@@ -160,7 +160,7 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
 
   // Provides access to functions that aren't part of the public API.
   SkVerticesPriv priv() noexcept;
-  const SkVerticesPriv priv() const noexcept;
+  const SkVerticesPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
 
  private:
   SkVertices() noexcept = default;

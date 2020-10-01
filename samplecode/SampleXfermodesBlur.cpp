@@ -72,9 +72,9 @@ class XfermodesBlurView : public Sample {
   }
 
  protected:
-  virtual SkString name() { return SkString("XfermodesBlur"); }
+  SkString name() override { return SkString("XfermodesBlur"); }
 
-  virtual void onDrawContent(SkCanvas* canvas) {
+  void onDrawContent(SkCanvas* canvas) override {
     canvas->translate(SkIntToScalar(10), SkIntToScalar(20));
 
     const SkBlendMode gModes[] = {

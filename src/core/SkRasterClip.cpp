@@ -98,11 +98,11 @@ void SkConservativeClip::opPath(
   return this->opIRect(ir, op);
 }
 
-void SkConservativeClip::opRegion(const SkRegion& rgn, SkRegion::Op op) {
+void SkConservativeClip::opRegion(const SkRegion& rgn, SkRegion::Op op) noexcept {
   this->opIRect(rgn.getBounds(), op);
 }
 
-void SkConservativeClip::opIRect(const SkIRect& devRect, SkRegion::Op op) {
+void SkConservativeClip::opIRect(const SkIRect& devRect, SkRegion::Op op) noexcept {
   if (SkRegion::kIntersect_Op == op) {
     if (!fBounds.intersect(devRect)) {
       fBounds.setEmpty();
@@ -450,7 +450,7 @@ void SkRasterClip::translate(int dx, int dy, SkRasterClip* dst) const {
   dst->updateCacheAndReturnNonEmpty();
 }
 
-bool SkRasterClip::quickContains(const SkIRect& ir) const noexcept {
+bool SkRasterClip::quickContains(const SkIRect& ir) const {
   return fIsBW ? fBW.quickContains(ir) : fAA.quickContains(ir);
 }
 
@@ -465,7 +465,7 @@ const SkRegion& SkRasterClip::forceGetBW() noexcept {
   return fBW;
 }
 
-void SkRasterClip::convertToAA() noexcept {
+void SkRasterClip::convertToAA() {
   AUTO_RASTERCLIP_VALIDATE(*this);
 
   SkASSERT(fIsBW);

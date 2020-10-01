@@ -12,7 +12,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 
-GrShaderCaps::GrShaderCaps(const GrContextOptions& options) noexcept {
+GrShaderCaps::GrShaderCaps(const GrContextOptions& options) {
   fGLSLGeneration = k330_GrGLSLGeneration;
   fShaderDerivativeSupport = false;
   fGeometryShaderSupport = false;

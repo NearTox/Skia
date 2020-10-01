@@ -20,7 +20,7 @@ class GrImageContext : public GrContext_Base {
 
   // Provides access to functions that aren't part of the public API.
   GrImageContextPriv priv();
-  const GrImageContextPriv priv() const;
+  const GrImageContextPriv priv() const;  // NOLINT(readability-const-return-type)
 
  protected:
   friend class GrImageContextPriv;  // for hidden functions

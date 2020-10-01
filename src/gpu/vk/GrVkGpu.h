@@ -11,6 +11,7 @@
 #include "include/gpu/vk/GrVkBackendContext.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrStagingBufferManager.h"
 #include "src/gpu/vk/GrVkCaps.h"
 #include "src/gpu/vk/GrVkMemory.h"
 #include "src/gpu/vk/GrVkMeshBuffer.h"
@@ -18,6 +19,7 @@
 #include "src/gpu/vk/GrVkSemaphore.h"
 #include "src/gpu/vk/GrVkUtil.h"
 
+class GrDirectContext;
 class GrPipeline;
 
 class GrVkBufferImpl;
@@ -34,11 +36,11 @@ struct GrVkInterface;
 
 namespace SkSL {
 class Compiler;
-}
+}  // namespace SkSL
 
 class GrVkGpu : public GrGpu {
  public:
-  static sk_sp<GrGpu> Make(const GrVkBackendContext&, const GrContextOptions&, GrContext*);
+  static sk_sp<GrGpu> Make(const GrVkBackendContext&, const GrContextOptions&, GrDirectContext*);
 
   ~GrVkGpu() override;
 
@@ -47,8 +49,10 @@ class GrVkGpu : public GrGpu {
   const GrVkInterface* vkInterface() const { return fInterface.get(); }
   const GrVkCaps& vkCaps() const { return *fVkCaps; }
 
+  GrStagingBufferManager* stagingBufferManager() override { return &fStagingBufferManager; }
+  void takeOwnershipOfBuffer(sk_sp<GrGpuBuffer>) override;
+
   bool isDeviceLost() const override { return fDeviceIsLost; }
-  void setDeviceLost() { fDeviceIsLost = true; }
 
   GrVkMemoryAllocator* memoryAllocator() const { return fMemoryAllocator.get(); }
 
@@ -69,7 +73,7 @@ class GrVkGpu : public GrGpu {
 
   void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>*) override;
 
-  void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
+  void xferBarrier(GrRenderTarget*, GrXferBarrierType) override;
 
   bool setBackendTextureState(
       const GrBackendTexture&, const GrBackendSurfaceMutableState&,
@@ -102,7 +106,7 @@ class GrVkGpu : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
 
   void addBufferMemoryBarrier(
       const GrManagedResource*, VkPipelineStageFlags srcStageMask,
@@ -115,8 +119,7 @@ class GrVkGpu : public GrGpu {
 
   bool onRegenerateMipMapLevels(GrTexture* tex) override;
 
-  void onResolveRenderTarget(
-      GrRenderTarget* target, const SkIRect& resolveRect, ForExternalIO) override;
+  void onResolveRenderTarget(GrRenderTarget* target, const SkIRect& resolveRect) override;
 
   void submitSecondaryCommandBuffer(std::unique_ptr<GrVkSecondaryCommandBuffer>);
 
@@ -162,26 +165,33 @@ class GrVkGpu : public GrGpu {
       const SkIRect& bounds, bool forSecondaryCB);
   void endRenderPass(GrRenderTarget* target, GrSurfaceOrigin origin, const SkIRect& bounds);
 
-  using GrGpu::setOOMed;
+  // Returns true if VkResult indicates success and also checks for device lost or OOM. Every
+  // Vulkan call (and GrVkMemoryAllocator call that returns VkResult) made on behalf of the
+  // GrVkGpu should be processed by this function so that we respond to OOMs and lost devices.
+  bool checkVkResult(VkResult);
 
  private:
   enum SyncQueue { kForce_SyncQueue, kSkip_SyncQueue };
 
   GrVkGpu(
-      GrContext*, const GrContextOptions&, const GrVkBackendContext&, sk_sp<const GrVkInterface>,
-      uint32_t instanceVersion, uint32_t physicalDeviceVersion, sk_sp<GrVkMemoryAllocator>);
+      GrDirectContext*, const GrContextOptions&, const GrVkBackendContext&,
+      sk_sp<const GrVkInterface>, uint32_t instanceVersion, uint32_t physicalDeviceVersion,
+      sk_sp<GrVkMemoryAllocator>);
 
   void onResetContext(uint32_t resetBits) override {}
 
   void destroyResources();
 
   GrBackendTexture onCreateBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipMapped, GrProtected) override;
+      SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
   GrBackendTexture onCreateCompressedBackendTexture(
-      SkISize dimensions, const GrBackendFormat&, GrMipMapped, GrProtected,
-      sk_sp<GrRefCntedCallback> finishedCallbacks, const BackendTextureData*) override;
+      SkISize dimensions, const GrBackendFormat&, GrMipmapped, GrProtected) override;
 
   bool onUpdateBackendTexture(
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
+      const BackendTextureData*) override;
+
+  bool onUpdateCompressedBackendTexture(
       const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
       const BackendTextureData*) override;
 
@@ -193,7 +203,7 @@ class GrVkGpu : public GrGpu {
       SkISize, const GrBackendFormat&, GrRenderable, int renderTargetSampleCnt, SkBudgeted,
       GrProtected, int mipLevelCount, uint32_t levelClearMask) override;
   sk_sp<GrTexture> onCreateCompressedTexture(
-      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipMapped, GrProtected,
+      SkISize dimensions, const GrBackendFormat&, SkBudgeted, GrMipmapped, GrProtected,
       const void* data, size_t dataSize) override;
 
   sk_sp<GrTexture> onWrapBackendTexture(
@@ -272,12 +282,12 @@ class GrVkGpu : public GrGpu {
       const GrMipLevel texels[], int mipLevelCount);
   bool uploadTexDataCompressed(
       GrVkTexture* tex, SkImage::CompressionType compression, VkFormat vkFormat, SkISize dimensions,
-      GrMipMapped mipMapped, const void* data, size_t dataSize);
+      GrMipmapped mipMapped, const void* data, size_t dataSize);
   void resolveImage(
       GrSurface* dst, GrVkRenderTarget* src, const SkIRect& srcRect, const SkIPoint& dstPoint);
 
   bool createVkImageForBackendSurface(
-      VkFormat, SkISize dimensions, GrTexturable, GrRenderable, GrMipMapped, GrVkImageInfo*,
+      VkFormat, SkISize dimensions, GrTexturable, GrRenderable, GrMipmapped, GrVkImageInfo*,
       GrProtected);
 
   sk_sp<const GrVkInterface> fInterface;
@@ -292,6 +302,7 @@ class GrVkGpu : public GrGpu {
 
   // Created by GrVkGpu
   GrVkResourceProvider fResourceProvider;
+  GrStagingBufferManager fStagingBufferManager;
 
   GrVkCommandPool* fMainCmdPool;
   // just a raw pointer; object's lifespan is managed by fCmdPool

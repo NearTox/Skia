@@ -243,7 +243,7 @@ class GrTextureResource : public GrManagedResource {
    * We track how many outstanding references this GrTextureResource has in command buffers and
    * when the count reaches zero we call the idle proc.
    */
-  void notifyQueuedForWorkOnGpu() const noexcept override;
+  void notifyQueuedForWorkOnGpu() const override;
   void notifyFinishedWithWorkOnGpu() const override;
   bool isQueuedForWorkOnGpu() const noexcept { return fNumOwners > 0; }
 

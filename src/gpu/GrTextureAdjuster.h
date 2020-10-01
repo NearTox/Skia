@@ -23,13 +23,15 @@ class GrTextureAdjuster final : public GrTextureProducer {
   GrTextureAdjuster(GrRecordingContext*, GrSurfaceProxyView, const GrColorInfo&, uint32_t uniqueID);
 
   std::unique_ptr<GrFragmentProcessor> createFragmentProcessor(
-      const SkMatrix& textureMatrix, const SkRect& constraintRect, FilterConstraint,
-      bool coordsLimitedToConstraintRect, GrSamplerState::WrapMode wrapX,
-      GrSamplerState::WrapMode wrapY,
-      const GrSamplerState::Filter* filterOrNullForBicubic) override;
+      const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
+      GrSamplerState) override;
+
+  std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessor(
+      const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
+      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) override;
 
  private:
-  GrSurfaceProxyView onView(GrMipMapped) override;
+  GrSurfaceProxyView onView(GrMipmapped) override;
 
   GrSurfaceProxyView makeMippedCopy();
 

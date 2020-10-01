@@ -23,7 +23,7 @@ GrAtlasManager::GrAtlasManager(
 
 GrAtlasManager::~GrAtlasManager() = default;
 
-void GrAtlasManager::freeAll() {
+void GrAtlasManager::freeAll() noexcept {
   for (int i = 0; i < kMaskFormatCount; ++i) {
     fAtlases[i] = nullptr;
   }
@@ -132,8 +132,8 @@ static void get_packed_glyph_image(
 // TODO we can handle some of these cases if we really want to, but the long term solution is to
 // get the actual glyph image itself when we get the glyph metrics.
 GrDrawOpAtlas::ErrorCode GrAtlasManager::addGlyphToAtlas(
-    const SkGlyph& skGlyph, int padding, GrGlyph* grGlyph, GrResourceProvider* resourceProvider,
-    GrDeferredUploadTarget* uploadTarget) {
+    const SkGlyph& skGlyph, GrGlyph* grGlyph, int srcPadding, GrResourceProvider* resourceProvider,
+    GrDeferredUploadTarget* uploadTarget, bool bilerpPadding) {
   if (skGlyph.image() == nullptr) {
     return GrDrawOpAtlas::ErrorCode::kError;
   }
@@ -143,12 +143,8 @@ GrDrawOpAtlas::ErrorCode GrAtlasManager::addGlyphToAtlas(
   GrMaskFormat expectedMaskFormat = this->resolveMaskFormat(glyphFormat);
   int bytesPerPixel = GrMaskFormatBytesPerPixel(expectedMaskFormat);
 
-  if (padding > 0) {
-    SkASSERT(skGlyph.maskFormat() != SkMask::kSDF_Format);
-  }
-
-  SkASSERT(padding == 0 || padding == 1);
   // Add 1 pixel padding around grGlyph if needed.
+  int padding = bilerpPadding ? 1 : 0;
   const int width = skGlyph.width() + 2 * padding;
   const int height = skGlyph.height() + 2 * padding;
   int rowBytes = width * bytesPerPixel;
@@ -165,9 +161,13 @@ GrDrawOpAtlas::ErrorCode GrAtlasManager::addGlyphToAtlas(
 
   get_packed_glyph_image(skGlyph, rowBytes, expectedMaskFormat, dataPtr);
 
-  return this->addToAtlas(
+  auto errorCode = this->addToAtlas(
       resourceProvider, uploadTarget, expectedMaskFormat, width, height, storage.get(),
       &grGlyph->fAtlasLocator);
+
+  grGlyph->fAtlasLocator.insetSrc(srcPadding);
+
+  return errorCode;
 }
 
 // add to texture atlas that matches this format
@@ -188,6 +188,7 @@ void GrAtlasManager::addGlyphToBulkAndSetUseToken(
 }
 
 #ifdef SK_DEBUG
+#  include "include/gpu/GrDirectContext.h"
 #  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/GrSurfaceContext.h"
 #  include "src/gpu/GrSurfaceProxy.h"
@@ -203,12 +204,13 @@ void GrAtlasManager::addGlyphToBulkAndSetUseToken(
  * @param filename      Full path to desired file
  */
 static bool save_pixels(
-    GrContext* context, GrSurfaceProxyView view, GrColorType colorType, const char* filename) {
+    GrDirectContext* dContext, GrSurfaceProxyView view, GrColorType colorType,
+    const char* filename) {
   if (!view.proxy()) {
     return false;
   }
 
-  SkImageInfo ii =
+  auto ii =
       SkImageInfo::Make(view.proxy()->dimensions(), kRGBA_8888_SkColorType, kPremul_SkAlphaType);
   SkBitmap bm;
   if (!bm.tryAllocPixels(ii)) {
@@ -216,12 +218,12 @@ static bool save_pixels(
   }
 
   auto sContext =
-      GrSurfaceContext::Make(context, std::move(view), colorType, kUnknown_SkAlphaType, nullptr);
+      GrSurfaceContext::Make(dContext, std::move(view), colorType, kUnknown_SkAlphaType, nullptr);
   if (!sContext || !sContext->asTextureProxy()) {
     return false;
   }
 
-  bool result = sContext->readPixels(ii, bm.getPixels(), bm.rowBytes(), {0, 0});
+  bool result = sContext->readPixels(dContext, ii, bm.getPixels(), bm.rowBytes(), {0, 0});
   if (!result) {
     SkDebugf("------ failed to read pixels for %s\n", filename);
     return false;
@@ -246,7 +248,7 @@ static bool save_pixels(
   return true;
 }
 
-void GrAtlasManager::dump(GrContext* context) const {
+void GrAtlasManager::dump(GrDirectContext* context) const {
   static int gDumpCount = 0;
   for (int i = 0; i < kMaskFormatCount; ++i) {
     if (fAtlases[i]) {

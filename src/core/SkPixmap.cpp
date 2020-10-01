@@ -222,8 +222,7 @@ bool SkPixmap::scalePixels(const SkPixmap& actualDst, SkFilterQuality quality) c
   if (!bitmap.installPixels(src)) {
     return false;
   }
-  bitmap.setImmutable();       // Don't copy when we create an image.
-  bitmap.setIsVolatile(true);  // Disable any caching.
+  bitmap.setImmutable();  // Don't copy when we create an image.
 
   SkMatrix scale = SkMatrix::MakeRectToRect(
       SkRect::Make(src.bounds()), SkRect::Make(dst.bounds()), SkMatrix::kFill_ScaleToFit);

@@ -92,7 +92,7 @@ class GrVkBuffer : public SkNoncopyable {
   bool vkUpdateData(
       GrVkGpu* gpu, const void* src, size_t srcSizeInBytes, bool* createdNewBuffer = nullptr);
 
-  void vkRelease();
+  void vkRelease(GrVkGpu* gpu);
 
  private:
   virtual const Resource* createResource(GrVkGpu* gpu, const Desc& descriptor) {

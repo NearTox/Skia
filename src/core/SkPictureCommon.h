@@ -23,9 +23,9 @@ struct SkPathCounter {
   static const SkPaint* AsPtr(const SkPaint& p) { return &p; }
   static const SkPaint* AsPtr(const SkRecords::Optional<SkPaint>& p) { return p; }
 
-  SkPathCounter() : fNumSlowPathsAndDashEffects(0) {}
+  SkPathCounter() noexcept : fNumSlowPathsAndDashEffects(0) {}
 
-  void checkPaint(const SkPaint* paint) {
+  void checkPaint(const SkPaint* paint) noexcept {
     if (paint && paint->getPathEffect()) {
       // Initially assume it's slow.
       fNumSlowPathsAndDashEffects++;
@@ -62,7 +62,7 @@ struct SkPathCounter {
     }
   }
 
-  void operator()(const SkRecords::ClipPath& op) {
+  void operator()(const SkRecords::ClipPath& op) noexcept {
     // TODO: does the SkRegion op matter?
     if (op.opAA.aa() && !op.path.isConvex()) {
       fNumSlowPathsAndDashEffects++;
@@ -86,6 +86,6 @@ struct SkPathCounter {
 
 sk_sp<SkImage> ImageDeserializer_SkDeserialImageProc(const void*, size_t, void* imagedeserializer);
 
-bool SkPicture_StreamIsSKP(SkStream*, SkPictInfo*) noexcept;
+bool SkPicture_StreamIsSKP(SkStream*, SkPictInfo*);
 
 #endif  // SkPictureCommon_DEFINED

@@ -1603,18 +1603,17 @@ protected:
         Zalgo zalgo;
 
         if (fRedraw || fRepeat) {
-
-            if (fRedraw || fParagraph.get() == nullptr) {
-                ParagraphBuilderImpl builder(paragraph_style, fontCollection);
-                builder.pushStyle(text_style);
-                auto utf16text = zalgo.zalgo("SkParagraph");
-                if (this->isVerbose()) {
-                    SkString str = SkStringFromU16String(utf16text);
-                    SkDebugf("Text:>%s<\n", str.c_str());
-                }
-                builder.addText(utf16text);
-                fParagraph = builder.Build();
+          if (fRedraw || fParagraph == nullptr) {
+            ParagraphBuilderImpl builder(paragraph_style, fontCollection);
+            builder.pushStyle(text_style);
+            auto utf16text = zalgo.zalgo("SkParagraph");
+            if (this->isVerbose()) {
+              SkString str = SkStringFromU16String(utf16text);
+              SkDebugf("Text:>%s<\n", str.c_str());
             }
+            builder.addText(utf16text);
+            fParagraph = builder.Build();
+          }
 
             auto impl = static_cast<ParagraphImpl*>(fParagraph.get());
             impl->setState(InternalState::kUnknown);
@@ -2901,46 +2900,46 @@ private:
 }  // namespace
 
 //////////////////////////////////////////////////////////////////////////////
-DEF_SAMPLE(return new ParagraphView1();)
-DEF_SAMPLE(return new ParagraphView2();)
-DEF_SAMPLE(return new ParagraphView3();)
-DEF_SAMPLE(return new ParagraphView4();)
-DEF_SAMPLE(return new ParagraphView5();)
-DEF_SAMPLE(return new ParagraphView6();)
-DEF_SAMPLE(return new ParagraphView7();)
-DEF_SAMPLE(return new ParagraphView8();)
-DEF_SAMPLE(return new ParagraphView9();)
-DEF_SAMPLE(return new ParagraphView10();)
-DEF_SAMPLE(return new ParagraphView11();)
-DEF_SAMPLE(return new ParagraphView12();)
-DEF_SAMPLE(return new ParagraphView14();)
-DEF_SAMPLE(return new ParagraphView15();)
-DEF_SAMPLE(return new ParagraphView16();)
-DEF_SAMPLE(return new ParagraphView17();)
-DEF_SAMPLE(return new ParagraphView18();)
-DEF_SAMPLE(return new ParagraphView19();)
-DEF_SAMPLE(return new ParagraphView20();)
-DEF_SAMPLE(return new ParagraphView21();)
-DEF_SAMPLE(return new ParagraphView22();)
-DEF_SAMPLE(return new ParagraphView23();)
-DEF_SAMPLE(return new ParagraphView24();)
-DEF_SAMPLE(return new ParagraphView25();)
-DEF_SAMPLE(return new ParagraphView26();)
-DEF_SAMPLE(return new ParagraphView27();)
-DEF_SAMPLE(return new ParagraphView28();)
-DEF_SAMPLE(return new ParagraphView29();)
-DEF_SAMPLE(return new ParagraphView30();)
-DEF_SAMPLE(return new ParagraphView31();)
-DEF_SAMPLE(return new ParagraphView32();)
-DEF_SAMPLE(return new ParagraphView33();)
-DEF_SAMPLE(return new ParagraphView34();)
-DEF_SAMPLE(return new ParagraphView35();)
-DEF_SAMPLE(return new ParagraphView36();)
-DEF_SAMPLE(return new ParagraphView37();)
-DEF_SAMPLE(return new ParagraphView38();)
-DEF_SAMPLE(return new ParagraphView39();)
-DEF_SAMPLE(return new ParagraphView41();)
-DEF_SAMPLE(return new ParagraphView42();)
-DEF_SAMPLE(return new ParagraphView43();)
-DEF_SAMPLE(return new ParagraphView44();)
-DEF_SAMPLE(return new ParagraphView45();)
+DEF_SAMPLE(return new ParagraphView1());
+DEF_SAMPLE(return new ParagraphView2());
+DEF_SAMPLE(return new ParagraphView3());
+DEF_SAMPLE(return new ParagraphView4());
+DEF_SAMPLE(return new ParagraphView5());
+DEF_SAMPLE(return new ParagraphView6());
+DEF_SAMPLE(return new ParagraphView7());
+DEF_SAMPLE(return new ParagraphView8());
+DEF_SAMPLE(return new ParagraphView9());
+DEF_SAMPLE(return new ParagraphView10());
+DEF_SAMPLE(return new ParagraphView11());
+DEF_SAMPLE(return new ParagraphView12());
+DEF_SAMPLE(return new ParagraphView14());
+DEF_SAMPLE(return new ParagraphView15());
+DEF_SAMPLE(return new ParagraphView16());
+DEF_SAMPLE(return new ParagraphView17());
+DEF_SAMPLE(return new ParagraphView18());
+DEF_SAMPLE(return new ParagraphView19());
+DEF_SAMPLE(return new ParagraphView20());
+DEF_SAMPLE(return new ParagraphView21());
+DEF_SAMPLE(return new ParagraphView22());
+DEF_SAMPLE(return new ParagraphView23());
+DEF_SAMPLE(return new ParagraphView24());
+DEF_SAMPLE(return new ParagraphView25());
+DEF_SAMPLE(return new ParagraphView26());
+DEF_SAMPLE(return new ParagraphView27());
+DEF_SAMPLE(return new ParagraphView28());
+DEF_SAMPLE(return new ParagraphView29());
+DEF_SAMPLE(return new ParagraphView30());
+DEF_SAMPLE(return new ParagraphView31());
+DEF_SAMPLE(return new ParagraphView32());
+DEF_SAMPLE(return new ParagraphView33());
+DEF_SAMPLE(return new ParagraphView34());
+DEF_SAMPLE(return new ParagraphView35());
+DEF_SAMPLE(return new ParagraphView36());
+DEF_SAMPLE(return new ParagraphView37());
+DEF_SAMPLE(return new ParagraphView38());
+DEF_SAMPLE(return new ParagraphView39());
+DEF_SAMPLE(return new ParagraphView41());
+DEF_SAMPLE(return new ParagraphView42());
+DEF_SAMPLE(return new ParagraphView43());
+DEF_SAMPLE(return new ParagraphView44());
+DEF_SAMPLE(return new ParagraphView45());

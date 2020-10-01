@@ -22,8 +22,7 @@
 #include "src/core/SkValidationUtils.h"
 #include "src/core/SkWriteBuffer.h"
 #if SK_SUPPORT_GPU
-#  include "include/gpu/GrContext.h"
-#  include "include/private/GrRecordingContext.h"
+#  include "include/gpu/GrRecordingContext.h"
 #  include "src/gpu/GrColorSpaceXform.h"
 #  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
@@ -42,13 +41,13 @@
  *  Returns the number of inputs this filter will accept (some inputs can
  *  be NULL).
  */
-int SkImageFilter::countInputs() const noexcept { return as_IFB(this)->fInputs.count(); }
+int SkImageFilter::countInputs() const { return as_IFB(this)->fInputs.count(); }
 
 /**
  *  Returns the input filter at a given index, or NULL if no input is
  *  connected.  The indices used are filter-specific.
  */
-const SkImageFilter* SkImageFilter::getInput(int i) const noexcept {
+const SkImageFilter* SkImageFilter::getInput(int i) const {
   SkASSERT(i < this->countInputs());
   return as_IFB(this)->fInputs[i].get();
 }
@@ -136,7 +135,7 @@ sk_sp<SkImageFilter> SkImageFilter::makeWithLocalMatrix(const SkMatrix& matrix) 
 
 SK_USE_FLUENT_IMAGE_FILTER_TYPES
 
-static int32_t next_image_filter_unique_id() noexcept {
+static int32_t next_image_filter_unique_id() {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;
@@ -520,7 +519,6 @@ skif::LayerSpace<SkIRect> SkImageFilter_Base::onGetOutputLayerBounds(
 
 template <skif::Usage kU>
 skif::FilterResult<kU> SkImageFilter_Base::filterInput(int index, const skif::Context& ctx) const {
-  // Sanity checks for the index-specific input usages
   SkASSERT(kU != skif::Usage::kInput0 || index == 0);
   SkASSERT(kU != skif::Usage::kInput1 || index == 1);
 
@@ -559,12 +557,12 @@ sk_sp<SkSpecialImage> SkImageFilter_Base::DrawWithFP(
     GrRecordingContext* context, std::unique_ptr<GrFragmentProcessor> fp, const SkIRect& bounds,
     SkColorType colorType, const SkColorSpace* colorSpace, GrProtected isProtected) {
   GrPaint paint;
-  paint.addColorFragmentProcessor(std::move(fp));
+  paint.setColorFragmentProcessor(std::move(fp));
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
   auto renderTargetContext = GrRenderTargetContext::Make(
       context, SkColorTypeToGrColorType(colorType), sk_ref_sp(colorSpace), SkBackingFit::kApprox,
-      bounds.size(), 1, GrMipMapped::kNo, isProtected, kBottomLeft_GrSurfaceOrigin);
+      bounds.size(), 1, GrMipmapped::kNo, isProtected, kBottomLeft_GrSurfaceOrigin);
   if (!renderTargetContext) {
     return nullptr;
   }

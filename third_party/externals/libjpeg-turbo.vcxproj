@@ -55,7 +55,7 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PreprocessorDefinitions>TURBO_FOR_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TURBO_FOR_WINDOWS;C_ARITH_CODING_SUPPORTED=1;D_ARITH_CODING_SUPPORTED=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
@@ -74,10 +74,10 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <PreprocessorDefinitions>TURBO_FOR_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>TURBO_FOR_WINDOWS;C_ARITH_CODING_SUPPORTED=1;D_ARITH_CODING_SUPPORTED=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>$(SolutionDir)\third_party\libjpeg-turbo;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>stdcpp17</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -159,6 +159,7 @@
     <ClCompile Include="libjpeg-turbo\jidctred.c" />
     <ClCompile Include="libjpeg-turbo\jmemmgr.c" />
     <ClCompile Include="libjpeg-turbo\jmemnobs.c" />
+    <ClCompile Include="libjpeg-turbo\jpeg_nbits_table.c" />
     <ClCompile Include="libjpeg-turbo\jquant1.c" />
     <ClCompile Include="libjpeg-turbo\jquant2.c" />
     <ClCompile Include="libjpeg-turbo\jsimd_none.c" />

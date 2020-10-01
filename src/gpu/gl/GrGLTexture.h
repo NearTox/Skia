@@ -27,7 +27,7 @@ class GrGLTexture : public GrTexture {
 
   static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget) noexcept;
 
-  GrGLTexture(GrGLGpu*, SkBudgeted, const Desc&, GrMipMapsStatus);
+  GrGLTexture(GrGLGpu*, SkBudgeted, const Desc&, GrMipmapStatus);
 
   ~GrGLTexture() override {}
 
@@ -42,7 +42,7 @@ class GrGLTexture : public GrTexture {
 
   GrGLuint textureID() const noexcept { return fID; }
 
-  GrGLenum target() const noexcept;
+  GrGLenum target() const;
 
   GrGLFormat format() const noexcept { return fFormat; }
 
@@ -50,21 +50,21 @@ class GrGLTexture : public GrTexture {
   void baseLevelWasBoundToFBO() noexcept { fBaseLevelHasBeenBoundToFBO = true; }
 
   static sk_sp<GrGLTexture> MakeWrapped(
-      GrGLGpu*, GrMipMapsStatus, const Desc&, sk_sp<GrGLTextureParameters>, GrWrapCacheable,
+      GrGLGpu*, GrMipmapStatus, const Desc&, sk_sp<GrGLTextureParameters>, GrWrapCacheable,
       GrIOType);
 
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
  protected:
   // Constructor for subclasses.
-  GrGLTexture(GrGLGpu*, const Desc&, sk_sp<GrGLTextureParameters>, GrMipMapsStatus);
+  GrGLTexture(GrGLGpu*, const Desc&, sk_sp<GrGLTextureParameters>, GrMipmapStatus);
 
   // Constructor for instances wrapping backend objects.
   GrGLTexture(
-      GrGLGpu*, const Desc&, GrMipMapsStatus, sk_sp<GrGLTextureParameters>, GrWrapCacheable,
+      GrGLGpu*, const Desc&, GrMipmapStatus, sk_sp<GrGLTextureParameters>, GrWrapCacheable,
       GrIOType);
 
-  void init(const Desc&) noexcept;
+  void init(const Desc&);
 
   void onAbandon() override;
   void onRelease() override;

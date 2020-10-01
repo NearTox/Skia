@@ -90,12 +90,17 @@ class SkTypeface_FreeType : public SkTypeface {
   /** Fetch units/EM from "head" table if needed (ie for bitmap fonts) */
   static int GetUnitsPerEm(FT_Face face);
 
+  /**
+   *  Return the font data, or nullptr on failure.
+   */
+  std::unique_ptr<SkFontData> makeFontData() const;
+
  protected:
   SkTypeface_FreeType(const SkFontStyle& style, bool isFixedPitch)
       : INHERITED(style, isFixedPitch) {}
 
   std::unique_ptr<SkFontData> cloneFontData(const SkFontArguments&) const;
-  virtual SkScalerContext* onCreateScalerContext(
+  SkScalerContext* onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
   void getGlyphToUnicodeMap(SkUnichar*) const override;
@@ -117,6 +122,8 @@ class SkTypeface_FreeType : public SkTypeface {
   int onGetTableTags(SkFontTableTag tags[]) const override;
   size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override;
   sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
+
+  virtual std::unique_ptr<SkFontData> onMakeFontData() const = 0;
 
  private:
   mutable SkMutex fC2GCacheMutex;

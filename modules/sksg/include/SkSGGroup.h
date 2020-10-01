@@ -26,19 +26,19 @@ class Group : public RenderNode {
   }
 
   void addChild(sk_sp<RenderNode>);
-  void removeChild(const sk_sp<RenderNode>&) noexcept;
+  void removeChild(const sk_sp<RenderNode>&);
 
-  size_t size() const noexcept { return fChildren.size(); }
-  bool empty() const noexcept { return fChildren.empty(); }
-  void clear() noexcept;
+  size_t size() const { return fChildren.size(); }
+  bool empty() const { return fChildren.empty(); }
+  void clear();
 
  protected:
-  Group() noexcept;
+  Group();
   explicit Group(std::vector<sk_sp<RenderNode>>);
   ~Group() override;
 
   void onRender(SkCanvas*, const RenderContext*) const override;
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override;
+  const RenderNode* onNodeAt(const SkPoint&) const override;
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 

@@ -18,7 +18,7 @@
 namespace android {
 namespace skia {
 class BitmapRegionDecoder;
-}
+}  // namespace skia
 }  // namespace android
 
 /**

@@ -21,28 +21,20 @@ class GrVkGpu;
 // makes a Vk call on the interface
 #define GR_VK_CALL(IFACE, X) (IFACE)->fFunctions.f##X
 
-#define GR_VK_CALL_RESULT(GPU, RESULT, X)                                                          \
-  do {                                                                                             \
-    (RESULT) = GR_VK_CALL(GPU->vkInterface(), X);                                                  \
-    SkASSERT(VK_SUCCESS == RESULT || VK_ERROR_DEVICE_LOST == RESULT);                              \
-    if (RESULT != VK_SUCCESS && !GPU->isDeviceLost()) {                                            \
-      SkDebugf("Failed vulkan call. Error: %d," #X "\n", RESULT);                                  \
-    }                                                                                              \
-    if (RESULT == VK_ERROR_DEVICE_LOST) {                                                          \
-      GPU->setDeviceLost();                                                                        \
-    } else if (RESULT == VK_ERROR_OUT_OF_HOST_MEMORY || RESULT == VK_ERROR_OUT_OF_DEVICE_MEMORY) { \
-      GPU->setOOMed();                                                                             \
-    }                                                                                              \
+#define GR_VK_CALL_RESULT(GPU, RESULT, X)                             \
+  do {                                                                \
+    (RESULT) = GR_VK_CALL(GPU->vkInterface(), X);                     \
+    SkASSERT(VK_SUCCESS == RESULT || VK_ERROR_DEVICE_LOST == RESULT); \
+    if (RESULT != VK_SUCCESS && !GPU->isDeviceLost()) {               \
+      SkDebugf("Failed vulkan call. Error: %d," #X "\n", RESULT);     \
+    }                                                                 \
+    GPU->checkVkResult(RESULT);                                       \
   } while (false)
 
-#define GR_VK_CALL_RESULT_NOCHECK(GPU, RESULT, X)                                                  \
-  do {                                                                                             \
-    (RESULT) = GR_VK_CALL(GPU->vkInterface(), X);                                                  \
-    if (RESULT == VK_ERROR_DEVICE_LOST) {                                                          \
-      GPU->setDeviceLost();                                                                        \
-    } else if (RESULT == VK_ERROR_OUT_OF_HOST_MEMORY || RESULT == VK_ERROR_OUT_OF_DEVICE_MEMORY) { \
-      GPU->setOOMed();                                                                             \
-    }                                                                                              \
+#define GR_VK_CALL_RESULT_NOCHECK(GPU, RESULT, X) \
+  do {                                            \
+    (RESULT) = GR_VK_CALL(GPU->vkInterface(), X); \
+    GPU->checkVkResult(RESULT);                   \
   } while (false)
 
 // same as GR_VK_CALL but checks for success
@@ -50,9 +42,9 @@ class GrVkGpu;
   VkResult SK_MACRO_APPEND_LINE(ret); \
   GR_VK_CALL_RESULT(GPU, SK_MACRO_APPEND_LINE(ret), X)
 
-bool GrVkFormatIsSupported(VkFormat);
+bool GrVkFormatIsSupported(VkFormat) noexcept;
 
-static constexpr uint32_t GrVkFormatChannels(VkFormat vkFormat) {
+static constexpr uint32_t GrVkFormatChannels(VkFormat vkFormat) noexcept {
   switch (vkFormat) {
     case VK_FORMAT_R8G8B8A8_UNORM: return kRGBA_SkColorChannelFlags;
     case VK_FORMAT_R8_UNORM: return kRed_SkColorChannelFlag;
@@ -80,9 +72,9 @@ static constexpr uint32_t GrVkFormatChannels(VkFormat vkFormat) {
   }
 }
 
-bool GrVkFormatNeedsYcbcrSampler(VkFormat format);
+bool GrVkFormatNeedsYcbcrSampler(VkFormat format) noexcept;
 
-bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples);
+bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples) noexcept;
 
 bool GrCompileVkShaderModule(
     GrVkGpu* gpu, const SkSL::String& shaderString, VkShaderStageFlagBits stage,
@@ -97,10 +89,10 @@ bool GrInstallVkShaderModule(
 /**
  * Returns true if the format is compressed.
  */
-bool GrVkFormatIsCompressed(VkFormat);
+bool GrVkFormatIsCompressed(VkFormat) noexcept;
 
-#if GR_TEST_UTILS
-static constexpr const char* GrVkFormatToStr(VkFormat vkFormat) {
+#if defined(SK_DEBUG) || GR_TEST_UTILS
+static constexpr const char* GrVkFormatToStr(VkFormat vkFormat) noexcept {
   switch (vkFormat) {
     case VK_FORMAT_R8G8B8A8_UNORM: return "R8G8B8A8_UNORM";
     case VK_FORMAT_R8_UNORM: return "R8_UNORM";

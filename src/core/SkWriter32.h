@@ -116,7 +116,7 @@ class SkWriter32 : SkNoncopyable {
     rrect.writeToMemory(this->reserve(SkRRect::kSizeInMemory));
   }
 
-  void writePath(const SkPath& path) noexcept {
+  void writePath(const SkPath& path) {
     size_t size = path.writeToMemory(nullptr);
     SkASSERT(SkAlign4(size) == size);
     path.writeToMemory(this->reserve(size));
@@ -124,7 +124,7 @@ class SkWriter32 : SkNoncopyable {
 
   void writeMatrix(const SkMatrix& matrix) noexcept;
 
-  void writeRegion(const SkRegion& rgn) noexcept {
+  void writeRegion(const SkRegion& rgn) {
     size_t size = rgn.writeToMemory(nullptr);
     SkASSERT(SkAlign4(size) == size);
     rgn.writeToMemory(this->reserve(size));
@@ -170,7 +170,7 @@ class SkWriter32 : SkNoncopyable {
    *
    *  If you write NULL, it will be read as "".
    */
-  void writeString(const char* str, size_t len = (size_t)-1) noexcept;
+  void writeString(const char* str, size_t len = (size_t)-1);
 
   /**
    *  Computes the size (aligned to multiple of 4) need to write the string
@@ -204,7 +204,7 @@ class SkWriter32 : SkNoncopyable {
   // copy into a single buffer (allocated by caller). Must be at least size()
   void flatten(void* dst) const noexcept { memcpy(dst, fData, fUsed); }
 
-  bool writeToStream(SkWStream* stream) const { return stream->write(fData, fUsed); }
+  bool writeToStream(SkWStream* stream) const noexcept { return stream->write(fData, fUsed); }
 
   // read from the stream, and write up to length bytes. Return the actual
   // number of bytes written.
@@ -236,9 +236,9 @@ class SkWriter32 : SkNoncopyable {
 template <size_t SIZE>
 class SkSWriter32 : public SkWriter32 {
  public:
-  SkSWriter32() { this->reset(); }
+  SkSWriter32() noexcept { this->reset(); }
 
-  void reset() { this->INHERITED::reset(fData.fStorage, SIZE); }
+  void reset() noexcept { this->INHERITED::reset(fData.fStorage, SIZE); }
 
  private:
   union {

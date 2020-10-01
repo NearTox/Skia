@@ -16,7 +16,7 @@
 class SkBitmap;
 class SkData;
 
-static constexpr bool SkCompressionTypeIsOpaque(SkImage::CompressionType compression) {
+static constexpr bool SkCompressionTypeIsOpaque(SkImage::CompressionType compression) noexcept {
   switch (compression) {
     case SkImage::CompressionType::kNone: return true;
     case SkImage::CompressionType::kETC2_RGB8_UNORM: return true;
@@ -29,19 +29,20 @@ static constexpr bool SkCompressionTypeIsOpaque(SkImage::CompressionType compres
 
 size_t SkCompressedDataSize(
     SkImage::CompressionType, SkISize baseDimensions, SkTArray<size_t>* individualMipOffsets,
-    bool mipMapped) noexcept;
+    bool mipMapped);
+size_t SkCompressedBlockSize(SkImage::CompressionType type);
 
 /**
  * Returns the data size for the given SkImage::CompressionType
  */
 size_t SkCompressedFormatDataSize(
-    SkImage::CompressionType compressionType, SkISize dimensions, bool mipMapped) noexcept;
+    SkImage::CompressionType compressionType, SkISize dimensions, bool mipMapped);
 
 /*
  * This method will decompress the bottommost level in 'data' into 'dst'.
  */
 bool SkDecompress(
     sk_sp<SkData> data, SkISize dimensions, SkImage::CompressionType compressionType,
-    SkBitmap* dst) noexcept;
+    SkBitmap* dst);
 
 #endif

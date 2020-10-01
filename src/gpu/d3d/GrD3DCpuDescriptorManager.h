@@ -28,7 +28,7 @@ class GrD3DCpuDescriptorManager {
   void recycleConstantOrShaderView(const GrD3DDescriptorHeap::CPUHandle&);
 
   GrD3DDescriptorHeap::CPUHandle createSampler(
-      GrD3DGpu*, D3D12_FILTER filter, D3D12_TEXTURE_ADDRESS_MODE addressModeU,
+      GrD3DGpu*, D3D12_FILTER filter, float maxLOD, D3D12_TEXTURE_ADDRESS_MODE addressModeU,
       D3D12_TEXTURE_ADDRESS_MODE addressModeV);
   void recycleSampler(const GrD3DDescriptorHeap::CPUHandle&);
 

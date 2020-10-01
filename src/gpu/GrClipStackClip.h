@@ -25,16 +25,13 @@ class GrClipStackClip final : public GrClip {
       const SkMatrixProvider* matrixProvider = nullptr)
       : fDeviceSize(dimensions), fStack(stack), fMatrixProvider(matrixProvider) {}
 
-  bool quickContains(const SkRect&) const final;
-  bool quickContains(const SkRRect&) const final;
   SkIRect getConservativeBounds() const final;
-  bool apply(
-      GrRecordingContext*, GrRenderTargetContext*, bool useHWAA, bool hasUserStencilSettings,
+  Effect apply(
+      GrRecordingContext*, GrRenderTargetContext*, GrAAType aaType, bool hasUserStencilSettings,
       GrAppliedClip* out, SkRect* bounds) const final;
+  PreClipResult preApply(const SkRect& drawBounds, GrAA aa) const final;
 
-  bool isRRect(SkRRect* rr, GrAA* aa) const override;
-
-  sk_sp<GrTextureProxy> testingOnly_createClipMask(GrContext*) const;
+  sk_sp<GrTextureProxy> testingOnly_createClipMask(GrRecordingContext*) const;
   static const char kMaskTestTag[];
 
  private:

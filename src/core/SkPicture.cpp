@@ -11,6 +11,7 @@
 #include "include/core/SkPictureRecorder.h"
 #include "include/core/SkSerialProcs.h"
 #include "include/private/SkTo.h"
+#include "src/core/SkCanvasPriv.h"
 #include "src/core/SkMathPriv.h"
 #include "src/core/SkPictureCommon.h"
 #include "src/core/SkPictureData.h"
@@ -66,7 +67,7 @@ bool SkPicture::IsValidPictInfo(const SkPictInfo& info) noexcept {
   return true;
 }
 
-bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) noexcept {
+bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
   if (!stream) {
     return false;
   }
@@ -94,11 +95,6 @@ bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) noexcept {
   if (!stream->readScalar(&info.fCullRect.fBottom)) {
     return false;
   }
-  if (info.getVersion() < SkPicturePriv::kRemoveHeaderFlags_Version) {
-    if (!stream->readU32(nullptr)) {
-      return false;
-    }
-  }
 
   if (!IsValidPictInfo(info)) {
     return false;
@@ -109,11 +105,11 @@ bool SkPicture::StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) noexcept {
   }
   return true;
 }
-bool SkPicture_StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) noexcept {
+bool SkPicture_StreamIsSKP(SkStream* stream, SkPictInfo* pInfo) {
   return SkPicture::StreamIsSKP(stream, pInfo);
 }
 
-bool SkPicture::BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo) noexcept {
+bool SkPicture::BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo) {
   SkPictInfo info;
   SkASSERT(sizeof(kMagic) == sizeof(info.fMagic));
   if (!buffer->readByteArray(&info.fMagic, sizeof(kMagic))) {
@@ -122,9 +118,6 @@ bool SkPicture::BufferIsSKP(SkReadBuffer* buffer, SkPictInfo* pInfo) noexcept {
 
   info.setVersion(buffer->readUInt());
   buffer->readRect(&info.fCullRect);
-  if (info.getVersion() < SkPicturePriv::kRemoveHeaderFlags_Version) {
-    (void)buffer->readUInt();  // used to be flags
-  }
 
   if (IsValidPictInfo(info)) {
     if (pInfo) {
@@ -266,7 +259,7 @@ static sk_sp<SkData> custom_serialize(const SkPicture* picture, const SkSerialPr
   return nullptr;
 }
 
-static bool write_pad32(SkWStream* stream, const void* data, size_t size) {
+static bool write_pad32(SkWStream* stream, const void* data, size_t size) noexcept {
   if (!stream->write(data, size)) {
     return false;
   }
@@ -342,8 +335,10 @@ sk_sp<SkPicture> SkPicture::MakePlaceholder(SkRect cull) {
     void playback(SkCanvas*, AbortCallback*) const noexcept override {}
 
     // approximateOpCount() needs to be greater than kMaxPictureOpsToUnrollInsteadOfRef
-    // in SkCanvas.cpp to avoid that unrolling.  SK_MaxS32 can't not be big enough!
-    int approximateOpCount() const noexcept override { return SK_MaxS32; }
+    // (SkCanvasPriv.h) to avoid unrolling this into a parent picture.
+    int approximateOpCount(bool) const noexcept override {
+      return kMaxPictureOpsToUnrollInsteadOfRef + 1;
+    }
     size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
     SkRect cullRect() const noexcept override { return fCull; }
 

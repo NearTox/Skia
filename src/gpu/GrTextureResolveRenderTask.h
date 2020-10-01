@@ -30,8 +30,10 @@ class GrTextureResolveRenderTask final : public GrRenderTask {
 
   bool onExecute(GrOpFlushState*) override;
 
+#if GR_TEST_UTILS
+  const char* name() const final { return "TextureResolve"; }
+#endif
 #ifdef SK_DEBUG
-  const char* name() const noexcept final { return "TextureResolve"; }
   void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const override;
 #endif
 

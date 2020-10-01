@@ -35,7 +35,7 @@ struct SkWritePixelsRec {
    *  On false, leaves self unchanged, but indicates that it does not overlap dst, or
    *  is not valid (e.g. bad fInfo) for writePixels().
    */
-  bool trim(int dstWidth, int dstHeight) noexcept;
+  bool trim(int dstWidth, int dstHeight);
 };
 
 #endif

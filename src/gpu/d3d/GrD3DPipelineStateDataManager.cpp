@@ -22,9 +22,9 @@ GrD3DPipelineStateDataManager::GrD3DPipelineStateDataManager(
         GrShaderVar::kNonArray == uniformInfo.fVariable.getArrayCount() ||
         uniformInfo.fVariable.getArrayCount() > 0);
     SkDEBUGCODE(uniform.fArrayCount = uniformInfo.fVariable.getArrayCount();
-                uniform.fType = uniformInfo.fVariable.getType();)
+                uniform.fType = uniformInfo.fVariable.getType());
 
-        uniform.fOffset = uniformInfo.fUBOOffset;
+    uniform.fOffset = uniformInfo.fUBOOffset;
     ++i;
   }
 }

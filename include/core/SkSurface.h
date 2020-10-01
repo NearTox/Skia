@@ -9,6 +9,7 @@
 #define SkSurface_DEFINED
 
 #include "include/core/SkImage.h"
+#include "include/core/SkPixmap.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkSurfaceProps.h"
 
@@ -68,6 +69,11 @@ class SK_API SkSurface : public SkRefCnt {
   static sk_sp<SkSurface> MakeRasterDirect(
       const SkImageInfo& imageInfo, void* pixels, size_t rowBytes,
       const SkSurfaceProps* surfaceProps = nullptr);
+
+  static sk_sp<SkSurface> MakeRasterDirect(
+      const SkPixmap& pm, const SkSurfaceProps* props = nullptr) {
+    return MakeRasterDirect(pm.info(), pm.writable_addr(), pm.rowBytes(), props);
+  }
 
   /** Allocates raster SkSurface. SkCanvas returned by SkSurface draws directly into pixels.
       releaseProc is called with pixels and context when SkSurface is deleted.
@@ -343,6 +349,13 @@ class SK_API SkSurface : public SkRefCnt {
       @return                      SkSurface if all parameters are valid; otherwise, nullptr
   */
   static sk_sp<SkSurface> MakeRenderTarget(
+      GrRecordingContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo,
+      int sampleCount, GrSurfaceOrigin surfaceOrigin, const SkSurfaceProps* surfaceProps,
+      bool shouldCreateWithMips = false);
+
+  /** Deprecated.
+   */
+  static sk_sp<SkSurface> MakeRenderTarget(
       GrContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo, int sampleCount,
       GrSurfaceOrigin surfaceOrigin, const SkSurfaceProps* surfaceProps,
       bool shouldCreateWithMips = false);
@@ -369,11 +382,17 @@ class SK_API SkSurface : public SkRefCnt {
       @return             SkSurface if all parameters are valid; otherwise, nullptr
   */
   static sk_sp<SkSurface> MakeRenderTarget(
-      GrContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo, int sampleCount,
-      const SkSurfaceProps* surfaceProps) {
+      GrRecordingContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo,
+      int sampleCount, const SkSurfaceProps* surfaceProps) {
     return MakeRenderTarget(
         context, budgeted, imageInfo, sampleCount, kBottomLeft_GrSurfaceOrigin, surfaceProps);
   }
+
+  /** Deprecated.
+   */
+  static sk_sp<SkSurface> MakeRenderTarget(
+      GrContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo, int sampleCount,
+      const SkSurfaceProps* surfaceProps);
 
   /** Returns SkSurface on GPU indicated by context. Allocates memory for
       pixels, based on the width, height, and SkColorType in SkImageInfo.  budgeted
@@ -389,12 +408,17 @@ class SK_API SkSurface : public SkRefCnt {
       @return           SkSurface if all parameters are valid; otherwise, nullptr
   */
   static sk_sp<SkSurface> MakeRenderTarget(
-      GrContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo) {
+      GrRecordingContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo) {
     if (!imageInfo.width() || !imageInfo.height()) {
       return nullptr;
     }
     return MakeRenderTarget(context, budgeted, imageInfo, 0, kBottomLeft_GrSurfaceOrigin, nullptr);
   }
+
+  /** Deprecated.
+   */
+  static sk_sp<SkSurface> MakeRenderTarget(
+      GrContext* context, SkBudgeted budgeted, const SkImageInfo& imageInfo);
 
   /** Returns SkSurface on GPU indicated by context that is compatible with the provided
       characterization. budgeted selects whether allocation for pixels is tracked by context.
@@ -500,11 +524,20 @@ class SK_API SkSurface : public SkRefCnt {
   */
   void notifyContentWillChange(ContentChangeMode mode);
 
-  /** Returns the GPU context of the GPU surface.
-
-      @return  GPU context, if available; nullptr otherwise
+  /** Deprecated.
+      This functionality is now achieved via:
+         GrRecordingContext* recordingContext = surface->recordingContext();
+         GrDirectContext* directContext = recordingContext->asDirectContext();
+      Where 'recordingContext' could be null if 'surface' is not GPU backed and
+      'directContext' could be null if the calling code is in the midst of DDL recording.
   */
   GrContext* getContext();
+
+  /** Returns the recording context being used by the SkSurface.
+
+      @return the recording context, if available; nullptr otherwise
+   */
+  GrRecordingContext* recordingContext();
 
   enum BackendHandleAccess {
     kFlushRead_BackendHandleAccess,     //!< back-end object is readable
@@ -742,22 +775,7 @@ class SK_API SkSurface : public SkRefCnt {
   */
   bool readPixels(const SkBitmap& dst, int srcX, int srcY);
 
-  /** The result from asyncRescaleAndReadPixels() or asyncRescaleAndReadPixelsYUV420(). */
-  class AsyncReadResult {
-   public:
-    AsyncReadResult(const AsyncReadResult&) = delete;
-    AsyncReadResult(AsyncReadResult&&) = delete;
-    AsyncReadResult& operator=(const AsyncReadResult&) = delete;
-    AsyncReadResult& operator=(AsyncReadResult&&) = delete;
-
-    virtual ~AsyncReadResult() = default;
-    virtual int count() const = 0;
-    virtual const void* data(int i) const = 0;
-    virtual size_t rowBytes(int i) const = 0;
-
-   protected:
-    AsyncReadResult() = default;
-  };
+  using AsyncReadResult = SkImage::AsyncReadResult;
 
   /** Client-provided context that is passed to client-provided ReadPixelsContext. */
   using ReadPixelsContext = void*;
@@ -770,7 +788,7 @@ class SK_API SkSurface : public SkRefCnt {
   /** Controls the gamma that rescaling occurs in for asyncRescaleAndReadPixels() and
       asyncRescaleAndReadPixelsYUV420().
    */
-  enum RescaleGamma : bool { kSrc, kLinear };
+  using RescaleGamma = SkImage::RescaleGamma;
 
   /** Makes surface pixel data available to caller, possibly asynchronously. It can also rescale
       the surface pixels.
@@ -838,7 +856,7 @@ class SK_API SkSurface : public SkRefCnt {
   void asyncRescaleAndReadPixelsYUV420(
       SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
       const SkISize& dstSize, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
-      ReadPixelsCallback callback, ReadPixelsContext);
+      ReadPixelsCallback callback, ReadPixelsContext context);
 
   /** Copies SkRect of pixels from the src SkPixmap to the SkSurface.
 
@@ -983,17 +1001,26 @@ class SK_API SkSurface : public SkRefCnt {
   GrSemaphoresSubmitted flush(
       const GrFlushInfo& info, const GrBackendSurfaceMutableState* newState = nullptr);
 
-  /** Inserts a list of GPU semaphores that the current GPU-backed API must wait on before
-      executing any more commands on the GPU for this surface. Skia will take ownership of the
-      underlying semaphores and delete them once they have been signaled and waited on.
-      If this call returns false, then the GPU back-end will not wait on any passed in semaphores,
-      and the client will still own the semaphores.
+  void flush() { this->flush({}); }
 
-      @param numSemaphores   size of waitSemaphores array
-      @param waitSemaphores  array of semaphore containers
-      @return                true if GPU is waiting on semaphores
+  /** Inserts a list of GPU semaphores that the current GPU-backed API must wait on before
+      executing any more commands on the GPU for this surface. If this call returns false, then
+      the GPU back-end will not wait on any passed in semaphores, and the client will still own
+      the semaphores, regardless of the value of deleteSemaphoresAfterWait.
+
+      If deleteSemaphoresAfterWait is false then Skia will not delete the semaphores. In this case
+      it is the client's responsibility to not destroy or attempt to reuse the semaphores until it
+      knows that Skia has finished waiting on them. This can be done by using finishedProcs
+      on flush calls.
+
+      @param numSemaphores               size of waitSemaphores array
+      @param waitSemaphores              array of semaphore containers
+      @paramm deleteSemaphoresAfterWait  who owns and should delete the semaphores
+      @return                            true if GPU is waiting on semaphores
   */
-  bool wait(int numSemaphores, const GrBackendSemaphore* waitSemaphores);
+  bool wait(
+      int numSemaphores, const GrBackendSemaphore* waitSemaphores,
+      bool deleteSemaphoresAfterWait = true);
 
   /** Initializes SkSurfaceCharacterization that can be used to perform GPU back-end
       processing in a separate thread. Typically this is used to divide drawing
@@ -1020,7 +1047,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Surface_draw_2
   */
-  bool draw(SkDeferredDisplayList* deferredDisplayList);
+  bool draw(sk_sp<const SkDeferredDisplayList> deferredDisplayList);
 
  protected:
   SkSurface(int width, int height, const SkSurfaceProps* surfaceProps) noexcept;

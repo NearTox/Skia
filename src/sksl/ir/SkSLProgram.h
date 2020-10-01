@@ -39,13 +39,13 @@ class Context;
 struct Program {
   struct Settings {
     struct Value {
-      Value(bool b) noexcept : fKind(kBool_Kind), fValue(b) {}
+      constexpr Value(bool b) noexcept : fKind(kBool_Kind), fValue(b) {}
 
-      Value(int i) noexcept : fKind(kInt_Kind), fValue(i) {}
+      constexpr Value(int i) noexcept : fKind(kInt_Kind), fValue(i) {}
 
-      Value(unsigned int i) noexcept : fKind(kInt_Kind), fValue(i) {}
+      constexpr Value(unsigned int i) noexcept : fKind(kInt_Kind), fValue(i) {}
 
-      Value(float f) noexcept : fKind(kFloat_Kind), fValueF(f) {}
+      constexpr Value(float f) noexcept : fKind(kFloat_Kind), fValueF(f) {}
 
       std::unique_ptr<Expression> literal(const Context& context, int offset) const {
         switch (fKind) {
@@ -101,8 +101,9 @@ struct Program {
     // If true, remove any uncalled functions other than main(). Note that a function which
     // starts out being used may end up being uncalled after optimization.
     bool fRemoveDeadFunctions = true;
-
-    std::unordered_map<String, Value> fArgs;
+    // Functions smaller than this (measured in IR nodes) will be inlined. Default is arbitrary.
+    // Set to 0 to disable inlining entirely.
+    int fInlineThreshold = 50;
   };
 
   struct Inputs {
@@ -215,7 +216,7 @@ struct Program {
       std::shared_ptr<Context> context,
       std::vector<std::unique_ptr<ProgramElement>>* inheritedElements,
       std::vector<std::unique_ptr<ProgramElement>> elements, std::shared_ptr<SymbolTable> symbols,
-      Inputs inputs)
+      Inputs inputs) noexcept
       : fKind(kind),
         fSource(std::move(source)),
         fSettings(settings),

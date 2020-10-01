@@ -106,13 +106,13 @@ class SK_API SkImageFilter : public SkFlattenable {
   /**
    *  Returns the number of inputs this filter will accept (some inputs can be NULL).
    */
-  int countInputs() const noexcept;
+  int countInputs() const;
 
   /**
    *  Returns the input filter at a given index, or NULL if no input is connected.  The indices
    *  used are filter-specific.
    */
-  const SkImageFilter* getInput(int i) const noexcept;
+  const SkImageFilter* getInput(int i) const;
 
   // Default impl returns union of all input bounds.
   virtual SkRect computeFastBounds(const SkRect& bounds) const;

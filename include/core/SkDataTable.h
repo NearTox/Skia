@@ -52,7 +52,7 @@ class SK_API SkDataTable : public SkRefCnt {
    *  Returns the index'th entry as a c-string, and assumes that the trailing
    *  null byte had been copied into the table as well.
    */
-  const char* atStr(int index) const {
+  const char* atStr(int index) const noexcept {
     size_t size;
     const char* str = this->atT<const char>(index, &size);
     SkASSERT(strlen(str) + 1 == size);
@@ -107,7 +107,7 @@ class SK_API SkDataTable : public SkRefCnt {
   SkDataTable() noexcept;
   SkDataTable(const void* array, size_t elemSize, int count, FreeProc, void* context) noexcept;
   SkDataTable(const Dir*, int count, FreeProc, void* context) noexcept;
-  virtual ~SkDataTable();
+  ~SkDataTable() override;
 
   friend class SkDataTableBuilder;  // access to Dir
 

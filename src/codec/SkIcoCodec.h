@@ -41,19 +41,17 @@ class SkIcoCodec : public SkCodec {
   Result onGetPixels(
       const SkImageInfo& dstInfo, void* dst, size_t dstRowBytes, const Options&, int*) override;
 
-  SkEncodedImageFormat onGetEncodedFormat() const noexcept override {
-    return SkEncodedImageFormat::kICO;
-  }
+  SkEncodedImageFormat onGetEncodedFormat() const override { return SkEncodedImageFormat::kICO; }
 
   SkScanlineOrder onGetScanlineOrder() const override;
 
-  bool conversionSupported(const SkImageInfo&, bool, bool) noexcept override {
+  bool conversionSupported(const SkImageInfo&, bool, bool) override {
     // This will be checked by the embedded codec.
     return true;
   }
 
   // Handled by the embedded codec.
-  bool usesColorXform() const noexcept override { return false; }
+  bool usesColorXform() const override { return false; }
 
  private:
   Result onStartScanlineDecode(

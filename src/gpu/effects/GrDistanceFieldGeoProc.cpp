@@ -152,9 +152,7 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
     fragBuilder->codeAppendf("%s = half4(val);", args.fOutputCoverage);
   }
 
-  void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-      const CoordTransformRange& transformRange) override {
+  void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {
     const GrDistanceFieldA8TextGeoProc& dfa8gp = proc.cast<GrDistanceFieldA8TextGeoProc>();
 
 #ifdef SK_GAMMA_APPLY_TO_A8
@@ -174,7 +172,6 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
           1.0f / atlasDimensions.fHeight);
       fAtlasDimensions = atlasDimensions;
     }
-    this->setTransformDataHelper(pdman, transformRange);
     this->setTransform(pdman, fLocalMatrixUniform, dfa8gp.localMatrix(), &fLocalMatrix);
   }
 
@@ -286,7 +283,7 @@ GrGeometryProcessor* GrDistanceFieldA8TextGeoProc::TestCreate(GrProcessorTestDat
   GrTest::TestWrapModes(d->fRandom, wrapModes);
   GrSamplerState samplerState(
       wrapModes,
-      d->fRandom->nextBool() ? GrSamplerState::Filter::kBilerp : GrSamplerState::Filter::kNearest);
+      d->fRandom->nextBool() ? GrSamplerState::Filter::kLinear : GrSamplerState::Filter::kNearest);
 
   uint32_t flags = 0;
   flags |= d->fRandom->nextBool() ? kSimilarity_DistanceFieldEffectFlag : 0;
@@ -430,9 +427,7 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
     fragBuilder->codeAppendf("%s = half4(val);", args.fOutputCoverage);
   }
 
-  void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-      const CoordTransformRange& transformRange) override {
+  void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {
     const GrDistanceFieldPathGeoProc& dfpgp = proc.cast<GrDistanceFieldPathGeoProc>();
 
     // We always set the matrix uniform; it's either used to transform from local to device
@@ -447,8 +442,6 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
           1.0f / atlasDimensions.fHeight);
       fAtlasDimensions = atlasDimensions;
     }
-
-    this->setTransformDataHelper(pdman, transformRange);
   }
 
   static inline void GenKey(
@@ -546,7 +539,7 @@ GrGeometryProcessor* GrDistanceFieldPathGeoProc::TestCreate(GrProcessorTestData*
   GrTest::TestWrapModes(d->fRandom, wrapModes);
   GrSamplerState samplerState(
       wrapModes,
-      d->fRandom->nextBool() ? GrSamplerState::Filter::kBilerp : GrSamplerState::Filter::kNearest);
+      d->fRandom->nextBool() ? GrSamplerState::Filter::kLinear : GrSamplerState::Filter::kNearest);
 
   uint32_t flags = 0;
   flags |= d->fRandom->nextBool() ? kSimilarity_DistanceFieldEffectFlag : 0;
@@ -732,8 +725,7 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
   }
 
   void setData(
-      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& processor,
-      const CoordTransformRange& transformRange) override {
+      const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& processor) override {
     SkASSERT(fDistanceAdjustUni.isValid());
 
     const GrDistanceFieldLCDTextGeoProc& dflcd = processor.cast<GrDistanceFieldLCDTextGeoProc>();
@@ -751,7 +743,6 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
           1.0f / atlasDimensions.fHeight);
       fAtlasDimensions = atlasDimensions;
     }
-    this->setTransformDataHelper(pdman, transformRange);
     this->setTransform(pdman, fLocalMatrixUniform, dflcd.localMatrix(), &fLocalMatrix);
   }
 
@@ -856,7 +847,7 @@ GrGeometryProcessor* GrDistanceFieldLCDTextGeoProc::TestCreate(GrProcessorTestDa
   GrTest::TestWrapModes(d->fRandom, wrapModes);
   GrSamplerState samplerState(
       wrapModes,
-      d->fRandom->nextBool() ? GrSamplerState::Filter::kBilerp : GrSamplerState::Filter::kNearest);
+      d->fRandom->nextBool() ? GrSamplerState::Filter::kLinear : GrSamplerState::Filter::kNearest);
   DistanceAdjust wa = {0.0f, 0.1f, -0.1f};
   uint32_t flags = kUseLCD_DistanceFieldEffectFlag;
   flags |= d->fRandom->nextBool() ? kSimilarity_DistanceFieldEffectFlag : 0;

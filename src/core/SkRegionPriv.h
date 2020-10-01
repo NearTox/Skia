@@ -32,7 +32,7 @@ class SkRegionPriv {
 
 static constexpr int SkRegion_kRunTypeSentinel = 0x7FFFFFFF;
 
-inline bool SkRegionValueIsSentinel(int32_t value) noexcept {
+constexpr inline bool SkRegionValueIsSentinel(int32_t value) noexcept {
   return value == (int32_t)SkRegion_kRunTypeSentinel;
 }
 

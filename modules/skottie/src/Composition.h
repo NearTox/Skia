@@ -9,6 +9,7 @@
 #define SkottieComposition_DEFINED
 
 #include "modules/skottie/src/SkottiePriv.h"
+#include "modules/skottie/src/Layer.h"
 
 #include "include/private/SkTArray.h"
 #include "include/private/SkTHash.h"

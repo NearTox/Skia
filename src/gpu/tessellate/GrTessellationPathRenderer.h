@@ -13,7 +13,7 @@
 #include "src/gpu/GrPathRenderer.h"
 #include <map>
 
-// This is the tie-in point for path rendering via GrTessellatePathOp. This path renderer draws
+// This is the tie-in point for path rendering via GrPathTessellateOp. This path renderer draws
 // paths using a hybrid Red Book "stencil, then cover" method. Curves get linearized by GPU
 // tessellation shaders. This path renderer doesn't apply analytic AA, so it requires a render
 // target that supports either MSAA or mixed samples if AA is desired.
@@ -43,6 +43,8 @@ class GrTessellationPathRenderer : public GrPathRenderer, public GrOnFlushCallba
     kWireframe = (1 << 2)
   };
 
+  static bool IsSupported(const GrCaps&);
+
   GrTessellationPathRenderer(const GrCaps&);
   const char* name() const noexcept final { return "GrTessellationPathRenderer"; }
   StencilSupport onGetStencilSupport(const GrStyledShape& shape) const override {
@@ -55,7 +57,7 @@ class GrTessellationPathRenderer : public GrPathRenderer, public GrOnFlushCallba
   void preFlush(GrOnFlushResourceProvider*, const uint32_t* opsTaskIDs, int numOpsTaskIDs) override;
 
  private:
-  void initAtlasFlags(const GrShaderCaps& shaderCaps);
+  void initAtlasFlags(const GrCaps&);
   SkPath* getAtlasUberPath(SkPathFillType fillType, bool antialias) {
     int idx = (int)antialias << 1;
     idx |= (int)fillType & 1;

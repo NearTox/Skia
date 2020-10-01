@@ -32,7 +32,8 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   // Forwarded to the wrapped canvas.
   SkISize getBaseLayerSize() const noexcept override { return proxy()->getBaseLayerSize(); }
   GrContext* getGrContext() noexcept override { return proxy()->getGrContext(); }
-  GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext() override {
+  GrRecordingContext* recordingContext() noexcept override { return proxy()->recordingContext(); }
+  GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext() noexcept override {
     return proxy()->internal_private_accessTopLayerRenderTargetContext();
   }
 

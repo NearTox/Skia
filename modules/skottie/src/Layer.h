@@ -9,6 +9,7 @@
 #define SkottieLayer_DEFINED
 
 #include "modules/skottie/src/SkottiePriv.h"
+#include "modules/sksg/include/SkSGTransform.h"
 
 namespace skottie {
 namespace internal {
@@ -43,7 +44,7 @@ class LayerBuilder final {
     kIs3D = 0x04,  // 3D layer ("ddd": 1) or camera layer
   };
 
-  bool is3D() const noexcept { return fFlags & Flags::kIs3D; }
+  bool is3D() const { return fFlags & Flags::kIs3D; }
 
   bool hasMotionBlur(const CompositionBuilder*) const;
 

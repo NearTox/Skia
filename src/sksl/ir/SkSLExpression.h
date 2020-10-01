@@ -9,7 +9,6 @@
 #define SKSL_EXPRESSION
 
 #include "src/sksl/ir/SkSLType.h"
-#include "src/sksl/ir/SkSLVariable.h"
 
 #include <unordered_map>
 
@@ -17,6 +16,7 @@ namespace SkSL {
 
 struct Expression;
 class IRGenerator;
+struct Variable;
 
 typedef std::unordered_map<const Variable*, std::unique_ptr<Expression>*> DefinitionMap;
 
@@ -41,9 +41,9 @@ struct Expression : public IRNode {
     kPostfix_Kind,
     kSetting_Kind,
     kSwizzle_Kind,
-    kVariableReference_Kind,
     kTernary_Kind,
     kTypeReference_Kind,
+    kVariableReference_Kind,
     kDefined_Kind
   };
 
@@ -53,10 +53,25 @@ struct Expression : public IRNode {
       : INHERITED(offset), fKind(kind), fType(std::move(type)) {}
 
   /**
+   *  Use as<T> to downcast expressions: e.g. replace `(IntLiteral&) i` with `i.as<IntLiteral>()`.
+   */
+  template <typename T>
+  const T& as() const {
+    SkASSERT(this->fKind == T::kExpressionKind);
+    return static_cast<const T&>(*this);
+  }
+
+  template <typename T>
+  T& as() {
+    SkASSERT(this->fKind == T::kExpressionKind);
+    return static_cast<T&>(*this);
+  }
+
+  /**
    * Returns true if this expression is constant. compareConstant must be implemented for all
    * constants!
    */
-  virtual bool isConstant() const noexcept { return false; }
+  virtual bool isCompileTimeConstant() const noexcept { return false; }
 
   /**
    * Compares this constant expression against another constant expression of the same type. It is
@@ -83,12 +98,12 @@ struct Expression : public IRNode {
    * Returns true if, given fixed values for uniforms, this expression always evaluates to the
    * same result with no side effects.
    */
-  virtual bool isConstantOrUniform() const {
-    SkASSERT(!this->isConstant() || !this->hasSideEffects());
-    return this->isConstant();
+  virtual bool isConstantOrUniform() const noexcept {
+    SkASSERT(!this->isCompileTimeConstant() || !this->hasSideEffects());
+    return this->isCompileTimeConstant();
   }
 
-  virtual bool hasProperty(Property property) const = 0;
+  virtual bool hasProperty(Property property) const noexcept = 0;
 
   bool hasSideEffects() const { return this->hasProperty(Property::kSideEffects); }
 

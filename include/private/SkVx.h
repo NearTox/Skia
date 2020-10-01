@@ -34,6 +34,12 @@
 #  include <arm_neon.h>
 #endif
 
+#if defined __wasm_simd128__
+// WASM SIMD intrinsics definitions:
+// https://github.com/llvm/llvm-project/blob/master/clang/lib/Headers/wasm_simd128.h
+#  include <wasm_simd128.h>
+#endif
+
 #if !defined(__clang__) && defined(__GNUC__) && defined(__mips64)
 // GCC 7 hits an internal compiler error when targeting MIPS64.
 #  define SKVX_ALIGNMENT
@@ -134,11 +140,16 @@ struct Vec<1, T> {
 };
 
 template <typename D, typename S>
-static inline D bit_pun(const S& s) noexcept {
-  static_assert(sizeof(D) == sizeof(S), "");
+static inline D unchecked_bit_pun(const S& s) noexcept {
   D d;
   memcpy(&d, &s, sizeof(D));
   return d;
+}
+
+template <typename D, typename S>
+static inline D bit_pun(const S& s) noexcept {
+  static_assert(sizeof(D) == sizeof(S), "");
+  return unchecked_bit_pun<D>(s);
 }
 
 // Translate from a value type T to its corresponding Mask, the result of a comparison.
@@ -350,8 +361,8 @@ SINT Vec<N, M<T>> operator>(const Vec<N, T>& x, const Vec<N, T>& y) noexcept {
 // N == 1 scalar implementations.
 SIT Vec<1, T> if_then_else(
     const Vec<1, M<T>>& cond, const Vec<1, T>& t, const Vec<1, T>& e) noexcept {
-  auto t_bits = bit_pun<M<T>>(t), e_bits = bit_pun<M<T>>(e);
-  return bit_pun<T>((cond.val & t_bits) | (~cond.val & e_bits));
+  // In practice this scalar implementation is unlikely to be used.  See if_then_else() below.
+  return bit_pun<Vec<1, T>>((cond & bit_pun<Vec<1, M<T>>>(t)) | (~cond & bit_pun<Vec<1, M<T>>>(e)));
 }
 
 SIT bool any(const Vec<1, T>& x) noexcept { return x.val != 0; }
@@ -385,14 +396,39 @@ SIT Vec<1, int> lrint(const Vec<1, T>& x) noexcept { return (int)std::lrint(x.va
 
 SIT Vec<1, T> rcp(const Vec<1, T>& x) noexcept { return 1 / x.val; }
 SIT Vec<1, T> rsqrt(const Vec<1, T>& x) noexcept { return rcp(sqrt(x)); }
-SIT Vec<1, T> mad(const Vec<1, T>& f, const Vec<1, T>& m, const Vec<1, T>& a) noexcept {
-  return f * m + a;
-}
 
 // All default N != 1 implementations just recurse on lo and hi halves.
 SINT Vec<N, T> if_then_else(
     const Vec<N, M<T>>& cond, const Vec<N, T>& t, const Vec<N, T>& e) noexcept {
-  return join(if_then_else(cond.lo, t.lo, e.lo), if_then_else(cond.hi, t.hi, e.hi));
+  // Specializations inline here so they can generalize what types the apply to.
+  // (This header is used in C++14 contexts, so we have to kind of fake constexpr if.)
+#if defined(__AVX__)
+  if /*constexpr*/ (N == 8 && sizeof(T) == 4) {
+    return unchecked_bit_pun<Vec<N, T>>(_mm256_blendv_ps(
+        unchecked_bit_pun<__m256>(e), unchecked_bit_pun<__m256>(t),
+        unchecked_bit_pun<__m256>(cond)));
+  }
+#endif
+#if defined(__SSE4_1__)
+  if /*constexpr*/ (N == 4 && sizeof(T) == 4) {
+    return unchecked_bit_pun<Vec<N, T>>(_mm_blendv_ps(
+        unchecked_bit_pun<__m128>(e), unchecked_bit_pun<__m128>(t),
+        unchecked_bit_pun<__m128>(cond)));
+  }
+#endif
+#if defined(__ARM_NEON)
+  if /*constexpr*/ (N == 4 && sizeof(T) == 4) {
+    return unchecked_bit_pun<Vec<N, T>>(vbslq_f32(
+        unchecked_bit_pun<uint32x4_t>(cond), unchecked_bit_pun<float32x4_t>(t),
+        unchecked_bit_pun<float32x4_t>(e)));
+  }
+#endif
+  // Recurse for large vectors to try to hit the specializations above.
+  if /*constexpr*/ (N > 4) {
+    return join(if_then_else(cond.lo, t.lo, e.lo), if_then_else(cond.hi, t.hi, e.hi));
+  }
+  // This default can lead to better code than the recursing onto scalars.
+  return bit_pun<Vec<N, T>>((cond & bit_pun<Vec<N, M<T>>>(t)) | (~cond & bit_pun<Vec<N, M<T>>>(e)));
 }
 
 SINT bool any(const Vec<N, T>& x) noexcept { return any(x.lo) || any(x.hi); }
@@ -426,9 +462,6 @@ SINT Vec<N, int> lrint(const Vec<N, T>& x) noexcept { return join(lrint(x.lo), l
 
 SINT Vec<N, T> rcp(const Vec<N, T>& x) noexcept { return join(rcp(x.lo), rcp(x.hi)); }
 SINT Vec<N, T> rsqrt(const Vec<N, T>& x) noexcept { return join(rsqrt(x.lo), rsqrt(x.hi)); }
-SINT Vec<N, T> mad(const Vec<N, T>& f, const Vec<N, T>& m, const Vec<N, T>& a) noexcept {
-  return join(mad(f.lo, m.lo, a.lo), mad(f.hi, m.hi, a.hi));
-}
 
 // Scalar/vector operations just splat the scalar to a vector...
 SINTU Vec<N, T> operator+(U x, const Vec<N, T>& y) noexcept { return Vec<N, T>(x) + y; }
@@ -465,26 +498,6 @@ SINTU Vec<N, M<T>> operator>(const Vec<N, T>& x, U y) noexcept { return x > Vec<
 SINTU Vec<N, T> min(const Vec<N, T>& x, U y) noexcept { return min(x, Vec<N, T>(y)); }
 SINTU Vec<N, T> max(const Vec<N, T>& x, U y) noexcept { return max(x, Vec<N, T>(y)); }
 SINTU Vec<N, T> pow(const Vec<N, T>& x, U y) noexcept { return pow(x, Vec<N, T>(y)); }
-
-// All vector/scalar combinations for mad() with at least one vector.
-SINTU Vec<N, T> mad(U f, const Vec<N, T>& m, const Vec<N, T>& a) noexcept {
-  return Vec<N, T>(f) * m + a;
-}
-SINTU Vec<N, T> mad(const Vec<N, T>& f, U m, const Vec<N, T>& a) noexcept {
-  return f * Vec<N, T>(m) + a;
-}
-SINTU Vec<N, T> mad(const Vec<N, T>& f, const Vec<N, T>& m, U a) noexcept {
-  return f * m + Vec<N, T>(a);
-}
-SINTU Vec<N, T> mad(const Vec<N, T>& f, U m, U a) noexcept {
-  return f * Vec<N, T>(m) + Vec<N, T>(a);
-}
-SINTU Vec<N, T> mad(U f, const Vec<N, T>& m, U a) noexcept {
-  return Vec<N, T>(f) * m + Vec<N, T>(a);
-}
-SINTU Vec<N, T> mad(U f, U m, const Vec<N, T>& a) noexcept {
-  return Vec<N, T>(f) * Vec<N, T>(m) + a;
-}
 
 // The various op= operators, for vectors...
 SINT Vec<N, T>& operator+=(Vec<N, T>& x, const Vec<N, T>& y) noexcept { return (x = x + y); }
@@ -553,6 +566,72 @@ static inline Vec<N, float> fma(
 template <int N>
 static inline Vec<N, float> fract(const Vec<N, float>& x) noexcept {
   return x - floor(x);
+}
+
+// The default cases for to_half/from_half are borrowed from skcms,
+// and assume inputs are finite and treat/flush denorm half floats as/to zero.
+// Key constants to watch for:
+//    - a float is 32-bit, 1-8-23 sign-exponent-mantissa, with 127 exponent bias;
+//    - a half  is 16-bit, 1-5-10 sign-exponent-mantissa, with  15 exponent bias.
+template <int N>
+static inline Vec<N, uint16_t> to_half_finite_ftz(const Vec<N, float>& x) noexcept {
+  Vec<N, uint32_t> sem = bit_pun<Vec<N, uint32_t>>(x), s = sem & 0x8000'0000, em = sem ^ s,
+                   is_denorm = em < 0x3880'0000;
+  return cast<uint16_t>(
+      if_then_else(is_denorm, Vec<N, uint32_t>(0), (s >> 16) + (em >> 13) - ((127 - 15) << 10)));
+}
+template <int N>
+static inline Vec<N, float> from_half_finite_ftz(const Vec<N, uint16_t>& x) noexcept {
+  Vec<N, uint32_t> wide = cast<uint32_t>(x), s = wide & 0x8000, em = wide ^ s;
+  auto is_denorm = bit_pun<Vec<N, int32_t>>(em < 0x0400);
+  return if_then_else(
+      is_denorm, Vec<N, float>(0),
+      bit_pun<Vec<N, float>>((s << 16) + (em << 13) + ((127 - 15) << 23)));
+}
+
+// Like if_then_else(), these N=1 base cases won't actually be used unless explicitly called.
+static inline Vec<1, uint16_t> to_half(const Vec<1, float>& x) noexcept {
+  return to_half_finite_ftz(x);
+}
+static inline Vec<1, float> from_half(const Vec<1, uint16_t>& x) noexcept {
+  return from_half_finite_ftz(x);
+}
+
+template <int N>
+static inline Vec<N, uint16_t> to_half(const Vec<N, float>& x) noexcept {
+#if defined(__F16C__)
+  if /*constexpr*/ (N == 8) {
+    return unchecked_bit_pun<Vec<N, uint16_t>>(
+        _mm256_cvtps_ph(unchecked_bit_pun<__m256>(x), _MM_FROUND_CUR_DIRECTION));
+  }
+#endif
+#if defined(__aarch64__)
+  if /*constexpr*/ (N == 4) {
+    return unchecked_bit_pun<Vec<N, uint16_t>>(vcvt_f16_f32(unchecked_bit_pun<float32x4_t>(x)));
+  }
+#endif
+  if /*constexpr*/ (N > 4) {
+    return join(to_half(x.lo), to_half(x.hi));
+  }
+  return to_half_finite_ftz(x);
+}
+
+template <int N>
+static inline Vec<N, float> from_half(const Vec<N, uint16_t>& x) noexcept {
+#if defined(__F16C__)
+  if /*constexpr*/ (N == 8) {
+    return unchecked_bit_pun<Vec<N, float>>(_mm256_cvtph_ps(unchecked_bit_pun<__m128i>(x)));
+  }
+#endif
+#if defined(__aarch64__)
+  if /*constexpr*/ (N == 4) {
+    return unchecked_bit_pun<Vec<N, float>>(vcvt_f32_f16(unchecked_bit_pun<float16x4_t>(x)));
+  }
+#endif
+  if /*constexpr*/ (N > 4) {
+    return join(from_half(x.lo), from_half(x.hi));
+  }
+  return from_half_finite_ftz(x);
 }
 
 // div255(x) = (x + 127) / 255 is a bit-exact rounding divide-by-255, packing down to 8-bit.
@@ -646,27 +725,6 @@ static inline Vec<2, int> lrint(const Vec<2, float>& x) noexcept {
 }
 #  endif
 
-#  if defined(__SSE4_1__)
-static inline Vec<4, float> if_then_else(
-    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) noexcept {
-  return bit_pun<Vec<4, float>>(
-      _mm_blendv_ps(bit_pun<__m128>(e), bit_pun<__m128>(t), bit_pun<__m128>(c)));
-}
-#  elif defined(__SSE__)
-static inline Vec<4, float> if_then_else(
-    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) noexcept {
-  return bit_pun<Vec<4, float>>(_mm_or_ps(
-      _mm_and_ps(bit_pun<__m128>(c), bit_pun<__m128>(t)),
-      _mm_andnot_ps(bit_pun<__m128>(c), bit_pun<__m128>(e))));
-}
-#  elif defined(__ARM_NEON)
-static inline Vec<4, float> if_then_else(
-    const Vec<4, int>& c, const Vec<4, float>& t, const Vec<4, float>& e) noexcept {
-  return bit_pun<Vec<4, float>>(
-      vbslq_f32(bit_pun<uint32x4_t>(c), bit_pun<float32x4_t>(t), bit_pun<float32x4_t>(e)));
-}
-#  endif
-
 #  if defined(__AVX2__)
 static inline Vec<4, float> fma(
     const Vec<4, float>& x, const Vec<4, float>& y, const Vec<4, float>& z) noexcept {
@@ -685,6 +743,69 @@ static inline Vec<4, float> fma(
   // These instructions tend to work like z += xy, so the order here is z,x,y.
   return bit_pun<Vec<4, float>>(
       vfmaq_f32(bit_pun<float32x4_t>(z), bit_pun<float32x4_t>(x), bit_pun<float32x4_t>(y)));
+}
+#  endif
+
+// WASM SIMD compatible operations which are not automatically compiled to SIMD commands
+// by emscripten:
+#  if defined __wasm_simd128__
+static inline Vec<4, float> min(const Vec<4, float>& x, const Vec<4, float>& y) noexcept {
+  return to_vec<4, float>(wasm_f32x4_min(to_vext(x), to_vext(y)));
+}
+static inline Vec<4, float> max(const Vec<4, float>& x, const Vec<4, float>& y) noexcept {
+  return to_vec<4, float>(wasm_f32x4_max(to_vext(x), to_vext(y)));
+}
+static inline Vec<4, float> sqrt(const Vec<4, float>& x) noexcept {
+  return to_vec<4, float>(wasm_f32x4_sqrt(to_vext(x)));
+}
+static inline Vec<4, float> abs(const Vec<4, float>& x) noexcept {
+  return to_vec<4, float>(wasm_f32x4_abs(to_vext(x)));
+}
+static inline Vec<4, float> rcp(const Vec<4, float>& x) noexcept { return 1.0f / x; }
+static inline Vec<4, float> rsqrt(const Vec<4, float>& x) noexcept { return 1.0f / sqrt(x); }
+
+static inline Vec<2, double> min(const Vec<2, double>& x, const Vec<2, double>& y) noexcept {
+  return to_vec<2, double>(wasm_f64x2_min(to_vext(x), to_vext(y)));
+}
+static inline Vec<2, double> max(const Vec<2, double>& x, const Vec<2, double>& y) noexcept {
+  return to_vec<2, double>(wasm_f64x2_max(to_vext(x), to_vext(y)));
+}
+static inline Vec<2, double> sqrt(const Vec<2, double>& x) noexcept {
+  return to_vec<2, double>(wasm_f64x2_sqrt(to_vext(x)));
+}
+static inline Vec<2, double> abs(const Vec<2, double>& x) noexcept {
+  return to_vec<2, double>(wasm_f64x2_abs(to_vext(x)));
+}
+static inline Vec<2, double> rcp(const Vec<2, double>& x) noexcept { return 1.0f / x; }
+static inline Vec<2, double> rsqrt(const Vec<2, double>& x) noexcept { return 1.0f / sqrt(x); }
+
+static inline bool any(const Vec<4, int32_t>& x) noexcept {
+  return wasm_i32x4_any_true(to_vext(x));
+}
+static inline bool all(const Vec<4, int32_t>& x) noexcept {
+  return wasm_i32x4_all_true(to_vext(x));
+}
+static inline Vec<4, int32_t> min(const Vec<4, int32_t>& x, const Vec<4, int32_t>& y) noexcept {
+  return to_vec<4, int32_t>(wasm_i32x4_min(to_vext(x), to_vext(y)));
+}
+static inline Vec<4, int32_t> max(const Vec<4, int32_t>& x, const Vec<4, int32_t>& y) noexcept {
+  return to_vec<4, int32_t>(wasm_i32x4_max(to_vext(x), to_vext(y)));
+}
+static inline Vec<4, int32_t> abs(const Vec<4, int32_t>& x) noexcept {
+  return to_vec<4, int32_t>(wasm_i32x4_abs(to_vext(x)));
+}
+
+static inline bool any(const Vec<4, uint32_t>& x) noexcept {
+  return wasm_i32x4_any_true(to_vext(x));
+}
+static inline bool all(const Vec<4, uint32_t>& x) noexcept {
+  return wasm_i32x4_all_true(to_vext(x));
+}
+static inline Vec<4, uint32_t> min(const Vec<4, uint32_t>& x, const Vec<4, uint32_t>& y) noexcept {
+  return to_vec<4, uint32_t>(wasm_u32x4_min(to_vext(x), to_vext(y)));
+}
+static inline Vec<4, uint32_t> max(const Vec<4, uint32_t>& x, const Vec<4, uint32_t>& y) noexcept {
+  return to_vec<4, uint32_t>(wasm_u32x4_max(to_vext(x), to_vext(y)));
 }
 #  endif
 

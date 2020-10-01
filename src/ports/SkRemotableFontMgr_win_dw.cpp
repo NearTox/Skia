@@ -31,13 +31,12 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
     IUnknown* fLoader;  // In COM only IUnknown pointers may be safely used for identity.
     void* fKey;
     UINT32 fKeySize;
-
-    DataId() {}
+    DataId() noexcept = default;
 
     DataId(DataId&& that) : fLoader(that.fLoader), fKey(that.fKey), fKeySize(that.fKeySize) {
       that.fLoader = nullptr;
       that.fKey = nullptr;
-      SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF;)
+      SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF);
     }
 
     ~DataId() {

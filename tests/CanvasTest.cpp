@@ -467,7 +467,7 @@ class LifeLineCanvas : public SkCanvas {
   LifeLineCanvas(int w, int h, bool* lifeline) : SkCanvas(w, h), fLifeLine(lifeline) {
     *fLifeLine = true;
   }
-  ~LifeLineCanvas() { *fLifeLine = false; }
+  ~LifeLineCanvas() override { *fLifeLine = false; }
 };
 
 }  // namespace

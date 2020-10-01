@@ -292,7 +292,7 @@ class DOMParser {
     fUnescapeBuffer.reserve(kUnescapeBufferReserve);
   }
 
-  const Value parse(const char* p, size_t size) {
+  Value parse(const char* p, size_t size) {
     if (!size) {
       return this->error(NullValue(), p, "invalid empty input");
     }
@@ -535,7 +535,7 @@ class DOMParser {
     this->popScopeAsVec<ArrayValue>(SkTo<size_t>(-fScopeIndex));
 
     SkDEBUGCODE(const auto& arr = fValueStack.back().as<ArrayValue>();
-                SkASSERT(arr.is<ArrayValue>());)
+                SkASSERT(arr.is<ArrayValue>()));
   }
 
   void pushObjectKey(const char* key, size_t size, const char* eos) {

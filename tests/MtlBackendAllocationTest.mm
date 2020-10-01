@@ -5,7 +5,7 @@
  * found in the LICENSE file.
  */
 
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "tests/Test.h"
 
@@ -14,22 +14,21 @@
 
 // In BackendAllocationTest.cpp
 void test_wrapping(
-    GrContext* context, skiatest::Reporter* reporter,
-    std::function<GrBackendTexture(GrContext*, GrMipMapped, GrRenderable)> create,
-    GrColorType colorType, GrMipMapped mipMapped, GrRenderable renderable,
-    bool* finishedBackendCreation);
+    GrDirectContext*, skiatest::Reporter*,
+    std::function<GrBackendTexture(GrDirectContext*, GrMipmapped, GrRenderable)> create,
+    GrColorType, GrMipmapped, GrRenderable, bool* finishedBackendCreation);
 
 void test_color_init(
-    GrContext* context, skiatest::Reporter* reporter,
-    std::function<GrBackendTexture(GrContext*, const SkColor4f&, GrMipMapped, GrRenderable)> create,
-    GrColorType colorType, const SkColor4f& color, GrMipMapped mipMapped, GrRenderable renderable,
-    bool* finishedBackendCreation);
+    GrDirectContext*, skiatest::Reporter*,
+    std::function<GrBackendTexture(GrDirectContext*, const SkColor4f&, GrMipmapped, GrRenderable)>
+        create,
+    GrColorType, const SkColor4f&, GrMipmapped, GrRenderable, bool* finishedBackendCreation);
 
 static void mark_signaled(void* context) { *(bool*)context = true; }
 
 DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
-  GrContext* context = ctxInfo.grContext();
-  const GrMtlCaps* mtlCaps = static_cast<const GrMtlCaps*>(context->priv().caps());
+  auto dContext = ctxInfo.directContext();
+  const GrMtlCaps* mtlCaps = static_cast<const GrMtlCaps*>(dContext->priv().caps());
 
   constexpr SkColor4f kTransCol{0, 0.25f, 0.75f, 0.5f};
   constexpr SkColor4f kGrayCol{0.75f, 0.75f, 0.75f, 0.75f};
@@ -87,8 +86,8 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
       continue;
     }
 
-    for (auto mipMapped : {GrMipMapped::kNo, GrMipMapped::kYes}) {
-      if (GrMipMapped::kYes == mipMapped && !mtlCaps->mipMapSupport()) {
+    for (auto mipMapped : {GrMipmapped::kNo, GrMipmapped::kYes}) {
+      if (GrMipmapped::kYes == mipMapped && !mtlCaps->mipmapSupport()) {
         continue;
       }
 
@@ -104,13 +103,14 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
 
         {
           auto uninitCreateMtd =
-              [format](GrContext* context, GrMipMapped mipMapped, GrRenderable renderable) {
-                return context->createBackendTexture(
+              [format](GrDirectContext* dContext, GrMipmapped mipMapped, GrRenderable renderable) {
+                return dContext->createBackendTexture(
                     32, 32, format, mipMapped, renderable, GrProtected::kNo);
               };
 
           test_wrapping(
-              context, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable, nullptr);
+              dContext, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable,
+              nullptr);
         }
 
         {
@@ -134,10 +134,10 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
           bool* finishedPtr = &finishedBackendCreation;
 
           auto createWithColorMtd = [format, swizzle, finishedPtr](
-                                        GrContext* context, const SkColor4f& color,
-                                        GrMipMapped mipMapped, GrRenderable renderable) {
+                                        GrDirectContext* dContext, const SkColor4f& color,
+                                        GrMipmapped mipMapped, GrRenderable renderable) {
             auto swizzledColor = swizzle.applyTo(color);
-            return context->createBackendTexture(
+            return dContext->createBackendTexture(
                 32, 32, format, swizzledColor, mipMapped, renderable, GrProtected::kNo,
                 mark_signaled, finishedPtr);
           };
@@ -151,8 +151,8 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
             color = {color.fR * color.fA, color.fG * color.fA, color.fB * color.fA, 1.f};
           }
           test_color_init(
-              context, reporter, createWithColorMtd, combo.fColorType, color, mipMapped, renderable,
-              finishedPtr);
+              dContext, reporter, createWithColorMtd, combo.fColorType, color, mipMapped,
+              renderable, finishedPtr);
         }
       }
     }

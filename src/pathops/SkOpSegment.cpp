@@ -328,7 +328,7 @@ void SkOpSegment::clearOne(SkOpSpan* span) {
   this->markDone(span);
 }
 
-SkOpSpanBase::Collapsed SkOpSegment::collapsed(double s, double e) const noexcept {
+SkOpSpanBase::Collapsed SkOpSegment::collapsed(double s, double e) const {
   const SkOpSpanBase* span = &fHead;
   do {
     SkOpSpanBase::Collapsed result = span->collapsed(s, e);
@@ -482,7 +482,7 @@ int SkOpSegment::computeSum(
   return start->starter(end)->windSum();
 }
 
-bool SkOpSegment::contains(double newT) const noexcept {
+bool SkOpSegment::contains(double newT) const {
   const SkOpSpanBase* spanBase = &fHead;
   do {
     if (spanBase->ptT()->contains(this, newT)) {
@@ -496,7 +496,7 @@ bool SkOpSegment::contains(double newT) const noexcept {
   return false;
 }
 
-void SkOpSegment::release(const SkOpSpan* span) noexcept {
+void SkOpSegment::release(const SkOpSpan* span) {
   if (span->done()) {
     --fDoneCount;
   }
@@ -817,7 +817,7 @@ SkOpSegment* SkOpSegment::findNextXor(
   return nextSegment;
 }
 
-SkOpGlobalState* SkOpSegment::globalState() const noexcept { return contour()->globalState(); }
+SkOpGlobalState* SkOpSegment::globalState() const { return contour()->globalState(); }
 
 void SkOpSegment::init(SkPoint pts[], SkScalar weight, SkOpContour* contour, SkPath::Verb verb) {
   fContour = contour;
@@ -851,7 +851,7 @@ bool SkOpSegment::isClose(double t, const SkOpSegment* opp) const {
   return false;
 }
 
-bool SkOpSegment::isXor() const noexcept { return fContour->isXor(); }
+bool SkOpSegment::isXor() const { return fContour->isXor(); }
 
 void SkOpSegment::markAllDone() {
   SkOpSpan* span = this->head();
@@ -1066,7 +1066,7 @@ bool SkOpSegment::match(
   return this != testParent || !this->ptsDisjoint(base->fT, base->fPt, testT, testPt);
 }
 
-static SkOpSegment* set_last(SkOpSpanBase** last, SkOpSpanBase* endSpan) noexcept {
+static SkOpSegment* set_last(SkOpSpanBase** last, SkOpSpanBase* endSpan) {
   if (last) {
     *last = endSpan;
   }
@@ -1135,7 +1135,7 @@ SkOpSegment* SkOpSegment::nextChase(
 }
 
 // Please keep this in sync with DebugClearVisited()
-void SkOpSegment::ClearVisited(SkOpSpanBase* span) noexcept {
+void SkOpSegment::ClearVisited(SkOpSpanBase* span) {
   // reset visited flag back to false
   do {
     SkOpPtT *ptT = span->ptT(), *stopPtT = ptT;
@@ -1488,9 +1488,9 @@ bool SkOpSegment::moveNearby() {
   return true;
 }
 
-bool SkOpSegment::operand() const noexcept { return fContour->operand(); }
+bool SkOpSegment::operand() const { return fContour->operand(); }
 
-bool SkOpSegment::oppXor() const noexcept { return fContour->oppXor(); }
+bool SkOpSegment::oppXor() const { return fContour->oppXor(); }
 
 bool SkOpSegment::ptsDisjoint(double t1, const SkPoint& pt1, double t2, const SkPoint& pt2) const {
   if (fVerb == SkPath::kLine_Verb) {
@@ -1510,8 +1510,7 @@ bool SkOpSegment::ptsDisjoint(double t1, const SkPoint& pt1, double t2, const Sk
 }
 
 void SkOpSegment::setUpWindings(
-    SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* maxWinding,
-    int* sumWinding) noexcept {
+    SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* maxWinding, int* sumWinding) {
   int deltaSum = SpanSign(start, end);
   *maxWinding = *sumMiWinding;
   *sumWinding = *sumMiWinding -= deltaSum;
@@ -1520,7 +1519,7 @@ void SkOpSegment::setUpWindings(
 
 void SkOpSegment::setUpWindings(
     SkOpSpanBase* start, SkOpSpanBase* end, int* sumMiWinding, int* sumSuWinding, int* maxWinding,
-    int* sumWinding, int* oppMaxWinding, int* oppSumWinding) noexcept {
+    int* sumWinding, int* oppMaxWinding, int* oppSumWinding) {
   int deltaSum = SpanSign(start, end);
   int oppDeltaSum = OppSign(start, end);
   if (operand()) {
@@ -1697,7 +1696,7 @@ bool SkOpSegment::testForCoincidence(
   return coincident;
 }
 
-SkOpSpan* SkOpSegment::undoneSpan() noexcept {
+SkOpSpan* SkOpSegment::undoneSpan() {
   SkOpSpan* span = &fHead;
   SkOpSpanBase* next;
   do {
@@ -1763,7 +1762,7 @@ int SkOpSegment::updateWindingReverse(const SkOpAngle* angle) {
 // OPTIMIZATION: does the following also work, and is it any faster?
 // return outerWinding * innerWinding > 0
 //      || ((outerWinding + innerWinding < 0) ^ ((outerWinding - innerWinding) < 0)))
-bool SkOpSegment::UseInnerWinding(int outerWinding, int innerWinding) noexcept {
+bool SkOpSegment::UseInnerWinding(int outerWinding, int innerWinding) {
   SkASSERT(outerWinding != SK_MaxS32);
   SkASSERT(innerWinding != SK_MaxS32);
   int absOut = SkTAbs(outerWinding);
@@ -1772,7 +1771,7 @@ bool SkOpSegment::UseInnerWinding(int outerWinding, int innerWinding) noexcept {
   return result;
 }
 
-int SkOpSegment::windSum(const SkOpAngle* angle) const noexcept {
+int SkOpSegment::windSum(const SkOpAngle* angle) const {
   const SkOpSpan* minSpan = angle->start()->starter(angle->end());
   return minSpan->windSum();
 }

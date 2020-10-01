@@ -30,7 +30,7 @@ class GrGlyph {
     SkUNREACHABLE;
   }
 
-  GrGlyph(SkPackedGlyphID packedGlyphID) : fPackedID(packedGlyphID) {}
+  GrGlyph(SkPackedGlyphID packedGlyphID) noexcept : fPackedID(packedGlyphID) {}
 
   const SkPackedGlyphID fPackedID;
   GrDrawOpAtlas::AtlasLocator fAtlasLocator;

@@ -11,7 +11,7 @@
 
 namespace {
 
-Sk4f pack_color(const SkColor4f& c4f, bool premul, const Sk4f& component_scale) {
+Sk4f pack_color(const SkColor4f& c4f, bool premul, const Sk4f& component_scale) noexcept {
   Sk4f pm4f = premul ? Sk4f::Load(c4f.premul().vec()) : Sk4f::Load(c4f.vec());
 
   if (premul) {
@@ -26,7 +26,7 @@ Sk4f pack_color(const SkColor4f& c4f, bool premul, const Sk4f& component_scale) 
 
 class IntervalIterator {
  public:
-  IntervalIterator(const SkGradientShaderBase& shader, bool reverse)
+  IntervalIterator(const SkGradientShaderBase& shader, bool reverse) noexcept
       : fShader(shader),
         fFirstPos(reverse ? SK_Scalar1 : 0),
         fBegin(reverse ? shader.fColorCount - 1 : 0),
@@ -114,7 +114,8 @@ void addMirrorIntervals(
 
 }  // anonymous namespace
 
-Sk4fGradientInterval::Sk4fGradientInterval(const Sk4f& c0, SkScalar t0, const Sk4f& c1, SkScalar t1)
+Sk4fGradientInterval::Sk4fGradientInterval(
+    const Sk4f& c0, SkScalar t0, const Sk4f& c1, SkScalar t1) noexcept
     : fT0(t0), fT1(t1) {
   SkASSERT(t0 != t1);
   // Either p0 or p1 can be (-)inf for synthetic clamp edge intervals.
@@ -206,7 +207,7 @@ void Sk4fGradientIntervalBuffer::init(
   const IntervalIterator iter(shader, reverse);
   iter.iterate(
       xformedColors.fColors,
-      [&](const SkColor4f& c0, const SkColor4f& c1, SkScalar t0, SkScalar t1) {
+      [&](const SkColor4f& c0, const SkColor4f& c1, SkScalar t0, SkScalar t1) noexcept {
         SkASSERT(fIntervals.empty() || fIntervals.back().fT1 == t0);
 
         fIntervals.emplace_back(
@@ -227,7 +228,7 @@ void Sk4fGradientIntervalBuffer::init(
   }
 }
 
-const Sk4fGradientInterval* Sk4fGradientIntervalBuffer::find(SkScalar t) const {
+const Sk4fGradientInterval* Sk4fGradientIntervalBuffer::find(SkScalar t) const noexcept {
   // Binary search.
   const auto* i0 = fIntervals.begin();
   const auto* i1 = fIntervals.end() - 1;
@@ -250,7 +251,7 @@ const Sk4fGradientInterval* Sk4fGradientIntervalBuffer::find(SkScalar t) const {
 }
 
 const Sk4fGradientInterval* Sk4fGradientIntervalBuffer::findNext(
-    SkScalar t, const Sk4fGradientInterval* prev, bool increasing) const {
+    SkScalar t, const Sk4fGradientInterval* prev, bool increasing) const noexcept {
   SkASSERT(!prev->contains(t));
   SkASSERT(prev >= fIntervals.begin() && prev < fIntervals.end());
   SkASSERT(t >= fIntervals.front().fT0 && t <= fIntervals.back().fT1);
@@ -279,7 +280,7 @@ const Sk4fGradientInterval* Sk4fGradientIntervalBuffer::findNext(
 }
 
 SkGradientShaderBase::GradientShaderBase4fContext::GradientShaderBase4fContext(
-    const SkGradientShaderBase& shader, const ContextRec& rec)
+    const SkGradientShaderBase& shader, const ContextRec& rec) noexcept
     : INHERITED(shader, rec), fFlags(this->INHERITED::getFlags()), fDither(rec.fPaint->isDither()) {
   const SkMatrix& inverse = this->getTotalInverse();
   fDstToPos.setConcat(shader.fPtsToUnit, inverse);
@@ -294,6 +295,6 @@ SkGradientShaderBase::GradientShaderBase4fContext::GradientShaderBase4fContext(
                      shader.fColorsAreOpaque;
 }
 
-bool SkGradientShaderBase::GradientShaderBase4fContext::isValid() const {
+bool SkGradientShaderBase::GradientShaderBase4fContext::isValid() const noexcept {
   return fDstToPos.isFinite();
 }

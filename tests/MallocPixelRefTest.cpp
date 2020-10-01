@@ -15,9 +15,6 @@ static void delete_uint8_proc(void* ptr, void*) { delete[] static_cast<uint8_t*>
 
 static void set_to_one_proc(void*, void* context) { *(static_cast<int*>(context)) = 1; }
 
-/**
- *  This test contains basic sanity checks concerning SkMallocPixelRef.
- */
 DEF_TEST(MallocPixelRef, reporter) {
   REPORTER_ASSERT(reporter, true);
   SkImageInfo info = SkImageInfo::MakeN32Premul(10, 13);

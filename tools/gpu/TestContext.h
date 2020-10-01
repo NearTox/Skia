@@ -16,7 +16,7 @@
 #include "src/core/SkScopeExit.h"
 #include "tools/gpu/FenceSync.h"
 
-class GrContext;
+class GrDirectContext;
 struct GrContextOptions;
 
 namespace sk_gpu_test {
@@ -65,7 +65,7 @@ class TestContext : public SkNoncopyable {
 
   virtual GrBackendApi backend() = 0;
 
-  virtual sk_sp<GrContext> makeGrContext(const GrContextOptions&);
+  virtual sk_sp<GrDirectContext> makeContext(const GrContextOptions&);
 
   /**
    * This will flush work to the GPU. Additionally, if the platform supports fence syncs, we will
@@ -73,7 +73,7 @@ class TestContext : public SkNoncopyable {
    * unfinished flushes active on the GPU at a time. If we have 2 outstanding flushes then we will
    * wait on the CPU until one has finished.
    */
-  void flushAndWaitOnSync(GrContext* context);
+  void flushAndWaitOnSync(GrDirectContext* context);
 
   /**
    * This notifies the context that we are deliberately testing abandoning

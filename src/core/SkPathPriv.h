@@ -8,8 +8,9 @@
 #ifndef SkPathPriv_DEFINED
 #define SkPathPriv_DEFINED
 
-#include "include/core/SkPath.h"
+#include "include/core/SkPathBuilder.h"
 #include "include/private/SkIDChangeListener.h"
+#include "src/core/SkPathView.h"
 
 static_assert(0 == static_cast<int>(SkPathFillType::kWinding), "fill_type_mismatch");
 static_assert(1 == static_cast<int>(SkPathFillType::kEvenOdd), "fill_type_mismatch");
@@ -42,7 +43,7 @@ class SkPathPriv {
    *  opposite.
    */
   static FirstDirection OppositeFirstDirection(FirstDirection dir) noexcept {
-    static constexpr FirstDirection gOppositeDir[] = {
+    static const FirstDirection gOppositeDir[] = {
         kCCW_FirstDirection,
         kCW_FirstDirection,
         kUnknown_FirstDirection,
@@ -170,6 +171,12 @@ class SkPathPriv {
               // Don't allow iteration through non-finite points.
               (!path.isFinite()) ? path.fPathRef->verbsBegin() : path.fPathRef->verbsEnd(),
               path.fPathRef->points(), path.fPathRef->conicWeights()) {}
+    Iterate(const SkPathView& path) noexcept
+        : Iterate(
+              path.fVerbs.begin(),
+              // Don't allow iteration through non-finite points.
+              (!path.isFinite()) ? path.fVerbs.begin() : path.fVerbs.end(), path.fPoints.begin(),
+              path.fWeights.begin()) {}
     Iterate(
         const uint8_t* verbsBegin, const uint8_t* verbsEnd, const SkPoint* points,
         const SkScalar* weights) noexcept
@@ -293,7 +300,7 @@ class SkPathPriv {
 
   // Returns number of valid points for each SkPath::Iter verb
   static int PtsInIter(unsigned verb) noexcept {
-    static constexpr uint8_t gPtsInVerb[] = {
+    static const uint8_t gPtsInVerb[] = {
         1,  // kMove    pts[0]
         2,  // kLine    pts[0..1]
         3,  // kQuad    pts[0..2]
@@ -322,7 +329,7 @@ class SkPathPriv {
   }
 
   static bool IsRectContour(
-      const SkPath&, bool allowPartial, int* currVerb, const SkPoint** ptsPtr, bool* isClosed,
+      const SkPathView&, bool allowPartial, int* currVerb, const SkPoint** ptsPtr, bool* isClosed,
       SkPathDirection* direction, SkRect* rect) noexcept;
 
   /** Returns true if SkPath is equivalent to nested SkRect pair when filled.
@@ -337,7 +344,12 @@ class SkPathPriv {
    @return      true if SkPath contains nested SkRect pair
    */
   static bool IsNestedFillRects(
-      const SkPath&, SkRect rect[2], SkPathDirection dirs[2] = nullptr) noexcept;
+      const SkPathView&, SkRect rect[2], SkPathDirection dirs[2] = nullptr);
+
+  static bool IsNestedFillRects(
+      const SkPath& path, SkRect rect[2], SkPathDirection dirs[2] = nullptr) {
+    return IsNestedFillRects(path.view(), rect, dirs);
+  }
 
   static constexpr bool IsInverseFillType(SkPathFillType fill) noexcept {
     return (static_cast<int>(fill) & 2) != 0;
@@ -377,6 +389,10 @@ class SkPathPriv {
     ed.writablePoints()[index] = pt;
     path->dirtyAfterEdit();
   }
+
+  static void SetConvexityType(SkPathBuilder* builder, SkPathConvexityType c) noexcept {
+    builder->privateSetConvexityType(c);
+  }
 };
 
 // Lightweight variant of SkPath::Iter that only returns segments (e.g. lines/conics).
@@ -398,7 +414,8 @@ class SkPathEdgeIter {
   enum { kIllegalEdgeValue = 99 };
 
  public:
-  SkPathEdgeIter(const SkPath& path) noexcept;
+  SkPathEdgeIter(const SkPath&) noexcept;
+  SkPathEdgeIter(const SkPathView&) noexcept;
 
   SkScalar conicWeight() const noexcept {
     SkASSERT(fIsConic);

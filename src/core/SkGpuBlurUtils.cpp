@@ -10,7 +10,7 @@
 #include "include/core/SkRect.h"
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrRecordingContext.h"
+#  include "include/gpu/GrRecordingContext.h"
 #  include "src/gpu/GrCaps.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/gpu/GrRenderTargetContext.h"
@@ -43,7 +43,7 @@ static void convolve_gaussian_1d(
   std::unique_ptr<GrFragmentProcessor> conv(GrGaussianConvolutionFragmentProcessor::Make(
       std::move(srcView), srcAlphaType, direction, radius, sigma, wm, srcSubset, &srcRect,
       *renderTargetContext->caps()));
-  paint.addColorFragmentProcessor(std::move(conv));
+  paint.setColorFragmentProcessor(std::move(conv));
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
   renderTargetContext->fillRectToRect(
       nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(), SkRect::Make(rtcRect),
@@ -55,7 +55,7 @@ static std::unique_ptr<GrRenderTargetContext> convolve_gaussian_2d(
     const SkIRect& srcBounds, const SkIRect& dstBounds, int radiusX, int radiusY, SkScalar sigmaX,
     SkScalar sigmaY, SkTileMode mode, sk_sp<SkColorSpace> finalCS, SkBackingFit dstFit) {
   auto renderTargetContext = GrRenderTargetContext::Make(
-      context, srcColorType, std::move(finalCS), dstFit, dstBounds.size(), 1, GrMipMapped::kNo,
+      context, srcColorType, std::move(finalCS), dstFit, dstBounds.size(), 1, GrMipmapped::kNo,
       srcView.proxy()->isProtected(), srcView.origin());
   if (!renderTargetContext) {
     return nullptr;
@@ -68,7 +68,7 @@ static std::unique_ptr<GrRenderTargetContext> convolve_gaussian_2d(
   auto conv = GrMatrixConvolutionEffect::MakeGaussian(
       context, std::move(srcView), srcBounds, size, 1.0, 0.0, kernelOffset, wm, true, sigmaX,
       sigmaY, *renderTargetContext->caps());
-  paint.addColorFragmentProcessor(std::move(conv));
+  paint.setColorFragmentProcessor(std::move(conv));
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
   // 'dstBounds' is actually in 'srcView' proxy space. It represents the blurred area from src
@@ -89,7 +89,7 @@ static std::unique_ptr<GrRenderTargetContext> convolve_gaussian(
   // and then capturing the 'dstBounds' portion in a new RTC where the top left of 'dstBounds' is
   // at {0, 0} in the new RTC.
   auto dstRenderTargetContext = GrRenderTargetContext::Make(
-      context, srcColorType, std::move(finalCS), fit, dstBounds.size(), 1, GrMipMapped::kNo,
+      context, srcColorType, std::move(finalCS), fit, dstBounds.size(), 1, GrMipmapped::kNo,
       srcView.proxy()->isProtected(), srcView.origin());
   if (!dstRenderTargetContext) {
     return nullptr;
@@ -235,7 +235,7 @@ static std::unique_ptr<GrRenderTargetContext> reexpand(
   src.reset();  // no longer needed
 
   auto dstRenderTargetContext = GrRenderTargetContext::Make(
-      context, srcColorType, std::move(colorSpace), fit, dstSize, 1, GrMipMapped::kNo,
+      context, srcColorType, std::move(colorSpace), fit, dstSize, 1, GrMipmapped::kNo,
       srcView.proxy()->isProtected(), srcView.origin());
   if (!dstRenderTargetContext) {
     return nullptr;
@@ -243,9 +243,9 @@ static std::unique_ptr<GrRenderTargetContext> reexpand(
 
   GrPaint paint;
   auto fp = GrTextureEffect::MakeSubset(
-      std::move(srcView), srcAlphaType, SkMatrix::I(), GrSamplerState::Filter::kBilerp, srcBounds,
+      std::move(srcView), srcAlphaType, SkMatrix::I(), GrSamplerState::Filter::kLinear, srcBounds,
       srcBounds, *context->priv().caps());
-  paint.addColorFragmentProcessor(std::move(fp));
+  paint.setColorFragmentProcessor(std::move(fp));
   paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
 
   dstRenderTargetContext->fillRectToRect(
@@ -430,7 +430,7 @@ std::unique_ptr<GrRenderTargetContext> GaussianBlur(
         std::move(srcView), srcAlphaType, SkMatrix::I(), sampler, SkRect::Make(srcBounds),
         SkRect::Make(dstBounds), *context->priv().caps());
     GrPaint paint;
-    paint.addColorFragmentProcessor(std::move(fp));
+    paint.setColorFragmentProcessor(std::move(fp));
     result->drawRect(
         nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(), SkRect::Make(dstBounds.size()));
     return result;

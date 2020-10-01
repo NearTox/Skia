@@ -19,20 +19,20 @@ class GrOpFlushState;
 class GrTextureProxyPriv {
  public:
   // Attach a deferred uploader to the proxy. Holds data being prepared by a worker thread.
-  void setDeferredUploader(std::unique_ptr<GrDeferredProxyUploader>) noexcept;
+  void setDeferredUploader(std::unique_ptr<GrDeferredProxyUploader>);
   bool isDeferred() const noexcept { return SkToBool(fTextureProxy->fDeferredUploader.get()); }
   // For a deferred proxy (one that has a deferred uploader attached), this schedules an ASAP
   // upload of that data to the instantiated texture.
   void scheduleUpload(GrOpFlushState*);
   // Clears any deferred uploader object on the proxy. Used to free the CPU data after the
   // contents have been uploaded.
-  void resetDeferredUploader() noexcept;
+  void resetDeferredUploader();
 
  private:
   explicit GrTextureProxyPriv(GrTextureProxy* textureProxy) noexcept
       : fTextureProxy(textureProxy) {}
-  GrTextureProxyPriv(const GrTextureProxyPriv&) noexcept {}  // unimpl
-  GrTextureProxyPriv& operator=(const GrTextureProxyPriv&);  // unimpl
+  GrTextureProxyPriv(const GrTextureProxyPriv&) = delete;
+  GrTextureProxyPriv& operator=(const GrTextureProxyPriv&) = delete;
 
   // No taking addresses of this type.
   const GrTextureProxyPriv* operator&() const;
@@ -45,7 +45,8 @@ class GrTextureProxyPriv {
 
 inline GrTextureProxyPriv GrTextureProxy::texPriv() noexcept { return GrTextureProxyPriv(this); }
 
-inline const GrTextureProxyPriv GrTextureProxy::texPriv() const noexcept {
+inline const GrTextureProxyPriv GrTextureProxy::texPriv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return GrTextureProxyPriv(const_cast<GrTextureProxy*>(this));
 }
 

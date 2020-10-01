@@ -131,7 +131,8 @@ class SkGlyphRunPainterInterface {
   virtual ~SkGlyphRunPainterInterface() = default;
 
   virtual void processDeviceMasks(
-      const SkZip<SkGlyphVariant, SkPoint>& drawables, const SkStrikeSpec& strikeSpec) = 0;
+      const SkZip<SkGlyphVariant, SkPoint>& drawables, const SkStrikeSpec& strikeSpec,
+      SkPoint residual) = 0;
 
   virtual void processSourceMasks(
       const SkZip<SkGlyphVariant, SkPoint>& drawables, const SkStrikeSpec& strikeSpec) = 0;

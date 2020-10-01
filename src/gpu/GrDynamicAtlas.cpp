@@ -20,12 +20,12 @@
 // Node immediately below or beside the others (thereby doubling the size of the GyDynamicAtlas).
 class GrDynamicAtlas::Node {
  public:
-  Node(Node* previous, GrRectanizer* rectanizer, int x, int y) noexcept
+  Node(Node* previous, GrRectanizer* rectanizer, int x, int y)
       : fPrevious(previous), fRectanizer(rectanizer), fX(x), fY(y) {}
 
-  Node* previous() const noexcept { return fPrevious; }
+  Node* previous() const { return fPrevious; }
 
-  bool addRect(int w, int h, SkIPoint16* loc) noexcept {
+  bool addRect(int w, int h, SkIPoint16* loc) {
     // Pad all paths except those that are expected to take up an entire physical texture.
     if (w < fRectanizer->width()) {
       w = std::min(w + kPadding, fRectanizer->width());
@@ -88,7 +88,7 @@ void GrDynamicAtlas::reset(SkISize initialSize, const GrCaps& caps) {
       [this](GrResourceProvider* resourceProvider, const LazyAtlasDesc& desc) {
         if (!fBackingTexture) {
           fBackingTexture = resourceProvider->createTexture(
-              {fWidth, fHeight}, desc.fFormat, desc.fRenderable, desc.fSampleCnt, desc.fMipMapped,
+              {fWidth, fHeight}, desc.fFormat, desc.fRenderable, desc.fSampleCnt, desc.fMipmapped,
               desc.fBudgeted, desc.fProtected);
         }
         return GrSurfaceProxy::LazyCallbackResult(fBackingTexture);

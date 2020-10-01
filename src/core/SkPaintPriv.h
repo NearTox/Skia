@@ -34,9 +34,9 @@ class SkPaintPriv {
    *  Note: returns conservative true, meaning it may return false even though the paint might
    *        in fact overwrite its pixels.
    */
-  static bool Overwrites(const SkPaint* paint, ShaderOverrideOpacity) noexcept;
+  static bool Overwrites(const SkPaint* paint, ShaderOverrideOpacity);
 
-  static bool ShouldDither(const SkPaint&, SkColorType) noexcept;
+  static bool ShouldDither(const SkPaint&, SkColorType);
 
   /*
    * The luminance color is used to determine which Gamma Canonical color to map to.  This is
@@ -73,9 +73,6 @@ class SkPaintPriv {
   // Since we may be filtering now, we need to know what color space to filter in,
   // typically the color space of the device we're drawing into.
   static void RemoveColorFilter(SkPaint*, SkColorSpace* dstCS);
-
- private:
-  static SkReadPaintResult Unflatten_PreV68(SkPaint* paint, SkReadBuffer& buffer, SkFont*);
 };
 
 #endif

@@ -41,7 +41,7 @@ constexpr int kRunArrayStackCount = 256;
 // Measurement:  for the `region_union_16` benchmark, this is 6% faster.
 class RunArray {
  public:
-  RunArray() { fPtr = fStack; }
+  RunArray() noexcept { fPtr = fStack; }
 #ifdef SK_DEBUG
   int count() const { return fCount; }
 #endif
@@ -243,7 +243,7 @@ char* SkRegion::toString() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int SkRegion::count_runtype_values(int* itop, int* ibot) const noexcept {
+int SkRegion::count_runtype_values(int* itop, int* ibot) const {
   int maxT;
 
   if (this->isRect()) {
@@ -638,7 +638,7 @@ void SkRegion::translate(int dx, int dy, SkRegion* dst) const noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkRegion::setRects(const SkIRect rects[], int count) noexcept {
+bool SkRegion::setRects(const SkIRect rects[], int count) {
   if (0 == count) {
     this->setEmpty();
   } else {
@@ -885,7 +885,7 @@ static int operate(
     const SkRegionPriv::RunType a_runs[], const SkRegionPriv::RunType b_runs[], RunArray* dst,
     SkRegion::Op op, bool quickExit) noexcept {
   const SkRegionPriv::RunType gEmptyScanline[] = {
-      0,  // dummy bottom value
+      0,  // fake bottom value
       0,  // zero intervals
       SkRegion_kRunTypeSentinel,
       // just need a 2nd value, since spanRec.init() reads 2 values, even
@@ -1122,7 +1122,7 @@ bool SkRegion::op(const SkRegion& rgna, const SkRegion& rgnb, Op op) noexcept {
 
 #include "src/core/SkBuffer.h"
 
-size_t SkRegion::writeToMemory(void* storage) const noexcept {
+size_t SkRegion::writeToMemory(void* storage) const {
   if (nullptr == storage) {
     size_t size = sizeof(int32_t);  // -1 (empty), 0 (rect), runCount
     if (!this->isEmpty()) {
@@ -1181,7 +1181,7 @@ static bool validate_run(
     return false;
   }
   SkASSERT(runCount >= 7);  // 7==SkRegion::kRectRegionRuns
-  // quick sanity check:
+  // quick safety check:
   if (runs[runCount - 1] != SkRegion_kRunTypeSentinel ||
       runs[runCount - 2] != SkRegion_kRunTypeSentinel) {
     return false;
@@ -1245,7 +1245,7 @@ static bool validate_run(
   SkASSERT(runs == end);  // if ySpanCount && intervalCount are right, must be correct length.
   return true;
 }
-size_t SkRegion::readFromMemory(const void* storage, size_t length) noexcept {
+size_t SkRegion::readFromMemory(const void* storage, size_t length) {
   SkRBuffer buffer(storage, length);
   SkRegion tmp;
   int32_t count;

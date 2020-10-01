@@ -24,20 +24,18 @@ class GrPathProcessor : public GrPrimitiveProcessor {
 
   const char* name() const noexcept override { return "PathProcessor"; }
 
-  const SkPMColor4f& color() const noexcept { return fColor; }
-  const SkMatrix& viewMatrix() const noexcept { return fViewMatrix; }
-  const SkMatrix& localMatrix() const noexcept { return fLocalMatrix; }
+  const SkPMColor4f& color() const { return fColor; }
+  const SkMatrix& viewMatrix() const { return fViewMatrix; }
+  const SkMatrix& localMatrix() const { return fLocalMatrix; }
 
-  virtual void getGLSLProcessorKey(
-      const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
+  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps& caps) const override;
 
-  virtual bool isPathRendering() const noexcept override { return true; }
+  bool isPathRendering() const override { return true; }
 
  private:
-  GrPathProcessor(
-      const SkPMColor4f&, const SkMatrix& viewMatrix, const SkMatrix& localMatrix) noexcept;
+  GrPathProcessor(const SkPMColor4f&, const SkMatrix& viewMatrix, const SkMatrix& localMatrix);
 
   SkPMColor4f fColor;
   const SkMatrix fViewMatrix;

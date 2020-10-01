@@ -27,8 +27,7 @@ namespace SkSL {
 struct InterfaceBlock : public ProgramElement {
   InterfaceBlock(
       int offset, const Variable* var, String typeName, String instanceName,
-      std::vector<std::unique_ptr<Expression>> sizes,
-      std::shared_ptr<SymbolTable> typeOwner) noexcept
+      std::vector<std::unique_ptr<Expression>> sizes, std::shared_ptr<SymbolTable> typeOwner)
       : INHERITED(offset, kInterfaceBlock_Kind),
         fVariable(*var),
         fTypeName(std::move(typeName)),

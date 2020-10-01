@@ -13,14 +13,14 @@
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkEdge.h"
 
-class SkPath;
+struct SkPathView;
 
 class SkEdgeBuilder {
  public:
-  int buildEdges(const SkPath& path, const SkIRect* shiftedClip);
+  int buildEdges(const SkPathView&, const SkIRect* shiftedClip);
 
  protected:
-  SkEdgeBuilder() = default;
+  SkEdgeBuilder() noexcept = default;
   virtual ~SkEdgeBuilder() = default;
 
   // In general mode we allocate pointers in fList and fEdgeList points to its head.
@@ -32,8 +32,8 @@ class SkEdgeBuilder {
   enum Combine { kNo_Combine, kPartial_Combine, kTotal_Combine };
 
  private:
-  int build(const SkPath& path, const SkIRect* clip, bool clipToTheRight);
-  int buildPoly(const SkPath& path, const SkIRect* clip, bool clipToTheRight);
+  int build(const SkPathView&, const SkIRect* clip, bool clipToTheRight);
+  int buildPoly(const SkPathView&, const SkIRect* clip, bool clipToTheRight);
 
   virtual char* allocEdges(size_t n, size_t* sizeof_edge) = 0;
   virtual SkRect recoverClip(const SkIRect&) const = 0;

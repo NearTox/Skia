@@ -8,7 +8,7 @@
 #ifndef GrSimpleMeshDrawOpHelper_DEFINED
 #define GrSimpleMeshDrawOpHelper_DEFINED
 
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrPipeline.h"
@@ -88,14 +88,14 @@ class GrSimpleMeshDrawOpHelper {
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType,
       GrProcessorAnalysisCoverage geometryCoverage, SkPMColor4f* geometryColor, bool* wideColor);
 
-  bool isTrivial() const noexcept { return fProcessors == nullptr; }
+  bool isTrivial() const { return fProcessors == nullptr; }
 
-  bool usesLocalCoords() const noexcept {
+  bool usesLocalCoords() const {
     SkASSERT(fDidAnalysis);
     return fUsesLocalCoords;
   }
 
-  bool compatibleWithCoverageAsAlpha() const noexcept { return fCompatibleWithCoverageAsAlpha; }
+  bool compatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
 
   struct MakeArgs {
    private:
@@ -112,12 +112,12 @@ class GrSimpleMeshDrawOpHelper {
     }
   }
 
-#ifdef SK_DEBUG
+#if GR_TEST_UTILS
   SkString dumpInfo() const;
 #endif
-  GrAAType aaType() const noexcept { return static_cast<GrAAType>(fAAType); }
+  GrAAType aaType() const { return static_cast<GrAAType>(fAAType); }
 
-  void setAAType(GrAAType aaType) noexcept { fAAType = static_cast<unsigned>(aaType); }
+  void setAAType(GrAAType aaType) { fAAType = static_cast<unsigned>(aaType); }
 
   static const GrPipeline* CreatePipeline(
       const GrCaps*, SkArenaAlloc*, GrSwizzle writeViewSwizzle, GrAppliedClip&&,
@@ -146,11 +146,11 @@ class GrSimpleMeshDrawOpHelper {
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
 
-  GrProcessorSet detachProcessorSet() noexcept {
+  GrProcessorSet detachProcessorSet() {
     return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
   }
 
-  GrPipeline::InputFlags pipelineFlags() const noexcept { return fPipelineFlags; }
+  GrPipeline::InputFlags pipelineFlags() const { return fPipelineFlags; }
 
  protected:
   GrProcessorSet::Analysis finalizeProcessors(
@@ -163,7 +163,7 @@ class GrSimpleMeshDrawOpHelper {
   unsigned fAAType : 2;
   unsigned fUsesLocalCoords : 1;
   unsigned fCompatibleWithCoverageAsAlpha : 1;
-  SkDEBUGCODE(unsigned fMadePipeline : 1;) SkDEBUGCODE(unsigned fDidAnalysis : 1;)
+  SkDEBUGCODE(unsigned fMadePipeline : 1;) SkDEBUGCODE(unsigned fDidAnalysis : 1);
 };
 
 template <typename Op, typename... OpArgs>

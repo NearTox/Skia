@@ -27,11 +27,11 @@
 
 class SkRecord : public SkRefCnt {
  public:
-  SkRecord() = default;
-  ~SkRecord();
+  SkRecord() noexcept = default;
+  ~SkRecord() override;
 
   // Returns the number of canvas commands in this SkRecord.
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   // Visit the i-th canvas command with a functor matching this interface:
   //   template <typename T>
@@ -91,7 +91,7 @@ class SkRecord : public SkRefCnt {
 
   // Rearrange and resize this record to eliminate any NoOps.
   // May change count() and the indices of ops, but preserves their order.
-  void defrag();
+  void defrag() noexcept;
 
  private:
   // An SkRecord is structured as an array of pointers into a big chunk of memory where
@@ -144,8 +144,8 @@ class SkRecord : public SkRefCnt {
       return ptr;
     }
 
-    SkRecords::Type type() const { return fType; }
-    void* ptr() const { return fPtr; }
+    SkRecords::Type type() const noexcept { return fType; }
+    void* ptr() const noexcept { return fPtr; }
 
     // Visit this record with functor F (see public API above).
     template <typename F>

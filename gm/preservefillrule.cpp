@@ -8,10 +8,11 @@
 #include "gm/gm.h"
 
 #include "include/core/SkPath.h"
-#include "include/gpu/GrContext.h"
 #include "include/gpu/GrContextOptions.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/ccpr/GrCCPathCache.h"
 #include "src/gpu/ccpr/GrCoverageCountingPathRenderer.h"
@@ -56,7 +57,8 @@ class PreserveFillRuleGM : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas, SkString* errorMsg) override {
+      GrRecordingContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas,
+      SkString* errorMsg) override {
     using CoverageType = GrCCAtlas::CoverageType;
 
     if (rtc->numSamples() > 1) {

@@ -58,7 +58,7 @@ class PolyToPolyView : public Sample {
   }
 
  protected:
-  virtual SkString name() { return SkString("PolyToPolyView"); }
+  SkString name() override { return SkString("PolyToPolyView"); }
 
   static void doDraw(
       SkCanvas* canvas, SkPaint* paint, const SkFont& font, const int isrc[], const int idst[],
@@ -95,7 +95,7 @@ class PolyToPolyView : public Sample {
     canvas->restore();
   }
 
-  virtual void onDrawContent(SkCanvas* canvas) {
+  void onDrawContent(SkCanvas* canvas) override {
     SkPaint paint;
     paint.setAntiAlias(true);
     paint.setStrokeWidth(SkIntToScalar(4));

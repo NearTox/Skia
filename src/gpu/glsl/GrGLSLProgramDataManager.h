@@ -64,7 +64,7 @@ class GrGLSLProgramDataManager : SkNoncopyable {
       VaryingHandle u, int components, const SkMatrix& matrix) const = 0;
 
  protected:
-  constexpr GrGLSLProgramDataManager() noexcept = default;
+  GrGLSLProgramDataManager() noexcept = default;
 
  private:
   typedef SkNoncopyable INHERITED;

@@ -41,8 +41,8 @@ class SkConservativeClip {
   void opRect(const SkRect&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
   void opRRect(const SkRRect&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
   void opPath(const SkPath&, const SkMatrix&, const SkIRect& limit, SkRegion::Op, bool isAA);
-  void opRegion(const SkRegion&, SkRegion::Op);
-  void opIRect(const SkIRect&, SkRegion::Op);
+  void opRegion(const SkRegion&, SkRegion::Op) noexcept;
+  void opIRect(const SkIRect&, SkRegion::Op) noexcept;
 };
 
 /**
@@ -105,8 +105,8 @@ class SkRasterClip {
   void translate(int dx, int dy, SkRasterClip* dst) const;
   void translate(int dx, int dy) { this->translate(dx, dy, this); }
 
-  bool quickContains(const SkIRect& rect) const noexcept;
-  bool quickContains(int left, int top, int right, int bottom) const noexcept {
+  bool quickContains(const SkIRect& rect) const;
+  bool quickContains(int left, int top, int right, int bottom) const {
     return quickContains(SkIRect::MakeLTRB(left, top, right, bottom));
   }
 
@@ -153,7 +153,7 @@ class SkRasterClip {
     // detect that our computed AA is really just a (hard-edged) rect
     if (detectAARect && !fIsEmpty && !fIsBW && fAA.isRect()) {
       fBW.setRect(fAA.getBounds());
-      fAA.setEmpty();  // don't need this guy anymore
+      fAA.setEmpty();  // don't need this anymore
       fIsBW = true;
     }
 
@@ -161,7 +161,7 @@ class SkRasterClip {
     return !fIsEmpty;
   }
 
-  void convertToAA() noexcept;
+  void convertToAA();
 
   bool setPath(const SkPath& path, const SkRegion& clip, bool doAA);
   bool setPath(const SkPath& path, const SkIRect& clip, bool doAA);
@@ -193,7 +193,6 @@ class SkAutoRasterClipValidate : SkNoncopyable {
  private:
   const SkRasterClip& fRC;
 };
-#define SkAutoRasterClipValidate(...) SK_REQUIRE_LOCAL_VAR(SkAutoRasterClipValidate)
 
 #ifdef SK_DEBUG
 #  define AUTO_RASTERCLIP_VALIDATE(rc) SkAutoRasterClipValidate arcv(rc)
@@ -209,7 +208,7 @@ class SkAutoRasterClipValidate : SkNoncopyable {
  *  not, they return the raw blitter and (bw) clip region.
  *
  *  We need to keep the constructor/destructor cost as small as possible, so we
- *  can freely put this guy on the stack, and not pay too much for the case when
+ *  can freely put this on the stack, and not pay too much for the case when
  *  we're really BW anyways.
  */
 class SkAAClipBlitterWrapper {

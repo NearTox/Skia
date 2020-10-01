@@ -17,23 +17,23 @@
 class SkDeferredDisplayListPriv {
  public:
 #if SK_SUPPORT_GPU
-  int numRenderTasks() const { return fDDL->fRenderTasks.count(); }
+  int numRenderTasks() const noexcept { return fDDL->fRenderTasks.count(); }
 
-  GrRenderTargetProxy* targetProxy() const { return fDDL->fTargetProxy.get(); }
+  GrRenderTargetProxy* targetProxy() const noexcept { return fDDL->fTargetProxy.get(); }
 
-  const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const {
+  const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const noexcept {
     return fDDL->fLazyProxyData.get();
   }
 
-  const SkTArray<GrRecordingContext::ProgramData>& programData() const {
+  const SkTArray<GrRecordingContext::ProgramData>& programData() const noexcept {
     return fDDL->programData();
   }
 #endif
 
  private:
-  explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) : fDDL(ddl) {}
-  SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&);             // unimpl
-  SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&);  // unimpl
+  explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) noexcept : fDDL(ddl) {}
+  SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&) = delete;
+  SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&) = delete;
 
   // No taking addresses of this type.
   const SkDeferredDisplayListPriv* operator&() const;
@@ -44,11 +44,12 @@ class SkDeferredDisplayListPriv {
   friend class SkDeferredDisplayList;  // to construct/copy this type.
 };
 
-inline SkDeferredDisplayListPriv SkDeferredDisplayList::priv() {
+inline SkDeferredDisplayListPriv SkDeferredDisplayList::priv() noexcept {
   return SkDeferredDisplayListPriv(this);
 }
 
-inline const SkDeferredDisplayListPriv SkDeferredDisplayList::priv() const {
+inline const SkDeferredDisplayListPriv SkDeferredDisplayList::priv()
+    const noexcept {  // NOLINT(readability-const-return-type)
   return SkDeferredDisplayListPriv(const_cast<SkDeferredDisplayList*>(this));
 }
 

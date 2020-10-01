@@ -62,10 +62,8 @@ sk_sp<SkShader> SkSVGRadialGradient::onMakeShader(
       lctx.resolve(fCx, SkSVGLengthContext::LengthType::kHorizontal),
       lctx.resolve(fCy, SkSVGLengthContext::LengthType::kVertical));
   const auto focal = SkPoint::Make(
-      fFx.isValid() ? lctx.resolve(*fFx.get(), SkSVGLengthContext::LengthType::kHorizontal)
-                    : center.x(),
-      fFy.isValid() ? lctx.resolve(*fFy.get(), SkSVGLengthContext::LengthType::kVertical)
-                    : center.y());
+      fFx.isValid() ? lctx.resolve(*fFx, SkSVGLengthContext::LengthType::kHorizontal) : center.x(),
+      fFy.isValid() ? lctx.resolve(*fFy, SkSVGLengthContext::LengthType::kVertical) : center.y());
 
   return center == focal ? SkGradientShader::MakeRadial(center, r, colors, pos, count, tm, 0, &m)
                          : SkGradientShader::MakeTwoPointConical(

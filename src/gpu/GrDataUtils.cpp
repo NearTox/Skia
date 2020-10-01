@@ -11,7 +11,7 @@
 #include "src/core/SkColorSpaceXformSteps.h"
 #include "src/core/SkCompressedDataUtils.h"
 #include "src/core/SkConvertPixels.h"
-#include "src/core/SkMipMap.h"
+#include "src/core/SkMipmap.h"
 #include "src/core/SkTLazy.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/core/SkUtils.h"
@@ -291,13 +291,13 @@ size_t GrComputeTightCombinedBufferSize(
 }
 
 void GrFillInCompressedData(
-    SkImage::CompressionType type, SkISize dimensions, GrMipMapped mipMapped, char* dstPixels,
+    SkImage::CompressionType type, SkISize dimensions, GrMipmapped mipMapped, char* dstPixels,
     const SkColor4f& colorf) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
   int numMipLevels = 1;
-  if (mipMapped == GrMipMapped::kYes) {
-    numMipLevels = SkMipMap::ComputeLevelCount(dimensions.width(), dimensions.height()) + 1;
+  if (mipMapped == GrMipmapped::kYes) {
+    numMipLevels = SkMipmap::ComputeLevelCount(dimensions.width(), dimensions.height()) + 1;
   }
 
   size_t offset = 0;
@@ -329,6 +329,14 @@ static GrSwizzle get_load_and_src_swizzle(
     case GrColorType::kAlpha_16: *load = SkRasterPipeline::load_a16; break;
     case GrColorType::kBGR_565: *load = SkRasterPipeline::load_565; break;
     case GrColorType::kABGR_4444: *load = SkRasterPipeline::load_4444; break;
+    case GrColorType::kARGB_4444:
+      swizzle = GrSwizzle("bgra");
+      *load = SkRasterPipeline::load_4444;
+      break;
+    case GrColorType::kBGRA_4444:
+      swizzle = GrSwizzle("gbar");
+      *load = SkRasterPipeline::load_4444;
+      break;
     case GrColorType::kRGBA_8888: *load = SkRasterPipeline::load_8888; break;
     case GrColorType::kRG_88: *load = SkRasterPipeline::load_rg88; break;
     case GrColorType::kRGBA_1010102: *load = SkRasterPipeline::load_1010102; break;
@@ -405,6 +413,14 @@ static GrSwizzle get_dst_swizzle_and_store(
     case GrColorType::kAlpha_16: *store = SkRasterPipeline::store_a16; break;
     case GrColorType::kBGR_565: *store = SkRasterPipeline::store_565; break;
     case GrColorType::kABGR_4444: *store = SkRasterPipeline::store_4444; break;
+    case GrColorType::kARGB_4444:
+      swizzle = GrSwizzle("bgra");
+      *store = SkRasterPipeline::store_4444;
+      break;
+    case GrColorType::kBGRA_4444:
+      swizzle = GrSwizzle("argb");
+      *store = SkRasterPipeline::store_4444;
+      break;
     case GrColorType::kRGBA_8888: *store = SkRasterPipeline::store_8888; break;
     case GrColorType::kRG_88: *store = SkRasterPipeline::store_rg88; break;
     case GrColorType::kRGBA_1010102: *store = SkRasterPipeline::store_1010102; break;

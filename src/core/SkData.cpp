@@ -74,7 +74,7 @@ sk_sp<SkData> SkData::PrivateNewWithCopy(const void* srcOrNull, size_t length) {
   return data;
 }
 
-void SkData::DummyReleaseProc(const void*, void*) noexcept {}
+void SkData::DummyReleaseProc(const void*, void*) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -142,7 +142,7 @@ sk_sp<SkData> SkData::MakeFromFD(int fd) {
 }
 
 // assumes context is a SkData
-static void sk_dataref_releaseproc(const void*, void* context) noexcept {
+static void sk_dataref_releaseproc(const void*, void* context) {
   SkData* src = reinterpret_cast<SkData*>(context);
   src->unref();
 }

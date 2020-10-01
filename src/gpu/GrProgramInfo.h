@@ -19,7 +19,7 @@ class GrProgramInfo {
   GrProgramInfo(
       int numSamples, int numStencilSamples, const GrBackendFormat& backendFormat,
       GrSurfaceOrigin origin, const GrPipeline* pipeline, const GrPrimitiveProcessor* primProc,
-      GrPrimitiveType primitiveType, uint8_t tessellationPatchVertexCount = 0) noexcept
+      GrPrimitiveType primitiveType, uint8_t tessellationPatchVertexCount = 0)
       : fNumSamples(numSamples),
         fNumStencilSamples(numStencilSamples),
         fIsMixedSampled(pipeline->isStencilEnabled() && numStencilSamples > numSamples),
@@ -37,7 +37,7 @@ class GrProgramInfo {
     }
     fRequestedFeatures |= fPipeline->getXferProcessor().requestedFeatures();
 
-    SkDEBUGCODE(this->validate(false);)
+    SkDEBUGCODE(this->validate(false));
   }
 
   GrProcessor::CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }

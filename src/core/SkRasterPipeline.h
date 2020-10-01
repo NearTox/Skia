@@ -38,7 +38,6 @@ class SkData;
 
 #define SK_RASTER_PIPELINE_STAGES(M)                                                                                                              \
   M(callback)                                                                                                                                     \
-  M(interpreter)                                                                                                                                  \
   M(move_src_dst)                                                                                                                                 \
   M(move_dst_src)                                                                                                                                 \
   M(clamp_0) M(clamp_1) M(clamp_a) M(clamp_gamut) M(unpremul) M(premul) M(premul_dst) M(                                                          \
@@ -155,16 +154,6 @@ class ByteCode;
 class ByteCodeFunction;
 }  // namespace SkSL
 
-struct SkRasterPipeline_InterpreterCtx {
-  const SkSL::ByteCode* byteCode;
-  const SkSL::ByteCodeFunction* fn;
-
-  SkColor4f paintColor;
-  sk_sp<SkData> inputs;
-  int ninputs;
-  bool shaderConvention;  // if false, we're a colorfilter
-};
-
 struct SkRasterPipeline_GradientCtx {
   size_t stopCount;
   float* fs[4];
@@ -195,7 +184,7 @@ struct SkRasterPipeline_EmbossCtx {
 
 class SkRasterPipeline {
  public:
-  explicit SkRasterPipeline(SkArenaAlloc*) noexcept;
+  explicit SkRasterPipeline(SkArenaAlloc*);
 
   SkRasterPipeline(const SkRasterPipeline&) = delete;
   SkRasterPipeline(SkRasterPipeline&&) noexcept = default;
@@ -203,7 +192,7 @@ class SkRasterPipeline {
   SkRasterPipeline& operator=(const SkRasterPipeline&) = delete;
   SkRasterPipeline& operator=(SkRasterPipeline&&) noexcept = default;
 
-  void reset() noexcept;
+  void reset();
 
   enum StockStage {
 #define M(stage) stage,

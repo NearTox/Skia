@@ -19,20 +19,27 @@
 
 class SkWStream;
 
+#if defined(SKVM_JIT_WHEN_POSSIBLE)
+#  if defined(__x86_64__) || defined(_M_X64)
+#    if defined(_WIN32) || defined(__linux) || defined(__APPLE__)
+#      if !defined(SK_BUILD_FOR_IOS)  // Exclude iOS simulator.
+#        define SKVM_JIT
+#      endif
+#    endif
+#  endif
+#  if defined(__aarch64__)
+#    if defined(__ANDROID__)
+#      define SKVM_JIT
+#    endif
+#  endif
+#endif
+
 #if 0
 #  define SKVM_LLVM
 #endif
 
-// JIT code isn't MSAN-instrumented, so we won't see when it uses
-// uninitialized memory, and we'll not see the writes it makes as properly
-// initializing memory.  Instead force the interpreter, which should let
-// MSAN see everything our programs do properly.
-//
-// Similarly, we can't get ASAN's checks unless we let it instrument our interpreter.
-#if defined(__has_feature)
-#  if __has_feature(memory_sanitizer) || __has_feature(address_sanitizer)
-#    undef SKVM_JIT
-#  endif
+#if 0
+#  undef SKVM_JIT
 #endif
 
 namespace skvm {
@@ -172,9 +179,9 @@ class Assembler {
     v31,
   };
 
-  void bytes(const void*, int) noexcept;
-  void byte(uint8_t) noexcept;
-  void word(uint32_t) noexcept;
+  void bytes(const void*, int);
+  void byte(uint8_t);
+  void word(uint32_t);
 
   struct Label {
     int offset = 0;
@@ -184,11 +191,11 @@ class Assembler {
 
   // x86-64
 
-  void align(int mod) noexcept;
+  void align(int mod);
 
-  void int3() noexcept;
-  void vzeroupper() noexcept;
-  void ret() noexcept;
+  void int3();
+  void vzeroupper();
+  void ret();
 
   // Mem represents a value at base + disp + scale*index,
   // or simply at base + disp if index=rsp.
@@ -215,140 +222,150 @@ class Assembler {
     Operand(Label* l) noexcept : label(l), kind(LABEL) {}
   };
 
-  void vpand(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpandn(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpor(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpxor(Ymm dst, Ymm x, Operand y) noexcept;
+  void vpand(Ymm dst, Ymm x, Operand y);
+  void vpandn(Ymm dst, Ymm x, Operand y);
+  void vpor(Ymm dst, Ymm x, Operand y);
+  void vpxor(Ymm dst, Ymm x, Operand y);
 
-  void vpaddd(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpsubd(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpmulld(Ymm dst, Ymm x, Operand y) noexcept;
+  void vpaddd(Ymm dst, Ymm x, Operand y);
+  void vpsubd(Ymm dst, Ymm x, Operand y);
+  void vpmulld(Ymm dst, Ymm x, Operand y);
 
-  void vpsubw(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpmullw(Ymm dst, Ymm x, Operand y) noexcept;
+  void vpsubw(Ymm dst, Ymm x, Operand y);
+  void vpmullw(Ymm dst, Ymm x, Operand y);
 
-  void vaddps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vsubps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vmulps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vdivps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vminps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vmaxps(Ymm dst, Ymm x, Operand y) noexcept;
+  void vaddps(Ymm dst, Ymm x, Operand y);
+  void vsubps(Ymm dst, Ymm x, Operand y);
+  void vmulps(Ymm dst, Ymm x, Operand y);
+  void vdivps(Ymm dst, Ymm x, Operand y);
+  void vminps(Ymm dst, Ymm x, Operand y);
+  void vmaxps(Ymm dst, Ymm x, Operand y);
 
-  void vsqrtps(Ymm dst, Operand x) noexcept;
+  void vsqrtps(Ymm dst, Operand x);
 
-  void vfmadd132ps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vfmadd213ps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vfmadd231ps(Ymm dst, Ymm x, Operand y) noexcept;
+  void vfmadd132ps(Ymm dst, Ymm x, Operand y);
+  void vfmadd213ps(Ymm dst, Ymm x, Operand y);
+  void vfmadd231ps(Ymm dst, Ymm x, Operand y);
 
-  void vfmsub132ps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vfmsub213ps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vfmsub231ps(Ymm dst, Ymm x, Operand y) noexcept;
+  void vfmsub132ps(Ymm dst, Ymm x, Operand y);
+  void vfmsub213ps(Ymm dst, Ymm x, Operand y);
+  void vfmsub231ps(Ymm dst, Ymm x, Operand y);
 
-  void vfnmadd132ps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vfnmadd213ps(Ymm dst, Ymm x, Operand y) noexcept;
-  void vfnmadd231ps(Ymm dst, Ymm x, Operand y) noexcept;
+  void vfnmadd132ps(Ymm dst, Ymm x, Operand y);
+  void vfnmadd213ps(Ymm dst, Ymm x, Operand y);
+  void vfnmadd231ps(Ymm dst, Ymm x, Operand y);
 
-  void vpackusdw(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpackuswb(Ymm dst, Ymm x, Operand y) noexcept;
+  void vpackusdw(Ymm dst, Ymm x, Operand y);
+  void vpackuswb(Ymm dst, Ymm x, Operand y);
 
-  void vpcmpeqd(Ymm dst, Ymm x, Operand y) noexcept;
-  void vpcmpgtd(Ymm dst, Ymm x, Operand y) noexcept;
+  void vpunpckldq(Ymm dst, Ymm x, Operand y);
+  void vpunpckhdq(Ymm dst, Ymm x, Operand y);
 
-  void vcmpps(Ymm dst, Ymm x, Operand y, int imm) noexcept;
-  void vcmpeqps(Ymm dst, Ymm x, Operand y) noexcept { this->vcmpps(dst, x, y, 0); }
-  void vcmpltps(Ymm dst, Ymm x, Operand y) noexcept { this->vcmpps(dst, x, y, 1); }
-  void vcmpleps(Ymm dst, Ymm x, Operand y) noexcept { this->vcmpps(dst, x, y, 2); }
-  void vcmpneqps(Ymm dst, Ymm x, Operand y) noexcept { this->vcmpps(dst, x, y, 4); }
+  void vpcmpeqd(Ymm dst, Ymm x, Operand y);
+  void vpcmpgtd(Ymm dst, Ymm x, Operand y);
+
+  void vcmpps(Ymm dst, Ymm x, Operand y, int imm);
+  void vcmpeqps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 0); }
+  void vcmpltps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 1); }
+  void vcmpleps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 2); }
+  void vcmpneqps(Ymm dst, Ymm x, Operand y) { this->vcmpps(dst, x, y, 4); }
 
   // Sadly, the x parameter cannot be a general Operand for these shifts.
-  void vpslld(Ymm dst, Ymm x, int imm) noexcept;
-  void vpsrld(Ymm dst, Ymm x, int imm) noexcept;
-  void vpsrad(Ymm dst, Ymm x, int imm) noexcept;
-  void vpsrlw(Ymm dst, Ymm x, int imm) noexcept;
+  void vpslld(Ymm dst, Ymm x, int imm);
+  void vpsrld(Ymm dst, Ymm x, int imm);
+  void vpsrad(Ymm dst, Ymm x, int imm);
+  void vpsrlw(Ymm dst, Ymm x, int imm);
 
-  void vpermq(Ymm dst, Operand x, int imm) noexcept;
+  void vpermq(Ymm dst, Operand x, int imm);
+  void vperm2f128(Ymm dst, Ymm x, Operand y, int imm);
+  void vpermps(Ymm dst, Ymm ix, Operand src);  // dst[i] = src[ix[i]]
 
-  enum Rounding { NEAREST, FLOOR, CEIL, TRUNC };
-  void vroundps(Ymm dst, Operand x, Rounding) noexcept;
+  enum Rounding { NEAREST, FLOOR, CEIL, TRUNC, CURRENT };
+  void vroundps(Ymm dst, Operand x, Rounding);
 
-  void vmovdqa(Ymm dst, Operand x) noexcept;
-  void vmovups(Ymm dst, Operand x) noexcept;
-  void vmovups(Operand dst, Ymm x) noexcept;
-  void vmovups(Operand dst, Xmm x) noexcept;
+  void vmovdqa(Ymm dst, Operand x);
+  void vmovups(Ymm dst, Operand x);
+  void vmovups(Xmm dst, Operand x);
+  void vmovups(Operand dst, Ymm x);
+  void vmovups(Operand dst, Xmm x);
 
-  void vcvtdq2ps(Ymm dst, Operand x) noexcept;
-  void vcvttps2dq(Ymm dst, Operand x) noexcept;
-  void vcvtps2dq(Ymm dst, Operand x) noexcept;
+  void vcvtdq2ps(Ymm dst, Operand x);
+  void vcvttps2dq(Ymm dst, Operand x);
+  void vcvtps2dq(Ymm dst, Operand x);
 
-  void vpblendvb(Ymm dst, Ymm x, Operand y, Ymm z) noexcept;
+  void vcvtps2ph(Operand dst, Ymm x, Rounding);
+  void vcvtph2ps(Ymm dst, Operand x);
 
-  void vpshufb(Ymm dst, Ymm x, Operand y) noexcept;
+  void vpblendvb(Ymm dst, Ymm x, Operand y, Ymm z);
 
-  void vptest(Ymm x, Operand y) noexcept;
+  void vpshufb(Ymm dst, Ymm x, Operand y);
 
-  void vbroadcastss(Ymm dst, Operand y) noexcept;
+  void vptest(Ymm x, Operand y);
 
-  void vpmovzxwd(Ymm dst, Operand src) noexcept;  // dst = src, 128-bit, uint16_t -> int
-  void vpmovzxbd(Ymm dst, Operand src) noexcept;  // dst = src,  64-bit, uint8_t  -> int
+  void vbroadcastss(Ymm dst, Operand y);
 
-  void vmovq(Operand dst, Xmm src) noexcept;  // dst = src,  64-bit
-  void vmovd(Operand dst, Xmm src) noexcept;  // dst = src,  32-bit
-  void vmovd(Xmm dst, Operand src) noexcept;  // dst = src,  32-bit
+  void vpmovzxwd(Ymm dst, Operand src);  // dst = src, 128-bit, uint16_t -> int
+  void vpmovzxbd(Ymm dst, Operand src);  // dst = src,  64-bit, uint8_t  -> int
 
-  void vpinsrw(Xmm dst, Xmm src, Operand y, int imm) noexcept;  // dst = src; dst[imm] = y, 16-bit
-  void vpinsrb(Xmm dst, Xmm src, Operand y, int imm) noexcept;  // dst = src; dst[imm] = y,  8-bit
+  void vmovq(Operand dst, Xmm src);  // dst = src,  64-bit
+  void vmovd(Operand dst, Xmm src);  // dst = src,  32-bit
+  void vmovd(Xmm dst, Operand src);  // dst = src,  32-bit
 
-  void vextracti128(Operand dst, Ymm src, int imm) noexcept;  // dst = src[imm], 128-bit
-  void vpextrd(Operand dst, Xmm src, int imm) noexcept;       // dst = src[imm],  32-bit
-  void vpextrw(Operand dst, Xmm src, int imm) noexcept;       // dst = src[imm],  16-bit
-  void vpextrb(Operand dst, Xmm src, int imm) noexcept;       // dst = src[imm],   8-bit
+  void vpinsrd(Xmm dst, Xmm src, Operand y, int imm);  // dst = src; dst[imm] = y, 32-bit
+  void vpinsrw(Xmm dst, Xmm src, Operand y, int imm);  // dst = src; dst[imm] = y, 16-bit
+  void vpinsrb(Xmm dst, Xmm src, Operand y, int imm);  // dst = src; dst[imm] = y,  8-bit
+
+  void vextracti128(Operand dst, Ymm src, int imm);  // dst = src[imm], 128-bit
+  void vpextrd(Operand dst, Xmm src, int imm);       // dst = src[imm],  32-bit
+  void vpextrw(Operand dst, Xmm src, int imm);       // dst = src[imm],  16-bit
+  void vpextrb(Operand dst, Xmm src, int imm);       // dst = src[imm],   8-bit
 
   // if (mask & 0x8000'0000) {
   //     dst = base[scale*ix];
   // }
   // mask = 0;
-  void vgatherdps(Ymm dst, Scale scale, Ymm ix, GP64 base, Ymm mask) noexcept;
+  void vgatherdps(Ymm dst, Scale scale, Ymm ix, GP64 base, Ymm mask);
 
-  void label(Label*) noexcept;
+  void label(Label*);
 
-  void jmp(Label*) noexcept;
-  void je(Label*) noexcept;
-  void jne(Label*) noexcept;
-  void jl(Label*) noexcept;
-  void jc(Label*) noexcept;
+  void jmp(Label*);
+  void je(Label*);
+  void jne(Label*);
+  void jl(Label*);
+  void jc(Label*);
 
-  void add(Operand dst, int imm) noexcept;
-  void sub(Operand dst, int imm) noexcept;
-  void cmp(Operand dst, int imm) noexcept;
-  void mov(Operand dst, int imm) noexcept;
-  void movb(Operand dst, int imm) noexcept;
+  void add(Operand dst, int imm);
+  void sub(Operand dst, int imm);
+  void cmp(Operand dst, int imm);
+  void mov(Operand dst, int imm);
+  void movb(Operand dst, int imm);
 
-  void add(Operand dst, GP64 x) noexcept;
-  void sub(Operand dst, GP64 x) noexcept;
-  void cmp(Operand dst, GP64 x) noexcept;
-  void mov(Operand dst, GP64 x) noexcept;
-  void movb(Operand dst, GP64 x) noexcept;
+  void add(Operand dst, GP64 x);
+  void sub(Operand dst, GP64 x);
+  void cmp(Operand dst, GP64 x);
+  void mov(Operand dst, GP64 x);
+  void movb(Operand dst, GP64 x);
 
-  void add(GP64 dst, Operand x) noexcept;
-  void sub(GP64 dst, Operand x) noexcept;
-  void cmp(GP64 dst, Operand x) noexcept;
-  void mov(GP64 dst, Operand x) noexcept;
-  void movb(GP64 dst, Operand x) noexcept;
+  void add(GP64 dst, Operand x);
+  void sub(GP64 dst, Operand x);
+  void cmp(GP64 dst, Operand x);
+  void mov(GP64 dst, Operand x);
+  void movb(GP64 dst, Operand x);
 
   // Disambiguators... choice is arbitrary (but generates different code!).
-  void add(GP64 dst, GP64 x) noexcept { this->add(Operand(dst), x); }
-  void sub(GP64 dst, GP64 x) noexcept { this->sub(Operand(dst), x); }
-  void cmp(GP64 dst, GP64 x) noexcept { this->cmp(Operand(dst), x); }
-  void mov(GP64 dst, GP64 x) noexcept { this->mov(Operand(dst), x); }
-  void movb(GP64 dst, GP64 x) noexcept { this->movb(Operand(dst), x); }
+  void add(GP64 dst, GP64 x) { this->add(Operand(dst), x); }
+  void sub(GP64 dst, GP64 x) { this->sub(Operand(dst), x); }
+  void cmp(GP64 dst, GP64 x) { this->cmp(Operand(dst), x); }
+  void mov(GP64 dst, GP64 x) { this->mov(Operand(dst), x); }
+  void movb(GP64 dst, GP64 x) { this->movb(Operand(dst), x); }
 
-  void movzbq(GP64 dst, Operand x) noexcept;  // dst = x, uint8_t  -> int
-  void movzwq(GP64 dst, Operand x) noexcept;  // dst = x, uint16_t -> int
+  void movzbq(GP64 dst, Operand x);  // dst = x, uint8_t  -> int
+  void movzwq(GP64 dst, Operand x);  // dst = x, uint16_t -> int
 
   // aarch64
 
   // d = op(n,m)
-  using DOpNM = void(V d, V n, V m) noexcept;
+  using DOpNM = void(V d, V n, V m);
   DOpNM and16b, orr16b, eor16b, bic16b, bsl16b, add4s, sub4s, mul4s, cmeq4s, cmgt4s, sub8h, mul8h,
       fadd4s, fsub4s, fmul4s, fdiv4s, fmin4s, fmax4s, fcmeq4s, fcmgt4s, fcmge4s, tbl;
 
@@ -356,17 +373,17 @@ class Assembler {
   // and the register comparison > and >= can also compare absolute values.  Interesting.
 
   // d += n*m
-  void fmla4s(V d, V n, V m) noexcept;
+  void fmla4s(V d, V n, V m);
 
   // d -= n*m
-  void fmls4s(V d, V n, V m) noexcept;
+  void fmls4s(V d, V n, V m);
 
   // d = op(n,imm)
-  using DOpNImm = void(V d, V n, int imm) noexcept;
+  using DOpNImm = void(V d, V n, int imm);
   DOpNImm sli4s, shl4s, sshr4s, ushr4s, ushr8h;
 
   // d = op(n)
-  using DOpN = void(V d, V n) noexcept;
+  using DOpN = void(V d, V n);
   DOpN not16b,   // d = ~n
       fneg4s,    // d = -n
       scvtf4s,   // int -> float
@@ -378,39 +395,39 @@ class Assembler {
       uxtlh2s,   // u16 -> u32
       uminv4s;   // dst[0] = min(n[0],n[1],n[2],n[3]), n as unsigned
 
-  void brk(int imm16) noexcept;
-  void ret(X) noexcept;
-  void add(X d, X n, int imm12) noexcept;
-  void sub(X d, X n, int imm12) noexcept;
-  void subs(X d, X n, int imm12) noexcept;  // subtract setting condition flags
+  void brk(int imm16);
+  void ret(X);
+  void add(X d, X n, int imm12);
+  void sub(X d, X n, int imm12);
+  void subs(X d, X n, int imm12);  // subtract setting condition flags
 
   // There's another encoding for unconditional branches that can jump further,
   // but this one encoded as b.al is simple to implement and should be fine.
-  void b(Label* l) noexcept { this->b(Condition::al, l); }
-  void bne(Label* l) noexcept { this->b(Condition::ne, l); }
-  void blt(Label* l) noexcept { this->b(Condition::lt, l); }
+  void b(Label* l) { this->b(Condition::al, l); }
+  void bne(Label* l) { this->b(Condition::ne, l); }
+  void blt(Label* l) { this->b(Condition::lt, l); }
 
   // "cmp ..." is just an assembler mnemonic for "subs xzr, ..."!
-  void cmp(X n, int imm12) noexcept { this->subs(xzr, n, imm12); }
+  void cmp(X n, int imm12) { this->subs(xzr, n, imm12); }
 
   // Compare and branch if zero/non-zero, as if
   //      cmp(t,0)
   //      beq/bne(l)
   // but without setting condition flags.
-  void cbz(X t, Label* l) noexcept;
-  void cbnz(X t, Label* l) noexcept;
+  void cbz(X t, Label* l);
+  void cbnz(X t, Label* l);
 
-  void ldrq(V dst, Label*) noexcept;  // 128-bit PC-relative load
+  void ldrq(V dst, Label*);  // 128-bit PC-relative load
 
-  void ldrq(V dst, X src, int imm12 = 0) noexcept;  // 128-bit dst = *(src+imm12*16)
-  void ldrs(V dst, X src, int imm12 = 0) noexcept;  //  32-bit dst = *(src+imm12*4)
-  void ldrb(V dst, X src, int imm12 = 0) noexcept;  //   8-bit dst = *(src+imm12)
+  void ldrq(V dst, X src, int imm12 = 0);  // 128-bit dst = *(src+imm12*16)
+  void ldrs(V dst, X src, int imm12 = 0);  //  32-bit dst = *(src+imm12*4)
+  void ldrb(V dst, X src, int imm12 = 0);  //   8-bit dst = *(src+imm12)
 
-  void strq(V src, X dst, int imm12 = 0) noexcept;  // 128-bit *(dst+imm12*16) = src
-  void strs(V src, X dst, int imm12 = 0) noexcept;  //  32-bit *(dst+imm12*4)  = src
-  void strb(V src, X dst, int imm12 = 0) noexcept;  //   8-bit *(dst+imm12)    = src
+  void strq(V src, X dst, int imm12 = 0);  // 128-bit *(dst+imm12*16) = src
+  void strs(V src, X dst, int imm12 = 0);  //  32-bit *(dst+imm12*4)  = src
+  void strb(V src, X dst, int imm12 = 0);  //   8-bit *(dst+imm12)    = src
 
-  void fmovs(X dst, V src) noexcept;  // dst = 32-bit src[0]
+  void fmovs(X dst, V src);  // dst = 32-bit src[0]
 
  private:
   // TODO: can probably track two of these three?
@@ -423,61 +440,53 @@ class Assembler {
   enum L { L128, L256 };  // Is this a 128- or 256-bit operation?        Intel Vol 2A 2.3.6.2
 
   // Helpers for vector instructions.
-  void op(int prefix, int map, int opcode, int dst, int x, Operand y, W, L) noexcept;
-  void op(int p, int m, int o, Ymm d, Ymm x, Operand y, W w = W0) noexcept {
-    op(p, m, o, d, x, y, w, L256);
-  }
-  void op(int p, int m, int o, Ymm d, Operand y, W w = W0) noexcept {
-    op(p, m, o, d, 0, y, w, L256);
-  }
-  void op(int p, int m, int o, Xmm d, Xmm x, Operand y, W w = W0) noexcept {
-    op(p, m, o, d, x, y, w, L128);
-  }
-  void op(int p, int m, int o, Xmm d, Operand y, W w = W0) noexcept {
-    op(p, m, o, d, 0, y, w, L128);
-  }
+  void op(int prefix, int map, int opcode, int dst, int x, Operand y, W, L);
+  void op(int p, int m, int o, Ymm d, Ymm x, Operand y, W w = W0) { op(p, m, o, d, x, y, w, L256); }
+  void op(int p, int m, int o, Ymm d, Operand y, W w = W0) { op(p, m, o, d, 0, y, w, L256); }
+  void op(int p, int m, int o, Xmm d, Xmm x, Operand y, W w = W0) { op(p, m, o, d, x, y, w, L128); }
+  void op(int p, int m, int o, Xmm d, Operand y, W w = W0) { op(p, m, o, d, 0, y, w, L128); }
 
   // Helpers for GP64 instructions.
-  void op(int opcode, Operand dst, GP64 x) noexcept;
-  void op(int opcode, int opcode_ext, Operand dst, int imm) noexcept;
+  void op(int opcode, Operand dst, GP64 x);
+  void op(int opcode, int opcode_ext, Operand dst, int imm);
 
-  void jump(uint8_t condition, Label*) noexcept;
-  int disp32(Label*) noexcept;
-  void imm_byte_after_operand(const Operand&, int byte) noexcept;
+  void jump(uint8_t condition, Label*);
+  int disp32(Label*);
+  void imm_byte_after_operand(const Operand&, int byte);
 
   // aarch64
 
   // Opcode for 3-arguments ops is split between hi and lo:
   //    [11 bits hi] [5 bits m] [6 bits lo] [5 bits n] [5 bits d]
-  void op(uint32_t hi, V m, uint32_t lo, V n, V d) noexcept;
+  void op(uint32_t hi, V m, uint32_t lo, V n, V d);
 
   // 0,1,2-argument ops, with or without an immediate:
   //    [ 22 bits op ] [5 bits n] [5 bits d]
   // Any immediate falls in the middle somewhere overlapping with either op, n, or both.
-  void op(uint32_t op22, V n, V d, int imm = 0) noexcept;
-  void op(uint32_t op22, X n, V d, int imm = 0) noexcept { this->op(op22, (V)n, d, imm); }
-  void op(uint32_t op22, V n, X d, int imm = 0) noexcept { this->op(op22, n, (V)d, imm); }
-  void op(uint32_t op22, X n, X d, int imm = 0) noexcept { this->op(op22, (V)n, (V)d, imm); }
-  void op(uint32_t op22, int imm = 0) noexcept { this->op(op22, (V)0, (V)0, imm); }
+  void op(uint32_t op22, V n, V d, int imm = 0);
+  void op(uint32_t op22, X n, V d, int imm = 0) { this->op(op22, (V)n, d, imm); }
+  void op(uint32_t op22, V n, X d, int imm = 0) { this->op(op22, n, (V)d, imm); }
+  void op(uint32_t op22, X n, X d, int imm = 0) { this->op(op22, (V)n, (V)d, imm); }
+  void op(uint32_t op22, int imm = 0) { this->op(op22, (V)0, (V)0, imm); }
   // (1-argument ops don't seem to have a consistent convention of passing as n or d.)
 
   // Order matters... value is 4-bit encoding for condition code.
   enum class Condition { eq, ne, cs, cc, mi, pl, vs, vc, hi, ls, ge, lt, gt, le, al };
-  void b(Condition, Label*) noexcept;
-  int disp19(Label*) noexcept;
+  void b(Condition, Label*);
+  int disp19(Label*);
 };
 
-// Order matters a little: Ops <=store32 are treated as having side effects.
+// Order matters a little: Ops <=store128 are treated as having side effects.
 #define SKVM_OPS(M)                                                                                \
   M(assert_true)                                                                                   \
   M(store8)                                                                                        \
-  M(store16) M(store32) M(index) M(load8) M(load16) M(load32) M(gather8) M(gather16) M(gather32)   \
-      M(uniform8) M(uniform16) M(uniform32) M(splat) M(add_f32) M(add_i32) M(sub_f32) M(sub_i32)   \
-          M(mul_f32) M(mul_i32) M(div_f32) M(min_f32) M(max_f32) M(fma_f32) M(fms_f32) M(fnma_f32) \
-              M(sqrt_f32) M(shl_i32) M(shr_i32) M(sra_i32) M(ceil) M(floor) M(trunc) M(round)      \
-                  M(to_f32) M(eq_f32) M(eq_i32) M(neq_f32) M(gt_f32) M(gt_i32) M(gte_f32)          \
-                      M(bit_and) M(bit_or) M(bit_xor) M(bit_clear) M(select)                       \
-                          M(pack)  // End of SKVM_OPS
+  M(store16) M(store32) M(store64) M(store128) M(index) M(load8) M(load16) M(load32) M(load64)     \
+      M(load128) M(gather8) M(gather16) M(gather32) M(uniform8) M(uniform16) M(uniform32) M(splat) \
+          M(add_f32) M(add_i32) M(sub_f32) M(sub_i32) M(mul_f32) M(mul_i32) M(div_f32) M(min_f32)  \
+              M(max_f32) M(fma_f32) M(fms_f32) M(fnma_f32) M(sqrt_f32) M(shl_i32) M(shr_i32)       \
+                  M(sra_i32) M(ceil) M(floor) M(trunc) M(round) M(to_half) M(from_half) M(to_f32)  \
+                      M(eq_f32) M(eq_i32) M(neq_f32) M(gt_f32) M(gt_i32) M(gte_f32) M(bit_and)     \
+                          M(bit_or) M(bit_xor) M(bit_clear) M(select) M(pack)  // End of SKVM_OPS
 
 enum class Op : int {
 #define M(op) op,
@@ -485,7 +494,7 @@ enum class Op : int {
 #undef M
 };
 
-static constexpr inline bool has_side_effect(Op op) noexcept { return op <= Op::store32; }
+static constexpr inline bool has_side_effect(Op op) noexcept { return op <= Op::store128; }
 static constexpr inline bool is_always_varying(Op op) noexcept {
   return op <= Op::gather32 && op != Op::assert_true;
 }
@@ -593,6 +602,12 @@ struct Uniforms {
   }
 };
 
+struct PixelFormat {
+  enum { UNORM, FLOAT } encoding;
+  int r_bits, g_bits, b_bits, a_bits, r_shift, g_shift, b_shift, a_shift;
+};
+bool SkColorType_to_PixelFormat(SkColorType, PixelFormat*);
+
 SK_BEGIN_REQUIRE_DENSE
 struct Instruction {
   Op op;           // v* = op(x,y,z,imm), where * == index of this Instruction.
@@ -639,24 +654,28 @@ class Builder {
   // TODO: unsigned integer operations where relevant (just comparisons?)?
 
   // Assert cond is true, printing debug when not.
-  void assert_true(I32 cond, I32 debug) noexcept;
-  void assert_true(I32 cond, F32 debug) noexcept { assert_true(cond, bit_cast(debug)); }
-  void assert_true(I32 cond) noexcept { assert_true(cond, cond); }
+  void assert_true(I32 cond, I32 debug);
+  void assert_true(I32 cond, F32 debug) { assert_true(cond, bit_cast(debug)); }
+  void assert_true(I32 cond) { assert_true(cond, cond); }
 
-  // Store {8,16,32}-bit varying.
+  // Store {8,16,32,64,128}-bit varying.
   void store8(Arg ptr, I32 val);
   void store16(Arg ptr, I32 val);
   void store32(Arg ptr, I32 val);
   void storeF(Arg ptr, F32 val) { store32(ptr, bit_cast(val)); }
+  void store64(Arg ptr, I32 lo, I32 hi);             // *ptr = lo|(hi<<32)
+  void store128(Arg ptr, I32 lo, I32 hi, int lane);  // 64-bit lane 0-1 at ptr = lo|(hi<<32).
 
   // Returns varying {n, n-1, n-2, ..., 1}, where n is the argument to Program::eval().
   I32 index();
 
-  // Load u8,u16,i32 varying.
+  // Load {8,16,32,64,128}-bit varying.
   I32 load8(Arg ptr);
   I32 load16(Arg ptr);
   I32 load32(Arg ptr);
   F32 loadF(Arg ptr) { return bit_cast(load32(ptr)); }
+  I32 load64(Arg ptr, int lane);   // Load 32-bit lane 0-1 of  64-bit value.
+  I32 load128(Arg ptr, int lane);  // Load 32-bit lane 0-3 of 128-bit value.
 
   // Load u8,u16,i32 uniform with byte-count offset.
   I32 uniform8(Arg ptr, int offset);
@@ -723,7 +742,7 @@ class Builder {
   F32 approx_atan(F32 x);
   F32 approx_atan2(F32 y, F32 x);
 
-  F32 lerp(F32 lo, F32 hi, F32 t) { return mad(sub(hi, lo), t, lo); }
+  F32 lerp(F32 lo, F32 hi, F32 t);
   F32 lerp(F32a lo, F32a hi, F32a t) { return lerp(_(lo), _(hi), _(t)); }
 
   F32 clamp(F32 x, F32 lo, F32 hi) { return max(lo, min(x, hi)); }
@@ -735,10 +754,14 @@ class Builder {
   F32 ceil(F32);
   F32 floor(F32);
   I32 is_NaN(F32 x) { return neq(x, x); }
+  I32 is_finite(F32 x) { return lt(bit_and(bit_cast(x), 0x7f80'0000), 0x7f80'0000); }
 
   I32 trunc(F32 x);
   I32 round(F32 x);  // Round to int using current rounding mode (as if lrintf()).
   I32 bit_cast(F32 x) noexcept { return {x.builder, x.id}; }
+
+  I32 to_half(F32 x);
+  F32 from_half(I32 x);
 
   F32 norm(F32 x, F32 y) { return sqrt(add(mul(x, x), mul(y, y))); }
   F32 norm(F32a x, F32a y) { return norm(_(x), _(y)); }
@@ -816,9 +839,10 @@ class Builder {
   F32 from_unorm(int bits, I32);  // E.g. from_unorm(8, x) -> x * (1/255.0f)
   I32 to_unorm(int bits, F32);    // E.g.   to_unorm(8, x) -> round(x * 255)
 
-  Color unpack_1010102(I32 rgba);
-  Color unpack_8888(I32 rgba);
-  Color unpack_565(I32 bgr);  // bottom 16 bits
+  Color load(PixelFormat, Arg ptr);
+  bool store(PixelFormat, Arg ptr, Color);
+  Color gather(PixelFormat, Arg ptr, int offset, I32 index);
+  Color gather(PixelFormat f, Uniform u, I32 index) { return gather(f, u.ptr, u.offset, index); }
 
   void premul(F32* r, F32* g, F32* b, F32 a);
   void unpremul(F32* r, F32* g, F32* b, F32 a);
@@ -868,10 +892,10 @@ class Builder {
   bool allImm() const noexcept;
 
   template <typename T, typename... Rest>
-  bool allImm(Val, T* imm, Rest...) const noexcept;
+  bool allImm(Val, T* imm, Rest...) const;
 
   template <typename T>
-  bool isImm(Val id, T want) const noexcept {
+  bool isImm(Val id, T want) const {
     T imm = 0;
     return this->allImm(id, &imm) && imm == want;
   }
@@ -896,7 +920,7 @@ class Usage {
   Usage(const std::vector<Instruction>&);
 
   // Return a sorted span of Vals which use result of Instruction id.
-  SkSpan<const Val> operator[](Val id) const noexcept;
+  SkSpan<const Val> operator[](Val id) const;
 
  private:
   std::vector<int> fIndex;
@@ -960,7 +984,9 @@ class Program {
   void setupJIT(const std::vector<OptimizedInstruction>&, const char* debug_name);
   void setupLLVM(const std::vector<OptimizedInstruction>&, const char* debug_name);
 
-  bool jit(const std::vector<OptimizedInstruction>&, int* stack_hint, Assembler*) const;
+  bool jit(
+      const std::vector<OptimizedInstruction>&, int* stack_hint, uint32_t* registers_used,
+      Assembler*) const;
 
   void waitForLLVM() const;
 
@@ -1052,14 +1078,16 @@ static inline F32& operator+=(F32& x, F32a y) { return (x = x + y); }
 static inline F32& operator-=(F32& x, F32a y) { return (x = x - y); }
 static inline F32& operator*=(F32& x, F32a y) { return (x = x * y); }
 
-static inline void assert_true(I32 cond, I32 debug) noexcept { cond->assert_true(cond, debug); }
-static inline void assert_true(I32 cond, F32 debug) noexcept { cond->assert_true(cond, debug); }
-static inline void assert_true(I32 cond) noexcept { cond->assert_true(cond); }
+static inline void assert_true(I32 cond, I32 debug) { cond->assert_true(cond, debug); }
+static inline void assert_true(I32 cond, F32 debug) { cond->assert_true(cond, debug); }
+static inline void assert_true(I32 cond) { cond->assert_true(cond); }
 
 static inline void store8(Arg ptr, I32 val) { val->store8(ptr, val); }
 static inline void store16(Arg ptr, I32 val) { val->store16(ptr, val); }
 static inline void store32(Arg ptr, I32 val) { val->store32(ptr, val); }
 static inline void storeF(Arg ptr, F32 val) { val->storeF(ptr, val); }
+static inline void store64(Arg ptr, I32 lo, I32 hi) { lo->store64(ptr, lo, hi); }
+static inline void store128(Arg ptr, I32 lo, I32 hi, int ix) { lo->store128(ptr, lo, hi, ix); }
 
 static inline I32 gather8(Arg ptr, int off, I32 ix) { return ix->gather8(ptr, off, ix); }
 static inline I32 gather16(Arg ptr, int off, I32 ix) { return ix->gather16(ptr, off, ix); }
@@ -1095,12 +1123,15 @@ static inline F32 ceil(F32 x) { return x->ceil(x); }
 static inline F32 fract(F32 x) { return x->fract(x); }
 static inline F32 floor(F32 x) { return x->floor(x); }
 static inline I32 is_NaN(F32 x) { return x->is_NaN(x); }
+static inline I32 is_finite(F32 x) { return x->is_finite(x); }
 
 static inline I32 trunc(F32 x) { return x->trunc(x); }
 static inline I32 round(F32 x) { return x->round(x); }
 static inline I32 bit_cast(F32 x) noexcept { return x->bit_cast(x); }
 static inline F32 bit_cast(I32 x) noexcept { return x->bit_cast(x); }
 static inline F32 to_f32(I32 x) { return x->to_f32(x); }
+static inline I32 to_half(F32 x) { return x->to_half(x); }
+static inline F32 from_half(I32 x) { return x->from_half(x); }
 
 static inline F32 lerp(F32 lo, F32a hi, F32a t) { return lo->lerp(lo, hi, t); }
 static inline F32 lerp(float lo, F32 hi, F32a t) { return hi->lerp(lo, hi, t); }
@@ -1146,9 +1177,11 @@ static inline F32 operator-(F32 x) { return 0 - x; }
 static inline F32 from_unorm(int bits, I32 x) { return x->from_unorm(bits, x); }
 static inline I32 to_unorm(int bits, F32 x) { return x->to_unorm(bits, x); }
 
-static inline Color unpack_1010102(I32 rgba) { return rgba->unpack_1010102(rgba); }
-static inline Color unpack_8888(I32 rgba) { return rgba->unpack_8888(rgba); }
-static inline Color unpack_565(I32 bgr) { return bgr->unpack_565(bgr); }
+static inline bool store(PixelFormat f, Arg p, Color c) { return c->store(f, p, c); }
+static inline Color gather(PixelFormat f, Arg p, int off, I32 ix) {
+  return ix->gather(f, p, off, ix);
+}
+static inline Color gather(PixelFormat f, Uniform u, I32 ix) { return ix->gather(f, u, ix); }
 
 static inline void premul(F32* r, F32* g, F32* b, F32 a) { a->premul(r, g, b, a); }
 static inline void unpremul(F32* r, F32* g, F32* b, F32 a) { a->unpremul(r, g, b, a); }

@@ -146,6 +146,7 @@
     <ClCompile Include="angle2\src\libANGLE\Overlay_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\Overlay_font_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\ProgramExecutable.cpp" />
+    <ClCompile Include="angle2\src\libANGLE\renderer\BufferImpl.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\converged\CompositorNativeWindow11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_support_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\ExternalImageSiblingImpl11.cpp" />

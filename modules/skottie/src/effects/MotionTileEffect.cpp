@@ -52,9 +52,7 @@ class TileRenderNode final : public sksg::CustomRenderNode {
   SG_ATTRIBUTE(HorizontalPhase, bool, fHorizontalPhase)
 
  protected:
-  const RenderNode* onNodeAt(const SkPoint&) const noexcept override {
-    return nullptr;
-  }  // no hit-testing
+  const RenderNode* onNodeAt(const SkPoint&) const override { return nullptr; }  // no hit-testing
 
   SkRect onRevalidate(sksg::InvalidationController* ic, const SkMatrix& ctm) override {
     // Re-record the layer picture if needed.

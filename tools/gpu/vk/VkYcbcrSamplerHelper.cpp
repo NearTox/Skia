@@ -9,7 +9,7 @@
 
 #ifdef SK_VULKAN
 
-#  include "include/gpu/GrContext.h"
+#  include "include/gpu/GrDirectContext.h"
 #  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/vk/GrVkGpu.h"
 #  include "src/gpu/vk/GrVkUtil.h"
@@ -22,10 +22,10 @@ std::pair<int, int> VkYcbcrSamplerHelper::GetExpectedUV(int x, int y, int width,
   return {16 + x * 224 / (width - 1), 16 + y * 224 / (height - 1)};
 }
 
-GrVkGpu* VkYcbcrSamplerHelper::vkGpu() { return (GrVkGpu*)fContext->priv().getGpu(); }
+GrVkGpu* VkYcbcrSamplerHelper::vkGpu() { return (GrVkGpu*)fDContext->priv().getGpu(); }
 
-VkYcbcrSamplerHelper::VkYcbcrSamplerHelper(GrContext* context) : fContext(context) {
-  SkASSERT_RELEASE(context->backend() == GrBackendApi::kVulkan);
+VkYcbcrSamplerHelper::VkYcbcrSamplerHelper(GrDirectContext* dContext) : fDContext(dContext) {
+  SkASSERT_RELEASE(dContext->backend() == GrBackendApi::kVulkan);
 }
 
 VkYcbcrSamplerHelper::~VkYcbcrSamplerHelper() {

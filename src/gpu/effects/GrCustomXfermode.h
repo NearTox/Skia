@@ -19,8 +19,8 @@ class GrXPFactory;
  * coefficients.
  */
 namespace GrCustomXfermode {
-bool IsSupportedMode(SkBlendMode mode) noexcept;
-const GrXPFactory* Get(SkBlendMode mode) noexcept;
-};  // namespace GrCustomXfermode
+bool IsSupportedMode(SkBlendMode mode);
+const GrXPFactory* Get(SkBlendMode mode);
+}  // namespace GrCustomXfermode
 
 #endif

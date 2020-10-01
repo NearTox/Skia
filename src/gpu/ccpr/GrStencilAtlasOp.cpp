@@ -7,7 +7,7 @@
 
 #include "src/gpu/ccpr/GrStencilAtlasOp.h"
 
-#include "include/private/GrRecordingContext.h"
+#include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrProgramInfo.h"
@@ -21,7 +21,7 @@ namespace {
 
 class StencilResolveProcessor : public GrGeometryProcessor {
  public:
-  StencilResolveProcessor() noexcept : INHERITED(kStencilResolveProcessor_ClassID) {
+  StencilResolveProcessor() : INHERITED(kStencilResolveProcessor_ClassID) {
     static constexpr Attribute kIBounds = {"ibounds", kShort4_GrVertexAttribType, kShort4_GrSLType};
     this->setInstanceAttributes(&kIBounds, 1);
     SkASSERT(this->instanceStride() == sizeof(GrStencilAtlasOp::ResolveRectInstance));
@@ -29,7 +29,7 @@ class StencilResolveProcessor : public GrGeometryProcessor {
 
  private:
   const char* name() const noexcept final { return "StencilResolveProcessor"; }
-  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept final {}
+  void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const final {}
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const final;
   class Impl;
 
@@ -57,9 +57,7 @@ class StencilResolveProcessor::Impl : public GrGLSLGeometryProcessor {
     f->codeAppendf("%s = %s = half4(1);", args.fOutputColor, args.fOutputCoverage);
   }
 
-  void setData(
-      const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&,
-      const CoordTransformRange&) noexcept override {}
+  void setData(const GrGLSLProgramDataManager&, const GrPrimitiveProcessor&) override {}
 };
 
 GrGLSLPrimitiveProcessor* StencilResolveProcessor::createGLSLInstance(const GrShaderCaps&) const {

@@ -12,30 +12,26 @@
 #include "src/gpu/effects/GrTextureEffect.h"
 
 GrPaint::GrPaint(const GrPaint& that)
-    : fXPFactory(that.fXPFactory),
-      fColorFragmentProcessors(that.fColorFragmentProcessors.count()),
-      fCoverageFragmentProcessors(that.fCoverageFragmentProcessors.count()),
-      fTrivial(that.fTrivial),
-      fColor(that.fColor) {
-  for (int i = 0; i < that.fColorFragmentProcessors.count(); ++i) {
-    fColorFragmentProcessors.push_back(that.fColorFragmentProcessors[i]->clone());
-    SkASSERT(fColorFragmentProcessors[i]);
+    : fXPFactory(that.fXPFactory), fTrivial(that.fTrivial), fColor(that.fColor) {
+  if (that.fColorFragmentProcessor) {
+    fColorFragmentProcessor = that.fColorFragmentProcessor->clone();
+    SkASSERT(fColorFragmentProcessor);
   }
-  for (int i = 0; i < that.fCoverageFragmentProcessors.count(); ++i) {
-    fCoverageFragmentProcessors.push_back(that.fCoverageFragmentProcessors[i]->clone());
-    SkASSERT(fCoverageFragmentProcessors[i]);
+  if (that.fCoverageFragmentProcessor) {
+    fCoverageFragmentProcessor = that.fCoverageFragmentProcessor->clone();
+    SkASSERT(fCoverageFragmentProcessor);
   }
 }
 
-void GrPaint::setPorterDuffXPFactory(SkBlendMode mode) noexcept {
+void GrPaint::setPorterDuffXPFactory(SkBlendMode mode) {
   this->setXPFactory(GrPorterDuffXPFactory::Get(mode));
 }
 
-void GrPaint::setCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage) noexcept {
+void GrPaint::setCoverageSetOpXPFactory(SkRegion::Op regionOp, bool invertCoverage) {
   this->setXPFactory(GrCoverageSetOpXPFactory::Get(regionOp, invertCoverage));
 }
 
-bool GrPaint::isConstantBlendedColor(SkPMColor4f* constantColor) const noexcept {
+bool GrPaint::isConstantBlendedColor(SkPMColor4f* constantColor) const {
   // This used to do a more sophisticated analysis but now it just explicitly looks for common
   // cases.
   static const GrXPFactory* kSrc = GrPorterDuffXPFactory::Get(SkBlendMode::kSrc);
@@ -44,7 +40,7 @@ bool GrPaint::isConstantBlendedColor(SkPMColor4f* constantColor) const noexcept 
     *constantColor = SK_PMColor4fTRANSPARENT;
     return true;
   }
-  if (this->numColorFragmentProcessors()) {
+  if (this->hasColorFragmentProcessor()) {
     return false;
   }
   if (kSrc == fXPFactory || (!fXPFactory && fColor.isOpaque())) {

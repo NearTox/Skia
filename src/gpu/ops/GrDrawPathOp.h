@@ -76,10 +76,6 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
 
   const char* name() const noexcept override { return "DrawPath"; }
 
-#ifdef SK_DEBUG
-  SkString dumpInfo() const override;
-#endif
-
  private:
   friend class GrOpMemoryPool;  // for ctor
 
@@ -90,6 +86,9 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
   }
 
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
+#if GR_TEST_UTILS
+  SkString onDumpInfo() const override;
+#endif
 
   sk_sp<const GrPath> fPath;
 

@@ -15,24 +15,24 @@ namespace sksg {
 // Helper for accessing implementation-private Transform methods.
 class TransformPriv final {
  public:
-  static bool Is44(const sk_sp<Transform>& t) noexcept { return t->is44(); }
+  static bool Is44(const sk_sp<Transform>& t) { return t->is44(); }
 
   template <
       typename T,
       typename = std::enable_if<std::is_same<T, SkMatrix>::value || std::is_same<T, SkM44>::value>>
-  static T As(const sk_sp<Transform>&) noexcept;
+  static T As(const sk_sp<Transform>&);
 
  private:
   TransformPriv() = delete;
 };
 
 template <>
-inline SkMatrix TransformPriv::As<SkMatrix>(const sk_sp<Transform>& t) noexcept {
+inline SkMatrix TransformPriv::As<SkMatrix>(const sk_sp<Transform>& t) {
   return t->asMatrix();
 }
 
 template <>
-inline SkM44 TransformPriv::As<SkM44>(const sk_sp<Transform>& t) noexcept {
+inline SkM44 TransformPriv::As<SkM44>(const sk_sp<Transform>& t) {
   return t->asM44();
 }
 

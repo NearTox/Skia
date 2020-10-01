@@ -38,7 +38,7 @@ SkCachedData::~SkCachedData() {
 
 class SkCachedData::AutoMutexWritable {
  public:
-  AutoMutexWritable(const SkCachedData* cd) : fCD(const_cast<SkCachedData*>(cd)) {
+  AutoMutexWritable(const SkCachedData* cd) noexcept : fCD(const_cast<SkCachedData*>(cd)) {
     fCD->fMutex.acquire();
     fCD->validate();
   }
@@ -54,11 +54,11 @@ class SkCachedData::AutoMutexWritable {
   SkCachedData* fCD;
 };
 
-void SkCachedData::internalRef(bool fromCache) const {
+void SkCachedData::internalRef(bool fromCache) const noexcept {
   AutoMutexWritable(this)->inMutexRef(fromCache);
 }
 
-void SkCachedData::internalUnref(bool fromCache) const {
+void SkCachedData::internalUnref(bool fromCache) const noexcept {
   if (AutoMutexWritable(this)->inMutexUnref(fromCache)) {
     // can't delete inside doInternalUnref, since it is locking a mutex (which we own)
     delete this;

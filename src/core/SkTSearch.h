@@ -34,7 +34,7 @@
 //      bool operator() (const T& t, const K& k)
 //      bool operator() (const K& t, const T& k)
 template <typename T, typename K, typename LESS>
-int SkTSearch(const T base[], int count, const K& key, size_t elemSize, LESS& less) {
+int SkTSearch(const T base[], int count, const K& key, size_t elemSize, const LESS& less) {
   SkASSERT(count >= 0);
   if (count <= 0) {
     return ~0;
@@ -65,44 +65,25 @@ int SkTSearch(const T base[], int count, const K& key, size_t elemSize, LESS& le
   return hi;
 }
 
-// Adapts a less-than function to a functor.
-template <typename T, bool(LESS)(const T&, const T&)>
-struct SkTLessFunctionToFunctorAdaptor {
-  bool operator()(const T& a, const T& b) { return LESS(a, b); }
-};
-
 // Specialization for case when T==K and the caller wants to use a function rather than functor.
 template <typename T, bool(LESS)(const T&, const T&)>
 int SkTSearch(const T base[], int count, const T& target, size_t elemSize) {
-  static SkTLessFunctionToFunctorAdaptor<T, LESS> functor;
-  return SkTSearch(base, count, target, elemSize, functor);
+  return SkTSearch(
+      base, count, target, elemSize, [](const T& a, const T& b) { return LESS(a, b); });
 }
-
-// Adapts operator < to a functor.
-template <typename T>
-struct SkTLessFunctor {
-  bool operator()(const T& a, const T& b) { return a < b; }
-};
 
 // Specialization for T==K, compare using op <.
 template <typename T>
 int SkTSearch(const T base[], int count, const T& target, size_t elemSize) {
-  static SkTLessFunctor<T> functor;
-  return SkTSearch(base, count, target, elemSize, functor);
+  return SkTSearch(base, count, target, elemSize, [](const T& a, const T& b) { return a < b; });
 }
-
-// Similar to SkLessFunctionToFunctorAdaptor but makes the functor interface take T* rather than T.
-template <typename T, bool(LESS)(const T&, const T&)>
-struct SkTLessFunctionToPtrFunctorAdaptor {
-  bool operator()(const T* t, const T* k) { return LESS(*t, *k); }
-};
 
 // Specialization for case where domain is an array of T* and the key value is a T*, and you want
 // to compare the T objects, not the pointers.
 template <typename T, bool(LESS)(const T&, const T&)>
 int SkTSearch(T* base[], int count, T* target, size_t elemSize) {
-  static SkTLessFunctionToPtrFunctorAdaptor<T, LESS> functor;
-  return SkTSearch(base, count, target, elemSize, functor);
+  return SkTSearch(
+      base, count, target, elemSize, [](const T* t, const T* k) { return LESS(*t, *k); });
 }
 
 int SkStrSearch(
@@ -126,8 +107,8 @@ class SkAutoAsciiToLC {
   SkAutoAsciiToLC(const char str[], size_t len = (size_t)-1);
   ~SkAutoAsciiToLC();
 
-  const char* lc() const noexcept { return fLC; }
-  size_t length() const noexcept { return fLength; }
+  const char* lc() const { return fLC; }
+  size_t length() const { return fLength; }
 
  private:
   char* fLC;  // points to either the heap or fStorage

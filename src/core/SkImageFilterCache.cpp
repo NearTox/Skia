@@ -30,20 +30,19 @@ namespace {
 class CacheImpl : public SkImageFilterCache {
  public:
   typedef SkImageFilterCacheKey Key;
-  CacheImpl(size_t maxBytes) noexcept : fMaxBytes(maxBytes), fCurrentBytes(0) {}
+  CacheImpl(size_t maxBytes) : fMaxBytes(maxBytes), fCurrentBytes(0) {}
   ~CacheImpl() override {
-    fLookup.foreach ([&](Value* v) noexcept { delete v; });
+    fLookup.foreach ([&](Value* v) { delete v; });
   }
   struct Value {
     Value(
-        const Key& key, const skif::FilterResult<For::kOutput>& image,
-        const SkImageFilter* filter) noexcept
+        const Key& key, const skif::FilterResult<For::kOutput>& image, const SkImageFilter* filter)
         : fKey(key), fImage(image), fFilter(filter) {}
 
     Key fKey;
     skif::FilterResult<For::kOutput> fImage;
     const SkImageFilter* fFilter;
-    static const Key& GetKey(const Value& v) noexcept { return v.fKey; }
+    static const Key& GetKey(const Value& v) { return v.fKey; }
     static uint32_t Hash(const Key& key) {
       return SkOpts::hash(reinterpret_cast<const uint32_t*>(&key), sizeof(Key));
     }
@@ -117,10 +116,8 @@ class CacheImpl : public SkImageFilterCache {
     fImageFilterValues.remove(filter);
   }
 
-  SkDEBUGCODE(int count() const override { return fLookup.count(); });
-
- private:
-  void removeInternal(Value* v) {
+  SkDEBUGCODE(int count() const override { return fLookup.count(); }) private
+      : void removeInternal(Value* v) {
     if (v->fFilter) {
       if (auto* values = fImageFilterValues.find(v->fFilter)) {
         if (values->size() == 1 && (*values)[0] == v) {

@@ -20,8 +20,9 @@
 
 class GrContext;
 class SkImage;
-class SkMipMap;
+class SkMipmap;
 class SkPicture;
+class SkTaskGroup;
 struct SkYUVAIndex;
 
 // This class acts as a proxy for a GrBackendTexture that backs an image.
@@ -33,23 +34,16 @@ struct SkYUVAIndex;
 // it drops all of its refs (via "reset").
 class PromiseImageCallbackContext : public SkRefCnt {
  public:
-  PromiseImageCallbackContext(GrContext* context, GrBackendFormat backendFormat)
-      : fContext(context), fBackendFormat(backendFormat) {}
+  PromiseImageCallbackContext(GrDirectContext* direct, GrBackendFormat backendFormat)
+      : fContext(direct), fBackendFormat(backendFormat) {}
 
-  ~PromiseImageCallbackContext();
+  ~PromiseImageCallbackContext() override;
 
   const GrBackendFormat& backendFormat() const { return fBackendFormat; }
 
   void setBackendTexture(const GrBackendTexture& backendTexture);
 
-  void destroyBackendTexture() {
-    SkASSERT(!fPromiseImageTexture || fPromiseImageTexture->unique());
-
-    if (fPromiseImageTexture) {
-      fContext->deleteBackendTexture(fPromiseImageTexture->backendTexture());
-    }
-    fPromiseImageTexture = nullptr;
-  }
+  void destroyBackendTexture();
 
   sk_sp<SkPromiseImageTexture> fulfill() {
     SkASSERT(fUnreleasedFulfills >= 0);
@@ -90,7 +84,7 @@ class PromiseImageCallbackContext : public SkRefCnt {
   }
 
  private:
-  GrContext* fContext;
+  GrDirectContext* fContext;
   GrBackendFormat fBackendFormat;
   sk_sp<SkPromiseImageTexture> fPromiseImageTexture;
   int fNumImages = 0;
@@ -132,10 +126,10 @@ class DDLPromiseImageHelper {
   // Convert the SkPicture into SkData replacing all the SkImages with an index.
   sk_sp<SkData> deflateSKP(const SkPicture* inputPicture);
 
-  void createCallbackContexts(GrContext*);
+  void createCallbackContexts(GrDirectContext*);
 
-  void uploadAllToGPU(SkTaskGroup*, GrContext*);
-  void deleteAllFromGPU(SkTaskGroup*, GrContext*);
+  void uploadAllToGPU(SkTaskGroup*, GrDirectContext*);
+  void deleteAllFromGPU(SkTaskGroup*, GrDirectContext*);
 
   // reinflate a deflated SKP, replacing all the indices with promise images.
   sk_sp<SkPicture> reinflateSKP(
@@ -157,7 +151,7 @@ class DDLPromiseImageHelper {
 
     int index() const { return fIndex; }
     uint32_t originalUniqueID() const { return fOriginalUniqueID; }
-    bool isYUV() const { return SkToBool(fYUVData.get()); }
+    bool isYUV() const { return !fYUVPlanes[0].isNull(); }
 
     int overallWidth() const { return fImageInfo.width(); }
     int overallHeight() const { return fImageInfo.height(); }
@@ -176,7 +170,7 @@ class DDLPromiseImageHelper {
     const SkPixmap& yuvPixmap(int index) const {
       SkASSERT(this->isYUV());
       SkASSERT(index >= 0 && index < SkYUVASizeInfo::kMaxCount);
-      return fYUVPlanes[index];
+      return fYUVPlanes[index].pixmap();
     }
 
     const SkBitmap& baseLevel() const {
@@ -185,7 +179,7 @@ class DDLPromiseImageHelper {
     }
     // This returns an array of all the available mipLevels - suitable for passing into
     // createBackendTexture.
-    const std::unique_ptr<SkPixmap[]> normalMipLevels() const;
+    std::unique_ptr<SkPixmap[]> normalMipLevels() const;
     int numMipLevels() const;
 
     void setCallbackContext(int index, sk_sp<PromiseImageCallbackContext> callbackContext) {
@@ -201,11 +195,11 @@ class DDLPromiseImageHelper {
       return fCallbackContexts[index];
     }
 
-    GrMipMapped mipMapped(int index) const {
+    GrMipmapped mipMapped(int index) const {
       if (this->isYUV()) {
-        return GrMipMapped::kNo;
+        return GrMipmapped::kNo;
       }
-      return fMipLevels ? GrMipMapped::kYes : GrMipMapped::kNo;
+      return fMipLevels ? GrMipmapped::kYes : GrMipmapped::kNo;
     }
     const GrBackendFormat& backendFormat(int index) const {
       SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVASizeInfo::kMaxCount : 1));
@@ -216,20 +210,12 @@ class DDLPromiseImageHelper {
       return fCallbackContexts[index]->promiseImageTexture();
     }
 
-    void setMipLevels(const SkBitmap& baseLevel, std::unique_ptr<SkMipMap> mipLevels);
+    void setMipLevels(const SkBitmap& baseLevel, std::unique_ptr<SkMipmap> mipLevels);
 
-    void setYUVData(
-        sk_sp<SkCachedData> yuvData, SkYUVAIndex yuvaIndices[SkYUVAIndex::kIndexCount],
-        SkYUVColorSpace cs) {
-      fYUVData = yuvData;
-      memcpy(fYUVAIndices, yuvaIndices, sizeof(fYUVAIndices));
-      fYUVColorSpace = cs;
-    }
-    void addYUVPlane(int index, const SkImageInfo& ii, const void* plane, size_t widthBytes) {
-      SkASSERT(this->isYUV());
-      SkASSERT(index >= 0 && index < SkYUVASizeInfo::kMaxCount);
-      fYUVPlanes[index].reset(ii, plane, widthBytes);
-    }
+    /** Takes ownership of the plane data. */
+    void setYUVPlanes(
+        const SkYUVASizeInfo& yuvaSizeInfo, const SkYUVAIndex yuvaIndices[SkYUVAIndex::kIndexCount],
+        SkYUVColorSpace cs, std::unique_ptr<char[]> planes[SkYUVAIndex::kIndexCount]);
 
    private:
     const int fIndex;                  // index in the 'fImageInfo' array
@@ -239,13 +225,12 @@ class DDLPromiseImageHelper {
 
     // CPU-side cache of a normal SkImage's mipmap levels
     SkBitmap fBaseLevel;
-    std::unique_ptr<SkMipMap> fMipLevels;
+    std::unique_ptr<SkMipmap> fMipLevels;
 
     // CPU-side cache of a YUV SkImage's contents
-    sk_sp<SkCachedData> fYUVData;  // when !null, this is a YUV image
     SkYUVColorSpace fYUVColorSpace = kJPEG_SkYUVColorSpace;
     SkYUVAIndex fYUVAIndices[SkYUVAIndex::kIndexCount];
-    SkPixmap fYUVPlanes[SkYUVASizeInfo::kMaxCount];
+    SkBitmap fYUVPlanes[SkYUVASizeInfo::kMaxCount];
 
     // Up to SkYUVASizeInfo::kMaxCount for a YUVA image. Only one for a normal image.
     sk_sp<PromiseImageCallbackContext> fCallbackContexts[SkYUVASizeInfo::kMaxCount];
@@ -259,14 +244,14 @@ class DDLPromiseImageHelper {
     SkTArray<sk_sp<SkImage>>* fPromiseImages;
   };
 
-  static void CreateBETexturesForPromiseImage(GrContext*, PromiseImageInfo*);
-  static void DeleteBETexturesForPromiseImage(GrContext*, PromiseImageInfo*);
+  static void CreateBETexturesForPromiseImage(GrDirectContext*, PromiseImageInfo*);
+  static void DeleteBETexturesForPromiseImage(GrDirectContext*, PromiseImageInfo*);
 
   static sk_sp<SkImage> CreatePromiseImages(const void* rawData, size_t length, void* ctxIn);
 
   bool isValidID(int id) const { return id >= 0 && id < fImageInfo.count(); }
   const PromiseImageInfo& getInfo(int id) const { return fImageInfo[id]; }
-  void uploadImage(GrContext*, PromiseImageInfo*);
+  void uploadImage(GrDirectContext*, PromiseImageInfo*);
 
   // returns -1 if not found
   int findImage(SkImage* image) const;

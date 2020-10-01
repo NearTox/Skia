@@ -7,12 +7,13 @@
 
 #include "src/gpu/vk/GrVkUtil.h"
 
+#include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDataUtils.h"
 #include "src/gpu/vk/GrVkGpu.h"
 #include "src/sksl/SkSLCompiler.h"
 
-bool GrVkFormatIsSupported(VkFormat format) {
+bool GrVkFormatIsSupported(VkFormat format) noexcept {
   switch (format) {
     case VK_FORMAT_R8G8B8A8_UNORM:
     case VK_FORMAT_B8G8R8A8_UNORM:
@@ -40,12 +41,12 @@ bool GrVkFormatIsSupported(VkFormat format) {
   }
 }
 
-bool GrVkFormatNeedsYcbcrSampler(VkFormat format) {
+bool GrVkFormatNeedsYcbcrSampler(VkFormat format) noexcept {
   return format == VK_FORMAT_G8_B8R8_2PLANE_420_UNORM ||
          format == VK_FORMAT_G8_B8_R8_3PLANE_420_UNORM;
 }
 
-bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples) {
+bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples) noexcept {
   SkASSERT(samples >= 1);
   switch (samples) {
     case 1: *vkSamples = VK_SAMPLE_COUNT_1_BIT; return true;
@@ -57,7 +58,7 @@ bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSam
   }
 }
 
-SkSL::Program::Kind vk_shader_stage_to_skiasl_kind(VkShaderStageFlagBits stage) {
+SkSL::Program::Kind vk_shader_stage_to_skiasl_kind(VkShaderStageFlagBits stage) noexcept {
   if (VK_SHADER_STAGE_VERTEX_BIT == stage) {
     return SkSL::Program::kVertex_Kind;
   }
@@ -119,7 +120,7 @@ bool GrInstallVkShaderModule(
   return true;
 }
 
-bool GrVkFormatIsCompressed(VkFormat vkFormat) {
+bool GrVkFormatIsCompressed(VkFormat vkFormat) noexcept {
   switch (vkFormat) {
     case VK_FORMAT_ETC2_R8G8B8_UNORM_BLOCK:
     case VK_FORMAT_BC1_RGB_UNORM_BLOCK:
@@ -128,4 +129,3 @@ bool GrVkFormatIsCompressed(VkFormat vkFormat) {
   }
   SkUNREACHABLE;
 }
-

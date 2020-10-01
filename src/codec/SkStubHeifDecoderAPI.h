@@ -41,22 +41,22 @@ struct HeifFrameInfo {
 };
 
 struct HeifDecoder {
-  bool init(HeifStream* stream, HeifFrameInfo*) noexcept {
+  bool init(HeifStream* stream, HeifFrameInfo*) {
     delete stream;
     return false;
   }
 
-  bool getSequenceInfo(HeifFrameInfo* frameInfo, size_t* frameCount) noexcept { return false; }
+  bool getSequenceInfo(HeifFrameInfo* frameInfo, size_t* frameCount) { return false; }
 
-  bool decode(HeifFrameInfo*) noexcept { return false; }
+  bool decode(HeifFrameInfo*) { return false; }
 
-  bool decodeSequence(int frameIndex, HeifFrameInfo* frameInfo) noexcept { return false; }
+  bool decodeSequence(int frameIndex, HeifFrameInfo* frameInfo) { return false; }
 
-  bool setOutputColor(HeifColorFormat) noexcept { return false; }
+  bool setOutputColor(HeifColorFormat) { return false; }
 
-  bool getScanline(uint8_t*) noexcept { return false; }
+  bool getScanline(uint8_t*) { return false; }
 
-  int skipScanlines(int) noexcept { return 0; }
+  int skipScanlines(int) { return 0; }
 };
 
 static inline HeifDecoder* createHeifDecoder() { return new HeifDecoder; }

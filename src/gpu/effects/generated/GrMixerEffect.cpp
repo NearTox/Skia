@@ -10,6 +10,7 @@
  **************************************************************************************************/
 #include "GrMixerEffect.h"
 
+#include "src/core/SkUtils.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
@@ -18,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLMixerEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLMixerEffect() {}
+  GrGLSLMixerEffect() noexcept = default;
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrMixerEffect& _outer = args.fFp.cast<GrMixerEffect>();
@@ -27,24 +28,18 @@ class GrGLSLMixerEffect : public GrGLSLFragmentProcessor {
     (void)weight;
     weightVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "weight");
-    SkString _input1278(args.fInputColor);
-    SkString _sample1278;
-    _sample1278 = this->invokeChild(_outer.fp0_index, _input1278.c_str(), args);
-    fragBuilder->codeAppendf(R"SkSL(half4 in0 = %s;)SkSL", _sample1278.c_str());
-    SkString _input1335(args.fInputColor);
-    SkString _sample1335;
-    if (_outer.fp1_index >= 0) {
-      _sample1335 = this->invokeChild(_outer.fp1_index, _input1335.c_str(), args);
-    } else {
-      _sample1335.swap(_input1335);
-    }
+    SkString _sample1099 = this->invokeChild(0, args);
+    fragBuilder->codeAppendf(R"SkSL(half4 inColor = %s;)SkSL", _sample1099.c_str());
+    SkString _input1138("inColor");
+    SkString _sample1138 = this->invokeChild(1, _input1138.c_str(), args);
+    SkString _input1160("inColor");
+    SkString _sample1160 = this->invokeChild(2, _input1160.c_str(), args);
     fragBuilder->codeAppendf(
         R"SkSL(
-half4 in1 = %s ? %s : %s;
-%s = mix(in0, in1, %s);
+%s = mix(%s, %s, %s);
 )SkSL",
-        _outer.fp1_index >= 0 ? "true" : "false", _sample1335.c_str(), args.fInputColor,
-        args.fOutputColor, args.fUniformHandler->getUniformCStr(weightVar));
+        args.fOutputColor, _sample1138.c_str(), _sample1160.c_str(),
+        args.fUniformHandler->getUniformCStr(weightVar));
   }
 
  private:
@@ -58,7 +53,7 @@ GrGLSLFragmentProcessor* GrMixerEffect::onCreateGLSLInstance() const {
   return new GrGLSLMixerEffect();
 }
 void GrMixerEffect::onGetGLSLProcessorKey(
-    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const noexcept {}
+    const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
 bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
   const GrMixerEffect& that = other.cast<GrMixerEffect>();
   (void)that;
@@ -67,11 +62,11 @@ bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
 }
 GrMixerEffect::GrMixerEffect(const GrMixerEffect& src)
     : INHERITED(kGrMixerEffect_ClassID, src.optimizationFlags()), weight(src.weight) {
-  { fp0_index = this->cloneAndRegisterChildProcessor(src.childProcessor(src.fp0_index)); }
-  if (src.fp1_index >= 0) {
-    fp1_index = this->cloneAndRegisterChildProcessor(src.childProcessor(src.fp1_index));
-  }
+  this->cloneAndRegisterAllChildProcessors(src);
 }
 std::unique_ptr<GrFragmentProcessor> GrMixerEffect::clone() const {
-  return std::unique_ptr<GrFragmentProcessor>(new GrMixerEffect(*this));
+  return std::make_unique<GrMixerEffect>(*this);
 }
+#if GR_TEST_UTILS
+SkString GrMixerEffect::onDumpInfo() const { return SkStringPrintf("(weight=%f)", weight); }
+#endif

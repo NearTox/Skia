@@ -14,8 +14,6 @@
 #include "src/gpu/GrShaderVar.h"
 #include "src/gpu/GrSwizzle.h"
 
-class GrCoordTransform;
-
 /*
  * The GrPrimitiveProcessor represents some kind of geometric primitive.  This includes the shape
  * of the primitive and the inherent color of the primitive.  The GrPrimitiveProcessor is
@@ -81,7 +79,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
 
   class Iter {
    public:
-    constexpr Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
+    Iter() noexcept : fCurr(nullptr), fRemaining(0) {}
     Iter(const Iter& iter) noexcept : fCurr(iter.fCurr), fRemaining(iter.fRemaining) {}
     Iter& operator=(const Iter& iter) noexcept {
       fCurr = iter.fCurr;
@@ -174,7 +172,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
    * Computes a key for the transforms owned by an FP based on the shader code that will be
    * emitted by the primitive processor to implement them.
    */
-  uint32_t computeCoordTransformsKey(const GrFragmentProcessor& fp) const noexcept;
+  uint32_t computeCoordTransformsKey(const GrFragmentProcessor& fp) const;
 
   /**
    * Sets a unique key on the GrProcessorKeyBuilder that is directly associated with this geometry
@@ -204,7 +202,7 @@ class GrPrimitiveProcessor : public GrProcessor, public GrNonAtomicRef<GrPrimiti
       the object. */
   virtual GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const = 0;
 
-  virtual bool isPathRendering() const noexcept { return false; }
+  virtual bool isPathRendering() const { return false; }
 
   // We use these methods as a temporary back door to inject OpenGL tessellation code. Once
   // tessellation is supported by SkSL we can remove these.
@@ -273,12 +271,12 @@ class GrPrimitiveProcessor::TextureSampler {
  public:
   TextureSampler() noexcept = default;
 
-  TextureSampler(GrSamplerState, const GrBackendFormat&, const GrSwizzle&) noexcept;
+  TextureSampler(GrSamplerState, const GrBackendFormat&, const GrSwizzle&);
 
   TextureSampler(const TextureSampler&) = delete;
   TextureSampler& operator=(const TextureSampler&) = delete;
 
-  void reset(GrSamplerState, const GrBackendFormat&, const GrSwizzle&) noexcept;
+  void reset(GrSamplerState, const GrBackendFormat&, const GrSwizzle&);
 
   const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
   GrTextureType textureType() const noexcept { return fBackendFormat.textureType(); }

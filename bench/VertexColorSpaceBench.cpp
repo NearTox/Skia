@@ -8,7 +8,7 @@
 #include "bench/Benchmark.h"
 
 #include "include/core/SkString.h"
-#include "include/gpu/GrContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "include/private/SkHalf.h"
 #include "src/core/SkColorSpacePriv.h"
 #include "src/gpu/GrContextPriv.h"
@@ -80,8 +80,7 @@ class GP : public GrGeometryProcessor {
         fragBuilder->codeAppendf("%s = half4(1);", args.fOutputCoverage);
       }
       void setData(
-          const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc,
-          const CoordTransformRange&) override {
+          const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& primProc) override {
         const GP& gp = primProc.cast<GP>();
         fColorSpaceHelper.setData(pdman, gp.fColorSpaceXform.get());
       }
@@ -267,7 +266,7 @@ class VertexColorSpaceBench : public Benchmark {
   const char* onGetName() override { return fName.c_str(); }
 
   void onDraw(int loops, SkCanvas* canvas) override {
-    GrContext* context = canvas->getGrContext();
+    auto context = canvas->recordingContext()->asDirectContext();
     SkASSERT(context);
 
     if (kHalf_Mode == fMode && !context->priv().caps()->halfFloatVertexAttributeSupport()) {

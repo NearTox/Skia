@@ -54,41 +54,46 @@ class GrPaint {
     fTrivial &= !SkToBool(xpFactory);
   }
 
-  void setPorterDuffXPFactory(SkBlendMode mode) noexcept;
+  void setPorterDuffXPFactory(SkBlendMode mode);
 
-  void setCoverageSetOpXPFactory(SkRegion::Op, bool invertCoverage = false) noexcept;
+  void setCoverageSetOpXPFactory(SkRegion::Op, bool invertCoverage = false);
 
   /**
-   * Appends an additional color processor to the color computation.
+   * Sets a processor for color computation.
    */
-  void addColorFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
+  void setColorFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
     SkASSERT(fp);
-    fColorFragmentProcessors.push_back(std::move(fp));
+    SkASSERT(fColorFragmentProcessor == nullptr);
+    fColorFragmentProcessor = std::move(fp);
     fTrivial = false;
   }
 
   /**
    * Appends an additional coverage processor to the coverage computation.
    */
-  void addCoverageFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
+  void setCoverageFragmentProcessor(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
     SkASSERT(fp);
-    fCoverageFragmentProcessors.push_back(std::move(fp));
+    SkASSERT(fCoverageFragmentProcessor == nullptr);
+    fCoverageFragmentProcessor = std::move(fp);
     fTrivial = false;
   }
 
-  int numColorFragmentProcessors() const noexcept { return fColorFragmentProcessors.count(); }
-  int numCoverageFragmentProcessors() const noexcept { return fCoverageFragmentProcessors.count(); }
+  bool hasColorFragmentProcessor() const noexcept { return fColorFragmentProcessor ? true : false; }
+  int hasCoverageFragmentProcessor() const noexcept {
+    return fCoverageFragmentProcessor ? true : false;
+  }
   int numTotalFragmentProcessors() const noexcept {
-    return this->numColorFragmentProcessors() + this->numCoverageFragmentProcessors();
+    return (this->hasColorFragmentProcessor() ? 1 : 0) +
+           (this->hasCoverageFragmentProcessor() ? 1 : 0);
   }
 
   const GrXPFactory* getXPFactory() const noexcept { return fXPFactory; }
 
-  GrFragmentProcessor* getColorFragmentProcessor(int i) const noexcept {
-    return fColorFragmentProcessors[i].get();
+  GrFragmentProcessor* getColorFragmentProcessor() const noexcept {
+    return fColorFragmentProcessor.get();
   }
-  GrFragmentProcessor* getCoverageFragmentProcessor(int i) const noexcept {
-    return fCoverageFragmentProcessors[i].get();
+  GrFragmentProcessor* getCoverageFragmentProcessor() const noexcept {
+    return fCoverageFragmentProcessor.get();
   }
 
   /**
@@ -97,7 +102,7 @@ class GrPaint {
    * coverage and color, so the actual values written to pixels with partial coverage may still
    * not seem constant, even if this function returns true.
    */
-  bool isConstantBlendedColor(SkPMColor4f* constantColor) const noexcept;
+  bool isConstantBlendedColor(SkPMColor4f* constantColor) const;
 
   /**
    * A trivial paint is one that uses src-over and has no fragment processors.
@@ -116,8 +121,8 @@ class GrPaint {
   friend class GrProcessorSet;
 
   const GrXPFactory* fXPFactory = nullptr;
-  SkSTArray<4, std::unique_ptr<GrFragmentProcessor>> fColorFragmentProcessors;
-  SkSTArray<2, std::unique_ptr<GrFragmentProcessor>> fCoverageFragmentProcessors;
+  std::unique_ptr<GrFragmentProcessor> fColorFragmentProcessor;
+  std::unique_ptr<GrFragmentProcessor> fCoverageFragmentProcessor;
   bool fTrivial = true;
   SkPMColor4f fColor = SK_PMColor4fWHITE;
   SkDEBUGCODE(bool fAlive = true);  // Set false after moved from.

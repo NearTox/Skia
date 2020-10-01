@@ -103,7 +103,7 @@ FILE* sk_fopen(const char path[], SkFILE_Flags flags) {
   return file;
 }
 
-size_t sk_fgetsize(FILE* f) noexcept {
+size_t sk_fgetsize(FILE* f) {
   SkASSERT(f);
 
   long curr = ftell(f);  // remember where we are
@@ -131,7 +131,7 @@ void sk_fflush(FILE* f) noexcept {
   fflush(f);
 }
 
-void sk_fsync(FILE* f) noexcept {
+void sk_fsync(FILE* f) {
 #if !defined(_WIN32) && !defined(SK_BUILD_FOR_ANDROID) && !defined(__UCLIBC__) && \
     !defined(_NEWLIB_VERSION)
   int fd = fileno(f);
@@ -171,7 +171,7 @@ bool sk_isdir(const char* path) noexcept {
   return SkToBool(status.st_mode & S_IFDIR);
 }
 
-bool sk_mkdir(const char* path) noexcept {
+bool sk_mkdir(const char* path) {
   if (sk_isdir(path)) {
     return true;
   }

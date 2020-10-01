@@ -23,7 +23,7 @@
 class GrCaps;
 class GrColorInfo;
 class GrColorSpaceXform;
-class GrContext;
+class GrDirectContext;
 class GrFragmentProcessor;
 class GrPaint;
 class GrRecordingContext;
@@ -51,7 +51,7 @@ static inline GrColor SkColorToPremulGrColor(SkColor c) noexcept {
   return GrColorPackRGBA(r, g, b, a);
 }
 
-static inline GrColor SkColorToUnpremulGrColor(SkColor c) noexcept {
+static constexpr inline GrColor SkColorToUnpremulGrColor(SkColor c) noexcept {
   unsigned r = SkColorGetR(c);
   unsigned g = SkColorGetG(c);
   unsigned b = SkColorGetB(c);
@@ -68,7 +68,7 @@ SkColor4f SkColor4fPrepForDst(SkColor4f, const GrColorInfo&);
 ////////////////////////////////////////////////////////////////////////////////
 // SkTileMode conversion
 
-static constexpr GrSamplerState::WrapMode SkTileModeToWrapMode(SkTileMode tileMode) {
+static constexpr GrSamplerState::WrapMode SkTileModeToWrapMode(SkTileMode tileMode) noexcept {
   switch (tileMode) {
     case SkTileMode::kClamp: return GrSamplerState::WrapMode::kClamp;
     case SkTileMode::kDecal: return GrSamplerState::WrapMode::kClampToBorder;
@@ -102,7 +102,7 @@ bool SkPaintToGrPaintReplaceShader(
 
 /** Blends the SkPaint's shader (or color if no shader) with the color which specified via a
     GrOp's GrPrimitiveProcesssor. */
-bool SkPaintToGrPaintWithXfermode(
+bool SkPaintToGrPaintWithBlend(
     GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
     const SkMatrixProvider& matrixProvider, SkBlendMode primColorMode, GrPaint* grPaint);
 
@@ -113,7 +113,7 @@ bool SkPaintToGrPaintWithXfermode(
 inline bool SkPaintToGrPaintWithPrimitiveColor(
     GrRecordingContext* context, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
     const SkMatrixProvider& matrixProvider, GrPaint* grPaint) {
-  return SkPaintToGrPaintWithXfermode(
+  return SkPaintToGrPaintWithBlend(
       context, dstColorInfo, skPaint, matrixProvider, SkBlendMode::kDst, grPaint);
 }
 
@@ -127,9 +127,15 @@ bool SkPaintToGrPaintWithTexture(
 ////////////////////////////////////////////////////////////////////////////////
 // Misc Sk to Gr type conversions
 
-GrSamplerState::Filter GrSkFilterQualityToGrFilterMode(
-    int imageWidth, int imageHeight, SkFilterQuality paintFilterQuality, const SkMatrix& viewM,
-    const SkMatrix& localM, bool sharpenMipmappedTextures, bool* doBicubic);
+/**
+ * Determines how to interpret SkFilterQuality given draw params and canvas state. If the returned
+ * bool is true then bicubic filtering should be used (and the two other return values can be
+ * ignored).
+ */
+std::tuple<GrSamplerState::Filter, GrSamplerState::MipmapMode, bool /*bicubic*/>
+GrInterpretFilterQuality(
+    SkISize imageDims, SkFilterQuality paintFilterQuality, const SkMatrix& viewM,
+    const SkMatrix& localM, bool sharpenMipmappedTextures);
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -163,10 +169,10 @@ enum class GrImageTexGenPolicy : int {
 /**
  * Returns a view that wraps a texture representing the bitmap. The texture is inserted into the
  * cache (unless the bitmap is marked volatile and can be retrieved again via this function.
- * A MIP mapped texture may be returned even when GrMipMapped is kNo. The function will succeed
- * with a non-MIP mapped texture if GrMipMapped is kYes but MIP mapping is not supported.
+ * A MIP mapped texture may be returned even when GrMipmapped is kNo. The function will succeed
+ * with a non-MIP mapped texture if GrMipmapped is kYes but MIP mapping is not supported.
  */
-GrSurfaceProxyView GrRefCachedBitmapView(GrRecordingContext*, const SkBitmap&, GrMipMapped);
+GrSurfaceProxyView GrRefCachedBitmapView(GrRecordingContext*, const SkBitmap&, GrMipmapped);
 
 /**
  * Creates a new texture with mipmap levels and copies the baseProxy into the base layer.
@@ -196,7 +202,7 @@ GrSurfaceProxyView GrMakeCachedBitmapProxyView(GrRecordingContext*, const SkBitm
  *      - SkImage
  *      - SkImageGenerator
  */
-void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds);
+void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds) noexcept;
 
 /**
  * Makes a SkIDChangeListener from a GrUniqueKey. The key will be invalidated in the resource

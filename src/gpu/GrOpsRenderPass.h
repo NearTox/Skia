@@ -73,8 +73,8 @@ class GrOpsRenderPass {
       const GrPipeline&);
 
   void bindBuffers(
-      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
-      GrPrimitiveRestart = GrPrimitiveRestart::kNo);
+      sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
+      sk_sp<const GrBuffer> vertexBuffer, GrPrimitiveRestart = GrPrimitiveRestart::kNo);
 
   // The next several draw*() methods issue draws using the current pipeline state. Before
   // drawing, the caller must configure the pipeline and dynamic state:
@@ -140,7 +140,8 @@ class GrOpsRenderPass {
   void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>);
 
  protected:
-  GrOpsRenderPass() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
+  constexpr GrOpsRenderPass() noexcept
+      : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
 
   GrOpsRenderPass(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept
       : fOrigin(origin), fRenderTarget(rt) {}
@@ -162,7 +163,7 @@ class GrOpsRenderPass {
   sk_sp<const GrBuffer> fActiveInstanceBuffer;
 
  private:
-  virtual GrGpu* gpu() noexcept = 0;
+  virtual GrGpu* gpu() = 0;
 
   void resetActiveBuffers() {
     fActiveIndexBuffer.reset();
@@ -181,8 +182,8 @@ class GrOpsRenderPass {
       const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
       const GrPipeline&) = 0;
   virtual void onBindBuffers(
-      const GrBuffer* indexBuffer, const GrBuffer* instanceBuffer, const GrBuffer* vertexBuffer,
-      GrPrimitiveRestart) = 0;
+      sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
+      sk_sp<const GrBuffer> vertexBuffer, GrPrimitiveRestart) = 0;
   virtual void onDraw(int vertexCount, int baseVertex) = 0;
   virtual void onDrawIndexed(
       int indexCount, int baseIndex, uint16_t minIndexValue, uint16_t maxIndexValue,

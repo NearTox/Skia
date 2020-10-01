@@ -576,10 +576,8 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
     class GLSLProcessor : public GrGLSLGeometryProcessor {
      public:
       void setData(
-          const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc,
-          const CoordTransformRange& transformRange) override {
+          const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {
         const auto& gp = proc.cast<QuadPerEdgeAAGeometryProcessor>();
-        this->setTransformDataHelper(pdman, transformRange);
         fTextureColorSpaceXformHelper.setData(pdman, gp.fTextureColorSpaceXform.get());
       }
 

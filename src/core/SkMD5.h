@@ -31,7 +31,7 @@ class SkMD5 : public SkWStream {
   };
 
   /** Computes and returns the digest. */
-  Digest finish();
+  Digest finish() noexcept;
 
  private:
   uint64_t byteCount;  // number of bytes, modulo 2^64

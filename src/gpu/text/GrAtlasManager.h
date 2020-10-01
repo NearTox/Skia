@@ -42,13 +42,16 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
     return nullptr;
   }
 
-  void freeAll();
+  void freeAll() noexcept;
 
   bool hasGlyph(GrMaskFormat, GrGlyph*);
 
+  // If bilerpPadding == true then addGlyphToAtlas adds a 1 pixel border to the glyph before
+  // inserting it into the atlas.
   GrDrawOpAtlas::ErrorCode addGlyphToAtlas(
-      const SkGlyph& skGlyph, int padding, GrGlyph* grGlyph, GrResourceProvider* resourceProvider,
-      GrDeferredUploadTarget* uploadTarget);
+      const SkGlyph& skGlyph, GrGlyph* grGlyph, int srcPadding,
+      GrResourceProvider* resourceProvider, GrDeferredUploadTarget* uploadTarget,
+      bool bilerpPadding = false);
 
   // To ensure the GrDrawOpAtlas does not evict the Glyph Mask from its texture backing store,
   // the client must pass in the current op token along with the GrGlyph.
@@ -103,7 +106,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   ///////////////////////////////////////////////////////////////////////////
   // Functions intended debug only
 #ifdef SK_DEBUG
-  void dump(GrContext* context) const;
+  void dump(GrDirectContext*) const;
 #endif
 
   void setAtlasDimensionsToMinimum_ForTesting();
@@ -125,10 +128,10 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   }
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
+  static constexpr int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
     return static_cast<int>(format);
   }
-  static GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
+  static constexpr GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
     return static_cast<GrMaskFormat>(idx);
   }
 

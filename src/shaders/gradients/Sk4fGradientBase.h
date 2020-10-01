@@ -17,7 +17,7 @@
 #include "src/shaders/gradients/SkGradientShaderPriv.h"
 
 struct Sk4fGradientInterval {
-  Sk4fGradientInterval(const Sk4f& c0, SkScalar t0, const Sk4f& c1, SkScalar t1);
+  Sk4fGradientInterval(const Sk4f& c0, SkScalar t0, const Sk4f& c1, SkScalar t1) noexcept;
 
   bool contains(SkScalar t) const noexcept {
     // True if t is in [p0,p1].  Note: this helper assumes a
@@ -39,9 +39,9 @@ class Sk4fGradientIntervalBuffer {
       const SkGradientShaderBase&, SkColorSpace* dstCS, SkTileMode tileMode, bool premulColors,
       SkScalar alpha, bool reverse);
 
-  const Sk4fGradientInterval* find(SkScalar t) const;
+  const Sk4fGradientInterval* find(SkScalar t) const noexcept;
   const Sk4fGradientInterval* findNext(
-      SkScalar t, const Sk4fGradientInterval* prev, bool increasing) const;
+      SkScalar t, const Sk4fGradientInterval* prev, bool increasing) const noexcept;
 
   using BufferType = SkSTArray<8, Sk4fGradientInterval, true>;
 
@@ -53,11 +53,11 @@ class Sk4fGradientIntervalBuffer {
 
 class SkGradientShaderBase::GradientShaderBase4fContext : public Context {
  public:
-  GradientShaderBase4fContext(const SkGradientShaderBase&, const ContextRec&);
+  GradientShaderBase4fContext(const SkGradientShaderBase&, const ContextRec&) noexcept;
 
   uint32_t getFlags() const noexcept override { return fFlags; }
 
-  bool isValid() const;
+  bool isValid() const noexcept;
 
  protected:
   Sk4fGradientIntervalBuffer fIntervals;

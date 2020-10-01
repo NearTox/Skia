@@ -36,7 +36,7 @@ class ScalarBench : public Benchmark {
 };
 
 // having unknown values in our arrays can throw off the timing a lot, perhaps
-// handling NaN values is a lot slower. Anyway, this guy is just meant to put
+// handling NaN values is a lot slower. Anyway, this is just meant to put
 // reasonable values in our arrays.
 template <typename T>
 void init9(T array[9]) {
@@ -51,8 +51,8 @@ class FloatComparisonBench : public ScalarBench {
   FloatComparisonBench() : INHERITED("compare_float") { init9(fArray); }
 
  protected:
-  virtual int mulLoopCount() const { return 4; }
-  virtual void performTest() {
+  int mulLoopCount() const override { return 4; }
+  void performTest() override {
     // xoring into a volatile prevents the compiler from optimizing these checks away.
     volatile bool junk = false;
     junk ^= (fArray[6] != 0.0f || fArray[7] != 0.0f || fArray[8] != 1.0f);
@@ -69,8 +69,8 @@ class ForcedIntComparisonBench : public ScalarBench {
   ForcedIntComparisonBench() : INHERITED("compare_forced_int") { init9(fArray); }
 
  protected:
-  virtual int mulLoopCount() const { return 4; }
-  virtual void performTest() {
+  int mulLoopCount() const override { return 4; }
+  void performTest() override {
     // xoring into a volatile prevents the compiler from optimizing these checks away.
     volatile int32_t junk = 0;
     junk ^=

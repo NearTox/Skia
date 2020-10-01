@@ -32,11 +32,11 @@ void Merge::onDraw(SkCanvas* canvas, const SkPaint& paint) const {
   canvas->drawPath(fMerged, paint);
 }
 
-bool Merge::onContains(const SkPoint& p) const noexcept { return fMerged.contains(p.x(), p.y()); }
+bool Merge::onContains(const SkPoint& p) const { return fMerged.contains(p.x(), p.y()); }
 
-SkPath Merge::onAsPath() const noexcept { return fMerged; }
+SkPath Merge::onAsPath() const { return fMerged; }
 
-static SkPathOp mode_to_op(Merge::Mode mode) noexcept {
+static SkPathOp mode_to_op(Merge::Mode mode) {
   switch (mode) {
     case Merge::Mode::kUnion: return kUnion_SkPathOp;
     case Merge::Mode::kIntersect: return kIntersect_SkPathOp;
@@ -57,17 +57,26 @@ SkRect Merge::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
   fMerged.reset();
   bool in_builder = false;
 
+  auto append = [&](const SkPath& path) {
+    if (in_builder) {
+      builder.resolve(&fMerged);
+      in_builder = false;
+    }
+
+    if (fMerged.isEmpty()) {
+      // First merge path determines the fill type.
+      fMerged = path;
+    } else {
+      fMerged.addPath(path);
+    }
+  };
+
   for (const auto& rec : fRecs) {
     rec.fGeo->revalidate(ic, ctm);
 
-    // Merge is not currently supported by SkOpBuidler.
     if (rec.fMode == Mode::kMerge) {
-      if (in_builder) {
-        builder.resolve(&fMerged);
-        in_builder = false;
-      }
-
-      fMerged.addPath(rec.fGeo->asPath());
+      // Merge (append) is not supported by SkOpBuidler.
+      append(rec.fGeo->asPath());
       continue;
     }
 

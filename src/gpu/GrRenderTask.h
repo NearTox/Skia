@@ -26,7 +26,7 @@ class GrTextureResolveRenderTask;
 // contents. (e.g., an opsTask that executes a command buffer, a task to regenerate mipmaps, etc.)
 class GrRenderTask : public SkRefCnt {
  public:
-  GrRenderTask();
+  GrRenderTask() noexcept;
   SkDEBUGCODE(~GrRenderTask() override);
 
   void makeClosed(const GrCaps&);
@@ -53,7 +53,7 @@ class GrRenderTask : public SkRefCnt {
    * Notify this GrRenderTask that it relies on the contents of 'dependedOn'
    */
   void addDependency(
-      GrDrawingManager*, GrSurfaceProxy* dependedOn, GrMipMapped, GrTextureResolveManager,
+      GrDrawingManager*, GrSurfaceProxy* dependedOn, GrMipmapped, GrTextureResolveManager,
       const GrCaps& caps);
 
   /*
@@ -76,13 +76,15 @@ class GrRenderTask : public SkRefCnt {
    */
   virtual GrOpsTask* asOpsTask() noexcept { return nullptr; }
 
-#ifdef SK_DEBUG
+#if GR_TEST_UTILS
   /*
    * Dump out the GrRenderTask dependency DAG
    */
   virtual void dump(bool printDependencies) const;
   virtual const char* name() const = 0;
+#endif
 
+#ifdef SK_DEBUG
   virtual int numClips() const { return 0; }
 
   virtual void visitProxies_debugOnly(const GrOp::VisitProxyFunc&) const = 0;
@@ -90,7 +92,7 @@ class GrRenderTask : public SkRefCnt {
   void visitTargetAndSrcProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const {
     this->visitProxies_debugOnly(fn);
     for (int i = 0; i < this->numTargets(); ++i) {
-      fn(this->target(i).proxy(), GrMipMapped::kNo);
+      fn(this->target(i).proxy(), GrMipmapped::kNo);
     }
   }
 #endif
@@ -157,7 +159,7 @@ class GrRenderTask : public SkRefCnt {
   // Feed proxy usage intervals to the GrResourceAllocator class
   virtual void gatherProxyIntervals(GrResourceAllocator*) const = 0;
 
-  static uint32_t CreateUniqueID();
+  static uint32_t CreateUniqueID() noexcept;
 
   enum Flags {
     kClosed_Flag = 0x01,    //!< This task can't accept any more dependencies.
@@ -214,6 +216,8 @@ class GrRenderTask : public SkRefCnt {
   // (http://skbug.com/9406). To accomplish this, we make and reuse one single resolve task for
   // each render task, then add it as a dependency during makeClosed().
   GrTextureResolveRenderTask* fTextureResolveTask = nullptr;
+
+  SkDEBUGCODE(GrDrawingManager* fDrawingMgr = nullptr);
 };
 
 #endif

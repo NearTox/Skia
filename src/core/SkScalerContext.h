@@ -88,7 +88,7 @@ struct SkScalerContextRec {
    *  Causes the luminance color to be ignored, and the paint and device
    *  gamma to be effectively 1.0
    */
-  void ignoreGamma() noexcept {
+  void ignoreGamma() {
     setLuminanceColor(SK_ColorTRANSPARENT);
     setPaintGamma(SK_Scalar1);
     setDeviceGamma(SK_Scalar1);
@@ -98,7 +98,7 @@ struct SkScalerContextRec {
    *  Causes the luminance color and contrast to be ignored, and the
    *  paint and device gamma to be effectively 1.0.
    */
-  void ignorePreBlend() noexcept {
+  void ignorePreBlend() {
     ignoreGamma();
     setContrast(0);
   }
@@ -132,7 +132,7 @@ struct SkScalerContextRec {
     return msg;
   }
 
-  void getMatrixFrom2x2(SkMatrix*) const noexcept;
+  void getMatrixFrom2x2(SkMatrix*) const;
   void getLocalMatrix(SkMatrix*) const;
   void getSingleMatrix(SkMatrix*) const;
 
@@ -180,7 +180,7 @@ struct SkScalerContextRec {
       SkMatrix* remainingWithoutRotation = nullptr, SkMatrix* remainingRotation = nullptr,
       SkMatrix* total = nullptr);
 
-  SkAxisAlignment computeAxisAlignmentForHText() const noexcept;
+  SkAxisAlignment computeAxisAlignmentForHText() const;
 
   inline SkFontHinting getHinting() const noexcept;
   inline void setHinting(SkFontHinting) noexcept;
@@ -191,7 +191,7 @@ struct SkScalerContextRec {
 
   // setLuminanceColor forces the alpha to be 0xFF because the blitter that draws the glyph
   // will apply the alpha from the paint. Don't apply the alpha twice.
-  void setLuminanceColor(SkColor c) noexcept;
+  void setLuminanceColor(SkColor c);
 
  private:
   // TODO: remove
@@ -326,7 +326,7 @@ class SkScalerContext {
    *  Return the axis (if any) that the baseline for horizontal text should land on.
    *  As an example, the identity matrix will return kX_SkAxisAlignment
    */
-  SkAxisAlignment computeAxisAlignmentForHText() const noexcept;
+  SkAxisAlignment computeAxisAlignmentForHText() const;
 
   static SkDescriptor* CreateDescriptorAndEffectsUsingPaint(
       const SkFont&, const SkPaint&, const SkSurfaceProps&, SkScalerContextFlags scalerContextFlags,

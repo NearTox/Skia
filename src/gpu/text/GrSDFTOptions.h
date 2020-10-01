@@ -16,14 +16,15 @@ class SkSurfaceProps;
 
 class GrSDFTOptions {
  public:
-  GrSDFTOptions(SkScalar min, SkScalar max);
+  GrSDFTOptions(SkScalar min, SkScalar max) noexcept;
 
   bool canDrawAsDistanceFields(
       const SkPaint&, const SkFont&, const SkMatrix& viewMatrix, const SkSurfaceProps& props,
-      bool contextSupportsDistanceFieldText) const;
-  SkFont getSDFFont(const SkFont& font, const SkMatrix& viewMatrix, SkScalar* textRatio) const;
+      bool contextSupportsDistanceFieldText) const noexcept;
+  SkFont getSDFFont(
+      const SkFont& font, const SkMatrix& viewMatrix, SkScalar* textRatio) const noexcept;
   std::pair<SkScalar, SkScalar> computeSDFMinMaxScale(
-      SkScalar textSize, const SkMatrix& viewMatrix) const;
+      SkScalar textSize, const SkMatrix& viewMatrix) const noexcept;
 
  private:
   // Below this size (in device space) distance field text will not be used.

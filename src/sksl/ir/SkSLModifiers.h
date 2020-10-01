@@ -37,7 +37,7 @@ struct Modifiers {
     kVarying_Flag = 1 << 16,
   };
 
-  constexpr Modifiers() noexcept : fLayout(Layout()), fFlags(0) {}
+  Modifiers() noexcept : fLayout(Layout()), fFlags(0) {}
 
   Modifiers(const Layout& layout, int flags) noexcept : fLayout(layout), fFlags(flags) {}
 

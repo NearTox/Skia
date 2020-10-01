@@ -31,7 +31,7 @@ SkDWriteFontFileStream::~SkDWriteFontFileStream() {
   }
 }
 
-size_t SkDWriteFontFileStream::read(void* buffer, size_t size) noexcept {
+size_t SkDWriteFontFileStream::read(void* buffer, size_t size) {
   HRESULT hr = S_OK;
 
   if (nullptr == buffer) {
@@ -76,7 +76,7 @@ size_t SkDWriteFontFileStream::read(void* buffer, size_t size) noexcept {
   return 0;
 }
 
-bool SkDWriteFontFileStream::isAtEnd() const noexcept { return fPos == this->getLength(); }
+bool SkDWriteFontFileStream::isAtEnd() const { return fPos == this->getLength(); }
 
 bool SkDWriteFontFileStream::rewind() noexcept {
   fPos = 0;
@@ -89,13 +89,13 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onDuplicate() const {
 
 size_t SkDWriteFontFileStream::getPosition() const noexcept { return fPos; }
 
-bool SkDWriteFontFileStream::seek(size_t position) noexcept {
+bool SkDWriteFontFileStream::seek(size_t position) {
   size_t length = this->getLength();
   fPos = (position > length) ? length : position;
   return true;
 }
 
-bool SkDWriteFontFileStream::move(long offset) noexcept { return seek(fPos + offset); }
+bool SkDWriteFontFileStream::move(long offset) { return seek(fPos + offset); }
 
 SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
   std::unique_ptr<SkDWriteFontFileStream> that(this->duplicate());
@@ -138,7 +138,7 @@ HRESULT SkDWriteFontFileStreamWrapper::Create(
   return S_OK;
 }
 
-SkDWriteFontFileStreamWrapper::SkDWriteFontFileStreamWrapper(SkStreamAsset* stream) noexcept
+SkDWriteFontFileStreamWrapper::SkDWriteFontFileStreamWrapper(SkStreamAsset* stream)
     : fRefCount(1), fStream(stream) {}
 
 SK_STDMETHODIMP SkDWriteFontFileStreamWrapper::QueryInterface(REFIID iid, void** ppvObject) {
