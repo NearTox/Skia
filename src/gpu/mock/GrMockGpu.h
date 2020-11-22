@@ -27,7 +27,8 @@ class GrMockGpu : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override { return 0; }
   bool waitFence(GrFence) override { return true; }
@@ -126,7 +127,7 @@ class GrMockGpu : public GrGpu {
   bool onSubmitToGpu(bool syncCpu) override { return true; }
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
-      const GrRenderTarget*, int width, int height, int numStencilSamples) override;
+      const GrRenderTarget*, SkISize dimensions, int numStencilSamples) override;
   GrBackendTexture onCreateBackendTexture(
       SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
 
@@ -160,14 +161,14 @@ class GrMockGpu : public GrGpu {
 
   const GrMockOptions fMockOptions;
 
-  static int NextInternalTextureID() noexcept;
-  static int NextExternalTextureID() noexcept;
-  static int NextInternalRenderTargetID() noexcept;
-  static int NextExternalRenderTargetID() noexcept;
+  static int NextInternalTextureID();
+  static int NextExternalTextureID();
+  static int NextInternalRenderTargetID();
+  static int NextExternalRenderTargetID();
 
   SkTHashSet<int> fOutstandingTestingOnlyTextureIDs;
 
-  typedef GrGpu INHERITED;
+  using INHERITED = GrGpu;
 };
 
 #endif

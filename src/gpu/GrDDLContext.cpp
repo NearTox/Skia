@@ -42,7 +42,7 @@ class GrDDLContext final : public GrContext {
  private:
   // TODO: Here we're pretending this isn't derived from GrContext. Switch this to be derived from
   // GrRecordingContext!
-  GrDirectContext* asDirectContext() noexcept override { return nullptr; }
+  GrDirectContext* asDirectContext() override { return nullptr; }
 
   bool init() override {
     if (!INHERITED::init()) {
@@ -109,7 +109,7 @@ class GrDDLContext final : public GrContext {
     // All the programInfo data should be stored in the record-time arena so there is no
     // need to ref them here or to delete them in the destructor.
     ProgramInfoMap() : fMap(10) {}
-    ~ProgramInfoMap() = default;
+    ~ProgramInfoMap() {}
 
     // TODO: this is doing a lot of reallocating of the ProgramDesc! Once the program descs
     // are allocated in the record-time area there won't be a problem.
@@ -144,7 +144,7 @@ class GrDDLContext final : public GrContext {
 
   ProgramInfoMap fProgramInfoMap;
 
-  typedef GrContext INHERITED;
+  using INHERITED = GrContext;
 };
 
 sk_sp<GrRecordingContext> GrRecordingContextPriv::MakeDDL(sk_sp<GrContextThreadSafeProxy> proxy) {

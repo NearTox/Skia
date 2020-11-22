@@ -27,13 +27,13 @@ GrMtlOpsRenderPass::GrMtlOpsRenderPass(
   this->setupRenderPass(colorInfo, stencilInfo);
 }
 
-GrMtlOpsRenderPass::~GrMtlOpsRenderPass() = default;
+GrMtlOpsRenderPass::~GrMtlOpsRenderPass() {}
 
 void GrMtlOpsRenderPass::precreateCmdEncoder() {
   // For clears, we may not have an associated draw. So we prepare a cmdEncoder that
   // will be submitted whether there's a draw or not.
-  SkDEBUGCODE(id<MTLRenderCommandEncoder> cmdEncoder =) fGpu->commandBuffer()
-      ->getRenderCommandEncoder(fRenderPassDesc, nullptr, this);
+  SkDEBUGCODE(id<MTLRenderCommandEncoder> cmdEncoder =)
+  fGpu->commandBuffer()->getRenderCommandEncoder(fRenderPassDesc, nullptr, this);
   SkASSERT(nil != cmdEncoder);
 }
 

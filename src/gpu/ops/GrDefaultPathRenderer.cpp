@@ -29,7 +29,7 @@
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelperWithStencil.h"
 
-GrDefaultPathRenderer::GrDefaultPathRenderer() noexcept = default;
+GrDefaultPathRenderer::GrDefaultPathRenderer() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Helpers for drawPath
@@ -333,7 +333,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
         devBounds, stencilSettings);
   }
 
-  const char* name() const noexcept override { return "DefaultPathOp"; }
+  const char* name() const override { return "DefaultPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -391,7 +391,8 @@ class DefaultPathOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -405,7 +406,8 @@ class DefaultPathOp final : public GrMeshDrawOp {
     SkASSERT(gp->vertexStride() == sizeof(SkPoint));
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
-        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->primType());
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->primType(),
+        renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -493,7 +495,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
   SkTDArray<GrSimpleMesh*> fMeshes;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace

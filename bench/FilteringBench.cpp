@@ -50,7 +50,7 @@ class FilteringBench : public Benchmark {
   sk_sp<SkShader> fShader;
   SkFilterOptions fOptions;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new FilteringBench({SkSamplingMode::kLinear, SkMipmapMode::kLinear});)

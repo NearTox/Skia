@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLArithmeticProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLArithmeticProcessor() noexcept = default;
+  GrGLSLArithmeticProcessor() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrArithmeticProcessor& _outer = args.fFp.cast<GrArithmeticProcessor>();
@@ -60,13 +60,14 @@ void GrArithmeticProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)enforcePMColor);
 }
-bool GrArithmeticProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrArithmeticProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrArithmeticProcessor& that = other.cast<GrArithmeticProcessor>();
   (void)that;
   if (k != that.k) return false;
   if (enforcePMColor != that.enforcePMColor) return false;
   return true;
 }
+bool GrArithmeticProcessor::usesExplicitReturn() const { return false; }
 GrArithmeticProcessor::GrArithmeticProcessor(const GrArithmeticProcessor& src)
     : INHERITED(kGrArithmeticProcessor_ClassID, src.optimizationFlags()),
       k(src.k),

@@ -52,11 +52,11 @@ class SK_API SkFontStyle {
 
   constexpr SkFontStyle() noexcept : SkFontStyle{kNormal_Weight, kNormal_Width, kUpright_Slant} {}
 
-  constexpr bool operator==(const SkFontStyle& rhs) const noexcept { return fValue == rhs.fValue; }
+  bool operator==(const SkFontStyle& rhs) const noexcept { return fValue == rhs.fValue; }
 
-  constexpr int weight() const noexcept { return fValue & 0xFFFF; }
-  constexpr int width() const noexcept { return (fValue >> 16) & 0xFF; }
-  constexpr Slant slant() const noexcept { return (Slant)((fValue >> 24) & 0xFF); }
+  int weight() const { return fValue & 0xFFFF; }
+  int width() const { return (fValue >> 16) & 0xFF; }
+  Slant slant() const { return (Slant)((fValue >> 24) & 0xFF); }
 
   static constexpr SkFontStyle Normal() noexcept {
     return SkFontStyle(kNormal_Weight, kNormal_Width, kUpright_Slant);

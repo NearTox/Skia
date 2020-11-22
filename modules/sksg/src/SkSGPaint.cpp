@@ -12,7 +12,7 @@
 namespace sksg {
 
 // Paint nodes don't generate damage on their own, but via their aggregation ancestor Draw nodes.
-PaintNode::PaintNode() noexcept : INHERITED(kBubbleDamage_Trait) {}
+PaintNode::PaintNode() : INHERITED(kBubbleDamage_Trait) {}
 
 SkPaint PaintNode::makePaint() const {
   SkASSERT(!this->hasInval());

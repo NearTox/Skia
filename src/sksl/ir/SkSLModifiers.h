@@ -35,11 +35,12 @@ struct Modifiers {
     kPLSIn_Flag = 1 << 14,
     kPLSOut_Flag = 1 << 15,
     kVarying_Flag = 1 << 16,
+    kInline_Flag = 1 << 17,
   };
 
-  Modifiers() noexcept : fLayout(Layout()), fFlags(0) {}
+  Modifiers() : fLayout(Layout()), fFlags(0) {}
 
-  Modifiers(const Layout& layout, int flags) noexcept : fLayout(layout), fFlags(flags) {}
+  Modifiers(const Layout& layout, int flags) : fLayout(layout), fFlags(flags) {}
 
   String description() const {
     String result = fLayout.description();
@@ -99,11 +100,11 @@ struct Modifiers {
     return result;
   }
 
-  bool operator==(const Modifiers& other) const noexcept {
+  bool operator==(const Modifiers& other) const {
     return fLayout == other.fLayout && fFlags == other.fFlags;
   }
 
-  bool operator!=(const Modifiers& other) const noexcept { return !(*this == other); }
+  bool operator!=(const Modifiers& other) const { return !(*this == other); }
 
   Layout fLayout;
   int fFlags;

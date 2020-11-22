@@ -9,7 +9,7 @@
 #include "include/core/SkDrawable.h"
 #include <atomic>
 
-static int32_t next_generation_id() noexcept {
+static int32_t next_generation_id() {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;
@@ -19,7 +19,7 @@ static int32_t next_generation_id() noexcept {
   return id;
 }
 
-SkDrawable::SkDrawable() noexcept : fGenerationID(0) {}
+SkDrawable::SkDrawable() : fGenerationID(0) {}
 
 static void draw_bbox(SkCanvas* canvas, const SkRect& r) {
   SkPaint paint;
@@ -49,7 +49,7 @@ void SkDrawable::draw(SkCanvas* canvas, SkScalar x, SkScalar y) {
 
 SkPicture* SkDrawable::newPictureSnapshot() { return this->onNewPictureSnapshot(); }
 
-uint32_t SkDrawable::getGenerationID() noexcept {
+uint32_t SkDrawable::getGenerationID() {
   if (0 == fGenerationID) {
     fGenerationID = next_generation_id();
   }
@@ -58,7 +58,7 @@ uint32_t SkDrawable::getGenerationID() noexcept {
 
 SkRect SkDrawable::getBounds() { return this->onGetBounds(); }
 
-void SkDrawable::notifyDrawingChanged() noexcept { fGenerationID = 0; }
+void SkDrawable::notifyDrawingChanged() { fGenerationID = 0; }
 
 /////////////////////////////////////////////////////////////////////////////////////////
 
@@ -68,7 +68,7 @@ SkPicture* SkDrawable::onNewPictureSnapshot() {
   SkPictureRecorder recorder;
 
   const SkRect bounds = this->getBounds();
-  SkCanvas* canvas = recorder.beginRecording(bounds, nullptr, 0);
+  SkCanvas* canvas = recorder.beginRecording(bounds);
   this->draw(canvas);
   if (false) {
     draw_bbox(canvas, bounds);

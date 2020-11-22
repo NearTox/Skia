@@ -12,9 +12,9 @@
 
 class GrAAHairLinePathRenderer : public GrPathRenderer {
  public:
-  GrAAHairLinePathRenderer() noexcept = default;
+  GrAAHairLinePathRenderer() {}
 
-  const char* name() const noexcept final { return "AAHairline"; }
+  const char* name() const final { return "AAHairline"; }
 
   typedef SkTArray<SkPoint, true> PtArray;
   typedef SkTArray<int, true> IntArray;
@@ -25,7 +25,7 @@ class GrAAHairLinePathRenderer : public GrPathRenderer {
 
   bool onDrawPath(const DrawPathArgs&) override;
 
-  typedef GrPathRenderer INHERITED;
+  using INHERITED = GrPathRenderer;
 };
 
 #endif

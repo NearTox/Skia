@@ -56,14 +56,14 @@ class GrTBlockList {
   /**
    * Create an allocator that defaults to using StartingItems as heap increment.
    */
-  GrTBlockList() noexcept : GrTBlockList(StartingItems) {}
+  GrTBlockList() : GrTBlockList(StartingItems) {}
 
   /**
    * Create an allocator
    *
    * @param   itemsPerBlock   the number of items to allocate at once
    */
-  explicit GrTBlockList(int itemsPerBlock) noexcept
+  explicit GrTBlockList(int itemsPerBlock)
       : fAllocator(
             GrBlockAllocator::GrowthPolicy::kFixed,
             GrBlockAllocator::BlockOverhead<alignof(T)>() + sizeof(T) * itemsPerBlock) {}
@@ -146,7 +146,7 @@ class GrTBlockList {
   /**
    * Returns the item count.
    */
-  int count() const noexcept {
+  int count() const {
 #ifdef SK_DEBUG
     // Confirm total count matches sum of block counts
     int count = 0;
@@ -164,7 +164,7 @@ class GrTBlockList {
   /**
    * Is the count 0?
    */
-  bool empty() const noexcept { return this->count() == 0; }
+  bool empty() const { return this->count() == 0; }
 
   /**
    * Access first item, only call if count() != 0
@@ -183,7 +183,7 @@ class GrTBlockList {
   /**
    * Access last item, only call if count() != 0
    */
-  T& back() noexcept {
+  T& back() {
     SkASSERT(this->count() > 0 && fAllocator->currentBlock()->metadata() > 0);
     return GetItem(fAllocator->currentBlock(), Last(fAllocator->currentBlock()));
   }
@@ -227,22 +227,16 @@ class GrTBlockList {
   static constexpr size_t StartingSize =
       GrBlockAllocator::Overhead<alignof(T)>() + StartingItems * sizeof(T);
 
-  static T& GetItem(GrBlockAllocator::Block* block, int index) noexcept {
+  static T& GetItem(GrBlockAllocator::Block* block, int index) {
     return *static_cast<T*>(block->ptr(index));
   }
-  static const T& GetItem(const GrBlockAllocator::Block* block, int index) noexcept {
+  static const T& GetItem(const GrBlockAllocator::Block* block, int index) {
     return *static_cast<const T*>(block->ptr(index));
   }
-  static int First(const GrBlockAllocator::Block* b) noexcept {
-    return b->firstAlignedOffset<alignof(T)>();
-  }
-  static int Last(const GrBlockAllocator::Block* b) noexcept { return b->metadata(); }
-  static int Increment(const GrBlockAllocator::Block* b, int index) noexcept {
-    return index + sizeof(T);
-  }
-  static int Decrement(const GrBlockAllocator::Block* b, int index) noexcept {
-    return index - sizeof(T);
-  }
+  static int First(const GrBlockAllocator::Block* b) { return b->firstAlignedOffset<alignof(T)>(); }
+  static int Last(const GrBlockAllocator::Block* b) { return b->metadata(); }
+  static int Increment(const GrBlockAllocator::Block* b, int index) { return index + sizeof(T); }
+  static int Decrement(const GrBlockAllocator::Block* b, int index) { return index - sizeof(T); }
 
   void* pushItem() {
     // 'template' required because fAllocator is a template, calling a template member
@@ -272,12 +266,12 @@ class GrTBlockList {
    *
    *   for (auto&& T : this->items()) {}
    */
-  Iter items() noexcept { return Iter(fAllocator.allocator()); }
-  CIter items() const noexcept { return CIter(fAllocator.allocator()); }
+  Iter items() { return Iter(fAllocator.allocator()); }
+  CIter items() const { return CIter(fAllocator.allocator()); }
 
   // Iterate from newest to oldest using a for-range loop.
-  RIter ritems() noexcept { return RIter(fAllocator.allocator()); }
-  CRIter ritems() const noexcept { return CRIter(fAllocator.allocator()); }
+  RIter ritems() { return RIter(fAllocator.allocator()); }
+  CRIter ritems() const { return CRIter(fAllocator.allocator()); }
 
 #if GR_TEST_UTILS
   // For introspection
@@ -292,7 +286,7 @@ void GrTBlockList<T, SI1>::concat(GrTBlockList<T, SI2>&& other) {
   // will be appended to the block linked list (no per-item moves needed then).
   int headItemCount = 0;
   GrBlockAllocator::Block* headBlock = other.fAllocator->headBlock();
-  SkDEBUGCODE(int oldCount = this->count());
+  SkDEBUGCODE(int oldCount = this->count();)
   if (headBlock->metadata() > 0) {
     int headStart = First(headBlock);
     int headEnd = Last(headBlock) + sizeof(T);  // exclusive
@@ -371,15 +365,15 @@ class BlockIndexIterator {
   using BlockIter = typename GrBlockAllocator::BlockIter<Forward, Const>;
 
  public:
-  BlockIndexIterator(BlockIter iter) noexcept : fBlockIter(iter) {}
+  BlockIndexIterator(BlockIter iter) : fBlockIter(iter) {}
 
   class Item {
    public:
-    bool operator!=(const Item& other) const noexcept {
+    bool operator!=(const Item& other) const {
       return other.fBlock != fBlock || (SkToBool(*fBlock) && other.fIndex != fIndex);
     }
 
-    T operator*() const noexcept {
+    T operator*() const {
       SkASSERT(*fBlock);
       return Resolve(*fBlock, fIndex);
     }

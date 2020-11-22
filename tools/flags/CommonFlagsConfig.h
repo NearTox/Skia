@@ -52,7 +52,7 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
 
   SkCommandLineConfigGpu(
       const SkString& tag, const SkTArray<SkString>& viaParts, ContextType contextType,
-      bool useDIText, int samples, SkColorType colorType, SkAlphaType alphaType,
+      bool fakeGLESVer2, bool useDIText, int samples, SkColorType colorType, SkAlphaType alphaType,
       sk_sp<SkColorSpace> colorSpace, bool useStencilBuffers, bool testThreading,
       int testPersistentCache, bool testPrecompile, bool useDDLSink, bool OOPRish, SurfType);
 

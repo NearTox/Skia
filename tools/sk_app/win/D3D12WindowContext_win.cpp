@@ -89,8 +89,7 @@ void D3D12WindowContext::initializeContext() {
   UINT dxgiFactoryFlags = 0;
   SkDEBUGCODE(dxgiFactoryFlags |= DXGI_CREATE_FACTORY_DEBUG;)
 
-      gr_cp<IDXGIFactory4>
-          factory;
+  gr_cp<IDXGIFactory4> factory;
   GR_D3D_CALL_ERRCHECK(CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&factory)));
 
   DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
@@ -133,7 +132,7 @@ void D3D12WindowContext::initializeContext() {
 void D3D12WindowContext::setupSurfaces(int width, int height) {
   // set up base resource info
   GrD3DTextureResourceInfo info(
-      nullptr, D3D12_RESOURCE_STATE_PRESENT, DXGI_FORMAT_R8G8B8A8_UNORM, 1, 0);
+      nullptr, nullptr, D3D12_RESOURCE_STATE_PRESENT, DXGI_FORMAT_R8G8B8A8_UNORM, 1, 1, 0);
   for (int i = 0; i < kNumFrames; ++i) {
     GR_D3D_CALL_ERRCHECK(fSwapChain->GetBuffer(i, IID_PPV_ARGS(&fBuffers[i])));
 
@@ -148,7 +147,7 @@ void D3D12WindowContext::setupSurfaces(int width, int height) {
           fContext.get(), backendTexture, kTopLeft_GrSurfaceOrigin, fSampleCount,
           kRGBA_8888_SkColorType, fDisplayParams.fColorSpace, &fDisplayParams.fSurfaceProps);
     } else {
-      GrBackendRenderTarget backendRT(width, height, 1, info);
+      GrBackendRenderTarget backendRT(width, height, info);
       fSurfaces[i] = SkSurface::MakeFromBackendRenderTarget(
           fContext.get(), backendRT, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
           fDisplayParams.fColorSpace, &fDisplayParams.fSurfaceProps);

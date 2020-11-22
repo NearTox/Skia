@@ -21,7 +21,7 @@ class GrVkManagedResource : public GrManagedResource {
                         // in subclass's freeGPUData()
 
  private:
-  typedef GrManagedResource INHERITED;
+  using INHERITED = GrManagedResource;
 };
 
 class GrVkRecycledResource : public GrRecycledResource {

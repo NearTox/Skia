@@ -16,7 +16,7 @@
 class SkBitmap;
 class SkData;
 
-static constexpr bool SkCompressionTypeIsOpaque(SkImage::CompressionType compression) noexcept {
+static constexpr bool SkCompressionTypeIsOpaque(SkImage::CompressionType compression) {
   switch (compression) {
     case SkImage::CompressionType::kNone: return true;
     case SkImage::CompressionType::kETC2_RGB8_UNORM: return true;

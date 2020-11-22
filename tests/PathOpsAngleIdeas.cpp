@@ -548,7 +548,7 @@ static void testQuadAngles(
   }
   if (overlap < 0) {
     SkDEBUGCODE(int realEnds =)
-        PathOpsAngleTester::EndsIntersect(*seg1->debugLastAngle(), *seg2->debugLastAngle());
+    PathOpsAngleTester::EndsIntersect(*seg1->debugLastAngle(), *seg2->debugLastAngle());
     SkASSERT(realEnds == (firstInside ? 1 : 0));
   }
   bruteForce(reporter, quad1, quad2, firstInside);

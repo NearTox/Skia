@@ -100,7 +100,8 @@ class NonAARectOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     using namespace GrDefaultGeoProcFactory;
 
     GrGeometryProcessor* gp = GrDefaultGeoProcFactory::Make(
@@ -113,7 +114,7 @@ class NonAARectOp : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -193,7 +194,7 @@ class NonAARectOp : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace
@@ -251,7 +252,7 @@ class AtlasedRectOp final : public NonAARectOp {
   // The Atlased ops have an internal singly-linked list of ops that land in the same opsTask
   AtlasedRectOp* fNext;
 
-  typedef NonAARectOp INHERITED;
+  using INHERITED = NonAARectOp;
 };
 
 }  // anonymous namespace

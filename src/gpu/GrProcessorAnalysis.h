@@ -20,12 +20,12 @@ class GrProcessorAnalysisColor {
     kYes,
   };
 
-  constexpr GrProcessorAnalysisColor(Opaque opaque = Opaque::kNo) noexcept
+  constexpr GrProcessorAnalysisColor(Opaque opaque = Opaque::kNo)
       : fFlags(opaque == Opaque::kYes ? kIsOpaque_Flag : 0), fColor(SK_PMColor4fTRANSPARENT) {}
 
-  GrProcessorAnalysisColor(const SkPMColor4f& color) noexcept { this->setToConstant(color); }
+  GrProcessorAnalysisColor(const SkPMColor4f& color) { this->setToConstant(color); }
 
-  void setToConstant(const SkPMColor4f& color) noexcept {
+  void setToConstant(const SkPMColor4f& color) {
     fColor = color;
     if (color.isOpaque()) {
       fFlags = kColorIsKnown_Flag | kIsOpaque_Flag;
@@ -34,15 +34,15 @@ class GrProcessorAnalysisColor {
     }
   }
 
-  void setToUnknown() noexcept { fFlags = 0; }
+  void setToUnknown() { fFlags = 0; }
 
-  void setToUnknownOpaque() noexcept { fFlags = kIsOpaque_Flag; }
+  void setToUnknownOpaque() { fFlags = kIsOpaque_Flag; }
 
-  bool isUnknown() const noexcept { return SkToBool(fFlags == 0); }
+  bool isUnknown() const { return SkToBool(fFlags == 0); }
 
-  bool isOpaque() const noexcept { return SkToBool(kIsOpaque_Flag & fFlags); }
+  bool isOpaque() const { return SkToBool(kIsOpaque_Flag & fFlags); }
 
-  bool isConstant(SkPMColor4f* color = nullptr) const noexcept {
+  bool isConstant(SkPMColor4f* color = nullptr) const {
     if (kColorIsKnown_Flag & fFlags) {
       if (color) {
         *color = fColor;
@@ -52,7 +52,7 @@ class GrProcessorAnalysisColor {
     return false;
   }
 
-  bool operator==(const GrProcessorAnalysisColor& that) const noexcept {
+  bool operator==(const GrProcessorAnalysisColor& that) const {
     if (fFlags != that.fFlags) {
       return false;
     }
@@ -61,7 +61,7 @@ class GrProcessorAnalysisColor {
 
   /** The returned value reflects the common properties of the two inputs. */
   static GrProcessorAnalysisColor Combine(
-      const GrProcessorAnalysisColor& a, const GrProcessorAnalysisColor& b) noexcept {
+      const GrProcessorAnalysisColor& a, const GrProcessorAnalysisColor& b) {
     GrProcessorAnalysisColor result;
     uint32_t commonFlags = a.fFlags & b.fFlags;
     if ((kColorIsKnown_Flag & commonFlags) && a.fColor == b.fColor) {
@@ -97,23 +97,21 @@ class GrColorFragmentProcessorAnalysis {
       const GrProcessorAnalysisColor& input, std::unique_ptr<GrFragmentProcessor> const fps[],
       int cnt);
 
-  bool isOpaque() const noexcept { return fIsOpaque; }
+  bool isOpaque() const { return fIsOpaque; }
 
   /**
    * Are all the fragment processors compatible with conflating coverage with color prior to the
    * the first fragment processor. This result assumes that processors that should be eliminated
    * as indicated by initialProcessorsToEliminate() are in fact eliminated.
    */
-  bool allProcessorsCompatibleWithCoverageAsAlpha() const noexcept {
-    return fCompatibleWithCoverageAsAlpha;
-  }
+  bool allProcessorsCompatibleWithCoverageAsAlpha() const { return fCompatibleWithCoverageAsAlpha; }
 
   /**
    * Do any of the fragment processors require local coords. This result assumes that
    * processors that should be eliminated as indicated by initialProcessorsToEliminate() are in
    * fact eliminated.
    */
-  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
+  bool usesLocalCoords() const { return fUsesLocalCoords; }
 
   /**
    * If we detected that the result after the first N processors is a known color then we
@@ -122,7 +120,7 @@ class GrColorFragmentProcessorAnalysis {
    * there are only N processors) sees its expected input. If this returns 0 then there are no
    * processors to eliminate.
    */
-  int initialProcessorsToEliminate(SkPMColor4f* newPipelineInputColor) const noexcept {
+  int initialProcessorsToEliminate(SkPMColor4f* newPipelineInputColor) const {
     if (fProcessorsToEliminate > 0) {
       *newPipelineInputColor = fLastKnownOutputColor;
     }
@@ -132,7 +130,7 @@ class GrColorFragmentProcessorAnalysis {
   /**
    * Provides known information about the last processor's output color.
    */
-  GrProcessorAnalysisColor outputColor() const noexcept {
+  GrProcessorAnalysisColor outputColor() const {
     if (fKnowOutputColor) {
       return fLastKnownOutputColor;
     }

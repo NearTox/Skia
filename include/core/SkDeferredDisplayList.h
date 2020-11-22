@@ -33,9 +33,7 @@ class SkDeferredDisplayList : public SkNVRefCnt<SkDeferredDisplayList> {
  public:
   SK_API ~SkDeferredDisplayList();
 
-  SK_API const SkSurfaceCharacterization& characterization() const noexcept {
-    return fCharacterization;
-  }
+  SK_API const SkSurfaceCharacterization& characterization() const { return fCharacterization; }
 
 #if SK_SUPPORT_GPU
   /**
@@ -59,8 +57,8 @@ class SkDeferredDisplayList : public SkNVRefCnt<SkDeferredDisplayList> {
 #endif
 
   // Provides access to functions that aren't part of the public API.
-  SkDeferredDisplayListPriv priv() noexcept;
-  const SkDeferredDisplayListPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
+  SkDeferredDisplayListPriv priv();
+  const SkDeferredDisplayListPriv priv() const;  // NOLINT(readability-const-return-type)
 
  private:
   friend class GrDrawingManager;  // for access to 'fRenderTasks', 'fLazyProxyData', 'fArenas'
@@ -89,9 +87,7 @@ class SkDeferredDisplayList : public SkNVRefCnt<SkDeferredDisplayList> {
       sk_sp<LazyProxyData>);
 
 #if SK_SUPPORT_GPU
-  const SkTArray<GrRecordingContext::ProgramData>& programData() const noexcept {
-    return fProgramData;
-  }
+  const SkTArray<GrRecordingContext::ProgramData>& programData() const { return fProgramData; }
 #endif
 
   const SkSurfaceCharacterization fCharacterization;

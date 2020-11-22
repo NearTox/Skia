@@ -14,15 +14,15 @@ class TextShadow {
   SkPoint fOffset;
   double fBlurRadius = 0.0;
 
-  TextShadow() noexcept;
+  TextShadow();
 
-  TextShadow(SkColor color, SkPoint offset, double blurRadius) noexcept;
+  TextShadow(SkColor color, SkPoint offset, double blurRadius);
 
-  bool operator==(const TextShadow& other) const noexcept;
+  bool operator==(const TextShadow& other) const;
 
-  bool operator!=(const TextShadow& other) const noexcept;
+  bool operator!=(const TextShadow& other) const;
 
-  bool hasShadow() const noexcept;
+  bool hasShadow() const;
 };
 }  // namespace textlayout
 }  // namespace skia

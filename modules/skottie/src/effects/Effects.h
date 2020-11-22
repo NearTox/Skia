@@ -8,6 +8,7 @@
 #ifndef SkottieEffects_DEFINED
 #define SkottieEffects_DEFINED
 
+#include "modules/skottie/src/Composition.h"
 #include "modules/skottie/src/SkottiePriv.h"
 #include "modules/skottie/src/animator/Animator.h"
 
@@ -22,13 +23,17 @@ namespace internal {
 
 class EffectBuilder final : public SkNoncopyable {
  public:
-  EffectBuilder(const AnimationBuilder*, const SkSize&);
+  EffectBuilder(const AnimationBuilder*, const SkSize&, CompositionBuilder*);
 
   sk_sp<sksg::RenderNode> attachEffects(const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
 
   sk_sp<sksg::RenderNode> attachStyles(const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
 
   static const skjson::Value& GetPropValue(const skjson::ArrayValue& jprops, size_t prop_index);
+
+  LayerBuilder* getLayerBuilder(int layer_index) const {
+    return fCompBuilder->layerBuilder(layer_index);
+  }
 
  private:
   using EffectBuilderT = sk_sp<sksg::RenderNode> (EffectBuilder::*)(
@@ -37,6 +42,8 @@ class EffectBuilder final : public SkNoncopyable {
   sk_sp<sksg::RenderNode> attachBrightnessContrastEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachCornerPinEffect(
+      const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
+  sk_sp<sksg::RenderNode> attachDisplacementMapEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
   sk_sp<sksg::RenderNode> attachDropShadowEffect(
       const skjson::ArrayValue&, sk_sp<sksg::RenderNode>) const;
@@ -83,6 +90,7 @@ class EffectBuilder final : public SkNoncopyable {
   EffectBuilderT findBuilder(const skjson::ObjectValue&) const;
 
   const AnimationBuilder* fBuilder;
+  CompositionBuilder* fCompBuilder;
   const SkSize fLayerSize;
 };
 

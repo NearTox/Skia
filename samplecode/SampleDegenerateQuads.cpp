@@ -443,7 +443,7 @@ class DegenerateQuadSample : public Sample {
     *domain = {vertices[52], vertices[53], vertices[54], vertices[55]};
   }
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 class DegenerateQuadSample::Click : public Sample::Click {

@@ -23,7 +23,7 @@
  */
 class SkColorSpaceLuminance : SkNoncopyable {
  public:
-  virtual ~SkColorSpaceLuminance() = default;
+  virtual ~SkColorSpaceLuminance() {}
 
   /** Converts a color component luminance in the color space to a linear luma. */
   virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const = 0;
@@ -52,7 +52,7 @@ class SkColorSpaceLuminance : SkNoncopyable {
  * @param base the number to be scaled to [0, 255].
  */
 template <U8CPU N>
-static constexpr inline U8CPU sk_t_scale255(U8CPU base) noexcept {
+static inline U8CPU sk_t_scale255(U8CPU base) {
   base <<= (8 - N);
   U8CPU lum = base;
   for (unsigned int i = N; i < 8; i += N) {
@@ -60,22 +60,10 @@ static constexpr inline U8CPU sk_t_scale255(U8CPU base) noexcept {
   }
   return lum;
 }
-template <>
-constexpr /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) noexcept {
-  return base * 0xFF;
-}
-template <>
-constexpr /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) noexcept {
-  return base * 0x55;
-}
-template <>
-constexpr /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) noexcept {
-  return base * 0x11;
-}
-template <>
-constexpr /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) noexcept {
-  return base;
-}
+template <> /*static*/ inline U8CPU sk_t_scale255<1>(U8CPU base) { return base * 0xFF; }
+template <> /*static*/ inline U8CPU sk_t_scale255<2>(U8CPU base) { return base * 0x55; }
+template <> /*static*/ inline U8CPU sk_t_scale255<4>(U8CPU base) { return base * 0x11; }
+template <> /*static*/ inline U8CPU sk_t_scale255<8>(U8CPU base) { return base; }
 ///@}
 
 template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
@@ -100,7 +88,7 @@ template <int R_LUM_BITS, int G_LUM_BITS, int B_LUM_BITS>
 class SkTMaskGamma : public SkRefCnt {
  public:
   /** Creates a linear SkTMaskGamma. */
-  SkTMaskGamma() noexcept : fIsLinear(true) {}
+  SkTMaskGamma() : fIsLinear(true) {}
 
   /**
    * Creates tables to convert linear alpha values to gamma correcting alpha
@@ -122,7 +110,7 @@ class SkTMaskGamma : public SkRefCnt {
   }
 
   /** Given a color, returns the closest canonical color. */
-  static constexpr SkColor CanonicalColor(SkColor color) noexcept {
+  static SkColor CanonicalColor(SkColor color) {
     return SkColorSetRGB(
         sk_t_scale255<R_LUM_BITS>(SkColorGetR(color) >> (8 - R_LUM_BITS)),
         sk_t_scale255<G_LUM_BITS>(SkColorGetG(color) >> (8 - G_LUM_BITS)),
@@ -152,7 +140,7 @@ class SkTMaskGamma : public SkRefCnt {
    * into a texture or analyzed in other ways.
    * Returns nullptr if fGammaTables hasn't been initialized.
    */
-  const uint8_t* getGammaTables() const noexcept {
+  const uint8_t* getGammaTables() const {
     return fIsLinear ? nullptr : (const uint8_t*)fGammaTables;
   }
 
@@ -163,7 +151,7 @@ class SkTMaskGamma : public SkRefCnt {
   uint8_t fGammaTables[1 << MAX_LUM_BITS][256];
   bool fIsLinear;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 /**
@@ -180,7 +168,7 @@ class SkTMaskPreBlend {
  private:
   SkTMaskPreBlend(
       sk_sp<const SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>> parent, const uint8_t* r,
-      const uint8_t* g, const uint8_t* b) noexcept
+      const uint8_t* g, const uint8_t* b)
       : fParent(std::move(parent)), fR(r), fG(g), fB(b) {}
 
   sk_sp<const SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>> fParent;
@@ -188,18 +176,19 @@ class SkTMaskPreBlend {
 
  public:
   /** Creates a non applicable SkTMaskPreBlend. */
-  constexpr SkTMaskPreBlend() noexcept : fParent(), fR(nullptr), fG(nullptr), fB(nullptr) {}
+  SkTMaskPreBlend() : fParent(), fR(nullptr), fG(nullptr), fB(nullptr) {}
 
   /**
    * This copy contructor exists for correctness, but should never be called
    * when return value optimization is enabled.
    */
-  SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that) noexcept
+  SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that)
       : fParent(that.fParent), fR(that.fR), fG(that.fG), fB(that.fB) {}
-  ~SkTMaskPreBlend() = default;
+
+  ~SkTMaskPreBlend() {}
 
   /** True if this PreBlend should be applied. When false, fR, fG, and fB are nullptr. */
-  bool isApplicable() const noexcept { return SkToBool(this->fG); }
+  bool isApplicable() const { return SkToBool(this->fG); }
 
   const uint8_t* fR;
   const uint8_t* fG;
@@ -225,11 +214,10 @@ SkTMaskGamma<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>::preBlend(SkColor color) const 
  *  @lut a look-up table which transforms the component.
  */
 template <bool APPLY_LUT>
-static inline U8CPU sk_apply_lut_if(U8CPU component, const uint8_t*) noexcept {
+static inline U8CPU sk_apply_lut_if(U8CPU component, const uint8_t*) {
   return component;
 }
-template <>
-/*static*/ inline U8CPU sk_apply_lut_if<true>(U8CPU component, const uint8_t* lut) noexcept {
+template <> /*static*/ inline U8CPU sk_apply_lut_if<true>(U8CPU component, const uint8_t* lut) {
   return lut[component];
 }
 ///@}

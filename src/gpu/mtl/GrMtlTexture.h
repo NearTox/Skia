@@ -62,7 +62,7 @@ class GrMtlTexture : public GrTexture {
 
   id<MTLTexture> fTexture;
 
-  typedef GrTexture INHERITED;
+  using INHERITED = GrTexture;
 };
 
 #endif

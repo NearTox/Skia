@@ -37,7 +37,7 @@ bool SkPackedArrayEqual(T* u, T* v, size_t n) {
   do {                                                     \
     if ((bool)(condition)) {                               \
       PRINT_NOT_IMPL("NOT_IMPLEMENTED: " #condition "\n"); \
-      SkDEBUGCODE(SkASSERT(!assert));                      \
+      SkDEBUGCODE(SkASSERT(!assert);)                      \
     }                                                      \
   } while (0)
 

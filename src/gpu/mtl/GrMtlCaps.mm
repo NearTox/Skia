@@ -1033,7 +1033,7 @@ GrProgramDesc GrMtlCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& progr
   b.add32(programInfo.numRasterSamples());
 
 #ifdef SK_DEBUG
-  if (rt && programInfo.pipeline().isStencilEnabled()) {
+  if (rt && programInfo.isStencilEnabled()) {
     SkASSERT(rt->getStencilAttachment());
   }
 #endif
@@ -1041,7 +1041,7 @@ GrProgramDesc GrMtlCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& progr
   b.add32(
       rt && rt->getStencilAttachment() ? this->preferredStencilFormat().fInternalFormat
                                        : MTLPixelFormatInvalid);
-  b.add32((uint32_t)programInfo.pipeline().isStencilEnabled());
+  b.add32((uint32_t)programInfo.isStencilEnabled());
   // Stencil samples don't seem to be tracked in the MTLRenderPipeline
 
   programInfo.pipeline().genKey(&b, *this);

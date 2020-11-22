@@ -16,21 +16,21 @@
 
 class SkSemaphore {
  public:
-  constexpr SkSemaphore(int count = 0) noexcept : fCount(count), fOSSemaphore(nullptr) {}
+  constexpr SkSemaphore(int count = 0) : fCount(count), fOSSemaphore(nullptr) {}
 
   // Cleanup the underlying OS semaphore.
   SK_SPI ~SkSemaphore();
 
   // Increment the counter n times.
   // Generally it's better to call signal(n) instead of signal() n times.
-  void signal(int n = 1) noexcept;
+  void signal(int n = 1);
 
   // Decrement the counter by 1,
   // then if the counter is < 0, sleep this thread until the counter is >= 0.
-  void wait() noexcept;
+  void wait();
 
   // If the counter is positive, decrement it by 1 and return true, otherwise return false.
-  SK_SPI bool try_wait() noexcept;
+  SK_SPI bool try_wait();
 
  private:
   // This implementation follows the general strategy of
@@ -44,15 +44,15 @@ class SkSemaphore {
   // moving the count from >=0 to <0 or vice-versa, i.e. sleeping or waking threads.
   struct OSSemaphore;
 
-  SK_SPI void osSignal(int n) noexcept;
-  SK_SPI void osWait() noexcept;
+  SK_SPI void osSignal(int n);
+  SK_SPI void osWait();
 
   std::atomic<int> fCount;
   SkOnce fOSSemaphoreOnce;
   OSSemaphore* fOSSemaphore;
 };
 
-inline void SkSemaphore::signal(int n) noexcept {
+inline void SkSemaphore::signal(int n) {
   int prev = fCount.fetch_add(n, std::memory_order_release);
 
   // We only want to call the OS semaphore when our logical count crosses
@@ -70,7 +70,7 @@ inline void SkSemaphore::signal(int n) noexcept {
   }
 }
 
-inline void SkSemaphore::wait() noexcept {
+inline void SkSemaphore::wait() {
   // Since this fetches the value before the subtract, zero and below means that there are no
   // resources left, so the thread needs to wait.
   if (fCount.fetch_sub(1, std::memory_order_acquire) <= 0) {

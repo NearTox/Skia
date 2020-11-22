@@ -96,6 +96,6 @@ class GrGLProgramBuilder : public GrGLSLProgramBuilder {
   // (all remaining bytes) char[] binary
   sk_sp<SkData> fCached;
 
-  typedef GrGLSLProgramBuilder INHERITED;
+  using INHERITED = GrGLSLProgramBuilder;
 };
 #endif

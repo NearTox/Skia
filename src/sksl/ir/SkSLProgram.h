@@ -39,13 +39,13 @@ class Context;
 struct Program {
   struct Settings {
     struct Value {
-      constexpr Value(bool b) noexcept : fKind(kBool_Kind), fValue(b) {}
+      Value(bool b) : fKind(kBool_Kind), fValue(b) {}
 
-      constexpr Value(int i) noexcept : fKind(kInt_Kind), fValue(i) {}
+      Value(int i) : fKind(kInt_Kind), fValue(i) {}
 
-      constexpr Value(unsigned int i) noexcept : fKind(kInt_Kind), fValue(i) {}
+      Value(unsigned int i) : fKind(kInt_Kind), fValue(i) {}
 
-      constexpr Value(float f) noexcept : fKind(kFloat_Kind), fValueF(f) {}
+      Value(float f) : fKind(kFloat_Kind), fValueF(f) {}
 
       std::unique_ptr<Expression> literal(const Context& context, int offset) const {
         switch (fKind) {
@@ -104,6 +104,11 @@ struct Program {
     // Functions smaller than this (measured in IR nodes) will be inlined. Default is arbitrary.
     // Set to 0 to disable inlining entirely.
     int fInlineThreshold = 50;
+    // true to enable optimization passes
+    bool fOptimize = true;
+    // If true, implicit conversions to lower precision numeric types are allowed
+    // (eg, float to half)
+    bool fAllowNarrowingConversions = false;
   };
 
   struct Inputs {
@@ -117,13 +122,13 @@ struct Program {
     // program will compile to the same code regardless of the flipY setting.
     bool fFlipY;
 
-    void reset() noexcept {
+    void reset() {
       fRTWidth = false;
       fRTHeight = false;
       fFlipY = false;
     }
 
-    bool isEmpty() noexcept { return !fRTWidth && !fRTHeight && !fFlipY; }
+    bool isEmpty() { return !fRTWidth && !fRTHeight && !fFlipY; }
   };
 
   class iterator {
@@ -153,7 +158,7 @@ struct Program {
    private:
     using inner = std::vector<std::unique_ptr<ProgramElement>>::iterator;
 
-    iterator(inner begin1, inner end1, inner begin2, inner end2) noexcept
+    iterator(inner begin1, inner end1, inner begin2, inner end2)
         : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
     inner fIter1;
@@ -191,7 +196,7 @@ struct Program {
    private:
     using inner = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
 
-    const_iterator(inner begin1, inner end1, inner begin2, inner end2) noexcept
+    const_iterator(inner begin1, inner end1, inner begin2, inner end2)
         : fIter1(begin1), fEnd1(end1), fIter2(begin2), fEnd2(end2) {}
 
     inner fIter1;
@@ -216,7 +221,7 @@ struct Program {
       std::shared_ptr<Context> context,
       std::vector<std::unique_ptr<ProgramElement>>* inheritedElements,
       std::vector<std::unique_ptr<ProgramElement>> elements, std::shared_ptr<SymbolTable> symbols,
-      Inputs inputs) noexcept
+      Inputs inputs)
       : fKind(kind),
         fSource(std::move(source)),
         fSettings(settings),
@@ -226,7 +231,7 @@ struct Program {
         fInheritedElements(inheritedElements),
         fElements(std::move(elements)) {}
 
-  iterator begin() noexcept {
+  iterator begin() {
     if (fInheritedElements) {
       return iterator(
           fInheritedElements->begin(), fInheritedElements->end(), fElements.begin(),
@@ -235,7 +240,7 @@ struct Program {
     return iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  iterator end() noexcept {
+  iterator end() {
     if (fInheritedElements) {
       return iterator(
           fInheritedElements->end(), fInheritedElements->end(), fElements.end(), fElements.end());
@@ -243,7 +248,7 @@ struct Program {
     return iterator(fElements.end(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  const_iterator begin() const noexcept {
+  const_iterator begin() const {
     if (fInheritedElements) {
       return const_iterator(
           fInheritedElements->begin(), fInheritedElements->end(), fElements.begin(),
@@ -252,7 +257,7 @@ struct Program {
     return const_iterator(fElements.begin(), fElements.end(), fElements.end(), fElements.end());
   }
 
-  const_iterator end() const noexcept {
+  const_iterator end() const {
     if (fInheritedElements) {
       return const_iterator(
           fInheritedElements->end(), fInheritedElements->end(), fElements.end(), fElements.end());
@@ -268,7 +273,6 @@ struct Program {
   // because destroying elements can modify reference counts in symbols
   std::shared_ptr<SymbolTable> fSymbols;
   Inputs fInputs;
-  bool fIsOptimized = false;
 
  private:
   std::vector<std::unique_ptr<ProgramElement>>* fInheritedElements;

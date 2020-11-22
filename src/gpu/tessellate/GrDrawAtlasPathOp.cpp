@@ -40,11 +40,11 @@ class DrawAtlasPathShader : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const noexcept override { return "DrawAtlasPathShader"; }
+  const char* name() const override { return "DrawAtlasPathShader"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     b->add32(fUsesLocalCoords);
   }
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fAtlasAccess; }
+  const TextureSampler& onTextureSampler(int) const override { return fAtlasAccess; }
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
 
   const TextureSampler fAtlasAccess;
@@ -143,7 +143,7 @@ GrOp::CombineResult GrDrawAtlasPathOp::onCombineIfPossible(
 
 void GrDrawAtlasPathOp::onPrePrepare(
     GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-    const GrXferProcessor::DstProxyView&) {}
+    const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) {}
 
 void GrDrawAtlasPathOp::onPrepare(GrOpFlushState* state) {
   size_t instanceStride = Instance::Stride(fUsesLocalCoords);
@@ -178,8 +178,9 @@ void GrDrawAtlasPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBoun
 
   GrProgramInfo programInfo(
       state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
-      state->proxy()->backendFormat(), state->writeView()->origin(), &pipeline, &shader,
-      GrPrimitiveType::kTriangleStrip);
+      state->proxy()->backendFormat(), state->writeView()->origin(), &pipeline,
+      &GrUserStencilSettings::kUnused, &shader, GrPrimitiveType::kTriangleStrip, 0,
+      state->renderPassBarriers());
 
   state->bindPipelineAndScissorClip(programInfo, this->bounds());
   state->bindTextures(shader, *fAtlasProxy, pipeline);

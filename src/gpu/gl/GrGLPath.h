@@ -46,7 +46,7 @@ class GrGLPath : public GrPath {
   bool fShouldStroke;
   bool fShouldFill;
 
-  typedef GrPath INHERITED;
+  using INHERITED = GrPath;
 };
 
 #endif

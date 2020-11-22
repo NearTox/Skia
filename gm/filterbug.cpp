@@ -103,7 +103,7 @@ class FilterBugGM : public skiagm::GM {
   sk_sp<SkImage> fTop;
   sk_sp<SkImage> fBot;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

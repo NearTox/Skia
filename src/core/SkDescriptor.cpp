@@ -118,7 +118,7 @@ bool SkDescriptor::isValid() const {
   return lengthRemaining == 0 && count == 0;
 }
 
-SkAutoDescriptor::SkAutoDescriptor() noexcept = default;
+SkAutoDescriptor::SkAutoDescriptor() = default;
 SkAutoDescriptor::SkAutoDescriptor(size_t size) { this->reset(size); }
 SkAutoDescriptor::SkAutoDescriptor(const SkDescriptor& desc) { this->reset(desc); }
 SkAutoDescriptor::SkAutoDescriptor(const SkAutoDescriptor& ad) { this->reset(*ad.getDesc()); }
@@ -144,7 +144,7 @@ void SkAutoDescriptor::reset(const SkDescriptor& desc) {
   memcpy(fDesc, &desc, size);
 }
 
-void SkAutoDescriptor::free() noexcept {
+void SkAutoDescriptor::free() {
   if (fDesc != (SkDescriptor*)&fStorage) {
     delete fDesc;
   }

@@ -24,7 +24,7 @@ class GrGLSLColorSpaceXformHelper;
 class GrGLSLShaderBuilder {
  public:
   GrGLSLShaderBuilder(GrGLSLProgramBuilder* program);
-  virtual ~GrGLSLShaderBuilder() = default;
+  virtual ~GrGLSLShaderBuilder() {}
 
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
@@ -45,6 +45,9 @@ class GrGLSLShaderBuilder {
   void appendTextureLookupAndBlend(
       const char* dst, SkBlendMode, SamplerHandle, const char* coordName,
       GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
+
+  /** Appends a load of an input attachment into the shader code. */
+  void appendInputLoad(SamplerHandle);
 
   /** Adds a helper function to facilitate color gamut transformation, and produces code that
       returns the srcColor transformed into a new gamut (via multiplication by the xform from
@@ -118,7 +121,7 @@ class GrGLSLShaderBuilder {
   /** Emits a helper function outside of main() in the fragment shader. */
   void emitFunction(
       GrSLType returnType, const char* name, int argCnt, const GrShaderVar* args, const char* body,
-      SkString* outName);
+      SkString* outName, bool forceInline = false);
 
   /*
    * Combines the various parts of the shader to create a single finalized shader string.
@@ -128,7 +131,7 @@ class GrGLSLShaderBuilder {
   /*
    * Get parent builder for adding uniforms
    */
-  GrGLSLProgramBuilder* getProgramBuilder() noexcept { return fProgramBuilder; }
+  GrGLSLProgramBuilder* getProgramBuilder() { return fProgramBuilder; }
 
   /**
    * Helper for begining and ending a block in the shader code.
@@ -187,26 +190,26 @@ class GrGLSLShaderBuilder {
 
   void compileAndAppendLayoutQualifiers();
 
-  void nextStage() noexcept {
+  void nextStage() {
     fShaderStrings.push_back();
     fCodeIndex++;
   }
 
-  void deleteStage() noexcept {
+  void deleteStage() {
     fShaderStrings.pop_back();
     fCodeIndex--;
   }
 
-  SkString& extensions() noexcept { return fShaderStrings[kExtensions]; }
-  SkString& definitions() noexcept { return fShaderStrings[kDefinitions]; }
-  SkString& precisionQualifier() noexcept { return fShaderStrings[kPrecisionQualifier]; }
-  SkString& layoutQualifiers() noexcept { return fShaderStrings[kLayoutQualifiers]; }
-  SkString& uniforms() noexcept { return fShaderStrings[kUniforms]; }
-  SkString& inputs() noexcept { return fShaderStrings[kInputs]; }
-  SkString& outputs() noexcept { return fShaderStrings[kOutputs]; }
-  SkString& functions() noexcept { return fShaderStrings[kFunctions]; }
-  SkString& main() noexcept { return fShaderStrings[kMain]; }
-  SkString& code() noexcept { return fShaderStrings[fCodeIndex]; }
+  SkString& extensions() { return fShaderStrings[kExtensions]; }
+  SkString& definitions() { return fShaderStrings[kDefinitions]; }
+  SkString& precisionQualifier() { return fShaderStrings[kPrecisionQualifier]; }
+  SkString& layoutQualifiers() { return fShaderStrings[kLayoutQualifiers]; }
+  SkString& uniforms() { return fShaderStrings[kUniforms]; }
+  SkString& inputs() { return fShaderStrings[kInputs]; }
+  SkString& outputs() { return fShaderStrings[kOutputs]; }
+  SkString& functions() { return fShaderStrings[kFunctions]; }
+  SkString& main() { return fShaderStrings[kMain]; }
+  SkString& code() { return fShaderStrings[fCodeIndex]; }
 
   virtual void onFinalize() = 0;
 

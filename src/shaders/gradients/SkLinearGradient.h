@@ -38,7 +38,7 @@ class SkLinearGradient : public SkGradientShaderBase {
   class LinearGradient4fContext;
 
   friend class SkGradientShader;
-  typedef SkGradientShaderBase INHERITED;
+  using INHERITED = SkGradientShaderBase;
   const SkPoint fStart;
   const SkPoint fEnd;
 };

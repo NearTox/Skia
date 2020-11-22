@@ -106,7 +106,7 @@ void Node::forEachInvalObserver(Func&& func) const {
   }
 }
 
-void Node::invalidate(bool damageBubbling) {
+void Node::invalidate(bool damageBubbling) noexcept {
   TRAVERSAL_GUARD;
 
   if (this->hasInval() && (!damageBubbling || (fFlags & kDamage_Flag))) {
@@ -122,7 +122,7 @@ void Node::invalidate(bool damageBubbling) {
 
   fFlags |= kInvalidated_Flag;
 
-  forEachInvalObserver([&](Node* observer) { observer->invalidate(damageBubbling); });
+  forEachInvalObserver([&](Node* observer) noexcept { observer->invalidate(damageBubbling); });
 }
 
 const SkRect& Node::revalidate(InvalidationController* ic, const SkMatrix& ctm) {

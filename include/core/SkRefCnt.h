@@ -116,7 +116,7 @@ class SK_API SkRefCnt : public SkRefCntBase {
 // "#include SK_REF_CNT_MIXIN_INCLUDE" doesn't work with this build system.
 #  if defined(SK_BUILD_FOR_GOOGLE3)
  public:
-  void deref() const noexcept { this->unref(); }
+  void deref() const { this->unref(); }
 #  endif
 };
 #endif
@@ -236,10 +236,10 @@ class sk_sp {
    *  the new sk_sp will have a reference to the object, and the argument will point to null.
    *  No call to ref() or unref() will be made.
    */
-  constexpr sk_sp(sk_sp<T>&& that) noexcept : fPtr(that.release()) {}
+  sk_sp(sk_sp<T>&& that) noexcept : fPtr(that.release()) {}
   template <
       typename U, typename = typename std::enable_if<std::is_convertible<U*, T*>::value>::type>
-  constexpr sk_sp(sk_sp<U>&& that) noexcept : fPtr(that.release()) {}
+  sk_sp(sk_sp<U>&& that) noexcept : fPtr(that.release()) {}
 
   /**
    *  Adopt the bare pointer into the newly created sk_sp.

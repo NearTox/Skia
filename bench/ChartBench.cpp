@@ -174,7 +174,7 @@ class ChartBench : public Benchmark {
   SkTDArray<SkScalar> fData[kNumGraphs];
   bool fAA;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 //////////////////////////////////////////////////////////////////////////////

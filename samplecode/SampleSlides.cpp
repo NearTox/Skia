@@ -426,7 +426,7 @@ class SlideView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

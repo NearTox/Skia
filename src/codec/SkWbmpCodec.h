@@ -54,7 +54,7 @@ class SkWbmpCodec final : public SkCodec {
   bool onSkipScanlines(int count) override;
   Result onStartScanlineDecode(const SkImageInfo& dstInfo, const Options& options) override;
 
-  typedef SkCodec INHERITED;
+  using INHERITED = SkCodec;
 };
 
 #endif  // SkCodec_wbmp_DEFINED

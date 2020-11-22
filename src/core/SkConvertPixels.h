@@ -18,8 +18,7 @@ void SkConvertPixels(
     const void* srcPixels, size_t srcRowBytes);
 
 static inline void SkRectMemcpy(
-    void* dst, size_t dstRB, const void* src, size_t srcRB, size_t trimRowBytes,
-    int rowCount) noexcept {
+    void* dst, size_t dstRB, const void* src, size_t srcRB, size_t trimRowBytes, int rowCount) {
   SkASSERT(trimRowBytes <= dstRB);
   SkASSERT(trimRowBytes <= srcRB);
   if (trimRowBytes == dstRB && trimRowBytes == srcRB) {

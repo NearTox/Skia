@@ -173,7 +173,7 @@ class GrMemoryPoolBench : public Benchmark {
   int fPoolSize;
   RunBenchProc fProc;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

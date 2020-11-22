@@ -27,7 +27,7 @@ class GrD3DPipelineStateDataManager : public GrUniformDataManager {
  private:
   D3D12_GPU_VIRTUAL_ADDRESS fConstantBufferAddress;
 
-  typedef GrUniformDataManager INHERITED;
+  using INHERITED = GrUniformDataManager;
 };
 
 #endif

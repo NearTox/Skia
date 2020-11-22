@@ -27,12 +27,12 @@ class GrContext_Base : public SkRefCnt {
   /*
    * Safely downcast to a GrDirectContext.
    */
-  virtual GrDirectContext* asDirectContext() noexcept { return nullptr; }
+  virtual GrDirectContext* asDirectContext() { return nullptr; }
 
   /*
    * The 3D API backing this context
    */
-  SK_API GrBackendApi backend() const noexcept;
+  SK_API GrBackendApi backend() const;
 
   /*
    * Retrieve the default GrBackendFormat for a given SkColorType and renderability.
@@ -46,16 +46,16 @@ class GrContext_Base : public SkRefCnt {
   SK_API GrBackendFormat compressedBackendFormat(SkImage::CompressionType) const;
 
   // TODO: When the public version is gone, rename to refThreadSafeProxy and add raw ptr ver.
-  sk_sp<GrContextThreadSafeProxy> threadSafeProxy() noexcept;
+  sk_sp<GrContextThreadSafeProxy> threadSafeProxy();
 
   // Provides access to functions that aren't part of the public API.
-  GrBaseContextPriv priv() noexcept;
-  const GrBaseContextPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
+  GrBaseContextPriv priv();
+  const GrBaseContextPriv priv() const;  // NOLINT(readability-const-return-type)
 
  protected:
   friend class GrBaseContextPriv;  // for hidden functions
 
-  GrContext_Base(sk_sp<GrContextThreadSafeProxy>) noexcept;
+  GrContext_Base(sk_sp<GrContextThreadSafeProxy>);
 
   virtual bool init();
 
@@ -66,27 +66,27 @@ class GrContext_Base : public SkRefCnt {
    * a third thread with a direct context, then all three contexts will report the same id.
    * It is an error for an image to be used with contexts that report different ids.
    */
-  uint32_t contextID() const noexcept;
+  uint32_t contextID() const;
 
-  bool matches(GrContext_Base* candidate) const noexcept {
+  bool matches(GrContext_Base* candidate) const {
     return candidate && candidate->contextID() == this->contextID();
   }
 
   /*
    * The options in effect for this context
    */
-  const GrContextOptions& options() const noexcept;
+  const GrContextOptions& options() const;
 
-  const GrCaps* caps() const noexcept;
-  sk_sp<const GrCaps> refCaps() const noexcept;
+  const GrCaps* caps() const;
+  sk_sp<const GrCaps> refCaps() const;
 
-  virtual GrImageContext* asImageContext() noexcept { return nullptr; }
-  virtual GrRecordingContext* asRecordingContext() noexcept { return nullptr; }
+  virtual GrImageContext* asImageContext() { return nullptr; }
+  virtual GrRecordingContext* asRecordingContext() { return nullptr; }
 
   sk_sp<GrContextThreadSafeProxy> fThreadSafeProxy;
 
  private:
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

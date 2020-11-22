@@ -54,7 +54,7 @@ class SkottieSlide : public Slide {
   bool fShowAnimationInval = false, fShowAnimationStats = false, fShowUI = false,
        fDraggingProgress = false, fPreferGlyphPaths = false;
 
-  typedef Slide INHERITED;
+  using INHERITED = Slide;
 };
 
 #endif  // SK_ENABLE_SKOTTIE

@@ -1,4 +1,5 @@
 // Copyright 2020 Google LLC.
+#include "include/core/SkPathBuilder.h"
 #include "include/effects/SkDashPathEffect.h"
 #include "include/effects/SkDiscretePathEffect.h"
 #include "modules/skparagraph/src/Decorations.h"
@@ -18,10 +19,10 @@ static void draw_line_as_rect(
 namespace skia {
 namespace textlayout {
 
-static constexpr float kDoubleDecorationSpacing = 3.0f;
+static const float kDoubleDecorationSpacing = 3.0f;
 void Decorations::paint(
     SkCanvas* canvas, const TextStyle& textStyle, const TextLine::ClipContext& context,
-    SkScalar baseline, SkPoint offset) {
+    SkScalar baseline) {
   if (textStyle.getDecorationType() == TextDecoration::kNoDecoration) {
     return;
   }
@@ -98,8 +99,6 @@ void Decorations::paint(
 
 void Decorations::calculateGaps(
     const TextLine::ClipContext& context, const SkRect& rect, SkScalar baseline, SkScalar halo) {
-  fPath.reset();
-
   // Create a special textblob for decorations
   SkTextBlobBuilder builder;
   context.run->copyTo(builder, SkToU32(context.pos), context.size);
@@ -115,18 +114,20 @@ void Decorations::calculateGaps(
   intersections.resize(count);
   blob->getIntercepts(bounds, intersections.data(), &fPaint);
 
+  SkPathBuilder path;
   auto start = rect.fLeft;
-  fPath.moveTo(rect.fLeft, rect.fTop);
+  path.moveTo(rect.fLeft, rect.fTop);
   for (int i = 0; i < intersections.count(); i += 2) {
     auto end = intersections[i] - halo;
     if (end - start >= halo) {
       start = intersections[i + 1] + halo;
-      fPath.lineTo(end, rect.fTop).moveTo(start, rect.fTop);
+      path.lineTo(end, rect.fTop).moveTo(start, rect.fTop);
     }
   }
   if (!intersections.empty() && (rect.fRight - start > halo)) {
-    fPath.lineTo(rect.fRight, rect.fTop);
+    path.lineTo(rect.fRight, rect.fTop);
   }
+  fPath = path.detach();
 }
 
 // This is how flutter calculates the thickness
@@ -151,7 +152,7 @@ void Decorations::calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> type
 }
 
 // This is how flutter calculates the positioning
-void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) noexcept {
+void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) {
   switch (decoration) {
     case TextDecoration::kUnderline:
       if ((fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kUnderlinePositionIsValid_Flag) &&

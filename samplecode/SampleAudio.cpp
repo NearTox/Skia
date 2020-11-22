@@ -86,6 +86,6 @@ class AudioView : public Sample {
   bool onAnimate(double /*nanos*/) override { return true; }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new AudioView;)

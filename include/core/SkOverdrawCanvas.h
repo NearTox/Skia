@@ -64,7 +64,7 @@ class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
 
   SkPaint fPaint;
 
-  typedef SkCanvasVirtualEnforcer<SkNWayCanvas> INHERITED;
+  using INHERITED = SkCanvasVirtualEnforcer<SkNWayCanvas>;
 };
 
 #endif

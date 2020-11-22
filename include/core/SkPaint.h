@@ -70,7 +70,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_copy_const_SkPaint
   */
-  SkPaint(const SkPaint& paint) noexcept;
+  SkPaint(const SkPaint& paint);
 
   /** Implements a move constructor to avoid increasing the reference counts
       of objects referenced by the paint.
@@ -102,7 +102,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_copy_operator
   */
-  SkPaint& operator=(const SkPaint& paint) noexcept;
+  SkPaint& operator=(const SkPaint& paint);
 
   /** Moves the paint to avoid increasing the reference counts
       of objects referenced by the paint parameter. Objects containing SkRefCnt in the
@@ -164,30 +164,28 @@ class SK_API SkPaint {
   /** Returns true if pixels on the active edges of SkPath may be drawn with partial transparency.
       @return  antialiasing state
   */
-  bool isAntiAlias() const noexcept { return SkToBool(fBitfields.fAntiAlias); }
+  bool isAntiAlias() const { return SkToBool(fBitfields.fAntiAlias); }
 
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
       @param aa  setting for antialiasing
   */
-  void setAntiAlias(bool aa) noexcept { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
+  void setAntiAlias(bool aa) { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
 
   /** Returns true if color error may be distributed to smooth color transition.
       @return  dithering state
   */
-  bool isDither() const noexcept { return SkToBool(fBitfields.fDither); }
+  bool isDither() const { return SkToBool(fBitfields.fDither); }
 
   /** Requests, but does not require, to distribute color error.
       @param dither  setting for ditering
   */
-  void setDither(bool dither) noexcept { fBitfields.fDither = static_cast<unsigned>(dither); }
+  void setDither(bool dither) { fBitfields.fDither = static_cast<unsigned>(dither); }
 
   /** Returns SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
   */
-  SkFilterQuality getFilterQuality() const noexcept {
-    return (SkFilterQuality)fBitfields.fFilterQuality;
-  }
+  SkFilterQuality getFilterQuality() const { return (SkFilterQuality)fBitfields.fFilterQuality; }
 
   /** Sets SkFilterQuality, the image filtering level. A lower setting
       draws faster; a higher setting looks better when the image is scaled.
@@ -196,7 +194,7 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Color_Methods
       example: https://fiddle.skia.org/c/@Paint_setFilterQuality
   */
-  void setFilterQuality(SkFilterQuality quality) noexcept;
+  void setFilterQuality(SkFilterQuality quality);
 
   /** \enum SkPaint::Style
       Set Style to fill, stroke, or both fill and stroke geometry.
@@ -218,7 +216,7 @@ class SK_API SkPaint {
 
   /** Returns whether the geometry is filled, stroked, or filled and stroked.
    */
-  Style getStyle() const noexcept { return (Style)fBitfields.fStyle; }
+  Style getStyle() const { return (Style)fBitfields.fStyle; }
 
   /** Sets whether the geometry is filled, stroked, or filled and stroked.
       Has no effect if style is not a legal SkPaint::Style value.
@@ -226,12 +224,12 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Paint_setStyle
       example: https://fiddle.skia.org/c/@Stroke_Width
   */
-  void setStyle(Style style) noexcept;
+  void setStyle(Style style);
 
   /**
    *  Set paint's style to kStroke if true, or kFill if false.
    */
-  void setStroke(bool) noexcept;
+  void setStroke(bool);
 
   /** Retrieves alpha and RGB, unpremultiplied, packed into 32 bits.
       Use helpers SkColorGetA(), SkColorGetR(), SkColorGetG(), and SkColorGetB() to extract
@@ -239,14 +237,14 @@ class SK_API SkPaint {
 
       @return  unpremultiplied ARGB
   */
-  SkColor getColor() const noexcept { return fColor4f.toSkColor(); }
+  SkColor getColor() const { return fColor4f.toSkColor(); }
 
   /** Retrieves alpha and RGB, unpremultiplied, as four floating point values. RGB are
       are extended sRGB values (sRGB gamut, and encoded with the sRGB transfer function).
 
       @return  unpremultiplied RGBA
   */
-  SkColor4f getColor4f() const noexcept { return fColor4f; }
+  SkColor4f getColor4f() const { return fColor4f; }
 
   /** Sets alpha and RGB used when stroking and filling. The color is a 32-bit value,
       unpremultiplied, packing 8-bit components for alpha, red, blue, and green.
@@ -255,7 +253,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_setColor
   */
-  void setColor(SkColor color) noexcept;
+  void setColor(SkColor color);
 
   /** Sets alpha and RGB used when stroking and filling. The color is four floating
       point values, unpremultiplied. The color values are interpreted as being in
@@ -275,10 +273,10 @@ class SK_API SkPaint {
 
       @return  alpha ranging from zero, fully transparent, to 255, fully opaque
   */
-  float getAlphaf() const noexcept { return fColor4f.fA; }
+  float getAlphaf() const { return fColor4f.fA; }
 
   // Helper that scales the alpha by 255.
-  uint8_t getAlpha() const noexcept { return sk_float_round2int(this->getAlphaf() * 255); }
+  uint8_t getAlpha() const { return sk_float_round2int(this->getAlphaf() * 255); }
 
   /** Replaces alpha, leaving RGB
       unchanged. An out of range value triggers an assert in the debug
@@ -288,10 +286,10 @@ class SK_API SkPaint {
 
       @param a  alpha component of color
   */
-  void setAlphaf(float a) noexcept;
+  void setAlphaf(float a);
 
   // Helper that accepts an int between 0 and 255, and divides it by 255.0
-  void setAlpha(U8CPU a) noexcept { this->setAlphaf(a * (1.0f / 255)); }
+  void setAlpha(U8CPU a) { this->setAlphaf(a * (1.0f / 255)); }
 
   /** Sets color used when drawing solid fills. The color components range from 0 to 255.
       The color is unpremultiplied; alpha sets the transparency independent of RGB.
@@ -303,14 +301,14 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_setARGB
   */
-  void setARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept;
+  void setARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
 
   /** Returns the thickness of the pen used by SkPaint to
       outline the shape.
 
       @return  zero for hairline, greater than zero for pen thickness
   */
-  SkScalar getStrokeWidth() const noexcept { return fWidth; }
+  SkScalar getStrokeWidth() const { return fWidth; }
 
   /** Sets the thickness of the pen used by the paint to outline the shape.
       A stroke-width of zero is treated as "hairline" width. Hairlines are always exactly one
@@ -322,13 +320,13 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Miter_Limit
       example: https://fiddle.skia.org/c/@Paint_setStrokeWidth
   */
-  void setStrokeWidth(SkScalar width) noexcept;
+  void setStrokeWidth(SkScalar width);
 
   /** Returns the limit at which a sharp corner is drawn beveled.
 
       @return  zero and greater miter limit
   */
-  SkScalar getStrokeMiter() const noexcept { return fMiterLimit; }
+  SkScalar getStrokeMiter() const { return fMiterLimit; }
 
   /** Sets the limit at which a sharp corner is drawn beveled.
       Valid values are zero and greater.
@@ -338,7 +336,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeMiter
   */
-  void setStrokeMiter(SkScalar miter) noexcept;
+  void setStrokeMiter(SkScalar miter);
 
   /** \enum SkPaint::Cap
       Cap draws at the beginning and end of an open path contour.
@@ -382,24 +380,24 @@ class SK_API SkPaint {
 
   /** Returns the geometry drawn at the beginning and end of strokes.
    */
-  Cap getStrokeCap() const noexcept { return (Cap)fBitfields.fCapType; }
+  Cap getStrokeCap() const { return (Cap)fBitfields.fCapType; }
 
   /** Sets the geometry drawn at the beginning and end of strokes.
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeCap_a
       example: https://fiddle.skia.org/c/@Paint_setStrokeCap_b
   */
-  void setStrokeCap(Cap cap) noexcept;
+  void setStrokeCap(Cap cap);
 
   /** Returns the geometry drawn at the corners of strokes.
    */
-  Join getStrokeJoin() const noexcept { return (Join)fBitfields.fJoinType; }
+  Join getStrokeJoin() const { return (Join)fBitfields.fJoinType; }
 
   /** Sets the geometry drawn at the corners of strokes.
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeJoin
   */
-  void setStrokeJoin(Join join) noexcept;
+  void setStrokeJoin(Join join);
 
   /** Returns the filled equivalent of the stroked path.
 
@@ -432,7 +430,7 @@ class SK_API SkPaint {
 
       @return  SkShader if previously set, nullptr otherwise
   */
-  SkShader* getShader() const noexcept { return fShader.get(); }
+  SkShader* getShader() const { return fShader.get(); }
 
   /** Returns optional colors used when filling a path, such as a gradient.
 
@@ -442,7 +440,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refShader
   */
-  sk_sp<SkShader> refShader() const noexcept;
+  sk_sp<SkShader> refShader() const;
 
   /** Sets optional colors used when filling a path, such as a gradient.
 
@@ -454,14 +452,14 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Color_Filter_Methods
       example: https://fiddle.skia.org/c/@Paint_setShader
   */
-  void setShader(sk_sp<SkShader> shader) noexcept;
+  void setShader(sk_sp<SkShader> shader);
 
   /** Returns SkColorFilter if set, or nullptr.
       Does not alter SkColorFilter SkRefCnt.
 
       @return  SkColorFilter if previously set, nullptr otherwise
   */
-  SkColorFilter* getColorFilter() const noexcept { return fColorFilter.get(); }
+  SkColorFilter* getColorFilter() const { return fColorFilter.get(); }
 
   /** Returns SkColorFilter if set, or nullptr.
       Increases SkColorFilter SkRefCnt by one.
@@ -470,7 +468,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refColorFilter
   */
-  sk_sp<SkColorFilter> refColorFilter() const noexcept;
+  sk_sp<SkColorFilter> refColorFilter() const;
 
   /** Sets SkColorFilter to filter, decreasing SkRefCnt of the previous
       SkColorFilter. Pass nullptr to clear SkColorFilter.
@@ -482,36 +480,34 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Blend_Mode_Methods
       example: https://fiddle.skia.org/c/@Paint_setColorFilter
   */
-  void setColorFilter(sk_sp<SkColorFilter> colorFilter) noexcept;
+  void setColorFilter(sk_sp<SkColorFilter> colorFilter);
 
   /** Returns SkBlendMode.
       By default, returns SkBlendMode::kSrcOver.
 
       @return  mode used to combine source color with destination color
   */
-  SkBlendMode getBlendMode() const noexcept { return (SkBlendMode)fBitfields.fBlendMode; }
+  SkBlendMode getBlendMode() const { return (SkBlendMode)fBitfields.fBlendMode; }
 
   /** Returns true if SkBlendMode is SkBlendMode::kSrcOver, the default.
 
       @return  true if SkBlendMode is SkBlendMode::kSrcOver
   */
-  bool isSrcOver() const noexcept {
-    return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver;
-  }
+  bool isSrcOver() const { return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver; }
 
   /** Sets SkBlendMode to mode.
       Does not check for valid input.
 
       @param mode  SkBlendMode used to combine source color and destination
   */
-  void setBlendMode(SkBlendMode mode) noexcept { fBitfields.fBlendMode = (unsigned)mode; }
+  void setBlendMode(SkBlendMode mode) { fBitfields.fBlendMode = (unsigned)mode; }
 
   /** Returns SkPathEffect if set, or nullptr.
       Does not alter SkPathEffect SkRefCnt.
 
       @return  SkPathEffect if previously set, nullptr otherwise
   */
-  SkPathEffect* getPathEffect() const noexcept { return fPathEffect.get(); }
+  SkPathEffect* getPathEffect() const { return fPathEffect.get(); }
 
   /** Returns SkPathEffect if set, or nullptr.
       Increases SkPathEffect SkRefCnt by one.
@@ -520,7 +516,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refPathEffect
   */
-  sk_sp<SkPathEffect> refPathEffect() const noexcept;
+  sk_sp<SkPathEffect> refPathEffect() const;
 
   /** Sets SkPathEffect to pathEffect, decreasing SkRefCnt of the previous
       SkPathEffect. Pass nullptr to leave the path geometry unaltered.
@@ -532,14 +528,14 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Mask_Filter_Methods
       example: https://fiddle.skia.org/c/@Paint_setPathEffect
   */
-  void setPathEffect(sk_sp<SkPathEffect> pathEffect) noexcept;
+  void setPathEffect(sk_sp<SkPathEffect> pathEffect);
 
   /** Returns SkMaskFilter if set, or nullptr.
       Does not alter SkMaskFilter SkRefCnt.
 
       @return  SkMaskFilter if previously set, nullptr otherwise
   */
-  SkMaskFilter* getMaskFilter() const noexcept { return fMaskFilter.get(); }
+  SkMaskFilter* getMaskFilter() const { return fMaskFilter.get(); }
 
   /** Returns SkMaskFilter if set, or nullptr.
 
@@ -549,7 +545,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refMaskFilter
   */
-  sk_sp<SkMaskFilter> refMaskFilter() const noexcept;
+  sk_sp<SkMaskFilter> refMaskFilter() const;
 
   /** Sets SkMaskFilter to maskFilter, decreasing SkRefCnt of the previous
       SkMaskFilter. Pass nullptr to clear SkMaskFilter and leave SkMaskFilter effect on
@@ -562,14 +558,14 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Paint_setMaskFilter
       example: https://fiddle.skia.org/c/@Typeface_Methods
   */
-  void setMaskFilter(sk_sp<SkMaskFilter> maskFilter) noexcept;
+  void setMaskFilter(sk_sp<SkMaskFilter> maskFilter);
 
   /** Returns SkImageFilter if set, or nullptr.
       Does not alter SkImageFilter SkRefCnt.
 
       @return  SkImageFilter if previously set, nullptr otherwise
   */
-  SkImageFilter* getImageFilter() const noexcept { return fImageFilter.get(); }
+  SkImageFilter* getImageFilter() const { return fImageFilter.get(); }
 
   /** Returns SkImageFilter if set, or nullptr.
       Increases SkImageFilter SkRefCnt by one.
@@ -578,7 +574,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refImageFilter
   */
-  sk_sp<SkImageFilter> refImageFilter() const noexcept;
+  sk_sp<SkImageFilter> refImageFilter() const;
 
   /** Sets SkImageFilter to imageFilter, decreasing SkRefCnt of the previous
       SkImageFilter. Pass nullptr to clear SkImageFilter, and remove SkImageFilter effect
@@ -590,7 +586,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_setImageFilter
   */
-  void setImageFilter(sk_sp<SkImageFilter> imageFilter) noexcept;
+  void setImageFilter(sk_sp<SkImageFilter> imageFilter);
 
   /** Returns true if SkPaint prevents all drawing;
       otherwise, the SkPaint may or may not allow drawing.

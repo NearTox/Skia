@@ -34,10 +34,14 @@ class SK_API SkSurfaceCharacterization {
   enum class Textureable : bool { kNo = false, kYes = true };
   enum class MipMapped : bool { kNo = false, kYes = true };
   enum class UsesGLFBO0 : bool { kNo = false, kYes = true };
+  // This flag indicates that the backing VkImage for this Vulkan surface will have the
+  // VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT set. This bit allows skia to handle advanced blends
+  // more optimally in a shader by being able to directly read the dst values.
+  enum class VkRTSupportsInputAttachment : bool { kNo = false, kYes = true };
   // This flag indicates if the surface is wrapping a raw Vulkan secondary command buffer.
   enum class VulkanSecondaryCBCompatible : bool { kNo = false, kYes = true };
 
-  SkSurfaceCharacterization() noexcept
+  SkSurfaceCharacterization()
       : fCacheMaxResourceBytes(0),
         fOrigin(kBottomLeft_GrSurfaceOrigin),
         fSampleCnt(0),
@@ -48,15 +52,13 @@ class SK_API SkSurfaceCharacterization {
         fIsProtected(GrProtected::kNo),
         fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
-  SkSurfaceCharacterization(SkSurfaceCharacterization&&) noexcept = default;
-  SkSurfaceCharacterization& operator=(SkSurfaceCharacterization&&) noexcept = default;
+  SkSurfaceCharacterization(SkSurfaceCharacterization&&) = default;
+  SkSurfaceCharacterization& operator=(SkSurfaceCharacterization&&) = default;
 
-  SkSurfaceCharacterization(const SkSurfaceCharacterization&) noexcept = default;
-  SkSurfaceCharacterization& operator=(const SkSurfaceCharacterization& other) noexcept = default;
-  bool operator==(const SkSurfaceCharacterization& other) const noexcept;
-  bool operator!=(const SkSurfaceCharacterization& other) const noexcept {
-    return !(*this == other);
-  }
+  SkSurfaceCharacterization(const SkSurfaceCharacterization&) = default;
+  SkSurfaceCharacterization& operator=(const SkSurfaceCharacterization& other) = default;
+  bool operator==(const SkSurfaceCharacterization& other) const;
+  bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
 
   /*
    * Return a new surface characterization with the only difference being a different width
@@ -81,30 +83,33 @@ class SK_API SkSurfaceCharacterization {
    */
   SkSurfaceCharacterization createFBO0(bool usesGLFBO0) const;
 
-  GrContextThreadSafeProxy* contextInfo() const noexcept { return fContextInfo.get(); }
-  sk_sp<GrContextThreadSafeProxy> refContextInfo() const noexcept { return fContextInfo; }
-  size_t cacheMaxResourceBytes() const noexcept { return fCacheMaxResourceBytes; }
+  GrContextThreadSafeProxy* contextInfo() const { return fContextInfo.get(); }
+  sk_sp<GrContextThreadSafeProxy> refContextInfo() const { return fContextInfo; }
+  size_t cacheMaxResourceBytes() const { return fCacheMaxResourceBytes; }
 
-  bool isValid() const noexcept { return kUnknown_SkColorType != fImageInfo.colorType(); }
+  bool isValid() const { return kUnknown_SkColorType != fImageInfo.colorType(); }
 
-  const SkImageInfo& imageInfo() const noexcept { return fImageInfo; }
-  const GrBackendFormat& backendFormat() const noexcept { return fBackendFormat; }
-  GrSurfaceOrigin origin() const noexcept { return fOrigin; }
-  SkISize dimensions() const noexcept { return fImageInfo.dimensions(); }
-  int width() const noexcept { return fImageInfo.width(); }
-  int height() const noexcept { return fImageInfo.height(); }
-  SkColorType colorType() const noexcept { return fImageInfo.colorType(); }
-  int sampleCount() const noexcept { return fSampleCnt; }
-  bool isTextureable() const noexcept { return Textureable::kYes == fIsTextureable; }
-  bool isMipMapped() const noexcept { return MipMapped::kYes == fIsMipMapped; }
-  bool usesGLFBO0() const noexcept { return UsesGLFBO0::kYes == fUsesGLFBO0; }
-  bool vulkanSecondaryCBCompatible() const noexcept {
+  const SkImageInfo& imageInfo() const { return fImageInfo; }
+  const GrBackendFormat& backendFormat() const { return fBackendFormat; }
+  GrSurfaceOrigin origin() const { return fOrigin; }
+  SkISize dimensions() const { return fImageInfo.dimensions(); }
+  int width() const { return fImageInfo.width(); }
+  int height() const { return fImageInfo.height(); }
+  SkColorType colorType() const { return fImageInfo.colorType(); }
+  int sampleCount() const { return fSampleCnt; }
+  bool isTextureable() const { return Textureable::kYes == fIsTextureable; }
+  bool isMipMapped() const { return MipMapped::kYes == fIsMipMapped; }
+  bool usesGLFBO0() const { return UsesGLFBO0::kYes == fUsesGLFBO0; }
+  bool vkRTSupportsInputAttachment() const {
+    return VkRTSupportsInputAttachment::kYes == fVkRTSupportsInputAttachment;
+  }
+  bool vulkanSecondaryCBCompatible() const {
     return VulkanSecondaryCBCompatible::kYes == fVulkanSecondaryCBCompatible;
   }
-  GrProtected isProtected() const noexcept { return fIsProtected; }
-  SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
-  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fImageInfo.refColorSpace(); }
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  GrProtected isProtected() const { return fIsProtected; }
+  SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const { return fImageInfo.refColorSpace(); }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
   // Is the provided backend texture compatible with this surface characterization?
   bool isCompatible(const GrBackendTexture&) const;
@@ -116,12 +121,13 @@ class SK_API SkSurfaceCharacterization {
   friend class SkDeferredDisplayListRecorder;  // for 'config'
   friend class SkSurface;                      // for 'config'
 
-  SkDEBUGCODE(void validate() const);
+  SkDEBUGCODE(void validate() const;)
 
   SkSurfaceCharacterization(
       sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
       const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
       int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
+      VkRTSupportsInputAttachment vkRTSupportsInputAttachment,
       VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
       const SkSurfaceProps& surfaceProps)
       : fContextInfo(std::move(contextInfo)),
@@ -133,6 +139,7 @@ class SK_API SkSurfaceCharacterization {
         fIsTextureable(isTextureable),
         fIsMipMapped(isMipMapped),
         fUsesGLFBO0(usesGLFBO0),
+        fVkRTSupportsInputAttachment(vkRTSupportsInputAttachment),
         fVulkanSecondaryCBCompatible(vulkanSecondaryCBCompatible),
         fIsProtected(isProtected),
         fSurfaceProps(surfaceProps) {
@@ -143,18 +150,9 @@ class SK_API SkSurfaceCharacterization {
       sk_sp<GrContextThreadSafeProxy> contextInfo, size_t cacheMaxResourceBytes,
       const SkImageInfo& ii, const GrBackendFormat& backendFormat, GrSurfaceOrigin origin,
       int sampleCnt, Textureable isTextureable, MipMapped isMipMapped, UsesGLFBO0 usesGLFBO0,
+      VkRTSupportsInputAttachment vkRTSupportsInputAttachment,
       VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
       const SkSurfaceProps& surfaceProps) {
-    SkASSERT(MipMapped::kNo == isMipMapped || Textureable::kYes == isTextureable);
-    SkASSERT(Textureable::kNo == isTextureable || UsesGLFBO0::kNo == usesGLFBO0);
-
-    SkASSERT(
-        VulkanSecondaryCBCompatible::kNo == vulkanSecondaryCBCompatible ||
-        UsesGLFBO0::kNo == usesGLFBO0);
-    SkASSERT(
-        Textureable::kNo == isTextureable ||
-        VulkanSecondaryCBCompatible::kNo == vulkanSecondaryCBCompatible);
-
     fContextInfo = contextInfo;
     fCacheMaxResourceBytes = cacheMaxResourceBytes;
 
@@ -165,6 +163,7 @@ class SK_API SkSurfaceCharacterization {
     fIsTextureable = isTextureable;
     fIsMipMapped = isMipMapped;
     fUsesGLFBO0 = usesGLFBO0;
+    fVkRTSupportsInputAttachment = vkRTSupportsInputAttachment;
     fVulkanSecondaryCBCompatible = vulkanSecondaryCBCompatible;
     fIsProtected = isProtected;
     fSurfaceProps = surfaceProps;
@@ -182,6 +181,7 @@ class SK_API SkSurfaceCharacterization {
   Textureable fIsTextureable;
   MipMapped fIsMipMapped;
   UsesGLFBO0 fUsesGLFBO0;
+  VkRTSupportsInputAttachment fVkRTSupportsInputAttachment;
   VulkanSecondaryCBCompatible fVulkanSecondaryCBCompatible;
   GrProtected fIsProtected;
   SkSurfaceProps fSurfaceProps;
@@ -193,36 +193,34 @@ class SK_API SkSurfaceCharacterization {
  public:
   SkSurfaceCharacterization() : fSurfaceProps(0, kUnknown_SkPixelGeometry) {}
 
-  SkSurfaceCharacterization createResized(int width, int height) const noexcept { return *this; }
+  SkSurfaceCharacterization createResized(int width, int height) const { return *this; }
 
-  SkSurfaceCharacterization createColorSpace(sk_sp<SkColorSpace>) const noexcept { return *this; }
+  SkSurfaceCharacterization createColorSpace(sk_sp<SkColorSpace>) const { return *this; }
 
-  SkSurfaceCharacterization createBackendFormat(
-      SkColorType, const GrBackendFormat&) const noexcept {
+  SkSurfaceCharacterization createBackendFormat(SkColorType, const GrBackendFormat&) const {
     return *this;
   }
 
-  SkSurfaceCharacterization createFBO0(bool usesGLFBO0) const noexcept { return *this; }
+  SkSurfaceCharacterization createFBO0(bool usesGLFBO0) const { return *this; }
 
-  bool operator==(const SkSurfaceCharacterization& other) const noexcept { return false; }
-  bool operator!=(const SkSurfaceCharacterization& other) const noexcept {
-    return !(*this == other);
-  }
+  bool operator==(const SkSurfaceCharacterization& other) const { return false; }
+  bool operator!=(const SkSurfaceCharacterization& other) const { return !(*this == other); }
 
-  size_t cacheMaxResourceBytes() const noexcept { return 0; }
+  size_t cacheMaxResourceBytes() const { return 0; }
 
-  bool isValid() const noexcept { return false; }
+  bool isValid() const { return false; }
 
-  int width() const noexcept { return 0; }
-  int height() const noexcept { return 0; }
-  int stencilCount() const noexcept { return 0; }
-  bool isTextureable() const noexcept { return false; }
-  bool isMipMapped() const noexcept { return false; }
-  bool usesGLFBO0() const noexcept { return false; }
-  bool vulkanSecondaryCBCompatible() const noexcept { return false; }
-  SkColorSpace* colorSpace() const noexcept { return nullptr; }
-  sk_sp<SkColorSpace> refColorSpace() const noexcept { return nullptr; }
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+  int width() const { return 0; }
+  int height() const { return 0; }
+  int stencilCount() const { return 0; }
+  bool isTextureable() const { return false; }
+  bool isMipMapped() const { return false; }
+  bool usesGLFBO0() const { return false; }
+  bool vkRTSupportsAttachmentInput() const { return false; }
+  bool vulkanSecondaryCBCompatible() const { return false; }
+  SkColorSpace* colorSpace() const { return nullptr; }
+  sk_sp<SkColorSpace> refColorSpace() const { return nullptr; }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
 
  private:
   SkSurfaceProps fSurfaceProps;

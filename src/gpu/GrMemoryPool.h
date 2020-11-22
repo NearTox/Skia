@@ -59,12 +59,12 @@ class GrMemoryPool {
   /**
    * p must have been returned by allocate().
    */
-  void release(void* p) noexcept;
+  void release(void* p);
 
   /**
    * Returns true if there are no unreleased allocations.
    */
-  bool isEmpty() const noexcept {
+  bool isEmpty() const {
     // If size is the same as preallocSize, there aren't any heap blocks, so currentBlock()
     // is the inline head block.
     return fAllocator.currentBlock() == fAllocator.headBlock() &&
@@ -74,12 +74,12 @@ class GrMemoryPool {
   /**
    * Returns the total allocated size of the GrMemoryPool minus any preallocated amount
    */
-  size_t size() const noexcept { return fAllocator.totalSize() - fAllocator.preallocSize(); }
+  size_t size() const { return fAllocator.totalSize() - fAllocator.preallocSize(); }
 
   /**
    * Returns the preallocated size of the GrMemoryPool
    */
-  size_t preallocSize() const noexcept {
+  size_t preallocSize() const {
     // Account for the debug-only fields in this count, the offset is 0 for release builds
     return offsetof(GrMemoryPool, fAllocator) + fAllocator.preallocSize();
   }
@@ -100,7 +100,7 @@ class GrMemoryPool {
     int fEnd;
   };
 
-  GrMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept;
+  GrMemoryPool(size_t preallocSize, size_t minAllocSize);
 
 #ifdef SK_DEBUG
   SkTHashSet<int> fAllocatedIDs;
@@ -127,12 +127,12 @@ class GrOpMemoryPool {
 
   void* allocate(size_t size) { return fPool.allocate(size); }
 
-  void release(std::unique_ptr<GrOp> op) noexcept;
+  void release(std::unique_ptr<GrOp> op);
 
-  bool isEmpty() const noexcept { return fPool.isEmpty(); }
+  bool isEmpty() const { return fPool.isEmpty(); }
 
  private:
-  GrOpMemoryPool(size_t preallocSize, size_t minAllocSize) noexcept
+  GrOpMemoryPool(size_t preallocSize, size_t minAllocSize)
       : fPool(preallocSize - offsetof(GrOpMemoryPool, fPool), minAllocSize) {}
 
   GrMemoryPool fPool;  // Must be the last field

@@ -34,7 +34,7 @@ size_t GrDawnRenderTarget::onGpuMemorySize() const {
 
 bool GrDawnRenderTarget::completeStencilAttachment() { return true; }
 
-GrDawnRenderTarget::~GrDawnRenderTarget() = default;
+GrDawnRenderTarget::~GrDawnRenderTarget() {}
 
 void GrDawnRenderTarget::onRelease() { INHERITED::onRelease(); }
 

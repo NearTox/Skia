@@ -87,6 +87,6 @@ class GrDawnProgramBuilder : public GrGLSLProgramBuilder {
   GrSPIRVVaryingHandler fVaryingHandler;
   GrSPIRVUniformHandler fUniformHandler;
 
-  typedef GrGLSLProgramBuilder INHERITED;
+  using INHERITED = GrGLSLProgramBuilder;
 };
 #endif

@@ -44,9 +44,9 @@ class GrCCFillGeometry {
     int fCubics;
     int fConics;
 
-    void operator+=(const PrimitiveTallies&) noexcept;
-    PrimitiveTallies operator-(const PrimitiveTallies&) const noexcept;
-    bool operator==(const PrimitiveTallies&) noexcept;
+    void operator+=(const PrimitiveTallies&);
+    PrimitiveTallies operator-(const PrimitiveTallies&) const;
+    bool operator==(const PrimitiveTallies&);
   };
 
   GrCCFillGeometry(int numSkPoints = 0, int numSkVerbs = 0, int numConicWeights = 0)
@@ -55,20 +55,20 @@ class GrCCFillGeometry {
         fVerbs(numSkVerbs * 3),
         fConicWeights(numConicWeights * 3 / 2) {}
 
-  const SkTArray<SkPoint, true>& points() const noexcept {
+  const SkTArray<SkPoint, true>& points() const {
     SkASSERT(!fBuildingContour);
     return fPoints;
   }
-  const SkTArray<Verb, true>& verbs() const noexcept {
+  const SkTArray<Verb, true>& verbs() const {
     SkASSERT(!fBuildingContour);
     return fVerbs;
   }
-  float getConicWeight(int idx) const noexcept {
+  float getConicWeight(int idx) const {
     SkASSERT(!fBuildingContour);
     return fConicWeights[idx];
   }
 
-  void reset() noexcept {
+  void reset() {
     SkASSERT(!fBuildingContour);
     fPoints.reset();
     fVerbs.reset();
@@ -126,7 +126,7 @@ class GrCCFillGeometry {
   SkSTArray<32, float, true> fConicWeights;
 };
 
-inline void GrCCFillGeometry::PrimitiveTallies::operator+=(const PrimitiveTallies& b) noexcept {
+inline void GrCCFillGeometry::PrimitiveTallies::operator+=(const PrimitiveTallies& b) {
   fTriangles += b.fTriangles;
   fWeightedTriangles += b.fWeightedTriangles;
   fQuadratics += b.fQuadratics;
@@ -135,13 +135,13 @@ inline void GrCCFillGeometry::PrimitiveTallies::operator+=(const PrimitiveTallie
 }
 
 GrCCFillGeometry::PrimitiveTallies inline GrCCFillGeometry::PrimitiveTallies::operator-(
-    const PrimitiveTallies& b) const noexcept {
+    const PrimitiveTallies& b) const {
   return {
       fTriangles - b.fTriangles, fWeightedTriangles - b.fWeightedTriangles,
       fQuadratics - b.fQuadratics, fCubics - b.fCubics, fConics - b.fConics};
 }
 
-inline bool GrCCFillGeometry::PrimitiveTallies::operator==(const PrimitiveTallies& b) noexcept {
+inline bool GrCCFillGeometry::PrimitiveTallies::operator==(const PrimitiveTallies& b) {
   return fTriangles == b.fTriangles && fWeightedTriangles == b.fWeightedTriangles &&
          fQuadratics == b.fQuadratics && fCubics == b.fCubics && fConics == b.fConics;
 }

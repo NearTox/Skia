@@ -30,10 +30,10 @@ class InvalidationController {
 
   void inval(const SkRect&, const SkMatrix& ctm = SkMatrix::I());
 
-  const SkRect& bounds() const noexcept { return fBounds; }
+  const SkRect& bounds() const { return fBounds; }
 
-  auto begin() const noexcept { return fRects.cbegin(); }
-  auto end() const noexcept { return fRects.cend(); }
+  auto begin() const { return fRects.cbegin(); }
+  auto end() const { return fRects.cend(); }
 
   void reset();
 

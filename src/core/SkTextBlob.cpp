@@ -74,7 +74,7 @@ struct RunRecordStorageEquivalent {
   SkPoint fOffset;
   uint32_t fCount;
   uint32_t fFlags;
-  SkDEBUGCODE(unsigned fMagic);
+  SkDEBUGCODE(unsigned fMagic;)
 };
 }  // namespace
 
@@ -153,7 +153,7 @@ SkTextBlob::~SkTextBlob() {
   const auto* run = RunRecord::First(this);
   do {
     const auto* nextRun = RunRecord::Next(run);
-    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize));
+    SkDEBUGCODE(run->validate((uint8_t*)this + fStorageSize);)
     run->~RunRecord();
     run = nextRun;
   } while (run);
@@ -200,14 +200,14 @@ void* SkTextBlob::operator new(size_t, void* p) { return p; }
 
 SkTextBlobRunIterator::SkTextBlobRunIterator(const SkTextBlob* blob)
     : fCurrentRun(SkTextBlob::RunRecord::First(blob)) {
-  SkDEBUGCODE(fStorageTop = (uint8_t*)blob + blob->fStorageSize);
+  SkDEBUGCODE(fStorageTop = (uint8_t*)blob + blob->fStorageSize;)
 }
 
 void SkTextBlobRunIterator::next() {
   SkASSERT(!this->done());
 
   if (!this->done()) {
-    SkDEBUGCODE(fCurrentRun->validate(fStorageTop));
+    SkDEBUGCODE(fCurrentRun->validate(fStorageTop);)
     fCurrentRun = SkTextBlob::RunRecord::Next(fCurrentRun);
   }
 }
@@ -575,7 +575,7 @@ sk_sp<SkTextBlob> SkTextBlobBuilder::make() {
   lastRun->fFlags |= SkTextBlob::RunRecord::kLast_Flag;
 
   SkTextBlob* blob = new (fStorage.release()) SkTextBlob(fBounds);
-  SkDEBUGCODE(const_cast<SkTextBlob*>(blob)->fStorageSize = fStorageSize);
+  SkDEBUGCODE(const_cast<SkTextBlob*>(blob)->fStorageSize = fStorageSize;)
 
   SkDEBUGCODE(SkSafeMath safe; size_t validateSize = SkAlignPtr(sizeof(SkTextBlob));
               for (const auto* run = SkTextBlob::RunRecord::First(blob); run;
@@ -585,7 +585,7 @@ sk_sp<SkTextBlob> SkTextBlobBuilder::make() {
                 run->validate(reinterpret_cast<const uint8_t*>(blob) + fStorageUsed);
                 fRunCount--;
               } SkASSERT(validateSize == fStorageUsed);
-              SkASSERT(fRunCount == 0); SkASSERT(safe));
+              SkASSERT(fRunCount == 0); SkASSERT(safe);)
 
   fStorageUsed = 0;
   fStorageSize = 0;

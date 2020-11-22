@@ -112,7 +112,7 @@ class BlurImageFilterBench : public Benchmark {
   bool fInitialized;
   SkBitmap fCheckerboard;
   SkScalar fSigmaX, fSigmaY;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new BlurImageFilterBench(BLUR_SIGMA_LARGE, 0, false, false, false);)

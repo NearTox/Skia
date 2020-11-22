@@ -87,6 +87,6 @@ class SpriteBitmapGM : public skiagm::GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new SpriteBitmapGM;)

@@ -63,7 +63,7 @@ std::unique_ptr<GrSurfaceContext> GrSurfaceContext::Make(
     surfaceContext = std::make_unique<GrSurfaceContext>(
         context, std::move(readView), colorType, alphaType, std::move(colorSpace));
   }
-  SkDEBUGCODE(surfaceContext->validate());
+  SkDEBUGCODE(surfaceContext->validate();)
   return surfaceContext;
 }
 
@@ -120,10 +120,9 @@ bool GrSurfaceContext::readPixels(
     SkIPoint pt) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::readPixels");
-
-  if (!dContext) {
+  if (!fContext->priv().matches(dContext)) {
     return false;
   }
 
@@ -279,7 +278,7 @@ bool GrSurfaceContext::writePixels(
     SkIPoint pt) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContext::writePixels");
 
   if (!dContext) {
@@ -958,7 +957,7 @@ void GrSurfaceContext::asyncRescaleAndReadPixelsYUV420(
 bool GrSurfaceContext::copy(GrSurfaceProxy* src, const SkIRect& srcRect, const SkIPoint& dstPoint) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_AUDIT_TRAIL_AUTO_FRAME(this->auditTrail(), "GrSurfaceContextPriv::copy");
 
   const GrCaps* caps = fContext->priv().caps();
@@ -1087,7 +1086,7 @@ std::unique_ptr<GrRenderTargetContext> GrSurfaceContext::rescale(
         dir = GrBicubicEffect::Direction::kX;
       }
       static constexpr auto kWM = GrSamplerState::WrapMode::kClamp;
-      static constexpr auto kKernel = GrBicubicEffect::Kernel::kCatmullRom;
+      static constexpr auto kKernel = GrBicubicEffect::gCatmullRom;
       fp = GrBicubicEffect::MakeSubset(
           std::move(texView), prevAlphaType, matrix, kWM, kWM, SkRect::Make(srcRect), kKernel, dir,
           *this->caps());
@@ -1132,7 +1131,7 @@ GrSemaphoresSubmitted GrSurfaceContext::flush(
     }
     return GrSemaphoresSubmitted::kNo;
   }
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "flush", fContext);
 
   return this->drawingManager()->flushSurface(this->asSurfaceProxy(), access, info, newState);

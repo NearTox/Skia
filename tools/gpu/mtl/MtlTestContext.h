@@ -21,7 +21,7 @@ class MtlTestContext : public TestContext {
   MtlTestContext() {}
 
  private:
-  typedef TestContext INHERITED;
+  using INHERITED = TestContext;
 };
 
 /**

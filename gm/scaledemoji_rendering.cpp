@@ -69,7 +69,7 @@ class ScaledEmojiRenderingGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

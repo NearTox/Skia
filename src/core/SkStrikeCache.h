@@ -40,7 +40,7 @@ class SkStrikePinner {
 
 class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
  public:
-  SkStrikeCache() noexcept = default;
+  SkStrikeCache() = default;
 
   class Strike final : public SkRefCnt, public SkStrikeForGPU {
    public:
@@ -64,7 +64,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       return glyphPath;
     }
 
-    SkScalerContext* getScalerContext() const noexcept { return fScalerCache.getScalerContext(); }
+    SkScalerContext* getScalerContext() const { return fScalerCache.getScalerContext(); }
 
     void findIntercepts(
         const SkScalar bounds[2], SkScalar scale, SkScalar xPos, SkGlyph* glyph, SkScalar* array,
@@ -72,7 +72,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       fScalerCache.findIntercepts(bounds, scale, xPos, glyph, array, count);
     }
 
-    const SkFontMetrics& getFontMetrics() const noexcept { return fScalerCache.getFontMetrics(); }
+    const SkFontMetrics& getFontMetrics() const { return fScalerCache.getFontMetrics(); }
 
     SkSpan<const SkGlyph*> metrics(SkSpan<const SkGlyphID> glyphIDs, const SkGlyph* results[]) {
       auto [glyphs, increase] = fScalerCache.metrics(glyphIDs, results);
@@ -99,7 +99,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       this->updateDelta(increase);
     }
 
-    const SkGlyphPositionRoundingSpec& roundingSpec() const noexcept override {
+    const SkGlyphPositionRoundingSpec& roundingSpec() const override {
       return fScalerCache.roundingSpec();
     }
 
@@ -123,7 +123,7 @@ class SkStrikeCache final : public SkStrikeForGPUCacheInterface {
       this->updateDelta(increase);
     }
 
-    void onAboutToExitScope() noexcept override { this->unref(); }
+    void onAboutToExitScope() override { this->unref(); }
 
     void updateDelta(size_t increase);
 

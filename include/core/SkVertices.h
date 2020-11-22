@@ -92,10 +92,10 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
      */
     Attribute(Type t = Type::kFloat, Usage u = Usage::kRaw, const char* markerName = nullptr);
 
-    bool operator==(const Attribute& that) const noexcept {
+    bool operator==(const Attribute& that) const {
       return fType == that.fType && fUsage == that.fUsage && fMarkerID == that.fMarkerID;
     }
-    bool operator!=(const Attribute& that) const noexcept { return !(*this == that); }
+    bool operator!=(const Attribute& that) const { return !(*this == that); }
 
     // Number of channels that will be produced for the SkRuntimeEffect to consume.
     // May not match the number of channels in fType. For example, kVector Attributes always
@@ -122,7 +122,7 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     Builder(
         VertexMode mode, int vertexCount, int indexCount, const Attribute* attrs, int attrCount);
 
-    bool isValid() const noexcept { return fVertices != nullptr; }
+    bool isValid() const { return fVertices != nullptr; }
 
     SkPoint* positions();
     uint16_t* indices();  // returns null if there are no indices
@@ -152,18 +152,18 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     friend class SkVerticesPriv;
   };
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
-  const SkRect& bounds() const noexcept { return fBounds; }
+  uint32_t uniqueID() const { return fUniqueID; }
+  const SkRect& bounds() const { return fBounds; }
 
   // returns approximate byte size of the vertices object
   size_t approximateSize() const;
 
   // Provides access to functions that aren't part of the public API.
-  SkVerticesPriv priv() noexcept;
-  const SkVerticesPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
+  SkVerticesPriv priv();
+  const SkVerticesPriv priv() const;  // NOLINT(readability-const-return-type)
 
  private:
-  SkVertices() noexcept = default;
+  SkVertices() {}
 
   friend class SkVerticesPriv;
 

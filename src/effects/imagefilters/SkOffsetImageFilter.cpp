@@ -41,7 +41,7 @@ class SkOffsetImageFilterImpl final : public SkImageFilter_Base {
 
   SkVector fOffset;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

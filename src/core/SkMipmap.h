@@ -65,11 +65,11 @@ class SkMipmap : public SkCachedData {
 
   // countLevels returns the number of mipmap levels generated (which does not
   // include the base mipmap level).
-  int countLevels() const noexcept;
+  int countLevels() const;
 
   // |index| is an index into the generated mipmap levels. It does not include
   // the base level. So index 0 represents mipmap level 1.
-  bool getLevel(int index, Level*) const noexcept;
+  bool getLevel(int index, Level*) const;
 
   bool validForRootLevel(const SkImageInfo&) const;
 
@@ -77,7 +77,7 @@ class SkMipmap : public SkCachedData {
   static bool Deserialize(SkMipmapBuilder*, const void* data, size_t size);
 
  protected:
-  void onDataChange(void* oldData, void* newData) noexcept override {
+  void onDataChange(void* oldData, void* newData) override {
     fLevels = (Level*)newData;  // could be nullptr
   }
 
@@ -86,12 +86,12 @@ class SkMipmap : public SkCachedData {
   Level* fLevels;  // managed by the baseclass, may be null due to onDataChanged.
   int fCount;
 
-  SkMipmap(void* malloc, size_t size) noexcept : INHERITED(malloc, size) {}
-  SkMipmap(size_t size, SkDiscardableMemory* dm) noexcept : INHERITED(size, dm) {}
+  SkMipmap(void* malloc, size_t size) : INHERITED(malloc, size) {}
+  SkMipmap(size_t size, SkDiscardableMemory* dm) : INHERITED(size, dm) {}
 
-  static size_t AllocLevelsSize(int levelCount, size_t pixelSize) noexcept;
+  static size_t AllocLevelsSize(int levelCount, size_t pixelSize);
 
-  typedef SkCachedData INHERITED;
+  using INHERITED = SkCachedData;
 };
 
 #endif

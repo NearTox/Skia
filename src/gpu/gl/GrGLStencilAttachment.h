@@ -28,16 +28,18 @@ class GrGLStencilAttachment : public GrStencilAttachment {
   };
 
   GrGLStencilAttachment(
-      GrGpu* gpu, const IDDesc& idDesc, int width, int height, int sampleCnt, const Format& format)
-      : GrStencilAttachment(gpu, width, height, format.fStencilBits, sampleCnt),
+      GrGpu* gpu, const IDDesc& idDesc, SkISize dimensions, int sampleCnt, const Format& format)
+      : GrStencilAttachment(gpu, dimensions, format.fStencilBits, sampleCnt, GrProtected::kNo),
         fFormat(format),
         fRenderbufferID(idDesc.fRenderbufferID) {
     this->registerWithCache(SkBudgeted::kYes);
   }
 
-  GrGLuint renderbufferID() const noexcept { return fRenderbufferID; }
+  GrBackendFormat backendFormat() const override;
 
-  const Format& format() const noexcept { return fFormat; }
+  GrGLuint renderbufferID() const { return fRenderbufferID; }
+
+  const Format& format() const { return fFormat; }
 
  protected:
   // overrides of GrResource
@@ -55,7 +57,7 @@ class GrGLStencilAttachment : public GrStencilAttachment {
   // us how many bits of stencil there are).
   GrGLuint fRenderbufferID;
 
-  typedef GrStencilAttachment INHERITED;
+  using INHERITED = GrStencilAttachment;
 };
 
 #endif

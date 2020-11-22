@@ -17,17 +17,17 @@ class TextStyle;
 class Paragraph;
 class FontCollection : public SkRefCnt {
  public:
-  FontCollection() noexcept;
+  FontCollection();
 
   size_t getFontManagersCount() const;
 
-  void setAssetFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
-  void setDynamicFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
-  void setTestFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
-  void setDefaultFontManager(sk_sp<SkFontMgr> fontManager) noexcept;
+  void setAssetFontManager(sk_sp<SkFontMgr> fontManager);
+  void setDynamicFontManager(sk_sp<SkFontMgr> fontManager);
+  void setTestFontManager(sk_sp<SkFontMgr> fontManager);
+  void setDefaultFontManager(sk_sp<SkFontMgr> fontManager);
   void setDefaultFontManager(sk_sp<SkFontMgr> fontManager, const char defaultFamilyName[]);
 
-  sk_sp<SkFontMgr> getFallbackManager() const noexcept { return fDefaultFontManager; }
+  sk_sp<SkFontMgr> getFallbackManager() const { return fDefaultFontManager; }
 
   std::vector<sk_sp<SkTypeface>> findTypefaces(
       const std::vector<SkString>& familyNames, SkFontStyle fontStyle);
@@ -36,11 +36,13 @@ class FontCollection : public SkRefCnt {
       SkUnichar unicode, SkFontStyle fontStyle, const SkString& locale);
   sk_sp<SkTypeface> defaultFallback();
 
-  void disableFontFallback() noexcept;
-  void enableFontFallback() noexcept;
-  bool fontFallbackEnabled() noexcept { return fEnableFontFallback; }
+  void disableFontFallback();
+  void enableFontFallback();
+  bool fontFallbackEnabled() { return fEnableFontFallback; }
 
-  ParagraphCache* getParagraphCache() noexcept { return &fParagraphCache; }
+  ParagraphCache* getParagraphCache() { return &fParagraphCache; }
+
+  void clearCaches();
 
  private:
   std::vector<sk_sp<SkFontMgr>> getFontManagerOrder() const;
@@ -56,10 +58,10 @@ class FontCollection : public SkRefCnt {
     std::vector<SkString> fFamilyNames;
     SkFontStyle fFontStyle;
 
-    bool operator==(const FamilyKey& other) const noexcept;
+    bool operator==(const FamilyKey& other) const;
 
     struct Hasher {
-      size_t operator()(const FamilyKey& key) const noexcept;
+      size_t operator()(const FamilyKey& key) const;
     };
   };
 

@@ -125,7 +125,7 @@ class SkCanvasState_v1 : public SkCanvasState {
 
  private:
   SkCanvas* originalCanvas;
-  typedef SkCanvasState INHERITED;
+  using INHERITED = SkCanvasState;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

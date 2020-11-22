@@ -109,7 +109,7 @@ class TestingUploadTarget : public GrDeferredUploadTarget {
  private:
   GrTokenTracker fTokenTracker;
 
-  typedef GrDeferredUploadTarget INHERITED;
+  using INHERITED = GrDeferredUploadTarget;
 };
 
 static bool fill_plot(
@@ -214,8 +214,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrAtlasTextOpPreparation, reporter, ctxInfo) 
 
   GrSurfaceProxyView surfaceView = rtc->writeSurfaceView();
   GrOpFlushState::OpArgs opArgs(
-      op.get(), &surfaceView, nullptr,
-      GrXferProcessor::DstProxyView(GrSurfaceProxyView(), SkIPoint::Make(0, 0)));
+      op.get(), &surfaceView, nullptr, GrXferProcessor::DstProxyView(), GrXferBarrierFlags::kNone);
 
   // Modify the atlas manager so it can't allocate any pages. This will force a failure
   // in the preparation of the text op

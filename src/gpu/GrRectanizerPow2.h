@@ -22,21 +22,19 @@
 // Mark this class final in an effort to avoid the vtable when this subclass is used explicitly.
 class GrRectanizerPow2 final : public GrRectanizer {
  public:
-  GrRectanizerPow2(int w, int h) noexcept : INHERITED(w, h) { this->reset(); }
+  GrRectanizerPow2(int w, int h) : INHERITED(w, h) { this->reset(); }
 
   ~GrRectanizerPow2() final {}
 
-  void reset() noexcept final {
+  void reset() final {
     fNextStripY = 0;
     fAreaSoFar = 0;
     sk_bzero(fRows, sizeof(fRows));
   }
 
-  bool addRect(int w, int h, SkIPoint16* loc) noexcept final;
+  bool addRect(int w, int h, SkIPoint16* loc) final;
 
-  float percentFull() const noexcept final {
-    return fAreaSoFar / ((float)this->width() * this->height());
-  }
+  float percentFull() const final { return fAreaSoFar / ((float)this->width() * this->height()); }
 
  private:
   static const int kMIN_HEIGHT_POW2 = 2;
@@ -48,7 +46,7 @@ class GrRectanizerPow2 final : public GrRectanizer {
     // but it is used to signal if there exists an open row of this height
     int fRowHeight;
 
-    bool canAddWidth(int width, int containerWidth) const noexcept {
+    bool canAddWidth(int width, int containerWidth) const {
       return fLoc.fX + width <= containerWidth;
     }
   };
@@ -58,22 +56,22 @@ class GrRectanizerPow2 final : public GrRectanizer {
   int fNextStripY;
   int32_t fAreaSoFar;
 
-  static int HeightToRowIndex(int height) noexcept {
+  static int HeightToRowIndex(int height) {
     SkASSERT(height >= kMIN_HEIGHT_POW2);
     int index = 32 - SkCLZ(height - 1);
     SkASSERT(index < kMaxExponent);
     return index;
   }
 
-  bool canAddStrip(int height) const noexcept { return fNextStripY + height <= this->height(); }
+  bool canAddStrip(int height) const { return fNextStripY + height <= this->height(); }
 
-  void initRow(Row* row, int rowHeight) noexcept {
+  void initRow(Row* row, int rowHeight) {
     row->fLoc.set(0, fNextStripY);
     row->fRowHeight = rowHeight;
     fNextStripY += rowHeight;
   }
 
-  typedef GrRectanizer INHERITED;
+  using INHERITED = GrRectanizer;
 };
 
 #endif

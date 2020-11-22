@@ -286,7 +286,7 @@ class GameBench : public Benchmark {
     }
   }
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Partial clear
@@ -357,7 +357,7 @@ class CanvasMatrixBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new CanvasMatrixBench(CanvasMatrixBench::kTranslate_Type));

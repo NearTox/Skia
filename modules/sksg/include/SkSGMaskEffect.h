@@ -46,7 +46,7 @@ class MaskEffect final : public EffectNode {
   const sk_sp<RenderNode> fMaskNode;
   const Mode fMaskMode;
 
-  typedef EffectNode INHERITED;
+  using INHERITED = EffectNode;
 };
 
 }  // namespace sksg

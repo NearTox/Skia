@@ -73,7 +73,7 @@ class SK_API SkNoDrawCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
       SrcRectConstraint) override {}
 
  private:
-  typedef SkCanvasVirtualEnforcer<SkCanvas> INHERITED;
+  using INHERITED = SkCanvasVirtualEnforcer<SkCanvas>;
 };
 
 #endif  // SkNoDrawCanvas_DEFINED

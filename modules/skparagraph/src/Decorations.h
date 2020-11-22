@@ -14,11 +14,11 @@ class Decorations {
  public:
   void paint(
       SkCanvas* canvas, const TextStyle& textStyle, const TextLine::ClipContext& context,
-      SkScalar baseline, SkPoint offset);
+      SkScalar baseline);
 
  private:
   void calculateThickness(TextStyle textStyle, sk_sp<SkTypeface> typeface);
-  void calculatePosition(TextDecoration decoration, SkScalar ascent) noexcept;
+  void calculatePosition(TextDecoration decoration, SkScalar ascent);
   void calculatePaint(const TextStyle& textStyle);
   void calculateWaves(const TextStyle& textStyle, SkRect clip);
   void calculateGaps(

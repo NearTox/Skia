@@ -154,15 +154,15 @@ class Tessellator {
 
   SkDEBUGCODE(char* vertices() const { return (char*)fVertexWriter.fPtr; })
 
-      private :
-      // VertexSpec defines many unique ways to write vertex attributes, which can be handled
-      // generically by branching per-quad based on the VertexSpec. However, there are several
-      // specs that appear in the wild far more frequently, so they use explicit WriteQuadProcs
-      // that have no branches.
-      typedef void (*WriteQuadProc)(
-          GrVertexWriter* vertices, const VertexSpec& spec, const GrQuad* deviceQuad,
-          const GrQuad* localQuad, const float coverage[4], const SkPMColor4f& color,
-          const SkRect& geomSubset, const SkRect& texSubset);
+ private:
+  // VertexSpec defines many unique ways to write vertex attributes, which can be handled
+  // generically by branching per-quad based on the VertexSpec. However, there are several
+  // specs that appear in the wild far more frequently, so they use explicit WriteQuadProcs
+  // that have no branches.
+  typedef void (*WriteQuadProc)(
+      GrVertexWriter* vertices, const VertexSpec& spec, const GrQuad* deviceQuad,
+      const GrQuad* localQuad, const float coverage[4], const SkPMColor4f& color,
+      const SkRect& geomSubset, const SkRect& texSubset);
   static WriteQuadProc GetWriteQuadProc(const VertexSpec& spec);
 
   GrQuadUtils::TessellationHelper fAAHelper;

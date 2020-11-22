@@ -62,8 +62,7 @@ void SkSVGEllipse::onDraw(
 }
 
 SkPath SkSVGEllipse::onAsPath(const SkSVGRenderContext& ctx) const {
-  SkPath path;
-  path.addOval(this->resolve(ctx.lengthContext()));
+  SkPath path = SkPath::Oval(this->resolve(ctx.lengthContext()));
   this->mapToParent(&path);
 
   return path;

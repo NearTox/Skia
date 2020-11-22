@@ -45,7 +45,7 @@ class SkSVGGradient : public SkSVGHiddenContainer {
   SkSVGTransformType fGradientTransform = SkSVGTransformType(SkMatrix::I());
   SkSVGSpreadMethod fSpreadMethod = SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad);
 
-  typedef SkSVGHiddenContainer INHERITED;
+  using INHERITED = SkSVGHiddenContainer;
 };
 
 #endif  // SkSVGGradient_DEFINED

@@ -49,7 +49,7 @@ class GrCoverageSetOpXPFactory : public GrXPFactory {
   SkRegion::Op fRegionOp;
   bool fInvertCoverage;
 
-  typedef GrXPFactory INHERITED;
+  using INHERITED = GrXPFactory;
 };
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop

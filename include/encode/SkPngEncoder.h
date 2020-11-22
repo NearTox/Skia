@@ -87,7 +87,7 @@ class SK_API SkPngEncoder : public SkEncoder {
   SkPngEncoder(std::unique_ptr<SkPngEncoderMgr>, const SkPixmap& src);
 
   std::unique_ptr<SkPngEncoderMgr> fEncoderMgr;
-  typedef SkEncoder INHERITED;
+  using INHERITED = SkEncoder;
 };
 
 static inline SkPngEncoder::FilterFlag operator|(

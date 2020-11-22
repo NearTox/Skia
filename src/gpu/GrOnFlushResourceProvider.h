@@ -27,7 +27,7 @@ class SkSurfaceProps;
  */
 class GrOnFlushCallbackObject {
  public:
-  virtual ~GrOnFlushCallbackObject() = default;
+  virtual ~GrOnFlushCallbackObject() {}
 
   /*
    * The onFlush callback allows subsystems (e.g., text, path renderers) to create atlases
@@ -61,8 +61,7 @@ class GrOnFlushResourceProvider {
  public:
   using UseAllocator = GrSurfaceProxy::UseAllocator;
 
-  explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) noexcept
-      : fDrawingMgr(drawingMgr) {}
+  explicit GrOnFlushResourceProvider(GrDrawingManager* drawingMgr) : fDrawingMgr(drawingMgr) {}
 
   std::unique_ptr<GrRenderTargetContext> makeRenderTargetContext(
       sk_sp<GrSurfaceProxy>, GrSurfaceOrigin, GrColorType, sk_sp<SkColorSpace>,

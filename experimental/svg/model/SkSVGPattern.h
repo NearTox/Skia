@@ -48,7 +48,7 @@ class SkSVGPattern final : public SkSVGHiddenContainer {
   //   - patternUnits
   //   - patternContentUnits
 
-  typedef SkSVGHiddenContainer INHERITED;
+  using INHERITED = SkSVGHiddenContainer;
 };
 
 #endif  // SkSVGPattern_DEFINED

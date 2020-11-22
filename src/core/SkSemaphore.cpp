@@ -14,7 +14,7 @@
 struct SkSemaphore::OSSemaphore {
   dispatch_semaphore_t fSemaphore;
 
-  OSSemaphore() noexcept { fSemaphore = dispatch_semaphore_create(0 /*initial count*/); }
+  OSSemaphore() { fSemaphore = dispatch_semaphore_create(0 /*initial count*/); }
   ~OSSemaphore() { dispatch_release(fSemaphore); }
 
   void signal(int n) {
@@ -28,17 +28,17 @@ struct SkSemaphore::OSSemaphore {
 struct SkSemaphore::OSSemaphore {
   HANDLE fSemaphore;
 
-  OSSemaphore() noexcept {
+  OSSemaphore() {
     fSemaphore = CreateSemaphore(
         nullptr /*security attributes, optional*/, 0 /*initial count*/, MAXLONG /*max count*/,
         nullptr /*name, optional*/);
   }
   ~OSSemaphore() { CloseHandle(fSemaphore); }
 
-  void signal(int n) noexcept {
+  void signal(int n) {
     ReleaseSemaphore(fSemaphore, n, nullptr /*returns previous count, optional*/);
   }
-  void wait() noexcept { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
+  void wait() { WaitForSingleObject(fSemaphore, INFINITE /*timeout in ms*/); }
 };
 #else
 // It's important we test for Mach before this.  This code will compile but not work there.
@@ -67,17 +67,17 @@ struct SkSemaphore::OSSemaphore {
 
 SkSemaphore::~SkSemaphore() { delete fOSSemaphore; }
 
-void SkSemaphore::osSignal(int n) noexcept {
-  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
+void SkSemaphore::osSignal(int n) {
+  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->signal(n);
 }
 
-void SkSemaphore::osWait() noexcept {
-  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
+void SkSemaphore::osWait() {
+  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->wait();
 }
 
-bool SkSemaphore::try_wait() noexcept {
+bool SkSemaphore::try_wait() {
   int count = fCount.load(std::memory_order_relaxed);
   if (count > 0) {
     return fCount.compare_exchange_weak(count, count - 1, std::memory_order_acquire);

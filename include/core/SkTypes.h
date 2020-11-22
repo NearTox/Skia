@@ -160,9 +160,7 @@
 #  define SK_ARM_HAS_NEON
 #endif
 
-// Really this __APPLE__ check shouldn't be necessary, but it seems that Apple's Clang defines
-// __ARM_FEATURE_CRC32 for -arch arm64, even though their chips don't support those instructions!
-#if defined(__ARM_FEATURE_CRC32) && !defined(__APPLE__)
+#if defined(__ARM_FEATURE_CRC32)
 #  define SK_ARM_HAS_CRC32
 #endif
 
@@ -255,7 +253,7 @@
 // See
 // https://developercommunity.visualstudio.com/content/problem/1128631/code-flow-doesnt-see-noreturn-with-extern-c.html
 // for why this is wrapped. Hopefully removable after msvc++ 19.27 is no longer supported.
-[[noreturn]] static inline void sk_fast_fail() noexcept { __fastfail(FAST_FAIL_INVALID_ARG); }
+[[noreturn]] static inline void sk_fast_fail() { __fastfail(FAST_FAIL_INVALID_ARG); }
 #    define SkUNREACHABLE sk_fast_fail()
 #  else
 #    define SkUNREACHABLE __builtin_trap()
@@ -413,6 +411,10 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  define SK_API_AVAILABLE(...)
 #endif
 
+#if defined(SK_BUILD_FOR_LIBFUZZER) || defined(SK_BUILD_FOR_AFL_FUZZ)
+#  define SK_BUILD_FOR_FUZZER
+#endif
+
 /** Called internally if we hit an unrecoverable error.
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
@@ -421,6 +423,9 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 
 #ifndef SkDebugf
 SK_API void SkDebugf(const char format[], ...) noexcept;
+#endif
+#if defined(SK_BUILD_FOR_LIBFUZZER)
+SK_API inline void SkDebugf(const char format[], ...) noexcept {}
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -579,7 +584,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
+static inline int32_t SkAbs32(int32_t value) {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -588,7 +593,7 @@ static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
 }
 
 template <typename T>
-static constexpr inline T SkTAbs(T value) noexcept {
+static inline T SkTAbs(T value) {
   if (value < 0) {
     value = -value;
   }

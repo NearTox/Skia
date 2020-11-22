@@ -36,7 +36,8 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
   }
   GrConfigConversionEffect(const GrConfigConversionEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "ConfigConversionEffect"; }
+  const char* name() const override { return "ConfigConversionEffect"; }
+  bool usesExplicitReturn() const override;
   PMConversion pmConversion;
 
  private:
@@ -48,11 +49,11 @@ class GrConfigConversionEffect : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 #if GR_TEST_UTILS
   SkString onDumpInfo() const override;
 #endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 #endif

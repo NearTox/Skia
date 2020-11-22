@@ -285,7 +285,7 @@ static void unref_ft_library() {
     SkASSERT(nullptr == gFaceRecHead);
     SkASSERT(nullptr != gFTLibrary);
     delete gFTLibrary;
-    SkDEBUGCODE(gFTLibrary = nullptr);
+    SkDEBUGCODE(gFTLibrary = nullptr;)
   }
 }
 
@@ -367,8 +367,7 @@ static void ft_face_setup_axes(SkFaceRec* rec, const SkFontData& data) {
         return;
       })
 
-      SkAutoSTMalloc<4, FT_Fixed>
-          coords(data.getAxisCount());
+  SkAutoSTMalloc<4, FT_Fixed> coords(data.getAxisCount());
   for (int i = 0; i < data.getAxisCount(); ++i) {
     coords[i] = data.getAxis()[i];
   }
@@ -1465,10 +1464,14 @@ void SkScalerContext_FreeType::generateFontMetrics(SkFontMetrics* metrics) {
     ascent = -SkIntToScalar(face->size->metrics.ascender) / (yppem * 64.0f);
     descent = -SkIntToScalar(face->size->metrics.descender) / (yppem * 64.0f);
     leading = (SkIntToScalar(face->size->metrics.height) / (yppem * 64.0f)) + ascent - descent;
+
     xmin = 0.0f;
     xmax = SkIntToScalar(face->available_sizes[fStrikeIndex].width) / xppem;
     ymin = descent;
     ymax = ascent;
+    // The actual bitmaps may be any size and placed at any offset.
+    metrics->fFlags |= SkFontMetrics::kBoundsInvalid_Flag;
+
     underlineThickness = 0;
     underlinePosition = 0;
     metrics->fFlags &= ~SkFontMetrics::kUnderlineThicknessIsValid_Flag;
@@ -1940,17 +1943,17 @@ bool SkTypeface_FreeType::Scanner::scanFont(
     }
   }
 
-  if (name) {
+  if (name != nullptr) {
     name->set(face->family_name);
   }
-  if (style) {
+  if (style != nullptr) {
     *style = SkFontStyle(weight, width, slant);
   }
-  if (isFixedPitch) {
+  if (isFixedPitch != nullptr) {
     *isFixedPitch = FT_IS_FIXED_WIDTH(face);
   }
 
-  if (axes && !GetAxes(face.get(), axes)) {
+  if (axes != nullptr && !GetAxes(face.get(), axes)) {
     return false;
   }
   return true;

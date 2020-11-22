@@ -8,7 +8,7 @@ namespace skia {
 namespace textlayout {
 
 namespace {
-SkScalar relax(SkScalar a) noexcept {
+SkScalar relax(SkScalar a) {
   // This rounding is done to match Flutter tests. Must be removed..
   if (SkScalarIsFinite(a)) {
     auto threshold = SkIntToScalar(1 << 12);
@@ -52,12 +52,12 @@ class ParagraphCacheValue {
   // ICU results
   SkTArray<CodeUnitFlags> fCodeUnitProperties;
   std::vector<size_t> fWords;
-  std::vector<BidiRegion> fBidiRegions;
+  std::vector<SkUnicode::BidiRegion> fBidiRegions;
   SkTArray<TextIndex, true> fUTF8IndexForUTF16Index;
   SkTArray<size_t, true> fUTF16IndexForUTF8Index;
 };
 
-uint32_t ParagraphCache::KeyHash::mix(uint32_t hash, uint32_t data) const noexcept {
+uint32_t ParagraphCache::KeyHash::mix(uint32_t hash, uint32_t data) const {
   hash += data;
   hash += (hash << 10);
   hash ^= (hash >> 6);
@@ -184,11 +184,11 @@ bool operator==(const ParagraphCacheKey& a, const ParagraphCacheKey& b) {
 }
 
 struct ParagraphCache::Entry {
-  Entry(ParagraphCacheValue* value) noexcept : fValue(value) {}
+  Entry(ParagraphCacheValue* value) : fValue(value) {}
   std::unique_ptr<ParagraphCacheValue> fValue;
 };
 
-ParagraphCache::ParagraphCache() noexcept
+ParagraphCache::ParagraphCache()
     : fChecker([](ParagraphImpl* impl, const char*, bool) {}),
       fLRUCacheMap(kMaxEntries),
       fCacheIsOn(true)
@@ -201,7 +201,7 @@ ParagraphCache::ParagraphCache() noexcept
 {
 }
 
-ParagraphCache::~ParagraphCache() = default;
+ParagraphCache::~ParagraphCache() {}
 
 void ParagraphCache::updateTo(ParagraphImpl* paragraph, const Entry* entry) {
   paragraph->fRuns.reset();

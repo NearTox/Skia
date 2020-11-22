@@ -8,7 +8,6 @@
     <ClCompile Include="skparagraph\src\ParagraphCache.cpp" />
     <ClCompile Include="skparagraph\src\ParagraphImpl.cpp" />
     <ClCompile Include="skparagraph\src\ParagraphStyle.cpp" />
-    <ClCompile Include="skparagraph\src\ParagraphUtil.cpp" />
     <ClCompile Include="skparagraph\src\Run.cpp" />
     <ClCompile Include="skparagraph\src\TextLine.cpp" />
     <ClCompile Include="skparagraph\src\TextShadow.cpp" />

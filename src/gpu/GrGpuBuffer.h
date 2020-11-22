@@ -21,11 +21,11 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
    */
   static void ComputeScratchKeyForDynamicVBO(size_t size, GrGpuBufferType, GrScratchKey*);
 
-  GrAccessPattern accessPattern() const noexcept { return fAccessPattern; }
+  GrAccessPattern accessPattern() const { return fAccessPattern; }
 
-  size_t size() const noexcept final { return fSizeInBytes; }
+  size_t size() const final { return fSizeInBytes; }
 
-  void ref() const noexcept final { GrGpuResource::ref(); }
+  void ref() const final { GrGpuResource::ref(); }
 
   void unref() const final { GrGpuResource::unref(); }
 
@@ -58,9 +58,9 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
    *
    * @return true if the buffer is mapped, false otherwise.
    */
-  bool isMapped() const noexcept;
+  bool isMapped() const;
 
-  bool isCpuBuffer() const noexcept final { return false; }
+  bool isCpuBuffer() const final { return false; }
 
   /**
    * Updates the buffer data.
@@ -81,8 +81,8 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
   bool updateData(const void* src, size_t srcSizeInBytes);
 
  protected:
-  GrGpuBuffer(GrGpu*, size_t sizeInBytes, GrGpuBufferType, GrAccessPattern) noexcept;
-  GrGpuBufferType intendedType() const noexcept { return fIntendedType; }
+  GrGpuBuffer(GrGpu*, size_t sizeInBytes, GrGpuBufferType, GrAccessPattern);
+  GrGpuBufferType intendedType() const { return fIntendedType; }
 
   void* fMapPtr;
 
@@ -91,8 +91,8 @@ class GrGpuBuffer : public GrGpuResource, public GrBuffer {
   virtual void onUnmap() = 0;
   virtual bool onUpdateData(const void* src, size_t srcSizeInBytes) = 0;
 
-  size_t onGpuMemorySize() const noexcept override { return fSizeInBytes; }
-  const char* getResourceType() const noexcept override { return "Buffer Object"; }
+  size_t onGpuMemorySize() const override { return fSizeInBytes; }
+  const char* getResourceType() const override { return "Buffer Object"; }
   void computeScratchKey(GrScratchKey* key) const override;
 
   size_t fSizeInBytes;

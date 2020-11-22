@@ -60,19 +60,21 @@ GrProgramInfo* CreateProgramInfo(
     const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* geomProc, SkBlendMode blendMode, GrPrimitiveType primitiveType,
-    GrPipeline::InputFlags flags, const GrUserStencilSettings* stencilSettings) {
+    GrXferBarrierFlags renderPassXferBarriers, GrPipeline::InputFlags flags,
+    const GrUserStencilSettings* stencilSettings) {
   GrProcessorSet processors = GrProcessorSet(blendMode);
 
   SkPMColor4f analysisColor = {0, 0, 0, 1};  // opaque black
 
-  SkDEBUGCODE(auto analysis =) processors.finalize(
+  SkDEBUGCODE(auto analysis =)
+  processors.finalize(
       analysisColor, GrProcessorAnalysisCoverage::kSingleChannel, &appliedClip, stencilSettings,
       false, *caps, GrClampType::kAuto, &analysisColor);
   SkASSERT(!analysis.requiresDstTexture());
 
   return GrSimpleMeshDrawOpHelper::CreateProgramInfo(
       caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc, std::move(processors),
-      primitiveType, flags, stencilSettings);
+      primitiveType, renderPassXferBarriers, flags, stencilSettings);
 }
 
 }  // namespace sk_gpu_test

@@ -161,7 +161,7 @@ class LayersView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new LayersView;)
 
@@ -225,6 +225,6 @@ class BackdropView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new BackdropView;)

@@ -84,7 +84,7 @@ class StLouisArchGM : public GM {
 
  private:
   SkTArray<SkPath> fPaths;
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

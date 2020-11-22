@@ -65,7 +65,7 @@ class ImageBlurTiledGM : public GM {
   SkScalar fSigmaX;
   SkScalar fSigmaY;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

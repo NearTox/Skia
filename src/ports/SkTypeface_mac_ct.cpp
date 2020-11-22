@@ -280,7 +280,7 @@ struct LinearInterpolater {
     S src_val;
     D dst_val;
   };
-  constexpr LinearInterpolater(Mapping const mapping[], int mappingCount) noexcept
+  constexpr LinearInterpolater(Mapping const mapping[], int mappingCount)
       : fMapping(mapping), fMappingCount(mappingCount) {}
 
   static D map(S value, S src_min, S src_max, D dst_min, D dst_max) {
@@ -774,7 +774,7 @@ std::unique_ptr<SkStreamAsset> SkTypeface_Mac::onOpenStream(int* ttcIndex) const
     // compute font header entries
     uint16_t entrySelector = 0;
     uint16_t searchRange = 1;
-    while (searchRange<numTables> > 1) {
+    while (searchRange < numTables >> 1) {
       entrySelector++;
       searchRange <<= 1;
     }

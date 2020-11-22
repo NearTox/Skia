@@ -5349,13 +5349,13 @@ DEF_TEST(SkParagraph_LineMetrics, reporter) {
     std::vector<LineMetrics> metrics;
     paragraph->getLineMetrics(metrics);
 
-    SkDEBUGCODE(auto impl = static_cast<ParagraphImpl*>(paragraph.get()));
+    SkDEBUGCODE(auto impl = static_cast<ParagraphImpl*>(paragraph.get());)
     SkASSERT(metrics.size() == impl->lines().size());
     for (size_t i = 0; i < metrics.size(); ++i) {
-      SkDEBUGCODE(auto& line = impl->lines()[i]);
-      SkDEBUGCODE(auto baseline = metrics[i].fBaseline);
-      SkDEBUGCODE(auto top = line.offset().fY);
-      SkDEBUGCODE(auto bottom = line.offset().fY + line.height());
+      SkDEBUGCODE(auto& line = impl->lines()[i];)
+      SkDEBUGCODE(auto baseline = metrics[i].fBaseline;)
+      SkDEBUGCODE(auto top = line.offset().fY;)
+      SkDEBUGCODE(auto bottom = line.offset().fY + line.height();)
       SkASSERT(baseline > top && baseline <= bottom);
     }
 
@@ -5404,19 +5404,18 @@ DEF_TEST(SkParagraph_PlaceholderHeightInf, reporter) {
   placeholder_style.fBaselineOffset = SK_ScalarInfinity;
 
   ParagraphStyle paragraph_style;
-
+  paragraph_style.setDrawOptions(DrawOptions::kRecord);
   ParagraphBuilderImpl builder(paragraph_style, fontCollection);
   builder.pushStyle(text_style);
   builder.addText("Limited by budget");
   builder.addPlaceholder(placeholder_style);
   auto paragraph = builder.Build();
   paragraph->layout(SK_ScalarInfinity);
+  paragraph->paint(canvas.get(), 0, 0);
 
   auto impl = static_cast<ParagraphImpl*>(paragraph.get());
-  REPORTER_ASSERT(reporter, SkScalarIsFinite(impl->getBoundaries().height()));
-  REPORTER_ASSERT(reporter, SkScalarIsFinite(impl->getBoundaries().width()));
-
-  paragraph->paint(canvas.get(), 0, 0);
+  REPORTER_ASSERT(reporter, SkScalarIsFinite(impl->getPicture()->cullRect().height()));
+  REPORTER_ASSERT(reporter, SkScalarIsFinite(impl->getPicture()->cullRect().width()));
 }
 
 DEF_TEST(SkParagraph_LineMetricsTextAlign, reporter) {

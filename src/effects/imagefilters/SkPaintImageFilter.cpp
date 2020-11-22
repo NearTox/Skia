@@ -34,7 +34,7 @@ class SkPaintImageFilterImpl final : public SkImageFilter_Base {
 
   SkPaint fPaint;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

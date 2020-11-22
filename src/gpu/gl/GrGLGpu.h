@@ -37,16 +37,16 @@ class GrGLGpu final : public GrGpu {
 
   void disconnect(DisconnectType) override;
 
-  const GrGLContext& glContext() const noexcept { return *fGLContext; }
+  const GrGLContext& glContext() const { return *fGLContext; }
 
-  const GrGLInterface* glInterface() const noexcept { return fGLContext->glInterface(); }
-  const GrGLContextInfo& ctxInfo() const noexcept { return *fGLContext; }
-  GrGLStandard glStandard() const noexcept { return fGLContext->standard(); }
-  GrGLVersion glVersion() const noexcept { return fGLContext->version(); }
-  GrGLSLGeneration glslGeneration() const noexcept { return fGLContext->glslGeneration(); }
-  const GrGLCaps& glCaps() const noexcept { return *fGLContext->caps(); }
+  const GrGLInterface* glInterface() const { return fGLContext->glInterface(); }
+  const GrGLContextInfo& ctxInfo() const { return *fGLContext; }
+  GrGLStandard glStandard() const { return fGLContext->standard(); }
+  GrGLVersion glVersion() const { return fGLContext->version(); }
+  GrGLSLGeneration glslGeneration() const { return fGLContext->glslGeneration(); }
+  const GrGLCaps& glCaps() const { return *fGLContext->caps(); }
 
-  GrGLPathRendering* glPathRendering() noexcept {
+  GrGLPathRendering* glPathRendering() {
     SkASSERT(glCaps().shaderCaps()->pathRenderingSupport());
     return static_cast<GrGLPathRendering*>(pathRendering());
   }
@@ -60,9 +60,7 @@ class GrGLGpu final : public GrGpu {
 
   // These callbacks update state tracking when GL objects are deleted. They are called from
   // GrGLResource onRelease functions.
-  void notifyVertexArrayDelete(GrGLuint id) noexcept {
-    fHWVertexArrayState.notifyVertexArrayDelete(id);
-  }
+  void notifyVertexArrayDelete(GrGLuint id) { fHWVertexArrayState.notifyVertexArrayDelete(id); }
 
   // Binds a buffer to the GL target corresponding to 'type', updates internal state tracking, and
   // returns the GL target the buffer was bound to.
@@ -122,12 +120,13 @@ class GrGLGpu final : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) override;
 
   void invalidateBoundRenderTarget() { fHWBoundRenderTargetUniqueID.makeInvalid(); }
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
-      const GrRenderTarget* rt, int width, int height, int numStencilSamples) override;
+      const GrRenderTarget* rt, SkISize dimensions, int numStencilSamples) override;
   void deleteBackendTexture(const GrBackendTexture&) override;
 
   bool compile(const GrProgramDesc&, const GrProgramInfo&) override;
@@ -355,7 +354,7 @@ class GrGLGpu final : public GrGpu {
   void flushWindowRectangles(const GrWindowRectsState&, const GrGLRenderTarget*, GrSurfaceOrigin);
   void disableWindowRectangles();
 
-  int numTextureUnits() const noexcept { return this->caps()->shaderCaps()->maxFragmentSamplers(); }
+  int numTextureUnits() const { return this->caps()->shaderCaps()->maxFragmentSamplers(); }
 
   // Binds a texture to a target on the "scratch" texture unit to use for texture operations
   // other than usual draw flow (i.e. a GrGLProgram derived from a GrPipeline used to draw). It
@@ -462,7 +461,7 @@ class GrGLGpu final : public GrGpu {
   struct {
     TriState fEnabled;
     GrNativeRect fRect;
-    void invalidate() noexcept {
+    void invalidate() {
       fEnabled = kUnknown_TriState;
       fRect.invalidate();
     }
@@ -470,17 +469,16 @@ class GrGLGpu final : public GrGpu {
 
   class {
    public:
-    bool valid() const noexcept { return kInvalidSurfaceOrigin != fRTOrigin; }
-    void invalidate() noexcept { fRTOrigin = kInvalidSurfaceOrigin; }
-    bool knownDisabled() const noexcept { return this->valid() && !fWindowState.enabled(); }
-    void setDisabled() noexcept {
+    bool valid() const { return kInvalidSurfaceOrigin != fRTOrigin; }
+    void invalidate() { fRTOrigin = kInvalidSurfaceOrigin; }
+    bool knownDisabled() const { return this->valid() && !fWindowState.enabled(); }
+    void setDisabled() {
       fRTOrigin = kTopLeft_GrSurfaceOrigin;
       fWindowState.setDisabled();
     }
 
     void set(
-        GrSurfaceOrigin rtOrigin, int width, int height,
-        const GrWindowRectsState& windowState) noexcept {
+        GrSurfaceOrigin rtOrigin, int width, int height, const GrWindowRectsState& windowState) {
       fRTOrigin = rtOrigin;
       fWidth = width;
       fHeight = height;
@@ -528,7 +526,7 @@ class GrGLGpu final : public GrGpu {
       }
     }
 
-    void notifyVertexArrayDelete(GrGLuint id) noexcept {
+    void notifyVertexArrayDelete(GrGLuint id) {
       if (fBoundVertexArrayIDIsValid && fBoundVertexArrayID == id) {
         // Does implicit bind to 0
         fBoundVertexArrayID = 0;
@@ -579,13 +577,13 @@ class GrGLGpu final : public GrGpu {
     GrGpuResource::UniqueID fBoundBufferUniqueID;
     bool fBufferZeroKnownBound;
 
-    void invalidate() noexcept {
+    void invalidate() {
       fBoundBufferUniqueID.makeInvalid();
       fBufferZeroKnownBound = false;
     }
   } fHWBufferState[kGrGpuBufferTypeCount];
 
-  auto* hwBufferState(GrGpuBufferType type) noexcept {
+  auto* hwBufferState(GrGpuBufferType type) {
     unsigned typeAsUInt = static_cast<unsigned>(type);
     SkASSERT(typeAsUInt < SK_ARRAY_COUNT(fHWBufferState));
     return &fHWBufferState[typeAsUInt];
@@ -599,7 +597,7 @@ class GrGLGpu final : public GrGpu {
   // This calls glFlush if it is required for previous operations or kForce is passed.
   void flush(FlushType flushType = FlushType::kIfRequired);
 
-  void setNeedsFlush() noexcept { fNeedsGLFlush = true; }
+  void setNeedsFlush() { fNeedsGLFlush = true; }
 
   struct {
     GrBlendEquation fEquation;
@@ -609,7 +607,7 @@ class GrGLGpu final : public GrGpu {
     bool fConstColorValid;
     TriState fEnabled;
 
-    void invalidate() noexcept {
+    void invalidate() {
       fEquation = kIllegal_GrBlendEquation;
       fSrcCoeff = kIllegal_GrBlendCoeff;
       fDstCoeff = kIllegal_GrBlendCoeff;
@@ -633,7 +631,7 @@ class GrGLGpu final : public GrGpu {
 
   class TextureUnitBindings {
    public:
-    TextureUnitBindings() noexcept = default;
+    TextureUnitBindings() = default;
     TextureUnitBindings(const TextureUnitBindings&) = delete;
     TextureUnitBindings& operator=(const TextureUnitBindings&) = delete;
 
@@ -675,7 +673,7 @@ class GrGLGpu final : public GrGpu {
 
   static int TextureToCopyProgramIdx(GrTexture* texture);
 
-  static int TextureSizeToMipmapProgramIdx(int width, int height) noexcept {
+  static int TextureSizeToMipmapProgramIdx(int width, int height) {
     const bool wide = (width > 1) && SkToBool(width & 0x1);
     const bool tall = (height > 1) && SkToBool(height & 0x1);
     return (wide ? 0x2 : 0x0) | (tall ? 0x1 : 0x0);
@@ -700,7 +698,7 @@ class GrGLGpu final : public GrGpu {
 
   friend class GrGLPathRendering;  // For accessing setTextureUnit.
 
-  typedef GrGpu INHERITED;
+  using INHERITED = GrGpu;
 };
 
 #endif

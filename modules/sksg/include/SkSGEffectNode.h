@@ -28,12 +28,12 @@ class EffectNode : public RenderNode {
 
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
-  const sk_sp<RenderNode>& getChild() const noexcept { return fChild; }
+  const sk_sp<RenderNode>& getChild() const { return fChild; }
 
  private:
   sk_sp<RenderNode> fChild;
 
-  typedef RenderNode INHERITED;
+  using INHERITED = RenderNode;
 };
 
 }  // namespace sksg

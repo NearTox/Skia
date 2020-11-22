@@ -39,7 +39,7 @@ class SkTypeface_Custom : public SkTypeface_FreeType {
   const SkString fFamilyName;
   const int fIndex;
 
-  typedef SkTypeface_FreeType INHERITED;
+  using INHERITED = SkTypeface_FreeType;
 };
 
 /** The empty SkTypeface implementation for the custom font manager.
@@ -55,7 +55,7 @@ class SkTypeface_Empty : public SkTypeface_Custom {
   std::unique_ptr<SkFontData> onMakeFontData() const override;
 
  private:
-  typedef SkTypeface_Custom INHERITED;
+  using INHERITED = SkTypeface_Custom;
 };
 
 /** The stream SkTypeface implementation for the custom font manager. */
@@ -73,7 +73,7 @@ class SkTypeface_Stream : public SkTypeface_Custom {
  private:
   const std::unique_ptr<const SkFontData> fData;
 
-  typedef SkTypeface_Custom INHERITED;
+  using INHERITED = SkTypeface_Custom;
 };
 
 /** The file SkTypeface implementation for the custom font manager. */
@@ -91,7 +91,7 @@ class SkTypeface_File : public SkTypeface_Custom {
  private:
   SkString fPath;
 
-  typedef SkTypeface_Custom INHERITED;
+  using INHERITED = SkTypeface_Custom;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -132,7 +132,7 @@ class SkFontMgr_Custom : public SkFontMgr {
   typedef SkTArray<sk_sp<SkFontStyleSet_Custom>> Families;
   class SystemFontLoader {
    public:
-    virtual ~SystemFontLoader() = default;
+    virtual ~SystemFontLoader() {}
     virtual void loadSystemFonts(const SkTypeface_FreeType::Scanner&, Families*) const = 0;
   };
   explicit SkFontMgr_Custom(const SystemFontLoader& loader);

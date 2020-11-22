@@ -63,7 +63,7 @@ class BaseSuperBlitter : public SkBlitter {
   /// Leftmost x coordinate in any row, in supersampled coordinates.
   int fSuperLeft;
 
-  SkDEBUGCODE(int fCurrX);
+  SkDEBUGCODE(int fCurrX;)
   /// Current y coordinate in supersampled coordinates.
   int fCurrY;
   /// Initial y coordinate (top of bounds).
@@ -97,7 +97,7 @@ BaseSuperBlitter::BaseSuperBlitter(
   fCurrIY = fTop - 1;
   fCurrY = SkLeftShift(fTop, SHIFT) - 1;
 
-  SkDEBUGCODE(fCurrX = -1);
+  SkDEBUGCODE(fCurrX = -1;)
 }
 
 /// Run-length-encoded supersampling antialiased blitter.
@@ -163,14 +163,14 @@ void SuperBlitter::flush() {
   if (fCurrIY >= fTop) {
     SkASSERT(fCurrentRun < fRunsToBuffer);
     if (!fRuns.empty()) {
-      // SkDEBUGCODE(fRuns.dump());
+      // SkDEBUGCODE(fRuns.dump();)
       fRealBlitter->blitAntiH(fLeft, fCurrIY, fRuns.fAlpha, fRuns.fRuns);
       this->advanceRuns();
       fOffsetX = 0;
     }
 
     fCurrIY = fTop - 1;
-    SkDEBUGCODE(fCurrX = -1);
+    SkDEBUGCODE(fCurrX = -1;)
   }
 }
 
@@ -465,7 +465,7 @@ static inline uint32_t quadplicate_byte(U8CPU value) {
 // Perform this tricky subtract, to avoid overflowing to 256. Our caller should
 // only ever call us with at most enough to hit 256 (never larger), so it is
 // enough to just subtract the high-bit. Actually clamping with a branch would
-// be slower (e.g. if (tmp > 255) tmp = 255);
+// be slower (e.g. if (tmp > 255) tmp = 255;)
 //
 static inline void saturated_add(uint8_t* ptr, U8CPU add) {
   unsigned tmp = *ptr + add;

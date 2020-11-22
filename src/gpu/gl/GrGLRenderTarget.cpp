@@ -64,8 +64,7 @@ sk_sp<GrGLRenderTarget> GrGLRenderTarget::MakeWrapped(
     format.fStencilBits = stencilBits;
     format.fTotalBits = stencilBits;
     // Ownership of sb is passed to the GrRenderTarget so doesn't need to be deleted
-    sb = new GrGLStencilAttachment(
-        gpu, sbDesc, dimensions.width(), dimensions.height(), sampleCount, format);
+    sb = new GrGLStencilAttachment(gpu, sbDesc, dimensions, sampleCount, format);
   }
   return sk_sp<GrGLRenderTarget>(
       new GrGLRenderTarget(gpu, dimensions, format, sampleCount, idDesc, sb));
@@ -84,7 +83,7 @@ GrBackendRenderTarget GrGLRenderTarget::getBackendRenderTarget() const {
       this->width(), this->height(), this->numSamples(), numStencilBits, fbi);
 }
 
-GrBackendFormat GrGLRenderTarget::backendFormat() const noexcept {
+GrBackendFormat GrGLRenderTarget::backendFormat() const {
   // We should never have a GrGLRenderTarget (even a textureable one with a target that is not
   // texture 2D.
   return GrBackendFormat::MakeGL(GrGLFormatToEnum(fRTFormat), GR_GL_TEXTURE_2D);

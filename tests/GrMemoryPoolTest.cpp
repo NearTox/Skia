@@ -73,7 +73,7 @@ class B : public A {
  private:
   double fDouble;
 
-  typedef A INHERITED;
+  using INHERITED = A;
 };
 
 class C : public A {
@@ -90,7 +90,7 @@ class C : public A {
  private:
   int64_t fInt64;
 
-  typedef A INHERITED;
+  using INHERITED = A;
 };
 
 // D derives from C and owns a dynamically created B
@@ -112,7 +112,7 @@ class D : public C {
   void* fVoidStar;
   B* fB;
 
-  typedef C INHERITED;
+  using INHERITED = C;
 };
 
 class E : public A {
@@ -137,7 +137,7 @@ class E : public A {
  private:
   int fIntArray[20];
 
-  typedef A INHERITED;
+  using INHERITED = A;
 };
 
 A* A::Create(SkRandom* r) {

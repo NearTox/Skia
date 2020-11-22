@@ -20,14 +20,14 @@ struct SkGlyphPositionRoundingSpec;
 // are reject by a stage they become the source for the next stage.
 class SkSourceGlyphBuffer {
  public:
-  SkSourceGlyphBuffer() noexcept = default;
+  SkSourceGlyphBuffer() = default;
 
-  void setSource(SkZip<const SkGlyphID, const SkPoint> source) noexcept {
+  void setSource(SkZip<const SkGlyphID, const SkPoint> source) {
     this->~SkSourceGlyphBuffer();
     new (this) SkSourceGlyphBuffer{source};
   }
 
-  void reset() noexcept;
+  void reset();
 
   void reject(size_t index) {
     SkASSERT(index < fSource.size());
@@ -49,7 +49,7 @@ class SkSourceGlyphBuffer {
     this->reject(index);
   }
 
-  SkZip<const SkGlyphID, const SkPoint> flipRejectsToSource() noexcept {
+  SkZip<const SkGlyphID, const SkPoint> flipRejectsToSource() {
     fRejects = SkMakeZip(fRejectedGlyphIDs, fRejectedPositions).first(fRejectSize);
     fSource = fRejects;
     fRejectSize = 0;
@@ -58,17 +58,13 @@ class SkSourceGlyphBuffer {
     return fSource;
   }
 
-  SkZip<const SkGlyphID, const SkPoint> source() const noexcept { return fSource; }
+  SkZip<const SkGlyphID, const SkPoint> source() const { return fSource; }
 
-  int rejectedMaxDimension() const noexcept { return fSourceMaxDimension; }
+  int rejectedMaxDimension() const { return fSourceMaxDimension; }
 
  private:
-  SkSourceGlyphBuffer(const SkZip<const SkGlyphID, const SkPoint>& source) noexcept {
-    fSource = source;
-  }
-  bool sourceIsRejectBuffers() const noexcept {
-    return fSource.get<0>().data() == fRejectedGlyphIDs.data();
-  }
+  SkSourceGlyphBuffer(const SkZip<const SkGlyphID, const SkPoint>& source) { fSource = source; }
+  bool sourceIsRejectBuffers() const { return fSource.get<0>().data() == fRejectedGlyphIDs.data(); }
 
   SkZip<const SkGlyphID, const SkPoint> fSource;
   size_t fRejectSize{0};
@@ -84,39 +80,39 @@ class SkSourceGlyphBuffer {
 // memory.
 class SkGlyphVariant {
  public:
-  constexpr SkGlyphVariant() noexcept : fV{nullptr} {}
-  SkGlyphVariant& operator=(SkPackedGlyphID packedID) noexcept {
+  SkGlyphVariant() : fV{nullptr} {}
+  SkGlyphVariant& operator=(SkPackedGlyphID packedID) {
     fV.packedID = packedID;
     SkDEBUGCODE(fTag = kPackedID);
     return *this;
   }
-  SkGlyphVariant& operator=(SkGlyph* glyph) noexcept {
+  SkGlyphVariant& operator=(SkGlyph* glyph) {
     fV.glyph = glyph;
     SkDEBUGCODE(fTag = kGlyph);
     return *this;
   }
-  SkGlyphVariant& operator=(const SkPath* path) noexcept {
+  SkGlyphVariant& operator=(const SkPath* path) {
     fV.path = path;
     SkDEBUGCODE(fTag = kPath);
     return *this;
   }
 
-  SkGlyph* glyph() const noexcept {
+  SkGlyph* glyph() const {
     SkASSERT(fTag == kGlyph);
     return fV.glyph;
   }
-  const SkPath* path() const noexcept {
+  const SkPath* path() const {
     SkASSERT(fTag == kPath);
     return fV.path;
   }
-  SkPackedGlyphID packedID() const noexcept {
+  SkPackedGlyphID packedID() const {
     SkASSERT(fTag == kPackedID);
     return fV.packedID;
   }
 
-  operator SkPackedGlyphID() const noexcept { return this->packedID(); }
-  operator SkGlyph*() const noexcept { return this->glyph(); }
-  operator const SkPath*() const noexcept { return this->path(); }
+  operator SkPackedGlyphID() const { return this->packedID(); }
+  operator SkGlyph*() const { return this->glyph(); }
+  operator const SkPath*() const { return this->path(); }
 
  private:
   union {
@@ -135,7 +131,7 @@ class SkGlyphVariant {
 // SkPackedGlyphIDs.
 class SkDrawableGlyphBuffer {
  public:
-  void ensureSize(size_t size) noexcept;
+  void ensureSize(size_t size);
 
   // Load the buffer with SkPackedGlyphIDs and positions at (0, 0) ready to finish positioning
   // during drawing.
@@ -241,7 +237,7 @@ class SkDrawableGlyphBuffer {
       const SkMatrix& viewMatrix, const SkGlyphPositionRoundingSpec& roundingSpec);
 
   // The input of SkPackedGlyphIDs
-  SkZip<SkGlyphVariant, SkPoint> input() noexcept {
+  SkZip<SkGlyphVariant, SkPoint> input() {
     SkASSERT(fPhase == kInput);
     SkDEBUGCODE(fPhase = kProcess);
     return SkZip<SkGlyphVariant, SkPoint>{fInputSize, fMultiBuffer, fPositions};
@@ -249,7 +245,7 @@ class SkDrawableGlyphBuffer {
 
   // Store the glyph in the next drawable slot, using the position information located at index
   // from.
-  void push_back(SkGlyph* glyph, size_t from) noexcept {
+  void push_back(SkGlyph* glyph, size_t from) {
     SkASSERT(fPhase == kProcess);
     SkASSERT(fDrawableSize <= from);
     fPositions[fDrawableSize] = fPositions[from];
@@ -259,7 +255,7 @@ class SkDrawableGlyphBuffer {
 
   // Store the path in the next drawable slot, using the position information located at index
   // from.
-  void push_back(const SkPath* path, size_t from) noexcept {
+  void push_back(const SkPath* path, size_t from) {
     SkASSERT(fPhase == kProcess);
     SkASSERT(fDrawableSize <= from);
     fPositions[fDrawableSize] = fPositions[from];
@@ -268,18 +264,18 @@ class SkDrawableGlyphBuffer {
   }
 
   // The result after a series of push_backs of drawable SkGlyph* or SkPath*.
-  SkZip<SkGlyphVariant, SkPoint> drawable() noexcept {
+  SkZip<SkGlyphVariant, SkPoint> drawable() {
     SkASSERT(fPhase == kProcess);
     SkDEBUGCODE(fPhase = kDraw);
     return SkZip<SkGlyphVariant, SkPoint>{fDrawableSize, fMultiBuffer, fPositions};
   }
 
-  bool drawableIsEmpty() const noexcept {
+  bool drawableIsEmpty() const {
     SkASSERT(fPhase == kProcess || fPhase == kDraw);
     return fDrawableSize == 0;
   }
 
-  void reset() noexcept;
+  void reset();
 
   template <typename Fn>
   void forEachGlyphID(Fn&& fn) {

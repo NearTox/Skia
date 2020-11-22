@@ -7,6 +7,7 @@
 
 #include "include/core/SkPathMeasure.h"
 #include "include/core/SkStrokeRec.h"
+#include "src/core/SkPathPriv.h"
 #include "src/core/SkPointPriv.h"
 #include "src/utils/SkDashPathPriv.h"
 
@@ -416,8 +417,9 @@ bool SkDashPath::InternalFilter(
     }
   } while (meas.nextContour());
 
+  // TODO: do we still need this?
   if (segCount > 1) {
-    dst->setConvexityType(SkPathConvexityType::kConcave);
+    SkPathPriv::SetConvexity(*dst, SkPathConvexity::kConcave);
   }
 
   return true;

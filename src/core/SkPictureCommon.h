@@ -23,9 +23,9 @@ struct SkPathCounter {
   static const SkPaint* AsPtr(const SkPaint& p) { return &p; }
   static const SkPaint* AsPtr(const SkRecords::Optional<SkPaint>& p) { return p; }
 
-  SkPathCounter() noexcept : fNumSlowPathsAndDashEffects(0) {}
+  SkPathCounter() : fNumSlowPathsAndDashEffects(0) {}
 
-  void checkPaint(const SkPaint* paint) noexcept {
+  void checkPaint(const SkPaint* paint) {
     if (paint && paint->getPathEffect()) {
       // Initially assume it's slow.
       fNumSlowPathsAndDashEffects++;
@@ -62,7 +62,7 @@ struct SkPathCounter {
     }
   }
 
-  void operator()(const SkRecords::ClipPath& op) noexcept {
+  void operator()(const SkRecords::ClipPath& op) {
     // TODO: does the SkRegion op matter?
     if (op.opAA.aa() && !op.path.isConvex()) {
       fNumSlowPathsAndDashEffects++;

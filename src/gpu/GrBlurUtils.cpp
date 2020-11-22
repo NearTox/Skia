@@ -18,6 +18,7 @@
 #include "src/gpu/GrSoftwarePathRenderer.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrTextureProxy.h"
+#include "src/gpu/GrThreadSafeUniquelyKeyedProxyViewCache.h"
 #include "src/gpu/effects/GrTextureEffect.h"
 #include "src/gpu/geometry/GrStyledShape.h"
 
@@ -63,13 +64,14 @@ static bool draw_mask(
 static void mask_release_proc(void* addr, void* /*context*/) { SkMask::FreeImage(addr); }
 
 static bool sw_draw_with_mask_filter(
-    GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, const GrClip* clipData,
-    const SkMatrix& viewMatrix, const GrStyledShape& shape, const SkMaskFilter* filter,
-    const SkIRect& clipBounds, GrPaint&& paint, const GrUniqueKey& key) {
+    GrRecordingContext* rContext, GrRenderTargetContext* renderTargetContext,
+    const GrClip* clipData, const SkMatrix& viewMatrix, const GrStyledShape& shape,
+    const SkMaskFilter* filter, const SkIRect& clipBounds, GrPaint&& paint,
+    const GrUniqueKey& key) {
   SkASSERT(filter);
   SkASSERT(!shape.style().applies());
 
-  auto proxyProvider = context->priv().proxyProvider();
+  auto threadSafeViewCache = rContext->priv().threadSafeViewCache();
 
   GrSurfaceProxyView filteredMaskView;
 
@@ -78,11 +80,13 @@ static bool sw_draw_with_mask_filter(
                                               : SkStrokeRec::kFill_InitStyle;
 
   if (key.isValid()) {
-    filteredMaskView = find_filtered_mask(proxyProvider, key);
+    filteredMaskView = threadSafeViewCache->find(key);
   }
 
   SkIRect drawRect;
   if (filteredMaskView) {
+    SkASSERT(kMaskOrigin == filteredMaskView.origin());
+
     SkRect devBounds = shape.bounds();
     viewMatrix.mapRect(&devBounds);
 
@@ -142,7 +146,7 @@ static bool sw_draw_with_mask_filter(
     }
     bm.setImmutable();
 
-    GrBitmapTextureMaker maker(context, bm, SkBackingFit::kApprox);
+    GrBitmapTextureMaker maker(rContext, bm, SkBackingFit::kApprox);
     filteredMaskView = maker.view(GrMipmapped::kNo);
     if (!filteredMaskView.proxy()) {
       return false;
@@ -153,7 +157,7 @@ static bool sw_draw_with_mask_filter(
     drawRect = dstM.fBounds;
 
     if (key.isValid()) {
-      proxyProvider->assignUniqueKeyToProxy(key, filteredMaskView.asTextureProxy());
+      filteredMaskView = threadSafeViewCache->add(key, filteredMaskView);
     }
   }
 
@@ -371,6 +375,7 @@ static void draw_shape_with_mask_filter(
 
     GrProxyProvider* proxyProvider = context->priv().proxyProvider();
 
+    // TODO: this path should also use the thread-safe proxy-view cache!
     if (maskKey.isValid()) {
       filteredMaskView = find_filtered_mask(proxyProvider, maskKey);
     }

@@ -35,11 +35,11 @@ class TextLine {
     bool clippingNeeded;
   };
 
-  TextLine() noexcept = default;
+  TextLine() = default;
   TextLine(const TextLine&) = delete;
   TextLine& operator=(const TextLine&) = delete;
-  TextLine(TextLine&&) noexcept = default;
-  TextLine& operator=(TextLine&&) noexcept = default;
+  TextLine(TextLine&&) = default;
+  TextLine& operator=(TextLine&&) = default;
   ~TextLine() = default;
 
   TextLine(
@@ -47,25 +47,25 @@ class TextLine {
       TextRange textWithSpaces, ClusterRange clusters, ClusterRange clustersWithGhosts,
       SkScalar widthWithSpaces, InternalLineMetrics sizes);
 
-  TextRange trimmedText() const noexcept { return fTextRange; }
-  TextRange textWithSpaces() const noexcept { return fTextWithWhitespacesRange; }
-  ClusterRange clusters() const noexcept { return fClusterRange; }
-  ClusterRange clustersWithSpaces() noexcept { return fGhostClusterRange; }
-  Run* ellipsis() const noexcept { return fEllipsis.get(); }
-  InternalLineMetrics sizes() const noexcept { return fSizes; }
-  bool empty() const noexcept { return fTextRange.empty(); }
+  TextRange trimmedText() const { return fTextRange; }
+  TextRange textWithSpaces() const { return fTextWithWhitespacesRange; }
+  ClusterRange clusters() const { return fClusterRange; }
+  ClusterRange clustersWithSpaces() { return fGhostClusterRange; }
+  Run* ellipsis() const { return fEllipsis.get(); }
+  InternalLineMetrics sizes() const { return fSizes; }
+  bool empty() const { return fTextRange.empty(); }
 
-  SkScalar spacesWidth() noexcept { return fWidthWithSpaces - width(); }
-  SkScalar height() const noexcept { return fAdvance.fY; }
-  SkScalar width() const noexcept {
+  SkScalar spacesWidth() { return fWidthWithSpaces - width(); }
+  SkScalar height() const { return fAdvance.fY; }
+  SkScalar width() const {
     return fAdvance.fX + (fEllipsis != nullptr ? fEllipsis->fAdvance.fX : 0);
   }
-  SkScalar shift() const noexcept { return fShift; }
-  SkVector offset() const noexcept;
+  SkScalar shift() const { return fShift; }
+  SkVector offset() const;
 
-  SkScalar alphabeticBaseline() const noexcept { return fSizes.alphabeticBaseline(); }
-  SkScalar ideographicBaseline() const noexcept { return fSizes.ideographicBaseline(); }
-  SkScalar baseline() const noexcept { return fSizes.baseline(); }
+  SkScalar alphabeticBaseline() const { return fSizes.alphabeticBaseline(); }
+  SkScalar ideographicBaseline() const { return fSizes.ideographicBaseline(); }
+  SkScalar baseline() const { return fSizes.baseline(); }
 
   using RunVisitor =
       std::function<bool(const Run* run, SkScalar runOffset, TextRange textRange, SkScalar* width)>;
@@ -81,18 +81,18 @@ class TextLine {
       bool reverse, bool includeGhosts, const ClustersVisitor& visitor) const;
 
   void format(TextAlign align, SkScalar maxWidth);
-  void paint(SkCanvas* canvas);
+  SkRect paint(SkCanvas* canvas, SkScalar x, SkScalar y);
 
   void createEllipsis(SkScalar maxWidth, const SkString& ellipsis, bool ltr);
 
   // For testing internal structures
   void scanStyles(StyleType style, const RunStyleVisitor& visitor);
 
-  void setMaxRunMetrics(const InternalLineMetrics& metrics) noexcept { fMaxRunMetrics = metrics; }
-  InternalLineMetrics getMaxRunMetrics() const noexcept { return fMaxRunMetrics; }
+  void setMaxRunMetrics(const InternalLineMetrics& metrics) { fMaxRunMetrics = metrics; }
+  InternalLineMetrics getMaxRunMetrics() const { return fMaxRunMetrics; }
 
-  bool isFirstLine() noexcept;
-  bool isLastLine() noexcept;
+  bool isFirstLine();
+  bool isLastLine();
   void getRectsForRange(
       TextRange textRange, RectHeightStyle rectHeightStyle, RectWidthStyle rectWidthStyle,
       std::vector<TextBox>& boxes);
@@ -105,12 +105,10 @@ class TextLine {
 
   LineMetrics getMetrics() const;
 
-  SkRect calculateBoundaries();
-
-  SkRect extendHeight(const ClipContext& context) const noexcept;
+  SkRect extendHeight(const ClipContext& context) const;
 
   SkScalar metricsWithoutMultiplier(TextHeightBehavior correction);
-  void shiftVertically(SkScalar shift) noexcept { fOffset.fY += shift; }
+  void shiftVertically(SkScalar shift) { fOffset.fY += shift; }
 
   bool endsWithHardLineBreak() const;
 
@@ -118,17 +116,17 @@ class TextLine {
   std::unique_ptr<Run> shapeEllipsis(const SkString& ellipsis, Run* run);
   void justify(SkScalar maxWidth);
 
-  void paintText(
-      SkCanvas* canvas, TextRange textRange, const TextStyle& style,
+  SkRect paintText(
+      SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
   void paintBackground(
-      SkCanvas* canvas, TextRange textRange, const TextStyle& style,
+      SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
-  void paintShadow(
-      SkCanvas* canvas, TextRange textRange, const TextStyle& style,
+  SkRect paintShadow(
+      SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
   void paintDecorations(
-      SkCanvas* canvas, TextRange textRange, const TextStyle& style,
+      SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
 
   void shiftCluster(const Cluster* cluster, SkScalar shift, SkScalar prevShift);

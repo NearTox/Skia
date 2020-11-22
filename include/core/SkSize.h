@@ -18,33 +18,31 @@ struct SkISize {
 
   static constexpr SkISize MakeEmpty() noexcept { return {0, 0}; }
 
-  constexpr void set(int32_t w, int32_t h) noexcept { *this = SkISize{w, h}; }
+  void set(int32_t w, int32_t h) { *this = SkISize{w, h}; }
 
   /** Returns true iff fWidth == 0 && fHeight == 0
    */
-  constexpr bool isZero() const noexcept { return 0 == fWidth && 0 == fHeight; }
+  bool isZero() const { return 0 == fWidth && 0 == fHeight; }
 
   /** Returns true if either width or height are <= 0 */
-  constexpr bool isEmpty() const noexcept { return fWidth <= 0 || fHeight <= 0; }
+  bool isEmpty() const { return fWidth <= 0 || fHeight <= 0; }
 
   /** Set the width and height to 0 */
-  constexpr void setEmpty() noexcept { fWidth = fHeight = 0; }
+  void setEmpty() { fWidth = fHeight = 0; }
 
   constexpr int32_t width() const noexcept { return fWidth; }
   constexpr int32_t height() const noexcept { return fHeight; }
 
   constexpr int64_t area() const noexcept { return fWidth * fHeight; }
 
-  constexpr bool equals(int32_t w, int32_t h) const noexcept { return fWidth == w && fHeight == h; }
+  bool equals(int32_t w, int32_t h) const { return fWidth == w && fHeight == h; }
 };
 
-static constexpr inline bool operator==(const SkISize& a, const SkISize& b) noexcept {
+static inline bool operator==(const SkISize& a, const SkISize& b) noexcept {
   return a.fWidth == b.fWidth && a.fHeight == b.fHeight;
 }
 
-static constexpr inline bool operator!=(const SkISize& a, const SkISize& b) noexcept {
-  return !(a == b);
-}
+static inline bool operator!=(const SkISize& a, const SkISize& b) noexcept { return !(a == b); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -60,43 +58,33 @@ struct SkSize {
 
   static constexpr SkSize MakeEmpty() noexcept { return {0, 0}; }
 
-  constexpr void set(SkScalar w, SkScalar h) noexcept { *this = SkSize{w, h}; }
+  void set(SkScalar w, SkScalar h) { *this = SkSize{w, h}; }
 
   /** Returns true iff fWidth == 0 && fHeight == 0
    */
-  constexpr bool isZero() const noexcept { return 0 == fWidth && 0 == fHeight; }
+  bool isZero() const { return 0 == fWidth && 0 == fHeight; }
 
   /** Returns true if either width or height are <= 0 */
-  constexpr bool isEmpty() const noexcept { return fWidth <= 0 || fHeight <= 0; }
+  bool isEmpty() const { return fWidth <= 0 || fHeight <= 0; }
 
   /** Set the width and height to 0 */
-  constexpr void setEmpty() noexcept { *this = SkSize{0, 0}; }
+  void setEmpty() { *this = SkSize{0, 0}; }
 
-  constexpr SkScalar width() const noexcept { return fWidth; }
-  constexpr SkScalar height() const noexcept { return fHeight; }
+  SkScalar width() const { return fWidth; }
+  SkScalar height() const { return fHeight; }
 
-  constexpr bool equals(SkScalar w, SkScalar h) const noexcept {
-    return fWidth == w && fHeight == h;
-  }
+  bool equals(SkScalar w, SkScalar h) const { return fWidth == w && fHeight == h; }
 
-  SkISize toRound() const noexcept {
-    return {SkScalarRoundToInt(fWidth), SkScalarRoundToInt(fHeight)};
-  }
+  SkISize toRound() const { return {SkScalarRoundToInt(fWidth), SkScalarRoundToInt(fHeight)}; }
 
-  SkISize toCeil() const noexcept {
-    return {SkScalarCeilToInt(fWidth), SkScalarCeilToInt(fHeight)};
-  }
+  SkISize toCeil() const { return {SkScalarCeilToInt(fWidth), SkScalarCeilToInt(fHeight)}; }
 
-  SkISize toFloor() const noexcept {
-    return {SkScalarFloorToInt(fWidth), SkScalarFloorToInt(fHeight)};
-  }
+  SkISize toFloor() const { return {SkScalarFloorToInt(fWidth), SkScalarFloorToInt(fHeight)}; }
 };
 
-static constexpr inline bool operator==(const SkSize& a, const SkSize& b) noexcept {
+static inline bool operator==(const SkSize& a, const SkSize& b) noexcept {
   return a.fWidth == b.fWidth && a.fHeight == b.fHeight;
 }
 
-static constexpr inline bool operator!=(const SkSize& a, const SkSize& b) noexcept {
-  return !(a == b);
-}
+static inline bool operator!=(const SkSize& a, const SkSize& b) noexcept { return !(a == b); }
 #endif

@@ -48,7 +48,7 @@ class FontCacheBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -134,7 +134,7 @@ class FontCacheEfficiency : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 DEF_BENCH(return new FontCacheBench();)
 
@@ -187,7 +187,7 @@ class FontPathBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 DEF_BENCH(return new FontPathBench(true);)
 DEF_BENCH(return new FontPathBench(false);)

@@ -71,7 +71,7 @@ class ArcOfZorroGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

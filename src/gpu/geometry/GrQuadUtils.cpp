@@ -27,11 +27,11 @@ static constexpr float kInvDistTolerance = 1.f / kDistTolerance;
 
 // These rotate the points/edge values either clockwise or counterclockwise assuming tri strip
 // order.
-static AI V4f next_cw(const V4f& v) noexcept { return skvx::shuffle<2, 0, 3, 1>(v); }
+static AI V4f next_cw(const V4f& v) { return skvx::shuffle<2, 0, 3, 1>(v); }
 
-static AI V4f next_ccw(const V4f& v) noexcept { return skvx::shuffle<1, 3, 0, 2>(v); }
+static AI V4f next_ccw(const V4f& v) { return skvx::shuffle<1, 3, 0, 2>(v); }
 
-static AI V4f next_diag(const V4f& v) noexcept {
+static AI V4f next_diag(const V4f& v) {
   // Same as next_ccw(next_ccw(v)), or next_cw(next_cw(v)), e.g. two rotations either direction.
   return skvx::shuffle<3, 2, 1, 0>(v);
 }
@@ -63,7 +63,7 @@ static AI void correct_bad_coords(const M4f& bad, V4f* c1, V4f* c2, V4f* c3) {
 // Since the local quad may not be type kRect, this uses the opposites for each vertex when
 // interpolating, and calculates new ws in addition to new xs, ys.
 static void interpolate_local(
-    float alpha, int v0, int v1, int v2, int v3, float lx[4], float ly[4], float lw[4]) noexcept {
+    float alpha, int v0, int v1, int v2, int v3, float lx[4], float ly[4], float lw[4]) {
   SkASSERT(v0 >= 0 && v0 < 4);
   SkASSERT(v1 >= 0 && v1 < 4);
   SkASSERT(v2 >= 0 && v2 < 4);
@@ -219,7 +219,7 @@ static GrQuadAAFlags crop_simple_rect(
 }
 // Consistent with GrQuad::asRect()'s return value but requires fewer operations since we don't need
 // to calculate the bounds of the quad.
-static bool is_simple_rect(const GrQuad& quad) noexcept {
+static bool is_simple_rect(const GrQuad& quad) {
   if (quad.quadType() != GrQuad::Type::kAxisAligned) {
     return false;
   }
@@ -234,7 +234,7 @@ static bool is_simple_rect(const GrQuad& quad) noexcept {
 // (x0,y0) - (x1,y1) - (x2, y2) and stores them in u, v, w.
 static bool barycentric_coords(
     float x0, float y0, float x1, float y1, float x2, float y2, const V4f& testX, const V4f& testY,
-    V4f* u, V4f* v, V4f* w) noexcept {
+    V4f* u, V4f* v, V4f* w) {
   // The 32-bit calculations can have catastrophic cancellation if the device-space coordinates
   // are really big, and this code needs to handle that because we evaluate barycentric coords
   // pre-cropping to the render target bounds. This preserves some precision by shrinking the
@@ -304,13 +304,13 @@ static bool barycentric_coords(
   return true;
 }
 
-static M4f inside_triangle(const V4f& u, const V4f& v, const V4f& w) noexcept {
+static M4f inside_triangle(const V4f& u, const V4f& v, const V4f& w) {
   return ((u >= 0.f) & (u <= 1.f)) & ((v >= 0.f) & (v <= 1.f)) & ((w >= 0.f) & (w <= 1.f));
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRect GrQuad::projectedBounds() const noexcept {
+SkRect GrQuad::projectedBounds() const {
   V4f xs = this->x4f();
   V4f ys = this->y4f();
   V4f ws = this->w4f();
@@ -639,7 +639,7 @@ bool CropToRect(const SkRect& cropRect, GrAA cropAA, DrawQuad* quad, bool comput
 
 void TessellationHelper::EdgeVectors::reset(
     const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, const skvx::Vec<4, float>& ws,
-    GrQuad::Type quadType) noexcept {
+    GrQuad::Type quadType) {
   // Calculate all projected edge vector values for this quad.
   if (quadType == GrQuad::Type::kPerspective) {
     V4f iw = 1.f / ws;
@@ -692,8 +692,7 @@ void TessellationHelper::EdgeEquations::reset(const EdgeVectors& edgeVectors) {
   }
 }
 
-V4f TessellationHelper::EdgeEquations::estimateCoverage(
-    const V4f& x2d, const V4f& y2d) const noexcept {
+V4f TessellationHelper::EdgeEquations::estimateCoverage(const V4f& x2d, const V4f& y2d) const {
   // Calculate distance of the 4 inset points (px, py) to the 4 edges
   V4f d0 = fA[0] * x2d + (fB[0] * y2d + fC[0]);
   V4f d1 = fA[1] * x2d + (fB[1] * y2d + fC[1]);
@@ -805,7 +804,7 @@ int TessellationHelper::EdgeEquations::computeDegenerateQuad(
 
 void TessellationHelper::OutsetRequest::reset(
     const EdgeVectors& edgeVectors, GrQuad::Type quadType,
-    const skvx::Vec<4, float>& edgeDistances) noexcept {
+    const skvx::Vec<4, float>& edgeDistances) {
   fEdgeDistances = edgeDistances;
 
   // Based on the edge distances, determine if it's acceptable to use fInvSinTheta to
@@ -856,8 +855,7 @@ void TessellationHelper::OutsetRequest::reset(
 
 //** Vertices implementation
 
-void TessellationHelper::Vertices::reset(
-    const GrQuad& deviceQuad, const GrQuad* localQuad) noexcept {
+void TessellationHelper::Vertices::reset(const GrQuad& deviceQuad, const GrQuad* localQuad) {
   // Set vertices to match the device and local quad
   fX = deviceQuad.x4f();
   fY = deviceQuad.y4f();
@@ -874,8 +872,7 @@ void TessellationHelper::Vertices::reset(
 }
 
 void TessellationHelper::Vertices::asGrQuads(
-    GrQuad* deviceOut, GrQuad::Type deviceType, GrQuad* localOut,
-    GrQuad::Type localType) const noexcept {
+    GrQuad* deviceOut, GrQuad::Type deviceType, GrQuad* localOut, GrQuad::Type localType) const {
   SkASSERT(deviceOut);
   SkASSERT(fUVRCount == 0 || localOut);
 

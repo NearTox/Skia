@@ -56,25 +56,25 @@ class GrStencilSettings {
     return *this;
   }
 
-  void invalidate() noexcept { fFlags |= kInvalid_PrivateFlag; }
-  void setDisabled() noexcept { fFlags = kAll_StencilFlags; }
+  void invalidate() { fFlags |= kInvalid_PrivateFlag; }
+  void setDisabled() { fFlags = kAll_StencilFlags; }
   void reset(const GrUserStencilSettings&, bool hasStencilClip, int numStencilBits);
   void reset(const GrStencilSettings&);
 
-  bool isValid() const noexcept { return !(fFlags & kInvalid_PrivateFlag); }
-  bool isDisabled() const noexcept {
+  bool isValid() const { return !(fFlags & kInvalid_PrivateFlag); }
+  bool isDisabled() const {
     SkASSERT(this->isValid());
     return fFlags & kDisabled_StencilFlag;
   }
-  bool doesWrite() const noexcept {
+  bool doesWrite() const {
     SkASSERT(this->isValid());
     return !(fFlags & kNoModifyStencil_StencilFlag);
   }
-  bool isTwoSided() const noexcept {
+  bool isTwoSided() const {
     SkASSERT(this->isValid());
     return !(fFlags & kSingleSided_StencilFlag);
   }
-  bool usesWrapOp() const noexcept {
+  bool usesWrapOp() const {
     SkASSERT(this->isValid());
     return !(fFlags & kNoWrapOps_StencilFlag);
   }
@@ -89,7 +89,7 @@ class GrStencilSettings {
     void setDisabled();
   };
 
-  const Face& singleSidedFace() const noexcept {
+  const Face& singleSidedFace() const {
     SkASSERT(!this->isDisabled());
     SkASSERT(!this->isTwoSided());
     return fCWFace;
@@ -97,14 +97,14 @@ class GrStencilSettings {
   // Returns the stencil settings for triangles that wind clockwise in "post-origin" space.
   // (i.e., the space that results after a potential y-axis flip on device space for bottom-left
   // origins.)
-  const Face& postOriginCWFace(GrSurfaceOrigin origin) const noexcept {
+  const Face& postOriginCWFace(GrSurfaceOrigin origin) const {
     SkASSERT(this->isTwoSided());
     return (kTopLeft_GrSurfaceOrigin == origin) ? fCWFace : fCCWFace;
   }
   // Returns the stencil settings for triangles that wind counter-clockwise in "post-origin"
   // space. (i.e., the space that results after a potential y-axis flip on device space for
   // bottom-left origins.)
-  const Face& postOriginCCWFace(GrSurfaceOrigin origin) const noexcept {
+  const Face& postOriginCCWFace(GrSurfaceOrigin origin) const {
     SkASSERT(this->isTwoSided());
     return (kTopLeft_GrSurfaceOrigin == origin) ? fCCWFace : fCWFace;
   }

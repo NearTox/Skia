@@ -364,7 +364,7 @@ class RoundRectGM : public GM {
   SkTArray<SkPaint> fPaints;
   SkTArray<SkMatrix> fMatrices;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

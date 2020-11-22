@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLTiledGradientEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLTiledGradientEffect() noexcept = default;
+  GrGLSLTiledGradientEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrTiledGradientEffect& _outer = args.fFp.cast<GrTiledGradientEffect>();
@@ -48,7 +48,7 @@ if (!%s && t.y < 0.0) {
     })SkSL",
         _sample453.c_str(), (_outer.childProcessor(1)->preservesOpaqueInput() ? "true" : "false"),
         args.fOutputColor, (_outer.mirror ? "true" : "false"));
-    SkString _coords1451("float2(half2(t.x, 0))");
+    SkString _coords1451("float2(half2(t.x, 0.0))");
     SkString _sample1451 = this->invokeChild(0, args, _coords1451.c_str());
     fragBuilder->codeAppendf(
         R"SkSL(
@@ -74,7 +74,7 @@ void GrTiledGradientEffect::onGetGLSLProcessorKey(
   b->add32((uint32_t)mirror);
   b->add32((uint32_t)makePremul);
 }
-bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrTiledGradientEffect& that = other.cast<GrTiledGradientEffect>();
   (void)that;
   if (mirror != that.mirror) return false;
@@ -82,6 +82,7 @@ bool GrTiledGradientEffect::onIsEqual(const GrFragmentProcessor& other) const no
   if (colorsAreOpaque != that.colorsAreOpaque) return false;
   return true;
 }
+bool GrTiledGradientEffect::usesExplicitReturn() const { return false; }
 GrTiledGradientEffect::GrTiledGradientEffect(const GrTiledGradientEffect& src)
     : INHERITED(kGrTiledGradientEffect_ClassID, src.optimizationFlags()),
       mirror(src.mirror),

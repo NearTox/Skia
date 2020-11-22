@@ -202,7 +202,7 @@ class GrD3DCaps : public GrCaps {
 
   StencilFormat fPreferredStencilFormat;
 
-  typedef GrCaps INHERITED;
+  using INHERITED = GrCaps;
 };
 
 #endif

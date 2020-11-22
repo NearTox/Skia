@@ -47,7 +47,7 @@ static SkPaint make_paint_with_image(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkDraw::SkDraw() noexcept = default;
+SkDraw::SkDraw() {}
 
 bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
   if (fRC->isEmpty()) {
@@ -69,7 +69,7 @@ bool SkDraw::computeConservativeLocalClipBounds(SkRect* localBounds) const {
 ///////////////////////////////////////////////////////////////////////////////
 
 void SkDraw::drawPaint(const SkPaint& paint) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   if (fRC->isEmpty()) {
     return;
@@ -336,7 +336,7 @@ void SkDraw::drawPoints(
   }
 
   SkASSERT(pts != nullptr);
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   // nothing to draw
   if (fRC->isEmpty()) {
@@ -425,9 +425,7 @@ void SkDraw::drawPoints(
           SkStrokeRec rec(paint);
           SkPathEffect::PointData pointData;
 
-          SkPath path;
-          path.moveTo(pts[0]);
-          path.lineTo(pts[1]);
+          SkPath path = SkPath::Line(pts[0], pts[1]);
 
           SkRect cullRect = SkRect::Make(fRC->getBounds());
 
@@ -565,11 +563,9 @@ SkDraw::RectType SkDraw::ComputeRectType(
   return rtype;
 }
 
-static const SkPoint* rect_points(const SkRect& r) noexcept {
-  return reinterpret_cast<const SkPoint*>(&r);
-}
+static const SkPoint* rect_points(const SkRect& r) { return reinterpret_cast<const SkPoint*>(&r); }
 
-static SkPoint* rect_points(SkRect& r) noexcept { return reinterpret_cast<SkPoint*>(&r); }
+static SkPoint* rect_points(SkRect& r) { return reinterpret_cast<SkPoint*>(&r); }
 
 static void draw_rect_as_path(
     const SkDraw& orig, const SkRect& prePaintRect, const SkPaint& paint,
@@ -585,7 +581,7 @@ static void draw_rect_as_path(
 void SkDraw::drawRect(
     const SkRect& prePaintRect, const SkPaint& paint, const SkMatrix* paintMatrix,
     const SkRect* postPaintRect) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   // nothing to draw
   if (fRC->isEmpty()) {
@@ -848,7 +844,7 @@ void SkDraw::drawDevPath(
 void SkDraw::drawPath(
     const SkPath& origSrcPath, const SkPaint& origPaint, const SkMatrix* prePathMatrix,
     bool pathIsMutable, bool drawCoverage, SkBlitter* customBlitter) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   // nothing to draw
   if (fRC->isEmpty()) {
@@ -878,7 +874,7 @@ void SkDraw::drawPath(
     }
   }
   // at this point we're done with prePathMatrix
-  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001);
+  SkDEBUGCODE(prePathMatrix = (const SkMatrix*)0x50FF8001;)
 
   SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
 
@@ -923,6 +919,12 @@ void SkDraw::drawPath(
 
   // transform the path into device space
   pathPtr->transform(matrixProvider->localToDevice(), devPathPtr);
+
+#if defined(SK_BUILD_FOR_FUZZER)
+  if (devPathPtr->countPoints() > 1000) {
+    return;
+  }
+#endif
 
   this->drawDevPath(*devPathPtr, *paint, drawCoverage, customBlitter, doFill);
 }
@@ -1031,7 +1033,7 @@ static bool clipHandlesSprite(const SkRasterClip& clip, int x, int y, const SkPi
 void SkDraw::drawBitmap(
     const SkBitmap& bitmap, const SkMatrix& prematrix, const SkRect* dstBounds,
     const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   // nothing to draw
   if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||
@@ -1095,7 +1097,7 @@ void SkDraw::drawBitmap(
 }
 
 void SkDraw::drawSprite(const SkBitmap& bitmap, int x, int y, const SkPaint& origPaint) const {
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   // nothing to draw
   if (fRC->isEmpty() || bitmap.width() == 0 || bitmap.height() == 0 ||

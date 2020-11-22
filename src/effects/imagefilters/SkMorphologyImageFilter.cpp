@@ -77,7 +77,7 @@ class SkMorphologyImageFilterImpl final : public SkImageFilter_Base {
   MorphType fType;
   SkSize fRadius;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace
@@ -192,7 +192,7 @@ class GrMorphologyEffect : public GrFragmentProcessor {
         std::move(inputFP), std::move(view), srcAlphaType, dir, radius, type, range));
   }
 
-  const char* name() const noexcept override { return "Morphology"; }
+  const char* name() const override { return "Morphology"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrMorphologyEffect(*this));
@@ -209,7 +209,7 @@ class GrMorphologyEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
   GrMorphologyEffect(
       std::unique_ptr<GrFragmentProcessor> inputFP, GrSurfaceProxyView, SkAlphaType srcAlphaType,
       MorphDirection, int radius, MorphType, const float range[2]);
@@ -217,7 +217,7 @@ class GrMorphologyEffect : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 GrGLSLFragmentProcessor* GrMorphologyEffect::onCreateGLSLInstance() const {
@@ -330,7 +330,7 @@ GrMorphologyEffect::GrMorphologyEffect(const GrMorphologyEffect& that)
   }
 }
 
-bool GrMorphologyEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
+bool GrMorphologyEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
   const GrMorphologyEffect& s = sBase.cast<GrMorphologyEffect>();
   return this->fRadius == s.fRadius && this->fDirection == s.fDirection &&
          this->fUseRange == s.fUseRange && this->fType == s.fType;
@@ -626,7 +626,9 @@ sk_sp<SkSpecialImage> SkMorphologyImageFilterImpl::onFilterImage(
   int height = SkScalarRoundToInt(radius.height());
 
   // Width (or height) must fit in a signed 32-bit int to avoid UBSAN issues (crbug.com/1018190)
-  constexpr int kMaxRadius = (std::numeric_limits<int>::max() - 1) / 2;
+  // Further, we limit the radius to something much smaller, to avoid extremely slow draw calls:
+  // (crbug.com/1123035):
+  constexpr int kMaxRadius = 100;  // (std::numeric_limits<int>::max() - 1) / 2;
 
   if (width < 0 || height < 0 || width > kMaxRadius || height > kMaxRadius) {
     return nullptr;

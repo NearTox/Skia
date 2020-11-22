@@ -27,7 +27,7 @@ class GrImageTextureMaker final : public GrTextureMaker {
   const SkImage_Lazy* fImage;
   GrImageTexGenPolicy fTexGenPolicy;
 
-  typedef GrTextureMaker INHERITED;
+  using INHERITED = GrTextureMaker;
 };
 
 /** This class manages the conversion of generator-backed YUVA images to GrTextures. */
@@ -41,16 +41,17 @@ class GrYUVAImageTextureMaker final : public GrTextureMaker {
 
   std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessor(
       const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
-      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) override;
+      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+      SkImage::CubicResampler) override;
 
-  bool isPlanar() const noexcept override { return true; }
+  bool isPlanar() const override { return true; }
 
  private:
   GrSurfaceProxyView refOriginalTextureProxyView(GrMipmapped) override;
 
   const SkImage_GpuYUVA* fImage;
 
-  typedef GrTextureMaker INHERITED;
+  using INHERITED = GrTextureMaker;
 };
 
 #endif

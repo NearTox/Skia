@@ -467,28 +467,24 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   bool waitOnSemaphores(
       int numSemaphores, const GrBackendSemaphore waitSemaphores[], bool deleteSemaphoresAfterWait);
 
-  int numSamples() const noexcept { return this->asRenderTargetProxy()->numSamples(); }
-  const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
-  bool wrapsVkSecondaryCB() const noexcept {
-    return this->asRenderTargetProxy()->wrapsVkSecondaryCB();
-  }
+  int numSamples() const { return this->asRenderTargetProxy()->numSamples(); }
+  const SkSurfaceProps& surfaceProps() const { return fSurfaceProps; }
+  bool wrapsVkSecondaryCB() const { return this->asRenderTargetProxy()->wrapsVkSecondaryCB(); }
   GrMipmapped mipmapped() const;
 
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
   // make a copy (which refs the proxy) if needed.
-  GrSurfaceProxyView writeSurfaceView() noexcept { return fWriteView; }
+  GrSurfaceProxyView writeSurfaceView() { return fWriteView; }
 
   // This entry point should only be called if the backing GPU object is known to be
   // instantiated.
-  GrRenderTarget* accessRenderTarget() noexcept {
-    return this->asSurfaceProxy()->peekRenderTarget();
-  }
+  GrRenderTarget* accessRenderTarget() { return this->asSurfaceProxy()->peekRenderTarget(); }
 
-  GrRenderTargetContext* asRenderTargetContext() noexcept override { return this; }
+  GrRenderTargetContext* asRenderTargetContext() override { return this; }
 
   // Provides access to functions that aren't part of the public API.
-  GrRenderTargetContextPriv priv() noexcept;
-  const GrRenderTargetContextPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
+  GrRenderTargetContextPriv priv();
+  const GrRenderTargetContextPriv priv() const;  // NOLINT(readability-const-return-type)
 
   void wasClosed(const GrOpsTask& task) override;
 
@@ -504,6 +500,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   GrAAType chooseAAType(GrAA);
 
   friend class GrClipStackClip;            // for access to getOpsTask
+  friend class GrClipStack;                // ""
   friend class GrOnFlushResourceProvider;  // for access to getOpsTask (http://skbug.com/9357)
 
   friend class GrRenderTargetContextPriv;
@@ -524,7 +521,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   friend class GrTessellationPathRenderer;         // for access to addDrawOp
   friend class GrTextureOp;                        // for access to addDrawOp
 
-  SkDEBUGCODE(void onValidate() const override);
+  SkDEBUGCODE(void onValidate() const override;)
 
   GrOpsTask::CanDiscardPreviousOps canDiscardPreviousOpsOnFullClear() const;
   void setNeedsStencil(bool useMixedSamplesIfNotMSAA);
@@ -596,7 +593,7 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
 
   GrOpsTask* getOpsTask();
 
-  SkGlyphRunListPainter* glyphPainter() noexcept { return &fGlyphPainter; }
+  SkGlyphRunListPainter* glyphPainter() { return &fGlyphPainter; }
 
   GrSurfaceProxyView fWriteView;
 
@@ -608,11 +605,14 @@ class GrRenderTargetContext : public GrSurfaceContext, public GrOpsTaskClosedObs
   bool fManagedOpsTask;
 
   int fNumStencilSamples = 0;
+
+  GrDstSampleType fDstSampleType = GrDstSampleType::kNone;
+
 #if GR_TEST_UTILS
   bool fPreserveOpsOnFullClear_TestingOnly = false;
 #endif
   SkGlyphRunListPainter fGlyphPainter;
-  typedef GrSurfaceContext INHERITED;
+  using INHERITED = GrSurfaceContext;
 };
 
 #endif

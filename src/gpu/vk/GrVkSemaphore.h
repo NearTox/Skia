@@ -66,7 +66,7 @@ class GrVkSemaphore : public GrSemaphore {
     bool fHasBeenSubmittedToQueueForWait;
     bool fIsOwned;
 
-    typedef GrVkManagedResource INHERITED;
+    using INHERITED = GrVkManagedResource;
   };
 
   Resource* getResource() { return fResource; }
@@ -79,7 +79,7 @@ class GrVkSemaphore : public GrSemaphore {
 
   Resource* fResource;
 
-  typedef GrSemaphore INHERITED;
+  using INHERITED = GrSemaphore;
 };
 
 #endif

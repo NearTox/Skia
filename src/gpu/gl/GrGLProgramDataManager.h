@@ -107,7 +107,7 @@ class GrGLProgramDataManager : public GrGLSLProgramDataManager {
   GrGLGpu* fGpu;
   GrGLuint fProgramID;
 
-  typedef GrGLSLProgramDataManager INHERITED;
+  using INHERITED = GrGLSLProgramDataManager;
 };
 
 #endif

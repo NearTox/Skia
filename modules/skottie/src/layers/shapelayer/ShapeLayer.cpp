@@ -157,7 +157,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
     const skjson::ArrayValue* jshape, AttachShapeContext* ctx, bool suppress_draws) const {
   if (!jshape) return nullptr;
 
-  SkDEBUGCODE(const auto initialGeometryEffects = ctx->fGeometryEffectStack->size());
+  SkDEBUGCODE(const auto initialGeometryEffects = ctx->fGeometryEffectStack->size();)
 
   const skjson::ObjectValue* jtransform = nullptr;
 
@@ -333,7 +333,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
 
   // Push transformed local geometries to parent list, for subsequent paints.
   for (auto& geo : geos) {
-    ctx->fGeometryStack->push_back(
+    ctx->fGeometryStack->emplace_back(
         shape_transform ? sksg::GeometryTransform::Make(std::move(geo), shape_transform)
                         : std::move(geo));
   }

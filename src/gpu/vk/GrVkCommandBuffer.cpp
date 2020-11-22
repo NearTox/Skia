@@ -406,10 +406,10 @@ bool GrVkPrimaryCommandBuffer::beginRenderPass(
     GrVkRenderTarget* target, const SkIRect& bounds, bool forSecondaryCB) {
   SkASSERT(fIsActive);
   SkASSERT(!fActiveRenderPass);
-  SkASSERT(renderPass->isCompatible(*target, renderPass->hasSelfDependency()));
+  SkASSERT(renderPass->isCompatible(*target, renderPass->selfDependencyFlags()));
 
   const GrVkFramebuffer* framebuffer =
-      target->getFramebuffer(renderPass->hasStencilAttachment(), renderPass->hasSelfDependency());
+      target->getFramebuffer(renderPass->hasStencilAttachment(), renderPass->selfDependencyFlags());
   if (!framebuffer) {
     return false;
   }
@@ -436,7 +436,8 @@ bool GrVkPrimaryCommandBuffer::beginRenderPass(
   GR_VK_CALL(gpu->vkInterface(), CmdBeginRenderPass(fCmdBuffer, &beginInfo, contents));
   fActiveRenderPass = renderPass;
   this->addResource(renderPass);
-  target->addResources(*this, renderPass->hasStencilAttachment(), renderPass->hasSelfDependency());
+  target->addResources(
+      *this, renderPass->hasStencilAttachment(), renderPass->selfDependencyFlags());
   return true;
 }
 

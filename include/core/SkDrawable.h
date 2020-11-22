@@ -67,7 +67,7 @@ class SK_API SkDrawable : public SkFlattenable {
 
   class GpuDrawHandler {
    public:
-    virtual ~GpuDrawHandler() = default;
+    virtual ~GpuDrawHandler() {}
 
     virtual void draw(const GrBackendDrawableInfo&) {}
   };
@@ -93,7 +93,7 @@ class SK_API SkDrawable : public SkFlattenable {
    *  Subclasses that change their state should call notifyDrawingChanged() to ensure that
    *  a new value will be returned the next time it is called.
    */
-  uint32_t getGenerationID() noexcept;
+  uint32_t getGenerationID();
 
   /**
    *  Return the (conservative) bounds of what the drawable will draw. If the drawable can
@@ -107,11 +107,11 @@ class SK_API SkDrawable : public SkFlattenable {
    *  the next time getGenerationID() is called. Typically this is called by the object itself,
    *  in response to its internal state changing.
    */
-  void notifyDrawingChanged() noexcept;
+  void notifyDrawingChanged();
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawable_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkDrawable_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkDrawable_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkDrawable_Type; }
 
   static sk_sp<SkDrawable> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -120,10 +120,10 @@ class SK_API SkDrawable : public SkFlattenable {
   }
 
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const noexcept override { return nullptr; }
+  const char* getTypeName() const override { return nullptr; }
 
  protected:
-  SkDrawable() noexcept;
+  SkDrawable();
 
   virtual SkRect onGetBounds() = 0;
   virtual void onDraw(SkCanvas*) = 0;

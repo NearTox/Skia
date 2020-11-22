@@ -35,13 +35,13 @@ class GrClip {
     GrAA fAA;        // Ignore if 'isRRect' is false
     bool fIsRRect;
 
-    PreClipResult(Effect effect) noexcept : fEffect(effect), fIsRRect(false) {}
-    PreClipResult(SkRect rect, GrAA aa) noexcept : PreClipResult(SkRRect::MakeRect(rect), aa) {}
-    PreClipResult(SkRRect rrect, GrAA aa) noexcept
+    PreClipResult(Effect effect) : fEffect(effect), fIsRRect(false) {}
+    PreClipResult(SkRect rect, GrAA aa) : PreClipResult(SkRRect::MakeRect(rect), aa) {}
+    PreClipResult(SkRRect rrect, GrAA aa)
         : fEffect(Effect::kClipped), fRRect(rrect), fAA(aa), fIsRRect(true) {}
   };
 
-  virtual ~GrClip() = default;
+  virtual ~GrClip() {}
 
   /**
    * Compute a conservative pixel bounds restricted to the given render target dimensions.
@@ -210,7 +210,7 @@ class GrClip {
    * Returns the minimal pixel-aligned rect that counts as containing a given set of bounds.
    * DEPRECATED: Only used by GrReducedClip
    */
-  static SkRect GetPixelBounds(const SkRect& bounds) noexcept {
+  static SkRect GetPixelBounds(const SkRect& bounds) {
     return SkRect::MakeLTRB(
         SkScalarFloorToScalar(bounds.fLeft + kBoundsTolerance),
         SkScalarFloorToScalar(bounds.fTop + kBoundsTolerance),
@@ -221,7 +221,7 @@ class GrClip {
   /**
    * Returns true if the given rect counts as aligned with pixel boundaries.
    */
-  static bool IsPixelAligned(const SkRect& rect) noexcept {
+  static bool IsPixelAligned(const SkRect& rect) {
     return SkScalarAbs(SkScalarRoundToScalar(rect.fLeft) - rect.fLeft) <= kBoundsTolerance &&
            SkScalarAbs(SkScalarRoundToScalar(rect.fTop) - rect.fTop) <= kBoundsTolerance &&
            SkScalarAbs(SkScalarRoundToScalar(rect.fRight) - rect.fRight) <= kBoundsTolerance &&

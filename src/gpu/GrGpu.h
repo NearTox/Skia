@@ -47,16 +47,16 @@ class GrGpu : public SkRefCnt {
   GrGpu(GrDirectContext* direct);
   ~GrGpu() override;
 
-  GrDirectContext* getContext() noexcept { return fContext; }
-  const GrDirectContext* getContext() const noexcept { return fContext; }
+  GrDirectContext* getContext() { return fContext; }
+  const GrDirectContext* getContext() const { return fContext; }
 
   /**
    * Gets the capabilities of the draw target.
    */
-  const GrCaps* caps() const noexcept { return fCaps.get(); }
-  sk_sp<const GrCaps> refCaps() const noexcept { return fCaps; }
+  const GrCaps* caps() const { return fCaps.get(); }
+  sk_sp<const GrCaps> refCaps() const { return fCaps; }
 
-  GrPathRendering* pathRendering() noexcept { return fPathRendering.get(); }
+  GrPathRendering* pathRendering() { return fPathRendering.get(); }
 
   virtual GrStagingBufferManager* stagingBufferManager() { return nullptr; }
 
@@ -84,7 +84,7 @@ class GrGpu : public SkRefCnt {
    * the GrGpu that the state was modified and it shouldn't make assumptions
    * about the state.
    */
-  void markContextDirty(uint32_t state = kAll_GrBackendState) noexcept { fResetBits |= state; }
+  void markContextDirty(uint32_t state = kAll_GrBackendState) { fResetBits |= state; }
 
   /**
    * Creates a texture object. If renderable is kYes then the returned texture can
@@ -344,7 +344,8 @@ class GrGpu : public SkRefCnt {
       GrRenderTarget* renderTarget, GrStencilAttachment* stencil, GrSurfaceOrigin,
       const SkIRect& bounds, const GrOpsRenderPass::LoadAndStoreInfo&,
       const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) = 0;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) = 0;
 
   // Called by GrDrawingManager when flushing.
   // Provides a hook for post-flush actions (e.g. Vulkan command buffer submits). This will also
@@ -379,7 +380,7 @@ class GrGpu : public SkRefCnt {
    * Checks if we detected an OOM from the underlying 3D API and if so returns true and resets
    * the internal OOM state to false. Otherwise, returns false.
    */
-  bool checkAndResetOOMed() noexcept;
+  bool checkAndResetOOMed();
 
   /**
    *  Put this texture in a safe and known state for use across multiple contexts. Depending on
@@ -404,71 +405,71 @@ class GrGpu : public SkRefCnt {
     static const int kNumProgramCacheResults = (int)ProgramCacheResult::kLast + 1;
 
 #if GR_GPU_STATS
-    Stats() noexcept = default;
+    Stats() = default;
 
-    void reset() noexcept { *this = {}; }
+    void reset() { *this = {}; }
 
-    int renderTargetBinds() const noexcept { return fRenderTargetBinds; }
-    void incRenderTargetBinds() noexcept { fRenderTargetBinds++; }
+    int renderTargetBinds() const { return fRenderTargetBinds; }
+    void incRenderTargetBinds() { fRenderTargetBinds++; }
 
-    int shaderCompilations() const noexcept { return fShaderCompilations; }
-    void incShaderCompilations() noexcept { fShaderCompilations++; }
+    int shaderCompilations() const { return fShaderCompilations; }
+    void incShaderCompilations() { fShaderCompilations++; }
 
-    int textureCreates() const noexcept { return fTextureCreates; }
-    void incTextureCreates() noexcept { fTextureCreates++; }
+    int textureCreates() const { return fTextureCreates; }
+    void incTextureCreates() { fTextureCreates++; }
 
-    int textureUploads() const noexcept { return fTextureUploads; }
-    void incTextureUploads() noexcept { fTextureUploads++; }
+    int textureUploads() const { return fTextureUploads; }
+    void incTextureUploads() { fTextureUploads++; }
 
-    int transfersToTexture() const noexcept { return fTransfersToTexture; }
-    void incTransfersToTexture() noexcept { fTransfersToTexture++; }
+    int transfersToTexture() const { return fTransfersToTexture; }
+    void incTransfersToTexture() { fTransfersToTexture++; }
 
-    int transfersFromSurface() const noexcept { return fTransfersFromSurface; }
-    void incTransfersFromSurface() noexcept { fTransfersFromSurface++; }
+    int transfersFromSurface() const { return fTransfersFromSurface; }
+    void incTransfersFromSurface() { fTransfersFromSurface++; }
 
-    int stencilAttachmentCreates() const noexcept { return fStencilAttachmentCreates; }
-    void incStencilAttachmentCreates() noexcept { fStencilAttachmentCreates++; }
+    int stencilAttachmentCreates() const { return fStencilAttachmentCreates; }
+    void incStencilAttachmentCreates() { fStencilAttachmentCreates++; }
 
-    int numDraws() const noexcept { return fNumDraws; }
-    void incNumDraws() noexcept { fNumDraws++; }
+    int numDraws() const { return fNumDraws; }
+    void incNumDraws() { fNumDraws++; }
 
-    int numFailedDraws() const noexcept { return fNumFailedDraws; }
-    void incNumFailedDraws() noexcept { ++fNumFailedDraws; }
+    int numFailedDraws() const { return fNumFailedDraws; }
+    void incNumFailedDraws() { ++fNumFailedDraws; }
 
-    int numSubmitToGpus() const noexcept { return fNumSubmitToGpus; }
-    void incNumSubmitToGpus() noexcept { ++fNumSubmitToGpus; }
+    int numSubmitToGpus() const { return fNumSubmitToGpus; }
+    void incNumSubmitToGpus() { ++fNumSubmitToGpus; }
 
-    int numScratchTexturesReused() const noexcept { return fNumScratchTexturesReused; }
-    void incNumScratchTexturesReused() noexcept { ++fNumScratchTexturesReused; }
+    int numScratchTexturesReused() const { return fNumScratchTexturesReused; }
+    void incNumScratchTexturesReused() { ++fNumScratchTexturesReused; }
 
-    int numInlineCompilationFailures() const noexcept { return fNumInlineCompilationFailures; }
-    void incNumInlineCompilationFailures() noexcept { ++fNumInlineCompilationFailures; }
+    int numInlineCompilationFailures() const { return fNumInlineCompilationFailures; }
+    void incNumInlineCompilationFailures() { ++fNumInlineCompilationFailures; }
 
-    int numInlineProgramCacheResult(ProgramCacheResult stat) const noexcept {
+    int numInlineProgramCacheResult(ProgramCacheResult stat) const {
       return fInlineProgramCacheStats[(int)stat];
     }
-    void incNumInlineProgramCacheResult(ProgramCacheResult stat) noexcept {
+    void incNumInlineProgramCacheResult(ProgramCacheResult stat) {
       ++fInlineProgramCacheStats[(int)stat];
     }
 
-    int numPreCompilationFailures() const noexcept { return fNumPreCompilationFailures; }
-    void incNumPreCompilationFailures() noexcept { ++fNumPreCompilationFailures; }
+    int numPreCompilationFailures() const { return fNumPreCompilationFailures; }
+    void incNumPreCompilationFailures() { ++fNumPreCompilationFailures; }
 
-    int numPreProgramCacheResult(ProgramCacheResult stat) const noexcept {
+    int numPreProgramCacheResult(ProgramCacheResult stat) const {
       return fPreProgramCacheStats[(int)stat];
     }
-    void incNumPreProgramCacheResult(ProgramCacheResult stat) noexcept {
+    void incNumPreProgramCacheResult(ProgramCacheResult stat) {
       ++fPreProgramCacheStats[(int)stat];
     }
 
-    int numCompilationFailures() const noexcept { return fNumCompilationFailures; }
-    void incNumCompilationFailures() noexcept { ++fNumCompilationFailures; }
+    int numCompilationFailures() const { return fNumCompilationFailures; }
+    void incNumCompilationFailures() { ++fNumCompilationFailures; }
 
-    int numPartialCompilationSuccesses() const noexcept { return fNumPartialCompilationSuccesses; }
-    void incNumPartialCompilationSuccesses() noexcept { ++fNumPartialCompilationSuccesses; }
+    int numPartialCompilationSuccesses() const { return fNumPartialCompilationSuccesses; }
+    void incNumPartialCompilationSuccesses() { ++fNumPartialCompilationSuccesses; }
 
-    int numCompilationSuccesses() const noexcept { return fNumCompilationSuccesses; }
-    void incNumCompilationSuccesses() noexcept { ++fNumCompilationSuccesses; }
+    int numCompilationSuccesses() const { return fNumCompilationSuccesses; }
+    void incNumCompilationSuccesses() { ++fNumCompilationSuccesses; }
 
 #  if GR_TEST_UTILS
     void dump(SkString*);
@@ -508,10 +509,12 @@ class GrGpu : public SkRefCnt {
     void incTextureCreates() {}
     void incTextureUploads() {}
     void incTransfersToTexture() {}
+    void incTransfersFromSurface() {}
     void incStencilAttachmentCreates() {}
     void incNumDraws() {}
     void incNumFailedDraws() {}
     void incNumSubmitToGpus() {}
+    void incNumScratchTexturesReused() {}
     void incNumInlineCompilationFailures() {}
     void incNumInlineProgramCacheResult(ProgramCacheResult stat) {}
     void incNumPreCompilationFailures() {}
@@ -522,7 +525,7 @@ class GrGpu : public SkRefCnt {
 #endif
   };
 
-  Stats* stats() noexcept { return &fStats; }
+  Stats* stats() { return &fStats; }
   void dumpJSON(SkJSONWriter*) const;
 
   /** Used to initialize a backend texture with either a constant color, pixmaps or
@@ -531,38 +534,37 @@ class GrGpu : public SkRefCnt {
   class BackendTextureData {
    public:
     enum class Type { kColor, kPixmaps, kCompressed };
-    BackendTextureData() noexcept = default;
-    BackendTextureData(const SkColor4f& color) noexcept : fType(Type::kColor), fColor(color) {}
-    BackendTextureData(const SkPixmap pixmaps[]) noexcept
-        : fType(Type::kPixmaps), fPixmaps(pixmaps) {
+    BackendTextureData() = default;
+    BackendTextureData(const SkColor4f& color) : fType(Type::kColor), fColor(color) {}
+    BackendTextureData(const SkPixmap pixmaps[]) : fType(Type::kPixmaps), fPixmaps(pixmaps) {
       SkASSERT(pixmaps);
     }
-    BackendTextureData(const void* data, size_t size) noexcept : fType(Type::kCompressed) {
+    BackendTextureData(const void* data, size_t size) : fType(Type::kCompressed) {
       SkASSERT(data);
       fCompressed.fData = data;
       fCompressed.fSize = size;
     }
 
-    Type type() const noexcept { return fType; }
-    SkColor4f color() const noexcept {
+    Type type() const { return fType; }
+    SkColor4f color() const {
       SkASSERT(this->type() == Type::kColor);
       return fColor;
     }
 
-    const SkPixmap& pixmap(int i) const noexcept {
+    const SkPixmap& pixmap(int i) const {
       SkASSERT(this->type() == Type::kPixmaps);
       return fPixmaps[i];
     }
-    const SkPixmap* pixmaps() const noexcept {
+    const SkPixmap* pixmaps() const {
       SkASSERT(this->type() == Type::kPixmaps);
       return fPixmaps;
     }
 
-    const void* compressedData() const noexcept {
+    const void* compressedData() const {
       SkASSERT(this->type() == Type::kCompressed);
       return fCompressed.fData;
     }
-    size_t compressedSize() const noexcept {
+    size_t compressedSize() const {
       SkASSERT(this->type() == Type::kCompressed);
       return fCompressed.fSize;
     }
@@ -613,13 +615,13 @@ class GrGpu : public SkRefCnt {
 
   virtual bool setBackendTextureState(
       const GrBackendTexture&, const GrBackendSurfaceMutableState&,
-      sk_sp<GrRefCntedCallback> finishedCallback) {
+      GrBackendSurfaceMutableState* previousState, sk_sp<GrRefCntedCallback> finishedCallback) {
     return false;
   }
 
   virtual bool setBackendRenderTargetState(
       const GrBackendRenderTarget&, const GrBackendSurfaceMutableState&,
-      sk_sp<GrRefCntedCallback> finishedCallback) {
+      GrBackendSurfaceMutableState* previousState, sk_sp<GrRefCntedCallback> finishedCallback) {
     return false;
   }
 
@@ -668,7 +670,7 @@ class GrGpu : public SkRefCnt {
   // Returns nullptr if compatible sb could not be created, otherwise the caller owns the ref on
   // the GrStencilAttachment.
   virtual GrStencilAttachment* createStencilAttachmentForRenderTarget(
-      const GrRenderTarget*, int width, int height, int numStencilSamples) = 0;
+      const GrRenderTarget*, SkISize dimensions, int numStencilSamples) = 0;
 
   void handleDirtyContext() {
     if (fResetBits) {
@@ -697,7 +699,7 @@ class GrGpu : public SkRefCnt {
       GrSurface* surface, GrSurfaceOrigin origin, const SkIRect* bounds,
       uint32_t mipLevels = 1) const;
 
-  void setOOMed() noexcept { fOOMed = true; }
+  void setOOMed() { fOOMed = true; }
 
   Stats fStats;
   std::unique_ptr<GrPathRendering> fPathRendering;
@@ -814,7 +816,7 @@ class GrGpu : public SkRefCnt {
   GrSamplePatternDictionary fSamplePatternDictionary;
 
   struct SubmittedProc {
-    SubmittedProc(GrGpuSubmittedProc proc, GrGpuSubmittedContext context) noexcept
+    SubmittedProc(GrGpuSubmittedProc proc, GrGpuSubmittedContext context)
         : fProc(proc), fContext(context) {}
 
     GrGpuSubmittedProc fProc;
@@ -825,7 +827,7 @@ class GrGpu : public SkRefCnt {
   bool fOOMed = false;
 
   friend class GrPathRendering;
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

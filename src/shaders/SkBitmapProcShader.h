@@ -20,7 +20,7 @@ class SkBitmapProcLegacyShader : public SkShaderBase {
       const SkShaderBase&, SkTileMode tmx, SkTileMode tmy, const SkImage_Base*, const ContextRec&,
       SkArenaAlloc* alloc);
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 #endif

@@ -137,7 +137,7 @@ class AnimatedImageBlurs : public skiagm::GM {
   SkRandom fRand;
   SkScalar fLastTime;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -18,7 +18,7 @@ class SkSVGClipPath final : public SkSVGHiddenContainer {
  private:
   SkSVGClipPath();
 
-  typedef SkSVGHiddenContainer INHERITED;
+  using INHERITED = SkSVGHiddenContainer;
 };
 
 #endif  // SkSVGClipPath_DEFINED

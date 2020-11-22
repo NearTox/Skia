@@ -126,4 +126,4 @@ class SkottieExternalPropsGM : public skiagm::GM {
   using INHERITED = skiagm::GM;
 };
 
-DEF_GM(return new SkottieExternalPropsGM);
+DEF_GM(return new SkottieExternalPropsGM;)

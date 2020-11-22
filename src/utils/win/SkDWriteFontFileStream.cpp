@@ -78,7 +78,7 @@ size_t SkDWriteFontFileStream::read(void* buffer, size_t size) {
 
 bool SkDWriteFontFileStream::isAtEnd() const { return fPos == this->getLength(); }
 
-bool SkDWriteFontFileStream::rewind() noexcept {
+bool SkDWriteFontFileStream::rewind() {
   fPos = 0;
   return true;
 }
@@ -87,7 +87,7 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onDuplicate() const {
   return new SkDWriteFontFileStream(fFontFileStream.get());
 }
 
-size_t SkDWriteFontFileStream::getPosition() const noexcept { return fPos; }
+size_t SkDWriteFontFileStream::getPosition() const { return fPos; }
 
 bool SkDWriteFontFileStream::seek(size_t position) {
   size_t length = this->getLength();
@@ -103,7 +103,7 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
   return that.release();
 }
 
-size_t SkDWriteFontFileStream::getLength() const noexcept {
+size_t SkDWriteFontFileStream::getLength() const {
   HRESULT hr = S_OK;
   UINT64 realFileSize = 0;
   hr = fFontFileStream->GetFileSize(&realFileSize);
@@ -113,7 +113,7 @@ size_t SkDWriteFontFileStream::getLength() const noexcept {
   return static_cast<size_t>(realFileSize);
 }
 
-const void* SkDWriteFontFileStream::getMemoryBase() noexcept {
+const void* SkDWriteFontFileStream::getMemoryBase() {
   if (fLockedMemory) {
     return fLockedMemory;
   }

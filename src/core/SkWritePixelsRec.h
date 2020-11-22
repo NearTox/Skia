@@ -15,11 +15,10 @@
  *  Helper class to package and trim the parameters passed to writePixels()
  */
 struct SkWritePixelsRec {
-  SkWritePixelsRec(
-      const SkImageInfo& info, const void* pixels, size_t rowBytes, int x, int y) noexcept
+  SkWritePixelsRec(const SkImageInfo& info, const void* pixels, size_t rowBytes, int x, int y)
       : fPixels(pixels), fRowBytes(rowBytes), fInfo(info), fX(x), fY(y) {}
 
-  SkWritePixelsRec(const SkPixmap& pm, int x, int y) noexcept
+  SkWritePixelsRec(const SkPixmap& pm, int x, int y)
       : fPixels(pm.addr()), fRowBytes(pm.rowBytes()), fInfo(pm.info()), fX(x), fY(y) {}
 
   const void* fPixels;

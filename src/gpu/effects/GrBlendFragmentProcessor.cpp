@@ -49,7 +49,7 @@ class BlendFragmentProcessor : public GrFragmentProcessor {
         new BlendFragmentProcessor(std::move(src), std::move(dst), mode, behavior));
   }
 
-  const char* name() const noexcept override { return "Blend"; }
+  const char* name() const override { return "Blend"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
@@ -169,7 +169,7 @@ class BlendFragmentProcessor : public GrFragmentProcessor {
     b->add32((int)fMode);
   }
 
-  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
+  bool onIsEqual(const GrFragmentProcessor& other) const override {
     const BlendFragmentProcessor& cs = other.cast<BlendFragmentProcessor>();
     return fMode == cs.fMode;
   }
@@ -210,7 +210,7 @@ class BlendFragmentProcessor : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -220,7 +220,7 @@ class GLBlendFragmentProcessor : public GrGLSLFragmentProcessor {
   void emitCode(EmitArgs&) override;
 
  private:
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 /////////////////////////////////////////////////////////////////////

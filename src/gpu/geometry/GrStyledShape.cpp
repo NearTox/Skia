@@ -174,11 +174,11 @@ int GrStyledShape::unstyledKeySize() const {
 
 void GrStyledShape::writeUnstyledKey(uint32_t* key) const {
   SkASSERT(this->unstyledKeySize());
-  SkDEBUGCODE(uint32_t* origKey = key;) if (fInheritedKey.count()) {
+  SkDEBUGCODE(uint32_t* origKey = key;)
+  if (fInheritedKey.count()) {
     memcpy(key, fInheritedKey.get(), sizeof(uint32_t) * fInheritedKey.count());
-    SkDEBUGCODE(key += fInheritedKey.count());
-  }
-  else {
+    SkDEBUGCODE(key += fInheritedKey.count();)
+  } else {
     // Dir and start are only used for rect and rrect shapes, so are not included in other
     // shape type keys. Make sure that they are the defaults for other shapes so it doesn't
     // matter that we universally include them in the flag key value.

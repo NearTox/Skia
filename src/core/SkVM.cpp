@@ -130,13 +130,13 @@ namespace {
 class SkDebugfStream final : public SkWStream {
   size_t fBytesWritten = 0;
 
-  bool write(const void* buffer, size_t size) noexcept override {
+  bool write(const void* buffer, size_t size) override {
     SkDebugf("%.*s", size, buffer);
     fBytesWritten += size;
     return true;
   }
 
-  size_t bytesWritten() const noexcept override { return fBytesWritten; }
+  size_t bytesWritten() const override { return fBytesWritten; }
 };
 
 struct V {
@@ -289,6 +289,7 @@ static void write_one_instruction(Val id, const I& inst, SkWStream* o, Fs... fs)
     case Op::uniform32: write(o, V{id}, "=", op, Arg{immy}, Hex{immz}, fs(id)...); break;
 
     case Op::splat: write(o, V{id}, "=", op, Splat{immy}, fs(id)...); break;
+    case Op::splat_q14: write(o, V{id}, "=", op, Splat{immy}, fs(id)...); break;
 
     case Op::add_f32: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
     case Op::sub_f32: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
@@ -318,12 +319,36 @@ static void write_one_instruction(Val id, const I& inst, SkWStream* o, Fs... fs)
     case Op::eq_i32: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
     case Op::gt_i32: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
 
+    case Op::add_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::sub_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::mul_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+
+    case Op::shl_q14: write(o, V{id}, "=", op, V{x}, Shift{immy}, fs(id)...); break;
+    case Op::shr_q14: write(o, V{id}, "=", op, V{x}, Shift{immy}, fs(id)...); break;
+    case Op::sra_q14: write(o, V{id}, "=", op, V{x}, Shift{immy}, fs(id)...); break;
+
+    case Op::min_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::max_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::uavg_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+
+    case Op::eq_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::gt_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+
+    case Op::bit_and_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::bit_or_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::bit_xor_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+    case Op::bit_clear_q14: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
+
+    case Op::from_q14: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
+    case Op::to_q14: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
+
     case Op::bit_and: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
     case Op::bit_or: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
     case Op::bit_xor: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
     case Op::bit_clear: write(o, V{id}, "=", op, V{x}, V{y}, fs(id)...); break;
 
     case Op::select: write(o, V{id}, "=", op, V{x}, V{y}, V{z}, fs(id)...); break;
+    case Op::select_q14: write(o, V{id}, "=", op, V{x}, V{y}, V{z}, fs(id)...); break;
     case Op::pack: write(o, V{id}, "=", op, V{x}, V{y}, Shift{immz}, fs(id)...); break;
 
     case Op::ceil: write(o, V{id}, "=", op, V{x}, fs(id)...); break;
@@ -417,6 +442,7 @@ void Program::dump(SkWStream* o) const {
       case Op::uniform32: write(o, R{d}, "=", op, Arg{immy}, Hex{immz}); break;
 
       case Op::splat: write(o, R{d}, "=", op, Splat{immy}); break;
+      case Op::splat_q14: write(o, R{d}, "=", op, Splat{immy}); break;
 
       case Op::add_f32: write(o, R{d}, "=", op, R{x}, R{y}); break;
       case Op::sub_f32: write(o, R{d}, "=", op, R{x}, R{y}); break;
@@ -446,12 +472,36 @@ void Program::dump(SkWStream* o) const {
       case Op::eq_i32: write(o, R{d}, "=", op, R{x}, R{y}); break;
       case Op::gt_i32: write(o, R{d}, "=", op, R{x}, R{y}); break;
 
+      case Op::add_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::sub_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::mul_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+
+      case Op::shl_q14: write(o, R{d}, "=", op, R{x}, Shift{immy}); break;
+      case Op::shr_q14: write(o, R{d}, "=", op, R{x}, Shift{immy}); break;
+      case Op::sra_q14: write(o, R{d}, "=", op, R{x}, Shift{immy}); break;
+
+      case Op::min_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::max_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::uavg_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+
+      case Op::eq_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::gt_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+
+      case Op::bit_and_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::bit_or_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::bit_xor_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+      case Op::bit_clear_q14: write(o, R{d}, "=", op, R{x}, R{y}); break;
+
+      case Op::from_q14: write(o, R{d}, "=", op, R{x}); break;
+      case Op::to_q14: write(o, R{d}, "=", op, R{x}); break;
+
       case Op::bit_and: write(o, R{d}, "=", op, R{x}, R{y}); break;
       case Op::bit_or: write(o, R{d}, "=", op, R{x}, R{y}); break;
       case Op::bit_xor: write(o, R{d}, "=", op, R{x}, R{y}); break;
       case Op::bit_clear: write(o, R{d}, "=", op, R{x}, R{y}); break;
 
       case Op::select: write(o, R{d}, "=", op, R{x}, R{y}, R{z}); break;
+      case Op::select_q14: write(o, R{d}, "=", op, R{x}, R{y}, R{z}); break;
       case Op::pack: write(o, R{d}, "=", op, R{x}, R{y}, Shift{immz}); break;
 
       case Op::ceil: write(o, R{d}, "=", op, R{x}); break;
@@ -502,7 +552,7 @@ std::vector<Instruction> eliminate_dead_code(std::vector<Instruction> program) {
       new_id[id] = next++;
     }
   }
-  auto it = std::remove_if(program.begin(), program.end(), [&](const Instruction& inst) noexcept {
+  auto it = std::remove_if(program.begin(), program.end(), [&](const Instruction& inst) {
     Val id = (Val)(&inst - program.data());
     return !live[id];
   });
@@ -643,7 +693,7 @@ uint64_t Builder::hash() const {
   return (uint64_t)lo | (uint64_t)hi << 32;
 }
 
-bool operator==(const Instruction& a, const Instruction& b) noexcept {
+bool operator==(const Instruction& a, const Instruction& b) {
   return a.op == b.op && a.x == b.x && a.y == b.y && a.z == b.z && a.immy == b.immy &&
          a.immz == b.immz;
 }
@@ -666,7 +716,7 @@ Val Builder::push(Instruction inst) {
   return id;
 }
 
-bool Builder::allImm() const noexcept { return true; }
+bool Builder::allImm() const { return true; }
 
 template <typename T, typename... Rest>
 bool Builder::allImm(Val id, T* imm, Rest... rest) const {
@@ -675,6 +725,7 @@ bool Builder::allImm(Val id, T* imm, Rest... rest) const {
     memcpy(imm, &fProgram[id].immy, 4);
     return this->allImm(rest...);
   }
+  // TODO: Op::splat_q14
   return false;
 }
 
@@ -737,13 +788,8 @@ I32 Builder::uniform32(Arg ptr, int offset) {
   return {this, push(Op::uniform32, NA, NA, NA, ptr.ix, offset)};
 }
 
-// The two splat() functions are just syntax sugar over splatting a 4-byte bit pattern.
 I32 Builder::splat(int n) { return {this, push(Op::splat, NA, NA, NA, n)}; }
-F32 Builder::splat(float f) {
-  int bits;
-  memcpy(&bits, &f, 4);
-  return {this, push(Op::splat, NA, NA, NA, bits)};
-}
+Q14 Builder::splat_q14(int n) { return {this, push(Op::splat_q14, NA, NA, NA, n)}; }
 
 bool fma_supported() {
   static const bool supported =
@@ -845,7 +891,7 @@ F32 Builder::sqrt(F32 x) {
 // See http://www.machinedlearnings.com/2011/06/fast-approximate-logarithm-exponential.html.
 F32 Builder::approx_log2(F32 x) {
   // e - 127 is a fair approximation of log2(x) in its own right...
-  F32 e = mul(to_f32(bit_cast(x)), splat(1.0f / (1 << 23)));
+  F32 e = mul(to_F32(bit_cast(x)), splat(1.0f / (1 << 23)));
 
   // ... but using the mantissa to refine its error is _much_ better.
   F32 m = bit_cast(bit_or(bit_and(bit_cast(x), 0x007fffff), 0x3f000000));
@@ -1007,6 +1053,43 @@ F32 Builder::max(F32 x, F32 y) {
   }
   return {this, this->push(Op::max_f32, x.id, y.id)};
 }
+
+// TODO: constant propagation and strength reduction for all these Q14 ops
+Q14 Builder::add(Q14 x, Q14 y) { return {this, this->push(Op::add_q14, x.id, y.id)}; }
+Q14 Builder::sub(Q14 x, Q14 y) { return {this, this->push(Op::sub_q14, x.id, y.id)}; }
+Q14 Builder::mul(Q14 x, Q14 y) { return {this, this->push(Op::mul_q14, x.id, y.id)}; }
+
+Q14 Builder::shl(Q14 x, int k) { return {this, this->push(Op::shl_q14, x.id, NA, NA, k)}; }
+Q14 Builder::shr(Q14 x, int k) { return {this, this->push(Op::shr_q14, x.id, NA, NA, k)}; }
+Q14 Builder::sra(Q14 x, int k) { return {this, this->push(Op::sra_q14, x.id, NA, NA, k)}; }
+
+Q14 Builder::eq(Q14 x, Q14 y) { return {this, this->push(Op::eq_q14, x.id, y.id)}; }
+Q14 Builder::gt(Q14 x, Q14 y) { return {this, this->push(Op::gt_q14, x.id, y.id)}; }
+Q14 Builder::lt(Q14 x, Q14 y) { return gt(y, x); }
+Q14 Builder::neq(Q14 x, Q14 y) { return ~eq(x, y); }
+Q14 Builder::gte(Q14 x, Q14 y) { return ~lt(x, y); }
+Q14 Builder::lte(Q14 x, Q14 y) { return ~gt(x, y); }
+
+Q14 Builder::min(Q14 x, Q14 y) { return {this, this->push(Op::min_q14, x.id, y.id)}; }
+Q14 Builder::max(Q14 x, Q14 y) { return {this, this->push(Op::max_q14, x.id, y.id)}; }
+
+Q14 Builder::bit_and(Q14 x, Q14 y) { return {this, this->push(Op::bit_and_q14, x.id, y.id)}; }
+Q14 Builder::bit_or(Q14 x, Q14 y) { return {this, this->push(Op::bit_or_q14, x.id, y.id)}; }
+Q14 Builder::bit_xor(Q14 x, Q14 y) { return {this, this->push(Op::bit_xor_q14, x.id, y.id)}; }
+Q14 Builder::bit_clear(Q14 x, Q14 y) { return {this, this->push(Op::bit_clear_q14, x.id, y.id)}; }
+
+Q14 Builder::select(Q14 cond, Q14 t, Q14 f) {
+  return {this, this->push(Op::select_q14, cond.id, t.id, f.id)};
+}
+
+Q14 Builder::to_Q14(I32 x) { return {this, this->push(Op::to_q14, x.id)}; }
+I32 Builder::to_I32(Q14 x) { return {this, this->push(Op::from_q14, x.id)}; }
+
+// TODO: open question in general whether float -> q14 should round() or trunc().
+Q14 Builder::to_Q14(F32 x) { return to_Q14(trunc(x * 16384.0f)); }
+F32 Builder::to_F32(Q14 x) { return to_F32(to_I32(x)) * (1 / 16384.0f); }
+
+Q14 Builder::unsigned_avg(Q14 x, Q14 y) { return {this, this->push(Op::uavg_q14, x.id, y.id)}; }
 
 I32 Builder::add(I32 x, I32 y) {
   if (int X, Y; this->allImm(x.id, &X, y.id, &Y)) {
@@ -1255,7 +1338,7 @@ F32 Builder::floor(F32 x) {
   }
   return {this, this->push(Op::floor, x.id)};
 }
-F32 Builder::to_f32(I32 x) {
+F32 Builder::to_F32(I32 x) {
   if (int X; this->allImm(x.id, &X)) {
     return splat((float)X);
   }
@@ -1289,7 +1372,7 @@ F32 Builder::from_half(I32 x) {
 
 F32 Builder::from_unorm(int bits, I32 x) {
   F32 limit = splat(1 / ((1 << bits) - 1.0f));
-  return mul(to_f32(x), limit);
+  return mul(to_F32(x), limit);
 }
 I32 Builder::to_unorm(int bits, F32 x) {
   F32 limit = splat((1 << bits) - 1.0f);
@@ -1564,14 +1647,13 @@ void Builder::premul(F32* r, F32* g, F32* b, F32 a) {
   *b *= a;
 }
 
-Color Builder::uniformPremul(
-    SkColor4f color, SkColorSpace* src, Uniforms* uniforms, SkColorSpace* dst) {
-  SkColorSpaceXformSteps(src, kUnpremul_SkAlphaType, dst, kPremul_SkAlphaType).apply(color.vec());
+Color Builder::uniformColor(SkColor4f color, Uniforms* uniforms) {
+  auto [r, g, b, a] = color;
   return {
-      uniformF(uniforms->pushF(color.fR)),
-      uniformF(uniforms->pushF(color.fG)),
-      uniformF(uniforms->pushF(color.fB)),
-      uniformF(uniforms->pushF(color.fA)),
+      uniformF(uniforms->pushF(r)),
+      uniformF(uniforms->pushF(g)),
+      uniformF(uniforms->pushF(b)),
+      uniformF(uniforms->pushF(a)),
   };
 }
 
@@ -1935,15 +2017,13 @@ Usage::Usage(const std::vector<Instruction>& program) {
 // http://ref.x86asm.net/coder64.html
 
 // Used for ModRM / immediate instruction encoding.
-static uint8_t _233(int a, int b, int c) noexcept {
-  return (a & 3) << 6 | (b & 7) << 3 | (c & 7) << 0;
-}
+static uint8_t _233(int a, int b, int c) { return (a & 3) << 6 | (b & 7) << 3 | (c & 7) << 0; }
 
 // ModRM byte encodes the arguments of an opcode.
 enum class Mod { Indirect, OneByteImm, FourByteImm, Direct };
 static uint8_t mod_rm(Mod mod, int reg, int rm) { return _233((int)mod, reg, rm); }
 
-static Mod mod(int imm) noexcept {
+static Mod mod(int imm) {
   if (imm == 0) {
     return Mod::Indirect;
   }
@@ -2032,9 +2112,9 @@ static VEX vex(
   return vex;
 }
 
-Assembler::Assembler(void* buf) noexcept : fCode((uint8_t*)buf), fCurr(fCode), fSize(0) {}
+Assembler::Assembler(void* buf) : fCode((uint8_t*)buf), fCurr(fCode), fSize(0) {}
 
-size_t Assembler::size() const noexcept { return fSize; }
+size_t Assembler::size() const { return fSize; }
 
 void Assembler::bytes(const void* p, int n) {
   if (fCurr) {
@@ -2129,8 +2209,17 @@ void Assembler::vpaddd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xfe, d
 void Assembler::vpsubd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xfa, dst, x, y); }
 void Assembler::vpmulld(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x40, dst, x, y); }
 
+void Assembler::vpaddw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xfd, dst, x, y); }
 void Assembler::vpsubw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xf9, dst, x, y); }
 void Assembler::vpmullw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xd5, dst, x, y); }
+void Assembler::vpavgw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xe3, dst, x, y); }
+void Assembler::vpmulhrsw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x0b, dst, x, y); }
+void Assembler::vpminsw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xea, dst, x, y); }
+void Assembler::vpmaxsw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xee, dst, x, y); }
+void Assembler::vpminuw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x3a, dst, x, y); }
+void Assembler::vpmaxuw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x380f, 0x3e, dst, x, y); }
+
+void Assembler::vpabsw(Ymm dst, Operand x) { this->op(0x66, 0x380f, 0x1d, dst, x); }
 
 void Assembler::vpand(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xdb, dst, x, y); }
 void Assembler::vpor(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0xeb, dst, x, y); }
@@ -2163,7 +2252,9 @@ void Assembler::vpunpckldq(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x6
 void Assembler::vpunpckhdq(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x6a, dst, x, y); }
 
 void Assembler::vpcmpeqd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x76, dst, x, y); }
+void Assembler::vpcmpeqw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x75, dst, x, y); }
 void Assembler::vpcmpgtd(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x66, dst, x, y); }
+void Assembler::vpcmpgtw(Ymm dst, Ymm x, Operand y) { this->op(0x66, 0x0f, 0x65, dst, x, y); }
 
 void Assembler::imm_byte_after_operand(const Operand& operand, int imm) {
   // When we've embedded a label displacement in the middle of an instruction,
@@ -2201,8 +2292,16 @@ void Assembler::vpsrad(Ymm dst, Ymm x, int imm) {
   this->op(0x66, 0x0f, 0x72, (Ymm)4, dst, x);
   this->byte(imm);
 }
+void Assembler::vpsllw(Ymm dst, Ymm x, int imm) {
+  this->op(0x66, 0x0f, 0x71, (Ymm)6, dst, x);
+  this->byte(imm);
+}
 void Assembler::vpsrlw(Ymm dst, Ymm x, int imm) {
   this->op(0x66, 0x0f, 0x71, (Ymm)2, dst, x);
+  this->byte(imm);
+}
+void Assembler::vpsraw(Ymm dst, Ymm x, int imm) {
+  this->op(0x66, 0x0f, 0x71, (Ymm)4, dst, x);
   this->byte(imm);
 }
 
@@ -3043,9 +3142,9 @@ Program::~Program() {
   }
 }
 
-Program::Program(Program&& other) noexcept : fImpl(std::move(other.fImpl)) {}
+Program::Program(Program&& other) : fImpl(std::move(other.fImpl)) {}
 
-Program& Program::operator=(Program&& other) noexcept {
+Program& Program::operator=(Program&& other) {
   fImpl = std::move(other.fImpl);
   return *this;
 }
@@ -3068,10 +3167,10 @@ Program::Program(
 }
 
 std::vector<InterpreterInstruction> Program::instructions() const { return fImpl->instructions; }
-int Program::nargs() const noexcept { return (int)fImpl->strides.size(); }
-int Program::nregs() const noexcept { return fImpl->regs; }
-int Program::loop() const noexcept { return fImpl->loop; }
-bool Program::empty() const noexcept { return fImpl->instructions.empty(); }
+int Program::nargs() const { return (int)fImpl->strides.size(); }
+int Program::nregs() const { return fImpl->regs; }
+int Program::loop() const { return fImpl->loop; }
+bool Program::empty() const { return fImpl->instructions.empty(); }
 
 // Translate OptimizedInstructions to InterpreterInstructions.
 void Program::setupInterpreter(const std::vector<OptimizedInstruction>& instructions) {
@@ -3084,7 +3183,7 @@ void Program::setupInterpreter(const std::vector<OptimizedInstruction>& instruct
   // But recycling registers is fairly cheap, and good practice for the
   // JITs where minimizing register pressure really is important.
   //
-  // Since we have effectively infinite registers, we hoist any value we can.
+  // We have effectively infinite registers, so we hoist any value we can.
   // (The JIT may choose a more complex policy to reduce register pressure.)
 
   fImpl->regs = 0;
@@ -3314,7 +3413,7 @@ bool Program::jit(
 #    endif
 
   auto load_from_memory = [&](Reg r, Val v) {
-    if (instructions[v].op == Op::splat) {
+    if (instructions[v].op == Op::splat || instructions[v].op == Op::splat_q14) {
       if (instructions[v].immy == 0) {
         a->vpxor(r, r, r);
       } else {
@@ -3354,7 +3453,7 @@ bool Program::jit(
   };
 
   auto load_from_memory = [&](Reg r, Val v) {
-    if (instructions[v].op == Op::splat) {
+    if (instructions[v].op == Op::splat || instructions[v].op == Op::splat_q14) {
       if (instructions[v].immy == 0) {
         a->eor16b(r, r, r);
       } else {
@@ -3413,7 +3512,8 @@ bool Program::jit(
 
       SkASSERT(v == NA || v >= 0);
       if (v >= 0) {
-        if (stack_slot[v] == NA && instructions[v].op != Op::splat) {
+        if (stack_slot[v] == NA && instructions[v].op != Op::splat &&
+            instructions[v].op != Op::splat_q14) {
           store_to_stack(r, v);
         }
         v = NA;
@@ -3530,7 +3630,7 @@ bool Program::jit(
       if (int found = find_existing_reg(v); found != NA) {
         return (Reg)found;
       }
-      if (instructions[v].op == Op::splat) {
+      if (instructions[v].op == Op::splat || instructions[v].op == Op::splat_q14) {
         return constants.find(instructions[v].immy);
       }
       return A::Mem{A::rsp, stack_slot[v] * K * 4};
@@ -3542,10 +3642,9 @@ bool Program::jit(
 #  endif
 
     switch (op) {
+      // Make sure splat constants can be found by load_from_memory() or any().
       case Op::splat:
-        // Make sure splat constants can be found by load_from_memory() or any().
-        (void)constants[immy];
-        break;
+      case Op::splat_q14: (void)constants[immy]; break;
 
 #  if defined(__x86_64__) || defined(_M_X64)
       case Op::assert_true: {
@@ -3856,6 +3955,15 @@ bool Program::jit(
           a->vpaddd(dst(y), r(y), any(x));
         }
         break;
+
+      case Op::add_q14:
+        if (in_reg(x)) {
+          a->vpaddw(dst(x), r(x), any(y));
+        } else {
+          a->vpaddw(dst(y), r(y), any(x));
+        }
+        break;
+
       case Op::mul_i32:
         if (in_reg(x)) {
           a->vpmulld(dst(x), r(x), any(y));
@@ -3864,9 +3972,20 @@ bool Program::jit(
         }
         break;
 
+      case Op::mul_q14:
+        if (in_reg(x)) {
+          a->vpmulhrsw(dst(x), r(x), any(y));
+        } else {
+          a->vpmulhrsw(dst(y), r(y), any(x));
+        }
+        a->vpaddw(dst(), dst(), dst());  // << 1
+        break;
+
       case Op::sub_i32: a->vpsubd(dst(x), r(x), any(y)); break;
+      case Op::sub_q14: a->vpsubw(dst(x), r(x), any(y)); break;
 
       case Op::bit_and:
+      case Op::bit_and_q14:
         if (in_reg(x)) {
           a->vpand(dst(x), r(x), any(y));
         } else {
@@ -3874,6 +3993,7 @@ bool Program::jit(
         }
         break;
       case Op::bit_or:
+      case Op::bit_or_q14:
         if (in_reg(x)) {
           a->vpor(dst(x), r(x), any(y));
         } else {
@@ -3881,6 +4001,7 @@ bool Program::jit(
         }
         break;
       case Op::bit_xor:
+      case Op::bit_xor_q14:
         if (in_reg(x)) {
           a->vpxor(dst(x), r(x), any(y));
         } else {
@@ -3888,9 +4009,11 @@ bool Program::jit(
         }
         break;
 
-      case Op::bit_clear: a->vpandn(dst(y), r(y), any(x)); break;  // Notice, y then x.
+      case Op::bit_clear:
+      case Op::bit_clear_q14: a->vpandn(dst(y), r(y), any(x)); break;  // Notice, y then x.
 
       case Op::select:
+      case Op::select_q14:
         if (try_alias(z)) {
           a->vpblendvb(dst(z), r(z), any(y), r(x));
         } else {
@@ -3898,9 +4021,37 @@ bool Program::jit(
         }
         break;
 
+      case Op::min_q14:
+        if (in_reg(x)) {
+          a->vpminsw(dst(x), r(x), any(y));
+        } else {
+          a->vpminsw(dst(y), r(y), any(x));
+        }
+        break;
+
+      case Op::max_q14:
+        if (in_reg(x)) {
+          a->vpmaxsw(dst(x), r(x), any(y));
+        } else {
+          a->vpmaxsw(dst(y), r(y), any(x));
+        }
+        break;
+
+      case Op::uavg_q14:
+        if (in_reg(x)) {
+          a->vpavgw(dst(x), r(x), any(y));
+        } else {
+          a->vpavgw(dst(y), r(y), any(x));
+        }
+        break;
+
       case Op::shl_i32: a->vpslld(dst(x), r(x), immy); break;
       case Op::shr_i32: a->vpsrld(dst(x), r(x), immy); break;
       case Op::sra_i32: a->vpsrad(dst(x), r(x), immy); break;
+
+      case Op::shl_q14: a->vpsllw(dst(x), r(x), immy); break;
+      case Op::shr_q14: a->vpsrlw(dst(x), r(x), immy); break;
+      case Op::sra_q14: a->vpsraw(dst(x), r(x), immy); break;
 
       case Op::eq_i32:
         if (in_reg(x)) {
@@ -3910,7 +4061,16 @@ bool Program::jit(
         }
         break;
 
+      case Op::eq_q14:
+        if (in_reg(x)) {
+          a->vpcmpeqw(dst(x), r(x), any(y));
+        } else {
+          a->vpcmpeqw(dst(y), r(y), any(x));
+        }
+        break;
+
       case Op::gt_i32: a->vpcmpgtd(dst(), r(x), any(y)); break;
+      case Op::gt_q14: a->vpcmpgtw(dst(), r(x), any(y)); break;
 
       case Op::eq_f32:
         if (in_reg(x)) {
@@ -3985,6 +4145,18 @@ bool Program::jit(
         a->vpackusdw(dst(x), r(x), r(x));  // f16 ymm -> f16 xmm
         a->vpermq(dst(), dst(), 0xd8);     // swap middle two 64-bit lanes
         a->vcvtph2ps(dst(), dst());        // f16 xmm -> f32 ymm
+        break;
+
+      // These are both no-ops because we're storing Q14 values in even lanes.
+      case Op::from_q14:
+        if (!try_alias(x)) {
+          a->vmovdqa(dst(), any(x));
+        }
+        break;
+      case Op::to_q14:
+        if (!try_alias(x)) {
+          a->vmovdqa(dst(), any(x));
+        }
         break;
 
 #  elif defined(__aarch64__)

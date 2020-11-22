@@ -45,18 +45,18 @@ typedef uint32_t SkFontTableTag;
 class SK_API SkTypeface : public SkWeakRefCnt {
  public:
   /** Returns the typeface's intrinsic style attributes. */
-  SkFontStyle fontStyle() const noexcept { return fStyle; }
+  SkFontStyle fontStyle() const { return fStyle; }
 
   /** Returns true if style() has the kBold bit set. */
-  bool isBold() const noexcept { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
+  bool isBold() const { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
 
   /** Returns true if style() has the kItalic bit set. */
-  bool isItalic() const noexcept { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
+  bool isItalic() const { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
 
   /** Returns true if the typeface claims to be fixed-pitch.
    *  This is a style bit, advance widths may vary even if this returns true.
    */
-  bool isFixedPitch() const noexcept { return fIsFixedPitch; }
+  bool isFixedPitch() const { return fIsFixedPitch; }
 
   /** Copy into 'coordinates' (allocated by the caller) the design variation coordinates.
    *
@@ -329,15 +329,15 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   void* internal_private_getCTFontRef() const { return this->onGetCTFontRef(); }
 
  protected:
-  explicit SkTypeface(const SkFontStyle& style, bool isFixedPitch = false) noexcept;
+  explicit SkTypeface(const SkFontStyle& style, bool isFixedPitch = false);
   ~SkTypeface() override;
 
   virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const = 0;
 
   /** Sets the fixedPitch bit. If used, must be called in the constructor. */
-  void setIsFixedPitch(bool isFixedPitch) noexcept { fIsFixedPitch = isFixedPitch; }
+  void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
   /** Sets the font style. If used, must be called in the constructor. */
-  void setFontStyle(SkFontStyle style) noexcept { fStyle = style; }
+  void setFontStyle(SkFontStyle style) { fStyle = style; }
 
   // Must return a valid scaler context. It can not return nullptr.
   virtual SkScalerContext* onCreateScalerContext(
@@ -419,6 +419,6 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   mutable SkOnce fBoundsOnce;
   bool fIsFixedPitch;
 
-  typedef SkWeakRefCnt INHERITED;
+  using INHERITED = SkWeakRefCnt;
 };
 #endif

@@ -27,7 +27,8 @@ static int max_iters;
 #ifdef CUBICMAP_TRACK_MAX_ERROR
 static float compute_slow(float A, float B, float C, float x) {
   double roots[3];
-  SkDEBUGCODE(int count =) SkDCubic::RootsValidT(A, B, C, -x, roots);
+  SkDEBUGCODE(int count =)
+  SkDCubic::RootsValidT(A, B, C, -x, roots);
   SkASSERT(count == 1);
   return (float)roots[0];
 }

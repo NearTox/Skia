@@ -129,6 +129,6 @@ class ColorMatrixGM : public skiagm::GM {
   sk_sp<SkImage> fSolidImg;
   sk_sp<SkImage> fTransparentImg;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ColorMatrixGM;)

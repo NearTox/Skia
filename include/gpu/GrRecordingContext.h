@@ -23,6 +23,7 @@ class GrRecordingContextPriv;
 class GrSurfaceContext;
 class GrSurfaceProxy;
 class GrTextBlobCache;
+class GrThreadSafeUniquelyKeyedProxyViewCache;
 class SkArenaAlloc;
 class SkJSONWriter;
 
@@ -61,6 +62,21 @@ class GrRecordingContext : public GrImageContext {
   }
 
   /**
+   * Gets the maximum supported texture size.
+   */
+  SK_API int maxTextureSize() const;
+
+  /**
+   * Gets the maximum supported render target size.
+   */
+  SK_API int maxRenderTargetSize() const;
+
+  /**
+   * Can a SkImage be created with the given color type.
+   */
+  SK_API bool colorTypeSupportedAsImage(SkColorType) const;
+
+  /**
    * Gets the maximum supported sample count for a color type. 1 is returned if only non-MSAA
    * rendering is supported for the color type. 0 is returned if rendering to this color type
    * is not supported at all.
@@ -68,8 +84,8 @@ class GrRecordingContext : public GrImageContext {
   SK_API int maxSurfaceSampleCountForColorType(SkColorType) const;
 
   // Provides access to functions that aren't part of the public API.
-  GrRecordingContextPriv priv() noexcept;
-  const GrRecordingContextPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
+  GrRecordingContextPriv priv();
+  const GrRecordingContextPriv priv() const;  // NOLINT(readability-const-return-type)
 
   // The collection of specialized memory arenas for different types of data recorded by a
   // GrRecordingContext. Arenas does not maintain ownership of the pools it groups together.
@@ -78,10 +94,10 @@ class GrRecordingContext : public GrImageContext {
     Arenas(GrOpMemoryPool*, SkArenaAlloc*);
 
     // For storing GrOp-derived classes recorded by a GrRecordingContext
-    GrOpMemoryPool* opMemoryPool() noexcept { return fOpMemoryPool; }
+    GrOpMemoryPool* opMemoryPool() { return fOpMemoryPool; }
 
     // For storing pipelines and other complex data as-needed by ops
-    SkArenaAlloc* recordTimeAllocator() noexcept { return fRecordTimeAllocator; }
+    SkArenaAlloc* recordTimeAllocator() { return fRecordTimeAllocator; }
 
    private:
     GrOpMemoryPool* fOpMemoryPool;
@@ -96,13 +112,12 @@ class GrRecordingContext : public GrImageContext {
   // Like Arenas, but preserves ownership of the underlying pools.
   class OwnedArenas {
    public:
-    OwnedArenas() noexcept;
+    OwnedArenas();
     ~OwnedArenas();
 
     Arenas get();
 
-    OwnedArenas(OwnedArenas&&) noexcept;
-    OwnedArenas& operator=(OwnedArenas&&) noexcept;
+    OwnedArenas& operator=(OwnedArenas&&);
 
    private:
     std::unique_ptr<GrOpMemoryPool> fOpMemoryPool;
@@ -114,25 +129,25 @@ class GrRecordingContext : public GrImageContext {
 
   void abandonContext() override;
 
-  GrDrawingManager* drawingManager() noexcept;
+  GrDrawingManager* drawingManager();
 
   // There is no going back from this method. It should only be called to control the timing
   // during abandon or destruction of the context.
-  void destroyDrawingManager() noexcept;
+  void destroyDrawingManager();
 
   Arenas arenas() { return fArenas.get(); }
   // This entry point should only be used for DDL creation where we want the ops' lifetime to
   // match that of the DDL.
-  OwnedArenas&& detachArenas() noexcept;
+  OwnedArenas&& detachArenas();
 
   struct ProgramData {
-    ProgramData(std::unique_ptr<const GrProgramDesc>, const GrProgramInfo*) noexcept;
-    ProgramData(ProgramData&&) noexcept;  // for SkTArray
+    ProgramData(std::unique_ptr<const GrProgramDesc>, const GrProgramInfo*);
+    ProgramData(ProgramData&&);  // for SkTArray
     ProgramData(const ProgramData&) = delete;
     ~ProgramData();
 
-    const GrProgramDesc& desc() const noexcept { return *fDesc; }
-    const GrProgramInfo& info() const noexcept { return *fInfo; }
+    const GrProgramDesc& desc() const { return *fDesc; }
+    const GrProgramInfo& info() const { return *fInfo; }
 
    private:
     // TODO: store the GrProgramDescs in the 'fRecordTimeData' arena
@@ -153,8 +168,11 @@ class GrRecordingContext : public GrImageContext {
   // same lifetime at the DDL itself.
   virtual void detachProgramData(SkTArray<ProgramData>*) {}
 
-  GrTextBlobCache* getTextBlobCache() noexcept;
-  const GrTextBlobCache* getTextBlobCache() const noexcept;
+  GrTextBlobCache* getTextBlobCache();
+  const GrTextBlobCache* getTextBlobCache() const;
+
+  GrThreadSafeUniquelyKeyedProxyViewCache* threadSafeViewCache();
+  const GrThreadSafeUniquelyKeyedProxyViewCache* threadSafeViewCache() const;
 
   /**
    * Registers an object for flush-related callbacks. (See GrOnFlushCallbackObject.)
@@ -164,22 +182,22 @@ class GrRecordingContext : public GrImageContext {
    */
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
-  GrAuditTrail* auditTrail() noexcept { return fAuditTrail.get(); }
+  GrAuditTrail* auditTrail() { return fAuditTrail.get(); }
 
-  GrRecordingContext* asRecordingContext() noexcept override { return this; }
+  GrRecordingContext* asRecordingContext() override { return this; }
 
   class Stats {
    public:
-    Stats() noexcept = default;
+    Stats() = default;
 
 #if GR_GPU_STATS
-    void reset() noexcept { *this = {}; }
+    void reset() { *this = {}; }
 
-    int numPathMasksGenerated() const noexcept { return fNumPathMasksGenerated; }
-    void incNumPathMasksGenerated() noexcept { fNumPathMasksGenerated++; }
+    int numPathMasksGenerated() const { return fNumPathMasksGenerated; }
+    void incNumPathMasksGenerated() { fNumPathMasksGenerated++; }
 
-    int numPathMaskCacheHits() const noexcept { return fNumPathMaskCacheHits; }
-    void incNumPathMasksCacheHits() noexcept { fNumPathMaskCacheHits++; }
+    int numPathMaskCacheHits() const { return fNumPathMaskCacheHits; }
+    void incNumPathMasksCacheHits() { fNumPathMaskCacheHits++; }
 
 #  if GR_TEST_UTILS
     void dump(SkString* out);
@@ -201,8 +219,8 @@ class GrRecordingContext : public GrImageContext {
 #endif  // GR_GPU_STATS
   } fStats;
 
-  Stats* stats() noexcept { return &fStats; }
-  const Stats* stats() const noexcept { return &fStats; }
+  Stats* stats() { return &fStats; }
+  const Stats* stats() const { return &fStats; }
   void dumpJSON(SkJSONWriter*) const;
 
  private:
@@ -212,18 +230,18 @@ class GrRecordingContext : public GrImageContext {
 
   std::unique_ptr<GrAuditTrail> fAuditTrail;
 
-#ifdef GR_TEST_UTILS
+#if GR_TEST_UTILS
   int fSuppressWarningMessages = 0;
 #endif
 
-  typedef GrImageContext INHERITED;
+  using INHERITED = GrImageContext;
 };
 
 /**
- * Safely cast a possibly-null recording context to direct context.
+ * Safely cast a possibly-null base context to direct context.
  */
-static inline GrDirectContext* GrAsDirectContext(GrRecordingContext* recording) noexcept {
-  return recording ? recording->asDirectContext() : nullptr;
+static inline GrDirectContext* GrAsDirectContext(GrContext_Base* base) {
+  return base ? base->asDirectContext() : nullptr;
 }
 
 #endif

@@ -6,6 +6,7 @@
  */
 
 #include "include/core/SkMatrix.h"
+#include "include/core/SkString.h"
 #include "include/private/SkMalloc.h"
 #include "src/core/SkBuffer.h"
 #include "src/core/SkRRectPriv.h"
@@ -16,7 +17,7 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkRRect::setRectXY(const SkRect& rect, SkScalar xRad, SkScalar yRad) noexcept {
+void SkRRect::setRectXY(const SkRect& rect, SkScalar xRad, SkScalar yRad) {
   if (!this->initializeRect(rect)) {
     return;
   }
@@ -54,8 +55,7 @@ void SkRRect::setRectXY(const SkRect& rect, SkScalar xRad, SkScalar yRad) noexce
 }
 
 void SkRRect::setNinePatch(
-    const SkRect& rect, SkScalar leftRad, SkScalar topRad, SkScalar rightRad,
-    SkScalar bottomRad) noexcept {
+    const SkRect& rect, SkScalar leftRad, SkScalar topRad, SkScalar rightRad, SkScalar bottomRad) {
   if (!this->initializeRect(rect)) {
     return;
   }
@@ -115,14 +115,14 @@ void SkRRect::setNinePatch(
 // These parameters intentionally double. Apropos crbug.com/463920, if one of the
 // radii is huge while the other is small, single precision math can completely
 // miss the fact that a scale is required.
-static double compute_min_scale(double rad1, double rad2, double limit, double curMin) noexcept {
+static double compute_min_scale(double rad1, double rad2, double limit, double curMin) {
   if ((rad1 + rad2) > limit) {
     return std::min(curMin, limit / (rad1 + rad2));
   }
   return curMin;
 }
 
-static bool clamp_to_zero(SkVector radii[4]) noexcept {
+static bool clamp_to_zero(SkVector radii[4]) {
   bool allCornersSquare = true;
 
   // Clamp negative radii to zero
@@ -142,7 +142,7 @@ static bool clamp_to_zero(SkVector radii[4]) noexcept {
   return allCornersSquare;
 }
 
-void SkRRect::setRectRadii(const SkRect& rect, const SkVector radii[4]) noexcept {
+void SkRRect::setRectRadii(const SkRect& rect, const SkVector radii[4]) {
   if (!this->initializeRect(rect)) {
     return;
   }
@@ -167,7 +167,7 @@ void SkRRect::setRectRadii(const SkRect& rect, const SkVector radii[4]) noexcept
   }
 }
 
-bool SkRRect::initializeRect(const SkRect& rect) noexcept {
+bool SkRRect::initializeRect(const SkRect& rect) {
   // Check this before sorting because sorting can hide nans.
   if (!rect.isFinite()) {
     *this = SkRRect();
@@ -185,7 +185,7 @@ bool SkRRect::initializeRect(const SkRect& rect) noexcept {
 // If we can't distinguish one of the radii relative to the other, force it to zero so it
 // doesn't confuse us later. See crbug.com/850350
 //
-static void flush_to_zero(SkScalar& a, SkScalar& b) noexcept {
+static void flush_to_zero(SkScalar& a, SkScalar& b) {
   SkASSERT(a >= 0);
   SkASSERT(b >= 0);
   if (a + b == a) {
@@ -195,7 +195,7 @@ static void flush_to_zero(SkScalar& a, SkScalar& b) noexcept {
   }
 }
 
-bool SkRRect::scaleRadii() noexcept {
+bool SkRRect::scaleRadii() {
   // Proportionally scale down all radii to fit. Find the minimum ratio
   // of a side and the radii on that side (for all four sides) and use
   // that to scale down _all_ the radii. This algorithm is from the
@@ -242,7 +242,7 @@ bool SkRRect::scaleRadii() noexcept {
 
 // This method determines if a point known to be inside the RRect's bounds is
 // inside all the corners.
-bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const noexcept {
+bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const {
   SkPoint canonicalPt;  // (x,y) translated to one of the quadrants
   int index;
 
@@ -302,14 +302,14 @@ bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const noexcept {
   return dist <= SkScalarSquare(fRadii[index].fX * fRadii[index].fY);
 }
 
-bool SkRRectPriv::AllCornersCircular(const SkRRect& rr, SkScalar tolerance) noexcept {
+bool SkRRectPriv::AllCornersCircular(const SkRRect& rr, SkScalar tolerance) {
   return SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[1].fX, rr.fRadii[1].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[2].fX, rr.fRadii[2].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[3].fX, rr.fRadii[3].fY, tolerance);
 }
 
-bool SkRRect::contains(const SkRect& rect) const noexcept {
+bool SkRRect::contains(const SkRect& rect) const {
   if (!this->getBounds().contains(rect)) {
     // If 'rect' isn't contained by the RR's bounds then the
     // RR definitely doesn't contain it
@@ -330,7 +330,7 @@ bool SkRRect::contains(const SkRect& rect) const noexcept {
          this->checkCornerContainment(rect.fLeft, rect.fBottom);
 }
 
-static bool radii_are_nine_patch(const SkVector radii[4]) noexcept {
+static bool radii_are_nine_patch(const SkVector radii[4]) {
   return radii[SkRRect::kUpperLeft_Corner].fX == radii[SkRRect::kLowerLeft_Corner].fX &&
          radii[SkRRect::kUpperLeft_Corner].fY == radii[SkRRect::kUpperRight_Corner].fY &&
          radii[SkRRect::kUpperRight_Corner].fX == radii[SkRRect::kLowerRight_Corner].fX &&
@@ -338,7 +338,7 @@ static bool radii_are_nine_patch(const SkVector radii[4]) noexcept {
 }
 
 // There is a simplified version of this method in setRectXY
-void SkRRect::computeType() noexcept {
+void SkRRect::computeType() {
   if (fRect.isEmpty()) {
     SkASSERT(fRect.isSorted());
     for (size_t i = 0; i < SK_ARRAY_COUNT(fRadii); ++i) {
@@ -518,7 +518,7 @@ bool SkRRect::transform(const SkMatrix& matrix, SkRRect* dst) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkRRect::inset(SkScalar dx, SkScalar dy, SkRRect* dst) const noexcept {
+void SkRRect::inset(SkScalar dx, SkScalar dy, SkRRect* dst) const {
   SkRect r = fRect.makeInset(dx, dy);
   bool degenerate = false;
   if (r.fRight <= r.fLeft) {
@@ -555,18 +555,18 @@ void SkRRect::inset(SkScalar dx, SkScalar dy, SkRRect* dst) const noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-size_t SkRRect::writeToMemory(void* buffer) const noexcept {
+size_t SkRRect::writeToMemory(void* buffer) const {
   // Serialize only the rect and corners, but not the derived type tag.
   memcpy(buffer, this, kSizeInMemory);
   return kSizeInMemory;
 }
 
-void SkRRectPriv::WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer) noexcept {
+void SkRRectPriv::WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer) {
   // Serialize only the rect and corners, but not the derived type tag.
   buffer->write(&rr, SkRRect::kSizeInMemory);
 }
 
-size_t SkRRect::readFromMemory(const void* buffer, size_t length) noexcept {
+size_t SkRRect::readFromMemory(const void* buffer, size_t length) {
   if (length < kSizeInMemory) {
     return 0;
   }
@@ -579,7 +579,7 @@ size_t SkRRect::readFromMemory(const void* buffer, size_t length) noexcept {
   return kSizeInMemory;
 }
 
-bool SkRRectPriv::ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr) noexcept {
+bool SkRRectPriv::ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr) {
   if (buffer->available() < SkRRect::kSizeInMemory) {
     return false;
   }
@@ -591,7 +591,7 @@ bool SkRRectPriv::ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr) noexcept {
 #include "include/core/SkString.h"
 #include "src/core/SkStringUtils.h"
 
-void SkRRect::dump(bool asHex) const {
+SkString SkRRect::dumpToString(bool asHex) const {
   SkScalarAsStringType asType = asHex ? kHex_SkScalarAsStringType : kDec_SkScalarAsStringType;
 
   fRect.dump(asHex);
@@ -607,20 +607,21 @@ void SkRRect::dump(bool asHex) const {
     line.append("\n");
   }
   line.append("};");
-  SkDebugf("%s\n", line.c_str());
+  return line;
 }
+
+void SkRRect::dump(bool asHex) const { SkDebugf("%s\n", this->dumpToString(asHex).c_str()); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 /**
  *  We need all combinations of predicates to be true to have a "safe" radius value.
  */
-static constexpr bool are_radius_check_predicates_valid(
-    SkScalar rad, SkScalar min, SkScalar max) noexcept {
+static bool are_radius_check_predicates_valid(SkScalar rad, SkScalar min, SkScalar max) {
   return (min <= max) && (rad <= max - min) && (min + rad <= max) && (max - rad >= min) && rad >= 0;
 }
 
-bool SkRRect::isValid() const noexcept {
+bool SkRRect::isValid() const {
   if (!AreRectAndRadiiValid(fRect, fRadii)) {
     return false;
   }
@@ -691,7 +692,7 @@ bool SkRRect::isValid() const noexcept {
   return true;
 }
 
-bool SkRRect::AreRectAndRadiiValid(const SkRect& rect, const SkVector radii[4]) noexcept {
+bool SkRRect::AreRectAndRadiiValid(const SkRect& rect, const SkVector radii[4]) {
   if (!rect.isFinite() || !rect.isSorted()) {
     return false;
   }
@@ -705,7 +706,7 @@ bool SkRRect::AreRectAndRadiiValid(const SkRect& rect, const SkVector radii[4]) 
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-SkRect SkRRectPriv::InnerBounds(const SkRRect& rr) noexcept {
+SkRect SkRRectPriv::InnerBounds(const SkRRect& rr) {
   if (rr.isEmpty() || rr.isRect()) {
     return rr.rect();
   }
@@ -764,7 +765,6 @@ SkRect SkRRectPriv::InnerBounds(const SkRRect& rr) noexcept {
   }
 
   SkASSERT(innerBounds.isSorted() && !innerBounds.isEmpty());
-  SkASSERT(rr.contains(innerBounds));
   return innerBounds;
 }
 
@@ -797,7 +797,22 @@ SkRRect SkRRectPriv::ConservativeIntersect(const SkRRect& a, const SkRRect& b) {
     SkPoint aCorner = getCorner(a.rect(), corner);
     SkPoint bCorner = getCorner(b.rect(), corner);
 
-    if (test == aCorner) {
+    if (test == aCorner && test == bCorner) {
+      // The round rects share a corner anchor, so pick A or B such that its X and Y radii
+      // are both larger than the other rrect's, or return false if neither A or B has the max
+      // corner radii (this is more permissive than the single corner tests below).
+      SkVector aRadii = a.radii(corner);
+      SkVector bRadii = b.radii(corner);
+      if (aRadii.fX >= bRadii.fX && aRadii.fY >= bRadii.fY) {
+        *radii = aRadii;
+        return true;
+      } else if (bRadii.fX >= aRadii.fX && bRadii.fY >= aRadii.fY) {
+        *radii = bRadii;
+        return true;
+      } else {
+        return false;
+      }
+    } else if (test == aCorner) {
       // Test that A's ellipse is contained by B. This is a non-trivial function to evaluate
       // so we resrict it to when the corners have the same radii. If not, we use the more
       // conservative test that the extreme point of A's bounding box is contained in B.

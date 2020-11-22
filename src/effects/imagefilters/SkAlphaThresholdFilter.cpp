@@ -55,7 +55,7 @@ class SkAlphaThresholdFilterImpl final : public SkImageFilter_Base {
   SkScalar fInnerThreshold;
   SkScalar fOuterThreshold;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 };  // end namespace

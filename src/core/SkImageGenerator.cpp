@@ -10,7 +10,7 @@
 #include "include/core/SkYUVAIndex.h"
 #include "src/core/SkNextID.h"
 
-SkImageGenerator::SkImageGenerator(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImageGenerator::SkImageGenerator(const SkImageInfo& info, uint32_t uniqueID)
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {}
 
 bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t rowBytes) {
@@ -26,6 +26,19 @@ bool SkImageGenerator::getPixels(const SkImageInfo& info, void* pixels, size_t r
 
   Options defaultOpts;
   return this->onGetPixels(info, pixels, rowBytes, defaultOpts);
+}
+
+bool SkImageGenerator::queryYUVAInfo(
+    const SkYUVAPixmapInfo::SupportedDataTypes& supportedDataTypes,
+    SkYUVAPixmapInfo* yuvaPixmapInfo) const {
+  SkASSERT(yuvaPixmapInfo);
+
+  return this->onQueryYUVAInfo(supportedDataTypes, yuvaPixmapInfo) &&
+         yuvaPixmapInfo->isSupported(supportedDataTypes);
+}
+
+bool SkImageGenerator::getYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) {
+  return this->onGetYUVAPlanes(yuvaPixmaps);
 }
 
 bool SkImageGenerator::queryYUVA8(
@@ -84,8 +97,7 @@ GrSurfaceProxyView SkImageGenerator::onGenerateTexture(
 static SkGraphics::ImageGeneratorFromEncodedDataFactory gFactory;
 
 SkGraphics::ImageGeneratorFromEncodedDataFactory
-SkGraphics::SetImageGeneratorFromEncodedDataFactory(
-    ImageGeneratorFromEncodedDataFactory factory) noexcept {
+SkGraphics::SetImageGeneratorFromEncodedDataFactory(ImageGeneratorFromEncodedDataFactory factory) {
   ImageGeneratorFromEncodedDataFactory prev = gFactory;
   gFactory = factory;
   return prev;

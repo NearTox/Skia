@@ -51,9 +51,9 @@ class AAClipBench : public Benchmark {
       canvas->save();
 #if 1
       if (fDoPath) {
-        canvas->clipPath(fClipPath, kReplace_SkClipOp, fDoAA);
+        canvas->clipPath(fClipPath, SkClipOp::kIntersect, fDoAA);
       } else {
-        canvas->clipRect(fClipRect, kReplace_SkClipOp, fDoAA);
+        canvas->clipRect(fClipRect, SkClipOp::kIntersect, fDoAA);
       }
 
       canvas->drawRect(fDrawRect, paint);
@@ -72,7 +72,7 @@ class AAClipBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -115,7 +115,7 @@ class NestedAAClipBench : public Benchmark {
     path.addRoundRect(temp, SkIntToScalar(3), SkIntToScalar(3));
     SkASSERT(path.isConvex());
 
-    canvas->clipPath(path, 0 == depth ? kReplace_SkClipOp : kIntersect_SkClipOp, fDoAA);
+    canvas->clipPath(path, SkClipOp::kIntersect, fDoAA);
 
     if (kNestingDepth == depth) {
       // we only draw the draw rect at the lowest nesting level
@@ -149,7 +149,7 @@ class NestedAAClipBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +191,7 @@ class AAClipBuilderBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -221,7 +221,7 @@ class AAClipRegionBench : public Benchmark {
 
  private:
   SkRegion fRegion;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

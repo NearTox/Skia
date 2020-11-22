@@ -17,23 +17,23 @@ namespace SkSL {
  * A literal floating point number.
  */
 struct FloatLiteral : public Expression {
-  static constexpr Kind kExpressionKind = kFloatLiteral_Kind;
+  static constexpr Kind kExpressionKind = Kind::kFloatLiteral;
 
   FloatLiteral(const Context& context, int offset, double value)
-      : INHERITED(offset, kExpressionKind, *context.fFloatLiteral_Type), fValue(value) {}
+      : INHERITED(offset, kExpressionKind, context.fFloatLiteral_Type.get()), fValue(value) {}
 
   FloatLiteral(int offset, double value, const Type* type)
-      : INHERITED(offset, kExpressionKind, *type), fValue(value) {}
+      : INHERITED(offset, kExpressionKind, type), fValue(value) {}
 
   String description() const override { return to_string(fValue); }
 
-  bool hasProperty(Property property) const noexcept override { return false; }
+  bool hasProperty(Property property) const override { return false; }
 
-  bool isCompileTimeConstant() const noexcept override { return true; }
+  bool isCompileTimeConstant() const override { return true; }
 
-  int coercionCost(const Type& target) const override {
+  CoercionCost coercionCost(const Type& target) const override {
     if (target.isFloat()) {
-      return 0;
+      return CoercionCost::Free();
     }
     return INHERITED::coercionCost(target);
   }
@@ -42,17 +42,15 @@ struct FloatLiteral : public Expression {
     return fValue == other.as<FloatLiteral>().fValue;
   }
 
-  double getConstantFloat() const noexcept override { return fValue; }
-
-  int nodeCount() const noexcept override { return 1; }
+  double getConstantFloat() const override { return fValue; }
 
   std::unique_ptr<Expression> clone() const override {
-    return std::unique_ptr<Expression>(new FloatLiteral(fOffset, fValue, &fType));
+    return std::unique_ptr<Expression>(new FloatLiteral(fOffset, fValue, &this->type()));
   }
 
   const double fValue;
 
-  typedef Expression INHERITED;
+  using INHERITED = Expression;
 };
 
 }  // namespace SkSL

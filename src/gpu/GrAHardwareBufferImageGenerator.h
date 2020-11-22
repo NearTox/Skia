@@ -60,6 +60,6 @@ class GrAHardwareBufferImageGenerator : public SkImageGenerator {
   const bool fIsProtectedContent;
   GrSurfaceOrigin fSurfaceOrigin;
 
-  typedef SkImageGenerator INHERITED;
+  using INHERITED = SkImageGenerator;
 };
 #endif  // GrAHardwareBufferImageGenerator_DEFINED

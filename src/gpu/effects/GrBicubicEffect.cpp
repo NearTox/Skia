@@ -18,16 +18,16 @@
 
 class GrBicubicEffect::Impl : public GrGLSLFragmentProcessor {
  public:
-  Impl() : fCoefficients(SkM44::kNaN_Constructor) {}
+  Impl() : fKernel{-1, -1} {}
   void emitCode(EmitArgs&) override;
 
  protected:
   void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
 
  private:
-  SkM44 fCoefficients;
+  SkImage::CubicResampler fKernel;
   UniformHandle fCoefficientUni;
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 void GrBicubicEffect::Impl::emitCode(EmitArgs& args) {
@@ -98,55 +98,21 @@ void GrBicubicEffect::Impl::emitCode(EmitArgs& args) {
   fragBuilder->codeAppendf("%s = bicubicColor;", args.fOutputColor);
 }
 
+#include "src/shaders/SkImageShader.h"
+
 void GrBicubicEffect::Impl::onSetData(
     const GrGLSLProgramDataManager& pdm, const GrFragmentProcessor& fp) {
   auto& bicubicEffect = fp.cast<GrBicubicEffect>();
-  const SkM44* coeffs = nullptr;
-  switch (bicubicEffect.fKernel) {
-    case Kernel::kMitchell: {
-      /*
-      Filter weights come from Don Mitchell & Arun Netravali's 'Reconstruction Filters in\
-      Computer * Graphics', ACM SIGGRAPH Computer Graphics 22, 4 (Aug. 1988).
-      ACM DL: http://dl.acm.org/citation.cfm?id=378514
 
-      The authors define a family of cubic filters with two free parameters (B and C):
-                 {(12 - 9B - 6C)|x|^3 + (-18 + 12B + 6C)|x|^2 + (6 - 2B)          |x| < 1
-      k(x) = 1/6 {(-B - 6C)|x|^3 + (6B + 30C)|x|^2 + (-12B - 48C)|x| + (8B + 24C) 1 <= |x| < 2
-                 {0                                                               otherwise
-
-      Various well-known cubic splines can be generated, and the authors select (1/3, 1/3) as
-      their favorite overall spline - this is now commonly known as the Mitchell filter, and
-      is the source of the specific weights below.
-      */
-      static constexpr SkM44 kMitchell(
-          1.f / 18.f, -9.f / 18.f, 15.f / 18.f, -7.f / 18.f, 16.f / 18.f, 0.f / 18.f, -36.f / 18.f,
-          21.f / 18.f, 1.f / 18.f, 9.f / 18.f, 27.f / 18.f, -21.f / 18.f, 0.f / 18.f, 0.f / 18.f,
-          -6.f / 18.f, 7.f / 18.f);
-      coeffs = &kMitchell;
-      break;
-    }
-    case Kernel::kCatmullRom: {
-      /*
-      Centripetal Catmull-Rom filter. From the same family with (B, C) = (0, 1/2).
-      Catmull, Edwin; Rom, Raphael (1974). "A class of local interpolating splines". In
-      Barnhill, Robert E.; Riesenfeld, Richard F. (eds.). Computer Aided Geometric Design.
-      pp. 317–326.
-      */
-      static constexpr SkM44 kCatmullRom(
-          0.0f, -0.5f, 1.0f, -0.5f, 1.0f, 0.0f, -2.5f, 1.5f, 0.0f, 0.5f, 2.0f, -1.5f, 0.0f, 0.0f,
-          -0.5f, 0.5f);
-      coeffs = &kCatmullRom;
-      break;
-    }
-  }
-  if (*coeffs != fCoefficients) {
-    pdm.setSkM44(fCoefficientUni, *coeffs);
+  if (fKernel.B != bicubicEffect.fKernel.B || fKernel.C != bicubicEffect.fKernel.C) {
+    fKernel = bicubicEffect.fKernel;
+    pdm.setSkM44(fCoefficientUni, SkImageShader::CubicResamplerMatrix(fKernel.B, fKernel.C));
   }
 }
 
 std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
-    GrSurfaceProxyView view, SkAlphaType alphaType, const SkMatrix& matrix, Kernel kernel,
-    Direction direction) {
+    GrSurfaceProxyView view, SkAlphaType alphaType, const SkMatrix& matrix,
+    SkImage::CubicResampler kernel, Direction direction) {
   auto fp = GrTextureEffect::Make(std::move(view), alphaType, SkMatrix::I());
   auto clamp = kPremul_SkAlphaType == alphaType ? Clamp::kPremul : Clamp::kUnpremul;
   return GrMatrixEffect::Make(
@@ -156,8 +122,8 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
 
 std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
     GrSurfaceProxyView view, SkAlphaType alphaType, const SkMatrix& matrix,
-    const GrSamplerState::WrapMode wrapX, const GrSamplerState::WrapMode wrapY, Kernel kernel,
-    Direction direction, const GrCaps& caps) {
+    const GrSamplerState::WrapMode wrapX, const GrSamplerState::WrapMode wrapY,
+    SkImage::CubicResampler kernel, Direction direction, const GrCaps& caps) {
   GrSamplerState sampler(wrapX, wrapY, GrSamplerState::Filter::kNearest);
   std::unique_ptr<GrFragmentProcessor> fp;
   fp = GrTextureEffect::Make(std::move(view), alphaType, SkMatrix::I(), sampler, caps);
@@ -170,7 +136,7 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
 std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::MakeSubset(
     GrSurfaceProxyView view, SkAlphaType alphaType, const SkMatrix& matrix,
     const GrSamplerState::WrapMode wrapX, const GrSamplerState::WrapMode wrapY,
-    const SkRect& subset, Kernel kernel, Direction direction, const GrCaps& caps) {
+    const SkRect& subset, SkImage::CubicResampler kernel, Direction direction, const GrCaps& caps) {
   GrSamplerState sampler(wrapX, wrapY, GrSamplerState::Filter::kNearest);
   std::unique_ptr<GrFragmentProcessor> fp;
   fp =
@@ -184,7 +150,7 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::MakeSubset(
 std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::MakeSubset(
     GrSurfaceProxyView view, SkAlphaType alphaType, const SkMatrix& matrix,
     const GrSamplerState::WrapMode wrapX, const GrSamplerState::WrapMode wrapY,
-    const SkRect& subset, const SkRect& domain, Kernel kernel, Direction direction,
+    const SkRect& subset, const SkRect& domain, SkImage::CubicResampler kernel, Direction direction,
     const GrCaps& caps) {
   auto lowerBound = [](float x) { return std::floor(x - 1.5f) + 0.5f; };
   auto upperBound = [](float x) { return std::floor(x + 1.5f) - 0.5f; };
@@ -203,7 +169,7 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::MakeSubset(
 
 std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
     std::unique_ptr<GrFragmentProcessor> fp, SkAlphaType alphaType, const SkMatrix& matrix,
-    Kernel kernel, Direction direction) {
+    SkImage::CubicResampler kernel, Direction direction) {
   auto clamp = kPremul_SkAlphaType == alphaType ? Clamp::kPremul : Clamp::kUnpremul;
   return GrMatrixEffect::Make(
       matrix, std::unique_ptr<GrFragmentProcessor>(
@@ -211,7 +177,8 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::Make(
 }
 
 GrBicubicEffect::GrBicubicEffect(
-    std::unique_ptr<GrFragmentProcessor> fp, Kernel kernel, Direction direction, Clamp clamp)
+    std::unique_ptr<GrFragmentProcessor> fp, SkImage::CubicResampler kernel, Direction direction,
+    Clamp clamp)
     : INHERITED(kGrBicubicEffect_ClassID, ProcessorOptimizationFlags(fp.get())),
       fKernel(kernel),
       fDirection(direction),
@@ -237,7 +204,7 @@ void GrBicubicEffect::onGetGLSLProcessorKey(
 
 GrGLSLFragmentProcessor* GrBicubicEffect::onCreateGLSLInstance() const { return new Impl(); }
 
-bool GrBicubicEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrBicubicEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const auto& that = other.cast<GrBicubicEffect>();
   return fDirection == that.fDirection && fClamp == that.fClamp;
 }
@@ -256,8 +223,7 @@ std::unique_ptr<GrFragmentProcessor> GrBicubicEffect::TestCreate(GrProcessorTest
     case 1: direction = Direction::kY; break;
     case 2: direction = Direction::kXY; break;
   }
-  auto kernel = d->fRandom->nextBool() ? GrBicubicEffect::Kernel::kMitchell
-                                       : GrBicubicEffect::Kernel::kCatmullRom;
+  auto kernel = d->fRandom->nextBool() ? GrBicubicEffect::gMitchell : GrBicubicEffect::gCatmullRom;
   auto m = GrTest::TestMatrix(d->fRandom);
   switch (d->fRandom->nextULessThan(3)) {
     case 0: {

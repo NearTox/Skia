@@ -25,7 +25,7 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
     return arena->make<GrRRectShadowGeoProc>(lutView);
   }
 
-  const char* name() const noexcept override { return "RRectShadow"; }
+  const char* name() const override { return "RRectShadow"; }
 
   const Attribute& inPosition() const { return fInPosition; }
   const Attribute& inColor() const { return fInColor; }
@@ -41,9 +41,7 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
 
   GrRRectShadowGeoProc(const GrSurfaceProxyView& lutView);
 
-  const TextureSampler& onTextureSampler(int i) const noexcept override {
-    return fLUTTextureSampler;
-  }
+  const TextureSampler& onTextureSampler(int i) const override { return fLUTTextureSampler; }
 
   GrColor fColor;
   TextureSampler fLUTTextureSampler;
@@ -54,7 +52,7 @@ class GrRRectShadowGeoProc : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 #endif

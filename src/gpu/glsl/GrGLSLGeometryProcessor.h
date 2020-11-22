@@ -67,7 +67,7 @@ class GrGLSLGeometryProcessor : public GrGLSLPrimitiveProcessor {
 
   // GPs that use writeOutputPosition and/or writeLocalCoord must incorporate the matrix type
   // into their key, and should use this function or one of the other related helpers.
-  static uint32_t ComputeMatrixKey(const SkMatrix& mat) noexcept {
+  static uint32_t ComputeMatrixKey(const SkMatrix& mat) {
     if (mat.isIdentity()) {
       return 0b00;
     } else if (mat.isScaleTranslate()) {
@@ -78,8 +78,7 @@ class GrGLSLGeometryProcessor : public GrGLSLPrimitiveProcessor {
       return 0b11;
     }
   }
-  static uint32_t ComputeMatrixKeys(
-      const SkMatrix& viewMatrix, const SkMatrix& localMatrix) noexcept {
+  static uint32_t ComputeMatrixKeys(const SkMatrix& viewMatrix, const SkMatrix& localMatrix) {
     return (ComputeMatrixKey(viewMatrix) << kMatrixKeyBits) | ComputeMatrixKey(localMatrix);
   }
   static uint32_t AddMatrixKeys(
@@ -118,7 +117,7 @@ class GrGLSLGeometryProcessor : public GrGLSLPrimitiveProcessor {
   };
   SkTArray<TransformInfo> fTransformInfos;
 
-  typedef GrGLSLPrimitiveProcessor INHERITED;
+  using INHERITED = GrGLSLPrimitiveProcessor;
 };
 
 #endif

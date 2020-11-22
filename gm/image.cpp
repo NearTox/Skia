@@ -167,7 +167,7 @@ class ImageGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ImageGM;)
 
@@ -285,7 +285,7 @@ class ScalePixelsGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ScalePixelsGM;)
 

@@ -28,20 +28,20 @@ class GrRenderTarget : virtual public GrSurface {
   using GrSurface::requiresManualMSAAResolve;
   using GrSurface::setRequiresManualMSAAResolve;
 
-  virtual bool alwaysClearStencil() const noexcept { return false; }
+  virtual bool alwaysClearStencil() const { return false; }
 
   // GrSurface overrides
-  GrRenderTarget* asRenderTarget() noexcept override { return this; }
-  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
+  GrRenderTarget* asRenderTarget() override { return this; }
+  const GrRenderTarget* asRenderTarget() const override { return this; }
 
   /**
    * Returns the number of samples/pixel in the color buffer (One if non-MSAA).
    */
-  int numSamples() const noexcept { return fSampleCnt; }
+  int numSamples() const { return fSampleCnt; }
 
   virtual GrBackendRenderTarget getBackendRenderTarget() const = 0;
 
-  GrStencilAttachment* getStencilAttachment() const noexcept { return fStencilAttachment.get(); }
+  GrStencilAttachment* getStencilAttachment() const { return fStencilAttachment.get(); }
   // Checked when this object is asked to attach a stencil buffer.
   virtual bool canAttemptStencilAttachment() const = 0;
 
@@ -82,7 +82,7 @@ class GrRenderTarget : virtual public GrSurface {
   int fSampleCnt;
   int fSamplePatternKey;
 
-  typedef GrSurface INHERITED;
+  using INHERITED = GrSurface;
 };
 
 #endif

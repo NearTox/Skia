@@ -47,7 +47,7 @@ class SkSVGRect final : public SkSVGShape {
   // The y radius for rounded rects.
   SkSVGLength fRy = SkSVGLength(0);
 
-  typedef SkSVGShape INHERITED;
+  using INHERITED = SkSVGShape;
 };
 
 #endif  // SkSVGRect_DEFINED

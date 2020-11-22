@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2018 Google Inc.
  *
  * Use of this source code is governed by a BSD-style license that can be
@@ -76,7 +76,7 @@ class GlyphTransformView : public Sample {
   SkScalar fScale;
   SkScalar fRotate;
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

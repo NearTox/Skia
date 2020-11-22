@@ -42,7 +42,7 @@ struct SkIRect;
 ////////////////////////////////////////////////////////////////////////////////
 // Color type conversions
 
-static inline GrColor SkColorToPremulGrColor(SkColor c) noexcept {
+static inline GrColor SkColorToPremulGrColor(SkColor c) {
   SkPMColor pm = SkPreMultiplyColor(c);
   unsigned r = SkGetPackedR32(pm);
   unsigned g = SkGetPackedG32(pm);
@@ -51,7 +51,7 @@ static inline GrColor SkColorToPremulGrColor(SkColor c) noexcept {
   return GrColorPackRGBA(r, g, b, a);
 }
 
-static constexpr inline GrColor SkColorToUnpremulGrColor(SkColor c) noexcept {
+static inline GrColor SkColorToUnpremulGrColor(SkColor c) {
   unsigned r = SkColorGetR(c);
   unsigned g = SkColorGetG(c);
   unsigned b = SkColorGetB(c);
@@ -68,7 +68,7 @@ SkColor4f SkColor4fPrepForDst(SkColor4f, const GrColorInfo&);
 ////////////////////////////////////////////////////////////////////////////////
 // SkTileMode conversion
 
-static constexpr GrSamplerState::WrapMode SkTileModeToWrapMode(SkTileMode tileMode) noexcept {
+static constexpr GrSamplerState::WrapMode SkTileModeToWrapMode(SkTileMode tileMode) {
   switch (tileMode) {
     case SkTileMode::kClamp: return GrSamplerState::WrapMode::kClamp;
     case SkTileMode::kDecal: return GrSamplerState::WrapMode::kClampToBorder;
@@ -106,6 +106,13 @@ bool SkPaintToGrPaintWithBlend(
     GrRecordingContext*, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
     const SkMatrixProvider& matrixProvider, SkBlendMode primColorMode, GrPaint* grPaint);
 
+/** Blends the passed-in shader with a per-primitive color which must be setup as a vertex attribute
+    using the specified SkBlendMode. */
+bool SkPaintToGrPaintWithBlendReplaceShader(
+    GrRecordingContext* context, const GrColorInfo& dstColorInfo, const SkPaint& skPaint,
+    const SkMatrixProvider& matrixProvider, std::unique_ptr<GrFragmentProcessor> shaderFP,
+    SkBlendMode primColorMode, GrPaint* grPaint);
+
 /** This is used when there is a primitive color, but the shader should be ignored. Currently,
     the expectation is that the primitive color will be premultiplied, though it really should be
     unpremultiplied so that interpolation is done in unpremul space. The paint's alpha will be
@@ -135,7 +142,7 @@ bool SkPaintToGrPaintWithTexture(
 std::tuple<GrSamplerState::Filter, GrSamplerState::MipmapMode, bool /*bicubic*/>
 GrInterpretFilterQuality(
     SkISize imageDims, SkFilterQuality paintFilterQuality, const SkMatrix& viewM,
-    const SkMatrix& localM, bool sharpenMipmappedTextures);
+    const SkMatrix& localM, bool sharpenMipmappedTextures, bool allowFilterQualityReduction);
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -202,7 +209,7 @@ GrSurfaceProxyView GrMakeCachedBitmapProxyView(GrRecordingContext*, const SkBitm
  *      - SkImage
  *      - SkImageGenerator
  */
-void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds) noexcept;
+void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& imageBounds);
 
 /**
  * Makes a SkIDChangeListener from a GrUniqueKey. The key will be invalidated in the resource

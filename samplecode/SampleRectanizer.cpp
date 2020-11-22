@@ -167,7 +167,7 @@ class RectanizerView : public Sample {
     fCurRandRect = 0;
   }
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

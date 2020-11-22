@@ -64,20 +64,16 @@ class TestOp : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return nullptr; }
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override {
-    return;
-  }
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
   void onPrePrepareDraws(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {
-    return;
-  }
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
   void onPrepareDraws(Target* target) override { return; }
   void onExecute(GrOpFlushState*, const SkRect&) override { return; }
 
   GrProcessorSet fProcessors;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 /**
@@ -137,7 +133,7 @@ class TestFP : public GrFragmentProcessor {
 
   bool onIsEqual(const GrFragmentProcessor&) const override { return false; }
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 }  // namespace
 

@@ -64,7 +64,7 @@ class BlurBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new BlurBench(MINI, kNormal_SkBlurStyle);)

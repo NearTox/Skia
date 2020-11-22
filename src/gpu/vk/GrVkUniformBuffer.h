@@ -45,7 +45,7 @@ class GrVkUniformBuffer : public GrVkBuffer {
 
     const VkDescriptorSet* descriptorSet() const;
 
-    typedef GrVkBuffer::Resource INHERITED;
+    using INHERITED = GrVkBuffer::Resource;
 
    private:
     const GrVkDescriptorSet* fDescriptorSet;
@@ -58,7 +58,7 @@ class GrVkUniformBuffer : public GrVkBuffer {
       GrVkGpu* gpu, const GrVkBuffer::Desc& desc, const GrVkUniformBuffer::Resource* resource)
       : INHERITED(desc, resource) {}
 
-  typedef GrVkBuffer INHERITED;
+  using INHERITED = GrVkBuffer;
 };
 
 #endif

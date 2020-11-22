@@ -50,6 +50,6 @@ class SimpleRectGM : public skiagm::GM {
   bool onAnimate(double nanos) override { return true; }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new SimpleRectGM;)

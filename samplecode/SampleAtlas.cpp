@@ -198,7 +198,7 @@ class DrawAtlasDrawable : public SkDrawable {
   }
 
  private:
-  typedef SkDrawable INHERITED;
+  using INHERITED = SkDrawable;
 };
 
 class DrawAtlasView : public Sample {
@@ -237,7 +237,7 @@ class DrawAtlasView : public Sample {
 #endif
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

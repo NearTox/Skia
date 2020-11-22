@@ -14,14 +14,14 @@
 #include "src/gpu/GrResourceCache.h"
 #include <atomic>
 
-static inline GrResourceCache* get_resource_cache(GrGpu* gpu) noexcept {
+static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
   SkASSERT(gpu);
   SkASSERT(gpu->getContext());
   SkASSERT(gpu->getContext()->priv().getResourceCache());
   return gpu->getContext()->priv().getResourceCache();
 }
 
-GrGpuResource::GrGpuResource(GrGpu* gpu) noexcept : fGpu(gpu), fUniqueID(CreateUniqueID()) {
+GrGpuResource::GrGpuResource(GrGpu* gpu) : fGpu(gpu), fUniqueID(CreateUniqueID()) {
   SkDEBUGCODE(fCacheArrayIndex = -1);
 }
 
@@ -109,7 +109,7 @@ SkString GrGpuResource::getResourceName() const {
   return resourceName;
 }
 
-const GrDirectContext* GrGpuResource::getContext() const noexcept {
+const GrDirectContext* GrGpuResource::getContext() const {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -117,7 +117,7 @@ const GrDirectContext* GrGpuResource::getContext() const noexcept {
   }
 }
 
-GrDirectContext* GrGpuResource::getContext() noexcept {
+GrDirectContext* GrGpuResource::getContext() {
   if (fGpu) {
     return fGpu->getContext();
   } else {
@@ -197,7 +197,7 @@ void GrGpuResource::makeUnbudgeted() {
   }
 }
 
-uint32_t GrGpuResource::CreateUniqueID() noexcept {
+uint32_t GrGpuResource::CreateUniqueID() {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {

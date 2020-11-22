@@ -45,7 +45,7 @@ class CubicKLMBench : public Benchmark {
   SkPoint fPoints[4];
   SkString fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new CubicKLMBench(

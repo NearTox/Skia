@@ -46,16 +46,16 @@ class GrDynamicAtlas {
 
   void reset(SkISize initialSize, const GrCaps& desc);
 
-  int maxAtlasSize() const noexcept { return fMaxAtlasSize; }
-  GrTextureProxy* textureProxy() const noexcept { return fTextureProxy.get(); }
-  bool isInstantiated() const noexcept { return fTextureProxy->isInstantiated(); }
-  int currentWidth() const noexcept { return fWidth; }
-  int currentHeight() const noexcept { return fHeight; }
+  int maxAtlasSize() const { return fMaxAtlasSize; }
+  GrTextureProxy* textureProxy() const { return fTextureProxy.get(); }
+  bool isInstantiated() const { return fTextureProxy->isInstantiated(); }
+  int currentWidth() const { return fWidth; }
+  int currentHeight() const { return fHeight; }
 
   // Attempts to add a rect to the atlas. Returns true if successful, along with the rect's
   // top-left location in the atlas.
   bool addRect(int width, int height, SkIPoint16* location);
-  const SkISize& drawBounds() noexcept { return fDrawBounds; }
+  const SkISize& drawBounds() { return fDrawBounds; }
 
   // Instantiates our texture proxy for the atlas and returns a pre-cleared GrRenderTargetContext
   // that the caller may use to render the content. After this call, it is no longer valid to call

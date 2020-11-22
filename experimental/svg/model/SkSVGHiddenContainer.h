@@ -17,7 +17,7 @@ class SkSVGHiddenContainer : public SkSVGContainer {
   void onRender(const SkSVGRenderContext&) const final {}
 
  private:
-  typedef SkSVGContainer INHERITED;
+  using INHERITED = SkSVGContainer;
 };
 
 #endif  // SkSVGHiddenContainer_DEFINED

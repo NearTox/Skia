@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLClampFragmentProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLClampFragmentProcessor() noexcept = default;
+  GrGLSLClampFragmentProcessor() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrClampFragmentProcessor& _outer = args.fFp.cast<GrClampFragmentProcessor>();
@@ -51,12 +51,13 @@ void GrClampFragmentProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)clampToPremul);
 }
-bool GrClampFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrClampFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrClampFragmentProcessor& that = other.cast<GrClampFragmentProcessor>();
   (void)that;
   if (clampToPremul != that.clampToPremul) return false;
   return true;
 }
+bool GrClampFragmentProcessor::usesExplicitReturn() const { return false; }
 GrClampFragmentProcessor::GrClampFragmentProcessor(const GrClampFragmentProcessor& src)
     : INHERITED(kGrClampFragmentProcessor_ClassID, src.optimizationFlags()),
       clampToPremul(src.clampToPremul) {

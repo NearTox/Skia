@@ -113,7 +113,7 @@ class GrFragmentProcessor : public GrProcessor {
   virtual std::unique_ptr<GrFragmentProcessor> clone() const = 0;
 
   // The FP this was registered with as a child function. This will be null if this is a root.
-  const GrFragmentProcessor* parent() const noexcept { return fParent; }
+  const GrFragmentProcessor* parent() const { return fParent; }
 
   GrGLSLFragmentProcessor* createGLSLInstance() const;
 
@@ -126,17 +126,17 @@ class GrFragmentProcessor : public GrProcessor {
     }
   }
 
-  int numVaryingCoordsUsed() const noexcept { return this->usesVaryingCoordsDirectly() ? 1 : 0; }
+  int numVaryingCoordsUsed() const { return this->usesVaryingCoordsDirectly() ? 1 : 0; }
 
-  int numChildProcessors() const noexcept { return fChildProcessors.count(); }
-  int numNonNullChildProcessors() const noexcept;
+  int numChildProcessors() const { return fChildProcessors.count(); }
+  int numNonNullChildProcessors() const;
 
-  GrFragmentProcessor* childProcessor(int index) noexcept { return fChildProcessors[index].get(); }
-  const GrFragmentProcessor* childProcessor(int index) const noexcept {
+  GrFragmentProcessor* childProcessor(int index) { return fChildProcessors[index].get(); }
+  const GrFragmentProcessor* childProcessor(int index) const {
     return fChildProcessors[index].get();
   }
 
-  SkDEBUGCODE(bool isInstantiated() const);
+  SkDEBUGCODE(bool isInstantiated() const;)
 
   /**
    * Does this FP require local coordinates to be produced by the primitive processor? This only
@@ -148,7 +148,7 @@ class GrFragmentProcessor : public GrProcessor {
    * provides the original local coordinates to start. This may be implicit as part of vertex
    * shader-lifted varyings, or by providing the base local coordinate to the fragment shader.
    */
-  bool usesVaryingCoordsDirectly() const noexcept {
+  bool usesVaryingCoordsDirectly() const {
     return SkToBool(fFlags & kUsesSampleCoordsDirectly_Flag) &&
            !SkToBool(fFlags & kSampledWithExplicitCoords_Flag);
   }
@@ -158,7 +158,7 @@ class GrFragmentProcessor : public GrProcessor {
    * processor? This can return true even if this FP does not refer to sample coordinates, but
    * true if a descendant FP uses them.
    */
-  bool usesVaryingCoords() const noexcept {
+  bool usesVaryingCoords() const {
     return (SkToBool(fFlags & kUsesSampleCoordsDirectly_Flag) ||
             SkToBool(fFlags & kUsesSampleCoordsIndirectly_Flag)) &&
            !SkToBool(fFlags & kSampledWithExplicitCoords_Flag);
@@ -173,24 +173,25 @@ class GrFragmentProcessor : public GrProcessor {
    * sampled, and does not change based on how the FP is composed. This property is specific to
    * the FP's function and not the entire program.
    */
-  bool referencesSampleCoords() const noexcept {
-    return SkToBool(fFlags & kUsesSampleCoordsDirectly_Flag);
-  }
+  bool referencesSampleCoords() const { return SkToBool(fFlags & kUsesSampleCoordsDirectly_Flag); }
 
   // True if this FP's parent invokes it with 'sample(float2)' or a variable 'sample(matrix)'
-  bool isSampledWithExplicitCoords() const noexcept {
+  bool isSampledWithExplicitCoords() const {
     return SkToBool(fFlags & kSampledWithExplicitCoords_Flag);
   }
 
   // True if the transform chain from root to this FP introduces perspective into the local
   // coordinate expression.
-  bool hasPerspectiveTransform() const noexcept {
+  bool hasPerspectiveTransform() const {
     return SkToBool(fFlags & kNetTransformHasPerspective_Flag);
   }
 
+  // True if emitted code returns the output color, rather than assigning it to sk_OutColor.
+  virtual bool usesExplicitReturn() const { return false; }
+
   // The SampleUsage describing how this FP is invoked by its parent using 'sample(matrix)'
   // This only reflects the immediate sampling from parent to this FP
-  const SkSL::SampleUsage& sampleUsage() const noexcept { return fUsage; }
+  const SkSL::SampleUsage& sampleUsage() const { return fUsage; }
 
   /**
    * A GrDrawOp may premultiply its antialiasing coverage into its GrGeometryProcessor's color
@@ -204,14 +205,14 @@ class GrFragmentProcessor : public GrProcessor {
    * value cannot depend on the input's color channels unless it unpremultiplies the input color
    * channels by the input alpha.
    */
-  bool compatibleWithCoverageAsAlpha() const noexcept {
+  bool compatibleWithCoverageAsAlpha() const {
     return SkToBool(fFlags & kCompatibleWithCoverageAsAlpha_OptimizationFlag);
   }
 
   /**
    * If this is true then all opaque input colors to the processor produce opaque output colors.
    */
-  bool preservesOpaqueInput() const noexcept {
+  bool preservesOpaqueInput() const {
     return SkToBool(fFlags & kPreservesOpaqueInput_OptimizationFlag);
   }
 
@@ -227,7 +228,7 @@ class GrFragmentProcessor : public GrProcessor {
     }
     return false;
   }
-  bool hasConstantOutputForConstantInput() const noexcept {
+  bool hasConstantOutputForConstantInput() const {
     return SkToBool(fFlags & kConstantOutputForConstantInput_OptimizationFlag);
   }
 
@@ -238,14 +239,14 @@ class GrFragmentProcessor : public GrProcessor {
       A return value of true from isEqual() should not be used to test whether the processor would
       generate the same shader code. To test for identical code generation use getGLSLProcessorKey
    */
-  bool isEqual(const GrFragmentProcessor& that) const noexcept;
+  bool isEqual(const GrFragmentProcessor& that) const;
 
   void visitProxies(const GrOp::VisitProxyFunc& func) const;
 
   void visitTextureEffects(const std::function<void(const GrTextureEffect&)>&) const;
 
-  GrTextureEffect* asTextureEffect() noexcept;
-  const GrTextureEffect* asTextureEffect() const noexcept;
+  GrTextureEffect* asTextureEffect();
+  const GrTextureEffect* asTextureEffect() const;
 
 #if GR_TEST_UTILS
   // Generates debug info for this processor tree by recursively calling dumpInfo() on this
@@ -308,8 +309,7 @@ class GrFragmentProcessor : public GrProcessor {
    * callers must determine on their own if the sampling uses a decal strategy in any way, in
    * which case the texture may become transparent regardless of the color type.
    */
-  static OptimizationFlags ModulateForSamplerOptFlags(
-      SkAlphaType alphaType, bool samplingDecal) noexcept {
+  static OptimizationFlags ModulateForSamplerOptFlags(SkAlphaType alphaType, bool samplingDecal) {
     if (samplingDecal) {
       return kCompatibleWithCoverageAsAlpha_OptimizationFlag;
     } else {
@@ -318,7 +318,7 @@ class GrFragmentProcessor : public GrProcessor {
   }
 
   // As above, but callers should somehow ensure or assert their sampler still uses clamping
-  static OptimizationFlags ModulateForClampedSamplerOptFlags(SkAlphaType alphaType) noexcept {
+  static OptimizationFlags ModulateForClampedSamplerOptFlags(SkAlphaType alphaType) {
     if (alphaType == kOpaque_SkAlphaType) {
       return kCompatibleWithCoverageAsAlpha_OptimizationFlag |
              kPreservesOpaqueInput_OptimizationFlag;
@@ -327,17 +327,17 @@ class GrFragmentProcessor : public GrProcessor {
     }
   }
 
-  GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags) noexcept
+  GrFragmentProcessor(ClassID classID, OptimizationFlags optimizationFlags)
       : INHERITED(classID), fFlags(optimizationFlags) {
     SkASSERT((optimizationFlags & ~kAll_OptimizationFlags) == 0);
   }
 
-  OptimizationFlags optimizationFlags() const noexcept {
+  OptimizationFlags optimizationFlags() const {
     return static_cast<OptimizationFlags>(kAll_OptimizationFlags & fFlags);
   }
 
   /** Useful when you can't call fp->optimizationFlags() on a base class object from a subclass.*/
-  static OptimizationFlags ProcessorOptimizationFlags(const GrFragmentProcessor* fp) noexcept {
+  static OptimizationFlags ProcessorOptimizationFlags(const GrFragmentProcessor* fp) {
     return fp ? fp->optimizationFlags() : kAll_OptimizationFlags;
   }
 
@@ -379,7 +379,7 @@ class GrFragmentProcessor : public GrProcessor {
 
   // FP implementations must call this function if their matching GrGLSLFragmentProcessor's
   // emitCode() function uses the EmitArgs::fSampleCoord variable in generated SkSL.
-  void setUsesSampleCoordsDirectly() noexcept { fFlags |= kUsesSampleCoordsDirectly_Flag; }
+  void setUsesSampleCoordsDirectly() { fFlags |= kUsesSampleCoordsDirectly_Flag; }
 
  private:
   virtual SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& /* inputColor */) const {
@@ -399,7 +399,7 @@ class GrFragmentProcessor : public GrProcessor {
    * the two processors are of the same subclass (i.e. they return the same object from
    * getFactory()).
    */
-  virtual bool onIsEqual(const GrFragmentProcessor&) const noexcept = 0;
+  virtual bool onIsEqual(const GrFragmentProcessor&) const = 0;
 
   enum PrivateFlags {
     kFirstPrivateFlag = kAll_OptimizationFlags + 1,
@@ -414,14 +414,14 @@ class GrFragmentProcessor : public GrProcessor {
     kSampledWithExplicitCoords_Flag = kFirstPrivateFlag << 2,
     kNetTransformHasPerspective_Flag = kFirstPrivateFlag << 3,
   };
-  void addAndPushFlagToChildren(PrivateFlags flag) noexcept;
+  void addAndPushFlagToChildren(PrivateFlags flag);
 
   SkSTArray<1, std::unique_ptr<GrFragmentProcessor>, true> fChildProcessors;
   const GrFragmentProcessor* fParent = nullptr;
   uint32_t fFlags = 0;
   SkSL::SampleUsage fUsage;
 
-  typedef GrProcessor INHERITED;
+  using INHERITED = GrProcessor;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -432,21 +432,21 @@ GR_MAKE_BITFIELD_OPS(GrFragmentProcessor::OptimizationFlags)
 
 class GrFragmentProcessor::CIter {
  public:
-  explicit CIter(const GrFragmentProcessor& fp) noexcept { fFPStack.push_back(&fp); }
-  explicit CIter(const GrPaint&) noexcept;
-  explicit CIter(const GrPipeline&) noexcept;
+  explicit CIter(const GrFragmentProcessor& fp) { fFPStack.push_back(&fp); }
+  explicit CIter(const GrPaint&);
+  explicit CIter(const GrPipeline&);
 
-  const GrFragmentProcessor& operator*() const noexcept { return *fFPStack.back(); }
-  const GrFragmentProcessor* operator->() const noexcept { return fFPStack.back(); }
+  const GrFragmentProcessor& operator*() const { return *fFPStack.back(); }
+  const GrFragmentProcessor* operator->() const { return fFPStack.back(); }
 
-  CIter& operator++() noexcept;
+  CIter& operator++();
 
-  operator bool() const noexcept { return !fFPStack.empty(); }
+  operator bool() const { return !fFPStack.empty(); }
 
-  bool operator!=(const EndCIter&) noexcept { return (bool)*this; }
+  bool operator!=(const EndCIter&) { return (bool)*this; }
 
   // Hopefully this does not actually get called because of RVO.
-  CIter(const CIter&) noexcept = default;
+  CIter(const CIter&) = default;
 
   // Because each iterator carries a stack we want to avoid copies.
   CIter& operator=(const CIter&) = delete;
@@ -462,9 +462,9 @@ class GrFragmentProcessor::CIter {
 template <typename Src>
 class GrFragmentProcessor::CIterRange {
  public:
-  explicit CIterRange(const Src& t) noexcept : fT(t) {}
-  CIter begin() const noexcept { return CIter(fT); }
-  EndCIter end() const noexcept { return EndCIter(); }
+  explicit CIterRange(const Src& t) : fT(t) {}
+  CIter begin() const { return CIter(fT); }
+  EndCIter end() const { return EndCIter(); }
 
  private:
   const Src& fT;
@@ -477,10 +477,10 @@ class GrFragmentProcessor::CIterRange {
  * met, `success` is set to false and the input FP is returned unchanged.
  */
 using GrFPResult = std::tuple<bool /*success*/, std::unique_ptr<GrFragmentProcessor>>;
-static inline GrFPResult GrFPFailure(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
+static inline GrFPResult GrFPFailure(std::unique_ptr<GrFragmentProcessor> fp) {
   return {false, std::move(fp)};
 }
-static inline GrFPResult GrFPSuccess(std::unique_ptr<GrFragmentProcessor> fp) noexcept {
+static inline GrFPResult GrFPSuccess(std::unique_ptr<GrFragmentProcessor> fp) {
   return {true, std::move(fp)};
 }
 

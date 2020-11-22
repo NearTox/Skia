@@ -1,31 +1,28 @@
 // Copyright 2018 Google LLC.
 // Use of this source code is governed by a BSD-style license that can be found in the LICENSE file.
 
+#include "include/private/SkTFitsIn.h"
 #include "src/utils/SkUTF.h"
 
 #include <climits>
 
-static constexpr inline int32_t left_shift(int32_t value, int32_t shift) noexcept {
+static constexpr inline int32_t left_shift(int32_t value, int32_t shift) {
   return (int32_t)((uint32_t)value << shift);
 }
 
 template <typename T>
-static constexpr bool is_align2(T x) noexcept {
+static constexpr bool is_align2(T x) {
   return 0 == (x & 1);
 }
 
 template <typename T>
-static constexpr bool is_align4(T x) noexcept {
+static constexpr bool is_align4(T x) {
   return 0 == (x & 3);
 }
 
-static constexpr inline bool utf16_is_high_surrogate(uint16_t c) noexcept {
-  return (c & 0xFC00) == 0xD800;
-}
+static constexpr inline bool utf16_is_high_surrogate(uint16_t c) { return (c & 0xFC00) == 0xD800; }
 
-static constexpr inline bool utf16_is_low_surrogate(uint16_t c) noexcept {
-  return (c & 0xFC00) == 0xDC00;
-}
+static constexpr inline bool utf16_is_low_surrogate(uint16_t c) { return (c & 0xFC00) == 0xDC00; }
 
 /** @returns   -1  iff invalid UTF8 byte,
                 0  iff UTF8 continuation byte,
@@ -35,7 +32,7 @@ static constexpr inline bool utf16_is_low_surrogate(uint16_t c) noexcept {
                 4  iff leading byte of 4-byte sequence.
       I.e.: if return value > 0, then gives length of sequence.
 */
-static int utf8_byte_type(uint8_t c) noexcept {
+static int utf8_byte_type(uint8_t c) {
   if (c < 0x80) {
     return 1;
   } else if (c < 0xC0) {
@@ -48,13 +45,13 @@ static int utf8_byte_type(uint8_t c) noexcept {
     return value;
   }
 }
-static constexpr bool utf8_type_is_valid_leading_byte(int type) noexcept { return type > 0; }
+static bool utf8_type_is_valid_leading_byte(int type) { return type > 0; }
 
-static bool utf8_byte_is_continuation(uint8_t c) noexcept { return utf8_byte_type(c) == 0; }
+static bool utf8_byte_is_continuation(uint8_t c) { return utf8_byte_type(c) == 0; }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int SkUTF::CountUTF8(const char* utf8, size_t byteLength) noexcept {
+int SkUTF::CountUTF8(const char* utf8, size_t byteLength) {
   if (!utf8) {
     return -1;
   }
@@ -77,7 +74,7 @@ int SkUTF::CountUTF8(const char* utf8, size_t byteLength) noexcept {
   return count;
 }
 
-int SkUTF::CountUTF16(const uint16_t* utf16, size_t byteLength) noexcept {
+int SkUTF::CountUTF16(const uint16_t* utf16, size_t byteLength) {
   if (!utf16 || !is_align2(intptr_t(utf16)) || !is_align2(byteLength)) {
     return -1;
   }
@@ -103,11 +100,11 @@ int SkUTF::CountUTF16(const uint16_t* utf16, size_t byteLength) noexcept {
   return count;
 }
 
-int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) noexcept {
-  if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) || byteLength >> 2 > INT_MAX) {
+int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) {
+  if (!is_align4(intptr_t(utf32)) || !is_align4(byteLength) || !SkTFitsIn<int>(byteLength >> 2)) {
     return -1;
   }
-  constexpr uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
+  const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
   const uint32_t* ptr = (const uint32_t*)utf32;
   const uint32_t* stop = ptr + (byteLength >> 2);
   while (ptr < stop) {
@@ -120,12 +117,12 @@ int SkUTF::CountUTF32(const int32_t* utf32, size_t byteLength) noexcept {
 }
 
 template <typename T>
-static SkUnichar next_fail(const T** ptr, const T* end) noexcept {
+static SkUnichar next_fail(const T** ptr, const T* end) {
   *ptr = end;
   return -1;
 }
 
-SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) noexcept {
+SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) {
   if (!ptr || !end) {
     return -1;
   }
@@ -161,7 +158,7 @@ SkUnichar SkUTF::NextUTF8(const char** ptr, const char* end) noexcept {
   return c;
 }
 
-SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) noexcept {
+SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) {
   if (!ptr || !end) {
     return -1;
   }
@@ -199,7 +196,7 @@ SkUnichar SkUTF::NextUTF16(const uint16_t** ptr, const uint16_t* end) noexcept {
   return result;
 }
 
-SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) noexcept {
+SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) {
   if (!ptr || !end) {
     return -1;
   }
@@ -208,7 +205,7 @@ SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) noexcept {
     return next_fail(ptr, end);
   }
   int32_t value = *s;
-  constexpr uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
+  const uint32_t kInvalidUnicharMask = 0xFF000000;  // unichar fits in 24 bits
   if (value & kInvalidUnicharMask) {
     return next_fail(ptr, end);
   }
@@ -216,7 +213,7 @@ SkUnichar SkUTF::NextUTF32(const int32_t** ptr, const int32_t* end) noexcept {
   return value;
 }
 
-size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) noexcept {
+size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) {
   if ((uint32_t)uni > 0x10FFFF) {
     return 0;
   }
@@ -245,7 +242,7 @@ size_t SkUTF::ToUTF8(SkUnichar uni, char utf8[SkUTF::kMaxBytesInUTF8Sequence]) n
   return count;
 }
 
-size_t SkUTF::ToUTF16(SkUnichar uni, uint16_t utf16[2]) noexcept {
+size_t SkUTF::ToUTF16(SkUnichar uni, uint16_t utf16[2]) {
   if ((uint32_t)uni > 0x10FFFF) {
     return 0;
   }
@@ -261,8 +258,7 @@ size_t SkUTF::ToUTF16(SkUnichar uni, uint16_t utf16[2]) noexcept {
   return 1 + extra;
 }
 
-int SkUTF::UTF8ToUTF16(
-    uint16_t dst[], int dstCapacity, const char src[], size_t srcByteLength) noexcept {
+int SkUTF::UTF8ToUTF16(uint16_t dst[], int dstCapacity, const char src[], size_t srcByteLength) {
   if (!dst) {
     dstCapacity = 0;
   }
@@ -285,6 +281,38 @@ int SkUTF::UTF8ToUTF16(
 
     if (dst) {
       uint16_t* elems = utf16;
+      while (dst < endDst && count > 0) {
+        *dst++ = *elems++;
+        count -= 1;
+      }
+    }
+  }
+  return dstLength;
+}
+
+int SkUTF::UTF16ToUTF8(char dst[], int dstCapacity, const uint16_t src[], size_t srcLength) {
+  if (!dst) {
+    dstCapacity = 0;
+  }
+
+  int dstLength = 0;
+  const char* endDst = dst + dstCapacity;
+  const uint16_t* endSrc = src + srcLength;
+  while (src < endSrc) {
+    SkUnichar uni = NextUTF16(&src, endSrc);
+    if (uni < 0) {
+      return -1;
+    }
+
+    char utf8[SkUTF::kMaxBytesInUTF8Sequence];
+    size_t count = ToUTF8(uni, utf8);
+    if (count == 0) {
+      return -1;
+    }
+    dstLength += count;
+
+    if (dst) {
+      const char* elems = utf8;
       while (dst < endDst && count > 0) {
         *dst++ = *elems++;
         count -= 1;

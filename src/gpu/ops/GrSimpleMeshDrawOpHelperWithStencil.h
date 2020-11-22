@@ -20,17 +20,13 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   using MakeArgs = GrSimpleMeshDrawOpHelper::MakeArgs;
   using InputFlags = GrSimpleMeshDrawOpHelper::InputFlags;
 
+  using GrSimpleMeshDrawOpHelper::createPipeline;
   using GrSimpleMeshDrawOpHelper::visitProxies;
-
-  const GrPipeline* createPipelineWithStencil(
-      const GrCaps*, SkArenaAlloc*, GrSwizzle writeViewSwizzle, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&);
-
-  const GrPipeline* createPipelineWithStencil(GrOpFlushState* flushState);
 
   GrProgramInfo* createProgramInfoWithStencil(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeViewSwizzle, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
+      const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType,
+      GrXferBarrierFlags renderPassXferBarriers);
 
   // using declarations can't be templated, so this is a pass through function instead.
   template <typename Op, typename... OpArgs>
@@ -78,7 +74,7 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
 
  private:
   const GrUserStencilSettings* fStencilSettings;
-  typedef GrSimpleMeshDrawOpHelper INHERITED;
+  using INHERITED = GrSimpleMeshDrawOpHelper;
 };
 
 #endif

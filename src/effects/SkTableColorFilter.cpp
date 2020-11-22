@@ -162,7 +162,7 @@ class SkTable_ColorFilter : public SkColorFilterBase {
 
   friend class SkTableColorFilter;
 
-  typedef SkColorFilter INHERITED;
+  using INHERITED = SkColorFilter;
 };
 
 static const uint8_t kCountNibBits[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
@@ -269,7 +269,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   ~ColorTableEffect() override {}
 
-  const char* name() const noexcept override { return "ColorTableEffect"; }
+  const char* name() const override { return "ColorTableEffect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new ColorTableEffect(*this));
@@ -283,7 +283,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
+  bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
   ColorTableEffect(std::unique_ptr<GrFragmentProcessor> inputFP, GrSurfaceProxyView view);
 
@@ -291,7 +291,7 @@ class ColorTableEffect : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 ColorTableEffect::ColorTableEffect(

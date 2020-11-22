@@ -7,7 +7,7 @@
 
 #include "src/gpu/GrRectanizerPow2.h"
 
-bool GrRectanizerPow2::addRect(int width, int height, SkIPoint16* loc) noexcept {
+bool GrRectanizerPow2::addRect(int width, int height, SkIPoint16* loc) {
   if ((unsigned)width > (unsigned)this->width() || (unsigned)height > (unsigned)this->height()) {
     return false;
   }

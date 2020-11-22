@@ -110,7 +110,7 @@ void XMLCALL entity_decl_handler(
 
 SkXMLParser::SkXMLParser(SkXMLParserError* parserError) : fParser(nullptr), fError(parserError) {}
 
-SkXMLParser::~SkXMLParser() = default;
+SkXMLParser::~SkXMLParser() {}
 
 bool SkXMLParser::parse(SkStream& docStream) {
   ParsingContext ctx(this);

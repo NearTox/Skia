@@ -144,10 +144,10 @@ class SkTriColorShader : public SkShaderBase {
   }
 
  private:
-  bool isOpaque() const noexcept override { return fIsOpaque; }
+  bool isOpaque() const override { return fIsOpaque; }
   // For serialization.  This will never be called.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const noexcept override { return nullptr; }
+  const char* getTypeName() const override { return nullptr; }
 
   // If fUsePersp, we need both of these matrices,
   // otherwise we can combine them, and only use fM43
@@ -157,7 +157,7 @@ class SkTriColorShader : public SkShaderBase {
   const bool fIsOpaque;
   const bool fUsePersp;  // controls our stages, and what we do in update()
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 bool SkTriColorShader::update(

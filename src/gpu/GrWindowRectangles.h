@@ -31,8 +31,8 @@ class GrWindowRectangles {
   SkIRect& addWindow(const SkIRect& window) { return this->addWindow() = window; }
   SkIRect& addWindow();
 
-  bool operator!=(const GrWindowRectangles& that) const noexcept { return !(*this == that); }
-  bool operator==(const GrWindowRectangles&) const noexcept;
+  bool operator!=(const GrWindowRectangles& that) const { return !(*this == that); }
+  bool operator==(const GrWindowRectangles&) const;
 
  private:
   struct Rec;
@@ -56,7 +56,7 @@ struct GrWindowRectangles::Rec : public GrNonAtomicRef<Rec> {
   SkIRect fData[kMaxWindows];
 };
 
-inline GrWindowRectangles ::~GrWindowRectangles() { SkSafeUnref(this->rec()); }
+inline GrWindowRectangles::~GrWindowRectangles() { SkSafeUnref(this->rec()); }
 
 inline const SkIRect* GrWindowRectangles::data() const noexcept {
   return fCount <= 1 ? &fLocalWindow : fRec->fData;
@@ -112,7 +112,7 @@ inline SkIRect& GrWindowRectangles::addWindow() {
   return fRec->fData[fCount++];
 }
 
-inline bool GrWindowRectangles::operator==(const GrWindowRectangles& that) const noexcept {
+inline bool GrWindowRectangles::operator==(const GrWindowRectangles& that) const {
   if (fCount != that.fCount) {
     return false;
   }

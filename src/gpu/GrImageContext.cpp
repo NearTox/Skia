@@ -21,7 +21,7 @@ GrImageContext::GrImageContext(sk_sp<GrContextThreadSafeProxy> proxy)
   fProxyProvider = std::make_unique<GrProxyProvider>(this);
 }
 
-GrImageContext::~GrImageContext() = default;
+GrImageContext::~GrImageContext() {}
 
 void GrImageContext::abandonContext() { fThreadSafeProxy->priv().abandonContext(); }
 

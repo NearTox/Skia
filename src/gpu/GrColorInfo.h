@@ -18,28 +18,24 @@
  * the GrColorSpaceXform from sRGB. */
 class GrColorInfo {
  public:
-  constexpr GrColorInfo() noexcept = default;
-  GrColorInfo(GrColorInfo&&) noexcept;
-  GrColorInfo(const GrColorInfo&) noexcept;
-  GrColorInfo& operator=(GrColorInfo&&) noexcept;
-  GrColorInfo& operator=(const GrColorInfo&) noexcept;
+  GrColorInfo() = default;
+  GrColorInfo(const GrColorInfo&);
+  GrColorInfo& operator=(const GrColorInfo&);
   GrColorInfo(GrColorType, SkAlphaType, sk_sp<SkColorSpace>);
   /* implicit */ GrColorInfo(const SkColorInfo&);
 
   bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
-  SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
-  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
+  SkColorSpace* colorSpace() const { return fColorSpace.get(); }
+  sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
 
-  GrColorSpaceXform* colorSpaceXformFromSRGB() const noexcept { return fColorXformFromSRGB.get(); }
-  sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const noexcept {
-    return fColorXformFromSRGB;
-  }
+  GrColorSpaceXform* colorSpaceXformFromSRGB() const { return fColorXformFromSRGB.get(); }
+  sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const { return fColorXformFromSRGB; }
 
-  GrColorType colorType() const noexcept { return fColorType; }
-  SkAlphaType alphaType() const noexcept { return fAlphaType; }
+  GrColorType colorType() const { return fColorType; }
+  SkAlphaType alphaType() const { return fAlphaType; }
 
-  bool isValid() const noexcept {
+  bool isValid() const {
     return fColorType != GrColorType::kUnknown && fAlphaType != kUnknown_SkAlphaType;
   }
 

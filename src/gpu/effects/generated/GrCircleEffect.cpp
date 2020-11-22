@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLCircleEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLCircleEffect() noexcept = default;
+  GrGLSLCircleEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrCircleEffect& _outer = args.fFp.cast<GrCircleEffect>();
@@ -101,7 +101,7 @@ void GrCircleEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)edgeType);
 }
-bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrCircleEffect& that = other.cast<GrCircleEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
@@ -109,6 +109,7 @@ bool GrCircleEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept 
   if (radius != that.radius) return false;
   return true;
 }
+bool GrCircleEffect::usesExplicitReturn() const { return false; }
 GrCircleEffect::GrCircleEffect(const GrCircleEffect& src)
     : INHERITED(kGrCircleEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),

@@ -167,7 +167,7 @@ class ImageFiltersCroppedGM : public skiagm::GM {
 
  private:
   SkBitmap fCheckerboard;
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

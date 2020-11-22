@@ -160,7 +160,7 @@ class DisplacementMapGM : public GM {
   SkBitmap fBitmap;
   sk_sp<SkImage> fCheckerboard, fSmall, fLarge, fLargeW, fLargeH;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

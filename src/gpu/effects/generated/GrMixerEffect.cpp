@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLMixerEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLMixerEffect() noexcept = default;
+  GrGLSLMixerEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrMixerEffect& _outer = args.fFp.cast<GrMixerEffect>();
@@ -54,12 +54,13 @@ GrGLSLFragmentProcessor* GrMixerEffect::onCreateGLSLInstance() const {
 }
 void GrMixerEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrMixerEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrMixerEffect& that = other.cast<GrMixerEffect>();
   (void)that;
   if (weight != that.weight) return false;
   return true;
 }
+bool GrMixerEffect::usesExplicitReturn() const { return false; }
 GrMixerEffect::GrMixerEffect(const GrMixerEffect& src)
     : INHERITED(kGrMixerEffect_ClassID, src.optimizationFlags()), weight(src.weight) {
   this->cloneAndRegisterAllChildProcessors(src);

@@ -143,21 +143,20 @@ static void test_explicit_purging(
       skif::FilterResult<For::kOutput>(image, skif::LayerSpace<SkIPoint>(offset)));
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 2 == cache->count());)
 
-      skif::FilterResult<For::kOutput>
-          foundImage;
+  skif::FilterResult<For::kOutput> foundImage;
   REPORTER_ASSERT(reporter, cache->get(key1, &foundImage));
   REPORTER_ASSERT(reporter, cache->get(key2, &foundImage));
 
   cache->purgeByImageFilter(filter1.get());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 1 == cache->count());)
 
-      REPORTER_ASSERT(reporter, !cache->get(key1, &foundImage));
+  REPORTER_ASSERT(reporter, !cache->get(key1, &foundImage));
   REPORTER_ASSERT(reporter, cache->get(key2, &foundImage));
 
   cache->purge();
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->count());)
 
-      REPORTER_ASSERT(reporter, !cache->get(key1, &foundImage));
+  REPORTER_ASSERT(reporter, !cache->get(key1, &foundImage));
   REPORTER_ASSERT(reporter, !cache->get(key2, &foundImage));
 }
 

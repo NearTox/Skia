@@ -91,7 +91,7 @@ class PerlinNoiseGM : public skiagm::GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 class PerlinNoiseGM2 : public skiagm::GM {

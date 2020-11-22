@@ -17,7 +17,7 @@
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
-bool GrFragmentProcessor::isEqual(const GrFragmentProcessor& that) const noexcept {
+bool GrFragmentProcessor::isEqual(const GrFragmentProcessor& that) const {
   if (this->classID() != that.classID()) {
     return false;
   }
@@ -60,14 +60,14 @@ void GrFragmentProcessor::visitTextureEffects(
   }
 }
 
-GrTextureEffect* GrFragmentProcessor::asTextureEffect() noexcept {
+GrTextureEffect* GrFragmentProcessor::asTextureEffect() {
   if (this->classID() == kGrTextureEffect_ClassID) {
     return static_cast<GrTextureEffect*>(this);
   }
   return nullptr;
 }
 
-const GrTextureEffect* GrFragmentProcessor::asTextureEffect() const noexcept {
+const GrTextureEffect* GrFragmentProcessor::asTextureEffect() const {
   if (this->classID() == kGrTextureEffect_ClassID) {
     return static_cast<const GrTextureEffect*>(this);
   }
@@ -107,7 +107,7 @@ GrGLSLFragmentProcessor* GrFragmentProcessor::createGLSLInstance() const {
   return glFragProc;
 }
 
-void GrFragmentProcessor::addAndPushFlagToChildren(PrivateFlags flag) noexcept {
+void GrFragmentProcessor::addAndPushFlagToChildren(PrivateFlags flag) {
   // This propagates down, so if we've already marked it, all our children should have it too
   if (!(fFlags & flag)) {
     fFlags |= flag;
@@ -124,10 +124,9 @@ void GrFragmentProcessor::addAndPushFlagToChildren(PrivateFlags flag) noexcept {
 #endif
 }
 
-int GrFragmentProcessor::numNonNullChildProcessors() const noexcept {
+int GrFragmentProcessor::numNonNullChildProcessors() const {
   return std::count_if(
-      fChildProcessors.begin(), fChildProcessors.end(),
-      [](const auto& c) noexcept { return c != nullptr; });
+      fChildProcessors.begin(), fChildProcessors.end(), [](const auto& c) { return c != nullptr; });
 }
 
 #ifdef SK_DEBUG
@@ -266,8 +265,8 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::SwizzleOutput(
           new SwizzleFragmentProcessor(std::move(fp), swizzle));
     }
 
-    const char* name() const noexcept override { return "Swizzle"; }
-    const GrSwizzle& swizzle() const noexcept { return fSwizzle; }
+    const char* name() const override { return "Swizzle"; }
+    const GrSwizzle& swizzle() const { return fSwizzle; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
       return Make(this->childProcessor(0)->clone(), fSwizzle);
@@ -297,23 +296,22 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::SwizzleOutput(
       return new GLFP;
     }
 
-    void onGetGLSLProcessorKey(
-        const GrShaderCaps&, GrProcessorKeyBuilder* b) const noexcept override {
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
       b->add32(fSwizzle.asKey());
     }
 
-    bool onIsEqual(const GrFragmentProcessor& other) const noexcept override {
+    bool onIsEqual(const GrFragmentProcessor& other) const override {
       const SwizzleFragmentProcessor& sfp = other.cast<SwizzleFragmentProcessor>();
       return fSwizzle == sfp.fSwizzle;
     }
 
-    SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const noexcept override {
+    SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
       return fSwizzle.applyTo(input);
     }
 
     GrSwizzle fSwizzle;
 
-    typedef GrFragmentProcessor INHERITED;
+    using INHERITED = GrFragmentProcessor;
   };
 
   if (!fp) {
@@ -335,7 +333,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::MakeInputPremulAndMulB
           new PremulFragmentProcessor(std::move(processor)));
     }
 
-    const char* name() const noexcept override { return "Premultiply"; }
+    const char* name() const override { return "Premultiply"; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
       return Make(this->childProcessor(0)->clone());
@@ -361,12 +359,11 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::MakeInputPremulAndMulB
       return new GLFP;
     }
 
-    void onGetGLSLProcessorKey(
-        const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
-    bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
+    bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
-    static OptimizationFlags OptFlags(const GrFragmentProcessor* inner) noexcept {
+    static OptimizationFlags OptFlags(const GrFragmentProcessor* inner) {
       OptimizationFlags flags = kNone_OptimizationFlags;
       if (inner->preservesOpaqueInput()) {
         flags |= kPreservesOpaqueInput_OptimizationFlag;
@@ -384,7 +381,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::MakeInputPremulAndMulB
       return premulInput * childColor;
     }
 
-    typedef GrFragmentProcessor INHERITED;
+    using INHERITED = GrFragmentProcessor;
   };
   if (!fp) {
     return nullptr;
@@ -413,7 +410,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
       return std::unique_ptr<GrFragmentProcessor>(new ComposeProcessor(std::move(f), std::move(g)));
     }
 
-    const char* name() const noexcept override { return "Compose"; }
+    const char* name() const override { return "Compose"; }
 
     std::unique_ptr<GrFragmentProcessor> clone() const override {
       return std::unique_ptr<GrFragmentProcessor>(new ComposeProcessor(*this));
@@ -444,10 +441,9 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
       this->cloneAndRegisterAllChildProcessors(that);
     }
 
-    void onGetGLSLProcessorKey(
-        const GrShaderCaps&, GrProcessorKeyBuilder*) const noexcept override {}
+    void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
-    bool onIsEqual(const GrFragmentProcessor&) const noexcept override { return true; }
+    bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
     SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& inColor) const override {
       SkPMColor4f color = inColor;
@@ -456,7 +452,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
       return color;
     }
 
-    typedef GrFragmentProcessor INHERITED;
+    using INHERITED = GrFragmentProcessor;
   };
 
   // Allow either of the composed functions to be null.
@@ -495,7 +491,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
 
 //////////////////////////////////////////////////////////////////////////////
 
-GrFragmentProcessor::CIter::CIter(const GrPaint& paint) noexcept {
+GrFragmentProcessor::CIter::CIter(const GrPaint& paint) {
   if (paint.hasCoverageFragmentProcessor()) {
     fFPStack.push_back(paint.getCoverageFragmentProcessor());
   }
@@ -504,13 +500,13 @@ GrFragmentProcessor::CIter::CIter(const GrPaint& paint) noexcept {
   }
 }
 
-GrFragmentProcessor::CIter::CIter(const GrPipeline& pipeline) noexcept {
+GrFragmentProcessor::CIter::CIter(const GrPipeline& pipeline) {
   for (int i = pipeline.numFragmentProcessors() - 1; i >= 0; --i) {
     fFPStack.push_back(&pipeline.getFragmentProcessor(i));
   }
 }
 
-GrFragmentProcessor::CIter& GrFragmentProcessor::CIter::operator++() noexcept {
+GrFragmentProcessor::CIter& GrFragmentProcessor::CIter::operator++() {
   SkASSERT(!fFPStack.empty());
   const GrFragmentProcessor* back = fFPStack.back();
   fFPStack.pop_back();

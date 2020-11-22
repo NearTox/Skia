@@ -19,9 +19,9 @@ class GrProxyProvider;
  */
 class GrSoftwarePathRenderer : public GrPathRenderer {
  public:
-  const char* name() const noexcept final { return "SW"; }
+  const char* name() const final { return "SW"; }
 
-  GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching) noexcept
+  GrSoftwarePathRenderer(GrProxyProvider* proxyProvider, bool allowCaching)
       : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
   static bool GetShapeAndClipBounds(
@@ -60,7 +60,7 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
   GrProxyProvider* fProxyProvider;
   bool fAllowCaching;
 
-  typedef GrPathRenderer INHERITED;
+  using INHERITED = GrPathRenderer;
 };
 
 #endif

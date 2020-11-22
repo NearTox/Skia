@@ -36,6 +36,7 @@ class DrawCommand {
     kClipRRect_OpType,
     kClipShader_OpType,
     kConcat_OpType,
+    kConcat44_OpType,
     kDrawAnnotation_OpType,
     kDrawBitmap_OpType,
     kDrawBitmapRect_OpType,
@@ -99,6 +100,7 @@ class DrawCommand {
   static void MakeJsonRect(SkJSONWriter&, const SkRect& rect);
   static void MakeJsonIRect(SkJSONWriter&, const SkIRect&);
   static void MakeJsonMatrix(SkJSONWriter&, const SkMatrix&);
+  static void MakeJsonMatrix44(SkJSONWriter&, const SkM44&);
   static void MakeJsonPath(SkJSONWriter&, const SkPath& path);
   static void MakeJsonRegion(SkJSONWriter&, const SkRegion& region);
   static void MakeJsonPaint(SkJSONWriter&, const SkPaint& paint, UrlDataManager& urlDataManager);
@@ -108,6 +110,7 @@ class DrawCommand {
       const SkFlattenable* flattenable, SkJSONWriter& writer, UrlDataManager& urlDataManager);
   static bool flatten(const SkImage& image, SkJSONWriter& writer, UrlDataManager& urlDataManager);
   static bool flatten(const SkBitmap& bitmap, SkJSONWriter& writer, UrlDataManager& urlDataManager);
+  OpType getOpType() const { return fOpType; }
 
  private:
   OpType fOpType;
@@ -120,7 +123,7 @@ class RestoreCommand : public DrawCommand {
   void execute(SkCanvas* canvas) const override;
 
  private:
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ClearCommand : public DrawCommand {
@@ -132,7 +135,7 @@ class ClearCommand : public DrawCommand {
  private:
   SkColor fColor;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ClipPathCommand : public DrawCommand {
@@ -147,7 +150,7 @@ class ClipPathCommand : public DrawCommand {
   SkClipOp fOp;
   bool fDoAA;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ClipRegionCommand : public DrawCommand {
@@ -160,7 +163,7 @@ class ClipRegionCommand : public DrawCommand {
   SkRegion fRegion;
   SkClipOp fOp;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ClipRectCommand : public DrawCommand {
@@ -174,7 +177,7 @@ class ClipRectCommand : public DrawCommand {
   SkClipOp fOp;
   bool fDoAA;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ClipRRectCommand : public DrawCommand {
@@ -189,7 +192,7 @@ class ClipRRectCommand : public DrawCommand {
   SkClipOp fOp;
   bool fDoAA;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ClipShaderCommand : public DrawCommand {
@@ -203,7 +206,7 @@ class ClipShaderCommand : public DrawCommand {
   sk_sp<SkShader> fShader;
   SkClipOp fOp;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class ConcatCommand : public DrawCommand {
@@ -215,7 +218,19 @@ class ConcatCommand : public DrawCommand {
  private:
   SkMatrix fMatrix;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
+};
+
+class Concat44Command : public DrawCommand {
+ public:
+  Concat44Command(const SkM44& matrix);
+  void execute(SkCanvas* canvas) const override;
+  void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
+
+ private:
+  SkM44 fMatrix;
+
+  using INHERITED = DrawCommand;
 };
 
 class DrawAnnotationCommand : public DrawCommand {
@@ -229,7 +244,7 @@ class DrawAnnotationCommand : public DrawCommand {
   SkString fKey;
   sk_sp<SkData> fValue;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawImageCommand : public DrawCommand {
@@ -238,6 +253,7 @@ class DrawImageCommand : public DrawCommand {
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
+  uint64_t imageId(UrlDataManager& udb) const;
 
  private:
   sk_sp<const SkImage> fImage;
@@ -245,7 +261,7 @@ class DrawImageCommand : public DrawCommand {
   SkScalar fTop;
   SkTLazy<SkPaint> fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawImageLatticeCommand : public DrawCommand {
@@ -256,6 +272,7 @@ class DrawImageLatticeCommand : public DrawCommand {
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
+  uint64_t imageId(UrlDataManager& udb) const;
 
  private:
   sk_sp<const SkImage> fImage;
@@ -263,7 +280,7 @@ class DrawImageLatticeCommand : public DrawCommand {
   SkRect fDst;
   SkTLazy<SkPaint> fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawImageNineCommand : public DrawCommand {
@@ -273,6 +290,7 @@ class DrawImageNineCommand : public DrawCommand {
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
+  uint64_t imageId(UrlDataManager& udb) const;
 
  private:
   sk_sp<const SkImage> fImage;
@@ -280,7 +298,7 @@ class DrawImageNineCommand : public DrawCommand {
   SkRect fDst;
   SkTLazy<SkPaint> fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawImageRectCommand : public DrawCommand {
@@ -291,6 +309,7 @@ class DrawImageRectCommand : public DrawCommand {
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
+  uint64_t imageId(UrlDataManager& udm) const;
 
  private:
   sk_sp<const SkImage> fImage;
@@ -299,7 +318,7 @@ class DrawImageRectCommand : public DrawCommand {
   SkTLazy<SkPaint> fPaint;
   SkCanvas::SrcRectConstraint fConstraint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 // Command for resolving the deferred SkImage representing an android layer
@@ -323,7 +342,7 @@ class DrawImageRectLayerCommand : public DrawCommand {
   SkTLazy<SkPaint> fPaint;
   SkCanvas::SrcRectConstraint fConstraint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawOvalCommand : public DrawCommand {
@@ -337,7 +356,7 @@ class DrawOvalCommand : public DrawCommand {
   SkRect fOval;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawArcCommand : public DrawCommand {
@@ -356,7 +375,7 @@ class DrawArcCommand : public DrawCommand {
   bool fUseCenter;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawPaintCommand : public DrawCommand {
@@ -369,7 +388,7 @@ class DrawPaintCommand : public DrawCommand {
  private:
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawBehindCommand : public DrawCommand {
@@ -382,7 +401,7 @@ class DrawBehindCommand : public DrawCommand {
  private:
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawPathCommand : public DrawCommand {
@@ -396,7 +415,7 @@ class DrawPathCommand : public DrawCommand {
   SkPath fPath;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class BeginDrawPictureCommand : public DrawCommand {
@@ -411,7 +430,7 @@ class BeginDrawPictureCommand : public DrawCommand {
   SkTLazy<SkMatrix> fMatrix;
   SkTLazy<SkPaint> fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class EndDrawPictureCommand : public DrawCommand {
@@ -423,7 +442,7 @@ class EndDrawPictureCommand : public DrawCommand {
  private:
   bool fRestore;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawPointsCommand : public DrawCommand {
@@ -439,7 +458,7 @@ class DrawPointsCommand : public DrawCommand {
   SkTDArray<SkPoint> fPts;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawRegionCommand : public DrawCommand {
@@ -453,7 +472,7 @@ class DrawRegionCommand : public DrawCommand {
   SkRegion fRegion;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawTextBlobCommand : public DrawCommand {
@@ -470,7 +489,7 @@ class DrawTextBlobCommand : public DrawCommand {
   SkScalar fYPos;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawPatchCommand : public DrawCommand {
@@ -490,7 +509,7 @@ class DrawPatchCommand : public DrawCommand {
   SkBlendMode fBlendMode;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawRectCommand : public DrawCommand {
@@ -503,7 +522,7 @@ class DrawRectCommand : public DrawCommand {
   SkRect fRect;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawRRectCommand : public DrawCommand {
@@ -517,7 +536,7 @@ class DrawRRectCommand : public DrawCommand {
   SkRRect fRRect;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawDRRectCommand : public DrawCommand {
@@ -532,7 +551,7 @@ class DrawDRRectCommand : public DrawCommand {
   SkRRect fInner;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawVerticesCommand : public DrawCommand {
@@ -546,7 +565,7 @@ class DrawVerticesCommand : public DrawCommand {
   SkBlendMode fBlendMode;
   SkPaint fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawAtlasCommand : public DrawCommand {
@@ -566,7 +585,7 @@ class DrawAtlasCommand : public DrawCommand {
   SkTLazy<SkRect> fCull;
   SkTLazy<SkPaint> fPaint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class SaveCommand : public DrawCommand {
@@ -575,7 +594,7 @@ class SaveCommand : public DrawCommand {
   void execute(SkCanvas* canvas) const override;
 
  private:
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class SaveLayerCommand : public DrawCommand {
@@ -590,7 +609,7 @@ class SaveLayerCommand : public DrawCommand {
   sk_sp<const SkImageFilter> fBackdrop;
   uint32_t fSaveLayerFlags;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class SetMatrixCommand : public DrawCommand {
@@ -602,7 +621,7 @@ class SetMatrixCommand : public DrawCommand {
  private:
   SkMatrix fMatrix;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawShadowCommand : public DrawCommand {
@@ -616,7 +635,7 @@ class DrawShadowCommand : public DrawCommand {
   SkPath fPath;
   SkDrawShadowRec fShadowRec;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawDrawableCommand : public DrawCommand {
@@ -628,7 +647,7 @@ class DrawDrawableCommand : public DrawCommand {
   sk_sp<SkDrawable> fDrawable;
   SkTLazy<SkMatrix> fMatrix;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawEdgeAAQuadCommand : public DrawCommand {
@@ -646,7 +665,7 @@ class DrawEdgeAAQuadCommand : public DrawCommand {
   SkColor4f fColor;
   SkBlendMode fMode;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 
 class DrawEdgeAAImageSetCommand : public DrawCommand {
@@ -664,6 +683,6 @@ class DrawEdgeAAImageSetCommand : public DrawCommand {
   SkTLazy<SkPaint> fPaint;
   SkCanvas::SrcRectConstraint fConstraint;
 
-  typedef DrawCommand INHERITED;
+  using INHERITED = DrawCommand;
 };
 #endif

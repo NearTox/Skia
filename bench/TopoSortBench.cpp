@@ -46,7 +46,8 @@ class TopoSortBench : public Benchmark {
 
       ToolUtils::TopoTestNode::Shuffle(&fGraph, &fRand);
 
-      SkDEBUGCODE(bool actualResult =) SkTTopoSort<ToolUtils::TopoTestNode>(&fGraph);
+      SkDEBUGCODE(bool actualResult =)
+      SkTTopoSort<ToolUtils::TopoTestNode>(&fGraph);
       SkASSERT(actualResult);
 
 #ifdef SK_DEBUG
@@ -64,7 +65,7 @@ class TopoSortBench : public Benchmark {
   SkTArray<sk_sp<ToolUtils::TopoTestNode>> fGraph;
   SkRandom fRand;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

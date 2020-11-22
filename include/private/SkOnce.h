@@ -19,7 +19,7 @@
 
 class SkOnce {
  public:
-  constexpr SkOnce() noexcept = default;
+  constexpr SkOnce() = default;
 
   template <typename Fn, typename... Args>
   void operator()(Fn&& fn, Args&&... args) {

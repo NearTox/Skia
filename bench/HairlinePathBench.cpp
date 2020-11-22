@@ -68,7 +68,7 @@ class HairlinePathBench : public Benchmark {
   SkPaint fPaint;
   SkString fName;
   Flags fFlags;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class LinePathBench : public HairlinePathBench {
@@ -99,7 +99,7 @@ class LinePathBench : public HairlinePathBench {
   }
 
  private:
-  typedef HairlinePathBench INHERITED;
+  using INHERITED = HairlinePathBench;
 };
 
 class QuadPathBench : public HairlinePathBench {
@@ -129,7 +129,7 @@ class QuadPathBench : public HairlinePathBench {
   }
 
  private:
-  typedef HairlinePathBench INHERITED;
+  using INHERITED = HairlinePathBench;
 };
 
 class ConicPathBench : public HairlinePathBench {
@@ -161,7 +161,7 @@ class ConicPathBench : public HairlinePathBench {
   }
 
  private:
-  typedef HairlinePathBench INHERITED;
+  using INHERITED = HairlinePathBench;
 };
 
 class CubicPathBench : public HairlinePathBench {
@@ -193,7 +193,7 @@ class CubicPathBench : public HairlinePathBench {
   }
 
  private:
-  typedef HairlinePathBench INHERITED;
+  using INHERITED = HairlinePathBench;
 };
 
 // FLAG00 - no AA, small

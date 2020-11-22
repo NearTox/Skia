@@ -77,7 +77,7 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
 
   GrD3DDescriptorHeap::CPUHandle fShaderResourceView;
 
-  typedef GrTexture INHERITED;
+  using INHERITED = GrTexture;
 };
 
 #endif

@@ -148,8 +148,6 @@ void SkShaper_CoreText::shape(
   SkUniqueCFRef<CTTypesetterRef> typesetter(
       CTTypesetterCreateWithAttributedString(attrString.get()));
 
-  SkSTArenaAllocWithReset<4096> arena;
-
   // We have to compute RunInfos in a loop, and then reuse them in a 2nd loop,
   // so we store them in an array (we reuse the array's storage for each line).
   std::vector<SkFont> fontStorage;
@@ -171,13 +169,13 @@ void SkShaper_CoreText::shape(
 
       SkASSERT(sizeof(CGGlyph) == sizeof(uint16_t));
 
+      SkSTArenaAlloc<4096> arena;
       CGSize* advances = arena.makeArrayDefault<CGSize>(runGlyphs);
       CTRunGetAdvances(run, {0, runGlyphs}, advances);
       SkScalar adv = 0;
       for (CFIndex k = 0; k < runGlyphs; ++k) {
         adv += advances[k].width;
       }
-      arena.reset();
 
       CFRange range = CTRunGetStringRange(run);
 
@@ -204,6 +202,7 @@ void SkShaper_CoreText::shape(
 
       CTRunGetGlyphs(run, {0, runGlyphs}, buffer.glyphs);
 
+      SkSTArenaAlloc<4096> arena;
       CGPoint* positions = arena.makeArrayDefault<CGPoint>(runGlyphs);
       CTRunGetPositions(run, {0, runGlyphs}, positions);
       CFIndex* indices = nullptr;
@@ -224,7 +223,6 @@ void SkShaper_CoreText::shape(
           buffer.clusters[k] = indices[k];
         }
       }
-      arena.reset();
       handler->commitRunBuffer(info);
     }
     handler->commitLine();

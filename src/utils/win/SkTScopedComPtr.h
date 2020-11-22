@@ -33,10 +33,10 @@ class SkTScopedComPtr {
   T* fPtr;
 
  public:
-  constexpr SkTScopedComPtr() noexcept : fPtr(nullptr) {}
-  constexpr SkTScopedComPtr(std::nullptr_t) noexcept : fPtr(nullptr) {}
-  explicit SkTScopedComPtr(T* ptr) noexcept : fPtr(ptr) {}
-  SkTScopedComPtr(SkTScopedComPtr&& that) noexcept : fPtr(that.release()) {}
+  constexpr SkTScopedComPtr() : fPtr(nullptr) {}
+  constexpr SkTScopedComPtr(std::nullptr_t) : fPtr(nullptr) {}
+  explicit SkTScopedComPtr(T* ptr) : fPtr(ptr) {}
+  SkTScopedComPtr(SkTScopedComPtr&& that) : fPtr(that.release()) {}
   SkTScopedComPtr(const SkTScopedComPtr&) = delete;
 
   ~SkTScopedComPtr() { this->reset(); }
@@ -51,14 +51,14 @@ class SkTScopedComPtr {
     return *this;
   }
 
-  T& operator*() const noexcept {
+  T& operator*() const {
     SkASSERT(fPtr != nullptr);
     return *fPtr;
   }
 
-  explicit operator bool() const noexcept { return fPtr != nullptr; }
+  explicit operator bool() const { return fPtr != nullptr; }
 
-  T* operator->() const noexcept { return fPtr; }
+  T* operator->() const { return fPtr; }
 
   /**
    * Returns the address of the underlying pointer.
@@ -66,12 +66,12 @@ class SkTScopedComPtr {
    * Must only be used on instances currently pointing to NULL,
    * and only to initialize the instance.
    */
-  T** operator&() noexcept {
+  T** operator&() {
     SkASSERT(fPtr == nullptr);
     return &fPtr;
   }
 
-  T* get() const noexcept { return fPtr; }
+  T* get() const { return fPtr; }
 
   void reset(T* ptr = nullptr) {
     if (fPtr) {
@@ -80,13 +80,13 @@ class SkTScopedComPtr {
     fPtr = ptr;
   }
 
-  void swap(SkTScopedComPtr<T>& that) noexcept {
+  void swap(SkTScopedComPtr<T>& that) {
     T* temp = this->fPtr;
     this->fPtr = that.fPtr;
     that.fPtr = temp;
   }
 
-  T* release() noexcept {
+  T* release() {
     T* temp = this->fPtr;
     this->fPtr = nullptr;
     return temp;

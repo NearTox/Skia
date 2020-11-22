@@ -37,7 +37,7 @@ class SkRadialGradient final : public SkGradientShaderBase {
   const SkScalar fRadius;
 
   friend class SkGradientShader;
-  typedef SkGradientShaderBase INHERITED;
+  using INHERITED = SkGradientShaderBase;
 };
 
 #endif

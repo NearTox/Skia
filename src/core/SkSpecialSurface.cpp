@@ -16,14 +16,14 @@
 ///////////////////////////////////////////////////////////////////////////////
 class SkSpecialSurface_Base : public SkSpecialSurface {
  public:
-  SkSpecialSurface_Base(const SkIRect& subset, const SkSurfaceProps* props) noexcept
+  SkSpecialSurface_Base(const SkIRect& subset, const SkSurfaceProps* props)
       : INHERITED(subset, props), fCanvas(nullptr) {}
 
   // reset is called after an SkSpecialImage has been snapped
-  void reset() noexcept { fCanvas.reset(); }
+  void reset() { fCanvas.reset(); }
 
   // This can return nullptr if reset has already been called or something when wrong in the ctor
-  SkCanvas* onGetCanvas() noexcept { return fCanvas.get(); }
+  SkCanvas* onGetCanvas() { return fCanvas.get(); }
 
   virtual sk_sp<SkSpecialImage> onMakeImageSnapshot() = 0;
 
@@ -31,22 +31,22 @@ class SkSpecialSurface_Base : public SkSpecialSurface {
   std::unique_ptr<SkCanvas> fCanvas;  // initialized by derived classes in ctors
 
  private:
-  typedef SkSpecialSurface INHERITED;
+  using INHERITED = SkSpecialSurface;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
-static SkSpecialSurface_Base* as_SB(SkSpecialSurface* surface) noexcept {
+static SkSpecialSurface_Base* as_SB(SkSpecialSurface* surface) {
   return static_cast<SkSpecialSurface_Base*>(surface);
 }
 
-SkSpecialSurface::SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps* props) noexcept
+SkSpecialSurface::SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps* props)
     : fProps(SkSurfacePropsCopyOrDefault(props).flags(), kUnknown_SkPixelGeometry),
       fSubset(subset) {
   SkASSERT(fSubset.width() > 0);
   SkASSERT(fSubset.height() > 0);
 }
 
-SkCanvas* SkSpecialSurface::getCanvas() noexcept { return as_SB(this)->onGetCanvas(); }
+SkCanvas* SkSpecialSurface::getCanvas() { return as_SB(this)->onGetCanvas(); }
 
 sk_sp<SkSpecialImage> SkSpecialSurface::makeImageSnapshot() {
   sk_sp<SkSpecialImage> image(as_SB(this)->onMakeImageSnapshot());
@@ -83,7 +83,7 @@ class SkSpecialSurface_Raster : public SkSpecialSurface_Base {
  private:
   SkBitmap fBitmap;
 
-  typedef SkSpecialSurface_Base INHERITED;
+  using INHERITED = SkSpecialSurface_Base;
 };
 
 sk_sp<SkSpecialSurface> SkSpecialSurface::MakeFromBitmap(
@@ -151,7 +151,7 @@ class SkSpecialSurface_Gpu : public SkSpecialSurface_Base {
 
  private:
   GrSurfaceProxyView fReadView;
-  typedef SkSpecialSurface_Base INHERITED;
+  using INHERITED = SkSpecialSurface_Base;
 };
 
 sk_sp<SkSpecialSurface> SkSpecialSurface::MakeRenderTarget(

@@ -21,7 +21,7 @@ class SkPixmapPriv {
   static bool Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOrigin);
 
   static bool ShouldSwapWidthHeight(SkEncodedOrigin o) noexcept;
-  static SkImageInfo SwapWidthHeight(const SkImageInfo& info) noexcept;
+  static SkImageInfo SwapWidthHeight(const SkImageInfo& info);
 
   /**
    *  Decode an image and then copy into dst, applying origin.

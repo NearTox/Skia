@@ -56,13 +56,14 @@ class ImageCacheBench : public Benchmark {
     TestKey key(-1);
     // search for a miss (-1)
     for (int i = 0; i < loops; ++i) {
-      SkDEBUGCODE(bool found =) fCache.find(key, TestRec::Visitor, nullptr);
+      SkDEBUGCODE(bool found =)
+      fCache.find(key, TestRec::Visitor, nullptr);
       SkASSERT(!found);
     }
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

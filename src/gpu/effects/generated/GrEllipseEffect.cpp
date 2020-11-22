@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLEllipseEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLEllipseEffect() noexcept = default;
+  GrGLSLEllipseEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrEllipseEffect& _outer = args.fFp.cast<GrEllipseEffect>();
@@ -142,7 +142,7 @@ void GrEllipseEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)edgeType);
 }
-bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrEllipseEffect& that = other.cast<GrEllipseEffect>();
   (void)that;
   if (edgeType != that.edgeType) return false;
@@ -150,6 +150,7 @@ bool GrEllipseEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept
   if (radii != that.radii) return false;
   return true;
 }
+bool GrEllipseEffect::usesExplicitReturn() const { return false; }
 GrEllipseEffect::GrEllipseEffect(const GrEllipseEffect& src)
     : INHERITED(kGrEllipseEffect_ClassID, src.optimizationFlags()),
       edgeType(src.edgeType),

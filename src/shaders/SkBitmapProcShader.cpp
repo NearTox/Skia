@@ -11,43 +11,26 @@
 #include "src/core/SkBitmapProcState.h"
 #include "src/core/SkXfermodePriv.h"
 
-static bool only_scale_and_translate(const SkMatrix& matrix) {
-  unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
-  return (matrix.getType() & ~mask) == 0;
-}
-
-class BitmapProcInfoContext : public SkShaderBase::Context {
+class BitmapProcShaderContext : public SkShaderBase::Context {
  public:
-  // The info has been allocated elsewhere, but we are responsible for calling its destructor.
-  BitmapProcInfoContext(
-      const SkShaderBase& shader, const SkShaderBase::ContextRec& rec, SkBitmapProcInfo* info)
-      : INHERITED(shader, rec), fInfo(info) {
-    fFlags = 0;
-    if (fInfo->fPixmap.isOpaque() && (255 == this->getPaintAlpha())) {
+  BitmapProcShaderContext(
+      const SkShaderBase& shader, const SkShaderBase::ContextRec& rec, SkBitmapProcState* state)
+      : INHERITED(shader, rec), fState(state), fFlags(0) {
+    if (fState->fPixmap.isOpaque() && (255 == this->getPaintAlpha())) {
       fFlags |= SkShaderBase::kOpaqueAlpha_Flag;
     }
 
-    if (1 == fInfo->fPixmap.height() && only_scale_and_translate(this->getTotalInverse())) {
+    auto only_scale_and_translate = [](const SkMatrix& matrix) {
+      unsigned mask = SkMatrix::kTranslate_Mask | SkMatrix::kScale_Mask;
+      return (matrix.getType() & ~mask) == 0;
+    };
+
+    if (1 == fState->fPixmap.height() && only_scale_and_translate(this->getTotalInverse())) {
       fFlags |= SkShaderBase::kConstInY32_Flag;
     }
   }
 
-  uint32_t getFlags() const noexcept override { return fFlags; }
-
- private:
-  SkBitmapProcInfo* fInfo;
-  uint32_t fFlags;
-
-  typedef SkShaderBase::Context INHERITED;
-};
-
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-class BitmapProcShaderContext : public BitmapProcInfoContext {
- public:
-  BitmapProcShaderContext(
-      const SkShaderBase& shader, const SkShaderBase::ContextRec& rec, SkBitmapProcState* state)
-      : INHERITED(shader, rec, state), fState(state) {}
+  uint32_t getFlags() const override { return fFlags; }
 
   void shadeSpan(int x, int y, SkPMColor dstC[], int count) override {
     const SkBitmapProcState& state = *fState;
@@ -81,8 +64,9 @@ class BitmapProcShaderContext : public BitmapProcInfoContext {
 
  private:
   SkBitmapProcState* fState;
+  uint32_t fFlags;
 
-  typedef BitmapProcInfoContext INHERITED;
+  using INHERITED = SkShaderBase::Context;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

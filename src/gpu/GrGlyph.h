@@ -15,7 +15,7 @@
 
 class GrGlyph {
  public:
-  static GrMaskFormat FormatFromSkGlyph(SkMask::Format format) noexcept {
+  static GrMaskFormat FormatFromSkGlyph(SkMask::Format format) {
     switch (format) {
       case SkMask::kBW_Format:
       case SkMask::kSDF_Format:
@@ -30,7 +30,7 @@ class GrGlyph {
     SkUNREACHABLE;
   }
 
-  GrGlyph(SkPackedGlyphID packedGlyphID) noexcept : fPackedID(packedGlyphID) {}
+  GrGlyph(SkPackedGlyphID packedGlyphID) : fPackedID(packedGlyphID) {}
 
   const SkPackedGlyphID fPackedID;
   GrDrawOpAtlas::AtlasLocator fAtlasLocator;

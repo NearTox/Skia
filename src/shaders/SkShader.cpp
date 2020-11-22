@@ -34,7 +34,7 @@ SkShaderBase::SkShaderBase(const SkMatrix* localMatrix)
   (void)fLocalMatrix.getType();
 }
 
-SkShaderBase::~SkShaderBase() = default;
+SkShaderBase::~SkShaderBase() {}
 
 void SkShaderBase::flatten(SkWriteBuffer& buffer) const {
   this->INHERITED::flatten(buffer);
@@ -45,8 +45,7 @@ void SkShaderBase::flatten(SkWriteBuffer& buffer) const {
   }
 }
 
-SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(
-    const SkMatrix* preLocalMatrix) const noexcept {
+SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(const SkMatrix* preLocalMatrix) const {
   SkTCopyOnFirstWrite<SkMatrix> m(fLocalMatrix);
 
   if (preLocalMatrix) {
@@ -57,7 +56,7 @@ SkTCopyOnFirstWrite<SkMatrix> SkShaderBase::totalLocalMatrix(
 }
 
 bool SkShaderBase::computeTotalInverse(
-    const SkMatrix& ctm, const SkMatrix* outerLocalMatrix, SkMatrix* totalInverse) const noexcept {
+    const SkMatrix& ctm, const SkMatrix* outerLocalMatrix, SkMatrix* totalInverse) const {
   return SkMatrix::Concat(ctm, *this->totalLocalMatrix(outerLocalMatrix)).invert(totalInverse);
 }
 
@@ -88,7 +87,7 @@ SkShaderBase::Context* SkShaderBase::makeContext(const ContextRec& rec, SkArenaA
 #endif
 }
 
-SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec) noexcept
+SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec)
     : fShader(shader), fCTM(*rec.fMatrix) {
   // We should never use a context with perspective.
   SkASSERT(!rec.fMatrix->hasPerspective());
@@ -102,7 +101,7 @@ SkShaderBase::Context::Context(const SkShaderBase& shader, const ContextRec& rec
   fPaintAlpha = rec.fPaint->getAlpha();
 }
 
-SkShaderBase::Context::~Context() = default;
+SkShaderBase::Context::~Context() {}
 
 bool SkShaderBase::ContextRec::isLegacyCompatible(SkColorSpace* shaderColorSpace) const {
   // In legacy pipelines, shaders always produce premul (or opaque) and the destination is also

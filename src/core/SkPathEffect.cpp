@@ -49,7 +49,7 @@ SkPathEffect::DashType SkPathEffect::asADash(DashInfo* info) const { return this
  */
 class SkPairPathEffect : public SkPathEffect {
  protected:
-  SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1) noexcept
+  SkPairPathEffect(sk_sp<SkPathEffect> pe0, sk_sp<SkPathEffect> pe1)
       : fPE0(std::move(pe0)), fPE1(std::move(pe1)) {
     SkASSERT(fPE0.get());
     SkASSERT(fPE1.get());
@@ -65,7 +65,7 @@ class SkPairPathEffect : public SkPathEffect {
   sk_sp<SkPathEffect> fPE1;
 
  private:
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ class SkComposePathEffect : public SkPairPathEffect {
   }
 
  protected:
-  SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner) noexcept
+  SkComposePathEffect(sk_sp<SkPathEffect> outer, sk_sp<SkPathEffect> inner)
       : INHERITED(outer, inner) {}
 
   bool onFilterPath(
@@ -115,7 +115,7 @@ class SkComposePathEffect : public SkPairPathEffect {
   SkComposePathEffect& operator=(const SkComposePathEffect&);
   friend class SkPathEffect;
 
-  typedef SkPairPathEffect INHERITED;
+  using INHERITED = SkPairPathEffect;
 };
 
 sk_sp<SkFlattenable> SkComposePathEffect::CreateProc(SkReadBuffer& buffer) {
@@ -151,7 +151,7 @@ class SkSumPathEffect : public SkPairPathEffect {
   SK_FLATTENABLE_HOOKS(SkSumPathEffect)
 
  protected:
-  SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second) noexcept
+  SkSumPathEffect(sk_sp<SkPathEffect> first, sk_sp<SkPathEffect> second)
       : INHERITED(first, second) {}
 
   bool onFilterPath(
@@ -166,7 +166,7 @@ class SkSumPathEffect : public SkPairPathEffect {
   SkSumPathEffect& operator=(const SkSumPathEffect&);
   friend class SkPathEffect;
 
-  typedef SkPairPathEffect INHERITED;
+  using INHERITED = SkPairPathEffect;
 };
 
 sk_sp<SkFlattenable> SkSumPathEffect::CreateProc(SkReadBuffer& buffer) {

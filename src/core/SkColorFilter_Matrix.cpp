@@ -33,9 +33,7 @@ SkColorFilter_Matrix::SkColorFilter_Matrix(const float array[20], Domain domain)
   memcpy(fMatrix, array, 20 * sizeof(float));
 }
 
-uint32_t SkColorFilter_Matrix::onGetFlags() const noexcept {
-  return this->INHERITED::onGetFlags() | fFlags;
-}
+uint32_t SkColorFilter_Matrix::onGetFlags() const { return this->INHERITED::onGetFlags() | fFlags; }
 
 void SkColorFilter_Matrix::flatten(SkWriteBuffer& buffer) const {
   SkASSERT(sizeof(fMatrix) / sizeof(float) == 20);
@@ -129,7 +127,7 @@ skvm::Color SkColorFilter_Matrix::onProgram(
     c = {r, g, b, a};
   }
 
-  return premul(c);  // note: rasterpipeline version does clamp01 first
+  return premul(clamp01(c));
 }
 
 #if SK_SUPPORT_GPU
@@ -180,6 +178,10 @@ sk_sp<SkColorFilter> SkColorFilters::Matrix(const SkColorMatrix& cm) {
 
 sk_sp<SkColorFilter> SkColorFilters::HSLAMatrix(const float array[20]) {
   return MakeMatrix(array, SkColorFilter_Matrix::Domain::kHSLA);
+}
+
+sk_sp<SkColorFilter> SkColorFilters::HSLAMatrix(const SkColorMatrix& cm) {
+  return MakeMatrix(cm.fMat.data(), SkColorFilter_Matrix::Domain::kHSLA);
 }
 
 void SkColorFilter_Matrix::RegisterFlattenables() {

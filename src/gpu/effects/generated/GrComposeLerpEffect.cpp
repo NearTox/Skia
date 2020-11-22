@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLComposeLerpEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLComposeLerpEffect() noexcept = default;
+  GrGLSLComposeLerpEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrComposeLerpEffect& _outer = args.fFp.cast<GrComposeLerpEffect>();
@@ -49,12 +49,13 @@ GrGLSLFragmentProcessor* GrComposeLerpEffect::onCreateGLSLInstance() const {
 }
 void GrComposeLerpEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrComposeLerpEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrComposeLerpEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrComposeLerpEffect& that = other.cast<GrComposeLerpEffect>();
   (void)that;
   if (weight != that.weight) return false;
   return true;
 }
+bool GrComposeLerpEffect::usesExplicitReturn() const { return false; }
 GrComposeLerpEffect::GrComposeLerpEffect(const GrComposeLerpEffect& src)
     : INHERITED(kGrComposeLerpEffect_ClassID, src.optimizationFlags()), weight(src.weight) {
   this->cloneAndRegisterAllChildProcessors(src);

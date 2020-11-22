@@ -100,7 +100,7 @@ class TallStretchedBitmapsGM : public skiagm::GM {
     SkBitmap fBmp;
     int fItemCnt;
   } fTallBmps[8];
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -61,12 +61,12 @@ class GrGLProgram : public SkRefCnt {
   /**
    * Call to abandon GL objects owned by this program.
    */
-  void abandon() noexcept;
+  void abandon();
 
   /**
    * Gets the GL program ID for this program.
    */
-  GrGLuint programID() const noexcept { return fProgramID; }
+  GrGLuint programID() const { return fProgramID; }
 
   /**
    * We use the RT's size and origin to adjust from Skia device space to OpenGL normalized device
@@ -74,11 +74,15 @@ class GrGLProgram : public SkRefCnt {
    * them.
    */
   struct RenderTargetState {
-    SkISize fRenderTargetSize = SkISize::Make(-1, -1);
-    GrSurfaceOrigin fRenderTargetOrigin = (GrSurfaceOrigin)-1;
+    SkISize fRenderTargetSize;
+    GrSurfaceOrigin fRenderTargetOrigin;
 
-    constexpr RenderTargetState() noexcept = default;
-    void invalidate() noexcept { *this = {}; }
+    RenderTargetState() { this->invalidate(); }
+    void invalidate() {
+      fRenderTargetSize.fWidth = -1;
+      fRenderTargetSize.fHeight = -1;
+      fRenderTargetOrigin = (GrSurfaceOrigin)-1;
+    }
 
     /**
      * Gets a float4 that adjusts the position from Skia device coords to GL's normalized device
@@ -87,7 +91,7 @@ class GrGLProgram : public SkRefCnt {
      * pos.x = dot(v.xy, pos.xz)
      * pos.y = dot(v.zw, pos.yz)
      */
-    void getRTAdjustmentVec(float* destVec) noexcept {
+    void getRTAdjustmentVec(float* destVec) {
       destVec[0] = 2.f / fRenderTargetSize.fWidth;
       destVec[1] = -1.f;
       if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
@@ -114,17 +118,17 @@ class GrGLProgram : public SkRefCnt {
       const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
       const GrPipeline&);
 
-  int vertexStride() const noexcept { return fVertexStride; }
-  int instanceStride() const noexcept { return fInstanceStride; }
+  int vertexStride() const { return fVertexStride; }
+  int instanceStride() const { return fInstanceStride; }
 
-  int numVertexAttributes() const noexcept { return fVertexAttributeCnt; }
-  const Attribute& vertexAttribute(int i) const noexcept {
+  int numVertexAttributes() const { return fVertexAttributeCnt; }
+  const Attribute& vertexAttribute(int i) const {
     SkASSERT(i >= 0 && i < fVertexAttributeCnt);
     return fAttributes[i];
   }
 
-  int numInstanceAttributes() const noexcept { return fInstanceAttributeCnt; }
-  const Attribute& instanceAttribute(int i) const noexcept {
+  int numInstanceAttributes() const { return fInstanceAttributeCnt; }
+  const Attribute& instanceAttribute(int i) const {
     SkASSERT(i >= 0 && i < fInstanceAttributeCnt);
     return fAttributes[i + fVertexAttributeCnt];
   }
@@ -163,7 +167,7 @@ class GrGLProgram : public SkRefCnt {
 
   int fNumTextureSamplers;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

@@ -10,8 +10,8 @@
 
 #include "modules/sksg/include/SkSGRenderNode.h"
 
-#include "include/core/SkImage.h"
 #include "include/core/SkFilterQuality.h"
+#include "include/core/SkImage.h"
 
 namespace sksg {
 
@@ -42,7 +42,7 @@ class Image final : public RenderNode {
   SkFilterQuality fQuality = kNone_SkFilterQuality;
   bool fAntiAlias = true;
 
-  typedef RenderNode INHERITED;
+  using INHERITED = RenderNode;
 };
 
 }  // namespace sksg

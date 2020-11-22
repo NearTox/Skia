@@ -67,7 +67,7 @@ class alignas(8) Value {
   /**
    * @return    The type of this value.
    */
-  Type getType() const noexcept;
+  Type getType() const;
 
   /**
    * @return    True if the record matches the facade type T.
@@ -139,7 +139,7 @@ class alignas(8) Value {
   void init_tagged(Tag);
   void init_tagged_pointer(Tag, void*);
 
-  Tag getTag() const noexcept { return static_cast<Tag>(fData8[0] & kTagMask); }
+  Tag getTag() const { return static_cast<Tag>(fData8[0] & kTagMask); }
 
   // Access the record payload as T.
   //
@@ -331,7 +331,7 @@ class DOM final : public SkNoncopyable {
  public:
   DOM(const char*, size_t);
 
-  const Value& root() const noexcept { return fRoot; }
+  const Value& root() const { return fRoot; }
 
   void write(SkWStream*) const;
 
@@ -340,7 +340,7 @@ class DOM final : public SkNoncopyable {
   Value fRoot;
 };
 
-inline Value::Type Value::getType() const noexcept {
+inline Value::Type Value::getType() const {
   switch (this->getTag()) {
     case Tag::kNull: return Type::kNull;
     case Tag::kBool: return Type::kBool;

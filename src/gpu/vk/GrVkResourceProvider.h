@@ -51,16 +51,18 @@ class GrVkResourceProvider {
 
   GR_DEFINE_RESOURCE_HANDLE_CLASS(CompatibleRPHandle);
 
+  using SelfDependencyFlags = GrVkRenderPass::SelfDependencyFlags;
+
   // Finds or creates a simple render pass that matches the target, increments the refcount,
   // and returns. The caller can optionally pass in a pointer to a CompatibleRPHandle. If this is
   // non null it will be set to a handle that can be used in the furutre to quickly return a
   // compatible GrVkRenderPasses without the need inspecting a GrVkRenderTarget.
   const GrVkRenderPass* findCompatibleRenderPass(
       const GrVkRenderTarget& target, CompatibleRPHandle* compatibleHandle, bool withStencil,
-      bool needsSelfDependency);
+      SelfDependencyFlags selfDepFlags);
   const GrVkRenderPass* findCompatibleRenderPass(
       GrVkRenderPass::AttachmentsDescriptor*, GrVkRenderPass::AttachmentFlags,
-      bool needsSelfDependency, CompatibleRPHandle* compatibleHandle = nullptr);
+      SelfDependencyFlags selfDepFlags, CompatibleRPHandle* compatibleHandle = nullptr);
 
   const GrVkRenderPass* findCompatibleExternalRenderPass(
       VkRenderPass, uint32_t colorAttachmentIndex);
@@ -73,7 +75,7 @@ class GrVkResourceProvider {
   const GrVkRenderPass* findRenderPass(
       GrVkRenderTarget* target, const GrVkRenderPass::LoadStoreOps& colorOps,
       const GrVkRenderPass::LoadStoreOps& stencilOps, CompatibleRPHandle* compatibleHandle,
-      bool withStencil, bool needsSelfDependency);
+      bool withStencil, SelfDependencyFlags selfDepFlags);
 
   // The CompatibleRPHandle must be a valid handle previously set by a call to findRenderPass or
   // findCompatibleRenderPass.
@@ -118,14 +120,16 @@ class GrVkResourceProvider {
 
   void getSamplerDescriptorSetHandle(
       VkDescriptorType type, const GrVkUniformHandler&, GrVkDescriptorSetManager::Handle* handle);
-  void getSamplerDescriptorSetHandle(
-      VkDescriptorType type, const SkTArray<uint32_t>& visibilities,
-      GrVkDescriptorSetManager::Handle* handle);
 
   // Returns the compatible VkDescriptorSetLayout to use for uniform buffers. The caller does not
   // own the VkDescriptorSetLayout and thus should not delete it. This function should be used
   // when the caller needs the layout to create a VkPipelineLayout.
   VkDescriptorSetLayout getUniformDSLayout() const;
+
+  // Returns the compatible VkDescriptorSetLayout to use for input attachments. The caller does
+  // not own the VkDescriptorSetLayout and thus should not delete it. This function should be used
+  // when the caller needs the layout to create a VkPipelineLayout.
+  VkDescriptorSetLayout getInputDSLayout() const;
 
   // Returns the compatible VkDescriptorSetLayout to use for a specific sampler handle. The caller
   // does not own the VkDescriptorSetLayout and thus should not delete it. This function should be
@@ -140,6 +144,10 @@ class GrVkResourceProvider {
   // the GrVkDescriptorSetManager::Handle passed in. The GrVkDescriptorSet is already reffed for
   // the caller.
   const GrVkDescriptorSet* getSamplerDescriptorSet(const GrVkDescriptorSetManager::Handle&);
+
+  // Returns a GrVkDescriptorSet that can be used for input attachments. The GrVkDescriptorSet
+  // is already reffed for the caller.
+  const GrVkDescriptorSet* getInputDescriptorSet();
 
   // Signals that the descriptor set passed it, which is compatible with the passed in handle,
   // can be reused by the next allocation request.
@@ -215,7 +223,7 @@ class GrVkResourceProvider {
 
     bool isCompatible(
         const GrVkRenderPass::AttachmentsDescriptor&, GrVkRenderPass::AttachmentFlags,
-        bool needsSelfDependency) const;
+        SelfDependencyFlags selfDepFlags) const;
 
     const GrVkRenderPass* getCompatibleRenderPass() const {
       // The first GrVkRenderpass should always exist since we create the basic load store
@@ -268,6 +276,7 @@ class GrVkResourceProvider {
   SkSTArray<4, std::unique_ptr<GrVkDescriptorSetManager>> fDescriptorSetManagers;
 
   GrVkDescriptorSetManager::Handle fUniformDSHandle;
+  GrVkDescriptorSetManager::Handle fInputDSHandle;
 
   std::recursive_mutex fBackgroundMutex;
 };

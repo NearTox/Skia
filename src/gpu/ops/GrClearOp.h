@@ -26,7 +26,7 @@ class GrClearOp final : public GrOp {
   static std::unique_ptr<GrClearOp> MakeStencilClip(
       GrRecordingContext* context, const GrScissorState& scissor, bool insideMask);
 
-  const char* name() const noexcept override { return "Clear"; }
+  const char* name() const override { return "Clear"; }
 
  private:
   friend class GrOpMemoryPool;  // for ctors
@@ -46,7 +46,7 @@ class GrClearOp final : public GrOp {
 
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
 
   void onPrepare(GrOpFlushState*) override {}
 
@@ -70,7 +70,7 @@ class GrClearOp final : public GrOp {
   bool fStencilInsideMask;
   Buffer fBuffer;
 
-  typedef GrOp INHERITED;
+  using INHERITED = GrOp;
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrClearOp::Buffer)

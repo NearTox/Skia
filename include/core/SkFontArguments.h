@@ -30,7 +30,7 @@ struct SkFontArguments {
    *  Font formats like ttc, dfont, cff, cid, pfr, t42, t1, and fon may actually be indexed
    *  collections of fonts.
    */
-  SkFontArguments& setCollectionIndex(int collectionIndex) noexcept {
+  SkFontArguments& setCollectionIndex(int collectionIndex) {
     fCollectionIndex = collectionIndex;
     return *this;
   }
@@ -42,15 +42,15 @@ struct SkFontArguments {
    *
    *  @param position not copied. The value must remain valid for life of SkFontArguments.
    */
-  SkFontArguments& setVariationDesignPosition(VariationPosition position) noexcept {
+  SkFontArguments& setVariationDesignPosition(VariationPosition position) {
     fVariationDesignPosition.coordinates = position.coordinates;
     fVariationDesignPosition.coordinateCount = position.coordinateCount;
     return *this;
   }
 
-  int getCollectionIndex() const noexcept { return fCollectionIndex; }
+  int getCollectionIndex() const { return fCollectionIndex; }
 
-  VariationPosition getVariationDesignPosition() const noexcept { return fVariationDesignPosition; }
+  VariationPosition getVariationDesignPosition() const { return fVariationDesignPosition; }
 
  private:
   int fCollectionIndex;

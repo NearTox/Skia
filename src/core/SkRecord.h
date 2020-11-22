@@ -27,11 +27,11 @@
 
 class SkRecord : public SkRefCnt {
  public:
-  SkRecord() noexcept = default;
+  SkRecord() = default;
   ~SkRecord() override;
 
   // Returns the number of canvas commands in this SkRecord.
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   // Visit the i-th canvas command with a functor matching this interface:
   //   template <typename T>
@@ -87,11 +87,11 @@ class SkRecord : public SkRefCnt {
 
   // Does not return the bytes in any pointers embedded in the Records; callers
   // need to iterate with a visitor to measure those they care for.
-  size_t bytesUsed() const noexcept;
+  size_t bytesUsed() const;
 
   // Rearrange and resize this record to eliminate any NoOps.
   // May change count() and the indices of ops, but preserves their order.
-  void defrag() noexcept;
+  void defrag();
 
  private:
   // An SkRecord is structured as an array of pointers into a big chunk of memory where
@@ -128,7 +128,7 @@ class SkRecord : public SkRefCnt {
     return this->alloc<T>();
   }
 
-  void grow() noexcept;
+  void grow();
 
   // A typed pointer to some bytes in fAlloc.  visit() and mutate() allow polymorphic dispatch.
   struct Record {
@@ -144,8 +144,8 @@ class SkRecord : public SkRefCnt {
       return ptr;
     }
 
-    SkRecords::Type type() const noexcept { return fType; }
-    void* ptr() const noexcept { return fPtr; }
+    SkRecords::Type type() const { return fType; }
+    void* ptr() const { return fPtr; }
 
     // Visit this record with functor F (see public API above).
     template <typename F>

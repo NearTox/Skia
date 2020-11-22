@@ -23,12 +23,14 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
   };
 
   static GrVkStencilAttachment* Create(
-      GrVkGpu* gpu, int width, int height, int sampleCnt, const Format& format);
+      GrVkGpu* gpu, SkISize dimensions, int sampleCnt, const Format& format);
 
   ~GrVkStencilAttachment() override;
 
+  GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
+
   const GrManagedResource* imageResource() const { return this->resource(); }
-  const GrVkImageView* stencilView() const { return fStencilView; }
+  const GrVkImageView* stencilView() const { return fStencilView.get(); }
 
  protected:
   void onRelease() override;
@@ -38,12 +40,13 @@ class GrVkStencilAttachment : public GrStencilAttachment, public GrVkImage {
   size_t onGpuMemorySize() const override;
 
   GrVkStencilAttachment(
-      GrVkGpu* gpu, const Format& format, const GrVkImage::ImageDesc&, const GrVkImageInfo&,
-      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* stencilView);
+      GrVkGpu* gpu, SkISize dimensions, const Format& format, const GrVkImage::ImageDesc&,
+      const GrVkImageInfo&, sk_sp<GrBackendSurfaceMutableStateImpl> mutableState,
+      sk_sp<const GrVkImageView> stencilView);
 
   GrVkGpu* getVkGpu() const;
 
-  const GrVkImageView* fStencilView;
+  sk_sp<const GrVkImageView> fStencilView;
 };
 
 #endif

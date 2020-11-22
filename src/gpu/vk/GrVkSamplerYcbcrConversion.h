@@ -65,7 +65,7 @@ class GrVkSamplerYcbcrConversion : public GrVkManagedResource {
   VkSamplerYcbcrConversion fYcbcrConversion;
   Key fKey;
 
-  typedef GrVkManagedResource INHERITED;
+  using INHERITED = GrVkManagedResource;
 };
 
 #endif

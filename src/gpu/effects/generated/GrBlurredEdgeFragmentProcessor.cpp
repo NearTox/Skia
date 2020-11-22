@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLBlurredEdgeFragmentProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLBlurredEdgeFragmentProcessor() noexcept = default;
+  GrGLSLBlurredEdgeFragmentProcessor() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrBlurredEdgeFragmentProcessor& _outer = args.fFp.cast<GrBlurredEdgeFragmentProcessor>();
@@ -54,12 +54,13 @@ void GrBlurredEdgeFragmentProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)mode);
 }
-bool GrBlurredEdgeFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrBlurredEdgeFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrBlurredEdgeFragmentProcessor& that = other.cast<GrBlurredEdgeFragmentProcessor>();
   (void)that;
   if (mode != that.mode) return false;
   return true;
 }
+bool GrBlurredEdgeFragmentProcessor::usesExplicitReturn() const { return false; }
 GrBlurredEdgeFragmentProcessor::GrBlurredEdgeFragmentProcessor(
     const GrBlurredEdgeFragmentProcessor& src)
     : INHERITED(kGrBlurredEdgeFragmentProcessor_ClassID, src.optimizationFlags()), mode(src.mode) {

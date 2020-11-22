@@ -13,15 +13,14 @@ namespace textlayout {
 
 class LangIterator final : public SkShaper::LanguageRunIterator {
  public:
-  LangIterator(
-      SkSpan<const char> utf8, SkSpan<Block> styles, const TextStyle& defaultStyle) noexcept
+  LangIterator(SkSpan<const char> utf8, SkSpan<Block> styles, const TextStyle& defaultStyle)
       : fText(utf8),
         fTextStyles(styles),
         fCurrentChar(utf8.begin()),
         fCurrentStyle(fTextStyles.begin()),
         fCurrentLocale(defaultStyle.getLocale()) {}
 
-  void consume() noexcept override {
+  void consume() override {
     SkASSERT(fCurrentChar < fText.end());
 
     if (fCurrentStyle == fTextStyles.end()) {
@@ -39,9 +38,9 @@ class LangIterator final : public SkShaper::LanguageRunIterator {
     }
   }
 
-  size_t endOfCurrentRun() const noexcept override { return fCurrentChar - fText.begin(); }
-  bool atEnd() const noexcept override { return fCurrentChar >= fText.end(); }
-  const char* currentLanguage() const noexcept override { return fCurrentLocale.c_str(); }
+  size_t endOfCurrentRun() const override { return fCurrentChar - fText.begin(); }
+  bool atEnd() const override { return fCurrentChar >= fText.end(); }
+  const char* currentLanguage() const override { return fCurrentLocale.c_str(); }
 
  private:
   SkSpan<const char> fText;

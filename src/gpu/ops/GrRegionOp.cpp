@@ -59,7 +59,7 @@ class RegionOp final : public GrMeshDrawOp {
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kNo, IsHairline::kNo);
   }
 
-  const char* name() const noexcept override { return "GrRegionOp"; }
+  const char* name() const override { return "GrRegionOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -84,7 +84,8 @@ class RegionOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp = make_gp(arena, fViewMatrix, fWideColor);
     if (!gp) {
       SkDebugf("Couldn't create GrGeometryProcessor\n");
@@ -93,7 +94,7 @@ class RegionOp final : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -188,7 +189,7 @@ class RegionOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace

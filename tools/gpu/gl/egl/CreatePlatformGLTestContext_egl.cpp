@@ -307,7 +307,8 @@ void EGLGLTestContext::setupFenceSync(sk_sp<const GrGLInterface> interface) {
       return;
     }
 
-    SkDEBUGCODE(EGLint result =) grEGLWaitSyncKHR(display, eglSync, 0);
+    SkDEBUGCODE(EGLint result =)
+    grEGLWaitSyncKHR(display, eglSync, 0);
     SkASSERT(result);
   };
 

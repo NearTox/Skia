@@ -29,7 +29,7 @@ class GrSmallPathAtlasMgr : public GrOnFlushCallbackObject,
                             public GrDrawOpAtlas::EvictionCallback,
                             public GrDrawOpAtlas::GenerationCounter {
  public:
-  GrSmallPathAtlasMgr() noexcept;
+  GrSmallPathAtlasMgr();
   ~GrSmallPathAtlasMgr() override;
 
   void reset();

@@ -85,7 +85,7 @@ void GrGLOpsRenderPass::onBindBuffers(
   // If this platform does not support baseInstance, defer binding of the instance buffer.
   if (fGpu->glCaps().baseVertexBaseInstanceSupport()) {
     this->bindInstanceBuffer(instanceBuffer.get(), 0);
-    SkDEBUGCODE(fDidBindInstanceBuffer = true);
+    SkDEBUGCODE(fDidBindInstanceBuffer = true;)
   }
   fActiveInstanceBuffer = std::move(instanceBuffer);
 
@@ -95,7 +95,7 @@ void GrGLOpsRenderPass::onBindBuffers(
   if ((indexBuffer && fGpu->glCaps().baseVertexBaseInstanceSupport()) ||
       (!indexBuffer && !fGpu->glCaps().drawArraysBaseVertexIsBroken())) {
     this->bindVertexBuffer(vertexBuffer.get(), 0);
-    SkDEBUGCODE(fDidBindVertexBuffer = true);
+    SkDEBUGCODE(fDidBindVertexBuffer = true;)
   }
   fActiveVertexBuffer = std::move(vertexBuffer);
   fActiveIndexBuffer = std::move(indexBuffer);

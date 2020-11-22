@@ -185,7 +185,7 @@ SkString GrYUVtoRGBEffect::onDumpInfo() const {
 GrGLSLFragmentProcessor* GrYUVtoRGBEffect::onCreateGLSLInstance() const {
   class GrGLSLYUVtoRGBEffect : public GrGLSLFragmentProcessor {
    public:
-    GrGLSLYUVtoRGBEffect() noexcept = default;
+    GrGLSLYUVtoRGBEffect() {}
 
     void emitCode(EmitArgs& args) override {
       GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
@@ -299,7 +299,7 @@ void GrYUVtoRGBEffect::onGetGLSLProcessorKey(
   b->add32(packed);
 }
 
-bool GrYUVtoRGBEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrYUVtoRGBEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrYUVtoRGBEffect& that = other.cast<GrYUVtoRGBEffect>();
 
   return std::equal(fYUVAIndices, fYUVAIndices + 4, that.fYUVAIndices) &&

@@ -50,7 +50,8 @@ class GrCCFiller {
   // Called after prepareToDraw(). Draws the given batch of path fills.
   void drawFills(
       GrOpFlushState*, GrCCCoverageProcessor*, const GrPipeline&, BatchID,
-      const SkIRect& drawBounds) const;
+      const SkIRect& drawBounds,
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused) const;
 
  private:
   static constexpr int kNumScissorModes = 2;
@@ -59,19 +60,19 @@ class GrCCFiller {
   // Every kBeginPath verb has a corresponding PathInfo entry.
   class PathInfo {
    public:
-    PathInfo(GrScissorTest scissorTest, const SkIVector& devToAtlasOffset) noexcept
+    PathInfo(GrScissorTest scissorTest, const SkIVector& devToAtlasOffset)
         : fScissorTest(scissorTest), fDevToAtlasOffset(devToAtlasOffset) {}
 
-    GrScissorTest scissorTest() const noexcept { return fScissorTest; }
-    const SkIVector& devToAtlasOffset() const noexcept { return fDevToAtlasOffset; }
+    GrScissorTest scissorTest() const { return fScissorTest; }
+    const SkIVector& devToAtlasOffset() const { return fDevToAtlasOffset; }
 
     // An empty tessellation fan is also valid; we use negative count to denote not tessellated.
-    bool hasFanTessellation() const noexcept { return fFanTessellationCount >= 0; }
-    int fanTessellationCount() const noexcept {
+    bool hasFanTessellation() const { return fFanTessellationCount >= 0; }
+    int fanTessellationCount() const {
       SkASSERT(this->hasFanTessellation());
       return fFanTessellationCount;
     }
-    const GrTriangulator::WindingVertex* fanTessellation() const noexcept {
+    const GrTriangulator::WindingVertex* fanTessellation() const {
       SkASSERT(this->hasFanTessellation());
       return fFanTessellation.get();
     }
@@ -106,8 +107,9 @@ class GrCCFiller {
       GrCCCoverageProcessor::TriPointInstance::Ordering, GrCCCoverageProcessor::TriPointInstance*,
       GrCCCoverageProcessor::QuadPointInstance*, GrCCFillGeometry::PrimitiveTallies*);
   void drawPrimitives(
-      GrOpFlushState*, const GrCCCoverageProcessor&, const GrPipeline&, BatchID,
-      int PrimitiveTallies::*instanceType, const SkIRect& drawBounds) const;
+      GrOpFlushState*, const GrCCCoverageProcessor&, const GrPipeline&,
+      const GrUserStencilSettings*, BatchID, int PrimitiveTallies::*instanceType,
+      const SkIRect& drawBounds) const;
 
   const Algorithm fAlgorithm;
   GrCCFillGeometry fGeometry;

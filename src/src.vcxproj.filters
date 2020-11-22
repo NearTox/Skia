@@ -758,5 +758,13 @@
     <ClCompile Include="ports\SkFontMgr_win_dw.cpp" />
     <ClCompile Include="ports\SkScalerContext_win_dw.cpp" />
     <ClCompile Include="ports\SkTypeface_win_dw.cpp" />
+    <ClCompile Include="core\SkYUVAInfo.cpp" />
+    <ClCompile Include="core\SkYUVAPixmaps.cpp" />
+    <ClCompile Include="sksl\SkSLInliner.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructor.cpp" />
+    <ClCompile Include="sksl\ir\SkSLIRNode.cpp" />
+    <ClCompile Include="gpu\GrBackendSurfaceMutableState.cpp" />
+    <ClCompile Include="gpu\GrClipStack.cpp" />
+    <ClCompile Include="gpu\GrThreadSafeUniquelyKeyedProxyViewCache.cpp" />
   </ItemGroup>
 </Project>

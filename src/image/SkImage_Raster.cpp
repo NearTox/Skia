@@ -25,7 +25,7 @@
 #endif
 
 // fixes https://bug.skia.org/5096
-static bool is_not_subset(const SkBitmap& bm) noexcept {
+static bool is_not_subset(const SkBitmap& bm) {
   SkASSERT(bm.pixelRef());
   SkISize dim = SkISize::Make(bm.pixelRef()->width(), bm.pixelRef()->height());
   SkASSERT(dim != bm.dimensions() || bm.pixelRefOrigin().isZero());
@@ -35,7 +35,7 @@ static bool is_not_subset(const SkBitmap& bm) noexcept {
 class SkImage_Raster : public SkImage_Base {
  public:
   static bool ValidArgs(const SkImageInfo& info, size_t rowBytes, size_t* minSize) {
-    constexpr int maxDimension = SK_MaxS32 >> 2;
+    const int maxDimension = SK_MaxS32 >> 2;
 
     // TODO(mtklein): eliminate anything here that setInfo() has already checked.
     SkBitmap dummy;
@@ -78,7 +78,8 @@ class SkImage_Raster : public SkImage_Base {
   ~SkImage_Raster() override;
 
   bool onReadPixels(
-      const SkImageInfo&, void*, size_t, int srcX, int srcY, CachingHint) const override;
+      GrDirectContext*, const SkImageInfo&, void*, size_t, int srcX, int srcY,
+      CachingHint) const override;
   bool onPeekPixels(SkPixmap*) const override;
   const SkBitmap* onPeekBitmap() const override { return &fBitmap; }
 
@@ -86,12 +87,12 @@ class SkImage_Raster : public SkImage_Base {
   GrSurfaceProxyView refView(GrRecordingContext*, GrMipmapped) const override;
 #endif
 
-  bool getROPixels(SkBitmap*, CachingHint) const override;
+  bool getROPixels(GrDirectContext*, SkBitmap*, CachingHint) const override;
   sk_sp<SkImage> onMakeSubset(const SkIRect&, GrDirectContext*) const override;
 
-  SkPixelRef* getPixelRef() const noexcept { return fBitmap.pixelRef(); }
+  SkPixelRef* getPixelRef() const { return fBitmap.pixelRef(); }
 
-  bool onAsLegacyBitmap(SkBitmap*) const override;
+  bool onAsLegacyBitmap(GrDirectContext*, SkBitmap*) const override;
 
   SkImage_Raster(const SkBitmap& bm, bool bitmapMayBeMutable = false)
       : INHERITED(
@@ -141,12 +142,12 @@ class SkImage_Raster : public SkImage_Base {
   mutable uint32_t fPinnedUniqueID = 0;
 #endif
 
-  typedef SkImage_Base INHERITED;
+  using INHERITED = SkImage_Base;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void release_data(void* addr, void* context) noexcept {
+static void release_data(void* addr, void* context) {
   SkData* data = static_cast<SkData*>(context);
   data->unref();
 }
@@ -167,15 +168,15 @@ SkImage_Raster::~SkImage_Raster() {
 }
 
 bool SkImage_Raster::onReadPixels(
-    const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY,
-    CachingHint) const {
+    GrDirectContext*, const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes, int srcX,
+    int srcY, CachingHint) const {
   SkBitmap shallowCopy(fBitmap);
   return shallowCopy.readPixels(dstInfo, dstPixels, dstRowBytes, srcX, srcY);
 }
 
 bool SkImage_Raster::onPeekPixels(SkPixmap* pm) const { return fBitmap.peekPixels(pm); }
 
-bool SkImage_Raster::getROPixels(SkBitmap* dst, CachingHint) const {
+bool SkImage_Raster::getROPixels(GrDirectContext*, SkBitmap* dst, CachingHint) const {
   *dst = fBitmap;
   return true;
 }
@@ -361,7 +362,7 @@ const SkPixelRef* SkBitmapImageGetPixelRef(const SkImage* image) {
   return ((const SkImage_Raster*)image)->getPixelRef();
 }
 
-bool SkImage_Raster::onAsLegacyBitmap(SkBitmap* bitmap) const {
+bool SkImage_Raster::onAsLegacyBitmap(GrDirectContext*, SkBitmap* bitmap) const {
   // When we're a snapshot from a surface, our bitmap may not be marked immutable
   // even though logically always we are, but in that case we can't physically share our
   // pixelref since the caller might call setImmutable() themselves
@@ -372,7 +373,7 @@ bool SkImage_Raster::onAsLegacyBitmap(SkBitmap* bitmap) const {
     bitmap->setPixelRef(sk_ref_sp(fBitmap.pixelRef()), origin.x(), origin.y());
     return true;
   }
-  return this->INHERITED::onAsLegacyBitmap(bitmap);
+  return this->INHERITED::onAsLegacyBitmap(nullptr, bitmap);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -13,7 +13,7 @@
 
 SkTypefaceCache::SkTypefaceCache() noexcept = default;
 
-void SkTypefaceCache::add(sk_sp<SkTypeface> face) noexcept {
+void SkTypefaceCache::add(sk_sp<SkTypeface> face) {
   if (fTypefaces.count() >= TYPEFACE_CACHE_LIMIT) {
     this->purge(TYPEFACE_CACHE_LIMIT >> 2);
   }
@@ -30,7 +30,7 @@ sk_sp<SkTypeface> SkTypefaceCache::findByProcAndRef(FindProc proc, void* ctx) co
   return nullptr;
 }
 
-void SkTypefaceCache::purge(int numToPurge) noexcept {
+void SkTypefaceCache::purge(int numToPurge) {
   int count = fTypefaces.count();
   int i = 0;
   while (i < count) {
@@ -46,7 +46,7 @@ void SkTypefaceCache::purge(int numToPurge) noexcept {
   }
 }
 
-void SkTypefaceCache::purgeAll() noexcept { this->purge(fTypefaces.count()); }
+void SkTypefaceCache::purgeAll() { this->purge(fTypefaces.count()); }
 
 ///////////////////////////////////////////////////////////////////////////////
 

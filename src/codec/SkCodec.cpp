@@ -165,7 +165,27 @@ SkCodec::SkCodec(
       fCurrScanline(-1),
       fStartedIncrementalDecode(false) {}
 
-SkCodec::~SkCodec() = default;
+SkCodec::~SkCodec() {}
+
+bool SkCodec::queryYUVAInfo(
+    const SkYUVAPixmapInfo::SupportedDataTypes& supportedDataTypes,
+    SkYUVAPixmapInfo* yuvaPixmapInfo) const {
+  if (!yuvaPixmapInfo) {
+    return false;
+  }
+  return this->onQueryYUVAInfo(supportedDataTypes, yuvaPixmapInfo) &&
+         yuvaPixmapInfo->isSupported(supportedDataTypes);
+}
+
+SkCodec::Result SkCodec::getYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) {
+  if (!yuvaPixmaps.isValid()) {
+    return kInvalidInput;
+  }
+  if (!this->rewindIfNeeded()) {
+    return kCouldNotRewind;
+  }
+  return this->onGetYUVAPlanes(yuvaPixmaps);
+}
 
 bool SkCodec::conversionSupported(const SkImageInfo& dst, bool srcIsOpaque, bool needsColorXform) {
   if (!valid_alpha(dst.alphaType(), srcIsOpaque)) {

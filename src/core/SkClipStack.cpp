@@ -19,7 +19,7 @@
 #  include "src/gpu/GrProxyProvider.h"
 #endif
 
-SkClipStack::Element::Element(const Element& that) noexcept {
+SkClipStack::Element::Element(const Element& that) {
   switch (that.getDeviceSpaceType()) {
     case DeviceSpaceType::kEmpty:
       fDeviceSpaceRRect.setEmpty();
@@ -61,7 +61,7 @@ SkClipStack::Element::~Element() {
 #endif
 }
 
-bool SkClipStack::Element::operator==(const Element& element) const noexcept {
+bool SkClipStack::Element::operator==(const Element& element) const {
   if (this == &element) {
     return true;
   }
@@ -79,7 +79,7 @@ bool SkClipStack::Element::operator==(const Element& element) const noexcept {
   }
 }
 
-const SkRect& SkClipStack::Element::getBounds() const noexcept {
+const SkRect& SkClipStack::Element::getBounds() const {
   static const SkRect kEmpty = {0, 0, 0, 0};
   static const SkRect kInfinite = SkRectPriv::MakeLargeS32();
   switch (fDeviceSpaceType) {
@@ -143,7 +143,7 @@ void SkClipStack::Element::invertShapeFillType() {
   }
 }
 
-void SkClipStack::Element::initCommon(int saveCount, SkClipOp op, bool doAA) noexcept {
+void SkClipStack::Element::initCommon(int saveCount, SkClipOp op, bool doAA) {
   fSaveCount = saveCount;
   fOp = op;
   fDoAA = doAA;
@@ -216,7 +216,7 @@ void SkClipStack::Element::initAsPath(
   this->initCommon(saveCount, op, doAA);
 }
 
-void SkClipStack::Element::initShader(int saveCount, sk_sp<SkShader> shader) noexcept {
+void SkClipStack::Element::initShader(int saveCount, sk_sp<SkShader> shader) {
   SkASSERT(shader);
   fDeviceSpaceType = DeviceSpaceType::kShader;
   fShader = std::move(shader);
@@ -243,7 +243,7 @@ void SkClipStack::Element::asDeviceSpacePath(SkPath* path) const {
   path->setIsVolatile(true);
 }
 
-void SkClipStack::Element::setEmpty() noexcept {
+void SkClipStack::Element::setEmpty() {
   fDeviceSpaceType = DeviceSpaceType::kEmpty;
   fFiniteBound.setEmpty();
   fFiniteBoundType = kNormal_BoundsType;
@@ -252,10 +252,10 @@ void SkClipStack::Element::setEmpty() noexcept {
   fDeviceSpacePath.reset();
   fShader.reset();
   fGenID = kEmptyGenID;
-  SkDEBUGCODE(this->checkEmpty());
+  SkDEBUGCODE(this->checkEmpty();)
 }
 
-void SkClipStack::Element::checkEmpty() const noexcept {
+void SkClipStack::Element::checkEmpty() const {
   SkASSERT(fFiniteBound.isEmpty());
   SkASSERT(kNormal_BoundsType == fFiniteBoundType);
   SkASSERT(!fIsIntersectionOfRects);
@@ -265,7 +265,7 @@ void SkClipStack::Element::checkEmpty() const noexcept {
   SkASSERT(!fShader);
 }
 
-bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) const noexcept {
+bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) const {
   if (DeviceSpaceType::kEmpty == fDeviceSpaceType &&
       (kDifference_SkClipOp == op || kIntersect_SkClipOp == op)) {
     return true;
@@ -276,7 +276,7 @@ bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) c
          (kIntersect_SkClipOp == fOp || kReplace_SkClipOp == fOp);
 }
 
-bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool newAA) const noexcept {
+bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool newAA) const {
   SkASSERT(DeviceSpaceType::kRect == fDeviceSpaceType);
 
   if (fDoAA == newAA) {
@@ -558,22 +558,20 @@ void SkClipStack::Element::updateBoundAndGenID(const Element* prior) {
 // the deque. As such it needs to balance allocating too much memory vs.
 // incurring allocation/deallocation thrashing. It should roughly correspond to
 // the deepest save/restore stack we expect to see.
-static constexpr int kDefaultElementAllocCnt = 8;
+static const int kDefaultElementAllocCnt = 8;
 
-SkClipStack::SkClipStack() noexcept
-    : fDeque(sizeof(Element), kDefaultElementAllocCnt), fSaveCount(0) {}
+SkClipStack::SkClipStack() : fDeque(sizeof(Element), kDefaultElementAllocCnt), fSaveCount(0) {}
 
-SkClipStack::SkClipStack(void* storage, size_t size) noexcept
+SkClipStack::SkClipStack(void* storage, size_t size)
     : fDeque(sizeof(Element), storage, size, kDefaultElementAllocCnt), fSaveCount(0) {}
 
-SkClipStack::SkClipStack(const SkClipStack& b) noexcept
-    : fDeque(sizeof(Element), kDefaultElementAllocCnt) {
+SkClipStack::SkClipStack(const SkClipStack& b) : fDeque(sizeof(Element), kDefaultElementAllocCnt) {
   *this = b;
 }
 
 SkClipStack::~SkClipStack() { reset(); }
 
-SkClipStack& SkClipStack::operator=(const SkClipStack& b) noexcept {
+SkClipStack& SkClipStack::operator=(const SkClipStack& b) {
   if (this == &b) {
     return *this;
   }
@@ -589,7 +587,7 @@ SkClipStack& SkClipStack::operator=(const SkClipStack& b) noexcept {
   return *this;
 }
 
-bool SkClipStack::operator==(const SkClipStack& b) const noexcept {
+bool SkClipStack::operator==(const SkClipStack& b) const {
   if (this->getTopmostGenID() == b.getTopmostGenID()) {
     return true;
   }
@@ -611,7 +609,7 @@ bool SkClipStack::operator==(const SkClipStack& b) const noexcept {
   return myElement == nullptr && bElement == nullptr;
 }
 
-void SkClipStack::reset() noexcept {
+void SkClipStack::reset() {
   // We used a placement new for each object in fDeque, so we're responsible
   // for calling the destructor on each of them as well.
   while (!fDeque.empty()) {
@@ -623,14 +621,14 @@ void SkClipStack::reset() noexcept {
   fSaveCount = 0;
 }
 
-void SkClipStack::save() noexcept { fSaveCount += 1; }
+void SkClipStack::save() { fSaveCount += 1; }
 
-void SkClipStack::restore() noexcept {
+void SkClipStack::restore() {
   fSaveCount -= 1;
   restoreTo(fSaveCount);
 }
 
-void SkClipStack::restoreTo(int saveCount) noexcept {
+void SkClipStack::restoreTo(int saveCount) {
   while (!fDeque.empty()) {
     Element* element = (Element*)fDeque.back();
     if (element->fSaveCount <= saveCount) {
@@ -734,7 +732,7 @@ void SkClipStack::pushElement(const Element& element) {
   if (prior) {
     if (prior->canBeIntersectedInPlace(fSaveCount, element.getOp())) {
       switch (prior->fDeviceSpaceType) {
-        case Element::DeviceSpaceType::kEmpty: SkDEBUGCODE(prior->checkEmpty()); return;
+        case Element::DeviceSpaceType::kEmpty: SkDEBUGCODE(prior->checkEmpty();) return;
         case Element::DeviceSpaceType::kShader:
           if (Element::DeviceSpaceType::kShader == element.getDeviceSpaceType()) {
             prior->fShader = SkShaders::Blend(SkBlendMode::kSrcIn, element.fShader, prior->fShader);
@@ -815,7 +813,7 @@ void SkClipStack::clipShader(sk_sp<SkShader> shader) {
   SkASSERT(fClipRestrictionRect.isEmpty());
 }
 
-void SkClipStack::clipEmpty() noexcept {
+void SkClipStack::clipEmpty() {
   Element* element = (Element*)fDeque.back();
 
   if (element && element->canBeIntersectedInPlace(fSaveCount, kIntersect_SkClipOp)) {
@@ -828,17 +826,17 @@ void SkClipStack::clipEmpty() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkClipStack::Iter::Iter() noexcept : fStack(nullptr) {}
+SkClipStack::Iter::Iter() : fStack(nullptr) {}
 
-SkClipStack::Iter::Iter(const SkClipStack& stack, IterStart startLoc) noexcept : fStack(&stack) {
+SkClipStack::Iter::Iter(const SkClipStack& stack, IterStart startLoc) : fStack(&stack) {
   this->reset(stack, startLoc);
 }
 
-const SkClipStack::Element* SkClipStack::Iter::next() noexcept {
+const SkClipStack::Element* SkClipStack::Iter::next() {
   return (const SkClipStack::Element*)fIter.next();
 }
 
-const SkClipStack::Element* SkClipStack::Iter::prev() noexcept {
+const SkClipStack::Element* SkClipStack::Iter::prev() {
   return (const SkClipStack::Element*)fIter.prev();
 }
 
@@ -878,7 +876,7 @@ const SkClipStack::Element* SkClipStack::Iter::skipToTopmost(SkClipOp op) {
   return this->next();
 }
 
-void SkClipStack::Iter::reset(const SkClipStack& stack, IterStart startLoc) noexcept {
+void SkClipStack::Iter::reset(const SkClipStack& stack, IterStart startLoc) {
   fStack = &stack;
   fIter.reset(stack.fDeque, static_cast<SkDeque::Iter::IterStart>(startLoc));
 }
@@ -962,9 +960,9 @@ bool SkClipStack::isRRect(const SkRect& bounds, SkRRect* rrect, bool* aa) const 
   return false;
 }
 
-uint32_t SkClipStack::GetNextGenID() noexcept {
+uint32_t SkClipStack::GetNextGenID() {
   // 0-2 are reserved for invalid, empty & wide-open
-  static constexpr uint32_t kFirstUnreservedGenID = 3;
+  static const uint32_t kFirstUnreservedGenID = 3;
   static std::atomic<uint32_t> nextID{kFirstUnreservedGenID};
 
   uint32_t id;
@@ -974,7 +972,7 @@ uint32_t SkClipStack::GetNextGenID() noexcept {
   return id;
 }
 
-uint32_t SkClipStack::getTopmostGenID() const noexcept {
+uint32_t SkClipStack::getTopmostGenID() const {
   if (fDeque.empty()) {
     return kWideOpenGenID;
   }

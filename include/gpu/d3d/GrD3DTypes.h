@@ -21,9 +21,12 @@
 // You should only include this header if you need the Direct3D definitions and are
 // prepared to rename those identifiers. Otherwise use GrD3DTypesMinimal.h.
 
+#include "include/core/SkRefCnt.h"
 #include "include/gpu/d3d/GrD3DTypesMinimal.h"
 #include <d3d12.h>
 #include <dxgi1_4.h>
+
+class GrD3DGpu;
 
 /** Check if the argument is non-null, and if so, call obj->AddRef() and return obj.
  */
@@ -49,8 +52,8 @@ class gr_cp {
  public:
   using element_type = T;
 
-  constexpr gr_cp() noexcept : fObject(nullptr) {}
-  constexpr gr_cp(std::nullptr_t) noexcept : fObject(nullptr) {}
+  constexpr gr_cp() : fObject(nullptr) {}
+  constexpr gr_cp(std::nullptr_t) : fObject(nullptr) {}
 
   /**
    *  Shares the underlying object by calling AddRef(), so that both the argument and the newly
@@ -63,13 +66,13 @@ class gr_cp {
    *  the new gr_cp will have a reference to the object, and the argument will point to null.
    *  No call to AddRef() or Release() will be made.
    */
-  gr_cp(gr_cp<T>&& that) noexcept : fObject(that.release()) {}
+  gr_cp(gr_cp<T>&& that) : fObject(that.release()) {}
 
   /**
    *  Adopt the bare object into the newly created gr_cp.
    *  No call to AddRef() or Release() will be made.
    */
-  explicit gr_cp(T* obj) noexcept { fObject = obj; }
+  explicit gr_cp(T* obj) { fObject = obj; }
 
   /**
    *  Calls Release() on the underlying object pointer.
@@ -101,11 +104,11 @@ class gr_cp {
     return *this;
   }
 
-  explicit operator bool() const noexcept { return this->get() != nullptr; }
+  explicit operator bool() const { return this->get() != nullptr; }
 
-  T* get() const noexcept { return fObject; }
-  T* operator->() const noexcept { return fObject; }
-  T** operator&() noexcept { return &fObject; }
+  T* get() const { return fObject; }
+  T* operator->() const { return fObject; }
+  T** operator&() { return &fObject; }
 
   /**
    *  Adopt the new object, and call Release() on any previously held object (if not null).
@@ -132,7 +135,7 @@ class gr_cp {
    *  The caller must assume ownership of the object, and manage its reference count directly.
    *  No call to Release() will be made.
    */
-  T* SK_WARN_UNUSED_RESULT release() noexcept {
+  T* SK_WARN_UNUSED_RESULT release() {
     T* obj = fObject;
     fObject = nullptr;
     return obj;
@@ -152,32 +155,43 @@ inline bool operator!=(const gr_cp<T>& a, const gr_cp<T>& b) {
   return a.get() != b.get();
 }
 
+// interface classes for the GPU memory allocator
+class GrD3DAlloc : public SkRefCnt {
+ public:
+  ~GrD3DAlloc() override = default;
+};
+
+class GrD3DMemoryAllocator : public SkRefCnt {
+ public:
+  virtual gr_cp<ID3D12Resource> createResource(
+      D3D12_HEAP_TYPE, const D3D12_RESOURCE_DESC*, D3D12_RESOURCE_STATES initialResourceState,
+      sk_sp<GrD3DAlloc>* allocation, const D3D12_CLEAR_VALUE*) = 0;
+};
+
 // Note: there is no notion of Borrowed or Adopted resources in the D3D backend,
 // so Ganesh will ref fResource once it's asked to wrap it.
 // Clients are responsible for releasing their own ref to avoid memory leaks.
 struct GrD3DTextureResourceInfo {
-  gr_cp<ID3D12Resource> fResource;
-  D3D12_RESOURCE_STATES fResourceState;
-  DXGI_FORMAT fFormat;
-  uint32_t fLevelCount;
-  unsigned int fSampleQualityPattern;
-  GrProtected fProtected;
+  gr_cp<ID3D12Resource> fResource = nullptr;
+  sk_sp<GrD3DAlloc> fAlloc = nullptr;
+  D3D12_RESOURCE_STATES fResourceState = D3D12_RESOURCE_STATE_COMMON;
+  DXGI_FORMAT fFormat = DXGI_FORMAT_UNKNOWN;
+  uint32_t fSampleCount = 1;
+  uint32_t fLevelCount = 0;
+  unsigned int fSampleQualityPattern = DXGI_STANDARD_MULTISAMPLE_QUALITY_PATTERN;
+  GrProtected fProtected = GrProtected::kNo;
 
-  GrD3DTextureResourceInfo()
-      : fResource(nullptr),
-        fResourceState(D3D12_RESOURCE_STATE_COMMON),
-        fFormat(DXGI_FORMAT_UNKNOWN),
-        fLevelCount(0),
-        fSampleQualityPattern(DXGI_STANDARD_MULTISAMPLE_QUALITY_PATTERN),
-        fProtected(GrProtected::kNo) {}
+  GrD3DTextureResourceInfo() = default;
 
   GrD3DTextureResourceInfo(
-      ID3D12Resource* resource, D3D12_RESOURCE_STATES resourceState, DXGI_FORMAT format,
-      uint32_t levelCount, unsigned int sampleQualityLevel,
-      GrProtected isProtected = GrProtected::kNo)
+      ID3D12Resource* resource, const sk_sp<GrD3DAlloc> alloc, D3D12_RESOURCE_STATES resourceState,
+      DXGI_FORMAT format, uint32_t sampleCount, uint32_t levelCount,
+      unsigned int sampleQualityLevel, GrProtected isProtected = GrProtected::kNo)
       : fResource(resource),
+        fAlloc(alloc),
         fResourceState(resourceState),
         fFormat(format),
+        fSampleCount(sampleCount),
         fLevelCount(levelCount),
         fSampleQualityPattern(sampleQualityLevel),
         fProtected(isProtected) {}
@@ -185,8 +199,10 @@ struct GrD3DTextureResourceInfo {
   GrD3DTextureResourceInfo(
       const GrD3DTextureResourceInfo& info, GrD3DResourceStateEnum resourceState)
       : fResource(info.fResource),
+        fAlloc(info.fAlloc),
         fResourceState(static_cast<D3D12_RESOURCE_STATES>(resourceState)),
         fFormat(info.fFormat),
+        fSampleCount(info.fSampleCount),
         fLevelCount(info.fLevelCount),
         fSampleQualityPattern(info.fSampleQualityPattern),
         fProtected(info.fProtected) {}
@@ -194,8 +210,9 @@ struct GrD3DTextureResourceInfo {
 #if GR_TEST_UTILS
   bool operator==(const GrD3DTextureResourceInfo& that) const {
     return fResource == that.fResource && fResourceState == that.fResourceState &&
-           fFormat == that.fFormat && fLevelCount == that.fLevelCount &&
-           fSampleQualityPattern == that.fSampleQualityPattern && fProtected == that.fProtected;
+           fFormat == that.fFormat && fSampleCount == that.fSampleCount &&
+           fLevelCount == that.fLevelCount && fSampleQualityPattern == that.fSampleQualityPattern &&
+           fProtected == that.fProtected;
   }
 #endif
 };

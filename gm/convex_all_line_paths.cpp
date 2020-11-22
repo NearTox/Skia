@@ -168,8 +168,7 @@ class ConvexLineOnlyPathsGM : public GM {
     // of the GMs rows.
     SkASSERT(path.isConvex());
     SkASSERT(SkPath::kLine_SegmentMask == path.getSegmentMasks());
-    SkPathPriv::FirstDirection actualDir;
-    SkASSERT(SkPathPriv::CheapComputeFirstDirection(path, &actualDir));
+    SkPathFirstDirection actualDir = SkPathPriv::ComputeFirstDirection(path);
     SkASSERT(SkPathPriv::AsFirstDirection(dir) == actualDir);
     SkRect bounds = path.getBounds();
     SkASSERT(SkScalarNearlyEqual(bounds.centerX(), 0.0f));
@@ -320,7 +319,7 @@ class ConvexLineOnlyPathsGM : public GM {
 
   bool fDoStrokeAndFill;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

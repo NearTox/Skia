@@ -47,6 +47,8 @@ int ClipToW0(DrawQuad* quad, DrawQuad* extraVertices);
  */
 bool CropToRect(const SkRect& cropRect, GrAA cropAA, DrawQuad* quad, bool computeLocal = true);
 
+inline void Outset(const skvx::Vec<4, float>& edgeDistances, GrQuad* quad);
+
 class TessellationHelper {
  public:
   // Set the original device and (optional) local coordinates that are inset or outset
@@ -96,7 +98,7 @@ class TessellationHelper {
 
     void reset(
         const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, const skvx::Vec<4, float>& ws,
-        GrQuad::Type quadType) noexcept;
+        GrQuad::Type quadType);
   };
 
   struct EdgeEquations {
@@ -106,7 +108,7 @@ class TessellationHelper {
     void reset(const EdgeVectors& edgeVectors);
 
     skvx::Vec<4, float> estimateCoverage(
-        const skvx::Vec<4, float>& x2d, const skvx::Vec<4, float>& y2d) const noexcept;
+        const skvx::Vec<4, float>& x2d, const skvx::Vec<4, float>& y2d) const;
 
     // Outsets or insets 'x2d' and 'y2d' in place. To be used when the interior is very
     // small, edges are near parallel, or edges are very short/zero-length. Returns number
@@ -129,7 +131,7 @@ class TessellationHelper {
 
     void reset(
         const EdgeVectors& edgeVectors, GrQuad::Type quadType,
-        const skvx::Vec<4, float>& edgeDistances) noexcept;
+        const skvx::Vec<4, float>& edgeDistances);
   };
 
   struct Vertices {
@@ -140,11 +142,10 @@ class TessellationHelper {
     skvx::Vec<4, float> fU, fV, fR;
     int fUVRCount;
 
-    void reset(const GrQuad& deviceQuad, const GrQuad* localQuad) noexcept;
+    void reset(const GrQuad& deviceQuad, const GrQuad* localQuad);
 
     void asGrQuads(
-        GrQuad* deviceOut, GrQuad::Type deviceType, GrQuad* localOut,
-        GrQuad::Type localType) const noexcept;
+        GrQuad* deviceOut, GrQuad::Type deviceType, GrQuad* localOut, GrQuad::Type localType) const;
 
     // Update the device and optional local coordinates by moving the corners along their
     // edge vectors such that the new edges have moved 'signedEdgeDistances' from their
@@ -194,5 +195,11 @@ class TessellationHelper {
 };
 
 };  // namespace GrQuadUtils
+
+void GrQuadUtils::Outset(const skvx::Vec<4, float>& edgeDistances, GrQuad* quad) {
+  TessellationHelper outsetter;
+  outsetter.reset(*quad, nullptr);
+  outsetter.outset(edgeDistances, quad, nullptr);
+}
 
 #endif

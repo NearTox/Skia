@@ -43,7 +43,7 @@ class ClipEffect final : public EffectNode {
 
   bool fNoop = false;
 
-  typedef EffectNode INHERITED;
+  using INHERITED = EffectNode;
 };
 
 }  // namespace sksg

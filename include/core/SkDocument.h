@@ -80,7 +80,7 @@ class SK_API SkDocument : public SkRefCnt {
   SkWStream* fStream;
   State fState;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

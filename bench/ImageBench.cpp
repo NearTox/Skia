@@ -56,6 +56,6 @@ class Image2RasterBench : public Benchmark {
   sk_sp<SkImage> fImage;
   sk_sp<SkSurface> fRasterSurface;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 DEF_BENCH(return new Image2RasterBench;)

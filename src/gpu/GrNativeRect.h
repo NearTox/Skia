@@ -20,8 +20,7 @@ struct GrNativeRect {
   int fWidth;
   int fHeight;
 
-  static GrNativeRect MakeRelativeTo(
-      GrSurfaceOrigin org, int rtHeight, const SkIRect& devRect) noexcept {
+  static GrNativeRect MakeRelativeTo(GrSurfaceOrigin org, int rtHeight, const SkIRect& devRect) {
     GrNativeRect nativeRect;
     nativeRect.setRelativeTo(org, rtHeight, devRect);
     return nativeRect;
@@ -29,7 +28,7 @@ struct GrNativeRect {
 
   static GrNativeRect MakeRelativeTo(
       GrSurfaceOrigin origin, int surfaceHeight, int leftOffset, int topOffset, int width,
-      int height) noexcept {
+      int height) {
     GrNativeRect nativeRect;
     nativeRect.setRelativeTo(origin, surfaceHeight, leftOffset, topOffset, width, height);
     return nativeRect;
@@ -38,7 +37,7 @@ struct GrNativeRect {
   /**
    *  cast-safe way to treat the rect as an array of (4) ints.
    */
-  const int* asInts() const noexcept {
+  const int* asInts() const {
     return &fX;
 
     static_assert(0 == offsetof(GrNativeRect, fX));
@@ -47,9 +46,9 @@ struct GrNativeRect {
     static_assert(12 == offsetof(GrNativeRect, fHeight));
     static_assert(16 == sizeof(GrNativeRect));  // For an array of GrNativeRect.
   }
-  int* asInts() noexcept { return &fX; }
+  int* asInts() { return &fX; }
 
-  SkIRect asSkIRect() const noexcept { return SkIRect::MakeXYWH(fX, fY, fWidth, fHeight); }
+  SkIRect asSkIRect() const { return SkIRect::MakeXYWH(fX, fY, fWidth, fHeight); }
 
   // sometimes we have a SkIRect from the client that we
   // want to simultaneously make relative to GL's viewport
@@ -57,13 +56,13 @@ struct GrNativeRect {
   // The GL's viewport will always be the full size of the
   // current render target so we just pass in the rtHeight
   // here.
-  void setRelativeTo(GrSurfaceOrigin org, int rtHeight, const SkIRect& devRect) noexcept {
+  void setRelativeTo(GrSurfaceOrigin org, int rtHeight, const SkIRect& devRect) {
     this->setRelativeTo(org, rtHeight, devRect.x(), devRect.y(), devRect.width(), devRect.height());
   }
 
   void setRelativeTo(
       GrSurfaceOrigin origin, int surfaceHeight, int leftOffset, int topOffset, int width,
-      int height) noexcept {
+      int height) {
     fX = leftOffset;
     fWidth = width;
     if (kBottomLeft_GrSurfaceOrigin == origin) {
@@ -77,18 +76,18 @@ struct GrNativeRect {
     SkASSERT(fHeight >= 0);
   }
 
-  bool contains(int width, int height) const noexcept {
+  bool contains(int width, int height) const {
     return fX <= 0 && fY <= 0 && fX + fWidth >= width && fY + fHeight >= height;
   }
 
-  void invalidate() noexcept { fX = fWidth = fY = fHeight = -1; }
-  bool isInvalid() const noexcept { return fX == -1 && fWidth == -1 && fY == -1 && fHeight == -1; }
+  void invalidate() { fX = fWidth = fY = fHeight = -1; }
+  bool isInvalid() const { return fX == -1 && fWidth == -1 && fY == -1 && fHeight == -1; }
 
-  bool operator==(const GrNativeRect& that) const noexcept {
+  bool operator==(const GrNativeRect& that) const {
     return 0 == memcmp(this, &that, sizeof(GrNativeRect));
   }
 
-  bool operator!=(const GrNativeRect& that) const noexcept { return !(*this == that); }
+  bool operator!=(const GrNativeRect& that) const { return !(*this == that); }
 };
 
 #endif

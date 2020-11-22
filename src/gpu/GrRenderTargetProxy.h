@@ -15,7 +15,6 @@
 #include "src/gpu/GrSwizzle.h"
 
 class GrResourceProvider;
-class GrRenderTargetProxyPriv;
 
 // This class delays the acquisition of RenderTargets until they are actually
 // required
@@ -23,8 +22,8 @@ class GrRenderTargetProxyPriv;
 // the uniqueID of the RenderTarget it represents!
 class GrRenderTargetProxy : virtual public GrSurfaceProxy {
  public:
-  GrRenderTargetProxy* asRenderTargetProxy() noexcept override { return this; }
-  const GrRenderTargetProxy* asRenderTargetProxy() const noexcept override { return this; }
+  GrRenderTargetProxy* asRenderTargetProxy() override { return this; }
+  const GrRenderTargetProxy* asRenderTargetProxy() const override { return this; }
 
   // Actually instantiate the backing rendertarget, if necessary.
   bool instantiate(GrResourceProvider*) override;
@@ -40,7 +39,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
    * The number of stencil samples on this proxy will be equal to the largest sample count passed
    * to this method.
    */
-  void setNeedsStencil(int8_t numStencilSamples) noexcept {
+  void setNeedsStencil(int8_t numStencilSamples) {
     SkASSERT(numStencilSamples >= fSampleCnt);
     fNumStencilSamples = std::max(numStencilSamples, fNumStencilSamples);
   }
@@ -48,17 +47,21 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   /**
    * Returns the number of stencil samples this proxy will use, or 0 if it does not use stencil.
    */
-  int numStencilSamples() const noexcept { return fNumStencilSamples; }
+  int numStencilSamples() const { return fNumStencilSamples; }
 
   /**
    * Returns the number of samples/pixel in the color buffer (One if non-MSAA).
    */
-  int numSamples() const noexcept { return fSampleCnt; }
+  int numSamples() const { return fSampleCnt; }
 
   int maxWindowRectangles(const GrCaps& caps) const;
 
-  bool wrapsVkSecondaryCB() const noexcept {
-    return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes;
+  bool glRTFBOIDIs0() const { return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
+
+  bool wrapsVkSecondaryCB() const { return fWrapsVkSecondaryCB == WrapsVkSecondaryCB::kYes; }
+
+  bool supportsVkInputAttachment() const {
+    return fSurfaceFlags & GrInternalSurfaceFlags::kVkRTSupportsInputAttachment;
   }
 
   void markMSAADirty(const SkIRect& dirtyRect, GrSurfaceOrigin origin) {
@@ -68,25 +71,21 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
         GrNativeRect::MakeRelativeTo(origin, this->backingStoreDimensions().height(), dirtyRect);
     fMSAADirtyRect.join(nativeRect.asSkIRect());
   }
-  void markMSAAResolved() noexcept {
+  void markMSAAResolved() {
     SkASSERT(this->requiresManualMSAAResolve());
     fMSAADirtyRect.setEmpty();
   }
-  bool isMSAADirty() const noexcept {
+  bool isMSAADirty() const {
     SkASSERT(fMSAADirtyRect.isEmpty() || this->requiresManualMSAAResolve());
     return this->requiresManualMSAAResolve() && !fMSAADirtyRect.isEmpty();
   }
-  const SkIRect& msaaDirtyRect() const noexcept {
+  const SkIRect& msaaDirtyRect() const {
     SkASSERT(this->requiresManualMSAAResolve());
     return fMSAADirtyRect;
   }
 
   // TODO: move this to a priv class!
   bool refsWrappedObjects() const;
-
-  // Provides access to special purpose functions.
-  GrRenderTargetProxyPriv rtPriv() noexcept;
-  const GrRenderTargetProxyPriv rtPriv() const noexcept;  // NOLINT(readability-const-return-type)
 
  protected:
   friend class GrProxyProvider;  // for ctors
@@ -119,14 +118,10 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
  private:
-  void setGLRTFBOIDIs0() noexcept { fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
-  bool glRTFBOIDIs0() const noexcept {
-    return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0;
-  }
   bool canChangeStencilAttachment() const;
 
   size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 
   LazySurfaceDesc callbackDesc() const override;
 
@@ -149,7 +144,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
   // will work, but we use 4 to be more explicit about getting it to 16 byte alignment.
   char fDummyPadding[4];
 
-  typedef GrSurfaceProxy INHERITED;
+  using INHERITED = GrSurfaceProxy;
 };
 
 #endif

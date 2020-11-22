@@ -151,7 +151,7 @@ class UnpremulView : public Sample {
     this->decodeCurrFile();
   }
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -34,7 +34,7 @@ class SkScalingCodec : public SkCodec {
   }
 
  private:
-  typedef SkCodec INHERITED;
+  using INHERITED = SkCodec;
 };
 
 #endif  // SkScalingCodec_DEFINED

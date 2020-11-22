@@ -65,7 +65,7 @@ class SkDisplacementMapEffectImpl final : public SkImageFilter_Base {
   const SkImageFilter* getDisplacementInput() const { return getInput(0); }
   const SkImageFilter* getColorInput() const { return getInput(1); }
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 // Shift values to extract channels from an SkColor (SkColorGetR, SkColorGetG, etc)
@@ -182,7 +182,7 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
   SkColorChannel yChannelSelector() const { return fYChannelSelector; }
   const SkVector& scale() const { return fScale; }
 
-  const char* name() const noexcept override { return "DisplacementMap"; }
+  const char* name() const override { return "DisplacementMap"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
@@ -195,7 +195,7 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
   GrDisplacementMapEffect(
       SkColorChannel xChannelSelector, SkColorChannel yChannelSelector, const SkVector& scale,
@@ -208,7 +208,7 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
   SkColorChannel fYChannelSelector;
   SkVector fScale;
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 }  // anonymous namespace
@@ -392,6 +392,9 @@ SkIRect SkDisplacementMapEffectImpl::onFilterNodeBounds(
 
 SkIRect SkDisplacementMapEffectImpl::onFilterBounds(
     const SkIRect& src, const SkMatrix& ctm, MapDirection dir, const SkIRect* inputRect) const {
+  if (kReverse_MapDirection == dir) {
+    return INHERITED::onFilterBounds(src, ctm, dir, inputRect);
+  }
   // Recurse only into color input.
   if (this->getColorInput()) {
     return this->getColorInput()->filterBounds(src, ctm, dir, inputRect);
@@ -416,7 +419,7 @@ class GrDisplacementMapEffect::Impl : public GrGLSLFragmentProcessor {
 
   UniformHandle fScaleUni;
 
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -469,13 +472,13 @@ GrDisplacementMapEffect::GrDisplacementMapEffect(const GrDisplacementMapEffect& 
   this->setUsesSampleCoordsDirectly();
 }
 
-GrDisplacementMapEffect::~GrDisplacementMapEffect() = default;
+GrDisplacementMapEffect::~GrDisplacementMapEffect() {}
 
 std::unique_ptr<GrFragmentProcessor> GrDisplacementMapEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrDisplacementMapEffect(*this));
 }
 
-bool GrDisplacementMapEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
+bool GrDisplacementMapEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
   const GrDisplacementMapEffect& s = sBase.cast<GrDisplacementMapEffect>();
   return fXChannelSelector == s.fXChannelSelector && fYChannelSelector == s.fYChannelSelector &&
          fScale == s.fScale;

@@ -24,10 +24,10 @@
 #include "src/gpu/text/GrTextBlobCache.h"
 
 GrRecordingContext::ProgramData::ProgramData(
-    std::unique_ptr<const GrProgramDesc> desc, const GrProgramInfo* info) noexcept
+    std::unique_ptr<const GrProgramDesc> desc, const GrProgramInfo* info)
     : fDesc(std::move(desc)), fInfo(info) {}
 
-GrRecordingContext::ProgramData::ProgramData(ProgramData&& other) noexcept
+GrRecordingContext::ProgramData::ProgramData(ProgramData&& other)
     : fDesc(std::move(other.fDesc)), fInfo(other.fInfo) {}
 
 GrRecordingContext::ProgramData::~ProgramData() = default;
@@ -67,9 +67,9 @@ void GrRecordingContext::abandonContext() {
   this->destroyDrawingManager();
 }
 
-GrDrawingManager* GrRecordingContext::drawingManager() noexcept { return fDrawingManager.get(); }
+GrDrawingManager* GrRecordingContext::drawingManager() { return fDrawingManager.get(); }
 
-void GrRecordingContext::destroyDrawingManager() noexcept { fDrawingManager.reset(); }
+void GrRecordingContext::destroyDrawingManager() { fDrawingManager.reset(); }
 
 GrRecordingContext::Arenas::Arenas(GrOpMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator)
     : fOpMemoryPool(opMemoryPool), fRecordTimeAllocator(recordTimeAllocator) {
@@ -80,12 +80,10 @@ GrRecordingContext::Arenas::Arenas(GrOpMemoryPool* opMemoryPool, SkArenaAlloc* r
 
 // Must be defined here so that std::unique_ptr can see the sizes of the various pools, otherwise
 // it can't generate a default destructor for them.
-GrRecordingContext::OwnedArenas::OwnedArenas() noexcept = default;
-GrRecordingContext::OwnedArenas::OwnedArenas(OwnedArenas&&) noexcept = default;
-GrRecordingContext::OwnedArenas::~OwnedArenas() = default;
+GrRecordingContext::OwnedArenas::OwnedArenas() {}
+GrRecordingContext::OwnedArenas::~OwnedArenas() {}
 
-GrRecordingContext::OwnedArenas& GrRecordingContext::OwnedArenas::operator=(
-    OwnedArenas&& a) noexcept {
+GrRecordingContext::OwnedArenas& GrRecordingContext::OwnedArenas::operator=(OwnedArenas&& a) {
   fOpMemoryPool = std::move(a.fOpMemoryPool);
   fRecordTimeAllocator = std::move(a.fRecordTimeAllocator);
   return *this;
@@ -107,30 +105,46 @@ GrRecordingContext::Arenas GrRecordingContext::OwnedArenas::get() {
   return {fOpMemoryPool.get(), fRecordTimeAllocator.get()};
 }
 
-GrRecordingContext::OwnedArenas&& GrRecordingContext::detachArenas() noexcept {
-  return std::move(fArenas);
-}
+GrRecordingContext::OwnedArenas&& GrRecordingContext::detachArenas() { return std::move(fArenas); }
 
-GrTextBlobCache* GrRecordingContext::getTextBlobCache() noexcept {
+GrTextBlobCache* GrRecordingContext::getTextBlobCache() {
   return fThreadSafeProxy->priv().getTextBlobCache();
 }
 
-const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const noexcept {
+const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const {
   return fThreadSafeProxy->priv().getTextBlobCache();
+}
+
+GrThreadSafeUniquelyKeyedProxyViewCache* GrRecordingContext::threadSafeViewCache() {
+  return fThreadSafeProxy->priv().threadSafeViewCache();
+}
+
+const GrThreadSafeUniquelyKeyedProxyViewCache* GrRecordingContext::threadSafeViewCache() const {
+  return fThreadSafeProxy->priv().threadSafeViewCache();
 }
 
 void GrRecordingContext::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {
   this->drawingManager()->addOnFlushCallbackObject(onFlushCBObject);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+int GrRecordingContext::maxTextureSize() const { return this->caps()->maxTextureSize(); }
+
+int GrRecordingContext::maxRenderTargetSize() const { return this->caps()->maxRenderTargetSize(); }
+
+bool GrRecordingContext::colorTypeSupportedAsImage(SkColorType colorType) const {
+  GrBackendFormat format =
+      this->caps()->getDefaultBackendFormat(SkColorTypeToGrColorType(colorType), GrRenderable::kNo);
+  return format.isValid();
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrCaps> GrRecordingContextPriv::refCaps() const noexcept { return fContext->refCaps(); }
+sk_sp<const GrCaps> GrRecordingContextPriv::refCaps() const { return fContext->refCaps(); }
 
 void GrRecordingContextPriv::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {
   fContext->addOnFlushCallbackObject(onFlushCBObject);
 }
-
-GrContext* GrRecordingContextPriv::backdoor() noexcept { return (GrContext*)fContext; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 

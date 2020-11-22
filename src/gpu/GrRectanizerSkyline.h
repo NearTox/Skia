@@ -17,11 +17,11 @@
 // Mark this class final in an effort to avoid the vtable when this subclass is used explicitly.
 class GrRectanizerSkyline final : public GrRectanizer {
  public:
-  GrRectanizerSkyline(int w, int h) noexcept : INHERITED(w, h) { this->reset(); }
+  GrRectanizerSkyline(int w, int h) : INHERITED(w, h) { this->reset(); }
 
   ~GrRectanizerSkyline() final {}
 
-  void reset() noexcept final {
+  void reset() final {
     fAreaSoFar = 0;
     fSkyline.reset();
     SkylineSegment* seg = fSkyline.append(1);
@@ -30,11 +30,9 @@ class GrRectanizerSkyline final : public GrRectanizer {
     seg->fWidth = this->width();
   }
 
-  bool addRect(int w, int h, SkIPoint16* loc) noexcept final;
+  bool addRect(int w, int h, SkIPoint16* loc) final;
 
-  float percentFull() const noexcept final {
-    return fAreaSoFar / ((float)this->width() * this->height());
-  }
+  float percentFull() const final { return fAreaSoFar / ((float)this->width() * this->height()); }
 
  private:
   struct SkylineSegment {
@@ -51,12 +49,12 @@ class GrRectanizerSkyline final : public GrRectanizer {
   // the skyline segments >= 'skylineIndex'? If so, return true and fill in
   // 'y' with the y-location at which it fits (the x location is pulled from
   // 'skylineIndex's segment.
-  bool rectangleFits(int skylineIndex, int width, int height, int* y) const noexcept;
+  bool rectangleFits(int skylineIndex, int width, int height, int* y) const;
   // Update the skyline structure to include a width x height rect located
   // at x,y.
-  void addSkylineLevel(int skylineIndex, int x, int y, int width, int height) noexcept;
+  void addSkylineLevel(int skylineIndex, int x, int y, int width, int height);
 
-  typedef GrRectanizer INHERITED;
+  using INHERITED = GrRectanizer;
 };
 
 #endif

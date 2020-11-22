@@ -28,12 +28,12 @@ class SkDWriteFontFileStream : public SkStreamMemory {
 
   size_t read(void* buffer, size_t size) override;
   bool isAtEnd() const override;
-  bool rewind() noexcept override;
-  size_t getPosition() const noexcept override;
+  bool rewind() override;
+  size_t getPosition() const override;
   bool seek(size_t position) override;
   bool move(long offset) override;
-  size_t getLength() const noexcept override;
-  const void* getMemoryBase() noexcept override;
+  size_t getLength() const override;
+  const void* getMemoryBase() override;
 
   std::unique_ptr<SkDWriteFontFileStream> duplicate() const {
     return std::unique_ptr<SkDWriteFontFileStream>(this->onDuplicate());
@@ -77,7 +77,7 @@ class SkDWriteFontFileStreamWrapper : public IDWriteFontFileStream {
 
  private:
   explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream);
-  virtual ~SkDWriteFontFileStreamWrapper() = default;
+  virtual ~SkDWriteFontFileStreamWrapper() {}
 
   ULONG fRefCount;
   std::unique_ptr<SkStreamAsset> fStream;

@@ -16,11 +16,10 @@
 
 class SkSurface_Base : public SkSurface {
  public:
-  SkSurface_Base(int width, int height, const SkSurfaceProps*) noexcept;
-  SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*) noexcept;
+  SkSurface_Base(int width, int height, const SkSurfaceProps*);
+  SkSurface_Base(const SkImageInfo&, const SkSurfaceProps*);
   ~SkSurface_Base() override;
 
-  virtual GrContext* onGetContext_deprecated();
   virtual GrRecordingContext* onGetRecordingContext();
 
   virtual GrBackendTexture onGetBackendTexture(BackendHandleAccess);
@@ -121,10 +120,10 @@ class SkSurface_Base : public SkSurface {
   inline SkCanvas* getCachedCanvas();
   inline sk_sp<SkImage> refCachedImage();
 
-  bool hasCachedImage() const noexcept { return fCachedImage != nullptr; }
+  bool hasCachedImage() const { return fCachedImage != nullptr; }
 
   // called by SkSurface to compute a new genID
-  uint32_t newGenerationID() noexcept;
+  uint32_t newGenerationID();
 
  private:
   std::unique_ptr<SkCanvas> fCachedCanvas;
@@ -134,12 +133,12 @@ class SkSurface_Base : public SkSurface {
 
   // Returns true if there is an outstanding image-snapshot, indicating that a call to aboutToDraw
   // would trigger a copy-on-write.
-  bool outstandingImageSnapshot() const noexcept;
+  bool outstandingImageSnapshot() const;
 
   friend class SkCanvas;
   friend class SkSurface;
 
-  typedef SkSurface INHERITED;
+  using INHERITED = SkSurface;
 };
 
 SkCanvas* SkSurface_Base::getCachedCanvas() {

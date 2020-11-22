@@ -45,7 +45,7 @@ class SK_API SkShader : public SkFlattenable {
    *  alpha value. Subclasses should override this to allow some
    *  optimizations.
    */
-  virtual bool isOpaque() const noexcept { return false; }
+  virtual bool isOpaque() const { return false; }
 
   /**
    *  Iff this shader is backed by a single SkImage, return its ptr (the caller must ref this
@@ -129,7 +129,7 @@ class SK_API SkShader : public SkFlattenable {
   SkShader() = default;
   friend class SkShaderBase;
 
-  typedef SkFlattenable INHERITED;
+  using INHERITED = SkFlattenable;
 };
 
 class SK_API SkShaders {

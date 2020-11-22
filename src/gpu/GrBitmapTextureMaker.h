@@ -33,7 +33,7 @@ class GrBitmapTextureMaker final : public GrTextureMaker {
   const SkBudgeted fBudgeted;
   GrUniqueKey fKey;
 
-  typedef GrTextureMaker INHERITED;
+  using INHERITED = GrTextureMaker;
 };
 
 #endif

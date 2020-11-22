@@ -21,7 +21,7 @@
 #include "tools/ToolUtils.h"
 
 #include "modules/skparagraph/include/Paragraph.h"
-#include "modules/skparagraph/include/ParagraphBuilder.h"
+#include "modules/skparagraph/src/ParagraphBuilderImpl.h"
 
 static const char* gSpeach =
     "Five score years ago, a great American, in whose symbolic shadow we stand today, signed the "
@@ -61,7 +61,11 @@ class ParagraphGM : public skiagm::GM {
 
     auto collection = sk_make_sp<skia::textlayout::FontCollection>();
     collection->setDefaultFontManager(SkFontMgr::RefDefault());
-    auto builder = skia::textlayout::ParagraphBuilder::make(paraStyle, collection);
+    auto builder = skia::textlayout::ParagraphBuilderImpl::make(paraStyle, collection);
+    if (nullptr == builder) {
+      fPara = nullptr;
+      return;
+    }
 
     builder->addText(gSpeach, strlen(gSpeach));
 
@@ -83,6 +87,9 @@ class ParagraphGM : public skiagm::GM {
   SkISize onISize() override { return SkISize::Make(412, 420); }
 
   DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
+    if (nullptr == fPara) {
+      return DrawResult::kSkip;
+    }
     const int loop = (this->getMode() == kGM_Mode) ? 1 : 50;
 
     int parity = 0;
@@ -113,8 +120,8 @@ class ParagraphGM : public skiagm::GM {
   bool onAnimate(double /*nanos*/) override { return true; }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
-DEF_GM(return new ParagraphGM(0));
-DEF_GM(return new ParagraphGM(kTimeLayout));
-DEF_GM(return new ParagraphGM(kUseUnderline));
+DEF_GM(return new ParagraphGM(0);)
+DEF_GM(return new ParagraphGM(kTimeLayout);)
+DEF_GM(return new ParagraphGM(kUseUnderline);)

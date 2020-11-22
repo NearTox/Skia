@@ -23,7 +23,7 @@ GrAtlasManager::GrAtlasManager(
 
 GrAtlasManager::~GrAtlasManager() = default;
 
-void GrAtlasManager::freeAll() noexcept {
+void GrAtlasManager::freeAll() {
   for (int i = 0; i < kMaskFormatCount; ++i) {
     fAtlases[i] = nullptr;
   }
@@ -165,7 +165,9 @@ GrDrawOpAtlas::ErrorCode GrAtlasManager::addGlyphToAtlas(
       resourceProvider, uploadTarget, expectedMaskFormat, width, height, storage.get(),
       &grGlyph->fAtlasLocator);
 
-  grGlyph->fAtlasLocator.insetSrc(srcPadding);
+  if (errorCode == GrDrawOpAtlas::ErrorCode::kSucceeded) {
+    grGlyph->fAtlasLocator.insetSrc(srcPadding);
+  }
 
   return errorCode;
 }

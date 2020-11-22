@@ -29,7 +29,7 @@ class GrMeshDrawOp : public GrDrawOp {
   /** Abstract interface that represents a destination for a GrMeshDrawOp. */
   class Target;
 
-  static constexpr bool CanUpgradeAAOnMerge(GrAAType aa1, GrAAType aa2) noexcept {
+  static bool CanUpgradeAAOnMerge(GrAAType aa1, GrAAType aa2) {
     return (aa1 == GrAAType::kNone && aa2 == GrAAType::kCoverage) ||
            (aa1 == GrAAType::kCoverage && aa2 == GrAAType::kNone);
   }
@@ -39,8 +39,10 @@ class GrMeshDrawOp : public GrDrawOp {
 
   void createProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
-    this->onCreateProgramInfo(caps, arena, writeView, std::move(appliedClip), dstProxyView);
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) {
+    this->onCreateProgramInfo(
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, renderPassXferBarriers);
   }
 
   void createProgramInfo(Target* target);
@@ -58,11 +60,11 @@ class GrMeshDrawOp : public GrDrawOp {
     void recordDraw(
         Target*, const GrGeometryProcessor*, const GrSurfaceProxy* const primProcProxies[]) const;
 
-    void* vertices() const noexcept { return fVertices; }
-    GrSimpleMesh* mesh() noexcept { return fMesh; }
+    void* vertices() const { return fVertices; }
+    GrSimpleMesh* mesh() { return fMesh; }
 
    protected:
-    PatternHelper() noexcept = default;
+    PatternHelper() = default;
     void init(
         Target*, GrPrimitiveType, size_t vertexStride, sk_sp<const GrBuffer> indexBuffer,
         int verticesPerRepetition, int indicesPerRepetition, int repeatCount, int maxRepetitions);
@@ -86,11 +88,11 @@ class GrMeshDrawOp : public GrDrawOp {
     using PatternHelper::vertices;
 
    private:
-    typedef PatternHelper INHERITED;
+    using INHERITED = PatternHelper;
   };
 
   static bool CombinedQuadCountWillOverflow(
-      GrAAType aaType, bool willBeUpgradedToAA, int combinedQuadCount) noexcept {
+      GrAAType aaType, bool willBeUpgradedToAA, int combinedQuadCount) {
     bool willBeAA = (aaType == GrAAType::kCoverage) || willBeUpgradedToAA;
 
     return combinedQuadCount > (willBeAA ? GrResourceProvider::MaxNumAAQuads()
@@ -99,7 +101,7 @@ class GrMeshDrawOp : public GrDrawOp {
 
   virtual void onPrePrepareDraws(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&);
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers);
 
  private:
   virtual GrProgramInfo* programInfo() = 0;
@@ -107,22 +109,23 @@ class GrMeshDrawOp : public GrDrawOp {
   // by this op.
   virtual void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) = 0;
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) = 0;
 
   void onPrePrepare(
       GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) final {
-    this->onPrePrepareDraws(context, writeView, clip, dstProxyView);
+      const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) final {
+    this->onPrePrepareDraws(context, writeView, clip, dstProxyView, renderPassXferBarriers);
   }
   void onPrepare(GrOpFlushState* state) final;
 
   virtual void onPrepareDraws(Target*) = 0;
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 class GrMeshDrawOp::Target {
  public:
-  virtual ~Target() = default;
+  virtual ~Target() {}
 
   /** Adds a draw of a mesh. 'primProcProxies' must have
    * GrPrimitiveProcessor::numTextureSamplers() entries. Can be null if no samplers.
@@ -206,6 +209,8 @@ class GrMeshDrawOp::Target {
   virtual GrAppliedClip detachAppliedClip() = 0;
 
   virtual const GrXferProcessor::DstProxyView& dstProxyView() const = 0;
+
+  virtual GrXferBarrierFlags renderPassBarriers() const = 0;
 
   virtual GrResourceProvider* resourceProvider() const = 0;
   uint32_t contextUniqueID() const { return this->resourceProvider()->contextUniqueID(); }

@@ -98,7 +98,7 @@ class SampleSG : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

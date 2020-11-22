@@ -35,6 +35,10 @@ class SkPictureImageFilterImpl final : public SkImageFilter_Base {
   void flatten(SkWriteBuffer&) const override;
   sk_sp<SkSpecialImage> onFilterImage(const Context&, SkIPoint* offset) const override;
 
+  SkRect computeFastBounds(const SkRect& src) const override;
+  SkIRect onFilterNodeBounds(
+      const SkIRect&, const SkMatrix& ctm, MapDirection, const SkIRect* inputRect) const override;
+
  private:
   friend void SkPictureImageFilter::RegisterFlattenables();
   SK_FLATTENABLE_HOOKS(SkPictureImageFilterImpl)
@@ -42,7 +46,7 @@ class SkPictureImageFilterImpl final : public SkImageFilter_Base {
   sk_sp<SkPicture> fPicture;
   SkRect fCropRect;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace
@@ -121,4 +125,18 @@ sk_sp<SkSpecialImage> SkPictureImageFilterImpl::onFilterImage(
   offset->fX = bounds.fLeft;
   offset->fY = bounds.fTop;
   return surf->makeImageSnapshot();
+}
+
+SkRect SkPictureImageFilterImpl::computeFastBounds(const SkRect& src) const { return fCropRect; }
+
+SkIRect SkPictureImageFilterImpl::onFilterNodeBounds(
+    const SkIRect& src, const SkMatrix& ctm, MapDirection direction,
+    const SkIRect* inputRect) const {
+  if (kReverse_MapDirection == direction) {
+    return INHERITED::onFilterNodeBounds(src, ctm, direction, inputRect);
+  }
+
+  SkRect dstRect = fCropRect;
+  ctm.mapRect(&dstRect);
+  return dstRect.roundOut();
 }

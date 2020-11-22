@@ -15,7 +15,7 @@ static int g_NumCachedShapes = 0;
 static int g_NumFreedShapes = 0;
 #endif
 
-GrSmallPathAtlasMgr::GrSmallPathAtlasMgr() noexcept = default;
+GrSmallPathAtlasMgr::GrSmallPathAtlasMgr() {}
 
 GrSmallPathAtlasMgr::~GrSmallPathAtlasMgr() { this->reset(); }
 

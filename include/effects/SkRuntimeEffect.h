@@ -66,7 +66,7 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
     uint32_t fFlags;
     uint32_t fMarker;
 
-    bool isArray() const noexcept { return SkToBool(fFlags & kArray_Flag); }
+    bool isArray() const { return SkToBool(fFlags & kArray_Flag); }
     size_t sizeInBytes() const;
   };
 
@@ -88,19 +88,18 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   sk_sp<SkColorFilter> makeColorFilter(
       sk_sp<SkData> uniforms, sk_sp<SkColorFilter> children[], size_t childCount);
 
-  const SkString& source() const noexcept { return fSkSL; }
-  uint32_t hash() const noexcept { return fHash; }
+  const SkString& source() const { return fSkSL; }
 
   template <typename T>
   class ConstIterable {
    public:
-    ConstIterable(const std::vector<T>& vec) noexcept : fVec(vec) {}
+    ConstIterable(const std::vector<T>& vec) : fVec(vec) {}
 
     using const_iterator = typename std::vector<T>::const_iterator;
 
-    const_iterator begin() const noexcept { return fVec.begin(); }
-    const_iterator end() const noexcept { return fVec.end(); }
-    size_t count() const noexcept { return fVec.size(); }
+    const_iterator begin() const { return fVec.begin(); }
+    const_iterator end() const { return fVec.end(); }
+    size_t count() const { return fVec.size(); }
 
    private:
     const std::vector<T>& fVec;
@@ -110,17 +109,15 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   // provide an SkData of this size, containing values for all of those variables.
   size_t uniformSize() const;
 
-  ConstIterable<Uniform> uniforms() const noexcept { return ConstIterable<Uniform>(fUniforms); }
-  ConstIterable<SkString> children() const noexcept { return ConstIterable<SkString>(fChildren); }
-  ConstIterable<Varying> varyings() const noexcept { return ConstIterable<Varying>(fVaryings); }
+  ConstIterable<Uniform> uniforms() const { return ConstIterable<Uniform>(fUniforms); }
+  ConstIterable<SkString> children() const { return ConstIterable<SkString>(fChildren); }
+  ConstIterable<Varying> varyings() const { return ConstIterable<Varying>(fVaryings); }
 
   // Returns pointer to the named uniform variable's description, or nullptr if not found
   const Uniform* findUniform(const char* name) const;
 
   // Returns index of the named child, or -1 if not found
   int findChild(const char* name) const;
-
-  bool usesSampleCoords() const noexcept { return fUsesSampleCoords; }
 
   static void RegisterFlattenables();
   ~SkRuntimeEffect() override;
@@ -130,6 +127,9 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
       SkString sksl, std::unique_ptr<SkSL::Program> baseProgram, std::vector<Uniform>&& uniforms,
       std::vector<SkString>&& children, std::vector<SkSL::SampleUsage>&& sampleUsages,
       std::vector<Varying>&& varyings, bool usesSampleCoords, bool allowColorFilter);
+
+  uint32_t hash() const { return fHash; }
+  bool usesSampleCoords() const { return fUsesSampleCoords; }
 
 #if SK_SUPPORT_GPU
   friend class GrSkSLFP;      // toPipelineStage
@@ -176,14 +176,15 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
  *   SkRuntimeShaderBuilder builder(effect);
  *   builder.uniform("some_uniform_float")  = 3.14f;
  *   builder.uniform("some_uniform_matrix") = SkM44::Rotate(...);
- *   builder.child("some_child_effect")   = mySkImage->makeShader(...);
+ *   builder.child("some_child_effect")     = mySkImage->makeShader(...);
  *   ...
  *   sk_sp<SkShader> shader = builder.makeShader(nullptr, false);
  *
  * Note that SkRuntimeShaderBuilder is built entirely on the public API of SkRuntimeEffect,
  * so can be used as-is or serve as inspiration for other interfaces or binding techniques.
  */
-struct SkRuntimeShaderBuilder {
+class SkRuntimeShaderBuilder {
+ public:
   SkRuntimeShaderBuilder(sk_sp<SkRuntimeEffect>);
   ~SkRuntimeShaderBuilder();
 
@@ -201,9 +202,7 @@ struct SkRuntimeShaderBuilder {
       } else if (sizeof(val) != fVar->sizeInBytes()) {
         SkDEBUGFAIL("Incorrect value size");
       } else {
-        memcpy(
-            SkTAddOffset<void>(fOwner->fUniforms->writable_data(), fVar->fOffset), &val,
-            sizeof(val));
+        memcpy(SkTAddOffset<void>(fOwner->writableUniformData(), fVar->fOffset), &val, sizeof(val));
       }
       return *this;
     }
@@ -214,7 +213,7 @@ struct SkRuntimeShaderBuilder {
       } else if (fVar->sizeInBytes() != 9 * sizeof(float)) {
         SkDEBUGFAIL("Incorrect value size");
       } else {
-        float* data = SkTAddOffset<float>(fOwner->fUniforms->writable_data(), fVar->fOffset);
+        float* data = SkTAddOffset<float>(fOwner->writableUniformData(), fVar->fOffset);
         data[0] = val.get(0);
         data[1] = val.get(3);
         data[2] = val.get(6);
@@ -239,10 +238,15 @@ struct SkRuntimeShaderBuilder {
     int fIndex;  // -1 if the child was not found
   };
 
+  const SkRuntimeEffect* effect() const { return fEffect.get(); }
+
   BuilderUniform uniform(const char* name) { return {this, fEffect->findUniform(name)}; }
   BuilderChild child(const char* name) { return {this, fEffect->findChild(name)}; }
 
   sk_sp<SkShader> makeShader(const SkMatrix* localMatrix, bool isOpaque);
+
+ private:
+  void* writableUniformData();
 
   sk_sp<SkRuntimeEffect> fEffect;
   sk_sp<SkData> fUniforms;

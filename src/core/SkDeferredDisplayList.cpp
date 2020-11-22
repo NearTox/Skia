@@ -46,7 +46,7 @@ SkDeferredDisplayList::ProgramIterator::ProgramIterator(
     GrDirectContext* dContext, SkDeferredDisplayList* ddl)
     : fDContext(dContext), fProgramData(ddl->programData()), fIndex(0) {}
 
-SkDeferredDisplayList::ProgramIterator::~ProgramIterator() = default;
+SkDeferredDisplayList::ProgramIterator::~ProgramIterator() {}
 
 bool SkDeferredDisplayList::ProgramIterator::compile() {
   if (!fDContext || fIndex < 0 || fIndex >= (int)fProgramData.size()) {

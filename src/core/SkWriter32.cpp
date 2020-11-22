@@ -9,7 +9,7 @@
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkWriter32.h"
 
-void SkWriter32::writeMatrix(const SkMatrix& matrix) noexcept {
+void SkWriter32::writeMatrix(const SkMatrix& matrix) {
   size_t size = SkMatrixPriv::WriteToMemory(matrix, nullptr);
   SkASSERT(SkAlign4(size) == size);
   SkMatrixPriv::WriteToMemory(matrix, this->reserve(size));
@@ -32,17 +32,17 @@ void SkWriter32::writeString(const char str[], size_t len) {
   chars[len] = '\0';
 }
 
-size_t SkWriter32::WriteStringSize(const char* str, size_t len) noexcept {
+size_t SkWriter32::WriteStringSize(const char* str, size_t len) {
   if ((long)len < 0) {
     SkASSERT(str);
     len = strlen(str);
   }
-  constexpr size_t lenBytes = 4;  // we use 4 bytes to record the length
+  const size_t lenBytes = 4;  // we use 4 bytes to record the length
   // add 1 since we also write a terminating 0
   return SkAlign4(lenBytes + len + 1);
 }
 
-void SkWriter32::growToAtLeast(size_t size) noexcept {
+void SkWriter32::growToAtLeast(size_t size) {
   const bool wasExternal = (fExternal != nullptr) && (fData == fExternal);
 
   fCapacity = 4096 + std::max(size, fCapacity + (fCapacity / 2));

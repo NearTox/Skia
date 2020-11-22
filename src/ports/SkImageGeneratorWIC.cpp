@@ -43,7 +43,7 @@ class ImageGeneratorWIC : public SkImageGenerator {
   SkTScopedComPtr<IWICBitmapSource> fImageSource;
   sk_sp<SkData> fData;
 
-  typedef SkImageGenerator INHERITED;
+  using INHERITED = SkImageGenerator;
 };
 }  // namespace
 

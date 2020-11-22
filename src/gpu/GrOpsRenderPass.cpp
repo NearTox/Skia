@@ -77,8 +77,8 @@ void GrOpsRenderPass::bindPipeline(const GrProgramInfo& programInfo, const SkRec
     SkASSERT(this->gpu()->caps()->wireframeSupport());
   }
   if (this->gpu()->caps()->twoSidedStencilRefsAndMasksMustMatch() &&
-      programInfo.pipeline().isStencilEnabled()) {
-    const GrUserStencilSettings* stencil = programInfo.pipeline().getUserStencil();
+      programInfo.isStencilEnabled()) {
+    const GrUserStencilSettings* stencil = programInfo.userStencilSettings();
     if (stencil->isTwoSided(programInfo.pipeline().hasStencilClip())) {
       SkASSERT(stencil->fCCWFace.fRef == stencil->fCWFace.fRef);
       SkASSERT(stencil->fCCWFace.fTestMask == stencil->fCWFace.fTestMask);
@@ -132,8 +132,7 @@ void GrOpsRenderPass::bindPipeline(const GrProgramInfo& programInfo, const SkRec
 #endif
 
   fDrawPipelineStatus = DrawPipelineStatus::kOk;
-  fXferBarrierType =
-      programInfo.pipeline().xferBarrierType(fRenderTarget->asTexture(), *this->gpu()->caps());
+  fXferBarrierType = programInfo.pipeline().xferBarrierType(*this->gpu()->caps());
 }
 
 void GrOpsRenderPass::setScissorRect(const SkIRect& scissor) {

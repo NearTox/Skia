@@ -153,7 +153,8 @@ DEF_TEST(SkPDF_DeflateWStream, r) {
     uint32_t minLength = std::min(size, (uint32_t)(decompressed->getLength()));
     for (uint32_t i = 0; i < minLength; ++i) {
       uint8_t c;
-      SkDEBUGCODE(size_t rb =) decompressed->read(&c, sizeof(uint8_t));
+      SkDEBUGCODE(size_t rb =)
+      decompressed->read(&c, sizeof(uint8_t));
       SkASSERT(sizeof(uint8_t) == rb);
       if (buffer[i] != c) {
         ERRORF(r, "Decompression failed at byte %u.", (unsigned)i);

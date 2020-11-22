@@ -38,8 +38,7 @@ void GrGLSLGeometryProcessor::emitCode(EmitArgs& args) {
     SkASSERT(
         kFloat2_GrSLType == gpArgs.fPositionVar.getType() ||
         kFloat3_GrSLType == gpArgs.fPositionVar.getType());
-    vBuilder->emitNormalizedSkPosition(
-        gpArgs.fPositionVar.c_str(), args.fRTAdjustName, gpArgs.fPositionVar.getType());
+    vBuilder->emitNormalizedSkPosition(gpArgs.fPositionVar.c_str(), gpArgs.fPositionVar.getType());
     if (kFloat2_GrSLType == gpArgs.fPositionVar.getType()) {
       args.fVaryingHandler->setNoPerspective();
     }

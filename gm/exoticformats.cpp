@@ -13,6 +13,7 @@
 #include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkCompressedDataUtils.h"
 #include "src/core/SkMipmap.h"
+#include "src/gpu/GrImageContextPriv.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/gl/GrGLDefines.h"
 #include "src/image/SkImage_Base.h"
@@ -68,7 +69,8 @@ static sk_sp<SkData> load_ktx(const char* filename, ImageInfo* imageInfo) {
   }
 
   uint32_t glType = get_uint(header, 16);
-  SkDEBUGCODE(uint32_t glTypeSize = get_uint(header, 20);) uint32_t glFormat = get_uint(header, 24);
+  SkDEBUGCODE(uint32_t glTypeSize = get_uint(header, 20);)
+  uint32_t glFormat = get_uint(header, 24);
   uint32_t glInternalFormat = get_uint(header, 28);
   // uint32_t glBaseInternalFormat = get_uint(header, 32);
   uint32_t pixelWidth = get_uint(header, 36);
@@ -365,8 +367,7 @@ class ExoticFormatsGM : public GM {
 
     bool isCompressed = false;
     if (image->isTextureBacked()) {
-      GrRecordingContext* rContext = ((SkImage_GpuBase*)image)->context();
-      const GrCaps* caps = rContext->priv().caps();
+      const GrCaps* caps = as_IB(image)->context()->priv().caps();
 
       GrTextureProxy* proxy = as_IB(image)->peekProxy();
       isCompressed = caps->isFormatCompressed(proxy->backendFormat());
@@ -419,7 +420,7 @@ class ExoticFormatsGM : public GM {
   sk_sp<SkImage> fETC1Image;
   sk_sp<SkImage> fBC1Image;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

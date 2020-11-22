@@ -10,7 +10,7 @@
 #include "src/gpu/vk/GrVkSamplerYcbcrConversion.h"
 #include "src/gpu/vk/GrVkUtil.h"
 
-const GrVkImageView* GrVkImageView::Create(
+sk_sp<const GrVkImageView> GrVkImageView::Make(
     GrVkGpu* gpu, VkImage image, VkFormat format, Type viewType, uint32_t miplevels,
     const GrVkYcbcrConversionInfo& ycbcrInfo) {
   void* pNext = nullptr;
@@ -55,7 +55,7 @@ const GrVkImageView* GrVkImageView::Create(
     return nullptr;
   }
 
-  return new GrVkImageView(gpu, imageView, ycbcrConversion);
+  return sk_sp<const GrVkImageView>(new GrVkImageView(gpu, imageView, ycbcrConversion));
 }
 
 void GrVkImageView::freeGPUData() const {

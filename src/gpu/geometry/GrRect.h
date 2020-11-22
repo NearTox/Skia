@@ -16,49 +16,52 @@
 struct GrIRect16 {
   int16_t fLeft, fTop, fRight, fBottom;
 
-  static constexpr GrIRect16 SK_WARN_UNUSED_RESULT MakeEmpty() noexcept {
-    // GrIRect16 r;
-    // r.setEmpty();
-    return MakeWH(0, 0);
+  static GrIRect16 SK_WARN_UNUSED_RESULT MakeEmpty() {
+    GrIRect16 r;
+    r.setEmpty();
+    return r;
   }
 
-  static constexpr GrIRect16 SK_WARN_UNUSED_RESULT MakeWH(int16_t w, int16_t h) noexcept {
-    return GrIRect16{0, 0, w, h};
+  static GrIRect16 SK_WARN_UNUSED_RESULT MakeWH(int16_t w, int16_t h) {
+    GrIRect16 r;
+    r.set(0, 0, w, h);
+    return r;
   }
 
-  static constexpr GrIRect16 SK_WARN_UNUSED_RESULT
-  MakeXYWH(int16_t x, int16_t y, int16_t w, int16_t h) noexcept {
-    return GrIRect16{x, y, SkToS16(x + w), SkToS16(y + h)};
+  static GrIRect16 SK_WARN_UNUSED_RESULT MakeXYWH(int16_t x, int16_t y, int16_t w, int16_t h) {
+    GrIRect16 r;
+    r.set(x, y, x + w, y + h);
+    return r;
   }
 
-  static GrIRect16 SK_WARN_UNUSED_RESULT Make(const SkIRect& ir) noexcept {
+  static GrIRect16 SK_WARN_UNUSED_RESULT Make(const SkIRect& ir) {
     GrIRect16 r;
     r.set(ir);
     return r;
   }
 
-  constexpr int width() const noexcept { return fRight - fLeft; }
-  constexpr int height() const noexcept { return fBottom - fTop; }
-  constexpr int area() const noexcept { return this->width() * this->height(); }
-  bool isEmpty() const noexcept { return fLeft >= fRight || fTop >= fBottom; }
+  int width() const { return fRight - fLeft; }
+  int height() const { return fBottom - fTop; }
+  int area() const { return this->width() * this->height(); }
+  bool isEmpty() const { return fLeft >= fRight || fTop >= fBottom; }
 
-  void setEmpty() noexcept { memset(this, 0, sizeof(*this)); }
+  void setEmpty() { memset(this, 0, sizeof(*this)); }
 
-  constexpr void set(int16_t left, int16_t top, int16_t right, int16_t bottom) noexcept {
+  void set(int16_t left, int16_t top, int16_t right, int16_t bottom) {
     fLeft = left;
     fTop = top;
     fRight = right;
     fBottom = bottom;
   }
 
-  constexpr void set(const SkIRect& r) noexcept {
+  void set(const SkIRect& r) {
     fLeft = SkToS16(r.fLeft);
     fTop = SkToS16(r.fTop);
     fRight = SkToS16(r.fRight);
     fBottom = SkToS16(r.fBottom);
   }
 
-  constexpr void offset(int16_t dx, int16_t dy) noexcept {
+  void offset(int16_t dx, int16_t dy) {
     fLeft += dx;
     fTop += dy;
     fRight += dx;
@@ -68,7 +71,7 @@ struct GrIRect16 {
 
 /** Returns true if the rectangles have a nonzero area of overlap. It assumed that rects can be
     infinitely small but not "inverted". */
-static inline bool GrRectsOverlap(const SkRect& a, const SkRect& b) noexcept {
+static inline bool GrRectsOverlap(const SkRect& a, const SkRect& b) {
   // See skbug.com/6607 about the isFinite() checks.
   SkASSERT(!a.isFinite() || (a.fLeft <= a.fRight && a.fTop <= a.fBottom));
   SkASSERT(!b.isFinite() || (b.fLeft <= b.fRight && b.fTop <= b.fBottom));
@@ -77,7 +80,7 @@ static inline bool GrRectsOverlap(const SkRect& a, const SkRect& b) noexcept {
 
 /** Returns true if the rectangles overlap or share an edge or corner. It assumed that rects can be
     infinitely small but not "inverted". */
-static inline bool GrRectsTouchOrOverlap(const SkRect& a, const SkRect& b) noexcept {
+static inline bool GrRectsTouchOrOverlap(const SkRect& a, const SkRect& b) {
   // See skbug.com/6607 about the isFinite() checks.
   SkASSERT(!a.isFinite() || (a.fLeft <= a.fRight && a.fTop <= a.fBottom));
   SkASSERT(!b.isFinite() || (b.fLeft <= b.fRight && b.fTop <= b.fBottom));
@@ -103,7 +106,7 @@ static inline void GrMapRectPoints(
  */
 static inline bool GrClipSrcRectAndDstPoint(
     const SkISize& dstSize, const SkISize& srcSize, const SkIRect& srcRect,
-    const SkIPoint& dstPoint, SkIRect* clippedSrcRect, SkIPoint* clippedDstPoint) noexcept {
+    const SkIPoint& dstPoint, SkIRect* clippedSrcRect, SkIPoint* clippedDstPoint) {
   *clippedSrcRect = srcRect;
   *clippedDstPoint = dstPoint;
 

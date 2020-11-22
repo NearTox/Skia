@@ -25,7 +25,7 @@ enum {
   kSentinel = 0xFF,
 };
 
-SkFontDescriptor::SkFontDescriptor() noexcept = default;
+SkFontDescriptor::SkFontDescriptor() {}
 
 static bool SK_WARN_UNUSED_RESULT read_string(SkStream* stream, SkString* string) {
   size_t length;
@@ -41,7 +41,7 @@ static bool SK_WARN_UNUSED_RESULT read_string(SkStream* stream, SkString* string
   return true;
 }
 
-static bool write_string(SkWStream* stream, const SkString& string, uint32_t id) noexcept {
+static bool write_string(SkWStream* stream, const SkString& string, uint32_t id) {
   if (string.isEmpty()) {
     return true;
   }
@@ -49,7 +49,7 @@ static bool write_string(SkWStream* stream, const SkString& string, uint32_t id)
          stream->write(string.c_str(), string.size());
 }
 
-static bool write_uint(SkWStream* stream, size_t n, uint32_t id) noexcept {
+static bool write_uint(SkWStream* stream, size_t n, uint32_t id) {
   return stream->writePackedUInt(id) && stream->writePackedUInt(n);
 }
 

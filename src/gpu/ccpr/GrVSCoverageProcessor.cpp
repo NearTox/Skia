@@ -41,19 +41,19 @@ static constexpr int kVertexData_IsHullBit = 1 << 2;
 
 static constexpr int32_t pack_vertex_data(
     int32_t leftNeighborID, int32_t rightNeighborID, int32_t bloatIdx, int32_t cornerID,
-    int32_t extraData = 0) noexcept {
+    int32_t extraData = 0) {
   return (leftNeighborID << kVertexData_LeftNeighborIdShift) |
          (rightNeighborID << kVertexData_RightNeighborIdShift) |
          (bloatIdx << kVertexData_BloatIdxShift) | cornerID | extraData;
 }
 
-static constexpr int32_t hull_vertex_data(int32_t cornerID, int32_t bloatIdx, int n) noexcept {
+static constexpr int32_t hull_vertex_data(int32_t cornerID, int32_t bloatIdx, int n) {
   return pack_vertex_data(
       (cornerID + n - 1) % n, (cornerID + 1) % n, bloatIdx, cornerID, kVertexData_IsHullBit);
 }
 
 static constexpr int32_t edge_vertex_data(
-    int32_t edgeID, int32_t endptIdx, int32_t bloatIdx, int n) noexcept {
+    int32_t edgeID, int32_t endptIdx, int32_t bloatIdx, int n) {
   return pack_vertex_data(
       0 == endptIdx ? (edgeID + 1) % n : edgeID, 0 == endptIdx ? (edgeID + 1) % n : edgeID,
       bloatIdx, 0 == endptIdx ? edgeID : (edgeID + 1) % n,
@@ -61,7 +61,7 @@ static constexpr int32_t edge_vertex_data(
 }
 
 static constexpr int32_t corner_vertex_data(
-    int32_t leftID, int32_t cornerID, int32_t rightID, int32_t bloatIdx) noexcept {
+    int32_t leftID, int32_t cornerID, int32_t rightID, int32_t bloatIdx) {
   return pack_vertex_data(leftID, rightID, bloatIdx, cornerID, kVertexData_IsCornerBit);
 }
 

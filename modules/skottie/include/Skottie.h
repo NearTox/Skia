@@ -255,7 +255,7 @@ class SK_API Animation : public SkNVRefCnt<Animation> {
   const double fInPoint, fOutPoint, fDuration, fFPS;
   const uint32_t fFlags;
 
-  typedef SkNVRefCnt<Animation> INHERITED;
+  using INHERITED = SkNVRefCnt<Animation>;
 };
 
 }  // namespace skottie

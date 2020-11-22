@@ -26,8 +26,8 @@
 
 struct ColorTypeFilter_8888 {
   typedef uint32_t Type;
-  static Sk4h Expand(uint32_t x) noexcept { return SkNx_cast<uint16_t>(Sk4b::Load(&x)); }
-  static uint32_t Compact(const Sk4h& x) noexcept {
+  static Sk4h Expand(uint32_t x) { return SkNx_cast<uint16_t>(Sk4b::Load(&x)); }
+  static uint32_t Compact(const Sk4h& x) {
     uint32_t r;
     SkNx_cast<uint8_t>(x).store(&r);
     return r;
@@ -36,32 +36,32 @@ struct ColorTypeFilter_8888 {
 
 struct ColorTypeFilter_565 {
   typedef uint16_t Type;
-  static uint32_t Expand(uint16_t x) noexcept {
+  static uint32_t Expand(uint16_t x) {
     return (x & ~SK_G16_MASK_IN_PLACE) | ((x & SK_G16_MASK_IN_PLACE) << 16);
   }
-  static uint16_t Compact(uint32_t x) noexcept {
+  static uint16_t Compact(uint32_t x) {
     return ((x & ~SK_G16_MASK_IN_PLACE) & 0xFFFF) | ((x >> 16) & SK_G16_MASK_IN_PLACE);
   }
 };
 
 struct ColorTypeFilter_4444 {
   typedef uint16_t Type;
-  static uint32_t Expand(uint16_t x) noexcept { return (x & 0xF0F) | ((x & ~0xF0F) << 12); }
-  static uint16_t Compact(uint32_t x) noexcept { return (x & 0xF0F) | ((x >> 12) & ~0xF0F); }
+  static uint32_t Expand(uint16_t x) { return (x & 0xF0F) | ((x & ~0xF0F) << 12); }
+  static uint16_t Compact(uint32_t x) { return (x & 0xF0F) | ((x >> 12) & ~0xF0F); }
 };
 
 struct ColorTypeFilter_8 {
   typedef uint8_t Type;
-  static unsigned Expand(unsigned x) noexcept { return x; }
-  static uint8_t Compact(unsigned x) noexcept { return (uint8_t)x; }
+  static unsigned Expand(unsigned x) { return x; }
+  static uint8_t Compact(unsigned x) { return (uint8_t)x; }
 };
 
 struct ColorTypeFilter_Alpha_F16 {
   typedef uint16_t Type;
-  static Sk4f Expand(uint16_t x) noexcept {
+  static Sk4f Expand(uint16_t x) {
     return SkHalfToFloat_finite_ftz((uint64_t)x);  // expand out to four lanes
   }
-  static uint16_t Compact(const Sk4f& x) noexcept {
+  static uint16_t Compact(const Sk4f& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return r & 0xFFFF;  // but ignore the extra 3 here
@@ -70,8 +70,8 @@ struct ColorTypeFilter_Alpha_F16 {
 
 struct ColorTypeFilter_RGBA_F16 {
   typedef uint64_t Type;  // SkHalf x4
-  static Sk4f Expand(uint64_t x) noexcept { return SkHalfToFloat_finite_ftz(x); }
-  static uint64_t Compact(const Sk4f& x) noexcept {
+  static Sk4f Expand(uint64_t x) { return SkHalfToFloat_finite_ftz(x); }
+  static uint64_t Compact(const Sk4f& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return r;
@@ -80,22 +80,22 @@ struct ColorTypeFilter_RGBA_F16 {
 
 struct ColorTypeFilter_88 {
   typedef uint16_t Type;
-  static uint32_t Expand(uint16_t x) noexcept { return (x & 0xFF) | ((x & ~0xFF) << 8); }
-  static uint16_t Compact(uint32_t x) noexcept { return (x & 0xFF) | ((x >> 8) & ~0xFF); }
+  static uint32_t Expand(uint16_t x) { return (x & 0xFF) | ((x & ~0xFF) << 8); }
+  static uint16_t Compact(uint32_t x) { return (x & 0xFF) | ((x >> 8) & ~0xFF); }
 };
 
 struct ColorTypeFilter_1616 {
   typedef uint32_t Type;
-  static uint64_t Expand(uint32_t x) noexcept { return (x & 0xFFFF) | ((x & ~0xFFFF) << 16); }
-  static uint16_t Compact(uint64_t x) noexcept { return (x & 0xFFFF) | ((x >> 16) & ~0xFFFF); }
+  static uint64_t Expand(uint32_t x) { return (x & 0xFFFF) | ((x & ~0xFFFF) << 16); }
+  static uint16_t Compact(uint64_t x) { return (x & 0xFFFF) | ((x >> 16) & ~0xFFFF); }
 };
 
 struct ColorTypeFilter_F16F16 {
   typedef uint32_t Type;
-  static Sk4f Expand(uint32_t x) noexcept {
+  static Sk4f Expand(uint32_t x) {
     return SkHalfToFloat_finite_ftz((uint64_t)x);  // expand out to four lanes
   }
-  static uint32_t Compact(const Sk4f& x) noexcept {
+  static uint32_t Compact(const Sk4f& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return (uint32_t)(r & 0xFFFFFFFF);  // but ignore the extra 2 here
@@ -104,10 +104,10 @@ struct ColorTypeFilter_F16F16 {
 
 struct ColorTypeFilter_16161616 {
   typedef uint64_t Type;
-  static skvx::Vec<4, uint32_t> Expand(uint64_t x) noexcept {
+  static skvx::Vec<4, uint32_t> Expand(uint64_t x) {
     return skvx::cast<uint32_t>(skvx::Vec<4, uint16_t>::Load(&x));
   }
-  static uint64_t Compact(const skvx::Vec<4, uint32_t>& x) noexcept {
+  static uint64_t Compact(const skvx::Vec<4, uint32_t>& x) {
     uint64_t r;
     skvx::cast<uint16_t>(x).store(&r);
     return r;
@@ -116,40 +116,40 @@ struct ColorTypeFilter_16161616 {
 
 struct ColorTypeFilter_16 {
   typedef uint16_t Type;
-  static uint32_t Expand(uint16_t x) noexcept { return x; }
-  static uint16_t Compact(uint32_t x) noexcept { return (uint16_t)x; }
+  static uint32_t Expand(uint16_t x) { return x; }
+  static uint16_t Compact(uint32_t x) { return (uint16_t)x; }
 };
 
 struct ColorTypeFilter_1010102 {
   typedef uint32_t Type;
-  static uint64_t Expand(uint64_t x) noexcept {
+  static uint64_t Expand(uint64_t x) {
     return (((x)&0x3ff)) | (((x >> 10) & 0x3ff) << 20) | (((x >> 20) & 0x3ff) << 40) |
            (((x >> 30) & 0x3) << 60);
   }
-  static uint32_t Compact(uint64_t x) noexcept {
+  static uint32_t Compact(uint64_t x) {
     return (((x)&0x3ff)) | (((x >> 20) & 0x3ff) << 10) | (((x >> 40) & 0x3ff) << 20) |
            (((x >> 60) & 0x3) << 30);
   }
 };
 
 template <typename T>
-T add_121(const T& a, const T& b, const T& c) noexcept {
+T add_121(const T& a, const T& b, const T& c) {
   return a + b + b + c;
 }
 
 template <typename T>
-T shift_right(const T& x, int bits) noexcept {
+T shift_right(const T& x, int bits) {
   return x >> bits;
 }
 
-Sk4f shift_right(const Sk4f& x, int bits) noexcept { return x * (1.0f / (1 << bits)); }
+Sk4f shift_right(const Sk4f& x, int bits) { return x * (1.0f / (1 << bits)); }
 
 template <typename T>
-T shift_left(const T& x, int bits) noexcept {
+T shift_left(const T& x, int bits) {
   return x << bits;
 }
 
-Sk4f shift_left(const Sk4f& x, int bits) noexcept { return x * (1 << bits); }
+Sk4f shift_left(const Sk4f& x, int bits) { return x * (1 << bits); }
 
 //
 //  To produce each mip level, we need to filter down by 1/2 (e.g. 100x100 -> 50,50)
@@ -361,7 +361,7 @@ void downsample_3_3(void* dst, const void* src, size_t srcRB, int count) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkMipmap::AllocLevelsSize(int levelCount, size_t pixelSize) noexcept {
+size_t SkMipmap::AllocLevelsSize(int levelCount, size_t pixelSize) {
   if (levelCount < 0) {
     return 0;
   }
@@ -747,17 +747,17 @@ bool SkMipmap::validForRootLevel(const SkImageInfo& root) const {
     return false;
   }
 
-  const SkPixmap& pm = fLevels[0].fPixmap;
-  if (pm.width() != std::max(1, dimension.width() >> 1) ||
-      pm.height() != std::max(1, dimension.height() >> 1)) {
-    return false;
-  }
-
-  for (int i = 0; i < this->countLevels(); ++i) {
     const SkPixmap& pm = fLevels[0].fPixmap;
-    if (pm.colorType() != root.colorType() || pm.alphaType() != root.alphaType()) return false;
-  }
-  return true;
+    if (pm.width() != std::max(1, dimension.width() >> 1) ||
+        pm.height() != std::max(1, dimension.height() >> 1)) {
+      return false;
+    }
+
+    for (int i = 0; i < this->countLevels(); ++i) {
+      const SkPixmap& pm = fLevels[0].fPixmap;
+      if (pm.colorType() != root.colorType() || pm.alphaType() != root.alphaType()) return false;
+    }
+    return true;
 }
 
 // Helper which extracts a pixmap from the src bitmap
@@ -770,9 +770,9 @@ SkMipmap* SkMipmap::Build(const SkBitmap& src, SkDiscardableFactoryProc fact) {
   return Build(srcPixmap, fact);
 }
 
-int SkMipmap::countLevels() const noexcept { return fCount; }
+int SkMipmap::countLevels() const { return fCount; }
 
-bool SkMipmap::getLevel(int index, Level* levelPtr) const noexcept {
+bool SkMipmap::getLevel(int index, Level* levelPtr) const {
   if (nullptr == fLevels) {
     return false;
   }

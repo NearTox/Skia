@@ -38,11 +38,13 @@ class GrSkSLFP : public GrFragmentProcessor {
       GrContext_Base* context, sk_sp<SkRuntimeEffect> effect, const char* name,
       sk_sp<SkData> uniforms);
 
-  const char* name() const noexcept override;
+  const char* name() const override;
 
   void addChild(std::unique_ptr<GrFragmentProcessor> child);
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
+
+  bool usesExplicitReturn() const override { return true; }
 
  private:
   using ShaderErrorHandler = GrContextOptions::ShaderErrorHandler;
@@ -57,7 +59,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
   sk_sp<const GrShaderCaps> fShaderCaps;
   ShaderErrorHandler* fShaderErrorHandler;
@@ -68,7 +70,7 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 
   friend class GrGLSLSkSLFP;
 

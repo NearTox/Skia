@@ -71,7 +71,7 @@ class CTConvertBench : public Benchmark {
   SkBitmap fSrcBM;
   sk_sp<SkSurface> fDstSurf;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new CTConvertBench(

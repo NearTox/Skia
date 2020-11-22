@@ -47,7 +47,7 @@ class SkTileImageFilterImpl final : public SkImageFilter_Base {
   SkRect fSrcRect;
   SkRect fDstRect;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

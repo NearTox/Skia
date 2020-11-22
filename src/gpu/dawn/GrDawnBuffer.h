@@ -44,7 +44,7 @@ class GrDawnBuffer : public GrGpuBuffer {
   wgpu::Buffer fStagingBuffer;
   size_t fStagingOffset = 0;
 
-  typedef GrGpuBuffer INHERITED;
+  using INHERITED = GrGpuBuffer;
 };
 
 #endif

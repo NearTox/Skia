@@ -60,15 +60,15 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
 
   ~GrConvexPolyEffect() override;
 
-  const char* name() const noexcept override { return "ConvexPoly"; }
+  const char* name() const override { return "ConvexPoly"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  GrClipEdgeType getEdgeType() const noexcept { return fEdgeType; }
+  GrClipEdgeType getEdgeType() const { return fEdgeType; }
 
-  int getEdgeCount() const noexcept { return fEdgeCount; }
+  int getEdgeCount() const { return fEdgeCount; }
 
-  const SkScalar* getEdges() const noexcept { return fEdges; }
+  const SkScalar* getEdges() const { return fEdges; }
 
  private:
   GrConvexPolyEffect(
@@ -80,7 +80,7 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor& other) const override;
 
   GrClipEdgeType fEdgeType;
   int fEdgeCount;
@@ -88,7 +88,7 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 #endif

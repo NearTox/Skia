@@ -40,7 +40,7 @@ struct GrVkInterface : public SkRefCnt {
     FNPTR_TYPE fPtr;
   };
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 
  public:
   GrVkInterface(

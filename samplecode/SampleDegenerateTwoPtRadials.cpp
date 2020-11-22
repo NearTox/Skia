@@ -71,7 +71,7 @@ class DegenerateTwoPtRadialsView : public Sample {
 
  private:
   SkScalar fTime;
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

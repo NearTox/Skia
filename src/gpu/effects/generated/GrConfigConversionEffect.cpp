@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLConfigConversionEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLConfigConversionEffect() noexcept = default;
+  GrGLSLConfigConversionEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrConfigConversionEffect& _outer = args.fFp.cast<GrConfigConversionEffect>();
@@ -56,12 +56,13 @@ void GrConfigConversionEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)pmConversion);
 }
-bool GrConfigConversionEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrConfigConversionEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrConfigConversionEffect& that = other.cast<GrConfigConversionEffect>();
   (void)that;
   if (pmConversion != that.pmConversion) return false;
   return true;
 }
+bool GrConfigConversionEffect::usesExplicitReturn() const { return false; }
 GrConfigConversionEffect::GrConfigConversionEffect(const GrConfigConversionEffect& src)
     : INHERITED(kGrConfigConversionEffect_ClassID, src.optimizationFlags()),
       pmConversion(src.pmConversion) {

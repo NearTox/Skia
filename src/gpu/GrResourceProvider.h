@@ -188,9 +188,9 @@ class GrResourceProvider {
     return fNonAAQuadIndexBuffer;
   }
 
-  static int MaxNumNonAAQuads() noexcept;
-  static int NumVertsPerNonAAQuad() noexcept;
-  static int NumIndicesPerNonAAQuad() noexcept;
+  static int MaxNumNonAAQuads();
+  static int NumVertsPerNonAAQuad();
+  static int NumIndicesPerNonAAQuad();
 
   /**
    * Returns an index buffer that can be used to render antialiased quads.
@@ -206,9 +206,9 @@ class GrResourceProvider {
     return fAAQuadIndexBuffer;
   }
 
-  static int MaxNumAAQuads() noexcept;
-  static int NumVertsPerAAQuad() noexcept;
-  static int NumIndicesPerAAQuad() noexcept;
+  static int MaxNumAAQuads();
+  static int NumVertsPerAAQuad();
+  static int NumIndicesPerAAQuad();
 
   /**
    * Factories for GrPath objects. It's an error to call these if path rendering
@@ -264,16 +264,16 @@ class GrResourceProvider {
       const GrBackendSemaphore&, SemaphoreWrapType wrapType,
       GrWrapOwnership = kBorrow_GrWrapOwnership);
 
-  void abandon() noexcept {
+  void abandon() {
     fCache = nullptr;
     fGpu = nullptr;
   }
 
-  uint32_t contextUniqueID() const noexcept { return fCache->contextUniqueID(); }
-  const GrCaps* caps() const noexcept { return fCaps.get(); }
-  bool overBudget() const noexcept { return fCache->overBudget(); }
+  uint32_t contextUniqueID() const { return fCache->contextUniqueID(); }
+  const GrCaps* caps() const { return fCaps.get(); }
+  bool overBudget() const { return fCache->overBudget(); }
 
-  static SkISize MakeApprox(SkISize) noexcept;
+  static SkISize MakeApprox(SkISize);
 
   inline GrResourceProviderPriv priv();
   inline const GrResourceProviderPriv priv() const;  // NOLINT(readability-const-return-type)
@@ -312,16 +312,16 @@ class GrResourceProvider {
       sk_sp<GrTexture> texture, GrColorType colorType, SkISize baseSize, const GrMipLevel texels[],
       int mipLevelCount) const;
 
-  GrResourceCache* cache() noexcept { return fCache; }
-  const GrResourceCache* cache() const noexcept { return fCache; }
+  GrResourceCache* cache() { return fCache; }
+  const GrResourceCache* cache() const { return fCache; }
 
   friend class GrResourceProviderPriv;
 
   // Method made available via GrResourceProviderPriv
-  GrGpu* gpu() noexcept { return fGpu; }
-  const GrGpu* gpu() const noexcept { return fGpu; }
+  GrGpu* gpu() { return fGpu; }
+  const GrGpu* gpu() const { return fGpu; }
 
-  bool isAbandoned() const noexcept {
+  bool isAbandoned() const {
     SkASSERT(SkToBool(fGpu) == SkToBool(fCache));
     return !SkToBool(fCache);
   }
@@ -339,7 +339,7 @@ class GrResourceProvider {
   sk_sp<const GrGpuBuffer> fAAQuadIndexBuffer;
 
   // In debug builds we guard against improper thread handling
-  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner);
+  SkDEBUGCODE(mutable GrSingleOwner* fSingleOwner;)
 };
 
 #endif

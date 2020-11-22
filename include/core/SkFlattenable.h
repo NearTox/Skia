@@ -42,7 +42,7 @@ class SK_API SkFlattenable : public SkRefCnt {
 
   typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
 
-  constexpr SkFlattenable() noexcept = default;
+  SkFlattenable() {}
 
   /** Implement this to return a factory function pointer that can be called
    to recreate your class given a buffer (previously written to by your
@@ -53,7 +53,7 @@ class SK_API SkFlattenable : public SkRefCnt {
   /**
    *  Returns the name of the object's class.
    */
-  virtual const char* getTypeName() const noexcept = 0;
+  virtual const char* getTypeName() const = 0;
 
   static Factory NameToFactory(const char name[]);
   static const char* FactoryToName(Factory);
@@ -68,7 +68,7 @@ class SK_API SkFlattenable : public SkRefCnt {
    */
   virtual void flatten(SkWriteBuffer&) const {}
 
-  virtual Type getFlattenableType() const noexcept = 0;
+  virtual Type getFlattenableType() const = 0;
 
   //
   // public ways to serialize / deserialize
@@ -91,7 +91,7 @@ class SK_API SkFlattenable : public SkRefCnt {
 
   friend class SkGraphics;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #if defined(SK_DISABLE_EFFECT_DESERIALIZATION)
@@ -103,7 +103,7 @@ class SK_API SkFlattenable : public SkRefCnt {
     static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);  \
     friend class SkFlattenable::PrivateInitializer;         \
     Factory getFactory() const override { return nullptr; } \
-    const char* getTypeName() const noexcept override { return #type; }
+    const char* getTypeName() const override { return #type; }
 #else
 #  define SK_REGISTER_FLATTENABLE(type) SkFlattenable::Register(#  type, type::CreateProc)
 
@@ -111,7 +111,7 @@ class SK_API SkFlattenable : public SkRefCnt {
     static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);           \
     friend class SkFlattenable::PrivateInitializer;                  \
     Factory getFactory() const override { return type::CreateProc; } \
-    const char* getTypeName() const noexcept override { return #type; }
+    const char* getTypeName() const override { return #type; }
 #endif
 
 #endif

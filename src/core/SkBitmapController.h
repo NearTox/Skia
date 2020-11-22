@@ -26,9 +26,9 @@ class SkBitmapController : ::SkNoncopyable {
    public:
     State(const SkImage_Base*, const SkMatrix& inv, SkFilterQuality);
 
-    const SkPixmap& pixmap() const noexcept { return fPixmap; }
-    const SkMatrix& invMatrix() const noexcept { return fInvMatrix; }
-    SkFilterQuality quality() const noexcept { return fQuality; }
+    const SkPixmap& pixmap() const { return fPixmap; }
+    const SkMatrix& invMatrix() const { return fInvMatrix; }
+    SkFilterQuality quality() const { return fQuality; }
 
    private:
     bool processHighRequest(const SkImage_Base*);
@@ -54,12 +54,12 @@ class SkMipmapAccessor : ::SkNoncopyable {
  public:
   SkMipmapAccessor(const SkImage_Base*, const SkMatrix& inv, SkMipmapMode requestedMode);
 
-  const SkPixmap& level() const noexcept { return fUpper; }
+  const SkPixmap& level() const { return fUpper; }
   // only valid if mode() == kLinear
-  const SkPixmap& lowerLevel() const noexcept { return fLower; }
+  const SkPixmap& lowerLevel() const { return fLower; }
   // 0....1. Will be 1.0 if there is no lowerLevel
-  float lowerWeight() const noexcept { return fLowerWeight; }
-  SkMipmapMode mode() const noexcept { return fResolvedMode; }
+  float lowerWeight() const { return fLowerWeight; }
+  SkMipmapMode mode() const { return fResolvedMode; }
 
  private:
   SkPixmap fUpper,

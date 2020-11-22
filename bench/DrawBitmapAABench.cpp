@@ -47,7 +47,7 @@ class DrawBitmapAABench : public Benchmark {
   SkString fName;
   SkBitmap fBitmap;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new DrawBitmapAABench(false, SkMatrix::I(), "ident");)

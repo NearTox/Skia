@@ -40,9 +40,9 @@ class GrQuad {
   static const int kTypeCount = static_cast<int>(Type::kLast) + 1;
 
   // This enforces W == 1 for non-perspective quads, but does not initialize X or Y.
-  GrQuad() noexcept = default;
+  GrQuad() = default;
 
-  explicit GrQuad(const SkRect& rect) noexcept
+  explicit GrQuad(const SkRect& rect)
       : fX{rect.fLeft, rect.fLeft, rect.fRight, rect.fRight},
         fY{rect.fTop, rect.fBottom, rect.fTop, rect.fBottom} {}
 
@@ -55,9 +55,9 @@ class GrQuad {
 
   GrQuad& operator=(const GrQuad&) = default;
 
-  SkPoint3 point3(int i) const noexcept { return {fX[i], fY[i], fW[i]}; }
+  SkPoint3 point3(int i) const { return {fX[i], fY[i], fW[i]}; }
 
-  SkPoint point(int i) const noexcept {
+  SkPoint point(int i) const {
     if (fType == Type::kPerspective) {
       return {fX[i] / fW[i], fY[i] / fW[i]};
     } else {
@@ -65,7 +65,7 @@ class GrQuad {
     }
   }
 
-  SkRect bounds() const noexcept {
+  SkRect bounds() const {
     if (fType == GrQuad::Type::kPerspective) {
       return this->projectedBounds();
     }
@@ -81,7 +81,7 @@ class GrQuad {
     return {min(fX), min(fY), max(fX), max(fY)};
   }
 
-  bool isFinite() const noexcept {
+  bool isFinite() const {
     // If any coordinate is infinity or NaN, then multiplying it with 0 will make accum NaN
     float accum = 0;
     for (int i = 0; i < 4; ++i) {
@@ -93,19 +93,19 @@ class GrQuad {
     return !SkScalarIsNaN(accum);
   }
 
-  float x(int i) const noexcept { return fX[i]; }
-  float y(int i) const noexcept { return fY[i]; }
-  float w(int i) const noexcept { return fW[i]; }
-  float iw(int i) const noexcept { return sk_ieee_float_divide(1.f, fW[i]); }
+  float x(int i) const { return fX[i]; }
+  float y(int i) const { return fY[i]; }
+  float w(int i) const { return fW[i]; }
+  float iw(int i) const { return sk_ieee_float_divide(1.f, fW[i]); }
 
-  skvx::Vec<4, float> x4f() const noexcept { return skvx::Vec<4, float>::Load(fX); }
-  skvx::Vec<4, float> y4f() const noexcept { return skvx::Vec<4, float>::Load(fY); }
-  skvx::Vec<4, float> w4f() const noexcept { return skvx::Vec<4, float>::Load(fW); }
-  skvx::Vec<4, float> iw4f() const noexcept { return 1.f / this->w4f(); }
+  skvx::Vec<4, float> x4f() const { return skvx::Vec<4, float>::Load(fX); }
+  skvx::Vec<4, float> y4f() const { return skvx::Vec<4, float>::Load(fY); }
+  skvx::Vec<4, float> w4f() const { return skvx::Vec<4, float>::Load(fW); }
+  skvx::Vec<4, float> iw4f() const { return 1.f / this->w4f(); }
 
-  Type quadType() const noexcept { return fType; }
+  Type quadType() const { return fType; }
 
-  bool hasPerspective() const noexcept { return fType == Type::kPerspective; }
+  bool hasPerspective() const { return fType == Type::kPerspective; }
 
   // True if anti-aliasing affects this quad. Only valid when quadType == kAxisAligned
   bool aaHasEffectOnRect() const;
@@ -117,15 +117,15 @@ class GrQuad {
 
   // The non-const pointers are provided to support modifying a GrQuad in-place, but care must be
   // taken to keep its quad type aligned with the geometric nature of the new coordinates.
-  const float* xs() const noexcept { return fX; }
-  float* xs() noexcept { return fX; }
-  const float* ys() const noexcept { return fY; }
-  float* ys() noexcept { return fY; }
-  const float* ws() const noexcept { return fW; }
-  float* ws() noexcept { return fW; }
+  const float* xs() const { return fX; }
+  float* xs() { return fX; }
+  const float* ys() const { return fY; }
+  float* ys() { return fY; }
+  const float* ws() const { return fW; }
+  float* ws() { return fW; }
 
   // Automatically ensures ws are 1 if new type is not perspective.
-  void setQuadType(Type newType) noexcept {
+  void setQuadType(Type newType) {
     if (newType != Type::kPerspective && fType == Type::kPerspective) {
       fW[0] = fW[1] = fW[2] = fW[3] = 1.f;
     }
@@ -141,8 +141,7 @@ class GrQuad {
   template <typename T>
   friend class GrQuadListBase;  // for access to fX, fY, fW
 
-  GrQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, Type type) noexcept
-      : fType(type) {
+  GrQuad(const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, Type type) : fType(type) {
     SkASSERT(type != Type::kPerspective);
     xs.store(fX);
     ys.store(fY);
@@ -150,7 +149,7 @@ class GrQuad {
 
   GrQuad(
       const skvx::Vec<4, float>& xs, const skvx::Vec<4, float>& ys, const skvx::Vec<4, float>& ws,
-      Type type) noexcept
+      Type type)
       : fW{}  // Include fW in member initializer to avoid redundant default initializer
         ,
         fType(type) {
@@ -160,7 +159,7 @@ class GrQuad {
   }
 
   // Defined in GrQuadUtils.cpp to share the coord clipping code
-  SkRect projectedBounds() const noexcept;
+  SkRect projectedBounds() const;
 
   float fX[4];
   float fY[4];

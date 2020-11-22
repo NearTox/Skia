@@ -36,18 +36,13 @@ SkUnichar SkUTF16_NextUnichar(const uint16_t**);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr inline bool SkUTF16_IsLeadingSurrogate(uint16_t c) noexcept {
-  return ((c)&0xFC00) == 0xD800;
-}
+static inline bool SkUTF16_IsLeadingSurrogate(uint16_t c) { return ((c)&0xFC00) == 0xD800; }
 
-static constexpr inline bool SkUTF16_IsTrailingSurrogate(uint16_t c) noexcept {
-  return ((c)&0xFC00) == 0xDC00;
-}
+static inline bool SkUTF16_IsTrailingSurrogate(uint16_t c) { return ((c)&0xFC00) == 0xDC00; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline int SkUTFN_CountUnichars(
-    SkTextEncoding enc, const void* utfN, size_t bytes) noexcept {
+static inline int SkUTFN_CountUnichars(SkTextEncoding enc, const void* utfN, size_t bytes) {
   switch (enc) {
     case SkTextEncoding::kUTF8: return SkUTF::CountUTF8((const char*)utfN, bytes);
     case SkTextEncoding::kUTF16: return SkUTF::CountUTF16((const uint16_t*)utfN, bytes);
@@ -56,8 +51,7 @@ static inline int SkUTFN_CountUnichars(
   }
 }
 
-static inline SkUnichar SkUTFN_Next(
-    SkTextEncoding enc, const void** ptr, const void* stop) noexcept {
+static inline SkUnichar SkUTFN_Next(SkTextEncoding enc, const void** ptr, const void* stop) {
   switch (enc) {
     case SkTextEncoding::kUTF8: return SkUTF::NextUTF8((const char**)ptr, (const char*)stop);
     case SkTextEncoding::kUTF16:

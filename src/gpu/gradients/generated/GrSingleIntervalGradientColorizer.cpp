@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLSingleIntervalGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLSingleIntervalGradientColorizer() noexcept = default;
+  GrGLSLSingleIntervalGradientColorizer() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrSingleIntervalGradientColorizer& _outer =
@@ -68,13 +68,14 @@ GrGLSLFragmentProcessor* GrSingleIntervalGradientColorizer::onCreateGLSLInstance
 }
 void GrSingleIntervalGradientColorizer::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrSingleIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
   const GrSingleIntervalGradientColorizer& that = other.cast<GrSingleIntervalGradientColorizer>();
   (void)that;
   if (start != that.start) return false;
   if (end != that.end) return false;
   return true;
 }
+bool GrSingleIntervalGradientColorizer::usesExplicitReturn() const { return false; }
 GrSingleIntervalGradientColorizer::GrSingleIntervalGradientColorizer(
     const GrSingleIntervalGradientColorizer& src)
     : INHERITED(kGrSingleIntervalGradientColorizer_ClassID, src.optimizationFlags()),

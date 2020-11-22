@@ -119,7 +119,7 @@ static void raster_tests(skiatest::Reporter* reporter, const TestCase& test) {
     readbackPM.alloc(nativeII);
     readbackPM.erase(SkColors::kTransparent);
 
-    REPORTER_ASSERT(reporter, i->readPixels(readbackPM, 0, 0));
+    REPORTER_ASSERT(reporter, i->readPixels(nullptr, readbackPM, 0, 0));
 
     SkColor expected = srcPM.getColor(0, 0);
     SkColor actual = readbackPM.getColor(0, 0);
@@ -146,7 +146,7 @@ static void raster_tests(skiatest::Reporter* reporter, const TestCase& test) {
     readbackPM.alloc(f32Unpremul);
     readbackPM.erase(SkColors::kTransparent);
 
-    REPORTER_ASSERT(reporter, i->readPixels(readbackPM, 0, 0));
+    REPORTER_ASSERT(reporter, i->readPixels(nullptr, readbackPM, 0, 0));
 
     SkColor expected = srcPM.getColor(0, 0);
     SkColor actual = readbackPM.getColor(0, 0);
@@ -218,7 +218,7 @@ static void gpu_tests(
       nativeActual.alloc(nativeII);
       nativeActual.erase(SkColors::kTransparent);
 
-      if (img->readPixels(nativeActual, 0, 0)) {
+      if (img->readPixels(dContext, nativeActual, 0, 0)) {
         compare_pixmaps(
             reporter, nativeExpected, nativeActual, test.fColorType,
             "SkImage::readPixels to native CT");
@@ -254,7 +254,7 @@ static void gpu_tests(
         SkAutoPixmapStorage f32Actual;
         f32Actual.alloc(f32Unpremul);
         f32Actual.erase(SkColors::kTransparent);
-        if (img->readPixels(f32Actual, 0, 0)) {
+        if (img->readPixels(dContext, f32Actual, 0, 0)) {
           compare_pixmaps(
               reporter, f32Expected, f32Actual, test.fColorType, "SkImage::readPixels to F32");
         }

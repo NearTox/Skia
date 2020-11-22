@@ -643,7 +643,7 @@ bool GrGpu::submitToGpu(bool syncCpu) {
   return submitted;
 }
 
-bool GrGpu::checkAndResetOOMed() noexcept {
+bool GrGpu::checkAndResetOOMed() {
   if (fOOMed) {
     fOOMed = false;
     return true;

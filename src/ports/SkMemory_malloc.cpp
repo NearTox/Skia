@@ -21,7 +21,7 @@
 
 static inline void sk_out_of_memory(size_t size) noexcept {
   SK_DEBUGFAILF("sk_out_of_memory (asked for %zu bytes)", size);
-#if defined(IS_FUZZING_WITH_AFL)
+#if defined(SK_BUILD_FOR_AFL_FUZZ)
   exit(1);
 #else
   abort();
@@ -52,7 +52,7 @@ void sk_abort_no_print() noexcept {
 
 void sk_out_of_memory(void) noexcept {
   SkDEBUGFAIL("sk_out_of_memory");
-#if defined(IS_FUZZING_WITH_AFL)
+#if defined(SK_BUILD_FOR_AFL_FUZZ)
   exit(1);
 #else
   abort();
@@ -74,7 +74,21 @@ void* sk_malloc_flags(size_t size, unsigned flags) noexcept {
   if (flags & SK_MALLOC_ZERO_INITIALIZE) {
     p = calloc(size, 1);
   } else {
+#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK) && defined(__BIONIC__)
+    /* TODO: After b/169449588 is fixed, we will want to change this to restore
+     *       original behavior instead of always disabling the flag.
+     * TODO: After b/158870657 is fixed and scudo is used globally, we can assert when an
+     *       an error is returned.
+     */
+    // malloc() generally doesn't initialize its memory and that's a huge security hole,
+    // so Android has replaced its malloc() with one that zeros memory,
+    // but that's a huge performance hit for HWUI, so turn it back off again.
+    (void)mallopt(M_THREAD_DISABLE_MEM_INIT, 1);
+#endif
     p = malloc(size);
+#if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK) && defined(__BIONIC__)
+    (void)mallopt(M_THREAD_DISABLE_MEM_INIT, 0);
+#endif
   }
   if (flags & SK_MALLOC_THROW) {
     return throw_on_failure(size, p);

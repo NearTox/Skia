@@ -161,7 +161,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Clear11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Context11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\DebugAnnotator11.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_format_map_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Fence11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\formatutils11.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\Framebuffer11.cpp" />
@@ -342,7 +341,6 @@
     <ClCompile Include="angle2\src\libANGLE\renderer\d3d\DynamicImage2DHLSL.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\ValidateAST.cpp" />
     <ClCompile Include="..\angle2\PoolAlloc2.cpp" />
-    <ClCompile Include="angle2\src\libANGLE\renderer\d3d\d3d11\dxgi_support_table_autogen.cpp" />
     <ClCompile Include="angle2\src\libANGLE\renderer\ShaderImpl.cpp" />
     <ClCompile Include="angle2\src\libANGLE\MemoryObject.cpp" />
     <ClCompile Include="angle2\src\compiler\translator\tree_util\ReplaceShadowingVariables.cpp" />

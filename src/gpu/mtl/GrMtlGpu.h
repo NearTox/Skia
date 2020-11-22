@@ -83,7 +83,8 @@ class GrMtlGpu : public GrGpu {
   GrOpsRenderPass* getOpsRenderPass(
       GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) override;
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) override;
 
   SkSL::Compiler* shaderCompiler() const { return fCompiler.get(); }
 
@@ -212,7 +213,7 @@ class GrMtlGpu : public GrGpu {
       id<MTLBuffer> transferBuffer, size_t offset, size_t imageBytes, size_t rowBytes);
 
   GrStencilAttachment* createStencilAttachmentForRenderTarget(
-      const GrRenderTarget*, int width, int height, int numStencilSamples) override;
+      const GrRenderTarget*, SkISize dimensions, int numStencilSamples) override;
 
   bool createMtlTextureForBackendSurface(
       MTLPixelFormat, SkISize dimensions, GrTexturable, GrRenderable, GrMipmapped,
@@ -249,7 +250,7 @@ class GrMtlGpu : public GrGpu {
 
   bool fDisconnected;
 
-  typedef GrGpu INHERITED;
+  using INHERITED = GrGpu;
 };
 
 #endif

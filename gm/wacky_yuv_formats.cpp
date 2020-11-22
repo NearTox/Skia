@@ -44,6 +44,7 @@
 #include "include/private/SkTDArray.h"
 #include "include/private/SkTemplates.h"
 #include "include/utils/SkTextUtils.h"
+#include "src/core/SkConvertPixels.h"
 #include "src/core/SkYUVMath.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrRecordingContextPriv.h"
@@ -62,7 +63,7 @@ class GrRenderTargetContext;
 static const int kTileWidthHeight = 128;
 static const int kLabelWidth = 64;
 static const int kLabelHeight = 32;
-static const int kDomainPadding = 8;
+static const int kSubsetPadding = 8;
 static const int kPad = 1;
 
 enum YUVFormat {
@@ -95,24 +96,110 @@ enum YUVFormat {
   kLast_YUVFormat = kYV12_YUVFormat
 };
 
+// Does the YUVFormat contain a slot for alpha? If not an external alpha plane is required for
+// transparency.
+static bool has_alpha_channel(YUVFormat format) {
+  switch (format) {
+    case kP016_YUVFormat: return false;
+    case kP010_YUVFormat: return false;
+    case kP016F_YUVFormat: return false;
+    case kY416_YUVFormat: return true;
+    case kAYUV_YUVFormat: return true;
+    case kY410_YUVFormat: return true;
+    case kNV12_YUVFormat: return false;
+    case kNV21_YUVFormat: return false;
+    case kI420_YUVFormat: return false;
+    case kYV12_YUVFormat: return false;
+  }
+  SkUNREACHABLE;
+}
+
 class YUVAPlanarConfig {
  public:
-  struct YUVALocation {
-    int fPlaneIdx = -1;
-    int fChannelIdx = -1;
-  };
-
   enum class YUVAChannel { kY, kU, kV, kA };
 
-  explicit YUVAPlanarConfig(const std::initializer_list<YUVALocation>& yuvaLocations);
+  YUVAPlanarConfig(YUVFormat format, bool opaque) {
+    switch (format) {
+      case kP016_YUVFormat:
+      case kP010_YUVFormat:
+      case kP016F_YUVFormat:
+      case kNV12_YUVFormat:
+        fLocations[0] = {0, 0};
+        fLocations[1] = {1, 0};
+        fLocations[2] = {1, 1};
+        if (opaque) {
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_UV_420;
+        } else {
+          fLocations[3] = {2, 0};
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_UV_A_4204;
+        }
+        break;
+      case kY416_YUVFormat:
+      case kY410_YUVFormat:
+        fLocations[0] = {0, 1};
+        fLocations[1] = {0, 0};
+        fLocations[2] = {0, 2};
+        if (opaque) {
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kUYV_444;
+        } else {
+          fLocations[3] = {0, 3};
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kUYVA_4444;
+        }
+        break;
+      case kAYUV_YUVFormat:
+        fLocations[0] = {0, 0};
+        fLocations[1] = {0, 1};
+        fLocations[2] = {0, 2};
+        if (opaque) {
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kYUV_444;
+        } else {
+          fLocations[3] = {0, 3};
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kYUVA_4444;
+        }
+        break;
+      case kNV21_YUVFormat:
+        fLocations[0] = {0, 0};
+        fLocations[1] = {1, 1};
+        fLocations[2] = {1, 0};
+        if (opaque) {
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_VU_420;
+        } else {
+          fLocations[3] = {2, 0};
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_VU_A_4204;
+        }
+        break;
+      case kI420_YUVFormat:
+        fLocations[0] = {0, 0};
+        fLocations[1] = {1, 0};
+        fLocations[2] = {2, 0};
+        if (opaque) {
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_420;
+        } else {
+          fLocations[3] = {3, 0};
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_A_4204;
+        }
+        break;
+      case kYV12_YUVFormat:
+        fLocations[0] = {0, 0};
+        fLocations[1] = {2, 0};
+        fLocations[2] = {1, 0};
+        if (opaque) {
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_V_U_420;
+        } else {
+          fLocations[3] = {3, 0};
+          fPlanarConfig = SkYUVAInfo::PlanarConfig::kY_V_U_A_4204;
+        }
+        break;
+    }
+  }
 
-  constexpr int numPlanes() const { return fNumPlanes; }
+  int numPlanes() const { return SkYUVAInfo::NumPlanes(fPlanarConfig); }
 
   int planeIndex(YUVAChannel c) const { return fLocations[static_cast<int>(c)].fPlaneIdx; }
 
   int channelIndex(YUVAChannel c) const { return fLocations[static_cast<int>(c)].fChannelIdx; }
 
-  constexpr bool hasAlpha() const { return fLocations[3].fPlaneIdx >= 0; }
+  bool hasAlpha() const { return SkYUVAInfo::HasAlpha(fPlanarConfig); }
 
   /**
    * Given a mask of SkColorChannelFlags choose a channel by index. Legal 'channelMask' values
@@ -131,52 +218,23 @@ class YUVAPlanarConfig {
    * must be the last texture and the channel index is assumed to be 0.
    */
   bool getYUVAIndices(
-      const GrBackendTexture textures[], int numTextures, bool externalAlphaPlane,
-      SkYUVAIndex indices[4]) const;
+      const GrBackendTexture textures[], int numTextures, SkYUVAIndex indices[4]) const;
 
-  /** Same as above but with pixmaps instead of textures. */
-  bool getYUVAIndices(
-      const SkBitmap planes[], int numBitmaps, bool externalAlphaPlane,
-      SkYUVAIndex indices[4]) const;
+  SkYUVAInfo getYUVAInfo(SkISize dimensions, SkYUVColorSpace yuvColorSpace) const;
+
+  SkYUVAPixmaps makeYUVAPixmaps(
+      SkISize dimensions, SkYUVColorSpace yuvColorSpace, const SkBitmap bitmaps[],
+      int numBitmaps) const;
 
  private:
-  bool getYUVAIndices(
-      const uint32_t channelMasks[], int numPlanes, bool externalAlphaPlane,
-      SkYUVAIndex indices[4]) const;
+  struct YUVALocation {
+    int fPlaneIdx = -1;
+    int fChannelIdx = -1;
+  };
 
+  SkYUVAInfo::PlanarConfig fPlanarConfig;
   YUVALocation fLocations[4] = {};
-  int fNumPlanes = 0;
 };
-
-YUVAPlanarConfig::YUVAPlanarConfig(const std::initializer_list<YUVALocation>& yuvaLocations) {
-  SkASSERT(yuvaLocations.size() == 3 || yuvaLocations.size() == 4);
-  uint32_t planeMask[5] = {};
-  int l = 0;
-  for (const auto& location : yuvaLocations) {
-    SkASSERT(location.fChannelIdx >= 0 && location.fChannelIdx <= 3);
-    SkASSERT(location.fPlaneIdx >= 0 && location.fPlaneIdx <= 3);
-    fLocations[l++] = location;
-    fNumPlanes = std::max(fNumPlanes, location.fPlaneIdx + 1);
-    int mask = 1 << location.fChannelIdx;
-    SkASSERT(!(planeMask[location.fPlaneIdx] & mask));
-    planeMask[location.fPlaneIdx] |= mask;
-  }
-
-  // Check that no plane is skipped and channel usage in each plane is tightly packed.
-  for (int i = 0; i < fNumPlanes; ++i) {
-    switch (planeMask[i]) {
-      case 0b0001: break;
-      case 0b0011: break;
-      case 0b0111: break;
-      case 0b1111: break;
-      default:
-        SK_ABORT(
-            "Illegal channel configuration. "
-            "Maximum of 4 channels per plane. "
-            "No skipped channels in any plane.");
-    }
-  }
-}
 
 bool YUVAPlanarConfig::ChannelIndexToChannel(
     uint32_t channelFlags, int channelIdx, SkColorChannel* channel) {
@@ -217,33 +275,13 @@ bool YUVAPlanarConfig::ChannelIndexToChannel(
 }
 
 bool YUVAPlanarConfig::getYUVAIndices(
-    const GrBackendTexture textures[], int numTextures, bool externalAlphaPlane,
-    SkYUVAIndex indices[4]) const {
+    const GrBackendTexture textures[], int numTextures, SkYUVAIndex indices[4]) const {
+  if (numTextures != this->numPlanes()) {
+    return false;
+  }
   uint32_t channelMasks[4] = {};
   for (int i = 0; i < numTextures; ++i) {
     channelMasks[i] = textures[i].getBackendFormat().channelMask();
-  }
-  return this->getYUVAIndices(channelMasks, numTextures, externalAlphaPlane, indices);
-}
-
-bool YUVAPlanarConfig::getYUVAIndices(
-    const SkBitmap bitmaps[], int numBitmaps, bool externalAlphaPlane,
-    SkYUVAIndex indices[4]) const {
-  uint32_t channelMasks[4] = {};
-  for (int i = 0; i < numBitmaps; ++i) {
-    channelMasks[i] = SkColorTypeChannelFlags(bitmaps[i].colorType());
-  }
-  return this->getYUVAIndices(channelMasks, numBitmaps, externalAlphaPlane, indices);
-}
-
-bool YUVAPlanarConfig::getYUVAIndices(
-    const uint32_t planeChannelMasks[], int numPlanes, bool externalAlphaPlane,
-    SkYUVAIndex indices[4]) const {
-  if (this->hasAlpha() && externalAlphaPlane) {
-    return false;
-  }
-  if (numPlanes != fNumPlanes + SkToInt(externalAlphaPlane)) {
-    return false;
   }
   for (int i = 0; i < 4; ++i) {
     int plane = fLocations[i].fPlaneIdx;
@@ -253,60 +291,34 @@ bool YUVAPlanarConfig::getYUVAIndices(
     } else {
       indices[i].fIndex = plane;
       if (!ChannelIndexToChannel(
-              planeChannelMasks[plane], fLocations[i].fChannelIdx, &indices[i].fChannel)) {
+              channelMasks[plane], fLocations[i].fChannelIdx, &indices[i].fChannel)) {
         return false;
       }
     }
   }
-  if (externalAlphaPlane) {
-    if (!ChannelIndexToChannel(planeChannelMasks[numPlanes - 1], 0, &indices[3].fChannel)) {
-      return false;
-    }
-    indices[3].fIndex = numPlanes - 1;
-  }
-  SkDEBUGCODE(int checkNumPlanes;) SkASSERT(SkYUVAIndex::AreValidIndices(indices, &checkNumPlanes));
-  SkASSERT(checkNumPlanes == numPlanes);
+  SkDEBUGCODE(int checkNumPlanes;)
+  SkASSERT(SkYUVAIndex::AreValidIndices(indices, &checkNumPlanes));
+  SkASSERT(checkNumPlanes == this->numPlanes());
   return true;
 }
 
-static const YUVAPlanarConfig& YUVAFormatPlanarConfig(YUVFormat format) {
-  switch (format) {
-    case kP016_YUVFormat:  // These all share the same plane/channel indices.
-    case kP010_YUVFormat:
-    case kP016F_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 0}, {1, 0}, {1, 1}});
-      return kConfig;
-    }
-    case kY416_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 1}, {0, 0}, {0, 2}, {0, 3}});
-      return kConfig;
-    }
-    case kAYUV_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 0}, {0, 1}, {0, 2}, {0, 3}});
-      return kConfig;
-    }
-    case kY410_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 1}, {0, 0}, {0, 2}, {0, 3}});
-      return kConfig;
-    }
-    case kNV12_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 0}, {1, 0}, {1, 1}});
-      return kConfig;
-    }
-    case kNV21_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 0}, {1, 1}, {1, 0}});
-      return kConfig;
-    }
-    case kI420_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 0}, {1, 0}, {2, 0}});
-      return kConfig;
-    }
-    case kYV12_YUVFormat: {
-      static const YUVAPlanarConfig kConfig({{0, 0}, {2, 0}, {1, 0}});
-      return kConfig;
-    }
+SkYUVAInfo YUVAPlanarConfig::getYUVAInfo(SkISize dimensions, SkYUVColorSpace yuvColorSpace) const {
+  return SkYUVAInfo(dimensions, fPlanarConfig, yuvColorSpace);
+}
+
+SkYUVAPixmaps YUVAPlanarConfig::makeYUVAPixmaps(
+    SkISize dimensions, SkYUVColorSpace yuvColorSpace, const SkBitmap bitmaps[],
+    int numBitmaps) const {
+  SkYUVAInfo info = this->getYUVAInfo(dimensions, yuvColorSpace);
+  SkPixmap pmaps[SkYUVAInfo::kMaxPlanes];
+  int n = info.numPlanes();
+  if (numBitmaps < n) {
+    return {};
   }
-  SkUNREACHABLE;
+  for (int i = 0; i < n; ++i) {
+    pmaps[i] = bitmaps[i].pixmap();
+  }
+  return SkYUVAPixmaps::FromExternalPixmaps(info, pmaps);
 }
 
 static bool is_colorType_texturable(const GrCaps* caps, GrColorType ct) {
@@ -458,7 +470,7 @@ static SkBitmap make_bitmap(
   const SkColor kBlue = ToolUtils::color_to_565(SkColorSetARGB(0xFF, 173, 167, 252));
   const SkColor kYellow = ToolUtils::color_to_565(SkColorSetARGB(0xFF, 255, 221, 117));
 
-  int widthHeight = kTileWidthHeight + (padWithRed ? 2 * kDomainPadding : 0);
+  int widthHeight = kTileWidthHeight + (padWithRed ? 2 * kSubsetPadding : 0);
 
   SkImageInfo ii = SkImageInfo::Make(widthHeight, widthHeight, colorType, kPremul_SkAlphaType);
 
@@ -468,7 +480,7 @@ static SkBitmap make_bitmap(
   std::unique_ptr<SkCanvas> canvas = SkCanvas::MakeRasterDirect(ii, bm.getPixels(), bm.rowBytes());
   if (padWithRed) {
     canvas->clear(SK_ColorRED);
-    canvas->translate(kDomainPadding, kDomainPadding);
+    canvas->translate(kSubsetPadding, kSubsetPadding);
     canvas->clipRect(SkRect::MakeWH(kTileWidthHeight, kTileWidthHeight));
   }
   canvas->clear(opaque ? kGreen : SK_ColorTRANSPARENT);
@@ -794,7 +806,7 @@ static int create_YUV(
       break;
   }
 
-  if (!YUVAFormatPlanarConfig(yuvFormat).hasAlpha() && !opaque) {
+  if (!opaque && !has_alpha_channel(yuvFormat)) {
     resultBMs[nextLayer++] = planes.fAFull;
   }
   return nextLayer;
@@ -819,20 +831,13 @@ static uint8_t look_up(float x1, float y1, const SkBitmap& bm, int channelIdx) {
 class YUVGenerator : public SkImageGenerator {
  public:
   YUVGenerator(
-      const SkImageInfo& ii, SkYUVColorSpace yuvColorSpace, YUVFormat yuvFormat,
-      bool externalAlphaPlane, SkBitmap bitmaps[SkYUVASizeInfo::kMaxCount])
-      : SkImageGenerator(ii),
-        fYUVFormat(yuvFormat),
-        fYUVColorSpace(yuvColorSpace),
-        fExternalAlphaPlane(externalAlphaPlane),
-        fAllA8(true) {
-    SkASSERT(!externalAlphaPlane || !YUVAFormatPlanarConfig(fYUVFormat).hasAlpha());
-    int numPlanes = this->numPlanes();
+      const SkImageInfo& ii, YUVAPlanarConfig planarConfig, SkYUVColorSpace yuvColorSpace,
+      SkBitmap bitmaps[SkYUVASizeInfo::kMaxCount])
+      : SkImageGenerator(ii), fPlanarConfig(planarConfig), fYUVColorSpace(yuvColorSpace) {
+    int numPlanes = fPlanarConfig.numPlanes();
     for (int i = 0; i < numPlanes; ++i) {
       fYUVBitmaps[i] = bitmaps[i];
-      if (kAlpha_8_SkColorType != fYUVBitmaps[i].colorType()) {
-        fAllA8 = false;
-      }
+      SkASSERT(!bitmaps[i].drawsNothing());
     }
   }
 
@@ -854,20 +859,16 @@ class YUVGenerator : public SkImageGenerator {
 
           uint8_t yuva[4] = {0, 0, 0, 255};
 
-          const auto& planarConfig = YUVAFormatPlanarConfig(fYUVFormat);
           using YUVAChannel = YUVAPlanarConfig::YUVAChannel;
           for (auto c : {YUVAChannel::kY, YUVAChannel::kU, YUVAChannel::kV}) {
-            const auto& bmp = fYUVBitmaps[planarConfig.planeIndex(c)];
-            int channelIdx = planarConfig.channelIndex(c);
+            const auto& bmp = fYUVBitmaps[fPlanarConfig.planeIndex(c)];
+            int channelIdx = fPlanarConfig.channelIndex(c);
             yuva[static_cast<int>(c)] = look_up(x1, y1, bmp, channelIdx);
           }
-          if (planarConfig.hasAlpha()) {
-            const auto& bmp = fYUVBitmaps[planarConfig.planeIndex(YUVAChannel::kA)];
-            int channelIdx = planarConfig.channelIndex(YUVAChannel::kA);
+          if (fPlanarConfig.hasAlpha()) {
+            const auto& bmp = fYUVBitmaps[fPlanarConfig.planeIndex(YUVAChannel::kA)];
+            int channelIdx = fPlanarConfig.channelIndex(YUVAChannel::kA);
             yuva[3] = look_up(x1, y1, bmp, channelIdx);
-          } else if (fExternalAlphaPlane) {
-            const auto& bmp = fYUVBitmaps[this->numPlanes() - 1];
-            yuva[3] = look_up(x1, y1, bmp, 0);
           }
 
           // Making premul here.
@@ -879,65 +880,41 @@ class YUVGenerator : public SkImageGenerator {
     return fFlattened.readPixels(info, pixels, rowBytes, 0, 0);
   }
 
-  bool onQueryYUVA8(
-      SkYUVASizeInfo* size, SkYUVAIndex yuvaIndices[SkYUVAIndex::kIndexCount],
-      SkYUVColorSpace* yuvColorSpace) const override {
-    if (!fAllA8) {
-      return false;
+  bool onQueryYUVAInfo(
+      const SkYUVAPixmapInfo::SupportedDataTypes& types, SkYUVAPixmapInfo* info) const override {
+    SkYUVAInfo yuvaInfo = fPlanarConfig.getYUVAInfo(this->getInfo().dimensions(), fYUVColorSpace);
+    SkColorType colorTypes[SkYUVAInfo::kMaxPlanes] = {};
+    for (int i = 0; i < yuvaInfo.numPlanes(); ++i) {
+      colorTypes[i] = fYUVBitmaps[i].colorType();
     }
-    const auto& planarConfig = YUVAFormatPlanarConfig(fYUVFormat);
-    if (!planarConfig.getYUVAIndices(
-            fYUVBitmaps, this->numPlanes(), fExternalAlphaPlane, yuvaIndices)) {
-      return false;
-    }
-    *yuvColorSpace = fYUVColorSpace;
-
-    int numPlanes = this->numPlanes();
-    int i = 0;
-    for (; i < numPlanes; ++i) {
-      size->fSizes[i].fWidth = fYUVBitmaps[i].width();
-      size->fSizes[i].fHeight = fYUVBitmaps[i].height();
-      size->fWidthBytes[i] = fYUVBitmaps[i].rowBytes();
-    }
-    for (; i < SkYUVASizeInfo::kMaxCount; ++i) {
-      size->fSizes[i].fWidth = 0;
-      size->fSizes[i].fHeight = 0;
-      size->fWidthBytes[i] = 0;
-    }
-
+    *info = SkYUVAPixmapInfo(yuvaInfo, colorTypes, /* row bytes */ nullptr);
+    SkASSERT(info->isValid());
     return true;
   }
 
-  bool onGetYUVA8Planes(
-      const SkYUVASizeInfo&, const SkYUVAIndex[SkYUVAIndex::kIndexCount],
-      void* planes[SkYUVASizeInfo::kMaxCount]) override {
-    SkASSERT(fAllA8);
-    int numPlanes = this->numPlanes();
-    for (int i = 0; i < numPlanes; ++i) {
-      planes[i] = fYUVBitmaps[i].getPixels();
+  bool onGetYUVAPlanes(const SkYUVAPixmaps& pixmaps) override {
+    int n = pixmaps.numPlanes();
+    for (int i = 0; i < n; ++i) {
+      SkASSERT(pixmaps.plane(i).dimensions() == fYUVBitmaps[i].dimensions());
+      SkASSERT(pixmaps.plane(i).colorType() == fYUVBitmaps[i].colorType());
+      SkRectMemcpy(
+          pixmaps.plane(i).writable_addr(), pixmaps.plane(i).rowBytes(), fYUVBitmaps[i].getPixels(),
+          fYUVBitmaps[i].rowBytes(), fYUVBitmaps[i].info().minRowBytes(), fYUVBitmaps[i].height());
     }
     return true;
   }
 
  private:
-  int numPlanes() const {
-    return YUVAFormatPlanarConfig(fYUVFormat).numPlanes() + SkToInt(fExternalAlphaPlane);
-  }
-
-  YUVFormat fYUVFormat;
+  YUVAPlanarConfig fPlanarConfig;
   SkYUVColorSpace fYUVColorSpace;
-  bool fExternalAlphaPlane;
-  SkBitmap fYUVBitmaps[SkYUVASizeInfo::kMaxCount];
+  SkBitmap fYUVBitmaps[SkYUVAInfo::kMaxPlanes];
   SkBitmap fFlattened;
-  bool fAllA8;  // are all the SkBitmaps in "fYUVBitmaps" A8?
 };
 
 static sk_sp<SkImage> make_yuv_gen_image(
-    const SkImageInfo& ii, YUVFormat yuvFormat, SkYUVColorSpace yuvColorSpace, bool opaque,
+    const SkImageInfo& ii, YUVAPlanarConfig planarConfig, SkYUVColorSpace yuvColorSpace,
     SkBitmap bitmaps[]) {
-  bool externalAlphaPlane = !opaque && !YUVAFormatPlanarConfig(yuvFormat).hasAlpha();
-  std::unique_ptr<SkImageGenerator> gen(
-      new YUVGenerator(ii, yuvColorSpace, yuvFormat, externalAlphaPlane, bitmaps));
+  auto gen = std::make_unique<YUVGenerator>(ii, planarConfig, yuvColorSpace, bitmaps);
 
   return SkImage::MakeFromGenerator(std::move(gen));
 }
@@ -1073,10 +1050,19 @@ namespace skiagm {
 // YV12
 class WackyYUVFormatsGM : public GM {
  public:
-  WackyYUVFormatsGM(bool useTargetColorSpace, bool useDomain, bool quarterSize)
-      : fUseTargetColorSpace(useTargetColorSpace),
-        fUseDomain(useDomain),
-        fQuarterSize(quarterSize) {
+  // This GM has a variety of ways in which the test images can be constructed.
+  enum class ImageType {
+    kYUVAPixmaps,       // SkImage::MakeFromYUVAPixmaps.
+    kYUVATextures,      // SkImage::MakeFromYUVATextures.
+    kYUVATexturesCopy,  // SkImage::MakeFromYUVATexturesCopy.
+    kGenerator,         // SkImage_Lazy backed by generator that supports YUVA. This is the only
+                        // mode that runs on CPU but CPU uses the flattening onGetPixels.
+    kResizeOnGpu,       // Planes uploaded to GPU then resized and fed to
+                        // SkImage::MakeFromYUVATextures.
+  };
+
+  WackyYUVFormatsGM(bool useTargetColorSpace, bool useSubset, ImageType imageType)
+      : fUseTargetColorSpace(useTargetColorSpace), fUseSubset(useSubset), fImageType(imageType) {
     this->setBGColor(0xFFCCCCCC);
   }
 
@@ -1086,11 +1072,15 @@ class WackyYUVFormatsGM : public GM {
     if (fUseTargetColorSpace) {
       name += "_cs";
     }
-    if (fUseDomain) {
+    if (fUseSubset) {
       name += "_domain";
     }
-    if (fQuarterSize) {
-      name += "_qtr";
+    switch (fImageType) {
+      case ImageType::kYUVAPixmaps: name += "_frompixmaps"; break;
+      case ImageType::kYUVATextures: break;
+      case ImageType::kYUVATexturesCopy: name += "_copy"; break;
+      case ImageType::kGenerator: name += "_imggen"; break;
+      case ImageType::kResizeOnGpu: name += "_qtr"; break;
     }
 
     return name;
@@ -1099,7 +1089,7 @@ class WackyYUVFormatsGM : public GM {
   SkISize onISize() override {
     int numCols = 2 * (kLastEnum_SkYUVColorSpace + 1);  // opacity x #-color-spaces
     int numRows = 1 + (kLast_YUVFormat + 1);            // original + #-yuv-formats
-    int wh = SkScalarCeilToInt(kTileWidthHeight * (fUseDomain ? 1.5f : 1.f));
+    int wh = SkScalarCeilToInt(kTileWidthHeight * (fUseSubset ? 1.5f : 1.f));
     return SkISize::Make(kLabelWidth + numCols * (wh + kPad), kLabelHeight + numRows * (wh + kPad));
   }
 
@@ -1112,14 +1102,14 @@ class WackyYUVFormatsGM : public GM {
       // transparent
       SkTDArray<SkRect> circles;
       SkPath path = create_splat(origin, innerRadius, outerRadius, 1.0f, 5, &circles);
-      fOriginalBMs[0] = make_bitmap(kRGBA_8888_SkColorType, path, circles, false, fUseDomain);
+      fOriginalBMs[0] = make_bitmap(kRGBA_8888_SkColorType, path, circles, false, fUseSubset);
     }
 
     {
       // opaque
       SkTDArray<SkRect> circles;
       SkPath path = create_splat(origin, innerRadius, outerRadius, 1.0f, 7, &circles);
-      fOriginalBMs[1] = make_bitmap(kRGBA_8888_SkColorType, path, circles, true, fUseDomain);
+      fOriginalBMs[1] = make_bitmap(kRGBA_8888_SkColorType, path, circles, true, fUseSubset);
     }
 
     if (fUseTargetColorSpace) {
@@ -1194,7 +1184,6 @@ class WackyYUVFormatsGM : public GM {
   }
 
   bool createImages(GrDirectContext* dContext) {
-    int counter = 0;
     for (bool opaque : {false, true}) {
       for (int cs = kJPEG_SkYUVColorSpace; cs <= kLastEnum_SkYUVColorSpace; ++cs) {
         PlaneData planes;
@@ -1204,10 +1193,13 @@ class WackyYUVFormatsGM : public GM {
           auto format = static_cast<YUVFormat>(f);
           SkBitmap resultBMs[4];
 
-          int numTextures = create_YUV(planes, format, resultBMs, opaque);
+          int numPlanes = create_YUV(planes, format, resultBMs, opaque);
+          const YUVAPlanarConfig planarConfig(format, opaque);
+          SkASSERT(numPlanes == planarConfig.numPlanes());
 
-          if (dContext) {
-            fGpuGeneratedImages = true;
+          if (fImageType == ImageType::kYUVATextures ||
+              fImageType == ImageType::kYUVATexturesCopy || fImageType == ImageType::kResizeOnGpu) {
+            SkASSERT(dContext);
 
             if (dContext->abandoned()) {
               return false;
@@ -1219,7 +1211,7 @@ class WackyYUVFormatsGM : public GM {
 
             auto releaseCtx = new YUVABackendReleaseContext(dContext);
 
-            for (int i = 0; i < numTextures; ++i) {
+            for (int i = 0; i < numPlanes; ++i) {
               GrBackendTexture tmp = create_yuva_texture(dContext, resultBMs[i], i, releaseCtx);
               if (!tmp.isValid()) {
                 YUVABackendReleaseContext::Unwind(dContext, releaseCtx, false);
@@ -1229,65 +1221,43 @@ class WackyYUVFormatsGM : public GM {
             }
 
             SkYUVAIndex yuvaIndices[4];
-            const auto& planarConfig = YUVAFormatPlanarConfig(format);
-            bool externalAlphaPlane = !opaque && !planarConfig.hasAlpha();
-            if (!planarConfig.getYUVAIndices(
-                    releaseCtx->beTextures(), numTextures, externalAlphaPlane, yuvaIndices)) {
+            if (!planarConfig.getYUVAIndices(releaseCtx->beTextures(), numPlanes, yuvaIndices)) {
               YUVABackendReleaseContext::Unwind(dContext, releaseCtx, false);
               continue;
             }
 
-            if (fQuarterSize) {
+            if (fImageType == ImageType::kResizeOnGpu) {
               fImages[opaque][cs][format] = this->resizeOnGpu(
                   dContext, format, (SkYUVColorSpace)cs, opaque, releaseCtx->beTextures(),
-                  yuvaIndices, numTextures, fOriginalBMs[opaque].dimensions());
+                  yuvaIndices, numPlanes, fOriginalBMs[opaque].dimensions());
+              YUVABackendReleaseContext::Unwind(dContext, releaseCtx, true);
+            } else if (fImageType == ImageType::kYUVATexturesCopy) {
+              // This is hard to triage with a subset because bleeding of subsampled
+              // chroma may occur during the initial copy and is not easily
+              // distinguished from incorrect bleeding that resulting from a draw.
+              SkASSERT(!fUseSubset);
+              fImages[opaque][cs][format] = SkImage::MakeFromYUVATexturesCopy(
+                  dContext, (SkYUVColorSpace)cs, releaseCtx->beTextures(), yuvaIndices,
+                  fOriginalBMs[opaque].dimensions(), kTopLeft_GrSurfaceOrigin);
               YUVABackendReleaseContext::Unwind(dContext, releaseCtx, true);
             } else {
-              int counterMod = counter % 3;
-              if (fUseDomain && counterMod == 0) {
-                // Copies flatten to RGB when they copy the YUVA data, which doesn't
-                // know about the intended domain and the domain padding bleeds in
-                counterMod = 1;
-              }
-
-              const SkISize imgSize{fOriginalBMs[opaque].width(), fOriginalBMs[opaque].height()};
-
-              switch (counterMod) {
-                case 0:
-                  fImages[opaque][cs][format] = SkImage::MakeFromYUVATexturesCopy(
-                      dContext, (SkYUVColorSpace)cs, releaseCtx->beTextures(), yuvaIndices, imgSize,
-                      kTopLeft_GrSurfaceOrigin);
-                  YUVABackendReleaseContext::Unwind(dContext, releaseCtx, true);
-                  break;
-                case 1:
-                  fImages[opaque][cs][format] = SkImage::MakeFromYUVATextures(
-                      dContext, (SkYUVColorSpace)cs, releaseCtx->beTextures(), yuvaIndices, imgSize,
-                      kTopLeft_GrSurfaceOrigin, nullptr, YUVABackendReleaseContext::Release,
-                      releaseCtx);
-                  break;
-                case 2:
-                default: {
-                  // TODO: we did a lot of work to delete these here
-                  YUVABackendReleaseContext::Unwind(dContext, releaseCtx, false);
-
-                  SkPixmap yuvaPixmaps[4];
-                  for (int i = 0; i < numTextures; ++i) {
-                    yuvaPixmaps[i] = resultBMs[i].pixmap();
-                  }
-
-                  fImages[opaque][cs][format] = SkImage::MakeFromYUVAPixmaps(
-                      dContext, (SkYUVColorSpace)cs, yuvaPixmaps, yuvaIndices, imgSize,
-                      kTopLeft_GrSurfaceOrigin, true);
-                  break;
-                }
-              }
-              ++counter;
+              SkASSERT(fImageType == ImageType::kYUVATextures);
+              fImages[opaque][cs][format] = SkImage::MakeFromYUVATextures(
+                  dContext, (SkYUVColorSpace)cs, releaseCtx->beTextures(), yuvaIndices,
+                  fOriginalBMs[opaque].dimensions(), kTopLeft_GrSurfaceOrigin, nullptr,
+                  YUVABackendReleaseContext::Release, releaseCtx);
             }
-          } else {
+          } else if (fImageType == ImageType::kGenerator) {
             SkImageInfo ii = SkImageInfo::MakeN32(
                 fOriginalBMs[opaque].width(), fOriginalBMs[opaque].height(), kPremul_SkAlphaType);
             fImages[opaque][cs][format] =
-                make_yuv_gen_image(ii, format, (SkYUVColorSpace)cs, opaque, resultBMs);
+                make_yuv_gen_image(ii, planarConfig, (SkYUVColorSpace)cs, resultBMs);
+          } else if (fImageType == ImageType::kYUVAPixmaps) {
+            SkASSERT(dContext);
+            SkYUVAPixmaps pixmaps = planarConfig.makeYUVAPixmaps(
+                fOriginalBMs[opaque].dimensions(), static_cast<SkYUVColorSpace>(cs), resultBMs,
+                numPlanes);
+            fImages[opaque][cs][format] = SkImage::MakeFromYUVAPixmaps(dContext, pixmaps);
           }
         }
       }
@@ -1313,6 +1283,11 @@ class WackyYUVFormatsGM : public GM {
       return DrawResult::kSkip;
     }
 
+    // Only the generator is expected to work with the CPU backend.
+    if (fImageType != ImageType::kGenerator && !dContext) {
+      return DrawResult::kSkip;
+    }
+
     if (!this->createImages(dContext)) {
       *errorMsg = "Failed to create YUV images";
       return DrawResult::kFail;
@@ -1332,31 +1307,28 @@ class WackyYUVFormatsGM : public GM {
   }
 
   void onDraw(SkCanvas* canvas) override {
+    auto direct = GrAsDirectContext(canvas->recordingContext());
+
     float cellWidth = kTileWidthHeight, cellHeight = kTileWidthHeight;
-    if (fUseDomain) {
+    if (fUseSubset) {
       cellWidth *= 1.5f;
       cellHeight *= 1.5f;
     }
 
-    auto direct = GrAsDirectContext(canvas->recordingContext());
-    SkRect origSrcRect = SkRect::MakeWH(fOriginalBMs[0].width(), fOriginalBMs[0].height());
-
-    SkRect srcRect = SkRect::MakeWH(fOriginalBMs[0].width(), fOriginalBMs[0].height());
+    SkRect srcRect = SkRect::Make(fOriginalBMs[0].dimensions());
     SkRect dstRect = SkRect::MakeXYWH(kLabelWidth, 0.f, srcRect.width(), srcRect.height());
-    if (fQuarterSize) {
-      if (fGpuGeneratedImages) {
-        // The src is only shrunk on the GPU
-        srcRect = SkRect::MakeWH(fOriginalBMs[0].width() / 2.0f, fOriginalBMs[0].height() / 2.0f);
-      }
-      // but the dest is always drawn smaller
+
+    SkRect origSrcRect = srcRect;
+    if (fImageType == ImageType::kResizeOnGpu) {
+      srcRect = SkRect::MakeWH(fOriginalBMs[0].width() / 2.0f, fOriginalBMs[0].height() / 2.0f);
       dstRect = SkRect::MakeXYWH(
           kLabelWidth, 0.f, fOriginalBMs[0].width() / 2.0f, fOriginalBMs[0].height() / 2.0f);
     }
 
     SkCanvas::SrcRectConstraint constraint = SkCanvas::kFast_SrcRectConstraint;
-    if (fUseDomain) {
-      srcRect.inset(kDomainPadding, kDomainPadding);
-      origSrcRect.inset(kDomainPadding, kDomainPadding);
+    if (fUseSubset) {
+      srcRect.inset(kSubsetPadding, kSubsetPadding);
+      origSrcRect.inset(kSubsetPadding, kSubsetPadding);
       // Draw a larger rectangle to ensure bilerp filtering would normally read outside the
       // srcRect and hit the red pixels, if strict constraint weren't used.
       dstRect.fRight = kLabelWidth + 1.5f * srcRect.width();
@@ -1405,20 +1377,36 @@ class WackyYUVFormatsGM : public GM {
   SkBitmap fOriginalBMs[2];
   sk_sp<SkImage> fImages[2][kLastEnum_SkYUVColorSpace + 1][kLast_YUVFormat + 1];
   bool fUseTargetColorSpace;
-  bool fUseDomain;
-  bool fQuarterSize;
+  bool fUseSubset;
+  ImageType fImageType;
   sk_sp<SkColorSpace> fTargetColorSpace;
-  bool fGpuGeneratedImages = false;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_GM(return new WackyYUVFormatsGM(/* cs */ false, /* domain */ false, /* quarterSize */ false);)
-DEF_GM(return new WackyYUVFormatsGM(/* cs */ false, /* domain */ false, /* quarterSize */ true);)
-DEF_GM(return new WackyYUVFormatsGM(/* cs */ true, /* domain */ false, /* quarterSize */ false);)
-DEF_GM(return new WackyYUVFormatsGM(/* cs */ false, /* domain */ true, /* quarterSize */ false);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ false,
+                  /* subset */ false, WackyYUVFormatsGM::ImageType::kYUVATextures);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ false,
+                  /* subset */ true, WackyYUVFormatsGM::ImageType::kYUVATextures);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ true,
+                  /* subset */ false, WackyYUVFormatsGM::ImageType::kYUVATextures);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ false,
+                  /* subset */ false, WackyYUVFormatsGM::ImageType::kResizeOnGpu);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ false,
+                  /* subset */ false, WackyYUVFormatsGM::ImageType::kYUVATexturesCopy);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ false,
+                  /* subset */ false, WackyYUVFormatsGM::ImageType::kGenerator);)
+DEF_GM(return new WackyYUVFormatsGM(
+                  /* target cs */ false,
+                  /* subset */ false, WackyYUVFormatsGM::ImageType::kYUVAPixmaps);)
 
 class YUVMakeColorSpaceGM : public GpuGM {
  public:
@@ -1465,7 +1453,7 @@ class YUVMakeColorSpaceGM : public GpuGM {
 
       create_YUV(planes, kAYUV_YUVFormat, resultBMs, opaque);
 
-      auto& planarConfig = YUVAFormatPlanarConfig(kAYUV_YUVFormat);
+      YUVAPlanarConfig planarConfig(kAYUV_YUVFormat, opaque);
       int numPlanes = planarConfig.numPlanes();
 
       auto releaseContext = new YUVABackendReleaseContext(context);
@@ -1492,7 +1480,7 @@ class YUVMakeColorSpaceGM : public GpuGM {
       }
 
       SkYUVAIndex yuvaIndices[4];
-      planarConfig.getYUVAIndices(releaseContext->beTextures(), numPlanes, false, yuvaIndices);
+      planarConfig.getYUVAIndices(releaseContext->beTextures(), numPlanes, yuvaIndices);
 
       fImages[opaque][0] = SkImage::MakeFromYUVATextures(
           context, kJPEG_SkYUVColorSpace, releaseContext->beTextures(), yuvaIndices,
@@ -1532,12 +1520,12 @@ class YUVMakeColorSpaceGM : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrRecordingContext* recording, GrRenderTargetContext*, SkCanvas* canvas,
+      GrRecordingContext* rContext, GrRenderTargetContext*, SkCanvas* canvas,
       SkString* msg) override {
     SkASSERT(fImages[0][0] && fImages[0][1] && fImages[1][0] && fImages[1][1]);
 
-    auto direct = GrAsDirectContext(recording);
-    if (recording && !direct) {
+    auto dContext = GrAsDirectContext(rContext);
+    if (rContext && !dContext) {
       *msg = "YUV ColorSpace image creation requires a direct context.";
       return DrawResult::kSkip;
     }
@@ -1553,14 +1541,14 @@ class YUVMakeColorSpaceGM : public GpuGM {
         y += kTileWidthHeight + kPad;
 
         if (fImages[opaque][tagged]) {
-          auto yuv = fImages[opaque][tagged]->makeColorSpace(fTargetColorSpace, direct);
+          auto yuv = fImages[opaque][tagged]->makeColorSpace(fTargetColorSpace, dContext);
           SkASSERT(yuv);
           SkASSERT(SkColorSpace::Equals(yuv->colorSpace(), fTargetColorSpace.get()));
           canvas->drawImage(yuv, x, y);
           y += kTileWidthHeight + kPad;
 
           SkIRect bounds = SkIRect::MakeWH(kTileWidthHeight / 2, kTileWidthHeight / 2);
-          auto subset = yuv->makeSubset(bounds, direct);
+          auto subset = yuv->makeSubset(bounds, dContext);
           SkASSERT(subset);
           canvas->drawImage(subset, x, y);
           y += kTileWidthHeight + kPad;
@@ -1572,7 +1560,7 @@ class YUVMakeColorSpaceGM : public GpuGM {
 
           SkBitmap readBack;
           readBack.allocPixels(yuv->imageInfo());
-          SkAssertResult(yuv->readPixels(readBack.pixmap(), 0, 0));
+          SkAssertResult(yuv->readPixels(dContext, readBack.pixmap(), 0, 0));
           canvas->drawBitmap(readBack, x, y);
         }
         x += kTileWidthHeight + kPad;
@@ -1586,7 +1574,7 @@ class YUVMakeColorSpaceGM : public GpuGM {
   sk_sp<SkImage> fImages[2][2];
   sk_sp<SkColorSpace> fTargetColorSpace;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new YUVMakeColorSpaceGM();)
@@ -1688,7 +1676,7 @@ class YUVSplitterGM : public skiagm::GM {
           kBT2020_SkYUVColorSpace}) {
       split_into_yuv(fOrig.get(), cs, fPM);
       auto img = SkImage::MakeFromYUVAPixmaps(
-          canvas->getGrContext(), cs, fPM, indices, fPM[0].info().dimensions(),
+          canvas->recordingContext(), cs, fPM, indices, fPM[0].info().dimensions(),
           kTopLeft_GrSurfaceOrigin, false, false, nullptr);
       if (img) {
         canvas->drawImage(img, 0, 0, nullptr);
@@ -1706,6 +1694,6 @@ class YUVSplitterGM : public skiagm::GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new YUVSplitterGM;)

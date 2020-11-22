@@ -78,7 +78,7 @@ class SkTextBlobBuilderPriv {
 //
 // Extended Textblob runs may be mixed with non-extended runs.
 
-SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe);
+SkDEBUGCODE(static const unsigned kRunRecordMagic = 0xb10bcafe;)
 
 class SkTextBlob::RunRecord {
  public:
@@ -95,37 +95,37 @@ class SkTextBlob::RunRecord {
     }
   }
 
-  uint32_t glyphCount() const noexcept { return fCount; }
+  uint32_t glyphCount() const { return fCount; }
 
-  const SkPoint& offset() const noexcept { return fOffset; }
+  const SkPoint& offset() const { return fOffset; }
 
-  const SkFont& font() const noexcept { return fFont; }
+  const SkFont& font() const { return fFont; }
 
-  GlyphPositioning positioning() const noexcept {
+  GlyphPositioning positioning() const {
     return static_cast<GlyphPositioning>(fFlags & kPositioning_Mask);
   }
 
-  uint16_t* glyphBuffer() const noexcept {
+  uint16_t* glyphBuffer() const {
     static_assert(SkIsAlignPtr(sizeof(RunRecord)), "");
     // Glyphs are stored immediately following the record.
     return reinterpret_cast<uint16_t*>(const_cast<RunRecord*>(this) + 1);
   }
 
   // can be aliased with pointBuffer() or xformBuffer()
-  SkScalar* posBuffer() const noexcept {
+  SkScalar* posBuffer() const {
     // Position scalars follow the (aligned) glyph buffer.
     return reinterpret_cast<SkScalar*>(
         reinterpret_cast<uint8_t*>(this->glyphBuffer()) + SkAlign4(fCount * sizeof(uint16_t)));
   }
 
   // alias for posBuffer()
-  SkPoint* pointBuffer() const noexcept {
+  SkPoint* pointBuffer() const {
     SkASSERT(this->positioning() == (GlyphPositioning)2);
     return reinterpret_cast<SkPoint*>(this->posBuffer());
   }
 
   // alias for posBuffer()
-  SkRSXform* xformBuffer() const noexcept {
+  SkRSXform* xformBuffer() const {
     SkASSERT(this->positioning() == (GlyphPositioning)3);
     return reinterpret_cast<SkRSXform*>(this->posBuffer());
   }
@@ -141,7 +141,7 @@ class SkTextBlob::RunRecord {
     return isExtended() ? reinterpret_cast<char*>(this->clusterBuffer() + fCount) : nullptr;
   }
 
-  bool isLastRun() const noexcept { return SkToBool(fFlags & kLast_Flag); }
+  bool isLastRun() const { return SkToBool(fFlags & kLast_Flag); }
 
   static size_t StorageSize(
       uint32_t glyphCount, uint32_t textSize, SkTextBlob::GlyphPositioning positioning,
@@ -171,14 +171,14 @@ class SkTextBlob::RunRecord {
 
   void grow(uint32_t count);
 
-  bool isExtended() const noexcept { return fFlags & kExtended_Flag; }
+  bool isExtended() const { return fFlags & kExtended_Flag; }
 
   SkFont fFont;
   uint32_t fCount;
   SkPoint fOffset;
   uint32_t fFlags;
 
-  SkDEBUGCODE(unsigned fMagic);
+  SkDEBUGCODE(unsigned fMagic;)
 };
 
 /**
@@ -198,30 +198,30 @@ class SkTextBlobRunIterator {
     kRSXform_Positioning = 3,     // RSXform positioning -- four scalars per glyph.
   };
 
-  bool done() const noexcept { return !fCurrentRun; }
+  bool done() const { return !fCurrentRun; }
   void next();
 
-  uint32_t glyphCount() const noexcept {
+  uint32_t glyphCount() const {
     SkASSERT(!this->done());
     return fCurrentRun->glyphCount();
   }
-  const uint16_t* glyphs() const noexcept {
+  const uint16_t* glyphs() const {
     SkASSERT(!this->done());
     return fCurrentRun->glyphBuffer();
   }
-  const SkScalar* pos() const noexcept {
+  const SkScalar* pos() const {
     SkASSERT(!this->done());
     return fCurrentRun->posBuffer();
   }
   // alias for pos()
-  const SkPoint* points() const noexcept { return fCurrentRun->pointBuffer(); }
+  const SkPoint* points() const { return fCurrentRun->pointBuffer(); }
   // alias for pos()
-  const SkRSXform* xforms() const noexcept { return fCurrentRun->xformBuffer(); }
-  const SkPoint& offset() const noexcept {
+  const SkRSXform* xforms() const { return fCurrentRun->xformBuffer(); }
+  const SkPoint& offset() const {
     SkASSERT(!this->done());
     return fCurrentRun->offset();
   }
-  const SkFont& font() const noexcept {
+  const SkFont& font() const {
     SkASSERT(!this->done());
     return fCurrentRun->font();
   }
@@ -244,7 +244,7 @@ class SkTextBlobRunIterator {
  private:
   const SkTextBlob::RunRecord* fCurrentRun;
 
-  SkDEBUGCODE(uint8_t* fStorageTop);
+  SkDEBUGCODE(uint8_t* fStorageTop;)
 };
 
 #endif  // SkTextBlobPriv_DEFINED

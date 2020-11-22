@@ -166,7 +166,7 @@ class HairlinesGM : public GM {
 
  private:
   SkTArray<SkPath> fPaths;
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 static void draw_squarehair_tests(SkCanvas* canvas, SkScalar width, SkPaint::Cap cap, bool aa) {
@@ -215,10 +215,12 @@ static void draw_subdivided_quad(SkCanvas* canvas, int x0, int y0, int x1, int y
   paint.setStyle(SkPaint::kStroke_Style);
   paint.setColor(color);
 
-  SkPath quad;
-  quad.moveTo(0, 0);
-  quad.quadTo(SkIntToScalar(x0), SkIntToScalar(y0), SkIntToScalar(x1), SkIntToScalar(y1));
-  canvas->drawPath(quad, paint);
+  canvas->drawPath(
+      SkPathBuilder()
+          .moveTo(0, 0)
+          .quadTo(SkIntToScalar(x0), SkIntToScalar(y0), SkIntToScalar(x1), SkIntToScalar(y1))
+          .detach(),
+      paint);
 }
 
 DEF_SIMPLE_GM(hairline_subdiv, canvas, 512, 256) {

@@ -23,9 +23,9 @@ class GrAutoMapVertexBuffer : SkNoncopyable {
   }
 
   bool hasGpuBuffer() const { return SkToBool(fGpuBuffer.get()); }
-  sk_sp<const GrGpuBuffer> gpuBuffer() const noexcept { return fGpuBuffer; }
-  bool isMapped() const noexcept { return SkToBool(fData); }
-  void* data() const noexcept {
+  sk_sp<const GrGpuBuffer> gpuBuffer() const { return fGpuBuffer; }
+  bool isMapped() const { return SkToBool(fData); }
+  void* data() const {
     SkASSERT(this->isMapped());
     return fData;
   }

@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLConstColorProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLConstColorProcessor() noexcept = default;
+  GrGLSLConstColorProcessor() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrConstColorProcessor& _outer = args.fFp.cast<GrConstColorProcessor>();
@@ -29,9 +29,9 @@ class GrGLSLConstColorProcessor : public GrGLSLFragmentProcessor {
     colorVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "color");
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s;
+        R"SkSL(return %s;
 )SkSL",
-        args.fOutputColor, args.fUniformHandler->getUniformCStr(colorVar));
+        args.fUniformHandler->getUniformCStr(colorVar));
   }
 
  private:
@@ -53,12 +53,13 @@ GrGLSLFragmentProcessor* GrConstColorProcessor::onCreateGLSLInstance() const {
 }
 void GrConstColorProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrConstColorProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrConstColorProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrConstColorProcessor& that = other.cast<GrConstColorProcessor>();
   (void)that;
   if (color != that.color) return false;
   return true;
 }
+bool GrConstColorProcessor::usesExplicitReturn() const { return true; }
 GrConstColorProcessor::GrConstColorProcessor(const GrConstColorProcessor& src)
     : INHERITED(kGrConstColorProcessor_ClassID, src.optimizationFlags()), color(src.color) {
   this->cloneAndRegisterAllChildProcessors(src);

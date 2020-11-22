@@ -16,13 +16,12 @@
 
 class GrGLSLMatrixEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLMatrixEffect() noexcept = default;
+  GrGLSLMatrixEffect() {}
 
   void emitCode(EmitArgs& args) override {
     fMatrixVar = args.fUniformHandler->addUniform(
         &args.fFp, kFragment_GrShaderFlag, kFloat3x3_GrSLType, "matrix");
-    SkString child = this->invokeChildWithMatrix(0, args);
-    args.fFragBuilder->codeAppendf("%s = %s;\n", args.fOutputColor, child.c_str());
+    args.fFragBuilder->codeAppendf("return %s;\n", this->invokeChildWithMatrix(0, args).c_str());
   }
 
  private:
@@ -41,7 +40,7 @@ GrGLSLFragmentProcessor* GrMatrixEffect::onCreateGLSLInstance() const {
 void GrMatrixEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
 
-bool GrMatrixEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrMatrixEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrMatrixEffect& that = other.cast<GrMatrixEffect>();
   if (fMatrix != that.fMatrix) return false;
   return true;

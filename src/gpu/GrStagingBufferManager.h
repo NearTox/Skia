@@ -19,7 +19,7 @@ class GrStagingBufferManager {
   GrStagingBufferManager(GrGpu* gpu) : fGpu(gpu) {}
 
   struct Slice {
-    Slice() noexcept = default;
+    Slice() {}
     Slice(GrGpuBuffer* buffer, size_t offset, void* offsetMapPtr)
         : fBuffer(buffer), fOffset(offset), fOffsetMapPtr(offsetMapPtr) {}
     GrGpuBuffer* fBuffer = nullptr;

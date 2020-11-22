@@ -22,15 +22,11 @@ class SkRectPriv {
     return {-large, -large, large, large};
   }
 
-  static constexpr SkIRect MakeILargestInverted() noexcept {
+  static constexpr SkIRect MakeILargestInverted() {
     return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
   }
 
-  static SkRect MakeLargeS32() noexcept {
-    SkRect r;
-    r.set(MakeILarge());
-    return r;
-  }
+  static constexpr SkRect MakeLargeS32() noexcept { return SkRect::Make(MakeILarge()); }
 
   static constexpr SkRect MakeLargest() noexcept {
     return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};
@@ -40,7 +36,7 @@ class SkRectPriv {
     return {SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin};
   }
 
-  static void GrowToInclude(SkRect* r, const SkPoint& pt) noexcept {
+  static void GrowToInclude(SkRect* r, const SkPoint& pt) {
     r->fLeft = std::min(pt.fX, r->fLeft);
     r->fRight = std::max(pt.fX, r->fRight);
     r->fTop = std::min(pt.fY, r->fTop);
@@ -49,12 +45,12 @@ class SkRectPriv {
 
   // Conservative check if r can be expressed in fixed-point.
   // Will return false for very large values that might have fit
-  static bool FitsInFixed(const SkRect& r) noexcept {
+  static bool FitsInFixed(const SkRect& r) {
     return SkFitsInFixed(r.fLeft) && SkFitsInFixed(r.fTop) && SkFitsInFixed(r.fRight) &&
            SkFitsInFixed(r.fBottom);
   }
 
-  static bool Is16Bit(const SkIRect& r) noexcept {
+  static bool Is16Bit(const SkIRect& r) {
     return SkTFitsIn<int16_t>(r.fLeft) && SkTFitsIn<int16_t>(r.fTop) &&
            SkTFitsIn<int16_t>(r.fRight) && SkTFitsIn<int16_t>(r.fBottom);
   }
@@ -62,17 +58,17 @@ class SkRectPriv {
   // Evaluate A-B. If the difference shape cannot be represented as a rectangle then false is
   // returned and 'out' is set to the largest rectangle contained in said shape. If true is
   // returned then A-B is representable as a rectangle, which is stored in 'out'.
-  static bool Subtract(const SkRect& a, const SkRect& b, SkRect* out) noexcept;
-  static bool Subtract(const SkIRect& a, const SkIRect& b, SkIRect* out) noexcept;
+  static bool Subtract(const SkRect& a, const SkRect& b, SkRect* out);
+  static bool Subtract(const SkIRect& a, const SkIRect& b, SkIRect* out);
 
   // Evaluate A-B, and return the largest rectangle contained in that shape (since the difference
   // may not be representable as rectangle). The returned rectangle will not intersect B.
-  static SkRect Subtract(const SkRect& a, const SkRect& b) noexcept {
+  static SkRect Subtract(const SkRect& a, const SkRect& b) {
     SkRect diff;
     Subtract(a, b, &diff);
     return diff;
   }
-  static SkIRect Subtract(const SkIRect& a, const SkIRect& b) noexcept {
+  static SkIRect Subtract(const SkIRect& a, const SkIRect& b) {
     SkIRect diff;
     Subtract(a, b, &diff);
     return diff;

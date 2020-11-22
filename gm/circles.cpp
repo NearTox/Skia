@@ -195,7 +195,7 @@ class CircleGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
   SkTArray<SkPaint> fPaints;
   SkTArray<SkMatrix> fMatrices;
 };

@@ -14,7 +14,6 @@
 #include "src/core/SkTSearch.h"
 #include "src/gpu/GrBackendUtils.h"
 #include "src/gpu/GrProgramDesc.h"
-#include "src/gpu/GrRenderTargetProxyPriv.h"
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
 #include "src/gpu/GrTextureProxyPriv.h"
@@ -51,7 +50,8 @@ GrGLCaps::GrGLCaps(
   fRGBA8888PixelsOpsAreSlow = false;
   fPartialFBOReadIsSlow = false;
   fBindUniformLocationSupport = false;
-  fMipmapLevelAndLodControlSupport = false;
+  fMipmapLevelControlSupport = false;
+  fMipmapLodControlSupport = false;
   fRGBAToBGRAReadbackConversionsAreSlow = false;
   fUseBufferDataNullHint = false;
   fDoManualMipmapping = false;
@@ -68,6 +68,8 @@ GrGLCaps::GrGLCaps(
   fProgramBinarySupport = false;
   fProgramParameterSupport = false;
   fSamplerObjectSupport = false;
+  fUseSamplerObjects = false;
+  fTextureSwizzleSupport = false;
   fTiledRenderingSupport = false;
   fFBFetchRequiresEnablePerSample = false;
   fSRGBWriteControl = false;
@@ -260,19 +262,21 @@ void GrGLCaps::init(
 
   if (GR_IS_GR_GL(standard)) {
     if (version >= GR_GL_VER(3, 3) || ctxInfo.hasExtension("GL_ARB_texture_swizzle")) {
-      this->fShaderCaps->fTextureSwizzleAppliedInShader = false;
+      fTextureSwizzleSupport = true;
     }
   } else if (GR_IS_GR_GL_ES(standard)) {
     if (version >= GR_GL_VER(3, 0)) {
-      this->fShaderCaps->fTextureSwizzleAppliedInShader = false;
+      fTextureSwizzleSupport = true;
     }
   }  // no WebGL support
 
   if (GR_IS_GR_GL(standard)) {
-    fMipmapLevelAndLodControlSupport = true;
+    fMipmapLevelControlSupport = true;
+    fMipmapLodControlSupport = true;
   } else if (GR_IS_GR_GL_ES(standard)) {
     if (version >= GR_GL_VER(3, 0)) {
-      fMipmapLevelAndLodControlSupport = true;
+      fMipmapLevelControlSupport = true;
+      fMipmapLodControlSupport = true;
     }
   }  // no WebGL support
 
@@ -403,7 +407,7 @@ void GrGLCaps::init(
   }
 
   // Protect ourselves against tracking huge amounts of texture state.
-  static constexpr uint8_t kMaxSaneSamplers = 32;
+  static const uint8_t kMaxSaneSamplers = 32;
   GrGLint maxSamplers;
   GR_GL_GetIntegerv(gli, GR_GL_MAX_TEXTURE_IMAGE_UNITS, &maxSamplers);
   shaderCaps->fMaxFragmentSamplers = std::min<GrGLint>(kMaxSaneSamplers, maxSamplers);
@@ -706,6 +710,8 @@ void GrGLCaps::init(
   } else if (GR_IS_GR_WEBGL(standard)) {
     fSamplerObjectSupport = version >= GR_GL_VER(2, 0);
   }
+  // We currently use sampler objects whenever they are available.
+  fUseSamplerObjects = fSamplerObjectSupport;
 
   if (GR_IS_GR_GL_ES(standard)) {
     fTiledRenderingSupport = ctxInfo.hasExtension("GL_QCOM_tiled_rendering");
@@ -722,8 +728,7 @@ void GrGLCaps::init(
         ctxInfo, contextOptions, gli, shaderCaps, &formatWorkarounds);
   }
 
-  // Requires fTextureSwizzleSupport, msaa support, ES compatibility have
-  // already been detected.
+  // Requires msaa support, ES compatibility have already been detected.
   this->initFormatTable(ctxInfo, gli, formatWorkarounds);
 
   this->finishInitialization(contextOptions);
@@ -1187,6 +1192,8 @@ void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {
   writer->appendBool("Program binary support", fProgramBinarySupport);
   writer->appendBool("Program parameters support", fProgramParameterSupport);
   writer->appendBool("Sampler object support", fSamplerObjectSupport);
+  writer->appendBool("Using sampler objects", fUseSamplerObjects);
+  writer->appendBool("Texture swizzle support", fTextureSwizzleSupport);
   writer->appendBool("Tiled rendering support", fTiledRenderingSupport);
   writer->appendBool("FB fetch requires enable per sample", fFBFetchRequiresEnablePerSample);
   writer->appendBool("sRGB Write Control", fSRGBWriteControl);
@@ -3261,7 +3268,7 @@ static bool has_msaa_render_buffer(const GrSurfaceProxy* surf, const GrGLCaps& g
   // 1) It's multisampled
   // 2) We're using an extension with separate MSAA renderbuffers
   // 3) It's not FBO 0, which is special and always auto-resolves
-  return rt->numSamples() > 1 && glCaps.usesMSAARenderBuffers() && !rt->rtPriv().glRTFBOIDIs0();
+  return rt->numSamples() > 1 && glCaps.usesMSAARenderBuffers() && !rt->glRTFBOIDIs0();
 }
 
 bool GrGLCaps::onCanCopySurface(
@@ -3563,11 +3570,23 @@ void GrGLCaps::applyDriverCorrectnessWorkarounds(
   static constexpr bool isMAC = false;
 #endif
 
+#ifdef SK_BUILD_FOR_ANDROID
+  // Older versions of Android have problems with setting GL_TEXTURE_BASE_LEVEL or
+  // GL_TEXTURE_MAX_LEVEL on GL_TEXTURE_EXTERTNAL_OES textures. We just leave them as is and hope
+  // the client never changes them either.
+  fDontSetBaseOrMaxLevelForExternalTextures = true;
+  // PowerVR can crash setting the levels on Android up to Q for any texture?
+  // https://crbug.com/1123874
+  if (ctxInfo.vendor() == kImagination_GrGLVendor) {
+    fMipmapLevelControlSupport = false;
+  }
+#endif
+
   // We support manual mip-map generation (via iterative downsampling draw calls). This fixes
   // bugs on some cards/drivers that produce incorrect mip-maps for sRGB textures when using
   // glGenerateMipmap. Our implementation requires mip-level sampling control. Additionally,
   // it can be much slower (especially on mobile GPUs), so we opt-in only when necessary:
-  if (fMipmapLevelAndLodControlSupport &&
+  if (fMipmapLevelControlSupport &&
       (contextOptions.fDoManualMipmapping || (kIntel_GrGLVendor == ctxInfo.vendor()) ||
        (kNVIDIA_GrGLDriver == ctxInfo.driver() && isMAC) ||
        (kATI_GrGLVendor == ctxInfo.vendor()))) {
@@ -3863,13 +3882,6 @@ void GrGLCaps::applyDriverCorrectnessWorkarounds(
   }
 #endif
 
-#ifdef SK_BUILD_FOR_ANDROID
-  // Older versions of Android have problems with setting GL_TEXTURE_BASE_LEVEL or
-  // GL_TEXTURE_MAX_LEVEL on GL_TEXTURE_EXTERTNAL_OES textures. We just leave them as is and hope
-  // the client never changes them either.
-  fDontSetBaseOrMaxLevelForExternalTextures = true;
-#endif
-
   // PowerVRGX6250 drops every pixel if we modify the sample mask while color writes are disabled.
   if (kPowerVRRogue_GrGLRenderer == ctxInfo.renderer()) {
     fNeverDisableColorWrites = true;
@@ -4009,9 +4021,6 @@ void GrGLCaps::onApplyOptionsOverrides(const GrContextOptions& options) {
     SkASSERT(!fNeverDisableColorWrites);
     SkASSERT(!fShaderCaps->fCanOnlyUseSampleMaskWithStencil);
   }
-  if (options.fDoManualMipmapping) {
-    fDoManualMipmapping = true;
-  }
   if (options.fShaderCacheStrategy < GrContextOptions::ShaderCacheStrategy::kBackendBinary) {
     fProgramBinarySupport = false;
   }
@@ -4056,7 +4065,7 @@ GrCaps::SurfaceReadPixelsSupport GrGLCaps::surfaceSupportsReadPixels(
   return SurfaceReadPixelsSupport::kSupported;
 }
 
-size_t offset_alignment_for_transfer_buffer(GrGLenum externalType) noexcept {
+size_t offset_alignment_for_transfer_buffer(GrGLenum externalType) {
   // This switch is derived from a table titled "Pixel data type parameter values and the
   // corresponding GL data types" in the OpenGL spec (Table 8.2 in OpenGL 4.5).
   switch (externalType) {
@@ -4074,19 +4083,19 @@ size_t offset_alignment_for_transfer_buffer(GrGLenum externalType) noexcept {
     case GR_GL_UNSIGNED_SHORT_5_5_5_1: return sizeof(GrGLushort);
     case GR_GL_UNSIGNED_INT_2_10_10_10_REV: return sizeof(GrGLuint);
 #if 0  // GL types we currently don't use. Here for future reference.
-    case GR_GL_UNSIGNED_BYTE_3_3_2: return sizeof(GrGLubyte);
-    case GR_GL_UNSIGNED_BYTE_2_3_3_REV: return sizeof(GrGLubyte);
-    case GR_GL_UNSIGNED_SHORT_5_6_5_REV: return sizeof(GrGLushort);
-    case GR_GL_UNSIGNED_SHORT_4_4_4_4_REV: return sizeof(GrGLushort);
-    case GR_GL_UNSIGNED_SHORT_1_5_5_5_REV: return sizeof(GrGLushort);
-    case GR_GL_UNSIGNED_INT_8_8_8_8: return sizeof(GrGLuint);
-    case GR_GL_UNSIGNED_INT_8_8_8_8_REV: return sizeof(GrGLuint);
-    case GR_GL_UNSIGNED_INT_10_10_10_2: return sizeof(GrGLuint);
-    case GR_GL_UNSIGNED_INT_24_8: return sizeof(GrGLuint);
-    case GR_GL_UNSIGNED_INT_10F_11F_11F_REV: return sizeof(GrGLuint);
-    case GR_GL_UNSIGNED_INT_5_9_9_9_REV: return sizeof(GrGLuint);
-    // This one is not corresponding to a GL data type and the spec just says it is 4.
-    case GR_GL_FLOAT_32_UNSIGNED_INT_24_8_REV: return 4;
+        case GR_GL_UNSIGNED_BYTE_3_3_2:             return sizeof(GrGLubyte);
+        case GR_GL_UNSIGNED_BYTE_2_3_3_REV:         return sizeof(GrGLubyte);
+        case GR_GL_UNSIGNED_SHORT_5_6_5_REV:        return sizeof(GrGLushort);
+        case GR_GL_UNSIGNED_SHORT_4_4_4_4_REV:      return sizeof(GrGLushort);
+        case GR_GL_UNSIGNED_SHORT_1_5_5_5_REV:      return sizeof(GrGLushort);
+        case GR_GL_UNSIGNED_INT_8_8_8_8:            return sizeof(GrGLuint);
+        case GR_GL_UNSIGNED_INT_8_8_8_8_REV:        return sizeof(GrGLuint);
+        case GR_GL_UNSIGNED_INT_10_10_10_2:         return sizeof(GrGLuint);
+        case GR_GL_UNSIGNED_INT_24_8:               return sizeof(GrGLuint);
+        case GR_GL_UNSIGNED_INT_10F_11F_11F_REV:    return sizeof(GrGLuint);
+        case GR_GL_UNSIGNED_INT_5_9_9_9_REV:        return sizeof(GrGLuint);
+        // This one is not corresponding to a GL data type and the spec just says it is 4.
+        case GR_GL_FLOAT_32_UNSIGNED_INT_24_8_REV:  return 4;
 #endif
     default: return 0;
   }
@@ -4171,7 +4180,7 @@ bool GrGLCaps::onIsWindowRectanglesSupportedForRT(const GrBackendRenderTarget& b
   return fbInfo.fFBOID != 0;
 }
 
-bool GrGLCaps::isFormatSRGB(const GrBackendFormat& format) const noexcept {
+bool GrGLCaps::isFormatSRGB(const GrBackendFormat& format) const {
   return format.asGLFormat() == GrGLFormat::kSRGB8_ALPHA8;
 }
 
@@ -4252,7 +4261,7 @@ int GrGLCaps::maxRenderTargetSampleCount(GrGLFormat format) const {
   return count;
 }
 
-size_t GrGLCaps::bytesPerPixel(GrGLFormat format) const noexcept {
+size_t GrGLCaps::bytesPerPixel(GrGLFormat format) const {
   return this->getFormatInfo(format).fBytesPerPixel;
 }
 
@@ -4261,7 +4270,7 @@ size_t GrGLCaps::bytesPerPixel(const GrBackendFormat& format) const {
   return this->bytesPerPixel(glFormat);
 }
 
-bool GrGLCaps::canFormatBeFBOColorAttachment(GrGLFormat format) const noexcept {
+bool GrGLCaps::canFormatBeFBOColorAttachment(GrGLFormat format) const {
   return SkToBool(this->getFormatInfo(format).fFlags & FormatInfo::kFBOColorAttachment_Flag);
 }
 
@@ -4273,7 +4282,7 @@ bool GrGLCaps::isFormatCopyable(const GrBackendFormat& format) const {
   return this->canFormatBeFBOColorAttachment(format.asGLFormat());
 }
 
-bool GrGLCaps::formatSupportsTexStorage(GrGLFormat format) const noexcept {
+bool GrGLCaps::formatSupportsTexStorage(GrGLFormat format) const {
   return SkToBool(this->getFormatInfo(format).fFlags & FormatInfo::kUseTexStorage_Flag);
 }
 
@@ -4391,14 +4400,22 @@ GrSwizzle GrGLCaps::getWriteSwizzle(const GrBackendFormat& format, GrColorType c
   return {};
 }
 
-uint64_t GrGLCaps::computeFormatKey(const GrBackendFormat& format) const noexcept {
+GrDstSampleType GrGLCaps::onGetDstSampleTypeForProxy(const GrRenderTargetProxy* rt) const {
+  if (rt->asTextureProxy()) {
+    return GrDstSampleType::kAsSelfTexture;
+  }
+  return GrDstSampleType::kAsTextureCopy;
+}
+
+uint64_t GrGLCaps::computeFormatKey(const GrBackendFormat& format) const {
   auto glFormat = format.asGLFormat();
   return (uint64_t)(glFormat);
 }
 
 GrProgramDesc GrGLCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& programInfo) const {
   GrProgramDesc desc;
-  SkDEBUGCODE(bool result =) GrProgramDesc::Build(&desc, rt, programInfo, *this);
+  SkDEBUGCODE(bool result =)
+  GrProgramDesc::Build(&desc, rt, programInfo, *this);
   SkASSERT(result == desc.isValid());
   return desc;
 }

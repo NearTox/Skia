@@ -43,7 +43,7 @@ class GrBufferAllocPool : SkNoncopyable {
     static sk_sp<CpuBufferCache> Make(int maxBuffersToCache);
 
     sk_sp<GrCpuBuffer> makeBuffer(size_t size, bool mustBeInitialized);
-    void releaseAll() noexcept;
+    void releaseAll();
 
    private:
     CpuBufferCache(int maxBuffersToCache);
@@ -82,8 +82,7 @@ class GrBufferAllocPool : SkNoncopyable {
    *                              or staging buffers used before data is uploaded to
    *                              GPU buffer objects.
    */
-  GrBufferAllocPool(
-      GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache) noexcept;
+  GrBufferAllocPool(GrGpu* gpu, GrGpuBufferType bufferType, sk_sp<CpuBufferCache> cpuBufferCache);
 
   virtual ~GrBufferAllocPool();
 
@@ -146,7 +145,7 @@ class GrBufferAllocPool : SkNoncopyable {
   };
 
   bool createBlock(size_t requestSize);
-  void destroyBlock() noexcept;
+  void destroyBlock();
   void deleteBlocks();
   void flushCpuData(const BufferBlock& block, size_t flushSize);
   void resetCpuData(size_t newSize);
@@ -176,7 +175,7 @@ class GrVertexBufferAllocPool : public GrBufferAllocPool {
    *                              or staging buffers used before data is uploaded to
    *                              GPU buffer objects.
    */
-  GrVertexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept;
+  GrVertexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache);
 
   /**
    * Returns a block of memory to hold vertices. A buffer designated to hold
@@ -234,7 +233,7 @@ class GrVertexBufferAllocPool : public GrBufferAllocPool {
       int* startVertex, int* actualVertexCount);
 
  private:
-  typedef GrBufferAllocPool INHERITED;
+  using INHERITED = GrBufferAllocPool;
 };
 
 /**
@@ -250,7 +249,7 @@ class GrIndexBufferAllocPool : public GrBufferAllocPool {
    *                              or staging buffers used before data is uploaded to
    *                              GPU buffer objects.
    */
-  GrIndexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept;
+  GrIndexBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache);
 
   /**
    * Returns a block of memory to hold indices. A buffer designated to hold
@@ -302,12 +301,12 @@ class GrIndexBufferAllocPool : public GrBufferAllocPool {
       int* actualIndexCount);
 
  private:
-  typedef GrBufferAllocPool INHERITED;
+  using INHERITED = GrBufferAllocPool;
 };
 
 class GrDrawIndirectBufferAllocPool : private GrBufferAllocPool {
  public:
-  GrDrawIndirectBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache) noexcept
+  GrDrawIndirectBufferAllocPool(GrGpu* gpu, sk_sp<CpuBufferCache> cpuBufferCache)
       : GrBufferAllocPool(gpu, GrGpuBufferType::kDrawIndirect, std::move(cpuBufferCache)) {}
 
   GrDrawIndirectCommand* makeSpace(int drawCount, sk_sp<const GrBuffer>* buffer, size_t* offset) {

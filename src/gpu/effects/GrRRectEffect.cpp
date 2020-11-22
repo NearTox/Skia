@@ -50,7 +50,7 @@ class CircularRRectEffect : public GrFragmentProcessor {
 
   ~CircularRRectEffect() override {}
 
-  const char* name() const noexcept override { return "CircularRRect"; }
+  const char* name() const override { return "CircularRRect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
@@ -70,7 +70,7 @@ class CircularRRectEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor& other) const override;
 
   SkRRect fRRect;
   GrClipEdgeType fEdgeType;
@@ -78,7 +78,7 @@ class CircularRRectEffect : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 GrFPResult CircularRRectEffect::Make(
@@ -116,7 +116,7 @@ std::unique_ptr<GrFragmentProcessor> CircularRRectEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new CircularRRectEffect(*this));
 }
 
-bool CircularRRectEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool CircularRRectEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const CircularRRectEffect& crre = other.cast<CircularRRectEffect>();
   // The corner flags are derived from fRRect, so no need to check them.
   return fEdgeType == crre.fEdgeType && fRRect == crre.fRRect;
@@ -160,7 +160,7 @@ class GLCircularRRectEffect : public GrGLSLFragmentProcessor {
   GrGLSLProgramDataManager::UniformHandle fInnerRectUniform;
   GrGLSLProgramDataManager::UniformHandle fRadiusPlusHalfUniform;
   SkRRect fPrevRRect;
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 void GLCircularRRectEffect::emitCode(EmitArgs& args) {
@@ -396,7 +396,7 @@ class EllipticalRRectEffect : public GrFragmentProcessor {
 
   ~EllipticalRRectEffect() override {}
 
-  const char* name() const noexcept override { return "EllipticalRRect"; }
+  const char* name() const override { return "EllipticalRRect"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
@@ -412,14 +412,14 @@ class EllipticalRRectEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor& other) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor& other) const override;
 
   SkRRect fRRect;
   GrClipEdgeType fEdgeType;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 GrFPResult EllipticalRRectEffect::Make(
@@ -453,7 +453,7 @@ std::unique_ptr<GrFragmentProcessor> EllipticalRRectEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new EllipticalRRectEffect(*this));
 }
 
-bool EllipticalRRectEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool EllipticalRRectEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const EllipticalRRectEffect& erre = other.cast<EllipticalRRectEffect>();
   return fEdgeType == erre.fEdgeType && fRRect == erre.fRRect;
 }
@@ -518,7 +518,7 @@ class GLEllipticalRRectEffect : public GrGLSLFragmentProcessor {
   GrGLSLProgramDataManager::UniformHandle fInvRadiiSqdUniform;
   GrGLSLProgramDataManager::UniformHandle fScaleUniform;
   SkRRect fPrevRRect;
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 void GLEllipticalRRectEffect::emitCode(EmitArgs& args) {

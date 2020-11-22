@@ -104,7 +104,7 @@ SkXPSDevice::SkXPSDevice(SkISize s)
       fCurrentPage(0),
       fTopTypefaces(&fTypefaces) {}
 
-SkXPSDevice::~SkXPSDevice() = default;
+SkXPSDevice::~SkXPSDevice() {}
 
 bool SkXPSDevice::beginPortfolio(SkWStream* outputStream, IXpsOMObjectFactory* factory) {
   SkASSERT(factory);
@@ -1767,8 +1767,9 @@ void SkXPSDevice::drawOval(const SkRect& o, const SkPaint& p) {
 void SkXPSDevice::drawImageRect(
     const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint& paint,
     SkCanvas::SrcRectConstraint constraint) {
+  // TODO: support gpu images
   SkBitmap bitmap;
-  if (!as_IB(image)->getROPixels(&bitmap)) {
+  if (!as_IB(image)->getROPixels(nullptr, &bitmap)) {
     return;
   }
 

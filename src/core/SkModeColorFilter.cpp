@@ -23,7 +23,7 @@
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) noexcept {
+SkModeColorFilter::SkModeColorFilter(SkColor color, SkBlendMode mode) {
   fColor = color;
   fMode = mode;
 }
@@ -38,7 +38,7 @@ bool SkModeColorFilter::onAsAColorMode(SkColor* color, SkBlendMode* mode) const 
   return true;
 }
 
-uint32_t SkModeColorFilter::onGetFlags() const noexcept {
+uint32_t SkModeColorFilter::onGetFlags() const {
   uint32_t flags = 0;
   switch (fMode) {
     case SkBlendMode::kDst:      //!< [Da, Dc]
@@ -75,8 +75,10 @@ bool SkModeColorFilter::onAppendStages(const SkStageRec& rec, bool shaderIsOpaqu
 skvm::Color SkModeColorFilter::onProgram(
     skvm::Builder* p, skvm::Color c, SkColorSpace* dstCS, skvm::Uniforms* uniforms,
     SkArenaAlloc*) const {
-  skvm::Color dst = c, src = p->uniformPremul(
-                           SkColor4f::FromColor(fColor), sk_srgb_singleton(), uniforms, dstCS);
+  SkColor4f color = SkColor4f::FromColor(fColor);
+  SkColorSpaceXformSteps(sk_srgb_singleton(), kUnpremul_SkAlphaType, dstCS, kPremul_SkAlphaType)
+      .apply(color.vec());
+  skvm::Color dst = c, src = p->uniformColor(color, uniforms);
   return p->blend(fMode, src, dst);
 }
 
@@ -96,7 +98,7 @@ GrFPResult SkModeColorFilter::asFragmentProcessor(
     return GrFPSuccess(std::move(inputFP));
   }
 
-  SkDEBUGCODE(const bool fpHasConstIO = !inputFP || inputFP->hasConstantOutputForConstantInput());
+  SkDEBUGCODE(const bool fpHasConstIO = !inputFP || inputFP->hasConstantOutputForConstantInput();)
 
   auto colorFP = GrConstColorProcessor::Make(SkColorToPMColor4f(fColor, dstColorInfo));
   auto xferFP = GrBlendFragmentProcessor::Make(

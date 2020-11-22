@@ -17,9 +17,9 @@
 #include "modules/skparagraph/include/TypefaceFontProvider.h"
 #include "modules/skparagraph/src/ParagraphBuilderImpl.h"
 #include "modules/skparagraph/src/ParagraphImpl.h"
-#include "modules/skparagraph/src/ParagraphUtil.h"
 #include "modules/skparagraph/src/TextLine.h"
 #include "modules/skparagraph/utils/TestFontCollection.h"
+#include "modules/skshaper/src/SkUnicode.h"
 #include "samplecode/Sample.h"
 #include "src/core/SkOSFile.h"
 #include "src/shaders/SkColorShader.h"
@@ -27,7 +27,6 @@
 #include "src/utils/SkUTF.h"
 #include "tools/Resources.h"
 #include "tools/flags/CommandLineFlags.h"
-
 
 static DEFINE_bool(verboseParagraph, false, "paragraph samples very verbose.");
 
@@ -169,8 +168,7 @@ protected:
     }
 
 private:
-
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView2 : public ParagraphView_Base {
@@ -416,7 +414,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView3 : public ParagraphView_Base {
@@ -539,7 +537,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView4 : public ParagraphView_Base {
@@ -675,7 +673,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView5 : public ParagraphView_Base {
@@ -746,14 +744,15 @@ protected:
             builder.addText(text4);
             builder.pop();
         } else {
-            if (this->isVerbose()) {
-                SkString str = SkStringFromU16String(text);
-                SkDebugf("Text: %s\n", str.c_str());
-            }
             builder.addText(text + expected);
         }
 
         auto paragraph = builder.Build();
+        auto impl = static_cast<ParagraphImpl*>(paragraph.get());
+        if (this->isVerbose()) {
+          SkDebugf("Text: >%s<\n", impl->text().data());
+        }
+
         paragraph->layout(w - margin * 2);
         paragraph->paint(canvas, margin, margin);
     }
@@ -794,7 +793,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView6 : public ParagraphView_Base {
@@ -965,7 +964,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView7 : public ParagraphView_Base {
@@ -1035,7 +1034,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView8 : public ParagraphView_Base {
@@ -1105,7 +1104,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView9 : public ParagraphView_Base {
@@ -1202,9 +1201,9 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
-    SkScalar letterSpacing;
-    SkScalar wordSpacing;
+ using INHERITED = Sample;
+ SkScalar letterSpacing;
+ SkScalar wordSpacing;
 };
 
 class ParagraphView10 : public ParagraphView_Base {
@@ -1244,7 +1243,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView11 : public ParagraphView_Base {
@@ -1323,7 +1322,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView12 : public ParagraphView_Base {
@@ -1362,7 +1361,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView14 : public ParagraphView_Base {
@@ -1397,7 +1396,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView15 : public ParagraphView_Base {
@@ -1444,7 +1443,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView16 : public ParagraphView_Base {
@@ -1479,7 +1478,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView17 : public ParagraphView_Base {
@@ -1515,7 +1514,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class Zalgo {
@@ -1607,15 +1606,14 @@ protected:
             ParagraphBuilderImpl builder(paragraph_style, fontCollection);
             builder.pushStyle(text_style);
             auto utf16text = zalgo.zalgo("SkParagraph");
-            if (this->isVerbose()) {
-              SkString str = SkStringFromU16String(utf16text);
-              SkDebugf("Text:>%s<\n", str.c_str());
-            }
             builder.addText(utf16text);
             fParagraph = builder.Build();
           }
 
             auto impl = static_cast<ParagraphImpl*>(fParagraph.get());
+            if (this->isVerbose()) {
+              SkDebugf("Text:>%s<\n", impl->text().data());
+            }
             impl->setState(InternalState::kUnknown);
             fParagraph->layout(1000);
             fParagraph->paint(canvas, 300, 200);
@@ -1647,7 +1645,7 @@ private:
     size_t fIndex = 0;
     size_t fLimit = 20;
     std::unique_ptr<Paragraph> fParagraph;
-    typedef Sample INHERITED;
+    using INHERITED = Sample;
 };
 
 class ParagraphView19 : public ParagraphView_Base {
@@ -1674,7 +1672,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView20 : public ParagraphView_Base {
@@ -1703,7 +1701,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView21 : public ParagraphView_Base {
@@ -1728,7 +1726,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView22 : public ParagraphView_Base {
@@ -1777,8 +1775,8 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
-    bool direction;
+ using INHERITED = Sample;
+ bool direction;
 };
 
 class ParagraphView23 : public ParagraphView_Base {
@@ -1828,7 +1826,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView24 : public ParagraphView_Base {
@@ -1873,7 +1871,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView25 : public ParagraphView_Base {
@@ -1940,7 +1938,7 @@ Shell: layout('Go to device settings ￼ and set up a passcode. ￼', 280.000000
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView26 : public ParagraphView_Base {
@@ -1983,7 +1981,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView27 : public ParagraphView_Base {
@@ -2115,7 +2113,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView28 : public ParagraphView_Base {
@@ -2151,7 +2149,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView29 : public ParagraphView_Base {
@@ -2219,7 +2217,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView30 : public ParagraphView_Base {
@@ -2275,7 +2273,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView31 : public ParagraphView_Base {
@@ -2305,7 +2303,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView32 : public ParagraphView_Base {
@@ -2344,7 +2342,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView33 : public ParagraphView_Base {
@@ -2377,7 +2375,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView34 : public ParagraphView_Base {
@@ -2429,7 +2427,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView35 : public ParagraphView_Base {
@@ -2488,8 +2486,8 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
-    SkPoint fPoint;
+ using INHERITED = Sample;
+ SkPoint fPoint;
 };
 
 class ParagraphView36 : public ParagraphView_Base {
@@ -2524,7 +2522,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView37 : public ParagraphView_Base {
@@ -2578,7 +2576,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView38 : public ParagraphView_Base {
@@ -2640,7 +2638,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView39 : public ParagraphView_Base {
@@ -2676,7 +2674,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView41 : public ParagraphView_Base {
@@ -2726,7 +2724,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView42 : public ParagraphView_Base {
@@ -2771,7 +2769,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView43 : public ParagraphView_Base {
@@ -2805,7 +2803,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView44 : public ParagraphView_Base {
@@ -2838,7 +2836,7 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
 };
 
 class ParagraphView45 : public ParagraphView_Base {
@@ -2894,52 +2892,199 @@ protected:
     }
 
 private:
-    typedef Sample INHERITED;
+ using INHERITED = Sample;
+};
+
+class ParagraphView46 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("Paragraph44"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    auto text = "XXXXXXXXXX\nYYYYYYYYYY\nZZZZZZZZZZ";
+    canvas->drawColor(SK_ColorWHITE);
+
+    auto fontCollection = sk_make_sp<FontCollection>();
+    fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
+    fontCollection->enableFontFallback();
+
+    ParagraphStyle paragraph_style;
+
+    auto column = width() / 3;
+    auto draw = [&](DrawOptions options, SkScalar x) {
+      paragraph_style.setDrawOptions(options);
+      ParagraphBuilderImpl builder(paragraph_style, fontCollection);
+      TextStyle text_style;
+      text_style.setColor(SK_ColorBLACK);
+      text_style.setFontFamilies({SkString("Roboto")});
+      text_style.setFontSize(20);
+      builder.pushStyle(text_style);
+      builder.addText(text);
+      auto paragraph = builder.Build();
+      paragraph->layout(column);
+      paragraph->paint(canvas, x, 000);
+      paragraph->paint(canvas, x, 200);
+      paragraph->paint(canvas, x, 400);
+    };
+
+    draw(DrawOptions::kReplay, column * 0);
+    draw(DrawOptions::kRecord, column * 1);
+    draw(DrawOptions::kDirect, column * 2);
+  }
+
+ private:
+  using INHERITED = Sample;
+};
+
+class ParagraphView47 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("Paragraph47"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->clear(SK_ColorWHITE);
+
+    SkPaint paint;
+    paint.setColor(SK_ColorRED);
+
+    auto fontCollection = sk_make_sp<FontCollection>();
+    fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
+
+    TextStyle defaultStyle;
+    defaultStyle.setForegroundColor(paint);
+
+    ParagraphStyle paraStyle;
+    paraStyle.setTextStyle(defaultStyle);
+    paraStyle.setMaxLines(1);
+    paraStyle.setEllipsis(SkString("..."));
+
+    const char* hello = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do";
+    auto builder = ParagraphBuilder::make(paraStyle, fontCollection);
+    builder->addText(hello, strlen(hello));
+
+    auto paragraph = builder->Build();
+    paragraph->layout(100);
+    paragraph->paint(canvas, 200, 200);
+
+    paragraph->layout(200);
+    paragraph->paint(canvas, 200, 300);
+
+    ParagraphStyle paraStyle2;
+    paraStyle2.setTextStyle(defaultStyle);
+    paraStyle2.setMaxLines(1);
+    paraStyle.setEllipsis(SkString(""));
+
+    auto builder2 = ParagraphBuilder::make(paraStyle, fontCollection);
+    builder2->addText(hello, strlen(hello));
+
+    auto paragraph2 = builder2->Build();
+    paragraph2->layout(100);
+    paragraph2->paint(canvas, 200, 400);
+
+    paragraph2->layout(200);
+    paragraph2->paint(canvas, 200, 500);
+    canvas->restore();
+  }
+
+ private:
+  using INHERITED = Sample;
+};
+
+class ParagraphView48 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("Paragraph48"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->clear(SK_ColorGRAY);
+
+    // To reproduce the client problem set DEFAULT_FONT_FAMILY to something
+    // non-existing: "sans-serif1", for instance
+    SkPaint paint;
+    paint.setColor(SK_ColorRED);
+
+    auto fontCollection = sk_make_sp<FontCollection>();
+    fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
+
+    TextStyle defaultStyle;
+    defaultStyle.setForegroundColor(paint);
+
+    ParagraphStyle paraStyle;
+    paraStyle.setTextStyle(defaultStyle);
+
+    const char* hello = "👶 487";
+    auto builder = ParagraphBuilder::make(paraStyle, fontCollection);
+    builder->addText(hello, strlen(hello));
+
+    auto paragraph = builder->Build();
+    paragraph->layout(200);
+    paragraph->paint(canvas, 200, 200);
+
+    const char* hello2 = "487";
+    auto builder2 = ParagraphBuilder::make(paraStyle, fontCollection);
+    builder2->addText(hello2, strlen(hello2));
+
+    auto paragraph2 = builder2->Build();
+    paragraph2->layout(200);
+    paragraph2->paint(canvas, 200, 300);
+
+    const char* hello3 = " 👶 487";
+    auto builder3 = ParagraphBuilder::make(paraStyle, fontCollection);
+    builder3->addText(hello3, strlen(hello3));
+
+    auto paragraph3 = builder3->Build();
+    paragraph3->layout(200);
+    paragraph3->paint(canvas, 200, 400);
+    canvas->restore();
+  }
+
+ private:
+  using INHERITED = Sample;
 };
 
 }  // namespace
 
 //////////////////////////////////////////////////////////////////////////////
-DEF_SAMPLE(return new ParagraphView1());
-DEF_SAMPLE(return new ParagraphView2());
-DEF_SAMPLE(return new ParagraphView3());
-DEF_SAMPLE(return new ParagraphView4());
-DEF_SAMPLE(return new ParagraphView5());
-DEF_SAMPLE(return new ParagraphView6());
-DEF_SAMPLE(return new ParagraphView7());
-DEF_SAMPLE(return new ParagraphView8());
-DEF_SAMPLE(return new ParagraphView9());
-DEF_SAMPLE(return new ParagraphView10());
-DEF_SAMPLE(return new ParagraphView11());
-DEF_SAMPLE(return new ParagraphView12());
-DEF_SAMPLE(return new ParagraphView14());
-DEF_SAMPLE(return new ParagraphView15());
-DEF_SAMPLE(return new ParagraphView16());
-DEF_SAMPLE(return new ParagraphView17());
-DEF_SAMPLE(return new ParagraphView18());
-DEF_SAMPLE(return new ParagraphView19());
-DEF_SAMPLE(return new ParagraphView20());
-DEF_SAMPLE(return new ParagraphView21());
-DEF_SAMPLE(return new ParagraphView22());
-DEF_SAMPLE(return new ParagraphView23());
-DEF_SAMPLE(return new ParagraphView24());
-DEF_SAMPLE(return new ParagraphView25());
-DEF_SAMPLE(return new ParagraphView26());
-DEF_SAMPLE(return new ParagraphView27());
-DEF_SAMPLE(return new ParagraphView28());
-DEF_SAMPLE(return new ParagraphView29());
-DEF_SAMPLE(return new ParagraphView30());
-DEF_SAMPLE(return new ParagraphView31());
-DEF_SAMPLE(return new ParagraphView32());
-DEF_SAMPLE(return new ParagraphView33());
-DEF_SAMPLE(return new ParagraphView34());
-DEF_SAMPLE(return new ParagraphView35());
-DEF_SAMPLE(return new ParagraphView36());
-DEF_SAMPLE(return new ParagraphView37());
-DEF_SAMPLE(return new ParagraphView38());
-DEF_SAMPLE(return new ParagraphView39());
-DEF_SAMPLE(return new ParagraphView41());
-DEF_SAMPLE(return new ParagraphView42());
-DEF_SAMPLE(return new ParagraphView43());
-DEF_SAMPLE(return new ParagraphView44());
-DEF_SAMPLE(return new ParagraphView45());
+DEF_SAMPLE(return new ParagraphView1();)
+DEF_SAMPLE(return new ParagraphView2();)
+DEF_SAMPLE(return new ParagraphView3();)
+DEF_SAMPLE(return new ParagraphView4();)
+DEF_SAMPLE(return new ParagraphView5();)
+DEF_SAMPLE(return new ParagraphView6();)
+DEF_SAMPLE(return new ParagraphView7();)
+DEF_SAMPLE(return new ParagraphView8();)
+DEF_SAMPLE(return new ParagraphView9();)
+DEF_SAMPLE(return new ParagraphView10();)
+DEF_SAMPLE(return new ParagraphView11();)
+DEF_SAMPLE(return new ParagraphView12();)
+DEF_SAMPLE(return new ParagraphView14();)
+DEF_SAMPLE(return new ParagraphView15();)
+DEF_SAMPLE(return new ParagraphView16();)
+DEF_SAMPLE(return new ParagraphView17();)
+DEF_SAMPLE(return new ParagraphView18();)
+DEF_SAMPLE(return new ParagraphView19();)
+DEF_SAMPLE(return new ParagraphView20();)
+DEF_SAMPLE(return new ParagraphView21();)
+DEF_SAMPLE(return new ParagraphView22();)
+DEF_SAMPLE(return new ParagraphView23();)
+DEF_SAMPLE(return new ParagraphView24();)
+DEF_SAMPLE(return new ParagraphView25();)
+DEF_SAMPLE(return new ParagraphView26();)
+DEF_SAMPLE(return new ParagraphView27();)
+DEF_SAMPLE(return new ParagraphView28();)
+DEF_SAMPLE(return new ParagraphView29();)
+DEF_SAMPLE(return new ParagraphView30();)
+DEF_SAMPLE(return new ParagraphView31();)
+DEF_SAMPLE(return new ParagraphView32();)
+DEF_SAMPLE(return new ParagraphView33();)
+DEF_SAMPLE(return new ParagraphView34();)
+DEF_SAMPLE(return new ParagraphView35();)
+DEF_SAMPLE(return new ParagraphView36();)
+DEF_SAMPLE(return new ParagraphView37();)
+DEF_SAMPLE(return new ParagraphView38();)
+DEF_SAMPLE(return new ParagraphView39();)
+DEF_SAMPLE(return new ParagraphView41();)
+DEF_SAMPLE(return new ParagraphView42();)
+DEF_SAMPLE(return new ParagraphView43();)
+DEF_SAMPLE(return new ParagraphView44();)
+DEF_SAMPLE(return new ParagraphView45();)
+DEF_SAMPLE(return new ParagraphView46();)
+DEF_SAMPLE(return new ParagraphView47();)
+DEF_SAMPLE(return new ParagraphView48();)

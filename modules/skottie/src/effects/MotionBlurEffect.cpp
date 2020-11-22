@@ -102,8 +102,8 @@ void MotionBlurEffect::renderToRaster8888Pow2Samples(
   SkASSERT(!info.isEmpty());
   std::vector<uint64_t> accum(info.width() * info.height());
 
-  SkDEBUGCODE(size_t frames_rendered = 0;) bool needs_clear =
-      false;  // Cleared initially by saveLayer().
+  SkDEBUGCODE(size_t frames_rendered = 0;)
+  bool needs_clear = false;  // Cleared initially by saveLayer().
   for (size_t i = 0; i < fSampleCount; ++i) {
     this->seekToSample(i, canvas->getTotalMatrix());
 
@@ -117,7 +117,7 @@ void MotionBlurEffect::renderToRaster8888Pow2Samples(
     }
     needs_clear = true;
     child->render(canvas, ctx);
-    SkDEBUGCODE(frames_rendered++);
+    SkDEBUGCODE(frames_rendered++;)
 
     // Pluck out the pixels we've drawn in the layer.
     const uint32_t* src = layer;
@@ -221,7 +221,8 @@ void MotionBlurEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) cons
     frame_ctx = frame_ctx.modulateOpacity(frame_alpha).modulateBlendMode(SkBlendMode::kPlus);
   }
 
-  SkDEBUGCODE(size_t frames_rendered = 0;) for (size_t i = 0; i < fSampleCount; ++i) {
+  SkDEBUGCODE(size_t frames_rendered = 0;)
+  for (size_t i = 0; i < fSampleCount; ++i) {
     this->seekToSample(i, canvas->getTotalMatrix());
 
     if (!child->isVisible()) {
@@ -234,7 +235,7 @@ void MotionBlurEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) cons
     }
 
     child->render(canvas, frame_ctx);
-    SkDEBUGCODE(frames_rendered++);
+    SkDEBUGCODE(frames_rendered++;)
   }
 
   SkASSERT(frames_rendered == fVisibleSampleCount);

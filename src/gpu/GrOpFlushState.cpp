@@ -30,10 +30,11 @@ GrOpFlushState::GrOpFlushState(
       fResourceProvider(resourceProvider),
       fTokenTracker(tokenTracker) {}
 
-const GrCaps& GrOpFlushState::caps() const noexcept { return *fGpu->caps(); }
+const GrCaps& GrOpFlushState::caps() const { return *fGpu->caps(); }
 
 void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
-    const GrOp* op, const SkRect& chainBounds, const GrPipeline* pipeline) {
+    const GrOp* op, const SkRect& chainBounds, const GrPipeline* pipeline,
+    const GrUserStencilSettings* userStencilSettings) {
   SkASSERT(this->opsRenderPass());
 
   while (fCurrDraw != fDraws.end() && fCurrDraw->fOp == op) {
@@ -45,8 +46,8 @@ void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
 
     GrProgramInfo programInfo(
         this->proxy()->numSamples(), this->proxy()->numStencilSamples(),
-        this->proxy()->backendFormat(), this->writeView()->origin(), pipeline,
-        fCurrDraw->fGeometryProcessor, fCurrDraw->fPrimitiveType);
+        this->proxy()->backendFormat(), this->writeView()->origin(), pipeline, userStencilSettings,
+        fCurrDraw->fGeometryProcessor, fCurrDraw->fPrimitiveType, 0, this->renderPassBarriers());
 
     this->bindPipelineAndScissorClip(programInfo, chainBounds);
     this->bindTextures(programInfo.primProc(), fCurrDraw->fPrimProcProxies, programInfo.pipeline());

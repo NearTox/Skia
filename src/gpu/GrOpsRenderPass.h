@@ -30,7 +30,7 @@ struct SkRect;
  */
 class GrOpsRenderPass {
  public:
-  virtual ~GrOpsRenderPass() = default;
+  virtual ~GrOpsRenderPass() {}
 
   struct LoadAndStoreInfo {
     GrLoadOp fLoadOp;
@@ -140,13 +140,12 @@ class GrOpsRenderPass {
   void executeDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>);
 
  protected:
-  constexpr GrOpsRenderPass() noexcept
-      : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
+  GrOpsRenderPass() : fOrigin(kTopLeft_GrSurfaceOrigin), fRenderTarget(nullptr) {}
 
-  GrOpsRenderPass(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept
+  GrOpsRenderPass(GrRenderTarget* rt, GrSurfaceOrigin origin)
       : fOrigin(origin), fRenderTarget(rt) {}
 
-  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) noexcept {
+  void set(GrRenderTarget* rt, GrSurfaceOrigin origin) {
     SkASSERT(!fRenderTarget);
 
     fRenderTarget = rt;
@@ -217,7 +216,7 @@ class GrOpsRenderPass {
   DynamicStateStatus fVertexBufferStatus;
 #endif
 
-  typedef GrOpsRenderPass INHERITED;
+  using INHERITED = GrOpsRenderPass;
 };
 
 #endif

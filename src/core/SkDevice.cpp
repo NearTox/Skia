@@ -18,6 +18,7 @@
 #include "src/core/SkDraw.h"
 #include "src/core/SkGlyphRun.h"
 #include "src/core/SkImageFilterCache.h"
+#include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkImagePriv.h"
 #include "src/core/SkLatticeIter.h"
 #include "src/core/SkMarkerStack.h"
@@ -32,7 +33,7 @@
 #include "src/shaders/SkLocalMatrixShader.h"
 #include "src/utils/SkPatchUtils.h"
 
-SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps) noexcept
+SkBaseDevice::SkBaseDevice(const SkImageInfo& info, const SkSurfaceProps& surfaceProps)
     : SkMatrixProvider(/* localToDevice = */ SkMatrix::I()),
       fInfo(info),
       fSurfaceProps(surfaceProps) {
@@ -57,7 +58,7 @@ void SkBaseDevice::setDeviceCoordinateSystem(
   fLocalToDevice33 = fLocalToDevice.asM33();
 }
 
-void SkBaseDevice::setGlobalCTM(const SkM44& ctm) noexcept {
+void SkBaseDevice::setGlobalCTM(const SkM44& ctm) {
   fLocalToDevice = ctm;
   fLocalToDevice.normalizePerspective();
   if (!fGlobalToDevice.isIdentity()) {
@@ -67,12 +68,12 @@ void SkBaseDevice::setGlobalCTM(const SkM44& ctm) noexcept {
   fLocalToDevice33 = fLocalToDevice.asM33();
 }
 
-bool SkBaseDevice::isPixelAlignedToGlobal() const noexcept {
+bool SkBaseDevice::isPixelAlignedToGlobal() const {
   return fDeviceToGlobal.isTranslate() && SkScalarIsInt(fDeviceToGlobal.getTranslateX()) &&
          SkScalarIsInt(fDeviceToGlobal.getTranslateY());
 }
 
-SkIPoint SkBaseDevice::getOrigin() const noexcept {
+SkIPoint SkBaseDevice::getOrigin() const {
   // getOrigin() is deprecated, the old origin has been moved into the fDeviceToGlobal matrix.
   // This extracts the origin from the matrix, but asserts that a more complicated coordinate
   // space hasn't been set of the device. This function can be removed once existing use cases
@@ -85,10 +86,10 @@ SkIPoint SkBaseDevice::getOrigin() const noexcept {
       SkScalarFloorToInt(fDeviceToGlobal.getTranslateY()));
 }
 
-SkMatrix SkBaseDevice::getRelativeTransform(const SkBaseDevice& inputDevice) const noexcept {
-  // To get the transform from the input's space to this space, transform from the input space to
-  // the global space, and then from the global space back to this space.
-  return SkMatrix::Concat(fGlobalToDevice, inputDevice.fDeviceToGlobal);
+SkMatrix SkBaseDevice::getRelativeTransform(const SkBaseDevice& dstDevice) const {
+  // To get the transform from this space to the other device's, transform from our space to
+  // global and then from global to the other device.
+  return SkMatrix::Concat(dstDevice.fGlobalToDevice, fDeviceToGlobal);
 }
 
 bool SkBaseDevice::getLocalToMarker(uint32_t id, SkM44* localToMarker) const {
@@ -106,7 +107,7 @@ bool SkBaseDevice::getLocalToMarker(uint32_t id, SkM44* localToMarker) const {
   return false;
 }
 
-static inline bool is_int(float x) noexcept { return x == (float)sk_float_round2int(x); }
+static inline bool is_int(float x) { return x == (float)sk_float_round2int(x); }
 
 void SkBaseDevice::drawRegion(const SkRegion& region, const SkPaint& paint) {
   const SkMatrix& localToDevice = this->localToDevice();
@@ -180,8 +181,9 @@ void SkBaseDevice::drawImageLattice(
   const SkImageInfo info = SkImageInfo::Make(1, 1, kBGRA_8888_SkColorType, kUnpremul_SkAlphaType);
 
   while (iter.next(&srcR, &dstR, &isFixedColor, &c)) {
+    // TODO: support this fast-path for GPU images
     if (isFixedColor || (srcR.width() <= 1.0f && srcR.height() <= 1.0f &&
-                         image->readPixels(info, &c, 4, srcR.fLeft, srcR.fTop))) {
+                         image->readPixels(nullptr, info, &c, 4, srcR.fLeft, srcR.fTop))) {
       // Fast draw with drawRect, if this is a patch containing a single color
       // or if this is a patch containing a single pixel.
       if (0 != c || !paint.isSrcOver()) {
@@ -317,6 +319,43 @@ sk_sp<SkSpecialImage> SkBaseDevice::makeSpecial(const SkImage*) { return nullptr
 sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial(const SkIRect&, bool) { return nullptr; }
 sk_sp<SkSpecialImage> SkBaseDevice::snapSpecial() {
   return this->snapSpecial(SkIRect::MakeWH(this->width(), this->height()));
+}
+
+void SkBaseDevice::drawFilteredImage(
+    const skif::Mapping& mapping, SkSpecialImage* src, const SkImageFilter* filter,
+    const SkPaint& paint) {
+  SkASSERT(!paint.getImageFilter() && !paint.getMaskFilter());
+  using For = skif::Usage;
+
+  skif::LayerSpace<SkIRect> targetOutput =
+      mapping.deviceToLayer(skif::DeviceSpace<SkIRect>(this->devClipBounds()));
+
+  // FIXME If the saved layer (so src) was created to use F16, should we do all image filtering
+  // in F16 and then only flatten to the destination color encoding at the end?
+  // Currently, this context converts everything to the dst color type ASAP.
+  SkColorType colorType = this->imageInfo().colorType();
+  if (colorType == kUnknown_SkColorType) {
+    colorType = kRGBA_8888_SkColorType;
+  }
+
+  // getImageFilterCache returns a bare image filter cache pointer that must be ref'ed until the
+  // filter's filterImage(ctx) function returns.
+  sk_sp<SkImageFilterCache> cache(this->getImageFilterCache());
+  skif::Context ctx(
+      mapping, targetOutput, cache.get(), colorType, this->imageInfo().colorSpace(),
+      skif::FilterResult<For::kInput>(sk_ref_sp(src)));
+
+  SkIPoint offset;
+  sk_sp<SkSpecialImage> result = as_IFB(filter)->filterImage(ctx).imageAndOffset(&offset);
+  if (result) {
+    // TODO(michaelludwig) - Eventually drawSpecial will take a matrix and we can just
+    // draw using mapping.deviceMatrix() directly. For now, all devices are relative to each
+    // other by a translation, or its a translation-only sprite draw.
+    SkASSERT(mapping.deviceMatrix().isTranslate());
+    offset.fX += SkScalarRoundToInt(mapping.deviceMatrix().getTranslateX());
+    offset.fY += SkScalarRoundToInt(mapping.deviceMatrix().getTranslateY());
+    this->drawSpecial(result.get(), offset.fX, offset.fY, paint);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

@@ -211,7 +211,7 @@ class SkXPSDevice : public SkClipStackDevice {
   SkXPSDevice(const SkXPSDevice&);
   void operator=(const SkXPSDevice&);
 
-  typedef SkClipStackDevice INHERITED;
+  using INHERITED = SkClipStackDevice;
 };
 
 #endif  // SK_BUILD_FOR_WIN

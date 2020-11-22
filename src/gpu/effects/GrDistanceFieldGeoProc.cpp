@@ -58,10 +58,7 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
         &fLocalMatrixUniform);
 
     // add varyings
-    GrGLSLVarying uv(kFloat2_GrSLType);
-    GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;
-    GrGLSLVarying texIdx(texIdxType);
-    GrGLSLVarying st(kFloat2_GrSLType);
+    GrGLSLVarying uv, texIdx, st;
     append_index_uv_varyings(
         args, dfTexEffect.numTextureSamplers(), dfTexEffect.inTextureCoords().name(),
         atlasDimensionsInvName, &uv, &texIdx, &st);
@@ -195,7 +192,7 @@ class GrGLDistanceFieldA8TextGeoProc : public GrGLSLGeometryProcessor {
   SkMatrix fLocalMatrix = SkMatrix::InvalidMatrix();
   UniformHandle fLocalMatrixUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -326,10 +323,7 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
         nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasDimensionsInv",
         &atlasDimensionsInvName);
 
-    GrGLSLVarying uv(kFloat2_GrSLType);
-    GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;
-    GrGLSLVarying texIdx(texIdxType);
-    GrGLSLVarying st(kFloat2_GrSLType);
+    GrGLSLVarying uv, texIdx, st;
     append_index_uv_varyings(
         args, dfPathEffect.numTextureSamplers(), dfPathEffect.inTextureCoords().name(),
         atlasDimensionsInvName, &uv, &texIdx, &st);
@@ -462,7 +456,7 @@ class GrGLDistanceFieldPathGeoProc : public GrGLSLGeometryProcessor {
   SkISize fAtlasDimensions;
   UniformHandle fAtlasDimensionsInvUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -590,10 +584,7 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
         dfTexEffect.localMatrix(), &fLocalMatrixUniform);
 
     // set up varyings
-    GrGLSLVarying uv(kFloat2_GrSLType);
-    GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;
-    GrGLSLVarying texIdx(texIdxType);
-    GrGLSLVarying st(kFloat2_GrSLType);
+    GrGLSLVarying uv, texIdx, st;
     append_index_uv_varyings(
         args, dfTexEffect.numTextureSamplers(), dfTexEffect.inTextureCoords().name(),
         atlasDimensionsInvName, &uv, &texIdx, &st);
@@ -765,7 +756,7 @@ class GrGLDistanceFieldLCDTextGeoProc : public GrGLSLGeometryProcessor {
   SkMatrix fLocalMatrix;
   UniformHandle fLocalMatrixUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

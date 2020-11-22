@@ -33,10 +33,9 @@ class GrShaderVar {
   };
 
   /** Defaults to a void with no type modifier or layout qualifier. */
-  GrShaderVar() noexcept
-      : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
+  GrShaderVar() : fType(kVoid_GrSLType), fTypeModifier(TypeModifier::None), fCount(kNonArray) {}
 
-  GrShaderVar(SkString name, GrSLType type, int arrayCount = kNonArray) noexcept
+  GrShaderVar(SkString name, GrSLType type, int arrayCount = kNonArray)
       : fType(type),
         fTypeModifier(TypeModifier::None),
         fCount(arrayCount),
@@ -44,17 +43,17 @@ class GrShaderVar {
   GrShaderVar(const char* name, GrSLType type, int arrayCount = kNonArray)
       : GrShaderVar(SkString(name), type, arrayCount) {}
 
-  GrShaderVar(SkString name, GrSLType type, TypeModifier typeModifier) noexcept
+  GrShaderVar(SkString name, GrSLType type, TypeModifier typeModifier)
       : fType(type), fTypeModifier(typeModifier), fCount(kNonArray), fName(std::move(name)) {}
   GrShaderVar(const char* name, GrSLType type, TypeModifier typeModifier)
       : GrShaderVar(SkString(name), type, typeModifier) {}
 
-  GrShaderVar(SkString name, GrSLType type, TypeModifier typeModifier, int arrayCount) noexcept
+  GrShaderVar(SkString name, GrSLType type, TypeModifier typeModifier, int arrayCount)
       : fType(type), fTypeModifier(typeModifier), fCount(arrayCount), fName(std::move(name)) {}
 
   GrShaderVar(
       SkString name, GrSLType type, TypeModifier typeModifier, int arrayCount,
-      SkString layoutQualifier, SkString extraModifier) noexcept
+      SkString layoutQualifier, SkString extraModifier)
       : fType(type),
         fTypeModifier(typeModifier),
         fCount(arrayCount),
@@ -62,10 +61,10 @@ class GrShaderVar {
         fLayoutQualifier(std::move(layoutQualifier)),
         fExtraModifiers(std::move(extraModifier)) {}
 
-  GrShaderVar(const GrShaderVar&) noexcept = default;
-  GrShaderVar& operator=(const GrShaderVar&) noexcept = default;
-  GrShaderVar(GrShaderVar&&) noexcept = default;
-  GrShaderVar& operator=(GrShaderVar&&) noexcept = default;
+  GrShaderVar(const GrShaderVar&) = default;
+  GrShaderVar& operator=(const GrShaderVar&) = default;
+  GrShaderVar(GrShaderVar&&) = default;
+  GrShaderVar& operator=(GrShaderVar&&) = default;
 
   /** Sets as a non-array. */
   void set(GrSLType type, const char* name) {
@@ -75,25 +74,25 @@ class GrShaderVar {
   }
 
   /** Is the var an array. */
-  bool isArray() const noexcept { return kNonArray != fCount; }
+  bool isArray() const { return kNonArray != fCount; }
 
   /** Is this an unsized array, (i.e. declared with []). */
-  bool isUnsizedArray() const noexcept { return kUnsizedArray == fCount; }
+  bool isUnsizedArray() const { return kUnsizedArray == fCount; }
 
   /** Get the array length. */
-  int getArrayCount() const noexcept { return fCount; }
+  int getArrayCount() const { return fCount; }
 
   /** Get the name. */
-  const SkString& getName() const noexcept { return fName; }
+  const SkString& getName() const { return fName; }
 
   /** Shortcut for this->getName().c_str(); */
-  const char* c_str() const noexcept { return this->getName().c_str(); }
+  const char* c_str() const { return this->getName().c_str(); }
 
   /** Get the type. */
-  GrSLType getType() const noexcept { return fType; }
+  GrSLType getType() const { return fType; }
 
-  TypeModifier getTypeModifier() const noexcept { return fTypeModifier; }
-  void setTypeModifier(TypeModifier type) noexcept { fTypeModifier = type; }
+  TypeModifier getTypeModifier() const { return fTypeModifier; }
+  void setTypeModifier(TypeModifier type) { fTypeModifier = type; }
 
   /** Appends to the layout qualifier. */
   void addLayoutQualifier(const char* layoutQualifier) {

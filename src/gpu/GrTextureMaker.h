@@ -22,7 +22,8 @@ class GrTextureMaker : public GrTextureProducer {
 
   std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessor(
       const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
-      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) override;
+      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+      SkImage::CubicResampler) override;
 
  protected:
   GrTextureMaker(GrRecordingContext* context, const GrImageInfo& info) : INHERITED(context, info) {}
@@ -36,7 +37,7 @@ class GrTextureMaker : public GrTextureProducer {
 
   GrSurfaceProxyView onView(GrMipmapped) final;
 
-  typedef GrTextureProducer INHERITED;
+  using INHERITED = GrTextureProducer;
 };
 
 #endif

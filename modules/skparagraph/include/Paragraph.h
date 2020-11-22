@@ -14,25 +14,25 @@ namespace textlayout {
 
 class Paragraph {
  public:
-  Paragraph(ParagraphStyle style, sk_sp<FontCollection> fonts) noexcept;
+  Paragraph(ParagraphStyle style, sk_sp<FontCollection> fonts);
 
   virtual ~Paragraph() = default;
 
-  SkScalar getMaxWidth() noexcept { return fWidth; }
+  SkScalar getMaxWidth() { return fWidth; }
 
-  SkScalar getHeight() noexcept { return fHeight; }
+  SkScalar getHeight() { return fHeight; }
 
-  SkScalar getMinIntrinsicWidth() noexcept { return fMinIntrinsicWidth; }
+  SkScalar getMinIntrinsicWidth() { return fMinIntrinsicWidth; }
 
-  SkScalar getMaxIntrinsicWidth() noexcept { return fMaxIntrinsicWidth; }
+  SkScalar getMaxIntrinsicWidth() { return fMaxIntrinsicWidth; }
 
-  SkScalar getAlphabeticBaseline() noexcept { return fAlphabeticBaseline; }
+  SkScalar getAlphabeticBaseline() { return fAlphabeticBaseline; }
 
-  SkScalar getIdeographicBaseline() noexcept { return fIdeographicBaseline; }
+  SkScalar getIdeographicBaseline() { return fIdeographicBaseline; }
 
-  SkScalar getLongestLine() noexcept { return fLongestLine; }
+  SkScalar getLongestLine() { return fLongestLine; }
 
-  bool didExceedMaxLines() noexcept { return fExceededMaxLines; }
+  bool didExceedMaxLines() { return fExceededMaxLines; }
 
   virtual void layout(SkScalar width) = 0;
 
@@ -56,13 +56,13 @@ class Paragraph {
 
   virtual void getLineMetrics(std::vector<LineMetrics>&) = 0;
 
-  virtual size_t lineNumber() noexcept = 0;
+  virtual size_t lineNumber() = 0;
 
-  virtual void markDirty() noexcept = 0;
+  virtual void markDirty() = 0;
 
   // This function will return the number of unresolved glyphs or
   // -1 if not applicable (has not been shaped yet - valid case)
-  virtual int32_t unresolvedGlyphs() noexcept = 0;
+  virtual int32_t unresolvedGlyphs() = 0;
 
   // Experimental API that allows fast way to update "immutable" paragraph
   virtual void updateTextAlign(TextAlign textAlign) = 0;

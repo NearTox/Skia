@@ -109,7 +109,7 @@ class SK_API SkLayerDrawLooper : public SkDrawLooper {
     static void ApplyInfo(SkPaint* dst, const SkPaint& src, const LayerInfo&);
   };
 
-  typedef SkDrawLooper INHERITED;
+  using INHERITED = SkDrawLooper;
 
  public:
   class SK_API Builder {

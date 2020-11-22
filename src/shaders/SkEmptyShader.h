@@ -18,7 +18,7 @@
  */
 class SkEmptyShader : public SkShaderBase {
  public:
-  SkEmptyShader() noexcept = default;
+  SkEmptyShader() {}
 
  protected:
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
@@ -41,7 +41,7 @@ class SkEmptyShader : public SkShaderBase {
  private:
   SK_FLATTENABLE_HOOKS(SkEmptyShader)
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 #endif

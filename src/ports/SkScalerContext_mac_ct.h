@@ -102,7 +102,7 @@ class SkScalerContext_Mac : public SkScalerContext {
 
   friend class Offscreen;
 
-  typedef SkScalerContext INHERITED;
+  using INHERITED = SkScalerContext;
 };
 
 #endif

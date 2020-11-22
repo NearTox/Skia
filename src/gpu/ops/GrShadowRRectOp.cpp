@@ -16,6 +16,7 @@
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
+#include "src/gpu/GrThreadSafeUniquelyKeyedProxyViewCache.h"
 #include "src/gpu/effects/GrShadowGeoProc.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
@@ -228,7 +229,7 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const noexcept override { return "ShadowCircularRRectOp"; }
+  const char* name() const override { return "ShadowCircularRRectOp"; }
 
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
@@ -518,14 +519,15 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp = GrRRectShadowGeoProc::Make(arena, fFalloffView);
     SkASSERT(sizeof(CircleVertex) == gp->vertexStride());
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangles, GrPipeline::InputFlags::kNone,
-        &GrUserStencilSettings::kUnused);
+        GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangles, renderPassXferBarriers,
+        GrPipeline::InputFlags::kNone, &GrUserStencilSettings::kUnused);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -637,7 +639,7 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace
@@ -646,18 +648,18 @@ class ShadowCircularRRectOp final : public GrMeshDrawOp {
 
 namespace GrShadowRRectOp {
 
-static GrSurfaceProxyView create_falloff_texture(GrRecordingContext* context) {
+static GrSurfaceProxyView create_falloff_texture(GrRecordingContext* rContext) {
   static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
   GrUniqueKey key;
   GrUniqueKey::Builder builder(&key, kDomain, 0, "Shadow Gaussian Falloff");
   builder.finish();
 
-  GrProxyProvider* proxyProvider = context->priv().proxyProvider();
+  auto threadSafeViewCache = rContext->priv().threadSafeViewCache();
 
-  if (sk_sp<GrTextureProxy> falloffTexture = proxyProvider->findOrCreateProxyByUniqueKey(key)) {
-    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(
-        falloffTexture->backendFormat(), GrColorType::kAlpha_8);
-    return {std::move(falloffTexture), kTopLeft_GrSurfaceOrigin, swizzle};
+  GrSurfaceProxyView view = threadSafeViewCache->find(key);
+  if (view) {
+    SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
+    return view;
   }
 
   static const int kWidth = 128;
@@ -674,13 +676,14 @@ static GrSurfaceProxyView create_falloff_texture(GrRecordingContext* context) {
   }
   bitmap.setImmutable();
 
-  GrBitmapTextureMaker maker(context, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-  auto view = maker.view(GrMipmapped::kNo);
-  SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
-
-  if (view) {
-    proxyProvider->assignUniqueKeyToProxy(key, view.asTextureProxy());
+  GrBitmapTextureMaker maker(rContext, bitmap, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
+  view = maker.view(GrMipmapped::kNo);
+  if (!view) {
+    return {};
   }
+
+  view = threadSafeViewCache->add(key, view);
+  SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
   return view;
 }
 

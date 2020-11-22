@@ -344,7 +344,7 @@ void SkScalerContext_Mac::generateMetrics(SkGlyph* glyph) {
   glyph->fHeight = SkToU16(skIBounds.height());
 }
 
-static constexpr uint8_t sk_pow2_table(size_t i) noexcept { return SkToU8(((i * i + 128) / 255)); }
+static constexpr uint8_t sk_pow2_table(size_t i) { return SkToU8(((i * i + 128) / 255)); }
 
 /**
  *  This will invert the gamma applied by CoreGraphics, so we can get linear
@@ -670,6 +670,12 @@ void SkScalerContext_Mac::generateFontMetrics(SkFontMetrics* metrics) {
   metrics->fFlags = 0;
   metrics->fFlags |= SkFontMetrics::kUnderlineThicknessIsValid_Flag;
   metrics->fFlags |= SkFontMetrics::kUnderlinePositionIsValid_Flag;
+
+  SkUniqueCFRef<CFArrayRef> ctAxes(CTFontCopyVariationAxes(fCTFont.get()));
+  if (ctAxes && CFArrayGetCount(ctAxes.get()) > 0) {
+    // The bounds are only valid for the default variation.
+    metrics->fFlags |= SkFontMetrics::kBoundsInvalid_Flag;
+  }
 
   // See https://bugs.chromium.org/p/skia/issues/detail?id=6203
   // At least on 10.12.3 with memory based fonts the x-height is always 0.6666 of the ascent and

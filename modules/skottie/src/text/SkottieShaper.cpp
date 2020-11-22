@@ -62,7 +62,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     fFont.setEdging(SkFont::Edging::kAntiAlias);
   }
 
-  void beginLine() noexcept override {
+  void beginLine() override {
     fLineGlyphs.reset(0);
     fLinePos.reset(0);
     fLineClusters.reset(0);
@@ -104,9 +104,9 @@ class BlobMaker final : public SkShaper::RunHandler {
         fLineClusters.get() + run_start_index, fCurrentPosition + alignmentOffset};
   }
 
-  void commitRunBuffer(const RunInfo& info) noexcept override { fCurrentPosition += info.fAdvance; }
+  void commitRunBuffer(const RunInfo& info) override { fCurrentPosition += info.fAdvance; }
 
-  void commitLine() noexcept override {
+  void commitLine() override {
     fOffset.fY += fDesc.fLineHeight;
 
     // TODO: justification adjustments
@@ -146,7 +146,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     //
     //   b) leading/trailing empty lines are still taken into account for alignment purposes
 
-    auto extent_box = [&]() -> SkRect {
+    auto extent_box = [&]() {
       auto box = fResult.computeVisualBounds();
 
       // By default, first line is vertically-aligned on a baseline of 0.
@@ -165,24 +165,25 @@ class BlobMaker final : public SkShaper::RunHandler {
     // Only compute the extent box when needed.
     SkTLazy<SkRect> ebox;
 
-    // Perform additional adjustments based on VAlign.
-    float v_offset = 0;
+    // Vertical adjustments.
+    float v_offset = -fDesc.fLineShift;
+
     switch (fDesc.fVAlign) {
-      case Shaper::VAlign::kTop: v_offset = -ascent; break;
+      case Shaper::VAlign::kTop: v_offset -= ascent; break;
       case Shaper::VAlign::kTopBaseline:
         // Default behavior.
         break;
       case Shaper::VAlign::kVisualTop:
         ebox.init(extent_box());
-        v_offset = fBox.fTop - ebox->fTop;
+        v_offset += fBox.fTop - ebox->fTop;
         break;
       case Shaper::VAlign::kVisualCenter:
         ebox.init(extent_box());
-        v_offset = fBox.centerY() - ebox->centerY();
+        v_offset += fBox.centerY() - ebox->centerY();
         break;
       case Shaper::VAlign::kVisualBottom:
         ebox.init(extent_box());
-        v_offset = fBox.fBottom - ebox->fBottom;
+        v_offset += fBox.fBottom - ebox->fBottom;
         break;
     }
 
@@ -299,7 +300,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     sk_careful_memcpy(blob_buffer.pos, pos, rec.fGlyphCount * sizeof(SkPoint));
   }
 
-  static float HAlignFactor(SkTextUtils::Align align) noexcept {
+  static float HAlignFactor(SkTextUtils::Align align) {
     switch (align) {
       case SkTextUtils::kLeft_Align: return 0.0f;
       case SkTextUtils::kCenter_Align: return -0.5f;
@@ -308,7 +309,7 @@ class BlobMaker final : public SkShaper::RunHandler {
     return 0.0f;  // go home, msvc...
   }
 
-  SkScalar ascent() const noexcept {
+  SkScalar ascent() const {
     // Use the explicit ascent, when specified.
     // Note: ascent values are negative (relative to the baseline).
     return fDesc.fAscent ? fDesc.fAscent : fFirstLineAscent;
@@ -392,6 +393,7 @@ Shaper::Result ShapeToFit(
     SkASSERT(try_scale >= in_scale && try_scale <= out_scale);
     desc.fTextSize = try_scale * orig_desc.fTextSize;
     desc.fLineHeight = try_scale * orig_desc.fLineHeight;
+    desc.fLineShift = try_scale * orig_desc.fLineShift;
     desc.fAscent = try_scale * orig_desc.fAscent;
 
     SkSize res_size = {0, 0};

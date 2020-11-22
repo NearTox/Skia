@@ -16,8 +16,8 @@
 /**
  *  Use this for bitmapcache and mipmapcache entries.
  */
-uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) noexcept {
-  constexpr uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
+uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) {
+  uint64_t sharedID = SkSetFourByteTag('b', 'm', 'a', 'p');
   return (sharedID << 32) | bitmapGenID;
 }
 
@@ -27,13 +27,13 @@ void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) noexcept {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(uint32_t imageID, const SkIRect& subset) {
   SkASSERT(imageID);
   SkASSERT(subset.width() > 0 && subset.height() > 0);
   return {imageID, subset};
 }
 
-SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) noexcept {
+SkBitmapCacheDesc SkBitmapCacheDesc::Make(const SkImage* image) {
   SkIRect bounds = SkIRect::MakeWH(image->width(), image->height());
   return Make(image->uniqueID(), bounds);
 }
@@ -57,9 +57,7 @@ struct BitmapKey : public SkResourceCache::Key {
 #include "src/core/SkDiscardableMemory.h"
 #include "src/core/SkNextID.h"
 
-void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) noexcept {
-  pr->setImmutableWithID(id);
-}
+void SkBitmapCache_setImmutableWithID(SkPixelRef* pr, uint32_t id) { pr->setImmutableWithID(id); }
 
 class SkBitmapCache::Rec : public SkResourceCache::Rec {
  public:
@@ -83,9 +81,7 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
   }
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const noexcept override {
-    return sizeof(fKey) + fInfo.computeByteSize(fRowBytes);
-  }
+  size_t bytesUsed() const override { return sizeof(fKey) + fInfo.computeByteSize(fRowBytes); }
   bool canBePurged() override {
     SkAutoMutexExclusive ama(fMutex);
     return fExternalCounter == 0;
@@ -165,7 +161,7 @@ class SkBitmapCache::Rec : public SkResourceCache::Rec {
   bool fDiscardableIsLocked = true;
 };
 
-void SkBitmapCache::PrivateDeleteRec(Rec* rec) noexcept { delete rec; }
+void SkBitmapCache::PrivateDeleteRec(Rec* rec) { delete rec; }
 
 SkBitmapCache::RecPtr SkBitmapCache::Alloc(
     const SkBitmapCacheDesc& desc, const SkImageInfo& info, SkPixmap* pmap) {
@@ -232,7 +228,7 @@ struct MipMapRec : public SkResourceCache::Rec {
   ~MipMapRec() override { fMipMap->detachFromCacheAndUnref(); }
 
   const Key& getKey() const override { return fKey; }
-  size_t bytesUsed() const noexcept override { return sizeof(fKey) + fMipMap->size(); }
+  size_t bytesUsed() const override { return sizeof(fKey) + fMipMap->size(); }
   const char* getCategory() const override { return "mipmap"; }
   SkDiscardableMemory* diagnostic_only_getDiscardable() const override {
     return fMipMap->diagnostic_only_getDiscardable();
@@ -275,7 +271,7 @@ static SkResourceCache::DiscardableFactory get_fact(SkResourceCache* localCache)
 
 const SkMipmap* SkMipmapCache::AddAndRef(const SkImage_Base* image, SkResourceCache* localCache) {
   SkBitmap src;
-  if (!image->getROPixels(&src)) {
+  if (!image->getROPixels(nullptr, &src)) {
     return nullptr;
   }
 

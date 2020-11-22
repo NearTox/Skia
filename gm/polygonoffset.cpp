@@ -403,7 +403,7 @@ class PolygonOffsetGM : public GM {
 
   bool fConvexOnly;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

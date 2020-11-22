@@ -19,7 +19,7 @@
 template <typename T, typename Key, typename Traits = T>
 class SkTDynamicHash {
  public:
-  SkTDynamicHash() noexcept = default;
+  SkTDynamicHash() {}
 
   // It is not safe to call set() or remove() while iterating with either foreach().
   // If you mutate the entries be very careful not to change the Key.
@@ -34,6 +34,8 @@ class SkTDynamicHash {
   }
 
   int count() const { return fTable.count(); }
+
+  size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
 
   T* find(const Key& key) const { return fTable.findOrNull(key); }
 

@@ -152,7 +152,7 @@ bool SkCoincidentSpans::ordered(bool* result) const {
   if (next == end) {
     *result = true;
     return true;
-    }
+  }
     bool flipped = this->flipped();
     const SkOpSegment* oppSeg = this->oppPtTStart()->segment();
     double oppLastT = fOppPtTStart->fT;
@@ -797,11 +797,11 @@ bool SkOpCoincidence::addMissing(bool* added DEBUG_COIN_DECLARE_PARAMS()) {
     SkOpSegment* outerCoinWritable = const_cast<SkOpSegment*>(outerCoin);
     SkOpSegment* outerOppWritable = const_cast<SkOpSegment*>(outerOpp);
     SkCoincidentSpans* inner = outer;
-#ifdef IS_FUZZING_WITH_LIBFUZZER
+#ifdef SK_BUILD_FOR_FUZZER
     int safetyNet = 1000;
 #endif
     while ((inner = inner->next())) {
-#ifdef IS_FUZZING_WITH_LIBFUZZER
+#ifdef SK_BUILD_FOR_FUZZER
       if (!--safetyNet) {
         return false;
       }

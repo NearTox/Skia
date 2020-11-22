@@ -54,7 +54,7 @@ void SkTypeface_FCI::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocalSt
 
 class SkFontStyleSet_FCI : public SkFontStyleSet {
  public:
-  SkFontStyleSet_FCI() noexcept = default;
+  SkFontStyleSet_FCI() {}
 
   int count() override { return 0; }
   void getStyle(int index, SkFontStyle*, SkString* style) override { SkASSERT(false); }
@@ -104,8 +104,8 @@ class SkFontRequestCache {
   struct Result : public SkResourceCache::Rec {
     Result(Request* request, sk_sp<SkTypeface> typeface)
         : fRequest(request), fFace(std::move(typeface)) {}
-    Result(Result&&) noexcept = default;
-    Result& operator=(Result&&) noexcept = default;
+    Result(Result&&) = default;
+    Result& operator=(Result&&) = default;
 
     const Key& getKey() const override { return *fRequest; }
     size_t bytesUsed() const override { return fRequest->size() + sizeof(fFace); }

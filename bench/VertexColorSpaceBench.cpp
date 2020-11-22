@@ -120,7 +120,7 @@ class GP : public GrGeometryProcessor {
   Attribute fInPosition;
   Attribute fInColor;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 class Op : public GrMeshDrawOp {
@@ -160,12 +160,13 @@ class Op : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp = GP::Make(arena, fMode, fColorSpaceXform);
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangleStrip,
+        GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangleStrip, renderPassXferBarriers,
         GrPipeline::InputFlags::kNone);
   }
 
@@ -251,7 +252,7 @@ class Op : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 }  // namespace
 
@@ -312,7 +313,7 @@ class VertexColorSpaceBench : public Benchmark {
   SkString fName;
   Mode fMode;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new VertexColorSpaceBench(kBaseline_Mode, "baseline"));

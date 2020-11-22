@@ -21,7 +21,7 @@ class GrTriangulatingPathRenderer : public GrPathRenderer {
   void setMaxVerbCount(int maxVerbCount) { fMaxVerbCount = maxVerbCount; }
 #endif
 
-  const char* name() const noexcept final { return "Triangulating"; }
+  const char* name() const final { return "Triangulating"; }
 
  private:
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
@@ -33,7 +33,7 @@ class GrTriangulatingPathRenderer : public GrPathRenderer {
   bool onDrawPath(const DrawPathArgs&) override;
   int fMaxVerbCount;
 
-  typedef GrPathRenderer INHERITED;
+  using INHERITED = GrPathRenderer;
 };
 
 #endif

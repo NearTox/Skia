@@ -65,7 +65,7 @@ class FrontBufferedStream : public SkStreamRewindable {
   // data, and size is greater than 0.
   size_t readDirectlyFromStream(char* dst, size_t size);
 
-  typedef SkStream INHERITED;
+  using INHERITED = SkStream;
 };
 }  // anonymous namespace
 
@@ -201,7 +201,8 @@ size_t FrontBufferedStream::peek(void* dst, size_t size) const {
 size_t FrontBufferedStream::read(void* voidDst, size_t size) {
   // Cast voidDst to a char* for easy addition.
   char* dst = reinterpret_cast<char*>(voidDst);
-  SkDEBUGCODE(const size_t totalSize = size;) const size_t start = fOffset;
+  SkDEBUGCODE(const size_t totalSize = size;)
+  const size_t start = fOffset;
 
   // First, read any data that was previously buffered.
   if (fOffset < fBufferedSoFar) {
@@ -231,8 +232,10 @@ size_t FrontBufferedStream::read(void* voidDst, size_t size) {
   }
 
   if (size > 0 && !fStream->isAtEnd()) {
-    SkDEBUGCODE(const size_t bytesReadDirectly =) this->readDirectlyFromStream(dst, size);
-    SkDEBUGCODE(size -= bytesReadDirectly;) SkASSERT(size + (fOffset - start) == totalSize);
+    SkDEBUGCODE(const size_t bytesReadDirectly =)
+    this->readDirectlyFromStream(dst, size);
+    SkDEBUGCODE(size -= bytesReadDirectly;)
+    SkASSERT(size + (fOffset - start) == totalSize);
   }
 
   return fOffset - start;

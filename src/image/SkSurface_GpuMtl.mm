@@ -9,8 +9,8 @@
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/mtl/GrMtlTypes.h"
-#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
+#include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrResourceProviderPriv.h"
@@ -27,11 +27,11 @@
 #    import <MetalKit/MetalKit.h>
 
 sk_sp<SkSurface> SkSurface::MakeFromCAMetalLayer(
-    GrContext* context, GrMTLHandle layer, GrSurfaceOrigin origin, int sampleCnt,
+    GrRecordingContext* rContext, GrMTLHandle layer, GrSurfaceOrigin origin, int sampleCnt,
     SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* surfaceProps,
     GrMTLHandle* drawable) {
-  GrProxyProvider* proxyProvider = context->priv().proxyProvider();
-  const GrCaps* caps = context->priv().caps();
+  GrProxyProvider* proxyProvider = rContext->priv().proxyProvider();
+  const GrCaps* caps = rContext->priv().caps();
 
   CAMetalLayer* metalLayer = (__bridge CAMetalLayer*)layer;
   GrBackendFormat backendFormat = GrBackendFormat::MakeMtl(metalLayer.pixelFormat);
@@ -81,17 +81,17 @@ sk_sp<SkSurface> SkSurface::MakeFromCAMetalLayer(
   GrSurfaceProxyView writeView(std::move(proxy), origin, writeSwizzle);
 
   auto rtc = std::make_unique<GrRenderTargetContext>(
-      context, std::move(readView), std::move(writeView), grColorType, colorSpace, surfaceProps);
+      rContext, std::move(readView), std::move(writeView), grColorType, colorSpace, surfaceProps);
 
-  sk_sp<SkSurface> surface = SkSurface_Gpu::MakeWrappedRenderTarget(context, std::move(rtc));
+  sk_sp<SkSurface> surface = SkSurface_Gpu::MakeWrappedRenderTarget(rContext, std::move(rtc));
   return surface;
 }
 
 sk_sp<SkSurface> SkSurface::MakeFromMTKView(
-    GrContext* context, GrMTLHandle view, GrSurfaceOrigin origin, int sampleCnt,
+    GrRecordingContext* rContext, GrMTLHandle view, GrSurfaceOrigin origin, int sampleCnt,
     SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* surfaceProps) {
-  GrProxyProvider* proxyProvider = context->priv().proxyProvider();
-  const GrCaps* caps = context->priv().caps();
+  GrProxyProvider* proxyProvider = rContext->priv().proxyProvider();
+  const GrCaps* caps = rContext->priv().caps();
 
   MTKView* mtkView = (__bridge MTKView*)view;
   GrBackendFormat backendFormat = GrBackendFormat::MakeMtl(mtkView.colorPixelFormat);
@@ -139,9 +139,9 @@ sk_sp<SkSurface> SkSurface::MakeFromMTKView(
   GrSurfaceProxyView writeView(std::move(proxy), origin, writeSwizzle);
 
   auto rtc = std::make_unique<GrRenderTargetContext>(
-      context, std::move(readView), std::move(writeView), grColorType, colorSpace, surfaceProps);
+      rContext, std::move(readView), std::move(writeView), grColorType, colorSpace, surfaceProps);
 
-  sk_sp<SkSurface> surface = SkSurface_Gpu::MakeWrappedRenderTarget(context, std::move(rtc));
+  sk_sp<SkSurface> surface = SkSurface_Gpu::MakeWrappedRenderTarget(rContext, std::move(rtc));
   return surface;
 }
 

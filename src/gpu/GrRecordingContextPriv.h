@@ -19,33 +19,33 @@ class SkDeferredDisplayList;
 class GrRecordingContextPriv {
  public:
   // from GrContext_Base
-  uint32_t contextID() const noexcept { return fContext->contextID(); }
+  uint32_t contextID() const { return fContext->contextID(); }
 
-  bool matches(GrContext_Base* candidate) const noexcept { return fContext->matches(candidate); }
+  bool matches(GrContext_Base* candidate) const { return fContext->matches(candidate); }
 
-  const GrContextOptions& options() const noexcept { return fContext->options(); }
+  const GrContextOptions& options() const { return fContext->options(); }
 
-  const GrCaps* caps() const noexcept { return fContext->caps(); }
-  sk_sp<const GrCaps> refCaps() const noexcept;
+  const GrCaps* caps() const { return fContext->caps(); }
+  sk_sp<const GrCaps> refCaps() const;
 
-  GrImageContext* asImageContext() noexcept { return fContext->asImageContext(); }
-  GrRecordingContext* asRecordingContext() noexcept { return fContext->asRecordingContext(); }
+  GrImageContext* asImageContext() { return fContext->asImageContext(); }
+  GrRecordingContext* asRecordingContext() { return fContext->asRecordingContext(); }
 
   // from GrImageContext
-  GrProxyProvider* proxyProvider() noexcept { return fContext->proxyProvider(); }
-  const GrProxyProvider* proxyProvider() const noexcept { return fContext->proxyProvider(); }
+  GrProxyProvider* proxyProvider() { return fContext->proxyProvider(); }
+  const GrProxyProvider* proxyProvider() const { return fContext->proxyProvider(); }
 
   /** This is only useful for debug purposes */
-  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); });
+  SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); })
 
   // from GrRecordingContext
-  GrDrawingManager* drawingManager() noexcept { return fContext->drawingManager(); }
+  GrDrawingManager* drawingManager() { return fContext->drawingManager(); }
 
   GrOpMemoryPool* opMemoryPool() { return fContext->arenas().opMemoryPool(); }
   SkArenaAlloc* recordTimeAllocator() { return fContext->arenas().recordTimeAllocator(); }
   GrRecordingContext::Arenas arenas() { return fContext->arenas(); }
 
-  GrRecordingContext::OwnedArenas&& detachArenas() noexcept { return fContext->detachArenas(); }
+  GrRecordingContext::OwnedArenas&& detachArenas() { return fContext->detachArenas(); }
 
   void recordProgramInfo(const GrProgramInfo* programInfo) {
     fContext->recordProgramInfo(programInfo);
@@ -57,6 +57,10 @@ class GrRecordingContextPriv {
 
   GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
 
+  GrThreadSafeUniquelyKeyedProxyViewCache* threadSafeViewCache() {
+    return fContext->threadSafeViewCache();
+  }
+
   void moveRenderTasksToDDL(SkDeferredDisplayList*);
 
   /**
@@ -67,11 +71,7 @@ class GrRecordingContextPriv {
    */
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
-  GrAuditTrail* auditTrail() noexcept { return fContext->auditTrail(); }
-
-  // CONTEXT TODO: remove this backdoor
-  // In order to make progress we temporarily need a way to break CL impasses.
-  GrContext* backdoor() noexcept;
+  GrAuditTrail* auditTrail() { return fContext->auditTrail(); }
 
 #if GR_TEST_UTILS
   // Used by tests that intentionally exercise codepaths that print warning messages, in order to
@@ -90,7 +90,7 @@ class GrRecordingContextPriv {
   void decrSuppressWarningMessages() { --fContext->fSuppressWarningMessages; }
 #endif
 
-  void printWarningMessage(const char* msg) const noexcept {
+  void printWarningMessage(const char* msg) const {
 #if GR_TEST_UTILS
     if (fContext->fSuppressWarningMessages > 0) {
       return;
@@ -99,9 +99,9 @@ class GrRecordingContextPriv {
     SkDebugf(msg);
   }
 
-  GrRecordingContext::Stats* stats() noexcept { return &fContext->fStats; }
+  GrRecordingContext::Stats* stats() { return &fContext->fStats; }
 
-  GrSDFTOptions SDFTOptions() const noexcept {
+  GrSDFTOptions SDFTOptions() const {
     return {this->options().fMinDistanceFieldFontSize, this->options().fGlyphsAsPathsFontSize};
   }
 
@@ -111,7 +111,7 @@ class GrRecordingContextPriv {
   static sk_sp<GrRecordingContext> MakeDDL(sk_sp<GrContextThreadSafeProxy>);
 
  private:
-  explicit GrRecordingContextPriv(GrRecordingContext* context) noexcept : fContext(context) {}
+  explicit GrRecordingContextPriv(GrRecordingContext* context) : fContext(context) {}
   GrRecordingContextPriv(const GrRecordingContextPriv&) = delete;
   GrRecordingContextPriv& operator=(const GrRecordingContextPriv&) = delete;
 
@@ -124,12 +124,10 @@ class GrRecordingContextPriv {
   friend class GrRecordingContext;  // to construct/copy this type.
 };
 
-inline GrRecordingContextPriv GrRecordingContext::priv() noexcept {
-  return GrRecordingContextPriv(this);
-}
+inline GrRecordingContextPriv GrRecordingContext::priv() { return GrRecordingContextPriv(this); }
 
 inline const GrRecordingContextPriv GrRecordingContext::priv()
-    const noexcept {  // NOLINT(readability-const-return-type)
+    const {  // NOLINT(readability-const-return-type)
   return GrRecordingContextPriv(const_cast<GrRecordingContext*>(this));
 }
 

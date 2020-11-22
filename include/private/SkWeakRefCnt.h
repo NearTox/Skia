@@ -159,7 +159,7 @@ class SK_API SkWeakRefCnt : public SkRefCnt {
   /* Invariant: fWeakCnt = #weak + (fRefCnt > 0 ? 1 : 0) */
   mutable std::atomic<int32_t> fWeakCnt;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

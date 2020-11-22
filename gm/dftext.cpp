@@ -230,7 +230,7 @@ class DFTextGM : public skiagm::GM {
   sk_sp<SkTypeface> fEmojiTypeface;
   const char* fEmojiText;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new DFTextGM;)

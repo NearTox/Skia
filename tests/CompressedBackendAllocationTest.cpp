@@ -118,7 +118,7 @@ static void check_readback(
   SkAssertResult(actual.tryAlloc(readBackII));
   actual.erase(SkColors::kTransparent);
 
-  bool result = img->readPixels(actual, 0, 0);
+  bool result = img->readPixels(dContext, actual, 0, 0);
   REPORTER_ASSERT(reporter, result);
 
   check_solid_pixmap(

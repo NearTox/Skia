@@ -76,7 +76,7 @@ class SkGaussianColorFilter : public SkColorFilterBase {
  private:
   SK_FLATTENABLE_HOOKS(SkGaussianColorFilter)
 
-  typedef SkColorFilterBase INHERITED;
+  using INHERITED = SkColorFilterBase;
 };
 
 sk_sp<SkFlattenable> SkGaussianColorFilter::CreateProc(SkReadBuffer&) {
@@ -100,7 +100,7 @@ sk_sp<SkColorFilter> SkColorFilterPriv::MakeGaussian() {
 
 namespace {
 
-constexpr uint64_t resource_cache_shared_id() noexcept {
+uint64_t resource_cache_shared_id() {
   return 0x2020776f64616873llu;  // 'shadow  '
 }
 
@@ -110,7 +110,7 @@ struct AmbientVerticesFactory {
   bool fTransparent;
   SkVector fOffset;
 
-  bool isCompatible(const AmbientVerticesFactory& that, SkVector* translate) const noexcept {
+  bool isCompatible(const AmbientVerticesFactory& that, SkVector* translate) const {
     if (fOccluderHeight != that.fOccluderHeight || fTransparent != that.fTransparent) {
       return false;
     }
@@ -206,7 +206,7 @@ struct SpotVerticesFactory {
  */
 class CachedTessellations : public SkRefCnt {
  public:
-  size_t size() const noexcept { return fAmbientSet.size() + fSpotSet.size(); }
+  size_t size() const { return fAmbientSet.size() + fSpotSet.size(); }
 
   sk_sp<SkVertices> find(
       const AmbientVerticesFactory& ambient, const SkMatrix& matrix, SkVector* translate) const {
@@ -234,7 +234,7 @@ class CachedTessellations : public SkRefCnt {
   template <typename FACTORY, int MAX_ENTRIES>
   class Set {
    public:
-    size_t size() const noexcept { return fSize; }
+    size_t size() const { return fSize; }
 
     sk_sp<SkVertices> find(
         const FACTORY& factory, const SkMatrix& matrix, SkVector* translate) const {
@@ -304,15 +304,15 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
     memcpy(fKey.get(), &key, key.size());
   }
 
-  const Key& getKey() const noexcept override {
+  const Key& getKey() const override {
     return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
   }
 
-  size_t bytesUsed() const noexcept override { return fTessellations->size(); }
+  size_t bytesUsed() const override { return fTessellations->size(); }
 
-  const char* getCategory() const noexcept override { return "tessellated shadow masks"; }
+  const char* getCategory() const override { return "tessellated shadow masks"; }
 
-  sk_sp<CachedTessellations> refTessellations() const noexcept { return fTessellations; }
+  sk_sp<CachedTessellations> refTessellations() const { return fTessellations; }
 
   template <typename FACTORY>
   sk_sp<SkVertices> find(
@@ -333,7 +333,7 @@ class CachedTessellationsRec : public SkResourceCache::Rec {
  */
 template <typename FACTORY>
 struct FindContext {
-  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory) noexcept
+  FindContext(const SkMatrix* viewMatrix, const FACTORY* factory)
       : fViewMatrix(viewMatrix), fFactory(factory) {}
   const SkMatrix* const fViewMatrix;
   // If this is valid after Find is called then we found the vertices and they should be drawn
@@ -380,8 +380,8 @@ class ShadowedPath {
   {
   }
 
-  const SkPath& path() const noexcept { return *fPath; }
-  const SkMatrix& viewMatrix() const noexcept { return *fViewMatrix; }
+  const SkPath& path() const { return *fPath; }
+  const SkMatrix& viewMatrix() const { return *fViewMatrix; }
 #if SK_SUPPORT_GPU
   /** Negative means the vertices should not be cached for this path. */
   int keyBytes() const { return fShapeForKey.unstyledKeySize() * sizeof(uint32_t); }
@@ -415,7 +415,7 @@ class ShadowInvalidator : public SkIDChangeListener {
   }
 
  private:
-  const SkResourceCache::Key& getKey() const noexcept {
+  const SkResourceCache::Key& getKey() const {
     return *reinterpret_cast<SkResourceCache::Key*>(fKey.get());
   }
 

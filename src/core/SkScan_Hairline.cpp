@@ -121,7 +121,11 @@ void SkScan::HairLineRgn(
       if (ix0 == ix1) {  // too short to draw
         continue;
       }
-
+#if defined(SK_BUILD_FOR_FUZZER)
+      if ((ix1 - ix0) > 100000 || (ix1 - ix0) < 0) {
+        continue;  // too big to draw
+      }
+#endif
       SkFixed slope = SkFixedDiv(dy, dx);
       SkFixed startY = SkFDot6ToFixed(y0) + (slope * ((32 - x0) & 63) >> 6);
 
@@ -137,7 +141,11 @@ void SkScan::HairLineRgn(
       if (iy0 == iy1) {  // too short to draw
         continue;
       }
-
+#if defined(SK_BUILD_FOR_FUZZER)
+      if ((iy1 - iy0) > 100000 || (iy1 - iy0) < 0) {
+        continue;  // too big to draw
+      }
+#endif
       SkFixed slope = SkFixedDiv(dx, dy);
       SkFixed startX = SkFDot6ToFixed(x0) + (slope * ((32 - y0) & 63) >> 6);
 

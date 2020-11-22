@@ -138,7 +138,7 @@ class EncodeSRGBGM : public GM {
  private:
   SkEncodedImageFormat fEncodedFormat;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new EncodeSRGBGM(SkEncodedImageFormat::kPNG);)

@@ -48,7 +48,7 @@ class RTreeBuildBench : public Benchmark {
  private:
   MakeRectProc fProc;
   SkString fName;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Time how long it takes to perform queries on an R-Tree.
@@ -88,7 +88,7 @@ class RTreeQueryBench : public Benchmark {
   SkRTree fTree;
   MakeRectProc fProc;
   SkString fName;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 static inline SkRect make_XYordered_rects(SkRandom& rand, int index, int numRects) {

@@ -116,7 +116,7 @@ class PerspImages : public GM {
   static constexpr int kNumImages = 4;
   SkTArray<sk_sp<SkImage>> fImages;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

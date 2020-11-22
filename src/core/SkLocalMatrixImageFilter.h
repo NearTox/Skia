@@ -37,7 +37,7 @@ class SkLocalMatrixImageFilter : public SkImageFilter_Base {
 
   SkMatrix fLocalM;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 #endif

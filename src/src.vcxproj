@@ -242,6 +242,8 @@
     <ClCompile Include="core\SkWriter32.cpp" />
     <ClCompile Include="core\SkXfermode.cpp" />
     <ClCompile Include="core\SkXfermodeInterpretation.cpp" />
+    <ClCompile Include="core\SkYUVAInfo.cpp" />
+    <ClCompile Include="core\SkYUVAPixmaps.cpp" />
     <ClCompile Include="core\SkYUVASizeInfo.cpp" />
     <ClCompile Include="core\SkYUVMath.cpp" />
     <ClCompile Include="core\SkYUVPlanesCache.cpp" />
@@ -416,6 +418,7 @@
     <ClCompile Include="gpu\GrAuditTrail.cpp" />
     <ClCompile Include="gpu\GrBackendSemaphore.cpp" />
     <ClCompile Include="gpu\GrBackendSurface.cpp" />
+    <ClCompile Include="gpu\GrBackendSurfaceMutableState.cpp" />
     <ClCompile Include="gpu\GrBackendTextureImageGenerator.cpp" />
     <ClCompile Include="gpu\GrBitmapTextureMaker.cpp" />
     <ClCompile Include="gpu\GrBlockAllocator.cpp" />
@@ -423,6 +426,7 @@
     <ClCompile Include="gpu\GrBufferAllocPool.cpp" />
     <ClCompile Include="gpu\GrCaps.cpp" />
     <ClCompile Include="gpu\GrClientMappedBufferManager.cpp" />
+    <ClCompile Include="gpu\GrClipStack.cpp" />
     <ClCompile Include="gpu\GrClipStackClip.cpp" />
     <ClCompile Include="gpu\GrColorInfo.cpp" />
     <ClCompile Include="gpu\GrColorSpaceXform.cpp" />
@@ -508,6 +512,7 @@
     <ClCompile Include="gpu\GrTextureProxy.cpp" />
     <ClCompile Include="gpu\GrTextureRenderTargetProxy.cpp" />
     <ClCompile Include="gpu\GrTextureResolveRenderTask.cpp" />
+    <ClCompile Include="gpu\GrThreadSafeUniquelyKeyedProxyViewCache.cpp" />
     <ClCompile Include="gpu\GrTransferFromRenderTask.cpp" />
     <ClCompile Include="gpu\GrTriangulator.cpp" />
     <ClCompile Include="gpu\GrUniformDataManager.cpp" />
@@ -705,6 +710,8 @@
     <ClCompile Include="shaders\SkPerlinNoiseShader.cpp" />
     <ClCompile Include="shaders\SkPictureShader.cpp" />
     <ClCompile Include="shaders\SkShader.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructor.cpp" />
+    <ClCompile Include="sksl\ir\SkSLIRNode.cpp" />
     <ClCompile Include="sksl\ir\SkSLSetting.cpp" />
     <ClCompile Include="sksl\ir\SkSLSymbolTable.cpp" />
     <ClCompile Include="sksl\ir\SkSLType.cpp" />
@@ -720,6 +727,7 @@
     <ClCompile Include="sksl\SkSLDehydrator.cpp" />
     <ClCompile Include="sksl\SkSLGLSLCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLHCodeGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLInliner.cpp" />
     <ClCompile Include="sksl\SkSLIRGenerator.cpp" />
     <ClCompile Include="sksl\SkSLLexer.cpp" />
     <ClCompile Include="sksl\SkSLMetalCodeGenerator.cpp" />
@@ -829,7 +837,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;$(SolutionDir)include/third_party/vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;$(SolutionDir)include/third_party/vulkan;$(SolutionDir)third_party\externals\expat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
@@ -857,13 +865,13 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;$(SolutionDir)include/third_party/vulkan;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)..\vs16.0\x86\include;$(SolutionDir)include/third_party/skcms;$(SolutionDir)include/third_party/vulkan;$(SolutionDir)third_party\externals\expat\expat\lib;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>

@@ -163,7 +163,7 @@ class FilterBitmapCheckerboardGM : public FilterBitmapGM {
 
  private:
   const bool fConvertToG8;
-  typedef FilterBitmapGM INHERITED;
+  using INHERITED = FilterBitmapGM;
 };
 
 class FilterBitmapImageGM : public FilterBitmapGM {
@@ -198,7 +198,7 @@ class FilterBitmapImageGM : public FilterBitmapGM {
 
  private:
   const bool fConvertToG8;
-  typedef FilterBitmapGM INHERITED;
+  using INHERITED = FilterBitmapGM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

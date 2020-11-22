@@ -31,7 +31,7 @@ class GrGLSLProgramBuilder {
   using UniformHandle = GrGLSLUniformHandler::UniformHandle;
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
-  virtual ~GrGLSLProgramBuilder() = default;
+  virtual ~GrGLSLProgramBuilder() {}
 
   virtual const GrCaps* caps() const = 0;
   const GrShaderCaps* shaderCaps() const { return this->caps()->shaderCaps(); }
@@ -64,10 +64,15 @@ class GrGLSLProgramBuilder {
   }
 
   GrSwizzle samplerSwizzle(SamplerHandle handle) const {
-    if (this->caps()->shaderCaps()->textureSwizzleAppliedInShader()) {
-      return this->uniformHandler()->samplerSwizzle(handle);
-    }
-    return GrSwizzle::RGBA();
+    return this->uniformHandler()->samplerSwizzle(handle);
+  }
+
+  const char* inputSamplerVariable(SamplerHandle handle) const {
+    return this->uniformHandler()->inputSamplerVariable(handle);
+  }
+
+  GrSwizzle inputSamplerSwizzle(SamplerHandle handle) const {
+    return this->uniformHandler()->inputSamplerSwizzle(handle);
   }
 
   // Used to add a uniform for the RenderTarget width (used for sk_Width) without mangling
@@ -128,7 +133,7 @@ class GrGLSLProgramBuilder {
   // fragment shader are cleared.
   void reset() {
     this->addStage();
-    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification());
+    SkDEBUGCODE(fFS.debugOnly_resetPerStageVerification();)
   }
   void addStage() { fStageIndex++; }
 
@@ -139,7 +144,7 @@ class GrGLSLProgramBuilder {
       // Each output to the fragment processor gets its own code section
       fPB->fFS.nextStage();
     }
-    ~AutoStageAdvance() = default;
+    ~AutoStageAdvance() {}
 
    private:
     GrGLSLProgramBuilder* fPB;
@@ -156,6 +161,7 @@ class GrGLSLProgramBuilder {
   void emitAndInstallXferProc(const SkString& colorIn, const SkString& coverageIn);
   SamplerHandle emitSampler(
       const GrBackendFormat&, GrSamplerState, const GrSwizzle&, const char* name);
+  SamplerHandle emitInputSampler(const GrSwizzle& swizzle, const char* name);
   bool checkSamplerCounts();
 
 #ifdef SK_DEBUG

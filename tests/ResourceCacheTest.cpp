@@ -321,7 +321,7 @@ class TestResource : public GrGpuResource {
   static int fNumAlive;
   SimulatedProperty fProperty;
   bool fIsScratch;
-  typedef GrGpuResource INHERITED;
+  using INHERITED = GrGpuResource;
 };
 int TestResource::fNumAlive = 0;
 
@@ -750,7 +750,7 @@ static void test_duplicate_scratch_key(skiatest::Reporter* reporter) {
   // Scratch resources are registered with GrResourceCache just by existing. There are 2.
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 2 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
   REPORTER_ASSERT(reporter, a->gpuMemorySize() + b->gpuMemorySize() == cache->getResourceBytes());
 
   // Our refs mean that the resources are non purgeable.
@@ -764,8 +764,8 @@ static void test_duplicate_scratch_key(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 2 == cache->countScratchEntriesForKey(scratchKey));)
 
-      // Purge again. This time resources should be purgeable.
-      cache->purgeAllUnlocked();
+  // Purge again. This time resources should be purgeable.
+  cache->purgeAllUnlocked();
   REPORTER_ASSERT(reporter, 0 == TestResource::NumAlive());
   REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->countScratchEntriesForKey(scratchKey));)
@@ -794,7 +794,7 @@ static void test_remove_scratch_key(skiatest::Reporter* reporter) {
   TestResource::ComputeScratchKey(TestResource::kB_SimulatedProperty, &scratchKey);
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 2 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
 
   // Find the first resource and remove its scratch key
   GrGpuResource* find = cache->findAndRefScratchResource(scratchKey);
@@ -802,31 +802,31 @@ static void test_remove_scratch_key(skiatest::Reporter* reporter) {
   // It's still alive, but not cached by scratch key anymore
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 1 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
 
   // The cache should immediately delete it when it's unrefed since it isn't accessible.
   find->unref();
   REPORTER_ASSERT(reporter, 1 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 1 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
 
   // Repeat for the second resource.
   find = cache->findAndRefScratchResource(scratchKey);
   find->resourcePriv().removeScratchKey();
   REPORTER_ASSERT(reporter, 1 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
 
   // Should be able to call this multiple times with no problem.
   find->resourcePriv().removeScratchKey();
   REPORTER_ASSERT(reporter, 1 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
 
   find->unref();
   REPORTER_ASSERT(reporter, 0 == TestResource::NumAlive());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->countScratchEntriesForKey(scratchKey));)
-      REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
+  REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
 }
 
 static void test_scratch_key_consistency(skiatest::Reporter* reporter) {

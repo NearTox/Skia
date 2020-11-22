@@ -144,7 +144,4 @@ class TextureUploadSample : public Sample {
   }
 };
 
-const int TextureUploadSample::kMinTileSize;
-const int TextureUploadSample::kMaxTileSize;
-
 DEF_SAMPLE(return new TextureUploadSample();)

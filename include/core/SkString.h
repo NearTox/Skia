@@ -119,23 +119,19 @@ class SK_API SkString {
   explicit SkString(size_t len);
   explicit SkString(const char text[]);
   SkString(const char text[], size_t len);
-  SkString(const SkString&) noexcept;
+  SkString(const SkString&);
   SkString(SkString&&) noexcept;
   explicit SkString(const std::string&);
   ~SkString();
 
-  operator std::string_view() const noexcept {
-    return std::string_view(this->c_str(), this->size());
-  }
+  bool isEmpty() const { return 0 == fRec->fLength; }
+  size_t size() const { return (size_t)fRec->fLength; }
+  const char* c_str() const { return fRec->data(); }
+  char operator[](size_t n) const { return this->c_str()[n]; }
 
-  bool isEmpty() const noexcept { return 0 == fRec->fLength; }
-  size_t size() const noexcept { return (size_t)fRec->fLength; }
-  const char* c_str() const noexcept { return fRec->data(); }
-  char operator[](size_t n) const noexcept { return this->c_str()[n]; }
-
-  bool equals(const SkString&) const noexcept;
-  bool equals(const char text[]) const noexcept;
-  bool equals(const char text[], size_t len) const noexcept;
+  bool equals(const SkString&) const;
+  bool equals(const char text[]) const;
+  bool equals(const char text[], size_t len) const;
 
   bool startsWith(const char prefixStr[]) const { return SkStrStartsWith(fRec->data(), prefixStr); }
   bool startsWith(const char prefixChar) const { return SkStrStartsWith(fRec->data(), prefixChar); }
@@ -146,24 +142,24 @@ class SK_API SkString {
   int find(const char substring[]) const { return SkStrFind(fRec->data(), substring); }
   int findLastOf(const char subchar) const { return SkStrFindLastOf(fRec->data(), subchar); }
 
-  friend bool operator==(const SkString& a, const SkString& b) noexcept { return a.equals(b); }
-  friend bool operator!=(const SkString& a, const SkString& b) noexcept { return !a.equals(b); }
+  friend bool operator==(const SkString& a, const SkString& b) { return a.equals(b); }
+  friend bool operator!=(const SkString& a, const SkString& b) { return !a.equals(b); }
 
   // these methods edit the string
 
-  SkString& operator=(const SkString&) noexcept;
+  SkString& operator=(const SkString&);
   SkString& operator=(SkString&&) noexcept;
   SkString& operator=(const char text[]);
 
   char* writable_str();
   char& operator[](size_t n) { return this->writable_str()[n]; }
 
-  void reset() noexcept;
+  void reset();
   /** String contents are preserved on resize. (For destructive resize, `set(nullptr, length)`.)
    * `resize` automatically reserves an extra byte at the end of the buffer for a null terminator.
    */
   void resize(size_t len);
-  void set(const SkString& src) noexcept { *this = src; }
+  void set(const SkString& src) { *this = src; }
   void set(const char text[]);
   void set(const char text[], size_t len);
 
@@ -256,8 +252,8 @@ class SK_API SkString {
 #ifdef SK_DEBUG
   const SkString& validate() const;
 #else
-  const SkString& validate() const noexcept { return *this; }
   SkString& validate() noexcept { return *this; }
+  const SkString& validate() const noexcept { return *this; }
 #endif
 
   static const Rec gEmptyRec;
@@ -267,9 +263,9 @@ class SK_API SkString {
 SkString SkStringPrintf(const char* format, ...) SK_PRINTF_LIKE(1, 2);
 /// This makes it easier to write a caller as a VAR_ARGS function where the format string is
 /// optional.
-static inline SkString SkStringPrintf() noexcept { return SkString(); }
+static inline SkString SkStringPrintf() { return SkString(); }
 
-static inline void swap(SkString& a, SkString& b) noexcept { a.swap(b); }
+static inline void swap(SkString& a, SkString& b) { a.swap(b); }
 
 enum SkStrSplitMode {
   // Strictly return all results. If the input is ",," and the separator is ',' this will return

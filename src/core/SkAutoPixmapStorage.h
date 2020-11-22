@@ -13,15 +13,15 @@
 
 class SkAutoPixmapStorage : public SkPixmap {
  public:
-  SkAutoPixmapStorage() noexcept;
+  SkAutoPixmapStorage();
   ~SkAutoPixmapStorage();
 
-  SkAutoPixmapStorage(SkAutoPixmapStorage&& other) noexcept;
+  SkAutoPixmapStorage(SkAutoPixmapStorage&& other);
 
   /**
    * Leave the moved-from object in a free-but-valid state.
    */
-  SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other) noexcept;
+  SkAutoPixmapStorage& operator=(SkAutoPixmapStorage&& other);
 
   /**
    *  Try to allocate memory for the pixels needed to match the specified Info. On success
@@ -52,7 +52,7 @@ class SkAutoPixmapStorage : public SkPixmap {
    * been allocated, the result is NULL. The caller is responsible for calling sk_free to free
    * the returned memory.
    */
-  void* SK_WARN_UNUSED_RESULT detachPixels() noexcept;
+  void* SK_WARN_UNUSED_RESULT detachPixels();
 
   /**
    *  Returns an SkData object wrapping the allocated pixels memory, and resets the pixmap.
@@ -62,16 +62,16 @@ class SkAutoPixmapStorage : public SkPixmap {
 
   // We wrap these so we can clear our internal storage
 
-  void reset() noexcept {
+  void reset() {
     this->freeStorage();
     this->INHERITED::reset();
   }
-  void reset(const SkImageInfo& info, const void* addr, size_t rb) noexcept {
+  void reset(const SkImageInfo& info, const void* addr, size_t rb) {
     this->freeStorage();
     this->INHERITED::reset(info, addr, rb);
   }
 
-  bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) noexcept {
+  bool SK_WARN_UNUSED_RESULT reset(const SkMask& mask) {
     this->freeStorage();
     return this->INHERITED::reset(mask);
   }
@@ -79,12 +79,12 @@ class SkAutoPixmapStorage : public SkPixmap {
  private:
   void* fStorage;
 
-  void freeStorage() noexcept {
+  void freeStorage() {
     sk_free(fStorage);
     fStorage = nullptr;
   }
 
-  typedef SkPixmap INHERITED;
+  using INHERITED = SkPixmap;
 };
 
 #endif

@@ -23,12 +23,12 @@
 #endif
 class GrDisableColorXPFactory : public GrXPFactory {
  public:
-  static const GrDisableColorXPFactory* Get() noexcept;
+  static const GrDisableColorXPFactory* Get();
 
   static sk_sp<const GrXferProcessor> MakeXferProcessor();
 
  private:
-  constexpr GrDisableColorXPFactory() noexcept = default;
+  constexpr GrDisableColorXPFactory() {}
 
   AnalysisProperties analysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
@@ -45,7 +45,7 @@ class GrDisableColorXPFactory : public GrXPFactory {
 
   GR_DECLARE_XP_FACTORY_TEST
 
-  typedef GrXPFactory INHERITED;
+  using INHERITED = GrXPFactory;
 };
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop
@@ -54,7 +54,7 @@ class GrDisableColorXPFactory : public GrXPFactory {
 #  pragma clang diagnostic pop
 #endif
 
-inline const GrDisableColorXPFactory* GrDisableColorXPFactory::Get() noexcept {
+inline const GrDisableColorXPFactory* GrDisableColorXPFactory::Get() {
   static constexpr const GrDisableColorXPFactory gDisableColorXPFactory;
   return &gDisableColorXPFactory;
 }

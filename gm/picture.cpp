@@ -24,23 +24,15 @@ static sk_sp<SkPicture> make_picture() {
 
   SkPaint paint;
   paint.setAntiAlias(true);
-  SkPath path;
 
   paint.setColor(0x800000FF);
   canvas->drawRect(SkRect::MakeWH(100, 100), paint);
 
   paint.setColor(0x80FF0000);
-  path.moveTo(0, 0);
-  path.lineTo(100, 0);
-  path.lineTo(100, 100);
-  canvas->drawPath(path, paint);
+  canvas->drawPath(SkPath::Polygon({{0, 0}, {100, 0}, {100, 100}}, false), paint);
 
   paint.setColor(0x8000FF00);
-  path.reset();
-  path.moveTo(0, 0);
-  path.lineTo(100, 0);
-  path.lineTo(0, 100);
-  canvas->drawPath(path, paint);
+  canvas->drawPath(SkPath::Polygon({{0, 0}, {100, 0}, {0, 100}}, false), paint);
 
   paint.setColor(0x80FFFFFF);
   paint.setBlendMode(SkBlendMode::kPlus);
@@ -84,7 +76,7 @@ class PictureGM : public skiagm::GM {
  private:
   sk_sp<SkPicture> fPicture;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 // Exercise drawing a picture with a cull rect of non-zero top-left corner.
@@ -133,7 +125,7 @@ class PictureCullRectGM : public skiagm::GM {
  private:
   sk_sp<SkPicture> fPicture;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new PictureGM;)

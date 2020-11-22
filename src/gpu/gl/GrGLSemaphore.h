@@ -48,7 +48,7 @@ class GrGLSemaphore : public GrSemaphore {
   GrGLsync fSync;
   bool fIsOwned;
 
-  typedef GrSemaphore INHERITED;
+  using INHERITED = GrSemaphore;
 };
 
 #endif

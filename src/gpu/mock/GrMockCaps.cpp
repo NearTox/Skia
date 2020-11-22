@@ -11,7 +11,8 @@
 
 GrProgramDesc GrMockCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& programInfo) const {
   GrProgramDesc desc;
-  SkDEBUGCODE(bool result =) GrProgramDesc::Build(&desc, rt, programInfo, *this);
+  SkDEBUGCODE(bool result =)
+  GrProgramDesc::Build(&desc, rt, programInfo, *this);
   SkASSERT(result == desc.isValid());
   return desc;
 }

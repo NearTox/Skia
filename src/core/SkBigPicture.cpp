@@ -14,7 +14,7 @@
 
 SkBigPicture::SkBigPicture(
     const SkRect& cull, sk_sp<SkRecord> record, std::unique_ptr<SnapshotArray> drawablePicts,
-    sk_sp<SkBBoxHierarchy> bbh, size_t approxBytesUsedBySubPictures) noexcept
+    sk_sp<SkBBoxHierarchy> bbh, size_t approxBytesUsedBySubPictures)
     : fCullRect(cull),
       fApproxBytesUsedBySubPictures(approxBytesUsedBySubPictures),
       fRecord(std::move(record)),
@@ -43,7 +43,7 @@ struct NestedApproxOpCounter {
   int fCount = 0;
 
   template <typename T>
-  void operator()(const T& op) noexcept {
+  void operator()(const T& op) {
     fCount += 1;
   }
   void operator()(const SkRecords::DrawPicture& op) {
@@ -51,7 +51,7 @@ struct NestedApproxOpCounter {
   }
 };
 
-SkRect SkBigPicture::cullRect() const noexcept { return fCullRect; }
+SkRect SkBigPicture::cullRect() const { return fCullRect; }
 int SkBigPicture::approximateOpCount(bool nested) const {
   if (nested) {
     NestedApproxOpCounter visitor;
@@ -63,7 +63,7 @@ int SkBigPicture::approximateOpCount(bool nested) const {
     return fRecord->count();
   }
 }
-size_t SkBigPicture::approximateBytesUsed() const noexcept {
+size_t SkBigPicture::approximateBytesUsed() const {
   size_t bytes = sizeof(*this) + fRecord->bytesUsed() + fApproxBytesUsedBySubPictures;
   if (fBBH) {
     bytes += fBBH->bytesUsed();
@@ -71,10 +71,8 @@ size_t SkBigPicture::approximateBytesUsed() const noexcept {
   return bytes;
 }
 
-int SkBigPicture::drawableCount() const noexcept {
-  return fDrawablePicts ? fDrawablePicts->count() : 0;
-}
+int SkBigPicture::drawableCount() const { return fDrawablePicts ? fDrawablePicts->count() : 0; }
 
-SkPicture const* const* SkBigPicture::drawablePicts() const noexcept {
+SkPicture const* const* SkBigPicture::drawablePicts() const {
   return fDrawablePicts ? fDrawablePicts->begin() : nullptr;
 }

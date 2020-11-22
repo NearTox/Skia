@@ -22,7 +22,7 @@ class SkColorFilterShader : public SkShaderBase {
 #endif
 
  private:
-  bool isOpaque() const noexcept override;
+  bool isOpaque() const override;
   void flatten(SkWriteBuffer&) const override;
   bool onAppendStages(const SkStageRec&) const override;
 
@@ -37,7 +37,7 @@ class SkColorFilterShader : public SkShaderBase {
   sk_sp<SkColorFilterBase> fFilter;
   float fAlpha;
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 #endif

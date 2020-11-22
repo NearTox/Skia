@@ -11,7 +11,7 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
-#include "include/core/SkPath.h"
+#include "include/core/SkPathBuilder.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
@@ -43,10 +43,8 @@ class BigBlursGM : public GM {
     SkRect insetRect = bigRect;
     insetRect.inset(20, 20);
 
-    SkPath rectori;
-
-    rectori.addRect(bigRect);
-    rectori.addRect(insetRect, SkPathDirection::kCCW);
+    SkPath rectori =
+        SkPathBuilder().addRect(bigRect).addRect(insetRect, SkPathDirection::kCCW).detach();
 
     // The blur extends 3*kSigma out from the big rect.
     // Offset the close-up windows so we get the entire blur
@@ -109,7 +107,7 @@ class BigBlursGM : public GM {
   static constexpr int kWidth = 5 * kCloseUpSize;
   static constexpr int kHeight = 2 * (kLastEnum_SkBlurStyle + 1) * kCloseUpSize;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new BigBlursGM;)

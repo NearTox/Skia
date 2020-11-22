@@ -29,14 +29,14 @@ class SkReadBuffer;
 class SkTextBlob;
 
 struct SkPictInfo {
-  SkPictInfo() noexcept : fVersion(~0U) {}
+  SkPictInfo() : fVersion(~0U) {}
 
-  uint32_t getVersion() const noexcept {
+  uint32_t getVersion() const {
     SkASSERT(fVersion != ~0U);
     return fVersion;
   }
 
-  void setVersion(uint32_t version) noexcept {
+  void setVersion(uint32_t version) {
     SkASSERT(version != ~0U);
     fVersion = version;
   }
@@ -86,23 +86,23 @@ class SkPictureData {
   void serialize(SkWStream*, const SkSerialProcs&, SkRefCntSet*, bool textBlobsOnly = false) const;
   void flatten(SkWriteBuffer&) const;
 
-  const sk_sp<SkData>& opData() const noexcept { return fOpData; }
+  const sk_sp<SkData>& opData() const { return fOpData; }
 
  protected:
-  explicit SkPictureData(const SkPictInfo& info) noexcept;
+  explicit SkPictureData(const SkPictInfo& info);
 
   // Does not affect ownership of SkStream.
   bool parseStream(SkStream*, const SkDeserialProcs&, SkTypefacePlayback*);
   bool parseBuffer(SkReadBuffer& buffer);
 
  public:
-  const SkImage* getImage(SkReadBuffer* reader) const noexcept {
+  const SkImage* getImage(SkReadBuffer* reader) const {
     // images are written base-0, unlike paths, pictures, drawables, etc.
     const int index = reader->readInt();
     return reader->validateIndex(index, fImages.count()) ? fImages[index].get() : nullptr;
   }
 
-  const SkPath& getPath(SkReadBuffer* reader) const noexcept {
+  const SkPath& getPath(SkReadBuffer* reader) const {
     int index = reader->readInt();
     return reader->validate(index > 0 && index <= fPaths.count()) ? fPaths[index - 1] : fEmptyPath;
   }
@@ -160,7 +160,7 @@ class SkPictureData {
   static void WriteFactories(SkWStream* stream, const SkFactorySet& rec);
   static void WriteTypefaces(SkWStream* stream, const SkRefCntSet& rec, const SkSerialProcs&);
 
-  void initForPlayback() const noexcept;
+  void initForPlayback() const;
 };
 
 #endif

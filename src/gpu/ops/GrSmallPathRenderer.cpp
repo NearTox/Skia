@@ -40,9 +40,9 @@ static constexpr SkScalar kMaxDim = 73;
 static constexpr SkScalar kMinSize = SK_ScalarHalf;
 static constexpr SkScalar kMaxSize = 2 * kMaxMIP;
 
-GrSmallPathRenderer::GrSmallPathRenderer() noexcept = default;
+GrSmallPathRenderer::GrSmallPathRenderer() {}
 
-GrSmallPathRenderer::~GrSmallPathRenderer() = default;
+GrSmallPathRenderer::~GrSmallPathRenderer() {}
 
 GrPathRenderer::CanDrawPath GrSmallPathRenderer::onCanDrawPath(const CanDrawPathArgs& args) const {
   if (!args.fCaps->shaderCaps()->shaderDerivativeSupport()) {
@@ -126,7 +126,7 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
     fGammaCorrect = gammaCorrect;
   }
 
-  const char* name() const noexcept override { return "SmallPathOp"; }
+  const char* name() const override { return "SmallPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override { fHelper.visitProxies(func); }
 
@@ -157,13 +157,13 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {
     // TODO [PI]: implement
   }
 
   void onPrePrepareDraws(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {
     // TODO [PI]: implement
   }
 
@@ -582,9 +582,10 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
-    auto pipeline = fHelper.createPipelineWithStencil(flushState);
+    auto pipeline = fHelper.createPipeline(flushState);
 
-    flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
+    flushState->executeDrawsAndUploadsForMeshDrawOp(
+        this, chainBounds, pipeline, fHelper.stencilSettings());
   }
 
   const SkPMColor4f& color() const { return fShapes[0].fColor; }
@@ -652,7 +653,7 @@ class GrSmallPathRenderer::SmallPathOp final : public GrMeshDrawOp {
   bool fGammaCorrect;
   bool fWideColor;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 bool GrSmallPathRenderer::onDrawPath(const DrawPathArgs& args) {

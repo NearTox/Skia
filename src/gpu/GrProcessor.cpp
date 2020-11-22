@@ -25,8 +25,8 @@ class MemoryPoolAccessor {
  public:
 // We know in the Android framework there is only one GrContext.
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-  MemoryPoolAccessor() noexcept = default;
-  ~MemoryPoolAccessor() = default;
+  MemoryPoolAccessor() {}
+  ~MemoryPoolAccessor() {}
 #else
   MemoryPoolAccessor() { gProcessorSpinlock.acquire(); }
   ~MemoryPoolAccessor() { gProcessorSpinlock.release(); }

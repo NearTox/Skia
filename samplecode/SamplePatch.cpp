@@ -309,7 +309,7 @@ struct PatchView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 }  // namespace
 DEF_SAMPLE(return new PatchView();)
@@ -409,7 +409,7 @@ class PseudoInkView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 }  // namespace
 DEF_SAMPLE(return new PseudoInkView();)
@@ -494,7 +494,7 @@ class ManyStrokesView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 }  // namespace
 DEF_SAMPLE(return new ManyStrokesView();)

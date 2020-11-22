@@ -1562,7 +1562,7 @@ class AAGeometryView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 static struct KeyCommand {

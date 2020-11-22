@@ -286,7 +286,7 @@ class RectsGM : public GM {
   SkTArray<SkMatrix> fMatrices;
   SkTArray<SkRect> fRects;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

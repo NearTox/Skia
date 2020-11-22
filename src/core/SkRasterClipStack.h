@@ -16,7 +16,7 @@
 template <typename T>
 class SkTStack {
  public:
-  SkTStack(void* storage, size_t size) noexcept : fDeque(sizeof(T), storage, size), fTop(nullptr) {}
+  SkTStack(void* storage, size_t size) : fDeque(sizeof(T), storage, size), fTop(nullptr) {}
   ~SkTStack() {
     while (!fDeque.empty()) {
       ((T*)fDeque.back())->~T();
@@ -24,21 +24,21 @@ class SkTStack {
     }
   }
 
-  bool empty() const noexcept { return fDeque.empty(); }
+  bool empty() const { return fDeque.empty(); }
 
-  int count() const noexcept { return fDeque.count(); }
+  int count() const { return fDeque.count(); }
 
-  const T& top() const noexcept {
+  const T& top() const {
     SkASSERT(fTop);
     return *fTop;
   }
 
-  T& top() noexcept {
+  T& top() {
     SkASSERT(fTop);
     return *fTop;
   }
 
-  T* push_raw() noexcept { return (T*)fDeque.push_back(); }
+  T* push_raw() { return (T*)fDeque.push_back(); }
   T& push() {
     fTop = this->push_raw();
     new (fTop) T();
@@ -50,7 +50,7 @@ class SkTStack {
     return *fTop;
   }
 
-  void pop() noexcept {
+  void pop() {
     fTop->~T();
     fDeque.pop_back();
     fTop = fDeque.empty() ? nullptr : (T*)fDeque.back();
@@ -73,7 +73,7 @@ class SkRasterClipStack : SkNoncopyable {
     SkASSERT(fStack.count() == 1);
   }
 
-  void setNewSize(int w, int h) noexcept {
+  void setNewSize(int w, int h) {
     fRootBounds.setXYWH(0, 0, w, h);
 
     SkASSERT(fStack.count() == 1);
@@ -82,15 +82,15 @@ class SkRasterClipStack : SkNoncopyable {
     rec.fRC.setRect(fRootBounds);
   }
 
-  const SkRasterClip& rc() const noexcept { return fStack.top().fRC; }
+  const SkRasterClip& rc() const { return fStack.top().fRC; }
 
-  void save() noexcept {
+  void save() {
     fCounter += 1;
     SkASSERT(fStack.top().fDeferredCount >= 0);
     fStack.top().fDeferredCount += 1;
   }
 
-  void restore() noexcept {
+  void restore() {
     fCounter -= 1;
     SkASSERT(fCounter >= 0);
     if (--fStack.top().fDeferredCount < 0) {
@@ -135,7 +135,7 @@ class SkRasterClipStack : SkNoncopyable {
     this->writable_rc().setDeviceClipRestriction(mutableClipRestriction);
   }
 
-  void validate() const noexcept {
+  void validate() const {
 #ifdef SK_DEBUG
     const SkRasterClip& clip = this->rc();
     if (fRootBounds.isEmpty()) {

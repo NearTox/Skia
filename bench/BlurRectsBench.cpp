@@ -44,7 +44,7 @@ class BlurRectsBench : public Benchmark {
   SkRect fInner;
   SkScalar fRadius;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class BlurRectsNinePatchBench : public BlurRectsBench {
@@ -55,7 +55,7 @@ class BlurRectsNinePatchBench : public BlurRectsBench {
   }
 
  private:
-  typedef BlurRectsBench INHERITED;
+  using INHERITED = BlurRectsBench;
 };
 
 class BlurRectsNonNinePatchBench : public BlurRectsBench {
@@ -67,7 +67,7 @@ class BlurRectsNonNinePatchBench : public BlurRectsBench {
   }
 
  private:
-  typedef BlurRectsBench INHERITED;
+  using INHERITED = BlurRectsBench;
 };
 
 DEF_BENCH(return new BlurRectsNinePatchBench(

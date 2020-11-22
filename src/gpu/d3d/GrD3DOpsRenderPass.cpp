@@ -46,7 +46,7 @@ bool GrD3DOpsRenderPass::set(
   return true;
 }
 
-GrD3DOpsRenderPass::~GrD3DOpsRenderPass() = default;
+GrD3DOpsRenderPass::~GrD3DOpsRenderPass() {}
 
 GrGpu* GrD3DOpsRenderPass::gpu() { return fGpu; }
 

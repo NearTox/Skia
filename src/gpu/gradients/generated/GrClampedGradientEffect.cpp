@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLClampedGradientEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLClampedGradientEffect() noexcept = default;
+  GrGLSLClampedGradientEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrClampedGradientEffect& _outer = args.fFp.cast<GrClampedGradientEffect>();
@@ -50,7 +50,7 @@ if (!%s && t.y < 0.0) {
         args.fOutputColor, args.fOutputColor,
         args.fUniformHandler->getUniformCStr(leftBorderColorVar), args.fOutputColor,
         args.fUniformHandler->getUniformCStr(rightBorderColorVar));
-    SkString _coords1871("float2(half2(t.x, 0))");
+    SkString _coords1871("float2(half2(t.x, 0.0))");
     SkString _sample1871 = this->invokeChild(0, args, _coords1871.c_str());
     fragBuilder->codeAppendf(
         R"SkSL(
@@ -92,7 +92,7 @@ void GrClampedGradientEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)makePremul);
 }
-bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrClampedGradientEffect& that = other.cast<GrClampedGradientEffect>();
   (void)that;
   if (leftBorderColor != that.leftBorderColor) return false;
@@ -101,6 +101,7 @@ bool GrClampedGradientEffect::onIsEqual(const GrFragmentProcessor& other) const 
   if (colorsAreOpaque != that.colorsAreOpaque) return false;
   return true;
 }
+bool GrClampedGradientEffect::usesExplicitReturn() const { return false; }
 GrClampedGradientEffect::GrClampedGradientEffect(const GrClampedGradientEffect& src)
     : INHERITED(kGrClampedGradientEffect_ClassID, src.optimizationFlags()),
       leftBorderColor(src.leftBorderColor),

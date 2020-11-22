@@ -152,7 +152,7 @@ class SkMaskFilterBase : public SkMaskFilter {
   virtual bool asABlur(BlurRec*) const;
 
  protected:
-  constexpr SkMaskFilterBase() noexcept = default;
+  SkMaskFilterBase() {}
 
 #if SK_SUPPORT_GPU
   virtual std::unique_ptr<GrFragmentProcessor> onAsFragmentProcessor(const GrFPArgs&) const;
@@ -163,7 +163,7 @@ class SkMaskFilterBase : public SkMaskFilter {
 
   class NinePatch : ::SkNoncopyable {
    public:
-    NinePatch() noexcept : fCache(nullptr) {}
+    NinePatch() : fCache(nullptr) {}
     ~NinePatch();
 
     SkMask fMask;        // fBounds must have [0,0] in its top-left
@@ -214,18 +214,16 @@ class SkMaskFilterBase : public SkMaskFilter {
   bool filterRRect(
       const SkRRect& devRRect, const SkMatrix& ctm, const SkRasterClip&, SkBlitter*) const;
 
-  typedef SkFlattenable INHERITED;
+  using INHERITED = SkFlattenable;
 };
 
-inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) noexcept {
-  return static_cast<SkMaskFilterBase*>(mf);
-}
+inline SkMaskFilterBase* as_MFB(SkMaskFilter* mf) { return static_cast<SkMaskFilterBase*>(mf); }
 
-inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) noexcept {
+inline const SkMaskFilterBase* as_MFB(const SkMaskFilter* mf) {
   return static_cast<const SkMaskFilterBase*>(mf);
 }
 
-inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) noexcept {
+inline const SkMaskFilterBase* as_MFB(const sk_sp<SkMaskFilter>& mf) {
   return static_cast<SkMaskFilterBase*>(mf.get());
 }
 

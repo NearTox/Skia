@@ -24,7 +24,7 @@ class GrDrawableOp final : public GrOp {
       GrRecordingContext*, std::unique_ptr<SkDrawable::GpuDrawHandler> drawable,
       const SkRect& bounds);
 
-  const char* name() const noexcept override { return "Drawable"; }
+  const char* name() const override { return "Drawable"; }
 
  private:
   friend class GrOpMemoryPool;  // for ctor
@@ -38,7 +38,7 @@ class GrDrawableOp final : public GrOp {
 
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
 
   void onPrepare(GrOpFlushState*) override {}
 
@@ -46,7 +46,7 @@ class GrDrawableOp final : public GrOp {
 
   std::unique_ptr<SkDrawable::GpuDrawHandler> fDrawable;
 
-  typedef GrOp INHERITED;
+  using INHERITED = GrOp;
 };
 
 #endif

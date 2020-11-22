@@ -72,7 +72,7 @@ class GrMtlRenderTarget : public GrRenderTarget {
 
   bool completeStencilAttachment() override;
 
-  typedef GrRenderTarget INHERITED;
+  using INHERITED = GrRenderTarget;
 };
 
 #endif

@@ -46,5 +46,6 @@ GrGLSLPrimitiveProcessor::FPCoordTransformHandler::operator++() {
   do {
     ++fIter;
   } while (fIter && !fIter->usesVaryingCoordsDirectly());
-  SkDEBUGCODE(fAddedCoord = false;) return *this;
+  SkDEBUGCODE(fAddedCoord = false;)
+  return *this;
 }

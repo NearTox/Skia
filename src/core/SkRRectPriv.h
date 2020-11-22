@@ -15,34 +15,33 @@ class SkWBuffer;
 
 class SkRRectPriv {
  public:
-  static bool IsCircle(const SkRRect& rr) noexcept {
+  static bool IsCircle(const SkRRect& rr) {
     return rr.isOval() && SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY);
   }
 
-  static SkVector GetSimpleRadii(const SkRRect& rr) noexcept {
+  static SkVector GetSimpleRadii(const SkRRect& rr) {
     SkASSERT(!rr.isComplex());
     return rr.fRadii[0];
   }
 
-  static bool IsSimpleCircular(const SkRRect& rr) noexcept {
+  static bool IsSimpleCircular(const SkRRect& rr) {
     return rr.isSimple() && SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY);
   }
 
-  static bool EqualRadii(const SkRRect& rr) noexcept {
+  static bool EqualRadii(const SkRRect& rr) {
     return rr.isRect() || SkRRectPriv::IsCircle(rr) || SkRRectPriv::IsSimpleCircular(rr);
   }
 
-  static const SkVector* GetRadiiArray(const SkRRect& rr) noexcept { return rr.fRadii; }
+  static const SkVector* GetRadiiArray(const SkRRect& rr) { return rr.fRadii; }
 
-  static bool AllCornersCircular(
-      const SkRRect& rr, SkScalar tolerance = SK_ScalarNearlyZero) noexcept;
+  static bool AllCornersCircular(const SkRRect& rr, SkScalar tolerance = SK_ScalarNearlyZero);
 
-  static bool ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr) noexcept;
+  static bool ReadFromBuffer(SkRBuffer* buffer, SkRRect* rr);
 
-  static void WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer) noexcept;
+  static void WriteToBuffer(const SkRRect& rr, SkWBuffer* buffer);
 
   // Test if a point is in the rrect, if it were a closed set.
-  static bool ContainsPoint(const SkRRect& rr, const SkPoint& p) noexcept {
+  static bool ContainsPoint(const SkRRect& rr, const SkPoint& p) {
     return rr.getBounds().contains(p.fX, p.fY) && rr.checkCornerContainment(p.fX, p.fY);
   }
 
@@ -50,7 +49,7 @@ class SkRRectPriv {
   // rect, oval, and simple types this will be the largest inscribed rectangle. Otherwise it may
   // not be the global maximum, but will be non-empty, touch at least one edge and be contained
   // in the round rect.
-  static SkRect InnerBounds(const SkRRect& rr) noexcept;
+  static SkRect InnerBounds(const SkRRect& rr);
 
   // Attempt to compute the intersection of two round rects. The intersection is not necessarily
   // a round rect. This returns intersections only when the shape is representable as a new

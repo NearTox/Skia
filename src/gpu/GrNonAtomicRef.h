@@ -34,7 +34,7 @@ class GrNonAtomicRef : public SkNoncopyable {
 
   // We allow this getter because this type is not thread-safe, meaning only one thread should
   // have ownership and be manipulating the ref count or querying this.
-  int refCnt() const noexcept { return fRefCnt; }
+  int refCnt() const { return fRefCnt; }
 
   void ref() const noexcept {
     // Once the ref cnt reaches zero it should never be ref'ed again.
@@ -54,7 +54,7 @@ class GrNonAtomicRef : public SkNoncopyable {
  private:
   mutable int32_t fRefCnt;
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 
 template <typename T>

@@ -88,7 +88,7 @@ class HardStopGradientBench_ScaleNumColors : public Benchmark {
   int fColorCount;
   SkPaint fPaint;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Clamp

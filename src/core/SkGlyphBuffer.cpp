@@ -9,12 +9,12 @@
 #include "src/core/SkGlyphRunPainter.h"
 #include "src/core/SkStrikeForGPU.h"
 
-void SkSourceGlyphBuffer::reset() noexcept {
+void SkSourceGlyphBuffer::reset() {
   fRejectedGlyphIDs.reset();
   fRejectedPositions.reset();
 }
 
-void SkDrawableGlyphBuffer::ensureSize(size_t size) noexcept {
+void SkDrawableGlyphBuffer::ensureSize(size_t size) {
   if (size > fMaxSize) {
     fMultiBuffer.reset(size);
     fPositions.reset(size);
@@ -81,7 +81,7 @@ SkPoint SkDrawableGlyphBuffer::startGPUDevice(
   auto positions = source.get<1>();
   device.mapPoints(fPositions, positions.data(), positions.size());
 
-  auto floor = [](SkPoint pt) noexcept -> SkPoint {
+  auto floor = [](SkPoint pt) -> SkPoint {
     return {SkScalarFloorToScalar(pt.x()), SkScalarFloorToScalar(pt.y())};
   };
 
@@ -100,7 +100,7 @@ SkPoint SkDrawableGlyphBuffer::startGPUDevice(
   return qFloor - q + roundingSpec.halfAxisSampleFreq;
 }
 
-void SkDrawableGlyphBuffer::reset() noexcept {
+void SkDrawableGlyphBuffer::reset() {
   SkDEBUGCODE(fPhase = kReset);
   if (fMaxSize > 200) {
     fMultiBuffer.reset();

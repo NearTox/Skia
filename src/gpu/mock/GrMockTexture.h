@@ -34,11 +34,11 @@ class GrMockTexture : public GrTexture {
 
   ~GrMockTexture() override {}
 
-  GrBackendTexture getBackendTexture() const noexcept override {
+  GrBackendTexture getBackendTexture() const override {
     return GrBackendTexture(this->width(), this->height(), this->mipmapped(), fInfo);
   }
 
-  GrBackendFormat backendFormat() const noexcept override { return fInfo.getBackendFormat(); }
+  GrBackendFormat backendFormat() const override { return fInfo.getBackendFormat(); }
 
   void textureParamsModified() override {}
 
@@ -62,7 +62,7 @@ class GrMockTexture : public GrTexture {
  private:
   GrMockTextureInfo fInfo;
 
-  typedef GrTexture INHERITED;
+  using INHERITED = GrTexture;
 };
 
 class GrMockRenderTarget : public GrRenderTarget {
@@ -108,7 +108,7 @@ class GrMockRenderTarget : public GrRenderTarget {
     return {this->width(), this->height(), this->numSamples(), numStencilBits, fInfo};
   }
 
-  GrBackendFormat backendFormat() const noexcept override { return fInfo.getBackendFormat(); }
+  GrBackendFormat backendFormat() const override { return fInfo.getBackendFormat(); }
 
  protected:
   // constructor for subclasses
@@ -122,7 +122,7 @@ class GrMockRenderTarget : public GrRenderTarget {
  private:
   GrMockRenderTargetInfo fInfo;
 
-  typedef GrRenderTarget INHERITED;
+  using INHERITED = GrRenderTarget;
 };
 
 class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarget {
@@ -149,16 +149,16 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
     this->registerWithCacheWrapped(cacheable);
   }
 
-  GrTexture* asTexture() noexcept override { return this; }
-  GrRenderTarget* asRenderTarget() noexcept override { return this; }
-  const GrTexture* asTexture() const noexcept override { return this; }
-  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
+  GrTexture* asTexture() override { return this; }
+  GrRenderTarget* asRenderTarget() override { return this; }
+  const GrTexture* asTexture() const override { return this; }
+  const GrRenderTarget* asRenderTarget() const override { return this; }
 
-  GrBackendFormat backendFormat() const noexcept override { return GrMockTexture::backendFormat(); }
+  GrBackendFormat backendFormat() const override { return GrMockTexture::backendFormat(); }
 
  protected:
   // This avoids an inherits via dominance warning on MSVC.
-  void willRemoveLastRef() noexcept override { GrTexture::willRemoveLastRef(); }
+  void willRemoveLastRef() override { GrTexture::willRemoveLastRef(); }
 
  private:
   void onAbandon() override {

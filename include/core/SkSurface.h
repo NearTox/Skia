@@ -295,7 +295,7 @@ class SK_API SkSurface : public SkRefCnt {
       @return                created SkSurface, or nullptr
    */
   static sk_sp<SkSurface> MakeFromCAMetalLayer(
-      GrContext* context, GrMTLHandle layer, GrSurfaceOrigin origin, int sampleCnt,
+      GrRecordingContext* context, GrMTLHandle layer, GrSurfaceOrigin origin, int sampleCnt,
       SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* surfaceProps,
       GrMTLHandle* drawable) SK_API_AVAILABLE_CA_METAL_LAYER;
 
@@ -317,7 +317,7 @@ class SK_API SkSurface : public SkRefCnt {
       @return                created SkSurface, or nullptr
    */
   static sk_sp<SkSurface> MakeFromMTKView(
-      GrContext* context, GrMTLHandle mtkView, GrSurfaceOrigin origin, int sampleCnt,
+      GrRecordingContext* context, GrMTLHandle mtkView, GrSurfaceOrigin origin, int sampleCnt,
       SkColorType colorType, sk_sp<SkColorSpace> colorSpace, const SkSurfaceProps* surfaceProps)
       SK_API_AVAILABLE(macos(10.11), ios(9.0));
 #endif
@@ -431,34 +431,6 @@ class SK_API SkSurface : public SkRefCnt {
       GrRecordingContext* context, const SkSurfaceCharacterization& characterization,
       SkBudgeted budgeted);
 
-  /** Wraps a backend texture in an SkSurface - setting up the surface to match the provided
-      characterization. The caller must ensure the texture is valid for the lifetime of
-      returned SkSurface.
-
-      If the backend texture and surface characterization are incompatible then null will
-      be returned.
-
-      Usually, the GrContext::createBackendTexture variant that takes a surface characterization
-      should be used to create the backend texture. If not,
-      SkSurfaceCharacterization::isCompatible can be used to determine if a given backend texture
-      is compatible with a specific surface characterization.
-
-      Upon success textureReleaseProc is called when it is safe to delete the texture in the
-      backend API (accounting only for use of the texture by this surface). If SkSurface creation
-      fails textureReleaseProc is called before this function returns.
-
-      @param context             GPU context
-      @param characterization    characterization of the desired surface
-      @param backendTexture      texture residing on GPU
-      @param textureReleaseProc  function called when texture can be released
-      @param releaseContext      state passed to textureReleaseProc
-      @return                    SkSurface if all parameters are compatible; otherwise, nullptr
-  */
-  static sk_sp<SkSurface> MakeFromBackendTexture(
-      GrContext* context, const SkSurfaceCharacterization& characterzation,
-      const GrBackendTexture& backendTexture, TextureReleaseProc textureReleaseProc = nullptr,
-      ReleaseContext releaseContext = nullptr);
-
   /** Is this surface compatible with the provided characterization?
 
       This method can be used to determine if an existing SkSurface is a viable destination
@@ -485,13 +457,13 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  number of pixel columns
   */
-  int width() const noexcept { return fWidth; }
+  int width() const { return fWidth; }
 
   /** Returns pixel row count; may be zero or greater.
 
       @return  number of pixel rows
   */
-  int height() const noexcept { return fHeight; }
+  int height() const { return fHeight; }
 
   /** Returns an ImageInfo describing the surface.
    */
@@ -505,7 +477,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Surface_notifyContentWillChange
   */
-  uint32_t generationID() noexcept;
+  uint32_t generationID();
 
   /** \enum SkSurface::ContentChangeMode
       ContentChangeMode members are parameters to notifyContentWillChange().
@@ -523,15 +495,6 @@ class SK_API SkSurface : public SkRefCnt {
       example: https://fiddle.skia.org/c/@Surface_notifyContentWillChange
   */
   void notifyContentWillChange(ContentChangeMode mode);
-
-  /** Deprecated.
-      This functionality is now achieved via:
-         GrRecordingContext* recordingContext = surface->recordingContext();
-         GrDirectContext* directContext = recordingContext->asDirectContext();
-      Where 'recordingContext' could be null if 'surface' is not GPU backed and
-      'directContext' could be null if the calling code is in the midst of DDL recording.
-  */
-  GrContext* getContext();
 
   /** Returns the recording context being used by the SkSurface.
 
@@ -896,7 +859,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       @return  LCD striping orientation and setting for device independent fonts
   */
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
   /** Call to ensure all reads/writes of the surface have been issued to the underlying 3D API.
       Skia will correctly order its own draws and pixel operations. This must to be used to ensure
@@ -979,6 +942,10 @@ class SK_API SkSurface : public SkRefCnt {
       object to be prepped for that use. A finishedProc or semaphore on the GrFlushInfo will also
       include the work for any requested state change.
 
+      If the backend API is Vulkan, the caller can set the GrBackendSurfaceMutableState's
+      VkImageLayout to VK_IMAGE_LAYOUT_UNDEFINED or queueFamilyIndex to VK_QUEUE_FAMILY_IGNORED to
+      tell Skia to not change those respective states.
+
       If the return is GrSemaphoresSubmitted::kYes, only initialized GrBackendSemaphores will be
       submitted to the gpu during the next submit call (it is possible Skia failed to create a
       subset of the semaphores). The client should not wait on these semaphores until after submit
@@ -1050,11 +1017,11 @@ class SK_API SkSurface : public SkRefCnt {
   bool draw(sk_sp<const SkDeferredDisplayList> deferredDisplayList);
 
  protected:
-  SkSurface(int width, int height, const SkSurfaceProps* surfaceProps) noexcept;
-  SkSurface(const SkImageInfo& imageInfo, const SkSurfaceProps* surfaceProps) noexcept;
+  SkSurface(int width, int height, const SkSurfaceProps* surfaceProps);
+  SkSurface(const SkImageInfo& imageInfo, const SkSurfaceProps* surfaceProps);
 
   // called by subclass if their contents have changed
-  void dirtyGenerationID() noexcept { fGenerationID = 0; }
+  void dirtyGenerationID() { fGenerationID = 0; }
 
  private:
   const SkSurfaceProps fProps;
@@ -1062,7 +1029,7 @@ class SK_API SkSurface : public SkRefCnt {
   const int fHeight;
   uint32_t fGenerationID;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

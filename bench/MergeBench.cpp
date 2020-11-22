@@ -81,7 +81,7 @@ class MergeBench : public Benchmark {
   bool fInitialized;
   sk_sp<SkImage> fImage, fCheckerboard;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

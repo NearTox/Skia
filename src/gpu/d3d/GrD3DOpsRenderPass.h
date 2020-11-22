@@ -74,7 +74,7 @@ class GrD3DOpsRenderPass : public GrOpsRenderPass {
   SkPMColor4f fClearColor;
   GrLoadOp fStencilLoadOp;
 
-  typedef GrOpsRenderPass INHERITED;
+  using INHERITED = GrOpsRenderPass;
 };
 
 #endif

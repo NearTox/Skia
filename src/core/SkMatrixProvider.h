@@ -13,18 +13,18 @@
 
 class SkMatrixProvider {
  public:
-  SkMatrixProvider(const SkMatrix& localToDevice) noexcept
+  SkMatrixProvider(const SkMatrix& localToDevice)
       : fLocalToDevice(localToDevice), fLocalToDevice33(localToDevice) {}
 
-  SkMatrixProvider(const SkM44& localToDevice) noexcept
+  SkMatrixProvider(const SkM44& localToDevice)
       : fLocalToDevice(localToDevice), fLocalToDevice33(localToDevice.asM33()) {}
 
-  virtual ~SkMatrixProvider() = default;
+  virtual ~SkMatrixProvider() {}
 
   // These should return the "same" matrix, as either a 3x3 or 4x4. Most sites in Skia still
   // call localToDevice, and operate on SkMatrix.
-  const SkMatrix& localToDevice() const noexcept { return fLocalToDevice33; }
-  const SkM44& localToDevice44() const noexcept { return fLocalToDevice; }
+  const SkMatrix& localToDevice() const { return fLocalToDevice33; }
+  const SkM44& localToDevice44() const { return fLocalToDevice; }
 
   virtual bool getLocalToMarker(uint32_t id, SkM44* localToMarker) const = 0;
 
@@ -37,8 +37,7 @@ class SkMatrixProvider {
 
 class SkOverrideDeviceMatrixProvider : public SkMatrixProvider {
  public:
-  SkOverrideDeviceMatrixProvider(
-      const SkMatrixProvider& parent, const SkMatrix& localToDevice) noexcept
+  SkOverrideDeviceMatrixProvider(const SkMatrixProvider& parent, const SkMatrix& localToDevice)
       : SkMatrixProvider(localToDevice), fParent(parent) {}
 
   bool getLocalToMarker(uint32_t id, SkM44* localToMarker) const override {
@@ -51,7 +50,7 @@ class SkOverrideDeviceMatrixProvider : public SkMatrixProvider {
 
 class SkPostTranslateMatrixProvider : public SkMatrixProvider {
  public:
-  SkPostTranslateMatrixProvider(const SkMatrixProvider& parent, SkScalar dx, SkScalar dy) noexcept
+  SkPostTranslateMatrixProvider(const SkMatrixProvider& parent, SkScalar dx, SkScalar dy)
       : SkMatrixProvider(SkM44::Translate(dx, dy) * parent.localToDevice44()), fParent(parent) {}
 
   // Assume that the post-translation doesn't apply to any marked matrices
@@ -65,7 +64,7 @@ class SkPostTranslateMatrixProvider : public SkMatrixProvider {
 
 class SkPreConcatMatrixProvider : public SkMatrixProvider {
  public:
-  SkPreConcatMatrixProvider(const SkMatrixProvider& parent, const SkMatrix& preMatrix) noexcept
+  SkPreConcatMatrixProvider(const SkMatrixProvider& parent, const SkMatrix& preMatrix)
       : SkMatrixProvider(parent.localToDevice44() * SkM44(preMatrix)),
         fParent(parent),
         fPreMatrix(preMatrix) {}
@@ -87,8 +86,7 @@ class SkPreConcatMatrixProvider : public SkMatrixProvider {
 
 class SkSimpleMatrixProvider : public SkMatrixProvider {
  public:
-  SkSimpleMatrixProvider(const SkMatrix& localToDevice) noexcept
-      : SkMatrixProvider(localToDevice) {}
+  SkSimpleMatrixProvider(const SkMatrix& localToDevice) : SkMatrixProvider(localToDevice) {}
 
   bool getLocalToMarker(uint32_t, SkM44*) const override { return false; }
 };

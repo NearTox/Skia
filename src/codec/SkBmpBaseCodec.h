@@ -34,6 +34,6 @@ class SkBmpBaseCodec : public SkBmpCodec {
  private:
   SkAutoFree fSrcBuffer;
 
-  typedef SkBmpCodec INHERITED;
+  using INHERITED = SkBmpCodec;
 };
 #endif  // SkBmpBaseCodec_DEFINED

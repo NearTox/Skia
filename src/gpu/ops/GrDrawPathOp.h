@@ -53,7 +53,7 @@ class GrDrawPathOpBase : public GrDrawOp {
  private:
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) final {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) final {}
 
   void onPrepare(GrOpFlushState*) final {}
 
@@ -64,7 +64,7 @@ class GrDrawPathOpBase : public GrDrawOp {
   bool fDoAA;
   GrProcessorSet fProcessorSet;
 
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 class GrDrawPathOp final : public GrDrawPathOpBase {
@@ -74,7 +74,7 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
   static std::unique_ptr<GrDrawOp> Make(
       GrRecordingContext*, const SkMatrix& viewMatrix, GrPaint&&, GrAA, sk_sp<const GrPath>);
 
-  const char* name() const noexcept override { return "DrawPath"; }
+  const char* name() const override { return "DrawPath"; }
 
  private:
   friend class GrOpMemoryPool;  // for ctor
@@ -92,7 +92,7 @@ class GrDrawPathOp final : public GrDrawPathOpBase {
 
   sk_sp<const GrPath> fPath;
 
-  typedef GrDrawPathOpBase INHERITED;
+  using INHERITED = GrDrawPathOpBase;
 };
 
 #endif

@@ -42,7 +42,7 @@ class SkTypeface_Android : public SkTypeface_FreeType {
   SkString fFamilyName;
 
  private:
-  typedef SkTypeface_FreeType INHERITED;
+  using INHERITED = SkTypeface_FreeType;
 };
 
 class SkTypeface_AndroidSystem : public SkTypeface_Android {
@@ -102,7 +102,7 @@ class SkTypeface_AndroidSystem : public SkTypeface_Android {
   const FontVariant fVariantStyle;
   SkAutoTCallVProc<FILE, sk_fclose> fFile;
 
-  typedef SkTypeface_Android INHERITED;
+  using INHERITED = SkTypeface_Android;
 };
 
 class SkTypeface_AndroidStream : public SkTypeface_Android {
@@ -139,7 +139,7 @@ class SkTypeface_AndroidStream : public SkTypeface_Android {
 
  private:
   const std::unique_ptr<const SkFontData> fData;
-  typedef SkTypeface_Android INHERITED;
+  using INHERITED = SkTypeface_Android;
 };
 
 class SkFontStyleSet_Android : public SkFontStyleSet {
@@ -241,7 +241,7 @@ class SkFontStyleSet_Android : public SkFontStyleSet {
   friend struct NameToFamily;
   friend class SkFontMgr_Android;
 
-  typedef SkFontStyleSet INHERITED;
+  using INHERITED = SkFontStyleSet;
 };
 
 /** On Android a single family can have many names, but our API assumes unique names.
@@ -526,7 +526,7 @@ class SkFontMgr_Android : public SkFontMgr {
     SkASSERT(fDefaultStyleSet);
   }
 
-  typedef SkFontMgr INHERITED;
+  using INHERITED = SkFontMgr;
 };
 
 #ifdef SK_DEBUG

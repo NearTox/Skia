@@ -19,11 +19,11 @@ static_assert(
     std::is_trivially_copyable<SkMatrix44>::value, "SkMatrix44 must be trivially copyable");
 #endif
 
-static inline bool eq4(const SkScalar* SK_RESTRICT a, const SkScalar* SK_RESTRICT b) noexcept {
+static inline bool eq4(const SkScalar* SK_RESTRICT a, const SkScalar* SK_RESTRICT b) {
   return (a[0] == b[0]) & (a[1] == b[1]) & (a[2] == b[2]) & (a[3] == b[3]);
 }
 
-bool SkMatrix44::operator==(const SkMatrix44& other) const noexcept {
+bool SkMatrix44::operator==(const SkMatrix44& other) const {
   if (this == &other) {
     return true;
   }
@@ -59,7 +59,7 @@ bool SkMatrix44::operator==(const SkMatrix44& other) const noexcept {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-void SkMatrix44::recomputeTypeMask() noexcept {
+void SkMatrix44::recomputeTypeMask() {
   if (0 != perspX() || 0 != perspY() || 0 != perspZ() || 1 != fMat[3][3]) {
     fTypeMask = kTranslate_Mask | kScale_Mask | kAffine_Mask | kPerspective_Mask;
     return;
@@ -182,12 +182,12 @@ void SkMatrix44::setRowMajord(const double src[]) {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-const SkMatrix44& SkMatrix44::I() noexcept {
+const SkMatrix44& SkMatrix44::I() {
   static constexpr SkMatrix44 gIdentity44(kIdentity_Constructor);
   return gIdentity44;
 }
 
-void SkMatrix44::setIdentity() noexcept {
+void SkMatrix44::setIdentity() {
   fMat[0][0] = 1;
   fMat[0][1] = 0;
   fMat[0][2] = 0;
@@ -209,7 +209,7 @@ void SkMatrix44::setIdentity() noexcept {
 
 void SkMatrix44::set3x3(
     SkScalar m_00, SkScalar m_10, SkScalar m_20, SkScalar m_01, SkScalar m_11, SkScalar m_21,
-    SkScalar m_02, SkScalar m_12, SkScalar m_22) noexcept {
+    SkScalar m_02, SkScalar m_12, SkScalar m_22) {
   fMat[0][0] = m_00;
   fMat[0][1] = m_10;
   fMat[0][2] = m_20;
@@ -435,7 +435,7 @@ void SkMatrix44::setRotateAboutUnit(SkScalar x, SkScalar y, SkScalar z, SkScalar
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static bool bits_isonly(int value, int mask) noexcept { return 0 == (value & ~mask); }
+static bool bits_isonly(int value, int mask) { return 0 == (value & ~mask); }
 
 void SkMatrix44::setConcat(const SkMatrix44& a, const SkMatrix44& b) {
   const SkMatrix44::TypeMask a_mask = a.getType();
@@ -753,7 +753,7 @@ bool SkMatrix44::invert(SkMatrix44* storage) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkMatrix44::transpose() noexcept {
+void SkMatrix44::transpose() {
   if (!this->isIdentity()) {
     using std::swap;
     swap(fMat[0][1], fMat[1][0]);
@@ -997,7 +997,7 @@ void SkMatrix44::dump() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void initFromMatrix(SkScalar dst[4][4], const SkMatrix& src) noexcept {
+static void initFromMatrix(SkScalar dst[4][4], const SkMatrix& src) {
   dst[0][0] = src[SkMatrix::kMScaleX];
   dst[1][0] = src[SkMatrix::kMSkewX];
   dst[2][0] = 0;
@@ -1016,9 +1016,9 @@ static void initFromMatrix(SkScalar dst[4][4], const SkMatrix& src) noexcept {
   dst[3][3] = src[SkMatrix::kMPersp2];
 }
 
-SkMatrix44::SkMatrix44(const SkMatrix& src) noexcept { this->operator=(src); }
+SkMatrix44::SkMatrix44(const SkMatrix& src) { this->operator=(src); }
 
-SkMatrix44& SkMatrix44::operator=(const SkMatrix& src) noexcept {
+SkMatrix44& SkMatrix44::operator=(const SkMatrix& src) {
   initFromMatrix(fMat, src);
 
   if (src.isIdentity()) {
@@ -1029,7 +1029,7 @@ SkMatrix44& SkMatrix44::operator=(const SkMatrix& src) noexcept {
   return *this;
 }
 
-SkMatrix44::operator SkMatrix() const noexcept {
+SkMatrix44::operator SkMatrix() const {
   SkMatrix dst;
 
   dst[SkMatrix::kMScaleX] = fMat[0][0];

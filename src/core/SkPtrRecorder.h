@@ -37,7 +37,7 @@ class SkPtrSet : public SkRefCnt {
   /**
    *  Return the number of (non-null) ptrs in the set.
    */
-  int count() const noexcept { return fList.count(); }
+  int count() const { return fList.count(); }
 
   /**
    *  Copy the ptrs in the set into the specified array (allocated by the
@@ -59,14 +59,12 @@ class SkPtrSet : public SkRefCnt {
    */
   class Iter {
    public:
-    Iter(const SkPtrSet& set) noexcept : fSet(set), fIndex(0) {}
+    Iter(const SkPtrSet& set) : fSet(set), fIndex(0) {}
 
     /**
      * Return the next ptr in the set or null if the end was reached.
      */
-    void* next() noexcept {
-      return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr;
-    }
+    void* next() { return fIndex < fSet.fList.count() ? fSet.fList[fIndex++].fPtr : nullptr; }
 
    private:
     const SkPtrSet& fSet;
@@ -91,7 +89,7 @@ class SkPtrSet : public SkRefCnt {
 
   static bool Less(const Pair& a, const Pair& b);
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 /**
@@ -107,7 +105,7 @@ class SkTPtrSet : public SkPtrSet {
   void copyToArray(T* array) const { this->INHERITED::copyToArray((void**)array); }
 
  private:
-  typedef SkPtrSet INHERITED;
+  using INHERITED = SkPtrSet;
 };
 
 /**
@@ -154,7 +152,7 @@ class SkNamedFactorySet : public SkRefCnt {
   SkFactorySet fFactorySet;
   SkTDArray<const char*> fNames;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

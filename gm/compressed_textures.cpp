@@ -25,8 +25,8 @@
 #  include "include/gpu/GrRecordingContext.h"
 #  include "src/core/SkCompressedDataUtils.h"
 #  include "src/core/SkMipmap.h"
-#  include "src/gpu/GrContextPriv.h"
 #  include "src/gpu/GrDataUtils.h"
+#  include "src/gpu/GrImageContextPriv.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
 #  include "src/image/SkImage_Base.h"
 #  include "src/image/SkImage_GpuBase.h"
@@ -257,8 +257,7 @@ class CompressedTexturesGM : public skiagm::GM {
 
     bool isCompressed = false;
     if (image->isTextureBacked()) {
-      GrRecordingContext* rContext = ((SkImage_GpuBase*)image)->context();
-      const GrCaps* caps = rContext->priv().caps();
+      const GrCaps* caps = as_IB(image)->context()->priv().caps();
 
       GrTextureProxy* proxy = as_IB(image)->peekProxy();
       isCompressed = caps->isFormatCompressed(proxy->backendFormat());
@@ -301,7 +300,7 @@ class CompressedTexturesGM : public skiagm::GM {
   sk_sp<SkImage> fOpaqueBC1Image;
   sk_sp<SkImage> fTransparentBC1Image;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

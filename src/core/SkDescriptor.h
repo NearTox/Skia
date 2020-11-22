@@ -17,7 +17,7 @@
 
 class SkDescriptor : SkNoncopyable {
  public:
-  static constexpr size_t ComputeOverhead(int entryCount) noexcept {
+  static size_t ComputeOverhead(int entryCount) {
     SkASSERT(entryCount >= 0);
     return sizeof(SkDescriptor) + entryCount * sizeof(Entry);
   }
@@ -30,7 +30,7 @@ class SkDescriptor : SkNoncopyable {
   void* operator new(size_t);
   void* operator new(size_t, void* p) { return p; }
 
-  uint32_t getLength() const noexcept { return fLength; }
+  uint32_t getLength() const { return fLength; }
   void* addEntry(uint32_t tag, size_t length, const void* data = nullptr);
   void computeChecksum();
 
@@ -50,7 +50,7 @@ class SkDescriptor : SkNoncopyable {
   bool operator==(const SkDescriptor& other) const;
   bool operator!=(const SkDescriptor& other) const { return !(*this == other); }
 
-  uint32_t getChecksum() const noexcept { return fChecksum; }
+  uint32_t getChecksum() const { return fChecksum; }
 
   struct Entry {
     uint32_t fTag;
@@ -62,7 +62,7 @@ class SkDescriptor : SkNoncopyable {
 #endif
 
  private:
-  constexpr SkDescriptor() noexcept = default;
+  SkDescriptor() = default;
   friend class SkDescriptorTestHelper;
   friend class SkAutoDescriptor;
 
@@ -75,7 +75,7 @@ class SkDescriptor : SkNoncopyable {
 
 class SkAutoDescriptor {
  public:
-  SkAutoDescriptor() noexcept;
+  SkAutoDescriptor();
   explicit SkAutoDescriptor(size_t size);
   explicit SkAutoDescriptor(const SkDescriptor& desc);
   SkAutoDescriptor(const SkAutoDescriptor& ad);
@@ -87,13 +87,13 @@ class SkAutoDescriptor {
 
   void reset(size_t size);
   void reset(const SkDescriptor& desc);
-  SkDescriptor* getDesc() const noexcept {
+  SkDescriptor* getDesc() const {
     SkASSERT(fDesc);
     return fDesc;
   }
 
  private:
-  void free() noexcept;
+  void free();
   static constexpr size_t kStorageSize =
       sizeof(SkDescriptor) + sizeof(SkDescriptor::Entry) + sizeof(SkScalerContextRec)  // for rec
       + sizeof(SkDescriptor::Entry) + sizeof(void*)  // for typeface

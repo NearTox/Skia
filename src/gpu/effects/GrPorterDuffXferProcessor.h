@@ -36,7 +36,7 @@ class GrPorterDuffXPFactory : public GrXPFactory {
 
   /** This XP implements non-LCD src-over using hw blend with no optimizations. It is returned
       by reference because it is global and its ref-cnting methods are not thread safe. */
-  static const GrXferProcessor& SimpleSrcOverXP() noexcept;
+  static const GrXferProcessor& SimpleSrcOverXP();
 
   static AnalysisProperties SrcOverAnalysisProperties(
       const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
@@ -59,7 +59,7 @@ class GrPorterDuffXPFactory : public GrXPFactory {
   SkBlendMode fBlendMode;
 
   friend class GrPorterDuffTest;  // for TestGetXPOutputTypes()
-  typedef GrXPFactory INHERITED;
+  using INHERITED = GrXPFactory;
 };
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop

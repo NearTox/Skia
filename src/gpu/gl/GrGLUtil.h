@@ -38,7 +38,7 @@ typedef uint64_t GrGLDriverVersion;
 #define GR_GLSL_INVALID_VER GR_GLSL_VER(0, 0)
 #define GR_GL_DRIVER_UNKNOWN_VER GR_GL_DRIVER_VER(0, 0, 0)
 
-static constexpr uint32_t GrGLFormatChannels(GrGLFormat format) noexcept {
+static constexpr uint32_t GrGLFormatChannels(GrGLFormat format) {
   switch (format) {
     case GrGLFormat::kUnknown: return 0;
     case GrGLFormat::kRGBA8: return kRGBA_SkColorChannelFlags;
@@ -297,7 +297,7 @@ extern bool gLogCallsGL;
     GR_GL_LOG_CALLS_IMPL(X);                     \
   } while (false)
 
-static constexpr GrGLFormat GrGLFormatFromGLEnum(GrGLenum glFormat) noexcept {
+static constexpr GrGLFormat GrGLFormatFromGLEnum(GrGLenum glFormat) {
   switch (glFormat) {
     case GR_GL_RGBA8: return GrGLFormat::kRGBA8;
     case GR_GL_R8: return GrGLFormat::kR8;
@@ -327,7 +327,7 @@ static constexpr GrGLFormat GrGLFormatFromGLEnum(GrGLenum glFormat) noexcept {
 }
 
 /** Returns either the sized internal format or compressed internal format of the GrGLFormat. */
-static constexpr GrGLenum GrGLFormatToEnum(GrGLFormat format) noexcept {
+static constexpr GrGLenum GrGLFormatToEnum(GrGLFormat format) {
   switch (format) {
     case GrGLFormat::kRGBA8: return GR_GL_RGBA8;
     case GrGLFormat::kR8: return GR_GL_R8;

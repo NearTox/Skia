@@ -82,8 +82,8 @@ class SkSafeMath {
         y <= std::numeric_limits<uint64_t>::max() >> 32) {
       return x * y;
     } else {
-      auto hi = [](uint64_t x) noexcept { return x >> 32; };
-      auto lo = [](uint64_t x) noexcept { return x & 0xFFFFFFFF; };
+      auto hi = [](uint64_t x) { return x >> 32; };
+      auto lo = [](uint64_t x) { return x & 0xFFFFFFFF; };
 
       uint64_t lx_ly = lo(x) * lo(y);
       uint64_t hx_ly = hi(x) * lo(y);

@@ -10,7 +10,7 @@
 #include "src/gpu/GrGpuBuffer.h"
 
 GrGpuBuffer::GrGpuBuffer(
-    GrGpu* gpu, size_t sizeInBytes, GrGpuBufferType type, GrAccessPattern pattern) noexcept
+    GrGpu* gpu, size_t sizeInBytes, GrGpuBufferType type, GrAccessPattern pattern)
     : GrGpuResource(gpu),
       fMapPtr(nullptr),
       fSizeInBytes(sizeInBytes),
@@ -36,7 +36,7 @@ void GrGpuBuffer::unmap() {
   fMapPtr = nullptr;
 }
 
-bool GrGpuBuffer::isMapped() const noexcept { return SkToBool(fMapPtr); }
+bool GrGpuBuffer::isMapped() const { return SkToBool(fMapPtr); }
 
 bool GrGpuBuffer::updateData(const void* src, size_t srcSizeInBytes) {
   SkASSERT(!this->isMapped());

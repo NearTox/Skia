@@ -89,7 +89,7 @@ class PolyUtilsBench : public Benchmark {
   SkString fName;
   Type fType;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class StarPolyUtilsBench : public PolyUtilsBench {
@@ -114,7 +114,7 @@ class StarPolyUtilsBench : public PolyUtilsBench {
   }
 
  private:
-  typedef PolyUtilsBench INHERITED;
+  using INHERITED = PolyUtilsBench;
 };
 
 class CirclePolyUtilsBench : public PolyUtilsBench {
@@ -136,7 +136,7 @@ class CirclePolyUtilsBench : public PolyUtilsBench {
   }
 
  private:
-  typedef PolyUtilsBench INHERITED;
+  using INHERITED = PolyUtilsBench;
 };
 
 class IntersectingPolyUtilsBench : public PolyUtilsBench {
@@ -160,7 +160,7 @@ class IntersectingPolyUtilsBench : public PolyUtilsBench {
   }
 
  private:
-  typedef PolyUtilsBench INHERITED;
+  using INHERITED = PolyUtilsBench;
 };
 
 // familiar videogame character
@@ -185,7 +185,7 @@ class NotchPolyUtilsBench : public PolyUtilsBench {
   }
 
  private:
-  typedef PolyUtilsBench INHERITED;
+  using INHERITED = PolyUtilsBench;
 };
 
 class IceCreamPolyUtilsBench : public PolyUtilsBench {
@@ -209,7 +209,7 @@ class IceCreamPolyUtilsBench : public PolyUtilsBench {
   }
 
  private:
-  typedef PolyUtilsBench INHERITED;
+  using INHERITED = PolyUtilsBench;
 };
 
 DEF_BENCH(return new StarPolyUtilsBench(PolyUtilsBench::Type::kConvexCheck);)

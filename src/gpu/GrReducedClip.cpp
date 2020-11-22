@@ -629,7 +629,7 @@ inline void GrReducedClip::addWindowRectangle(const SkRect& elementInteriorRect,
   }
 }
 
-GrClipEdgeType GrReducedClip::GetClipEdgeType(Invert invert, GrAA aa) noexcept {
+GrClipEdgeType GrReducedClip::GetClipEdgeType(Invert invert, GrAA aa) {
   if (Invert::kNo == invert) {
     return (GrAA::kYes == aa) ? GrClipEdgeType::kFillAA : GrClipEdgeType::kFillBW;
   } else {
@@ -667,10 +667,10 @@ GrReducedClip::ClipResult GrReducedClip::addAnalyticRRect(
     return ClipResult::kClipped;
   }
 
-  SkPath deviceSpacePath;
+  SkPathBuilder deviceSpacePath;
   deviceSpacePath.setIsVolatile(true);
   deviceSpacePath.addRRect(deviceSpaceRRect);
-  return this->addAnalyticPath(deviceSpacePath, invert, aa);
+  return this->addAnalyticPath(deviceSpacePath.detach(), invert, aa);
 }
 
 GrReducedClip::ClipResult GrReducedClip::addAnalyticPath(
@@ -701,7 +701,7 @@ GrReducedClip::ClipResult GrReducedClip::addAnalyticPath(
   return ClipResult::kNotClipped;
 }
 
-void GrReducedClip::makeEmpty() noexcept {
+void GrReducedClip::makeEmpty() {
   fHasScissor = false;
   fAAClipRectGenID = SK_InvalidGenID;
   fWindowRects.reset();
@@ -875,7 +875,7 @@ bool GrReducedClip::drawStencilClipMask(
   return true;
 }
 
-int GrReducedClip::numAnalyticElements() const noexcept {
+int GrReducedClip::numAnalyticElements() const {
   return fCCPRClipPaths.size() + fNumAnalyticElements;
 }
 

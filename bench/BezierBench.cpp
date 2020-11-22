@@ -85,7 +85,7 @@ class BezierBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new BezierBench(SkPaint::kButt_Cap, SkPaint::kRound_Join, 2, draw_quad);)

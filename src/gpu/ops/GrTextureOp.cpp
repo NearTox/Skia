@@ -247,7 +247,7 @@ class TextureOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const noexcept override { return "TextureOp"; }
+  const char* name() const override { return "TextureOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     bool mipped = (fMetadata.mipmapMode() != GrSamplerState::MipmapMode::kNone);
@@ -606,7 +606,8 @@ class TextureOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     SkASSERT(fDesc);
 
     GrGeometryProcessor* gp;
@@ -630,15 +631,17 @@ class TextureOp final : public GrMeshDrawOp {
 
     fDesc->fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrProcessorSet::MakeEmptySet(), fDesc->fVertexSpec.primitiveType(), pipelineFlags);
+        GrProcessorSet::MakeEmptySet(), fDesc->fVertexSpec.primitiveType(), renderPassXferBarriers,
+        pipelineFlags);
   }
 
   void onPrePrepareDraws(
       GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
+      const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
-    SkDEBUGCODE(this->validate());
+    SkDEBUGCODE(this->validate();)
     SkASSERT(!fDesc);
 
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
@@ -649,14 +652,15 @@ class TextureOp final : public GrMeshDrawOp {
     FillInVertices(*context->priv().caps(), this, fDesc, fDesc->fPrePreparedVertices);
 
     // This will call onCreateProgramInfo and register the created program with the DDL.
-    this->INHERITED::onPrePrepareDraws(context, writeView, clip, dstProxyView);
+    this->INHERITED::onPrePrepareDraws(
+        context, writeView, clip, dstProxyView, renderPassXferBarriers);
   }
 
   static void FillInVertices(const GrCaps& caps, TextureOp* texOp, Desc* desc, char* vertexData) {
     SkASSERT(vertexData);
 
     int totQuadsSeen = 0;
-    SkDEBUGCODE(int totVerticesSeen = 0);
+    SkDEBUGCODE(int totVerticesSeen = 0;)
     SkDEBUGCODE(const size_t vertexSize = desc->fVertexSpec.vertexSize());
 
     GrQuadPerEdgeAA::Tessellator tessellator(desc->fVertexSpec, vertexData);
@@ -736,7 +740,7 @@ class TextureOp final : public GrMeshDrawOp {
 #endif
 
   void characterize(Desc* desc) const {
-    SkDEBUGCODE(this->validate());
+    SkDEBUGCODE(this->validate();)
 
     GrQuad::Type quadType = GrQuad::Type::kAxisAligned;
     ColorType colorType = ColorType::kNone;
@@ -814,7 +818,7 @@ class TextureOp final : public GrMeshDrawOp {
   void onPrepareDraws(Target* target) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
-    SkDEBUGCODE(this->validate());
+    SkDEBUGCODE(this->validate();)
 
     SkASSERT(!fDesc || fDesc->fPrePreparedVertices);
 
@@ -869,7 +873,8 @@ class TextureOp final : public GrMeshDrawOp {
         std::move(fDesc->fIndexBuffer), nullptr, std::move(fDesc->fVertexBuffer));
 
     int totQuadsSeen = 0;
-    SkDEBUGCODE(int numDraws = 0;) for (const auto& op : ChainRange<TextureOp>(this)) {
+    SkDEBUGCODE(int numDraws = 0;)
+    for (const auto& op : ChainRange<TextureOp>(this)) {
       for (unsigned p = 0; p < op.fMetadata.fProxyCount; ++p) {
         const int quadCnt = op.fViewCountPairs[p].fQuadCnt;
         SkASSERT(numDraws < fDesc->fNumProxies);
@@ -880,7 +885,7 @@ class TextureOp final : public GrMeshDrawOp {
             flushState->caps(), flushState->opsRenderPass(), fDesc->fVertexSpec, totQuadsSeen,
             quadCnt, fDesc->totalNumVertices(), fDesc->fBaseVertex);
         totQuadsSeen += quadCnt;
-        SkDEBUGCODE(++numDraws);
+        SkDEBUGCODE(++numDraws;)
       }
     }
 
@@ -913,8 +918,8 @@ class TextureOp final : public GrMeshDrawOp {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
     auto* that = t->cast<TextureOp>();
 
-    SkDEBUGCODE(this->validate());
-    SkDEBUGCODE(that->validate());
+    SkDEBUGCODE(this->validate();)
+    SkDEBUGCODE(that->validate();)
 
     if (fDesc || that->fDesc) {
       // This should never happen (since only DDL recorded ops should be prePrepared)
@@ -1000,7 +1005,7 @@ class TextureOp final : public GrMeshDrawOp {
       that->propagateCoverageAAThroughoutChain();
     }
 
-    SkDEBUGCODE(this->validate());
+    SkDEBUGCODE(this->validate();)
 
     return CombineResult::kMerged;
   }
@@ -1049,7 +1054,7 @@ class TextureOp final : public GrMeshDrawOp {
   // as an fProxyCnt-length array.
   ViewCountPair fViewCountPairs[1];
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace
@@ -1170,7 +1175,7 @@ void GrTextureOp::AddTextureSetOps(
     const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
   // Ensure that the index buffer limits are lower than the proxy and quad count limits of
   // the op's metadata so we don't need to worry about overflow.
-  SkDEBUGCODE(TextureOp::ValidateResourceLimits());
+  SkDEBUGCODE(TextureOp::ValidateResourceLimits();)
   SkASSERT(proxy_run_count(set, cnt) == proxyRunCnt);
 
   // First check if we can support batches as a single op

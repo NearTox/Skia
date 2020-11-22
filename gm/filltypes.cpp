@@ -9,7 +9,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkPaint.h"
-#include "include/core/SkPath.h"
+#include "include/core/SkPathBuilder.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkSize.h"
@@ -26,8 +26,10 @@ class FillTypeGM : public GM {
   void makePath() {
     if (fPath.isEmpty()) {
       const SkScalar radius = SkIntToScalar(45);
-      fPath.addCircle(SkIntToScalar(50), SkIntToScalar(50), radius);
-      fPath.addCircle(SkIntToScalar(100), SkIntToScalar(100), radius);
+      fPath = SkPathBuilder()
+                  .addCircle(SkIntToScalar(50), SkIntToScalar(50), radius)
+                  .addCircle(SkIntToScalar(100), SkIntToScalar(100), radius)
+                  .detach();
     }
   }
 
@@ -82,7 +84,7 @@ class FillTypeGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

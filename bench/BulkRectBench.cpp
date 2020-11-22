@@ -256,7 +256,7 @@ class BulkRectBench : public Benchmark {
 
   SkIPoint onGetSize() override { return {kWidth, kHeight}; }
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // constructor call is wrapped in () so the macro doesn't break parsing the commas in the template

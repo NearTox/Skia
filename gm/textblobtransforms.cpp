@@ -165,7 +165,7 @@ class TextBlobTransforms : public GM {
   static constexpr int kWidth = 1000;
   static constexpr int kHeight = 1200;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

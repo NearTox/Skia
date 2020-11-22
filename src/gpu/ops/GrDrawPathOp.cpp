@@ -74,14 +74,15 @@ void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBoun
   }
 
   auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
-      flushState, this->detachProcessorSet(), pipelineFlags, &kCoverPass);
+      flushState, this->detachProcessorSet(), pipelineFlags);
 
   sk_sp<GrPathProcessor> pathProc(GrPathProcessor::Create(this->color(), this->viewMatrix()));
 
   GrRenderTargetProxy* proxy = flushState->proxy();
   GrProgramInfo programInfo(
       proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(),
-      flushState->writeView()->origin(), pipeline, pathProc.get(), GrPrimitiveType::kPath);
+      flushState->writeView()->origin(), pipeline, &kCoverPass, pathProc.get(),
+      GrPrimitiveType::kPath, 0, flushState->renderPassBarriers());
 
   flushState->bindPipelineAndScissorClip(programInfo, this->bounds());
   flushState->bindTextures(programInfo.primProc(), nullptr, programInfo.pipeline());

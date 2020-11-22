@@ -47,16 +47,16 @@ class SkSpecialImage : public SkRefCnt {
   typedef void* ReleaseContext;
   typedef void (*RasterReleaseProc)(void* pixels, ReleaseContext);
 
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
-  int width() const noexcept { return fSubset.width(); }
-  int height() const noexcept { return fSubset.height(); }
-  const SkIRect& subset() const noexcept { return fSubset; }
-  SkColorSpace* getColorSpace() const noexcept;
+  int width() const { return fSubset.width(); }
+  int height() const { return fSubset.height(); }
+  const SkIRect& subset() const { return fSubset; }
+  SkColorSpace* getColorSpace() const;
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
-  virtual SkAlphaType alphaType() const noexcept = 0;
-  virtual SkColorType colorType() const noexcept = 0;
+  uint32_t uniqueID() const { return fUniqueID; }
+  virtual SkAlphaType alphaType() const = 0;
+  virtual SkColorType colorType() const = 0;
   virtual size_t getSize() const = 0;
 
   /**
@@ -114,12 +114,12 @@ class SkSpecialImage : public SkRefCnt {
   /**
    *  If the SpecialImage is backed by a gpu texture, return true.
    */
-  bool isTextureBacked() const noexcept;
+  bool isTextureBacked() const;
 
   /**
    * Return the GrRecordingContext if the SkSpecialImage is GrTexture-backed
    */
-  GrRecordingContext* getContext() const noexcept;
+  GrRecordingContext* getContext() const;
 
 #if SK_SUPPORT_GPU
   /**
@@ -139,14 +139,14 @@ class SkSpecialImage : public SkRefCnt {
   bool getROPixels(SkBitmap*) const;
 
  protected:
-  SkSpecialImage(const SkIRect& subset, uint32_t uniqueID, const SkSurfaceProps*) noexcept;
+  SkSpecialImage(const SkIRect& subset, uint32_t uniqueID, const SkSurfaceProps*);
 
  private:
   const SkSurfaceProps fProps;
   const SkIRect fSubset;
   const uint32_t fUniqueID;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

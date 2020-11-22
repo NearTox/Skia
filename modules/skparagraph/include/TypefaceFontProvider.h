@@ -16,16 +16,16 @@ namespace textlayout {
 
 class TypefaceFontStyleSet : public SkFontStyleSet {
  public:
-  explicit TypefaceFontStyleSet(const SkString& familyName) noexcept;
+  explicit TypefaceFontStyleSet(const SkString& familyName);
 
   int count() noexcept override;
   void getStyle(int index, SkFontStyle*, SkString* name) override;
   SkTypeface* createTypeface(int index) override;
   SkTypeface* matchStyle(const SkFontStyle& pattern) override;
 
-  SkString getFamilyName() const noexcept { return fFamilyName; }
-  SkString getAlias() const noexcept { return fAlias; }
-  void appendTypeface(sk_sp<SkTypeface> typeface) noexcept;
+  SkString getFamilyName() const { return fFamilyName; }
+  SkString getAlias() const { return fAlias; }
+  void appendTypeface(sk_sp<SkTypeface> typeface);
 
  private:
   SkTArray<sk_sp<SkTypeface>> fStyles;

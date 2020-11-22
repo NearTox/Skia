@@ -182,18 +182,25 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
 
   this->codeAppendf("half4 %s;\n", args.fOutputColor);
   fp->emitCode(args);
-  this->codeAppendf("return %s;\n", args.fOutputColor);
+  if (args.fFp.usesExplicitReturn()) {
+    // Some FPs explicitly return their output, so no need to do anything further
+    SkASSERT(SkStrContains(this->code().c_str(), "return"));
+  } else {
+    // Most FPs still just write their output to fOutputColor, so we need to inject the return
+    this->codeAppendf("return %s;\n", args.fOutputColor);
+  }
 
   SkString result;
   this->emitFunction(
-      kHalf4_GrSLType, args.fFp.name(), paramCount, params, this->code().c_str(), &result);
+      kHalf4_GrSLType, args.fFp.name(), paramCount, params, this->code().c_str(), &result,
+      args.fForceInline);
   this->deleteStage();
   this->onAfterChildProcEmitCode();
   return result;
 }
 
 const char* GrGLSLFragmentShaderBuilder::dstColor() {
-  SkDEBUGCODE(fHasReadDstColorThisStage_DebugOnly = true);
+  SkDEBUGCODE(fHasReadDstColorThisStage_DebugOnly = true;)
 
   const GrShaderCaps* shaderCaps = fProgramBuilder->shaderCaps();
   if (shaderCaps->fbFetchSupport()) {
@@ -250,7 +257,7 @@ void GrGLSLFragmentShaderBuilder::enableSecondaryOutput() {
 
   // If the primary output is declared, we must declare also the secondary output
   // and vice versa, since it is not allowed to use a built-in gl_FragColor and a custom
-  // output. The condition also co-incides with the condition in whici GLES SL 2.0
+  // output. The condition also co-incides with the condition in which GLES SL 2.0
   // requires the built-in gl_SecondaryFragColorEXT, where as 3.0 requires a custom output.
   if (caps.mustDeclareFragmentShaderOutput()) {
     fOutputs.emplace_back(

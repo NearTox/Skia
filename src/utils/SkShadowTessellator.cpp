@@ -25,7 +25,7 @@
 class SkBaseShadowTessellator {
  public:
   SkBaseShadowTessellator(const SkPoint3& zPlaneParams, const SkRect& bounds, bool transparent);
-  virtual ~SkBaseShadowTessellator() = default;
+  virtual ~SkBaseShadowTessellator() {}
 
   sk_sp<SkVertices> releaseVertices() {
     if (!fSucceeded) {
@@ -886,7 +886,7 @@ class SkAmbientShadowTessellator : public SkBaseShadowTessellator {
  private:
   bool computePathPolygon(const SkPath& path, const SkMatrix& ctm);
 
-  typedef SkBaseShadowTessellator INHERITED;
+  using INHERITED = SkBaseShadowTessellator;
 };
 
 SkAmbientShadowTessellator::SkAmbientShadowTessellator(
@@ -970,7 +970,7 @@ class SkSpotShadowTessellator : public SkBaseShadowTessellator {
       const SkPath& path, const SkMatrix& ctm, const SkMatrix& shadowTransform);
   void addToClip(const SkVector& nextPoint);
 
-  typedef SkBaseShadowTessellator INHERITED;
+  using INHERITED = SkBaseShadowTessellator;
 };
 
 SkSpotShadowTessellator::SkSpotShadowTessellator(

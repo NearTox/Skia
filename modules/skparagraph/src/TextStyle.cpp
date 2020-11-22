@@ -20,7 +20,7 @@ TextStyle::TextStyle(const TextStyle& other, bool placeholder) {
   fFontFeatures = other.fFontFeatures;
 }
 
-bool TextStyle::equals(const TextStyle& other) const noexcept {
+bool TextStyle::equals(const TextStyle& other) const {
   if (fIsPlaceholder || other.fIsPlaceholder) {
     return false;
   }
@@ -78,7 +78,7 @@ bool TextStyle::equals(const TextStyle& other) const noexcept {
   return true;
 }
 
-bool TextStyle::equalsByFonts(const TextStyle& that) const noexcept {
+bool TextStyle::equalsByFonts(const TextStyle& that) const {
   return !fIsPlaceholder && !that.fIsPlaceholder && fFontStyle == that.fFontStyle &&
          fFontFamilies == that.fFontFamilies && fFontFeatures == that.fFontFeatures &&
          nearlyEqual(fLetterSpacing, that.fLetterSpacing) &&
@@ -86,7 +86,7 @@ bool TextStyle::equalsByFonts(const TextStyle& that) const noexcept {
          nearlyEqual(fFontSize, that.fFontSize) && fLocale == that.fLocale;
 }
 
-bool TextStyle::matchOneAttribute(StyleType styleType, const TextStyle& other) const noexcept {
+bool TextStyle::matchOneAttribute(StyleType styleType, const TextStyle& other) const {
   switch (styleType) {
     case kForeground:
       return (!fHasForeground && !other.fHasForeground && fColor == other.fColor) ||
@@ -143,7 +143,7 @@ void TextStyle::getFontMetrics(SkFontMetrics* metrics) const {
   }
 }
 
-bool PlaceholderStyle::equals(const PlaceholderStyle& other) const noexcept {
+bool PlaceholderStyle::equals(const PlaceholderStyle& other) const {
   return nearlyEqual(fWidth, other.fWidth) && nearlyEqual(fHeight, other.fHeight) &&
          fAlignment == other.fAlignment && fBaseline == other.fBaseline &&
          (fAlignment != PlaceholderAlignment::kBaseline ||

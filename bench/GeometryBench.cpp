@@ -9,6 +9,7 @@
 #include "include/core/SkRect.h"
 #include "include/utils/SkRandom.h"
 #include "src/core/SkGeometry.h"
+#include "src/core/SkPathPriv.h"
 
 class GeometryBench : public Benchmark {
  public:
@@ -264,8 +265,7 @@ class ConvexityBench : public Benchmark {
 
   void onDraw(int loops, SkCanvas* canvas) override {
     for (int i = 0; i < loops; ++i) {
-      fPath.setConvexityType(SkPathConvexityType::kUnknown);
-      (void)fPath.isConvex();
+      SkPathPriv::ForceComputeConvexity(fPath);
     }
   }
 

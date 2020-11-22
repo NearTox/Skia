@@ -70,7 +70,7 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
   GrVkVaryingHandler fVaryingHandler;
   GrVkUniformHandler fUniformHandler;
 
-  typedef GrGLSLProgramBuilder INHERITED;
+  using INHERITED = GrGLSLProgramBuilder;
 };
 
 #endif

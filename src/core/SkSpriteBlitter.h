@@ -43,7 +43,7 @@ class SkSpriteBlitter : public SkBlitter {
   const SkPaint* fPaint;
 
  private:
-  typedef SkBlitter INHERITED;
+  using INHERITED = SkBlitter;
 };
 
 #endif

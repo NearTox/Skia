@@ -8,6 +8,7 @@
 #ifndef SkArenaAlloc_DEFINED
 #define SkArenaAlloc_DEFINED
 
+#include "include/core/SkTypes.h"
 #include "include/private/SkTFitsIn.h"
 
 #include <array>
@@ -64,9 +65,9 @@
 // there are 71 allocations.
 class SkArenaAlloc {
  public:
-  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation) noexcept;
+  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation);
 
-  explicit SkArenaAlloc(size_t firstHeapAllocation) noexcept
+  explicit SkArenaAlloc(size_t firstHeapAllocation)
       : SkArenaAlloc(nullptr, 0, firstHeapAllocation) {}
 
   ~SkArenaAlloc();
@@ -74,7 +75,7 @@ class SkArenaAlloc {
   template <typename T, typename... Args>
   T* make(Args&&... args) {
     uint32_t size = ToU32(sizeof(T));
-    constexpr uint32_t alignment = ToU32(alignof(T));
+    uint32_t alignment = ToU32(alignof(T));
     char* objStart;
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(size, alignment);
@@ -86,7 +87,7 @@ class SkArenaAlloc {
 
       // Advance to end of object to install footer.
       fCursor = objStart + size;
-      FooterAction* releaser = [](char* objEnd) noexcept {
+      FooterAction* releaser = [](char* objEnd) {
         char* objStart = objEnd - (sizeof(T) + sizeof(Footer));
         ((T*)objStart)->~T();
         return objStart;
@@ -136,26 +137,32 @@ class SkArenaAlloc {
   }
 
  private:
-  static void AssertRelease(bool cond) noexcept {
+  static void AssertRelease(bool cond) {
     if (!cond) {
       ::abort();
     }
   }
-  static constexpr uint32_t ToU32(size_t v) noexcept {
+  static uint32_t ToU32(size_t v) {
     assert(SkTFitsIn<uint32_t>(v));
     return (uint32_t)v;
   }
 
-  using Footer = int64_t;
   using FooterAction = char*(char*);
+  struct Footer {
+    uint8_t unaligned_action[sizeof(FooterAction*)];
+    uint8_t padding;
+  };
 
-  static char* SkipPod(char* footerEnd) noexcept;
+  static char* SkipPod(char* footerEnd);
   static void RunDtorsOnBlock(char* footerEnd);
   static char* NextBlock(char* footerEnd);
 
-  void installFooter(FooterAction* releaser, uint32_t padding) noexcept;
-  void installUint32Footer(FooterAction* action, uint32_t value, uint32_t padding) noexcept;
-  void installPtrFooter(FooterAction* action, char* ptr, uint32_t padding) noexcept;
+  template <typename T>
+  void installRaw(const T& val) {
+    memcpy(fCursor, &val, sizeof(val));
+    fCursor += sizeof(val);
+  }
+  void installFooter(FooterAction* releaser, uint32_t padding);
 
   void ensureSpace(uint32_t size, uint32_t alignment);
 
@@ -168,7 +175,13 @@ class SkArenaAlloc {
       this->ensureSpace(size, alignment);
       alignedOffset = (~reinterpret_cast<uintptr_t>(fCursor) + 1) & mask;
     }
-    return fCursor + alignedOffset;
+
+    char* object = fCursor + alignedOffset;
+
+    SkASSERT((reinterpret_cast<uintptr_t>(object) & (alignment - 1)) == 0);
+    SkASSERT(object + size <= fEnd);
+
+    return object;
   }
 
   char* allocObjectWithFooter(uint32_t sizeIncludingFooter, uint32_t alignment);
@@ -181,7 +194,7 @@ class SkArenaAlloc {
     char* objStart;
     AssertRelease(count <= std::numeric_limits<uint32_t>::max() / sizeof(T));
     uint32_t arraySize = ToU32(count * sizeof(T));
-    constexpr uint32_t alignment = ToU32(alignof(T));
+    uint32_t alignment = ToU32(alignof(T));
 
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(arraySize, alignment);
@@ -197,7 +210,8 @@ class SkArenaAlloc {
 
       // Advance to end of array to install footer.?
       fCursor = objStart + arraySize;
-      this->installUint32Footer(
+      this->installRaw(ToU32(count));
+      this->installFooter(
           [](char* footerEnd) {
             char* objEnd = footerEnd - (sizeof(Footer) + sizeof(uint32_t));
             uint32_t count;
@@ -209,7 +223,7 @@ class SkArenaAlloc {
             }
             return objStart;
           },
-          ToU32(count), padding);
+          padding);
     }
 
     return (T*)objStart;
@@ -238,13 +252,13 @@ class SkArenaAlloc {
 
 class SkArenaAllocWithReset : public SkArenaAlloc {
  public:
-  SkArenaAllocWithReset(char* block, size_t blockSize, size_t firstHeapAllocation) noexcept;
+  SkArenaAllocWithReset(char* block, size_t blockSize, size_t firstHeapAllocation);
 
-  explicit SkArenaAllocWithReset(size_t firstHeapAllocation) noexcept
+  explicit SkArenaAllocWithReset(size_t firstHeapAllocation)
       : SkArenaAllocWithReset(nullptr, 0, firstHeapAllocation) {}
 
   // Destroy all allocated objects, free any heap allocations.
-  void reset() noexcept;
+  void reset();
 
  private:
   char* const fFirstBlock;
@@ -260,7 +274,7 @@ class SkArenaAllocWithReset : public SkArenaAlloc {
 template <size_t InlineStorageSize>
 class SkSTArenaAlloc : private std::array<char, InlineStorageSize>, public SkArenaAlloc {
  public:
-  explicit SkSTArenaAlloc(size_t firstHeapAllocation = InlineStorageSize) noexcept
+  explicit SkSTArenaAlloc(size_t firstHeapAllocation = InlineStorageSize)
       : SkArenaAlloc{this->data(), this->size(), firstHeapAllocation} {}
 };
 
@@ -268,7 +282,7 @@ template <size_t InlineStorageSize>
 class SkSTArenaAllocWithReset : private std::array<char, InlineStorageSize>,
                                 public SkArenaAllocWithReset {
  public:
-  explicit SkSTArenaAllocWithReset(size_t firstHeapAllocation = InlineStorageSize) noexcept
+  explicit SkSTArenaAllocWithReset(size_t firstHeapAllocation = InlineStorageSize)
       : SkArenaAllocWithReset{this->data(), this->size(), firstHeapAllocation} {}
 };
 

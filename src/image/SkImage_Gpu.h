@@ -24,7 +24,7 @@ struct SkYUVAIndex;
 class SkImage_Gpu : public SkImage_GpuBase {
  public:
   SkImage_Gpu(
-      sk_sp<GrContext>, uint32_t uniqueID, GrSurfaceProxyView, SkColorType, SkAlphaType,
+      sk_sp<GrImageContext>, uint32_t uniqueID, GrSurfaceProxyView, SkColorType, SkAlphaType,
       sk_sp<SkColorSpace>);
   ~SkImage_Gpu() override;
 
@@ -75,7 +75,7 @@ class SkImage_Gpu : public SkImage_GpuBase {
  private:
   GrSurfaceProxyView fView;
 
-  typedef SkImage_GpuBase INHERITED;
+  using INHERITED = SkImage_GpuBase;
 };
 
 #endif

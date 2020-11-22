@@ -184,7 +184,7 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
   const int vertexStride = (int)flushInfo.fGeometryProcessor->vertexStride();
 
   // Ensure we don't request an insanely large contiguous vertex allocation.
-  static constexpr int kMaxVertexBytes = GrBufferAllocPool::kDefaultBufferSize;
+  static const int kMaxVertexBytes = GrBufferAllocPool::kDefaultBufferSize;
   const int quadSize = vertexStride * kVerticesPerGlyph;
   const int maxQuadsPerBuffer = kMaxVertexBytes / quadSize;
 
@@ -253,7 +253,8 @@ void GrAtlasTextOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBou
   auto pipeline = GrSimpleMeshDrawOpHelper::CreatePipeline(
       flushState, std::move(fProcessors), GrPipeline::InputFlags::kNone);
 
-  flushState->executeDrawsAndUploadsForMeshDrawOp(this, chainBounds, pipeline);
+  flushState->executeDrawsAndUploadsForMeshDrawOp(
+      this, chainBounds, pipeline, &GrUserStencilSettings::kUnused);
 }
 
 void GrAtlasTextOp::createDrawForGeneratedGlyphs(

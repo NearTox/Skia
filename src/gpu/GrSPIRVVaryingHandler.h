@@ -23,7 +23,7 @@ class GrSPIRVVaryingHandler : public GrGLSLVaryingHandler {
  private:
   void onFinalize() override;
 
-  typedef GrGLSLVaryingHandler INHERITED;
+  using INHERITED = GrGLSLVaryingHandler;
 };
 
 #endif

@@ -20,7 +20,7 @@ class SkPixmap;
 
 class SkAutoBlitterChoose : SkNoncopyable {
  public:
-  SkAutoBlitterChoose() noexcept = default;
+  SkAutoBlitterChoose() {}
   SkAutoBlitterChoose(
       const SkDraw& draw, const SkMatrixProvider* matrixProvider, const SkPaint& paint,
       bool drawCoverage = false) {

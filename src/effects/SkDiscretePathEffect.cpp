@@ -94,6 +94,11 @@ bool SkDiscretePathEffect::onFilterPath(
 
   do {
     SkScalar length = meas.getLength();
+#if defined(SK_BUILD_FOR_FUZZER)
+    if (length > 1000) {
+      return false;
+    }
+#endif
 
     if (fSegLength * (2 + doFill) > length) {
       meas.getSegment(0, length, dst, true);  // to short for us to mangle

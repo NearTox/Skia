@@ -112,10 +112,10 @@ class SkImageFilter_Base : public SkImageFilter {
    *
    *  DEPRECATED - Remove once cropping is handled by a separate filter
    */
-  bool cropRectIsSet() const noexcept { return fCropRect.flags() != 0x0; }
+  bool cropRectIsSet() const { return fCropRect.flags() != 0x0; }
 
   // DEPRECATED - Remove once cropping is handled by a separate filter
-  CropRect getCropRect() const noexcept { return fCropRect; }
+  CropRect getCropRect() const { return fCropRect; }
 
   // Expose isolated node bounds behavior for SampleImageFilterDAG and debugging
   SkIRect filterNodeBounds(
@@ -149,7 +149,7 @@ class SkImageFilter_Base : public SkImageFilter {
    */
   sk_sp<SkImageFilter> applyCTM(const SkMatrix& ctm, SkMatrix* remainder) const;
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
  protected:
   class Common {
@@ -164,11 +164,11 @@ class SkImageFilter_Base : public SkImageFilter {
      */
     bool unflatten(SkReadBuffer&, int expectedInputs);
 
-    const CropRect& cropRect() const noexcept { return fCropRect; }
-    int inputCount() const noexcept { return fInputs.count(); }
-    sk_sp<SkImageFilter>* inputs() noexcept { return fInputs.begin(); }
+    const CropRect& cropRect() const { return fCropRect; }
+    int inputCount() const { return fInputs.count(); }
+    sk_sp<SkImageFilter>* inputs() { return fInputs.begin(); }
 
-    sk_sp<SkImageFilter> getInput(int index) noexcept { return fInputs[index]; }
+    sk_sp<SkImageFilter> getInput(int index) { return fInputs[index]; }
 
    private:
     CropRect fCropRect;
@@ -234,9 +234,7 @@ class SkImageFilter_Base : public SkImageFilter {
   }
 
   // DEPRECATED - Remove once cropping is handled by a separate filter
-  const CropRect* getCropRectIfSet() const noexcept {
-    return this->cropRectIsSet() ? &fCropRect : nullptr;
-  }
+  const CropRect* getCropRectIfSet() const { return this->cropRectIsSet() ? &fCropRect : nullptr; }
 
   /** Given a "srcBounds" rect, computes destination bounds for this filter.
    *  "dstBounds" are computed by transforming the crop rect by the context's
@@ -407,18 +405,18 @@ class SkImageFilter_Base : public SkImageFilter {
   CropRect fCropRect;
   uint32_t fUniqueID;  // Globally unique
 
-  typedef SkImageFilter INHERITED;
+  using INHERITED = SkImageFilter;
 };
 
-static inline SkImageFilter_Base* as_IFB(SkImageFilter* filter) noexcept {
+static inline SkImageFilter_Base* as_IFB(SkImageFilter* filter) {
   return static_cast<SkImageFilter_Base*>(filter);
 }
 
-static inline SkImageFilter_Base* as_IFB(const sk_sp<SkImageFilter>& filter) noexcept {
+static inline SkImageFilter_Base* as_IFB(const sk_sp<SkImageFilter>& filter) {
   return static_cast<SkImageFilter_Base*>(filter.get());
 }
 
-static inline const SkImageFilter_Base* as_IFB(const SkImageFilter* filter) noexcept {
+static inline const SkImageFilter_Base* as_IFB(const SkImageFilter* filter) {
   return static_cast<const SkImageFilter_Base*>(filter);
 }
 

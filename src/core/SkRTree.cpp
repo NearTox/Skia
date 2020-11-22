@@ -163,7 +163,7 @@ void SkRTree::search(Node* node, const SkRect& query, std::vector<int>* results)
   }
 }
 
-size_t SkRTree::bytesUsed() const noexcept {
+size_t SkRTree::bytesUsed() const {
   size_t byteCount = sizeof(SkRTree);
 
   byteCount += fNodes.capacity() * sizeof(Node);

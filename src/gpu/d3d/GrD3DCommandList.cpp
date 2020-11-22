@@ -26,7 +26,8 @@ bool GrD3DCommandList::close() {
   SkASSERT(fIsActive);
   this->submitResourceBarriers();
   HRESULT hr = fCommandList->Close();
-  SkDEBUGCODE(fIsActive = false;) return SUCCEEDED(hr);
+  SkDEBUGCODE(fIsActive = false;)
+  return SUCCEEDED(hr);
 }
 
 GrD3DCommandList::SubmitResult GrD3DCommandList::submit(ID3D12CommandQueue* queue) {
@@ -54,7 +55,8 @@ void GrD3DCommandList::reset() {
 
   this->releaseResources();
 
-  SkDEBUGCODE(fIsActive = true;) fHasWork = false;
+  SkDEBUGCODE(fIsActive = true;)
+  fHasWork = false;
 }
 
 void GrD3DCommandList::releaseResources() {
@@ -292,6 +294,8 @@ void GrD3DDirectCommandList::setGraphicsRootSignature(const sk_sp<GrD3DRootSigna
     fCommandList->SetGraphicsRootSignature(rootSig->rootSignature());
     this->addResource(rootSig);
     fCurrentRootSignature = rootSig.get();
+    // need to reset the current descriptor tables as well
+    sk_bzero(fCurrentRootDescriptorTable, sizeof(fCurrentRootDescriptorTable));
   }
 }
 

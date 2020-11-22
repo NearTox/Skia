@@ -304,7 +304,7 @@ DEF_TEST(SkSLMetalConstantSwizzle, r) {
       "float4 _fragCoord [[position]]) {\n"
       "    Outputs _outputStruct;\n"
       "    thread Outputs* _out = &_outputStruct;\n"
-      "    _out->sk_FragColor = float4(float4(0.5).xyz, 1);\n"
+      "    _out->sk_FragColor = float4(float4(0.5).xyz, 1.0);\n"
       "    return *_out;\n"
       "}\n");
 }

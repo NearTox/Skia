@@ -16,36 +16,35 @@ namespace SkSL {
 /**
  * Represents 'true' or 'false'.
  */
-struct BoolLiteral : public Expression {
-  static constexpr Kind kExpressionKind = kBoolLiteral_Kind;
+class BoolLiteral : public Expression {
+ public:
+  static constexpr Kind kExpressionKind = Kind::kBoolLiteral;
 
-  BoolLiteral(const Context& context, int offset, bool value) noexcept
-      : INHERITED(offset, kExpressionKind, *context.fBool_Type), fValue(value) {}
+  BoolLiteral(const Context& context, int offset, bool value)
+      : INHERITED(offset, BoolLiteralData{context.fBool_Type.get(), value}) {}
 
-  String description() const override { return String(fValue ? "true" : "false"); }
+  bool value() const { return this->boolLiteralData().fValue; }
 
-  bool hasProperty(Property property) const noexcept override { return false; }
+  String description() const override { return String(this->value() ? "true" : "false"); }
 
-  bool isCompileTimeConstant() const noexcept override { return true; }
+  bool hasProperty(Property property) const override { return false; }
+
+  bool isCompileTimeConstant() const override { return true; }
 
   bool compareConstant(const Context& context, const Expression& other) const override {
-    BoolLiteral& b = (BoolLiteral&)other;
-    return fValue == b.fValue;
+    const BoolLiteral& b = other.as<BoolLiteral>();
+    return this->value() == b.value();
   }
-
-  int nodeCount() const noexcept override { return 1; }
 
   std::unique_ptr<Expression> clone() const override {
-    return std::unique_ptr<Expression>(new BoolLiteral(fOffset, fValue, &fType));
+    return std::unique_ptr<Expression>(new BoolLiteral(fOffset, this->value(), &this->type()));
   }
 
-  const bool fValue;
-
-  typedef Expression INHERITED;
-
  private:
-  BoolLiteral(int offset, bool value, const Type* type) noexcept
-      : INHERITED(offset, kExpressionKind, *type), fValue(value) {}
+  BoolLiteral(int offset, bool value, const Type* type)
+      : INHERITED(offset, BoolLiteralData{type, value}) {}
+
+  using INHERITED = Expression;
 };
 
 }  // namespace SkSL

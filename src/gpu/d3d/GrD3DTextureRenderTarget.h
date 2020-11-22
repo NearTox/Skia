@@ -89,4 +89,8 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
   }
 };
 
+#ifdef SK_BUILD_FOR_WIN
+#  pragma warning(pop)
+#endif
+
 #endif

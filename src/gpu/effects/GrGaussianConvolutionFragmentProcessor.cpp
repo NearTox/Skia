@@ -19,7 +19,7 @@
 using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 using Direction = GrGaussianConvolutionFragmentProcessor::Direction;
 
-static constexpr int radius_to_width(int r) noexcept { return 2 * r + 1; }
+static constexpr int radius_to_width(int r) { return 2 * r + 1; }
 
 class GrGaussianConvolutionFragmentProcessor::Impl : public GrGLSLFragmentProcessor {
  public:
@@ -34,7 +34,7 @@ class GrGaussianConvolutionFragmentProcessor::Impl : public GrGLSLFragmentProces
   UniformHandle fKernelUni;
   UniformHandle fIncrementUni;
 
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 void GrGaussianConvolutionFragmentProcessor::Impl::emitCode(EmitArgs& args) {
@@ -89,7 +89,8 @@ void GrGaussianConvolutionFragmentProcessor::Impl::onSetData(
 
   int width = radius_to_width(conv.fRadius);
   int arrayCount = (width + 3) / 4;
-  SkDEBUGCODE(size_t arraySize = 4 * arrayCount;) SkASSERT(arraySize >= static_cast<size_t>(width));
+  SkDEBUGCODE(size_t arraySize = 4 * arrayCount;)
+  SkASSERT(arraySize >= static_cast<size_t>(width));
   SkASSERT(arraySize <= SK_ARRAY_COUNT(GrGaussianConvolutionFragmentProcessor::fKernel));
   pdman.set4fv(fKernelUni, arrayCount, conv.fKernel);
 }
@@ -102,7 +103,7 @@ void GrGaussianConvolutionFragmentProcessor::Impl::GenKey(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static void fill_in_1D_gaussian_kernel(float* kernel, float gaussianSigma, int radius) {
+void SkFillIn1DGaussianKernel(float* kernel, float gaussianSigma, int radius) {
   const float twoSigmaSqrd = 2.0f * gaussianSigma * gaussianSigma;
   int width = radius_to_width(radius);
   if (SkScalarNearlyZero(twoSigmaSqrd, SK_ScalarNearlyZero)) {
@@ -161,7 +162,7 @@ GrGaussianConvolutionFragmentProcessor::GrGaussianConvolutionFragmentProcessor(
       fDirection(direction) {
   this->registerChild(std::move(child), SkSL::SampleUsage::Explicit());
   SkASSERT(radius <= kMaxKernelRadius);
-  fill_in_1D_gaussian_kernel(fKernel, gaussianSigma, fRadius);
+  SkFillIn1DGaussianKernel(fKernel, gaussianSigma, fRadius);
   this->setUsesSampleCoordsDirectly();
 }
 
@@ -184,8 +185,7 @@ GrGLSLFragmentProcessor* GrGaussianConvolutionFragmentProcessor::onCreateGLSLIns
   return new Impl;
 }
 
-bool GrGaussianConvolutionFragmentProcessor::onIsEqual(
-    const GrFragmentProcessor& sBase) const noexcept {
+bool GrGaussianConvolutionFragmentProcessor::onIsEqual(const GrFragmentProcessor& sBase) const {
   const auto& that = sBase.cast<GrGaussianConvolutionFragmentProcessor>();
   return fRadius == that.fRadius && fDirection == that.fDirection &&
          std::equal(fKernel, fKernel + radius_to_width(fRadius), that.fKernel);

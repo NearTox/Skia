@@ -59,7 +59,7 @@ class GrQuadBoundsBench : public Benchmark {
   GrQuad fQuads[kQuadCount];
   SkScalar fArea;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

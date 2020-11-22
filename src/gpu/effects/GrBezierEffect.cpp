@@ -51,7 +51,7 @@ class GrGLConicEffect : public GrGLSLGeometryProcessor {
   UniformHandle fViewMatrixUniform;
   UniformHandle fLocalMatrixUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 GrGLConicEffect::GrGLConicEffect(const GrGeometryProcessor& processor)
@@ -154,7 +154,7 @@ void GrGLConicEffect::GenKey(
 
 constexpr GrPrimitiveProcessor::Attribute GrConicEffect::kAttributes[];
 
-GrConicEffect::~GrConicEffect() = default;
+GrConicEffect::~GrConicEffect() {}
 
 void GrConicEffect::getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLConicEffect::GenKey(*this, caps, b);
@@ -231,7 +231,7 @@ class GrGLQuadEffect : public GrGLSLGeometryProcessor {
   UniformHandle fViewMatrixUniform;
   UniformHandle fLocalMatrixUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 GrGLQuadEffect::GrGLQuadEffect(const GrGeometryProcessor& processor)
@@ -306,7 +306,7 @@ void GrGLQuadEffect::GenKey(
 
 constexpr GrPrimitiveProcessor::Attribute GrQuadEffect::kAttributes[];
 
-GrQuadEffect::~GrQuadEffect() = default;
+GrQuadEffect::~GrQuadEffect() {}
 
 void GrQuadEffect::getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   GrGLQuadEffect::GenKey(*this, caps, b);

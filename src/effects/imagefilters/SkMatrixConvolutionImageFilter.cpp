@@ -84,7 +84,7 @@ class SkMatrixConvolutionImageFilterImpl final : public SkImageFilter_Base {
       const SkBitmap& src, SkBitmap* result, SkIVector& offset, const SkIRect& rect,
       const SkIRect& bounds) const;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 class UncheckedPixelFetcher {

@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLRadialGradientLayout : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLRadialGradientLayout() noexcept = default;
+  GrGLSLRadialGradientLayout() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrRadialGradientLayout& _outer = args.fFp.cast<GrRadialGradientLayout>();
@@ -40,11 +40,12 @@ GrGLSLFragmentProcessor* GrRadialGradientLayout::onCreateGLSLInstance() const {
 }
 void GrRadialGradientLayout::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrRadialGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrRadialGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
   const GrRadialGradientLayout& that = other.cast<GrRadialGradientLayout>();
   (void)that;
   return true;
 }
+bool GrRadialGradientLayout::usesExplicitReturn() const { return false; }
 GrRadialGradientLayout::GrRadialGradientLayout(const GrRadialGradientLayout& src)
     : INHERITED(kGrRadialGradientLayout_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

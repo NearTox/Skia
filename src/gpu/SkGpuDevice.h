@@ -13,8 +13,6 @@
 #include "include/core/SkRegion.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrTypes.h"
-#include "src/core/SkClipStackDevice.h"
-#include "src/gpu/GrClipStackClip.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/SkGr.h"
 
@@ -27,11 +25,33 @@ class SkSpecialImage;
 class SkSurface;
 class SkVertices;
 
+// NOTE: when not defined, SkGpuDevice extends SkBaseDevice directly and manages its clip stack
+// using GrClipStack. When false, SkGpuDevice continues to extend SkClipStackDevice and uses
+// SkClipStack and GrClipStackClip to manage the clip stack.
+#if !defined(SK_DISABLE_NEW_GR_CLIP_STACK)
+// For staging purposes, disable this for Android Framework and Google3
+#  if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK) || defined(SK_BUILD_FOR_GOOGLE3)
+#    define SK_DISABLE_NEW_GR_CLIP_STACK
+#  endif
+#endif
+
+#if !defined(SK_DISABLE_NEW_GR_CLIP_STACK)
+#  include "src/core/SkDevice.h"
+#  include "src/gpu/GrClipStack.h"
+#  define BASE_DEVICE SkBaseDevice
+#  define GR_CLIP_STACK GrClipStack
+#else
+#  include "src/core/SkClipStackDevice.h"
+#  include "src/gpu/GrClipStackClip.h"
+#  define BASE_DEVICE SkClipStackDevice
+#  define GR_CLIP_STACK GrClipStackClip
+#endif
+
 /**
  *  Subclass of SkBaseDevice, which directs all drawing to the GrGpu owned by the
  *  canvas.
  */
-class SkGpuDevice : public SkClipStackDevice {
+class SkGpuDevice : public BASE_DEVICE {
  public:
   enum InitContents { kClear_InitContents, kUninit_InitContents };
 
@@ -56,8 +76,7 @@ class SkGpuDevice : public SkClipStackDevice {
 
   ~SkGpuDevice() override {}
 
-  GrContext* context() const noexcept override;
-  GrRecordingContext* recordingContext() const noexcept override { return fContext.get(); }
+  GrRecordingContext* recordingContext() const override { return fContext.get(); }
 
   // set all pixels to 0
   void clearAll();
@@ -66,7 +85,7 @@ class SkGpuDevice : public SkClipStackDevice {
   void replaceRenderTargetContext(
       std::unique_ptr<GrRenderTargetContext>, SkSurface::ContentChangeMode mode);
 
-  GrRenderTargetContext* accessRenderTargetContext() noexcept override;
+  GrRenderTargetContext* accessRenderTargetContext() override;
 
   void drawPaint(const SkPaint& paint) override;
   void drawPoints(
@@ -129,11 +148,45 @@ class SkGpuDevice : public SkClipStackDevice {
   bool onReadPixels(const SkPixmap&, int, int) override;
   bool onWritePixels(const SkPixmap&, int, int) override;
 
+#if !defined(SK_DISABLE_NEW_GR_CLIP_STACK)
+  void onSave() override { fClip.save(); }
+  void onRestore() override { fClip.restore(); }
+
+  void onClipRect(const SkRect& rect, SkClipOp op, bool aa) override {
+    SkASSERT(op == SkClipOp::kIntersect || op == SkClipOp::kDifference);
+    fClip.clipRect(this->localToDevice(), rect, GrAA(aa), op);
+  }
+  void onClipRRect(const SkRRect& rrect, SkClipOp op, bool aa) override {
+    SkASSERT(op == SkClipOp::kIntersect || op == SkClipOp::kDifference);
+    fClip.clipRRect(this->localToDevice(), rrect, GrAA(aa), op);
+  }
+  void onClipPath(const SkPath& path, SkClipOp op, bool aa) override;
+  void onClipShader(sk_sp<SkShader> shader) override { fClip.clipShader(std::move(shader)); }
+  void onReplaceClip(const SkIRect& rect) override {
+    // Transform from "global/canvas" coordinates to relative to this device
+    SkIRect deviceRect = this->globalToDevice().mapRect(SkRect::Make(rect)).round();
+    fClip.replaceClip(deviceRect);
+  }
+  void onClipRegion(const SkRegion& globalRgn, SkClipOp op) override;
+  void onAsRgnClip(SkRegion*) const override;
+  ClipType onGetClipType() const override;
+  bool onClipIsAA() const override;
+
+  void onSetDeviceClipRestriction(SkIRect* mutableClipRestriction) override {
+    SkASSERT(mutableClipRestriction->isEmpty());
+  }
+  bool onClipIsWideOpen() const override {
+    return fClip.clipState() == GrClipStack::ClipState::kWideOpen;
+  }
+  SkIRect onDevClipBounds() const override { return fClip.getConservativeBounds(); }
+#endif
+
  private:
   // We want these unreffed in RenderTargetContext, GrContext order.
   sk_sp<GrRecordingContext> fContext;
   std::unique_ptr<GrRenderTargetContext> fRenderTargetContext;
-  GrClipStackClip fClip;
+
+  GR_CLIP_STACK fClip;
 
   enum Flags {
     kNeedClear_Flag = 1 << 0,  //!< Surface requires an initial clear
@@ -141,7 +194,7 @@ class SkGpuDevice : public SkClipStackDevice {
                                //   opaque even if the config supports alpha.
   };
   static bool CheckAlphaTypeAndGetFlags(
-      const SkImageInfo* info, InitContents init, unsigned* flags) noexcept;
+      const SkImageInfo* info, InitContents init, unsigned* flags);
 
   SkGpuDevice(GrRecordingContext*, std::unique_ptr<GrRenderTargetContext>, unsigned flags);
 
@@ -151,12 +204,9 @@ class SkGpuDevice : public SkClipStackDevice {
 
   SkImageFilterCache* getImageFilterCache() override;
 
-  bool forceConservativeRasterClip() const noexcept override { return true; }
+  bool forceConservativeRasterClip() const override { return true; }
 
-  const GrClip* clip() const noexcept { return &fClip; }
-
-  sk_sp<SkSpecialImage> filterTexture(
-      SkSpecialImage*, int left, int top, SkIPoint* offset, const SkImageFilter* filter);
+  const GrClip* clip() const { return &fClip; }
 
   // If not null, dstClip must be contained inside dst and will also respect the edge AA flags.
   // If 'preViewMatrix' is not null, final CTM will be this->ctm() * preViewMatrix.
@@ -178,7 +228,10 @@ class SkGpuDevice : public SkClipStackDevice {
 
   friend class GrAtlasTextContext;
   friend class SkSurface_Gpu;  // for access to surfaceProps
-  typedef SkClipStackDevice INHERITED;
+  using INHERITED = BASE_DEVICE;
 };
+
+#undef BASE_DEVICE
+#undef GR_CLIP_STACK
 
 #endif

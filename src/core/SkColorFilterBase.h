@@ -37,7 +37,7 @@ class SkColorFilterBase : public SkColorFilter {
 
   /** Returns the flags for this filter. Override in subclasses to return custom flags.
    */
-  virtual uint32_t onGetFlags() const noexcept { return 0; }
+  virtual uint32_t onGetFlags() const { return 0; }
 
 #if SK_SUPPORT_GPU
   /**
@@ -60,9 +60,9 @@ class SkColorFilterBase : public SkColorFilter {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkColorFilter_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkColorFilter_Type; }
 
   static sk_sp<SkColorFilter> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -71,7 +71,7 @@ class SkColorFilterBase : public SkColorFilter {
   }
 
  protected:
-  SkColorFilterBase() noexcept = default;
+  SkColorFilterBase() {}
 
   virtual bool onAsAColorMatrix(float[20]) const;
   virtual bool onAsAColorMode(SkColor* color, SkBlendMode* bmode) const;
@@ -84,22 +84,22 @@ class SkColorFilterBase : public SkColorFilter {
 
   friend class SkColorFilter;
 
-  typedef SkFlattenable INHERITED;
+  using INHERITED = SkFlattenable;
 };
 
-static inline SkColorFilterBase* as_CFB(SkColorFilter* filter) noexcept {
+static inline SkColorFilterBase* as_CFB(SkColorFilter* filter) {
   return static_cast<SkColorFilterBase*>(filter);
 }
 
-static inline const SkColorFilterBase* as_CFB(const SkColorFilter* filter) noexcept {
+static inline const SkColorFilterBase* as_CFB(const SkColorFilter* filter) {
   return static_cast<const SkColorFilterBase*>(filter);
 }
 
-static inline const SkColorFilterBase* as_CFB(const sk_sp<SkColorFilter>& filter) noexcept {
+static inline const SkColorFilterBase* as_CFB(const sk_sp<SkColorFilter>& filter) {
   return static_cast<SkColorFilterBase*>(filter.get());
 }
 
-static inline sk_sp<SkColorFilterBase> as_CFB_sp(sk_sp<SkColorFilter> filter) noexcept {
+static inline sk_sp<SkColorFilterBase> as_CFB_sp(sk_sp<SkColorFilter> filter) {
   return sk_sp<SkColorFilterBase>(static_cast<SkColorFilterBase*>(filter.release()));
 }
 

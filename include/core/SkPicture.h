@@ -90,11 +90,11 @@ class SK_API SkPicture : public SkRefCnt {
 
         @return  abstract class cannot be instantiated
     */
-    constexpr AbortCallback() noexcept = default;
+    AbortCallback() {}
 
     /** Has no effect.
      */
-    virtual ~AbortCallback() = default;
+    virtual ~AbortCallback() {}
 
     /** Stops SkPicture playback when some condition is met. A subclass of
         AbortCallback provides an override for abort() that can stop SkPicture::playback.
@@ -137,13 +137,13 @@ class SK_API SkPicture : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Picture_cullRect
   */
-  virtual SkRect cullRect() const noexcept = 0;
+  virtual SkRect cullRect() const = 0;
 
   /** Returns a non-zero value unique among SkPicture in Skia process.
 
       @return  identifier for SkPicture
   */
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /** Returns storage containing SkData describing SkPicture, using optional custom
       encoders.
@@ -208,7 +208,7 @@ class SK_API SkPicture : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Picture_approximateBytesUsed
   */
-  virtual size_t approximateBytesUsed() const noexcept = 0;
+  virtual size_t approximateBytesUsed() const = 0;
 
   /** Return a new shader that will draw with this picture.
    *
@@ -229,7 +229,7 @@ class SK_API SkPicture : public SkRefCnt {
 
  private:
   // Allowed subclasses.
-  SkPicture() noexcept;
+  SkPicture();
   friend class SkBigPicture;
   friend class SkEmptyPicture;
   friend class SkPicturePriv;
@@ -256,15 +256,15 @@ class SK_API SkPicture : public SkRefCnt {
   friend bool SkPicture_StreamIsSKP(SkStream*, struct SkPictInfo*);
 
   // Returns NULL if this is not an SkBigPicture.
-  virtual const class SkBigPicture* asSkBigPicture() const noexcept { return nullptr; }
+  virtual const class SkBigPicture* asSkBigPicture() const { return nullptr; }
 
   friend struct SkPathCounter;
 
-  static bool IsValidPictInfo(const struct SkPictInfo& info) noexcept;
+  static bool IsValidPictInfo(const struct SkPictInfo& info);
   static sk_sp<SkPicture> Forwardport(
       const struct SkPictInfo&, const class SkPictureData*, class SkReadBuffer* buffer);
 
-  struct SkPictInfo createHeader() const noexcept;
+  struct SkPictInfo createHeader() const;
   class SkPictureData* backport() const;
 
   uint32_t fUniqueID;

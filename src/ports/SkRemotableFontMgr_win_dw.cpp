@@ -31,12 +31,13 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
     IUnknown* fLoader;  // In COM only IUnknown pointers may be safely used for identity.
     void* fKey;
     UINT32 fKeySize;
-    DataId() noexcept = default;
+
+    DataId() {}
 
     DataId(DataId&& that) : fLoader(that.fLoader), fKey(that.fKey), fKeySize(that.fKeySize) {
       that.fLoader = nullptr;
       that.fKey = nullptr;
-      SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF);
+      SkDEBUGCODE(that.fKeySize = 0xFFFFFFFF;)
     }
 
     ~DataId() {
@@ -221,7 +222,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
       fIdentity.fDataId = SkFontIdentity::kInvalidDataId;
     }
 
-    virtual ~FontFallbackRenderer() = default;
+    virtual ~FontFallbackRenderer() {}
 
     // IDWriteTextRenderer methods
     SK_STDMETHODIMP DrawGlyphRun(
@@ -392,7 +393,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
   SkTScopedComPtr<IDWriteFontCollection> fFontCollection;
   SkSMallocWCHAR fLocaleName;
 
-  typedef SkRemotableFontMgr INHERITED;
+  using INHERITED = SkRemotableFontMgr;
 };
 
 SkRemotableFontMgr* SkRemotableFontMgr_New_DirectWrite() {

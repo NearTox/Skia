@@ -59,7 +59,7 @@ class Sprite_D16_S32 : public SkSpriteBlitter {
  private:
   bool fUseSrcOver;
 
-  typedef SkSpriteBlitter INHERITED;
+  using INHERITED = SkSpriteBlitter;
 };
 
 SkSpriteBlitter* SkSpriteBlitter::ChooseL565(
@@ -144,7 +144,7 @@ class Sprite_D8_S32 : public SkSpriteBlitter {
  private:
   bool fUseSrcOver;
 
-  typedef SkSpriteBlitter INHERITED;
+  using INHERITED = SkSpriteBlitter;
 };
 
 SkSpriteBlitter* SkSpriteBlitter::ChooseLA8(

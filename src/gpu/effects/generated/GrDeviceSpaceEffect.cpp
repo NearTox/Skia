@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLDeviceSpaceEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLDeviceSpaceEffect() noexcept = default;
+  GrGLSLDeviceSpaceEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrDeviceSpaceEffect& _outer = args.fFp.cast<GrDeviceSpaceEffect>();
@@ -41,11 +41,12 @@ GrGLSLFragmentProcessor* GrDeviceSpaceEffect::onCreateGLSLInstance() const {
 }
 void GrDeviceSpaceEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrDeviceSpaceEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrDeviceSpaceEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrDeviceSpaceEffect& that = other.cast<GrDeviceSpaceEffect>();
   (void)that;
   return true;
 }
+bool GrDeviceSpaceEffect::usesExplicitReturn() const { return false; }
 GrDeviceSpaceEffect::GrDeviceSpaceEffect(const GrDeviceSpaceEffect& src)
     : INHERITED(kGrDeviceSpaceEffect_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

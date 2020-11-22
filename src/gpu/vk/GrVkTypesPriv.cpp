@@ -10,17 +10,19 @@
 #include "src/gpu/GrBackendSurfaceMutableStateImpl.h"
 #include "src/gpu/vk/GrVkImageLayout.h"
 
-void GrVkBackendSurfaceInfo::cleanup() noexcept {}
+void GrVkBackendSurfaceInfo::cleanup(){};
 
-void GrVkBackendSurfaceInfo::assign(const GrVkBackendSurfaceInfo& that, bool isThisValid) noexcept {
+void GrVkBackendSurfaceInfo::assign(const GrVkBackendSurfaceInfo& that, bool isThisValid) {
   fImageInfo = that.fImageInfo;
 }
 
 GrVkImageInfo GrVkBackendSurfaceInfo::snapImageInfo(
     const GrBackendSurfaceMutableStateImpl* mutableState) const {
   SkASSERT(mutableState);
-  return GrVkImageInfo(
-      fImageInfo, mutableState->getImageLayout(), mutableState->getQueueFamilyIndex());
+  GrVkImageInfo newInfo = fImageInfo;
+  newInfo.fImageLayout = mutableState->getImageLayout();
+  newInfo.fCurrentQueueFamily = mutableState->getQueueFamilyIndex();
+  return newInfo;
 }
 
 #if GR_TEST_UTILS

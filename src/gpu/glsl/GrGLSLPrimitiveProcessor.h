@@ -26,7 +26,7 @@ class GrGLSLPrimitiveProcessor {
   using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
-  virtual ~GrGLSLPrimitiveProcessor() = default;
+  virtual ~GrGLSLPrimitiveProcessor() {}
 
   /**
    * This class provides access to each GrFragmentProcessor in a GrPipeline that requires varying
@@ -41,22 +41,23 @@ class GrGLSLPrimitiveProcessor {
     FPCoordTransformHandler(const GrPipeline&, SkTArray<GrShaderVar>*);
     ~FPCoordTransformHandler() { SkASSERT(!fIter); }
 
-    operator bool() const noexcept { return (bool)fIter; }
+    operator bool() const { return (bool)fIter; }
 
     // Gets the current GrFragmentProcessor
     const GrFragmentProcessor& get() const;
 
     FPCoordTransformHandler& operator++();
 
-    void specifyCoordsForCurrCoordTransform(GrShaderVar varyingVar) noexcept {
+    void specifyCoordsForCurrCoordTransform(GrShaderVar varyingVar) {
       SkASSERT(!fAddedCoord);
       fTransformedCoordVars->push_back(varyingVar);
-      SkDEBUGCODE(fAddedCoord = true);
+      SkDEBUGCODE(fAddedCoord = true;)
     }
 
    private:
     GrFragmentProcessor::CIter fIter;
-    SkDEBUGCODE(bool fAddedCoord = false;) SkTArray<GrShaderVar>* fTransformedCoordVars;
+    SkDEBUGCODE(bool fAddedCoord = false;)
+    SkTArray<GrShaderVar>* fTransformedCoordVars;
   };
 
   struct EmitArgs {
@@ -65,8 +66,7 @@ class GrGLSLPrimitiveProcessor {
         GrGLSLFPFragmentBuilder* fragBuilder, GrGLSLVaryingHandler* varyingHandler,
         GrGLSLUniformHandler* uniformHandler, const GrShaderCaps* caps,
         const GrPrimitiveProcessor& gp, const char* outputColor, const char* outputCoverage,
-        const char* rtAdjustName, const SamplerHandle* texSamplers,
-        FPCoordTransformHandler* transformHandler) noexcept
+        const SamplerHandle* texSamplers, FPCoordTransformHandler* transformHandler)
         : fVertBuilder(vertBuilder),
           fGeomBuilder(geomBuilder),
           fFragBuilder(fragBuilder),
@@ -76,7 +76,6 @@ class GrGLSLPrimitiveProcessor {
           fGP(gp),
           fOutputColor(outputColor),
           fOutputCoverage(outputCoverage),
-          fRTAdjustName(rtAdjustName),
           fTexSamplers(texSamplers),
           fFPCoordTransformHandler(transformHandler) {}
     GrGLSLVertexBuilder* fVertBuilder;
@@ -88,7 +87,6 @@ class GrGLSLPrimitiveProcessor {
     const GrPrimitiveProcessor& fGP;
     const char* fOutputColor;
     const char* fOutputCoverage;
-    const char* fRTAdjustName;
     const SamplerHandle* fTexSamplers;
     FPCoordTransformHandler* fFPCoordTransformHandler;
   };

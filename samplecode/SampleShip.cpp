@@ -134,7 +134,7 @@ class DrawShipView : public Sample {
   SkRSXform fXform[kGrid * kGrid + 1];
   SkRect fTex[kGrid * kGrid + 1];
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

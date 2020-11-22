@@ -38,9 +38,9 @@ bool SkColorFilter::asAColorMatrix(float matrix[20]) const {
   return as_CFB(this)->onAsAColorMatrix(matrix);
 }
 
-uint32_t SkColorFilter::getFlags() const noexcept { return as_CFB(this)->onGetFlags(); }
+uint32_t SkColorFilter::getFlags() const { return as_CFB(this)->onGetFlags(); }
 
-bool SkColorFilter::isAlphaUnchanged() const noexcept {
+bool SkColorFilter::isAlphaUnchanged() const {
   return SkToBool(this->getFlags() & kAlphaUnchanged_Flag);
 }
 
@@ -110,7 +110,7 @@ SkColor4f SkColorFilter::filterColor4f(
 
 class SkComposeColorFilter : public SkColorFilterBase {
  public:
-  uint32_t onGetFlags() const noexcept override {
+  uint32_t onGetFlags() const override {
     // Can only claim alphaunchanged support if both our proxys do.
     return fOuter->onGetFlags() & fInner->onGetFlags();
   }
@@ -164,7 +164,7 @@ class SkComposeColorFilter : public SkColorFilterBase {
   }
 
  private:
-  SkComposeColorFilter(sk_sp<SkColorFilter> outer, sk_sp<SkColorFilter> inner) noexcept
+  SkComposeColorFilter(sk_sp<SkColorFilter> outer, sk_sp<SkColorFilter> inner)
       : fOuter(as_CFB_sp(std::move(outer))), fInner(as_CFB_sp(std::move(inner))) {}
 
   sk_sp<SkColorFilterBase> fOuter;
@@ -172,7 +172,7 @@ class SkComposeColorFilter : public SkColorFilterBase {
 
   friend class SkColorFilter;
 
-  typedef SkColorFilter INHERITED;
+  using INHERITED = SkColorFilter;
 };
 
 sk_sp<SkFlattenable> SkComposeColorFilter::CreateProc(SkReadBuffer& buffer) {
@@ -262,7 +262,7 @@ class SkSRGBGammaColorFilter : public SkColorFilterBase {
   SkColorSpaceXformSteps fSteps;
 
   friend class SkColorFilter;
-  typedef SkColorFilterBase INHERITED;
+  using INHERITED = SkColorFilterBase;
 };
 
 sk_sp<SkFlattenable> SkSRGBGammaColorFilter::CreateProc(SkReadBuffer& buffer) {
@@ -291,13 +291,13 @@ sk_sp<SkColorFilter> SkColorFilters::SRGBToLinearGamma() {
 
 class SkMixerColorFilter : public SkColorFilterBase {
  public:
-  SkMixerColorFilter(sk_sp<SkColorFilter> cf0, sk_sp<SkColorFilter> cf1, float weight) noexcept
+  SkMixerColorFilter(sk_sp<SkColorFilter> cf0, sk_sp<SkColorFilter> cf1, float weight)
       : fCF0(as_CFB_sp(std::move(cf0))), fCF1(as_CFB_sp(std::move(cf1))), fWeight(weight) {
     SkASSERT(fCF0);
     SkASSERT(fWeight >= 0 && fWeight <= 1);
   }
 
-  uint32_t onGetFlags() const noexcept override {
+  uint32_t onGetFlags() const override {
     uint32_t f0 = fCF0->onGetFlags();
     uint32_t f1 = fCF1 ? fCF1->onGetFlags() : ~0U;
     return f0 & f1;
@@ -387,7 +387,7 @@ class SkMixerColorFilter : public SkColorFilterBase {
 
   friend class SkColorFilter;
 
-  typedef SkColorFilterBase INHERITED;
+  using INHERITED = SkColorFilterBase;
 };
 
 sk_sp<SkFlattenable> SkMixerColorFilter::CreateProc(SkReadBuffer& buffer) {

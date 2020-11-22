@@ -143,7 +143,7 @@ class ModeColorFilterGM : public GM {
 
  private:
   sk_sp<SkShader> fBmpShader;
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -121,17 +121,20 @@ class GrSimpleMeshDrawOpHelper {
 
   static const GrPipeline* CreatePipeline(
       const GrCaps*, SkArenaAlloc*, GrSwizzle writeViewSwizzle, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrProcessorSet&&, GrPipeline::InputFlags pipelineFlags,
-      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
+      const GrXferProcessor::DstProxyView&, GrProcessorSet&&, GrPipeline::InputFlags pipelineFlags);
   static const GrPipeline* CreatePipeline(
-      GrOpFlushState*, GrProcessorSet&&, GrPipeline::InputFlags pipelineFlags,
-      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
+      GrOpFlushState*, GrProcessorSet&&, GrPipeline::InputFlags pipelineFlags);
 
   const GrPipeline* createPipeline(GrOpFlushState* flushState);
 
+  const GrPipeline* createPipeline(
+      const GrCaps*, SkArenaAlloc*, GrSwizzle writeViewSwizzle, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&);
+
   static GrProgramInfo* CreateProgramInfo(
       SkArenaAlloc*, const GrPipeline*, const GrSurfaceProxyView* writeView, GrGeometryProcessor*,
-      GrPrimitiveType);
+      GrPrimitiveType, GrXferBarrierFlags renderPassXferBarriers,
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
   // Create a programInfo with the following properties:
   //     its primitive processor uses no textures
@@ -139,12 +142,14 @@ class GrSimpleMeshDrawOpHelper {
   static GrProgramInfo* CreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrProcessorSet&&, GrPrimitiveType,
+      GrXferBarrierFlags renderPassXferBarriers,
       GrPipeline::InputFlags pipelineFlags = GrPipeline::InputFlags::kNone,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
   GrProgramInfo* createProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType);
+      const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType,
+      GrXferBarrierFlags renderPassXferBarriers);
 
   GrProcessorSet detachProcessorSet() {
     return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
@@ -163,7 +168,8 @@ class GrSimpleMeshDrawOpHelper {
   unsigned fAAType : 2;
   unsigned fUsesLocalCoords : 1;
   unsigned fCompatibleWithCoverageAsAlpha : 1;
-  SkDEBUGCODE(unsigned fMadePipeline : 1;) SkDEBUGCODE(unsigned fDidAnalysis : 1);
+  SkDEBUGCODE(unsigned fMadePipeline : 1;)
+  SkDEBUGCODE(unsigned fDidAnalysis : 1;)
 };
 
 template <typename Op, typename... OpArgs>

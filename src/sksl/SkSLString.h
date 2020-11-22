@@ -21,18 +21,18 @@ namespace SkSL {
 
 // Represents a (not necessarily null-terminated) slice of a string.
 struct StringFragment {
-  constexpr StringFragment() noexcept : fChars(""), fLength(0) {}
+  StringFragment() : fChars(""), fLength(0) {}
 
-  StringFragment(const char* chars) noexcept : fChars(chars), fLength(strlen(chars)) {}
+  StringFragment(const char* chars) : fChars(chars), fLength(strlen(chars)) {}
 
-  StringFragment(const char* chars, size_t length) noexcept : fChars(chars), fLength(length) {}
+  StringFragment(const char* chars, size_t length) : fChars(chars), fLength(length) {}
 
-  char operator[](size_t idx) const noexcept { return fChars[idx]; }
+  char operator[](size_t idx) const { return fChars[idx]; }
 
-  bool operator==(const char* s) const noexcept;
-  bool operator!=(const char* s) const noexcept;
-  bool operator==(StringFragment s) const noexcept;
-  bool operator!=(StringFragment s) const noexcept;
+  bool operator==(const char* s) const;
+  bool operator!=(const char* s) const;
+  bool operator==(StringFragment s) const;
+  bool operator!=(StringFragment s) const;
   bool operator<(StringFragment s) const;
 
 #ifndef SKSL_STANDALONE
@@ -43,9 +43,9 @@ struct StringFragment {
   size_t fLength;
 };
 
-bool operator==(const char* s1, StringFragment s2) noexcept;
+bool operator==(const char* s1, StringFragment s2);
 
-bool operator!=(const char* s1, StringFragment s2) noexcept;
+bool operator!=(const char* s1, StringFragment s2);
 
 class SK_API String : public std::string {
  public:
@@ -57,8 +57,9 @@ class SK_API String : public std::string {
   void appendf(const char* fmt, ...);
   void vappendf(const char* fmt, va_list va);
 
-  bool startsWith(const char* prefix) const;
-  bool endsWith(const char* suffix) const;
+  bool startsWith(const char prefix[]) const;
+  bool endsWith(const char suffix[]) const;
+  bool consumeSuffix(const char suffix[]);
 
   String operator+(const char* s) const;
   String operator+(const String& s) const;
@@ -67,40 +68,20 @@ class SK_API String : public std::string {
   String& operator+=(const char* s);
   String& operator+=(const String& s);
   String& operator+=(StringFragment s);
-  bool operator==(const char* s) const noexcept;
-  bool operator!=(const char* s) const noexcept;
-  bool operator==(const String& s) const noexcept;
-  bool operator!=(const String& s) const noexcept;
-  friend String operator+(const char s1, const String& s2);
+  bool operator==(const char* s) const;
+  bool operator!=(const char* s) const;
+  bool operator==(const String& s) const;
+  bool operator!=(const String& s) const;
   friend String operator+(const char* s1, const String& s2);
-  friend bool operator==(const char* s1, const String& s2) noexcept;
-  friend bool operator!=(const char* s1, const String& s2) noexcept;
+  friend bool operator==(const char* s1, const String& s2);
+  friend bool operator!=(const char* s1, const String& s2);
 
  private:
-  typedef std::string INHERITED;
+  using INHERITED = std::string;
 };
 
-String operator+(const char s1, const String& s2);
 String operator+(const char* s1, const String& s2);
-
-inline String operator+(const char* s1, String&& s2) {
-  s2.append(s1);
-  return std::move(s2);
-}
-inline String operator+(const char s1, String&& s2) {
-  s2.insert(0, 1, s1);
-  return std::move(s2);
-}
-inline String operator+(String&& s1, const char s2) {
-  s1.push_back(s2);
-  return std::move(s1);
-}
-inline String operator+(String&& s1, const char* s2) {
-  s1.append(s2);
-  return std::move(s1);
-}
-
-bool operator!=(const char* s1, const String& s2) noexcept;
+bool operator!=(const char* s1, const String& s2);
 
 String to_string(double value);
 String to_string(int32_t value);

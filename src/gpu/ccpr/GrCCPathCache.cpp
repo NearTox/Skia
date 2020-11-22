@@ -15,7 +15,7 @@ static constexpr int kMaxKeyDataCountU32 = 256;  // 1kB of uint32_t's.
 
 DECLARE_SKMESSAGEBUS_MESSAGE(sk_sp<GrCCPathCache::Key>);
 
-static inline uint32_t next_path_cache_id() noexcept {
+static inline uint32_t next_path_cache_id() {
   static std::atomic<uint32_t> gNextID(1);
   for (;;) {
     uint32_t id = gNextID.fetch_add(+1, std::memory_order_acquire);
@@ -26,14 +26,14 @@ static inline uint32_t next_path_cache_id() noexcept {
 }
 
 static inline bool SkShouldPostMessageToBus(
-    const sk_sp<GrCCPathCache::Key>& key, uint32_t msgBusUniqueID) noexcept {
+    const sk_sp<GrCCPathCache::Key>& key, uint32_t msgBusUniqueID) {
   return key->pathCacheUniqueID() == msgBusUniqueID;
 }
 
 // The maximum number of cache entries we allow in our own cache.
 static constexpr int kMaxCacheCount = 1 << 16;
 
-GrCCPathCache::MaskTransform::MaskTransform(const SkMatrix& m, SkIVector* shift) noexcept
+GrCCPathCache::MaskTransform::MaskTransform(const SkMatrix& m, SkIVector* shift)
     : fMatrix2x2{m.getScaleX(), m.getSkewX(), m.getSkewY(), m.getScaleY()} {
   SkASSERT(!m.hasPerspective());
   Sk2f translate = Sk2f(m.getTranslateX(), m.getTranslateY());
@@ -51,7 +51,7 @@ GrCCPathCache::MaskTransform::MaskTransform(const SkMatrix& m, SkIVector* shift)
 }
 
 inline static bool fuzzy_equals(
-    const GrCCPathCache::MaskTransform& a, const GrCCPathCache::MaskTransform& b) noexcept {
+    const GrCCPathCache::MaskTransform& a, const GrCCPathCache::MaskTransform& b) {
   if ((Sk4f::Load(a.fMatrix2x2) != Sk4f::Load(b.fMatrix2x2)).anyTrue()) {
     return false;
   }
@@ -76,12 +76,12 @@ sk_sp<GrCCPathCache::Key> GrCCPathCache::Key::Make(
 
 void GrCCPathCache::Key::operator delete(void* p) { ::operator delete(p); }
 
-const uint32_t* GrCCPathCache::Key::data() const noexcept {
+const uint32_t* GrCCPathCache::Key::data() const {
   // The shape key is a variable-length footer to the entry allocation.
   return reinterpret_cast<const uint32_t*>(reinterpret_cast<const char*>(this) + sizeof(Key));
 }
 
-uint32_t* GrCCPathCache::Key::data() noexcept {
+uint32_t* GrCCPathCache::Key::data() {
   // The shape key is a variable-length footer to the entry allocation.
   return reinterpret_cast<uint32_t*>(reinterpret_cast<char*>(this) + sizeof(Key));
 }
@@ -127,7 +127,7 @@ class WriteKeyHelper {
   WriteKeyHelper(const GrStyledShape& shape) : fShapeUnstyledKeyCount(shape.unstyledKeySize()) {}
 
   // Returns the total number of uint32_t's to allocate for the key.
-  int allocCountU32() const noexcept { return kShapeUnstyledKeyIdx + fShapeUnstyledKeyCount; }
+  int allocCountU32() const { return kShapeUnstyledKeyIdx + fShapeUnstyledKeyCount; }
 
   // Writes the key data to out[].
   void write(const GrStyledShape& shape, uint32_t* out) {
@@ -329,7 +329,7 @@ void GrCCPathCache::evictInvalidatedCacheKeys() {
 }
 
 GrCCPathCache::OnFlushEntryRef GrCCPathCache::OnFlushEntryRef::OnFlushRef(
-    GrCCPathCacheEntry* entry) noexcept {
+    GrCCPathCacheEntry* entry) {
   entry->ref();
   ++entry->fOnFlushRefCnt;
   if (entry->fCachedAtlas) {
@@ -425,7 +425,7 @@ GrCCPathCacheEntry::ReleaseAtlasResult GrCCCachedAtlas::invalidatePathPixels(
   return ReleaseAtlasResult::kNone;
 }
 
-void GrCCCachedAtlas::decrOnFlushRefCnt(int count) const noexcept {
+void GrCCCachedAtlas::decrOnFlushRefCnt(int count) const {
   SkASSERT(count > 0);
   fOnFlushRefCnt -= count;
   SkASSERT(fOnFlushRefCnt >= 0);

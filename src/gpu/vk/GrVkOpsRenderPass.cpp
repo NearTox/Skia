@@ -61,13 +61,24 @@ bool GrVkOpsRenderPass::init(
   GrVkRenderTarget* vkRT = static_cast<GrVkRenderTarget*>(fRenderTarget);
   GrVkImage* targetImage = vkRT->msaaImage() ? vkRT->msaaImage() : vkRT;
 
-  // Change layout of our render target so it can be used as the color attachment.
-  // TODO: If we know that we will never be blending or loading the attachment we could drop the
-  // VK_ACCESS_COLOR_ATTACHMENT_READ_BIT.
-  targetImage->setImageLayout(
-      fGpu, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
-      VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, false);
+  if (fSelfDependencyFlags == SelfDependencyFlags::kForInputAttachment) {
+    // We need to use the GENERAL layout in this case since we'll be using texture barriers
+    // with an input attachment.
+    VkAccessFlags dstAccess = VK_ACCESS_INPUT_ATTACHMENT_READ_BIT |
+                              VK_ACCESS_COLOR_ATTACHMENT_READ_BIT |
+                              VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+    VkPipelineStageFlags dstStages =
+        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+    targetImage->setImageLayout(fGpu, VK_IMAGE_LAYOUT_GENERAL, dstAccess, dstStages, false);
+  } else {
+    // Change layout of our render target so it can be used as the color attachment.
+    // TODO: If we know that we will never be blending or loading the attachment we could drop
+    // the VK_ACCESS_COLOR_ATTACHMENT_READ_BIT.
+    targetImage->setImageLayout(
+        fGpu, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+        VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, false);
+  }
 
   // If we are using a stencil attachment we also need to update its layout
   if (withStencil) {
@@ -82,15 +93,14 @@ bool GrVkOpsRenderPass::init(
         VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
         VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT, false);
   }
-
   const GrVkResourceProvider::CompatibleRPHandle& rpHandle =
-      vkRT->compatibleRenderPassHandle(withStencil, fUsesXferBarriers);
+      vkRT->compatibleRenderPassHandle(withStencil, fSelfDependencyFlags);
   if (rpHandle.isValid()) {
     fCurrentRenderPass =
         fGpu->resourceProvider().findRenderPass(rpHandle, vkColorOps, vkStencilOps);
   } else {
     fCurrentRenderPass = fGpu->resourceProvider().findRenderPass(
-        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil, fUsesXferBarriers);
+        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil, fSelfDependencyFlags);
   }
   if (!fCurrentRenderPass) {
     return false;
@@ -110,7 +120,7 @@ bool GrVkOpsRenderPass::init(
       return false;
     }
     fCurrentSecondaryCommandBuffer->begin(
-        fGpu, vkRT->getFramebuffer(withStencil, fUsesXferBarriers), fCurrentRenderPass);
+        fGpu, vkRT->getFramebuffer(withStencil, fSelfDependencyFlags), fCurrentRenderPass);
   }
 
   if (!fGpu->beginRenderPass(
@@ -184,7 +194,8 @@ bool GrVkOpsRenderPass::set(
     GrRenderTarget* rt, GrStencilAttachment* stencil, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo,
-    const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) {
+    const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+    GrXferBarrierFlags renderPassXferBarriers) {
   SkASSERT(!fRenderTarget);
   SkASSERT(fGpu == rt->getContext()->priv().getGpu());
 
@@ -215,7 +226,12 @@ bool GrVkOpsRenderPass::set(
   SkASSERT(bounds.isEmpty() || SkIRect::MakeWH(rt->width(), rt->height()).contains(bounds));
   fBounds = bounds;
 
-  fUsesXferBarriers = usesXferBarriers;
+  if (renderPassXferBarriers & GrXferBarrierFlags::kBlend) {
+    fSelfDependencyFlags |= GrVkRenderPass::SelfDependencyFlags::kForNonCoherentAdvBlend;
+  }
+  if (renderPassXferBarriers & GrXferBarrierFlags::kTexture) {
+    fSelfDependencyFlags |= GrVkRenderPass::SelfDependencyFlags::kForInputAttachment;
+  }
 
   if (this->wrapsSecondaryCommandBuffer()) {
     return this->initWrapped();
@@ -238,6 +254,8 @@ void GrVkOpsRenderPass::reset() {
   fCurrentCBIsEmpty = true;
 
   fRenderTarget = nullptr;
+
+  fSelfDependencyFlags = GrVkRenderPass::SelfDependencyFlags::kNone;
 
 #ifdef SK_DEBUG
   fIsActive = false;
@@ -365,7 +383,7 @@ void GrVkOpsRenderPass::addAdditionalRenderPass(bool mustUseSecondaryCommandBuff
   bool withStencil = fCurrentRenderPass->hasStencilAttachment();
 
   const GrVkResourceProvider::CompatibleRPHandle& rpHandle =
-      vkRT->compatibleRenderPassHandle(withStencil, fUsesXferBarriers);
+      vkRT->compatibleRenderPassHandle(withStencil, fSelfDependencyFlags);
   SkASSERT(fCurrentRenderPass);
   fCurrentRenderPass->unref();
   if (rpHandle.isValid()) {
@@ -373,7 +391,7 @@ void GrVkOpsRenderPass::addAdditionalRenderPass(bool mustUseSecondaryCommandBuff
         fGpu->resourceProvider().findRenderPass(rpHandle, vkColorOps, vkStencilOps);
   } else {
     fCurrentRenderPass = fGpu->resourceProvider().findRenderPass(
-        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil, fUsesXferBarriers);
+        vkRT, vkColorOps, vkStencilOps, nullptr, withStencil, fSelfDependencyFlags);
   }
   if (!fCurrentRenderPass) {
     return;
@@ -390,7 +408,7 @@ void GrVkOpsRenderPass::addAdditionalRenderPass(bool mustUseSecondaryCommandBuff
       return;
     }
     fCurrentSecondaryCommandBuffer->begin(
-        fGpu, vkRT->getFramebuffer(withStencil, fUsesXferBarriers), fCurrentRenderPass);
+        fGpu, vkRT->getFramebuffer(withStencil, fSelfDependencyFlags), fCurrentRenderPass);
   }
 
   // We use the same fBounds as the whole GrVkOpsRenderPass since we have no way of tracking the
@@ -509,8 +527,12 @@ bool GrVkOpsRenderPass::onBindTextures(
     check_sampled_texture(dstTexture, fRenderTarget, fGpu);
   }
 #endif
-  return fCurrentPipelineState->setAndBindTextures(
-      fGpu, primProc, pipeline, primProcTextures, this->currentCommandBuffer());
+  if (!fCurrentPipelineState->setAndBindTextures(
+          fGpu, primProc, pipeline, primProcTextures, this->currentCommandBuffer())) {
+    return false;
+  }
+  return fCurrentPipelineState->setAndBindInputAttachment(
+      fGpu, static_cast<GrVkRenderTarget*>(fRenderTarget), pipeline, this->currentCommandBuffer());
 }
 
 void GrVkOpsRenderPass::onBindBuffers(

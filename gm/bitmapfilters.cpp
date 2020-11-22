@@ -101,7 +101,7 @@ class FilterGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new FilterGM;)
 
@@ -144,6 +144,6 @@ class TestExtractAlphaGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new TestExtractAlphaGM;)

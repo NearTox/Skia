@@ -28,7 +28,7 @@ class WriterBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

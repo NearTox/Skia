@@ -143,7 +143,7 @@ class ColorEmojiBlendModesGM : public skiagm::GM {
   SkBitmap fBG;
   sk_sp<SkTypeface> fColorType;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 }  // namespace
 

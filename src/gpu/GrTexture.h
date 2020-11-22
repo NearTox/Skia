@@ -18,10 +18,10 @@
 
 class GrTexture : virtual public GrSurface {
  public:
-  GrTexture* asTexture() noexcept override { return this; }
-  const GrTexture* asTexture() const noexcept override { return this; }
+  GrTexture* asTexture() override { return this; }
+  const GrTexture* asTexture() const override { return this; }
 
-  virtual GrBackendTexture getBackendTexture() const noexcept = 0;
+  virtual GrBackendTexture getBackendTexture() const = 0;
 
   /**
    * This function indicates that the texture parameters (wrap mode, filtering, ...) have been
@@ -51,7 +51,7 @@ class GrTexture : virtual public GrSurface {
    * If the API is unmanaged (e.g. Vulkan) then kFinished has the additional constraint that the
    * work flushed to the GPU is finished.
    */
-  virtual void addIdleProc(sk_sp<GrRefCntedCallback> idleProc, IdleState) noexcept {
+  virtual void addIdleProc(sk_sp<GrRefCntedCallback> idleProc, IdleState) {
     // This is the default implementation for the managed case where the IdleState can be
     // ignored. Unmanaged backends, e.g. Vulkan, must override this to consider IdleState.
     fIdleProcs.push_back(std::move(idleProc));
@@ -62,19 +62,19 @@ class GrTexture : virtual public GrSurface {
     this->addIdleProc(sk_make_sp<GrRefCntedCallback>(callback, context), state);
   }
 
-  GrTextureType textureType() const noexcept { return fTextureType; }
-  bool hasRestrictedSampling() const noexcept {
+  GrTextureType textureType() const { return fTextureType; }
+  bool hasRestrictedSampling() const {
     return GrTextureTypeHasRestrictedSampling(this->textureType());
   }
 
   void markMipmapsDirty();
   void markMipmapsClean();
-  GrMipmapped mipmapped() const noexcept {
+  GrMipmapped mipmapped() const {
     return GrMipmapped(fMipmapStatus != GrMipmapStatus::kNotAllocated);
   }
-  bool mipmapsAreDirty() const noexcept { return fMipmapStatus != GrMipmapStatus::kValid; }
-  GrMipmapStatus mipmapStatus() const noexcept { return fMipmapStatus; }
-  int maxMipmapLevel() const noexcept { return fMaxMipmapLevel; }
+  bool mipmapsAreDirty() const { return fMipmapStatus != GrMipmapStatus::kValid; }
+  GrMipmapStatus mipmapStatus() const { return fMipmapStatus; }
+  int maxMipmapLevel() const { return fMaxMipmapLevel; }
 
   static void ComputeScratchKey(
       const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, GrRenderable,
@@ -87,7 +87,7 @@ class GrTexture : virtual public GrSurface {
 
   SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
 
-  void willRemoveLastRef() noexcept override {
+  void willRemoveLastRef() override {
     // We're about to be idle in the resource cache. Do our part to trigger the idle callbacks.
     fIdleProcs.reset();
   }
@@ -102,7 +102,7 @@ class GrTexture : virtual public GrSurface {
   int fMaxMipmapLevel;
   friend class GrTextureResource;
 
-  typedef GrSurface INHERITED;
+  using INHERITED = GrSurface;
 };
 
 #endif

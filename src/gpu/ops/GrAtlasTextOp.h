@@ -39,7 +39,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     SkPMColor4f fColor;
   };
 
-  const char* name() const noexcept override { return "AtlasTextOp"; }
+  const char* name() const override { return "AtlasTextOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override;
 
@@ -58,7 +58,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     kLCDBGRDistanceField_MaskType,
   };
 
-  MaskType maskType() const noexcept { return fMaskType; }
+  MaskType maskType() const { return fMaskType; }
 
 #if GR_TEST_UTILS
   static std::unique_ptr<GrDrawOp> CreateOpTestingOnly(
@@ -98,13 +98,13 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {
     // TODO [PI]: implement
   }
 
   void onPrePrepareDraws(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {
     // TODO [PI]: implement
   }
 
@@ -115,7 +115,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   SkString onDumpInfo() const override;
 #endif
 
-  GrMaskFormat maskFormat() const noexcept {
+  GrMaskFormat maskFormat() const {
     switch (fMaskType) {
       case kLCDCoverageMask_MaskType: return kA565_GrMaskFormat;
       case kColorBitmapMask_MaskType: return kARGB_GrMaskFormat;
@@ -128,13 +128,13 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
     return kA8_GrMaskFormat;  // suppress warning
   }
 
-  bool usesDistanceFields() const noexcept {
+  bool usesDistanceFields() const {
     return kAliasedDistanceField_MaskType == fMaskType ||
            kGrayscaleDistanceField_MaskType == fMaskType ||
            kLCDDistanceField_MaskType == fMaskType || kLCDBGRDistanceField_MaskType == fMaskType;
   }
 
-  bool isLCD() const noexcept {
+  bool isLCD() const {
     return kLCDCoverageMask_MaskType == fMaskType || kLCDDistanceField_MaskType == fMaskType ||
            kLCDBGRDistanceField_MaskType == fMaskType;
   }
@@ -142,12 +142,12 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   inline void createDrawForGeneratedGlyphs(
       GrMeshDrawOp::Target* target, FlushInfo* flushInfo) const;
 
-  const SkPMColor4f& color() const noexcept {
+  const SkPMColor4f& color() const {
     SkASSERT(fGeoCount > 0);
     return fGeoData[0].fColor;
   }
-  bool usesLocalCoords() const noexcept { return fUsesLocalCoords; }
-  int numGlyphs() const noexcept { return fNumGlyphs; }
+  bool usesLocalCoords() const { return fUsesLocalCoords; }
+  int numGlyphs() const { return fNumGlyphs; }
 
   CombineResult onCombineIfPossible(
       GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override;
@@ -169,7 +169,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   int fGeoCount;
   int fNumGlyphs;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 #endif

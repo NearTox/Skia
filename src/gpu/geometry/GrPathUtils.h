@@ -42,7 +42,7 @@ uint32_t generateCubicPoints(
 // points of the quadratic.
 class QuadUVMatrix {
  public:
-  QuadUVMatrix() noexcept = default;
+  QuadUVMatrix() {}
   // Initialize the matrix from the control pts
   QuadUVMatrix(const SkPoint controlPts[3]) { this->set(controlPts); }
   void set(const SkPoint controlPts[3]);
@@ -104,7 +104,7 @@ void convertCubicToQuads(const SkPoint p[4], SkScalar tolScale, SkTArray<SkPoint
 // This variation enforces this constraint. The cubic must be simple and dir
 // must specify the orientation of the contour containing the cubic.
 void convertCubicToQuadsConstrainToTangents(
-    const SkPoint p[4], SkScalar tolScale, SkPathPriv::FirstDirection dir,
+    const SkPoint p[4], SkScalar tolScale, SkPathFirstDirection dir,
     SkTArray<SkPoint, true>* quads);
 
 enum class ExcludedTerm { kNonInvertible, kQuadraticTerm, kLinearTerm };

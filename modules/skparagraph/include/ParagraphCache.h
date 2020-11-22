@@ -29,7 +29,7 @@ bool operator==(const ParagraphCacheKey& a, const ParagraphCacheKey& b);
 
 class ParagraphCache {
  public:
-  ParagraphCache() noexcept;
+  ParagraphCache();
   ~ParagraphCache();
 
   void abandon();
@@ -38,12 +38,12 @@ class ParagraphCache {
   bool findParagraph(ParagraphImpl* paragraph);
 
   // For testing
-  void setChecker(std::function<void(ParagraphImpl* impl, const char*, bool)> checker) noexcept {
+  void setChecker(std::function<void(ParagraphImpl* impl, const char*, bool)> checker) {
     fChecker = std::move(checker);
   }
   void printStatistics();
-  void turnOn(bool value) noexcept { fCacheIsOn = value; }
-  int count() noexcept { return fLRUCacheMap.count(); }
+  void turnOn(bool value) { fCacheIsOn = value; }
+  int count() { return fLRUCacheMap.count(); }
 
  private:
   struct Entry;
@@ -56,7 +56,7 @@ class ParagraphCache {
   static const int kMaxEntries = 128;
 
   struct KeyHash {
-    uint32_t mix(uint32_t hash, uint32_t data) const noexcept;
+    uint32_t mix(uint32_t hash, uint32_t data) const;
     uint32_t operator()(const ParagraphCacheKey& key) const;
   };
 

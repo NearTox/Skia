@@ -34,6 +34,10 @@ void GrGLStencilAttachment::onAbandon() {
   INHERITED::onAbandon();
 }
 
+GrBackendFormat GrGLStencilAttachment::backendFormat() const {
+  return GrBackendFormat::MakeGL(fFormat.fInternalFormat, GR_GL_TEXTURE_NONE);
+}
+
 void GrGLStencilAttachment::setMemoryBacking(
     SkTraceMemoryDump* traceMemoryDump, const SkString& dumpName) const {
   SkString renderbuffer_id;

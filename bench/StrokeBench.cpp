@@ -42,7 +42,7 @@ class StrokeBench : public Benchmark {
   SkPaint fPaint;
   SkString fName;
   SkScalar fRes;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

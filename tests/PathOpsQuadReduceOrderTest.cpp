@@ -20,7 +20,8 @@ static void oneOffTest(skiatest::Reporter* reporter) {
     SkDQuad quad;
     quad.debugSet(q.fPts);
     SkReduceOrder reducer;
-    SkDEBUGCODE(int result =) reducer.reduce(quad);
+    SkDEBUGCODE(int result =)
+    reducer.reduce(quad);
     SkASSERT(result == 3);
   }
 }

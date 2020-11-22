@@ -30,7 +30,7 @@ class RefCntBench_Stack : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class PlacedRefCnt : public SkRefCnt {
@@ -39,7 +39,7 @@ class PlacedRefCnt : public SkRefCnt {
   void operator delete(void*) {}
 
  private:
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 class RefCntBench_Heap : public Benchmark {
@@ -62,7 +62,7 @@ class RefCntBench_Heap : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class RefCntBench_New : public Benchmark {
@@ -84,7 +84,7 @@ class RefCntBench_New : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,7 +107,7 @@ class WeakRefCntBench_Stack : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class PlacedWeakRefCnt : public SkWeakRefCnt {
@@ -136,7 +136,7 @@ class WeakRefCntBench_Heap : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class WeakRefCntBench_New : public Benchmark {
@@ -158,7 +158,7 @@ class WeakRefCntBench_New : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

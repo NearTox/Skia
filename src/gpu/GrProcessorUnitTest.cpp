@@ -36,7 +36,7 @@ GrProcessorTestData::GrProcessorTestData(
   fArena = std::make_unique<SkArenaAlloc>(1000);
 }
 
-GrProcessorTestData::~GrProcessorTestData() = default;
+GrProcessorTestData::~GrProcessorTestData() {}
 
 GrProxyProvider* GrProcessorTestData::proxyProvider() { return fContext->priv().proxyProvider(); }
 

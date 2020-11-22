@@ -61,7 +61,7 @@ class SkCoincidentSpans {
   bool flipped() const { return fOppPtTStart->fT > fOppPtTEnd->fT; }
   SkDEBUGCODE(SkOpGlobalState* globalState() { return fGlobalState; })
 
-      void init(SkDEBUGCODE(SkOpGlobalState* globalState)) {
+  void init(SkDEBUGCODE(SkOpGlobalState* globalState)) {
     sk_bzero(this, sizeof(*this));
     SkDEBUGCODE(fGlobalState = globalState);
   }

@@ -39,7 +39,7 @@ enum class TextPaintOrder : uint8_t {
 struct TextPropertyValue {
   sk_sp<SkTypeface> fTypeface;
   SkString fText;
-  float fTextSize = 0, fStrokeWidth = 0, fLineHeight = 0, fAscent = 0;
+  float fTextSize = 0, fStrokeWidth = 0, fLineHeight = 0, fLineShift = 0, fAscent = 0;
   SkTextUtils::Align fHAlign = SkTextUtils::kLeft_Align;
   Shaper::VAlign fVAlign = Shaper::VAlign::kTop;
   Shaper::ResizePolicy fResize = Shaper::ResizePolicy::kNone;
@@ -48,8 +48,8 @@ struct TextPropertyValue {
   TextPaintOrder fPaintOrder = TextPaintOrder::kFillStroke;
   bool fHasFill = false, fHasStroke = false;
 
-  bool operator==(const TextPropertyValue& other) const noexcept;
-  bool operator!=(const TextPropertyValue& other) const noexcept;
+  bool operator==(const TextPropertyValue& other) const;
+  bool operator!=(const TextPropertyValue& other) const;
 };
 
 struct TransformPropertyValue {
@@ -57,8 +57,8 @@ struct TransformPropertyValue {
   SkVector fScale;
   SkScalar fRotation, fSkew, fSkewAxis;
 
-  bool operator==(const TransformPropertyValue& other) const noexcept;
-  bool operator!=(const TransformPropertyValue& other) const noexcept;
+  bool operator==(const TransformPropertyValue& other) const;
+  bool operator!=(const TransformPropertyValue& other) const;
 };
 
 namespace internal {
@@ -72,7 +72,7 @@ class AnimationBuilder;
 template <typename ValueT, typename NodeT>
 class SK_API PropertyHandle final {
  public:
-  explicit PropertyHandle(sk_sp<NodeT> node) noexcept : fNode(std::move(node)) {}
+  explicit PropertyHandle(sk_sp<NodeT> node) : fNode(std::move(node)) {}
   ~PropertyHandle();
 
   ValueT get() const;

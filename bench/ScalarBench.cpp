@@ -32,7 +32,7 @@ class ScalarBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // having unknown values in our arrays can throw off the timing a lot, perhaps
@@ -61,7 +61,7 @@ class FloatComparisonBench : public ScalarBench {
 
  private:
   float fArray[9];
-  typedef ScalarBench INHERITED;
+  using INHERITED = ScalarBench;
 };
 
 class ForcedIntComparisonBench : public ScalarBench {
@@ -82,7 +82,7 @@ class ForcedIntComparisonBench : public ScalarBench {
  private:
   static const int32_t kPersp1Int = 0x3f800000;
   SkScalar fArray[9];
-  typedef ScalarBench INHERITED;
+  using INHERITED = ScalarBench;
 };
 
 class IsFiniteScalarBench : public ScalarBench {
@@ -113,7 +113,7 @@ class IsFiniteScalarBench : public ScalarBench {
   enum { ARRAY_N = 64 };
   SkScalar fArray[ARRAY_N];
 
-  typedef ScalarBench INHERITED;
+  using INHERITED = ScalarBench;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ class RectBoundsBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

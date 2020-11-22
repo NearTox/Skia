@@ -38,7 +38,7 @@ class SkSVGPoly final : public SkSVGShape {
 
   mutable SkPath fPath;  // mutated in onDraw(), to apply inherited fill types.
 
-  typedef SkSVGShape INHERITED;
+  using INHERITED = SkSVGShape;
 };
 
 #endif  // SkSVGPoly_DEFINED

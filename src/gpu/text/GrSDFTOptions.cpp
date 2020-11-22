@@ -28,14 +28,14 @@ static const int kLargeDFFontLimit = 162;
 static const int kExtraLargeDFFontSize = 256;
 #endif
 
-GrSDFTOptions::GrSDFTOptions(SkScalar min, SkScalar max) noexcept
+GrSDFTOptions::GrSDFTOptions(SkScalar min, SkScalar max)
     : fMinDistanceFieldFontSize{min}, fMaxDistanceFieldFontSize{max} {
   SkASSERT_RELEASE(min > 0 && max >= min);
 }
 
 bool GrSDFTOptions::canDrawAsDistanceFields(
     const SkPaint& paint, const SkFont& font, const SkMatrix& viewMatrix,
-    const SkSurfaceProps& props, bool contextSupportsDistanceFieldText) const noexcept {
+    const SkSurfaceProps& props, bool contextSupportsDistanceFieldText) const {
   // mask filters modify alpha, which doesn't translate well to distance
   if (paint.getMaskFilter() || !contextSupportsDistanceFieldText) {
     return false;
@@ -71,7 +71,7 @@ bool GrSDFTOptions::canDrawAsDistanceFields(
   return true;
 }
 
-SkScalar scaled_text_size(const SkScalar textSize, const SkMatrix& viewMatrix) noexcept {
+SkScalar scaled_text_size(const SkScalar textSize, const SkMatrix& viewMatrix) {
   SkScalar scaledTextSize = textSize;
 
   if (viewMatrix.hasPerspective()) {
@@ -92,7 +92,7 @@ SkScalar scaled_text_size(const SkScalar textSize, const SkMatrix& viewMatrix) n
 }
 
 SkFont GrSDFTOptions::getSDFFont(
-    const SkFont& font, const SkMatrix& viewMatrix, SkScalar* textRatio) const noexcept {
+    const SkFont& font, const SkMatrix& viewMatrix, SkScalar* textRatio) const {
   SkScalar textSize = font.getSize();
   SkScalar scaledTextSize = scaled_text_size(textSize, viewMatrix);
 
@@ -129,7 +129,7 @@ SkFont GrSDFTOptions::getSDFFont(
 }
 
 std::pair<SkScalar, SkScalar> GrSDFTOptions::computeSDFMinMaxScale(
-    SkScalar textSize, const SkMatrix& viewMatrix) const noexcept {
+    SkScalar textSize, const SkMatrix& viewMatrix) const {
   SkScalar scaledTextSize = scaled_text_size(textSize, viewMatrix);
 
   // We have three sizes of distance field text, and within each size 'bucket' there is a floor

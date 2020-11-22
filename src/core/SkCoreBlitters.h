@@ -23,7 +23,7 @@ class SkRasterBlitter : public SkBlitter {
   const SkPixmap fDevice;
 
  private:
-  typedef SkBlitter INHERITED;
+  using INHERITED = SkBlitter;
 };
 
 class SkShaderBlitter : public SkRasterBlitter {
@@ -47,7 +47,7 @@ class SkShaderBlitter : public SkRasterBlitter {
   // illegal
   SkShaderBlitter& operator=(const SkShaderBlitter&);
 
-  typedef SkRasterBlitter INHERITED;
+  using INHERITED = SkRasterBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,7 @@ class SkA8_Coverage_Blitter : public SkRasterBlitter {
   const SkPixmap* justAnOpaqueColor(uint32_t*) override;
 
  private:
-  typedef SkRasterBlitter INHERITED;
+  using INHERITED = SkRasterBlitter;
 };
 
 ////////////////////////////////////////////////////////////////
@@ -90,7 +90,7 @@ class SkARGB32_Blitter : public SkRasterBlitter {
   // illegal
   SkARGB32_Blitter& operator=(const SkARGB32_Blitter&);
 
-  typedef SkRasterBlitter INHERITED;
+  using INHERITED = SkRasterBlitter;
 };
 
 class SkARGB32_Opaque_Blitter : public SkARGB32_Blitter {
@@ -103,7 +103,7 @@ class SkARGB32_Opaque_Blitter : public SkARGB32_Blitter {
   void blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) override;
 
  private:
-  typedef SkARGB32_Blitter INHERITED;
+  using INHERITED = SkARGB32_Blitter;
 };
 
 class SkARGB32_Black_Blitter : public SkARGB32_Opaque_Blitter {
@@ -114,7 +114,7 @@ class SkARGB32_Black_Blitter : public SkARGB32_Opaque_Blitter {
   void blitAntiV2(int x, int y, U8CPU a0, U8CPU a1) override;
 
  private:
-  typedef SkARGB32_Opaque_Blitter INHERITED;
+  using INHERITED = SkARGB32_Opaque_Blitter;
 };
 
 class SkARGB32_Shader_Blitter : public SkShaderBlitter {
@@ -138,7 +138,7 @@ class SkARGB32_Shader_Blitter : public SkShaderBlitter {
   // illegal
   SkARGB32_Shader_Blitter& operator=(const SkARGB32_Shader_Blitter&);
 
-  typedef SkShaderBlitter INHERITED;
+  using INHERITED = SkShaderBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +159,7 @@ class SkRGB565_Shader_Blitter : public SkShaderBlitter {
   SkS32D16BlendProc fBlend;
   SkS32D16BlendProc fBlendCoverage;
 
-  typedef SkShaderBlitter INHERITED;
+  using INHERITED = SkShaderBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

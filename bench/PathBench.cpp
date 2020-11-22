@@ -67,7 +67,7 @@ class PathBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class TrianglePathBench : public PathBench {
@@ -84,7 +84,7 @@ class TrianglePathBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class RectPathBench : public PathBench {
@@ -98,7 +98,7 @@ class RectPathBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class RotatedRectBench : public PathBench {
@@ -128,7 +128,7 @@ class RotatedRectBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
   int fDegrees;
   bool fAA;
 };
@@ -144,7 +144,7 @@ class OvalPathBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class CirclePathBench : public PathBench {
@@ -157,7 +157,7 @@ class CirclePathBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class NonAACirclePathBench : public CirclePathBench {
@@ -172,7 +172,7 @@ class NonAACirclePathBench : public CirclePathBench {
   }
 
  private:
-  typedef CirclePathBench INHERITED;
+  using INHERITED = CirclePathBench;
 };
 
 // Test max speedup of Analytic AA for concave paths
@@ -191,7 +191,7 @@ class AAAConcavePathBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 // Test max speedup of Analytic AA for convex paths
@@ -209,7 +209,7 @@ class AAAConvexPathBench : public PathBench {
   }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class SawToothPathBench : public PathBench {
@@ -238,7 +238,7 @@ class SawToothPathBench : public PathBench {
   int complexity() override { return 1; }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class LongCurvedPathBench : public PathBench {
@@ -259,7 +259,7 @@ class LongCurvedPathBench : public PathBench {
   int complexity() override { return 2; }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class LongLinePathBench : public PathBench {
@@ -277,7 +277,7 @@ class LongLinePathBench : public PathBench {
   int complexity() override { return 2; }
 
  private:
-  typedef PathBench INHERITED;
+  using INHERITED = PathBench;
 };
 
 class RandomPathBench : public Benchmark {
@@ -368,7 +368,7 @@ class RandomPathBench : public Benchmark {
   int fCurrVerb;
   int fCurrPoint;
   SkRandom fRandom;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class PathCreateBench : public RandomPathBench {
@@ -393,7 +393,7 @@ class PathCreateBench : public RandomPathBench {
  private:
   SkPath fPath;
 
-  typedef RandomPathBench INHERITED;
+  using INHERITED = RandomPathBench;
 };
 
 class PathCopyBench : public RandomPathBench {
@@ -426,7 +426,7 @@ class PathCopyBench : public RandomPathBench {
   SkAutoTArray<SkPath> fPaths;
   SkAutoTArray<SkPath> fCopies;
 
-  typedef RandomPathBench INHERITED;
+  using INHERITED = RandomPathBench;
 };
 
 class PathTransformBench : public RandomPathBench {
@@ -474,7 +474,7 @@ class PathTransformBench : public RandomPathBench {
 
   SkMatrix fMatrix;
   bool fInPlace;
-  typedef RandomPathBench INHERITED;
+  using INHERITED = RandomPathBench;
 };
 
 class PathEqualityBench : public RandomPathBench {
@@ -511,7 +511,7 @@ class PathEqualityBench : public RandomPathBench {
   };
   SkAutoTArray<SkPath> fPaths;
   SkAutoTArray<SkPath> fCopies;
-  typedef RandomPathBench INHERITED;
+  using INHERITED = RandomPathBench;
 };
 
 class SkBench_AddPathTest : public RandomPathBench {
@@ -600,7 +600,7 @@ class SkBench_AddPathTest : public RandomPathBench {
   SkAutoTArray<SkPath> fPaths0;
   SkAutoTArray<SkPath> fPaths1;
   SkMatrix fMatrix;
-  typedef RandomPathBench INHERITED;
+  using INHERITED = RandomPathBench;
 };
 
 class CirclesBench : public Benchmark {
@@ -653,7 +653,7 @@ class CirclesBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Chrome creates its own round rects with each corner possibly being different.
@@ -742,7 +742,7 @@ class ArbRoundRectBench : public Benchmark {
  private:
   bool fZeroRad;  // should 0 radius rounds rects be tested?
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class ConservativelyContainsBench : public Benchmark {
@@ -814,7 +814,7 @@ class ConservativelyContainsBench : public Benchmark {
   bool fParity;
   SkTDArray<SkRect> fQueryRects;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -845,7 +845,7 @@ class ConicBench_Chop : public Benchmark {
     }
   }
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 DEF_BENCH(return new ConicBench_Chop;)
 
@@ -928,7 +928,7 @@ class ConicBench_TinyError : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 DEF_BENCH(return new ConicBench_TinyError;)
 
@@ -961,7 +961,7 @@ class ConicBench : public Benchmark {
   SkConic fConics[CONICS];
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class ConicBench_ComputeError : public ConicBench {
@@ -981,7 +981,7 @@ class ConicBench_ComputeError : public ConicBench {
   }
 
  private:
-  typedef ConicBench INHERITED;
+  using INHERITED = ConicBench;
 };
 
 class ConicBench_asQuadTol : public ConicBench {
@@ -1000,7 +1000,7 @@ class ConicBench_asQuadTol : public ConicBench {
   }
 
  private:
-  typedef ConicBench INHERITED;
+  using INHERITED = ConicBench;
 };
 
 class ConicBench_quadPow2 : public ConicBench {
@@ -1019,7 +1019,7 @@ class ConicBench_quadPow2 : public ConicBench {
   }
 
  private:
-  typedef ConicBench INHERITED;
+  using INHERITED = ConicBench;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1060,7 +1060,7 @@ class TightBoundsBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 const SkRect ConservativelyContainsBench::kBounds =
@@ -1167,7 +1167,7 @@ class CommonConvexBench : public Benchmark {
     fPath.addRRect(SkRRect::MakeRectXY(r, w / 8.0f, h / 8.0f));
 
     if (forceConcave) {
-      fPath.setConvexityType(SkPathConvexityType::kConcave);
+      SkPathPriv::SetConvexity(fPath, SkPathConvexity::kConcave);
       SkASSERT(!fPath.isConvex());
     } else {
       SkASSERT(fPath.isConvex());
@@ -1189,7 +1189,7 @@ class CommonConvexBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new CommonConvexBench(16, 16, false, false);)

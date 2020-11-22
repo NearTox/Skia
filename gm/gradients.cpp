@@ -328,7 +328,7 @@ class GradientsViewPerspectiveGM : public GradientsGM {
   }
 
  private:
-  typedef GradientsGM INHERITED;
+  using INHERITED = GradientsGM;
 };
 DEF_GM(return new GradientsViewPerspectiveGM(true);)
 DEF_GM(return new GradientsViewPerspectiveGM(false);)
@@ -534,7 +534,7 @@ class RadialGradient2GM : public skiagm::GM {
  private:
   bool fDither;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new RadialGradient2GM(true);)
 DEF_GM(return new RadialGradient2GM(false);)
@@ -572,7 +572,7 @@ class RadialGradient3GM : public skiagm::GM {
   sk_sp<SkShader> fShader;
   bool fDither;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new RadialGradient3GM(true);)
 DEF_GM(return new RadialGradient3GM(false);)
@@ -609,7 +609,7 @@ class RadialGradient4GM : public skiagm::GM {
   sk_sp<SkShader> fShader;
   bool fDither;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new RadialGradient4GM(true);)
 DEF_GM(return new RadialGradient4GM(false);)
@@ -663,7 +663,7 @@ class LinearGradientGM : public skiagm::GM {
   sk_sp<SkShader> fShader[100];
   bool fDither;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new LinearGradientGM(true);)
 DEF_GM(return new LinearGradientGM(false);)

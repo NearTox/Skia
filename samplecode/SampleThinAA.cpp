@@ -62,7 +62,7 @@ class RectRenderer : public ShapeRenderer {
  private:
   RectRenderer() {}
 
-  typedef ShapeRenderer INHERITED;
+  using INHERITED = ShapeRenderer;
 };
 
 class PathRenderer : public ShapeRenderer {
@@ -143,7 +143,7 @@ class PathRenderer : public ShapeRenderer {
 
   PathRenderer(SkScalar depth, bool hairline) : fDepth(depth), fHairline(hairline) {}
 
-  typedef ShapeRenderer INHERITED;
+  using INHERITED = ShapeRenderer;
 };
 
 class OffscreenShapeRenderer : public ShapeRenderer {
@@ -227,7 +227,7 @@ class OffscreenShapeRenderer : public ShapeRenderer {
         fRenderer(std::move(renderer)),
         fSupersampleFactor(supersample) {}
 
-  typedef ShapeRenderer INHERITED;
+  using INHERITED = ShapeRenderer;
 };
 
 class ThinAASample : public Sample {
@@ -528,7 +528,7 @@ class ThinAASample : public Sample {
     canvas->translate(0.f, 8.f * ShapeRenderer::kTileHeight + 20.f);
   }
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

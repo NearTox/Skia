@@ -46,7 +46,7 @@ class PerlinNoiseBench : public Benchmark {
     }
   }
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

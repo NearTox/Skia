@@ -22,7 +22,7 @@ enum HeifColorFormat {
 };
 
 struct HeifStream {
-  virtual ~HeifStream() = default;
+  virtual ~HeifStream() {}
 
   virtual size_t read(void*, size_t) = 0;
   virtual bool rewind() = 0;

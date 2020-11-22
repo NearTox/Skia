@@ -41,7 +41,7 @@ class SkEmbossMaskFilter : public SkMaskFilterBase {
   Light fLight;
   SkScalar fBlurSigma;
 
-  typedef SkMaskFilter INHERITED;
+  using INHERITED = SkMaskFilter;
 };
 
 #endif

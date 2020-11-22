@@ -43,10 +43,10 @@
 #include "src/gpu/text/GrSDFTOptions.h"
 #include "src/image/SkSurface_Gpu.h"
 
-GrDrawingManager::RenderTaskDAG::RenderTaskDAG(bool sortRenderTasks) noexcept
+GrDrawingManager::RenderTaskDAG::RenderTaskDAG(bool sortRenderTasks)
     : fSortRenderTasks(sortRenderTasks) {}
 
-GrDrawingManager::RenderTaskDAG::~RenderTaskDAG() = default;
+GrDrawingManager::RenderTaskDAG::~RenderTaskDAG() {}
 
 void GrDrawingManager::RenderTaskDAG::gatherIDs(SkSTArray<8, uint32_t, true>* idArray) const {
   idArray->reset(fRenderTasks.count());
@@ -57,7 +57,7 @@ void GrDrawingManager::RenderTaskDAG::gatherIDs(SkSTArray<8, uint32_t, true>* id
   }
 }
 
-void GrDrawingManager::RenderTaskDAG::reset() noexcept { fRenderTasks.reset(); }
+void GrDrawingManager::RenderTaskDAG::reset() { fRenderTasks.reset(); }
 
 void GrDrawingManager::RenderTaskDAG::rawRemoveRenderTasks(int startIndex, int stopIndex) {
   for (int i = startIndex; i < stopIndex; ++i) {
@@ -103,7 +103,7 @@ void GrDrawingManager::RenderTaskDAG::add(const SkTArray<sk_sp<GrRenderTask>>& r
   fRenderTasks.push_back_n(renderTasks.count(), renderTasks.begin());
 }
 
-void GrDrawingManager::RenderTaskDAG::swap(SkTArray<sk_sp<GrRenderTask>>* renderTasks) noexcept {
+void GrDrawingManager::RenderTaskDAG::swap(SkTArray<sk_sp<GrRenderTask>>* renderTasks) {
   SkASSERT(renderTasks->empty());
   renderTasks->swap(fRenderTasks);
 }
@@ -111,7 +111,7 @@ void GrDrawingManager::RenderTaskDAG::swap(SkTArray<sk_sp<GrRenderTask>>* render
 void GrDrawingManager::RenderTaskDAG::prepForFlush() {
   if (fSortRenderTasks) {
     SkDEBUGCODE(bool result =)
-        SkTTopoSort<GrRenderTask, GrRenderTask::TopoSortTraits>(&fRenderTasks);
+    SkTTopoSort<GrRenderTask, GrRenderTask::TopoSortTraits>(&fRenderTasks);
     SkASSERT(result);
   }
 
@@ -283,11 +283,11 @@ bool GrDrawingManager::flush(
     // Enable this to print out verbose GrOp information
     SkDEBUGCODE(SkDebugf("onFlush renderTasks:"));
     for (const auto& onFlushRenderTask : fOnFlushRenderTasks) {
-        SkDEBUGCODE(onFlushRenderTask->dump());
+        SkDEBUGCODE(onFlushRenderTask->dump();)
     }
     SkDEBUGCODE(SkDebugf("Normal renderTasks:"));
     for (int i = 0; i < fRenderTasks.count(); ++i) {
-        SkDEBUGCODE(fRenderTasks[i]->dump());
+        SkDEBUGCODE(fRenderTasks[i]->dump();)
     }
 #endif
 

@@ -84,13 +84,13 @@ static struct DepthHistogram {
 #  define DEBUG_CUBIC_RECURSION_TRACK_DEPTH(depth) (void)(depth)
 #endif
 
-static inline bool degenerate_vector(const SkVector& v) noexcept {
+static inline bool degenerate_vector(const SkVector& v) {
   return !SkPointPriv::CanNormalize(v.fX, v.fY);
 }
 
 static bool set_normal_unitnormal(
     const SkPoint& before, const SkPoint& after, SkScalar scale, SkScalar radius, SkVector* normal,
-    SkVector* unitNormal) noexcept {
+    SkVector* unitNormal) {
   if (!unitNormal->setNormalize((after.fX - before.fX) * scale, (after.fY - before.fY) * scale)) {
     return false;
   }
@@ -100,7 +100,7 @@ static bool set_normal_unitnormal(
 }
 
 static bool set_normal_unitnormal(
-    const SkVector& vec, SkScalar radius, SkVector* normal, SkVector* unitNormal) noexcept {
+    const SkVector& vec, SkScalar radius, SkVector* normal, SkVector* unitNormal) {
   if (!unitNormal->setNormalize(vec.fX, vec.fY)) {
     return false;
   }
@@ -123,7 +123,7 @@ struct SkQuadConstruct {   // The state of the quad stroke under construction.
   bool fOppositeTangents;  // set if coincident tangents have opposite directions
 
   // return false if start and end are too close to have a unique middle
-  bool init(SkScalar start, SkScalar end) noexcept {
+  bool init(SkScalar start, SkScalar end) {
     fStartT = start;
     fMidT = (start + end) * SK_ScalarHalf;
     fEndT = end;
@@ -131,7 +131,7 @@ struct SkQuadConstruct {   // The state of the quad stroke under construction.
     return fStartT < fMidT && fMidT < fEndT;
   }
 
-  bool initWithStart(SkQuadConstruct* parent) noexcept {
+  bool initWithStart(SkQuadConstruct* parent) {
     if (!init(parent->fStartT, parent->fMidT)) {
       return false;
     }
@@ -141,7 +141,7 @@ struct SkQuadConstruct {   // The state of the quad stroke under construction.
     return true;
   }
 
-  bool initWithEnd(SkQuadConstruct* parent) noexcept {
+  bool initWithEnd(SkQuadConstruct* parent) {
     if (!init(parent->fMidT, parent->fEndT)) {
       return false;
     }
@@ -158,8 +158,8 @@ class SkPathStroker {
       const SkPath& src, SkScalar radius, SkScalar miterLimit, SkPaint::Cap, SkPaint::Join,
       SkScalar resScale, bool canIgnoreCenter);
 
-  bool hasOnlyMoveTo() const noexcept { return 0 == fSegmentCount; }
-  SkPoint moveToPt() const noexcept { return fFirstPt; }
+  bool hasOnlyMoveTo() const { return 0 == fSegmentCount; }
+  SkPoint moveToPt() const { return fFirstPt; }
 
   void moveTo(const SkPoint&);
   void lineTo(const SkPoint&, const SkPath::Iter* iter = nullptr);
@@ -173,9 +173,9 @@ class SkPathStroker {
     dst->swap(fOuter);
   }
 
-  SkScalar getResScale() const noexcept { return fResScale; }
+  SkScalar getResScale() const { return fResScale; }
 
-  bool isCurrentContourEmpty() const noexcept {
+  bool isCurrentContourEmpty() const {
     return fInner.isZeroLengthSincePoint(0) &&
            fOuter.isZeroLengthSincePoint(fFirstOuterPtIndexInContour);
   }
@@ -247,7 +247,7 @@ class SkPathStroker {
   void cubicQuadEnds(const SkPoint cubic[4], SkQuadConstruct*);
   void cubicQuadMid(const SkPoint cubic[4], const SkQuadConstruct*, SkPoint* mid) const;
   bool cubicStroke(const SkPoint cubic[4], SkQuadConstruct*);
-  void init(StrokeType strokeType, SkQuadConstruct*, SkScalar tStart, SkScalar tEnd) noexcept;
+  void init(StrokeType strokeType, SkQuadConstruct*, SkScalar tStart, SkScalar tEnd);
   ResultType intersectRay(SkQuadConstruct*, IntersectRayType STROKER_DEBUG_PARAMS(int)) const;
   bool ptInQuadBounds(const SkPoint quad[3], const SkPoint& pt) const;
   void quadPerpRay(
@@ -255,13 +255,13 @@ class SkPathStroker {
   bool quadStroke(const SkPoint quad[3], SkQuadConstruct*);
   void setConicEndNormal(
       const SkConic&, const SkVector& normalAB, const SkVector& unitNormalAB, SkVector* normalBC,
-      SkVector* unitNormalBC) noexcept;
+      SkVector* unitNormalBC);
   void setCubicEndNormal(
       const SkPoint cubic[4], const SkVector& normalAB, const SkVector& unitNormalAB,
-      SkVector* normalCD, SkVector* unitNormalCD) noexcept;
+      SkVector* normalCD, SkVector* unitNormalCD);
   void setQuadEndNormal(
       const SkPoint quad[3], const SkVector& normalAB, const SkVector& unitNormalAB,
-      SkVector* normalBC, SkVector* unitNormalBC) noexcept;
+      SkVector* normalBC, SkVector* unitNormalBC);
   void setRayPts(const SkPoint& tPt, SkVector* dxy, SkPoint* onPt, SkPoint* tangent) const;
   static bool SlightAngle(SkQuadConstruct*);
   ResultType strokeCloseEnough(
@@ -271,7 +271,7 @@ class SkPathStroker {
 
   void finishContour(bool close, bool isLine);
   bool preJoinTo(const SkPoint&, SkVector* normal, SkVector* unitNormal, bool isLine);
-  void postJoinTo(const SkPoint&, const SkVector& normal, const SkVector& unitNormal) noexcept;
+  void postJoinTo(const SkPoint&, const SkVector& normal, const SkVector& unitNormal);
 
   void line_to(const SkPoint& currPt, const SkVector& normal);
 };
@@ -313,7 +313,7 @@ bool SkPathStroker::preJoinTo(
 }
 
 void SkPathStroker::postJoinTo(
-    const SkPoint& currPt, const SkVector& normal, const SkVector& unitNormal) noexcept {
+    const SkPoint& currPt, const SkVector& normal, const SkVector& unitNormal) {
   fJoinCompleted = true;
   fPrevPt = currPt;
   fPrevUnitNormal = unitNormal;
@@ -420,7 +420,7 @@ void SkPathStroker::line_to(const SkPoint& currPt, const SkVector& normal) {
   fInner.lineTo(currPt.fX - normal.fX, currPt.fY - normal.fY);
 }
 
-static bool has_valid_tangent(const SkPath::Iter* iter) noexcept {
+static bool has_valid_tangent(const SkPath::Iter* iter) {
   SkPath::Iter copy = *iter;
   SkPath::Verb verb;
   SkPoint pts[4];
@@ -470,7 +470,7 @@ void SkPathStroker::lineTo(const SkPoint& currPt, const SkPath::Iter* iter) {
 
 void SkPathStroker::setQuadEndNormal(
     const SkPoint quad[3], const SkVector& normalAB, const SkVector& unitNormalAB,
-    SkVector* normalBC, SkVector* unitNormalBC) noexcept {
+    SkVector* normalBC, SkVector* unitNormalBC) {
   if (!set_normal_unitnormal(quad[1], quad[2], fResScale, fRadius, normalBC, unitNormalBC)) {
     *normalBC = normalAB;
     *unitNormalBC = unitNormalAB;
@@ -479,13 +479,13 @@ void SkPathStroker::setQuadEndNormal(
 
 void SkPathStroker::setConicEndNormal(
     const SkConic& conic, const SkVector& normalAB, const SkVector& unitNormalAB,
-    SkVector* normalBC, SkVector* unitNormalBC) noexcept {
+    SkVector* normalBC, SkVector* unitNormalBC) {
   setQuadEndNormal(conic.fPts, normalAB, unitNormalAB, normalBC, unitNormalBC);
 }
 
 void SkPathStroker::setCubicEndNormal(
     const SkPoint cubic[4], const SkVector& normalAB, const SkVector& unitNormalAB,
-    SkVector* normalCD, SkVector* unitNormalCD) noexcept {
+    SkVector* normalCD, SkVector* unitNormalCD) {
   SkVector ab = cubic[1] - cubic[0];
   SkVector cd = cubic[3] - cubic[2];
 
@@ -514,15 +514,14 @@ void SkPathStroker::setCubicEndNormal(
 }
 
 void SkPathStroker::init(
-    StrokeType strokeType, SkQuadConstruct* quadPts, SkScalar tStart, SkScalar tEnd) noexcept {
+    StrokeType strokeType, SkQuadConstruct* quadPts, SkScalar tStart, SkScalar tEnd) {
   fStrokeType = strokeType;
   fFoundTangents = false;
   quadPts->init(tStart, tEnd);
 }
 
 // returns the distance squared from the point to the line
-static SkScalar pt_to_line(
-    const SkPoint& pt, const SkPoint& lineStart, const SkPoint& lineEnd) noexcept {
+static SkScalar pt_to_line(const SkPoint& pt, const SkPoint& lineStart, const SkPoint& lineEnd) {
   SkVector dxy = lineEnd - lineStart;
   SkVector ab0 = pt - lineStart;
   SkScalar numer = dxy.dot(ab0);
@@ -561,7 +560,7 @@ static SkScalar pt_to_line(
 
                mid_2 == (outer_1 ^ outer_2 ^ mid_1)
  */
-static bool cubic_in_line(const SkPoint cubic[4]) noexcept {
+static bool cubic_in_line(const SkPoint cubic[4]) {
   SkScalar ptMax = -1;
   int outer1 SK_INIT_TO_AVOID_WARNING;
   int outer2 SK_INIT_TO_AVOID_WARNING;
@@ -598,7 +597,7 @@ static bool cubic_in_line(const SkPoint cubic[4]) noexcept {
    Since the XOR of the indices is 3  (0 ^ 1 ^ 2)
    the missing index equals: outer_1 ^ outer_2 ^ 3
  */
-static bool quad_in_line(const SkPoint quad[3]) noexcept {
+static bool quad_in_line(const SkPoint quad[3]) {
   SkScalar ptMax = -1;
   int outer1 SK_INIT_TO_AVOID_WARNING;
   int outer2 SK_INIT_TO_AVOID_WARNING;
@@ -617,7 +616,7 @@ static bool quad_in_line(const SkPoint quad[3]) noexcept {
   SkASSERT(outer2 >= 1 && outer2 <= 2);
   SkASSERT(outer1 < outer2);
   int mid = outer1 ^ outer2 ^ 3;
-  constexpr float kCurvatureSlop = 0.000005f;  // this multiplier is pulled out of the air
+  const float kCurvatureSlop = 0.000005f;  // this multiplier is pulled out of the air
   SkScalar lineSlop = ptMax * ptMax * kCurvatureSlop;
   return pt_to_line(quad[mid], quad[outer1], quad[outer2]) <= lineSlop;
 }
@@ -992,12 +991,11 @@ bool SkPathStroker::ptInQuadBounds(const SkPoint quad[3], const SkPoint& pt) con
   return true;
 }
 
-static bool points_within_dist(
-    const SkPoint& nearPt, const SkPoint& farPt, SkScalar limit) noexcept {
+static bool points_within_dist(const SkPoint& nearPt, const SkPoint& farPt, SkScalar limit) {
   return SkPointPriv::DistanceToSqd(nearPt, farPt) <= limit * limit;
 }
 
-static bool sharp_angle(const SkPoint quad[3]) noexcept {
+static bool sharp_angle(const SkPoint quad[3]) {
   SkVector smaller = quad[1] - quad[0];
   SkVector larger = quad[1] - quad[2];
   SkScalar smallerLen = SkPointPriv::LengthSqd(smaller);
@@ -1342,7 +1340,7 @@ SkStroke::SkStroke() {
   fDoFill = false;
 }
 
-SkStroke::SkStroke(const SkPaint& p) noexcept {
+SkStroke::SkStroke(const SkPaint& p) {
   fWidth = p.getStrokeWidth();
   fMiterLimit = p.getStrokeMiter();
   fResScale = 1;
@@ -1351,7 +1349,7 @@ SkStroke::SkStroke(const SkPaint& p) noexcept {
   fDoFill = SkToU8(p.getStyle() == SkPaint::kStrokeAndFill_Style);
 }
 
-SkStroke::SkStroke(const SkPaint& p, SkScalar width) noexcept {
+SkStroke::SkStroke(const SkPaint& p, SkScalar width) {
   fWidth = width;
   fMiterLimit = p.getStrokeMiter();
   fResScale = 1;
@@ -1360,22 +1358,22 @@ SkStroke::SkStroke(const SkPaint& p, SkScalar width) noexcept {
   fDoFill = SkToU8(p.getStyle() == SkPaint::kStrokeAndFill_Style);
 }
 
-void SkStroke::setWidth(SkScalar width) noexcept {
+void SkStroke::setWidth(SkScalar width) {
   SkASSERT(width >= 0);
   fWidth = width;
 }
 
-void SkStroke::setMiterLimit(SkScalar miterLimit) noexcept {
+void SkStroke::setMiterLimit(SkScalar miterLimit) {
   SkASSERT(miterLimit >= 0);
   fMiterLimit = miterLimit;
 }
 
-void SkStroke::setCap(SkPaint::Cap cap) noexcept {
+void SkStroke::setCap(SkPaint::Cap cap) {
   SkASSERT((unsigned)cap < SkPaint::kCapCount);
   fCap = SkToU8(cap);
 }
 
-void SkStroke::setJoin(SkPaint::Join join) noexcept {
+void SkStroke::setJoin(SkPaint::Join join) {
   SkASSERT((unsigned)join < SkPaint::kJoinCount);
   fJoin = SkToU8(join);
 }
@@ -1386,7 +1384,7 @@ void SkStroke::setJoin(SkPaint::Join join) noexcept {
 // its contents with src when we're done.
 class AutoTmpPath {
  public:
-  AutoTmpPath(const SkPath& src, SkPath** dst) noexcept : fSrc(src) {
+  AutoTmpPath(const SkPath& src, SkPath** dst) : fSrc(src) {
     if (&src == *dst) {
       *dst = &fTmpDst;
       fSwapWithSrc = true;
@@ -1493,7 +1491,7 @@ DONE:
   stroker.done(dst, lastSegment == SkPath::kLine_Verb);
 
   if (fDoFill && !ignoreCenter) {
-    if (SkPathPriv::CheapIsFirstDirection(src, SkPathPriv::kCCW_FirstDirection)) {
+    if (SkPathPriv::ComputeFirstDirection(src) == SkPathFirstDirection::kCCW) {
       dst->reverseAddPath(src);
     } else {
       dst->addPath(src);
@@ -1527,7 +1525,7 @@ DONE:
   }
 }
 
-static SkPathDirection reverse_direction(SkPathDirection dir) noexcept {
+static SkPathDirection reverse_direction(SkPathDirection dir) {
   static const SkPathDirection gOpposite[] = {SkPathDirection::kCCW, SkPathDirection::kCW};
   return gOpposite[(int)dir];
 }

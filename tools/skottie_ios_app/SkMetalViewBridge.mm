@@ -12,8 +12,8 @@
 #import <Metal/Metal.h>
 #import <MetalKit/MetalKit.h>
 
-sk_sp<SkSurface> SkMtkViewToSurface(MTKView* mtkView, GrContext* grContext) {
-  if (!grContext || MTLPixelFormatDepth32Float_Stencil8 != [mtkView depthStencilPixelFormat] ||
+sk_sp<SkSurface> SkMtkViewToSurface(MTKView* mtkView, GrRecordingContext* rContext) {
+  if (!rContext || MTLPixelFormatDepth32Float_Stencil8 != [mtkView depthStencilPixelFormat] ||
       MTLPixelFormatBGRA8Unorm != [mtkView colorPixelFormat]) {
     return nullptr;
   }
@@ -25,14 +25,14 @@ sk_sp<SkSurface> SkMtkViewToSurface(MTKView* mtkView, GrContext* grContext) {
   int sampleCount = (int)[mtkView sampleCount];
 
   return SkSurface::MakeFromMTKView(
-      grContext, (__bridge GrMTLHandle)mtkView, origin, sampleCount, colorType, colorSpace,
+      rContext, (__bridge GrMTLHandle)mtkView, origin, sampleCount, colorType, colorSpace,
       &surfaceProps);
 }
 
 GrContextHolder SkMetalDeviceToGrContext(id<MTLDevice> device, id<MTLCommandQueue> queue) {
   GrContextOptions grContextOptions;  // set different options here.
   return GrContextHolder(
-      GrContext::MakeMetal((__bridge void*)device, (__bridge void*)queue, grContextOptions)
+      GrDirectContext::MakeMetal((__bridge void*)device, (__bridge void*)queue, grContextOptions)
           .release());
 }
 

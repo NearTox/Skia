@@ -16,7 +16,7 @@
 #define GPUGL static_cast<GrGLGpu*>(this->getGpu())
 #define GL_CALL(X) GR_GL_CALL(GPUGL->glInterface(), X)
 
-GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) noexcept {
+GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) {
   switch (target) {
     case GR_GL_TEXTURE_2D: return GrTextureType::k2D;
     case GR_GL_TEXTURE_RECTANGLE: return GrTextureType::kRectangle;
@@ -25,7 +25,7 @@ GrTextureType GrGLTexture::TextureTypeFromTarget(GrGLenum target) noexcept {
   SK_ABORT("Unexpected texture target");
 }
 
-static inline GrGLenum target_from_texture_type(GrTextureType type) noexcept {
+static inline GrGLenum target_from_texture_type(GrTextureType type) {
   switch (type) {
     case GrTextureType::k2D: return GR_GL_TEXTURE_2D;
     case GrTextureType::kRectangle: return GR_GL_TEXTURE_RECTANGLE;
@@ -102,7 +102,7 @@ void GrGLTexture::onAbandon() {
   INHERITED::onAbandon();
 }
 
-GrBackendTexture GrGLTexture::getBackendTexture() const noexcept {
+GrBackendTexture GrGLTexture::getBackendTexture() const {
   GrGLTextureInfo info;
   info.fTarget = target_from_texture_type(this->textureType());
   info.fID = fID;
@@ -110,7 +110,7 @@ GrBackendTexture GrGLTexture::getBackendTexture() const noexcept {
   return GrBackendTexture(this->width(), this->height(), this->mipmapped(), info, fParameters);
 }
 
-GrBackendFormat GrGLTexture::backendFormat() const noexcept {
+GrBackendFormat GrGLTexture::backendFormat() const {
   return GrBackendFormat::MakeGL(
       GrGLFormatToEnum(fFormat), target_from_texture_type(this->textureType()));
 }

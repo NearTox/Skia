@@ -10,6 +10,7 @@
 
 #include "include/gpu/vk/GrVkMemoryAllocator.h"
 
+class GrVkCaps;
 class GrVkExtensions;
 struct GrVkInterface;
 
@@ -19,7 +20,7 @@ class GrVkAMDMemoryAllocator {
   static sk_sp<GrVkMemoryAllocator> Make(
       VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device,
       uint32_t physicalDeviceVersion, const GrVkExtensions* extensions,
-      sk_sp<const GrVkInterface> interface);
+      sk_sp<const GrVkInterface> interface, const GrVkCaps* caps);
 };
 
 #else
@@ -31,7 +32,7 @@ class GrVkAMDMemoryAllocator : public GrVkMemoryAllocator {
   static sk_sp<GrVkMemoryAllocator> Make(
       VkInstance instance, VkPhysicalDevice physicalDevice, VkDevice device,
       uint32_t physicalDeviceVersion, const GrVkExtensions* extensions,
-      sk_sp<const GrVkInterface> interface);
+      sk_sp<const GrVkInterface> interface, const GrVkCaps* caps);
 
   ~GrVkAMDMemoryAllocator() override;
 
@@ -57,7 +58,8 @@ class GrVkAMDMemoryAllocator : public GrVkMemoryAllocator {
   uint64_t totalAllocatedMemory() const override;
 
  private:
-  GrVkAMDMemoryAllocator(VmaAllocator allocator, sk_sp<const GrVkInterface> interface);
+  GrVkAMDMemoryAllocator(
+      VmaAllocator allocator, sk_sp<const GrVkInterface> interface, bool preferCachedCpuMemory);
 
   VmaAllocator fAllocator;
 
@@ -66,7 +68,9 @@ class GrVkAMDMemoryAllocator : public GrVkMemoryAllocator {
   // vulkan calls.
   sk_sp<const GrVkInterface> fInterface;
 
-  typedef GrVkMemoryAllocator INHERITED;
+  bool fPreferCachedCpuMemory;
+
+  using INHERITED = GrVkMemoryAllocator;
 };
 
 #endif  // SK_USE_VMA

@@ -112,7 +112,7 @@ class AnisotropicGM : public GM {
   SkBitmap fBM;
   SkFilterQuality fFilterQuality;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

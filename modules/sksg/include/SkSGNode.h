@@ -48,13 +48,13 @@ class Node : public SkRefCnt {
   explicit Node(uint32_t invalTraits) noexcept;
   ~Node() override;
 
-  const SkRect& bounds() const noexcept {
+  const SkRect& bounds() const {
     SkASSERT(!this->hasInval());
     return fBounds;
   }
 
   // Tag this node for invalidation and optional damage.
-  void invalidate(bool damage = true);
+  void invalidate(bool damage = true) noexcept;
   bool hasInval() const noexcept { return fFlags & kInvalidated_Flag; }
 
   // Dispatched on revalidation.  Subclasses are expected to recompute/cache their properties
@@ -91,34 +91,34 @@ class Node : public SkRefCnt {
   friend class NodePriv;
   friend class RenderNode;  // node flags access
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 // Helper for defining attribute getters/setters in subclasses.
-#define SG_ATTRIBUTE(attr_name, attr_type, attr_container)                    \
-  const attr_type& get##attr_name() const noexcept { return attr_container; } \
-  void set##attr_name(const attr_type& v) {                                   \
-    if (attr_container == v) return;                                          \
-    attr_container = v;                                                       \
-    this->invalidate();                                                       \
-  }                                                                           \
-  void set##attr_name(attr_type&& v) {                                        \
-    if (attr_container == v) return;                                          \
-    attr_container = std::move(v);                                            \
-    this->invalidate();                                                       \
+#define SG_ATTRIBUTE(attr_name, attr_type, attr_container)           \
+  const attr_type& get##attr_name() const { return attr_container; } \
+  void set##attr_name(const attr_type& v) {                          \
+    if (attr_container == v) return;                                 \
+    attr_container = v;                                              \
+    this->invalidate();                                              \
+  }                                                                  \
+  void set##attr_name(attr_type&& v) {                               \
+    if (attr_container == v) return;                                 \
+    attr_container = std::move(v);                                   \
+    this->invalidate();                                              \
   }
 
-#define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)                       \
-  attr_type get##attr_name() const noexcept { return attr_container.get##attr_name(); } \
-  void set##attr_name(const attr_type& v) {                                             \
-    if (attr_container.get##attr_name() == v) return;                                   \
-    attr_container.set##attr_name(v);                                                   \
-    this->invalidate();                                                                 \
-  }                                                                                     \
-  void set##attr_name(attr_type&& v) {                                                  \
-    if (attr_container.get##attr_name() == v) return;                                   \
-    attr_container.set##attr_name(std::move(v));                                        \
-    this->invalidate();                                                                 \
+#define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)              \
+  attr_type get##attr_name() const { return attr_container.get##attr_name(); } \
+  void set##attr_name(const attr_type& v) {                                    \
+    if (attr_container.get##attr_name() == v) return;                          \
+    attr_container.set##attr_name(v);                                          \
+    this->invalidate();                                                        \
+  }                                                                            \
+  void set##attr_name(attr_type&& v) {                                         \
+    if (attr_container.get##attr_name() == v) return;                          \
+    attr_container.set##attr_name(std::move(v));                               \
+    this->invalidate();                                                        \
   }
 
 }  // namespace sksg

@@ -35,13 +35,13 @@ struct SkDCubic {
     return v03.dot(v01) > 0 && v03.dot(v02) > 0 && v03.dot(v13) > 0 && v03.dot(v23) > 0;
   }
 
-  static bool IsConic() noexcept { return false; }
+  static bool IsConic() { return false; }
 
-  const SkDPoint& operator[](int n) const noexcept {
+  const SkDPoint& operator[](int n) const {
     SkASSERT(n >= 0 && n < kPointCount);
     return fPts[n];
   }
-  SkDPoint& operator[](int n) noexcept {
+  SkDPoint& operator[](int n) {
     SkASSERT(n >= 0 && n < kPointCount);
     return fPts[n];
   }
@@ -82,12 +82,12 @@ struct SkDCubic {
   bool hullIntersects(const SkDQuad& c2, bool* isLinear) const;
   bool hullIntersects(const SkDPoint* pts, int ptCount, bool* isLinear) const;
   bool isLinear(int startIndex, int endIndex) const;
-  static int maxIntersections() noexcept { return kMaxIntersections; }
+  static int maxIntersections() { return kMaxIntersections; }
   bool monotonicInX() const;
   bool monotonicInY() const;
   void otherPts(int index, const SkDPoint* o1Pts[kPointCount - 1]) const;
-  static int pointCount() noexcept { return kPointCount; }
-  static int pointLast() noexcept { return kPointLast; }
+  static int pointCount() { return kPointCount; }
+  static int pointLast() { return kPointLast; }
   SkDPoint ptAtT(double t) const;
   static int RootsReal(double A, double B, double C, double D, double t[3]);
   static int RootsValidT(const double A, const double B, const double C, double D, double s[3]);
@@ -158,10 +158,10 @@ given that:
    (0, 3) ^ 2 -> (2, 1)  (1, 2) ^ 2 -> (3, 0)
    (0, 1) ^ 3 -> (3, 2)  (0, 2) ^ 3 -> (3, 1)  (1, 3) ^ 3 -> (2, 0)  (2, 3) ^ 3 -> (1, 0)
 */
-inline int other_two(int one, int two) noexcept { return 1 >> (3 - (one ^ two)) ^ 3; }
+inline int other_two(int one, int two) { return 1 >> (3 - (one ^ two)) ^ 3; }
 
 struct SkDCubicPair {
-  SkDCubic first() const noexcept {
+  SkDCubic first() const {
 #ifdef SK_DEBUG
     SkDCubic result;
     result.debugSet(&pts[0]);
@@ -170,7 +170,7 @@ struct SkDCubicPair {
     return (const SkDCubic&)pts[0];
 #endif
   }
-  SkDCubic second() const noexcept {
+  SkDCubic second() const {
 #ifdef SK_DEBUG
     SkDCubic result;
     result.debugSet(&pts[3]);
@@ -185,14 +185,15 @@ struct SkDCubicPair {
 class SkTCubic : public SkTCurve {
  public:
   SkDCubic fCubic;
-  SkTCubic() noexcept = default;
 
-  SkTCubic(const SkDCubic& c) noexcept : fCubic(c) {}
+  SkTCubic() {}
+
+  SkTCubic(const SkDCubic& c) : fCubic(c) {}
 
   ~SkTCubic() override {}
 
-  const SkDPoint& operator[](int n) const noexcept override { return fCubic[n]; }
-  SkDPoint& operator[](int n) noexcept override { return fCubic[n]; }
+  const SkDPoint& operator[](int n) const override { return fCubic[n]; }
+  SkDPoint& operator[](int n) override { return fCubic[n]; }
 
   bool collapsed() const override { return fCubic.collapsed(); }
   bool controlsInside() const override { return fCubic.controlsInside(); }
@@ -216,17 +217,17 @@ class SkTCubic : public SkTCurve {
   }
 
   int intersectRay(SkIntersections* i, const SkDLine& line) const override;
-  bool IsConic() const noexcept override { return false; }
+  bool IsConic() const override { return false; }
   SkTCurve* make(SkArenaAlloc& heap) const override { return heap.make<SkTCubic>(); }
 
-  int maxIntersections() const noexcept override { return SkDCubic::kMaxIntersections; }
+  int maxIntersections() const override { return SkDCubic::kMaxIntersections; }
 
   void otherPts(int oddMan, const SkDPoint* endPt[2]) const override {
     fCubic.otherPts(oddMan, endPt);
   }
 
-  int pointCount() const noexcept override { return SkDCubic::kPointCount; }
-  int pointLast() const noexcept override { return SkDCubic::kPointLast; }
+  int pointCount() const override { return SkDCubic::kPointCount; }
+  int pointLast() const override { return SkDCubic::kPointLast; }
   SkDPoint ptAtT(double t) const override { return fCubic.ptAtT(t); }
   void setBounds(SkDRect*) const override;
 

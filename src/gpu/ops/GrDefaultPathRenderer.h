@@ -18,9 +18,9 @@
  */
 class GrDefaultPathRenderer : public GrPathRenderer {
  public:
-  GrDefaultPathRenderer() noexcept;
+  GrDefaultPathRenderer();
 
-  const char* name() const noexcept final { return "Default"; }
+  const char* name() const final { return "Default"; }
 
  private:
   StencilSupport onGetStencilSupport(const GrStyledShape&) const override;
@@ -35,7 +35,7 @@ class GrDefaultPathRenderer : public GrPathRenderer {
       GrRenderTargetContext*, GrPaint&&, GrAAType, const GrUserStencilSettings&, const GrClip*,
       const SkMatrix& viewMatrix, const GrStyledShape&, bool stencilOnly);
 
-  typedef GrPathRenderer INHERITED;
+  using INHERITED = GrPathRenderer;
 };
 
 #endif

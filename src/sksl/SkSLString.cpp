@@ -61,6 +61,18 @@ bool String::endsWith(const char suffix[]) const {
   return !strncmp(this->data() + this->size() - suffixLength, suffix, suffixLength);
 }
 
+bool String::consumeSuffix(const char suffix[]) {
+  size_t suffixLength = strlen(suffix);
+  if (this->length() < suffixLength) {
+    return false;
+  }
+  if (0 != strncmp(this->data() + this->size() - suffixLength, suffix, suffixLength)) {
+    return false;
+  }
+  this->resize(this->length() - suffixLength);
+  return true;
+}
+
 String String::operator+(const char* s) const {
   String result(*this);
   result.append(s);
@@ -99,17 +111,17 @@ String& String::operator+=(StringFragment s) {
   return *this;
 }
 
-bool String::operator==(const String& s) const noexcept {
+bool String::operator==(const String& s) const {
   return this->size() == s.size() && !memcmp(c_str(), s.c_str(), this->size());
 }
 
-bool String::operator!=(const String& s) const noexcept { return !(*this == s); }
+bool String::operator!=(const String& s) const { return !(*this == s); }
 
-bool String::operator==(const char* s) const noexcept {
+bool String::operator==(const char* s) const {
   return this->size() == strlen(s) && !memcmp(c_str(), s, this->size());
 }
 
-bool String::operator!=(const char* s) const noexcept { return !(*this == s); }
+bool String::operator!=(const char* s) const { return !(*this == s); }
 
 String operator+(const char* s1, const String& s2) {
   String result(s1);
@@ -117,31 +129,25 @@ String operator+(const char* s1, const String& s2) {
   return result;
 }
 
-String operator+(const char s1, const String& s2) {
-  String result(1, s1);
-  result.append(s2);
-  return result;
-}
+bool operator==(const char* s1, const String& s2) { return s2 == s1; }
 
-bool operator==(const char* s1, const String& s2) noexcept { return s2 == s1; }
+bool operator!=(const char* s1, const String& s2) { return s2 != s1; }
 
-bool operator!=(const char* s1, const String& s2) noexcept { return s2 != s1; }
-
-bool StringFragment::operator==(StringFragment s) const noexcept {
+bool StringFragment::operator==(StringFragment s) const {
   if (fLength != s.fLength) {
     return false;
   }
   return !memcmp(fChars, s.fChars, fLength);
 }
 
-bool StringFragment::operator!=(StringFragment s) const noexcept {
+bool StringFragment::operator!=(StringFragment s) const {
   if (fLength != s.fLength) {
     return true;
   }
   return memcmp(fChars, s.fChars, fLength);
 }
 
-bool StringFragment::operator==(const char* s) const noexcept {
+bool StringFragment::operator==(const char* s) const {
   for (size_t i = 0; i < fLength; ++i) {
     if (fChars[i] != s[i]) {
       return false;
@@ -150,7 +156,7 @@ bool StringFragment::operator==(const char* s) const noexcept {
   return 0 == s[fLength];
 }
 
-bool StringFragment::operator!=(const char* s) const noexcept {
+bool StringFragment::operator!=(const char* s) const {
   for (size_t i = 0; i < fLength; ++i) {
     if (fChars[i] != s[i]) {
       return true;
@@ -167,9 +173,9 @@ bool StringFragment::operator<(StringFragment other) const {
   return fLength < other.fLength;
 }
 
-bool operator==(const char* s1, StringFragment s2) noexcept { return s2 == s1; }
+bool operator==(const char* s1, StringFragment s2) { return s2 == s1; }
 
-bool operator!=(const char* s1, StringFragment s2) noexcept { return s2 != s1; }
+bool operator!=(const char* s1, StringFragment s2) { return s2 != s1; }
 
 String to_string(int32_t value) { return SkSL::String::printf("%d", value); }
 
@@ -209,7 +215,8 @@ String to_string(double value) {
 
 SKSL_INT stoi(const String& s) {
   char* p;
-  SkDEBUGCODE(errno = 0;) long result = strtoul(s.c_str(), &p, 0);
+  SkDEBUGCODE(errno = 0;)
+  long result = strtoul(s.c_str(), &p, 0);
   SkASSERT(*p == 0);
   SkASSERT(!errno);
   return result;
@@ -227,7 +234,8 @@ SKSL_FLOAT stod(const String& s) {
 
 long stol(const String& s) {
   char* p;
-  SkDEBUGCODE(errno = 0;) long result = strtoul(s.c_str(), &p, 0);
+  SkDEBUGCODE(errno = 0;)
+  long result = strtoul(s.c_str(), &p, 0);
   SkASSERT(*p == 0);
   SkASSERT(!errno);
   return result;

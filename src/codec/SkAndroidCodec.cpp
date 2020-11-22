@@ -71,7 +71,7 @@ SkAndroidCodec::SkAndroidCodec(SkCodec* codec, ExifOrientationBehavior orientati
       fOrientationBehavior(orientationBehavior),
       fCodec(codec) {}
 
-SkAndroidCodec::~SkAndroidCodec() = default;
+SkAndroidCodec::~SkAndroidCodec() {}
 
 std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromStream(
     std::unique_ptr<SkStream> stream, SkPngChunkReader* chunkReader) {

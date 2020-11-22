@@ -65,7 +65,7 @@ class GrStencilMaskHelper : SkNoncopyable {
   GrStencilClip fClip;
   int fNumFPs;
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 
 #endif  // GrStencilMaskHelper_DEFINED

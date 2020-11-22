@@ -22,15 +22,15 @@ class GrShaderCaps;
  */
 class GrProgramDesc {
  public:
-  GrProgramDesc(const GrProgramDesc& other) noexcept : fKey(other.fKey) {}  // for SkLRUCache
+  GrProgramDesc(const GrProgramDesc& other) : fKey(other.fKey) {}  // for SkLRUCache
 
-  bool isValid() const noexcept { return !fKey.empty(); }
+  bool isValid() const { return !fKey.empty(); }
 
   // Returns this as a uint32_t array to be used as a key in the program cache.
-  const uint32_t* asKey() const noexcept { return reinterpret_cast<const uint32_t*>(fKey.begin()); }
+  const uint32_t* asKey() const { return reinterpret_cast<const uint32_t*>(fKey.begin()); }
 
   // Gets the number of bytes in asKey(). It will be a 4-byte aligned value.
-  uint32_t keyLength() const noexcept {
+  uint32_t keyLength() const {
     SkASSERT(0 == (fKey.count() % 4));
     return fKey.count();
   }
@@ -74,7 +74,7 @@ class GrProgramDesc {
   friend class GrGLGpu;  // for ProgramCache to access BuildFromData
 
   // Creates an uninitialized key that must be populated by Build
-  GrProgramDesc() noexcept = default;
+  GrProgramDesc() {}
 
   /**
    * Builds a program descriptor.
@@ -121,7 +121,7 @@ class GrProgramDesc {
   }
 
   template <typename T, size_t OFFSET>
-  const T* atOffset() const noexcept {
+  const T* atOffset() const {
     return reinterpret_cast<const T*>(reinterpret_cast<intptr_t>(fKey.begin()) + OFFSET);
   }
 
@@ -143,7 +143,7 @@ class GrProgramDesc {
         kHeaderOffset + kHeaderSize + kMaxPreallocProcessors * sizeof(uint32_t) * kIntsPerProcessor,
   };
 
-  SkSTArray<kPreAllocSize, uint8_t, true>& key() noexcept { return fKey; }
+  SkSTArray<kPreAllocSize, uint8_t, true>& key() { return fKey; }
 
  private:
   SkSTArray<kPreAllocSize, uint8_t, true> fKey;

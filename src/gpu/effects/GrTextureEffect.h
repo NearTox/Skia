@@ -72,23 +72,22 @@ class GrTextureEffect : public GrFragmentProcessor {
       const GrCaps& caps, const float border[4] = kDefaultBorder);
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
+  bool usesExplicitReturn() const override { return true; }
 
-  const char* name() const noexcept override { return "TextureEffect"; }
+  const char* name() const override { return "TextureEffect"; }
 
-  GrSamplerState samplerState() const noexcept { return fSamplerState; }
+  GrSamplerState samplerState() const { return fSamplerState; }
 
-  GrTexture* texture() const noexcept { return fView.asTextureProxy()->peekTexture(); }
+  GrTexture* texture() const { return fView.asTextureProxy()->peekTexture(); }
 
-  const GrSurfaceProxyView& view() const noexcept { return fView; }
+  const GrSurfaceProxyView& view() const { return fView; }
 
   class Impl : public GrGLSLFragmentProcessor {
    public:
     void emitCode(EmitArgs&) override;
     void onSetData(const GrGLSLProgramDataManager&, const GrFragmentProcessor&) override;
 
-    void setSamplerHandle(GrGLSLShaderBuilder::SamplerHandle handle) noexcept {
-      fSamplerHandle = handle;
-    }
+    void setSamplerHandle(GrGLSLShaderBuilder::SamplerHandle handle) { fSamplerHandle = handle; }
 
    private:
     UniformHandle fSubsetUni;
@@ -118,7 +117,7 @@ class GrTextureEffect : public GrFragmentProcessor {
   };
   static ShaderMode GetShaderMode(
       GrSamplerState::WrapMode, GrSamplerState::Filter, GrSamplerState::MipmapMode);
-  static bool ShaderModeIsClampToBorder(ShaderMode) noexcept;
+  static bool ShaderModeIsClampToBorder(ShaderMode);
 
   GrSurfaceProxyView fView;
   GrSamplerState fSamplerState;
@@ -137,14 +136,14 @@ class GrTextureEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
-  bool hasClampToBorderShaderMode() const noexcept {
+  bool hasClampToBorderShaderMode() const {
     return ShaderModeIsClampToBorder(fShaderModes[0]) || ShaderModeIsClampToBorder(fShaderModes[1]);
   }
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 #endif

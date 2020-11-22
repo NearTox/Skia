@@ -25,13 +25,13 @@ class SkJSONWriter;
  */
 class SK_API GrGLExtensions {
  public:
-  GrGLExtensions() noexcept = default;
+  GrGLExtensions() {}
 
   GrGLExtensions(const GrGLExtensions&);
 
   GrGLExtensions& operator=(const GrGLExtensions&);
 
-  void swap(GrGLExtensions* that) noexcept {
+  void swap(GrGLExtensions* that) {
     using std::swap;
     swap(fStrings, that->fStrings);
     swap(fInitialized, that->fInitialized);
@@ -47,7 +47,7 @@ class SK_API GrGLExtensions {
       GrGLFunction<GrGLGetStringiFn> getStringi, GrGLFunction<GrGLGetIntegervFn> getIntegerv,
       GrGLFunction<GrEGLQueryStringFn> queryString = nullptr, GrEGLDisplay eglDisplay = nullptr);
 
-  bool isInitialized() const noexcept { return fInitialized; }
+  bool isInitialized() const { return fInitialized; }
 
   /**
    * Queries whether an extension is present. This will fail if init() has not been called.

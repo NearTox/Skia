@@ -88,7 +88,8 @@ class BezierTestOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     auto gp = this->makeGP(*caps, arena);
     if (!gp) {
       return;
@@ -98,7 +99,7 @@ class BezierTestOp : public GrMeshDrawOp {
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
-        GrPrimitiveType::kTriangles, flags);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers, flags);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) final {
@@ -127,7 +128,7 @@ class BezierTestOp : public GrMeshDrawOp {
   GrProcessorSet fProcessorSet;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 /**
@@ -188,7 +189,7 @@ class BezierConicTestOp : public BezierTestOp {
   static constexpr int kVertsPerCubic = 4;
   static constexpr int kIndicesPerCubic = 6;
 
-  typedef BezierTestOp INHERITED;
+  using INHERITED = BezierTestOp;
 };
 
 /**
@@ -321,7 +322,7 @@ class BezierConicEffects : public GpuGM {
     return conicCnt;
   }
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -378,7 +379,7 @@ class BezierQuadTestOp : public BezierTestOp {
   static constexpr int kVertsPerCubic = 4;
   static constexpr int kIndicesPerCubic = 6;
 
-  typedef BezierTestOp INHERITED;
+  using INHERITED = BezierTestOp;
 };
 
 /**
@@ -466,7 +467,7 @@ class BezierQuadEffects : public GpuGM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new BezierConicEffects;)

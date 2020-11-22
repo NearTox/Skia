@@ -58,7 +58,7 @@ class MathBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class MathBenchU32 : public MathBench {
@@ -76,7 +76,7 @@ class MathBenchU32 : public MathBench {
   }
 
  private:
-  typedef MathBench INHERITED;
+  using INHERITED = MathBench;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -93,7 +93,7 @@ class NoOpMathBench : public MathBench {
   }
 
  private:
-  typedef MathBench INHERITED;
+  using INHERITED = MathBench;
 };
 
 class SkRSqrtMathBench : public MathBench {
@@ -108,7 +108,7 @@ class SkRSqrtMathBench : public MathBench {
   }
 
  private:
-  typedef MathBench INHERITED;
+  using INHERITED = MathBench;
 };
 
 class SlowISqrtMathBench : public MathBench {
@@ -123,7 +123,7 @@ class SlowISqrtMathBench : public MathBench {
   }
 
  private:
-  typedef MathBench INHERITED;
+  using INHERITED = MathBench;
 };
 
 class FastISqrtMathBench : public MathBench {
@@ -138,7 +138,7 @@ class FastISqrtMathBench : public MathBench {
   }
 
  private:
-  typedef MathBench INHERITED;
+  using INHERITED = MathBench;
 };
 
 static inline uint32_t QMul64(uint32_t value, U8CPU alpha) {
@@ -164,7 +164,7 @@ class QMul64Bench : public MathBenchU32 {
   }
 
  private:
-  typedef MathBenchU32 INHERITED;
+  using INHERITED = MathBenchU32;
 };
 
 class QMul32Bench : public MathBenchU32 {
@@ -180,7 +180,7 @@ class QMul32Bench : public MathBenchU32 {
   }
 
  private:
-  typedef MathBenchU32 INHERITED;
+  using INHERITED = MathBenchU32;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -311,7 +311,7 @@ class IsFiniteBench : public Benchmark {
   IsFiniteProc fProc;
   const char* fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class FloorBench : public Benchmark {
@@ -368,7 +368,7 @@ class FloorBench : public Benchmark {
  private:
   const char* fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class CLZBench : public Benchmark {
@@ -423,7 +423,7 @@ class CLZBench : public Benchmark {
  private:
   const char* fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class CTZBench : public Benchmark {
@@ -478,7 +478,7 @@ class CTZBench : public Benchmark {
  private:
   const char* fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -521,7 +521,7 @@ class NormalizeBench : public Benchmark {
  private:
   const char* fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -560,7 +560,7 @@ class FixedMathBench : public Benchmark {
   const char* onGetName() override { return "float_to_fixed"; }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -684,7 +684,7 @@ class Floor2IntBench : public Benchmark {
  private:
   const char* fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 DEF_BENCH(return new Floor2IntBench(false);)
 DEF_BENCH(return new Floor2IntBench(true);)

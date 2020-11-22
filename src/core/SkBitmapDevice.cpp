@@ -35,9 +35,9 @@ struct Bounder {
     }
   }
 
-  bool hasBounds() const noexcept { return fHasBounds; }
-  const SkRect* bounds() const noexcept { return fHasBounds ? &fBounds : nullptr; }
-  operator const SkRect*() const noexcept { return this->bounds(); }
+  bool hasBounds() const { return fHasBounds; }
+  const SkRect* bounds() const { return fHasBounds ? &fBounds : nullptr; }
+  operator const SkRect*() const { return this->bounds(); }
 };
 
 class SkDrawTiler {
@@ -61,7 +61,7 @@ class SkDrawTiler {
   bool fDone, fNeedsTiling;
 
  public:
-  static bool NeedsTiling(SkBitmapDevice* dev) noexcept {
+  static bool NeedsTiling(SkBitmapDevice* dev) {
     return dev->width() > kMaxDim || dev->height() > kMaxDim;
   }
 
@@ -120,7 +120,7 @@ class SkDrawTiler {
     }
   }
 
-  bool needsTiling() const noexcept { return fNeedsTiling; }
+  bool needsTiling() const { return fNeedsTiling; }
 
   const SkDraw* next() {
     if (fDone) {
@@ -195,7 +195,7 @@ class SkBitmapDevice::BDDraw : public SkDraw {
   }
 };
 
-static bool valid_for_bitmap_device(const SkImageInfo& info, SkAlphaType* newAlphaType) noexcept {
+static bool valid_for_bitmap_device(const SkImageInfo& info, SkAlphaType* newAlphaType) {
   if (info.width() < 0 || info.height() < 0 || kUnknown_SkColorType == info.colorType()) {
     return false;
   }
@@ -358,21 +358,16 @@ void SkBitmapDevice::drawRect(const SkRect& r, const SkPaint& paint) {
 }
 
 void SkBitmapDevice::drawOval(const SkRect& oval, const SkPaint& paint) {
-  SkPath path;
-  path.addOval(oval);
   // call the VIRTUAL version, so any subclasses who do handle drawPath aren't
   // required to override drawOval.
-  this->drawPath(path, paint, true);
+  this->drawPath(SkPath::Oval(oval), paint, true);
 }
 
 void SkBitmapDevice::drawRRect(const SkRRect& rrect, const SkPaint& paint) {
 #ifdef SK_IGNORE_BLURRED_RRECT_OPT
-  SkPath path;
-
-  path.addRRect(rrect);
   // call the VIRTUAL version, so any subclasses who do handle drawPath aren't
   // required to override drawRRect.
-  this->drawPath(path, paint, true);
+  this->drawPath(SkPath::RRect(rrect), paint, true);
 #else
   LOOP_TILER(drawRRect(rrect, paint), Bounder(rrect.getBounds(), paint))
 #endif
@@ -423,7 +418,9 @@ void SkBitmapDevice::drawImageRect(
   SkASSERT(dst.isSorted());
 
   SkBitmap bitmap;
-  if (!as_IB(image)->getROPixels(&bitmap)) {
+  // TODO: Elevate direct context requirement to public API and remove cheat.
+  auto dContext = as_IB(image)->directContext();
+  if (!as_IB(image)->getROPixels(dContext, &bitmap)) {
     return;
   }
 
@@ -581,36 +578,13 @@ void SkBitmapDevice::drawAtlas(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkBitmapDevice::drawSpecial(SkSpecialImage* src, int x, int y, const SkPaint& origPaint) {
+void SkBitmapDevice::drawSpecial(SkSpecialImage* src, int x, int y, const SkPaint& paint) {
   SkASSERT(!src->isTextureBacked());
-  SkASSERT(!origPaint.getMaskFilter());
-
-  sk_sp<SkSpecialImage> filteredImage;
-  SkTCopyOnFirstWrite<SkPaint> paint(origPaint);
-
-  if (SkImageFilter* filter = paint->getImageFilter()) {
-    SkIPoint offset = SkIPoint::Make(0, 0);
-    const SkMatrix matrix = SkMatrix::Concat(
-        SkMatrix::Translate(SkIntToScalar(-x), SkIntToScalar(-y)), this->localToDevice());
-    const SkIRect clipBounds = fRCStack.rc().getBounds().makeOffset(-x, -y);
-    sk_sp<SkImageFilterCache> cache(this->getImageFilterCache());
-    SkImageFilter_Base::Context ctx(
-        matrix, clipBounds, cache.get(), fBitmap.colorType(), fBitmap.colorSpace(), src);
-
-    filteredImage = as_IFB(filter)->filterImage(ctx).imageAndOffset(&offset);
-    if (!filteredImage) {
-      return;
-    }
-
-    src = filteredImage.get();
-    paint.writable()->setImageFilter(nullptr);
-    x += offset.x();
-    y += offset.y();
-  }
+  SkASSERT(!paint.getMaskFilter() && !paint.getImageFilter());
 
   SkBitmap resultBM;
   if (src->getROPixels(&resultBM)) {
-    BDDraw(this).drawSprite(resultBM, x, y, *paint);
+    BDDraw(this).drawSprite(resultBM, x, y, paint);
   }
 }
 

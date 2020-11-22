@@ -35,7 +35,7 @@ class LatticeGP : public GrGeometryProcessor {
     return arena->make<LatticeGP>(view, std::move(csxf), filter, wideColor);
   }
 
-  const char* name() const noexcept override { return "LatticeGP"; }
+  const char* name() const override { return "LatticeGP"; }
 
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     b->add32(GrColorSpaceXform::XformKey(fColorSpaceXform.get()));
@@ -97,7 +97,7 @@ class LatticeGP : public GrGeometryProcessor {
     this->setVertexAttributes(&fInPosition, 4);
   }
 
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fSampler; }
+  const TextureSampler& onTextureSampler(int) const override { return fSampler; }
 
   Attribute fInPosition;
   Attribute fInTextureCoords;
@@ -107,7 +107,7 @@ class LatticeGP : public GrGeometryProcessor {
   sk_sp<GrColorSpaceXform> fColorSpaceXform;
   TextureSampler fSampler;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 class NonAALatticeOp final : public GrMeshDrawOp {
@@ -147,7 +147,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     this->setTransformedBounds(patch.fDst, viewMatrix, HasAABloat::kNo, IsHairline::kNo);
   }
 
-  const char* name() const noexcept override { return "NonAALatticeOp"; }
+  const char* name() const override { return "NonAALatticeOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     func(fView.proxy(), GrMipmapped::kNo);
@@ -180,7 +180,8 @@ class NonAALatticeOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     auto gp = LatticeGP::Make(arena, fView, fColorSpaceXform, fFilter, fWideColor);
     if (!gp) {
       return;
@@ -188,8 +189,8 @@ class NonAALatticeOp final : public GrMeshDrawOp {
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        fHelper.detachProcessorSet(), GrPrimitiveType::kTriangles, fHelper.pipelineFlags(),
-        &GrUserStencilSettings::kUnused);
+        fHelper.detachProcessorSet(), GrPrimitiveType::kTriangles, renderPassXferBarriers,
+        fHelper.pipelineFlags(), &GrUserStencilSettings::kUnused);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -338,7 +339,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace

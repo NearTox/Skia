@@ -37,8 +37,8 @@ class GrImageContextPriv {
   /** This is only useful for debug purposes */
   SkDEBUGCODE(GrSingleOwner* singleOwner() const { return fContext->singleOwner(); })
 
-      private : explicit GrImageContextPriv(GrImageContext* context)
-      : fContext(context) {}
+ private:
+  explicit GrImageContextPriv(GrImageContext* context) : fContext(context) {}
   GrImageContextPriv(const GrImageContextPriv&) = delete;
   GrImageContextPriv& operator=(const GrImageContextPriv&) = delete;
 

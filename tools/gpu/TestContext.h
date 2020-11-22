@@ -113,7 +113,7 @@ class TestContext : public SkNoncopyable {
   sk_sp<FlushFinishTracker> fFinishTrackers[kMaxFrameLag - 1];
   int fCurrentFlushIdx = 0;
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 }  // namespace sk_gpu_test
 #endif

@@ -15,6 +15,8 @@
 
 #include <cctype>
 
+#if defined(SKSL_STANDALONE) || GR_TEST_UTILS
+
 constexpr const char* kFragmentProcessorHeader =
     R"(
 /**************************************************************************************************
@@ -77,9 +79,11 @@ class HCodeGenerator : public CodeGenerator {
   String fFullName;
   SectionAndParameterHelper fSectionAndParameterHelper;
 
-  typedef CodeGenerator INHERITED;
+  using INHERITED = CodeGenerator;
 };
 
 }  // namespace SkSL
 
-#endif
+#endif  // defined(SKSL_STANDALONE) || GR_TEST_UTILS
+
+#endif  // SKSL_HCODEGENERATOR

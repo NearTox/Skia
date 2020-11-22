@@ -25,10 +25,9 @@ enum SampleFlag {
   kPersp_Matrix_Flag = 0b10000,  // GrFP::sampleUsage()::fHasPerspective
 };
 
-GrPrimitiveProcessor::GrPrimitiveProcessor(ClassID classID) noexcept : GrProcessor(classID) {}
+GrPrimitiveProcessor::GrPrimitiveProcessor(ClassID classID) : GrProcessor(classID) {}
 
-const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler(
-    int i) const noexcept {
+const GrPrimitiveProcessor::TextureSampler& GrPrimitiveProcessor::textureSampler(int i) const {
   SkASSERT(i >= 0 && i < this->numTextureSamplers());
   return this->onTextureSampler(i);
 }
@@ -56,7 +55,7 @@ uint32_t GrPrimitiveProcessor::computeCoordTransformsKey(const GrFragmentProcess
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 static inline GrSamplerState::Filter clamp_filter(
-    GrTextureType type, GrSamplerState::Filter requestedFilter) noexcept {
+    GrTextureType type, GrSamplerState::Filter requestedFilter) {
   if (GrTextureTypeHasRestrictedSampling(type)) {
     return std::min(requestedFilter, GrSamplerState::Filter::kLinear);
   }

@@ -29,7 +29,7 @@ class SkString;
 */
 class SkPDFFont {
  public:
-  SkPDFFont() noexcept = default;
+  SkPDFFont() {}
   ~SkPDFFont();
   SkPDFFont(SkPDFFont&&);
   SkPDFFont& operator=(SkPDFFont&&);

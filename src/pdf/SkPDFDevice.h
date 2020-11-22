@@ -175,7 +175,7 @@ class SkPDFDevice final : public SkClipStackDevice {
 
   void reset();
 
-  typedef SkClipStackDevice INHERITED;
+  using INHERITED = SkClipStackDevice;
 };
 
 #endif

@@ -101,7 +101,7 @@ class SK_API SkFontConfigInterface : public SkRefCnt {
    */
   static SkFontConfigInterface* GetSingletonDirectInterface();
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

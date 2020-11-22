@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLUnrolledBinaryGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLUnrolledBinaryGradientColorizer() noexcept = default;
+  GrGLSLUnrolledBinaryGradientColorizer() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrUnrolledBinaryGradientColorizer& _outer =
@@ -275,7 +275,7 @@ void GrUnrolledBinaryGradientColorizer::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
   b->add32((uint32_t)intervalCount);
 }
-bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
   const GrUnrolledBinaryGradientColorizer& that = other.cast<GrUnrolledBinaryGradientColorizer>();
   (void)that;
   if (intervalCount != that.intervalCount) return false;
@@ -299,6 +299,7 @@ bool GrUnrolledBinaryGradientColorizer::onIsEqual(const GrFragmentProcessor& oth
   if (thresholds9_13 != that.thresholds9_13) return false;
   return true;
 }
+bool GrUnrolledBinaryGradientColorizer::usesExplicitReturn() const { return false; }
 GrUnrolledBinaryGradientColorizer::GrUnrolledBinaryGradientColorizer(
     const GrUnrolledBinaryGradientColorizer& src)
     : INHERITED(kGrUnrolledBinaryGradientColorizer_ClassID, src.optimizationFlags()),

@@ -47,7 +47,7 @@ class MaskGenerator final : public SkImageGenerator {
   }
 
  private:
-  typedef SkImageGenerator INHERITED;
+  using INHERITED = SkImageGenerator;
 };
 
 using MakerT = sk_sp<SkImage> (*)(SkCanvas*, const SkImageInfo&);

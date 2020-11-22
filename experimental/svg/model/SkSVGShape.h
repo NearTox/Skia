@@ -29,7 +29,7 @@ class SkSVGShape : public SkSVGTransformableNode {
       SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPathFillType) const = 0;
 
  private:
-  typedef SkSVGTransformableNode INHERITED;
+  using INHERITED = SkSVGTransformableNode;
 };
 
 #endif  // SkSVGShape_DEFINED

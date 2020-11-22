@@ -28,7 +28,7 @@ class GrDrawAtlasPathOp : public GrDrawOp {
     this->setBounds(SkRect::Make(devIBounds), HasAABloat::kYes, IsHairline::kNo);
   }
 
-  const char* name() const noexcept override { return "GrDrawAtlasPathOp"; }
+  const char* name() const override { return "GrDrawAtlasPathOp"; }
   FixedFunctionFlags fixedFunctionFlags() const override {
     return (fEnableHWAA) ? FixedFunctionFlags::kUsesHWAA : FixedFunctionFlags::kNone;
   }
@@ -45,7 +45,7 @@ class GrDrawAtlasPathOp : public GrDrawOp {
  private:
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override;
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
 
   struct Instance {
     constexpr static size_t Stride(bool usesLocalCoords) {

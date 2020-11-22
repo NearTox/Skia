@@ -93,7 +93,7 @@ class ImageCycle : public Benchmark {
   int fImageCnt;
   int fRepeatCnt;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new ImageCycle(5, 10));

@@ -65,6 +65,8 @@ GrVkCaps::GrVkCaps(
 
   fDynamicStateArrayGeometryProcessorTextureSupport = true;
 
+  fTextureBarrierSupport = true;
+
   fShaderCaps.reset(new GrShaderCaps(contextOptions));
 
   this->init(
@@ -366,6 +368,16 @@ void GrVkCaps::init(
 
   fMaxInputAttachmentDescriptors = properties.limits.maxDescriptorSetInputAttachments;
 
+  // On mobile GPUs we avoid using cached cpu memory. The memory is shared between the gpu and cpu
+  // and there probably isn't any win keeping a cached copy local on the CPU. We have seen
+  // examples on ARM where coherent non-cached memory writes are faster on the cpu than using
+  // cached non-coherent memory. Additionally we don't do a lot of read and writes to cpu memory
+  // in between GPU usues. Our uses are mostly write on CPU then read on GPU.
+  if (kQualcomm_VkVendor == properties.vendorID || kARM_VkVendor == properties.vendorID ||
+      kImagination_VkVendor == properties.vendorID) {
+    fPreferCachedCpuMemory = false;
+  }
+
   this->initGrCaps(vkInterface, physDev, properties, memoryProperties, features, extensions);
   this->initShaderCaps(properties, features);
 
@@ -395,6 +407,13 @@ void GrVkCaps::init(
     // (At least in our current round rect op.)
     fPreferTrianglesOverSampleMask = true;
   }
+
+#ifdef SK_BUILD_FOR_UNIX
+  if (kNvidia_VkVendor == properties.vendorID) {
+    // On nvidia linux we see a big perf regression when not using dedicated image allocations.
+    fShouldAlwaysUseDedicatedImageMemory = true;
+  }
+#endif
 
   this->initFormatTable(vkInterface, physDev, properties);
   this->initStencilFormat(vkInterface, physDev);
@@ -442,7 +461,7 @@ void GrVkCaps::applyDriverCorrectnessWorkarounds(const VkPhysicalDevicePropertie
   }
 
   // On Mali galaxy s7 we see lots of rendering issues when we suballocate VkImages.
-  if (kARM_VkVendor == properties.vendorID) {
+  if (kARM_VkVendor == properties.vendorID && androidAPIVersion <= 28) {
     fShouldAlwaysUseDedicatedImageMemory = true;
   }
 
@@ -492,6 +511,12 @@ void GrVkCaps::applyDriverCorrectnessWorkarounds(const VkPhysicalDevicePropertie
   // AMD advertises support for MAX_UINT vertex input attributes, but in reality only supports 32.
   if (kAMD_VkVendor == properties.vendorID) {
     fMaxVertexAttributes = std::min(fMaxVertexAttributes, 32);
+  }
+
+  // Adreno devices fail when trying to read the dest using an input attachment and texture
+  // barriers.
+  if (kQualcomm_VkVendor == properties.vendorID) {
+    fTextureBarrierSupport = false;
   }
 
   ////////////////////////////////////////////////////////////////////////////
@@ -663,7 +688,7 @@ void GrVkCaps::initStencilFormat(const GrVkInterface* interface, VkPhysicalDevic
   }
 }
 
-static bool format_is_srgb(VkFormat format) noexcept {
+static bool format_is_srgb(VkFormat format) {
   SkASSERT(GrVkFormatIsSupported(format));
 
   switch (format) {
@@ -1228,6 +1253,9 @@ void GrVkCaps::FormatInfo::InitFormatFlags(VkFormatFeatureFlags vkFlags, uint16_
       *flags = *flags | kRenderable_Flag;
     }
   }
+  // TODO: For Vk w/ VK_KHR_maintenance1 extension support, check
+  //  VK_FORMAT_FEATURE_TRANSFER_[SRC|DST]_BIT_KHR explicitly to set copy flags
+  //  Can do similar check for VK_KHR_sampler_ycbcr_conversion added bits
 
   if (SkToBool(VK_FORMAT_FEATURE_BLIT_SRC_BIT & vkFlags)) {
     *flags = *flags | kBlitSrc_Flag;
@@ -1293,7 +1321,7 @@ void GrVkCaps::FormatInfo::init(
 // For many checks in caps, we need to know whether the GrBackendFormat is external or not. If it is
 // external the VkFormat will be VK_NULL_HANDLE which is not handled by our various format
 // capability checks.
-static bool backend_format_is_external(const GrBackendFormat& format) noexcept {
+static bool backend_format_is_external(const GrBackendFormat& format) {
   const GrVkYcbcrConversionInfo* ycbcrInfo = format.getVkYcbcrConversionInfo();
   SkASSERT(ycbcrInfo);
 
@@ -1309,7 +1337,7 @@ static bool backend_format_is_external(const GrBackendFormat& format) noexcept {
   return false;
 }
 
-bool GrVkCaps::isFormatSRGB(const GrBackendFormat& format) const noexcept {
+bool GrVkCaps::isFormatSRGB(const GrBackendFormat& format) const {
   VkFormat vkFormat;
   if (!format.asVkFormat(&vkFormat)) {
     return false;
@@ -1594,6 +1622,13 @@ GrSwizzle GrVkCaps::getWriteSwizzle(const GrBackendFormat& format, GrColorType c
   return {};
 }
 
+GrDstSampleType GrVkCaps::onGetDstSampleTypeForProxy(const GrRenderTargetProxy* rt) const {
+  if (rt->supportsVkInputAttachment()) {
+    return GrDstSampleType::kAsInputAttachment;
+  }
+  return GrDstSampleType::kAsTextureCopy;
+}
+
 uint64_t GrVkCaps::computeFormatKey(const GrBackendFormat& format) const {
   VkFormat vkFormat;
   SkAssertResult(format.asVkFormat(&vkFormat));
@@ -1691,17 +1726,20 @@ GrProgramDesc GrVkCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& progra
   // GrVkPipelineStateBuilder.cpp).
   b.add32(GrVkGpu::kShader_PersistentCacheKeyType);
 
-  // Currently we only support blend barriers with the advanced blend function. Thus we pass in
-  // nullptr for the texture.
-  auto barrierType = programInfo.pipeline().xferBarrierType(nullptr, *this);
-  bool usesXferBarriers = barrierType == kBlend_GrXferBarrierType;
+  GrVkRenderPass::SelfDependencyFlags selfDepFlags = GrVkRenderPass::SelfDependencyFlags::kNone;
+  if (programInfo.renderPassBarriers() & GrXferBarrierFlags::kBlend) {
+    selfDepFlags |= GrVkRenderPass::SelfDependencyFlags::kForNonCoherentAdvBlend;
+  }
+  if (programInfo.renderPassBarriers() & GrXferBarrierFlags::kTexture) {
+    selfDepFlags |= GrVkRenderPass::SelfDependencyFlags::kForInputAttachment;
+  }
 
   if (rt) {
     GrVkRenderTarget* vkRT = (GrVkRenderTarget*)rt;
 
     bool needsStencil = programInfo.numStencilSamples() || programInfo.isStencilEnabled();
     // TODO: support failure in getSimpleRenderPass
-    const GrVkRenderPass* rp = vkRT->getSimpleRenderPass(needsStencil, usesXferBarriers);
+    const GrVkRenderPass* rp = vkRT->getSimpleRenderPass(needsStencil, selfDepFlags);
     SkASSERT(rp);
     rp->genKey(&b);
 
@@ -1713,7 +1751,7 @@ GrProgramDesc GrVkCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& progra
       GrVkRenderPass::AttachmentFlags attachmentFlags;
       GrVkRenderTarget::ReconstructAttachmentsDescriptor(
           *this, programInfo, &attachmentsDescriptor, &attachmentFlags);
-      SkASSERT(rp->isCompatible(attachmentsDescriptor, attachmentFlags, usesXferBarriers));
+      SkASSERT(rp->isCompatible(attachmentsDescriptor, attachmentFlags, selfDepFlags));
     }
 #endif
   } else {
@@ -1725,7 +1763,7 @@ GrProgramDesc GrVkCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& progra
     // kExternal_AttachmentFlag is only set for wrapped secondary command buffers - which
     // will always go through the above 'rt' path (i.e., we can always pass 0 as the final
     // parameter to GenKey).
-    GrVkRenderPass::GenKey(&b, attachmentFlags, attachmentsDescriptor, usesXferBarriers, 0);
+    GrVkRenderPass::GenKey(&b, attachmentFlags, attachmentsDescriptor, selfDepFlags, 0);
   }
 
   GrStencilSettings stencil = programInfo.nonGLStencilSettings();
@@ -1744,6 +1782,11 @@ GrProgramDesc GrVkCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& progra
   }
 
   return desc;
+}
+
+GrInternalSurfaceFlags GrVkCaps::getExtraSurfaceFlagsForDeferredRT() const {
+  // We always create vulkan RT with the input attachment flag;
+  return GrInternalSurfaceFlags::kVkRTSupportsInputAttachment;
 }
 
 #if GR_TEST_UTILS

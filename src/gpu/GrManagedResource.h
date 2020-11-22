@@ -74,7 +74,7 @@ class GrManagedResource : SkNoncopyable {
 
   /** Default construct, initializing the reference count to 1.
    */
-  constexpr GrManagedResource() noexcept : fRefCnt(1) {
+  GrManagedResource() : fRefCnt(1) {
 #ifdef SK_TRACE_MANAGED_RESOURCES
     fKey = fKeyCounter.fetch_add(+1, std::memory_order_relaxed);
     GetTrace()->add(this);
@@ -99,7 +99,7 @@ class GrManagedResource : SkNoncopyable {
   /** May return true if the caller is the only owner.
    *  Ensures that all previous owner's actions are complete.
    */
-  bool unique() const noexcept {
+  bool unique() const {
     // The acquire barrier is only really needed if we return true.  It
     // prevents code conditioned on the result of unique() from running
     // until previous owners are all totally done calling unref().
@@ -109,9 +109,10 @@ class GrManagedResource : SkNoncopyable {
   /** Increment the reference count.
       Must be balanced by a call to unref() or unrefAndFreeResources().
    */
-  void ref() const noexcept {
+  void ref() const {
     // No barrier required.
-    SkDEBUGCODE(int newRefCount =) fRefCnt.fetch_add(+1, std::memory_order_relaxed);
+    SkDEBUGCODE(int newRefCount =)
+    fRefCnt.fetch_add(+1, std::memory_order_relaxed);
     SkASSERT(newRefCount >= 1);
   }
 
@@ -189,7 +190,7 @@ class GrManagedResource : SkNoncopyable {
   uint32_t fKey;
 #endif
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 
 // This subclass allows for recycling
@@ -218,11 +219,11 @@ class GrRecycledResource : public GrManagedResource {
 */
 class GrTextureResource : public GrManagedResource {
  public:
-  GrTextureResource() noexcept = default;
+  GrTextureResource() {}
 
   ~GrTextureResource() override { SkASSERT(!fReleaseHelper); }
 
-  void setRelease(sk_sp<GrRefCntedCallback> releaseHelper) noexcept {
+  void setRelease(sk_sp<GrRefCntedCallback> releaseHelper) {
     fReleaseHelper = std::move(releaseHelper);
   }
 
@@ -233,11 +234,11 @@ class GrTextureResource : public GrManagedResource {
    * GrTextureResource calls them when the last command buffer reference goes away and the
    * GrTexture is purgeable.
    */
-  void addIdleProc(GrTexture*, sk_sp<GrRefCntedCallback>) const noexcept;
-  int idleProcCnt() const noexcept;
-  sk_sp<GrRefCntedCallback> idleProc(int) const noexcept;
-  void resetIdleProcs() const noexcept;
-  void removeOwningTexture() const noexcept;
+  void addIdleProc(GrTexture*, sk_sp<GrRefCntedCallback>) const;
+  int idleProcCnt() const;
+  sk_sp<GrRefCntedCallback> idleProc(int) const;
+  void resetIdleProcs() const;
+  void removeOwningTexture() const;
 
   /**
    * We track how many outstanding references this GrTextureResource has in command buffers and
@@ -245,13 +246,13 @@ class GrTextureResource : public GrManagedResource {
    */
   void notifyQueuedForWorkOnGpu() const override;
   void notifyFinishedWithWorkOnGpu() const override;
-  bool isQueuedForWorkOnGpu() const noexcept { return fNumOwners > 0; }
+  bool isQueuedForWorkOnGpu() const { return fNumOwners > 0; }
 
  protected:
   mutable sk_sp<GrRefCntedCallback> fReleaseHelper;
   mutable GrTexture* fOwningTexture = nullptr;
 
-  void invokeReleaseProc() const noexcept {
+  void invokeReleaseProc() const {
     if (fReleaseHelper) {
       // Depending on the ref count of fReleaseHelper this may or may not actually trigger
       // the ReleaseProc to be called.
@@ -263,7 +264,7 @@ class GrTextureResource : public GrManagedResource {
   mutable int fNumOwners = 0;
   mutable SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
 
-  typedef GrManagedResource INHERITED;
+  using INHERITED = GrManagedResource;
 };
 
 #endif

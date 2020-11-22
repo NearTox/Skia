@@ -34,7 +34,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
       const Helper::MakeArgs&, const SkPMColor4f& color, const SkMatrix& viewMatrix, GrAAType,
       int spriteCount, const SkRSXform* xforms, const SkRect* rects, const SkColor* colors);
 
-  const char* name() const noexcept override { return "DrawAtlasOp"; }
+  const char* name() const override { return "DrawAtlasOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -54,7 +54,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override;
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
 
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
@@ -84,7 +84,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 static GrGeometryProcessor* make_gp(
@@ -193,13 +193,14 @@ SkString DrawAtlasOp::onDumpInfo() const {
 
 void DrawAtlasOp::onCreateProgramInfo(
     const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+    GrXferBarrierFlags renderPassXferBarriers) {
   // Setup geometry processor
   GrGeometryProcessor* gp = make_gp(arena, this->hasColors(), this->color(), this->viewMatrix());
 
   fProgramInfo = fHelper.createProgramInfo(
-      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-      GrPrimitiveType::kTriangles);
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, GrPrimitiveType::kTriangles,
+      renderPassXferBarriers);
 }
 
 void DrawAtlasOp::onPrepareDraws(Target* target) {

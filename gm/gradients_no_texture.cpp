@@ -128,7 +128,7 @@ class GradientsNoTextureGM : public GM {
  private:
   bool fDither;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -298,7 +298,7 @@ class GradientsManyColorsGM : public GM {
  private:
   bool fDither;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -21,7 +21,7 @@ class CoverageSetOpXP : public GrXferProcessor {
   CoverageSetOpXP(SkRegion::Op regionOp, bool invertCoverage)
       : INHERITED(kCoverageSetOpXP_ClassID), fRegionOp(regionOp), fInvertCoverage(invertCoverage) {}
 
-  const char* name() const noexcept override { return "Coverage Set Op"; }
+  const char* name() const override { return "Coverage Set Op"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
@@ -32,7 +32,7 @@ class CoverageSetOpXP : public GrXferProcessor {
 
   void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override;
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override {
+  bool onIsEqual(const GrXferProcessor& xpBase) const override {
     const CoverageSetOpXP& xp = xpBase.cast<CoverageSetOpXP>();
     return (fRegionOp == xp.fRegionOp && fInvertCoverage == xp.fInvertCoverage);
   }
@@ -40,7 +40,7 @@ class CoverageSetOpXP : public GrXferProcessor {
   SkRegion::Op fRegionOp;
   bool fInvertCoverage;
 
-  typedef GrXferProcessor INHERITED;
+  using INHERITED = GrXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ class GLCoverageSetOpXP : public GrGLSLXferProcessor {
 
   void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
-  typedef GrGLSLXferProcessor INHERITED;
+  using INHERITED = GrGLSLXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

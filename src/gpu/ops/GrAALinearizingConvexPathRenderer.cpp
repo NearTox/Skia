@@ -157,7 +157,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
     this->setTransformedBounds(bounds, viewMatrix, HasAABloat::kYes, IsHairline::kNo);
   }
 
-  const char* name() const noexcept override { return "AAFlatteningConvexPathOp"; }
+  const char* name() const override { return "AAFlatteningConvexPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -182,7 +182,8 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp = create_lines_only_gp(
         arena, fHelper.compatibleWithCoverageAsAlpha(), fHelper.usesLocalCoords(), fWideColor);
     if (!gp) {
@@ -192,7 +193,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void recordDraw(
@@ -355,7 +356,7 @@ class AAFlatteningConvexPathOp final : public GrMeshDrawOp {
   SkTDArray<GrSimpleMesh*> fMeshes;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace

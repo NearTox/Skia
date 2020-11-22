@@ -124,7 +124,7 @@ class GrCCPathProcessor::Impl : public GrGLSLGeometryProcessor {
   GrGLSLUniformHandler::UniformHandle fLocalMatrixUni;
   SkMatrix fLocalMatrix = SkMatrix::InvalidMatrix();
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 void GrCCPathProcessor::getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const {
@@ -149,7 +149,8 @@ void GrCCPathProcessor::drawPaths(
   GrRenderTargetProxy* rtProxy = flushState->proxy();
   GrProgramInfo programInfo(
       rtProxy->numSamples(), rtProxy->numStencilSamples(), rtProxy->backendFormat(),
-      flushState->writeView()->origin(), &pipeline, this, primitiveType);
+      flushState->writeView()->origin(), &pipeline, &GrUserStencilSettings::kUnused, this,
+      primitiveType, 0, flushState->renderPassBarriers());
 
   flushState->bindPipelineAndScissorClip(programInfo, bounds);
   flushState->bindTextures(*this, atlasProxy, pipeline);

@@ -511,7 +511,7 @@ class SkPngNormalDecoder : public SkPngCodec {
   int fLastRow;
   int fRowsNeeded;
 
-  typedef SkPngCodec INHERITED;
+  using INHERITED = SkPngCodec;
 
   static SkPngNormalDecoder* GetDecoder(png_structp png_ptr) {
     return static_cast<SkPngNormalDecoder*>(png_get_progressive_ptr(png_ptr));
@@ -627,7 +627,7 @@ class SkPngInterlacedDecoder : public SkPngCodec {
   size_t fPng_rowbytes;
   SkAutoTMalloc<png_byte> fInterlaceBuffer;
 
-  typedef SkPngCodec INHERITED;
+  using INHERITED = SkPngCodec;
 
   // FIXME: Currently sharing interlaced callback for all rows and subset. It's not
   // as expensive as the subset version of non-interlaced, but it still does extra

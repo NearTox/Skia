@@ -43,14 +43,14 @@ class SkGradientShaderBase : public SkShaderBase {
 
   class DescriptorScope : public Descriptor {
    public:
-    DescriptorScope() noexcept = default;
+    DescriptorScope() {}
 
     bool unflatten(SkReadBuffer&);
 
     // fColors and fPos always point into local memory, so they can be safely mutated
     //
-    SkColor4f* mutableColors() noexcept { return const_cast<SkColor4f*>(fColors); }
-    SkScalar* mutablePos() noexcept { return const_cast<SkScalar*>(fPos); }
+    SkColor4f* mutableColors() { return const_cast<SkColor4f*>(fColors); }
+    SkScalar* mutablePos() { return const_cast<SkScalar*>(fPos); }
 
    private:
     SkSTArray<16, SkColor4f, true> fColorStorage;
@@ -61,11 +61,11 @@ class SkGradientShaderBase : public SkShaderBase {
   SkGradientShaderBase(const Descriptor& desc, const SkMatrix& ptsToUnit);
   ~SkGradientShaderBase() override;
 
-  bool isOpaque() const noexcept override;
+  bool isOpaque() const override;
 
-  uint32_t getGradFlags() const noexcept { return fGradFlags; }
+  uint32_t getGradFlags() const { return fGradFlags; }
 
-  const SkMatrix& getGradientMatrix() const noexcept { return fPtsToUnit; }
+  const SkMatrix& getGradientMatrix() const { return fPtsToUnit; }
 
  protected:
   class GradientShaderBase4fContext;
@@ -105,17 +105,17 @@ class SkGradientShaderBase : public SkShaderBase {
   uint8_t fGradFlags;
 
  public:
-  SkScalar getPos(int i) const noexcept {
+  SkScalar getPos(int i) const {
     SkASSERT(i < fColorCount);
     return fOrigPos ? fOrigPos[i] : SkIntToScalar(i) / (fColorCount - 1);
   }
 
-  SkColor getLegacyColor(int i) const noexcept {
+  SkColor getLegacyColor(int i) const {
     SkASSERT(i < fColorCount);
     return fOrigColors4f[i].toSkColor();
   }
 
-  bool colorsCanConvertToSkColor() const noexcept {
+  bool colorsCanConvertToSkColor() const {
     bool canConvert = true;
     for (int i = 0; i < fColorCount; ++i) {
       canConvert &= fOrigColors4f[i].fitsInBytes();
@@ -128,9 +128,9 @@ class SkGradientShaderBase : public SkShaderBase {
   int fColorCount;
   sk_sp<SkColorSpace> fColorSpace;  // color space of gradient stops
 
-  bool colorsAreOpaque() const noexcept { return fColorsAreOpaque; }
+  bool colorsAreOpaque() const { return fColorsAreOpaque; }
 
-  SkTileMode getTileMode() const noexcept { return fTileMode; }
+  SkTileMode getTileMode() const { return fTileMode; }
 
  private:
   // Reserve inline space for up to 4 stops.
@@ -141,7 +141,7 @@ class SkGradientShaderBase : public SkShaderBase {
 
   bool fColorsAreOpaque;
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -178,7 +178,7 @@ GrSkSLFP::GrSkSLFP(const GrSkSLFP& other)
   this->cloneAndRegisterAllChildProcessors(other);
 }
 
-const char* GrSkSLFP::name() const noexcept { return fName; }
+const char* GrSkSLFP::name() const { return fName; }
 
 void GrSkSLFP::addChild(std::unique_ptr<GrFragmentProcessor> child) {
   int childIndex = this->numChildProcessors();
@@ -201,7 +201,7 @@ void GrSkSLFP::onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBui
   b->add32(SkToU32(fUniforms->size()));
 }
 
-bool GrSkSLFP::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrSkSLFP::onIsEqual(const GrFragmentProcessor& other) const {
   const GrSkSLFP& sk = other.cast<GrSkSLFP>();
   return fEffect->hash() == sk.fEffect->hash() && fUniforms->equals(sk.fUniforms.get());
 }

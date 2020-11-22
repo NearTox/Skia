@@ -35,7 +35,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
 
   ~GrBitmapTextGeoProc() override {}
 
-  const char* name() const noexcept override { return "Texture"; }
+  const char* name() const override { return "Texture"; }
 
   const Attribute& inPosition() const { return fInPosition; }
   const Attribute& inColor() const { return fInColor; }
@@ -61,9 +61,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
       int numViews, GrSamplerState params, GrMaskFormat format, const SkMatrix& localMatrix,
       bool usesW);
 
-  const TextureSampler& onTextureSampler(int i) const noexcept override {
-    return fTextureSamplers[i];
-  }
+  const TextureSampler& onTextureSampler(int i) const override { return fTextureSamplers[i]; }
 
   SkPMColor4f fColor;
   SkMatrix fLocalMatrix;
@@ -77,7 +75,7 @@ class GrBitmapTextGeoProc : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 #endif

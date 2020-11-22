@@ -179,7 +179,7 @@ class TextBlobMixedSizes : public GM {
 
   bool fUseDFT;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -107,7 +107,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
     }
     void onPrePrepare(
         GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-        const GrXferProcessor::DstProxyView&) override {}
+        const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
 
     void onPrepare(GrOpFlushState*) override {}
 
@@ -259,10 +259,9 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
         sk_sp<GrTexture> fTexture;
       };
       sk_sp<GrTextureProxy> proxy = proxyProvider->createLazyProxy(
-          TestCallback(&testCount, releaseCallback, tex), format, {kSize, kSize}, GrRenderable::kNo,
-          1, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated, GrInternalSurfaceFlags::kNone,
-          SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
-          GrSurfaceProxy::UseAllocator::kYes);
+          TestCallback(&testCount, releaseCallback, tex), format, {kSize, kSize}, GrMipmapped::kNo,
+          GrMipmapStatus::kNotAllocated, GrInternalSurfaceFlags::kNone, SkBackingFit::kExact,
+          SkBudgeted::kNo, GrProtected::kNo, GrSurfaceProxy::UseAllocator::kYes);
 
       REPORTER_ASSERT(reporter, proxy.get());
       REPORTER_ASSERT(reporter, 0 == testCount);
@@ -328,7 +327,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
                   desc.fMipmapped, desc.fBudgeted, desc.fProtected),
               true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
-        format, dims, GrRenderable::kNo, 1, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated,
+        format, dims, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated,
         GrInternalSurfaceFlags::kNone, SkBackingFit::kExact, SkBudgeted::kNo, GrProtected::kNo,
         GrSurfaceProxy::UseAllocator::kYes);
 
@@ -345,7 +344,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
   }
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
     *fTestExecuteValue = 2;
@@ -354,7 +353,7 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
   int* fTestExecuteValue;
   sk_sp<GrTextureProxy> fLazyProxy;
 
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 // Test that when a lazy proxy fails to instantiate during flush that we drop the Op that it was

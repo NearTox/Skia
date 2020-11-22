@@ -18,7 +18,6 @@
     <ClCompile Include="skparagraph\src\ParagraphCache.cpp" />
     <ClCompile Include="skparagraph\src\ParagraphImpl.cpp" />
     <ClCompile Include="skparagraph\src\ParagraphStyle.cpp" />
-    <ClCompile Include="skparagraph\src\ParagraphUtil.cpp" />
     <ClCompile Include="skparagraph\src\Run.cpp" />
     <ClCompile Include="skparagraph\src\TextLine.cpp" />
     <ClCompile Include="skparagraph\src\TextShadow.cpp" />
@@ -104,7 +103,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skparagraph\include;$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
       <IntrinsicFunctions>true</IntrinsicFunctions>

@@ -18,14 +18,14 @@
  */
 class SkKeyedImage {
  public:
-  SkKeyedImage() noexcept = default;
+  SkKeyedImage() {}
   SkKeyedImage(sk_sp<SkImage>);
   SkKeyedImage(const SkBitmap&);
-  SkKeyedImage(SkKeyedImage&&) noexcept = default;
-  SkKeyedImage(const SkKeyedImage&) noexcept = default;
+  SkKeyedImage(SkKeyedImage&&) = default;
+  SkKeyedImage(const SkKeyedImage&) = default;
 
-  SkKeyedImage& operator=(SkKeyedImage&&) noexcept = default;
-  SkKeyedImage& operator=(const SkKeyedImage&) noexcept = default;
+  SkKeyedImage& operator=(SkKeyedImage&&) = default;
+  SkKeyedImage& operator=(const SkKeyedImage&) = default;
 
   explicit operator bool() const { return fImage != nullptr; }
   const SkBitmapKey& key() const { return fKey; }

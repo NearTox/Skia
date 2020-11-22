@@ -31,11 +31,12 @@
 #if SK_SUPPORT_GPU
 #  include "include/gpu/GrDirectContext.h"
 #  include "src/gpu/GrContextPriv.h"
+#  include "src/gpu/GrImageContextPriv.h"
 #  include "src/image/SkImage_Gpu.h"
 #endif
 #include "include/gpu/GrBackendSurface.h"
 
-SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImage::SkImage(const SkImageInfo& info, uint32_t uniqueID)
     : fInfo(info), fUniqueID(kNeedNewImageUniqueID == uniqueID ? SkNextID::ImageID() : uniqueID) {
   SkASSERT(info.width() > 0);
   SkASSERT(info.height() > 0);
@@ -50,10 +51,19 @@ bool SkImage::peekPixels(SkPixmap* pm) const {
 }
 
 bool SkImage::readPixels(
+    GrDirectContext* dContext, const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes,
+    int srcX, int srcY, CachingHint chint) const {
+  return as_IB(this)->onReadPixels(dContext, dstInfo, dstPixels, dstRowBytes, srcX, srcY, chint);
+}
+
+#ifndef SK_IMAGE_READ_PIXELS_DISABLE_LEGACY_API
+bool SkImage::readPixels(
     const SkImageInfo& dstInfo, void* dstPixels, size_t dstRowBytes, int srcX, int srcY,
     CachingHint chint) const {
-  return as_IB(this)->onReadPixels(dstInfo, dstPixels, dstRowBytes, srcX, srcY, chint);
+  auto dContext = as_IB(this)->directContext();
+  return this->readPixels(dContext, dstInfo, dstPixels, dstRowBytes, srcX, srcY, chint);
 }
+#endif
 
 void SkImage::asyncRescaleAndReadPixels(
     const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
@@ -82,15 +92,17 @@ void SkImage::asyncRescaleAndReadPixelsYUV420(
 }
 
 bool SkImage::scalePixels(const SkPixmap& dst, SkFilterQuality quality, CachingHint chint) const {
+  // Context TODO: Elevate GrDirectContext requirement to public API.
+  auto dContext = as_IB(this)->directContext();
   if (this->width() == dst.width() && this->height() == dst.height()) {
-    return this->readPixels(dst, 0, 0, chint);
+    return this->readPixels(dContext, dst, 0, 0, chint);
   }
 
   // Idea: If/when SkImageGenerator supports a native-scaling API (where the generator itself
   //       can scale more efficiently) we should take advantage of it here.
   //
   SkBitmap bm;
-  if (as_IB(this)->getROPixels(&bm, chint)) {
+  if (as_IB(this)->getROPixels(dContext, &bm, chint)) {
     SkPixmap pmap;
     // Note: By calling the pixmap scaler, we never cache the final result, so the chint
     //       is (currently) only being applied to the getROPixels. If we get a request to
@@ -103,13 +115,13 @@ bool SkImage::scalePixels(const SkPixmap& dst, SkFilterQuality quality, CachingH
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkColorType SkImage::colorType() const noexcept { return fInfo.colorType(); }
+SkColorType SkImage::colorType() const { return fInfo.colorType(); }
 
-SkAlphaType SkImage::alphaType() const noexcept { return fInfo.alphaType(); }
+SkAlphaType SkImage::alphaType() const { return fInfo.alphaType(); }
 
-SkColorSpace* SkImage::colorSpace() const noexcept { return fInfo.colorSpace(); }
+SkColorSpace* SkImage::colorSpace() const { return fInfo.colorSpace(); }
 
-sk_sp<SkColorSpace> SkImage::refColorSpace() const noexcept { return fInfo.refColorSpace(); }
+sk_sp<SkColorSpace> SkImage::refColorSpace() const { return fInfo.refColorSpace(); }
 
 sk_sp<SkShader> SkImage::makeShader(
     SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix) const {
@@ -137,8 +149,10 @@ sk_sp<SkShader> SkImage::makeShader(
 }
 
 sk_sp<SkData> SkImage::encodeToData(SkEncodedImageFormat type, int quality) const {
+  // Context TODO: Elevate GrDirectContext requirement to public API.
+  auto dContext = as_IB(this)->directContext();
   SkBitmap bm;
-  if (as_IB(this)->getROPixels(&bm)) {
+  if (as_IB(this)->getROPixels(dContext, &bm)) {
     return SkEncodeBitmap(bm, type, quality);
   }
   return nullptr;
@@ -240,7 +254,7 @@ void SkImage::flushAndSubmit(GrDirectContext*) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID) noexcept
+SkImage_Base::SkImage_Base(const SkImageInfo& info, uint32_t uniqueID)
     : INHERITED(info, uniqueID), fAddedToRasterCache(false) {}
 
 SkImage_Base::~SkImage_Base() {
@@ -259,9 +273,11 @@ void SkImage_Base::onAsyncRescaleAndReadPixels(
     src.installPixels(peek);
     srcRect = origSrcRect;
   } else {
+    // Context TODO: Elevate GrDirectContext requirement to public API.
+    auto dContext = as_IB(this)->directContext();
     src.setInfo(this->imageInfo().makeDimensions(origSrcRect.size()));
     src.allocPixels();
-    if (!this->readPixels(src.pixmap(), origSrcRect.x(), origSrcRect.y())) {
+    if (!this->readPixels(dContext, src.pixmap(), origSrcRect.x(), origSrcRect.y())) {
       callback(context, nullptr);
       return;
     }
@@ -285,9 +301,26 @@ GrBackendTexture SkImage_Base::onGetBackendTexture(
   return GrBackendTexture();  // invalid
 }
 
-bool SkImage::readPixels(const SkPixmap& pmap, int srcX, int srcY, CachingHint chint) const {
-  return this->readPixels(pmap.info(), pmap.writable_addr(), pmap.rowBytes(), srcX, srcY, chint);
+GrDirectContext* SkImage_Base::directContext() const {
+#if SK_SUPPORT_GPU
+  return GrAsDirectContext(this->context());
+#else
+  return nullptr;
+#endif
 }
+
+bool SkImage::readPixels(
+    GrDirectContext* dContext, const SkPixmap& pmap, int srcX, int srcY, CachingHint chint) const {
+  return this->readPixels(
+      dContext, pmap.info(), pmap.writable_addr(), pmap.rowBytes(), srcX, srcY, chint);
+}
+
+#ifndef SK_IMAGE_READ_PIXELS_DISABLE_LEGACY_API
+bool SkImage::readPixels(const SkPixmap& pmap, int srcX, int srcY, CachingHint chint) const {
+  auto dContext = as_IB(this)->directContext();
+  return this->readPixels(dContext, pmap, srcX, srcY, chint);
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -300,17 +333,20 @@ sk_sp<SkImage> SkImage::MakeFromBitmap(const SkBitmap& bm) {
 }
 
 bool SkImage::asLegacyBitmap(SkBitmap* bitmap, LegacyBitmapMode) const {
-  return as_IB(this)->onAsLegacyBitmap(bitmap);
+  // Context TODO: Elevate GrDirectContext requirement to public API.
+  auto dContext = as_IB(this)->directContext();
+  return as_IB(this)->onAsLegacyBitmap(dContext, bitmap);
 }
 
-bool SkImage_Base::onAsLegacyBitmap(SkBitmap* bitmap) const {
+bool SkImage_Base::onAsLegacyBitmap(GrDirectContext* dContext, SkBitmap* bitmap) const {
   // As the base-class, all we can do is make a copy (regardless of mode).
   // Subclasses that want to be more optimal should override.
   SkImageInfo info = fInfo.makeColorType(kN32_SkColorType).makeColorSpace(nullptr);
   if (!bitmap->tryAllocPixels(info)) {
     return false;
   }
-  if (!this->readPixels(bitmap->info(), bitmap->getPixels(), bitmap->rowBytes(), 0, 0)) {
+
+  if (!this->readPixels(dContext, bitmap->info(), bitmap->getPixels(), bitmap->rowBytes(), 0, 0)) {
     bitmap->reset();
     return false;
   }
@@ -388,7 +424,7 @@ sk_sp<SkImage> SkImage::makeWithFilter(
 
 bool SkImage::isLazyGenerated() const { return as_IB(this)->onIsLazyGenerated(); }
 
-bool SkImage::isAlphaOnly() const noexcept { return SkColorTypeIsAlphaOnly(fInfo.colorType()); }
+bool SkImage::isAlphaOnly() const { return SkColorTypeIsAlphaOnly(fInfo.colorType()); }
 
 sk_sp<SkImage> SkImage::makeColorSpace(sk_sp<SkColorSpace> target, GrDirectContext* direct) const {
   return this->makeColorTypeAndColorSpace(this->colorType(), std::move(target), direct);
@@ -461,9 +497,11 @@ sk_sp<SkImage> SkImage::makeRasterImage(CachingHint chint) const {
     return nullptr;
   }
 
+  // Context TODO: Elevate GrDirectContext requirement to public API.
+  auto dContext = as_IB(this)->directContext();
   sk_sp<SkData> data = SkData::MakeUninitialized(size);
   pm = {fInfo.makeColorSpace(nullptr), data->writable_data(), fInfo.minRowBytes()};
-  if (!this->readPixels(pm, 0, 0, chint)) {
+  if (!this->readPixels(dContext, pm, 0, 0, chint)) {
     return nullptr;
   }
 
@@ -510,6 +548,12 @@ sk_sp<SkImage> SkImage::MakeFromYUVATexturesCopyWithExternalBackend(
   return nullptr;
 }
 
+sk_sp<SkImage> SkImage::MakeFromYUVAPixmaps(
+    GrRecordingContext* context, const SkYUVAPixmaps& pixmaps, GrMipMapped buildMips,
+    bool limitToMaxTextureSize, sk_sp<SkColorSpace> imageColorSpace) {
+  return nullptr;
+}
+
 sk_sp<SkImage> SkImage::MakeFromYUVTexturesCopyWithExternalBackend(
     GrContext*, SkYUVColorSpace, const GrBackendTexture[3], GrSurfaceOrigin,
     const GrBackendTexture&, sk_sp<SkColorSpace>) {
@@ -553,7 +597,7 @@ SkMipmapBuilder::SkMipmapBuilder(const SkImageInfo& info) {
   fMM = sk_sp<SkMipmap>(SkMipmap::Build({info, nullptr, 0}, nullptr, false));
 }
 
-SkMipmapBuilder::~SkMipmapBuilder() = default;
+SkMipmapBuilder::~SkMipmapBuilder() {}
 
 int SkMipmapBuilder::countLevels() const { return fMM ? fMM->countLevels() : 0; }
 
@@ -567,8 +611,6 @@ SkPixmap SkMipmapBuilder::level(int index) const {
   return pm;
 }
 
-sk_sp<SkMipmap> SkMipmapBuilder::detach() noexcept { return std::move(fMM); }
-
 bool SkImage::hasMipmaps() const { return as_IB(this)->onPeekMips() != nullptr; }
 
 sk_sp<SkImage> SkImage::withMipmaps(sk_sp<SkMipmap> mips) const {
@@ -579,3 +621,7 @@ sk_sp<SkImage> SkImage::withMipmaps(sk_sp<SkMipmap> mips) const {
   }
   return sk_ref_sp((const_cast<SkImage*>(this)));
 }
+
+sk_sp<SkImage> SkImage::withDefaultMipmaps() const { return this->withMipmaps(nullptr); }
+
+sk_sp<SkImage> SkMipmapBuilder::attachTo(const SkImage* src) { return src->withMipmaps(fMM); }

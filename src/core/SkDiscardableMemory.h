@@ -32,12 +32,12 @@ class SK_SPI SkDiscardableMemory {
     virtual SkDiscardableMemory* create(size_t bytes) = 0;
 
    private:
-    typedef SkRefCnt INHERITED;
+    using INHERITED = SkRefCnt;
   };
 
   /** Must not be called while locked.
    */
-  virtual ~SkDiscardableMemory() = default;
+  virtual ~SkDiscardableMemory() {}
 
   /**
    * Locks the memory, prevent it from being discarded. Once locked. you may
@@ -54,7 +54,7 @@ class SK_SPI SkDiscardableMemory {
    * Returns the current pointer for the discardable memory. This call is ONLY
    * valid when the discardable memory object is locked.
    */
-  virtual void* data() noexcept = 0;
+  virtual void* data() = 0;
 
   /**
    * Unlock the memory so that it can be purged by the system. Must be called

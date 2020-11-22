@@ -35,7 +35,7 @@ class GrD3DSemaphore : public GrSemaphore {
 
   GrD3DFenceInfo fFenceInfo;
 
-  typedef GrSemaphore INHERITED;
+  using INHERITED = GrSemaphore;
 };
 
 #endif

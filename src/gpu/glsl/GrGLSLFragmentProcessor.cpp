@@ -29,7 +29,8 @@ void GrGLSLFragmentProcessor::emitChildFunction(int childIndex, EmitArgs& args) 
     TransformedCoordVars coordVars = args.fTransformedCoords.childInputs(childIndex);
     EmitArgs childArgs(
         fragBuilder, args.fUniformHandler, args.fShaderCaps, *args.fFp.childProcessor(childIndex),
-        "_output", "_input", "_coords", coordVars);
+        "_output", "_input", "_coords", coordVars,
+        /*forceInline=*/false);
     fFunctionNames[childIndex] =
         fragBuilder->writeProcessorFunction(this->childProcessor(childIndex), childArgs);
   }

@@ -51,7 +51,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
   enum class CoverageMode : bool { kCoverageCount, kLiteral };
 
-  static constexpr GrColorType GetColorTypeFromCoverageMode(CoverageMode mode) noexcept {
+  static GrColorType GetColorTypeFromCoverageMode(CoverageMode mode) {
     return mode == CoverageMode::kCoverageCount ? GrColorType::kAlpha_F16 : GrColorType::kAlpha_8;
   }
 
@@ -59,7 +59,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
       CoverageMode, const GrTexture* atlasTexture, const GrSwizzle&, GrSurfaceOrigin atlasOrigin,
       const SkMatrix& viewMatrixIfUsingLocalCoords = SkMatrix::I());
 
-  const char* name() const noexcept override { return "GrCCPathProcessor"; }
+  const char* name() const override { return "GrCCPathProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override;
 
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
@@ -69,7 +69,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
       const GrCCPerFlushResources&, int baseInstance, int endInstance, const SkRect& bounds) const;
 
  private:
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fAtlasAccess; }
+  const TextureSampler& onTextureSampler(int) const override { return fAtlasAccess; }
 
   const CoverageMode fCoverageMode;
   const TextureSampler fAtlasAccess;
@@ -88,7 +88,7 @@ class GrCCPathProcessor : public GrGeometryProcessor {
 
   class Impl;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 inline void GrCCPathProcessor::Instance::set(

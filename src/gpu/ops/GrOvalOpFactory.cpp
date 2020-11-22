@@ -71,7 +71,7 @@ class CircleGeometryProcessor : public GrGeometryProcessor {
         stroke, clipPlane, isectPlane, unionPlane, roundCaps, wideColor, localMatrix);
   }
 
-  const char* name() const noexcept override { return "CircleGeometryProcessor"; }
+  const char* name() const override { return "CircleGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -111,7 +111,7 @@ class CircleGeometryProcessor : public GrGeometryProcessor {
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
-    GLSLProcessor() noexcept = default;
+    GLSLProcessor() {}
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const CircleGeometryProcessor& cgp = args.fGP.cast<CircleGeometryProcessor>();
@@ -221,7 +221,7 @@ class CircleGeometryProcessor : public GrGeometryProcessor {
     }
 
    private:
-    typedef GrGLSLGeometryProcessor INHERITED;
+    using INHERITED = GrGLSLGeometryProcessor;
 
     SkMatrix fLocalMatrix = SkMatrix::InvalidMatrix();
     UniformHandle fLocalMatrixUniform;
@@ -241,7 +241,7 @@ class CircleGeometryProcessor : public GrGeometryProcessor {
   bool fStroke;
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(CircleGeometryProcessor);
@@ -269,7 +269,7 @@ class ButtCapDashedCircleGeometryProcessor : public GrGeometryProcessor {
 
   ~ButtCapDashedCircleGeometryProcessor() override {}
 
-  const char* name() const noexcept override { return "ButtCapDashedCircleGeometryProcessor"; }
+  const char* name() const override { return "ButtCapDashedCircleGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -293,7 +293,7 @@ class ButtCapDashedCircleGeometryProcessor : public GrGeometryProcessor {
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
-    GLSLProcessor() noexcept = default;
+    GLSLProcessor() {}
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const ButtCapDashedCircleGeometryProcessor& bcscgp =
@@ -484,7 +484,7 @@ class ButtCapDashedCircleGeometryProcessor : public GrGeometryProcessor {
     }
 
    private:
-    typedef GrGLSLGeometryProcessor INHERITED;
+    using INHERITED = GrGLSLGeometryProcessor;
 
     SkMatrix fLocalMatrix = SkMatrix::InvalidMatrix();
     UniformHandle fLocalMatrixUniform;
@@ -498,7 +498,7 @@ class ButtCapDashedCircleGeometryProcessor : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 #if GR_TEST_UTILS
@@ -529,7 +529,7 @@ class EllipseGeometryProcessor : public GrGeometryProcessor {
 
   ~EllipseGeometryProcessor() override {}
 
-  const char* name() const noexcept override { return "EllipseGeometryProcessor"; }
+  const char* name() const override { return "EllipseGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -560,7 +560,7 @@ class EllipseGeometryProcessor : public GrGeometryProcessor {
 
   class GLSLProcessor : public GrGLSLGeometryProcessor {
    public:
-    GLSLProcessor() noexcept = default;
+    GLSLProcessor() {}
 
     void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
       const EllipseGeometryProcessor& egp = args.fGP.cast<EllipseGeometryProcessor>();
@@ -670,7 +670,7 @@ class EllipseGeometryProcessor : public GrGeometryProcessor {
     }
 
    private:
-    typedef GrGLSLGeometryProcessor INHERITED;
+    using INHERITED = GrGLSLGeometryProcessor;
 
     SkMatrix fLocalMatrix = SkMatrix::InvalidMatrix();
     UniformHandle fLocalMatrixUniform;
@@ -687,7 +687,7 @@ class EllipseGeometryProcessor : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(EllipseGeometryProcessor);
@@ -723,7 +723,7 @@ class DIEllipseGeometryProcessor : public GrGeometryProcessor {
 
   ~DIEllipseGeometryProcessor() override {}
 
-  const char* name() const noexcept override { return "DIEllipseGeometryProcessor"; }
+  const char* name() const override { return "DIEllipseGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     GLSLProcessor::GenKey(*this, caps, b);
@@ -861,7 +861,7 @@ class DIEllipseGeometryProcessor : public GrGeometryProcessor {
     SkMatrix fViewMatrix;
     UniformHandle fViewMatrixUniform;
 
-    typedef GrGLSLGeometryProcessor INHERITED;
+    using INHERITED = GrGLSLGeometryProcessor;
   };
 
   Attribute fInPosition;
@@ -875,7 +875,7 @@ class DIEllipseGeometryProcessor : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(DIEllipseGeometryProcessor);
@@ -1193,7 +1193,7 @@ class CircleOp final : public GrMeshDrawOp {
     fAllFill = !stroked;
   }
 
-  const char* name() const noexcept override { return "CircleOp"; }
+  const char* name() const override { return "CircleOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -1219,7 +1219,8 @@ class CircleOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
       return;
@@ -1231,7 +1232,7 @@ class CircleOp final : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -1448,7 +1449,7 @@ class CircleOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 class ButtCapDashedCircleOp final : public GrMeshDrawOp {
@@ -1535,7 +1536,7 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
     fIndexCount = circle_type_to_index_count(true);
   }
 
-  const char* name() const noexcept override { return "ButtCappedDashedCircleOp"; }
+  const char* name() const override { return "ButtCappedDashedCircleOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -1561,7 +1562,8 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
       return;
@@ -1573,7 +1575,7 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -1733,7 +1735,7 @@ class ButtCapDashedCircleOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1851,7 +1853,7 @@ class EllipseOp : public GrMeshDrawOp {
     fViewMatrixIfUsingLocalCoords = viewMatrix;
   }
 
-  const char* name() const noexcept override { return "EllipseOp"; }
+  const char* name() const override { return "EllipseOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -1879,7 +1881,8 @@ class EllipseOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
       return;
@@ -1890,7 +1893,7 @@ class EllipseOp : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -2006,7 +2009,7 @@ class EllipseOp : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2117,7 +2120,7 @@ class DIEllipseOp : public GrMeshDrawOp {
     this->setTransformedBounds(fEllipses[0].fBounds, viewMatrix, HasAABloat::kYes, IsHairline::kNo);
   }
 
-  const char* name() const noexcept override { return "DIEllipseOp"; }
+  const char* name() const override { return "DIEllipseOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -2145,13 +2148,14 @@ class DIEllipseOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp = DIEllipseGeometryProcessor::Make(
         arena, fWideColor, fUseScale, this->viewMatrix(), this->style());
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -2265,7 +2269,7 @@ class DIEllipseOp : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -2451,7 +2455,7 @@ class CircularRRectOp : public GrMeshDrawOp {
     fAllFill = (kFill_RRectType == type);
   }
 
-  const char* name() const noexcept override { return "CircularRRectOp"; }
+  const char* name() const override { return "CircularRRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -2519,7 +2523,8 @@ class CircularRRectOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     // Invert the view matrix as a local matrix (if any other processors require coords).
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
@@ -2531,7 +2536,7 @@ class CircularRRectOp : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -2698,7 +2703,7 @@ class CircularRRectOp : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 static const int kNumRRectsInIndexBuffer = 256;
@@ -2797,7 +2802,7 @@ class EllipticalRRectOp : public GrMeshDrawOp {
     fRRects.emplace_back(RRect{color, devXRadius, devYRadius, innerXRadius, innerYRadius, bounds});
   }
 
-  const char* name() const noexcept override { return "EllipticalRRectOp"; }
+  const char* name() const override { return "EllipticalRRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -2824,7 +2829,8 @@ class EllipticalRRectOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     SkMatrix localMatrix;
     if (!fViewMatrixIfUsingLocalCoords.invert(&localMatrix)) {
       return;
@@ -2835,7 +2841,7 @@ class EllipticalRRectOp : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrPrimitiveType::kTriangles);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -2985,7 +2991,7 @@ class EllipticalRRectOp : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 std::unique_ptr<GrDrawOp> GrOvalOpFactory::MakeCircularRRectOp(

@@ -25,9 +25,9 @@ int SafeCount(const T* obj) {
   return obj ? obj->count() : 0;
 }
 
-SkPictureData::SkPictureData(const SkPictInfo& info) noexcept : fInfo(info) {}
+SkPictureData::SkPictureData(const SkPictInfo& info) : fInfo(info) {}
 
-void SkPictureData::initForPlayback() const noexcept {
+void SkPictureData::initForPlayback() const {
   // ensure that the paths bounds are pre-computed
   for (int i = 0; i < fPaths.count(); i++) {
     fPaths[i].updateBoundsCache();
@@ -77,12 +77,12 @@ static size_t compute_chunk_size(SkFlattenable::Factory* array, int count) {
   return size;
 }
 
-static void write_tag_size(SkWriteBuffer& buffer, uint32_t tag, size_t size) noexcept {
+static void write_tag_size(SkWriteBuffer& buffer, uint32_t tag, size_t size) {
   buffer.writeUInt(tag);
   buffer.writeUInt(SkToU32(size));
 }
 
-static void write_tag_size(SkWStream* stream, uint32_t tag, size_t size) noexcept {
+static void write_tag_size(SkWStream* stream, uint32_t tag, size_t size) {
   stream->write32(tag);
   stream->write32(SkToU32(size));
 }
@@ -187,7 +187,7 @@ void SkPictureData::flattenToBuffer(SkWriteBuffer& buffer, bool textBlobsOnly) c
 // call that custom typefaceproc on *every* typeface, not just on the unique ones. To avoid this,
 // we ignore the custom proc (here) when we serialize the paints, and then do respect it when
 // we serialize the typefaces.
-static SkSerialProcs skip_typeface_proc(const SkSerialProcs& procs) noexcept {
+static SkSerialProcs skip_typeface_proc(const SkSerialProcs& procs) {
   SkSerialProcs newProcs = procs;
   newProcs.fTypefaceProc = nullptr;
   newProcs.fTypefaceCtx = nullptr;
@@ -222,13 +222,13 @@ void SkPictureData::serialize(
   // Pretend to serialize our sub-pictures for the side effect of filling typefaceSet
   // with typefaces from sub-pictures.
   struct DevNull : public SkWStream {
-    constexpr DevNull() noexcept : fBytesWritten(0) {}
+    DevNull() : fBytesWritten(0) {}
     size_t fBytesWritten;
-    bool write(const void*, size_t size) noexcept override {
+    bool write(const void*, size_t size) override {
       fBytesWritten += size;
       return true;
     }
-    size_t bytesWritten() const noexcept override { return fBytesWritten; }
+    size_t bytesWritten() const override { return fBytesWritten; }
   } devnull;
   for (const auto& pic : fPictures) {
     pic->serialize(&devnull, nullptr, typefaceSet, /*textBlobsOnly=*/true);

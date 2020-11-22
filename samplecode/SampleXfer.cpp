@@ -181,7 +181,7 @@ class XferDemo : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new XferDemo;)
 
@@ -291,6 +291,6 @@ class CubicResamplerDemo : public Sample {
   SkRect fDomain;
   SkImage::CubicResampler fCubic;
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new CubicResamplerDemo;)

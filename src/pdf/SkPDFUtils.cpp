@@ -261,7 +261,7 @@ static size_t print_permil_as_decimal(int x, char* result, unsigned places) {
   return j + 1;
 }
 
-static constexpr int int_pow(int base, unsigned exp, int acc = 1) noexcept {
+static constexpr int int_pow(int base, unsigned exp, int acc = 1) {
   return exp < 1 ? acc : int_pow(base * base, exp / 2, (exp % 2) ? acc * base : acc);
 }
 
@@ -320,7 +320,8 @@ bool SkPDFUtils::ToBitmap(const SkImage* img, SkBitmap* dst) {
   SkASSERT(img);
   SkASSERT(dst);
   SkBitmap bitmap;
-  if (as_IB(img)->getROPixels(&bitmap)) {
+  // TODO: support GPU images
+  if (as_IB(img)->getROPixels(nullptr, &bitmap)) {
     SkASSERT(bitmap.dimensions() == img->dimensions());
     SkASSERT(!bitmap.drawsNothing());
     *dst = std::move(bitmap);

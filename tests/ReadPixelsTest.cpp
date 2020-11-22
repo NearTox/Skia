@@ -113,7 +113,7 @@ static SkBitmap make_src_bitmap() {
 static void fill_src_canvas(SkCanvas* canvas) {
   canvas->save();
   canvas->setMatrix(SkMatrix::I());
-  canvas->clipRect(DEV_RECT_S, kReplace_SkClipOp);
+  canvas->clipRect(DEV_RECT_S, SkClipOp::kIntersect);
   SkPaint paint;
   paint.setBlendMode(SkBlendMode::kSrc);
   canvas->drawBitmap(make_src_bitmap(), 0, 0, &paint);
@@ -492,7 +492,7 @@ static void test_conversion(
   // Enough space for 5 pixels when color type is F16, more than enough space in other cases.
   uint64_t dstPixels[kNumPixels];
   SkPixmap dstPixmap(dstInfo, dstPixels, dstInfo.minRowBytes());
-  bool success = src->readPixels(dstPixmap, 0, 0);
+  bool success = src->readPixels(nullptr, dstPixmap, 0, 0);
   REPORTER_ASSERT(r, success == SkImageInfoValidConversion(dstInfo, srcInfo));
 
   if (success) {

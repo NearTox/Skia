@@ -62,8 +62,8 @@ class SimpleRT : public RuntimeShaderGM {
             "runtime_shader", {512, 256}, R"(
         uniform half4 gColor;
 
-        void main(float2 p, inout half4 color) {
-            color = half4(half2(p)*(1.0/255), gColor.b, 1);
+        half4 main(float2 p) {
+            return half4(p*(1.0/255), gColor.b, 1);
         }
     )",
             kBench_RTFlag) {}
@@ -138,12 +138,12 @@ class ThresholdRT : public RuntimeShaderGM {
             return clamp(x, 0, 1);
         }
 
-        void main(float2 xy, inout half4 color) {
+        half4 main(float2 xy) {
             half4 before = sample(before_map);
             half4 after = sample(after_map);
 
             float m = smooth_cutoff(sample(threshold_map).a);
-            color = mix(before, after, half(m));
+            return mix(before, after, m);
         }
     )",
             kAnimate_RTFlag | kBench_RTFlag) {}
@@ -197,7 +197,7 @@ class SpiralRT : public RuntimeShaderGM {
         layout(srgb_unpremul) uniform float4 in_colors0;
         layout(srgb_unpremul) uniform float4 in_colors1;
 
-        void main(float2 p, inout half4 color) {
+        half4 main(float2 p) {
             float2 pp = p - in_center;
             float radius = length(pp);
             radius = sqrt(radius);
@@ -205,8 +205,7 @@ class SpiralRT : public RuntimeShaderGM {
             float t = (angle + 3.1415926/2) / (3.1415926);
             t += radius * rad_scale;
             t = fract(t);
-            float4 m = in_colors0 * (1-t) + in_colors1 * t;
-            color = half4(m);
+            return in_colors0 * (1-t) + in_colors1 * t;
         }
     )",
             kAnimate_RTFlag | kBench_RTFlag) {}
@@ -238,8 +237,8 @@ class ColorCubeRT : public RuntimeShaderGM {
         uniform float b_scale;
         uniform float inv_size;
 
-        void main(float2 xy, inout half4 color) {
-            float4 c = float4(unpremul(sample(input)));
+        half4 main(float2 xy) {
+            float4 c = unpremul(sample(input));
 
             // Map to cube coords:
             float3 cubeCoords = float3(c.rg * rg_scale + rg_bias, c.b * b_scale);
@@ -249,11 +248,13 @@ class ColorCubeRT : public RuntimeShaderGM {
             float2 coords2 = float2(( ceil(cubeCoords.b) + cubeCoords.r) * inv_size, cubeCoords.g);
 
             // Two bilinear fetches, plus a manual lerp for the third axis:
-            color = mix(sample(color_cube, coords1), sample(color_cube, coords2),
-                        half(fract(cubeCoords.b)));
+            half4 color = mix(sample(color_cube, coords1), sample(color_cube, coords2),
+                              fract(cubeCoords.b));
 
             // Premul again
             color.rgb *= color.a;
+
+            return color;
         }
     )") {}
 
@@ -315,8 +316,8 @@ class DefaultColorRT : public RuntimeShaderGM {
   DefaultColorRT()
       : RuntimeShaderGM("default_color_rt", {512, 256}, R"(
         in shader input;
-        void main(inout half4 color) {
-            color = sample(input);
+        half4 main() {
+            return sample(input);
         }
     )") {}
 

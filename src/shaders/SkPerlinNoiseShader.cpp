@@ -332,7 +332,7 @@ class SkPerlinNoiseShaderImpl : public SkShaderBase {
     SkMatrix fMatrix;
     PaintingData fPaintingData;
 
-    typedef Context INHERITED;
+    using INHERITED = Context;
   };
 
 #if SK_SUPPORT_GPU
@@ -358,7 +358,7 @@ class SkPerlinNoiseShaderImpl : public SkShaderBase {
 
   friend class ::SkPerlinNoiseShader;
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 namespace {
@@ -681,7 +681,7 @@ class GrGLPerlinNoise : public GrGLSLFragmentProcessor {
   GrGLSLProgramDataManager::UniformHandle fStitchDataUni;
   GrGLSLProgramDataManager::UniformHandle fBaseFrequencyUni;
 
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -707,7 +707,7 @@ class GrPerlinNoise2Effect : public GrFragmentProcessor {
                     std::move(permutationsFP), std::move(noiseFP))));
   }
 
-  const char* name() const noexcept override { return "PerlinNoise"; }
+  const char* name() const override { return "PerlinNoise"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrPerlinNoise2Effect(*this));
@@ -729,7 +729,7 @@ class GrPerlinNoise2Effect : public GrFragmentProcessor {
     GrGLPerlinNoise::GenKey(*this, caps, b);
   }
 
-  bool onIsEqual(const GrFragmentProcessor& sBase) const noexcept override {
+  bool onIsEqual(const GrFragmentProcessor& sBase) const override {
     const GrPerlinNoise2Effect& s = sBase.cast<GrPerlinNoise2Effect>();
     return fType == s.fType && fPaintingData->fBaseFrequency == s.fPaintingData->fBaseFrequency &&
            fNumOctaves == s.fNumOctaves && fStitchTiles == s.fStitchTiles &&
@@ -769,7 +769,7 @@ class GrPerlinNoise2Effect : public GrFragmentProcessor {
 
   std::unique_ptr<SkPerlinNoiseShaderImpl::PaintingData> fPaintingData;
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -1040,7 +1040,7 @@ class GrGLImprovedPerlinNoise : public GrGLSLFragmentProcessor {
   GrGLSLProgramDataManager::UniformHandle fZUni;
   GrGLSLProgramDataManager::UniformHandle fBaseFrequencyUni;
 
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 /////////////////////////////////////////////////////////////////////
@@ -1064,7 +1064,7 @@ class GrImprovedPerlinNoiseEffect : public GrFragmentProcessor {
                     std::move(gradientFP))));
   }
 
-  const char* name() const noexcept override { return "ImprovedPerlinNoise"; }
+  const char* name() const override { return "ImprovedPerlinNoise"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrImprovedPerlinNoiseEffect(*this));
@@ -1083,7 +1083,7 @@ class GrImprovedPerlinNoiseEffect : public GrFragmentProcessor {
     GrGLImprovedPerlinNoise::GenKey(*this, caps, b);
   }
 
-  bool onIsEqual(const GrFragmentProcessor& sBase) const noexcept override {
+  bool onIsEqual(const GrFragmentProcessor& sBase) const override {
     const GrImprovedPerlinNoiseEffect& that = sBase.cast<GrImprovedPerlinNoiseEffect>();
     return this->z() == that.z() && this->octaves() == that.octaves() &&
            this->baseFrequency() == that.baseFrequency();
@@ -1119,7 +1119,7 @@ class GrImprovedPerlinNoiseEffect : public GrFragmentProcessor {
 
   std::unique_ptr<SkPerlinNoiseShaderImpl::PaintingData> fPaintingData;
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 /////////////////////////////////////////////////////////////////////

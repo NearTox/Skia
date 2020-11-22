@@ -12,7 +12,7 @@
 #endif
 
 GrBlockAllocator::GrBlockAllocator(
-    GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes) noexcept
+    GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes)
     : fTail(&fHead)
       // Round up to the nearest max-aligned value, and then divide so that fBlockSizeIncrement
       // can effectively fit higher byte counts in its 16 bits of storage
@@ -30,7 +30,7 @@ GrBlockAllocator::GrBlockAllocator(
   SkASSERT(additionalPreallocBytes <= kMaxAllocationSize);
 }
 
-GrBlockAllocator::Block::Block(Block* prev, int allocationSize) noexcept
+GrBlockAllocator::Block::Block(Block* prev, int allocationSize)
     : fNext(nullptr),
       fPrev(prev),
       fSize(allocationSize),
@@ -38,7 +38,7 @@ GrBlockAllocator::Block::Block(Block* prev, int allocationSize) noexcept
       fMetadata(0),
       fAllocatorMetadata(0) {
   SkASSERT(allocationSize >= (int)sizeof(Block));
-  SkDEBUGCODE(fSentinel = kAssignedMarker);
+  SkDEBUGCODE(fSentinel = kAssignedMarker;)
 }
 
 GrBlockAllocator::Block::~Block() {
@@ -46,7 +46,7 @@ GrBlockAllocator::Block::~Block() {
   SkDEBUGCODE(fSentinel = kFreedMarker;)  // FWIW
 }
 
-size_t GrBlockAllocator::totalSize() const noexcept {
+size_t GrBlockAllocator::totalSize() const {
   // Use size_t since the sum across all blocks could exceed 'int', even though each block won't
   size_t size = offsetof(GrBlockAllocator, fHead) + this->scratchBlockSize();
   for (const Block* b : this->blocks()) {
@@ -56,7 +56,7 @@ size_t GrBlockAllocator::totalSize() const noexcept {
   return size;
 }
 
-size_t GrBlockAllocator::totalUsableSpace() const noexcept {
+size_t GrBlockAllocator::totalUsableSpace() const {
   size_t size = this->scratchBlockSize();
   if (size > 0) {
     size -= kDataStart;  // scratchBlockSize reports total block size, not usable size
@@ -68,7 +68,7 @@ size_t GrBlockAllocator::totalUsableSpace() const noexcept {
   return size;
 }
 
-size_t GrBlockAllocator::totalSpaceInUse() const noexcept {
+size_t GrBlockAllocator::totalSpaceInUse() const {
   size_t size = 0;
   for (const Block* b : this->blocks()) {
     size += (b->fCursor - kDataStart);
@@ -77,7 +77,7 @@ size_t GrBlockAllocator::totalSpaceInUse() const noexcept {
   return size;
 }
 
-GrBlockAllocator::Block* GrBlockAllocator::findOwningBlock(const void* p) noexcept {
+GrBlockAllocator::Block* GrBlockAllocator::findOwningBlock(const void* p) {
   // When in doubt, search in reverse to find an overlapping block.
   uintptr_t ptr = reinterpret_cast<uintptr_t>(p);
   for (Block* b : this->rblocks()) {
@@ -91,7 +91,7 @@ GrBlockAllocator::Block* GrBlockAllocator::findOwningBlock(const void* p) noexce
   return nullptr;
 }
 
-void GrBlockAllocator::releaseBlock(Block* block) noexcept {
+void GrBlockAllocator::releaseBlock(Block* block) {
   if (block == &fHead) {
     // Reset the cursor of the head block so that it can be reused if it becomes the new tail
     block->fCursor = kDataStart;
@@ -144,7 +144,7 @@ void GrBlockAllocator::releaseBlock(Block* block) noexcept {
   SkASSERT(fN1 >= 1 && fN0 >= 0);
 }
 
-void GrBlockAllocator::stealHeapBlocks(GrBlockAllocator* other) noexcept {
+void GrBlockAllocator::stealHeapBlocks(GrBlockAllocator* other) {
   Block* toSteal = other->fHead.fNext;
   if (toSteal) {
     // The other's next block connects back to this allocator's current tail, and its new tail
@@ -159,7 +159,7 @@ void GrBlockAllocator::stealHeapBlocks(GrBlockAllocator* other) noexcept {
   }  // else no block to steal
 }
 
-void GrBlockAllocator::reset() noexcept {
+void GrBlockAllocator::reset() {
   for (Block* b : this->rblocks()) {
     if (b == &fHead) {
       // Reset metadata and cursor, tail points to the head block again
@@ -184,7 +184,7 @@ void GrBlockAllocator::reset() noexcept {
   fN1 = 1;
 }
 
-void GrBlockAllocator::resetScratchSpace() noexcept {
+void GrBlockAllocator::resetScratchSpace() {
   if (fHead.fPrev) {
     delete fHead.fPrev;
     fHead.fPrev = nullptr;

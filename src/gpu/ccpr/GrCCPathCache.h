@@ -11,6 +11,7 @@
 #include "include/private/SkIDChangeListener.h"
 #include "include/private/SkTHash.h"
 #include "src/core/SkTInternalLList.h"
+#include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/ccpr/GrCCAtlas.h"
 #include "src/gpu/ccpr/GrCCPathProcessor.h"
 #include "src/gpu/geometry/GrStyledShape.h"
@@ -33,18 +34,18 @@ class GrCCPathCache {
     static sk_sp<Key> Make(
         uint32_t pathCacheUniqueID, int dataCountU32, const void* data = nullptr);
 
-    uint32_t pathCacheUniqueID() const noexcept { return fPathCacheUniqueID; }
+    uint32_t pathCacheUniqueID() const { return fPathCacheUniqueID; }
 
-    int dataSizeInBytes() const noexcept { return fDataSizeInBytes; }
-    const uint32_t* data() const noexcept;
+    int dataSizeInBytes() const { return fDataSizeInBytes; }
+    const uint32_t* data() const;
 
-    void resetDataCountU32(int dataCountU32) noexcept {
+    void resetDataCountU32(int dataCountU32) {
       SkASSERT(dataCountU32 <= fDataReserveCountU32);
       fDataSizeInBytes = dataCountU32 * sizeof(uint32_t);
     }
-    uint32_t* data() noexcept;
+    uint32_t* data();
 
-    bool operator==(const Key& that) const noexcept {
+    bool operator==(const Key& that) const {
       return fDataSizeInBytes == that.fDataSizeInBytes &&
              !memcmp(this->data(), that.data(), fDataSizeInBytes);
     }
@@ -59,9 +60,8 @@ class GrCCPathCache {
     Key(uint32_t pathCacheUniqueID, int dataCountU32)
         : fPathCacheUniqueID(pathCacheUniqueID),
           fDataSizeInBytes(dataCountU32 * sizeof(uint32_t))
-              SkDEBUGCODE(, fDataReserveCountU32(dataCountU32)) {
-      SkASSERT(SK_InvalidUniqueID != fPathCacheUniqueID);
-    }
+              SkDEBUGCODE(, fDataReserveCountU32(dataCountU32))
+    { SkASSERT(SK_InvalidUniqueID != fPathCacheUniqueID); }
 
     const uint32_t fPathCacheUniqueID;
     int fDataSizeInBytes;
@@ -74,7 +74,7 @@ class GrCCPathCache {
   // integer translation). During construction, any integer portions of the matrix's translate are
   // shaved off and returned to the caller. The caller is responsible for those integer shifts.
   struct MaskTransform {
-    MaskTransform(const SkMatrix& m, SkIVector* shift) noexcept;
+    MaskTransform(const SkMatrix& m, SkIVector* shift);
     float fMatrix2x2[4];
 #ifndef SK_BUILD_FOR_ANDROID_FRAMEWORK
     // Except on AOSP, cache hits must have matching subpixel portions of their view matrix.
@@ -86,19 +86,19 @@ class GrCCPathCache {
   // Represents a ref on a GrCCPathCacheEntry that should only be used during the current flush.
   class OnFlushEntryRef : SkNoncopyable {
    public:
-    static OnFlushEntryRef OnFlushRef(GrCCPathCacheEntry*) noexcept;
-    constexpr OnFlushEntryRef() noexcept = default;
-    OnFlushEntryRef(OnFlushEntryRef&& ref) noexcept : fEntry(std::exchange(ref.fEntry, nullptr)) {}
+    static OnFlushEntryRef OnFlushRef(GrCCPathCacheEntry*);
+    OnFlushEntryRef() = default;
+    OnFlushEntryRef(OnFlushEntryRef&& ref) : fEntry(std::exchange(ref.fEntry, nullptr)) {}
     ~OnFlushEntryRef();
 
-    GrCCPathCacheEntry* get() const noexcept { return fEntry; }
-    GrCCPathCacheEntry* operator->() const noexcept { return fEntry; }
-    GrCCPathCacheEntry& operator*() const noexcept { return *fEntry; }
-    explicit operator bool() const noexcept { return fEntry; }
-    void operator=(OnFlushEntryRef&& ref) noexcept { fEntry = std::exchange(ref.fEntry, nullptr); }
+    GrCCPathCacheEntry* get() const { return fEntry; }
+    GrCCPathCacheEntry* operator->() const { return fEntry; }
+    GrCCPathCacheEntry& operator*() const { return *fEntry; }
+    explicit operator bool() const { return fEntry; }
+    void operator=(OnFlushEntryRef&& ref) { fEntry = std::exchange(ref.fEntry, nullptr); }
 
    private:
-    OnFlushEntryRef(GrCCPathCacheEntry* entry) noexcept : fEntry(entry) {}
+    OnFlushEntryRef(GrCCPathCacheEntry* entry) : fEntry(entry) {}
     GrCCPathCacheEntry* fEntry = nullptr;
   };
 
@@ -135,25 +135,24 @@ class GrCCPathCache {
       return GrResourceKeyHash(key.data(), key.dataSizeInBytes());
     }
 
-    constexpr HashNode() noexcept = default;
+    HashNode() = default;
     HashNode(GrCCPathCache*, sk_sp<Key>, const MaskTransform&, const GrStyledShape&);
-    HashNode(HashNode&& node) noexcept
-        : fPathCache(node.fPathCache), fEntry(std::move(node.fEntry)) {
+    HashNode(HashNode&& node) : fPathCache(node.fPathCache), fEntry(std::move(node.fEntry)) {
       SkASSERT(!node.fEntry);
     }
 
     ~HashNode();
 
-    void operator=(HashNode&& node) noexcept;
+    void operator=(HashNode&& node);
 
-    GrCCPathCacheEntry* entry() const noexcept { return fEntry.get(); }
+    GrCCPathCacheEntry* entry() const { return fEntry.get(); }
 
    private:
     GrCCPathCache* fPathCache = nullptr;
     sk_sp<GrCCPathCacheEntry> fEntry;
   };
 
-  GrStdSteadyClock::time_point quickPerFlushTimestamp() noexcept {
+  GrStdSteadyClock::time_point quickPerFlushTimestamp() {
     // time_point::min() means it's time to update fPerFlushTimestamp with a newer clock read.
     if (GrStdSteadyClock::time_point::min() == fPerFlushTimestamp) {
       fPerFlushTimestamp = GrStdSteadyClock::now();
@@ -205,7 +204,7 @@ class GrCCPathCacheEntry : public GrNonAtomicRef<GrCCPathCacheEntry> {
     SkASSERT(0 == fOnFlushRefCnt);
   }
 
-  const GrCCPathCache::Key& cacheKey() const noexcept {
+  const GrCCPathCache::Key& cacheKey() const {
     SkASSERT(fCacheKey);
     return *fCacheKey;
   }
@@ -215,17 +214,17 @@ class GrCCPathCacheEntry : public GrNonAtomicRef<GrCCPathCacheEntry> {
   // flush, the hit count is only incremented once.
   //
   // If the entry did not previously exist, its hit count will be 1.
-  int hitCount() const noexcept { return fHitCount; }
+  int hitCount() const { return fHitCount; }
 
   // The accumulative region of the path that has been drawn during the lifetime of this cache
   // entry (as defined by the 'clippedDrawBounds' parameter for GrCCPathCache::find).
-  const SkIRect& hitRect() const noexcept { return fHitRect; }
+  const SkIRect& hitRect() const { return fHitRect; }
 
-  const GrCCCachedAtlas* cachedAtlas() const noexcept { return fCachedAtlas.get(); }
+  const GrCCCachedAtlas* cachedAtlas() const { return fCachedAtlas.get(); }
 
-  const SkIRect& devIBounds() const noexcept { return fDevIBounds; }
-  int width() const noexcept { return fDevIBounds.width(); }
-  int height() const noexcept { return fDevIBounds.height(); }
+  const SkIRect& devIBounds() const { return fDevIBounds; }
+  int width() const { return fDevIBounds.width(); }
+  int height() const { return fDevIBounds.height(); }
 
   enum class ReleaseAtlasResult : bool { kNone, kDidInvalidateFromCache };
 
@@ -244,11 +243,10 @@ class GrCCPathCacheEntry : public GrNonAtomicRef<GrCCPathCacheEntry> {
  private:
   using MaskTransform = GrCCPathCache::MaskTransform;
 
-  GrCCPathCacheEntry(
-      sk_sp<GrCCPathCache::Key> cacheKey, const MaskTransform& maskTransform) noexcept
+  GrCCPathCacheEntry(sk_sp<GrCCPathCache::Key> cacheKey, const MaskTransform& maskTransform)
       : fCacheKey(std::move(cacheKey)), fMaskTransform(maskTransform) {}
 
-  bool hasBeenEvicted() const noexcept { return fCacheKey->shouldDeregister(); }
+  bool hasBeenEvicted() const { return fCacheKey->shouldDeregister(); }
 
   // Resets this entry back to not having an atlas, and purges its previous atlas texture from the
   // resource cache if needed.
@@ -293,7 +291,7 @@ class GrCCCachedAtlas : public GrNonAtomicRef<GrCCCachedAtlas> {
 
   GrCCCachedAtlas(
       GrCCAtlas::CoverageType type, const GrUniqueKey& textureKey,
-      sk_sp<GrTextureProxy> onFlushProxy) noexcept
+      sk_sp<GrTextureProxy> onFlushProxy)
       : fCoverageType(type), fTextureKey(textureKey), fOnFlushProxy(std::move(onFlushProxy)) {}
 
   ~GrCCCachedAtlas() {
@@ -301,26 +299,26 @@ class GrCCCachedAtlas : public GrNonAtomicRef<GrCCCachedAtlas> {
     SkASSERT(!fOnFlushRefCnt);
   }
 
-  GrCCAtlas::CoverageType coverageType() const noexcept { return fCoverageType; }
-  const GrUniqueKey& textureKey() const noexcept { return fTextureKey; }
+  GrCCAtlas::CoverageType coverageType() const { return fCoverageType; }
+  const GrUniqueKey& textureKey() const { return fTextureKey; }
 
-  GrTextureProxy* getOnFlushProxy() const noexcept { return fOnFlushProxy.get(); }
+  GrTextureProxy* getOnFlushProxy() const { return fOnFlushProxy.get(); }
 
-  void setOnFlushProxy(sk_sp<GrTextureProxy> proxy) noexcept {
+  void setOnFlushProxy(sk_sp<GrTextureProxy> proxy) {
     SkASSERT(!fOnFlushProxy);
     fOnFlushProxy = std::move(proxy);
   }
 
-  void addPathPixels(int numPixels) noexcept { fNumPathPixels += numPixels; }
+  void addPathPixels(int numPixels) { fNumPathPixels += numPixels; }
   ReleaseAtlasResult invalidatePathPixels(GrCCPathCache*, int numPixels);
 
-  int peekOnFlushRefCnt() const noexcept { return fOnFlushRefCnt; }
-  void incrOnFlushRefCnt(int count = 1) const noexcept {
+  int peekOnFlushRefCnt() const { return fOnFlushRefCnt; }
+  void incrOnFlushRefCnt(int count = 1) const {
     SkASSERT(count > 0);
     SkASSERT(fOnFlushProxy);
     fOnFlushRefCnt += count;
   }
-  void decrOnFlushRefCnt(int count = 1) const noexcept;
+  void decrOnFlushRefCnt(int count = 1) const;
 
  private:
   const GrCCAtlas::CoverageType fCoverageType;
@@ -353,7 +351,7 @@ inline GrCCPathCache::HashNode::~HashNode() {
   SkASSERT(!fEntry || fEntry->hasBeenEvicted());  // Should have called GrCCPathCache::evict().
 }
 
-inline void GrCCPathCache::HashNode::operator=(HashNode&& node) noexcept {
+inline void GrCCPathCache::HashNode::operator=(HashNode&& node) {
   SkASSERT(!fEntry || fEntry->hasBeenEvicted());  // Should have called GrCCPathCache::evict().
   fEntry = std::exchange(node.fEntry, nullptr);
 }

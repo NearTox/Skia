@@ -16,16 +16,25 @@
 class SK_API SkPathBuilder {
  public:
   SkPathBuilder();
+  SkPathBuilder(SkPathFillType);
+  SkPathBuilder(const SkPath&);
+  SkPathBuilder(const SkPathBuilder&) = default;
   ~SkPathBuilder();
 
-  SkPath snapshot();  // the builder is unchanged after returning this path
-  SkPath detach();    // the builder is reset to empty after returning this path
+  SkPathBuilder& operator=(const SkPath&);
+  SkPathBuilder& operator=(const SkPathBuilder&) = default;
 
-  SkPathBuilder& setFillType(SkPathFillType ft) noexcept {
+  SkPathFillType fillType() const { return fFillType; }
+  SkRect computeBounds() const;
+
+  SkPath snapshot() const;  // the builder is unchanged after returning this path
+  SkPath detach();          // the builder is reset to empty after returning this path
+
+  SkPathBuilder& setFillType(SkPathFillType ft) {
     fFillType = ft;
     return *this;
   }
-  SkPathBuilder& setIsVolatile(bool isVolatile) noexcept {
+  SkPathBuilder& setIsVolatile(bool isVolatile) {
     fIsVolatile = isVolatile;
     return *this;
   }
@@ -60,6 +69,12 @@ class SK_API SkPathBuilder {
   SkPathBuilder& cubicTo(const SkPoint pts[3]) { return this->cubicTo(pts[0], pts[1], pts[2]); }
 
   SkPathBuilder& close();
+
+  // Append a series of lineTo(...)
+  SkPathBuilder& polylineTo(const SkPoint pts[], int count);
+  SkPathBuilder& polylineTo(const std::initializer_list<SkPoint>& list) {
+    return this->polylineTo(list.begin(), SkToInt(list.size()));
+  }
 
   // Relative versions of segments, relative to the previous position.
 
@@ -199,6 +214,13 @@ class SK_API SkPathBuilder {
   void incReserve(int extraPtCount, int extraVerbCount);
   void incReserve(int extraPtCount) { this->incReserve(extraPtCount, extraPtCount); }
 
+  SkPathBuilder& offset(SkScalar dx, SkScalar dy);
+
+  SkPathBuilder& toggleInverseFillType() {
+    fFillType = (SkPathFillType)((unsigned)fFillType ^ 2);
+    return *this;
+  }
+
  private:
   SkTDArray<SkPoint> fPts;
   SkTDArray<uint8_t> fVerbs;
@@ -222,9 +244,9 @@ class SK_API SkPathBuilder {
   bool fIsACCW = false;  // tracks direction iff fIsA is not unknown
 
   // for testing
-  SkPathConvexityType fConvexity = SkPathConvexityType::kUnknown;
+  SkPathConvexity fOverrideConvexity = SkPathConvexity::kUnknown;
 
-  int countVerbs() const noexcept { return fVerbs.count(); }
+  int countVerbs() const { return fVerbs.count(); }
 
   // called right before we add a (non-move) verb
   void ensureMove() {
@@ -236,8 +258,10 @@ class SK_API SkPathBuilder {
 
   SkPath make(sk_sp<SkPathRef>) const;
 
+  SkPathBuilder& privateReverseAddPath(const SkPath&);
+
   // For testing
-  void privateSetConvexityType(SkPathConvexityType c) noexcept { fConvexity = c; }
+  void privateSetConvexity(SkPathConvexity c) { fOverrideConvexity = c; }
 
   friend class SkPathPriv;
 };

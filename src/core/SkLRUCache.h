@@ -28,7 +28,7 @@ class SkLRUCache : public SkNoncopyable {
   };
 
  public:
-  explicit SkLRUCache(int maxCount) noexcept : fMaxCount(maxCount) {}
+  explicit SkLRUCache(int maxCount) : fMaxCount(maxCount) {}
 
   ~SkLRUCache() {
     Entry* node = fLRU.head();
@@ -62,7 +62,7 @@ class SkLRUCache : public SkNoncopyable {
     return &entry->fValue;
   }
 
-  int count() noexcept { return fMap.count(); }
+  int count() { return fMap.count(); }
 
   template <typename Fn>  // f(K*, V*)
   void foreach (Fn&& fn) {

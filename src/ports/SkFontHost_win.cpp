@@ -311,7 +311,7 @@ class FontMemResourceTypeface : public LogFontTypeface {
 
   HANDLE fFontMemResource;
 
-  typedef LogFontTypeface INHERITED;
+  using INHERITED = LogFontTypeface;
 };
 
 static const LOGFONT& get_default_font() {
@@ -466,7 +466,8 @@ const void* HDCOffscreen::draw(const SkGlyph& glyph, bool isBW, size_t* srcRBPtr
     fSavefont = (HFONT)SelectObject(fDC, fFont);
 
     COLORREF color = 0x00FFFFFF;
-    SkDEBUGCODE(COLORREF prev =) SetTextColor(fDC, color);
+    SkDEBUGCODE(COLORREF prev =)
+    SetTextColor(fDC, color);
     SkASSERT(prev != CLR_INVALID);
   }
 

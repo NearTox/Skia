@@ -58,13 +58,13 @@ class SK_API SkData final : public SkNVRefCnt<SkData> {
    *  length to the size of the data. If buffer is NULL, it is ignored, and
    *  only the computed number of bytes is returned.
    */
-  size_t copyRange(size_t offset, size_t length, void* buffer) const noexcept;
+  size_t copyRange(size_t offset, size_t length, void* buffer) const;
 
   /**
    *  Returns true if these two objects have the same length and contents,
    *  effectively returning 0 == memcmp(...)
    */
-  bool equals(const SkData* other) const noexcept;
+  bool equals(const SkData* other) const;
 
   /**
    *  Function that, if provided, will be called when the SkData goes out
@@ -173,7 +173,7 @@ class SK_API SkData final : public SkNVRefCnt<SkData> {
 
   static void DummyReleaseProc(const void*, void*);  // {}
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

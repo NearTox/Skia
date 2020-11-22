@@ -10,7 +10,7 @@
 
 #include <algorithm>
 
-bool GrRectanizerSkyline::addRect(int width, int height, SkIPoint16* loc) noexcept {
+bool GrRectanizerSkyline::addRect(int width, int height, SkIPoint16* loc) {
   if ((unsigned)width > (unsigned)this->width() || (unsigned)height > (unsigned)this->height()) {
     return false;
   }
@@ -48,8 +48,7 @@ bool GrRectanizerSkyline::addRect(int width, int height, SkIPoint16* loc) noexce
   return false;
 }
 
-bool GrRectanizerSkyline::rectangleFits(
-    int skylineIndex, int width, int height, int* ypos) const noexcept {
+bool GrRectanizerSkyline::rectangleFits(int skylineIndex, int width, int height, int* ypos) const {
   int x = fSkyline[skylineIndex].fX;
   if (x + width > this->width()) {
     return false;
@@ -72,8 +71,7 @@ bool GrRectanizerSkyline::rectangleFits(
   return true;
 }
 
-void GrRectanizerSkyline::addSkylineLevel(
-    int skylineIndex, int x, int y, int width, int height) noexcept {
+void GrRectanizerSkyline::addSkylineLevel(int skylineIndex, int x, int y, int width, int height) {
   SkylineSegment newSegment;
   newSegment.fX = x;
   newSegment.fY = y + height;

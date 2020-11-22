@@ -129,7 +129,7 @@ class TileImageFilterGM : public GM {
  private:
   sk_sp<SkImage> fBitmap, fCheckerboard;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -75,8 +75,7 @@ void SkSVGRect::onDraw(
 }
 
 SkPath SkSVGRect::onAsPath(const SkSVGRenderContext& ctx) const {
-  SkPath path;
-  path.addRRect(this->resolve(ctx.lengthContext()));
+  SkPath path = SkPath::RRect(this->resolve(ctx.lengthContext()));
 
   this->mapToParent(&path);
 

@@ -31,11 +31,11 @@ void GrPathRenderer::StencilPathArgs::validate() const {
 
 //////////////////////////////////////////////////////////////////////////////
 
-GrPathRenderer::GrPathRenderer() noexcept = default;
+GrPathRenderer::GrPathRenderer() {}
 
 GrPathRenderer::StencilSupport GrPathRenderer::getStencilSupport(const GrStyledShape& shape) const {
-  SkDEBUGCODE(SkPath path);
-  SkDEBUGCODE(shape.asPath(&path));
+  SkDEBUGCODE(SkPath path;)
+  SkDEBUGCODE(shape.asPath(&path);)
   SkASSERT(shape.style().isSimpleFill());
   SkASSERT(!path.isInverseFillType());
   return this->onGetStencilSupport(shape);

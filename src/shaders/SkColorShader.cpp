@@ -17,7 +17,7 @@
 
 SkColorShader::SkColorShader(SkColor c) : fColor(c) {}
 
-bool SkColorShader::isOpaque() const noexcept { return SkColorGetA(fColor) == 255; }
+bool SkColorShader::isOpaque() const { return SkColorGetA(fColor) == 255; }
 
 sk_sp<SkFlattenable> SkColorShader::CreateProc(SkReadBuffer& buffer) {
   return sk_make_sp<SkColorShader>(buffer.readColor());
@@ -90,14 +90,21 @@ skvm::Color SkColorShader::onProgram(
     skvm::Builder* p, skvm::Coord /*device*/, skvm::Coord /*local*/, skvm::Color /*paint*/,
     const SkMatrixProvider&, const SkMatrix* /*localM*/, SkFilterQuality /*quality*/,
     const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const {
-  return p->uniformPremul(
-      SkColor4f::FromColor(fColor), sk_srgb_singleton(), uniforms, dst.colorSpace());
+  SkColor4f color = SkColor4f::FromColor(fColor);
+  SkColorSpaceXformSteps(
+      sk_srgb_singleton(), kUnpremul_SkAlphaType, dst.colorSpace(), kPremul_SkAlphaType)
+      .apply(color.vec());
+  return p->uniformColor(color, uniforms);
 }
 skvm::Color SkColor4Shader::onProgram(
     skvm::Builder* p, skvm::Coord /*device*/, skvm::Coord /*local*/, skvm::Color /*paint*/,
     const SkMatrixProvider&, const SkMatrix* /*localM*/, SkFilterQuality /*quality*/,
     const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const {
-  return p->uniformPremul(fColor, fColorSpace.get(), uniforms, dst.colorSpace());
+  SkColor4f color = fColor;
+  SkColorSpaceXformSteps(
+      fColorSpace.get(), kUnpremul_SkAlphaType, dst.colorSpace(), kPremul_SkAlphaType)
+      .apply(color.vec());
+  return p->uniformColor(color, uniforms);
 }
 
 #if SK_SUPPORT_GPU

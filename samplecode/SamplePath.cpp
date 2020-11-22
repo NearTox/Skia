@@ -192,7 +192,7 @@ class PathView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new PathView;)
 
@@ -286,7 +286,7 @@ class ArcToView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new ArcToView;)
 
@@ -412,7 +412,7 @@ class FatStroke : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new FatStroke;)
 
@@ -518,7 +518,7 @@ class CubicCurve : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new CubicCurve;)
 
@@ -700,6 +700,6 @@ class CubicCurve2 : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new CubicCurve2;)

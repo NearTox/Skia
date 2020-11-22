@@ -22,10 +22,10 @@ class GrCCClipProcessor : public GrFragmentProcessor {
       std::unique_ptr<GrFragmentProcessor>, const GrCaps&, const GrCCClipPath*, IsCoverageCount,
       MustCheckBounds);
 
-  const char* name() const noexcept override { return "GrCCClipProcessor"; }
+  const char* name() const override { return "GrCCClipProcessor"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
 
  private:
@@ -37,7 +37,7 @@ class GrCCClipProcessor : public GrFragmentProcessor {
 
   class Impl;
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 #endif

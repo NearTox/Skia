@@ -109,7 +109,7 @@ class GrGLCaps : public GrCaps {
       const GrContextOptions& contextOptions, const GrGLContextInfo& ctxInfo,
       const GrGLInterface* glInterface);
 
-  bool isFormatSRGB(const GrBackendFormat&) const noexcept override;
+  bool isFormatSRGB(const GrBackendFormat&) const override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isFormatTexturable(GrGLFormat) const;
@@ -131,14 +131,14 @@ class GrGLCaps : public GrCaps {
   }
   int maxRenderTargetSampleCount(GrGLFormat) const;
 
-  size_t bytesPerPixel(GrGLFormat) const noexcept;
+  size_t bytesPerPixel(GrGLFormat) const;
   size_t bytesPerPixel(const GrBackendFormat&) const override;
 
   bool isFormatCopyable(const GrBackendFormat&) const override;
 
-  bool canFormatBeFBOColorAttachment(GrGLFormat) const noexcept;
+  bool canFormatBeFBOColorAttachment(GrGLFormat) const;
 
-  GrGLFormat getFormatFromColorType(GrColorType colorType) const noexcept {
+  GrGLFormat getFormatFromColorType(GrColorType colorType) const {
     int idx = static_cast<int>(colorType);
     return fColorTypeToFormatTable[idx];
   }
@@ -147,7 +147,7 @@ class GrGLCaps : public GrCaps {
    * Gets the internal format to use with glTexImage...() and glTexStorage...(). May be sized or
    * base depending upon the GL. Not applicable to compressed textures.
    */
-  GrGLenum getTexImageOrStorageInternalFormat(GrGLFormat format) const noexcept {
+  GrGLenum getTexImageOrStorageInternalFormat(GrGLFormat format) const {
     return this->getFormatInfo(format).fInternalFormatForTexImageOrStorage;
   }
 
@@ -184,9 +184,9 @@ class GrGLCaps : public GrCaps {
    * to be supported by the driver but are legal GLenum names given the GL
    * version and extensions supported.
    */
-  const SkTArray<StencilFormat, true>& stencilFormats() const noexcept { return fStencilFormats; }
+  const SkTArray<StencilFormat, true>& stencilFormats() const { return fStencilFormats; }
 
-  bool formatSupportsTexStorage(GrGLFormat) const noexcept;
+  bool formatSupportsTexStorage(GrGLFormat) const;
 
   /**
    * Would it be useful to check GL_IMPLEMENTATION_READ_FORMAT and _TYPE for this format to
@@ -205,21 +205,21 @@ class GrGLCaps : public GrCaps {
    * Gets the internal format to use with glRenderbufferStorageMultisample...(). May be sized or
    * base depending upon the GL. Not applicable to compressed textures.
    */
-  GrGLenum getRenderbufferInternalFormat(GrGLFormat format) const noexcept {
+  GrGLenum getRenderbufferInternalFormat(GrGLFormat format) const {
     return this->getFormatInfo(format).fInternalFormatForRenderbuffer;
   }
 
   /**
    * Gets the default external type to use with glTex[Sub]Image... when the data pointer is null.
    */
-  GrGLenum getFormatDefaultExternalType(GrGLFormat format) const noexcept {
+  GrGLenum getFormatDefaultExternalType(GrGLFormat format) const {
     return this->getFormatInfo(format).fDefaultExternalType;
   }
 
   /**
    * Has a stencil format index been found for the format (or we've found that no format works).
    */
-  bool hasStencilFormatBeenDeterminedForFormat(GrGLFormat format) const noexcept {
+  bool hasStencilFormatBeenDeterminedForFormat(GrGLFormat format) const {
     return this->getFormatInfo(format).fStencilFormatIndex != FormatInfo::kUnknown_StencilIndex;
   }
 
@@ -229,7 +229,7 @@ class GrGLCaps : public GrCaps {
    * no stencil format is supported with the format. Otherwise, returned index refers to the array
    * returned by stencilFormats().
    */
-  int getStencilFormatIndexForFormat(GrGLFormat format) const noexcept {
+  int getStencilFormatIndexForFormat(GrGLFormat format) const {
     SkASSERT(this->hasStencilFormatBeenDeterminedForFormat(format));
     return this->getFormatInfo(format).fStencilFormatIndex;
   }
@@ -243,12 +243,12 @@ class GrGLCaps : public GrCaps {
   /**
    * Reports the type of MSAA FBO support.
    */
-  MSFBOType msFBOType() const noexcept { return fMSFBOType; }
+  MSFBOType msFBOType() const { return fMSFBOType; }
 
   /**
    * Does the preferred MSAA FBO extension have MSAA renderbuffers?
    */
-  bool usesMSAARenderBuffers() const noexcept {
+  bool usesMSAARenderBuffers() const {
     return kNone_MSFBOType != fMSFBOType && kES_IMG_MsToTexture_MSFBOType != fMSFBOType &&
            kES_EXT_MsToTexture_MSFBOType != fMSFBOType;
   }
@@ -256,67 +256,65 @@ class GrGLCaps : public GrCaps {
   /**
    * What functionality is supported by glBlitFramebuffer.
    */
-  uint32_t blitFramebufferSupportFlags() const noexcept { return fBlitFramebufferFlags; }
+  uint32_t blitFramebufferSupportFlags() const { return fBlitFramebufferFlags; }
 
   /**
    * Is the MSAA FBO extension one where the texture is multisampled when bound to an FBO and
    * then implicitly resolved when read.
    */
-  bool usesImplicitMSAAResolve() const noexcept {
+  bool usesImplicitMSAAResolve() const {
     return kES_IMG_MsToTexture_MSFBOType == fMSFBOType ||
            kES_EXT_MsToTexture_MSFBOType == fMSFBOType;
   }
 
-  InvalidateFBType invalidateFBType() const noexcept { return fInvalidateFBType; }
+  InvalidateFBType invalidateFBType() const { return fInvalidateFBType; }
 
   /// What type of buffer mapping is supported?
-  MapBufferType mapBufferType() const noexcept { return fMapBufferType; }
+  MapBufferType mapBufferType() const { return fMapBufferType; }
 
   /// What type of transfer buffer is supported?
-  TransferBufferType transferBufferType() const noexcept { return fTransferBufferType; }
+  TransferBufferType transferBufferType() const { return fTransferBufferType; }
 
   /// How are GrFences implemented?
-  FenceType fenceType() const noexcept { return fFenceType; }
+  FenceType fenceType() const { return fFenceType; }
 
   /// The maximum number of fragment uniform vectors (GLES has min. 16).
-  int maxFragmentUniformVectors() const noexcept { return fMaxFragmentUniformVectors; }
+  int maxFragmentUniformVectors() const { return fMaxFragmentUniformVectors; }
 
   /// Is there support for GL_PACK_REVERSE_ROW_ORDER
-  bool packFlipYSupport() const noexcept { return fPackFlipYSupport; }
+  bool packFlipYSupport() const { return fPackFlipYSupport; }
 
   /// Is there support for texture parameter GL_TEXTURE_USAGE
-  bool textureUsageSupport() const noexcept { return fTextureUsageSupport; }
+  bool textureUsageSupport() const { return fTextureUsageSupport; }
 
   /// Is GL_ARB_IMAGING supported
-  bool imagingSupport() const noexcept { return fImagingSupport; }
+  bool imagingSupport() const { return fImagingSupport; }
 
   /// Is there support for Vertex Array Objects?
-  bool vertexArrayObjectSupport() const noexcept { return fVertexArrayObjectSupport; }
+  bool vertexArrayObjectSupport() const { return fVertexArrayObjectSupport; }
 
   /// Is there support for GL_KHR_debug?
-  bool debugSupport() const noexcept { return fDebugSupport; }
+  bool debugSupport() const { return fDebugSupport; }
 
   /// Is there support for ES2 compatability?
-  bool ES2CompatibilitySupport() const noexcept { return fES2CompatibilitySupport; }
+  bool ES2CompatibilitySupport() const { return fES2CompatibilitySupport; }
 
   /// Is there support for GL_ANGLE_base_vertex_base_instance?
-  bool ANGLEMultiDrawSupport() const noexcept { return fANGLEMultiDrawSupport; }
+  bool ANGLEMultiDrawSupport() const { return fANGLEMultiDrawSupport; }
 
   /// Is there support for glMultiDraw*Indirect? Note that the baseInstance fields of indirect
   /// draw commands cannot be used unless we have base instance support.
-  bool multiDrawIndirectSupport() const noexcept { return fMultiDrawIndirectSupport; }
+  bool multiDrawIndirectSupport() const { return fMultiDrawIndirectSupport; }
 
   /// Is there support for glDrawRangeElements?
-  bool drawRangeElementsSupport() const noexcept { return fDrawRangeElementsSupport; }
+  bool drawRangeElementsSupport() const { return fDrawRangeElementsSupport; }
 
   /// Are the glDraw*Base(VertexBase)Instance methods, and baseInstance fields in indirect draw
   // commands supported?
-  bool baseVertexBaseInstanceSupport() const noexcept { return fBaseVertexBaseInstanceSupport; }
+  bool baseVertexBaseInstanceSupport() const { return fBaseVertexBaseInstanceSupport; }
 
   /// Use indices or vertices in CPU arrays rather than VBOs for dynamic content.
-  bool useNonVBOVertexAndIndexDynamicData() const noexcept {
-    return fUseNonVBOVertexAndIndexDynamicData;
-  }
+  bool useNonVBOVertexAndIndexDynamicData() const { return fUseNonVBOVertexAndIndexDynamicData; }
 
   SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const override;
 
@@ -324,81 +322,85 @@ class GrGLCaps : public GrCaps {
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
       GrColorType srcColorType) const override;
 
-  bool isCoreProfile() const noexcept { return fIsCoreProfile; }
+  bool isCoreProfile() const { return fIsCoreProfile; }
 
-  bool bindFragDataLocationSupport() const noexcept { return fBindFragDataLocationSupport; }
+  bool bindFragDataLocationSupport() const { return fBindFragDataLocationSupport; }
 
-  bool bindUniformLocationSupport() const noexcept { return fBindUniformLocationSupport; }
+  bool bindUniformLocationSupport() const { return fBindUniformLocationSupport; }
 
   /// Are textures with GL_TEXTURE_RECTANGLE type supported.
-  bool rectangleTextureSupport() const noexcept { return fRectangleTextureSupport; }
+  bool rectangleTextureSupport() const { return fRectangleTextureSupport; }
 
-  bool mipmapLevelAndLodControlSupport() const noexcept { return fMipmapLevelAndLodControlSupport; }
+  /// Can set the BASE and MAX mip map level.
+  bool mipmapLevelControlSupport() const { return fMipmapLevelControlSupport; }
 
-  bool doManualMipmapping() const noexcept { return fDoManualMipmapping; }
+  /// Can set the MIN/MAX LOD value.
+  bool mipmapLodControlSupport() const { return fMipmapLodControlSupport; }
+
+  bool doManualMipmapping() const { return fDoManualMipmapping; }
 
   void onDumpJSON(SkJSONWriter*) const override;
 
-  bool rgba8888PixelsOpsAreSlow() const noexcept { return fRGBA8888PixelsOpsAreSlow; }
-  bool partialFBOReadIsSlow() const noexcept { return fPartialFBOReadIsSlow; }
-  bool rgbaToBgraReadbackConversionsAreSlow() const noexcept {
+  bool rgba8888PixelsOpsAreSlow() const { return fRGBA8888PixelsOpsAreSlow; }
+  bool partialFBOReadIsSlow() const { return fPartialFBOReadIsSlow; }
+  bool rgbaToBgraReadbackConversionsAreSlow() const {
     return fRGBAToBGRAReadbackConversionsAreSlow;
   }
 
-  bool useBufferDataNullHint() const noexcept { return fUseBufferDataNullHint; }
+  bool useBufferDataNullHint() const { return fUseBufferDataNullHint; }
 
   // Certain Intel GPUs on Mac fail to clear if the glClearColor is made up of only 1s and 0s.
-  bool clearToBoundaryValuesIsBroken() const noexcept { return fClearToBoundaryValuesIsBroken; }
+  bool clearToBoundaryValuesIsBroken() const { return fClearToBoundaryValuesIsBroken; }
 
   /// glClearTex(Sub)Image support
-  bool clearTextureSupport() const noexcept { return fClearTextureSupport; }
+  bool clearTextureSupport() const { return fClearTextureSupport; }
 
   // Adreno/MSAA drops a draw on the imagefiltersbase GM if the base vertex param to
   // glDrawArrays is nonzero.
   // https://bugs.chromium.org/p/skia/issues/detail?id=6650
-  bool drawArraysBaseVertexIsBroken() const noexcept { return fDrawArraysBaseVertexIsBroken; }
+  bool drawArraysBaseVertexIsBroken() const { return fDrawArraysBaseVertexIsBroken; }
 
   // If true then we must use an intermediate surface to perform partial updates to unorm textures
   // that have ever been bound to a FBO.
-  bool disallowTexSubImageForUnormConfigTexturesEverBoundToFBO() const noexcept {
+  bool disallowTexSubImageForUnormConfigTexturesEverBoundToFBO() const {
     return fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO;
   }
 
   // Use an intermediate surface to write pixels (full or partial overwrite) to into a texture
   // that is bound to an FBO.
-  bool useDrawInsteadOfAllRenderTargetWrites() const noexcept {
+  bool useDrawInsteadOfAllRenderTargetWrites() const {
     return fUseDrawInsteadOfAllRenderTargetWrites;
   }
 
   // At least some Adreno 3xx drivers draw lines incorrectly after drawing non-lines. Toggling
   // face culling on and off seems to resolve this.
-  bool requiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines() const noexcept {
+  bool requiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines() const {
     return fRequiresCullFaceEnableDisableWhenDrawingLinesAfterNonLines;
   }
 
   // Some Adreno drivers refuse to ReadPixels from an MSAA buffer that has stencil attached.
-  bool detachStencilFromMSAABuffersBeforeReadPixels() const noexcept {
+  bool detachStencilFromMSAABuffersBeforeReadPixels() const {
     return fDetachStencilFromMSAABuffersBeforeReadPixels;
   }
 
   // Older Android versions seem to have an issue with setting GL_TEXTURE_BASE_LEVEL or
   // GL_TEXTURE_MAX_LEVEL for GL_TEXTURE_EXTERNAL_OES textures.
-  bool dontSetBaseOrMaxLevelForExternalTextures() const noexcept {
+  bool dontSetBaseOrMaxLevelForExternalTextures() const {
     return fDontSetBaseOrMaxLevelForExternalTextures;
   }
 
   // PowerVRGX6250 drops every pixel if we modify the sample mask while color writes are disabled.
-  bool neverDisableColorWrites() const noexcept { return fNeverDisableColorWrites; }
+  bool neverDisableColorWrites() const { return fNeverDisableColorWrites; }
 
   // Texture parameters must be used to enable MIP mapping even when a sampler object is used.
-  bool mustSetAnyTexParameterToEnableMipmapping() const noexcept {
+  bool mustSetAnyTexParameterToEnableMipmapping() const {
     return fMustSetAnyTexParameterToEnableMipmapping;
   }
 
   // Returns the observed maximum number of instances the driver can handle in a single draw call
   // without crashing, or 'pendingInstanceCount' if this workaround is not necessary.
   // NOTE: the return value may be larger than pendingInstanceCount.
-  int maxInstancesPerDrawWithoutCrashing(int pendingInstanceCount) const noexcept {
+  int maxInstancesPerDrawWithoutCrashing(int pendingInstanceCount) const {
     return (fMaxInstancesPerDrawWithoutCrashing) ? fMaxInstancesPerDrawWithoutCrashing
                                                  : pendingInstanceCount;
   }
@@ -417,26 +419,35 @@ class GrGLCaps : public GrCaps {
   DstCopyRestrictions getDstCopyRestrictions(
       const GrRenderTargetProxy* src, GrColorType) const override;
 
-  bool programBinarySupport() const noexcept { return fProgramBinarySupport; }
-  bool programParameterSupport() const noexcept { return fProgramParameterSupport; }
+  bool programBinarySupport() const { return fProgramBinarySupport; }
+  bool programParameterSupport() const { return fProgramParameterSupport; }
 
-  bool samplerObjectSupport() const noexcept { return fSamplerObjectSupport; }
+  /** Are sampler objects available in this GL? */
+  bool samplerObjectSupport() const { return fSamplerObjectSupport; }
 
-  bool tiledRenderingSupport() const noexcept { return fTiledRenderingSupport; }
+  /**
+   * Are we using sampler objects in favor of texture parameters? (This will only be true if
+   * samplerObjectSupport()).
+   */
+  bool useSamplerObjects() const { return fUseSamplerObjects; }
 
-  bool fbFetchRequiresEnablePerSample() const noexcept { return fFBFetchRequiresEnablePerSample; }
+  bool textureSwizzleSupport() const { return fTextureSwizzleSupport; }
+
+  bool tiledRenderingSupport() const { return fTiledRenderingSupport; }
+
+  bool fbFetchRequiresEnablePerSample() const { return fFBFetchRequiresEnablePerSample; }
 
   /* Is there support for enabling/disabling sRGB writes for sRGB-capable color buffers? */
-  bool srgbWriteControl() const noexcept { return fSRGBWriteControl; }
+  bool srgbWriteControl() const { return fSRGBWriteControl; }
 
   /** Skip checks for GL errors, shader compilation success, program link success. */
-  bool skipErrorChecks() const noexcept { return fSkipErrorChecks; }
+  bool skipErrorChecks() const { return fSkipErrorChecks; }
 
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
 
   GrSwizzle getWriteSwizzle(const GrBackendFormat&, GrColorType) const override;
 
-  uint64_t computeFormatKey(const GrBackendFormat&) const noexcept override;
+  uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
   GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const override;
 
@@ -497,6 +508,8 @@ class GrGLCaps : public GrCaps {
 
   GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const override;
 
+  GrDstSampleType onGetDstSampleTypeForProxy(const GrRenderTargetProxy*) const override;
+
   GrGLStandard fStandard = kNone_GrGLStandard;
 
   SkTArray<StencilFormat, true> fStencilFormats;
@@ -526,13 +539,16 @@ class GrGLCaps : public GrCaps {
   bool fPartialFBOReadIsSlow : 1;
   bool fBindUniformLocationSupport : 1;
   bool fRectangleTextureSupport : 1;
-  bool fMipmapLevelAndLodControlSupport : 1;
+  bool fMipmapLevelControlSupport : 1;
+  bool fMipmapLodControlSupport : 1;
   bool fRGBAToBGRAReadbackConversionsAreSlow : 1;
   bool fUseBufferDataNullHint : 1;
   bool fClearTextureSupport : 1;
   bool fProgramBinarySupport : 1;
   bool fProgramParameterSupport : 1;
   bool fSamplerObjectSupport : 1;
+  bool fUseSamplerObjects : 1;
+  bool fTextureSwizzleSupport : 1;
   bool fTiledRenderingSupport : 1;
   bool fFBFetchRequiresEnablePerSample : 1;
   bool fSRGBWriteControl : 1;
@@ -601,7 +617,7 @@ class GrGLCaps : public GrCaps {
 
     GrGLenum externalFormat(
         GrColorType externalColorType, ExternalFormatUsage usage,
-        bool haveQueriedImplementationReadFormat) const noexcept {
+        bool haveQueriedImplementationReadFormat) const {
       for (int i = 0; i < fExternalIOFormatCount; ++i) {
         if (fExternalIOFormats[i].fColorType == externalColorType) {
           if (usage == kTexImage_ExternalFormatUsage) {
@@ -619,7 +635,7 @@ class GrGLCaps : public GrCaps {
       return 0;
     }
 
-    GrGLenum externalType(GrColorType externalColorType) const noexcept {
+    GrGLenum externalType(GrColorType externalColorType) const {
       for (int i = 0; i < fExternalIOFormatCount; ++i) {
         if (fExternalIOFormats[i].fColorType == externalColorType) {
           return fExternalIOFormats[i].fExternalType;
@@ -633,7 +649,7 @@ class GrGLCaps : public GrCaps {
   };
 
   struct FormatInfo {
-    uint32_t colorTypeFlags(GrColorType colorType) const noexcept {
+    uint32_t colorTypeFlags(GrColorType colorType) const {
       for (int i = 0; i < fColorTypeInfoCount; ++i) {
         if (fColorTypeInfos[i].fColorType == colorType) {
           return fColorTypeInfos[i].fFlags;
@@ -644,7 +660,7 @@ class GrGLCaps : public GrCaps {
 
     GrGLenum externalFormat(
         GrColorType surfaceColorType, GrColorType externalColorType,
-        ExternalFormatUsage usage) const noexcept {
+        ExternalFormatUsage usage) const {
       for (int i = 0; i < fColorTypeInfoCount; ++i) {
         if (fColorTypeInfos[i].fColorType == surfaceColorType) {
           return fColorTypeInfos[i].externalFormat(
@@ -654,8 +670,7 @@ class GrGLCaps : public GrCaps {
       return 0;
     }
 
-    GrGLenum externalType(
-        GrColorType surfaceColorType, GrColorType externalColorType) const noexcept {
+    GrGLenum externalType(GrColorType surfaceColorType, GrColorType externalColorType) const {
       for (int i = 0; i < fColorTypeInfoCount; ++i) {
         if (fColorTypeInfos[i].fColorType == surfaceColorType) {
           return fColorTypeInfos[i].externalType(externalColorType);
@@ -719,17 +734,15 @@ class GrGLCaps : public GrCaps {
 
   FormatInfo fFormatTable[kGrGLFormatCount];
 
-  FormatInfo& getFormatInfo(GrGLFormat format) noexcept {
-    return fFormatTable[static_cast<int>(format)];
-  }
-  const FormatInfo& getFormatInfo(GrGLFormat format) const noexcept {
+  FormatInfo& getFormatInfo(GrGLFormat format) { return fFormatTable[static_cast<int>(format)]; }
+  const FormatInfo& getFormatInfo(GrGLFormat format) const {
     return fFormatTable[static_cast<int>(format)];
   }
 
   GrGLFormat fColorTypeToFormatTable[kGrColorTypeCnt];
   void setColorTypeFormat(GrColorType, GrGLFormat);
 
-  typedef GrCaps INHERITED;
+  using INHERITED = GrCaps;
 };
 
 #endif

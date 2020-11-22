@@ -62,6 +62,6 @@ class GrMtlPipelineStateBuilder : public GrGLSLProgramBuilder {
   GrMtlUniformHandler fUniformHandler;
   GrMtlVaryingHandler fVaryingHandler;
 
-  typedef GrGLSLProgramBuilder INHERITED;
+  using INHERITED = GrGLSLProgramBuilder;
 };
 #endif

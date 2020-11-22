@@ -18,7 +18,7 @@ SkCornerPathEffect::SkCornerPathEffect(SkScalar radius) {
   }
   fRadius = radius;
 }
-SkCornerPathEffect::~SkCornerPathEffect() = default;
+SkCornerPathEffect::~SkCornerPathEffect() {}
 
 static bool ComputeStep(const SkPoint& a, const SkPoint& b, SkScalar radius, SkPoint* step) {
   SkScalar dist = SkPoint::Distance(a, b);

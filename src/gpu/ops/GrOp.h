@@ -13,7 +13,6 @@
 #include "include/core/SkString.h"
 #include "include/gpu/GrRecordingContext.h"
 #include "src/gpu/GrGpuResource.h"
-#include "src/gpu/GrNonAtomicRef.h"
 #include "src/gpu/GrTracing.h"
 #include "src/gpu/GrXferProcessor.h"
 #include <atomic>
@@ -59,7 +58,7 @@ class GrOpsRenderPass;
 
 // A helper macro to generate a class static id
 #define DEFINE_OP_CLASS_ID                     \
-  static uint32_t ClassID() noexcept {         \
+  static uint32_t ClassID() {                  \
     static uint32_t kClassID = GenOpClassID(); \
     return kClassID;                           \
   }
@@ -68,7 +67,7 @@ class GrOp : private SkNoncopyable {
  public:
   virtual ~GrOp() = default;
 
-  virtual const char* name() const noexcept = 0;
+  virtual const char* name() const = 0;
 
   using VisitProxyFunc = std::function<void(GrSurfaceProxy*, GrMipmapped)>;
 
@@ -100,23 +99,23 @@ class GrOp : private SkNoncopyable {
   CombineResult combineIfPossible(
       GrOp* that, GrRecordingContext::Arenas* arena, const GrCaps& caps);
 
-  const SkRect& bounds() const noexcept {
+  const SkRect& bounds() const {
     SkASSERT(kUninitialized_BoundsFlag != fBoundsFlags);
     return fBounds;
   }
 
-  void setClippedBounds(const SkRect& clippedBounds) noexcept {
+  void setClippedBounds(const SkRect& clippedBounds) {
     fBounds = clippedBounds;
     // The clipped bounds already incorporate any effect of the bounds flags.
     fBoundsFlags = 0;
   }
 
-  bool hasAABloat() const noexcept {
+  bool hasAABloat() const {
     SkASSERT(fBoundsFlags != kUninitialized_BoundsFlag);
     return SkToBool(fBoundsFlags & kAABloat_BoundsFlag);
   }
 
-  bool hasZeroArea() const noexcept {
+  bool hasZeroArea() const {
     SkASSERT(fBoundsFlags != kUninitialized_BoundsFlag);
     return SkToBool(fBoundsFlags & kZeroArea_BoundsFlag);
   }
@@ -134,24 +133,24 @@ class GrOp : private SkNoncopyable {
    * Helper for safely down-casting to a GrOp subclass
    */
   template <typename T>
-  const T& cast() const noexcept {
+  const T& cast() const {
     SkASSERT(T::ClassID() == this->classID());
     return *static_cast<const T*>(this);
   }
 
   template <typename T>
-  T* cast() noexcept {
+  T* cast() {
     SkASSERT(T::ClassID() == this->classID());
     return static_cast<T*>(this);
   }
 
-  uint32_t classID() const noexcept {
+  uint32_t classID() const {
     SkASSERT(kIllegalOpID != fClassID);
     return fClassID;
   }
 
   // We lazily initialize the uniqueID because currently the only user is GrAuditTrail
-  uint32_t uniqueID() const noexcept {
+  uint32_t uniqueID() const {
     if (kIllegalOpID == fUniqueID) {
       fUniqueID = GenOpID();
     }
@@ -165,8 +164,9 @@ class GrOp : private SkNoncopyable {
    */
   void prePrepare(
       GrRecordingContext* context, GrSurfaceProxyView* dstView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) {
-    this->onPrePrepare(context, dstView, clip, dstProxyView);
+      const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) {
+    this->onPrePrepare(context, dstView, clip, dstProxyView, renderPassXferBarriers);
   }
 
   /**
@@ -202,12 +202,12 @@ class GrOp : private SkNoncopyable {
    private:
     class Iter {
      public:
-      explicit Iter(const OpSubclass* head) noexcept : fCurr(head) {}
-      inline Iter& operator++() noexcept {
+      explicit Iter(const OpSubclass* head) : fCurr(head) {}
+      inline Iter& operator++() {
         return *this = Iter(static_cast<const OpSubclass*>(fCurr->nextInChain()));
       }
-      const OpSubclass& operator*() const noexcept { return *fCurr; }
-      bool operator!=(const Iter& that) const noexcept { return fCurr != that.fCurr; }
+      const OpSubclass& operator*() const { return *fCurr; }
+      bool operator!=(const Iter& that) const { return fCurr != that.fCurr; }
 
      private:
       const OpSubclass* fCurr;
@@ -215,37 +215,37 @@ class GrOp : private SkNoncopyable {
     const OpSubclass* fHead;
 
    public:
-    explicit ChainRange(const OpSubclass* head) noexcept : fHead(head) {}
-    Iter begin() noexcept { return Iter(fHead); }
-    Iter end() noexcept { return Iter(nullptr); }
+    explicit ChainRange(const OpSubclass* head) : fHead(head) {}
+    Iter begin() { return Iter(fHead); }
+    Iter end() { return Iter(nullptr); }
   };
 
   /**
    * Concatenates two op chains. This op must be a tail and the passed op must be a head. The ops
    * must be of the same subclass.
    */
-  void chainConcat(std::unique_ptr<GrOp>) noexcept;
+  void chainConcat(std::unique_ptr<GrOp>);
   /** Returns true if this is the head of a chain (including a length 1 chain). */
-  bool isChainHead() const noexcept { return !fPrevInChain; }
+  bool isChainHead() const { return !fPrevInChain; }
   /** Returns true if this is the tail of a chain (including a length 1 chain). */
-  bool isChainTail() const noexcept { return !fNextInChain; }
+  bool isChainTail() const { return !fNextInChain; }
   /** The next op in the chain. */
-  GrOp* nextInChain() const noexcept { return fNextInChain.get(); }
+  GrOp* nextInChain() const { return fNextInChain.get(); }
   /** The previous op in the chain. */
-  GrOp* prevInChain() const noexcept { return fPrevInChain; }
+  GrOp* prevInChain() const { return fPrevInChain; }
   /**
    * Cuts the chain after this op. The returned op is the op that was previously next in the
    * chain or null if this was already a tail.
    */
-  std::unique_ptr<GrOp> cutChain() noexcept;
+  std::unique_ptr<GrOp> cutChain();
   SkDEBUGCODE(void validateChain(GrOp* expectedTail = nullptr) const);
 
 #ifdef SK_DEBUG
-  virtual void validate() const noexcept {}
+  virtual void validate() const {}
 #endif
 
  protected:
-  GrOp(uint32_t classID) noexcept;
+  GrOp(uint32_t classID);
 
   /**
    * Indicates that the op will produce geometry that extends beyond its bounds for the
@@ -259,7 +259,7 @@ class GrOp : private SkNoncopyable {
    */
   enum class IsHairline : bool { kNo = false, kYes = true };
 
-  void setBounds(const SkRect& newBounds, HasAABloat aabloat, IsHairline zeroArea) noexcept {
+  void setBounds(const SkRect& newBounds, HasAABloat aabloat, IsHairline zeroArea) {
     fBounds = newBounds;
     this->setBoundsFlags(aabloat, zeroArea);
   }
@@ -268,14 +268,14 @@ class GrOp : private SkNoncopyable {
     m.mapRect(&fBounds, srcBounds);
     this->setBoundsFlags(aabloat, zeroArea);
   }
-  void makeFullScreen(GrSurfaceProxy* proxy) noexcept {
+  void makeFullScreen(GrSurfaceProxy* proxy) {
     this->setBounds(proxy->getBoundsRect(), HasAABloat::kNo, IsHairline::kNo);
   }
 
-  static uint32_t GenOpClassID() noexcept { return GenID(&gCurrOpClassID); }
+  static uint32_t GenOpClassID() { return GenID(&gCurrOpClassID); }
 
  private:
-  void joinBounds(const GrOp& that) noexcept {
+  void joinBounds(const GrOp& that) {
     if (that.hasAABloat()) {
       fBoundsFlags |= kAABloat_BoundsFlag;
     }
@@ -292,7 +292,7 @@ class GrOp : private SkNoncopyable {
   // TODO: the parameters to onPrePrepare mirror GrOpFlushState::OpArgs - fuse the two?
   virtual void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) = 0;
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) = 0;
   virtual void onPrepare(GrOpFlushState*) = 0;
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.
   // Otherwise, this op's bounds.
@@ -301,7 +301,7 @@ class GrOp : private SkNoncopyable {
   virtual SkString onDumpInfo() const { return SkString(); }
 #endif
 
-  static uint32_t GenID(std::atomic<uint32_t>* idCounter) noexcept {
+  static uint32_t GenID(std::atomic<uint32_t>* idCounter) {
     uint32_t id = (*idCounter)++;
     if (id == 0) {
       SK_ABORT(
@@ -311,7 +311,7 @@ class GrOp : private SkNoncopyable {
     return id;
   }
 
-  void setBoundsFlags(HasAABloat aabloat, IsHairline zeroArea) noexcept {
+  void setBoundsFlags(HasAABloat aabloat, IsHairline zeroArea) {
     fBoundsFlags = 0;
     fBoundsFlags |= (HasAABloat::kYes == aabloat) ? kAABloat_BoundsFlag : 0;
     fBoundsFlags |= (IsHairline ::kYes == zeroArea) ? kZeroArea_BoundsFlag : 0;
@@ -332,7 +332,7 @@ class GrOp : private SkNoncopyable {
   const uint16_t fClassID;
   uint16_t fBoundsFlags;
 
-  static uint32_t GenOpID() noexcept { return GenID(&gCurrOpUniqueID); }
+  static uint32_t GenOpID() { return GenID(&gCurrOpUniqueID); }
   mutable uint32_t fUniqueID = SK_InvalidUniqueID;
   SkRect fBounds;
 

@@ -481,10 +481,10 @@ const char* kFontFormatCFF = "CFF";
 #endif
 
 SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect() {
-  SkDEBUGCODE(fontconfiginterface_unittest());
+  SkDEBUGCODE(fontconfiginterface_unittest();)
 }
 
-SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() = default;
+SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() {}
 
 bool SkFontConfigInterfaceDirect::isAccessible(const char* filename) {
   if (access(filename, R_OK) != 0) {

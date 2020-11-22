@@ -52,7 +52,7 @@ void GrCCClipProcessor::onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKe
   b->add32(key);
 }
 
-bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const noexcept {
+bool GrCCClipProcessor::onIsEqual(const GrFragmentProcessor& fp) const {
   const GrCCClipProcessor& that = fp.cast<GrCCClipProcessor>();
   return that.fClipPath->deviceSpacePath().getGenerationID() ==
              fClipPath->deviceSpacePath().getGenerationID() &&

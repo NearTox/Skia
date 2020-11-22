@@ -81,7 +81,7 @@ class GrDrawingManager {
       GrSurfaceProxyView srcView, const SkIRect& srcRect, GrSurfaceProxyView dstView,
       const SkIPoint& dstPoint);
 
-  GrRecordingContext* getContext() noexcept { return fContext; }
+  GrRecordingContext* getContext() { return fContext; }
 
   GrPathRenderer* getPathRenderer(
       const GrPathRenderer::CanDrawPathArgs& args, bool allowSW,
@@ -111,6 +111,9 @@ class GrDrawingManager {
 
 #if GR_TEST_UTILS
   void testingOnly_removeOnFlushCallbackObject(GrOnFlushCallbackObject*);
+  GrPathRendererChain::Options testingOnly_getOptionsForPathRendererChain() {
+    return fOptionsForPathRendererChain;
+  }
 #endif
 
   GrRenderTask* getLastRenderTask(const GrSurfaceProxy*) const;
@@ -125,7 +128,7 @@ class GrDrawingManager {
   // renderTasks.
   class RenderTaskDAG {
    public:
-    RenderTaskDAG(bool sortRenderTasks) noexcept;
+    RenderTaskDAG(bool sortRenderTasks);
     ~RenderTaskDAG();
 
     // Currently, when explicitly allocating resources, this call will topologically sort the
@@ -137,7 +140,7 @@ class GrDrawingManager {
 
     void gatherIDs(SkSTArray<8, uint32_t, true>* idArray) const;
 
-    void reset() noexcept;
+    void reset();
 
     // This call forceably removes GrRenderTasks from the DAG. It is problematic bc it
     // just removes the GrRenderTasks but doesn't cleanup any referring pointers (i.e.
@@ -145,24 +148,24 @@ class GrDrawingManager {
     // topological sort is complete (so the dangling pointers aren't used).
     void rawRemoveRenderTasks(int startIndex, int stopIndex);
 
-    bool empty() const noexcept { return fRenderTasks.empty(); }
-    int numRenderTasks() const noexcept { return fRenderTasks.count(); }
+    bool empty() const { return fRenderTasks.empty(); }
+    int numRenderTasks() const { return fRenderTasks.count(); }
 
     bool isUsed(GrSurfaceProxy*) const;
 
-    GrRenderTask* renderTask(int index) noexcept { return fRenderTasks[index].get(); }
-    const GrRenderTask* renderTask(int index) const noexcept { return fRenderTasks[index].get(); }
+    GrRenderTask* renderTask(int index) { return fRenderTasks[index].get(); }
+    const GrRenderTask* renderTask(int index) const { return fRenderTasks[index].get(); }
 
-    GrRenderTask* back() noexcept { return fRenderTasks.back().get(); }
-    const GrRenderTask* back() const noexcept { return fRenderTasks.back().get(); }
+    GrRenderTask* back() { return fRenderTasks.back().get(); }
+    const GrRenderTask* back() const { return fRenderTasks.back().get(); }
 
     GrRenderTask* add(sk_sp<GrRenderTask>);
     GrRenderTask* addBeforeLast(sk_sp<GrRenderTask>);
     void add(const SkTArray<sk_sp<GrRenderTask>>&);
 
-    void swap(SkTArray<sk_sp<GrRenderTask>>* renderTasks) noexcept;
+    void swap(SkTArray<sk_sp<GrRenderTask>>* renderTasks);
 
-    bool sortingRenderTasks() const noexcept { return fSortRenderTasks; }
+    bool sortingRenderTasks() const { return fSortRenderTasks; }
 
    private:
     SkTArray<sk_sp<GrRenderTask>> fRenderTasks;
@@ -236,7 +239,7 @@ class GrDrawingManager {
     auto entry = fDDLTargets.find(newTarget->uniqueID().asUInt());
     return entry ? *entry : nullptr;
   }
-  void clearDDLTargets() noexcept { fDDLTargets.reset(); }
+  void clearDDLTargets() { fDDLTargets.reset(); }
 
   // We play a trick with lazy proxies to retarget the base target of a DDL to the SkSurface
   // it is replayed on. 'fDDLTargets' stores this mapping from SkSurface unique proxy ID
@@ -245,9 +248,7 @@ class GrDrawingManager {
   SkTHashMap<uint32_t, GrRenderTargetProxy*> fDDLTargets;
 
   struct SurfaceIDKeyTraits {
-    static constexpr uint32_t GetInvalidKey() noexcept {
-      return GrSurfaceProxy::UniqueID::InvalidID().asUInt();
-    }
+    static uint32_t GetInvalidKey() { return GrSurfaceProxy::UniqueID::InvalidID().asUInt(); }
   };
 
   GrHashMapWithCache<uint32_t, GrRenderTask*, SurfaceIDKeyTraits, GrCheapHash> fLastRenderTasks;

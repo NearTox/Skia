@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#include "src/gpu/vk/GrVkPipelineStateBuilder.h"
+
 #include "include/gpu/GrDirectContext.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrAutoLocaleSetter.h"
@@ -15,7 +17,6 @@
 #include "src/gpu/GrStencilSettings.h"
 #include "src/gpu/vk/GrVkDescriptorSetManager.h"
 #include "src/gpu/vk/GrVkGpu.h"
-#include "src/gpu/vk/GrVkPipelineStateBuilder.h"
 #include "src/gpu/vk/GrVkRenderPass.h"
 #include "src/gpu/vk/GrVkRenderTarget.h"
 
@@ -142,7 +143,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
     const GrProgramDesc& desc, VkRenderPass compatibleRenderPass) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
-  VkDescriptorSetLayout dsLayout[2];
+  VkDescriptorSetLayout dsLayout[GrVkUniformHandler::kDescSetCount];
   VkPipelineLayout pipelineLayout;
   VkShaderModule shaderModules[kGrShaderTypeCount] = {
       VK_NULL_HANDLE, VK_NULL_HANDLE, VK_NULL_HANDLE};
@@ -157,13 +158,18 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
   dsLayout[GrVkUniformHandler::kSamplerDescSet] =
       resourceProvider.getSamplerDSLayout(samplerDSHandle);
 
+  dsLayout[GrVkUniformHandler::kInputDescSet] = resourceProvider.getInputDSLayout();
+
+  bool usesInput = fProgramInfo.pipeline().usesInputAttachment();
+  uint32_t layoutCount =
+      usesInput ? GrVkUniformHandler::kDescSetCount : (GrVkUniformHandler::kDescSetCount - 1);
   // Create the VkPipelineLayout
   VkPipelineLayoutCreateInfo layoutCreateInfo;
   memset(&layoutCreateInfo, 0, sizeof(VkPipelineLayoutCreateFlags));
   layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   layoutCreateInfo.pNext = nullptr;
   layoutCreateInfo.flags = 0;
-  layoutCreateInfo.setLayoutCount = 2;
+  layoutCreateInfo.setLayoutCount = layoutCount;
   layoutCreateInfo.pSetLayouts = dsLayout;
   layoutCreateInfo.pushConstantRangeCount = 0;
   layoutCreateInfo.pPushConstantRanges = nullptr;

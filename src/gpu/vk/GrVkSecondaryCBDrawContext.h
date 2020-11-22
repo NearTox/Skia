@@ -119,7 +119,7 @@ class SK_SPI GrVkSecondaryCBDrawContext : public SkRefCnt {
   std::unique_ptr<SkCanvas> fCachedCanvas;
   const SkSurfaceProps fProps;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

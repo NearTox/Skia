@@ -29,7 +29,7 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
  public:
   using CoverageType = GrCCAtlas::CoverageType;
 
-  const char* name() const noexcept final { return "CCPR"; }
+  const char* name() const final { return "CCPR"; }
 
   static bool IsSupported(const GrCaps&, CoverageType* = nullptr);
 
@@ -38,7 +38,7 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
   static sk_sp<GrCoverageCountingPathRenderer> CreateIfSupported(
       const GrCaps&, AllowCaching, uint32_t contextUniqueID);
 
-  CoverageType coverageType() const noexcept { return fCoverageType; }
+  CoverageType coverageType() const { return fCoverageType; }
 
   using PendingPathsMap = std::map<uint32_t, sk_sp<GrCCPerOpsTaskPaths>>;
 

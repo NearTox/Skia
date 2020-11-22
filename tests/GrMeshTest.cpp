@@ -418,7 +418,7 @@ class GrMeshTestOp : public GrDrawOp {
 
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
   void onPrepare(GrOpFlushState* state) override {
     fHelper = std::make_unique<DrawMeshHelper>(state);
     fPrepareFn(fHelper.get());
@@ -431,7 +431,7 @@ class GrMeshTestOp : public GrDrawOp {
   std::function<void(DrawMeshHelper*)> fPrepareFn;
   std::function<void(DrawMeshHelper*)> fExecuteFn;
 
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 class GrMeshTestProcessor : public GrGeometryProcessor {
@@ -480,7 +480,7 @@ class GrMeshTestProcessor : public GrGeometryProcessor {
   Attribute fInstanceLocation;
   Attribute fInstanceColor;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 class GLSLMeshTestProcessor : public GrGLSLGeometryProcessor {
@@ -552,8 +552,8 @@ GrOpsRenderPass* DrawMeshHelper::bindPipeline(
 
   GrProgramInfo programInfo(
       fState->proxy()->numSamples(), fState->proxy()->numStencilSamples(),
-      fState->proxy()->backendFormat(), fState->writeView()->origin(), pipeline, mtp,
-      primitiveType);
+      fState->proxy()->backendFormat(), fState->writeView()->origin(), pipeline,
+      &GrUserStencilSettings::kUnused, mtp, primitiveType, 0, fState->renderPassBarriers());
 
   fState->opsRenderPass()->bindPipeline(programInfo, SkRect::MakeIWH(kImageWidth, kImageHeight));
   return fState->opsRenderPass();

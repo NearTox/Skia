@@ -32,20 +32,20 @@ class GrVkImage : SkNoncopyable {
 
   virtual ~GrVkImage();
 
-  VkImage image() const noexcept {
+  VkImage image() const {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return fInfo.fImage;
   }
-  const GrVkAlloc& alloc() const noexcept {
+  const GrVkAlloc& alloc() const {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return fInfo.fAlloc;
   }
-  VkFormat imageFormat() const noexcept { return fInfo.fFormat; }
-  GrBackendFormat getBackendFormat() const noexcept {
+  VkFormat imageFormat() const { return fInfo.fFormat; }
+  GrBackendFormat getBackendFormat() const {
     if (fResource && this->ycbcrConversionInfo().isValid()) {
       SkASSERT(this->imageFormat() == this->ycbcrConversionInfo().fFormat);
       return GrBackendFormat::MakeVk(this->ycbcrConversionInfo());
@@ -53,28 +53,31 @@ class GrVkImage : SkNoncopyable {
     SkASSERT(this->imageFormat() != VK_FORMAT_UNDEFINED);
     return GrBackendFormat::MakeVk(this->imageFormat());
   }
-  uint32_t mipLevels() const noexcept { return fInfo.fLevelCount; }
-  const GrVkYcbcrConversionInfo& ycbcrConversionInfo() const noexcept {
+  uint32_t mipLevels() const { return fInfo.fLevelCount; }
+  const GrVkYcbcrConversionInfo& ycbcrConversionInfo() const {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return fInfo.fYcbcrConversionInfo;
   }
-  const Resource* resource() const noexcept {
+  bool supportsInputAttachmentUsage() const {
+    return fInfo.fImageUsageFlags & VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT;
+  }
+  const Resource* resource() const {
     SkASSERT(fResource);
     return fResource;
   }
-  bool isLinearTiled() const noexcept {
+  bool isLinearTiled() const {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
     return SkToBool(VK_IMAGE_TILING_LINEAR == fInfo.fImageTiling);
   }
-  bool isBorrowed() const noexcept { return fIsBorrowed; }
+  bool isBorrowed() const { return fIsBorrowed; }
 
-  sk_sp<GrBackendSurfaceMutableStateImpl> getMutableState() const noexcept { return fMutableState; }
+  sk_sp<GrBackendSurfaceMutableStateImpl> getMutableState() const { return fMutableState; }
 
-  VkImageLayout currentLayout() const noexcept { return fMutableState->getImageLayout(); }
+  VkImageLayout currentLayout() const { return fMutableState->getImageLayout(); }
 
   void setImageLayoutAndQueueIndex(
       const GrVkGpu* gpu, VkImageLayout newLayout, VkAccessFlags dstAccessMask,
@@ -87,9 +90,9 @@ class GrVkImage : SkNoncopyable {
         gpu, newLayout, dstAccessMask, dstStageMask, byRegion, VK_QUEUE_FAMILY_IGNORED);
   }
 
-  uint32_t currentQueueFamilyIndex() const noexcept { return fMutableState->getQueueFamilyIndex(); }
+  uint32_t currentQueueFamilyIndex() const { return fMutableState->getQueueFamilyIndex(); }
 
-  void setQueueFamilyIndex(uint32_t queueFamilyIndex) noexcept {
+  void setQueueFamilyIndex(uint32_t queueFamilyIndex) {
     fMutableState->setQueueFamilyIndex(queueFamilyIndex);
   }
 
@@ -103,7 +106,7 @@ class GrVkImage : SkNoncopyable {
   // This simply updates our tracking of the image layout and does not actually do any gpu work.
   // This is only used for mip map generation where we are manually changing the layouts as we
   // blit each layer, and then at the end need to update our tracking.
-  void updateImageLayout(VkImageLayout newLayout) noexcept {
+  void updateImageLayout(VkImageLayout newLayout) {
     // Should only be called when we have a real fResource object, i.e. never when being used as
     // a RT in an external secondary command buffer.
     SkASSERT(fResource);
@@ -122,7 +125,7 @@ class GrVkImage : SkNoncopyable {
     VkFlags fMemProps;
     GrProtected fIsProtected;
 
-    constexpr ImageDesc() noexcept
+    ImageDesc()
         : fImageType(VK_IMAGE_TYPE_2D),
           fFormat(VK_FORMAT_UNDEFINED),
           fWidth(0),
@@ -155,7 +158,7 @@ class GrVkImage : SkNoncopyable {
 
  protected:
   void releaseImage();
-  bool hasResource() const noexcept { return fResource; }
+  bool hasResource() const { return fResource; }
 
   GrVkImageInfo fInfo;
   uint32_t fInitialQueueFamily;
@@ -165,13 +168,12 @@ class GrVkImage : SkNoncopyable {
  private:
   class Resource : public GrTextureResource {
    public:
-    explicit Resource(const GrVkGpu* gpu) noexcept : fGpu(gpu), fImage(VK_NULL_HANDLE) {
+    explicit Resource(const GrVkGpu* gpu) : fGpu(gpu), fImage(VK_NULL_HANDLE) {
       fAlloc.fMemory = VK_NULL_HANDLE;
       fAlloc.fOffset = 0;
     }
 
-    Resource(
-        const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling) noexcept
+    Resource(const GrVkGpu* gpu, VkImage image, const GrVkAlloc& alloc, VkImageTiling tiling)
         : fGpu(gpu), fImage(image), fAlloc(alloc), fImageTiling(tiling) {}
 
     ~Resource() override {}
@@ -194,7 +196,7 @@ class GrVkImage : SkNoncopyable {
     GrVkAlloc fAlloc;
     VkImageTiling fImageTiling;
 
-    typedef GrTextureResource INHERITED;
+    using INHERITED = GrTextureResource;
   };
 
   // for wrapped textures

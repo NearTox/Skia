@@ -33,10 +33,10 @@ class SkSpecialImage;
  */
 class SkSpecialSurface : public SkRefCnt {
  public:
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
-  int width() const noexcept { return fSubset.width(); }
-  int height() const noexcept { return fSubset.height(); }
+  int width() const { return fSubset.width(); }
+  int height() const { return fSubset.height(); }
 
   /**
    *  Return a canvas that will draw into this surface. This will always
@@ -45,7 +45,7 @@ class SkSpecialSurface : public SkRefCnt {
    *
    *  The canvas will be invalid after 'newImageSnapshot' is called.
    */
-  SkCanvas* getCanvas() noexcept;
+  SkCanvas* getCanvas();
 
   /**
    *  Returns an image of the current state of the surface pixels up to this
@@ -82,17 +82,17 @@ class SkSpecialSurface : public SkRefCnt {
   static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&, const SkSurfaceProps* = nullptr);
 
  protected:
-  SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*) noexcept;
+  SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*);
 
   // For testing only
   friend class TestingSpecialSurfaceAccess;
-  const SkIRect& subset() const noexcept { return fSubset; }
+  const SkIRect& subset() const { return fSubset; }
 
  private:
   const SkSurfaceProps fProps;
   const SkIRect fSubset;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

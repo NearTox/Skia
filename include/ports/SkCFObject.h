@@ -37,7 +37,7 @@ class sk_cf_obj {
  public:
   using element_type = T;
 
-  constexpr sk_cf_obj() noexcept : fObject(nullptr) {}
+  constexpr sk_cf_obj() : fObject(nullptr) {}
 
   /**
    *  Shares the underlying object by calling CFRetain(), so that both the argument and the newly
@@ -50,13 +50,13 @@ class sk_cf_obj {
    *  the new sk_cf_obj will have a reference to the object, and the argument will point to null.
    *  No call to CFRetain() or CFRelease() will be made.
    */
-  sk_cf_obj(sk_cf_obj<T>&& that) noexcept : fObject(that.release()) {}
+  sk_cf_obj(sk_cf_obj<T>&& that) : fObject(that.release()) {}
 
   /**
    *  Adopt the bare object into the newly created sk_cf_obj.
    *  No call to CFRetain() or CFRelease() will be made.
    */
-  explicit sk_cf_obj(T obj) noexcept { fObject = obj; }
+  explicit sk_cf_obj(T obj) { fObject = obj; }
 
   /**
    *  Calls CFRelease() on the underlying object pointer.
@@ -115,7 +115,7 @@ class sk_cf_obj {
    *  The caller must assume ownership of the object, and manage its reference count directly.
    *  No call to CFRelease() will be made.
    */
-  T SK_WARN_UNUSED_RESULT release() noexcept {
+  T SK_WARN_UNUSED_RESULT release() {
     T obj = fObject;
     fObject = nullptr;
     return obj;

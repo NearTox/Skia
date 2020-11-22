@@ -12,8 +12,7 @@
 #include "src/gpu/vk/GrVkGpu.h"
 
 GrVkCommandPool* GrVkCommandPool::Create(GrVkGpu* gpu) {
-  VkCommandPoolCreateFlags cmdPoolCreateFlags =
-      VK_COMMAND_POOL_CREATE_TRANSIENT_BIT | VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+  VkCommandPoolCreateFlags cmdPoolCreateFlags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
   if (gpu->protectedContext()) {
     cmdPoolCreateFlags |= VK_COMMAND_POOL_CREATE_PROTECTED_BIT;
   }
@@ -78,7 +77,7 @@ void GrVkCommandPool::reset(GrVkGpu* gpu) {
   // thread and we can't be modifying the lost state on the GrVkGpu. We just call
   // vkResetCommandPool and assume the "next" vulkan call will catch the lost device.
   SkDEBUGCODE(VkResult result =)
-      GR_VK_CALL(gpu->vkInterface(), ResetCommandPool(gpu->device(), fCommandPool, 0));
+  GR_VK_CALL(gpu->vkInterface(), ResetCommandPool(gpu->device(), fCommandPool, 0));
   SkASSERT(result == VK_SUCCESS || result == VK_ERROR_DEVICE_LOST);
 }
 

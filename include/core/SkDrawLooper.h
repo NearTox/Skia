@@ -34,8 +34,8 @@ class SK_API SkDrawLooper : public SkFlattenable {
    */
   class SK_API Context {
    public:
-    constexpr Context() noexcept = default;
-    virtual ~Context() = default;
+    Context() {}
+    virtual ~Context() {}
 
     struct Info {
       SkVector fTranslate;
@@ -102,9 +102,9 @@ class SK_API SkDrawLooper : public SkFlattenable {
    */
   virtual bool asABlurShadow(BlurShadowRec*) const;
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawLooper_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkDrawLooper_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkDrawLooper_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkDrawLooper_Type; }
 
   static sk_sp<SkDrawLooper> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -116,10 +116,10 @@ class SK_API SkDrawLooper : public SkFlattenable {
       SkCanvas* canvas, const SkPaint& paint, std::function<void(SkCanvas*, const SkPaint&)>);
 
  protected:
-  constexpr SkDrawLooper() noexcept = default;
+  SkDrawLooper() {}
 
  private:
-  typedef SkFlattenable INHERITED;
+  using INHERITED = SkFlattenable;
 };
 
 #endif

@@ -93,7 +93,7 @@ class ImageAlphaThresholdGM : public skiagm::GM {
  private:
   bool fUseCropRect;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 // Create a 'width' x 'height' SkSurface that matches the colorType of 'canvas' as
@@ -150,7 +150,7 @@ class ImageAlphaThresholdSurfaceGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

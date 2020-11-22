@@ -11,7 +11,7 @@
 
 typedef skvx::Vec<4, float> sk4f;
 
-bool SkM44::operator==(const SkM44& other) const noexcept {
+bool SkM44::operator==(const SkM44& other) const {
   if (this == &other) {
     return true;
   }
@@ -30,7 +30,7 @@ bool SkM44::operator==(const SkM44& other) const noexcept {
   return (eq[0] & eq[1] & eq[2] & eq[3]) == ~0;
 }
 
-static void transpose_arrays(SkScalar dst[], const SkScalar src[]) noexcept {
+static void transpose_arrays(SkScalar dst[], const SkScalar src[]) {
   dst[0] = src[0];
   dst[1] = src[4];
   dst[2] = src[8];
@@ -49,15 +49,15 @@ static void transpose_arrays(SkScalar dst[], const SkScalar src[]) noexcept {
   dst[15] = src[15];
 }
 
-void SkM44::getRowMajor(SkScalar v[]) const noexcept { transpose_arrays(v, fMat); }
+void SkM44::getRowMajor(SkScalar v[]) const { transpose_arrays(v, fMat); }
 
-SkM44& SkM44::setConcat(const SkM44& a, const SkM44& b) noexcept {
+SkM44& SkM44::setConcat(const SkM44& a, const SkM44& b) {
   sk4f c0 = sk4f::Load(a.fMat + 0);
   sk4f c1 = sk4f::Load(a.fMat + 4);
   sk4f c2 = sk4f::Load(a.fMat + 8);
   sk4f c3 = sk4f::Load(a.fMat + 12);
 
-  auto compute = [&](sk4f r) noexcept { return c0 * r[0] + (c1 * r[1] + (c2 * r[2] + c3 * r[3])); };
+  auto compute = [&](sk4f r) { return c0 * r[0] + (c1 * r[1] + (c2 * r[2] + c3 * r[3])); };
 
   sk4f m0 = compute(sk4f::Load(b.fMat + 0));
   sk4f m1 = compute(sk4f::Load(b.fMat + 4));
@@ -76,9 +76,7 @@ SkM44& SkM44::preConcat(const SkMatrix& b) {
   sk4f c1 = sk4f::Load(fMat + 4);
   sk4f c3 = sk4f::Load(fMat + 12);
 
-  auto compute = [&](float r0, float r1, float r3) noexcept {
-    return (c0 * r0 + (c1 * r1 + c3 * r3));
-  };
+  auto compute = [&](float r0, float r1, float r3) { return (c0 * r0 + (c1 * r1 + c3 * r3)); };
 
   sk4f m0 = compute(b[0], b[3], b[6]);
   sk4f m1 = compute(b[1], b[4], b[7]);
@@ -90,7 +88,7 @@ SkM44& SkM44::preConcat(const SkMatrix& b) {
   return *this;
 }
 
-SkM44& SkM44::preTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept {
+SkM44& SkM44::preTranslate(SkScalar x, SkScalar y, SkScalar z) {
   sk4f c0 = sk4f::Load(fMat + 0);
   sk4f c1 = sk4f::Load(fMat + 4);
   sk4f c2 = sk4f::Load(fMat + 8);
@@ -101,7 +99,7 @@ SkM44& SkM44::preTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept {
   return *this;
 }
 
-SkM44& SkM44::postTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept {
+SkM44& SkM44::postTranslate(SkScalar x, SkScalar y, SkScalar z) {
   sk4f t = {x, y, z, 0};
   (t * fMat[3] + sk4f::Load(fMat + 0)).store(fMat + 0);
   (t * fMat[7] + sk4f::Load(fMat + 4)).store(fMat + 4);
@@ -110,7 +108,7 @@ SkM44& SkM44::postTranslate(SkScalar x, SkScalar y, SkScalar z) noexcept {
   return *this;
 }
 
-SkM44& SkM44::preScale(SkScalar x, SkScalar y) noexcept {
+SkM44& SkM44::preScale(SkScalar x, SkScalar y) {
   sk4f c0 = sk4f::Load(fMat + 0);
   sk4f c1 = sk4f::Load(fMat + 4);
 
@@ -119,7 +117,7 @@ SkM44& SkM44::preScale(SkScalar x, SkScalar y) noexcept {
   return *this;
 }
 
-SkV4 SkM44::map(float x, float y, float z, float w) const noexcept {
+SkV4 SkM44::map(float x, float y, float z, float w) const {
   sk4f c0 = sk4f::Load(fMat + 0);
   sk4f c1 = sk4f::Load(fMat + 4);
   sk4f c2 = sk4f::Load(fMat + 8);
@@ -130,7 +128,7 @@ SkV4 SkM44::map(float x, float y, float z, float w) const noexcept {
   return v;
 }
 
-void SkM44::normalizePerspective() noexcept {
+void SkM44::normalizePerspective() {
   // If the bottom row of the matrix is [0, 0, 0, not_one], we will treat the matrix as if it
   // is in perspective, even though it stills behaves like its affine. If we divide everything
   // by the not_one value, then it will behave the same, but will be treated as affine,
@@ -151,7 +149,7 @@ void SkM44::normalizePerspective() noexcept {
     precision along the way. This relies on the compiler automatically
     promoting our SkScalar values to double (if needed).
  */
-bool SkM44::invert(SkM44* inverse) const noexcept {
+bool SkM44::invert(SkM44* inverse) const {
   double a00 = fMat[0];
   double a01 = fMat[1];
   double a02 = fMat[2];
@@ -228,13 +226,13 @@ bool SkM44::invert(SkM44* inverse) const noexcept {
   return true;
 }
 
-SkM44 SkM44::transpose() const noexcept {
+SkM44 SkM44::transpose() const {
   SkM44 trans(SkM44::kUninitialized_Constructor);
   transpose_arrays(trans.fMat, fMat);
   return trans;
 }
 
-SkM44& SkM44::setRotateUnitSinCos(SkV3 axis, SkScalar sinAngle, SkScalar cosAngle) noexcept {
+SkM44& SkM44::setRotateUnitSinCos(SkV3 axis, SkScalar sinAngle, SkScalar cosAngle) {
   // Taken from "Essential Mathematics for Games and Interactive Applications"
   //             James M. Van Verth and Lars M. Bishop -- third edition
   SkScalar x = axis.x;
@@ -264,7 +262,7 @@ SkM44& SkM44::setRotateUnitSinCos(SkV3 axis, SkScalar sinAngle, SkScalar cosAngl
   return *this;
 }
 
-SkM44& SkM44::setRotate(SkV3 axis, SkScalar radians) noexcept {
+SkM44& SkM44::setRotate(SkV3 axis, SkScalar radians) {
   SkScalar len = axis.length();
   if (len > 0 && SkScalarIsFinite(len)) {
     this->setRotateUnit(axis * (SK_Scalar1 / len), radians);
@@ -287,11 +285,11 @@ void SkM44::dump() const {
       fMat[6], fMat[10], fMat[14], fMat[3], fMat[7], fMat[11], fMat[15]);
 }
 
-static SkV3 normalize(SkV3 v) noexcept { return v * (1.0f / v.length()); }
+static SkV3 normalize(SkV3 v) { return v * (1.0f / v.length()); }
 
-static constexpr SkV4 v4(SkV3 v, SkScalar w) noexcept { return {v.x, v.y, v.z, w}; }
+static SkV4 v4(SkV3 v, SkScalar w) { return {v.x, v.y, v.z, w}; }
 
-SkM44 Sk3LookAt(const SkV3& eye, const SkV3& center, const SkV3& up) noexcept {
+SkM44 Sk3LookAt(const SkV3& eye, const SkV3& center, const SkV3& up) {
   SkV3 f = normalize(center - eye);
   SkV3 u = normalize(up);
   SkV3 s = normalize(f.cross(u));
@@ -303,7 +301,7 @@ SkM44 Sk3LookAt(const SkV3& eye, const SkV3& center, const SkV3& up) noexcept {
   return m;
 }
 
-SkM44 Sk3Perspective(float near, float far, float angle) noexcept {
+SkM44 Sk3Perspective(float near, float far, float angle) {
   SkASSERT(far > near);
 
   float denomInv = sk_ieee_float_divide(1, far - near);

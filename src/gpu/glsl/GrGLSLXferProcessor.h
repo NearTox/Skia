@@ -20,8 +20,8 @@ class GrTexture;
 
 class GrGLSLXferProcessor {
  public:
-  GrGLSLXferProcessor() noexcept = default;
-  virtual ~GrGLSLXferProcessor() = default;
+  GrGLSLXferProcessor() {}
+  virtual ~GrGLSLXferProcessor() {}
 
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
@@ -30,8 +30,8 @@ class GrGLSLXferProcessor {
         GrGLSLXPFragmentBuilder* fragBuilder, GrGLSLUniformHandler* uniformHandler,
         const GrShaderCaps* caps, const GrXferProcessor& xp, const char* inputColor,
         const char* inputCoverage, const char* outputPrimary, const char* outputSecondary,
-        const SamplerHandle dstTextureSamplerHandle, GrSurfaceOrigin dstTextureOrigin,
-        const GrSwizzle& writeSwizzle) noexcept
+        GrDstSampleType dstSampleType, const SamplerHandle dstTextureSamplerHandle,
+        GrSurfaceOrigin dstTextureOrigin, const GrSwizzle& writeSwizzle)
         : fXPFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),
@@ -40,6 +40,7 @@ class GrGLSLXferProcessor {
           fInputCoverage(inputCoverage),
           fOutputPrimary(outputPrimary),
           fOutputSecondary(outputSecondary),
+          fDstSampleType(dstSampleType),
           fDstTextureSamplerHandle(dstTextureSamplerHandle),
           fDstTextureOrigin(dstTextureOrigin),
           fWriteSwizzle(writeSwizzle) {}
@@ -51,6 +52,7 @@ class GrGLSLXferProcessor {
     const char* fInputCoverage;
     const char* fOutputPrimary;
     const char* fOutputSecondary;
+    GrDstSampleType fDstSampleType;
     const SamplerHandle fDstTextureSamplerHandle;
     GrSurfaceOrigin fDstTextureOrigin;
     GrSwizzle fWriteSwizzle;

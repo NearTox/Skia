@@ -220,7 +220,7 @@ class DashOp final : public GrMeshDrawOp {
         std::move(paint), geometry, cap, aaMode, fullDash, stencilSettings);
   }
 
-  const char* name() const noexcept override { return "DashOp"; }
+  const char* name() const override { return "DashOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -306,7 +306,8 @@ class DashOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     DashCap capType = (this->cap() == SkPaint::kRound_Cap) ? kRound_DashCap : kNonRound_DashCap;
 
     GrGeometryProcessor* gp;
@@ -335,7 +336,7 @@ class DashOp final : public GrMeshDrawOp {
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
-        GrPrimitiveType::kTriangles, pipelineFlags, fStencilSettings);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers, pipelineFlags, fStencilSettings);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -699,7 +700,7 @@ class DashOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 std::unique_ptr<GrDrawOp> GrDashOp::MakeDashLineOp(
@@ -777,7 +778,7 @@ class DashingCircleEffect : public GrGeometryProcessor {
       SkArenaAlloc* arena, const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix,
       bool usesLocalCoords);
 
-  const char* name() const noexcept override { return "DashingCircleEffect"; }
+  const char* name() const override { return "DashingCircleEffect"; }
 
   AAMode aaMode() const { return fAAMode; }
 
@@ -809,7 +810,7 @@ class DashingCircleEffect : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -836,7 +837,7 @@ class GLDashingCircleEffect : public GrGLSLGeometryProcessor {
   SkScalar fPrevCenterX;
   SkScalar fPrevIntervalLength;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 GLDashingCircleEffect::GLDashingCircleEffect() {
@@ -979,7 +980,7 @@ class DashingLineEffect : public GrGeometryProcessor {
       SkArenaAlloc* arena, const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix,
       bool usesLocalCoords);
 
-  const char* name() const noexcept override { return "DashingEffect"; }
+  const char* name() const override { return "DashingEffect"; }
 
   AAMode aaMode() const { return fAAMode; }
 
@@ -1011,7 +1012,7 @@ class DashingLineEffect : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1034,7 +1035,7 @@ class GLDashingLineEffect : public GrGLSLGeometryProcessor {
   SkMatrix fLocalMatrix;
   UniformHandle fLocalMatrixUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 GLDashingLineEffect::GLDashingLineEffect() : fColor(SK_PMColor4fILLEGAL) {}

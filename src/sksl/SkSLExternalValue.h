@@ -17,7 +17,7 @@ class Type;
 
 class ExternalValue : public Symbol {
  public:
-  static constexpr Kind kSymbolKind = kExternal_Kind;
+  static constexpr Kind kSymbolKind = Kind::kExternal;
 
   ExternalValue(const char* name, const Type& type)
       : INHERITED(-1, kSymbolKind, name), fType(type) {}
@@ -72,9 +72,7 @@ class ExternalValue : public Symbol {
 
   /**
    * Resolves 'name' within this context and returns an ExternalValue which represents it, or
-   * null if no such child exists. If the implementation of this method creates new
-   * ExternalValues and there isn't a more convenient place for ownership of the objects to
-   * reside, the compiler's takeOwnership method may be useful.
+   * null if no such child exists.
    *
    * The 'name' string may not persist after this call; do not store this pointer.
    */
@@ -83,7 +81,7 @@ class ExternalValue : public Symbol {
   String description() const override { return String("external<") + fName + ">"; }
 
  private:
-  typedef Symbol INHERITED;
+  using INHERITED = Symbol;
 
   const Type& fType;
 };

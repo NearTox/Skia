@@ -163,6 +163,6 @@ class TrimGM : public skiagm::GM {
   SkTArray<SkPath> fPaths;
   SkScalar fOffset = 0;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new TrimGM;)

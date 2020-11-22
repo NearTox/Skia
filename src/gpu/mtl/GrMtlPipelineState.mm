@@ -69,7 +69,7 @@ void GrMtlPipelineState::setData(
   fDataManager.resetDirtyBits();
 
 #ifdef SK_DEBUG
-  if (programInfo.pipeline().isStencilEnabled()) {
+  if (programInfo.isStencilEnabled()) {
     SkASSERT(renderTarget->getStencilAttachment());
     SkASSERT(renderTarget->numStencilBits() == 8);
   }

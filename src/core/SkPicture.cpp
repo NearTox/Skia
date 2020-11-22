@@ -34,7 +34,7 @@ enum {
 
 /* SkPicture impl.  This handles generic responsibilities like unique IDs and serialization. */
 
-SkPicture::SkPicture() noexcept {
+SkPicture::SkPicture() {
   static std::atomic<uint32_t> nextID{1};
   do {
     fUniqueID = nextID.fetch_add(+1, std::memory_order_relaxed);
@@ -43,7 +43,7 @@ SkPicture::SkPicture() noexcept {
 
 static const char kMagic[] = {'s', 'k', 'i', 'a', 'p', 'i', 'c', 't'};
 
-SkPictInfo SkPicture::createHeader() const noexcept {
+SkPictInfo SkPicture::createHeader() const {
   SkPictInfo info;
   // Copy magic bytes at the beginning of the header
   static_assert(sizeof(kMagic) == 8, "");
@@ -56,7 +56,7 @@ SkPictInfo SkPicture::createHeader() const noexcept {
   return info;
 }
 
-bool SkPicture::IsValidPictInfo(const SkPictInfo& info) noexcept {
+bool SkPicture::IsValidPictInfo(const SkPictInfo& info) {
   if (0 != memcmp(info.fMagic, kMagic, sizeof(kMagic))) {
     return false;
   }
@@ -259,7 +259,7 @@ static sk_sp<SkData> custom_serialize(const SkPicture* picture, const SkSerialPr
   return nullptr;
 }
 
-static bool write_pad32(SkWStream* stream, const void* data, size_t size) noexcept {
+static bool write_pad32(SkWStream* stream, const void* data, size_t size) {
   if (!stream->write(data, size)) {
     return false;
   }
@@ -330,17 +330,15 @@ void SkPicturePriv::Flatten(const sk_sp<const SkPicture> picture, SkWriteBuffer&
 
 sk_sp<SkPicture> SkPicture::MakePlaceholder(SkRect cull) {
   struct Placeholder : public SkPicture {
-    explicit Placeholder(SkRect cull) noexcept : fCull(cull) {}
+    explicit Placeholder(SkRect cull) : fCull(cull) {}
 
-    void playback(SkCanvas*, AbortCallback*) const noexcept override {}
+    void playback(SkCanvas*, AbortCallback*) const override {}
 
     // approximateOpCount() needs to be greater than kMaxPictureOpsToUnrollInsteadOfRef
     // (SkCanvasPriv.h) to avoid unrolling this into a parent picture.
-    int approximateOpCount(bool) const noexcept override {
-      return kMaxPictureOpsToUnrollInsteadOfRef + 1;
-    }
-    size_t approximateBytesUsed() const noexcept override { return sizeof(*this); }
-    SkRect cullRect() const noexcept override { return fCull; }
+    int approximateOpCount(bool) const override { return kMaxPictureOpsToUnrollInsteadOfRef + 1; }
+    size_t approximateBytesUsed() const override { return sizeof(*this); }
+    SkRect cullRect() const override { return fCull; }
 
     SkRect fCull;
   };

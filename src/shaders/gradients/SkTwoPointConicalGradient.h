@@ -30,11 +30,11 @@ class SkTwoPointConicalGradient final : public SkGradientShaderBase {
     // known as the edge case where the inside circle touches the outside circle (on the focal
     // point). If we were to solve for t bruteforcely using a quadratic equation, this case
     // implies that the quadratic equation degenerates to a linear equation.
-    bool isFocalOnCircle() const noexcept { return SkScalarNearlyZero(1 - fR1); }
+    bool isFocalOnCircle() const { return SkScalarNearlyZero(1 - fR1); }
 
-    bool isSwapped() const noexcept { return fIsSwapped; }
-    bool isWellBehaved() const noexcept { return !this->isFocalOnCircle() && fR1 > 1; }
-    bool isNativelyFocal() const noexcept { return SkScalarNearlyZero(fFocalX); }
+    bool isSwapped() const { return fIsSwapped; }
+    bool isWellBehaved() const { return !this->isFocalOnCircle() && fR1 > 1; }
+    bool isNativelyFocal() const { return SkScalarNearlyZero(fFocalX); }
   };
 
   enum class Type { kRadial, kStrip, kFocal };
@@ -47,17 +47,17 @@ class SkTwoPointConicalGradient final : public SkGradientShaderBase {
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
 #endif
-  bool isOpaque() const noexcept override;
+  bool isOpaque() const override;
 
-  SkScalar getCenterX1() const noexcept { return SkPoint::Distance(fCenter1, fCenter2); }
-  SkScalar getStartRadius() const noexcept { return fRadius1; }
-  SkScalar getDiffRadius() const noexcept { return fRadius2 - fRadius1; }
-  const SkPoint& getStartCenter() const noexcept { return fCenter1; }
-  const SkPoint& getEndCenter() const noexcept { return fCenter2; }
-  SkScalar getEndRadius() const noexcept { return fRadius2; }
+  SkScalar getCenterX1() const { return SkPoint::Distance(fCenter1, fCenter2); }
+  SkScalar getStartRadius() const { return fRadius1; }
+  SkScalar getDiffRadius() const { return fRadius2 - fRadius1; }
+  const SkPoint& getStartCenter() const { return fCenter1; }
+  const SkPoint& getEndCenter() const { return fCenter2; }
+  SkScalar getEndRadius() const { return fRadius2; }
 
-  Type getType() const noexcept { return fType; }
-  const FocalData& getFocalData() const noexcept { return fFocalData; }
+  Type getType() const { return fType; }
+  const FocalData& getFocalData() const { return fFocalData; }
 
  protected:
   void flatten(SkWriteBuffer& buffer) const override;
@@ -85,7 +85,7 @@ class SkTwoPointConicalGradient final : public SkGradientShaderBase {
   FocalData fFocalData;
 
   friend class SkGradientShader;
-  typedef SkGradientShaderBase INHERITED;
+  using INHERITED = SkGradientShaderBase;
 };
 
 #endif

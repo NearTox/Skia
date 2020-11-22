@@ -43,7 +43,7 @@ class BlendFormula {
 
   constexpr BlendFormula(
       OutputType primaryOut, OutputType secondaryOut, GrBlendEquation equation,
-      GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) noexcept
+      GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff)
       : fPrimaryOutputType(primaryOut),
         fSecondaryOutputType(secondaryOut),
         fBlendEquation(equation),
@@ -51,33 +51,33 @@ class BlendFormula {
         fDstCoeff(dstCoeff),
         fProps(GetProperties(primaryOut, secondaryOut, equation, srcCoeff, dstCoeff)) {}
 
-  BlendFormula(const BlendFormula&) noexcept = default;
-  BlendFormula& operator=(const BlendFormula&) noexcept = default;
+  BlendFormula(const BlendFormula&) = default;
+  BlendFormula& operator=(const BlendFormula&) = default;
 
-  bool operator==(const BlendFormula& that) const noexcept {
+  bool operator==(const BlendFormula& that) const {
     return fPrimaryOutputType == that.fPrimaryOutputType &&
            fSecondaryOutputType == that.fSecondaryOutputType &&
            fBlendEquation == that.fBlendEquation && fSrcCoeff == that.fSrcCoeff &&
            fDstCoeff == that.fDstCoeff && fProps == that.fProps;
   }
 
-  bool hasSecondaryOutput() const noexcept { return kNone_OutputType != fSecondaryOutputType; }
-  bool modifiesDst() const noexcept { return SkToBool(fProps & kModifiesDst_Property); }
-  bool usesDstColor() const noexcept { return SkToBool(fProps & kUsesDstColor_Property); }
-  bool usesInputColor() const noexcept { return SkToBool(fProps & kUsesInputColor_Property); }
-  bool canTweakAlphaForCoverage() const noexcept {
+  bool hasSecondaryOutput() const { return kNone_OutputType != fSecondaryOutputType; }
+  bool modifiesDst() const { return SkToBool(fProps & kModifiesDst_Property); }
+  bool usesDstColor() const { return SkToBool(fProps & kUsesDstColor_Property); }
+  bool usesInputColor() const { return SkToBool(fProps & kUsesInputColor_Property); }
+  bool canTweakAlphaForCoverage() const {
     return SkToBool(fProps & kCanTweakAlphaForCoverage_Property);
   }
 
-  GrBlendEquation equation() const noexcept { return fBlendEquation; }
+  GrBlendEquation equation() const { return fBlendEquation; }
 
-  GrBlendCoeff srcCoeff() const noexcept { return fSrcCoeff; }
+  GrBlendCoeff srcCoeff() const { return fSrcCoeff; }
 
-  GrBlendCoeff dstCoeff() const noexcept { return fDstCoeff; }
+  GrBlendCoeff dstCoeff() const { return fDstCoeff; }
 
-  OutputType primaryOutput() const noexcept { return fPrimaryOutputType; }
+  OutputType primaryOutput() const { return fPrimaryOutputType; }
 
-  OutputType secondaryOutput() const noexcept { return fSecondaryOutputType; }
+  OutputType secondaryOutput() const { return fSecondaryOutputType; }
 
  private:
   enum Properties {
@@ -95,7 +95,7 @@ class BlendFormula {
    */
   static constexpr Properties GetProperties(
       OutputType PrimaryOut, OutputType SecondaryOut, GrBlendEquation BlendEquation,
-      GrBlendCoeff SrcCoeff, GrBlendCoeff DstCoeff) noexcept;
+      GrBlendCoeff SrcCoeff, GrBlendCoeff DstCoeff);
 
   struct {
     // We allot the enums one more bit than they require because MSVC seems to sign-extend
@@ -120,7 +120,7 @@ GR_MAKE_BITFIELD_OPS(BlendFormula::Properties);
 
 constexpr BlendFormula::Properties BlendFormula::GetProperties(
     OutputType PrimaryOut, OutputType SecondaryOut, GrBlendEquation BlendEquation,
-    GrBlendCoeff SrcCoeff, GrBlendCoeff DstCoeff) noexcept {
+    GrBlendCoeff SrcCoeff, GrBlendCoeff DstCoeff) {
   return
       // The provided formula should already be optimized before a BlendFormula is constructed.
       // Assert that here while setting up the properties in the constexpr constructor.
@@ -148,8 +148,7 @@ constexpr BlendFormula::Properties BlendFormula::GetProperties(
  * When there is no coverage, or the blend mode can tweak alpha for coverage, we use the standard
  * Porter Duff formula.
  */
-static constexpr BlendFormula MakeCoeffFormula(
-    GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) noexcept {
+static constexpr BlendFormula MakeCoeffFormula(GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) {
   // When the coeffs are (Zero, Zero) or (Zero, One) we set the primary output to none.
   return (kZero_GrBlendCoeff == srcCoeff &&
           (kZero_GrBlendCoeff == dstCoeff || kOne_GrBlendCoeff == dstCoeff))
@@ -165,8 +164,7 @@ static constexpr BlendFormula MakeCoeffFormula(
  * Basic coeff formula similar to MakeCoeffFormula but we will make the src f*Sa. This is used in
  * LCD dst-out.
  */
-static constexpr BlendFormula MakeSAModulateFormula(
-    GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) noexcept {
+static constexpr BlendFormula MakeSAModulateFormula(GrBlendCoeff srcCoeff, GrBlendCoeff dstCoeff) {
   return BlendFormula(
       BlendFormula::kSAModulate_OutputType, BlendFormula::kNone_OutputType, kAdd_GrBlendEquation,
       srcCoeff, dstCoeff);
@@ -187,7 +185,7 @@ static constexpr BlendFormula MakeSAModulateFormula(
  * Xfer modes: dst-atop (Sa!=1)
  */
 static constexpr BlendFormula MakeCoverageFormula(
-    BlendFormula::OutputType oneMinusDstCoeffModulateOutput, GrBlendCoeff srcCoeff) noexcept {
+    BlendFormula::OutputType oneMinusDstCoeffModulateOutput, GrBlendCoeff srcCoeff) {
   return BlendFormula(
       BlendFormula::kModulate_OutputType, oneMinusDstCoeffModulateOutput, kAdd_GrBlendEquation,
       srcCoeff, kIS2C_GrBlendCoeff);
@@ -208,7 +206,7 @@ static constexpr BlendFormula MakeCoverageFormula(
  * Xfer modes: clear, dst-out (Sa=1), dst-in (Sa!=1), modulate (Sc!=1)
  */
 static constexpr BlendFormula MakeCoverageSrcCoeffZeroFormula(
-    BlendFormula::OutputType oneMinusDstCoeffModulateOutput) noexcept {
+    BlendFormula::OutputType oneMinusDstCoeffModulateOutput) {
   return BlendFormula(
       oneMinusDstCoeffModulateOutput, BlendFormula::kNone_OutputType,
       kReverseSubtract_GrBlendEquation, kDC_GrBlendCoeff, kOne_GrBlendCoeff);
@@ -224,7 +222,7 @@ static constexpr BlendFormula MakeCoverageSrcCoeffZeroFormula(
  *
  * Xfer modes (Sa!=1): src, src-in, src-out
  */
-static constexpr BlendFormula MakeCoverageDstCoeffZeroFormula(GrBlendCoeff srcCoeff) noexcept {
+static constexpr BlendFormula MakeCoverageDstCoeffZeroFormula(GrBlendCoeff srcCoeff) {
   return BlendFormula(
       BlendFormula::kModulate_OutputType, BlendFormula::kCoverage_OutputType, kAdd_GrBlendEquation,
       srcCoeff, kIS2A_GrBlendCoeff);
@@ -339,13 +337,13 @@ static constexpr BlendFormula gLCDBlendTable[(int)SkBlendMode::kLastCoeffMode + 
 };
 
 static BlendFormula get_blend_formula(
-    bool isOpaque, bool hasCoverage, bool hasMixedSamples, SkBlendMode xfermode) noexcept {
+    bool isOpaque, bool hasCoverage, bool hasMixedSamples, SkBlendMode xfermode) {
   SkASSERT((unsigned)xfermode <= (unsigned)SkBlendMode::kLastCoeffMode);
   bool conflatesCoverage = hasCoverage || hasMixedSamples;
   return gBlendTable[isOpaque][conflatesCoverage][(int)xfermode];
 }
 
-static BlendFormula get_lcd_blend_formula(SkBlendMode xfermode) noexcept {
+static BlendFormula get_lcd_blend_formula(SkBlendMode xfermode) {
   SkASSERT((unsigned)xfermode <= (unsigned)SkBlendMode::kLastCoeffMode);
 
   return gLCDBlendTable[(int)xfermode];
@@ -355,36 +353,36 @@ static BlendFormula get_lcd_blend_formula(SkBlendMode xfermode) noexcept {
 
 class PorterDuffXferProcessor : public GrXferProcessor {
  public:
-  PorterDuffXferProcessor(BlendFormula blendFormula, GrProcessorAnalysisCoverage coverage) noexcept
+  PorterDuffXferProcessor(BlendFormula blendFormula, GrProcessorAnalysisCoverage coverage)
       : INHERITED(kPorterDuffXferProcessor_ClassID, false, false, coverage),
         fBlendFormula(blendFormula) {}
 
-  const char* name() const noexcept override { return "Porter Duff"; }
+  const char* name() const override { return "Porter Duff"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  BlendFormula getBlendFormula() const noexcept { return fBlendFormula; }
+  BlendFormula getBlendFormula() const { return fBlendFormula; }
 
  private:
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  bool onHasSecondaryOutput() const noexcept override { return fBlendFormula.hasSecondaryOutput(); }
+  bool onHasSecondaryOutput() const override { return fBlendFormula.hasSecondaryOutput(); }
 
-  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const noexcept override {
+  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override {
     blendInfo->fEquation = fBlendFormula.equation();
     blendInfo->fSrcBlend = fBlendFormula.srcCoeff();
     blendInfo->fDstBlend = fBlendFormula.dstCoeff();
     blendInfo->fWriteColor = fBlendFormula.modifiesDst();
   }
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override {
+  bool onIsEqual(const GrXferProcessor& xpBase) const override {
     const PorterDuffXferProcessor& xp = xpBase.cast<PorterDuffXferProcessor>();
     return fBlendFormula == xp.fBlendFormula;
   }
 
   const BlendFormula fBlendFormula;
 
-  typedef GrXferProcessor INHERITED;
+  using INHERITED = GrXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -443,9 +441,9 @@ class GLPorterDuffXferProcessor : public GrGLSLXferProcessor {
         args.fInputCoverage);
   }
 
-  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
-  typedef GrGLSLXferProcessor INHERITED;
+  using INHERITED = GrGLSLXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -464,27 +462,27 @@ GrGLSLXferProcessor* PorterDuffXferProcessor::createGLSLInstance() const {
 class ShaderPDXferProcessor : public GrXferProcessor {
  public:
   ShaderPDXferProcessor(
-      bool hasMixedSamples, SkBlendMode xfermode, GrProcessorAnalysisCoverage coverage) noexcept
+      bool hasMixedSamples, SkBlendMode xfermode, GrProcessorAnalysisCoverage coverage)
       : INHERITED(kShaderPDXferProcessor_ClassID, true, hasMixedSamples, coverage),
         fXfermode(xfermode) {}
 
-  const char* name() const noexcept override { return "Porter Duff Shader"; }
+  const char* name() const override { return "Porter Duff Shader"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  SkBlendMode getXfermode() const noexcept { return fXfermode; }
+  SkBlendMode getXfermode() const { return fXfermode; }
 
  private:
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override {
+  bool onIsEqual(const GrXferProcessor& xpBase) const override {
     const ShaderPDXferProcessor& xp = xpBase.cast<ShaderPDXferProcessor>();
     return fXfermode == xp.fXfermode;
   }
 
   const SkBlendMode fXfermode;
 
-  typedef GrXferProcessor INHERITED;
+  using INHERITED = GrXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -510,9 +508,9 @@ class GLShaderPDXferProcessor : public GrGLSLXferProcessor {
         fragBuilder, srcCoverage, dstColor, outColor, outColorSecondary, xp);
   }
 
-  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) noexcept override {}
+  void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
-  typedef GrGLSLXferProcessor INHERITED;
+  using INHERITED = GrGLSLXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -535,24 +533,24 @@ class PDLCDXferProcessor : public GrXferProcessor {
 
   ~PDLCDXferProcessor() override;
 
-  const char* name() const noexcept override { return "Porter Duff LCD"; }
+  const char* name() const override { return "Porter Duff LCD"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  float alpha() const noexcept { return fAlpha; }
+  float alpha() const { return fAlpha; }
 
  private:
-  PDLCDXferProcessor(const SkPMColor4f& blendConstant, float alpha) noexcept;
+  PDLCDXferProcessor(const SkPMColor4f& blendConstant, float alpha);
 
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
 
-  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const noexcept override {
+  void onGetBlendInfo(GrXferProcessor::BlendInfo* blendInfo) const override {
     blendInfo->fSrcBlend = kConstC_GrBlendCoeff;
     blendInfo->fDstBlend = kISC_GrBlendCoeff;
     blendInfo->fBlendConstant = fBlendConstant;
   }
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override {
+  bool onIsEqual(const GrXferProcessor& xpBase) const override {
     const PDLCDXferProcessor& xp = xpBase.cast<PDLCDXferProcessor>();
     if (fBlendConstant != xp.fBlendConstant || fAlpha != xp.fAlpha) {
       return false;
@@ -563,7 +561,7 @@ class PDLCDXferProcessor : public GrXferProcessor {
   SkPMColor4f fBlendConstant;
   float fAlpha;
 
-  typedef GrXferProcessor INHERITED;
+  using INHERITED = GrXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -601,12 +599,12 @@ class GLPDLCDXferProcessor : public GrGLSLXferProcessor {
 
   GrGLSLUniformHandler::UniformHandle fAlphaUniform;
   float fLastAlpha;
-  typedef GrGLSLXferProcessor INHERITED;
+  using INHERITED = GrGLSLXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-PDLCDXferProcessor::PDLCDXferProcessor(const SkPMColor4f& blendConstant, float alpha) noexcept
+PDLCDXferProcessor::PDLCDXferProcessor(const SkPMColor4f& blendConstant, float alpha)
     : INHERITED(kPDLCDXferProcessor_ClassID, false, false, GrProcessorAnalysisCoverage::kLCD),
       fBlendConstant(blendConstant),
       fAlpha(alpha) {}
@@ -626,7 +624,7 @@ sk_sp<const GrXferProcessor> PDLCDXferProcessor::Make(
   return sk_sp<GrXferProcessor>(new PDLCDXferProcessor(blendConstantPM, alpha));
 }
 
-PDLCDXferProcessor::~PDLCDXferProcessor() = default;
+PDLCDXferProcessor::~PDLCDXferProcessor() {}
 
 void PDLCDXferProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
@@ -806,7 +804,7 @@ void GrPorterDuffXPFactory::TestGetXPOutputTypes(
 ////////////////////////////////////////////////////////////////////////////////////////////////
 // SrcOver Global functions
 ////////////////////////////////////////////////////////////////////////////////////////////////
-const GrXferProcessor& GrPorterDuffXPFactory::SimpleSrcOverXP() noexcept {
+const GrXferProcessor& GrPorterDuffXPFactory::SimpleSrcOverXP() {
   static BlendFormula gSrcOverBlendFormula = MakeCoeffFormula(kOne_GrBlendCoeff, kISA_GrBlendCoeff);
   static PorterDuffXferProcessor gSrcOverXP(
       gSrcOverBlendFormula, GrProcessorAnalysisCoverage::kSingleChannel);

@@ -46,7 +46,7 @@ class GLWindowContext_win : public GLWindowContext {
   HWND fHWND;
   HGLRC fHGLRC;
 
-  typedef GLWindowContext INHERITED;
+  using INHERITED = GLWindowContext;
 };
 
 GLWindowContext_win::GLWindowContext_win(HWND wnd, const DisplayParams& params)

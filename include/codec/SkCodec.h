@@ -17,7 +17,7 @@
 #include "include/core/SkSize.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkTypes.h"
-#include "include/core/SkYUVASizeInfo.h"
+#include "include/core/SkYUVAPixmaps.h"
 #include "include/private/SkEncodedInfo.h"
 #include "include/private/SkNoncopyable.h"
 #include "include/private/SkTemplates.h"
@@ -51,7 +51,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  this many bytes, or by implementing rewind() to be able to rewind()
    *  after reading this many bytes.
    */
-  static constexpr size_t MinBufferedBytesNeeded() noexcept { return 32; }
+  static constexpr size_t MinBufferedBytesNeeded() { return 32; }
 
   /**
    *  Error codes for various SkCodec methods.
@@ -195,23 +195,19 @@ class SK_API SkCodec : SkNoncopyable {
    */
   SkImageInfo getInfo() const { return fEncodedInfo.makeImageInfo(); }
 
-  SkISize dimensions() const noexcept { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
-  SkIRect bounds() const noexcept {
-    return SkIRect::MakeWH(fEncodedInfo.width(), fEncodedInfo.height());
-  }
+  SkISize dimensions() const { return {fEncodedInfo.width(), fEncodedInfo.height()}; }
+  SkIRect bounds() const { return SkIRect::MakeWH(fEncodedInfo.width(), fEncodedInfo.height()); }
 
   /**
    * Return the ICC profile of the encoded data.
    */
-  const skcms_ICCProfile* getICCProfile() const noexcept {
-    return this->getEncodedInfo().profile();
-  }
+  const skcms_ICCProfile* getICCProfile() const { return this->getEncodedInfo().profile(); }
 
   /**
    *  Returns the image orientation stored in the EXIF data.
    *  If there is no EXIF data, or if we cannot read the EXIF data, returns kTopLeft.
    */
-  SkEncodedOrigin getOrigin() const noexcept { return fOrigin; }
+  SkEncodedOrigin getOrigin() const { return fOrigin; }
 
   /**
    *  Return a size that approximately supports the desired scale factor.
@@ -281,7 +277,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  Additional options to pass to getPixels.
    */
   struct Options {
-    constexpr Options() noexcept
+    Options()
         : fZeroInitialized(kNo_ZeroInitialized),
           fSubset(nullptr),
           fFrameIndex(0),
@@ -379,56 +375,29 @@ class SK_API SkCodec : SkNoncopyable {
   }
 
   /**
-   *  If decoding to YUV is supported, this returns true.  Otherwise, this
-   *  returns false and does not modify any of the parameters.
+   *  If decoding to YUV is supported, this returns true. Otherwise, this
+   *  returns false and the caller will ignore output parameter yuvaPixmapInfo.
    *
-   *  @param sizeInfo   Output parameter indicating the sizes and required
-   *                    allocation widths of the Y, U, V, and A planes. Given current codec
-   *                    limitations the size of the A plane will always be 0 and the Y, U, V
-   *                    channels will always be planar.
-   *  @param colorSpace Output parameter.  If non-NULL this is set to kJPEG,
-   *                    otherwise this is ignored.
+   * @param  supportedDataTypes Indicates the data type/planar config combinations that are
+   *                            supported by the caller. If the generator supports decoding to
+   *                            YUV(A), but not as a type in supportedDataTypes, this method
+   *                            returns false.
+   *  @param yuvaPixmapInfo Output parameter that specifies the planar configuration, subsampling,
+   *                        orientation, chroma siting, plane color types, and row bytes.
    */
-  bool queryYUV8(SkYUVASizeInfo* sizeInfo, SkYUVColorSpace* colorSpace) const {
-    if (nullptr == sizeInfo) {
-      return false;
-    }
-
-    bool result = this->onQueryYUV8(sizeInfo, colorSpace);
-    if (result) {
-      for (int i = 0; i <= 2; ++i) {
-        SkASSERT(
-            sizeInfo->fSizes[i].fWidth > 0 && sizeInfo->fSizes[i].fHeight > 0 &&
-            sizeInfo->fWidthBytes[i] > 0);
-      }
-      SkASSERT(
-          !sizeInfo->fSizes[3].fWidth && !sizeInfo->fSizes[3].fHeight && !sizeInfo->fWidthBytes[3]);
-    }
-    return result;
-  }
+  bool queryYUVAInfo(
+      const SkYUVAPixmapInfo::SupportedDataTypes& supportedDataTypes,
+      SkYUVAPixmapInfo* yuvaPixmapInfo) const;
 
   /**
    *  Returns kSuccess, or another value explaining the type of failure.
-   *  This always attempts to perform a full decode.  If the client only
-   *  wants size, it should call queryYUV8().
+   *  This always attempts to perform a full decode. To get the planar
+   *  configuration without decoding use queryYUVAInfo().
    *
-   *  @param sizeInfo   Needs to exactly match the values returned by the
-   *                    query, except the WidthBytes may be larger than the
-   *                    recommendation (but not smaller).
-   *  @param planes     Memory for each of the Y, U, and V planes.
+   *  @param yuvaPixmaps  Contains preallocated pixmaps configured according to a successful call
+   *                      to queryYUVAInfo().
    */
-  Result getYUV8Planes(const SkYUVASizeInfo& sizeInfo, void* planes[SkYUVASizeInfo::kMaxCount]) {
-    if (!planes || !planes[0] || !planes[1] || !planes[2]) {
-      return kInvalidInput;
-    }
-    SkASSERT(!planes[3]);  // TODO: is this a fair assumption?
-
-    if (!this->rewindIfNeeded()) {
-      return kCouldNotRewind;
-    }
-
-    return this->onGetYUV8Planes(sizeInfo, planes);
-  }
+  Result getYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps);
 
   /**
    *  Prepare for an incremental decode with the specified options.
@@ -726,7 +695,7 @@ class SK_API SkCodec : SkNoncopyable {
       std::unique_ptr<SkCodec> (*make)(std::unique_ptr<SkStream>, SkCodec::Result*));
 
  protected:
-  const SkEncodedInfo& getEncodedInfo() const noexcept { return fEncodedInfo; }
+  const SkEncodedInfo& getEncodedInfo() const { return fEncodedInfo; }
 
   using XformFormat = skcms_PixelFormat;
 
@@ -757,12 +726,12 @@ class SK_API SkCodec : SkNoncopyable {
   virtual Result onGetPixels(
       const SkImageInfo& info, void* pixels, size_t rowBytes, const Options&, int* rowsDecoded) = 0;
 
-  virtual bool onQueryYUV8(SkYUVASizeInfo*, SkYUVColorSpace*) const { return false; }
-
-  virtual Result onGetYUV8Planes(
-      const SkYUVASizeInfo&, void * [SkYUVASizeInfo::kMaxCount] /*planes*/) {
-    return kUnimplemented;
+  virtual bool onQueryYUVAInfo(
+      const SkYUVAPixmapInfo::SupportedDataTypes&, SkYUVAPixmapInfo*) const {
+    return false;
   }
+
+  virtual Result onGetYUVAPlanes(const SkYUVAPixmaps&) { return kUnimplemented; }
 
   virtual bool onGetValidSubset(SkIRect* /*desiredSubset*/) const {
     // By default, subsets are not supported.
@@ -791,7 +760,7 @@ class SK_API SkCodec : SkNoncopyable {
   /**
    * Get method for the input stream
    */
-  SkStream* stream() noexcept { return fStream.get(); }
+  SkStream* stream() { return fStream.get(); }
 
   /**
    *  The remaining functions revolve around decoding scanlines.
@@ -802,9 +771,9 @@ class SK_API SkCodec : SkNoncopyable {
    */
   virtual SkScanlineOrder onGetScanlineOrder() const { return kTopDown_SkScanlineOrder; }
 
-  const SkImageInfo& dstInfo() const noexcept { return fDstInfo; }
+  const SkImageInfo& dstInfo() const { return fDstInfo; }
 
-  const Options& options() const noexcept { return fOptions; }
+  const Options& options() const { return fOptions; }
 
   /**
    *  Returns the number of scanlines that have been decoded so far.
@@ -812,7 +781,7 @@ class SK_API SkCodec : SkNoncopyable {
    *
    *  Returns -1 if we have not started a scanline decode.
    */
-  int currScanline() const noexcept { return fCurrScanline; }
+  int currScanline() const { return fCurrScanline; }
 
   virtual int onOutputScanline(int inputScanline) const;
 
@@ -829,8 +798,8 @@ class SK_API SkCodec : SkNoncopyable {
   virtual bool usesColorXform() const { return true; }
   void applyColorXform(void* dst, const void* src, int count) const;
 
-  bool colorXform() const noexcept { return fXformTime != kNo_XformTime; }
-  bool xformOnDecode() const noexcept { return fXformTime == kDecodeRow_XformTime; }
+  bool colorXform() const { return fXformTime != kNo_XformTime; }
+  bool xformOnDecode() const { return fXformTime == kDecodeRow_XformTime; }
 
   virtual int onGetFrameCount() { return 1; }
 

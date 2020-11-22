@@ -61,5 +61,6 @@
     <ClCompile Include="skottie\src\layers\AudioLayer.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\OffsetPaths.cpp" />
     <ClCompile Include="skottie\src\layers\shapelayer\PuckerBloat.cpp" />
+    <ClCompile Include="skottie\src\effects\DisplacementMapEffect.cpp" />
   </ItemGroup>
 </Project>

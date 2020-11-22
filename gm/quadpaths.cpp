@@ -141,7 +141,7 @@ class QuadPathGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 class QuadClosePathGM : public GM {
@@ -263,7 +263,7 @@ class QuadClosePathGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

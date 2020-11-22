@@ -164,9 +164,9 @@ GrSurfaceProxyView GrAHardwareBufferImageGenerator::makeView(GrRecordingContext*
 
         return tex;
       },
-      backendFormat, {width, height}, GrRenderable::kNo, 1, GrMipmapped::kNo,
-      GrMipmapStatus::kNotAllocated, GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact,
-      SkBudgeted::kNo, GrProtected(fIsProtectedContent), GrSurfaceProxy::UseAllocator::kYes);
+      backendFormat, {width, height}, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated,
+      GrInternalSurfaceFlags::kReadOnly, SkBackingFit::kExact, SkBudgeted::kNo,
+      GrProtected(fIsProtectedContent), GrSurfaceProxy::UseAllocator::kYes);
 
   GrSwizzle readSwizzle = context->priv().caps()->getReadSwizzle(backendFormat, grColorType);
 

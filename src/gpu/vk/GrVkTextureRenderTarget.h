@@ -33,7 +33,7 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
       GrVkGpu*, SkISize dimensions, int sampleCnt, GrWrapOwnership, GrWrapCacheable,
       const GrVkImageInfo&, sk_sp<GrBackendSurfaceMutableStateImpl>);
 
-  GrBackendFormat backendFormat() const noexcept override { return this->getBackendFormat(); }
+  GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
 
  protected:
   void onAbandon() override {
@@ -53,30 +53,31 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
       const GrVkImageInfo& info, sk_sp<GrBackendSurfaceMutableStateImpl> mutableState,
-      const GrVkImageView* texView, const GrVkImageInfo& msaaInfo,
+      sk_sp<const GrVkImageView> texView, const GrVkImageInfo& msaaInfo,
       sk_sp<GrBackendSurfaceMutableStateImpl> msaaMutableState,
-      const GrVkImageView* colorAttachmentView, const GrVkImageView* resolveAttachmentView,
-      GrMipmapStatus);
+      sk_sp<const GrVkImageView> colorAttachmentView,
+      sk_sp<const GrVkImageView> resolveAttachmentView, GrMipmapStatus);
 
   // non-MSAA, not-wrapped
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrVkImageInfo& info,
-      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* texView,
-      const GrVkImageView* colorAttachmentView, GrMipmapStatus);
+      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, sk_sp<const GrVkImageView> texView,
+      sk_sp<const GrVkImageView> colorAttachmentView, GrMipmapStatus);
 
   // MSAA, wrapped
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkISize dimensions, int sampleCnt, const GrVkImageInfo& info,
-      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* texView,
+      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, sk_sp<const GrVkImageView> texView,
       const GrVkImageInfo& msaaInfo, sk_sp<GrBackendSurfaceMutableStateImpl> msaaMutableState,
-      const GrVkImageView* colorAttachmentView, const GrVkImageView* resolveAttachmentView,
-      GrMipmapStatus, GrBackendObjectOwnership, GrWrapCacheable);
+      sk_sp<const GrVkImageView> colorAttachmentView,
+      sk_sp<const GrVkImageView> resolveAttachmentView, GrMipmapStatus, GrBackendObjectOwnership,
+      GrWrapCacheable);
 
   // non-MSAA, wrapped
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkISize dimensions, const GrVkImageInfo& info,
-      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, const GrVkImageView* texView,
-      const GrVkImageView* colorAttachmentView, GrMipmapStatus, GrBackendObjectOwnership,
+      sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, sk_sp<const GrVkImageView> texView,
+      sk_sp<const GrVkImageView> colorAttachmentView, GrMipmapStatus, GrBackendObjectOwnership,
       GrWrapCacheable);
 
   // GrGLRenderTarget accounts for the texture's memory and any MSAA renderbuffer's memory.
@@ -89,5 +90,9 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
     this->setResourceRelease(std::move(releaseHelper));
   }
 };
+
+#ifdef SK_BUILD_FOR_WIN
+#  pragma warning(pop)
+#endif
 
 #endif

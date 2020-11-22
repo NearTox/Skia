@@ -77,7 +77,7 @@ class SkAlphaRuns {
       runs += x + 1;
       alpha += x + 1;
       x = 0;
-      SkDEBUGCODE(this->validate());
+      SkDEBUGCODE(this->validate();)
     }
 
     if (middleCount) {
@@ -93,7 +93,7 @@ class SkAlphaRuns {
         runs += n;
         middleCount -= n;
       } while (middleCount > 0);
-      SkDEBUGCODE(this->validate());
+      SkDEBUGCODE(this->validate();)
       lastAlpha = alpha;
     }
 
@@ -101,14 +101,15 @@ class SkAlphaRuns {
       SkAlphaRuns::Break(runs, alpha, x, 1);
       alpha += x;
       alpha[0] = SkToU8(alpha[0] + stopAlpha);
-      SkDEBUGCODE(this->validate());
+      SkDEBUGCODE(this->validate();)
       lastAlpha = alpha;
     }
 
     return SkToS32(lastAlpha - fAlpha);  // new offsetX
   }
 
-  SkDEBUGCODE(void assertValid(int y, int maxStep) const;) SkDEBUGCODE(void dump() const);
+  SkDEBUGCODE(void assertValid(int y, int maxStep) const;)
+  SkDEBUGCODE(void dump() const;)
 
   /**
    * Break the runs in the buffer at offsets x and x+count, properly
@@ -189,7 +190,8 @@ class SkAlphaRuns {
   }
 
  private:
-  SkDEBUGCODE(int fWidth;) SkDEBUGCODE(void validate() const);
+  SkDEBUGCODE(int fWidth;)
+  SkDEBUGCODE(void validate() const;)
 };
 
 #endif

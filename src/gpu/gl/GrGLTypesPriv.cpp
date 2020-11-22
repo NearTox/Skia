@@ -10,7 +10,7 @@
 #include "src/gpu/GrSwizzle.h"
 #include "src/gpu/gl/GrGLDefines.h"
 
-GrGLTextureParameters::SamplerOverriddenState::SamplerOverriddenState() noexcept
+GrGLTextureParameters::SamplerOverriddenState::SamplerOverriddenState()
     // These are the OpenGL defaults.
     : fMinFilter(GR_GL_NEAREST_MIPMAP_LINEAR),
       fMagFilter(GR_GL_LINEAR),
@@ -20,7 +20,7 @@ GrGLTextureParameters::SamplerOverriddenState::SamplerOverriddenState() noexcept
       fMaxLOD(1000.f),
       fBorderColorInvalid(false) {}
 
-void GrGLTextureParameters::SamplerOverriddenState::invalidate() noexcept {
+void GrGLTextureParameters::SamplerOverriddenState::invalidate() {
   fMinFilter = ~0U;
   fMagFilter = ~0U;
   fWrapS = ~0U;
@@ -30,12 +30,12 @@ void GrGLTextureParameters::SamplerOverriddenState::invalidate() noexcept {
   fBorderColorInvalid = true;
 }
 
-GrGLTextureParameters::NonsamplerState::NonsamplerState() noexcept
+GrGLTextureParameters::NonsamplerState::NonsamplerState()
     // These are the OpenGL defaults.
-    : fSwizzleKey(GrSwizzle::RGBA().asKey()), fBaseMipMapLevel(0), fMaxMipmapLevel(1000) {}
+    : fBaseMipMapLevel(0), fMaxMipmapLevel(1000), fSwizzleIsRGBA(true) {}
 
-void GrGLTextureParameters::NonsamplerState::invalidate() noexcept {
-  fSwizzleKey = ~0U;
+void GrGLTextureParameters::NonsamplerState::invalidate() {
+  fSwizzleIsRGBA = false;
   fBaseMipMapLevel = ~0;
   fMaxMipmapLevel = ~0;
 }
@@ -47,7 +47,7 @@ void GrGLTextureParameters::invalidate() {
 
 void GrGLTextureParameters::set(
     const SamplerOverriddenState* samplerState, const NonsamplerState& nonsamplerState,
-    ResetTimestamp currTimestamp) noexcept {
+    ResetTimestamp currTimestamp) {
   if (samplerState) {
     fSamplerOverriddenState = *samplerState;
   }
@@ -55,7 +55,7 @@ void GrGLTextureParameters::set(
   fResetTimestamp = currTimestamp;
 }
 
-void GrGLBackendTextureInfo::assign(const GrGLBackendTextureInfo& that, bool thisIsValid) noexcept {
+void GrGLBackendTextureInfo::assign(const GrGLBackendTextureInfo& that, bool thisIsValid) {
   fInfo = that.fInfo;
   SkSafeRef(that.fParams);
   if (thisIsValid) {
@@ -64,4 +64,4 @@ void GrGLBackendTextureInfo::assign(const GrGLBackendTextureInfo& that, bool thi
   fParams = that.fParams;
 }
 
-void GrGLBackendTextureInfo::cleanup() noexcept { SkSafeUnref(fParams); }
+void GrGLBackendTextureInfo::cleanup() { SkSafeUnref(fParams); }

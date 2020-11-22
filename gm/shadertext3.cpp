@@ -128,7 +128,7 @@ class ShaderText3GM : public GM {
 
  private:
   SkBitmap fBmp;
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

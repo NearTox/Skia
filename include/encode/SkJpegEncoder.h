@@ -90,7 +90,7 @@ class SK_API SkJpegEncoder : public SkEncoder {
   SkJpegEncoder(std::unique_ptr<SkJpegEncoderMgr>, const SkPixmap& src);
 
   std::unique_ptr<SkJpegEncoderMgr> fEncoderMgr;
-  typedef SkEncoder INHERITED;
+  using INHERITED = SkEncoder;
 };
 
 #endif

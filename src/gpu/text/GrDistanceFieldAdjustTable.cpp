@@ -9,7 +9,7 @@
 
 #include "src/core/SkScalerContext.h"
 
-SkDEBUGCODE(static const int kExpectedDistanceAdjustTableSize = 8);
+SkDEBUGCODE(static const int kExpectedDistanceAdjustTableSize = 8;)
 
 SkScalar* build_distance_adjust_table(SkScalar paintGamma, SkScalar deviceGamma) {
   // This is used for an approximation of the mask gamma hack, used by raster and bitmap

@@ -67,7 +67,8 @@ static uint32_t grsltype_to_alignment_mask(GrSLType type) {
     case kTextureExternalSampler_GrSLType:
     case kTexture2DRectSampler_GrSLType:
     case kSampler_GrSLType:
-    case kTexture2D_GrSLType: break;
+    case kTexture2D_GrSLType:
+    case kInput_GrSLType: break;
   }
   SK_ABORT("Unexpected type");
 }
@@ -119,7 +120,8 @@ static inline uint32_t grsltype_to_mtl_size(GrSLType type) {
     case kTextureExternalSampler_GrSLType:
     case kTexture2DRectSampler_GrSLType:
     case kSampler_GrSLType:
-    case kTexture2D_GrSLType: break;
+    case kTexture2D_GrSLType:
+    case kInput_GrSLType: break;
   }
   SK_ABORT("Unexpected type");
 }
@@ -210,7 +212,6 @@ GrGLSLUniformHandler::SamplerHandle GrMtlUniformHandler::addSampler(
        kFragment_GrShaderFlag, nullptr, SkString(name)},
       0});
 
-  SkASSERT(caps->textureSwizzleAppliedInShader());
   fSamplerSwizzles.push_back(swizzle);
   SkASSERT(fSamplerSwizzles.count() == fSamplers.count());
   return GrGLSLUniformHandler::SamplerHandle(fSamplers.count() - 1);

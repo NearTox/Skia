@@ -17,7 +17,7 @@
 
 class SkBitSet {
  public:
-  explicit SkBitSet(size_t size) noexcept
+  explicit SkBitSet(size_t size)
       : fSize(size)
         // May http://wg21.link/p0593 be accepted.
         ,
@@ -25,8 +25,8 @@ class SkBitSet {
 
   SkBitSet(const SkBitSet&) = delete;
   SkBitSet& operator=(const SkBitSet&) = delete;
-  SkBitSet(SkBitSet&& that) noexcept { *this = std::move(that); }
-  SkBitSet& operator=(SkBitSet&& that) noexcept {
+  SkBitSet(SkBitSet&& that) { *this = std::move(that); }
+  SkBitSet& operator=(SkBitSet&& that) {
     if (this != &that) {
       this->fSize = that.fSize;
       this->fChunks = std::move(that.fChunks);
@@ -53,7 +53,7 @@ class SkBitSet {
     return SkToBool(*this->chunkFor(index) & chunkMaskFor(index));
   }
 
-  size_t size() const noexcept { return fSize; }
+  size_t size() const { return fSize; }
 
   // Calls f(size_t index) for each set index.
   template <typename FN>
@@ -78,30 +78,30 @@ class SkBitSet {
     size_t fValue;
 
    public:
-    OptionalIndex() noexcept : fHasValue(false) {}
-    constexpr OptionalIndex(size_t index) noexcept : fHasValue(true), fValue(index) {}
+    OptionalIndex() : fHasValue(false) {}
+    constexpr OptionalIndex(size_t index) : fHasValue(true), fValue(index) {}
 
-    constexpr size_t* operator->() noexcept { return &fValue; }
-    constexpr const size_t* operator->() const noexcept { return &fValue; }
-    constexpr size_t& operator*() & noexcept { return fValue; }
-    constexpr const size_t& operator*() const& noexcept { return fValue; }
-    constexpr size_t&& operator*() && noexcept { return std::move(fValue); }
-    constexpr const size_t&& operator*() const&& noexcept { return std::move(fValue); }
+    constexpr size_t* operator->() { return &fValue; }
+    constexpr const size_t* operator->() const { return &fValue; }
+    constexpr size_t& operator*() & { return fValue; }
+    constexpr const size_t& operator*() const& { return fValue; }
+    constexpr size_t&& operator*() && { return std::move(fValue); }
+    constexpr const size_t&& operator*() const&& { return std::move(fValue); }
 
     constexpr explicit operator bool() const noexcept { return fHasValue; }
     constexpr bool has_value() const noexcept { return fHasValue; }
 
-    constexpr size_t& value() & noexcept { return fValue; }
-    constexpr const size_t& value() const& noexcept { return fValue; }
-    constexpr size_t&& value() && noexcept { return std::move(fValue); }
-    constexpr const size_t&& value() const&& noexcept { return std::move(fValue); }
+    constexpr size_t& value() & { return fValue; }
+    constexpr const size_t& value() const& { return fValue; }
+    constexpr size_t&& value() && { return std::move(fValue); }
+    constexpr const size_t&& value() const&& { return std::move(fValue); }
 
     template <typename U>
-    constexpr size_t value_or(U&& defaultValue) const& noexcept {
+    constexpr size_t value_or(U&& defaultValue) const& {
       return bool(*this) ? **this : static_cast<size_t>(std::forward<U>(defaultValue));
     }
     template <typename U>
-    constexpr size_t value_or(U&& defaultValue) && noexcept {
+    constexpr size_t value_or(U&& defaultValue) && {
       return bool(*this) ? std::move(**this) : static_cast<size_t>(std::forward<U>(defaultValue));
     }
   };
@@ -129,13 +129,11 @@ class SkBitSet {
 
   Chunk* chunkFor(size_t index) const { return fChunks.get() + (index / ChunkBits); }
 
-  static constexpr Chunk chunkMaskFor(size_t index) noexcept {
+  static constexpr Chunk chunkMaskFor(size_t index) {
     return (Chunk)1 << (index & (ChunkBits - 1));
   }
 
-  static constexpr size_t numChunksFor(size_t size) noexcept {
-    return (size + (ChunkBits - 1)) / ChunkBits;
-  }
+  static constexpr size_t numChunksFor(size_t size) { return (size + (ChunkBits - 1)) / ChunkBits; }
 };
 
 #endif

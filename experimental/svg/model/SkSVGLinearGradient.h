@@ -38,7 +38,7 @@ class SkSVGLinearGradient final : public SkSVGGradient {
   SkSVGLength fX2 = SkSVGLength(100, SkSVGLength::Unit::kPercentage);
   SkSVGLength fY2 = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
 
-  typedef SkSVGGradient INHERITED;
+  using INHERITED = SkSVGGradient;
 };
 
 #endif  // SkSVGLinearGradient_DEFINED

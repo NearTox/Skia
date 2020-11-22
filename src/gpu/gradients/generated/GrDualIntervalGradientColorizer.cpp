@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLDualIntervalGradientColorizer : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLDualIntervalGradientColorizer() noexcept = default;
+  GrGLSLDualIntervalGradientColorizer() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrDualIntervalGradientColorizer& _outer =
@@ -111,7 +111,7 @@ GrGLSLFragmentProcessor* GrDualIntervalGradientColorizer::onCreateGLSLInstance()
 }
 void GrDualIntervalGradientColorizer::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other) const {
   const GrDualIntervalGradientColorizer& that = other.cast<GrDualIntervalGradientColorizer>();
   (void)that;
   if (scale01 != that.scale01) return false;
@@ -121,6 +121,7 @@ bool GrDualIntervalGradientColorizer::onIsEqual(const GrFragmentProcessor& other
   if (threshold != that.threshold) return false;
   return true;
 }
+bool GrDualIntervalGradientColorizer::usesExplicitReturn() const { return false; }
 GrDualIntervalGradientColorizer::GrDualIntervalGradientColorizer(
     const GrDualIntervalGradientColorizer& src)
     : INHERITED(kGrDualIntervalGradientColorizer_ClassID, src.optimizationFlags()),

@@ -111,7 +111,7 @@ class ThinRectsGM : public GM {
     }
   }
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

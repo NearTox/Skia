@@ -55,7 +55,7 @@ class PremulAndUnpremulAlphaOpsBench : public Benchmark {
   SkColorType fColorType;
   SkString fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new PremulAndUnpremulAlphaOpsBench(kRGBA_8888_SkColorType));

@@ -12,7 +12,7 @@
 #include "src/gpu/GrTextureProxyPriv.h"
 #include "src/gpu/GrTextureResolveRenderTask.h"
 
-uint32_t GrRenderTask::CreateUniqueID() noexcept {
+uint32_t GrRenderTask::CreateUniqueID() {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {
@@ -21,7 +21,7 @@ uint32_t GrRenderTask::CreateUniqueID() noexcept {
   return id;
 }
 
-GrRenderTask::GrRenderTask() noexcept : fUniqueID(CreateUniqueID()), fFlags(0) {}
+GrRenderTask::GrRenderTask() : fUniqueID(CreateUniqueID()), fFlags(0) {}
 
 void GrRenderTask::disown(GrDrawingManager* drawingMgr) {
   SkASSERT(!fDrawingMgr || drawingMgr == fDrawingMgr);

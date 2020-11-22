@@ -26,7 +26,7 @@
 */
 class SkLanguage {
  public:
-  SkLanguage() noexcept = default;
+  SkLanguage() {}
   SkLanguage(const SkString& tag) : fTag(tag) {}
   SkLanguage(const char* tag) : fTag(tag) {}
   SkLanguage(const char* tag, size_t len) : fTag(tag, len) {}

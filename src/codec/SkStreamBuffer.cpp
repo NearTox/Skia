@@ -24,10 +24,9 @@ const char* SkStreamBuffer::get() const {
     const size_t bytesToBuffer = fBytesBuffered - fTrulyBuffered;
     char* dst = SkTAddOffset<char>(const_cast<char*>(fBuffer), fTrulyBuffered);
     SkDEBUGCODE(const size_t bytesRead =)
-        // This stream is rewindable, so it should be safe to call the non-const
-        // read()
-        const_cast<SkStream*>(fStream.get())
-            ->read(dst, bytesToBuffer);
+    // This stream is rewindable, so it should be safe to call the non-const
+    // read()
+    const_cast<SkStream*>(fStream.get())->read(dst, bytesToBuffer);
     SkASSERT(bytesRead == bytesToBuffer);
     fTrulyBuffered = fBytesBuffered;
   }

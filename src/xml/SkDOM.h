@@ -87,7 +87,7 @@ class SkDOM : public SkNoncopyable {
   Node* fRoot;
   std::unique_ptr<SkDOMParser> fParser;
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 
 #endif

@@ -168,7 +168,7 @@ class OverstrokeView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

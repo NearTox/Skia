@@ -16,21 +16,21 @@
 #include <new>
 
 // Force small chunks to be a page's worth
-static constexpr size_t kMinAllocSize = 4096;
+static const size_t kMinAllocSize = 4096;
 
 struct SkBufferBlock {
   SkBufferBlock* fNext;  // updated by the writer
   size_t fUsed;          // updated by the writer
   const size_t fCapacity;
 
-  SkBufferBlock(size_t capacity) noexcept : fNext(nullptr), fUsed(0), fCapacity(capacity) {}
+  SkBufferBlock(size_t capacity) : fNext(nullptr), fUsed(0), fCapacity(capacity) {}
 
-  const void* startData() const noexcept { return this + 1; }
+  const void* startData() const { return this + 1; }
 
-  size_t avail() const noexcept { return fCapacity - fUsed; }
-  void* availData() noexcept { return (char*)this->startData() + fUsed; }
+  size_t avail() const { return fCapacity - fUsed; }
+  void* availData() { return (char*)this->startData() + fUsed; }
 
-  static SkBufferBlock* Alloc(size_t length) noexcept {
+  static SkBufferBlock* Alloc(size_t length) {
     size_t capacity = LengthToCapacity(length);
     void* buffer = sk_malloc_throw(sizeof(SkBufferBlock) + capacity);
     return new (buffer) SkBufferBlock(capacity);
@@ -39,7 +39,7 @@ struct SkBufferBlock {
   // Return number of bytes actually appended. Important that we always completely this block
   // before spilling into the next, since the reader uses fCapacity to know how many it can read.
   //
-  size_t append(const void* src, size_t length) noexcept {
+  size_t append(const void* src, size_t length) {
     this->validate();
     size_t amount = std::min(this->avail(), length);
     memcpy(this->availData(), src, amount);
@@ -50,7 +50,7 @@ struct SkBufferBlock {
 
   // Do not call in the reader thread, since the writer may be updating fUsed.
   // (The assertion is still true, but TSAN still may complain about its raciness.)
-  void validate() const noexcept {
+  void validate() const {
 #ifdef SK_DEBUG
     SkASSERT(fCapacity > 0);
     SkASSERT(fUsed <= fCapacity);
@@ -58,8 +58,8 @@ struct SkBufferBlock {
   }
 
  private:
-  static size_t LengthToCapacity(size_t length) noexcept {
-    constexpr size_t minSize = kMinAllocSize - sizeof(SkBufferBlock);
+  static size_t LengthToCapacity(size_t length) {
+    const size_t minSize = kMinAllocSize - sizeof(SkBufferBlock);
     return std::max(length, minSize);
   }
 };
@@ -68,23 +68,23 @@ struct SkBufferHead {
   mutable std::atomic<int32_t> fRefCnt;
   SkBufferBlock fBlock;
 
-  SkBufferHead(size_t capacity) noexcept : fRefCnt(1), fBlock(capacity) {}
+  SkBufferHead(size_t capacity) : fRefCnt(1), fBlock(capacity) {}
 
-  static size_t LengthToCapacity(size_t length) noexcept {
-    constexpr size_t minSize = kMinAllocSize - sizeof(SkBufferHead);
+  static size_t LengthToCapacity(size_t length) {
+    const size_t minSize = kMinAllocSize - sizeof(SkBufferHead);
     return std::max(length, minSize);
   }
 
-  static SkBufferHead* Alloc(size_t length) noexcept {
+  static SkBufferHead* Alloc(size_t length) {
     size_t capacity = LengthToCapacity(length);
     size_t size = sizeof(SkBufferHead) + capacity;
     void* buffer = sk_malloc_throw(size);
     return new (buffer) SkBufferHead(capacity);
   }
 
-  void ref() const noexcept { SkAssertResult(fRefCnt.fetch_add(+1, std::memory_order_relaxed)); }
+  void ref() const { SkAssertResult(fRefCnt.fetch_add(+1, std::memory_order_relaxed)); }
 
-  void unref() const noexcept {
+  void unref() const {
     // A release here acts in place of all releases we "should" have been doing in ref().
     int32_t oldRefCnt = fRefCnt.fetch_add(-1, std::memory_order_acq_rel);
     SkASSERT(oldRefCnt);
@@ -100,7 +100,7 @@ struct SkBufferHead {
     }
   }
 
-  void validate(size_t minUsed, const SkBufferBlock* tail = nullptr) const noexcept {
+  void validate(size_t minUsed, const SkBufferBlock* tail = nullptr) const {
 #ifdef SK_DEBUG
     SkASSERT(fRefCnt.load(std::memory_order_relaxed) > 0);
     size_t totalUsed = 0;
@@ -124,8 +124,7 @@ struct SkBufferHead {
 // The reader can only access block.fCapacity (which never changes), and cannot access
 // block.fUsed, which may be updated by the writer.
 //
-SkROBuffer::SkROBuffer(
-    const SkBufferHead* head, size_t available, const SkBufferBlock* tail) noexcept
+SkROBuffer::SkROBuffer(const SkBufferHead* head, size_t available, const SkBufferBlock* tail)
     : fHead(head), fAvailable(available), fTail(tail) {
   if (head) {
     fHead->ref();
@@ -143,11 +142,11 @@ SkROBuffer::~SkROBuffer() {
   }
 }
 
-SkROBuffer::Iter::Iter(const SkROBuffer* buffer) noexcept { this->reset(buffer); }
+SkROBuffer::Iter::Iter(const SkROBuffer* buffer) { this->reset(buffer); }
 
-SkROBuffer::Iter::Iter(const sk_sp<SkROBuffer>& buffer) noexcept { this->reset(buffer.get()); }
+SkROBuffer::Iter::Iter(const sk_sp<SkROBuffer>& buffer) { this->reset(buffer.get()); }
 
-void SkROBuffer::Iter::reset(const SkROBuffer* buffer) noexcept {
+void SkROBuffer::Iter::reset(const SkROBuffer* buffer) {
   fBuffer = buffer;
   if (buffer && buffer->fHead) {
     fBlock = &buffer->fHead->fBlock;
@@ -158,18 +157,16 @@ void SkROBuffer::Iter::reset(const SkROBuffer* buffer) noexcept {
   }
 }
 
-const void* SkROBuffer::Iter::data() const noexcept {
-  return fRemaining ? fBlock->startData() : nullptr;
-}
+const void* SkROBuffer::Iter::data() const { return fRemaining ? fBlock->startData() : nullptr; }
 
-size_t SkROBuffer::Iter::size() const noexcept {
+size_t SkROBuffer::Iter::size() const {
   if (!fBlock) {
     return 0;
   }
   return std::min(fBlock->fCapacity, fRemaining);
 }
 
-bool SkROBuffer::Iter::next() noexcept {
+bool SkROBuffer::Iter::next() {
   if (fRemaining) {
     fRemaining -= this->size();
     if (fBuffer->fTail == fBlock) {
@@ -185,8 +182,7 @@ bool SkROBuffer::Iter::next() noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkRWBuffer::SkRWBuffer(size_t initialCapacity) noexcept
-    : fHead(nullptr), fTail(nullptr), fTotalUsed(0) {
+SkRWBuffer::SkRWBuffer(size_t initialCapacity) : fHead(nullptr), fTail(nullptr), fTotalUsed(0) {
   if (initialCapacity) {
     fHead = SkBufferHead::Alloc(initialCapacity);
     fTail = &fHead->fBlock;
@@ -204,7 +200,7 @@ SkRWBuffer::~SkRWBuffer() {
 // next, since our reader will be using fCapacity (min'd against its total available) to know how
 // many bytes to read from a given block.
 //
-void SkRWBuffer::append(const void* src, size_t length, size_t reserve) noexcept {
+void SkRWBuffer::append(const void* src, size_t length, size_t reserve) {
   this->validate();
   if (0 == length) {
     return;
@@ -246,7 +242,7 @@ void SkRWBuffer::validate() const {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 class SkROBufferStreamAsset : public SkStreamAsset {
-  void validate() const noexcept {
+  void validate() const {
 #ifdef SK_DEBUG
     SkASSERT(fGlobalOffset <= fBuffer->size());
     SkASSERT(fLocalOffset <= fIter.size());
@@ -268,21 +264,20 @@ class SkROBufferStreamAsset : public SkStreamAsset {
 #endif
 
  public:
-  SkROBufferStreamAsset(sk_sp<SkROBuffer> buffer) noexcept
-      : fBuffer(std::move(buffer)), fIter(fBuffer) {
+  SkROBufferStreamAsset(sk_sp<SkROBuffer> buffer) : fBuffer(std::move(buffer)), fIter(fBuffer) {
     fGlobalOffset = fLocalOffset = 0;
   }
 
-  size_t getLength() const noexcept override { return fBuffer->size(); }
+  size_t getLength() const override { return fBuffer->size(); }
 
-  bool rewind() noexcept override {
+  bool rewind() override {
     AUTO_VALIDATE
     fIter.reset(fBuffer.get());
     fGlobalOffset = fLocalOffset = 0;
     return true;
   }
 
-  size_t read(void* dst, size_t request) noexcept override {
+  size_t read(void* dst, size_t request) override {
     AUTO_VALIDATE
     size_t bytesRead = 0;
     for (;;) {
@@ -311,9 +306,9 @@ class SkROBufferStreamAsset : public SkStreamAsset {
     return bytesRead;
   }
 
-  bool isAtEnd() const noexcept override { return fBuffer->size() == fGlobalOffset; }
+  bool isAtEnd() const override { return fBuffer->size() == fGlobalOffset; }
 
-  size_t getPosition() const noexcept override { return fGlobalOffset; }
+  size_t getPosition() const override { return fGlobalOffset; }
 
   bool seek(size_t position) override {
     AUTO_VALIDATE

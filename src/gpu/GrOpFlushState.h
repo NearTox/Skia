@@ -47,12 +47,12 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
 
   /** Called as ops are executed. Must be called in the same order as the ops were prepared. */
   void executeDrawsAndUploadsForMeshDrawOp(
-      const GrOp* op, const SkRect& chainBounds, const GrPipeline*);
+      const GrOp* op, const SkRect& chainBounds, const GrPipeline*, const GrUserStencilSettings*);
 
-  GrOpsRenderPass* opsRenderPass() noexcept { return fOpsRenderPass; }
-  void setOpsRenderPass(GrOpsRenderPass* renderPass) noexcept { fOpsRenderPass = renderPass; }
+  GrOpsRenderPass* opsRenderPass() { return fOpsRenderPass; }
+  void setOpsRenderPass(GrOpsRenderPass* renderPass) { fOpsRenderPass = renderPass; }
 
-  GrGpu* gpu() noexcept { return fGpu; }
+  GrGpu* gpu() { return fGpu; }
 
   void reset();
 
@@ -61,27 +61,30 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     // TODO: why does OpArgs have the op we're going to pass it to as a member? Remove it.
     explicit OpArgs(
         GrOp* op, GrSurfaceProxyView* surfaceView, GrAppliedClip* appliedClip,
-        const GrXferProcessor::DstProxyView& dstProxyView) noexcept
+        const GrXferProcessor::DstProxyView& dstProxyView,
+        GrXferBarrierFlags renderPassXferBarriers)
         : fOp(op),
           fSurfaceView(surfaceView),
           fRenderTargetProxy(surfaceView->asRenderTargetProxy()),
           fAppliedClip(appliedClip),
-          fDstProxyView(dstProxyView) {
+          fDstProxyView(dstProxyView),
+          fRenderPassXferBarriers(renderPassXferBarriers) {
       SkASSERT(surfaceView->asRenderTargetProxy());
     }
 
-    GrSurfaceOrigin origin() const noexcept { return fSurfaceView->origin(); }
-    GrSwizzle writeSwizzle() const noexcept { return fSurfaceView->swizzle(); }
+    GrSurfaceOrigin origin() const { return fSurfaceView->origin(); }
+    GrSwizzle writeSwizzle() const { return fSurfaceView->swizzle(); }
 
-    GrOp* op() noexcept { return fOp; }
-    const GrSurfaceProxyView* writeView() const noexcept { return fSurfaceView; }
-    GrRenderTargetProxy* proxy() const noexcept { return fRenderTargetProxy; }
-    GrAppliedClip* appliedClip() noexcept { return fAppliedClip; }
-    const GrAppliedClip* appliedClip() const noexcept { return fAppliedClip; }
-    const GrXferProcessor::DstProxyView& dstProxyView() const noexcept { return fDstProxyView; }
+    GrOp* op() { return fOp; }
+    const GrSurfaceProxyView* writeView() const { return fSurfaceView; }
+    GrRenderTargetProxy* proxy() const { return fRenderTargetProxy; }
+    GrAppliedClip* appliedClip() { return fAppliedClip; }
+    const GrAppliedClip* appliedClip() const { return fAppliedClip; }
+    const GrXferProcessor::DstProxyView& dstProxyView() const { return fDstProxyView; }
+    GrXferBarrierFlags renderPassBarriers() const { return fRenderPassXferBarriers; }
 
 #ifdef SK_DEBUG
-    void validate() const noexcept {
+    void validate() const {
       SkASSERT(fOp);
       SkASSERT(fSurfaceView);
     }
@@ -93,25 +96,26 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
     GrRenderTargetProxy* fRenderTargetProxy;
     GrAppliedClip* fAppliedClip;
     GrXferProcessor::DstProxyView fDstProxyView;  // TODO: do we still need the dst proxy here?
+    GrXferBarrierFlags fRenderPassXferBarriers;
   };
 
-  void setOpArgs(OpArgs* opArgs) noexcept { fOpArgs = opArgs; }
+  void setOpArgs(OpArgs* opArgs) { fOpArgs = opArgs; }
 
-  const OpArgs& drawOpArgs() const noexcept {
+  const OpArgs& drawOpArgs() const {
     SkASSERT(fOpArgs);
     SkDEBUGCODE(fOpArgs->validate());
     return *fOpArgs;
   }
 
-  void setSampledProxyArray(SkTArray<GrSurfaceProxy*, true>* sampledProxies) noexcept {
+  void setSampledProxyArray(SkTArray<GrSurfaceProxy*, true>* sampledProxies) {
     fSampledProxies = sampledProxies;
   }
 
-  SkTArray<GrSurfaceProxy*, true>* sampledProxyArray() noexcept override { return fSampledProxies; }
+  SkTArray<GrSurfaceProxy*, true>* sampledProxyArray() override { return fSampledProxies; }
 
   /** Overrides of GrDeferredUploadTarget. */
 
-  const GrTokenTracker* tokenTracker() noexcept final { return fTokenTracker; }
+  const GrTokenTracker* tokenTracker() final { return fTokenTracker; }
   GrDeferredUploadToken addInlineUpload(GrDeferredTextureUploadFn&&) final;
   GrDeferredUploadToken addASAPUpload(GrDeferredTextureUploadFn&&) final;
 
@@ -138,24 +142,25 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
   }
   void putBackIndices(int indexCount) final;
   void putBackVertices(int vertices, size_t vertexStride) final;
-  const GrSurfaceProxyView* writeView() const noexcept final {
-    return this->drawOpArgs().writeView();
-  }
-  GrRenderTargetProxy* proxy() const noexcept final { return this->drawOpArgs().proxy(); }
-  const GrAppliedClip* appliedClip() const noexcept final {
-    return this->drawOpArgs().appliedClip();
-  }
-  const GrAppliedHardClip& appliedHardClip() const noexcept {
+  const GrSurfaceProxyView* writeView() const final { return this->drawOpArgs().writeView(); }
+  GrRenderTargetProxy* proxy() const final { return this->drawOpArgs().proxy(); }
+  const GrAppliedClip* appliedClip() const final { return this->drawOpArgs().appliedClip(); }
+  const GrAppliedHardClip& appliedHardClip() const {
     return (fOpArgs->appliedClip()) ? fOpArgs->appliedClip()->hardClip()
                                     : GrAppliedHardClip::Disabled();
   }
   GrAppliedClip detachAppliedClip() final;
-  const GrXferProcessor::DstProxyView& dstProxyView() const noexcept final {
+  const GrXferProcessor::DstProxyView& dstProxyView() const final {
     return this->drawOpArgs().dstProxyView();
   }
-  GrDeferredUploadTarget* deferredUploadTarget() noexcept final { return this; }
-  const GrCaps& caps() const noexcept final;
-  GrResourceProvider* resourceProvider() const noexcept final { return fResourceProvider; }
+
+  GrXferBarrierFlags renderPassBarriers() const final {
+    return this->drawOpArgs().renderPassBarriers();
+  }
+
+  GrDeferredUploadTarget* deferredUploadTarget() final { return this; }
+  const GrCaps& caps() const final;
+  GrResourceProvider* resourceProvider() const final { return fResourceProvider; }
 
   GrStrikeCache* strikeCache() const final;
 
@@ -240,7 +245,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
 
  private:
   struct InlineUpload {
-    InlineUpload(GrDeferredTextureUploadFn&& upload, GrDeferredUploadToken token) noexcept
+    InlineUpload(GrDeferredTextureUploadFn&& upload, GrDeferredUploadToken token)
         : fUpload(std::move(upload)), fUploadBeforeToken(token) {}
     GrDeferredTextureUploadFn fUpload;
     GrDeferredUploadToken fUploadBeforeToken;

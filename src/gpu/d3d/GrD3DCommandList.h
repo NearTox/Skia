@@ -121,7 +121,8 @@ class GrD3DCommandList {
   SkSTArray<kInitialTrackedResourcesCount, sk_sp<const GrBuffer>> fTrackedGpuBuffers;
 
   // When we create a command list it starts in an active recording state
-  SkDEBUGCODE(bool fIsActive = true;) bool fHasWork = false;
+  SkDEBUGCODE(bool fIsActive = true;)
+  bool fHasWork = false;
 
  private:
   void callFinishedCallbacks() { fFinishedCallbacks.reset(); }

@@ -19,18 +19,16 @@ class GrGLSLVertexGeoBuilder : public GrGLSLShaderBuilder {
   GrGLSLVertexGeoBuilder(GrGLSLProgramBuilder* program) : INHERITED(program) {}
 
   void emitNormalizedSkPosition(
-      const char* devPos, const char* rtAdjustName,
-      GrSLType devPosType = GrSLType::kFloat2_GrSLType) {
-    this->emitNormalizedSkPosition(&this->code(), devPos, rtAdjustName, devPosType);
+      const char* devPos, GrSLType devPosType = GrSLType::kFloat2_GrSLType) {
+    this->emitNormalizedSkPosition(&this->code(), devPos, devPosType);
   }
 
   void emitNormalizedSkPosition(
-      SkString* out, const char* devPos, const char* rtAdjustName,
-      GrSLType devPosType = GrSLType::kFloat2_GrSLType);
+      SkString* out, const char* devPos, GrSLType devPosType = GrSLType::kFloat2_GrSLType);
 
   friend class GrGLSLGeometryProcessor;
 
-  typedef GrGLSLShaderBuilder INHERITED;
+  using INHERITED = GrGLSLShaderBuilder;
 };
 
 class GrGLSLVertexBuilder : public GrGLSLVertexGeoBuilder {
@@ -42,7 +40,7 @@ class GrGLSLVertexBuilder : public GrGLSLVertexGeoBuilder {
 
   friend class GrGLProgramBuilder;
 
-  typedef GrGLSLVertexGeoBuilder INHERITED;
+  using INHERITED = GrGLSLVertexGeoBuilder;
 };
 
 class GrGLSLGeometryBuilder : public GrGLSLVertexGeoBuilder {
@@ -60,14 +58,11 @@ class GrGLSLGeometryBuilder : public GrGLSLVertexGeoBuilder {
   void configure(InputType, OutputType, int maxVertices, int numInvocations = 1);
   bool isConfigured() const { return fNumInvocations; }
 
-  void emitVertex(
-      const char* devPos, const char* rtAdjustName,
-      GrSLType devPosType = GrSLType::kFloat2_GrSLType) {
-    this->emitVertex(&this->code(), devPos, rtAdjustName, devPosType);
+  void emitVertex(const char* devPos, GrSLType devPosType = GrSLType::kFloat2_GrSLType) {
+    this->emitVertex(&this->code(), devPos, devPosType);
   }
   void emitVertex(
-      SkString* out, const char* devPos, const char* rtAdjustName,
-      GrSLType devPosType = GrSLType::kFloat2_GrSLType);
+      SkString* out, const char* devPos, GrSLType devPosType = GrSLType::kFloat2_GrSLType);
 
   void endPrimitive();
 
@@ -78,7 +73,7 @@ class GrGLSLGeometryBuilder : public GrGLSLVertexGeoBuilder {
 
   friend class GrGLProgramBuilder;
 
-  typedef GrGLSLVertexGeoBuilder INHERITED;
+  using INHERITED = GrGLSLVertexGeoBuilder;
 };
 
 #endif

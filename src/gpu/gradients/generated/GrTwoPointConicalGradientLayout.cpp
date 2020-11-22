@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLTwoPointConicalGradientLayout : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLTwoPointConicalGradientLayout() noexcept = default;
+  GrGLSLTwoPointConicalGradientLayout() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrTwoPointConicalGradientLayout& _outer =
@@ -152,7 +152,7 @@ void GrTwoPointConicalGradientLayout::onGetGLSLProcessorKey(
   b->add32((uint32_t)isSwapped);
   b->add32((uint32_t)isNativelyFocal);
 }
-bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
   const GrTwoPointConicalGradientLayout& that = other.cast<GrTwoPointConicalGradientLayout>();
   (void)that;
   if (type != that.type) return false;
@@ -164,6 +164,7 @@ bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other
   if (focalParams != that.focalParams) return false;
   return true;
 }
+bool GrTwoPointConicalGradientLayout::usesExplicitReturn() const { return false; }
 GrTwoPointConicalGradientLayout::GrTwoPointConicalGradientLayout(
     const GrTwoPointConicalGradientLayout& src)
     : INHERITED(kGrTwoPointConicalGradientLayout_ClassID, src.optimizationFlags()),

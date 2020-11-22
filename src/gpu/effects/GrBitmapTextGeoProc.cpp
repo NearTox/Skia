@@ -39,9 +39,7 @@ class GrGLBitmapTextGeoProc : public GrGLSLGeometryProcessor {
     fAtlasDimensionsInvUniform = uniformHandler->addUniform(
         nullptr, kVertex_GrShaderFlag, kFloat2_GrSLType, "AtlasSizeInv", &atlasDimensionsInvName);
 
-    GrGLSLVarying uv(kFloat2_GrSLType);
-    GrSLType texIdxType = args.fShaderCaps->integerSupport() ? kInt_GrSLType : kFloat_GrSLType;
-    GrGLSLVarying texIdx(texIdxType);
+    GrGLSLVarying uv, texIdx;
     append_index_uv_varyings(
         args, btgp.numTextureSamplers(), btgp.inTextureCoords().name(), atlasDimensionsInvName, &uv,
         &texIdx, nullptr);
@@ -113,7 +111,7 @@ class GrGLBitmapTextGeoProc : public GrGLSLGeometryProcessor {
   SkMatrix fLocalMatrix;
   UniformHandle fLocalMatrixUniform;
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

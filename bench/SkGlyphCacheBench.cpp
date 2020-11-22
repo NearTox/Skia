@@ -12,8 +12,8 @@
 #include "include/core/SkGraphics.h"
 #include "include/core/SkTypeface.h"
 #include "src/core/SkRemoteGlyphCache.h"
-#include "src/core/SkStrikeCache.h"
 #include "src/core/SkStrikeSpec.h"
+#include "src/core/SkTLazy.h"
 #include "src/core/SkTaskGroup.h"
 #include "src/core/SkTextBlobTrace.h"
 #include "tools/Resources.h"
@@ -66,7 +66,7 @@ class SkGlyphCacheBasic : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
   const size_t fCacheSize;
   SkString fName;
 };
@@ -103,7 +103,7 @@ class SkGlyphCacheStressTest : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
   const size_t fCacheSize;
   SkString fName;
 };

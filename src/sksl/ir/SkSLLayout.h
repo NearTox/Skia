@@ -100,7 +100,7 @@ struct Layout {
     kGrFragmentProcessor,
   };
 
-  static const char* FormatToStr(Format format) noexcept {
+  static const char* FormatToStr(Format format) {
     switch (format) {
       case Format::kUnspecified: return "";
       case Format::kRGBA32F: return "rgba32f";
@@ -117,7 +117,7 @@ struct Layout {
     ABORT("Unexpected format");
   }
 
-  static bool ReadFormat(String str, Format* format) noexcept {
+  static bool ReadFormat(String str, Format* format) {
     if (str == "rgba32f") {
       *format = Format::kRGBA32F;
       return true;
@@ -152,7 +152,7 @@ struct Layout {
     return false;
   }
 
-  static const char* CTypeToStr(CType ctype) noexcept {
+  static const char* CTypeToStr(CType ctype) {
     switch (ctype) {
       case CType::kDefault: return nullptr;
       case CType::kFloat: return "float";
@@ -175,7 +175,7 @@ struct Layout {
   Layout(
       int flags, int location, int offset, int binding, int index, int set, int builtin,
       int inputAttachmentIndex, Format format, Primitive primitive, int maxVertices,
-      int invocations, StringFragment marker, StringFragment when, Key key, CType ctype) noexcept
+      int invocations, StringFragment marker, StringFragment when, Key key, CType ctype)
       : fFlags(flags),
         fLocation(location),
         fOffset(offset),
@@ -193,7 +193,7 @@ struct Layout {
         fKey(key),
         fCType(ctype) {}
 
-  constexpr Layout() noexcept
+  Layout()
       : fFlags(0),
         fLocation(-1),
         fOffset(-1),
@@ -209,7 +209,7 @@ struct Layout {
         fKey(kNo_Key),
         fCType(CType::kDefault) {}
 
-  static Layout builtin(int builtin) noexcept {
+  static Layout builtin(int builtin) {
     Layout result;
     result.fBuiltin = builtin;
     return result;
@@ -343,7 +343,7 @@ struct Layout {
     return result;
   }
 
-  bool operator==(const Layout& other) const noexcept {
+  bool operator==(const Layout& other) const {
     return fFlags == other.fFlags && fLocation == other.fLocation && fOffset == other.fOffset &&
            fBinding == other.fBinding && fIndex == other.fIndex && fSet == other.fSet &&
            fBuiltin == other.fBuiltin && fInputAttachmentIndex == other.fInputAttachmentIndex &&
@@ -353,7 +353,7 @@ struct Layout {
            fCType == other.fCType;
   }
 
-  bool operator!=(const Layout& other) const noexcept { return !(*this == other); }
+  bool operator!=(const Layout& other) const { return !(*this == other); }
 
   int fFlags;
   int fLocation;

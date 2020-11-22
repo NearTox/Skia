@@ -95,7 +95,7 @@ inline void mark_dst_initialized_if_safe<Clear>(void* dst, void* end) {
 template <typename Xfermode>
 class Sk4pxXfermode : public SkXfermode {
  public:
-  Sk4pxXfermode() noexcept = default;
+  Sk4pxXfermode() {}
 
   void xfer32(SkPMColor dst[], const SkPMColor src[], int n, const SkAlpha aa[]) const override {
     mark_dst_initialized_if_safe<Xfermode>(dst, dst + n);

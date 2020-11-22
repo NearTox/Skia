@@ -83,8 +83,6 @@ class GLSLCodeGenerator : public CodeGenerator {
   bool generateCode() override;
 
  protected:
-  enum class SwizzleOrder { MASK_FIRST, CONSTANTS_FIRST };
-
   void write(const char* s);
 
   void writeLine();
@@ -155,15 +153,6 @@ class GLSLCodeGenerator : public CodeGenerator {
 
   virtual void writeFieldAccess(const FieldAccess& f);
 
-  void writeConstantSwizzle(const Swizzle& swizzle, const String& constants);
-
-  void writeSwizzleMask(const Swizzle& swizzle, const String& mask);
-
-  void writeSwizzleConstructor(
-      const Swizzle& swizzle, const String& constants, const String& mask, SwizzleOrder order);
-
-  void writeSwizzleConstructor(
-      const Swizzle& swizzle, const String& constants, const String& mask, const String& reswizzle);
   virtual void writeSwizzle(const Swizzle& swizzle);
 
   static Precedence GetBinaryPrecedence(Token::Kind op);
@@ -189,8 +178,6 @@ class GLSLCodeGenerator : public CodeGenerator {
   virtual void writeSetting(const Setting& s);
 
   void writeStatement(const Statement& s);
-
-  void writeStatements(const std::vector<std::unique_ptr<Statement>>& statements);
 
   void writeBlock(const Block& b);
 
@@ -255,7 +242,7 @@ class GLSLCodeGenerator : public CodeGenerator {
   };
   static std::unordered_map<StringFragment, FunctionClass>* fFunctionClasses;
 
-  typedef CodeGenerator INHERITED;
+  using INHERITED = CodeGenerator;
 };
 
 }  // namespace SkSL

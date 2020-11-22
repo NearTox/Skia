@@ -118,7 +118,7 @@ class AndroidBlendModesGM : public GM {
   SkBitmap fCompositeSrc;
   SkBitmap fCompositeDst;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

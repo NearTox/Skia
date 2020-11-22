@@ -67,7 +67,7 @@ DEF_TEST(GrBlockAllocatorPreallocSize, r) {
   GrBlockAllocator stack{GrowthPolicy::kFixed, 2048};
   SkDEBUGCODE(stack.validate();)
 
-      REPORTER_ASSERT(r, stack.preallocSize() == sizeof(GrBlockAllocator));
+  REPORTER_ASSERT(r, stack.preallocSize() == sizeof(GrBlockAllocator));
   REPORTER_ASSERT(r, stack.preallocUsableSpace() == (size_t)stack.currentBlock()->avail());
 
   // Tests placement new initialization to increase head block size, option #2
@@ -82,7 +82,8 @@ DEF_TEST(GrBlockAllocatorPreallocSize, r) {
 
   // Tests inline increased preallocation, option #3
   GrSBlockAllocator<2048> inlined{};
-  SkDEBUGCODE(inlined->validate();) REPORTER_ASSERT(r, inlined->preallocSize() == 2048);
+  SkDEBUGCODE(inlined->validate();)
+  REPORTER_ASSERT(r, inlined->preallocSize() == 2048);
   REPORTER_ASSERT(
       r, inlined->preallocUsableSpace() < 2048 &&
              inlined->preallocUsableSpace() >= (2048 - sizeof(GrBlockAllocator)));
@@ -92,26 +93,26 @@ DEF_TEST(GrBlockAllocatorAlloc, r) {
   GrSBlockAllocator<1024> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      // Assumes the previous pointer was in the same block
-      auto validate_ptr = [&](int align, int size, GrBlockAllocator::ByteRange br,
-                              GrBlockAllocator::ByteRange* prevBR) {
-        uintptr_t pt = reinterpret_cast<uintptr_t>(br.fBlock->ptr(br.fAlignedOffset));
-        // Matches the requested align
-        REPORTER_ASSERT(r, pt % align == 0);
-        // And large enough
-        REPORTER_ASSERT(r, br.fEnd - br.fAlignedOffset >= size);
-        // And has enough padding for alignment
-        REPORTER_ASSERT(r, br.fAlignedOffset - br.fStart >= 0);
-        REPORTER_ASSERT(r, br.fAlignedOffset - br.fStart <= align - 1);
-        // And block of the returned struct is the current block of the allocator
-        REPORTER_ASSERT(r, pool->currentBlock() == br.fBlock);
+  // Assumes the previous pointer was in the same block
+  auto validate_ptr = [&](int align, int size, GrBlockAllocator::ByteRange br,
+                          GrBlockAllocator::ByteRange* prevBR) {
+    uintptr_t pt = reinterpret_cast<uintptr_t>(br.fBlock->ptr(br.fAlignedOffset));
+    // Matches the requested align
+    REPORTER_ASSERT(r, pt % align == 0);
+    // And large enough
+    REPORTER_ASSERT(r, br.fEnd - br.fAlignedOffset >= size);
+    // And has enough padding for alignment
+    REPORTER_ASSERT(r, br.fAlignedOffset - br.fStart >= 0);
+    REPORTER_ASSERT(r, br.fAlignedOffset - br.fStart <= align - 1);
+    // And block of the returned struct is the current block of the allocator
+    REPORTER_ASSERT(r, pool->currentBlock() == br.fBlock);
 
-        // And make sure that we're past the required end of the previous allocation
-        if (prevBR) {
-          uintptr_t prevEnd = reinterpret_cast<uintptr_t>(prevBR->fBlock->ptr(prevBR->fEnd - 1));
-          REPORTER_ASSERT(r, pt > prevEnd);
-        }
-      };
+    // And make sure that we're past the required end of the previous allocation
+    if (prevBR) {
+      uintptr_t prevEnd = reinterpret_cast<uintptr_t>(prevBR->fBlock->ptr(prevBR->fEnd - 1));
+      REPORTER_ASSERT(r, pt > prevEnd);
+    }
+  };
 
   auto p1 = pool->allocate<1>(14);
   validate_ptr(1, 14, p1, nullptr);
@@ -135,8 +136,8 @@ DEF_TEST(GrBlockAllocatorAlloc, r) {
   REPORTER_ASSERT(r, total_size(pool) == pool->preallocSize());
   SkDEBUGCODE(pool->validate();)
 
-      // Requesting an allocation of avail() should not make a new block
-      size_t avail = pool->currentBlock()->avail<4>();
+  // Requesting an allocation of avail() should not make a new block
+  size_t avail = pool->currentBlock()->avail<4>();
   auto pAvail = pool->allocate<4>(avail);
   validate_ptr(4, avail, pAvail, &p32);
 
@@ -167,8 +168,8 @@ DEF_TEST(GrBlockAllocatorResize, r) {
   GrSBlockAllocator<1024> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      // Fixed resize from 16 to 32
-      auto p = pool->allocate<4>(16);
+  // Fixed resize from 16 to 32
+  auto p = pool->allocate<4>(16);
   REPORTER_ASSERT(r, p.fBlock->avail<4>() > 16);
   REPORTER_ASSERT(r, p.fBlock->resize(p.fStart, p.fEnd, 16));
   p.fEnd += 16;
@@ -205,8 +206,8 @@ DEF_TEST(GrBlockAllocatorResize, r) {
              32);
   SkDEBUGCODE(pool->validate();)
 
-      // Confirm that we can't shrink past the start of the allocation, but we can shrink it to 0
-      int shrinkTo0 = pNext.fStart - pNext.fEnd;
+  // Confirm that we can't shrink past the start of the allocation, but we can shrink it to 0
+  int shrinkTo0 = pNext.fStart - pNext.fEnd;
 #ifndef SK_DEBUG
   // Only test for false on release builds; a negative size should assert on debug builds
   REPORTER_ASSERT(r, !pNext.fBlock->resize(pNext.fStart, pNext.fEnd, shrinkTo0 - 1));
@@ -218,8 +219,8 @@ DEF_TEST(GrBlockAllocatorRelease, r) {
   GrSBlockAllocator<1024> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      // Successful allocate and release
-      auto p = pool->allocate<8>(32);
+  // Successful allocate and release
+  auto p = pool->allocate<8>(32);
   REPORTER_ASSERT(r, pool->currentBlock()->release(p.fStart, p.fEnd));
   // Ensure the above release actually means the next allocation reuses the same space
   auto p2 = pool->allocate<8>(32);
@@ -252,21 +253,22 @@ DEF_TEST(GrBlockAllocatorRewind, r) {
   GrSBlockAllocator<1024> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      std::vector<GrBlockAllocator::ByteRange>
-          ptrs;
+  std::vector<GrBlockAllocator::ByteRange> ptrs;
   for (int i = 0; i < 32; ++i) {
     ptrs.push_back(pool->allocate<4>(16));
   }
 
   // Release everything in reverse order
-  SkDEBUGCODE(pool->validate();) for (int i = 31; i >= 0; --i) {
+  SkDEBUGCODE(pool->validate();)
+  for (int i = 31; i >= 0; --i) {
     auto br = ptrs[i];
     REPORTER_ASSERT(r, br.fBlock->release(br.fStart, br.fEnd));
   }
 
   // If correct, we've rewound all the way back to the start of the block, so a new allocation
   // will have the same location as ptrs[0]
-  SkDEBUGCODE(pool->validate();) REPORTER_ASSERT(r, pool->allocate<4>(16).fStart == ptrs[0].fStart);
+  SkDEBUGCODE(pool->validate();)
+  REPORTER_ASSERT(r, pool->allocate<4>(16).fStart == ptrs[0].fStart);
 }
 
 DEF_TEST(GrBlockAllocatorGrowthPolicy, r) {
@@ -287,7 +289,7 @@ DEF_TEST(GrBlockAllocatorGrowthPolicy, r) {
     GrSBlockAllocator<kInitSize> pool{(GrowthPolicy)gp};
     SkDEBUGCODE(pool->validate();)
 
-        REPORTER_ASSERT(r, kExpectedSizes[gp][0] == total_size(pool));
+    REPORTER_ASSERT(r, kExpectedSizes[gp][0] == total_size(pool));
     for (int i = 1; i < kBlockCount; ++i) {
       REPORTER_ASSERT(r, kExpectedSizes[gp][i] == add_block(pool));
     }
@@ -302,7 +304,7 @@ DEF_TEST(GrBlockAllocatorReset, r) {
   GrSBlockAllocator<kBlockIncrement> pool{GrowthPolicy::kLinear};
   SkDEBUGCODE(pool->validate();)
 
-      void* firstAlloc = alloc_byte(pool);
+  void* firstAlloc = alloc_byte(pool);
 
   // Add several blocks
   add_block(pool);
@@ -310,7 +312,7 @@ DEF_TEST(GrBlockAllocatorReset, r) {
   add_block(pool);
   SkDEBUGCODE(pool->validate();)
 
-      REPORTER_ASSERT(r, block_count(pool) == 4);  // 3 added plus the implicit head
+  REPORTER_ASSERT(r, block_count(pool) == 4);  // 3 added plus the implicit head
 
   get_block(pool, 0)->setMetadata(2);
 
@@ -319,7 +321,7 @@ DEF_TEST(GrBlockAllocatorReset, r) {
   pool->reset();
   SkDEBUGCODE(pool->validate();)
 
-      REPORTER_ASSERT(r, block_count(pool) == 1);
+  REPORTER_ASSERT(r, block_count(pool) == 1);
   REPORTER_ASSERT(r, pool->preallocSize() == pool->totalSize());
   REPORTER_ASSERT(r, get_block(pool, 0)->metadata() == 0);
 
@@ -336,7 +338,7 @@ DEF_TEST(GrBlockAllocatorReleaseBlock, r) {
     GrSBlockAllocator<1024> pool{(GrowthPolicy)gp};
     SkDEBUGCODE(pool->validate();)
 
-        void* firstAlloc = alloc_byte(pool);
+    void* firstAlloc = alloc_byte(pool);
 
     size_t b1Size = total_size(pool);
     size_t b2Size = add_block(pool);
@@ -344,8 +346,7 @@ DEF_TEST(GrBlockAllocatorReleaseBlock, r) {
     size_t b4Size = add_block(pool);
     SkDEBUGCODE(pool->validate();)
 
-        get_block(pool, 0)
-            ->setMetadata(1);
+    get_block(pool, 0)->setMetadata(1);
     get_block(pool, 1)->setMetadata(2);
     get_block(pool, 2)->setMetadata(3);
     get_block(pool, 3)->setMetadata(4);
@@ -546,12 +547,12 @@ DEF_TEST(GrBlockAllocatorMetadata, r) {
   GrSBlockAllocator<1024> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      // Allocation where alignment of user data > alignment of metadata
-      SkASSERT(alignof(TestMeta) < 16);
+  // Allocation where alignment of user data > alignment of metadata
+  SkASSERT(alignof(TestMeta) < 16);
   auto p1 = pool->allocate<16, sizeof(TestMeta)>(16);
   SkDEBUGCODE(pool->validate();)
 
-      REPORTER_ASSERT(r, p1.fAlignedOffset - p1.fStart >= (int)sizeof(TestMeta));
+  REPORTER_ASSERT(r, p1.fAlignedOffset - p1.fStart >= (int)sizeof(TestMeta));
   TestMeta* meta = static_cast<TestMeta*>(p1.fBlock->ptr(p1.fAlignedOffset - sizeof(TestMeta)));
   // Confirm alignment for both pointers
   REPORTER_ASSERT(r, reinterpret_cast<uintptr_t>(meta) % alignof(TestMeta) == 0);
@@ -565,7 +566,7 @@ DEF_TEST(GrBlockAllocatorMetadata, r) {
   auto p2 = pool->allocate<alignof(TestMetaBig), sizeof(TestMetaBig)>(16);
   SkDEBUGCODE(pool->validate();)
 
-      REPORTER_ASSERT(r, p2.fAlignedOffset - p2.fStart >= (int)sizeof(TestMetaBig));
+  REPORTER_ASSERT(r, p2.fAlignedOffset - p2.fStart >= (int)sizeof(TestMetaBig));
   TestMetaBig* metaBig =
       static_cast<TestMetaBig*>(p2.fBlock->ptr(p2.fAlignedOffset - sizeof(TestMetaBig)));
   // Confirm alignment for both pointers
@@ -584,7 +585,7 @@ DEF_TEST(GrBlockAllocatorAllocatorMetadata, r) {
   GrSBlockAllocator<256> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      REPORTER_ASSERT(r, pool->metadata() == 0);  // initial value
+  REPORTER_ASSERT(r, pool->metadata() == 0);  // initial value
 
   pool->setMetadata(4);
   REPORTER_ASSERT(r, pool->metadata() == 4);
@@ -632,7 +633,7 @@ DEF_TEST(GrBlockAllocatorOwningBlock, r) {
   GrSBlockAllocator<1024> pool{};
   SkDEBUGCODE(pool->validate();)
 
-      run_owning_block_tests<1>(r, pool.allocator());
+  run_owning_block_tests<1>(r, pool.allocator());
   run_owning_block_tests<2>(r, pool.allocator());
   run_owning_block_tests<4>(r, pool.allocator());
   run_owning_block_tests<8>(r, pool.allocator());

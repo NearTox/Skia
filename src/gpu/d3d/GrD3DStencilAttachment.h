@@ -24,9 +24,11 @@ class GrD3DStencilAttachment : public GrStencilAttachment, public GrD3DTextureRe
   };
 
   static GrD3DStencilAttachment* Make(
-      GrD3DGpu* gpu, int width, int height, int sampleCnt, const Format& format);
+      GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const Format& format);
 
   ~GrD3DStencilAttachment() override {}
+
+  GrBackendFormat backendFormat() const override { return GrBackendFormat::MakeDxgi(fFormat); }
 
   D3D12_CPU_DESCRIPTOR_HANDLE view() const { return fView.fHandle; }
 
@@ -38,13 +40,14 @@ class GrD3DStencilAttachment : public GrStencilAttachment, public GrD3DTextureRe
   size_t onGpuMemorySize() const override;
 
   GrD3DStencilAttachment(
-      GrD3DGpu* gpu, const Format& format, const D3D12_RESOURCE_DESC&,
+      GrD3DGpu* gpu, SkISize dimensions, const Format& format, const D3D12_RESOURCE_DESC&,
       const GrD3DTextureResourceInfo&, sk_sp<GrD3DResourceState>,
       const GrD3DDescriptorHeap::CPUHandle& view);
 
   GrD3DGpu* getD3DGpu() const;
 
   GrD3DDescriptorHeap::CPUHandle fView;
+  DXGI_FORMAT fFormat;
 };
 
 #endif

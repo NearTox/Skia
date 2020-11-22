@@ -102,7 +102,7 @@ SkAnimatedImage::SkAnimatedImage(
   this->decodeNextFrame();
 }
 
-SkAnimatedImage::~SkAnimatedImage() = default;
+SkAnimatedImage::~SkAnimatedImage() {}
 
 SkRect SkAnimatedImage::onGetBounds() {
   return SkRect::MakeIWH(fCropRect.width(), fCropRect.height());

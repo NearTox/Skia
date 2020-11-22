@@ -22,16 +22,16 @@ enum SkFILE_Flags {
 };
 
 FILE* sk_fopen(const char path[], SkFILE_Flags);
-void sk_fclose(FILE*) noexcept;
+void sk_fclose(FILE*);
 
 size_t sk_fgetsize(FILE*);
 
-size_t sk_fwrite(const void* buffer, size_t byteCount, FILE*) noexcept;
+size_t sk_fwrite(const void* buffer, size_t byteCount, FILE*);
 
-void sk_fflush(FILE*) noexcept;
+void sk_fflush(FILE*);
 void sk_fsync(FILE*);
 
-size_t sk_ftell(FILE*) noexcept;
+size_t sk_ftell(FILE*);
 
 /** Maps a file into memory. Returns the address and length on success, NULL otherwise.
  *  The mapping is read only.
@@ -64,7 +64,7 @@ int sk_fileno(FILE* f);
 bool sk_exists(const char* path, SkFILE_Flags = (SkFILE_Flags)0);
 
 // Returns true if a directory exists at this path.
-bool sk_isdir(const char* path) noexcept;
+bool sk_isdir(const char* path);
 
 // Like pread, but may affect the file position marker.
 // Returns the number of bytes read or SIZE_MAX if failed.

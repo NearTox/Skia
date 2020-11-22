@@ -17,32 +17,29 @@
  */
 class GrFixedClip final : public GrHardClip {
  public:
-  explicit GrFixedClip(const SkISize& rtDims) noexcept : fScissorState(rtDims) {}
-  GrFixedClip(const SkISize& rtDims, const SkIRect& scissorRect) noexcept : GrFixedClip(rtDims) {
+  explicit GrFixedClip(const SkISize& rtDims) : fScissorState(rtDims) {}
+  GrFixedClip(const SkISize& rtDims, const SkIRect& scissorRect) : GrFixedClip(rtDims) {
     SkAssertResult(fScissorState.set(scissorRect));
   }
 
-  const GrScissorState& scissorState() const noexcept { return fScissorState; }
-  bool scissorEnabled() const noexcept { return fScissorState.enabled(); }
+  const GrScissorState& scissorState() const { return fScissorState; }
+  bool scissorEnabled() const { return fScissorState.enabled(); }
   // Returns the scissor rect or rt bounds if the scissor test is not enabled.
-  const SkIRect& scissorRect() const noexcept { return fScissorState.rect(); }
+  const SkIRect& scissorRect() const { return fScissorState.rect(); }
 
-  void disableScissor() noexcept { fScissorState.setDisabled(); }
+  void disableScissor() { fScissorState.setDisabled(); }
 
-  bool SK_WARN_UNUSED_RESULT setScissor(const SkIRect& irect) noexcept {
-    return fScissorState.set(irect);
-  }
-  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) noexcept {
+  bool SK_WARN_UNUSED_RESULT setScissor(const SkIRect& irect) { return fScissorState.set(irect); }
+  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& irect) {
     return fScissorState.intersect(irect);
   }
 
-  const GrWindowRectsState& windowRectsState() const noexcept { return fWindowRectsState; }
-  bool hasWindowRectangles() const noexcept { return fWindowRectsState.enabled(); }
+  const GrWindowRectsState& windowRectsState() const { return fWindowRectsState; }
+  bool hasWindowRectangles() const { return fWindowRectsState.enabled(); }
 
-  void disableWindowRectangles() noexcept { fWindowRectsState.setDisabled(); }
+  void disableWindowRectangles() { fWindowRectsState.setDisabled(); }
 
-  void setWindowRectangles(
-      const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) noexcept {
+  void setWindowRectangles(const GrWindowRectangles& windows, GrWindowRectsState::Mode mode) {
     fWindowRectsState.set(windows, mode);
   }
 

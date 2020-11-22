@@ -126,12 +126,12 @@ void GrAuditTrail::getBoundsByOpsTaskID(OpInfo* outInfo, int opsTaskID) {
   this->copyOutFromOpsTask(outInfo, opsTaskID);
 }
 
-void GrAuditTrail::fullReset() noexcept {
+void GrAuditTrail::fullReset() {
   SkASSERT(fEnabled);
   fOpsTask.reset();
   fIDLookup.reset();
   // free all client ops
-  fClientIDLookup.foreach ([](const int&, Ops** ops) noexcept { delete *ops; });
+  fClientIDLookup.foreach ([](const int&, Ops** ops) { delete *ops; });
   fClientIDLookup.reset();
   fOpPool.reset();  // must be last, frees all of the memory
 }

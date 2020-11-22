@@ -41,7 +41,8 @@ class GrStyledShape {
   // Keys for paths may be extracted from the path data for small paths. Clients aren't supposed
   // to have to worry about this. This value is exposed for unit tests.
   static constexpr int kMaxKeyFromDataVerbCnt = 10;
-  GrStyledShape() noexcept = default;
+
+  GrStyledShape() {}
 
   explicit GrStyledShape(const SkPath& path) : GrStyledShape(path, GrStyle::SimpleFill()) {}
 
@@ -100,10 +101,10 @@ class GrStyledShape {
   static GrStyledShape MakeFilled(
       const GrStyledShape& original, FillInversion = FillInversion::kPreserve);
 
-  const GrStyle& style() const noexcept { return fStyle; }
+  const GrStyle& style() const { return fStyle; }
 
   // True if the shape and/or style were modified into a simpler, equivalent pairing
-  bool simplified() const noexcept { return fSimplified; }
+  bool simplified() const { return fSimplified; }
 
   /**
    * Returns a shape that has either applied the path effect or path effect and stroking
@@ -114,7 +115,7 @@ class GrStyledShape {
     return GrStyledShape(*this, apply, scale);
   }
 
-  bool isRect() const noexcept {
+  bool isRect() const {
     // Should have simplified a rrect to a rect if possible already.
     SkASSERT(!fShape.isRRect() || !fShape.rrect().isRect());
     return fShape.isRect();
@@ -139,7 +140,7 @@ class GrStyledShape {
    * Returns whether the geometry is empty. Note that applying the style could produce a
    * non-empty shape. It also may have an inverse fill.
    */
-  bool isEmpty() const noexcept { return fShape.isEmpty(); }
+  bool isEmpty() const { return fShape.isEmpty(); }
 
   /**
    * Gets the bounds of the geometry without reflecting the shape's styling. This ignores
@@ -165,15 +166,15 @@ class GrStyledShape {
    * a computable direction, but this is not always a requirement for path renderers so it is
    * kept separate from knownToBeConvex().
    */
-  bool knownDirection() const noexcept {
+  bool knownDirection() const {
     // Assuming this is called after knownToBeConvex(), this should just be relying on
     // cached convexity and direction and will be cheap.
     return !fShape.isPath() ||
-           !SkPathPriv::CheapIsFirstDirection(fShape.path(), SkPathPriv::kUnknown_FirstDirection);
+           SkPathPriv::ComputeFirstDirection(fShape.path()) != SkPathFirstDirection::kUnknown;
   }
 
   /** Is the pre-styled geometry inverse filled? */
-  bool inverseFilled() const noexcept {
+  bool inverseFilled() const {
     // Since the path tracks inverted-fillness itself, it should match what was recorded.
     SkASSERT(!fShape.isPath() || fShape.inverted() == fShape.path().isInverseFillType());
     // Dashing ignores inverseness. We should have caught this earlier. skbug.com/5421
@@ -186,7 +187,7 @@ class GrStyledShape {
    * because an arbitrary path effect could produce an inverse filled path. In other cases this
    * can be thought of as "inverseFilledAfterStyling()".
    */
-  bool mayBeInverseFilledAfterStyling() const noexcept {
+  bool mayBeInverseFilledAfterStyling() const {
     // An arbitrary path effect can produce an arbitrary output path, which may be inverse
     // filled.
     if (this->style().hasNonDashPathEffect()) {
@@ -199,7 +200,7 @@ class GrStyledShape {
    * Is it known that the unstyled geometry has no unclosed contours. This means that it will
    * not have any caps if stroked (modulo the effect of any path effect).
    */
-  bool knownToBeClosed() const noexcept {
+  bool knownToBeClosed() const {
     // This refers to the base shape and does not depend on invertedness.
     return fShape.closed();
   }

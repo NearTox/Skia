@@ -19,7 +19,7 @@ class GrVkImageView : public GrVkManagedResource {
  public:
   enum Type { kColor_Type, kStencil_Type };
 
-  static const GrVkImageView* Create(
+  static sk_sp<const GrVkImageView> Make(
       GrVkGpu* gpu, VkImage image, VkFormat format, Type viewType, uint32_t miplevels,
       const GrVkYcbcrConversionInfo& ycbcrInfo);
 
@@ -36,15 +36,12 @@ class GrVkImageView : public GrVkManagedResource {
       const GrVkGpu* gpu, VkImageView imageView, GrVkSamplerYcbcrConversion* ycbcrConversion)
       : INHERITED(gpu), fImageView(imageView), fYcbcrConversion(ycbcrConversion) {}
 
-  GrVkImageView(const GrVkImageView&);
-  GrVkImageView& operator=(const GrVkImageView&);
-
   void freeGPUData() const override;
 
   VkImageView fImageView;
   GrVkSamplerYcbcrConversion* fYcbcrConversion;
 
-  typedef GrVkManagedResource INHERITED;
+  using INHERITED = GrVkManagedResource;
 };
 
 #endif

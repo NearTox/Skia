@@ -85,7 +85,7 @@ class SkHeifCodec : public SkCodec {
     }
 
    private:
-    typedef SkFrame INHERITED;
+    using INHERITED = SkFrame;
   };
 
   class FrameHolder : public SkFrameHolder {
@@ -109,7 +109,7 @@ class SkHeifCodec : public SkCodec {
   };
 
   FrameHolder fFrameHolder;
-  typedef SkCodec INHERITED;
+  using INHERITED = SkCodec;
 };
 
 #endif  // SkHeifCodec_DEFINED

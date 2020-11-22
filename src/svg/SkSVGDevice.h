@@ -61,7 +61,7 @@ class SkSVGDevice final : public SkClipStackDevice {
   std::unique_ptr<AutoElement> fRootElement;
   SkTArray<ClipRec> fClipStack;
 
-  typedef SkClipStackDevice INHERITED;
+  using INHERITED = SkClipStackDevice;
 };
 
 #endif  // SkSVGDevice_DEFINED

@@ -29,12 +29,12 @@ class VideoDecoderGM : public skiagm::GM {
   }
 
   void onDraw(SkCanvas* canvas) override {
-    GrContext* gr = canvas->getGrContext();
-    if (!gr) {
+    auto* rContext = canvas->recordingContext();
+    if (!rContext) {
       return;
     }
 
-    fDecoder.setGrContext(gr);  // gr can change over time in viewer
+    fDecoder.setGrContext(rContext);  // context can change over time in viewer
 
     double timeStamp;
     auto img = fDecoder.nextImage(&timeStamp);
@@ -53,6 +53,6 @@ class VideoDecoderGM : public skiagm::GM {
   bool onAnimate(double nanos) override { return true; }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new VideoDecoderGM;)

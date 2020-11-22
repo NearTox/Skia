@@ -44,7 +44,7 @@ class Window_mac : public Window {
 
   static SkTDynamicHash<Window_mac, NSInteger> gWindowMap;
 
-  typedef Window INHERITED;
+  using INHERITED = Window;
 };
 
 }  // namespace sk_app

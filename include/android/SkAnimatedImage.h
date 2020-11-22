@@ -178,7 +178,7 @@ class SK_API SkAnimatedImage : public SkDrawable {
   int computeNextFrame(int current, bool* animationEnded);
   double finish();
 
-  typedef SkDrawable INHERITED;
+  using INHERITED = SkDrawable;
 };
 
 #endif  // SkAnimatedImage_DEFINED

@@ -63,7 +63,7 @@ DEF_GPUTEST(VkProtectedContext_CreateProtectedSkSurface, reporter, options) {
   const int kW = 8;
   const int kH = 8;
   GrBackendTexture backendTex = dContext->createBackendTexture(
-      kW, kH, kRGBA_8888_SkColorType, GrMipmapped::kNo, GrRenderable::kNo, GrProtected::kYes);
+      kW, kH, kRGBA_8888_SkColorType, GrMipmapped::kNo, GrRenderable::kYes, GrProtected::kYes);
   REPORTER_ASSERT(reporter, backendTex.isValid());
   REPORTER_ASSERT(reporter, backendTex.isProtected());
 

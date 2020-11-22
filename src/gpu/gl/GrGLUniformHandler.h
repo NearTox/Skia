@@ -71,7 +71,7 @@ class GrGLUniformHandler : public GrGLSLUniformHandler {
 
   friend class GrGLProgramBuilder;
 
-  typedef GrGLSLUniformHandler INHERITED;
+  using INHERITED = GrGLSLUniformHandler;
 };
 
 #endif

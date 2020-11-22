@@ -545,7 +545,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
         saturate);
   }
 
-  const char* name() const noexcept override { return "QuadPerEdgeAAGeometryProcessor"; }
+  const char* name() const override { return "QuadPerEdgeAAGeometryProcessor"; }
 
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     // texturing, device-dimensions are single bit flags
@@ -778,7 +778,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
     this->setVertexAttributes(&fPosition, 6);
   }
 
-  const TextureSampler& onTextureSampler(int) const noexcept override { return fSampler; }
+  const TextureSampler& onTextureSampler(int) const override { return fSampler; }
 
   Attribute fPosition;  // May contain coverage as last channel
   Attribute fCoverage;  // Used for non-perspective position to avoid Intel Metal issues
@@ -799,7 +799,7 @@ class QuadPerEdgeAAGeometryProcessor : public GrGeometryProcessor {
   sk_sp<GrColorSpaceXform> fTextureColorSpaceXform;
   TextureSampler fSampler;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 GrGeometryProcessor* MakeProcessor(SkArenaAlloc* arena, const VertexSpec& spec) {

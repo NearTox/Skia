@@ -19,7 +19,7 @@
 #include <atomic>
 #include <new>
 
-static int32_t next_id() noexcept {
+static int32_t next_id() {
   static std::atomic<int32_t> nextID{1};
 
   int32_t id;

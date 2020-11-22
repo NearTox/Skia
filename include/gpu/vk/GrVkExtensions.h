@@ -18,7 +18,7 @@
  */
 class SK_API GrVkExtensions {
  public:
-  GrVkExtensions() noexcept = default;
+  GrVkExtensions() {}
 
   void init(
       GrVkGetProc, VkInstance, VkPhysicalDevice, uint32_t instanceExtensionCount,
@@ -28,17 +28,17 @@ class SK_API GrVkExtensions {
   bool hasExtension(const char[], uint32_t minVersion) const;
 
   struct Info {
-    Info() noexcept = default;
+    Info() {}
     Info(const char* name) : fName(name), fSpecVersion(0) {}
 
     SkString fName;
     uint32_t fSpecVersion;
 
     struct Less {
-      bool operator()(const Info& a, const SkString& b) const noexcept {
+      bool operator()(const Info& a, const SkString& b) const {
         return strcmp(a.fName.c_str(), b.c_str()) < 0;
       }
-      bool operator()(const SkString& a, const GrVkExtensions::Info& b) const noexcept {
+      bool operator()(const SkString& a, const GrVkExtensions::Info& b) const {
         return strcmp(a.c_str(), b.fName.c_str()) < 0;
       }
     };

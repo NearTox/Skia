@@ -123,7 +123,7 @@ class PatchBench : public Benchmark {
   SkColor fColors[4];
   VertexMode fVertexMode;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class SquarePatchBench : public PatchBench {
@@ -153,7 +153,7 @@ class SquarePatchBench : public PatchBench {
   }
 
  private:
-  typedef PatchBench INHERITED;
+  using INHERITED = PatchBench;
 };
 
 class LODDiffPatchBench : public PatchBench {
@@ -183,7 +183,7 @@ class LODDiffPatchBench : public PatchBench {
   }
 
  private:
-  typedef PatchBench INHERITED;
+  using INHERITED = PatchBench;
 };
 
 class LoopPatchBench : public PatchBench {
@@ -213,7 +213,7 @@ class LoopPatchBench : public PatchBench {
   }
 
  private:
-  typedef PatchBench INHERITED;
+  using INHERITED = PatchBench;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -257,7 +257,7 @@ void SkPictureRecord::didSetMatrix(const SkMatrix& matrix) {
   this->INHERITED::didSetMatrix(matrix);
 }
 
-static bool clipOpExpands(SkClipOp op) noexcept {
+static bool clipOpExpands(SkClipOp op) {
   switch (op) {
     case kUnion_SkClipOp:
     case kXOR_SkClipOp:
@@ -288,7 +288,7 @@ void SkPictureRecord::fillRestoreOffsetPlaceholdersForCurrentStackLevel(uint32_t
 #endif
 }
 
-void SkPictureRecord::beginRecording() noexcept {
+void SkPictureRecord::beginRecording() {
   // we have to call this *after* our constructor, to ensure that it gets
   // recorded. This is balanced by restoreToCount() call from endRecording,
   // which in-turn calls our overridden restore(), so those get recorded too.
@@ -816,12 +816,12 @@ void SkPictureRecord::onDrawEdgeAAImageSet(
 // De-duping helper.
 
 template <typename T>
-static bool equals(T* a, T* b) noexcept {
+static bool equals(T* a, T* b) {
   return a->uniqueID() == b->uniqueID();
 }
 
 template <>
-bool equals(SkDrawable* a, SkDrawable* b) noexcept {
+bool equals(SkDrawable* a, SkDrawable* b) {
   // SkDrawable's generationID is not a stable unique identifier.
   return a == b;
 }

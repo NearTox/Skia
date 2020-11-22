@@ -34,7 +34,7 @@ class BigPathBench : public Benchmark {
 
   SkIPoint onGetSize() override { return SkIPoint::Make(640, 100); }
 
-  void onDelayedSetup() override { ToolUtils::make_big_path(fPath); }
+  void onDelayedSetup() override { fPath = ToolUtils::make_big_path(); }
 
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint;
@@ -59,7 +59,7 @@ class BigPathBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new BigPathBench(kLeft_Align, false);)

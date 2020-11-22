@@ -51,7 +51,7 @@ enum class Mode {
   kSimpleInnerPolygons
 };
 
-constexpr size_t GetVertexStride(Mode mode) noexcept {
+constexpr size_t GetVertexStride(Mode mode) {
   return sizeof(SkPoint) + ((Mode::kEdgeAntialias == mode) ? sizeof(float) : 0);
 }
 

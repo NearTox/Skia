@@ -27,7 +27,7 @@ class SkTypefaceCache {
    *  Add a typeface to the cache. Later, if we need to purge the cache,
    *  typefaces uniquely owned by the cache will be unref()ed.
    */
-  void add(sk_sp<SkTypeface>) noexcept;
+  void add(sk_sp<SkTypeface>);
 
   /**
    *  Iterate through the cache, calling proc(typeface, ctx) for each typeface.
@@ -42,7 +42,7 @@ class SkTypefaceCache {
    *  This function is exposed for clients that explicitly want to purge the
    *  cache (e.g. to look for leaks).
    */
-  void purgeAll() noexcept;
+  void purgeAll();
 
   /**
    *  Helper: returns a unique fontID to pass to the constructor of
@@ -64,7 +64,7 @@ class SkTypefaceCache {
  private:
   static SkTypefaceCache& Get() noexcept;
 
-  void purge(int count) noexcept;
+  void purge(int count);
 
   SkTArray<sk_sp<SkTypeface>> fTypefaces;
 };

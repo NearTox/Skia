@@ -45,7 +45,7 @@ class GrGSCoverageProcessor : public GrCCCoverageProcessor {
   class CurveHullImpl;
   class CornerImpl;
 
-  typedef GrCCCoverageProcessor INHERITED;
+  using INHERITED = GrCCCoverageProcessor;
 };
 
 #endif

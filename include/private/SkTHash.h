@@ -25,13 +25,13 @@
 template <typename T, typename K, typename Traits = T>
 class SkTHashTable {
  public:
-  constexpr SkTHashTable() noexcept : fCount(0), fCapacity(0) {}
-  SkTHashTable(SkTHashTable&& other) noexcept
+  SkTHashTable() : fCount(0), fCapacity(0) {}
+  SkTHashTable(SkTHashTable&& other)
       : fCount(other.fCount), fCapacity(other.fCapacity), fSlots(std::move(other.fSlots)) {
     other.fCount = other.fCapacity = 0;
   }
 
-  SkTHashTable& operator=(SkTHashTable&& other) noexcept {
+  SkTHashTable& operator=(SkTHashTable&& other) {
     if (this != &other) {
       this->~SkTHashTable();
       new (this) SkTHashTable(std::move(other));
@@ -40,13 +40,13 @@ class SkTHashTable {
   }
 
   // Clear the table.
-  void reset() noexcept { *this = SkTHashTable(); }
+  void reset() { *this = SkTHashTable(); }
 
   // How many entries are in the table?
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
-  size_t approxBytesUsed() const noexcept { return fCapacity * sizeof(Slot); }
+  size_t approxBytesUsed() const { return fCapacity * sizeof(Slot); }
 
   // !!!!!!!!!!!!!!!!!                 CAUTION                   !!!!!!!!!!!!!!!!!
   // set(), find() and foreach() all allow mutable access to table entries.
@@ -211,7 +211,7 @@ class SkTHashTable {
     }
   }
 
-  int next(int index) const noexcept {
+  int next(int index) const {
     index--;
     if (index < 0) {
       index += fCapacity;
@@ -234,7 +234,7 @@ class SkTHashTable {
       return *this;
     }
 
-    bool empty() const noexcept { return this->hash == 0; }
+    bool empty() const { return this->hash == 0; }
 
     T val;
     uint32_t hash;
@@ -252,18 +252,18 @@ class SkTHashTable {
 template <typename K, typename V, typename HashK = SkGoodHash>
 class SkTHashMap {
  public:
-  constexpr SkTHashMap() noexcept = default;
-  SkTHashMap(SkTHashMap&&) noexcept = default;
-  SkTHashMap& operator=(SkTHashMap&&) noexcept = default;
+  SkTHashMap() {}
+  SkTHashMap(SkTHashMap&&) = default;
+  SkTHashMap& operator=(SkTHashMap&&) = default;
 
   // Clear the map.
-  void reset() noexcept { fTable.reset(); }
+  void reset() { fTable.reset(); }
 
   // How many key/value pairs are in the table?
-  int count() const noexcept { return fTable.count(); }
+  int count() const { return fTable.count(); }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
-  size_t approxBytesUsed() const noexcept { return fTable.approxBytesUsed(); }
+  size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
 
   // N.B. The pointers returned by set() and find() are valid only until the next call to set().
 
@@ -326,21 +326,21 @@ class SkTHashMap {
 template <typename T, typename HashT = SkGoodHash>
 class SkTHashSet {
  public:
-  constexpr SkTHashSet() noexcept = default;
-  SkTHashSet(SkTHashSet&&) noexcept = default;
-  SkTHashSet& operator=(SkTHashSet&&) noexcept = default;
+  SkTHashSet() {}
+  SkTHashSet(SkTHashSet&&) = default;
+  SkTHashSet& operator=(SkTHashSet&&) = default;
 
   // Clear the set.
-  void reset() noexcept { fTable.reset(); }
+  void reset() { fTable.reset(); }
 
   // How many items are in the set?
-  int count() const noexcept { return fTable.count(); }
+  int count() const { return fTable.count(); }
 
   // Is empty?
-  bool empty() const noexcept { return fTable.count() == 0; }
+  bool empty() const { return fTable.count() == 0; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
-  size_t approxBytesUsed() const noexcept { return fTable.approxBytesUsed(); }
+  size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
 
   // Copy an item into the set.
   void add(T item) { fTable.set(std::move(item)); }

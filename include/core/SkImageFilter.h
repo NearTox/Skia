@@ -39,11 +39,11 @@ class SK_API SkImageFilter : public SkFlattenable {
       kHasHeight_CropEdge = 0x08,
       kHasAll_CropEdge = 0x0F,
     };
-    CropRect() noexcept = default;
-    explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge) noexcept
+    CropRect() {}
+    explicit CropRect(const SkRect& rect, uint32_t flags = kHasAll_CropEdge)
         : fRect(rect), fFlags(flags) {}
-    uint32_t flags() const noexcept { return fFlags; }
-    const SkRect& rect() const noexcept { return fRect; }
+    uint32_t flags() const { return fFlags; }
+    const SkRect& rect() const { return fRect; }
 
     /**
      *  Apply this cropRect to the imageBounds. If a given edge of the cropRect is not set, then
@@ -133,9 +133,9 @@ class SK_API SkImageFilter : public SkFlattenable {
   static sk_sp<SkImageFilter> MakeMatrixFilter(
       const SkMatrix& matrix, SkFilterQuality quality, sk_sp<SkImageFilter> input);
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkImageFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkImageFilter_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkImageFilter_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkImageFilter_Type; }
 
   static sk_sp<SkImageFilter> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -144,14 +144,12 @@ class SK_API SkImageFilter : public SkFlattenable {
   }
 
  protected:
-  sk_sp<SkImageFilter> refMe() const noexcept {
-    return sk_ref_sp(const_cast<SkImageFilter*>(this));
-  }
+  sk_sp<SkImageFilter> refMe() const { return sk_ref_sp(const_cast<SkImageFilter*>(this)); }
 
  private:
   friend class SkImageFilter_Base;
 
-  typedef SkFlattenable INHERITED;
+  using INHERITED = SkFlattenable;
 };
 
 #endif

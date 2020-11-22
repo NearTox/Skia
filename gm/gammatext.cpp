@@ -83,7 +83,7 @@ class GammaTextGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new GammaTextGM;)
@@ -146,7 +146,7 @@ class GammaShaderTextGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new GammaShaderTextGM;)

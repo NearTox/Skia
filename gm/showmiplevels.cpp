@@ -194,7 +194,7 @@ class ShowMipLevels : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ShowMipLevels(255);)
 DEF_GM(return new ShowMipLevels(256);)
@@ -304,7 +304,7 @@ class ShowMipLevels2 : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ShowMipLevels2(255, 255);)
 DEF_GM(return new ShowMipLevels2(256, 255);)
@@ -331,11 +331,11 @@ class ShowMipLevels3 : public skiagm::GM {
       auto surf = SkSurface::MakeRasterDirect(builder.level(i));
       surf->getCanvas()->drawColor(colors[i % SK_ARRAY_COUNT(colors)]);
     }
-    fImg = fImg->withMipmaps(builder.detach());
+    fImg = builder.attachTo(fImg.get());
   }
 
   DrawResult onDraw(SkCanvas* canvas, SkString*) override {
-    if (canvas->getGrContext()) {
+    if (canvas->recordingContext()) {
       // mips not supported yet
       return DrawResult::kSkip;
     }
@@ -366,6 +366,6 @@ class ShowMipLevels3 : public skiagm::GM {
     return r.height() + 10;
   }
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ShowMipLevels3;)

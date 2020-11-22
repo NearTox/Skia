@@ -16,22 +16,22 @@ SkRecord::~SkRecord() {
   }
 }
 
-void SkRecord::grow() noexcept {
+void SkRecord::grow() {
   SkASSERT(fCount == fReserved);
   fReserved = fReserved ? fReserved * 2 : 4;
   fRecords.realloc(fReserved);
 }
 
-size_t SkRecord::bytesUsed() const noexcept {
+size_t SkRecord::bytesUsed() const {
   size_t bytes = fApproxBytesAllocated + sizeof(SkRecord);
   return bytes;
 }
 
-void SkRecord::defrag() noexcept {
+void SkRecord::defrag() {
   // Remove all the NoOps, preserving the order of other ops, e.g.
   //      Save, ClipRect, NoOp, DrawRect, NoOp, NoOp, Restore
   //  ->  Save, ClipRect, DrawRect, Restore
-  Record* noops = std::remove_if(fRecords.get(), fRecords.get() + fCount, [](Record op) noexcept {
+  Record* noops = std::remove_if(fRecords.get(), fRecords.get() + fCount, [](Record op) {
     return op.type() == SkRecords::NoOp_Type;
   });
   fCount = noops - fRecords.get();

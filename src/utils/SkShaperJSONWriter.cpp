@@ -17,7 +17,7 @@
 SkShaperJSONWriter::SkShaperJSONWriter(SkJSONWriter* JSONWriter, const char* utf8, size_t size)
     : fJSONWriter{JSONWriter}, fUTF8{utf8, size} {}
 
-void SkShaperJSONWriter::beginLine() noexcept {}
+void SkShaperJSONWriter::beginLine() {}
 
 void SkShaperJSONWriter::runInfo(const SkShaper::RunHandler::RunInfo& info) {}
 

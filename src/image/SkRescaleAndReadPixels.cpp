@@ -114,7 +114,7 @@ void SkRescaleAndReadPixels(
   size_t rowBytes = resultInfo.minRowBytes();
   std::unique_ptr<char[]> data(new char[resultInfo.height() * rowBytes]);
   SkPixmap pm(resultInfo, data.get(), rowBytes);
-  if (srcImage->readPixels(pm, srcX, srcY)) {
+  if (srcImage->readPixels(nullptr, pm, srcX, srcY)) {
     class Result : public SkImage::AsyncReadResult {
      public:
       Result(std::unique_ptr<const char[]> data, size_t rowBytes)

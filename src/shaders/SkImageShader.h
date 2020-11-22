@@ -44,7 +44,7 @@ class SkImageShader : public SkShaderBase {
       sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, SkImage::CubicResampler,
       const SkMatrix* localMatrix);
 
-  bool isOpaque() const noexcept override;
+  bool isOpaque() const override;
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -81,7 +81,7 @@ class SkImageShader : public SkShaderBase {
 
   bool doStages(const SkStageRec&, SkImageStageUpdater* = nullptr) const;
 
-  SkFilterQuality resolveFiltering(SkFilterQuality paintQuality) const noexcept {
+  SkFilterQuality resolveFiltering(SkFilterQuality paintQuality) const {
     switch (fFilterEnum) {
       case kUseCubicResampler: return kHigh_SkFilterQuality;  // TODO: handle explicitly
       case kUseFilterOptions: return kNone_SkFilterQuality;   // TODO: handle explicitly
@@ -103,7 +103,7 @@ class SkImageShader : public SkShaderBase {
   SkImage::CubicResampler fCubic = {1 / 3.0f, 1 / 3.0f};  // Default to Mitchell-Netravali.
 
   friend class SkShaderBase;
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 #endif

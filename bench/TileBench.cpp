@@ -99,7 +99,7 @@ class ConstXTileBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Scaled benches are trending towards free.  Seems like caching.

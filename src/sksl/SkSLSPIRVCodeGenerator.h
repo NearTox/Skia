@@ -86,7 +86,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
  public:
   class LValue {
    public:
-    virtual ~LValue() = default;
+    virtual ~LValue() {}
 
     // returns a pointer to the lvalue, if possible. If the lvalue cannot be directly referenced
     // by a pointer (e.g. vector swizzles), returns 0.
@@ -380,8 +380,6 @@ class SPIRVCodeGenerator : public CodeGenerator {
   SpvId fBoolTrue;
   SpvId fBoolFalse;
   std::unordered_map<std::pair<ConstantValue, ConstantType>, SpvId> fNumberConstants;
-  // The constant float2(0, 1), used in swizzling
-  SpvId fConstantZeroOneVector = 0;
   bool fSetupFragPosition;
   // label of the current block, or 0 if we are not in a block
   SpvId fCurrentBlock;
@@ -396,7 +394,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
   friend class PointerLValue;
   friend class SwizzleLValue;
 
-  typedef CodeGenerator INHERITED;
+  using INHERITED = CodeGenerator;
 };
 
 }  // namespace SkSL

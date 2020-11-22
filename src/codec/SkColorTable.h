@@ -44,7 +44,7 @@ class SkColorTable : public SkRefCnt {
   SkPMColor* fColors;
   int fCount;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

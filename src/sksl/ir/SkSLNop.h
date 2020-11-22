@@ -17,21 +17,19 @@ namespace SkSL {
  * A no-op statement that does nothing.
  */
 struct Nop : public Statement {
-  static constexpr Kind kStatementKind = kNop_Kind;
+  static constexpr Kind kStatementKind = Kind::kNop;
 
-  Nop() noexcept : INHERITED(-1, kStatementKind) {}
+  Nop() : INHERITED(-1, kStatementKind) {}
 
-  bool isEmpty() const noexcept override { return true; }
+  bool isEmpty() const override { return true; }
 
   String description() const override { return String(";"); }
-
-  int nodeCount() const noexcept override { return 0; }
 
   std::unique_ptr<Statement> clone() const override {
     return std::unique_ptr<Statement>(new Nop());
   }
 
-  typedef Statement INHERITED;
+  using INHERITED = Statement;
 };
 
 }  // namespace SkSL

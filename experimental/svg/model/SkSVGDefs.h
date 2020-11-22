@@ -17,7 +17,7 @@ class SkSVGDefs : public SkSVGHiddenContainer {
  private:
   SkSVGDefs() : INHERITED(SkSVGTag::kDefs) {}
 
-  typedef SkSVGHiddenContainer INHERITED;
+  using INHERITED = SkSVGHiddenContainer;
 };
 
 #endif  // SkSVGDefs_DEFINED

@@ -41,7 +41,7 @@ class SkSVGLine final : public SkSVGShape {
   SkSVGLength fX2 = SkSVGLength(0);
   SkSVGLength fY2 = SkSVGLength(0);
 
-  typedef SkSVGShape INHERITED;
+  using INHERITED = SkSVGShape;
 };
 
 #endif  // SkSVGLine_DEFINED

@@ -21,16 +21,16 @@
 class GrScissorState {
  public:
   // The disabled scissor state for a render target of the given size.
-  explicit GrScissorState(const SkISize& rtDims) noexcept
+  explicit GrScissorState(const SkISize& rtDims)
       : fRTSize(rtDims), fRect(SkIRect::MakeSize(rtDims)) {}
 
-  void setDisabled() noexcept { fRect = SkIRect::MakeSize(fRTSize); }
-  bool set(const SkIRect& rect) noexcept {
+  void setDisabled() { fRect = SkIRect::MakeSize(fRTSize); }
+  bool set(const SkIRect& rect) {
     this->setDisabled();
     return this->intersect(rect);
   }
 
-  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& rect) noexcept {
+  bool SK_WARN_UNUSED_RESULT intersect(const SkIRect& rect) {
     if (!fRect.intersect(rect)) {
       fRect.setEmpty();
       return false;
@@ -42,7 +42,7 @@ class GrScissorState {
   // If the scissor was configured for the backing store dimensions and it's acceptable to
   // draw outside the logical dimensions of the target, this will discard the scissor test if
   // the test wouldn't modify the logical dimensions.
-  bool relaxTest(const SkISize& logicalDimensions) noexcept {
+  bool relaxTest(const SkISize& logicalDimensions) {
     SkASSERT(
         logicalDimensions.fWidth <= fRTSize.fWidth && logicalDimensions.fHeight <= fRTSize.fHeight);
     if (fRect.fLeft == 0 && fRect.fTop == 0 && fRect.fRight >= logicalDimensions.fWidth &&
@@ -54,12 +54,12 @@ class GrScissorState {
     }
   }
 
-  bool operator==(const GrScissorState& other) const noexcept {
+  bool operator==(const GrScissorState& other) const {
     return fRTSize == other.fRTSize && fRect == other.fRect;
   }
-  bool operator!=(const GrScissorState& other) const noexcept { return !(*this == other); }
+  bool operator!=(const GrScissorState& other) const { return !(*this == other); }
 
-  bool enabled() const noexcept {
+  bool enabled() const {
     SkASSERT(fRect.isEmpty() || SkIRect::MakeSize(fRTSize).contains(fRect));
     // This is equivalent to a strict contains check on SkIRect::MakeSize(rtSize) w/o creating
     // the render target bounding rectangle.
@@ -69,7 +69,7 @@ class GrScissorState {
 
   // Will always be equal to or contained in the rt bounds, or empty if scissor rectangles were
   // added that did not intersect with the render target or prior scissor.
-  const SkIRect& rect() const noexcept {
+  const SkIRect& rect() const {
     SkASSERT(fRect.isEmpty() || SkIRect::MakeSize(fRTSize).contains(fRect));
     return fRect;
   }

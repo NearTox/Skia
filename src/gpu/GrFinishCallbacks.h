@@ -48,7 +48,7 @@ class GrFinishCallbacks {
   /**
    * Returns true if the callback list is empty.
    */
-  bool empty() const noexcept { return fCallbacks.empty(); }
+  bool empty() const { return fCallbacks.empty(); }
 
  private:
   struct FinishCallback {

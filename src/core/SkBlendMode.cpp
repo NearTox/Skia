@@ -8,7 +8,7 @@
 #include "src/core/SkBlendModePriv.h"
 #include "src/core/SkRasterPipeline.h"
 
-bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode mode, bool rgb_coverage) noexcept {
+bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode mode, bool rgb_coverage) {
   // The most important things we do here are:
   //   1) never pre-scale with rgb coverage if the blend mode involves a source-alpha term;
   //   2) always pre-scale Plus.
@@ -40,7 +40,7 @@ bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode mode, bool rgb_coverage) noe
 }
 
 // Users of this function may want to switch to the rgb-coverage aware version above.
-bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode mode) noexcept {
+bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode mode) {
   return SkBlendMode_ShouldPreScaleCoverage(mode, false);
 }
 
@@ -71,7 +71,7 @@ const CoeffRec gCoeffs[] = {
     {SkBlendModeCoeff::kOne, SkBlendModeCoeff::kISC},  // screen
 };
 
-bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) noexcept {
+bool SkBlendMode_AsCoeff(SkBlendMode mode, SkBlendModeCoeff* src, SkBlendModeCoeff* dst) {
   if (mode > SkBlendMode::kScreen) {
     return false;
   }

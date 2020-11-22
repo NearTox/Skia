@@ -181,7 +181,7 @@ class GrMtlCaps : public GrCaps {
 
   StencilFormat fPreferredStencilFormat;
 
-  typedef GrCaps INHERITED;
+  using INHERITED = GrCaps;
 };
 
 #endif

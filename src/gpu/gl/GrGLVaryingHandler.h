@@ -28,7 +28,7 @@ class GrGLVaryingHandler : public GrGLSLVaryingHandler {
 
   friend class GrGLProgramBuilder;
 
-  typedef GrGLSLVaryingHandler INHERITED;
+  using INHERITED = GrGLSLVaryingHandler;
 };
 
 #endif

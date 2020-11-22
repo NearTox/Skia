@@ -63,7 +63,7 @@ class XfermodeBench : public Benchmark {
   SkString fName;
   bool fAA;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 //////////////////////////////////////////////////////////////////////////////

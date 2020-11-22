@@ -76,7 +76,7 @@ GrDynamicAtlas::GrDynamicAtlas(
   this->reset(initialSize, caps);
 }
 
-GrDynamicAtlas::~GrDynamicAtlas() = default;
+GrDynamicAtlas::~GrDynamicAtlas() {}
 
 void GrDynamicAtlas::reset(SkISize initialSize, const GrCaps& caps) {
   fNodeAllocator.reset();

@@ -63,10 +63,10 @@ class OneLineShaper : public SkShaper::RunHandler {
 #endif
   void finish(TextRange text, SkScalar height, SkScalar& advanceX);
 
-  void beginLine() noexcept override {}
+  void beginLine() override {}
   void runInfo(const RunInfo&) override {}
   void commitRunInfo() override {}
-  void commitLine() noexcept override {}
+  void commitLine() override {}
 
   Buffer runBuffer(const RunInfo& info) override {
     fCurrentRun = std::make_shared<Run>(

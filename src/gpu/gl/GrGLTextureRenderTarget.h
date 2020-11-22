@@ -35,7 +35,7 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
       GrGLGpu* gpu, int sampleCount, const GrGLTexture::Desc&, sk_sp<GrGLTextureParameters>,
       const GrGLRenderTarget::IDs&, GrWrapCacheable, GrMipmapStatus);
 
-  GrBackendFormat backendFormat() const noexcept override {
+  GrBackendFormat backendFormat() const override {
     // It doesn't matter if we take the texture or render target path, so just pick texture.
     return GrGLTexture::backendFormat();
   }

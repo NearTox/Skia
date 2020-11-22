@@ -48,7 +48,7 @@ class SkMagnifierImageFilterImpl final : public SkImageFilter_Base {
   SkRect fSrcRect;
   SkScalar fInset;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

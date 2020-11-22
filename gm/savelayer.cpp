@@ -91,7 +91,7 @@ class UnclippedSaveLayerGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new UnclippedSaveLayerGM;)
 
@@ -183,9 +183,12 @@ static void draw_cell(
   r.fLeft = w - margin;
 
   // save the behind image
-  SkDEBUGCODE(int sc0 =) canvas->getSaveCount();
-  SkDEBUGCODE(int sc1 =) SkCanvasPriv::SaveBehind(canvas, &r);
-  SkDEBUGCODE(int sc2 =) canvas->getSaveCount();
+  SkDEBUGCODE(int sc0 =)
+  canvas->getSaveCount();
+  SkDEBUGCODE(int sc1 =)
+  SkCanvasPriv::SaveBehind(canvas, &r);
+  SkDEBUGCODE(int sc2 =)
+  canvas->getSaveCount();
   SkASSERT(sc0 == sc1);
   SkASSERT(sc0 + 1 == sc2);
 
@@ -208,7 +211,8 @@ static void draw_cell(
 
   // this should restore the behind image
   canvas->restore();
-  SkDEBUGCODE(int sc3 =) canvas->getSaveCount();
+  SkDEBUGCODE(int sc3 =)
+  canvas->getSaveCount();
   SkASSERT(sc3 == sc0);
 
   // just outline where we expect the treatment to appear

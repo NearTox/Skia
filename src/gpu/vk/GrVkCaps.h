@@ -33,12 +33,12 @@ class GrVkCaps : public GrCaps {
       uint32_t physicalDeviceVersion, const GrVkExtensions& extensions,
       GrProtected isProtected = GrProtected::kNo);
 
-  bool isFormatSRGB(const GrBackendFormat&) const noexcept override;
+  bool isFormatSRGB(const GrBackendFormat&) const override;
 
   bool isFormatTexturable(const GrBackendFormat&) const override;
   bool isVkFormatTexturable(VkFormat) const;
 
-  bool isFormatCopyable(const GrBackendFormat&) const noexcept override { return true; }
+  bool isFormatCopyable(const GrBackendFormat&) const override { return true; }
 
   bool isFormatAsColorTypeRenderable(
       GrColorType ct, const GrBackendFormat& format, int sampleCount = 1) const override;
@@ -79,23 +79,21 @@ class GrVkCaps : public GrCaps {
   // Sometimes calls to QueueWaitIdle return before actually signalling the fences
   // on the command buffers even though they have completed. This causes an assert to fire when
   // destroying the command buffers. Therefore we add a sleep to make sure the fence signals.
-  bool mustSleepOnTearDown() const noexcept { return fMustSleepOnTearDown; }
+  bool mustSleepOnTearDown() const { return fMustSleepOnTearDown; }
 
   // Returns true if we should always make dedicated allocations for VkImages.
-  bool shouldAlwaysUseDedicatedImageMemory() const noexcept {
-    return fShouldAlwaysUseDedicatedImageMemory;
-  }
+  bool shouldAlwaysUseDedicatedImageMemory() const { return fShouldAlwaysUseDedicatedImageMemory; }
 
   // Always use a transfer buffer instead of vkCmdUpdateBuffer to upload data to a VkBuffer.
-  bool avoidUpdateBuffers() const noexcept { return fAvoidUpdateBuffers; }
+  bool avoidUpdateBuffers() const { return fAvoidUpdateBuffers; }
 
   /**
    * Returns both a supported and most preferred stencil format to use in draws.
    */
-  const StencilFormat& preferredStencilFormat() const noexcept { return fPreferredStencilFormat; }
+  const StencilFormat& preferredStencilFormat() const { return fPreferredStencilFormat; }
 
   // Returns total number of bits used by stencil + depth + padding
-  static int GetStencilFormatTotalBitCount(VkFormat format) noexcept {
+  static int GetStencilFormatTotalBitCount(VkFormat format) {
     switch (format) {
       case VK_FORMAT_S8_UINT: return 8;
       case VK_FORMAT_D24_UNORM_S8_UINT: return 32;
@@ -110,54 +108,52 @@ class GrVkCaps : public GrCaps {
   // swapchain functions, but we may need to transition to and from the
   // VK_IMAGE_LAYOUT_PRESENT_SRC_KHR image layout, so we must know whether that layout is
   // supported.
-  bool supportsSwapchain() const noexcept { return fSupportsSwapchain; }
+  bool supportsSwapchain() const { return fSupportsSwapchain; }
 
   // Returns whether the device supports the ability to extend VkPhysicalDeviceProperties struct.
-  bool supportsPhysicalDeviceProperties2() const noexcept {
-    return fSupportsPhysicalDeviceProperties2;
-  }
+  bool supportsPhysicalDeviceProperties2() const { return fSupportsPhysicalDeviceProperties2; }
   // Returns whether the device supports the ability to extend VkMemoryRequirements struct.
-  bool supportsMemoryRequirements2() const noexcept { return fSupportsMemoryRequirements2; }
+  bool supportsMemoryRequirements2() const { return fSupportsMemoryRequirements2; }
 
   // Returns whether the device supports the ability to extend the vkBindMemory call.
-  bool supportsBindMemory2() const noexcept { return fSupportsBindMemory2; }
+  bool supportsBindMemory2() const { return fSupportsBindMemory2; }
 
   // Returns whether or not the device suports the various API maintenance fixes to Vulkan 1.0. In
   // Vulkan 1.1 all these maintenance are part of the core spec.
-  bool supportsMaintenance1() const noexcept { return fSupportsMaintenance1; }
-  bool supportsMaintenance2() const noexcept { return fSupportsMaintenance2; }
-  bool supportsMaintenance3() const noexcept { return fSupportsMaintenance3; }
+  bool supportsMaintenance1() const { return fSupportsMaintenance1; }
+  bool supportsMaintenance2() const { return fSupportsMaintenance2; }
+  bool supportsMaintenance3() const { return fSupportsMaintenance3; }
 
   // Returns true if the device supports passing in a flag to say we are using dedicated GPU when
   // allocating memory. For some devices this allows them to return more optimized memory knowning
   // they will never need to suballocate amonst multiple objects.
-  bool supportsDedicatedAllocation() const noexcept { return fSupportsDedicatedAllocation; }
+  bool supportsDedicatedAllocation() const { return fSupportsDedicatedAllocation; }
 
   // Returns true if the device supports importing of external memory into Vulkan memory.
-  bool supportsExternalMemory() const noexcept { return fSupportsExternalMemory; }
+  bool supportsExternalMemory() const { return fSupportsExternalMemory; }
   // Returns true if the device supports importing Android hardware buffers into Vulkan memory.
-  bool supportsAndroidHWBExternalMemory() const noexcept {
-    return fSupportsAndroidHWBExternalMemory;
-  }
+  bool supportsAndroidHWBExternalMemory() const { return fSupportsAndroidHWBExternalMemory; }
 
   // Returns true if it supports ycbcr conversion for samplers
-  bool supportsYcbcrConversion() const noexcept { return fSupportsYcbcrConversion; }
+  bool supportsYcbcrConversion() const { return fSupportsYcbcrConversion; }
 
   // Returns true if the device supports protected memory.
-  bool supportsProtectedMemory() const noexcept { return fSupportsProtectedMemory; }
+  bool supportsProtectedMemory() const { return fSupportsProtectedMemory; }
 
   // Returns whether we prefer to record draws directly into a primary command buffer.
-  bool preferPrimaryOverSecondaryCommandBuffers() const noexcept {
+  bool preferPrimaryOverSecondaryCommandBuffers() const {
     return fPreferPrimaryOverSecondaryCommandBuffers;
   }
 
-  int maxPerPoolCachedSecondaryCommandBuffers() const noexcept {
+  int maxPerPoolCachedSecondaryCommandBuffers() const {
     return fMaxPerPoolCachedSecondaryCommandBuffers;
   }
 
-  uint32_t maxInputAttachmentDescriptors() const noexcept { return fMaxInputAttachmentDescriptors; }
+  uint32_t maxInputAttachmentDescriptors() const { return fMaxInputAttachmentDescriptors; }
 
-  bool mustInvalidatePrimaryCmdBufferStateAfterClearAttachments() const noexcept {
+  bool preferCachedCpuMemory() const { return fPreferCachedCpuMemory; }
+
+  bool mustInvalidatePrimaryCmdBufferStateAfterClearAttachments() const {
     return fMustInvalidatePrimaryCmdBufferStateAfterClearAttachments;
   }
 
@@ -180,7 +176,7 @@ class GrVkCaps : public GrCaps {
 
   GrBackendFormat getBackendFormatFromCompressionType(SkImage::CompressionType) const override;
 
-  VkFormat getFormatFromColorType(GrColorType colorType) const noexcept {
+  VkFormat getFormatFromColorType(GrColorType colorType) const {
     int idx = static_cast<int>(colorType);
     return fColorTypeToFormatTable[idx];
   }
@@ -196,6 +192,8 @@ class GrVkCaps : public GrCaps {
       GrProcessorKeyBuilder*, GrSamplerState, const GrBackendFormat&) const override;
 
   GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const override;
+
+  GrInternalSurfaceFlags getExtraSurfaceFlagsForDeferredRT() const override;
 
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;
@@ -239,6 +237,8 @@ class GrVkCaps : public GrCaps {
 
   GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const override;
 
+  GrDstSampleType onGetDstSampleTypeForProxy(const GrRenderTargetProxy*) const override;
+
   // ColorTypeInfo for a specific format
   struct ColorTypeInfo {
     GrColorType fColorType = GrColorType::kUnknown;
@@ -258,7 +258,7 @@ class GrVkCaps : public GrCaps {
   };
 
   struct FormatInfo {
-    uint32_t colorTypeFlags(GrColorType colorType) const noexcept {
+    uint32_t colorTypeFlags(GrColorType colorType) const {
       for (int i = 0; i < fColorTypeInfoCount; ++i) {
         if (fColorTypeInfos[i].fColorType == colorType) {
           return fColorTypeInfos[i].fFlags;
@@ -334,7 +334,9 @@ class GrVkCaps : public GrCaps {
 
   uint32_t fMaxInputAttachmentDescriptors = 0;
 
-  typedef GrCaps INHERITED;
+  bool fPreferCachedCpuMemory = true;
+
+  using INHERITED = GrCaps;
 };
 
 #endif

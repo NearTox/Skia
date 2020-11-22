@@ -31,7 +31,7 @@ class SkPicturePriv {
   static void Flatten(const sk_sp<const SkPicture>, SkWriteBuffer& buffer);
 
   // Returns NULL if this is not an SkBigPicture.
-  static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) noexcept {
+  static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) {
     return picture->asSkBigPicture();
   }
 

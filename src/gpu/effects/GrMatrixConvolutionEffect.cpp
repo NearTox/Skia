@@ -13,6 +13,7 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/GrTextureProxy.h"
+#include "src/gpu/GrThreadSafeUniquelyKeyedProxyViewCache.h"
 #include "src/gpu/effects/GrTextureEffect.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
@@ -39,14 +40,15 @@ class GrGLMatrixConvolutionEffect : public GrGLSLFragmentProcessor {
   UniformHandle fBiasUni;
   UniformHandle fKernelBiasUni;
 
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 GrMatrixConvolutionEffect::KernelWrapper::MakeResult GrMatrixConvolutionEffect::KernelWrapper::Make(
-    GrRecordingContext* context, SkISize size, const GrCaps& caps, const SkScalar* values) {
-  if (!context || !values || size.isEmpty()) {
+    GrRecordingContext* rContext, SkISize size, const GrCaps& caps, const SkScalar* values) {
+  if (!rContext || !values || size.isEmpty()) {
     return {};
   }
+
   const int length = size.area();
   // Small kernel -> just fill the array.
   KernelWrapper result(size);
@@ -58,7 +60,7 @@ GrMatrixConvolutionEffect::KernelWrapper::MakeResult GrMatrixConvolutionEffect::
   }
 
   BiasAndGain& scalableSampler = result.fBiasAndGain;
-  bool useA16 = context->defaultBackendFormat(kA16_float_SkColorType, GrRenderable::kNo).isValid();
+  bool useA16 = rContext->defaultBackendFormat(kA16_float_SkColorType, GrRenderable::kNo).isValid();
   SkScalar min = values[0];
   if (!useA16) {
     // Determine min and max values to figure out inner gain & bias.
@@ -95,42 +97,47 @@ GrMatrixConvolutionEffect::KernelWrapper::MakeResult GrMatrixConvolutionEffect::
   }
 
   // Find or create a texture.
-  GrProxyProvider* proxyProvider = context->priv().proxyProvider();
-  GrSurfaceProxyView view;
+  auto threadSafeViewCache = rContext->priv().threadSafeViewCache();
+
   SkColorType colorType = useA16 ? kA16_float_SkColorType : kAlpha_8_SkColorType;
-  sk_sp<GrTextureProxy> cachedKernel;
-  if (kCacheKernelTexture && (cachedKernel = proxyProvider->findOrCreateProxyByUniqueKey(key))) {
-    GrSwizzle swizzle = context->priv().caps()->getReadSwizzle(
-        cachedKernel->backendFormat(), SkColorTypeToGrColorType(colorType));
-    view = {std::move(cachedKernel), kTopLeft_GrSurfaceOrigin, swizzle};
-  } else {
-    SkBitmap bm;
-    auto info = SkImageInfo::Make({length, 1}, colorType, kPremul_SkAlphaType, nullptr);
-    if (!bm.tryAllocPixels(info)) {
-      return {};
-    }
-    for (int i = 0; i < length; i++) {
-      if (useA16) {
-        *bm.getAddr16(i, 0) = SkFloatToHalf(values[i]);
-      } else {
-        *bm.getAddr8(i, 0) = SkScalarRoundToInt((values[i] - min) / scalableSampler.fGain * 255);
-      }
-    }
-    bm.setImmutable();
-    GrBitmapTextureMaker maker(context, bm, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
-    view = maker.view(GrMipmapped::kNo);
-    if (!view) {
-      return {};
-    }
-    if (kCacheKernelTexture) {
-      proxyProvider->assignUniqueKeyToProxy(key, view.asTextureProxy());
+
+  GrSurfaceProxyView view;
+  if (kCacheKernelTexture && (view = threadSafeViewCache->find(key))) {
+    SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
+    auto kernelFP = GrTextureEffect::Make(std::move(view), kUnknown_SkAlphaType);
+    return {result, std::move(kernelFP)};
+  }
+
+  SkBitmap bm;
+  auto info = SkImageInfo::Make({length, 1}, colorType, kPremul_SkAlphaType, nullptr);
+  if (!bm.tryAllocPixels(info)) {
+    return {};
+  }
+  for (int i = 0; i < length; i++) {
+    if (useA16) {
+      *bm.getAddr16(i, 0) = SkFloatToHalf(values[i]);
+    } else {
+      *bm.getAddr8(i, 0) = SkScalarRoundToInt((values[i] - min) / scalableSampler.fGain * 255);
     }
   }
+  bm.setImmutable();
+
+  GrBitmapTextureMaker maker(rContext, bm, GrImageTexGenPolicy::kNew_Uncached_Budgeted);
+  view = maker.view(GrMipmapped::kNo);
+  if (!view) {
+    return {};
+  }
+
+  if (kCacheKernelTexture) {
+    view = threadSafeViewCache->add(key, view);
+  }
+
+  SkASSERT(view.origin() == kTopLeft_GrSurfaceOrigin);
   auto kernelFP = GrTextureEffect::Make(std::move(view), kUnknown_SkAlphaType);
   return {result, std::move(kernelFP)};
 }
 
-bool GrMatrixConvolutionEffect::KernelWrapper::operator==(const KernelWrapper& k) const noexcept {
+bool GrMatrixConvolutionEffect::KernelWrapper::operator==(const KernelWrapper& k) const {
   if (fSize != k.fSize) {
     return false;
   } else if (this->isSampled()) {
@@ -140,8 +147,7 @@ bool GrMatrixConvolutionEffect::KernelWrapper::operator==(const KernelWrapper& k
   }
 }
 
-bool GrMatrixConvolutionEffect::KernelWrapper::BiasAndGain::operator==(
-    const BiasAndGain& k) const noexcept {
+bool GrMatrixConvolutionEffect::KernelWrapper::BiasAndGain::operator==(const BiasAndGain& k) const {
   return fGain == k.fGain && fBias == k.fBias;
 }
 
@@ -313,7 +319,7 @@ GrGLSLFragmentProcessor* GrMatrixConvolutionEffect::onCreateGLSLInstance() const
   return new GrGLMatrixConvolutionEffect;
 }
 
-bool GrMatrixConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) const noexcept {
+bool GrMatrixConvolutionEffect::onIsEqual(const GrFragmentProcessor& sBase) const {
   const GrMatrixConvolutionEffect& s = sBase.cast<GrMatrixConvolutionEffect>();
   return fKernel == s.fKernel && fGain == s.gain() && fBias == s.bias() &&
          fKernelOffset == s.kernelOffset() && fConvolveAlpha == s.convolveAlpha();

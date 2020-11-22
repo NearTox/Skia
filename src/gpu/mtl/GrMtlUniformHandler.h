@@ -86,7 +86,7 @@ class GrMtlUniformHandler : public GrGLSLUniformHandler {
 
   friend class GrMtlPipelineStateBuilder;
 
-  typedef GrGLSLUniformHandler INHERITED;
+  using INHERITED = GrGLSLUniformHandler;
 };
 
 #endif

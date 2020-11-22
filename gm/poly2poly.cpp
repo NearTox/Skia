@@ -111,7 +111,7 @@ class Poly2PolyGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
   sk_sp<SkTypeface> fEmFace;
 };
 

@@ -37,7 +37,7 @@ class SK_API SkCornerPathEffect : public SkPathEffect {
 
   SkScalar fRadius;
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 #endif

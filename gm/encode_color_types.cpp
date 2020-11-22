@@ -139,7 +139,7 @@ class EncodeColorTypesGM : public GM {
   const Variant fVariant;
   const char* fName;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 #define DEF_ENCODE_GM(format, quality, variant, name)                                        \

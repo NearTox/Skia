@@ -46,8 +46,7 @@ static bool is_valid_non_lazy(SkISize dimensions) {
 // Deferred version
 GrSurfaceProxy::GrSurfaceProxy(
     const GrBackendFormat& format, SkISize dimensions, SkBackingFit fit, SkBudgeted budgeted,
-    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags,
-    UseAllocator useAllocator) noexcept
+    GrProtected isProtected, GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
     : fSurfaceFlags(surfaceFlags),
       fFormat(format),
       fDimensions(dimensions),
@@ -64,7 +63,7 @@ GrSurfaceProxy::GrSurfaceProxy(
 GrSurfaceProxy::GrSurfaceProxy(
     LazyInstantiateCallback&& callback, const GrBackendFormat& format, SkISize dimensions,
     SkBackingFit fit, SkBudgeted budgeted, GrProtected isProtected,
-    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator) noexcept
+    GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator)
     : fSurfaceFlags(surfaceFlags),
       fFormat(format),
       fDimensions(dimensions),
@@ -98,7 +97,7 @@ GrSurfaceProxy::GrSurfaceProxy(
   SkASSERT(fFormat.isValid());
 }
 
-GrSurfaceProxy::~GrSurfaceProxy() = default;
+GrSurfaceProxy::~GrSurfaceProxy() {}
 
 sk_sp<GrSurface> GrSurfaceProxy::createSurfaceImpl(
     GrResourceProvider* resourceProvider, int sampleCnt, GrRenderable renderable,
@@ -122,7 +121,7 @@ sk_sp<GrSurface> GrSurfaceProxy::createSurfaceImpl(
   return surface;
 }
 
-bool GrSurfaceProxy::canSkipResourceAllocator() const noexcept {
+bool GrSurfaceProxy::canSkipResourceAllocator() const {
   if (fUseAllocator == UseAllocator::kNo) {
     // Usually an atlas or onFlush proxy
     return true;
@@ -140,7 +139,7 @@ bool GrSurfaceProxy::canSkipResourceAllocator() const noexcept {
 void GrSurfaceProxy::assign(sk_sp<GrSurface> surface) {
   SkASSERT(!fTarget && surface);
 
-  SkDEBUGCODE(this->validateSurface(surface.get()));
+  SkDEBUGCODE(this->validateSurface(surface.get());)
 
   fTarget = std::move(surface);
 

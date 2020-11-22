@@ -64,7 +64,7 @@ class GrMockOpsRenderPass : public GrOpsRenderPass {
   GrLoadOp fColorLoadOp;
   int fNumDraws = 0;
 
-  typedef GrOpsRenderPass INHERITED;
+  using INHERITED = GrOpsRenderPass;
 };
 
 #endif

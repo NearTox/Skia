@@ -13,31 +13,31 @@
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 
-const GrProcessorSet& GrProcessorSet::EmptySet() noexcept {
+const GrProcessorSet& GrProcessorSet::EmptySet() {
   static GrProcessorSet gEmpty(GrProcessorSet::Empty::kEmpty);
   return gEmpty;
 }
 
-GrProcessorSet GrProcessorSet::MakeEmptySet() noexcept {
+GrProcessorSet GrProcessorSet::MakeEmptySet() {
   return GrProcessorSet(GrProcessorSet::Empty::kEmpty);
 }
 
-GrProcessorSet::GrProcessorSet(GrPaint&& paint) noexcept : fXP(paint.getXPFactory()) {
+GrProcessorSet::GrProcessorSet(GrPaint&& paint) : fXP(paint.getXPFactory()) {
   fColorFragmentProcessor = std::move(paint.fColorFragmentProcessor);
   fCoverageFragmentProcessor = std::move(paint.fCoverageFragmentProcessor);
 
-  SkDEBUGCODE(paint.fAlive = false);
+  SkDEBUGCODE(paint.fAlive = false;)
 }
 
 GrProcessorSet::GrProcessorSet(SkBlendMode mode) : fXP(SkBlendMode_AsXPFactory(mode)) {}
 
-GrProcessorSet::GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP) noexcept
+GrProcessorSet::GrProcessorSet(std::unique_ptr<GrFragmentProcessor> colorFP)
     : fXP((const GrXPFactory*)nullptr) {
   SkASSERT(colorFP);
   fColorFragmentProcessor = std::move(colorFP);
 }
 
-GrProcessorSet::GrProcessorSet(GrProcessorSet&& that) noexcept
+GrProcessorSet::GrProcessorSet(GrProcessorSet&& that)
     : fColorFragmentProcessor(std::move(that.fColorFragmentProcessor)),
       fCoverageFragmentProcessor(std::move(that.fCoverageFragmentProcessor)),
       fXP(std::move(that.fXP)),

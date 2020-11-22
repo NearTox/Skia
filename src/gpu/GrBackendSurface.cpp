@@ -30,7 +30,7 @@
 #  include "src/gpu/d3d/GrD3DUtil.h"
 #endif
 
-GrBackendFormat::GrBackendFormat(const GrBackendFormat& that) noexcept
+GrBackendFormat::GrBackendFormat(const GrBackendFormat& that)
     : fBackend(that.fBackend), fValid(that.fValid), fTextureType(that.fTextureType) {
   if (!fValid) {
     return;
@@ -57,7 +57,7 @@ GrBackendFormat::GrBackendFormat(const GrBackendFormat& that) noexcept
   }
 }
 
-GrBackendFormat& GrBackendFormat::operator=(const GrBackendFormat& that) noexcept {
+GrBackendFormat& GrBackendFormat::operator=(const GrBackendFormat& that) {
   if (this != &that) {
     this->~GrBackendFormat();
     new (this) GrBackendFormat(that);
@@ -66,7 +66,7 @@ GrBackendFormat& GrBackendFormat::operator=(const GrBackendFormat& that) noexcep
 }
 
 #ifdef SK_GL
-GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target) noexcept
+GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target)
     : fBackend(GrBackendApi::kOpenGL), fValid(true), fGLFormat(format) {
   switch (target) {
     case GR_GL_TEXTURE_NONE: fTextureType = GrTextureType::kNone; break;
@@ -78,20 +78,19 @@ GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target) noexcept
 }
 #endif
 
-GrGLFormat GrBackendFormat::asGLFormat() const noexcept {
+GrGLFormat GrBackendFormat::asGLFormat() const {
   if (this->isValid() && GrBackendApi::kOpenGL == fBackend) {
     return GrGLFormatFromGLEnum(fGLFormat);
   }
   return GrGLFormat::kUnknown;
 }
 
-GrBackendFormat GrBackendFormat::MakeVk(const GrVkYcbcrConversionInfo& ycbcrInfo) noexcept {
+GrBackendFormat GrBackendFormat::MakeVk(const GrVkYcbcrConversionInfo& ycbcrInfo) {
   SkASSERT(ycbcrInfo.isValid());
   return GrBackendFormat(ycbcrInfo.fFormat, ycbcrInfo);
 }
 
-GrBackendFormat::GrBackendFormat(
-    VkFormat vkFormat, const GrVkYcbcrConversionInfo& ycbcrInfo) noexcept
+GrBackendFormat::GrBackendFormat(VkFormat vkFormat, const GrVkYcbcrConversionInfo& ycbcrInfo)
     : fBackend(GrBackendApi::kVulkan)
 #ifdef SK_VULKAN
       ,
@@ -109,7 +108,7 @@ GrBackendFormat::GrBackendFormat(
   }
 }
 
-bool GrBackendFormat::asVkFormat(VkFormat* format) const noexcept {
+bool GrBackendFormat::asVkFormat(VkFormat* format) const {
   SkASSERT(format);
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     *format = fVk.fFormat;
@@ -118,7 +117,7 @@ bool GrBackendFormat::asVkFormat(VkFormat* format) const noexcept {
   return false;
 }
 
-const GrVkYcbcrConversionInfo* GrBackendFormat::getVkYcbcrConversionInfo() const noexcept {
+const GrVkYcbcrConversionInfo* GrBackendFormat::getVkYcbcrConversionInfo() const {
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     return &fVk.fYcbcrConversionInfo;
   }
@@ -174,8 +173,7 @@ bool GrBackendFormat::asDxgiFormat(DXGI_FORMAT* dxgiFormat) const {
 }
 #endif
 
-GrBackendFormat::GrBackendFormat(
-    GrColorType colorType, SkImage::CompressionType compression) noexcept
+GrBackendFormat::GrBackendFormat(GrColorType colorType, SkImage::CompressionType compression)
     : fBackend(GrBackendApi::kMock), fValid(true), fTextureType(GrTextureType::k2D) {
   fMock.fColorType = colorType;
   fMock.fCompressionType = compression;
@@ -207,7 +205,7 @@ uint32_t GrBackendFormat::channelMask() const {
   }
 }
 
-GrColorType GrBackendFormat::asMockColorType() const noexcept {
+GrColorType GrBackendFormat::asMockColorType() const {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
     SkASSERT(
         fMock.fCompressionType == SkImage::CompressionType::kNone ||
@@ -219,7 +217,7 @@ GrColorType GrBackendFormat::asMockColorType() const noexcept {
   return GrColorType::kUnknown;
 }
 
-SkImage::CompressionType GrBackendFormat::asMockCompressionType() const noexcept {
+SkImage::CompressionType GrBackendFormat::asMockCompressionType() const {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
     SkASSERT(
         fMock.fCompressionType == SkImage::CompressionType::kNone ||
@@ -247,11 +245,11 @@ GrBackendFormat GrBackendFormat::makeTexture2D() const {
 }
 
 GrBackendFormat GrBackendFormat::MakeMock(
-    GrColorType colorType, SkImage::CompressionType compression) noexcept {
+    GrColorType colorType, SkImage::CompressionType compression) {
   return GrBackendFormat(colorType, compression);
 }
 
-bool GrBackendFormat::operator==(const GrBackendFormat& that) const noexcept {
+bool GrBackendFormat::operator==(const GrBackendFormat& that) const {
   // Invalid GrBackendFormats are never equal to anything.
   if (!fValid || !that.fValid) {
     return false;
@@ -346,7 +344,7 @@ SkString GrBackendFormat::toStr() const {
 #endif
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-GrBackendTexture::GrBackendTexture() noexcept : fIsValid(false) {}
+GrBackendTexture::GrBackendTexture() : fIsValid(false) {}
 
 #ifdef SK_DAWN
 GrBackendTexture::GrBackendTexture(int width, int height, const GrDawnTextureInfo& dawnInfo)
@@ -365,22 +363,40 @@ GrBackendTexture::GrBackendTexture(int width, int height, const GrVkImageInfo& v
           sk_sp<GrBackendSurfaceMutableStateImpl>(new GrBackendSurfaceMutableStateImpl(
               vkInfo.fImageLayout, vkInfo.fCurrentQueueFamily))) {}
 
+static const VkImageUsageFlags kDefaultUsageFlags =
+    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+
+// We don't know if the backend texture is made renderable or not, so we default the usage flags
+// to include color attachment as well.
+static const VkImageUsageFlags kDefaultTexRTUsageFlags =
+    kDefaultUsageFlags | VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
+static GrVkImageInfo apply_default_usage_flags(
+    const GrVkImageInfo& info, VkImageUsageFlags defaultFlags) {
+  if (info.fImageUsageFlags == 0) {
+    GrVkImageInfo newInfo = info;
+    newInfo.fImageUsageFlags = defaultFlags;
+    return newInfo;
+  }
+  return info;
+}
+
 GrBackendTexture::GrBackendTexture(
     int width, int height, const GrVkImageInfo& vkInfo,
-    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState) noexcept
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
       fMipmapped(GrMipmapped(vkInfo.fLevelCount > 1)),
       fBackend(GrBackendApi::kVulkan),
-      fVkInfo(vkInfo),
+      fVkInfo(apply_default_usage_flags(vkInfo, kDefaultTexRTUsageFlags)),
       fMutableState(std::move(mutableState)) {}
 #endif
 
 #ifdef SK_GL
 GrBackendTexture::GrBackendTexture(
     int width, int height, GrMipmapped mipmapped, const GrGLTextureInfo glInfo,
-    sk_sp<GrGLTextureParameters> params) noexcept
+    sk_sp<GrGLTextureParameters> params)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
@@ -388,7 +404,7 @@ GrBackendTexture::GrBackendTexture(
       fBackend(GrBackendApi::kOpenGL),
       fGLInfo(glInfo, params.release()) {}
 
-sk_sp<GrGLTextureParameters> GrBackendTexture::getGLTextureParams() const noexcept {
+sk_sp<GrGLTextureParameters> GrBackendTexture::getGLTextureParams() const {
   if (fBackend != GrBackendApi::kOpenGL) {
     return nullptr;
   }
@@ -435,7 +451,7 @@ GrBackendTexture::GrBackendTexture(
 #endif
 
 GrBackendTexture::GrBackendTexture(
-    int width, int height, GrMipmapped mipmapped, const GrMockTextureInfo& mockInfo) noexcept
+    int width, int height, GrMipmapped mipmapped, const GrMockTextureInfo& mockInfo)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
@@ -445,7 +461,7 @@ GrBackendTexture::GrBackendTexture(
 
 GrBackendTexture::~GrBackendTexture() { this->cleanup(); }
 
-void GrBackendTexture::cleanup() noexcept {
+void GrBackendTexture::cleanup() {
 #ifdef SK_GL
   if (this->isValid() && GrBackendApi::kOpenGL == fBackend) {
     fGLInfo.cleanup();
@@ -463,11 +479,9 @@ void GrBackendTexture::cleanup() noexcept {
 #endif
 }
 
-GrBackendTexture::GrBackendTexture(const GrBackendTexture& that) noexcept : fIsValid(false) {
-  *this = that;
-}
+GrBackendTexture::GrBackendTexture(const GrBackendTexture& that) : fIsValid(false) { *this = that; }
 
-GrBackendTexture& GrBackendTexture::operator=(const GrBackendTexture& that) noexcept {
+GrBackendTexture& GrBackendTexture::operator=(const GrBackendTexture& that) {
   if (!that.isValid()) {
     this->cleanup();
     fIsValid = false;
@@ -505,7 +519,7 @@ GrBackendTexture& GrBackendTexture::operator=(const GrBackendTexture& that) noex
   return *this;
 }
 
-sk_sp<GrBackendSurfaceMutableStateImpl> GrBackendTexture::getMutableState() const noexcept {
+sk_sp<GrBackendSurfaceMutableStateImpl> GrBackendTexture::getMutableState() const {
   return fMutableState;
 }
 
@@ -529,7 +543,7 @@ bool GrBackendTexture::getVkImageInfo(GrVkImageInfo* outInfo) const {
   return false;
 }
 
-void GrBackendTexture::setVkImageLayout(VkImageLayout layout) noexcept {
+void GrBackendTexture::setVkImageLayout(VkImageLayout layout) {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     fMutableState->setImageLayout(layout);
@@ -747,72 +761,78 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 #endif
 
 #ifdef SK_VULKAN
-GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits, const GrVkImageInfo& vkInfo)
-    : GrBackendRenderTarget(width, height, sampleCnt, vkInfo) {
-  // This is a deprecated constructor that takes a bogus stencil bits.
-  SkASSERT(0 == stencilBits);
+static GrVkImageInfo resolve_vkii_sample_count(const GrVkImageInfo& vkII, int sidebandSampleCnt) {
+  auto result = vkII;
+  result.fSampleCount = std::max({vkII.fSampleCount, static_cast<uint32_t>(sidebandSampleCnt), 1U});
+  return result;
 }
 
 GrBackendRenderTarget::GrBackendRenderTarget(
     int width, int height, int sampleCnt, const GrVkImageInfo& vkInfo)
+    : GrBackendRenderTarget(width, height, resolve_vkii_sample_count(vkInfo, sampleCnt)) {}
+
+GrBackendRenderTarget::GrBackendRenderTarget(int width, int height, const GrVkImageInfo& vkInfo)
     : GrBackendRenderTarget(
-          width, height, sampleCnt, vkInfo,
+          width, height, vkInfo,
           sk_sp<GrBackendSurfaceMutableStateImpl>(new GrBackendSurfaceMutableStateImpl(
               vkInfo.fImageLayout, vkInfo.fCurrentQueueFamily))) {}
 
+static const VkImageUsageFlags kDefaultRTUsageFlags =
+    kDefaultUsageFlags | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, const GrVkImageInfo& vkInfo,
-    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState) noexcept
+    int width, int height, const GrVkImageInfo& vkInfo,
+    sk_sp<GrBackendSurfaceMutableStateImpl> mutableState)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
-      fSampleCnt(std::max(1, sampleCnt)),
+      fSampleCnt(std::max(1U, vkInfo.fSampleCount)),
       fStencilBits(0)  // We always create stencil buffers internally for vulkan
       ,
       fBackend(GrBackendApi::kVulkan),
-      fVkInfo(vkInfo),
+      fVkInfo(apply_default_usage_flags(vkInfo, kDefaultRTUsageFlags)),
       fMutableState(mutableState) {}
 #endif
 
 #ifdef SK_METAL
-GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, const GrMtlTextureInfo& mtlInfo)
+GrBackendRenderTarget::GrBackendRenderTarget(int width, int height, const GrMtlTextureInfo& mtlInfo)
     : fIsValid(true),
       fFramebufferOnly(false)  // TODO: set this from mtlInfo.fTexture->framebufferOnly
       ,
       fWidth(width),
       fHeight(height),
-      fSampleCnt(std::max(1, sampleCnt)),
+      fSampleCnt(std::max(1, GrMtlTextureInfoSampleCount(mtlInfo))),
       fStencilBits(0),
       fBackend(GrBackendApi::kMetal),
       fMtlInfo(mtlInfo) {}
+
+GrBackendRenderTarget::GrBackendRenderTarget(
+    int width, int height, int sampleCount, const GrMtlTextureInfo& mtlInfo)
+    : GrBackendRenderTarget(width, height, mtlInfo) {}
 #endif
 
 #ifdef SK_DIRECT3D
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, const GrD3DTextureResourceInfo& d3dInfo)
+    int width, int height, const GrD3DTextureResourceInfo& d3dInfo)
     : GrBackendRenderTarget(
-          width, height, sampleCnt, d3dInfo,
+          width, height, d3dInfo,
           sk_sp<GrD3DResourceState>(
               new GrD3DResourceState(static_cast<D3D12_RESOURCE_STATES>(d3dInfo.fResourceState)))) {
 }
 
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, const GrD3DTextureResourceInfo& d3dInfo,
-    sk_sp<GrD3DResourceState> state)
+    int width, int height, const GrD3DTextureResourceInfo& d3dInfo, sk_sp<GrD3DResourceState> state)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
-      fSampleCnt(std::max(1, sampleCnt)),
+      fSampleCnt(std::max(1U, d3dInfo.fSampleCount)),
       fStencilBits(0),
       fBackend(GrBackendApi::kDirect3D),
       fD3DInfo(d3dInfo, state.release()) {}
 #endif
 #ifdef SK_GL
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits,
-    const GrGLFramebufferInfo& glInfo) noexcept
+    int width, int height, int sampleCnt, int stencilBits, const GrGLFramebufferInfo& glInfo)
     : fWidth(width),
       fHeight(height),
       fSampleCnt(std::max(1, sampleCnt)),
@@ -824,8 +844,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 #endif
 
 GrBackendRenderTarget::GrBackendRenderTarget(
-    int width, int height, int sampleCnt, int stencilBits,
-    const GrMockRenderTargetInfo& mockInfo) noexcept
+    int width, int height, int sampleCnt, int stencilBits, const GrMockRenderTargetInfo& mockInfo)
     : fIsValid(true),
       fWidth(width),
       fHeight(height),
@@ -835,7 +854,7 @@ GrBackendRenderTarget::GrBackendRenderTarget(
 
 GrBackendRenderTarget::~GrBackendRenderTarget() { this->cleanup(); }
 
-void GrBackendRenderTarget::cleanup() noexcept {
+void GrBackendRenderTarget::cleanup() {
 #ifdef SK_VULKAN
   if (this->isValid() && GrBackendApi::kVulkan == fBackend) {
     fVkInfo.cleanup();
@@ -848,13 +867,11 @@ void GrBackendRenderTarget::cleanup() noexcept {
 #endif
 }
 
-GrBackendRenderTarget::GrBackendRenderTarget(const GrBackendRenderTarget& that) noexcept
-    : fIsValid(false) {
+GrBackendRenderTarget::GrBackendRenderTarget(const GrBackendRenderTarget& that) : fIsValid(false) {
   *this = that;
 }
 
-GrBackendRenderTarget& GrBackendRenderTarget::operator=(
-    const GrBackendRenderTarget& that) noexcept {
+GrBackendRenderTarget& GrBackendRenderTarget::operator=(const GrBackendRenderTarget& that) {
   if (!that.isValid()) {
     this->cleanup();
     fIsValid = false;
@@ -1011,8 +1028,7 @@ GrBackendFormat GrBackendRenderTarget::getBackendFormat() const {
   }
 }
 
-bool GrBackendRenderTarget::getMockRenderTargetInfo(
-    GrMockRenderTargetInfo* outInfo) const noexcept {
+bool GrBackendRenderTarget::getMockRenderTargetInfo(GrMockRenderTargetInfo* outInfo) const {
   if (this->isValid() && GrBackendApi::kMock == fBackend) {
     *outInfo = fMockInfo;
     return true;
@@ -1020,11 +1036,11 @@ bool GrBackendRenderTarget::getMockRenderTargetInfo(
   return false;
 }
 
-void GrBackendRenderTarget::setMutableState(const GrBackendSurfaceMutableState& state) noexcept {
+void GrBackendRenderTarget::setMutableState(const GrBackendSurfaceMutableState& state) {
   fMutableState->set(state);
 }
 
-bool GrBackendRenderTarget::isProtected() const noexcept {
+bool GrBackendRenderTarget::isProtected() const {
   if (!this->isValid() || this->backend() != GrBackendApi::kVulkan) {
     return false;
   }

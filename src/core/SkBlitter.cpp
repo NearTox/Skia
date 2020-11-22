@@ -30,7 +30,7 @@
 bool gUseSkVMBlitter{false};
 bool gSkForceRasterPipelineBlitter{false};
 
-SkBlitter::~SkBlitter() = default;
+SkBlitter::~SkBlitter() {}
 
 bool SkBlitter::isNullBlitter() const { return false; }
 
@@ -488,7 +488,7 @@ void SkRgnClipBlitter::blitAntiH(int x, int y, const SkAlpha aa[], const int16_t
   int width = compute_anti_width(runs);
   SkRegion::Spanerator span(*fRgn, y, x, x + width);
   int left, right;
-  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds());
+  SkDEBUGCODE(const SkIRect& bounds = fRgn->getBounds();)
 
   int prevRite = x;
   while (span.next(&left, &right)) {

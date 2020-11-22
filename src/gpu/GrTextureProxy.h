@@ -20,8 +20,8 @@ class GrTextureProxyPriv;
 // This class delays the acquisition of textures until they are actually required
 class GrTextureProxy : virtual public GrSurfaceProxy {
  public:
-  GrTextureProxy* asTextureProxy() noexcept override { return this; }
-  const GrTextureProxy* asTextureProxy() const noexcept override { return this; }
+  GrTextureProxy* asTextureProxy() override { return this; }
+  const GrTextureProxy* asTextureProxy() const override { return this; }
 
   // Actually instantiate the backing texture, if necessary
   bool instantiate(GrResourceProvider*) override;
@@ -33,24 +33,24 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // generation later.
   GrMipmapped mipmapped() const;
 
-  bool mipmapsAreDirty() const noexcept {
+  bool mipmapsAreDirty() const {
     SkASSERT((GrMipmapped::kNo == fMipmapped) == (GrMipmapStatus::kNotAllocated == fMipmapStatus));
     return GrMipmapped::kYes == fMipmapped && GrMipmapStatus::kValid != fMipmapStatus;
   }
-  void markMipmapsDirty() noexcept {
+  void markMipmapsDirty() {
     SkASSERT(GrMipmapped::kYes == fMipmapped);
     fMipmapStatus = GrMipmapStatus::kDirty;
   }
-  void markMipmapsClean() noexcept {
+  void markMipmapsClean() {
     SkASSERT(GrMipmapped::kYes == fMipmapped);
     fMipmapStatus = GrMipmapStatus::kValid;
   }
 
   // Returns the GrMipmapped value of the proxy from creation time regardless of whether it has
   // been instantiated or not.
-  GrMipmapped proxyMipmapped() const noexcept { return fMipmapped; }
+  GrMipmapped proxyMipmapped() const { return fMipmapped; }
 
-  GrTextureType textureType() const noexcept { return this->backendFormat().textureType(); }
+  GrTextureType textureType() const { return this->backendFormat().textureType(); }
 
   /** If true then the texture does not support MIP maps and only supports clamp wrap mode. */
   bool hasRestrictedSampling() const {
@@ -67,7 +67,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   /**
    * Return the texture proxy's unique key. It will be invalid if the proxy doesn't have one.
    */
-  const GrUniqueKey& getUniqueKey() const noexcept {
+  const GrUniqueKey& getUniqueKey() const {
 #ifdef SK_DEBUG
     if (this->isInstantiated() && fUniqueKey.isValid() && fSyncTargetKey &&
         fCreatingProvider == GrDDLProvider::kNo) {
@@ -90,14 +90,14 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
    * Internal-only helper class used for manipulations of the resource by the cache.
    */
   class CacheAccess;
-  inline CacheAccess cacheAccess() noexcept;
-  inline const CacheAccess cacheAccess() const noexcept;  // NOLINT(readability-const-return-type)
+  inline CacheAccess cacheAccess();
+  inline const CacheAccess cacheAccess() const;  // NOLINT(readability-const-return-type)
 
   // Provides access to special purpose functions.
-  GrTextureProxyPriv texPriv() noexcept;
-  const GrTextureProxyPriv texPriv() const noexcept;  // NOLINT(readability-const-return-type)
+  GrTextureProxyPriv texPriv();
+  const GrTextureProxyPriv texPriv() const;  // NOLINT(readability-const-return-type)
 
-  SkDEBUGCODE(GrDDLProvider creatingProvider() const { return fCreatingProvider; });
+  SkDEBUGCODE(GrDDLProvider creatingProvider() const { return fCreatingProvider; })
 
  protected:
   // DDL TODO: rm the GrSurfaceProxy friending
@@ -136,7 +136,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   // By default uniqueKeys are propagated from a textureProxy to its backing GrTexture.
   // Setting syncTargetKey to false disables this behavior and only keeps the unique key
   // on the proxy.
-  void setTargetKeySync(bool sync) noexcept { fSyncTargetKey = sync; }
+  void setTargetKeySync(bool sync) { fSyncTargetKey = sync; }
 
  private:
   // WARNING: Be careful when adding or removing fields here. ASAN is likely to trigger warnings
@@ -159,7 +159,7 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   //
   // NOTE: fMipmapStatus may no longer be equal to fInitialMipmapStatus by the time the texture
   // is instantiated, since it tracks mipmaps in the time frame in which the DAG is being built.
-  SkDEBUGCODE(const GrMipmapStatus fInitialMipmapStatus);
+  SkDEBUGCODE(const GrMipmapStatus fInitialMipmapStatus;)
 
   bool fSyncTargetKey = true;  // Should target's unique key be sync'ed with ours.
 
@@ -185,9 +185,9 @@ class GrTextureProxy : virtual public GrSurfaceProxy {
   void setUniqueKey(GrProxyProvider*, const GrUniqueKey&);
   void clearUniqueKey();
 
-  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override);
+  SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 
-  typedef GrSurfaceProxy INHERITED;
+  using INHERITED = GrSurfaceProxy;
 };
 
 #endif

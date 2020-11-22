@@ -20,10 +20,10 @@
 #include "src/core/SkTypefaceCache.h"
 #include "src/sfnt/SkOTTable_OS_2.h"
 
-SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch) noexcept
+SkTypeface::SkTypeface(const SkFontStyle& style, bool isFixedPitch)
     : fUniqueID(SkTypefaceCache::NewFontID()), fStyle(style), fIsFixedPitch(isFixedPitch) {}
 
-SkTypeface::~SkTypeface() = default;
+SkTypeface::~SkTypeface() {}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -34,7 +34,7 @@ class SkEmptyTypeface : public SkTypeface {
   static sk_sp<SkTypeface> Make() { return sk_sp<SkTypeface>(new SkEmptyTypeface); }
 
  protected:
-  SkEmptyTypeface() noexcept : SkTypeface(SkFontStyle(), true) {}
+  SkEmptyTypeface() : SkTypeface(SkFontStyle(), true) {}
 
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override { return nullptr; }
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {

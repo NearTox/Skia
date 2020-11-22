@@ -364,7 +364,7 @@ static void serialize_and_compare_typeface(
   SkPictureRecorder recorder;
   SkIRect canvasRect = SkIRect::MakeWH(kBitmapSize, kBitmapSize);
   SkCanvas* canvas = recorder.beginRecording(
-      SkIntToScalar(canvasRect.width()), SkIntToScalar(canvasRect.height()), nullptr, 0);
+      SkIntToScalar(canvasRect.width()), SkIntToScalar(canvasRect.height()));
   canvas->drawColor(SK_ColorWHITE);
   canvas->drawString(text, 24, 32, font, paint);
   sk_sp<SkPicture> picture(recorder.finishRecordingAsPicture());
@@ -672,8 +672,7 @@ DEF_TEST(Serialization, reporter) {
 // Test simple SkPicture serialization
 {
   SkPictureRecorder recorder;
-  draw_something(
-      recorder.beginRecording(SkIntToScalar(kBitmapSize), SkIntToScalar(kBitmapSize), nullptr, 0));
+  draw_something(recorder.beginRecording(SkIntToScalar(kBitmapSize), SkIntToScalar(kBitmapSize)));
   sk_sp<SkPicture> pict(recorder.finishRecordingAsPicture());
 
   // Serialize picture

@@ -135,7 +135,7 @@ class DrawMiniBitmapRectGM : public skiagm::GM {
   sk_sp<SkImage> fImage;
   SkString fName;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new DrawMiniBitmapRectGM(true);)

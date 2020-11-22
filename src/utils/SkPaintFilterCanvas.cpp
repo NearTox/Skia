@@ -264,7 +264,7 @@ bool SkPaintFilterCanvas::onAccessTopLayerPixels(SkPixmap* pixmap) {
   return true;
 }
 
-SkImageInfo SkPaintFilterCanvas::onImageInfo() const noexcept { return proxy()->imageInfo(); }
+SkImageInfo SkPaintFilterCanvas::onImageInfo() const { return proxy()->imageInfo(); }
 
 bool SkPaintFilterCanvas::onGetProps(SkSurfaceProps* props) const {
   return proxy()->getProps(props);

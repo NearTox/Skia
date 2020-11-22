@@ -41,7 +41,7 @@ class SampleMatrixVariableEffect : public GrFragmentProcessor {
   float fXOffset;
   float fYOffset;
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
   friend class GLSLSampleMatrixVariableEffect;
 };
 

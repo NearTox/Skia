@@ -15,21 +15,19 @@ std::atomic<uint32_t> GrManagedResource::fKeyCounter{0};
 #endif
 
 void GrTextureResource::addIdleProc(
-    GrTexture* owningTexture, sk_sp<GrRefCntedCallback> idleProc) const noexcept {
+    GrTexture* owningTexture, sk_sp<GrRefCntedCallback> idleProc) const {
   SkASSERT(!fOwningTexture || fOwningTexture == owningTexture);
   fOwningTexture = owningTexture;
   fIdleProcs.push_back(std::move(idleProc));
 }
 
-int GrTextureResource::idleProcCnt() const noexcept { return fIdleProcs.count(); }
+int GrTextureResource::idleProcCnt() const { return fIdleProcs.count(); }
 
-sk_sp<GrRefCntedCallback> GrTextureResource::idleProc(int i) const noexcept {
-  return fIdleProcs[i];
-}
+sk_sp<GrRefCntedCallback> GrTextureResource::idleProc(int i) const { return fIdleProcs[i]; }
 
-void GrTextureResource::resetIdleProcs() const noexcept { fIdleProcs.reset(); }
+void GrTextureResource::resetIdleProcs() const { fIdleProcs.reset(); }
 
-void GrTextureResource::removeOwningTexture() const noexcept { fOwningTexture = nullptr; }
+void GrTextureResource::removeOwningTexture() const { fOwningTexture = nullptr; }
 
 void GrTextureResource::notifyQueuedForWorkOnGpu() const { ++fNumOwners; }
 

@@ -21,7 +21,7 @@ struct GrUserStencilSettings;
     additional data members or virtual methods. */
 class GrRenderTargetContextPriv {
  public:
-  GrRecordingContext* recordingContext() noexcept { return fRenderTargetContext->fContext; }
+  GrRecordingContext* recordingContext() { return fRenderTargetContext->fContext; }
   // called to note the last clip drawn to the stencil buffer.
   // TODO: remove after clipping overhaul.
   void setLastClip(
@@ -98,7 +98,7 @@ class GrRenderTargetContextPriv {
       const GrClip*, std::unique_ptr<GrDrawOp>,
       const std::function<WillAddOpFn>& = std::function<WillAddOpFn>());
 
-  SkGlyphRunListPainter* testingOnly_glyphRunPainter() noexcept {
+  SkGlyphRunListPainter* testingOnly_glyphRunPainter() {
     return &fRenderTargetContext->fGlyphPainter;
   }
 
@@ -111,7 +111,7 @@ class GrRenderTargetContextPriv {
   }
 
  private:
-  explicit GrRenderTargetContextPriv(GrRenderTargetContext* renderTargetContext) noexcept
+  explicit GrRenderTargetContextPriv(GrRenderTargetContext* renderTargetContext)
       : fRenderTargetContext(renderTargetContext) {}
   GrRenderTargetContextPriv(const GrRenderTargetContextPriv&) = delete;
   GrRenderTargetContextPriv& operator=(const GrRenderTargetContextPriv&) = delete;
@@ -125,12 +125,12 @@ class GrRenderTargetContextPriv {
   friend class GrRenderTargetContext;  // to construct/copy this type.
 };
 
-inline GrRenderTargetContextPriv GrRenderTargetContext::priv() noexcept {
+inline GrRenderTargetContextPriv GrRenderTargetContext::priv() {
   return GrRenderTargetContextPriv(this);
 }
 
 inline const GrRenderTargetContextPriv GrRenderTargetContext::priv()
-    const noexcept {  // NOLINT(readability-const-return-type)
+    const {  // NOLINT(readability-const-return-type)
   return GrRenderTargetContextPriv(const_cast<GrRenderTargetContext*>(this));
 }
 

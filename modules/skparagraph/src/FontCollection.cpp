@@ -7,34 +7,33 @@
 namespace skia {
 namespace textlayout {
 
-bool FontCollection::FamilyKey::operator==(const FontCollection::FamilyKey& other) const noexcept {
+bool FontCollection::FamilyKey::operator==(const FontCollection::FamilyKey& other) const {
   return fFamilyNames == other.fFamilyNames && fFontStyle == other.fFontStyle;
 }
 
-size_t FontCollection::FamilyKey::Hasher::operator()(
-    const FontCollection::FamilyKey& key) const noexcept {
+size_t FontCollection::FamilyKey::Hasher::operator()(const FontCollection::FamilyKey& key) const {
   size_t hash = 0;
   for (const SkString& family : key.fFamilyNames) {
-    hash ^= std::hash<std::string_view>()(family);
+    hash ^= std::hash<std::string>()(family.c_str());
   }
   return hash ^ std::hash<uint32_t>()(key.fFontStyle.weight()) ^
          std::hash<uint32_t>()(key.fFontStyle.slant());
 }
 
-FontCollection::FontCollection() noexcept
+FontCollection::FontCollection()
     : fEnableFontFallback(true), fDefaultFamilyName(DEFAULT_FONT_FAMILY) {}
 
 size_t FontCollection::getFontManagersCount() const { return this->getFontManagerOrder().size(); }
 
-void FontCollection::setAssetFontManager(sk_sp<SkFontMgr> font_manager) noexcept {
+void FontCollection::setAssetFontManager(sk_sp<SkFontMgr> font_manager) {
   fAssetFontManager = font_manager;
 }
 
-void FontCollection::setDynamicFontManager(sk_sp<SkFontMgr> font_manager) noexcept {
+void FontCollection::setDynamicFontManager(sk_sp<SkFontMgr> font_manager) {
   fDynamicFontManager = font_manager;
 }
 
-void FontCollection::setTestFontManager(sk_sp<SkFontMgr> font_manager) noexcept {
+void FontCollection::setTestFontManager(sk_sp<SkFontMgr> font_manager) {
   fTestFontManager = font_manager;
 }
 
@@ -44,7 +43,7 @@ void FontCollection::setDefaultFontManager(
   fDefaultFamilyName = defaultFamilyName;
 }
 
-void FontCollection::setDefaultFontManager(sk_sp<SkFontMgr> fontManager) noexcept {
+void FontCollection::setDefaultFontManager(sk_sp<SkFontMgr> fontManager) {
   fDefaultFontManager = fontManager;
 }
 
@@ -85,6 +84,14 @@ std::vector<sk_sp<SkTypeface>> FontCollection::findTypefaces(
 
   if (typefaces.empty()) {
     sk_sp<SkTypeface> match = matchTypeface(fDefaultFamilyName, fontStyle);
+    if (!match) {
+      for (const auto& manager : this->getFontManagerOrder()) {
+        match = manager->legacyMakeTypeface(nullptr, fontStyle);
+        if (match) {
+          break;
+        }
+      }
+    }
     if (match) {
       typefaces.emplace_back(std::move(match));
     }
@@ -135,8 +142,13 @@ sk_sp<SkTypeface> FontCollection::defaultFallback() {
       fDefaultFontManager->matchFamilyStyle(fDefaultFamilyName.c_str(), SkFontStyle()));
 }
 
-void FontCollection::disableFontFallback() noexcept { fEnableFontFallback = false; }
-void FontCollection::enableFontFallback() noexcept { fEnableFontFallback = true; }
+void FontCollection::disableFontFallback() { fEnableFontFallback = false; }
+void FontCollection::enableFontFallback() { fEnableFontFallback = true; }
+
+void FontCollection::clearCaches() {
+  fParagraphCache.reset();
+  fTypefaces.reset();
+}
 
 }  // namespace textlayout
 }  // namespace skia

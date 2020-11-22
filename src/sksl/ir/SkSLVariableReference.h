@@ -23,7 +23,7 @@ class IRGenerator;
  * there is only one Variable 'x', but two VariableReferences to it.
  */
 struct VariableReference : public Expression {
-  static constexpr Kind kExpressionKind = kVariableReference_Kind;
+  static constexpr Kind kExpressionKind = Kind::kVariableReference;
 
   enum RefKind {
     kRead_RefKind,
@@ -34,48 +34,46 @@ struct VariableReference : public Expression {
     kPointer_RefKind
   };
 
-  VariableReference(int offset, const Variable& variable, RefKind refKind = kRead_RefKind);
+  VariableReference(int offset, const Variable* variable, RefKind refKind = kRead_RefKind);
 
   ~VariableReference() override;
 
   VariableReference(const VariableReference&) = delete;
   VariableReference& operator=(const VariableReference&) = delete;
 
-  RefKind refKind() const noexcept { return fRefKind; }
+  RefKind refKind() const { return fRefKind; }
 
   void setRefKind(RefKind refKind);
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     switch (property) {
       case Property::kSideEffects: return false;
-      case Property::kContainsRTAdjust: return fVariable.fName == "sk_RTAdjust";
+      case Property::kContainsRTAdjust: return fVariable->fName == "sk_RTAdjust";
       default: SkASSERT(false); return false;
     }
   }
 
-  bool isConstantOrUniform() const noexcept override {
-    return (fVariable.fModifiers.fFlags & Modifiers::kUniform_Flag) != 0;
+  bool isConstantOrUniform() const override {
+    return (fVariable->fModifiers.fFlags & Modifiers::kUniform_Flag) != 0;
   }
-
-  int nodeCount() const noexcept override { return 1; }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new VariableReference(fOffset, fVariable, fRefKind));
   }
 
-  String description() const override { return fVariable.fName; }
-
-  static std::unique_ptr<Expression> copy_constant(
-      const IRGenerator& irGenerator, const Expression* expr);
+  String description() const override { return fVariable->fName; }
 
   std::unique_ptr<Expression> constantPropagate(
       const IRGenerator& irGenerator, const DefinitionMap& definitions) override;
 
-  const Variable& fVariable;
+  const Variable* fVariable;
   RefKind fRefKind;
 
  private:
-  typedef Expression INHERITED;
+  void incrementRefs() const;
+  void decrementRefs() const;
+
+  using INHERITED = Expression;
 };
 
 }  // namespace SkSL

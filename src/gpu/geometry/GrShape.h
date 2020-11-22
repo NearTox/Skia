@@ -49,8 +49,8 @@ struct GrLineSegment {
 class GrShape {
  public:
   // The current set of types GrShape can represent directly
-  enum class Type : uint8_t { kEmpty, kPoint, kRect, kRRect, kPath, kArc, kLine, kLast = kLine };
-  static constexpr int kTypeCount = static_cast<int>(Type::kLast) + 1;
+  enum class Type : uint8_t { kEmpty, kPoint, kRect, kRRect, kPath, kArc, kLine };
+  static constexpr int kTypeCount = static_cast<int>(Type::kLine) + 1;
 
   // The direction and start index used when a shape does not have a representable winding,
   // or when that information was discarded during simplification (kIgnoreWinding_Flag).
@@ -58,56 +58,53 @@ class GrShape {
   static constexpr unsigned kDefaultStart = 0;
   // The fill rule that is used by asPath() for shapes that aren't already a path.
   static constexpr SkPathFillType kDefaultFillType = SkPathFillType::kEvenOdd;
-  GrShape() noexcept {}
-  explicit GrShape(const SkPoint& point) noexcept { this->setPoint(point); }
-  explicit GrShape(const SkRect& rect) noexcept { this->setRect(rect); }
-  explicit GrShape(const SkRRect& rrect) noexcept { this->setRRect(rrect); }
-  explicit GrShape(const SkPath& path) noexcept { this->setPath(path); }
-  explicit GrShape(const GrArc& arc) noexcept { this->setArc(arc); }
-  explicit GrShape(const GrLineSegment& line) noexcept { this->setLine(line); }
 
-  explicit GrShape(const GrShape& shape) noexcept { *this = shape; }
+  GrShape() {}
+  explicit GrShape(const SkPoint& point) { this->setPoint(point); }
+  explicit GrShape(const SkRect& rect) { this->setRect(rect); }
+  explicit GrShape(const SkRRect& rrect) { this->setRRect(rrect); }
+  explicit GrShape(const SkPath& path) { this->setPath(path); }
+  explicit GrShape(const GrArc& arc) { this->setArc(arc); }
+  explicit GrShape(const GrLineSegment& line) { this->setLine(line); }
+
+  GrShape(const GrShape& shape) { *this = shape; }
 
   ~GrShape() { this->reset(); }
 
   // NOTE: None of the geometry types benefit from move semantics, so we don't bother
   // defining a move assignment operator for GrShape.
-  GrShape& operator=(const GrShape& shape) noexcept;
+  GrShape& operator=(const GrShape& shape);
 
   // These type queries reflect the shape type provided when assigned, it does not incorporate
   // any potential simplification (e.g. if isRRect() is true and rrect().isRect() is true,
   // isRect() will still be false, until simplify() is called).
-  bool isEmpty() const noexcept { return this->type() == Type::kEmpty; }
-  bool isPoint() const noexcept { return this->type() == Type::kPoint; }
-  bool isRect() const noexcept { return this->type() == Type::kRect; }
-  bool isRRect() const noexcept { return this->type() == Type::kRRect; }
-  bool isPath() const noexcept { return this->type() == Type::kPath; }
-  bool isArc() const noexcept { return this->type() == Type::kArc; }
-  bool isLine() const noexcept { return this->type() == Type::kLine; }
+  bool isEmpty() const { return this->type() == Type::kEmpty; }
+  bool isPoint() const { return this->type() == Type::kPoint; }
+  bool isRect() const { return this->type() == Type::kRect; }
+  bool isRRect() const { return this->type() == Type::kRRect; }
+  bool isPath() const { return this->type() == Type::kPath; }
+  bool isArc() const { return this->type() == Type::kArc; }
+  bool isLine() const { return this->type() == Type::kLine; }
 
-  Type type() const noexcept { return fType; }
+  Type type() const { return fType; }
 
   // Report the shape type, winding direction, start index, and invertedness as a value suitable
   // for use in a resource key. This does not include any geometry coordinates into the key value.
-  uint32_t stateKey() const noexcept;
+  uint32_t stateKey() const;
 
   // Whether or not the shape is meant to be the inverse of its geometry (i.e. its exterior).
-  bool inverted() const noexcept {
-    return this->isPath() ? fPath.isInverseFillType() : SkToBool(fInverted);
-  }
+  bool inverted() const { return this->isPath() ? fPath.isInverseFillType() : SkToBool(fInverted); }
 
   // Returns the path direction extracted from the path during simplification, if the shape's
   // type represents a rrect, rect, or oval.
-  SkPathDirection dir() const noexcept {
-    return fCW ? SkPathDirection::kCW : SkPathDirection::kCCW;
-  }
+  SkPathDirection dir() const { return fCW ? SkPathDirection::kCW : SkPathDirection::kCCW; }
   // Returns the start index extracted from the path during simplification, if the shape's
   // type represents a rrect, rect, or oval.
-  unsigned startIndex() const noexcept { return fStart; }
+  unsigned startIndex() const { return fStart; }
 
   // Override the direction and start parameters for the simplified contour. These are only
   // meaningful for rects, rrects, and ovals.
-  void setPathWindingParams(SkPathDirection dir, unsigned start) noexcept {
+  void setPathWindingParams(SkPathDirection dir, unsigned start) {
     SkASSERT(
         (this->isRect() && start < 4) || (this->isRRect() && start < 8) ||
         (dir == kDefaultDir && start == kDefaultStart));
@@ -115,7 +112,7 @@ class GrShape {
     fStart = static_cast<uint8_t>(start);
   }
 
-  void setInverted(bool inverted) noexcept {
+  void setInverted(bool inverted) {
     if (this->isPath()) {
       if (inverted != fPath.isInverseFillType()) {
         fPath.toggleInverseFillType();
@@ -127,56 +124,56 @@ class GrShape {
 
   // Access the actual geometric description of the shape. May only access the appropriate type
   // based on what was last set. The type may change after simplify() is called.
-  SkPoint& point() noexcept {
+  SkPoint& point() {
     SkASSERT(this->isPoint());
     return fPoint;
   }
-  const SkPoint& point() const noexcept {
+  const SkPoint& point() const {
     SkASSERT(this->isPoint());
     return fPoint;
   }
 
-  SkRect& rect() noexcept {
+  SkRect& rect() {
     SkASSERT(this->isRect());
     return fRect;
   }
-  const SkRect& rect() const noexcept {
+  const SkRect& rect() const {
     SkASSERT(this->isRect());
     return fRect;
   }
 
-  SkRRect& rrect() noexcept {
+  SkRRect& rrect() {
     SkASSERT(this->isRRect());
     return fRRect;
   }
-  const SkRRect& rrect() const noexcept {
+  const SkRRect& rrect() const {
     SkASSERT(this->isRRect());
     return fRRect;
   }
 
-  SkPath& path() noexcept {
+  SkPath& path() {
     SkASSERT(this->isPath());
     return fPath;
   }
-  const SkPath& path() const noexcept {
+  const SkPath& path() const {
     SkASSERT(this->isPath());
     return fPath;
   }
 
-  GrArc& arc() noexcept {
+  GrArc& arc() {
     SkASSERT(this->isArc());
     return fArc;
   }
-  const GrArc& arc() const noexcept {
+  const GrArc& arc() const {
     SkASSERT(this->isArc());
     return fArc;
   }
 
-  GrLineSegment& line() noexcept {
+  GrLineSegment& line() {
     SkASSERT(this->isLine());
     return fLine;
   }
-  const GrLineSegment& line() const noexcept {
+  const GrLineSegment& line() const {
     SkASSERT(this->isLine());
     return fLine;
   }
@@ -187,27 +184,27 @@ class GrShape {
   //
   // These also reset any extracted direction, start, and inverted state from a prior simplified
   // path, since these functions ared used to describe a new geometry.
-  void setPoint(const SkPoint& point) noexcept {
+  void setPoint(const SkPoint& point) {
     this->reset(Type::kPoint);
     fPoint = point;
   }
-  void setRect(const SkRect& rect) noexcept {
+  void setRect(const SkRect& rect) {
     this->reset(Type::kRect);
     fRect = rect;
   }
-  void setRRect(const SkRRect& rrect) noexcept {
+  void setRRect(const SkRRect& rrect) {
     this->reset(Type::kRRect);
     fRRect = rrect;
   }
-  void setArc(const GrArc& arc) noexcept {
+  void setArc(const GrArc& arc) {
     this->reset(Type::kArc);
     fArc = arc;
   }
-  void setLine(const GrLineSegment& line) noexcept {
+  void setLine(const GrLineSegment& line) {
     this->reset(Type::kLine);
     fLine = line;
   }
-  void setPath(const SkPath& path) noexcept {
+  void setPath(const SkPath& path) {
     if (this->isPath()) {
       // Assign directly
       fPath = path;
@@ -220,7 +217,7 @@ class GrShape {
     this->setPathWindingParams(kDefaultDir, kDefaultStart);
     fInverted = path.isInverseFillType();
   }
-  void reset() noexcept { this->reset(Type::kEmpty); }
+  void reset() { this->reset(Type::kEmpty); }
 
   // Flags that enable more aggressive, "destructive" simplifications to the geometry
   enum SimplifyFlags : unsigned {
@@ -241,13 +238,15 @@ class GrShape {
   // path), even if the final simplification results in a point, line, or empty.
   bool simplify(unsigned flags = kAll_Flags);
 
-  // True if the given bounding box is completely inside the shape.
-  bool contains(const SkRect& rect) const;
+  // True if the given bounding box is completely inside the shape, if it's conservatively treated
+  // as a filled, closed shape.
+  bool conservativeContains(const SkRect& rect) const;
+  bool conservativeContains(const SkPoint& point) const;
 
   // True if the underlying geometry represents a closed shape, without the need for an
   // implicit close (note that if simplified earlier with 'simpleFill' = true, a shape that was
   // not closed may become closed).
-  bool closed() const noexcept;
+  bool closed() const;
 
   // True if the underlying shape is known to be convex, assuming no other styles. If 'simpleFill'
   // is true, it is assumed the contours will be implicitly closed when drawn or used.
@@ -263,7 +262,7 @@ class GrShape {
   void asPath(SkPath* out, bool simpleFill = true) const;
 
  private:
-  void setType(Type type) noexcept {
+  void setType(Type type) {
     if (this->isPath() && type != Type::kPath) {
       fInverted = fPath.isInverseFillType();
       fPath.~SkPath();
@@ -271,7 +270,7 @@ class GrShape {
     fType = type;
   }
 
-  void reset(Type type) noexcept {
+  void reset(Type type) {
     this->setType(type);
     this->setPathWindingParams(kDefaultDir, kDefaultStart);
     this->setInverted(false);
@@ -287,7 +286,7 @@ class GrShape {
   // simplification that hasn't been set on the GrShape yet. The simpler types do not report
   // whether or not they were closed because it's implicit in their type.
   void simplifyLine(const SkPoint& p1, const SkPoint& p2, unsigned flags);
-  void simplifyPoint(const SkPoint& point, unsigned flags) noexcept;
+  void simplifyPoint(const SkPoint& point, unsigned flags);
 
   // RRects and rects care about winding for path effects and will set the path winding state
   // of the shape as well.

@@ -191,7 +191,7 @@ class ColorEmojiGM : public GM {
     }
   }
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

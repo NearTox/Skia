@@ -146,6 +146,7 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
   SkSL::SharedCompiler compiler;
   SkSL::Program::Settings settings;
   settings.fInlineThreshold = compiler.getInlineThreshold();
+  settings.fAllowNarrowingConversions = true;
   auto program = compiler->convertProgram(
       SkSL::Program::kPipelineStage_Kind, SkSL::String(sksl.c_str(), sksl.size()), settings);
 // TODO: Many errors aren't caught until we process the generated Program here. Catching those
@@ -153,9 +154,6 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
 #define RETURN_FAILURE(...) return std::make_tuple(nullptr, SkStringPrintf(__VA_ARGS__))
 
   if (!program) {
-    RETURN_FAILURE("%s", compiler->errorText().c_str());
-  }
-  if (!compiler->optimize(*program)) {
     RETURN_FAILURE("%s", compiler->errorText().c_str());
   }
 
@@ -181,18 +179,20 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
   // Go through program elements, pulling out information that we need
   for (const auto& elem : *program) {
     // Variables (uniform, varying, etc.)
-    if (elem.fKind == SkSL::ProgramElement::kVar_Kind) {
+    if (elem.kind() == SkSL::ProgramElement::Kind::kVar) {
       const auto& varDecls = static_cast<const SkSL::VarDeclarations&>(elem);
       for (const auto& varDecl : varDecls.fVars) {
         const SkSL::Variable& var = *(static_cast<const SkSL::VarDeclaration&>(*varDecl).fVar);
+        const SkSL::Type& varType = var.type();
 
         // Varyings (only used in conjunction with drawVertices)
         if (var.fModifiers.fFlags & SkSL::Modifiers::kVarying_Flag) {
           varyings.push_back(
-              {var.fName, var.fType.kind() == SkSL::Type::kVector_Kind ? var.fType.columns() : 1});
+              {var.fName,
+               varType.typeKind() == SkSL::Type::TypeKind::kVector ? varType.columns() : 1});
         }
         // Fragment Processors (aka 'shader'): These are child effects
-        else if (&var.fType == ctx.fFragmentProcessor_Type.get()) {
+        else if (&varType == ctx.fFragmentProcessor_Type.get()) {
           children.push_back(var.fName);
           sampleUsages.push_back(SkSL::Analysis::GetSampleUsage(*program, var));
         }
@@ -203,8 +203,8 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
           uni.fFlags = 0;
           uni.fCount = 1;
 
-          const SkSL::Type* type = &var.fType;
-          if (type->kind() == SkSL::Type::kArray_Kind) {
+          const SkSL::Type* type = &var.type();
+          if (type->typeKind() == SkSL::Type::TypeKind::kArray) {
             uni.fFlags |= Uniform::kArray_Flag;
             uni.fCount = type->columns();
             type = &type->componentType();
@@ -236,7 +236,7 @@ SkRuntimeEffect::EffectResult SkRuntimeEffect::Make(SkString sksl) {
       }
     }
     // Functions
-    else if (elem.fKind == SkSL::ProgramElement::kFunction_Kind) {
+    else if (elem.kind() == SkSL::ProgramElement::Kind::kFunction) {
       const auto& func = static_cast<const SkSL::FunctionDefinition&>(elem);
       const SkSL::FunctionDeclaration& decl = func.fDeclaration;
       if (decl.fName == "main") {
@@ -322,6 +322,7 @@ bool SkRuntimeEffect::toPipelineStage(
   SkSL::Program::Settings settings;
   settings.fCaps = shaderCaps;
   settings.fInlineThreshold = compiler.getInlineThreshold();
+  settings.fAllowNarrowingConversions = true;
 
   auto program = compiler->convertProgram(
       SkSL::Program::kPipelineStage_Kind, SkSL::String(fSkSL.c_str(), fSkSL.size()), settings);
@@ -362,16 +363,12 @@ static skvm::Color program_fn(
     return x;
   };
 
-  // main(inout half4 color) or main(float2 local, inout half4 color)
-  SkASSERT(fn.getParameterCount() == 4 || fn.getParameterCount() == 6);
-  if (fn.getParameterCount() == 6) {
+  // half4 main() or half4 main(float2 local)
+  SkASSERT(fn.getParameterCount() == 0 || fn.getParameterCount() == 2);
+  if (fn.getParameterCount() == 2) {
     push(local.x);
     push(local.y);
   }
-  push(inColor.r);
-  push(inColor.g);
-  push(inColor.b);
-  push(inColor.a);
 
   for (int i = 0; i < fn.getLocalCount(); i++) {
     push(p->splat(0.0f));
@@ -623,17 +620,18 @@ static skvm::Color program_fn(
       } break;
 
       case Inst::kReturn: {
-        SkAssertResult(u8() == 0);
-        SkASSERT(ip == end);
+        SkAssertResult(u8() == 4);
+        // We'd like to assert that (ip == end) -> there is only one return, but ByteCode
+        // always includes a kReturn/0 at the end of each function, as a precaution.
+        SkASSERT(stack.size() >= 4);
+        skvm::F32 a = pop(), b = pop(), g = pop(), r = pop();
+        return {r, g, b, a};
       } break;
     }
   }
-  for (int i = 0; i < fn.getLocalCount(); i++) {
-    pop();
-  }
-  SkASSERT(stack.size() == (size_t)fn.getParameterCount());
-  skvm::F32 a = pop(), b = pop(), g = pop(), r = pop();
-  return {r, g, b, a};
+
+  SkUNREACHABLE;
+  return {};
 }
 
 static sk_sp<SkData> get_xformed_uniforms(
@@ -860,7 +858,7 @@ class SkRTShader : public SkShaderBase {
         fUniforms(std::move(uniforms)),
         fChildren(children, children + childCount) {}
 
-  bool isOpaque() const noexcept override { return fIsOpaque; }
+  bool isOpaque() const override { return fIsOpaque; }
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs& args) const override {
@@ -976,7 +974,7 @@ class SkRTShader : public SkShaderBase {
     }
   }
 
-  SkRuntimeEffect* asRuntimeEffect() const noexcept override { return fEffect.get(); }
+  SkRuntimeEffect* asRuntimeEffect() const override { return fEffect.get(); }
 
   SK_FLATTENABLE_HOOKS(SkRTShader)
 
@@ -1074,6 +1072,13 @@ SkRuntimeShaderBuilder::SkRuntimeShaderBuilder(sk_sp<SkRuntimeEffect> effect)
       fChildren(fEffect->children().count()) {}
 
 SkRuntimeShaderBuilder::~SkRuntimeShaderBuilder() = default;
+
+void* SkRuntimeShaderBuilder::writableUniformData() {
+  if (!fUniforms->unique()) {
+    fUniforms = SkData::MakeWithCopy(fUniforms->data(), fUniforms->size());
+  }
+  return fUniforms->writable_data();
+}
 
 sk_sp<SkShader> SkRuntimeShaderBuilder::makeShader(const SkMatrix* localMatrix, bool isOpaque) {
   return fEffect->makeShader(fUniforms, fChildren.data(), fChildren.size(), localMatrix, isOpaque);

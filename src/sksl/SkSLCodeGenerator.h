@@ -20,11 +20,9 @@ namespace SkSL {
 class CodeGenerator {
  public:
   CodeGenerator(const Program* program, ErrorReporter* errors, OutputStream* out)
-      : fProgram(*program), fErrors(*errors), fOut(out) {
-    SkASSERT(program->fIsOptimized);
-  }
+      : fProgram(*program), fErrors(*errors), fOut(out) {}
 
-  virtual ~CodeGenerator() = default;
+  virtual ~CodeGenerator() {}
 
   virtual bool generateCode() = 0;
 

@@ -62,8 +62,7 @@ SkPath SkSVGCircle::onAsPath(const SkSVGRenderContext& ctx) const {
   SkScalar r;
   std::tie(pos, r) = this->resolve(ctx.lengthContext());
 
-  SkPath path;
-  path.addCircle(pos.x(), pos.y(), r);
+  SkPath path = SkPath::Circle(pos.x(), pos.y(), r);
   this->mapToParent(&path);
 
   return path;

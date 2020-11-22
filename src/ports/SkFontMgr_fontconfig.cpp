@@ -429,7 +429,7 @@ class SkTypeface_stream : public SkTypeface_FreeType {
   SkString fFamilyName;
   const std::unique_ptr<const SkFontData> fData;
 
-  typedef SkTypeface_FreeType INHERITED;
+  using INHERITED = SkTypeface_FreeType;
 };
 
 class SkTypeface_fontconfig : public SkTypeface_FreeType {
@@ -545,7 +545,7 @@ class SkTypeface_fontconfig : public SkTypeface_FreeType {
         fPattern(std::move(pattern)),
         fSysroot(std::move(sysroot)) {}
 
-  typedef SkTypeface_FreeType INHERITED;
+  using INHERITED = SkTypeface_FreeType;
 };
 
 class SkFontMgr_fontconfig : public SkFontMgr {

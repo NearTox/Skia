@@ -19,7 +19,7 @@
 SkDWriteGeometrySink::SkDWriteGeometrySink(SkPath* path)
     : fRefCount{1}, fPath{path}, fStarted{false}, fCurrent{0, 0} {}
 
-SkDWriteGeometrySink::~SkDWriteGeometrySink() = default;
+SkDWriteGeometrySink::~SkDWriteGeometrySink() {}
 
 SK_STDMETHODIMP SkDWriteGeometrySink::QueryInterface(REFIID iid, void** object) {
   if (nullptr == object) {

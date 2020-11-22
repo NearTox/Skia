@@ -13,7 +13,7 @@
 #include "src/gpu/mock/GrMockTexture.h"
 #include <atomic>
 
-int GrMockGpu::NextInternalTextureID() noexcept {
+int GrMockGpu::NextInternalTextureID() {
   static std::atomic<int> nextID{1};
   int id;
   do {
@@ -22,21 +22,21 @@ int GrMockGpu::NextInternalTextureID() noexcept {
   return id;
 }
 
-int GrMockGpu::NextExternalTextureID() noexcept {
+int GrMockGpu::NextExternalTextureID() {
   // We use negative ints for the "testing only external textures" so they can easily be
   // identified when debugging.
   static std::atomic<int> nextID{-1};
   return nextID--;
 }
 
-int GrMockGpu::NextInternalRenderTargetID() noexcept {
+int GrMockGpu::NextInternalRenderTargetID() {
   // We start off with large numbers to differentiate from texture IDs, even though they're
   // technically in a different space.
   static std::atomic<int> nextID{SK_MaxS32};
   return nextID--;
 }
 
-int GrMockGpu::NextExternalRenderTargetID() noexcept {
+int GrMockGpu::NextExternalRenderTargetID() {
   // We use large negative ints for the "testing only external render targets" so they can easily
   // be identified when debugging.
   static std::atomic<int> nextID{SK_MinS32};
@@ -57,7 +57,8 @@ GrOpsRenderPass* GrMockGpu::getOpsRenderPass(
     GrRenderTarget* rt, GrStencilAttachment*, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-    const SkTArray<GrSurfaceProxy*, true>& sampledProxies, bool usesXferBarriers) {
+    const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+    GrXferBarrierFlags renderPassXferBarriers) {
   return new GrMockOpsRenderPass(this, rt, origin, colorInfo);
 }
 
@@ -249,11 +250,11 @@ sk_sp<GrGpuBuffer> GrMockGpu::onCreateBuffer(
 }
 
 GrStencilAttachment* GrMockGpu::createStencilAttachmentForRenderTarget(
-    const GrRenderTarget* rt, int width, int height, int numStencilSamples) {
+    const GrRenderTarget* rt, SkISize dimensions, int numStencilSamples) {
   SkASSERT(numStencilSamples == rt->numSamples());
   static constexpr int kBits = 8;
   fStats.incStencilAttachmentCreates();
-  return new GrMockStencilAttachment(this, width, height, kBits, rt->numSamples());
+  return new GrMockStencilAttachment(this, dimensions, kBits, rt->numSamples());
 }
 
 GrBackendTexture GrMockGpu::onCreateBackendTexture(

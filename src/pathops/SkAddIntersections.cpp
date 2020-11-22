@@ -299,7 +299,7 @@ bool AddIntersectTs(SkOpContour* test, SkOpContour* next, SkOpCoincidence* coinc
         continue;
       }
       int pts = 0;
-      SkIntersections ts{SkDEBUGCODE(test->globalState())};
+      SkIntersections ts { SkDEBUGCODE(test->globalState()) };
       bool swap = false;
       SkDQuad quad1, quad2;
       SkDConic conic1, conic2;

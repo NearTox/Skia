@@ -37,7 +37,7 @@ class PaintNode : public Node {
   SG_ATTRIBUTE(StrokeCap, SkPaint::Cap, fStrokeCap)
 
  protected:
-  PaintNode() noexcept;
+  PaintNode();
 
   virtual void onApplyToPaint(SkPaint*) const = 0;
 
@@ -49,7 +49,7 @@ class PaintNode : public Node {
   SkPaint::Join fStrokeJoin = SkPaint::kMiter_Join;
   SkPaint::Cap fStrokeCap = SkPaint::kButt_Cap;
 
-  typedef Node INHERITED;
+  using INHERITED = Node;
 };
 
 /**

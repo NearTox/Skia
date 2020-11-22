@@ -12,7 +12,7 @@
 #include "include/core/SkFont.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPaint.h"
-#include "include/core/SkPath.h"
+#include "include/core/SkPathBuilder.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
@@ -86,9 +86,10 @@ DEF_SIMPLE_GM(blur2rects, canvas, 700, 500) {
 
   SkRect outer = SkRect::MakeXYWH(10.125f, 10.125f, 100.125f, 100);
   SkRect inner = SkRect::MakeXYWH(20.25f, 20.125f, 80, 80);
-  SkPath path;
-  path.addRect(outer, SkPathDirection::kCW);
-  path.addRect(inner, SkPathDirection::kCCW);
+  SkPath path = SkPathBuilder()
+                    .addRect(outer, SkPathDirection::kCW)
+                    .addRect(inner, SkPathDirection::kCCW)
+                    .detach();
 
   canvas->drawPath(path, paint);
   // important to translate by a factional amount to exercise a different "phase"
@@ -104,9 +105,10 @@ DEF_SIMPLE_GM(blur2rectsnonninepatch, canvas, 700, 500) {
 
   SkRect outer = SkRect::MakeXYWH(10, 110, 100, 100);
   SkRect inner = SkRect::MakeXYWH(50, 150, 10, 10);
-  SkPath path;
-  path.addRect(outer, SkPathDirection::kCW);
-  path.addRect(inner, SkPathDirection::kCW);
+  SkPath path = SkPathBuilder()
+                    .addRect(outer, SkPathDirection::kCW)
+                    .addRect(inner, SkPathDirection::kCW)
+                    .detach();
   canvas->drawPath(path, paint);
 
   SkScalar dx = SkScalarRoundToScalar(path.getBounds().width()) + 40 + 0.25f;

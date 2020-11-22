@@ -49,7 +49,7 @@ class SkFontPriv {
     return MakeTextMatrix(font.getSize(), font.getScaleX(), font.getSkewX());
   }
 
-  static void ScaleFontMetrics(SkFontMetrics*, SkScalar) noexcept;
+  static void ScaleFontMetrics(SkFontMetrics*, SkScalar);
 
   /**
       Returns the union of bounds of all glyphs.
@@ -64,20 +64,20 @@ class SkFontPriv {
    */
   static SkRect GetFontBounds(const SkFont&);
 
-  static bool IsFinite(const SkFont& font) noexcept {
+  static bool IsFinite(const SkFont& font) {
     return SkScalarIsFinite(font.getSize()) && SkScalarIsFinite(font.getScaleX()) &&
            SkScalarIsFinite(font.getSkewX());
   }
 
   // Returns the number of elements (characters or glyphs) in the array.
-  static int CountTextElements(const void* text, size_t byteLength, SkTextEncoding) noexcept;
+  static int CountTextElements(const void* text, size_t byteLength, SkTextEncoding);
 
   static void GlyphsToUnichars(const SkFont&, const uint16_t glyphs[], int count, SkUnichar[]);
 
   static void Flatten(const SkFont&, SkWriteBuffer& buffer);
   static bool Unflatten(SkFont*, SkReadBuffer& buffer);
 
-  static inline uint8_t Flags(const SkFont& font) noexcept { return font.fFlags; }
+  static inline uint8_t Flags(const SkFont& font) { return font.fFlags; }
 };
 
 class SkAutoToGlyphs {
@@ -97,8 +97,8 @@ class SkAutoToGlyphs {
     }
   }
 
-  int count() const noexcept { return fCount; }
-  const uint16_t* glyphs() const noexcept { return fGlyphs; }
+  int count() const { return fCount; }
+  const uint16_t* glyphs() const { return fGlyphs; }
 
  private:
   SkAutoSTArray<32, uint16_t> fStorage;

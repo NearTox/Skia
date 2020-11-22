@@ -37,21 +37,19 @@ enum SerializationVersions {
 
 enum SerializationType { kGeneral = 0, kRRect = 1 };
 
-static constexpr unsigned extract_version(uint32_t packed) noexcept {
-  return packed & kVersion_SerializationMask;
-}
+static unsigned extract_version(uint32_t packed) { return packed & kVersion_SerializationMask; }
 
-static constexpr SkPathFillType extract_filltype(uint32_t packed) noexcept {
+static SkPathFillType extract_filltype(uint32_t packed) {
   return static_cast<SkPathFillType>((packed >> kFillType_SerializationShift) & 0x3);
 }
 
-static constexpr SerializationType extract_serializationtype(uint32_t packed) noexcept {
+static SerializationType extract_serializationtype(uint32_t packed) {
   return static_cast<SerializationType>((packed >> kType_SerializationShift) & 0xF);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkPath::writeToMemoryAsRRect(void* storage) const noexcept {
+size_t SkPath::writeToMemoryAsRRect(void* storage) const {
   SkRect oval;
   SkRRect rrect;
   bool isCCW;
@@ -65,12 +63,12 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const noexcept {
   }
 
   // packed header, rrect, start index.
-  constexpr size_t sizeNeeded = sizeof(int32_t) + SkRRect::kSizeInMemory + sizeof(int32_t);
+  const size_t sizeNeeded = sizeof(int32_t) + SkRRect::kSizeInMemory + sizeof(int32_t);
   if (!storage) {
     return sizeNeeded;
   }
 
-  int firstDir = isCCW ? SkPathPriv::kCCW_FirstDirection : SkPathPriv::kCW_FirstDirection;
+  int firstDir = isCCW ? (int)SkPathFirstDirection::kCCW : (int)SkPathFirstDirection::kCW;
   int32_t packed = (fFillType << kFillType_SerializationShift) |
                    (firstDir << kDirection_SerializationShift) |
                    (SerializationType::kRRect << kType_SerializationShift) | kCurrent_Version;
@@ -84,8 +82,8 @@ size_t SkPath::writeToMemoryAsRRect(void* storage) const noexcept {
   return buffer.pos();
 }
 
-size_t SkPath::writeToMemory(void* storage) const noexcept {
-  SkDEBUGCODE(this->validate());
+size_t SkPath::writeToMemory(void* storage) const {
+  SkDEBUGCODE(this->validate();)
 
   if (size_t bytes = this->writeToMemoryAsRRect(storage)) {
     return bytes;
@@ -168,8 +166,8 @@ size_t SkPath::readAsRRect(const void* storage, size_t length) {
   SkRRect rrect;
   int32_t start;
   switch (dir) {
-    case SkPathPriv::kCW_FirstDirection: rrectDir = SkPathDirection::kCW; break;
-    case SkPathPriv::kCCW_FirstDirection: rrectDir = SkPathDirection::kCCW; break;
+    case (int)SkPathFirstDirection::kCW: rrectDir = SkPathDirection::kCW; break;
+    case (int)SkPathFirstDirection::kCCW: rrectDir = SkPathDirection::kCCW; break;
     default: return 0;
   }
   if (!SkRRectPriv::ReadFromBuffer(&buffer, &rrect)) {

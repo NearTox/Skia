@@ -116,7 +116,7 @@ class SampleLocationsTestProcessor : public GrGeometryProcessor {
 
   class Impl;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 class SampleLocationsTestProcessor::Impl : public GrGLSLGeometryProcessor {
@@ -227,25 +227,29 @@ class SampleLocationsTestOp : public GrDrawOp {
 
   GrProgramInfo* createProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) const {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) const {
     GrGeometryProcessor* geomProc = SampleLocationsTestProcessor::Make(arena, fGradType);
 
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kHWAntialias;
 
     return sk_gpu_test::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc,
-        SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip, flags, &gStencilWrite);
+        SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip, renderPassXferBarriers, flags,
+        &gStencilWrite);
   }
 
   GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) const {
     return this->createProgramInfo(
         &flushState->caps(), flushState->allocator(), flushState->writeView(),
-        flushState->detachAppliedClip(), flushState->dstProxyView());
+        flushState->detachAppliedClip(), flushState->dstProxyView(),
+        flushState->renderPassBarriers());
   }
 
   void onPrePrepare(
       GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) final {
+      const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) final {
     // We're going to create the GrProgramInfo (and the GrPipeline and geometry processor
     // it relies on) in the DDL-record-time arena.
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
@@ -254,7 +258,8 @@ class SampleLocationsTestOp : public GrDrawOp {
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip::Disabled();
 
     fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView,
+        renderPassXferBarriers);
 
     context->priv().recordProgramInfo(fProgramInfo);
   }
@@ -282,7 +287,7 @@ class SampleLocationsTestOp : public GrDrawOp {
 
   friend class ::GrOpMemoryPool;  // for ctor
 
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

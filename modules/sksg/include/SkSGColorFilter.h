@@ -37,7 +37,7 @@ class ColorFilter : public EffectNode {
  private:
   sk_sp<SkColorFilter> fColorFilter;
 
-  typedef EffectNode INHERITED;
+  using INHERITED = EffectNode;
 };
 
 /**
@@ -82,7 +82,7 @@ class ModeColorFilter final : public ColorFilter {
   const sk_sp<Color> fColor;
   const SkBlendMode fMode;
 
-  typedef ColorFilter INHERITED;
+  using INHERITED = ColorFilter;
 };
 
 /**

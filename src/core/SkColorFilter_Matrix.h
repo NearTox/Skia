@@ -16,7 +16,7 @@ class SkColorFilter_Matrix : public SkColorFilterBase {
 
   explicit SkColorFilter_Matrix(const float array[20], Domain);
 
-  uint32_t onGetFlags() const noexcept override;
+  uint32_t onGetFlags() const override;
 
 #if SK_SUPPORT_GPU
   GrFPResult asFragmentProcessor(
@@ -41,7 +41,7 @@ class SkColorFilter_Matrix : public SkColorFilterBase {
   uint16_t fFlags;
   Domain fDomain;
 
-  typedef SkColorFilterBase INHERITED;
+  using INHERITED = SkColorFilterBase;
 };
 
 #endif

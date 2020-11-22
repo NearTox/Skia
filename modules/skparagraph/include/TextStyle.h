@@ -18,15 +18,14 @@
 namespace skia {
 namespace textlayout {
 
-static inline bool nearlyZero(SkScalar x, SkScalar tolerance = SK_ScalarNearlyZero) noexcept {
+static inline bool nearlyZero(SkScalar x, SkScalar tolerance = SK_ScalarNearlyZero) {
   if (SkScalarIsFinite(x)) {
     return SkScalarNearlyZero(x, tolerance);
   }
   return false;
 }
 
-static inline bool nearlyEqual(
-    SkScalar x, SkScalar y, SkScalar tolerance = SK_ScalarNearlyZero) noexcept {
+static inline bool nearlyEqual(SkScalar x, SkScalar y, SkScalar tolerance = SK_ScalarNearlyZero) {
   if (SkScalarIsFinite(x) && SkScalarIsFinite(x)) {
     return SkScalarNearlyEqual(x, y, tolerance);
   }
@@ -72,7 +71,7 @@ struct Decoration {
   TextDecorationStyle fStyle;
   SkScalar fThicknessMultiplier;
 
-  bool operator==(const Decoration& other) const noexcept {
+  bool operator==(const Decoration& other) const {
     return this->fType == other.fType && this->fMode == other.fMode &&
            this->fColor == other.fColor && this->fStyle == other.fStyle &&
            this->fThicknessMultiplier == other.fThicknessMultiplier;
@@ -109,8 +108,8 @@ enum class PlaceholderAlignment {
 };
 
 struct FontFeature {
-  FontFeature(const SkString name, int value) noexcept : fName(name), fValue(value) {}
-  bool operator==(const FontFeature& that) const noexcept {
+  FontFeature(const SkString name, int value) : fName(name), fValue(value) {}
+  bool operator==(const FontFeature& that) const {
     return fName == that.fName && fValue == that.fValue;
   }
   SkString fName;
@@ -118,17 +117,17 @@ struct FontFeature {
 };
 
 struct PlaceholderStyle {
-  constexpr PlaceholderStyle() noexcept = default;
-  constexpr PlaceholderStyle(
+  PlaceholderStyle() = default;
+  PlaceholderStyle(
       SkScalar width, SkScalar height, PlaceholderAlignment alignment, TextBaseline baseline,
-      SkScalar offset) noexcept
+      SkScalar offset)
       : fWidth(width),
         fHeight(height),
         fAlignment(alignment),
         fBaseline(baseline),
         fBaselineOffset(offset) {}
 
-  bool equals(const PlaceholderStyle&) const noexcept;
+  bool equals(const PlaceholderStyle&) const;
 
   SkScalar fWidth = 0;
   SkScalar fHeight = 0;
@@ -147,103 +146,97 @@ struct PlaceholderStyle {
 
 class TextStyle {
  public:
-  TextStyle() noexcept = default;
+  TextStyle() = default;
   TextStyle(const TextStyle& other, bool placeholder);
 
-  bool equals(const TextStyle& other) const noexcept;
-  bool equalsByFonts(const TextStyle& that) const noexcept;
-  bool matchOneAttribute(StyleType styleType, const TextStyle& other) const noexcept;
-  bool operator==(const TextStyle& rhs) const noexcept { return this->equals(rhs); }
+  bool equals(const TextStyle& other) const;
+  bool equalsByFonts(const TextStyle& that) const;
+  bool matchOneAttribute(StyleType styleType, const TextStyle& other) const;
+  bool operator==(const TextStyle& rhs) const { return this->equals(rhs); }
 
   // Colors
-  SkColor getColor() const noexcept { return fColor; }
-  void setColor(SkColor color) noexcept { fColor = color; }
+  SkColor getColor() const { return fColor; }
+  void setColor(SkColor color) { fColor = color; }
 
-  bool hasForeground() const noexcept { return fHasForeground; }
-  SkPaint getForeground() const noexcept { return fForeground; }
-  void setForegroundColor(SkPaint paint) noexcept {
+  bool hasForeground() const { return fHasForeground; }
+  SkPaint getForeground() const { return fForeground; }
+  void setForegroundColor(SkPaint paint) {
     fHasForeground = true;
     fForeground = std::move(paint);
   }
-  void clearForegroundColor() noexcept { fHasForeground = false; }
+  void clearForegroundColor() { fHasForeground = false; }
 
-  bool hasBackground() const noexcept { return fHasBackground; }
-  SkPaint getBackground() const noexcept { return fBackground; }
-  void setBackgroundColor(SkPaint paint) noexcept {
+  bool hasBackground() const { return fHasBackground; }
+  SkPaint getBackground() const { return fBackground; }
+  void setBackgroundColor(SkPaint paint) {
     fHasBackground = true;
     fBackground = std::move(paint);
   }
-  void clearBackgroundColor() noexcept { fHasBackground = false; }
+  void clearBackgroundColor() { fHasBackground = false; }
 
   // Decorations
-  Decoration getDecoration() const noexcept { return fDecoration; }
-  TextDecoration getDecorationType() const noexcept { return fDecoration.fType; }
-  TextDecorationMode getDecorationMode() const noexcept { return fDecoration.fMode; }
-  SkColor getDecorationColor() const noexcept { return fDecoration.fColor; }
-  TextDecorationStyle getDecorationStyle() const noexcept { return fDecoration.fStyle; }
-  SkScalar getDecorationThicknessMultiplier() const noexcept {
-    return fDecoration.fThicknessMultiplier;
-  }
-  void setDecoration(TextDecoration decoration) noexcept { fDecoration.fType = decoration; }
-  void setDecorationMode(TextDecorationMode mode) noexcept { fDecoration.fMode = mode; }
-  void setDecorationStyle(TextDecorationStyle style) noexcept { fDecoration.fStyle = style; }
-  void setDecorationColor(SkColor color) noexcept { fDecoration.fColor = color; }
-  void setDecorationThicknessMultiplier(SkScalar m) noexcept {
-    fDecoration.fThicknessMultiplier = m;
-  }
+  Decoration getDecoration() const { return fDecoration; }
+  TextDecoration getDecorationType() const { return fDecoration.fType; }
+  TextDecorationMode getDecorationMode() const { return fDecoration.fMode; }
+  SkColor getDecorationColor() const { return fDecoration.fColor; }
+  TextDecorationStyle getDecorationStyle() const { return fDecoration.fStyle; }
+  SkScalar getDecorationThicknessMultiplier() const { return fDecoration.fThicknessMultiplier; }
+  void setDecoration(TextDecoration decoration) { fDecoration.fType = decoration; }
+  void setDecorationMode(TextDecorationMode mode) { fDecoration.fMode = mode; }
+  void setDecorationStyle(TextDecorationStyle style) { fDecoration.fStyle = style; }
+  void setDecorationColor(SkColor color) { fDecoration.fColor = color; }
+  void setDecorationThicknessMultiplier(SkScalar m) { fDecoration.fThicknessMultiplier = m; }
 
   // Weight/Width/Slant
-  SkFontStyle getFontStyle() const noexcept { return fFontStyle; }
-  void setFontStyle(SkFontStyle fontStyle) noexcept { fFontStyle = fontStyle; }
+  SkFontStyle getFontStyle() const { return fFontStyle; }
+  void setFontStyle(SkFontStyle fontStyle) { fFontStyle = fontStyle; }
 
   // Shadows
-  size_t getShadowNumber() const noexcept { return fTextShadows.size(); }
-  const std::vector<TextShadow>& getShadows() const noexcept { return fTextShadows; }
+  size_t getShadowNumber() const { return fTextShadows.size(); }
+  std::vector<TextShadow> getShadows() const { return fTextShadows; }
   void addShadow(TextShadow shadow) { fTextShadows.emplace_back(shadow); }
-  void resetShadows() noexcept { fTextShadows.clear(); }
+  void resetShadows() { fTextShadows.clear(); }
 
   // Font features
-  size_t getFontFeatureNumber() const noexcept { return fFontFeatures.size(); }
-  const std::vector<FontFeature>& getFontFeatures() const noexcept { return fFontFeatures; }
+  size_t getFontFeatureNumber() const { return fFontFeatures.size(); }
+  std::vector<FontFeature> getFontFeatures() const { return fFontFeatures; }
   void addFontFeature(const SkString& fontFeature, int value) {
     fFontFeatures.emplace_back(fontFeature, value);
   }
-  void resetFontFeatures() noexcept { fFontFeatures.clear(); }
+  void resetFontFeatures() { fFontFeatures.clear(); }
 
-  SkScalar getFontSize() const noexcept { return fFontSize; }
-  void setFontSize(SkScalar size) noexcept { fFontSize = size; }
+  SkScalar getFontSize() const { return fFontSize; }
+  void setFontSize(SkScalar size) { fFontSize = size; }
 
-  const std::vector<SkString>& getFontFamilies() const noexcept { return fFontFamilies; }
-  void setFontFamilies(std::vector<SkString> families) noexcept {
-    fFontFamilies = std::move(families);
-  }
+  const std::vector<SkString>& getFontFamilies() const { return fFontFamilies; }
+  void setFontFamilies(std::vector<SkString> families) { fFontFamilies = std::move(families); }
 
-  void setHeight(SkScalar height) noexcept { fHeight = height; }
-  SkScalar getHeight() const noexcept { return fHeightOverride ? fHeight : 0; }
+  void setHeight(SkScalar height) { fHeight = height; }
+  SkScalar getHeight() const { return fHeightOverride ? fHeight : 0; }
 
-  void setHeightOverride(bool heightOverride) noexcept { fHeightOverride = heightOverride; }
-  bool getHeightOverride() const noexcept { return fHeightOverride; }
+  void setHeightOverride(bool heightOverride) { fHeightOverride = heightOverride; }
+  bool getHeightOverride() const { return fHeightOverride; }
 
-  void setLetterSpacing(SkScalar letterSpacing) noexcept { fLetterSpacing = letterSpacing; }
-  SkScalar getLetterSpacing() const noexcept { return fLetterSpacing; }
+  void setLetterSpacing(SkScalar letterSpacing) { fLetterSpacing = letterSpacing; }
+  SkScalar getLetterSpacing() const { return fLetterSpacing; }
 
-  void setWordSpacing(SkScalar wordSpacing) noexcept { fWordSpacing = wordSpacing; }
-  SkScalar getWordSpacing() const noexcept { return fWordSpacing; }
+  void setWordSpacing(SkScalar wordSpacing) { fWordSpacing = wordSpacing; }
+  SkScalar getWordSpacing() const { return fWordSpacing; }
 
-  SkTypeface* getTypeface() const noexcept { return fTypeface.get(); }
-  sk_sp<SkTypeface> refTypeface() const noexcept { return fTypeface; }
-  void setTypeface(sk_sp<SkTypeface> typeface) noexcept { fTypeface = std::move(typeface); }
+  SkTypeface* getTypeface() const { return fTypeface.get(); }
+  sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
+  void setTypeface(sk_sp<SkTypeface> typeface) { fTypeface = std::move(typeface); }
 
-  SkString getLocale() const noexcept { return fLocale; }
-  void setLocale(const SkString& locale) noexcept { fLocale = locale; }
+  SkString getLocale() const { return fLocale; }
+  void setLocale(const SkString& locale) { fLocale = locale; }
 
-  TextBaseline getTextBaseline() const noexcept { return fTextBaseline; }
-  void setTextBaseline(TextBaseline baseline) noexcept { fTextBaseline = baseline; }
+  TextBaseline getTextBaseline() const { return fTextBaseline; }
+  void setTextBaseline(TextBaseline baseline) { fTextBaseline = baseline; }
 
   void getFontMetrics(SkFontMetrics* metrics) const;
 
-  bool isPlaceholder() const noexcept { return fIsPlaceholder; }
-  void setPlaceholder() noexcept { fIsPlaceholder = true; }
+  bool isPlaceholder() const { return fIsPlaceholder; }
+  void setPlaceholder() { fIsPlaceholder = true; }
 
  private:
   Decoration fDecoration = {
@@ -284,14 +277,14 @@ class TextStyle {
 
 typedef size_t TextIndex;
 typedef SkRange<size_t> TextRange;
-constexpr SkRange<size_t> EMPTY_TEXT = EMPTY_RANGE;
+const SkRange<size_t> EMPTY_TEXT = EMPTY_RANGE;
 
 struct Block {
   Block() = default;
   Block(size_t start, size_t end, const TextStyle& style) : fRange(start, end), fStyle(style) {}
   Block(TextRange textRange, const TextStyle& style) : fRange(textRange), fStyle(style) {}
 
-  void add(TextRange tail) noexcept {
+  void add(TextRange tail) {
     SkASSERT(fRange.end == tail.start);
     fRange = TextRange(fRange.start, fRange.start + fRange.width() + tail.width());
   }
@@ -302,8 +295,8 @@ struct Block {
 
 typedef size_t BlockIndex;
 typedef SkRange<size_t> BlockRange;
-constexpr size_t EMPTY_BLOCK = EMPTY_INDEX;
-constexpr SkRange<size_t> EMPTY_BLOCKS = EMPTY_RANGE;
+const size_t EMPTY_BLOCK = EMPTY_INDEX;
+const SkRange<size_t> EMPTY_BLOCKS = EMPTY_RANGE;
 
 struct Placeholder {
   Placeholder() = default;

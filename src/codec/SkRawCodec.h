@@ -54,7 +54,7 @@ class SkRawCodec : public SkCodec {
 
   std::unique_ptr<SkDngImage> fDngImage;
 
-  typedef SkCodec INHERITED;
+  using INHERITED = SkCodec;
 };
 
 #endif

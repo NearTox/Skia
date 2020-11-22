@@ -8,15 +8,15 @@
 #include "include/core/SkData.h"
 #include "src/core/SkAutoPixmapStorage.h"
 
-SkAutoPixmapStorage::SkAutoPixmapStorage() noexcept : fStorage(nullptr) {}
+SkAutoPixmapStorage::SkAutoPixmapStorage() : fStorage(nullptr) {}
 
 SkAutoPixmapStorage::~SkAutoPixmapStorage() { this->freeStorage(); }
 
-SkAutoPixmapStorage::SkAutoPixmapStorage(SkAutoPixmapStorage&& other) noexcept : fStorage(nullptr) {
+SkAutoPixmapStorage::SkAutoPixmapStorage(SkAutoPixmapStorage&& other) : fStorage(nullptr) {
   *this = std::move(other);
 }
 
-SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) noexcept {
+SkAutoPixmapStorage& SkAutoPixmapStorage::operator=(SkAutoPixmapStorage&& other) {
   this->fStorage = other.fStorage;
   this->INHERITED::reset(other.info(), this->fStorage, other.rowBytes());
 
@@ -53,7 +53,7 @@ bool SkAutoPixmapStorage::tryAlloc(const SkImageInfo& info) {
 
 void SkAutoPixmapStorage::alloc(const SkImageInfo& info) { SkASSERT_RELEASE(this->tryAlloc(info)); }
 
-void* SkAutoPixmapStorage::detachPixels() noexcept {
+void* SkAutoPixmapStorage::detachPixels() {
   if (!fStorage) {
     return nullptr;
   }

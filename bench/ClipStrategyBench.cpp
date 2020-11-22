@@ -67,7 +67,7 @@ class ClipStrategyBench : public Benchmark {
   SkString fName;
   SkPath fClipPath;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new ClipStrategyBench(ClipStrategyBench::Mode::kClipPath, 1);)

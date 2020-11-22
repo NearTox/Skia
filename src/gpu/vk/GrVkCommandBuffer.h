@@ -26,7 +26,7 @@ class GrVkTransferBuffer;
 
 class GrVkCommandBuffer {
  public:
-  virtual ~GrVkCommandBuffer() = default;
+  virtual ~GrVkCommandBuffer() {}
 
   void invalidateState();
 
@@ -264,7 +264,7 @@ class GrVkPrimaryCommandBuffer : public GrVkCommandBuffer {
   VkFence fSubmitFence;
   SkTArray<sk_sp<GrRefCntedCallback>> fFinishedProcs;
 
-  typedef GrVkCommandBuffer INHERITED;
+  using INHERITED = GrVkCommandBuffer;
 };
 
 class GrVkSecondaryCommandBuffer : public GrVkCommandBuffer {
@@ -290,7 +290,7 @@ class GrVkSecondaryCommandBuffer : public GrVkCommandBuffer {
   // Used for accessing fIsActive (on GrVkCommandBuffer)
   friend class GrVkPrimaryCommandBuffer;
 
-  typedef GrVkCommandBuffer INHERITED;
+  using INHERITED = GrVkCommandBuffer;
 };
 
 #endif

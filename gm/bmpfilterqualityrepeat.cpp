@@ -95,7 +95,7 @@ class BmpFilterQualityRepeat : public skiagm::GM {
 
   SkBitmap fBmp;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

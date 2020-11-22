@@ -32,7 +32,8 @@ class PictureNesting : public Benchmark {
     canvas->save();
     canvas->scale(SkIntToScalar(canvasSize.x()), SkIntToScalar(canvasSize.y()));
 
-    SkDEBUGCODE(int pics =) this->sierpinsky(canvas, 0, fPaint);
+    SkDEBUGCODE(int pics =)
+    this->sierpinsky(canvas, 0, fPaint);
     SkASSERT(pics == this->countPics());
 
     canvas->restore();
@@ -99,7 +100,7 @@ class PictureNesting : public Benchmark {
   SkString fName;
   SkPaint fPaint;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class PictureNestingRecording : public PictureNesting {
@@ -123,7 +124,7 @@ class PictureNestingRecording : public PictureNesting {
   }
 
  private:
-  typedef PictureNesting INHERITED;
+  using INHERITED = PictureNesting;
 };
 
 class PictureNestingPlayback : public PictureNesting {
@@ -153,7 +154,7 @@ class PictureNestingPlayback : public PictureNesting {
  private:
   sk_sp<SkPicture> fPicture;
 
-  typedef PictureNesting INHERITED;
+  using INHERITED = PictureNesting;
 };
 
 DEF_BENCH(return new PictureNestingRecording(8, 0);)

@@ -157,7 +157,7 @@ class ScaledTilingGM : public skiagm::GM {
 
  private:
   bool fPowerOfTwoSize;
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 constexpr int gWidth = 32;

@@ -59,7 +59,7 @@ class GLBigKeyProcessor : public GrGLSLFragmentProcessor {
   }
 
  private:
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 class BigKeyProcessor : public GrFragmentProcessor {
@@ -83,7 +83,7 @@ class BigKeyProcessor : public GrFragmentProcessor {
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(BigKeyProcessor);
@@ -119,7 +119,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
     }
 
    private:
-    typedef GrGLSLFragmentProcessor INHERITED;
+    using INHERITED = GrGLSLFragmentProcessor;
   };
 
   BlockInputFragmentProcessor(std::unique_ptr<GrFragmentProcessor> child)
@@ -131,7 +131,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
 
   bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -375,7 +375,7 @@ static int get_programs_max_levels(const sk_gpu_test::ContextInfo& ctxInfo) {
 #ifdef SK_BUILD_FOR_IOS
     maxTreeLevels = 2;
 #endif
-#ifdef SK_BUILD_FOR_ANDROID
+#if defined(SK_BUILD_FOR_ANDROID) && defined(SK_GL)
     GrGLGpu* gpu = static_cast<GrGLGpu*>(ctxInfo.directContext()->priv().getGpu());
     // Tecno Spark 3 Pro with Power VR Rogue GE8300 will fail shader compiles with
     // no message if the shader is particularly long.

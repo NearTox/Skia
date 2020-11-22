@@ -27,7 +27,7 @@ GrGLProgramDataManager::GrGLProgramDataManager(
         GrShaderVar::kNonArray == builderUniform.fVariable.getArrayCount() ||
         builderUniform.fVariable.getArrayCount() > 0);
     SkDEBUGCODE(uniform.fArrayCount = builderUniform.fVariable.getArrayCount();
-                uniform.fType = builderUniform.fVariable.getType());
+                uniform.fType = builderUniform.fVariable.getType();)
     uniform.fLocation = builderUniform.fLocation;
   }
 
@@ -41,7 +41,7 @@ GrGLProgramDataManager::GrGLProgramDataManager(
         GrShaderVar::kNonArray == builderPathProcVarying.fVariable.getArrayCount() ||
         builderPathProcVarying.fVariable.getArrayCount() > 0);
     SkDEBUGCODE(pathProcVarying.fArrayCount = builderPathProcVarying.fVariable.getArrayCount();
-                pathProcVarying.fType = builderPathProcVarying.fVariable.getType());
+                pathProcVarying.fType = builderPathProcVarying.fVariable.getType();)
     pathProcVarying.fLocation = builderPathProcVarying.fLocation;
   }
 }

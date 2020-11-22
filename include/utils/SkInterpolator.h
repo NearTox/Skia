@@ -107,7 +107,7 @@ class SK_API SkInterpolator : public SkInterpolatorBase {
 #ifdef SK_DEBUG
   SkScalar (*fScalarsArray)[10];
 #endif
-  typedef SkInterpolatorBase INHERITED;
+  using INHERITED = SkInterpolatorBase;
 };
 
 /** Interpolate a cubic curve, typically to provide an ease-in ease-out transition.

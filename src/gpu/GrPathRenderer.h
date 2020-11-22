@@ -31,9 +31,9 @@ class SkPath;
  */
 class GrPathRenderer : public SkRefCnt {
  public:
-  GrPathRenderer() noexcept;
+  GrPathRenderer();
 
-  virtual const char* name() const noexcept = 0;
+  virtual const char* name() const = 0;
 
   /**
    * A caller may wish to use a path renderer to draw a path into the stencil buffer. However,
@@ -77,7 +77,7 @@ class GrPathRenderer : public SkRefCnt {
   struct CanDrawPathArgs {
     SkDEBUGCODE(CanDrawPathArgs() { memset(this, 0, sizeof(*this)); })  // For validation.
 
-        const GrCaps* fCaps;
+    const GrCaps* fCaps;
     const GrRenderTargetProxy* fProxy;
     const SkIRect* fClipConservativeBounds;
     const SkMatrix* fViewMatrix;
@@ -106,7 +106,7 @@ class GrPathRenderer : public SkRefCnt {
    * called when searching for the best path renderer to draw a path.
    */
   CanDrawPath canDrawPath(const CanDrawPathArgs& args) const {
-    SkDEBUGCODE(args.validate());
+    SkDEBUGCODE(args.validate();)
     return this->onCanDrawPath(args);
   }
 
@@ -144,7 +144,7 @@ class GrPathRenderer : public SkRefCnt {
   struct StencilPathArgs {
     SkDEBUGCODE(StencilPathArgs() { memset(this, 0, sizeof(*this)); })  // For validation.
 
-        GrRecordingContext* fContext;
+    GrRecordingContext* fContext;
     GrRenderTargetContext* fRenderTargetContext;
     const GrHardClip* fClip;
     const SkIRect* fClipConservativeBounds;
@@ -160,7 +160,7 @@ class GrPathRenderer : public SkRefCnt {
    * initialized to zero. The pixels inside the path will have non-zero stencil values afterwards.
    */
   void stencilPath(const StencilPathArgs& args) {
-    SkDEBUGCODE(args.validate());
+    SkDEBUGCODE(args.validate();)
     SkASSERT(kNoSupport_StencilSupport != this->getStencilSupport(*args.fShape));
     this->onStencilPath(args);
   }
@@ -199,7 +199,7 @@ class GrPathRenderer : public SkRefCnt {
    */
   virtual void onStencilPath(const StencilPathArgs&);
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

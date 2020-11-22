@@ -142,7 +142,7 @@ class SkDngHost : public dng_host {
   }
 
  private:
-  typedef dng_host INHERITED;
+  using INHERITED = dng_host;
 };
 
 // T must be unsigned type.
@@ -166,7 +166,7 @@ bool is_asset_stream(const SkStream& stream) { return stream.hasLength() && stre
 
 class SkRawStream {
  public:
-  virtual ~SkRawStream() = default;
+  virtual ~SkRawStream() {}
 
   /*
    * Gets the length of the stream. Depending on the type of stream, this may require reading to
@@ -202,7 +202,7 @@ class SkRawLimitedDynamicMemoryWStream : public SkDynamicMemoryWStream {
   // streaming too large data chunk. We can always adjust the limit here if we need.
   const size_t kMaxStreamSize = 100 * 1024 * 1024;  // 100MB
 
-  typedef SkDynamicMemoryWStream INHERITED;
+  using INHERITED = SkDynamicMemoryWStream;
 };
 
 // Note: the maximum buffer size is 100MB (limited by SkRawLimitedDynamicMemoryWStream).
@@ -421,7 +421,7 @@ class SkDngImage {
    */
   static SkDngImage* NewFromStream(SkRawStream* stream) {
     std::unique_ptr<SkDngImage> dngImage(new SkDngImage(stream));
-#if defined(IS_FUZZING_WITH_LIBFUZZER)
+#if defined(SK_BUILD_FOR_LIBFUZZER)
     // Libfuzzer easily runs out of memory after here. To avoid that
     // We just pretend all streams are invalid. Our AFL-fuzzer
     // should still exercise this code; it's more resistant to OOM.
@@ -762,7 +762,7 @@ bool SkRawCodec::onDimensionsSupported(const SkISize& dim) {
   return sizeFloor == dim || sizeCeil == dim;
 }
 
-SkRawCodec::~SkRawCodec() = default;
+SkRawCodec::~SkRawCodec() {}
 
 SkRawCodec::SkRawCodec(SkDngImage* dngImage)
     : INHERITED(

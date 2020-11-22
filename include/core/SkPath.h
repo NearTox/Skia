@@ -67,12 +67,17 @@ class SK_API SkPath {
       const SkPoint[], int pointCount, const uint8_t[], int verbCount, const SkScalar[],
       int conicWeightCount, SkPathFillType, bool isVolatile = false);
 
-  static SkPath Rect(const SkRect&, SkPathDirection dir = SkPathDirection::kCW);
-  static SkPath Oval(const SkRect&, SkPathDirection dir = SkPathDirection::kCW);
+  static SkPath Rect(
+      const SkRect&, SkPathDirection = SkPathDirection::kCW, unsigned startIndex = 0);
+  static SkPath Oval(const SkRect&, SkPathDirection = SkPathDirection::kCW);
+  static SkPath Oval(const SkRect&, SkPathDirection, unsigned startIndex);
   static SkPath Circle(
       SkScalar center_x, SkScalar center_y, SkScalar radius,
       SkPathDirection dir = SkPathDirection::kCW);
   static SkPath RRect(const SkRRect&, SkPathDirection dir = SkPathDirection::kCW);
+  static SkPath RRect(const SkRRect&, SkPathDirection, unsigned startIndex);
+  static SkPath RRect(
+      const SkRect& bounds, SkScalar rx, SkScalar ry, SkPathDirection dir = SkPathDirection::kCW);
 
   static SkPath Polygon(
       const SkPoint pts[], int count, bool isClosed, SkPathFillType = SkPathFillType::kWinding,
@@ -93,7 +98,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_empty_constructor
   */
-  SkPath() noexcept;
+  SkPath();
 
   /** Constructs a copy of an existing path.
       Copy constructor makes two paths identical by value. Internally, path and
@@ -109,8 +114,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_copy_const_SkPath
   */
-  SkPath(const SkPath& path) noexcept;
-  SkPath(SkPath&& path) noexcept;
+  SkPath(const SkPath& path);
 
   /** Releases ownership of any shared data and deletes data if SkPath is sole owner.
 
@@ -132,8 +136,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_copy_operator
   */
-  SkPath& operator=(const SkPath& path) noexcept;
-  SkPath& operator=(SkPath&& path) noexcept;
+  SkPath& operator=(const SkPath& path);
 
   /** Compares a and b; returns true if SkPath::FillType, verb array, SkPoint array, and weights
       are equivalent.
@@ -142,7 +145,7 @@ class SK_API SkPath {
       @param b  SkPath to compare
       @return   true if SkPath pair are equivalent
   */
-  friend SK_API bool operator==(const SkPath& a, const SkPath& b) noexcept;
+  friend SK_API bool operator==(const SkPath& a, const SkPath& b);
 
   /** Compares a and b; returns true if SkPath::FillType, verb array, SkPoint array, and weights
       are not equivalent.
@@ -151,7 +154,7 @@ class SK_API SkPath {
       @param b  SkPath to compare
       @return   true if SkPath pair are not equivalent
   */
-  friend bool operator!=(const SkPath& a, const SkPath& b) noexcept { return !(a == b); }
+  friend bool operator!=(const SkPath& a, const SkPath& b) { return !(a == b); }
 
   /** Returns true if SkPath contain equal verbs and equal weights.
       If SkPath contain one or more conics, the weights must match.
@@ -165,7 +168,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isInterpolatable
   */
-  bool isInterpolatable(const SkPath& compare) const noexcept;
+  bool isInterpolatable(const SkPath& compare) const;
 
   /** Interpolates between SkPath with SkPoint array of equal size.
       Copy verb array and weights to out, and set out SkPoint array to a weighted
@@ -194,59 +197,28 @@ class SK_API SkPath {
 
       @return  current SkPathFillType setting
   */
-  SkPathFillType getFillType() const noexcept { return (SkPathFillType)fFillType; }
+  SkPathFillType getFillType() const { return (SkPathFillType)fFillType; }
 
   /** Sets FillType, the rule used to fill SkPath. While there is no check
       that ft is legal, values outside of FillType are not supported.
   */
-  void setFillType(SkPathFillType ft) noexcept { fFillType = SkToU8(ft); }
+  void setFillType(SkPathFillType ft) { fFillType = SkToU8(ft); }
 
   /** Returns if FillType describes area outside SkPath geometry. The inverse fill area
       extends indefinitely.
 
       @return  true if FillType is kInverseWinding or kInverseEvenOdd
   */
-  bool isInverseFillType() const noexcept { return SkPathFillType_IsInverse(this->getFillType()); }
+  bool isInverseFillType() const { return SkPathFillType_IsInverse(this->getFillType()); }
 
   /** Replaces FillType with its inverse. The inverse of FillType describes the area
       unmodified by the original FillType.
   */
-  void toggleInverseFillType() noexcept { fFillType ^= 2; }
-
-  /** Returns the comvexity type, computing if needed. Never returns kUnknown.
-      @return  path's convexity type (convex or concave)
-  */
-  SkPathConvexityType getConvexityType() const noexcept {
-    SkPathConvexityType convexity = this->getConvexityTypeOrUnknown();
-    if (convexity != SkPathConvexityType::kUnknown) {
-      return convexity;
-    }
-    return this->internalGetConvexity();
-  }
-
-  /** If the path's convexity is already known, return it, else return kUnknown.
-   *  If you always want to know the convexity, even if that means having to compute it,
-   *  call getConvexitytype().
-   *
-   *  @return  known convexity, or kUnknown
-   */
-  SkPathConvexityType getConvexityTypeOrUnknown() const noexcept {
-    return (SkPathConvexityType)fConvexity.load(std::memory_order_relaxed);
-  }
-
-  /** Stores a convexity type for this path. This is what will be returned if
-   *  getConvexityTypeOrUnknown() is called. If you pass kUnknown, then if getContexityType()
-   *  is called, the real convexity will be computed.
-   *
-   *  example: https://fiddle.skia.org/c/@Path_setConvexity
-   */
-  void setConvexityType(SkPathConvexityType convexity) noexcept;
+  void toggleInverseFillType() { fFillType ^= 2; }
 
   /** Returns true if the path is convex. If necessary, it will first compute the convexity.
    */
-  bool isConvex() const noexcept {
-    return SkPathConvexityType::kConvex == this->getConvexityType();
-  }
+  bool isConvex() const { return SkPathConvexity::kConvex == this->getConvexity(); }
 
   /** Returns true if this path is recognized as an oval or circle.
 
@@ -259,7 +231,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isOval
   */
-  bool isOval(SkRect* bounds) const noexcept;
+  bool isOval(SkRect* bounds) const;
 
   /** Returns true if path is representable as SkRRect.
       Returns false if path is representable as oval, circle, or SkRect.
@@ -273,7 +245,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isRRect
   */
-  bool isRRect(SkRRect* rrect) const noexcept;
+  bool isRRect(SkRRect* rrect) const;
 
   /** Sets SkPath to its initial state.
       Removes verb array, SkPoint array, and weights, and sets FillType to kWinding.
@@ -283,7 +255,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_reset
   */
-  SkPath& reset() noexcept;
+  SkPath& reset();
 
   /** Sets SkPath to its initial state, preserving internal storage.
       Removes verb array, SkPoint array, and weights, and sets FillType to kWinding.
@@ -304,8 +276,8 @@ class SK_API SkPath {
 
       @return  true if the path contains no SkPath::Verb array
   */
-  bool isEmpty() const noexcept {
-    SkDEBUGCODE(this->validate());
+  bool isEmpty() const {
+    SkDEBUGCODE(this->validate();)
     return 0 == fPathRef->countVerbs();
   }
 
@@ -317,7 +289,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isLastContourClosed
   */
-  bool isLastContourClosed() const noexcept;
+  bool isLastContourClosed() const;
 
   /** Returns true for finite SkPoint array values between negative SK_ScalarMax and
       positive SK_ScalarMax. Returns false for any SkPoint array value of
@@ -325,8 +297,8 @@ class SK_API SkPath {
 
       @return  true if all SkPoint values are finite
   */
-  bool isFinite() const noexcept {
-    SkDEBUGCODE(this->validate());
+  bool isFinite() const {
+    SkDEBUGCODE(this->validate();)
     return fPathRef->isFinite();
   }
 
@@ -337,7 +309,7 @@ class SK_API SkPath {
 
       @return  true if caller will alter SkPath after drawing
   */
-  bool isVolatile() const noexcept { return SkToBool(fIsVolatile); }
+  bool isVolatile() const { return SkToBool(fIsVolatile); }
 
   /** Specifies whether SkPath is volatile; whether it will be altered or discarded
       by the caller after it is drawn. SkPath by default have volatile set false, allowing
@@ -353,8 +325,12 @@ class SK_API SkPath {
       GPU surface SkPath draws are affected by volatile for some shadows and concave geometries.
 
       @param isVolatile  true if caller will alter SkPath after drawing
+      @return            reference to SkPath
   */
-  void setIsVolatile(bool isVolatile) noexcept { fIsVolatile = isVolatile; }
+  SkPath& setIsVolatile(bool isVolatile) {
+    fIsVolatile = isVolatile;
+    return *this;
+  }
 
   /** Tests if line between SkPoint pair is degenerate.
       Line with no length or that moves a very short distance is degenerate; it is
@@ -370,7 +346,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_IsLineDegenerate
   */
-  static bool IsLineDegenerate(const SkPoint& p1, const SkPoint& p2, bool exact) noexcept;
+  static bool IsLineDegenerate(const SkPoint& p1, const SkPoint& p2, bool exact);
 
   /** Tests if quad is degenerate.
       Quad with no length or that moves a very short distance is degenerate; it is
@@ -383,8 +359,7 @@ class SK_API SkPath {
                     if false, returns true if p1, p2, and p3 are equal or nearly equal
       @return       true if quad is degenerate; its length is effectively zero
   */
-  static bool IsQuadDegenerate(
-      const SkPoint& p1, const SkPoint& p2, const SkPoint& p3, bool exact) noexcept;
+  static bool IsQuadDegenerate(const SkPoint& p1, const SkPoint& p2, const SkPoint& p3, bool exact);
 
   /** Tests if cubic is degenerate.
       Cubic with no length or that moves a very short distance is degenerate; it is
@@ -399,8 +374,7 @@ class SK_API SkPath {
       @return       true if cubic is degenerate; its length is effectively zero
   */
   static bool IsCubicDegenerate(
-      const SkPoint& p1, const SkPoint& p2, const SkPoint& p3, const SkPoint& p4,
-      bool exact) noexcept;
+      const SkPoint& p1, const SkPoint& p2, const SkPoint& p3, const SkPoint& p4, bool exact);
 
   /** Returns true if SkPath contains only one line;
       SkPath::Verb array has two entries: kMove_Verb, kLine_Verb.
@@ -413,7 +387,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isLine
   */
-  bool isLine(SkPoint line[2]) const noexcept;
+  bool isLine(SkPoint line[2]) const;
 
   /** Returns the number of points in SkPath.
       SkPoint count is initially zero.
@@ -422,7 +396,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_countPoints
   */
-  int countPoints() const noexcept;
+  int countPoints() const;
 
   /** Returns SkPoint at index in SkPoint array. Valid range for index is
       0 to countPoints() - 1.
@@ -433,7 +407,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_getPoint
   */
-  SkPoint getPoint(int index) const noexcept;
+  SkPoint getPoint(int index) const;
 
   /** Returns number of points in SkPath. Up to max points are copied.
       points may be nullptr; then, max must be zero.
@@ -445,7 +419,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_getPoints
   */
-  int getPoints(SkPoint points[], int max) const noexcept;
+  int getPoints(SkPoint points[], int max) const;
 
   /** Returns the number of verbs: kMove_Verb, kLine_Verb, kQuad_Verb, kConic_Verb,
       kCubic_Verb, and kClose_Verb; added to SkPath.
@@ -454,7 +428,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_countVerbs
   */
-  int countVerbs() const noexcept;
+  int countVerbs() const;
 
   /** Returns the number of verbs in the path. Up to max verbs are copied. The
       verbs are copied as one byte per verb.
@@ -465,13 +439,13 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_getVerbs
   */
-  int getVerbs(uint8_t verbs[], int max) const noexcept;
+  int getVerbs(uint8_t verbs[], int max) const;
 
   /** Returns the approximate byte size of the SkPath in memory.
 
       @return  approximate size
   */
-  size_t approximateBytesUsed() const noexcept;
+  size_t approximateBytesUsed() const;
 
   /** Exchanges the verb array, SkPoint array, weights, and SkPath::FillType with other.
       Cached state is also exchanged. swap() internally exchanges pointers, so
@@ -485,7 +459,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_swap
   */
-  void swap(SkPath& other) noexcept;
+  void swap(SkPath& other);
 
   /** Returns minimum and maximum axes values of SkPoint array.
       Returns (0, 0, 0, 0) if SkPath contains no points. Returned bounds width and height may
@@ -496,7 +470,7 @@ class SK_API SkPath {
 
       @return  bounds of all SkPoint in SkPoint array
   */
-  const SkRect& getBounds() const noexcept { return fPathRef->getBounds(); }
+  const SkRect& getBounds() const { return fPathRef->getBounds(); }
 
   /** Updates internal bounds so that subsequent calls to getBounds() are instantaneous.
       Unaltered copies of SkPath may also access cached bounds through getBounds().
@@ -506,7 +480,7 @@ class SK_API SkPath {
       Call to prepare SkPath subsequently drawn from multiple threads,
       to avoid a race condition where each draw separately computes the bounds.
   */
-  void updateBoundsCache() const noexcept {
+  void updateBoundsCache() const {
     // for now, just calling getBounds() is sufficient
     this->getBounds();
   }
@@ -543,7 +517,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_conservativelyContainsRect
   */
-  bool conservativelyContainsRect(const SkRect& rect) const noexcept;
+  bool conservativelyContainsRect(const SkRect& rect) const;
 
   /** Grows SkPath verb array and SkPoint array to contain extraPtCount additional SkPoint.
       May improve performance and use less memory by
@@ -558,7 +532,7 @@ class SK_API SkPath {
   /** Shrinks SkPath verb array and SkPoint array storage to discard unused capacity.
       May reduce the heap overhead for SkPath known to be fully constructed.
   */
-  void shrinkToFit() noexcept;
+  void shrinkToFit();
 
 #ifdef SK_HIDE_PATH_EDIT_METHODS
  private:
@@ -1038,8 +1012,7 @@ class SK_API SkPath {
       @return      number of quad curves written to pts
   */
   static int ConvertConicToQuads(
-      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[],
-      int pow2) noexcept;
+      const SkPoint& p0, const SkPoint& p1, const SkPoint& p2, SkScalar w, SkPoint pts[], int pow2);
 
   /** Returns true if SkPath is equivalent to SkRect when filled.
       If false: rect, isClosed, and direction are unchanged.
@@ -1055,8 +1028,11 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_isRect
   */
-  bool isRect(
-      SkRect* rect, bool* isClosed = nullptr, SkPathDirection* direction = nullptr) const noexcept;
+  bool isRect(SkRect* rect, bool* isClosed = nullptr, SkPathDirection* direction = nullptr) const;
+
+#ifdef SK_HIDE_PATH_EDIT_METHODS
+ private:
+#endif
 
   /** Adds SkRect to SkPath, appending kMove_Verb, three kLine_Verb, and kClose_Verb,
       starting with top-left corner of SkRect; followed by top-right, bottom-right,
@@ -1254,6 +1230,10 @@ class SK_API SkPath {
     return this->addPoly(list.begin(), SkToInt(list.size()), close);
   }
 
+#ifdef SK_HIDE_PATH_EDIT_METHODS
+ public:
+#endif
+
   /** \enum SkPath::AddPathMode
       AddPathMode chooses how addPath() appends. Adding one SkPath to another can extend
       the last contour or start a new contour.
@@ -1382,7 +1362,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_getLastPt
   */
-  bool getLastPt(SkPoint* lastPt) const noexcept;
+  bool getLastPt(SkPoint* lastPt) const;
 
   /** Sets last point to (x, y). If SkPoint array is empty, append kMove_Verb to
       verb array and append (x, y) to SkPoint array.
@@ -1420,7 +1400,7 @@ class SK_API SkPath {
 
       @return  SegmentMask bits or zero
   */
-  uint32_t getSegmentMasks() const noexcept { return fPathRef->getSegmentMasks(); }
+  uint32_t getSegmentMasks() const { return fPathRef->getSegmentMasks(); }
 
   /** \enum SkPath::Verb
       Verb instructs SkPath how to interpret one or more SkPoint and optional conic weight;
@@ -1451,7 +1431,7 @@ class SK_API SkPath {
 
     example: https://fiddle.skia.org/c/@Path_Iter_Iter
     */
-    Iter() noexcept;
+    Iter();
 
     /** Sets SkPath::Iter to return elements of verb array, SkPoint array, and conic weight in
         path. If forceClose is true, SkPath::Iter will add kLine_Verb and kClose_Verb after each
@@ -1463,7 +1443,7 @@ class SK_API SkPath {
 
     example: https://fiddle.skia.org/c/@Path_Iter_const_SkPath
     */
-    Iter(const SkPath& path, bool forceClose) noexcept;
+    Iter(const SkPath& path, bool forceClose);
 
     /** Sets SkPath::Iter to return elements of verb array, SkPoint array, and conic weight in
         path. If forceClose is true, SkPath::Iter will add kLine_Verb and kClose_Verb after each
@@ -1474,7 +1454,7 @@ class SK_API SkPath {
 
     example: https://fiddle.skia.org/c/@Path_Iter_setPath
     */
-    void setPath(const SkPath& path, bool forceClose) noexcept;
+    void setPath(const SkPath& path, bool forceClose);
 
     /** Returns next SkPath::Verb in verb array, and advances SkPath::Iter.
         When verb array is exhausted, returns kDone_Verb.
@@ -1486,7 +1466,7 @@ class SK_API SkPath {
 
     example: https://fiddle.skia.org/c/@Path_RawIter_next
     */
-    Verb next(SkPoint pts[4]) noexcept;
+    Verb next(SkPoint pts[4]);
 
     /** Returns conic weight if next() returned kConic_Verb.
 
@@ -1495,7 +1475,7 @@ class SK_API SkPath {
 
         @return  conic weight for conic SkPoint returned by next()
     */
-    SkScalar conicWeight() const noexcept { return *fConicWeights; }
+    SkScalar conicWeight() const { return *fConicWeights; }
 
     /** Returns true if last kLine_Verb returned by next() was generated
         by kClose_Verb. When true, the end point returned by next() is
@@ -1506,7 +1486,7 @@ class SK_API SkPath {
 
         @return  true if last kLine_Verb was generated by kClose_Verb
     */
-    bool isCloseLine() const noexcept { return SkToBool(fCloseLine); }
+    bool isCloseLine() const { return SkToBool(fCloseLine); }
 
     /** Returns true if subsequent calls to next() return kClose_Verb before returning
         kMove_Verb. if true, contour SkPath::Iter is processing may end with kClose_Verb, or
@@ -1516,7 +1496,7 @@ class SK_API SkPath {
 
     example: https://fiddle.skia.org/c/@Path_Iter_isClosedContour
     */
-    bool isClosedContour() const noexcept;
+    bool isClosedContour() const;
 
    private:
     const SkPoint* fPts;
@@ -1538,11 +1518,11 @@ class SK_API SkPath {
     };
     SegmentState fSegmentState;
 
-    inline const SkPoint& cons_moveTo() noexcept;
-    Verb autoClose(SkPoint pts[2]) noexcept;
+    inline const SkPoint& cons_moveTo();
+    Verb autoClose(SkPoint pts[2]);
   };
 
-  SkPathView view() const noexcept;
+  SkPathView view() const;
 
  private:
   /** \class SkPath::RangeIter
@@ -1553,14 +1533,14 @@ class SK_API SkPath {
   */
   class RangeIter {
    public:
-    RangeIter() noexcept = default;
-    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights) noexcept
+    RangeIter() = default;
+    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights)
         : fVerb(verbs), fPoints(points), fWeights(weights) {
-      SkDEBUGCODE(fInitialPoints = fPoints);
+      SkDEBUGCODE(fInitialPoints = fPoints;)
     }
-    bool operator!=(const RangeIter& that) const noexcept { return fVerb != that.fVerb; }
-    bool operator==(const RangeIter& that) const noexcept { return fVerb == that.fVerb; }
-    RangeIter& operator++() noexcept {
+    bool operator!=(const RangeIter& that) const { return fVerb != that.fVerb; }
+    bool operator==(const RangeIter& that) const { return fVerb == that.fVerb; }
+    RangeIter& operator++() {
       auto verb = static_cast<SkPathVerb>(*fVerb++);
       fPoints += pts_advance_after_verb(verb);
       if (verb == SkPathVerb::kConic) {
@@ -1568,13 +1548,13 @@ class SK_API SkPath {
       }
       return *this;
     }
-    RangeIter operator++(int) noexcept {
+    RangeIter operator++(int) {
       RangeIter copy = *this;
       this->operator++();
       return copy;
     }
-    SkPathVerb peekVerb() const noexcept { return static_cast<SkPathVerb>(*fVerb); }
-    std::tuple<SkPathVerb, const SkPoint*, const SkScalar*> operator*() const noexcept {
+    SkPathVerb peekVerb() const { return static_cast<SkPathVerb>(*fVerb); }
+    std::tuple<SkPathVerb, const SkPoint*, const SkScalar*> operator*() const {
       SkPathVerb verb = this->peekVerb();
       // We provide the starting point for beziers by peeking backwards from the current
       // point, which works fine as long as there is always a kMove before any geometry.
@@ -1585,7 +1565,7 @@ class SK_API SkPath {
     }
 
    private:
-    constexpr static int pts_advance_after_verb(SkPathVerb verb) noexcept {
+    constexpr static int pts_advance_after_verb(SkPathVerb verb) {
       switch (verb) {
         case SkPathVerb::kMove: return 1;
         case SkPathVerb::kLine: return 1;
@@ -1596,7 +1576,7 @@ class SK_API SkPath {
       }
       SkUNREACHABLE;
     }
-    constexpr static int pts_backset_for_verb(SkPathVerb verb) noexcept {
+    constexpr static int pts_backset_for_verb(SkPathVerb verb) {
       switch (verb) {
         case SkPathVerb::kMove: return 0;
         case SkPathVerb::kLine: return -1;
@@ -1610,7 +1590,7 @@ class SK_API SkPath {
     const uint8_t* fVerb = nullptr;
     const SkPoint* fPoints = nullptr;
     const SkScalar* fWeights = nullptr;
-    SkDEBUGCODE(const SkPoint* fInitialPoints = nullptr);
+    SkDEBUGCODE(const SkPoint* fInitialPoints = nullptr;)
   };
 
  public:
@@ -1624,21 +1604,21 @@ class SK_API SkPath {
 
         @return  RawIter of empty SkPath
     */
-    RawIter() noexcept = default;
+    RawIter() {}
 
     /** Sets RawIter to return elements of verb array, SkPoint array, and conic weight in path.
 
         @param path  SkPath to iterate
         @return      RawIter of path
     */
-    RawIter(const SkPath& path) noexcept { setPath(path); }
+    RawIter(const SkPath& path) { setPath(path); }
 
     /** Sets SkPath::Iter to return elements of verb array, SkPoint array, and conic weight in
         path.
 
         @param path  SkPath to iterate
     */
-    void setPath(const SkPath&) noexcept;
+    void setPath(const SkPath&);
 
     /** Returns next SkPath::Verb in verb array, and advances RawIter.
         When verb array is exhausted, returns kDone_Verb.
@@ -1653,7 +1633,7 @@ class SK_API SkPath {
 
         @return  next SkPath::Verb from verb array
     */
-    Verb peek() const noexcept {
+    Verb peek() const {
       return (fIter != fEnd) ? static_cast<Verb>(std::get<0>(*fIter)) : kDone_Verb;
     }
 
@@ -1664,7 +1644,7 @@ class SK_API SkPath {
 
         @return  conic weight for conic SkPoint returned by next()
     */
-    SkScalar conicWeight() const noexcept { return fConicWeight; }
+    SkScalar conicWeight() const { return fConicWeight; }
 
    private:
     RangeIter fIter;
@@ -1731,7 +1711,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_writeToMemory
   */
-  size_t writeToMemory(void* buffer) const noexcept;
+  size_t writeToMemory(void* buffer) const;
 
   /** Writes SkPath to buffer, returning the buffer written to, wrapped in SkData.
 
@@ -1777,7 +1757,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_getGenerationID
   */
-  uint32_t getGenerationID() const noexcept;
+  uint32_t getGenerationID() const;
 
   /** Returns if SkPath data is consistent. Corrupt SkPath data is detected if
       internal values are out of range or internal storage does not match
@@ -1785,15 +1765,17 @@ class SK_API SkPath {
 
       @return  true if SkPath data is consistent
   */
-  bool isValid() const noexcept { return this->isValidImpl() && fPathRef->isValid(); }
+  bool isValid() const { return this->isValidImpl() && fPathRef->isValid(); }
 
  private:
-  SkPath(sk_sp<SkPathRef>, SkPathFillType, bool isVolatile, SkPathConvexityType) noexcept;
+  SkPath(
+      sk_sp<SkPathRef>, SkPathFillType, bool isVolatile, SkPathConvexity,
+      SkPathFirstDirection firstDirection);
 
   sk_sp<SkPathRef> fPathRef;
   int fLastMoveToIndex;
-  mutable std::atomic<uint8_t> fConvexity;       // SkPathConvexityType
-  mutable std::atomic<uint8_t> fFirstDirection;  // really an SkPathPriv::FirstDirection
+  mutable std::atomic<uint8_t> fConvexity;       // SkPathConvexity
+  mutable std::atomic<uint8_t> fFirstDirection;  // SkPathFirstDirection
   uint8_t fFillType : 2;
   uint8_t fIsVolatile : 1;
 
@@ -1801,15 +1783,15 @@ class SK_API SkPath {
    *  Assumes the caller has already emptied fPathRef.
    *  On Android increments fGenerationID without reseting it.
    */
-  void resetFields() noexcept;
+  void resetFields();
 
   /** Sets all fields other than fPathRef to the values in 'that'.
    *  Assumes the caller has already set fPathRef.
    *  Doesn't change fGenerationID or fSourcePath on Android.
    */
-  void copyFields(const SkPath& that) noexcept;
+  void copyFields(const SkPath& that);
 
-  size_t writeToMemoryAsRRect(void* buffer) const noexcept;
+  size_t writeToMemoryAsRRect(void* buffer) const;
   size_t readAsRRect(const void*, size_t);
   size_t readFromMemory_EQ4Or5(const void*, size_t);
 
@@ -1831,25 +1813,25 @@ class SK_API SkPath {
   //
   inline void injectMoveToIfNeeded();
 
-  inline bool hasOnlyMoveTos() const noexcept;
+  inline bool hasOnlyMoveTos() const;
 
-  SkPathConvexityType internalGetConvexity() const noexcept;
+  SkPathConvexity computeConvexity() const;
 
   /** Asserts if SkPath data is inconsistent.
       Debugging check intended for internal use only.
    */
-  SkDEBUGCODE(void validate() const { SkASSERT(this->isValidImpl()); });
-  bool isValidImpl() const noexcept;
-  SkDEBUGCODE(void validateRef() const { fPathRef->validate(); });
+  SkDEBUGCODE(void validate() const { SkASSERT(this->isValidImpl()); })
+  bool isValidImpl() const;
+  SkDEBUGCODE(void validateRef() const { fPathRef->validate(); })
 
   // called by stroker to see if all points (in the last contour) are equal and worthy of a cap
-  bool isZeroLengthSincePoint(int startPtIndex) const noexcept;
+  bool isZeroLengthSincePoint(int startPtIndex) const;
 
   /** Returns if the path can return a bound at no cost (true) or will have to
       perform some computation (false).
    */
-  bool hasComputedBounds() const noexcept {
-    SkDEBUGCODE(this->validate());
+  bool hasComputedBounds() const {
+    SkDEBUGCODE(this->validate();)
     return fPathRef->hasComputedBounds();
   }
 
@@ -1862,13 +1844,36 @@ class SK_API SkPath {
 
   void setPt(int index, SkScalar x, SkScalar y);
 
-  SkPath& dirtyAfterEdit() noexcept;
+  SkPath& dirtyAfterEdit();
 
   // Bottlenecks for working with fConvexity and fFirstDirection.
   // Notice the setters are const... these are mutable atomic fields.
-  void setConvexityType(SkPathConvexityType) const noexcept;
-  void setFirstDirection(uint8_t) const noexcept;
-  uint8_t getFirstDirection() const noexcept;
+  void setConvexity(SkPathConvexity) const;
+
+  void setFirstDirection(SkPathFirstDirection) const;
+  SkPathFirstDirection getFirstDirection() const;
+
+  /** Returns the comvexity type, computing if needed. Never returns kUnknown.
+      @return  path's convexity type (convex or concave)
+  */
+  SkPathConvexity getConvexity() const {
+    SkPathConvexity convexity = this->getConvexityOrUnknown();
+    if (convexity == SkPathConvexity::kUnknown) {
+      convexity = this->computeConvexity();
+    }
+    SkASSERT(convexity != SkPathConvexity::kUnknown);
+    return convexity;
+  }
+  SkPathConvexity getConvexityOrUnknown() const {
+    return (SkPathConvexity)fConvexity.load(std::memory_order_relaxed);
+  }
+  /** Stores a convexity type for this path. This is what will be returned if
+   *  getConvexityOrUnknown() is called. If you pass kUnknown, then if getContexityType()
+   *  is called, the real convexity will be computed.
+   *
+   *  example: https://fiddle.skia.org/c/@Path_setConvexity
+   */
+  void setConvexity(SkPathConvexity convexity);
 
   friend class SkAutoPathBoundsUpdate;
   friend class SkAutoDisableOvalCheck;

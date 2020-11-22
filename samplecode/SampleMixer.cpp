@@ -80,6 +80,6 @@ class MixerView : public Sample {
  private:
   SkIRect fRect;
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new MixerView;)

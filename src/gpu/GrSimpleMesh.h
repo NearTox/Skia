@@ -42,7 +42,7 @@ struct GrSimpleMesh {
   int fVertexCount;
   int fBaseVertex = 0;
 
-  SkDEBUGCODE(bool fIsInitialized = false);
+  SkDEBUGCODE(bool fIsInitialized = false;)
 };
 
 inline void GrSimpleMesh::set(sk_sp<const GrBuffer> vertexBuffer, int vertexCount, int baseVertex) {
@@ -51,7 +51,7 @@ inline void GrSimpleMesh::set(sk_sp<const GrBuffer> vertexBuffer, int vertexCoun
   fVertexBuffer = std::move(vertexBuffer);
   fVertexCount = vertexCount;
   fBaseVertex = baseVertex;
-  SkDEBUGCODE(fIsInitialized = true);
+  SkDEBUGCODE(fIsInitialized = true;)
 }
 
 inline void GrSimpleMesh::setIndexed(
@@ -72,7 +72,7 @@ inline void GrSimpleMesh::setIndexed(
   fPrimitiveRestart = primitiveRestart;
   fVertexBuffer = std::move(vertexBuffer);
   fBaseVertex = baseVertex;
-  SkDEBUGCODE(fIsInitialized = true);
+  SkDEBUGCODE(fIsInitialized = true;)
 }
 
 inline void GrSimpleMesh::setIndexedPatterned(
@@ -93,7 +93,7 @@ inline void GrSimpleMesh::setIndexedPatterned(
   fPrimitiveRestart = GrPrimitiveRestart::kNo;
   fVertexBuffer = std::move(vertexBuffer);
   fBaseVertex = baseVertex;
-  SkDEBUGCODE(fIsInitialized = true);
+  SkDEBUGCODE(fIsInitialized = true;)
 }
 
 #endif

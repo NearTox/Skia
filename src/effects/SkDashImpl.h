@@ -37,7 +37,7 @@ class SkDashImpl : public SkPathEffect {
   int32_t fInitialDashIndex;
   SkScalar fIntervalLength;
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 #endif

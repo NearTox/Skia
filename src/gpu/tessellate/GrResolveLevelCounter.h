@@ -19,7 +19,7 @@ class GrResolveLevelCounter {
  public:
   void reset() {
     memset(fInstanceCounts, 0, sizeof(fInstanceCounts));
-    SkDEBUGCODE(fHasCalledReset = true);
+    SkDEBUGCODE(fHasCalledReset = true;)
   }
 
   void reset(const SkPath& path, const SkMatrix& viewMatrix, float intolerance) {
@@ -63,8 +63,8 @@ class GrResolveLevelCounter {
   int totalCubicIndirectDrawCount() const { return fTotalCubicIndirectDrawCount; }
 
  private:
-  SkDEBUGCODE(bool fHasCalledReset =
-                  false;) int fInstanceCounts[GrTessellationPathRenderer::kMaxResolveLevel + 1];
+  SkDEBUGCODE(bool fHasCalledReset = false;)
+  int fInstanceCounts[GrTessellationPathRenderer::kMaxResolveLevel + 1];
   int fTotalCubicInstanceCount = 0;
   int fTotalCubicIndirectDrawCount = 0;
 };

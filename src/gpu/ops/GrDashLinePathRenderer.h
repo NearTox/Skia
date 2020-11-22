@@ -14,7 +14,7 @@ class GrGpu;
 
 class GrDashLinePathRenderer : public GrPathRenderer {
  private:
-  const char* name() const noexcept final { return "DashLine"; }
+  const char* name() const final { return "DashLine"; }
 
   CanDrawPath onCanDrawPath(const CanDrawPathArgs&) const override;
 
@@ -25,7 +25,7 @@ class GrDashLinePathRenderer : public GrPathRenderer {
   bool onDrawPath(const DrawPathArgs&) override;
 
   sk_sp<GrGpu> fGpu;
-  typedef GrPathRenderer INHERITED;
+  using INHERITED = GrPathRenderer;
 };
 
 #endif

@@ -48,7 +48,7 @@ class VkTestContext : public TestContext {
   PFN_vkDestroyDebugReportCallbackEXT fDestroyDebugReportCallbackEXT = nullptr;
 
  private:
-  typedef TestContext INHERITED;
+  using INHERITED = TestContext;
 };
 
 /**

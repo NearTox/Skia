@@ -211,13 +211,16 @@ class RegionView : public Sample {
 
       {
         char buffer[1000];
-        SkDEBUGCODE(size_t size =) tmp.writeToMemory(nullptr);
+        SkDEBUGCODE(size_t size =)
+        tmp.writeToMemory(nullptr);
         SkASSERT(size <= sizeof(buffer));
-        SkDEBUGCODE(size_t size2 =) tmp.writeToMemory(buffer);
+        SkDEBUGCODE(size_t size2 =)
+        tmp.writeToMemory(buffer);
         SkASSERT(size == size2);
 
         SkRegion tmp3;
-        SkDEBUGCODE(size2 =) tmp3.readFromMemory(buffer, 1000);
+        SkDEBUGCODE(size2 =)
+        tmp3.readFromMemory(buffer, 1000);
         SkASSERT(size == size2);
 
         SkASSERT(tmp3 == tmp);
@@ -324,7 +327,7 @@ class RegionView : public Sample {
  private:
   SkIRect fBase, fRect;
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

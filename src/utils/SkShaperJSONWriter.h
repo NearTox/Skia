@@ -23,7 +23,7 @@ class SkShaperJSONWriter final : public SkShaper::RunHandler {
  public:
   SkShaperJSONWriter(SkJSONWriter* JSONWriter, const char* utf8, size_t size);
 
-  void beginLine() noexcept override;
+  void beginLine() override;
   void runInfo(const RunInfo& info) override;
   void commitRunInfo() override;
 
@@ -31,7 +31,7 @@ class SkShaperJSONWriter final : public SkShaper::RunHandler {
 
   void commitRunBuffer(const RunInfo& info) override;
 
-  void commitLine() noexcept override {}
+  void commitLine() override {}
 
   using BreakupCluastersCallback = std::function<void(size_t, size_t, uint32_t, uint32_t)>;
 

@@ -83,7 +83,7 @@ class MorphologyGM : public GM {
  private:
   SkBitmap fBitmap;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLLumaColorFilterEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLLumaColorFilterEffect() noexcept = default;
+  GrGLSLLumaColorFilterEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrLumaColorFilterEffect& _outer = args.fFp.cast<GrLumaColorFilterEffect>();
@@ -43,11 +43,12 @@ GrGLSLFragmentProcessor* GrLumaColorFilterEffect::onCreateGLSLInstance() const {
 }
 void GrLumaColorFilterEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrLumaColorFilterEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrLumaColorFilterEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrLumaColorFilterEffect& that = other.cast<GrLumaColorFilterEffect>();
   (void)that;
   return true;
 }
+bool GrLumaColorFilterEffect::usesExplicitReturn() const { return false; }
 GrLumaColorFilterEffect::GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src)
     : INHERITED(kGrLumaColorFilterEffect_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

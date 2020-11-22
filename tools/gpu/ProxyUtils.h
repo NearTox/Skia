@@ -26,6 +26,7 @@ GrSurfaceProxyView MakeTextureProxyViewFromData(
 GrProgramInfo* CreateProgramInfo(
     const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
     const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, SkBlendMode, GrPrimitiveType,
+    GrXferBarrierFlags renderPassXferBarriers,
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone,
     const GrUserStencilSettings* stencil = &GrUserStencilSettings::kUnused);
 

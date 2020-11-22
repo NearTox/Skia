@@ -26,19 +26,19 @@
  */
 class GrGeometryProcessor : public GrPrimitiveProcessor {
  public:
-  GrGeometryProcessor(ClassID classID) noexcept : INHERITED(classID) {}
+  GrGeometryProcessor(ClassID classID) : INHERITED(classID) {}
 
  protected:
   // GPs that need to use either float or ubyte colors can just call this to get a correctly
   // configured Attribute struct
-  static Attribute MakeColorAttribute(const char* name, bool wideColor) noexcept {
+  static Attribute MakeColorAttribute(const char* name, bool wideColor) {
     return {
         name, wideColor ? kFloat4_GrVertexAttribType : kUByte4_norm_GrVertexAttribType,
         kHalf4_GrSLType};
   }
 
  private:
-  typedef GrPrimitiveProcessor INHERITED;
+  using INHERITED = GrPrimitiveProcessor;
 };
 
 #endif

@@ -43,7 +43,7 @@ class PipelineStageCodeGenerator : public GLSLCodeGenerator {
 
   PipelineStageArgs* fArgs;
 
-  typedef GLSLCodeGenerator INHERITED;
+  using INHERITED = GLSLCodeGenerator;
 };
 
 }  // namespace SkSL

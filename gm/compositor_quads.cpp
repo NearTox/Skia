@@ -533,7 +533,7 @@ class CompositorGM : public skiagm::GM {
     SkASSERT(fMatrices.count() == fMatrixNames.count());
   }
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -601,7 +601,7 @@ class DebugTileRenderer : public ClipTileRenderer {
   DebugTileRenderer(SkCanvas::QuadAAFlags aa, bool enableAAOverrde)
       : fAAOverride(aa), fEnableAAOverride(enableAAOverrde) {}
 
-  typedef ClipTileRenderer INHERITED;
+  using INHERITED = ClipTileRenderer;
 };
 
 // Tests tmp_drawEdgeAAQuad
@@ -626,7 +626,7 @@ class SolidColorRenderer : public ClipTileRenderer {
 
   SolidColorRenderer(const SkColor4f& color) : fColor(color) {}
 
-  typedef ClipTileRenderer INHERITED;
+  using INHERITED = ClipTileRenderer;
 };
 
 // Tests drawEdgeAAImageSet(), but can batch the entries together in different ways
@@ -873,7 +873,7 @@ class TextureSetRenderer : public ClipTileRenderer {
     return 1;
   }
 
-  typedef ClipTileRenderer INHERITED;
+  using INHERITED = ClipTileRenderer;
 };
 
 class YUVTextureSetRenderer : public ClipTileRenderer {
@@ -970,7 +970,7 @@ class YUVTextureSetRenderer : public ClipTileRenderer {
     return 1;
   }
 
-  typedef ClipTileRenderer INHERITED;
+  using INHERITED = ClipTileRenderer;
 };
 
 static SkTArray<sk_sp<ClipTileRenderer>> make_debug_renderers() {

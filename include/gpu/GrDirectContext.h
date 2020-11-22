@@ -82,14 +82,14 @@ class SK_API GrDirectContext : public GrContext {
   GrAtlasManager* onGetAtlasManager() override { return fAtlasManager.get(); }
   GrSmallPathAtlasMgr* onGetSmallPathAtlasMgr() override;
 
-  GrDirectContext* asDirectContext() noexcept override { return this; }
+  GrDirectContext* asDirectContext() override { return this; }
 
  private:
   std::unique_ptr<GrAtlasManager> fAtlasManager;
 
   std::unique_ptr<GrSmallPathAtlasMgr> fSmallPathAtlasMgr;
 
-  typedef GrContext INHERITED;
+  using INHERITED = GrContext;
 };
 
 #endif

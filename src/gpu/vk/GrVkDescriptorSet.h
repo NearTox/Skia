@@ -36,10 +36,11 @@ class GrVkDescriptorSet : public GrVkRecycledResource {
   void onRecycle() const override;
 
   VkDescriptorSet fDescSet;
-  SkDEBUGCODE(mutable) GrVkDescriptorPool* fPool;
+  SkDEBUGCODE(mutable)
+  GrVkDescriptorPool* fPool;
   GrVkDescriptorSetManager::Handle fHandle;
 
-  typedef GrVkRecycledResource INHERITED;
+  using INHERITED = GrVkRecycledResource;
 };
 
 #endif

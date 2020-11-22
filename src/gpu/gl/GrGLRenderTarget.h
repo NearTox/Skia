@@ -18,7 +18,7 @@ class GrGLStencilAttachment;
 
 class GrGLRenderTarget : public GrRenderTarget {
  public:
-  bool alwaysClearStencil() const noexcept override { return 0 == fRTFBOID; }
+  bool alwaysClearStencil() const override { return 0 == fRTFBOID; }
 
   // set fTexFBOID to this value to indicate that it is multisampled but
   // Gr doesn't know how to resolve it.
@@ -37,13 +37,13 @@ class GrGLRenderTarget : public GrRenderTarget {
   // The following two functions return the same ID when a texture/render target is not
   // multisampled, and different IDs when it is multisampled.
   // FBO ID used to render into
-  GrGLuint renderFBOID() const noexcept { return fRTFBOID; }
+  GrGLuint renderFBOID() const { return fRTFBOID; }
   // FBO ID that has texture ID attached.
-  GrGLuint textureFBOID() const noexcept { return fTexFBOID; }
+  GrGLuint textureFBOID() const { return fTexFBOID; }
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
 
-  GrBackendFormat backendFormat() const noexcept override;
+  GrBackendFormat backendFormat() const override;
 
   bool canAttemptStencilAttachment() const override;
 
@@ -51,7 +51,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   // components seperately.
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 
-  GrGLFormat format() const noexcept { return fRTFormat; }
+  GrGLFormat format() const { return fRTFormat; }
 
  protected:
   // Constructor for subclasses.
@@ -62,7 +62,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   void onAbandon() override;
   void onRelease() override;
 
-  int numSamplesOwnedPerPixel() const noexcept { return fNumSamplesOwnedPerPixel; }
+  int numSamplesOwnedPerPixel() const { return fNumSamplesOwnedPerPixel; }
 
  private:
   // Constructor for instances wrapping backend objects.
@@ -92,7 +92,7 @@ class GrGLRenderTarget : public GrRenderTarget {
   // the IDs are just required for the computation in totalSamples we cache that result here.
   int fNumSamplesOwnedPerPixel;
 
-  typedef GrRenderTarget INHERITED;
+  using INHERITED = GrRenderTarget;
 };
 
 #endif

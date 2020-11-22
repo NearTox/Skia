@@ -60,7 +60,7 @@ class SkPictureShader : public SkShaderBase {
     PictureShaderContext(
         const SkPictureShader&, const ContextRec&, sk_sp<SkShader> bitmapShader, SkArenaAlloc*);
 
-    uint32_t getFlags() const noexcept override;
+    uint32_t getFlags() const override;
 
     void shadeSpan(int x, int y, SkPMColor dstC[], int count) override;
 
@@ -68,7 +68,7 @@ class SkPictureShader : public SkShaderBase {
     SkShaderBase::Context* fBitmapShaderContext;
     void* fBitmapShaderContextStorage;
 
-    typedef Context INHERITED;
+    using INHERITED = Context;
   };
 
   sk_sp<SkPicture> fPicture;
@@ -78,7 +78,7 @@ class SkPictureShader : public SkShaderBase {
   const uint32_t fUniqueID;
   mutable std::atomic<bool> fAddedToCache;
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 #endif  // SkPictureShader_DEFINED

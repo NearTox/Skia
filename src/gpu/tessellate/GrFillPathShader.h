@@ -46,7 +46,7 @@ class GrFillTriangleShader : public GrFillPathShader {
   }
 
  private:
-  const char* name() const noexcept override { return "GrFillTriangleShader"; }
+  const char* name() const override { return "GrFillTriangleShader"; }
   void emitVertexCode(
       Impl*, GrGLSLVertexBuilder*, const char* viewMatrix, GrGLSLUniformHandler*) const override;
 };
@@ -65,7 +65,7 @@ class GrFillCubicHullShader : public GrFillPathShader {
   }
 
  private:
-  const char* name() const noexcept override { return "GrFillCubicHullShader"; }
+  const char* name() const override { return "GrFillCubicHullShader"; }
   void emitVertexCode(
       Impl*, GrGLSLVertexBuilder*, const char* viewMatrix, GrGLSLUniformHandler*) const override;
 };
@@ -84,7 +84,7 @@ class GrFillBoundingBoxShader : public GrFillPathShader {
   const SkRect& pathBounds() const { return fPathBounds; }
 
  private:
-  const char* name() const noexcept override { return "GrFillBoundingBoxShader"; }
+  const char* name() const override { return "GrFillBoundingBoxShader"; }
   void emitVertexCode(
       Impl*, GrGLSLVertexBuilder*, const char* viewMatrix, GrGLSLUniformHandler*) const override;
 

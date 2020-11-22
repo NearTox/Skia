@@ -42,6 +42,8 @@ bool CreateBackendTexture(
     GrDirectContext*, GrBackendTexture* backendTex, const SkImageInfo& ii, const SkColor4f& color,
     GrMipmapped, GrRenderable, GrProtected = GrProtected::kNo);
 
+bool CreateBackendTexture(GrDirectContext*, GrBackendTexture* backendTex, const SkBitmap& bm);
+
 void DeleteBackendTexture(GrDirectContext*, const GrBackendTexture& backendTex);
 
 // Checks srcBuffer and dstBuffer contain the same colors

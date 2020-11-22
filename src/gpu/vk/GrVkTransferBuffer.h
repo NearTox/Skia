@@ -47,7 +47,7 @@ class GrVkTransferBuffer : public GrGpuBuffer, public GrVkBuffer {
     return reinterpret_cast<GrVkGpu*>(this->getGpu());
   }
 
-  typedef GrGpuBuffer INHERITED;
+  using INHERITED = GrGpuBuffer;
 };
 
 #endif

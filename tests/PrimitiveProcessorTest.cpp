@@ -60,7 +60,8 @@ class Op : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     class GP : public GrGeometryProcessor {
      public:
       static GrGeometryProcessor* Make(SkArenaAlloc* arena, int numAttribs) {
@@ -114,14 +115,15 @@ class Op : public GrMeshDrawOp {
       std::unique_ptr<SkString[]> fAttribNames;
       std::unique_ptr<Attribute[]> fAttributes;
 
-      typedef GrGeometryProcessor INHERITED;
+      using INHERITED = GrGeometryProcessor;
     };
 
     GrGeometryProcessor* gp = GP::Make(arena, fNumAttribs);
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangles, GrPipeline::InputFlags::kNone);
+        GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangles, renderPassXferBarriers,
+        GrPipeline::InputFlags::kNone);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -150,7 +152,7 @@ class Op : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 }  // namespace
 

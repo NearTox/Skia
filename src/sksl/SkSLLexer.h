@@ -48,6 +48,7 @@ struct Token {
     TK_VOLATILE,
     TK_RESTRICT,
     TK_BUFFER,
+    TK_INLINE,
     TK_HASSIDEEFFECTS,
     TK_PLS,
     TK_PLSIN,
@@ -117,9 +118,9 @@ struct Token {
     TK_INVALID,
   };
 
-  constexpr Token() noexcept : fKind(Kind::TK_INVALID), fOffset(-1), fLength(-1) {}
+  Token() : fKind(Kind::TK_INVALID), fOffset(-1), fLength(-1) {}
 
-  Token(Kind kind, int32_t offset, int32_t length) noexcept
+  Token(Kind kind, int32_t offset, int32_t length)
       : fKind(kind), fOffset(offset), fLength(length) {}
 
   Kind fKind;
@@ -129,7 +130,7 @@ struct Token {
 
 class Lexer {
  public:
-  void start(const char* text, int32_t length) noexcept {
+  void start(const char* text, int32_t length) {
     fText = text;
     fLength = length;
     fOffset = 0;

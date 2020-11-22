@@ -138,7 +138,7 @@ class ImageLightingGM : public GM {
   SkBitmap fBitmap;
   SkScalar fAzimuth;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

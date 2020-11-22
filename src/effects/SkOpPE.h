@@ -25,7 +25,7 @@ class SkOpPE : public SkPathEffect {
   sk_sp<SkPathEffect> fTwo;
   SkPathOp fOp;
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 class SkMatrixPE : public SkPathEffect {
@@ -41,7 +41,7 @@ class SkMatrixPE : public SkPathEffect {
 
   SkMatrix fMatrix;
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 class SkStrokePE : public SkPathEffect {
@@ -60,12 +60,12 @@ class SkStrokePE : public SkPathEffect {
   SkPaint::Join fJoin;
   SkPaint::Cap fCap;
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 class SkStrokeAndFillPE : public SkPathEffect {
  public:
-  SkStrokeAndFillPE() noexcept = default;
+  SkStrokeAndFillPE() {}
 
  protected:
   void flatten(SkWriteBuffer&) const override;
@@ -75,7 +75,7 @@ class SkStrokeAndFillPE : public SkPathEffect {
  private:
   SK_FLATTENABLE_HOOKS(SkStrokeAndFillPE)
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 #endif

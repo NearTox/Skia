@@ -10,13 +10,14 @@
 #include "include/core/SkPathTypes.h"
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
+#include "include/private/SkPathRef.h"
 #include "src/core/SkSpan.h"
 
 struct SkPathView {
   SkPathView(
       SkSpan<const SkPoint> points, SkSpan<const uint8_t> verbs, SkSpan<const float> weights,
-      SkPathFillType ft, SkPathConvexityType ct, const SkRect& bounds, unsigned segmentMask,
-      bool isFinite) noexcept
+      SkPathFillType ft, SkPathConvexity ct, const SkRect& bounds, unsigned segmentMask,
+      bool isFinite)
       : fPoints(points),
         fVerbs(verbs),
         fWeights(weights),
@@ -28,13 +29,13 @@ struct SkPathView {
     this->validate();
   }
 
-  bool isInverseFillType() const noexcept { return SkPathFillType_IsInverse(fFillType); }
-  bool isConvex() const noexcept { return fConvexity == SkPathConvexityType::kConvex; }
+  bool isInverseFillType() const { return SkPathFillType_IsInverse(fFillType); }
+  bool isConvex() const { return fConvexity == SkPathConvexity::kConvex; }
 
-  bool isEmpty() const noexcept { return fPoints.size() == 0; }
+  bool isEmpty() const { return fPoints.size() == 0; }
 
-  bool isRect(SkRect*) const noexcept;
-  bool isFinite() const noexcept { return fIsFinite; }
+  bool isRect(SkRect*) const;
+  bool isFinite() const { return fIsFinite; }
 
   SkSpan<const SkPoint> fPoints;
   SkSpan<const uint8_t> fVerbs;
@@ -43,29 +44,29 @@ struct SkPathView {
   SkRect fBounds;
 
   SkPathFillType fFillType;
-  SkPathConvexityType fConvexity;
+  SkPathConvexity fConvexity;
   uint8_t fSegmentMask;
   bool fIsFinite;
 
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const noexcept {}
+  void validate() const {}
 #endif
 };
 
-static inline SkPathView SkPathView_triangle(const SkPoint pts[3], const SkRect& bounds) noexcept {
+static inline SkPathView SkPathView_triangle(const SkPoint pts[3], const SkRect& bounds) {
   static constexpr uint8_t verbs[] = {
       (uint8_t)SkPathVerb::kMove,
       (uint8_t)SkPathVerb::kLine,
       (uint8_t)SkPathVerb::kLine,
   };
   return SkPathView(
-      {pts, 3}, SkMakeSpan(verbs), {}, SkPathFillType::kWinding, SkPathConvexityType::kConvex,
-      bounds, kLine_SkPathSegmentMask, true);
+      {pts, 3}, SkMakeSpan(verbs), {}, SkPathFillType::kWinding, SkPathConvexity::kConvex, bounds,
+      kLine_SkPathSegmentMask, true);
 }
 
-static inline SkPathView SkPathView_quad(const SkPoint pts[4], const SkRect& bounds) noexcept {
+static inline SkPathView SkPathView_quad(const SkPoint pts[4], const SkRect& bounds) {
   static constexpr uint8_t verbs[] = {
       (uint8_t)SkPathVerb::kMove,
       (uint8_t)SkPathVerb::kLine,
@@ -73,6 +74,6 @@ static inline SkPathView SkPathView_quad(const SkPoint pts[4], const SkRect& bou
       (uint8_t)SkPathVerb::kLine,
   };
   return SkPathView(
-      {pts, 4}, SkMakeSpan(verbs), {}, SkPathFillType::kWinding, SkPathConvexityType::kConvex,
-      bounds, kLine_SkPathSegmentMask, true);
+      {pts, 4}, SkMakeSpan(verbs), {}, SkPathFillType::kWinding, SkPathConvexity::kConvex, bounds,
+      kLine_SkPathSegmentMask, true);
 };

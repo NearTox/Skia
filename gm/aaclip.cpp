@@ -11,7 +11,7 @@
 #include "include/core/SkColor.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
-#include "include/core/SkPath.h"
+#include "include/core/SkPathBuilder.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkSize.h"
@@ -226,12 +226,11 @@ class ClipCubicGM : public skiagm::GM {
 
  public:
   ClipCubicGM() {
-    fVPath.moveTo(W, 0);
-    fVPath.cubicTo(W, H - 10, 0, 10, 0, H);
+    fVPath = SkPathBuilder().moveTo(W, 0).cubicTo(W, H - 10, 0, 10, 0, H).detach();
 
     SkMatrix pivot;
     pivot.setRotate(90, W / 2, H / 2);
-    fVPath.transform(pivot, &fHPath);
+    fHPath = fVPath.makeTransform(pivot);
   }
 
  protected:
@@ -276,6 +275,6 @@ class ClipCubicGM : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new ClipCubicGM;)

@@ -75,7 +75,7 @@ class BitmapImageGM : public GM {
  private:
   static constexpr int kSize = 512;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

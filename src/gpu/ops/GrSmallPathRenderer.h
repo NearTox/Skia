@@ -16,10 +16,10 @@ class GrStyledShape;
 
 class GrSmallPathRenderer : public GrPathRenderer {
  public:
-  GrSmallPathRenderer() noexcept;
+  GrSmallPathRenderer();
   ~GrSmallPathRenderer() override;
 
-  const char* name() const noexcept final { return "Small"; }
+  const char* name() const final { return "Small"; }
 
   static std::unique_ptr<GrDrawOp> createOp_TestingOnly(
       GrRecordingContext*, GrPaint&&, const GrStyledShape&, const SkMatrix& viewMatrix,
@@ -36,7 +36,7 @@ class GrSmallPathRenderer : public GrPathRenderer {
 
   bool onDrawPath(const DrawPathArgs&) override;
 
-  typedef GrPathRenderer INHERITED;
+  using INHERITED = GrPathRenderer;
 };
 
 #endif

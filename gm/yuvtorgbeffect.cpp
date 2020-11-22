@@ -143,7 +143,7 @@ class YUVtoRGBEffect : public GpuGM {
   static constexpr SkScalar kTestPad = 10.f;
   static constexpr SkScalar kColorSpaceOffset = 36.f;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new YUVtoRGBEffect;)
@@ -250,7 +250,7 @@ class YUVNV12toRGBEffect : public GpuGM {
   static constexpr SkScalar kTestPad = 10.f;
   static constexpr SkScalar kColorSpaceOffset = 36.f;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new YUVNV12toRGBEffect;)
@@ -362,7 +362,7 @@ class YUVtoRGBSubsetEffect : public GpuGM {
 
   static constexpr SkScalar kTestPad = 10.f;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new YUVtoRGBSubsetEffect;)

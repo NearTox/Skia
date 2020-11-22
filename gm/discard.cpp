@@ -84,7 +84,7 @@ class DiscardGM : public GpuGM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -20,7 +20,7 @@ class SkMasks {
   };
 
   constexpr SkMasks(
-      const MaskInfo red, const MaskInfo green, const MaskInfo blue, const MaskInfo alpha) noexcept
+      const MaskInfo red, const MaskInfo green, const MaskInfo blue, const MaskInfo alpha)
       : fRed(red), fGreen(green), fBlue(blue), fAlpha(alpha) {}
 
   // Input bit masks format

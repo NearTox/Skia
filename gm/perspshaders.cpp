@@ -168,7 +168,7 @@ class PerspShadersGM : public GM {
   sk_sp<SkImage> fImage;
   SkBitmap fBitmap;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 DEF_GM(return new PerspShadersGM(true);)
 DEF_GM(return new PerspShadersGM(false);)

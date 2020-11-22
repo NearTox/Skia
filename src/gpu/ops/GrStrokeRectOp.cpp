@@ -89,7 +89,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  const char* name() const noexcept override { return "NonAAStrokeRectOp"; }
+  const char* name() const override { return "NonAAStrokeRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -167,7 +167,8 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& clip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& clip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -182,7 +183,8 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
         (fStrokeWidth > 0) ? GrPrimitiveType::kTriangleStrip : GrPrimitiveType::kLineStrip;
 
     fProgramInfo = fHelper.createProgramInfo(
-        caps, arena, writeView, std::move(clip), dstProxyView, gp, primType);
+        caps, arena, writeView, std::move(clip), dstProxyView, gp, primType,
+        renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -256,7 +258,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
   const static int kVertsPerHairlineRect = 5;
   const static int kVertsPerStrokeRect = 10;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -396,7 +398,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const noexcept override { return "AAStrokeRect"; }
+  const char* name() const override { return "AAStrokeRect"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -421,7 +423,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override;
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
 
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
@@ -483,12 +485,13 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   bool fMiterStroke;
   bool fWideColor;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 void AAStrokeRectOp::onCreateProgramInfo(
     const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+    GrXferBarrierFlags renderPassXferBarriers) {
   GrGeometryProcessor* gp = create_aa_stroke_rect_gp(
       arena, fHelper.compatibleWithCoverageAsAlpha(), this->viewMatrix(), fHelper.usesLocalCoords(),
       fWideColor);
@@ -498,8 +501,8 @@ void AAStrokeRectOp::onCreateProgramInfo(
   }
 
   fProgramInfo = fHelper.createProgramInfo(
-      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-      GrPrimitiveType::kTriangles);
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, GrPrimitiveType::kTriangles,
+      renderPassXferBarriers);
 }
 
 void AAStrokeRectOp::onPrepareDraws(Target* target) {

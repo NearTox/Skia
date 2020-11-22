@@ -305,7 +305,7 @@ GrRenderTargetContext::GrRenderTargetContext(
   SkASSERT(this->asSurfaceProxy() == fWriteView.proxy());
   SkASSERT(this->origin() == fWriteView.origin());
 
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 }
 
 #ifdef SK_DEBUG
@@ -344,7 +344,7 @@ GrMipmapped GrRenderTargetContext::mipmapped() const {
 
 GrOpsTask* GrRenderTargetContext::getOpsTask() {
   ASSERT_SINGLE_OWNER
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
 
   if (!fOpsTask) {
     sk_sp<GrOpsTask> newOpsTask =
@@ -392,7 +392,7 @@ void GrRenderTargetContext::drawGlyphRunList(
     const GrClip* clip, const SkMatrixProvider& viewMatrix, const SkGlyphRunList& glyphRunList) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawGlyphRunList", fContext);
 
   // Drawing text can cause us to do inline uploads. This is not supported for wrapped vulkan
@@ -438,28 +438,42 @@ void GrRenderTargetContext::drawGlyphRunList(
     key.fPixelGeometry = pixelGeometry;
     key.fUniqueID = glyphRunList.uniqueID();
     key.fStyle = blobPaint.getStyle();
+    if (key.fStyle != SkPaint::kFill_Style) {
+      key.fFrameWidth = blobPaint.getStrokeWidth();
+      key.fMiterLimit = blobPaint.getStrokeMiter();
+      key.fJoin = blobPaint.getStrokeJoin();
+    }
     key.fHasBlur = SkToBool(mf);
+    if (key.fHasBlur) {
+      key.fBlurRec = blurRec;
+    }
     key.fCanonicalColor = canonicalColor;
     key.fScalerContextFlags = scalerContextFlags;
     blob = textBlobCache->find(key);
   }
 
-  const SkMatrix& drawMatrix(viewMatrix.localToDevice());
-  if (blob == nullptr || !blob->canReuse(blobPaint, blurRec, drawMatrix, drawOrigin)) {
+  SkMatrix drawMatrix(viewMatrix.localToDevice());
+  drawMatrix.preTranslate(drawOrigin.x(), drawOrigin.y());
+  if (blob == nullptr || !blob->canReuse(blobPaint, drawMatrix)) {
     if (blob != nullptr) {
       // We have to remake the blob because changes may invalidate our masks.
       // TODO we could probably get away with reuse most of the time if the pointer is unique,
       //      but we'd have to clear the SubRun information
       textBlobCache->remove(blob.get());
     }
+
+    blob = GrTextBlob::Make(glyphRunList, drawMatrix);
     if (canCache) {
-      blob = textBlobCache->makeCachedBlob(glyphRunList, key, blurRec, drawMatrix);
-    } else {
-      blob = GrTextBlob::Make(glyphRunList, drawMatrix);
+      blob->addKey(key);
+      textBlobCache->add(glyphRunList, blob);
     }
+
+    // TODO(herb): redo processGlyphRunList to handle shifted draw matrix.
     bool supportsSDFT = fContext->priv().caps()->shaderCaps()->supportsDistanceFieldText();
     fGlyphPainter.processGlyphRunList(
-        glyphRunList, drawMatrix, fSurfaceProps, supportsSDFT, options, blob.get());
+        glyphRunList,
+        viewMatrix.localToDevice(),  // Use unshifted matrix.
+        fSurfaceProps, supportsSDFT, options, blob.get());
   }
 
   for (GrSubRun* subRun : blob->subRunList()) {
@@ -470,7 +484,7 @@ void GrRenderTargetContext::drawGlyphRunList(
 void GrRenderTargetContext::discard() {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "discard", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -497,7 +511,7 @@ void GrRenderTargetContext::internalClear(
     const SkIRect* scissor, const SkPMColor4f& color, bool upgradePartialToFull) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "clear", fContext);
 
   // There are three ways clears are handled: load ops, native clears, and draws. Load ops are
@@ -724,7 +738,7 @@ void GrRenderTargetContext::drawFilledQuad(
     const GrClip* clip, GrPaint&& paint, GrAA aa, DrawQuad* quad, const GrUserStencilSettings* ss) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawFilledQuad", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -754,7 +768,7 @@ void GrRenderTargetContext::drawTexturedQuad(
     DrawQuad* quad, const SkRect* subset) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   SkASSERT(proxyView.asTextureProxy());
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawTexturedQuad", fContext);
 
@@ -789,7 +803,7 @@ void GrRenderTargetContext::drawRect(
   }
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawRect", fContext);
 
   // Path effects should've been devolved to a path in SkGpuDevice
@@ -913,7 +927,7 @@ void GrRenderTargetContextPriv::stencilPath(
     sk_sp<const GrPath> path) {
   ASSERT_SINGLE_OWNER_PRIV
   RETURN_IF_ABANDONED_PRIV
-  SkDEBUGCODE(fRenderTargetContext->validate());
+  SkDEBUGCODE(fRenderTargetContext->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT(
       "GrRenderTargetContextPriv", "stencilPath", fRenderTargetContext->fContext);
 
@@ -958,7 +972,7 @@ void GrRenderTargetContext::drawTextureSet(
     sk_sp<GrColorSpaceXform> texXform) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawTextureSet", fContext);
 
   // Create the minimum number of GrTextureOps needed to draw this set. Individual
@@ -978,7 +992,7 @@ void GrRenderTargetContext::drawVertices(
     sk_sp<SkVertices> vertices, GrPrimitiveType* overridePrimType, const SkRuntimeEffect* effect) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawVertices", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -998,7 +1012,7 @@ void GrRenderTargetContext::drawAtlas(
     const SkRSXform xform[], const SkRect texRect[], const SkColor colors[]) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawAtlas", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -1016,7 +1030,7 @@ void GrRenderTargetContext::drawRRect(
     const SkRRect& rrect, const GrStyle& style) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawRRect", fContext);
 
   SkASSERT(!style.pathEffect());  // this should've been devolved to a path in SkGpuDevice
@@ -1110,7 +1124,7 @@ bool GrRenderTargetContext::drawFastShadow(
   if (fContext->abandoned()) {
     return true;
   }
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawFastShadow", fContext);
 
   // check z plane
@@ -1379,7 +1393,7 @@ void GrRenderTargetContext::drawDRRect(
     const SkRRect& inner) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawDRRect", fContext);
 
   SkASSERT(!outer.isEmpty());
@@ -1407,7 +1421,7 @@ void GrRenderTargetContext::drawRegion(
     const SkRegion& region, const GrStyle& style, const GrUserStencilSettings* ss) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawRegion", fContext);
 
   if (GrAA::kYes == aa) {
@@ -1438,7 +1452,7 @@ void GrRenderTargetContext::drawOval(
     const GrStyle& style) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawOval", fContext);
 
   const SkStrokeRec& stroke = style.strokeRec();
@@ -1496,7 +1510,7 @@ void GrRenderTargetContext::drawArc(
     SkScalar startAngle, SkScalar sweepAngle, bool useCenter, const GrStyle& style) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawArc", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -1524,7 +1538,7 @@ void GrRenderTargetContext::drawImageLattice(
     std::unique_ptr<SkLatticeIter> iter, const SkRect& dst) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawImageLattice", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -1546,7 +1560,7 @@ bool GrRenderTargetContext::waitOnSemaphores(
     int numSemaphores, const GrBackendSemaphore waitSemaphores[], bool deleteSemaphoresAfterWait) {
   ASSERT_SINGLE_OWNER
   RETURN_FALSE_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "waitOnSemaphores", fContext);
 
   AutoCheckFlush acf(this->drawingManager());
@@ -1581,7 +1595,7 @@ void GrRenderTargetContext::drawPath(
     const GrStyle& style) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawPath", fContext);
 
   GrStyledShape shape(path, style);
@@ -1594,7 +1608,7 @@ void GrRenderTargetContext::drawShape(
     const GrStyledShape& shape) {
   ASSERT_SINGLE_OWNER
   RETURN_IF_ABANDONED
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "drawShape", fContext);
 
   if (shape.isEmpty()) {
@@ -1655,7 +1669,7 @@ bool GrRenderTargetContextPriv::drawAndStencilPath(
     const SkMatrix& viewMatrix, const SkPath& path) {
   ASSERT_SINGLE_OWNER_PRIV
   RETURN_FALSE_IF_ABANDONED_PRIV
-  SkDEBUGCODE(fRenderTargetContext->validate());
+  SkDEBUGCODE(fRenderTargetContext->validate();)
   GR_CREATE_TRACE_MARKER_CONTEXT(
       "GrRenderTargetContextPriv", "drawAndStencilPath", fRenderTargetContext->fContext);
 
@@ -1724,7 +1738,7 @@ SkBudgeted GrRenderTargetContextPriv::isBudgeted() const {
     return SkBudgeted::kNo;
   }
 
-  SkDEBUGCODE(fRenderTargetContext->validate());
+  SkDEBUGCODE(fRenderTargetContext->validate();)
 
   return fRenderTargetContext->asSurfaceProxy()->isBudgeted();
 }
@@ -1862,8 +1876,8 @@ void GrRenderTargetContext::addDrawOp(
     fContext->priv().opMemoryPool()->release(std::move(op));
     return;
   }
-  SkDEBUGCODE(this->validate());
-  SkDEBUGCODE(op->fAddDrawOpCalled = true);
+  SkDEBUGCODE(this->validate();)
+  SkDEBUGCODE(op->fAddDrawOpCalled = true;)
   GR_CREATE_TRACE_MARKER_CONTEXT("GrRenderTargetContext", "addDrawOp", fContext);
 
   // Setup clip
@@ -1938,16 +1952,21 @@ bool GrRenderTargetContext::setupDstProxyView(
     return false;
   }
 
-  if (this->caps()->textureBarrierSupport() &&
-      !this->asSurfaceProxy()->requiresManualMSAAResolve()) {
-    if (this->asTextureProxy()) {
-      // The render target is a texture, so we can read from it directly in the shader. The XP
-      // will be responsible to detect this situation and request a texture barrier.
-      dstProxyView->setProxyView(this->readSurfaceView());
-      dstProxyView->setOffset(0, 0);
-      return true;
-    }
+  if (fDstSampleType == GrDstSampleType::kNone) {
+    fDstSampleType = this->caps()->getDstSampleTypeForProxy(this->asRenderTargetProxy());
   }
+  SkASSERT(fDstSampleType != GrDstSampleType::kNone);
+
+  if (GrDstSampleTypeDirectlySamplesDst(fDstSampleType)) {
+    // The render target is a texture or input attachment, so we can read from it directly in
+    // the shader. The XP will be responsible to detect this situation and request a texture
+    // barrier.
+    dstProxyView->setProxyView(this->readSurfaceView());
+    dstProxyView->setOffset(0, 0);
+    dstProxyView->setDstSampleType(fDstSampleType);
+    return true;
+  }
+  SkASSERT(fDstSampleType == GrDstSampleType::kAsTextureCopy);
 
   GrColorType colorType = this->colorInfo().colorType();
   // MSAA consideration: When there is support for reading MSAA samples in the shader we could
@@ -1981,6 +2000,7 @@ bool GrRenderTargetContext::setupDstProxyView(
 
   dstProxyView->setProxyView({std::move(copy), this->origin(), this->readSwizzle()});
   dstProxyView->setOffset(dstOffset);
+  dstProxyView->setDstSampleType(fDstSampleType);
   return true;
 }
 

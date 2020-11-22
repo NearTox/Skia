@@ -31,7 +31,7 @@ class GrStencilAtlasOp : public GrDrawOp {
   };
 
   // GrDrawOp interface.
-  const char* name() const noexcept override { return "StencilAtlasOp (CCPR)"; }
+  const char* name() const override { return "StencilAtlasOp (CCPR)"; }
   FixedFunctionFlags fixedFunctionFlags() const override {
     return FixedFunctionFlags::kUsesHWAA | FixedFunctionFlags::kUsesStencil;
   }
@@ -54,11 +54,11 @@ class GrStencilAtlasOp : public GrDrawOp {
  private:
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
   void drawResolve(
-      GrOpFlushState*, const GrPipeline&, const GrPrimitiveProcessor&,
+      GrOpFlushState*, const GrPipeline&, const GrUserStencilSettings*, const GrPrimitiveProcessor&,
       const SkIRect& drawBounds) const;
 
   friend class ::GrOpMemoryPool;  // for ctor

@@ -119,7 +119,7 @@ class ComplexClip4GM : public GM {
   SkIRect fDeviceRestriction;
   bool fDoAAClip;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

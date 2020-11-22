@@ -25,7 +25,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
   friend class GrYUVAImageTextureMaker;
 
   SkImage_GpuYUVA(
-      sk_sp<GrRecordingContext>, SkISize size, uint32_t uniqueID, SkYUVColorSpace,
+      sk_sp<GrImageContext>, SkISize size, uint32_t uniqueID, SkYUVColorSpace,
       GrSurfaceProxyView views[], int numViews, const SkYUVAIndex[4], GrSurfaceOrigin,
       sk_sp<SkColorSpace>);
 
@@ -47,7 +47,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
 
   sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const final;
 
-  bool isYUVA() const noexcept override { return true; }
+  bool isYUVA() const override { return true; }
 
   bool setupMipmapsForPlanes(GrRecordingContext*) const;
 
@@ -75,7 +75,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
       PromiseImageApiVersion);
 
  private:
-  SkImage_GpuYUVA(sk_sp<GrContext>, const SkImage_GpuYUVA* image, sk_sp<SkColorSpace>);
+  SkImage_GpuYUVA(sk_sp<GrImageContext>, const SkImage_GpuYUVA* image, sk_sp<SkColorSpace>);
 
   void flattenToRGB(GrRecordingContext*) const;
 
@@ -100,7 +100,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
   // using the separate YUVA planes. From thence forth we will only use the
   // the RGBView.
   mutable GrSurfaceProxyView fRGBView;
-  typedef SkImage_GpuBase INHERITED;
+  using INHERITED = SkImage_GpuBase;
 };
 
 #endif

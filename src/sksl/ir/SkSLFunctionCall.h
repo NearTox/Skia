@@ -17,10 +17,10 @@ namespace SkSL {
  * A function invocation.
  */
 struct FunctionCall : public Expression {
-  static constexpr Kind kExpressionKind = kFunctionCall_Kind;
+  static constexpr Kind kExpressionKind = Kind::kFunctionCall;
 
   FunctionCall(
-      int offset, const Type& type, const FunctionDeclaration& function,
+      int offset, const Type* type, const FunctionDeclaration& function,
       std::vector<std::unique_ptr<Expression>> arguments)
       : INHERITED(offset, kExpressionKind, type),
         fFunction(std::move(function)),
@@ -30,7 +30,7 @@ struct FunctionCall : public Expression {
 
   ~FunctionCall() override { --fFunction.fCallCount; }
 
-  bool hasProperty(Property property) const noexcept override {
+  bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects &&
         (fFunction.fModifiers.fFlags & Modifiers::kHasSideEffects_Flag)) {
       return true;
@@ -43,21 +43,13 @@ struct FunctionCall : public Expression {
     return false;
   }
 
-  int nodeCount() const noexcept override {
-    int result = 1;
-    for (const auto& a : fArguments) {
-      result += a->nodeCount();
-    }
-    return result;
-  }
-
   std::unique_ptr<Expression> clone() const override {
     std::vector<std::unique_ptr<Expression>> cloned;
     for (const auto& arg : fArguments) {
       cloned.push_back(arg->clone());
     }
     return std::unique_ptr<Expression>(
-        new FunctionCall(fOffset, fType, fFunction, std::move(cloned)));
+        new FunctionCall(fOffset, &this->type(), fFunction, std::move(cloned)));
   }
 
   String description() const override {
@@ -75,7 +67,7 @@ struct FunctionCall : public Expression {
   const FunctionDeclaration& fFunction;
   std::vector<std::unique_ptr<Expression>> fArguments;
 
-  typedef Expression INHERITED;
+  using INHERITED = Expression;
 };
 
 }  // namespace SkSL

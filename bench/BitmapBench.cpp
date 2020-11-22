@@ -112,7 +112,7 @@ class BitmapBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 /** Explicitly invoke some filter types to improve coverage of acceleration
@@ -195,7 +195,7 @@ class FilterBitmapBench : public BitmapBench {
   }
 
  private:
-  typedef BitmapBench INHERITED;
+  using INHERITED = BitmapBench;
 };
 
 /** Verify optimizations that test source alpha values. */
@@ -285,7 +285,7 @@ class SourceAlphaBitmapBench : public BitmapBench {
   }
 
  private:
-  typedef BitmapBench INHERITED;
+  using INHERITED = BitmapBench;
 };
 
 DEF_BENCH(return new BitmapBench(kN32_SkColorType, kPremul_SkAlphaType, false, false);)

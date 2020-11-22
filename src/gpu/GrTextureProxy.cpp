@@ -22,10 +22,8 @@ GrTextureProxy::GrTextureProxy(
     GrInternalSurfaceFlags surfaceFlags, UseAllocator useAllocator, GrDDLProvider creatingProvider)
     : INHERITED(format, dimensions, fit, budgeted, isProtected, surfaceFlags, useAllocator),
       fMipmapped(mipMapped),
-      fMipmapStatus(mipmapStatus) SkDEBUGCODE(, fInitialMipmapStatus(fMipmapStatus)),
-      fCreatingProvider(creatingProvider),
-      fProxyProvider(nullptr),
-      fDeferredUploader(nullptr) {
+      fMipmapStatus(mipmapStatus) SkDEBUGCODE(, fInitialMipmapStatus(fMipmapStatus))
+, fCreatingProvider(creatingProvider), fProxyProvider(nullptr), fDeferredUploader(nullptr) {
   SkASSERT(!(fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly));
 }
 
@@ -39,10 +37,8 @@ GrTextureProxy::GrTextureProxy(
           std::move(callback), format, dimensions, fit, budgeted, isProtected, surfaceFlags,
           useAllocator),
       fMipmapped(mipMapped),
-      fMipmapStatus(mipmapStatus) SkDEBUGCODE(, fInitialMipmapStatus(fMipmapStatus)),
-      fCreatingProvider(creatingProvider),
-      fProxyProvider(nullptr),
-      fDeferredUploader(nullptr) {
+      fMipmapStatus(mipmapStatus) SkDEBUGCODE(, fInitialMipmapStatus(fMipmapStatus))
+, fCreatingProvider(creatingProvider), fProxyProvider(nullptr), fDeferredUploader(nullptr) {
   SkASSERT(!(fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly));
 }
 
@@ -52,10 +48,8 @@ GrTextureProxy::GrTextureProxy(
     : INHERITED(std::move(surf), SkBackingFit::kExact, useAllocator),
       fMipmapped(fTarget->asTexture()->mipmapped()),
       fMipmapStatus(fTarget->asTexture()->mipmapStatus())
-          SkDEBUGCODE(, fInitialMipmapStatus(fMipmapStatus)),
-      fCreatingProvider(creatingProvider),
-      fProxyProvider(nullptr),
-      fDeferredUploader(nullptr) {
+          SkDEBUGCODE(, fInitialMipmapStatus(fMipmapStatus))
+, fCreatingProvider(creatingProvider), fProxyProvider(nullptr), fDeferredUploader(nullptr) {
   if (fTarget->getUniqueKey().isValid()) {
     fProxyProvider = fTarget->asTexture()->getContext()->priv().proxyProvider();
     fProxyProvider->adoptUniqueKeyFromSurface(this, fTarget.get());

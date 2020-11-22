@@ -87,7 +87,7 @@ class SK_API SkNWayCanvas : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   class Iter;
 
  private:
-  typedef SkCanvasVirtualEnforcer<SkNoDrawCanvas> INHERITED;
+  using INHERITED = SkCanvasVirtualEnforcer<SkNoDrawCanvas>;
 };
 
 #endif

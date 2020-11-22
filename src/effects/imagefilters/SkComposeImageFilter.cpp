@@ -34,7 +34,7 @@ class SkComposeImageFilterImpl final : public SkImageFilter_Base {
   friend void SkComposeImageFilter::RegisterFlattenables();
   SK_FLATTENABLE_HOOKS(SkComposeImageFilterImpl)
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

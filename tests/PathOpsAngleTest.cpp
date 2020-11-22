@@ -609,7 +609,8 @@ DEF_TEST(PathOpsAngleAfter, reporter) {
       // These data sets are seeded when the set itself fails, so likely the dataset does not
       // match the expected result. The tests above return 1 when first added, but
       // return 0 after the bug is fixed.
-      SkDEBUGCODE(int result =) PathOpsAngleTester::After(angle2, angle1);
+      SkDEBUGCODE(int result =)
+      PathOpsAngleTester::After(angle2, angle1);
       SkASSERT(result == 0 || result == 1);
     }
   }

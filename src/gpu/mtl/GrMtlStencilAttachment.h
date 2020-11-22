@@ -25,9 +25,13 @@ class GrMtlStencilAttachment : public GrStencilAttachment {
   };
 
   static GrMtlStencilAttachment* Create(
-      GrMtlGpu* gpu, int width, int height, int sampleCnt, const Format& format);
+      GrMtlGpu* gpu, SkISize dimensions, int sampleCnt, const Format& format);
 
   ~GrMtlStencilAttachment() override;
+
+  GrBackendFormat backendFormat() const override {
+    return GrBackendFormat::MakeMtl(fStencilView.pixelFormat);
+  }
 
   MTLPixelFormat mtlFormat() const { return fFormat.fInternalFormat; }
 
@@ -40,7 +44,8 @@ class GrMtlStencilAttachment : public GrStencilAttachment {
  private:
   size_t onGpuMemorySize() const override;
 
-  GrMtlStencilAttachment(GrMtlGpu* gpu, const Format& format, const id<MTLTexture> stencilView);
+  GrMtlStencilAttachment(
+      GrMtlGpu* gpu, SkISize dimensions, const Format& format, const id<MTLTexture> stencilView);
 
   GrMtlGpu* getMtlGpu() const;
 

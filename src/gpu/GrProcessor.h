@@ -26,24 +26,24 @@ class GrResourceProvider;
  */
 class GrProcessorKeyBuilder {
  public:
-  GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) noexcept : fData(data), fCount(0) {
+  GrProcessorKeyBuilder(SkTArray<unsigned char, true>* data) : fData(data), fCount(0) {
     SkASSERT(0 == fData->count() % sizeof(uint32_t));
   }
 
-  void add32(uint32_t v) noexcept {
+  void add32(uint32_t v) {
     ++fCount;
     fData->push_back_n(4, reinterpret_cast<uint8_t*>(&v));
   }
 
   /** Inserts count uint32_ts into the key. The returned pointer is only valid until the next
       add*() call. */
-  uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) noexcept {
+  uint32_t* SK_WARN_UNUSED_RESULT add32n(int count) {
     SkASSERT(count > 0);
     fCount += count;
     return reinterpret_cast<uint32_t*>(fData->push_back_n(4 * count));
   }
 
-  size_t size() const noexcept { return sizeof(uint32_t) * fCount; }
+  size_t size() const { return sizeof(uint32_t) * fCount; }
 
  private:
   SkTArray<uint8_t, true>* fData;  // unowned ptr to the larger key.
@@ -181,7 +181,7 @@ class GrProcessor {
 
   /** Human-meaningful string to identify this processor; may be embedded in generated shader
       code and must be a legal SkSL identifier prefix. */
-  virtual const char* name() const noexcept = 0;
+  virtual const char* name() const = 0;
 
   /** Human-readable dump of all information */
 #if GR_TEST_UTILS
@@ -206,7 +206,7 @@ class GrProcessor {
 
   GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(CustomFeatures);
 
-  CustomFeatures requestedFeatures() const noexcept { return fRequestedFeatures; }
+  CustomFeatures requestedFeatures() const { return fRequestedFeatures; }
 
   void* operator new(size_t size);
   void operator delete(void* target);
@@ -216,19 +216,19 @@ class GrProcessor {
 
   /** Helper for down-casting to a GrProcessor subclass */
   template <typename T>
-  const T& cast() const noexcept {
+  const T& cast() const {
     return *static_cast<const T*>(this);
   }
 
-  ClassID classID() const noexcept { return fClassID; }
+  ClassID classID() const { return fClassID; }
 
  protected:
-  GrProcessor(ClassID classID) noexcept : fClassID(classID) {}
+  GrProcessor(ClassID classID) : fClassID(classID) {}
   GrProcessor(const GrProcessor&) = delete;
   GrProcessor& operator=(const GrProcessor&) = delete;
 
-  void setWillUseCustomFeature(CustomFeatures feature) noexcept { fRequestedFeatures |= feature; }
-  void resetCustomFeatures() noexcept { fRequestedFeatures = CustomFeatures::kNone; }
+  void setWillUseCustomFeature(CustomFeatures feature) { fRequestedFeatures |= feature; }
+  void resetCustomFeatures() { fRequestedFeatures = CustomFeatures::kNone; }
 
   const ClassID fClassID;
   CustomFeatures fRequestedFeatures = CustomFeatures::kNone;

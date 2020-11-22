@@ -86,7 +86,7 @@ class DashBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class RectDashBench : public DashBench {
@@ -126,7 +126,7 @@ class RectDashBench : public DashBench {
   }
 
  private:
-  typedef DashBench INHERITED;
+  using INHERITED = DashBench;
 };
 
 static void make_unit_star(SkPath* path, int n) {
@@ -191,7 +191,7 @@ class MakeDashBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 /*
@@ -228,7 +228,7 @@ class DashLineBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class DrawPointsDashingBench : public Benchmark {
@@ -269,7 +269,7 @@ class DrawPointsDashingBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Want to test how we handle dashing when 99% of the dash is clipped out
@@ -331,7 +331,7 @@ class GiantDashBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Want to test how we draw a dashed grid (like what is used in spreadsheets) of many
@@ -395,7 +395,7 @@ class DashGridBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

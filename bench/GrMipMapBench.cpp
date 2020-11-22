@@ -60,7 +60,7 @@ class GrMipMapBench : public Benchmark {
   void onPerCanvasPostDraw(SkCanvas*) override { fSurface.reset(nullptr); }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 // Build variants that exercise the width and heights being even or odd at each level, as the

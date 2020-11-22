@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLDitherEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLDitherEffect() noexcept = default;
+  GrGLSLDitherEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrDitherEffect& _outer = args.fFp.cast<GrDitherEffect>();
@@ -60,12 +60,13 @@ GrGLSLFragmentProcessor* GrDitherEffect::onCreateGLSLInstance() const {
 }
 void GrDitherEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrDitherEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrDitherEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrDitherEffect& that = other.cast<GrDitherEffect>();
   (void)that;
   if (range != that.range) return false;
   return true;
 }
+bool GrDitherEffect::usesExplicitReturn() const { return false; }
 GrDitherEffect::GrDitherEffect(const GrDitherEffect& src)
     : INHERITED(kGrDitherEffect_ClassID, src.optimizationFlags()), range(src.range) {
   this->cloneAndRegisterAllChildProcessors(src);

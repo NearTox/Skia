@@ -57,18 +57,18 @@ class GrSurfaceContext {
 
   virtual ~GrSurfaceContext() = default;
 
-  const GrColorInfo& colorInfo() const noexcept { return fColorInfo; }
-  GrImageInfo imageInfo() const noexcept { return {fColorInfo, fReadView.proxy()->dimensions()}; }
+  const GrColorInfo& colorInfo() const { return fColorInfo; }
+  GrImageInfo imageInfo() const { return {fColorInfo, fReadView.proxy()->dimensions()}; }
 
-  GrSurfaceOrigin origin() const noexcept { return fReadView.origin(); }
-  GrSwizzle readSwizzle() const noexcept { return fReadView.swizzle(); }
+  GrSurfaceOrigin origin() const { return fReadView.origin(); }
+  GrSwizzle readSwizzle() const { return fReadView.swizzle(); }
   // TODO: See if it makes sense for this to return a const& instead and require the callers to
   // make a copy (which refs the proxy) if needed.
-  GrSurfaceProxyView readSurfaceView() noexcept { return fReadView; }
+  GrSurfaceProxyView readSurfaceView() { return fReadView; }
 
-  SkISize dimensions() const noexcept { return fReadView.dimensions(); }
-  int width() const noexcept { return fReadView.proxy()->width(); }
-  int height() const noexcept { return fReadView.proxy()->height(); }
+  SkISize dimensions() const { return fReadView.dimensions(); }
+  int width() const { return fReadView.proxy()->width(); }
+  int height() const { return fReadView.proxy()->height(); }
 
   const GrCaps* caps() const;
 
@@ -114,23 +114,19 @@ class GrSurfaceContext {
       GrDirectContext* dContext, const GrImageInfo& srcInfo, const void* src, size_t rowBytes,
       SkIPoint dstPt);
 
-  GrSurfaceProxy* asSurfaceProxy() noexcept { return fReadView.proxy(); }
-  const GrSurfaceProxy* asSurfaceProxy() const noexcept { return fReadView.proxy(); }
-  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() noexcept { return fReadView.refProxy(); }
+  GrSurfaceProxy* asSurfaceProxy() { return fReadView.proxy(); }
+  const GrSurfaceProxy* asSurfaceProxy() const { return fReadView.proxy(); }
+  sk_sp<GrSurfaceProxy> asSurfaceProxyRef() { return fReadView.refProxy(); }
 
-  GrTextureProxy* asTextureProxy() noexcept { return fReadView.asTextureProxy(); }
-  const GrTextureProxy* asTextureProxy() const noexcept { return fReadView.asTextureProxy(); }
-  sk_sp<GrTextureProxy> asTextureProxyRef() noexcept { return fReadView.asTextureProxyRef(); }
+  GrTextureProxy* asTextureProxy() { return fReadView.asTextureProxy(); }
+  const GrTextureProxy* asTextureProxy() const { return fReadView.asTextureProxy(); }
+  sk_sp<GrTextureProxy> asTextureProxyRef() { return fReadView.asTextureProxyRef(); }
 
-  GrRenderTargetProxy* asRenderTargetProxy() noexcept { return fReadView.asRenderTargetProxy(); }
-  const GrRenderTargetProxy* asRenderTargetProxy() const noexcept {
-    return fReadView.asRenderTargetProxy();
-  }
-  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() noexcept {
-    return fReadView.asRenderTargetProxyRef();
-  }
+  GrRenderTargetProxy* asRenderTargetProxy() { return fReadView.asRenderTargetProxy(); }
+  const GrRenderTargetProxy* asRenderTargetProxy() const { return fReadView.asRenderTargetProxy(); }
+  sk_sp<GrRenderTargetProxy> asRenderTargetProxyRef() { return fReadView.asRenderTargetProxyRef(); }
 
-  virtual GrRenderTargetContext* asRenderTargetContext() noexcept { return nullptr; }
+  virtual GrRenderTargetContext* asRenderTargetContext() { return nullptr; }
 
   /**
    * Rescales the contents of srcRect. The gamma in which the rescaling occurs is controlled by
@@ -173,9 +169,9 @@ class GrSurfaceContext {
   GrDrawingManager* drawingManager();
   const GrDrawingManager* drawingManager() const;
 
-  SkDEBUGCODE(void validate() const);
+  SkDEBUGCODE(void validate() const;)
 
-  SkDEBUGCODE(GrSingleOwner* singleOwner());
+  SkDEBUGCODE(GrSingleOwner* singleOwner();)
 
   GrRecordingContext* fContext;
 
@@ -202,7 +198,7 @@ class GrSurfaceContext {
  private:
   friend class GrSurfaceProxy;  // for copy
 
-  SkDEBUGCODE(virtual void onValidate() const {});
+  SkDEBUGCODE(virtual void onValidate() const {})
 
   /**
    * Copy 'src' into the proxy backing this context. This call will not do any draw fallback.
@@ -224,7 +220,7 @@ class GrSurfaceContext {
 
   GrColorInfo fColorInfo;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

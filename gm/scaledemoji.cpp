@@ -79,7 +79,7 @@ class ScaledEmojiGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 class ScaledEmojiPosGM : public GM {
@@ -134,7 +134,7 @@ class ScaledEmojiPosGM : public GM {
   }
 
  private:
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

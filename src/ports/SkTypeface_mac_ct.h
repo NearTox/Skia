@@ -121,7 +121,7 @@ class SkTypeface_Mac : public SkTypeface {
   bool fIsFromStream;
   mutable SkOnce fInitStream;
 
-  typedef SkTypeface INHERITED;
+  using INHERITED = SkTypeface;
 };
 
 #endif

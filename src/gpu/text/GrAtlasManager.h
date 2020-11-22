@@ -42,7 +42,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
     return nullptr;
   }
 
-  void freeAll() noexcept;
+  void freeAll();
 
   bool hasGlyph(GrMaskFormat, GrGlyph*);
 
@@ -101,7 +101,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
 
   // The AtlasGlyph cache always survives freeGpuResources so we want it to remain in the active
   // OnFlushCallbackObject list
-  bool retainOnFreeGpuResources() noexcept override { return true; }
+  bool retainOnFreeGpuResources() override { return true; }
 
   ///////////////////////////////////////////////////////////////////////////
   // Functions intended debug only
@@ -128,12 +128,8 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   }
 
   // There is a 1:1 mapping between GrMaskFormats and atlas indices
-  static constexpr int MaskFormatToAtlasIndex(GrMaskFormat format) noexcept {
-    return static_cast<int>(format);
-  }
-  static constexpr GrMaskFormat AtlasIndexToMaskFormat(int idx) noexcept {
-    return static_cast<GrMaskFormat>(idx);
-  }
+  static int MaskFormatToAtlasIndex(GrMaskFormat format) { return static_cast<int>(format); }
+  static GrMaskFormat AtlasIndexToMaskFormat(int idx) { return static_cast<GrMaskFormat>(idx); }
 
   GrDrawOpAtlas* getAtlas(GrMaskFormat format) const {
     format = this->resolveMaskFormat(format);
@@ -149,7 +145,7 @@ class GrAtlasManager : public GrOnFlushCallbackObject, public GrDrawOpAtlas::Gen
   sk_sp<const GrCaps> fCaps;
   GrDrawOpAtlasConfig fAtlasConfig;
 
-  typedef GrOnFlushCallbackObject INHERITED;
+  using INHERITED = GrOnFlushCallbackObject;
 };
 
 #endif  // GrAtlasManager_DEFINED

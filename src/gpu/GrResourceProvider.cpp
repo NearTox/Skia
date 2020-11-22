@@ -171,9 +171,9 @@ sk_sp<GrTexture> GrResourceProvider::createTexture(
 
 // Map 'value' to a larger multiple of 2. Values <= 'kMagicTol' will pop up to
 // the next power of 2. Those above 'kMagicTol' will only go up half the floor power of 2.
-SkISize GrResourceProvider::MakeApprox(SkISize dimensions) noexcept {
-  auto adjust = [](int value) noexcept {
-    static constexpr int kMagicTol = 1024;
+SkISize GrResourceProvider::MakeApprox(SkISize dimensions) {
+  auto adjust = [](int value) {
+    static const int kMagicTol = 1024;
 
     value = std::max(kMinScratchTextureSize, value);
 
@@ -381,9 +381,9 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createNonAAQuadIndexBuffer() {
       kNonAAQuadIndexPattern, kIndicesPerNonAAQuad, kMaxNumNonAAQuads, kVertsPerNonAAQuad, nullptr);
 }
 
-int GrResourceProvider::MaxNumNonAAQuads() noexcept { return kMaxNumNonAAQuads; }
-int GrResourceProvider::NumVertsPerNonAAQuad() noexcept { return kVertsPerNonAAQuad; }
-int GrResourceProvider::NumIndicesPerNonAAQuad() noexcept { return kIndicesPerNonAAQuad; }
+int GrResourceProvider::MaxNumNonAAQuads() { return kMaxNumNonAAQuads; }
+int GrResourceProvider::NumVertsPerNonAAQuad() { return kVertsPerNonAAQuad; }
+int GrResourceProvider::NumIndicesPerNonAAQuad() { return kIndicesPerNonAAQuad; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 static constexpr int kMaxNumAAQuads = 1 << 9;  // max possible: (1 << 13) - 1;
@@ -409,9 +409,9 @@ sk_sp<const GrGpuBuffer> GrResourceProvider::createAAQuadIndexBuffer() {
       kAAQuadIndexPattern, kIndicesPerAAQuad, kMaxNumAAQuads, kVertsPerAAQuad, nullptr);
 }
 
-int GrResourceProvider::MaxNumAAQuads() noexcept { return kMaxNumAAQuads; }
-int GrResourceProvider::NumVertsPerAAQuad() noexcept { return kVertsPerAAQuad; }
-int GrResourceProvider::NumIndicesPerAAQuad() noexcept { return kIndicesPerAAQuad; }
+int GrResourceProvider::MaxNumAAQuads() { return kMaxNumAAQuads; }
+int GrResourceProvider::NumVertsPerAAQuad() { return kVertsPerAAQuad; }
+int GrResourceProvider::NumIndicesPerAAQuad() { return kIndicesPerAAQuad; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 sk_sp<GrPath> GrResourceProvider::createPath(const SkPath& path, const GrStyle& style) {
@@ -465,8 +465,6 @@ bool GrResourceProvider::attachStencilAttachment(GrRenderTarget* rt, int numSten
   if (!rt->wasDestroyed() && rt->canAttemptStencilAttachment()) {
     GrUniqueKey sbKey;
 
-    int width = rt->width();
-    int height = rt->height();
 #if 0
         if (this->caps()->oversizedStencilSupport()) {
             width  = SkNextPow2(width);
@@ -474,12 +472,12 @@ bool GrResourceProvider::attachStencilAttachment(GrRenderTarget* rt, int numSten
         }
 #endif
     GrStencilAttachment::ComputeSharedStencilAttachmentKey(
-        width, height, numStencilSamples, &sbKey);
+        rt->dimensions(), numStencilSamples, &sbKey);
     auto stencil = this->findByUniqueKey<GrStencilAttachment>(sbKey);
     if (!stencil) {
       // Need to try and create a new stencil
       stencil.reset(this->gpu()->createStencilAttachmentForRenderTarget(
-          rt, width, height, numStencilSamples));
+          rt, rt->dimensions(), numStencilSamples));
       if (!stencil) {
         return false;
       }

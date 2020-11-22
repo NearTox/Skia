@@ -41,10 +41,7 @@ static uint32_t sampler_key(
   int samplerTypeKey = texture_type_key(textureType);
 
   static_assert(2 == sizeof(swizzle.asKey()));
-  uint16_t swizzleKey = 0;
-  if (caps.shaderCaps()->textureSwizzleAppliedInShader()) {
-    swizzleKey = swizzle.asKey();
-  }
+  uint16_t swizzleKey = swizzle.asKey();
   return SkToU32(samplerTypeKey | swizzleKey << kSamplerOrImageTypeKeyBits);
 }
 

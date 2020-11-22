@@ -2,12 +2,14 @@
 
 #include "modules/skparagraph/include/DartTypes.h"
 #include "modules/skparagraph/include/ParagraphStyle.h"
-#include "modules/skparagraph/src/ParagraphUtil.h"
+#include "modules/skshaper/src/SkUnicode.h"
+#include "src/core/SkStringUtils.h"
+#include "src/utils/SkUTF.h"
 
 namespace skia {
 namespace textlayout {
 
-StrutStyle::StrutStyle() noexcept {
+StrutStyle::StrutStyle() {
   fFontStyle = SkFontStyle::Normal();
   fFontSize = 14;
   fHeight = 1;
@@ -17,7 +19,7 @@ StrutStyle::StrutStyle() noexcept {
   fEnabled = false;
 }
 
-ParagraphStyle::ParagraphStyle() noexcept {
+ParagraphStyle::ParagraphStyle() {
   fTextAlign = TextAlign::kStart;
   fTextDirection = TextDirection::kLtr;
   fLinesLimit = std::numeric_limits<size_t>::max();
@@ -26,7 +28,7 @@ ParagraphStyle::ParagraphStyle() noexcept {
   fHintingIsOn = true;
 }
 
-TextAlign ParagraphStyle::effective_align() const noexcept {
+TextAlign ParagraphStyle::effective_align() const {
   if (fTextAlign == TextAlign::kStart) {
     return (fTextDirection == TextDirection::kLtr) ? TextAlign::kLeft : TextAlign::kRight;
   } else if (fTextAlign == TextAlign::kEnd) {
@@ -34,10 +36,6 @@ TextAlign ParagraphStyle::effective_align() const noexcept {
   } else {
     return fTextAlign;
   }
-}
-
-void ParagraphStyle::setEllipsis(const std::u16string& ellipsis) {
-  fEllipsis = SkStringFromU16String(ellipsis);
 }
 }  // namespace textlayout
 }  // namespace skia

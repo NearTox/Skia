@@ -20,11 +20,11 @@ class SkBBHFactory;
 
 class SkDrawableList : SkNoncopyable {
  public:
-  constexpr SkDrawableList() noexcept = default;
+  SkDrawableList() {}
   ~SkDrawableList();
 
-  int count() const noexcept { return fArray.count(); }
-  SkDrawable* const* begin() const noexcept { return fArray.begin(); }
+  int count() const { return fArray.count(); }
+  SkDrawable* const* begin() const { return fArray.begin(); }
 
   void append(SkDrawable* drawable);
 
@@ -43,21 +43,15 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   SkRecorder(SkRecord*, int width, int height, SkMiniRecorder* = nullptr);  // TODO: remove
   SkRecorder(SkRecord*, const SkRect& bounds, SkMiniRecorder* = nullptr);
 
-  enum DrawPictureMode {
-    Record_DrawPictureMode,
-    Playback_DrawPictureMode,
-    // Plays back top level drawPicture calls only, but records pictures within those.
-    PlaybackTop_DrawPictureMode,
-  };
-  void reset(SkRecord*, const SkRect& bounds, DrawPictureMode, SkMiniRecorder* = nullptr);
+  void reset(SkRecord*, const SkRect& bounds, SkMiniRecorder* = nullptr);
 
-  size_t approxBytesUsedBySubPictures() const noexcept { return fApproxBytesUsedBySubPictures; }
+  size_t approxBytesUsedBySubPictures() const { return fApproxBytesUsedBySubPictures; }
 
-  SkDrawableList* getDrawableList() const noexcept { return fDrawableList.get(); }
-  std::unique_ptr<SkDrawableList> detachDrawableList() noexcept { return std::move(fDrawableList); }
+  SkDrawableList* getDrawableList() const { return fDrawableList.get(); }
+  std::unique_ptr<SkDrawableList> detachDrawableList() { return std::move(fDrawableList); }
 
   // Make SkRecorder forget entirely about its SkRecord*; all calls to SkRecorder will fail.
-  void forgetRecord() noexcept;
+  void forgetRecord();
 
   void onFlush() override;
 
@@ -135,7 +129,6 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   template <typename T, typename... Args>
   void append(Args&&...);
 
-  DrawPictureMode fDrawPictureMode;
   size_t fApproxBytesUsedBySubPictures;
   SkRecord* fRecord;
   std::unique_ptr<SkDrawableList> fDrawableList;

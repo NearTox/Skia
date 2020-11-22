@@ -24,7 +24,7 @@ void GrOp::operator delete(void* target) {
 }
 #endif
 
-GrOp::GrOp(uint32_t classID) noexcept : fClassID(classID) {
+GrOp::GrOp(uint32_t classID) : fClassID(classID) {
   SkASSERT(classID == SkToU32(fClassID));
   SkASSERT(classID);
   SkDEBUGCODE(fBoundsFlags = kUninitialized_BoundsFlag);
@@ -43,7 +43,7 @@ GrOp::CombineResult GrOp::combineIfPossible(
   return result;
 }
 
-void GrOp::chainConcat(std::unique_ptr<GrOp> next) noexcept {
+void GrOp::chainConcat(std::unique_ptr<GrOp> next) {
   SkASSERT(next);
   SkASSERT(this->classID() == next->classID());
   SkASSERT(this->isChainTail());
@@ -52,7 +52,7 @@ void GrOp::chainConcat(std::unique_ptr<GrOp> next) noexcept {
   fNextInChain->fPrevInChain = this;
 }
 
-std::unique_ptr<GrOp> GrOp::cutChain() noexcept {
+std::unique_ptr<GrOp> GrOp::cutChain() {
   if (fNextInChain) {
     fNextInChain->fPrevInChain = nullptr;
     return std::move(fNextInChain);

@@ -23,12 +23,12 @@ class GrStencilClip final : public GrHardClip {
       const SkISize& rtDims, const SkIRect& scissorRect, uint32_t stencilStackID = SK_InvalidGenID)
       : fFixedClip(rtDims, scissorRect), fStencilStackID(stencilStackID) {}
 
-  const GrFixedClip& fixedClip() const noexcept { return fFixedClip; }
-  GrFixedClip& fixedClip() noexcept { return fFixedClip; }
+  const GrFixedClip& fixedClip() const { return fFixedClip; }
+  GrFixedClip& fixedClip() { return fFixedClip; }
 
-  uint32_t stencilStackID() const noexcept { return fStencilStackID; }
-  bool hasStencilClip() const noexcept { return SK_InvalidGenID != fStencilStackID; }
-  void setStencilClip(uint32_t stencilStackID) noexcept { fStencilStackID = stencilStackID; }
+  uint32_t stencilStackID() const { return fStencilStackID; }
+  bool hasStencilClip() const { return SK_InvalidGenID != fStencilStackID; }
+  void setStencilClip(uint32_t stencilStackID) { fStencilStackID = stencilStackID; }
 
   SkIRect getConservativeBounds() const final { return fFixedClip.getConservativeBounds(); }
 
@@ -57,7 +57,7 @@ class GrStencilClip final : public GrHardClip {
   GrFixedClip fFixedClip;
   uint32_t fStencilStackID;
 
-  typedef GrClip INHERITED;
+  using INHERITED = GrClip;
 };
 
 #endif

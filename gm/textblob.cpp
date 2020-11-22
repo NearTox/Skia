@@ -186,7 +186,7 @@ class TextBlobGM : public skiagm::GM {
   SkTDArray<uint16_t> fGlyphs;
   sk_sp<SkTypeface> fTypeface;
   const char* fText;
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new TextBlobGM("hamburgefons");)

@@ -16,7 +16,7 @@
 
 class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
  public:
-  GrGLSLRRectShadowGeoProc() noexcept = default;
+  GrGLSLRRectShadowGeoProc() {}
 
   void onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) override {
     const GrRRectShadowGeoProc& rsgp = args.fGP.cast<GrRRectShadowGeoProc>();
@@ -47,7 +47,7 @@ class GrGLSLRRectShadowGeoProc : public GrGLSLGeometryProcessor {
   void setData(const GrGLSLProgramDataManager& pdman, const GrPrimitiveProcessor& proc) override {}
 
  private:
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

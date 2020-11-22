@@ -123,9 +123,7 @@ class SkTSpan {
 
   SkDEBUGCODE(SkOpGlobalState* globalState() const { return fDebugGlobalState; })
 
-      bool hasOppT(double t) const {
-    return SkToBool(oppT(t));
-  }
+  bool hasOppT(double t) const { return SkToBool(oppT(t)); }
 
   int hullsIntersect(SkTSpan* span, bool* start, bool* oppStart);
   void init(const SkTCurve&);
@@ -212,9 +210,8 @@ class SkTSect {
   SkTSect(const SkTCurve& c SkDEBUGPARAMS(SkOpGlobalState*) PATH_OPS_DEBUG_T_SECT_PARAMS(int id));
   static void BinarySearch(SkTSect* sect1, SkTSect* sect2, SkIntersections* intersections);
 
-  SkDEBUGCODE(SkOpGlobalState* globalState() {
-    return fDebugGlobalState;
-  }) bool hasBounded(const SkTSpan*) const;
+  SkDEBUGCODE(SkOpGlobalState* globalState() { return fDebugGlobalState; })
+  bool hasBounded(const SkTSpan*) const;
 
   const SkTSect* debugOpp() const { return SkDEBUGRELEASE(fOppSect, nullptr); }
 

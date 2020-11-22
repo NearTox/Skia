@@ -10,7 +10,7 @@
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrPipeline.h"
 
-GrXferProcessor::GrXferProcessor(ClassID classID) noexcept
+GrXferProcessor::GrXferProcessor(ClassID classID)
     : INHERITED(classID),
       fWillReadDstColor(false),
       fDstReadUsesMixedSamples(false),
@@ -18,7 +18,7 @@ GrXferProcessor::GrXferProcessor(ClassID classID) noexcept
 
 GrXferProcessor::GrXferProcessor(
     ClassID classID, bool willReadDstColor, bool hasMixedSamples,
-    GrProcessorAnalysisCoverage coverage) noexcept
+    GrProcessorAnalysisCoverage coverage)
     : INHERITED(classID),
       fWillReadDstColor(willReadDstColor),
       fDstReadUsesMixedSamples(willReadDstColor && hasMixedSamples),

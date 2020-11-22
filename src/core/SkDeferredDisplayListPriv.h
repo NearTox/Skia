@@ -17,21 +17,21 @@
 class SkDeferredDisplayListPriv {
  public:
 #if SK_SUPPORT_GPU
-  int numRenderTasks() const noexcept { return fDDL->fRenderTasks.count(); }
+  int numRenderTasks() const { return fDDL->fRenderTasks.count(); }
 
-  GrRenderTargetProxy* targetProxy() const noexcept { return fDDL->fTargetProxy.get(); }
+  GrRenderTargetProxy* targetProxy() const { return fDDL->fTargetProxy.get(); }
 
-  const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const noexcept {
+  const SkDeferredDisplayList::LazyProxyData* lazyProxyData() const {
     return fDDL->fLazyProxyData.get();
   }
 
-  const SkTArray<GrRecordingContext::ProgramData>& programData() const noexcept {
+  const SkTArray<GrRecordingContext::ProgramData>& programData() const {
     return fDDL->programData();
   }
 #endif
 
  private:
-  explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) noexcept : fDDL(ddl) {}
+  explicit SkDeferredDisplayListPriv(SkDeferredDisplayList* ddl) : fDDL(ddl) {}
   SkDeferredDisplayListPriv(const SkDeferredDisplayListPriv&) = delete;
   SkDeferredDisplayListPriv& operator=(const SkDeferredDisplayListPriv&) = delete;
 
@@ -44,12 +44,12 @@ class SkDeferredDisplayListPriv {
   friend class SkDeferredDisplayList;  // to construct/copy this type.
 };
 
-inline SkDeferredDisplayListPriv SkDeferredDisplayList::priv() noexcept {
+inline SkDeferredDisplayListPriv SkDeferredDisplayList::priv() {
   return SkDeferredDisplayListPriv(this);
 }
 
 inline const SkDeferredDisplayListPriv SkDeferredDisplayList::priv()
-    const noexcept {  // NOLINT(readability-const-return-type)
+    const {  // NOLINT(readability-const-return-type)
   return SkDeferredDisplayListPriv(const_cast<SkDeferredDisplayList*>(this));
 }
 

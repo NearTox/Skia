@@ -50,7 +50,8 @@ std::unique_ptr<GrFragmentProcessor> GrTextureProducer::createFragmentProcessorF
 
 std::unique_ptr<GrFragmentProcessor> GrTextureProducer::createBicubicFragmentProcessorForView(
     GrSurfaceProxyView view, const SkMatrix& textureMatrix, const SkRect* subset,
-    const SkRect* domain, GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) {
+    const SkRect* domain, GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+    SkImage::CubicResampler kernel) {
   if (!view) {
     return nullptr;
   }
@@ -63,20 +64,19 @@ std::unique_ptr<GrFragmentProcessor> GrTextureProducer::createBicubicFragmentPro
 
   const auto& caps = *fContext->priv().caps();
   static constexpr auto kDir = GrBicubicEffect::Direction::kXY;
-  static constexpr auto kKernel = GrBicubicEffect::Kernel::kMitchell;
   if (subset) {
     if (domain) {
       return GrBicubicEffect::MakeSubset(
-          std::move(view), this->alphaType(), textureMatrix, wrapX, wrapY, *subset, *domain,
-          kKernel, kDir, caps);
+          std::move(view), this->alphaType(), textureMatrix, wrapX, wrapY, *subset, *domain, kernel,
+          kDir, caps);
     } else {
       return GrBicubicEffect::MakeSubset(
-          std::move(view), this->alphaType(), textureMatrix, wrapX, wrapY, *subset, kKernel, kDir,
+          std::move(view), this->alphaType(), textureMatrix, wrapX, wrapY, *subset, kernel, kDir,
           caps);
     }
   } else {
     return GrBicubicEffect::Make(
-        std::move(view), this->alphaType(), textureMatrix, wrapX, wrapY, kKernel, kDir, caps);
+        std::move(view), this->alphaType(), textureMatrix, wrapX, wrapY, kernel, kDir, caps);
   }
 }
 

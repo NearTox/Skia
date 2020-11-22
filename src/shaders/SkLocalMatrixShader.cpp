@@ -160,7 +160,7 @@ class SkCTMShader final : public SkShaderBase {
   sk_sp<SkShader> fProxyShader;
   SkMatrix fCTM;
 
-  typedef SkShaderBase INHERITED;
+  using INHERITED = SkShaderBase;
 };
 
 #if SK_SUPPORT_GPU

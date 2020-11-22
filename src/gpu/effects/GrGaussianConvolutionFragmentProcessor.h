@@ -32,7 +32,7 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
       GrSurfaceProxyView, SkAlphaType, Direction, int halfWidth, float gaussianSigma,
       GrSamplerState::WrapMode, const SkIRect& subset, const SkIRect* pixelDomain, const GrCaps&);
 
-  const char* name() const noexcept override { return "GaussianConvolution"; }
+  const char* name() const override { return "GaussianConvolution"; }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return std::unique_ptr<GrFragmentProcessor>(new GrGaussianConvolutionFragmentProcessor(*this));
@@ -60,7 +60,7 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
@@ -74,7 +74,7 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
 
   class Impl;
 
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 #endif

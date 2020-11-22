@@ -25,29 +25,29 @@ class GrGLTexture : public GrTexture {
     GrBackendObjectOwnership fOwnership = GrBackendObjectOwnership::kOwned;
   };
 
-  static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget) noexcept;
+  static GrTextureType TextureTypeFromTarget(GrGLenum textureTarget);
 
   GrGLTexture(GrGLGpu*, SkBudgeted, const Desc&, GrMipmapStatus);
 
   ~GrGLTexture() override {}
 
-  GrBackendTexture getBackendTexture() const noexcept override;
+  GrBackendTexture getBackendTexture() const override;
 
-  GrBackendFormat backendFormat() const noexcept override;
+  GrBackendFormat backendFormat() const override;
 
   // TODO: Remove once clients are no longer calling this.
   void textureParamsModified() override { fParameters->invalidate(); }
 
-  GrGLTextureParameters* parameters() noexcept { return fParameters.get(); }
+  GrGLTextureParameters* parameters() { return fParameters.get(); }
 
-  GrGLuint textureID() const noexcept { return fID; }
+  GrGLuint textureID() const { return fID; }
 
   GrGLenum target() const;
 
-  GrGLFormat format() const noexcept { return fFormat; }
+  GrGLFormat format() const { return fFormat; }
 
-  bool hasBaseLevelBeenBoundToFBO() const noexcept { return fBaseLevelHasBeenBoundToFBO; }
-  void baseLevelWasBoundToFBO() noexcept { fBaseLevelHasBeenBoundToFBO = true; }
+  bool hasBaseLevelBeenBoundToFBO() const { return fBaseLevelHasBeenBoundToFBO; }
+  void baseLevelWasBoundToFBO() { fBaseLevelHasBeenBoundToFBO = true; }
 
   static sk_sp<GrGLTexture> MakeWrapped(
       GrGLGpu*, GrMipmapStatus, const Desc&, sk_sp<GrGLTextureParameters>, GrWrapCacheable,
@@ -78,7 +78,7 @@ class GrGLTexture : public GrTexture {
   GrBackendObjectOwnership fTextureIDOwnership;
   bool fBaseLevelHasBeenBoundToFBO = false;
 
-  typedef GrTexture INHERITED;
+  using INHERITED = GrTexture;
 };
 
 #endif

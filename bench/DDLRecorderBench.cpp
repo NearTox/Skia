@@ -84,7 +84,7 @@ class DDLRecorderBench : public Benchmark {
   std::unique_ptr<SkDeferredDisplayListRecorder> fRecorder = nullptr;
   std::vector<sk_sp<SkDeferredDisplayList>> fDDLs;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new DDLRecorderBench();)

@@ -19,7 +19,7 @@ class SkMipmap;
 class SkPixmap;
 class SkResourceCache;
 
-uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID) noexcept;
+uint64_t SkMakeResourceCacheSharedIDForBitmap(uint32_t bitmapGenID);
 
 void SkNotifyBitmapGenIDIsStale(uint32_t bitmapGenID);
 
@@ -27,14 +27,14 @@ struct SkBitmapCacheDesc {
   uint32_t fImageID;  // != 0
   SkIRect fSubset;    // always set to a valid rect (entire or subset)
 
-  void validate() const noexcept {
+  void validate() const {
     SkASSERT(fImageID);
     SkASSERT(fSubset.fLeft >= 0 && fSubset.fTop >= 0);
     SkASSERT(fSubset.width() > 0 && fSubset.height() > 0);
   }
 
-  static SkBitmapCacheDesc Make(const SkImage*) noexcept;
-  static SkBitmapCacheDesc Make(uint32_t genID, const SkIRect& subset) noexcept;
+  static SkBitmapCacheDesc Make(const SkImage*);
+  static SkBitmapCacheDesc Make(uint32_t genID, const SkIRect& subset);
 };
 
 class SkBitmapCache {
@@ -47,7 +47,7 @@ class SkBitmapCache {
 
   class Rec;
   struct RecDeleter {
-    void operator()(Rec* r) noexcept { PrivateDeleteRec(r); }
+    void operator()(Rec* r) { PrivateDeleteRec(r); }
   };
   typedef std::unique_ptr<Rec, RecDeleter> RecPtr;
 
@@ -55,7 +55,7 @@ class SkBitmapCache {
   static void Add(RecPtr, SkBitmap*);
 
  private:
-  static void PrivateDeleteRec(Rec*) noexcept;
+  static void PrivateDeleteRec(Rec*);
 };
 
 class SkMipmapCache {

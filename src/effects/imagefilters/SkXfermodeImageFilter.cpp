@@ -58,7 +58,7 @@ class SkXfermodeImageFilterImpl : public SkImageFilter_Base {
 
   SkBlendMode fMode;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

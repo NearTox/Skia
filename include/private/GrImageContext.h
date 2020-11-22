@@ -30,13 +30,13 @@ class GrImageContext : public GrContext_Base {
   SK_API virtual void abandonContext();
   SK_API virtual bool abandoned();
 
-  GrProxyProvider* proxyProvider() noexcept { return fProxyProvider.get(); }
-  const GrProxyProvider* proxyProvider() const noexcept { return fProxyProvider.get(); }
+  GrProxyProvider* proxyProvider() { return fProxyProvider.get(); }
+  const GrProxyProvider* proxyProvider() const { return fProxyProvider.get(); }
 
   /** This is only useful for debug purposes */
-  GrSingleOwner* singleOwner() const noexcept { return &fSingleOwner; }
+  GrSingleOwner* singleOwner() const { return &fSingleOwner; }
 
-  GrImageContext* asImageContext() noexcept override { return this; }
+  GrImageContext* asImageContext() override { return this; }
 
  private:
   std::unique_ptr<GrProxyProvider> fProxyProvider;
@@ -46,7 +46,7 @@ class GrImageContext : public GrContext_Base {
   // GrRenderTargetContexts.  It is also passed to the GrResourceProvider and SkGpuDevice.
   mutable GrSingleOwner fSingleOwner;
 
-  typedef GrContext_Base INHERITED;
+  using INHERITED = GrContext_Base;
 };
 
 #endif

@@ -36,6 +36,6 @@ class CodecBench : public Benchmark {
   sk_sp<SkData> fData;
   SkImageInfo fInfo;  // Set in onDelayedSetup.
   SkAutoMalloc fPixelStorage;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 #endif  // CodecBench_DEFINED

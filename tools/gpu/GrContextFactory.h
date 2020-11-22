@@ -56,6 +56,7 @@ class GrContextFactory : SkNoncopyable {
   enum class ContextOverrides {
     kNone = 0x0,
     kAvoidStencilBuffers = 0x1,
+    kFakeGLESVersionAs2 = 0x2,
   };
 
   static bool IsRenderingContext(ContextType type) {

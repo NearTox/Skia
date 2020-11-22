@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLMagnifierEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLMagnifierEffect() noexcept = default;
+  GrGLSLMagnifierEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrMagnifierEffect& _outer = args.fFp.cast<GrMagnifierEffect>();
@@ -70,13 +70,13 @@ if (delta.x < 2.0 && delta.y < 2.0) {
         args.fUniformHandler->getUniformCStr(boundsUniformVar),
         args.fUniformHandler->getUniformCStr(xInvInsetVar),
         args.fUniformHandler->getUniformCStr(yInvInsetVar));
-    SkString _coords1043 = SkStringPrintf("mix(%s, zoom_coord, weight)", args.fSampleCoord);
-    SkString _sample1043 = this->invokeChild(0, args, _coords1043.c_str());
+    SkString _coords1037 = SkStringPrintf("mix(%s, zoom_coord, weight)", args.fSampleCoord);
+    SkString _sample1037 = this->invokeChild(0, args, _coords1037.c_str());
     fragBuilder->codeAppendf(
         R"SkSL(
-%s = %s;
+return %s;
 )SkSL",
-        args.fOutputColor, _sample1043.c_str());
+        _sample1037.c_str());
   }
 
  private:
@@ -120,7 +120,7 @@ GrGLSLFragmentProcessor* GrMagnifierEffect::onCreateGLSLInstance() const {
 }
 void GrMagnifierEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrMagnifierEffect& that = other.cast<GrMagnifierEffect>();
   (void)that;
   if (bounds != that.bounds) return false;
@@ -131,6 +131,7 @@ bool GrMagnifierEffect::onIsEqual(const GrFragmentProcessor& other) const noexce
   if (yInvInset != that.yInvInset) return false;
   return true;
 }
+bool GrMagnifierEffect::usesExplicitReturn() const { return true; }
 GrMagnifierEffect::GrMagnifierEffect(const GrMagnifierEffect& src)
     : INHERITED(kGrMagnifierEffect_ClassID, src.optimizationFlags()),
       bounds(src.bounds),

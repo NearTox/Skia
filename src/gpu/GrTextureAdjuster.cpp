@@ -84,7 +84,8 @@ std::unique_ptr<GrFragmentProcessor> GrTextureAdjuster::createFragmentProcessor(
 
 std::unique_ptr<GrFragmentProcessor> GrTextureAdjuster::createBicubicFragmentProcessor(
     const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
-    GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) {
+    GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+    SkImage::CubicResampler kernel) {
   return this->createBicubicFragmentProcessorForView(
-      this->view(GrMipmapped::kNo), textureMatrix, subset, domain, wrapX, wrapY);
+      this->view(GrMipmapped::kNo), textureMatrix, subset, domain, wrapX, wrapY, kernel);
 }

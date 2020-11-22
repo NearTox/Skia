@@ -14,7 +14,7 @@
 
 class SK_API SkPathMeasure {
  public:
-  SkPathMeasure() noexcept;
+  SkPathMeasure();
   /** Initialize the pathmeasure with the specified path. The parts of the path that are needed
    *  are copied, so the client is free to modify/delete the path after this call.
    *
@@ -32,7 +32,7 @@ class SK_API SkPathMeasure {
   /** Return the total length of the current contour, or 0 if no path
       is associated (e.g. resetPath(null))
   */
-  SkScalar getLength() noexcept;
+  SkScalar getLength();
 
   /** Pins distance to 0 <= distance <= getLength(), and then computes
       the corresponding position and tangent.
@@ -65,7 +65,7 @@ class SK_API SkPathMeasure {
 
   /** Return true if the current contour is closed()
    */
-  bool isClosed() noexcept;
+  bool isClosed();
 
   /** Move to the next contour in the path. Return true if one exists, or false if
       we're done with the path.

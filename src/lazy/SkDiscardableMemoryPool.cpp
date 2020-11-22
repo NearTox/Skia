@@ -26,7 +26,7 @@ class PoolDiscardableMemory;
  */
 class DiscardableMemoryPool : public SkDiscardableMemoryPool {
  public:
-  DiscardableMemoryPool(size_t budget) noexcept;
+  DiscardableMemoryPool(size_t budget);
   ~DiscardableMemoryPool() override;
 
   std::unique_ptr<SkDiscardableMemory> make(size_t bytes);
@@ -34,9 +34,9 @@ class DiscardableMemoryPool : public SkDiscardableMemoryPool {
     return this->make(bytes).release();  // TODO: change API
   }
 
-  size_t getRAMUsed() noexcept override;
+  size_t getRAMUsed() override;
   void setRAMBudget(size_t budget) override;
-  size_t getRAMBudget() noexcept override { return fBudget; }
+  size_t getRAMBudget() override { return fBudget; }
 
   /** purges all unlocked DMs */
   void dumpPool() override;
@@ -66,7 +66,7 @@ class DiscardableMemoryPool : public SkDiscardableMemoryPool {
 
   friend class PoolDiscardableMemory;
 
-  typedef SkDiscardableMemory::Factory INHERITED;
+  using INHERITED = SkDiscardableMemory::Factory;
 };
 
 /**
@@ -75,11 +75,10 @@ class DiscardableMemoryPool : public SkDiscardableMemoryPool {
  */
 class PoolDiscardableMemory : public SkDiscardableMemory {
  public:
-  PoolDiscardableMemory(
-      sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes) noexcept;
+  PoolDiscardableMemory(sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes);
   ~PoolDiscardableMemory() override;
   bool lock() override;
-  void* data() noexcept override;
+  void* data() override;
   void unlock() override;
   friend class DiscardableMemoryPool;
 
@@ -92,7 +91,7 @@ class PoolDiscardableMemory : public SkDiscardableMemory {
 };
 
 PoolDiscardableMemory::PoolDiscardableMemory(
-    sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes) noexcept
+    sk_sp<DiscardableMemoryPool> pool, SkAutoFree pointer, size_t bytes)
     : fPool(std::move(pool)), fLocked(true), fPointer(std::move(pointer)), fBytes(bytes) {
   SkASSERT(fPool != nullptr);
   SkASSERT(fPointer != nullptr);
@@ -109,7 +108,7 @@ bool PoolDiscardableMemory::lock() {
   return fPool->lock(this);
 }
 
-void* PoolDiscardableMemory::data() noexcept {
+void* PoolDiscardableMemory::data() {
   SkASSERT(fLocked);  // contract for SkDiscardableMemory
   return fPointer.get();
 }
@@ -121,7 +120,7 @@ void PoolDiscardableMemory::unlock() {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DiscardableMemoryPool::DiscardableMemoryPool(size_t budget) noexcept : fBudget(budget), fUsed(0) {
+DiscardableMemoryPool::DiscardableMemoryPool(size_t budget) : fBudget(budget), fUsed(0) {
 #if SK_LAZY_CACHE_STATS
   fCacheHits = 0;
   fCacheMisses = 0;
@@ -210,7 +209,7 @@ void DiscardableMemoryPool::unlock(PoolDiscardableMemory* dm) {
   this->dumpDownTo(fBudget);
 }
 
-size_t DiscardableMemoryPool::getRAMUsed() noexcept { return fUsed; }
+size_t DiscardableMemoryPool::getRAMUsed() { return fUsed; }
 void DiscardableMemoryPool::setRAMBudget(size_t budget) {
   SkAutoMutexExclusive autoMutexAcquire(fMutex);
   fBudget = budget;

@@ -106,7 +106,7 @@ class FontRegenGM : public skiagm::GpuGM {
   static constexpr int kSize = 512;
 
   sk_sp<SkTextBlob> fBlobs[3];
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -149,7 +149,7 @@ class BadAppleGM : public skiagm::GpuGM {
   static constexpr int kSize = 512;
 
   sk_sp<SkTextBlob> fBlobs[3];
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

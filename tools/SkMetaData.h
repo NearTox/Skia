@@ -113,6 +113,14 @@ class SkMetaData {
 
   SkMetaData(const SkMetaData&) = delete;
   SkMetaData& operator=(const SkMetaData&) = delete;
+
+ private:
+  struct FindResult {
+    SkMetaData::Rec* rec;
+    SkMetaData::Rec* prev;
+  };
+  FindResult findWithPrev(const char name[], Type type) const;
+  void remove(FindResult);
 };
 
 #endif

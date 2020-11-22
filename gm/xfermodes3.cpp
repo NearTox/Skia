@@ -207,7 +207,7 @@ class Xfermodes3GM : public GM {
   sk_sp<SkShader> fBGShader;
   sk_sp<SkShader> fBmpShader;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

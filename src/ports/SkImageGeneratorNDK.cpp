@@ -36,7 +36,7 @@ class ImageGeneratorNDK : public SkImageGenerator {
   // to recreate the AImageDecoder.
   bool fPreviouslySetADataSpace;
 
-  typedef SkImageGenerator INHERITED;
+  using INHERITED = SkImageGenerator;
 };
 
 }  // anonymous namespace

@@ -121,7 +121,7 @@ class ComplexClip3GM : public GM {
  private:
   bool fDoSimpleClipFirst;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

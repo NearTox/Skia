@@ -30,65 +30,61 @@ class GrSamplerState {
   static constexpr int kFilterCount = static_cast<int>(Filter::kLast) + 1;
   static constexpr int kWrapModeCount = static_cast<int>(WrapMode::kLast) + 1;
 
-  constexpr GrSamplerState() noexcept = default;
+  constexpr GrSamplerState() = default;
 
-  constexpr GrSamplerState(
-      WrapMode wrapXAndY, Filter filter, MipmapMode mm = MipmapMode::kNone) noexcept
+  constexpr GrSamplerState(WrapMode wrapXAndY, Filter filter, MipmapMode mm = MipmapMode::kNone)
       : fWrapModes{wrapXAndY, wrapXAndY}, fFilter(filter), fMipmapMode(mm) {}
 
   constexpr GrSamplerState(
-      WrapMode wrapX, WrapMode wrapY, Filter filter, MipmapMode mm = MipmapMode::kNone) noexcept
+      WrapMode wrapX, WrapMode wrapY, Filter filter, MipmapMode mm = MipmapMode::kNone)
       : fWrapModes{wrapX, wrapY}, fFilter(filter), fMipmapMode(mm) {}
 
   constexpr GrSamplerState(
-      const WrapMode wrapModes[2], Filter filter, MipmapMode mm = MipmapMode::kNone) noexcept
+      const WrapMode wrapModes[2], Filter filter, MipmapMode mm = MipmapMode::kNone)
       : fWrapModes{wrapModes[0], wrapModes[1]}, fFilter(filter), fMipmapMode(mm) {}
 
-  constexpr /*explicit*/ GrSamplerState(Filter filter) noexcept : fFilter(filter) {}
-  constexpr GrSamplerState(Filter filter, MipmapMode mm) noexcept
-      : fFilter(filter), fMipmapMode(mm) {}
+  constexpr /*explicit*/ GrSamplerState(Filter filter) : fFilter(filter) {}
+  constexpr GrSamplerState(Filter filter, MipmapMode mm) : fFilter(filter), fMipmapMode(mm) {}
 
-  constexpr GrSamplerState(const GrSamplerState&) noexcept = default;
+  constexpr GrSamplerState(const GrSamplerState&) = default;
 
-  constexpr GrSamplerState& operator=(const GrSamplerState&) noexcept = default;
+  constexpr GrSamplerState& operator=(const GrSamplerState&) = default;
 
-  constexpr WrapMode wrapModeX() const noexcept { return fWrapModes[0]; }
+  constexpr WrapMode wrapModeX() const { return fWrapModes[0]; }
 
-  constexpr WrapMode wrapModeY() const noexcept { return fWrapModes[1]; }
+  constexpr WrapMode wrapModeY() const { return fWrapModes[1]; }
 
-  constexpr bool isRepeated() const noexcept {
+  constexpr bool isRepeated() const {
     return fWrapModes[0] == WrapMode::kRepeat || fWrapModes[0] == WrapMode::kMirrorRepeat ||
            fWrapModes[1] == WrapMode::kRepeat || fWrapModes[1] == WrapMode::kMirrorRepeat;
   }
 
-  constexpr Filter filter() const noexcept { return fFilter; }
+  constexpr Filter filter() const { return fFilter; }
 
-  constexpr MipmapMode mipmapMode() const noexcept { return fMipmapMode; }
+  constexpr MipmapMode mipmapMode() const { return fMipmapMode; }
 
-  constexpr GrMipmapped mipmapped() const noexcept {
-    return GrMipmapped(fMipmapMode != MipmapMode::kNone);
-  }
+  constexpr GrMipmapped mipmapped() const { return GrMipmapped(fMipmapMode != MipmapMode::kNone); }
 
-  constexpr void setFilterMode(Filter filterMode) noexcept { fFilter = filterMode; }
+  constexpr void setFilterMode(Filter filterMode) { fFilter = filterMode; }
 
-  constexpr void setMipmapMode(MipmapMode mm) noexcept { fMipmapMode = mm; }
+  constexpr void setMipmapMode(MipmapMode mm) { fMipmapMode = mm; }
 
-  constexpr void setWrapModeX(const WrapMode wrap) noexcept { fWrapModes[0] = wrap; }
+  constexpr void setWrapModeX(const WrapMode wrap) { fWrapModes[0] = wrap; }
 
-  constexpr void setWrapModeY(const WrapMode wrap) noexcept { fWrapModes[1] = wrap; }
+  constexpr void setWrapModeY(const WrapMode wrap) { fWrapModes[1] = wrap; }
 
-  constexpr bool operator==(GrSamplerState that) const noexcept {
+  constexpr bool operator==(GrSamplerState that) const {
     return fWrapModes[0] == that.fWrapModes[0] && fWrapModes[1] == that.fWrapModes[1] &&
            fFilter == that.fFilter && fMipmapMode == that.fMipmapMode;
   }
 
-  constexpr bool operator!=(const GrSamplerState& that) const noexcept { return !(*this == that); }
+  constexpr bool operator!=(const GrSamplerState& that) const { return !(*this == that); }
 
   /**
    * Turn the sampler state into an integer from a tightly packed range for use as an index
    * (or key)
    */
-  constexpr uint8_t asIndex() const noexcept {
+  constexpr uint8_t asIndex() const {
     constexpr int kNumWraps = static_cast<int>(WrapMode::kLast) + 1;
     constexpr int kNumFilters = static_cast<int>(Filter::kLast) + 1;
     int result = static_cast<int>(fWrapModes[0]) * 1 + static_cast<int>(fWrapModes[1]) * kNumWraps +

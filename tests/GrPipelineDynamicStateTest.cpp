@@ -82,7 +82,7 @@ class GrPipelineDynamicStateTestProcessor : public GrGeometryProcessor {
   };
 
   friend class GLSLPipelineDynamicStateTestProcessor;
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 constexpr GrPrimitiveProcessor::Attribute GrPipelineDynamicStateTestProcessor::kAttributes[];
 
@@ -138,7 +138,7 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
   }
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) override {
     GrPipeline pipeline(fScissorTest, SkBlendMode::kSrc, flushState->drawOpArgs().writeSwizzle());
@@ -153,7 +153,8 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
     GrProgramInfo programInfo(
         flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
         flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &pipeline,
-        geomProc, GrPrimitiveType::kTriangleStrip);
+        &GrUserStencilSettings::kUnused, geomProc, GrPrimitiveType::kTriangleStrip, 0,
+        flushState->renderPassBarriers());
 
     flushState->bindPipeline(programInfo, SkRect::MakeIWH(kScreenSize, kScreenSize));
     for (int i = 0; i < 4; ++i) {
@@ -167,7 +168,7 @@ class GrPipelineDynamicStateTestOp : public GrDrawOp {
   GrScissorTest fScissorTest;
   const sk_sp<const GrBuffer> fVertexBuffer;
 
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrPipelineDynamicStateTest, reporter, ctxInfo) {

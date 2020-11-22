@@ -80,7 +80,7 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const noexcept override { return "LinearStrokeProcessor"; }
+  const char* name() const override { return "LinearStrokeProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[2] = {
@@ -96,7 +96,7 @@ class LinearStrokeProcessor : public GrGeometryProcessor {
     return new Impl();
   }
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 void LinearStrokeProcessor::Impl::onEmitCode(EmitArgs& args, GrGPArgs* gpArgs) {
@@ -172,7 +172,7 @@ class CubicStrokeProcessor : public GrGeometryProcessor {
   }
 
  private:
-  const char* name() const noexcept override { return "CubicStrokeProcessor"; }
+  const char* name() const override { return "CubicStrokeProcessor"; }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   static constexpr Attribute kInstanceAttribs[3] = {
@@ -733,7 +733,8 @@ void GrCCStroker::drawLog2Strokes(
   GrProgramInfo programInfo(
       flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
       flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &pipeline,
-      &processor, GrPrimitiveType::kTriangleStrip);
+      &GrUserStencilSettings::kUnused, &processor, GrPrimitiveType::kTriangleStrip, 0,
+      flushState->renderPassBarriers());
 
   flushState->bindPipeline(programInfo, SkRect::Make(drawBounds));
   flushState->bindBuffers(nullptr, fInstanceBuffer, nullptr);

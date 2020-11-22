@@ -14,7 +14,7 @@ namespace GrShaderUtils {
 
 class GLSLPrettyPrint {
  public:
-  GLSLPrettyPrint() noexcept = default;
+  GLSLPrettyPrint() {}
 
   SkSL::String prettify(const SkSL::String& string) {
     fTabs = 0;

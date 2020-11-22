@@ -90,9 +90,10 @@ class GrGLOpsRenderPass : public GrOpsRenderPass {
   const uint16_t* fIndexPointer;
 
   // This tracks whether or not we bound the respective buffers during the bindBuffers call.
-  SkDEBUGCODE(bool fDidBindVertexBuffer = false;) SkDEBUGCODE(bool fDidBindInstanceBuffer = false);
+  SkDEBUGCODE(bool fDidBindVertexBuffer = false;)
+  SkDEBUGCODE(bool fDidBindInstanceBuffer = false;)
 
-  typedef GrOpsRenderPass INHERITED;
+  using INHERITED = GrOpsRenderPass;
 };
 
 #endif

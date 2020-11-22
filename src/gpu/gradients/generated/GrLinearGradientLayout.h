@@ -26,7 +26,8 @@ class GrLinearGradientLayout : public GrFragmentProcessor {
       const SkLinearGradient& gradient, const GrFPArgs& args);
   GrLinearGradientLayout(const GrLinearGradientLayout& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-  const char* name() const noexcept override { return "LinearGradientLayout"; }
+  const char* name() const override { return "LinearGradientLayout"; }
+  bool usesExplicitReturn() const override;
 
  private:
   GrLinearGradientLayout()
@@ -37,11 +38,11 @@ class GrLinearGradientLayout : public GrFragmentProcessor {
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 #if GR_TEST_UTILS
   SkString onDumpInfo() const override;
 #endif
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 #endif

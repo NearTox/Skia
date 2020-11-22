@@ -21,7 +21,7 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
       const SkRect* subset = nullptr, const SkRect* domain = nullptr);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  const char* name() const noexcept override { return "YUVtoRGBEffect"; }
+  const char* name() const override { return "YUVtoRGBEffect"; }
 
  private:
   GrYUVtoRGBEffect(
@@ -38,7 +38,7 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
 
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  bool onIsEqual(const GrFragmentProcessor&) const noexcept override;
+  bool onIsEqual(const GrFragmentProcessor&) const override;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 

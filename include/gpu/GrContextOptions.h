@@ -44,7 +44,7 @@ struct SK_API GrContextOptions {
    */
   class SK_API PersistentCache {
    public:
-    virtual ~PersistentCache() = default;
+    virtual ~PersistentCache() {}
 
     /**
      * Returns the data for the key if it exists in the cache, otherwise returns null.
@@ -61,10 +61,11 @@ struct SK_API GrContextOptions {
    */
   class SK_API ShaderErrorHandler {
    public:
-    virtual ~ShaderErrorHandler() = default;
+    virtual ~ShaderErrorHandler() {}
     virtual void compileError(const char* shader, const char* errors) = 0;
   };
-  GrContextOptions() noexcept = default;
+
+  GrContextOptions() {}
 
   // Suppress prints for the GrContext.
   bool fSuppressPrints = false;
@@ -97,7 +98,7 @@ struct SK_API GrContextOptions {
 
   /** Construct mipmaps manually, via repeated downsampling draw-calls. This is used when
       the driver's implementation (glGenerateMipmap) contains bugs. This requires mipmap
-      level and LOD control (ie desktop or ES3). */
+      level control (ie desktop or ES3). */
   bool fDoManualMipmapping = false;
 
   /**
@@ -260,6 +261,17 @@ struct SK_API GrContextOptions {
    * If true, the caps will never support tessellation shaders.
    */
   bool fSuppressTessellationShaders = false;
+
+  /**
+   * If greater than zero and less than the actual hardware limit, overrides the maximum number of
+   * tessellation segments supported by the caps.
+   */
+  int fMaxTessellationSegmentsOverride = 0;
+
+  /**
+   * If true, then all paths are processed as if "setIsVolatile" had been called.
+   */
+  bool fAllPathsVolatile = false;
 
   /**
    * Render everything in wireframe

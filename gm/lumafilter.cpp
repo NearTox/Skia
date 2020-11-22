@@ -150,7 +150,7 @@ class LumaFilterGM : public skiagm::GM {
   sk_sp<SkColorFilter> fFilter;
   sk_sp<SkShader> fGr1, fGr2;
 
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

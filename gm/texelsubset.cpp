@@ -207,7 +207,7 @@ class TexelSubset : public GpuGM {
   MipmapMode fMipmapMode;
   bool fUpscale;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new TexelSubset(Filter::kNearest, MipmapMode::kNone, false);)

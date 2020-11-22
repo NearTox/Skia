@@ -22,7 +22,6 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
-#include "src/gpu/GrRenderTargetProxyPriv.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/SkGpuDevice.h"
 #include "src/image/SkImage_Base.h"
@@ -37,9 +36,7 @@ SkSurface_Gpu::SkSurface_Gpu(sk_sp<SkGpuDevice> device)
   SkASSERT(fDevice->accessRenderTargetContext()->asSurfaceProxy()->priv().isExact());
 }
 
-SkSurface_Gpu::~SkSurface_Gpu() = default;
-
-GrContext* SkSurface_Gpu::onGetContext_deprecated() { return fDevice->context(); }
+SkSurface_Gpu::~SkSurface_Gpu() {}
 
 GrRecordingContext* SkSurface_Gpu::onGetRecordingContext() { return fDevice->recordingContext(); }
 
@@ -98,9 +95,7 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
     return nullptr;
   }
 
-  // CONTEXT TODO: remove this use of 'backdoor' to create an SkImage. The issue is that
-  // SkImages still require a GrContext but the SkGpuDevice only holds a GrRecordingContext.
-  GrContext* context = fDevice->recordingContext()->priv().backdoor();
+  auto rContext = fDevice->recordingContext();
 
   if (!rtc->asSurfaceProxy()) {
     return nullptr;
@@ -115,7 +110,7 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
     // avoid copy-on-write.
     auto rect = subset ? *subset : SkIRect::MakeSize(rtc->dimensions());
     srcView = GrSurfaceProxyView::Copy(
-        context, std::move(srcView), rtc->mipmapped(), rect, SkBackingFit::kExact, budgeted);
+        rContext, std::move(srcView), rtc->mipmapped(), rect, SkBackingFit::kExact, budgeted);
   }
 
   const SkImageInfo info = fDevice->imageInfo();
@@ -125,7 +120,7 @@ sk_sp<SkImage> SkSurface_Gpu::onNewImageSnapshot(const SkIRect* subset) {
     // above copy creates a kExact surfaceContext.
     SkASSERT(srcView.proxy()->priv().isExact());
     image = sk_make_sp<SkImage_Gpu>(
-        sk_ref_sp(context), kNeedNewImageUniqueID, std::move(srcView), info.colorType(),
+        sk_ref_sp(rContext), kNeedNewImageUniqueID, std::move(srcView), info.colorType(),
         info.alphaType(), info.refColorSpace());
   }
   return image;
@@ -215,10 +210,12 @@ bool SkSurface_Gpu::onCharacterize(SkSurfaceCharacterization* characterization) 
     return false;
   }
 
-  bool usesGLFBO0 = rtc->asRenderTargetProxy()->rtPriv().glRTFBOIDIs0();
+  bool usesGLFBO0 = rtc->asRenderTargetProxy()->glRTFBOIDIs0();
   // We should never get in the situation where we have a texture render target that is also
   // backend by FBO 0.
   SkASSERT(!usesGLFBO0 || !SkToBool(rtc->asTextureProxy()));
+
+  bool vkRTSupportsInputAttachment = rtc->asRenderTargetProxy()->supportsVkInputAttachment();
 
   SkImageInfo ii = SkImageInfo::Make(
       rtc->width(), rtc->height(), ct, kPremul_SkAlphaType, rtc->colorInfo().refColorSpace());
@@ -230,6 +227,7 @@ bool SkSurface_Gpu::onCharacterize(SkSurfaceCharacterization* characterization) 
       SkSurfaceCharacterization::Textureable(SkToBool(rtc->asTextureProxy())),
       SkSurfaceCharacterization::MipMapped(mipmapped),
       SkSurfaceCharacterization::UsesGLFBO0(usesGLFBO0),
+      SkSurfaceCharacterization::VkRTSupportsInputAttachment(vkRTSupportsInputAttachment),
       SkSurfaceCharacterization::VulkanSecondaryCBCompatible(false),
       rtc->asRenderTargetProxy()->isProtected(), this->props());
   return true;
@@ -307,7 +305,7 @@ bool SkSurface_Gpu::onIsCompatible(const SkSurfaceCharacterization& characteriza
     }
   }
 
-  if (characterization.usesGLFBO0() != rtc->asRenderTargetProxy()->rtPriv().glRTFBOIDIs0()) {
+  if (characterization.usesGLFBO0() != rtc->asRenderTargetProxy()->glRTFBOIDIs0()) {
     // FBO0-ness effects how MSAA and window rectangles work. If the characterization was
     // tagged as FBO0 it would never have been allowed to use window rectangles. If MSAA
     // was also never used then a DDL recorded with this characterization should be replayable
@@ -420,60 +418,6 @@ static bool validate_backend_texture(
   }
 
   return true;
-}
-
-sk_sp<SkSurface> SkSurface::MakeFromBackendTexture(
-    GrContext* context, const SkSurfaceCharacterization& c, const GrBackendTexture& backendTexture,
-    TextureReleaseProc textureReleaseProc, ReleaseContext releaseContext) {
-  sk_sp<GrRefCntedCallback> releaseHelper;
-  if (textureReleaseProc) {
-    releaseHelper.reset(new GrRefCntedCallback(textureReleaseProc, releaseContext));
-  }
-
-  if (!context || !c.isValid()) {
-    return nullptr;
-  }
-
-  if (c.usesGLFBO0()) {
-    // If we are making the surface we will never use FBO0.
-    return nullptr;
-  }
-
-  if (!c.isCompatible(backendTexture)) {
-    return nullptr;
-  }
-
-  GrColorType grCT = SkColorTypeAndFormatToGrColorType(
-      context->priv().caps(), c.colorType(), backendTexture.getBackendFormat());
-  if (grCT == GrColorType::kUnknown) {
-    return nullptr;
-  }
-
-  if (!validate_backend_texture(
-          context->priv().caps(), backendTexture, c.sampleCount(), grCT, true)) {
-    return nullptr;
-  }
-
-  auto rtc = GrRenderTargetContext::MakeFromBackendTexture(
-      context, grCT, c.refColorSpace(), backendTexture, c.sampleCount(), c.origin(),
-      &c.surfaceProps(), std::move(releaseHelper));
-  if (!rtc) {
-    return nullptr;
-  }
-
-  auto device = SkGpuDevice::Make(context, std::move(rtc), SkGpuDevice::kUninit_InitContents);
-  if (!device) {
-    return nullptr;
-  }
-
-  sk_sp<SkSurface> result = sk_make_sp<SkSurface_Gpu>(std::move(device));
-#  ifdef SK_DEBUG
-  if (result) {
-    SkASSERT(result->isCompatible(c));
-  }
-#  endif
-
-  return result;
 }
 
 sk_sp<SkSurface> SkSurface::MakeRenderTarget(

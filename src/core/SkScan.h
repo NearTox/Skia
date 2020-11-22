@@ -96,7 +96,7 @@ class SkScan {
     from int to SkFixed. Does not check for overflow if the src coordinates
     exceed 32K
 */
-static inline void XRect_set(SkXRect* xr, const SkIRect& src) noexcept {
+static inline void XRect_set(SkXRect* xr, const SkIRect& src) {
   xr->fLeft = SkIntToFixed(src.fLeft);
   xr->fTop = SkIntToFixed(src.fTop);
   xr->fRight = SkIntToFixed(src.fRight);
@@ -107,7 +107,7 @@ static inline void XRect_set(SkXRect* xr, const SkIRect& src) noexcept {
     from SkScalar to SkFixed. Does not check for overflow if the src coordinates
     exceed 32K
 */
-static inline void XRect_set(SkXRect* xr, const SkRect& src) noexcept {
+static inline void XRect_set(SkXRect* xr, const SkRect& src) {
   xr->fLeft = SkScalarToFixed(src.fLeft);
   xr->fTop = SkScalarToFixed(src.fTop);
   xr->fRight = SkScalarToFixed(src.fRight);
@@ -116,7 +116,7 @@ static inline void XRect_set(SkXRect* xr, const SkRect& src) noexcept {
 
 /** Round the SkXRect coordinates, and store the result in the SkIRect.
  */
-static inline void XRect_round(const SkXRect& xr, SkIRect* dst) noexcept {
+static inline void XRect_round(const SkXRect& xr, SkIRect* dst) {
   dst->fLeft = SkFixedRoundToInt(xr.fLeft);
   dst->fTop = SkFixedRoundToInt(xr.fTop);
   dst->fRight = SkFixedRoundToInt(xr.fRight);
@@ -126,7 +126,7 @@ static inline void XRect_round(const SkXRect& xr, SkIRect* dst) noexcept {
 /** Round the SkXRect coordinates out (i.e. use floor for left/top, and ceiling
     for right/bottom), and store the result in the SkIRect.
 */
-static inline void XRect_roundOut(const SkXRect& xr, SkIRect* dst) noexcept {
+static inline void XRect_roundOut(const SkXRect& xr, SkIRect* dst) {
   dst->fLeft = SkFixedFloorToInt(xr.fLeft);
   dst->fTop = SkFixedFloorToInt(xr.fTop);
   dst->fRight = SkFixedCeilToInt(xr.fRight);

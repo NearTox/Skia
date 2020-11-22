@@ -16,7 +16,7 @@ class SkModeColorFilter : public SkColorFilterBase {
     return sk_sp<SkColorFilter>(new SkModeColorFilter(color, mode));
   }
 
-  uint32_t onGetFlags() const noexcept override;
+  uint32_t onGetFlags() const override;
 
 #if SK_SUPPORT_GPU
   GrFPResult asFragmentProcessor(
@@ -27,7 +27,7 @@ class SkModeColorFilter : public SkColorFilterBase {
   SK_FLATTENABLE_HOOKS(SkModeColorFilter)
 
  protected:
-  SkModeColorFilter(SkColor color, SkBlendMode mode) noexcept;
+  SkModeColorFilter(SkColor color, SkBlendMode mode);
 
   void flatten(SkWriteBuffer&) const override;
   bool onAsAColorMode(SkColor*, SkBlendMode*) const override;
@@ -42,7 +42,7 @@ class SkModeColorFilter : public SkColorFilterBase {
 
   friend class SkColorFilter;
 
-  typedef SkColorFilterBase INHERITED;
+  using INHERITED = SkColorFilterBase;
 };
 
 #endif

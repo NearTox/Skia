@@ -22,8 +22,8 @@ class GrDawnGpu;
 class GrDawnTextureRenderTarget : public GrDawnTexture, public GrDawnRenderTarget {
  public:
   GrDawnTextureRenderTarget(
-      GrDawnGpu* gpu, SkISize dimensions, const wgpu::TextureView textureView, int sampleCnt,
-      const GrDawnTextureInfo& textureInfo, GrMipmapStatus mipmapStatus);
+      GrDawnGpu* gpu, SkISize dimensions, int sampleCnt, const GrDawnTextureInfo& textureInfo,
+      GrMipmapStatus mipmapStatus);
 
   bool canAttemptStencilAttachment() const override;
 

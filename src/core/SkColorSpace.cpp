@@ -347,7 +347,7 @@ sk_sp<SkColorSpace> SkColorSpace::Deserialize(const void* data, size_t length) {
   }
 }
 
-bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) noexcept {
+bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) {
   if (x == y) {
     return true;
   }

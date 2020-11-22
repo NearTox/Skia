@@ -46,7 +46,7 @@ Run::Run(
   fPlaceholderIndex = std::numeric_limits<size_t>::max();
 }
 
-void Run::calculateMetrics() noexcept {
+void Run::calculateMetrics() {
   fCorrectAscent = fFontMetrics.fAscent - fFontMetrics.fLeading * 0.5;
   fCorrectDescent = fFontMetrics.fDescent + fFontMetrics.fLeading * 0.5;
   fCorrectLeading = 0;
@@ -58,12 +58,12 @@ void Run::calculateMetrics() noexcept {
   }
 }
 
-SkShaper::RunHandler::Buffer Run::newRunBuffer() noexcept {
+SkShaper::RunHandler::Buffer Run::newRunBuffer() {
   return {fGlyphs.data(), fPositions.data(), nullptr, fClusterIndexes.data(), fOffset};
 }
 
 void Run::commit() { fFont.getBounds(fGlyphs.data(), fGlyphs.size(), fBounds.data(), nullptr); }
-SkScalar Run::calculateWidth(size_t start, size_t end, bool clip) const noexcept {
+SkScalar Run::calculateWidth(size_t start, size_t end, bool clip) const {
   SkASSERT(start <= end);
   // clip |= end == size();  // Clip at the end of the run?
   SkScalar shift = 0;
@@ -170,7 +170,7 @@ void Run::iterateThroughClusters(const ClusterVisitor& visitor) {
   }
 }
 
-SkScalar Run::addSpacesAtTheEnd(SkScalar space, Cluster* cluster) noexcept {
+SkScalar Run::addSpacesAtTheEnd(SkScalar space, Cluster* cluster) {
   if (cluster->endPos() == cluster->startPos()) {
     return 0;
   }
@@ -206,7 +206,7 @@ SkScalar Run::addSpacesEvenly(SkScalar space, Cluster* cluster) {
   return shift;
 }
 
-void Run::shift(const Cluster* cluster, SkScalar offset) noexcept {
+void Run::shift(const Cluster* cluster, SkScalar offset) {
   if (offset == 0) {
     return;
   }
@@ -273,7 +273,7 @@ void Run::updateMetrics(InternalLineMetrics* endlineMetrics) {
   endlineMetrics->add(this);
 }
 
-SkScalar Cluster::sizeToChar(TextIndex ch) const noexcept {
+SkScalar Cluster::sizeToChar(TextIndex ch) const {
   if (ch < fTextRange.start || ch >= fTextRange.end) {
     return 0;
   }
@@ -283,7 +283,7 @@ SkScalar Cluster::sizeToChar(TextIndex ch) const noexcept {
   return SkDoubleToScalar(fWidth * ratio);
 }
 
-SkScalar Cluster::sizeFromChar(TextIndex ch) const noexcept {
+SkScalar Cluster::sizeFromChar(TextIndex ch) const {
   if (ch < fTextRange.start || ch >= fTextRange.end) {
     return 0;
   }
@@ -293,24 +293,24 @@ SkScalar Cluster::sizeFromChar(TextIndex ch) const noexcept {
   return SkDoubleToScalar(fWidth * ratio);
 }
 
-size_t Cluster::roundPos(SkScalar s) const noexcept {
+size_t Cluster::roundPos(SkScalar s) const {
   auto ratio = (s * 1.0) / fWidth;
   return sk_double_floor2int(ratio * size());
 }
 
-SkScalar Cluster::trimmedWidth(size_t pos) const noexcept {
+SkScalar Cluster::trimmedWidth(size_t pos) const {
   // Find the width until the pos and return the min between trimmedWidth and the width(pos)
   // We don't have to take in account cluster shift since it's the same for 0 and for pos
   auto& run = fOwner->run(fRunIndex);
   return std::min(run.positionX(pos) - run.positionX(fStart), fWidth);
 }
 
-SkScalar Run::positionX(size_t pos) const noexcept {
+SkScalar Run::positionX(size_t pos) const {
   return posX(pos) + fShifts[pos] +
          (fJustificationShifts.empty() ? 0 : fJustificationShifts[pos].fY);
 }
 
-PlaceholderStyle* Run::placeholderStyle() const noexcept {
+PlaceholderStyle* Run::placeholderStyle() const {
   if (isPlaceholder()) {
     return &fOwner->placeholders()[fPlaceholderIndex].fStyle;
   } else {
@@ -318,14 +318,14 @@ PlaceholderStyle* Run::placeholderStyle() const noexcept {
   }
 }
 
-Run* Cluster::run() const noexcept {
+Run* Cluster::run() const {
   if (fRunIndex >= fOwner->runs().size()) {
     return nullptr;
   }
   return &fOwner->run(fRunIndex);
 }
 
-SkFont Cluster::font() const noexcept { return fOwner->run(fRunIndex).font(); }
+SkFont Cluster::font() const { return fOwner->run(fRunIndex).font(); }
 
 bool Cluster::isHardBreak() const {
   return fOwner->codeUnitHasProperty(fTextRange.end, CodeUnitFlags::kHardLineBreakBefore);

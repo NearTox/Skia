@@ -47,7 +47,7 @@ class BitmapRegionDecoderBench : public Benchmark {
   const SkColorType fColorType;
   const uint32_t fSampleSize;
   const SkIRect fSubset;
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 #endif  // SK_ENABLE_ANDROID_UTILS
 #endif  // BitmapRegionDecoderBench_DEFINED

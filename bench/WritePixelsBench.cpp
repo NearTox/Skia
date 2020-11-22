@@ -45,7 +45,7 @@ class WritePixelsBench : public Benchmark {
   sk_sp<SkColorSpace> fCS;
   SkString fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 //////////////////////////////////////////////////////////////////////////////

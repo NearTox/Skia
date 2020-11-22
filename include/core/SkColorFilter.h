@@ -44,10 +44,10 @@ class SK_API SkColorFilter : public SkFlattenable {
   enum Flags {
     kAlphaUnchanged_Flag = 1 << 0,
   };
-  uint32_t getFlags() const noexcept;
+  uint32_t getFlags() const;
 
   // Returns true if the filter is guaranteed to never change the alpha of a color it filters.
-  bool isAlphaUnchanged() const noexcept;
+  bool isAlphaUnchanged() const;
 
   SkColor filterColor(SkColor) const;
 
@@ -65,13 +65,13 @@ class SK_API SkColorFilter : public SkFlattenable {
    */
   sk_sp<SkColorFilter> makeComposed(sk_sp<SkColorFilter> inner) const;
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
 
  private:
-  constexpr SkColorFilter() noexcept = default;
+  SkColorFilter() = default;
   friend class SkColorFilterBase;
 
-  typedef SkFlattenable INHERITED;
+  using INHERITED = SkFlattenable;
 };
 
 class SK_API SkColorFilters {
@@ -85,6 +85,7 @@ class SK_API SkColorFilters {
 
   // A version of Matrix which operates in HSLA space instead of RGBA.
   // I.e. HSLA-to-RGBA(Matrix(RGBA-to-HSLA(input))).
+  static sk_sp<SkColorFilter> HSLAMatrix(const SkColorMatrix&);
   static sk_sp<SkColorFilter> HSLAMatrix(const float rowMajor[20]);
 
   static sk_sp<SkColorFilter> LinearToSRGBGamma();
@@ -92,7 +93,7 @@ class SK_API SkColorFilters {
   static sk_sp<SkColorFilter> Lerp(float t, sk_sp<SkColorFilter> dst, sk_sp<SkColorFilter> src);
 
  private:
-  SkColorFilters() noexcept = delete;
+  SkColorFilters() = delete;
 };
 
 #endif

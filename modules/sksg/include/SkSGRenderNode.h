@@ -82,8 +82,8 @@ class RenderNode : public Node {
       return *this;
     }
 
-    operator const RenderContext*() const noexcept { return &fCtx; }
-    const RenderContext* operator->() const noexcept { return &fCtx; }
+    operator const RenderContext*() const { return &fCtx; }
+    const RenderContext* operator->() const { return &fCtx; }
 
     // Add (cumulative) paint overrides to a render node sub-DAG.
     ScopedRenderContext&& modulateOpacity(float opacity);
@@ -119,7 +119,7 @@ class RenderNode : public Node {
  private:
   friend class ImageFilterEffect;
 
-  typedef Node INHERITED;
+  using INHERITED = Node;
 };
 
 /**

@@ -132,7 +132,7 @@ class MatrixConvolutionGM : public GM {
   const char* fNameSuffix;
   KernelFixture fKernelFixture;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

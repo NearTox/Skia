@@ -245,7 +245,7 @@ class RectangleTexture : public GpuGM {
   sk_sp<SkImage> fGradImgs[kNumGradImages];
   sk_sp<SkImage> fSmallImg;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new RectangleTexture;)

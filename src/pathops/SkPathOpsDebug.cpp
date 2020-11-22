@@ -2677,7 +2677,8 @@ int SkIntersections::debugCoincidentUsed() const {
     return 0;
   }
   int count = 0;
-  SkDEBUGCODE(int count2 = 0;) for (int index = 0; index < fUsed; ++index) {
+  SkDEBUGCODE(int count2 = 0;)
+  for (int index = 0; index < fUsed; ++index) {
     if (fIsCoincident[0] & (1 << index)) {
       ++count;
     }

@@ -186,8 +186,8 @@ struct FilterNode {
 
       // Fill in the children. The union of these bounds should equal the value calculated
       // for reverseBounds already.
-      SkDEBUGCODE(SkIRect netReverseBounds =
-                      SkIRect::MakeEmpty();) for (int i = 0; i < fInputNodes.count(); ++i) {
+      SkDEBUGCODE(SkIRect netReverseBounds = SkIRect::MakeEmpty();)
+      for (int i = 0; i < fInputNodes.count(); ++i) {
         fInputNodes[i].computeReverseBounds(nextSrcRect, writeToLayerBounds);
         SkDEBUGCODE(netReverseBounds.join(
             writeToLayerBounds ? fInputNodes[i].fLayerBounds : fInputNodes[i].fReverseLocalBounds);)
@@ -510,7 +510,7 @@ class ImageFilterDAGSample : public Sample {
   SkString name() override { return SkString("ImageFilterDAG"); }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 DEF_SAMPLE(return new ImageFilterDAGSample();)

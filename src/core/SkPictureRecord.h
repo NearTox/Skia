@@ -34,15 +34,15 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
 
   SkPictureRecord(const SkIRect& dimensions, uint32_t recordFlags);
 
-  const SkTArray<sk_sp<const SkPicture>>& getPictures() const noexcept { return fPictures; }
+  const SkTArray<sk_sp<const SkPicture>>& getPictures() const { return fPictures; }
 
-  const SkTArray<sk_sp<SkDrawable>>& getDrawables() const noexcept { return fDrawables; }
+  const SkTArray<sk_sp<SkDrawable>>& getDrawables() const { return fDrawables; }
 
-  const SkTArray<sk_sp<const SkTextBlob>>& getTextBlobs() const noexcept { return fTextBlobs; }
+  const SkTArray<sk_sp<const SkTextBlob>>& getTextBlobs() const { return fTextBlobs; }
 
-  const SkTArray<sk_sp<const SkVertices>>& getVertices() const noexcept { return fVertices; }
+  const SkTArray<sk_sp<const SkVertices>>& getVertices() const { return fVertices; }
 
-  const SkTArray<sk_sp<const SkImage>>& getImages() const noexcept { return fImages; }
+  const SkTArray<sk_sp<const SkImage>>& getImages() const { return fImages; }
 
   sk_sp<SkData> opData() const {
     this->validate(fWriter.bytesWritten(), 0);
@@ -53,11 +53,11 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
     return fWriter.snapshotAsData();
   }
 
-  void setFlags(uint32_t recordFlags) noexcept { fRecordFlags = recordFlags; }
+  void setFlags(uint32_t recordFlags) { fRecordFlags = recordFlags; }
 
-  const SkWriter32& writeStream() const noexcept { return fWriter; }
+  const SkWriter32& writeStream() const { return fWriter; }
 
-  void beginRecording() noexcept;
+  void beginRecording();
   void endRecording();
 
  protected:
@@ -103,8 +103,8 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
     return offset;
   }
 
-  void addInt(int value) noexcept { fWriter.writeInt(value); }
-  void addScalar(SkScalar scalar) noexcept { fWriter.writeScalar(scalar); }
+  void addInt(int value) { fWriter.writeInt(value); }
+  void addScalar(SkScalar scalar) { fWriter.writeScalar(scalar); }
 
   void addImage(const SkImage*);
   void addMatrix(const SkMatrix& matrix);
@@ -129,7 +129,7 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
   int find(const SkBitmap& bitmap);
 
  protected:
-  void validate(size_t initialOffset, size_t size) const noexcept {
+  void validate(size_t initialOffset, size_t size) const {
     SkASSERT(fWriter.bytesWritten() == initialOffset + size);
   }
 
@@ -220,7 +220,7 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
   SkTArray<SkPaint> fPaints;
 
   struct PathHash {
-    uint32_t operator()(const SkPath& p) noexcept { return p.getGenerationID(); }
+    uint32_t operator()(const SkPath& p) { return p.getGenerationID(); }
   };
   SkTHashMap<SkPath, int, PathHash> fPaths;
 
@@ -237,7 +237,7 @@ class SkPictureRecord : public SkCanvasVirtualEnforcer<SkCanvas> {
 
   friend class SkPictureData;  // for SkPictureData's SkPictureRecord-based constructor
 
-  typedef SkCanvasVirtualEnforcer<SkCanvas> INHERITED;
+  using INHERITED = SkCanvasVirtualEnforcer<SkCanvas>;
 };
 
 #endif

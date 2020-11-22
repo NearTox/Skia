@@ -21,7 +21,7 @@ SkIDChangeListener::~SkIDChangeListener() = default;
 
 using List = SkIDChangeListener::List;
 
-List::List() noexcept = default;
+List::List() = default;
 
 List::~List() {
   // We don't need the mutex. No other thread should have this list while it's being

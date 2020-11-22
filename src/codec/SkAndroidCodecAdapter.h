@@ -30,6 +30,6 @@ class SkAndroidCodecAdapter : public SkAndroidCodec {
       const AndroidOptions& options) override;
 
  private:
-  typedef SkAndroidCodec INHERITED;
+  using INHERITED = SkAndroidCodec;
 };
 #endif  // SkAndroidCodecAdapter_DEFINED

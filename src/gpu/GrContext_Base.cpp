@@ -13,10 +13,10 @@
 #include "src/gpu/GrShaderUtils.h"
 #include "src/gpu/effects/GrSkSLFP.h"
 
-GrContext_Base::GrContext_Base(sk_sp<GrContextThreadSafeProxy> proxy) noexcept
+GrContext_Base::GrContext_Base(sk_sp<GrContextThreadSafeProxy> proxy)
     : fThreadSafeProxy(std::move(proxy)) {}
 
-GrContext_Base::~GrContext_Base() = default;
+GrContext_Base::~GrContext_Base() {}
 
 bool GrContext_Base::init() {
   SkASSERT(fThreadSafeProxy->isValid());
@@ -24,17 +24,15 @@ bool GrContext_Base::init() {
   return true;
 }
 
-uint32_t GrContext_Base::contextID() const noexcept { return fThreadSafeProxy->priv().contextID(); }
-GrBackendApi GrContext_Base::backend() const noexcept { return fThreadSafeProxy->priv().backend(); }
+uint32_t GrContext_Base::contextID() const { return fThreadSafeProxy->priv().contextID(); }
+GrBackendApi GrContext_Base::backend() const { return fThreadSafeProxy->priv().backend(); }
 
-const GrContextOptions& GrContext_Base::options() const noexcept {
+const GrContextOptions& GrContext_Base::options() const {
   return fThreadSafeProxy->priv().options();
 }
 
-const GrCaps* GrContext_Base::caps() const noexcept { return fThreadSafeProxy->priv().caps(); }
-sk_sp<const GrCaps> GrContext_Base::refCaps() const noexcept {
-  return fThreadSafeProxy->priv().refCaps();
-}
+const GrCaps* GrContext_Base::caps() const { return fThreadSafeProxy->priv().caps(); }
+sk_sp<const GrCaps> GrContext_Base::refCaps() const { return fThreadSafeProxy->priv().refCaps(); }
 
 GrBackendFormat GrContext_Base::defaultBackendFormat(
     SkColorType skColorType, GrRenderable renderable) const {
@@ -50,9 +48,7 @@ GrBackendFormat GrContext_Base::compressedBackendFormat(SkImage::CompressionType
   return format;
 }
 
-sk_sp<GrContextThreadSafeProxy> GrContext_Base::threadSafeProxy() noexcept {
-  return fThreadSafeProxy;
-}
+sk_sp<GrContextThreadSafeProxy> GrContext_Base::threadSafeProxy() { return fThreadSafeProxy; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const { return fContext->refCaps(); }

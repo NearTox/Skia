@@ -284,7 +284,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(
         outerStrokeAndAARing, 0.0f, 0.0f, 2 * kAntialiasingRadius, 1.0f, &insetAARing);
 
-    SkDEBUGCODE(this->validate());
+    SkDEBUGCODE(this->validate();)
     return true;
   }
 
@@ -323,7 +323,7 @@ bool GrAAConvexTessellator::tessellate(const SkMatrix& m, const SkPath& path) {
     this->createInsetRings(fInitialRing, 0.0f, 0.5f, kAntialiasingRadius, 1.0f, &insetAARing);
   }
 
-  SkDEBUGCODE(this->validate());
+  SkDEBUGCODE(this->validate();)
   return true;
 }
 
@@ -369,7 +369,7 @@ bool GrAAConvexTessellator::computePtAlongBisector(
 }
 
 bool GrAAConvexTessellator::extractFromPath(const SkMatrix& m, const SkPath& path) {
-  SkASSERT(SkPathConvexityType::kConvex == path.getConvexityType());
+  SkASSERT(path.isConvex());
 
   SkRect bounds = path.getBounds();
   m.mapRect(&bounds);

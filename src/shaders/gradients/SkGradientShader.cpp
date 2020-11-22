@@ -199,7 +199,7 @@ SkGradientShaderBase::SkGradientShaderBase(const Descriptor& desc, const SkMatri
   }
 }
 
-SkGradientShaderBase::~SkGradientShaderBase() = default;
+SkGradientShaderBase::~SkGradientShaderBase() {}
 
 void SkGradientShaderBase::flatten(SkWriteBuffer& buffer) const {
   Descriptor desc;
@@ -588,7 +588,7 @@ skvm::Color SkGradientShaderBase::onProgram(
   };
 }
 
-bool SkGradientShaderBase::isOpaque() const noexcept {
+bool SkGradientShaderBase::isOpaque() const {
   return fColorsAreOpaque && (this->getTileMode() != SkTileMode::kDecal);
 }
 
@@ -761,8 +761,7 @@ static sk_sp<SkShader> make_degenerate_gradient(
   } while (0)
 
 struct ColorStopOptimizer {
-  ColorStopOptimizer(
-      const SkColor4f* colors, const SkScalar* pos, int count, SkTileMode mode) noexcept
+  ColorStopOptimizer(const SkColor4f* colors, const SkScalar* pos, int count, SkTileMode mode)
       : fColors(colors), fPos(pos), fCount(count) {
     if (!pos || count != 3) {
       return;
@@ -792,7 +791,7 @@ struct ColorStopOptimizer {
 };
 
 struct ColorConverter {
-  ColorConverter(const SkColor* colors, int count) noexcept {
+  ColorConverter(const SkColor* colors, int count) {
     const float ONE_OVER_255 = 1.f / 255;
     for (int i = 0; i < count; ++i) {
       fColors4f.push_back(

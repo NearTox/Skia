@@ -22,12 +22,17 @@
     }                                                            \
   } while (false)
 
+static constexpr bool operator==(
+    const D3D12_CPU_DESCRIPTOR_HANDLE& first, const D3D12_CPU_DESCRIPTOR_HANDLE& second) {
+  return first.ptr == second.ptr;
+}
+
 /**
  * Returns true if the format is compressed.
  */
 bool GrDxgiFormatIsCompressed(DXGI_FORMAT);
 
-static constexpr uint32_t GrDxgiFormatChannels(DXGI_FORMAT vkFormat) noexcept {
+static constexpr uint32_t GrDxgiFormatChannels(DXGI_FORMAT vkFormat) {
   switch (vkFormat) {
     case DXGI_FORMAT_R8G8B8A8_UNORM: return kRGBA_SkColorChannelFlags;
     case DXGI_FORMAT_R8_UNORM: return kRed_SkColorChannelFlag;
@@ -73,11 +78,6 @@ static constexpr const char* GrDxgiFormatToStr(DXGI_FORMAT dxgiFormat) {
     default: return "Unknown";
   }
 }
-
-static constexpr bool operator==(
-    const D3D12_CPU_DESCRIPTOR_HANDLE& first, const D3D12_CPU_DESCRIPTOR_HANDLE& second) {
-  return first.ptr == second.ptr;
-}
-
 #endif
+
 #endif

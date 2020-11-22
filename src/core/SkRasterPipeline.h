@@ -96,7 +96,7 @@ class SkData;
                                                                                                               M(swizzle)
 
 // The largest number of pixels we handle at a time.
-static constexpr int SkRasterPipeline_kMaxStride = 16;
+static const int SkRasterPipeline_kMaxStride = 16;
 
 // Structs representing the arguments to some common stages.
 
@@ -187,10 +187,10 @@ class SkRasterPipeline {
   explicit SkRasterPipeline(SkArenaAlloc*);
 
   SkRasterPipeline(const SkRasterPipeline&) = delete;
-  SkRasterPipeline(SkRasterPipeline&&) noexcept = default;
+  SkRasterPipeline(SkRasterPipeline&&) = default;
 
   SkRasterPipeline& operator=(const SkRasterPipeline&) = delete;
-  SkRasterPipeline& operator=(SkRasterPipeline&&) noexcept = default;
+  SkRasterPipeline& operator=(SkRasterPipeline&&) = default;
 
   void reset();
 
@@ -241,7 +241,7 @@ class SkRasterPipeline {
 
   void append_transfer_function(const skcms_TransferFunction&);
 
-  bool empty() const noexcept { return fStages == nullptr; }
+  bool empty() const { return fStages == nullptr; }
 
  private:
   struct StageList {

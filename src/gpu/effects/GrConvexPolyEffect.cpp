@@ -33,7 +33,7 @@ class GrGLConvexPolyEffect : public GrGLSLFragmentProcessor {
  private:
   GrGLSLProgramDataManager::UniformHandle fEdgeUniform;
   SkScalar fPrevEdges[3 * GrConvexPolyEffect::kMaxEdges];
-  typedef GrGLSLFragmentProcessor INHERITED;
+  using INHERITED = GrGLSLFragmentProcessor;
 };
 
 void GrGLConvexPolyEffect::emitCode(EmitArgs& args) {
@@ -94,11 +94,11 @@ GrFPResult GrConvexPolyEffect::Make(
     return GrFPFailure(std::move(inputFP));
   }
 
-  SkPathPriv::FirstDirection dir;
+  SkPathFirstDirection dir = SkPathPriv::ComputeFirstDirection(path);
   // The only way this should fail is if the clip is effectively a infinitely thin line. In that
   // case nothing is inside the clip. It'd be nice to detect this at a higher level and either
   // skip the draw or omit the clip element.
-  if (!SkPathPriv::CheapComputeFirstDirection(path, &dir)) {
+  if (dir == SkPathFirstDirection::kUnknown) {
     if (GrProcessorEdgeTypeIsInverseFill(type)) {
       return GrFPSuccess(GrFragmentProcessor::ModulateRGBA(std::move(inputFP), SK_PMColor4fWHITE));
     }
@@ -131,7 +131,7 @@ GrFPResult GrConvexPolyEffect::Make(
         if (pts[0] != pts[1]) {
           SkVector v = pts[1] - pts[0];
           v.normalize();
-          if (SkPathPriv::kCCW_FirstDirection == dir) {
+          if (SkPathFirstDirection::kCCW == dir) {
             edges[3 * n] = v.fY;
             edges[3 * n + 1] = -v.fX;
           } else {
@@ -159,7 +159,7 @@ GrFPResult GrConvexPolyEffect::Make(
   return GrFPSuccess(GrAARectEffect::Make(std::move(inputFP), edgeType, rect));
 }
 
-GrConvexPolyEffect::~GrConvexPolyEffect() = default;
+GrConvexPolyEffect::~GrConvexPolyEffect() {}
 
 void GrConvexPolyEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
@@ -200,7 +200,7 @@ std::unique_ptr<GrFragmentProcessor> GrConvexPolyEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrConvexPolyEffect(*this));
 }
 
-bool GrConvexPolyEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrConvexPolyEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrConvexPolyEffect& cpe = other.cast<GrConvexPolyEffect>();
   // ignore the fact that 0 == -0 and just use memcmp.
   return (

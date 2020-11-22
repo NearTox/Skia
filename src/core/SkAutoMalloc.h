@@ -22,7 +22,7 @@
  */
 class SkAutoMalloc : SkNoncopyable {
  public:
-  explicit SkAutoMalloc(size_t size = 0) noexcept
+  explicit SkAutoMalloc(size_t size = 0)
       : fPtr(size ? sk_malloc_throw(size) : nullptr), fSize(size) {}
 
   /**
@@ -48,7 +48,7 @@ class SkAutoMalloc : SkNoncopyable {
   /**
    *  Reallocates the block to a new size. The ptr may or may not change.
    */
-  void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) noexcept {
+  void* reset(size_t size = 0, OnShrink shrink = kAlloc_OnShrink) {
     if (size != fSize && (size > fSize || kReuse_OnShrink != shrink)) {
       fPtr.reset(size ? sk_malloc_throw(size) : nullptr);
       fSize = size;
@@ -59,21 +59,21 @@ class SkAutoMalloc : SkNoncopyable {
   /**
    *  Return the allocated block.
    */
-  void* get() noexcept { return fPtr.get(); }
-  const void* get() const noexcept { return fPtr.get(); }
+  void* get() { return fPtr.get(); }
+  const void* get() const { return fPtr.get(); }
 
   /** Transfer ownership of the current ptr to the caller, setting the
       internal reference to null. Note the caller is reponsible for calling
       sk_free on the returned address.
    */
-  void* release() noexcept {
+  void* release() {
     fSize = 0;
     return fPtr.release();
   }
 
  private:
   struct WrapFree {
-    void operator()(void* p) noexcept { sk_free(p); }
+    void operator()(void* p) { sk_free(p); }
   };
   std::unique_ptr<void, WrapFree> fPtr;
   size_t fSize;  // can be larger than the requested size (see kReuse)
@@ -92,7 +92,7 @@ class SkAutoSMalloc : SkNoncopyable {
    *  Creates initially empty storage. get() returns a ptr, but it is to a zero-byte allocation.
    *  Must call reset(size) to return an allocated block.
    */
-  SkAutoSMalloc() noexcept {
+  SkAutoSMalloc() {
     fPtr = fStorage;
     fSize = kSize;
   }
@@ -101,7 +101,7 @@ class SkAutoSMalloc : SkNoncopyable {
    *  Allocate a block of the specified size. If size <= kSizeRequested (or slightly more), then
    *  the allocation will come from the stack, otherwise it will be dynamically allocated.
    */
-  explicit SkAutoSMalloc(size_t size) noexcept {
+  explicit SkAutoSMalloc(size_t size) {
     fPtr = fStorage;
     fSize = kSize;
     this->reset(size);
@@ -122,7 +122,7 @@ class SkAutoSMalloc : SkNoncopyable {
    *  this may be on the stack or dynamically allocated, the caller must not call sk_free() on it,
    *  but must rely on SkAutoSMalloc to manage it.
    */
-  void* get() const noexcept { return fPtr; }
+  void* get() const { return fPtr; }
 
   /**
    *  Return a new block of the requested size, freeing (as necessary) any previously allocated
@@ -131,7 +131,7 @@ class SkAutoSMalloc : SkNoncopyable {
    */
   void* reset(
       size_t size, SkAutoMalloc::OnShrink shrink = SkAutoMalloc::kAlloc_OnShrink,
-      bool* didChangeAlloc = nullptr) noexcept {
+      bool* didChangeAlloc = nullptr) {
     size = (size < kSize) ? kSize : size;
     bool alloc = size != fSize && (SkAutoMalloc::kAlloc_OnShrink == shrink || size > fSize);
     if (didChangeAlloc) {

@@ -40,7 +40,7 @@ class SkSVGRadialGradient final : public SkSVGGradient {
   SkTLazy<SkSVGLength> fFx;
   SkTLazy<SkSVGLength> fFy;
 
-  typedef SkSVGGradient INHERITED;
+  using INHERITED = SkSVGGradient;
 };
 
 #endif  // SkSVGRadialGradient_DEFINED

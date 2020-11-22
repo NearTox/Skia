@@ -93,6 +93,6 @@ class SkIcoCodec : public SkCodec {
   // std::unique_ptr.  It will be deleted by the destructor of fEmbeddedCodecs.
   SkCodec* fCurrCodec;
 
-  typedef SkCodec INHERITED;
+  using INHERITED = SkCodec;
 };
 #endif  // SkIcoCodec_DEFINED

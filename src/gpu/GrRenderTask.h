@@ -26,7 +26,7 @@ class GrTextureResolveRenderTask;
 // contents. (e.g., an opsTask that executes a command buffer, a task to regenerate mipmaps, etc.)
 class GrRenderTask : public SkRefCnt {
  public:
-  GrRenderTask() noexcept;
+  GrRenderTask();
   SkDEBUGCODE(~GrRenderTask() override);
 
   void makeClosed(const GrCaps&);
@@ -47,7 +47,7 @@ class GrRenderTask : public SkRefCnt {
   // mappings from surface proxy to last modifying rendertask.
   virtual void disown(GrDrawingManager*);
 
-  bool isClosed() const noexcept { return this->isSetFlag(kClosed_Flag); }
+  bool isClosed() const { return this->isSetFlag(kClosed_Flag); }
 
   /*
    * Notify this GrRenderTask that it relies on the contents of 'dependedOn'
@@ -67,14 +67,14 @@ class GrRenderTask : public SkRefCnt {
    */
   bool dependsOn(const GrRenderTask* dependedOn) const;
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
-  int numTargets() const noexcept { return fTargets.count(); }
-  const GrSurfaceProxyView& target(int i) const noexcept { return fTargets[i]; }
+  uint32_t uniqueID() const { return fUniqueID; }
+  int numTargets() const { return fTargets.count(); }
+  const GrSurfaceProxyView& target(int i) const { return fTargets[i]; }
 
   /*
    * Safely cast this GrRenderTask to a GrOpsTask (if possible).
    */
-  virtual GrOpsTask* asOpsTask() noexcept { return nullptr; }
+  virtual GrOpsTask* asOpsTask() { return nullptr; }
 
 #if GR_TEST_UTILS
   /*
@@ -102,7 +102,7 @@ class GrRenderTask : public SkRefCnt {
   // it is required)?
   bool isInstantiated() const;
 
-  SkDEBUGCODE(bool deferredProxiesAreInstantiated() const);
+  SkDEBUGCODE(bool deferredProxiesAreInstantiated() const;)
 
   // Add a target surface proxy to the list of targets for this task.
   // This also informs the drawing manager to update the lastRenderTask association.
@@ -152,14 +152,14 @@ class GrRenderTask : public SkRefCnt {
 
   void addDependency(GrRenderTask* dependedOn);
   void addDependent(GrRenderTask* dependent);
-  SkDEBUGCODE(bool isDependedent(const GrRenderTask* dependent) const);
-  SkDEBUGCODE(void validate() const);
+  SkDEBUGCODE(bool isDependedent(const GrRenderTask* dependent) const;)
+  SkDEBUGCODE(void validate() const;)
   void closeThoseWhoDependOnMe(const GrCaps&);
 
   // Feed proxy usage intervals to the GrResourceAllocator class
   virtual void gatherProxyIntervals(GrResourceAllocator*) const = 0;
 
-  static uint32_t CreateUniqueID() noexcept;
+  static uint32_t CreateUniqueID();
 
   enum Flags {
     kClosed_Flag = 0x01,    //!< This task can't accept any more dependencies.
@@ -169,32 +169,28 @@ class GrRenderTask : public SkRefCnt {
     kTempMark_Flag = 0x08,   //!< Flag for topological sorting
   };
 
-  void setFlag(uint32_t flag) noexcept { fFlags |= flag; }
+  void setFlag(uint32_t flag) { fFlags |= flag; }
 
-  void resetFlag(uint32_t flag) noexcept { fFlags &= ~flag; }
+  void resetFlag(uint32_t flag) { fFlags &= ~flag; }
 
-  bool isSetFlag(uint32_t flag) const noexcept { return SkToBool(fFlags & flag); }
+  bool isSetFlag(uint32_t flag) const { return SkToBool(fFlags & flag); }
 
   struct TopoSortTraits {
-    static void Output(GrRenderTask* renderTask, int /* index */) noexcept {
+    static void Output(GrRenderTask* renderTask, int /* index */) {
       renderTask->setFlag(kWasOutput_Flag);
     }
-    static bool WasOutput(const GrRenderTask* renderTask) noexcept {
+    static bool WasOutput(const GrRenderTask* renderTask) {
       return renderTask->isSetFlag(kWasOutput_Flag);
     }
-    static void SetTempMark(GrRenderTask* renderTask) noexcept {
-      renderTask->setFlag(kTempMark_Flag);
-    }
-    static void ResetTempMark(GrRenderTask* renderTask) noexcept {
-      renderTask->resetFlag(kTempMark_Flag);
-    }
-    static bool IsTempMarked(const GrRenderTask* renderTask) noexcept {
+    static void SetTempMark(GrRenderTask* renderTask) { renderTask->setFlag(kTempMark_Flag); }
+    static void ResetTempMark(GrRenderTask* renderTask) { renderTask->resetFlag(kTempMark_Flag); }
+    static bool IsTempMarked(const GrRenderTask* renderTask) {
       return renderTask->isSetFlag(kTempMark_Flag);
     }
-    static int NumDependencies(const GrRenderTask* renderTask) noexcept {
+    static int NumDependencies(const GrRenderTask* renderTask) {
       return renderTask->fDependencies.count();
     }
-    static GrRenderTask* Dependency(GrRenderTask* renderTask, int index) noexcept {
+    static GrRenderTask* Dependency(GrRenderTask* renderTask, int index) {
       return renderTask->fDependencies[index];
     }
   };
@@ -217,7 +213,7 @@ class GrRenderTask : public SkRefCnt {
   // each render task, then add it as a dependency during makeClosed().
   GrTextureResolveRenderTask* fTextureResolveTask = nullptr;
 
-  SkDEBUGCODE(GrDrawingManager* fDrawingMgr = nullptr);
+  SkDEBUGCODE(GrDrawingManager* fDrawingMgr = nullptr;)
 };
 
 #endif

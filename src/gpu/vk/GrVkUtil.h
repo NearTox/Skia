@@ -42,9 +42,9 @@ class GrVkGpu;
   VkResult SK_MACRO_APPEND_LINE(ret); \
   GR_VK_CALL_RESULT(GPU, SK_MACRO_APPEND_LINE(ret), X)
 
-bool GrVkFormatIsSupported(VkFormat) noexcept;
+bool GrVkFormatIsSupported(VkFormat);
 
-static constexpr uint32_t GrVkFormatChannels(VkFormat vkFormat) noexcept {
+static constexpr uint32_t GrVkFormatChannels(VkFormat vkFormat) {
   switch (vkFormat) {
     case VK_FORMAT_R8G8B8A8_UNORM: return kRGBA_SkColorChannelFlags;
     case VK_FORMAT_R8_UNORM: return kRed_SkColorChannelFlag;
@@ -72,9 +72,9 @@ static constexpr uint32_t GrVkFormatChannels(VkFormat vkFormat) noexcept {
   }
 }
 
-bool GrVkFormatNeedsYcbcrSampler(VkFormat format) noexcept;
+bool GrVkFormatNeedsYcbcrSampler(VkFormat format);
 
-bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples) noexcept;
+bool GrSampleCountToVkSampleCount(uint32_t samples, VkSampleCountFlagBits* vkSamples);
 
 bool GrCompileVkShaderModule(
     GrVkGpu* gpu, const SkSL::String& shaderString, VkShaderStageFlagBits stage,
@@ -89,10 +89,10 @@ bool GrInstallVkShaderModule(
 /**
  * Returns true if the format is compressed.
  */
-bool GrVkFormatIsCompressed(VkFormat) noexcept;
+bool GrVkFormatIsCompressed(VkFormat);
 
 #if defined(SK_DEBUG) || GR_TEST_UTILS
-static constexpr const char* GrVkFormatToStr(VkFormat vkFormat) noexcept {
+static constexpr const char* GrVkFormatToStr(VkFormat vkFormat) {
   switch (vkFormat) {
     case VK_FORMAT_R8G8B8A8_UNORM: return "R8G8B8A8_UNORM";
     case VK_FORMAT_R8_UNORM: return "R8_UNORM";

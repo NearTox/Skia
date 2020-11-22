@@ -21,22 +21,22 @@ class SkMatrixPriv {
     kMaxFlattenSize = 9 * sizeof(SkScalar) + sizeof(uint32_t),
   };
 
-  static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) noexcept {
+  static size_t WriteToMemory(const SkMatrix& matrix, void* buffer) {
     return matrix.writeToMemory(buffer);
   }
 
-  static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) noexcept {
+  static size_t ReadFromMemory(SkMatrix* matrix, const void* buffer, size_t length) {
     return matrix->readFromMemory(buffer, length);
   }
 
   typedef SkMatrix::MapXYProc MapXYProc;
   typedef SkMatrix::MapPtsProc MapPtsProc;
 
-  static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) noexcept {
+  static MapPtsProc GetMapPtsProc(const SkMatrix& matrix) {
     return SkMatrix::GetMapPtsProc(matrix.getType());
   }
 
-  static MapXYProc GetMapXYProc(const SkMatrix& matrix) noexcept {
+  static MapXYProc GetMapXYProc(const SkMatrix& matrix) {
     return SkMatrix::GetMapXYProc(matrix.getType());
   }
 
@@ -147,26 +147,26 @@ class SkMatrixPriv {
 
   static void MapHomogeneousPointsWithStride(
       const SkMatrix& mx, SkPoint3 dst[], size_t dstStride, const SkPoint3 src[], size_t srcStride,
-      int count) noexcept;
+      int count);
 
   // Returns the recommended filterquality, assuming the caller originally wanted kHigh (bicubic)
   static SkFilterQuality AdjustHighQualityFilterLevel(
-      const SkMatrix&, bool matrixIsInverse = false) noexcept;
+      const SkMatrix&, bool matrixIsInverse = false);
 
-  static bool PostIDiv(SkMatrix* matrix, int divx, int divy) noexcept {
+  static bool PostIDiv(SkMatrix* matrix, int divx, int divy) {
     return matrix->postIDiv(divx, divy);
   }
 
-  static bool CheapEqual(const SkMatrix& a, const SkMatrix& b) noexcept {
+  static bool CheapEqual(const SkMatrix& a, const SkMatrix& b) {
     return &a == &b || 0 == memcmp(a.fMat, b.fMat, sizeof(a.fMat));
   }
 
-  static const SkScalar* M44ColMajor(const SkM44& m) noexcept { return m.fMat; }
+  static const SkScalar* M44ColMajor(const SkM44& m) { return m.fMat; }
 
   // This is legacy functionality that only checks the 3x3 portion. The matrix could have Z-based
   // shear, or other complex behavior. Only use this if you're planning to use the information
   // to accelerate some purely 2D operation.
-  static bool IsScaleTranslateAsM33(const SkM44& m) noexcept {
+  static bool IsScaleTranslateAsM33(const SkM44& m) {
     return m.rc(1, 0) == 0 && m.rc(3, 0) == 0 && m.rc(0, 1) == 0 && m.rc(3, 1) == 0 &&
            m.rc(3, 3) == 1;
   }

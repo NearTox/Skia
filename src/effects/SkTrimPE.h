@@ -26,7 +26,7 @@ class SkTrimPE : public SkPathEffect {
   const SkScalar fStartT, fStopT;
   const SkTrimPathEffect::Mode fMode;
 
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 #endif

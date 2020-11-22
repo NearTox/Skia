@@ -29,37 +29,33 @@ struct SampleUsage {
   };
 
   // Make a SampleUsage that corresponds to no sampling of the child at all
-  SampleUsage() noexcept = default;
+  SampleUsage() = default;
 
   // This corresponds to sample(child, color, matrix) calls where every call site in the FP has
   // the same matrix, and that matrix's value is uniform (some expression only involving literals
   // and uniform variables).
-  static SampleUsage UniformMatrix(std::string expression, bool hasPerspective = true) noexcept {
+  static SampleUsage UniformMatrix(std::string expression, bool hasPerspective = true) {
     return SampleUsage(Kind::kUniform, std::move(expression), hasPerspective, false, false);
   }
 
   // This corresponds to sample(child, color, matrix) where the 3rd argument is an expression that
   // can't be hoisted to the vertex shader, or where the expression used is not the same at all
   // call sites in the FP.
-  static SampleUsage VariableMatrix(bool hasPerspective = true) noexcept {
-    return SampleUsage(Kind::kVariable, {}, hasPerspective, false, false);
+  static SampleUsage VariableMatrix(bool hasPerspective = true) {
+    return SampleUsage(Kind::kVariable, "", hasPerspective, false, false);
   }
 
-  static SampleUsage Explicit() noexcept {
-    return SampleUsage(Kind::kNone, {}, false, true, false);
-  }
+  static SampleUsage Explicit() { return SampleUsage(Kind::kNone, "", false, true, false); }
 
-  static SampleUsage PassThrough() noexcept {
-    return SampleUsage(Kind::kNone, {}, false, false, true);
-  }
+  static SampleUsage PassThrough() { return SampleUsage(Kind::kNone, "", false, false, true); }
 
   SampleUsage merge(const SampleUsage& other);
 
-  bool isSampled() const noexcept { return this->hasMatrix() || fExplicitCoords || fPassThrough; }
+  bool isSampled() const { return this->hasMatrix() || fExplicitCoords || fPassThrough; }
 
-  bool hasMatrix() const noexcept { return fKind != Kind::kNone; }
-  bool hasUniformMatrix() const noexcept { return fKind == Kind::kUniform; }
-  bool hasVariableMatrix() const noexcept { return fKind == Kind::kVariable; }
+  bool hasMatrix() const { return fKind != Kind::kNone; }
+  bool hasUniformMatrix() const { return fKind == Kind::kUniform; }
+  bool hasVariableMatrix() const { return fKind == Kind::kVariable; }
 
   Kind fKind = Kind::kNone;
   // The uniform expression representing the matrix (only valid when kind == kUniform)
@@ -72,10 +68,9 @@ struct SampleUsage {
   bool fPassThrough = false;
 
   SampleUsage(
-      Kind kind, std::string expression, bool hasPerspective, bool explicitCoords,
-      bool passThrough) noexcept
+      Kind kind, std::string expression, bool hasPerspective, bool explicitCoords, bool passThrough)
       : fKind(kind),
-        fExpression(std::move(expression)),
+        fExpression(expression),
         fHasPerspective(hasPerspective),
         fExplicitCoords(explicitCoords),
         fPassThrough(passThrough) {}

@@ -22,26 +22,26 @@ struct SkVertices_DeprecatedBone {
     data members or virtual methods. */
 class SkVerticesPriv {
  public:
-  SkVertices::VertexMode mode() const noexcept { return fVertices->fMode; }
+  SkVertices::VertexMode mode() const { return fVertices->fMode; }
 
-  bool hasCustomData() const noexcept { return SkToBool(fVertices->fCustomData); }
-  bool hasColors() const noexcept { return SkToBool(fVertices->fColors); }
-  bool hasTexCoords() const noexcept { return SkToBool(fVertices->fTexs); }
-  bool hasIndices() const noexcept { return SkToBool(fVertices->fIndices); }
+  bool hasCustomData() const { return SkToBool(fVertices->fCustomData); }
+  bool hasColors() const { return SkToBool(fVertices->fColors); }
+  bool hasTexCoords() const { return SkToBool(fVertices->fTexs); }
+  bool hasIndices() const { return SkToBool(fVertices->fIndices); }
 
   bool hasUsage(SkVertices::Attribute::Usage) const;
 
-  int vertexCount() const noexcept { return fVertices->fVertexCount; }
-  int indexCount() const noexcept { return fVertices->fIndexCount; }
-  int attributeCount() const noexcept { return fVertices->fAttributeCount; }
+  int vertexCount() const { return fVertices->fVertexCount; }
+  int indexCount() const { return fVertices->fIndexCount; }
+  int attributeCount() const { return fVertices->fAttributeCount; }
   size_t customDataSize() const;
 
-  const SkPoint* positions() const noexcept { return fVertices->fPositions; }
-  const void* customData() const noexcept { return fVertices->fCustomData; }
-  const SkPoint* texCoords() const noexcept { return fVertices->fTexs; }
-  const SkColor* colors() const noexcept { return fVertices->fColors; }
-  const uint16_t* indices() const noexcept { return fVertices->fIndices; }
-  const SkVertices::Attribute* attributes() const noexcept { return fVertices->fAttributes; }
+  const SkPoint* positions() const { return fVertices->fPositions; }
+  const void* customData() const { return fVertices->fCustomData; }
+  const SkPoint* texCoords() const { return fVertices->fTexs; }
+  const SkColor* colors() const { return fVertices->fColors; }
+  const uint16_t* indices() const { return fVertices->fIndices; }
+  const SkVertices::Attribute* attributes() const { return fVertices->fAttributes; }
 
   // Never called due to RVO in priv(), but must exist for MSVC 2017.
   SkVerticesPriv(const SkVerticesPriv&) = default;
@@ -50,7 +50,7 @@ class SkVerticesPriv {
   static sk_sp<SkVertices> Decode(SkReadBuffer&);
 
  private:
-  explicit SkVerticesPriv(SkVertices* vertices) noexcept : fVertices(vertices) {}
+  explicit SkVerticesPriv(SkVertices* vertices) : fVertices(vertices) {}
   SkVerticesPriv& operator=(const SkVerticesPriv&) = delete;
 
   // No taking addresses of this type
@@ -62,10 +62,9 @@ class SkVerticesPriv {
   friend class SkVertices;  // to construct this type
 };
 
-inline SkVerticesPriv SkVertices::priv() noexcept { return SkVerticesPriv(this); }
+inline SkVerticesPriv SkVertices::priv() { return SkVerticesPriv(this); }
 
-inline const SkVerticesPriv SkVertices::priv()
-    const noexcept {  // NOLINT(readability-const-return-type)
+inline const SkVerticesPriv SkVertices::priv() const {  // NOLINT(readability-const-return-type)
   return SkVerticesPriv(const_cast<SkVertices*>(this));
 }
 

@@ -111,7 +111,7 @@ void test_star(SkCanvas* canvas, const SkPaint& paint) {
   canvas->save();
   canvas->translate(300, 100);
   canvas->drawPath(
-      SkPath().addPoly({{30, 20}, {50, 80}, {70, 20}, {20, 57}, {80, 57}}, false), paint);
+      SkPath::Polygon({{30, 20}, {50, 80}, {70, 20}, {20, 57}, {80, 57}}, false), paint);
   canvas->restore();
 }
 

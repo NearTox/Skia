@@ -81,8 +81,6 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
   }
   fUniformHandles.fRTAdjustmentUni = this->uniformHandler()->addUniform(
       nullptr, rtAdjustVisibility, kFloat4_GrSLType, SkSL::Compiler::RTADJUST_NAME);
-  const char* rtAdjustName =
-      this->uniformHandler()->getUniformCStr(fUniformHandles.fRTAdjustmentUni);
 
   // Enclose custom code in a block to avoid namespace conflicts
   SkString openBrace;
@@ -108,12 +106,12 @@ void GrGLSLProgramBuilder::emitAndInstallPrimProc(SkString* outputColor, SkStrin
   GrGLSLGeometryProcessor::EmitArgs args(
       &fVS, proc.willUseGeoShader() ? &fGS : nullptr, &fFS, this->varyingHandler(),
       this->uniformHandler(), this->shaderCaps(), proc, outputColor->c_str(),
-      outputCoverage->c_str(), rtAdjustName, texSamplers.get(), &transformHandler);
+      outputCoverage->c_str(), texSamplers.get(), &transformHandler);
   fGeometryProcessor->emitCode(args);
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(proc));
+  SkDEBUGCODE(verify(proc);)
 
   fFS.codeAppend("}");
 }
@@ -136,8 +134,6 @@ void GrGLSLProgramBuilder::emitAndInstallFragProcs(SkString* color, SkString* co
   }
 }
 
-// TODO Processors cannot output zeros because an empty string is all 1s
-// the fix is to allow effects to take the SkString directly
 SkString GrGLSLProgramBuilder::emitFragProc(
     const GrFragmentProcessor& fp, GrGLSLFragmentProcessor& glslFP, int transformedCoordVarsIdx,
     const SkString& input, SkString output) {
@@ -145,11 +141,6 @@ SkString GrGLSLProgramBuilder::emitFragProc(
   // Program builders have a bit of state we need to clear with each effect
   AutoStageAdvance adv(this);
   this->nameExpression(&output, "output");
-
-  // Enclose custom code in a block to avoid namespace conflicts
-  SkString openBrace;
-  openBrace.printf("{ // Stage %d, %s\n", fStageIndex, fp.name());
-  fFS.codeAppend(openBrace.c_str());
 
   int samplerIdx = 0;
   for (auto [subFP, subGLSLFP] : GrGLSLFragmentProcessor::ParallelRange(fp, glslFP)) {
@@ -168,38 +159,52 @@ SkString GrGLSLProgramBuilder::emitFragProc(
   GrGLSLFragmentProcessor::TransformedCoordVars coords(&fp, coordVars);
   GrGLSLFragmentProcessor::EmitArgs args(
       &fFS, this->uniformHandler(), this->shaderCaps(), fp, output.c_str(), input.c_str(),
-      "_coords", coords);
+      "_coords", coords,
+      /*forceInline=*/true);
 
-  if (fp.referencesSampleCoords()) {
-    // The fp's generated code expects a _coords variable, but we're at the root so _coords
-    // is just the local coordinates produced by the primitive processor.
-    SkASSERT(fp.usesVaryingCoordsDirectly());
+  if (fp.usesExplicitReturn()) {
+    // FPs that explicitly return their output color must be in a helper function, but we inline
+    // it if at all possible.
+    args.fInputColor = "_input";
+    args.fOutputColor = "_output";
+    auto name = fFS.writeProcessorFunction(&glslFP, args);
+    fFS.codeAppendf("%s = %s(%s);", output.c_str(), name.c_str(), input.c_str());
+  } else {
+    // Enclose custom code in a block to avoid namespace conflicts
+    fFS.codeAppendf("{ // Stage %d, %s\n", fStageIndex, fp.name());
 
-    const GrShaderVar& varying = coordVars[0];
-    switch (varying.getType()) {
-      case kFloat2_GrSLType:
-        fFS.codeAppendf("float2 %s = %s.xy;\n", args.fSampleCoord, varying.getName().c_str());
-        break;
-      case kFloat3_GrSLType:
-        fFS.codeAppendf(
-            "float2 %s = %s.xy / %s.z;\n", args.fSampleCoord, varying.getName().c_str(),
-            varying.getName().c_str());
-        break;
-      default:
-        SkDEBUGFAILF(
-            "Unexpected type for varying: %d named %s\n", (int)varying.getType(),
-            varying.getName().c_str());
-        break;
+    if (fp.referencesSampleCoords()) {
+      // The fp's generated code expects a _coords variable, but we're at the root so _coords
+      // is just the local coordinates produced by the primitive processor.
+      SkASSERT(fp.usesVaryingCoordsDirectly());
+
+      const GrShaderVar& varying = coordVars[0];
+      switch (varying.getType()) {
+        case kFloat2_GrSLType:
+          fFS.codeAppendf("float2 %s = %s.xy;\n", args.fSampleCoord, varying.getName().c_str());
+          break;
+        case kFloat3_GrSLType:
+          fFS.codeAppendf(
+              "float2 %s = %s.xy / %s.z;\n", args.fSampleCoord, varying.getName().c_str(),
+              varying.getName().c_str());
+          break;
+        default:
+          SkDEBUGFAILF(
+              "Unexpected type for varying: %d named %s\n", (int)varying.getType(),
+              varying.getName().c_str());
+          break;
+      }
     }
-  }
 
-  glslFP.emitCode(args);
+    glslFP.emitCode(args);
+
+    fFS.codeAppend("}");
+  }
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(fp));
+  SkDEBUGCODE(verify(fp);)
 
-  fFS.codeAppend("}");
   return output;
 }
 
@@ -229,13 +234,17 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
   GrSurfaceOrigin dstTextureOrigin = kTopLeft_GrSurfaceOrigin;
 
   const GrSurfaceProxyView& dstView = this->pipeline().dstProxyView();
-  if (GrTextureProxy* dstTextureProxy = dstView.asTextureProxy()) {
-    // GrProcessor::TextureSampler sampler(dstTexture);
+  if (this->pipeline().usesDstTexture()) {
+    GrTextureProxy* dstTextureProxy = dstView.asTextureProxy();
+    SkASSERT(dstTextureProxy);
     const GrSwizzle& swizzle = dstView.swizzle();
     dstTextureSamplerHandle = this->emitSampler(
         dstTextureProxy->backendFormat(), GrSamplerState(), swizzle, "DstTextureSampler");
     dstTextureOrigin = dstView.origin();
     SkASSERT(dstTextureProxy->textureType() != GrTextureType::kExternal);
+  } else if (this->pipeline().usesInputAttachment()) {
+    const GrSwizzle& swizzle = dstView.swizzle();
+    dstTextureSamplerHandle = this->emitInputSampler(swizzle, "DstTextureInput");
   }
 
   SkString finalInColor = colorIn.size() ? colorIn : SkString("float4(1)");
@@ -243,13 +252,13 @@ void GrGLSLProgramBuilder::emitAndInstallXferProc(
   GrGLSLXferProcessor::EmitArgs args(
       &fFS, this->uniformHandler(), this->shaderCaps(), xp, finalInColor.c_str(),
       coverageIn.size() ? coverageIn.c_str() : "float4(1)", fFS.getPrimaryColorOutputName(),
-      fFS.getSecondaryColorOutputName(), dstTextureSamplerHandle, dstTextureOrigin,
-      this->pipeline().writeSwizzle());
+      fFS.getSecondaryColorOutputName(), this->pipeline().dstSampleType(), dstTextureSamplerHandle,
+      dstTextureOrigin, this->pipeline().writeSwizzle());
   fXferProcessor->emitCode(args);
 
   // We have to check that effects and the code they emit are consistent, ie if an effect
   // asks for dst color, then the emit code needs to follow suit
-  SkDEBUGCODE(verify(xp));
+  SkDEBUGCODE(verify(xp);)
   fFS.codeAppend("}");
 }
 
@@ -259,6 +268,11 @@ GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitSampler(
   ++fNumFragmentSamplers;
   return this->uniformHandler()->addSampler(
       backendFormat, state, swizzle, name, this->shaderCaps());
+}
+
+GrGLSLProgramBuilder::SamplerHandle GrGLSLProgramBuilder::emitInputSampler(
+    const GrSwizzle& swizzle, const char* name) {
+  return this->uniformHandler()->addInputSampler(swizzle, name);
 }
 
 bool GrGLSLProgramBuilder::checkSamplerCounts() {

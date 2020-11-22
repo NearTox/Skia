@@ -161,7 +161,7 @@ class RotRectBench : public Benchmark {
   SkBlendMode fMode;
   SkString fName;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 #define DEF_FOR_COLOR_TYPES(aa, blend)                                                       \

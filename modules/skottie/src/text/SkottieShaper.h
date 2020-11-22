@@ -88,7 +88,7 @@ class Shaper final {
 
   struct TextDesc {
     const sk_sp<SkTypeface>& fTypeface;
-    SkScalar fTextSize, fLineHeight, fAscent;
+    SkScalar fTextSize, fLineHeight, fLineShift, fAscent;
     SkTextUtils::Align fHAlign;
     VAlign fVAlign;
     ResizePolicy fResize;

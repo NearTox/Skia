@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLSweepGradientLayout : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLSweepGradientLayout() noexcept = default;
+  GrGLSLSweepGradientLayout() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrSweepGradientLayout& _outer = args.fFp.cast<GrSweepGradientLayout>();
@@ -73,13 +73,14 @@ GrGLSLFragmentProcessor* GrSweepGradientLayout::onCreateGLSLInstance() const {
 }
 void GrSweepGradientLayout::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrSweepGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
   const GrSweepGradientLayout& that = other.cast<GrSweepGradientLayout>();
   (void)that;
   if (bias != that.bias) return false;
   if (scale != that.scale) return false;
   return true;
 }
+bool GrSweepGradientLayout::usesExplicitReturn() const { return false; }
 GrSweepGradientLayout::GrSweepGradientLayout(const GrSweepGradientLayout& src)
     : INHERITED(kGrSweepGradientLayout_ClassID, src.optimizationFlags()),
       bias(src.bias),

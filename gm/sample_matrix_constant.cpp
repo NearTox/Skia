@@ -39,7 +39,7 @@ class SampleMatrixConstantEffect : public GrFragmentProcessor {
 
  private:
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 class GLSLSampleMatrixConstantEffect : public GrGLSLFragmentProcessor {

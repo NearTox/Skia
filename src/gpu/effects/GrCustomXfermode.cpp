@@ -27,7 +27,7 @@ bool GrCustomXfermode::IsSupportedMode(SkBlendMode mode) {
 // Static helpers
 ///////////////////////////////////////////////////////////////////////////////
 
-static constexpr GrBlendEquation hw_blend_equation(SkBlendMode mode) noexcept {
+static constexpr GrBlendEquation hw_blend_equation(SkBlendMode mode) {
 // In C++14 this could be a constexpr int variable.
 #define EQ_OFFSET (kOverlay_GrBlendEquation - (int)SkBlendMode::kOverlay)
   static_assert(kOverlay_GrBlendEquation == (int)SkBlendMode::kOverlay + EQ_OFFSET);
@@ -80,7 +80,7 @@ class CustomXP : public GrXferProcessor {
         fMode(mode),
         fHWBlendEquation(kIllegal_GrBlendEquation) {}
 
-  const char* name() const noexcept override { return "Custom Xfermode"; }
+  const char* name() const override { return "Custom Xfermode"; }
 
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
@@ -99,12 +99,12 @@ class CustomXP : public GrXferProcessor {
 
   void onGetBlendInfo(BlendInfo*) const override;
 
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override;
+  bool onIsEqual(const GrXferProcessor& xpBase) const override;
 
   const SkBlendMode fMode;
   const GrBlendEquation fHWBlendEquation;
 
-  typedef GrXferProcessor INHERITED;
+  using INHERITED = GrXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -158,7 +158,7 @@ class GLCustomXP : public GrGLSLXferProcessor {
 
   void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
-  typedef GrGLSLXferProcessor INHERITED;
+  using INHERITED = GrGLSLXferProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ GrGLSLXferProcessor* CustomXP::createGLSLInstance() const {
   return new GLCustomXP(*this);
 }
 
-bool CustomXP::onIsEqual(const GrXferProcessor& other) const noexcept {
+bool CustomXP::onIsEqual(const GrXferProcessor& other) const {
   const CustomXP& s = other.cast<CustomXP>();
   return fMode == s.fMode && fHWBlendEquation == s.fHWBlendEquation;
 }
@@ -203,7 +203,7 @@ void CustomXP::onGetBlendInfo(BlendInfo* blendInfo) const {
 #endif
 class CustomXPFactory : public GrXPFactory {
  public:
-  constexpr CustomXPFactory(SkBlendMode mode) noexcept
+  constexpr CustomXPFactory(SkBlendMode mode)
       : fMode(mode), fHWBlendEquation(hw_blend_equation(mode)) {}
 
  private:
@@ -220,7 +220,7 @@ class CustomXPFactory : public GrXPFactory {
   SkBlendMode fMode;
   GrBlendEquation fHWBlendEquation;
 
-  typedef GrXPFactory INHERITED;
+  using INHERITED = GrXPFactory;
 };
 #if defined(__GNUC__)
 #  pragma GCC diagnostic pop

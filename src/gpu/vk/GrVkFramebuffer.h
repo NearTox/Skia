@@ -41,7 +41,7 @@ class GrVkFramebuffer : public GrVkManagedResource {
 
   VkFramebuffer fFramebuffer;
 
-  typedef GrVkManagedResource INHERITED;
+  using INHERITED = GrVkManagedResource;
 };
 
 #endif

@@ -18,26 +18,26 @@ namespace SkSL {
  * always eventually replaced by Constructors in valid programs.
  */
 struct TypeReference : public Expression {
-  static constexpr Kind kExpressionKind = kTypeReference_Kind;
+  static constexpr Kind kExpressionKind = Kind::kTypeReference;
 
-  TypeReference(const Context& context, int offset, const Type& value) noexcept
-      : INHERITED(offset, kExpressionKind, *context.fInvalid_Type), fValue(value) {}
+  TypeReference(const Context& context, int offset, const Type* value)
+      : INHERITED(offset, kExpressionKind, context.fInvalid_Type.get()), fValue(*value) {}
 
-  bool hasProperty(Property property) const noexcept override { return false; }
+  bool hasProperty(Property property) const override { return false; }
 
   String description() const override { return String(fValue.fName); }
 
   std::unique_ptr<Expression> clone() const override {
-    return std::unique_ptr<Expression>(new TypeReference(fOffset, fValue, &fType));
+    return std::unique_ptr<Expression>(new TypeReference(fOffset, fValue, &this->type()));
   }
 
   const Type& fValue;
 
-  typedef Expression INHERITED;
+  using INHERITED = Expression;
 
  private:
-  TypeReference(int offset, const Type& value, const Type* type) noexcept
-      : INHERITED(offset, kExpressionKind, *type), fValue(value) {}
+  TypeReference(int offset, const Type& value, const Type* type)
+      : INHERITED(offset, kExpressionKind, type), fValue(value) {}
 };
 
 }  // namespace SkSL

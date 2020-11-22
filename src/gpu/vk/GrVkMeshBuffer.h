@@ -30,7 +30,7 @@ class GrVkMeshBuffer : public GrGpuBuffer, public GrVkBuffer {
 
   GrVkGpu* getVkGpu() const;
 
-  typedef GrGpuBuffer INHERITED;
+  using INHERITED = GrGpuBuffer;
 };
 
 #endif

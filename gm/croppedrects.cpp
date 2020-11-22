@@ -88,9 +88,9 @@ class CroppedRectsGM : public GM {
     {
       // GrRenderTargetContext::fillRectWithLocalMatrix.
       SkAutoCanvasRestore acr(canvas, true);
-      SkPath path;
-      path.moveTo(kSrcImageClip.fLeft - kSrcImageClip.width(), kSrcImageClip.centerY());
-      path.lineTo(kSrcImageClip.fRight + 3 * kSrcImageClip.width(), kSrcImageClip.centerY());
+      SkPath path = SkPath::Line(
+          {kSrcImageClip.fLeft - kSrcImageClip.width(), kSrcImageClip.centerY()},
+          {kSrcImageClip.fRight + 3 * kSrcImageClip.width(), kSrcImageClip.centerY()});
       SkPaint paint;
       paint.setStyle(SkPaint::kStroke_Style);
       paint.setStrokeWidth(2 * kSrcImageClip.height());
@@ -109,7 +109,7 @@ class CroppedRectsGM : public GM {
   sk_sp<SkImage> fSrcImage;
   sk_sp<SkShader> fSrcImageShader;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new CroppedRectsGM();)

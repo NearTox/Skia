@@ -24,7 +24,7 @@ class GrProxyProvider;
  */
 class GrCCClipPath {
  public:
-  GrCCClipPath() noexcept = default;
+  GrCCClipPath() = default;
   GrCCClipPath(const GrCCClipPath&) = delete;
 
   ~GrCCClipPath() {
@@ -36,24 +36,24 @@ class GrCCClipPath {
     SkASSERT(!fAtlasLazyProxy || fAtlasLazyProxy->unique());
   }
 
-  bool isInitialized() const noexcept { return fAtlasLazyProxy != nullptr; }
+  bool isInitialized() const { return fAtlasLazyProxy != nullptr; }
   void init(
       const SkPath& deviceSpacePath, const SkIRect& desc, GrCCAtlas::CoverageType atlasCoverageType,
       const GrCaps&);
 
-  void addAccess(const SkIRect& accessRect) noexcept {
+  void addAccess(const SkIRect& accessRect) {
     SkASSERT(this->isInitialized());
     fAccessRect.join(accessRect);
   }
-  GrTextureProxy* atlasLazyProxy() const noexcept {
+  GrTextureProxy* atlasLazyProxy() const {
     SkASSERT(this->isInitialized());
     return fAtlasLazyProxy.get();
   }
-  const SkPath& deviceSpacePath() const noexcept {
+  const SkPath& deviceSpacePath() const {
     SkASSERT(this->isInitialized());
     return fDeviceSpacePath;
   }
-  const SkIRect& pathDevIBounds() const noexcept {
+  const SkIRect& pathDevIBounds() const {
     SkASSERT(this->isInitialized());
     return fPathDevIBounds;
   }
@@ -61,7 +61,7 @@ class GrCCClipPath {
   void accountForOwnPath(GrCCPerFlushResourceSpecs*) const;
   void renderPathInAtlas(GrCCPerFlushResources*, GrOnFlushResourceProvider*);
 
-  const SkIVector& atlasTranslate() const noexcept {
+  const SkIVector& atlasTranslate() const {
     SkASSERT(fHasAtlasTranslate);
     return fDevToAtlasOffset;
   }
@@ -74,8 +74,8 @@ class GrCCClipPath {
 
   const GrCCAtlas* fAtlas = nullptr;
   SkIVector fDevToAtlasOffset;  // Translation from device space to location in atlas.
-  SkDEBUGCODE(bool fHasAtlas = false);
-  SkDEBUGCODE(bool fHasAtlasTranslate = false);
+  SkDEBUGCODE(bool fHasAtlas = false;)
+  SkDEBUGCODE(bool fHasAtlasTranslate = false;)
 };
 
 #endif

@@ -104,7 +104,7 @@ class FillRectOp final : public GrMeshDrawOp {
     }
   }
 
-  const char* name() const noexcept override { return "FillRectOp"; }
+  const char* name() const override { return "FillRectOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -199,7 +199,8 @@ class FillRectOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     const VertexSpec vertexSpec = this->vertexSpec();
 
     GrGeometryProcessor* gp = GrQuadPerEdgeAA::MakeProcessor(arena, vertexSpec);
@@ -207,12 +208,13 @@ class FillRectOp final : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
-        vertexSpec.primitiveType());
+        vertexSpec.primitiveType(), renderPassXferBarriers);
   }
 
   void onPrePrepareDraws(
       GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) override {
+      const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
     SkASSERT(!fPrePreparedVertices);
@@ -223,7 +225,8 @@ class FillRectOp final : public GrMeshDrawOp {
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip::Disabled();
 
     this->createProgramInfo(
-        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView,
+        renderPassXferBarriers);
 
     context->priv().recordProgramInfo(fProgramInfo);
 
@@ -446,7 +449,7 @@ class FillRectOp final : public GrMeshDrawOp {
   sk_sp<const GrBuffer> fIndexBuffer;
   int fBaseVertex;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace

@@ -21,18 +21,18 @@ class SK_API SkDataTable : public SkRefCnt {
   /**
    *  Returns true if the table is empty (i.e. has no entries).
    */
-  bool isEmpty() const noexcept { return 0 == fCount; }
+  bool isEmpty() const { return 0 == fCount; }
 
   /**
    *  Return the number of entries in the table. 0 for an empty table
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   /**
    *  Return the size of the index'th entry in the table. The caller must
    *  ensure that index is valid for this table.
    */
-  size_t atSize(int index) const noexcept;
+  size_t atSize(int index) const;
 
   /**
    *  Return a pointer to the data of the index'th entry in the table.
@@ -41,10 +41,10 @@ class SK_API SkDataTable : public SkRefCnt {
    *  @param size If non-null, this returns the byte size of this entry. This
    *              will be the same value that atSize(index) would return.
    */
-  const void* at(int index, size_t* size = nullptr) const noexcept;
+  const void* at(int index, size_t* size = nullptr) const;
 
   template <typename T>
-  const T* atT(int index, size_t* size = nullptr) const noexcept {
+  const T* atT(int index, size_t* size = nullptr) const {
     return reinterpret_cast<const T*>(this->at(index, size));
   }
 
@@ -52,7 +52,7 @@ class SK_API SkDataTable : public SkRefCnt {
    *  Returns the index'th entry as a c-string, and assumes that the trailing
    *  null byte had been copied into the table as well.
    */
-  const char* atStr(int index) const noexcept {
+  const char* atStr(int index) const {
     size_t size;
     const char* str = this->atT<const char>(index, &size);
     SkASSERT(strlen(str) + 1 == size);
@@ -104,14 +104,14 @@ class SK_API SkDataTable : public SkRefCnt {
   FreeProc fFreeProc;
   void* fFreeProcContext;
 
-  SkDataTable() noexcept;
-  SkDataTable(const void* array, size_t elemSize, int count, FreeProc, void* context) noexcept;
-  SkDataTable(const Dir*, int count, FreeProc, void* context) noexcept;
+  SkDataTable();
+  SkDataTable(const void* array, size_t elemSize, int count, FreeProc, void* context);
+  SkDataTable(const Dir*, int count, FreeProc, void* context);
   ~SkDataTable() override;
 
   friend class SkDataTableBuilder;  // access to Dir
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 #endif

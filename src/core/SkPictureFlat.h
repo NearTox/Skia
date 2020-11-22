@@ -144,13 +144,13 @@ enum SaveBehindFlatFlags {
 // clipparams are packed in 5 bits
 //  doAA:1 | clipOp:4
 
-static constexpr inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) noexcept {
+static inline uint32_t ClipParams_pack(SkClipOp op, bool doAA) {
   unsigned doAABit = doAA ? 1 : 0;
   return (doAABit << 4) | static_cast<int>(op);
 }
 
 template <typename T>
-T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) noexcept {
+T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) {
   if (buffer->validate(candidate <= static_cast<uint32_t>(T::kMax_EnumValue))) {
     return static_cast<T>(candidate);
   }
@@ -158,33 +158,29 @@ T asValidEnum(SkReadBuffer* buffer, uint32_t candidate) noexcept {
   return T::kMax_EnumValue;
 }
 
-static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t packed) noexcept {
+static inline SkClipOp ClipParams_unpackRegionOp(SkReadBuffer* buffer, uint32_t packed) {
   return asValidEnum<SkClipOp>(buffer, packed & 0xF);
 }
 
-static constexpr inline bool ClipParams_unpackDoAA(uint32_t packed) noexcept {
-  return SkToBool((packed >> 4) & 1);
-}
+static inline bool ClipParams_unpackDoAA(uint32_t packed) { return SkToBool((packed >> 4) & 1); }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 class SkTypefacePlayback {
  public:
-  constexpr SkTypefacePlayback() noexcept : fCount(0), fArray(nullptr) {}
+  SkTypefacePlayback() : fCount(0), fArray(nullptr) {}
   ~SkTypefacePlayback() = default;
 
   void setCount(size_t count);
 
-  size_t count() const noexcept { return fCount; }
+  size_t count() const { return fCount; }
 
-  sk_sp<SkTypeface>& operator[](size_t index) noexcept {
+  sk_sp<SkTypeface>& operator[](size_t index) {
     SkASSERT(index < fCount);
     return fArray[index];
   }
 
-  void setupBuffer(SkReadBuffer& buffer) const noexcept {
-    buffer.setTypefaceArray(fArray.get(), fCount);
-  }
+  void setupBuffer(SkReadBuffer& buffer) const { buffer.setTypefaceArray(fArray.get(), fCount); }
 
  protected:
   size_t fCount;
@@ -197,11 +193,9 @@ class SkFactoryPlayback {
 
   ~SkFactoryPlayback() { delete[] fArray; }
 
-  SkFlattenable::Factory* base() const noexcept { return fArray; }
+  SkFlattenable::Factory* base() const { return fArray; }
 
-  void setupBuffer(SkReadBuffer& buffer) const noexcept {
-    buffer.setFactoryPlayback(fArray, fCount);
-  }
+  void setupBuffer(SkReadBuffer& buffer) const { buffer.setFactoryPlayback(fArray, fCount); }
 
  private:
   int fCount;

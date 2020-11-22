@@ -40,7 +40,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
         gpTypeFlags, color, viewMatrix, localMatrix, coverage, localCoordsWillBeRead);
   }
 
-  const char* name() const noexcept override { return "DefaultGeometryProcessor"; }
+  const char* name() const override { return "DefaultGeometryProcessor"; }
 
   const SkPMColor4f& color() const { return fColor; }
   bool hasVertexColor() const { return fInColor.isInitialized(); }
@@ -166,7 +166,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
     UniformHandle fColorUniform;
     UniformHandle fCoverageUniform;
 
-    typedef GrGLSLGeometryProcessor INHERITED;
+    using INHERITED = GrGLSLGeometryProcessor;
   };
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
@@ -216,7 +216,7 @@ class DefaultGeoProc : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 GR_DEFINE_GEOMETRY_PROCESSOR_TEST(DefaultGeoProc);

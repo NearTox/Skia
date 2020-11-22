@@ -92,7 +92,7 @@ class TextBlobColorTrans : public GM {
   static constexpr int kWidth = 675;
   static constexpr int kHeight = 1600;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

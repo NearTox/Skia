@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLLinearGradientLayout : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLLinearGradientLayout() noexcept = default;
+  GrGLSLLinearGradientLayout() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrLinearGradientLayout& _outer = args.fFp.cast<GrLinearGradientLayout>();
@@ -40,11 +40,12 @@ GrGLSLFragmentProcessor* GrLinearGradientLayout::onCreateGLSLInstance() const {
 }
 void GrLinearGradientLayout::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrLinearGradientLayout::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrLinearGradientLayout::onIsEqual(const GrFragmentProcessor& other) const {
   const GrLinearGradientLayout& that = other.cast<GrLinearGradientLayout>();
   (void)that;
   return true;
 }
+bool GrLinearGradientLayout::usesExplicitReturn() const { return false; }
 GrLinearGradientLayout::GrLinearGradientLayout(const GrLinearGradientLayout& src)
     : INHERITED(kGrLinearGradientLayout_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

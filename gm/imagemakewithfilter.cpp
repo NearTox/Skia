@@ -347,7 +347,7 @@ class ImageMakeWithFilterGM : public skiagm::GM {
     }
   }
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 // The different strategies should all look the same, with the exception of filters that affect
 // transparent black (i.e. the lighting filter). In the save layer case, the filter affects the

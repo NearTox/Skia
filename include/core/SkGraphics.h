@@ -165,7 +165,7 @@ class SK_API SkGraphics {
    *  Returns the previous factory (which could be NULL).
    */
   static ImageGeneratorFromEncodedDataFactory SetImageGeneratorFromEncodedDataFactory(
-      ImageGeneratorFromEncodedDataFactory) noexcept;
+      ImageGeneratorFromEncodedDataFactory);
 
   /**
    *  Call early in main() to allow Skia to use a JIT to accelerate CPU-bound operations.

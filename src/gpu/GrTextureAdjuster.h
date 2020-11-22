@@ -28,7 +28,8 @@ class GrTextureAdjuster final : public GrTextureProducer {
 
   std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessor(
       const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
-      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) override;
+      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+      SkImage::CubicResampler) override;
 
  private:
   GrSurfaceProxyView onView(GrMipmapped) override;
@@ -38,7 +39,7 @@ class GrTextureAdjuster final : public GrTextureProducer {
   GrSurfaceProxyView fOriginal;
   uint32_t fUniqueID;
 
-  typedef GrTextureProducer INHERITED;
+  using INHERITED = GrTextureProducer;
 };
 
 #endif

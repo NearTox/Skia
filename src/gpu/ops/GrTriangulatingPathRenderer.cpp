@@ -170,7 +170,7 @@ class TriangulatingPathOp final : public GrMeshDrawOp {
         context, std::move(paint), shape, viewMatrix, devClipBounds, aaType, stencilSettings);
   }
 
-  const char* name() const noexcept override { return "TriangulatingPathOp"; }
+  const char* name() const override { return "TriangulatingPathOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -300,7 +300,8 @@ class TriangulatingPathOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) override {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) override {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -339,7 +340,8 @@ class TriangulatingPathOp final : public GrMeshDrawOp {
         TRIANGULATOR_WIREFRAME ? GrPrimitiveType::kLines : GrPrimitiveType::kTriangles;
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
-        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, primitiveType);
+        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, primitiveType,
+        renderPassXferBarriers);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -386,7 +388,7 @@ class TriangulatingPathOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 }  // anonymous namespace

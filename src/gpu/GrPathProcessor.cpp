@@ -100,7 +100,7 @@ class GrGLPathProcessor : public GrGLSLPrimitiveProcessor {
   UniformHandle fColorUniform;
   SkPMColor4f fColor;
 
-  typedef GrGLSLPrimitiveProcessor INHERITED;
+  using INHERITED = GrGLSLPrimitiveProcessor;
 };
 
 GrPathProcessor::GrPathProcessor(

@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLAlphaThresholdFragmentProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLAlphaThresholdFragmentProcessor() noexcept = default;
+  GrGLSLAlphaThresholdFragmentProcessor() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrAlphaThresholdFragmentProcessor& _outer =
@@ -77,13 +77,14 @@ GrGLSLFragmentProcessor* GrAlphaThresholdFragmentProcessor::onCreateGLSLInstance
 }
 void GrAlphaThresholdFragmentProcessor::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrAlphaThresholdFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrAlphaThresholdFragmentProcessor& that = other.cast<GrAlphaThresholdFragmentProcessor>();
   (void)that;
   if (innerThreshold != that.innerThreshold) return false;
   if (outerThreshold != that.outerThreshold) return false;
   return true;
 }
+bool GrAlphaThresholdFragmentProcessor::usesExplicitReturn() const { return false; }
 GrAlphaThresholdFragmentProcessor::GrAlphaThresholdFragmentProcessor(
     const GrAlphaThresholdFragmentProcessor& src)
     : INHERITED(kGrAlphaThresholdFragmentProcessor_ClassID, src.optimizationFlags()),

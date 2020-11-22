@@ -206,7 +206,7 @@ class GradientBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 
   sk_sp<SkShader> MakeShader(GradType gradType, GradData data, SkTileMode tm, float scale) {
     const SkPoint pts[2] = {{0, 0}, {SkIntToScalar(kSize), SkIntToScalar(kSize)}};
@@ -309,7 +309,7 @@ class Gradient2Bench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new Gradient2Bench(false);)

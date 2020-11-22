@@ -23,19 +23,26 @@ class GrContextThreadSafeProxyPriv {
  public:
   void init(sk_sp<const GrCaps> caps) const { fProxy->init(std::move(caps)); }
 
-  bool matches(GrContext_Base* candidate) const noexcept {
+  bool matches(GrContext_Base* candidate) const {
     return fProxy == candidate->threadSafeProxy().get();
   }
 
-  GrBackend backend() const noexcept { return fProxy->fBackend; }
-  const GrContextOptions& options() const noexcept { return fProxy->fOptions; }
-  uint32_t contextID() const noexcept { return fProxy->fContextID; }
+  GrBackend backend() const { return fProxy->fBackend; }
+  const GrContextOptions& options() const { return fProxy->fOptions; }
+  uint32_t contextID() const { return fProxy->fContextID; }
 
-  const GrCaps* caps() const noexcept { return fProxy->fCaps.get(); }
-  sk_sp<const GrCaps> refCaps() const noexcept { return fProxy->fCaps; }
+  const GrCaps* caps() const { return fProxy->fCaps.get(); }
+  sk_sp<const GrCaps> refCaps() const { return fProxy->fCaps; }
 
-  GrTextBlobCache* getTextBlobCache() noexcept { return fProxy->fTextBlobCache.get(); }
-  const GrTextBlobCache* getTextBlobCache() const noexcept { return fProxy->fTextBlobCache.get(); }
+  GrTextBlobCache* getTextBlobCache() { return fProxy->fTextBlobCache.get(); }
+  const GrTextBlobCache* getTextBlobCache() const { return fProxy->fTextBlobCache.get(); }
+
+  GrThreadSafeUniquelyKeyedProxyViewCache* threadSafeViewCache() {
+    return fProxy->fThreadSafeViewCache.get();
+  }
+  const GrThreadSafeUniquelyKeyedProxyViewCache* threadSafeViewCache() const {
+    return fProxy->fThreadSafeViewCache.get();
+  }
 
   void abandonContext() { fProxy->abandonContext(); }
   bool abandoned() const { return fProxy->abandoned(); }
@@ -44,7 +51,7 @@ class GrContextThreadSafeProxyPriv {
   static sk_sp<GrContextThreadSafeProxy> Make(GrBackendApi, const GrContextOptions&);
 
  private:
-  explicit GrContextThreadSafeProxyPriv(GrContextThreadSafeProxy* proxy) noexcept : fProxy(proxy) {}
+  explicit GrContextThreadSafeProxyPriv(GrContextThreadSafeProxy* proxy) : fProxy(proxy) {}
   GrContextThreadSafeProxyPriv(const GrContextThreadSafeProxy&) = delete;
   GrContextThreadSafeProxyPriv& operator=(const GrContextThreadSafeProxyPriv&) = delete;
 
@@ -57,12 +64,12 @@ class GrContextThreadSafeProxyPriv {
   friend class GrContextThreadSafeProxy;  // to construct/copy this type.
 };
 
-inline GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() noexcept {
+inline GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv() {
   return GrContextThreadSafeProxyPriv(this);
 }
 
 inline const GrContextThreadSafeProxyPriv GrContextThreadSafeProxy::priv()
-    const noexcept {  // NOLINT(readability-const-return-type)
+    const {  // NOLINT(readability-const-return-type)
   return GrContextThreadSafeProxyPriv(const_cast<GrContextThreadSafeProxy*>(this));
 }
 

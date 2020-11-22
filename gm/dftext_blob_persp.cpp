@@ -137,7 +137,7 @@ class DFTextBlobPerspGM : public skiagm::GM {
   }
 
   SkTArray<sk_sp<SkTextBlob>> fBlobs;
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 DEF_GM(return new DFTextBlobPerspGM;)

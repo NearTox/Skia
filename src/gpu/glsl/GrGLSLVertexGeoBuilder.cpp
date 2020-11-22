@@ -12,7 +12,7 @@
 #include "src/gpu/glsl/GrGLSLVarying.h"
 
 void GrGLSLVertexGeoBuilder::emitNormalizedSkPosition(
-    SkString* out, const char* devPos, const char* rtAdjustName, GrSLType devPosType) {
+    SkString* out, const char* devPos, GrSLType devPosType) {
   if (this->getProgramBuilder()->snapVerticesToPixelCenters()) {
     if (kFloat3_GrSLType == devPosType) {
       const char* p = devPos;
@@ -73,9 +73,8 @@ void GrGLSLGeometryBuilder::configure(
       SkStringPrintf("max_vertices = %i", maxVertices).c_str(), kOut_InterfaceQualifier);
 }
 
-void GrGLSLGeometryBuilder::emitVertex(
-    SkString* out, const char* devPos, const char* rtAdjustName, GrSLType devPosType) {
-  this->emitNormalizedSkPosition(out, devPos, rtAdjustName, devPosType);
+void GrGLSLGeometryBuilder::emitVertex(SkString* out, const char* devPos, GrSLType devPosType) {
+  this->emitNormalizedSkPosition(out, devPos, devPosType);
   out->append("EmitVertex();");
 }
 

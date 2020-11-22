@@ -116,7 +116,7 @@ class ClippedCubic2GM : public skiagm::GM {
   SkPath fFlipped;
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 class CubicPathGM : public skiagm::GM {

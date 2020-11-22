@@ -27,52 +27,33 @@ class SkPathPriv {
 
   static constexpr SkScalar kW0PlaneDistance = 0.05f;
 
-  enum FirstDirection : int {
-    kCW_FirstDirection,   // == SkPathDirection::kCW
-    kCCW_FirstDirection,  // == SkPathDirection::kCCW
-    kUnknown_FirstDirection,
-  };
-
-  static constexpr FirstDirection AsFirstDirection(SkPathDirection dir) noexcept {
+  static SkPathFirstDirection AsFirstDirection(SkPathDirection dir) {
     // since we agree numerically for the values in Direction, we can just cast.
-    return (FirstDirection)dir;
+    return (SkPathFirstDirection)dir;
   }
 
   /**
    *  Return the opposite of the specified direction. kUnknown is its own
    *  opposite.
    */
-  static FirstDirection OppositeFirstDirection(FirstDirection dir) noexcept {
-    static const FirstDirection gOppositeDir[] = {
-        kCCW_FirstDirection,
-        kCW_FirstDirection,
-        kUnknown_FirstDirection,
+  static SkPathFirstDirection OppositeFirstDirection(SkPathFirstDirection dir) {
+    static const SkPathFirstDirection gOppositeDir[] = {
+        SkPathFirstDirection::kCCW,
+        SkPathFirstDirection::kCW,
+        SkPathFirstDirection::kUnknown,
     };
-    return gOppositeDir[dir];
+    return gOppositeDir[(unsigned)dir];
   }
 
   /**
-   *  Tries to quickly compute the direction of the first non-degenerate
-   *  contour. If it can be computed, return true and set dir to that
-   *  direction. If it cannot be (quickly) determined, return false and ignore
-   *  the dir parameter. If the direction was determined, it is cached to make
-   *  subsequent calls return quickly.
+   *  Tries to compute the direction of the outer-most non-degenerate
+   *  contour. If it can be computed, return that direction. If it cannot be determined,
+   *  or the contour is known to be convex, return kUnknown. If the direction was determined,
+   *  it is cached to make subsequent calls return quickly.
    */
-  static bool CheapComputeFirstDirection(const SkPath&, FirstDirection* dir) noexcept;
+  static SkPathFirstDirection ComputeFirstDirection(const SkPath&);
 
-  /**
-   *  Returns true if the path's direction can be computed via
-   *  cheapComputDirection() and if that computed direction matches the
-   *  specified direction. If dir is kUnknown, returns true if the direction
-   *  cannot be computed.
-   */
-  static bool CheapIsFirstDirection(const SkPath& path, FirstDirection dir) noexcept {
-    FirstDirection computedDir = kUnknown_FirstDirection;
-    (void)CheapComputeFirstDirection(path, &computedDir);
-    return computedDir == dir;
-  }
-
-  static bool IsClosedSingleContour(const SkPath& path) noexcept {
+  static bool IsClosedSingleContour(const SkPath& path) {
     int verbCount = path.countVerbs();
     if (verbCount == 0) return false;
     int moveCount = 0;
@@ -101,12 +82,13 @@ class SkPathPriv {
   }
 
   /**
-   * This returns true for a rect that begins and ends at the same corner and has either a move
-   * followed by four lines or a move followed by 3 lines and a close. None of the parameters are
-   * optional. This does not permit degenerate line or point rectangles.
+   * This returns true for a rect that has a move followed by 3 or 4 lines and a close. If
+   * 'isSimpleFill' is true, an uncloseed rect will also be accepted as long as it starts and
+   * ends at the same corner. This does not permit degenerate line or point rectangles.
    */
-  static bool IsSimpleClosedRect(
-      const SkPath& path, SkRect* rect, SkPathDirection* direction, unsigned* start);
+  static bool IsSimpleRect(
+      const SkPath& path, bool isSimpleFill, SkRect* rect, SkPathDirection* direction,
+      unsigned* start);
 
   /**
    * Creates a path from arc params using the semantics of SkCanvas::drawArc. This function
@@ -120,8 +102,7 @@ class SkPathPriv {
    * Determines whether an arc produced by CreateDrawArcPath will be convex. Assumes a non-empty
    * oval.
    */
-  static bool DrawArcIsConvex(
-      SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect) noexcept;
+  static bool DrawArcIsConvex(SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect);
 
   /**
    * Returns a C++11-iterable object that traverses a path's verbs in order. e.g:
@@ -132,15 +113,15 @@ class SkPathPriv {
    */
   struct Verbs {
    public:
-    Verbs(const SkPath& path) noexcept : fPathRef(path.fPathRef.get()) {}
+    Verbs(const SkPath& path) : fPathRef(path.fPathRef.get()) {}
     struct Iter {
-      void operator++() noexcept { fVerb++; }
-      bool operator!=(const Iter& b) noexcept { return fVerb != b.fVerb; }
-      SkPath::Verb operator*() noexcept { return static_cast<SkPath::Verb>(*fVerb); }
+      void operator++() { fVerb++; }
+      bool operator!=(const Iter& b) { return fVerb != b.fVerb; }
+      SkPath::Verb operator*() { return static_cast<SkPath::Verb>(*fVerb); }
       const uint8_t* fVerb;
     };
-    Iter begin() noexcept { return Iter{fPathRef->verbsBegin()}; }
-    Iter end() noexcept { return Iter{fPathRef->verbsEnd()}; }
+    Iter begin() { return Iter{fPathRef->verbsBegin()}; }
+    Iter end() { return Iter{fPathRef->verbsEnd()}; }
 
    private:
     Verbs(const Verbs&) = delete;
@@ -165,13 +146,13 @@ class SkPathPriv {
    */
   struct Iterate {
    public:
-    Iterate(const SkPath& path) noexcept
+    Iterate(const SkPath& path)
         : Iterate(
               path.fPathRef->verbsBegin(),
               // Don't allow iteration through non-finite points.
               (!path.isFinite()) ? path.fPathRef->verbsBegin() : path.fPathRef->verbsEnd(),
               path.fPathRef->points(), path.fPathRef->conicWeights()) {}
-    Iterate(const SkPathView& path) noexcept
+    Iterate(const SkPathView& path)
         : Iterate(
               path.fVerbs.begin(),
               // Don't allow iteration through non-finite points.
@@ -179,10 +160,10 @@ class SkPathPriv {
               path.fWeights.begin()) {}
     Iterate(
         const uint8_t* verbsBegin, const uint8_t* verbsEnd, const SkPoint* points,
-        const SkScalar* weights) noexcept
+        const SkScalar* weights)
         : fVerbsBegin(verbsBegin), fVerbsEnd(verbsEnd), fPoints(points), fWeights(weights) {}
-    SkPath::RangeIter begin() noexcept { return {fVerbsBegin, fPoints, fWeights}; }
-    SkPath::RangeIter end() noexcept { return {fVerbsEnd, nullptr, nullptr}; }
+    SkPath::RangeIter begin() { return {fVerbsBegin, fPoints, fWeights}; }
+    SkPath::RangeIter end() { return {fVerbsEnd, nullptr, nullptr}; }
 
    private:
     const uint8_t* fVerbsBegin;
@@ -194,18 +175,16 @@ class SkPathPriv {
   /**
    * Returns a pointer to the verb data.
    */
-  static const uint8_t* VerbData(const SkPath& path) noexcept {
-    return path.fPathRef->verbsBegin();
-  }
+  static const uint8_t* VerbData(const SkPath& path) { return path.fPathRef->verbsBegin(); }
 
   /** Returns a raw pointer to the path points */
-  static const SkPoint* PointData(const SkPath& path) noexcept { return path.fPathRef->points(); }
+  static const SkPoint* PointData(const SkPath& path) { return path.fPathRef->points(); }
 
   /** Returns the number of conic weights in the path */
-  static int ConicWeightCnt(const SkPath& path) noexcept { return path.fPathRef->countWeights(); }
+  static int ConicWeightCnt(const SkPath& path) { return path.fPathRef->countWeights(); }
 
   /** Returns a raw pointer to the path conic weights. */
-  static const SkScalar* ConicWeightData(const SkPath& path) noexcept {
+  static const SkScalar* ConicWeightData(const SkPath& path) {
     return path.fPathRef->conicWeights();
   }
 
@@ -216,10 +195,13 @@ class SkPathPriv {
 
       @return       true if pts represent a convex geometry
   */
-  static bool IsConvex(const SkPoint pts[], int count) noexcept;
+  static bool IsConvex(const SkPoint pts[], int count);
 
   /** Returns true if the underlying SkPathRef has one single owner. */
-  static bool TestingOnly_unique(const SkPath& path) noexcept { return path.fPathRef->unique(); }
+  static bool TestingOnly_unique(const SkPath& path) { return path.fPathRef->unique(); }
+
+  // Won't be needed once we can make path's immutable (with their bounds always computed)
+  static bool HasComputedBounds(const SkPath& path) { return path.hasComputedBounds(); }
 
   /** Returns true if constructed by addCircle(), addOval(); and in some cases,
    addRoundRect(), addRRect(). SkPath constructed with conicTo() or rConicTo() will not
@@ -239,8 +221,7 @@ class SkPathPriv {
    @param start  storage for start of oval; may be nullptr
    @return       true if SkPath was constructed by method that reduces to oval
    */
-  static bool IsOval(
-      const SkPath& path, SkRect* rect, SkPathDirection* dir, unsigned* start) noexcept {
+  static bool IsOval(const SkPath& path, SkRect* rect, SkPathDirection* dir, unsigned* start) {
     bool isCCW = false;
     bool result = path.fPathRef->isOval(rect, &isCCW, start);
     if (dir && result) {
@@ -267,8 +248,7 @@ class SkPathPriv {
    @param start  storage for start of SkRRect; may be nullptr
    @return       true if SkPath contains only SkRRect
    */
-  static bool IsRRect(
-      const SkPath& path, SkRRect* rrect, SkPathDirection* dir, unsigned* start) noexcept {
+  static bool IsRRect(const SkPath& path, SkRRect* rrect, SkPathDirection* dir, unsigned* start) {
     bool isCCW = false;
     bool result = path.fPathRef->isRRect(rrect, &isCCW, start);
     if (dir && result) {
@@ -285,7 +265,7 @@ class SkPathPriv {
    *  finite path values into infinities (or NaNs), we allow the upper drawing code to reject
    *  the path if its bounds (in device coordinates) is too close to max float.
    */
-  static bool TooBigForMath(const SkRect& bounds) noexcept {
+  static bool TooBigForMath(const SkRect& bounds) {
     // This value is just a guess. smaller is safer, but we don't want to reject largish paths
     // that we don't have to.
     constexpr SkScalar scale_down_to_allow_for_small_multiplies = 0.25f;
@@ -296,10 +276,10 @@ class SkPathPriv {
         bounds.fLeft >= -max && bounds.fTop >= -max && bounds.fRight <= max &&
         bounds.fBottom <= max);
   }
-  static bool TooBigForMath(const SkPath& path) noexcept { return TooBigForMath(path.getBounds()); }
+  static bool TooBigForMath(const SkPath& path) { return TooBigForMath(path.getBounds()); }
 
   // Returns number of valid points for each SkPath::Iter verb
-  static int PtsInIter(unsigned verb) noexcept {
+  static int PtsInIter(unsigned verb) {
     static const uint8_t gPtsInVerb[] = {
         1,  // kMove    pts[0]
         2,  // kLine    pts[0..1]
@@ -314,12 +294,29 @@ class SkPathPriv {
     return gPtsInVerb[verb];
   }
 
-  static bool IsAxisAligned(const SkPath& path) noexcept {
+  // Returns number of valid points for each verb, not including the "starter"
+  // point that the Iterator adds for line/quad/conic/cubic
+  static int PtsInVerb(unsigned verb) {
+    static const uint8_t gPtsInVerb[] = {
+        1,  // kMove    pts[0]
+        1,  // kLine    pts[0..1]
+        2,  // kQuad    pts[0..2]
+        2,  // kConic   pts[0..2]
+        3,  // kCubic   pts[0..3]
+        0,  // kClose
+        0   // kDone
+    };
+
+    SkASSERT(verb < SK_ARRAY_COUNT(gPtsInVerb));
+    return gPtsInVerb[verb];
+  }
+
+  static bool IsAxisAligned(const SkPath& path) {
     SkRect tmp;
     return (path.fPathRef->fIsRRect | path.fPathRef->fIsOval) || path.isRect(&tmp);
   }
 
-  static bool AllPointsEq(const SkPoint pts[], int count) noexcept {
+  static bool AllPointsEq(const SkPoint pts[], int count) {
     for (int i = 1; i < count; ++i) {
       if (pts[0] != pts[i]) {
         return false;
@@ -330,7 +327,7 @@ class SkPathPriv {
 
   static bool IsRectContour(
       const SkPathView&, bool allowPartial, int* currVerb, const SkPoint** ptsPtr, bool* isClosed,
-      SkPathDirection* direction, SkRect* rect) noexcept;
+      SkPathDirection* direction, SkRect* rect);
 
   /** Returns true if SkPath is equivalent to nested SkRect pair when filled.
    If false, rect and dirs are unchanged.
@@ -351,9 +348,7 @@ class SkPathPriv {
     return IsNestedFillRects(path.view(), rect, dirs);
   }
 
-  static constexpr bool IsInverseFillType(SkPathFillType fill) noexcept {
-    return (static_cast<int>(fill) & 2) != 0;
-  }
+  static bool IsInverseFillType(SkPathFillType fill) { return (static_cast<int>(fill) & 2) != 0; }
 
   /** Returns equivalent SkPath::FillType representing SkPath fill inside its bounds.
    .
@@ -362,7 +357,7 @@ class SkPathPriv {
    kInverseWinding_FillType, kInverseEvenOdd_FillType
    @return      fill, or kWinding_FillType or kEvenOdd_FillType if fill is inverted
    */
-  static constexpr SkPathFillType ConvertToNonInverseFillType(SkPathFillType fill) noexcept {
+  static SkPathFillType ConvertToNonInverseFillType(SkPathFillType fill) {
     return (SkPathFillType)(static_cast<int>(fill) & 1);
   }
 
@@ -390,8 +385,21 @@ class SkPathPriv {
     path->dirtyAfterEdit();
   }
 
-  static void SetConvexityType(SkPathBuilder* builder, SkPathConvexityType c) noexcept {
-    builder->privateSetConvexityType(c);
+  static SkPathConvexity GetConvexity(const SkPath& path) { return path.getConvexity(); }
+  static SkPathConvexity GetConvexityOrUnknown(const SkPath& path) {
+    return path.getConvexityOrUnknown();
+  }
+  static void SetConvexity(const SkPath& path, SkPathConvexity c) { path.setConvexity(c); }
+  static void SetConvexity(SkPathBuilder* builder, SkPathConvexity c) {
+    builder->privateSetConvexity(c);
+  }
+  static void ForceComputeConvexity(const SkPath& path) {
+    path.setConvexity(SkPathConvexity::kUnknown);
+    (void)path.isConvex();
+  }
+
+  static void ReverseAddPath(SkPathBuilder* builder, const SkPath& reverseMe) {
+    builder->privateReverseAddPath(reverseMe);
   }
 };
 
@@ -414,10 +422,10 @@ class SkPathEdgeIter {
   enum { kIllegalEdgeValue = 99 };
 
  public:
-  SkPathEdgeIter(const SkPath&) noexcept;
-  SkPathEdgeIter(const SkPathView&) noexcept;
+  SkPathEdgeIter(const SkPath&);
+  SkPathEdgeIter(const SkPathView&);
 
-  SkScalar conicWeight() const noexcept {
+  SkScalar conicWeight() const {
     SkASSERT(fIsConic);
     return *fConicWeights;
   }
@@ -429,7 +437,7 @@ class SkPathEdgeIter {
     kCubic = SkPath::kCubic_Verb,
   };
 
-  static constexpr SkPath::Verb EdgeToVerb(Edge e) noexcept { return SkPath::Verb(e); }
+  static SkPath::Verb EdgeToVerb(Edge e) { return SkPath::Verb(e); }
 
   struct Result {
     const SkPoint* fPts;  // points for the segment, or null if done
@@ -437,7 +445,7 @@ class SkPathEdgeIter {
     bool fIsNewContour;
 
     // Returns true when it holds an Edge, false when the path is done.
-    operator bool() noexcept { return fPts != nullptr; }
+    operator bool() { return fPts != nullptr; }
   };
 
   Result next() {
@@ -455,7 +463,7 @@ class SkPathEdgeIter {
         return fNeedsCloseLine ? closeline() : Result{nullptr, Edge(kIllegalEdgeValue), false};
       }
 
-      SkDEBUGCODE(fIsConic = false);
+      SkDEBUGCODE(fIsConic = false;)
 
       const auto v = *fVerbs++;
       switch (v) {
@@ -479,7 +487,7 @@ class SkPathEdgeIter {
           fPts += pts_count;
           fConicWeights += cws_count;
 
-          SkDEBUGCODE(fIsConic = (v == SkPath::kConic_Verb));
+          SkDEBUGCODE(fIsConic = (v == SkPath::kConic_Verb);)
           SkASSERT(fIsConic == (cws_count > 0));
 
           bool isNewContour = fNextIsNewContour;

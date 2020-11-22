@@ -31,8 +31,8 @@ class SkStrokerPriv {
       const SkVector& afterUnitNormal, SkScalar radius, SkScalar invMiterLimit, bool prevIsLine,
       bool currIsLine);
 
-  static CapProc CapFactory(SkPaint::Cap) noexcept;
-  static JoinProc JoinFactory(SkPaint::Join) noexcept;
+  static CapProc CapFactory(SkPaint::Cap);
+  static JoinProc JoinFactory(SkPaint::Join);
 };
 
 #endif

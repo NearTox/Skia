@@ -37,7 +37,7 @@ class SkColorFilterImageFilterImpl final : public SkImageFilter_Base {
 
   sk_sp<SkColorFilter> fColorFilter;
 
-  typedef SkImageFilter_Base INHERITED;
+  using INHERITED = SkImageFilter_Base;
 };
 
 }  // end namespace

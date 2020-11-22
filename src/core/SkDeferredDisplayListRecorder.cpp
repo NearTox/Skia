@@ -15,7 +15,7 @@
 #if !SK_SUPPORT_GPU
 SkDeferredDisplayListRecorder::SkDeferredDisplayListRecorder(const SkSurfaceCharacterization&) {}
 
-SkDeferredDisplayListRecorder::~SkDeferredDisplayListRecorder() = default;
+SkDeferredDisplayListRecorder::~SkDeferredDisplayListRecorder() {}
 
 bool SkDeferredDisplayListRecorder::init() { return false; }
 
@@ -102,20 +102,26 @@ bool SkDeferredDisplayListRecorder::init() {
     }
   }
 
+  bool vkRTSupportsInputAttachment = fCharacterization.vkRTSupportsInputAttachment();
+  if (vkRTSupportsInputAttachment && GrBackendApi::kVulkan != fContext->backend()) {
+    return false;
+  }
+
   if (fCharacterization.vulkanSecondaryCBCompatible()) {
     // Because of the restrictive API allowed for a GrVkSecondaryCBDrawContext, we know ahead
-    // of time that we don't be able to support certain parameter combinations. Specifially we
+    // of time that we don't be able to support certain parameter combinations. Specifically we
     // fail on usesGLFBO0 since we can't mix GL and Vulkan. We can't have a texturable object.
-    // And finally the GrVkSecondaryCBDrawContext always assumes a top left origin.
-    if (usesGLFBO0 || fCharacterization.isTextureable() ||
+    // We can't use it as in input attachment since we don't control the render pass this will
+    // be played into and thus can't force it to have an input attachment and the correct
+    // dependencies. And finally the GrVkSecondaryCBDrawContext always assumes a top left
+    // origin.
+    if (usesGLFBO0 || vkRTSupportsInputAttachment || fCharacterization.isTextureable() ||
         fCharacterization.origin() == kBottomLeft_GrSurfaceOrigin) {
       return false;
     }
   }
 
   GrColorType grColorType = SkColorTypeToGrColorType(fCharacterization.colorType());
-
-  sk_sp<SkDeferredDisplayList::LazyProxyData> lazyProxyData = fLazyProxyData;
 
   // What we're doing here is we're creating a lazy proxy to back the SkSurface. The lazy
   // proxy, when instantiated, will use the GrRenderTarget that backs the SkSurface that the
@@ -129,6 +135,11 @@ bool SkDeferredDisplayListRecorder::init() {
       fCharacterization.isTextureable()) {
     surfaceFlags |= GrInternalSurfaceFlags::kRequiresManualMSAAResolve;
   }
+
+  if (vkRTSupportsInputAttachment) {
+    surfaceFlags |= GrInternalSurfaceFlags::kVkRTSupportsInputAttachment;
+  }
+
   // FIXME: Why do we use GrMipmapped::kNo instead of SkSurfaceCharacterization::fIsMipMapped?
   static constexpr GrProxyProvider::TextureInfo kTextureInfo{GrMipmapped::kNo, GrTextureType::k2D};
   const GrProxyProvider::TextureInfo* optionalTextureInfo = nullptr;
@@ -139,7 +150,7 @@ bool SkDeferredDisplayListRecorder::init() {
   GrSwizzle readSwizzle = caps->getReadSwizzle(fCharacterization.backendFormat(), grColorType);
 
   fTargetProxy = proxyProvider->createLazyRenderTargetProxy(
-      [lazyProxyData](
+      [lazyProxyData = fLazyProxyData](
           GrResourceProvider* resourceProvider, const GrSurfaceProxy::LazySurfaceDesc&) {
         // The proxy backing the destination surface had better have been instantiated
         // prior to the this one (i.e., the proxy backing the DLL's surface).

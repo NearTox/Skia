@@ -201,7 +201,7 @@ class VerticesView : public Sample {
 
   Rec fRecs[3];
 
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

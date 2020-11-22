@@ -61,7 +61,7 @@ class SymbolTable {
 
   std::unordered_map<StringFragment, const Symbol*>::iterator end();
 
-  const std::shared_ptr<SymbolTable> fParent;
+  std::shared_ptr<SymbolTable> fParent;
 
   std::vector<std::unique_ptr<const Symbol>> fOwnedSymbols;
 

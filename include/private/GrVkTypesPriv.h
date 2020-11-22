@@ -20,19 +20,19 @@ class GrBackendSurfaceMutableStateImpl;
 // current VkImageLayout which can be shared with an internal GrVkImage so that layout updates can
 // be seen by all users of the image.
 struct GrVkBackendSurfaceInfo {
-  GrVkBackendSurfaceInfo(GrVkImageInfo info) noexcept : fImageInfo(info) {}
+  GrVkBackendSurfaceInfo(GrVkImageInfo info) : fImageInfo(info) {}
 
-  void cleanup() noexcept;
+  void cleanup();
 
   GrVkBackendSurfaceInfo& operator=(const GrVkBackendSurfaceInfo&) = delete;
 
   // Assigns the passed in GrVkBackendSurfaceInfo to this object. if isValid is true we will also
   // attempt to unref the old fLayout on this object.
-  void assign(const GrVkBackendSurfaceInfo&, bool isValid) noexcept;
+  void assign(const GrVkBackendSurfaceInfo&, bool isValid);
 
   GrVkImageInfo snapImageInfo(const GrBackendSurfaceMutableStateImpl*) const;
 
-  bool isProtected() const noexcept { return fImageInfo.fProtected == GrProtected::kYes; }
+  bool isProtected() const { return fImageInfo.fProtected == GrProtected::kYes; }
 #if GR_TEST_UTILS
   bool operator==(const GrVkBackendSurfaceInfo& that) const;
 #endif
@@ -43,31 +43,31 @@ struct GrVkBackendSurfaceInfo {
 
 class GrVkSharedImageInfo {
  public:
-  GrVkSharedImageInfo(VkImageLayout layout, uint32_t queueFamilyIndex) noexcept
+  GrVkSharedImageInfo(VkImageLayout layout, uint32_t queueFamilyIndex)
       : fLayout(layout), fQueueFamilyIndex(queueFamilyIndex) {}
 
-  GrVkSharedImageInfo& operator=(const GrVkSharedImageInfo& that) noexcept {
+  GrVkSharedImageInfo& operator=(const GrVkSharedImageInfo& that) {
     fLayout = that.getImageLayout();
     fQueueFamilyIndex = that.getQueueFamilyIndex();
     return *this;
   }
 
-  void setImageLayout(VkImageLayout layout) noexcept {
+  void setImageLayout(VkImageLayout layout) {
     // Defaulting to use std::memory_order_seq_cst
     fLayout.store(layout);
   }
 
-  VkImageLayout getImageLayout() const noexcept {
+  VkImageLayout getImageLayout() const {
     // Defaulting to use std::memory_order_seq_cst
     return fLayout.load();
   }
 
-  void setQueueFamilyIndex(uint32_t queueFamilyIndex) noexcept {
+  void setQueueFamilyIndex(uint32_t queueFamilyIndex) {
     // Defaulting to use std::memory_order_seq_cst
     fQueueFamilyIndex.store(queueFamilyIndex);
   }
 
-  uint32_t getQueueFamilyIndex() const noexcept {
+  uint32_t getQueueFamilyIndex() const {
     // Defaulting to use std::memory_order_seq_cst
     return fQueueFamilyIndex.load();
   }

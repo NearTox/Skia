@@ -36,7 +36,7 @@ class SkLumaColorFilterImpl : public SkColorFilterBase {
 
  private:
   Factory getFactory() const override { return CreateProc; }
-  const char* getTypeName() const noexcept override { return "SkLumaColorFilter"; }
+  const char* getTypeName() const override { return "SkLumaColorFilter"; }
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override {
     rec.fPipeline->append(SkRasterPipeline::bt709_luminance_or_luma_to_alpha);
@@ -56,7 +56,7 @@ class SkLumaColorFilterImpl : public SkColorFilterBase {
     };
   }
 
-  typedef SkColorFilterBase INHERITED;
+  using INHERITED = SkColorFilterBase;
 };
 
 sk_sp<SkColorFilter> SkLumaColorFilter::Make() {

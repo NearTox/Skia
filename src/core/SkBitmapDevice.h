@@ -64,9 +64,7 @@ class SkBitmapDevice : public SkBaseDevice {
     return Create(info, props, false, nullptr);
   }
 
-  const SkPixmap* accessCoverage() const noexcept {
-    return fCoverage ? &fCoverage->pixmap() : nullptr;
-  }
+  const SkPixmap* accessCoverage() const { return fCoverage ? &fCoverage->pixmap() : nullptr; }
 
  protected:
   void* getRasterHandle() const override { return fRasterHandle; }
@@ -161,13 +159,13 @@ class SkBitmapDevice : public SkBaseDevice {
   std::unique_ptr<SkBitmap> fCoverage;  // if non-null, will have the same dimensions as fBitmap
   SkGlyphRunListPainter fGlyphPainter;
 
-  typedef SkBaseDevice INHERITED;
+  using INHERITED = SkBaseDevice;
 };
 
 class SkBitmapDeviceFilteredSurfaceProps {
  public:
   SkBitmapDeviceFilteredSurfaceProps(
-      const SkBitmap& bitmap, const SkPaint& paint, const SkSurfaceProps& surfaceProps) noexcept
+      const SkBitmap& bitmap, const SkPaint& paint, const SkSurfaceProps& surfaceProps)
       : fSurfaceProps(
             (kN32_SkColorType != bitmap.colorType() || !paint.isSrcOver())
                 ? fLazy.init(surfaceProps.flags(), kUnknown_SkPixelGeometry)
@@ -178,7 +176,7 @@ class SkBitmapDeviceFilteredSurfaceProps {
   SkBitmapDeviceFilteredSurfaceProps(SkBitmapDeviceFilteredSurfaceProps&&) = delete;
   SkBitmapDeviceFilteredSurfaceProps& operator=(SkBitmapDeviceFilteredSurfaceProps&&) = delete;
 
-  const SkSurfaceProps& operator()() const noexcept { return *fSurfaceProps; }
+  const SkSurfaceProps& operator()() const { return *fSurfaceProps; }
 
  private:
   SkTLazy<SkSurfaceProps> fLazy;

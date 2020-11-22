@@ -20,7 +20,7 @@ class GrAppliedClip;
  */
 class GrDrawOp : public GrOp {
  public:
-  GrDrawOp(uint32_t classID) noexcept : INHERITED(classID) {}
+  GrDrawOp(uint32_t classID) : INHERITED(classID) {}
 
   /**
    * This information is required to determine how to compute a GrAppliedClip from a GrClip for
@@ -58,7 +58,7 @@ class GrDrawOp : public GrOp {
 #endif
 
  private:
-  typedef GrOp INHERITED;
+  using INHERITED = GrOp;
 };
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrDrawOp::FixedFunctionFlags);

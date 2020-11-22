@@ -19,6 +19,7 @@ class GrBackendFormat;
 class GrCaps;
 class GrContextThreadSafeProxyPriv;
 class GrTextBlobCache;
+class GrThreadSafeUniquelyKeyedProxyViewCache;
 class SkSurfaceCharacterization;
 class SkSurfaceProps;
 
@@ -66,7 +67,7 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
       size_t cacheMaxResourceBytes, const SkImageInfo& ii, const GrBackendFormat& backendFormat,
       int sampleCount, GrSurfaceOrigin origin, const SkSurfaceProps& surfaceProps, bool isMipMapped,
       bool willUseGLFBO0 = false, bool isTextureable = true,
-      GrProtected isProtected = GrProtected::kNo);
+      GrProtected isProtected = GrProtected::kNo, bool vkRTSupportsInputAttachment = false);
 
   /*
    * Retrieve the default GrBackendFormat for a given SkColorType and renderability.
@@ -77,20 +78,19 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
    */
   GrBackendFormat defaultBackendFormat(SkColorType ct, GrRenderable renderable) const;
 
-  bool isValid() const noexcept { return nullptr != fCaps; }
+  bool isValid() const { return nullptr != fCaps; }
 
-  bool operator==(const GrContextThreadSafeProxy& that) const noexcept {
+  bool operator==(const GrContextThreadSafeProxy& that) const {
     // Each GrContext should only ever have a single thread-safe proxy.
     SkASSERT((this == &that) == (this->fContextID == that.fContextID));
     return this == &that;
   }
 
-  bool operator!=(const GrContextThreadSafeProxy& that) const noexcept { return !(*this == that); }
+  bool operator!=(const GrContextThreadSafeProxy& that) const { return !(*this == that); }
 
   // Provides access to functions that aren't part of the public API.
-  GrContextThreadSafeProxyPriv priv() noexcept;
-  const GrContextThreadSafeProxyPriv priv()
-      const noexcept;  // NOLINT(readability-const-return-type)
+  GrContextThreadSafeProxyPriv priv();
+  const GrContextThreadSafeProxyPriv priv() const;  // NOLINT(readability-const-return-type)
 
  private:
   friend class GrContextThreadSafeProxyPriv;  // for ctor and hidden methods
@@ -111,6 +111,7 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
   const uint32_t fContextID;
   sk_sp<const GrCaps> fCaps;
   std::unique_ptr<GrTextBlobCache> fTextBlobCache;
+  std::unique_ptr<GrThreadSafeUniquelyKeyedProxyViewCache> fThreadSafeViewCache;
   std::atomic<bool> fAbandoned{false};
 };
 

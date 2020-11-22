@@ -73,7 +73,7 @@ class MegaStrokeView : public Sample {
   SkRect fClip;
   int fAngle;
   int fPlusMinus;
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

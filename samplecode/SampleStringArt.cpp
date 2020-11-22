@@ -56,7 +56,7 @@ class StringArtView : public Sample {
 
  private:
   SkScalar fAngle;
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////

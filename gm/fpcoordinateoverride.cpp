@@ -55,7 +55,7 @@ class SampleCoordEffect : public GrFragmentProcessor {
 
  private:
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  typedef GrFragmentProcessor INHERITED;
+  using INHERITED = GrFragmentProcessor;
 };
 
 class GLSLSampleCoordEffect : public GrGLSLFragmentProcessor {

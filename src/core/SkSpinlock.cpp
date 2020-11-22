@@ -13,33 +13,33 @@
 #  include <execinfo.h>
 #  include <stdio.h>
 
-static void debug_trace() {
-  void* stack[64];
-  int len = backtrace(stack, SK_ARRAY_COUNT(stack));
+    static void debug_trace() {
+        void* stack[64];
+        int len = backtrace(stack, SK_ARRAY_COUNT(stack));
 
-  // As you might imagine, we can't use an SkSpinlock here...
-  static SkMutex lock;
-  {
-    SkAutoMutexExclusive locked(lock);
-    fprintf(stderr, "\n");
-    backtrace_symbols_fd(stack, len, 2 /*stderr*/);
-    fprintf(stderr, "\n");
-  }
-}
+        // As you might imagine, we can't use an SkSpinlock here...
+        static SkMutex lock;
+        {
+            SkAutoMutexExclusive locked(lock);
+            fprintf(stderr, "\n");
+            backtrace_symbols_fd(stack, len, 2/*stderr*/);
+            fprintf(stderr, "\n");
+        }
+    }
 #else
-static void debug_trace() noexcept {}
+static void debug_trace() {}
 #endif
 
 // Renamed from "pause" to avoid conflict with function defined in unistd.h
 #if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
 #  include <emmintrin.h>
-static void do_pause() noexcept { _mm_pause(); }
+static void do_pause() { _mm_pause(); }
 #else
-static void do_pause() noexcept { /*spin*/
+static void do_pause() { /*spin*/
 }
 #endif
 
-void SkSpinlock::contendedAcquire() noexcept {
+void SkSpinlock::contendedAcquire() {
   debug_trace();
 
   // To act as a mutex, we need an acquire barrier when we acquire the lock.

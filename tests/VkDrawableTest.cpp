@@ -79,7 +79,7 @@ class TestDrawable : public SkDrawable {
     int32_t fWidth;
     int32_t fHeight;
 
-    typedef GpuDrawHandler INHERITED;
+    using INHERITED = GpuDrawHandler;
   };
 
   typedef void (*DrawProc)(
@@ -118,7 +118,7 @@ class TestDrawable : public SkDrawable {
     const SkIRect fClipBounds;
     const SkImageInfo fBufferInfo;
 
-    typedef GpuDrawHandler INHERITED;
+    using INHERITED = GpuDrawHandler;
   };
 
   // Helper function to test drawing to a secondary command buffer that we imported into the
@@ -199,7 +199,7 @@ class TestDrawable : public SkDrawable {
   int32_t fWidth;
   int32_t fHeight;
 
-  typedef SkDrawable INHERITED;
+  using INHERITED = SkDrawable;
 };
 
 void draw_drawable_test(

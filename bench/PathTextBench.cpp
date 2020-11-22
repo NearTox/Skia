@@ -104,7 +104,7 @@ class PathTextBench : public Benchmark {
   SkMatrix fXforms[kNumDraws];
   SkPath fClipPath;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new PathTextBench(false, false);)

@@ -152,7 +152,7 @@ class MixedTextBlobsGM : public GM {
   static constexpr int kWidth = 1250;
   static constexpr int kHeight = 700;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -32,7 +32,7 @@ class SK_API Sk1DPathEffect : public SkPathEffect {
   virtual SkScalar next(SkPath* dst, SkScalar dist, SkPathMeasure&) const = 0;
 
  private:
-  typedef SkPathEffect INHERITED;
+  using INHERITED = SkPathEffect;
 };
 
 class SK_API SkPath1DPathEffect : public Sk1DPathEffect {
@@ -71,7 +71,7 @@ class SK_API SkPath1DPathEffect : public Sk1DPathEffect {
   SkScalar fInitialOffset;  // computed from phase
   Style fStyle;             // copied from constructor
 
-  typedef Sk1DPathEffect INHERITED;
+  using INHERITED = Sk1DPathEffect;
 };
 
 #endif

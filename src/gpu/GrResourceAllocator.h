@@ -68,12 +68,13 @@ class GrResourceProvider;
 class GrResourceAllocator {
  public:
   GrResourceAllocator(GrResourceProvider* resourceProvider SkDEBUGCODE(, int numOpsTasks))
-      : fResourceProvider(resourceProvider) SkDEBUGCODE(, fNumOpsTasks(numOpsTasks)) {}
+      : fResourceProvider(resourceProvider) SkDEBUGCODE(, fNumOpsTasks(numOpsTasks))
+  {}
 
   ~GrResourceAllocator();
 
-  unsigned int curOp() const noexcept { return fNumOps; }
-  void incOps() noexcept { fNumOps++; }
+  unsigned int curOp() const { return fNumOps; }
+  void incOps() { fNumOps++; }
 
   /** Indicates whether a given call to addInterval represents an actual usage of the
    *  provided proxy. This is mainly here to accomodate deferred proxies attached to opsTasks.
@@ -132,7 +133,7 @@ class GrResourceAllocator {
 
   class Interval {
    public:
-    Interval(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) noexcept
+    Interval(GrSurfaceProxy* proxy, unsigned int start, unsigned int end)
         : fProxy(proxy),
           fProxyID(proxy->uniqueID().asUInt()),
           fStart(start),
@@ -148,7 +149,7 @@ class GrResourceAllocator {
     }
 
     // Used when recycling an interval
-    void resetTo(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) noexcept {
+    void resetTo(GrSurfaceProxy* proxy, unsigned int start, unsigned int end) {
       SkASSERT(proxy);
       SkASSERT(!fProxy && !fNext);
 
@@ -168,23 +169,23 @@ class GrResourceAllocator {
 
     ~Interval() { SkASSERT(!fAssignedSurface); }
 
-    const GrSurfaceProxy* proxy() const noexcept { return fProxy; }
-    GrSurfaceProxy* proxy() noexcept { return fProxy; }
+    const GrSurfaceProxy* proxy() const { return fProxy; }
+    GrSurfaceProxy* proxy() { return fProxy; }
 
-    unsigned int start() const noexcept { return fStart; }
-    unsigned int end() const noexcept { return fEnd; }
+    unsigned int start() const { return fStart; }
+    unsigned int end() const { return fEnd; }
 
-    void setNext(Interval* next) noexcept { fNext = next; }
-    const Interval* next() const noexcept { return fNext; }
-    Interval* next() noexcept { return fNext; }
+    void setNext(Interval* next) { fNext = next; }
+    const Interval* next() const { return fNext; }
+    Interval* next() { return fNext; }
 
-    void markAsRecyclable() noexcept { fIsRecyclable = true; }
-    bool isRecyclable() const noexcept { return fIsRecyclable; }
+    void markAsRecyclable() { fIsRecyclable = true; }
+    bool isRecyclable() const { return fIsRecyclable; }
 
-    void addUse() noexcept { fUses++; }
-    int uses() noexcept { return fUses; }
+    void addUse() { fUses++; }
+    int uses() { return fUses; }
 
-    void extendEnd(unsigned int newEnd) noexcept {
+    void extendEnd(unsigned int newEnd) {
       if (newEnd > fEnd) {
         fEnd = newEnd;
 #if GR_TRACK_INTERVAL_CREATION
@@ -194,8 +195,8 @@ class GrResourceAllocator {
     }
 
     void assign(sk_sp<GrSurface>);
-    bool wasAssignedSurface() const noexcept { return fAssignedSurface != nullptr; }
-    sk_sp<GrSurface> detachSurface() noexcept { return std::move(fAssignedSurface); }
+    bool wasAssignedSurface() const { return fAssignedSurface != nullptr; }
+    sk_sp<GrSurface> detachSurface() { return std::move(fAssignedSurface); }
 
     // for SkTDynamicHash
     static const uint32_t& GetKey(const Interval& intvl) { return intvl.fProxyID; }
@@ -220,24 +221,25 @@ class GrResourceAllocator {
 
   class IntervalList {
    public:
-    constexpr IntervalList() noexcept = default;
-    // The only time we delete an IntervalList is in the GrResourceAllocator dtor.
-    // Since the arena allocator will clean up for us we don't bother here.
-    // ~IntervalList() = default;
+    IntervalList() = default;
+    ~IntervalList() {
+      // The only time we delete an IntervalList is in the GrResourceAllocator dtor.
+      // Since the arena allocator will clean up for us we don't bother here.
+    }
 
-    bool empty() const noexcept {
+    bool empty() const {
       SkASSERT(SkToBool(fHead) == SkToBool(fTail));
       return !SkToBool(fHead);
     }
     const Interval* peekHead() const { return fHead; }
-    Interval* peekHead() noexcept { return fHead; }
+    Interval* peekHead() { return fHead; }
     Interval* popHead();
     void insertByIncreasingStart(Interval*);
     void insertByIncreasingEnd(Interval*);
     Interval* detachAll();
 
    private:
-    SkDEBUGCODE(void validate() const);
+    SkDEBUGCODE(void validate() const;)
 
     Interval* fHead = nullptr;
     Interval* fTail = nullptr;
@@ -256,9 +258,9 @@ class GrResourceAllocator {
   unsigned int fNumOps = 0;
   SkTArray<unsigned int> fEndOfOpsTaskOpIndices;
   int fCurOpsTaskIndex = 0;
-  SkDEBUGCODE(const int fNumOpsTasks = -1);
+  SkDEBUGCODE(const int fNumOpsTasks = -1;)
 
-  SkDEBUGCODE(bool fAssigned = false);
+  SkDEBUGCODE(bool fAssigned = false;)
 
   char fStorage[kInitialArenaSize];
   SkArenaAlloc fIntervalAllocator{fStorage, kInitialArenaSize, kInitialArenaSize};

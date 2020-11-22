@@ -120,7 +120,7 @@ class VerticesGP : public GrGeometryProcessor {
         attrCount, customMatrices);
   }
 
-  const char* name() const noexcept override { return "VerticesGP"; }
+  const char* name() const override { return "VerticesGP"; }
 
   const SkPMColor4f& color() const { return fColor; }
   const SkMatrix& viewMatrix() const { return fViewMatrix; }
@@ -344,7 +344,7 @@ class VerticesGP : public GrGeometryProcessor {
     };
     std::vector<MarkedUniform> fCustomMatrixUniforms;
 
-    typedef GrGLSLGeometryProcessor INHERITED;
+    using INHERITED = GrGLSLGeometryProcessor;
   };
 
   void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
@@ -409,7 +409,7 @@ class VerticesGP : public GrGeometryProcessor {
   int fCustomAttributeCount;
   const MarkedMatrices* fCustomMatrices;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 class DrawVerticesOp final : public GrMeshDrawOp {
@@ -423,7 +423,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
       const Helper::MakeArgs&, const SkPMColor4f&, sk_sp<SkVertices>, GrPrimitiveType, GrAAType,
       sk_sp<GrColorSpaceXform>, const SkMatrixProvider&, const SkRuntimeEffect*);
 
-  const char* name() const noexcept override { return "DrawVerticesOp"; }
+  const char* name() const override { return "DrawVerticesOp"; }
 
   void visitProxies(const VisitProxyFunc& func) const override {
     if (fProgramInfo) {
@@ -443,7 +443,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&) override;
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
 
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
@@ -503,7 +503,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
   GrSimpleMesh* fMesh = nullptr;
   GrProgramInfo* fProgramInfo = nullptr;
 
-  typedef GrMeshDrawOp INHERITED;
+  using INHERITED = GrMeshDrawOp;
 };
 
 DrawVerticesOp::DrawVerticesOp(
@@ -594,10 +594,12 @@ GrGeometryProcessor* DrawVerticesOp::makeGP(SkArenaAlloc* arena) {
 
 void DrawVerticesOp::onCreateProgramInfo(
     const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) {
+    GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+    GrXferBarrierFlags renderPassXferBarriers) {
   GrGeometryProcessor* gp = this->makeGP(arena);
   fProgramInfo = fHelper.createProgramInfo(
-      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->primitiveType());
+      caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->primitiveType(),
+      renderPassXferBarriers);
 }
 
 void DrawVerticesOp::onPrepareDraws(Target* target) {

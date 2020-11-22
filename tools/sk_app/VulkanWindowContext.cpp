@@ -212,6 +212,7 @@ bool VulkanWindowContext::createSwapchain(int width, int height, const DisplayPa
   }
 
   VkImageUsageFlags usageFlags = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT |
+                                 VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT |
                                  VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT;
   SkASSERT((caps.supportedUsageFlags & usageFlags) == usageFlags);
   SkASSERT(caps.supportedTransforms & caps.currentTransform);
@@ -312,13 +313,14 @@ bool VulkanWindowContext::createSwapchain(int width, int height, const DisplayPa
   }
 
   this->createBuffers(
-      swapchainCreateInfo.imageFormat, colorType, swapchainCreateInfo.imageSharingMode);
+      swapchainCreateInfo.imageFormat, usageFlags, colorType, swapchainCreateInfo.imageSharingMode);
 
   return true;
 }
 
 void VulkanWindowContext::createBuffers(
-    VkFormat format, SkColorType colorType, VkSharingMode sharingMode) {
+    VkFormat format, VkImageUsageFlags usageFlags, SkColorType colorType,
+    VkSharingMode sharingMode) {
   fGetSwapchainImagesKHR(fDevice, fSwapchain, &fImageCount, nullptr);
   SkASSERT(fImageCount);
   fImages = new VkImage[fImageCount];
@@ -336,6 +338,7 @@ void VulkanWindowContext::createBuffers(
     info.fImageLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     info.fImageTiling = VK_IMAGE_TILING_OPTIMAL;
     info.fFormat = format;
+    info.fImageUsageFlags = usageFlags;
     info.fLevelCount = 1;
     info.fCurrentQueueFamily = fPresentQueueIndex;
     info.fSharingMode = sharingMode;
@@ -368,7 +371,8 @@ void VulkanWindowContext::createBuffers(
   fBackbuffers = new BackbufferInfo[fImageCount + 1];
   for (uint32_t i = 0; i < fImageCount + 1; ++i) {
     fBackbuffers[i].fImageIndex = -1;
-    SkDEBUGCODE(VkResult result =) GR_VK_CALL(
+    SkDEBUGCODE(VkResult result =)
+    GR_VK_CALL(
         fInterface,
         CreateSemaphore(fDevice, &semaphoreInfo, nullptr, &fBackbuffers[i].fRenderSemaphore));
     SkASSERT(result == VK_SUCCESS);
@@ -416,6 +420,7 @@ void VulkanWindowContext::destroyContext() {
     }
   }
 
+  SkASSERT(fContext->unique());
   fContext.reset();
   fInterface.reset();
 
@@ -462,7 +467,7 @@ sk_sp<SkSurface> VulkanWindowContext::getBackbufferSurface() {
   semaphoreInfo.flags = 0;
   VkSemaphore semaphore;
   SkDEBUGCODE(VkResult result =)
-      GR_VK_CALL(fInterface, CreateSemaphore(fDevice, &semaphoreInfo, nullptr, &semaphore));
+  GR_VK_CALL(fInterface, CreateSemaphore(fDevice, &semaphoreInfo, nullptr, &semaphore));
   SkASSERT(result == VK_SUCCESS);
 
   // acquire the image

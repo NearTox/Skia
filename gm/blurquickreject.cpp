@@ -80,7 +80,7 @@ class BlurQuickRejectGM : public skiagm::GM {
   static constexpr int kWidth = 300;
   static constexpr int kHeight = 300;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_GM(return new BlurQuickRejectGM();)

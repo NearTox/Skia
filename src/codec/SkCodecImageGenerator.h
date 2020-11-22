@@ -98,11 +98,10 @@ class SkCodecImageGenerator : public SkImageGenerator {
   bool onGetPixels(
       const SkImageInfo& info, void* pixels, size_t rowBytes, const Options& opts) override;
 
-  bool onQueryYUVA8(
-      SkYUVASizeInfo*, SkYUVAIndex[SkYUVAIndex::kIndexCount], SkYUVColorSpace*) const override;
+  bool onQueryYUVAInfo(
+      const SkYUVAPixmapInfo::SupportedDataTypes&, SkYUVAPixmapInfo*) const override;
 
-  bool onGetYUVA8Planes(
-      const SkYUVASizeInfo&, const SkYUVAIndex[SkYUVAIndex::kIndexCount], void* planes[]) override;
+  bool onGetYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) override;
 
  private:
   /*
@@ -113,6 +112,6 @@ class SkCodecImageGenerator : public SkImageGenerator {
   std::unique_ptr<SkCodec> fCodec;
   sk_sp<SkData> fData;
 
-  typedef SkImageGenerator INHERITED;
+  using INHERITED = SkImageGenerator;
 };
 #endif  // SkCodecImageGenerator_DEFINED

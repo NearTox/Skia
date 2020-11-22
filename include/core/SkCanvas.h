@@ -238,7 +238,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_imageInfo
   */
-  SkImageInfo imageInfo() const noexcept;
+  SkImageInfo imageInfo() const;
 
   /** Copies SkSurfaceProps, if SkCanvas is associated with raster surface or
       GPU surface, and returns true. Otherwise, returns false and leave props unchanged.
@@ -265,7 +265,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getBaseLayerSize
   */
-  virtual SkISize getBaseLayerSize() const noexcept;
+  virtual SkISize getBaseLayerSize() const;
 
   /** Creates SkSurface matching info and props, and associates it with SkCanvas.
       Returns nullptr if no match found.
@@ -285,19 +285,14 @@ class SK_API SkCanvas {
 
       @return  GPU context, if available; nullptr otherwise
 
-      example: https://fiddle.skia.org/c/@Canvas_getGrContext
-  */
-  virtual GrContext* getGrContext() noexcept;
-
-  /**
-   * Experimental. SkCanvases can actually only guarantee a GrRecordingContext.
+      example: https://fiddle.skia.org/c/@Canvas_recordingContext
    */
-  virtual GrRecordingContext* recordingContext() noexcept;
+  virtual GrRecordingContext* recordingContext();
 
   /** Sometimes a canvas is owned by a surface. If it is, getSurface() will return a bare
    *  pointer to that surface, else this will return nullptr.
    */
-  SkSurface* getSurface() const noexcept;
+  SkSurface* getSurface() const;
 
   /** Returns the pixel base address, SkImageInfo, rowBytes, and origin if the pixels
       can be read directly. The returned address is only valid
@@ -552,7 +547,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_save
   */
-  int save() noexcept;
+  int save();
 
   /** Saves SkMatrix and clip, and allocates a SkBitmap for subsequent drawing.
       Calling restore() discards changes to SkMatrix and clip, and draws the SkBitmap.
@@ -652,7 +647,7 @@ class SK_API SkCanvas {
 
         @return  empty SaveLayerRec
     */
-    constexpr SaveLayerRec() noexcept = default;
+    SaveLayerRec() {}
 
     /** Sets fBounds, fPaint, and fSaveLayerFlags; sets fBackdrop to nullptr.
 
@@ -661,8 +656,7 @@ class SK_API SkCanvas {
         @param saveLayerFlags  SaveLayerRec options to modify layer
         @return                SaveLayerRec with empty fBackdrop
     */
-    SaveLayerRec(
-        const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0) noexcept
+    SaveLayerRec(const SkRect* bounds, const SkPaint* paint, SaveLayerFlags saveLayerFlags = 0)
         : fBounds(bounds), fPaint(paint), fSaveLayerFlags(saveLayerFlags) {}
 
     /** Sets fBounds, fPaint, fBackdrop, and fSaveLayerFlags.
@@ -679,7 +673,7 @@ class SK_API SkCanvas {
     */
     SaveLayerRec(
         const SkRect* bounds, const SkPaint* paint, const SkImageFilter* backdrop,
-        SaveLayerFlags saveLayerFlags) noexcept
+        SaveLayerFlags saveLayerFlags)
         : fBounds(bounds), fPaint(paint), fBackdrop(backdrop), fSaveLayerFlags(saveLayerFlags) {}
 
     /** hints at layer size limit */
@@ -739,7 +733,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getSaveCount
   */
-  int getSaveCount() const noexcept;
+  int getSaveCount() const;
 
   /** Restores state to SkMatrix and clip values when save(), saveLayer(),
       saveLayerPreserveLCDTextRequests(), or saveLayerAlpha() returned saveCount.
@@ -1066,7 +1060,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_getDeviceClipBounds
   */
-  SkIRect getDeviceClipBounds() const noexcept;
+  SkIRect getDeviceClipBounds() const;
 
   /** Returns SkIRect bounds of clip, unaffected by SkMatrix. If clip is empty,
       return false, and set bounds to SkRect::MakeEmpty, where all SkRect sides equal zero.
@@ -1076,7 +1070,7 @@ class SK_API SkCanvas {
       @param bounds  SkRect of clip in device coordinates
       @return        true if clip bounds is not empty
   */
-  bool getDeviceClipBounds(SkIRect* bounds) const noexcept {
+  bool getDeviceClipBounds(SkIRect* bounds) const {
     *bounds = this->getDeviceClipBounds();
     return !bounds->isEmpty();
   }
@@ -1865,16 +1859,16 @@ class SK_API SkCanvas {
   struct SK_API ImageSetEntry {
     ImageSetEntry(
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, int matrixIndex,
-        float alpha, unsigned aaFlags, bool hasClip) noexcept;
+        float alpha, unsigned aaFlags, bool hasClip);
 
     ImageSetEntry(
         sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, float alpha,
-        unsigned aaFlags) noexcept;
+        unsigned aaFlags);
 
-    ImageSetEntry() noexcept;
+    ImageSetEntry();
     ~ImageSetEntry();
-    ImageSetEntry(const ImageSetEntry&) noexcept;
-    ImageSetEntry& operator=(const ImageSetEntry&) noexcept;
+    ImageSetEntry(const ImageSetEntry&);
+    ImageSetEntry& operator=(const ImageSetEntry&);
 
     sk_sp<const SkImage> fImage;
     SkRect fSrcRect;
@@ -2403,7 +2397,7 @@ class SK_API SkCanvas {
 
       example: https://fiddle.skia.org/c/@Canvas_isClipEmpty
   */
-  virtual bool isClipEmpty() const noexcept;
+  virtual bool isClipEmpty() const;
 
   /** Returns true if clip is SkRect and not empty.
       Returns false if the clip is empty, or if it is not SkRect.
@@ -2419,7 +2413,7 @@ class SK_API SkCanvas {
    *
    *  @return transformation from local coordinates to device / pixels.
    */
-  SkM44 getLocalToDevice() const noexcept;
+  SkM44 getLocalToDevice() const;
 
   /** Legacy version of getLocalToDevice(), which strips away any Z information, and
    *  just returns a 3x3 version.
@@ -2429,12 +2423,12 @@ class SK_API SkCanvas {
    *  example: https://fiddle.skia.org/c/@Canvas_getTotalMatrix
    *  example: https://fiddle.skia.org/c/@Clip
    */
-  SkMatrix getTotalMatrix() const noexcept;
+  SkMatrix getTotalMatrix() const;
 
   ///////////////////////////////////////////////////////////////////////////
 
   // don't call
-  virtual GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext() noexcept;
+  virtual GrRenderTargetContext* internal_private_accessTopLayerRenderTargetContext();
   SkIRect internal_private_getTopLayerBounds() const { return getTopLayerBounds(); }
 
   // TEMP helpers until we switch virtual over to const& for src-rect
@@ -2457,7 +2451,7 @@ class SK_API SkCanvas {
   // default impl defers to its device
   virtual bool onPeekPixels(SkPixmap* pixmap);
   virtual bool onAccessTopLayerPixels(SkPixmap* pixmap);
-  virtual SkImageInfo onImageInfo() const noexcept;
+  virtual SkImageInfo onImageInfo() const;
   virtual bool onGetProps(SkSurfaceProps* props) const;
   virtual void onFlush();
 
@@ -2557,7 +2551,7 @@ class SK_API SkCanvas {
       const SkRect* bounds, SaveLayerFlags flags, SkIRect* intersection,
       const SkImageFilter* imageFilter = nullptr);
 
-  SkBaseDevice* getTopDevice() const noexcept;
+  SkBaseDevice* getTopDevice() const;
 
  private:
   /** After calling saveLayer(), there can be any number of devices that make
@@ -2569,22 +2563,22 @@ class SK_API SkCanvas {
   class LayerIter /*: SkNoncopyable*/ {
    public:
     /** Initialize iterator with canvas, and set values for 1st device */
-    LayerIter(SkCanvas*) noexcept;
+    LayerIter(SkCanvas*);
     ~LayerIter();
 
     /** Return true if the iterator is done */
-    bool done() const noexcept { return fDone; }
+    bool done() const { return fDone; }
     /** Cycle to the next device */
-    void next() noexcept;
+    void next();
 
     // These reflect the current device in the iterator
 
-    SkBaseDevice* device() const noexcept;
-    const SkMatrix& matrix() const noexcept;
+    SkBaseDevice* device() const;
+    const SkMatrix& matrix() const;
     SkIRect clipBounds() const;
-    const SkPaint& paint() const noexcept;
-    int x() const noexcept;
-    int y() const noexcept;
+    const SkPaint& paint() const;
+    int x() const;
+    int y() const;
 
    private:
     // used to embed the SkDrawIter object directly in our instance, w/o
@@ -2599,7 +2593,7 @@ class SK_API SkCanvas {
     bool fDone;
   };
 
-  static bool BoundsAffectsClip(SaveLayerFlags) noexcept;
+  static bool BoundsAffectsClip(SaveLayerFlags);
 
   static void DrawDeviceWithFilter(
       SkBaseDevice* src, const SkImageFilter* filter, SkBaseDevice* dst, const SkIPoint& dstOrigin,
@@ -2621,7 +2615,7 @@ class SK_API SkCanvas {
         shaderOverrideIsOpaque ? kOpaque_ShaderOverrideOpacity : kNotOpaque_ShaderOverrideOpacity);
   }
 
-  SkBaseDevice* getDevice() const noexcept;
+  SkBaseDevice* getDevice() const;
 
   class MCRec;
 
@@ -2646,8 +2640,8 @@ class SK_API SkCanvas {
   std::unique_ptr<SkRasterHandleAllocator> fAllocator;
 
   SkSurface_Base* fSurfaceBase;
-  SkSurface_Base* getSurfaceBase() const noexcept { return fSurfaceBase; }
-  void setSurfaceBase(SkSurface_Base* sb) noexcept { fSurfaceBase = sb; }
+  SkSurface_Base* getSurfaceBase() const { return fSurfaceBase; }
+  void setSurfaceBase(SkSurface_Base* sb) { fSurfaceBase = sb; }
   friend class SkSurface_Base;
   friend class SkSurface_Gpu;
 
@@ -2655,7 +2649,7 @@ class SK_API SkCanvas {
 
   void doSave();
   void checkForDeferredSave();
-  void internalSetMatrix(const SkMatrix&) noexcept;
+  void internalSetMatrix(const SkMatrix&);
 
   friend class SkAndroidFrameworkUtils;
   friend class SkCanvasPriv;  // needs kDontClipToLayer_PrivateSaveLayerFlag
@@ -2750,9 +2744,7 @@ class SK_API SkCanvas {
    */
   void androidFramework_replaceClip(const SkIRect& rect);
 
-  virtual SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const noexcept {
-    return nullptr;
-  }
+  virtual SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const { return nullptr; }
 
   /**
    *  Keep track of the device clip bounds and if the matrix is scale-translate.  This allows
@@ -2763,9 +2755,7 @@ class SK_API SkCanvas {
 
   class AutoValidateClip {
    public:
-    explicit AutoValidateClip(SkCanvas* canvas) noexcept : fCanvas(canvas) {
-      fCanvas->validateClip();
-    }
+    explicit AutoValidateClip(SkCanvas* canvas) : fCanvas(canvas) { fCanvas->validateClip(); }
     ~AutoValidateClip() { fCanvas->validateClip(); }
 
    private:
@@ -2780,12 +2770,12 @@ class SK_API SkCanvas {
 #ifdef SK_DEBUG
   void validateClip() const;
 #else
-  void validateClip() const noexcept {}
+  void validateClip() const {}
 #endif
 
   std::unique_ptr<SkGlyphRunBuilder> fScratchGlyphRunBuilder;
 
-  typedef SkRefCnt INHERITED;
+  using INHERITED = SkRefCnt;
 };
 
 /** \class SkAutoCanvasRestore
@@ -2801,7 +2791,7 @@ class SkAutoCanvasRestore {
       @param doSave  call SkCanvas::save()
       @return        utility to restore SkCanvas state on destructor
   */
-  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) noexcept : fCanvas(canvas), fSaveCount(0) {
+  SkAutoCanvasRestore(SkCanvas* canvas, bool doSave) : fCanvas(canvas), fSaveCount(0) {
     if (fCanvas) {
       fSaveCount = canvas->getSaveCount();
       if (doSave) {

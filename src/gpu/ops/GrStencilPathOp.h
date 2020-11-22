@@ -25,7 +25,7 @@ class GrStencilPathOp final : public GrOp {
       GrRecordingContext* context, const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip,
       const GrScissorState& scissor, sk_sp<const GrPath> path);
 
-  const char* name() const noexcept override { return "StencilPathOp"; }
+  const char* name() const override { return "StencilPathOp"; }
 
  private:
   friend class GrOpMemoryPool;  // for ctor
@@ -44,7 +44,7 @@ class GrStencilPathOp final : public GrOp {
 
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
 
   void onPrepare(GrOpFlushState*) override {}
 
@@ -62,7 +62,7 @@ class GrStencilPathOp final : public GrOp {
   GrScissorState fScissor;
   sk_sp<const GrPath> fPath;
 
-  typedef GrOp INHERITED;
+  using INHERITED = GrOp;
 };
 
 #endif

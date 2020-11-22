@@ -18,7 +18,7 @@ class SkMatrixProvider;
 struct GrFPArgs {
   GrFPArgs(
       GrRecordingContext* context, const SkMatrixProvider& matrixProvider,
-      SkFilterQuality filterQuality, const GrColorInfo* dstColorInfo) noexcept
+      SkFilterQuality filterQuality, const GrColorInfo* dstColorInfo)
       : fContext(context),
         fMatrixProvider(matrixProvider),
         fFilterQuality(filterQuality),
@@ -28,7 +28,7 @@ struct GrFPArgs {
 
   class WithPreLocalMatrix;
 
-  GrFPArgs withNewMatrixProvider(const SkMatrixProvider& provider) const noexcept {
+  GrFPArgs withNewMatrixProvider(const SkMatrixProvider& provider) const {
     GrFPArgs newArgs(fContext, provider, fFilterQuality, fDstColorInfo);
     newArgs.fInputColorIsOpaque = fInputColorIsOpaque;
     newArgs.fPreLocalMatrix = fPreLocalMatrix;
@@ -44,12 +44,13 @@ struct GrFPArgs {
   bool fInputColorIsOpaque = false;
 
   SkFilterQuality fFilterQuality;
+  bool fAllowFilterQualityReduction = true;
   const GrColorInfo* fDstColorInfo;
 };
 
 class GrFPArgs::WithPreLocalMatrix final : public GrFPArgs {
  public:
-  WithPreLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) noexcept : INHERITED(args) {
+  WithPreLocalMatrix(const GrFPArgs& args, const SkMatrix& lm) : INHERITED(args) {
     if (!lm.isIdentity()) {
       if (fPreLocalMatrix) {
         fStorage.setConcat(lm, *fPreLocalMatrix);

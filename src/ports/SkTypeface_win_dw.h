@@ -132,7 +132,7 @@ class DWriteFontTypeface : public SkTypeface {
 
  private:
   mutable sk_sp<Loaders> fLoaders;
-  typedef SkTypeface INHERITED;
+  using INHERITED = SkTypeface;
 };
 
 #endif

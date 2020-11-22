@@ -27,7 +27,7 @@ class MutexBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
   SkString fBenchName;
   Mutex fMu;
 };
@@ -47,7 +47,7 @@ class SharedBench : public Benchmark {
   }
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
   SkSharedMutex fMu;
 };
 

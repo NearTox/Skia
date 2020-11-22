@@ -103,7 +103,7 @@ GrMtlRenderTarget::~GrMtlRenderTarget() {
 GrBackendRenderTarget GrMtlRenderTarget::getBackendRenderTarget() const {
   GrMtlTextureInfo info;
   info.fTexture.reset(GrRetainPtrFromId(fColorTexture));
-  return GrBackendRenderTarget(this->width(), this->height(), fColorTexture.sampleCount, info);
+  return GrBackendRenderTarget(this->width(), this->height(), info);
 }
 
 GrBackendFormat GrMtlRenderTarget::backendFormat() const {

@@ -9,10 +9,10 @@
 #include "include/core/SkDataTable.h"
 #include "include/private/SkOnce.h"
 
-static void malloc_freeproc(void* context) noexcept { sk_free(context); }
+static void malloc_freeproc(void* context) { sk_free(context); }
 
 // Makes empty table
-SkDataTable::SkDataTable() noexcept {
+SkDataTable::SkDataTable() {
   fCount = 0;
   fElemSize = 0;  // 0 signals that we use fDir instead of fElems
   fU.fDir = nullptr;
@@ -21,7 +21,7 @@ SkDataTable::SkDataTable() noexcept {
 }
 
 SkDataTable::SkDataTable(
-    const void* array, size_t elemSize, int count, FreeProc proc, void* context) noexcept {
+    const void* array, size_t elemSize, int count, FreeProc proc, void* context) {
   SkASSERT(count > 0);
 
   fCount = count;
@@ -31,7 +31,7 @@ SkDataTable::SkDataTable(
   fFreeProcContext = context;
 }
 
-SkDataTable::SkDataTable(const Dir* dir, int count, FreeProc proc, void* ctx) noexcept {
+SkDataTable::SkDataTable(const Dir* dir, int count, FreeProc proc, void* ctx) {
   SkASSERT(count > 0);
 
   fCount = count;
@@ -47,7 +47,7 @@ SkDataTable::~SkDataTable() {
   }
 }
 
-size_t SkDataTable::atSize(int index) const noexcept {
+size_t SkDataTable::atSize(int index) const {
   SkASSERT((unsigned)index < (unsigned)fCount);
 
   if (fElemSize) {
@@ -57,7 +57,7 @@ size_t SkDataTable::atSize(int index) const noexcept {
   }
 }
 
-const void* SkDataTable::at(int index, size_t* size) const noexcept {
+const void* SkDataTable::at(int index, size_t* size) const {
   SkASSERT((unsigned)index < (unsigned)fCount);
 
   if (fElemSize) {

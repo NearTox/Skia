@@ -53,7 +53,7 @@ class ANGLEGLWindowContext_win : public GLWindowContext {
   EGLContext fEGLContext = EGL_NO_CONTEXT;
   EGLSurface fEGLSurface = EGL_NO_SURFACE;
 
-  typedef GLWindowContext INHERITED;
+  using INHERITED = GLWindowContext;
 };
 
 ANGLEGLWindowContext_win::ANGLEGLWindowContext_win(HWND wnd, const DisplayParams& params)

@@ -72,23 +72,23 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
     void setW(const Sk2f& P0, const Sk2f& P1, const Sk2f& P2, const Sk2f& trans, float w);
   };
 
-  PrimitiveType primitiveType() const noexcept { return fPrimitiveType; }
+  PrimitiveType primitiveType() const { return fPrimitiveType; }
 
   // Number of bezier points for curves, or 3 for triangles.
-  int numInputPoints() const noexcept { return PrimitiveType::kCubics == fPrimitiveType ? 4 : 3; }
+  int numInputPoints() const { return PrimitiveType::kCubics == fPrimitiveType ? 4 : 3; }
 
-  bool isTriangles() const noexcept {
+  bool isTriangles() const {
     return PrimitiveType::kTriangles == fPrimitiveType ||
            PrimitiveType::kWeightedTriangles == fPrimitiveType;
   }
 
-  int hasInputWeight() const noexcept {
+  int hasInputWeight() const {
     return PrimitiveType::kWeightedTriangles == fPrimitiveType ||
            PrimitiveType::kConics == fPrimitiveType;
   }
 
   // GrPrimitiveProcessor overrides.
-  const char* name() const noexcept override { return PrimitiveTypeName(fPrimitiveType); }
+  const char* name() const override { return PrimitiveTypeName(fPrimitiveType); }
   void getGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
     SkDEBUGCODE(this->getDebugBloatKey(b));
     b->add32((int)fPrimitiveType);
@@ -114,7 +114,9 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
   // subpassIdx of each PrimitiveType, it calls reset/bind*/drawInstances.
   virtual int numSubpasses() const = 0;
   virtual void reset(PrimitiveType, int subpassIdx, GrResourceProvider*) = 0;
-  void bindPipeline(GrOpFlushState*, const GrPipeline&, const SkRect& drawBounds) const;
+  void bindPipeline(
+      GrOpFlushState*, const GrPipeline&, const SkRect& drawBounds,
+      const GrUserStencilSettings* = &GrUserStencilSettings::kUnused) const;
   virtual void bindBuffers(GrOpsRenderPass*, sk_sp<const GrBuffer> instanceBuffer) const = 0;
   virtual void drawInstances(GrOpsRenderPass*, int instanceCount, int baseInstance) const = 0;
 
@@ -181,7 +183,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
         GrGLSLVertexGeoBuilder*, const char* leftDir, const char* rightDir,
         const char* outputAttenuation);
 
-    virtual ~Shader() = default;
+    virtual ~Shader() {}
 
    protected:
     // Here the subclass adds its internal varyings to the handler and produces code to
@@ -224,7 +226,7 @@ class GrCCCoverageProcessor : public GrGeometryProcessor {
 
   class TriangleShader;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 inline const char* GrCCCoverageProcessor::PrimitiveTypeName(PrimitiveType type) {

@@ -70,7 +70,7 @@ class GrConicEffect : public GrGeometryProcessor {
 
   ~GrConicEffect() override;
 
-  const char* name() const noexcept override { return "Conic"; }
+  const char* name() const override { return "Conic"; }
 
   inline const Attribute& inPosition() const { return kAttributes[0]; }
   inline const Attribute& inConicCoeffs() const { return kAttributes[1]; }
@@ -104,7 +104,7 @@ class GrConicEffect : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -132,7 +132,7 @@ class GrQuadEffect : public GrGeometryProcessor {
 
   ~GrQuadEffect() override;
 
-  const char* name() const noexcept override { return "Quad"; }
+  const char* name() const override { return "Quad"; }
 
   inline const Attribute& inPosition() const { return kAttributes[0]; }
   inline const Attribute& inHairQuadEdge() const { return kAttributes[1]; }
@@ -167,7 +167,7 @@ class GrQuadEffect : public GrGeometryProcessor {
 
   GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 #endif

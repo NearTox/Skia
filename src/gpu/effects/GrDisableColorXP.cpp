@@ -22,8 +22,8 @@ class DisableColorXP : public GrXferProcessor {
   DisableColorXP() : INHERITED(kDisableColorXP_ClassID) {}
 
  private:
-  const char* name() const noexcept override { return "Disable Color"; }
-  bool onIsEqual(const GrXferProcessor& xpBase) const noexcept override { return true; }
+  const char* name() const override { return "Disable Color"; }
+  bool onIsEqual(const GrXferProcessor& xpBase) const override { return true; }
   void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
     return;  // No key.
   }
@@ -32,7 +32,7 @@ class DisableColorXP : public GrXferProcessor {
   }
   GrGLSLXferProcessor* createGLSLInstance() const override;
 
-  typedef GrXferProcessor INHERITED;
+  using INHERITED = GrXferProcessor;
 };
 
 class GLDisableColorXP : public GrGLSLXferProcessor {
@@ -56,7 +56,7 @@ class GLDisableColorXP : public GrGLSLXferProcessor {
 
   void onSetData(const GrGLSLProgramDataManager&, const GrXferProcessor&) override {}
 
-  typedef GrGLSLXferProcessor INHERITED;
+  using INHERITED = GrGLSLXferProcessor;
 };
 
 GrGLSLXferProcessor* DisableColorXP::createGLSLInstance() const { return new GLDisableColorXP(); }

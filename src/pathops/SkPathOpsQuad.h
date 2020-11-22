@@ -14,8 +14,8 @@
 struct SkOpCurve;
 
 struct SkDQuadPair {
-  const SkDQuad& first() const noexcept { return (const SkDQuad&)pts[0]; }
-  const SkDQuad& second() const noexcept { return (const SkDQuad&)pts[2]; }
+  const SkDQuad& first() const { return (const SkDQuad&)pts[0]; }
+  const SkDQuad& second() const { return (const SkDQuad&)pts[2]; }
   SkDPoint pts[5];
 };
 
@@ -30,23 +30,23 @@ struct SkDQuad {
     return fPts[0].approximatelyEqual(fPts[1]) && fPts[0].approximatelyEqual(fPts[2]);
   }
 
-  bool controlsInside() const noexcept {
+  bool controlsInside() const {
     SkDVector v01 = fPts[0] - fPts[1];
     SkDVector v02 = fPts[0] - fPts[2];
     SkDVector v12 = fPts[1] - fPts[2];
     return v02.dot(v01) > 0 && v02.dot(v12) > 0;
   }
 
-  void debugInit() noexcept { sk_bzero(fPts, sizeof(fPts)); }
+  void debugInit() { sk_bzero(fPts, sizeof(fPts)); }
 
   void debugSet(const SkDPoint* pts);
 
-  SkDQuad flip() const noexcept {
+  SkDQuad flip() const {
     SkDQuad result = {{fPts[2], fPts[1], fPts[0]} SkDEBUGPARAMS(fDebugGlobalState)};
     return result;
   }
 
-  static bool IsConic() noexcept { return false; }
+  static bool IsConic() { return false; }
 
   const SkDQuad& set(
       const SkPoint pts[kPointCount] SkDEBUGPARAMS(SkOpGlobalState* state = nullptr)) {
@@ -57,11 +57,11 @@ struct SkDQuad {
     return *this;
   }
 
-  const SkDPoint& operator[](int n) const noexcept {
+  const SkDPoint& operator[](int n) const {
     SkASSERT(n >= 0 && n < kPointCount);
     return fPts[n];
   }
-  SkDPoint& operator[](int n) noexcept {
+  SkDPoint& operator[](int n) {
     SkASSERT(n >= 0 && n < kPointCount);
     return fPts[n];
   }
@@ -86,12 +86,12 @@ struct SkDQuad {
   bool hullIntersects(const SkDConic&, bool* isLinear) const;
   bool hullIntersects(const SkDCubic&, bool* isLinear) const;
   bool isLinear(int startIndex, int endIndex) const;
-  static int maxIntersections() noexcept { return kMaxIntersections; }
+  static int maxIntersections() { return kMaxIntersections; }
   bool monotonicInX() const;
   bool monotonicInY() const;
   void otherPts(int oddMan, const SkDPoint* endPt[2]) const;
-  static int pointCount() noexcept { return kPointCount; }
-  static int pointLast() noexcept { return kPointLast; }
+  static int pointCount() { return kPointCount; }
+  static int pointLast() { return kPointLast; }
   SkDPoint ptAtT(double t) const;
   static int RootsReal(double A, double B, double C, double t[2]);
   static int RootsValidT(const double A, const double B, const double C, double s[2]);
@@ -130,17 +130,18 @@ struct SkDQuad {
 class SkTQuad : public SkTCurve {
  public:
   SkDQuad fQuad;
-  SkTQuad() noexcept = default;
 
-  SkTQuad(const SkDQuad& q) noexcept : fQuad(q) {}
+  SkTQuad() {}
+
+  SkTQuad(const SkDQuad& q) : fQuad(q) {}
 
   ~SkTQuad() override {}
 
-  const SkDPoint& operator[](int n) const noexcept override { return fQuad[n]; }
-  SkDPoint& operator[](int n) noexcept override { return fQuad[n]; }
+  const SkDPoint& operator[](int n) const override { return fQuad[n]; }
+  SkDPoint& operator[](int n) override { return fQuad[n]; }
 
   bool collapsed() const override { return fQuad.collapsed(); }
-  bool controlsInside() const noexcept override { return fQuad.controlsInside(); }
+  bool controlsInside() const override { return fQuad.controlsInside(); }
   void debugInit() override { return fQuad.debugInit(); }
 #if DEBUG_T_SECT
   void dumpID(int id) const override { return fQuad.dumpID(id); }
@@ -162,17 +163,17 @@ class SkTQuad : public SkTCurve {
   }
 
   int intersectRay(SkIntersections* i, const SkDLine& line) const override;
-  bool IsConic() const noexcept override { return false; }
+  bool IsConic() const override { return false; }
   SkTCurve* make(SkArenaAlloc& heap) const override { return heap.make<SkTQuad>(); }
 
-  int maxIntersections() const noexcept override { return SkDQuad::kMaxIntersections; }
+  int maxIntersections() const override { return SkDQuad::kMaxIntersections; }
 
   void otherPts(int oddMan, const SkDPoint* endPt[2]) const override {
     fQuad.otherPts(oddMan, endPt);
   }
 
-  int pointCount() const noexcept override { return SkDQuad::kPointCount; }
-  int pointLast() const noexcept override { return SkDQuad::kPointLast; }
+  int pointCount() const override { return SkDQuad::kPointCount; }
+  int pointLast() const override { return SkDQuad::kPointLast; }
   SkDPoint ptAtT(double t) const override { return fQuad.ptAtT(t); }
   void setBounds(SkDRect*) const override;
 

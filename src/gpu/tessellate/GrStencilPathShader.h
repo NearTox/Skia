@@ -39,7 +39,7 @@ class GrStencilTriangleShader : public GrStencilPathShader {
             kTessellate_GrStencilTriangleShader_ClassID, viewMatrix, GrPrimitiveType::kTriangles) {
     this->setVertexAttributes(&kSinglePointAttrib, 1);
   }
-  const char* name() const noexcept override { return "tessellate_GrStencilTriangleShader"; }
+  const char* name() const override { return "tessellate_GrStencilTriangleShader"; }
 };
 
 // Uses GPU tessellation shaders to linearize, triangulate, and render standalone closed cubics.
@@ -51,7 +51,7 @@ class GrCubicTessellateShader : public GrStencilPathShader {
             kTessellate_GrCubicTessellateShader_ClassID, viewMatrix, GrPrimitiveType::kPatches, 4) {
     this->setVertexAttributes(&kSinglePointAttrib, 1);
   }
-  const char* name() const noexcept override { return "tessellate_GrCubicTessellateShader"; }
+  const char* name() const override { return "tessellate_GrCubicTessellateShader"; }
 
  private:
   SkString getTessControlShaderGLSL(
@@ -73,7 +73,7 @@ class GrWedgeTessellateShader : public GrStencilPathShader {
             kTessellate_GrWedgeTessellateShader_ClassID, viewMatrix, GrPrimitiveType::kPatches, 5) {
     this->setVertexAttributes(&kSinglePointAttrib, 1);
   }
-  const char* name() const noexcept override { return "tessellate_GrWedgeTessellateShader"; }
+  const char* name() const override { return "tessellate_GrWedgeTessellateShader"; }
 
  private:
   SkString getTessControlShaderGLSL(
@@ -136,7 +136,7 @@ class GrMiddleOutCubicShader : public GrStencilPathShader {
     this->setInstanceAttributes(kInputPtsAttribs, 2);
   }
 
-  const char* name() const noexcept override { return "tessellate_GrMiddleOutCubicShader"; }
+  const char* name() const override { return "tessellate_GrMiddleOutCubicShader"; }
 
  private:
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;

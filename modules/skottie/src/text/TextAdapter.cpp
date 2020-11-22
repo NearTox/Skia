@@ -256,7 +256,7 @@ uint32_t TextAdapter::shaperFlags() const {
 
 void TextAdapter::reshape() {
   const Shaper::TextDesc text_desc = {
-      fText->fTypeface, fText->fTextSize, fText->fLineHeight, fText->fAscent,
+      fText->fTypeface, fText->fTextSize, fText->fLineHeight, fText->fLineShift,   fText->fAscent,
       fText->fHAlign,   fText->fVAlign,   fText->fResize,     this->shaperFlags(),
   };
   const auto shape_result = Shaper::Shape(fText->fText, text_desc, fText->fBox, fFontMgr);
@@ -298,9 +298,9 @@ void TextAdapter::reshape() {
   bounds_color->setStrokeWidth(1);
   bounds_color->setAntiAlias(true);
 
-  fRoot->addChild(sksg::Draw::Make(sksg::Rect::Make(fText.fBox), std::move(box_color)));
-  fRoot->addChild(
-      sksg::Draw::Make(sksg::Rect::Make(shape_result.computeBounds()), std::move(bounds_color)));
+  fRoot->addChild(sksg::Draw::Make(sksg::Rect::Make(fText->fBox), std::move(box_color)));
+  fRoot->addChild(sksg::Draw::Make(
+      sksg::Rect::Make(shape_result.computeVisualBounds()), std::move(bounds_color)));
 #endif
 }
 

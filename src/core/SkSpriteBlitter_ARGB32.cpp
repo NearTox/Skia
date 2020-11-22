@@ -53,7 +53,7 @@ class Sprite_D32_S32 : public SkSpriteBlitter {
   SkBlitRow::Proc32 fProc32;
   U8CPU fAlpha;
 
-  typedef SkSpriteBlitter INHERITED;
+  using INHERITED = SkSpriteBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ class Sprite_D32_S32A_Xfer : public SkSpriteBlitter {
   SkXfermode* fXfermode;
 
  private:
-  typedef SkSpriteBlitter INHERITED;
+  using INHERITED = SkSpriteBlitter;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -29,7 +29,7 @@ class D3DTestContext : public TestContext {
   bool fOwnsContext;
 
  private:
-  typedef TestContext INHERITED;
+  using INHERITED = TestContext;
 };
 
 /**

@@ -21,20 +21,17 @@ enum class SkPathFillType {
   kInverseEvenOdd
 };
 
-static constexpr inline bool SkPathFillType_IsEvenOdd(SkPathFillType ft) noexcept {
+static inline bool SkPathFillType_IsEvenOdd(SkPathFillType ft) {
   return (static_cast<int>(ft) & 1) != 0;
 }
 
-static constexpr inline bool SkPathFillType_IsInverse(SkPathFillType ft) noexcept {
+static inline bool SkPathFillType_IsInverse(SkPathFillType ft) {
   return (static_cast<int>(ft) & 2) != 0;
 }
 
-static constexpr inline SkPathFillType SkPathFillType_ConvertToNonInverse(
-    SkPathFillType ft) noexcept {
+static inline SkPathFillType SkPathFillType_ConvertToNonInverse(SkPathFillType ft) {
   return static_cast<SkPathFillType>(static_cast<int>(ft) & 1);
 }
-
-enum class SkPathConvexityType { kUnknown, kConvex, kConcave };
 
 enum class SkPathDirection {
   /** clockwise direction for adding closed contours */

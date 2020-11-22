@@ -74,7 +74,8 @@ class GrTextureProducer : public SkNoncopyable {
    */
   virtual std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessor(
       const SkMatrix& textureMatrix, const SkRect* subset, const SkRect* domain,
-      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY) = 0;
+      GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+      SkImage::CubicResampler kernel) = 0;
 
   /**
    * Returns a texture view, possibly with MIP maps. The request for MIP maps may not be honored
@@ -83,18 +84,18 @@ class GrTextureProducer : public SkNoncopyable {
    */
   GrSurfaceProxyView view(GrMipmapped);
 
-  int width() const noexcept { return fImageInfo.width(); }
-  int height() const noexcept { return fImageInfo.height(); }
-  SkISize dimensions() const noexcept { return fImageInfo.dimensions(); }
-  GrColorType colorType() const noexcept { return fImageInfo.colorType(); }
-  SkAlphaType alphaType() const noexcept { return fImageInfo.alphaType(); }
-  SkColorSpace* colorSpace() const noexcept { return fImageInfo.colorSpace(); }
-  bool isAlphaOnly() const noexcept { return GrColorTypeIsAlphaOnly(fImageInfo.colorType()); }
+  int width() const { return fImageInfo.width(); }
+  int height() const { return fImageInfo.height(); }
+  SkISize dimensions() const { return fImageInfo.dimensions(); }
+  GrColorType colorType() const { return fImageInfo.colorType(); }
+  SkAlphaType alphaType() const { return fImageInfo.alphaType(); }
+  SkColorSpace* colorSpace() const { return fImageInfo.colorSpace(); }
+  bool isAlphaOnly() const { return GrColorTypeIsAlphaOnly(fImageInfo.colorType()); }
   /* Is it a planar image consisting of multiple textures that may have different resolutions? */
-  virtual bool isPlanar() const noexcept { return false; }
+  virtual bool isPlanar() const { return false; }
 
  protected:
-  GrTextureProducer(GrRecordingContext* context, const GrImageInfo& imageInfo) noexcept
+  GrTextureProducer(GrRecordingContext* context, const GrImageInfo& imageInfo)
       : fContext(context), fImageInfo(imageInfo) {}
 
   // Helper for making a texture effect from a single proxy view.
@@ -105,9 +106,10 @@ class GrTextureProducer : public SkNoncopyable {
   // Helper for making a bicubic effect from a single proxy view.
   std::unique_ptr<GrFragmentProcessor> createBicubicFragmentProcessorForView(
       GrSurfaceProxyView view, const SkMatrix& textureMatrix, const SkRect* subset,
-      const SkRect* domain, GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY);
+      const SkRect* domain, GrSamplerState::WrapMode wrapX, GrSamplerState::WrapMode wrapY,
+      SkImage::CubicResampler kernel);
 
-  GrRecordingContext* context() const noexcept { return fContext; }
+  GrRecordingContext* context() const { return fContext; }
 
  private:
   virtual GrSurfaceProxyView onView(GrMipmapped) = 0;
@@ -115,7 +117,7 @@ class GrTextureProducer : public SkNoncopyable {
   GrRecordingContext* fContext;
   const GrImageInfo fImageInfo;
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 
 #endif

@@ -134,7 +134,7 @@ class TestOp : public GrOp {
 
   void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&) override {}
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
 
   void onPrepare(GrOpFlushState*) override {}
 
@@ -168,7 +168,7 @@ class TestOp : public GrOp {
   int* fResult;
   const Combinable* fCombinable;
 
-  typedef GrOp INHERITED;
+  using INHERITED = GrOp;
 };
 }  // namespace
 

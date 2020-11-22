@@ -47,7 +47,7 @@ struct GrVertexWriter {
 
   template <typename T, typename... Args>
   void write(const T& val, const Args&... remainder) {
-    static_assert(std::is_trivially_copyable<T>::value, "");
+    static_assert(std::is_pod<T>::value, "");
     // This assert is barely related to what we're trying to check - that our vertex data
     // matches our attribute layouts, where each attribute is aligned to four bytes. If this
     // becomes a problem, just remove it.
@@ -59,7 +59,7 @@ struct GrVertexWriter {
 
   template <typename T, size_t N, typename... Args>
   void write(const T (&val)[N], const Args&... remainder) {
-    static_assert(std::is_trivially_copyable<T>::value, "");
+    static_assert(std::is_pod<T>::value, "");
     static_assert(alignof(T) <= 4, "");
     memcpy(fPtr, val, N * sizeof(T));
     fPtr = SkTAddOffset<void>(fPtr, N * sizeof(T));
@@ -122,11 +122,11 @@ struct GrVertexWriter {
     T l, t, r, b;
   };
 
-  static TriStrip<float> TriStripFromRect(const SkRect& r) noexcept {
+  static TriStrip<float> TriStripFromRect(const SkRect& r) {
     return {r.fLeft, r.fTop, r.fRight, r.fBottom};
   }
 
-  static TriStrip<uint16_t> TriStripFromUVs(const std::array<uint16_t, 4>& rect) noexcept {
+  static TriStrip<uint16_t> TriStripFromUVs(const std::array<uint16_t, 4>& rect) {
     return {rect[0], rect[1], rect[2], rect[3]};
   }
 
@@ -135,7 +135,7 @@ struct GrVertexWriter {
     T l, t, r, b;
   };
 
-  static TriFan<float> TriFanFromRect(const SkRect& r) noexcept {
+  static TriFan<float> TriFanFromRect(const SkRect& r) {
     return {r.fLeft, r.fTop, r.fRight, r.fBottom};
   }
 

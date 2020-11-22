@@ -34,7 +34,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
 
     // Geometry shader.
     GrGLSLVaryingHandler* varyingHandler = args.fVaryingHandler;
-    this->emitGeometryShader(proc, varyingHandler, args.fGeomBuilder, args.fRTAdjustName);
+    this->emitGeometryShader(proc, varyingHandler, args.fGeomBuilder);
     varyingHandler->emitAttributes(proc);
     varyingHandler->setNoPerspective();
     SkASSERT(!*args.fFPCoordTransformHandler);
@@ -49,7 +49,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
 
   void emitGeometryShader(
       const GrGSCoverageProcessor& proc, GrGLSLVaryingHandler* varyingHandler,
-      GrGLSLGeometryBuilder* g, const char* rtAdjust) const {
+      GrGLSLGeometryBuilder* g) const {
     int numInputPoints = proc.numInputPoints();
     SkASSERT(3 == numInputPoints || 4 == numInputPoints);
 
@@ -105,7 +105,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
           fShader->emitVaryings(
               varyingHandler, GrGLSLVarying::Scope::kGeoToFrag, &fnBody, "vertexpos", coverage,
               cornerCoverage, wind.c_str());
-          g->emitVertex(&fnBody, "vertexpos", rtAdjust);
+          g->emitVertex(&fnBody, "vertexpos");
           return fnBody;
         }()
             .c_str(),
@@ -143,7 +143,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
   const std::unique_ptr<Shader> fShader;
   const GrShaderVar fEdgeDistanceEquation{"edge_distance_equation", kFloat3_GrSLType};
 
-  typedef GrGLSLGeometryProcessor INHERITED;
+  using INHERITED = GrGLSLGeometryProcessor;
 };
 
 /**

@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLColorMatrixFragmentProcessor : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLColorMatrixFragmentProcessor() noexcept = default;
+  GrGLSLColorMatrixFragmentProcessor() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrColorMatrixFragmentProcessor& _outer = args.fFp.cast<GrColorMatrixFragmentProcessor>();
@@ -41,12 +41,12 @@ class GrGLSLColorMatrixFragmentProcessor : public GrGLSLFragmentProcessor {
     fragBuilder->codeAppendf(
         R"SkSL(half4 inputColor = %s;
 @if (%s) {
-    half4 _inlineResulthalf4unpremulhalf40;
-    half4 _inlineArghalf4unpremulhalf41_0 = inputColor;
+    half4 _0_unpremul;
     {
-        _inlineResulthalf4unpremulhalf40 = half4(_inlineArghalf4unpremulhalf41_0.xyz / max(_inlineArghalf4unpremulhalf41_0.w, 9.9999997473787516e-05), _inlineArghalf4unpremulhalf41_0.w);
+        _0_unpremul = half4(inputColor.xyz / max(inputColor.w, 9.9999997473787516e-05), inputColor.w);
     }
-    inputColor = _inlineResulthalf4unpremulhalf40;
+
+    inputColor = _0_unpremul;
 
 }
 %s = %s * inputColor + %s;
@@ -73,6 +73,7 @@ class GrGLSLColorMatrixFragmentProcessor : public GrGLSLFragmentProcessor {
       const SkM44& mValue = _outer.m;
       if (mPrev != (mValue)) {
         mPrev = mValue;
+        static_assert(1 == 1);
         pdman.setSkM44(mVar, mValue);
       }
       const SkV4& vValue = _outer.v;
@@ -96,7 +97,7 @@ void GrColorMatrixFragmentProcessor::onGetGLSLProcessorKey(
   b->add32((uint32_t)clampRGBOutput);
   b->add32((uint32_t)premulOutput);
 }
-bool GrColorMatrixFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrColorMatrixFragmentProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   const GrColorMatrixFragmentProcessor& that = other.cast<GrColorMatrixFragmentProcessor>();
   (void)that;
   if (m != that.m) return false;
@@ -106,6 +107,7 @@ bool GrColorMatrixFragmentProcessor::onIsEqual(const GrFragmentProcessor& other)
   if (premulOutput != that.premulOutput) return false;
   return true;
 }
+bool GrColorMatrixFragmentProcessor::usesExplicitReturn() const { return false; }
 GrColorMatrixFragmentProcessor::GrColorMatrixFragmentProcessor(
     const GrColorMatrixFragmentProcessor& src)
     : INHERITED(kGrColorMatrixFragmentProcessor_ClassID, src.optimizationFlags()),

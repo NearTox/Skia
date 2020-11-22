@@ -141,7 +141,7 @@ class Xfermodes2GM : public GM {
   sk_sp<SkShader> fSrc;
   sk_sp<SkShader> fDst;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////

@@ -37,7 +37,7 @@ class Window_win : public Window {
   HWND fHWnd;
   BackendType fBackend;
 
-  typedef Window INHERITED;
+  using INHERITED = Window;
 };
 
 }  // namespace sk_app

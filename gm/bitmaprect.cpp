@@ -91,7 +91,7 @@ class DrawBitmapRect2 : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ class DrawBitmapRect3 : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ class DrawBitmapRect4 : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 
 class BitmapRectRounding : public skiagm::GM {
@@ -254,7 +254,7 @@ class BitmapRectRounding : public skiagm::GM {
   }
 
  private:
-  typedef skiagm::GM INHERITED;
+  using INHERITED = skiagm::GM;
 };
 DEF_GM(return new BitmapRectRounding;)
 

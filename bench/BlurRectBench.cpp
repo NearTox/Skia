@@ -65,7 +65,7 @@ class BlurRectBench : public Benchmark {
   virtual void preBenchSetup(const SkRect&) {}
 
  private:
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 class BlurRectDirectBench : public BlurRectBench {
@@ -93,7 +93,7 @@ class BlurRectDirectBench : public BlurRectBench {
   }
 
  private:
-  typedef BlurRectBench INHERITED;
+  using INHERITED = BlurRectBench;
 };
 
 class BlurRectSeparableBench : public BlurRectBench {
@@ -117,7 +117,7 @@ class BlurRectSeparableBench : public BlurRectBench {
   SkMask fSrcMask;
 
  private:
-  typedef BlurRectBench INHERITED;
+  using INHERITED = BlurRectBench;
 };
 
 class BlurRectBoxFilterBench : public BlurRectSeparableBench {
@@ -146,7 +146,7 @@ class BlurRectBoxFilterBench : public BlurRectSeparableBench {
   }
 
  private:
-  typedef BlurRectSeparableBench INHERITED;
+  using INHERITED = BlurRectSeparableBench;
 };
 
 class BlurRectGaussianBench : public BlurRectSeparableBench {
@@ -175,7 +175,7 @@ class BlurRectGaussianBench : public BlurRectSeparableBench {
   }
 
  private:
-  typedef BlurRectSeparableBench INHERITED;
+  using INHERITED = BlurRectSeparableBench;
 };
 
 DEF_BENCH(return new BlurRectBoxFilterBench(SMALL);)

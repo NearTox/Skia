@@ -59,10 +59,10 @@ class SkProcCoeffXfermode : public SkXfermode {
  private:
   const SkBlendMode fMode;
 
-  typedef SkXfermode INHERITED;
+  using INHERITED = SkXfermode;
 };
 
-const char* SkBlendMode_Name(SkBlendMode mode) noexcept {
+const char* SkBlendMode_Name(SkBlendMode mode) {
   SkASSERT((unsigned)mode <= (unsigned)SkBlendMode::kLastMode);
   const char* gModeStrings[] = {"Clear",     "Src",        "Dst",        "SrcOver",    "DstOver",
                                 "SrcIn",     "DstIn",      "SrcOut",     "DstOut",     "SrcATop",

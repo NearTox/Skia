@@ -86,7 +86,7 @@ class FwidthSquircleTestProcessor : public GrGeometryProcessor {
 
   class Impl;
 
-  typedef GrGeometryProcessor INHERITED;
+  using INHERITED = GrGeometryProcessor;
 };
 
 class FwidthSquircleTestProcessor::Impl : public GrGLSLGeometryProcessor {
@@ -167,30 +167,34 @@ class FwidthSquircleTestOp : public GrDrawOp {
 
   GrProgramInfo* createProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView) const {
+      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) const {
     GrGeometryProcessor* geomProc = FwidthSquircleTestProcessor::Make(arena, fViewMatrix);
 
     return sk_gpu_test::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, geomProc,
-        SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip);
+        SkBlendMode::kSrcOver, GrPrimitiveType::kTriangleStrip, renderPassXferBarriers);
   }
 
   GrProgramInfo* createProgramInfo(GrOpFlushState* flushState) const {
     return this->createProgramInfo(
         &flushState->caps(), flushState->allocator(), flushState->writeView(),
-        flushState->detachAppliedClip(), flushState->dstProxyView());
+        flushState->detachAppliedClip(), flushState->dstProxyView(),
+        flushState->renderPassBarriers());
   }
 
   void onPrePrepare(
       GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView) final {
+      const GrXferProcessor::DstProxyView& dstProxyView,
+      GrXferBarrierFlags renderPassXferBarriers) final {
     SkArenaAlloc* arena = context->priv().recordTimeAllocator();
 
     // This is equivalent to a GrOpFlushState::detachAppliedClip
     GrAppliedClip appliedClip = clip ? std::move(*clip) : GrAppliedClip::Disabled();
 
     fProgramInfo = this->createProgramInfo(
-        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView);
+        context->priv().caps(), arena, writeView, std::move(appliedClip), dstProxyView,
+        renderPassXferBarriers);
 
     context->priv().recordProgramInfo(fProgramInfo);
   }
@@ -235,7 +239,7 @@ class FwidthSquircleTestOp : public GrDrawOp {
 
   friend class ::GrOpMemoryPool;  // for ctor
 
-  typedef GrDrawOp INHERITED;
+  using INHERITED = GrDrawOp;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -28,7 +28,7 @@ class DawnTestContext : public TestContext {
   wgpu::Device fDevice;
 
  private:
-  typedef TestContext INHERITED;
+  using INHERITED = TestContext;
 };
 
 /**

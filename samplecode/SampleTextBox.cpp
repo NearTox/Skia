@@ -111,7 +111,7 @@ class TextBoxView : public Sample {
 
  private:
   std::unique_ptr<SkShaper> fShaper;
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 DEF_SAMPLE(return new TextBoxView([]() { return SkShaper::Make(); }, "default"););
@@ -183,6 +183,6 @@ class SampleShaper : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new SampleShaper;);

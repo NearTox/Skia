@@ -19,7 +19,7 @@
 #include "src/sksl/SkSLUtil.h"
 class GrGLSLRGBToHSLFilterEffect : public GrGLSLFragmentProcessor {
  public:
-  GrGLSLRGBToHSLFilterEffect() noexcept = default;
+  GrGLSLRGBToHSLFilterEffect() {}
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     const GrRGBToHSLFilterEffect& _outer = args.fFp.cast<GrRGBToHSLFilterEffect>();
@@ -50,11 +50,12 @@ GrGLSLFragmentProcessor* GrRGBToHSLFilterEffect::onCreateGLSLInstance() const {
 }
 void GrRGBToHSLFilterEffect::onGetGLSLProcessorKey(
     const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {}
-bool GrRGBToHSLFilterEffect::onIsEqual(const GrFragmentProcessor& other) const noexcept {
+bool GrRGBToHSLFilterEffect::onIsEqual(const GrFragmentProcessor& other) const {
   const GrRGBToHSLFilterEffect& that = other.cast<GrRGBToHSLFilterEffect>();
   (void)that;
   return true;
 }
+bool GrRGBToHSLFilterEffect::usesExplicitReturn() const { return false; }
 GrRGBToHSLFilterEffect::GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src)
     : INHERITED(kGrRGBToHSLFilterEffect_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

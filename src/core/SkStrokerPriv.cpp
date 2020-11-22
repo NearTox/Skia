@@ -46,7 +46,7 @@ static void SquareCapper(
 
 /////////////////////////////////////////////////////////////////////////////
 
-static bool is_clockwise(const SkVector& before, const SkVector& after) noexcept {
+static bool is_clockwise(const SkVector& before, const SkVector& after) {
   return before.fX * after.fY > before.fY * after.fX;
 }
 
@@ -57,7 +57,7 @@ enum AngleType {
   kNearlyLine_AngleType
 };
 
-static AngleType Dot2AngleType(SkScalar dot) noexcept {
+static AngleType Dot2AngleType(SkScalar dot) {
   // need more precise fixed normalization
   //  SkASSERT(SkScalarAbs(dot) <= SK_Scalar1 + SK_ScalarNearlyZero);
 
@@ -216,14 +216,14 @@ DO_BLUNT:
 
 /////////////////////////////////////////////////////////////////////////////
 
-SkStrokerPriv::CapProc SkStrokerPriv::CapFactory(SkPaint::Cap cap) noexcept {
+SkStrokerPriv::CapProc SkStrokerPriv::CapFactory(SkPaint::Cap cap) {
   const SkStrokerPriv::CapProc gCappers[] = {ButtCapper, RoundCapper, SquareCapper};
 
   SkASSERT((unsigned)cap < SkPaint::kCapCount);
   return gCappers[cap];
 }
 
-SkStrokerPriv::JoinProc SkStrokerPriv::JoinFactory(SkPaint::Join join) noexcept {
+SkStrokerPriv::JoinProc SkStrokerPriv::JoinFactory(SkPaint::Join join) {
   const SkStrokerPriv::JoinProc gJoiners[] = {MiterJoiner, RoundJoiner, BluntJoiner};
 
   SkASSERT((unsigned)join < SkPaint::kJoinCount);

@@ -50,7 +50,7 @@ class SkSVGValue : public SkNoncopyable {
  private:
   Type fType;
 
-  typedef SkNoncopyable INHERITED;
+  using INHERITED = SkNoncopyable;
 };
 
 template <typename T, SkSVGValue::Type ValueType>
@@ -70,7 +70,7 @@ class SkSVGWrapperValue final : public SkSVGValue {
 
   const T& fWrappedValue;
 
-  typedef SkSVGValue INHERITED;
+  using INHERITED = SkSVGValue;
 };
 
 using SkSVGClipValue = SkSVGWrapperValue<SkSVGClip, SkSVGValue::Type::kClip>;

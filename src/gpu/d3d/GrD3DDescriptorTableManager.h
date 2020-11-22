@@ -85,7 +85,7 @@ class GrD3DDescriptorTableManager {
     unsigned int fDescriptorCount;
     unsigned int fNextAvailable;
 
-    typedef GrRecycledResource INHERITED;
+    using INHERITED = GrRecycledResource;
   };
 
   class HeapPool {

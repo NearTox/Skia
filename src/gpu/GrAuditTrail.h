@@ -34,7 +34,7 @@ class GrAuditTrail {
 
   class AutoEnable {
    public:
-    AutoEnable(GrAuditTrail* auditTrail) noexcept : fAuditTrail(auditTrail) {
+    AutoEnable(GrAuditTrail* auditTrail) : fAuditTrail(auditTrail) {
       SkASSERT(!fAuditTrail->isEnabled());
       fAuditTrail->setEnabled(true);
     }
@@ -50,7 +50,7 @@ class GrAuditTrail {
 
   class AutoManageOpsTask {
    public:
-    AutoManageOpsTask(GrAuditTrail* auditTrail) noexcept
+    AutoManageOpsTask(GrAuditTrail* auditTrail)
         : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {}
 
     ~AutoManageOpsTask() { fAuditTrail->fullReset(); }
@@ -62,7 +62,7 @@ class GrAuditTrail {
 
   class AutoCollectOps {
    public:
-    AutoCollectOps(GrAuditTrail* auditTrail, int clientID) noexcept
+    AutoCollectOps(GrAuditTrail* auditTrail, int clientID)
         : fAutoEnable(auditTrail), fAuditTrail(auditTrail) {
       fAuditTrail->setClientID(clientID);
     }
@@ -94,10 +94,10 @@ class GrAuditTrail {
   // returns a json string of all of the ops associated with a given client id
   void toJson(SkJSONWriter& writer, int clientID) const;
 
-  bool isEnabled() noexcept { return fEnabled; }
-  void setEnabled(bool enabled) noexcept { fEnabled = enabled; }
+  bool isEnabled() { return fEnabled; }
+  void setEnabled(bool enabled) { fEnabled = enabled; }
 
-  void setClientID(int clientID) noexcept { fClientID = clientID; }
+  void setClientID(int clientID) { fClientID = clientID; }
 
   // We could just return our internal bookkeeping struct if copying the data out becomes
   // a performance issue, but until then its nice to decouple
@@ -115,7 +115,7 @@ class GrAuditTrail {
   void getBoundsByClientID(SkTArray<OpInfo>* outInfo, int clientID);
   void getBoundsByOpsTaskID(OpInfo* outInfo, int opsTaskID);
 
-  void fullReset() noexcept;
+  void fullReset();
 
   static const int kGrAuditTrailInvalidID;
 
@@ -135,7 +135,7 @@ class GrAuditTrail {
   typedef SkTArray<Op*> Ops;
 
   struct OpNode {
-    OpNode(const GrSurfaceProxy::UniqueID& proxyID) noexcept : fProxyUniqueID(proxyID) {}
+    OpNode(const GrSurfaceProxy::UniqueID& proxyID) : fProxyUniqueID(proxyID) {}
     void toJson(SkJSONWriter& writer) const;
 
     SkRect fBounds;

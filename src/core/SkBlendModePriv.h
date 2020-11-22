@@ -14,13 +14,13 @@
 
 class SkRasterPipeline;
 
-bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode) noexcept;
+bool SkBlendMode_SupportsCoverageAsAlpha(SkBlendMode);
 
-static constexpr inline bool SkBlendMode_CaresAboutRBOrder(SkBlendMode mode) noexcept {
+static inline bool SkBlendMode_CaresAboutRBOrder(SkBlendMode mode) {
   return (mode > SkBlendMode::kLastSeparableMode);
 }
 
-bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode, bool rgb_coverage) noexcept;
+bool SkBlendMode_ShouldPreScaleCoverage(SkBlendMode, bool rgb_coverage);
 void SkBlendMode_AppendStages(SkBlendMode, SkRasterPipeline*);
 
 SkPMColor4f SkBlendMode_Apply(SkBlendMode, const SkPMColor4f& src, const SkPMColor4f& dst);

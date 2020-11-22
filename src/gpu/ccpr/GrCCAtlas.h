@@ -29,12 +29,12 @@ class GrCCAtlas : public GrDynamicAtlas {
     int fApproxNumPixels = 0;
 
     // Add space for a rect in the desired atlas specs.
-    void accountForSpace(int width, int height) noexcept;
+    void accountForSpace(int width, int height);
   };
 
   enum class CoverageType { kFP16_CoverageCount, kA8_Multisample, kA8_LiteralCoverage };
 
-  static constexpr GrColorType CoverageTypeToColorType(CoverageType coverageType) noexcept {
+  static constexpr GrColorType CoverageTypeToColorType(CoverageType coverageType) {
     switch (coverageType) {
       case CoverageType::kFP16_CoverageCount: return GrColorType::kAlpha_F16;
       case CoverageType::kA8_Multisample:
@@ -44,7 +44,7 @@ class GrCCAtlas : public GrDynamicAtlas {
   }
 
   static constexpr InternalMultisample CoverageTypeHasInternalMultisample(
-      CoverageType coverageType) noexcept {
+      CoverageType coverageType) {
     switch (coverageType) {
       case CoverageType::kFP16_CoverageCount:
       case CoverageType::kA8_LiteralCoverage: return InternalMultisample::kNo;
@@ -54,7 +54,7 @@ class GrCCAtlas : public GrDynamicAtlas {
   }
 
   static constexpr GrCCPathProcessor::CoverageMode CoverageTypeToPathCoverageMode(
-      CoverageType coverageType) noexcept {
+      CoverageType coverageType) {
     return (GrCCAtlas::CoverageType::kFP16_CoverageCount == coverageType)
                ? GrCCPathProcessor::CoverageMode::kCoverageCount
                : GrCCPathProcessor::CoverageMode::kLiteral;
@@ -73,12 +73,12 @@ class GrCCAtlas : public GrDynamicAtlas {
 
   // This is an optional space for the caller to jot down user-defined instance data to use when
   // rendering atlas content.
-  void setFillBatchID(int id) noexcept;
-  int getFillBatchID() const noexcept { return fFillBatchID; }
-  void setStrokeBatchID(int id) noexcept;
-  int getStrokeBatchID() const noexcept { return fStrokeBatchID; }
-  void setEndStencilResolveInstance(int idx) noexcept;
-  int getEndStencilResolveInstance() const noexcept { return fEndStencilResolveInstance; }
+  void setFillBatchID(int id);
+  int getFillBatchID() const { return fFillBatchID; }
+  void setStrokeBatchID(int id);
+  int getStrokeBatchID() const { return fStrokeBatchID; }
+  void setEndStencilResolveInstance(int idx);
+  int getEndStencilResolveInstance() const { return fEndStencilResolveInstance; }
 
   sk_sp<GrCCCachedAtlas> refOrMakeCachedAtlas(GrOnFlushResourceProvider*);
 
@@ -99,12 +99,11 @@ class GrCCAtlasStack {
   using CoverageType = GrCCAtlas::CoverageType;
   using CCAtlasAllocator = GrTBlockList<GrCCAtlas, 4>;
 
-  GrCCAtlasStack(
-      CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps) noexcept
+  GrCCAtlasStack(CoverageType coverageType, const GrCCAtlas::Specs& specs, const GrCaps* caps)
       : fCoverageType(coverageType), fSpecs(specs), fCaps(caps) {}
 
-  CoverageType coverageType() const noexcept { return fCoverageType; }
-  bool empty() const noexcept { return fAtlases.empty(); }
+  CoverageType coverageType() const { return fCoverageType; }
+  bool empty() const { return fAtlases.empty(); }
   const GrCCAtlas& front() const {
     SkASSERT(!this->empty());
     return fAtlases.front();
@@ -113,13 +112,13 @@ class GrCCAtlasStack {
     SkASSERT(!this->empty());
     return fAtlases.front();
   }
-  GrCCAtlas& current() noexcept {
+  GrCCAtlas& current() {
     SkASSERT(!this->empty());
     return fAtlases.back();
   }
 
-  CCAtlasAllocator::Iter atlases() noexcept { return fAtlases.items(); }
-  CCAtlasAllocator::CIter atlases() const noexcept { return fAtlases.items(); }
+  CCAtlasAllocator::Iter atlases() { return fAtlases.items(); }
+  CCAtlasAllocator::CIter atlases() const { return fAtlases.items(); }
 
   // Adds a rect to the current atlas and returns the offset from device space to atlas space.
   // Call current() to get the atlas it was added to.
@@ -137,7 +136,7 @@ class GrCCAtlasStack {
   CCAtlasAllocator fAtlases;
 };
 
-inline void GrCCAtlas::Specs::accountForSpace(int width, int height) noexcept {
+inline void GrCCAtlas::Specs::accountForSpace(int width, int height) {
   fMinWidth = std::max(width, fMinWidth);
   fMinHeight = std::max(height, fMinHeight);
   fApproxNumPixels += (width + kPadding) * (height + kPadding);

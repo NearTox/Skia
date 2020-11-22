@@ -16,7 +16,8 @@
 
 static float accurate_t(float A, float B, float C, float D) {
   double roots[3];
-  SkDEBUGCODE(int count =) SkDCubic::RootsValidT(A, B, C, D, roots);
+  SkDEBUGCODE(int count =)
+  SkDCubic::RootsValidT(A, B, C, D, roots);
   SkASSERT(count == 1);
   return (float)roots[0];
 }

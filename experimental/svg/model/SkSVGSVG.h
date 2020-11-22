@@ -43,7 +43,7 @@ class SkSVGSVG : public SkSVGContainer {
 
   SkTLazy<SkSVGViewBoxType> fViewBox;
 
-  typedef SkSVGContainer INHERITED;
+  using INHERITED = SkSVGContainer;
 };
 
 #endif  // SkSVGSVG_DEFINED

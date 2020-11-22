@@ -17,16 +17,12 @@ namespace SkSL {
  * Represents an identifier referring to an ExternalValue.
  */
 struct ExternalValueReference : public Expression {
-  static constexpr Kind kExpressionKind = kExternalValue_Kind;
+  static constexpr Kind kExpressionKind = Kind::kExternalValue;
 
   ExternalValueReference(int offset, const ExternalValue* ev)
-      : INHERITED(offset, kExpressionKind, ev->type()), fValue(ev) {}
+      : INHERITED(offset, kExpressionKind, &ev->type()), fValue(ev) {}
 
-  bool hasProperty(Property property) const noexcept override {
-    return property == Property::kSideEffects;
-  }
-
-  int nodeCount() const noexcept override { return 1; }
+  bool hasProperty(Property property) const override { return property == Property::kSideEffects; }
 
   String description() const override { return String(fValue->fName); }
 
@@ -36,7 +32,7 @@ struct ExternalValueReference : public Expression {
 
   const ExternalValue* fValue;
 
-  typedef Expression INHERITED;
+  using INHERITED = Expression;
 };
 
 }  // namespace SkSL

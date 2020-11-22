@@ -241,7 +241,7 @@ void Parser::error(int offset, String msg) { fErrors.error(offset, msg); }
 
 bool Parser::isType(StringFragment name) {
   const Symbol* s = fSymbols[name];
-  return s && s->fKind == Symbol::kType_Kind;
+  return s && s->kind() == Symbol::Kind::kType;
 }
 
 /* DIRECTIVE(#version) INT_LITERAL ("es" | "compatibility")? |
@@ -337,7 +337,7 @@ ASTNode::ID Parser::enumDeclaration() {
   if (!this->expect(Token::Kind::TK_LBRACE, "'{'")) {
     return ASTNode::ID::Invalid();
   }
-  fSymbols.add(this->text(name), std::make_unique<Type>(this->text(name), Type::kEnum_Kind));
+  fSymbols.add(this->text(name), std::make_unique<Type>(this->text(name), Type::TypeKind::kEnum));
   CREATE_NODE(result, name.fOffset, ASTNode::Kind::kEnum, this->text(name));
   if (!this->checkNext(Token::Kind::TK_RBRACE)) {
     Token id;
@@ -381,8 +381,12 @@ ASTNode::ID Parser::enumDeclaration() {
    (COMMA parameter)* RPAREN (block | SEMICOLON)) | SEMICOLON) | interfaceBlock) */
 ASTNode::ID Parser::declaration() {
   Token lookahead = this->peek();
-  if (lookahead.fKind == Token::Kind::TK_ENUM) {
-    return this->enumDeclaration();
+  switch (lookahead.fKind) {
+    case Token::Kind::TK_ENUM: return this->enumDeclaration();
+    case Token::Kind::TK_SEMICOLON:
+      this->error(lookahead.fOffset, "expected a declaration, but found ';'");
+      return ASTNode::ID::Invalid();
+    default: break;
   }
   Modifiers modifiers = this->modifiers();
   lookahead = this->peek();
@@ -478,7 +482,7 @@ ASTNode::ID Parser::structDeclaration() {
     }
     ASTNode& declsNode = getNode(decls);
     const Symbol* symbol = fSymbols[(declsNode.begin() + 1)->getTypeData().fName];
-    SkASSERT(symbol && symbol->fKind == Symbol::kType_Kind);
+    SkASSERT(symbol && symbol->kind() == Symbol::Kind::kType);
     const Type* type = (const Type*)symbol;
     for (auto iter = declsNode.begin() + 2; iter != declsNode.end(); ++iter) {
       ASTNode& var = *iter;
@@ -490,9 +494,9 @@ ASTNode::ID Parser::structDeclaration() {
           return ASTNode::ID::Invalid();
         }
         uint64_t columns = size.getInt();
-        String name = type->name() + "[" + to_string(columns) + "]";
+        String typeName = type->name() + "[" + to_string(columns) + "]";
         type = fSymbols.takeOwnershipOfSymbol(
-            std::make_unique<Type>(name, Type::kArray_Kind, *type, (int)columns));
+            std::make_unique<Type>(typeName, Type::TypeKind::kArray, *type, (int)columns));
       }
       fields.push_back(Type::Field(declsNode.begin()->getModifiers(), vd.fName, type));
       if (vd.fSizeCount ? (var.begin() + (vd.fSizeCount - 1))->fNext : var.fFirstChild) {
@@ -544,38 +548,6 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
     }
     ++vd.fSizeCount;
-  }
-  getNode(currentVar).setVarData(vd);
-  if (this->checkNext(Token::Kind::TK_EQ)) {
-    ASTNode::ID value = this->assignmentExpression();
-    if (!value) {
-      return ASTNode::ID::Invalid();
-    }
-    getNode(currentVar).addChild(value);
-  }
-  while (this->checkNext(Token::Kind::TK_COMMA)) {
-    Token name;
-    if (!this->expect(Token::Kind::TK_IDENTIFIER, "an identifier", &name)) {
-      return ASTNode::ID::Invalid();
-    }
-    currentVar = ASTNode::ID(fFile->fNodes.size());
-    vd = ASTNode::VarData(this->text(name), 0);
-    fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
-    getNode(result).addChild(currentVar);
-    while (this->checkNext(Token::Kind::TK_LBRACKET)) {
-      if (this->checkNext(Token::Kind::TK_RBRACKET)) {
-        CREATE_EMPTY_CHILD(currentVar);
-      } else {
-        ASTNode::ID size = this->expression();
-        if (!size) {
-          return ASTNode::ID::Invalid();
-        }
-        getNode(currentVar).addChild(size);
-        if (!this->expect(Token::Kind::TK_RBRACKET, "']'")) {
-          return ASTNode::ID::Invalid();
-        }
-      }
-      ++vd.fSizeCount;
     }
     getNode(currentVar).setVarData(vd);
     if (this->checkNext(Token::Kind::TK_EQ)) {
@@ -585,7 +557,39 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       }
       getNode(currentVar).addChild(value);
     }
-  }
+    while (this->checkNext(Token::Kind::TK_COMMA)) {
+      Token identifierName;
+      if (!this->expect(Token::Kind::TK_IDENTIFIER, "an identifier", &identifierName)) {
+        return ASTNode::ID::Invalid();
+      }
+      currentVar = ASTNode::ID(fFile->fNodes.size());
+      vd = ASTNode::VarData(this->text(identifierName), 0);
+      fFile->fNodes.emplace_back(&fFile->fNodes, -1, ASTNode::Kind::kVarDeclaration);
+      getNode(result).addChild(currentVar);
+      while (this->checkNext(Token::Kind::TK_LBRACKET)) {
+        if (this->checkNext(Token::Kind::TK_RBRACKET)) {
+          CREATE_EMPTY_CHILD(currentVar);
+        } else {
+          ASTNode::ID size = this->expression();
+          if (!size) {
+            return ASTNode::ID::Invalid();
+          }
+          getNode(currentVar).addChild(size);
+          if (!this->expect(Token::Kind::TK_RBRACKET, "']'")) {
+            return ASTNode::ID::Invalid();
+          }
+        }
+        ++vd.fSizeCount;
+      }
+      getNode(currentVar).setVarData(vd);
+      if (this->checkNext(Token::Kind::TK_EQ)) {
+        ASTNode::ID value = this->assignmentExpression();
+        if (!value) {
+          return ASTNode::ID::Invalid();
+        }
+        getNode(currentVar).addChild(value);
+      }
+    }
     if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
       return ASTNode::ID::Invalid();
     }
@@ -846,7 +850,7 @@ Layout Parser::layout() {
 
 /* layout? (UNIFORM | CONST | IN | OUT | INOUT | LOWP | MEDIUMP | HIGHP | FLAT | NOPERSPECTIVE |
             READONLY | WRITEONLY | COHERENT | VOLATILE | RESTRICT | BUFFER | PLS | PLSIN |
-            PLSOUT | VARYING)* */
+            PLSOUT | VARYING | INLINE)* */
 Modifiers Parser::modifiers() {
   Layout layout = this->layout();
   int flags = 0;
@@ -925,6 +929,10 @@ Modifiers Parser::modifiers() {
       case Token::Kind::TK_VARYING:
         this->nextToken();
         flags |= Modifiers::kVarying_Flag;
+        break;
+      case Token::Kind::TK_INLINE:
+        this->nextToken();
+        flags |= Modifiers::kInline_Flag;
         break;
       default: return Modifiers(layout, flags);
     }
@@ -1890,8 +1898,17 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
       getNode(result).addChild(e);
       return result;
     }
-    case Token::Kind::TK_DOT:  // fall through
     case Token::Kind::TK_COLONCOLON: {
+      int offset = this->peek().fOffset;
+      StringFragment text;
+      if (this->identifier(&text)) {
+        CREATE_NODE(result, offset, ASTNode::Kind::kScope, std::move(text));
+        getNode(result).addChild(base);
+        return result;
+      }
+      return ASTNode::ID::Invalid();
+    }
+    case Token::Kind::TK_DOT: {
       int offset = this->peek().fOffset;
       StringFragment text;
       if (this->identifier(&text)) {
@@ -1899,7 +1916,7 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
         getNode(result).addChild(base);
         return result;
       }
-      [[fallthrough]];  // FIXME(ethannicholas)
+      [[fallthrough]];
     }
     case Token::Kind::TK_FLOAT_LITERAL: {
       // Swizzles that start with a constant number, e.g. '.000r', will be tokenized as

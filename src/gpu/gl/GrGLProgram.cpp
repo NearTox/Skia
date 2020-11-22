@@ -73,7 +73,7 @@ GrGLProgram::~GrGLProgram() {
   }
 }
 
-void GrGLProgram::abandon() noexcept { fProgramID = 0; }
+void GrGLProgram::abandon() { fProgramID = 0; }
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -107,7 +107,7 @@ class BitmapShaderGM : public GM {
   SkBitmap fBitmap;
   SkBitmap fMask;
 
-  typedef GM INHERITED;
+  using INHERITED = GM;
 };
 
 DEF_SIMPLE_GM(hugebitmapshader, canvas, 100, 100) {

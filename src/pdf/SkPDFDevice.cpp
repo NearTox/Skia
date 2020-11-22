@@ -99,12 +99,6 @@ class ScopedOutputMarkedContentTags {
 
 // Utility functions
 
-static SkPath to_path(const SkRect& r) {
-  SkPath p;
-  p.addRect(r);
-  return p;
-}
-
 // This function destroys the mask and either frees or takes the pixels.
 sk_sp<SkImage> mask_to_greyscale_image(SkMask* mask) {
   sk_sp<SkImage> img;
@@ -137,8 +131,10 @@ sk_sp<SkImage> alpha_image_to_greyscale_image(const SkImage* mask) {
   int w = mask->width(), h = mask->height();
   SkBitmap greyBitmap;
   greyBitmap.allocPixels(SkImageInfo::Make(w, h, kGray_8_SkColorType, kOpaque_SkAlphaType));
+  // TODO: support gpu images in pdf
   if (!mask->readPixels(
-          SkImageInfo::MakeA8(w, h), greyBitmap.getPixels(), greyBitmap.rowBytes(), 0, 0)) {
+          nullptr, SkImageInfo::MakeA8(w, h), greyBitmap.getPixels(), greyBitmap.rowBytes(), 0,
+          0)) {
     return nullptr;
   }
   return SkImage::MakeFromBitmap(greyBitmap);
@@ -206,7 +202,7 @@ static void set_style(SkTCopyOnFirstWrite<SkPaint>* paint, SkPaint::Style style)
  */
 static bool calculate_inverse_path(const SkRect& bounds, const SkPath& invPath, SkPath* outPath) {
   SkASSERT(invPath.isInverseFillType());
-  return Op(to_path(bounds), invPath, kIntersect_SkPathOp, outPath);
+  return Op(SkPath::Rect(bounds), invPath, kIntersect_SkPathOp, outPath);
 }
 
 SkBaseDevice* SkPDFDevice::onCreateDevice(const CreateInfo& cinfo, const SkPaint* layerPaint) {
@@ -344,8 +340,7 @@ void SkPDFDevice::drawAnnotation(const SkRect& rect, const char key[], SkData* v
     return;
   }
   // Convert to path to handle non-90-degree rotations.
-  SkPath path = to_path(rect);
-  path.transform(this->localToDevice(), &path);
+  SkPath path = SkPath::Rect(rect).makeTransform(this->localToDevice());
   SkPath clip;
   SkClipStack_AsPath(this->cs(), &clip);
   Op(clip, path, kIntersect_SkPathOp, &path);
@@ -462,19 +457,15 @@ void SkPDFDevice::drawPoints(
 void SkPDFDevice::drawRect(const SkRect& rect, const SkPaint& paint) {
   SkRect r = rect;
   r.sort();
-  this->internalDrawPath(this->cs(), this->localToDevice(), to_path(r), paint, true);
+  this->internalDrawPath(this->cs(), this->localToDevice(), SkPath::Rect(r), paint, true);
 }
 
 void SkPDFDevice::drawRRect(const SkRRect& rrect, const SkPaint& paint) {
-  SkPath path;
-  path.addRRect(rrect);
-  this->internalDrawPath(this->cs(), this->localToDevice(), path, paint, true);
+  this->internalDrawPath(this->cs(), this->localToDevice(), SkPath::RRect(rrect), paint, true);
 }
 
 void SkPDFDevice::drawOval(const SkRect& oval, const SkPaint& paint) {
-  SkPath path;
-  path.addOval(oval);
-  this->internalDrawPath(this->cs(), this->localToDevice(), path, paint, true);
+  this->internalDrawPath(this->cs(), this->localToDevice(), SkPath::Oval(oval), paint, true);
 }
 
 void SkPDFDevice::drawPath(const SkPath& path, const SkPaint& paint, bool pathIsMutable) {
@@ -970,7 +961,8 @@ void SkPDFDevice::drawDevice(SkBaseDevice* device, int x, int y, const SkPaint& 
   }
   if (content.needShape()) {
     SkISize dim = device->imageInfo().dimensions();
-    content.setShape(to_path(SkRect::Make(SkIRect::MakeXYWH(x, y, dim.width(), dim.height()))));
+    content.setShape(
+        SkPath::Rect(SkRect::Make(SkIRect::MakeXYWH(x, y, dim.width(), dim.height()))));
   }
   if (!content.needSource()) {
     return;
@@ -1514,7 +1506,7 @@ void SkPDFDevice::internalDrawImageRect(
   }
   if (paint->getMaskFilter()) {
     paint.writable()->setShader(imageSubset.image()->makeShader(&transform));
-    SkPath path = to_path(dst);  // handles non-integral clipping.
+    SkPath path = SkPath::Rect(dst);  // handles non-integral clipping.
     this->internalDrawPath(this->cs(), this->localToDevice(), path, *paint, true);
     return;
   }
@@ -1536,8 +1528,7 @@ void SkPDFDevice::internalDrawImageRect(
     // Transform the bitmap in the new space, without taking into
     // account the initial transform.
     SkRect imageBounds = SkRect::Make(imageSubset.image()->bounds());
-    SkPath perspectiveOutline = to_path(imageBounds);
-    perspectiveOutline.transform(transform);
+    SkPath perspectiveOutline = SkPath::Rect(imageBounds).makeTransform(transform);
 
     // TODO(edisonn): perf - use current clip too.
     // Retrieve the bounds of the new shape.
@@ -1548,8 +1539,7 @@ void SkPDFDevice::internalDrawImageRect(
     SkMatrix total = transform;
     total.postConcat(fInitialTransform);
 
-    SkPath physicalPerspectiveOutline = to_path(imageBounds);
-    physicalPerspectiveOutline.transform(total);
+    SkPath physicalPerspectiveOutline = SkPath::Rect(imageBounds).makeTransform(total);
 
     SkRect physicalPerspectiveBounds = physicalPerspectiveOutline.getBounds();
     SkScalar scaleX = physicalPerspectiveBounds.width() / bounds.width();
@@ -1609,8 +1599,7 @@ void SkPDFDevice::internalDrawImageRect(
     return;
   }
   if (content.needShape()) {
-    SkPath shape = to_path(SkRect::Make(subset));
-    shape.transform(matrix);
+    SkPath shape = SkPath::Rect(SkRect::Make(subset)).makeTransform(matrix);
     content.setShape(shape);
   }
   if (!content.needSource()) {
@@ -1651,36 +1640,11 @@ void SkPDFDevice::drawSpecial(SkSpecialImage* srcImg, int x, int y, const SkPain
     return;
   }
   SkASSERT(!srcImg->isTextureBacked());
-  SkASSERT(!paint.getMaskFilter());
-
-  // TODO: clipImage support
+  SkASSERT(!paint.getMaskFilter() && !paint.getImageFilter());
 
   SkBitmap resultBM;
-
-  SkImageFilter* filter = paint.getImageFilter();
-  if (filter) {
-    SkIPoint offset = SkIPoint::Make(0, 0);
-    SkMatrix matrix = this->localToDevice();
-    matrix.postTranslate(SkIntToScalar(-x), SkIntToScalar(-y));
-    const SkIRect clipBounds = this->cs().bounds(this->bounds()).roundOut().makeOffset(-x, -y);
-    sk_sp<SkImageFilterCache> cache(this->getImageFilterCache());
-    // TODO: Should PDF be operating in a specified color type/space? For now, run the filter
-    // in the same color space as the source (this is different from all other backends).
-    SkImageFilter_Base::Context ctx(
-        matrix, clipBounds, cache.get(), kN32_SkColorType, srcImg->getColorSpace(), srcImg);
-
-    sk_sp<SkSpecialImage> resultImg(as_IFB(filter)->filterImage(ctx).imageAndOffset(&offset));
-    if (resultImg) {
-      SkPaint tmpUnfiltered(paint);
-      tmpUnfiltered.setImageFilter(nullptr);
-      if (resultImg->getROPixels(&resultBM)) {
-        this->drawSprite(resultBM, x + offset.x(), y + offset.y(), tmpUnfiltered);
-      }
-    }
-  } else {
-    if (srcImg->getROPixels(&resultBM)) {
-      this->drawSprite(resultBM, x, y, paint);
-    }
+  if (srcImg->getROPixels(&resultBM)) {
+    this->drawSprite(resultBM, x, y, paint);
   }
 }
 

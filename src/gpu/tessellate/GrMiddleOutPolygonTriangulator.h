@@ -48,7 +48,7 @@ class GrMiddleOutPolygonTriangulator {
     if (maxStackDepth > kStackPreallocCount) {
       fVertexStack.reset(maxStackDepth);
     }
-    SkDEBUGCODE(fStackAllocCount = maxStackDepth);
+    SkDEBUGCODE(fStackAllocCount = maxStackDepth;)
     // The stack will always contain a starting point. This is an implicit moveTo(0, 0)
     // initially, but will be overridden if moveTo() gets called before adding geometry.
     fVertexStack[0] = {0, {0, 0}};
@@ -146,7 +146,8 @@ class GrMiddleOutPolygonTriangulator {
 
   constexpr static int kStackPreallocCount = 32;
   SkAutoSTMalloc<kStackPreallocCount, StackVertex> fVertexStack;
-  SkDEBUGCODE(int fStackAllocCount;) StackVertex* fTop;
+  SkDEBUGCODE(int fStackAllocCount;)
+  StackVertex* fTop;
   SkPoint* fVertexData;
   int fPerTriangleVertexAdvance;
   int fTotalClosedTriangleCount = 0;

@@ -60,7 +60,7 @@ class PathClipView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 DEF_SAMPLE(return new PathClipView;)
 
@@ -297,7 +297,7 @@ class EdgeClipView : public Sample {
   }
 
  private:
-  typedef Sample INHERITED;
+  using INHERITED = Sample;
 };
 
 DEF_SAMPLE(return new EdgeClipView;)

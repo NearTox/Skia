@@ -33,13 +33,14 @@ enum GrDriverBugWorkaroundType {
 
 class SK_API GrDriverBugWorkarounds {
  public:
-  GrDriverBugWorkarounds() noexcept;
-  explicit GrDriverBugWorkarounds(const std::vector<int32_t>& workarounds) noexcept;
+  GrDriverBugWorkarounds();
+  GrDriverBugWorkarounds(const GrDriverBugWorkarounds&) = default;
+  explicit GrDriverBugWorkarounds(const std::vector<int32_t>& workarounds);
 
-  GrDriverBugWorkarounds& operator=(const GrDriverBugWorkarounds&) noexcept = default;
+  GrDriverBugWorkarounds& operator=(const GrDriverBugWorkarounds&) = default;
 
   // Turn on any workarounds listed in |workarounds| (but don't turn any off).
-  void applyOverrides(const GrDriverBugWorkarounds& workarounds) noexcept;
+  void applyOverrides(const GrDriverBugWorkarounds& workarounds);
 
   ~GrDriverBugWorkarounds();
 

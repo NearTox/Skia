@@ -21,6 +21,7 @@ class GrVkDescriptorSet;
 class GrVkGpu;
 class GrVkImageView;
 class GrVkPipeline;
+class GrVkRenderTarget;
 class GrVkSampler;
 class GrVkTexture;
 class GrVkUniformBuffer;
@@ -56,9 +57,10 @@ class GrVkPipelineState {
       GrVkGpu*, const GrPrimitiveProcessor&, const GrPipeline&,
       const GrSurfaceProxy* const primitiveProcessorTextures[], GrVkCommandBuffer*);
 
-  void bindPipeline(const GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer);
+  bool setAndBindInputAttachment(
+      GrVkGpu*, GrVkRenderTarget* renderTarget, const GrPipeline&, GrVkCommandBuffer*);
 
-  void addUniformResources(GrVkCommandBuffer&, GrVkSampler*[], GrVkTexture*[], int numTextures);
+  void bindPipeline(const GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer);
 
   void freeGPUResources(GrVkGpu* gpu);
 

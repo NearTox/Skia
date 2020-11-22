@@ -22,7 +22,7 @@ class GrGLSLFPFragmentBuilder;
 
 class GrGLSLFragmentProcessor {
  public:
-  GrGLSLFragmentProcessor() noexcept = default;
+  GrGLSLFragmentProcessor() {}
 
   virtual ~GrGLSLFragmentProcessor() {
     for (int i = 0; i < fChildProcessors.count(); ++i) {
@@ -101,7 +101,7 @@ class GrGLSLFragmentProcessor {
         GrGLSLFPFragmentBuilder* fragBuilder, GrGLSLUniformHandler* uniformHandler,
         const GrShaderCaps* caps, const GrFragmentProcessor& fp, const char* outputColor,
         const char* inputColor, const char* sampleCoord,
-        const TransformedCoordVars& transformedCoordVars) noexcept
+        const TransformedCoordVars& transformedCoordVars, bool forceInline)
         : fFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),
@@ -109,7 +109,8 @@ class GrGLSLFragmentProcessor {
           fOutputColor(outputColor),
           fInputColor(inputColor ? inputColor : "half4(1.0)"),
           fSampleCoord(sampleCoord),
-          fTransformedCoords(transformedCoordVars) {}
+          fTransformedCoords(transformedCoordVars),
+          fForceInline(forceInline) {}
     GrGLSLFPFragmentBuilder* fFragBuilder;
     GrGLSLUniformHandler* fUniformHandler;
     const GrShaderCaps* fShaderCaps;
@@ -118,6 +119,7 @@ class GrGLSLFragmentProcessor {
     const char* fInputColor;
     const char* fSampleCoord;
     const TransformedCoordVars& fTransformedCoords;
+    bool fForceInline;
   };
 
   virtual void emitCode(EmitArgs&) = 0;
@@ -126,11 +128,9 @@ class GrGLSLFragmentProcessor {
   // is the responsibility of the caller.
   void setData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor);
 
-  int numChildProcessors() const noexcept { return fChildProcessors.count(); }
+  int numChildProcessors() const { return fChildProcessors.count(); }
 
-  GrGLSLFragmentProcessor* childProcessor(int index) const noexcept {
-    return fChildProcessors[index];
-  }
+  GrGLSLFragmentProcessor* childProcessor(int index) const { return fChildProcessors[index]; }
 
   void emitChildFunction(int childIndex, EmitArgs& parentArgs);
 
@@ -181,12 +181,12 @@ class GrGLSLFragmentProcessor {
   class Iter {
    public:
     Iter(std::unique_ptr<GrGLSLFragmentProcessor> fps[], int cnt);
-    Iter(GrGLSLFragmentProcessor& fp) noexcept { fFPStack.push_back(&fp); }
+    Iter(GrGLSLFragmentProcessor& fp) { fFPStack.push_back(&fp); }
 
     GrGLSLFragmentProcessor& operator*() const;
     GrGLSLFragmentProcessor* operator->() const;
     Iter& operator++();
-    operator bool() const noexcept { return !fFPStack.empty(); }
+    operator bool() const { return !fFPStack.empty(); }
 
     // Because each iterator carries a stack we want to avoid copies.
     Iter(const Iter&) = delete;
@@ -226,7 +226,7 @@ class GrGLSLFragmentProcessor {
 
     ParallelIter begin() { return {fInitialFP, fInitialGLSLFP}; }
 
-    ParallelIterEnd end() noexcept { return {}; }
+    ParallelIterEnd end() { return {}; }
 
    private:
     const GrFragmentProcessor& fInitialFP;

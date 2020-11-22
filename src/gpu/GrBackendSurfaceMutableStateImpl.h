@@ -14,37 +14,37 @@
 class GrBackendSurfaceMutableStateImpl : public SkRefCnt {
  public:
 #ifdef SK_VULKAN
-  GrBackendSurfaceMutableStateImpl(VkImageLayout layout, uint32_t queueFamilyIndex) noexcept
+  GrBackendSurfaceMutableStateImpl(VkImageLayout layout, uint32_t queueFamilyIndex)
       : fState(layout, queueFamilyIndex) {}
 
-  GrBackendSurfaceMutableStateImpl(GrVkSharedImageInfo sharedInfo) noexcept
+  GrBackendSurfaceMutableStateImpl(GrVkSharedImageInfo sharedInfo)
       : fState(sharedInfo.getImageLayout(), sharedInfo.getQueueFamilyIndex()) {}
 #endif
 
-  void set(const GrBackendSurfaceMutableState& state) noexcept { fState = state; }
+  void set(const GrBackendSurfaceMutableState& state) { fState = state; }
 
 #ifdef SK_VULKAN
-  VkImageLayout getImageLayout() const noexcept {
+  VkImageLayout getImageLayout() const {
     SkASSERT(fState.fBackend == GrBackend::kVulkan);
     return fState.fVkState.getImageLayout();
   }
 
-  void setImageLayout(VkImageLayout layout) noexcept {
+  void setImageLayout(VkImageLayout layout) {
     SkASSERT(fState.fBackend == GrBackend::kVulkan);
     fState.fVkState.setImageLayout(layout);
   }
 
-  uint32_t getQueueFamilyIndex() const noexcept {
+  uint32_t getQueueFamilyIndex() const {
     SkASSERT(fState.fBackend == GrBackend::kVulkan);
     return fState.fVkState.getQueueFamilyIndex();
   }
 
-  void setQueueFamilyIndex(uint32_t queueFamilyIndex) noexcept {
+  void setQueueFamilyIndex(uint32_t queueFamilyIndex) {
     SkASSERT(fState.fBackend == GrBackend::kVulkan);
     fState.fVkState.setQueueFamilyIndex(queueFamilyIndex);
   }
 
-  const GrVkSharedImageInfo& getVkSharedImageInfo() noexcept {
+  const GrVkSharedImageInfo& getVkSharedImageInfo() {
     SkASSERT(fState.fBackend == GrBackend::kVulkan);
     return fState.fVkState;
   }

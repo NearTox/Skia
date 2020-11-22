@@ -18,7 +18,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
  public:
   /** Return the length of the contour.
    */
-  SkScalar length() const noexcept { return fLength; }
+  SkScalar length() const { return fLength; }
 
   /** Pins distance to 0 <= distance <= length(), and then computes the corresponding
    *  position and tangent.
@@ -51,7 +51,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
 
   /** Return true if the contour is closed()
    */
-  bool isClosed() const noexcept { return fIsClosed; }
+  bool isClosed() const { return fIsClosed; }
 
  private:
   struct Segment {
@@ -61,9 +61,9 @@ class SK_API SkContourMeasure : public SkRefCnt {
     unsigned fType : 2;  // actually the enum SkSegType
     // See SkPathMeasurePriv.h
 
-    SkScalar getScalarT() const noexcept;
+    SkScalar getScalarT() const;
 
-    static const Segment* Next(const Segment* seg) noexcept {
+    static const Segment* Next(const Segment* seg) {
       unsigned ptIndex = seg->fPtIndex;
       do {
         ++seg;
@@ -79,7 +79,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
   const bool fIsClosed;
 
   SkContourMeasure(
-      SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed) noexcept;
+      SkTDArray<Segment>&& segs, SkTDArray<SkPoint>&& pts, SkScalar length, bool isClosed);
   ~SkContourMeasure() override {}
 
   const Segment* distanceToSegment(SkScalar distance, SkScalar* t) const;
@@ -89,7 +89,7 @@ class SK_API SkContourMeasure : public SkRefCnt {
 
 class SK_API SkContourMeasureIter {
  public:
-  SkContourMeasureIter() noexcept;
+  SkContourMeasureIter();
   /**
    *  Initialize the Iter with a path.
    *  The parts of the path that are needed are copied, so the client is free to modify/delete

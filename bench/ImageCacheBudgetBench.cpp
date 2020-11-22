@@ -144,7 +144,7 @@ class ImageCacheBudgetBench : public Benchmark {
   std::unique_ptr<int[]> fIndices;
   size_t fOldBytes;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new ImageCacheBudgetBench(105, false);)
@@ -242,7 +242,7 @@ class ImageCacheBudgetDynamicBench : public Benchmark {
   size_t fOldBytes;
   int fOldCount;
 
-  typedef Benchmark INHERITED;
+  using INHERITED = Benchmark;
 };
 
 DEF_BENCH(return new ImageCacheBudgetDynamicBench(ImageCacheBudgetDynamicBench::Mode::kPingPong);)

@@ -269,15 +269,7 @@ static void test_codec(
 }
 
 static bool supports_partial_scanlines(const char path[]) {
-  static const char* const exts[] = {
-      "jpg",
-      "jpeg",
-      "png",
-      "webp"
-      "JPG",
-      "JPEG",
-      "PNG",
-      "WEBP"};
+  static const char* const exts[] = {"jpg", "jpeg", "png", "webp", "JPG", "JPEG", "PNG", "WEBP"};
 
   for (uint32_t i = 0; i < SK_ARRAY_COUNT(exts); i++) {
     if (SkStrEndsWith(path, exts[i])) {
