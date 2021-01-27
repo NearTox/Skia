@@ -98,7 +98,8 @@ class SK_API GrBackendFormat {
   static GrBackendFormat MakeDxgi(DXGI_FORMAT format) { return GrBackendFormat(format); }
 #  endif
 
-  static GrBackendFormat MakeMock(GrColorType colorType, SkImage::CompressionType compression);
+  static GrBackendFormat MakeMock(
+      GrColorType colorType, SkImage::CompressionType compression, bool isStencilFormat = false);
 
   bool operator==(const GrBackendFormat& that) const;
   bool operator!=(const GrBackendFormat& that) const { return !(*this == that); }
@@ -151,12 +152,13 @@ class SK_API GrBackendFormat {
 #  endif
 
   /**
-   * If the backend API is not Mock these two calls will return kUnknown and kNone, respectively.
-   * Otherwise, if the compression type is kNone then the GrColorType will be valid. If the
-   * compression type is anything other then kNone than the GrColorType will be kUnknown.
+   * If the backend API is not Mock these three calls will return kUnknown, kNone or false,
+   * respectively. Otherwise, only one of the following can be true. The GrColorType is not
+   * kUnknown, the compression type is not kNone, or this is a mock stencil format.
    */
   GrColorType asMockColorType() const;
   SkImage::CompressionType asMockCompressionType() const;
+  bool isMockStencilFormat() const;
 
   // If possible, copies the GrBackendFormat and forces the texture type to be Texture2D. If the
   // GrBackendFormat was for Vulkan and it originally had a GrVkYcbcrConversionInfo, we will
@@ -164,7 +166,7 @@ class SK_API GrBackendFormat {
   GrBackendFormat makeTexture2D() const;
 
   // Returns true if the backend format has been initialized.
-  bool isValid() const { return fValid; }
+  bool isValid() const noexcept { return fValid; }
 
 #  if defined(SK_DEBUG) || GR_TEST_UTILS
   SkString toStr() const;
@@ -187,7 +189,11 @@ class SK_API GrBackendFormat {
   GrBackendFormat(DXGI_FORMAT dxgiFormat);
 #  endif
 
-  GrBackendFormat(GrColorType, SkImage::CompressionType);
+  GrBackendFormat(GrColorType, SkImage::CompressionType, bool isStencilFormat);
+
+#  ifdef SK_DEBUG
+  bool validateMock() const;
+#  endif
 
   GrBackendApi fBackend = GrBackendApi::kMock;
   bool fValid = false;
@@ -212,6 +218,7 @@ class SK_API GrBackendFormat {
     struct {
       GrColorType fColorType;
       SkImage::CompressionType fCompressionType;
+      bool fIsStencilFormat;
     } fMock;
   };
   GrTextureType fTextureType = GrTextureType::kNone;
@@ -249,13 +256,13 @@ class SK_API GrBackendTexture {
 
   GrBackendTexture& operator=(const GrBackendTexture& that);
 
-  SkISize dimensions() const { return {fWidth, fHeight}; }
-  int width() const { return fWidth; }
-  int height() const { return fHeight; }
-  bool hasMipmaps() const { return fMipmapped == GrMipmapped::kYes; }
+  SkISize dimensions() const noexcept { return {fWidth, fHeight}; }
+  int width() const noexcept { return fWidth; }
+  int height() const noexcept { return fHeight; }
+  bool hasMipmaps() const noexcept { return fMipmapped == GrMipmapped::kYes; }
   /** deprecated alias of hasMipmaps(). */
   bool hasMipMaps() const { return this->hasMipmaps(); }
-  GrBackendApi backend() const { return fBackend; }
+  GrBackendApi backend() const noexcept { return fBackend; }
 
   // If the backend API is GL, copies a snapshot of the GrGLTextureInfo struct into the passed in
   // pointer and returns true. Otherwise returns false if the backend API is not GL.
@@ -386,11 +393,13 @@ class SK_API GrBackendRenderTarget {
   // Creates an invalid backend texture.
   GrBackendRenderTarget();
 
-  // The GrGLTextureInfo must have a valid fFormat.
+  // The GrGLTextureInfo must have a valid fFormat. If wrapping in an SkSurface we require the
+  // stencil bits to be either 0, 8 or 16.
   GrBackendRenderTarget(
       int width, int height, int sampleCnt, int stencilBits, const GrGLFramebufferInfo& glInfo);
 
 #  ifdef SK_DAWN
+  // If wrapping in an SkSurface we require the stencil bits to be either 0, 8 or 16.
   GrBackendRenderTarget(
       int width, int height, int sampleCnt, int stencilBits,
       const GrDawnRenderTargetInfo& dawnInfo);

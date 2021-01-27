@@ -16,7 +16,7 @@
 #include "src/gpu/SkGr.h"
 
 size_t GrSurface::ComputeSize(
-    const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, int colorSamplesPerPixel,
+    const GrBackendFormat& format, SkISize dimensions, int colorSamplesPerPixel,
     GrMipmapped mipMapped, bool binSize) {
   // For external formats we do not actually know the real size of the resource so we just return
   // 0 here to indicate this.
@@ -35,7 +35,8 @@ size_t GrSurface::ComputeSize(
     colorSize =
         SkCompressedFormatDataSize(compressionType, dimensions, mipMapped == GrMipmapped::kYes);
   } else {
-    colorSize = (size_t)dimensions.width() * dimensions.height() * caps.bytesPerPixel(format);
+    colorSize =
+        (size_t)dimensions.width() * dimensions.height() * GrBackendFormatBytesPerPixel(format);
   }
   SkASSERT(colorSize > 0);
 

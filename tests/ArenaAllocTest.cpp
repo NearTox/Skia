@@ -67,6 +67,10 @@ struct WithDtor {
   ~WithDtor() {}
 };
 
+struct alignas(8) OddAlignment {
+  char buf[10];
+};
+
 DEF_TEST(ArenaAlloc, r) {
   {
     created = 0;
@@ -89,34 +93,34 @@ DEF_TEST(ArenaAlloc, r) {
     REPORTER_ASSERT(r, fooArray[4].y == -3.0f);
     REPORTER_ASSERT(r, created == 11);
     REPORTER_ASSERT(r, destroyed == 0);
-    arena.make<typename std::aligned_storage<10, 8>::type>();
+    arena.make<OddAlignment>();
   }
-  REPORTER_ASSERT(r, created == 11);
-  REPORTER_ASSERT(r, destroyed == 11);
-
-  {
-    created = 0;
-    destroyed = 0;
-    SkSTArenaAlloc<64> arena;
-
-    REPORTER_ASSERT(r, *arena.make<int>(3) == 3);
-    Foo* foo = arena.make<Foo>(3, 4.0f);
-    REPORTER_ASSERT(r, foo->x == 3);
-    REPORTER_ASSERT(r, foo->y == 4.0f);
-    REPORTER_ASSERT(r, created == 1);
-    REPORTER_ASSERT(r, destroyed == 0);
-    arena.makeArrayDefault<int>(10);
-    int* zeroed = arena.makeArray<int>(10);
-    for (int i = 0; i < 10; i++) {
-      REPORTER_ASSERT(r, zeroed[i] == 0);
-    }
-    Foo* fooArray = arena.makeArrayDefault<Foo>(10);
-    REPORTER_ASSERT(r, fooArray[3].x == -2);
-    REPORTER_ASSERT(r, fooArray[4].y == -3.0f);
     REPORTER_ASSERT(r, created == 11);
-    REPORTER_ASSERT(r, destroyed == 0);
-    arena.make<typename std::aligned_storage<10, 8>::type>();
-  }
+    REPORTER_ASSERT(r, destroyed == 11);
+
+    {
+      created = 0;
+      destroyed = 0;
+      SkSTArenaAlloc<64> arena;
+
+      REPORTER_ASSERT(r, *arena.make<int>(3) == 3);
+      Foo* foo = arena.make<Foo>(3, 4.0f);
+      REPORTER_ASSERT(r, foo->x == 3);
+      REPORTER_ASSERT(r, foo->y == 4.0f);
+      REPORTER_ASSERT(r, created == 1);
+      REPORTER_ASSERT(r, destroyed == 0);
+      arena.makeArrayDefault<int>(10);
+      int* zeroed = arena.makeArray<int>(10);
+      for (int i = 0; i < 10; i++) {
+        REPORTER_ASSERT(r, zeroed[i] == 0);
+      }
+      Foo* fooArray = arena.makeArrayDefault<Foo>(10);
+      REPORTER_ASSERT(r, fooArray[3].x == -2);
+      REPORTER_ASSERT(r, fooArray[4].y == -3.0f);
+      REPORTER_ASSERT(r, created == 11);
+      REPORTER_ASSERT(r, destroyed == 0);
+      arena.make<OddAlignment>();
+    }
     REPORTER_ASSERT(r, created == 11);
     REPORTER_ASSERT(r, destroyed == 11);
 
@@ -142,7 +146,7 @@ DEF_TEST(ArenaAlloc, r) {
       REPORTER_ASSERT(r, fooArray[4].y == -3.0f);
       REPORTER_ASSERT(r, created == 11);
       REPORTER_ASSERT(r, destroyed == 0);
-      arena.make<typename std::aligned_storage<10, 8>::type>();
+      arena.make<OddAlignment>();
     }
     REPORTER_ASSERT(r, created == 11);
     REPORTER_ASSERT(r, destroyed == 11);

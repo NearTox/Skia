@@ -87,7 +87,7 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onDuplicate() const {
   return new SkDWriteFontFileStream(fFontFileStream.get());
 }
 
-size_t SkDWriteFontFileStream::getPosition() const { return fPos; }
+size_t SkDWriteFontFileStream::getPosition() const noexcept { return fPos; }
 
 bool SkDWriteFontFileStream::seek(size_t position) {
   size_t length = this->getLength();
@@ -103,7 +103,7 @@ SkDWriteFontFileStream* SkDWriteFontFileStream::onFork() const {
   return that.release();
 }
 
-size_t SkDWriteFontFileStream::getLength() const {
+size_t SkDWriteFontFileStream::getLength() const noexcept {
   HRESULT hr = S_OK;
   UINT64 realFileSize = 0;
   hr = fFontFileStream->GetFileSize(&realFileSize);

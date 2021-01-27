@@ -26,8 +26,9 @@
 #include "src/core/SkColorSpacePriv.h"
 #include "src/core/SkImagePriv.h"
 #include "src/core/SkUtils.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrImageContextPriv.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrResourceCache.h"
 #include "src/gpu/GrTexture.h"
@@ -35,9 +36,9 @@
 #include "src/image/SkImage_Base.h"
 #include "src/image/SkImage_GpuYUVA.h"
 #include "tests/Test.h"
-#include "tests/TestUtils.h"
 #include "tools/Resources.h"
 #include "tools/ToolUtils.h"
+#include "tools/gpu/ManagedBackendTexture.h"
 
 using namespace sk_gpu_test;
 
@@ -408,7 +409,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SkImage_makeTextureImage, reporter, contextIn
         if (!texImage) {
           auto imageContext = as_IB(image)->context();
           // We expect to fail if image comes from a different context
-          if (!image->isTextureBacked() || imageContext == dContext) {
+          if (!image->isTextureBacked() || imageContext->priv().matches(dContext)) {
             ERRORF(reporter, "makeTextureImage failed.");
           }
           continue;
@@ -483,20 +484,17 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrContext_colorTypeSupportedAsImage, reporter
     SkColorType colorType = static_cast<SkColorType>(ct);
     bool can = dContext->colorTypeSupportedAsImage(colorType);
 
-    GrBackendTexture backendTex;
-    CreateBackendTexture(
-        dContext, &backendTex, kSize, kSize, colorType, SkColors::kTransparent, GrMipmapped::kNo,
-        GrRenderable::kNo, GrProtected::kNo);
-
-    auto img = SkImage::MakeFromTexture(
-        dContext, backendTex, kTopLeft_GrSurfaceOrigin, colorType, kOpaque_SkAlphaType, nullptr);
+    auto mbet = sk_gpu_test::ManagedBackendTexture::MakeWithoutData(
+        dContext, kSize, kSize, colorType, GrMipmapped::kNo, GrRenderable::kNo);
+    sk_sp<SkImage> img;
+    if (mbet) {
+      img = SkImage::MakeFromTexture(
+          dContext, mbet->texture(), kTopLeft_GrSurfaceOrigin, colorType, kOpaque_SkAlphaType,
+          nullptr);
+    }
     REPORTER_ASSERT(
         reporter, can == SkToBool(img), "colorTypeSupportedAsImage:%d, actual:%d, ct:%d", can,
         SkToBool(img), colorType);
-
-    img.reset();
-    dContext->flushAndSubmit();
-    dContext->deleteBackendTexture(backendTex);
   }
 }
 
@@ -831,26 +829,28 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(SkImage_NewFromTextureRelease, reporter, c
 
   auto dContext = ctxInfo.directContext();
 
-  SkImageInfo ii =
-      SkImageInfo::Make(kWidth, kHeight, SkColorType::kRGBA_8888_SkColorType, kPremul_SkAlphaType);
-  GrBackendTexture backendTex;
-  if (!CreateBackendTexture(
-          dContext, &backendTex, ii, SkColors::kRed, GrMipmapped::kNo, GrRenderable::kNo)) {
+  auto mbet = sk_gpu_test::ManagedBackendTexture::MakeWithoutData(
+      dContext, kWidth, kHeight, kRGBA_8888_SkColorType, GrMipmapped::kNo, GrRenderable::kNo,
+      GrProtected::kNo);
+  if (!mbet) {
     ERRORF(reporter, "couldn't create backend texture\n");
+    return;
   }
 
   TextureReleaseChecker releaseChecker;
   GrSurfaceOrigin texOrigin = kBottomLeft_GrSurfaceOrigin;
-  sk_sp<SkImage> refImg(SkImage::MakeFromTexture(
-      dContext, backendTex, texOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr,
-      TextureReleaseChecker::Release, &releaseChecker));
+  sk_sp<SkImage> refImg = SkImage::MakeFromTexture(
+      dContext, mbet->texture(), texOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+      /*color space*/ nullptr, sk_gpu_test::ManagedBackendTexture::ReleaseProc,
+      mbet->releaseContext(TextureReleaseChecker::Release, &releaseChecker));
 
   GrSurfaceOrigin readBackOrigin;
   GrBackendTexture readBackBackendTex = refImg->getBackendTexture(false, &readBackOrigin);
-  if (!GrBackendTexture::TestingOnly_Equals(readBackBackendTex, backendTex)) {
+  if (!GrBackendTexture::TestingOnly_Equals(readBackBackendTex, mbet->texture())) {
     ERRORF(reporter, "backend mismatch\n");
   }
-  REPORTER_ASSERT(reporter, GrBackendTexture::TestingOnly_Equals(readBackBackendTex, backendTex));
+  REPORTER_ASSERT(
+      reporter, GrBackendTexture::TestingOnly_Equals(readBackBackendTex, mbet->texture()));
   if (readBackOrigin != texOrigin) {
     ERRORF(reporter, "origin mismatch %d %d\n", readBackOrigin, texOrigin);
   }
@@ -860,8 +860,6 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(SkImage_NewFromTextureRelease, reporter, c
   REPORTER_ASSERT(reporter, 0 == releaseChecker.fReleaseCount);
   refImg.reset(nullptr);  // force a release of the image
   REPORTER_ASSERT(reporter, 1 == releaseChecker.fReleaseCount);
-
-  DeleteBackendTexture(dContext, backendTex);
 }
 
 static void test_cross_context_image(
@@ -1372,7 +1370,9 @@ DEF_TEST(Image_nonfinite_dst, reporter) {
 static sk_sp<SkImage> make_yuva_image(GrDirectContext* dContext) {
   SkAutoPixmapStorage pm;
   pm.alloc(SkImageInfo::Make(1, 1, kAlpha_8_SkColorType, kPremul_SkAlphaType));
-  SkYUVAInfo yuvaInfo({1, 1}, SkYUVAInfo::PlanarConfig::kY_U_V_444, kJPEG_Full_SkYUVColorSpace);
+  SkYUVAInfo yuvaInfo(
+      {1, 1}, SkYUVAInfo::PlaneConfig::kY_U_V, SkYUVAInfo::Subsampling::k444,
+      kJPEG_Full_SkYUVColorSpace);
   const SkPixmap pmaps[] = {pm, pm, pm};
   auto yuvaPixmaps = SkYUVAPixmaps::FromExternalPixmaps(yuvaInfo, pmaps);
 

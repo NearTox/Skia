@@ -11,9 +11,8 @@
 #include "src/gpu/d3d/GrD3DGpu.h"
 
 GrD3DTextureRenderTarget::GrD3DTextureRenderTarget(
-    GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
-    const GrD3DTextureResourceInfo& info, sk_sp<GrD3DResourceState> state,
-    const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
+    GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrD3DTextureResourceInfo& info,
+    sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
     const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
     const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
     const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipmapStatus mipmapStatus)
@@ -21,8 +20,8 @@ GrD3DTextureRenderTarget::GrD3DTextureRenderTarget(
       GrD3DTextureResource(info, state),
       GrD3DTexture(gpu, dimensions, info, state, shaderResourceView, mipmapStatus),
       GrD3DRenderTarget(
-          gpu, dimensions, sampleCnt, info, state, msaaInfo, std::move(msaaState),
-          colorRenderTargetView, resolveRenderTargetView) {
+          gpu, dimensions, info, state, msaaInfo, std::move(msaaState), colorRenderTargetView,
+          resolveRenderTargetView) {
   SkASSERT(info.fProtected == msaaInfo.fProtected);
   this->registerWithCache(budgeted);
 }
@@ -39,7 +38,7 @@ GrD3DTextureRenderTarget::GrD3DTextureRenderTarget(
 }
 
 GrD3DTextureRenderTarget::GrD3DTextureRenderTarget(
-    GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
+    GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
     sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
     const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
     const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
@@ -49,8 +48,8 @@ GrD3DTextureRenderTarget::GrD3DTextureRenderTarget(
       GrD3DTextureResource(info, state),
       GrD3DTexture(gpu, dimensions, info, state, shaderResourceView, mipmapStatus),
       GrD3DRenderTarget(
-          gpu, dimensions, sampleCnt, info, state, msaaInfo, std::move(msaaState),
-          colorRenderTargetView, resolveRenderTargetView) {
+          gpu, dimensions, info, state, msaaInfo, std::move(msaaState), colorRenderTargetView,
+          resolveRenderTargetView) {
   SkASSERT(info.fProtected == msaaInfo.fProtected);
   this->registerWithCacheWrapped(cacheable);
 }
@@ -106,7 +105,7 @@ sk_sp<GrD3DTextureRenderTarget> GrD3DTextureRenderTarget::MakeNewTextureRenderTa
         gpu->resourceProvider().createRenderTargetView(msInfo.fResource.get());
 
     GrD3DTextureRenderTarget* trt = new GrD3DTextureRenderTarget(
-        gpu, budgeted, dimensions, sampleCnt, info, std::move(state), shaderResourceView, msInfo,
+        gpu, budgeted, dimensions, info, std::move(state), shaderResourceView, msInfo,
         std::move(msState), msaaRenderTargetView, renderTargetView, mipmapStatus);
     return sk_sp<GrD3DTextureRenderTarget>(trt);
   } else {
@@ -146,8 +145,8 @@ sk_sp<GrD3DTextureRenderTarget> GrD3DTextureRenderTarget::MakeWrappedTextureRend
         gpu->resourceProvider().createRenderTargetView(msInfo.fResource.get());
 
     GrD3DTextureRenderTarget* trt = new GrD3DTextureRenderTarget(
-        gpu, dimensions, sampleCnt, info, std::move(state), shaderResourceView, msInfo,
-        std::move(msState), msaaRenderTargetView, renderTargetView, mipmapStatus, cacheable);
+        gpu, dimensions, info, std::move(state), shaderResourceView, msInfo, std::move(msState),
+        msaaRenderTargetView, renderTargetView, mipmapStatus, cacheable);
     return sk_sp<GrD3DTextureRenderTarget>(trt);
   } else {
     return sk_sp<GrD3DTextureRenderTarget>(new GrD3DTextureRenderTarget(
@@ -162,9 +161,8 @@ size_t GrD3DTextureRenderTarget::onGpuMemorySize() const {
     // Add one to account for the resolve VkImage.
     ++numColorSamples;
   }
-  const GrCaps& caps = *this->getGpu()->caps();
   return GrSurface::ComputeSize(
-      caps, this->backendFormat(), this->dimensions(),
+      this->backendFormat(), this->dimensions(),
       numColorSamples,  // TODO: this still correct?
       this->mipmapped());
 }

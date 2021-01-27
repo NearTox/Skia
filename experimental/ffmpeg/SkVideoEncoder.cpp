@@ -297,16 +297,16 @@ bool SkVideoEncoder::sendFrame(AVFrame* frame) {
 }
 
 SkCanvas* SkVideoEncoder::beginFrame() {
-  if (!fSurface) {
-    fSurface = SkSurface::MakeRaster(fInfo);
     if (!fSurface) {
-      return nullptr;
+      fSurface = SkSurface::MakeRaster(fInfo);
+      if (!fSurface) {
+        return nullptr;
+      }
     }
-  }
-  SkCanvas* canvas = fSurface->getCanvas();
-  canvas->restoreToCount(1);
-  canvas->clear(0);
-  return canvas;
+    SkCanvas* canvas = fSurface->getCanvas();
+    canvas->restoreToCount(1);
+    canvas->clear(0);
+    return canvas;
 }
 
 bool SkVideoEncoder::endFrame() {

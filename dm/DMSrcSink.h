@@ -413,8 +413,7 @@ class GPUSink : public Sink {
   }
 
  protected:
-  sk_sp<SkSurface> createDstSurface(
-      GrDirectContext*, SkISize size, GrBackendTexture*, GrBackendRenderTarget*) const;
+  sk_sp<SkSurface> createDstSurface(GrDirectContext*, SkISize size) const;
   bool readBack(SkSurface*, SkBitmap* dst) const;
 
  private:

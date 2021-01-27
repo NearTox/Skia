@@ -28,16 +28,16 @@ class SK_API SkDeque {
    * elemSize specifies the size of each individual element in the deque
    * allocCount specifies how many elements are to be allocated as a block
    */
-  explicit SkDeque(size_t elemSize, int allocCount = 1) noexcept;
-  SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1) noexcept;
+  explicit SkDeque(size_t elemSize, int allocCount = 1);
+  SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount = 1);
   ~SkDeque();
 
-  bool empty() const { return 0 == fCount; }
-  int count() const { return fCount; }
-  size_t elemSize() const { return fElemSize; }
+  bool empty() const noexcept { return 0 == fCount; }
+  int count() const noexcept { return fCount; }
+  size_t elemSize() const noexcept { return fElemSize; }
 
-  const void* front() const { return fFront; }
-  const void* back() const { return fBack; }
+  const void* front() const noexcept { return fFront; }
+  const void* back() const noexcept { return fBack; }
 
   void* front() { return (void*)((const SkDeque*)this)->front(); }
 
@@ -119,7 +119,7 @@ class SK_API SkDeque {
   int fAllocCount;  // number of elements to allocate per block
 
   Block* allocateBlock(int allocCount);
-  void freeBlock(Block* block) noexcept;
+  void freeBlock(Block* block);
 
   /**
    * This returns the number of chunk blocks allocated by the deque. It

@@ -75,6 +75,7 @@ class SkTypefaceProxy : public SkTypeface {
     // Used by SkStrikeCache::DumpMemoryStatistics.
     *familyName = "";
   }
+  bool onGetPostScriptName(SkString*) const override { SK_ABORT("Should never be called."); }
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
     SK_ABORT("Should never be called.");
   }

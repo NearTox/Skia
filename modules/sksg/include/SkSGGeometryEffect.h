@@ -112,7 +112,7 @@ class DashEffect final : public GeometryEffect {
   SkPath onRevalidateEffect(const sk_sp<GeometryNode>&) override;
 
   std::vector<float> fIntervals;
-  float fPhase;
+  float fPhase = 0;
 
   using INHERITED = GeometryEffect;
 };

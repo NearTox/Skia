@@ -22,37 +22,38 @@
 #include "src/utils/SkUTF.h"
 
 class EmbossView : public Sample {
-  SkEmbossMaskFilter::Light fLight;
+    SkEmbossMaskFilter::Light   fLight;
+public:
+    EmbossView() {
+        fLight.fDirection[0] = SK_Scalar1;
+        fLight.fDirection[1] = SK_Scalar1;
+        fLight.fDirection[2] = SK_Scalar1;
+        fLight.fAmbient = 128;
+        fLight.fSpecular = 16*2;
+    }
 
- public:
-  EmbossView() {
-    fLight.fDirection[0] = SK_Scalar1;
-    fLight.fDirection[1] = SK_Scalar1;
-    fLight.fDirection[2] = SK_Scalar1;
-    fLight.fAmbient = 128;
-    fLight.fSpecular = 16 * 2;
-  }
+protected:
+    SkString name() override { return SkString("Emboss"); }
 
- protected:
-  SkString name() override { return SkString("Emboss"); }
+    void onDrawContent(SkCanvas* canvas) override {
+        SkPaint paint;
 
-  void onDrawContent(SkCanvas* canvas) override {
-    SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setStrokeWidth(SkIntToScalar(10));
+        paint.setMaskFilter(SkEmbossMaskFilter::Make(SkBlurMask::ConvertRadiusToSigma(4), fLight));
+        paint.setShader(SkShaders::Color(SK_ColorBLUE));
+        paint.setDither(true);
 
-    paint.setAntiAlias(true);
-    paint.setStyle(SkPaint::kStroke_Style);
-    paint.setStrokeWidth(SkIntToScalar(10));
-    paint.setMaskFilter(SkEmbossMaskFilter::Make(SkBlurMask::ConvertRadiusToSigma(4), fLight));
-    paint.setShader(SkShaders::Color(SK_ColorBLUE));
-    paint.setDither(true);
+        canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50),
+                           SkIntToScalar(30), paint);
+    }
 
-    canvas->drawCircle(SkIntToScalar(50), SkIntToScalar(50), SkIntToScalar(30), paint);
-  }
+private:
 
- private:
-  using INHERITED = Sample;
+    using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE(return new EmbossView();)
+DEF_SAMPLE( return new EmbossView(); )

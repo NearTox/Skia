@@ -181,7 +181,7 @@ class GrXPFactoryTestFactory : private SkNoncopyable {
 #    define GR_DEFINE_XP_FACTORY_TEST(X)
 
 #  endif  // !SK_ALLOW_STATIC_GLOBAL_INITIALIZERS
-#else  // GR_TEST_UTILS
+#else     // GR_TEST_UTILS
 #  define GR_DECLARE_GEOMETRY_PROCESSOR_TEST
 #  define GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 #  define GR_DECLARE_XP_FACTORY_TEST

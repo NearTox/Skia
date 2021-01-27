@@ -186,7 +186,7 @@ static inline sk_sp<SkData> icc_from_color_space(const SkImageInfo& info) {
   if (cs->isNumericalTransferFn(&fn) && cs->toXYZD50(&toXYZD50)) {
     return SkWriteICCProfile(fn, toXYZD50);
   }
-  return nullptr;
+    return nullptr;
 }
 
 #endif  // SkImageEncoderFns_DEFINED

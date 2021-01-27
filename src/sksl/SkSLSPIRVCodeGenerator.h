@@ -38,20 +38,22 @@
 #include "src/sksl/ir/SkSLSwizzle.h"
 #include "src/sksl/ir/SkSLTernaryExpression.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
-#include "src/sksl/ir/SkSLVarDeclarationsStatement.h"
 #include "src/sksl/ir/SkSLVariableReference.h"
 #include "src/sksl/ir/SkSLWhileStatement.h"
 #include "src/sksl/spirv.h"
 
 union ConstantValue {
-  ConstantValue(int64_t i) : fInt(i) {}
+  ConstantValue(int64_t i) : fInt(i) { SkASSERT(sizeof(*this) == sizeof(int64_t)); }
 
-  ConstantValue(double d) : fDouble(d) {}
+  ConstantValue(SKSL_FLOAT f) {
+    memset(this, 0, sizeof(*this));
+    fFloat = f;
+  }
 
   bool operator==(const ConstantValue& other) const { return fInt == other.fInt; }
 
   int64_t fInt;
-  double fDouble;
+  SKSL_FLOAT fFloat;
 };
 
 enum class ConstantType {
@@ -108,7 +110,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
         fBoolFalse(0),
         fSetupFragPosition(false),
         fCurrentBlock(0),
-        fSynthetics(errors) {
+        fSynthetics(errors, /*builtin=*/true) {
     this->setupIntrinsics();
   }
 
@@ -140,7 +142,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
 
   SpvId nextId();
 
-  Type getActualType(const Type& type);
+  const Type& getActualType(const Type& type);
 
   SpvId getType(const Type& type);
 
@@ -176,9 +178,9 @@ class SPIRVCodeGenerator : public CodeGenerator {
 
   SpvId writeFunction(const FunctionDefinition& f, OutputStream& out);
 
-  void writeGlobalVars(Program::Kind kind, const VarDeclarations& v, OutputStream& out);
+  void writeGlobalVar(Program::Kind kind, const VarDeclaration& v, OutputStream& out);
 
-  void writeVarDeclarations(const VarDeclarations& decl, OutputStream& out);
+  void writeVarDeclaration(const VarDeclaration& var, OutputStream& out);
 
   SpvId writeVariableReference(const VariableReference& ref, OutputStream& out);
 
@@ -200,8 +202,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
    * returns (vec2(float), vec2). It is an error to use mismatched vector sizes, e.g. (float,
    * vec2, vec3).
    */
-  std::vector<SpvId> vectorize(
-      const std::vector<std::unique_ptr<Expression>>& args, OutputStream& out);
+  std::vector<SpvId> vectorize(const ExpressionArray& args, OutputStream& out);
 
   SpvId writeSpecialIntrinsic(const FunctionCall& c, SpecialIntrinsic kind, OutputStream& out);
 
@@ -387,6 +388,7 @@ class SPIRVCodeGenerator : public CodeGenerator {
   std::stack<SpvId> fContinueTarget;
   SpvId fRTHeightStructId = (SpvId)-1;
   SpvId fRTHeightFieldIndex = (SpvId)-1;
+  SpvStorageClass_ fRTHeightStorageClass;
   // holds variables synthesized during output, for lifetime purposes
   SymbolTable fSynthetics;
   int fSkInCount = 1;

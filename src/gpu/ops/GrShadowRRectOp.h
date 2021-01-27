@@ -10,6 +10,7 @@
 
 #include <memory>
 #include "src/gpu/GrColor.h"
+#include "src/gpu/ops/GrOp.h"
 
 class GrDrawOp;
 class GrRecordingContext;
@@ -19,7 +20,7 @@ class SkRRect;
 
 namespace GrShadowRRectOp {
 
-std::unique_ptr<GrDrawOp> Make(
+GrOp::Owner Make(
     GrRecordingContext*, GrColor, const SkMatrix& viewMatrix, const SkRRect&, SkScalar blurWidth,
     SkScalar insetWidth);
 }  // namespace GrShadowRRectOp

@@ -22,13 +22,13 @@ class GrGLSLChildProcessorWithInputExpression : public GrGLSLFragmentProcessor {
     (void)_outer;
     colorVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "color");
-    SkString _input89 =
+    SkString _input0 =
         SkStringPrintf("%s * half4(0.5)", args.fUniformHandler->getUniformCStr(colorVar));
-    SkString _sample89 = this->invokeChild(0, _input89.c_str(), args);
+    SkString _sample0 = this->invokeChild(0, _input0.c_str(), args);
     fragBuilder->codeAppendf(
         R"SkSL(%s = %s;
 )SkSL",
-        args.fOutputColor, _sample89.c_str());
+        args.fOutputColor, _sample0.c_str());
   }
 
  private:

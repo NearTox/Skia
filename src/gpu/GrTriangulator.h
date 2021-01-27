@@ -57,7 +57,7 @@ constexpr size_t GetVertexStride(Mode mode) {
 
 int PathToTriangles(
     const SkPath& path, SkScalar tolerance, const SkRect& clipBounds, GrEagerVertexAllocator*, Mode,
-    int* numCountedCurves);
+    bool* isLinear);
 }  // namespace GrTriangulator
 
 #endif

@@ -18,28 +18,33 @@ namespace SkSL {
  * An identifier referring to a function name. This is an intermediate value: FunctionReferences are
  * always eventually replaced by FunctionCalls in valid programs.
  */
-struct FunctionReference : public Expression {
+class FunctionReference final : public Expression {
+ public:
   static constexpr Kind kExpressionKind = Kind::kFunctionReference;
 
   FunctionReference(
-      const Context& context, int offset, std::vector<const FunctionDeclaration*> function)
-      : INHERITED(offset, kExpressionKind, context.fInvalid_Type.get()), fFunctions(function) {}
+      const Context& context, int offset, std::vector<const FunctionDeclaration*> functions)
+      : INHERITED(offset, kExpressionKind, context.fInvalid_Type.get()),
+        fFunctions(std::move(functions)) {}
+
+  const std::vector<const FunctionDeclaration*>& functions() const { return fFunctions; }
 
   bool hasProperty(Property property) const override { return false; }
 
   std::unique_ptr<Expression> clone() const override {
-    return std::unique_ptr<Expression>(new FunctionReference(fOffset, fFunctions, &this->type()));
+    return std::unique_ptr<Expression>(
+        new FunctionReference(fOffset, this->functions(), &this->type()));
   }
 
   String description() const override { return String("<function>"); }
 
-  const std::vector<const FunctionDeclaration*> fFunctions;
+ private:
+  FunctionReference(int offset, std::vector<const FunctionDeclaration*> functions, const Type* type)
+      : INHERITED(offset, kExpressionKind, type), fFunctions(std::move(functions)) {}
+
+  std::vector<const FunctionDeclaration*> fFunctions;
 
   using INHERITED = Expression;
-
- private:
-  FunctionReference(int offset, std::vector<const FunctionDeclaration*> function, const Type* type)
-      : INHERITED(offset, kExpressionKind, type), fFunctions(function) {}
 };
 
 }  // namespace SkSL

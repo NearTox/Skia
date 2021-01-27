@@ -9,6 +9,7 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/pathops/SkPathOps.h"
+#include "src/core/SkPathPriv.h"
 
 namespace sksg {
 
@@ -92,7 +93,7 @@ SkRect Merge::onRevalidate(InvalidationController* ic, const SkMatrix& ctm) {
     builder.resolve(&fMerged);
   }
 
-  fMerged.shrinkToFit();
+  SkPathPriv::ShrinkToFit(&fMerged);
 
   return fMerged.computeTightBounds();
 }

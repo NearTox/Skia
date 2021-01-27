@@ -279,6 +279,7 @@ class SkWuffsCodec final : public SkScalingCodec {
   uint8_t* fIncrDecDst;
   uint64_t fIncrDecReaderIOPosition;
   size_t fIncrDecRowBytes;
+  wuffs_base__pixel_blend fIncrDecPixelBlend;
   bool fIncrDecOnePass;
   bool fFirstCallToIncrementalDecode;
 
@@ -382,6 +383,7 @@ SkWuffsCodec::SkWuffsCodec(
       fIncrDecDst(nullptr),
       fIncrDecReaderIOPosition(0),
       fIncrDecRowBytes(0),
+      fIncrDecPixelBlend(WUFFS_BASE__PIXEL_BLEND__SRC),
       fIncrDecOnePass(false),
       fFirstCallToIncrementalDecode(false),
       fTwoPassPixbufPtr(nullptr, &sk_free),
@@ -433,9 +435,6 @@ SkCodec::Result SkWuffsCodec::onStartIncrementalDecode(
   if (options.fSubset) {
     return SkCodec::kUnimplemented;
   }
-  if (options.fFrameIndex > 0 && SkColorTypeIsAlwaysOpaque(dstInfo.colorType())) {
-    return SkCodec::kInvalidConversion;
-  }
   SkCodec::Result result = this->seekFrame(WhichDecoder::kIncrDecode, options.fFrameIndex);
   if (result != SkCodec::kSuccess) {
     return result;
@@ -453,6 +452,10 @@ SkCodec::Result SkWuffsCodec::onStartIncrementalDecode(
   size_t bytesPerPixel = 0;
 
   switch (dstInfo.colorType()) {
+    case kRGB_565_SkColorType:
+      pixelFormat = WUFFS_BASE__PIXEL_FORMAT__BGR_565;
+      bytesPerPixel = 2;
+      break;
     case kBGRA_8888_SkColorType:
       pixelFormat = WUFFS_BASE__PIXEL_FORMAT__BGRA_NONPREMUL;
       bytesPerPixel = 4;
@@ -469,12 +472,8 @@ SkCodec::Result SkWuffsCodec::onStartIncrementalDecode(
   fIncrDecOnePass = (pixelFormat != WUFFS_BASE__PIXEL_FORMAT__INVALID) &&
                     // ...and no color profile (as Wuffs does not support them)...
                     (!getEncodedInfo().profile()) &&
-                    // ...and we have an independent frame (as Wuffs does not support the
-                    // equivalent of SkBlendMode::kSrcOver)...
-                    ((options.fFrameIndex == 0) ||
-                     (this->frame(options.fFrameIndex)->getRequiredFrame() == SkCodec::kNoFrame)) &&
-                    // ...and we use the identity transform (as Wuffs does not support
-                    // scaling).
+                    // ...and we use the identity transform (as Wuffs does
+                    // not support scaling).
                     (this->dimensions() == dstInfo.dimensions());
 
   result = fIncrDecOnePass ? this->onStartIncrementalDecodeOnePass(
@@ -511,7 +510,17 @@ SkCodec::Result SkWuffsCodec::onStartIncrementalDecodeOnePass(
     return SkCodec::kInternalError;
   }
 
-  SkSampler::Fill(dstInfo, dst, rowBytes, options.fZeroInitialized);
+  // SRC is usually faster than SRC_OVER, but for a dependent frame, dst is
+  // assumed to hold the previous frame's pixels (after processing the
+  // DisposalMethod). For one-pass decoding, we therefore use SRC_OVER.
+  if ((options.fFrameIndex != 0) &&
+      (this->frame(options.fFrameIndex)->getRequiredFrame() != SkCodec::kNoFrame)) {
+    fIncrDecPixelBlend = WUFFS_BASE__PIXEL_BLEND__SRC_OVER;
+  } else {
+    SkSampler::Fill(dstInfo, dst, rowBytes, options.fZeroInitialized);
+    fIncrDecPixelBlend = WUFFS_BASE__PIXEL_BLEND__SRC;
+  }
+
   return SkCodec::kSuccess;
 }
 
@@ -565,6 +574,7 @@ SkCodec::Result SkWuffsCodec::onStartIncrementalDecodeTwoPass() {
     }
   }
 
+  fIncrDecPixelBlend = WUFFS_BASE__PIXEL_BLEND__SRC;
   return SkCodec::kSuccess;
 }
 
@@ -594,6 +604,7 @@ SkCodec::Result SkWuffsCodec::onIncrementalDecode(int* rowsDecoded) {
     fIncrDecDst = nullptr;
     fIncrDecReaderIOPosition = 0;
     fIncrDecRowBytes = 0;
+    fIncrDecPixelBlend = WUFFS_BASE__PIXEL_BLEND__SRC;
     fIncrDecOnePass = false;
   } else {
     fIncrDecReaderIOPosition = fIOBuffer.reader_io_position();
@@ -895,8 +906,8 @@ const char* SkWuffsCodec::decodeFrameConfig(WhichDecoder which) {
 const char* SkWuffsCodec::decodeFrame(WhichDecoder which) {
   while (true) {
     wuffs_base__status status = fDecoders[which]->decode_frame(
-        &fPixelBuffer, &fIOBuffer, WUFFS_BASE__PIXEL_BLEND__SRC,
-        wuffs_base__make_slice_u8(fWorkbufPtr.get(), fWorkbufLen), NULL);
+        &fPixelBuffer, &fIOBuffer, fIncrDecPixelBlend,
+        wuffs_base__make_slice_u8(fWorkbufPtr.get(), fWorkbufLen), nullptr);
     if ((status.repr == wuffs_base__suspension__short_read) &&
         fill_buffer(&fIOBuffer, fStream.get())) {
       continue;

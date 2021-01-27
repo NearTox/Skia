@@ -159,12 +159,11 @@ uint32_t get_ubo_offset(uint32_t* currentOffset, GrSLType type, int arrayCount) 
 GrGLSLUniformHandler::UniformHandle GrSPIRVUniformHandler::internalAddUniformArray(
     const GrFragmentProcessor* owner, uint32_t visibility, GrSLType type, const char* name,
     bool mangleName, int arrayCount, const char** outName) {
-  SkString resolvedName;
   char prefix = 'u';
   if ('u' == name[0] || !strncmp(name, GR_NO_MANGLE_PREFIX, strlen(GR_NO_MANGLE_PREFIX))) {
     prefix = '\0';
   }
-  fProgramBuilder->nameVariable(&resolvedName, prefix, name, mangleName);
+  SkString resolvedName = fProgramBuilder->nameVariable(prefix, name, mangleName);
 
   int offset = get_ubo_offset(&fCurrentUBOOffset, type, arrayCount);
   SkString layoutQualifier;
@@ -188,8 +187,7 @@ GrGLSLUniformHandler::SamplerHandle GrSPIRVUniformHandler::addSampler(
     const GrShaderCaps* caps) {
   int binding = fSamplers.count() * 2;
 
-  SkString mangleName;
-  fProgramBuilder->nameVariable(&mangleName, 's', name, true);
+  SkString mangleName = fProgramBuilder->nameVariable('s', name, /*mangle=*/true);
   SkString layoutQualifier;
   layoutQualifier.appendf("set = %d, binding = %d", kSamplerTextureDescriptorSet, binding);
   SPIRVUniformInfo& info = fSamplers.push_back(SPIRVUniformInfo{
@@ -202,8 +200,7 @@ GrGLSLUniformHandler::SamplerHandle GrSPIRVUniformHandler::addSampler(
   fSamplerSwizzles.push_back(swizzle);
   SkASSERT(fSamplerSwizzles.count() == fSamplers.count());
 
-  SkString mangleTexName;
-  fProgramBuilder->nameVariable(&mangleTexName, 't', name, true);
+  SkString mangleTexName = fProgramBuilder->nameVariable('t', name, /*mangle=*/true);
   SkString texLayoutQualifier;
   texLayoutQualifier.appendf("set = %d, binding = %d", kSamplerTextureDescriptorSet, binding + 1);
   UniformInfo& texInfo = fTextures.push_back(SPIRVUniformInfo{

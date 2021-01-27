@@ -22,8 +22,7 @@ struct SkFontArguments {
     int coordinateCount;
   };
 
-  constexpr SkFontArguments() noexcept
-      : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0} {}
+  SkFontArguments() : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0} {}
 
   /** Specify the index of the desired font.
    *

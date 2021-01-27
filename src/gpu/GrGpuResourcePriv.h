@@ -71,7 +71,9 @@ class GrGpuResource::ResourcePriv {
 
   bool isPurgeable() const { return fResource->isPurgeable(); }
 
-  bool hasRef() const { return fResource->hasRef(); }
+  bool hasRefOrCommandBufferUsage() const {
+    return fResource->hasRef() || !fResource->hasNoCommandBufferUsages();
+  }
 
  protected:
   ResourcePriv(GrGpuResource* resource) : fResource(resource) {}

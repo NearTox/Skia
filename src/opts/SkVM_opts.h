@@ -47,7 +47,7 @@ static inline skvx::Vec<N, int> gather32(const int* ptr, const skvx::Vec<N, int>
   if constexpr (N > 8) {
     return join(gather32(ptr, ix.lo), gather32(ptr, ix.hi));
   }
-  return map(ix, [&](int i) { return ptr[i]; });
+  return map([&](int i) { return ptr[i]; }, ix);
 }
 
 namespace SK_OPTS_NS {
@@ -194,13 +194,13 @@ inline void interpret_skvm(
           STRIDE_K(Op::gather8) : {
             const uint8_t* ptr;
             memcpy(&ptr, (const uint8_t*)args[immy] + immz, sizeof(ptr));
-            r[d].i32 = map(r[x].i32, [&](int ix) { return (int)ptr[ix]; });
+            r[d].i32 = map([&](int ix) { return (int)ptr[ix]; }, r[x].i32);
           }
           break;
           STRIDE_K(Op::gather16) : {
             const uint16_t* ptr;
             memcpy(&ptr, (const uint8_t*)args[immy] + immz, sizeof(ptr));
-            r[d].i32 = map(r[x].i32, [&](int ix) { return (int)ptr[ix]; });
+            r[d].i32 = map([&](int ix) { return (int)ptr[ix]; }, r[x].i32);
           }
           break;
           STRIDE_K(Op::gather32) : {

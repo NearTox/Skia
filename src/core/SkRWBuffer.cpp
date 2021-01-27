@@ -268,7 +268,7 @@ class SkROBufferStreamAsset : public SkStreamAsset {
     fGlobalOffset = fLocalOffset = 0;
   }
 
-  size_t getLength() const override { return fBuffer->size(); }
+  size_t getLength() const noexcept override { return fBuffer->size(); }
 
   bool rewind() override {
     AUTO_VALIDATE
@@ -308,7 +308,7 @@ class SkROBufferStreamAsset : public SkStreamAsset {
 
   bool isAtEnd() const override { return fBuffer->size() == fGlobalOffset; }
 
-  size_t getPosition() const override { return fGlobalOffset; }
+  size_t getPosition() const noexcept override { return fGlobalOffset; }
 
   bool seek(size_t position) override {
     AUTO_VALIDATE

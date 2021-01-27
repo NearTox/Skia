@@ -63,7 +63,7 @@ class ImageFiltersGraphGM : public skiagm::GM {
       sk_sp<SkImageFilter> colorMorph(
           SkImageFilters::ColorFilter(std::move(matrixFilter), std::move(morph)));
       SkPaint paint;
-      paint.setImageFilter(SkImageFilters::Xfermode(SkBlendMode::kSrcOver, std::move(colorMorph)));
+      paint.setImageFilter(SkImageFilters::Blend(SkBlendMode::kSrcOver, std::move(colorMorph)));
 
       DrawClippedImage(canvas, fImage.get(), paint);
       canvas->translate(SkIntToScalar(100), 0);
@@ -87,7 +87,7 @@ class ImageFiltersGraphGM : public skiagm::GM {
       SkIRect cropRect = SkIRect::MakeWH(95, 100);
       SkPaint paint;
       paint.setImageFilter(
-          SkImageFilters::Xfermode(SkBlendMode::kSrcIn, std::move(blur), nullptr, &cropRect));
+          SkImageFilters::Blend(SkBlendMode::kSrcIn, std::move(blur), nullptr, &cropRect));
       DrawClippedImage(canvas, fImage.get(), paint);
       canvas->translate(SkIntToScalar(100), 0);
     }

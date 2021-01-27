@@ -14,7 +14,7 @@
 
 class GrGLCaps;
 class GrGLGpu;
-class GrGLStencilAttachment;
+class GrGLAttachment;
 
 class GrGLRenderTarget : public GrRenderTarget {
  public:
@@ -67,7 +67,7 @@ class GrGLRenderTarget : public GrRenderTarget {
  private:
   // Constructor for instances wrapping backend objects.
   GrGLRenderTarget(
-      GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&, GrGLStencilAttachment*);
+      GrGLGpu*, const SkISize&, GrGLFormat, int sampleCount, const IDs&, GrGLAttachment*);
 
   void setFlags(const GrGLCaps&, const IDs&);
 

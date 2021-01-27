@@ -16,7 +16,7 @@
 #include "include/gpu/mock/GrMockTypes.h"
 #include "src/core/SkPathPriv.h"
 #include "src/gpu/GrClip.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrPaint.h"
 #include "src/gpu/GrPathRenderer.h"
@@ -325,8 +325,7 @@ class CCPRCacheTest : public CCPRTest {
     int lastCopyAtlasID() const { return fLastCopyAtlasID; }
     int lastRenderedAtlasID() const { return fLastRenderedAtlasID; }
 
-    void preFlush(
-        GrOnFlushResourceProvider*, const uint32_t* opsTaskIDs, int numOpsTaskIDs) override {
+    void preFlush(GrOnFlushResourceProvider*, SkSpan<const uint32_t>) override {
       fLastRenderedAtlasID = fLastCopyAtlasID = 0;
 
       const GrCCPerFlushResources* resources = fCCPR->testingOnly_getCurrentFlushResources();
@@ -342,7 +341,7 @@ class CCPRCacheTest : public CCPRTest {
       }
     }
 
-    void postFlush(GrDeferredUploadToken, const uint32_t*, int) override {}
+    void postFlush(GrDeferredUploadToken, SkSpan<const uint32_t>) override {}
 
    private:
     sk_sp<GrCoverageCountingPathRenderer> fCCPR;
@@ -914,3 +913,38 @@ class CCPR_busyPath : public CCPRRenderingTest {
   }
 };
 DEF_CCPR_RENDERING_TEST(CCPR_busyPath)
+
+// https://bugs.chromium.org/p/chromium/issues/detail?id=1102117
+class CCPR_evictCacheEntryForPendingDrawOp : public CCPRRenderingTest {
+  void onRun(skiatest::Reporter* reporter, const CCPRPathDrawer& ccpr) const override {
+    static constexpr SkRect kRect = SkRect::MakeWH(50, 50);
+    ccpr.clear();
+
+    // make sure path is cached.
+    for (int i = 0; i < 2; i++) {
+      SkPath path;
+      path.addRect(kRect);
+
+      ccpr.drawPath(path);
+      ccpr.flush();
+    }
+
+    // make enough cached draws to make DoCopies happen.
+    for (int i = 0; i <= GrCoverageCountingPathRenderer::kDoCopiesThreshold; i++) {
+      SkPath path;
+      path.addRect(kRect);
+      ccpr.drawPath(path);
+    }
+
+    // now draw the path in an incompatible matrix. Previous draw's cached atlas should
+    // not be invalidated. otherwise, this flush would render more paths than allocated for.
+    auto m = SkMatrix::Translate(0.1f, 0.1f);
+    SkPath path;
+    path.addRect(kRect);
+    ccpr.drawPath(path, m);
+    ccpr.flush();
+
+    // if this test does not crash, it is passed.
+  }
+};
+DEF_CCPR_RENDERING_TEST(CCPR_evictCacheEntryForPendingDrawOp)

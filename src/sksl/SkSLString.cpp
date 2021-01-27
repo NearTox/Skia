@@ -173,6 +173,14 @@ bool StringFragment::operator<(StringFragment other) const {
   return fLength < other.fLength;
 }
 
+String StringFragment::operator+(const char* other) const { return String(*this) + other; }
+
+String StringFragment::operator+(const StringFragment& other) const {
+  return String(*this) + other;
+}
+
+String StringFragment::operator+(const String& other) const { return String(*this) + other; }
+
 bool operator==(const char* s1, StringFragment s2) { return s2 == s1; }
 
 bool operator!=(const char* s1, StringFragment s2) { return s2 != s1; }

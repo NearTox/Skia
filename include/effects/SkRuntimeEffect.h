@@ -21,7 +21,6 @@
 #  include "include/gpu/GrContextOptions.h"
 #endif
 
-class GrShaderCaps;
 class SkColorFilter;
 class SkShader;
 
@@ -135,11 +134,8 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   friend class GrSkSLFP;      // toPipelineStage
   friend class GrGLSLSkSLFP;  // fSampleUsages
 
-  // This re-compiles the program from scratch, using the supplied shader caps.
-  // This is necessary to get the correct values of settings.
   bool toPipelineStage(
-      const GrShaderCaps* shaderCaps, GrContextOptions::ShaderErrorHandler* errorHandler,
-      SkSL::PipelineStageArgs* outArgs);
+      GrContextOptions::ShaderErrorHandler* errorHandler, SkSL::PipelineStageArgs* outArgs);
 #endif
 
   friend class SkRTShader;            // toByteCode

@@ -12,7 +12,9 @@
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkTArray.h"
+#include "src/core/SkSpan.h"
 #include "src/core/SkTInternalLList.h"
+#include "src/gpu/GrAttachment.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrOpsRenderPass.h"
 #include "src/gpu/GrSamplePatternDictionary.h"
@@ -36,7 +38,7 @@ class GrRenderTarget;
 class GrRingBuffer;
 class GrSemaphore;
 class GrStagingBufferManager;
-class GrStencilAttachment;
+class GrAttachment;
 class GrStencilSettings;
 class GrSurface;
 class GrTexture;
@@ -157,11 +159,6 @@ class GrGpu : public SkRefCnt {
    * Implements GrResourceProvider::wrapBackendRenderTarget
    */
   sk_sp<GrRenderTarget> wrapBackendRenderTarget(const GrBackendRenderTarget&);
-
-  /**
-   * Implements GrResourceProvider::wrapBackendTextureAsRenderTarget
-   */
-  sk_sp<GrRenderTarget> wrapBackendTextureAsRenderTarget(const GrBackendTexture&, int sampleCnt);
 
   /**
    * Implements GrResourceProvider::wrapVulkanSecondaryCBAsRenderTarget
@@ -340,19 +337,18 @@ class GrGpu : public SkRefCnt {
   // If a 'stencil' is provided it will be the one bound to 'renderTarget'. If one is not
   // provided but 'renderTarget' has a stencil buffer then that is a signal that the
   // render target's stencil buffer should be ignored.
-  virtual GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget* renderTarget, GrStencilAttachment* stencil, GrSurfaceOrigin,
-      const SkIRect& bounds, const GrOpsRenderPass::LoadAndStoreInfo&,
-      const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+  GrOpsRenderPass* getOpsRenderPass(
+      GrRenderTarget* renderTarget, GrAttachment* stencil, GrSurfaceOrigin, const SkIRect& bounds,
+      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
-      GrXferBarrierFlags renderPassXferBarriers) = 0;
+      GrXferBarrierFlags renderPassXferBarriers);
 
   // Called by GrDrawingManager when flushing.
   // Provides a hook for post-flush actions (e.g. Vulkan command buffer submits). This will also
   // insert any numSemaphore semaphores on the gpu and set the backendSemaphores to match the
   // inserted semaphores.
   void executeFlushInfo(
-      GrSurfaceProxy*[], int numProxies, SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
+      SkSpan<GrSurfaceProxy*>, SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
       const GrBackendSurfaceMutableState* newState);
 
   bool submitToGpu(bool syncCpu);
@@ -430,6 +426,9 @@ class GrGpu : public SkRefCnt {
     int stencilAttachmentCreates() const { return fStencilAttachmentCreates; }
     void incStencilAttachmentCreates() { fStencilAttachmentCreates++; }
 
+    int msaaAttachmentCreates() const { return fMSAAAttachmentCreates; }
+    void incMSAAAttachmentCreates() { fMSAAAttachmentCreates++; }
+
     int numDraws() const { return fNumDraws; }
     void incNumDraws() { fNumDraws++; }
 
@@ -441,6 +440,9 @@ class GrGpu : public SkRefCnt {
 
     int numScratchTexturesReused() const { return fNumScratchTexturesReused; }
     void incNumScratchTexturesReused() { ++fNumScratchTexturesReused; }
+
+    int numScratchMSAAAttachmentsReused() const { return fNumScratchMSAAAttachmentsReused; }
+    void incNumScratchMSAAAttachmentsReused() { ++fNumScratchMSAAAttachmentsReused; }
 
     int numInlineCompilationFailures() const { return fNumInlineCompilationFailures; }
     void incNumInlineCompilationFailures() { ++fNumInlineCompilationFailures; }
@@ -483,10 +485,12 @@ class GrGpu : public SkRefCnt {
     int fTransfersToTexture = 0;
     int fTransfersFromSurface = 0;
     int fStencilAttachmentCreates = 0;
+    int fMSAAAttachmentCreates = 0;
     int fNumDraws = 0;
     int fNumFailedDraws = 0;
     int fNumSubmitToGpus = 0;
     int fNumScratchTexturesReused = 0;
+    int fNumScratchMSAAAttachmentsReused = 0;
 
     int fNumInlineCompilationFailures = 0;
     int fInlineProgramCacheStats[kNumProgramCacheResults] = {0};
@@ -511,10 +515,12 @@ class GrGpu : public SkRefCnt {
     void incTransfersToTexture() {}
     void incTransfersFromSurface() {}
     void incStencilAttachmentCreates() {}
+    void incMSAAAttachmentCreates() {}
     void incNumDraws() {}
     void incNumFailedDraws() {}
     void incNumSubmitToGpus() {}
     void incNumScratchTexturesReused() {}
+    void incNumScratchMSAAAttachmentsReused() {}
     void incNumInlineCompilationFailures() {}
     void incNumInlineProgramCacheResult(ProgramCacheResult stat) {}
     void incNumPreCompilationFailures() {}
@@ -642,8 +648,21 @@ class GrGpu : public SkRefCnt {
   /** Check a handle represents an actual texture in the backend API that has not been freed. */
   virtual bool isTestingOnlyBackendTexture(const GrBackendTexture&) const = 0;
 
-  virtual GrBackendRenderTarget createTestingOnlyBackendRenderTarget(int w, int h, GrColorType) = 0;
+  /**
+   * Creates a GrBackendRenderTarget that can be wrapped using
+   * SkSurface::MakeFromBackendRenderTarget. Ideally this is a non-textureable allocation to
+   * differentiate from testing with SkSurface::MakeFromBackendTexture. When sampleCnt > 1 this
+   * is used to test client wrapped allocations with MSAA where Skia does not allocate a separate
+   * buffer for resolving. If the color is non-null the backing store should be cleared to the
+   * passed in color.
+   */
+  virtual GrBackendRenderTarget createTestingOnlyBackendRenderTarget(
+      SkISize dimensions, GrColorType, int sampleCount = 1, GrProtected = GrProtected::kNo) = 0;
 
+  /**
+   * Deletes a GrBackendRenderTarget allocated with the above. Synchronization to make this safe
+   * is up to the caller.
+   */
   virtual void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) = 0;
 
   // This is only to be used in GL-specific tests.
@@ -668,9 +687,16 @@ class GrGpu : public SkRefCnt {
 
   // width and height may be larger than rt (if underlying API allows it).
   // Returns nullptr if compatible sb could not be created, otherwise the caller owns the ref on
-  // the GrStencilAttachment.
-  virtual GrStencilAttachment* createStencilAttachmentForRenderTarget(
+  // the GrAttachment.
+  virtual sk_sp<GrAttachment> makeStencilAttachmentForRenderTarget(
       const GrRenderTarget*, SkISize dimensions, int numStencilSamples) = 0;
+
+  virtual GrBackendFormat getPreferredStencilFormat(const GrBackendFormat&) = 0;
+
+  // Creates an MSAA surface to be used as an MSAA attachment on a framebuffer.
+  virtual sk_sp<GrAttachment> makeMSAAAttachment(
+      SkISize dimensions, const GrBackendFormat& format, int numSamples,
+      GrProtected isProtected) = 0;
 
   void handleDirtyContext() {
     if (fResetBits) {
@@ -751,8 +777,6 @@ class GrGpu : public SkRefCnt {
   virtual sk_sp<GrTexture> onWrapRenderableBackendTexture(
       const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable) = 0;
   virtual sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) = 0;
-  virtual sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt) = 0;
   virtual sk_sp<GrRenderTarget> onWrapVulkanSecondaryCBAsRenderTarget(
       const SkImageInfo&, const GrVkDrawableInfo&);
 
@@ -789,8 +813,14 @@ class GrGpu : public SkRefCnt {
   virtual bool onCopySurface(
       GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint) = 0;
 
+  virtual GrOpsRenderPass* onGetOpsRenderPass(
+      GrRenderTarget* renderTarget, GrAttachment* stencil, GrSurfaceOrigin, const SkIRect& bounds,
+      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) = 0;
+
   virtual void prepareSurfacesForBackendAccessAndStateUpdates(
-      GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
+      SkSpan<GrSurfaceProxy*> proxies, SkSurface::BackendSurfaceAccess access,
       const GrBackendSurfaceMutableState* newState) {}
 
   virtual bool onSubmitToGpu(bool syncCpu) = 0;
@@ -825,6 +855,10 @@ class GrGpu : public SkRefCnt {
   SkSTArray<4, SubmittedProc> fSubmittedProcs;
 
   bool fOOMed = false;
+
+#if SK_HISTOGRAMS_ENABLED
+  int fCurrentSubmitRenderPassCount = 0;
+#endif
 
   friend class GrPathRendering;
   using INHERITED = SkRefCnt;

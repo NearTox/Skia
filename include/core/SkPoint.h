@@ -50,14 +50,14 @@ struct SkIPoint {
 
       @return  true if fX is zero and fY is zero
   */
-  bool isZero() const { return (fX | fY) == 0; }
+  bool isZero() const noexcept { return (fX | fY) == 0; }
 
   /** Sets fX to x and fY to y.
 
       @param x  new value for fX
       @param y  new value for fY
   */
-  void set(int32_t x, int32_t y) {
+  void set(int32_t x, int32_t y) noexcept {
     fX = x;
     fY = y;
   }
@@ -66,13 +66,13 @@ struct SkIPoint {
 
       @return  SkIPoint as (-fX, -fY)
   */
-  SkIPoint operator-() const { return {-fX, -fY}; }
+  SkIPoint operator-() const noexcept { return {-fX, -fY}; }
 
   /** Offsets SkIPoint by ivector v. Sets SkIPoint to (fX + v.fX, fY + v.fY).
 
       @param v  ivector to add
   */
-  void operator+=(const SkIVector& v) {
+  void operator+=(const SkIVector& v) noexcept {
     fX = Sk32_sat_add(fX, v.fX);
     fY = Sk32_sat_add(fY, v.fY);
   }
@@ -81,7 +81,7 @@ struct SkIPoint {
 
       @param v  ivector to subtract
   */
-  void operator-=(const SkIVector& v) {
+  void operator-=(const SkIVector& v) noexcept {
     fX = Sk32_sat_sub(fX, v.fX);
     fY = Sk32_sat_sub(fY, v.fY);
   }
@@ -92,7 +92,7 @@ struct SkIPoint {
       @param y  value compared with fY
       @return   true if SkIPoint equals (x, y)
   */
-  bool equals(int32_t x, int32_t y) const { return fX == x && fY == y; }
+  bool equals(int32_t x, int32_t y) const noexcept { return fX == x && fY == y; }
 
   /** Returns true if a is equivalent to b.
 
@@ -100,7 +100,7 @@ struct SkIPoint {
       @param b  SkIPoint to compare
       @return   true if a.fX == b.fX and a.fY == b.fY
   */
-  friend bool operator==(const SkIPoint& a, const SkIPoint& b) {
+  friend bool operator==(const SkIPoint& a, const SkIPoint& b) noexcept {
     return a.fX == b.fX && a.fY == b.fY;
   }
 
@@ -110,7 +110,7 @@ struct SkIPoint {
       @param b  SkIPoint to compare
       @return   true if a.fX != b.fX or a.fY != b.fY
   */
-  friend bool operator!=(const SkIPoint& a, const SkIPoint& b) {
+  friend bool operator!=(const SkIPoint& a, const SkIPoint& b) noexcept {
     return a.fX != b.fX || a.fY != b.fY;
   }
 
@@ -122,7 +122,7 @@ struct SkIPoint {
       @param b  ivector to subtract
       @return   ivector from b to a
   */
-  friend SkIVector operator-(const SkIPoint& a, const SkIPoint& b) {
+  friend SkIVector operator-(const SkIPoint& a, const SkIPoint& b) noexcept {
     return {Sk32_sat_sub(a.fX, b.fX), Sk32_sat_sub(a.fY, b.fY)};
   }
 
@@ -136,7 +136,7 @@ struct SkIPoint {
       @param b  SkIPoint or ivector to add
       @return   SkIPoint equal to a offset by b
   */
-  friend SkIPoint operator+(const SkIPoint& a, const SkIVector& b) {
+  friend SkIPoint operator+(const SkIPoint& a, const SkIVector& b) noexcept {
     return {Sk32_sat_add(a.fX, b.fX), Sk32_sat_add(a.fY, b.fY)};
   }
 };
@@ -179,14 +179,14 @@ struct SK_API SkPoint {
 
       @return  true if fX is zero and fY is zero
   */
-  bool isZero() const { return (0 == fX) & (0 == fY); }
+  bool isZero() const noexcept { return (0 == fX) & (0 == fY); }
 
   /** Sets fX to x and fY to y.
 
       @param x  new value for fX
       @param y  new value for fY
   */
-  void set(SkScalar x, SkScalar y) {
+  void set(SkScalar x, SkScalar y) noexcept {
     fX = x;
     fY = y;
   }
@@ -200,7 +200,7 @@ struct SK_API SkPoint {
       @param x  new value for fX
       @param y  new value for fY
   */
-  void iset(int32_t x, int32_t y) {
+  void iset(int32_t x, int32_t y) noexcept {
     fX = SkIntToScalar(x);
     fY = SkIntToScalar(y);
   }
@@ -213,7 +213,7 @@ struct SK_API SkPoint {
 
       @param p  SkIPoint members promoted to SkScalar
   */
-  void iset(const SkIPoint& p) {
+  void iset(const SkIPoint& p) noexcept {
     fX = SkIntToScalar(p.fX);
     fY = SkIntToScalar(p.fY);
   }
@@ -222,7 +222,7 @@ struct SK_API SkPoint {
 
       @param pt  members providing magnitude for fX and fY
   */
-  void setAbs(const SkPoint& pt) {
+  void setAbs(const SkPoint& pt) noexcept {
     fX = SkScalarAbs(pt.fX);
     fY = SkScalarAbs(pt.fY);
   }
@@ -233,7 +233,7 @@ struct SK_API SkPoint {
       @param count   entries in array
       @param offset  vector added to points
   */
-  static void Offset(SkPoint points[], int count, const SkVector& offset) {
+  static void Offset(SkPoint points[], int count, const SkVector& offset) noexcept {
     Offset(points, count, offset.fX, offset.fY);
   }
 
@@ -244,7 +244,7 @@ struct SK_API SkPoint {
       @param dx      added to fX in points
       @param dy      added to fY in points
   */
-  static void Offset(SkPoint points[], int count, SkScalar dx, SkScalar dy) {
+  static void Offset(SkPoint points[], int count, SkScalar dx, SkScalar dy) noexcept {
     for (int i = 0; i < count; ++i) {
       points[i].offset(dx, dy);
     }
@@ -255,7 +255,7 @@ struct SK_API SkPoint {
       @param dx  added to fX
       @param dy  added to fY
   */
-  void offset(SkScalar dx, SkScalar dy) {
+  void offset(SkScalar dx, SkScalar dy) noexcept {
     fX += dx;
     fY += dy;
   }
@@ -268,7 +268,7 @@ struct SK_API SkPoint {
 
       @return  straight-line distance to origin
   */
-  SkScalar length() const { return SkPoint::Length(fX, fY); }
+  SkScalar length() const noexcept { return SkPoint::Length(fX, fY); }
 
   /** Returns the Euclidean distance from origin, computed as:
 
@@ -278,7 +278,7 @@ struct SK_API SkPoint {
 
       @return  straight-line distance to origin
   */
-  SkScalar distanceToOrigin() const { return this->length(); }
+  SkScalar distanceToOrigin() const noexcept { return this->length(); }
 
   /** Scales (fX, fY) so that length() returns one, while preserving ratio of fX to fY,
       if possible. If prior length is nearly zero, sets vector to (0, 0) and returns
@@ -288,7 +288,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_normalize_2
   */
-  bool normalize();
+  bool normalize() noexcept;
 
   /** Sets vector to (x, y) scaled so length() returns one, and so that
       (fX, fY) is proportional to (x, y).  If (x, y) length is nearly zero,
@@ -300,7 +300,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_setNormalize
   */
-  bool setNormalize(SkScalar x, SkScalar y);
+  bool setNormalize(SkScalar x, SkScalar y) noexcept;
 
   /** Scales vector so that distanceToOrigin() returns length, if possible. If former
       length is nearly zero, sets vector to (0, 0) and return false; otherwise returns
@@ -311,7 +311,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_setLength
   */
-  bool setLength(SkScalar length);
+  bool setLength(SkScalar length) noexcept;
 
   /** Sets vector to (x, y) scaled to length, if possible. If former
       length is nearly zero, sets vector to (0, 0) and return false; otherwise returns
@@ -324,7 +324,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_setLength_2
   */
-  bool setLength(SkScalar x, SkScalar y, SkScalar length);
+  bool setLength(SkScalar x, SkScalar y, SkScalar length) noexcept;
 
   /** Sets dst to SkPoint times scale. dst may be SkPoint to modify SkPoint in place.
 
@@ -333,17 +333,17 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_scale
   */
-  void scale(SkScalar scale, SkPoint* dst) const;
+  void scale(SkScalar scale, SkPoint* dst) const noexcept;
 
   /** Scales SkPoint in place by scale.
 
       @param value  factor to multiply SkPoint by
   */
-  void scale(SkScalar value) { this->scale(value, this); }
+  void scale(SkScalar value) noexcept { this->scale(value, this); }
 
   /** Changes the sign of fX and fY.
    */
-  void negate() {
+  void negate() noexcept {
     fX = -fX;
     fY = -fY;
   }
@@ -352,13 +352,13 @@ struct SK_API SkPoint {
 
       @return  SkPoint as (-fX, -fY)
   */
-  SkPoint operator-() const { return {-fX, -fY}; }
+  SkPoint operator-() const noexcept { return {-fX, -fY}; }
 
   /** Adds vector v to SkPoint. Sets SkPoint to: (fX + v.fX, fY + v.fY).
 
       @param v  vector to add
   */
-  void operator+=(const SkVector& v) {
+  void operator+=(const SkVector& v) noexcept {
     fX += v.fX;
     fY += v.fY;
   }
@@ -367,7 +367,7 @@ struct SK_API SkPoint {
 
       @param v  vector to subtract
   */
-  void operator-=(const SkVector& v) {
+  void operator-=(const SkVector& v) noexcept {
     fX -= v.fX;
     fY -= v.fY;
   }
@@ -377,14 +377,14 @@ struct SK_API SkPoint {
       @param scale  scalar to multiply by
       @return       SkPoint as (fX * scale, fY * scale)
   */
-  SkPoint operator*(SkScalar scale) const { return {fX * scale, fY * scale}; }
+  SkPoint operator*(SkScalar scale) const noexcept { return {fX * scale, fY * scale}; }
 
   /** Multiplies SkPoint by scale. Sets SkPoint to: (fX * scale, fY * scale).
 
       @param scale  scalar to multiply by
       @return       reference to SkPoint
   */
-  SkPoint& operator*=(SkScalar scale) {
+  SkPoint& operator*=(SkScalar scale) noexcept {
     fX *= scale;
     fY *= scale;
     return *this;
@@ -394,7 +394,7 @@ struct SK_API SkPoint {
 
       @return  true for values other than infinities and NaN
   */
-  bool isFinite() const {
+  bool isFinite() const noexcept {
     SkScalar accum = 0;
     accum *= fX;
     accum *= fY;
@@ -413,7 +413,7 @@ struct SK_API SkPoint {
       @param y  value compared with fY
       @return   true if SkPoint equals (x, y)
   */
-  bool equals(SkScalar x, SkScalar y) const { return fX == x && fY == y; }
+  bool equals(SkScalar x, SkScalar y) const noexcept { return fX == x && fY == y; }
 
   /** Returns true if a is equivalent to b.
 
@@ -421,7 +421,7 @@ struct SK_API SkPoint {
       @param b  SkPoint to compare
       @return   true if a.fX == b.fX and a.fY == b.fY
   */
-  friend bool operator==(const SkPoint& a, const SkPoint& b) {
+  friend bool operator==(const SkPoint& a, const SkPoint& b) noexcept {
     return a.fX == b.fX && a.fY == b.fY;
   }
 
@@ -431,7 +431,7 @@ struct SK_API SkPoint {
       @param b  SkPoint to compare
       @return   true if a.fX != b.fX or a.fY != b.fY
   */
-  friend bool operator!=(const SkPoint& a, const SkPoint& b) {
+  friend bool operator!=(const SkPoint& a, const SkPoint& b) noexcept {
     return a.fX != b.fX || a.fY != b.fY;
   }
 
@@ -444,7 +444,7 @@ struct SK_API SkPoint {
       @param b  SkPoint to subtract
       @return   vector from b to a
   */
-  friend SkVector operator-(const SkPoint& a, const SkPoint& b) {
+  friend SkVector operator-(const SkPoint& a, const SkPoint& b) noexcept {
     return {a.fX - b.fX, a.fY - b.fY};
   }
 
@@ -458,7 +458,7 @@ struct SK_API SkPoint {
       @param b  SkPoint or vector to add
       @return   SkPoint equal to a offset by b
   */
-  friend SkPoint operator+(const SkPoint& a, const SkVector& b) {
+  friend SkPoint operator+(const SkPoint& a, const SkVector& b) noexcept {
     return {a.fX + b.fX, a.fY + b.fY};
   }
 
@@ -474,7 +474,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_Length
   */
-  static SkScalar Length(SkScalar x, SkScalar y);
+  static SkScalar Length(SkScalar x, SkScalar y) noexcept;
 
   /** Scales (vec->fX, vec->fY) so that length() returns one, while preserving ratio of vec->fX
       to vec->fY, if possible. If original length is nearly zero, sets vec to (0, 0) and returns
@@ -489,7 +489,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_Normalize
   */
-  static SkScalar Normalize(SkVector* vec);
+  static SkScalar Normalize(SkVector* vec) noexcept;
 
   /** Returns the Euclidean distance between a and b.
 
@@ -497,7 +497,7 @@ struct SK_API SkPoint {
       @param b  line end point
       @return   straight-line distance from a to b
   */
-  static SkScalar Distance(const SkPoint& a, const SkPoint& b) {
+  static SkScalar Distance(const SkPoint& a, const SkPoint& b) noexcept {
     return Length(a.fX - b.fX, a.fY - b.fY);
   }
 
@@ -507,7 +507,7 @@ struct SK_API SkPoint {
       @param b  right side of dot product
       @return   product of input magnitudes and cosine of the angle between them
   */
-  static SkScalar DotProduct(const SkVector& a, const SkVector& b) {
+  static SkScalar DotProduct(const SkVector& a, const SkVector& b) noexcept {
     return a.fX * b.fX + a.fY * b.fY;
   }
 
@@ -521,7 +521,7 @@ struct SK_API SkPoint {
       @param b  right side of cross product
       @return   area spanned by vectors signed by angle direction
   */
-  static SkScalar CrossProduct(const SkVector& a, const SkVector& b) {
+  static SkScalar CrossProduct(const SkVector& a, const SkVector& b) noexcept {
     return a.fX * b.fY - a.fY * b.fX;
   }
 
@@ -534,14 +534,14 @@ struct SK_API SkPoint {
       @param vec  right side of cross product
       @return     area spanned by vectors signed by angle direction
   */
-  SkScalar cross(const SkVector& vec) const { return CrossProduct(*this, vec); }
+  SkScalar cross(const SkVector& vec) const noexcept { return CrossProduct(*this, vec); }
 
   /** Returns the dot product of vector and vector vec.
 
       @param vec  right side of dot product
       @return     product of input magnitudes and cosine of the angle between them
   */
-  SkScalar dot(const SkVector& vec) const { return DotProduct(*this, vec); }
+  SkScalar dot(const SkVector& vec) const noexcept { return DotProduct(*this, vec); }
 };
 
 #endif

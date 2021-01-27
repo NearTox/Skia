@@ -26,9 +26,9 @@
 #define kDefault_Edging SkFont::Edging::kAntiAlias
 #define kDefault_Hinting SkPaintDefaults_Hinting
 
-static inline SkScalar valid_size(SkScalar size) noexcept { return std::max<SkScalar>(0, size); }
+static inline SkScalar valid_size(SkScalar size) { return std::max<SkScalar>(0, size); }
 
-SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept
+SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar skewX)
     : fTypeface(std::move(face)),
       fSize(valid_size(size)),
       fScaleX(scaleX),
@@ -37,14 +37,13 @@ SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size, SkScalar scaleX, SkScalar 
       fEdging(static_cast<unsigned>(kDefault_Edging)),
       fHinting(static_cast<unsigned>(kDefault_Hinting)) {}
 
-SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size) noexcept
-    : SkFont(std::move(face), size, 1, 0) {}
+SkFont::SkFont(sk_sp<SkTypeface> face, SkScalar size) : SkFont(std::move(face), size, 1, 0) {}
 
-SkFont::SkFont(sk_sp<SkTypeface> face) noexcept : SkFont(std::move(face), kDefault_Size, 1, 0) {}
+SkFont::SkFont(sk_sp<SkTypeface> face) : SkFont(std::move(face), kDefault_Size, 1, 0) {}
 
-SkFont::SkFont() noexcept : SkFont(nullptr, kDefault_Size) {}
+SkFont::SkFont() : SkFont(nullptr, kDefault_Size) {}
 
-bool SkFont::operator==(const SkFont& b) const noexcept {
+bool SkFont::operator==(const SkFont& b) const {
   return fTypeface.get() == b.fTypeface.get() && fSize == b.fSize && fScaleX == b.fScaleX &&
          fSkewX == b.fSkewX && fFlags == b.fFlags && fEdging == b.fEdging && fHinting == b.fHinting;
 }
@@ -61,7 +60,7 @@ void SkFont::dump() const {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-static inline uint32_t set_clear_mask(uint32_t bits, bool cond, uint32_t mask) noexcept {
+static inline uint32_t set_clear_mask(uint32_t bits, bool cond, uint32_t mask) {
   return cond ? bits | mask : bits & ~mask;
 }
 
@@ -205,7 +204,7 @@ SkScalar SkFont::measureText(
 
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakeCanonicalized(*this, paint);
   SkBulkGlyphMetrics metrics{strikeSpec};
-  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkMakeSpan(glyphIDs, glyphCount));
+  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkSpan(glyphIDs, glyphCount));
 
   SkScalar width = 0;
   if (bounds) {
@@ -242,7 +241,7 @@ void SkFont::getWidthsBounds(
     const SkPaint* paint) const {
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakeCanonicalized(*this, paint);
   SkBulkGlyphMetrics metrics{strikeSpec};
-  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkMakeSpan(glyphIDs, count));
+  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkSpan(glyphIDs, count));
 
   SkScalar scale = strikeSpec.strikeToSourceRatio();
 
@@ -265,7 +264,7 @@ void SkFont::getWidthsBounds(
 void SkFont::getPos(const SkGlyphID glyphIDs[], int count, SkPoint pos[], SkPoint origin) const {
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakeCanonicalized(*this);
   SkBulkGlyphMetrics metrics{strikeSpec};
-  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkMakeSpan(glyphIDs, count));
+  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkSpan(glyphIDs, count));
 
   SkPoint sum = origin;
   for (auto glyph : glyphs) {
@@ -278,7 +277,7 @@ void SkFont::getXPos(
     const SkGlyphID glyphIDs[], int count, SkScalar xpos[], SkScalar origin) const {
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakeCanonicalized(*this);
   SkBulkGlyphMetrics metrics{strikeSpec};
-  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkMakeSpan(glyphIDs, count));
+  SkSpan<const SkGlyph*> glyphs = metrics.glyphs(SkSpan(glyphIDs, count));
 
   SkScalar loc = origin;
   SkScalar* cursor = xpos;
@@ -297,7 +296,7 @@ void SkFont::getPaths(
 
   SkStrikeSpec strikeSpec = SkStrikeSpec::MakeWithNoDevice(font);
   SkBulkGlyphMetricsAndPaths paths{strikeSpec};
-  SkSpan<const SkGlyph*> glyphs = paths.glyphs(SkMakeSpan(glyphIDs, count));
+  SkSpan<const SkGlyph*> glyphs = paths.glyphs(SkSpan(glyphIDs, count));
 
   for (auto glyph : glyphs) {
     proc(glyph->path(), mx, ctx);

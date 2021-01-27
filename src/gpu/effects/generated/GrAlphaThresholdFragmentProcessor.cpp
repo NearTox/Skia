@@ -33,9 +33,9 @@ class GrGLSLAlphaThresholdFragmentProcessor : public GrGLSLFragmentProcessor {
         &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "innerThreshold");
     outerThresholdVar = args.fUniformHandler->addUniform(
         &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "outerThreshold");
-    SkString _sample515 = this->invokeChild(0, args);
-    fragBuilder->codeAppendf(R"SkSL(half4 color = %s;)SkSL", _sample515.c_str());
-    SkString _sample555 = this->invokeChild(1, args);
+    SkString _sample0 = this->invokeChild(0, args);
+    fragBuilder->codeAppendf(R"SkSL(half4 color = %s;)SkSL", _sample0.c_str());
+    SkString _sample1 = this->invokeChild(1, args);
     fragBuilder->codeAppendf(
         R"SkSL(
 half4 mask_color = %s;
@@ -52,7 +52,7 @@ if (mask_color.w < 0.5) {
 }
 %s = color;
 )SkSL",
-        _sample555.c_str(), args.fUniformHandler->getUniformCStr(outerThresholdVar),
+        _sample1.c_str(), args.fUniformHandler->getUniformCStr(outerThresholdVar),
         args.fUniformHandler->getUniformCStr(outerThresholdVar),
         args.fUniformHandler->getUniformCStr(outerThresholdVar),
         args.fUniformHandler->getUniformCStr(innerThresholdVar),

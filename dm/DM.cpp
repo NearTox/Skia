@@ -362,7 +362,7 @@ static void crash_handler(int sig) {
   find_culprit();
 
 #  if !defined(SK_BUILD_FOR_ANDROID)
-  void* stack[64];
+  void* stack[128];
   int count = backtrace(stack, SK_ARRAY_COUNT(stack));
   char** symbols = backtrace_symbols(stack, count);
   info("\nStack trace:\n");
@@ -1111,7 +1111,7 @@ struct Task {
             data->rewind();
           } else {
             hashAndEncode = std::make_unique<HashAndEncode>(bitmap);
-            hashAndEncode->write(&hash);
+            hashAndEncode->feedHash(&hash);
           }
           SkMD5::Digest digest = hash.finish();
           for (int i = 0; i < 16; i++) {
@@ -1158,7 +1158,7 @@ struct Task {
                 rasterized.getPixels(), w, h, 8, rasterized.rowBytes(), cs.get(), info)};
             CGContextDrawPDFPage(ctx.get(), page);
 
-            // Skip calling hashAndEncode->write(SkMD5*)... we want the .pdf's hash.
+            // Skip calling hashAndEncode->feedHash(SkMD5*)... we want the .pdf's hash.
             hashAndEncode = std::make_unique<HashAndEncode>(rasterized);
             WriteToDisk(task, md5, "png", nullptr, 0, &rasterized, hashAndEncode.get());
           } else
@@ -1331,19 +1331,18 @@ struct Task {
       path.append(ext);
     }
 
+    SkFILEWStream file(path.c_str());
+    if (!file.isValid()) {
+      fail(SkStringPrintf("Can't open %s for writing.\n", path.c_str()));
+      return;
+    }
     if (bitmap) {
       SkASSERT(hashAndEncode);
-      if (!hashAndEncode->writePngTo(
-              path.c_str(), result.md5.c_str(), FLAGS_key, FLAGS_properties)) {
+      if (!hashAndEncode->encodePNG(&file, result.md5.c_str(), FLAGS_key, FLAGS_properties)) {
         fail(SkStringPrintf("Can't encode PNG to %s.\n", path.c_str()));
         return;
       }
     } else {
-      SkFILEWStream file(path.c_str());
-      if (!file.isValid()) {
-        fail(SkStringPrintf("Can't open %s for writing.\n", path.c_str()));
-        return;
-      }
       if (!file.writeStream(data, len)) {
         fail(SkStringPrintf("Can't write to %s.\n", path.c_str()));
         return;

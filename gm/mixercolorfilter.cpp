@@ -102,8 +102,8 @@ class MixerCFGM final : public skiagm::GM {
     sk_sp<SkRuntimeEffect> effect;
     if (fRuntime) {
       const char* sksl = R"(
-                in shader cf0;
-                in shader cf1;
+                uniform shader cf0;
+                uniform shader cf1;
                 uniform half t;
                 half4 main() {
                     return mix(sample(cf0), sample(cf1), t);

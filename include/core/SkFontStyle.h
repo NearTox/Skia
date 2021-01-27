@@ -9,6 +9,7 @@
 #define SkFontStyle_DEFINED
 
 #include "include/core/SkTypes.h"
+#include "include/private/SkTPin.h"
 
 class SK_API SkFontStyle {
  public:
@@ -54,9 +55,9 @@ class SK_API SkFontStyle {
 
   bool operator==(const SkFontStyle& rhs) const noexcept { return fValue == rhs.fValue; }
 
-  int weight() const { return fValue & 0xFFFF; }
-  int width() const { return (fValue >> 16) & 0xFF; }
-  Slant slant() const { return (Slant)((fValue >> 24) & 0xFF); }
+  int weight() const noexcept { return fValue & 0xFFFF; }
+  int width() const noexcept { return (fValue >> 16) & 0xFF; }
+  Slant slant() const noexcept { return (Slant)((fValue >> 24) & 0xFF); }
 
   static constexpr SkFontStyle Normal() noexcept {
     return SkFontStyle(kNormal_Weight, kNormal_Width, kUpright_Slant);

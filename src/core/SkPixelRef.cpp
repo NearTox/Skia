@@ -14,13 +14,13 @@
 
 #include <atomic>
 
-uint32_t SkNextID::ImageID() noexcept {
+uint32_t SkNextID::ImageID() {
   // We never set the low bit.... see SkPixelRef::genIDIsUnique().
   static std::atomic<uint32_t> nextID{2};
 
   uint32_t id;
   do {
-    id = nextID.fetch_add(2);
+    id = nextID.fetch_add(2, std::memory_order_relaxed);
   } while (id == 0);
   return id;
 }

@@ -101,6 +101,7 @@ class TestSVGTypeface : public SkTypeface {
   int onGetUPEM() const override { return fUpem; }
 
   void onGetFamilyName(SkString* familyName) const override;
+  bool onGetPostScriptName(SkString*) const override;
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
 
   int onGetVariationDesignPosition(

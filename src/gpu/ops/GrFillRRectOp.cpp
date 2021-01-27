@@ -31,7 +31,7 @@ class FillRRectOp : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext*, GrPaint&&, const SkMatrix& viewMatrix, const SkRRect&, GrAAType);
 
   const char* name() const final { return "GrFillRRectOp"; }
@@ -40,7 +40,7 @@ class FillRRectOp : public GrMeshDrawOp {
 
   GrProcessorSet::Analysis finalize(
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) final;
-  CombineResult onCombineIfPossible(GrOp*, GrRecordingContext::Arenas*, const GrCaps&) final;
+  CombineResult onCombineIfPossible(GrOp*, SkArenaAlloc*, const GrCaps&) final;
 
   void visitProxies(const VisitProxyFunc& fn) const override {
     if (fProgramInfo) {
@@ -56,7 +56,7 @@ class FillRRectOp : public GrMeshDrawOp {
 
  private:
   friend class ::GrSimpleMeshDrawOpHelper;  // for access to ctor
-  friend class ::GrOpMemoryPool;            // for access to ctor
+  friend class ::GrOp;                      // for access to ctor
 
   enum class ProcessorFlags {
     kNone = 0,
@@ -71,7 +71,7 @@ class FillRRectOp : public GrMeshDrawOp {
   class Processor;
 
   FillRRectOp(
-      const Helper::MakeArgs&, const SkPMColor4f& paintColor, const SkMatrix& totalShapeMatrix,
+      GrProcessorSet*, const SkPMColor4f& paintColor, const SkMatrix& totalShapeMatrix,
       const SkRRect&, GrAAType, ProcessorFlags, const SkRect& devBounds);
 
   // These methods are used to append data of various POD types to our internal array of instance
@@ -127,7 +127,7 @@ GR_MAKE_BITFIELD_CLASS_OPS(FillRRectOp::ProcessorFlags)
 static bool can_use_hw_derivatives_with_coverage(
     const GrShaderCaps&, const SkMatrix&, const SkRRect&);
 
-std::unique_ptr<GrDrawOp> FillRRectOp::Make(
+GrOp::Owner FillRRectOp::Make(
     GrRecordingContext* ctx, GrPaint&& paint, const SkMatrix& viewMatrix, const SkRRect& rrect,
     GrAAType aaType) {
   using Helper = GrSimpleMeshDrawOpHelper;
@@ -202,11 +202,10 @@ std::unique_ptr<GrDrawOp> FillRRectOp::Make(
 }
 
 FillRRectOp::FillRRectOp(
-    const GrSimpleMeshDrawOpHelper::MakeArgs& helperArgs, const SkPMColor4f& paintColor,
-    const SkMatrix& totalShapeMatrix, const SkRRect& rrect, GrAAType aaType,
-    ProcessorFlags processorFlags, const SkRect& devBounds)
+    GrProcessorSet* processorSet, const SkPMColor4f& paintColor, const SkMatrix& totalShapeMatrix,
+    const SkRRect& rrect, GrAAType aaType, ProcessorFlags processorFlags, const SkRect& devBounds)
     : INHERITED(ClassID()),
-      fHelper(helperArgs, aaType),
+      fHelper(processorSet, aaType),
       fColor(paintColor),
       fLocalRect(rrect.rect()),
       fProcessorFlags(
@@ -264,8 +263,7 @@ GrProcessorSet::Analysis FillRRectOp::finalize(
   return analysis;
 }
 
-GrDrawOp::CombineResult FillRRectOp::onCombineIfPossible(
-    GrOp* op, GrRecordingContext::Arenas*, const GrCaps& caps) {
+GrOp::CombineResult FillRRectOp::onCombineIfPossible(GrOp* op, SkArenaAlloc*, const GrCaps& caps) {
   const auto& that = *op->cast<FillRRectOp>();
   if (!fHelper.isCompatible(that.fHelper, caps, this->bounds(), that.bounds())) {
     return CombineResult::kCannotCombine;
@@ -889,7 +887,7 @@ static bool can_use_hw_derivatives_with_coverage(
 
 }  // anonymous namespace
 
-std::unique_ptr<GrDrawOp> GrFillRRectOp::Make(
+GrOp::Owner GrFillRRectOp::Make(
     GrRecordingContext* ctx, GrPaint&& paint, const SkMatrix& viewMatrix, const SkRRect& rrect,
     GrAAType aaType) {
   return FillRRectOp::Make(ctx, std::move(paint), viewMatrix, rrect, aaType);

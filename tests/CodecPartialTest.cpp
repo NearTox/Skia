@@ -551,23 +551,23 @@ DEF_TEST(Codec_emptyIDAT, r) {
   sk_sp<SkData> file = GetResourceAsData(name);
   if (!file) {
     return;
-  }
+    }
 
-  // Truncate to the beginning of the IDAT, immediately after the IDAT tag.
-  file = SkData::MakeSubset(file.get(), 0, 80);
+    // Truncate to the beginning of the IDAT, immediately after the IDAT tag.
+    file = SkData::MakeSubset(file.get(), 0, 80);
 
-  std::unique_ptr<SkCodec> codec(SkCodec::MakeFromData(std::move(file)));
-  if (!codec) {
-    ERRORF(r, "Failed to create a codec for %s", name);
-    return;
-  }
+    std::unique_ptr<SkCodec> codec(SkCodec::MakeFromData(std::move(file)));
+    if (!codec) {
+      ERRORF(r, "Failed to create a codec for %s", name);
+      return;
+    }
 
-  SkBitmap bm;
-  const auto info = standardize_info(codec.get());
-  bm.allocPixels(info);
+    SkBitmap bm;
+    const auto info = standardize_info(codec.get());
+    bm.allocPixels(info);
 
-  const auto result = codec->getPixels(info, bm.getPixels(), bm.rowBytes());
-  REPORTER_ASSERT(r, SkCodec::kIncompleteInput == result);
+    const auto result = codec->getPixels(info, bm.getPixels(), bm.rowBytes());
+    REPORTER_ASSERT(r, SkCodec::kIncompleteInput == result);
 }
 
 DEF_TEST(Codec_incomplete, r) {

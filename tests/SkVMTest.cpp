@@ -2357,51 +2357,51 @@ DEF_TEST(SkVM_min_max, r) {
         }
       }
     });
-  }
-
-  // Test each with constant on the right.
-  for (int i = 0; i < 8; i++) {
-    skvm::Builder b;
-    {
-      skvm::Arg src = b.varying<float>(), mn = b.varying<float>(), mx = b.varying<float>();
-
-      skvm::F32 x = b.loadF(src), y = b.splat(f[i]);
-
-      b.storeF(mn, b.min(x, y));
-      b.storeF(mx, b.max(x, y));
     }
 
-    test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
-      float mn[8], mx[8];
-      program.eval(8, f, mn, mx);
-      for (int j = 0; j < 8; j++) {
-        REPORTER_ASSERT(r, identical(mn[j], std::min(f[j], f[i])));
-        REPORTER_ASSERT(r, identical(mx[j], std::max(f[j], f[i])));
+    // Test each with constant on the right.
+    for (int i = 0; i < 8; i++) {
+      skvm::Builder b;
+      {
+        skvm::Arg src = b.varying<float>(), mn = b.varying<float>(), mx = b.varying<float>();
+
+        skvm::F32 x = b.loadF(src), y = b.splat(f[i]);
+
+        b.storeF(mn, b.min(x, y));
+        b.storeF(mx, b.max(x, y));
       }
-    });
-  }
 
-  // Test each with constant on the left.
-  for (int i = 0; i < 8; i++) {
-    skvm::Builder b;
-    {
-      skvm::Arg src = b.varying<float>(), mn = b.varying<float>(), mx = b.varying<float>();
-
-      skvm::F32 x = b.splat(f[i]), y = b.loadF(src);
-
-      b.storeF(mn, b.min(x, y));
-      b.storeF(mx, b.max(x, y));
+      test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
+        float mn[8], mx[8];
+        program.eval(8, f, mn, mx);
+        for (int j = 0; j < 8; j++) {
+          REPORTER_ASSERT(r, identical(mn[j], std::min(f[j], f[i])));
+          REPORTER_ASSERT(r, identical(mx[j], std::max(f[j], f[i])));
+        }
+      });
     }
 
-    test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
-      float mn[8], mx[8];
-      program.eval(8, f, mn, mx);
-      for (int j = 0; j < 8; j++) {
-        REPORTER_ASSERT(r, identical(mn[j], std::min(f[i], f[j])));
-        REPORTER_ASSERT(r, identical(mx[j], std::max(f[i], f[j])));
+    // Test each with constant on the left.
+    for (int i = 0; i < 8; i++) {
+      skvm::Builder b;
+      {
+        skvm::Arg src = b.varying<float>(), mn = b.varying<float>(), mx = b.varying<float>();
+
+        skvm::F32 x = b.splat(f[i]), y = b.loadF(src);
+
+        b.storeF(mn, b.min(x, y));
+        b.storeF(mx, b.max(x, y));
       }
-    });
-  }
+
+      test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
+        float mn[8], mx[8];
+        program.eval(8, f, mn, mx);
+        for (int j = 0; j < 8; j++) {
+          REPORTER_ASSERT(r, identical(mn[j], std::min(f[i], f[j])));
+          REPORTER_ASSERT(r, identical(mx[j], std::max(f[i], f[j])));
+        }
+      });
+    }
 }
 
 DEF_TEST(SkVM_halfs, r) {
@@ -2444,37 +2444,37 @@ DEF_TEST(SkVM_64bit, r) {
     wide[i] = ((uint64_t)lo[i] << 0) | ((uint64_t)hi[i] << 32);
   }
 
-  {
-    skvm::Builder b;
     {
-      skvm::Arg wide = b.varying<uint64_t>(), lo = b.varying<int>(), hi = b.varying<int>();
-      b.store32(lo, b.load64(wide, 0));
-      b.store32(hi, b.load64(wide, 1));
-    }
-    test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
-      uint32_t l[65], h[65];
-      program.eval(65, wide, l, h);
-      for (int i = 0; i < 65; i++) {
-        REPORTER_ASSERT(r, l[i] == lo[i]);
-        REPORTER_ASSERT(r, h[i] == hi[i]);
+      skvm::Builder b;
+      {
+        skvm::Arg wide = b.varying<uint64_t>(), lo = b.varying<int>(), hi = b.varying<int>();
+        b.store32(lo, b.load64(wide, 0));
+        b.store32(hi, b.load64(wide, 1));
       }
-    });
-  }
+      test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
+        uint32_t l[65], h[65];
+        program.eval(65, wide, l, h);
+        for (int i = 0; i < 65; i++) {
+          REPORTER_ASSERT(r, l[i] == lo[i]);
+          REPORTER_ASSERT(r, h[i] == hi[i]);
+        }
+      });
+    }
 
-  {
-    skvm::Builder b;
     {
-      skvm::Arg wide = b.varying<uint64_t>(), lo = b.varying<int>(), hi = b.varying<int>();
-      b.store64(wide, b.load32(lo), b.load32(hi));
-    }
-    test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
-      uint64_t w[65];
-      program.eval(65, w, lo, hi);
-      for (int i = 0; i < 65; i++) {
-        REPORTER_ASSERT(r, w[i] == wide[i]);
+      skvm::Builder b;
+      {
+        skvm::Arg wide = b.varying<uint64_t>(), lo = b.varying<int>(), hi = b.varying<int>();
+        b.store64(wide, b.load32(lo), b.load32(hi));
       }
-    });
-  }
+      test_jit_and_interpreter(b.done(), [&](const skvm::Program& program) {
+        uint64_t w[65];
+        program.eval(65, w, lo, hi);
+        for (int i = 0; i < 65; i++) {
+          REPORTER_ASSERT(r, w[i] == wide[i]);
+        }
+      });
+    }
 }
 
 DEF_TEST(SkVM_is_NaN_is_finite, r) {

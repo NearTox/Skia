@@ -41,7 +41,7 @@ class GrRecordingContextPriv {
   // from GrRecordingContext
   GrDrawingManager* drawingManager() { return fContext->drawingManager(); }
 
-  GrOpMemoryPool* opMemoryPool() { return fContext->arenas().opMemoryPool(); }
+  GrMemoryPool* opMemoryPool() { return fContext->arenas().opMemoryPool(); }
   SkArenaAlloc* recordTimeAllocator() { return fContext->arenas().recordTimeAllocator(); }
   GrRecordingContext::Arenas arenas() { return fContext->arenas(); }
 
@@ -57,9 +57,7 @@ class GrRecordingContextPriv {
 
   GrTextBlobCache* getTextBlobCache() { return fContext->getTextBlobCache(); }
 
-  GrThreadSafeUniquelyKeyedProxyViewCache* threadSafeViewCache() {
-    return fContext->threadSafeViewCache();
-  }
+  GrThreadSafeCache* threadSafeCache() { return fContext->threadSafeCache(); }
 
   void moveRenderTasksToDDL(SkDeferredDisplayList*);
 

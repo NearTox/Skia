@@ -32,14 +32,13 @@ class CircleGM : public GM {
   sk_sp<SkDrawLooper> fLooper;
   enum { kLooperColorSentinel = 0x01020304 };
 
- public:
-  CircleGM() {
+ protected:
+  void onOnceBeforeDraw() override {
     this->setBGColor(0xFF000000);
     this->makePaints();
     this->makeMatrices();
   }
 
- protected:
   SkString onShortName() override { return SkString("circles"); }
 
   SkISize onISize() override { return SkISize::Make(1200, 900); }

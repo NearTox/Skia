@@ -18,9 +18,10 @@ bool TextPropertyValue::operator==(const TextPropertyValue& other) const {
   return fTypeface == other.fTypeface && fText == other.fText && fTextSize == other.fTextSize &&
          fStrokeWidth == other.fStrokeWidth && fLineHeight == other.fLineHeight &&
          fLineShift == other.fLineShift && fAscent == other.fAscent && fHAlign == other.fHAlign &&
-         fVAlign == other.fVAlign && fResize == other.fResize && fBox == other.fBox &&
-         fFillColor == other.fFillColor && fStrokeColor == other.fStrokeColor &&
-         fHasFill == other.fHasFill && fHasStroke == other.fHasStroke;
+         fVAlign == other.fVAlign && fResize == other.fResize && fLineBreak == other.fLineBreak &&
+         fBox == other.fBox && fFillColor == other.fFillColor &&
+         fStrokeColor == other.fStrokeColor && fHasFill == other.fHasFill &&
+         fHasStroke == other.fHasStroke;
 }
 
 bool TextPropertyValue::operator!=(const TextPropertyValue& other) const {

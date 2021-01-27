@@ -98,7 +98,7 @@ bool pf_less(const PixelFormat& a, const PixelFormat& b) {
   } else if (a.fChoosePixelFormatRank < b.fChoosePixelFormatRank) {
     return true;
   }
-  return false;
+    return false;
 }
 }
 

@@ -109,7 +109,7 @@ half v = 1.0;
         }
         break;
 }
-%s = half4(half(t), v, 0.0, 0.0);
+return half4(half(t), v, 0.0, 0.0);
 )SkSL",
         (int)_outer.type, args.fUniformHandler->getUniformCStr(focalParamsVar), args.fSampleCoord,
         args.fSampleCoord, args.fSampleCoord, args.fUniformHandler->getUniformCStr(focalParamsVar),
@@ -123,7 +123,7 @@ half v = 1.0;
         (_outer.isRadiusIncreasing ? "true" : "false"), args.fSampleCoord, args.fSampleCoord,
         (_outer.isWellBehaved ? "true" : "false"), (_outer.isRadiusIncreasing ? "true" : "false"),
         (_outer.isNativelyFocal ? "true" : "false"), (_outer.isNativelyFocal ? "true" : "false"),
-        (_outer.isSwapped ? "true" : "false"), args.fOutputColor);
+        (_outer.isSwapped ? "true" : "false"));
   }
 
  private:
@@ -164,7 +164,7 @@ bool GrTwoPointConicalGradientLayout::onIsEqual(const GrFragmentProcessor& other
   if (focalParams != that.focalParams) return false;
   return true;
 }
-bool GrTwoPointConicalGradientLayout::usesExplicitReturn() const { return false; }
+bool GrTwoPointConicalGradientLayout::usesExplicitReturn() const { return true; }
 GrTwoPointConicalGradientLayout::GrTwoPointConicalGradientLayout(
     const GrTwoPointConicalGradientLayout& src)
     : INHERITED(kGrTwoPointConicalGradientLayout_ClassID, src.optimizationFlags()),

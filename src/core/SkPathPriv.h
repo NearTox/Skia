@@ -10,7 +10,6 @@
 
 #include "include/core/SkPathBuilder.h"
 #include "include/private/SkIDChangeListener.h"
-#include "src/core/SkPathView.h"
 
 static_assert(0 == static_cast<int>(SkPathFillType::kWinding), "fill_type_mismatch");
 static_assert(1 == static_cast<int>(SkPathFillType::kEvenOdd), "fill_type_mismatch");
@@ -25,7 +24,8 @@ class SkPathPriv {
   static const int kPathRefGenIDBitCnt = 32;
 #endif
 
-  static constexpr SkScalar kW0PlaneDistance = 0.05f;
+  // skbug.com/9906: Not a perfect solution for W plane clipping, but 1/1024 is a reasonable limit
+  static constexpr SkScalar kW0PlaneDistance = 1.f / 1024.f;
 
   static SkPathFirstDirection AsFirstDirection(SkPathDirection dir) {
     // since we agree numerically for the values in Direction, we can just cast.
@@ -104,6 +104,8 @@ class SkPathPriv {
    */
   static bool DrawArcIsConvex(SkScalar sweepAngle, bool useCenter, bool isFillNoPathEffect);
 
+  static void ShrinkToFit(SkPath* path) { path->shrinkToFit(); }
+
   /**
    * Returns a C++11-iterable object that traverses a path's verbs in order. e.g:
    *
@@ -152,12 +154,6 @@ class SkPathPriv {
               // Don't allow iteration through non-finite points.
               (!path.isFinite()) ? path.fPathRef->verbsBegin() : path.fPathRef->verbsEnd(),
               path.fPathRef->points(), path.fPathRef->conicWeights()) {}
-    Iterate(const SkPathView& path)
-        : Iterate(
-              path.fVerbs.begin(),
-              // Don't allow iteration through non-finite points.
-              (!path.isFinite()) ? path.fVerbs.begin() : path.fVerbs.end(), path.fPoints.begin(),
-              path.fWeights.begin()) {}
     Iterate(
         const uint8_t* verbsBegin, const uint8_t* verbsEnd, const SkPoint* points,
         const SkScalar* weights)
@@ -326,7 +322,7 @@ class SkPathPriv {
   }
 
   static bool IsRectContour(
-      const SkPathView&, bool allowPartial, int* currVerb, const SkPoint** ptsPtr, bool* isClosed,
+      const SkPath&, bool allowPartial, int* currVerb, const SkPoint** ptsPtr, bool* isClosed,
       SkPathDirection* direction, SkRect* rect);
 
   /** Returns true if SkPath is equivalent to nested SkRect pair when filled.
@@ -340,13 +336,7 @@ class SkPathPriv {
    @param dirs  storage for SkPathDirection pair; may be nullptr
    @return      true if SkPath contains nested SkRect pair
    */
-  static bool IsNestedFillRects(
-      const SkPathView&, SkRect rect[2], SkPathDirection dirs[2] = nullptr);
-
-  static bool IsNestedFillRects(
-      const SkPath& path, SkRect rect[2], SkPathDirection dirs[2] = nullptr) {
-    return IsNestedFillRects(path.view(), rect, dirs);
-  }
+  static bool IsNestedFillRects(const SkPath&, SkRect rect[2], SkPathDirection dirs[2] = nullptr);
 
   static bool IsInverseFillType(SkPathFillType fill) { return (static_cast<int>(fill) & 2) != 0; }
 
@@ -422,8 +412,7 @@ class SkPathEdgeIter {
   enum { kIllegalEdgeValue = 99 };
 
  public:
-  SkPathEdgeIter(const SkPath&);
-  SkPathEdgeIter(const SkPathView&);
+  SkPathEdgeIter(const SkPath& path);
 
   SkScalar conicWeight() const {
     SkASSERT(fIsConic);

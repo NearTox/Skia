@@ -56,49 +56,49 @@ std::tuple<sk_sp<SkImage>, SkIRect> make_ringed_image(int width, int height) {
   for (int x = 1; x < width - 1; ++x) {
     scanline[x] = kInnerRingColor;
   }
-  scanline[width - 1] = kOuterRingColor;
-
-  for (int y = 2; y < height / 2; ++y) {
-    scanline = bitmap.getAddr32(0, y);
-    scanline[0] = kOuterRingColor;
-    scanline[1] = kInnerRingColor;
-    for (int x = 2; x < width / 2; ++x) {
-      scanline[x] = kCheckColor1;
-    }
-    for (int x = width / 2; x < width - 2; ++x) {
-      scanline[x] = kCheckColor2;
-    }
-    scanline[width - 2] = kInnerRingColor;
     scanline[width - 1] = kOuterRingColor;
-  }
 
-  for (int y = height / 2; y < height - 2; ++y) {
-    scanline = bitmap.getAddr32(0, y);
+    for (int y = 2; y < height / 2; ++y) {
+      scanline = bitmap.getAddr32(0, y);
+      scanline[0] = kOuterRingColor;
+      scanline[1] = kInnerRingColor;
+      for (int x = 2; x < width / 2; ++x) {
+        scanline[x] = kCheckColor1;
+      }
+      for (int x = width / 2; x < width - 2; ++x) {
+        scanline[x] = kCheckColor2;
+      }
+      scanline[width - 2] = kInnerRingColor;
+      scanline[width - 1] = kOuterRingColor;
+    }
+
+    for (int y = height / 2; y < height - 2; ++y) {
+      scanline = bitmap.getAddr32(0, y);
+      scanline[0] = kOuterRingColor;
+      scanline[1] = kInnerRingColor;
+      for (int x = 2; x < width / 2; ++x) {
+        scanline[x] = kCheckColor2;
+      }
+      for (int x = width / 2; x < width - 2; ++x) {
+        scanline[x] = kCheckColor1;
+      }
+      scanline[width - 2] = kInnerRingColor;
+      scanline[width - 1] = kOuterRingColor;
+    }
+
+    scanline = bitmap.getAddr32(0, height - 2);
     scanline[0] = kOuterRingColor;
-    scanline[1] = kInnerRingColor;
-    for (int x = 2; x < width / 2; ++x) {
-      scanline[x] = kCheckColor2;
+    for (int x = 1; x < width - 1; ++x) {
+      scanline[x] = kInnerRingColor;
     }
-    for (int x = width / 2; x < width - 2; ++x) {
-      scanline[x] = kCheckColor1;
-    }
-    scanline[width - 2] = kInnerRingColor;
     scanline[width - 1] = kOuterRingColor;
-  }
 
-  scanline = bitmap.getAddr32(0, height - 2);
-  scanline[0] = kOuterRingColor;
-  for (int x = 1; x < width - 1; ++x) {
-    scanline[x] = kInnerRingColor;
-  }
-  scanline[width - 1] = kOuterRingColor;
-
-  scanline = bitmap.getAddr32(0, height - 1);
-  for (int x = 0; x < width; ++x) {
-    scanline[x] = kOuterRingColor;
-  }
-  bitmap.setImmutable();
-  return {SkImage::MakeFromBitmap(bitmap), {2, 2, width - 2, height - 2}};
+    scanline = bitmap.getAddr32(0, height - 1);
+    for (int x = 0; x < width; ++x) {
+      scanline[x] = kOuterRingColor;
+    }
+    bitmap.setImmutable();
+    return {SkImage::MakeFromBitmap(bitmap), {2, 2, width - 2, height - 2}};
 }
 
 /**

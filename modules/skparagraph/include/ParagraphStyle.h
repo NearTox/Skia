@@ -91,7 +91,6 @@ struct ParagraphStyle {
   SkString getEllipsis() const { return fEllipsis; }
   std::u16string getEllipsisUtf16() const { return fEllipsisUtf16; }
   void setEllipsis(const std::u16string& ellipsis) { fEllipsisUtf16 = ellipsis; }
-  void setEllipsis(const std::u16string_view& ellipsis) { fEllipsisUtf16 = ellipsis; }
   void setEllipsis(const SkString& ellipsis) { fEllipsis = ellipsis; }
 
   SkScalar getHeight() const { return fHeight; }

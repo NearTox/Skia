@@ -14,7 +14,7 @@
 
 class SkTypefaceCache {
  public:
-  SkTypefaceCache() noexcept;
+  SkTypefaceCache();
 
   /**
    * Callback for FindByProc. Returns true if the given typeface is a match
@@ -48,7 +48,7 @@ class SkTypefaceCache {
    *  Helper: returns a unique fontID to pass to the constructor of
    *  your subclass of SkTypeface
    */
-  static SkFontID NewFontID() noexcept;
+  static SkFontID NewFontID();
 
   // These are static wrappers around a global instance of a cache.
 
@@ -62,7 +62,7 @@ class SkTypefaceCache {
   static void Dump();
 
  private:
-  static SkTypefaceCache& Get() noexcept;
+  static SkTypefaceCache& Get();
 
   void purge(int count);
 

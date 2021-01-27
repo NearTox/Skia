@@ -42,7 +42,7 @@ class SK_API SkFlattenable : public SkRefCnt {
 
   typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
 
-  SkFlattenable() {}
+  constexpr SkFlattenable() noexcept = default;
 
   /** Implement this to return a factory function pointer that can be called
    to recreate your class given a buffer (previously written to by your
@@ -53,7 +53,7 @@ class SK_API SkFlattenable : public SkRefCnt {
   /**
    *  Returns the name of the object's class.
    */
-  virtual const char* getTypeName() const = 0;
+  virtual const char* getTypeName() const noexcept = 0;
 
   static Factory NameToFactory(const char name[]);
   static const char* FactoryToName(Factory);
@@ -111,7 +111,7 @@ class SK_API SkFlattenable : public SkRefCnt {
     static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);           \
     friend class SkFlattenable::PrivateInitializer;                  \
     Factory getFactory() const override { return type::CreateProc; } \
-    const char* getTypeName() const override { return #type; }
+    const char* getTypeName() const noexcept override { return #type; }
 #endif
 
 #endif

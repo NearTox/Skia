@@ -117,7 +117,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
       GrSurfaceProxyView view, SkAlphaType alphaType, sk_sp<GrColorSpaceXform> colorSpaceXForm,
       GrSamplerState::Filter filter, std::unique_ptr<SkLatticeIter> iter, const SkRect& dst) {
@@ -128,11 +128,11 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   }
 
   NonAALatticeOp(
-      Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkMatrix& viewMatrix,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, const SkMatrix& viewMatrix,
       GrSurfaceProxyView view, SkAlphaType alphaType, sk_sp<GrColorSpaceXform> colorSpaceXform,
       GrSamplerState::Filter filter, std::unique_ptr<SkLatticeIter> iter, const SkRect& dst)
       : INHERITED(ClassID()),
-        fHelper(helperArgs, GrAAType::kNone),
+        fHelper(processorSet, GrAAType::kNone),
         fView(std::move(view)),
         fAlphaType(alphaType),
         fColorSpaceXform(std::move(colorSpaceXform)),
@@ -284,8 +284,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     flushState->drawMesh(*fMesh);
   }
 
-  CombineResult onCombineIfPossible(
-      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) override {
     NonAALatticeOp* that = t->cast<NonAALatticeOp>();
     if (fView != that->fView) {
       return CombineResult::kCannotCombine;
@@ -345,7 +344,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
 }  // anonymous namespace
 
 namespace GrLatticeOp {
-std::unique_ptr<GrDrawOp> MakeNonAA(
+GrOp::Owner MakeNonAA(
     GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
     GrSurfaceProxyView view, SkAlphaType alphaType, sk_sp<GrColorSpaceXform> colorSpaceXform,
     GrSamplerState::Filter filter, std::unique_ptr<SkLatticeIter> iter, const SkRect& dst) {

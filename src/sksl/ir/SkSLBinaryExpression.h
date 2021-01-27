@@ -22,17 +22,17 @@ namespace SkSL {
 static inline bool check_ref(const Expression& expr) {
   switch (expr.kind()) {
     case Expression::Kind::kExternalValue: return true;
-    case Expression::Kind::kFieldAccess: return check_ref(*expr.as<FieldAccess>().fBase);
-    case Expression::Kind::kIndex: return check_ref(*expr.as<IndexExpression>().fBase);
-    case Expression::Kind::kSwizzle: return check_ref(*expr.as<Swizzle>().fBase);
+    case Expression::Kind::kFieldAccess: return check_ref(*expr.as<FieldAccess>().base());
+    case Expression::Kind::kIndex: return check_ref(*expr.as<IndexExpression>().base());
+    case Expression::Kind::kSwizzle: return check_ref(*expr.as<Swizzle>().base());
     case Expression::Kind::kTernary: {
       const TernaryExpression& t = expr.as<TernaryExpression>();
-      return check_ref(*t.fIfTrue) && check_ref(*t.fIfFalse);
+      return check_ref(*t.ifTrue()) && check_ref(*t.ifFalse());
     }
     case Expression::Kind::kVariableReference: {
       const VariableReference& ref = expr.as<VariableReference>();
-      return ref.fRefKind == VariableReference::kWrite_RefKind ||
-             ref.fRefKind == VariableReference::kReadWrite_RefKind;
+      return ref.refKind() == VariableReference::RefKind::kWrite ||
+             ref.refKind() == VariableReference::RefKind::kReadWrite;
     }
     default: return false;
   }
@@ -41,61 +41,63 @@ static inline bool check_ref(const Expression& expr) {
 /**
  * A binary operation.
  */
-struct BinaryExpression : public Expression {
+class BinaryExpression final : public Expression {
+ public:
   static constexpr Kind kExpressionKind = Kind::kBinary;
 
   BinaryExpression(
       int offset, std::unique_ptr<Expression> left, Token::Kind op,
       std::unique_ptr<Expression> right, const Type* type)
-      : INHERITED(offset, kExpressionKind, {type, op}) {
-    fExpressionChildren.reserve(2);
-    fExpressionChildren.push_back(std::move(left));
-    fExpressionChildren.push_back(std::move(right));
+      : INHERITED(offset, kExpressionKind, type),
+        fLeft(std::move(left)),
+        fOperator(op),
+        fRight(std::move(right)) {
     // If we are assigning to a VariableReference, ensure that it is set to Write or ReadWrite
-    SkASSERT(!Compiler::IsAssignment(op) || check_ref(this->left()));
+    SkASSERT(!Compiler::IsAssignment(op) || check_ref(*this->left()));
   }
 
-  Expression& left() const { return this->expressionChild(0); }
+  std::unique_ptr<Expression>& left() { return fLeft; }
 
-  std::unique_ptr<Expression>& leftPointer() { return this->expressionPointer(0); }
+  const std::unique_ptr<Expression>& left() const { return fLeft; }
 
-  const std::unique_ptr<Expression>& leftPointer() const { return this->expressionPointer(0); }
+  std::unique_ptr<Expression>& right() { return fRight; }
 
-  Expression& right() const { return this->expressionChild(1); }
+  const std::unique_ptr<Expression>& right() const { return fRight; }
 
-  std::unique_ptr<Expression>& rightPointer() { return this->expressionPointer(1); }
-
-  const std::unique_ptr<Expression>& rightPointer() const { return this->expressionPointer(1); }
-
-  Token::Kind getOperator() const { return this->typeTokenData().fToken; }
+  Token::Kind getOperator() const { return fOperator; }
 
   bool isConstantOrUniform() const override {
-    return this->left().isConstantOrUniform() && this->right().isConstantOrUniform();
+    return this->left()->isConstantOrUniform() && this->right()->isConstantOrUniform();
   }
 
   std::unique_ptr<Expression> constantPropagate(
       const IRGenerator& irGenerator, const DefinitionMap& definitions) override {
-    return irGenerator.constantFold(this->left(), this->getOperator(), this->right());
+    return irGenerator.constantFold(*this->left(), this->getOperator(), *this->right());
   }
 
   bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects && Compiler::IsAssignment(this->getOperator())) {
       return true;
     }
-    return this->left().hasProperty(property) || this->right().hasProperty(property);
+    return this->left()->hasProperty(property) || this->right()->hasProperty(property);
   }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(new BinaryExpression(
-        fOffset, this->left().clone(), this->getOperator(), this->right().clone(), &this->type()));
+        fOffset, this->left()->clone(), this->getOperator(), this->right()->clone(),
+        &this->type()));
   }
 
   String description() const override {
-    return "(" + this->left().description() + " " + Compiler::OperatorName(this->getOperator()) +
-           " " + this->right().description() + ")";
+    return "(" + this->left()->description() + " " + Compiler::OperatorName(this->getOperator()) +
+           " " + this->right()->description() + ")";
   }
 
  private:
+  std::unique_ptr<Expression> fLeft;
+  Token::Kind fOperator;
+  std::unique_ptr<Expression> fRight;
+
   using INHERITED = Expression;
 };
 

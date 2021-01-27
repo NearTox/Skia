@@ -11,6 +11,7 @@
 #include "include/core/SkPoint3.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkColorData.h"
+#include "include/private/SkTPin.h"
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkSpecialImage.h"
@@ -1623,20 +1624,21 @@ void GrGLLightingEffect::emitCode(EmitArgs& args) {
       GrShaderVar("e", kHalf_GrSLType),     GrShaderVar("f", kHalf_GrSLType),
       GrShaderVar("scale", kHalf_GrSLType),
   };
-  SkString sobelFuncName;
 
+  SkString sobelFuncName = fragBuilder->getMangledFunctionName("sobel");
   fragBuilder->emitFunction(
-      kHalf_GrSLType, "sobel", SK_ARRAY_COUNT(gSobelArgs), gSobelArgs,
-      "\treturn (-a + b - 2.0 * c + 2.0 * d -e + f) * scale;\n", &sobelFuncName);
+      kHalf_GrSLType, sobelFuncName.c_str(), {gSobelArgs, SK_ARRAY_COUNT(gSobelArgs)},
+      "\treturn (-a + b - 2.0 * c + 2.0 * d -e + f) * scale;\n");
   const GrShaderVar gPointToNormalArgs[] = {
       GrShaderVar("x", kHalf_GrSLType),
       GrShaderVar("y", kHalf_GrSLType),
       GrShaderVar("scale", kHalf_GrSLType),
   };
-  SkString pointToNormalName;
+  SkString pointToNormalName = fragBuilder->getMangledFunctionName("pointToNormal");
   fragBuilder->emitFunction(
-      kHalf3_GrSLType, "pointToNormal", SK_ARRAY_COUNT(gPointToNormalArgs), gPointToNormalArgs,
-      "\treturn normalize(half3(-x * scale, -y * scale, 1));\n", &pointToNormalName);
+      kHalf3_GrSLType, pointToNormalName.c_str(),
+      {gPointToNormalArgs, SK_ARRAY_COUNT(gPointToNormalArgs)},
+      "\treturn normalize(half3(-x * scale, -y * scale, 1));\n");
 
   const GrShaderVar gInteriorNormalArgs[] = {
       GrShaderVar("m", kHalf_GrSLType, 9),
@@ -1644,10 +1646,10 @@ void GrGLLightingEffect::emitCode(EmitArgs& args) {
   };
   SkString normalBody =
       emitNormalFunc(le.boundaryMode(), pointToNormalName.c_str(), sobelFuncName.c_str());
-  SkString normalName;
+  SkString normalName = fragBuilder->getMangledFunctionName("normal");
   fragBuilder->emitFunction(
-      kHalf3_GrSLType, "normal", SK_ARRAY_COUNT(gInteriorNormalArgs), gInteriorNormalArgs,
-      normalBody.c_str(), &normalName);
+      kHalf3_GrSLType, normalName.c_str(),
+      {gInteriorNormalArgs, SK_ARRAY_COUNT(gInteriorNormalArgs)}, normalBody.c_str());
 
   fragBuilder->codeAppendf("\t\tfloat2 coord = %s;\n", args.fSampleCoord);
   fragBuilder->codeAppend("\t\thalf m[9];\n");
@@ -1710,9 +1712,10 @@ void GrGLDiffuseLightingEffect::emitLightFunc(
   SkString lightBody;
   lightBody.appendf("\thalf colorScale = %s * dot(normal, surfaceToLight);\n", kd);
   lightBody.appendf("\treturn half4(lightColor * saturate(colorScale), 1.0);\n");
+  *funcName = fragBuilder->getMangledFunctionName("light");
   fragBuilder->emitFunction(
-      kHalf4_GrSLType, "light", SK_ARRAY_COUNT(gLightArgs), gLightArgs, lightBody.c_str(),
-      funcName);
+      kHalf4_GrSLType, funcName->c_str(), {gLightArgs, SK_ARRAY_COUNT(gLightArgs)},
+      lightBody.c_str());
 }
 
 void GrGLDiffuseLightingEffect::onSetData(
@@ -1799,9 +1802,10 @@ void GrGLSpecularLightingEffect::emitLightFunc(
       "\thalf colorScale = half(%s * pow(dot(normal, halfDir), %s));\n", ks, shininess);
   lightBody.appendf("\thalf3 color = lightColor * saturate(colorScale);\n");
   lightBody.appendf("\treturn half4(color, max(max(color.r, color.g), color.b));\n");
+  *funcName = fragBuilder->getMangledFunctionName("light");
   fragBuilder->emitFunction(
-      kHalf4_GrSLType, "light", SK_ARRAY_COUNT(gLightArgs), gLightArgs, lightBody.c_str(),
-      funcName);
+      kHalf4_GrSLType, funcName->c_str(), {gLightArgs, SK_ARRAY_COUNT(gLightArgs)},
+      lightBody.c_str());
 }
 
 void GrGLSpecularLightingEffect::onSetData(
@@ -1926,9 +1930,10 @@ void GrGLSpotLight::emitLightColor(
       "\t\treturn %s * scale * (cosAngle - %s) * %s;\n", color, cosOuter, coneScale);
   lightColorBody.appendf("\t}\n");
   lightColorBody.appendf("\treturn %s;\n", color);
+  fLightColorFunc = fragBuilder->getMangledFunctionName("lightColor");
   fragBuilder->emitFunction(
-      kHalf3_GrSLType, "lightColor", SK_ARRAY_COUNT(gLightColorArgs), gLightColorArgs,
-      lightColorBody.c_str(), &fLightColorFunc);
+      kHalf3_GrSLType, fLightColorFunc.c_str(), {gLightColorArgs, SK_ARRAY_COUNT(gLightColorArgs)},
+      lightColorBody.c_str());
 
   fragBuilder->codeAppendf("%s(%s)", fLightColorFunc.c_str(), surfaceToLight);
 }

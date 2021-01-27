@@ -137,12 +137,12 @@ class SkArenaAlloc {
   }
 
  private:
-  static void AssertRelease(bool cond) {
+  static void AssertRelease(bool cond) noexcept {
     if (!cond) {
       ::abort();
     }
   }
-  static uint32_t ToU32(size_t v) {
+  static uint32_t ToU32(size_t v) noexcept {
     assert(SkTFitsIn<uint32_t>(v));
     return (uint32_t)v;
   }

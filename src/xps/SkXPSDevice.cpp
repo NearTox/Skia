@@ -1712,15 +1712,13 @@ void SkXPSDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
   }
 }
 
-void SkXPSDevice::drawDevice(SkBaseDevice* dev, int x, int y, const SkPaint&) {
+void SkXPSDevice::drawDevice(SkBaseDevice* dev, const SkPaint&) {
   SkXPSDevice* that = static_cast<SkXPSDevice*>(dev);
   SkASSERT(that->fTopTypefaces == this->fTopTypefaces);
 
   SkTScopedComPtr<IXpsOMMatrixTransform> xpsTransform;
-  // TODO(halcanary): assert that current transform is identity rather than calling setter.
-  XPS_MATRIX rawTransform = {1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f};
   HRVM(
-      this->fXpsFactory->CreateMatrixTransform(&rawTransform, &xpsTransform),
+      this->createXpsTransform(dev->getRelativeTransform(*this), &xpsTransform),
       "Could not create layer transform.");
   HRVM(
       that->fCurrentXpsCanvas->SetTransformLocal(xpsTransform.get()),

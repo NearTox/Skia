@@ -24,7 +24,7 @@ static bool nearly_equal(const float a[], const float b[], int count) {
 
 void test(
     skiatest::Reporter* r, const char* src, float* in, float* expected, bool exactCompare = true) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   std::unique_ptr<SkSL::Program> program =
       compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
@@ -68,7 +68,7 @@ void test(
 }
 
 void vec_test(skiatest::Reporter* r, const char* src) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   std::unique_ptr<SkSL::Program> program =
       compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
@@ -77,60 +77,60 @@ void vec_test(skiatest::Reporter* r, const char* src) {
     return;
   }
 
-  std::unique_ptr<SkSL::ByteCode> byteCode = compiler.toByteCode(*program);
-  if (compiler.errorCount() > 0) {
-    REPORT_FAILURE(r, "!toByteCode", SkString(compiler.errorText().c_str()));
-    return;
-  }
-
-  const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
-
-  // Test on four different vectors (with varying orderings to get divergent control flow)
-  const float input[16] = {1, 2, 3, 4, 4, 3, 2, 1, 7, 5, 8, 6, 6, 8, 5, 7};
-
-  float out_s[16], out_v[16];
-  memcpy(out_s, input, sizeof(out_s));
-  memcpy(out_v, input, sizeof(out_v));
-
-  // First run in scalar mode to determine the expected output
-  for (int i = 0; i < 4; ++i) {
-    SkAssertResult(byteCode->run(main, out_s + i * 4, 4, nullptr, 0, nullptr, 0));
-  }
-
-  // Need to transpose input vectors for striped execution
-  auto transpose = [](float* v) {
-    for (int r = 0; r < 4; ++r)
-      for (int c = 0; c < r; ++c) std::swap(v[r * 4 + c], v[c * 4 + r]);
-  };
-
-  // Need to transpose input vectors for striped execution
-  transpose(out_v);
-  float* args[] = {out_v, out_v + 4, out_v + 8, out_v + 12};
-
-  // Now run in parallel and compare results
-  SkAssertResult(byteCode->runStriped(main, 4, args, 4, nullptr, 0, nullptr, 0));
-
-  // Transpose striped outputs back
-  transpose(out_v);
-
-  if (0 != memcmp(out_s, out_v, sizeof(out_s))) {
-    printf("for program: %s\n", src);
-    for (int i = 0; i < 4; ++i) {
-      printf(
-          "(%g %g %g %g) -> (%g %g %g %g), expected (%g %g %g %g)\n", input[4 * i + 0],
-          input[4 * i + 1], input[4 * i + 2], input[4 * i + 3], out_v[4 * i + 0], out_v[4 * i + 1],
-          out_v[4 * i + 2], out_v[4 * i + 3], out_s[4 * i + 0], out_s[4 * i + 1], out_s[4 * i + 2],
-          out_s[4 * i + 3]);
+    std::unique_ptr<SkSL::ByteCode> byteCode = compiler.toByteCode(*program);
+    if (compiler.errorCount() > 0) {
+      REPORT_FAILURE(r, "!toByteCode", SkString(compiler.errorText().c_str()));
+      return;
     }
-    main->disassemble();
-    REPORT_FAILURE(r, "VecInterpreter mismatch", SkString());
-  }
+
+    const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
+
+    // Test on four different vectors (with varying orderings to get divergent control flow)
+    const float input[16] = {1, 2, 3, 4, 4, 3, 2, 1, 7, 5, 8, 6, 6, 8, 5, 7};
+
+    float out_s[16], out_v[16];
+    memcpy(out_s, input, sizeof(out_s));
+    memcpy(out_v, input, sizeof(out_v));
+
+    // First run in scalar mode to determine the expected output
+    for (int i = 0; i < 4; ++i) {
+      SkAssertResult(byteCode->run(main, out_s + i * 4, 4, nullptr, 0, nullptr, 0));
+    }
+
+    // Need to transpose input vectors for striped execution
+    auto transpose = [](float* v) {
+      for (int r = 0; r < 4; ++r)
+        for (int c = 0; c < r; ++c) std::swap(v[r * 4 + c], v[c * 4 + r]);
+    };
+
+    // Need to transpose input vectors for striped execution
+    transpose(out_v);
+    float* args[] = {out_v, out_v + 4, out_v + 8, out_v + 12};
+
+    // Now run in parallel and compare results
+    SkAssertResult(byteCode->runStriped(main, 4, args, 4, nullptr, 0, nullptr, 0));
+
+    // Transpose striped outputs back
+    transpose(out_v);
+
+    if (0 != memcmp(out_s, out_v, sizeof(out_s))) {
+      printf("for program: %s\n", src);
+      for (int i = 0; i < 4; ++i) {
+        printf(
+            "(%g %g %g %g) -> (%g %g %g %g), expected (%g %g %g %g)\n", input[4 * i + 0],
+            input[4 * i + 1], input[4 * i + 2], input[4 * i + 3], out_v[4 * i + 0],
+            out_v[4 * i + 1], out_v[4 * i + 2], out_v[4 * i + 3], out_s[4 * i + 0],
+            out_s[4 * i + 1], out_s[4 * i + 2], out_s[4 * i + 3]);
+      }
+      main->disassemble();
+      REPORT_FAILURE(r, "VecInterpreter mismatch", SkString());
+    }
 }
 
 void test(
     skiatest::Reporter* r, const char* src, float inR, float inG, float inB, float inA,
     float expectedR, float expectedG, float expectedB, float expectedA) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   std::unique_ptr<SkSL::Program> program =
       compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
@@ -748,7 +748,7 @@ DEF_TEST(SkSLInterpreterCompound, r) {
       "  }\n"
       "}\n";
 
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   settings.fRemoveDeadFunctions = false;
   std::unique_ptr<SkSL::Program> program =
@@ -825,7 +825,7 @@ DEF_TEST(SkSLInterpreterCompound, r) {
 }
 
 static void expect_failure(skiatest::Reporter* r, const char* src) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   auto program = compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
   REPORTER_ASSERT(r, program);
@@ -836,7 +836,7 @@ static void expect_failure(skiatest::Reporter* r, const char* src) {
 }
 
 static void expect_run_failure(skiatest::Reporter* r, const char* src, float* in) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   auto program = compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
   REPORTER_ASSERT(r, program);
@@ -856,9 +856,41 @@ DEF_TEST(SkSLInterpreterRestrictFunctionCalls, r) {
   // Ensure that calls to undefined functions are not allowed (to prevent mutual recursion)
   expect_failure(r, "float foo(); float bar() { return foo(); } float foo() { return bar(); }");
 
-  // returns are not allowed inside conditionals (or loops, which are effectively the same thing)
-  expect_failure(r, "float main(float x, float y) { if (x < y) { return x; } return y; }");
+  // returns are not allowed inside loops
   expect_failure(r, "float main(float x) { while (x > 1) { return x; } return 0; }");
+}
+
+DEF_TEST(SkSLInterpreterEarlyReturn, r) {
+  // Unlike returns in loops, returns in conditionals should work.
+  const char* src = "float main(float x, float y) { if (x < y) { return x; } return y; }";
+
+  SkSL::Compiler compiler(/*caps=*/nullptr);
+  std::unique_ptr<SkSL::Program> program = compiler.convertProgram(
+      SkSL::Program::kGeneric_Kind, SkSL::String(src), SkSL::Program::Settings{});
+  REPORTER_ASSERT(r, program);
+
+  std::unique_ptr<SkSL::ByteCode> byteCode = compiler.toByteCode(*program);
+  REPORTER_ASSERT(r, byteCode);
+
+  // Our function should work fine via run().
+  const SkSL::ByteCodeFunction* fun = byteCode->getFunction("main");
+  float in[] = {1.0f, 2.0f};
+  float ret;
+  REPORTER_ASSERT(r, byteCode->run(fun, in, 2, &ret, 1, nullptr, 0));
+  REPORTER_ASSERT(r, ret == 1.0f);
+
+  in[0] = 3.0f;
+  REPORTER_ASSERT(r, byteCode->run(fun, in, 2, &ret, 1, nullptr, 0));
+  REPORTER_ASSERT(r, ret == 2.0f);
+
+  // Now same again via runStriped(), won't quite work yet.
+  float xs[] = {1.0f, 3.0f}, ys[] = {2.0f, 2.0f};
+  float rets[2];
+  float* ins[] = {xs, ys};
+  float* outs[] = {rets + 0, rets + 1};
+  REPORTER_ASSERT(r, byteCode->runStriped(fun, 2, ins, 2, outs, 1, nullptr, 0));
+  REPORTER_ASSERT(r, rets[0] == 1.0f);
+  // REPORTER_ASSERT(r, rets[1] == 2.0f);  // TODO: skia:10852, make striped early returns work.
 }
 
 DEF_TEST(SkSLInterpreterArrayBounds, r) {
@@ -888,7 +920,7 @@ DEF_TEST(SkSLInterpreterFunctions, r) {
       "float dot3_test(float x) { return dot(float3(x, x + 1, x + 2), float3(1, -1, 2)); }\n"
       "float dot2_test(float x) { return dot(float2(x, x + 1), float2(1, -1)); }\n";
 
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   settings.fRemoveDeadFunctions = false;
   std::unique_ptr<SkSL::Program> program =
@@ -1131,7 +1163,7 @@ class PointerExternalValue : public SkSL::ExternalValue {
 DEF_TEST(SkSLInterpreterExternalValues, r) {
   const char* json = "{ \"value1\": 12, \"child\": { \"value2\": true, \"value3\": 5.5 } }";
   skjson::DOM dom(json, strlen(json));
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   const char* src =
       "float main() {"
@@ -1164,7 +1196,7 @@ DEF_TEST(SkSLInterpreterExternalValues, r) {
 }
 
 DEF_TEST(SkSLInterpreterExternalValuesVector, r) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   const char* src =
       "void main() {"
@@ -1223,7 +1255,7 @@ class FunctionExternalValue : public SkSL::ExternalValue {
 };
 
 DEF_TEST(SkSLInterpreterExternalValuesCall, r) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   const char* src =
       "float main() {"
@@ -1280,7 +1312,7 @@ class VectorFunctionExternalValue : public SkSL::ExternalValue {
 };
 
 DEF_TEST(SkSLInterpreterExternalValuesVectorCall, r) {
-  SkSL::Compiler compiler;
+  SkSL::Compiler compiler(/*caps=*/nullptr);
   SkSL::Program::Settings settings;
   const char* src =
       "float4 main() {"

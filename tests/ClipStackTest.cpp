@@ -31,7 +31,7 @@
 #include "src/core/SkTLList.h"
 #include "src/gpu/GrClip.h"
 #include "src/gpu/GrClipStackClip.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrReducedClip.h"
 #include "src/gpu/GrResourceCache.h"
 #include "src/gpu/GrTexture.h"
@@ -1454,10 +1454,10 @@ static void test_is_rrect_deep_rect_stack(skiatest::Reporter* reporter) {
     stack.clipRect(
         SkRect::MakeLTRB(i, j + 0.5, kTargetBounds.width(), kTargetBounds.height()), SkMatrix::I(),
         SkClipOp::kIntersect, aa);
-  }
-  SkRRect rrect;
-  bool isAA;
-  REPORTER_ASSERT(reporter, !stack.isRRect(kTargetBounds, &rrect, &isAA));
+    }
+    SkRRect rrect;
+    bool isAA;
+    REPORTER_ASSERT(reporter, !stack.isRRect(kTargetBounds, &rrect, &isAA));
 }
 
 DEF_TEST(ClipStack, reporter) {

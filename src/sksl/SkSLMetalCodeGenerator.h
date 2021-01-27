@@ -27,6 +27,7 @@
 #include "src/sksl/ir/SkSLFunctionCall.h"
 #include "src/sksl/ir/SkSLFunctionDeclaration.h"
 #include "src/sksl/ir/SkSLFunctionDefinition.h"
+#include "src/sksl/ir/SkSLFunctionPrototype.h"
 #include "src/sksl/ir/SkSLIfStatement.h"
 #include "src/sksl/ir/SkSLIndexExpression.h"
 #include "src/sksl/ir/SkSLInlineMarker.h"
@@ -42,7 +43,6 @@
 #include "src/sksl/ir/SkSLSwizzle.h"
 #include "src/sksl/ir/SkSLTernaryExpression.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
-#include "src/sksl/ir/SkSLVarDeclarationsStatement.h"
 #include "src/sksl/ir/SkSLVariableReference.h"
 #include "src/sksl/ir/SkSLWhileStatement.h"
 
@@ -166,9 +166,11 @@ class MetalCodeGenerator : public CodeGenerator {
 
   void writeFunctionStart(const FunctionDeclaration& f);
 
-  void writeFunctionDeclaration(const FunctionDeclaration& f);
+  bool writeFunctionDeclaration(const FunctionDeclaration& f);
 
   void writeFunction(const FunctionDefinition& f);
+
+  void writeFunctionPrototype(const FunctionPrototype& f);
 
   void writeLayout(const Layout& layout);
 
@@ -178,7 +180,7 @@ class MetalCodeGenerator : public CodeGenerator {
 
   void writeName(const String& name);
 
-  void writeVarDeclarations(const VarDeclarations& decl, bool global);
+  void writeVarDeclaration(const VarDeclaration& decl, bool global);
 
   void writeFragCoord();
 
@@ -197,8 +199,7 @@ class MetalCodeGenerator : public CodeGenerator {
   bool matrixConstructHelperIsNeeded(const Constructor& c);
   String getMatrixConstructHelper(const Constructor& c);
   void assembleMatrixFromMatrix(const Type& sourceMatrix, int rows, int columns);
-  void assembleMatrixFromExpressions(
-      const std::vector<std::unique_ptr<Expression>>& args, int rows, int columns);
+  void assembleMatrixFromExpressions(const ExpressionArray& args, int rows, int columns);
 
   void writeMatrixTimesEqualHelper(const Type& left, const Type& right, const Type& result);
 
@@ -234,7 +235,7 @@ class MetalCodeGenerator : public CodeGenerator {
 
   void writeStatement(const Statement& s);
 
-  void writeStatements(const std::vector<std::unique_ptr<Statement>>& statements);
+  void writeStatements(const StatementArray& statements);
 
   void writeBlock(const Block& b);
 

@@ -48,7 +48,7 @@ class Node : public SkRefCnt {
   explicit Node(uint32_t invalTraits) noexcept;
   ~Node() override;
 
-  const SkRect& bounds() const {
+  const SkRect& bounds() const noexcept {
     SkASSERT(!this->hasInval());
     return fBounds;
   }
@@ -63,7 +63,7 @@ class Node : public SkRefCnt {
 
   // Register/unregister |this| to receive invalidation events from a descendant.
   void observeInval(const sk_sp<Node>&);
-  void unobserveInval(const sk_sp<Node>&) noexcept;
+  void unobserveInval(const sk_sp<Node>&);
 
  private:
   enum Flags {
@@ -96,7 +96,7 @@ class Node : public SkRefCnt {
 
 // Helper for defining attribute getters/setters in subclasses.
 #define SG_ATTRIBUTE(attr_name, attr_type, attr_container)           \
-  const attr_type& get##attr_name() const { return attr_container; } \
+  const attr_type& get##attr_name() const noexcept { return attr_container; } \
   void set##attr_name(const attr_type& v) {                          \
     if (attr_container == v) return;                                 \
     attr_container = v;                                              \
@@ -109,7 +109,7 @@ class Node : public SkRefCnt {
   }
 
 #define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)              \
-  attr_type get##attr_name() const { return attr_container.get##attr_name(); } \
+  attr_type get##attr_name() const noexcept { return attr_container.get##attr_name(); } \
   void set##attr_name(const attr_type& v) {                                    \
     if (attr_container.get##attr_name() == v) return;                          \
     attr_container.set##attr_name(v);                                          \

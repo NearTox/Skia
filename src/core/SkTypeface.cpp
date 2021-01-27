@@ -62,6 +62,7 @@ class SkEmptyTypeface : public SkTypeface {
     bool next(SkTypeface::LocalizedString*) override { return false; }
   };
   void onGetFamilyName(SkString* familyName) const override { familyName->reset(); }
+  bool onGetPostScriptName(SkString*) const override { return false; }
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
     return new EmptyLocalizedStrings;
   }
@@ -80,7 +81,7 @@ class SkEmptyTypeface : public SkTypeface {
 
 }  // namespace
 
-SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) noexcept {
+SkFontStyle SkTypeface::FromOldStyle(Style oldStyle) {
   return SkFontStyle(
       (oldStyle & SkTypeface::kBold) ? SkFontStyle::kBold_Weight : SkFontStyle::kNormal_Weight,
       SkFontStyle::kNormal_Width,
@@ -316,6 +317,8 @@ void SkTypeface::getFamilyName(SkString* name) const {
   SkASSERT(name);
   this->onGetFamilyName(name);
 }
+
+bool SkTypeface::getPostScriptName(SkString* name) const { return this->onGetPostScriptName(name); }
 
 void SkTypeface::getGlyphToUnicodeMap(SkUnichar* dst) const {
   sk_bzero(dst, sizeof(SkUnichar) * this->countGlyphs());

@@ -11,6 +11,7 @@
 #include "include/core/SkSurface.h"
 #include "include/private/SkTArray.h"
 #include "include/private/SkTHash.h"
+#include "src/core/SkSpan.h"
 #include "src/gpu/GrBufferAllocPool.h"
 #include "src/gpu/GrDeferredUpload.h"
 #include "src/gpu/GrHashMapWithCache.h"
@@ -99,13 +100,8 @@ class GrDrawingManager {
   static bool ProgramUnitTest(GrDirectContext*, int maxStages, int maxLevels);
 
   GrSemaphoresSubmitted flushSurfaces(
-      GrSurfaceProxy* proxies[], int cnt, SkSurface::BackendSurfaceAccess access,
-      const GrFlushInfo& info, const GrBackendSurfaceMutableState* newState);
-  GrSemaphoresSubmitted flushSurface(
-      GrSurfaceProxy* proxy, SkSurface::BackendSurfaceAccess access, const GrFlushInfo& info,
-      const GrBackendSurfaceMutableState* newState) {
-    return this->flushSurfaces(&proxy, 1, access, info, newState);
-  }
+      SkSpan<GrSurfaceProxy*>, SkSurface::BackendSurfaceAccess, const GrFlushInfo&,
+      const GrBackendSurfaceMutableState* newState);
 
   void addOnFlushCallbackObject(GrOnFlushCallbackObject*);
 
@@ -128,12 +124,7 @@ class GrDrawingManager {
   // renderTasks.
   class RenderTaskDAG {
    public:
-    RenderTaskDAG(bool sortRenderTasks);
-    ~RenderTaskDAG();
-
-    // Currently, when explicitly allocating resources, this call will topologically sort the
-    // GrRenderTasks.
-    // MDB TODO: remove once incremental GrRenderTask sorting is enabled
+    // This call will topologically sort the GrRenderTasks.
     void prepForFlush();
 
     void closeAll(const GrCaps* caps);
@@ -165,16 +156,12 @@ class GrDrawingManager {
 
     void swap(SkTArray<sk_sp<GrRenderTask>>* renderTasks);
 
-    bool sortingRenderTasks() const { return fSortRenderTasks; }
-
    private:
     SkTArray<sk_sp<GrRenderTask>> fRenderTasks;
-    bool fSortRenderTasks;
   };
 
   GrDrawingManager(
-      GrRecordingContext*, const GrPathRendererChain::Options&, bool sortRenderTasks,
-      bool reduceOpsTaskSplitting);
+      GrRecordingContext*, const GrPathRendererChain::Options&, bool reduceOpsTaskSplitting);
 
   bool wasAbandoned() const;
 
@@ -190,15 +177,15 @@ class GrDrawingManager {
   void removeRenderTasks(int startIndex, int stopIndex);
 
   bool flush(
-      GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
-      const GrFlushInfo&, const GrBackendSurfaceMutableState* newState);
+      SkSpan<GrSurfaceProxy*> proxies, SkSurface::BackendSurfaceAccess access, const GrFlushInfo&,
+      const GrBackendSurfaceMutableState* newState);
 
   bool submitToGpu(bool syncToCpu);
 
   SkDEBUGCODE(void validate() const);
 
-  friend class GrContext;                  // access to: flush & cleanup
-  friend class GrContextPriv;              // access to: flush
+  friend class GrDirectContext;            // access to: flush & cleanup
+  friend class GrDirectContextPriv;        // access to: flush
   friend class GrOnFlushResourceProvider;  // this is just a shallow wrapper around this class
   friend class GrRecordingContext;         // access to: ctor
   friend class SkImage;                    // for access to: flush
@@ -225,7 +212,7 @@ class GrDrawingManager {
 
   GrTokenTracker fTokenTracker;
   bool fFlushing;
-  bool fReduceOpsTaskSplitting;
+  const bool fReduceOpsTaskSplitting;
 
   SkTArray<GrOnFlushCallbackObject*> fOnFlushCBObjects;
 

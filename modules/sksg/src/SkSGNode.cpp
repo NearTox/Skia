@@ -15,8 +15,7 @@ namespace sksg {
 
 class Node::ScopedFlag {
  public:
-  ScopedFlag(Node* node, uint32_t flag) noexcept
-      : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
+  ScopedFlag(Node* node, uint32_t flag) noexcept : fNode(node), fFlag(flag), fWasSet(node->fFlags & flag) {
     node->fFlags |= flag;
   }
   ~ScopedFlag() {
@@ -77,7 +76,7 @@ void Node::observeInval(const sk_sp<Node>& node) {
   node->fInvalObserverArray->push_back(this);
 }
 
-void Node::unobserveInval(const sk_sp<Node>& node) noexcept {
+void Node::unobserveInval(const sk_sp<Node>& node) {
   SkASSERT(node);
   if (!(node->fFlags & kObserverArray_Flag)) {
     SkASSERT(node->fInvalObserver == this);

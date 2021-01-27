@@ -28,7 +28,7 @@
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPointPriv.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
@@ -140,16 +140,14 @@ class BezierConicTestOp : public BezierTestOp {
 
   const char* name() const final { return "BezierConicTestOp"; }
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, const SkRect& rect, const SkPMColor4f& color,
       const SkMatrix& klm) {
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
-
-    return pool->allocate<BezierConicTestOp>(rect, color, klm);
+    return GrOp::Make<BezierConicTestOp>(context, rect, color, klm);
   }
 
  private:
-  friend class ::GrOpMemoryPool;  // for ctor
+  friend class ::GrOp;  // for ctor
 
   BezierConicTestOp(const SkRect& rect, const SkPMColor4f& color, const SkMatrix& klm)
       : INHERITED(rect, color, ClassID()), fKLM(klm) {}
@@ -275,7 +273,7 @@ class BezierConicEffects : public GpuGM {
 
         canvas->drawRect(bounds, boundsPaint);
 
-        std::unique_ptr<GrDrawOp> op = BezierConicTestOp::Make(context, bounds, kOpaqueBlack, klm);
+        GrOp::Owner op = BezierConicTestOp::Make(context, bounds, kOpaqueBlack, klm);
         renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
       }
     }
@@ -332,16 +330,14 @@ class BezierQuadTestOp : public BezierTestOp {
   DEFINE_OP_CLASS_ID
   const char* name() const override { return "BezierQuadTestOp"; }
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, const SkRect& rect, const SkPMColor4f& color,
       const GrPathUtils::QuadUVMatrix& devToUV) {
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
-
-    return pool->allocate<BezierQuadTestOp>(rect, color, devToUV);
+    return GrOp::Make<BezierQuadTestOp>(context, rect, color, devToUV);
   }
 
  private:
-  friend class ::GrOpMemoryPool;  // for ctor
+  friend class ::GrOp;  // for ctor
 
   BezierQuadTestOp(
       const SkRect& rect, const SkPMColor4f& color, const GrPathUtils::QuadUVMatrix& devToUV)
@@ -459,8 +455,7 @@ class BezierQuadEffects : public GpuGM {
 
         GrPathUtils::QuadUVMatrix DevToUV(pts);
 
-        std::unique_ptr<GrDrawOp> op =
-            BezierQuadTestOp::Make(context, bounds, kOpaqueBlack, DevToUV);
+        GrOp::Owner op = BezierQuadTestOp::Make(context, bounds, kOpaqueBlack, DevToUV);
         renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
       }
     }

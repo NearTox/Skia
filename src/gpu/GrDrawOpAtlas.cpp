@@ -9,7 +9,9 @@
 
 #include <memory>
 
+#include "include/private/SkTPin.h"
 #include "src/core/SkOpts.h"
+#include "src/gpu/GrBackendUtils.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProxyProvider.h"
@@ -257,8 +259,8 @@ inline bool GrDrawOpAtlas::updatePlot(
 }
 
 bool GrDrawOpAtlas::uploadToPage(
-    const GrCaps& caps, unsigned int pageIdx, GrDeferredUploadTarget* target, int width, int height,
-    const void* image, AtlasLocator* atlasLocator) {
+    unsigned int pageIdx, GrDeferredUploadTarget* target, int width, int height, const void* image,
+    AtlasLocator* atlasLocator) {
   SkASSERT(fViews[pageIdx].proxy() && fViews[pageIdx].proxy()->isInstantiated());
 
   // look through all allocated plots for one we can share, in Most Recently Refed order
@@ -266,7 +268,7 @@ bool GrDrawOpAtlas::uploadToPage(
   plotIter.init(fPages[pageIdx].fPlotList, PlotList::Iter::kHead_IterStart);
 
   for (Plot* plot = plotIter.get(); plot; plot = plotIter.next()) {
-    SkASSERT(caps.bytesPerPixel(fViews[pageIdx].proxy()->backendFormat()) == plot->bpp());
+    SkASSERT(GrBackendFormatBytesPerPixel(fViews[pageIdx].proxy()->backendFormat()) == plot->bpp());
 
     if (plot->addSubImage(width, height, image, atlasLocator)) {
       return this->updatePlot(target, atlasLocator, plot);
@@ -292,13 +294,11 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
     return ErrorCode::kError;
   }
 
-  const GrCaps& caps = *resourceProvider->caps();
-
   // Look through each page to see if we can upload without having to flush
   // We prioritize this upload to the first pages, not the most recently used, to make it easier
   // to remove unused pages in reverse page order.
   for (unsigned int pageIdx = 0; pageIdx < fNumActivePages; ++pageIdx) {
-    if (this->uploadToPage(caps, pageIdx, target, width, height, image, atlasLocator)) {
+    if (this->uploadToPage(pageIdx, target, width, height, image, atlasLocator)) {
       return ErrorCode::kSucceeded;
     }
   }
@@ -314,7 +314,8 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
       SkASSERT(plot);
       if (plot->lastUseToken() < target->tokenTracker()->nextTokenToFlush()) {
         this->processEvictionAndResetRects(plot);
-        SkASSERT(caps.bytesPerPixel(fViews[pageIdx].proxy()->backendFormat()) == plot->bpp());
+        SkASSERT(
+            GrBackendFormatBytesPerPixel(fViews[pageIdx].proxy()->backendFormat()) == plot->bpp());
         SkDEBUGCODE(bool verify =)
         plot->addSubImage(width, height, image, atlasLocator);
         SkASSERT(verify);
@@ -330,7 +331,7 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
       return ErrorCode::kError;
     }
 
-    if (this->uploadToPage(caps, fNumActivePages - 1, target, width, height, image, atlasLocator)) {
+    if (this->uploadToPage(fNumActivePages - 1, target, width, height, image, atlasLocator)) {
       return ErrorCode::kSucceeded;
     } else {
       // If we fail to upload to a newly activated page then something has gone terribly
@@ -370,7 +371,8 @@ GrDrawOpAtlas::ErrorCode GrDrawOpAtlas::addToAtlas(
   newPlot.reset(plot->clone());
 
   fPages[pageIdx].fPlotList.addToHead(newPlot.get());
-  SkASSERT(caps.bytesPerPixel(fViews[pageIdx].proxy()->backendFormat()) == newPlot->bpp());
+  SkASSERT(
+      GrBackendFormatBytesPerPixel(fViews[pageIdx].proxy()->backendFormat()) == newPlot->bpp());
   SkDEBUGCODE(bool verify =)
   newPlot->addSubImage(width, height, image, atlasLocator);
   SkASSERT(verify);

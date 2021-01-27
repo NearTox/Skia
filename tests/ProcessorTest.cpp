@@ -10,7 +10,7 @@
 #include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrClip.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrGpuResource.h"
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrMemoryPool.h"
@@ -30,11 +30,8 @@ namespace {
 class TestOp : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
-  static std::unique_ptr<GrDrawOp> Make(
-      GrRecordingContext* rContext, std::unique_ptr<GrFragmentProcessor> fp) {
-    GrOpMemoryPool* pool = rContext->priv().opMemoryPool();
-
-    return pool->allocate<TestOp>(std::move(fp));
+  static GrOp::Owner Make(GrRecordingContext* rContext, std::unique_ptr<GrFragmentProcessor> fp) {
+    return GrOp::Make<TestOp>(rContext, std::move(fp));
   }
 
   const char* name() const override { return "TestOp"; }
@@ -54,7 +51,7 @@ class TestOp : public GrMeshDrawOp {
   }
 
  private:
-  friend class ::GrOpMemoryPool;  // for ctor
+  friend class ::GrOp;  // for ctor
 
   TestOp(std::unique_ptr<GrFragmentProcessor> fp)
       : INHERITED(ClassID()), fProcessors(std::move(fp)) {
@@ -167,7 +164,7 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(ProcessorRefTest, reporter, ctxInfo) {
           if (makeClone) {
             clone = fp->clone();
           }
-          std::unique_ptr<GrDrawOp> op(TestOp::Make(context, std::move(fp)));
+          GrOp::Owner op = TestOp::Make(context, std::move(fp));
           renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
           if (clone) {
             op = TestOp::Make(context, std::move(clone));
@@ -477,48 +474,48 @@ bool legal_modulation(const GrColor in[3], const GrColor out[3]) {
       SkASSERT(inf[i].fR == 0 && inf[i].fG == 0 && inf[i].fB == 0);
       expectedForColorModulation[i] = expectedForAlphaModulation[i] = {0, 0, 0, 0};
     }
-  }
-
-  bool isLegalColorModulation = fuzzy_color_equals(outf[0], expectedForColorModulation[0]) &&
-                                fuzzy_color_equals(outf[1], expectedForColorModulation[1]) &&
-                                fuzzy_color_equals(outf[2], expectedForColorModulation[2]);
-
-  bool isLegalAlphaModulation = fuzzy_color_equals(outf[0], expectedForAlphaModulation[0]) &&
-                                fuzzy_color_equals(outf[1], expectedForAlphaModulation[1]) &&
-                                fuzzy_color_equals(outf[2], expectedForAlphaModulation[2]);
-
-  // This can be enabled to print the values that caused this check to fail.
-  if (0 && !isLegalColorModulation && !isLegalAlphaModulation) {
-    SkDebugf(
-        "Color modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
-        fpPreColorModulation[0], fpPreColorModulation[1], fpPreColorModulation[2],
-        fpPreColorModulation[3]);
-    for (int i = 0; i < 3; ++i) {
-      SkDebugf(
-          "\t(%.03f, %.03f, %.03f, %.03f) -> "
-          "(%.03f, %.03f, %.03f, %.03f) | "
-          "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
-          inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
-          outf[i].fA, expectedForColorModulation[i].fR, expectedForColorModulation[i].fG,
-          expectedForColorModulation[i].fB, expectedForColorModulation[i].fA,
-          fuzzy_color_equals(outf[i], expectedForColorModulation[i]));
     }
-    SkDebugf(
-        "Alpha modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
-        fpPreAlphaModulation[0], fpPreAlphaModulation[1], fpPreAlphaModulation[2],
-        fpPreAlphaModulation[3]);
-    for (int i = 0; i < 3; ++i) {
+
+    bool isLegalColorModulation = fuzzy_color_equals(outf[0], expectedForColorModulation[0]) &&
+                                  fuzzy_color_equals(outf[1], expectedForColorModulation[1]) &&
+                                  fuzzy_color_equals(outf[2], expectedForColorModulation[2]);
+
+    bool isLegalAlphaModulation = fuzzy_color_equals(outf[0], expectedForAlphaModulation[0]) &&
+                                  fuzzy_color_equals(outf[1], expectedForAlphaModulation[1]) &&
+                                  fuzzy_color_equals(outf[2], expectedForAlphaModulation[2]);
+
+    // This can be enabled to print the values that caused this check to fail.
+    if (0 && !isLegalColorModulation && !isLegalAlphaModulation) {
       SkDebugf(
-          "\t(%.03f, %.03f, %.03f, %.03f) -> "
-          "(%.03f, %.03f, %.03f, %.03f) | "
-          "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
-          inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
-          outf[i].fA, expectedForAlphaModulation[i].fR, expectedForAlphaModulation[i].fG,
-          expectedForAlphaModulation[i].fB, expectedForAlphaModulation[i].fA,
-          fuzzy_color_equals(outf[i], expectedForAlphaModulation[i]));
+          "Color modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
+          fpPreColorModulation[0], fpPreColorModulation[1], fpPreColorModulation[2],
+          fpPreColorModulation[3]);
+      for (int i = 0; i < 3; ++i) {
+        SkDebugf(
+            "\t(%.03f, %.03f, %.03f, %.03f) -> "
+            "(%.03f, %.03f, %.03f, %.03f) | "
+            "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
+            inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
+            outf[i].fA, expectedForColorModulation[i].fR, expectedForColorModulation[i].fG,
+            expectedForColorModulation[i].fB, expectedForColorModulation[i].fA,
+            fuzzy_color_equals(outf[i], expectedForColorModulation[i]));
+      }
+      SkDebugf(
+          "Alpha modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
+          fpPreAlphaModulation[0], fpPreAlphaModulation[1], fpPreAlphaModulation[2],
+          fpPreAlphaModulation[3]);
+      for (int i = 0; i < 3; ++i) {
+        SkDebugf(
+            "\t(%.03f, %.03f, %.03f, %.03f) -> "
+            "(%.03f, %.03f, %.03f, %.03f) | "
+            "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
+            inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
+            outf[i].fA, expectedForAlphaModulation[i].fR, expectedForAlphaModulation[i].fG,
+            expectedForAlphaModulation[i].fB, expectedForAlphaModulation[i].fA,
+            fuzzy_color_equals(outf[i], expectedForAlphaModulation[i]));
+      }
     }
-  }
-  return isLegalColorModulation || isLegalAlphaModulation;
+    return isLegalColorModulation || isLegalAlphaModulation;
 }
 
 DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(ProcessorOptimizationValidationTest, reporter, ctxInfo) {
@@ -836,7 +833,7 @@ static bool verify_identical_render(
 #  if defined(SK_BUILD_FOR_SKQP)
   const int maxAcceptableFailedPixels = 0;  // Strict when running as SKQP
 #  else
-  const int maxAcceptableFailedPixels = 2 * renderSize;  // ~0.002% of the pixels (size 1024*1024)
+  const int maxAcceptableFailedPixels = 2 * renderSize;                   // ~0.002% of the pixels (size 1024*1024)
 #  endif
 
   int failedPixelCount = 0;

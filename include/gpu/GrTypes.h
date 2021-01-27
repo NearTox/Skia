@@ -22,32 +22,32 @@ class SkSurface;
  * Defines overloaded bitwise operators to make it easier to use an enum as a
  * bitfield.
  */
-#define GR_MAKE_BITFIELD_OPS(X)                           \
-  inline X operator|(X a, X b) { return (X)(+a | +b); }   \
-  inline X& operator|=(X& a, X b) { return (a = a | b); } \
-  inline X operator&(X a, X b) { return (X)(+a & +b); }   \
-  inline X& operator&=(X& a, X b) { return (a = a & b); } \
-  template <typename T>                                   \
-  inline X operator&(T a, X b) {                          \
-    return (X)(+a & +b);                                  \
-  }                                                       \
-  template <typename T>                                   \
-  inline X operator&(X a, T b) {                          \
-    return (X)(+a & +b);                                  \
+#define GR_MAKE_BITFIELD_OPS(X)                                    \
+  inline X operator|(X a, X b) noexcept { return (X)(+a | +b); }   \
+  inline X& operator|=(X& a, X b) noexcept { return (a = a | b); } \
+  inline X operator&(X a, X b) noexcept { return (X)(+a & +b); }   \
+  inline X& operator&=(X& a, X b) noexcept { return (a = a & b); } \
+  template <typename T>                                            \
+  inline X operator&(T a, X b) noexcept {                          \
+    return (X)(+a & +b);                                           \
+  }                                                                \
+  template <typename T>                                            \
+  inline X operator&(X a, T b) noexcept {                          \
+    return (X)(+a & +b);                                           \
   }
 
-#define GR_DECL_BITFIELD_OPS_FRIENDS(X) \
-  friend X operator|(X a, X b);         \
-  friend X& operator|=(X& a, X b);      \
-                                        \
-  friend X operator&(X a, X b);         \
-  friend X& operator&=(X& a, X b);      \
-                                        \
-  template <typename T>                 \
-  friend X operator&(T a, X b);         \
-                                        \
-  template <typename T>                 \
-  friend X operator&(X a, T b);
+#define GR_DECL_BITFIELD_OPS_FRIENDS(X)     \
+  friend X operator|(X a, X b) noexcept;    \
+  friend X& operator|=(X& a, X b) noexcept; \
+                                            \
+  friend X operator&(X a, X b) noexcept;    \
+  friend X& operator&=(X& a, X b) noexcept; \
+                                            \
+  template <typename T>                     \
+  friend X operator&(T a, X b) noexcept;    \
+                                            \
+  template <typename T>                     \
+  friend X operator&(X a, T b) noexcept;
 
 /**
  * Wraps a C++11 enum that we use as a bitfield, and enables a limited amount of
@@ -56,9 +56,9 @@ class SkSurface;
 template <typename TFlags>
 class GrTFlagsMask {
  public:
-  constexpr explicit GrTFlagsMask(TFlags value) : GrTFlagsMask(static_cast<int>(value)) {}
-  constexpr explicit GrTFlagsMask(int value) : fValue(value) {}
-  constexpr int value() const { return fValue; }
+  constexpr explicit GrTFlagsMask(TFlags value) noexcept : GrTFlagsMask(static_cast<int>(value)) {}
+  constexpr explicit GrTFlagsMask(int value) noexcept : fValue(value) {}
+  constexpr int value() const noexcept { return fValue; }
 
  private:
   const int fValue;
@@ -66,37 +66,37 @@ class GrTFlagsMask {
 
 // Or-ing a mask always returns another mask.
 template <typename TFlags>
-constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a, GrTFlagsMask<TFlags> b) {
+constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a, GrTFlagsMask<TFlags> b) noexcept {
   return GrTFlagsMask<TFlags>(a.value() | b.value());
 }
 template <typename TFlags>
-constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a, TFlags b) {
+constexpr GrTFlagsMask<TFlags> operator|(GrTFlagsMask<TFlags> a, TFlags b) noexcept {
   return GrTFlagsMask<TFlags>(a.value() | static_cast<int>(b));
 }
 template <typename TFlags>
-constexpr GrTFlagsMask<TFlags> operator|(TFlags a, GrTFlagsMask<TFlags> b) {
+constexpr GrTFlagsMask<TFlags> operator|(TFlags a, GrTFlagsMask<TFlags> b) noexcept {
   return GrTFlagsMask<TFlags>(static_cast<int>(a) | b.value());
 }
 template <typename TFlags>
-inline GrTFlagsMask<TFlags>& operator|=(GrTFlagsMask<TFlags>& a, GrTFlagsMask<TFlags> b) {
+inline GrTFlagsMask<TFlags>& operator|=(GrTFlagsMask<TFlags>& a, GrTFlagsMask<TFlags> b) noexcept {
   return (a = a | b);
 }
 
 // And-ing two masks returns another mask; and-ing one with regular flags returns flags.
 template <typename TFlags>
-constexpr GrTFlagsMask<TFlags> operator&(GrTFlagsMask<TFlags> a, GrTFlagsMask<TFlags> b) {
+constexpr GrTFlagsMask<TFlags> operator&(GrTFlagsMask<TFlags> a, GrTFlagsMask<TFlags> b) noexcept {
   return GrTFlagsMask<TFlags>(a.value() & b.value());
 }
 template <typename TFlags>
-constexpr TFlags operator&(GrTFlagsMask<TFlags> a, TFlags b) {
+constexpr TFlags operator&(GrTFlagsMask<TFlags> a, TFlags b) noexcept {
   return static_cast<TFlags>(a.value() & static_cast<int>(b));
 }
 template <typename TFlags>
-constexpr TFlags operator&(TFlags a, GrTFlagsMask<TFlags> b) {
+constexpr TFlags operator&(TFlags a, GrTFlagsMask<TFlags> b) noexcept {
   return static_cast<TFlags>(static_cast<int>(a) & b.value());
 }
 template <typename TFlags>
-inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) {
+inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) noexcept {
   return (a = a & b);
 }
 
@@ -104,19 +104,23 @@ inline TFlags& operator&=(TFlags& a, GrTFlagsMask<TFlags> b) {
  * Defines bitwise operators that make it possible to use an enum class as a
  * basic bitfield.
  */
-#define GR_MAKE_BITFIELD_CLASS_OPS(X)                                                        \
-  constexpr GrTFlagsMask<X> operator~(X a) { return GrTFlagsMask<X>(~static_cast<int>(a)); } \
-  constexpr X operator|(X a, X b) {                                                          \
-    return static_cast<X>(static_cast<int>(a) | static_cast<int>(b));                        \
-  }                                                                                          \
-  inline X& operator|=(X& a, X b) { return (a = a | b); }                                    \
-  constexpr bool operator&(X a, X b) { return SkToBool(static_cast<int>(a) & static_cast<int>(b)); }
+#define GR_MAKE_BITFIELD_CLASS_OPS(X)                                 \
+  constexpr GrTFlagsMask<X> operator~(X a) noexcept {                 \
+    return GrTFlagsMask<X>(~static_cast<int>(a));                     \
+  }                                                                   \
+  constexpr X operator|(X a, X b) noexcept {                          \
+    return static_cast<X>(static_cast<int>(a) | static_cast<int>(b)); \
+  }                                                                   \
+  inline X& operator|=(X& a, X b) noexcept { return (a = a | b); }    \
+  constexpr bool operator&(X a, X b) noexcept {                       \
+    return SkToBool(static_cast<int>(a) & static_cast<int>(b));       \
+  }
 
-#define GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(X)    \
-  friend constexpr GrTFlagsMask<X> operator~(X); \
-  friend constexpr X operator|(X, X);            \
-  friend X& operator|=(X&, X);                   \
-  friend constexpr bool operator&(X, X)
+#define GR_DECL_BITFIELD_CLASS_OPS_FRIENDS(X)             \
+  friend constexpr GrTFlagsMask<X> operator~(X) noexcept; \
+  friend constexpr X operator|(X, X) noexcept;            \
+  friend X& operator|=(X&, X) noexcept;                   \
+  friend constexpr bool operator&(X, X) noexcept
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -207,7 +211,7 @@ enum GrGLBackendState {
 /**
  * This value translates to reseting all the context state for any backend.
  */
-static const uint32_t kAll_GrBackendState = 0xffffffff;
+static constexpr uint32_t kAll_GrBackendState = 0xffffffff;
 
 typedef void* GrGpuFinishedContext;
 typedef void (*GrGpuFinishedProc)(GrGpuFinishedContext finishedContext);

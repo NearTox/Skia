@@ -27,7 +27,6 @@ if (skia_use_system_harfbuzz) {
       "HAVE_ICU_BUILTIN",
       "HAVE_INTEL_ATOMIC_PRIMITIVES",
       "HAVE_OT",
-      "HAVE_ROUND",
     ]
     deps = [ "//third_party/icu" ]
     public = [

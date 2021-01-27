@@ -53,7 +53,7 @@ struct CoercionCost {
 /**
  * Represents a type, such as int or float4.
  */
-class Type : public Symbol {
+class Type final : public Symbol {
  public:
   static constexpr Kind kSymbolKind = Kind::kType;
 
@@ -85,93 +85,73 @@ class Type : public Symbol {
 
   enum class NumberKind { kFloat, kSigned, kUnsigned, kNonnumeric };
 
+  Type(const Type& other) = delete;
+
   // Create an "other" (special) type with the given name. These types cannot be directly
   // referenced from user code.
   Type(const char* name)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kOther),
-        fNumberKind(NumberKind::kNonnumeric) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fNumberKind(NumberKind::kNonnumeric) {}
 
   // Create an "other" (special) type that supports field access.
   Type(const char* name, std::vector<Field> fields)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kOther),
         fNumberKind(NumberKind::kNonnumeric),
-        fFields(std::move(fields)) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fFields(std::move(fields)) {}
 
   // Create a simple type.
   Type(String name, TypeKind kind)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, ""),
         fNameString(std::move(name)),
         fTypeKind(kind),
         fNumberKind(NumberKind::kNonnumeric) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
   }
 
   // Create a generic type which maps to the listed types.
   Type(const char* name, std::vector<const Type*> types)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kGeneric),
         fNumberKind(NumberKind::kNonnumeric),
-        fCoercibleTypes(std::move(types)) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fCoercibleTypes(std::move(types)) {}
 
   // Create a struct type with the given fields.
   Type(int offset, String name, std::vector<Field> fields)
-      : INHERITED(offset, kSymbolKind, StringFragment()),
+      : INHERITED(offset, kSymbolKind, ""),
         fNameString(std::move(name)),
         fTypeKind(TypeKind::kStruct),
         fNumberKind(NumberKind::kNonnumeric),
         fFields(std::move(fields)) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
   }
 
   // Create a scalar type.
   Type(const char* name, NumberKind numberKind, int priority, bool highPrecision = false)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kScalar),
         fNumberKind(numberKind),
         fPriority(priority),
         fColumns(1),
         fRows(1),
-        fHighPrecision(highPrecision) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fHighPrecision(highPrecision) {}
 
   // Create a scalar type which can be coerced to the listed types.
   Type(
       const char* name, NumberKind numberKind, int priority,
       std::vector<const Type*> coercibleTypes)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kScalar),
         fNumberKind(numberKind),
         fPriority(priority),
         fCoercibleTypes(std::move(coercibleTypes)),
         fColumns(1),
-        fRows(1) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fRows(1) {}
 
   // Create a nullable type.
   Type(String name, TypeKind kind, const Type& componentType)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, ""),
         fNameString(std::move(name)),
         fTypeKind(kind),
         fNumberKind(NumberKind::kNonnumeric),
@@ -179,17 +159,18 @@ class Type : public Symbol {
         fColumns(1),
         fRows(1),
         fDimensions(SpvDim1D) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
   }
 
   // Create a vector type.
   Type(const char* name, const Type& componentType, int columns)
       : Type(name, TypeKind::kVector, componentType, columns) {}
 
+  static constexpr int kUnsizedArray = -1;
+
   // Create a vector or array type.
   Type(String name, TypeKind kind, const Type& componentType, int columns)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
+      : INHERITED(-1, kSymbolKind, ""),
         fNameString(std::move(name)),
         fTypeKind(kind),
         fNumberKind(NumberKind::kNonnumeric),
@@ -197,45 +178,36 @@ class Type : public Symbol {
         fColumns(columns),
         fRows(1),
         fDimensions(SpvDim1D) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
+    SkASSERT(fColumns > 0 || (fTypeKind == TypeKind::kArray && fColumns == kUnsizedArray));
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
   }
 
   // Create a matrix type.
   Type(const char* name, const Type& componentType, int columns, int rows)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kMatrix),
         fNumberKind(NumberKind::kNonnumeric),
         fComponentType(&componentType),
         fColumns(columns),
         fRows(rows),
-        fDimensions(SpvDim1D) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fDimensions(SpvDim1D) {}
 
   // Create a texture type.
   Type(
       const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayed, bool isMultisampled,
       bool isSampled)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kTexture),
         fNumberKind(NumberKind::kNonnumeric),
         fDimensions(dimensions),
         fIsDepth(isDepth),
         fIsArrayed(isArrayed),
         fIsMultisampled(isMultisampled),
-        fIsSampled(isSampled) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
+        fIsSampled(isSampled) {}
 
   // Create a sampler type.
   Type(const char* name, const Type& textureType)
-      : INHERITED(-1, kSymbolKind, StringFragment()),
-        fNameString(name),
+      : INHERITED(-1, kSymbolKind, name),
         fTypeKind(TypeKind::kSampler),
         fNumberKind(NumberKind::kNonnumeric),
         fDimensions(textureType.dimensions()),
@@ -243,28 +215,24 @@ class Type : public Symbol {
         fIsArrayed(textureType.isArrayed()),
         fIsMultisampled(textureType.isMultisampled()),
         fIsSampled(textureType.isSampled()),
-        fTextureType(&textureType) {
-    fName.fChars = fNameString.c_str();
-    fName.fLength = fNameString.size();
-  }
-
-  const String& name() const { return fNameString; }
+        fTextureType(&textureType) {}
 
   String displayName() const {
-    if (fNameString == "$floatLiteral") {
+    StringFragment name = this->name();
+    if (name == "$floatLiteral") {
       return "float";
     }
-    if (fNameString == "$intLiteral") {
+    if (name == "$intLiteral") {
       return "int";
     }
-    return fNameString;
+    return name;
   }
 
   String description() const override { return this->displayName(); }
 
-  bool operator==(const Type& other) const { return fName == other.fName; }
+  bool operator==(const Type& other) const { return this->name() == other.name(); }
 
-  bool operator!=(const Type& other) const { return fName != other.fName; }
+  bool operator!=(const Type& other) const { return this->name() != other.name(); }
 
   /**
    * Returns the category (scalar, vector, matrix, etc.) of this type.

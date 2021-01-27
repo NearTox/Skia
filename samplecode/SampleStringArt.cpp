@@ -16,49 +16,50 @@
 // generating an angle from 0 to 1.
 
 class StringArtView : public Sample {
- public:
-  StringArtView() : fAngle(0.305f) {}
+public:
+    StringArtView() : fAngle(0.305f) {}
 
- protected:
-  SkString name() override { return SkString("StringArt"); }
+protected:
+    SkString name() override { return SkString("StringArt"); }
 
-  void onDrawContent(SkCanvas* canvas) override {
-    SkScalar angle = fAngle * SK_ScalarPI + SkScalarHalf(SK_ScalarPI);
+    void onDrawContent(SkCanvas* canvas) override {
+        SkScalar angle = fAngle*SK_ScalarPI + SkScalarHalf(SK_ScalarPI);
 
-    SkPoint center = SkPoint::Make(SkScalarHalf(this->width()), SkScalarHalf(this->height()));
-    SkScalar length = 5;
-    SkScalar step = angle;
+        SkPoint center = SkPoint::Make(SkScalarHalf(this->width()), SkScalarHalf(this->height()));
+        SkScalar length = 5;
+        SkScalar step = angle;
 
-    SkPath path;
-    path.moveTo(center);
+        SkPath path;
+        path.moveTo(center);
 
-    while (length < (SkScalarHalf(std::min(this->width(), this->height())) - 10.f)) {
-      SkPoint rp = SkPoint::Make(
-          length * SkScalarCos(step) + center.fX, length * SkScalarSin(step) + center.fY);
-      path.lineTo(rp);
-      length += angle / SkScalarHalf(SK_ScalarPI);
-      step += angle;
+        while (length < (SkScalarHalf(std::min(this->width(), this->height())) - 10.f))
+        {
+            SkPoint rp = SkPoint::Make(length*SkScalarCos(step) + center.fX,
+                                       length*SkScalarSin(step) + center.fY);
+            path.lineTo(rp);
+            length += angle / SkScalarHalf(SK_ScalarPI);
+            step += angle;
+        }
+        path.close();
+
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setColor(0xFF007700);
+
+        canvas->drawPath(path, paint);
     }
-    path.close();
 
-    SkPaint paint;
-    paint.setAntiAlias(true);
-    paint.setStyle(SkPaint::kStroke_Style);
-    paint.setColor(0xFF007700);
+    Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override {
+        fAngle = x/width();
+        return nullptr;
+    }
+private:
 
-    canvas->drawPath(path, paint);
-  }
-
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey) override {
-    fAngle = x / width();
-    return nullptr;
-  }
-
- private:
-  SkScalar fAngle;
-  using INHERITED = Sample;
+    SkScalar fAngle;
+    using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE(return new StringArtView();)
+DEF_SAMPLE( return new StringArtView(); )

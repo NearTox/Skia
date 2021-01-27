@@ -33,7 +33,7 @@ class GrD3DTexture : public GrTexture, public virtual GrD3DTextureResource {
 
   void textureParamsModified() override {}
 
-  void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) override;
+  void addIdleProc(sk_sp<GrRefCntedCallback>) override;
   void callIdleProcsOnBehalfOfResource() override;
 
  protected:

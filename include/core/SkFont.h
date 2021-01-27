@@ -34,7 +34,7 @@ class SK_API SkFont {
 
       @return  default initialized SkFont
   */
-  SkFont() noexcept;
+  SkFont();
 
   /** Constructs SkFont with default values with SkTypeface and size in points.
 
@@ -42,14 +42,14 @@ class SK_API SkFont {
       @param size      typographic height of text
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size) noexcept;
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size);
 
   /** Constructs SkFont with default values with SkTypeface.
 
       @param typeface  font and style used to draw and measure text
       @return          initialized SkFont
   */
-  explicit SkFont(sk_sp<SkTypeface> typeface) noexcept;
+  explicit SkFont(sk_sp<SkTypeface> typeface);
 
   /** Constructs SkFont with default values with SkTypeface and size in points,
       horizontal scale, and horizontal skew. Horizontal scale emulates condensed
@@ -61,7 +61,7 @@ class SK_API SkFont {
       @param skewX     additional shear on x-axis relative to y-axis
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept;
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX);
 
   /** Compares SkFont and font, and returns true if they are equivalent.
       May return false if SkTypeface has identical contents but different pointers.
@@ -69,7 +69,7 @@ class SK_API SkFont {
       @param font  font to compare
       @return      true if SkFont pair are equivalent
   */
-  bool operator==(const SkFont& font) const noexcept;
+  bool operator==(const SkFont& font) const;
 
   /** Compares SkFont and font, and returns true if they are not equivalent.
       May return true if SkTypeface has identical contents but different pointers.
@@ -77,7 +77,7 @@ class SK_API SkFont {
       @param font  font to compare
       @return      true if SkFont pair are not equivalent
   */
-  bool operator!=(const SkFont& font) const noexcept { return !(*this == font); }
+  bool operator!=(const SkFont& font) const { return !(*this == font); }
 
   /** If true, instructs the font manager to always hint glyphs.
       Returned value is only meaningful if platform uses FreeType as the font manager.
@@ -338,8 +338,8 @@ class SK_API SkFont {
 
   /** Returns the advance width of text.
       The advance is the normal distance to move before drawing additional text.
-      Returns the bounding box of text if bounds is not nullptr. paint
-      stroke width or SkPathEffect may modify the advance with.
+      Returns the bounding box of text if bounds is not nullptr. The paint
+      stroke settings, mask filter, or path effect may modify the bounds.
 
       @param text        character storage encoded with SkTextEncoding
       @param byteLength  length of character storage in bytes
@@ -508,8 +508,6 @@ class SK_API SkFont {
   SkScalar setupForAsPaths(SkPaint*);
   bool hasSomeAntiAliasing() const;
 
-  friend class GrSDFTSubRun;
-  friend class GrTextBlob;
   friend class SkFontPriv;
   friend class SkGlyphRunListPainter;
   friend class SkTextBlobCacheDiffCanvas;

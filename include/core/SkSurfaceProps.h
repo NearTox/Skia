@@ -24,22 +24,22 @@ enum SkPixelGeometry {
 };
 
 // Returns true iff geo is a known geometry and is RGB.
-static inline bool SkPixelGeometryIsRGB(SkPixelGeometry geo) {
+static constexpr inline bool SkPixelGeometryIsRGB(SkPixelGeometry geo) noexcept {
   return kRGB_H_SkPixelGeometry == geo || kRGB_V_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is BGR.
-static inline bool SkPixelGeometryIsBGR(SkPixelGeometry geo) {
+static constexpr inline bool SkPixelGeometryIsBGR(SkPixelGeometry geo) noexcept {
   return kBGR_H_SkPixelGeometry == geo || kBGR_V_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is horizontal.
-static inline bool SkPixelGeometryIsH(SkPixelGeometry geo) {
+static constexpr inline bool SkPixelGeometryIsH(SkPixelGeometry geo) noexcept {
   return kRGB_H_SkPixelGeometry == geo || kBGR_H_SkPixelGeometry == geo;
 }
 
 // Returns true iff geo is a known geometry and is vertical.
-static inline bool SkPixelGeometryIsV(SkPixelGeometry geo) {
+static constexpr inline bool SkPixelGeometryIsV(SkPixelGeometry geo) noexcept {
   return kRGB_V_SkPixelGeometry == geo || kBGR_V_SkPixelGeometry == geo;
 }
 
@@ -56,30 +56,27 @@ class SK_API SkSurfaceProps {
   /** Deprecated alias used by Chromium. Will be removed. */
   static const Flags kUseDistanceFieldFonts_Flag = kUseDeviceIndependentFonts_Flag;
 
-  SkSurfaceProps(uint32_t flags, SkPixelGeometry);
+  /** No flags, unknown pixel geometry. */
+  SkSurfaceProps() noexcept;
+  SkSurfaceProps(uint32_t flags, SkPixelGeometry) noexcept;
 
-  enum InitType { kLegacyFontHost_InitType };
-  SkSurfaceProps(InitType);
-  SkSurfaceProps(uint32_t flags, InitType);
-  SkSurfaceProps(const SkSurfaceProps&);
-  SkSurfaceProps& operator=(const SkSurfaceProps&);
+  SkSurfaceProps(const SkSurfaceProps&) noexcept;
+  SkSurfaceProps& operator=(const SkSurfaceProps&) noexcept;
 
-  uint32_t flags() const { return fFlags; }
-  SkPixelGeometry pixelGeometry() const { return fPixelGeometry; }
+  uint32_t flags() const noexcept { return fFlags; }
+  SkPixelGeometry pixelGeometry() const noexcept { return fPixelGeometry; }
 
-  bool isUseDeviceIndependentFonts() const {
+  bool isUseDeviceIndependentFonts() const noexcept {
     return SkToBool(fFlags & kUseDeviceIndependentFonts_Flag);
   }
 
-  bool operator==(const SkSurfaceProps& that) const {
+  bool operator==(const SkSurfaceProps& that) const noexcept {
     return fFlags == that.fFlags && fPixelGeometry == that.fPixelGeometry;
   }
 
-  bool operator!=(const SkSurfaceProps& that) const { return !(*this == that); }
+  bool operator!=(const SkSurfaceProps& that) const noexcept { return !(*this == that); }
 
  private:
-  SkSurfaceProps();
-
   uint32_t fFlags;
   SkPixelGeometry fPixelGeometry;
 };

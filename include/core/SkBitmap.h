@@ -60,7 +60,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_empty_constructor
   */
-  SkBitmap() noexcept;
+  SkBitmap();
 
   /** Copies settings from src to returned SkBitmap. Shares pixels if src has pixels
       allocated, so both bitmaps reference the same pixels.
@@ -80,7 +80,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_move_SkBitmap
   */
-  SkBitmap(SkBitmap&& src) noexcept;
+  SkBitmap(SkBitmap&& src);
 
   /** Decrements SkPixelRef reference count, if SkPixelRef is not nullptr.
    */
@@ -104,7 +104,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_move_operator
   */
-  SkBitmap& operator=(SkBitmap&& src) noexcept;
+  SkBitmap& operator=(SkBitmap&& src);
 
   /** Swaps the fields of the two bitmaps.
 
@@ -112,7 +112,7 @@ class SK_API SkBitmap {
 
       example: https://fiddle.skia.org/c/@Bitmap_swap
   */
-  void swap(SkBitmap& other) noexcept;
+  void swap(SkBitmap& other);
 
   /** Returns a constant reference to the SkPixmap holding the SkBitmap pixel
       address, row bytes, and SkImageInfo.
@@ -205,7 +205,7 @@ class SK_API SkBitmap {
 
       @return  true if no SkPixelRef is associated
   */
-  bool isNull() const noexcept { return nullptr == fPixelRef; }
+  bool isNull() const { return nullptr == fPixelRef; }
 
   /** Returns true if width() or height() are zero, or if SkPixelRef is nullptr.
       If true, SkBitmap has no effect when drawn or drawn into.
@@ -689,7 +689,7 @@ class SK_API SkBitmap {
 
       @return  SkPixelRef, or nullptr
   */
-  SkPixelRef* pixelRef() const noexcept { return fPixelRef.get(); }
+  SkPixelRef* pixelRef() const { return fPixelRef.get(); }
 
   /** Returns origin of pixels within SkPixelRef. SkBitmap bounds is always contained
       by SkPixelRef bounds, which may be the same size or larger. Multiple SkBitmap

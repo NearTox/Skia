@@ -53,8 +53,7 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
       const GrVkImageInfo& info, sk_sp<GrBackendSurfaceMutableStateImpl> mutableState,
-      sk_sp<const GrVkImageView> texView, const GrVkImageInfo& msaaInfo,
-      sk_sp<GrBackendSurfaceMutableStateImpl> msaaMutableState,
+      sk_sp<const GrVkImageView> texView, sk_sp<GrVkAttachment> msaaAttachment,
       sk_sp<const GrVkImageView> colorAttachmentView,
       sk_sp<const GrVkImageView> resolveAttachmentView, GrMipmapStatus);
 
@@ -68,8 +67,7 @@ class GrVkTextureRenderTarget : public GrVkTexture, public GrVkRenderTarget {
   GrVkTextureRenderTarget(
       GrVkGpu* gpu, SkISize dimensions, int sampleCnt, const GrVkImageInfo& info,
       sk_sp<GrBackendSurfaceMutableStateImpl> mutableState, sk_sp<const GrVkImageView> texView,
-      const GrVkImageInfo& msaaInfo, sk_sp<GrBackendSurfaceMutableStateImpl> msaaMutableState,
-      sk_sp<const GrVkImageView> colorAttachmentView,
+      sk_sp<GrVkAttachment> msaaAttachment, sk_sp<const GrVkImageView> colorAttachmentView,
       sk_sp<const GrVkImageView> resolveAttachmentView, GrMipmapStatus, GrBackendObjectOwnership,
       GrWrapCacheable);
 

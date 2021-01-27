@@ -22,7 +22,7 @@
 #include "src/gpu/GrBuffer.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrColorSpaceXform.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
@@ -205,10 +205,8 @@ class SampleLocationsTestOp : public GrDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  static std::unique_ptr<GrDrawOp> Make(
-      GrRecordingContext* ctx, const SkMatrix& viewMatrix, GradType gradType) {
-    GrOpMemoryPool* pool = ctx->priv().opMemoryPool();
-    return pool->allocate<SampleLocationsTestOp>(gradType);
+  static GrOp::Owner Make(GrRecordingContext* ctx, const SkMatrix& viewMatrix, GradType gradType) {
+    return GrOp::Make<SampleLocationsTestOp>(ctx, gradType);
   }
 
  private:
@@ -285,7 +283,7 @@ class SampleLocationsTestOp : public GrDrawOp {
   // guaranteed to have the same lifetime as the program info.
   GrProgramInfo* fProgramInfo = nullptr;
 
-  friend class ::GrOpMemoryPool;  // for ctor
+  friend class ::GrOp;  // for ctor
 
   using INHERITED = GrDrawOp;
 };

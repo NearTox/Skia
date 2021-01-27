@@ -9,7 +9,6 @@
 
 #ifdef SK_XML
 
-#  include "experimental/svg/model/SkSVGDOM.h"
 #  include "include/core/SkBitmap.h"
 #  include "include/core/SkCanvas.h"
 #  include "include/core/SkColor.h"
@@ -30,6 +29,7 @@
 #  include "include/private/SkTDArray.h"
 #  include "include/private/SkTemplates.h"
 #  include "include/utils/SkNoDrawCanvas.h"
+#  include "modules/svg/include/SkSVGDOM.h"
 #  include "src/core/SkAdvancedTypefaceMetrics.h"
 #  include "src/core/SkFontDescriptor.h"
 #  include "src/core/SkFontPriv.h"
@@ -152,6 +152,8 @@ void TestSVGTypeface::onCharsToGlyphs(const SkUnichar uni[], int count, SkGlyphI
 }
 
 void TestSVGTypeface::onGetFamilyName(SkString* familyName) const { *familyName = fName; }
+
+bool TestSVGTypeface::onGetPostScriptName(SkString*) const { return false; }
 
 SkTypeface::LocalizedStrings* TestSVGTypeface::onCreateFamilyNameIterator() const {
   SkString familyName(fName);
@@ -297,8 +299,7 @@ sk_sp<TestSVGTypeface> TestSVGTypeface::Default() {
       return true;
     }
   };
-  return sk_make_sp<DefaultTypeface>(
-      "Emoji", 1000, metrics, SkMakeSpan(glyphs), SkFontStyle::Normal());
+  return sk_make_sp<DefaultTypeface>("Emoji", 1000, metrics, SkSpan(glyphs), SkFontStyle::Normal());
 }
 
 sk_sp<TestSVGTypeface> TestSVGTypeface::Planets() {
@@ -344,8 +345,7 @@ sk_sp<TestSVGTypeface> TestSVGTypeface::Planets() {
       return true;
     }
   };
-  return sk_make_sp<PlanetTypeface>(
-      "Planets", 200, metrics, SkMakeSpan(glyphs), SkFontStyle::Normal());
+  return sk_make_sp<PlanetTypeface>("Planets", 200, metrics, SkSpan(glyphs), SkFontStyle::Normal());
 }
 
 void TestSVGTypeface::exportTtxCommon(

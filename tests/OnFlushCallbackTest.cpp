@@ -11,8 +11,8 @@
 #include "include/gpu/GrBackendSemaphore.h"
 #include "include/gpu/GrDirectContext.h"
 #include "src/core/SkPointPriv.h"
-#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDefaultGeoProcFactory.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrImageInfo.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrProgramInfo.h"
@@ -36,13 +36,12 @@ class NonAARectOp : public GrMeshDrawOp {
   DEFINE_OP_CLASS_ID
 
   // This creates an instance of a simple non-AA solid color rect-drawing Op
-  static std::unique_ptr<GrDrawOp> Make(
-      GrRecordingContext* context, GrPaint&& paint, const SkRect& r) {
+  static GrOp::Owner Make(GrRecordingContext* context, GrPaint&& paint, const SkRect& r) {
     return Helper::FactoryHelper<NonAARectOp>(context, std::move(paint), r, nullptr, ClassID());
   }
 
   // This creates an instance of a simple non-AA textured rect-drawing Op
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkRect& r, const SkRect& local) {
     return Helper::FactoryHelper<NonAARectOp>(context, std::move(paint), r, &local, ClassID());
   }
@@ -50,13 +49,13 @@ class NonAARectOp : public GrMeshDrawOp {
   const SkPMColor4f& color() const { return fColor; }
 
   NonAARectOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkRect& r,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, const SkRect& r,
       const SkRect* localRect, int32_t classID)
       : INHERITED(classID),
         fColor(color),
         fHasLocalRect(SkToBool(localRect)),
         fRect(r),
-        fHelper(helperArgs, GrAAType::kNone) {
+        fHelper(processorSet, GrAAType::kNone) {
     if (fHasLocalRect) {
       fLocalQuad = GrQuad(*localRect);
     }
@@ -217,19 +216,16 @@ class AtlasedRectOp final : public NonAARectOp {
 
   int id() const { return fID; }
 
-  static std::unique_ptr<AtlasedRectOp> Make(
-      GrRecordingContext* rContext, GrPaint&& paint, const SkRect& r, int id) {
-    GrDrawOp* op =
-        Helper::FactoryHelper<AtlasedRectOp>(rContext, std::move(paint), r, id).release();
-    return std::unique_ptr<AtlasedRectOp>(static_cast<AtlasedRectOp*>(op));
+  static GrOp::Owner Make(GrRecordingContext* rContext, GrPaint&& paint, const SkRect& r, int id) {
+    return Helper::FactoryHelper<AtlasedRectOp>(rContext, std::move(paint), r, id);
   }
 
   // We set the initial color of the NonAARectOp based on the ID.
   // Note that we force creation of a NonAARectOp that has local coords in anticipation of
   // pulling from the atlas.
-  AtlasedRectOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkRect& r, int id)
-      : INHERITED(helperArgs, SkPMColor4f::FromBytes_RGBA(kColors[id]), r, &kEmptyRect, ClassID()),
+  AtlasedRectOp(GrProcessorSet* processorSet, const SkPMColor4f& color, const SkRect& r, int id)
+      : INHERITED(
+            processorSet, SkPMColor4f::FromBytes_RGBA(kColors[id]), r, &kEmptyRect, ClassID()),
         fID(id),
         fNext(nullptr) {
     SkASSERT(fID < kMaxIDs);
@@ -338,12 +334,11 @@ class AtlasObject final : public GrOnFlushCallbackObject {
    * This callback creates the atlas and updates the AtlasedRectOps to read from it
    */
   void preFlush(
-      GrOnFlushResourceProvider* resourceProvider, const uint32_t* opsTaskIDs,
-      int numOpsTaskIDs) override {
+      GrOnFlushResourceProvider* resourceProvider, SkSpan<const uint32_t> renderTaskIDs) override {
     // Until MDB is landed we will most-likely only have one opsTask.
     SkTDArray<LinkedListHeader*> lists;
-    for (int i = 0; i < numOpsTaskIDs; ++i) {
-      if (LinkedListHeader* list = this->getList(opsTaskIDs[i])) {
+    for (uint32_t taskID : renderTaskIDs) {
+      if (LinkedListHeader* list = this->getList(taskID)) {
         lists.push_back(list);
       }
     }
@@ -448,10 +443,8 @@ static GrSurfaceProxyView make_upstream_image(
     GrPaint paint;
     paint.setColorFragmentProcessor(std::move(fp));
     paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
-    std::unique_ptr<AtlasedRectOp> op(
-        AtlasedRectOp::Make(rContext, std::move(paint), r, start + i));
-
-    AtlasedRectOp* sparePtr = op.get();
+    GrOp::Owner op = AtlasedRectOp::Make(rContext, std::move(paint), r, start + i);
+    AtlasedRectOp* sparePtr = (AtlasedRectOp*)op.get();
 
     uint32_t opsTaskID;
     rtc->priv().testingOnly_addDrawOp(

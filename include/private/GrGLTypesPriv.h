@@ -11,7 +11,7 @@
 #ifndef GrGLTypesPriv_DEFINED
 #  define GrGLTypesPriv_DEFINED
 
-static constexpr int kGrGLFormatCount = static_cast<int>(GrGLFormat::kLast) + 1;
+static constexpr int kGrGLColorFormatCount = static_cast<int>(GrGLFormat::kLastColorFormat) + 1;
 
 class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
  public:
@@ -53,35 +53,37 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
     bool fSwizzleIsRGBA;
   };
 
-  void invalidate();
+    void invalidate();
 
-  ResetTimestamp resetTimestamp() const { return fResetTimestamp; }
-  const SamplerOverriddenState& samplerOverriddenState() const { return fSamplerOverriddenState; }
-  const NonsamplerState& nonsamplerState() const { return fNonsamplerState; }
+    ResetTimestamp resetTimestamp() const noexcept { return fResetTimestamp; }
+    const SamplerOverriddenState& samplerOverriddenState() const noexcept {
+      return fSamplerOverriddenState;
+    }
+    const NonsamplerState& nonsamplerState() const noexcept { return fNonsamplerState; }
 
-  // SamplerOverriddenState is optional because we don't track it when we're using sampler
-  // objects.
-  void set(
-      const SamplerOverriddenState* samplerState, const NonsamplerState& nonsamplerState,
-      ResetTimestamp currTimestamp);
+    // SamplerOverriddenState is optional because we don't track it when we're using sampler
+    // objects.
+    void set(
+        const SamplerOverriddenState* samplerState, const NonsamplerState& nonsamplerState,
+        ResetTimestamp currTimestamp);
 
- private:
-  static constexpr ResetTimestamp kExpiredTimestamp = 0;
+   private:
+    static constexpr ResetTimestamp kExpiredTimestamp = 0;
 
-  SamplerOverriddenState fSamplerOverriddenState;
-  NonsamplerState fNonsamplerState;
-  ResetTimestamp fResetTimestamp = kExpiredTimestamp;
+    SamplerOverriddenState fSamplerOverriddenState;
+    NonsamplerState fNonsamplerState;
+    ResetTimestamp fResetTimestamp = kExpiredTimestamp;
 };
 
 class GrGLBackendTextureInfo {
  public:
-  GrGLBackendTextureInfo(const GrGLTextureInfo& info, GrGLTextureParameters* params)
+  GrGLBackendTextureInfo(const GrGLTextureInfo& info, GrGLTextureParameters* params) noexcept
       : fInfo(info), fParams(params) {}
   GrGLBackendTextureInfo(const GrGLBackendTextureInfo&) = delete;
   GrGLBackendTextureInfo& operator=(const GrGLBackendTextureInfo&) = delete;
-  const GrGLTextureInfo& info() const { return fInfo; }
-  GrGLTextureParameters* parameters() const { return fParams; }
-  sk_sp<GrGLTextureParameters> refParameters() const { return sk_ref_sp(fParams); }
+  const GrGLTextureInfo& info() const noexcept { return fInfo; }
+  GrGLTextureParameters* parameters() const noexcept { return fParams; }
+  sk_sp<GrGLTextureParameters> refParameters() const noexcept { return sk_ref_sp(fParams); }
 
   void cleanup();
   void assign(const GrGLBackendTextureInfo&, bool thisIsValid);

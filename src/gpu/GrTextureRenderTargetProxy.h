@@ -47,7 +47,7 @@ class GrTextureRenderTargetProxy : public GrRenderTargetProxy, public GrTextureP
   bool instantiate(GrResourceProvider*) override;
   sk_sp<GrSurface> createSurface(GrResourceProvider*) const override;
 
-  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
+  size_t onUninstantiatedGpuMemorySize() const override;
   LazySurfaceDesc callbackDesc() const override;
   SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 };

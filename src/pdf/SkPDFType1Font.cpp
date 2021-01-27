@@ -125,7 +125,7 @@ static int8_t hexToBin(uint8_t c) {
   } else if (c <= 'f') {
     return c - 'a' + 10;
   }
-  return -1;
+    return -1;
 }
 
 static sk_sp<SkData> convert_type1_font_stream(
@@ -303,7 +303,7 @@ void SkPDFEmitType1Font(const SkPDFFont& pdfFont, SkPDFDocument* doc) {
     }
     SkStrikeSpec strikeSpec = SkStrikeSpec::MakePDFVector(*typeface, &emSize);
     SkBulkGlyphMetrics metrics{strikeSpec};
-    auto glyphs = metrics.glyphs(SkMakeSpan(glyphIDs.get(), glyphRangeSize));
+    auto glyphs = metrics.glyphs(SkSpan(glyphIDs.get(), glyphRangeSize));
     for (int i = 0; i < glyphRangeSize; ++i) {
       widths->appendScalar(from_font_units(glyphs[i]->advanceX(), SkToU16(emSize)));
     }

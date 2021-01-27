@@ -39,54 +39,54 @@ DEF_TEST(MallocPixelRef, reporter) {
     // data too small.
     REPORTER_ASSERT(reporter, nullptr == pr.get());
   }
-  size_t rowBytes = info.minRowBytes() + info.bytesPerPixel();
-  size_t size = info.computeByteSize(rowBytes) + 9;
-  {
-    SkAutoMalloc memory(size);
-    auto pr = sk_make_sp<SkPixelRef>(info.width(), info.height(), memory.get(), rowBytes);
-    REPORTER_ASSERT(reporter, pr.get() != nullptr);
-    REPORTER_ASSERT(reporter, memory.get() == pr->pixels());
-  }
-  {
-    sk_sp<SkPixelRef> pr(SkMallocPixelRef::MakeAllocate(info, rowBytes));
-    REPORTER_ASSERT(reporter, pr.get() != nullptr);
-    REPORTER_ASSERT(reporter, pr->pixels());
-  }
-  {
-    void* addr = static_cast<void*>(new uint8_t[size]);
-    sk_sp<SkPixelRef> pr(SkMakePixelRefWithProc(
-        info.width(), info.height(), rowBytes, addr, delete_uint8_proc, nullptr));
-    REPORTER_ASSERT(reporter, pr.get() != nullptr);
-    REPORTER_ASSERT(reporter, addr == pr->pixels());
-  }
-  {
-    int x = 0;
-    SkAutoMalloc memory(size);
-    sk_sp<SkPixelRef> pr(SkMakePixelRefWithProc(
-        info.width(), info.height(), rowBytes, memory.get(), set_to_one_proc,
-        static_cast<void*>(&x)));
-    REPORTER_ASSERT(reporter, pr.get() != nullptr);
-    REPORTER_ASSERT(reporter, memory.get() == pr->pixels());
-    REPORTER_ASSERT(reporter, 0 == x);
-    pr.reset(nullptr);
-    // make sure that set_to_one_proc was called.
-    REPORTER_ASSERT(reporter, 1 == x);
-  }
-  {
-    void* addr = static_cast<void*>(new uint8_t[size]);
-    REPORTER_ASSERT(reporter, addr != nullptr);
-    sk_sp<SkPixelRef> pr(SkMakePixelRefWithProc(
-        info.width(), info.height(), rowBytes, addr, delete_uint8_proc, nullptr));
-    REPORTER_ASSERT(reporter, addr == pr->pixels());
-  }
-  {
-    sk_sp<SkData> data(SkData::MakeUninitialized(size));
-    SkData* dataPtr = data.get();
-    REPORTER_ASSERT(reporter, dataPtr->unique());
-    sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeWithData(info, rowBytes, data);
-    REPORTER_ASSERT(reporter, !(dataPtr->unique()));
-    data.reset(nullptr);
-    REPORTER_ASSERT(reporter, dataPtr->unique());
-    REPORTER_ASSERT(reporter, dataPtr->data() == pr->pixels());
-  }
+    size_t rowBytes = info.minRowBytes() + info.bytesPerPixel();
+    size_t size = info.computeByteSize(rowBytes) + 9;
+    {
+      SkAutoMalloc memory(size);
+      auto pr = sk_make_sp<SkPixelRef>(info.width(), info.height(), memory.get(), rowBytes);
+      REPORTER_ASSERT(reporter, pr.get() != nullptr);
+      REPORTER_ASSERT(reporter, memory.get() == pr->pixels());
+    }
+    {
+      sk_sp<SkPixelRef> pr(SkMallocPixelRef::MakeAllocate(info, rowBytes));
+      REPORTER_ASSERT(reporter, pr.get() != nullptr);
+      REPORTER_ASSERT(reporter, pr->pixels());
+    }
+    {
+      void* addr = static_cast<void*>(new uint8_t[size]);
+      sk_sp<SkPixelRef> pr(SkMakePixelRefWithProc(
+          info.width(), info.height(), rowBytes, addr, delete_uint8_proc, nullptr));
+      REPORTER_ASSERT(reporter, pr.get() != nullptr);
+      REPORTER_ASSERT(reporter, addr == pr->pixels());
+    }
+    {
+      int x = 0;
+      SkAutoMalloc memory(size);
+      sk_sp<SkPixelRef> pr(SkMakePixelRefWithProc(
+          info.width(), info.height(), rowBytes, memory.get(), set_to_one_proc,
+          static_cast<void*>(&x)));
+      REPORTER_ASSERT(reporter, pr.get() != nullptr);
+      REPORTER_ASSERT(reporter, memory.get() == pr->pixels());
+      REPORTER_ASSERT(reporter, 0 == x);
+      pr.reset(nullptr);
+      // make sure that set_to_one_proc was called.
+      REPORTER_ASSERT(reporter, 1 == x);
+    }
+    {
+      void* addr = static_cast<void*>(new uint8_t[size]);
+      REPORTER_ASSERT(reporter, addr != nullptr);
+      sk_sp<SkPixelRef> pr(SkMakePixelRefWithProc(
+          info.width(), info.height(), rowBytes, addr, delete_uint8_proc, nullptr));
+      REPORTER_ASSERT(reporter, addr == pr->pixels());
+    }
+    {
+      sk_sp<SkData> data(SkData::MakeUninitialized(size));
+      SkData* dataPtr = data.get();
+      REPORTER_ASSERT(reporter, dataPtr->unique());
+      sk_sp<SkPixelRef> pr = SkMallocPixelRef::MakeWithData(info, rowBytes, data);
+      REPORTER_ASSERT(reporter, !(dataPtr->unique()));
+      data.reset(nullptr);
+      REPORTER_ASSERT(reporter, dataPtr->unique());
+      REPORTER_ASSERT(reporter, dataPtr->data() == pr->pixels());
+    }
 }

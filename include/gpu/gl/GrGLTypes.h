@@ -21,7 +21,7 @@ enum GrGLStandard {
   kGLES_GrGLStandard,
   kWebGL_GrGLStandard,
 };
-static const int kGrGLStandardCnt = 4;
+static constexpr int kGrGLStandardCnt = 4;
 
 // The following allow certain interfaces to be turned off at compile time
 // (for example, to lower code size).
@@ -81,7 +81,14 @@ enum class GrGLFormat {
   kRG16F,
   kLUMINANCE16F,
 
-  kLast = kLUMINANCE16F
+  kLastColorFormat = kLUMINANCE16F,
+
+  // Depth/Stencil formats
+  kSTENCIL_INDEX8,
+  kSTENCIL_INDEX16,
+  kDEPTH24_STENCIL8,
+
+  kLast = kDEPTH24_STENCIL8
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -168,7 +175,7 @@ struct GrGLTextureInfo {
   GrGLuint fID;
   GrGLenum fFormat = 0;
 
-  bool operator==(const GrGLTextureInfo& that) const {
+  bool operator==(const GrGLTextureInfo& that) const noexcept {
     return fTarget == that.fTarget && fID == that.fID && fFormat == that.fFormat;
   }
 };
@@ -177,7 +184,7 @@ struct GrGLFramebufferInfo {
   GrGLuint fFBOID;
   GrGLenum fFormat = 0;
 
-  bool operator==(const GrGLFramebufferInfo& that) const {
+  bool operator==(const GrGLFramebufferInfo& that) const noexcept {
     return fFBOID == that.fFBOID && fFormat == that.fFormat;
   }
 };

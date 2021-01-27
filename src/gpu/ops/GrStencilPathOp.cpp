@@ -14,13 +14,11 @@
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTarget.h"
 
-std::unique_ptr<GrOp> GrStencilPathOp::Make(
+GrOp::Owner GrStencilPathOp::Make(
     GrRecordingContext* context, const SkMatrix& viewMatrix, bool useHWAA, bool hasStencilClip,
     const GrScissorState& scissor, sk_sp<const GrPath> path) {
-  GrOpMemoryPool* pool = context->priv().opMemoryPool();
-
-  return pool->allocate<GrStencilPathOp>(
-      viewMatrix, useHWAA, hasStencilClip, scissor, std::move(path));
+  return GrOp::Make<GrStencilPathOp>(
+      context, viewMatrix, useHWAA, hasStencilClip, scissor, std::move(path));
 }
 
 void GrStencilPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBounds) {

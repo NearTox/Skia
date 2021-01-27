@@ -75,6 +75,13 @@ class Shaper final {
     kDownscaleToFit,
   };
 
+  enum class LinebreakPolicy : uint8_t {
+    // Break lines such that they fit in a non-empty paragraph box, horizontally.
+    kParagraph,
+    // Only break lines when requested explicitly (\r), regardless of paragraph box dimensions.
+    kExplicit,
+  };
+
   enum Flags : uint32_t {
     kNone = 0x00,
 
@@ -92,6 +99,7 @@ class Shaper final {
     SkTextUtils::Align fHAlign;
     VAlign fVAlign;
     ResizePolicy fResize;
+    LinebreakPolicy fLinebreak;
     uint32_t fFlags;
   };
 

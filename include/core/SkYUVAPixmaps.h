@@ -29,6 +29,8 @@ class SK_API SkYUVAPixmapInfo {
  public:
   static constexpr auto kMaxPlanes = SkYUVAInfo::kMaxPlanes;
 
+  using PlaneConfig = SkYUVAInfo::PlaneConfig;
+  using Subsampling = SkYUVAInfo::Subsampling;
   using PlanarConfig = SkYUVAInfo::PlanarConfig;
 
   /**
@@ -53,13 +55,16 @@ class SK_API SkYUVAPixmapInfo {
     /** Init based on texture formats supported by the context. */
     SupportedDataTypes(const GrImageContext&);
 
-    /** All legal combinations of PlanarConfig and DataType are supported. */
+    /** All legal combinations of PlaneConfig and DataType are supported. */
     static constexpr SupportedDataTypes All();
 
     /**
      * Checks whether there is a supported combination of color types for planes structured
-     * as indicated by PlanarConfig with channel data types as indicated by DataType.
+     * as indicated by PlaneConfig with channel data types as indicated by DataType.
      */
+    constexpr bool supported(PlaneConfig, DataType) const;
+
+    /** Deprecated. Use PlaneConfig version. */
     constexpr bool supported(PlanarConfig, DataType) const;
 
     /**
@@ -119,7 +124,7 @@ class SK_API SkYUVAPixmapInfo {
   SkYUVColorSpace yuvColorSpace() const { return fYUVAInfo.yuvColorSpace(); }
 
   /** The number of SkPixmap planes, 0 if this SkYUVAPixmapInfo is invalid. */
-  int numPlanes() const { return this->isValid() ? fYUVAInfo.numPlanes() : 0; }
+  int numPlanes() const { return fYUVAInfo.numPlanes(); }
 
   /** The per-YUV[A] channel data type. */
   DataType dataType() const { return fDataType; }
@@ -151,7 +156,7 @@ class SK_API SkYUVAPixmapInfo {
    * Returns true if this has been configured with a non-empty dimensioned SkYUVAInfo with
    * compatible color types and row bytes.
    */
-  bool isValid() const { return fPlaneInfos[0].colorType() != kUnknown_SkColorType; }
+  bool isValid() const { return fYUVAInfo.isValid(); }
 
   /** Is this valid and does it use color types allowed by the passed SupportedDataTypes? */
   bool isSupported(const SupportedDataTypes&) const;
@@ -170,7 +175,10 @@ class SK_API SkYUVAPixmapInfo {
  */
 class SK_API SkYUVAPixmaps {
  public:
+  using DataType = SkYUVAPixmapInfo::DataType;
   static constexpr auto kMaxPlanes = SkYUVAPixmapInfo::kMaxPlanes;
+
+  static SkColorType RecommendedRGBAColorType(DataType);
 
   /** Allocate space for pixmaps' pixels in the SkYUVAPixmaps. */
   static SkYUVAPixmaps Allocate(const SkYUVAPixmapInfo& yuvaPixmapInfo);
@@ -180,6 +188,12 @@ class SK_API SkYUVAPixmaps {
    * SkYUVAPixmaps.
    */
   static SkYUVAPixmaps FromData(const SkYUVAPixmapInfo&, sk_sp<SkData>);
+
+  /**
+   * Makes a deep copy of the src SkYUVAPixmaps. The returned SkYUVAPixmaps owns its planes'
+   * backing stores.
+   */
+  static SkYUVAPixmaps MakeCopy(const SkYUVAPixmaps& src);
 
   /**
    * Use passed in memory as backing store for pixmaps' pixels. Caller must ensure memory remains
@@ -210,6 +224,10 @@ class SK_API SkYUVAPixmaps {
 
   const SkYUVAInfo& yuvaInfo() const { return fYUVAInfo; }
 
+  DataType dataType() const { return fDataType; }
+
+  SkYUVAPixmapInfo pixmapsInfo() const;
+
   /** Number of pixmap planes or 0 if this SkYUVAPixmaps is invalid. */
   int numPlanes() const { return this->isValid() ? fYUVAInfo.numPlanes() : 0; }
 
@@ -226,17 +244,27 @@ class SK_API SkYUVAPixmaps {
   const SkPixmap& plane(int i) const { return fPlanes[SkToSizeT(i)]; }
 
   /**
+   * Computes a SkYUVAIndex representation of the planar layout. Returns true on success and
+   * false on failure. Will succeed whenever this->isValid() is true.
+   */
+  bool toYUVAIndices(SkYUVAIndex[SkYUVAIndex::kIndexCount]) const;
+
+  /** Does this SkPixmaps own the backing store of the planes? */
+  bool ownsStorage() const { return SkToBool(fData); }
+
+  /**
    * Conversion to legacy SkYUVA data structures.
    */
-  bool toLegacy(SkYUVASizeInfo*, SkYUVAIndex[4]) const;
+  bool toLegacy(SkYUVASizeInfo*, SkYUVAIndex[SkYUVAIndex::kIndexCount]) const;
 
  private:
   SkYUVAPixmaps(const SkYUVAPixmapInfo&, sk_sp<SkData>);
-  SkYUVAPixmaps(const SkYUVAInfo&, const SkPixmap[kMaxPlanes]);
+  SkYUVAPixmaps(const SkYUVAInfo&, DataType, const SkPixmap[kMaxPlanes]);
 
-  SkYUVAInfo fYUVAInfo;
   std::array<SkPixmap, kMaxPlanes> fPlanes = {};
   sk_sp<SkData> fData;
+  SkYUVAInfo fYUVAInfo;
+  DataType fDataType;
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -258,7 +286,7 @@ constexpr SkYUVAPixmapInfo::SupportedDataTypes SkYUVAPixmapInfo::SupportedDataTy
 }
 
 constexpr bool SkYUVAPixmapInfo::SupportedDataTypes::supported(
-    PlanarConfig config, DataType type) const {
+    PlaneConfig config, DataType type) const {
   int n = SkYUVAInfo::NumPlanes(config);
   for (int i = 0; i < n; ++i) {
     auto c = static_cast<size_t>(SkYUVAInfo::NumChannelsInPlane(config, i));
@@ -269,6 +297,12 @@ constexpr bool SkYUVAPixmapInfo::SupportedDataTypes::supported(
     }
   }
   return true;
+}
+
+constexpr bool SkYUVAPixmapInfo::SupportedDataTypes::supported(
+    PlanarConfig planarConfig, DataType type) const {
+  auto pc = std::get<0>(SkYUVAInfo::PlanarConfigToPlaneConfigAndSubsampling(planarConfig));
+  return this->supported(pc, type);
 }
 
 constexpr SkColorType SkYUVAPixmapInfo::DefaultColorTypeForDataType(

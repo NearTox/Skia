@@ -124,10 +124,10 @@ class SK_API SkString {
   explicit SkString(const std::string&);
   ~SkString();
 
-  bool isEmpty() const { return 0 == fRec->fLength; }
-  size_t size() const { return (size_t)fRec->fLength; }
-  const char* c_str() const { return fRec->data(); }
-  char operator[](size_t n) const { return this->c_str()[n]; }
+  bool isEmpty() const noexcept { return 0 == fRec->fLength; }
+  size_t size() const noexcept { return (size_t)fRec->fLength; }
+  const char* c_str() const noexcept { return fRec->data(); }
+  char operator[](size_t n) const noexcept { return this->c_str()[n]; }
 
   bool equals(const SkString&) const;
   bool equals(const char text[]) const;
@@ -154,7 +154,7 @@ class SK_API SkString {
   char* writable_str();
   char& operator[](size_t n) { return this->writable_str()[n]; }
 
-  void reset();
+  void reset() noexcept;
   /** String contents are preserved on resize. (For destructive resize, `set(nullptr, length)`.)
    * `resize` automatically reserves an extra byte at the end of the buffer for a null terminator.
    */
@@ -263,9 +263,9 @@ class SK_API SkString {
 SkString SkStringPrintf(const char* format, ...) SK_PRINTF_LIKE(1, 2);
 /// This makes it easier to write a caller as a VAR_ARGS function where the format string is
 /// optional.
-static inline SkString SkStringPrintf() { return SkString(); }
+static inline SkString SkStringPrintf() noexcept { return SkString(); }
 
-static inline void swap(SkString& a, SkString& b) { a.swap(b); }
+static inline void swap(SkString& a, SkString& b) noexcept { a.swap(b); }
 
 enum SkStrSplitMode {
   // Strictly return all results. If the input is ",," and the separator is ',' this will return

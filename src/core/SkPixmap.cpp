@@ -15,6 +15,7 @@
 #include "include/private/SkHalf.h"
 #include "include/private/SkImageInfoPriv.h"
 #include "include/private/SkNx.h"
+#include "include/private/SkTPin.h"
 #include "include/private/SkTemplates.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkConvertPixels.h"
@@ -31,7 +32,7 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkPixmap::reset() noexcept {
+void SkPixmap::reset() {
   fPixels = nullptr;
   fRowBytes = 0;
   fInfo = SkImageInfo::MakeUnknown();
@@ -570,7 +571,7 @@ bool SkPixmapPriv::Orient(const SkPixmap& dst, const SkPixmap& src, SkEncodedOri
   return draw_orientation(dst, src, origin);
 }
 
-bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) noexcept {
+bool SkPixmapPriv::ShouldSwapWidthHeight(SkEncodedOrigin origin) {
   // The last four SkEncodedOrigin values involve 90 degree rotations
   return origin >= kLeftTop_SkEncodedOrigin;
 }

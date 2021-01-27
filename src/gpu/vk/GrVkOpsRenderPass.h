@@ -34,7 +34,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   using SelfDependencyFlags = GrVkRenderPass::SelfDependencyFlags;
 
   bool set(
-      GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
+      GrRenderTarget*, GrAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
       GrXferBarrierFlags renderPassXferBarriers);

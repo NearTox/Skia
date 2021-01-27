@@ -18,15 +18,19 @@ class SkRectPriv {
   static constexpr SkIRect MakeILarge() noexcept {
     // SK_MaxS32 >> 1 seemed better, but it did not survive round-trip with SkRect and rounding.
     // Also, 1 << 29 can be perfectly represented in float, while SK_MaxS32 >> 1 cannot.
-    constexpr int32_t large = 1 << 29;
+    const constexpr int32_t large = 1 << 29;
     return {-large, -large, large, large};
   }
 
-  static constexpr SkIRect MakeILargestInverted() {
+  static constexpr SkIRect MakeILargestInverted() noexcept {
     return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
   }
 
-  static constexpr SkRect MakeLargeS32() noexcept { return SkRect::Make(MakeILarge()); }
+  static SkRect MakeLargeS32() noexcept {
+    SkRect r;
+    r.set(MakeILarge());
+    return r;
+  }
 
   static constexpr SkRect MakeLargest() noexcept {
     return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};
@@ -36,7 +40,7 @@ class SkRectPriv {
     return {SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin};
   }
 
-  static void GrowToInclude(SkRect* r, const SkPoint& pt) {
+  static void GrowToInclude(SkRect* r, const SkPoint& pt) noexcept {
     r->fLeft = std::min(pt.fX, r->fLeft);
     r->fRight = std::max(pt.fX, r->fRight);
     r->fTop = std::min(pt.fY, r->fTop);

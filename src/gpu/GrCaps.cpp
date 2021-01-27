@@ -152,6 +152,9 @@ void GrCaps::applyOptionsOverrides(const GrContextOptions& options) {
     fShouldInitializeTextures = true;
   }
 #endif
+  if (options.fSuppressMipmapSupport) {
+    fMipmapSupport = false;
+  }
 
   if (fMaxWindowRectangles > GrWindowRectangles::kMaxWindows) {
     SkDebugf(

@@ -20,7 +20,7 @@ class GrGLSLNullableChildProcessor : public GrGLSLFragmentProcessor {
     const GrNullableChildProcessor& _outer = args.fFp.cast<GrNullableChildProcessor>();
     (void)_outer;
     fragBuilder->codeAppendf(R"SkSL(if (%s) {)SkSL", _outer.childProcessor(0) ? "true" : "false");
-    SkString _sample96 = this->invokeChild(0, args);
+    SkString _sample0 = this->invokeChild(0, args);
     fragBuilder->codeAppendf(
         R"SkSL(
     %s = %s;
@@ -28,7 +28,7 @@ class GrGLSLNullableChildProcessor : public GrGLSLFragmentProcessor {
     %s = half4(0.5);
 }
 )SkSL",
-        args.fOutputColor, _sample96.c_str(), args.fOutputColor);
+        args.fOutputColor, _sample0.c_str(), args.fOutputColor);
   }
 
  private:

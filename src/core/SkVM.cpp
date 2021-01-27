@@ -1956,7 +1956,7 @@ Color Builder::blend(SkBlendMode mode, Color src, Color dst) {
 SkSpan<const Val> Usage::operator[](Val id) const {
   int begin = fIndex[id];
   int end = fIndex[id + 1];
-  return SkMakeSpan(fTable.data() + begin, end - begin);
+  return SkSpan(fTable.data() + begin, end - begin);
 }
 
 Usage::Usage(const std::vector<Instruction>& program) {

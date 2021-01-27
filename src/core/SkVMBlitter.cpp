@@ -319,7 +319,7 @@ struct NoopColorFilter : public SkColorFilterBase {
 
   // Only created here, should never be flattened / unflattened.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return "NoopColorFilter"; }
+  const char* getTypeName() const noexcept override { return "NoopColorFilter"; }
 };
 
 struct SpriteShader : public SkShaderBase {
@@ -329,7 +329,7 @@ struct SpriteShader : public SkShaderBase {
 
   // Only created here temporarily... never serialized.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return "SpriteShader"; }
+  const char* getTypeName() const noexcept override { return "SpriteShader"; }
 
   bool isOpaque() const override { return fSprite.isOpaque(); }
 
@@ -355,7 +355,7 @@ struct DitherShader : public SkShaderBase {
 
   // Only created here temporarily... never serialized.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return "DitherShader"; }
+  const char* getTypeName() const noexcept override { return "DitherShader"; }
 
   bool isOpaque() const override { return fShader->isOpaque(); }
 

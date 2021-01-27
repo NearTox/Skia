@@ -38,7 +38,7 @@ class GrClipStackClip final : public GrClip {
   static bool PathNeedsSWRenderer(
       GrRecordingContext* context, const SkIRect& scissorRect, bool hasUserStencilSettings,
       const GrRenderTargetContext*, const SkMatrix& viewMatrix, const SkClipStack::Element* element,
-      GrPathRenderer** prOut, bool needsStencil);
+      bool needsStencil);
 
   bool applyClipMask(
       GrRecordingContext*, GrRenderTargetContext*, const GrReducedClip&,

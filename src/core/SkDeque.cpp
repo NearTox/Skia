@@ -15,24 +15,24 @@ struct SkDeque::Block {
   char* fEnd;    // end of used section in this chunk
   char* fStop;   // end of the allocated chunk
 
-  char* start() noexcept { return (char*)(this + 1); }
-  const char* start() const noexcept { return (const char*)(this + 1); }
+  char* start() { return (char*)(this + 1); }
+  const char* start() const { return (const char*)(this + 1); }
 
-  void init(size_t size) noexcept {
+  void init(size_t size) {
     fNext = fPrev = nullptr;
     fBegin = fEnd = nullptr;
     fStop = (char*)this + size;
   }
 };
 
-SkDeque::SkDeque(size_t elemSize, int allocCount) noexcept
+SkDeque::SkDeque(size_t elemSize, int allocCount)
     : fElemSize(elemSize), fInitialStorage(nullptr), fCount(0), fAllocCount(allocCount) {
   SkASSERT(allocCount >= 1);
   fFrontBlock = fBackBlock = nullptr;
   fFront = fBack = nullptr;
 }
 
-SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount) noexcept
+SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount)
     : fElemSize(elemSize), fInitialStorage(storage), fCount(0), fAllocCount(allocCount) {
   SkASSERT(storageSize == 0 || storage != nullptr);
   SkASSERT(allocCount >= 1);
@@ -225,7 +225,7 @@ SkDeque::Block* SkDeque::allocateBlock(int allocCount) {
   return newBlock;
 }
 
-void SkDeque::freeBlock(Block* block) noexcept { sk_free(block); }
+void SkDeque::freeBlock(Block* block) { sk_free(block); }
 
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -174,7 +174,7 @@ bool GrStencilAndCoverPathRenderer::onDrawPath(const DrawPathArgs& args) {
           coverBounds, &localMatrix);
     }
   } else {
-    std::unique_ptr<GrDrawOp> op = GrDrawPathOp::Make(
+    GrOp::Owner op = GrDrawPathOp::Make(
         args.fContext, viewMatrix, std::move(args.fPaint), GrAA(stencilAAType == GrAAType::kMSAA),
         std::move(path));
     args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));

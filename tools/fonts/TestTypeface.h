@@ -93,6 +93,7 @@ class TestTypeface : public SkTypeface {
   int onGetUPEM() const override { return 2048; }
 
   void onGetFamilyName(SkString* familyName) const override;
+  bool onGetPostScriptName(SkString*) const override;
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
 
   int onGetVariationDesignPosition(

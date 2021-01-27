@@ -140,7 +140,7 @@ class ImageFilterXfermodeIn : public Benchmark {
     auto blur = SkImageFilters::Blur(20.0f, 20.0f, nullptr);
     auto offset1 = SkImageFilters::Offset(100.0f, 100.0f, blur);
     auto offset2 = SkImageFilters::Offset(-100.0f, -100.0f, blur);
-    auto xfermode = SkImageFilters::Xfermode(SkBlendMode::kSrcIn, offset1, offset2, nullptr);
+    auto xfermode = SkImageFilters::Blend(SkBlendMode::kSrcIn, offset1, offset2, nullptr);
 
     SkPaint paint;
     paint.setImageFilter(xfermode);

@@ -29,10 +29,10 @@ class SkDWriteFontFileStream : public SkStreamMemory {
   size_t read(void* buffer, size_t size) override;
   bool isAtEnd() const override;
   bool rewind() override;
-  size_t getPosition() const override;
+  size_t getPosition() const noexcept override;
   bool seek(size_t position) override;
   bool move(long offset) override;
-  size_t getLength() const override;
+  size_t getLength() const noexcept override;
   const void* getMemoryBase() override;
 
   std::unique_ptr<SkDWriteFontFileStream> duplicate() const {

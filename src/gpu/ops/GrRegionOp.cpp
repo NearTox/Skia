@@ -37,7 +37,7 @@ class RegionOp final : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
       const SkRegion& region, GrAAType aaType,
       const GrUserStencilSettings* stencilSettings = nullptr) {
@@ -46,10 +46,10 @@ class RegionOp final : public GrMeshDrawOp {
   }
 
   RegionOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkMatrix& viewMatrix,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, const SkMatrix& viewMatrix,
       const SkRegion& region, GrAAType aaType, const GrUserStencilSettings* stencilSettings)
       : INHERITED(ClassID()),
-        fHelper(helperArgs, aaType, stencilSettings),
+        fHelper(processorSet, aaType, stencilSettings),
         fViewMatrix(viewMatrix) {
     RegionInfo& info = fRegions.push_back();
     info.fColor = color;
@@ -146,8 +146,7 @@ class RegionOp final : public GrMeshDrawOp {
     flushState->drawMesh(*fMesh);
   }
 
-  CombineResult onCombineIfPossible(
-      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) override {
     RegionOp* that = t->cast<RegionOp>();
     if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
       return CombineResult::kCannotCombine;
@@ -196,7 +195,7 @@ class RegionOp final : public GrMeshDrawOp {
 
 namespace GrRegionOp {
 
-std::unique_ptr<GrDrawOp> Make(
+GrOp::Owner Make(
     GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
     const SkRegion& region, GrAAType aaType, const GrUserStencilSettings* stencilSettings) {
   if (aaType != GrAAType::kNone && aaType != GrAAType::kMSAA) {

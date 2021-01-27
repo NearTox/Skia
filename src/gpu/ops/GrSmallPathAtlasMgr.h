@@ -47,16 +47,14 @@ class GrSmallPathAtlasMgr : public GrOnFlushCallbackObject,
 
   // GrOnFlushCallbackObject overrides
   void preFlush(
-      GrOnFlushResourceProvider* onFlushRP, const uint32_t* /* opsTaskIDs */,
-      int /* numOpsTaskIDs */) override {
+      GrOnFlushResourceProvider* onFlushRP, SkSpan<const uint32_t> /* taskIDs */) override {
     if (fAtlas) {
       fAtlas->instantiate(onFlushRP);
     }
   }
 
   void postFlush(
-      GrDeferredUploadToken startTokenForNextFlush, const uint32_t* /* opsTaskIDs */,
-      int /* numOpsTaskIDs */) override {
+      GrDeferredUploadToken startTokenForNextFlush, SkSpan<const uint32_t> /* taskIDs */) override {
     if (fAtlas) {
       fAtlas->compact(startTokenForNextFlush);
     }

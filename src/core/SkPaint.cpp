@@ -61,17 +61,17 @@ SkPaint::SkPaint(const SkColor4f& color, SkColorSpace* colorSpace) : SkPaint() {
   this->setColor(color, colorSpace);
 }
 
-SkPaint::SkPaint(const SkPaint& src) = default;
+SkPaint::SkPaint(const SkPaint& src) noexcept = default;
 
 SkPaint::SkPaint(SkPaint&& src) noexcept = default;
 
 SkPaint::~SkPaint() = default;
 
-SkPaint& SkPaint::operator=(const SkPaint& src) = default;
+SkPaint& SkPaint::operator=(const SkPaint& src) noexcept = default;
 
-SkPaint& SkPaint::operator=(SkPaint&& src)noexcept = default;
+SkPaint& SkPaint::operator=(SkPaint&& src) noexcept = default;
 
-bool operator==(const SkPaint& a, const SkPaint& b) noexcept {
+bool operator==(const SkPaint& a, const SkPaint& b) {
 #define EQUAL(field) (a.field == b.field)
   return EQUAL(fPathEffect) && EQUAL(fShader) && EQUAL(fMaskFilter) && EQUAL(fColorFilter) &&
          EQUAL(fImageFilter) && EQUAL(fColor4f) && EQUAL(fWidth) && EQUAL(fMiterLimit) &&
@@ -80,7 +80,7 @@ bool operator==(const SkPaint& a, const SkPaint& b) noexcept {
 }
 
 #define DEFINE_REF_FOO(type) \
-  sk_sp<Sk##type> SkPaint::ref##type() const { return f##type; }
+  sk_sp<Sk##type> SkPaint::ref##type() const noexcept { return f##type; }
 DEFINE_REF_FOO(ColorFilter)
 DEFINE_REF_FOO(ImageFilter)
 DEFINE_REF_FOO(MaskFilter)
@@ -90,9 +90,11 @@ DEFINE_REF_FOO(Shader)
 
 void SkPaint::reset() noexcept { *this = SkPaint(); }
 
-void SkPaint::setFilterQuality(SkFilterQuality quality) { fBitfields.fFilterQuality = quality; }
+void SkPaint::setFilterQuality(SkFilterQuality quality) noexcept {
+  fBitfields.fFilterQuality = quality;
+}
 
-void SkPaint::setStyle(Style style) {
+void SkPaint::setStyle(Style style) noexcept {
   if ((unsigned)style < kStyleCount) {
     fBitfields.fStyle = style;
   } else {
@@ -102,7 +104,7 @@ void SkPaint::setStyle(Style style) {
   }
 }
 
-void SkPaint::setStroke(bool isStroke) {
+void SkPaint::setStroke(bool isStroke) noexcept {
   fBitfields.fStyle = isStroke ? kStroke_Style : kFill_Style;
 }
 
@@ -117,7 +119,7 @@ void SkPaint::setColor(const SkColor4f& color, SkColorSpace* colorSpace) {
   steps.apply(fColor4f.vec());
 }
 
-void SkPaint::setAlphaf(float a) {
+void SkPaint::setAlphaf(float a) noexcept {
   SkASSERT(a >= 0 && a <= 1.0f);
   fColor4f.fA = a;
 }
@@ -126,7 +128,7 @@ void SkPaint::setARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
   this->setColor(SkColorSetARGB(a, r, g, b));
 }
 
-void SkPaint::setStrokeWidth(SkScalar width) {
+void SkPaint::setStrokeWidth(SkScalar width) noexcept {
   if (width >= 0) {
     fWidth = width;
   } else {
@@ -169,7 +171,7 @@ void SkPaint::setStrokeJoin(Join jt) {
 ///////////////////////////////////////////////////////////////////////////////
 
 #define MOVE_FIELD(Field) \
-  void SkPaint::set##Field(sk_sp<Sk##Field> f) { f##Field = std::move(f); }
+  void SkPaint::set##Field(sk_sp<Sk##Field> f) noexcept { f##Field = std::move(f); }
 MOVE_FIELD(ImageFilter)
 MOVE_FIELD(Shader)
 MOVE_FIELD(ColorFilter)
@@ -203,7 +205,7 @@ enum FlatFlags {
 // of those flags, split into categories depending on which objects they (now) apply to.
 
 template <typename T>
-uint32_t shift_bits(T value, unsigned shift, unsigned bits) {
+uint32_t shift_bits(T value, unsigned shift, unsigned bits) noexcept {
   SkASSERT(shift + bits <= 32);
   uint32_t v = static_cast<uint32_t>(value);
   ASSERT_FITS_IN(v, bits);

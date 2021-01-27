@@ -24,7 +24,7 @@ class GrGLSLChildProcessorFieldAccess : public GrGLSLFragmentProcessor {
         R"SkSL(bool opaque = %s;
 if (opaque) {)SkSL",
         (opaque ? "true" : "false"));
-    SkString _sample131 = this->invokeChild(0, args);
+    SkString _sample0 = this->invokeChild(0, args);
     fragBuilder->codeAppendf(
         R"SkSL(
     %s = %s;
@@ -32,7 +32,7 @@ if (opaque) {)SkSL",
     %s = half4(0.5);
 }
 )SkSL",
-        args.fOutputColor, _sample131.c_str(), args.fOutputColor);
+        args.fOutputColor, _sample0.c_str(), args.fOutputColor);
   }
 
  private:

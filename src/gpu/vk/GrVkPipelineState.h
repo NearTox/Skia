@@ -57,8 +57,7 @@ class GrVkPipelineState {
       GrVkGpu*, const GrPrimitiveProcessor&, const GrPipeline&,
       const GrSurfaceProxy* const primitiveProcessorTextures[], GrVkCommandBuffer*);
 
-  bool setAndBindInputAttachment(
-      GrVkGpu*, GrVkRenderTarget* renderTarget, const GrPipeline&, GrVkCommandBuffer*);
+  bool setAndBindInputAttachment(GrVkGpu*, GrVkRenderTarget* renderTarget, GrVkCommandBuffer*);
 
   void bindPipeline(const GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer);
 

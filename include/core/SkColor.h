@@ -42,7 +42,7 @@ typedef uint32_t SkColor;
     @param b  amount of blue, from no blue (0) to full blue (255)
     @return   color and alpha, unpremultiplied
 */
-static constexpr inline SkColor SkColorSetARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+static constexpr inline SkColor SkColorSetARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   return SkASSERT(a <= 255 && r <= 255 && g <= 255 && b <= 255),
          (a << 24) | (r << 16) | (g << 8) | (b << 0);
 }
@@ -75,7 +75,7 @@ static constexpr inline SkColor SkColorSetARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU 
     @param a  alpha: transparent at zero, fully opaque at 255
     @return   color with transparency
 */
-static constexpr inline SkColor SK_WARN_UNUSED_RESULT SkColorSetA(SkColor c, U8CPU a) {
+static constexpr inline SkColor SK_WARN_UNUSED_RESULT SkColorSetA(SkColor c, U8CPU a) noexcept {
   return (c & 0x00FFFFFF) | (a << 24);
 }
 
@@ -294,13 +294,13 @@ struct SkRGBA4f {
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  const float* vec() const { return &fR; }
+  const float* vec() const noexcept { return &fR; }
 
   /** Returns a pointer to components of SkRGBA4f, for array access.
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  float* vec() { return &fR; }
+  float* vec() noexcept { return &fR; }
 
   /** Returns one component. Asserts if index is out of range and SK_DEBUG is defined.
 

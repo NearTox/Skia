@@ -38,7 +38,7 @@ static bool reset_return_false(SkBitmap* bm) {
   return false;
 }
 
-SkBitmap::SkBitmap() noexcept = default;
+SkBitmap::SkBitmap() {}
 
 SkBitmap::SkBitmap(const SkBitmap& src)
     : fPixelRef(src.fPixelRef), fPixmap(src.fPixmap), fMips(src.fMips) {
@@ -46,7 +46,7 @@ SkBitmap::SkBitmap(const SkBitmap& src)
   SkDEBUGCODE(this->validate();)
 }
 
-SkBitmap::SkBitmap(SkBitmap&& other) noexcept
+SkBitmap::SkBitmap(SkBitmap&& other)
     : fPixelRef(std::move(other.fPixelRef)),
       fPixmap(std::move(other.fPixmap)),
       fMips(std::move(other.fMips)) {
@@ -66,7 +66,7 @@ SkBitmap& SkBitmap::operator=(const SkBitmap& src) {
   return *this;
 }
 
-SkBitmap& SkBitmap::operator=(SkBitmap&& other) noexcept {
+SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
   if (this != &other) {
     fPixelRef = std::move(other.fPixelRef);
     fPixmap = std::move(other.fPixmap);
@@ -77,7 +77,7 @@ SkBitmap& SkBitmap::operator=(SkBitmap&& other) noexcept {
   return *this;
 }
 
-void SkBitmap::swap(SkBitmap& other) noexcept {
+void SkBitmap::swap(SkBitmap& other) {
   using std::swap;
   swap(*this, other);
   SkDEBUGCODE(this->validate();)

@@ -11,44 +11,44 @@
 #include "include/private/SkTFitsIn.h"
 
 template <typename D, typename S>
-constexpr D SkTo(S s) {
+constexpr D SkTo(S s) noexcept {
   return SkASSERT(SkTFitsIn<D>(s)), static_cast<D>(s);
 }
 
 template <typename S>
-constexpr int8_t SkToS8(S x) {
+constexpr int8_t SkToS8(S x) noexcept {
   return SkTo<int8_t>(x);
 }
 template <typename S>
-constexpr uint8_t SkToU8(S x) {
+constexpr uint8_t SkToU8(S x) noexcept {
   return SkTo<uint8_t>(x);
 }
 template <typename S>
-constexpr int16_t SkToS16(S x) {
+constexpr int16_t SkToS16(S x) noexcept {
   return SkTo<int16_t>(x);
 }
 template <typename S>
-constexpr uint16_t SkToU16(S x) {
+constexpr uint16_t SkToU16(S x) noexcept {
   return SkTo<uint16_t>(x);
 }
 template <typename S>
-constexpr int32_t SkToS32(S x) {
+constexpr int32_t SkToS32(S x) noexcept {
   return SkTo<int32_t>(x);
 }
 template <typename S>
-constexpr uint32_t SkToU32(S x) {
+constexpr uint32_t SkToU32(S x) noexcept {
   return SkTo<uint32_t>(x);
 }
 template <typename S>
-constexpr int SkToInt(S x) {
+constexpr int SkToInt(S x) noexcept {
   return SkTo<int>(x);
 }
 template <typename S>
-constexpr unsigned SkToUInt(S x) {
+constexpr unsigned SkToUInt(S x) noexcept {
   return SkTo<unsigned>(x);
 }
 template <typename S>
-constexpr size_t SkToSizeT(S x) {
+constexpr size_t SkToSizeT(S x) noexcept {
   return SkTo<size_t>(x);
 }
 

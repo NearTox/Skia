@@ -30,7 +30,13 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
 
   GrBackendFormat backendFormat() const override { return this->getBackendFormat(); }
 
-  GrD3DTextureResource* msaaTextureResource() const { return fMSAATextureResource.get(); }
+  /**
+   * If this render target is multisampled, this returns the MSAA texture for rendering. This
+   * will be different than *this* when we have separate render/resolve images. If not
+   * multisampled returns nullptr.
+   */
+  const GrD3DTextureResource* msaaTextureResource() const;
+  GrD3DTextureResource* msaaTextureResource();
 
   bool canAttemptStencilAttachment() const override { return true; }
 
@@ -47,7 +53,7 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
 
  protected:
   GrD3DRenderTarget(
-      GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
+      GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
       sk_sp<GrD3DResourceState> msaaState,
       const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
@@ -67,16 +73,15 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
       // Add one to account for the resolved VkImage.
       numColorSamples += 1;
     }
-    const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
+        this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
   }
 
  private:
   // Extra param to disambiguate from constructor used by subclasses.
   enum Wrapped { kWrapped };
   GrD3DRenderTarget(
-      GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
+      GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DTextureResourceInfo& msaaInfo,
       sk_sp<GrD3DResourceState> msaaState,
       const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,

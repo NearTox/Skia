@@ -36,7 +36,7 @@ class GrImageContext : public GrContext_Base {
   /** This is only useful for debug purposes */
   GrSingleOwner* singleOwner() const { return &fSingleOwner; }
 
-  GrImageContext* asImageContext() override { return this; }
+  GrImageContext* asImageContext() noexcept override { return this; }
 
  private:
   std::unique_ptr<GrProxyProvider> fProxyProvider;

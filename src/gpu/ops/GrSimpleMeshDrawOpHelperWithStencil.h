@@ -17,7 +17,6 @@
  */
 class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
  public:
-  using MakeArgs = GrSimpleMeshDrawOpHelper::MakeArgs;
   using InputFlags = GrSimpleMeshDrawOpHelper::InputFlags;
 
   using GrSimpleMeshDrawOpHelper::createPipeline;
@@ -30,14 +29,13 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
 
   // using declarations can't be templated, so this is a pass through function instead.
   template <typename Op, typename... OpArgs>
-  static std::unique_ptr<GrDrawOp> FactoryHelper(
-      GrRecordingContext* context, GrPaint&& paint, OpArgs... opArgs) {
+  static GrOp::Owner FactoryHelper(GrRecordingContext* context, GrPaint&& paint, OpArgs... opArgs) {
     return GrSimpleMeshDrawOpHelper::FactoryHelper<Op, OpArgs...>(
         context, std::move(paint), std::forward<OpArgs>(opArgs)...);
   }
 
   GrSimpleMeshDrawOpHelperWithStencil(
-      const MakeArgs&, GrAAType, const GrUserStencilSettings*, InputFlags = InputFlags::kNone);
+      GrProcessorSet*, GrAAType, const GrUserStencilSettings*, InputFlags = InputFlags::kNone);
 
   GrDrawOp::FixedFunctionFlags fixedFunctionFlags() const;
 

@@ -47,5 +47,5 @@ bool GrPaint::isConstantBlendedColor(SkPMColor4f* constantColor) const {
     *constantColor = fColor;
     return true;
   }
-  return false;
+    return false;
 }

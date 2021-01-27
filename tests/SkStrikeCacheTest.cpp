@@ -44,5 +44,5 @@ DEF_TEST(SkStrikeCache_CachePurge, Reporter) {
     sk_sp<SkStrike> strike = strikeSpec.findOrCreateStrike(&cache);
     REPORTER_ASSERT(Reporter, cache.getTotalMemoryUsed() == 0);
   }
-  REPORTER_ASSERT(Reporter, cache.getTotalMemoryUsed() == 0);
+    REPORTER_ASSERT(Reporter, cache.getTotalMemoryUsed() == 0);
 }

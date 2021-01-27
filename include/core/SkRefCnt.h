@@ -330,7 +330,7 @@ class sk_sp {
     return ptr;
   }
 
-  void swap(sk_sp<T>& that) noexcept {
+ constexpr void swap(sk_sp<T>& that) noexcept {
     using std::swap;
     swap(fPtr, that.fPtr);
   }
@@ -340,7 +340,7 @@ class sk_sp {
 };
 
 template <typename T>
-inline void swap(sk_sp<T>& a, sk_sp<T>& b) noexcept {
+inline constexpr void swap(sk_sp<T>& a, sk_sp<T>& b) noexcept {
   a.swap(b);
 }
 

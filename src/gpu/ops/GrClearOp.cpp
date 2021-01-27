@@ -18,16 +18,14 @@ static bool contains_scissor(const GrScissorState& a, const GrScissorState& b) {
   return !a.enabled() || (b.enabled() && a.rect().contains(b.rect()));
 }
 
-std::unique_ptr<GrClearOp> GrClearOp::MakeColor(
+GrOp::Owner GrClearOp::MakeColor(
     GrRecordingContext* context, const GrScissorState& scissor, const SkPMColor4f& color) {
-  GrOpMemoryPool* pool = context->priv().opMemoryPool();
-  return pool->allocate<GrClearOp>(Buffer::kColor, scissor, color, false);
+  return GrOp::Make<GrClearOp>(context, Buffer::kColor, scissor, color, false);
 }
 
-std::unique_ptr<GrClearOp> GrClearOp::MakeStencilClip(
+GrOp::Owner GrClearOp::MakeStencilClip(
     GrRecordingContext* context, const GrScissorState& scissor, bool insideMask) {
-  GrOpMemoryPool* pool = context->priv().opMemoryPool();
-  return pool->allocate<GrClearOp>(Buffer::kStencilClip, scissor, SkPMColor4f(), insideMask);
+  return GrOp::Make<GrClearOp>(context, Buffer::kStencilClip, scissor, SkPMColor4f(), insideMask);
 }
 
 GrClearOp::GrClearOp(
@@ -40,8 +38,7 @@ GrClearOp::GrClearOp(
   this->setBounds(SkRect::Make(scissor.rect()), HasAABloat::kNo, IsHairline::kNo);
 }
 
-GrOp::CombineResult GrClearOp::onCombineIfPossible(
-    GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) {
+GrOp::CombineResult GrClearOp::onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) {
   GrClearOp* other = t->cast<GrClearOp>();
 
   if (other->fBuffer == fBuffer) {

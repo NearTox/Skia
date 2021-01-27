@@ -214,28 +214,28 @@ DEF_SIMPLE_GM(HSL_duck, canvas, 1110, 620) {
     canvas->drawSimpleText(name, strlen(name), SkTextEncoding::kUTF8, 150, -20, font, SkPaint());
     canvas->translate(r.width() + 10, 0);
   }
-  canvas->restore();
-
-  for (SkScalar src_a : {1.0f, 0.5f}) {
-    canvas->save();
-    for (auto [mode, _] : recs) {
-      SkPaint p;
-      p.setShader(dst);
-      canvas->drawRect(r, p);  // bg
-
-      p.setShader(nullptr);
-      p.setBlendMode(mode);
-      p.setAlphaf(src_a);
-      canvas->drawImageRect(src, r, &p);
-
-      canvas->translate(r.width() + 10, 0);
-    }
-    SkString str;
-    str.printf("alpha %g", src_a);
-    canvas->drawSimpleText(
-        str.c_str(), str.size(), SkTextEncoding::kUTF8, 10, r.height() / 2, font, SkPaint());
-
     canvas->restore();
-    canvas->translate(0, r.height() + 10);
-  }
+
+    for (SkScalar src_a : {1.0f, 0.5f}) {
+      canvas->save();
+      for (auto [mode, _] : recs) {
+        SkPaint p;
+        p.setShader(dst);
+        canvas->drawRect(r, p);  // bg
+
+        p.setShader(nullptr);
+        p.setBlendMode(mode);
+        p.setAlphaf(src_a);
+        canvas->drawImageRect(src, r, &p);
+
+        canvas->translate(r.width() + 10, 0);
+      }
+      SkString str;
+      str.printf("alpha %g", src_a);
+      canvas->drawSimpleText(
+          str.c_str(), str.size(), SkTextEncoding::kUTF8, 10, r.height() / 2, font, SkPaint());
+
+      canvas->restore();
+      canvas->translate(0, r.height() + 10);
+    }
 }

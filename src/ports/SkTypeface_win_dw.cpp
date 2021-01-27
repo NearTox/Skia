@@ -54,6 +54,22 @@ void DWriteFontTypeface::onGetFamilyName(SkString* familyName) const {
   sk_get_locale_string(familyNames.get(), nullptr /*fMgr->fLocaleName.get()*/, familyName);
 }
 
+bool DWriteFontTypeface::onGetPostScriptName(SkString* skPostScriptName) const {
+  SkString localSkPostScriptName;
+  SkTScopedComPtr<IDWriteLocalizedStrings> postScriptNames;
+  BOOL exists = FALSE;
+  if (FAILED(fDWriteFont->GetInformationalStrings(
+          DWRITE_INFORMATIONAL_STRING_POSTSCRIPT_NAME, &postScriptNames, &exists)) ||
+      !exists ||
+      FAILED(sk_get_locale_string(postScriptNames.get(), nullptr, &localSkPostScriptName))) {
+    return false;
+  }
+  if (skPostScriptName) {
+    *skPostScriptName = localSkPostScriptName;
+  }
+  return true;
+}
+
 void DWriteFontTypeface::onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocalStream) const {
   // Get the family name.
   SkTScopedComPtr<IDWriteLocalizedStrings> familyNames;
@@ -283,12 +299,12 @@ sk_sp<SkData> DWriteFontTypeface::onCopyTableData(SkFontTableTag tag) const {
       new Context(lock, fDWriteFontFace.get()));
 }
 
-void DWriteFontTypeface::weak_dispose() const noexcept {
-  fLoaders.reset();
+ void DWriteFontTypeface::weak_dispose() const noexcept {
+    fLoaders.reset();
 
-  // SkTypefaceCache::Remove(this);
-  INHERITED::weak_dispose();
-}
+    // SkTypefaceCache::Remove(this);
+    INHERITED::weak_dispose();
+  }
 
 sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) const {
   // Skip if the current face index does not match the ttcIndex

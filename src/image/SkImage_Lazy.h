@@ -70,9 +70,7 @@ class SkImage_Lazy : public SkImage_Base {
   void addUniqueIDListener(sk_sp<SkIDChangeListener>) const;
 #if SK_SUPPORT_GPU
   sk_sp<SkCachedData> getPlanes(
-      const SkYUVAPixmapInfo::SupportedDataTypes& supportedDataTypes, SkYUVASizeInfo* yuvaSizeInfo,
-      SkYUVAIndex yuvaIndices[SkYUVAIndex::kIndexCount], SkYUVColorSpace* yuvColorSpace,
-      SkPixmap planes[SkYUVASizeInfo::kMaxCount]) const;
+      const SkYUVAPixmapInfo::SupportedDataTypes& supportedDataTypes, SkYUVAPixmaps* pixmaps) const;
   GrSurfaceProxyView textureProxyViewFromPlanes(GrRecordingContext*, SkBudgeted) const;
 #endif
 

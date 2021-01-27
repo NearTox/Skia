@@ -37,11 +37,7 @@ class SkImageShader : public SkShaderBase {
       bool clampAsIfUnpremul = false);
 
   static sk_sp<SkShader> Make(
-      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkFilterOptions&,
-      const SkMatrix* localMatrix);
-
-  static sk_sp<SkShader> Make(
-      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, SkImage::CubicResampler,
+      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions&,
       const SkMatrix* localMatrix);
 
   bool isOpaque() const override;
@@ -59,10 +55,7 @@ class SkImageShader : public SkShaderBase {
       sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix, FilterEnum,
       bool clampAsIfUnpremul);
   SkImageShader(
-      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkFilterOptions&,
-      const SkMatrix* localMatrix);
-  SkImageShader(
-      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, SkImage::CubicResampler,
+      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions&,
       const SkMatrix* localMatrix);
 
   void flatten(SkWriteBuffer&) const override;
@@ -100,7 +93,7 @@ class SkImageShader : public SkShaderBase {
   // only use this if fFilterEnum == kUseFilterOptions
   SkFilterOptions fFilterOptions;
   // only use this if fFilterEnum == kUseCubicResampler or kHigh
-  SkImage::CubicResampler fCubic = {1 / 3.0f, 1 / 3.0f};  // Default to Mitchell-Netravali.
+  SkCubicResampler fCubic = {1 / 3.0f, 1 / 3.0f};  // Default to Mitchell-Netravali.
 
   friend class SkShaderBase;
   using INHERITED = SkShaderBase;

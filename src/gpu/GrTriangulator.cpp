@@ -791,12 +791,12 @@ void generate_cubic_points(
 
 void path_to_contours(
     const SkPath& path, SkScalar tolerance, const SkRect& clipBounds, VertexList* contours,
-    SkArenaAlloc& alloc, Mode mode, int* numCountedCurves) {
+    SkArenaAlloc& alloc, Mode mode, bool* isLinear) {
   SkScalar toleranceSqd = tolerance * tolerance;
   bool innerPolygons = (Mode::kSimpleInnerPolygons == mode);
 
   SkPoint pts[4];
-  int localCurveCount = 0;
+  *isLinear = true;
   VertexList* contour = contours;
   SkPath::Iter iter(path, false);
   if (path.isInverseFillType()) {
@@ -812,7 +812,7 @@ void path_to_contours(
   while ((verb = iter.next(pts)) != SkPath::kDone_Verb) {
     switch (verb) {
       case SkPath::kConic_Verb: {
-        ++localCurveCount;
+        *isLinear = false;
         if (innerPolygons) {
           append_point_to_contour(pts[2], contour, alloc);
           break;
@@ -836,7 +836,7 @@ void path_to_contours(
         break;
       }
       case SkPath::kQuad_Verb: {
-        ++localCurveCount;
+        *isLinear = false;
         if (innerPolygons) {
           append_point_to_contour(pts[2], contour, alloc);
           break;
@@ -845,7 +845,7 @@ void path_to_contours(
         break;
       }
       case SkPath::kCubic_Verb: {
-        ++localCurveCount;
+        *isLinear = false;
         if (innerPolygons) {
           append_point_to_contour(pts[3], contour, alloc);
           break;
@@ -859,7 +859,6 @@ void path_to_contours(
       case SkPath::kDone_Verb: break;
     }
   }
-  *numCountedCurves = localCurveCount;
 }
 
 inline bool apply_fill_type(SkPathFillType fillType, int winding) {
@@ -2325,14 +2324,14 @@ void* polys_to_triangles(Poly* polys, SkPathFillType fillType, Mode mode, void* 
 
 Poly* path_to_polys(
     const SkPath& path, SkScalar tolerance, const SkRect& clipBounds, int contourCnt,
-    SkArenaAlloc& alloc, Mode mode, int* numCountedCurves, VertexList* outerMesh) {
+    SkArenaAlloc& alloc, Mode mode, bool* isLinear, VertexList* outerMesh) {
   SkPathFillType fillType = path.getFillType();
   if (SkPathFillType_IsInverse(fillType)) {
     contourCnt++;
   }
   std::unique_ptr<VertexList[]> contours(new VertexList[contourCnt]);
 
-  path_to_contours(path, tolerance, clipBounds, contours.get(), alloc, mode, numCountedCurves);
+  path_to_contours(path, tolerance, clipBounds, contours.get(), alloc, mode, isLinear);
   return contours_to_polys(
       contours.get(), contourCnt, path.getFillType(), path.getBounds(), mode, outerMesh, alloc);
 }
@@ -2410,16 +2409,16 @@ namespace GrTriangulator {
 
 int PathToTriangles(
     const SkPath& path, SkScalar tolerance, const SkRect& clipBounds,
-    GrEagerVertexAllocator* vertexAllocator, Mode mode, int* numCountedCurves) {
+    GrEagerVertexAllocator* vertexAllocator, Mode mode, bool* isLinear) {
   int contourCnt = get_contour_count(path, tolerance);
   if (contourCnt <= 0) {
-    *numCountedCurves = 0;
+    *isLinear = true;
     return 0;
   }
   SkArenaAlloc alloc(kArenaChunkSize);
   VertexList outerMesh;
-  Poly* polys = path_to_polys(
-      path, tolerance, clipBounds, contourCnt, alloc, mode, numCountedCurves, &outerMesh);
+  Poly* polys =
+      path_to_polys(path, tolerance, clipBounds, contourCnt, alloc, mode, isLinear, &outerMesh);
   SkPathFillType fillType =
       (Mode::kEdgeAntialias == mode) ? SkPathFillType::kWinding : path.getFillType();
   int64_t count64 = count_points(polys, fillType);
@@ -2457,9 +2456,9 @@ int PathToVertices(
     return 0;
   }
   SkArenaAlloc alloc(kArenaChunkSize);
-  int numCountedCurves;
+  bool isLinear;
   Poly* polys = path_to_polys(
-      path, tolerance, clipBounds, contourCnt, alloc, Mode::kNormal, &numCountedCurves, nullptr);
+      path, tolerance, clipBounds, contourCnt, alloc, Mode::kNormal, &isLinear, nullptr);
   SkPathFillType fillType = path.getFillType();
   int64_t count64 = count_points(polys, fillType);
   if (0 == count64 || count64 > SK_MaxS32) {

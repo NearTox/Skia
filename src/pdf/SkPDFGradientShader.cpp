@@ -248,42 +248,42 @@ static std::unique_ptr<SkPDFDict> gradientStitchCode(const SkShader::GradientInf
   // check if last 2 stops coincide
   if (colorOffsets[i - 1] == colorOffsets[i]) {
     colorOffsets[i - 1] -= 0.00001f;
-  }
-
-  SkAutoSTMalloc<4, ColorTuple> colorDataAlloc(colorCount);
-  ColorTuple* colorData = colorDataAlloc.get();
-  for (int i = 0; i < colorCount; i++) {
-    colorData[i][0] = SkColorGetR(colors[i]);
-    colorData[i][1] = SkColorGetG(colors[i]);
-    colorData[i][2] = SkColorGetB(colors[i]);
-  }
-
-  // no need for a stitch function if there are only 2 stops.
-  if (colorCount == 2) return createInterpolationFunction(colorData[0], colorData[1]);
-
-  auto encode = SkPDFMakeArray();
-  auto bounds = SkPDFMakeArray();
-  auto functions = SkPDFMakeArray();
-
-  retval->insertObject("Domain", SkPDFMakeArray(0, 1));
-  retval->insertInt("FunctionType", 3);
-
-  for (int i = 1; i < colorCount; i++) {
-    if (i > 1) {
-      bounds->appendScalar(colorOffsets[i - 1]);
     }
 
-    encode->appendScalar(0);
-    encode->appendScalar(1.0f);
+    SkAutoSTMalloc<4, ColorTuple> colorDataAlloc(colorCount);
+    ColorTuple* colorData = colorDataAlloc.get();
+    for (int i = 0; i < colorCount; i++) {
+      colorData[i][0] = SkColorGetR(colors[i]);
+      colorData[i][1] = SkColorGetG(colors[i]);
+      colorData[i][2] = SkColorGetB(colors[i]);
+    }
 
-    functions->appendObject(createInterpolationFunction(colorData[i - 1], colorData[i]));
-  }
+    // no need for a stitch function if there are only 2 stops.
+    if (colorCount == 2) return createInterpolationFunction(colorData[0], colorData[1]);
 
-  retval->insertObject("Encode", std::move(encode));
-  retval->insertObject("Bounds", std::move(bounds));
-  retval->insertObject("Functions", std::move(functions));
+    auto encode = SkPDFMakeArray();
+    auto bounds = SkPDFMakeArray();
+    auto functions = SkPDFMakeArray();
 
-  return retval;
+    retval->insertObject("Domain", SkPDFMakeArray(0, 1));
+    retval->insertInt("FunctionType", 3);
+
+    for (int i = 1; i < colorCount; i++) {
+      if (i > 1) {
+        bounds->appendScalar(colorOffsets[i - 1]);
+      }
+
+      encode->appendScalar(0);
+      encode->appendScalar(1.0f);
+
+      functions->appendObject(createInterpolationFunction(colorData[i - 1], colorData[i]));
+    }
+
+    retval->insertObject("Encode", std::move(encode));
+    retval->insertObject("Bounds", std::move(bounds));
+    retval->insertObject("Functions", std::move(functions));
+
+    return retval;
 }
 
 /* Map a value of t on the stack into [0, 1) for Repeat or Mirror tile mode. */

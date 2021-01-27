@@ -53,7 +53,7 @@ class FontCollection : public SkRefCnt {
     FamilyKey(const std::vector<SkString>& familyNames, SkFontStyle style)
         : fFamilyNames(familyNames), fFontStyle(style) {}
 
-    FamilyKey() noexcept = default;
+    FamilyKey() {}
 
     std::vector<SkString> fFamilyNames;
     SkFontStyle fFontStyle;

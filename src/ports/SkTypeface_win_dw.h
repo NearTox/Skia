@@ -105,7 +105,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const noexcept override;
+  void weak_dispose() const  noexcept  override;
 
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const override;
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override;
@@ -120,6 +120,7 @@ class DWriteFontTypeface : public SkTypeface {
   void getPostScriptGlyphNames(SkString*) const override;
   int onGetUPEM() const override;
   void onGetFamilyName(SkString* familyName) const override;
+  bool onGetPostScriptName(SkString*) const override;
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[],

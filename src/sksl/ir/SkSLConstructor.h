@@ -8,6 +8,7 @@
 #ifndef SKSL_CONSTRUCTOR
 #define SKSL_CONSTRUCTOR
 
+#include "include/private/SkTArray.h"
 #include "src/sksl/SkSLIRGenerator.h"
 #include "src/sksl/ir/SkSLExpression.h"
 #include "src/sksl/ir/SkSLFloatLiteral.h"
@@ -25,18 +26,16 @@ namespace SkSL {
  * Matrix constructors will always consist of either exactly 1 scalar, exactly 1 matrix, or a
  * collection of vectors and scalars totalling exactly the right number of scalar components.
  */
-class Constructor : public Expression {
+class Constructor final : public Expression {
  public:
   static constexpr Kind kExpressionKind = Kind::kConstructor;
 
-  Constructor(int offset, const Type* type, std::vector<std::unique_ptr<Expression>> arguments)
-      : INHERITED(offset, kExpressionKind, type) {
-    fExpressionChildren = std::move(arguments);
-  }
+  Constructor(int offset, const Type* type, ExpressionArray arguments)
+      : INHERITED(offset, kExpressionKind, type), fArguments(std::move(arguments)) {}
 
-  std::vector<std::unique_ptr<Expression>>& arguments() { return fExpressionChildren; }
+  ExpressionArray& arguments() { return fArguments; }
 
-  const std::vector<std::unique_ptr<Expression>>& arguments() const { return fExpressionChildren; }
+  const ExpressionArray& arguments() const { return fArguments; }
 
   std::unique_ptr<Expression> constantPropagate(
       const IRGenerator& irGenerator, const DefinitionMap& definitions) override;
@@ -51,8 +50,8 @@ class Constructor : public Expression {
   }
 
   std::unique_ptr<Expression> clone() const override {
-    std::vector<std::unique_ptr<Expression>> cloned;
-    cloned.reserve(this->arguments().size());
+    ExpressionArray cloned;
+    cloned.reserve_back(this->arguments().size());
     for (const std::unique_ptr<Expression>& arg : this->arguments()) {
       cloned.push_back(arg->clone());
     }
@@ -105,6 +104,8 @@ class Constructor : public Expression {
   SKSL_FLOAT getMatComponent(int col, int row) const override;
 
  private:
+  ExpressionArray fArguments;
+
   using INHERITED = Expression;
 };
 

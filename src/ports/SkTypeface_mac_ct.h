@@ -97,6 +97,7 @@ class SkTypeface_Mac : public SkTypeface {
       SkFontArguments::VariationPosition::Coordinate coordinates[],
       int coordinateCount) const override;
   void onGetFamilyName(SkString* familyName) const override;
+  bool onGetPostScriptName(SkString*) const override;
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
   int onGetTableTags(SkFontTableTag tags[]) const override;
   size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override;

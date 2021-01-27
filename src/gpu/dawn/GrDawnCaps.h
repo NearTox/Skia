@@ -35,8 +35,6 @@ class GrDawnCaps : public GrCaps {
 
   SurfaceReadPixelsSupport surfaceSupportsReadPixels(const GrSurface*) const override;
 
-  size_t bytesPerPixel(const GrBackendFormat&) const override;
-
   int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat&) const override;
 
   int maxRenderTargetSampleCount(const GrBackendFormat& format) const override;

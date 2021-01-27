@@ -30,14 +30,14 @@ class GrFillRectOp {
  public:
   using InputFlags = GrSimpleMeshDrawOpHelper::InputFlags;
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, GrAAType aaType, DrawQuad* quad,
       const GrUserStencilSettings* stencil = nullptr, InputFlags = InputFlags::kNone);
 
   // Utility function to create a non-AA rect transformed by view. This is used commonly enough
   // in testing and GMs that manage ops without going through GrRTC that it's worth the
   // convenience.
-  static std::unique_ptr<GrDrawOp> MakeNonAARect(
+  static GrOp::Owner MakeNonAARect(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& view, const SkRect& rect,
       const GrUserStencilSettings* stencil = nullptr);
 
@@ -55,7 +55,7 @@ class GrFillRectOp {
  private:
   // Create a GrFillRectOp that uses as many quads as possible from 'quads' w/o exceeding
   // any index buffer size limits.
-  static std::unique_ptr<GrDrawOp> MakeOp(
+  static GrOp::Owner MakeOp(
       GrRecordingContext*, GrPaint&&, GrAAType, const SkMatrix& viewMatrix,
       const GrRenderTargetContext::QuadSetEntry quads[], int quadCount,
       const GrUserStencilSettings*, int* numConsumed);

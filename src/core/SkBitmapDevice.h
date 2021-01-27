@@ -97,11 +97,12 @@ class SkBitmapDevice : public SkBaseDevice {
   void drawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
       const SkPaint&) override;
-  void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
 
   ///////////////////////////////////////////////////////////////////////////
 
-  void drawSpecial(SkSpecialImage*, int x, int y, const SkPaint&) override;
+  void drawDevice(SkBaseDevice*, const SkPaint&) override;
+  void drawSpecial(SkSpecialImage*, const SkMatrix&, const SkPaint&) override;
+
   sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
   sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
   sk_sp<SkSpecialImage> snapSpecial(const SkIRect&, bool = false) override;
@@ -134,7 +135,6 @@ class SkBitmapDevice : public SkBaseDevice {
 
  private:
   friend class SkCanvas;
-  friend struct DeviceCM;  // for setMatrixClip
   friend class SkDraw;
   friend class SkDrawIter;
   friend class SkDrawTiler;

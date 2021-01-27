@@ -99,7 +99,7 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
     }
   }
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix, const SkRect& rect,
       const SkStrokeRec& stroke, GrAAType aaType) {
     bool isMiter;
@@ -118,9 +118,9 @@ class NonAAStrokeRectOp final : public GrMeshDrawOp {
   }
 
   NonAAStrokeRectOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, Helper::InputFlags inputFlags,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, Helper::InputFlags inputFlags,
       const SkMatrix& viewMatrix, const SkRect& rect, const SkStrokeRec& stroke, GrAAType aaType)
-      : INHERITED(ClassID()), fHelper(helperArgs, aaType, inputFlags) {
+      : INHERITED(ClassID()), fHelper(processorSet, aaType, inputFlags) {
     fColor = color;
     fViewMatrix = viewMatrix;
     fRect = rect;
@@ -346,7 +346,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
       const SkRect& devOutside, const SkRect& devInside, const SkVector& devHalfStrokeSize) {
     return Helper::FactoryHelper<AAStrokeRectOp>(
@@ -354,9 +354,9 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   }
 
   AAStrokeRectOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkMatrix& viewMatrix,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, const SkMatrix& viewMatrix,
       const SkRect& devOutside, const SkRect& devInside, const SkVector& devHalfStrokeSize)
-      : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage), fViewMatrix(viewMatrix) {
+      : INHERITED(ClassID()), fHelper(processorSet, GrAAType::kCoverage), fViewMatrix(viewMatrix) {
     SkASSERT(!devOutside.isEmpty());
     SkASSERT(!devInside.isEmpty());
 
@@ -366,7 +366,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
     fMiterStroke = true;
   }
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix, const SkRect& rect,
       const SkStrokeRec& stroke) {
     bool isMiter;
@@ -378,9 +378,9 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   }
 
   AAStrokeRectOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkMatrix& viewMatrix,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, const SkMatrix& viewMatrix,
       const SkRect& rect, const SkStrokeRec& stroke, bool isMiter)
-      : INHERITED(ClassID()), fHelper(helperArgs, GrAAType::kCoverage), fViewMatrix(viewMatrix) {
+      : INHERITED(ClassID()), fHelper(processorSet, GrAAType::kCoverage), fViewMatrix(viewMatrix) {
     fMiterStroke = isMiter;
     RectInfo& info = fRects.push_back();
     compute_aa_rects(
@@ -460,7 +460,7 @@ class AAStrokeRectOp final : public GrMeshDrawOp {
   const SkMatrix& viewMatrix() const { return fViewMatrix; }
   bool miterStroke() const { return fMiterStroke; }
 
-  CombineResult onCombineIfPossible(GrOp* t, GrRecordingContext::Arenas*, const GrCaps&) override;
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps&) override;
 
   void generateAAStrokeRectGeometry(
       GrVertexWriter& vertices, const SkPMColor4f& color, bool wideColor, const SkRect& devOutside,
@@ -576,11 +576,11 @@ sk_sp<const GrGpuBuffer> AAStrokeRectOp::GetIndexBuffer(
             3 + 8, 0 + 8, 4 + 8, 4 + 8, 7 + 8, 3 + 8,
         };
     // clang-format on
-        static_assert(SK_ARRAY_COUNT(gMiterIndices) == kMiterIndexCnt);
-        GR_DEFINE_STATIC_UNIQUE_KEY(gMiterIndexBufferKey);
-        return resourceProvider->findOrCreatePatternedIndexBuffer(
-            gMiterIndices, kMiterIndexCnt, kNumMiterRectsInIndexBuffer, kMiterVertexCnt,
-            gMiterIndexBufferKey);
+    static_assert(SK_ARRAY_COUNT(gMiterIndices) == kMiterIndexCnt);
+    GR_DEFINE_STATIC_UNIQUE_KEY(gMiterIndexBufferKey);
+    return resourceProvider->findOrCreatePatternedIndexBuffer(
+        gMiterIndices, kMiterIndexCnt, kNumMiterRectsInIndexBuffer, kMiterVertexCnt,
+        gMiterIndexBufferKey);
   } else {
     /**
      * As in miter-stroke, index = a + b, and a is the current index, b is the shift
@@ -640,17 +640,17 @@ sk_sp<const GrGpuBuffer> AAStrokeRectOp::GetIndexBuffer(
             3 + 16, 0 + 16, 4 + 16, 4 + 16, 7 + 16, 3 + 16,
         };
     // clang-format on
-        static_assert(SK_ARRAY_COUNT(gBevelIndices) == kBevelIndexCnt);
+    static_assert(SK_ARRAY_COUNT(gBevelIndices) == kBevelIndexCnt);
 
-        GR_DEFINE_STATIC_UNIQUE_KEY(gBevelIndexBufferKey);
-        return resourceProvider->findOrCreatePatternedIndexBuffer(
-            gBevelIndices, kBevelIndexCnt, kNumBevelRectsInIndexBuffer, kBevelVertexCnt,
-            gBevelIndexBufferKey);
+    GR_DEFINE_STATIC_UNIQUE_KEY(gBevelIndexBufferKey);
+    return resourceProvider->findOrCreatePatternedIndexBuffer(
+        gBevelIndices, kBevelIndexCnt, kNumBevelRectsInIndexBuffer, kBevelVertexCnt,
+        gBevelIndexBufferKey);
   }
 }
 
 GrOp::CombineResult AAStrokeRectOp::onCombineIfPossible(
-    GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) {
+    GrOp* t, SkArenaAlloc*, const GrCaps& caps) {
   AAStrokeRectOp* that = t->cast<AAStrokeRectOp>();
 
   if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
@@ -765,7 +765,7 @@ void AAStrokeRectOp::generateAAStrokeRectGeometry(
 
 namespace GrStrokeRectOp {
 
-std::unique_ptr<GrDrawOp> Make(
+GrOp::Owner Make(
     GrRecordingContext* context, GrPaint&& paint, GrAAType aaType, const SkMatrix& viewMatrix,
     const SkRect& rect, const SkStrokeRec& stroke) {
   if (aaType == GrAAType::kCoverage) {
@@ -779,7 +779,7 @@ std::unique_ptr<GrDrawOp> Make(
   }
 }
 
-std::unique_ptr<GrDrawOp> MakeNested(
+GrOp::Owner MakeNested(
     GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix,
     const SkRect rects[2]) {
   SkASSERT(viewMatrix.rectStaysRect());

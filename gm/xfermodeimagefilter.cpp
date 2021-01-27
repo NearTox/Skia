@@ -67,7 +67,7 @@ class XfermodeImageFilterGM : public GM {
     int x = 0, y = 0;
     sk_sp<SkImageFilter> background(SkImageFilters::Image(fCheckerboard));
     for (size_t i = 0; i < SK_ARRAY_COUNT(gModes); i++) {
-      paint.setImageFilter(SkImageFilters::Xfermode(gModes[i], background));
+      paint.setImageFilter(SkImageFilters::Blend(gModes[i], background));
       DrawClippedBitmap(canvas, fBitmap, paint, x, y);
       x += fBitmap.width() + MARGIN;
       if (x + fBitmap.width() > WIDTH) {
@@ -84,7 +84,7 @@ class XfermodeImageFilterGM : public GM {
       y += fBitmap.height() + MARGIN;
     }
     // Test nullptr mode
-    paint.setImageFilter(SkImageFilters::Xfermode(SkBlendMode::kSrcOver, background));
+    paint.setImageFilter(SkImageFilters::Blend(SkBlendMode::kSrcOver, background));
     DrawClippedBitmap(canvas, fBitmap, paint, x, y);
     x += fBitmap.width() + MARGIN;
     if (x + fBitmap.width() > WIDTH) {
@@ -99,7 +99,7 @@ class XfermodeImageFilterGM : public GM {
     sk_sp<SkImageFilter> offsetForeground(SkImageFilters::Offset(4, -4, foreground));
     sk_sp<SkImageFilter> offsetBackground(SkImageFilters::Offset(4, 4, background));
     paint.setImageFilter(
-        SkImageFilters::Xfermode(SkBlendMode::kSrcOver, offsetBackground, offsetForeground));
+        SkImageFilters::Blend(SkBlendMode::kSrcOver, offsetBackground, offsetForeground));
     DrawClippedPaint(canvas, clipRect, paint, x, y);
     x += fBitmap.width() + MARGIN;
     if (x + fBitmap.width() > WIDTH) {
@@ -108,7 +108,7 @@ class XfermodeImageFilterGM : public GM {
     }
     // Test offsets on Darken (uses shader blend)
     paint.setImageFilter(
-        SkImageFilters::Xfermode(SkBlendMode::kDarken, offsetBackground, offsetForeground));
+        SkImageFilters::Blend(SkBlendMode::kDarken, offsetBackground, offsetForeground));
     DrawClippedPaint(canvas, clipRect, paint, x, y);
     x += fBitmap.width() + MARGIN;
     if (x + fBitmap.width() > WIDTH) {
@@ -125,7 +125,7 @@ class XfermodeImageFilterGM : public GM {
           offsets[i][0], offsets[i][1], fBitmap.width() + offsets[i][2],
           fBitmap.height() + offsets[i][3]);
       paint.setImageFilter(
-          SkImageFilters::Xfermode(sampledModes[i], offsetBackground, offsetForeground, &cropRect));
+          SkImageFilters::Blend(sampledModes[i], offsetBackground, offsetForeground, &cropRect));
       DrawClippedPaint(canvas, clipRect, paint, x, y);
       x += fBitmap.width() + MARGIN;
       if (x + fBitmap.width() > WIDTH) {
@@ -136,8 +136,7 @@ class XfermodeImageFilterGM : public GM {
     // Test small bg, large fg with Screen (uses shader blend)
     SkIRect cropRect = SkIRect::MakeXYWH(10, 10, 60, 60);
     sk_sp<SkImageFilter> cropped(SkImageFilters::Offset(0, 0, foreground, &cropRect));
-    paint.setImageFilter(
-        SkImageFilters::Xfermode(SkBlendMode::kScreen, cropped, background, nullptr));
+    paint.setImageFilter(SkImageFilters::Blend(SkBlendMode::kScreen, cropped, background));
     DrawClippedPaint(canvas, clipRect, paint, x, y);
     x += fBitmap.width() + MARGIN;
     if (x + fBitmap.width() > WIDTH) {
@@ -145,8 +144,7 @@ class XfermodeImageFilterGM : public GM {
       y += fBitmap.height() + MARGIN;
     }
     // Test small fg, large bg with Screen (uses shader blend)
-    paint.setImageFilter(
-        SkImageFilters::Xfermode(SkBlendMode::kScreen, background, cropped, nullptr));
+    paint.setImageFilter(SkImageFilters::Blend(SkBlendMode::kScreen, background, cropped));
     DrawClippedPaint(canvas, clipRect, paint, x, y);
     x += fBitmap.width() + MARGIN;
     if (x + fBitmap.width() > WIDTH) {
@@ -158,7 +156,7 @@ class XfermodeImageFilterGM : public GM {
     // the region outside the foreground.
     SkIRect cropRectFull = SkIRect::MakeXYWH(0, 0, 80, 80);
     paint.setImageFilter(
-        SkImageFilters::Xfermode(SkBlendMode::kSrcIn, background, cropped, &cropRectFull));
+        SkImageFilters::Blend(SkBlendMode::kSrcIn, background, cropped, &cropRectFull));
     DrawClippedPaint(canvas, clipRect, paint, x, y);
     x += fBitmap.width() + MARGIN;
     if (x + fBitmap.width() > WIDTH) {

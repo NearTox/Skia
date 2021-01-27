@@ -256,7 +256,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::ClampPremulOutput(
 }
 
 std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::SwizzleOutput(
-    std::unique_ptr<GrFragmentProcessor> fp, const GrSwizzle& swizzle) {
+        std::unique_ptr<GrFragmentProcessor> fp, const GrSwizzle& swizzle) {
   class SwizzleFragmentProcessor : public GrFragmentProcessor {
    public:
     static std::unique_ptr<GrFragmentProcessor> Make(
@@ -402,7 +402,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::OverrideInput(
 //////////////////////////////////////////////////////////////////////////////
 
 std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
-    std::unique_ptr<GrFragmentProcessor> f, std::unique_ptr<GrFragmentProcessor> g) {
+        std::unique_ptr<GrFragmentProcessor> f, std::unique_ptr<GrFragmentProcessor> g) {
   class ComposeProcessor : public GrFragmentProcessor {
    public:
     static std::unique_ptr<GrFragmentProcessor> Make(
@@ -423,7 +423,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
         void emitCode(EmitArgs& args) override {
           SkString result = this->invokeChild(0, args);
           result = this->invokeChild(1, result.c_str(), args);
-          args.fFragBuilder->codeAppendf("%s = %s;", args.fOutputColor, result.c_str());
+          args.fFragBuilder->codeAppendf("return %s;", result.c_str());
         }
       };
       return new GLFP;
@@ -444,6 +444,7 @@ std::unique_ptr<GrFragmentProcessor> GrFragmentProcessor::Compose(
     void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
     bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
+    bool usesExplicitReturn() const override { return true; }
 
     SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& inColor) const override {
       SkPMColor4f color = inColor;

@@ -170,8 +170,8 @@ static bool cubic_too_curvy(const SkPoint pts[4], SkScalar tolerance) {
 class SkContourMeasureIter::Impl {
  public:
   Impl(const SkPath& path, bool forceClosed, SkScalar resScale)
-      : fIter(SkPathPriv::Iterate(path).begin()),
-        fPath(path),
+      : fPath(path),
+        fIter(SkPathPriv::Iterate(fPath).begin()),
         fTolerance(CHEAP_DIST_LIMIT * SkScalarInvert(resScale)),
         fForceClosed(forceClosed) {}
 
@@ -179,8 +179,8 @@ class SkContourMeasureIter::Impl {
   SkContourMeasure* buildSegments();
 
  private:
-  SkPathPriv::RangeIter fIter;
   SkPath fPath;
+  SkPathPriv::RangeIter fIter;
   SkScalar fTolerance;
   bool fForceClosed;
 

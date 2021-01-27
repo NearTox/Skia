@@ -56,7 +56,7 @@ class SK_API SkPixmap {
       @param rowBytes  size of one row of addr; width times pixel size, or larger
       @return          initialized SkPixmap
   */
-  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept
+  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes)
       : fPixels(addr), fRowBytes(rowBytes), fInfo(info) {}
 
   /** Sets width, height, row bytes to zero; pixel address to nullptr; SkColorType to
@@ -67,7 +67,7 @@ class SK_API SkPixmap {
 
       example: https://fiddle.skia.org/c/@Pixmap_reset
   */
-  void reset() noexcept;
+  void reset();
 
   /** Sets width, height, SkAlphaType, and SkColorType from info.
       Sets pixel address from addr, which may be nullptr.

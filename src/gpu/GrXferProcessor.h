@@ -112,7 +112,8 @@ class GrXferProcessor : public GrProcessor, public GrNonAtomicRef<GrXferProcesso
    * specific subclass's key.
    */
   void getGLSLProcessorKey(
-      const GrShaderCaps&, GrProcessorKeyBuilder*, const GrSurfaceOrigin* originIfDstTexture) const;
+      const GrShaderCaps&, GrProcessorKeyBuilder*, const GrSurfaceOrigin* originIfDstTexture,
+      GrDstSampleType dstSampleType) const;
 
   /** Returns a new instance of the appropriate *GL* implementation class
       for the given GrXferProcessor; caller is responsible for deleting

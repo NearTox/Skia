@@ -38,7 +38,6 @@
     <ClCompile Include="gpu\vk\GrVkTransferBuffer.cpp" />
     <ClCompile Include="gpu\vk\GrVkTextureRenderTarget.cpp" />
     <ClCompile Include="gpu\vk\GrVkTexture.cpp" />
-    <ClCompile Include="gpu\vk\GrVkStencilAttachment.cpp" />
     <ClCompile Include="gpu\vk\GrVkSemaphore.cpp" />
     <ClCompile Include="gpu\vk\GrVkSecondaryCBDrawContext.cpp" />
     <ClCompile Include="gpu\vk\GrVkSamplerYcbcrConversion.cpp" />
@@ -77,7 +76,6 @@
     <ClCompile Include="gpu\gl\GrGLTypesPriv.cpp" />
     <ClCompile Include="gpu\gl\GrGLTextureRenderTarget.cpp" />
     <ClCompile Include="gpu\gl\GrGLTexture.cpp" />
-    <ClCompile Include="gpu\gl\GrGLStencilAttachment.cpp" />
     <ClCompile Include="gpu\gl\GrGLSemaphore.cpp" />
     <ClCompile Include="gpu\gl\GrGLRenderTarget.cpp" />
     <ClCompile Include="gpu\gl\GrGLProgramDataManager.cpp" />
@@ -168,7 +166,6 @@
     <ClCompile Include="gpu\tessellate\GrTessellationPathRenderer.cpp" />
     <ClCompile Include="gpu\tessellate\GrStrokeTessellateShader.cpp" />
     <ClCompile Include="gpu\tessellate\GrStrokeTessellateOp.cpp" />
-    <ClCompile Include="gpu\tessellate\GrStrokePatchBuilder.cpp" />
     <ClCompile Include="gpu\tessellate\GrStencilPathShader.cpp" />
     <ClCompile Include="gpu\tessellate\GrPathTessellateOp.cpp" />
     <ClCompile Include="gpu\tessellate\GrFillPathShader.cpp" />
@@ -281,7 +278,6 @@
     <ClCompile Include="gpu\GrStyle.cpp" />
     <ClCompile Include="gpu\GrStencilSettings.cpp" />
     <ClCompile Include="gpu\GrStencilMaskHelper.cpp" />
-    <ClCompile Include="gpu\GrStencilAttachment.cpp" />
     <ClCompile Include="gpu\GrStagingBufferManager.cpp" />
     <ClCompile Include="gpu\GrSoftwarePathRenderer.cpp" />
     <ClCompile Include="gpu\GrShaderVar.cpp" />
@@ -343,8 +339,6 @@
     <ClCompile Include="gpu\GrCopyRenderTask.cpp" />
     <ClCompile Include="gpu\GrContext_Base.cpp" />
     <ClCompile Include="gpu\GrContextThreadSafeProxy.cpp" />
-    <ClCompile Include="gpu\GrContextPriv.cpp" />
-    <ClCompile Include="gpu\GrContext.cpp" />
     <ClCompile Include="gpu\GrColorSpaceXform.cpp" />
     <ClCompile Include="gpu\GrColorInfo.cpp" />
     <ClCompile Include="gpu\GrClipStackClip.cpp" />
@@ -660,7 +654,6 @@
     <ClCompile Include="core\SkM44.cpp" />
     <ClCompile Include="core\SkLocalMatrixImageFilter.cpp" />
     <ClCompile Include="core\SkLineClipper.cpp" />
-    <ClCompile Include="core\SkLegacyGpuBlurUtils.cpp" />
     <ClCompile Include="core\SkLatticeIter.cpp" />
     <ClCompile Include="core\SkImageInfo.cpp" />
     <ClCompile Include="core\SkImageGenerator.cpp" />
@@ -682,7 +675,6 @@
     <ClCompile Include="core\SkFont_serial.cpp" />
     <ClCompile Include="core\SkFontStream.cpp" />
     <ClCompile Include="core\SkFontMgr.cpp" />
-    <ClCompile Include="core\SkFontLCDConfig.cpp" />
     <ClCompile Include="core\SkFontDescriptor.cpp" />
     <ClCompile Include="core\SkFont.cpp" />
     <ClCompile Include="core\SkFlattenable.cpp" />
@@ -762,9 +754,17 @@
     <ClCompile Include="core\SkYUVAPixmaps.cpp" />
     <ClCompile Include="sksl\SkSLInliner.cpp" />
     <ClCompile Include="sksl\ir\SkSLConstructor.cpp" />
-    <ClCompile Include="sksl\ir\SkSLIRNode.cpp" />
     <ClCompile Include="gpu\GrBackendSurfaceMutableState.cpp" />
     <ClCompile Include="gpu\GrClipStack.cpp" />
-    <ClCompile Include="gpu\GrThreadSafeUniquelyKeyedProxyViewCache.cpp" />
+    <ClCompile Include="sksl\SkSLPool.cpp" />
+    <ClCompile Include="sksl\ir\SkSLPrefixExpression.cpp" />
+    <ClCompile Include="gpu\GrAttachment.cpp" />
+    <ClCompile Include="gpu\GrBackendUtils.cpp" />
+    <ClCompile Include="gpu\GrDirectContextPriv.cpp" />
+    <ClCompile Include="gpu\GrThreadSafeCache.cpp" />
+    <ClCompile Include="gpu\GrYUVABackendTextures.cpp" />
+    <ClCompile Include="gpu\tessellate\GrStrokeOp.cpp" />
+    <ClCompile Include="gpu\gl\GrGLAttachment.cpp" />
+    <ClCompile Include="gpu\vk\GrVkAttachment.cpp" />
   </ItemGroup>
 </Project>

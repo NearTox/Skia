@@ -85,73 +85,73 @@ static void raster_tests(skiatest::Reporter* reporter, const TestCase& test) {
   {
     auto s = SkSurface::MakeRaster(nativeII);
     REPORTER_ASSERT(reporter, SkToBool(s));
-  }
-
-  // opaque formats should make transparent black become opaque
-  {
-    SkAutoPixmapStorage pm;
-    pm.alloc(nativeII);
-    pm.erase(SkColors::kTransparent);
-    SkColor actual = pm.getColor(0, 0);
-    SkColor4f expected = get_trans_black_expected_color(test.fChannels);
-    REPORTER_ASSERT(reporter, expected.toSkColor() == actual);
-  }
-
-  // unused channels should drop out
-  {
-    SkAutoPixmapStorage pm;
-    pm.alloc(nativeII);
-    pm.erase(SkColors::kWhite);
-    SkColor actual = pm.getColor(0, 0);
-    SkColor4f expected = get_opaque_white_expected_color(test.fChannels);
-    REPORTER_ASSERT(reporter, expected.toSkColor() == actual);
-  }
-
-  // Reading back from an image to the same colorType should always work
-  {
-    SkAutoPixmapStorage srcPM;
-    srcPM.alloc(nativeII);
-    srcPM.erase(SkColors::kWhite);
-    auto i = SkImage::MakeFromRaster(srcPM, nullptr, nullptr);
-    REPORTER_ASSERT(reporter, SkToBool(i));
-
-    SkAutoPixmapStorage readbackPM;
-    readbackPM.alloc(nativeII);
-    readbackPM.erase(SkColors::kTransparent);
-
-    REPORTER_ASSERT(reporter, i->readPixels(nullptr, readbackPM, 0, 0));
-
-    SkColor expected = srcPM.getColor(0, 0);
-    SkColor actual = readbackPM.getColor(0, 0);
-    REPORTER_ASSERT(reporter, expected == actual);
-  }
-
-  // Rendering to an F32 surface should always work
-  {
-    SkAutoPixmapStorage srcPM;
-    srcPM.alloc(nativeII);
-    srcPM.erase(SkColors::kWhite);
-    auto i = SkImage::MakeFromRaster(srcPM, nullptr, nullptr);
-    REPORTER_ASSERT(reporter, SkToBool(i));
-
-    auto s = SkSurface::MakeRaster(f32Unpremul);
-    REPORTER_ASSERT(reporter, SkToBool(s));
-
-    {
-      auto c = s->getCanvas();
-      c->drawImage(i, 0, 0);
     }
 
-    SkAutoPixmapStorage readbackPM;
-    readbackPM.alloc(f32Unpremul);
-    readbackPM.erase(SkColors::kTransparent);
+    // opaque formats should make transparent black become opaque
+    {
+      SkAutoPixmapStorage pm;
+      pm.alloc(nativeII);
+      pm.erase(SkColors::kTransparent);
+      SkColor actual = pm.getColor(0, 0);
+      SkColor4f expected = get_trans_black_expected_color(test.fChannels);
+      REPORTER_ASSERT(reporter, expected.toSkColor() == actual);
+    }
 
-    REPORTER_ASSERT(reporter, i->readPixels(nullptr, readbackPM, 0, 0));
+    // unused channels should drop out
+    {
+      SkAutoPixmapStorage pm;
+      pm.alloc(nativeII);
+      pm.erase(SkColors::kWhite);
+      SkColor actual = pm.getColor(0, 0);
+      SkColor4f expected = get_opaque_white_expected_color(test.fChannels);
+      REPORTER_ASSERT(reporter, expected.toSkColor() == actual);
+    }
 
-    SkColor expected = srcPM.getColor(0, 0);
-    SkColor actual = readbackPM.getColor(0, 0);
-    REPORTER_ASSERT(reporter, expected == actual);
-  }
+    // Reading back from an image to the same colorType should always work
+    {
+      SkAutoPixmapStorage srcPM;
+      srcPM.alloc(nativeII);
+      srcPM.erase(SkColors::kWhite);
+      auto i = SkImage::MakeFromRaster(srcPM, nullptr, nullptr);
+      REPORTER_ASSERT(reporter, SkToBool(i));
+
+      SkAutoPixmapStorage readbackPM;
+      readbackPM.alloc(nativeII);
+      readbackPM.erase(SkColors::kTransparent);
+
+      REPORTER_ASSERT(reporter, i->readPixels(nullptr, readbackPM, 0, 0));
+
+      SkColor expected = srcPM.getColor(0, 0);
+      SkColor actual = readbackPM.getColor(0, 0);
+      REPORTER_ASSERT(reporter, expected == actual);
+    }
+
+    // Rendering to an F32 surface should always work
+    {
+      SkAutoPixmapStorage srcPM;
+      srcPM.alloc(nativeII);
+      srcPM.erase(SkColors::kWhite);
+      auto i = SkImage::MakeFromRaster(srcPM, nullptr, nullptr);
+      REPORTER_ASSERT(reporter, SkToBool(i));
+
+      auto s = SkSurface::MakeRaster(f32Unpremul);
+      REPORTER_ASSERT(reporter, SkToBool(s));
+
+      {
+        auto c = s->getCanvas();
+        c->drawImage(i, 0, 0);
+        }
+
+        SkAutoPixmapStorage readbackPM;
+        readbackPM.alloc(f32Unpremul);
+        readbackPM.erase(SkColors::kTransparent);
+
+        REPORTER_ASSERT(reporter, i->readPixels(nullptr, readbackPM, 0, 0));
+
+        SkColor expected = srcPM.getColor(0, 0);
+        SkColor actual = readbackPM.getColor(0, 0);
+        REPORTER_ASSERT(reporter, expected == actual);
+    }
 }
 
 static void compare_pixmaps(

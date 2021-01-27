@@ -29,5 +29,5 @@ DEF_SIMPLE_GM(crbug_918512, canvas, 256, 256) {
       paint.setColor(SK_ColorGRAY);
       canvas->drawRect(SkRect{0, 0, 128, 256}, paint);
     }
-  }
+    }
 }

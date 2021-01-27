@@ -84,7 +84,7 @@ class SkXPSDevice : public SkClipStackDevice {
       SkCanvas::SrcRectConstraint) override;
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
-  void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
+  void drawDevice(SkBaseDevice*, const SkPaint&) override;
 
  private:
   class TypefaceUse {

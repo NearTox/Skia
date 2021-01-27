@@ -22,6 +22,7 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
   const char* name() const override { return "YUVtoRGBEffect"; }
+  bool usesExplicitReturn() const override { return true; }
 
  private:
   GrYUVtoRGBEffect(

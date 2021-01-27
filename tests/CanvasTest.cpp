@@ -655,7 +655,7 @@ DEF_TEST(Canvas_degenerate_dimension, reporter) {
   // Need a paint that will sneak us past the quickReject in SkCanvas, so we can test the
   // raster code further downstream.
   SkPaint paint;
-  paint.setImageFilter(SkImageFilters::Paint(SkPaint(), nullptr));
+  paint.setImageFilter(SkImageFilters::Shader(SkShaders::Color(SK_ColorBLACK), nullptr));
   REPORTER_ASSERT(reporter, !paint.canComputeFastBounds());
 
   const int big = 100 * 1024;  // big enough to definitely trigger tiling
@@ -733,4 +733,11 @@ DEF_TEST(canvas_markctm, reporter) {
   canvas.restore();
   // found the previous one
   REPORTER_ASSERT(reporter, canvas.findMarkedCTM(id_a, &m) && m == a1);
+}
+
+DEF_TEST(Canvas_quickreject_empty, reporter) {
+  SkCanvas canvas(10, 10);
+
+  REPORTER_ASSERT(reporter, canvas.quickReject({0, 0, 0, 0}));
+  REPORTER_ASSERT(reporter, canvas.quickReject(SkPath()));
 }

@@ -23,101 +23,102 @@ static constexpr char kPauseKey = 'p';
 static constexpr char kResetKey = 'r';
 
 class SampleAnimatedImage : public Sample {
-  sk_sp<SkAnimatedImage> fImage;
-  sk_sp<SkDrawable> fDrawable;
-  SkScalar fYOffset = 0;
-  bool fRunning = false;
-  double fCurrentTime = 0.0;
-  double fLastWallTime = 0.0;
-  double fTimeToShowNextFrame = 0.0;
+    sk_sp<SkAnimatedImage>  fImage;
+    sk_sp<SkDrawable>       fDrawable;
+    SkScalar                fYOffset = 0;
+    bool                    fRunning = false;
+    double                  fCurrentTime = 0.0;
+    double                  fLastWallTime = 0.0;
+    double                  fTimeToShowNextFrame = 0.0;
 
-  void onDrawBackground(SkCanvas* canvas) override {
-    SkFont font;
-    font.setSize(20);
+    void onDrawBackground(SkCanvas* canvas) override {
+        SkFont font;
+        font.setSize(20);
 
-    SkString str =
-        SkStringPrintf("Press '%c' to start/pause; '%c' to reset.", kPauseKey, kResetKey);
-    const char* text = str.c_str();
-    SkRect bounds;
-    font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
-    fYOffset = bounds.height();
+        SkString str = SkStringPrintf("Press '%c' to start/pause; '%c' to reset.",
+                kPauseKey, kResetKey);
+        const char* text = str.c_str();
+        SkRect bounds;
+        font.measureText(text, strlen(text), SkTextEncoding::kUTF8, &bounds);
+        fYOffset = bounds.height();
 
-    canvas->drawSimpleText(text, strlen(text), SkTextEncoding::kUTF8, 5, fYOffset, font, SkPaint());
-    fYOffset *= 2;
-  }
-
-  void onDrawContent(SkCanvas* canvas) override {
-    if (!fImage) {
-      return;
+        canvas->drawSimpleText(text, strlen(text), SkTextEncoding::kUTF8, 5, fYOffset, font, SkPaint());
+        fYOffset *= 2;
     }
 
-    canvas->translate(0, fYOffset);
-
-    canvas->drawDrawable(fImage.get());
-    canvas->drawDrawable(fDrawable.get(), fImage->getBounds().width(), 0);
-  }
-
-  bool onAnimate(double nanos) override {
-    if (!fImage) {
-      return false;
-    }
-
-    const double lastWallTime = fLastWallTime;
-    fLastWallTime = TimeUtils::NanosToMSec(nanos);
-
-    if (fRunning) {
-      fCurrentTime += fLastWallTime - lastWallTime;
-      if (fCurrentTime > fTimeToShowNextFrame) {
-        fTimeToShowNextFrame += fImage->decodeNextFrame();
-        if (fImage->isFinished()) {
-          fRunning = false;
+    void onDrawContent(SkCanvas* canvas) override {
+        if (!fImage) {
+            return;
         }
-      }
+
+        canvas->translate(0, fYOffset);
+
+        canvas->drawDrawable(fImage.get());
+        canvas->drawDrawable(fDrawable.get(), fImage->getBounds().width(), 0);
     }
 
-    return true;
-  }
+    bool onAnimate(double nanos) override {
+        if (!fImage) {
+            return false;
+        }
 
-  void onOnceBeforeDraw() override {
-    sk_sp<SkData> file(GetResourceAsData("images/alphabetAnim.gif"));
-    std::unique_ptr<SkCodec> codec(SkCodec::MakeFromData(file));
-    if (!codec) {
-      return;
+        const double lastWallTime = fLastWallTime;
+        fLastWallTime = TimeUtils::NanosToMSec(nanos);
+
+        if (fRunning) {
+            fCurrentTime += fLastWallTime - lastWallTime;
+            if (fCurrentTime > fTimeToShowNextFrame) {
+                fTimeToShowNextFrame += fImage->decodeNextFrame();
+                if (fImage->isFinished()) {
+                    fRunning = false;
+                }
+            }
+        }
+
+        return true;
     }
 
-    fImage = SkAnimatedImage::Make(SkAndroidCodec::MakeFromCodec(std::move(codec)));
-    if (!fImage) {
-      return;
+    void onOnceBeforeDraw() override {
+        sk_sp<SkData> file(GetResourceAsData("images/alphabetAnim.gif"));
+        std::unique_ptr<SkCodec> codec(SkCodec::MakeFromData(file));
+        if (!codec) {
+            return;
+        }
+
+        fImage = SkAnimatedImage::Make(SkAndroidCodec::MakeFromCodec(std::move(codec)));
+        if (!fImage) {
+            return;
+        }
+
+        fTimeToShowNextFrame = fImage->currentFrameDuration();
+        SkPictureRecorder recorder;
+        auto canvas = recorder.beginRecording(fImage->getBounds());
+        canvas->drawDrawable(fImage.get());
+        fDrawable = recorder.finishRecordingAsDrawable();
     }
 
-    fTimeToShowNextFrame = fImage->currentFrameDuration();
-    SkPictureRecorder recorder;
-    auto canvas = recorder.beginRecording(fImage->getBounds());
-    canvas->drawDrawable(fImage.get());
-    fDrawable = recorder.finishRecordingAsDrawable();
-  }
+    SkString name() override { return SkString("AnimatedImage"); }
 
-  SkString name() override { return SkString("AnimatedImage"); }
-
-  bool onChar(SkUnichar uni) override {
-    if (fImage) {
-      switch (uni) {
-        case kPauseKey:
-          fRunning = !fRunning;
-          if (!fImage->isFinished()) {
-            return true;
-          }
-          [[fallthrough]];
-        case kResetKey:
-          fImage->reset();
-          fCurrentTime = fLastWallTime;
-          fTimeToShowNextFrame = fCurrentTime + fImage->currentFrameDuration();
-          return true;
-        default: break;
-      }
+    bool onChar(SkUnichar uni) override {
+        if (fImage) {
+            switch (uni) {
+                case kPauseKey:
+                    fRunning = !fRunning;
+                    if (!fImage->isFinished()) {
+                        return true;
+                    }
+                    [[fallthrough]];
+                case kResetKey:
+                    fImage->reset();
+                    fCurrentTime = fLastWallTime;
+                    fTimeToShowNextFrame = fCurrentTime + fImage->currentFrameDuration();
+                    return true;
+                default:
+                    break;
+            }
+        }
+        return false;
     }
-    return false;
-  }
 };
 
-DEF_SAMPLE(return new SampleAnimatedImage();)
+DEF_SAMPLE( return new SampleAnimatedImage(); )

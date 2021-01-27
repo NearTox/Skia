@@ -10,7 +10,7 @@
 
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/vk/GrVkStencilAttachment.h"
+#include "src/gpu/vk/GrVkAttachment.h"
 
 class GrShaderCaps;
 class GrVkExtensions;
@@ -21,8 +21,6 @@ struct GrVkInterface;
  */
 class GrVkCaps : public GrCaps {
  public:
-  typedef GrVkStencilAttachment::Format StencilFormat;
-
   /**
    * Creates a GrVkCaps that is set such that nothing is supported. The init function should
    * be called to fill out the caps.
@@ -50,9 +48,6 @@ class GrVkCaps : public GrCaps {
 
   int maxRenderTargetSampleCount(const GrBackendFormat&) const override;
   int maxRenderTargetSampleCount(VkFormat format) const;
-
-  size_t bytesPerPixel(const GrBackendFormat&) const override;
-  size_t bytesPerPixel(VkFormat format) const;
 
   SupportedWrite supportedWritePixelsColorType(
       GrColorType surfaceColorType, const GrBackendFormat& surfaceFormat,
@@ -90,7 +85,7 @@ class GrVkCaps : public GrCaps {
   /**
    * Returns both a supported and most preferred stencil format to use in draws.
    */
-  const StencilFormat& preferredStencilFormat() const { return fPreferredStencilFormat; }
+  VkFormat preferredStencilFormat() const { return fPreferredStencilFormat; }
 
   // Returns total number of bits used by stencil + depth + padding
   static int GetStencilFormatTotalBitCount(VkFormat format) {
@@ -283,8 +278,6 @@ class GrVkCaps : public GrCaps {
     uint16_t fLinearFlags = 0;
 
     SkTDArray<int> fColorSampleCounts;
-    // This value is only valid for regular formats. Compressed formats will be 0.
-    size_t fBytesPerPixel = 0;
 
     std::unique_ptr<ColorTypeInfo[]> fColorTypeInfos;
     int fColorTypeInfoCount = 0;
@@ -298,7 +291,7 @@ class GrVkCaps : public GrCaps {
   VkFormat fColorTypeToFormatTable[kGrColorTypeCnt];
   void setColorType(GrColorType, std::initializer_list<VkFormat> formats);
 
-  StencilFormat fPreferredStencilFormat;
+  VkFormat fPreferredStencilFormat;
 
   SkSTArray<1, GrVkYcbcrConversionInfo> fYcbcrInfos;
 

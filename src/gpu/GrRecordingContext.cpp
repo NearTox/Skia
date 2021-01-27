@@ -43,7 +43,11 @@ int GrRecordingContext::maxSurfaceSampleCountForColorType(SkColorType colorType)
   return this->caps()->maxRenderTargetSampleCount(format);
 }
 
-void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTaskSplitting) {
+bool GrRecordingContext::init() {
+  if (!INHERITED::init()) {
+    return false;
+  }
+
   GrPathRendererChain::Options prcOptions;
   prcOptions.fAllowPathMaskCaching = this->options().fAllowPathMaskCaching;
 #if GR_TEST_UTILS
@@ -57,8 +61,14 @@ void GrRecordingContext::setupDrawingManager(bool sortOpsTasks, bool reduceOpsTa
     prcOptions.fGpuPathRenderers &= ~GpuPathRenderers::kSmall;
   }
 
-  fDrawingManager.reset(
-      new GrDrawingManager(this, prcOptions, sortOpsTasks, reduceOpsTaskSplitting));
+  bool reduceOpsTaskSplitting = false;
+  if (GrContextOptions::Enable::kYes == this->options().fReduceOpsTaskSplitting) {
+    reduceOpsTaskSplitting = true;
+  } else if (GrContextOptions::Enable::kNo == this->options().fReduceOpsTaskSplitting) {
+    reduceOpsTaskSplitting = false;
+  }
+  fDrawingManager.reset(new GrDrawingManager(this, prcOptions, reduceOpsTaskSplitting));
+  return true;
 }
 
 void GrRecordingContext::abandonContext() {
@@ -71,7 +81,7 @@ GrDrawingManager* GrRecordingContext::drawingManager() { return fDrawingManager.
 
 void GrRecordingContext::destroyDrawingManager() { fDrawingManager.reset(); }
 
-GrRecordingContext::Arenas::Arenas(GrOpMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator)
+GrRecordingContext::Arenas::Arenas(GrMemoryPool* opMemoryPool, SkArenaAlloc* recordTimeAllocator)
     : fOpMemoryPool(opMemoryPool), fRecordTimeAllocator(recordTimeAllocator) {
   // OwnedArenas should instantiate these before passing the bare pointer off to this struct.
   SkASSERT(opMemoryPool);
@@ -94,7 +104,7 @@ GrRecordingContext::Arenas GrRecordingContext::OwnedArenas::get() {
     // DDL TODO: should the size of the memory pool be decreased in DDL mode? CPU-side memory
     // consumed in DDL mode vs. normal mode for a single skp might be a good metric of wasted
     // memory.
-    fOpMemoryPool = GrOpMemoryPool::Make(16384, 16384);
+    fOpMemoryPool = GrMemoryPool::Make(16384, 16384);
   }
 
   if (!fRecordTimeAllocator) {
@@ -115,12 +125,12 @@ const GrTextBlobCache* GrRecordingContext::getTextBlobCache() const {
   return fThreadSafeProxy->priv().getTextBlobCache();
 }
 
-GrThreadSafeUniquelyKeyedProxyViewCache* GrRecordingContext::threadSafeViewCache() {
-  return fThreadSafeProxy->priv().threadSafeViewCache();
+GrThreadSafeCache* GrRecordingContext::threadSafeCache() {
+  return fThreadSafeProxy->priv().threadSafeCache();
 }
 
-const GrThreadSafeUniquelyKeyedProxyViewCache* GrRecordingContext::threadSafeViewCache() const {
-  return fThreadSafeProxy->priv().threadSafeViewCache();
+const GrThreadSafeCache* GrRecordingContext::threadSafeCache() const {
+  return fThreadSafeProxy->priv().threadSafeCache();
 }
 
 void GrRecordingContext::addOnFlushCallbackObject(GrOnFlushCallbackObject* onFlushCBObject) {
@@ -184,4 +194,4 @@ void GrRecordingContext::Stats::dumpKeyValuePairs(
 }
 
 #  endif  // GR_GPU_STATS
-#endif  // GR_TEST_UTILS
+#endif    // GR_TEST_UTILS

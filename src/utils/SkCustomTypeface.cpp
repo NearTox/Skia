@@ -62,6 +62,7 @@ class SkUserTypeface final : public SkTypeface {
   void onCharsToGlyphs(const SkUnichar* chars, int count, SkGlyphID glyphs[]) const override;
 
   void onGetFamilyName(SkString* familyName) const override;
+  bool onGetPostScriptName(SkString*) const override;
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
 
   std::unique_ptr<SkStreamAsset> onOpenStream(int*) const override;
@@ -169,6 +170,8 @@ void SkUserTypeface::onCharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID
 }
 
 void SkUserTypeface::onGetFamilyName(SkString* familyName) const { *familyName = ""; }
+
+bool SkUserTypeface::onGetPostScriptName(SkString*) const { return false; }
 
 SkTypeface::LocalizedStrings* SkUserTypeface::onCreateFamilyNameIterator() const { return nullptr; }
 

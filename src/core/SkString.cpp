@@ -6,6 +6,7 @@
  */
 
 #include "include/core/SkString.h"
+#include "include/private/SkTPin.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkUtils.h"
@@ -17,7 +18,7 @@
 #include <vector>
 
 // number of bytes (on the stack) to receive the printf result
-static const size_t kBufferSize = 1024;
+static constexpr size_t kBufferSize = 1024;
 
 struct StringBuffer {
   char* fText;
@@ -167,8 +168,8 @@ const SkString::Rec SkString::gEmptyRec(0, 0);
 
 #define SizeOfRec() (gEmptyRec.data() - (const char*)&gEmptyRec)
 
-static uint32_t trim_size_t_to_u32(size_t value) noexcept {
-  if (sizeof(size_t) > sizeof(uint32_t)) {
+static constexpr uint32_t trim_size_t_to_u32(size_t value) noexcept {
+  if constexpr (sizeof(size_t) > sizeof(uint32_t)) {
     if (value > UINT32_MAX) {
       value = UINT32_MAX;
     }
@@ -176,9 +177,9 @@ static uint32_t trim_size_t_to_u32(size_t value) noexcept {
   return (uint32_t)value;
 }
 
-static size_t check_add32(size_t base, size_t extra) noexcept {
+static constexpr size_t check_add32(size_t base, size_t extra) noexcept {
   SkASSERT(base <= UINT32_MAX);
-  if (sizeof(size_t) > sizeof(uint32_t)) {
+  if constexpr (sizeof(size_t) > sizeof(uint32_t)) {
     if (base + extra > UINT32_MAX) {
       extra = UINT32_MAX - base;
     }
@@ -304,7 +305,7 @@ SkString& SkString::operator=(const char text[]) {
   return *this = SkString(text);
 }
 
-void SkString::reset() {
+void SkString::reset() noexcept {
   this->validate();
   fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }

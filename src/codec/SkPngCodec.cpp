@@ -420,7 +420,7 @@ std::unique_ptr<SkEncodedInfo::ICCProfile> read_color_profile(
   skcms_SetXYZD50(&skcmsProfile, &toXYZD50);
 
   return SkEncodedInfo::ICCProfile::Make(skcmsProfile);
-#else  // LIBPNG >= 1.6
+#else   // LIBPNG >= 1.6
   return nullptr;
 #endif  // LIBPNG >= 1.6
 }

@@ -287,7 +287,7 @@ void SkM44::dump() const {
 
 static SkV3 normalize(SkV3 v) { return v * (1.0f / v.length()); }
 
-static SkV4 v4(SkV3 v, SkScalar w) { return {v.x, v.y, v.z, w}; }
+static constexpr SkV4 v4(SkV3 v, SkScalar w) noexcept { return {v.x, v.y, v.z, w}; }
 
 SkM44 Sk3LookAt(const SkV3& eye, const SkV3& center, const SkV3& up) {
   SkV3 f = normalize(center - eye);

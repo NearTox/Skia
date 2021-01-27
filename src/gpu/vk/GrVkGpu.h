@@ -45,6 +45,7 @@ class GrVkGpu : public GrGpu {
   ~GrVkGpu() override;
 
   void disconnect(DisconnectType) override;
+  bool disconnected() const { return fDisconnected; }
 
   const GrVkInterface* vkInterface() const { return fInterface.get(); }
   const GrVkCaps& vkCaps() const { return *fVkCaps; }
@@ -92,7 +93,8 @@ class GrVkGpu : public GrGpu {
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
 
-  GrBackendRenderTarget createTestingOnlyBackendRenderTarget(int w, int h, GrColorType) override;
+  GrBackendRenderTarget createTestingOnlyBackendRenderTarget(
+      SkISize dimensions, GrColorType, int sampleCnt, GrProtected) override;
   void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) override;
 
   void testingOnly_flushGpuAndSync() override;
@@ -102,14 +104,16 @@ class GrVkGpu : public GrGpu {
   }
 #endif
 
-  GrStencilAttachment* createStencilAttachmentForRenderTarget(
+  sk_sp<GrAttachment> makeStencilAttachmentForRenderTarget(
       const GrRenderTarget*, SkISize dimensions, int numStencilSamples) override;
 
-  GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
-      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
-      GrXferBarrierFlags renderPassXferBarriers) override;
+  GrBackendFormat getPreferredStencilFormat(const GrBackendFormat&) override {
+    return GrBackendFormat::MakeVk(this->vkCaps().preferredStencilFormat());
+  }
+
+  sk_sp<GrAttachment> makeMSAAAttachment(
+      SkISize dimensions, const GrBackendFormat& format, int numSamples,
+      GrProtected isProtected) override;
 
   void addBufferMemoryBarrier(
       const GrManagedResource*, VkPipelineStageFlags srcStageMask,
@@ -217,9 +221,6 @@ class GrVkGpu : public GrGpu {
       const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable) override;
   sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
 
-  sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt) override;
-
   sk_sp<GrRenderTarget> onWrapVulkanSecondaryCBAsRenderTarget(
       const SkImageInfo&, const GrVkDrawableInfo&) override;
 
@@ -251,8 +252,14 @@ class GrVkGpu : public GrGpu {
 
   void addFinishedCallback(sk_sp<GrRefCntedCallback> finishedCallback);
 
+  GrOpsRenderPass* onGetOpsRenderPass(
+      GrRenderTarget*, GrAttachment*, GrSurfaceOrigin, const SkIRect&,
+      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) override;
+
   void prepareSurfacesForBackendAccessAndStateUpdates(
-      GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
+      SkSpan<GrSurfaceProxy*> proxies, SkSurface::BackendSurfaceAccess access,
       const GrBackendSurfaceMutableState* newState) override;
 
   bool onSubmitToGpu(bool syncCpu) override;
@@ -290,8 +297,8 @@ class GrVkGpu : public GrGpu {
       GrSurface* dst, GrVkRenderTarget* src, const SkIRect& srcRect, const SkIPoint& dstPoint);
 
   bool createVkImageForBackendSurface(
-      VkFormat, SkISize dimensions, GrTexturable, GrRenderable, GrMipmapped, GrVkImageInfo*,
-      GrProtected);
+      VkFormat, SkISize dimensions, int sampleCnt, GrTexturable, GrRenderable, GrMipmapped,
+      GrVkImageInfo*, GrProtected);
 
   sk_sp<const GrVkInterface> fInterface;
   sk_sp<GrVkMemoryAllocator> fMemoryAllocator;

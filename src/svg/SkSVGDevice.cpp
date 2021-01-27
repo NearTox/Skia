@@ -22,6 +22,7 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkChecksum.h"
 #include "include/private/SkTHash.h"
+#include "include/private/SkTPin.h"
 #include "include/private/SkTo.h"
 #include "include/svg/SkSVGCanvas.h"
 #include "include/utils/SkBase64.h"
@@ -899,12 +900,12 @@ void SkSVGDevice::drawBitmapCommon(const MxCp& mc, const SkBitmap& bm, const SkP
       image.addAttribute("height", bm.height());
       image.addAttribute("xlink:href", svgImageData);
     }
-  }
+    }
 
-  {
-    AutoElement imageUse("use", this, fResourceBucket.get(), mc, paint);
-    imageUse.addAttribute("xlink:href", SkStringPrintf("#%s", imageID.c_str()));
-  }
+    {
+      AutoElement imageUse("use", this, fResourceBucket.get(), mc, paint);
+      imageUse.addAttribute("xlink:href", SkStringPrintf("#%s", imageID.c_str()));
+    }
 }
 
 void SkSVGDevice::drawImageRect(
@@ -1034,9 +1035,5 @@ void SkSVGDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
 }
 
 void SkSVGDevice::drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) {
-  // todo
-}
-
-void SkSVGDevice::drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) {
   // todo
 }

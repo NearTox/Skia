@@ -50,9 +50,8 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
  private:
   // MSAA, not-wrapped
   GrD3DTextureRenderTarget(
-      GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, int sampleCnt,
-      const GrD3DTextureResourceInfo& info, sk_sp<GrD3DResourceState> state,
-      const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
+      GrD3DGpu* gpu, SkBudgeted budgeted, SkISize dimensions, const GrD3DTextureResourceInfo& info,
+      sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
       const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
       const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,
       const GrD3DDescriptorHeap::CPUHandle& resolveRenderTargetView, GrMipmapStatus);
@@ -65,7 +64,7 @@ class GrD3DTextureRenderTarget : public GrD3DTexture, public GrD3DRenderTarget {
 
   // MSAA, wrapped
   GrD3DTextureRenderTarget(
-      GrD3DGpu* gpu, SkISize dimensions, int sampleCnt, const GrD3DTextureResourceInfo& info,
+      GrD3DGpu* gpu, SkISize dimensions, const GrD3DTextureResourceInfo& info,
       sk_sp<GrD3DResourceState> state, const GrD3DDescriptorHeap::CPUHandle& shaderResourceView,
       const GrD3DTextureResourceInfo& msaaInfo, sk_sp<GrD3DResourceState> msaaState,
       const GrD3DDescriptorHeap::CPUHandle& colorRenderTargetView,

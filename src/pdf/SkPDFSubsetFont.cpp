@@ -106,7 +106,7 @@ static sk_sp<SkData> subset_sfntly(
   (void)ttcIndex;
   int subsetFontSize = SfntlyWrapper::SubsetFont(
       fontName, fontData->bytes(), fontData->size(), subset.data(), subset.size(), &subsetFont);
-#  else  // defined(SK_BUILD_FOR_GOOGLE3)
+#  else   // defined(SK_BUILD_FOR_GOOGLE3)
   (void)fontName;
   int subsetFontSize = SfntlyWrapper::SubsetFont(
       ttcIndex, fontData->bytes(), fontData->size(), subset.data(), subset.size(), &subsetFont);

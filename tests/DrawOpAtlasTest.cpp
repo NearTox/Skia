@@ -21,8 +21,8 @@
 #include "include/private/GrTypesPriv.h"
 #include "src/core/SkIPoint16.h"
 #include "src/gpu/GrCaps.h"
-#include "src/gpu/GrContextPriv.h"
 #include "src/gpu/GrDeferredUpload.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrDrawOpAtlas.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrMemoryPool.h"
@@ -175,7 +175,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(BasicDrawOpAtlas, reporter, ctxInfo) {
     atlas->compact(uploadTarget.tokenTracker()->nextTokenToFlush());
   }
 
-  check(reporter, atlas.get(), 1, 4, 1);
+    check(reporter, atlas.get(), 1, 4, 1);
 }
 
 // This test verifies that the GrAtlasTextOp::onPrepare method correctly handles a failure
@@ -185,7 +185,6 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrAtlasTextOpPreparation, reporter, ctxInfo) 
 
   auto gpu = context->priv().getGpu();
   auto resourceProvider = context->priv().resourceProvider();
-  auto opMemoryPool = context->priv().opMemoryPool();
 
   auto rtc = GrRenderTargetContext::Make(
       context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox, {32, 32});
@@ -199,14 +198,16 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrAtlasTextOpPreparation, reporter, ctxInfo) 
   const char* text = "a";
   SkSimpleMatrixProvider matrixProvider(SkMatrix::I());
 
-  std::unique_ptr<GrDrawOp> op =
+  GrOp::Owner op =
       GrAtlasTextOp::CreateOpTestingOnly(rtc.get(), paint, font, matrixProvider, text, 16, 16);
   if (!op) {
     return;
   }
 
   bool hasMixedSampledCoverage = false;
-  op->finalize(*context->priv().caps(), nullptr, hasMixedSampledCoverage, GrClampType::kAuto);
+  GrAtlasTextOp* atlasTextOp = (GrAtlasTextOp*)op.get();
+  atlasTextOp->finalize(
+      *context->priv().caps(), nullptr, hasMixedSampledCoverage, GrClampType::kAuto);
 
   TestingUploadTarget uploadTarget;
 
@@ -226,7 +227,6 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrAtlasTextOpPreparation, reporter, ctxInfo) 
   flushState.setOpArgs(&opArgs);
   op->prepare(&flushState);
   flushState.setOpArgs(nullptr);
-  opMemoryPool->release(std::move(op));
 }
 
 void test_atlas_config(

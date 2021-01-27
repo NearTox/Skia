@@ -22,7 +22,8 @@
 #include "src/core/SkScan.h"
 
 static void fill_rect(
-    const SkMatrix& ctm, const SkRasterClip& rc, const SkRect& r, SkBlitter* blitter) {
+    const SkMatrix& ctm, const SkRasterClip& rc, const SkRect& r, SkBlitter* blitter,
+    SkPath* scratchPath) {
   if (ctm.rectStaysRect()) {
     SkRect dr;
     ctm.mapRect(&dr, r);
@@ -32,10 +33,9 @@ static void fill_rect(
     r.toQuad(pts);
     ctm.mapPoints(pts, pts, 4);
 
-    SkRect bounds;
-    bounds.setBounds(pts, 4);
-
-    SkScan::FillPath(SkPathView_quad(pts, bounds), rc, blitter);
+    scratchPath->rewind();
+    scratchPath->addPoly(pts, 4, true);
+    SkScan::FillPath(*scratchPath, rc, blitter);
   }
 }
 
@@ -108,6 +108,8 @@ void SkDraw::drawAtlas(
 
   if (auto blitter =
           SkCreateRasterPipelineBlitter(fDst, p, pipeline, isOpaque, &alloc, fRC->clipShader())) {
+    SkPath scratchPath;
+
     for (int i = 0; i < count; ++i) {
       if (colors) {
         SkColor4f c4 = SkColor4f::FromColor(colors[i]);
@@ -121,7 +123,7 @@ void SkDraw::drawAtlas(
       mx.postConcat(fMatrixProvider->localToDevice());
 
       if (updator->update(mx, nullptr)) {
-        fill_rect(mx, *fRC, textures[i], blitter);
+        fill_rect(mx, *fRC, textures[i], blitter, &scratchPath);
       }
     }
   }

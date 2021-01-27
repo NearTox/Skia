@@ -174,6 +174,8 @@ class BlendFragmentProcessor : public GrFragmentProcessor {
     return fMode == cs.fMode;
   }
 
+  bool usesExplicitReturn() const override { return true; }
+
   SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override {
     const auto* src = this->childProcessor(0);
     const auto* dst = this->childProcessor(1);
@@ -299,12 +301,15 @@ void GLBlendFragmentProcessor::emitCode(EmitArgs& args) {
   }
 
   // Blend src and dst colors together.
-  GrGLSLBlend::AppendMode(fragBuilder, srcColor.c_str(), dstColor.c_str(), args.fOutputColor, mode);
+  fragBuilder->codeAppendf(
+      "return %s(%s, %s)", GrGLSLBlend::BlendFuncName(mode), srcColor.c_str(), dstColor.c_str());
 
   // Reapply alpha from input color if we are doing a compose-two.
   if (behavior == BlendBehavior::kComposeTwoBehavior) {
-    fragBuilder->codeAppendf("%s *= %s.a;\n", args.fOutputColor, args.fInputColor);
+    fragBuilder->codeAppendf(" * %s.a", args.fInputColor);
   }
+
+  fragBuilder->codeAppendf(";\n");
 }
 
 //////////////////////////////////////////////////////////////////////////////

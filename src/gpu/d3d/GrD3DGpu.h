@@ -65,7 +65,8 @@ class GrD3DGpu : public GrGpu {
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
 
-  GrBackendRenderTarget createTestingOnlyBackendRenderTarget(int w, int h, GrColorType) override;
+  GrBackendRenderTarget createTestingOnlyBackendRenderTarget(
+      SkISize dimensions, GrColorType, int sampleCnt, GrProtected) override;
   void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) override;
 
   void testingOnly_flushGpuAndSync() override;
@@ -78,14 +79,18 @@ class GrD3DGpu : public GrGpu {
   }
 #endif
 
-  GrStencilAttachment* createStencilAttachmentForRenderTarget(
+  sk_sp<GrAttachment> makeStencilAttachmentForRenderTarget(
       const GrRenderTarget*, SkISize dimensions, int numStencilSamples) override;
 
-  GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect&,
-      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
-      GrXferBarrierFlags renderPassXferBarriers) override;
+  GrBackendFormat getPreferredStencilFormat(const GrBackendFormat&) override {
+    return GrBackendFormat::MakeDxgi(this->d3dCaps().preferredStencilFormat());
+  }
+
+  sk_sp<GrAttachment> makeMSAAAttachment(
+      SkISize dimensions, const GrBackendFormat& format, int numSamples,
+      GrProtected isProtected) override {
+    return nullptr;
+  }
 
   void addResourceBarriers(
       sk_sp<GrManagedResource> resource, int numBarriers,
@@ -143,9 +148,6 @@ class GrD3DGpu : public GrGpu {
 
   sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
 
-  sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt) override;
-
   sk_sp<GrGpuBuffer> onCreateBuffer(
       size_t sizeInBytes, GrGpuBufferType, GrAccessPattern, const void*) override;
 
@@ -180,8 +182,14 @@ class GrD3DGpu : public GrGpu {
       GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) override;
   void addFinishedCallback(sk_sp<GrRefCntedCallback> finishedCallback);
 
+  GrOpsRenderPass* onGetOpsRenderPass(
+      GrRenderTarget*, GrAttachment*, GrSurfaceOrigin, const SkIRect&,
+      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) override;
+
   void prepareSurfacesForBackendAccessAndStateUpdates(
-      GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
+      SkSpan<GrSurfaceProxy*> proxies, SkSurface::BackendSurfaceAccess access,
       const GrBackendSurfaceMutableState* newState) override;
 
   bool onSubmitToGpu(bool syncCpu) override;
@@ -224,7 +232,8 @@ class GrD3DGpu : public GrGpu {
 
   bool createTextureResourceForBackendSurface(
       DXGI_FORMAT dxgiFormat, SkISize dimensions, GrTexturable texturable, GrRenderable renderable,
-      GrMipmapped mipMapped, GrD3DTextureResourceInfo* info, GrProtected isProtected);
+      GrMipmapped mipMapped, int sampleCnt, GrD3DTextureResourceInfo* info,
+      GrProtected isProtected);
 
   gr_cp<ID3D12Device> fDevice;
   gr_cp<ID3D12CommandQueue> fQueue;

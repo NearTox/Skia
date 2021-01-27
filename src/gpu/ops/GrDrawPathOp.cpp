@@ -59,12 +59,10 @@ void init_stencil_pass_settings(
 
 //////////////////////////////////////////////////////////////////////////////
 
-std::unique_ptr<GrDrawOp> GrDrawPathOp::Make(
+GrOp::Owner GrDrawPathOp::Make(
     GrRecordingContext* context, const SkMatrix& viewMatrix, GrPaint&& paint, GrAA aa,
     sk_sp<const GrPath> path) {
-  GrOpMemoryPool* pool = context->priv().opMemoryPool();
-
-  return pool->allocate<GrDrawPathOp>(viewMatrix, std::move(paint), aa, std::move(path));
+  return GrOp::Make<GrDrawPathOp>(context, viewMatrix, std::move(paint), aa, std::move(path));
 }
 
 void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {

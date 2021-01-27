@@ -45,7 +45,7 @@ bool GrColorSpaceXform::Equals(const GrColorSpaceXform* a, const GrColorSpaceXfo
     return false;
   }
 
-  return true;
+    return true;
 }
 
 SkColor4f GrColorSpaceXform::apply(const SkColor4f& srcColor) {

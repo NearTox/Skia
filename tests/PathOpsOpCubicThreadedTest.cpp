@@ -76,7 +76,7 @@ static void testOpCubicsMain(PathOpsThreadState* data) {
                   if (state.fReporter->verbose()) {
                     ++loopNo;
                     goto skipToNext;
-                  }
+                }
                 }
                 if (PathOpsDebug::gCheckForDuplicateNames) return;
               }

@@ -7,7 +7,7 @@
 
 #include "include/gpu/GrDirectContext.h"
 #include "src/core/SkBlendModePriv.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrRenderTargetContextPriv.h"
@@ -130,7 +130,7 @@ static void textureop_creation_test(
       quad.fLocal = GrQuad(set[i].fSrcRect);
       quad.fEdgeFlags = set[i].fAAFlags;
 
-      std::unique_ptr<GrDrawOp> op = GrTextureOp::Make(
+      GrOp::Owner op = GrTextureOp::Make(
           dContext, set[i].fProxyView, set[i].fSrcAlphaType, nullptr,
           GrSamplerState::Filter::kNearest, GrSamplerState::MipmapMode::kNone, set[i].fColor,
           GrTextureOp::Saturate::kYes, blendMode, overallAA, &quad, nullptr);

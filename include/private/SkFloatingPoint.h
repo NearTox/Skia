@@ -35,7 +35,7 @@ constexpr double SK_DoublePI = 3.14159265358979323846264338327950288;
 // C++98 cmath std::pow seems to be the earliest portable way to get float pow.
 // However, on Linux including cmath undefines isfinite.
 // http://gcc.gnu.org/bugzilla/show_bug.cgi?id=14608
-static inline float sk_float_pow(float base, float exp) { return powf(base, exp); }
+static inline float sk_float_pow(float base, float exp) noexcept { return powf(base, exp); }
 
 #define sk_float_sqrt(x) sqrtf(x)
 #define sk_float_sin(x) sinf(x)
@@ -78,13 +78,15 @@ static inline float sk_float_log2(float x) {
 #  define sk_float_log2(x) log2f(x)
 #endif
 
-static inline bool sk_float_isfinite(float x) { return SkFloatBits_IsFinite(SkFloat2Bits(x)); }
+static constexpr inline bool sk_float_isfinite(float x) noexcept {
+  return SkFloatBits_IsFinite(SkFloat2Bits(x));
+}
 
-static inline bool sk_floats_are_finite(float a, float b) {
+static constexpr inline bool sk_floats_are_finite(float a, float b) noexcept {
   return sk_float_isfinite(a) && sk_float_isfinite(b);
 }
 
-static inline bool sk_floats_are_finite(const float array[], int count) {
+static inline bool sk_floats_are_finite(const float array[], int count) noexcept {
   float prod = 0;
   for (int i = 0; i < count; ++i) {
     prod *= array[i];
@@ -93,9 +95,11 @@ static inline bool sk_floats_are_finite(const float array[], int count) {
   return prod == 0;  // if prod is NaN, this check will return false
 }
 
-static inline bool sk_float_isinf(float x) { return SkFloatBits_IsInf(SkFloat2Bits(x)); }
+static constexpr inline bool sk_float_isinf(float x) noexcept {
+  return SkFloatBits_IsInf(SkFloat2Bits(x));
+}
 
-static inline bool sk_float_isnan(float x) { return !(x == x); }
+static constexpr inline bool sk_float_isnan(float x) noexcept { return !(x == x); }
 
 #define sk_double_isnan(a) sk_float_isnan(a)
 
@@ -108,7 +112,7 @@ static inline bool sk_float_isnan(float x) { return !(x == x); }
 /**
  *  Return the closest int for the given float. Returns SK_MaxS32FitsInFloat for NaN.
  */
-static inline int sk_float_saturate2int(float x) {
+static constexpr inline int sk_float_saturate2int(float x) noexcept {
   x = x < SK_MaxS32FitsInFloat ? x : SK_MaxS32FitsInFloat;
   x = x > SK_MinS32FitsInFloat ? x : SK_MinS32FitsInFloat;
   return (int)x;
@@ -117,7 +121,7 @@ static inline int sk_float_saturate2int(float x) {
 /**
  *  Return the closest int for the given double. Returns SK_MaxS32 for NaN.
  */
-static inline int sk_double_saturate2int(double x) {
+static constexpr inline int sk_double_saturate2int(double x) noexcept {
   x = x < SK_MaxS32 ? x : SK_MaxS32;
   x = x > SK_MinS32 ? x : SK_MinS32;
   return (int)x;
@@ -126,7 +130,7 @@ static inline int sk_double_saturate2int(double x) {
 /**
  *  Return the closest int64_t for the given float. Returns SK_MaxS64FitsInFloat for NaN.
  */
-static inline int64_t sk_float_saturate2int64(float x) {
+static constexpr inline int64_t sk_float_saturate2int64(float x) noexcept {
   x = x < SK_MaxS64FitsInFloat ? x : SK_MaxS64FitsInFloat;
   x = x > SK_MinS64FitsInFloat ? x : SK_MinS64FitsInFloat;
   return (int64_t)x;
@@ -151,7 +155,9 @@ static inline int64_t sk_float_saturate2int64(float x) {
 // Clang thinks this is undefined, but it's actually implementation defined to return either
 // the largest float or infinity (one of the two bracketing representable floats).  Good enough!
 SK_ATTRIBUTE(no_sanitize("float-cast-overflow"))
-static inline float sk_double_to_float(double x) { return static_cast<float>(x); }
+static constexpr inline float sk_double_to_float(double x) noexcept {
+  return static_cast<float>(x);
+}
 
 #define SK_FloatNaN std::numeric_limits<float>::quiet_NaN()
 #define SK_FloatInfinity (+std::numeric_limits<float>::infinity())
@@ -161,9 +167,9 @@ static inline float sk_double_to_float(double x) { return static_cast<float>(x);
 
 // Returns false if any of the floats are outside of [0...1]
 // Returns true if count is 0
-bool sk_floats_are_unit(const float array[], size_t count);
+bool sk_floats_are_unit(const float array[], size_t count) noexcept;
 
-static inline float sk_float_rsqrt_portable(float x) {
+static inline float sk_float_rsqrt_portable(float x) noexcept {
   // Get initial estimate.
   int i;
   memcpy(&i, &x, 4);
@@ -179,7 +185,7 @@ static inline float sk_float_rsqrt_portable(float x) {
 
 // Fast, approximate inverse square root.
 // Compare to name-brand "1.0f / sk_float_sqrt(x)".  Should be around 10x faster on SSE, 2x on NEON.
-static inline float sk_float_rsqrt(float x) {
+static inline float sk_float_rsqrt(float x) noexcept {
 // We want all this inlined, so we'll inline SIMD and just take the hit when we don't know we've got
 // it at compile time.  This is going to be too fast to productively hide behind a function pointer.
 //
@@ -212,7 +218,7 @@ static inline float sk_float_rsqrt(float x) {
 //     sk_float_nextlog2((2..4]) -> 2
 //     sk_float_nextlog2((4..8]) -> 3
 //     ...
-static inline int sk_float_nextlog2(float x) {
+static constexpr inline int sk_float_nextlog2(float x) noexcept {
   uint32_t bits = (uint32_t)SkFloat2Bits(x);
   bits += (1u << 23) - 1u;  // Increment the exponent for non-powers-of-2.
   int exp = ((int32_t)bits >> 23) - 127;
@@ -232,20 +238,26 @@ static inline int sk_float_nextlog2(float x) {
 // so we have a helper that suppresses the possible undefined-behavior warnings.
 
 SK_ATTRIBUTE(no_sanitize("float-divide-by-zero"))
-static inline float sk_ieee_float_divide(float numer, float denom) { return numer / denom; }
+static constexpr inline float sk_ieee_float_divide(float numer, float denom) noexcept {
+  return numer / denom;
+}
 
 SK_ATTRIBUTE(no_sanitize("float-divide-by-zero"))
-static inline double sk_ieee_double_divide(double numer, double denom) { return numer / denom; }
+static constexpr inline double sk_ieee_double_divide(double numer, double denom) noexcept {
+  return numer / denom;
+}
 
 // While we clean up divide by zero, we'll replace places that do divide by zero with this TODO.
-static inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(float n, float d) {
+static constexpr inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
+    float n, float d) noexcept {
   return sk_ieee_float_divide(n, d);
 }
-static inline float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(double n, double d) {
+static constexpr inline float sk_ieee_double_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
+    double n, double d) noexcept {
   return sk_ieee_double_divide(n, d);
 }
 
-static inline float sk_fmaf(float f, float m, float a) {
+static inline float sk_fmaf(float f, float m, float a) noexcept {
 #if defined(FP_FAST_FMA)
   return std::fmaf(f, m, a);
 #else

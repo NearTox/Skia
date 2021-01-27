@@ -333,7 +333,7 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachShape(
 
   // Push transformed local geometries to parent list, for subsequent paints.
   for (auto& geo : geos) {
-    ctx->fGeometryStack->emplace_back(
+    ctx->fGeometryStack->push_back(
         shape_transform ? sksg::GeometryTransform::Make(std::move(geo), shape_transform)
                         : std::move(geo));
   }

@@ -14,51 +14,53 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 class LayerMaskView : public Sample {
- public:
-  LayerMaskView() { this->setBGColor(0xFFDDDDDD); }
-
- protected:
-  SkString name() override { return SkString("LayerMask"); }
-
-  void drawMask(SkCanvas* canvas, const SkRect& r) {
-    SkPaint paint;
-    paint.setAntiAlias(true);
-
-    if (true) {
-      SkBitmap mask;
-      int w = SkScalarRoundToInt(r.width());
-      int h = SkScalarRoundToInt(r.height());
-      mask.allocN32Pixels(w, h);
-      mask.eraseColor(SK_ColorTRANSPARENT);
-      SkCanvas c(mask);
-      SkRect bounds = r;
-      bounds.offset(-bounds.fLeft, -bounds.fTop);
-      c.drawOval(bounds, paint);
-
-      paint.setBlendMode(SkBlendMode::kDstIn);
-      canvas->drawBitmap(mask, r.fLeft, r.fTop, &paint);
-    } else {
-      SkPath p;
-      p.addOval(r);
-      p.setFillType(SkPathFillType::kInverseWinding);
-      paint.setBlendMode(SkBlendMode::kDstOut);
-      canvas->drawPath(p, paint);
+public:
+    LayerMaskView() {
+        this->setBGColor(0xFFDDDDDD);
     }
-  }
 
-  void onDrawContent(SkCanvas* canvas) override {
-    SkRect r;
-    r.setLTRB(20, 20, 120, 120);
-    canvas->saveLayer(&r, nullptr);
-    canvas->drawColor(SK_ColorRED);
-    drawMask(canvas, r);
-    canvas->restore();
-  }
+protected:
+    SkString name() override { return SkString("LayerMask"); }
 
- private:
-  using INHERITED = Sample;
+    void drawMask(SkCanvas* canvas, const SkRect& r) {
+        SkPaint paint;
+        paint.setAntiAlias(true);
+
+        if (true) {
+            SkBitmap mask;
+            int w = SkScalarRoundToInt(r.width());
+            int h = SkScalarRoundToInt(r.height());
+            mask.allocN32Pixels(w, h);
+            mask.eraseColor(SK_ColorTRANSPARENT);
+            SkCanvas c(mask);
+            SkRect bounds = r;
+            bounds.offset(-bounds.fLeft, -bounds.fTop);
+            c.drawOval(bounds, paint);
+
+            paint.setBlendMode(SkBlendMode::kDstIn);
+            canvas->drawBitmap(mask, r.fLeft, r.fTop, &paint);
+        } else {
+            SkPath p;
+            p.addOval(r);
+            p.setFillType(SkPathFillType::kInverseWinding);
+            paint.setBlendMode(SkBlendMode::kDstOut);
+            canvas->drawPath(p, paint);
+        }
+    }
+
+    void onDrawContent(SkCanvas* canvas) override {
+        SkRect  r;
+        r.setLTRB(20, 20, 120, 120);
+        canvas->saveLayer(&r, nullptr);
+        canvas->drawColor(SK_ColorRED);
+        drawMask(canvas, r);
+        canvas->restore();
+    }
+
+private:
+    using INHERITED = Sample;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE(return new LayerMaskView();)
+DEF_SAMPLE( return new LayerMaskView(); )

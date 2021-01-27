@@ -420,7 +420,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
   DEFINE_OP_CLASS_ID
 
   DrawVerticesOp(
-      const Helper::MakeArgs&, const SkPMColor4f&, sk_sp<SkVertices>, GrPrimitiveType, GrAAType,
+      GrProcessorSet*, const SkPMColor4f&, sk_sp<SkVertices>, GrPrimitiveType, GrAAType,
       sk_sp<GrColorSpaceXform>, const SkMatrixProvider&, const SkRuntimeEffect*);
 
   const char* name() const override { return "DrawVerticesOp"; }
@@ -459,7 +459,7 @@ class DrawVerticesOp final : public GrMeshDrawOp {
            GrPrimitiveType::kLines == fPrimitiveType || GrPrimitiveType::kPoints == fPrimitiveType;
   }
 
-  CombineResult onCombineIfPossible(GrOp* t, GrRecordingContext::Arenas*, const GrCaps&) override;
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps&) override;
 
   struct Mesh {
     SkPMColor4f fColor;  // Used if this->hasPerVertexColors() is false.
@@ -507,11 +507,11 @@ class DrawVerticesOp final : public GrMeshDrawOp {
 };
 
 DrawVerticesOp::DrawVerticesOp(
-    const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, sk_sp<SkVertices> vertices,
+    GrProcessorSet* processorSet, const SkPMColor4f& color, sk_sp<SkVertices> vertices,
     GrPrimitiveType primitiveType, GrAAType aaType, sk_sp<GrColorSpaceXform> colorSpaceXform,
     const SkMatrixProvider& matrixProvider, const SkRuntimeEffect* effect)
     : INHERITED(ClassID()),
-      fHelper(helperArgs, aaType),
+      fHelper(processorSet, aaType),
       fPrimitiveType(primitiveType),
       fMultipleViewMatrices(false),
       fColorSpaceXform(std::move(colorSpaceXform)) {
@@ -702,7 +702,7 @@ void DrawVerticesOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBo
 }
 
 GrOp::CombineResult DrawVerticesOp::onCombineIfPossible(
-    GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) {
+    GrOp* t, SkArenaAlloc*, const GrCaps& caps) {
   DrawVerticesOp* that = t->cast<DrawVerticesOp>();
 
   if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
@@ -802,7 +802,7 @@ static GrPrimitiveType SkVertexModeToGrPrimitiveType(SkVertices::VertexMode mode
   SK_ABORT("Invalid mode");
 }
 
-std::unique_ptr<GrDrawOp> GrDrawVerticesOp::Make(
+GrOp::Owner GrDrawVerticesOp::Make(
     GrRecordingContext* context, GrPaint&& paint, sk_sp<SkVertices> vertices,
     const SkMatrixProvider& matrixProvider, GrAAType aaType,
     sk_sp<GrColorSpaceXform> colorSpaceXform, GrPrimitiveType* overridePrimType,

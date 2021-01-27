@@ -113,7 +113,7 @@ class StandaloneShaderCaps {
   bool fMustEnableSpecificAdvBlendEqs = false;
   bool mustEnableSpecificAdvBlendEqs() const { return fMustEnableSpecificAdvBlendEqs; }
 
-  bool fCanUseAnyFunctionInShader = false;
+  bool fCanUseAnyFunctionInShader = true;
   bool canUseAnyFunctionInShader() const { return fCanUseAnyFunctionInShader; }
 
   bool fNoDefaultPrecisionForExternalSamplers = false;
@@ -129,6 +129,9 @@ class StandaloneShaderCaps {
 
   bool fBuiltinFMASupport = false;
   bool builtinFMASupport() const { return fBuiltinFMASupport; }
+
+  bool fBuiltinDeterminantSupport = false;
+  bool builtinDeterminantSupport() const { return fBuiltinDeterminantSupport; }
 
   bool fCanUseDoLoops = false;
   bool canUseDoLoops() const {
@@ -212,36 +215,23 @@ class ShaderCapsFactory {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
     result->fShaderDerivativeSupport = true;
+    result->fBuiltinDeterminantSupport = true;
     result->fCanUseDoLoops = true;
     return result;
   }
 
   static ShaderCapsPointer Standalone() { return MakeShaderCaps(); }
 
-  static ShaderCapsPointer Version450Core() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 450 core";
-    return result;
-  }
-
-  static ShaderCapsPointer Version110() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 110";
-    result->fGLSLGeneration = GrGLSLGeneration::k110_GrGLSLGeneration;
-    return result;
-  }
-
-  static ShaderCapsPointer UsesPrecisionModifiers() {
+  static ShaderCapsPointer AddAndTrueToLoopCondition() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
-    result->fUsesPrecisionModifiers = true;
+    result->fAddAndTrueToLoopCondition = true;
     return result;
   }
 
-  static ShaderCapsPointer CannotUseMinAndAbsTogether() {
+  static ShaderCapsPointer BlendModesFailRandomlyForAllZeroVec() {
     ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fCanUseMinAndAbsTogether = false;
+    result->fInBlendModesFailRandomlyForAllZeroVec = true;
     return result;
   }
 
@@ -252,27 +242,24 @@ class ShaderCapsFactory {
     return result;
   }
 
-  static ShaderCapsPointer MustForceNegatedAtanParamToFloat() {
+  static ShaderCapsPointer CannotUseFragCoord() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
-    result->fMustForceNegatedAtanParamToFloat = true;
+    result->fCanUseFragCoord = false;
     return result;
   }
 
-  static ShaderCapsPointer ShaderDerivativeExtensionString() {
+  static ShaderCapsPointer CannotUseMinAndAbsTogether() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
-    result->fShaderDerivativeSupport = true;
-    result->fShaderDerivativeExtensionString = "GL_OES_standard_derivatives";
-    result->fUsesPrecisionModifiers = true;
+    result->fCanUseMinAndAbsTogether = false;
     return result;
   }
 
-  static ShaderCapsPointer FragCoordsOld() {
+  static ShaderCapsPointer EmulateAbsIntFunction() {
     ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 110";
-    result->fGLSLGeneration = GrGLSLGeneration::k110_GrGLSLGeneration;
-    result->fFragCoordConventionsExtensionString = "GL_ARB_fragment_coord_conventions";
+    result->fVersionDeclString = "#version 400";
+    result->fEmulateAbsIntFunction = true;
     return result;
   }
 
@@ -282,20 +269,11 @@ class ShaderCapsFactory {
     result->fFragCoordConventionsExtensionString = "GL_ARB_fragment_coord_conventions";
     return result;
   }
-
-  static ShaderCapsPointer GeometryShaderSupport() {
+  static ShaderCapsPointer FragCoordsOld() {
     ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fGeometryShaderSupport = true;
-    result->fGSInvocationsSupport = true;
-    return result;
-  }
-
-  static ShaderCapsPointer NoGSInvocationsSupport() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fGeometryShaderSupport = true;
-    result->fGSInvocationsSupport = false;
+    result->fVersionDeclString = "#version 110";
+    result->fGLSLGeneration = GrGLSLGeneration::k110_GrGLSLGeneration;
+    result->fFragCoordConventionsExtensionString = "GL_ARB_fragment_coord_conventions";
     return result;
   }
 
@@ -304,6 +282,14 @@ class ShaderCapsFactory {
     result->fVersionDeclString = "#version 310es";
     result->fGeometryShaderSupport = true;
     result->fGeometryShaderExtensionString = "GL_EXT_geometry_shader";
+    result->fGSInvocationsSupport = true;
+    return result;
+  }
+
+  static ShaderCapsPointer GeometryShaderSupport() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 400";
+    result->fGeometryShaderSupport = true;
     result->fGSInvocationsSupport = true;
     return result;
   }
@@ -317,22 +303,6 @@ class ShaderCapsFactory {
     return result;
   }
 
-  static ShaderCapsPointer VariousCaps() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fExternalTextureSupport = true;
-    result->fFBFetchSupport = false;
-    result->fCanUseAnyFunctionInShader = false;
-    return result;
-  }
-
-  static ShaderCapsPointer CannotUseFragCoord() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fCanUseFragCoord = false;
-    return result;
-  }
-
   static ShaderCapsPointer IncompleteShortIntPrecision() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 310es";
@@ -341,31 +311,24 @@ class ShaderCapsFactory {
     return result;
   }
 
-  static ShaderCapsPointer AddAndTrueToLoopCondition() {
+  static ShaderCapsPointer MustForceNegatedAtanParamToFloat() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
-    result->fAddAndTrueToLoopCondition = true;
+    result->fMustForceNegatedAtanParamToFloat = true;
     return result;
   }
 
-  static ShaderCapsPointer UnfoldShortCircuitAsTernary() {
+  static ShaderCapsPointer MustGuardDivisionEvenAfterExplicitZeroCheck() {
     ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fUnfoldShortCircuitAsTernary = true;
+    result->fMustGuardDivisionEvenAfterExplicitZeroCheck = true;
     return result;
   }
 
-  static ShaderCapsPointer EmulateAbsIntFunction() {
+  static ShaderCapsPointer NoGSInvocationsSupport() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
-    result->fEmulateAbsIntFunction = true;
-    return result;
-  }
-
-  static ShaderCapsPointer RewriteDoWhileLoops() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fRewriteDoWhileLoops = true;
+    result->fGeometryShaderSupport = true;
+    result->fGSInvocationsSupport = false;
     return result;
   }
 
@@ -376,9 +339,52 @@ class ShaderCapsFactory {
     return result;
   }
 
+  static ShaderCapsPointer RewriteDoWhileLoops() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 400";
+    result->fRewriteDoWhileLoops = true;
+    return result;
+  }
+
   static ShaderCapsPointer SampleMaskSupport() {
     ShaderCapsPointer result = Default();
     result->fSampleMaskSupport = true;
+    return result;
+  }
+
+  static ShaderCapsPointer ShaderDerivativeExtensionString() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 400";
+    result->fShaderDerivativeSupport = true;
+    result->fShaderDerivativeExtensionString = "GL_OES_standard_derivatives";
+    result->fUsesPrecisionModifiers = true;
+    return result;
+  }
+
+  static ShaderCapsPointer UnfoldShortCircuitAsTernary() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 400";
+    result->fUnfoldShortCircuitAsTernary = true;
+    return result;
+  }
+
+  static ShaderCapsPointer UsesPrecisionModifiers() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 400";
+    result->fUsesPrecisionModifiers = true;
+    return result;
+  }
+
+  static ShaderCapsPointer Version110() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 110";
+    result->fGLSLGeneration = GrGLSLGeneration::k110_GrGLSLGeneration;
+    return result;
+  }
+
+  static ShaderCapsPointer Version450Core() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 450 core";
     return result;
   }
 

@@ -172,15 +172,6 @@ bool SkScalerContext::GetGammaLUTData(
   return true;
 }
 
-void SkScalerContext::getAdvance(SkGlyph* glyph) {
-  if (generateAdvance(glyph)) {
-    glyph->fMaskFormat = MASK_FORMAT_JUST_ADVANCE;
-  } else {
-    this->getMetrics(glyph);
-    SkASSERT(glyph->fMaskFormat != MASK_FORMAT_UNKNOWN);
-  }
-}
-
 void SkScalerContext::getMetrics(SkGlyph* glyph) {
   bool generatingImageFromPath = fGenerateImageFromPath;
   if (!generatingImageFromPath) {

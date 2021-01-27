@@ -60,7 +60,7 @@ class MemoryLayout {
         }
         return this->roundUpIfNeeded(result);
       }
-      default: ABORT("cannot determine size of type %s", type.name().c_str());
+      default: ABORT("cannot determine size of type %s", String(type.name()).c_str());
     }
   }
 
@@ -122,7 +122,7 @@ class MemoryLayout {
             !type.fields().size() || (0 == alignment % this->alignment(*type.fields()[0].fType)));
         return (total + alignment - 1) & ~(alignment - 1);
       }
-      default: ABORT("cannot determine size of type %s", type.name().c_str());
+      default: ABORT("cannot determine size of type %s", String(type.name()).c_str());
     }
   }
 

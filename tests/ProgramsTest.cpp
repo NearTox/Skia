@@ -13,7 +13,7 @@
 #include "include/private/SkChecksum.h"
 #include "include/utils/SkRandom.h"
 #include "src/gpu/GrAutoLocaleSetter.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrPipeline.h"
@@ -309,27 +309,27 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
   if (!renderTargetContext) {
     SkDebugf("Could not allocate a renderTargetContext");
     return false;
-  }
-
-  int fpFactoryCnt = GrFragmentProcessorTestFactory::Count();
-  for (int i = 0; i < fpFactoryCnt; ++i) {
-    // Since FP factories internally randomize, call each 10 times.
-    for (int j = 0; j < 10; ++j) {
-      GrProcessorTestData ptd(&random, direct, /*maxTreeDepth=*/1, SK_ARRAY_COUNT(views), views);
-
-      GrPaint paint;
-      paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
-      auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
-      auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
-      paint.setColorFragmentProcessor(std::move(blockFP));
-      GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
-
-      direct->flush(GrFlushInfo());
-      direct->submit(false);
     }
-  }
 
-  return true;
+    int fpFactoryCnt = GrFragmentProcessorTestFactory::Count();
+    for (int i = 0; i < fpFactoryCnt; ++i) {
+      // Since FP factories internally randomize, call each 10 times.
+      for (int j = 0; j < 10; ++j) {
+        GrProcessorTestData ptd(&random, direct, /*maxTreeDepth=*/1, SK_ARRAY_COUNT(views), views);
+
+        GrPaint paint;
+        paint.setXPFactory(GrPorterDuffXPFactory::Get(SkBlendMode::kSrc));
+        auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
+        auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
+        paint.setColorFragmentProcessor(std::move(blockFP));
+        GrDrawRandomOp(&random, renderTargetContext.get(), std::move(paint));
+
+        direct->flush(GrFlushInfo());
+        direct->submit(false);
+      }
+    }
+
+    return true;
 }
 #endif
 

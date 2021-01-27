@@ -39,7 +39,7 @@ class GrTextureOp {
    * deconstructed into the texture, filter, modulating color, and blend mode. When blend mode is
    * src over, this will return a GrFillRectOp with a paint that samples the proxy.
    */
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext*, GrSurfaceProxyView, SkAlphaType srcAlphaType, sk_sp<GrColorSpaceXform>,
       GrSamplerState::Filter, GrSamplerState::MipmapMode, const SkPMColor4f&, Saturate, SkBlendMode,
       GrAAType, DrawQuad*, const SkRect* subset = nullptr);

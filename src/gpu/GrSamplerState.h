@@ -54,10 +54,15 @@ class GrSamplerState {
 
   constexpr WrapMode wrapModeY() const { return fWrapModes[1]; }
 
-  constexpr bool isRepeated() const {
-    return fWrapModes[0] == WrapMode::kRepeat || fWrapModes[0] == WrapMode::kMirrorRepeat ||
-           fWrapModes[1] == WrapMode::kRepeat || fWrapModes[1] == WrapMode::kMirrorRepeat;
+  constexpr bool isRepeatedX() const {
+    return fWrapModes[0] == WrapMode::kRepeat || fWrapModes[0] == WrapMode::kMirrorRepeat;
   }
+
+  constexpr bool isRepeatedY() const {
+    return fWrapModes[1] == WrapMode::kRepeat || fWrapModes[1] == WrapMode::kMirrorRepeat;
+  }
+
+  constexpr bool isRepeated() const { return this->isRepeatedX() || this->isRepeatedY(); }
 
   constexpr Filter filter() const { return fFilter; }
 

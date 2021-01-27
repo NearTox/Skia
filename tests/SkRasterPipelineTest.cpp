@@ -382,82 +382,82 @@ DEF_TEST(SkRasterPipeline_u16, r) {
         REPORTER_ASSERT(r, b == 0xff);
       }
     }
-  }
+    }
 
-  {
-    uint8_t data[][4] = {
-        {0x00, 0x01, 0x02, 0x03},
-        {0x10, 0x11, 0x12, 0x13},
-        {0x20, 0x21, 0x22, 0x23},
-        {0x30, 0x31, 0x32, 0x33},
-    };
-    alignas(8) uint16_t buffer[4];
-    SkRasterPipeline_MemoryCtx src = {&data[0][0], 0}, dst = {&buffer[0], 0};
+    {
+      uint8_t data[][4] = {
+          {0x00, 0x01, 0x02, 0x03},
+          {0x10, 0x11, 0x12, 0x13},
+          {0x20, 0x21, 0x22, 0x23},
+          {0x30, 0x31, 0x32, 0x33},
+      };
+      alignas(8) uint16_t buffer[4];
+      SkRasterPipeline_MemoryCtx src = {&data[0][0], 0}, dst = {&buffer[0], 0};
 
-    for (unsigned i = 1; i <= 4; i++) {
-      memset(buffer, 0xff, sizeof(buffer));
-      SkRasterPipeline_<256> p;
-      p.append(SkRasterPipeline::load_8888, &src);
-      p.append(SkRasterPipeline::store_a16, &dst);
-      p.run(0, 0, i, 1);
-      for (unsigned j = 0; j < i; j++) {
-        uint16_t expected = (data[j][3] << 8) | data[j][3];
-        REPORTER_ASSERT(r, buffer[j] == expected);
-      }
-      for (int j = i; j < 4; j++) {
-        REPORTER_ASSERT(r, buffer[j] == 0xffff);
+      for (unsigned i = 1; i <= 4; i++) {
+        memset(buffer, 0xff, sizeof(buffer));
+        SkRasterPipeline_<256> p;
+        p.append(SkRasterPipeline::load_8888, &src);
+        p.append(SkRasterPipeline::store_a16, &dst);
+        p.run(0, 0, i, 1);
+        for (unsigned j = 0; j < i; j++) {
+          uint16_t expected = (data[j][3] << 8) | data[j][3];
+          REPORTER_ASSERT(r, buffer[j] == expected);
+        }
+        for (int j = i; j < 4; j++) {
+          REPORTER_ASSERT(r, buffer[j] == 0xffff);
+        }
       }
     }
-  }
 
-  {
-    alignas(8) uint16_t data[][4] = {
-        {0x0000, 0x1000, 0x2000, 0x3000},
-        {0x0001, 0x1001, 0x2001, 0x3001},
-        {0x0002, 0x1002, 0x2002, 0x3002},
-        {0x0003, 0x1003, 0x2003, 0x3003},
-    };
-    alignas(8) uint16_t buffer[4][4];
-    SkRasterPipeline_MemoryCtx src = {&data[0][0], 0}, dst = {&buffer[0], 0};
+    {
+      alignas(8) uint16_t data[][4] = {
+          {0x0000, 0x1000, 0x2000, 0x3000},
+          {0x0001, 0x1001, 0x2001, 0x3001},
+          {0x0002, 0x1002, 0x2002, 0x3002},
+          {0x0003, 0x1003, 0x2003, 0x3003},
+      };
+      alignas(8) uint16_t buffer[4][4];
+      SkRasterPipeline_MemoryCtx src = {&data[0][0], 0}, dst = {&buffer[0], 0};
 
-    for (unsigned i = 1; i <= 4; i++) {
-      memset(buffer, 0xff, sizeof(buffer));
-      SkRasterPipeline_<256> p;
-      p.append(SkRasterPipeline::load_16161616, &src);
-      p.append(SkRasterPipeline::swap_rb);
-      p.append(SkRasterPipeline::store_16161616, &dst);
-      p.run(0, 0, i, 1);
-      for (unsigned j = 0; j < i; j++) {
-        uint16_t expected[4] = {data[j][2], data[j][1], data[j][0], data[j][3]};
-        REPORTER_ASSERT(r, !memcmp(&expected[0], &buffer[j], sizeof(expected)));
-      }
-      for (int j = i; j < 4; j++) {
-        for (uint16_t u16 : buffer[j]) REPORTER_ASSERT(r, u16 == 0xffff);
+      for (unsigned i = 1; i <= 4; i++) {
+        memset(buffer, 0xff, sizeof(buffer));
+        SkRasterPipeline_<256> p;
+        p.append(SkRasterPipeline::load_16161616, &src);
+        p.append(SkRasterPipeline::swap_rb);
+        p.append(SkRasterPipeline::store_16161616, &dst);
+        p.run(0, 0, i, 1);
+        for (unsigned j = 0; j < i; j++) {
+          uint16_t expected[4] = {data[j][2], data[j][1], data[j][0], data[j][3]};
+          REPORTER_ASSERT(r, !memcmp(&expected[0], &buffer[j], sizeof(expected)));
+        }
+        for (int j = i; j < 4; j++) {
+          for (uint16_t u16 : buffer[j]) REPORTER_ASSERT(r, u16 == 0xffff);
+        }
       }
     }
-  }
 }
 
 DEF_TEST(SkRasterPipeline_lowp, r) {
   uint32_t rgba[64];
   for (int i = 0; i < 64; i++) {
     rgba[i] = (4 * i + 0) << 0 | (4 * i + 1) << 8 | (4 * i + 2) << 16 | (4 * i + 3) << 24;
-  }
-
-  SkRasterPipeline_MemoryCtx ptr = {rgba, 0};
-
-  SkRasterPipeline_<256> p;
-  p.append(SkRasterPipeline::load_8888, &ptr);
-  p.append(SkRasterPipeline::swap_rb);
-  p.append(SkRasterPipeline::store_8888, &ptr);
-  p.run(0, 0, 64, 1);
-
-  for (int i = 0; i < 64; i++) {
-    uint32_t want = (4 * i + 0) << 16 | (4 * i + 1) << 8 | (4 * i + 2) << 0 | (4 * i + 3) << 24;
-    if (rgba[i] != want) {
-      ERRORF(r, "got %08x, want %08x\n", rgba[i], want);
     }
-  }
+
+    SkRasterPipeline_MemoryCtx ptr = {rgba, 0};
+
+    SkRasterPipeline_<256> p;
+    p.append(SkRasterPipeline::load_8888, &ptr);
+    p.append(SkRasterPipeline::swap_rb);
+    p.append(SkRasterPipeline::store_8888, &ptr);
+    p.run(0, 0, 64, 1);
+
+    for (int i = 0; i < 64; i++) {
+      uint32_t want = (4 * i + 0) << 16 | (4 * i + 1) << 8 | (4 * i + 2) << 0 | (4 * i + 3) << 24;
+      if (rgba[i] != want) {
+        ERRORF(r, "got %08x, want %08x\n", rgba[i], want);
+      }
+    }
 }
 
 DEF_TEST(SkRasterPipeline_swizzle, r) {

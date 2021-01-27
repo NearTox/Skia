@@ -14,8 +14,8 @@
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 GrSimpleMeshDrawOpHelper::GrSimpleMeshDrawOpHelper(
-    const MakeArgs& args, GrAAType aaType, InputFlags inputFlags)
-    : fProcessors(args.fProcessorSet),
+    GrProcessorSet* processorSet, GrAAType aaType, InputFlags inputFlags)
+    : fProcessors(processorSet),
       fPipelineFlags((GrPipeline::InputFlags)inputFlags),
       fAAType((int)aaType),
       fUsesLocalCoords(false),

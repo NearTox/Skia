@@ -53,20 +53,25 @@ class GrDawnGpu : public GrGpu {
 #if GR_TEST_UTILS
   bool isTestingOnlyBackendTexture(const GrBackendTexture&) const override;
 
-  GrBackendRenderTarget createTestingOnlyBackendRenderTarget(int w, int h, GrColorType) override;
+  GrBackendRenderTarget createTestingOnlyBackendRenderTarget(
+      SkISize dimensions, GrColorType, int sampleCnt, GrProtected) override;
   void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) override;
 
   void testingOnly_flushGpuAndSync() override;
 #endif
 
-  GrStencilAttachment* createStencilAttachmentForRenderTarget(
+  sk_sp<GrAttachment> makeStencilAttachmentForRenderTarget(
       const GrRenderTarget*, SkISize dimensions, int numStencilSamples) override;
 
-  GrOpsRenderPass* getOpsRenderPass(
-      GrRenderTarget*, GrStencilAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
-      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
-      GrXferBarrierFlags renderPassXferBarriers) override;
+  GrBackendFormat getPreferredStencilFormat(const GrBackendFormat&) override {
+    return GrBackendFormat::MakeDawn(wgpu::TextureFormat::Depth24PlusStencil8);
+  }
+
+  sk_sp<GrAttachment> makeMSAAAttachment(
+      SkISize dimensions, const GrBackendFormat& format, int numSamples,
+      GrProtected isProtected) override {
+    return nullptr;
+  }
 
   SkSL::Compiler* shaderCompiler() const { return fCompiler.get(); }
 
@@ -124,9 +129,6 @@ class GrDawnGpu : public GrGpu {
       const GrBackendTexture&, int sampleCnt, GrWrapOwnership, GrWrapCacheable) override;
   sk_sp<GrRenderTarget> onWrapBackendRenderTarget(const GrBackendRenderTarget&) override;
 
-  sk_sp<GrRenderTarget> onWrapBackendTextureAsRenderTarget(
-      const GrBackendTexture&, int sampleCnt) override;
-
   GrBackendTexture onCreateBackendTexture(
       SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
 
@@ -172,7 +174,17 @@ class GrDawnGpu : public GrGpu {
   void addFinishedProc(
       GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) override;
 
+  GrOpsRenderPass* onGetOpsRenderPass(
+      GrRenderTarget*, GrAttachment*, GrSurfaceOrigin, const SkIRect&,
+      const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
+      GrXferBarrierFlags renderPassXferBarriers) override;
+
   bool onSubmitToGpu(bool syncCpu) override;
+
+  void uploadTextureData(
+      GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount, const SkIRect& rect,
+      wgpu::Texture texture);
 
   void moveStagingBuffersToBusyAndMapAsync();
   void checkForCompletedStagingBuffers();

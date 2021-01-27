@@ -40,8 +40,6 @@ GrGLCaps::GrGLCaps(
   fDebugSupport = false;
   fES2CompatibilitySupport = false;
   fDrawRangeElementsSupport = false;
-  fANGLEMultiDrawSupport = false;
-  fMultiDrawIndirectSupport = false;
   fBaseVertexBaseInstanceSupport = false;
   fUseNonVBOVertexAndIndexDynamicData = false;
   fIsCoreProfile = false;
@@ -624,27 +622,38 @@ void GrGLCaps::init(
     if (fBaseVertexBaseInstanceSupport) {
       fNativeDrawIndirectSupport =
           version >= GR_GL_VER(4, 0) || ctxInfo.hasExtension("GL_ARB_draw_indirect");
-      fMultiDrawIndirectSupport =
-          version >= GR_GL_VER(4, 3) || ctxInfo.hasExtension("GL_ARB_multi_draw_indirect");
+      if (version >= GR_GL_VER(4, 3) || ctxInfo.hasExtension("GL_ARB_multi_draw_indirect")) {
+        fMultiDrawType = MultiDrawType::kMultiDrawIndirect;
+      }
     }
     fDrawRangeElementsSupport = version >= GR_GL_VER(2, 0);
   } else if (GR_IS_GR_GL_ES(standard)) {
     if (ctxInfo.hasExtension("GL_ANGLE_base_vertex_base_instance")) {
       fBaseVertexBaseInstanceSupport = true;
       fNativeDrawIndirectSupport = true;
-      fANGLEMultiDrawSupport = true;
+      fMultiDrawType = MultiDrawType::kANGLEOrWebGL;
       // The indirect structs need to reside in CPU memory for the ANGLE version.
       fUseClientSideIndirectBuffers = true;
     } else {
       fBaseVertexBaseInstanceSupport = ctxInfo.hasExtension("GL_EXT_base_instance");
       if (fBaseVertexBaseInstanceSupport) {
         fNativeDrawIndirectSupport = (version >= GR_GL_VER(3, 1));
-        fMultiDrawIndirectSupport = ctxInfo.hasExtension("GL_EXT_multi_draw_indirect");
+        if (ctxInfo.hasExtension("GL_EXT_multi_draw_indirect")) {
+          fMultiDrawType = MultiDrawType::kMultiDrawIndirect;
+        }
       }
     }
     fDrawRangeElementsSupport = version >= GR_GL_VER(3, 0);
   } else if (GR_IS_GR_WEBGL(standard)) {
-    // WebGL lacks indirect support, but drawRange was added in WebGL 2.0
+    fBaseVertexBaseInstanceSupport =
+        ctxInfo.hasExtension("WEBGL_draw_instanced_base_vertex_base_instance");
+    if (fBaseVertexBaseInstanceSupport &&
+        ctxInfo.hasExtension("GL_WEBGL_multi_draw_instanced_base_vertex_base_instance")) {
+      fNativeDrawIndirectSupport = true;
+      fMultiDrawType = MultiDrawType::kANGLEOrWebGL;
+    }
+    // The indirect structs need to reside in CPU memory for the WebGL version.
+    fUseClientSideIndirectBuffers = true;
     fDrawRangeElementsSupport = version >= GR_GL_VER(2, 0);
   }
 
@@ -801,7 +810,7 @@ bool is_float_fp32(const GrGLContextInfo& ctxInfo, const GrGLInterface* gli, GrG
       return false;
     }
   }
-  return true;
+    return true;
 }
 
 void GrGLCaps::initGLSL(const GrGLContextInfo& ctxInfo, const GrGLInterface* gli) {
@@ -957,6 +966,8 @@ void GrGLCaps::initGLSL(const GrGLContextInfo& ctxInfo, const GrGLInterface* gli
     shaderCaps->fBuiltinFMASupport = ctxInfo.glslGeneration() >= k320es_GrGLSLGeneration;
   }
 
+  shaderCaps->fBuiltinDeterminantSupport = ctxInfo.glslGeneration() >= k150_GrGLSLGeneration;
+
   if (GR_IS_GR_WEBGL(standard)) {
     // WebGL 1.0 doesn't support do-while loops.
     shaderCaps->fCanUseDoLoops = version >= GR_GL_VER(2, 0);
@@ -1070,22 +1081,13 @@ void GrGLCaps::initBlendEqationSupport(const GrGLContextInfo& ctxInfo) {
   }
 }
 
-namespace {
-const GrGLuint kUnknownBitCount = GrGLStencilAttachment::kUnknownBitCount;
-}  // namespace
 
 void GrGLCaps::initStencilSupport(const GrGLContextInfo& ctxInfo) {
   // Build up list of legal stencil formats (though perhaps not supported on
   // the particular gpu/driver) from most preferred to least.
 
-  // these consts are in order of most preferred to least preferred
-  // we don't bother with GL_STENCIL_INDEX1 or GL_DEPTH32F_STENCIL8
-
-  static const StencilFormat
-      // internal Format      stencil bits      total bits        packed?
-      gS8 = {GR_GL_STENCIL_INDEX8, 8, 8, false},
-      gS16 = {GR_GL_STENCIL_INDEX16, 16, 16, false}, gD24S8 = {GR_GL_DEPTH24_STENCIL8, 8, 32, true},
-      gDS = {GR_GL_DEPTH_STENCIL, kUnknownBitCount, kUnknownBitCount, true};
+  // We push back stencil formats onto the fStencilFormats array in order of most preferred to
+  // least preferred.
 
   if (GR_IS_GR_GL(ctxInfo.standard())) {
     bool supportsPackedDS = ctxInfo.version() >= GR_GL_VER(3, 0) ||
@@ -1094,32 +1096,39 @@ void GrGLCaps::initStencilSupport(const GrGLContextInfo& ctxInfo) {
 
     // S1 thru S16 formats are in GL 3.0+, EXT_FBO, and ARB_FBO since we
     // require FBO support we can expect these are legal formats and don't
-    // check. These also all support the unsized GL_STENCIL_INDEX.
-    fStencilFormats.push_back() = gS8;
-    fStencilFormats.push_back() = gS16;
+    // check.
+    fStencilFormats.push_back() = GrGLFormat::kSTENCIL_INDEX8;
+    fStencilFormats.push_back() = GrGLFormat::kSTENCIL_INDEX16;
     if (supportsPackedDS) {
-      fStencilFormats.push_back() = gD24S8;
-      fStencilFormats.push_back() = gDS;
+      fStencilFormats.push_back() = GrGLFormat::kDEPTH24_STENCIL8;
     }
   } else if (GR_IS_GR_GL_ES(ctxInfo.standard())) {
     // ES2 has STENCIL_INDEX8 without extensions but requires extensions
     // for other formats.
-    // ES doesn't support using the unsized format.
 
-    fStencilFormats.push_back() = gS8;
+    fStencilFormats.push_back() = GrGLFormat::kSTENCIL_INDEX8;
     if (ctxInfo.version() >= GR_GL_VER(3, 0) ||
         ctxInfo.hasExtension("GL_OES_packed_depth_stencil")) {
-      fStencilFormats.push_back() = gD24S8;
+      fStencilFormats.push_back() = GrGLFormat::kDEPTH24_STENCIL8;
     }
   } else if (GR_IS_GR_WEBGL(ctxInfo.standard())) {
-    fStencilFormats.push_back() = gS8;
+    fStencilFormats.push_back() = GrGLFormat::kSTENCIL_INDEX8;
     if (ctxInfo.version() >= GR_GL_VER(2, 0)) {
-      fStencilFormats.push_back() = gD24S8;
+      fStencilFormats.push_back() = GrGLFormat::kDEPTH24_STENCIL8;
     }
   }
 }
 
 #ifdef SK_ENABLE_DUMP_GPU
+static const char* multi_draw_type_name(GrGLCaps::MultiDrawType multiDrawType) {
+  switch (multiDrawType) {
+    case GrGLCaps::MultiDrawType::kNone: return "kNone";
+    case GrGLCaps::MultiDrawType::kMultiDrawIndirect: return "kMultiDrawIndirect";
+    case GrGLCaps::MultiDrawType::kANGLEOrWebGL: return "kMultiDrawIndirect";
+  }
+  SkUNREACHABLE;
+}
+
 void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {
   // We are called by the base class, which has already called beginObject(). We choose to nest
   // all of our caps information in a named sub-object.
@@ -1129,123 +1138,123 @@ void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {
 
   for (int i = 0; i < fStencilFormats.count(); ++i) {
     writer->beginObject(nullptr, false);
-    writer->appendS32("stencil bits", fStencilFormats[i].fStencilBits);
-    writer->appendS32("total bits", fStencilFormats[i].fTotalBits);
+    writer->appendS32("stencil bits", GrGLFormatStencilBits(fStencilFormats[i]));
+    writer->appendS32("total bytes", GrGLFormatBytesPerBlock(fStencilFormats[i]));
     writer->endObject();
   }
 
-  writer->endArray();
+    writer->endArray();
 
-  static const char* kMSFBOExtStr[] = {
-      "None", "Standard", "Apple", "IMG MS To Texture", "EXT MS To Texture",
-  };
-  static_assert(0 == kNone_MSFBOType);
-  static_assert(1 == kStandard_MSFBOType);
-  static_assert(2 == kES_Apple_MSFBOType);
-  static_assert(3 == kES_IMG_MsToTexture_MSFBOType);
-  static_assert(4 == kES_EXT_MsToTexture_MSFBOType);
-  static_assert(SK_ARRAY_COUNT(kMSFBOExtStr) == kLast_MSFBOType + 1);
+    static const char* kMSFBOExtStr[] = {
+        "None", "Standard", "Apple", "IMG MS To Texture", "EXT MS To Texture",
+    };
+    static_assert(0 == kNone_MSFBOType);
+    static_assert(1 == kStandard_MSFBOType);
+    static_assert(2 == kES_Apple_MSFBOType);
+    static_assert(3 == kES_IMG_MsToTexture_MSFBOType);
+    static_assert(4 == kES_EXT_MsToTexture_MSFBOType);
+    static_assert(SK_ARRAY_COUNT(kMSFBOExtStr) == kLast_MSFBOType + 1);
 
-  static const char* kInvalidateFBTypeStr[] = {
-      "None",
-      "Discard",
-      "Invalidate",
-  };
-  static_assert(0 == kNone_InvalidateFBType);
-  static_assert(1 == kDiscard_InvalidateFBType);
-  static_assert(2 == kInvalidate_InvalidateFBType);
-  static_assert(SK_ARRAY_COUNT(kInvalidateFBTypeStr) == kLast_InvalidateFBType + 1);
+    static const char* kInvalidateFBTypeStr[] = {
+        "None",
+        "Discard",
+        "Invalidate",
+    };
+    static_assert(0 == kNone_InvalidateFBType);
+    static_assert(1 == kDiscard_InvalidateFBType);
+    static_assert(2 == kInvalidate_InvalidateFBType);
+    static_assert(SK_ARRAY_COUNT(kInvalidateFBTypeStr) == kLast_InvalidateFBType + 1);
 
-  static const char* kMapBufferTypeStr[] = {
-      "None",
-      "MapBuffer",
-      "MapBufferRange",
-      "Chromium",
-  };
-  static_assert(0 == kNone_MapBufferType);
-  static_assert(1 == kMapBuffer_MapBufferType);
-  static_assert(2 == kMapBufferRange_MapBufferType);
-  static_assert(3 == kChromium_MapBufferType);
-  static_assert(SK_ARRAY_COUNT(kMapBufferTypeStr) == kLast_MapBufferType + 1);
+    static const char* kMapBufferTypeStr[] = {
+        "None",
+        "MapBuffer",
+        "MapBufferRange",
+        "Chromium",
+    };
+    static_assert(0 == kNone_MapBufferType);
+    static_assert(1 == kMapBuffer_MapBufferType);
+    static_assert(2 == kMapBufferRange_MapBufferType);
+    static_assert(3 == kChromium_MapBufferType);
+    static_assert(SK_ARRAY_COUNT(kMapBufferTypeStr) == kLast_MapBufferType + 1);
 
-  writer->appendBool("Core Profile", fIsCoreProfile);
-  writer->appendString("MSAA Type", kMSFBOExtStr[fMSFBOType]);
-  writer->appendString("Invalidate FB Type", kInvalidateFBTypeStr[fInvalidateFBType]);
-  writer->appendString("Map Buffer Type", kMapBufferTypeStr[fMapBufferType]);
-  writer->appendS32("Max FS Uniform Vectors", fMaxFragmentUniformVectors);
-  writer->appendBool("Pack Flip Y support", fPackFlipYSupport);
+    writer->appendBool("Core Profile", fIsCoreProfile);
+    writer->appendString("MSAA Type", kMSFBOExtStr[fMSFBOType]);
+    writer->appendString("Invalidate FB Type", kInvalidateFBTypeStr[fInvalidateFBType]);
+    writer->appendString("Map Buffer Type", kMapBufferTypeStr[fMapBufferType]);
+    writer->appendString("Multi Draw Type", multi_draw_type_name(fMultiDrawType));
+    writer->appendS32("Max FS Uniform Vectors", fMaxFragmentUniformVectors);
+    writer->appendBool("Pack Flip Y support", fPackFlipYSupport);
 
-  writer->appendBool("Texture Usage support", fTextureUsageSupport);
-  writer->appendBool("GL_ARB_imaging support", fImagingSupport);
-  writer->appendBool("Vertex array object support", fVertexArrayObjectSupport);
-  writer->appendBool("Debug support", fDebugSupport);
-  writer->appendBool("Multi draw indirect support", fMultiDrawIndirectSupport);
-  writer->appendBool("Base (vertex base) instance support", fBaseVertexBaseInstanceSupport);
-  writer->appendBool("RGBA 8888 pixel ops are slow", fRGBA8888PixelsOpsAreSlow);
-  writer->appendBool("Partial FBO read is slow", fPartialFBOReadIsSlow);
-  writer->appendBool("Bind uniform location support", fBindUniformLocationSupport);
-  writer->appendBool("Rectangle texture support", fRectangleTextureSupport);
-  writer->appendBool(
-      "BGRA to RGBA readback conversions are slow", fRGBAToBGRAReadbackConversionsAreSlow);
-  writer->appendBool("Use buffer data null hint", fUseBufferDataNullHint);
-  writer->appendBool("Clear texture support", fClearTextureSupport);
-  writer->appendBool("Program binary support", fProgramBinarySupport);
-  writer->appendBool("Program parameters support", fProgramParameterSupport);
-  writer->appendBool("Sampler object support", fSamplerObjectSupport);
-  writer->appendBool("Using sampler objects", fUseSamplerObjects);
-  writer->appendBool("Texture swizzle support", fTextureSwizzleSupport);
-  writer->appendBool("Tiled rendering support", fTiledRenderingSupport);
-  writer->appendBool("FB fetch requires enable per sample", fFBFetchRequiresEnablePerSample);
-  writer->appendBool("sRGB Write Control", fSRGBWriteControl);
+    writer->appendBool("Texture Usage support", fTextureUsageSupport);
+    writer->appendBool("GL_ARB_imaging support", fImagingSupport);
+    writer->appendBool("Vertex array object support", fVertexArrayObjectSupport);
+    writer->appendBool("Debug support", fDebugSupport);
+    writer->appendBool("Base (vertex base) instance support", fBaseVertexBaseInstanceSupport);
+    writer->appendBool("RGBA 8888 pixel ops are slow", fRGBA8888PixelsOpsAreSlow);
+    writer->appendBool("Partial FBO read is slow", fPartialFBOReadIsSlow);
+    writer->appendBool("Bind uniform location support", fBindUniformLocationSupport);
+    writer->appendBool("Rectangle texture support", fRectangleTextureSupport);
+    writer->appendBool(
+        "BGRA to RGBA readback conversions are slow", fRGBAToBGRAReadbackConversionsAreSlow);
+    writer->appendBool("Use buffer data null hint", fUseBufferDataNullHint);
+    writer->appendBool("Clear texture support", fClearTextureSupport);
+    writer->appendBool("Program binary support", fProgramBinarySupport);
+    writer->appendBool("Program parameters support", fProgramParameterSupport);
+    writer->appendBool("Sampler object support", fSamplerObjectSupport);
+    writer->appendBool("Using sampler objects", fUseSamplerObjects);
+    writer->appendBool("Texture swizzle support", fTextureSwizzleSupport);
+    writer->appendBool("Tiled rendering support", fTiledRenderingSupport);
+    writer->appendBool("FB fetch requires enable per sample", fFBFetchRequiresEnablePerSample);
+    writer->appendBool("sRGB Write Control", fSRGBWriteControl);
 
-  writer->appendBool(
-      "Intermediate texture for partial updates of unorm textures ever bound to FBOs",
-      fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO);
-  writer->appendBool(
-      "Intermediate texture for all updates of textures bound to FBOs",
-      fUseDrawInsteadOfAllRenderTargetWrites);
-  writer->appendBool(
-      "Max instances per draw without crashing (or zero)", fMaxInstancesPerDrawWithoutCrashing);
+    writer->appendBool(
+        "Intermediate texture for partial updates of unorm textures ever bound to FBOs",
+        fDisallowTexSubImageForUnormConfigTexturesEverBoundToFBO);
+    writer->appendBool(
+        "Intermediate texture for all updates of textures bound to FBOs",
+        fUseDrawInsteadOfAllRenderTargetWrites);
+    writer->appendBool(
+        "Max instances per draw without crashing (or zero)", fMaxInstancesPerDrawWithoutCrashing);
 
-  writer->beginArray("formats");
+    writer->beginArray("formats");
 
-  for (int i = 0; i < kGrGLFormatCount; ++i) {
-    writer->beginObject(nullptr, false);
-    writer->appendHexU32("flags", fFormatTable[i].fFlags);
-    writer->appendHexU32("f_type", (uint32_t)fFormatTable[i].fFormatType);
-    writer->appendHexU32("c_internal", fFormatTable[i].fCompressedInternalFormat);
-    writer->appendHexU32("i_for_teximage", fFormatTable[i].fInternalFormatForTexImageOrStorage);
-    writer->appendHexU32("i_for_renderbuffer", fFormatTable[i].fInternalFormatForRenderbuffer);
-    writer->appendHexU32("default_ex_format", fFormatTable[i].fDefaultExternalFormat);
-    writer->appendHexU32("default_ex_type", fFormatTable[i].fDefaultExternalType);
-    writer->appendHexU32("default_color_type", (uint32_t)fFormatTable[i].fDefaultColorType);
-
-    writer->beginArray("surface color types");
-    for (int j = 0; j < fFormatTable[i].fColorTypeInfoCount; ++j) {
-      const auto& ctInfo = fFormatTable[i].fColorTypeInfos[j];
+    for (int i = 0; i < kGrGLColorFormatCount; ++i) {
       writer->beginObject(nullptr, false);
-      writer->appendHexU32("colorType", (uint32_t)ctInfo.fColorType);
-      writer->appendHexU32("flags", ctInfo.fFlags);
+      writer->appendHexU32("flags", fFormatTable[i].fFlags);
+      writer->appendHexU32("f_type", (uint32_t)fFormatTable[i].fFormatType);
+      writer->appendHexU32("c_internal", fFormatTable[i].fCompressedInternalFormat);
+      writer->appendHexU32("i_for_teximage", fFormatTable[i].fInternalFormatForTexImageOrStorage);
+      writer->appendHexU32("i_for_renderbuffer", fFormatTable[i].fInternalFormatForRenderbuffer);
+      writer->appendHexU32("default_ex_format", fFormatTable[i].fDefaultExternalFormat);
+      writer->appendHexU32("default_ex_type", fFormatTable[i].fDefaultExternalType);
+      writer->appendHexU32("default_color_type", (uint32_t)fFormatTable[i].fDefaultColorType);
 
-      writer->beginArray("data color types");
-      for (int k = 0; k < ctInfo.fExternalIOFormatCount; ++k) {
-        const auto& ioInfo = ctInfo.fExternalIOFormats[k];
+      writer->beginArray("surface color types");
+      for (int j = 0; j < fFormatTable[i].fColorTypeInfoCount; ++j) {
+        const auto& ctInfo = fFormatTable[i].fColorTypeInfos[j];
         writer->beginObject(nullptr, false);
-        writer->appendHexU32("colorType", (uint32_t)ioInfo.fColorType);
-        writer->appendHexU32("ex_type", ioInfo.fExternalType);
-        writer->appendHexU32("ex_teximage", ioInfo.fExternalTexImageFormat);
-        writer->appendHexU32("ex_read", ioInfo.fExternalReadFormat);
+        writer->appendHexU32("colorType", (uint32_t)ctInfo.fColorType);
+        writer->appendHexU32("flags", ctInfo.fFlags);
+
+        writer->beginArray("data color types");
+        for (int k = 0; k < ctInfo.fExternalIOFormatCount; ++k) {
+          const auto& ioInfo = ctInfo.fExternalIOFormats[k];
+          writer->beginObject(nullptr, false);
+          writer->appendHexU32("colorType", (uint32_t)ioInfo.fColorType);
+          writer->appendHexU32("ex_type", ioInfo.fExternalType);
+          writer->appendHexU32("ex_teximage", ioInfo.fExternalTexImageFormat);
+          writer->appendHexU32("ex_read", ioInfo.fExternalReadFormat);
+          writer->endObject();
+        }
+        writer->endArray();
         writer->endObject();
       }
       writer->endArray();
       writer->endObject();
     }
+
     writer->endArray();
     writer->endObject();
-  }
-
-  writer->endArray();
-  writer->endObject();
 }
 #else
 void GrGLCaps::onDumpJSON(SkJSONWriter* writer) const {}
@@ -1370,7 +1379,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGBA;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kRGBA_8888;
-    info.fBytesPerPixel = 4;
     info.fFlags = FormatInfo::kTexturable_Flag;
     if (GR_IS_GR_GL(standard)) {
       info.fFlags |= msaaRenderFlags;
@@ -1492,7 +1500,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RED;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kR_8;
-    info.fBytesPerPixel = 1;
     bool r8Support = false;
     if (GR_IS_GR_GL(standard)) {
       r8Support = version >= GR_GL_VER(3, 0) || ctxInfo.hasExtension("GL_ARB_texture_rg");
@@ -1617,7 +1624,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_ALPHA;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kAlpha_8;
-    info.fBytesPerPixel = 1;
     if (alpha8IsValidForGL || alpha8IsValidForGLES || alpha8IsValidForWebGL) {
       info.fFlags = FormatInfo::kTexturable_Flag;
     }
@@ -1693,7 +1699,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_LUMINANCE;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kGray_8;
-    info.fBytesPerPixel = 1;
     bool lum8Supported = false;
     bool lum8SizedFormatSupported = false;
     if (GR_IS_GR_GL(standard) && !fIsCoreProfile) {
@@ -1784,18 +1789,14 @@ void GrGLCaps::initFormatTable(
     // requires the src and dst be bindable to FBOs. However, we can't do this in the current
     // world since some devices (e.g. chromium & angle) require the formats in glBlitFramebuffer
     // to match. We don't have a way to really check this during resolve since we only actually
-    // have GrBackendFormat that is shared by the GrGLRenderTarget.
+    // have GrBackendFormat that is shared by the GrGLRenderTarget. We always set the
+    // renderbuffer format to RGBA8 but disable MSAA unless we have the APPLE extension.
     // Once we break those up into different surface we can revisit doing this change.
-    if (ctxInfo.hasExtension("GL_APPLE_texture_format_BGRA8888")) {
-      info.fInternalFormatForRenderbuffer = GR_GL_RGBA8;
-    } else {
-      info.fInternalFormatForRenderbuffer = GR_GL_BGRA8;
-    }
+    info.fInternalFormatForRenderbuffer = GR_GL_RGBA8;
 
     info.fDefaultExternalFormat = GR_GL_BGRA;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kBGRA_8888;
-    info.fBytesPerPixel = 4;
 
     GrGLenum bgraTexImageFormat;
     // If BGRA is supported as an internal format it must always be specified to glTex[Sub]Image
@@ -1903,7 +1904,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGB;
     info.fDefaultExternalType = GR_GL_UNSIGNED_SHORT_5_6_5;
     info.fDefaultColorType = GrColorType::kBGR_565;
-    info.fBytesPerPixel = 2;
     if (GR_IS_GR_GL(standard)) {
       if (version >= GR_GL_VER(4, 2) || ctxInfo.hasExtension("GL_ARB_ES2_compatibility")) {
         info.fFlags = FormatInfo::kTexturable_Flag | msaaRenderFlags;
@@ -1975,7 +1975,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGBA;
     info.fDefaultExternalType = halfFloatType;
     info.fDefaultColorType = GrColorType::kRGBA_F16;
-    info.fBytesPerPixel = 8;
     bool rgba16FTextureSupport = false;
     bool rgba16FRenderTargetSupport = false;
 
@@ -2113,7 +2112,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RED;
     info.fDefaultExternalType = halfFloatType;
     info.fDefaultColorType = GrColorType::kR_F16;
-    info.fBytesPerPixel = 2;
     bool r16FTextureSupport = false;
     bool r16FRenderTargetSupport = false;
 
@@ -2227,7 +2225,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_LUMINANCE;
     info.fDefaultExternalType = halfFloatType;
     info.fDefaultColorType = GrColorType::kGray_F16;
-    info.fBytesPerPixel = 2;
 
     if (lum16FSupported) {
       info.fFlags = FormatInfo::kTexturable_Flag;
@@ -2291,7 +2288,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGB;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kRGB_888;
-    info.fBytesPerPixel = 4;  // We assume the GPU stores this format 4 byte aligned
     info.fFlags = FormatInfo::kTexturable_Flag;
     if (GR_IS_GR_GL(standard)) {
       // Even in OpenGL 4.6 GL_RGB8 is required to be color renderable but not required to be
@@ -2317,9 +2313,6 @@ void GrGLCaps::initFormatTable(
     } else {
       info.fInternalFormatForTexImageOrStorage =
           texImageSupportsSizedInternalFormat ? GR_GL_RGB8 : GR_GL_RGB;
-    }
-    if (formatWorkarounds.fDisableRGB8ForMali400) {
-      info.fFlags = 0;
     }
 
     info.fColorTypeInfoCount = 1;
@@ -2371,7 +2364,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RG;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kRG_88;
-    info.fBytesPerPixel = 2;
     bool rg8Support = false;
     if (GR_IS_GR_GL(standard)) {
       rg8Support = version >= GR_GL_VER(3, 0) || ctxInfo.hasExtension("GL_ARB_texture_rg");
@@ -2439,7 +2431,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGBA;
     info.fDefaultExternalType = GR_GL_UNSIGNED_INT_2_10_10_10_REV;
     info.fDefaultColorType = GrColorType::kRGBA_1010102;
-    info.fBytesPerPixel = 4;
     if (GR_IS_GR_GL(standard) || (GR_IS_GR_GL_ES(standard) && version >= GR_GL_VER(3, 0))) {
       info.fFlags = FormatInfo::kTexturable_Flag | msaaRenderFlags;
     } else if (
@@ -2539,7 +2530,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGBA;
     info.fDefaultExternalType = GR_GL_UNSIGNED_SHORT_4_4_4_4;
     info.fDefaultColorType = GrColorType::kABGR_4444;
-    info.fBytesPerPixel = 2;
     info.fFlags = FormatInfo::kTexturable_Flag;
     if (GR_IS_GR_GL(standard)) {
       if (version >= GR_GL_VER(4, 2)) {
@@ -2602,7 +2592,6 @@ void GrGLCaps::initFormatTable(
     info.fInternalFormatForRenderbuffer = GR_GL_SRGB8_ALPHA8;
     info.fDefaultExternalType = GR_GL_UNSIGNED_BYTE;
     info.fDefaultColorType = GrColorType::kRGBA_8888_SRGB;
-    info.fBytesPerPixel = 4;
 
     // We may modify the default external format below.
     info.fDefaultExternalFormat = GR_GL_RGBA;
@@ -2773,7 +2762,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RED;
     info.fDefaultExternalType = GR_GL_UNSIGNED_SHORT;
     info.fDefaultColorType = GrColorType::kR_16;
-    info.fBytesPerPixel = 2;
     bool r16Supported = false;
     if (GR_IS_GR_GL(standard)) {
       r16Supported = version >= GR_GL_VER(3, 0) || ctxInfo.hasExtension("GL_ARB_texture_rg");
@@ -2844,7 +2832,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RG;
     info.fDefaultExternalType = GR_GL_UNSIGNED_SHORT;
     info.fDefaultColorType = GrColorType::kRG_1616;
-    info.fBytesPerPixel = 4;
     bool rg16Supported = false;
     if (GR_IS_GR_GL(standard)) {
       rg16Supported = version >= GR_GL_VER(3, 0) || ctxInfo.hasExtension("GL_ARB_texture_rg");
@@ -2919,7 +2906,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RGBA;
     info.fDefaultExternalType = GR_GL_UNSIGNED_SHORT;
     info.fDefaultColorType = GrColorType::kRGBA_16161616;
-    info.fBytesPerPixel = 8;
     if (rgba16Support) {
       info.fFlags = FormatInfo::kTexturable_Flag | msaaRenderFlags;
     }
@@ -3008,7 +2994,6 @@ void GrGLCaps::initFormatTable(
     info.fDefaultExternalFormat = GR_GL_RG;
     info.fDefaultExternalType = halfFloatType;
     info.fDefaultColorType = GrColorType::kRG_F16;
-    info.fBytesPerPixel = 4;
     if (rg16FTextureSupport) {
       info.fFlags |= FormatInfo::kTexturable_Flag;
       if (rg16FRenderTargetSupport) {
@@ -3066,7 +3051,7 @@ void GrGLCaps::initFormatTable(
   this->setupSampleCounts(ctxInfo, gli);
 
 #ifdef SK_DEBUG
-  for (int i = 0; i < kGrGLFormatCount; ++i) {
+  for (int i = 0; i < kGrGLColorFormatCount; ++i) {
     if (GrGLFormat::kUnknown == static_cast<GrGLFormat>(i)) {
       continue;
     }
@@ -3101,7 +3086,7 @@ void GrGLCaps::setupSampleCounts(const GrGLContextInfo& ctxInfo, const GrGLInter
   sk_ignore_unused_variable(standard);
   GrGLVersion version = ctxInfo.version();
 
-  for (int i = 0; i < kGrGLFormatCount; ++i) {
+  for (int i = 0; i < kGrGLColorFormatCount; ++i) {
     if (FormatInfo::kFBOColorAttachmentWithMSAA_Flag & fFormatTable[i].fFlags) {
       // We assume that MSAA rendering is supported only if we support non-MSAA rendering.
       SkASSERT(FormatInfo::kFBOColorAttachment_Flag & fFormatTable[i].fFlags);
@@ -3170,12 +3155,52 @@ bool GrGLCaps::canCopyTexSubImage(
     GrGLFormat dstFormat, bool dstHasMSAARenderBuffer, const GrTextureType* dstTypeIfTexture,
     GrGLFormat srcFormat, bool srcHasMSAARenderBuffer,
     const GrTextureType* srcTypeIfTexture) const {
-  // Table 3.9 of the ES2 spec indicates the supported formats with CopyTexSubImage
-  // and BGRA isn't in the spec. There doesn't appear to be any extension that adds it. Perhaps
-  // many drivers would allow it to work, but ANGLE does not.
-  if (GR_IS_GR_GL_ES(fStandard) &&
-      (dstFormat == GrGLFormat::kBGRA8 || srcFormat == GrGLFormat::kBGRA8)) {
+  // When it comes to format types and component sizes the gl spec is fairly complex as
+  // requirements differ depending on many properties (e.g. if the internalFormat was created with
+  // a sized format or not). These affect the rules about which format types can be copied to
+  // which other types. For now we are being more restrictive and requiring that the types must
+  // match exactly.
+  if (this->getFormatDefaultExternalType(dstFormat) !=
+      this->getFormatDefaultExternalType(srcFormat)) {
     return false;
+  }
+
+  // Either both the src and dst formats need to be SRGB or both need to not be SRGB
+  if (GrGLFormatIsSRGB(dstFormat) != GrGLFormatIsSRGB(srcFormat)) {
+    return false;
+  }
+
+  if (GR_IS_GR_GL_ES(fStandard)) {
+    // Table 3.9 of the ES2 spec indicates the supported formats with CopyTexSubImage
+    // and BGRA isn't in the spec. There doesn't appear to be any extension that adds it.
+    // Perhaps many drivers would allow it to work, but ANGLE does not.
+    if (dstFormat == GrGLFormat::kBGRA8 || srcFormat == GrGLFormat::kBGRA8) {
+      return false;
+    }
+
+    // Table 3.9 of the ES2 spec and 3.16 of ES3 spec indicates the supported internal base
+    // formats with CopyTexSubImage. Each base format can be copied to itself or formats with
+    // less channels.
+    uint32_t dstChannels = GrGLFormatChannels(dstFormat);
+    uint32_t srcChannels = GrGLFormatChannels(srcFormat);
+    if (!dstChannels || !srcChannels) {
+      // The formats don't represent color channels (i.e. may be depth stencil)
+      return false;
+    }
+    // The dst channels have to be a subset of the srcChannels, unless the dst is going to
+    // gray.
+    if ((dstChannels & srcChannels) != srcChannels) {
+      if (dstChannels == kGray_SkColorChannelFlag) {
+        // We can't copy Alpha into a Luminance channel
+        if (srcChannels == kAlpha_8_SkColorType) {
+          return false;
+        }
+      } else {
+        // Currently we don't support any LA formats
+        SkASSERT((dstChannels & kGray_SkColorChannelFlag) == 0);
+        return false;
+      }
+    }
   }
 
   // CopyTexSubImage is invalid or doesn't copy what we want when we have msaa render buffers.
@@ -3608,14 +3633,14 @@ void GrGLCaps::applyDriverCorrectnessWorkarounds(
       ctxInfo.angleBackend() != GrGLANGLEBackend::kOpenGL) {
     fBaseVertexBaseInstanceSupport = false;
     fNativeDrawIndirectSupport = false;
-    fMultiDrawIndirectSupport = false;
+    fMultiDrawType = MultiDrawType::kNone;
   }
 
   // http://anglebug.com/4538
   if (fBaseVertexBaseInstanceSupport && !fDrawInstancedSupport) {
     fBaseVertexBaseInstanceSupport = false;
     fNativeDrawIndirectSupport = false;
-    fMultiDrawIndirectSupport = false;
+    fMultiDrawType = MultiDrawType::kNone;
   }
 
   // Currently the extension is advertised but fb fetch is broken on 500 series Adrenos like the
@@ -3920,9 +3945,6 @@ void GrGLCaps::applyDriverCorrectnessWorkarounds(
       kIntel_GrGLDriver == ctxInfo.driver() && GR_IS_GR_GL_ES(ctxInfo.standard());
 #endif
 
-  // Mali-400 fails ReadPixels tests, mostly with non-0xFF alpha values when read as GL_RGBA8.
-  formatWorkarounds->fDisableRGB8ForMali400 = kMali4xx_GrGLRenderer == ctxInfo.renderer();
-
   // On the Intel Iris 6100, interacting with LUM16F seems to confuse the driver. After
   // writing to/reading from a LUM16F texture reads from/writes to other formats behave
   // erratically.
@@ -4059,6 +4081,12 @@ GrCaps::SurfaceReadPixelsSupport GrGLCaps::surfaceSupportsReadPixels(
     // binding the texture to a FBO. For now we also disallow reading back directly
     // from compressed textures.
     if (tex->target() == GR_GL_TEXTURE_EXTERNAL || GrGLFormatIsCompressed(tex->format())) {
+      return SurfaceReadPixelsSupport::kCopyToTexture2D;
+    }
+  } else if (auto rt = static_cast<const GrGLRenderTarget*>(surface->asRenderTarget())) {
+    // glReadPixels does not allow reading back from a MSAA framebuffer. If the underlying
+    // GrSurface doesn't have a second FBO to resolve to then we must make a copy.
+    if (rt->numSamples() > 1 && rt->textureFBOID() == GrGLRenderTarget::kUnresolvableFBOID) {
       return SurfaceReadPixelsSupport::kCopyToTexture2D;
     }
   }
@@ -4245,7 +4273,7 @@ int GrGLCaps::getRenderTargetSampleCount(int requestedCount, GrGLFormat format) 
       return count;
     }
   }
-  return 0;
+    return 0;
 }
 
 int GrGLCaps::maxRenderTargetSampleCount(GrGLFormat format) const {
@@ -4259,15 +4287,6 @@ int GrGLCaps::maxRenderTargetSampleCount(GrGLFormat format) const {
     count = std::min(count, 4);
   }
   return count;
-}
-
-size_t GrGLCaps::bytesPerPixel(GrGLFormat format) const {
-  return this->getFormatInfo(format).fBytesPerPixel;
-}
-
-size_t GrGLCaps::bytesPerPixel(const GrBackendFormat& format) const {
-  auto glFormat = format.asGLFormat();
-  return this->bytesPerPixel(glFormat);
 }
 
 bool GrGLCaps::canFormatBeFBOColorAttachment(GrGLFormat format) const {

@@ -12,6 +12,7 @@
 #include "include/core/SkTypes.h"
 #include "include/private/SkFixed.h"
 #include "include/private/SkTFitsIn.h"
+#include "include/private/SkTPin.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkOSFile.h"
 #include "src/core/SkSafeMath.h"
@@ -88,7 +89,7 @@ bool SkWStream::writeScalarAsText(SkScalar value) {
 
 bool SkWStream::writeScalar(SkScalar value) { return this->write(&value, sizeof(value)); }
 
-int SkWStream::SizeOfPackedUInt(size_t value) {
+int SkWStream::SizeOfPackedUInt(size_t value) noexcept {
   if (value <= SK_MAX_BYTE_FOR_U8) {
     return 1;
   } else if (value <= 0xFFFF) {
@@ -119,7 +120,7 @@ bool SkWStream::writePackedUInt(size_t value) {
 
 bool SkWStream::writeStream(SkStream* stream, size_t length) {
   char scratch[1024];
-  const size_t MAX = sizeof(scratch);
+  constexpr size_t MAX = sizeof(scratch);
 
   while (length != 0) {
     size_t n = length;
@@ -203,7 +204,7 @@ SkStreamAsset* SkFILEStream::onDuplicate() const {
   return new SkFILEStream(fFILE, fEnd, fStart, fStart);
 }
 
-size_t SkFILEStream::getPosition() const {
+size_t SkFILEStream::getPosition() const noexcept {
   SkASSERT(fCurrent >= fStart);
   return fCurrent - fStart;
 }
@@ -235,7 +236,7 @@ SkStreamAsset* SkFILEStream::onFork() const {
   return new SkFILEStream(fFILE, fEnd, fStart, fCurrent);
 }
 
-size_t SkFILEStream::getLength() const { return fEnd - fStart; }
+size_t SkFILEStream::getLength() const noexcept { return fEnd - fStart; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -337,7 +338,7 @@ bool SkMemoryStream::rewind() {
 
 SkMemoryStream* SkMemoryStream::onDuplicate() const { return new SkMemoryStream(fData); }
 
-size_t SkMemoryStream::getPosition() const { return fOffset; }
+size_t SkMemoryStream::getPosition() const noexcept { return fOffset; }
 
 bool SkMemoryStream::seek(size_t position) {
   fOffset = position > fData->size() ? fData->size() : position;
@@ -352,7 +353,7 @@ SkMemoryStream* SkMemoryStream::onFork() const {
   return that.release();
 }
 
-size_t SkMemoryStream::getLength() const { return fData->size(); }
+size_t SkMemoryStream::getLength() const noexcept { return fData->size(); }
 
 const void* SkMemoryStream::getMemoryBase() { return fData->data(); }
 
@@ -678,7 +679,7 @@ void SkDynamicMemoryWStream::validate() const {
 
 class SkBlockMemoryRefCnt : public SkRefCnt {
  public:
-  explicit SkBlockMemoryRefCnt(SkDynamicMemoryWStream::Block* head) : fHead(head) {}
+  explicit SkBlockMemoryRefCnt(SkDynamicMemoryWStream::Block* head) noexcept : fHead(head) {}
 
   ~SkBlockMemoryRefCnt() override {
     SkDynamicMemoryWStream::Block* block = fHead;
@@ -727,7 +728,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
     return 0;
   }
 
-  bool isAtEnd() const override { return fOffset == fSize; }
+  bool isAtEnd() const noexcept override { return fOffset == fSize; }
 
   size_t peek(void* buff, size_t bytesToPeek) const override {
     SkASSERT(buff != nullptr);
@@ -750,7 +751,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
     return bytesToPeek;
   }
 
-  bool rewind() override {
+  bool rewind() noexcept override {
     fCurrent = fBlockMemory->fHead;
     fOffset = 0;
     fCurrentOffset = 0;
@@ -761,7 +762,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
     return new SkBlockMemoryStream(fBlockMemory, fSize);
   }
 
-  size_t getPosition() const override { return fOffset; }
+  size_t getPosition() const noexcept override { return fOffset; }
 
   bool seek(size_t position) override {
     // If possible, skip forward.
@@ -790,7 +791,7 @@ class SkBlockMemoryStream : public SkStreamAsset {
     return that;
   }
 
-  size_t getLength() const override { return fSize; }
+  size_t getLength() const noexcept override { return fSize; }
 
   const void* getMemoryBase() override {
     if (fBlockMemory->fHead && !fBlockMemory->fHead->fNext) {
@@ -863,7 +864,7 @@ sk_sp<SkData> SkCopyStreamToData(SkStream* stream) {
   }
 
   SkDynamicMemoryWStream tempStream;
-  const size_t bufferSize = 4096;
+  constexpr size_t bufferSize = 4096;
   char buffer[bufferSize];
   do {
     size_t bytesRead = stream->read(buffer, bufferSize);

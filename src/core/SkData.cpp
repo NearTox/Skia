@@ -31,7 +31,7 @@ SkData::~SkData() {
   }
 }
 
-bool SkData::equals(const SkData* other) const {
+bool SkData::equals(const SkData* other) const noexcept {
   if (this == other) {
     return true;
   }
@@ -41,7 +41,7 @@ bool SkData::equals(const SkData* other) const {
   return fSize == other->fSize && !sk_careful_memcmp(fPtr, other->fPtr, fSize);
 }
 
-size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const {
+size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const noexcept {
   size_t available = fSize;
   if (offset >= available || 0 == length) {
     return 0;
@@ -87,7 +87,7 @@ sk_sp<SkData> SkData::MakeEmpty() {
 }
 
 // assumes fPtr was allocated via sk_malloc
-static void sk_free_releaseproc(const void* ptr, void*) { sk_free((void*)ptr); }
+static void sk_free_releaseproc(const void* ptr, void*) noexcept { sk_free((void*)ptr); }
 
 sk_sp<SkData> SkData::MakeFromMalloc(const void* data, size_t length) {
   return sk_sp<SkData>(new SkData(data, length, sk_free_releaseproc, nullptr));

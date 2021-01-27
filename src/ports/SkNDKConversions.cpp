@@ -109,4 +109,4 @@ sk_sp<SkColorSpace> toColorSpace(ADataSpace dataSpace) {
   }
   return nullptr;
 }
-}  // namespace SkNDKConversions
+}

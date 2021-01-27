@@ -317,7 +317,7 @@ void GrMtlPipelineStateDataManager::uploadAndBindUniformBuffers(
     GrMtlGpu* gpu, id<MTLRenderCommandEncoder> renderCmdEncoder) const {
   if (fUniformSize && fUniformsDirty) {
     if (@available(macOS 10.11, iOS 8.3, *)) {
-      SkASSERT(fUniformSize <= 4 * 1024);
+      SkASSERT(fUniformSize <= gpu->caps()->maxPushConstantsSize());
       [renderCmdEncoder setVertexBytes:fUniformData.get()
                                 length:fUniformSize
                                atIndex:GrMtlUniformHandler::kUniformBinding];

@@ -29,7 +29,7 @@ class GrCCDrawPathsOp : public GrDrawOp {
   DEFINE_OP_CLASS_ID
   SK_DECLARE_INTERNAL_LLIST_INTERFACE(GrCCDrawPathsOp);
 
-  static std::unique_ptr<GrCCDrawPathsOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext*, const SkIRect& clipIBounds, const SkMatrix&, const GrStyledShape&,
       GrPaint&&);
   ~GrCCDrawPathsOp() override;
@@ -38,7 +38,7 @@ class GrCCDrawPathsOp : public GrDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
   GrProcessorSet::Analysis finalize(
       const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType) override;
-  CombineResult onCombineIfPossible(GrOp*, GrRecordingContext::Arenas*, const GrCaps&) override;
+  CombineResult onCombineIfPossible(GrOp*, SkArenaAlloc*, const GrCaps&) override;
   void visitProxies(const VisitProxyFunc& fn) const override {
     for (const auto& range : fInstanceRanges) {
       fn(range.fAtlasProxy, GrMipmapped::kNo);
@@ -73,9 +73,9 @@ class GrCCDrawPathsOp : public GrDrawOp {
       GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
       const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
 
-  friend class GrOpMemoryPool;
+  friend class GrOp;
 
-  static std::unique_ptr<GrCCDrawPathsOp> InternalMake(
+  static GrOp::Owner InternalMake(
       GrRecordingContext*, const SkIRect& clipIBounds, const SkMatrix&, const GrStyledShape&,
       float strokeDevWidth, const SkRect& conservativeDevBounds, GrPaint&&);
 
@@ -114,10 +114,10 @@ class GrCCDrawPathsOp : public GrDrawOp {
     SkPMColor4f fColor;
 
     GrCCPathCache::OnFlushEntryRef fCacheEntry;
+    sk_sp<GrTextureProxy> fCachedAtlasProxy;
+    GrCCAtlas::CoverageType fCachedAtlasCoverageType;
     SkIVector fCachedMaskShift;
-    bool fDoCopyToA8Coverage = false;
     bool fDoCachePathMask = false;
-    SkDEBUGCODE(bool fWasCountedAsRender = false);
 
     SingleDraw* fNext = nullptr;
 

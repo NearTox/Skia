@@ -20,8 +20,8 @@ class GrDawnTexture : public GrTexture {
       SkBudgeted, int mipLevels, GrMipmapStatus);
 
   static sk_sp<GrDawnTexture> MakeWrapped(
-      GrDawnGpu*, SkISize dimensions, GrRenderable, int sampleCnt, GrMipmapStatus, GrWrapCacheable,
-      GrIOType, const GrDawnTextureInfo&);
+      GrDawnGpu*, SkISize dimensions, GrRenderable, int sampleCnt, GrWrapCacheable, GrIOType,
+      const GrDawnTextureInfo&);
 
   ~GrDawnTexture() override;
 
@@ -30,13 +30,8 @@ class GrDawnTexture : public GrTexture {
 
   void textureParamsModified() override {}
 
-  void upload(
-      GrColorType, const GrMipLevel texels[], int mipLevels, wgpu::CommandEncoder copyEncoder);
-  void upload(
-      GrColorType, const GrMipLevel texels[], int mipLevels, const SkIRect& dstRect,
-      wgpu::CommandEncoder copyEncoder);
-
   wgpu::Texture texture() const { return fInfo.fTexture; }
+  wgpu::TextureFormat format() const { return fInfo.fFormat; }
 
  protected:
   GrDawnTexture(GrDawnGpu*, SkISize dimensions, const GrDawnTextureInfo&, GrMipmapStatus);

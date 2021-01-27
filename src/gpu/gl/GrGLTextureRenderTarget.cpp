@@ -9,7 +9,7 @@
 
 #include "include/core/SkTraceMemoryDump.h"
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/gl/GrGLGpu.h"
 
@@ -60,8 +60,7 @@ sk_sp<GrGLTextureRenderTarget> GrGLTextureRenderTarget::MakeWrapped(
 }
 
 size_t GrGLTextureRenderTarget::onGpuMemorySize() const {
-  const GrCaps& caps = *this->getGpu()->caps();
   return GrSurface::ComputeSize(
-      caps, this->backendFormat(), this->dimensions(), this->numSamplesOwnedPerPixel(),
+      this->backendFormat(), this->dimensions(), this->numSamplesOwnedPerPixel(),
       this->mipmapped());
 }

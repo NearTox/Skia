@@ -9,6 +9,7 @@
 #define SkSpan_DEFINED
 
 #include <cstddef>
+#include "include/private/SkTLogic.h"
 #include "include/private/SkTo.h"
 
 template <typename T>
@@ -19,6 +20,11 @@ class SkSpan {
   template <typename U, typename = typename std::enable_if<std::is_same<const U, T>::value>::type>
   constexpr SkSpan(const SkSpan<U>& that) : fPtr(that.data()), fSize{that.size()} {}
   constexpr SkSpan(const SkSpan& o) = default;
+  template <size_t N>
+  constexpr SkSpan(T (&a)[N]) : SkSpan{a, N} {}
+  template <typename Container>
+  constexpr SkSpan(Container& c) : SkSpan{skstd::data(c), skstd::size(c)} {}
+
   constexpr SkSpan& operator=(const SkSpan& that) {
     fPtr = that.fPtr;
     fSize = that.fSize;
@@ -38,7 +44,7 @@ class SkSpan {
   constexpr auto rend() const { return std::make_reverse_iterator(this->begin()); }
   constexpr auto crbegin() const { return std::make_reverse_iterator(this->cend()); }
   constexpr auto crend() const { return std::make_reverse_iterator(this->cbegin()); }
-  constexpr T* data() const { return fPtr; }
+  constexpr T* data() const { return this->begin(); }
   constexpr int count() const { return SkTo<int>(fSize); }
   constexpr size_t size() const { return fSize; }
   constexpr bool empty() const { return fSize == 0; }
@@ -62,19 +68,8 @@ class SkSpan {
   size_t fSize;
 };
 
-template <typename T, typename S>
-inline constexpr SkSpan<T> SkMakeSpan(T* p, S s) {
-  return SkSpan<T>{p, SkTo<size_t>(s)};
-}
-
-template <size_t N, typename T>
-inline constexpr SkSpan<T> SkMakeSpan(T (&a)[N]) {
-  return SkSpan<T>{a, N};
-}
-
 template <typename Container>
-inline auto SkMakeSpan(Container& c)
-    -> SkSpan<typename std::remove_reference<decltype(*(c.data()))>::type> {
-  return {c.data(), c.size()};
-}
+SkSpan(Container&)
+    -> SkSpan<std::remove_pointer_t<decltype(skstd::data(std::declval<Container&>()))>>;
+
 #endif  // SkSpan_DEFINED

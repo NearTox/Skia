@@ -15,11 +15,11 @@
 #include "src/gpu/GrDataUtils.h"
 #include "src/gpu/GrTexture.h"
 #include "src/gpu/d3d/GrD3DAMDMemoryAllocator.h"
+#include "src/gpu/d3d/GrD3DAttachment.h"
 #include "src/gpu/d3d/GrD3DBuffer.h"
 #include "src/gpu/d3d/GrD3DCaps.h"
 #include "src/gpu/d3d/GrD3DOpsRenderPass.h"
 #include "src/gpu/d3d/GrD3DSemaphore.h"
-#include "src/gpu/d3d/GrD3DStencilAttachment.h"
 #include "src/gpu/d3d/GrD3DTexture.h"
 #include "src/gpu/d3d/GrD3DTextureRenderTarget.h"
 #include "src/gpu/d3d/GrD3DUtil.h"
@@ -65,10 +65,10 @@ GrD3DGpu::GrD3DGpu(
       fResourceProvider(this),
       fStagingBufferManager(this),
       fConstantsRingBuffer(this, 128 * 1024, kConstantAlignment, GrGpuBufferType::kVertex),
-      fOutstandingCommandLists(sizeof(OutstandingCommandList), kDefaultOutstandingAllocCnt),
-      fCompiler(new SkSL::Compiler()) {
+      fOutstandingCommandLists(sizeof(OutstandingCommandList), kDefaultOutstandingAllocCnt) {
   fCaps.reset(
       new GrD3DCaps(contextOptions, backendContext.fAdapter.get(), backendContext.fDevice.get()));
+  fCompiler.reset(new SkSL::Compiler(fCaps->shaderCaps()));
 
   fCurrentDirectCommandList = fResourceProvider.findOrCreateDirectCommandList();
   SkASSERT(fCurrentDirectCommandList);
@@ -113,8 +113,8 @@ void GrD3DGpu::destroyResources() {
   fResourceProvider.destroyResources();
 }
 
-GrOpsRenderPass* GrD3DGpu::getOpsRenderPass(
-    GrRenderTarget* rt, GrStencilAttachment*, GrSurfaceOrigin origin, const SkIRect& bounds,
+GrOpsRenderPass* GrD3DGpu::onGetOpsRenderPass(
+    GrRenderTarget* rt, GrAttachment*, GrSurfaceOrigin origin, const SkIRect& bounds,
     const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
     const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo,
     const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
@@ -208,8 +208,7 @@ void GrD3DGpu::submit(GrOpsRenderPass* renderPass) {
 void GrD3DGpu::addFinishedProc(
     GrGpuFinishedProc finishedProc, GrGpuFinishedContext finishedContext) {
   SkASSERT(finishedProc);
-  sk_sp<GrRefCntedCallback> finishedCallback(new GrRefCntedCallback(finishedProc, finishedContext));
-  this->addFinishedCallback(std::move(finishedCallback));
+  this->addFinishedCallback(GrRefCntedCallback::Make(finishedProc, finishedContext));
 }
 
 void GrD3DGpu::addFinishedCallback(sk_sp<GrRefCntedCallback> finishedCallback) {
@@ -551,7 +550,7 @@ void GrD3DGpu::resolveTexture(
 void GrD3DGpu::onResolveRenderTarget(GrRenderTarget* target, const SkIRect& resolveRect) {
   SkASSERT(target->numSamples() > 1);
   GrD3DRenderTarget* rt = static_cast<GrD3DRenderTarget*>(target);
-  SkASSERT(rt->msaaTextureResource());
+  SkASSERT(rt->msaaTextureResource() && rt != rt->msaaTextureResource());
 
   this->resolveTexture(target, resolveRect.fLeft, resolveRect.fTop, rt, resolveRect);
 }
@@ -602,7 +601,7 @@ bool GrD3DGpu::onReadPixels(
       &desc, 0, 1, baseOffset, &dstLocation.PlacedFootprint, nullptr, nullptr, &transferTotalBytes);
   SkASSERT(transferTotalBytes);
   size_t bpp = GrColorTypeBytesPerPixel(dstColorType);
-  if (this->d3dCaps().bytesPerPixel(texResource->dxgiFormat()) != bpp) {
+  if (GrDxgiFormatBytesPerBlock(texResource->dxgiFormat()) != bpp) {
     return false;
   }
   size_t tightRowBytes = bpp * width;
@@ -849,14 +848,6 @@ sk_sp<GrTexture> GrD3DGpu::onWrapRenderableBackendTexture(
 }
 
 sk_sp<GrRenderTarget> GrD3DGpu::onWrapBackendRenderTarget(const GrBackendRenderTarget& rt) {
-  // Currently the Direct3D backend does not support wrapping of msaa render targets directly. In
-  // general this is not an issue since swapchain images in D3D are never multisampled. Thus if
-  // you want a multisampled RT it is best to wrap the swapchain images and then let Skia handle
-  // creating and owning the MSAA images.
-  if (rt.sampleCnt() > 1) {
-    return nullptr;
-  }
-
   GrD3DTextureResourceInfo info;
   if (!rt.getD3DTextureResourceInfo(&info)) {
     return nullptr;
@@ -877,8 +868,8 @@ sk_sp<GrRenderTarget> GrD3DGpu::onWrapBackendRenderTarget(const GrBackendRenderT
 
   sk_sp<GrD3DResourceState> state = rt.getGrD3DResourceState();
 
-  sk_sp<GrD3DRenderTarget> tgt =
-      GrD3DRenderTarget::MakeWrappedRenderTarget(this, rt.dimensions(), 1, info, std::move(state));
+  sk_sp<GrD3DRenderTarget> tgt = GrD3DRenderTarget::MakeWrappedRenderTarget(
+      this, rt.dimensions(), rt.sampleCnt(), info, std::move(state));
 
   // We don't allow the client to supply a premade stencil buffer. We always create one if needed.
   SkASSERT(!rt.stencilBits());
@@ -887,43 +878,6 @@ sk_sp<GrRenderTarget> GrD3DGpu::onWrapBackendRenderTarget(const GrBackendRenderT
   }
 
   return std::move(tgt);
-}
-
-sk_sp<GrRenderTarget> GrD3DGpu::onWrapBackendTextureAsRenderTarget(
-    const GrBackendTexture& tex, int sampleCnt) {
-  GrD3DTextureResourceInfo textureInfo;
-  if (!tex.getD3DTextureResourceInfo(&textureInfo)) {
-    return nullptr;
-  }
-  if (!check_resource_info(textureInfo)) {
-    return nullptr;
-  }
-
-  // If sampleCnt is > 1 we will create an intermediate MSAA VkImage and then resolve into
-  // the wrapped VkImage. We don't yet support rendering directly to client-provided MSAA texture.
-  if (textureInfo.fSampleCount != 1) {
-    return nullptr;
-  }
-
-  if (!check_rt_resource_info(this->d3dCaps(), textureInfo, sampleCnt)) {
-    return nullptr;
-  }
-
-  // TODO: support protected context
-  if (tex.isProtected()) {
-    return nullptr;
-  }
-
-  sampleCnt = this->d3dCaps().getRenderTargetSampleCount(sampleCnt, textureInfo.fFormat);
-  if (!sampleCnt) {
-    return nullptr;
-  }
-
-  sk_sp<GrD3DResourceState> state = tex.getGrD3DResourceState();
-  SkASSERT(state);
-
-  return GrD3DRenderTarget::MakeWrappedRenderTarget(
-      this, tex.dimensions(), sampleCnt, textureInfo, std::move(state));
 }
 
 sk_sp<GrGpuBuffer> GrD3DGpu::onCreateBuffer(
@@ -936,23 +890,21 @@ sk_sp<GrGpuBuffer> GrD3DGpu::onCreateBuffer(
   return std::move(buffer);
 }
 
-GrStencilAttachment* GrD3DGpu::createStencilAttachmentForRenderTarget(
+sk_sp<GrAttachment> GrD3DGpu::makeStencilAttachmentForRenderTarget(
     const GrRenderTarget* rt, SkISize dimensions, int numStencilSamples) {
   SkASSERT(numStencilSamples == rt->numSamples() || this->caps()->mixedSamplesSupport());
   SkASSERT(dimensions.width() >= rt->width());
   SkASSERT(dimensions.height() >= rt->height());
 
-  const GrD3DCaps::StencilFormat& sFmt = this->d3dCaps().preferredStencilFormat();
+  DXGI_FORMAT sFmt = this->d3dCaps().preferredStencilFormat();
 
-  GrD3DStencilAttachment* stencil(
-      GrD3DStencilAttachment::Make(this, dimensions, numStencilSamples, sFmt));
   fStats.incStencilAttachmentCreates();
-  return stencil;
+  return GrD3DAttachment::MakeStencil(this, dimensions, numStencilSamples, sFmt);
 }
 
 bool GrD3DGpu::createTextureResourceForBackendSurface(
     DXGI_FORMAT dxgiFormat, SkISize dimensions, GrTexturable texturable, GrRenderable renderable,
-    GrMipmapped mipMapped, GrD3DTextureResourceInfo* info, GrProtected isProtected) {
+    GrMipmapped mipMapped, int sampleCnt, GrD3DTextureResourceInfo* info, GrProtected isProtected) {
   SkASSERT(texturable == GrTexturable::kYes || renderable == GrRenderable::kYes);
 
   if (this->protectedContext() != (isProtected == GrProtected::kYes)) {
@@ -986,7 +938,7 @@ bool GrD3DGpu::createTextureResourceForBackendSurface(
   resourceDesc.DepthOrArraySize = 1;
   resourceDesc.MipLevels = numMipLevels;
   resourceDesc.Format = dxgiFormat;
-  resourceDesc.SampleDesc.Count = 1;
+  resourceDesc.SampleDesc.Count = sampleCnt;
   resourceDesc.SampleDesc.Quality = DXGI_STANDARD_MULTISAMPLE_QUALITY_PATTERN;
   resourceDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;  // use driver-selected swizzle
   resourceDesc.Flags = usageFlags;
@@ -1038,7 +990,8 @@ GrBackendTexture GrD3DGpu::onCreateBackendTexture(
 
   GrD3DTextureResourceInfo info;
   if (!this->createTextureResourceForBackendSurface(
-          dxgiFormat, dimensions, GrTexturable::kYes, renderable, mipMapped, &info, isProtected)) {
+          dxgiFormat, dimensions, GrTexturable::kYes, renderable, mipMapped, 1, &info,
+          isProtected)) {
     return {};
   }
 
@@ -1046,14 +999,13 @@ GrBackendTexture GrD3DGpu::onCreateBackendTexture(
 }
 
 static void copy_src_data(
-    GrD3DGpu* gpu, char* mapPtr, DXGI_FORMAT dxgiFormat,
-    D3D12_PLACED_SUBRESOURCE_FOOTPRINT* placedFootprints, const SkPixmap srcData[],
-    int numMipLevels) {
+    char* mapPtr, DXGI_FORMAT dxgiFormat, D3D12_PLACED_SUBRESOURCE_FOOTPRINT* placedFootprints,
+    const SkPixmap srcData[], int numMipLevels) {
   SkASSERT(srcData && numMipLevels);
   SkASSERT(!GrDxgiFormatIsCompressed(dxgiFormat));
   SkASSERT(mapPtr);
 
-  size_t bytesPerPixel = gpu->d3dCaps().bytesPerPixel(dxgiFormat);
+  size_t bytesPerPixel = GrDxgiFormatBytesPerBlock(dxgiFormat);
 
   for (int currentMipLevel = 0; currentMipLevel < numMipLevels; currentMipLevel++) {
     const size_t trimRowBytes = srcData[currentMipLevel].width() * bytesPerPixel;
@@ -1143,7 +1095,7 @@ bool GrD3DGpu::onUpdateBackendTexture(
 
   if (data->type() == BackendTextureData::Type::kPixmaps) {
     copy_src_data(
-        this, bufferData, info.fFormat, placedFootprints.get(), data->pixmaps(), info.fLevelCount);
+        bufferData, info.fFormat, placedFootprints.get(), data->pixmaps(), info.fLevelCount);
   } else if (data->type() == BackendTextureData::Type::kCompressed) {
     copy_compressed_data(
         bufferData, info.fFormat, placedFootprints.get(), numRows.get(), rowSizeInBytes.get(),
@@ -1223,10 +1175,11 @@ bool GrD3DGpu::isTestingOnlyBackendTexture(const GrBackendTexture& tex) const {
 }
 
 GrBackendRenderTarget GrD3DGpu::createTestingOnlyBackendRenderTarget(
-    int w, int h, GrColorType colorType) {
+    SkISize dimensions, GrColorType colorType, int sampleCnt, GrProtected isProtected) {
   this->handleDirtyContext();
 
-  if (w > this->caps()->maxRenderTargetSize() || h > this->caps()->maxRenderTargetSize()) {
+  if (dimensions.width() > this->caps()->maxRenderTargetSize() ||
+      dimensions.height() > this->caps()->maxRenderTargetSize()) {
     return {};
   }
 
@@ -1234,12 +1187,12 @@ GrBackendRenderTarget GrD3DGpu::createTestingOnlyBackendRenderTarget(
 
   GrD3DTextureResourceInfo info;
   if (!this->createTextureResourceForBackendSurface(
-          dxgiFormat, {w, h}, GrTexturable::kNo, GrRenderable::kYes, GrMipmapped::kNo, &info,
-          GrProtected::kNo)) {
+          dxgiFormat, dimensions, GrTexturable::kNo, GrRenderable::kYes, GrMipmapped::kNo,
+          sampleCnt, &info, isProtected)) {
     return {};
   }
 
-  return GrBackendRenderTarget(w, h, info);
+  return GrBackendRenderTarget(dimensions.width(), dimensions.height(), info);
 }
 
 void GrD3DGpu::deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget& rt) {
@@ -1291,20 +1244,17 @@ void GrD3DGpu::addBufferResourceBarriers(
 }
 
 void GrD3DGpu::prepareSurfacesForBackendAccessAndStateUpdates(
-    GrSurfaceProxy* proxies[], int numProxies, SkSurface::BackendSurfaceAccess access,
+    SkSpan<GrSurfaceProxy*> proxies, SkSurface::BackendSurfaceAccess access,
     const GrBackendSurfaceMutableState* newState) {
-  SkASSERT(numProxies >= 0);
-  SkASSERT(!numProxies || proxies);
-
   // prepare proxies by transitioning to PRESENT renderState
-  if (numProxies && access == SkSurface::BackendSurfaceAccess::kPresent) {
+  if (!proxies.empty() && access == SkSurface::BackendSurfaceAccess::kPresent) {
     GrD3DTextureResource* resource;
-    for (int i = 0; i < numProxies; ++i) {
-      SkASSERT(proxies[i]->isInstantiated());
-      if (GrTexture* tex = proxies[i]->peekTexture()) {
+    for (GrSurfaceProxy* proxy : proxies) {
+      SkASSERT(proxy->isInstantiated());
+      if (GrTexture* tex = proxy->peekTexture()) {
         resource = static_cast<GrD3DTexture*>(tex);
       } else {
-        GrRenderTarget* rt = proxies[i]->peekRenderTarget();
+        GrRenderTarget* rt = proxy->peekRenderTarget();
         SkASSERT(rt);
         resource = static_cast<GrD3DRenderTarget*>(rt);
       }

@@ -15,6 +15,7 @@
 #include "include/private/SkColorData.h"
 #include "include/private/SkMalloc.h"
 #include "include/private/SkMutex.h"
+#include "include/private/SkTPin.h"
 #include "include/private/SkTemplates.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkAdvancedTypefaceMetrics.h"
@@ -692,6 +693,23 @@ void SkTypeface_FreeType::getPostScriptGlyphNames(SkString* dstArray) const {
   }
 }
 
+bool SkTypeface_FreeType::onGetPostScriptName(SkString* skPostScriptName) const {
+  AutoFTAccess fta(this);
+  FT_Face face = fta.face();
+  if (!face) {
+    return false;
+  }
+
+  const char* ftPostScriptName = FT_Get_Postscript_Name(face);
+  if (!ftPostScriptName) {
+    return false;
+  }
+  if (skPostScriptName) {
+    *skPostScriptName = ftPostScriptName;
+  }
+  return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////
 
 static bool bothZero(SkScalar a, SkScalar b) { return 0 == a && 0 == b; }
@@ -954,80 +972,80 @@ SkScalerContext_FreeType::SkScalerContext_FreeType(
   if (err != 0) {
     SK_TRACEFTR(err, "FT_Activate_Size(%s) failed.", fFaceRec->fFace->family_name);
     return;
-  }
+    }
 
-  fRec.computeMatrices(SkScalerContextRec::kFull_PreMatrixScale, &fScale, &fMatrix22Scalar);
-  FT_F26Dot6 scaleX = SkScalarToFDot6(fScale.fX);
-  FT_F26Dot6 scaleY = SkScalarToFDot6(fScale.fY);
+    fRec.computeMatrices(SkScalerContextRec::kFull_PreMatrixScale, &fScale, &fMatrix22Scalar);
+    FT_F26Dot6 scaleX = SkScalarToFDot6(fScale.fX);
+    FT_F26Dot6 scaleY = SkScalarToFDot6(fScale.fY);
 
-  if (FT_IS_SCALABLE(fFaceRec->fFace)) {
-    err = FT_Set_Char_Size(fFaceRec->fFace.get(), scaleX, scaleY, 72, 72);
-    if (err != 0) {
-      SK_TRACEFTR(
-          err, "FT_Set_CharSize(%s, %f, %f) failed.", fFaceRec->fFace->family_name, fScale.fX,
-          fScale.fY);
+    if (FT_IS_SCALABLE(fFaceRec->fFace)) {
+      err = FT_Set_Char_Size(fFaceRec->fFace.get(), scaleX, scaleY, 72, 72);
+      if (err != 0) {
+        SK_TRACEFTR(
+            err, "FT_Set_CharSize(%s, %f, %f) failed.", fFaceRec->fFace->family_name, fScale.fX,
+            fScale.fY);
+        return;
+      }
+
+      // Adjust the matrix to reflect the actually chosen scale.
+      // FreeType currently does not allow requesting sizes less than 1, this allow for scaling.
+      // Don't do this at all sizes as that will interfere with hinting.
+      if (fScale.fX < 1 || fScale.fY < 1) {
+        SkScalar upem = fFaceRec->fFace->units_per_EM;
+        FT_Size_Metrics& ftmetrics = fFaceRec->fFace->size->metrics;
+        SkScalar x_ppem = upem * SkFT_FixedToScalar(ftmetrics.x_scale) / 64.0f;
+        SkScalar y_ppem = upem * SkFT_FixedToScalar(ftmetrics.y_scale) / 64.0f;
+        fMatrix22Scalar.preScale(fScale.x() / x_ppem, fScale.y() / y_ppem);
+      }
+
+    } else if (FT_HAS_FIXED_SIZES(fFaceRec->fFace)) {
+      fStrikeIndex = chooseBitmapStrike(fFaceRec->fFace.get(), scaleY);
+      if (fStrikeIndex == -1) {
+        LOG_INFO("No glyphs for font \"%s\" size %f.\n", fFaceRec->fFace->family_name, fScale.fY);
+        return;
+      }
+
+      err = FT_Select_Size(fFaceRec->fFace.get(), fStrikeIndex);
+      if (err != 0) {
+        SK_TRACEFTR(
+            err, "FT_Select_Size(%s, %d) failed.", fFaceRec->fFace->family_name, fStrikeIndex);
+        fStrikeIndex = -1;
+        return;
+      }
+
+      // Adjust the matrix to reflect the actually chosen scale.
+      // It is likely that the ppem chosen was not the one requested, this allows for scaling.
+      fMatrix22Scalar.preScale(
+          fScale.x() / fFaceRec->fFace->size->metrics.x_ppem,
+          fScale.y() / fFaceRec->fFace->size->metrics.y_ppem);
+
+      // FreeType does not provide linear metrics for bitmap fonts.
+      linearMetrics = false;
+
+      // FreeType documentation says:
+      // FT_LOAD_NO_BITMAP -- Ignore bitmap strikes when loading.
+      // Bitmap-only fonts ignore this flag.
+      //
+      // However, in FreeType 2.5.1 color bitmap only fonts do not ignore this flag.
+      // Force this flag off for bitmap only fonts.
+      fLoadGlyphFlags &= ~FT_LOAD_NO_BITMAP;
+    } else {
+      LOG_INFO("Unknown kind of font \"%s\" size %f.\n", fFaceRec->fFace->family_name, fScale.fY);
       return;
     }
 
-    // Adjust the matrix to reflect the actually chosen scale.
-    // FreeType currently does not allow requesting sizes less than 1, this allow for scaling.
-    // Don't do this at all sizes as that will interfere with hinting.
-    if (fScale.fX < 1 || fScale.fY < 1) {
-      SkScalar upem = fFaceRec->fFace->units_per_EM;
-      FT_Size_Metrics& ftmetrics = fFaceRec->fFace->size->metrics;
-      SkScalar x_ppem = upem * SkFT_FixedToScalar(ftmetrics.x_scale) / 64.0f;
-      SkScalar y_ppem = upem * SkFT_FixedToScalar(ftmetrics.y_scale) / 64.0f;
-      fMatrix22Scalar.preScale(fScale.x() / x_ppem, fScale.y() / y_ppem);
-    }
-
-  } else if (FT_HAS_FIXED_SIZES(fFaceRec->fFace)) {
-    fStrikeIndex = chooseBitmapStrike(fFaceRec->fFace.get(), scaleY);
-    if (fStrikeIndex == -1) {
-      LOG_INFO("No glyphs for font \"%s\" size %f.\n", fFaceRec->fFace->family_name, fScale.fY);
-      return;
-    }
-
-    err = FT_Select_Size(fFaceRec->fFace.get(), fStrikeIndex);
-    if (err != 0) {
-      SK_TRACEFTR(
-          err, "FT_Select_Size(%s, %d) failed.", fFaceRec->fFace->family_name, fStrikeIndex);
-      fStrikeIndex = -1;
-      return;
-    }
-
-    // Adjust the matrix to reflect the actually chosen scale.
-    // It is likely that the ppem chosen was not the one requested, this allows for scaling.
-    fMatrix22Scalar.preScale(
-        fScale.x() / fFaceRec->fFace->size->metrics.x_ppem,
-        fScale.y() / fFaceRec->fFace->size->metrics.y_ppem);
-
-    // FreeType does not provide linear metrics for bitmap fonts.
-    linearMetrics = false;
-
-    // FreeType documentation says:
-    // FT_LOAD_NO_BITMAP -- Ignore bitmap strikes when loading.
-    // Bitmap-only fonts ignore this flag.
-    //
-    // However, in FreeType 2.5.1 color bitmap only fonts do not ignore this flag.
-    // Force this flag off for bitmap only fonts.
-    fLoadGlyphFlags &= ~FT_LOAD_NO_BITMAP;
-  } else {
-    LOG_INFO("Unknown kind of font \"%s\" size %f.\n", fFaceRec->fFace->family_name, fScale.fY);
-    return;
-  }
-
-  fMatrix22.xx = SkScalarToFixed(fMatrix22Scalar.getScaleX());
-  fMatrix22.xy = SkScalarToFixed(-fMatrix22Scalar.getSkewX());
-  fMatrix22.yx = SkScalarToFixed(-fMatrix22Scalar.getSkewY());
-  fMatrix22.yy = SkScalarToFixed(fMatrix22Scalar.getScaleY());
+    fMatrix22.xx = SkScalarToFixed(fMatrix22Scalar.getScaleX());
+    fMatrix22.xy = SkScalarToFixed(-fMatrix22Scalar.getSkewX());
+    fMatrix22.yx = SkScalarToFixed(-fMatrix22Scalar.getSkewY());
+    fMatrix22.yy = SkScalarToFixed(fMatrix22Scalar.getScaleY());
 
 #ifdef FT_COLOR_H
-  FT_Palette_Select(fFaceRec->fFace.get(), 0, nullptr);
+    FT_Palette_Select(fFaceRec->fFace.get(), 0, nullptr);
 #endif
 
-  fFTSize = ftSize.release();
-  fFace = fFaceRec->fFace.get();
-  fDoLinearMetrics = linearMetrics;
+    fFTSize = ftSize.release();
+    fFace = fFaceRec->fFace.get();
+    fDoLinearMetrics = linearMetrics;
 }
 
 SkScalerContext_FreeType::~SkScalerContext_FreeType() {
@@ -1496,35 +1514,35 @@ void SkScalerContext_FreeType::generateFontMetrics(SkFontMetrics* metrics) {
   if (!avgCharWidth) {
     avgCharWidth = xmax - xmin;
   }
-  if (!cap_height) {
-    cap_height = -ascent * fScale.y();
-  }
+    if (!cap_height) {
+      cap_height = -ascent * fScale.y();
+    }
 
-  // disallow negative linespacing
-  if (leading < 0.0f) {
-    leading = 0.0f;
-  }
+    // disallow negative linespacing
+    if (leading < 0.0f) {
+      leading = 0.0f;
+    }
 
-  metrics->fTop = ymax * fScale.y();
-  metrics->fAscent = ascent * fScale.y();
-  metrics->fDescent = descent * fScale.y();
-  metrics->fBottom = ymin * fScale.y();
-  metrics->fLeading = leading * fScale.y();
-  metrics->fAvgCharWidth = avgCharWidth * fScale.y();
-  metrics->fXMin = xmin * fScale.y();
-  metrics->fXMax = xmax * fScale.y();
-  metrics->fMaxCharWidth = metrics->fXMax - metrics->fXMin;
-  metrics->fXHeight = x_height;
-  metrics->fCapHeight = cap_height;
-  metrics->fUnderlineThickness = underlineThickness * fScale.y();
-  metrics->fUnderlinePosition = underlinePosition * fScale.y();
-  metrics->fStrikeoutThickness = strikeoutThickness * fScale.y();
-  metrics->fStrikeoutPosition = strikeoutPosition * fScale.y();
+    metrics->fTop = ymax * fScale.y();
+    metrics->fAscent = ascent * fScale.y();
+    metrics->fDescent = descent * fScale.y();
+    metrics->fBottom = ymin * fScale.y();
+    metrics->fLeading = leading * fScale.y();
+    metrics->fAvgCharWidth = avgCharWidth * fScale.y();
+    metrics->fXMin = xmin * fScale.y();
+    metrics->fXMax = xmax * fScale.y();
+    metrics->fMaxCharWidth = metrics->fXMax - metrics->fXMin;
+    metrics->fXHeight = x_height;
+    metrics->fCapHeight = cap_height;
+    metrics->fUnderlineThickness = underlineThickness * fScale.y();
+    metrics->fUnderlinePosition = underlinePosition * fScale.y();
+    metrics->fStrikeoutThickness = strikeoutThickness * fScale.y();
+    metrics->fStrikeoutPosition = strikeoutPosition * fScale.y();
 
-  if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
-    // The bounds are only valid for the default variation.
-    metrics->fFlags |= SkFontMetrics::kBoundsInvalid_Flag;
-  }
+    if (face->face_flags & FT_FACE_FLAG_MULTIPLE_MASTERS) {
+      // The bounds are only valid for the default variation.
+      metrics->fFlags |= SkFontMetrics::kBoundsInvalid_Flag;
+    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

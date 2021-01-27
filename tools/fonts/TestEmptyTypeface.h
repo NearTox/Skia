@@ -46,6 +46,7 @@ class TestEmptyTypeface : public SkTypeface {
     bool next(SkTypeface::LocalizedString*) override { return false; }
   };
   void onGetFamilyName(SkString* familyName) const override { familyName->reset(); }
+  bool onGetPostScriptName(SkString*) const override { return false; }
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
     return new EmptyLocalizedStrings;
   }

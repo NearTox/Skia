@@ -98,9 +98,9 @@ static sk_sp<SkImageFilter> arithmetic_factory(sk_sp<SkImage> auxImage, const Sk
       0.0f, .6f, 1.f, 0.f, false, std::move(background), nullptr, cropRect);
 }
 
-static sk_sp<SkImageFilter> xfermode_factory(sk_sp<SkImage> auxImage, const SkIRect* cropRect) {
+static sk_sp<SkImageFilter> blend_factory(sk_sp<SkImage> auxImage, const SkIRect* cropRect) {
   sk_sp<SkImageFilter> background = SkImageFilters::Image(std::move(auxImage));
-  return SkImageFilters::Xfermode(SkBlendMode::kModulate, std::move(background), nullptr, cropRect);
+  return SkImageFilters::Blend(SkBlendMode::kModulate, std::move(background), nullptr, cropRect);
 }
 
 static sk_sp<SkImageFilter> convolution_factory(sk_sp<SkImage> auxImage, const SkIRect* cropRect) {
@@ -216,13 +216,14 @@ class ImageMakeWithFilterGM : public skiagm::GM {
   DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
     FilterFactory filters[] = {color_filter_factory, blur_filter_factory, drop_shadow_factory,
                                offset_factory,       dilate_factory,      erode_factory,
-                               displacement_factory, arithmetic_factory,  xfermode_factory,
+                               displacement_factory, arithmetic_factory,  blend_factory,
                                convolution_factory,  matrix_factory,      alpha_threshold_factory,
                                lighting_factory,     tile_factory};
-    const char* filterNames[] = {"Color",     "Blur",        "Drop Shadow",  "Offset",
-                                 "Dilate",    "Erode",       "Displacement", "Arithmetic",
-                                 "Xfer Mode", "Convolution", "Matrix Xform", "Alpha Threshold",
-                                 "Lighting",  "Tile"};
+    const char* filterNames[] = {"Color",       "Blur",         "Drop Shadow",     "Offset",
+                                 "Dilate",      "Erode",        "Displacement",    "Arithmetic",
+                                 "Xfer Mode",  // "blend"
+                                 "Convolution", "Matrix Xform", "Alpha Threshold", "Lighting",
+                                 "Tile"};
     static_assert(SK_ARRAY_COUNT(filters) == SK_ARRAY_COUNT(filterNames), "filter name length");
 
     SkIRect clipBounds[]{{-20, -20, 100, 100}, {0, 0, 75, 75},   {20, 20, 100, 100},

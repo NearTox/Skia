@@ -28,7 +28,7 @@ class CreateBackendTextureBench : public Benchmark {
   void onDraw(int loops, SkCanvas* canvas) override {
     auto context = canvas->recordingContext()->asDirectContext();
 
-    fBackendTextures.reserve(loops);
+    fBackendTextures.reserve_back(loops);
 
     static const int kSize = 16;
     for (int i = 0; i < loops; ++i) {

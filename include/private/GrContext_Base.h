@@ -80,8 +80,8 @@ class GrContext_Base : public SkRefCnt {
   const GrCaps* caps() const;
   sk_sp<const GrCaps> refCaps() const;
 
-  virtual GrImageContext* asImageContext() { return nullptr; }
-  virtual GrRecordingContext* asRecordingContext() { return nullptr; }
+  virtual GrImageContext* asImageContext() noexcept { return nullptr; }
+  virtual GrRecordingContext* asRecordingContext() noexcept { return nullptr; }
 
   sk_sp<GrContextThreadSafeProxy> fThreadSafeProxy;
 

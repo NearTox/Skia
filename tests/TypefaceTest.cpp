@@ -97,6 +97,22 @@ DEF_TEST(TypefaceStyle, reporter) {
   }
 }
 
+DEF_TEST(TypefacePostScriptName, reporter) {
+  sk_sp<SkTypeface> typeface(MakeResourceAsTypeface("fonts/Em.ttf"));
+  if (!typeface) {
+    // Not all SkFontMgr can MakeFromStream().
+    return;
+  }
+
+  SkString postScriptName;
+  bool hasName = typeface->getPostScriptName(&postScriptName);
+  bool hasName2 = typeface->getPostScriptName(nullptr);
+  REPORTER_ASSERT(reporter, hasName == hasName2);
+  if (hasName) {
+    REPORTER_ASSERT(reporter, postScriptName == SkString("Em"));
+  }
+}
+
 DEF_TEST(TypefaceRoundTrip, reporter) {
   sk_sp<SkTypeface> typeface(MakeResourceAsTypeface("fonts/7630.otf"));
   if (!typeface) {
@@ -128,6 +144,29 @@ DEF_TEST(FontDescriptorNegativeVariationSerialize, reporter) {
   }
 
   REPORTER_ASSERT(reporter, descD.getVariation()[0].value == -1.0f);
+};
+
+DEF_TEST(FontDescriptorDeserializeOldFormat, reporter) {
+  // From ossfuzz:26254
+  const uint8_t old_serialized_desc[] = {
+      0x0,                        // style
+      0xff, 0xfb, 0x0, 0x0, 0x0,  // kFontAxes
+      0x0,                        // coordinateCount
+      0xff, 0xff, 0x0, 0x0, 0x0,  // kSentinel
+      0x0,                        // data length
+  };
+
+  SkMemoryStream stream(old_serialized_desc, sizeof(old_serialized_desc), false);
+  SkFontDescriptor desc;
+  if (!SkFontDescriptor::Deserialize(&stream, &desc)) {
+    REPORT_FAILURE(
+        reporter, "!SkFontDescriptor::Deserialize(&stream, &desc)",
+        SkString("bytes should be recognized unless removing support"));
+    return;
+  }
+  // This call should not crash and should not return a valid SkFontData.
+  std::unique_ptr<SkFontData> data = desc.maybeAsSkFontData();
+  REPORTER_ASSERT(reporter, !data);
 };
 
 DEF_TEST(TypefaceAxes, reporter) {
@@ -296,8 +335,8 @@ DEF_TEST(TypefaceCache, reporter) {
     REPORTER_ASSERT(reporter, count(reporter, cache) == 2);
     cache.purgeAll();
     REPORTER_ASSERT(reporter, count(reporter, cache) == 1);
-  }
-  REPORTER_ASSERT(reporter, t1->unique());
+    }
+    REPORTER_ASSERT(reporter, t1->unique());
 }
 
 static void check_serialize_behaviors(

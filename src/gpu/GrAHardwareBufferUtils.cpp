@@ -21,7 +21,7 @@
 
 #  include "include/gpu/GrDirectContext.h"
 #  include "include/gpu/gl/GrGLTypes.h"
-#  include "src/gpu/GrContextPriv.h"
+#  include "src/gpu/GrDirectContextPriv.h"
 #  include "src/gpu/gl/GrGLDefines.h"
 #  include "src/gpu/gl/GrGLUtil.h"
 
@@ -55,14 +55,8 @@ SkColorType GetSkColorTypeFromBufferFormat(uint32_t bufferFormat) {
 }
 
 GrBackendFormat GetBackendFormat(
-    GrContext* context, AHardwareBuffer* hardwareBuffer, uint32_t bufferFormat,
+    GrDirectContext* dContext, AHardwareBuffer* hardwareBuffer, uint32_t bufferFormat,
     bool requireKnownFormat) {
-  // CONTEXT TODO: Elevate direct context requirement to Android API.
-  auto dContext = GrAsDirectContext(context);
-  if (!dContext) {
-    SkDEBUGFAIL("Requires direct context.");
-    return GrBackendFormat();
-  }
   GrBackendApi backend = dContext->backend();
 
   if (backend == GrBackendApi::kOpenGL) {
@@ -195,13 +189,7 @@ void delete_gl_texture(void* context) {
   delete cleanupHelper;
 }
 
-void update_gl_texture(void* context, GrContext* grContext) {
-  // CONTEXT TODO: Elevate direct context requirement to Android API.
-  auto dContext = GrAsDirectContext(grContext);
-  if (!dContext) {
-    SkDEBUGFAIL("Direct context required.");
-    return;
-  }
+void update_gl_texture(void* context, GrDirectContext* dContext) {
   GLTextureHelper* cleanupHelper = static_cast<GLTextureHelper*>(context);
   cleanupHelper->rebind(dContext);
 }
@@ -292,9 +280,7 @@ void delete_vk_image(void* context) {
   delete cleanupHelper;
 }
 
-void update_vk_image(void* context, GrContext* grContext) {
-  // CONTEXT TODO: Elevate direct context requirement to Android API.
-  SkASSERT(GrAsDirectContext(grContext));
+void update_vk_image(void* context, GrDirectContext* dContext) {
   // no op
 }
 
@@ -304,6 +290,8 @@ static GrBackendTexture make_vk_backend_texture(
     bool isProtectedContent, const GrBackendFormat& backendFormat, bool isRenderable) {
   SkASSERT(dContext->backend() == GrBackendApi::kVulkan);
   GrVkGpu* gpu = static_cast<GrVkGpu*>(dContext->priv().getGpu());
+
+  SkASSERT(!isProtectedContent || gpu->protectedContext());
 
   VkPhysicalDevice physicalDevice = gpu->physicalDevice();
   VkDevice device = gpu->device();
@@ -377,10 +365,12 @@ static GrBackendTexture make_vk_backend_texture(
   // to use linear. Add better linear support throughout Ganesh.
   VkImageTiling tiling = VK_IMAGE_TILING_OPTIMAL;
 
+  VkImageCreateFlags flags = isProtectedContent ? VK_IMAGE_CREATE_PROTECTED_BIT : 0;
+
   const VkImageCreateInfo imageCreateInfo = {
       VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,     // sType
       &externalMemoryImageInfo,                // pNext
-      0,                                       // VkImageCreateFlags
+      flags,                                   // VkImageCreateFlags
       VK_IMAGE_TYPE_2D,                        // VkImageType
       format,                                  // VkFormat
       {(uint32_t)width, (uint32_t)height, 1},  // VkExtent3D
@@ -484,6 +474,7 @@ static GrBackendTexture make_vk_backend_texture(
   // support that extension. Or if we know the source of the AHardwareBuffer is not from a
   // "foreign" device we can leave them as external.
   imageInfo.fCurrentQueueFamily = VK_QUEUE_FAMILY_EXTERNAL;
+  imageInfo.fProtected = isProtectedContent ? GrProtected::kYes : GrProtected::kNo;
   imageInfo.fYcbcrConversionInfo = *ycbcrConversion;
   imageInfo.fSharingMode = imageCreateInfo.sharingMode;
 
@@ -514,16 +505,18 @@ static bool can_import_protected_content(GrDirectContext* dContext) {
     // function is called.
     static bool hasIt = can_import_protected_content_eglimpl();
     return hasIt;
+  } else if (GrBackendApi::kVulkan == dContext->backend()) {
+#  ifdef SK_VULKAN
+    return static_cast<GrVkGpu*>(dContext->priv().getGpu())->protectedContext();
+#  endif
   }
   return false;
 }
 
 GrBackendTexture MakeBackendTexture(
-    GrContext* context, AHardwareBuffer* hardwareBuffer, int width, int height,
+    GrDirectContext* dContext, AHardwareBuffer* hardwareBuffer, int width, int height,
     DeleteImageProc* deleteProc, UpdateImageProc* updateProc, TexImageCtx* imageCtx,
     bool isProtectedContent, const GrBackendFormat& backendFormat, bool isRenderable) {
-  // CONTEXT TODO: Elevate direct context requirement to Android API.
-  auto dContext = GrAsDirectContext(context);
   SkASSERT(dContext);
   if (!dContext || dContext->abandoned()) {
     return GrBackendTexture();
@@ -537,8 +530,6 @@ GrBackendTexture MakeBackendTexture(
   } else {
     SkASSERT(GrBackendApi::kVulkan == dContext->backend());
 #  ifdef SK_VULKAN
-    // Currently we don't support protected images on vulkan
-    SkASSERT(!createProtectedImage);
     return make_vk_backend_texture(
         dContext, hardwareBuffer, width, height, deleteProc, updateProc, imageCtx,
         createProtectedImage, backendFormat, isRenderable);

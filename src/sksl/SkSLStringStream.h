@@ -23,6 +23,8 @@ class StringStream : public OutputStream {
 
   void write(const void* s, size_t size) override { fBuffer.append((const char*)s, size); }
 
+  size_t bytesWritten() const { return fBuffer.size(); }
+
   const String& str() const { return fBuffer; }
 
   void reset() { fBuffer = ""; }
@@ -45,6 +47,8 @@ class StringStream : public OutputStream {
   void writeText(const char* s) override { fStream.writeText(s); }
 
   void write(const void* s, size_t size) override { fStream.write(s, size); }
+
+  size_t bytesWritten() const { return fStream.bytesWritten(); }
 
   const String& str() const {
     if (!fString.size()) {

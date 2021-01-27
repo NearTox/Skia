@@ -32,15 +32,14 @@ class RectsGM : public GM {
   sk_sp<SkDrawLooper> fLooper;
   enum { kLooperColorSentinel = 0x01020304 };
 
- public:
-  RectsGM() {
+ protected:
+  void onOnceBeforeDraw() override {
     this->setBGColor(0xFF000000);
     this->makePaints();
     this->makeMatrices();
     this->makeRects();
   }
 
- protected:
   SkString onShortName() override { return SkString("rects"); }
 
   SkISize onISize() override { return SkISize::Make(1200, 900); }

@@ -16,6 +16,11 @@
 
 SkPathBuilder::SkPathBuilder() { this->reset(); }
 
+SkPathBuilder::SkPathBuilder(SkPathFillType ft) {
+  this->reset();
+  fFillType = ft;
+}
+
 SkPathBuilder::SkPathBuilder(const SkPath& src) { *this = src; }
 
 SkPathBuilder::~SkPathBuilder() {}

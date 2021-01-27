@@ -64,8 +64,8 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
       const SkPath& deviceSpacePath, const SkIRect& accessRect, const GrCaps& caps);
 
   // GrOnFlushCallbackObject overrides.
-  void preFlush(GrOnFlushResourceProvider*, const uint32_t* opsTaskIDs, int numOpsTaskIDs) override;
-  void postFlush(GrDeferredUploadToken, const uint32_t* opsTaskIDs, int numOpsTaskIDs) override;
+  void preFlush(GrOnFlushResourceProvider*, SkSpan<const uint32_t> taskIDs) override;
+  void postFlush(GrDeferredUploadToken, SkSpan<const uint32_t> taskIDs) override;
 
   void purgeCacheEntriesOlderThan(GrProxyProvider*, const GrStdSteadyClock::time_point&);
 
@@ -78,6 +78,8 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
   // Maximum inflation of path bounds due to stroking (from width, miter, caps). Strokes wider
   // than this will be converted to fill paths and drawn by the CCPR filler instead.
   static constexpr float kMaxBoundsInflationFromStroke = 4096;
+
+  static constexpr int kDoCopiesThreshold = 100;
 
   static float GetStrokeDevWidth(
       const SkMatrix&, const SkStrokeRec&, float* inflationRadius = nullptr);
@@ -93,7 +95,7 @@ class GrCoverageCountingPathRenderer : public GrPathRenderer, public GrOnFlushCa
   bool onDrawPath(const DrawPathArgs&) override;
 
   GrCCPerOpsTaskPaths* lookupPendingPaths(uint32_t opsTaskID);
-  void recordOp(std::unique_ptr<GrCCDrawPathsOp>, const DrawPathArgs&);
+  void recordOp(GrOp::Owner, const DrawPathArgs&);
 
   const CoverageType fCoverageType;
 

@@ -20,6 +20,7 @@
     <ClCompile Include="skottie\src\animator\VectorKeyframeAnimator.cpp" />
     <ClCompile Include="skottie\src\Camera.cpp" />
     <ClCompile Include="skottie\src\Composition.cpp" />
+    <ClCompile Include="skottie\src\effects\BlackAndWhiteEffect.cpp" />
     <ClCompile Include="skottie\src\effects\BrightnessContrastEffect.cpp" />
     <ClCompile Include="skottie\src\effects\CornerPinEffect.cpp" />
     <ClCompile Include="skottie\src\effects\DisplacementMapEffect.cpp" />

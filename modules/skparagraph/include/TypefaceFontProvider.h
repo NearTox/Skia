@@ -18,7 +18,7 @@ class TypefaceFontStyleSet : public SkFontStyleSet {
  public:
   explicit TypefaceFontStyleSet(const SkString& familyName);
 
-  int count() noexcept override;
+  int count() override;
   void getStyle(int index, SkFontStyle*, SkString* name) override;
   SkTypeface* createTypeface(int index) override;
   SkTypeface* matchStyle(const SkFontStyle& pattern) override;

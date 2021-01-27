@@ -31,7 +31,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   DEFINE_OP_CLASS_ID
 
   DrawAtlasOp(
-      const Helper::MakeArgs&, const SkPMColor4f& color, const SkMatrix& viewMatrix, GrAAType,
+      GrProcessorSet*, const SkPMColor4f& color, const SkMatrix& viewMatrix, GrAAType,
       int spriteCount, const SkRSXform* xforms, const SkRect* rects, const SkColor* colors);
 
   const char* name() const override { return "DrawAtlasOp"; }
@@ -67,7 +67,7 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   bool hasColors() const { return fHasColors; }
   int quadCount() const { return fQuadCount; }
 
-  CombineResult onCombineIfPossible(GrOp* t, GrRecordingContext::Arenas*, const GrCaps&) override;
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps&) override;
 
   struct Geometry {
     SkPMColor4f fColor;
@@ -100,10 +100,10 @@ static GrGeometryProcessor* make_gp(
 }
 
 DrawAtlasOp::DrawAtlasOp(
-    const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, const SkMatrix& viewMatrix,
+    GrProcessorSet* processorSet, const SkPMColor4f& color, const SkMatrix& viewMatrix,
     GrAAType aaType, int spriteCount, const SkRSXform* xforms, const SkRect* rects,
     const SkColor* colors)
-    : INHERITED(ClassID()), fHelper(helperArgs, aaType), fColor(color) {
+    : INHERITED(ClassID()), fHelper(processorSet, aaType), fColor(color) {
   SkASSERT(xforms);
   SkASSERT(rects);
 
@@ -241,8 +241,7 @@ void DrawAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBound
   flushState->drawMesh(*fMesh);
 }
 
-GrOp::CombineResult DrawAtlasOp::onCombineIfPossible(
-    GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) {
+GrOp::CombineResult DrawAtlasOp::onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) {
   DrawAtlasOp* that = t->cast<DrawAtlasOp>();
 
   if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
@@ -291,7 +290,7 @@ GrProcessorSet::Analysis DrawAtlasOp::finalize(
 
 }  // anonymous namespace
 
-std::unique_ptr<GrDrawOp> GrDrawAtlasOp::Make(
+GrOp::Owner GrDrawAtlasOp::Make(
     GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix, GrAAType aaType,
     int spriteCount, const SkRSXform* xforms, const SkRect* rects, const SkColor* colors) {
   return GrSimpleMeshDrawOpHelper::FactoryHelper<DrawAtlasOp>(

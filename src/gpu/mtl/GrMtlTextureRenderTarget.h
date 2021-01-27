@@ -55,9 +55,8 @@ class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
     if (numColorSamples > 1) {
       ++numColorSamples;
     }
-    const GrCaps& caps = *this->getGpu()->caps();
     return GrSurface::ComputeSize(
-        caps, this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
+        this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
   }
 };
 

@@ -32,7 +32,7 @@ static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath
     rotPath[index].fX = cubic[index].fX * dx + cubic[index].fY * dy;
     rotPath[index].fY = cubic[index].fY * dx - cubic[index].fX * dy;
   }
-  return true;
+    return true;
 }
 
 // Returns 0 if negative, 1 if zero, 2 if positive
@@ -141,7 +141,7 @@ int SkDCubic::convexHull(char order[4]) const {
     order[2] = most;
     return 3;  // result is a triangle
   }
-  order[2] = midX;
-  order[3] = most;
-  return 4;  // result is a quadralateral
+    order[2] = midX;
+    order[3] = most;
+    return 4;  // result is a quadralateral
 }

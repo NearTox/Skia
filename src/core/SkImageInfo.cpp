@@ -10,7 +10,7 @@
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkWriteBuffer.h"
 
-int SkColorTypeBytesPerPixel(SkColorType ct) {
+int SkColorTypeBytesPerPixel(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 1;

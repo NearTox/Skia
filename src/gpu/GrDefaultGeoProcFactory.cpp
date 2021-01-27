@@ -226,7 +226,7 @@ GrGeometryProcessor* DefaultGeoProc::TestCreate(GrProcessorTestData* d) {
   uint32_t flags = 0;
   if (d->fRandom->nextBool()) {
     flags |= kColorAttribute_GPFlag;
-  }
+    }
     if (d->fRandom->nextBool()) {
       flags |= kColorAttributeIsWide_GPFlag;
     }

@@ -109,7 +109,7 @@ enum SkColorType {
 
     @return    bytes per pixel
 */
-SK_API int SkColorTypeBytesPerPixel(SkColorType ct);
+SK_API int SkColorTypeBytesPerPixel(SkColorType ct) noexcept;
 
 /** Returns true if SkColorType always decodes alpha to 1.0, making the pixel
     fully opaque. If true, SkColorType does not reserve bits to encode alpha.
@@ -241,7 +241,7 @@ class SK_API SkColorInfo {
   /** Creates SkColorInfo with same SkAlphaType, SkColorType, with SkColorSpace
       set to cs. cs may be nullptr.
   */
-  SkColorInfo makeColorSpace(sk_sp<SkColorSpace> cs) const {
+  SkColorInfo makeColorSpace(sk_sp<SkColorSpace> cs) const noexcept {
     return SkColorInfo(this->colorType(), this->alphaType(), std::move(cs));
   }
 
@@ -323,7 +323,7 @@ struct SK_API SkImageInfo {
                           SkColorSpace (which may be nullptr)
       @return        created SkImageInfo
   */
-  static SkImageInfo Make(SkISize dimensions, const SkColorInfo& colorInfo) noexcept {
+  static SkImageInfo Make(SkISize dimensions, const SkColorInfo& colorInfo) {
     return SkImageInfo(dimensions, colorInfo);
   }
   static SkImageInfo Make(SkISize dimensions, SkColorInfo&& colorInfo) noexcept {
@@ -448,24 +448,24 @@ struct SK_API SkImageInfo {
 
       @return  pixel width
   */
-  int width() const { return fDimensions.width(); }
+  int width() const noexcept { return fDimensions.width(); }
 
   /** Returns pixel row count.
 
       @return  pixel height
   */
-  int height() const { return fDimensions.height(); }
+  int height() const noexcept { return fDimensions.height(); }
 
-  SkColorType colorType() const { return fColorInfo.colorType(); }
+  SkColorType colorType() const noexcept { return fColorInfo.colorType(); }
 
-  SkAlphaType alphaType() const { return fColorInfo.alphaType(); }
+  SkAlphaType alphaType() const noexcept { return fColorInfo.alphaType(); }
 
   /** Returns SkColorSpace, the range of colors. The reference count of
       SkColorSpace is unchanged. The returned SkColorSpace is immutable.
 
       @return  SkColorSpace, or nullptr
   */
-  SkColorSpace* colorSpace() const { return fColorInfo.colorSpace(); }
+  SkColorSpace* colorSpace() const noexcept { return fColorInfo.colorSpace(); }
 
   /** Returns smart pointer to SkColorSpace, the range of colors. The smart pointer
       tracks the number of objects sharing this SkColorSpace reference so the memory
@@ -482,7 +482,7 @@ struct SK_API SkImageInfo {
 
       @return  true if either dimension is zero or smaller
   */
-  bool isEmpty() const { return fDimensions.isEmpty(); }
+  bool isEmpty() const noexcept { return fDimensions.isEmpty(); }
 
   /** Returns the dimensionless SkColorInfo that represents the same color type,
       alpha type, and color space as this SkImageInfo.
@@ -510,7 +510,7 @@ struct SK_API SkImageInfo {
 
       @return  integral rectangle from origin to width() and height()
   */
-  SkIRect bounds() const { return SkIRect::MakeSize(fDimensions); }
+  SkIRect bounds() const noexcept { return SkIRect::MakeSize(fDimensions); }
 
   /** Returns true if associated SkColorSpace is not nullptr, and SkColorSpace gamma
       is approximately the same as sRGB.
@@ -527,7 +527,7 @@ struct SK_API SkImageInfo {
       @param newHeight  pixel row count; must be zero or greater
       @return           created SkImageInfo
   */
-  SkImageInfo makeWH(int newWidth, int newHeight) const noexcept {
+  SkImageInfo makeWH(int newWidth, int newHeight) const {
     return Make({newWidth, newHeight}, fColorInfo);
   }
 
@@ -537,7 +537,7 @@ struct SK_API SkImageInfo {
       @param newSize   pixel column and row count; must be zero or greater
       @return          created SkImageInfo
   */
-  SkImageInfo makeDimensions(SkISize newSize) const noexcept { return Make(newSize, fColorInfo); }
+  SkImageInfo makeDimensions(SkISize newSize) const { return Make(newSize, fColorInfo); }
 
   /** Creates SkImageInfo with same SkColorType, SkColorSpace, width, and height,
       with SkAlphaType set to newAlphaType.
@@ -566,7 +566,7 @@ struct SK_API SkImageInfo {
       @param cs  range of colors; may be nullptr
       @return    created SkImageInfo
   */
-  SkImageInfo makeColorSpace(sk_sp<SkColorSpace> cs) const {
+  SkImageInfo makeColorSpace(sk_sp<SkColorSpace> cs) const noexcept {
     return Make(fDimensions, fColorInfo.makeColorSpace(std::move(cs)));
   }
 

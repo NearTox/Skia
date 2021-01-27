@@ -38,6 +38,7 @@ class SkRandomTypeface : public SkTypeface {
   int onGetUPEM() const override;
 
   void onGetFamilyName(SkString* familyName) const override;
+  bool onGetPostScriptName(SkString*) const override;
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override;
 
   void getPostScriptGlyphNames(SkString*) const override;

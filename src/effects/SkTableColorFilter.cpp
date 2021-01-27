@@ -358,22 +358,22 @@ std::unique_ptr<GrFragmentProcessor> ColorTableEffect::TestCreate(GrProcessorTes
       flags |= d->fRandom->nextBool() ? (1 << i) : 0;
     }
   } while (!flags);
-  for (int i = 0; i < 4; ++i) {
-    if (flags & (1 << i)) {
-      for (int j = 0; j < 256; ++j) {
-        luts[j][i] = SkToU8(d->fRandom->nextBits(8));
+    for (int i = 0; i < 4; ++i) {
+      if (flags & (1 << i)) {
+        for (int j = 0; j < 256; ++j) {
+          luts[j][i] = SkToU8(d->fRandom->nextBits(8));
+        }
       }
     }
-  }
-  auto filter(SkTableColorFilter::MakeARGB(
-      (flags & (1 << 0)) ? luts[0] : nullptr, (flags & (1 << 1)) ? luts[1] : nullptr,
-      (flags & (1 << 2)) ? luts[2] : nullptr, (flags & (1 << 3)) ? luts[3] : nullptr));
-  sk_sp<SkColorSpace> colorSpace = GrTest::TestColorSpace(d->fRandom);
-  auto [success, fp] = as_CFB(filter)->asFragmentProcessor(
-      d->inputFP(), d->context(),
-      GrColorInfo(GrColorType::kRGBA_8888, kUnknown_SkAlphaType, std::move(colorSpace)));
-  SkASSERT(success);
-  return std::move(fp);
+    auto filter(SkTableColorFilter::MakeARGB(
+        (flags & (1 << 0)) ? luts[0] : nullptr, (flags & (1 << 1)) ? luts[1] : nullptr,
+        (flags & (1 << 2)) ? luts[2] : nullptr, (flags & (1 << 3)) ? luts[3] : nullptr));
+    sk_sp<SkColorSpace> colorSpace = GrTest::TestColorSpace(d->fRandom);
+    auto [success, fp] = as_CFB(filter)->asFragmentProcessor(
+        d->inputFP(), d->context(),
+        GrColorInfo(GrColorType::kRGBA_8888, kUnknown_SkAlphaType, std::move(colorSpace)));
+    SkASSERT(success);
+    return std::move(fp);
 }
 #  endif
 

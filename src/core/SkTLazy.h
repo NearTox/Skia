@@ -116,7 +116,7 @@ class SkTLazy {
   T* getMaybeNull() const { return fPtr; }
 
  private:
-  typename std::aligned_storage<sizeof(T), alignof(T)>::type fStorage;
+  alignas(T) char fStorage[sizeof(T)];
   T* fPtr{nullptr};  // nullptr or fStorage
 };
 

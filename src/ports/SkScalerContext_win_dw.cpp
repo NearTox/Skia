@@ -582,7 +582,7 @@ static void ReleaseProc(const void* ptr, void* context) {
   ctx->fontFace4->ReleaseGlyphImageData(ctx->glyphDataContext);
   delete ctx;
 }
-}  // namespace
+}
 
 void SkScalerContext_DW::generatePngMetrics(SkGlyph* glyph) {
   SkASSERT(isPngGlyph(*glyph));

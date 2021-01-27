@@ -57,7 +57,7 @@ class SkSurface_Gpu : public SkSurface_Base {
   bool onCharacterize(SkSurfaceCharacterization*) const override;
   bool onIsCompatible(const SkSurfaceCharacterization&) const override;
   void onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint) override;
-  bool onDraw(sk_sp<const SkDeferredDisplayList>) override;
+  bool onDraw(sk_sp<const SkDeferredDisplayList>, int xOffset, int yOffset) override;
 
   SkGpuDevice* getDevice() { return fDevice.get(); }
 

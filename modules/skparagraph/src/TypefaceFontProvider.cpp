@@ -58,7 +58,7 @@ size_t TypefaceFontProvider::registerTypeface(
 
 TypefaceFontStyleSet::TypefaceFontStyleSet(const SkString& familyName) : fFamilyName(familyName) {}
 
-int TypefaceFontStyleSet::count() noexcept { return fStyles.size(); }
+int TypefaceFontStyleSet::count() { return fStyles.size(); }
 
 void TypefaceFontStyleSet::getStyle(int index, SkFontStyle* style, SkString* name) {
   SkASSERT(index < fStyles.count());

@@ -22,7 +22,6 @@
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPathPriv.h"
-#include "src/core/SkPathView.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkWriteBuffer.h"
 #include "tests/Test.h"
@@ -2141,60 +2140,60 @@ static void test_isRect(skiatest::Reporter* reporter) {
     }
   }
 
-  // fail, close then line
-  SkPath path1;
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  path1.lineTo(1, 0);
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
-
-  // fail, move in the middle
-  path1.reset();
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    if (index == 2) {
-      path1.moveTo(1, .5f);
+    // fail, close then line
+    SkPath path1;
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      path1.lineTo(r1[index].fX, r1[index].fY);
     }
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.close();
+    path1.lineTo(1, 0);
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-  // fail, move on the edge
-  path1.reset();
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    path1.moveTo(r1[index - 1].fX, r1[index - 1].fY);
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
-
-  // fail, quad
-  path1.reset();
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    if (index == 2) {
-      path1.quadTo(1, .5f, 1, .5f);
+    // fail, move in the middle
+    path1.reset();
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      if (index == 2) {
+        path1.moveTo(1, .5f);
+      }
+      path1.lineTo(r1[index].fX, r1[index].fY);
     }
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 
-  // fail, cubic
-  path1.reset();
-  path1.moveTo(r1[0].fX, r1[0].fY);
-  for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
-    if (index == 2) {
-      path1.cubicTo(1, .5f, 1, .5f, 1, .5f);
+    // fail, move on the edge
+    path1.reset();
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      path1.moveTo(r1[index - 1].fX, r1[index - 1].fY);
+      path1.lineTo(r1[index].fX, r1[index].fY);
     }
-    path1.lineTo(r1[index].fX, r1[index].fY);
-  }
-  path1.close();
-  REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+
+    // fail, quad
+    path1.reset();
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      if (index == 2) {
+        path1.quadTo(1, .5f, 1, .5f);
+      }
+      path1.lineTo(r1[index].fX, r1[index].fY);
+    }
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
+
+    // fail, cubic
+    path1.reset();
+    path1.moveTo(r1[0].fX, r1[0].fY);
+    for (index = 1; index < SkToInt(SK_ARRAY_COUNT(r1)); ++index) {
+      if (index == 2) {
+        path1.cubicTo(1, .5f, 1, .5f, 1, .5f);
+      }
+      path1.lineTo(r1[index].fX, r1[index].fY);
+    }
+    path1.close();
+    REPORTER_ASSERT(reporter, !path1.isRect(nullptr));
 }
 
 static void check_simple_rect(
@@ -5571,16 +5570,33 @@ DEF_TEST(Path_shrinkToFit, reporter) {
     add_verbs(&shared_path, verbs);
 
     const SkPath copy = shared_path;
+
     REPORTER_ASSERT(reporter, shared_path == unique_path);
     REPORTER_ASSERT(reporter, shared_path == copy);
+
+    uint32_t uID = unique_path.getGenerationID();
+    uint32_t sID = shared_path.getGenerationID();
+    uint32_t cID = copy.getGenerationID();
+    REPORTER_ASSERT(reporter, sID == cID);
 
 #ifdef SK_DEBUG
     size_t before = PathTest_Private::GetFreeSpace(unique_path);
 #endif
-    unique_path.shrinkToFit();
-    shared_path.shrinkToFit();
+    SkPathPriv::ShrinkToFit(&unique_path);
+    SkPathPriv::ShrinkToFit(&shared_path);
     REPORTER_ASSERT(reporter, shared_path == unique_path);
     REPORTER_ASSERT(reporter, shared_path == copy);
+
+    // since the unique_path is "unique", it's genID need not have changed even though
+    // unique_path has changed (been shrunk)
+    REPORTER_ASSERT(reporter, uID == unique_path.getGenerationID());
+    // since the copy has not been changed, its ID should be the same
+    REPORTER_ASSERT(reporter, cID == copy.getGenerationID());
+    // but since shared_path has changed, and was not uniquely owned, it's gen ID needs to have
+    // changed, breaking the "sharing" -- this is done defensively in case there were any
+    // outstanding Iterators active on copy, which could have been invalidated during
+    // shrinkToFit.
+    REPORTER_ASSERT(reporter, sID != shared_path.getGenerationID());
 
 #ifdef SK_DEBUG
     size_t after = PathTest_Private::GetFreeSpace(unique_path);
@@ -5769,18 +5785,146 @@ static void test_edger(
   }
 
   SkPathEdgeIter iter(path);
-  SkPathEdgeIter iter2(path.view());
   for (auto v : expected) {
     auto e = iter.next();
     REPORTER_ASSERT(r, e);
     REPORTER_ASSERT(r, SkPathEdgeIter::EdgeToVerb(e.fEdge) == v);
-
-    e = iter2.next();
-    REPORTER_ASSERT(r, e);
-    REPORTER_ASSERT(r, SkPathEdgeIter::EdgeToVerb(e.fEdge) == v);
   }
   REPORTER_ASSERT(r, !iter.next());
-  REPORTER_ASSERT(r, !iter2.next());
+}
+
+static void assert_points(
+    skiatest::Reporter* reporter, const SkPath& path, const std::initializer_list<SkPoint>& list) {
+  const SkPoint* expected = list.begin();
+  SkPath::RawIter iter(path);
+  for (size_t i = 0;;) {
+    SkPoint pts[4];
+    switch (iter.next(pts)) {
+      case SkPath::kDone_Verb: REPORTER_ASSERT(reporter, i == list.size()); return;
+      case SkPath::kMove_Verb:
+        REPORTER_ASSERT(reporter, pts[0] == expected[i]);
+        i++;
+        break;
+      case SkPath::kLine_Verb:
+        REPORTER_ASSERT(reporter, pts[1] == expected[i]);
+        i++;
+        break;
+      case SkPath::kClose_Verb: break;
+      default: SkASSERT(false);
+    }
+  }
+}
+
+static void test_addRect_and_trailing_lineTo(skiatest::Reporter* reporter) {
+  SkPath path;
+  const SkRect r = {1, 2, 3, 4};
+  // build our default p-array clockwise
+  const SkPoint p[] = {
+      {r.fLeft, r.fTop},
+      {r.fRight, r.fTop},
+      {r.fRight, r.fBottom},
+      {r.fLeft, r.fBottom},
+  };
+
+  for (auto dir : {SkPathDirection::kCW, SkPathDirection::kCCW}) {
+    int increment = dir == SkPathDirection::kCW ? 1 : 3;
+    for (int i = 0; i < 4; ++i) {
+      path.reset();
+      path.addRect(r, dir, i);
+
+      // check that we return the 4 ponts in the expected order
+      SkPoint e[4];
+      for (int j = 0; j < 4; ++j) {
+        int index = (i + j * increment) % 4;
+        e[j] = p[index];
+      }
+      assert_points(reporter, path, {e[0], e[1], e[2], e[3]});
+
+      // check that the new line begins where the rect began
+      path.lineTo(7, 8);
+      assert_points(
+          reporter, path,
+          {
+              e[0],
+              e[1],
+              e[2],
+              e[3],
+              e[0],
+              {7, 8},
+          });
+    }
+  }
+
+  // now add a moveTo before the rect, just to be sure we don't always look at
+  // the "first" point in the path when we handle the trailing lineTo
+  path.reset();
+  path.moveTo(7, 8);
+  path.addRect(r, SkPathDirection::kCW, 2);
+  path.lineTo(5, 6);
+
+  assert_points(
+      reporter, path,
+      {
+          {7, 8},  // initial moveTo
+          p[2],
+          p[3],
+          p[0],
+          p[1],  // rect
+          p[2],
+          {5, 6},  // trailing line
+      });
+}
+
+/*
+ *  SkPath allows the caller to "skip" calling moveTo for contours. If lineTo (or a curve) is
+ *  called on an empty path, a 'moveTo(0,0)' will automatically be injected. If the path is
+ *  not empty, but its last contour has been "closed", then it will inject a moveTo corresponding
+ *  to where the last contour itself started (i.e. its moveTo).
+ *
+ *  This test exercises this in a particular case:
+ *      path.moveTo(...)                <-- needed to show the bug
+ *      path.moveTo....close()
+ *      // at this point, the path's verbs are: M M ... C
+ *
+ *      path.lineTo(...)
+ *      // after lineTo,  the path's verbs are: M M ... C M L
+ */
+static void test_addPath_and_injected_moveTo(skiatest::Reporter* reporter) {
+  /*
+   *  Given a path, and the expected last-point and last-move-to in it,
+   *  assert that, after a lineTo(), that the injected moveTo corresponds
+   *  to the expected value.
+   */
+  auto test_before_after_lineto =
+      [reporter](SkPath& path, SkPoint expectedLastPt, SkPoint expectedMoveTo) {
+        SkPoint p = path.getPoint(path.countPoints() - 1);
+        REPORTER_ASSERT(reporter, p == expectedLastPt);
+
+        const SkPoint newLineTo = {1234, 5678};
+        path.lineTo(newLineTo);
+
+        p = path.getPoint(path.countPoints() - 2);
+        REPORTER_ASSERT(reporter, p == expectedMoveTo);  // this was injected by lineTo()
+
+        p = path.getPoint(path.countPoints() - 1);
+        REPORTER_ASSERT(reporter, p == newLineTo);
+      };
+
+  SkPath path1;
+  SkPath path2;
+
+  path1.moveTo(230, 230);  // Needed to show the bug: a moveTo before the addRect
+
+  // add a rect, but the shape doesn't really matter
+  path1.moveTo(20, 30).lineTo(40, 30).lineTo(40, 50).lineTo(20, 50).close();
+
+  path2.addPath(path1);  // this must correctly update its "last-move-to" so that when
+                         // lineTo is called, it will inject the correct moveTo.
+
+  // at this point, path1 and path2 should be the same...
+
+  test_before_after_lineto(path1, {20, 50}, {20, 30});
+  test_before_after_lineto(path2, {20, 50}, {20, 30});
 }
 
 DEF_TEST(pathedger, r) {
@@ -5798,4 +5942,16 @@ DEF_TEST(pathedger, r) {
   test_edger(r, {M, L, L, C}, {L, L, L});
 
   test_edger(r, {M, L, L, M, L, L}, {L, L, L, L, L, L});
+
+  test_addRect_and_trailing_lineTo(r);
+  test_addPath_and_injected_moveTo(r);
+}
+
+DEF_TEST(path_addpath_crbug_1153516, r) {
+  // When we add a path to another path, we need to sniff out in case the argument ended
+  // with a kClose, in which case we need to fiddle with our lastMoveIndex (as ::close() does)
+  SkPath p1, p2;
+  p1.addRect({143, 226, 200, 241});
+  p1.addPath(p1);
+  p1.lineTo(262, 513);  // this should not assert
 }

@@ -771,24 +771,25 @@ static bool is_yuv_supported(
   SkASSERT(hSampY == dinfo->max_h_samp_factor);
   SkASSERT(vSampY == dinfo->max_v_samp_factor);
 
-  SkYUVAInfo::PlanarConfig tempPlanarConfig;
+  SkYUVAInfo::Subsampling tempSubsampling;
   if (1 == hSampY && 1 == vSampY) {
-    tempPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_444;
+    tempSubsampling = SkYUVAInfo::Subsampling::k444;
   } else if (2 == hSampY && 1 == vSampY) {
-    tempPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_422;
+    tempSubsampling = SkYUVAInfo::Subsampling::k422;
   } else if (2 == hSampY && 2 == vSampY) {
-    tempPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_420;
+    tempSubsampling = SkYUVAInfo::Subsampling::k420;
   } else if (1 == hSampY && 2 == vSampY) {
-    tempPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_440;
+    tempSubsampling = SkYUVAInfo::Subsampling::k440;
   } else if (4 == hSampY && 1 == vSampY) {
-    tempPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_411;
+    tempSubsampling = SkYUVAInfo::Subsampling::k411;
   } else if (4 == hSampY && 2 == vSampY) {
-    tempPlanarConfig = SkYUVAInfo::PlanarConfig::kY_U_V_410;
+    tempSubsampling = SkYUVAInfo::Subsampling::k410;
   } else {
     return false;
   }
   if (supportedDataTypes &&
-      !supportedDataTypes->supported(tempPlanarConfig, SkYUVAPixmapInfo::DataType::kUnorm8)) {
+      !supportedDataTypes->supported(
+          SkYUVAInfo::PlaneConfig::kY_U_V, SkYUVAPixmapInfo::DataType::kUnorm8)) {
     return false;
   }
   if (yuvaPixmapInfo) {
@@ -799,8 +800,9 @@ static bool is_yuv_supported(
       rowBytes[i] = dinfo->comp_info[i].width_in_blocks * DCTSIZE;
     }
     SkYUVAInfo yuvaInfo(
-        codec.dimensions(), tempPlanarConfig, kJPEG_Full_SkYUVColorSpace, codec.getOrigin(),
-        SkYUVAInfo::Siting::kCentered, SkYUVAInfo::Siting::kCentered);
+        codec.dimensions(), SkYUVAInfo::PlaneConfig::kY_U_V, tempSubsampling,
+        kJPEG_Full_SkYUVColorSpace, codec.getOrigin(), SkYUVAInfo::Siting::kCentered,
+        SkYUVAInfo::Siting::kCentered);
     *yuvaPixmapInfo = SkYUVAPixmapInfo(yuvaInfo, colorTypes, rowBytes);
   }
   return true;
@@ -865,68 +867,68 @@ SkCodec::Result SkJpegCodec::onGetYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) {
   static_assert(sizeof(JSAMPLE) == 1);
   for (int i = 0; i < numYRowsPerBlock; i++) {
     rowptrs[i] = static_cast<JSAMPLE*>(planes[0].writable_addr()) + i * planes[0].rowBytes();
-  }
-  for (int i = 0; i < DCTSIZE; i++) {
-    rowptrs[i + 2 * DCTSIZE] =
-        static_cast<JSAMPLE*>(planes[1].writable_addr()) + i * planes[1].rowBytes();
-    rowptrs[i + 3 * DCTSIZE] =
-        static_cast<JSAMPLE*>(planes[2].writable_addr()) + i * planes[2].rowBytes();
-  }
-
-  // After each loop iteration, we will increment pointers to Y, U, and V.
-  size_t blockIncrementY = numYRowsPerBlock * planes[0].rowBytes();
-  size_t blockIncrementU = DCTSIZE * planes[1].rowBytes();
-  size_t blockIncrementV = DCTSIZE * planes[2].rowBytes();
-
-  uint32_t numRowsPerBlock = numYRowsPerBlock;
-
-  // We intentionally round down here, as this first loop will only handle
-  // full block rows.  As a special case at the end, we will handle any
-  // remaining rows that do not make up a full block.
-  const int numIters = dinfo->output_height / numRowsPerBlock;
-  for (int i = 0; i < numIters; i++) {
-    JDIMENSION linesRead = jpeg_read_raw_data(dinfo, yuv, numRowsPerBlock);
-    if (linesRead < numRowsPerBlock) {
-      // FIXME: Handle incomplete YUV decodes without signalling an error.
-      return kInvalidInput;
-    }
-
-    // Update rowptrs.
-    for (int i = 0; i < numYRowsPerBlock; i++) {
-      rowptrs[i] += blockIncrementY;
     }
     for (int i = 0; i < DCTSIZE; i++) {
-      rowptrs[i + 2 * DCTSIZE] += blockIncrementU;
-      rowptrs[i + 3 * DCTSIZE] += blockIncrementV;
-    }
-  }
-
-  uint32_t remainingRows = dinfo->output_height - dinfo->output_scanline;
-  SkASSERT(remainingRows == dinfo->output_height % numRowsPerBlock);
-  SkASSERT(dinfo->output_scanline == numIters * numRowsPerBlock);
-  if (remainingRows > 0) {
-    // libjpeg-turbo needs memory to be padded by the block sizes.  We will fulfill
-    // this requirement using an extra row buffer.
-    // FIXME: Should SkCodec have an extra memory buffer that can be shared among
-    //        all of the implementations that use temporary/garbage memory?
-    SkAutoTMalloc<JSAMPLE> extraRow(planes[0].rowBytes());
-    for (int i = remainingRows; i < numYRowsPerBlock; i++) {
-      rowptrs[i] = extraRow.get();
-    }
-    int remainingUVRows = dinfo->comp_info[1].downsampled_height - DCTSIZE * numIters;
-    for (int i = remainingUVRows; i < DCTSIZE; i++) {
-      rowptrs[i + 2 * DCTSIZE] = extraRow.get();
-      rowptrs[i + 3 * DCTSIZE] = extraRow.get();
+      rowptrs[i + 2 * DCTSIZE] =
+          static_cast<JSAMPLE*>(planes[1].writable_addr()) + i * planes[1].rowBytes();
+      rowptrs[i + 3 * DCTSIZE] =
+          static_cast<JSAMPLE*>(planes[2].writable_addr()) + i * planes[2].rowBytes();
     }
 
-    JDIMENSION linesRead = jpeg_read_raw_data(dinfo, yuv, numRowsPerBlock);
-    if (linesRead < remainingRows) {
-      // FIXME: Handle incomplete YUV decodes without signalling an error.
-      return kInvalidInput;
-    }
-  }
+    // After each loop iteration, we will increment pointers to Y, U, and V.
+    size_t blockIncrementY = numYRowsPerBlock * planes[0].rowBytes();
+    size_t blockIncrementU = DCTSIZE * planes[1].rowBytes();
+    size_t blockIncrementV = DCTSIZE * planes[2].rowBytes();
 
-  return kSuccess;
+    uint32_t numRowsPerBlock = numYRowsPerBlock;
+
+    // We intentionally round down here, as this first loop will only handle
+    // full block rows.  As a special case at the end, we will handle any
+    // remaining rows that do not make up a full block.
+    const int numIters = dinfo->output_height / numRowsPerBlock;
+    for (int i = 0; i < numIters; i++) {
+      JDIMENSION linesRead = jpeg_read_raw_data(dinfo, yuv, numRowsPerBlock);
+      if (linesRead < numRowsPerBlock) {
+        // FIXME: Handle incomplete YUV decodes without signalling an error.
+        return kInvalidInput;
+      }
+
+      // Update rowptrs.
+      for (int i = 0; i < numYRowsPerBlock; i++) {
+        rowptrs[i] += blockIncrementY;
+      }
+      for (int i = 0; i < DCTSIZE; i++) {
+        rowptrs[i + 2 * DCTSIZE] += blockIncrementU;
+        rowptrs[i + 3 * DCTSIZE] += blockIncrementV;
+      }
+    }
+
+    uint32_t remainingRows = dinfo->output_height - dinfo->output_scanline;
+    SkASSERT(remainingRows == dinfo->output_height % numRowsPerBlock);
+    SkASSERT(dinfo->output_scanline == numIters * numRowsPerBlock);
+    if (remainingRows > 0) {
+      // libjpeg-turbo needs memory to be padded by the block sizes.  We will fulfill
+      // this requirement using an extra row buffer.
+      // FIXME: Should SkCodec have an extra memory buffer that can be shared among
+      //        all of the implementations that use temporary/garbage memory?
+      SkAutoTMalloc<JSAMPLE> extraRow(planes[0].rowBytes());
+      for (int i = remainingRows; i < numYRowsPerBlock; i++) {
+        rowptrs[i] = extraRow.get();
+      }
+      int remainingUVRows = dinfo->comp_info[1].downsampled_height - DCTSIZE * numIters;
+      for (int i = remainingUVRows; i < DCTSIZE; i++) {
+        rowptrs[i + 2 * DCTSIZE] = extraRow.get();
+        rowptrs[i + 3 * DCTSIZE] = extraRow.get();
+      }
+
+      JDIMENSION linesRead = jpeg_read_raw_data(dinfo, yuv, numRowsPerBlock);
+      if (linesRead < remainingRows) {
+        // FIXME: Handle incomplete YUV decodes without signalling an error.
+        return kInvalidInput;
+      }
+    }
+
+    return kSuccess;
 }
 
 // This function is declared in SkJpegInfo.h, used by SkPDF.

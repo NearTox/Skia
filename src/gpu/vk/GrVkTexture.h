@@ -39,7 +39,7 @@ class GrVkTexture : public GrTexture, public virtual GrVkImage {
 
   const GrVkImageView* textureView();
 
-  void addIdleProc(sk_sp<GrRefCntedCallback>, IdleState) override;
+  void addIdleProc(sk_sp<GrRefCntedCallback>) override;
   void callIdleProcsOnBehalfOfResource() override;
 
   // For each GrVkTexture, there is a cache of GrVkDescriptorSets which only contain a single

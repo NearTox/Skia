@@ -14,6 +14,7 @@
 #  include "include/core/SkTypeface.h"
 #  include "include/core/SkTypes.h"
 #  include "include/private/SkMutex.h"
+#  include "include/private/SkTPin.h"
 #  include "src/core/SkEndian.h"
 #  include "src/core/SkFontDescriptor.h"
 #  include "src/core/SkTypefaceCache.h"
@@ -318,7 +319,7 @@ class SkFontStyleSet_DirectWrite : public SkFontStyleSet {
   SkFontStyleSet_DirectWrite(const SkFontMgr_DirectWrite* fontMgr, IDWriteFontFamily* fontFamily)
       : fFontMgr(SkRef(fontMgr)), fFontFamily(SkRefComPtr(fontFamily)) {}
 
-  int count() noexcept override;
+  int count() override;
   void getStyle(int index, SkFontStyle* fs, SkString* styleName) override;
   SkTypeface* createTypeface(int index) override;
   SkTypeface* matchStyle(const SkFontStyle& pattern) override;
@@ -1165,7 +1166,7 @@ sk_sp<SkTypeface> SkFontMgr_DirectWrite::onLegacyMakeTypeface(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-int SkFontStyleSet_DirectWrite::count() noexcept { return fFontFamily->GetFontCount(); }
+int SkFontStyleSet_DirectWrite::count() { return fFontFamily->GetFontCount(); }
 
 SkTypeface* SkFontStyleSet_DirectWrite::createTypeface(int index) {
   SkTScopedComPtr<IDWriteFont> font;

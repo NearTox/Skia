@@ -214,31 +214,26 @@ static bool safe_to_ignore_subset_rect(
  */
 class TextureOp final : public GrMeshDrawOp {
  public:
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrSurfaceProxyView proxyView,
       sk_sp<GrColorSpaceXform> textureXform, GrSamplerState::Filter filter,
       GrSamplerState::MipmapMode mm, const SkPMColor4f& color, GrTextureOp::Saturate saturate,
       GrAAType aaType, DrawQuad* quad, const SkRect* subset) {
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
-    return pool->allocate<TextureOp>(
-        std::move(proxyView), std::move(textureXform), filter, mm, color, saturate, aaType, quad,
-        subset);
+    return GrOp::Make<TextureOp>(
+        context, std::move(proxyView), std::move(textureXform), filter, mm, color, saturate, aaType,
+        quad, subset);
   }
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrRenderTargetContext::TextureSetEntry set[], int cnt,
       int proxyRunCnt, GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm,
       GrTextureOp::Saturate saturate, GrAAType aaType, SkCanvas::SrcRectConstraint constraint,
       const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
     // Allocate size based on proxyRunCnt, since that determines number of ViewCountPairs.
     SkASSERT(proxyRunCnt <= cnt);
-
-    size_t size = sizeof(TextureOp) + sizeof(ViewCountPair) * (proxyRunCnt - 1);
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
-    void* mem = pool->allocate(size);
-    return std::unique_ptr<GrDrawOp>(new (mem) TextureOp(
-        set, cnt, proxyRunCnt, filter, mm, saturate, aaType, constraint, viewMatrix,
-        std::move(textureColorSpaceXform)));
+    return GrOp::MakeWithExtraMemory<TextureOp>(
+        context, sizeof(ViewCountPair) * (proxyRunCnt - 1), set, cnt, proxyRunCnt, filter, mm,
+        saturate, aaType, constraint, viewMatrix, std::move(textureColorSpaceXform));
   }
 
   ~TextureOp() override {
@@ -294,7 +289,7 @@ class TextureOp final : public GrMeshDrawOp {
   DEFINE_OP_CLASS_ID
 
  private:
-  friend class ::GrOpMemoryPool;
+  friend class ::GrOp;
 
   struct ColorSubsetAndAA {
     ColorSubsetAndAA(const SkPMColor4f& color, const SkRect& subsetRect, GrQuadAAFlags aaFlags)
@@ -913,8 +908,7 @@ class TextureOp final : public GrMeshDrawOp {
     }
   }
 
-  CombineResult onCombineIfPossible(
-      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
     auto* that = t->cast<TextureOp>();
 
@@ -1063,7 +1057,7 @@ class TextureOp final : public GrMeshDrawOp {
 uint32_t GrTextureOp::ClassID() { return TextureOp::ClassID(); }
 #endif
 
-std::unique_ptr<GrDrawOp> GrTextureOp::Make(
+GrOp::Owner GrTextureOp::Make(
     GrRecordingContext* context, GrSurfaceProxyView proxyView, SkAlphaType alphaType,
     sk_sp<GrColorSpaceXform> textureXform, GrSamplerState::Filter filter,
     GrSamplerState::MipmapMode mm, const SkPMColor4f& color, Saturate saturate,
@@ -1139,7 +1133,7 @@ class GrTextureOp::BatchSizeLimiter {
 
   void createOp(GrRenderTargetContext::TextureSetEntry set[], int clumpSize, GrAAType aaType) {
     int clumpProxyCount = proxy_run_count(&set[fNumClumped], clumpSize);
-    std::unique_ptr<GrDrawOp> op = TextureOp::Make(
+    GrOp::Owner op = TextureOp::Make(
         fContext, &set[fNumClumped], clumpSize, clumpProxyCount, fFilter, fMipmapMode, fSaturate,
         aaType, fConstraint, fViewMatrix, fTextureColorSpaceXform);
     fRTC->addDrawOp(fClip, std::move(op));

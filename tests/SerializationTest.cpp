@@ -269,7 +269,7 @@ static void TestBitmapSerialization(
   sk_sp<SkImageFilter> validBitmapSource(SkImageFilters::Image(std::move(validImage)));
   sk_sp<SkImage> invalidImage(SkImage::MakeFromBitmap(invalidBitmap));
   sk_sp<SkImageFilter> invalidBitmapSource(SkImageFilters::Image(std::move(invalidImage)));
-  sk_sp<SkImageFilter> xfermodeImageFilter(SkImageFilters::Xfermode(
+  sk_sp<SkImageFilter> xfermodeImageFilter(SkImageFilters::Blend(
       SkBlendMode::kSrcOver, std::move(invalidBitmapSource), std::move(validBitmapSource),
       nullptr));
 
@@ -399,14 +399,14 @@ static sk_sp<SkTypeface> makeDistortableWithNonDefaultAxes(skiatest::Reporter* r
   sk_sp<SkTypeface> typeface = fm->makeFromStream(std::move(distortable), params);
   if (!typeface) {
     return nullptr;  // Not all SkFontMgr can makeFromStream().
-  }
+    }
 
-  int count = typeface->getVariationDesignPosition(nullptr, 0);
-  if (count == -1) {
-    return nullptr;  // The number of axes is unknown.
-  }
+    int count = typeface->getVariationDesignPosition(nullptr, 0);
+    if (count == -1) {
+      return nullptr;  // The number of axes is unknown.
+    }
 
-  return typeface;
+    return typeface;
 }
 
 static void TestPictureTypefaceSerialization(

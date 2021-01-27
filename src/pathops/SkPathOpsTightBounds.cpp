@@ -65,5 +65,5 @@ bool TightBounds(const SkPath& path, SkRect* result) {
   if (!moveBounds.isEmpty()) {
     result->join(moveBounds);
   }
-  return true;
+    return true;
 }

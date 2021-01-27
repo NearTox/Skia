@@ -10,7 +10,7 @@
 #include "include/core/SkPath.h"
 #include "include/gpu/GrContextOptions.h"
 #include "include/gpu/GrRecordingContext.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrDrawingManager.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetContext.h"
@@ -57,7 +57,7 @@ class PreserveFillRuleGM : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrRecordingContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas,
+      GrRecordingContext* rContext, GrRenderTargetContext* rtc, SkCanvas* canvas,
       SkString* errorMsg) override {
     using CoverageType = GrCCAtlas::CoverageType;
 
@@ -66,7 +66,7 @@ class PreserveFillRuleGM : public GpuGM {
       return DrawResult::kSkip;
     }
 
-    auto* ccpr = ctx->priv().drawingManager()->getCoverageCountingPathRenderer();
+    auto* ccpr = rContext->priv().drawingManager()->getCoverageCountingPathRenderer();
     if (!ccpr) {
       errorMsg->set("ccpr only");
       return DrawResult::kSkip;
@@ -78,6 +78,12 @@ class PreserveFillRuleGM : public GpuGM {
           "ccpr is not in caching mode. "
           "Are you using viewer? Launch with \"--cachePathMasks true\".");
       return DrawResult::kFail;
+    }
+
+    auto dContext = GrAsDirectContext(rContext);
+    if (!dContext) {
+      *errorMsg = "Requires a direct context.";
+      return skiagm::DrawResult::kSkip;
     }
 
     auto starRect = SkRect::MakeWH(fStarSize, fStarSize);
@@ -135,8 +141,11 @@ class PreserveFillRuleGM : public GpuGM {
         }
         ++numCachedPaths;
       }
-      // Verify all 4 paths are tracked by the path cache.
-      ERR_MSG_ASSERT(4 == numCachedPaths);
+
+      if (dContext) {
+        // Verify all 4 paths are tracked by the path cache.
+        ERR_MSG_ASSERT(4 == numCachedPaths);
+      }
     }
 
     return DrawResult::kOk;

@@ -67,9 +67,15 @@ class SKUNICODE_API SkBreakIterator {
   virtual bool setText(const char utftext8[], int utf8Units) = 0;
 };
 
-class SKUNICODE_API SkUnicode {
+class SKUNICODE_API SkScriptIterator {
  public:
   typedef uint32_t ScriptID;
+  virtual ~SkScriptIterator() = default;
+  virtual bool getScript(SkUnichar u, ScriptID* script) = 0;
+};
+
+class SKUNICODE_API SkUnicode {
+ public:
   typedef uint32_t CombiningClass;
   typedef uint32_t GeneralCategory;
   enum class TextDirection {
@@ -107,6 +113,7 @@ class SKUNICODE_API SkUnicode {
       const char text[], int count, SkBidiIterator::Direction) = 0;
   virtual std::unique_ptr<SkBreakIterator> makeBreakIterator(
       const char locale[], BreakType breakType) = 0;
+  virtual std::unique_ptr<SkScriptIterator> makeScriptIterator() = 0;
 
   // High level methods (that we actually use somewhere=SkParagraph)
   virtual bool getBidiRegions(

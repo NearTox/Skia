@@ -18,7 +18,7 @@
 #include "src/core/SkMatrixProvider.h"
 #include "src/core/SkRRectPriv.h"
 #include "src/core/SkRectPriv.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRenderTargetContext.h"
 
@@ -1446,6 +1446,7 @@ DEF_TEST(GrClipStack_DeviceRRect, r) {
 DEF_TEST(GrClipStack_ScaleTranslate, r) {
   SkMatrix lm = SkMatrix::Scale(2.f, 4.f);
   lm.postTranslate(15.5f, 14.3f);
+  SkASSERT(lm.preservesAxisAlignment() && lm.isScaleTranslate());
 
   // Rect -> matrix is applied up front
   SkRect rect = {0.f, 0.f, 10.f, 10.f};
@@ -1478,6 +1479,53 @@ DEF_TEST(GrClipStack_ScaleTranslate, r) {
   // Path -> matrix is NOT applied
   run_test_case(
       r, TestCase::Build("st+path", kDeviceBounds)
+             .actual()
+             .intersect()
+             .localToDevice(lm)
+             .path(make_octagon(rect))
+             .finishElements()
+             .expectActual()
+             .state(GrClipStack::ClipState::kComplex)
+             .finishTest());
+}
+
+// Tests that rect-stays-rect matrices that are not scale+translate matrices are pre-applied.
+DEF_TEST(GrClipStack_PreserveAxisAlignment, r) {
+  SkMatrix lm = SkMatrix::RotateDeg(90.f);
+  lm.postTranslate(15.5f, 14.3f);
+  SkASSERT(lm.preservesAxisAlignment() && !lm.isScaleTranslate());
+
+  // Rect -> matrix is applied up front
+  SkRect rect = {0.f, 0.f, 10.f, 10.f};
+  run_test_case(
+      r, TestCase::Build("r90+rect", kDeviceBounds)
+             .actual()
+             .rect(rect, lm, GrAA::kYes, SkClipOp::kIntersect)
+             .finishElements()
+             .expect()
+             .rect(lm.mapRect(rect), GrAA::kYes, SkClipOp::kIntersect)
+             .finishElements()
+             .state(GrClipStack::ClipState::kDeviceRect)
+             .finishTest());
+
+  // RRect -> matrix is applied up front
+  SkRRect localRRect = SkRRect::MakeRectXY(rect, 2.f, 2.f);
+  SkRRect deviceRRect;
+  SkAssertResult(localRRect.transform(lm, &deviceRRect));
+  run_test_case(
+      r, TestCase::Build("r90+rrect", kDeviceBounds)
+             .actual()
+             .rrect(localRRect, lm, GrAA::kYes, SkClipOp::kIntersect)
+             .finishElements()
+             .expect()
+             .rrect(deviceRRect, GrAA::kYes, SkClipOp::kIntersect)
+             .finishElements()
+             .state(GrClipStack::ClipState::kDeviceRRect)
+             .finishTest());
+
+  // Path -> matrix is NOT applied
+  run_test_case(
+      r, TestCase::Build("r90+path", kDeviceBounds)
              .actual()
              .intersect()
              .localToDevice(lm)
@@ -2128,6 +2176,39 @@ DEF_TEST(GrClipStack_ReplaceClip, r) {
       rrectElem.fShape.rrect() == rrect && rrectElem.fAA == GrAA::kYes &&
           rrectElem.fOp == SkClipOp::kIntersect && rrectElem.fLocalToDevice == SkMatrix::I(),
       "RRect element state not restored properly after replace clip undone");
+}
+
+// Try to overflow the number of allowed window rects (see skbug.com/10989)
+DEF_TEST(GrClipStack_DiffRects, r) {
+  GrMockOptions options;
+  options.fMaxWindowRectangles = 8;
+
+  SkSimpleMatrixProvider matrixProvider = SkMatrix::I();
+  sk_sp<GrDirectContext> context = GrDirectContext::MakeMock(&options);
+  std::unique_ptr<GrRenderTargetContext> rtc = GrRenderTargetContext::Make(
+      context.get(), GrColorType::kRGBA_8888, SkColorSpace::MakeSRGB(), SkBackingFit::kExact,
+      kDeviceBounds.size());
+
+  GrClipStack cs(kDeviceBounds, &matrixProvider, false);
+
+  cs.save();
+  for (int y = 0; y < 10; ++y) {
+    for (int x = 0; x < 10; ++x) {
+      cs.clipRect(
+          SkMatrix::I(), SkRect::MakeXYWH(10 * x + 1, 10 * y + 1, 8, 8), GrAA::kNo,
+          SkClipOp::kDifference);
+    }
+  }
+
+  GrAppliedClip out(kDeviceBounds.size());
+  SkRect drawBounds = SkRect::Make(kDeviceBounds);
+  GrClip::Effect effect =
+      cs.apply(context.get(), rtc.get(), GrAAType::kCoverage, false, &out, &drawBounds);
+
+  REPORTER_ASSERT(r, effect == GrClip::Effect::kClipped);
+  REPORTER_ASSERT(r, out.windowRectsState().numWindows() == 8);
+
+  cs.restore();
 }
 
 // Tests that when a stack is forced to always be AA, non-AA elements become AA

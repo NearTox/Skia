@@ -453,8 +453,8 @@ class GrDrawOpAtlas {
   }
 
   bool uploadToPage(
-      const GrCaps&, unsigned int pageIdx, GrDeferredUploadTarget*, int width, int height,
-      const void* image, AtlasLocator*);
+      unsigned int pageIdx, GrDeferredUploadTarget*, int width, int height, const void* image,
+      AtlasLocator*);
 
   bool createPages(GrProxyProvider*, GenerationCounter*);
   bool activateNewPage(GrResourceProvider*);

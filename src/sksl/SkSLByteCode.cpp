@@ -50,9 +50,12 @@ struct Interpreter {
     auto inst = READ_INST();
     printf("%02x ", (int)inst);
     switch (inst) {
+      DISASSEMBLE_COUNT(kAbs, "abs")
       DISASSEMBLE_COUNT(kAddF, "addf")
       DISASSEMBLE_COUNT(kAddI, "addi")
       DISASSEMBLE_COUNT(kAndB, "andb")
+      DISASSEMBLE_COUNT(kACos, "acos")
+      DISASSEMBLE_COUNT(kASin, "asin")
       DISASSEMBLE_COUNT(kATan, "atan")
       case ByteCodeInstruction::kBranch: printf("branch %d", READ16()); break;
       case ByteCodeInstruction::kCall: printf("call %d", READ8()); break;
@@ -91,6 +94,8 @@ struct Interpreter {
         DISASSEMBLE_COUNT(kDivideS, "divideS")
         DISASSEMBLE_COUNT(kDivideU, "divideu")
         DISASSEMBLE_COUNT(kDup, "dup")
+        DISASSEMBLE_COUNT(kExp, "exp")
+        DISASSEMBLE_COUNT(kExp2, "exp2")
         DISASSEMBLE_COUNT(kFloor, "floor")
         DISASSEMBLE_COUNT(kFract, "fract")
       case ByteCodeInstruction::kInverse2x2: printf("inverse2x2"); break;
@@ -98,6 +103,7 @@ struct Interpreter {
       case ByteCodeInstruction::kInverse4x4:
         printf("inverse4x4");
         break;
+        DISASSEMBLE_COUNT(kInvSqrt, "inversesqrt")
         DISASSEMBLE_COUNT(kLerp, "lerp")
         DISASSEMBLE_COUNT_SLOT(kLoad, "load")
         DISASSEMBLE_COUNT_SLOT(kLoadGlobal, "loadglobal")
@@ -105,7 +111,11 @@ struct Interpreter {
         DISASSEMBLE_COUNT(kLoadExtended, "loadextended")
         DISASSEMBLE_COUNT(kLoadExtendedGlobal, "loadextendedglobal")
         DISASSEMBLE_COUNT(kLoadExtendedUniform, "loadextendeduniform")
-      case ByteCodeInstruction::kLoadFragCoord: printf("loadfragcoord"); break;
+      case ByteCodeInstruction::kLoadFragCoord:
+        printf("loadfragcoord");
+        break;
+        DISASSEMBLE_COUNT(kLog, "log")
+        DISASSEMBLE_COUNT(kLog2, "log2")
       case ByteCodeInstruction::kMatrixToMatrix: {
         int srcCols = READ8();
         int srcRows = READ8();
@@ -408,6 +418,8 @@ struct Interpreter {
 #    endif
       ByteCodeInstruction inst = READ_INST();
       switch (inst) {
+        VECTOR_UNARY_FN(kAbs, skvx::abs, fFloat)
+
         VECTOR_BINARY_OP(kAddF, fFloat, +)
         VECTOR_BINARY_OP(kAddI, fSigned, +)
 
@@ -473,7 +485,10 @@ struct Interpreter {
           VECTOR_UNARY_FN(kConvertStoF, skvx::cast<float>, fSigned)
           VECTOR_UNARY_FN(kConvertUtoF, skvx::cast<float>, fUnsigned)
 
-          VECTOR_UNARY_FN(kCos, skvx::cos, fFloat)
+          VECTOR_UNARY_FN(
+              kACos, [](auto x) { return skvx::map(acosf, x); }, fFloat)
+          VECTOR_UNARY_FN(
+              kCos, [](auto x) { return skvx::map(cosf, x); }, fFloat)
 
           VECTOR_BINARY_MASKED_OP(kDivideS, fSigned, /)
           VECTOR_BINARY_MASKED_OP(kDivideU, fUnsigned, /)
@@ -485,6 +500,11 @@ struct Interpreter {
           sp += count;
         }
           continue;
+
+          VECTOR_UNARY_FN(
+              kExp, [](auto x) { return skvx::map(expf, x); }, fFloat)
+          VECTOR_UNARY_FN(
+              kExp2, [](auto x) { return skvx::map(exp2f, x); }, fFloat)
 
           VECTOR_UNARY_FN(kFloor, skvx::floor, fFloat)
           VECTOR_UNARY_FN(kFract, skvx::fract, fFloat)
@@ -571,6 +591,11 @@ struct Interpreter {
         }
           continue;
 
+          VECTOR_UNARY_FN(
+              kLog, [](auto x) { return skvx::map(logf, x); }, fFloat)
+          VECTOR_UNARY_FN(
+              kLog2, [](auto x) { return skvx::map(log2f, x); }, fFloat)
+
         case ByteCodeInstruction::kMatrixToMatrix: {
           int srcCols = READ8();
           int srcRows = READ8();
@@ -643,7 +668,7 @@ struct Interpreter {
           sp -= READ8();
           continue;
 
-          VECTOR_BINARY_FN(kPow, fFloat, skvx::pow)
+          VECTOR_BINARY_FN(kPow, fFloat, [](auto x, auto y) { return skvx::map(powf, x, y); })
 
         case ByteCodeInstruction::kPushImmediate: PUSH(U32(READ32())); continue;
 
@@ -730,7 +755,12 @@ struct Interpreter {
           sp[0] = sp[0].fUnsigned >> READ8();
           continue;
 
-          VECTOR_UNARY_FN(kSin, skvx::sin, fFloat)
+          VECTOR_UNARY_FN(
+              kASin, [](auto x) { return skvx::map(asinf, x); }, fFloat)
+          VECTOR_UNARY_FN(
+              kSin, [](auto x) { return skvx::map(sinf, x); }, fFloat)
+          VECTOR_UNARY_FN(
+              kInvSqrt, [](auto x) { return 1.0f / skvx::sqrt(x); }, fFloat)
           VECTOR_UNARY_FN(kSqrt, skvx::sqrt, fFloat)
 
         case ByteCodeInstruction::kStore: {
@@ -797,8 +827,10 @@ struct Interpreter {
         }
           continue;
 
-          VECTOR_UNARY_FN(kATan, skvx::atan, fFloat)
-          VECTOR_UNARY_FN(kTan, skvx::tan, fFloat)
+          VECTOR_UNARY_FN(
+              kATan, [](auto x) { return skvx::map(atanf, x); }, fFloat)
+          VECTOR_UNARY_FN(
+              kTan, [](auto x) { return skvx::map(tanf, x); }, fFloat)
 
         case ByteCodeInstruction::kWriteExternal: {
           int count = READ8(), slot = READ8();

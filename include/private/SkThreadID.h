@@ -13,8 +13,9 @@
 typedef int64_t SkThreadID;
 
 // SkMutex.h uses SkGetThredID in debug only code.
-SkDEBUGCODE(SK_SPI) SkThreadID SkGetThreadID();
+SkDEBUGCODE(SK_SPI)
+SkThreadID SkGetThreadID();
 
-const SkThreadID kIllegalThreadID = 0;
+constexpr SkThreadID kIllegalThreadID = 0;
 
 #endif  // SkThreadID_DEFINED

@@ -63,7 +63,7 @@ sk_sp<const GrGLInterface> GrGLMakeNativeInterface() {
   } else if (GR_IS_GR_GL(standard)) {
     return GrGLMakeAssembledGLInterface((void*)module.get(), win_get_gl_proc);
   }
-  return nullptr;
+    return nullptr;
 }
 
 #  endif  // ARM64

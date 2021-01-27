@@ -25,7 +25,7 @@
 #include <utility>
 
 #if defined(SK_DISABLE_AAA)
-void SkScan::AAAFillPath(const SkPathView&, SkBlitter*, const SkIRect&, const SkIRect&, bool) {
+void SkScan::AAAFillPath(const SkPath&, SkBlitter*, const SkIRect&, const SkIRect&, bool) {
   SkDEBUGFAIL("AAA Disabled");
   return;
 }
@@ -1554,11 +1554,9 @@ static void aaa_walk_edges(
   }
 }
 
-#  include "src/core/SkPathView.h"
-
 static SK_ALWAYS_INLINE void aaa_fill_path(
-    const SkPathView& path, const SkIRect& clipRect, AdditiveBlitter* blitter, int start_y,
-    int stop_y, bool pathContainedInClip, bool isUsingMask,
+    const SkPath& path, const SkIRect& clipRect, AdditiveBlitter* blitter, int start_y, int stop_y,
+    bool pathContainedInClip, bool isUsingMask,
     bool forceRLE) {  // forceRLE implies that SkAAClip is calling us
   SkASSERT(blitter);
 
@@ -1627,7 +1625,7 @@ static SK_ALWAYS_INLINE void aaa_fill_path(
     // If we're using mask, then we have to limit the bound within the path bounds.
     // Otherwise, the edge drift may access an invalid address inside the mask.
     SkIRect ir;
-    path.fBounds.roundOut(&ir);
+    path.getBounds().roundOut(&ir);
     leftBound = std::max(leftBound, SkIntToFixed(ir.fLeft));
     rightBound = std::min(rightBound, SkIntToFixed(ir.fRight));
   }
@@ -1641,16 +1639,16 @@ static SK_ALWAYS_INLINE void aaa_fill_path(
 
     // We skip intersection computation if there are many points which probably already
     // give us enough fractional scan lines.
-    bool skipIntersect = path.fPoints.count() > (stop_y - start_y) * 2;
+    bool skipIntersect = path.countPoints() > (stop_y - start_y) * 2;
 
     aaa_walk_edges(
-        &headEdge, &tailEdge, path.fFillType, blitter, start_y, stop_y, leftBound, rightBound,
+        &headEdge, &tailEdge, path.getFillType(), blitter, start_y, stop_y, leftBound, rightBound,
         isUsingMask, forceRLE, useDeferred, skipIntersect);
   }
 }
 
 void SkScan::AAAFillPath(
-    const SkPathView& path, SkBlitter* blitter, const SkIRect& ir, const SkIRect& clipBounds,
+    const SkPath& path, SkBlitter* blitter, const SkIRect& ir, const SkIRect& clipBounds,
     bool forceRLE) {
   bool containedInClip = clipBounds.contains(ir);
   bool isInverse = path.isInverseFillType();

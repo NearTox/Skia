@@ -119,10 +119,10 @@ DEF_TEST(SamplePatternDictionary, reporter) {
       }
     }
   }
-  for (int j = 0; j < testPatterns.count(); ++j) {
-    const SkTArray<SkPoint>& pattern = testPatterns[testPatterns.count() - j - 1];
-    REPORTER_ASSERT(reporter, dict.retrieveSampleLocations(j) == pattern);
-  }
+    for (int j = 0; j < testPatterns.count(); ++j) {
+        const SkTArray<SkPoint>& pattern = testPatterns[testPatterns.count() - j - 1];
+        REPORTER_ASSERT(reporter, dict.retrieveSampleLocations(j) == pattern);
+    }
 }
 
 #endif

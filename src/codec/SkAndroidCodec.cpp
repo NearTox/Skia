@@ -95,6 +95,7 @@ std::unique_ptr<SkAndroidCodec> SkAndroidCodec::MakeFromCodec(
     case SkEncodedImageFormat::kBMP:
     case SkEncodedImageFormat::kWBMP:
     case SkEncodedImageFormat::kHEIF:
+    case SkEncodedImageFormat::kAVIF:
       return std::make_unique<SkSampledCodec>(codec.release(), orientationBehavior);
 #ifdef SK_HAS_WUFFS_LIBRARY
     case SkEncodedImageFormat::kGIF:

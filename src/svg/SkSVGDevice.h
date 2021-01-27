@@ -35,8 +35,6 @@ class SkSVGDevice final : public SkClipStackDevice {
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
-  void drawDevice(SkBaseDevice*, int x, int y, const SkPaint&) override;
-
  private:
   SkSVGDevice(const SkISize& size, std::unique_ptr<SkXMLWriter>, uint32_t);
   ~SkSVGDevice() override;

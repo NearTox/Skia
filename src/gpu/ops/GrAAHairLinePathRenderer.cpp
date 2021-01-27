@@ -774,7 +774,7 @@ class AAHairlineOp final : public GrMeshDrawOp {
  public:
   DEFINE_OP_CLASS_ID
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix, const SkPath& path,
       const GrStyle& style, const SkIRect& devClipBounds,
       const GrUserStencilSettings* stencilSettings) {
@@ -793,11 +793,11 @@ class AAHairlineOp final : public GrMeshDrawOp {
   }
 
   AAHairlineOp(
-      const Helper::MakeArgs& helperArgs, const SkPMColor4f& color, uint8_t coverage,
+      GrProcessorSet* processorSet, const SkPMColor4f& color, uint8_t coverage,
       const SkMatrix& viewMatrix, const SkPath& path, SkIRect devClipBounds, SkScalar capLength,
       const GrUserStencilSettings* stencilSettings)
       : INHERITED(ClassID()),
-        fHelper(helperArgs, GrAAType::kCoverage, stencilSettings),
+        fHelper(processorSet, GrAAType::kCoverage, stencilSettings),
         fColor(color),
         fCoverage(coverage) {
     fPaths.emplace_back(PathData{viewMatrix, path, devClipBounds, capLength});
@@ -877,8 +877,7 @@ class AAHairlineOp final : public GrMeshDrawOp {
   typedef SkTArray<int, true> IntArray;
   typedef SkTArray<float, true> FloatArray;
 
-  CombineResult onCombineIfPossible(
-      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) override {
     AAHairlineOp* that = t->cast<AAHairlineOp>();
 
     if (!fHelper.isCompatible(that->fHelper, caps, this->bounds(), that->bounds())) {
@@ -1240,7 +1239,7 @@ bool GrAAHairLinePathRenderer::onDrawPath(const DrawPathArgs& args) {
 
   SkPath path;
   args.fShape->asPath(&path);
-  std::unique_ptr<GrDrawOp> op = AAHairlineOp::Make(
+  GrOp::Owner op = AAHairlineOp::Make(
       args.fContext, std::move(args.fPaint), *args.fViewMatrix, path, args.fShape->style(),
       *args.fClipConservativeBounds, args.fUserStencilSettings);
   args.fRenderTargetContext->addDrawOp(args.fClip, std::move(op));

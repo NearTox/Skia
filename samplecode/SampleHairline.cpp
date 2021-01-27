@@ -26,200 +26,206 @@
 static SkRandom gRand;
 
 static void generate_pts(SkPoint pts[], int count, int w, int h) {
-  for (int i = 0; i < count; i++) {
-    pts[i].set(
-        gRand.nextUScalar1() * 3 * w - SkIntToScalar(w),
-        gRand.nextUScalar1() * 3 * h - SkIntToScalar(h));
-  }
+    for (int i = 0; i < count; i++) {
+        pts[i].set(gRand.nextUScalar1() * 3 * w - SkIntToScalar(w),
+                   gRand.nextUScalar1() * 3 * h - SkIntToScalar(h));
+    }
 }
 
 static bool check_zeros(const SkPMColor pixels[], int count, int skip) {
-  for (int i = 0; i < count; i++) {
-    if (*pixels) {
-      return false;
+    for (int i = 0; i < count; i++) {
+        if (*pixels) {
+            return false;
+        }
+        pixels += skip;
     }
-    pixels += skip;
-  }
-  return true;
+    return true;
 }
 
 static bool check_bitmap_margin(const SkBitmap& bm, int margin) {
-  size_t rb = bm.rowBytes();
-  for (int i = 0; i < margin; i++) {
-    if (!check_zeros(bm.getAddr32(0, i), bm.width(), 1)) {
-      return false;
+    size_t rb = bm.rowBytes();
+    for (int i = 0; i < margin; i++) {
+        if (!check_zeros(bm.getAddr32(0, i), bm.width(), 1)) {
+            return false;
+        }
+        int bottom = bm.height() - i - 1;
+        if (!check_zeros(bm.getAddr32(0, bottom), bm.width(), 1)) {
+            return false;
+        }
+        // left column
+        if (!check_zeros(bm.getAddr32(i, 0), bm.height(), SkToInt(rb >> 2))) {
+            return false;
+        }
+        int right = bm.width() - margin + i;
+        if (!check_zeros(bm.getAddr32(right, 0), bm.height(),
+                         SkToInt(rb >> 2))) {
+            return false;
+        }
     }
-    int bottom = bm.height() - i - 1;
-    if (!check_zeros(bm.getAddr32(0, bottom), bm.width(), 1)) {
-      return false;
-    }
-    // left column
-    if (!check_zeros(bm.getAddr32(i, 0), bm.height(), SkToInt(rb >> 2))) {
-      return false;
-    }
-    int right = bm.width() - margin + i;
-    if (!check_zeros(bm.getAddr32(right, 0), bm.height(), SkToInt(rb >> 2))) {
-      return false;
-    }
-  }
-  return true;
+    return true;
 }
 
-#define WIDTH 620
-#define HEIGHT 460
-#define MARGIN 10
+#define WIDTH   620
+#define HEIGHT  460
+#define MARGIN  10
 
-static void line_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
-  const int N = 2;
-  SkPoint pts[N];
-  for (int i = 0; i < 400; i++) {
-    generate_pts(pts, N, WIDTH, HEIGHT);
+static void line_proc(SkCanvas* canvas, const SkPaint& paint,
+                      const SkBitmap& bm) {
+    const int N = 2;
+    SkPoint pts[N];
+    for (int i = 0; i < 400; i++) {
+        generate_pts(pts, N, WIDTH, HEIGHT);
 
-    canvas->drawLine(pts[0], pts[1], paint);
-    if (!check_bitmap_margin(bm, MARGIN)) {
-      SkDebugf(
-          "---- hairline failure (%g %g) (%g %g)\n", pts[0].fX, pts[0].fY, pts[1].fX, pts[1].fY);
-      break;
+        canvas->drawLine(pts[0], pts[1], paint);
+        if (!check_bitmap_margin(bm, MARGIN)) {
+            SkDebugf("---- hairline failure (%g %g) (%g %g)\n",
+                     pts[0].fX, pts[0].fY, pts[1].fX, pts[1].fY);
+            break;
+        }
     }
-  }
 }
 
-static void poly_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
-  const int N = 8;
-  SkPoint pts[N];
-  for (int i = 0; i < 50; i++) {
-    generate_pts(pts, N, WIDTH, HEIGHT);
+static void poly_proc(SkCanvas* canvas, const SkPaint& paint,
+                      const SkBitmap& bm) {
+    const int N = 8;
+    SkPoint pts[N];
+    for (int i = 0; i < 50; i++) {
+        generate_pts(pts, N, WIDTH, HEIGHT);
 
-    SkPath path;
-    path.moveTo(pts[0]);
-    for (int j = 1; j < N; j++) {
-      path.lineTo(pts[j]);
+        SkPath path;
+        path.moveTo(pts[0]);
+        for (int j = 1; j < N; j++) {
+            path.lineTo(pts[j]);
+        }
+        canvas->drawPath(path, paint);
     }
-    canvas->drawPath(path, paint);
-  }
 }
 
 static SkPoint ave(const SkPoint& a, const SkPoint& b) {
-  SkPoint c = a + b;
-  c.fX = SkScalarHalf(c.fX);
-  c.fY = SkScalarHalf(c.fY);
-  return c;
+    SkPoint c = a + b;
+    c.fX = SkScalarHalf(c.fX);
+    c.fY = SkScalarHalf(c.fY);
+    return c;
 }
 
-static void quad_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
-  const int N = 30;
-  SkPoint pts[N];
-  for (int i = 0; i < 10; i++) {
-    generate_pts(pts, N, WIDTH, HEIGHT);
+static void quad_proc(SkCanvas* canvas, const SkPaint& paint,
+                      const SkBitmap& bm) {
+    const int N = 30;
+    SkPoint pts[N];
+    for (int i = 0; i < 10; i++) {
+        generate_pts(pts, N, WIDTH, HEIGHT);
 
-    SkPath path;
-    path.moveTo(pts[0]);
-    for (int j = 1; j < N - 2; j++) {
-      path.quadTo(pts[j], ave(pts[j], pts[j + 1]));
+        SkPath path;
+        path.moveTo(pts[0]);
+        for (int j = 1; j < N - 2; j++) {
+            path.quadTo(pts[j], ave(pts[j], pts[j+1]));
+        }
+        path.quadTo(pts[N - 2], pts[N - 1]);
+
+        canvas->drawPath(path, paint);
     }
-    path.quadTo(pts[N - 2], pts[N - 1]);
-
-    canvas->drawPath(path, paint);
-  }
 }
 
 static void add_cubic(SkPath* path, const SkPoint& mid, const SkPoint& end) {
-  SkPoint start;
-  path->getLastPt(&start);
-  path->cubicTo(ave(start, mid), ave(mid, end), end);
+    SkPoint start;
+    path->getLastPt(&start);
+    path->cubicTo(ave(start, mid), ave(mid, end), end);
 }
 
-static void cube_proc(SkCanvas* canvas, const SkPaint& paint, const SkBitmap& bm) {
-  const int N = 30;
-  SkPoint pts[N];
-  for (int i = 0; i < 10; i++) {
-    generate_pts(pts, N, WIDTH, HEIGHT);
+static void cube_proc(SkCanvas* canvas, const SkPaint& paint,
+                      const SkBitmap& bm) {
+    const int N = 30;
+    SkPoint pts[N];
+    for (int i = 0; i < 10; i++) {
+        generate_pts(pts, N, WIDTH, HEIGHT);
 
-    SkPath path;
-    path.moveTo(pts[0]);
-    for (int j = 1; j < N - 2; j++) {
-      add_cubic(&path, pts[j], ave(pts[j], pts[j + 1]));
+        SkPath path;
+        path.moveTo(pts[0]);
+        for (int j = 1; j < N - 2; j++) {
+            add_cubic(&path, pts[j], ave(pts[j], pts[j+1]));
+        }
+        add_cubic(&path, pts[N - 2], pts[N - 1]);
+
+        canvas->drawPath(path, paint);
     }
-    add_cubic(&path, pts[N - 2], pts[N - 1]);
-
-    canvas->drawPath(path, paint);
-  }
 }
 
 typedef void (*HairProc)(SkCanvas*, const SkPaint&, const SkBitmap&);
 
 static const struct {
-  const char* fName;
-  HairProc fProc;
+    const char* fName;
+    HairProc    fProc;
 } gProcs[] = {
-    {"line", line_proc},
-    {"poly", poly_proc},
-    {"quad", quad_proc},
-    {"cube", cube_proc},
+    { "line",   line_proc },
+    { "poly",   poly_proc },
+    { "quad",   quad_proc },
+    { "cube",   cube_proc },
 };
 
-static int cycle_hairproc_index(int index) { return (index + 1) % SK_ARRAY_COUNT(gProcs); }
+static int cycle_hairproc_index(int index) {
+    return (index + 1) % SK_ARRAY_COUNT(gProcs);
+}
 
 class HairlineView : public Sample {
-  SkMSec fNow;
-  int fProcIndex;
-  bool fDoAA;
-
- public:
-  HairlineView() {
-    fProcIndex = 0;
-    fDoAA = true;
-    fNow = 0;
-  }
-
- protected:
-  SkString name() override { return SkStringPrintf("Hair-%s", gProcs[fProcIndex].fName); }
-
-  void show_bitmaps(
-      SkCanvas* canvas, const SkBitmap& b0, const SkBitmap& b1, const SkIRect& inset) {
-    canvas->drawBitmap(b0, 0, 0, nullptr);
-    canvas->drawBitmap(b1, SkIntToScalar(b0.width()), 0, nullptr);
-  }
-
-  void onDrawContent(SkCanvas* canvas) override {
-    gRand.setSeed(fNow);
-
-    SkBitmap bm, bm2;
-    bm.allocN32Pixels(WIDTH + MARGIN * 2, HEIGHT + MARGIN * 2);
-    // this will erase our margin, which we want to always stay 0
-    bm.eraseColor(SK_ColorTRANSPARENT);
-
-    bm2.installPixels(
-        SkImageInfo::MakeN32Premul(WIDTH, HEIGHT), bm.getAddr32(MARGIN, MARGIN), bm.rowBytes());
-
-    SkCanvas c2(bm2);
-    SkPaint paint;
-    paint.setAntiAlias(fDoAA);
-    paint.setStyle(SkPaint::kStroke_Style);
-
-    bm2.eraseColor(SK_ColorTRANSPARENT);
-    gProcs[fProcIndex].fProc(&c2, paint, bm);
-    canvas->drawBitmap(bm2, SkIntToScalar(10), SkIntToScalar(10), nullptr);
-  }
-
-  bool onAnimate(double /*nanos*/) override {
-    if (fDoAA) {
-      fProcIndex = cycle_hairproc_index(fProcIndex);
-      // todo: signal that we want to rebuild our TITLE
+    SkMSec fNow;
+    int fProcIndex;
+    bool fDoAA;
+public:
+    HairlineView() {
+        fProcIndex = 0;
+        fDoAA = true;
+        fNow = 0;
     }
-    fDoAA = !fDoAA;
-    return true;
-  }
 
-  Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
-    fDoAA = !fDoAA;
-    return this->INHERITED::onFindClickHandler(x, y, modi);
-  }
+protected:
+    SkString name() override { return SkStringPrintf("Hair-%s", gProcs[fProcIndex].fName); }
 
- private:
-  using INHERITED = Sample;
+    void show_bitmaps(SkCanvas* canvas, const SkBitmap& b0, const SkBitmap& b1,
+                      const SkIRect& inset) {
+        canvas->drawBitmap(b0, 0, 0, nullptr);
+        canvas->drawBitmap(b1, SkIntToScalar(b0.width()), 0, nullptr);
+    }
+
+    void onDrawContent(SkCanvas* canvas) override {
+        gRand.setSeed(fNow);
+
+        SkBitmap bm, bm2;
+        bm.allocN32Pixels(WIDTH + MARGIN*2, HEIGHT + MARGIN*2);
+        // this will erase our margin, which we want to always stay 0
+        bm.eraseColor(SK_ColorTRANSPARENT);
+
+        bm2.installPixels(SkImageInfo::MakeN32Premul(WIDTH, HEIGHT),
+                          bm.getAddr32(MARGIN, MARGIN), bm.rowBytes());
+
+        SkCanvas c2(bm2);
+        SkPaint paint;
+        paint.setAntiAlias(fDoAA);
+        paint.setStyle(SkPaint::kStroke_Style);
+
+        bm2.eraseColor(SK_ColorTRANSPARENT);
+        gProcs[fProcIndex].fProc(&c2, paint, bm);
+        canvas->drawBitmap(bm2, SkIntToScalar(10), SkIntToScalar(10), nullptr);
+    }
+
+    bool onAnimate(double /*nanos*/) override {
+        if (fDoAA) {
+            fProcIndex = cycle_hairproc_index(fProcIndex);
+            // todo: signal that we want to rebuild our TITLE
+        }
+        fDoAA = !fDoAA;
+        return true;
+    }
+
+    Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {
+        fDoAA = !fDoAA;
+        return this->INHERITED::onFindClickHandler(x, y, modi);
+    }
+
+
+private:
+    using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE(return new HairlineView();)
+DEF_SAMPLE( return new HairlineView(); )

@@ -491,22 +491,22 @@ class Assembler {
 };
 
 // Order matters a little: Ops <=store128 are treated as having side effects.
-#define SKVM_OPS(M)                                                                                \
-  M(assert_true)                                                                                   \
-  M(store8)                                                                                        \
-  M(store16)                                                                                       \
-  M(store32)                                                                                       \
-  M(store64) M(store128) M(index) M(load8) M(load16) M(load32) M(load64) M(load128) M(gather8)     \
-      M(gather16) M(gather32) M(uniform8) M(uniform16) M(uniform32) M(splat) M(splat_q14)          \
-          M(add_f32) M(add_i32) M(add_q14) M(sub_f32) M(sub_i32) M(sub_q14) M(mul_f32) M(mul_i32)  \
-              M(mul_q14) M(div_f32) M(min_f32) M(max_f32) M(min_q14) M(max_q14) M(uavg_q14)        \
-                  M(fma_f32) M(fms_f32) M(fnma_f32) M(sqrt_f32) M(shl_i32) M(shr_i32) M(sra_i32)   \
-                      M(shl_q14) M(shr_q14) M(sra_q14) M(ceil) M(floor) M(trunc) M(round)          \
-                          M(to_half) M(from_half) M(to_f32) M(to_q14) M(from_q14) M(neq_f32)       \
-                              M(eq_f32) M(eq_i32) M(eq_q14) M(gte_f32) M(gt_f32) M(gt_i32)         \
-                                  M(gt_q14) M(bit_and) M(bit_or) M(bit_xor) M(bit_clear)           \
-                                      M(bit_and_q14) M(bit_or_q14) M(bit_xor_q14) M(bit_clear_q14) \
-                                          M(select) M(select_q14) M(pack)  // End of SKVM_OPS
+#define SKVM_OPS(M)                                                                               \
+  M(assert_true)                                                                                  \
+  M(store8)                                                                                       \
+  M(store16)                                                                                      \
+  M(store32) M(store64) M(store128) M(index) M(load8) M(load16) M(load32) M(load64) M(load128)    \
+      M(gather8) M(gather16) M(gather32) M(uniform8) M(uniform16) M(uniform32) M(splat)           \
+          M(splat_q14) M(add_f32) M(add_i32) M(add_q14) M(sub_f32) M(sub_i32) M(sub_q14)          \
+              M(mul_f32) M(mul_i32) M(mul_q14) M(div_f32) M(min_f32) M(max_f32) M(min_q14)        \
+                  M(max_q14) M(uavg_q14) M(fma_f32) M(fms_f32) M(fnma_f32) M(sqrt_f32) M(shl_i32) \
+                      M(shr_i32) M(sra_i32) M(shl_q14) M(shr_q14) M(sra_q14) M(ceil) M(floor)     \
+                          M(trunc) M(round) M(to_half) M(from_half) M(to_f32) M(to_q14)           \
+                              M(from_q14) M(neq_f32) M(eq_f32) M(eq_i32) M(eq_q14) M(gte_f32)     \
+                                  M(gt_f32) M(gt_i32) M(gt_q14) M(bit_and) M(bit_or) M(bit_xor)   \
+                                      M(bit_clear) M(bit_and_q14) M(bit_or_q14) M(bit_xor_q14)    \
+                                          M(bit_clear_q14) M(select) M(select_q14)                \
+                                              M(pack)  // End of SKVM_OPS
 
 enum class Op : int {
 #define M(op) op,
@@ -1339,6 +1339,9 @@ static inline Q14 operator^(int x, Q14 y) { return y->bit_xor(x, y); }
 static inline Q14& operator&=(Q14& x, Q14a y) { return (x = x & y); }
 static inline Q14& operator|=(Q14& x, Q14a y) { return (x = x | y); }
 static inline Q14& operator^=(Q14& x, Q14a y) { return (x = x ^ y); }
+
+static inline I32 bit_clear(I32 x, I32a y) { return x->bit_clear(x, y); }
+static inline I32 bit_clear(int x, I32 y) { return y->bit_clear(x, y); }
 
 static inline I32 select(I32 cond, I32a t, I32a f) { return cond->select(cond, t, f); }
 static inline F32 select(I32 cond, F32a t, F32a f) { return cond->select(cond, t, f); }

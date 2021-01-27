@@ -160,6 +160,7 @@ class GrOpFlushState final : public GrDeferredUploadTarget, public GrMeshDrawOp:
 
   GrDeferredUploadTarget* deferredUploadTarget() final { return this; }
   const GrCaps& caps() const final;
+  GrThreadSafeCache* threadSafeCache() const final;
   GrResourceProvider* resourceProvider() const final { return fResourceProvider; }
 
   GrStrikeCache* strikeCache() const final;

@@ -95,8 +95,8 @@ static void draw_scene(
 }
 
 class LumaFilterGM : public skiagm::GM {
- public:
-  LumaFilterGM() {
+ protected:
+  void onOnceBeforeDraw() override {
     SkColor g1Colors[] = {kColor1, SkColorSetA(kColor1, 0x20)};
     SkColor g2Colors[] = {kColor2, SkColorSetA(kColor2, 0x20)};
     SkPoint g1Points[] = {{0, 0}, {0, 100}};
@@ -110,7 +110,6 @@ class LumaFilterGM : public skiagm::GM {
         g2Points, g2Colors, pos, SK_ARRAY_COUNT(g2Colors), SkTileMode::kClamp);
   }
 
- protected:
   SkString onShortName() override { return SkString("lumafilter"); }
 
   SkISize onISize() override { return SkISize::Make(600, 420); }

@@ -202,6 +202,8 @@ class GrCaps : public SkRefCnt {
     return this->maxWindowRectangles() > 0 && this->onIsWindowRectanglesSupportedForRT(rt);
   }
 
+  uint32_t maxPushConstantsSize() const { return fMaxPushConstantsSize; }
+
   virtual bool isFormatSRGB(const GrBackendFormat&) const = 0;
 
   bool isFormatCompressed(const GrBackendFormat& format) const;
@@ -232,10 +234,6 @@ class GrCaps : public SkRefCnt {
   // sample count is 1 then 1 will be returned if non-MSAA rendering is supported, otherwise 0.
   // For historical reasons requestedCount==0 is handled identically to requestedCount==1.
   virtual int getRenderTargetSampleCount(int requestedCount, const GrBackendFormat&) const = 0;
-
-  // Returns the number of bytes per pixel for the given GrBackendFormat. This is only supported
-  // for "normal" formats. For compressed formats this will return 0.
-  virtual size_t bytesPerPixel(const GrBackendFormat&) const = 0;
 
   /**
    * Backends may have restrictions on what types of surfaces support GrGpu::writePixels().
@@ -544,6 +542,7 @@ class GrCaps : public SkRefCnt {
   int fMaxTileSize;
   int fMaxWindowRectangles;
   int fInternalMultisampleCount;
+  uint32_t fMaxPushConstantsSize = 0;
 
   GrDriverBugWorkarounds fDriverBugWorkarounds;
 

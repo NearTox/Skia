@@ -211,13 +211,11 @@ class DashOp final : public GrMeshDrawOp {
     SkScalar fPerpendicularScale;
   };
 
-  static std::unique_ptr<GrDrawOp> Make(
+  static GrOp::Owner Make(
       GrRecordingContext* context, GrPaint&& paint, const LineData& geometry, SkPaint::Cap cap,
       AAMode aaMode, bool fullDash, const GrUserStencilSettings* stencilSettings) {
-    GrOpMemoryPool* pool = context->priv().opMemoryPool();
-
-    return pool->allocate<DashOp>(
-        std::move(paint), geometry, cap, aaMode, fullDash, stencilSettings);
+    return GrOp::Make<DashOp>(
+        context, std::move(paint), geometry, cap, aaMode, fullDash, stencilSettings);
   }
 
   const char* name() const override { return "DashOp"; }
@@ -253,7 +251,7 @@ class DashOp final : public GrMeshDrawOp {
   }
 
  private:
-  friend class GrOpMemoryPool;  // for ctor
+  friend class GrOp;  // for ctor
 
   DashOp(
       GrPaint&& paint, const LineData& geometry, SkPaint::Cap cap, AAMode aaMode, bool fullDash,
@@ -631,8 +629,7 @@ class DashOp final : public GrMeshDrawOp {
     flushState->drawMesh(*fMesh);
   }
 
-  CombineResult onCombineIfPossible(
-      GrOp* t, GrRecordingContext::Arenas*, const GrCaps& caps) override {
+  CombineResult onCombineIfPossible(GrOp* t, SkArenaAlloc*, const GrCaps& caps) override {
     DashOp* that = t->cast<DashOp>();
     if (fProcessorSet != that->fProcessorSet) {
       return CombineResult::kCannotCombine;
@@ -703,7 +700,7 @@ class DashOp final : public GrMeshDrawOp {
   using INHERITED = GrMeshDrawOp;
 };
 
-std::unique_ptr<GrDrawOp> GrDashOp::MakeDashLineOp(
+GrOp::Owner GrDashOp::MakeDashLineOp(
     GrRecordingContext* context, GrPaint&& paint, const SkMatrix& viewMatrix, const SkPoint pts[2],
     AAMode aaMode, const GrStyle& style, const GrUserStencilSettings* stencilSettings) {
   SkASSERT(GrDashOp::CanDrawDashLine(pts, style, viewMatrix));

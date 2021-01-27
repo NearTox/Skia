@@ -241,7 +241,7 @@ class SkRasterPipeline {
 
   void append_transfer_function(const skcms_TransferFunction&);
 
-  bool empty() const { return fStages == nullptr; }
+  bool empty() const noexcept { return fStages == nullptr; }
 
  private:
   struct StageList {

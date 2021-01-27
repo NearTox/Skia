@@ -28,6 +28,7 @@ EffectBuilder::EffectBuilderT EffectBuilder::findBuilder(const skjson::ObjectVal
     const char* fName;
     EffectBuilderT fBuilder;
   } gBuilderInfo[] = {
+      {"ADBE Black&White", &EffectBuilder::attachBlackAndWhiteEffect},
       {"ADBE Brightness & Contrast 2", &EffectBuilder::attachBrightnessContrastEffect},
       {"ADBE Corner Pin", &EffectBuilder::attachCornerPinEffect},
       {"ADBE Displacement Map", &EffectBuilder::attachDisplacementMapEffect},

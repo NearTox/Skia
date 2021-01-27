@@ -120,7 +120,7 @@ class GrRenderTargetProxy : virtual public GrSurfaceProxy {
  private:
   bool canChangeStencilAttachment() const;
 
-  size_t onUninstantiatedGpuMemorySize(const GrCaps&) const override;
+  size_t onUninstantiatedGpuMemorySize() const override;
   SkDEBUGCODE(void onValidateSurface(const GrSurface*) override;)
 
   LazySurfaceDesc callbackDesc() const override;

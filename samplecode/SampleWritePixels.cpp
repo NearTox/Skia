@@ -15,45 +15,44 @@
 #include "src/utils/SkUTF.h"
 
 static void create_bitmap(SkBitmap* bitmap) {
-  const int W = 100;
-  const int H = 100;
-  bitmap->allocN32Pixels(W, H);
+    const int W = 100;
+    const int H = 100;
+    bitmap->allocN32Pixels(W, H);
 
-  SkCanvas canvas(*bitmap);
-  canvas.drawColor(SK_ColorRED);
-  SkPaint paint;
-  paint.setColor(SK_ColorBLUE);
-  canvas.drawCircle(SkIntToScalar(W) / 2, SkIntToScalar(H) / 2, SkIntToScalar(W) / 2, paint);
+    SkCanvas canvas(*bitmap);
+    canvas.drawColor(SK_ColorRED);
+    SkPaint paint;
+    paint.setColor(SK_ColorBLUE);
+    canvas.drawCircle(SkIntToScalar(W)/2, SkIntToScalar(H)/2, SkIntToScalar(W)/2, paint);
 }
 
 class WritePixelsView : public Sample {
-  SkPath fPath;
+    SkPath fPath;
+public:
+    WritePixelsView() {}
 
- public:
-  WritePixelsView() {}
+protected:
+    SkString name() override { return SkString("WritePixels"); }
 
- protected:
-  SkString name() override { return SkString("WritePixels"); }
+    void onDrawContent(SkCanvas* canvas) override {
+        SkBitmap bitmap;
+        create_bitmap(&bitmap);
+        int x = bitmap.width() / 2;
+        int y = bitmap.height() / 2;
 
-  void onDrawContent(SkCanvas* canvas) override {
-    SkBitmap bitmap;
-    create_bitmap(&bitmap);
-    int x = bitmap.width() / 2;
-    int y = bitmap.height() / 2;
+        SkBitmap subset;
+        bitmap.extractSubset(&subset, SkIRect::MakeXYWH(x, y, x, y));
 
-    SkBitmap subset;
-    bitmap.extractSubset(&subset, SkIRect::MakeXYWH(x, y, x, y));
+        canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
 
-    canvas->translate(SkIntToScalar(20), SkIntToScalar(20));
+        canvas->writePixels(bitmap, 0, 0);
+        canvas->writePixels(subset, 0, 0);
+    }
 
-    canvas->writePixels(bitmap, 0, 0);
-    canvas->writePixels(subset, 0, 0);
-  }
-
- private:
-  using INHERITED = Sample;
+private:
+    using INHERITED = Sample;
 };
 
 //////////////////////////////////////////////////////////////////////////////
 
-DEF_SAMPLE(return new WritePixelsView();)
+DEF_SAMPLE( return new WritePixelsView(); )

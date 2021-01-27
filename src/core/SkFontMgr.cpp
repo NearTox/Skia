@@ -16,7 +16,7 @@ class SkTypeface;
 
 class SkEmptyFontStyleSet : public SkFontStyleSet {
  public:
-  int count() noexcept override { return 0; }
+  int count() override { return 0; }
   void getStyle(int, SkFontStyle*, SkString*) override {
     SkDEBUGFAIL("SkFontStyleSet::getStyle called on empty set");
   }
@@ -199,15 +199,15 @@ SkTypeface* SkFontStyleSet::matchStyleCSS3(const SkFontStyle& pattern) {
   struct Score {
     int score;
     int index;
-    Score& operator+=(int rhs) noexcept {
+    Score& operator+=(int rhs) {
       this->score += rhs;
       return *this;
     }
-    Score& operator<<=(int rhs) noexcept {
+    Score& operator<<=(int rhs) {
       this->score <<= rhs;
       return *this;
     }
-    bool operator<(const Score& that) noexcept { return this->score < that.score; }
+    bool operator<(const Score& that) { return this->score < that.score; }
   };
 
   Score maxScore = {0, 0};

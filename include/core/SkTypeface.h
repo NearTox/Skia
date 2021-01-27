@@ -89,7 +89,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   /** Return a 32bit value for this typeface, unique for the underlying font
       data. Will never return 0.
    */
-  SkFontID uniqueID() const noexcept { return fUniqueID; }
+  SkFontID uniqueID() const { return fUniqueID; }
 
   /** Return the uniqueID for the specified typeface. If the face is null,
       resolve it to the default font and return its uniqueID. Will never
@@ -273,10 +273,10 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   };
   class LocalizedStrings {
    public:
-    constexpr LocalizedStrings() noexcept = default;
-    virtual ~LocalizedStrings() = default;
+    LocalizedStrings() = default;
+    virtual ~LocalizedStrings() {}
     virtual bool next(LocalizedString* localizedString) = 0;
-    void unref() noexcept { delete this; }
+    void unref() { delete this; }
 
    private:
     LocalizedStrings(const LocalizedStrings&) = delete;
@@ -295,6 +295,13 @@ class SK_API SkTypeface : public SkWeakRefCnt {
    *  platform chooses.
    */
   void getFamilyName(SkString* name) const;
+
+  /**
+   *  Return the PostScript name for this typeface.
+   *  Value may change based on variation parameters.
+   *  Returns false if no PostScript name is available.
+   */
+  bool getPostScriptName(SkString* name) const;
 
   /**
    *  Return a stream for the contents of the font data, or NULL on failure.
@@ -378,6 +385,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
    *  This name may or may not be produced by the family name iterator.
    */
   virtual void onGetFamilyName(SkString* familyName) const = 0;
+  virtual bool onGetPostScriptName(SkString*) const = 0;
 
   /** Returns an iterator over the family names in the font. */
   virtual LocalizedStrings* onCreateFamilyNameIterator() const = 0;
@@ -405,7 +413,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
     // helpers
     kBoldItalic = 0x03
   };
-  static SkFontStyle FromOldStyle(Style oldStyle) noexcept;
+  static SkFontStyle FromOldStyle(Style oldStyle);
   static SkTypeface* GetDefaultTypeface(Style style = SkTypeface::kNormal);
 
   friend class SkFontPriv;   // GetDefaultTypeface

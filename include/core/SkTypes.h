@@ -253,7 +253,7 @@
 // See
 // https://developercommunity.visualstudio.com/content/problem/1128631/code-flow-doesnt-see-noreturn-with-extern-c.html
 // for why this is wrapped. Hopefully removable after msvc++ 19.27 is no longer supported.
-[[noreturn]] static inline void sk_fast_fail() { __fastfail(FAST_FAIL_INVALID_ARG); }
+[[noreturn]] static inline void sk_fast_fail() noexcept { __fastfail(FAST_FAIL_INVALID_ARG); }
 #    define SkUNREACHABLE sk_fast_fail()
 #  else
 #    define SkUNREACHABLE __builtin_trap()
@@ -387,19 +387,31 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  define GR_TEST_UTILS 0
 #endif
 
-#if defined(SK_HISTOGRAM_ENUMERATION) && defined(SK_HISTOGRAM_BOOLEAN)
+#if defined(SK_HISTOGRAM_ENUMERATION) || defined(SK_HISTOGRAM_BOOLEAN) || \
+    defined(SK_HISTOGRAM_EXACT_LINEAR) || defined(SK_HISTOGRAM_MEMORY_KB)
 #  define SK_HISTOGRAMS_ENABLED 1
 #else
 #  define SK_HISTOGRAMS_ENABLED 0
 #endif
 
 #ifndef SK_HISTOGRAM_BOOLEAN
-#  define SK_HISTOGRAM_BOOLEAN(name, value)
+#  define SK_HISTOGRAM_BOOLEAN(name, sample)
 #endif
 
 #ifndef SK_HISTOGRAM_ENUMERATION
-#  define SK_HISTOGRAM_ENUMERATION(name, value, boundary_value)
+#  define SK_HISTOGRAM_ENUMERATION(name, sample, enum_size)
 #endif
+
+#ifndef SK_HISTOGRAM_EXACT_LINEAR
+#  define SK_HISTOGRAM_EXACT_LINEAR(name, sample, value_max)
+#endif
+
+#ifndef SK_HISTOGRAM_MEMORY_KB
+#  define SK_HISTOGRAM_MEMORY_KB(name, sample)
+#endif
+
+#define SK_HISTOGRAM_PERCENTAGE(name, percent_as_int) \
+  SK_HISTOGRAM_EXACT_LINEAR(name, percent_as_int, 101)
 
 #ifndef SK_DISABLE_LEGACY_SHADERCONTEXT
 #  define SK_ENABLE_LEGACY_SHADERCONTEXT
@@ -584,7 +596,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
+static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -593,21 +605,11 @@ static inline int32_t SkAbs32(int32_t value) {
 }
 
 template <typename T>
-static inline T SkTAbs(T value) {
+static constexpr inline T SkTAbs(T value) noexcept {
   if (value < 0) {
     value = -value;
   }
   return value;
-}
-
-/** @return value pinned (clamped) between min and max, inclusively.
-
-    NOTE: Unlike std::clamp, SkTPin has well-defined behavior if 'value' is a
-          floating point NaN. In that case, 'max' is returned.
-*/
-template <typename T>
-static constexpr const T& SkTPin(const T& value, const T& min, const T& max) noexcept {
-  return value < min ? min : (value < max ? value : max);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

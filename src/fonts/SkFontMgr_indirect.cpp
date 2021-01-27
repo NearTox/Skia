@@ -28,7 +28,7 @@ class SkStyleSet_Indirect : public SkFontStyleSet {
       const SkFontMgr_Indirect* owner, int familyIndex, SkRemotableFontIdentitySet* data)
       : fOwner(SkRef(owner)), fFamilyIndex(familyIndex), fData(data) {}
 
-  int count() noexcept override { return fData->count(); }
+  int count() override { return fData->count(); }
 
   void getStyle(int index, SkFontStyle* fs, SkString* style) override {
     if (fs) {

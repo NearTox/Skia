@@ -68,7 +68,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
       g->codeAppendf("%s *= half(sk_in[0].sk_Position.w);", wind.c_str());
     }
 
-    SkString emitVertexFn;
+    SkString emitVertexFn = g->getMangledFunctionName("emitVertex");
     SkSTArray<3, GrShaderVar> emitArgs;
     const char* corner = emitArgs.emplace_back("corner", kFloat2_GrSLType).c_str();
     const char* bloatdir = emitArgs.emplace_back("bloatdir", kFloat2_GrSLType).c_str();
@@ -81,8 +81,8 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
       cornerCoverage = emitArgs.emplace_back("corner_coverage", kHalf2_GrSLType).c_str();
     }
     g->emitFunction(
-        kVoid_GrSLType, "emitVertex", emitArgs.count(), emitArgs.begin(),
-        [&]() {
+        kVoid_GrSLType, emitVertexFn.c_str(), {&emitArgs.front(), emitArgs.size()},
+        [&] {
           SkString fnBody;
           fnBody.appendf("float2 vertexpos = fma(%s, float2(bloat), %s);", bloatdir, corner);
           const char* coverage = inputCoverage;
@@ -108,8 +108,7 @@ class GrGSCoverageProcessor::Impl : public GrGLSLGeometryProcessor {
           g->emitVertex(&fnBody, "vertexpos");
           return fnBody;
         }()
-            .c_str(),
-        &emitVertexFn);
+            .c_str());
 
     float bloat = kAABloatRadius;
 #ifdef SK_DEBUG

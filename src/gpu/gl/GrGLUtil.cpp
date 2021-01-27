@@ -57,7 +57,7 @@ GrGLStandard GrGLGetStandardInUseFromString(const char* versionString) {
   if (2 == n) {
     return kGLES_GrGLStandard;
   }
-  return kNone_GrGLStandard;
+    return kNone_GrGLStandard;
 }
 
 void GrGLGetDriverInfo(
@@ -627,6 +627,9 @@ bool GrGLFormatIsCompressed(GrGLFormat format) {
     case GrGLFormat::kRG16:
     case GrGLFormat::kRGBA16:
     case GrGLFormat::kRG16F:
+    case GrGLFormat::kSTENCIL_INDEX8:
+    case GrGLFormat::kSTENCIL_INDEX16:
+    case GrGLFormat::kDEPTH24_STENCIL8:
     case GrGLFormat::kUnknown: return false;
   }
   SkUNREACHABLE;

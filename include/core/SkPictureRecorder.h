@@ -18,7 +18,6 @@ class Picture;
 };
 #endif
 
-class GrContext;
 class SkCanvas;
 class SkDrawable;
 class SkMiniRecorder;

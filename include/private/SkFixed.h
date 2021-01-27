@@ -11,6 +11,7 @@
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkSafe_math.h"
+#include "include/private/SkTPin.h"
 #include "include/private/SkTo.h"
 
 /** \file SkFixed.h
@@ -75,13 +76,15 @@ inline SkFixed SkIntToFixed(int n) {
 #define SkFixedCeilToInt(x) (((x) + SK_Fixed1 - 1) >> 16)
 #define SkFixedFloorToInt(x) ((x) >> 16)
 
-static inline SkFixed SkFixedRoundToFixed(SkFixed x) {
+static constexpr inline SkFixed SkFixedRoundToFixed(SkFixed x) noexcept {
   return (SkFixed)((uint32_t)(x + SK_FixedHalf) & 0xFFFF0000);
 }
-static inline SkFixed SkFixedCeilToFixed(SkFixed x) {
+static constexpr inline SkFixed SkFixedCeilToFixed(SkFixed x) noexcept {
   return (SkFixed)((uint32_t)(x + SK_Fixed1 - 1) & 0xFFFF0000);
 }
-static inline SkFixed SkFixedFloorToFixed(SkFixed x) { return (SkFixed)((uint32_t)x & 0xFFFF0000); }
+static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept {
+  return (SkFixed)((uint32_t)x & 0xFFFF0000);
+}
 
 #define SkFixedAbs(x) SkAbs32(x)
 #define SkFixedAve(a, b) (((a) + (b)) >> 1)
@@ -90,7 +93,9 @@ static inline SkFixed SkFixedFloorToFixed(SkFixed x) { return (SkFixed)((uint32_
 #define SkFixedDiv(numer, denom) \
   SkToS32(SkTPin<int64_t>((SkLeftShift((int64_t)(numer), 16) / (denom)), SK_MinS32, SK_MaxS32))
 
-static inline SkFixed SkFixedMul(SkFixed a, SkFixed b) { return (SkFixed)((int64_t)a * b >> 16); }
+static constexpr inline SkFixed SkFixedMul(SkFixed a, SkFixed b) noexcept {
+  return (SkFixed)((int64_t)a * b >> 16);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Platform-specific alternatives to our portable versions.

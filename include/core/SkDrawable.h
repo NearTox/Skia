@@ -120,7 +120,7 @@ class SK_API SkDrawable : public SkFlattenable {
   }
 
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return nullptr; }
+  const char* getTypeName() const noexcept override { return nullptr; }
 
  protected:
   SkDrawable();

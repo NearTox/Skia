@@ -83,7 +83,7 @@ class SkZip {
   constexpr Iterator end() const { return Iterator{this, this->size()}; }
   template <size_t I>
   constexpr auto get() const {
-    return SkMakeSpan(std::get<I>(fPointers), fSize);
+    return SkSpan(std::get<I>(fPointers), fSize);
   }
   constexpr std::tuple<Ts*...> data() const { return fPointers; }
   constexpr SkZip first(size_t n) const {

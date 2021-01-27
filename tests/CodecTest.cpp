@@ -824,7 +824,7 @@ DEF_TEST(Codec_pngChunkReader, r) {
   REPORTER_ASSERT(r, chunkReader.allHaveBeenSeen());
 }
 #  endif  // SK_PNG_DISABLE_TESTS
-#endif  // PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
+#endif    // PNG_READ_UNKNOWN_CHUNKS_SUPPORTED
 
 // Stream that can only peek up to a limit
 class LimitedPeekingMemStream : public SkStream {
@@ -1092,7 +1092,7 @@ DEF_TEST(Codec_PngRoundTrip, r) {
   for (SkAlphaType alphaType : alphaTypes) {
     SkImageInfo newInfo = codec->getInfo().makeAlphaType(alphaType).makeColorSpace(nullptr);
     check_round_trip(r, codec.get(), newInfo);
-  }
+    }
 }
 
 static void test_conversion_possible(

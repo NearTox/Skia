@@ -14,7 +14,7 @@
 #include "src/core/SkTraceEvent.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/gpu/GrAutoLocaleSetter.h"
-#include "src/gpu/GrContextPriv.h"
+#include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrPersistentCacheUtils.h"
 #include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/GrShaderCaps.h"
@@ -216,7 +216,6 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* pr
   auto errorHandler = this->gpu()->getContext()->priv().getShaderErrorHandler();
   const GrPrimitiveProcessor& primProc = this->primitiveProcessor();
   SkSL::Program::Settings settings;
-  settings.fCaps = this->gpu()->glCaps().shaderCaps();
   settings.fFlipY = this->origin() != kTopLeft_GrSurfaceOrigin;
   settings.fSharpenTextures = this->gpu()->getContext()->priv().options().fSharpenMipmappedTextures;
   settings.fFragColorIsInOut = this->fragColorIsInOut();
@@ -549,8 +548,6 @@ bool GrGLProgramBuilder::PrecompileProgram(
   auto errorHandler = gpu->getContext()->priv().getShaderErrorHandler();
 
   SkSL::Program::Settings settings;
-  const GrGLCaps& caps = gpu->glCaps();
-  settings.fCaps = caps.shaderCaps();
   settings.fSharpenTextures = gpu->getContext()->priv().options().fSharpenMipmappedTextures;
   GrPersistentCacheUtils::ShaderMetadata meta;
   meta.fSettings = &settings;
@@ -602,6 +599,7 @@ bool GrGLProgramBuilder::PrecompileProgram(
         gpu->glInterface(), BindAttribLocation(programID, i, meta.fAttributeNames[i].c_str()));
   }
 
+  const GrGLCaps& caps = gpu->glCaps();
   if (meta.fHasCustomColorOutput && caps.bindFragDataLocationSupport()) {
     GR_GL_CALL(
         gpu->glInterface(),

@@ -318,7 +318,7 @@ class SkSpecialImage_Gpu : public SkSpecialImage_Base {
 
   SkColorType colorType() const override { return GrColorTypeToSkColorType(fColorType); }
 
-  size_t getSize() const override { return fView.proxy()->gpuMemorySize(*fContext->priv().caps()); }
+  size_t getSize() const override { return fView.proxy()->gpuMemorySize(); }
 
   void onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint) const override {
     SkRect dst = SkRect::MakeXYWH(x, y, this->subset().width(), this->subset().height());

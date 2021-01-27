@@ -94,7 +94,7 @@ class SkOSFile {
     static const size_t kStorageSize = 40;
 
    private:
-    SkAlignedSStorage<kStorageSize> fSelf;
+    alignas(void*) alignas(double) char fSelf[kStorageSize];
   };
 };
 

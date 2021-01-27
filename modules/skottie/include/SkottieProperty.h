@@ -43,6 +43,7 @@ struct TextPropertyValue {
   SkTextUtils::Align fHAlign = SkTextUtils::kLeft_Align;
   Shaper::VAlign fVAlign = Shaper::VAlign::kTop;
   Shaper::ResizePolicy fResize = Shaper::ResizePolicy::kNone;
+  Shaper::LinebreakPolicy fLineBreak = Shaper::LinebreakPolicy::kExplicit;
   SkRect fBox = SkRect::MakeEmpty();
   SkColor fFillColor = SK_ColorTRANSPARENT, fStrokeColor = SK_ColorTRANSPARENT;
   TextPaintOrder fPaintOrder = TextPaintOrder::kFillStroke;

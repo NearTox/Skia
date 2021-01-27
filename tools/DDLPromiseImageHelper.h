@@ -19,7 +19,7 @@
 #include "src/core/SkCachedData.h"
 #include "src/core/SkTLazy.h"
 
-class GrContext;
+class GrDirectContext;
 class SkImage;
 class SkMipmap;
 class SkPicture;
@@ -47,19 +47,11 @@ class PromiseImageCallbackContext : public SkRefCnt {
   void destroyBackendTexture();
 
   sk_sp<SkPromiseImageTexture> fulfill() {
-    SkASSERT(fUnreleasedFulfills >= 0);
-    ++fUnreleasedFulfills;
     ++fTotalFulfills;
     return fPromiseImageTexture;
   }
 
   void release() {
-    SkASSERT(fUnreleasedFulfills > 0);
-    --fUnreleasedFulfills;
-    ++fTotalReleases;
-  }
-
-  void done() {
     ++fDoneCnt;
     SkASSERT(fDoneCnt <= fNumImages);
   }
@@ -76,11 +68,6 @@ class PromiseImageCallbackContext : public SkRefCnt {
   static void PromiseImageReleaseProc(void* textureContext) {
     auto callbackContext = static_cast<PromiseImageCallbackContext*>(textureContext);
     callbackContext->release();
-  }
-
-  static void PromiseImageDoneProc(void* textureContext) {
-    auto callbackContext = static_cast<PromiseImageCallbackContext*>(textureContext);
-    callbackContext->done();
     callbackContext->unref();
   }
 
@@ -90,8 +77,6 @@ class PromiseImageCallbackContext : public SkRefCnt {
   sk_sp<SkPromiseImageTexture> fPromiseImageTexture;
   int fNumImages = 0;
   int fTotalFulfills = 0;
-  int fTotalReleases = 0;
-  int fUnreleasedFulfills = 0;
   int fDoneCnt = 0;
 
   using INHERITED = SkRefCnt;
@@ -161,19 +146,8 @@ class DDLPromiseImageHelper {
     SkAlphaType overallAlphaType() const { return fImageInfo.alphaType(); }
     sk_sp<SkColorSpace> refOverallColorSpace() const { return fImageInfo.refColorSpace(); }
 
-    int numYUVAPlanes() const {
-      SkASSERT(this->isYUV());
-      return fYUVAPixmaps.yuvaInfo().numPlanes();
-    }
-    SkYUVColorSpace yuvColorSpace() const {
-      SkASSERT(this->isYUV());
-      return fYUVAPixmaps.yuvaInfo().yuvColorSpace();
-    }
-    const SkYUVAIndex* yuvaIndices() const {
-      SkASSERT(this->isYUV());
-      SkASSERT(fYUVAIndices[SkYUVAIndex::kY_Index].fIndex >= 0);
-      return fYUVAIndices;
-    }
+    const SkYUVAInfo& yuvaInfo() const { return fYUVAPixmaps.yuvaInfo(); }
+
     const SkPixmap& yuvPixmap(int index) const {
       SkASSERT(this->isYUV());
       return fYUVAPixmaps.planes()[index];
@@ -221,9 +195,6 @@ class DDLPromiseImageHelper {
     /** Takes ownership of the plane data. */
     void setYUVPlanes(SkYUVAPixmaps yuvaPixmaps) { fYUVAPixmaps = std::move(yuvaPixmaps); }
 
-    /** Call after setYUVPlanes() and callback contexts have been installed.  */
-    void initYUVAIndices();
-
    private:
     const int fIndex;                  // index in the 'fImageInfo' array
     const uint32_t fOriginalUniqueID;  // original ID for deduping
@@ -236,7 +207,6 @@ class DDLPromiseImageHelper {
 
     // CPU-side cache of a YUV SkImage's contents
     SkYUVAPixmaps fYUVAPixmaps;
-    SkYUVAIndex fYUVAIndices[SkYUVAIndex::kIndexCount] = {};
 
     // Up to SkYUVASizeInfo::kMaxCount for a YUVA image. Only one for a normal image.
     sk_sp<PromiseImageCallbackContext> fCallbackContexts[SkYUVASizeInfo::kMaxCount];
@@ -251,7 +221,7 @@ class DDLPromiseImageHelper {
   };
 
   static void CreateBETexturesForPromiseImage(GrDirectContext*, PromiseImageInfo*);
-  static void DeleteBETexturesForPromiseImage(GrDirectContext*, PromiseImageInfo*);
+  static void DeleteBETexturesForPromiseImage(PromiseImageInfo*);
 
   static sk_sp<SkImage> CreatePromiseImages(const void* rawData, size_t length, void* ctxIn);
 

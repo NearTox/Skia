@@ -265,7 +265,6 @@ class SkScalerContext {
   bool isVertical() const { return false; }
 
   unsigned getGlyphCount() { return this->generateGlyphCount(); }
-  void getAdvance(SkGlyph*);
   void getMetrics(SkGlyph*);
   void getImage(const SkGlyph&);
   bool SK_WARN_UNUSED_RESULT getPath(SkPackedGlyphID, SkPath*);
@@ -294,8 +293,7 @@ class SkScalerContext {
       const SkFont& font, SkScalerContextRec* rec, SkScalerContextEffects* effects) {
     SkPaint paint;
     return MakeRecAndEffects(
-        font, paint, SkSurfaceProps(SkSurfaceProps::kLegacyFontHost_InitType),
-        SkScalerContextFlags::kNone, SkMatrix::I(), rec, effects);
+        font, paint, SkSurfaceProps(), SkScalerContextFlags::kNone, SkMatrix::I(), rec, effects);
   }
 
   static SkDescriptor* MakeDescriptorForPaths(SkFontID fontID, SkAutoDescriptor* ad);

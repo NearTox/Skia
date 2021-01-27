@@ -16,23 +16,22 @@ namespace SkSL {
 /**
  * A 'do' statement.
  */
-class DoStatement : public Statement {
+class DoStatement final : public Statement {
  public:
   static constexpr Kind kStatementKind = Kind::kDo;
 
   DoStatement(int offset, std::unique_ptr<Statement> statement, std::unique_ptr<Expression> test)
-      : INHERITED(offset, kStatementKind) {
-    fStatementChildren.push_back(std::move(statement));
-    fExpressionChildren.push_back(std::move(test));
-  }
+      : INHERITED(offset, kStatementKind),
+        fStatement(std::move(statement)),
+        fTest(std::move(test)) {}
 
-  std::unique_ptr<Statement>& statement() { return fStatementChildren[0]; }
+  std::unique_ptr<Statement>& statement() { return fStatement; }
 
-  const std::unique_ptr<Statement>& statement() const { return fStatementChildren[0]; }
+  const std::unique_ptr<Statement>& statement() const { return fStatement; }
 
-  std::unique_ptr<Expression>& test() { return fExpressionChildren[0]; }
+  std::unique_ptr<Expression>& test() { return fTest; }
 
-  const std::unique_ptr<Expression>& test() const { return fExpressionChildren[0]; }
+  const std::unique_ptr<Expression>& test() const { return fTest; }
 
   std::unique_ptr<Statement> clone() const override {
     return std::unique_ptr<Statement>(
@@ -45,6 +44,9 @@ class DoStatement : public Statement {
   }
 
  private:
+  std::unique_ptr<Statement> fStatement;
+  std::unique_ptr<Expression> fTest;
+
   using INHERITED = Statement;
 };
 
