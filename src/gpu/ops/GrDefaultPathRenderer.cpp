@@ -20,10 +20,8 @@
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrProgramInfo.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrSimpleMesh.h"
 #include "src/gpu/GrStyle.h"
-#include "src/gpu/GrSurfaceContextPriv.h"
 #include "src/gpu/geometry/GrPathUtils.h"
 #include "src/gpu/geometry/GrStyledShape.h"
 #include "src/gpu/ops/GrMeshDrawOp.h"
@@ -390,9 +388,9 @@ class DefaultPathOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-      GrXferBarrierFlags renderPassXferBarriers) override {
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) override {
     GrGeometryProcessor* gp;
     {
       using namespace GrDefaultGeoProcFactory;
@@ -407,7 +405,7 @@ class DefaultPathOp final : public GrMeshDrawOp {
 
     fProgramInfo = fHelper.createProgramInfoWithStencil(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->primType(),
-        renderPassXferBarriers);
+        renderPassXferBarriers, colorLoadOp);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -500,10 +498,10 @@ class DefaultPathOp final : public GrMeshDrawOp {
 }  // anonymous namespace
 
 bool GrDefaultPathRenderer::internalDrawPath(
-    GrRenderTargetContext* renderTargetContext, GrPaint&& paint, GrAAType aaType,
+    GrSurfaceDrawContext* surfaceDrawContext, GrPaint&& paint, GrAAType aaType,
     const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
     const SkMatrix& viewMatrix, const GrStyledShape& shape, bool stencilOnly) {
-  auto context = renderTargetContext->surfPriv().getContext();
+  auto context = surfaceDrawContext->recordingContext();
 
   SkASSERT(GrAAType::kCoverage != aaType);
   SkPath path;
@@ -586,7 +584,7 @@ bool GrDefaultPathRenderer::internalDrawPath(
 
   SkRect devBounds;
   GetPathDevBounds(
-      path, renderTargetContext->asRenderTargetProxy()->backingStoreDimensions(), viewMatrix,
+      path, surfaceDrawContext->asRenderTargetProxy()->backingStoreDimensions(), viewMatrix,
       &devBounds);
 
   for (int p = 0; p < passCount; ++p) {
@@ -611,7 +609,7 @@ bool GrDefaultPathRenderer::internalDrawPath(
       const SkMatrix& viewM = (reverse && viewMatrix.hasPerspective()) ? SkMatrix::I() : viewMatrix;
       // This is a non-coverage aa rect op since we assert aaType != kCoverage at the start
       assert_alive(paint);
-      renderTargetContext->priv().stencilRect(
+      surfaceDrawContext->stencilRect(
           clip, passes[p], std::move(paint), GrAA(aaType == GrAAType::kMSAA), viewM, bounds,
           &localMatrix);
     } else {
@@ -629,7 +627,7 @@ bool GrDefaultPathRenderer::internalDrawPath(
             context, std::move(paint), path, srcSpaceTol, newCoverage, viewMatrix, isHairline,
             aaType, devBounds, passes[p]);
       }
-      renderTargetContext->addDrawOp(clip, std::move(op));
+      surfaceDrawContext->addDrawOp(clip, std::move(op));
     }
   }
   return true;

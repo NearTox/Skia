@@ -305,7 +305,7 @@ static D3D12_RECT scissor_to_d3d_clear_rect(
   return clearRect;
 }
 
-void GrD3DOpsRenderPass::onClear(const GrScissorState& scissor, const SkPMColor4f& color) {
+void GrD3DOpsRenderPass::onClear(const GrScissorState& scissor, std::array<float, 4> color) {
   D3D12_RECT clearRect = scissor_to_d3d_clear_rect(scissor, fRenderTarget, fOrigin);
   auto d3dRT = static_cast<GrD3DRenderTarget*>(fRenderTarget);
   SkASSERT(d3dRT->grD3DResourceState()->getResourceState() == D3D12_RESOURCE_STATE_RENDER_TARGET);

@@ -15,8 +15,7 @@
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
 #include "src/gpu/GrTexture.h"
@@ -104,8 +103,9 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
       return GrProcessorSet::EmptySetAnalysis();
     }
     void onPrePrepare(
-        GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-        const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
+        GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+        const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+        GrLoadOp colorLoadOp) override {}
 
     void onPrepare(GrOpFlushState*) override {}
 
@@ -166,7 +166,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
    private:
     SkIRect getConservativeBounds() const final { return SkIRect::MakeSize(fAtlas->dimensions()); }
     Effect apply(
-        GrRecordingContext* context, GrRenderTargetContext*, GrAAType, bool hasUserStencilSettings,
+        GrRecordingContext* context, GrSurfaceDrawContext*, GrAAType, bool hasUserStencilSettings,
         GrAppliedClip* out, SkRect* bounds) const override {
       GrProxyProvider* proxyProvider = context->priv().proxyProvider();
       out->addCoverageFP(std::make_unique<ClipFP>(context, proxyProvider, fTest, fAtlas));
@@ -193,15 +193,14 @@ DEF_GPUTEST(LazyProxyTest, reporter, /* options */) {
   for (bool nullTexture : {false, true}) {
     LazyProxyTest test(reporter);
     ctx->priv().addOnFlushCallbackObject(&test);
-    auto rtc = GrRenderTargetContext::Make(
+    auto rtc = GrSurfaceDrawContext::Make(
         ctx.get(), GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact, {100, 100});
     REPORTER_ASSERT(reporter, rtc);
-    auto mockAtlas = GrRenderTargetContext::Make(
+    auto mockAtlas = GrSurfaceDrawContext::Make(
         ctx.get(), GrColorType::kAlpha_F16, nullptr, SkBackingFit::kExact, {10, 10});
     REPORTER_ASSERT(reporter, mockAtlas);
     LazyProxyTest::Clip clip(&test, mockAtlas->asTextureProxy());
-    rtc->priv().testingOnly_addDrawOp(
-        &clip, LazyProxyTest::Op::Make(ctx.get(), proxyProvider, &test, nullTexture));
+    rtc->addDrawOp(&clip, LazyProxyTest::Op::Make(ctx.get(), proxyProvider, &test, nullTexture));
     ctx->priv().testingOnly_flushAndRemoveOnFlushCallbackObject(&test);
   }
 }
@@ -340,8 +339,9 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
     return GrProcessorSet::EmptySetAnalysis();
   }
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
+      GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override {}
   void onPrepare(GrOpFlushState*) override {}
   void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
     *fTestExecuteValue = 2;
@@ -360,14 +360,14 @@ DEF_GPUTEST(LazyProxyFailedInstantiationTest, reporter, /* options */) {
   sk_sp<GrDirectContext> ctx = GrDirectContext::MakeMock(&mockOptions, GrContextOptions());
   GrProxyProvider* proxyProvider = ctx->priv().proxyProvider();
   for (bool failInstantiation : {false, true}) {
-    auto rtc = GrRenderTargetContext::Make(
+    auto rtc = GrSurfaceDrawContext::Make(
         ctx.get(), GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact, {100, 100});
     REPORTER_ASSERT(reporter, rtc);
 
     rtc->clear(SkPMColor4f::FromBytes_RGBA(0xbaaaaaad));
 
     int executeTestValue = 0;
-    rtc->priv().testingOnly_addDrawOp(LazyFailedInstantiationTestOp::Make(
+    rtc->addDrawOp(LazyFailedInstantiationTestOp::Make(
         ctx.get(), proxyProvider, &executeTestValue, failInstantiation));
     ctx->flushAndSubmit();
 

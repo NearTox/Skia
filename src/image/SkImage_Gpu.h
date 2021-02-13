@@ -20,7 +20,6 @@ class GrRecordingContext;
 class GrTexture;
 
 class SkBitmap;
-struct SkYUVAIndex;
 
 class SkImage_Gpu : public SkImage_GpuBase {
  public:
@@ -51,12 +50,12 @@ class SkImage_Gpu : public SkImage_GpuBase {
   sk_sp<SkImage> onReinterpretColorSpace(sk_sp<SkColorSpace>) const final;
 
   void onAsyncRescaleAndReadPixels(
-      const SkImageInfo&, const SkIRect& srcRect, RescaleGamma, SkFilterQuality, ReadPixelsCallback,
+      const SkImageInfo&, const SkIRect& srcRect, RescaleGamma, RescaleMode, ReadPixelsCallback,
       ReadPixelsContext) override;
 
   void onAsyncRescaleAndReadPixelsYUV420(
       SkYUVColorSpace, sk_sp<SkColorSpace>, const SkIRect& srcRect, const SkISize& dstSize,
-      RescaleGamma, SkFilterQuality, ReadPixelsCallback, ReadPixelsContext) override;
+      RescaleGamma, RescaleMode, ReadPixelsCallback, ReadPixelsContext) override;
 
   /**
    * This is the implementation of SkDeferredDisplayListRecorder::makePromiseImage.
@@ -66,11 +65,6 @@ class SkImage_Gpu : public SkImage_GpuBase {
       GrMipmapped mipMapped, GrSurfaceOrigin origin, SkColorType colorType, SkAlphaType alphaType,
       sk_sp<SkColorSpace> colorSpace, PromiseImageTextureFulfillProc textureFulfillProc,
       PromiseImageTextureReleaseProc textureReleaseProc, PromiseImageTextureContext textureContext);
-
-  static sk_sp<SkImage> ConvertYUVATexturesToRGB(
-      GrRecordingContext*, SkYUVColorSpace, const GrBackendTexture[],
-      const SkYUVAIndex[SkYUVAIndex::kIndexCount], SkISize, GrSurfaceOrigin, GrRenderTargetContext*,
-      sk_sp<GrRefCntedCallback> releaseHelper = nullptr);
 
  private:
   GrSurfaceProxyView fView;

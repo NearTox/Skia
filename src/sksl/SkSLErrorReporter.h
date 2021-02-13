@@ -26,6 +26,15 @@ class ErrorReporter {
   virtual int errorCount() = 0;
 };
 
+/**
+ * Error reporter for tests that need an SkSL context; aborts immediately if an error is reported.
+ */
+class TestingOnly_AbortErrorReporter : public ErrorReporter {
+ public:
+  void error(int offset, String msg) override { ABORT("%s", msg.c_str()); }
+  int errorCount() override { return 0; }
+};
+
 }  // namespace SkSL
 
 #endif

@@ -19,7 +19,6 @@ class GrConditionalInUniform : public GrFragmentProcessor {
   GrConditionalInUniform(const GrConditionalInUniform& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ConditionalInUniform"; }
-  bool usesExplicitReturn() const override;
   bool test;
   SkPMColor4f color;
 

@@ -100,7 +100,7 @@ class SurfacePropsGM : public skiagm::GM {
         continue;
       }
       test_draw(surface->getCanvas(), rec.fLabel);
-      surface->draw(canvas, x, y, nullptr);
+      surface->draw(canvas, x, y);
       y += H;
     }
   }
@@ -247,5 +247,5 @@ DEF_SIMPLE_GM(surface_underdraw, canvas, 256, 256) {
   }
 
   // show it on screen
-  surf->draw(canvas, 0, 0, nullptr);
+  surf->draw(canvas, 0, 0);
 }

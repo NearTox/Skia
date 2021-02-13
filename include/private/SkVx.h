@@ -667,7 +667,9 @@ SIN Vec<N, uint16_t> mull(const Vec<N, uint8_t>& x, const Vec<N, uint8_t>& y) {
 
 #undef SINTU
 #undef SINT
+#undef SIN
 #undef SIT
 #undef SI
+#undef SKVX_ALWAYS_INLINE
 
 #endif  // SKVX_DEFINED

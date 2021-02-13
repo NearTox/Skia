@@ -24,6 +24,9 @@ void GrGLSLGeometryProcessor::emitCode(EmitArgs& args) {
     this->collectTransforms(
         args.fVertBuilder, args.fVaryingHandler, args.fUniformHandler, gpArgs.fLocalCoordVar,
         args.fFPCoordTransformHandler);
+  } else {
+    // Make sure no FPs needed the local coord variable.
+    SkASSERT(!*args.fFPCoordTransformHandler);
   }
 
   if (args.fGP.willUseTessellationShaders()) {

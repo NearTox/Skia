@@ -81,7 +81,8 @@ class GrMtlCaps : public GrCaps {
 
   uint64_t computeFormatKey(const GrBackendFormat&) const override;
 
-  GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const override;
+  GrProgramDesc makeDesc(
+      GrRenderTarget*, const GrProgramInfo&, ProgramDescOverrideFlags) const override;
 
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;

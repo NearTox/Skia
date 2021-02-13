@@ -24,9 +24,9 @@ class GrGLSLNonInlinedInUniform : public GrGLSLFragmentProcessor {
     pointVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf2_GrSLType, "point");
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(%s, %s);
+        R"SkSL(return half4(%s, %s);
 )SkSL",
-        args.fOutputColor, args.fUniformHandler->getUniformCStr(pointVar),
+        args.fUniformHandler->getUniformCStr(pointVar),
         args.fUniformHandler->getUniformCStr(pointVar));
   }
 
@@ -51,7 +51,6 @@ bool GrNonInlinedInUniform::onIsEqual(const GrFragmentProcessor& other) const {
   if (point != that.point) return false;
   return true;
 }
-bool GrNonInlinedInUniform::usesExplicitReturn() const { return false; }
 GrNonInlinedInUniform::GrNonInlinedInUniform(const GrNonInlinedInUniform& src)
     : INHERITED(kGrNonInlinedInUniform_ClassID, src.optimizationFlags()), point(src.point) {
   this->cloneAndRegisterAllChildProcessors(src);

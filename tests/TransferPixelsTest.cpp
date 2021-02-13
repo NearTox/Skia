@@ -287,7 +287,8 @@ void basic_transfer_from_test(
   data.fPixels = textureData.get();
   data.fRowBytes = textureDataRowBytes;
   sk_sp<GrTexture> tex = resourceProvider->createTexture(
-      kTexDims, format, colorType, renderable, 1, SkBudgeted::kNo, GrProtected::kNo, &data, 1);
+      kTexDims, format, colorType, renderable, 1, SkBudgeted::kNo, GrMipMapped::kNo,
+      GrProtected::kNo, &data);
   if (!tex) {
     return;
   }

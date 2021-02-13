@@ -27,7 +27,7 @@ class GrClipStackClip final : public GrClip {
 
   SkIRect getConservativeBounds() const final;
   Effect apply(
-      GrRecordingContext*, GrRenderTargetContext*, GrAAType aaType, bool hasUserStencilSettings,
+      GrRecordingContext*, GrSurfaceDrawContext*, GrAAType aaType, bool hasUserStencilSettings,
       GrAppliedClip* out, SkRect* bounds) const final;
   PreClipResult preApply(const SkRect& drawBounds, GrAA aa) const final;
 
@@ -37,12 +37,12 @@ class GrClipStackClip final : public GrClip {
  private:
   static bool PathNeedsSWRenderer(
       GrRecordingContext* context, const SkIRect& scissorRect, bool hasUserStencilSettings,
-      const GrRenderTargetContext*, const SkMatrix& viewMatrix, const SkClipStack::Element* element,
+      const GrSurfaceDrawContext*, const SkMatrix& viewMatrix, const SkClipStack::Element* element,
       bool needsStencil);
 
   bool applyClipMask(
-      GrRecordingContext*, GrRenderTargetContext*, const GrReducedClip&,
-      bool hasUserStencilSettings, GrAppliedClip*) const;
+      GrRecordingContext*, GrSurfaceDrawContext*, const GrReducedClip&, bool hasUserStencilSettings,
+      GrAppliedClip*) const;
 
   // Creates an alpha mask of the clip. The mask is a rasterization of elements through the
   // rect specified by clipSpaceIBounds.
@@ -50,10 +50,10 @@ class GrClipStackClip final : public GrClip {
 
   // Similar to createAlphaClipMask but it rasterizes in SW and uploads to the result texture.
   GrSurfaceProxyView createSoftwareClipMask(
-      GrRecordingContext*, const GrReducedClip&, GrRenderTargetContext*) const;
+      GrRecordingContext*, const GrReducedClip&, GrSurfaceDrawContext*) const;
 
   static bool UseSWOnlyPath(
-      GrRecordingContext*, bool hasUserStencilSettings, const GrRenderTargetContext*,
+      GrRecordingContext*, bool hasUserStencilSettings, const GrSurfaceDrawContext*,
       const GrReducedClip&);
 
   // SkClipStack does not track device bounds explicitly, but it will refine these device bounds

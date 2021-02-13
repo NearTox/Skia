@@ -93,8 +93,9 @@ static void drawTestCase(
   // This demonstrates that we can not measure the text if
   // there's a device transform. The canvas total matrix will
   // end up being a device transform.
-  bool drawRef = !(
-      canvas->getTotalMatrix().getType() & ~(SkMatrix::kIdentity_Mask | SkMatrix::kTranslate_Mask));
+  bool drawRef =
+      !(canvas->getLocalToDeviceAs3x3().getType() &
+        ~(SkMatrix::kIdentity_Mask | SkMatrix::kTranslate_Mask));
 
   SkRect bounds;
   if (drawRef) {

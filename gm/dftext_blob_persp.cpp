@@ -72,7 +72,7 @@ class DFTextBlobPerspGM : public skiagm::GM {
     auto surface = SkSurface::MakeRenderTarget(ctx, SkBudgeted::kNo, info, 0, &props);
     SkCanvas* canvas = surface ? surface->getCanvas() : inputCanvas;
     // init our new canvas with the old canvas's matrix
-    canvas->setMatrix(inputCanvas->getTotalMatrix());
+    canvas->setMatrix(inputCanvas->getLocalToDeviceAs3x3());
     SkScalar x = 0, y = 0;
     SkScalar maxH = 0;
     for (auto twm : {TranslateWithMatrix::kNo, TranslateWithMatrix::kYes}) {

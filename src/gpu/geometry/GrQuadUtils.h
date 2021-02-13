@@ -125,7 +125,7 @@ class TessellationHelper {
     // of effective vertices in the degenerate quad.
     int computeDegenerateQuad(
         const skvx::Vec<4, float>& signedEdgeDistances, skvx::Vec<4, float>* x2d,
-        skvx::Vec<4, float>* y2d) const;
+        skvx::Vec<4, float>* y2d, skvx::Vec<4, int32_t>* aaMask) const;
   };
 
   struct OutsetRequest {

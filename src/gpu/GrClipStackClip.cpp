@@ -20,7 +20,6 @@
 #include "src/gpu/GrGpuResourcePriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrSWMaskHelper.h"
 #include "src/gpu/GrStyle.h"
 #include "src/gpu/GrTextureProxy.h"
@@ -82,14 +81,14 @@ static std::unique_ptr<GrFragmentProcessor> create_fp_for_mask(
   auto domain = subset.makeInset(0.5, 0.5);
   auto fp = GrTextureEffect::MakeSubset(
       std::move(mask), kPremul_SkAlphaType, m, samplerState, subset, domain, caps);
-  fp = GrBlendFragmentProcessor::Make(std::move(fp), nullptr, SkBlendMode::kModulate);
+  fp = GrBlendFragmentProcessor::Make(std::move(fp), nullptr, SkBlendMode::kDstIn);
   return GrDeviceSpaceEffect::Make(std::move(fp));
 }
 
 // Does the path in 'element' require SW rendering?
 bool GrClipStackClip::PathNeedsSWRenderer(
     GrRecordingContext* context, const SkIRect& scissorRect, bool hasUserStencilSettings,
-    const GrRenderTargetContext* renderTargetContext, const SkMatrix& viewMatrix,
+    const GrSurfaceDrawContext* surfaceDrawContext, const SkMatrix& viewMatrix,
     const Element* element, bool needsStencil) {
   if (Element::DeviceSpaceType::kRect == element->getDeviceSpaceType()) {
     // rects can always be drawn directly w/o using the software path
@@ -107,7 +106,7 @@ bool GrClipStackClip::PathNeedsSWRenderer(
     }
 
     // We only use this method when rendering coverage clip masks.
-    SkASSERT(renderTargetContext->numSamples() <= 1);
+    SkASSERT(surfaceDrawContext->numSamples() <= 1);
     auto aaType = (element->isAA()) ? GrAAType::kCoverage : GrAAType::kNone;
 
     GrPathRendererChain::DrawType type = needsStencil
@@ -117,13 +116,13 @@ bool GrClipStackClip::PathNeedsSWRenderer(
     GrStyledShape shape(path, GrStyle::SimpleFill());
     GrPathRenderer::CanDrawPathArgs canDrawArgs;
     canDrawArgs.fCaps = context->priv().caps();
-    canDrawArgs.fProxy = renderTargetContext->asRenderTargetProxy();
+    canDrawArgs.fProxy = surfaceDrawContext->asRenderTargetProxy();
     canDrawArgs.fClipConservativeBounds = &scissorRect;
     canDrawArgs.fViewMatrix = &viewMatrix;
     canDrawArgs.fShape = &shape;
     canDrawArgs.fPaint = nullptr;
     canDrawArgs.fAAType = aaType;
-    SkASSERT(!renderTargetContext->wrapsVkSecondaryCB());
+    SkASSERT(!surfaceDrawContext->wrapsVkSecondaryCB());
     canDrawArgs.fTargetIsWrappedVkSecondaryCB = false;
     canDrawArgs.fHasUserStencilSettings = hasUserStencilSettings;
 
@@ -141,7 +140,7 @@ bool GrClipStackClip::PathNeedsSWRenderer(
  */
 bool GrClipStackClip::UseSWOnlyPath(
     GrRecordingContext* context, bool hasUserStencilSettings,
-    const GrRenderTargetContext* renderTargetContext, const GrReducedClip& reducedClip) {
+    const GrSurfaceDrawContext* surfaceDrawContext, const GrReducedClip& reducedClip) {
   // TODO: right now it appears that GPU clip masks are strictly slower than software. We may
   // want to revisit this assumption once we can test with render target sorting.
   return true;
@@ -152,7 +151,7 @@ bool GrClipStackClip::UseSWOnlyPath(
 
   // If we're avoiding stencils, always use SW. This includes drawing into a wrapped vulkan
   // secondary command buffer which can't handle stencils.
-  if (context->priv().caps()->avoidStencilBuffers() || renderTargetContext->wrapsVkSecondaryCB()) {
+  if (context->priv().caps()->avoidStencilBuffers() || surfaceDrawContext->wrapsVkSecondaryCB()) {
     return true;
   }
 
@@ -169,7 +168,7 @@ bool GrClipStackClip::UseSWOnlyPath(
     bool needsStencil = invert || kIntersect_SkClipOp == op || kReverseDifference_SkClipOp == op;
 
     if (PathNeedsSWRenderer(
-            context, reducedClip.scissor(), hasUserStencilSettings, renderTargetContext, translate,
+            context, reducedClip.scissor(), hasUserStencilSettings, surfaceDrawContext, translate,
             element, needsStencil)) {
       return true;
     }
@@ -181,11 +180,11 @@ bool GrClipStackClip::UseSWOnlyPath(
 // sort out what kind of clip mask needs to be created: alpha, stencil,
 // scissor, or entirely software
 GrClip::Effect GrClipStackClip::apply(
-    GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, GrAAType aa,
+    GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext, GrAAType aa,
     bool hasUserStencilSettings, GrAppliedClip* out, SkRect* bounds) const {
   SkASSERT(
-      renderTargetContext->width() == fDeviceSize.fWidth &&
-      renderTargetContext->height() == fDeviceSize.fHeight);
+      surfaceDrawContext->width() == fDeviceSize.fWidth &&
+      surfaceDrawContext->height() == fDeviceSize.fHeight);
   SkRect devBounds = SkRect::MakeIWH(fDeviceSize.fWidth, fDeviceSize.fHeight);
   if (!devBounds.intersect(*bounds)) {
     return Effect::kClippedOut;
@@ -203,9 +202,9 @@ GrClip::Effect GrClipStackClip::apply(
   // when drawing rounded div borders.
   constexpr int kMaxAnalyticElements = 4;
 
-  int maxWindowRectangles = renderTargetContext->priv().maxWindowRectangles();
+  int maxWindowRectangles = surfaceDrawContext->maxWindowRectangles();
   int maxAnalyticElements = kMaxAnalyticElements;
-  if (renderTargetContext->numSamples() > 1 || aa == GrAAType::kMSAA || hasUserStencilSettings) {
+  if (surfaceDrawContext->numSamples() > 1 || aa == GrAAType::kMSAA || hasUserStencilSettings) {
     // Disable analytic clips when we have MSAA. In MSAA we never conflate coverage and opacity.
     maxAnalyticElements = 0;
     // We disable MSAA when avoiding stencil.
@@ -234,7 +233,7 @@ GrClip::Effect GrClipStackClip::apply(
 
   if (!reducedClip.maskElements().isEmpty()) {
     if (!this->applyClipMask(
-            context, renderTargetContext, reducedClip, hasUserStencilSettings, out)) {
+            context, surfaceDrawContext, reducedClip, hasUserStencilSettings, out)) {
       return Effect::kClippedOut;
     }
     effect = Effect::kClipped;
@@ -242,7 +241,7 @@ GrClip::Effect GrClipStackClip::apply(
 
   // The opsTask ID must not be looked up until AFTER producing the clip mask (if any). That step
   // can cause a flush or otherwise change which opstask our draw is going into.
-  uint32_t opsTaskID = renderTargetContext->getOpsTask()->uniqueID();
+  uint32_t opsTaskID = surfaceDrawContext->getOpsTask()->uniqueID();
   if (auto clipFPs =
           reducedClip.finishAndDetachAnalyticElements(context, *fMatrixProvider, ccpr, opsTaskID)) {
     out->addCoverageFP(std::move(clipFPs));
@@ -253,23 +252,23 @@ GrClip::Effect GrClipStackClip::apply(
 }
 
 bool GrClipStackClip::applyClipMask(
-    GrRecordingContext* context, GrRenderTargetContext* renderTargetContext,
+    GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext,
     const GrReducedClip& reducedClip, bool hasUserStencilSettings, GrAppliedClip* out) const {
 #ifdef SK_DEBUG
   SkASSERT(reducedClip.hasScissor());
-  SkIRect rtIBounds = SkIRect::MakeWH(renderTargetContext->width(), renderTargetContext->height());
+  SkIRect rtIBounds = SkIRect::MakeWH(surfaceDrawContext->width(), surfaceDrawContext->height());
   const SkIRect& scissor = reducedClip.scissor();
   SkASSERT(rtIBounds.contains(scissor));  // Mask shouldn't be larger than the RT.
 #endif
 
   // MIXED SAMPLES TODO: We may want to explore using the stencil buffer for AA clipping.
-  if ((renderTargetContext->numSamples() <= 1 && reducedClip.maskRequiresAA()) ||
-      context->priv().caps()->avoidStencilBuffers() || renderTargetContext->wrapsVkSecondaryCB()) {
+  if ((surfaceDrawContext->numSamples() <= 1 && reducedClip.maskRequiresAA()) ||
+      context->priv().caps()->avoidStencilBuffers() || surfaceDrawContext->wrapsVkSecondaryCB()) {
     GrSurfaceProxyView result;
-    if (UseSWOnlyPath(context, hasUserStencilSettings, renderTargetContext, reducedClip)) {
+    if (UseSWOnlyPath(context, hasUserStencilSettings, surfaceDrawContext, reducedClip)) {
       // The clip geometry is complex enough that it will be more efficient to create it
       // entirely in software
-      result = this->createSoftwareClipMask(context, reducedClip, renderTargetContext);
+      result = this->createSoftwareClipMask(context, reducedClip, surfaceDrawContext);
     } else {
       result = this->createAlphaClipMask(context, reducedClip);
     }
@@ -284,8 +283,7 @@ bool GrClipStackClip::applyClipMask(
 
     // If alpha or software clip mask creation fails, fall through to the stencil code paths,
     // unless stencils are disallowed.
-    if (context->priv().caps()->avoidStencilBuffers() ||
-        renderTargetContext->wrapsVkSecondaryCB()) {
+    if (context->priv().caps()->avoidStencilBuffers() || surfaceDrawContext->wrapsVkSecondaryCB()) {
       SkDebugf(
           "WARNING: Clip mask requires stencil, but stencil unavailable. "
           "Clip will be ignored.\n");
@@ -293,7 +291,7 @@ bool GrClipStackClip::applyClipMask(
     }
   }
 
-  reducedClip.drawStencilClipMask(context, renderTargetContext);
+  reducedClip.drawStencilClipMask(context, surfaceDrawContext);
   out->hardClip().addStencilClip(reducedClip.maskGenID());
   return true;
 }
@@ -345,7 +343,7 @@ GrSurfaceProxyView GrClipStackClip::createAlphaClipMask(
     return cachedView;
   }
 
-  auto rtc = GrRenderTargetContext::MakeWithFallback(
+  auto rtc = GrSurfaceDrawContext::MakeWithFallback(
       context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kApprox,
       {reducedClip.width(), reducedClip.height()}, 1, GrMipmapped::kNo, GrProtected::kNo,
       kMaskOrigin);
@@ -445,7 +443,7 @@ static void draw_clip_elements_to_mask_helper(
 
 GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
     GrRecordingContext* context, const GrReducedClip& reducedClip,
-    GrRenderTargetContext* renderTargetContext) const {
+    GrSurfaceDrawContext* surfaceDrawContext) const {
   GrUniqueKey key;
   create_clip_mask_key(
       reducedClip.maskGenID(), reducedClip.scissor(), reducedClip.numAnalyticElements(), &key);
@@ -466,7 +464,7 @@ GrSurfaceProxyView GrClipStackClip::createSoftwareClipMask(
   }
 
   GrSurfaceProxyView view;
-  if (taskGroup && renderTargetContext) {
+  if (taskGroup && surfaceDrawContext) {
     const GrCaps* caps = context->priv().caps();
     // Create our texture proxy
     GrBackendFormat format =

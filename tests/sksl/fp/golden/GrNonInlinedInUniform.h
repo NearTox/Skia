@@ -19,7 +19,6 @@ class GrNonInlinedInUniform : public GrFragmentProcessor {
   GrNonInlinedInUniform(const GrNonInlinedInUniform& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "NonInlinedInUniform"; }
-  bool usesExplicitReturn() const override;
   SkPoint point;
 
  private:

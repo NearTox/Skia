@@ -50,7 +50,7 @@ class SK_API SkMatrix {
           | 0 1 0 |
           | 0 0 1 |
   */
-  constexpr SkMatrix() noexcept
+  constexpr SkMatrix()
       : SkMatrix(1, 0, 0, 0, 1, 0, 0, 0, 1, kIdentity_Mask | kRectStaysRect_Mask) {}
 
   /** Sets SkMatrix to scale by (sx, sy). Returned matrix is:
@@ -106,20 +106,6 @@ class SK_API SkMatrix {
     return RotateDeg(SkRadiansToDegrees(rad));
   }
 
-#ifdef SK_SUPPORT_LEGACY_MATRIX_FACTORIES
-  // DEPRECATED
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkScalar dx, SkScalar dy) {
-    return Translate(dx, dy);
-  }
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar sx, SkScalar sy) {
-    return Scale(sx, sy);
-  }
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeScale(SkScalar scale) { return Scale(scale, scale); }
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkVector t) { return MakeTrans(t.x(), t.y()); }
-  static SkMatrix SK_WARN_UNUSED_RESULT MakeTrans(SkIVector t) { return MakeTrans(t.x(), t.y()); }
-  // end DEPRECATED
-#endif
-
   /** Sets SkMatrix to:
 
           | scaleX  skewX transX |
@@ -139,7 +125,7 @@ class SK_API SkMatrix {
   */
   static SkMatrix SK_WARN_UNUSED_RESULT MakeAll(
       SkScalar scaleX, SkScalar skewX, SkScalar transX, SkScalar skewY, SkScalar scaleY,
-      SkScalar transY, SkScalar pers0, SkScalar pers1, SkScalar pers2) noexcept {
+      SkScalar transY, SkScalar pers0, SkScalar pers1, SkScalar pers2) {
     SkMatrix m;
     m.setAll(scaleX, skewX, transX, skewY, scaleY, transY, pers0, pers1, pers2);
     return m;
@@ -333,7 +319,7 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @return       value corresponding to index
   */
-  SkScalar operator[](int index) const noexcept {
+  SkScalar operator[](int index) const {
     SkASSERT((unsigned)index < 9);
     return fMat[index];
   }
@@ -345,7 +331,7 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @return       value corresponding to index
   */
-  SkScalar get(int index) const noexcept {
+  SkScalar get(int index) const {
     SkASSERT((unsigned)index < 9);
     return fMat[index];
   }
@@ -357,7 +343,7 @@ class SK_API SkMatrix {
       @param c  matrix column to fetch
       @return   value at the given matrix position
   */
-  SkScalar rc(int r, int c) const noexcept {
+  SkScalar rc(int r, int c) const {
     SkASSERT(r >= 0 && r <= 2);
     SkASSERT(c >= 0 && c <= 2);
     return fMat[r * 3 + c];
@@ -368,14 +354,14 @@ class SK_API SkMatrix {
 
       @return  horizontal scale factor
   */
-  SkScalar getScaleX() const noexcept { return fMat[kMScaleX]; }
+  SkScalar getScaleX() const { return fMat[kMScaleX]; }
 
   /** Returns scale factor multiplied by y-axis input, contributing to y-axis output.
       With mapPoints(), scales SkPoint along the y-axis.
 
       @return  vertical scale factor
   */
-  SkScalar getScaleY() const noexcept { return fMat[kMScaleY]; }
+  SkScalar getScaleY() const { return fMat[kMScaleY]; }
 
   /** Returns scale factor multiplied by x-axis input, contributing to y-axis output.
       With mapPoints(), skews SkPoint along the y-axis.
@@ -383,7 +369,7 @@ class SK_API SkMatrix {
 
       @return  vertical skew factor
   */
-  SkScalar getSkewY() const noexcept { return fMat[kMSkewY]; }
+  SkScalar getSkewY() const { return fMat[kMSkewY]; }
 
   /** Returns scale factor multiplied by y-axis input, contributing to x-axis output.
       With mapPoints(), skews SkPoint along the x-axis.
@@ -391,33 +377,33 @@ class SK_API SkMatrix {
 
       @return  horizontal scale factor
   */
-  SkScalar getSkewX() const noexcept { return fMat[kMSkewX]; }
+  SkScalar getSkewX() const { return fMat[kMSkewX]; }
 
   /** Returns translation contributing to x-axis output.
       With mapPoints(), moves SkPoint along the x-axis.
 
       @return  horizontal translation factor
   */
-  SkScalar getTranslateX() const noexcept { return fMat[kMTransX]; }
+  SkScalar getTranslateX() const { return fMat[kMTransX]; }
 
   /** Returns translation contributing to y-axis output.
       With mapPoints(), moves SkPoint along the y-axis.
 
       @return  vertical translation factor
   */
-  SkScalar getTranslateY() const noexcept { return fMat[kMTransY]; }
+  SkScalar getTranslateY() const { return fMat[kMTransY]; }
 
   /** Returns factor scaling input x-axis relative to input y-axis.
 
       @return  input x-axis perspective factor
   */
-  SkScalar getPerspX() const noexcept { return fMat[kMPersp0]; }
+  SkScalar getPerspX() const { return fMat[kMPersp0]; }
 
   /** Returns factor scaling input y-axis relative to input x-axis.
 
       @return  input y-axis perspective factor
   */
-  SkScalar getPerspY() const noexcept { return fMat[kMPersp1]; }
+  SkScalar getPerspY() const { return fMat[kMPersp1]; }
 
   /** Returns writable SkMatrix value. Asserts if index is out of range and SK_DEBUG is
       defined. Clears internal cache anticipating that caller will change SkMatrix value.
@@ -429,7 +415,7 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @return       writable value corresponding to index
   */
-  SkScalar& operator[](int index) noexcept {
+  SkScalar& operator[](int index) {
     SkASSERT((unsigned)index < 9);
     this->setTypeMask(kUnknown_Mask);
     return fMat[index];
@@ -442,7 +428,7 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @param value  scalar to store in SkMatrix
   */
-  SkMatrix& set(int index, SkScalar value) noexcept {
+  SkMatrix& set(int index, SkScalar value) {
     SkASSERT((unsigned)index < 9);
     fMat[index] = value;
     this->setTypeMask(kUnknown_Mask);
@@ -453,51 +439,51 @@ class SK_API SkMatrix {
 
       @param v  horizontal scale factor to store
   */
-  SkMatrix& setScaleX(SkScalar v) noexcept { return this->set(kMScaleX, v); }
+  SkMatrix& setScaleX(SkScalar v) { return this->set(kMScaleX, v); }
 
   /** Sets vertical scale factor.
 
       @param v  vertical scale factor to store
   */
-  SkMatrix& setScaleY(SkScalar v) noexcept { return this->set(kMScaleY, v); }
+  SkMatrix& setScaleY(SkScalar v) { return this->set(kMScaleY, v); }
 
   /** Sets vertical skew factor.
 
       @param v  vertical skew factor to store
   */
-  SkMatrix& setSkewY(SkScalar v) noexcept { return this->set(kMSkewY, v); }
+  SkMatrix& setSkewY(SkScalar v) { return this->set(kMSkewY, v); }
 
   /** Sets horizontal skew factor.
 
       @param v  horizontal skew factor to store
   */
-  SkMatrix& setSkewX(SkScalar v) noexcept { return this->set(kMSkewX, v); }
+  SkMatrix& setSkewX(SkScalar v) { return this->set(kMSkewX, v); }
 
   /** Sets horizontal translation.
 
       @param v  horizontal translation to store
   */
-  SkMatrix& setTranslateX(SkScalar v) noexcept { return this->set(kMTransX, v); }
+  SkMatrix& setTranslateX(SkScalar v) { return this->set(kMTransX, v); }
 
   /** Sets vertical translation.
 
       @param v  vertical translation to store
   */
-  SkMatrix& setTranslateY(SkScalar v) noexcept { return this->set(kMTransY, v); }
+  SkMatrix& setTranslateY(SkScalar v) { return this->set(kMTransY, v); }
 
   /** Sets input x-axis perspective factor, which causes mapXY() to vary input x-axis values
       inversely proportional to input y-axis values.
 
       @param v  perspective factor
   */
-  SkMatrix& setPerspX(SkScalar v) noexcept { return this->set(kMPersp0, v); }
+  SkMatrix& setPerspX(SkScalar v) { return this->set(kMPersp0, v); }
 
   /** Sets input y-axis perspective factor, which causes mapXY() to vary input y-axis values
       inversely proportional to input x-axis values.
 
       @param v  perspective factor
   */
-  SkMatrix& setPerspY(SkScalar v) noexcept { return this->set(kMPersp1, v); }
+  SkMatrix& setPerspY(SkScalar v) { return this->set(kMPersp1, v); }
 
   /** Sets all values from parameters. Sets matrix to:
 
@@ -517,7 +503,7 @@ class SK_API SkMatrix {
   */
   SkMatrix& setAll(
       SkScalar scaleX, SkScalar skewX, SkScalar transX, SkScalar skewY, SkScalar scaleY,
-      SkScalar transY, SkScalar persp0, SkScalar persp1, SkScalar persp2) noexcept {
+      SkScalar transY, SkScalar persp0, SkScalar persp1, SkScalar persp2) {
     fMat[kMScaleX] = scaleX;
     fMat[kMSkewX] = skewX;
     fMat[kMTransX] = transX;
@@ -537,7 +523,7 @@ class SK_API SkMatrix {
 
       @param buffer  storage for nine scalar values
   */
-  void get9(SkScalar buffer[9]) const noexcept { memcpy(buffer, fMat, 9 * sizeof(SkScalar)); }
+  void get9(SkScalar buffer[9]) const { memcpy(buffer, fMat, 9 * sizeof(SkScalar)); }
 
   /** Sets SkMatrix to nine scalar values in buffer, in member value ascending order:
       kMScaleX, kMSkewX, kMTransX, kMSkewY, kMScaleY, kMTransY, kMPersp0, kMPersp1,
@@ -1314,6 +1300,27 @@ class SK_API SkMatrix {
    */
   void mapHomogeneousPoints(SkPoint3 dst[], const SkPoint src[], int count) const;
 
+  /** Returns SkPoint pt multiplied by SkMatrix. Given:
+
+                   | A B C |        | x |
+          Matrix = | D E F |,  pt = | y |
+                   | G H I |        | 1 |
+
+      result is computed as:
+
+                        |A B C| |x|                               Ax+By+C   Dx+Ey+F
+          Matrix * pt = |D E F| |y| = |Ax+By+C Dx+Ey+F Gx+Hy+I| = ------- , -------
+                        |G H I| |1|                               Gx+Hy+I   Gx+Hy+I
+
+      @param p  SkPoint to map
+      @return   mapped SkPoint
+  */
+  SkPoint mapPoint(SkPoint pt) const {
+    SkPoint result;
+    this->mapXY(pt.x(), pt.y(), &result);
+    return result;
+  }
+
   /** Maps SkPoint (x, y) to result. SkPoint is mapped by multiplying by SkMatrix. Given:
 
                    | A B C |        | x |
@@ -1354,6 +1361,33 @@ class SK_API SkMatrix {
     SkPoint result;
     this->mapXY(x, y, &result);
     return result;
+  }
+
+  /** Returns (0, 0) multiplied by SkMatrix. Given:
+
+                   | A B C |        | 0 |
+          Matrix = | D E F |,  pt = | 0 |
+                   | G H I |        | 1 |
+
+      result is computed as:
+
+                        |A B C| |0|             C    F
+          Matrix * pt = |D E F| |0| = |C F I| = -  , -
+                        |G H I| |1|             I    I
+
+      @return   mapped (0, 0)
+  */
+  SkPoint mapOrigin() const {
+    SkScalar x = this->getTranslateX(), y = this->getTranslateY();
+    if (this->hasPerspective()) {
+      SkScalar w = fMat[kMPersp2];
+      if (w) {
+        w = 1 / w;
+      }
+      x *= w;
+      y *= w;
+    }
+    return {x, y};
   }
 
   /** Maps src vector array of length count to vector SkPoint array of equal or greater
@@ -1690,7 +1724,7 @@ class SK_API SkMatrix {
   /** Sets internal cache to unknown state. Use to force update after repeated
       modifications to SkMatrix element reference returned by operator[](int index).
   */
-  void dirtyMatrixTypeCache() noexcept { this->setTypeMask(kUnknown_Mask); }
+  void dirtyMatrixTypeCache() { this->setTypeMask(kUnknown_Mask); }
 
   /** Initializes SkMatrix with scale and translate elements.
 
@@ -1703,7 +1737,7 @@ class SK_API SkMatrix {
       @param tx  horizontal translation to store
       @param ty  vertical translation to store
   */
-  void setScaleTranslate(SkScalar sx, SkScalar sy, SkScalar tx, SkScalar ty) noexcept {
+  void setScaleTranslate(SkScalar sx, SkScalar sy, SkScalar tx, SkScalar ty) {
     fMat[kMScaleX] = sx;
     fMat[kMSkewX] = 0;
     fMat[kMTransX] = tx;
@@ -1731,7 +1765,7 @@ class SK_API SkMatrix {
 
       @return  true if matrix has only finite elements
   */
-  bool isFinite() const noexcept { return SkScalarsAreFinite(fMat, 9); }
+  bool isFinite() const { return SkScalarsAreFinite(fMat, 9); }
 
  private:
   /** Set if the matrix will map a rectangle to another rectangle. This
@@ -1760,7 +1794,7 @@ class SK_API SkMatrix {
 
   constexpr SkMatrix(
       SkScalar sx, SkScalar kx, SkScalar tx, SkScalar ky, SkScalar sy, SkScalar ty, SkScalar p0,
-      SkScalar p1, SkScalar p2, int typeMask) noexcept
+      SkScalar p1, SkScalar p2, int typeMask)
       : fMat{sx, kx, tx, ky, sy, ty, p0, p1, p2}, fTypeMask(typeMask) {}
 
   static void ComputeInv(SkScalar dst[9], const SkScalar src[9], double invDet, bool isPersp);
@@ -1768,7 +1802,7 @@ class SK_API SkMatrix {
   uint8_t computeTypeMask() const;
   uint8_t computePerspectiveTypeMask() const;
 
-  void setTypeMask(int mask) noexcept {
+  void setTypeMask(int mask) {
     // allow kUnknown or a valid mask
     SkASSERT(
         kUnknown_Mask == mask || (mask & kAllMasks) == mask ||
@@ -1777,12 +1811,12 @@ class SK_API SkMatrix {
     fTypeMask = mask;
   }
 
-  void orTypeMask(int mask) noexcept {
+  void orTypeMask(int mask) {
     SkASSERT((mask & kORableMasks) == mask);
     fTypeMask |= mask;
   }
 
-  void clearTypeMask(int mask) noexcept {
+  void clearTypeMask(int mask) {
     // only allow a valid mask
     SkASSERT((mask & kAllMasks) == mask);
     fTypeMask &= ~mask;
@@ -1798,14 +1832,14 @@ class SK_API SkMatrix {
   /** Returns true if we already know that the matrix is identity;
       false otherwise.
   */
-  bool isTriviallyIdentity() const noexcept {
+  bool isTriviallyIdentity() const {
     if (fTypeMask & kUnknown_Mask) {
       return false;
     }
     return ((fTypeMask & 0xF) == 0);
   }
 
-  inline void updateTranslateMask() noexcept {
+  inline void updateTranslateMask() {
     if ((fMat[kMTransX] != 0) | (fMat[kMTransY] != 0)) {
       fTypeMask |= kTranslate_Mask;
     } else {

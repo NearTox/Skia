@@ -11,9 +11,7 @@
 #include "include/core/SkBitmap.h"
 #include "include/core/SkDeferredDisplayListRecorder.h"
 #include "include/core/SkPromiseImageTexture.h"
-#include "include/core/SkYUVAIndex.h"
 #include "include/core/SkYUVAPixmaps.h"
-#include "include/core/SkYUVASizeInfo.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/private/SkTArray.h"
 #include "src/core/SkCachedData.h"
@@ -24,7 +22,6 @@ class SkImage;
 class SkMipmap;
 class SkPicture;
 class SkTaskGroup;
-struct SkYUVAIndex;
 
 // This class acts as a proxy for a GrBackendTexture that backs an image.
 // Whenever a promise image is created for the image, the promise image receives a ref to
@@ -53,7 +50,10 @@ class PromiseImageCallbackContext : public SkRefCnt {
 
   void release() {
     ++fDoneCnt;
-    SkASSERT(fDoneCnt <= fNumImages);
+    // YUVA Images can fail to create if they have a non-default encoded origin. This will be
+    // fixed when skbug.com/10632 is finished. This assert fires because done is called on
+    // failure and we never bumped fNumImages.
+    // SkASSERT(fDoneCnt <= fNumImages);
   }
 
   void wasAddedToImage() { fNumImages++; }
@@ -163,15 +163,15 @@ class DDLPromiseImageHelper {
     int numMipLevels() const;
 
     void setCallbackContext(int index, sk_sp<PromiseImageCallbackContext> callbackContext) {
-      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVASizeInfo::kMaxCount : 1));
+      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVAInfo::kMaxPlanes : 1));
       fCallbackContexts[index] = callbackContext;
     }
     PromiseImageCallbackContext* callbackContext(int index) const {
-      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVASizeInfo::kMaxCount : 1));
+      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVAInfo::kMaxPlanes : 1));
       return fCallbackContexts[index].get();
     }
     sk_sp<PromiseImageCallbackContext> refCallbackContext(int index) const {
-      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVASizeInfo::kMaxCount : 1));
+      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVAInfo::kMaxPlanes : 1));
       return fCallbackContexts[index];
     }
 
@@ -182,11 +182,11 @@ class DDLPromiseImageHelper {
       return fMipLevels ? GrMipmapped::kYes : GrMipmapped::kNo;
     }
     const GrBackendFormat& backendFormat(int index) const {
-      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVASizeInfo::kMaxCount : 1));
+      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVAInfo::kMaxPlanes : 1));
       return fCallbackContexts[index]->backendFormat();
     }
     const SkPromiseImageTexture* promiseTexture(int index) const {
-      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVASizeInfo::kMaxCount : 1));
+      SkASSERT(index >= 0 && index < (this->isYUV() ? SkYUVAInfo::kMaxPlanes : 1));
       return fCallbackContexts[index]->promiseImageTexture();
     }
 
@@ -209,7 +209,7 @@ class DDLPromiseImageHelper {
     SkYUVAPixmaps fYUVAPixmaps;
 
     // Up to SkYUVASizeInfo::kMaxCount for a YUVA image. Only one for a normal image.
-    sk_sp<PromiseImageCallbackContext> fCallbackContexts[SkYUVASizeInfo::kMaxCount];
+    sk_sp<PromiseImageCallbackContext> fCallbackContexts[SkYUVAInfo::kMaxPlanes];
   };
 
   // This stack-based context allows each thread to re-inflate the image indices into

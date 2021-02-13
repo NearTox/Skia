@@ -129,7 +129,14 @@ class SkRasterClipStack : SkNoncopyable {
     this->validate();
   }
 
-  void replaceClip(const SkIRect& rect) { this->writable_rc().setRect(rect); }
+  void replaceClip(const SkIRect& rect) {
+    SkIRect devRect = rect;
+    if (!devRect.intersect(fRootBounds)) {
+      this->writable_rc().setEmpty();
+    } else {
+      this->writable_rc().setRect(devRect);
+    }
+  }
 
   void setDeviceClipRestriction(SkIRect* mutableClipRestriction) {
     this->writable_rc().setDeviceClipRestriction(mutableClipRestriction);

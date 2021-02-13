@@ -14,7 +14,7 @@
 #endif
 
 sk_sp<GrGpu> GrMtlTrampoline::MakeGpu(
-    GrDirectContext* direct, const GrContextOptions& options, void* device, void* queue) {
-  return GrMtlGpu::Make(
-      direct, options, (__bridge id<MTLDevice>)device, (__bridge id<MTLCommandQueue>)queue);
+    const GrMtlBackendContext& backendContext, const GrContextOptions& options,
+    GrDirectContext* direct) {
+  return GrMtlGpu::Make(backendContext, options, direct);
 }

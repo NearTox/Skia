@@ -26,9 +26,9 @@ class GrGLSLChildProcessorSampleMatrixSingleInUniform : public GrGLSLFragmentPro
         &_outer, kFragment_GrShaderFlag, kFloat3x3_GrSLType, "matrix");
     SkString _sample0 = this->invokeChildWithMatrix(0, args);
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s;
+        R"SkSL(return %s;
 )SkSL",
-        args.fOutputColor, _sample0.c_str());
+        _sample0.c_str());
   }
 
  private:
@@ -55,7 +55,6 @@ bool GrChildProcessorSampleMatrixSingleInUniform::onIsEqual(
   if (matrix != that.matrix) return false;
   return true;
 }
-bool GrChildProcessorSampleMatrixSingleInUniform::usesExplicitReturn() const { return false; }
 GrChildProcessorSampleMatrixSingleInUniform::GrChildProcessorSampleMatrixSingleInUniform(
     const GrChildProcessorSampleMatrixSingleInUniform& src)
     : INHERITED(kGrChildProcessorSampleMatrixSingleInUniform_ClassID, src.optimizationFlags()),

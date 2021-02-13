@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkShader.h"
@@ -38,7 +39,8 @@ static void run_shader_test(
   paint_source(sourceSurface);
 
   sk_sp<SkImage> sourceImage(sourceSurface->makeImageSnapshot());
-  sk_sp<SkShader> sourceShader = sourceImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
+  sk_sp<SkShader> sourceShader =
+      sourceImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions());
 
   SkPaint paint;
   paint.setShader(sourceShader);
@@ -61,8 +63,8 @@ static void run_shader_test(
   SkMatrix matrix;
   matrix.setTranslate(SkIntToScalar(-1), SkIntToScalar(0));
 
-  sk_sp<SkShader> sourceShaderTranslated =
-      sourceImage->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &matrix);
+  sk_sp<SkShader> sourceShaderTranslated = sourceImage->makeShader(
+      SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), &matrix);
 
   destinationCanvas->clear(SK_ColorTRANSPARENT);
 

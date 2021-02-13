@@ -23,6 +23,9 @@ class GrGLSLLayoutWhen : public GrGLSLFragmentProcessor {
       sometimesVar = args.fUniformHandler->addUniform(
           &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "sometimes");
     }
+    fragBuilder->codeAppendf(
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -40,7 +43,6 @@ bool GrLayoutWhen::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrLayoutWhen::usesExplicitReturn() const { return false; }
 GrLayoutWhen::GrLayoutWhen(const GrLayoutWhen& src)
     : INHERITED(kGrLayoutWhen_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

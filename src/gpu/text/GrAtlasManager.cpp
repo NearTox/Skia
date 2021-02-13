@@ -220,12 +220,12 @@ static bool save_pixels(
   }
 
   auto sContext =
-      GrSurfaceContext::Make(dContext, std::move(view), colorType, kUnknown_SkAlphaType, nullptr);
+      GrSurfaceContext::Make(dContext, std::move(view), {colorType, kUnknown_SkAlphaType, nullptr});
   if (!sContext || !sContext->asTextureProxy()) {
     return false;
   }
 
-  bool result = sContext->readPixels(dContext, ii, bm.getPixels(), bm.rowBytes(), {0, 0});
+  bool result = sContext->readPixels(dContext, bm.pixmap(), {0, 0});
   if (!result) {
     SkDebugf("------ failed to read pixels for %s\n", filename);
     return false;

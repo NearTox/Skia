@@ -315,8 +315,8 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* pr
         settings.fForceHighPrecision = true;
       }
       std::unique_ptr<SkSL::Program> fs = GrSkSLtoGLSL(
-          gpu()->glContext(), SkSL::Program::kFragment_Kind, *sksl[kFragment_GrShaderType],
-          settings, &glsl[kFragment_GrShaderType], errorHandler);
+          this->gpu(), SkSL::Program::kFragment_Kind, *sksl[kFragment_GrShaderType], settings,
+          &glsl[kFragment_GrShaderType], errorHandler);
       if (!fs) {
         cleanup_program(fGpu, programID, shadersToDelete);
         return nullptr;
@@ -338,7 +338,7 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* pr
     if (glsl[kVertex_GrShaderType].empty()) {
       // Don't have cached GLSL, need to compile SkSL->GLSL
       std::unique_ptr<SkSL::Program> vs = GrSkSLtoGLSL(
-          gpu()->glContext(), SkSL::Program::kVertex_Kind, *sksl[kVertex_GrShaderType], settings,
+          this->gpu(), SkSL::Program::kVertex_Kind, *sksl[kVertex_GrShaderType], settings,
           &glsl[kVertex_GrShaderType], errorHandler);
       if (!vs) {
         cleanup_program(fGpu, programID, shadersToDelete);
@@ -400,8 +400,8 @@ sk_sp<GrGLProgram> GrGLProgramBuilder::finalize(const GrGLPrecompiledProgram* pr
         // Don't have cached GLSL, need to compile SkSL->GLSL
         std::unique_ptr<SkSL::Program> gs;
         gs = GrSkSLtoGLSL(
-            gpu()->glContext(), SkSL::Program::kGeometry_Kind, *sksl[kGeometry_GrShaderType],
-            settings, &glsl[kGeometry_GrShaderType], errorHandler);
+            this->gpu(), SkSL::Program::kGeometry_Kind, *sksl[kGeometry_GrShaderType], settings,
+            &glsl[kGeometry_GrShaderType], errorHandler);
         if (!gs) {
           cleanup_program(fGpu, programID, shadersToDelete);
           return nullptr;
@@ -568,7 +568,7 @@ bool GrGLProgramBuilder::PrecompileProgram(
 
   auto compileShader = [&](SkSL::Program::Kind kind, const SkSL::String& sksl, GrGLenum type) {
     SkSL::String glsl;
-    auto program = GrSkSLtoGLSL(gpu->glContext(), kind, sksl, settings, &glsl, errorHandler);
+    auto program = GrSkSLtoGLSL(gpu, kind, sksl, settings, &glsl, errorHandler);
     if (!program) {
       return false;
     }

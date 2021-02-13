@@ -156,9 +156,7 @@ class SkDrawableGlyphBuffer {
   //
   // In theory, newMappedOrigin - initialMappedOrigin should be integer, but the vagaries of
   // floating point don't guarantee that, so force it to integer.
-  //
-  // Returns the origin mapped through the initial matrix.
-  SkPoint startGPUDevice(
+  void startGPUDevice(
       const SkZip<const SkGlyphID, const SkPoint>& source, SkPoint origin,
       const SkMatrix& viewMatrix, const SkGlyphPositionRoundingSpec& roundingSpec);
 

@@ -15,8 +15,7 @@
 #include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrProgramInfo.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
@@ -39,7 +38,7 @@ class GP : public GrGeometryProcessor {
  public:
   static GrGeometryProcessor* Make(
       SkArenaAlloc* arena, Mode mode, sk_sp<GrColorSpaceXform> colorSpaceXform) {
-    return arena->make<GP>(mode, std::move(colorSpaceXform));
+    return arena->make([&](void* ptr) { return new (ptr) GP(mode, std::move(colorSpaceXform)); });
   }
 
   const char* name() const override { return "VertexColorXformGP"; }
@@ -96,8 +95,6 @@ class GP : public GrGeometryProcessor {
   }
 
  private:
-  friend class ::SkArenaAlloc;  // for access to ctor
-
   GP(Mode mode, sk_sp<GrColorSpaceXform> colorSpaceXform)
       : INHERITED(kVertexColorSpaceBenchGP_ClassID),
         fMode(mode),
@@ -159,15 +156,15 @@ class Op : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-      GrXferBarrierFlags renderPassXferBarriers) override {
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) override {
     GrGeometryProcessor* gp = GP::Make(arena, fMode, fColorSpaceXform);
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         GrProcessorSet::MakeEmptySet(), GrPrimitiveType::kTriangleStrip, renderPassXferBarriers,
-        GrPipeline::InputFlags::kNone);
+        colorLoadOp, GrPipeline::InputFlags::kNone);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -282,7 +279,7 @@ class VertexColorSpaceBench : public Benchmark {
     const int kDrawsPerLoop = 32;
 
     for (int i = 0; i < loops; ++i) {
-      auto rtc = GrRenderTargetContext::Make(
+      auto rtc = GrSurfaceDrawContext::Make(
           context, GrColorType::kRGBA_8888, p3, SkBackingFit::kApprox, {100, 100});
       SkASSERT(rtc);
 
@@ -302,7 +299,7 @@ class VertexColorSpaceBench : public Benchmark {
             op = GrOp::Make<Op>(rContext, c4f, fMode);
           }
         }
-        rtc->priv().testingOnly_addDrawOp(std::move(op));
+        rtc->addDrawOp(std::move(op));
       }
 
       context->flushAndSubmit();

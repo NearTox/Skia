@@ -245,7 +245,7 @@ class SkShaderBase : public SkShader {
   virtual skvm::Color onProgram(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
       const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
-      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const;
+      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const = 0;
 
   using INHERITED = SkShader;
 };

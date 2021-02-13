@@ -45,13 +45,21 @@ class GrMtlCommandBuffer : public SkRefCnt {
   void encodeWaitForEvent(id<MTLEvent>, uint64_t value) SK_API_AVAILABLE(macos(10.14), ios(12.0));
 
   void waitUntilCompleted() { [fCmdBuffer waitUntilCompleted]; }
+  bool isCompleted() {
+    return fCmdBuffer.status == MTLCommandBufferStatusCompleted ||
+           fCmdBuffer.status == MTLCommandBufferStatusError;
+  }
   void callFinishedCallbacks() { fFinishedCallbacks.reset(); }
 
  private:
   static const int kInitialTrackedResourcesCount = 32;
 
   GrMtlCommandBuffer(id<MTLCommandBuffer> cmdBuffer)
-      : fCmdBuffer(cmdBuffer), fPreviousRenderPassDescriptor(nil), fHasWork(false) {}
+      : fCmdBuffer(cmdBuffer),
+        fActiveBlitCommandEncoder(nil),
+        fActiveRenderCommandEncoder(nil),
+        fPreviousRenderPassDescriptor(nil),
+        fHasWork(false) {}
 
   void endAllEncoding();
 

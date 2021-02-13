@@ -23,8 +23,7 @@
 #include "src/core/SkTLList.h"
 #include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrPaint.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/effects/GrConvexPolyEffect.h"
 #include "tools/gpu/TestOps.h"
 
@@ -102,7 +101,7 @@ class ConvexPolyEffect : public GpuGM {
   }
 
   void onDraw(
-      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext,
+      GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext,
       SkCanvas* canvas) override {
     SkScalar y = 0;
     static constexpr SkScalar kDX = 12.f;
@@ -130,7 +129,7 @@ class ConvexPolyEffect : public GpuGM {
 
         auto rect = p.getBounds().makeOutset(kOutset, kOutset);
         auto op = sk_gpu_test::test_ops::MakeRect(context, std::move(grPaint), rect);
-        renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
+        surfaceDrawContext->addDrawOp(std::move(op));
 
         x += SkScalarCeilToScalar(path->getBounds().width() + kDX);
       }
@@ -167,7 +166,7 @@ class ConvexPolyEffect : public GpuGM {
         auto drawRect = rect.makeOutset(kOutset, kOutset);
         auto op = sk_gpu_test::test_ops::MakeRect(context, std::move(grPaint), drawRect);
 
-        renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
+        surfaceDrawContext->addDrawOp(std::move(op));
 
         x += SkScalarCeilToScalar(rect.width() + kDX);
       }

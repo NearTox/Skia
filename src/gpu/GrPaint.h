@@ -91,6 +91,10 @@ class GrPaint {
   GrFragmentProcessor* getCoverageFragmentProcessor() const {
     return fCoverageFragmentProcessor.get();
   }
+  bool usesVaryingCoords() const {
+    return (fColorFragmentProcessor && fColorFragmentProcessor->usesVaryingCoords()) ||
+           (fCoverageFragmentProcessor && fCoverageFragmentProcessor->usesVaryingCoords());
+  }
 
   /**
    * Returns true if the paint's output color will be constant after blending. If the result is

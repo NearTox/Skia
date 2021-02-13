@@ -302,13 +302,13 @@ DEF_TEST(Skottie_Properties, reporter) {
   REPORTER_ASSERT(reporter, texts.size() == 1);
   REPORTER_ASSERT(reporter, texts[0].node_name.equals("layer_1"));
   REPORTER_ASSERT(
-      reporter,
-      texts[0].handle->get() ==
-          skottie::TextPropertyValue(
-              {test_typeface, SkString("inline_text"), 100, 0, 120, 12, 0, SkTextUtils::kLeft_Align,
-               Shaper::VAlign::kTopBaseline, Shaper::ResizePolicy::kNone,
-               Shaper::LinebreakPolicy::kExplicit, SkRect::MakeEmpty(), SK_ColorTRANSPARENT,
-               SK_ColorTRANSPARENT, TextPaintOrder::kFillStroke, false, false}));
+      reporter, texts[0].handle->get() ==
+                    skottie::TextPropertyValue(
+                        {test_typeface, SkString("inline_text"), 100, 0, 120, 12, 0,
+                         SkTextUtils::kLeft_Align, Shaper::VAlign::kTopBaseline,
+                         Shaper::ResizePolicy::kNone, Shaper::LinebreakPolicy::kExplicit,
+                         Shaper::Direction::kLTR, SkRect::MakeEmpty(), SK_ColorTRANSPARENT,
+                         SK_ColorTRANSPARENT, TextPaintOrder::kFillStroke, false, false}));
 }
 
 DEF_TEST(Skottie_Annotations, reporter) {
@@ -448,6 +448,7 @@ DEF_TEST(Skottie_Shaper_HAlign, reporter) {
           Shaper::VAlign::kTopBaseline,
           Shaper::ResizePolicy::kNone,
           Shaper::LinebreakPolicy::kExplicit,
+          Shaper::Direction::kLTR,
           Shaper::Flags::kNone};
 
       const auto shape_result = Shaper::Shape(text, desc, text_point, SkFontMgr::RefDefault());
@@ -509,6 +510,7 @@ DEF_TEST(Skottie_Shaper_VAlign, reporter) {
           talign.align,
           Shaper::ResizePolicy::kNone,
           Shaper::LinebreakPolicy::kParagraph,
+          Shaper::Direction::kLTR,
           Shaper::Flags::kNone};
 
       const auto shape_result = Shaper::Shape(text, desc, text_box, SkFontMgr::RefDefault());
@@ -545,6 +547,7 @@ DEF_TEST(Skottie_Shaper_FragmentGlyphs, reporter) {
       Shaper::VAlign::kTop,
       Shaper::ResizePolicy::kNone,
       Shaper::LinebreakPolicy::kParagraph,
+      Shaper::Direction::kLTR,
       Shaper::Flags::kNone};
 
   const SkString text("Foo bar baz");
@@ -634,6 +637,7 @@ DEF_TEST(Skottie_Shaper_ExplicitFontMgr, reporter) {
       Shaper::VAlign::kTop,
       Shaper::ResizePolicy::kNone,
       Shaper::LinebreakPolicy::kParagraph,
+      Shaper::Direction::kLTR,
       Shaper::Flags::kNone};
 
   const auto text_box = SkRect::MakeWH(100, 100);

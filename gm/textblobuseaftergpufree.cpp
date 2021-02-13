@@ -20,7 +20,7 @@
 
 #include <string.h>
 
-class GrRenderTargetContext;
+class GrSurfaceDrawContext;
 
 // This tests that we correctly regenerate textblobs after freeing all gpu resources crbug/491350
 namespace skiagm {
@@ -33,7 +33,7 @@ class TextBlobUseAfterGpuFree : public GpuGM {
 
   SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
-  void onDraw(GrRecordingContext* context, GrRenderTargetContext*, SkCanvas* canvas) override {
+  void onDraw(GrRecordingContext* context, GrSurfaceDrawContext*, SkCanvas* canvas) override {
     const char text[] = "Hamburgefons";
 
     SkFont font(ToolUtils::create_portable_typeface(), 20);

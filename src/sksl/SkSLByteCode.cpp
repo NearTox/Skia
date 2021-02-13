@@ -5,21 +5,21 @@
  * found in the LICENSE file.
  */
 
-#ifndef SKSL_STANDALONE
+#include "include/core/SkPoint3.h"
+#include "include/private/SkVx.h"
+#include "src/core/SkUtils.h"  // sk_unaligned_load
+#include "src/sksl/SkSLByteCode.h"
+#include "src/sksl/SkSLByteCodeGenerator.h"
+#include "src/sksl/SkSLExternalFunction.h"
+#include "src/sksl/SkSLOutputStream.h"
+#include "src/sksl/SkSLStringStream.h"
 
-#  include "include/core/SkPoint3.h"
-#  include "include/private/SkVx.h"
-#  include "src/core/SkUtils.h"  // sk_unaligned_load
-#  include "src/sksl/SkSLByteCode.h"
-#  include "src/sksl/SkSLByteCodeGenerator.h"
-#  include "src/sksl/SkSLExternalValue.h"
-
-#  include <functional>
-#  include <vector>
+#include <functional>
+#include <vector>
 
 namespace SkSL {
 
-#  if defined(SK_ENABLE_SKSL_INTERPRETER)
+#if defined(SK_ENABLE_SKSL_INTERPRETER)
 
 constexpr int VecWidth = ByteCode::kVecWidth;
 
@@ -28,27 +28,27 @@ struct Interpreter {
   using I32 = skvx::Vec<VecWidth, int32_t>;
   using U32 = skvx::Vec<VecWidth, uint32_t>;
 
-#    define READ8() (*(ip++))
-#    define READ16() (ip += 2, sk_unaligned_load<uint16_t>(ip - 2))
-#    define READ32() (ip += 4, sk_unaligned_load<uint32_t>(ip - 4))
-#    define READ_INST()                   \
-      (ip += sizeof(ByteCodeInstruction), \
-       sk_unaligned_load<ByteCodeInstruction>(ip - sizeof(ByteCodeInstruction)))
+#  define READ8() (*(ip++))
+#  define READ16() (ip += 2, sk_unaligned_load<uint16_t>(ip - 2))
+#  define READ32() (ip += 4, sk_unaligned_load<uint32_t>(ip - 4))
+#  define READ_INST()                   \
+    (ip += sizeof(ByteCodeInstruction), \
+     sk_unaligned_load<ByteCodeInstruction>(ip - sizeof(ByteCodeInstruction)))
 
-#    define DISASSEMBLE_COUNT(op, text) \
-      case ByteCodeInstruction::op:     \
-        printf(text " %d", READ8());    \
-        break;
+#  define DISASSEMBLE_COUNT(op, text)   \
+    case ByteCodeInstruction::op:       \
+      out->printf(text " %d", READ8()); \
+      break;
 
-#    define DISASSEMBLE_COUNT_SLOT(op, text) \
-      case ByteCodeInstruction::op: {        \
-        int N = READ8(), slot = READ8();     \
-        printf(text " %d [%d]", N, slot);    \
-      } break;
+#  define DISASSEMBLE_COUNT_SLOT(op, text)   \
+    case ByteCodeInstruction::op: {          \
+      int N = READ8(), slot = READ8();       \
+      out->printf(text " %d [%d]", N, slot); \
+    } break;
 
-  static const uint8_t* DisassembleInstruction(const uint8_t* ip) {
+  static const uint8_t* DisassembleInstruction(const uint8_t* ip, OutputStream* out) {
     auto inst = READ_INST();
-    printf("%02x ", (int)inst);
+    out->printf("%02x ", (int)inst);
     switch (inst) {
       DISASSEMBLE_COUNT(kAbs, "abs")
       DISASSEMBLE_COUNT(kAddF, "addf")
@@ -57,18 +57,19 @@ struct Interpreter {
       DISASSEMBLE_COUNT(kACos, "acos")
       DISASSEMBLE_COUNT(kASin, "asin")
       DISASSEMBLE_COUNT(kATan, "atan")
-      case ByteCodeInstruction::kBranch: printf("branch %d", READ16()); break;
-      case ByteCodeInstruction::kCall: printf("call %d", READ8()); break;
+      DISASSEMBLE_COUNT(kATan2, "atan2")
+      case ByteCodeInstruction::kBranch: out->printf("branch %d", READ16()); break;
+      case ByteCodeInstruction::kCall: out->printf("call %d", READ8()); break;
       case ByteCodeInstruction::kCallExternal: {
         int argumentCount = READ8();
         int returnCount = READ8();
-        int externalValue = READ8();
-        printf("callexternal %d, %d, %d", argumentCount, returnCount, externalValue);
+        int externalFunction = READ8();
+        out->printf("callexternal %d, %d, %d", argumentCount, returnCount, externalFunction);
         break;
       }
         DISASSEMBLE_COUNT(kCeil, "ceil")
       case ByteCodeInstruction::kClampIndex:
-        printf("clampindex %d", READ8());
+        out->printf("clampindex %d", READ8());
         break;
         DISASSEMBLE_COUNT(kCompareIEQ, "compareieq")
         DISASSEMBLE_COUNT(kCompareINEQ, "compareineq")
@@ -98,10 +99,10 @@ struct Interpreter {
         DISASSEMBLE_COUNT(kExp2, "exp2")
         DISASSEMBLE_COUNT(kFloor, "floor")
         DISASSEMBLE_COUNT(kFract, "fract")
-      case ByteCodeInstruction::kInverse2x2: printf("inverse2x2"); break;
-      case ByteCodeInstruction::kInverse3x3: printf("inverse3x3"); break;
+      case ByteCodeInstruction::kInverse2x2: out->printf("inverse2x2"); break;
+      case ByteCodeInstruction::kInverse3x3: out->printf("inverse3x3"); break;
       case ByteCodeInstruction::kInverse4x4:
-        printf("inverse4x4");
+        out->printf("inverse4x4");
         break;
         DISASSEMBLE_COUNT(kInvSqrt, "inversesqrt")
         DISASSEMBLE_COUNT(kLerp, "lerp")
@@ -112,7 +113,7 @@ struct Interpreter {
         DISASSEMBLE_COUNT(kLoadExtendedGlobal, "loadextendedglobal")
         DISASSEMBLE_COUNT(kLoadExtendedUniform, "loadextendeduniform")
       case ByteCodeInstruction::kLoadFragCoord:
-        printf("loadfragcoord");
+        out->printf("loadfragcoord");
         break;
         DISASSEMBLE_COUNT(kLog, "log")
         DISASSEMBLE_COUNT(kLog2, "log2")
@@ -121,14 +122,14 @@ struct Interpreter {
         int srcRows = READ8();
         int dstCols = READ8();
         int dstRows = READ8();
-        printf("matrixtomatrix %dx%d %dx%d", srcCols, srcRows, dstCols, dstRows);
+        out->printf("matrixtomatrix %dx%d %dx%d", srcCols, srcRows, dstCols, dstRows);
         break;
       }
       case ByteCodeInstruction::kMatrixMultiply: {
         int lCols = READ8();
         int lRows = READ8();
         int rCols = READ8();
-        printf("matrixmultiply %dx%d %dx%d", lCols, lRows, rCols, lCols);
+        out->printf("matrixmultiply %dx%d %dx%d", lCols, lRows, rCols, lCols);
         break;
       }
         DISASSEMBLE_COUNT(kMaxF, "maxf")
@@ -136,6 +137,7 @@ struct Interpreter {
         DISASSEMBLE_COUNT(kMinF, "minf")
         DISASSEMBLE_COUNT(kMinS, "mins")
         DISASSEMBLE_COUNT(kMix, "mix")
+        DISASSEMBLE_COUNT(kMod, "mod")
         DISASSEMBLE_COUNT(kMultiplyF, "multiplyf")
         DISASSEMBLE_COUNT(kMultiplyI, "multiplyi")
         DISASSEMBLE_COUNT(kNegateF, "negatef")
@@ -150,31 +152,32 @@ struct Interpreter {
           uint32_t u;
           float f;
         } pun = {v};
-        printf("pushimmediate %s", (to_string(v) + "(" + to_string(pun.f) + ")").c_str());
+        out->printf("pushimmediate %s", (to_string(v) + "(" + to_string(pun.f) + ")").c_str());
         break;
       }
-        DISASSEMBLE_COUNT_SLOT(kReadExternal, "readexternal")
         DISASSEMBLE_COUNT(kRemainderF, "remainderf")
         DISASSEMBLE_COUNT(kRemainderS, "remainders")
         DISASSEMBLE_COUNT(kRemainderU, "remainderu")
         DISASSEMBLE_COUNT(kReserve, "reserve")
         DISASSEMBLE_COUNT(kReturn, "return")
-      case ByteCodeInstruction::kSample: printf("sample %d", READ8()); break;
-      case ByteCodeInstruction::kSampleExplicit: printf("sampleExplicit %d", READ8()); break;
-      case ByteCodeInstruction::kSampleMatrix: printf("sampleMatrix %d", READ8()); break;
+      case ByteCodeInstruction::kSample: out->printf("sample %d", READ8()); break;
+      case ByteCodeInstruction::kSampleExplicit: out->printf("sampleExplicit %d", READ8()); break;
+      case ByteCodeInstruction::kSampleMatrix: out->printf("sampleMatrix %d", READ8()); break;
       case ByteCodeInstruction::kScalarToMatrix: {
         int cols = READ8();
         int rows = READ8();
-        printf("scalartomatrix %dx%d", cols, rows);
+        out->printf("scalartomatrix %dx%d", cols, rows);
         break;
       }
-      case ByteCodeInstruction::kShiftLeft: printf("shl %d", READ8()); break;
-      case ByteCodeInstruction::kShiftRightS: printf("shrs %d", READ8()); break;
+      case ByteCodeInstruction::kShiftLeft: out->printf("shl %d", READ8()); break;
+      case ByteCodeInstruction::kShiftRightS: out->printf("shrs %d", READ8()); break;
       case ByteCodeInstruction::kShiftRightU:
-        printf("shru %d", READ8());
+        out->printf("shru %d", READ8());
         break;
+        DISASSEMBLE_COUNT(kSign, "sign")
         DISASSEMBLE_COUNT(kSin, "sin")
         DISASSEMBLE_COUNT(kSqrt, "sqrt")
+        DISASSEMBLE_COUNT(kStep, "step")
         DISASSEMBLE_COUNT_SLOT(kStore, "store")
         DISASSEMBLE_COUNT_SLOT(kStoreGlobal, "storeglobal")
         DISASSEMBLE_COUNT(kStoreExtended, "storeextended")
@@ -182,31 +185,32 @@ struct Interpreter {
         DISASSEMBLE_COUNT(kSubtractF, "subtractf")
         DISASSEMBLE_COUNT(kSubtractI, "subtracti")
       case ByteCodeInstruction::kSwizzle: {
-        printf("swizzle %d, ", READ8());
+        out->printf("swizzle %d, ", READ8());
         int count = READ8();
-        printf("%d", count);
+        out->printf("%d", count);
         for (int i = 0; i < count; ++i) {
-          printf(", %d", READ8());
+          out->printf(", %d", READ8());
         }
         break;
       }
         DISASSEMBLE_COUNT(kTan, "tan")
-        DISASSEMBLE_COUNT_SLOT(kWriteExternal, "writeexternal")
         DISASSEMBLE_COUNT(kXorB, "xorb")
-      case ByteCodeInstruction::kMaskPush: printf("maskpush"); break;
-      case ByteCodeInstruction::kMaskPop: printf("maskpop"); break;
-      case ByteCodeInstruction::kMaskNegate: printf("masknegate"); break;
-      case ByteCodeInstruction::kMaskBlend: printf("maskblend %d", READ8()); break;
-      case ByteCodeInstruction::kBranchIfAllFalse: printf("branchifallfalse %d", READ16()); break;
-      case ByteCodeInstruction::kLoopBegin: printf("loopbegin"); break;
-      case ByteCodeInstruction::kLoopNext: printf("loopnext"); break;
-      case ByteCodeInstruction::kLoopMask: printf("loopmask"); break;
-      case ByteCodeInstruction::kLoopEnd: printf("loopend"); break;
-      case ByteCodeInstruction::kLoopContinue: printf("loopcontinue"); break;
-      case ByteCodeInstruction::kLoopBreak: printf("loopbreak"); break;
+      case ByteCodeInstruction::kMaskPush: out->printf("maskpush"); break;
+      case ByteCodeInstruction::kMaskPop: out->printf("maskpop"); break;
+      case ByteCodeInstruction::kMaskNegate: out->printf("masknegate"); break;
+      case ByteCodeInstruction::kMaskBlend: out->printf("maskblend %d", READ8()); break;
+      case ByteCodeInstruction::kBranchIfAllFalse:
+        out->printf("branchifallfalse %d", READ16());
+        break;
+      case ByteCodeInstruction::kLoopBegin: out->printf("loopbegin"); break;
+      case ByteCodeInstruction::kLoopNext: out->printf("loopnext"); break;
+      case ByteCodeInstruction::kLoopMask: out->printf("loopmask"); break;
+      case ByteCodeInstruction::kLoopEnd: out->printf("loopend"); break;
+      case ByteCodeInstruction::kLoopContinue: out->printf("loopcontinue"); break;
+      case ByteCodeInstruction::kLoopBreak: out->printf("loopbreak"); break;
       default:
         ip -= sizeof(ByteCodeInstruction);
-        printf("unknown(%d)\n", (int)(intptr_t)READ_INST());
+        out->printf("unknown(%d)\n", (int)(intptr_t)READ_INST());
         SkASSERT(false);
     }
     return ip;
@@ -215,48 +219,48 @@ struct Interpreter {
 // A naive implementation of / or % using skvx operations will likely crash with a divide by zero
 // in inactive vector lanes, so we need to be sure to avoid masked-off lanes.
 // TODO: Would it be better to do this with a select of (lane, 1) based on mask?
-#    define VECTOR_BINARY_MASKED_OP(inst, field, op)     \
-      case ByteCodeInstruction::inst: {                  \
-        int count = READ8();                             \
-        for (int i = count; i > 0; --i) {                \
-          for (int j = 0; j < VecWidth; ++j) {           \
-            if (mask()[j]) {                             \
-              sp[-count].field[j] op## = sp[0].field[j]; \
-            }                                            \
-          }                                              \
-          POP();                                         \
-        }                                                \
-      }                                                  \
-        continue;
+#  define VECTOR_BINARY_MASKED_OP(inst, field, op)     \
+    case ByteCodeInstruction::inst: {                  \
+      int count = READ8();                             \
+      for (int i = count; i > 0; --i) {                \
+        for (int j = 0; j < VecWidth; ++j) {           \
+          if (mask()[j]) {                             \
+            sp[-count].field[j] op## = sp[0].field[j]; \
+          }                                            \
+        }                                              \
+        POP();                                         \
+      }                                                \
+    }                                                  \
+      continue;
 
-#    define VECTOR_BINARY_OP(inst, field, op)           \
-      case ByteCodeInstruction::inst: {                 \
-        int count = READ8();                            \
-        for (int i = count; i > 0; --i) {               \
-          sp[-count] = sp[-count].field op sp[0].field; \
-          POP();                                        \
-        }                                               \
+#  define VECTOR_BINARY_OP(inst, field, op)           \
+    case ByteCodeInstruction::inst: {                 \
+      int count = READ8();                            \
+      for (int i = count; i > 0; --i) {               \
+        sp[-count] = sp[-count].field op sp[0].field; \
+        POP();                                        \
+      }                                               \
+    }                                                 \
+      continue;
+
+#  define VECTOR_BINARY_FN(inst, field, fn)             \
+    case ByteCodeInstruction::inst: {                   \
+      int count = READ8();                              \
+      for (int i = count; i > 0; --i) {                 \
+        sp[-count] = fn(sp[-count].field, sp[0].field); \
+        POP();                                          \
       }                                                 \
-        continue;
+    }                                                   \
+      continue;
 
-#    define VECTOR_BINARY_FN(inst, field, fn)             \
-      case ByteCodeInstruction::inst: {                   \
-        int count = READ8();                              \
-        for (int i = count; i > 0; --i) {                 \
-          sp[-count] = fn(sp[-count].field, sp[0].field); \
-          POP();                                          \
-        }                                                 \
-      }                                                   \
-        continue;
-
-#    define VECTOR_UNARY_FN(inst, fn, field) \
-      case ByteCodeInstruction::inst: {      \
-        int count = READ8();                 \
-        for (int i = count; i-- > 0;) {      \
-          sp[-i] = fn(sp[-i].field);         \
-        }                                    \
-      }                                      \
-        continue;
+#  define VECTOR_UNARY_FN(inst, fn, field) \
+    case ByteCodeInstruction::inst: {      \
+      int count = READ8();                 \
+      for (int i = count; i-- > 0;) {      \
+        sp[-i] = fn(sp[-i].field);         \
+      }                                    \
+    }                                      \
+      continue;
 
   union VValue {
     VValue() {}
@@ -278,14 +282,14 @@ struct Interpreter {
 
   static F32 VecMod(F32 a, F32 b) { return a - skvx::trunc(a / b) * b; }
 
-#    define spf(index) sp[index].fFloat
+#  define spf(index) sp[index].fFloat
 
   static void CallExternal(
       const ByteCode* byteCode, const uint8_t*& ip, VValue*& sp, int baseIndex, I32 mask) {
     int argumentCount = READ8();
     int returnCount = READ8();
     int target = READ8();
-    const ExternalValue* v = byteCode->fExternalValues[target];
+    const ExternalFunction* f = byteCode->fExternalFunctions[target];
     sp -= argumentCount - 1;
 
     float tmpArgs[4];
@@ -298,7 +302,7 @@ struct Interpreter {
         for (int j = 0; j < argumentCount; ++j) {
           tmpArgs[j] = sp[j].fFloat[i];
         }
-        v->call(baseIndex + i, tmpArgs, tmpReturn);
+        f->call(baseIndex + i, tmpArgs, tmpReturn);
         for (int j = 0; j < returnCount; ++j) {
           sp[j].fFloat[i] = tmpReturn[j];
         }
@@ -384,8 +388,8 @@ struct Interpreter {
 
     VValue* sp = stack + f->fParameterCount + f->fLocalCount - 1;
 
-#    define POP() (*(sp--))
-#    define PUSH(v) (sp[1] = v, ++sp)
+#  define POP() (*(sp--))
+#  define PUSH(v) (sp[1] = v, ++sp)
 
     const uint8_t* code = f->fCode.data();
     const uint8_t* ip = code;
@@ -411,11 +415,11 @@ struct Interpreter {
     auto mask = [&]() { return *maskPtr & *loopPtr; };
 
     for (;;) {
-#    ifdef TRACE
+#  ifdef TRACE
       printf("at %3d ", (int)(ip - code));
       disassemble_instruction(ip);
       printf(" (stack: %d)\n", (int)(sp - stack) + 1);
-#    endif
+#  endif
       ByteCodeInstruction inst = READ_INST();
       switch (inst) {
         VECTOR_UNARY_FN(kAbs, skvx::abs, fFloat)
@@ -658,6 +662,8 @@ struct Interpreter {
         }
           continue;
 
+          VECTOR_BINARY_FN(kMod, fFloat, [](auto x, auto y) { return x - y * skvx::floor(x / y); })
+
           VECTOR_BINARY_OP(kMultiplyI, fSigned, *)
           VECTOR_BINARY_OP(kMultiplyF, fFloat, *)
 
@@ -670,23 +676,8 @@ struct Interpreter {
 
           VECTOR_BINARY_FN(kPow, fFloat, [](auto x, auto y) { return skvx::map(powf, x, y); })
 
-        case ByteCodeInstruction::kPushImmediate: PUSH(U32(READ32())); continue;
-
-        case ByteCodeInstruction::kReadExternal: {
-          int count = READ8(), slot = READ8();
-          SkASSERT(count <= 4);
-          float tmp[4];
-          I32 m = mask();
-          for (int i = 0; i < VecWidth; ++i) {
-            if (m[i]) {
-              byteCode->fExternalValues[slot]->read(baseIndex + i, tmp);
-              for (int j = 0; j < count; ++j) {
-                sp[j + 1].fFloat[i] = tmp[j];
-              }
-            }
-          }
-          sp += count;
-        }
+        case ByteCodeInstruction::kPushImmediate:
+          PUSH(U32(READ32()));
           continue;
 
           VECTOR_BINARY_FN(kRemainderF, fFloat, VecMod)
@@ -762,6 +753,16 @@ struct Interpreter {
           VECTOR_UNARY_FN(
               kInvSqrt, [](auto x) { return 1.0f / skvx::sqrt(x); }, fFloat)
           VECTOR_UNARY_FN(kSqrt, skvx::sqrt, fFloat)
+          VECTOR_UNARY_FN(
+              kSign,
+              [](auto x) {
+                return skvx::if_then_else(
+                    x < 0, F32(-1.0f), skvx::if_then_else(x > 0, F32(1.0f), F32(0.0f)));
+              },
+              fFloat)
+          VECTOR_BINARY_FN(kStep, fFloat, [](auto edge, auto x) {
+            return skvx::if_then_else(x < edge, F32(0.0f), F32(1.0f));
+          })
 
         case ByteCodeInstruction::kStore: {
           int count = READ8(), slot = READ8();
@@ -829,25 +830,10 @@ struct Interpreter {
 
           VECTOR_UNARY_FN(
               kATan, [](auto x) { return skvx::map(atanf, x); }, fFloat)
+          VECTOR_BINARY_FN(kATan2, fFloat, [](auto y, auto x) { return skvx::map(atan2f, y, x); })
+
           VECTOR_UNARY_FN(
               kTan, [](auto x) { return skvx::map(tanf, x); }, fFloat)
-
-        case ByteCodeInstruction::kWriteExternal: {
-          int count = READ8(), slot = READ8();
-          SkASSERT(count <= 4);
-          float tmp[4];
-          I32 m = mask();
-          sp -= count;
-          for (int i = 0; i < VecWidth; ++i) {
-            if (m[i]) {
-              for (int j = 0; j < count; ++j) {
-                tmp[j] = sp[j + 1].fFloat[i];
-              }
-              byteCode->fExternalValues[slot]->write(baseIndex + i, tmp);
-            }
-          }
-        }
-          continue;
 
         case ByteCodeInstruction::kMaskPush:
           condPtr[1] = POP().fSigned;
@@ -916,25 +902,34 @@ struct Interpreter {
 
 };  // class Interpreter
 
-#  endif  // SK_ENABLE_SKSL_INTERPRETER
+#endif  // SK_ENABLE_SKSL_INTERPRETER
 
-#  undef spf
+#undef spf
 
-void ByteCodeFunction::disassemble() const {
-#  if defined(SK_ENABLE_SKSL_INTERPRETER)
+void ByteCodeFunction::disassemble(OutputStream* out) const {
+#if defined(SK_ENABLE_SKSL_INTERPRETER)
+  StringStream stream;
+  if (!out) {
+    out = &stream;
+  }
+
   const uint8_t* ip = fCode.data();
   while (ip < fCode.data() + fCode.size()) {
-    printf("%d: ", (int)(ip - fCode.data()));
-    ip = Interpreter::DisassembleInstruction(ip);
-    printf("\n");
+    out->printf("%3d: ", (int)(ip - fCode.data()));
+    ip = Interpreter::DisassembleInstruction(ip, out);
+    out->printf("\n");
   }
-#  endif
+
+  if (out == &stream) {
+    SkDebugf("%s", stream.str().c_str());
+  }
+#endif
 }
 
 bool ByteCode::run(
     const ByteCodeFunction* f, float* args, int argCount, float* outReturn, int returnCount,
     const float* uniforms, int uniformCount) const {
-#  if defined(SK_ENABLE_SKSL_INTERPRETER)
+#if defined(SK_ENABLE_SKSL_INTERPRETER)
   Interpreter::VValue stack[128];
   int stackNeeded = f->fParameterCount + f->fLocalCount + f->fStackCount;
   if (stackNeeded > (int)SK_ARRAY_COUNT(stack)) {
@@ -985,16 +980,16 @@ bool ByteCode::run(
   }
 
   return true;
-#  else
+#else
   SkDEBUGFAIL("ByteCode interpreter not enabled");
   return false;
-#  endif
+#endif
 }
 
 bool ByteCode::runStriped(
     const ByteCodeFunction* f, int N, float* args[], int argCount, float* outReturn[],
     int returnCount, const float* uniforms, int uniformCount) const {
-#  if defined(SK_ENABLE_SKSL_INTERPRETER)
+#if defined(SK_ENABLE_SKSL_INTERPRETER)
   Interpreter::VValue stack[192];
   int stackNeeded = f->fParameterCount + f->fLocalCount + f->fStackCount;
   if (stackNeeded > (int)SK_ARRAY_COUNT(stack)) {
@@ -1061,12 +1056,30 @@ bool ByteCode::runStriped(
   }
 
   return true;
-#  else
+#else
   SkDEBUGFAIL("ByteCode interpreter not enabled");
   return false;
-#  endif
+#endif
+}
+
+void ByteCode::disassemble(OutputStream* out) const {
+#if defined(SK_ENABLE_SKSL_INTERPRETER)
+  StringStream stream;
+  if (!out) {
+    out = &stream;
+  }
+
+  for (const auto& f : fFunctions) {
+    out->writeString(f->fName);
+    out->writeText("\n");
+    f->disassemble(out);
+    out->writeText("\n");
+  }
+
+  if (out == &stream) {
+    SkDebugf("%s", stream.str().c_str());
+  }
+#endif
 }
 
 }  // namespace SkSL
-
-#endif

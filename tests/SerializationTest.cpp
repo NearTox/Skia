@@ -265,9 +265,9 @@ static void TestArraySerialization(T* data, skiatest::Reporter* reporter) {
 static void TestBitmapSerialization(
     const SkBitmap& validBitmap, const SkBitmap& invalidBitmap, bool shouldSucceed,
     skiatest::Reporter* reporter) {
-  sk_sp<SkImage> validImage(SkImage::MakeFromBitmap(validBitmap));
+  sk_sp<SkImage> validImage(validBitmap.asImage());
   sk_sp<SkImageFilter> validBitmapSource(SkImageFilters::Image(std::move(validImage)));
-  sk_sp<SkImage> invalidImage(SkImage::MakeFromBitmap(invalidBitmap));
+  sk_sp<SkImage> invalidImage(invalidBitmap.asImage());
   sk_sp<SkImageFilter> invalidBitmapSource(SkImageFilters::Image(std::move(invalidImage)));
   sk_sp<SkImageFilter> xfermodeImageFilter(SkImageFilters::Blend(
       SkBlendMode::kSrcOver, std::move(invalidBitmapSource), std::move(validBitmapSource),
@@ -399,7 +399,7 @@ static sk_sp<SkTypeface> makeDistortableWithNonDefaultAxes(skiatest::Reporter* r
   sk_sp<SkTypeface> typeface = fm->makeFromStream(std::move(distortable), params);
   if (!typeface) {
     return nullptr;  // Not all SkFontMgr can makeFromStream().
-    }
+  }
 
     int count = typeface->getVariationDesignPosition(nullptr, 0);
     if (count == -1) {

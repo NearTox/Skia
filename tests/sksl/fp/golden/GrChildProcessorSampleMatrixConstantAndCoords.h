@@ -22,7 +22,6 @@ class GrChildProcessorSampleMatrixConstantAndCoords : public GrFragmentProcessor
       const GrChildProcessorSampleMatrixConstantAndCoords& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessorSampleMatrixConstantAndCoords"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrChildProcessorSampleMatrixConstantAndCoords(std::unique_ptr<GrFragmentProcessor> child)

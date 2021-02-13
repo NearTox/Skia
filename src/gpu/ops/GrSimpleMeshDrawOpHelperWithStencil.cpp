@@ -43,13 +43,14 @@ bool GrSimpleMeshDrawOpHelperWithStencil::isCompatible(
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelperWithStencil::createProgramInfoWithStencil(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeViewSwizzle,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeViewSwizzle,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-    GrGeometryProcessor* gp, GrPrimitiveType primType, GrXferBarrierFlags renderPassXferBarriers) {
+    GrGeometryProcessor* gp, GrPrimitiveType primType, GrXferBarrierFlags renderPassXferBarriers,
+    GrLoadOp colorLoadOp) {
   return CreateProgramInfo(
       caps, arena, writeViewSwizzle, std::move(appliedClip), dstProxyView, gp,
-      this->detachProcessorSet(), primType, renderPassXferBarriers, this->pipelineFlags(),
-      this->stencilSettings());
+      this->detachProcessorSet(), primType, renderPassXferBarriers, colorLoadOp,
+      this->pipelineFlags(), this->stencilSettings());
 }
 
 #if GR_TEST_UTILS

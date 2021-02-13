@@ -59,14 +59,16 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
   }
 
   /* If dstOrNull is null, computes a dst by mapping the bitmap's bounds through the matrix. */
-  void drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkPaint&) const;
+  void drawBitmap(
+      const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkSamplingOptions&,
+      const SkPaint&) const;
   void drawSprite(const SkBitmap&, int x, int y, const SkPaint&) const;
   void drawGlyphRunList(
       const SkGlyphRunList& glyphRunList, SkGlyphRunListPainter* glyphPainter) const;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) const;
   void drawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
-      const SkPaint&);
+      const SkSamplingOptions&, const SkPaint&);
 
   /**
    *  Overwrite the target with the path's coverage (i.e. its mask).
@@ -117,7 +119,7 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
   static SkScalar ComputeResScaleForStroking(const SkMatrix&);
 
  private:
-  void drawBitmapAsMask(const SkBitmap&, const SkPaint&) const;
+  void drawBitmapAsMask(const SkBitmap&, const SkSamplingOptions&, const SkPaint&) const;
   void draw_fixed_vertices(
       const SkVertices*, SkBlendMode, const SkPaint&, const SkMatrix&, const SkPoint dev2[],
       const SkPoint3 dev3[], SkArenaAlloc*) const;

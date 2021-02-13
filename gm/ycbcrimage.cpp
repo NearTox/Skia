@@ -82,7 +82,7 @@ class YCbCrImageGM : public GpuGM {
   void onGpuTeardown() override { fYCbCrImage = nullptr; }
 
   DrawResult onDraw(
-      GrRecordingContext*, GrRenderTargetContext*, SkCanvas* canvas, SkString*) override {
+      GrRecordingContext*, GrSurfaceDrawContext*, SkCanvas* canvas, SkString*) override {
     SkASSERT(fYCbCrImage);
 
     SkPaint paint;

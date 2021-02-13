@@ -78,7 +78,7 @@ class GrResourceProvider {
   sk_sp<GrTexture> createTexture(
       SkISize dimensions, const GrBackendFormat& format, GrColorType colorType,
       GrRenderable renderable, int renderTargetSampleCnt, SkBudgeted budgeted,
-      GrProtected isProtected, const GrMipLevel texels[], int mipLevelCount);
+      GrMipMapped mipMapped, GrProtected isProtected, const GrMipLevel texels[]);
 
   /**
    * Create a potentially loose fit texture with the provided data. The color type must be valid

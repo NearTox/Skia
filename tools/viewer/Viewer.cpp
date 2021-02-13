@@ -28,6 +28,7 @@
 #include "src/gpu/GrPersistentCacheUtils.h"
 #include "src/gpu/GrShaderUtils.h"
 #include "src/gpu/ccpr/GrCoverageCountingPathRenderer.h"
+#include "src/gpu/tessellate/GrTessellationPathRenderer.h"
 #include "src/image/SkImage_Base.h"
 #include "src/utils/SkJSONWriter.h"
 #include "src/utils/SkOSPath.h"
@@ -172,6 +173,7 @@ static DEFINE_bool(skvm, false, "Force skvm blitters for raster.");
 static DEFINE_bool(jit, true, "JIT SkVM?");
 static DEFINE_bool(dylib, false, "JIT via dylib (much slower compile but easier to debug/profile)");
 static DEFINE_bool(stats, false, "Display stats overlay on startup.");
+static DEFINE_bool(binaryarchive, false, "Enable MTLBinaryArchive use (if available).");
 
 #ifndef SK_GL
 static_assert(false, "viewer requires GL backend for raster.")
@@ -349,6 +351,7 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
 
   DisplayParams displayParams;
   displayParams.fMSAASampleCount = FLAGS_msaa;
+  displayParams.fEnableBinaryArchive = FLAGS_binaryarchive;
   SetCtxOptionsFromCommonFlags(&displayParams.fGrContextOptions);
   displayParams.fGrContextOptions.fPersistentCache = &fPersistentCache;
   displayParams.fGrContextOptions.fShaderCacheStrategy =
@@ -662,10 +665,10 @@ Viewer::Viewer(int argc, char** argv, void* platformData)
 
   auto gamutImage = GetResourceAsImage("images/gamut.png");
   if (gamutImage) {
-    fImGuiGamutPaint.setShader(gamutImage->makeShader());
+    fImGuiGamutPaint.setShader(
+        gamutImage->makeShader(SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone)));
   }
   fImGuiGamutPaint.setColor(SK_ColorWHITE);
-  fImGuiGamutPaint.setFilterQuality(kLow_SkFilterQuality);
 
   fWindow->attach(backend_type_for_window(fBackendType));
   this->setCurrentSlide(this->startupSlide());
@@ -1699,7 +1702,7 @@ void Viewer::drawImGui() {
         ImGui::SameLine();
         ImGui::RadioButton("Dawn", &newBackend, sk_app::Window::kDawn_BackendType);
 #endif
-#if defined(SK_VULKAN)
+#if defined(SK_VULKAN) && !defined(SK_BUILD_FOR_MAC)
         ImGui::SameLine();
         ImGui::RadioButton("Vulkan", &newBackend, sk_app::Window::kVulkan_BackendType);
 #endif
@@ -1798,7 +1801,7 @@ void Viewer::drawImGui() {
             const auto* caps = ctx->priv().caps();
             prButton(GpuPathRenderers::kDefault);
             if (fWindow->sampleCount() > 1 || caps->mixedSamplesSupport()) {
-              if (caps->shaderCaps()->tessellationSupport()) {
+              if (GrTessellationPathRenderer::IsSupported(*caps)) {
                 prButton(GpuPathRenderers::kTessellation);
               }
               if (caps->shaderCaps()->pathRenderingSupport()) {
@@ -2450,7 +2453,7 @@ void Viewer::updateUIState() {
           const auto* caps = ctx->priv().caps();
           writer.appendString(gPathRendererNames[GpuPathRenderers::kDefault].c_str());
           if (fWindow->sampleCount() > 1 || caps->mixedSamplesSupport()) {
-            if (caps->shaderCaps()->tessellationSupport()) {
+            if (GrTessellationPathRenderer::IsSupported(*caps)) {
               writer.appendString(gPathRendererNames[GpuPathRenderers::kTessellation].c_str());
             }
             if (caps->shaderCaps()->pathRenderingSupport()) {

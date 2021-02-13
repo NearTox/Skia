@@ -6,8 +6,8 @@
  */
 
 #include "include/core/SkBitmap.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkSamplingOptions.h"
 
 struct SkImageInfo;
 struct SkIRect;
@@ -15,4 +15,4 @@ struct SkIRect;
 /** Generic/synchronous implementation for SkImage:: and SkSurface::asyncRescaleAndReadPixels. */
 void SkRescaleAndReadPixels(
     SkBitmap src, const SkImageInfo& resultInfo, const SkIRect& srcRect, SkImage::RescaleGamma,
-    SkFilterQuality, SkImage::ReadPixelsCallback, SkImage::ReadPixelsContext);
+    SkImage::RescaleMode, SkImage::ReadPixelsCallback, SkImage::ReadPixelsContext);

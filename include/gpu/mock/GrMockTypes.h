@@ -19,8 +19,7 @@ struct GrMockTextureInfo {
         fCompressionType(SkImage::CompressionType::kNone),
         fID(0) {}
 
-  GrMockTextureInfo(
-      GrColorType colorType, SkImage::CompressionType compressionType, int id) noexcept
+  GrMockTextureInfo(GrColorType colorType, SkImage::CompressionType compressionType, int id)
       : fColorType(colorType), fCompressionType(compressionType), fID(id) {
     SkASSERT(fID);
     if (fCompressionType != SkImage::CompressionType::kNone) {
@@ -28,21 +27,21 @@ struct GrMockTextureInfo {
     }
   }
 
-  bool operator==(const GrMockTextureInfo& that) const noexcept {
+  bool operator==(const GrMockTextureInfo& that) const {
     return fColorType == that.fColorType && fCompressionType == that.fCompressionType &&
            fID == that.fID;
   }
 
   GrBackendFormat getBackendFormat() const;
 
-  SkImage::CompressionType compressionType() const noexcept { return fCompressionType; }
+  SkImage::CompressionType compressionType() const { return fCompressionType; }
 
-  GrColorType colorType() const noexcept {
+  GrColorType colorType() const {
     SkASSERT(fCompressionType == SkImage::CompressionType::kNone);
     return fColorType;
   }
 
-  int id() const noexcept { return fID; }
+  int id() const { return fID; }
 
  private:
   GrColorType fColorType;
@@ -53,17 +52,17 @@ struct GrMockTextureInfo {
 struct GrMockRenderTargetInfo {
   GrMockRenderTargetInfo() : fColorType(GrColorType::kUnknown), fID(0) {}
 
-  GrMockRenderTargetInfo(GrColorType colorType, int id) noexcept : fColorType(colorType), fID(id) {
+  GrMockRenderTargetInfo(GrColorType colorType, int id) : fColorType(colorType), fID(id) {
     SkASSERT(fID);
   }
 
-  bool operator==(const GrMockRenderTargetInfo& that) const noexcept {
+  bool operator==(const GrMockRenderTargetInfo& that) const {
     return fColorType == that.fColorType && fID == that.fID;
   }
 
   GrBackendFormat getBackendFormat() const;
 
-  GrColorType colorType() const noexcept { return fColorType; }
+  GrColorType colorType() const { return fColorType; }
 
  private:
   GrColorType fColorType;

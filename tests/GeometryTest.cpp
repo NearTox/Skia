@@ -584,7 +584,7 @@ static void test_chop_at_midtangent(skiatest::Reporter* reporter) {
   int n = SkChopCubicAtInflections(kExactCuspAtInf, chops);
   for (int i = 0; i < n; ++i) {
     test_chop_cubic_at_midtangent(reporter, chops + i * 3, SkCubicType::kCuspAtInfinity);
-    }
+  }
 }
 
 DEF_TEST(Geometry, reporter) {

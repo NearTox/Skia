@@ -10,7 +10,6 @@
 #include "include/effects/SkRuntimeEffect.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/ops/GrFillRectOp.h"
 #include "tools/ToolUtils.h"
@@ -38,7 +37,7 @@ class ConstantMatrixEffect : public GrFragmentProcessor {
     class Impl : public GrGLSLFragmentProcessor {
       void emitCode(EmitArgs& args) override {
         SkString sample = this->invokeChildWithMatrix(0, args);
-        args.fFragBuilder->codeAppendf("%s = %s;\n", args.fOutputColor, sample.c_str());
+        args.fFragBuilder->codeAppendf("return %s;\n", sample.c_str());
       }
     };
     return new Impl;
@@ -67,7 +66,7 @@ class UniformMatrixEffect : public GrFragmentProcessor {
         fMatrixVar = args.fUniformHandler->addUniform(
             &args.fFp, kFragment_GrShaderFlag, kFloat3x3_GrSLType, "matrix");
         SkString sample = this->invokeChildWithMatrix(0, args);
-        args.fFragBuilder->codeAppendf("%s = %s;\n", args.fOutputColor, sample.c_str());
+        args.fFragBuilder->codeAppendf("return %s;\n", sample.c_str());
       }
       void onSetData(
           const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& proc) override {
@@ -102,7 +101,7 @@ class VariableMatrixEffect : public GrFragmentProcessor {
       void emitCode(EmitArgs& args) override {
         SkString sample =
             this->invokeChildWithMatrix(0, args, "float3x3(1, 0, 0, 0, 1, 0, 8, 0, 1)");
-        args.fFragBuilder->codeAppendf("%s = %s;\n", args.fOutputColor, sample.c_str());
+        args.fFragBuilder->codeAppendf("return %s;\n", sample.c_str());
       }
     };
     return new Impl;
@@ -131,7 +130,7 @@ class ExplicitCoordEffect : public GrFragmentProcessor {
       void emitCode(EmitArgs& args) override {
         args.fFragBuilder->codeAppendf("float2 coord = %s + float2(0, 8);", args.fSampleCoord);
         SkString sample = this->invokeChild(0, args, "coord");
-        args.fFragBuilder->codeAppendf("%s = %s;\n", args.fOutputColor, sample.c_str());
+        args.fFragBuilder->codeAppendf("return %s;\n", sample.c_str());
       }
     };
     return new Impl;
@@ -158,7 +157,7 @@ class TestPatternEffect : public GrFragmentProcessor {
         auto fb = args.fFragBuilder;
         fb->codeAppendf("float2 coord = %s / 64.0;", args.fSampleCoord);
         fb->codeAppendf("coord = floor(coord * 4) / 3;");
-        fb->codeAppendf("%s = half4(half2(coord.rg), 0, 1);\n", args.fOutputColor);
+        fb->codeAppendf("return half2(coord).rg01;\n");
       }
     };
     return new Impl;
@@ -328,7 +327,7 @@ DEF_SIMPLE_GM(sksl_sample_chaining, canvas, 380, 306) {
   };
 
   auto draw = [&](std::initializer_list<EffectType> effectTypes) {
-    auto shader = bmp.makeShader();
+    auto shader = bmp.makeShader(SkSamplingOptions());
 
     for (EffectType effectType : effectTypes) {
       SkRuntimeShaderBuilder builder(effects[effectType]);

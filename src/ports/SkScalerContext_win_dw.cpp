@@ -12,6 +12,7 @@
 #  undef GetGlyphIndices
 
 #  include "include/codec/SkCodec.h"
+#  include "include/core/SkBitmap.h"
 #  include "include/core/SkFontMetrics.h"
 #  include "include/core/SkPath.h"
 #  include "include/private/SkMutex.h"
@@ -366,8 +367,6 @@ SkScalerContext_DW::SkScalerContext_DW(
 }
 
 SkScalerContext_DW::~SkScalerContext_DW() {}
-
-unsigned SkScalerContext_DW::generateGlyphCount() { return fGlyphCount; }
 
 bool SkScalerContext_DW::generateAdvance(SkGlyph* glyph) {
   glyph->fAdvanceX = 0;

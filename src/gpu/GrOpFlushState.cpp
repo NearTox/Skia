@@ -49,9 +49,8 @@ void GrOpFlushState::executeDrawsAndUploadsForMeshDrawOp(
     }
 
     GrProgramInfo programInfo(
-        this->proxy()->numSamples(), this->proxy()->numStencilSamples(),
-        this->proxy()->backendFormat(), this->writeView()->origin(), pipeline, userStencilSettings,
-        fCurrDraw->fGeometryProcessor, fCurrDraw->fPrimitiveType, 0, this->renderPassBarriers());
+        this->writeView(), pipeline, userStencilSettings, fCurrDraw->fGeometryProcessor,
+        fCurrDraw->fPrimitiveType, 0, this->renderPassBarriers(), this->colorLoadOp());
 
     this->bindPipelineAndScissorClip(programInfo, chainBounds);
     this->bindTextures(programInfo.primProc(), fCurrDraw->fPrimProcProxies, programInfo.pipeline());

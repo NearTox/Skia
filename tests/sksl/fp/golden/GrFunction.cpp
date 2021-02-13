@@ -59,9 +59,9 @@ class GrGLSLFunction : public GrGLSLFragmentProcessor {
 return c.wzyx;
 )SkSL");
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s(%s(%s(%s)));
+        R"SkSL(return %s(%s(%s(%s)));
 )SkSL",
-        args.fOutputColor, flip_name.c_str(), flip_name.c_str(), flip_name.c_str(),
+        flip_name.c_str(), flip_name.c_str(), flip_name.c_str(),
         args.fUniformHandler->getUniformCStr(colorVar));
   }
 
@@ -77,7 +77,6 @@ bool GrFunction::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrFunction::usesExplicitReturn() const { return false; }
 GrFunction::GrFunction(const GrFunction& src)
     : INHERITED(kGrFunction_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

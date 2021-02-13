@@ -25,7 +25,7 @@ class SkColorFilter;
 class SkShader;
 
 namespace SkSL {
-class ByteCode;
+class FunctionDefinition;
 struct PipelineStageArgs;
 struct Program;
 class SharedCompiler;
@@ -123,7 +123,8 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
 
  private:
   SkRuntimeEffect(
-      SkString sksl, std::unique_ptr<SkSL::Program> baseProgram, std::vector<Uniform>&& uniforms,
+      SkString sksl, std::unique_ptr<SkSL::Program> baseProgram,
+      const SkSL::FunctionDefinition& main, std::vector<Uniform>&& uniforms,
       std::vector<SkString>&& children, std::vector<SkSL::SampleUsage>&& sampleUsages,
       std::vector<Varying>&& varyings, bool usesSampleCoords, bool allowColorFilter);
 
@@ -138,18 +139,14 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
       GrContextOptions::ShaderErrorHandler* errorHandler, SkSL::PipelineStageArgs* outArgs);
 #endif
 
-  friend class SkRTShader;            // toByteCode
+  friend class SkRTShader;            // fBaseProgram, fMain
   friend class SkRuntimeColorFilter;  //
-
-  // [ByteCode, ErrorText]
-  // If successful, ByteCode != nullptr, otherwise, ErrorText contains the reason for failure.
-  using ByteCodeResult = std::tuple<std::unique_ptr<SkSL::ByteCode>, SkString>;
-  ByteCodeResult toByteCode() const;
 
   uint32_t fHash;
   SkString fSkSL;
 
   std::unique_ptr<SkSL::Program> fBaseProgram;
+  const SkSL::FunctionDefinition& fMain;
   std::vector<Uniform> fUniforms;
   std::vector<SkString> fChildren;
   std::vector<SkSL::SampleUsage> fSampleUsages;

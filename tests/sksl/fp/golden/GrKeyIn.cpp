@@ -22,10 +22,9 @@ class GrGLSLKeyIn : public GrGLSLFragmentProcessor {
     auto color = _outer.color;
     (void)color;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(%f, %f, %f, %f);
+        R"SkSL(return half4(%f, %f, %f, %f);
 )SkSL",
-        args.fOutputColor, _outer.color.left(), _outer.color.top(), _outer.color.right(),
-        _outer.color.bottom());
+        _outer.color.left(), _outer.color.top(), _outer.color.right(), _outer.color.bottom());
   }
 
  private:
@@ -47,7 +46,6 @@ bool GrKeyIn::onIsEqual(const GrFragmentProcessor& other) const {
   if (color != that.color) return false;
   return true;
 }
-bool GrKeyIn::usesExplicitReturn() const { return false; }
 GrKeyIn::GrKeyIn(const GrKeyIn& src)
     : INHERITED(kGrKeyIn_ClassID, src.optimizationFlags()), color(src.color) {
   this->cloneAndRegisterAllChildProcessors(src);

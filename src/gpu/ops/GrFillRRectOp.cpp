@@ -95,8 +95,9 @@ class FillRRectOp : public GrMeshDrawOp {
 
   // Create a GrProgramInfo object in the provided arena
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) final;
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) final;
 
   Helper fHelper;
   SkPMColor4f fColor;
@@ -283,7 +284,7 @@ GrOp::CombineResult FillRRectOp::onCombineIfPossible(GrOp* op, SkArenaAlloc*, co
 class FillRRectOp::Processor : public GrGeometryProcessor {
  public:
   static GrGeometryProcessor* Make(SkArenaAlloc* arena, GrAAType aaType, ProcessorFlags flags) {
-    return arena->make<Processor>(aaType, flags);
+    return arena->make([&](void* ptr) { return new (ptr) Processor(aaType, flags); });
   }
 
   const char* name() const final { return "GrFillRRectOp::Processor"; }
@@ -295,8 +296,6 @@ class FillRRectOp::Processor : public GrGeometryProcessor {
   GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const final;
 
  private:
-  friend class ::SkArenaAlloc;  // for access to ctor
-
   Processor(GrAAType aaType, ProcessorFlags flags)
       : INHERITED(kGrFillRRectOp_Processor_ClassID), fAAType(aaType), fFlags(flags) {
     int numVertexAttribs = (GrAAType::kCoverage == fAAType) ? 3 : 2;
@@ -801,15 +800,15 @@ GrGLSLPrimitiveProcessor* FillRRectOp::Processor::createGLSLInstance(const GrSha
 }
 
 void FillRRectOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-    GrXferBarrierFlags renderPassXferBarriers) {
+    GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) {
   GrGeometryProcessor* gp = Processor::Make(arena, fHelper.aaType(), fProcessorFlags);
   SkASSERT(gp->instanceStride() == (size_t)fInstanceStride);
 
   fProgramInfo = fHelper.createProgramInfo(
       caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, GrPrimitiveType::kTriangles,
-      renderPassXferBarriers);
+      renderPassXferBarriers, colorLoadOp);
 }
 
 void FillRRectOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) {

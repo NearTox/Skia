@@ -19,7 +19,6 @@ class GrGrSLTypesAreSupported : public GrFragmentProcessor {
   GrGrSLTypesAreSupported(const GrGrSLTypesAreSupported& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "GrSLTypesAreSupported"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrGrSLTypesAreSupported()

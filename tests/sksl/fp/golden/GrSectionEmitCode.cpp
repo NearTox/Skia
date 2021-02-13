@@ -23,9 +23,9 @@ class GrGLSLSectionEmitCode : public GrGLSLFragmentProcessor {
     fragBuilder->codeAppendf("half y = %d\n", x * 2);
     fragBuilder->codeAppendf(
         R"SkSL(half x = %f;
-%s = half4(1.0);
+return half4(1.0);
 )SkSL",
-        x, args.fOutputColor);
+        x);
   }
 
  private:
@@ -43,7 +43,6 @@ bool GrSectionEmitCode::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrSectionEmitCode::usesExplicitReturn() const { return false; }
 GrSectionEmitCode::GrSectionEmitCode(const GrSectionEmitCode& src)
     : INHERITED(kGrSectionEmitCode_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

@@ -27,7 +27,6 @@ class GrLinearGradientLayout : public GrFragmentProcessor {
   GrLinearGradientLayout(const GrLinearGradientLayout& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "LinearGradientLayout"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrLinearGradientLayout()

@@ -80,11 +80,11 @@ class SkXPSDevice : public SkClipStackDevice {
   void drawRRect(const SkRRect& rr, const SkPaint& paint) override;
   void drawPath(const SkPath& path, const SkPaint& paint, bool pathIsMutable = false) override;
   void drawImageRect(
-      const SkImage*, const SkRect* srcOrNull, const SkRect& dst, const SkPaint& paint,
-      SkCanvas::SrcRectConstraint) override;
+      const SkImage*, const SkRect* srcOrNull, const SkRect& dst, const SkSamplingOptions&,
+      const SkPaint& paint, SkCanvas::SrcRectConstraint) override;
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
-  void drawDevice(SkBaseDevice*, const SkPaint&) override;
+  void drawDevice(SkBaseDevice*, const SkSamplingOptions&, const SkPaint&) override;
 
  private:
   class TypefaceUse {

@@ -26,7 +26,8 @@ class GrMidpointContourParser {
       : fPath(path),
         fVerbs(SkPathPriv::VerbData(fPath)),
         fNumRemainingVerbs(fPath.countVerbs()),
-        fPoints(SkPathPriv::PointData(fPath)) {}
+        fPoints(SkPathPriv::PointData(fPath)),
+        fWeights(SkPathPriv::ConicWeightData(fPath)) {}
   // Advances the internal state to the next contour in the path. Returns false if there are no
   // more contours.
   bool parseNextContour() {
@@ -44,8 +45,8 @@ class GrMidpointContourParser {
           return true;
         default: continue;
         case SkPath::kLine_Verb: ++fPtsIdx; break;
-        case SkPath::kQuad_Verb:
-        case SkPath::kConic_Verb: fPtsIdx += 2; break;
+        case SkPath::kConic_Verb: ++fWtsIdx; [[fallthrough]];
+        case SkPath::kQuad_Verb: fPtsIdx += 2; break;
         case SkPath::kCubic_Verb: fPtsIdx += 3; break;
       }
       fMidpoint += fPoints[fPtsIdx - 1];
@@ -57,7 +58,7 @@ class GrMidpointContourParser {
 
   // Allows for iterating the current contour using a range-for loop.
   SkPathPriv::Iterate currentContour() {
-    return SkPathPriv::Iterate(fVerbs, fVerbs + fVerbsIdx, fPoints, nullptr);
+    return SkPathPriv::Iterate(fVerbs, fVerbs + fVerbsIdx, fPoints, fWeights);
   }
 
   SkPoint currentMidpoint() { return fMidpoint * (1.f / fMidpointWeight); }
@@ -69,6 +70,8 @@ class GrMidpointContourParser {
     fVerbsIdx = 0;
     fPoints += fPtsIdx;
     fPtsIdx = 0;
+    fWeights += fWtsIdx;
+    fWtsIdx = 0;
   }
 
   const SkPath& fPath;
@@ -79,6 +82,9 @@ class GrMidpointContourParser {
 
   const SkPoint* fPoints;
   int fPtsIdx = 0;
+
+  const float* fWeights;
+  int fWtsIdx = 0;
 
   SkPoint fMidpoint;
   int fMidpointWeight;

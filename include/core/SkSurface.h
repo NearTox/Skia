@@ -598,11 +598,20 @@ class SK_API SkSurface : public SkRefCnt {
       @param canvas  SkCanvas drawn into
       @param x       horizontal offset in SkCanvas
       @param y       vertical offset in SkCanvas
+      @param sampling what technique to use when sampling the surface pixels
       @param paint   SkPaint containing SkBlendMode, SkColorFilter, SkImageFilter,
                      and so on; or nullptr
 
       example: https://fiddle.skia.org/c/@Surface_draw
   */
+  void draw(
+      SkCanvas* canvas, SkScalar x, SkScalar y, const SkSamplingOptions& sampling,
+      const SkPaint* paint);
+  void draw(SkCanvas* canvas, SkScalar x, SkScalar y) {
+    this->draw(canvas, x, y, SkSamplingOptions(), nullptr);
+  }
+
+  // DEPRECATED -- use explicit sampling options
   void draw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint);
 
   /** Copies SkSurface pixel address, row bytes, and SkImageInfo to SkPixmap, if address
@@ -727,6 +736,7 @@ class SK_API SkSurface : public SkRefCnt {
       asyncRescaleAndReadPixelsYUV420().
    */
   using RescaleGamma = SkImage::RescaleGamma;
+  using RescaleMode = SkImage::RescaleMode;
 
   /** Makes surface pixel data available to caller, possibly asynchronously. It can also rescale
       the surface pixels.
@@ -754,13 +764,13 @@ class SK_API SkSurface : public SkRefCnt {
       @param srcRect         subrectangle of surface to read
       @param rescaleGamma    controls whether rescaling is done in the surface's gamma or whether
                              the source data is transformed to a linear gamma before rescaling.
-      @param rescaleQuality  controls the quality (and cost) of the rescaling
+      @param rescaleMode     controls the technique of the rescaling
       @param callback        function to call with result of the read
       @param context         passed to callback
    */
   void asyncRescaleAndReadPixels(
       const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
-      SkFilterQuality rescaleQuality, ReadPixelsCallback callback, ReadPixelsContext context);
+      RescaleMode rescaleMode, ReadPixelsCallback callback, ReadPixelsContext context);
 
   /**
       Similar to asyncRescaleAndReadPixels but performs an additional conversion to YUV. The
@@ -787,13 +797,13 @@ class SK_API SkSurface : public SkRefCnt {
       @param dstSize        The size to rescale srcRect to
       @param rescaleGamma   controls whether rescaling is done in the surface's gamma or whether
                             the source data is transformed to a linear gamma before rescaling.
-      @param rescaleQuality controls the quality (and cost) of the rescaling
+      @param rescaleMode    controls the sampling technique of the rescaling
       @param callback       function to call with the planar read result
       @param context        passed to callback
    */
   void asyncRescaleAndReadPixelsYUV420(
       SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-      const SkISize& dstSize, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
+      const SkISize& dstSize, RescaleGamma rescaleGamma, RescaleMode rescaleMode,
       ReadPixelsCallback callback, ReadPixelsContext context);
 
   /** Copies SkRect of pixels from the src SkPixmap to the SkSurface.

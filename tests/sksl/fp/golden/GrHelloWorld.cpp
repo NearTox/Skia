@@ -20,9 +20,8 @@ class GrGLSLHelloWorld : public GrGLSLFragmentProcessor {
     const GrHelloWorld& _outer = args.fFp.cast<GrHelloWorld>();
     (void)_outer;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -39,7 +38,6 @@ bool GrHelloWorld::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrHelloWorld::usesExplicitReturn() const { return false; }
 GrHelloWorld::GrHelloWorld(const GrHelloWorld& src)
     : INHERITED(kGrHelloWorld_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

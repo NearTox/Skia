@@ -43,8 +43,6 @@ class GrSkSLFP : public GrFragmentProcessor {
 
   std::unique_ptr<GrFragmentProcessor> clone() const override;
 
-  bool usesExplicitReturn() const override { return true; }
-
  private:
   using ShaderErrorHandler = GrContextOptions::ShaderErrorHandler;
 

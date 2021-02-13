@@ -41,9 +41,9 @@ class GrGLSLNestedCall : public GrGLSLFragmentProcessor {
     fragBuilder->emitFunction(
         kHalf4_GrSLType, func2_name.c_str(), {func2_args, 0}, func2_impl.c_str());
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s();
+        R"SkSL(return %s();
 )SkSL",
-        args.fOutputColor, func1_name.c_str());
+        func1_name.c_str());
   }
 
  private:
@@ -60,7 +60,6 @@ bool GrNestedCall::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrNestedCall::usesExplicitReturn() const { return false; }
 GrNestedCall::GrNestedCall(const GrNestedCall& src)
     : INHERITED(kGrNestedCall_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

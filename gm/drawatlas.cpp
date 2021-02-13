@@ -339,7 +339,7 @@ DEF_SIMPLE_GM(compare_atlas_vertices, canvas, 560, 585) {
         paint.setColorFilter(cf);
         canvas->drawAtlas(image, &xform, &tex, &color, 1, mode, &tex, &paint);
         canvas->translate(128, 0);
-        paint.setShader(image->makeShader());
+        paint.setShader(image->makeShader(SkSamplingOptions()));
         canvas->drawVertices(verts, mode, paint);
         paint.setShader(nullptr);
         canvas->translate(145, 0);

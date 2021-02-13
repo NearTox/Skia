@@ -14,27 +14,27 @@
 #include "include/core/SkPath.h"
 #include "include/gpu/GrDirectContext.h"
 #include "samplecode/Sample.h"
-#include "src/core/SkRectPriv.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrGpu.h"
-#include "src/gpu/GrMemoryPool.h"
-#include "src/gpu/GrOnFlushResourceProvider.h"
-#include "src/gpu/GrOpFlushState.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/ccpr/GrCCCoverageProcessor.h"
-#include "src/gpu/ccpr/GrCCFillGeometry.h"
-#include "src/gpu/ccpr/GrGSCoverageProcessor.h"
-#include "src/gpu/ccpr/GrVSCoverageProcessor.h"
-#include "src/gpu/geometry/GrPathUtils.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/ops/GrDrawOp.h"
+#  include "src/core/SkCanvasPriv.h"
+#  include "src/core/SkRectPriv.h"
+#  include "src/gpu/GrDirectContextPriv.h"
+#  include "src/gpu/GrGpu.h"
+#  include "src/gpu/GrMemoryPool.h"
+#  include "src/gpu/GrOnFlushResourceProvider.h"
+#  include "src/gpu/GrOpFlushState.h"
+#  include "src/gpu/GrRecordingContextPriv.h"
+#  include "src/gpu/GrResourceProvider.h"
+#  include "src/gpu/GrSurfaceDrawContext.h"
+#  include "src/gpu/ccpr/GrCCCoverageProcessor.h"
+#  include "src/gpu/ccpr/GrCCFillGeometry.h"
+#  include "src/gpu/ccpr/GrGSCoverageProcessor.h"
+#  include "src/gpu/ccpr/GrVSCoverageProcessor.h"
+#  include "src/gpu/geometry/GrPathUtils.h"
+#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/ops/GrDrawOp.h"
 
-#ifdef SK_GL
-#include "src/gpu/gl/GrGLGpu.h"
-#endif
+#  ifdef SK_GL
+#    include "src/gpu/gl/GrGLGpu.h"
+#  endif
 
 using TriPointInstance = GrCCCoverageProcessor::TriPointInstance;
 using QuadPointInstance = GrCCCoverageProcessor::QuadPointInstance;
@@ -100,11 +100,10 @@ private:
                                       bool hasMixedSampledCoverage, GrClampType) override {
         return GrProcessorSet::EmptySetAnalysis();
     }
-    void onPrePrepare(GrRecordingContext*,
-                      const GrSurfaceProxyView* writeView,
-                      GrAppliedClip*,
-                      const GrXferProcessor::DstProxyView&,
-                      GrXferBarrierFlags renderPassXferBarriers) override {}
+    void onPrePrepare(
+        GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+        const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+        GrLoadOp colorLoadOp) override {}
     void onPrepare(GrOpFlushState*) override {}
     void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
 
@@ -121,12 +120,11 @@ public:
     }
 
 private:
-    const char* name() const override {
-        return "VisualizeCoverageCountFP";
-    }
-    std::unique_ptr<GrFragmentProcessor> clone() const override {
-        return std::unique_ptr<GrFragmentProcessor>(new VisualizeCoverageCountFP(*this));
-    }
+ const char* name() const override { return "VisualizeCoverageCountFP"; }
+
+ std::unique_ptr<GrFragmentProcessor> clone() const override {
+   return std::unique_ptr<GrFragmentProcessor>(new VisualizeCoverageCountFP(*this));
+ }
     VisualizeCoverageCountFP(std::unique_ptr<GrFragmentProcessor> inputFP)
             : GrFragmentProcessor(kTestFP_ClassID, kNone_OptimizationFlags) {
         this->registerChild(std::move(inputFP));
@@ -144,8 +142,7 @@ private:
             static constexpr int kInputFPIndex = 0;
             SkString inputColor = this->invokeChild(kInputFPIndex, args);
             f->codeAppendf("half count = %s.a;", inputColor.c_str());
-            f->codeAppendf("%s = half4(clamp(-count, 0, 1), clamp(+count, 0, 1), 0, abs(count));",
-                           args.fOutputColor);
+            f->codeAppendf("return half4(saturate(-count), saturate(+count), 0, abs(count));");
         }
     };
 
@@ -193,29 +190,29 @@ void CCPRGeometryView::onDrawContent(SkCanvas* canvas) {
 
     if (fDoStroke) {
         caption.appendf(" (stroke_width=%f)", fStrokeWidth);
-    } else if (GrRenderTargetContext* rtc =
-            canvas->internal_private_accessTopLayerRenderTargetContext()) {
-        // Render coverage count.
-        auto ctx = canvas->recordingContext();
-        SkASSERT(ctx);
+    } else if (GrSurfaceDrawContext* sdc = SkCanvasPriv::TopDeviceSurfaceDrawContext(canvas)) {
+      // Render coverage count.
+      auto ctx = canvas->recordingContext();
+      SkASSERT(ctx);
 
-        int width = this->width();
-        int height = this->height();
-        auto ccbuff = GrRenderTargetContext::Make(
-                ctx, GrColorType::kAlpha_F16, nullptr, SkBackingFit::kApprox, {width, height});
-        SkASSERT(ccbuff);
-        ccbuff->clear(SK_PMColor4fTRANSPARENT);
-        ccbuff->priv().testingOnly_addDrawOp(GrOp::Make<DrawCoverageCountOp>(ctx, this));
+      int width = this->width();
+      int height = this->height();
+      auto ccbuff = GrSurfaceDrawContext::Make(
+          ctx, GrColorType::kAlpha_F16, nullptr, SkBackingFit::kApprox, {width, height});
+      SkASSERT(ccbuff);
+      ccbuff->clear(SK_PMColor4fTRANSPARENT);
+      ccbuff->addDrawOp(GrOp::Make<DrawCoverageCountOp>(ctx, this));
 
-        // Visualize coverage count in main canvas.
-        GrPaint paint;
-        paint.setColorFragmentProcessor(VisualizeCoverageCountFP::Make(
-                GrTextureEffect::Make(ccbuff->readSurfaceView(), ccbuff->colorInfo().alphaType())));
-        paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
-        rtc->drawRect(nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(),
-                      SkRect::MakeIWH(this->width(), this->height()));
+      // Visualize coverage count in main canvas.
+      GrPaint paint;
+      paint.setColorFragmentProcessor(VisualizeCoverageCountFP::Make(
+          GrTextureEffect::Make(ccbuff->readSurfaceView(), ccbuff->colorInfo().alphaType())));
+      paint.setPorterDuffXPFactory(SkBlendMode::kSrcOver);
+      sdc->drawRect(
+          nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(),
+          SkRect::MakeIWH(this->width(), this->height()));
     } else {
-        caption = "Use GPU backend to visualize geometry.";
+      caption = "Use GPU backend to visualize geometry.";
     }
 
     SkPaint pointsPaint;
@@ -329,8 +326,8 @@ void CCPRGeometryView::DrawCoverageCountOp::onExecute(GrOpFlushState* state,
     }
 #endif
 
-    GrPipeline pipeline(GrScissorTest::kDisabled, SkBlendMode::kPlus,
-                        state->drawOpArgs().writeSwizzle());
+    GrPipeline pipeline(
+        GrScissorTest::kDisabled, SkBlendMode::kPlus, state->drawOpArgs().writeView().swizzle());
 
     std::unique_ptr<GrCCCoverageProcessor> proc;
     if (state->caps().shaderCaps()->geometryShaderSupport()) {
@@ -422,10 +419,10 @@ bool CCPRGeometryView::onChar(SkUnichar unichar) {
             return true;
         }
         float* valueToScale = nullptr;
-        if (fDoStroke) {
-            valueToScale = &fStrokeWidth;
-        } else if (PrimitiveType::kConics == fPrimitiveType) {
-            valueToScale = &fConicWeight;
+        if (PrimitiveType::kConics == fPrimitiveType) {
+          valueToScale = &fConicWeight;
+        } else if (fDoStroke) {
+          valueToScale = &fStrokeWidth;
         }
         if (valueToScale) {
             if (unichar == '+') {

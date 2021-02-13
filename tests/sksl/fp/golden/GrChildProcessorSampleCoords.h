@@ -19,13 +19,11 @@ class GrChildProcessorSampleCoords : public GrFragmentProcessor {
   GrChildProcessorSampleCoords(const GrChildProcessorSampleCoords& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessorSampleCoords"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrChildProcessorSampleCoords(std::unique_ptr<GrFragmentProcessor> child)
       : INHERITED(kGrChildProcessorSampleCoords_ClassID, kNone_OptimizationFlags) {
     this->setUsesSampleCoordsDirectly();
-    SkASSERT(child);
     this->registerChild(
         std::move(child), SkSL::SampleUsage(SkSL::SampleUsage::Kind::kNone, "", false, true, true));
   }

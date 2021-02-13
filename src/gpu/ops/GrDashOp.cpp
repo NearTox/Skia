@@ -303,9 +303,9 @@ class DashOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-      GrXferBarrierFlags renderPassXferBarriers) override {
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) override {
     DashCap capType = (this->cap() == SkPaint::kRound_Cap) ? kRound_DashCap : kNonRound_DashCap;
 
     GrGeometryProcessor* gp;
@@ -334,7 +334,8 @@ class DashOp final : public GrMeshDrawOp {
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
-        GrPrimitiveType::kTriangles, renderPassXferBarriers, pipelineFlags, fStencilSettings);
+        GrPrimitiveType::kTriangles, renderPassXferBarriers, colorLoadOp, pipelineFlags,
+        fStencilSettings);
   }
 
   void onPrepareDraws(Target* target) override {
@@ -791,7 +792,6 @@ class DashingCircleEffect : public GrGeometryProcessor {
 
  private:
   friend class GLDashingCircleEffect;
-  friend class ::SkArenaAlloc;  // for access to ctor
 
   DashingCircleEffect(
       const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
@@ -920,7 +920,9 @@ void GLDashingCircleEffect::GenKey(
 GrGeometryProcessor* DashingCircleEffect::Make(
     SkArenaAlloc* arena, const SkPMColor4f& color, AAMode aaMode, const SkMatrix& localMatrix,
     bool usesLocalCoords) {
-  return arena->make<DashingCircleEffect>(color, aaMode, localMatrix, usesLocalCoords);
+  return arena->make([&](void* ptr) {
+    return new (ptr) DashingCircleEffect(color, aaMode, localMatrix, usesLocalCoords);
+  });
 }
 
 void DashingCircleEffect::getGLSLProcessorKey(
@@ -993,7 +995,6 @@ class DashingLineEffect : public GrGeometryProcessor {
 
  private:
   friend class GLDashingLineEffect;
-  friend class ::SkArenaAlloc;  // for access to ctor
 
   DashingLineEffect(
       const SkPMColor4f&, AAMode aaMode, const SkMatrix& localMatrix, bool usesLocalCoords);
@@ -1137,7 +1138,9 @@ void GLDashingLineEffect::GenKey(
 GrGeometryProcessor* DashingLineEffect::Make(
     SkArenaAlloc* arena, const SkPMColor4f& color, AAMode aaMode, const SkMatrix& localMatrix,
     bool usesLocalCoords) {
-  return arena->make<DashingLineEffect>(color, aaMode, localMatrix, usesLocalCoords);
+  return arena->make([&](void* ptr) {
+    return new (ptr) DashingLineEffect(color, aaMode, localMatrix, usesLocalCoords);
+  });
 }
 
 void DashingLineEffect::getGLSLProcessorKey(

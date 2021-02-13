@@ -22,21 +22,19 @@ class ModifiersDeclaration final : public ProgramElement {
  public:
   static constexpr Kind kProgramElementKind = Kind::kModifiers;
 
-  ModifiersDeclaration(ModifiersPool::Handle modifiers)
-      : INHERITED(-1, kProgramElementKind), fModifiersHandle(modifiers) {}
+  ModifiersDeclaration(const Modifiers* modifiers)
+      : INHERITED(-1, kProgramElementKind), fModifiers(modifiers) {}
 
-  const Modifiers& modifiers() const { return *fModifiersHandle; }
-
-  const ModifiersPool::Handle& modifiersHandle() const { return fModifiersHandle; }
+  const Modifiers& modifiers() const { return *fModifiers; }
 
   std::unique_ptr<ProgramElement> clone() const override {
-    return std::unique_ptr<ProgramElement>(new ModifiersDeclaration(this->modifiersHandle()));
+    return std::make_unique<ModifiersDeclaration>(&this->modifiers());
   }
 
   String description() const override { return this->modifiers().description() + ";"; }
 
  private:
-  ModifiersPool::Handle fModifiersHandle;
+  const Modifiers* fModifiers;
 
   using INHERITED = ProgramElement;
 };

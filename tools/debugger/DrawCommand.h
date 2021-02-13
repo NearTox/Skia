@@ -43,7 +43,6 @@ class DrawCommand {
     kDrawDRRect_OpType,
     kDrawImage_OpType,
     kDrawImageLattice_OpType,
-    kDrawImageNine_OpType,
     kDrawImageRect_OpType,
     kDrawImageRectLayer_OpType,  // unique to DebugCanvas
     kDrawOval_OpType,
@@ -67,8 +66,9 @@ class DrawCommand {
     kSave_OpType,
     kSaveLayer_OpType,
     kSetMatrix_OpType,
+    kSetM44_OpType,
 
-    kLast_OpType = kSetMatrix_OpType
+    kLast_OpType = kSetM44_OpType
   };
 
   static const int kOpTypeCount = kLast_OpType + 1;
@@ -277,24 +277,6 @@ class DrawImageLatticeCommand : public DrawCommand {
  private:
   sk_sp<const SkImage> fImage;
   SkCanvas::Lattice fLattice;
-  SkRect fDst;
-  SkTLazy<SkPaint> fPaint;
-
-  using INHERITED = DrawCommand;
-};
-
-class DrawImageNineCommand : public DrawCommand {
- public:
-  DrawImageNineCommand(
-      const SkImage* image, const SkIRect& center, const SkRect& dst, const SkPaint* paint);
-  void execute(SkCanvas* canvas) const override;
-  bool render(SkCanvas* canvas) const override;
-  void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
-  uint64_t imageId(UrlDataManager& udb) const;
-
- private:
-  sk_sp<const SkImage> fImage;
-  SkIRect fCenter;
   SkRect fDst;
   SkTLazy<SkPaint> fPaint;
 
@@ -624,6 +606,18 @@ class SetMatrixCommand : public DrawCommand {
   using INHERITED = DrawCommand;
 };
 
+class SetM44Command : public DrawCommand {
+ public:
+  SetM44Command(const SkM44& matrix);
+  void execute(SkCanvas* canvas) const override;
+  void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
+
+ private:
+  SkM44 fMatrix;
+
+  using INHERITED = DrawCommand;
+};
+
 class DrawShadowCommand : public DrawCommand {
  public:
   DrawShadowCommand(const SkPath& path, const SkDrawShadowRec& rec);
@@ -671,8 +665,8 @@ class DrawEdgeAAQuadCommand : public DrawCommand {
 class DrawEdgeAAImageSetCommand : public DrawCommand {
  public:
   DrawEdgeAAImageSetCommand(
-      const SkCanvas::ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
-      SkCanvas::SrcRectConstraint);
+      const SkCanvas::ImageSetEntry[], int count, const SkPoint[], const SkMatrix[],
+      const SkSamplingOptions&, const SkPaint*, SkCanvas::SrcRectConstraint);
   void execute(SkCanvas* canvas) const override;
 
  private:
@@ -680,6 +674,7 @@ class DrawEdgeAAImageSetCommand : public DrawCommand {
   int fCount;
   SkAutoTArray<SkPoint> fDstClips;
   SkAutoTArray<SkMatrix> fPreViewMatrices;
+  SkSamplingOptions fSampling;
   SkTLazy<SkPaint> fPaint;
   SkCanvas::SrcRectConstraint fConstraint;
 

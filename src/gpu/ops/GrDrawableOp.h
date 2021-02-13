@@ -36,8 +36,9 @@ class GrDrawableOp final : public GrOp {
   }
 
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
+      GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override {}
 
   void onPrepare(GrOpFlushState*) override {}
 

@@ -185,7 +185,7 @@ class GrRecordingContext : public GrImageContext {
 
   GrAuditTrail* auditTrail() { return fAuditTrail.get(); }
 
-  GrRecordingContext* asRecordingContext() noexcept override { return this; }
+  GrRecordingContext* asRecordingContext() override { return this; }
 
   class Stats {
    public:
@@ -225,11 +225,12 @@ class GrRecordingContext : public GrImageContext {
   void dumpJSON(SkJSONWriter*) const;
 
  private:
+  // Delete last in case other objects call it during destruction.
+  std::unique_ptr<GrAuditTrail> fAuditTrail;
+
   OwnedArenas fArenas;
 
   std::unique_ptr<GrDrawingManager> fDrawingManager;
-
-  std::unique_ptr<GrAuditTrail> fAuditTrail;
 
 #if GR_TEST_UTILS
   int fSuppressWarningMessages = 0;

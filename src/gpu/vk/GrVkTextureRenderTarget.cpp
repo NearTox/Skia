@@ -119,16 +119,19 @@ static Views create_views(
 
     views.colorAttachmentView = sk_ref_sp<const GrVkImageView>(views.msaaAttachment->view());
 
-    // Create resolve attachment view.
+    // Create resolve attachment view. Attachment views on framebuffers must have a single mip
+    // level.
     views.resolveAttachmentView = GrVkImageView::Make(
-        gpu, image, pixelFormat, GrVkImageView::kColor_Type, info.fLevelCount,
-        GrVkYcbcrConversionInfo());
+        gpu, image, pixelFormat, GrVkImageView::kColor_Type,
+        /*miplevels=*/1, GrVkYcbcrConversionInfo());
     if (!views.resolveAttachmentView) {
       return {};
     }
   } else {
+    // Attachment views on framebuffers must have a single mip level.
     views.colorAttachmentView = GrVkImageView::Make(
-        gpu, info.fImage, pixelFormat, GrVkImageView::kColor_Type, 1, GrVkYcbcrConversionInfo());
+        gpu, info.fImage, pixelFormat, GrVkImageView::kColor_Type, /*miplevels=*/1,
+        GrVkYcbcrConversionInfo());
   }
 
   if (!views.colorAttachmentView) {

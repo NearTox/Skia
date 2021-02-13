@@ -9,14 +9,13 @@
 #include "src/core/SkBlendModePriv.h"
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/ops/GrFillRectOp.h"
 #include "src/gpu/ops/GrTextureOp.h"
 #include "tests/Test.h"
 
-static std::unique_ptr<GrRenderTargetContext> new_RTC(GrRecordingContext* rContext) {
-  return GrRenderTargetContext::Make(
+static std::unique_ptr<GrSurfaceDrawContext> new_RTC(GrRecordingContext* rContext) {
+  return GrSurfaceDrawContext::Make(
       rContext, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact, {128, 128});
 }
 
@@ -45,9 +44,9 @@ static void fillrectop_creation_test(
     return;
   }
 
-  std::unique_ptr<GrRenderTargetContext> rtc = new_RTC(dContext);
+  std::unique_ptr<GrSurfaceDrawContext> rtc = new_RTC(dContext);
 
-  auto quads = new GrRenderTargetContext::QuadSetEntry[requestedTotNumQuads];
+  auto quads = new GrSurfaceDrawContext::QuadSetEntry[requestedTotNumQuads];
 
   for (int i = 0; i < requestedTotNumQuads; ++i) {
     quads[i].fRect = SkRect::MakeWH(100.5f, 100.5f);  // prevent the int non-AA optimization
@@ -88,7 +87,7 @@ static void textureop_creation_test(
     skiatest::Reporter* reporter, GrDirectContext* dContext, PerQuadAAFunc perQuadAA,
     GrAAType overallAA, SkBlendMode blendMode, bool addOneByOne, bool allUniqueProxies,
     int requestedTotNumQuads, int expectedNumOps) {
-  std::unique_ptr<GrRenderTargetContext> rtc = new_RTC(dContext);
+  std::unique_ptr<GrSurfaceDrawContext> rtc = new_RTC(dContext);
 
   GrSurfaceProxyView proxyViewA, proxyViewB;
 
@@ -99,7 +98,7 @@ static void textureop_creation_test(
     proxyViewB = GrSurfaceProxyView(std::move(proxyB), kTopLeft_GrSurfaceOrigin, GrSwizzle::RGBA());
   }
 
-  auto set = new GrRenderTargetContext::TextureSetEntry[requestedTotNumQuads];
+  auto set = new GrSurfaceDrawContext::TextureSetEntry[requestedTotNumQuads];
 
   for (int i = 0; i < requestedTotNumQuads; ++i) {
     if (!allUniqueProxies) {
@@ -134,7 +133,7 @@ static void textureop_creation_test(
           dContext, set[i].fProxyView, set[i].fSrcAlphaType, nullptr,
           GrSamplerState::Filter::kNearest, GrSamplerState::MipmapMode::kNone, set[i].fColor,
           GrTextureOp::Saturate::kYes, blendMode, overallAA, &quad, nullptr);
-      rtc->priv().testingOnly_addDrawOp(nullptr, std::move(op));
+      rtc->addDrawOp(nullptr, std::move(op));
     }
   } else {
     GrTextureOp::AddTextureSetOps(

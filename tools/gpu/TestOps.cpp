@@ -111,8 +111,9 @@ private:
 
     GrProgramInfo* programInfo() override { return fProgramInfo; }
     void onCreateProgramInfo(
-        const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-        const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
+        const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
+        const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+        GrLoadOp colorLoadOp) override;
 
     void onPrepareDraws(Target*) override;
     void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
@@ -166,12 +167,13 @@ TestRectOp::TestRectOp(const GrCaps* caps,
 }
 
 void TestRectOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-    GrXferBarrierFlags renderPassXferBarriers) {
+    GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) {
   fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
       caps, arena, writeView, std::move(appliedClip), dstProxyView, &fGP, std::move(fProcessorSet),
-      GrPrimitiveType::kTriangles, renderPassXferBarriers, GrPipeline::InputFlags::kNone);
+      GrPrimitiveType::kTriangles, renderPassXferBarriers, colorLoadOp,
+      GrPipeline::InputFlags::kNone);
 }
 
 void TestRectOp::onPrepareDraws(Target* target) {

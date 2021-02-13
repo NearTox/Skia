@@ -61,7 +61,7 @@ static sk_sp<SkShader> make_bg_shader(int checkSize) {
       SkIntToScalar(checkSize));
   canvas.drawRect(rect1, paint);
   canvas.drawRect(rect0, paint);
-  return bmp.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
+  return bmp.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions());
 }
 
 class ModeColorFilterGM : public GM {

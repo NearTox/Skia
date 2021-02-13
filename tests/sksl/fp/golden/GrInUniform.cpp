@@ -24,9 +24,9 @@ class GrGLSLInUniform : public GrGLSLFragmentProcessor {
     colorVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "color");
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s;
+        R"SkSL(return %s;
 )SkSL",
-        args.fOutputColor, args.fUniformHandler->getUniformCStr(colorVar));
+        args.fUniformHandler->getUniformCStr(colorVar));
   }
 
  private:
@@ -44,7 +44,6 @@ bool GrInUniform::onIsEqual(const GrFragmentProcessor& other) const {
   if (color != that.color) return false;
   return true;
 }
-bool GrInUniform::usesExplicitReturn() const { return false; }
 GrInUniform::GrInUniform(const GrInUniform& src)
     : INHERITED(kGrInUniform_ClassID, src.optimizationFlags()), color(src.color) {
   this->cloneAndRegisterAllChildProcessors(src);

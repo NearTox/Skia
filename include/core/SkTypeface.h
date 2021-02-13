@@ -347,7 +347,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   void setFontStyle(SkFontStyle style) { fStyle = style; }
 
   // Must return a valid scaler context. It can not return nullptr.
-  virtual SkScalerContext* onCreateScalerContext(
+  virtual std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const = 0;
   virtual void onFilterRec(SkScalerContextRec*) const = 0;
   friend class SkScalerContext;  // onFilterRec

@@ -10,8 +10,8 @@
 
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImageInfo.h"
+#include "include/core/SkSamplingOptions.h"
 #include "include/gpu/GrTypes.h"
 #include "include/private/SkColorData.h"
 #include "src/core/SkBlendModePriv.h"
@@ -139,10 +139,10 @@ bool SkPaintToGrPaintWithTexture(
  * bool is true then bicubic filtering should be used (and the two other return values can be
  * ignored).
  */
-std::tuple<GrSamplerState::Filter, GrSamplerState::MipmapMode, bool /*bicubic*/>
-GrInterpretFilterQuality(
-    SkISize imageDims, SkFilterQuality paintFilterQuality, const SkMatrix& viewM,
-    const SkMatrix& localM, bool sharpenMipmappedTextures, bool allowFilterQualityReduction);
+std::tuple<GrSamplerState::Filter, GrSamplerState::MipmapMode, SkCubicResampler>
+GrInterpretSamplingOptions(
+    SkISize imageDims, const SkSamplingOptions&, const SkMatrix& viewM, const SkMatrix& localM,
+    bool sharpenMipmappedTextures, bool allowFilterQualityReduction);
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -218,5 +218,11 @@ void GrMakeKeyFromImageID(GrUniqueKey* key, uint32_t imageID, const SkIRect& ima
  * are purged before listeners trigger).
  */
 sk_sp<SkIDChangeListener> GrMakeUniqueKeyInvalidationListener(GrUniqueKey*, uint32_t contextID);
+
+constexpr SkCubicResampler kInvalidCubicResampler{-1.f, -1.f};
+
+static inline bool GrValidCubicResampler(SkCubicResampler cubic) {
+  return cubic.B >= 0 && cubic.C >= 0;
+}
 
 #endif

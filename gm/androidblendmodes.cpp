@@ -67,9 +67,9 @@ class AndroidBlendModesGM : public GM {
     canvas->saveLayer(nullptr, nullptr);
 
     SkPaint p;
-    canvas->drawBitmap(fCompositeDst, 0, 0, &p);
+    canvas->drawImage(fCompositeDst.asImage(), 0, 0, &p);
     p.setBlendMode(mode);
-    canvas->drawBitmap(fCompositeSrc, 0, 0, &p);
+    canvas->drawImage(fCompositeSrc.asImage(), 0, 0, &p);
   }
 
   void onDraw(SkCanvas* canvas) override {

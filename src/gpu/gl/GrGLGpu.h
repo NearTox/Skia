@@ -70,7 +70,11 @@ class GrGLGpu final : public GrGpu {
 
   // Flushes state from GrProgramInfo to GL. Returns false if the state couldn't be set.
   bool flushGLState(GrRenderTarget*, const GrProgramInfo&);
-  void flushScissorRect(const SkIRect&, int rtWidth, int rtHeight, GrSurfaceOrigin);
+  void flushScissorRect(const SkIRect& scissor, int rtHeight, GrSurfaceOrigin);
+
+  // The flushRenderTarget methods will all set the initial viewport to the full extent of the
+  // backing render target.
+  void flushViewport(const SkIRect& viewport, int rtHeight, GrSurfaceOrigin);
 
   // Returns the last program bound by flushGLState(), or nullptr if a different program has since
   // been put into use via some other method (e.g., resetContext, copySurfaceAsDraw).
@@ -100,7 +104,7 @@ class GrGLGpu final : public GrGpu {
   // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
   // Thus this is the implementation of the clear call for the corresponding passthrough function
   // on GrGLOpsRenderPass.
-  void clear(const GrScissorState&, const SkPMColor4f&, GrRenderTarget*, GrSurfaceOrigin);
+  void clear(const GrScissorState&, std::array<float, 4> color, GrRenderTarget*, GrSurfaceOrigin);
 
   // The GrGLOpsRenderPass does not buffer up draws before submitting them to the gpu.
   // Thus this is the implementation of the clearStencil call for the corresponding passthrough
@@ -353,15 +357,14 @@ class GrGLGpu final : public GrGpu {
   void flushPatchVertexCount(uint8_t count);
 
   void flushColorWrite(bool writeColor);
-  void flushClearColor(const SkPMColor4f&);
+  void flushClearColor(std::array<float, 4>);
 
   // flushes the scissor. see the note on flushBoundTextureAndParams about
   // flushing the scissor after that function is called.
-  void flushScissor(
-      const GrScissorState& scissorState, int rtWidth, int rtHeight, GrSurfaceOrigin rtOrigin) {
+  void flushScissor(const GrScissorState& scissorState, int rtHeight, GrSurfaceOrigin rtOrigin) {
     this->flushScissorTest(GrScissorTest(scissorState.enabled()));
     if (scissorState.enabled()) {
-      this->flushScissorRect(scissorState.rect(), rtWidth, rtHeight, rtOrigin);
+      this->flushScissorRect(scissorState.rect(), rtHeight, rtOrigin);
     }
   }
   void flushScissorTest(GrScissorTest);
@@ -384,9 +387,6 @@ class GrGLGpu final : public GrGpu {
   void flushRenderTarget(GrGLRenderTarget*);
   // This version can be used when the render target's colors will not be written.
   void flushRenderTargetNoColorWrites(GrGLRenderTarget*);
-
-  // Need not be called if flushRenderTarget is used.
-  void flushViewport(int width, int height);
 
   void flushStencil(const GrStencilSettings&, GrSurfaceOrigin);
   void disableStencil();

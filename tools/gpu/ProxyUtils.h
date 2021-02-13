@@ -15,18 +15,18 @@
 
 class GrDirectContext;
 class GrProgramInfo;
+class GrPixmap;
 
 namespace sk_gpu_test {
 
 /** Makes a texture proxy containing the passed in color data. */
 GrSurfaceProxyView MakeTextureProxyViewFromData(
-    GrDirectContext*, GrRenderable, GrSurfaceOrigin, const GrImageInfo&, const void* data,
-    size_t rowBytes);
+    GrDirectContext*, GrRenderable, GrSurfaceOrigin, GrPixmap pixmap);
 
 GrProgramInfo* CreateProgramInfo(
-    const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
+    const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
     const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, SkBlendMode, GrPrimitiveType,
-    GrXferBarrierFlags renderPassXferBarriers,
+    GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp,
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone,
     const GrUserStencilSettings* stencil = &GrUserStencilSettings::kUnused);
 

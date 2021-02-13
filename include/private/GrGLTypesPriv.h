@@ -55,11 +55,9 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
 
     void invalidate();
 
-    ResetTimestamp resetTimestamp() const noexcept { return fResetTimestamp; }
-    const SamplerOverriddenState& samplerOverriddenState() const noexcept {
-      return fSamplerOverriddenState;
-    }
-    const NonsamplerState& nonsamplerState() const noexcept { return fNonsamplerState; }
+    ResetTimestamp resetTimestamp() const { return fResetTimestamp; }
+    const SamplerOverriddenState& samplerOverriddenState() const { return fSamplerOverriddenState; }
+    const NonsamplerState& nonsamplerState() const { return fNonsamplerState; }
 
     // SamplerOverriddenState is optional because we don't track it when we're using sampler
     // objects.
@@ -77,13 +75,13 @@ class GrGLTextureParameters : public SkNVRefCnt<GrGLTextureParameters> {
 
 class GrGLBackendTextureInfo {
  public:
-  GrGLBackendTextureInfo(const GrGLTextureInfo& info, GrGLTextureParameters* params) noexcept
+  GrGLBackendTextureInfo(const GrGLTextureInfo& info, GrGLTextureParameters* params)
       : fInfo(info), fParams(params) {}
   GrGLBackendTextureInfo(const GrGLBackendTextureInfo&) = delete;
   GrGLBackendTextureInfo& operator=(const GrGLBackendTextureInfo&) = delete;
-  const GrGLTextureInfo& info() const noexcept { return fInfo; }
-  GrGLTextureParameters* parameters() const noexcept { return fParams; }
-  sk_sp<GrGLTextureParameters> refParameters() const noexcept { return sk_ref_sp(fParams); }
+  const GrGLTextureInfo& info() const { return fInfo; }
+  GrGLTextureParameters* parameters() const { return fParams; }
+  sk_sp<GrGLTextureParameters> refParameters() const { return sk_ref_sp(fParams); }
 
   void cleanup();
   void assign(const GrGLBackendTextureInfo&, bool thisIsValid);

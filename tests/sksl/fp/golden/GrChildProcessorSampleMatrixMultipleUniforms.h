@@ -23,7 +23,6 @@ class GrChildProcessorSampleMatrixMultipleUniforms : public GrFragmentProcessor 
       const GrChildProcessorSampleMatrixMultipleUniforms& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessorSampleMatrixMultipleUniforms"; }
-  bool usesExplicitReturn() const override;
   SkMatrix matrixA;
   SkMatrix matrixB;
 

@@ -10,6 +10,7 @@
 #include "include/core/SkString.h"
 #include "src/core/SkStringUtils.h"
 
+#include <math.h>
 #include <stdio.h>
 #include <thread>
 
@@ -144,6 +145,10 @@ DEF_TEST(String, reporter) {
     {SK_Scalar1, "1"},
     {-SK_Scalar1, "-1"},
     {SK_Scalar1 / 2, "0.5"},
+    {INFINITY, "inf"},
+    {-INFINITY, "-inf"},
+    {NAN, "nan"},
+    {-NAN, "nan"},
 #if defined(SK_BUILD_FOR_WIN) && (_MSC_VER < 1900)
     {3.4028234e38f, "3.4028235e+038"},
     {-3.4028234e38f, "-3.4028235e+038"},

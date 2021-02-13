@@ -32,7 +32,6 @@ class GrCircleEffect : public GrFragmentProcessor {
   GrCircleEffect(const GrCircleEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "CircleEffect"; }
-  bool usesExplicitReturn() const override;
   GrClipEdgeType edgeType;
   SkPoint center;
   float radius;
@@ -43,8 +42,7 @@ class GrCircleEffect : public GrFragmentProcessor {
       float radius)
       : INHERITED(
             kGrCircleEffect_ClassID,
-            (OptimizationFlags)(
-                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+            (OptimizationFlags)(inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
                 kCompatibleWithCoverageAsAlpha_OptimizationFlag),
         edgeType(edgeType),
         center(center),

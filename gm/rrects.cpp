@@ -19,11 +19,11 @@
 #include "include/core/SkTypes.h"
 #include "include/private/GrSharedEnums.h"
 #include "include/private/GrTypesPriv.h"
+#include "src/core/SkCanvasPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrPaint.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 #include "src/gpu/effects/GrRRectEffect.h"
 #include "src/gpu/ops/GrDrawOp.h"
@@ -68,10 +68,10 @@ class RRectGM : public GM {
   SkISize onISize() override { return SkISize::Make(kImageWidth, kImageHeight); }
 
   DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
-    GrRenderTargetContext* renderTargetContext =
-        canvas->internal_private_accessTopLayerRenderTargetContext();
+    GrSurfaceDrawContext* surfaceDrawContext = SkCanvasPriv::TopDeviceSurfaceDrawContext(canvas);
+
     auto context = canvas->recordingContext();
-    if (kEffect_Type == fType && (!renderTargetContext || !context)) {
+    if (kEffect_Type == fType && (!surfaceDrawContext || !context)) {
       *errorMsg = kErrorMsg_DrawSkippedGpuOnly;
       return DrawResult::kSkip;
     }
@@ -106,7 +106,7 @@ class RRectGM : public GM {
           SkRRect rrect = fRRects[curRRect];
           rrect.offset(SkIntToScalar(x), SkIntToScalar(y));
           GrClipEdgeType edgeType = (GrClipEdgeType)et;
-          const auto& caps = *renderTargetContext->caps()->shaderCaps();
+          const auto& caps = *surfaceDrawContext->caps()->shaderCaps();
           auto [success, fp] = GrRRectEffect::Make(/*inputFP=*/nullptr, edgeType, rrect, caps);
           if (success) {
             GrPaint grPaint;
@@ -117,7 +117,7 @@ class RRectGM : public GM {
             SkRect bounds = rrect.getBounds();
             bounds.outset(2.f, 2.f);
 
-            renderTargetContext->priv().testingOnly_addDrawOp(
+            surfaceDrawContext->addDrawOp(
                 GrFillRectOp::MakeNonAARect(context, std::move(grPaint), SkMatrix::I(), bounds));
           } else {
             drew = false;

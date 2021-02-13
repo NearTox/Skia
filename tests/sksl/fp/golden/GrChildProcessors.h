@@ -21,15 +21,12 @@ class GrChildProcessors : public GrFragmentProcessor {
   GrChildProcessors(const GrChildProcessors& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessors"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrChildProcessors(
       std::unique_ptr<GrFragmentProcessor> child1, std::unique_ptr<GrFragmentProcessor> child2)
       : INHERITED(kGrChildProcessors_ClassID, kNone_OptimizationFlags) {
-    SkASSERT(child1);
     this->registerChild(std::move(child1), SkSL::SampleUsage::PassThrough());
-    SkASSERT(child2);
     this->registerChild(std::move(child2), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

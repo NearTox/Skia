@@ -9,6 +9,7 @@
 #define SKSL_BINARYEXPRESSION
 
 #include "src/sksl/SkSLCompiler.h"
+#include "src/sksl/SkSLConstantFolder.h"
 #include "src/sksl/SkSLIRGenerator.h"
 #include "src/sksl/SkSLLexer.h"
 #include "src/sksl/ir/SkSLExpression.h"
@@ -21,7 +22,6 @@ namespace SkSL {
 
 static inline bool check_ref(const Expression& expr) {
   switch (expr.kind()) {
-    case Expression::Kind::kExternalValue: return true;
     case Expression::Kind::kFieldAccess: return check_ref(*expr.as<FieldAccess>().base());
     case Expression::Kind::kIndex: return check_ref(*expr.as<IndexExpression>().base());
     case Expression::Kind::kSwizzle: return check_ref(*expr.as<Swizzle>().base());
@@ -72,7 +72,8 @@ class BinaryExpression final : public Expression {
 
   std::unique_ptr<Expression> constantPropagate(
       const IRGenerator& irGenerator, const DefinitionMap& definitions) override {
-    return irGenerator.constantFold(*this->left(), this->getOperator(), *this->right());
+    return ConstantFolder::Simplify(
+        irGenerator.fContext, *this->left(), this->getOperator(), *this->right());
   }
 
   bool hasProperty(Property property) const override {

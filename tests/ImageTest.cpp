@@ -229,7 +229,7 @@ DEF_TEST(Image_Serialize_Encoding_Failure, reporter) {
 
   SkPictureRecorder recorder;
   SkCanvas* canvas = recorder.beginRecording(100, 100);
-  canvas->drawImage(image, 0, 0);
+  canvas->drawImage(image.get(), 0, 0, SkSamplingOptions());
   sk_sp<SkPicture> picture(recorder.finishRecordingAsPicture());
   REPORTER_ASSERT(reporter, picture);
   REPORTER_ASSERT(reporter, picture->approximateOpCount() > 0);
@@ -311,7 +311,7 @@ DEF_TEST(image_newfrombitmap, reporter) {
     SkBitmap bm;
     rec[i].fMakeProc(&bm);
 
-    sk_sp<SkImage> image(SkImage::MakeFromBitmap(bm));
+    sk_sp<SkImage> image(bm.asImage());
     SkPixmap pmap;
 
     const bool sharedID = (image->uniqueID() == bm.getGenerationID());
@@ -508,7 +508,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(UnpremulTextureImage, reporter, ctxInfo) {
     }
   }
   auto dContext = ctxInfo.directContext();
-  auto texImage = SkImage::MakeFromBitmap(bmp)->makeTextureImage(dContext);
+  auto texImage = bmp.asImage()->makeTextureImage(dContext);
   if (!texImage || texImage->alphaType() != kUnpremul_SkAlphaType) {
     ERRORF(reporter, "Failed to make unpremul texture image.");
     return;
@@ -747,7 +747,7 @@ static void test_legacy_bitmap(
   REPORTER_ASSERT(
       reporter,
       bitmap.extractSubset(&tmp, SkIRect::MakeWH(image->width() / 2, image->height() / 2)));
-  sk_sp<SkImage> subsetImage(SkImage::MakeFromBitmap(tmp));
+  sk_sp<SkImage> subsetImage(tmp.asImage());
   REPORTER_ASSERT(reporter, subsetImage.get());
 
   SkBitmap subsetBitmap;
@@ -1161,7 +1161,7 @@ DEF_TEST(Image_ColorSpace, r) {
   SkBitmap bitmap;
   SkImageInfo info = SkImageInfo::MakeN32(10, 10, kPremul_SkAlphaType, rec2020);
   bitmap.allocPixels(info);
-  image = SkImage::MakeFromBitmap(bitmap);
+  image = bitmap.asImage();
   REPORTER_ASSERT(r, SkColorSpace::Equals(rec2020.get(), image->colorSpace()));
 
   sk_sp<SkSurface> surface =
@@ -1191,7 +1191,7 @@ DEF_TEST(Image_makeColorSpace, r) {
   srgbBitmap.allocPixels(SkImageInfo::MakeS32(1, 1, kOpaque_SkAlphaType));
   *srgbBitmap.getAddr32(0, 0) = SkSwizzle_RGBA_to_PMColor(0xFF604020);
   srgbBitmap.setImmutable();
-  sk_sp<SkImage> srgbImage = SkImage::MakeFromBitmap(srgbBitmap);
+  sk_sp<SkImage> srgbImage = srgbBitmap.asImage();
   sk_sp<SkImage> p3Image = srgbImage->makeColorSpace(p3, nullptr);
   SkBitmap p3Bitmap;
   bool success = p3Image->asLegacyBitmap(&p3Bitmap);
@@ -1252,7 +1252,7 @@ DEF_TEST(image_roundtrip_encode, reporter) {
   SkBitmap bm0;
   make_all_premul(&bm0);
 
-  auto img0 = SkImage::MakeFromBitmap(bm0);
+  auto img0 = bm0.asImage();
   sk_sp<SkData> data = img0->encodeToData(SkEncodedImageFormat::kPNG, 100);
   auto img1 = SkImage::MakeFromEncoded(data);
 
@@ -1303,7 +1303,8 @@ static void test_scale_pixels(
   for (auto chint : {SkImage::kDisallow_CachingHint, SkImage::kAllow_CachingHint}) {
     SkAutoPixmapStorage scaled;
     scaled.alloc(info);
-    if (!image->scalePixels(scaled, kLow_SkFilterQuality, chint)) {
+    if (!image->scalePixels(
+            scaled, SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone), chint)) {
       ERRORF(reporter, "Failed to scale image");
       continue;
     }

@@ -28,18 +28,15 @@ class GrDitherEffect : public GrFragmentProcessor {
   GrDitherEffect(const GrDitherEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "DitherEffect"; }
-  bool usesExplicitReturn() const override;
   float range;
 
  private:
   GrDitherEffect(std::unique_ptr<GrFragmentProcessor> inputFP, float range)
       : INHERITED(
             kGrDitherEffect_ClassID,
-            (OptimizationFlags)(
-                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+            (OptimizationFlags)(inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
                 kPreservesOpaqueInput_OptimizationFlag),
         range(range) {
-    SkASSERT(inputFP);
     this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

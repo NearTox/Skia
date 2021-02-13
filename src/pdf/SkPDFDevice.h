@@ -78,8 +78,8 @@ class SkPDFDevice final : public SkClipStackDevice {
   void drawPath(const SkPath& origpath, const SkPaint& paint, bool pathIsMutable) override;
 
   void drawImageRect(
-      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint&,
-      SkCanvas::SrcRectConstraint) override;
+      const SkImage*, const SkRect* src, const SkRect& dst, const SkSamplingOptions&,
+      const SkPaint&, SkCanvas::SrcRectConstraint) override;
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
@@ -105,8 +105,9 @@ class SkPDFDevice final : public SkClipStackDevice {
 
   void drawAnnotation(const SkRect&, const char key[], SkData* value) override;
 
-  void drawDevice(SkBaseDevice*, const SkPaint&) override;
-  void drawSpecial(SkSpecialImage*, const SkMatrix&, const SkPaint&) override;
+  void drawDevice(SkBaseDevice*, const SkSamplingOptions&, const SkPaint&) override;
+  void drawSpecial(
+      SkSpecialImage*, const SkMatrix&, const SkSamplingOptions&, const SkPaint&) override;
 
   sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
   sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
@@ -156,7 +157,7 @@ class SkPDFDevice final : public SkClipStackDevice {
   void drawGlyphRunAsPath(const SkGlyphRun& glyphRun, SkPoint offset, const SkPaint& runPaint);
 
   void internalDrawImageRect(
-      SkKeyedImage, const SkRect* src, const SkRect& dst, const SkPaint&,
+      SkKeyedImage, const SkRect* src, const SkRect& dst, const SkSamplingOptions&, const SkPaint&,
       const SkMatrix& canvasTransformationMatrix);
 
   void internalDrawPath(

@@ -33,14 +33,12 @@ using GrStdSteadyClock = std::chrono::steady_clock;
  *  divide, rounding up
  */
 
-static inline constexpr size_t GrSizeDivRoundUp(size_t x, size_t y) noexcept {
-  return (x + (y - 1)) / y;
-}
+static inline constexpr size_t GrSizeDivRoundUp(size_t x, size_t y) { return (x + (y - 1)) / y; }
 
 /**
  *  align up to a power of 2
  */
-static inline constexpr size_t GrAlignTo(size_t x, size_t alignment) noexcept {
+static inline constexpr size_t GrAlignTo(size_t x, size_t alignment) {
   SkASSERT(alignment && SkIsPow2(alignment));
   return (x + alignment - 1) & ~(alignment - 1);
 }
@@ -59,12 +57,8 @@ enum class GrPrimitiveType : uint8_t {
 };
 static constexpr int kNumGrPrimitiveTypes = (int)GrPrimitiveType::kPath + 1;
 
-static constexpr bool GrIsPrimTypeLines(GrPrimitiveType type) noexcept {
+static constexpr bool GrIsPrimTypeLines(GrPrimitiveType type) {
   return GrPrimitiveType::kLines == type || GrPrimitiveType::kLineStrip == type;
-}
-
-static constexpr bool GrIsPrimTypeTris(GrPrimitiveType type) noexcept {
-  return GrPrimitiveType::kTriangles == type || GrPrimitiveType::kTriangleStrip == type;
 }
 
 enum class GrPrimitiveRestart : bool { kNo = false, kYes = true };
@@ -109,12 +103,12 @@ enum GrMaskFormat {
 
   kLast_GrMaskFormat = kARGB_GrMaskFormat
 };
-static constexpr int kMaskFormatCount = kLast_GrMaskFormat + 1;
+static const int kMaskFormatCount = kLast_GrMaskFormat + 1;
 
 /**
  *  Return the number of bytes-per-pixel for the specified mask format.
  */
-inline constexpr int GrMaskFormatBytesPerPixel(GrMaskFormat format) noexcept {
+inline constexpr int GrMaskFormatBytesPerPixel(GrMaskFormat format) {
   SkASSERT(format < kMaskFormatCount);
   // kA8   (0) -> 1
   // kA565 (1) -> 2
@@ -224,9 +218,9 @@ enum class GrAAType : unsigned {
 
   kLast = kMSAA
 };
-static constexpr int kGrAATypeCount = static_cast<int>(GrAAType::kLast) + 1;
+static const int kGrAATypeCount = static_cast<int>(GrAAType::kLast) + 1;
 
-static constexpr bool GrAATypeIsHW(GrAAType type) noexcept {
+static constexpr bool GrAATypeIsHW(GrAAType type) {
   switch (type) {
     case GrAAType::kNone: return false;
     case GrAAType::kCoverage: return false;
@@ -275,7 +269,7 @@ enum class GrQuadAAFlags {
 
 GR_MAKE_BITFIELD_CLASS_OPS(GrQuadAAFlags)
 
-static constexpr inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) noexcept {
+static inline GrQuadAAFlags SkToGrQuadAAFlags(unsigned flags) {
   return static_cast<GrQuadAAFlags>(flags);
 }
 
@@ -330,7 +324,7 @@ enum GrSLType {
 
   kLast_GrSLType = kInput_GrSLType
 };
-static constexpr int kGrSLTypeCount = kLast_GrSLType + 1;
+static const int kGrSLTypeCount = kLast_GrSLType + 1;
 
 /**
  * The type of texture. Backends other than GL currently only use the 2D value but the type must
@@ -352,7 +346,7 @@ enum GrShaderType {
 
   kLastkFragment_GrShaderType = kFragment_GrShaderType
 };
-static constexpr int kGrShaderTypeCount = kLastkFragment_GrShaderType + 1;
+static const int kGrShaderTypeCount = kLastkFragment_GrShaderType + 1;
 
 enum GrShaderFlags {
   kNone_GrShaderFlags = 0,
@@ -365,7 +359,7 @@ enum GrShaderFlags {
 GR_MAKE_BITFIELD_OPS(GrShaderFlags)
 
 /** Is the shading language type float (including vectors/matrices)? */
-static constexpr bool GrSLTypeIsFloatType(GrSLType type) noexcept {
+static constexpr bool GrSLTypeIsFloatType(GrSLType type) {
   switch (type) {
     case kFloat_GrSLType:
     case kFloat2_GrSLType:
@@ -417,7 +411,7 @@ static constexpr bool GrSLTypeIsFloatType(GrSLType type) noexcept {
 }
 
 /** If the type represents a single value or vector return the vector length, else -1. */
-static constexpr int GrSLTypeVecLength(GrSLType type) noexcept {
+static constexpr int GrSLTypeVecLength(GrSLType type) {
   switch (type) {
     case kFloat_GrSLType:
     case kHalf_GrSLType:
@@ -471,7 +465,7 @@ static constexpr int GrSLTypeVecLength(GrSLType type) noexcept {
   SkUNREACHABLE;
 }
 
-static inline GrSLType GrSLCombinedSamplerTypeForTextureType(GrTextureType type) noexcept {
+static inline GrSLType GrSLCombinedSamplerTypeForTextureType(GrTextureType type) {
   switch (type) {
     case GrTextureType::k2D: return kTexture2DSampler_GrSLType;
     case GrTextureType::kRectangle: return kTexture2DRectSampler_GrSLType;
@@ -483,7 +477,7 @@ static inline GrSLType GrSLCombinedSamplerTypeForTextureType(GrTextureType type)
 /** Rectangle and external textures only support the clamp wrap mode and do not support
  *  MIP maps.
  */
-static inline bool GrTextureTypeHasRestrictedSampling(GrTextureType type) noexcept {
+static inline bool GrTextureTypeHasRestrictedSampling(GrTextureType type) {
   switch (type) {
     case GrTextureType::k2D: return false;
     case GrTextureType::kRectangle: return true;
@@ -492,7 +486,7 @@ static inline bool GrTextureTypeHasRestrictedSampling(GrTextureType type) noexce
   }
 }
 
-static constexpr bool GrSLTypeIsCombinedSamplerType(GrSLType type) noexcept {
+static constexpr bool GrSLTypeIsCombinedSamplerType(GrSLType type) {
   switch (type) {
     case kTexture2DSampler_GrSLType:
     case kTextureExternalSampler_GrSLType:
@@ -587,17 +581,17 @@ enum GrVertexAttribType {
 
   kLast_GrVertexAttribType = kUShort4_norm_GrVertexAttribType
 };
-static constexpr int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
+static const int kGrVertexAttribTypeCount = kLast_GrVertexAttribType + 1;
 
 //////////////////////////////////////////////////////////////////////////////
 
-static constexpr int kGrClipEdgeTypeCnt = (int)GrClipEdgeType::kLast + 1;
+static const int kGrClipEdgeTypeCnt = (int)GrClipEdgeType::kLast + 1;
 
-static constexpr bool GrProcessorEdgeTypeIsFill(const GrClipEdgeType edgeType) noexcept {
+static constexpr bool GrProcessorEdgeTypeIsFill(const GrClipEdgeType edgeType) {
   return (GrClipEdgeType::kFillAA == edgeType || GrClipEdgeType::kFillBW == edgeType);
 }
 
-static constexpr bool GrProcessorEdgeTypeIsInverseFill(const GrClipEdgeType edgeType) noexcept {
+static constexpr bool GrProcessorEdgeTypeIsInverseFill(const GrClipEdgeType edgeType) {
   return (GrClipEdgeType::kInverseFillAA == edgeType || GrClipEdgeType::kInverseFillBW == edgeType);
 }
 
@@ -605,7 +599,7 @@ static constexpr bool GrProcessorEdgeTypeIsAA(const GrClipEdgeType edgeType) {
   return (GrClipEdgeType::kFillBW != edgeType && GrClipEdgeType::kInverseFillBW != edgeType);
 }
 
-static inline GrClipEdgeType GrInvertProcessorEdgeType(const GrClipEdgeType edgeType) noexcept {
+static inline GrClipEdgeType GrInvertProcessorEdgeType(const GrClipEdgeType edgeType) {
   switch (edgeType) {
     case GrClipEdgeType::kFillBW: return GrClipEdgeType::kInverseFillBW;
     case GrClipEdgeType::kFillAA: return GrClipEdgeType::kInverseFillAA;
@@ -630,7 +624,7 @@ enum class GrGpuBufferType {
   kXferCpuToGpu,
   kXferGpuToCpu,
 };
-static constexpr int kGrGpuBufferTypeCount = static_cast<int>(GrGpuBufferType::kXferGpuToCpu) + 1;
+static const int kGrGpuBufferTypeCount = static_cast<int>(GrGpuBufferType::kXferGpuToCpu) + 1;
 
 /**
  * Provides a performance hint regarding the frequency at which a data store will be accessed.
@@ -736,7 +730,7 @@ enum class GpuPathRenderers {
   kAALinearizing = 1 << 6,
   kSmall = 1 << 7,
   kTriangulating = 1 << 8,
-  kDefault = ((1 << 9) - 1) & ~kTessellation  // All but kTessellation.
+  kDefault = ((1 << 9) - 1)  // All path renderers.
 };
 
 /**
@@ -772,6 +766,7 @@ enum class GrColorType {
   kRGBA_1010102,
   kBGRA_1010102,
   kGray_8,
+  kGrayAlpha_88,
   kAlpha_F16,
   kRGBA_F16,
   kRGBA_F16_Clamped,
@@ -802,9 +797,9 @@ enum class GrColorType {
   kLast = kGray_F16
 };
 
-static constexpr int kGrColorTypeCnt = static_cast<int>(GrColorType::kLast) + 1;
+static const int kGrColorTypeCnt = static_cast<int>(GrColorType::kLast) + 1;
 
-static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) noexcept {
+static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) {
   switch (ct) {
     case GrColorType::kUnknown: return kUnknown_SkColorType;
     case GrColorType::kAlpha_8: return kAlpha_8_SkColorType;
@@ -819,6 +814,7 @@ static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) noexcept {
     case GrColorType::kRGBA_1010102: return kRGBA_1010102_SkColorType;
     case GrColorType::kBGRA_1010102: return kBGRA_1010102_SkColorType;
     case GrColorType::kGray_8: return kGray_8_SkColorType;
+    case GrColorType::kGrayAlpha_88: return kUnknown_SkColorType;
     case GrColorType::kAlpha_F16: return kA16_float_SkColorType;
     case GrColorType::kRGBA_F16: return kRGBA_F16_SkColorType;
     case GrColorType::kRGBA_F16_Clamped: return kRGBA_F16Norm_SkColorType;
@@ -841,7 +837,7 @@ static constexpr SkColorType GrColorTypeToSkColorType(GrColorType ct) noexcept {
   SkUNREACHABLE;
 }
 
-static constexpr GrColorType SkColorTypeToGrColorType(SkColorType ct) noexcept {
+static constexpr GrColorType SkColorTypeToGrColorType(SkColorType ct) {
   switch (ct) {
     case kUnknown_SkColorType: return GrColorType::kUnknown;
     case kAlpha_8_SkColorType: return GrColorType::kAlpha_8;
@@ -873,7 +869,7 @@ static constexpr GrColorType SkColorTypeToGrColorType(SkColorType ct) noexcept {
 GrColorType SkColorTypeAndFormatToGrColorType(
     const GrCaps* caps, SkColorType skCT, const GrBackendFormat& format);
 
-static constexpr uint32_t GrColorTypeChannelFlags(GrColorType ct) noexcept {
+static constexpr uint32_t GrColorTypeChannelFlags(GrColorType ct) {
   switch (ct) {
     case GrColorType::kUnknown: return 0;
     case GrColorType::kAlpha_8: return kAlpha_SkColorChannelFlag;
@@ -887,6 +883,7 @@ static constexpr uint32_t GrColorTypeChannelFlags(GrColorType ct) noexcept {
     case GrColorType::kRGBA_1010102: return kRGBA_SkColorChannelFlags;
     case GrColorType::kBGRA_1010102: return kRGBA_SkColorChannelFlags;
     case GrColorType::kGray_8: return kGray_SkColorChannelFlag;
+    case GrColorType::kGrayAlpha_88: return kGrayAlpha_SkColorChannelFlags;
     case GrColorType::kAlpha_F16: return kAlpha_SkColorChannelFlag;
     case GrColorType::kRGBA_F16: return kRGBA_SkColorChannelFlags;
     case GrColorType::kRGBA_F16_Clamped: return kRGBA_SkColorChannelFlags;
@@ -928,45 +925,49 @@ enum class GrColorTypeEncoding {
  */
 struct GrColorTypeDesc {
  public:
-  static constexpr GrColorTypeDesc MakeRGBA(int rgba, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeRGBA(int rgba, GrColorTypeEncoding e) {
     return {rgba, rgba, rgba, rgba, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeRGBA(int rgb, int a, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeRGBA(int rgb, int a, GrColorTypeEncoding e) {
     return {rgb, rgb, rgb, a, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeRGB(int rgb, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeRGB(int rgb, GrColorTypeEncoding e) {
     return {rgb, rgb, rgb, 0, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeRGB(int r, int g, int b, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeRGB(int r, int g, int b, GrColorTypeEncoding e) {
     return {r, g, b, 0, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeAlpha(int a, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeAlpha(int a, GrColorTypeEncoding e) {
     return {0, 0, 0, a, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeR(int r, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeR(int r, GrColorTypeEncoding e) {
     return {r, 0, 0, 0, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeRG(int rg, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeRG(int rg, GrColorTypeEncoding e) {
     return {rg, rg, 0, 0, 0, e};
   }
 
-  static constexpr GrColorTypeDesc MakeGray(int grayBits, GrColorTypeEncoding e) noexcept {
+  static constexpr GrColorTypeDesc MakeGray(int grayBits, GrColorTypeEncoding e) {
     return {0, 0, 0, 0, grayBits, e};
   }
 
-  static constexpr GrColorTypeDesc MakeInvalid() noexcept { return {}; }
+  static constexpr GrColorTypeDesc MakeGrayAlpha(int grayAlpha, GrColorTypeEncoding e) {
+    return {0, 0, 0, 0, grayAlpha, e};
+  }
 
-  constexpr int r() const noexcept { return fRBits; }
-  constexpr int g() const noexcept { return fGBits; }
-  constexpr int b() const noexcept { return fBBits; }
-  constexpr int a() const noexcept { return fABits; }
-  constexpr int operator[](int c) const noexcept {
+  static constexpr GrColorTypeDesc MakeInvalid() { return {}; }
+
+  constexpr int r() const { return fRBits; }
+  constexpr int g() const { return fGBits; }
+  constexpr int b() const { return fBBits; }
+  constexpr int a() const { return fABits; }
+  constexpr int operator[](int c) const {
     switch (c) {
       case 0: return this->r();
       case 1: return this->g();
@@ -976,9 +977,9 @@ struct GrColorTypeDesc {
     SkUNREACHABLE;
   }
 
-  constexpr int gray() const noexcept { return fGrayBits; }
+  constexpr int gray() const { return fGrayBits; }
 
-  constexpr GrColorTypeEncoding encoding() const noexcept { return fEncoding; }
+  constexpr GrColorTypeEncoding encoding() const { return fEncoding; }
 
  private:
   int fRBits = 0;
@@ -988,10 +989,9 @@ struct GrColorTypeDesc {
   int fGrayBits = 0;
   GrColorTypeEncoding fEncoding = GrColorTypeEncoding::kUnorm;
 
-  constexpr GrColorTypeDesc() noexcept = default;
+  constexpr GrColorTypeDesc() = default;
 
-  constexpr GrColorTypeDesc(
-      int r, int g, int b, int a, int gray, GrColorTypeEncoding encoding) noexcept
+  constexpr GrColorTypeDesc(int r, int g, int b, int a, int gray, GrColorTypeEncoding encoding)
       : fRBits(r), fGBits(g), fBBits(b), fABits(a), fGrayBits(gray), fEncoding(encoding) {
     SkASSERT(r >= 0 && g >= 0 && b >= 0 && a >= 0 && gray >= 0);
     SkASSERT(!gray || (!r && !g && !b));
@@ -999,7 +999,7 @@ struct GrColorTypeDesc {
   }
 };
 
-static constexpr GrColorTypeDesc GrGetColorTypeDesc(GrColorType ct) noexcept {
+static constexpr GrColorTypeDesc GrGetColorTypeDesc(GrColorType ct) {
   switch (ct) {
     case GrColorType::kUnknown: return GrColorTypeDesc::MakeInvalid();
     case GrColorType::kAlpha_8: return GrColorTypeDesc::MakeAlpha(8, GrColorTypeEncoding::kUnorm);
@@ -1017,6 +1017,8 @@ static constexpr GrColorTypeDesc GrGetColorTypeDesc(GrColorType ct) noexcept {
     case GrColorType::kBGRA_1010102:
       return GrColorTypeDesc::MakeRGBA(10, 2, GrColorTypeEncoding::kUnorm);
     case GrColorType::kGray_8: return GrColorTypeDesc::MakeGray(8, GrColorTypeEncoding::kUnorm);
+    case GrColorType::kGrayAlpha_88:
+      return GrColorTypeDesc::MakeGrayAlpha(8, GrColorTypeEncoding::kUnorm);
     case GrColorType::kAlpha_F16:
       return GrColorTypeDesc::MakeAlpha(16, GrColorTypeEncoding::kFloat);
     case GrColorType::kRGBA_F16: return GrColorTypeDesc::MakeRGBA(16, GrColorTypeEncoding::kFloat);
@@ -1044,7 +1046,7 @@ static constexpr GrColorTypeDesc GrGetColorTypeDesc(GrColorType ct) noexcept {
   SkUNREACHABLE;
 }
 
-static constexpr GrClampType GrColorTypeClampType(GrColorType colorType) noexcept {
+static constexpr GrClampType GrColorTypeClampType(GrColorType colorType) {
   if (GrGetColorTypeDesc(colorType).encoding() == GrColorTypeEncoding::kUnorm ||
       GrGetColorTypeDesc(colorType).encoding() == GrColorTypeEncoding::kSRGBUnorm) {
     return GrClampType::kAuto;
@@ -1054,14 +1056,14 @@ static constexpr GrClampType GrColorTypeClampType(GrColorType colorType) noexcep
 
 // Consider a color type "wider" than n if it has more than n bits for any its representable
 // channels.
-static constexpr bool GrColorTypeIsWiderThan(GrColorType colorType, int n) noexcept {
+static constexpr bool GrColorTypeIsWiderThan(GrColorType colorType, int n) {
   SkASSERT(n > 0);
   auto desc = GrGetColorTypeDesc(colorType);
   return (desc.r() && desc.r() > n) || (desc.g() && desc.g() > n) || (desc.b() && desc.b() > n) ||
          (desc.a() && desc.a() > n) || (desc.gray() && desc.gray() > n);
 }
 
-static constexpr bool GrColorTypeIsAlphaOnly(GrColorType ct) noexcept {
+static constexpr bool GrColorTypeIsAlphaOnly(GrColorType ct) {
   return GrColorTypeChannelFlags(ct) == kAlpha_SkColorChannelFlag;
 }
 
@@ -1069,7 +1071,7 @@ static constexpr bool GrColorTypeHasAlpha(GrColorType ct) {
   return GrColorTypeChannelFlags(ct) & kAlpha_SkColorChannelFlag;
 }
 
-static constexpr size_t GrColorTypeBytesPerPixel(GrColorType ct) noexcept {
+static constexpr size_t GrColorTypeBytesPerPixel(GrColorType ct) {
   switch (ct) {
     case GrColorType::kUnknown: return 0;
     case GrColorType::kAlpha_8: return 1;
@@ -1083,6 +1085,7 @@ static constexpr size_t GrColorTypeBytesPerPixel(GrColorType ct) noexcept {
     case GrColorType::kRGBA_1010102: return 4;
     case GrColorType::kBGRA_1010102: return 4;
     case GrColorType::kGray_8: return 1;
+    case GrColorType::kGrayAlpha_88: return 2;
     case GrColorType::kAlpha_F16: return 2;
     case GrColorType::kRGBA_F16: return 8;
     case GrColorType::kRGBA_F16_Clamped: return 8;
@@ -1107,8 +1110,7 @@ static constexpr size_t GrColorTypeBytesPerPixel(GrColorType ct) noexcept {
 
 // In general we try to not mix CompressionType and ColorType, but currently SkImage still requires
 // an SkColorType even for CompressedTypes so we need some conversion.
-static constexpr SkColorType GrCompressionTypeToSkColorType(
-    SkImage::CompressionType compression) noexcept {
+static constexpr SkColorType GrCompressionTypeToSkColorType(SkImage::CompressionType compression) {
   switch (compression) {
     case SkImage::CompressionType::kNone: return kUnknown_SkColorType;
     case SkImage::CompressionType::kETC2_RGB8_UNORM: return kRGB_888x_SkColorType;
@@ -1119,7 +1121,7 @@ static constexpr SkColorType GrCompressionTypeToSkColorType(
   SkUNREACHABLE;
 }
 
-static constexpr GrColorType GrMaskFormatToColorType(GrMaskFormat format) noexcept {
+static constexpr GrColorType GrMaskFormatToColorType(GrMaskFormat format) {
   switch (format) {
     case kA8_GrMaskFormat: return GrColorType::kAlpha_8;
     case kA565_GrMaskFormat: return GrColorType::kBGR_565;
@@ -1145,10 +1147,10 @@ class GrRefCntedCallback : public SkNVRefCnt<GrRefCntedCallback> {
 
   ~GrRefCntedCallback() { fReleaseProc(fReleaseCtx); }
 
-  Context context() const noexcept { return fReleaseCtx; }
+  Context context() const { return fReleaseCtx; }
 
  private:
-  GrRefCntedCallback(Callback proc, Context ctx) noexcept : fReleaseProc(proc), fReleaseCtx(ctx) {}
+  GrRefCntedCallback(Callback proc, Context ctx) : fReleaseProc(proc), fReleaseCtx(ctx) {}
   GrRefCntedCallback(const GrRefCntedCallback&) = delete;
   GrRefCntedCallback(GrRefCntedCallback&&) = delete;
   GrRefCntedCallback& operator=(const GrRefCntedCallback&) = delete;
@@ -1168,7 +1170,7 @@ enum class GrDstSampleType {
 
 // Returns true if the sampling of the dst color in the shader is done by reading the dst directly.
 // Anything that directly reads the dst will need a barrier between draws.
-static constexpr bool GrDstSampleTypeDirectlySamplesDst(GrDstSampleType type) noexcept {
+static constexpr bool GrDstSampleTypeDirectlySamplesDst(GrDstSampleType type) {
   switch (type) {
     case GrDstSampleType::kAsSelfTexture:  // fall through
     case GrDstSampleType::kAsInputAttachment: return true;
@@ -1178,7 +1180,7 @@ static constexpr bool GrDstSampleTypeDirectlySamplesDst(GrDstSampleType type) no
   SkUNREACHABLE;
 }
 
-static constexpr bool GrDstSampleTypeUsesTexture(GrDstSampleType type) noexcept {
+static constexpr bool GrDstSampleTypeUsesTexture(GrDstSampleType type) {
   switch (type) {
     case GrDstSampleType::kAsSelfTexture:  // fall through
     case GrDstSampleType::kAsTextureCopy: return true;
@@ -1189,7 +1191,7 @@ static constexpr bool GrDstSampleTypeUsesTexture(GrDstSampleType type) noexcept 
 }
 
 #if defined(SK_DEBUG) || GR_TEST_UTILS || defined(SK_ENABLE_DUMP_GPU)
-static constexpr const char* GrBackendApiToStr(GrBackendApi api) noexcept {
+static constexpr const char* GrBackendApiToStr(GrBackendApi api) {
   switch (api) {
     case GrBackendApi::kOpenGL: return "OpenGL";
     case GrBackendApi::kVulkan: return "Vulkan";
@@ -1201,7 +1203,7 @@ static constexpr const char* GrBackendApiToStr(GrBackendApi api) noexcept {
   SkUNREACHABLE;
 }
 
-static constexpr const char* GrColorTypeToStr(GrColorType ct) noexcept {
+static constexpr const char* GrColorTypeToStr(GrColorType ct) {
   switch (ct) {
     case GrColorType::kUnknown: return "kUnknown";
     case GrColorType::kAlpha_8: return "kAlpha_8";
@@ -1215,6 +1217,7 @@ static constexpr const char* GrColorTypeToStr(GrColorType ct) noexcept {
     case GrColorType::kRGBA_1010102: return "kRGBA_1010102";
     case GrColorType::kBGRA_1010102: return "kBGRA_1010102";
     case GrColorType::kGray_8: return "kGray_8";
+    case GrColorType::kGrayAlpha_88: return "kGrayAlpha_88";
     case GrColorType::kAlpha_F16: return "kAlpha_F16";
     case GrColorType::kRGBA_F16: return "kRGBA_F16";
     case GrColorType::kRGBA_F16_Clamped: return "kRGBA_F16_Clamped";
@@ -1237,7 +1240,7 @@ static constexpr const char* GrColorTypeToStr(GrColorType ct) noexcept {
   SkUNREACHABLE;
 }
 
-static constexpr const char* GrCompressionTypeToStr(SkImage::CompressionType compression) noexcept {
+static constexpr const char* GrCompressionTypeToStr(SkImage::CompressionType compression) {
   switch (compression) {
     case SkImage::CompressionType::kNone: return "kNone";
     case SkImage::CompressionType::kETC2_RGB8_UNORM: return "kETC2_RGB8_UNORM";

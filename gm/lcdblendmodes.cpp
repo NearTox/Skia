@@ -85,7 +85,7 @@ class LcdBlendGM : public skiagm::GM {
 
     SkPaint surfPaint;
     surfPaint.setBlendMode(SkBlendMode::kSrcOver);
-    surface->draw(canvas, 0, 0, &surfPaint);
+    surface->draw(canvas, 0, 0, SkSamplingOptions(), &surfPaint);
   }
 
   void drawColumn(SkCanvas* canvas, SkColor backgroundColor, SkColor textColor, bool useGrad) {

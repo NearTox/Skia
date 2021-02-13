@@ -20,7 +20,8 @@ class GrVkFramebuffer : public GrVkManagedResource {
  public:
   static GrVkFramebuffer* Create(
       GrVkGpu* gpu, int width, int height, const GrVkRenderPass* renderPass,
-      const GrVkImageView* colorAttachment, const GrVkImageView* stencilAttachment);
+      const GrVkImageView* colorAttachment, const GrVkImageView* resolveAttachment,
+      const GrVkImageView* stencilAttachment);
 
   VkFramebuffer framebuffer() const { return fFramebuffer; }
 

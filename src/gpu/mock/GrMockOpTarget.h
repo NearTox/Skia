@@ -33,6 +33,7 @@ class GrMockOpTarget : public GrMeshDrawOp::Target {
   GrAppliedClip detachAppliedClip() override { return GrAppliedClip::Disabled(); }
   const GrXferProcessor::DstProxyView& dstProxyView() const override { return fDstProxyView; }
   GrXferBarrierFlags renderPassBarriers() const override { return GrXferBarrierFlags::kNone; }
+  GrLoadOp colorLoadOp() const override { return GrLoadOp::kLoad; }
 
   void* makeVertexSpace(
       size_t vertexSize, int vertexCount, sk_sp<const GrBuffer>*, int* startVertex) override {
@@ -66,7 +67,11 @@ class GrMockOpTarget : public GrMeshDrawOp::Target {
           "FATAL: wanted %i static drawIndirect elements; only have %i.\n", drawCount,
           staticBufferCount);
     }
+    *offsetInBytes = 0;
     return fStaticDrawIndirectData;
+  }
+
+  void putBackIndirectDraws(int count) override { /* no-op */
   }
 
   GrDrawIndexedIndirectCommand* makeDrawIndexedIndirectSpace(
@@ -77,7 +82,11 @@ class GrMockOpTarget : public GrMeshDrawOp::Target {
           "FATAL: wanted %i static drawIndexedIndirect elements; only have %i.\n", drawCount,
           staticBufferCount);
     }
+    *offsetInBytes = 0;
     return fStaticDrawIndexedIndirectData;
+  }
+
+  void putBackIndexedIndirectDraws(int count) override { /* no-op */
   }
 
 #define UNIMPL(...) \
@@ -88,8 +97,8 @@ class GrMockOpTarget : public GrMeshDrawOp::Target {
   UNIMPL(uint16_t* makeIndexSpace(int, sk_sp<const GrBuffer>*, int*))
   UNIMPL(uint16_t* makeIndexSpaceAtLeast(int, int, sk_sp<const GrBuffer>*, int*, int*))
   UNIMPL(void putBackIndices(int))
-  UNIMPL(GrRenderTargetProxy* proxy() const)
-  UNIMPL(const GrSurfaceProxyView* writeView() const)
+  UNIMPL(GrRenderTargetProxy* rtProxy() const)
+  UNIMPL(const GrSurfaceProxyView& writeView() const)
   UNIMPL(const GrAppliedClip* appliedClip() const)
   UNIMPL(GrStrikeCache* strikeCache() const)
   UNIMPL(GrAtlasManager* atlasManager() const)
@@ -99,7 +108,7 @@ class GrMockOpTarget : public GrMeshDrawOp::Target {
 
  private:
   sk_sp<GrDirectContext> fMockContext;
-  char fStaticVertexData[4 * 1024 * 1024];
+  char fStaticVertexData[6 * 1024 * 1024];
   GrDrawIndirectCommand fStaticDrawIndirectData[32];
   GrDrawIndexedIndirectCommand fStaticDrawIndexedIndirectData[32];
   SkSTArenaAllocWithReset<1024 * 1024> fAllocator;

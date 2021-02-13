@@ -132,7 +132,12 @@ static float minus_1_ulp(float x) {
 // and repurpose the other fields to hold the parameters of the HDR functions.
 enum TFKind { Bad, sRGBish, PQish, HLGish, HLGinvish };
 struct TF_PQish  { float A,B,C,D,E,F; };
-struct TF_HLGish { float R,G,a,b,c; };
+struct TF_HLGish {
+  float R, G, a, b, c, K_minus_1;
+};
+// We didn't originally support a scale factor K for HLG, and instead just stored 0 in
+// the unused `f` field of skcms_TransferFunction for HLGish and HLGInvish transfer functions.
+// By storing f=K-1, those old unusued f=0 values now mean K=1, a noop scale factor.
 
 static float TFKind_marker(TFKind kind) {
     // We'd use different NaNs, but those aren't guaranteed to be preserved by WASM.
@@ -184,12 +189,11 @@ bool skcms_TransferFunction_makePQish(skcms_TransferFunction* tf,
     return true;
 }
 
-bool skcms_TransferFunction_makeHLGish(skcms_TransferFunction* tf,
-                                       float R, float G,
-                                       float a, float b, float c) {
-    *tf = { TFKind_marker(HLGish), R,G, a,b,c, 0 };
-    assert(skcms_TransferFunction_isHLGish(tf));
-    return true;
+bool skcms_TransferFunction_makeScaledHLGish(
+    skcms_TransferFunction* tf, float K, float R, float G, float a, float b, float c) {
+  *tf = {TFKind_marker(HLGish), R, G, a, b, c, K - 1.0f};
+  assert(skcms_TransferFunction_isHLGish(tf));
+  return true;
 }
 
 float skcms_TransferFunction_eval(const skcms_TransferFunction* tf, float x) {
@@ -201,13 +205,18 @@ float skcms_TransferFunction_eval(const skcms_TransferFunction* tf, float x) {
     switch (classify(*tf, &pq, &hlg)) {
         case Bad:       break;
 
-        case HLGish:    return sign * (x*hlg.R <= 1 ? powf_(x*hlg.R, hlg.G)
-                                                    : expf_((x-hlg.c)*hlg.a) + hlg.b);
+        case HLGish: {
+          const float K = hlg.K_minus_1 + 1.0f;
+          return K * sign *
+                 (x * hlg.R <= 1 ? powf_(x * hlg.R, hlg.G) : expf_((x - hlg.c) * hlg.a) + hlg.b);
+        }
 
         // skcms_TransferFunction_invert() inverts R, G, and a for HLGinvish so this math is fast.
-        case HLGinvish: return sign * (x <= 1 ? hlg.R * powf_(x, hlg.G)
-                                              : hlg.a * logf_(x - hlg.b) + hlg.c);
-
+        case HLGinvish: {
+          const float K = hlg.K_minus_1 + 1.0f;
+          x /= K;
+          return sign * (x <= 1 ? hlg.R * powf_(x, hlg.G) : hlg.a * logf_(x - hlg.b) + hlg.c);
+        }
 
         case sRGBish: return sign * (x < tf->d ?       tf->c * x + tf->f
                                                : powf_(tf->a * x + tf->b, tf->g) + tf->e);
@@ -1553,14 +1562,19 @@ bool skcms_TransferFunction_invert(const skcms_TransferFunction* src, skcms_Tran
             return true;
 
         case HLGish:
-            *dst = { TFKind_marker(HLGinvish), 1.0f/hlg.R, 1.0f/hlg.G
-                                             , 1.0f/hlg.a, hlg.b, hlg.c, 0 };
-            return true;
+          *dst = {TFKind_marker(HLGinvish),
+                  1.0f / hlg.R,
+                  1.0f / hlg.G,
+                  1.0f / hlg.a,
+                  hlg.b,
+                  hlg.c,
+                  hlg.K_minus_1};
+          return true;
 
         case HLGinvish:
-            *dst = { TFKind_marker(HLGish), 1.0f/hlg.R, 1.0f/hlg.G
-                                          , 1.0f/hlg.a, hlg.b, hlg.c, 0 };
-            return true;
+          *dst = {TFKind_marker(HLGish), 1.0f / hlg.R, 1.0f / hlg.G, 1.0f / hlg.a, hlg.b, hlg.c,
+                  hlg.K_minus_1};
+          return true;
     }
 
     assert (classify(*src) == sRGBish);

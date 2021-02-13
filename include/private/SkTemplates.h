@@ -31,13 +31,13 @@
  *  Note that this does *not* prevent the local variable from being optimized away.
  */
 template <typename T>
-inline void sk_ignore_unused_variable(const T&) noexcept {}
+inline void sk_ignore_unused_variable(const T&) {}
 
 /**
  *  Returns a pointer to a D which comes immediately after S[count].
  */
 template <typename D, typename S>
-static D* SkTAfter(S* ptr, size_t count = 1) noexcept {
+static D* SkTAfter(S* ptr, size_t count = 1) {
   return reinterpret_cast<D*>(ptr + count);
 }
 
@@ -71,11 +71,14 @@ struct SkFunctionWrapper {
 template <typename T, void (*P)(T*)>
 class SkAutoTCallVProc
     : public std::unique_ptr<T, SkFunctionWrapper<std::remove_pointer_t<decltype(P)>, P>> {
- public:
-  SkAutoTCallVProc(T* obj)
-      : std::unique_ptr<T, SkFunctionWrapper<std::remove_pointer_t<decltype(P)>, P>>(obj) {}
+  using inherited = std::unique_ptr<T, SkFunctionWrapper<std::remove_pointer_t<decltype(P)>, P>>;
 
-  operator T*() const noexcept { return this->get(); }
+ public:
+  using inherited::inherited;
+  SkAutoTCallVProc(const SkAutoTCallVProc&) = delete;
+  SkAutoTCallVProc(SkAutoTCallVProc&& that) : inherited(std::move(that)) {}
+
+  operator T*() const { return this->get(); }
 };
 
 /** Allocate an array of T elements, and free the array in the destructor
@@ -86,7 +89,7 @@ class SkAutoTArray {
   SkAutoTArray() {}
   /** Allocate count number of T elements
    */
-  explicit SkAutoTArray(int count) noexcept {
+  explicit SkAutoTArray(int count) {
     SkASSERT(count >= 0);
     if (count) {
       fArray.reset(new T[count]);
@@ -94,10 +97,10 @@ class SkAutoTArray {
     SkDEBUGCODE(fCount = count;)
   }
 
-  SkAutoTArray(SkAutoTArray&& other) noexcept : fArray(std::move(other.fArray)) {
+  SkAutoTArray(SkAutoTArray&& other) : fArray(std::move(other.fArray)) {
     SkDEBUGCODE(fCount = other.fCount; other.fCount = 0;)
   }
-  SkAutoTArray& operator=(SkAutoTArray&& other) noexcept {
+  SkAutoTArray& operator=(SkAutoTArray&& other) {
     if (this != &other) {
       fArray = std::move(other.fArray);
       SkDEBUGCODE(fCount = other.fCount; other.fCount = 0;)
@@ -107,22 +110,22 @@ class SkAutoTArray {
 
   /** Reallocates given a new count. Reallocation occurs even if new count equals old count.
    */
-  void reset(int count) noexcept { *this = SkAutoTArray(count); }
+  void reset(int count) { *this = SkAutoTArray(count); }
 
   /** Return the array of T elements. Will be NULL if count == 0
    */
-  T* get() const noexcept { return fArray.get(); }
+  T* get() const { return fArray.get(); }
 
   /** Return the nth element in the array
    */
-  T& operator[](int index) const noexcept {
+  T& operator[](int index) const {
     SkASSERT((unsigned)index < (unsigned)fCount);
     return fArray[index];
   }
 
   /** Aliases matching other types, like std::vector. */
-  const T* data() const noexcept { return fArray.get(); }
-  T* data() noexcept { return fArray.get(); }
+  const T* data() const { return fArray.get(); }
+  T* data() { return fArray.get(); }
 
  private:
   std::unique_ptr<T[]> fArray;
@@ -191,31 +194,31 @@ class SkAutoSTArray {
 
   /** Return the number of T elements in the array
    */
-  int count() const noexcept { return fCount; }
+  int count() const { return fCount; }
 
   /** Return the array of T elements. Will be NULL if count == 0
    */
-  T* get() const noexcept { return fArray; }
+  T* get() const { return fArray; }
 
-  T* begin() noexcept { return fArray; }
+  T* begin() { return fArray; }
 
-  const T* begin() const noexcept { return fArray; }
+  const T* begin() const { return fArray; }
 
-  T* end() noexcept { return fArray + fCount; }
+  T* end() { return fArray + fCount; }
 
-  const T* end() const noexcept { return fArray + fCount; }
+  const T* end() const { return fArray + fCount; }
 
   /** Return the nth element in the array
    */
-  T& operator[](int index) const noexcept {
+  T& operator[](int index) const {
     SkASSERT(index < fCount);
     return fArray[index];
   }
 
   /** Aliases matching other types, like std::vector. */
-  const T* data() const noexcept { return fArray; }
-  T* data() noexcept { return fArray; }
-  size_t size() const noexcept { return fCount; }
+  const T* data() const { return fArray; }
+  T* data() { return fArray; }
+  size_t size() const { return fCount; }
 
  private:
 #if defined(SK_BUILD_FOR_GOOGLE3)
@@ -241,14 +244,14 @@ template <typename T>
 class SkAutoTMalloc {
  public:
   /** Takes ownership of the ptr. The ptr must be a value which can be passed to sk_free. */
-  constexpr explicit SkAutoTMalloc(T* ptr = nullptr) noexcept : fPtr(ptr) {}
+  explicit SkAutoTMalloc(T* ptr = nullptr) : fPtr(ptr) {}
 
   /** Allocates space for 'count' Ts. */
   explicit SkAutoTMalloc(size_t count)
       : fPtr(count ? (T*)sk_malloc_throw(count, sizeof(T)) : nullptr) {}
 
-  SkAutoTMalloc(SkAutoTMalloc&&) noexcept = default;
-  SkAutoTMalloc& operator=(SkAutoTMalloc&&) noexcept = default;
+  SkAutoTMalloc(SkAutoTMalloc&&) = default;
+  SkAutoTMalloc& operator=(SkAutoTMalloc&&) = default;
 
   /** Resize the memory area pointed to by the current ptr preserving contents. */
   void realloc(size_t count) {
@@ -261,26 +264,26 @@ class SkAutoTMalloc {
     return this->get();
   }
 
-  T* get() const noexcept { return fPtr.get(); }
+  T* get() const { return fPtr.get(); }
 
-  operator T*() noexcept { return fPtr.get(); }
+  operator T*() { return fPtr.get(); }
 
-  operator const T*() const noexcept { return fPtr.get(); }
+  operator const T*() const { return fPtr.get(); }
 
-  T& operator[](int index) noexcept { return fPtr.get()[index]; }
+  T& operator[](int index) { return fPtr.get()[index]; }
 
-  const T& operator[](int index) const noexcept { return fPtr.get()[index]; }
+  const T& operator[](int index) const { return fPtr.get()[index]; }
 
   /** Aliases matching other types, like std::vector. */
-  const T* data() const noexcept { return fPtr.get(); }
-  T* data() noexcept { return fPtr.get(); }
+  const T* data() const { return fPtr.get(); }
+  T* data() { return fPtr.get(); }
 
   /**
    *  Transfer ownership of the ptr to the caller, setting the internal
    *  pointer to NULL. Note that this differs from get(), which also returns
    *  the pointer, but it does not transfer ownership.
    */
-  T* release() noexcept { return fPtr.release(); }
+  T* release() { return fPtr.release(); }
 
  private:
   std::unique_ptr<T, SkFunctionWrapper<void(void*), sk_free>> fPtr;
@@ -327,19 +330,19 @@ class SkAutoSTMalloc {
     return fPtr;
   }
 
-  T* get() const noexcept { return fPtr; }
+  T* get() const { return fPtr; }
 
-  operator T*() noexcept { return fPtr; }
+  operator T*() { return fPtr; }
 
-  operator const T*() const noexcept { return fPtr; }
+  operator const T*() const { return fPtr; }
 
-  T& operator[](int index) noexcept { return fPtr[index]; }
+  T& operator[](int index) { return fPtr[index]; }
 
-  const T& operator[](int index) const noexcept { return fPtr[index]; }
+  const T& operator[](int index) const { return fPtr[index]; }
 
   /** Aliases matching other types, like std::vector. */
-  const T* data() const noexcept { return fPtr; }
-  T* data() noexcept { return fPtr; }
+  const T* data() const { return fPtr; }
+  T* data() { return fPtr; }
 
   // Reallocs the array, can be used to shrink the allocation.  Makes no attempt to be intelligent
   void realloc(size_t count) {
@@ -431,13 +434,13 @@ class SkAlignedSTStorage {
 using SkAutoFree = std::unique_ptr<void, SkFunctionWrapper<void(void*), sk_free>>;
 
 template <typename C, std::size_t... Is>
-constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...>) noexcept
+constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...>)
     -> std::array<std::invoke_result_t<C(std::size_t)>, sizeof...(Is)> {
   return {{c(Is)...}};
 }
 
 template <size_t N, typename C>
-constexpr auto SkMakeArray(C c) noexcept -> std::array<std::invoke_result_t<C(std::size_t)>, N> {
+constexpr auto SkMakeArray(C c) -> std::array<std::invoke_result_t<C(std::size_t)>, N> {
   return SkMakeArrayFromIndexSequence(c, std::make_index_sequence<N>{});
 }
 

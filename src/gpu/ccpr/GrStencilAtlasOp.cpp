@@ -118,7 +118,7 @@ void GrStencilAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chain
 
   GrPipeline pipeline(
       GrScissorTest::kEnabled, GrDisableColorXPFactory::MakeXferProcessor(),
-      flushState->drawOpArgs().writeSwizzle(), GrPipeline::InputFlags::kHWAntialias);
+      flushState->drawOpArgs().writeView().swizzle(), GrPipeline::InputFlags::kHWAntialias);
 
   GrSampleMaskProcessor sampleMaskProc;
 
@@ -130,7 +130,8 @@ void GrStencilAtlasOp::onExecute(GrOpFlushState* flushState, const SkRect& chain
   constexpr auto noHWAA = GrPipeline::InputFlags::kNone;
 
   GrPipeline resolvePipeline(
-      GrScissorTest::kEnabled, SkBlendMode::kSrc, flushState->drawOpArgs().writeSwizzle(), noHWAA);
+      GrScissorTest::kEnabled, SkBlendMode::kSrc, flushState->drawOpArgs().writeView().swizzle(),
+      noHWAA);
   StencilResolveProcessor primProc;
 
   if (!flushState->caps().twoSidedStencilRefsAndMasksMustMatch()) {
@@ -157,9 +158,9 @@ void GrStencilAtlasOp::drawResolve(
     const GrUserStencilSettings* stencil, const GrPrimitiveProcessor& primProc,
     const SkIRect& drawBounds) const {
   GrProgramInfo programInfo(
-      flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-      flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &resolvePipeline,
-      stencil, &primProc, GrPrimitiveType::kTriangleStrip, 0, flushState->renderPassBarriers());
+      flushState->writeView(), &resolvePipeline, stencil, &primProc,
+      GrPrimitiveType::kTriangleStrip, 0, flushState->renderPassBarriers(),
+      flushState->colorLoadOp());
   flushState->bindPipeline(programInfo, SkRect::Make(drawBounds));
   flushState->setScissorRect(drawBounds);
   flushState->bindBuffers(nullptr, fResources->stencilResolveBuffer(), nullptr);

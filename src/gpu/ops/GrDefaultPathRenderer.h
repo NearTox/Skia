@@ -32,7 +32,7 @@ class GrDefaultPathRenderer : public GrPathRenderer {
   void onStencilPath(const StencilPathArgs&) override;
 
   bool internalDrawPath(
-      GrRenderTargetContext*, GrPaint&&, GrAAType, const GrUserStencilSettings&, const GrClip*,
+      GrSurfaceDrawContext*, GrPaint&&, GrAAType, const GrUserStencilSettings&, const GrClip*,
       const SkMatrix& viewMatrix, const GrStyledShape&, bool stencilOnly);
 
   using INHERITED = GrPathRenderer;

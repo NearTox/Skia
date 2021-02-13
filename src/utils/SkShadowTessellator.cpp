@@ -964,7 +964,7 @@ class SkSpotShadowTessellator : public SkBaseShadowTessellator {
  public:
   SkSpotShadowTessellator(
       const SkPath& path, const SkMatrix& ctm, const SkPoint3& zPlaneParams,
-      const SkPoint3& lightPos, SkScalar lightRadius, bool transparent);
+      const SkPoint3& lightPos, SkScalar lightRadius, bool transparent, bool directional);
 
  private:
   bool computeClipAndPathPolygons(
@@ -976,13 +976,14 @@ class SkSpotShadowTessellator : public SkBaseShadowTessellator {
 
 SkSpotShadowTessellator::SkSpotShadowTessellator(
     const SkPath& path, const SkMatrix& ctm, const SkPoint3& zPlaneParams, const SkPoint3& lightPos,
-    SkScalar lightRadius, bool transparent)
+    SkScalar lightRadius, bool transparent, bool directional)
     : INHERITED(zPlaneParams, path.getBounds(), transparent) {
   // Compute the blur radius, scale and translation for the spot shadow.
   SkMatrix shadowTransform;
   SkScalar outset;
   if (!SkDrawShadowMetrics::GetSpotShadowTransform(
-          lightPos, lightRadius, ctm, zPlaneParams, path.getBounds(), &shadowTransform, &outset)) {
+          lightPos, lightRadius, ctm, zPlaneParams, path.getBounds(), directional, &shadowTransform,
+          &outset)) {
     return;
   }
   SkScalar inset = outset;
@@ -1125,12 +1126,13 @@ sk_sp<SkVertices> SkShadowTessellator::MakeAmbient(
 
 sk_sp<SkVertices> SkShadowTessellator::MakeSpot(
     const SkPath& path, const SkMatrix& ctm, const SkPoint3& zPlane, const SkPoint3& lightPos,
-    SkScalar lightRadius, bool transparent) {
+    SkScalar lightRadius, bool transparent, bool directional) {
   if (!ctm.mapRect(path.getBounds()).isFinite() || !zPlane.isFinite() || !lightPos.isFinite() ||
       !(lightPos.fZ >= SK_ScalarNearlyZero) || !SkScalarIsFinite(lightRadius) ||
       !(lightRadius >= SK_ScalarNearlyZero)) {
     return nullptr;
   }
-  SkSpotShadowTessellator spotTess(path, ctm, zPlane, lightPos, lightRadius, transparent);
+  SkSpotShadowTessellator spotTess(
+      path, ctm, zPlane, lightPos, lightRadius, transparent, directional);
   return spotTess.releaseVertices();
 }

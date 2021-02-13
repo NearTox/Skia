@@ -57,9 +57,9 @@ class IRNode {
   int fOffset;
 
   // Override operator new and delete to allow us to use a memory pool.
-  static void* operator new(const size_t size) { return Pool::AllocIRNode(size); }
+  static void* operator new(const size_t size) { return Pool::AllocMemory(size); }
 
-  static void operator delete(void* ptr) { Pool::FreeIRNode(ptr); }
+  static void operator delete(void* ptr) { Pool::FreeMemory(ptr); }
 
  protected:
   IRNode(int offset, int kind) : fOffset(offset), fKind(kind) {}

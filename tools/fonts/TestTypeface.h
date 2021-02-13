@@ -70,7 +70,7 @@ class TestTypeface : public SkTypeface {
   SkPath getPath(SkGlyphID glyph);
 
  protected:
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor* desc) const override;
   void onFilterRec(SkScalerContextRec* rec) const override;
   void getGlyphToUnicodeMap(SkUnichar* glyphToUnicode) const override;

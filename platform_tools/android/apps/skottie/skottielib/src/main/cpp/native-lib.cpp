@@ -112,134 +112,117 @@ struct SkottieAnimation {
     float                     mDuration; //in milliseconds
 };
 
-extern "C" JNIEXPORT jlong
-JNICALL
-Java_org_skia_skottie_SkottieRunner_00024SkottieAnimation_nCreateProxy(JNIEnv *env,
-                                                                           jobject clazz,
-                                                                           jlong runner,
-                                                                           jobject bufferObj) {
+extern "C" JNIEXPORT jlong JNICALL Java_org_skia_skottie_SkottieAnimation_nCreateProxy(
+    JNIEnv* env, jobject clazz, jlong runner, jobject bufferObj) {
+  if (!runner) {
+    return 0;
+  }
+  SkottieRunner* skottieRunner = reinterpret_cast<SkottieRunner*>(runner);
 
-    if (!runner) {
-        return 0;
-    }
-    SkottieRunner *skottieRunner = reinterpret_cast<SkottieRunner*>(runner);
+  const void* buffer = env->GetDirectBufferAddress(bufferObj);
+  jlong bufferSize = env->GetDirectBufferCapacity(bufferObj);
+  if (buffer == nullptr || bufferSize <= 0) {
+    return 0;
+  }
 
-    const void* buffer = env->GetDirectBufferAddress(bufferObj);
-    jlong bufferSize = env->GetDirectBufferCapacity(bufferObj);
-    if (buffer == nullptr || bufferSize <= 0) {
-        return 0;
-    }
+  env->GetJavaVM(&sJVM);
+  jobject bufferRef = env->NewGlobalRef(bufferObj);
+  if (bufferRef == nullptr) {
+    return 0;
+  }
 
-    env->GetJavaVM(&sJVM);
-    jobject bufferRef = env->NewGlobalRef(bufferObj);
-    if (bufferRef == nullptr) {
-        return 0;
-    }
+  sk_sp<SkData> data(SkData::MakeWithProc(
+      buffer, bufferSize, release_global_jni_ref, reinterpret_cast<void*>(bufferRef)));
+  std::unique_ptr<SkStream> stream = SkMemoryStream::Make(data);
+  if (!stream.get()) {
+    // Cannot create a stream
+    return 0;
+  }
 
-    sk_sp<SkData> data(SkData::MakeWithProc(buffer, bufferSize, release_global_jni_ref,
-                                            reinterpret_cast<void*>(bufferRef)));
-    std::unique_ptr<SkStream> stream = SkMemoryStream::Make(data);
-    if (!stream.get()) {
-        // Cannot create a stream
-        return 0;
-    }
+  SkottieAnimation* skottieAnimation = new SkottieAnimation();
+  skottieAnimation->mRunner = skottieRunner;
+  skottieAnimation->mStream = std::move(stream);
 
-    SkottieAnimation* skottieAnimation = new SkottieAnimation();
-    skottieAnimation->mRunner = skottieRunner;
-    skottieAnimation->mStream = std::move(stream);
+  skottieAnimation->mAnimation = skottie::Animation::Make(skottieAnimation->mStream.get());
+  skottieAnimation->mTimeBase = 0.0f;  // force a time reset
+  skottieAnimation->mDuration = 1000 * skottieAnimation->mAnimation->duration();
 
-    skottieAnimation->mAnimation = skottie::Animation::Make(skottieAnimation->mStream.get());
-    skottieAnimation->mTimeBase  = 0.0f; // force a time reset
-    skottieAnimation->mDuration = 1000 * skottieAnimation->mAnimation->duration();
-
-    if (!skottieAnimation->mAnimation) {
-        //failed to load Bodymovin animation
-        delete skottieAnimation;
-        return 0;
-    }
-
-    return (jlong) skottieAnimation;
-}
-
-extern "C" JNIEXPORT void
-JNICALL
-Java_org_skia_skottie_SkottieRunner_00024SkottieAnimation_nDeleteProxy(JNIEnv *env, jclass clazz,
-                                                                       jlong nativeProxy) {
-    if (!nativeProxy) {
-        return;
-    }
-    SkottieAnimation* skottieAnimation = reinterpret_cast<SkottieAnimation*>(nativeProxy);
+  if (!skottieAnimation->mAnimation) {
+    // failed to load Bodymovin animation
     delete skottieAnimation;
+    return 0;
+  }
+
+  return (jlong)skottieAnimation;
 }
 
-extern "C" JNIEXPORT bool
-JNICALL
-Java_org_skia_skottie_SkottieRunner_00024SkottieAnimation_nDrawFrame(JNIEnv *env, jclass clazz,
-                                                                     jlong nativeProxy, jint width,
-                                                                     jint height,
-                                                                     jboolean wideColorGamut,
-                                                                     jfloat progress,
-                                                                     jint backgroundColor,
-                                                                     jboolean forceDraw) {
-    ATRACE_NAME("SkottieDrawFrame");
-    if (!nativeProxy) {
-        return false;
-    }
-    SkottieAnimation* skottieAnimation = reinterpret_cast<SkottieAnimation*>(nativeProxy);
-
-    auto dContext = skottieAnimation->mRunner->mDContext.get();
-
-    if (!dContext) {
-        return false;
-    }
-
-    sksg::InvalidationController ic;
-
-    if (skottieAnimation->mAnimation) {
-        skottieAnimation->mAnimation->seek(progress, &ic);
-        if (!forceDraw && ic.bounds().isEmpty()) {
-            return false;
-        }
-    }
-
-    SkColorType colorType;
-    // setup surface for fbo0
-    GrGLFramebufferInfo fboInfo;
-    fboInfo.fFBOID = 0;
-    if (wideColorGamut) {
-        fboInfo.fFormat = GL_RGBA16F;
-        colorType = kRGBA_F16_SkColorType;
-    } else {
-        fboInfo.fFormat = GL_RGBA8;
-        colorType = kN32_SkColorType;
-    }
-    GrBackendRenderTarget backendRT(width, height, 0, STENCIL_BUFFER_SIZE, fboInfo);
-
-    SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
-
-    sk_sp<SkSurface> renderTarget(SkSurface::MakeFromBackendRenderTarget(
-            dContext, backendRT, kBottomLeft_GrSurfaceOrigin, colorType,
-            nullptr, &props));
-
-    auto canvas = renderTarget->getCanvas();
-    canvas->clear(backgroundColor);
-
-    SkAutoCanvasRestore acr(canvas, true);
-    SkRect bounds = SkRect::MakeWH(width, height);
-    skottieAnimation->mAnimation->render(canvas, &bounds);
-
-    canvas->flush();
-    return true;
+extern "C" JNIEXPORT void JNICALL
+Java_org_skia_skottie_SkottieAnimation_nDeleteProxy(JNIEnv* env, jclass clazz, jlong nativeProxy) {
+  if (!nativeProxy) {
+    return;
+  }
+  SkottieAnimation* skottieAnimation = reinterpret_cast<SkottieAnimation*>(nativeProxy);
+  delete skottieAnimation;
 }
 
-extern "C" JNIEXPORT jlong
-JNICALL
-Java_org_skia_skottie_SkottieRunner_00024SkottieAnimation_nGetDuration(JNIEnv *env,
-                                                                           jclass clazz,
-                                                                           jlong nativeProxy) {
-    if (!nativeProxy) {
-        return 0;
+extern "C" JNIEXPORT bool JNICALL Java_org_skia_skottie_SkottieAnimation_nDrawFrame(
+    JNIEnv* env, jclass clazz, jlong nativeProxy, jint width, jint height, jboolean wideColorGamut,
+    jfloat progress, jint backgroundColor, jboolean forceDraw) {
+  ATRACE_NAME("SkottieDrawFrame");
+  if (!nativeProxy) {
+    return false;
+  }
+  SkottieAnimation* skottieAnimation = reinterpret_cast<SkottieAnimation*>(nativeProxy);
+
+  auto dContext = skottieAnimation->mRunner->mDContext.get();
+
+  if (!dContext) {
+    return false;
+  }
+
+  sksg::InvalidationController ic;
+
+  if (skottieAnimation->mAnimation) {
+    skottieAnimation->mAnimation->seek(progress, &ic);
+    if (!forceDraw && ic.bounds().isEmpty()) {
+      return false;
     }
-    SkottieAnimation* skottieAnimation = reinterpret_cast<SkottieAnimation*>(nativeProxy);
-    return (jlong) skottieAnimation->mDuration;
+  }
+
+  SkColorType colorType;
+  // setup surface for fbo0
+  GrGLFramebufferInfo fboInfo;
+  fboInfo.fFBOID = 0;
+  if (wideColorGamut) {
+    fboInfo.fFormat = GL_RGBA16F;
+    colorType = kRGBA_F16_SkColorType;
+  } else {
+    fboInfo.fFormat = GL_RGBA8;
+    colorType = kN32_SkColorType;
+  }
+  GrBackendRenderTarget backendRT(width, height, 0, STENCIL_BUFFER_SIZE, fboInfo);
+
+  SkSurfaceProps props(0, kUnknown_SkPixelGeometry);
+
+  sk_sp<SkSurface> renderTarget(SkSurface::MakeFromBackendRenderTarget(
+      dContext, backendRT, kBottomLeft_GrSurfaceOrigin, colorType, nullptr, &props));
+
+  auto canvas = renderTarget->getCanvas();
+  canvas->clear(backgroundColor);
+
+  SkAutoCanvasRestore acr(canvas, true);
+  SkRect bounds = SkRect::MakeWH(width, height);
+  skottieAnimation->mAnimation->render(canvas, &bounds);
+
+  canvas->flush();
+  return true;
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+Java_org_skia_skottie_SkottieAnimation_nGetDuration(JNIEnv* env, jclass clazz, jlong nativeProxy) {
+  if (!nativeProxy) {
+    return 0;
+  }
+  SkottieAnimation* skottieAnimation = reinterpret_cast<SkottieAnimation*>(nativeProxy);
+  return (jlong)skottieAnimation->mDuration;
 }

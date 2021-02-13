@@ -180,15 +180,7 @@ SkString GrGLSLFPFragmentBuilder::writeProcessorFunction(
     }
   }  // else the function keeps its two arguments
 
-  this->codeAppendf("half4 %s;\n", args.fOutputColor);
   fp->emitCode(args);
-  if (args.fFp.usesExplicitReturn()) {
-    // Some FPs explicitly return their output, so no need to do anything further
-    SkASSERT(SkStrContains(this->code().c_str(), "return"));
-  } else {
-    // Most FPs still just write their output to fOutputColor, so we need to inject the return
-    this->codeAppendf("return %s;\n", args.fOutputColor);
-  }
 
   SkString funcName = this->getMangledFunctionName(args.fFp.name());
   this->emitFunction(

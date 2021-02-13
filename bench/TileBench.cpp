@@ -29,15 +29,14 @@ static void create_gradient(SkBitmap* bm) {
 class ConstXTileBench : public Benchmark {
   SkPaint fPaint;
   SkString fName;
-  bool fDoFilter;
   bool fDoTrans;
   bool fDoScale;
   static const int kWidth = 1;
   static const int kHeight = 300;
 
  public:
-  ConstXTileBench(SkTileMode xTile, SkTileMode yTile, bool doFilter, bool doTrans, bool doScale)
-      : fDoFilter(doFilter), fDoTrans(doTrans), fDoScale(doScale) {
+  ConstXTileBench(SkTileMode xTile, SkTileMode yTile, SkFilterMode fm, bool doTrans, bool doScale)
+      : fDoTrans(doTrans), fDoScale(doScale) {
     SkBitmap bm;
 
     bm.allocN32Pixels(kWidth, kHeight, true);
@@ -45,7 +44,7 @@ class ConstXTileBench : public Benchmark {
 
     create_gradient(&bm);
 
-    fPaint.setShader(bm.makeShader(xTile, yTile));
+    fPaint.setShader(bm.makeShader(xTile, yTile, SkSamplingOptions(fm, SkMipmapMode::kNone)));
 
     fName.printf("constXTile_");
 
@@ -53,7 +52,7 @@ class ConstXTileBench : public Benchmark {
     fName.append(gTileModeStr[(unsigned)xTile]);
     fName.append(gTileModeStr[(unsigned)yTile]);
 
-    if (doFilter) {
+    if (fm != SkFilterMode::kNearest) {
       fName.append("_filter");
     }
 
@@ -72,7 +71,6 @@ class ConstXTileBench : public Benchmark {
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint(fPaint);
     this->setupPaint(&paint);
-    paint.setFilterQuality(fDoFilter ? kLow_SkFilterQuality : kNone_SkFilterQuality);
     if (fDoTrans) {
       paint.setColor(SkColorSetARGB(0x80, 0xFF, 0xFF, 0xFF));
     }
@@ -105,22 +103,25 @@ class ConstXTileBench : public Benchmark {
 // Scaled benches are trending towards free.  Seems like caching.
 // TODO(mtklein, reed): fix and reenable
 
+constexpr SkFilterMode gNN = SkFilterMode::kNearest;
+constexpr SkFilterMode gLI = SkFilterMode::kLinear;
+
 // DEF_BENCH(return new ConstXTileBench(SkTileMode::kRepeat, SkTileMode::kRepeat, false, false,
 // true))
-DEF_BENCH(return new ConstXTileBench(SkTileMode::kClamp, SkTileMode::kClamp, false, false, false))
+DEF_BENCH(return new ConstXTileBench(SkTileMode::kClamp, SkTileMode::kClamp, gNN, false, false))
 // DEF_BENCH(return new ConstXTileBench(SkTileMode::kMirror, SkTileMode::kMirror, false, false,
 // true))
 
-DEF_BENCH(return new ConstXTileBench(SkTileMode::kRepeat, SkTileMode::kRepeat, true, false, false))
+DEF_BENCH(return new ConstXTileBench(SkTileMode::kRepeat, SkTileMode::kRepeat, gLI, false, false))
 // DEF_BENCH(return new ConstXTileBench(SkTileMode::kClamp, SkTileMode::kClamp, true, false, true))
-DEF_BENCH(return new ConstXTileBench(SkTileMode::kMirror, SkTileMode::kMirror, true, false, false))
+DEF_BENCH(return new ConstXTileBench(SkTileMode::kMirror, SkTileMode::kMirror, gLI, false, false))
 
 // DEF_BENCH(return new ConstXTileBench(SkTileMode::kRepeat, SkTileMode::kRepeat, false, true,
 // true))
-DEF_BENCH(return new ConstXTileBench(SkTileMode::kClamp, SkTileMode::kClamp, false, true, false))
+DEF_BENCH(return new ConstXTileBench(SkTileMode::kClamp, SkTileMode::kClamp, gNN, true, false))
 // DEF_BENCH(return new ConstXTileBench(SkTileMode::kMirror, SkTileMode::kMirror, false, true,
 // true))
 
-DEF_BENCH(return new ConstXTileBench(SkTileMode::kRepeat, SkTileMode::kRepeat, true, true, false))
+DEF_BENCH(return new ConstXTileBench(SkTileMode::kRepeat, SkTileMode::kRepeat, gLI, true, false))
 // DEF_BENCH(return new ConstXTileBench(SkTileMode::kClamp, SkTileMode::kClamp, true, true, true))
-DEF_BENCH(return new ConstXTileBench(SkTileMode::kMirror, SkTileMode::kMirror, true, true, false))
+DEF_BENCH(return new ConstXTileBench(SkTileMode::kMirror, SkTileMode::kMirror, gLI, true, false))

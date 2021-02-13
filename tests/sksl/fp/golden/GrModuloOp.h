@@ -19,7 +19,6 @@ class GrModuloOp : public GrFragmentProcessor {
   GrModuloOp(const GrModuloOp& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ModuloOp"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrModuloOp() : INHERITED(kGrModuloOp_ClassID, kNone_OptimizationFlags) {}

@@ -8,6 +8,7 @@
 #ifndef SkBigPicture_DEFINED
 #define SkBigPicture_DEFINED
 
+#include "include/core/SkM44.h"
 #include "include/core/SkPicture.h"
 #include "include/core/SkRect.h"
 #include "include/private/SkNoncopyable.h"
@@ -51,7 +52,7 @@ class SkBigPicture final : public SkPicture {
   const SkBigPicture* asSkBigPicture() const override { return this; }
 
   // Used by GrLayerHoister
-  void partialPlayback(SkCanvas*, int start, int stop, const SkMatrix& initialCTM) const;
+  void partialPlayback(SkCanvas*, int start, int stop, const SkM44& initialCTM) const;
   // Used by GrRecordReplaceDraw
   const SkBBoxHierarchy* bbh() const { return fBBH.get(); }
   const SkRecord* record() const { return fRecord.get(); }

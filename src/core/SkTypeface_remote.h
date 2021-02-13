@@ -27,7 +27,6 @@ class SkScalerContextProxy : public SkScalerContext {
       sk_sp<SkStrikeClient::DiscardableHandleManager> manager);
 
  protected:
-  unsigned generateGlyphCount() override;
   bool generateAdvance(SkGlyph* glyph) override;
   void generateMetrics(SkGlyph* glyph) override;
   void generateImage(const SkGlyph& glyph) override;
@@ -83,9 +82,9 @@ class SkTypefaceProxy : public SkTypeface {
   size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override {
     SK_ABORT("Should never be called.");
   }
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects& effects, const SkDescriptor* desc) const override {
-    return new SkScalerContextProxy(
+    return std::make_unique<SkScalerContextProxy>(
         sk_ref_sp(const_cast<SkTypefaceProxy*>(this)), effects, desc, fDiscardableManager);
   }
   void onFilterRec(SkScalerContextRec* rec) const override {

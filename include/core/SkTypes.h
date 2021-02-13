@@ -94,14 +94,6 @@
 #define SK_CPU_SSE_LEVEL_AVX2 52
 #define SK_CPU_SSE_LEVEL_SKX 60
 
-// When targetting iOS and using gyp to generate the build files, it is not
-// possible to select files to build depending on the architecture (i.e. it
-// is not possible to use hand optimized assembly implementation). In that
-// configuration SK_BUILD_NO_OPTS is defined. Remove optimisation then.
-#ifdef SK_BUILD_NO_OPTS
-#  define SK_CPU_SSE_LEVEL 0
-#endif
-
 // Are we in GCC/Clang?
 #ifndef SK_CPU_SSE_LEVEL
 // These checks must be done in descending order to ensure we set the highest
@@ -151,12 +143,12 @@
 // ARM defines
 #if defined(__arm__) && (!defined(__APPLE__) || !TARGET_IPHONE_SIMULATOR)
 #  define SK_CPU_ARM32
-#elif defined(__aarch64__) && !defined(SK_BUILD_NO_OPTS)
+#elif defined(__aarch64__)
 #  define SK_CPU_ARM64
 #endif
 
 // All 64-bit ARM chips have NEON.  Many 32-bit ARM chips do too.
-#if !defined(SK_ARM_HAS_NEON) && !defined(SK_BUILD_NO_OPTS) && defined(__ARM_NEON)
+#if !defined(SK_ARM_HAS_NEON) && defined(__ARM_NEON)
 #  define SK_ARM_HAS_NEON
 #endif
 
@@ -253,7 +245,7 @@
 // See
 // https://developercommunity.visualstudio.com/content/problem/1128631/code-flow-doesnt-see-noreturn-with-extern-c.html
 // for why this is wrapped. Hopefully removable after msvc++ 19.27 is no longer supported.
-[[noreturn]] static inline void sk_fast_fail() noexcept { __fastfail(FAST_FAIL_INVALID_ARG); }
+[[noreturn]] static inline void sk_fast_fail() { __fastfail(FAST_FAIL_INVALID_ARG); }
 #    define SkUNREACHABLE sk_fast_fail()
 #  else
 #    define SkUNREACHABLE __builtin_trap()
@@ -431,13 +423,13 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-[[noreturn]] SK_API extern void sk_abort_no_print(void) noexcept;
+[[noreturn]] SK_API extern void sk_abort_no_print(void);
 
 #ifndef SkDebugf
-SK_API void SkDebugf(const char format[], ...) noexcept;
+SK_API void SkDebugf(const char format[], ...);
 #endif
 #if defined(SK_BUILD_FOR_LIBFUZZER)
-SK_API inline void SkDebugf(const char format[], ...) noexcept {}
+SK_API inline void SkDebugf(const char format[], ...) {}
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -451,13 +443,13 @@ SK_API inline void SkDebugf(const char format[], ...) noexcept {}
 //               x - 4;
 //    }
 #define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(%s)", #cond); }())
+  static_cast<void>((cond) ? (void)0 : [] { SK_ABORT("assert(%s)", #cond); }())
 
 #ifdef SK_DEBUG
 #  define SkASSERT(cond) SkASSERT_RELEASE(cond)
 #  define SkASSERTF(cond, fmt, ...)            \
     static_cast<void>((cond) ? (void)0 : [&] { \
-      SkDebugf(fmt "\n", __VA_ARGS__);         \
+      SkDebugf(fmt "\n", ##__VA_ARGS__);       \
       SK_ABORT("assert(%s)", #cond);           \
     }())
 #  define SkDEBUGFAIL(message) SK_ABORT("%s", message)
@@ -497,7 +489,7 @@ typedef unsigned U16CPU;
 /** @return false or true based on the condition
  */
 template <typename T>
-static constexpr bool SkToBool(const T& x) noexcept {
+static constexpr bool SkToBool(const T& x) {
   return 0 != x;  // NOLINT(modernize-use-nullptr)
 }
 
@@ -511,11 +503,11 @@ static constexpr int32_t SK_NaN32 = INT32_MIN;
 static constexpr int64_t SK_MaxS64 = INT64_MAX;
 static constexpr int64_t SK_MinS64 = -SK_MaxS64;
 
-static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) noexcept {
+static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) {
   return (int32_t)((uint32_t)value << shift);
 }
 
-static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) noexcept {
+static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) {
   return (int64_t)((uint64_t)value << shift);
 }
 
@@ -530,42 +522,42 @@ char (&SkArrayCountHelper(T (&array)[N]))[N];
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-static constexpr T SkAlign2(T x) noexcept {
+static constexpr T SkAlign2(T x) {
   return (x + 1) >> 1 << 1;
 }
 template <typename T>
-static constexpr T SkAlign4(T x) noexcept {
+static constexpr T SkAlign4(T x) {
   return (x + 3) >> 2 << 2;
 }
 template <typename T>
-static constexpr T SkAlign8(T x) noexcept {
+static constexpr T SkAlign8(T x) {
   return (x + 7) >> 3 << 3;
 }
 
 template <typename T>
-static constexpr bool SkIsAlign2(T x) noexcept {
+static constexpr bool SkIsAlign2(T x) {
   return 0 == (x & 1);
 }
 template <typename T>
-static constexpr bool SkIsAlign4(T x) noexcept {
+static constexpr bool SkIsAlign4(T x) {
   return 0 == (x & 3);
 }
 template <typename T>
-static constexpr bool SkIsAlign8(T x) noexcept {
+static constexpr bool SkIsAlign8(T x) {
   return 0 == (x & 7);
 }
 
 template <typename T>
-static constexpr T SkAlignPtr(T x) noexcept {
+static constexpr T SkAlignPtr(T x) {
   return sizeof(void*) == 8 ? SkAlign8(x) : SkAlign4(x);
 }
 template <typename T>
-static constexpr bool SkIsAlignPtr(T x) noexcept {
+static constexpr bool SkIsAlignPtr(T x) {
   return sizeof(void*) == 8 ? SkIsAlign8(x) : SkIsAlign4(x);
 }
 
 typedef uint32_t SkFourByteTag;
-static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
+static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) {
   return (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d);
 }
 
@@ -596,7 +588,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
+static inline int32_t SkAbs32(int32_t value) {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -605,7 +597,7 @@ static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
 }
 
 template <typename T>
-static constexpr inline T SkTAbs(T value) noexcept {
+static inline T SkTAbs(T value) {
   if (value < 0) {
     value = -value;
   }

@@ -238,6 +238,7 @@ int DWriteFontTypeface::onGetVariationDesignParameters(
       parameters[coordIndex].max = fontAxisRange[axisIndex].maxValue;
       parameters[coordIndex].setHidden(
           fontResource->GetFontAxisAttributes(axisIndex) & DWRITE_FONT_AXIS_ATTRIBUTES_HIDDEN);
+      ++coordIndex;
     }
   }
 
@@ -298,13 +299,6 @@ sk_sp<SkData> DWriteFontTypeface::onCopyTableData(SkFontTableTag tag) const {
       data, size, [](const void*, void* ctx) { delete (Context*)ctx; },
       new Context(lock, fDWriteFontFace.get()));
 }
-
- void DWriteFontTypeface::weak_dispose() const noexcept {
-    fLoaders.reset();
-
-    // SkTypefaceCache::Remove(this);
-    INHERITED::weak_dispose();
-  }
 
 sk_sp<SkTypeface> DWriteFontTypeface::onMakeClone(const SkFontArguments& args) const {
   // Skip if the current face index does not match the ttcIndex
@@ -377,9 +371,10 @@ std::unique_ptr<SkStreamAsset> DWriteFontTypeface::onOpenStream(int* ttcIndex) c
   return std::unique_ptr<SkStreamAsset>(new SkDWriteFontFileStream(fontFileStream.get()));
 }
 
-SkScalerContext* DWriteFontTypeface::onCreateScalerContext(
+std::unique_ptr<SkScalerContext> DWriteFontTypeface::onCreateScalerContext(
     const SkScalerContextEffects& effects, const SkDescriptor* desc) const {
-  return new SkScalerContext_DW(sk_ref_sp(const_cast<DWriteFontTypeface*>(this)), effects, desc);
+  return std::make_unique<SkScalerContext_DW>(
+      sk_ref_sp(const_cast<DWriteFontTypeface*>(this)), effects, desc);
 }
 
 void DWriteFontTypeface::onFilterRec(SkScalerContextRec* rec) const {

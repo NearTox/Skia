@@ -172,7 +172,7 @@ static void normalize_src_quad(const NormalizationParams& params, GrQuad* srcQua
 // Count the number of proxy runs in the entry set. This usually is already computed by
 // SkGpuDevice, but when the BatchLengthLimiter chops the set up it must determine a new proxy count
 // for each split.
-static int proxy_run_count(const GrRenderTargetContext::TextureSetEntry set[], int count) {
+static int proxy_run_count(const GrSurfaceDrawContext::TextureSetEntry set[], int count) {
   int actualProxyRunCount = 0;
   const GrSurfaceProxy* lastProxy = nullptr;
   for (int i = 0; i < count; ++i) {
@@ -225,7 +225,7 @@ class TextureOp final : public GrMeshDrawOp {
   }
 
   static GrOp::Owner Make(
-      GrRecordingContext* context, GrRenderTargetContext::TextureSetEntry set[], int cnt,
+      GrRecordingContext* context, GrSurfaceDrawContext::TextureSetEntry set[], int cnt,
       int proxyRunCnt, GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm,
       GrTextureOp::Saturate saturate, GrAAType aaType, SkCanvas::SrcRectConstraint constraint,
       const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform) {
@@ -436,7 +436,7 @@ class TextureOp final : public GrMeshDrawOp {
   }
 
   TextureOp(
-      GrRenderTargetContext::TextureSetEntry set[], int cnt, int proxyRunCnt,
+      GrSurfaceDrawContext::TextureSetEntry set[], int cnt, int proxyRunCnt,
       GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm, GrTextureOp::Saturate saturate,
       GrAAType aaType, SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
       sk_sp<GrColorSpaceXform> textureColorSpaceXform)
@@ -600,9 +600,9 @@ class TextureOp final : public GrMeshDrawOp {
   }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-      GrXferBarrierFlags renderPassXferBarriers) override {
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) override {
     SkASSERT(fDesc);
 
     GrGeometryProcessor* gp;
@@ -627,13 +627,13 @@ class TextureOp final : public GrMeshDrawOp {
     fDesc->fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         GrProcessorSet::MakeEmptySet(), fDesc->fVertexSpec.primitiveType(), renderPassXferBarriers,
-        pipelineFlags);
+        colorLoadOp, pipelineFlags);
   }
 
   void onPrePrepareDraws(
-      GrRecordingContext* context, const GrSurfaceProxyView* writeView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView,
-      GrXferBarrierFlags renderPassXferBarriers) override {
+      GrRecordingContext* context, const GrSurfaceProxyView& writeView, GrAppliedClip* clip,
+      const GrXferProcessor::DstProxyView& dstProxyView, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override {
     TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
     SkDEBUGCODE(this->validate();)
@@ -648,7 +648,7 @@ class TextureOp final : public GrMeshDrawOp {
 
     // This will call onCreateProgramInfo and register the created program with the DDL.
     this->INHERITED::onPrePrepareDraws(
-        context, writeView, clip, dstProxyView, renderPassXferBarriers);
+        context, writeView, clip, dstProxyView, renderPassXferBarriers, colorLoadOp);
   }
 
   static void FillInVertices(const GrCaps& caps, TextureOp* texOp, Desc* desc, char* vertexData) {
@@ -1009,11 +1009,12 @@ class TextureOp final : public GrMeshDrawOp {
     SkString str = SkStringPrintf("# draws: %d\n", fQuads.count());
     auto iter = fQuads.iterator();
     for (unsigned p = 0; p < fMetadata.fProxyCount; ++p) {
+      SkString proxyStr = fViewCountPairs[p].fProxy->dump();
+      str.append(proxyStr);
       str.appendf(
-          "Proxy ID: %d, Filter: %d, MM: %d\n", fViewCountPairs[p].fProxy->uniqueID().asUInt(),
-          static_cast<int>(fMetadata.fFilter), static_cast<int>(fMetadata.fMipmapMode));
-      int i = 0;
-      while (i < fViewCountPairs[p].fQuadCnt && iter.next()) {
+          ", Filter: %d, MM: %d\n", static_cast<int>(fMetadata.fFilter),
+          static_cast<int>(fMetadata.fMipmapMode));
+      for (int i = 0; i < fViewCountPairs[p].fQuadCnt && iter.next(); ++i) {
         const GrQuad* quad = iter.deviceQuad();
         GrQuad uv = iter.isLocalValid() ? *(iter.localQuad()) : GrQuad();
         const ColorSubsetAndAA& info = iter.metadata();
@@ -1027,8 +1028,6 @@ class TextureOp final : public GrMeshDrawOp {
             quad->point(2).fX, quad->point(2).fY, quad->point(3).fX, quad->point(3).fY,
             uv.point(0).fX, uv.point(0).fY, uv.point(1).fX, uv.point(1).fY, uv.point(2).fX,
             uv.point(2).fY, uv.point(3).fX, uv.point(3).fY);
-
-        i++;
       }
     }
     return str;
@@ -1084,23 +1083,25 @@ GrOp::Owner GrTextureOp::Make(
         std::move(quad), subset);
   } else {
     // Emulate complex blending using GrFillRectOp
+    GrSamplerState samplerState(GrSamplerState::WrapMode::kClamp, filter, mm);
     GrPaint paint;
     paint.setColor4f(color);
     paint.setXPFactory(SkBlendMode_AsXPFactory(blendMode));
 
     std::unique_ptr<GrFragmentProcessor> fp;
+    const auto& caps = *context->priv().caps();
     if (subset) {
-      const auto& caps = *context->priv().caps();
       SkRect localRect;
       if (quad->fLocal.asRect(&localRect)) {
         fp = GrTextureEffect::MakeSubset(
-            std::move(proxyView), alphaType, SkMatrix::I(), filter, *subset, localRect, caps);
+            std::move(proxyView), alphaType, SkMatrix::I(), samplerState, *subset, localRect, caps);
       } else {
         fp = GrTextureEffect::MakeSubset(
-            std::move(proxyView), alphaType, SkMatrix::I(), filter, *subset, caps);
+            std::move(proxyView), alphaType, SkMatrix::I(), samplerState, *subset, caps);
       }
     } else {
-      fp = GrTextureEffect::Make(std::move(proxyView), alphaType, SkMatrix::I(), filter);
+      fp =
+          GrTextureEffect::Make(std::move(proxyView), alphaType, SkMatrix::I(), samplerState, caps);
     }
     fp = GrColorSpaceXformEffect::Make(std::move(fp), std::move(textureXform));
     fp = GrBlendFragmentProcessor::Make(std::move(fp), nullptr, SkBlendMode::kModulate);
@@ -1116,7 +1117,7 @@ GrOp::Owner GrTextureOp::Make(
 class GrTextureOp::BatchSizeLimiter {
  public:
   BatchSizeLimiter(
-      GrRenderTargetContext* rtc, const GrClip* clip, GrRecordingContext* context, int numEntries,
+      GrSurfaceDrawContext* rtc, const GrClip* clip, GrRecordingContext* context, int numEntries,
       GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm, GrTextureOp::Saturate saturate,
       SkCanvas::SrcRectConstraint constraint, const SkMatrix& viewMatrix,
       sk_sp<GrColorSpaceXform> textureColorSpaceXform)
@@ -1131,7 +1132,7 @@ class GrTextureOp::BatchSizeLimiter {
         fTextureColorSpaceXform(textureColorSpaceXform),
         fNumLeft(numEntries) {}
 
-  void createOp(GrRenderTargetContext::TextureSetEntry set[], int clumpSize, GrAAType aaType) {
+  void createOp(GrSurfaceDrawContext::TextureSetEntry set[], int clumpSize, GrAAType aaType) {
     int clumpProxyCount = proxy_run_count(&set[fNumClumped], clumpSize);
     GrOp::Owner op = TextureOp::Make(
         fContext, &set[fNumClumped], clumpSize, clumpProxyCount, fFilter, fMipmapMode, fSaturate,
@@ -1146,7 +1147,7 @@ class GrTextureOp::BatchSizeLimiter {
   int baseIndex() const { return fNumClumped; }
 
  private:
-  GrRenderTargetContext* fRTC;
+  GrSurfaceDrawContext* fRTC;
   const GrClip* fClip;
   GrRecordingContext* fContext;
   GrSamplerState::Filter fFilter;
@@ -1162,8 +1163,8 @@ class GrTextureOp::BatchSizeLimiter {
 
 // Greedily clump quad draws together until the index buffer limit is exceeded.
 void GrTextureOp::AddTextureSetOps(
-    GrRenderTargetContext* rtc, const GrClip* clip, GrRecordingContext* context,
-    GrRenderTargetContext::TextureSetEntry set[], int cnt, int proxyRunCnt,
+    GrSurfaceDrawContext* rtc, const GrClip* clip, GrRecordingContext* context,
+    GrSurfaceDrawContext::TextureSetEntry set[], int cnt, int proxyRunCnt,
     GrSamplerState::Filter filter, GrSamplerState::MipmapMode mm, Saturate saturate,
     SkBlendMode blendMode, GrAAType aaType, SkCanvas::SrcRectConstraint constraint,
     const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureColorSpaceXform) {

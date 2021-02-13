@@ -101,9 +101,6 @@ struct Program {
     // if false, sk_FragCoord is exactly the same as gl_FragCoord. If true, the y coordinate
     // must be flipped.
     bool fFlipY = false;
-    // if false, sk_FragCoord is exactly the same as gl_FragCoord. If true, the w coordinate
-    // must be inversed.
-    bool fInverseW = false;
     // If true the destination fragment color is read sk_FragColor. It must be declared inout.
     bool fFragColorIsInOut = false;
     // if true, Setting objects (e.g. sk_Caps.fbFetchSupport) should be replaced with their
@@ -125,7 +122,7 @@ struct Program {
     bool fRemoveDeadFunctions = true;
     // Functions larger than this (measured in IR nodes) will not be inlined. The default value
     // is arbitrary. A value of zero will disable the inliner entirely.
-    int fInlineThreshold = 49;
+    int fInlineThreshold = 50;
     // true to enable optimization passes
     bool fOptimize = true;
     // If true, implicit conversions to lower precision numeric types are allowed
@@ -161,15 +158,15 @@ struct Program {
     kVertex_Kind,
     kGeometry_Kind,
     kFragmentProcessor_Kind,
-    kPipelineStage_Kind,
+    kRuntimeEffect_Kind,
     kGeneric_Kind,
   };
 
   Program(
       Kind kind, std::unique_ptr<String> source, Settings settings, const ShaderCapsClass* caps,
       std::shared_ptr<Context> context, std::vector<std::unique_ptr<ProgramElement>> elements,
-      std::unique_ptr<ModifiersPool> modifiers, std::shared_ptr<SymbolTable> symbols,
-      std::unique_ptr<Pool> pool, Inputs inputs)
+      std::vector<const ProgramElement*> sharedElements, std::unique_ptr<ModifiersPool> modifiers,
+      std::shared_ptr<SymbolTable> symbols, std::unique_ptr<Pool> pool, Inputs inputs)
       : fKind(kind),
         fSource(std::move(source)),
         fSettings(settings),
@@ -179,6 +176,7 @@ struct Program {
         fPool(std::move(pool)),
         fInputs(inputs),
         fElements(std::move(elements)),
+        fSharedElements(std::move(sharedElements)),
         fModifiers(std::move(modifiers)) {
     fUsage = Analysis::GetUsage(*this);
   }
@@ -187,15 +185,86 @@ struct Program {
     // Some or all of the program elements are in the pool. To free them safely, we must attach
     // the pool before destroying any program elements. (Otherwise, we may accidentally call
     // delete on a pooled node.)
-    fPool->attachToThread();
+    if (fPool) {
+      fPool->attachToThread();
+    }
     fElements.clear();
     fContext.reset();
     fSymbols.reset();
     fModifiers.reset();
-    fPool->detachFromThread();
+    if (fPool) {
+      fPool->detachFromThread();
+    }
   }
 
-  const std::vector<std::unique_ptr<ProgramElement>>& elements() const { return fElements; }
+  class ElementsCollection {
+   public:
+    class iterator {
+     public:
+      const ProgramElement* operator*() {
+        if (fShared != fSharedEnd) {
+          return *fShared;
+        } else {
+          return fOwned->get();
+        }
+      }
+
+      iterator& operator++() {
+        if (fShared != fSharedEnd) {
+          ++fShared;
+        } else {
+          ++fOwned;
+        }
+        return *this;
+      }
+
+      bool operator==(const iterator& other) const {
+        return fOwned == other.fOwned && fShared == other.fShared;
+      }
+
+      bool operator!=(const iterator& other) const { return !(*this == other); }
+
+     private:
+      using Owned = std::vector<std::unique_ptr<ProgramElement>>::const_iterator;
+      using Shared = std::vector<const ProgramElement*>::const_iterator;
+      friend class ElementsCollection;
+
+      iterator(Owned owned, Owned ownedEnd, Shared shared, Shared sharedEnd)
+          : fOwned(owned), fOwnedEnd(ownedEnd), fShared(shared), fSharedEnd(sharedEnd) {}
+
+      Owned fOwned;
+      Owned fOwnedEnd;
+      Shared fShared;
+      Shared fSharedEnd;
+    };
+
+    iterator begin() const {
+      return iterator(
+          fProgram.fElements.begin(), fProgram.fElements.end(), fProgram.fSharedElements.begin(),
+          fProgram.fSharedElements.end());
+    }
+
+    iterator end() const {
+      return iterator(
+          fProgram.fElements.end(), fProgram.fElements.end(), fProgram.fSharedElements.end(),
+          fProgram.fSharedElements.end());
+    }
+
+   private:
+    friend struct Program;
+
+    ElementsCollection(const Program& program) : fProgram(program) {}
+    const Program& fProgram;
+  };
+
+  // Can be used to iterate over *all* elements in this Program, both owned and shared (builtin).
+  // The iterator's value type is 'const ProgramElement*', so it's clear that you *must not*
+  // modify anything (as you might be mutating shared data).
+  ElementsCollection elements() const { return ElementsCollection(*this); }
+
+  // Can be used to iterate over *just* the elements owned by the Program, not shared builtins.
+  // The iterator's value type is 'std::unique_ptr<ProgramElement>', and mutation is allowed.
+  const std::vector<std::unique_ptr<ProgramElement>>& ownedElements() { return fElements; }
 
   Kind fKind;
   std::unique_ptr<String> fSource;
@@ -210,9 +279,11 @@ struct Program {
 
  private:
   std::vector<std::unique_ptr<ProgramElement>> fElements;
+  std::vector<const ProgramElement*> fSharedElements;
   std::unique_ptr<ModifiersPool> fModifiers;
   std::unique_ptr<ProgramUsage> fUsage;
 
+  friend class ByteCodeGenerator;  // fModifiers
   friend class Compiler;
   friend class Inliner;             // fUsage
   friend class SPIRVCodeGenerator;  // fModifiers

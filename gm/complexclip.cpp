@@ -208,7 +208,7 @@ DEF_GM(return new ComplexClipGM(true, true, true);)
 
 DEF_SIMPLE_GM(clip_shader, canvas, 840, 650) {
   auto img = GetResourceAsImage("images/yellow_rose.png");
-  auto sh = img->makeShader();
+  auto sh = img->makeShader(SkSamplingOptions());
 
   SkRect r = SkRect::MakeIWH(img->width(), img->height());
   SkPaint p;
@@ -235,7 +235,8 @@ DEF_SIMPLE_GM(clip_shader, canvas, 840, 650) {
   canvas->clipShader(sh, SkClipOp::kIntersect);
   canvas->save();
   SkMatrix lm = SkMatrix::Scale(1.0f / 5, 1.0f / 5);
-  canvas->clipShader(img->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &lm));
+  canvas->clipShader(
+      img->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), lm));
   canvas->drawImage(img, 0, 0, nullptr);
 
   canvas->restore();
@@ -244,7 +245,7 @@ DEF_SIMPLE_GM(clip_shader, canvas, 840, 650) {
 
 DEF_SIMPLE_GM(clip_shader_layer, canvas, 430, 320) {
   auto img = GetResourceAsImage("images/yellow_rose.png");
-  auto sh = img->makeShader();
+  auto sh = img->makeShader(SkSamplingOptions());
 
   SkRect r = SkRect::MakeIWH(img->width(), img->height());
 
@@ -379,8 +380,9 @@ DEF_SIMPLE_GM(clip_shader_persp, canvas, 1370, 1030) {
         {0.5f * img->width(), 0.5f * img->height()}, 0.1f * img->width(), gradColors, nullptr, 2,
         SkTileMode::kRepeat, 0, gradLM ? &persp : nullptr);
     bool imageLM = config.fLM == kImageWithLocalMat || config.fLM == kBothWithLocalMat;
-    auto imgShader =
-        img->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, imageLM ? perspScale : scale);
+    auto imgShader = img->makeShader(
+        SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(),
+        imageLM ? perspScale : scale);
 
     // Perspective before any clipShader
     if (config.fConcat == kConcatBeforeClips) {
@@ -436,7 +438,8 @@ DEF_SIMPLE_GM(clip_shader_difference, canvas, 512, 512) {
   SkMatrix local = SkMatrix::MakeRectToRect(
       SkRect::MakeWH(image->width(), image->height()), SkRect::MakeWH(64, 64),
       SkMatrix::kFill_ScaleToFit);
-  auto shader = image->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &local);
+  auto shader =
+      image->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), &local);
 
   SkPaint paint;
   paint.setColor(SK_ColorRED);

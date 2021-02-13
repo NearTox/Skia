@@ -236,8 +236,7 @@ class DrawBitmapRectGM : public skiagm::GM {
       paint.setMaskFilter(SkMaskFilter::MakeBlur(
           kNormal_SkBlurStyle, SkBlurMask::ConvertRadiusToSigma(SkIntToScalar(5))));
 
-      sk_sp<SkImage> image(SkImage::MakeFromBitmap(bm));
-      fProc(canvas, image.get(), bm, srcRect, dstRect, &paint);
+      fProc(canvas, bm.asImage().get(), bm, srcRect, dstRect, &paint);
     }
   }
 

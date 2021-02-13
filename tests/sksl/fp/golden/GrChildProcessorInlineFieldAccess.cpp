@@ -26,12 +26,12 @@ class GrGLSLChildProcessorInlineFieldAccess : public GrGLSLFragmentProcessor {
     SkString _sample0 = this->invokeChild(0, args);
     fragBuilder->codeAppendf(
         R"SkSL(
-    %s = %s;
+    return %s;
 } else {
-    %s = half4(1.0);
+    return half4(1.0);
 }
 )SkSL",
-        args.fOutputColor, _sample0.c_str(), args.fOutputColor);
+        _sample0.c_str());
   }
 
  private:
@@ -48,7 +48,6 @@ bool GrChildProcessorInlineFieldAccess::onIsEqual(const GrFragmentProcessor& oth
   (void)that;
   return true;
 }
-bool GrChildProcessorInlineFieldAccess::usesExplicitReturn() const { return false; }
 GrChildProcessorInlineFieldAccess::GrChildProcessorInlineFieldAccess(
     const GrChildProcessorInlineFieldAccess& src)
     : INHERITED(kGrChildProcessorInlineFieldAccess_ClassID, src.optimizationFlags()) {

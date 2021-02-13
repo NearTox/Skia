@@ -151,8 +151,8 @@ skvm::Color sk_program_transfer_fn(
 
   auto apply = [&](skvm::F32 v) -> skvm::F32 {
     // Strip off the sign bit and save it for later.
-    skvm::I32 bits = bit_cast(v), sign = bits & 0x80000000;
-    v = bit_cast(bits ^ sign);
+    skvm::I32 bits = pun_to_I32(v), sign = bits & 0x80000000;
+    v = pun_to_F32(bits ^ sign);
 
     switch (classify_transfer_fn(tf)) {
       case Bad_TF: SkASSERT(false); break;
@@ -160,22 +160,24 @@ skvm::Color sk_program_transfer_fn(
       case sRGBish_TF: v = select(v <= D, C * v + F, approx_powf(A * v + B, G) + E); break;
 
       case PQish_TF: {
-        auto vC = approx_powf(v, C);
+        skvm::F32 vC = approx_powf(v, C);
         v = approx_powf(max(B * vC + A, 0.0f) / (E * vC + D), F);
       } break;
 
       case HLGish_TF: {
-        auto vA = v * A;
-        v = select(vA <= 1.0f, approx_powf(vA, B), approx_exp((v - E) * C + D));
+        skvm::F32 vA = v * A, K = F + 1.0f;
+        v = K * select(vA <= 1.0f, approx_powf(vA, B), approx_exp((v - E) * C + D));
       } break;
 
       case HLGinvish_TF:
+        skvm::F32 K = F + 1.0f;
+        v /= K;
         v = select(v <= 1.0f, A * approx_powf(v, B), C * approx_log(v - D) + E);
         break;
     }
 
     // Re-apply the original sign bit on our way out the door.
-    return bit_cast(sign | bit_cast(v));
+    return pun_to_F32(sign | pun_to_I32(v));
   };
 
   return {apply(c.r), apply(c.g), apply(c.b), c.a};

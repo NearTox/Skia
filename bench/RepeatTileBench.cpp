@@ -57,7 +57,8 @@ class RepeatTileBench : public Benchmark {
 
     draw_into_bitmap(fBitmap);
 
-    fPaint.setShader(fBitmap.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat));
+    fPaint.setShader(
+        fBitmap.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions()));
   }
 
   void onDraw(int loops, SkCanvas* canvas) override {

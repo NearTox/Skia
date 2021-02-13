@@ -68,16 +68,10 @@ class GrGLSLGrSLTypesAreSupported : public GrGLSLFragmentProcessor {
 }
 )SkSL");
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(int4(%s(1)));
-%s = half4(%s(int2(1)).xxxx);
-%s = half4(%s(int3(1)).xxxx);
-%s = half4(%s(int4(1)).xxxx);
-%s = %s(half3x4(1.0))[0];
-%s = half4(%s(float2x4(1.0))[0]);
+        R"SkSL(return ((((((int4(%s(1)) , %s(int2(1)).xxxx) , %s(int3(1)).xxxx) , %s(int4(1)).xxxx) , %s(half3x4(1.0))[0]) , %s(float2x4(1.0))[0]) , half4(1.0));
 )SkSL",
-        args.fOutputColor, test_i_name.c_str(), args.fOutputColor, test_i2_name.c_str(),
-        args.fOutputColor, test_i3_name.c_str(), args.fOutputColor, test_i4_name.c_str(),
-        args.fOutputColor, test_h3x4_name.c_str(), args.fOutputColor, test_f2x4_name.c_str());
+        test_i_name.c_str(), test_i2_name.c_str(), test_i3_name.c_str(), test_i4_name.c_str(),
+        test_h3x4_name.c_str(), test_f2x4_name.c_str());
   }
 
  private:
@@ -94,7 +88,6 @@ bool GrGrSLTypesAreSupported::onIsEqual(const GrFragmentProcessor& other) const 
   (void)that;
   return true;
 }
-bool GrGrSLTypesAreSupported::usesExplicitReturn() const { return false; }
 GrGrSLTypesAreSupported::GrGrSLTypesAreSupported(const GrGrSLTypesAreSupported& src)
     : INHERITED(kGrGrSLTypesAreSupported_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

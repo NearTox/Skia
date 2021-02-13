@@ -8,6 +8,10 @@
 #include "tools/sk_app/ios/WindowContextFactory_ios.h"
 #include "tools/sk_app/ios/Window_ios.h"
 
+#if __has_feature(objc_arc)
+#  error "File should not be compiled with ARC."
+#endif
+
 @interface WindowViewController : UIViewController
 
 - (WindowViewController*)initWithWindow:(sk_app::Window_ios*)initWindow;
@@ -119,8 +123,10 @@ void Window_ios::onInval() {
 }
 
 - (WindowViewController*)initWithWindow:(sk_app::Window_ios *)initWindow {
+  self = [super initWithNibName:nil bundle:nil];
+  if (self) {
     fWindow = initWindow;
-
+  }
     return self;
 }
 
@@ -144,76 +150,67 @@ void Window_ios::onInval() {
     sk_app::Window_ios* fWindow;
 }
 
-- (IBAction)panGestureAction:(UIGestureRecognizer*)sender {
-    CGPoint location = [sender locationInView:self];
-    switch (sender.state) {
-        case UIGestureRecognizerStateBegan:
-            fWindow->onMouse(location.x, location.y,
-                             skui::InputState::kDown, skui::ModifierKey::kNone);
-            break;
-        case UIGestureRecognizerStateChanged:
-            fWindow->onMouse(location.x, location.y,
-                             skui::InputState::kMove, skui::ModifierKey::kNone);
-            break;
-        case UIGestureRecognizerStateEnded:
-            fWindow->onMouse(location.x, location.y,
-                             skui::InputState::kUp, skui::ModifierKey::kNone);
-            break;
-        case UIGestureRecognizerStateCancelled:
-            fWindow->onMouse(location.x, location.y,
-                             skui::InputState::kUp, skui::ModifierKey::kNone);
-            break;
-        default:
-            break;
-    }
+- (void)panGestureAction:(UIGestureRecognizer*)sender {
+  CGPoint location = [sender locationInView:self];
+  switch (sender.state) {
+    case UIGestureRecognizerStateBegan:
+      fWindow->onMouse(location.x, location.y, skui::InputState::kDown, skui::ModifierKey::kNone);
+      break;
+    case UIGestureRecognizerStateChanged:
+      fWindow->onMouse(location.x, location.y, skui::InputState::kMove, skui::ModifierKey::kNone);
+      break;
+    case UIGestureRecognizerStateEnded:
+      fWindow->onMouse(location.x, location.y, skui::InputState::kUp, skui::ModifierKey::kNone);
+      break;
+    case UIGestureRecognizerStateCancelled:
+      fWindow->onMouse(location.x, location.y, skui::InputState::kUp, skui::ModifierKey::kNone);
+      break;
+    default: break;
+  }
 }
 
-- (IBAction)tapGestureAction:(UIGestureRecognizer*)sender {
-    CGPoint location = [sender locationInView:self];
-    switch (sender.state) {
-        case UIGestureRecognizerStateEnded:
-            fWindow->onMouse(location.x, location.y,
-                             skui::InputState::kDown, skui::ModifierKey::kNone);
-            fWindow->onMouse(location.x, location.y,
-                             skui::InputState::kUp, skui::ModifierKey::kNone);
-            break;
-        default:
-            break;
-    }
+- (void)tapGestureAction:(UIGestureRecognizer*)sender {
+  CGPoint location = [sender locationInView:self];
+  switch (sender.state) {
+    case UIGestureRecognizerStateEnded:
+      fWindow->onMouse(location.x, location.y, skui::InputState::kDown, skui::ModifierKey::kNone);
+      fWindow->onMouse(location.x, location.y, skui::InputState::kUp, skui::ModifierKey::kNone);
+      break;
+    default: break;
+  }
 }
 
-- (IBAction)pinchGestureAction:(UIGestureRecognizer*)sender {
-    CGPoint location = [sender locationInView:self];
-    UIPinchGestureRecognizer* pinchGestureRecognizer = (UIPinchGestureRecognizer*) sender;
-    float scale = pinchGestureRecognizer.scale;
-    switch (sender.state) {
-        case UIGestureRecognizerStateBegan:
-            fWindow->onPinch(skui::InputState::kDown, scale, location.x, location.y);
-            break;
-        case UIGestureRecognizerStateChanged:
-            fWindow->onPinch(skui::InputState::kMove, scale, location.x, location.y);
-            break;
-        case UIGestureRecognizerStateEnded:
-            fWindow->onPinch(skui::InputState::kUp, scale, location.x, location.y);
-            break;
-        case UIGestureRecognizerStateCancelled:
-            fWindow->onPinch(skui::InputState::kUp, scale, location.x, location.y);
-            break;
-        default:
-            break;
-    }
+- (void)pinchGestureAction:(UIGestureRecognizer*)sender {
+  CGPoint location = [sender locationInView:self];
+  UIPinchGestureRecognizer* pinchGestureRecognizer = (UIPinchGestureRecognizer*)sender;
+  float scale = pinchGestureRecognizer.scale;
+  switch (sender.state) {
+    case UIGestureRecognizerStateBegan:
+      fWindow->onPinch(skui::InputState::kDown, scale, location.x, location.y);
+      break;
+    case UIGestureRecognizerStateChanged:
+      fWindow->onPinch(skui::InputState::kMove, scale, location.x, location.y);
+      break;
+    case UIGestureRecognizerStateEnded:
+      fWindow->onPinch(skui::InputState::kUp, scale, location.x, location.y);
+      break;
+    case UIGestureRecognizerStateCancelled:
+      fWindow->onPinch(skui::InputState::kUp, scale, location.x, location.y);
+      break;
+    default: break;
+  }
 }
 
-- (IBAction)swipeRightGestureAction:(UIGestureRecognizer*)sender {
-    if (UIGestureRecognizerStateEnded == sender.state) {
-        fWindow->onFling(skui::InputState::kRight);
-    }
+- (void)swipeRightGestureAction:(UIGestureRecognizer*)sender {
+  if (UIGestureRecognizerStateEnded == sender.state) {
+    fWindow->onFling(skui::InputState::kRight);
+  }
 }
 
-- (IBAction)swipeLeftGestureAction:(UIGestureRecognizer*)sender {
-    if (UIGestureRecognizerStateEnded == sender.state) {
-        fWindow->onFling(skui::InputState::kLeft);
-    }
+- (void)swipeLeftGestureAction:(UIGestureRecognizer*)sender {
+  if (UIGestureRecognizerStateEnded == sender.state) {
+    fWindow->onFling(skui::InputState::kLeft);
+  }
 }
 
 - (MainView*)initWithWindow:(sk_app::Window_ios *)initWindow {

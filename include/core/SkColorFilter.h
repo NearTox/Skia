@@ -65,10 +65,10 @@ class SK_API SkColorFilter : public SkFlattenable {
    */
   sk_sp<SkColorFilter> makeComposed(sk_sp<SkColorFilter> inner) const;
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
 
  private:
-  constexpr SkColorFilter() noexcept = default;
+  SkColorFilter() = default;
   friend class SkColorFilterBase;
 
   using INHERITED = SkFlattenable;

@@ -35,15 +35,15 @@ class GrGLSLArithmeticProcessor : public GrGLSLFragmentProcessor {
     fragBuilder->codeAppendf(
         R"SkSL(
 half4 dst = %s;
-%s = clamp((((half(%s.x) * src) * dst + half(%s.y) * src) + half(%s.z) * dst) + half(%s.w), 0.0, 1.0);
+half4 color = clamp((((half(%s.x) * src) * dst + half(%s.y) * src) + half(%s.z) * dst) + half(%s.w), 0.0, 1.0);
 @if (%s) {
-    %s.xyz = min(%s.xyz, %s.w);
+    color.xyz = min(color.xyz, color.w);
 }
+return color;
 )SkSL",
-        _sample1.c_str(), args.fOutputColor, args.fUniformHandler->getUniformCStr(kVar),
+        _sample1.c_str(), args.fUniformHandler->getUniformCStr(kVar),
         args.fUniformHandler->getUniformCStr(kVar), args.fUniformHandler->getUniformCStr(kVar),
-        args.fUniformHandler->getUniformCStr(kVar), (_outer.enforcePMColor ? "true" : "false"),
-        args.fOutputColor, args.fOutputColor, args.fOutputColor);
+        args.fUniformHandler->getUniformCStr(kVar), (_outer.enforcePMColor ? "true" : "false"));
   }
 
  private:
@@ -67,7 +67,6 @@ bool GrArithmeticProcessor::onIsEqual(const GrFragmentProcessor& other) const {
   if (enforcePMColor != that.enforcePMColor) return false;
   return true;
 }
-bool GrArithmeticProcessor::usesExplicitReturn() const { return false; }
 GrArithmeticProcessor::GrArithmeticProcessor(const GrArithmeticProcessor& src)
     : INHERITED(kGrArithmeticProcessor_ClassID, src.optimizationFlags()),
       k(src.k),

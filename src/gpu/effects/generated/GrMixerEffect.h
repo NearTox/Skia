@@ -35,7 +35,6 @@ class GrMixerEffect : public GrFragmentProcessor {
   GrMixerEffect(const GrMixerEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "MixerEffect"; }
-  bool usesExplicitReturn() const override;
   float weight;
 
  private:
@@ -48,7 +47,6 @@ class GrMixerEffect : public GrFragmentProcessor {
                                         ProcessorOptimizationFlags(fp0.get())),
         weight(weight) {
     this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
-    SkASSERT(fp0);
     this->registerChild(std::move(fp0), SkSL::SampleUsage::PassThrough());
     this->registerChild(std::move(fp1), SkSL::SampleUsage::PassThrough());
   }

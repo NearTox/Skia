@@ -57,7 +57,6 @@ class PerspShadersGM : public GM {
         kCellSize, kCellSize, SK_ColorBLUE, SK_ColorYELLOW, kCellSize / 10);
     fBitmap.setImmutable();
 
-    fBitmapShader = fBitmap.makeShader();
     SkPoint pts1[] = {{0, 0}, {SkIntToScalar(kCellSize), SkIntToScalar(kCellSize)}};
     SkPoint pts2[] = {{0, 0}, {0, SkIntToScalar(kCellSize)}};
     constexpr SkColor colors[] = {
@@ -86,8 +85,7 @@ class PerspShadersGM : public GM {
     filterPaint.setAntiAlias(fDoAA);
 
     SkPaint pathPaint;
-    pathPaint.setShader(fBitmapShader);
-    pathPaint.setFilterQuality(filterQ);
+    pathPaint.setShader(fBitmap.makeShader(SkSamplingOptions(filterQ)));
     pathPaint.setAntiAlias(fDoAA);
 
     SkPaint gradPaint1;
@@ -161,7 +159,6 @@ class PerspShadersGM : public GM {
 
   bool fDoAA;
   SkPath fPath;
-  sk_sp<SkShader> fBitmapShader;
   sk_sp<SkShader> fLinearGrad1;
   sk_sp<SkShader> fLinearGrad2;
   SkMatrix fPerspMatrix;
@@ -199,7 +196,8 @@ static SkPath make_path() {
 
 DEF_SIMPLE_GM(perspective_clip, canvas, 800, 800) {
   SkPath path = make_path();
-  auto shader = GetResourceAsImage("images/mandrill_128.png")->makeShader(SkMatrix::Scale(3, 3));
+  auto shader = GetResourceAsImage("images/mandrill_128.png")
+                    ->makeShader(SkSamplingOptions(), SkMatrix::Scale(3, 3));
 
   SkPaint paint;
   paint.setColor({0.75, 0.75, 0.75, 1});

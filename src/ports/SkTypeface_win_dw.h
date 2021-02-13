@@ -105,11 +105,16 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const  noexcept  override;
+  void weak_dispose() const override {
+    fLoaders.reset();
+
+    // SkTypefaceCache::Remove(this);
+    INHERITED::weak_dispose();
+  }
 
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const override;
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override;
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
   void getGlyphToUnicodeMap(SkUnichar* glyphToUnicode) const override;

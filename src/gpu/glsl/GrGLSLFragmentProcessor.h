@@ -99,14 +99,12 @@ class GrGLSLFragmentProcessor {
   struct EmitArgs {
     EmitArgs(
         GrGLSLFPFragmentBuilder* fragBuilder, GrGLSLUniformHandler* uniformHandler,
-        const GrShaderCaps* caps, const GrFragmentProcessor& fp, const char* outputColor,
-        const char* inputColor, const char* sampleCoord,
-        const TransformedCoordVars& transformedCoordVars, bool forceInline)
+        const GrShaderCaps* caps, const GrFragmentProcessor& fp, const char* inputColor,
+        const char* sampleCoord, const TransformedCoordVars& transformedCoordVars, bool forceInline)
         : fFragBuilder(fragBuilder),
           fUniformHandler(uniformHandler),
           fShaderCaps(caps),
           fFp(fp),
-          fOutputColor(outputColor),
           fInputColor(inputColor ? inputColor : "half4(1.0)"),
           fSampleCoord(sampleCoord),
           fTransformedCoords(transformedCoordVars),
@@ -115,7 +113,6 @@ class GrGLSLFragmentProcessor {
     GrGLSLUniformHandler* fUniformHandler;
     const GrShaderCaps* fShaderCaps;
     const GrFragmentProcessor& fFp;
-    const char* fOutputColor;
     const char* fInputColor;
     const char* fSampleCoord;
     const TransformedCoordVars& fTransformedCoords;

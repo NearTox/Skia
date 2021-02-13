@@ -20,9 +20,8 @@ class GrGLSLSectionInitializers : public GrGLSLFragmentProcessor {
     const GrSectionInitializers& _outer = args.fFp.cast<GrSectionInitializers>();
     (void)_outer;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -39,7 +38,6 @@ bool GrSectionInitializers::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrSectionInitializers::usesExplicitReturn() const { return false; }
 GrSectionInitializers::GrSectionInitializers(const GrSectionInitializers& src)
     : INHERITED(kGrSectionInitializers_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

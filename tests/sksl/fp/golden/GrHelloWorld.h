@@ -19,7 +19,6 @@ class GrHelloWorld : public GrFragmentProcessor {
   GrHelloWorld(const GrHelloWorld& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "HelloWorld"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrHelloWorld() : INHERITED(kGrHelloWorld_ClassID, kNone_OptimizationFlags) {}

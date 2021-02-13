@@ -15,32 +15,28 @@ class SkRectPriv {
  public:
   // Returns an irect that is very large, and can be safely round-trip with SkRect and still
   // be considered non-empty (i.e. width/height > 0) even if we round-out the SkRect.
-  static constexpr SkIRect MakeILarge() noexcept {
+  static SkIRect MakeILarge() {
     // SK_MaxS32 >> 1 seemed better, but it did not survive round-trip with SkRect and rounding.
     // Also, 1 << 29 can be perfectly represented in float, while SK_MaxS32 >> 1 cannot.
-    const constexpr int32_t large = 1 << 29;
+    const int32_t large = 1 << 29;
     return {-large, -large, large, large};
   }
 
-  static constexpr SkIRect MakeILargestInverted() noexcept {
-    return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
-  }
+  static SkIRect MakeILargestInverted() { return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32}; }
 
-  static SkRect MakeLargeS32() noexcept {
+  static SkRect MakeLargeS32() {
     SkRect r;
     r.set(MakeILarge());
     return r;
   }
 
-  static constexpr SkRect MakeLargest() noexcept {
-    return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};
-  }
+  static SkRect MakeLargest() { return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax}; }
 
-  static constexpr SkRect MakeLargestInverted() noexcept {
+  static constexpr SkRect MakeLargestInverted() {
     return {SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin};
   }
 
-  static void GrowToInclude(SkRect* r, const SkPoint& pt) noexcept {
+  static void GrowToInclude(SkRect* r, const SkPoint& pt) {
     r->fLeft = std::min(pt.fX, r->fLeft);
     r->fRight = std::max(pt.fX, r->fRight);
     r->fTop = std::min(pt.fY, r->fTop);
@@ -57,6 +53,15 @@ class SkRectPriv {
   static bool Is16Bit(const SkIRect& r) {
     return SkTFitsIn<int16_t>(r.fLeft) && SkTFitsIn<int16_t>(r.fTop) &&
            SkTFitsIn<int16_t>(r.fRight) && SkTFitsIn<int16_t>(r.fBottom);
+  }
+
+  // Returns r.width()/2 but divides first to avoid width() overflowing.
+  static SkScalar HalfWidth(const SkRect& r) {
+    return SkScalarHalf(r.fRight) - SkScalarHalf(r.fLeft);
+  }
+  // Returns r.height()/2 but divides first to avoid height() overflowing.
+  static SkScalar HalfHeight(const SkRect& r) {
+    return SkScalarHalf(r.fBottom) - SkScalarHalf(r.fTop);
   }
 
   // Evaluate A-B. If the difference shape cannot be represented as a rectangle then false is

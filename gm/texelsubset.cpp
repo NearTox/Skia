@@ -22,9 +22,8 @@
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrSamplerState.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/effects/generated/GrConstColorProcessor.h"
 #include "tools/Resources.h"
@@ -79,7 +78,7 @@ class TexelSubset : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, SkCanvas* canvas,
+      GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext, SkCanvas* canvas,
       SkString* errorMsg) override {
     GrMipmapped mipmapped =
         (fMipmapMode != MipmapMode::kNone) ? GrMipmapped::kYes : GrMipmapped::kNo;
@@ -158,7 +157,7 @@ class TexelSubset : public GpuGM {
           if (auto op = sk_gpu_test::test_ops::MakeRect(
                   context, std::move(fp1), drawRect, localRect.makeOffset(kT),
                   SkMatrix::Translate(-kT))) {
-            renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
+            surfaceDrawContext->addDrawOp(std::move(op));
           }
 
           x += localRect.width() + kTestPad;
@@ -173,7 +172,7 @@ class TexelSubset : public GpuGM {
               subsetView, fBitmap.alphaType(), subsetTextureMatrix, sampler, caps);
           if (auto op =
                   sk_gpu_test::test_ops::MakeRect(context, std::move(fp2), drawRect, localRect)) {
-            renderTargetContext->priv().testingOnly_addDrawOp(std::move(op));
+            surfaceDrawContext->addDrawOp(std::move(op));
           }
 
           if (mx < GrSamplerState::kWrapModeCount - 1) {

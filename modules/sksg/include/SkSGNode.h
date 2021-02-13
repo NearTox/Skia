@@ -45,17 +45,17 @@ class Node : public SkRefCnt {
     kOverrideDamage_Trait = 1 << 1,
   };
 
-  explicit Node(uint32_t invalTraits) noexcept;
+  explicit Node(uint32_t invalTraits);
   ~Node() override;
 
-  const SkRect& bounds() const noexcept {
+  const SkRect& bounds() const {
     SkASSERT(!this->hasInval());
     return fBounds;
   }
 
   // Tag this node for invalidation and optional damage.
-  void invalidate(bool damage = true) noexcept;
-  bool hasInval() const noexcept { return fFlags & kInvalidated_Flag; }
+  void invalidate(bool damage = true);
+  bool hasInval() const { return fFlags & kInvalidated_Flag; }
 
   // Dispatched on revalidation.  Subclasses are expected to recompute/cache their properties
   // and return their bounding box in local coordinates.
@@ -96,7 +96,7 @@ class Node : public SkRefCnt {
 
 // Helper for defining attribute getters/setters in subclasses.
 #define SG_ATTRIBUTE(attr_name, attr_type, attr_container)           \
-  const attr_type& get##attr_name() const noexcept { return attr_container; } \
+  const attr_type& get##attr_name() const { return attr_container; } \
   void set##attr_name(const attr_type& v) {                          \
     if (attr_container == v) return;                                 \
     attr_container = v;                                              \
@@ -109,7 +109,7 @@ class Node : public SkRefCnt {
   }
 
 #define SG_MAPPED_ATTRIBUTE(attr_name, attr_type, attr_container)              \
-  attr_type get##attr_name() const noexcept { return attr_container.get##attr_name(); } \
+  attr_type get##attr_name() const { return attr_container.get##attr_name(); } \
   void set##attr_name(const attr_type& v) {                                    \
     if (attr_container.get##attr_name() == v) return;                          \
     attr_container.set##attr_name(v);                                          \

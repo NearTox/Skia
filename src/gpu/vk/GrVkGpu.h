@@ -13,6 +13,7 @@
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrStagingBufferManager.h"
 #include "src/gpu/vk/GrVkCaps.h"
+#include "src/gpu/vk/GrVkMSAALoadManager.h"
 #include "src/gpu/vk/GrVkMemory.h"
 #include "src/gpu/vk/GrVkMeshBuffer.h"
 #include "src/gpu/vk/GrVkResourceProvider.h"
@@ -33,10 +34,6 @@ class GrVkRenderPass;
 class GrVkSecondaryCommandBuffer;
 class GrVkTexture;
 struct GrVkInterface;
-
-namespace SkSL {
-class Compiler;
-}  // namespace SkSL
 
 class GrVkGpu : public GrGpu {
  public:
@@ -122,7 +119,9 @@ class GrVkGpu : public GrGpu {
       const GrManagedResource*, VkPipelineStageFlags srcStageMask,
       VkPipelineStageFlags dstStageMask, bool byRegion, VkImageMemoryBarrier* barrier) const;
 
-  SkSL::Compiler* shaderCompiler() const { return fCompiler; }
+  bool loadMSAAFromResolve(
+      GrVkCommandBuffer* commandBuffer, const GrVkRenderPass& renderPass, GrSurface* dst,
+      GrSurface* src, const SkIRect& srcRect);
 
   bool onRegenerateMipMapLevels(GrTexture* tex) override;
 
@@ -168,8 +167,8 @@ class GrVkGpu : public GrGpu {
   void storeVkPipelineCacheData() override;
 
   bool beginRenderPass(
-      const GrVkRenderPass*, const VkClearValue* colorClear, GrVkRenderTarget*, GrSurfaceOrigin,
-      const SkIRect& bounds, bool forSecondaryCB);
+      const GrVkRenderPass*, const VkClearValue* colorClear, GrVkRenderTarget*,
+      const SkIRect& renderPassBounds, bool forSecondaryCB);
   void endRenderPass(GrRenderTarget* target, GrSurfaceOrigin origin, const SkIRect& bounds);
 
   // Returns true if VkResult indicates success and also checks for device lost or OOM. Every
@@ -264,6 +263,8 @@ class GrVkGpu : public GrGpu {
 
   bool onSubmitToGpu(bool syncCpu) override;
 
+  void onReportSubmitHistograms() override;
+
   // Ends and submits the current command buffer to the queue and then creates a new command
   // buffer and begins it. If sync is set to kForce_SyncQueue, the function will wait for all
   // work in the queue to finish before returning. If this GrVkGpu object has any semaphores in
@@ -314,6 +315,8 @@ class GrVkGpu : public GrGpu {
   GrVkResourceProvider fResourceProvider;
   GrStagingBufferManager fStagingBufferManager;
 
+  GrVkMSAALoadManager fMSAALoadManager;
+
   GrVkCommandPool* fMainCmdPool;
   // just a raw pointer; object's lifespan is managed by fCmdPool
   GrVkPrimaryCommandBuffer* fMainCmdBuffer;
@@ -325,10 +328,6 @@ class GrVkGpu : public GrGpu {
 
   VkPhysicalDeviceProperties fPhysDevProps;
   VkPhysicalDeviceMemoryProperties fPhysDevMemProps;
-
-  // compiler used for compiling sksl into spirv. We only want to create the compiler once since
-  // there is significant overhead to the first compile of any compiler.
-  SkSL::Compiler* fCompiler;
 
   // We need a bool to track whether or not we've already disconnected all the gpu resources from
   // vulkan context.

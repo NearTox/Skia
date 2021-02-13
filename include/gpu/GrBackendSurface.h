@@ -166,7 +166,7 @@ class SK_API GrBackendFormat {
   GrBackendFormat makeTexture2D() const;
 
   // Returns true if the backend format has been initialized.
-  bool isValid() const noexcept { return fValid; }
+  bool isValid() const { return fValid; }
 
 #  if defined(SK_DEBUG) || GR_TEST_UTILS
   SkString toStr() const;
@@ -256,13 +256,13 @@ class SK_API GrBackendTexture {
 
   GrBackendTexture& operator=(const GrBackendTexture& that);
 
-  SkISize dimensions() const noexcept { return {fWidth, fHeight}; }
-  int width() const noexcept { return fWidth; }
-  int height() const noexcept { return fHeight; }
-  bool hasMipmaps() const noexcept { return fMipmapped == GrMipmapped::kYes; }
+  SkISize dimensions() const { return {fWidth, fHeight}; }
+  int width() const { return fWidth; }
+  int height() const { return fHeight; }
+  bool hasMipmaps() const { return fMipmapped == GrMipmapped::kYes; }
   /** deprecated alias of hasMipmaps(). */
   bool hasMipMaps() const { return this->hasMipmaps(); }
-  GrBackendApi backend() const noexcept { return fBackend; }
+  GrBackendApi backend() const { return fBackend; }
 
   // If the backend API is GL, copies a snapshot of the GrGLTextureInfo struct into the passed in
   // pointer and returns true. Otherwise returns false if the backend API is not GL.

@@ -116,9 +116,9 @@ class TextLine {
   std::unique_ptr<Run> shapeEllipsis(const SkString& ellipsis, Run* run);
   void justify(SkScalar maxWidth);
 
-  SkRect paintText(
+  void buildTextBlob(
       SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
-      const ClipContext& context) const;
+      const ClipContext& context);
   void paintBackground(
       SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
@@ -152,6 +152,19 @@ class TextLine {
 
   LineMetricStyle fAscentStyle;
   LineMetricStyle fDescentStyle;
+
+  struct TextBlobRecord {
+    void paint(SkCanvas* canvas, SkScalar x, SkScalar y);
+
+    sk_sp<SkTextBlob> fBlob;
+    SkPoint fOffset = SkPoint::Make(0.0f, 0.0f);
+    SkPaint fPaint;
+    SkRect fBounds = SkRect::MakeEmpty();
+    bool fClippingNeeded = false;
+    SkRect fClipRect = SkRect::MakeEmpty();
+  };
+  bool fTextBlobCachePopulated;
+  std::vector<TextBlobRecord> fTextBlobCache;
 };
 }  // namespace textlayout
 }  // namespace skia

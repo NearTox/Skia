@@ -43,7 +43,6 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
   GrOverrideInputFragmentProcessor(const GrOverrideInputFragmentProcessor& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "OverrideInputFragmentProcessor"; }
-  bool usesExplicitReturn() const override;
   bool useUniform;
   SkPMColor4f uniformColor;
   SkPMColor4f literalColor;
@@ -58,7 +57,6 @@ class GrOverrideInputFragmentProcessor : public GrFragmentProcessor {
         useUniform(useUniform),
         uniformColor(uniformColor),
         literalColor(literalColor) {
-    SkASSERT(fp);
     this->registerChild(std::move(fp), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

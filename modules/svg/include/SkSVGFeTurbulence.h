@@ -13,7 +13,6 @@
 
 class SkSVGFeTurbulence : public SkSVGFe {
  public:
-  ~SkSVGFeTurbulence() override = default;
   static sk_sp<SkSVGFeTurbulence> Make() {
     return sk_sp<SkSVGFeTurbulence>(new SkSVGFeTurbulence());
   }
@@ -29,6 +28,8 @@ class SkSVGFeTurbulence : public SkSVGFe {
   sk_sp<SkImageFilter> onMakeImageFilter(
       const SkSVGRenderContext&, const SkSVGFilterContext&) const override;
 
+  std::vector<SkSVGFeInputType> getInputs() const override { return {}; }
+
   bool parseAndSetAttribute(const char*, const char*) override;
 
  private:
@@ -37,4 +38,4 @@ class SkSVGFeTurbulence : public SkSVGFe {
   using INHERITED = SkSVGFe;
 };
 
-#endif  // SkSVGStop_DEFINED
+#endif  // SkSVGFeTurbulence_DEFINED

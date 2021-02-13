@@ -470,37 +470,33 @@ void GrMtlCaps::initShaderCaps() {
   shaderCaps->fMaxFragmentSamplers = 16;
 }
 
+// Define this so we can use it to initialize arrays and work around
+// the fact that MTLPixelFormatBGR10A2Unorm is not always available.
+#define kMTLPixelFormatBGR10A2Unorm MTLPixelFormat(94)
+
 // These are all the valid MTLPixelFormats that we support in Skia.  They are roughly ordered from
 // most frequently used to least to improve look up times in arrays.
 static constexpr MTLPixelFormat kMtlFormats[] = {
-    MTLPixelFormatRGBA8Unorm,
-    MTLPixelFormatR8Unorm,
-    MTLPixelFormatA8Unorm,
+    MTLPixelFormatRGBA8Unorm,      MTLPixelFormatR8Unorm,   MTLPixelFormatA8Unorm,
     MTLPixelFormatBGRA8Unorm,
 #ifdef SK_BUILD_FOR_IOS
     MTLPixelFormatB5G6R5Unorm,
 #endif
-    MTLPixelFormatRGBA16Float,
-    MTLPixelFormatR16Float,
-    MTLPixelFormatRG8Unorm,
+    MTLPixelFormatRGBA16Float,     MTLPixelFormatR16Float,  MTLPixelFormatRG8Unorm,
     MTLPixelFormatRGB10A2Unorm,
 #ifdef SK_BUILD_FOR_MAC
-    // BGR10_A2 wasn't added until iOS 11
-    MTLPixelFormatBGR10A2Unorm,
+    kMTLPixelFormatBGR10A2Unorm,
 #endif
 #ifdef SK_BUILD_FOR_IOS
     MTLPixelFormatABGR4Unorm,
 #endif
-    MTLPixelFormatRGBA8Unorm_sRGB,
-    MTLPixelFormatR16Unorm,
-    MTLPixelFormatRG16Unorm,
+    MTLPixelFormatRGBA8Unorm_sRGB, MTLPixelFormatR16Unorm,  MTLPixelFormatRG16Unorm,
 #ifdef SK_BUILD_FOR_IOS
     MTLPixelFormatETC2_RGB8,
 #else
     MTLPixelFormatBC1_RGBA,
 #endif
-    MTLPixelFormatRGBA16Unorm,
-    MTLPixelFormatRG16Float,
+    MTLPixelFormatRGBA16Unorm,     MTLPixelFormatRG16Float,
 
     MTLPixelFormatInvalid,
 };
@@ -550,6 +546,10 @@ size_t GrMtlCaps::GetFormatIndex(MTLPixelFormat pixelFormat) {
 void GrMtlCaps::initFormatTable() {
   FormatInfo* info;
 
+  if (@available(macos 10.13, ios 11.0, *)) {
+    SkASSERT(kMTLPixelFormatBGR10A2Unorm == MTLPixelFormatBGR10A2Unorm);
+  }
+
   // Format: R8Unorm
   {
     info = &fFormatTable[GetFormatIndex(MTLPixelFormatR8Unorm)];
@@ -562,8 +562,8 @@ void GrMtlCaps::initFormatTable() {
       auto& ctInfo = info->fColorTypeInfos[ctIdx++];
       ctInfo.fColorType = GrColorType::kAlpha_8;
       ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-      ctInfo.fReadSwizzle = GrSwizzle::RRRR();
-      ctInfo.fWriteSwizzle = GrSwizzle::AAAA();
+      ctInfo.fReadSwizzle = GrSwizzle("000r");
+      ctInfo.fWriteSwizzle = GrSwizzle("a000");
     }
     // Format: R8Unorm, Surface: kGray_8
     {
@@ -586,7 +586,6 @@ void GrMtlCaps::initFormatTable() {
         auto& ctInfo = info->fColorTypeInfos[ctIdx++];
         ctInfo.fColorType = GrColorType::kAlpha_8;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-        ctInfo.fReadSwizzle = GrSwizzle::AAAA();
       }
     }
 
@@ -710,7 +709,7 @@ void GrMtlCaps::initFormatTable() {
 
 #ifdef SK_BUILD_FOR_MAC
     // Format: BGR10A2Unorm
-    {
+    if (@available(macos 10.13, ios 11.0, *)) {
       info = &fFormatTable[GetFormatIndex(MTLPixelFormatBGR10A2Unorm)];
       if (this->isMac() && fFamilyGroup == 1) {
         info->fFlags = FormatInfo::kTexturable_Flag;
@@ -741,8 +740,8 @@ void GrMtlCaps::initFormatTable() {
         auto& ctInfo = info->fColorTypeInfos[ctIdx++];
         ctInfo.fColorType = GrColorType::kAlpha_F16;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-        ctInfo.fReadSwizzle = GrSwizzle::RRRR();
-        ctInfo.fWriteSwizzle = GrSwizzle::AAAA();
+        ctInfo.fReadSwizzle = GrSwizzle("000r");
+        ctInfo.fWriteSwizzle = GrSwizzle("a000");
       }
     }
 
@@ -783,8 +782,8 @@ void GrMtlCaps::initFormatTable() {
         auto& ctInfo = info->fColorTypeInfos[ctIdx++];
         ctInfo.fColorType = GrColorType::kAlpha_16;
         ctInfo.fFlags = ColorTypeInfo::kUploadData_Flag | ColorTypeInfo::kRenderable_Flag;
-        ctInfo.fReadSwizzle = GrSwizzle::RRRR();
-        ctInfo.fWriteSwizzle = GrSwizzle::AAAA();
+        ctInfo.fReadSwizzle = GrSwizzle("000r");
+        ctInfo.fWriteSwizzle = GrSwizzle("a000");
       }
     }
 
@@ -872,7 +871,9 @@ void GrMtlCaps::initFormatTable() {
     this->setColorType(GrColorType::kBGRA_8888, {MTLPixelFormatBGRA8Unorm});
     this->setColorType(GrColorType::kRGBA_1010102, {MTLPixelFormatRGB10A2Unorm});
 #ifdef SK_BUILD_FOR_MAC
-    this->setColorType(GrColorType::kBGRA_1010102, {MTLPixelFormatBGR10A2Unorm});
+    if (@available(macos 10.13, ios 11.0, *)) {
+      this->setColorType(GrColorType::kBGRA_1010102, {MTLPixelFormatBGR10A2Unorm});
+    }
 #endif
     this->setColorType(GrColorType::kGray_8, {MTLPixelFormatR8Unorm});
     this->setColorType(GrColorType::kAlpha_F16, {MTLPixelFormatR16Float});
@@ -1064,7 +1065,10 @@ GrCaps::SupportedRead GrMtlCaps::onSupportedReadPixelsColorType(
  * pipeline. This includes blending information and primitive type. The pipeline is immutable
  * so any remaining dynamic state is set via the MtlRenderCmdEncoder.
  */
-GrProgramDesc GrMtlCaps::makeDesc(GrRenderTarget* rt, const GrProgramInfo& programInfo) const {
+GrProgramDesc GrMtlCaps::makeDesc(
+    GrRenderTarget* rt, const GrProgramInfo& programInfo,
+    ProgramDescOverrideFlags overrideFlags) const {
+  SkASSERT(overrideFlags == ProgramDescOverrideFlags::kNone);
   GrProgramDesc desc;
   if (!GrProgramDesc::Build(&desc, rt, programInfo, *this)) {
     SkASSERT(!desc.isValid());
@@ -1116,7 +1120,7 @@ std::vector<GrCaps::TestFormatColorTypeCombination> GrMtlCaps::getTestingCombina
     {GrColorType::kBGRA_8888, GrBackendFormat::MakeMtl(MTLPixelFormatBGRA8Unorm)},
     {GrColorType::kRGBA_1010102, GrBackendFormat::MakeMtl(MTLPixelFormatRGB10A2Unorm)},
 #  ifdef SK_BUILD_FOR_MAC
-    {GrColorType::kBGRA_1010102, GrBackendFormat::MakeMtl(MTLPixelFormatBGR10A2Unorm)},
+    {GrColorType::kBGRA_1010102, GrBackendFormat::MakeMtl(kMTLPixelFormatBGR10A2Unorm)},
 #  endif
     {GrColorType::kGray_8, GrBackendFormat::MakeMtl(MTLPixelFormatR8Unorm)},
     {GrColorType::kAlpha_F16, GrBackendFormat::MakeMtl(MTLPixelFormatR16Float)},

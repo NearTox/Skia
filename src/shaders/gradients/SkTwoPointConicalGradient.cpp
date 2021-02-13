@@ -207,6 +207,8 @@ void SkTwoPointConicalGradient::appendGradientStages(
 
 skvm::F32 SkTwoPointConicalGradient::transformT(
     skvm::Builder* p, skvm::Uniforms* uniforms, skvm::Coord coord, skvm::I32* mask) const {
+  auto mag = [](skvm::F32 x, skvm::F32 y) { return sqrt(x * x + y * y); };
+
   // See https://skia.org/dev/design/conical, and onAppendStages() above.
   // There's a lot going on here, and I'm not really sure what's independent
   // or disjoint, what can be reordered, simplified, etc.  Tweak carefully.
@@ -215,7 +217,7 @@ skvm::F32 SkTwoPointConicalGradient::transformT(
   if (fType == Type::kRadial) {
     float denom = 1.0f / (fRadius2 - fRadius1), scale = std::max(fRadius1, fRadius2) * denom,
           bias = -fRadius1 * denom;
-    return norm(x, y) * p->uniformF(uniforms->pushF(scale)) + p->uniformF(uniforms->pushF(bias));
+    return mag(x, y) * p->uniformF(uniforms->pushF(scale)) + p->uniformF(uniforms->pushF(bias));
   }
 
   if (fType == Type::kStrip) {
@@ -232,7 +234,7 @@ skvm::F32 SkTwoPointConicalGradient::transformT(
   if (fFocalData.isFocalOnCircle()) {
     t = (y / x) * y + x;  // (x^2 + y^2) / x  ~~>  x + y^2/x  ~~>  y/x * y + x
   } else if (fFocalData.isWellBehaved()) {
-    t = norm(x, y) - x * invR1;
+    t = mag(x, y) - x * invR1;
   } else {
     skvm::F32 k = sqrt(x * x - y * y);
     if (fFocalData.isSwapped() || 1 - fFocalData.fFocalX < 0) {

@@ -351,16 +351,13 @@ SI F apply_hlg(const skcms_TransferFunction* tf, F x) {
     (void)tf;
     return x;
 #else
-    const float R = tf->a, G = tf->b,
-                a = tf->c, b = tf->d, c = tf->e;
-    U32 bits = bit_pun<U32>(x),
-        sign = bits & 0x80000000;
-    x = bit_pun<F>(bits ^ sign);
+  const float R = tf->a, G = tf->b, a = tf->c, b = tf->d, c = tf->e, K = tf->f + 1;
+  U32 bits = bit_pun<U32>(x), sign = bits & 0x80000000;
+  x = bit_pun<F>(bits ^ sign);
 
-    F v = if_then_else(x*R <= 1, approx_pow(x*R, G)
-                               , approx_exp((x-c)*a) + b);
+  F v = if_then_else(x * R <= 1, approx_pow(x * R, G), approx_exp((x - c) * a) + b);
 
-    return bit_pun<F>(sign | bit_pun<U32>(v));
+  return K * bit_pun<F>(sign | bit_pun<U32>(v));
 #endif
 }
 
@@ -370,16 +367,14 @@ SI F apply_hlginv(const skcms_TransferFunction* tf, F x) {
     (void)tf;
     return x;
 #else
-    const float R = tf->a, G = tf->b,
-                a = tf->c, b = tf->d, c = tf->e;
-    U32 bits = bit_pun<U32>(x),
-        sign = bits & 0x80000000;
-    x = bit_pun<F>(bits ^ sign);
+  const float R = tf->a, G = tf->b, a = tf->c, b = tf->d, c = tf->e, K = tf->f + 1;
+  U32 bits = bit_pun<U32>(x), sign = bits & 0x80000000;
+  x = bit_pun<F>(bits ^ sign);
+  x /= K;
 
-    F v = if_then_else(x <= 1, R * approx_pow(x, G)
-                             , a * approx_log(x - b) + c);
+  F v = if_then_else(x <= 1, R * approx_pow(x, G), a * approx_log(x - b) + c);
 
-    return bit_pun<F>(sign | bit_pun<U32>(v));
+  return bit_pun<F>(sign | bit_pun<U32>(v));
 #endif
 }
 

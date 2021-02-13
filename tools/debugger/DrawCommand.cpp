@@ -24,6 +24,7 @@
 #include "src/core/SkLatticeIter.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkPaintDefaults.h"
+#include "src/core/SkPaintPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkRectPriv.h"
 #include "src/core/SkTextBlobPriv.h"
@@ -231,7 +232,6 @@ const char* DrawCommand::GetCommandString(OpType type) {
     case kDrawDRRect_OpType: return "DrawDRRect";
     case kDrawImage_OpType: return "DrawImage";
     case kDrawImageLattice_OpType: return "DrawImageLattice";
-    case kDrawImageNine_OpType: return "DrawImageNine";
     case kDrawImageRect_OpType: return "DrawImageRect";
     case kDrawImageRectLayer_OpType: return "DrawImageRectLayer";
     case kDrawOval_OpType: return "DrawOval";
@@ -255,6 +255,7 @@ const char* DrawCommand::GetCommandString(OpType type) {
     case kSave_OpType: return "Save";
     case kSaveLayer_OpType: return "SaveLayer";
     case kSetMatrix_OpType: return "SetMatrix";
+    case kSetM44_OpType: return "SetM44";
     default:
       SkDebugf("OpType error 0x%08x\n", type);
       SkASSERT(0);
@@ -641,8 +642,18 @@ void DrawCommand::WritePNG(SkBitmap bitmap, SkWStream& out) {
   SkPngEncoder::Encode(&out, pm, options);
 }
 
+// flattens an image to a Json stream, also called from shader flatten
 bool DrawCommand::flatten(
     const SkImage& image, SkJSONWriter& writer, UrlDataManager& urlDataManager) {
+  // For MSKP files, there is no need to encode the image,
+  // just report its id.
+  if (urlDataManager.hasImageIndex()) {
+    writer.appendName(DEBUGCANVAS_ATTRIBUTE_IMAGE_INDEX);
+    writer.appendU64(urlDataManager.lookupImage(&image));
+    return true;
+  }
+
+  writer.beginObject(DEBUGCANVAS_ATTRIBUTE_IMAGE);
   size_t rowBytes = 4 * image.width();
   SkAutoMalloc buffer(rowBytes * image.height());
   SkImageInfo dstInfo =
@@ -654,6 +665,7 @@ bool DrawCommand::flatten(
 #endif
   if (!image.readPixels(dContext, dstInfo, buffer.get(), rowBytes, 0, 0)) {
     SkDebugf("DrawCommand::flatten SkImage: readPixels failed\n");
+    writer.endObject();
     return false;
   }
 
@@ -665,10 +677,18 @@ bool DrawCommand::flatten(
   sk_sp<SkData> encoded = out.detachAsData();
   if (encoded == nullptr) {
     SkDebugf("DrawCommand::flatten SkImage: could not encode image as PNG\n");
+    writer.endObject();
+    return false;
+  }
+  auto dataPtr = encoded->data();
+  if (!dataPtr) {
+    SkDebugf("DrawCommand::flatten SkImage: encoding as PNG produced zero length data\n");
+    writer.endObject();
     return false;
   }
   SkString url = encode_data(encoded->data(), encoded->size(), "image/png", urlDataManager);
   writer.appendString(DEBUGCANVAS_ATTRIBUTE_DATA, url.c_str());
+  writer.endObject();
   return true;
 }
 
@@ -695,9 +715,10 @@ static const char* alpha_type_name(SkAlphaType alphaType) {
 
 bool DrawCommand::flatten(
     const SkBitmap& bitmap, SkJSONWriter& writer, UrlDataManager& urlDataManager) {
-  sk_sp<SkImage> image(SkImage::MakeFromBitmap(bitmap));
+  sk_sp<SkImage> image(bitmap.asImage());
   writer.appendString(DEBUGCANVAS_ATTRIBUTE_COLOR, color_type_name(bitmap.colorType()));
   writer.appendString(DEBUGCANVAS_ATTRIBUTE_ALPHA, alpha_type_name(bitmap.alphaType()));
+  // Image will appear to have no uses, TODO(nifong): provide the user with a useful explanation
   bool success = flatten(*image, writer, urlDataManager);
   return success;
 }
@@ -798,7 +819,7 @@ static void apply_paint_join(const SkPaint& paint, SkJSONWriter& writer) {
 }
 
 static void apply_paint_filterquality(const SkPaint& paint, SkJSONWriter& writer) {
-  SkFilterQuality quality = paint.getFilterQuality();
+  SkFilterQuality quality = SkPaintPriv::GetFQ(paint);
   switch (quality) {
     case kNone_SkFilterQuality: break;
     case kLow_SkFilterQuality:
@@ -1146,7 +1167,8 @@ void DrawAnnotationCommand::toJSON(SkJSONWriter& writer, UrlDataManager& urlData
   MakeJsonRect(writer, fRect);
   writer.appendString("key", fKey.c_str());
   if (fValue) {
-    // TODO: dump out the "value"
+    writer.appendString(
+        "value", std::string(static_cast<const char*>(fValue->data()), fValue->size()).c_str());
   }
 
   SkString desc;
@@ -1181,15 +1203,7 @@ uint64_t DrawImageCommand::imageId(UrlDataManager& udm) const {
 
 void DrawImageCommand::toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const {
   INHERITED::toJSON(writer, urlDataManager);
-  if (urlDataManager.hasImageIndex()) {
-    writer.appendName(DEBUGCANVAS_ATTRIBUTE_IMAGE_INDEX);
-    writer.appendU64(imageId(urlDataManager));
-  } else {
-    writer.beginObject(DEBUGCANVAS_ATTRIBUTE_IMAGE);
-    flatten(*fImage, writer, urlDataManager);
-    writer.endObject();  // image
-  }
-
+  flatten(*fImage, writer, urlDataManager);
   writer.appendName(DEBUGCANVAS_ATTRIBUTE_COORDS);
   MakeJsonPoint(writer, fLeft, fTop);
   if (fPaint.isValid()) {
@@ -1242,15 +1256,7 @@ uint64_t DrawImageLatticeCommand::imageId(UrlDataManager& udm) const {
 
 void DrawImageLatticeCommand::toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const {
   INHERITED::toJSON(writer, urlDataManager);
-  if (urlDataManager.hasImageIndex()) {
-    writer.appendName(DEBUGCANVAS_ATTRIBUTE_IMAGE_INDEX);
-    writer.appendU64(imageId(urlDataManager));
-  } else {
-    writer.beginObject(DEBUGCANVAS_ATTRIBUTE_IMAGE);
-    flatten(*fImage, writer, urlDataManager);
-    writer.endObject();  // image
-  }
-
+  flatten(*fImage, writer, urlDataManager);
   writer.appendName(DEBUGCANVAS_ATTRIBUTE_LATTICE);
   MakeJsonLattice(writer, fLattice);
   writer.appendName(DEBUGCANVAS_ATTRIBUTE_DST);
@@ -1295,15 +1301,7 @@ uint64_t DrawImageRectCommand::imageId(UrlDataManager& udm) const {
 
 void DrawImageRectCommand::toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const {
   INHERITED::toJSON(writer, urlDataManager);
-  if (urlDataManager.hasImageIndex()) {
-    writer.appendName(DEBUGCANVAS_ATTRIBUTE_IMAGE_INDEX);
-    writer.appendU64(imageId(urlDataManager));
-  } else {
-    writer.beginObject(DEBUGCANVAS_ATTRIBUTE_IMAGE);
-    flatten(*fImage, writer, urlDataManager);
-    writer.endObject();  // image
-  }
-
+  flatten(*fImage, writer, urlDataManager);
   if (fSrc.isValid()) {
     writer.appendName(DEBUGCANVAS_ATTRIBUTE_SRC);
     MakeJsonRect(writer, *fSrc);
@@ -1375,53 +1373,6 @@ void DrawImageRectLayerCommand::toJSON(SkJSONWriter& writer, UrlDataManager& url
 
   SkString desc;
   writer.appendString(DEBUGCANVAS_ATTRIBUTE_SHORTDESC, str_append(&desc, fDst)->c_str());
-}
-
-DrawImageNineCommand::DrawImageNineCommand(
-    const SkImage* image, const SkIRect& center, const SkRect& dst, const SkPaint* paint)
-    : INHERITED(kDrawImageNine_OpType),
-      fImage(SkRef(image)),
-      fCenter(center),
-      fDst(dst),
-      fPaint(paint) {}
-
-void DrawImageNineCommand::execute(SkCanvas* canvas) const {
-  canvas->drawImageNine(fImage.get(), fCenter, fDst, fPaint.getMaybeNull());
-}
-
-bool DrawImageNineCommand::render(SkCanvas* canvas) const {
-  SkAutoCanvasRestore acr(canvas, true);
-  canvas->clear(0xFFFFFFFF);
-
-  xlate_and_scale_to_bounds(canvas, fDst);
-
-  this->execute(canvas);
-  return true;
-}
-
-uint64_t DrawImageNineCommand::imageId(UrlDataManager& udm) const {
-  return udm.lookupImage(fImage.get());
-}
-
-void DrawImageNineCommand::toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const {
-  INHERITED::toJSON(writer, urlDataManager);
-  if (urlDataManager.hasImageIndex()) {
-    writer.appendName(DEBUGCANVAS_ATTRIBUTE_IMAGE_INDEX);
-    writer.appendU64(imageId(urlDataManager));
-  } else {
-    writer.beginObject(DEBUGCANVAS_ATTRIBUTE_IMAGE);
-    flatten(*fImage, writer, urlDataManager);
-    writer.endObject();  // image
-  }
-
-  writer.appendName(DEBUGCANVAS_ATTRIBUTE_CENTER);
-  MakeJsonIRect(writer, fCenter);
-  writer.appendName(DEBUGCANVAS_ATTRIBUTE_DST);
-  MakeJsonRect(writer, fDst);
-  if (fPaint.isValid()) {
-    writer.appendName(DEBUGCANVAS_ATTRIBUTE_PAINT);
-    MakeJsonPaint(writer, *fPaint, urlDataManager);
-  }
 }
 
 DrawOvalCommand::DrawOvalCommand(const SkRect& oval, const SkPaint& paint)
@@ -1918,10 +1869,12 @@ void DrawEdgeAAQuadCommand::execute(SkCanvas* canvas) const {
 
 DrawEdgeAAImageSetCommand::DrawEdgeAAImageSetCommand(
     const SkCanvas::ImageSetEntry set[], int count, const SkPoint dstClips[],
-    const SkMatrix preViewMatrices[], const SkPaint* paint, SkCanvas::SrcRectConstraint constraint)
+    const SkMatrix preViewMatrices[], const SkSamplingOptions& sampling, const SkPaint* paint,
+    SkCanvas::SrcRectConstraint constraint)
     : INHERITED(kDrawEdgeAAImageSet_OpType),
       fSet(count),
       fCount(count),
+      fSampling(sampling),
       fPaint(paint),
       fConstraint(constraint) {
   int totalDstClipCount, totalMatrixCount;
@@ -1936,7 +1889,7 @@ DrawEdgeAAImageSetCommand::DrawEdgeAAImageSetCommand(
 
 void DrawEdgeAAImageSetCommand::execute(SkCanvas* canvas) const {
   canvas->experimental_DrawEdgeAAImageSet(
-      fSet.get(), fCount, fDstClips.get(), fPreViewMatrices.get(), fPaint.getMaybeNull(),
+      fSet.get(), fCount, fDstClips.get(), fPreViewMatrices.get(), fSampling, fPaint.getMaybeNull(),
       fConstraint);
 }
 
@@ -2036,4 +1989,14 @@ void SetMatrixCommand::toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManag
   writer.appendName(DEBUGCANVAS_ATTRIBUTE_MATRIX);
   MakeJsonMatrix(writer, fMatrix);
   writeMatrixType(writer, fMatrix);
+}
+
+SetM44Command::SetM44Command(const SkM44& matrix) : INHERITED(kSetM44_OpType) { fMatrix = matrix; }
+
+void SetM44Command::execute(SkCanvas* canvas) const { canvas->setMatrix(fMatrix); }
+
+void SetM44Command::toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const {
+  INHERITED::toJSON(writer, urlDataManager);
+  writer.appendName(DEBUGCANVAS_ATTRIBUTE_MATRIX);
+  MakeJsonMatrix44(writer, fMatrix);
 }

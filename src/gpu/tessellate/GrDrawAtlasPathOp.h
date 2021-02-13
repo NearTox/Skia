@@ -44,8 +44,9 @@ class GrDrawAtlasPathOp : public GrDrawOp {
 
  private:
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
+      GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override;
 
   struct Instance {
     constexpr static size_t Stride(bool usesLocalCoords) {

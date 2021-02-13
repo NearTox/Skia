@@ -31,7 +31,7 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
    */
   static GrVkPipelineState* CreatePipelineState(
       GrVkGpu*, GrRenderTarget*, const GrProgramDesc&, const GrProgramInfo&,
-      VkRenderPass compatibleRenderPass);
+      VkRenderPass compatibleRenderPass, bool overrideSubpassForResolveLoad);
 
   const GrCaps* caps() const override;
 
@@ -43,7 +43,8 @@ class GrVkPipelineStateBuilder : public GrGLSLProgramBuilder {
  private:
   GrVkPipelineStateBuilder(GrVkGpu*, GrRenderTarget*, const GrProgramDesc&, const GrProgramInfo&);
 
-  GrVkPipelineState* finalize(const GrProgramDesc&, VkRenderPass compatibleRenderPass);
+  GrVkPipelineState* finalize(
+      const GrProgramDesc&, VkRenderPass compatibleRenderPass, bool overrideSupbassForResolveLoad);
 
   // returns number of shader stages
   int loadShadersFromCache(

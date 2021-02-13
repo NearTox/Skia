@@ -28,7 +28,7 @@
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOnFlushResourceProvider.h"
 #include "src/gpu/GrOpFlushState.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/ops/GrAtlasTextOp.h"
@@ -186,7 +186,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrAtlasTextOpPreparation, reporter, ctxInfo) 
   auto gpu = context->priv().getGpu();
   auto resourceProvider = context->priv().resourceProvider();
 
-  auto rtc = GrRenderTargetContext::Make(
+  auto rtc = GrSurfaceDrawContext::Make(
       context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox, {32, 32});
 
   SkPaint paint;
@@ -215,7 +215,8 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GrAtlasTextOpPreparation, reporter, ctxInfo) 
 
   GrSurfaceProxyView surfaceView = rtc->writeSurfaceView();
   GrOpFlushState::OpArgs opArgs(
-      op.get(), &surfaceView, nullptr, GrXferProcessor::DstProxyView(), GrXferBarrierFlags::kNone);
+      op.get(), surfaceView, nullptr, GrXferProcessor::DstProxyView(), GrXferBarrierFlags::kNone,
+      GrLoadOp::kLoad);
 
   // Modify the atlas manager so it can't allocate any pages. This will force a failure
   // in the preparation of the text op

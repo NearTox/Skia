@@ -19,7 +19,6 @@ class GrInUniformCType : public GrFragmentProcessor {
   GrInUniformCType(const GrInUniformCType& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "InUniformCType"; }
-  bool usesExplicitReturn() const override;
   SkPMColor4f color;
 
  private:

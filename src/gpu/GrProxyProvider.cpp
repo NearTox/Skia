@@ -23,8 +23,8 @@
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrImageContextPriv.h"
 #include "src/gpu/GrRenderTarget.h"
-#include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrSurfaceProxyPriv.h"
 #include "src/gpu/GrTexture.h"
@@ -230,7 +230,7 @@ GrSurfaceProxyView GrProxyProvider::findCachedProxyWithColorTypeFallback(
   if (proxy->asRenderTargetProxy()) {
     GrBackendFormat expectedFormat;
     std::tie(ct, expectedFormat) =
-        GrRenderTargetContext::GetFallbackColorTypeAndFormat(fImageContext, ct, sampleCnt);
+        GrSurfaceFillContext::GetFallbackColorTypeAndFormat(fImageContext, ct, sampleCnt);
     SkASSERT(expectedFormat == proxy->backendFormat());
   }
   GrSwizzle swizzle = fImageContext->priv().caps()->getReadSwizzle(proxy->backendFormat(), ct);
@@ -356,7 +356,7 @@ sk_sp<GrTextureProxy> GrProxyProvider::createMippedProxyFromBitmap(
         }
         return LazyCallbackResult(resourceProvider->createTexture(
             desc.fDimensions, desc.fFormat, colorType, GrRenderable::kNo, 1, desc.fBudgeted,
-            GrProtected::kNo, texels.get(), mipLevelCount));
+            GrMipMapped::kYes, GrProtected::kNo, texels.get()));
       },
       format, dims, GrMipmapped::kYes, GrMipmapStatus::kValid, GrInternalSurfaceFlags::kNone,
       SkBackingFit::kExact, budgeted, GrProtected::kNo, UseAllocator::kYes);

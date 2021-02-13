@@ -29,10 +29,16 @@ struct StringFragment {
 
   StringFragment(const char* chars, size_t length) : fChars(chars), fLength(length) {}
 
+  const char* begin() const { return fChars; }
+  const char* end() const { return fChars + fLength; }
+
   const char* data() const { return fChars; }
   size_t size() const { return fLength; }
   size_t length() const { return fLength; }
   char operator[](size_t idx) const { return fChars[idx]; }
+
+  bool startsWith(const char prefix[]) const;
+  bool endsWith(const char suffix[]) const;
 
   bool operator==(const char* s) const;
   bool operator!=(const char* s) const;
@@ -65,8 +71,13 @@ class SK_API String : public std::string {
   void appendf(const char* fmt, ...);
   void vappendf(const char* fmt, va_list va);
 
-  bool startsWith(const char prefix[]) const;
-  bool endsWith(const char suffix[]) const;
+  bool startsWith(const char prefix[]) const {
+    return StringFragment(data(), size()).startsWith(prefix);
+  }
+  bool endsWith(const char suffix[]) const {
+    return StringFragment(data(), size()).endsWith(suffix);
+  }
+
   bool consumeSuffix(const char suffix[]);
 
   String operator+(const char* s) const;
@@ -97,11 +108,10 @@ String to_string(uint32_t value);
 String to_string(int64_t value);
 String to_string(uint64_t value);
 
-SKSL_INT stoi(const String& s);
-SKSL_FLOAT stod(const String& s);
-long stol(const String& s);
+bool stod(const StringFragment& s, SKSL_FLOAT* value);
+bool stoi(const StringFragment& s, SKSL_INT* value);
 
-}  // namespace  SkSL
+}  // namespace SkSL
 
 namespace std {
 template <>

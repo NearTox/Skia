@@ -140,10 +140,9 @@ int main(int argc, char** argv) {
                         rec->encoder->addFrame({rec->info, result->data(0), result->rowBytes(0)});
                     }
                 };
-                surf->asyncRescaleAndReadPixels(info, {0, 0, info.width(), info.height()},
-                                                SkSurface::RescaleGamma::kSrc,
-                                                kNone_SkFilterQuality,
-                                                read_pixels_cb, &asyncRec);
+                surf->asyncRescaleAndReadPixels(
+                    info, {0, 0, info.width(), info.height()}, SkSurface::RescaleGamma::kSrc,
+                    SkImage::RescaleMode::kNearest, read_pixels_cb, &asyncRec);
                 context->submit();
             } else {
                 SkPixmap pm;

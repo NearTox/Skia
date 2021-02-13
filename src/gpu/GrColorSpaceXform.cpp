@@ -69,7 +69,7 @@ class GrGLColorSpaceXformEffect : public GrGLSLFragmentProcessor {
 
     SkString xformedColor;
     fragBuilder->appendColorGamutXform(&xformedColor, childColor.c_str(), &fColorSpaceHelper);
-    fragBuilder->codeAppendf("%s = %s;", args.fOutputColor, xformedColor.c_str());
+    fragBuilder->codeAppendf("return %s;", xformedColor.c_str());
   }
 
  private:

@@ -15,7 +15,7 @@
 
 class GrCoverageCountingPathRenderer;
 class GrRecordingContext;
-class GrRenderTargetContext;
+class GrSurfaceDrawContext;
 
 /**
  * This class takes a clip stack and produces a reduced set of elements that are equivalent to
@@ -99,8 +99,8 @@ class GrReducedClip {
     return fMaskRequiresAA;
   }
 
-  bool drawAlphaClipMask(GrRenderTargetContext*) const;
-  bool drawStencilClipMask(GrRecordingContext*, GrRenderTargetContext*) const;
+  bool drawAlphaClipMask(GrSurfaceDrawContext*) const;
+  bool drawStencilClipMask(GrRecordingContext*, GrSurfaceDrawContext*) const;
 
   int numAnalyticElements() const;
 

@@ -40,14 +40,12 @@ class GrRGBToHSLFilterEffect : public GrFragmentProcessor {
   GrRGBToHSLFilterEffect(const GrRGBToHSLFilterEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "RGBToHSLFilterEffect"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrRGBToHSLFilterEffect(std::unique_ptr<GrFragmentProcessor> inputFP)
       : INHERITED(
             kGrRGBToHSLFilterEffect_ClassID,
-            (OptimizationFlags)(
-                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+            (OptimizationFlags)(inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
                 (kConstantOutputForConstantInput_OptimizationFlag |
                  kPreservesOpaqueInput_OptimizationFlag)) {
     this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());

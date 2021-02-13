@@ -27,7 +27,8 @@ class SkSLInterpreterCFBench : public Benchmark {
   bool isSuitableFor(Backend backend) override { return backend == kNonRendering_Backend; }
 
   void onDelayedSetup() override {
-    SkSL::Compiler compiler(/*caps=*/nullptr);
+    GrShaderCaps caps(GrContextOptions{});
+    SkSL::Compiler compiler(&caps);
     SkSL::Program::Settings settings;
     auto program = compiler.convertProgram(SkSL::Program::kGeneric_Kind, fSrc, settings);
     SkASSERT(compiler.errorCount() == 0);

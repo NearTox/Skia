@@ -47,10 +47,11 @@ void writeH(
   for (const std::string& t : tokens) {
     out << "        TK_" << t << ",\n";
   }
+  out << "        TK_NONE,\n";
   out << "    };\n";
   out << "\n";
   out << "    " << token << "()\n";
-  out << "    : fKind(Kind::TK_INVALID)\n";
+  out << "    : fKind(Kind::TK_NONE)\n";
   out << "    , fOffset(-1)\n";
   out << "    , fLength(-1) {}\n";
   out << "\n";

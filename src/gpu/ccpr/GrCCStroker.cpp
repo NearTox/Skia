@@ -695,7 +695,7 @@ void GrCCStroker::drawStrokes(
                               : fScissorSubBatches[startScissorSubBatch - 1].fEndInstances;
 
   GrPipeline pipeline(
-      GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().writeSwizzle());
+      GrScissorTest::kEnabled, SkBlendMode::kPlus, flushState->drawOpArgs().writeView().swizzle());
 
   // Draw linear strokes.
   this->drawLog2Strokes(
@@ -731,10 +731,9 @@ void GrCCStroker::drawLog2Strokes(
     const GrPipeline& pipeline, const Batch& batch, const InstanceTallies* startIndices[2],
     int startScissorSubBatch, const SkIRect& drawBounds) const {
   GrProgramInfo programInfo(
-      flushState->proxy()->numSamples(), flushState->proxy()->numStencilSamples(),
-      flushState->proxy()->backendFormat(), flushState->writeView()->origin(), &pipeline,
-      &GrUserStencilSettings::kUnused, &processor, GrPrimitiveType::kTriangleStrip, 0,
-      flushState->renderPassBarriers());
+      flushState->writeView(), &pipeline, &GrUserStencilSettings::kUnused, &processor,
+      GrPrimitiveType::kTriangleStrip, 0, flushState->renderPassBarriers(),
+      flushState->colorLoadOp());
 
   flushState->bindPipeline(programInfo, SkRect::Make(drawBounds));
   flushState->bindBuffers(nullptr, fInstanceBuffer, nullptr);

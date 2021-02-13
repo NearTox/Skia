@@ -31,14 +31,12 @@ class GrGLSLChildProcessorSampleMatrixMultipleUniforms : public GrGLSLFragmentPr
         &_outer, kFragment_GrShaderFlag, kFloat3x3_GrSLType, "matrixB");
     SkString _matrix0(args.fUniformHandler->getUniformCStr(matrixAVar));
     SkString _sample0 = this->invokeChildWithMatrix(0, args, _matrix0.c_str());
-    fragBuilder->codeAppendf(R"SkSL(%s = %s;)SkSL", args.fOutputColor, _sample0.c_str());
     SkString _matrix1(args.fUniformHandler->getUniformCStr(matrixBVar));
     SkString _sample1 = this->invokeChildWithMatrix(0, args, _matrix1.c_str());
     fragBuilder->codeAppendf(
-        R"SkSL(
-%s += %s;
+        R"SkSL(return %s + %s;
 )SkSL",
-        args.fOutputColor, _sample1.c_str());
+        _sample0.c_str(), _sample1.c_str());
   }
 
  private:
@@ -70,7 +68,6 @@ bool GrChildProcessorSampleMatrixMultipleUniforms::onIsEqual(
   if (matrixB != that.matrixB) return false;
   return true;
 }
-bool GrChildProcessorSampleMatrixMultipleUniforms::usesExplicitReturn() const { return false; }
 GrChildProcessorSampleMatrixMultipleUniforms::GrChildProcessorSampleMatrixMultipleUniforms(
     const GrChildProcessorSampleMatrixMultipleUniforms& src)
     : INHERITED(kGrChildProcessorSampleMatrixMultipleUniforms_ClassID, src.optimizationFlags()),

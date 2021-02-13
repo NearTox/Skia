@@ -102,7 +102,7 @@ class SkTypeface_Mac : public SkTypeface {
   int onGetTableTags(SkFontTableTag tags[]) const override;
   size_t onGetTableData(SkFontTableTag, size_t offset, size_t length, void* data) const override;
   sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
   void onGetFontDescriptor(SkFontDescriptor*, bool*) const override;

@@ -10,7 +10,6 @@
 
 #include "include/gpu/GrTypes.h"
 #include "include/gpu/d3d/GrD3DTypes.h"
-#include "include/private/SkColorData.h"
 #include "src/gpu/GrManagedResource.h"
 #include "src/gpu/GrRingBuffer.h"
 #include "src/gpu/d3d/GrD3DRootSignature.h"
@@ -165,7 +164,7 @@ class GrD3DDirectCommandList : public GrD3DCommandList {
       const GrD3DBuffer* argumentBuffer, size_t argumentBufferOffset);
 
   void clearRenderTargetView(
-      const GrD3DRenderTarget* renderTarget, const SkPMColor4f& color, const D3D12_RECT* rect);
+      const GrD3DRenderTarget* renderTarget, std::array<float, 4> color, const D3D12_RECT* rect);
   void clearDepthStencilView(
       const GrD3DAttachment*, uint8_t stencilClearValue, const D3D12_RECT* rect);
   void setRenderTarget(const GrD3DRenderTarget* renderTarget);

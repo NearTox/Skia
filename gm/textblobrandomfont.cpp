@@ -31,7 +31,7 @@
 #include <string.h>
 #include <utility>
 
-class GrRenderTargetContext;
+class GrSurfaceDrawContext;
 
 namespace skiagm {
 class TextBlobRandomFont : public GpuGM {
@@ -104,7 +104,7 @@ class TextBlobRandomFont : public GpuGM {
   SkISize onISize() override { return SkISize::Make(kWidth, kHeight); }
 
   DrawResult onDraw(
-      GrRecordingContext* context, GrRenderTargetContext*, SkCanvas* canvas,
+      GrRecordingContext* context, GrSurfaceDrawContext*, SkCanvas* canvas,
       SkString* errorMsg) override {
     // This GM exists to test a specific feature of the GPU backend.
     // This GM uses ToolUtils::makeSurface which doesn't work well with vias.
@@ -142,7 +142,7 @@ class TextBlobRandomFont : public GpuGM {
     // Rotate in the surface canvas, not the final canvas, to avoid aliasing
     surfaceCanvas->rotate(-0.05f);
     surfaceCanvas->drawTextBlob(fBlob, 10, yOffset, paint);
-    surface->draw(canvas, 0, 0, nullptr);
+    surface->draw(canvas, 0, 0);
     yOffset += stride;
 
     if (auto direct = context->asDirectContext()) {

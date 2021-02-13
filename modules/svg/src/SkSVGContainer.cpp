@@ -46,6 +46,5 @@ SkRect SkSVGContainer::onObjectBoundingBox(const SkSVGRenderContext& ctx) const 
     bounds.join(childBounds);
   }
 
-  this->mapToParent(&bounds);
   return bounds;
 }

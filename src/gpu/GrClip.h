@@ -11,7 +11,7 @@
 #include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
 #include "src/gpu/GrAppliedClip.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 
 /**
  * GrClip is an abstract base class for applying a clip. It constructs a clip mask if necessary, and
@@ -60,7 +60,7 @@ class GrClip {
    * and should be ignored (and the draw should be skipped).
    */
   virtual Effect apply(
-      GrRecordingContext*, GrRenderTargetContext*, GrAAType, bool hasUserStencilSettings,
+      GrRecordingContext*, GrSurfaceDrawContext*, GrAAType, bool hasUserStencilSettings,
       GrAppliedClip*, SkRect* bounds) const = 0;
 
   /**
@@ -244,7 +244,7 @@ class GrHardClip : public GrClip {
 
  private:
   Effect apply(
-      GrRecordingContext*, GrRenderTargetContext* rtc, GrAAType aa, bool hasUserStencilSettings,
+      GrRecordingContext*, GrSurfaceDrawContext* rtc, GrAAType aa, bool hasUserStencilSettings,
       GrAppliedClip* out, SkRect* bounds) const final {
     SkIRect pixelBounds = GetPixelIBounds(*bounds, GrAA(aa != GrAAType::kNone));
     Effect effect = this->apply(&out->hardClip(), &pixelBounds);

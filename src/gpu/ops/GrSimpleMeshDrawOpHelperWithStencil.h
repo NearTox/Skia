@@ -23,9 +23,9 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   using GrSimpleMeshDrawOpHelper::visitProxies;
 
   GrProgramInfo* createProgramInfoWithStencil(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeViewSwizzle, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeViewSwizzle, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType,
-      GrXferBarrierFlags renderPassXferBarriers);
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp);
 
   // using declarations can't be templated, so this is a pass through function instead.
   template <typename Op, typename... OpArgs>

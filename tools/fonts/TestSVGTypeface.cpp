@@ -176,8 +176,6 @@ class SkTestSVGScalerContext : public SkScalerContext {
     return static_cast<TestSVGTypeface*>(this->getTypeface());
   }
 
-  unsigned generateGlyphCount() override { return this->getTestSVGTypeface()->countGlyphs(); }
-
   bool generateAdvance(SkGlyph* glyph) override {
     this->getTestSVGTypeface()->getAdvance(glyph);
 
@@ -253,9 +251,10 @@ class SkTestSVGScalerContext : public SkScalerContext {
   SkMatrix fMatrix;
 };
 
-SkScalerContext* TestSVGTypeface::onCreateScalerContext(
+std::unique_ptr<SkScalerContext> TestSVGTypeface::onCreateScalerContext(
     const SkScalerContextEffects& e, const SkDescriptor* desc) const {
-  return new SkTestSVGScalerContext(sk_ref_sp(const_cast<TestSVGTypeface*>(this)), e, desc);
+  return std::make_unique<SkTestSVGScalerContext>(
+      sk_ref_sp(const_cast<TestSVGTypeface*>(this)), e, desc);
 }
 
 sk_sp<TestSVGTypeface> TestSVGTypeface::Default() {

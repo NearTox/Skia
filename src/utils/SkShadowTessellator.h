@@ -37,7 +37,7 @@ sk_sp<SkVertices> MakeAmbient(
  */
 sk_sp<SkVertices> MakeSpot(
     const SkPath& path, const SkMatrix& ctm, const SkPoint3& zPlane, const SkPoint3& lightPos,
-    SkScalar lightRadius, bool transparent);
+    SkScalar lightRadius, bool transparent, bool directional);
 
 }  // namespace SkShadowTessellator
 

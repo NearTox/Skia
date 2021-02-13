@@ -84,6 +84,7 @@ class GrProcessorSet {
     bool inputColorIsIgnored() const { return fInputColorType == kIgnored_InputColorType; }
     bool inputColorIsOverridden() const { return fInputColorType == kOverridden_InputColorType; }
     bool usesNonCoherentHWBlending() const { return fUsesNonCoherentHWBlending; }
+    bool unaffectedByDstValue() const { return fUnaffectedByDstValue; }
 
    private:
     constexpr Analysis(Empty)
@@ -94,6 +95,7 @@ class GrProcessorSet {
           fHasColorFragmentProcessor(false),
           fIsInitialized(true),
           fUsesNonCoherentHWBlending(false),
+          fUnaffectedByDstValue(false),
           fInputColorType(kOriginal_InputColorType) {}
     enum InputColorType : uint32_t {
       kOriginal_InputColorType,
@@ -112,6 +114,7 @@ class GrProcessorSet {
     PackedBool fHasColorFragmentProcessor : 1;
     PackedBool fIsInitialized : 1;
     PackedBool fUsesNonCoherentHWBlending : 1;
+    PackedBool fUnaffectedByDstValue : 1;
     PackedInputColorType fInputColorType : 2;
 
     friend class GrProcessorSet;

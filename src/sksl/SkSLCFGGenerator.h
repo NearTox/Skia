@@ -57,7 +57,13 @@ struct BasicBlock {
 #ifdef SK_DEBUG
     String description() const {
       SkASSERT(fStatement || fExpression);
-      return fStatement ? (*fStatement)->description() : (*fExpression)->description();
+      if (fStatement) {
+        return *fStatement ? (*fStatement)->description() : "(null statement)";
+      } else if (fExpression) {
+        return *fExpression ? (*fExpression)->description() : "(null expression)";
+      } else {
+        return "(nothing)";
+      }
     }
 #endif
 
@@ -120,6 +126,7 @@ struct BasicBlock {
 
   std::vector<Node> fNodes;
   bool fIsReachable = false;
+  bool fAllowUnreachable = false;
   using ExitArray = SkSTArray<4, BlockId>;
   ExitArray fExits;
   // variable definitions upon entering this basic block (null expression = undefined)

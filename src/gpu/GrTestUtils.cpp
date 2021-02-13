@@ -341,7 +341,7 @@ TestAsFPArgs::TestAsFPArgs(GrProcessorTestData* d)
     : fMatrixProvider(TestMatrix(d->fRandom)),
       fColorInfoStorage(std::make_unique<GrColorInfo>(
           GrColorType::kRGBA_8888, kPremul_SkAlphaType, TestColorSpace(d->fRandom))),
-      fArgs(d->context(), fMatrixProvider, kNone_SkFilterQuality, fColorInfoStorage.get()) {}
+      fArgs(d->context(), fMatrixProvider, SkSamplingOptions(), fColorInfoStorage.get()) {}
 
 TestAsFPArgs::~TestAsFPArgs() {}
 

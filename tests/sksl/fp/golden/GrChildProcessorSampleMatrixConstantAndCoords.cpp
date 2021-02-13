@@ -22,14 +22,12 @@ class GrGLSLChildProcessorSampleMatrixConstantAndCoords : public GrGLSLFragmentP
         args.fFp.cast<GrChildProcessorSampleMatrixConstantAndCoords>();
     (void)_outer;
     SkString _sample0 = this->invokeChildWithMatrix(0, args);
-    fragBuilder->codeAppendf(R"SkSL(%s = %s;)SkSL", args.fOutputColor, _sample0.c_str());
     SkString _coords1 = SkStringPrintf("%s / 2.0", args.fSampleCoord);
     SkString _sample1 = this->invokeChild(0, args, _coords1.c_str());
     fragBuilder->codeAppendf(
-        R"SkSL(
-%s = %s;
+        R"SkSL(return %s * %s;
 )SkSL",
-        args.fOutputColor, _sample1.c_str());
+        _sample0.c_str(), _sample1.c_str());
   }
 
  private:
@@ -49,7 +47,6 @@ bool GrChildProcessorSampleMatrixConstantAndCoords::onIsEqual(
   (void)that;
   return true;
 }
-bool GrChildProcessorSampleMatrixConstantAndCoords::usesExplicitReturn() const { return false; }
 GrChildProcessorSampleMatrixConstantAndCoords::GrChildProcessorSampleMatrixConstantAndCoords(
     const GrChildProcessorSampleMatrixConstantAndCoords& src)
     : INHERITED(kGrChildProcessorSampleMatrixConstantAndCoords_ClassID, src.optimizationFlags()) {

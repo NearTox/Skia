@@ -15,7 +15,7 @@ bool FuzzSKSL2Pipeline(sk_sp<SkData> bytes) {
   SkSL::Compiler compiler(caps.get());
   SkSL::Program::Settings settings;
   std::unique_ptr<SkSL::Program> program = compiler.convertProgram(
-      SkSL::Program::kPipelineStage_Kind, SkSL::String((const char*)bytes->data(), bytes->size()),
+      SkSL::Program::kRuntimeEffect_Kind, SkSL::String((const char*)bytes->data(), bytes->size()),
       settings);
   SkSL::PipelineStageArgs args;
   if (!program || !compiler.toPipelineStage(*program, &args)) {

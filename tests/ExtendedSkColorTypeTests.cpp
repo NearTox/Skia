@@ -85,7 +85,7 @@ static void raster_tests(skiatest::Reporter* reporter, const TestCase& test) {
   {
     auto s = SkSurface::MakeRaster(nativeII);
     REPORTER_ASSERT(reporter, SkToBool(s));
-    }
+  }
 
     // opaque formats should make transparent black become opaque
     {
@@ -140,7 +140,7 @@ static void raster_tests(skiatest::Reporter* reporter, const TestCase& test) {
       {
         auto c = s->getCanvas();
         c->drawImage(i, 0, 0);
-        }
+      }
 
         SkAutoPixmapStorage readbackPM;
         readbackPM.alloc(f32Unpremul);
@@ -197,7 +197,8 @@ static void gpu_tests(
     auto markFinished = [](void* context) { *(bool*)context = true; };
     if (fullInit) {
       backendTex = dContext->createBackendTexture(
-          &nativeExpected, 1, GrRenderable::kNo, GrProtected::kNo, markFinished, &finishedBECreate);
+          nativeExpected, kTopLeft_GrSurfaceOrigin, GrRenderable::kNo, GrProtected::kNo,
+          markFinished, &finishedBECreate);
     } else {
       backendTex = dContext->createBackendTexture(
           kSize, kSize, test.fColorType, SkColors::kWhite, GrMipmapped::kNo, GrRenderable::kNo,

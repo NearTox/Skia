@@ -10,8 +10,9 @@
 
 #include "modules/sksg/include/SkSGRenderNode.h"
 
-#include "include/core/SkFilterQuality.h"
-#include "include/core/SkImage.h"
+#include "include/core/SkSamplingOptions.h"
+
+class SkImage;
 
 namespace sksg {
 
@@ -26,7 +27,7 @@ class Image final : public RenderNode {
   }
 
   SG_ATTRIBUTE(Image, sk_sp<SkImage>, fImage)
-  SG_ATTRIBUTE(Quality, SkFilterQuality, fQuality)
+  SG_ATTRIBUTE(SamplingOptions, SkSamplingOptions, fSamplingOptions)
   SG_ATTRIBUTE(AntiAlias, bool, fAntiAlias)
 
  protected:
@@ -38,8 +39,8 @@ class Image final : public RenderNode {
   SkRect onRevalidate(InvalidationController*, const SkMatrix&) override;
 
  private:
+  SkSamplingOptions fSamplingOptions;
   sk_sp<SkImage> fImage;
-  SkFilterQuality fQuality = kNone_SkFilterQuality;
   bool fAntiAlias = true;
 
   using INHERITED = RenderNode;

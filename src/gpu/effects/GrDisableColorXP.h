@@ -31,8 +31,8 @@ class GrDisableColorXPFactory : public GrXPFactory {
   constexpr GrDisableColorXPFactory() {}
 
   AnalysisProperties analysisProperties(
-      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const override {
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, bool hasMixedSamples,
+      const GrCaps&, GrClampType) const override {
     return AnalysisProperties::kCompatibleWithCoverageAsAlpha |
            AnalysisProperties::kIgnoresInputColor;
   }

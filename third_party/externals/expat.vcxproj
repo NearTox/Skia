@@ -44,10 +44,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
+    <IncludePath>C:\work\STL_out\inc;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\work\STL_out\lib\i386;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
+    <LibraryPath>C:\work\STL_out\lib\amd64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\work\STL_out\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>

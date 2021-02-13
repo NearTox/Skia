@@ -26,10 +26,6 @@ class GrDirectContext;
 class GrPipeline;
 struct GrDawnProgram;
 
-namespace SkSL {
-class Compiler;
-}
-
 class GrDawnGpu : public GrGpu {
  public:
   static sk_sp<GrGpu> Make(const wgpu::Device&, const GrContextOptions&, GrDirectContext*);
@@ -72,8 +68,6 @@ class GrDawnGpu : public GrGpu {
       GrProtected isProtected) override {
     return nullptr;
   }
-
-  SkSL::Compiler* shaderCompiler() const { return fCompiler.get(); }
 
   void submit(GrOpsRenderPass*) override;
 
@@ -191,7 +185,6 @@ class GrDawnGpu : public GrGpu {
 
   wgpu::Device fDevice;
   wgpu::Queue fQueue;
-  std::unique_ptr<SkSL::Compiler> fCompiler;
   std::unique_ptr<GrDawnOpsRenderPass> fOpsRenderPass;
   GrDawnRingBuffer fUniformRingBuffer;
   wgpu::CommandEncoder fCopyEncoder;

@@ -36,7 +36,7 @@ class ResizeGM : public GM {
       SkCanvas* canvas, const SkRect& rect, const SkSize& deviceSize, SkFilterQuality filterQuality,
       sk_sp<SkImageFilter> input) {
     SkRect dstRect;
-    canvas->getTotalMatrix().mapRect(&dstRect, rect);
+    canvas->getLocalToDeviceAs3x3().mapRect(&dstRect, rect);
     canvas->save();
     SkScalar deviceScaleX = deviceSize.width() / dstRect.width();
     SkScalar deviceScaleY = deviceSize.height() / dstRect.height();

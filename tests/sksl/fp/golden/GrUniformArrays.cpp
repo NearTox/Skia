@@ -24,9 +24,9 @@ class GrGLSLUniformArrays : public GrGLSLFragmentProcessor {
     pointArrayVar = args.fUniformHandler->addUniformArray(
         &_outer, kFragment_GrShaderFlag, kHalf2_GrSLType, "pointArray", 2);
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(((%s[0] * %s[0].x + %s[1] * %s[0].y) + %s[2] * %s[1].x) + %s[3] * %s[1].y);
+        R"SkSL(return half4(((%s[0] * %s[0].x + %s[1] * %s[0].y) + %s[2] * %s[1].x) + %s[3] * %s[1].y);
 )SkSL",
-        args.fOutputColor, args.fUniformHandler->getUniformCStr(scalarArrayVar),
+        args.fUniformHandler->getUniformCStr(scalarArrayVar),
         args.fUniformHandler->getUniformCStr(pointArrayVar),
         args.fUniformHandler->getUniformCStr(scalarArrayVar),
         args.fUniformHandler->getUniformCStr(pointArrayVar),
@@ -52,7 +52,6 @@ bool GrUniformArrays::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrUniformArrays::usesExplicitReturn() const { return false; }
 GrUniformArrays::GrUniformArrays(const GrUniformArrays& src)
     : INHERITED(kGrUniformArrays_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

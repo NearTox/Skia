@@ -63,7 +63,7 @@ class ColorMatrixGM : public skiagm::GM {
             SkRect::MakeXYWH(SkIntToScalar(x), SkIntToScalar(y), SK_Scalar1, SK_Scalar1), paint);
       }
     }
-    return SkImage::MakeFromBitmap(bm);
+    return bm.asImage();
   }
 
   // creates a bitmap with shades of transparent gray.
@@ -78,7 +78,7 @@ class ColorMatrixGM : public skiagm::GM {
     SkPaint paint;
     paint.setShader(SkGradientShader::MakeLinear(pts, colors, nullptr, 2, SkTileMode::kClamp));
     canvas.drawRect(SkRect::MakeWH(SkIntToScalar(width), SkIntToScalar(height)), paint);
-    return SkImage::MakeFromBitmap(bm);
+    return bm.asImage();
   }
 
   void onDraw(SkCanvas* canvas) override {

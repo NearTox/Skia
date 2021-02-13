@@ -35,7 +35,7 @@ class GrOpsRenderPass {
   struct LoadAndStoreInfo {
     GrLoadOp fLoadOp;
     GrStoreOp fStoreOp;
-    SkPMColor4f fClearColor;
+    std::array<float, 4> fClearColor;
   };
 
   // Load-time clears of the stencil buffer are always to 0 so we don't store
@@ -126,7 +126,7 @@ class GrOpsRenderPass {
    * is restricted to 'scissor'. Must check caps.performPartialClearsAsDraws() before using an
    * enabled scissor test; must check caps.performColorClearsAsDraws() before using this at all.
    */
-  void clear(const GrScissorState& scissor, const SkPMColor4f&);
+  void clear(const GrScissorState& scissor, std::array<float, 4> color);
 
   /**
    * Same as clear() but modifies the stencil; check caps.performStencilClearsAsDraws() and
@@ -197,7 +197,7 @@ class GrOpsRenderPass {
   virtual void onDrawIndexedIndirect(const GrBuffer*, size_t offset, int drawCount) {
     SK_ABORT("Not implemented.");  // Only called if caps.nativeDrawIndirectSupport().
   }
-  virtual void onClear(const GrScissorState&, const SkPMColor4f&) = 0;
+  virtual void onClear(const GrScissorState&, std::array<float, 4> color) = 0;
   virtual void onClearStencilClip(const GrScissorState&, bool insideStencilMask) = 0;
   virtual void onExecuteDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) {}
 

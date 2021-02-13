@@ -25,17 +25,16 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
       : fProxyProvider(proxyProvider), fAllowCaching(allowCaching) {}
 
   static bool GetShapeAndClipBounds(
-      GrRenderTargetContext*, const GrClip* clip, const GrStyledShape& shape,
-      const SkMatrix& matrix, SkIRect* unclippedDevShapeBounds, SkIRect* clippedDevShapeBounds,
-      SkIRect* devClipBounds);
+      GrSurfaceDrawContext*, const GrClip* clip, const GrStyledShape& shape, const SkMatrix& matrix,
+      SkIRect* unclippedDevShapeBounds, SkIRect* clippedDevShapeBounds, SkIRect* devClipBounds);
 
  private:
   static void DrawNonAARect(
-      GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      GrSurfaceDrawContext* surfaceDrawContext, GrPaint&& paint,
       const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
       const SkMatrix& viewMatrix, const SkRect& rect, const SkMatrix& localMatrix);
   static void DrawAroundInvPath(
-      GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      GrSurfaceDrawContext* surfaceDrawContext, GrPaint&& paint,
       const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
       const SkMatrix& viewMatrix, const SkIRect& devClipBounds, const SkIRect& devPathBounds);
 
@@ -43,7 +42,7 @@ class GrSoftwarePathRenderer : public GrPathRenderer {
   // space. The 'viewMatrix' will be used to ensure the correct local coords are provided to
   // any fragment processors in the paint.
   static void DrawToTargetWithShapeMask(
-      GrSurfaceProxyView, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+      GrSurfaceProxyView, GrSurfaceDrawContext* surfaceDrawContext, GrPaint&& paint,
       const GrUserStencilSettings& userStencilSettings, const GrClip* clip,
       const SkMatrix& viewMatrix, const SkIPoint& textureOriginInDeviceSpace,
       const SkIRect& deviceSpaceRectToDraw);

@@ -36,6 +36,7 @@ class Window_win : public Window {
   HINSTANCE fHInstance;
   HWND fHWnd;
   BackendType fBackend;
+  bool fInitializedBackend = false;
 
   using INHERITED = Window;
 };

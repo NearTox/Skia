@@ -21,7 +21,7 @@
 #include "include/utils/SkRandom.h"
 #include "tools/ToolUtils.h"
 
-class GrRenderTargetContext;
+class GrSurfaceDrawContext;
 
 namespace skiagm {
 
@@ -39,7 +39,7 @@ class DiscardGM : public GpuGM {
   SkISize onISize() override { return SkISize::Make(100, 100); }
 
   DrawResult onDraw(
-      GrRecordingContext* context, GrRenderTargetContext*, SkCanvas* canvas,
+      GrRecordingContext* context, GrSurfaceDrawContext*, SkCanvas* canvas,
       SkString* errorMsg) override {
     auto direct = context->asDirectContext();
     if (!direct) {
@@ -74,7 +74,7 @@ class DiscardGM : public GpuGM {
             surface->getCanvas()->drawPaint(paint);
             break;
         }
-        surface->draw(canvas, 10.f * x, 10.f * y, nullptr);
+        surface->draw(canvas, 10.f * x, 10.f * y);
       }
     }
 

@@ -568,67 +568,67 @@ bool CropToRect(const SkRect& cropRect, GrAA cropAA, DrawQuad* quad, bool comput
     return true;
   }
 
-    if (computeLocal) {
-      // FIXME (michaelludwig) Calculate cropped local coordinates when not kAxisAligned
-      return false;
-    }
-
-    V4f devX = quad->fDevice.x4f();
-    V4f devY = quad->fDevice.y4f();
-    // Project the 3D coordinates to 2D
-    if (quad->fDevice.quadType() == GrQuad::Type::kPerspective) {
-      V4f devW = quad->fDevice.w4f();
-      if (any(devW < SkPathPriv::kW0PlaneDistance)) {
-        // The rest of this function assumes the quad is in front of w = 0
-        return false;
-      }
-      devW = 1.f / devW;
-      devX *= devW;
-      devY *= devW;
-    }
-
-    V4f clipX = {cropRect.fLeft, cropRect.fLeft, cropRect.fRight, cropRect.fRight};
-    V4f clipY = {cropRect.fTop, cropRect.fBottom, cropRect.fTop, cropRect.fBottom};
-
-    // Calculate barycentric coordinates for the 4 rect corners in the 2 triangles that the quad
-    // is tessellated into when drawn.
-    V4f u1, v1, w1;
-    V4f u2, v2, w2;
-    if (!barycentric_coords(
-            devX[0], devY[0], devX[1], devY[1], devX[2], devY[2], clipX, clipY, &u1, &v1, &w1) ||
-        !barycentric_coords(
-            devX[1], devY[1], devX[3], devY[3], devX[2], devY[2], clipX, clipY, &u2, &v2, &w2)) {
-      // Bad triangles, skip cropping
-      return false;
-    }
-
-    // clipDevRect is completely inside this quad if each corner is in at least one of two triangles
-    M4f inTri1 = inside_triangle(u1, v1, w1);
-    M4f inTri2 = inside_triangle(u2, v2, w2);
-    if (all(inTri1 | inTri2)) {
-      // We can crop to exactly the clipDevRect.
-      // FIXME (michaelludwig) - there are other ways to have determined quad covering the clip
-      // rect, but the barycentric coords will be useful to derive local coordinates in the future
-
-      // Since we are cropped to exactly clipDevRect, we have discarded any perspective and the
-      // type becomes kRect. If updated locals were requested, they will incorporate perspective.
-      // FIXME (michaelludwig) - once we have local coordinates handled, it may be desirable to
-      // keep the draw as perspective so that the hardware does perspective interpolation instead
-      // of pushing it into a local coord w and having the shader do an extra divide.
-      clipX.store(quad->fDevice.xs());
-      clipY.store(quad->fDevice.ys());
-      quad->fDevice.setQuadType(GrQuad::Type::kAxisAligned);
-
-      // Update the edge flags to match the clip setting since all 4 edges have been clipped
-      quad->fEdgeFlags = cropAA == GrAA::kYes ? GrQuadAAFlags::kAll : GrQuadAAFlags::kNone;
-
-      return true;
-    }
-
-    // FIXME (michaelludwig) - use TessellationHelper's inset/outset math to move
-    // edges to the closest clip corner they are outside of
-
+  if (computeLocal) {
+    // FIXME (michaelludwig) Calculate cropped local coordinates when not kAxisAligned
     return false;
+  }
+
+  V4f devX = quad->fDevice.x4f();
+  V4f devY = quad->fDevice.y4f();
+  // Project the 3D coordinates to 2D
+  if (quad->fDevice.quadType() == GrQuad::Type::kPerspective) {
+    V4f devW = quad->fDevice.w4f();
+    if (any(devW < SkPathPriv::kW0PlaneDistance)) {
+      // The rest of this function assumes the quad is in front of w = 0
+      return false;
+    }
+    devW = 1.f / devW;
+    devX *= devW;
+    devY *= devW;
+  }
+
+  V4f clipX = {cropRect.fLeft, cropRect.fLeft, cropRect.fRight, cropRect.fRight};
+  V4f clipY = {cropRect.fTop, cropRect.fBottom, cropRect.fTop, cropRect.fBottom};
+
+  // Calculate barycentric coordinates for the 4 rect corners in the 2 triangles that the quad
+  // is tessellated into when drawn.
+  V4f u1, v1, w1;
+  V4f u2, v2, w2;
+  if (!barycentric_coords(
+          devX[0], devY[0], devX[1], devY[1], devX[2], devY[2], clipX, clipY, &u1, &v1, &w1) ||
+      !barycentric_coords(
+          devX[1], devY[1], devX[3], devY[3], devX[2], devY[2], clipX, clipY, &u2, &v2, &w2)) {
+    // Bad triangles, skip cropping
+    return false;
+  }
+
+  // clipDevRect is completely inside this quad if each corner is in at least one of two triangles
+  M4f inTri1 = inside_triangle(u1, v1, w1);
+  M4f inTri2 = inside_triangle(u2, v2, w2);
+  if (all(inTri1 | inTri2)) {
+    // We can crop to exactly the clipDevRect.
+    // FIXME (michaelludwig) - there are other ways to have determined quad covering the clip
+    // rect, but the barycentric coords will be useful to derive local coordinates in the future
+
+    // Since we are cropped to exactly clipDevRect, we have discarded any perspective and the
+    // type becomes kRect. If updated locals were requested, they will incorporate perspective.
+    // FIXME (michaelludwig) - once we have local coordinates handled, it may be desirable to
+    // keep the draw as perspective so that the hardware does perspective interpolation instead
+    // of pushing it into a local coord w and having the shader do an extra divide.
+    clipX.store(quad->fDevice.xs());
+    clipY.store(quad->fDevice.ys());
+    quad->fDevice.setQuadType(GrQuad::Type::kAxisAligned);
+
+    // Update the edge flags to match the clip setting since all 4 edges have been clipped
+    quad->fEdgeFlags = cropAA == GrAA::kYes ? GrQuadAAFlags::kAll : GrQuadAAFlags::kNone;
+
+    return true;
+  }
+
+  // FIXME (michaelludwig) - use TessellationHelper's inset/outset math to move
+  // edges to the closest clip corner they are outside of
+
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -712,7 +712,9 @@ V4f TessellationHelper::EdgeEquations::estimateCoverage(const V4f& x2d, const V4
 }
 
 int TessellationHelper::EdgeEquations::computeDegenerateQuad(
-    const V4f& signedEdgeDistances, V4f* x2d, V4f* y2d) const {
+    const V4f& signedEdgeDistances, V4f* x2d, V4f* y2d, M4f* aaMask) const {
+  *aaMask = signedEdgeDistances != 0.f;
+
   // Move the edge by the signed edge adjustment.
   V4f oc = fC + signedEdgeDistances;
 
@@ -788,10 +790,19 @@ int TessellationHelper::EdgeEquations::computeDegenerateQuad(
     if (SkScalarAbs(eDenom[0]) > kTolerance) {
       px = if_then_else(d1v0, V4f(ex[0]), px);
       py = if_then_else(d1v0, V4f(ey[0]), py);
+      // If we replace a vertex with an intersection then it will not fall along the
+      // edges that intersect at the original vertex. When we apply AA later to the
+      // original points we move along the original 3d edges to move towards the 2d
+      // points we're computing here. If we have an AA edge and a non-AA edge we
+      // can only move along 1 edge, but now the point we're moving toward isn't
+      // on that edge. Thus, we provide an additional degree of freedom by turning
+      // AA on for both edges if either edge is AA.
+      *aaMask = *aaMask | (d1v0 & skvx::shuffle<2, 0, 3, 1>(*aaMask));
     }
     if (SkScalarAbs(eDenom[1]) > kTolerance) {
       px = if_then_else(d2v0, V4f(ex[1]), px);
       py = if_then_else(d2v0, V4f(ey[1]), py);
+      *aaMask = *aaMask | (d2v0 & skvx::shuffle<2, 0, 3, 1>(*aaMask));
     }
 
     *x2d = px;
@@ -1172,9 +1183,11 @@ int TessellationHelper::adjustDegenerateVertices(
     // handles perspective).
     V4f x2d = fEdgeVectors.fX2D;
     V4f y2d = fEdgeVectors.fY2D;
+
+    M4f aaMask;
     int vertexCount =
-        this->getEdgeEquations().computeDegenerateQuad(signedEdgeDistances, &x2d, &y2d);
-    vertices->moveTo(x2d, y2d, signedEdgeDistances != 0.f);
+        this->getEdgeEquations().computeDegenerateQuad(signedEdgeDistances, &x2d, &y2d, &aaMask);
+    vertices->moveTo(x2d, y2d, aaMask);
     return vertexCount;
   }
 }

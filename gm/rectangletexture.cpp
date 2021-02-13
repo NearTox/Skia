@@ -40,7 +40,7 @@
 #  include <cstdint>
 #  include <memory>
 
-class GrRenderTargetContext;
+class GrSurfaceDrawContext;
 
 namespace skiagm {
 class RectangleTexture : public GpuGM {
@@ -94,19 +94,7 @@ class RectangleTexture : public GpuGM {
     if (!bet.isValid()) {
       return nullptr;
     }
-    const SkPixmap* pm = &content.pixmap();
-    SkAutoPixmapStorage tempPM;
-    if (origin == kBottomLeft_GrSurfaceOrigin) {
-      tempPM.alloc(pm->info());
-      const uint32_t* src = pm->addr32();
-      uint32_t* dst = tempPM.writable_addr32(0, content.height() - 1);
-      for (int y = 0; y < content.height();
-           ++y, src += pm->rowBytesAsPixels(), dst -= tempPM.rowBytesAsPixels()) {
-        std::copy_n(src, content.width(), dst);
-      }
-      pm = &tempPM;
-    }
-    if (!dContext->updateBackendTexture(bet, pm, 1, nullptr, nullptr)) {
+    if (!dContext->updateBackendTexture(bet, content.pixmap(), origin, nullptr, nullptr)) {
       dContext->deleteBackendTexture(bet);
     }
     return SkImage::MakeFromAdoptedTexture(dContext, bet, origin, kRGBA_8888_SkColorType);
@@ -150,7 +138,7 @@ class RectangleTexture : public GpuGM {
   }
 
   DrawResult onDraw(
-      GrRecordingContext*, GrRenderTargetContext*, SkCanvas* canvas, SkString*) override {
+      GrRecordingContext*, GrSurfaceDrawContext*, SkCanvas* canvas, SkString*) override {
     SkASSERT(fGradImgs[0] && fGradImgs[1] && fSmallImg);
 
     static constexpr SkScalar kPad = 5.f;
@@ -181,15 +169,14 @@ class RectangleTexture : public GpuGM {
 
           // clamp/clamp shader
           SkPaint clampPaint;
-          clampPaint.setFilterQuality(q);
-          clampPaint.setShader(fGradImgs[i]->makeShader());
+          clampPaint.setShader(fGradImgs[i]->makeShader(SkSamplingOptions(q)));
           canvas->drawRect(SkRect::MakeWH(1.5f * w, 1.5f * h), clampPaint);
           canvas->translate(1.5f * w + kPad, 0);
 
           // repeat/mirror shader
           SkPaint repeatPaint;
-          repeatPaint.setFilterQuality(q);
-          repeatPaint.setShader(fGradImgs[i]->makeShader(SkTileMode::kRepeat, SkTileMode::kMirror));
+          repeatPaint.setShader(fGradImgs[i]->makeShader(
+              SkTileMode::kRepeat, SkTileMode::kMirror, SkSamplingOptions(q)));
           canvas->drawRect(SkRect::MakeWH(1.5f * w, 1.5f * h), repeatPaint);
           canvas->translate(1.5f * w + kPad, 0);
 
@@ -221,11 +208,10 @@ class RectangleTexture : public GpuGM {
           SkMatrix lm;
           lm.setRotate(45.f, 1, 1);
           lm.postScale(6.5f, 6.5f);
-          auto shader =
-              fSmallImg->makeShader(static_cast<SkTileMode>(tx), static_cast<SkTileMode>(ty), &lm);
           SkPaint paint;
-          paint.setShader(std::move(shader));
-          paint.setFilterQuality(static_cast<SkFilterQuality>(fq));
+          paint.setShader(fSmallImg->makeShader(
+              static_cast<SkTileMode>(tx), static_cast<SkTileMode>(ty),
+              SkSamplingOptions((SkFilterQuality)fq), lm));
           canvas->drawRect(dstRect, paint);
           canvas->translate(dstRect.width() + kPad, 0);
         }

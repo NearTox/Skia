@@ -1581,8 +1581,15 @@ void SkMatrix::dump() const {
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "src/core/SkMatrixUtils.h"
+#include "src/core/SkSamplingPriv.h"
 
-bool SkTreatAsSprite(const SkMatrix& mat, const SkISize& size, const SkPaint& paint) {
+bool SkTreatAsSprite(
+    const SkMatrix& mat, const SkISize& size, const SkSamplingOptions& sampling,
+    const SkPaint& paint) {
+  if (!SkSamplingPriv::NoChangeWithIdentityMatrix(sampling)) {
+    return false;
+  }
+
   // Our path aa is 2-bits, and our rect aa is 8, so we could use 8,
   // but in practice 4 seems enough (still looks smooth) and allows
   // more slightly fractional cases to fall into the fast (sprite) case.
@@ -1779,6 +1786,7 @@ void SkRSXform::toTriStrip(SkScalar width, SkScalar height, SkPoint strip[4]) co
 
 SkFilterQuality SkMatrixPriv::AdjustHighQualityFilterLevel(
     const SkMatrix& matrix, bool matrixIsInverse) {
+#ifdef SK_SUPPORT_LEGACY_ADJUSTHQHEURISTIC
   if (matrix.isIdentity()) {
     return kNone_SkFilterQuality;
   }
@@ -1802,7 +1810,7 @@ SkFilterQuality SkMatrixPriv::AdjustHighQualityFilterLevel(
       return kLow_SkFilterQuality;
     }
   }
-
+#endif
   return kHigh_SkFilterQuality;
 }
 

@@ -89,19 +89,20 @@ class SkBitmapDevice : public SkBaseDevice {
   void drawPath(const SkPath&, const SkPaint&, bool pathIsMutable) override;
 
   void drawImageRect(
-      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint&,
-      SkCanvas::SrcRectConstraint) override;
+      const SkImage*, const SkRect* src, const SkRect& dst, const SkSamplingOptions&,
+      const SkPaint&, SkCanvas::SrcRectConstraint) override;
 
   void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
   void drawAtlas(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
-      const SkPaint&) override;
+      const SkSamplingOptions&, const SkPaint&) override;
 
   ///////////////////////////////////////////////////////////////////////////
 
-  void drawDevice(SkBaseDevice*, const SkPaint&) override;
-  void drawSpecial(SkSpecialImage*, const SkMatrix&, const SkPaint&) override;
+  void drawDevice(SkBaseDevice*, const SkSamplingOptions&, const SkPaint&) override;
+  void drawSpecial(
+      SkSpecialImage*, const SkMatrix&, const SkSamplingOptions&, const SkPaint&) override;
 
   sk_sp<SkSpecialImage> makeSpecial(const SkBitmap&) override;
   sk_sp<SkSpecialImage> makeSpecial(const SkImage*) override;
@@ -131,12 +132,13 @@ class SkBitmapDevice : public SkBaseDevice {
   ClipType onGetClipType() const override;
   SkIRect onDevClipBounds() const override;
 
-  void drawBitmap(const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkPaint&);
+  void drawBitmap(
+      const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkSamplingOptions&,
+      const SkPaint&);
 
  private:
   friend class SkCanvas;
   friend class SkDraw;
-  friend class SkDrawIter;
   friend class SkDrawTiler;
   friend class SkSurface_Raster;
 

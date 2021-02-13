@@ -27,7 +27,7 @@ class Literal<SKSL_FLOAT> final : public Expression {
   static constexpr Kind kExpressionKind = Kind::kFloatLiteral;
 
   Literal(const Context& context, int offset, float value)
-      : INHERITED(offset, kExpressionKind, context.fFloatLiteral_Type.get()), fValue(value) {}
+      : Literal(offset, value, context.fTypes.fFloatLiteral.get()) {}
 
   Literal(int offset, float value, const Type* type)
       : INHERITED(offset, kExpressionKind, type), fValue(value) {}
@@ -47,8 +47,12 @@ class Literal<SKSL_FLOAT> final : public Expression {
     return INHERITED::coercionCost(target);
   }
 
-  bool compareConstant(const Context& context, const Expression& other) const override {
-    return this->value() == other.as<FloatLiteral>().value();
+  ComparisonResult compareConstant(const Expression& other) const override {
+    if (!other.is<FloatLiteral>()) {
+      return ComparisonResult::kUnknown;
+    }
+    return this->value() == other.as<FloatLiteral>().value() ? ComparisonResult::kEqual
+                                                             : ComparisonResult::kNotEqual;
   }
 
   SKSL_FLOAT getConstantFloat() const override { return this->value(); }

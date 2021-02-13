@@ -75,8 +75,8 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
       fPathIBoundsUniform = uniHandler->addUniform(
           &proc, kFragment_GrShaderFlag, kFloat4_GrSLType, "path_ibounds", &pathIBounds);
       f->codeAppendf(
-          "if (all(greaterThan(float4(sk_FragCoord.xy, %s.zw), "
-          "float4(%s.xy, sk_FragCoord.xy)))) {",
+          "if (all(greaterThan(float4(sk_FragCoord.xy, %s.RB), "
+          "float4(%s.LT, sk_FragCoord.xy)))) {",
           pathIBounds, pathIBounds);
     }
 
@@ -113,7 +113,7 @@ class GrCCClipProcessor::Impl : public GrGLSLFragmentProcessor {
     constexpr int kInputFPIndex = 1;
     SkString inputColor = this->invokeChild(kInputFPIndex, args);
 
-    f->codeAppendf("%s = %s * coverage;", args.fOutputColor, inputColor.c_str());
+    f->codeAppendf("return %s * coverage;", inputColor.c_str());
   }
 
   void onSetData(const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& fp) override {

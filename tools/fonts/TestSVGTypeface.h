@@ -78,7 +78,7 @@ class TestSVGTypeface : public SkTypeface {
  protected:
   void exportTtxCommon(SkWStream*, const char* type, const SkTArray<GlyfInfo>* = nullptr) const;
 
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor* desc) const override;
   void onFilterRec(SkScalerContextRec* rec) const override;
   void getGlyphToUnicodeMap(SkUnichar*) const override;

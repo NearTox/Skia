@@ -27,7 +27,6 @@
 
 #define SK_FRAGCOLOR_BUILTIN 10001
 #define SK_IN_BUILTIN 10002
-#define SK_OUTCOLOR_BUILTIN 10004
 #define SK_OUT_BUILTIN 10007
 #define SK_LASTFRAGCOLOR_BUILTIN 10008
 #define SK_MAIN_COORDS_BUILTIN 10009
@@ -46,14 +45,19 @@ class SkSLCompileBench;
 
 namespace SkSL {
 
+namespace dsl {
+class DSLWriter;
+}
+
 class ByteCode;
-class ExternalValue;
+class ExternalFunction;
 class IRGenerator;
 class IRIntrinsicMap;
 struct PipelineStageArgs;
 class ProgramUsage;
 
 struct LoadedModule {
+  Program::Kind fKind;
   std::shared_ptr<SymbolTable> fSymbols;
   std::vector<std::unique_ptr<ProgramElement>> fElements;
 };
@@ -138,12 +142,12 @@ class SK_API Compiler : public ErrorReporter {
   Compiler& operator=(const Compiler&) = delete;
 
   /**
-   * If externalValues is supplied, those values are registered in the symbol table of the
+   * If externalFunctions is supplied, those values are registered in the symbol table of the
    * Program, but ownership is *not* transferred. It is up to the caller to keep them alive.
    */
   std::unique_ptr<Program> convertProgram(
       Program::Kind kind, String text, const Program::Settings& settings,
-      const std::vector<std::unique_ptr<ExternalValue>>* externalValues = nullptr);
+      const std::vector<std::unique_ptr<ExternalFunction>>* externalFunctions = nullptr);
 
   bool toSPIRV(Program& program, OutputStream& out);
 
@@ -173,7 +177,7 @@ class SK_API Compiler : public ErrorReporter {
 
   void error(int offset, String msg) override;
 
-  String errorText();
+  String errorText(bool showCount = true);
 
   void writeErrorCount();
 
@@ -214,11 +218,14 @@ class SK_API Compiler : public ErrorReporter {
   const ParsedModule& moduleForProgramKind(Program::Kind kind);
 
  private:
+  const ParsedModule& loadGPUModule();
+  const ParsedModule& loadFragmentModule();
+  const ParsedModule& loadVertexModule();
   const ParsedModule& loadFPModule();
   const ParsedModule& loadGeometryModule();
   const ParsedModule& loadPublicModule();
   const ParsedModule& loadInterpreterModule();
-  const ParsedModule& loadPipelineModule();
+  const ParsedModule& loadRuntimeEffectModule();
 
   void addDefinition(
       const Expression* lvalue, std::unique_ptr<Expression>* expr, DefinitionMap* definitions);
@@ -253,8 +260,11 @@ class SK_API Compiler : public ErrorReporter {
    */
   bool optimize(Program& program);
 
+  bool optimize(LoadedModule& module);
+
   Position position(int offset);
 
+  std::shared_ptr<Context> fContext;
   const ShaderCapsClass* fCaps = nullptr;
 
   std::shared_ptr<SymbolTable> fRootSymbolTable;
@@ -269,9 +279,9 @@ class SK_API Compiler : public ErrorReporter {
   ParsedModule fGeometryModule;  // [GPU] + Geometry stage decls
   ParsedModule fFPModule;        // [GPU] + FP features
 
-  ParsedModule fPublicModule;       // [Root] + Public features
-  ParsedModule fInterpreterModule;  // [Public] + Interpreter-only decls
-  ParsedModule fPipelineModule;     // [Public] + Runtime effect decls
+  ParsedModule fPublicModule;         // [Root] + Public features
+  ParsedModule fInterpreterModule;    // [Public] + Interpreter-only decls
+  ParsedModule fRuntimeEffectModule;  // [Public] + Runtime effect decls
 
   // holds ModifiersPools belonging to the core includes for lifetime purposes
   std::vector<std::unique_ptr<ModifiersPool>> fModifiers;
@@ -281,12 +291,12 @@ class SK_API Compiler : public ErrorReporter {
   int fFlags;
 
   const String* fSource;
-  std::shared_ptr<Context> fContext;
   int fErrorCount;
   String fErrorText;
 
   friend class AutoSource;
   friend class ::SkSLCompileBench;
+  friend class dsl::DSLWriter;
 };
 
 #if !defined(SKSL_STANDALONE) && SK_SUPPORT_GPU

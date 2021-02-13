@@ -19,12 +19,10 @@ class GrChildProcessorFieldAccess : public GrFragmentProcessor {
   GrChildProcessorFieldAccess(const GrChildProcessorFieldAccess& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessorFieldAccess"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrChildProcessorFieldAccess(std::unique_ptr<GrFragmentProcessor> child)
       : INHERITED(kGrChildProcessorFieldAccess_ClassID, kNone_OptimizationFlags) {
-    SkASSERT(child);
     this->registerChild(std::move(child), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

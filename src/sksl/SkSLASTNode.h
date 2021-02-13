@@ -170,32 +170,31 @@ struct ASTNode {
   struct TypeData {
     TypeData() {}
 
-    TypeData(StringFragment name, bool isStructDeclaration, bool isNullable)
-        : fName(name), fIsStructDeclaration(isStructDeclaration), fIsNullable(isNullable) {}
+    TypeData(StringFragment name, bool isStructDeclaration)
+        : fName(name), fIsStructDeclaration(isStructDeclaration) {}
 
     StringFragment fName;
     bool fIsStructDeclaration;
-    bool fIsNullable;
   };
 
   struct ParameterData {
     ParameterData() {}
 
-    ParameterData(Modifiers modifiers, StringFragment name, size_t sizeCount)
-        : fModifiers(modifiers), fName(name), fSizeCount(sizeCount) {}
+    ParameterData(Modifiers modifiers, StringFragment name, bool isArray)
+        : fModifiers(modifiers), fName(name), fIsArray(isArray) {}
 
     Modifiers fModifiers;
     StringFragment fName;
-    size_t fSizeCount;
+    bool fIsArray;
   };
 
   struct VarData {
     VarData() {}
 
-    VarData(StringFragment name, size_t sizeCount) : fName(name), fSizeCount(sizeCount) {}
+    VarData(StringFragment name, bool isArray) : fName(name), fIsArray(isArray) {}
 
     StringFragment fName;
-    size_t fSizeCount;
+    bool fIsArray;
   };
 
   struct FunctionData {
@@ -214,18 +213,18 @@ struct ASTNode {
 
     InterfaceBlockData(
         Modifiers modifiers, StringFragment typeName, size_t declarationCount,
-        StringFragment instanceName, size_t sizeCount)
+        StringFragment instanceName, bool isArray)
         : fModifiers(modifiers),
           fTypeName(typeName),
           fDeclarationCount(declarationCount),
           fInstanceName(instanceName),
-          fSizeCount(sizeCount) {}
+          fIsArray(isArray) {}
 
     Modifiers fModifiers;
     StringFragment fTypeName;
     size_t fDeclarationCount;
     StringFragment fInstanceName;
-    size_t fSizeCount;
+    bool fIsArray;
   };
 
   struct SectionData {

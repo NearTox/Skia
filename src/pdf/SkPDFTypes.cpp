@@ -108,7 +108,7 @@ static void write_string(SkWStream* wStream, const char* cin, size_t len) {
     } else if (cin[i] == '\\' || cin[i] == '(' || cin[i] == ')') {
       ++extraCharacterCount;
     }
-    }
+  }
     if (extraCharacterCount <= len) {
       wStream->writeText("(");
       for (size_t i = 0; i < len; i++) {

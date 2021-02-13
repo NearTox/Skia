@@ -40,10 +40,9 @@ class SkEmptyTypeface : public SkTypeface {
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
     return sk_ref_sp(this);
   }
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects& effects, const SkDescriptor* desc) const override {
-    return SkScalerContext::MakeEmptyContext(
-        sk_ref_sp(const_cast<SkEmptyTypeface*>(this)), effects, desc);
+    return SkScalerContext::MakeEmpty(sk_ref_sp(const_cast<SkEmptyTypeface*>(this)), effects, desc);
   }
   void onFilterRec(SkScalerContextRec*) const override {}
   std::unique_ptr<SkAdvancedTypefaceMetrics> onGetAdvancedMetrics() const override {
@@ -274,6 +273,13 @@ std::unique_ptr<SkStreamAsset> SkTypeface::openStream(int* ttcIndex) const {
     ttcIndex = &ttcIndexStorage;
   }
   return this->onOpenStream(ttcIndex);
+}
+
+std::unique_ptr<SkScalerContext> SkTypeface::createScalerContext(
+    const SkScalerContextEffects& effects, const SkDescriptor* desc) const {
+  std::unique_ptr<SkScalerContext> scalerContext = this->onCreateScalerContext(effects, desc);
+  SkASSERT(scalerContext);
+  return scalerContext;
 }
 
 void SkTypeface::unicharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID glyphs[]) const {

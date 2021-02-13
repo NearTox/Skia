@@ -27,17 +27,13 @@ class GrConstColorProcessor : public GrFragmentProcessor {
   GrConstColorProcessor(const GrConstColorProcessor& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ConstColorProcessor"; }
-  bool usesExplicitReturn() const override;
   SkPMColor4f color;
 
  private:
   GrConstColorProcessor(SkPMColor4f color)
       : INHERITED(
             kGrConstColorProcessor_ClassID,
-            (OptimizationFlags)(
-                kConstantOutputForConstantInput_OptimizationFlag |
-                (color.isOpaque() ? kPreservesOpaqueInput_OptimizationFlag
-                                  : kNone_OptimizationFlags))),
+            (OptimizationFlags)(kConstantOutputForConstantInput_OptimizationFlag | (color.isOpaque() ? kPreservesOpaqueInput_OptimizationFlag : kNone_OptimizationFlags))),
         color(color) {}
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
   void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;

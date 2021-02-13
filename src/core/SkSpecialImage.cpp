@@ -179,8 +179,8 @@ class SkSpecialImage_Raster : public SkSpecialImage_Base {
   void onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint) const override {
     SkRect dst = SkRect::MakeXYWH(x, y, this->subset().width(), this->subset().height());
 
-    canvas->drawBitmapRect(
-        fBitmap, this->subset(), dst, paint, SkCanvas::kStrict_SrcRectConstraint);
+    canvas->drawImageRect(
+        fBitmap.asImage(), this->subset(), dst, paint, SkCanvas::kStrict_SrcRectConstraint);
   }
 
   bool onGetROPixels(SkBitmap* bm) const override {
@@ -221,10 +221,10 @@ class SkSpecialImage_Raster : public SkSpecialImage_Base {
         return nullptr;
       }
 
-      return SkImage::MakeFromBitmap(subsetBM);
+      return subsetBM.asImage();
     }
 
-    return SkImage::MakeFromBitmap(fBitmap);
+    return fBitmap.asImage();
   }
 
   sk_sp<SkSurface> onMakeTightSurface(

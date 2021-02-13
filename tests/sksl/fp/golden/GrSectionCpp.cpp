@@ -20,9 +20,8 @@ cpp section #include "src/core/SkUtils.h"
     const GrSectionCpp& _outer = args.fFp.cast<GrSectionCpp>();
     (void)_outer;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -39,7 +38,6 @@ bool GrSectionCpp::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrSectionCpp::usesExplicitReturn() const { return false; }
 GrSectionCpp::GrSectionCpp(const GrSectionCpp& src)
     : INHERITED(kGrSectionCpp_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

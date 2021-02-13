@@ -9,8 +9,8 @@
 #define GrVkCommandBuffer_DEFINED
 
 #include "include/gpu/vk/GrVkTypes.h"
-#include "src/gpu/GrCommandBufferRef.h"
 #include "src/gpu/GrManagedResource.h"
+#include "src/gpu/GrRefCnt.h"
 #include "src/gpu/vk/GrVkGpu.h"
 #include "src/gpu/vk/GrVkSemaphore.h"
 #include "src/gpu/vk/GrVkUtil.h"
@@ -44,11 +44,11 @@ class GrVkCommandBuffer {
 
   void bindIndexBuffer(GrVkGpu* gpu, sk_sp<const GrBuffer> buffer);
 
-  void bindPipeline(const GrVkGpu* gpu, const GrVkPipeline* pipeline);
+  void bindPipeline(const GrVkGpu* gpu, sk_sp<const GrVkPipeline> pipeline);
 
   void bindDescriptorSets(
-      const GrVkGpu* gpu, GrVkPipelineState*, VkPipelineLayout layout, uint32_t firstSet,
-      uint32_t setCount, const VkDescriptorSet* descriptorSets, uint32_t dynamicOffsetCount,
+      const GrVkGpu* gpu, VkPipelineLayout layout, uint32_t firstSet, uint32_t setCount,
+      const VkDescriptorSet* descriptorSets, uint32_t dynamicOffsetCount,
       const uint32_t* dynamicOffsets);
 
   void setViewport(
@@ -83,19 +83,23 @@ class GrVkCommandBuffer {
 
   // Add ref-counted resource that will be tracked and released when this command buffer finishes
   // execution
-  void addResource(const GrManagedResource* resource) {
+  void addResource(sk_sp<const GrManagedResource> resource) {
     SkASSERT(resource);
-    resource->ref();
     resource->notifyQueuedForWorkOnGpu();
-    fTrackedResources.append(1, &resource);
+    fTrackedResources.push_back(std::move(resource));
   }
+  void addResource(const GrManagedResource* resource) { this->addResource(sk_ref_sp(resource)); }
 
   // Add ref-counted resource that will be tracked and released when this command buffer finishes
   // execution. When it is released, it will signal that the resource can be recycled for reuse.
-  void addRecycledResource(const GrRecycledResource* resource) {
-    resource->ref();
+  void addRecycledResource(gr_rp<const GrRecycledResource> resource) {
+    SkASSERT(resource);
     resource->notifyQueuedForWorkOnGpu();
-    fTrackedRecycledResources.append(1, &resource);
+    fTrackedRecycledResources.push_back(std::move(resource));
+  }
+
+  void addRecycledResource(const GrRecycledResource* resource) {
+    this->addRecycledResource(gr_ref_rp<const GrRecycledResource>(resource));
   }
 
   void addGrBuffer(sk_sp<const GrBuffer> buffer) {
@@ -115,8 +119,6 @@ class GrVkCommandBuffer {
  protected:
   GrVkCommandBuffer(VkCommandBuffer cmdBuffer, bool isWrapped = false)
       : fCmdBuffer(cmdBuffer), fIsWrapped(isWrapped) {
-    fTrackedResources.setReserve(kInitialTrackedResourcesCount);
-    fTrackedRecycledResources.setReserve(kInitialTrackedResourcesCount);
     this->invalidateState();
   }
 
@@ -126,8 +128,14 @@ class GrVkCommandBuffer {
 
   void submitPipelineBarriers(const GrVkGpu* gpu, bool forSelfDependency = false);
 
-  SkTDArray<const GrManagedResource*> fTrackedResources;
-  SkTDArray<const GrRecycledResource*> fTrackedRecycledResources;
+ private:
+  static constexpr int kInitialTrackedResourcesCount = 32;
+
+ protected:
+  template <typename T>
+  using TrackedResourceArray = SkSTArray<kInitialTrackedResourcesCount, T>;
+  TrackedResourceArray<sk_sp<const GrManagedResource>> fTrackedResources;
+  TrackedResourceArray<gr_rp<const GrRecycledResource>> fTrackedRecycledResources;
   SkSTArray<16, sk_sp<const GrBuffer>> fTrackedGpuBuffers;
   SkSTArray<16, gr_cb<const GrSurface>> fTrackedGpuSurfaces;
 
@@ -143,9 +151,6 @@ class GrVkCommandBuffer {
 
   VkCommandBuffer fCmdBuffer;
 
- private:
-  static const int kInitialTrackedResourcesCount = 32;
-
   virtual void onReleaseResources() {}
   virtual void onFreeGPUData(const GrVkGpu* gpu) const = 0;
 
@@ -153,13 +158,6 @@ class GrVkCommandBuffer {
 
   VkBuffer fBoundInputBuffers[kMaxInputBuffers];
   VkBuffer fBoundIndexBuffer;
-
-  // When resetting the command buffer, we remove the tracked resources from their arrays, and
-  // we prefer to not free all the memory every time so usually we just rewind. However, to avoid
-  // all arrays growing to the max size, after so many resets we'll do a full reset of the tracked
-  // resource arrays.
-  static const int kNumRewindResetsBeforeFullReset = 8;
-  int fNumResets = 0;
 
   // Cached values used for dynamic state updates
   VkViewport fCachedViewport;
@@ -193,6 +191,8 @@ class GrVkPrimaryCommandBuffer : public GrVkCommandBuffer {
       GrVkGpu* gpu, const GrVkRenderPass* renderPass, const VkClearValue clearValues[],
       GrVkRenderTarget* target, const SkIRect& bounds, bool forSecondaryCB);
   void endRenderPass(const GrVkGpu* gpu);
+
+  void nexSubpass(GrVkGpu* gpu, bool forSecondaryCB);
 
   // Submits the SecondaryCommandBuffer into this command buffer. It is required that we are
   // currently inside a render pass that is compatible with the one used to create the

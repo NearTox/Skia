@@ -27,13 +27,14 @@
 #include "src/gpu/vk/GrVkUniformBuffer.h"
 
 GrVkPipelineState::GrVkPipelineState(
-    GrVkGpu* gpu, GrVkPipeline* pipeline, const GrVkDescriptorSetManager::Handle& samplerDSHandle,
+    GrVkGpu* gpu, sk_sp<const GrVkPipeline> pipeline,
+    const GrVkDescriptorSetManager::Handle& samplerDSHandle,
     const GrGLSLBuiltinUniformHandles& builtinUniformHandles, const UniformInfoArray& uniforms,
     uint32_t uniformSize, const UniformInfoArray& samplers,
     std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
     std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
     std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fragmentProcessors)
-    : fPipeline(pipeline),
+    : fPipeline(std::move(pipeline)),
       fSamplerDSHandle(samplerDSHandle),
       fBuiltinUniformHandles(builtinUniformHandles),
       fGeometryProcessor(std::move(geometryProcessor)),
@@ -56,10 +57,7 @@ GrVkPipelineState::~GrVkPipelineState() {
 }
 
 void GrVkPipelineState::freeGPUResources(GrVkGpu* gpu) {
-  if (fPipeline) {
-    fPipeline->unref();
-    fPipeline = nullptr;
-  }
+  fPipeline.reset();
 
   if (fUniformBuffer) {
     fUniformBuffer->release(gpu);
@@ -94,8 +92,9 @@ bool GrVkPipelineState::setAndBindUniforms(
     fDataManager.uploadUniformBuffers(gpu, fUniformBuffer.get());
     static const int kUniformDSIdx = GrVkUniformHandler::kUniformBufferDescSet;
     commandBuffer->bindDescriptorSets(
-        gpu, this, fPipeline->layout(), kUniformDSIdx, 1, fUniformBuffer->descriptorSet(), 0,
-        nullptr);
+        gpu, fPipeline->layout(), kUniformDSIdx, /*setCount=*/1, fUniformBuffer->descriptorSet(),
+        /*dynamicOffsetCount=*/0,
+        /*dynamicOffsets=*/nullptr);
     commandBuffer->addRecycledResource(fUniformBuffer->resource());
   }
   return true;
@@ -145,8 +144,10 @@ bool GrVkPipelineState::setAndBindTextures(
         commandBuffer->addResource(texture->resource());
         commandBuffer->addRecycledResource(descriptorSet);
         commandBuffer->bindDescriptorSets(
-            gpu, this, fPipeline->layout(), kSamplerDSIdx, 1, descriptorSet->descriptorSet(), 0,
-            nullptr);
+            gpu, fPipeline->layout(), kSamplerDSIdx,
+            /*setCount=*/1, descriptorSet->descriptorSet(),
+            /*dynamicOffsetCount=*/0,
+            /*dynamicOffsets=*/nullptr);
         return true;
       }
     }
@@ -206,8 +207,8 @@ bool GrVkPipelineState::setAndBindTextures(
     }
 
     commandBuffer->bindDescriptorSets(
-        gpu, this, fPipeline->layout(), kSamplerDSIdx, 1, descriptorSet->descriptorSet(), 0,
-        nullptr);
+        gpu, fPipeline->layout(), kSamplerDSIdx, /*setCount=*/1, descriptorSet->descriptorSet(),
+        /*dynamicOffsetCount=*/0, /*dynamicOffsets=*/nullptr);
     commandBuffer->addRecycledResource(descriptorSet);
     descriptorSet->recycle();
   }
@@ -217,13 +218,13 @@ bool GrVkPipelineState::setAndBindTextures(
 bool GrVkPipelineState::setAndBindInputAttachment(
     GrVkGpu* gpu, GrVkRenderTarget* renderTarget, GrVkCommandBuffer* commandBuffer) {
   SkASSERT(renderTarget->supportsInputAttachmentUsage());
-  const GrVkDescriptorSet* descriptorSet = renderTarget->inputDescSet(gpu);
+  const GrVkDescriptorSet* descriptorSet = renderTarget->inputDescSet(gpu, /*forResolve=*/false);
   if (!descriptorSet) {
     return false;
   }
   commandBuffer->bindDescriptorSets(
-      gpu, this, fPipeline->layout(), GrVkUniformHandler::kInputDescSet, /*setCount=*/1,
-      descriptorSet->descriptorSet(),
+      gpu, fPipeline->layout(), GrVkUniformHandler::kInputDescSet,
+      /*setCount=*/1, descriptorSet->descriptorSet(),
       /*dynamicOffsetCount=*/0, /*dynamicOffsets=*/nullptr);
   // We don't add the input resource to the command buffer to track since the input will be
   // the same as the color attachment which is already tracked on the command buffer.

@@ -32,7 +32,8 @@ class LatticeGP : public GrGeometryProcessor {
   static GrGeometryProcessor* Make(
       SkArenaAlloc* arena, const GrSurfaceProxyView& view, sk_sp<GrColorSpaceXform> csxf,
       GrSamplerState::Filter filter, bool wideColor) {
-    return arena->make<LatticeGP>(view, std::move(csxf), filter, wideColor);
+    return arena->make(
+        [&](void* ptr) { return new (ptr) LatticeGP(view, std::move(csxf), filter, wideColor); });
   }
 
   const char* name() const override { return "LatticeGP"; }
@@ -80,8 +81,6 @@ class LatticeGP : public GrGeometryProcessor {
   }
 
  private:
-  friend class ::SkArenaAlloc;  // for access to ctor
-
   LatticeGP(
       const GrSurfaceProxyView& view, sk_sp<GrColorSpaceXform> csxf, GrSamplerState::Filter filter,
       bool wideColor)
@@ -179,9 +178,9 @@ class NonAALatticeOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+      const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
       GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-      GrXferBarrierFlags renderPassXferBarriers) override {
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) override {
     auto gp = LatticeGP::Make(arena, fView, fColorSpaceXform, fFilter, fWideColor);
     if (!gp) {
       return;
@@ -190,7 +189,7 @@ class NonAALatticeOp final : public GrMeshDrawOp {
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
         caps, arena, writeView, std::move(appliedClip), dstProxyView, gp,
         fHelper.detachProcessorSet(), GrPrimitiveType::kTriangles, renderPassXferBarriers,
-        fHelper.pipelineFlags(), &GrUserStencilSettings::kUnused);
+        colorLoadOp, fHelper.pipelineFlags(), &GrUserStencilSettings::kUnused);
   }
 
   void onPrepareDraws(Target* target) override {

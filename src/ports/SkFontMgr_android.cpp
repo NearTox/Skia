@@ -503,10 +503,9 @@ class SkFontMgr_Android : public SkFontMgr {
     int familyIndex = 0;
     for (FontFamily* family : families) {
       addFamily(*family, isolated, familyIndex++);
-      family->fallbackFamilies.foreach (
-          [this, isolated, &familyIndex](SkString, std::unique_ptr<FontFamily>* fallbackFamily) {
-            addFamily(**fallbackFamily, isolated, familyIndex++);
-          });
+      for (const auto& [unused, fallbackFamily] : family->fallbackFamilies) {
+        addFamily(*fallbackFamily, isolated, familyIndex++);
+      }
     }
   }
 

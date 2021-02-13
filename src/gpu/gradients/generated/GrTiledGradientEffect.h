@@ -28,7 +28,6 @@ class GrTiledGradientEffect : public GrFragmentProcessor {
   GrTiledGradientEffect(const GrTiledGradientEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "TiledGradientEffect"; }
-  bool usesExplicitReturn() const override;
   bool mirror;
   bool makePremul;
   bool colorsAreOpaque;
@@ -47,9 +46,7 @@ class GrTiledGradientEffect : public GrFragmentProcessor {
         mirror(mirror),
         makePremul(makePremul),
         colorsAreOpaque(colorsAreOpaque) {
-    SkASSERT(colorizer);
     this->registerChild(std::move(colorizer), SkSL::SampleUsage::Explicit());
-    SkASSERT(gradLayout);
     this->registerChild(std::move(gradLayout), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

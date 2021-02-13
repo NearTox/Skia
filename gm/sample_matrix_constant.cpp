@@ -10,7 +10,6 @@
 #include "src/core/SkMatrixProvider.h"
 #include "src/gpu/GrBitmapTextureMaker.h"
 #include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/ops/GrFillRectOp.h"
 #include "tools/Resources.h"
@@ -46,7 +45,7 @@ class GLSLSampleMatrixConstantEffect : public GrGLSLFragmentProcessor {
   void emitCode(EmitArgs& args) override {
     GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;
     SkString sample = this->invokeChildWithMatrix(0, args);
-    fragBuilder->codeAppendf("%s = %s;\n", args.fOutputColor, sample.c_str());
+    fragBuilder->codeAppendf("return %s;\n", sample.c_str());
   }
 };
 
@@ -97,7 +96,7 @@ DEF_SIMPLE_GPU_GM(sample_matrix_constant, ctx, rtCtx, canvas, 1024, 256) {
     SkMatrix matrix;
     SkSimpleMatrixProvider matrixProvider(matrix);
     GrColorInfo colorInfo;
-    GrFPArgs args(ctx, matrixProvider, kHigh_SkFilterQuality, &colorInfo);
+    GrFPArgs args(ctx, matrixProvider, SkSamplingOptions({1.0f / 3, 1.0f / 3}), &colorInfo);
     std::unique_ptr<GrFragmentProcessor> gradientFP = as_SB(shader)->asFragmentProcessor(args);
     draw(std::move(gradientFP), 512, 0);
     gradientFP = as_SB(shader)->asFragmentProcessor(args);

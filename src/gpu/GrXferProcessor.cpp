@@ -121,12 +121,14 @@ SkString GrXferProcessor::BlendInfo::dump() const {
 
 GrXPFactory::AnalysisProperties GrXPFactory::GetAnalysisProperties(
     const GrXPFactory* factory, const GrProcessorAnalysisColor& color,
-    const GrProcessorAnalysisCoverage& coverage, const GrCaps& caps, GrClampType clampType) {
+    const GrProcessorAnalysisCoverage& coverage, bool hasMixedSamples, const GrCaps& caps,
+    GrClampType clampType) {
   AnalysisProperties result;
   if (factory) {
-    result = factory->analysisProperties(color, coverage, caps, clampType);
+    result = factory->analysisProperties(color, coverage, hasMixedSamples, caps, clampType);
   } else {
-    result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(color, coverage, caps, clampType);
+    result = GrPorterDuffXPFactory::SrcOverAnalysisProperties(
+        color, coverage, hasMixedSamples, caps, clampType);
   }
   if (coverage == GrProcessorAnalysisCoverage::kNone) {
     result |= AnalysisProperties::kCompatibleWithCoverageAsAlpha;

@@ -141,6 +141,9 @@ class StandaloneShaderCaps {
     return fCanUseDoLoops;
   }
 
+  bool fUseNodePools = true;
+  bool useNodePools() const { return fUseNodePools; }
+
   const char* fShaderDerivativeExtensionString = nullptr;
   const char* shaderDerivativeExtensionString() const { return fShaderDerivativeExtensionString; }
 

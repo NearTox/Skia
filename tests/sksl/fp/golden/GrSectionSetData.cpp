@@ -24,9 +24,8 @@ class GrGLSLSectionSetData : public GrGLSLFragmentProcessor {
     calculatedVar = args.fUniformHandler->addUniform(
         &_outer, kFragment_GrShaderFlag, kHalf_GrSLType, "calculated");
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -54,7 +53,6 @@ bool GrSectionSetData::onIsEqual(const GrFragmentProcessor& other) const {
   if (provided != that.provided) return false;
   return true;
 }
-bool GrSectionSetData::usesExplicitReturn() const { return false; }
 GrSectionSetData::GrSectionSetData(const GrSectionSetData& src)
     : INHERITED(kGrSectionSetData_ClassID, src.optimizationFlags()), provided(src.provided) {
   this->cloneAndRegisterAllChildProcessors(src);

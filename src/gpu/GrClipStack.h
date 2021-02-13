@@ -20,7 +20,7 @@
 class GrAppliedClip;
 class GrProxyProvider;
 class GrRecordingContext;
-class GrRenderTargetContext;
+class GrSurfaceDrawContext;
 class GrSWMaskHelper;
 
 class GrClipStack final : public GrClip {
@@ -70,7 +70,7 @@ class GrClipStack final : public GrClip {
 
   // GrClip implementation
   GrClip::Effect apply(
-      GrRecordingContext*, GrRenderTargetContext*, GrAAType aa, bool hasUserStencilSettings,
+      GrRecordingContext*, GrSurfaceDrawContext*, GrAAType aa, bool hasUserStencilSettings,
       GrAppliedClip*, SkRect* bounds) const override;
   GrClip::PreClipResult preApply(const SkRect& drawBounds, GrAA aa) const override;
   SkIRect getConservativeBounds() const override;

@@ -135,13 +135,12 @@ class SK_API SkAnimatedImage : public SkDrawable {
   };
 
   std::unique_ptr<SkAndroidCodec> fCodec;
-  const SkISize fScaledSize;
-  const SkImageInfo fDecodeInfo;
+  SkImageInfo fDecodeInfo;
   const SkIRect fCropRect;
   const sk_sp<SkPicture> fPostProcess;
   const int fFrameCount;
-  const bool fSimple;  // no crop, scale, or postprocess
-  SkMatrix fMatrix;    // used only if !fSimple
+  SkMatrix fMatrix;
+  int fSampleSize;
 
   bool fFinished;
   int fCurrentFrameDuration;
@@ -152,12 +151,26 @@ class SK_API SkAnimatedImage : public SkDrawable {
   int fRepetitionsCompleted;
 
   SkAnimatedImage(
-      std::unique_ptr<SkAndroidCodec>, SkISize scaledSize, SkImageInfo decodeInfo, SkIRect cropRect,
+      std::unique_ptr<SkAndroidCodec>, const SkImageInfo& requestedInfo, SkIRect cropRect,
       sk_sp<SkPicture> postProcess);
-  SkAnimatedImage(std::unique_ptr<SkAndroidCodec>);
 
   int computeNextFrame(int current, bool* animationEnded);
   double finish();
+
+  /**
+   *  True if there is no crop, orientation, or post decoding scaling.
+   */
+  bool simple() const {
+    return fMatrix.isIdentity() && !fPostProcess && fCropRect == fDecodeInfo.bounds();
+  }
+
+  /**
+   *  Returns the current frame as an SkImage.
+   *
+   *  Like getCurrentFrame, but only returns the raw data from the internal SkBitmap. (i.e. no
+   *  scaling, orientation-correction or cropping.) If simple(), this is the final output.
+   */
+  sk_sp<SkImage> getCurrentFrameSimple();
 
   using INHERITED = SkDrawable;
 };

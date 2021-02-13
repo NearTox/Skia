@@ -19,7 +19,6 @@ class GrSectionConstructorParams : public GrFragmentProcessor {
   GrSectionConstructorParams(const GrSectionConstructorParams& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "SectionConstructorParams"; }
-  bool usesExplicitReturn() const override;
   float w;
 
  private:

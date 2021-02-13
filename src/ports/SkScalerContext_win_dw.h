@@ -25,7 +25,6 @@ class SkScalerContext_DW : public SkScalerContext {
   ~SkScalerContext_DW() override;
 
  protected:
-  unsigned generateGlyphCount() override;
   bool generateAdvance(SkGlyph* glyph) override;
   void generateMetrics(SkGlyph* glyph) override;
   void generateImage(const SkGlyph& glyph) override;

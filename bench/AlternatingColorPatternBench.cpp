@@ -109,7 +109,9 @@ class AlternatingColorPatternBench : public Benchmark {
     int w = 40;
     int h = 40;
     makebm(&fBmp, w, h);
-    fBmShader = fBmp.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
+    fBmShader = fBmp.makeShader(
+        SkTileMode::kRepeat, SkTileMode::kRepeat,
+        SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone));
     int offset = 2;
     int count = 0;
     for (int j = 0; j < NY; ++j) {
@@ -140,7 +142,6 @@ class AlternatingColorPatternBench : public Benchmark {
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint;
     paint.setAntiAlias(false);
-    paint.setFilterQuality(kLow_SkFilterQuality);
 
     for (int i = 0; i < loops; ++i) {
       for (int j = 0; j < NUM_DRAWS; ++j) {

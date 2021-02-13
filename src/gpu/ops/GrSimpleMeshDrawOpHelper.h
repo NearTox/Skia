@@ -121,24 +121,24 @@ class GrSimpleMeshDrawOpHelper {
       const GrXferProcessor::DstProxyView&);
 
   static GrProgramInfo* CreateProgramInfo(
-      SkArenaAlloc*, const GrPipeline*, const GrSurfaceProxyView* writeView, GrGeometryProcessor*,
-      GrPrimitiveType, GrXferBarrierFlags renderPassXferBarriers,
+      SkArenaAlloc*, const GrPipeline*, const GrSurfaceProxyView& writeView, GrGeometryProcessor*,
+      GrPrimitiveType, GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
   // Create a programInfo with the following properties:
   //     its primitive processor uses no textures
   //     it has no dynamic state besides the scissor clip
   static GrProgramInfo* CreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrProcessorSet&&, GrPrimitiveType,
-      GrXferBarrierFlags renderPassXferBarriers,
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp,
       GrPipeline::InputFlags pipelineFlags = GrPipeline::InputFlags::kNone,
       const GrUserStencilSettings* = &GrUserStencilSettings::kUnused);
 
   GrProgramInfo* createProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
       const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType,
-      GrXferBarrierFlags renderPassXferBarriers);
+      GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp);
 
   GrProcessorSet detachProcessorSet() {
     return fProcessors ? std::move(*fProcessors) : GrProcessorSet::MakeEmptySet();
@@ -164,17 +164,17 @@ class GrSimpleMeshDrawOpHelper {
 template <typename Op, typename... Args>
 GrOp::Owner GrOp::MakeWithProcessorSet(
     GrRecordingContext* context, const SkPMColor4f& color, GrPaint&& paint, Args&&... args) {
-#if defined(GR_OP_ALLOCATE_USE_NEW)
-  char* bytes = (char*)::operator new(sizeof(Op) + sizeof(GrProcessorSet));
-  char* setMem = bytes + sizeof(Op);
-  GrProcessorSet* processorSet = new (setMem) GrProcessorSet{std::move(paint)};
-  return Owner{new (bytes) Op(processorSet, color, std::forward<Args>(args)...)};
-#else
+#if defined(GR_OP_ALLOCATE_USE_POOL)
   GrMemoryPool* pool = context->priv().opMemoryPool();
   char* bytes = (char*)pool->allocate(sizeof(Op) + sizeof(GrProcessorSet));
   char* setMem = bytes + sizeof(Op);
   GrProcessorSet* processorSet = new (setMem) GrProcessorSet{std::move(paint)};
   return Owner{new (bytes) Op(processorSet, color, std::forward<Args>(args)...), pool};
+#else
+  char* bytes = (char*)::operator new(sizeof(Op) + sizeof(GrProcessorSet));
+  char* setMem = bytes + sizeof(Op);
+  GrProcessorSet* processorSet = new (setMem) GrProcessorSet{std::move(paint)};
+  return Owner{new (bytes) Op(processorSet, color, std::forward<Args>(args)...)};
 #endif
 }
 

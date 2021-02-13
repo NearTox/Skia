@@ -11,8 +11,8 @@
 #include "include/core/SkRefCnt.h"
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrColor.h"
-#include "src/gpu/GrRenderTargetContext.h"
 #include "src/gpu/GrSamplerState.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 
 class GrColorSpaceXform;
 class GrDrawOp;
@@ -48,8 +48,8 @@ class GrTextureOp {
   // supported, or if the blend mode is not src-over. 'cnt' is the size of the entry array.
   // 'proxyCnt' <= 'cnt' and represents the number of proxy switches within the array.
   static void AddTextureSetOps(
-      GrRenderTargetContext*, const GrClip* clip, GrRecordingContext*,
-      GrRenderTargetContext::TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
+      GrSurfaceDrawContext*, const GrClip* clip, GrRecordingContext*,
+      GrSurfaceDrawContext::TextureSetEntry[], int cnt, int proxyRunCnt, GrSamplerState::Filter,
       GrSamplerState::MipmapMode, Saturate, SkBlendMode, GrAAType, SkCanvas::SrcRectConstraint,
       const SkMatrix& viewMatrix, sk_sp<GrColorSpaceXform> textureXform);
 

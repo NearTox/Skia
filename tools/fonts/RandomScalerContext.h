@@ -24,7 +24,7 @@ class SkRandomTypeface : public SkTypeface {
   const SkPaint& paint() const { return fPaint; }
 
  protected:
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
   void getGlyphToUnicodeMap(SkUnichar*) const override;

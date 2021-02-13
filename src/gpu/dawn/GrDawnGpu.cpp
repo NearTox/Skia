@@ -118,8 +118,7 @@ GrDawnGpu::GrDawnGpu(
       fStagingBufferManager(this),
       fRenderPipelineCache(kMaxRenderPipelineEntries),
       fFinishCallbacks(this) {
-  fCaps.reset(new GrDawnCaps(options));
-  fCompiler.reset(new SkSL::Compiler(fCaps->shaderCaps()));
+  this->initCapsAndCompiler(sk_make_sp<GrDawnCaps>(options));
 }
 
 GrDawnGpu::~GrDawnGpu() { this->waitOnAllBusyStagingBuffers(); }
@@ -359,7 +358,7 @@ bool GrDawnGpu::onUpdateBackendTexture(
   SkAutoMalloc defaultStorage(baseLayerSize);
   if (data && data->type() == BackendTextureData::Type::kPixmaps) {
     SkTDArray<GrMipLevel> texels;
-    GrColorType colorType = SkColorTypeToGrColorType(data->pixmap(0).colorType());
+    GrColorType colorType = data->pixmap(0).colorType();
     int numMipLevels = info.fLevelCount;
     texels.append(numMipLevels);
     for (int i = 0; i < numMipLevels; ++i) {

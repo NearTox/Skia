@@ -22,9 +22,8 @@ class GrGLSLSectionConstructorParams : public GrGLSLFragmentProcessor {
     auto w = _outer.w;
     (void)w;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -42,7 +41,6 @@ bool GrSectionConstructorParams::onIsEqual(const GrFragmentProcessor& other) con
   if (w != that.w) return false;
   return true;
 }
-bool GrSectionConstructorParams::usesExplicitReturn() const { return false; }
 GrSectionConstructorParams::GrSectionConstructorParams(const GrSectionConstructorParams& src)
     : INHERITED(kGrSectionConstructorParams_ClassID, src.optimizationFlags()), w(src.w) {
   this->cloneAndRegisterAllChildProcessors(src);

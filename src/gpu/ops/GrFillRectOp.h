@@ -9,7 +9,7 @@
 #define GrFillRectOp_DEFINED
 
 #include "include/private/GrTypesPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 class GrDrawOp;
@@ -44,8 +44,8 @@ class GrFillRectOp {
   // Bulk API for drawing quads with a single op
   // TODO(michaelludwig) - remove if the bulk API is not useful for SkiaRenderer
   static void AddFillRectOps(
-      GrRenderTargetContext*, const GrClip* clip, GrRecordingContext*, GrPaint&&, GrAAType,
-      const SkMatrix& viewMatrix, const GrRenderTargetContext::QuadSetEntry quads[], int quadCount,
+      GrSurfaceDrawContext*, const GrClip* clip, GrRecordingContext*, GrPaint&&, GrAAType,
+      const SkMatrix& viewMatrix, const GrSurfaceDrawContext::QuadSetEntry quads[], int quadCount,
       const GrUserStencilSettings* = nullptr);
 
 #if GR_TEST_UTILS
@@ -57,8 +57,8 @@ class GrFillRectOp {
   // any index buffer size limits.
   static GrOp::Owner MakeOp(
       GrRecordingContext*, GrPaint&&, GrAAType, const SkMatrix& viewMatrix,
-      const GrRenderTargetContext::QuadSetEntry quads[], int quadCount,
-      const GrUserStencilSettings*, int* numConsumed);
+      const GrSurfaceDrawContext::QuadSetEntry quads[], int quadCount, const GrUserStencilSettings*,
+      int* numConsumed);
 };
 
 #endif  // GrFillRectOp_DEFINED

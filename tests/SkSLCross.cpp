@@ -7,19 +7,18 @@
 
 #include "tests/Test.h"
 
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 
 static void run_test(
-    skiatest::Reporter*, GrDirectContext*, GrRenderTargetContext*, SkVector a, SkVector b,
+    skiatest::Reporter*, GrDirectContext*, GrSurfaceDrawContext*, SkVector a, SkVector b,
     float expectedCrossProduct);
 
 // This is a GPU test that ensures the SkSL 2d cross() intrinsic returns the correct sign (negative,
 // positive, or zero).
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(SkSLCross, reporter, ctxInfo) {
   GrDirectContext* directContext = ctxInfo.directContext();
-  auto rtc = GrRenderTargetContext::Make(
+  auto rtc = GrSurfaceDrawContext::Make(
       directContext, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact, {1, 1});
   if (!rtc) {
     ERRORF(reporter, "could not create render target context.");
@@ -65,8 +64,8 @@ class VisualizeCrossProductSignFP : public GrFragmentProcessor {
                     float crossProduct = cross(%s, %s);
                     float2 visualization = clamp(float2(-sign(crossProduct), sign(crossProduct)),
                                                  float2(0), float2(1));
-                    %s = half4(half2(visualization), 0, 1);)",
-          a, b, args.fOutputColor);
+                    return half2(visualization).xy01;)",
+          a, b);
     }
     void onSetData(
         const GrGLSLProgramDataManager& pdman, const GrFragmentProcessor& processor) override {
@@ -85,7 +84,7 @@ class VisualizeCrossProductSignFP : public GrFragmentProcessor {
 }  // namespace
 
 static void run_test(
-    skiatest::Reporter* reporter, GrDirectContext* directContext, GrRenderTargetContext* rtc,
+    skiatest::Reporter* reporter, GrDirectContext* directContext, GrSurfaceDrawContext* rtc,
     SkVector a, SkVector b, float expectedCrossProduct) {
   SkASSERT(rtc->width() == 1);
   SkASSERT(rtc->height() == 1);
@@ -100,9 +99,10 @@ static void run_test(
       /*clip=*/nullptr, std::move(crossPaint), GrAA::kNo, SkMatrix::I(), SkRect::MakeWH(1, 1));
 
   GrColor result;
-  rtc->readPixels(
-      directContext, SkImageInfo::Make(1, 1, kRGBA_8888_SkColorType, kPremul_SkAlphaType), &result,
-      4, {0, 0});
+  GrPixmap resultPM(
+      SkImageInfo::Make(1, 1, kRGBA_8888_SkColorType, kPremul_SkAlphaType), &result,
+      sizeof(GrColor));
+  rtc->readPixels(directContext, resultPM, {0, 0});
 
   SkASSERT(expectedCrossProduct == a.cross(b));
   if (expectedCrossProduct > 0) {

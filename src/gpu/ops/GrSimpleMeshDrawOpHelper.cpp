@@ -125,14 +125,14 @@ const GrPipeline* GrSimpleMeshDrawOpHelper::CreatePipeline(
     GrOpFlushState* flushState, GrProcessorSet&& processorSet,
     GrPipeline::InputFlags pipelineFlags) {
   return CreatePipeline(
-      &flushState->caps(), flushState->allocator(), flushState->writeView()->swizzle(),
+      &flushState->caps(), flushState->allocator(), flushState->writeView().swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView(), std::move(processorSet),
       pipelineFlags);
 }
 
 const GrPipeline* GrSimpleMeshDrawOpHelper::createPipeline(GrOpFlushState* flushState) {
   return CreatePipeline(
-      &flushState->caps(), flushState->allocator(), flushState->writeView()->swizzle(),
+      &flushState->caps(), flushState->allocator(), flushState->writeView().swizzle(),
       flushState->detachAppliedClip(), flushState->dstProxyView(), this->detachProcessorSet(),
       this->pipelineFlags());
 }
@@ -146,40 +146,39 @@ const GrPipeline* GrSimpleMeshDrawOpHelper::createPipeline(
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
     GrGeometryProcessor* geometryProcessor, GrProcessorSet&& processorSet,
-    GrPrimitiveType primitiveType, GrXferBarrierFlags renderPassXferBarriers,
+    GrPrimitiveType primitiveType, GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp,
     GrPipeline::InputFlags pipelineFlags, const GrUserStencilSettings* stencilSettings) {
   auto pipeline = CreatePipeline(
-      caps, arena, writeView->swizzle(), std::move(appliedClip), dstProxyView,
+      caps, arena, writeView.swizzle(), std::move(appliedClip), dstProxyView,
       std::move(processorSet), pipelineFlags);
 
   return CreateProgramInfo(
       arena, pipeline, writeView, geometryProcessor, primitiveType, renderPassXferBarriers,
-      stencilSettings);
+      colorLoadOp, stencilSettings);
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-    SkArenaAlloc* arena, const GrPipeline* pipeline, const GrSurfaceProxyView* writeView,
+    SkArenaAlloc* arena, const GrPipeline* pipeline, const GrSurfaceProxyView& writeView,
     GrGeometryProcessor* geometryProcessor, GrPrimitiveType primitiveType,
-    GrXferBarrierFlags xferBarrierFlags, const GrUserStencilSettings* stencilSettings) {
-  GrRenderTargetProxy* outputProxy = writeView->asRenderTargetProxy();
-
+    GrXferBarrierFlags xferBarrierFlags, GrLoadOp colorLoadOp,
+    const GrUserStencilSettings* stencilSettings) {
   auto tmp = arena->make<GrProgramInfo>(
-      outputProxy->numSamples(), outputProxy->numStencilSamples(), outputProxy->backendFormat(),
-      writeView->origin(), pipeline, stencilSettings, geometryProcessor, primitiveType, 0,
-      xferBarrierFlags);
+      writeView, pipeline, stencilSettings, geometryProcessor, primitiveType, 0, xferBarrierFlags,
+      colorLoadOp);
   return tmp;
 }
 
 GrProgramInfo* GrSimpleMeshDrawOpHelper::createProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-    GrGeometryProcessor* gp, GrPrimitiveType primType, GrXferBarrierFlags renderPassXferBarriers) {
+    GrGeometryProcessor* gp, GrPrimitiveType primType, GrXferBarrierFlags renderPassXferBarriers,
+    GrLoadOp colorLoadOp) {
   return CreateProgramInfo(
       caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, this->detachProcessorSet(),
-      primType, renderPassXferBarriers, this->pipelineFlags());
+      primType, renderPassXferBarriers, colorLoadOp, this->pipelineFlags());
 }
 
 #if GR_TEST_UTILS

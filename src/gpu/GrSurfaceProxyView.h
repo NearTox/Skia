@@ -71,6 +71,16 @@ class GrSurfaceProxyView {
   GrSurfaceOrigin origin() const { return fOrigin; }
   GrSwizzle swizzle() const { return fSwizzle; }
 
+  void concatSwizzle(GrSwizzle swizzle) { fSwizzle = GrSwizzle::Concat(fSwizzle, swizzle); }
+
+  GrSurfaceProxyView makeSwizzle(GrSwizzle swizzle) const& {
+    return {fProxy, fOrigin, GrSwizzle::Concat(fSwizzle, swizzle)};
+  }
+
+  GrSurfaceProxyView makeSwizzle(GrSwizzle swizzle) && {
+    return {std::move(fProxy), fOrigin, GrSwizzle::Concat(fSwizzle, swizzle)};
+  }
+
   void reset() { *this = {}; }
 
   // Helper that copies a rect of a src view'' proxy and then creates a view for the copy with

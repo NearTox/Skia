@@ -72,7 +72,6 @@ class Type final : public Symbol {
     kArray,
     kEnum,
     kGeneric,
-    kNullable,
     kMatrix,
     kOther,
     kSampler,
@@ -83,152 +82,86 @@ class Type final : public Symbol {
     kVector
   };
 
-  enum class NumberKind { kFloat, kSigned, kUnsigned, kNonnumeric };
+  enum class NumberKind { kFloat, kSigned, kUnsigned, kBoolean, kNonnumeric };
 
   Type(const Type& other) = delete;
 
   // Create an "other" (special) type with the given name. These types cannot be directly
   // referenced from user code.
-  Type(const char* name)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kOther),
-        fNumberKind(NumberKind::kNonnumeric) {}
-
-  // Create an "other" (special) type that supports field access.
-  Type(const char* name, std::vector<Field> fields)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kOther),
-        fNumberKind(NumberKind::kNonnumeric),
-        fFields(std::move(fields)) {}
-
-  // Create a simple type.
-  Type(String name, TypeKind kind)
-      : INHERITED(-1, kSymbolKind, ""),
-        fNameString(std::move(name)),
-        fTypeKind(kind),
-        fNumberKind(NumberKind::kNonnumeric) {
-    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  static std::unique_ptr<Type> MakeOtherType(const char* name) {
+    return std::unique_ptr<Type>(new Type(name));
   }
 
-  // Create a generic type which maps to the listed types.
-  Type(const char* name, std::vector<const Type*> types)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kGeneric),
-        fNumberKind(NumberKind::kNonnumeric),
-        fCoercibleTypes(std::move(types)) {}
+  // Create an "other" (special) type that supports field access.
+  static std::unique_ptr<Type> MakeOtherStruct(const char* name, std::vector<Field> fields) {
+    return std::unique_ptr<Type>(new Type(name, std::move(fields)));
+  }
+
+  // Create a simple type.
+  static std::unique_ptr<Type> MakeSimpleType(String name, TypeKind kind) {
+    return std::unique_ptr<Type>(new Type(std::move(name), kind));
+  }
+
+  // Create a generic type which maps to the listed types--e.g. $genType is a generic type which
+  // can match float, float2, float3 or float4.
+  static std::unique_ptr<Type> MakeGenericType(const char* name, std::vector<const Type*> types) {
+    return std::unique_ptr<Type>(new Type(name, std::move(types)));
+  }
 
   // Create a struct type with the given fields.
-  Type(int offset, String name, std::vector<Field> fields)
-      : INHERITED(offset, kSymbolKind, ""),
-        fNameString(std::move(name)),
-        fTypeKind(TypeKind::kStruct),
-        fNumberKind(NumberKind::kNonnumeric),
-        fFields(std::move(fields)) {
-    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  static std::unique_ptr<Type> MakeStructType(int offset, String name, std::vector<Field> fields) {
+    return std::unique_ptr<Type>(new Type(offset, std::move(name), std::move(fields)));
   }
 
   // Create a scalar type.
-  Type(const char* name, NumberKind numberKind, int priority, bool highPrecision = false)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kScalar),
-        fNumberKind(numberKind),
-        fPriority(priority),
-        fColumns(1),
-        fRows(1),
-        fHighPrecision(highPrecision) {}
+  static std::unique_ptr<Type> MakeScalarType(
+      const char* name, NumberKind numberKind, int priority, bool highPrecision = false) {
+    return std::unique_ptr<Type>(new Type(name, numberKind, priority, highPrecision));
+  }
 
-  // Create a scalar type which can be coerced to the listed types.
-  Type(
-      const char* name, NumberKind numberKind, int priority,
-      std::vector<const Type*> coercibleTypes)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kScalar),
-        fNumberKind(numberKind),
-        fPriority(priority),
-        fCoercibleTypes(std::move(coercibleTypes)),
-        fColumns(1),
-        fRows(1) {}
-
-  // Create a nullable type.
-  Type(String name, TypeKind kind, const Type& componentType)
-      : INHERITED(-1, kSymbolKind, ""),
-        fNameString(std::move(name)),
-        fTypeKind(kind),
-        fNumberKind(NumberKind::kNonnumeric),
-        fComponentType(&componentType),
-        fColumns(1),
-        fRows(1),
-        fDimensions(SpvDim1D) {
-    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  // Create a type for literal scalars.
+  static std::unique_ptr<Type> MakeLiteralType(
+      const char* name, const Type& scalarType, int priority) {
+    return std::unique_ptr<Type>(new Type(name, scalarType, priority));
   }
 
   // Create a vector type.
-  Type(const char* name, const Type& componentType, int columns)
-      : Type(name, TypeKind::kVector, componentType, columns) {}
+  static std::unique_ptr<Type> MakeVectorType(
+      const char* name, const Type& componentType, int columns) {
+    return std::unique_ptr<Type>(new Type(name, TypeKind::kVector, componentType, columns));
+  }
 
+  // Create an array type.
   static constexpr int kUnsizedArray = -1;
-
-  // Create a vector or array type.
-  Type(String name, TypeKind kind, const Type& componentType, int columns)
-      : INHERITED(-1, kSymbolKind, ""),
-        fNameString(std::move(name)),
-        fTypeKind(kind),
-        fNumberKind(NumberKind::kNonnumeric),
-        fComponentType(&componentType),
-        fColumns(columns),
-        fRows(1),
-        fDimensions(SpvDim1D) {
-    SkASSERT(fColumns > 0 || (fTypeKind == TypeKind::kArray && fColumns == kUnsizedArray));
-    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  static std::unique_ptr<Type> MakeArrayType(String name, const Type& componentType, int columns) {
+    return std::unique_ptr<Type>(
+        new Type(std::move(name), TypeKind::kArray, componentType, columns));
   }
 
   // Create a matrix type.
-  Type(const char* name, const Type& componentType, int columns, int rows)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kMatrix),
-        fNumberKind(NumberKind::kNonnumeric),
-        fComponentType(&componentType),
-        fColumns(columns),
-        fRows(rows),
-        fDimensions(SpvDim1D) {}
-
-  // Create a texture type.
-  Type(
-      const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayed, bool isMultisampled,
-      bool isSampled)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kTexture),
-        fNumberKind(NumberKind::kNonnumeric),
-        fDimensions(dimensions),
-        fIsDepth(isDepth),
-        fIsArrayed(isArrayed),
-        fIsMultisampled(isMultisampled),
-        fIsSampled(isSampled) {}
-
-  // Create a sampler type.
-  Type(const char* name, const Type& textureType)
-      : INHERITED(-1, kSymbolKind, name),
-        fTypeKind(TypeKind::kSampler),
-        fNumberKind(NumberKind::kNonnumeric),
-        fDimensions(textureType.dimensions()),
-        fIsDepth(textureType.isDepth()),
-        fIsArrayed(textureType.isArrayed()),
-        fIsMultisampled(textureType.isMultisampled()),
-        fIsSampled(textureType.isSampled()),
-        fTextureType(&textureType) {}
-
-  String displayName() const {
-    StringFragment name = this->name();
-    if (name == "$floatLiteral") {
-      return "float";
-    }
-    if (name == "$intLiteral") {
-      return "int";
-    }
-    return name;
+  static std::unique_ptr<Type> MakeMatrixType(
+      const char* name, const Type& componentType, int columns, int rows) {
+    return std::unique_ptr<Type>(new Type(name, componentType, columns, rows));
   }
 
+  // Create a texture type.
+  static std::unique_ptr<Type> MakeTextureType(
+      const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayedTexture,
+      bool isMultisampled, bool isSampled) {
+    return std::unique_ptr<Type>(
+        new Type(name, dimensions, isDepth, isArrayedTexture, isMultisampled, isSampled));
+  }
+
+  // Create a sampler type.
+  static std::unique_ptr<Type> MakeSamplerType(const char* name, const Type& textureType) {
+    return std::unique_ptr<Type>(new Type(name, textureType));
+  }
+
+  String displayName() const { return this->scalarTypeForLiteral().name(); }
+
   String description() const override { return this->displayName(); }
+
+  bool isPrivate() const { return this->name().startsWith("$"); }
 
   bool operator==(const Type& other) const { return this->name() == other.name(); }
 
@@ -239,10 +172,17 @@ class Type final : public Symbol {
    */
   TypeKind typeKind() const { return fTypeKind; }
 
+  NumberKind numberKind() const { return fNumberKind; }
+
+  /**
+   * Returns true if this type is a bool.
+   */
+  bool isBoolean() const { return fNumberKind == NumberKind::kBoolean; }
+
   /**
    * Returns true if this is a numeric scalar type.
    */
-  bool isNumber() const { return fNumberKind != NumberKind::kNonnumeric; }
+  bool isNumber() const { return this->isFloat() || this->isInteger(); }
 
   /**
    * Returns true if this is a floating-point scalar type (float or half).
@@ -262,7 +202,21 @@ class Type final : public Symbol {
   /**
    * Returns true if this is a signed or unsigned integer.
    */
-  bool isInteger() const { return isSigned() || isUnsigned(); }
+  bool isInteger() const { return this->isSigned() || this->isUnsigned(); }
+
+  /**
+   * Returns true if this is an "opaque type" (an external object which the shader references in
+   * some fashion). https://www.khronos.org/opengl/wiki/Data_Type_(GLSL)#Opaque_types
+   */
+  bool isOpaque() const {
+    switch (fTypeKind) {
+      case TypeKind::kOther:
+      case TypeKind::kSampler:
+      case TypeKind::kSeparateSampler:
+      case TypeKind::kTexture: return true;
+      default: return false;
+    }
+  }
 
   /**
    * Returns the "priority" of a number type, in order of float > half > int > short.
@@ -287,11 +241,13 @@ class Type final : public Symbol {
 
   /**
    * For matrices and vectors, returns the type of individual cells (e.g. mat2 has a component
-   * type of kFloat_Type). For all other types, causes an SkASSERTion failure.
+   * type of Float). For all other types, returns the type itself.
    */
   const Type& componentType() const {
-    SkASSERT(fComponentType);
-    return *fComponentType;
+    if (fComponentType) {
+      return *fComponentType;
+    }
+    return *this;
   }
 
   /**
@@ -304,24 +260,12 @@ class Type final : public Symbol {
   }
 
   /**
-   * For nullable types, returns the base type, otherwise returns the type itself.
-   */
-  const Type& nonnullable() const {
-    if (fTypeKind == TypeKind::kNullable) {
-      return this->componentType();
-    }
-    return *this;
-  }
-
-  /**
-   * For matrices and vectors, returns the number of columns (e.g. both mat3 and float3return 3).
+   * For matrices and vectors, returns the number of columns (e.g. both mat3 and float3 return 3).
    * For scalars, returns 1. For arrays, returns either the size of the array (if known) or -1.
    * For all other types, causes an SkASSERTion failure.
    */
   int columns() const {
-    SkASSERT(
-        fTypeKind == TypeKind::kScalar || fTypeKind == TypeKind::kVector ||
-        fTypeKind == TypeKind::kMatrix || fTypeKind == TypeKind::kArray);
+    SkASSERT(this->isScalar() || this->isVector() || this->isMatrix() || this->isArray());
     return fColumns;
   }
 
@@ -335,13 +279,12 @@ class Type final : public Symbol {
   }
 
   const std::vector<Field>& fields() const {
-    SkASSERT(fTypeKind == TypeKind::kStruct || fTypeKind == TypeKind::kOther);
+    SkASSERT(this->isStruct() || fTypeKind == TypeKind::kOther);
     return fFields;
   }
 
   /**
-   * For generic types, returns the types that this generic type can substitute for. For other
-   * types, returns a list of other types that this type can be coerced into.
+   * For generic types, returns the types that this generic type can substitute for.
    */
   const std::vector<const Type*>& coercibleTypes() const {
     SkASSERT(fCoercibleTypes.size() > 0);
@@ -358,10 +301,26 @@ class Type final : public Symbol {
     return fIsDepth;
   }
 
-  bool isArrayed() const {
+  bool isArrayedTexture() const {
     SkASSERT(TypeKind::kSampler == fTypeKind || TypeKind::kTexture == fTypeKind);
     return fIsArrayed;
   }
+
+  bool isScalar() const { return fTypeKind == TypeKind::kScalar; }
+
+  bool isLiteral() const { return fScalarTypeForLiteral != nullptr; }
+
+  const Type& scalarTypeForLiteral() const {
+    return fScalarTypeForLiteral ? *fScalarTypeForLiteral : *this;
+  }
+
+  bool isVector() const { return fTypeKind == TypeKind::kVector; }
+
+  bool isMatrix() const { return fTypeKind == TypeKind::kMatrix; }
+
+  bool isArray() const { return fTypeKind == TypeKind::kArray; }
+
+  bool isStruct() const { return fTypeKind == TypeKind::kStruct; }
 
   bool isMultisampled() const {
     SkASSERT(TypeKind::kSampler == fTypeKind || TypeKind::kTexture == fTypeKind);
@@ -389,6 +348,122 @@ class Type final : public Symbol {
  private:
   using INHERITED = Symbol;
 
+  // Constructor for MakeOtherType.
+  Type(const char* name)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kOther),
+        fNumberKind(NumberKind::kNonnumeric) {}
+
+  // Constructor for MakeOtherStruct.
+  Type(const char* name, std::vector<Field> fields)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kOther),
+        fNumberKind(NumberKind::kNonnumeric),
+        fFields(std::move(fields)) {}
+
+  // Constructor for MakeSimpleType.
+  Type(String name, TypeKind kind)
+      : INHERITED(-1, kSymbolKind, ""),
+        fNameString(std::move(name)),
+        fTypeKind(kind),
+        fNumberKind(NumberKind::kNonnumeric) {
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  }
+
+  // Constructor for MakeGenericType.
+  Type(const char* name, std::vector<const Type*> types)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kGeneric),
+        fNumberKind(NumberKind::kNonnumeric),
+        fCoercibleTypes(std::move(types)) {}
+
+  // Constructor for MakeScalarType.
+  Type(const char* name, NumberKind numberKind, int priority, bool highPrecision)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kScalar),
+        fNumberKind(numberKind),
+        fPriority(priority),
+        fColumns(1),
+        fRows(1),
+        fHighPrecision(highPrecision) {}
+
+  // Constructor for MakeLiteralType.
+  Type(const char* name, const Type& scalarType, int priority)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kScalar),
+        fNumberKind(scalarType.numberKind()),
+        fPriority(priority),
+        fColumns(1),
+        fRows(1),
+        fHighPrecision(scalarType.highPrecision()),
+        fScalarTypeForLiteral(&scalarType) {}
+
+  // Constructor shared by MakeVectorType and MakeArrayType.
+  Type(String name, TypeKind kind, const Type& componentType, int columns)
+      : INHERITED(-1, kSymbolKind, ""),
+        fNameString(std::move(name)),
+        fTypeKind(kind),
+        fNumberKind(NumberKind::kNonnumeric),
+        fComponentType(&componentType),
+        fColumns(columns),
+        fRows(1),
+        fDimensions(SpvDim1D) {
+    if (this->isArray()) {
+      // Allow either explicitly-sized or unsized arrays.
+      SkASSERT(this->columns() > 0 || this->columns() == kUnsizedArray);
+      // Disallow multi-dimensional arrays.
+      SkASSERT(!this->componentType().isArray());
+    } else {
+      SkASSERT(this->columns() > 0);
+    }
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  }
+
+  // Constructor for MakeMatrixType.
+  Type(const char* name, const Type& componentType, int columns, int rows)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kMatrix),
+        fNumberKind(NumberKind::kNonnumeric),
+        fComponentType(&componentType),
+        fColumns(columns),
+        fRows(rows),
+        fDimensions(SpvDim1D) {}
+
+  // Constructor for MakeStructType.
+  Type(int offset, String name, std::vector<Field> fields)
+      : INHERITED(offset, kSymbolKind, ""),
+        fNameString(std::move(name)),
+        fTypeKind(TypeKind::kStruct),
+        fNumberKind(NumberKind::kNonnumeric),
+        fFields(std::move(fields)) {
+    fName = StringFragment(fNameString.c_str(), fNameString.length());
+  }
+
+  // Constructor for MakeTextureType.
+  Type(
+      const char* name, SpvDim_ dimensions, bool isDepth, bool isArrayedTexture,
+      bool isMultisampled, bool isSampled)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kTexture),
+        fNumberKind(NumberKind::kNonnumeric),
+        fDimensions(dimensions),
+        fIsDepth(isDepth),
+        fIsArrayed(isArrayedTexture),
+        fIsMultisampled(isMultisampled),
+        fIsSampled(isSampled) {}
+
+  // Constructor for MakeSamplerType.
+  Type(const char* name, const Type& textureType)
+      : INHERITED(-1, kSymbolKind, name),
+        fTypeKind(TypeKind::kSampler),
+        fNumberKind(NumberKind::kNonnumeric),
+        fDimensions(textureType.dimensions()),
+        fIsDepth(textureType.isDepth()),
+        fIsArrayed(textureType.isArrayedTexture()),
+        fIsMultisampled(textureType.isMultisampled()),
+        fIsSampled(textureType.isSampled()),
+        fTextureType(&textureType) {}
+
   String fNameString;
   TypeKind fTypeKind;
   // always kNonnumeric_NumberKind for non-scalar values
@@ -406,6 +481,7 @@ class Type final : public Symbol {
   bool fIsSampled = false;
   bool fHighPrecision = false;
   const Type* fTextureType = nullptr;
+  const Type* fScalarTypeForLiteral = nullptr;
 };
 
 }  // namespace SkSL

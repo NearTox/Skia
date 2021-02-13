@@ -260,7 +260,7 @@ class LogFontTypeface : public SkTypeface {
  protected:
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override;
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override;
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
   void getGlyphToUnicodeMap(SkUnichar*) const override;
@@ -544,7 +544,6 @@ class SkScalerContext_GDI : public SkScalerContext {
   bool isValid() const;
 
  protected:
-  unsigned generateGlyphCount() override;
   bool generateAdvance(SkGlyph* glyph) override;
   void generateMetrics(SkGlyph* glyph) override;
   void generateImage(const SkGlyph& glyph) override;
@@ -575,7 +574,6 @@ class SkScalerContext_GDI : public SkScalerContext {
   HFONT fSavefont;
   HFONT fFont;
   SCRIPT_CACHE fSC;
-  int fGlyphCount;
 
   /** The total matrix which also removes EM scale. */
   SkMatrix fHiResMatrix;
@@ -611,8 +609,7 @@ SkScalerContext_GDI::SkScalerContext_GDI(
       fDDC(0),
       fSavefont(0),
       fFont(0),
-      fSC(0),
-      fGlyphCount(-1) {
+      fSC(0) {
   LogFontTypeface* typeface = static_cast<LogFontTypeface*>(this->getTypeface());
 
   fDDC = ::CreateCompatibleDC(nullptr);
@@ -769,14 +766,6 @@ SkScalerContext_GDI::~SkScalerContext_GDI() {
 }
 
 bool SkScalerContext_GDI::isValid() const { return fDDC && fFont; }
-
-unsigned SkScalerContext_GDI::generateGlyphCount() {
-  if (fGlyphCount < 0) {
-    fGlyphCount = calculateGlyphCount(
-        fDDC, static_cast<const LogFontTypeface*>(this->getTypeface())->fLogFont);
-  }
-  return fGlyphCount;
-}
 
 bool SkScalerContext_GDI::generateAdvance(SkGlyph* glyph) { return false; }
 
@@ -2034,21 +2023,23 @@ sk_sp<SkData> LogFontTypeface::onCopyTableData(SkFontTableTag tag) const {
   return data;
 }
 
-SkScalerContext* LogFontTypeface::onCreateScalerContext(
+std::unique_ptr<SkScalerContext> LogFontTypeface::onCreateScalerContext(
     const SkScalerContextEffects& effects, const SkDescriptor* desc) const {
   auto ctx = std::make_unique<SkScalerContext_GDI>(
       sk_ref_sp(const_cast<LogFontTypeface*>(this)), effects, desc);
-  if (!ctx->isValid()) {
-    ctx.reset();
-    SkStrikeCache::PurgeAll();
-    ctx = std::make_unique<SkScalerContext_GDI>(
-        sk_ref_sp(const_cast<LogFontTypeface*>(this)), effects, desc);
-    if (!ctx->isValid()) {
-      return SkScalerContext::MakeEmptyContext(
-          sk_ref_sp(const_cast<LogFontTypeface*>(this)), effects, desc);
-    }
+  if (ctx->isValid()) {
+    return std::move(ctx);
   }
-  return ctx.release();
+
+  ctx.reset();
+  SkStrikeCache::PurgeAll();
+  ctx = std::make_unique<SkScalerContext_GDI>(
+      sk_ref_sp(const_cast<LogFontTypeface*>(this)), effects, desc);
+  if (ctx->isValid()) {
+    return std::move(ctx);
+  }
+
+  return SkScalerContext::MakeEmpty(sk_ref_sp(const_cast<LogFontTypeface*>(this)), effects, desc);
 }
 
 void LogFontTypeface::onFilterRec(SkScalerContextRec* rec) const {

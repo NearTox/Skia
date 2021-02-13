@@ -1982,11 +1982,11 @@ STAGE(HLGish, const skcms_TransferFunction* ctx) {
     U32 sign;
     v = strip_sign(v, &sign);
 
-    const float R = ctx->a, G = ctx->b, a = ctx->c, b = ctx->d, c = ctx->e;
+    const float R = ctx->a, G = ctx->b, a = ctx->c, b = ctx->d, c = ctx->e, K = ctx->f + 1.0f;
 
     F r = if_then_else(v * R <= 1, approx_powf(v * R, G), approx_exp((v - c) * a) + b);
 
-    return apply_sign(r, sign);
+    return K * apply_sign(r, sign);
   };
   r = fn(r);
   g = fn(g);
@@ -1998,8 +1998,9 @@ STAGE(HLGinvish, const skcms_TransferFunction* ctx) {
     U32 sign;
     v = strip_sign(v, &sign);
 
-    const float R = ctx->a, G = ctx->b, a = ctx->c, b = ctx->d, c = ctx->e;
+    const float R = ctx->a, G = ctx->b, a = ctx->c, b = ctx->d, c = ctx->e, K = ctx->f + 1.0f;
 
+    v /= K;
     F r = if_then_else(v <= 1, R * approx_powf(v, G), a * approx_log(v - b) + c);
 
     return apply_sign(r, sign);
@@ -2419,6 +2420,9 @@ STAGE(alpha_to_gray_dst, Ctx::None) {
 STAGE(bt709_luminance_or_luma_to_alpha, Ctx::None) {
   a = r * 0.2126f + g * 0.7152f + b * 0.0722f;
   r = g = b = 0;
+}
+STAGE(bt709_luminance_or_luma_to_rgb, Ctx::None) {
+  r = g = b = r * 0.2126f + g * 0.7152f + b * 0.0722f;
 }
 
 STAGE(matrix_translate, const float* m) {
@@ -3803,6 +3807,9 @@ STAGE_PP(alpha_to_gray_dst, Ctx::None) {
 STAGE_PP(bt709_luminance_or_luma_to_alpha, Ctx::None) {
   a = (r * 54 + g * 183 + b * 19) / 256;  // 0.2126, 0.7152, 0.0722 with 256 denominator.
   r = g = b = 0;
+}
+STAGE_PP(bt709_luminance_or_luma_to_rgb, Ctx::None) {
+  r = g = b = (r * 54 + g * 183 + b * 19) / 256;  // 0.2126, 0.7152, 0.0722 with 256 denominator.
 }
 
 // ~~~~~~ Coverage scales / lerps ~~~~~~ //

@@ -27,8 +27,7 @@ static constexpr int kS = 25;
 
 static void make_images(sk_sp<SkImage> imgs[], int cnt) {
   for (int i = 0; i < cnt; ++i) {
-    SkBitmap bmp = ToolUtils::create_checkerboard_bitmap(kS, kS, SK_ColorBLACK, SK_ColorCYAN, 10);
-    imgs[i] = SkImage::MakeFromBitmap(bmp);
+    imgs[i] = ToolUtils::create_checkerboard_image(kS, kS, SK_ColorBLACK, SK_ColorCYAN, 10);
   }
 }
 
@@ -116,6 +115,8 @@ class ImageCacheBudgetBench : public Benchmark {
   }
 
   void onDraw(int loops, SkCanvas* canvas) override {
+    auto dContext = GrAsDirectContext(canvas->recordingContext());
+
     for (int i = 0; i < loops; ++i) {
       for (int frame = 0; frame < kSimulatedFrames; ++frame) {
         for (int j = 0; j < kImagesToDraw; ++j) {
@@ -128,7 +129,9 @@ class ImageCacheBudgetBench : public Benchmark {
           draw_image(canvas, fImages[idx].get());
         }
         // Simulate a frame boundary by flushing. This should notify GrResourceCache.
-        canvas->flush();
+        if (dContext) {
+          dContext->flush();
+        }
       }
     }
   }
@@ -209,6 +212,8 @@ class ImageCacheBudgetDynamicBench : public Benchmark {
   }
 
   void onDraw(int loops, SkCanvas* canvas) override {
+    auto dContext = GrAsDirectContext(canvas->recordingContext());
+
     int delta = 0;
     switch (fMode) {
       case Mode::kPingPong: delta = 1; break;
@@ -226,7 +231,9 @@ class ImageCacheBudgetDynamicBench : public Benchmark {
           imgsToDraw += 2 * delta;
         }
         // Simulate a frame boundary by flushing. This should notify GrResourceCache.
-        canvas->flush();
+        if (dContext) {
+          dContext->flush();
+        }
       }
     }
   }

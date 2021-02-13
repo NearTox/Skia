@@ -66,7 +66,6 @@ bool GrDitherEffect::onIsEqual(const GrFragmentProcessor& other) const {
   if (range != that.range) return false;
   return true;
 }
-bool GrDitherEffect::usesExplicitReturn() const { return true; }
 GrDitherEffect::GrDitherEffect(const GrDitherEffect& src)
     : INHERITED(kGrDitherEffect_ClassID, src.optimizationFlags()), range(src.range) {
   this->cloneAndRegisterAllChildProcessors(src);

@@ -36,7 +36,7 @@ class SkPicturePlayback final : SkNoncopyable {
 
   void handleOp(
       SkReadBuffer* reader, DrawType op, uint32_t size, SkCanvas* canvas,
-      const SkMatrix& initialMatrix);
+      const SkM44& initialMatrix);
 
   class AutoResetOpID {
    public:

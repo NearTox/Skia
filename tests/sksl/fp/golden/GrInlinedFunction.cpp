@@ -22,15 +22,10 @@ class GrGLSLInlinedFunction : public GrGLSLFragmentProcessor {
     colorVar =
         args.fUniformHandler->addUniform(&_outer, kFragment_GrShaderFlag, kHalf4_GrSLType, "color");
     fragBuilder->codeAppendf(
-        R"SkSL(half4 _0_flip;
-{
-    _0_flip = %s.wzyx;
-}
-
-%s = _0_flip;
+        R"SkSL(return %s.wzyx;
 
 )SkSL",
-        args.fUniformHandler->getUniformCStr(colorVar), args.fOutputColor);
+        args.fUniformHandler->getUniformCStr(colorVar));
   }
 
  private:
@@ -48,7 +43,6 @@ bool GrInlinedFunction::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrInlinedFunction::usesExplicitReturn() const { return false; }
 GrInlinedFunction::GrInlinedFunction(const GrInlinedFunction& src)
     : INHERITED(kGrInlinedFunction_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

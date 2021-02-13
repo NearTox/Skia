@@ -20,9 +20,8 @@ class GrGLSLSectionClass : public GrGLSLFragmentProcessor {
     const GrSectionClass& _outer = args.fFp.cast<GrSectionClass>();
     (void)_outer;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -39,7 +38,6 @@ bool GrSectionClass::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrSectionClass::usesExplicitReturn() const { return false; }
 GrSectionClass::GrSectionClass(const GrSectionClass& src)
     : INHERITED(kGrSectionClass_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

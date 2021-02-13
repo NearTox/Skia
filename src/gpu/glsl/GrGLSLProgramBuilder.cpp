@@ -158,7 +158,7 @@ SkString GrGLSLProgramBuilder::emitFragProc(
   const GrShaderVar* coordVars = fTransformedCoordVars.begin() + transformedCoordVarsIdx;
   GrGLSLFragmentProcessor::TransformedCoordVars coords(&fp, coordVars);
   GrGLSLFragmentProcessor::EmitArgs args(
-      &fFS, this->uniformHandler(), this->shaderCaps(), fp, "_output", "_input", "_coords", coords,
+      &fFS, this->uniformHandler(), this->shaderCaps(), fp, "_input", "_coords", coords,
       /*forceInline=*/true);
   auto name = fFS.writeProcessorFunction(&glslFP, args);
   fFS.codeAppendf("%s = %s(%s);", output.c_str(), name.c_str(), input.c_str());

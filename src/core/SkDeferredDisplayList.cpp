@@ -29,6 +29,9 @@ SkDeferredDisplayList::SkDeferredDisplayList(
       fLazyProxyData(std::move(lazyProxyData))
 #endif
 {
+#if SK_SUPPORT_GPU
+  SkASSERT(fTargetProxy->isDDLTarget());
+#endif
 }
 
 SkDeferredDisplayList::~SkDeferredDisplayList() {

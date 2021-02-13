@@ -19,7 +19,6 @@ class GrSectionConstructor : public GrFragmentProcessor {
   GrSectionConstructor(const GrSectionConstructor& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "SectionConstructor"; }
-  bool usesExplicitReturn() const override;
 
  private:
   constructor section GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

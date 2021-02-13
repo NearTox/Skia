@@ -20,13 +20,12 @@ namespace {
 class MtlTestContextImpl : public sk_gpu_test::MtlTestContext {
 public:
     static MtlTestContext* Create(MtlTestContext* sharedContext) {
+      GrMtlBackendContext backendContext = {};
+      if (sharedContext) {
+        MtlTestContextImpl* sharedContextImpl = (MtlTestContextImpl*)sharedContext;
+        backendContext = sharedContextImpl->getMtlBackendContext();
+      } else {
         id<MTLDevice> device;
-        id<MTLCommandQueue> queue;
-        if (sharedContext) {
-            MtlTestContextImpl* sharedContextImpl = (MtlTestContextImpl*) sharedContext;
-            device = sharedContextImpl->device();
-            queue = sharedContextImpl->queue();
-        } else {
 #  ifdef SK_BUILD_FOR_MAC
           NSArray<id<MTLDevice>>* availableDevices = MTLCopyAllDevices();
           // Choose the non-integrated CPU if available
@@ -46,10 +45,12 @@ public:
 #  else
           device = MTLCreateSystemDefaultDevice();
 #  endif
-          queue = [device newCommandQueue];
-        }
+          backendContext.fDevice.retain((__bridge GrMTLHandle)device);
+          id<MTLCommandQueue> queue = [device newCommandQueue];
+          backendContext.fQueue.retain((__bridge GrMTLHandle)queue);
+      }
 
-        return new MtlTestContextImpl(device, queue);
+      return new MtlTestContextImpl(backendContext);
     }
 
     ~MtlTestContextImpl() override { this->teardown(); }
@@ -59,26 +60,17 @@ public:
     void finish() override {}
 
     sk_sp<GrDirectContext> makeContext(const GrContextOptions& options) override {
-      return GrDirectContext::MakeMetal((__bridge void*)fDevice, (__bridge void*)fQueue, options);
+      return GrDirectContext::MakeMetal(fMtl, options);
     }
-
-    id<MTLDevice> device() { return fDevice; }
-    id<MTLCommandQueue> queue() { return fQueue; }
 
 private:
-    MtlTestContextImpl(id<MTLDevice> device, id<MTLCommandQueue> queue)
-            : INHERITED(), fDevice(device), fQueue(queue) {
-      fFenceSupport = true;
-    }
+ MtlTestContextImpl(const GrMtlBackendContext& mtl) : INHERITED(mtl) { fFenceSupport = true; }
 
-    void onPlatformMakeNotCurrent() const override {}
-    void onPlatformMakeCurrent() const override {}
-    std::function<void()> onPlatformGetAutoContextRestore() const override { return nullptr; }
+ void onPlatformMakeNotCurrent() const override {}
+ void onPlatformMakeCurrent() const override {}
+ std::function<void()> onPlatformGetAutoContextRestore() const override { return nullptr; }
 
-    id<MTLDevice>        fDevice;
-    id<MTLCommandQueue>  fQueue;
-
-    using INHERITED = sk_gpu_test::MtlTestContext;
+ using INHERITED = sk_gpu_test::MtlTestContext;
 };
 
 }  // anonymous namespace

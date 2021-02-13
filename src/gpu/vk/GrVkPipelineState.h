@@ -38,7 +38,8 @@ class GrVkPipelineState {
   using UniformHandle = GrGLSLProgramDataManager::UniformHandle;
 
   GrVkPipelineState(
-      GrVkGpu* gpu, GrVkPipeline* pipeline, const GrVkDescriptorSetManager::Handle& samplerDSHandle,
+      GrVkGpu* gpu, sk_sp<const GrVkPipeline> pipeline,
+      const GrVkDescriptorSetManager::Handle& samplerDSHandle,
       const GrGLSLBuiltinUniformHandles& builtinUniformHandles, const UniformInfoArray& uniforms,
       uint32_t uniformSize, const UniformInfoArray& samplers,
       std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
@@ -104,7 +105,7 @@ class GrVkPipelineState {
   void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin);
 
   // GrManagedResources
-  GrVkPipeline* fPipeline;
+  sk_sp<const GrVkPipeline> fPipeline;
 
   const GrVkDescriptorSetManager::Handle fSamplerDSHandle;
 

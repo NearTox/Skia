@@ -74,7 +74,7 @@ void GrMockGpu::submit(GrOpsRenderPass* renderPass) {
 GrMockGpu::GrMockGpu(
     GrDirectContext* direct, const GrMockOptions& options, const GrContextOptions& contextOptions)
     : INHERITED(direct), fMockOptions(options) {
-  fCaps.reset(new GrMockCaps(contextOptions, options));
+  this->initCapsAndCompiler(sk_make_sp<GrMockCaps>(contextOptions, options));
 }
 
 void GrMockGpu::querySampleLocations(GrRenderTarget* rt, SkTArray<SkPoint>* sampleLocations) {

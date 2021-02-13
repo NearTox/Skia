@@ -19,7 +19,6 @@ class GrSectionEmitCode : public GrFragmentProcessor {
   GrSectionEmitCode(const GrSectionEmitCode& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "SectionEmitCode"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrSectionEmitCode() : INHERITED(kGrSectionEmitCode_ClassID, kNone_OptimizationFlags) {}

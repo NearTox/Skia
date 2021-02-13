@@ -293,7 +293,6 @@
     <ClCompile Include="gpu\GrResourceAllocator.cpp" />
     <ClCompile Include="gpu\GrRenderTask.cpp" />
     <ClCompile Include="gpu\GrRenderTargetProxy.cpp" />
-    <ClCompile Include="gpu\GrRenderTargetContext.cpp" />
     <ClCompile Include="gpu\GrRenderTarget.cpp" />
     <ClCompile Include="gpu\GrReducedClip.cpp" />
     <ClCompile Include="gpu\GrRectanizerSkyline.cpp" />
@@ -554,7 +553,6 @@
     <ClCompile Include="image\SkImage.cpp" />
     <ClCompile Include="core\SkYUVPlanesCache.cpp" />
     <ClCompile Include="core\SkYUVMath.cpp" />
-    <ClCompile Include="core\SkYUVASizeInfo.cpp" />
     <ClCompile Include="core\SkXfermodeInterpretation.cpp" />
     <ClCompile Include="core\SkXfermode.cpp" />
     <ClCompile Include="core\SkWriter32.cpp" />
@@ -615,7 +613,6 @@
     <ClCompile Include="core\SkRasterPipelineBlitter.cpp" />
     <ClCompile Include="core\SkRasterPipeline.cpp" />
     <ClCompile Include="core\SkRasterClip.cpp" />
-    <ClCompile Include="core\SkRWBuffer.cpp" />
     <ClCompile Include="core\SkRTree.cpp" />
     <ClCompile Include="core\SkRRect.cpp" />
     <ClCompile Include="core\SkQuadClipper.cpp" />
@@ -728,7 +725,6 @@
     <ClCompile Include="core\SkBitmapProcState_matrixProcs.cpp" />
     <ClCompile Include="core\SkBitmapProcState.cpp" />
     <ClCompile Include="core\SkBitmapDevice.cpp" />
-    <ClCompile Include="core\SkBitmapController.cpp" />
     <ClCompile Include="core\SkBitmapCache.cpp" />
     <ClCompile Include="core\SkBitmap.cpp" />
     <ClCompile Include="core\SkBBHFactory.cpp" />
@@ -766,5 +762,23 @@
     <ClCompile Include="gpu\tessellate\GrStrokeOp.cpp" />
     <ClCompile Include="gpu\gl\GrGLAttachment.cpp" />
     <ClCompile Include="gpu\vk\GrVkAttachment.cpp" />
+    <ClCompile Include="gpu\GrAATriangulator.cpp" />
+    <ClCompile Include="gpu\GrDDLTask.cpp" />
+    <ClCompile Include="gpu\GrSurfaceDrawContext.cpp" />
+    <ClCompile Include="gpu\GrSurfaceFillContext.cpp" />
+    <ClCompile Include="gpu\GrYUVATextureProxies.cpp" />
+    <ClCompile Include="gpu\tessellate\GrStrokeIndirectOp.cpp" />
+    <ClCompile Include="gpu\vk\GrVkMSAALoadManager.cpp" />
+    <ClCompile Include="sksl\SkSLConstantFolder.cpp" />
+    <ClCompile Include="sksl\SkSLContext.cpp" />
+    <ClCompile Include="sksl\SkSLVMGenerator.cpp" />
+    <ClCompile Include="sksl\dsl\DSLCore.cpp" />
+    <ClCompile Include="sksl\dsl\DSLExpression.cpp" />
+    <ClCompile Include="sksl\dsl\DSLType.cpp" />
+    <ClCompile Include="sksl\dsl\DSLVar.cpp" />
+    <ClCompile Include="sksl\dsl\priv\DSLWriter.cpp" />
+    <ClCompile Include="core\SkOpts_erms.cpp" />
+    <ClCompile Include="sksl\SkSLMangler.cpp" />
+    <ClCompile Include="core\SkMipmapAccessor.cpp" />
   </ItemGroup>
 </Project>

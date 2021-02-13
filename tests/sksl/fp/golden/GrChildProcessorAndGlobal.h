@@ -19,12 +19,10 @@ class GrChildProcessorAndGlobal : public GrFragmentProcessor {
   GrChildProcessorAndGlobal(const GrChildProcessorAndGlobal& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessorAndGlobal"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrChildProcessorAndGlobal(std::unique_ptr<GrFragmentProcessor> child)
       : INHERITED(kGrChildProcessorAndGlobal_ClassID, kNone_OptimizationFlags) {
-    SkASSERT(child);
     this->registerChild(std::move(child), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

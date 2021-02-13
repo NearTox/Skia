@@ -67,7 +67,7 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
 
 #if GR_TEST_UTILS
   static GrOp::Owner CreateOpTestingOnly(
-      GrRenderTargetContext* rtc, const SkPaint& skPaint, const SkFont& font,
+      GrSurfaceDrawContext* rtc, const SkPaint& skPaint, const SkFont& font,
       const SkMatrixProvider& mtxProvider, const char* text, int x, int y);
 #endif
 
@@ -99,16 +99,18 @@ class GrAtlasTextOp final : public GrMeshDrawOp {
   }
 
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override {
     // We cannot surface the GrAtlasTextOp's programInfo at record time. As currently
     // implemented, the GP is modified at flush time based on the number of pages in the
     // atlas.
   }
 
   void onPrePrepareDraws(
-      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {
+      GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override {
     // TODO [PI]: implement
   }
 

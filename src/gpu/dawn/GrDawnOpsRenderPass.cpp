@@ -54,7 +54,7 @@ wgpu::RenderPassEncoder GrDawnOpsRenderPass::beginRenderPass(
   }
   auto stencilAttachment = static_cast<GrDawnAttachment*>(fRenderTarget->getStencilAttachment());
 
-  const float* c = fColorInfo.fClearColor.vec();
+  const float* c = fColorInfo.fClearColor.data();
 
   wgpu::RenderPassColorAttachmentDescriptor colorAttachment;
   colorAttachment.attachment = static_cast<GrDawnRenderTarget*>(fRenderTarget)->textureView();
@@ -95,7 +95,7 @@ void GrDawnOpsRenderPass::onClearStencilClip(
   fPassEncoder = beginRenderPass(wgpu::LoadOp::Load, wgpu::LoadOp::Clear);
 }
 
-void GrDawnOpsRenderPass::onClear(const GrScissorState& scissor, const SkPMColor4f& color) {
+void GrDawnOpsRenderPass::onClear(const GrScissorState& scissor, std::array<float, 4> color) {
   SkASSERT(!scissor.enabled());
   fPassEncoder.EndPass();
   fPassEncoder = beginRenderPass(wgpu::LoadOp::Clear, wgpu::LoadOp::Load);
@@ -139,7 +139,7 @@ bool GrDawnOpsRenderPass::onBindPipeline(
 }
 
 void GrDawnOpsRenderPass::onSetScissorRect(const SkIRect& scissor) {
-  // Higher-level GrRenderTargetContext and clips should have already ensured draw bounds are
+  // Higher-level GrSurfaceDrawContext and clips should have already ensured draw bounds are
   // restricted to the render target.
   SkASSERT(SkIRect::MakeSize(fRenderTarget->dimensions()).contains(scissor));
   auto nativeScissorRect = GrNativeRect::MakeRelativeTo(fOrigin, fRenderTarget->height(), scissor);

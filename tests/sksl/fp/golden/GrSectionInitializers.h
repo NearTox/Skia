@@ -19,7 +19,6 @@ class GrSectionInitializers : public GrFragmentProcessor {
   GrSectionInitializers(const GrSectionInitializers& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "SectionInitializers"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrSectionInitializers()

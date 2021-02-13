@@ -32,14 +32,12 @@ class GrLumaColorFilterEffect : public GrFragmentProcessor {
   GrLumaColorFilterEffect(const GrLumaColorFilterEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "LumaColorFilterEffect"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrLumaColorFilterEffect(std::unique_ptr<GrFragmentProcessor> inputFP)
       : INHERITED(
             kGrLumaColorFilterEffect_ClassID,
-            (OptimizationFlags)(
-                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+            (OptimizationFlags)(inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
                 kConstantOutputForConstantInput_OptimizationFlag) {
     this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
   }

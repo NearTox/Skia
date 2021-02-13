@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "include/core/SkBitmap.h"
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkPathBuilder.h"
 #include "include/core/SkRRect.h"
@@ -24,10 +25,10 @@
 #  include "include/gpu/GrRecordingContext.h"
 #  include "src/gpu/GrFragmentProcessor.h"
 #  include "src/gpu/GrRecordingContextPriv.h"
-#  include "src/gpu/GrRenderTargetContext.h"
 #  include "src/gpu/GrResourceProvider.h"
 #  include "src/gpu/GrShaderCaps.h"
 #  include "src/gpu/GrStyle.h"
+#  include "src/gpu/GrSurfaceDrawContext.h"
 #  include "src/gpu/GrTextureProxy.h"
 #  include "src/gpu/effects/GrTextureEffect.h"
 #  include "src/gpu/effects/generated/GrCircleBlurFragmentProcessor.h"
@@ -53,7 +54,7 @@ class SkBlurMaskFilterImpl : public SkMaskFilterBase {
       const GrStyledShape& shape, const SkIRect& devSpaceShapeBounds, const SkIRect& clipBounds,
       const SkMatrix& ctm, SkIRect* maskRect) const override;
   bool directFilterMaskGPU(
-      GrRecordingContext*, GrRenderTargetContext* renderTargetContext, GrPaint&&, const GrClip*,
+      GrRecordingContext*, GrSurfaceDrawContext* surfaceDrawContext, GrPaint&&, const GrClip*,
       const SkMatrix& viewMatrix, const GrStyledShape& shape) const override;
   GrSurfaceProxyView filterMaskGPU(
       GrRecordingContext*, GrSurfaceProxyView srcView, GrColorType srcColorType,
@@ -549,9 +550,9 @@ void SkBlurMaskFilterImpl::flatten(SkWriteBuffer& buffer) const {
 #if SK_SUPPORT_GPU
 
 bool SkBlurMaskFilterImpl::directFilterMaskGPU(
-    GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, GrPaint&& paint,
+    GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext, GrPaint&& paint,
     const GrClip* clip, const SkMatrix& viewMatrix, const GrStyledShape& shape) const {
-  SkASSERT(renderTargetContext);
+  SkASSERT(surfaceDrawContext);
 
   if (fBlurStyle != kNormal_SkBlurStyle) {
     return false;
@@ -564,7 +565,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
 
   SkScalar xformedSigma = this->computeXformedSigma(viewMatrix);
   if (SkGpuBlurUtils::IsEffectivelyZeroSigma(xformedSigma)) {
-    renderTargetContext->drawShape(clip, std::move(paint), GrAA::kYes, viewMatrix, shape);
+    surfaceDrawContext->drawShape(clip, std::move(paint), GrAA::kYes, viewMatrix, shape);
     return true;
   }
 
@@ -627,7 +628,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     }
     srcProxyRect.outset(outsetX, outsetY);
 
-    renderTargetContext->drawRect(clip, std::move(paint), GrAA::kNo, viewMatrix, srcProxyRect);
+    surfaceDrawContext->drawRect(clip, std::move(paint), GrAA::kNo, viewMatrix, srcProxyRect);
     return true;
   }
   if (!viewMatrix.isScaleTranslate()) {
@@ -656,7 +657,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
 
     paint.setCoverageFragmentProcessor(std::move(fp));
     SkSimpleMatrixProvider matrixProvider(viewMatrix);
-    renderTargetContext->drawVertices(clip, std::move(paint), matrixProvider, std::move(vertices));
+    surfaceDrawContext->drawVertices(clip, std::move(paint), matrixProvider, std::move(vertices));
   } else {
     SkMatrix inverse;
     if (!viewMatrix.invert(&inverse)) {
@@ -668,7 +669,7 @@ bool SkBlurMaskFilterImpl::directFilterMaskGPU(
     proxyRect.outset(extra, extra);
 
     paint.setCoverageFragmentProcessor(std::move(fp));
-    renderTargetContext->fillRectWithLocalMatrix(
+    surfaceDrawContext->fillRectWithLocalMatrix(
         clip, std::move(paint), GrAA::kNo, SkMatrix::I(), proxyRect, inverse);
   }
 
@@ -721,10 +722,10 @@ GrSurfaceProxyView SkBlurMaskFilterImpl::filterMaskGPU(
   // gaussianBlur.  Otherwise, we need to save it for later compositing.
   bool isNormalBlur = (kNormal_SkBlurStyle == fBlurStyle);
   auto srcBounds = SkIRect::MakeSize(srcView.proxy()->dimensions());
-  auto renderTargetContext = SkGpuBlurUtils::GaussianBlur(
+  auto surfaceDrawContext = SkGpuBlurUtils::GaussianBlur(
       context, srcView, srcColorType, srcAlphaType, nullptr, clipRect, srcBounds, xformedSigma,
       xformedSigma, SkTileMode::kClamp);
-  if (!renderTargetContext || !renderTargetContext->asTextureProxy()) {
+  if (!surfaceDrawContext || !surfaceDrawContext->asTextureProxy()) {
     return {};
   }
 
@@ -747,11 +748,11 @@ GrSurfaceProxyView SkBlurMaskFilterImpl::filterMaskGPU(
       paint.setCoverageSetOpXPFactory(SkRegion::kReplace_Op);
     }
 
-    renderTargetContext->drawRect(
+    surfaceDrawContext->drawRect(
         nullptr, std::move(paint), GrAA::kNo, SkMatrix::I(), SkRect::Make(clipRect));
   }
 
-  return renderTargetContext->readSurfaceView();
+  return surfaceDrawContext->readSurfaceView();
 }
 
 #endif  // SK_SUPPORT_GPU

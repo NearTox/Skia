@@ -27,7 +27,6 @@ class GrDirectContext;
 class GrImageContext;
 class GrSamplerState;
 class SkCachedData;
-struct SkYUVASizeInfo;
 
 enum { kNeedNewImageUniqueID = 0 };
 
@@ -51,14 +50,14 @@ class SkImage_Base : public SkImage {
    * Default implementation does a rescale/read and then calls the callback.
    */
   virtual void onAsyncRescaleAndReadPixels(
-      const SkImageInfo&, const SkIRect& srcRect, RescaleGamma, SkFilterQuality, ReadPixelsCallback,
+      const SkImageInfo&, const SkIRect& srcRect, RescaleGamma, RescaleMode, ReadPixelsCallback,
       ReadPixelsContext);
   /**
    * Default implementation does a rescale/read/yuv conversion and then calls the callback.
    */
   virtual void onAsyncRescaleAndReadPixelsYUV420(
       SkYUVColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-      const SkISize& dstSize, RescaleGamma, SkFilterQuality, ReadPixelsCallback, ReadPixelsContext);
+      const SkISize& dstSize, RescaleGamma, RescaleMode, ReadPixelsCallback, ReadPixelsContext);
 
   virtual GrImageContext* context() const { return nullptr; }
 

@@ -32,17 +32,15 @@ class Variable final : public Symbol {
   static constexpr Kind kSymbolKind = Kind::kVariable;
 
   Variable(
-      int offset, ModifiersPool::Handle modifiers, StringFragment name, const Type* type,
-      bool builtin, Storage storage, const Expression* initialValue = nullptr)
+      int offset, const Modifiers* modifiers, StringFragment name, const Type* type, bool builtin,
+      Storage storage, const Expression* initialValue = nullptr)
       : INHERITED(offset, kSymbolKind, name, type),
         fInitialValue(initialValue),
-        fModifiersHandle(modifiers),
+        fModifiers(modifiers),
         fStorage(storage),
         fBuiltin(builtin) {}
 
-  const Modifiers& modifiers() const { return *fModifiersHandle; }
-
-  const ModifiersPool::Handle& modifiersHandle() const { return fModifiersHandle; }
+  const Modifiers& modifiers() const { return *fModifiers; }
 
   bool isBuiltin() const { return fBuiltin; }
 
@@ -61,7 +59,7 @@ class Variable final : public Symbol {
 
  private:
   const Expression* fInitialValue = nullptr;
-  ModifiersPool::Handle fModifiersHandle;
+  const Modifiers* fModifiers;
   VariableStorage fStorage;
   bool fBuiltin;
 

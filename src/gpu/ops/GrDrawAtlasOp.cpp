@@ -53,8 +53,9 @@ class DrawAtlasOp final : public GrMeshDrawOp {
   GrProgramInfo* programInfo() override { return fProgramInfo; }
 
   void onCreateProgramInfo(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView* writeView, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override;
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, GrAppliedClip&&,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override;
 
   void onPrepareDraws(Target*) override;
   void onExecute(GrOpFlushState*, const SkRect& chainBounds) override;
@@ -192,15 +193,15 @@ SkString DrawAtlasOp::onDumpInfo() const {
 #endif
 
 void DrawAtlasOp::onCreateProgramInfo(
-    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView* writeView,
+    const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
     GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
-    GrXferBarrierFlags renderPassXferBarriers) {
+    GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) {
   // Setup geometry processor
   GrGeometryProcessor* gp = make_gp(arena, this->hasColors(), this->color(), this->viewMatrix());
 
   fProgramInfo = fHelper.createProgramInfo(
       caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, GrPrimitiveType::kTriangles,
-      renderPassXferBarriers);
+      renderPassXferBarriers, colorLoadOp);
 }
 
 void DrawAtlasOp::onPrepareDraws(Target* target) {

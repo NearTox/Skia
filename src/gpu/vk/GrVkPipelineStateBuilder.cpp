@@ -17,12 +17,14 @@
 #include "src/gpu/GrStencilSettings.h"
 #include "src/gpu/vk/GrVkDescriptorSetManager.h"
 #include "src/gpu/vk/GrVkGpu.h"
+#include "src/gpu/vk/GrVkPipeline.h"
 #include "src/gpu/vk/GrVkRenderPass.h"
 #include "src/gpu/vk/GrVkRenderTarget.h"
 
 GrVkPipelineState* GrVkPipelineStateBuilder::CreatePipelineState(
     GrVkGpu* gpu, GrRenderTarget* renderTarget, const GrProgramDesc& desc,
-    const GrProgramInfo& programInfo, VkRenderPass compatibleRenderPass) {
+    const GrProgramInfo& programInfo, VkRenderPass compatibleRenderPass,
+    bool overrideSubpassForResolveLoad) {
   gpu->stats()->incShaderCompilations();
 
   // ensure that we use "." as a decimal separator when creating SkSL code
@@ -36,7 +38,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::CreatePipelineState(
     return nullptr;
   }
 
-  return builder.finalize(desc, compatibleRenderPass);
+  return builder.finalize(desc, compatibleRenderPass, overrideSubpassForResolveLoad);
 }
 
 GrVkPipelineStateBuilder::GrVkPipelineStateBuilder(
@@ -140,7 +142,8 @@ void GrVkPipelineStateBuilder::storeShadersInCache(
 }
 
 GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
-    const GrProgramDesc& desc, VkRenderPass compatibleRenderPass) {
+    const GrProgramDesc& desc, VkRenderPass compatibleRenderPass,
+    bool overrideSubpassForResolveLoad) {
   TRACE_EVENT0("skia.gpu", TRACE_FUNC);
 
   VkDescriptorSetLayout dsLayout[GrVkUniformHandler::kDescSetCount];
@@ -288,8 +291,19 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
     }
   }
 
-  GrVkPipeline* pipeline = resourceProvider.createPipeline(
-      fProgramInfo, shaderStageInfo, numShaderStages, compatibleRenderPass, pipelineLayout);
+  // For the vast majority of cases we only have one subpass so we default piplines to subpass 0.
+  // However, if we need to load a resolve into msaa attachment for discardable msaa then the
+  // main subpass will be 1.
+  uint32_t subpass = 0;
+  if (overrideSubpassForResolveLoad || (fProgramInfo.colorLoadOp() == GrLoadOp::kLoad &&
+                                        fProgramInfo.targetSupportsVkResolveLoad() &&
+                                        fGpu->vkCaps().preferDiscardableMSAAAttachment())) {
+    subpass = 1;
+  }
+  sk_sp<const GrVkPipeline> pipeline = resourceProvider.makePipeline(
+      fProgramInfo, shaderStageInfo, numShaderStages, compatibleRenderPass, pipelineLayout,
+      subpass);
+
   for (int i = 0; i < kGrShaderTypeCount; ++i) {
     // This if check should not be needed since calling destroy on a VK_NULL_HANDLE is allowed.
     // However this is causing a crash in certain drivers (e.g. NVidia).
@@ -305,7 +319,7 @@ GrVkPipelineState* GrVkPipelineStateBuilder::finalize(
   }
 
   return new GrVkPipelineState(
-      fGpu, pipeline, samplerDSHandle, fUniformHandles, fUniformHandler.fUniforms,
+      fGpu, std::move(pipeline), samplerDSHandle, fUniformHandles, fUniformHandler.fUniforms,
       fUniformHandler.fCurrentUBOOffset, fUniformHandler.fSamplers, std::move(fGeometryProcessor),
       std::move(fXferProcessor), std::move(fFragmentProcessors));
 }

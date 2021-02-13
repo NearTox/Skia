@@ -26,7 +26,6 @@ class GrAARectEffect : public GrFragmentProcessor {
   GrAARectEffect(const GrAARectEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "AARectEffect"; }
-  bool usesExplicitReturn() const override;
   GrClipEdgeType edgeType;
   SkRect rect;
 
@@ -34,8 +33,7 @@ class GrAARectEffect : public GrFragmentProcessor {
   GrAARectEffect(std::unique_ptr<GrFragmentProcessor> inputFP, GrClipEdgeType edgeType, SkRect rect)
       : INHERITED(
             kGrAARectEffect_ClassID,
-            (OptimizationFlags)(
-                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+            (OptimizationFlags)(inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
                 kCompatibleWithCoverageAsAlpha_OptimizationFlag),
         edgeType(edgeType),
         rect(rect) {

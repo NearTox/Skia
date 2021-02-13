@@ -16,10 +16,9 @@
 #include "src/gpu/GrPrimitiveProcessor.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/GrShaderVar.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLGeometryProcessor.h"
 #include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
@@ -49,7 +48,7 @@ constexpr static int kHeight = (int)kRect.fBottom + 21;
 class TessellationGM : public GpuGM {
   SkString onShortName() override { return SkString("tessellation"); }
   SkISize onISize() override { return {kWidth, kHeight}; }
-  DrawResult onDraw(GrRecordingContext*, GrRenderTargetContext*, SkCanvas*, SkString*) override;
+  DrawResult onDraw(GrRecordingContext*, GrSurfaceDrawContext*, SkCanvas*, SkString*) override;
 };
 
 class TessellationTestTriShader : public GrGeometryProcessor {
@@ -309,8 +308,9 @@ class TessellationTestOp : public GrDrawOp {
   }
 
   void onPrePrepare(
-      GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) override {}
+      GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+      GrLoadOp colorLoadOp) override {}
 
   void onPrepare(GrOpFlushState* flushState) override {
     if (fTriPositions) {
@@ -323,7 +323,7 @@ class TessellationTestOp : public GrDrawOp {
 
   void onExecute(GrOpFlushState* state, const SkRect& chainBounds) override {
     GrPipeline pipeline(
-        GrScissorTest::kDisabled, SkBlendMode::kSrc, state->drawOpArgs().writeSwizzle());
+        GrScissorTest::kDisabled, SkBlendMode::kSrc, state->drawOpArgs().writeView().swizzle());
     int tessellationPatchVertexCount;
     std::unique_ptr<GrGeometryProcessor> shader;
     if (fTriPositions) {
@@ -340,10 +340,9 @@ class TessellationTestOp : public GrDrawOp {
     }
 
     GrProgramInfo programInfo(
-        state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
-        state->proxy()->backendFormat(), state->writeView()->origin(), &pipeline,
-        &GrUserStencilSettings::kUnused, shader.get(), GrPrimitiveType::kPatches,
-        tessellationPatchVertexCount, state->renderPassBarriers());
+        state->writeView(), &pipeline, &GrUserStencilSettings::kUnused, shader.get(),
+        GrPrimitiveType::kPatches, tessellationPatchVertexCount, state->renderPassBarriers(),
+        state->colorLoadOp());
 
     state->bindPipeline(programInfo, SkRect::MakeIWH(kWidth, kHeight));
     state->bindBuffers(nullptr, nullptr, std::move(fVertexBuffer));
@@ -376,7 +375,7 @@ static SkPath build_outset_triangle(const std::array<float, 3>* tri) {
 }
 
 DrawResult TessellationGM::onDraw(
-    GrRecordingContext* ctx, GrRenderTargetContext* rtc, SkCanvas* canvas, SkString* errorMsg) {
+    GrRecordingContext* ctx, GrSurfaceDrawContext* rtc, SkCanvas* canvas, SkString* errorMsg) {
   if (!ctx->priv().caps()->shaderCaps()->tessellationSupport()) {
     *errorMsg = "Requires GPU tessellation support.";
     return DrawResult::kSkip;
@@ -398,12 +397,9 @@ DrawResult TessellationGM::onDraw(
   borderPaint.setColor4f({1, 0, 1, 1});
   canvas->drawRect(kRect.makeOutset(1.5f, 1.5f), borderPaint);
 
-  rtc->priv().testingOnly_addDrawOp(
-      GrOp::Make<TessellationTestOp>(ctx, canvas->getTotalMatrix(), kTri1));
-  rtc->priv().testingOnly_addDrawOp(
-      GrOp::Make<TessellationTestOp>(ctx, canvas->getTotalMatrix(), kTri2));
-  rtc->priv().testingOnly_addDrawOp(
-      GrOp::Make<TessellationTestOp>(ctx, canvas->getTotalMatrix(), nullptr));
+  rtc->addDrawOp(GrOp::Make<TessellationTestOp>(ctx, canvas->getTotalMatrix(), kTri1));
+  rtc->addDrawOp(GrOp::Make<TessellationTestOp>(ctx, canvas->getTotalMatrix(), kTri2));
+  rtc->addDrawOp(GrOp::Make<TessellationTestOp>(ctx, canvas->getTotalMatrix(), nullptr));
 
   return skiagm::DrawResult::kOk;
 }

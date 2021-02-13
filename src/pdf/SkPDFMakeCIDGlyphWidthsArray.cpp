@@ -130,7 +130,7 @@ std::unique_ptr<SkPDFArray> SkPDFMakeCIDGlyphWidthsArray(
     // a. Skipping don't cares or defaults is a win (trivial)
     if (advance == modeAdvance) {
       continue;
-        }
+    }
 #endif
 
         // b. 2+ repeats create run as long as possible, else start range

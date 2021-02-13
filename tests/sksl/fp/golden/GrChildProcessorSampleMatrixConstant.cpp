@@ -22,9 +22,9 @@ class GrGLSLChildProcessorSampleMatrixConstant : public GrGLSLFragmentProcessor 
     (void)_outer;
     SkString _sample0 = this->invokeChildWithMatrix(0, args);
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s;
+        R"SkSL(return %s;
 )SkSL",
-        args.fOutputColor, _sample0.c_str());
+        _sample0.c_str());
   }
 
  private:
@@ -42,7 +42,6 @@ bool GrChildProcessorSampleMatrixConstant::onIsEqual(const GrFragmentProcessor& 
   (void)that;
   return true;
 }
-bool GrChildProcessorSampleMatrixConstant::usesExplicitReturn() const { return false; }
 GrChildProcessorSampleMatrixConstant::GrChildProcessorSampleMatrixConstant(
     const GrChildProcessorSampleMatrixConstant& src)
     : INHERITED(kGrChildProcessorSampleMatrixConstant_ClassID, src.optimizationFlags()) {

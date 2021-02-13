@@ -15,7 +15,7 @@
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTarget.h"
-#include "src/gpu/GrRenderTargetContext.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
 
 static constexpr GrUserStencilSettings kCoverPass{GrUserStencilSettings::StaticInit<
@@ -52,7 +52,7 @@ void init_stencil_pass_settings(
     GrStencilSettings* stencil) {
   const GrAppliedClip* appliedClip = flushState.drawOpArgs().appliedClip();
   bool stencilClip = appliedClip && appliedClip->hasStencilClip();
-  GrRenderTarget* rt = flushState.drawOpArgs().proxy()->peekRenderTarget();
+  GrRenderTarget* rt = flushState.drawOpArgs().rtProxy()->peekRenderTarget();
   stencil->reset(
       GrPathRendering::GetStencilPassSettings(fillType), stencilClip, rt->numStencilBits());
 }
@@ -76,11 +76,9 @@ void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBoun
 
   sk_sp<GrPathProcessor> pathProc(GrPathProcessor::Create(this->color(), this->viewMatrix()));
 
-  GrRenderTargetProxy* proxy = flushState->proxy();
   GrProgramInfo programInfo(
-      proxy->numSamples(), proxy->numStencilSamples(), proxy->backendFormat(),
-      flushState->writeView()->origin(), pipeline, &kCoverPass, pathProc.get(),
-      GrPrimitiveType::kPath, 0, flushState->renderPassBarriers());
+      flushState->writeView(), pipeline, &kCoverPass, pathProc.get(), GrPrimitiveType::kPath, 0,
+      flushState->renderPassBarriers(), flushState->colorLoadOp());
 
   flushState->bindPipelineAndScissorClip(programInfo, this->bounds());
   flushState->bindTextures(programInfo.primProc(), nullptr, programInfo.pipeline());
@@ -88,7 +86,7 @@ void GrDrawPathOp::onExecute(GrOpFlushState* flushState, const SkRect& chainBoun
   GrStencilSettings stencil;
   init_stencil_pass_settings(*flushState, this->fillType(), &stencil);
   flushState->gpu()->pathRendering()->drawPath(
-      proxy->peekRenderTarget(), programInfo, stencil, fPath.get());
+      flushState->rtProxy()->peekRenderTarget(), programInfo, stencil, fPath.get());
 }
 
 //////////////////////////////////////////////////////////////////////////////

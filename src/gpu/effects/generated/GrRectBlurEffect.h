@@ -148,7 +148,6 @@ class GrRectBlurEffect : public GrFragmentProcessor {
   GrRectBlurEffect(const GrRectBlurEffect& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "RectBlurEffect"; }
-  bool usesExplicitReturn() const override;
   SkRect rect;
   bool applyInvVM;
   SkMatrix invVM;
@@ -160,15 +159,13 @@ class GrRectBlurEffect : public GrFragmentProcessor {
       std::unique_ptr<GrFragmentProcessor> integral, bool isFast)
       : INHERITED(
             kGrRectBlurEffect_ClassID,
-            (OptimizationFlags)(
-                inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
+            (OptimizationFlags)(inputFP ? ProcessorOptimizationFlags(inputFP.get()) : kAll_OptimizationFlags) &
                 kCompatibleWithCoverageAsAlpha_OptimizationFlag),
         rect(rect),
         applyInvVM(applyInvVM),
         invVM(invVM),
         isFast(isFast) {
     this->registerChild(std::move(inputFP), SkSL::SampleUsage::PassThrough());
-    SkASSERT(integral);
     this->registerChild(std::move(integral), SkSL::SampleUsage::Explicit());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

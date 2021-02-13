@@ -20,9 +20,9 @@ class GrGLSLMainCoords : public GrGLSLFragmentProcessor {
     const GrMainCoords& _outer = args.fFp.cast<GrMainCoords>();
     (void)_outer;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(%s, %s);
+        R"SkSL(return half4(half2(%s), half2(%s));
 )SkSL",
-        args.fOutputColor, args.fSampleCoord, args.fSampleCoord);
+        args.fSampleCoord, args.fSampleCoord);
   }
 
  private:
@@ -39,7 +39,6 @@ bool GrMainCoords::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrMainCoords::usesExplicitReturn() const { return false; }
 GrMainCoords::GrMainCoords(const GrMainCoords& src)
     : INHERITED(kGrMainCoords_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

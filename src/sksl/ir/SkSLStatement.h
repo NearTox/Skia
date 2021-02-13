@@ -33,10 +33,9 @@ class Statement : public IRNode {
     kSwitch,
     kSwitchCase,
     kVarDeclaration,
-    kWhile,
 
     kFirst = kBlock,
-    kLast = kWhile
+    kLast = kVarDeclaration,
   };
 
   Statement(int offset, Kind kind) : INHERITED(offset, (int)kind) {

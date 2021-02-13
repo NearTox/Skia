@@ -75,7 +75,7 @@ class GrGLOpsRenderPass : public GrOpsRenderPass {
       const GrBuffer* drawIndirectBuffer, size_t offset, int drawCount) override;
   void multiDrawElementsANGLEOrWebGL(
       const GrBuffer* drawIndirectBuffer, size_t offset, int drawCount);
-  void onClear(const GrScissorState& scissor, const SkPMColor4f& color) override;
+  void onClear(const GrScissorState& scissor, std::array<float, 4> color) override;
   void onClearStencilClip(const GrScissorState& scissor, bool insideStencilMask) override;
 
   GrGLGpu* fGpu;

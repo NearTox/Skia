@@ -152,7 +152,7 @@ DEF_GPUTEST(VkProtectedContext_AsyncReadFromProtectedSurface, reporter, options)
       10, 10, kRGBA_8888_SkColorType, kPremul_SkAlphaType, SkColorSpace::MakeSRGB());
   surface->asyncRescaleAndReadPixelsYUV420(
       kIdentity_SkYUVColorSpace, SkColorSpace::MakeSRGB(), image_info.bounds(),
-      image_info.dimensions(), SkSurface::RescaleGamma::kSrc, kNone_SkFilterQuality,
+      image_info.dimensions(), SkSurface::RescaleGamma::kSrc, SkSurface::RescaleMode::kNearest,
       &async_callback, &cbContext);
   dContext->submit();
   while (!cbContext.fCalled) {

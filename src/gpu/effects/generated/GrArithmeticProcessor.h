@@ -30,7 +30,6 @@ class GrArithmeticProcessor : public GrFragmentProcessor {
   GrArithmeticProcessor(const GrArithmeticProcessor& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ArithmeticProcessor"; }
-  bool usesExplicitReturn() const override;
   SkV4 k;
   bool enforcePMColor;
 
@@ -42,7 +41,6 @@ class GrArithmeticProcessor : public GrFragmentProcessor {
         k(k),
         enforcePMColor(enforcePMColor) {
     this->registerChild(std::move(srcFP), SkSL::SampleUsage::PassThrough());
-    SkASSERT(dstFP);
     this->registerChild(std::move(dstFP), SkSL::SampleUsage::PassThrough());
   }
   GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;

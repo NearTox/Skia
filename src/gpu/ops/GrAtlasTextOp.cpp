@@ -18,9 +18,8 @@
 #include "src/gpu/GrMemoryPool.h"
 #include "src/gpu/GrOpFlushState.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrResourceProvider.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/SkGr.h"
 #include "src/gpu/effects/GrBitmapTextGeoProc.h"
 #include "src/gpu/effects/GrDistanceFieldGeoProc.h"
@@ -73,8 +72,9 @@ GrAtlasTextOp::GrAtlasTextOp(
 }
 
 void GrAtlasTextOp::Geometry::fillVertexData(void* dst, int offset, int count) const {
-  fSubRun.fillVertexData(
-      dst, offset, count, fColor.toBytes_RGBA(), fDrawMatrix, fDrawOrigin, fClipRect);
+  SkMatrix positionMatrix = fDrawMatrix;
+  positionMatrix.preTranslate(fDrawOrigin.x(), fDrawOrigin.y());
+  fSubRun.fillVertexData(dst, offset, count, fColor.toBytes_RGBA(), positionMatrix, fClipRect);
 }
 
 void GrAtlasTextOp::visitProxies(const VisitProxyFunc& func) const {
@@ -178,15 +178,15 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
   if (this->usesDistanceFields()) {
     flushInfo.fGeometryProcessor = this->setupDfProcessor(
         target->allocator(), *target->caps().shaderCaps(), localMatrix, views, numActiveViews);
-    } else {
-      auto filter =
-          fNeedsGlyphTransform ? GrSamplerState::Filter::kLinear : GrSamplerState::Filter::kNearest;
-      // Bitmap text uses a single color, combineIfPossible ensures all geometries have the same
-      // color, so we can use the first's without worry.
-      flushInfo.fGeometryProcessor = GrBitmapTextGeoProc::Make(
-          target->allocator(), *target->caps().shaderCaps(), fGeometries.front().fColor, false,
-          views, numActiveViews, filter, maskFormat, localMatrix, fHasPerspective);
-    }
+  } else {
+    auto filter =
+        fNeedsGlyphTransform ? GrSamplerState::Filter::kLinear : GrSamplerState::Filter::kNearest;
+    // Bitmap text uses a single color, combineIfPossible ensures all geometries have the same
+    // color, so we can use the first's without worry.
+    flushInfo.fGeometryProcessor = GrBitmapTextGeoProc::Make(
+        target->allocator(), *target->caps().shaderCaps(), fGeometries.front().fColor, false, views,
+        numActiveViews, filter, maskFormat, localMatrix, fHasPerspective);
+  }
 
     const int vertexStride = (int)flushInfo.fGeometryProcessor->vertexStride();
 
@@ -220,7 +220,7 @@ void GrAtlasTextOp::onPrepareDraws(Target* target) {
 
     for (const Geometry& geo : fGeometries.items()) {
       const GrAtlasSubRun& subRun = geo.fSubRun;
-      SkASSERT((int)subRun.vertexStride() == vertexStride);
+      SkASSERT((int)subRun.vertexStride(geo.fDrawMatrix) == vertexStride);
 
       const int subRunEnd = subRun.glyphCount();
       for (int subRunCursor = 0; subRunCursor < subRunEnd;) {
@@ -411,7 +411,7 @@ GrGeometryProcessor* GrAtlasTextOp::setupDfProcessor(
 #if GR_TEST_UTILS
 
 GrOp::Owner GrAtlasTextOp::CreateOpTestingOnly(
-    GrRenderTargetContext* rtc, const SkPaint& skPaint, const SkFont& font,
+    GrSurfaceDrawContext* rtc, const SkPaint& skPaint, const SkFont& font,
     const SkMatrixProvider& mtxProvider, const char* text, int x, int y) {
   size_t textLen = (int)strlen(text);
 
@@ -426,27 +426,29 @@ GrOp::Owner GrAtlasTextOp::CreateOpTestingOnly(
     return nullptr;
   }
 
-  auto rContext = rtc->priv().recordingContext();
+  auto rContext = rtc->recordingContext();
   GrSDFTOptions SDFOptions = rContext->priv().SDFTOptions();
 
   sk_sp<GrTextBlob> blob = GrTextBlob::Make(glyphRunList, drawMatrix);
-  SkGlyphRunListPainter* painter = rtc->priv().testingOnly_glyphRunPainter();
-  painter->processGlyphRunList(
-      glyphRunList, drawMatrix, rtc->surfaceProps(),
-      rContext->priv().caps()->shaderCaps()->supportsDistanceFieldText(), SDFOptions, blob.get());
+  SkGlyphRunListPainter* painter = rtc->glyphRunPainter();
+  painter->processGlyphRun(
+      *glyphRunList.begin(), drawMatrix, glyphRunList.origin(), glyphRunList.paint(),
+      rtc->surfaceProps(), rContext->priv().caps()->shaderCaps()->supportsDistanceFieldText(),
+      SDFOptions, blob.get());
   if (!blob->subRunList().head()) {
     return nullptr;
   }
 
-  GrAtlasSubRun* subRun = static_cast<GrAtlasSubRun*>(blob->subRunList().head());
+  GrAtlasSubRun* subRun = blob->subRunList().head()->testingOnly_atlasSubRun();
+  SkASSERT(subRun);
   GrOp::Owner op;
   std::tie(std::ignore, op) = subRun->makeAtlasTextOp(nullptr, mtxProvider, glyphRunList, rtc);
   return op;
 }
 
 GR_DRAW_OP_TEST_DEFINE(GrAtlasTextOp) {
-  // Setup dummy SkPaint / GrPaint / GrRenderTargetContext
-  auto rtc = GrRenderTargetContext::Make(
+  // Setup dummy SkPaint / GrPaint / GrSurfaceDrawContext
+  auto rtc = GrSurfaceDrawContext::Make(
       context, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kApprox, {1024, 1024});
 
   SkSimpleMatrixProvider matrixProvider(GrTest::TestMatrixInvertible(random));

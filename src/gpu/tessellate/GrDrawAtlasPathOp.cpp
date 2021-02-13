@@ -79,7 +79,7 @@ class DrawAtlasPathShader::Impl : public GrGLSLGeometryProcessor {
                 if (dev_xywh.w < 0) {  // Negative height indicates that the path is transposed.
                     atlascoord = atlascoord.yx;
                 }
-                atlascoord += atlas_xy;
+                atlascoord += float2(atlas_xy);
                 %s = atlascoord * %s;)",
         atlasCoord.vsOut(), atlasAdjust);
 
@@ -142,8 +142,9 @@ GrOp::CombineResult GrDrawAtlasPathOp::onCombineIfPossible(
 }
 
 void GrDrawAtlasPathOp::onPrePrepare(
-    GrRecordingContext*, const GrSurfaceProxyView* writeView, GrAppliedClip*,
-    const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers) {}
+    GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
+    const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
+    GrLoadOp colorLoadOp) {}
 
 void GrDrawAtlasPathOp::onPrepare(GrOpFlushState* state) {
   size_t instanceStride = Instance::Stride(fUsesLocalCoords);
@@ -167,7 +168,7 @@ void GrDrawAtlasPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBoun
   }
   initArgs.fCaps = &state->caps();
   initArgs.fDstProxyView = state->drawOpArgs().dstProxyView();
-  initArgs.fWriteSwizzle = state->drawOpArgs().writeSwizzle();
+  initArgs.fWriteSwizzle = state->drawOpArgs().writeView().swizzle();
   GrPipeline pipeline(initArgs, std::move(fProcessors), state->detachAppliedClip());
 
   GrSwizzle swizzle =
@@ -177,10 +178,8 @@ void GrDrawAtlasPathOp::onExecute(GrOpFlushState* state, const SkRect& chainBoun
   SkASSERT(shader.instanceStride() == Instance::Stride(fUsesLocalCoords));
 
   GrProgramInfo programInfo(
-      state->proxy()->numSamples(), state->proxy()->numStencilSamples(),
-      state->proxy()->backendFormat(), state->writeView()->origin(), &pipeline,
-      &GrUserStencilSettings::kUnused, &shader, GrPrimitiveType::kTriangleStrip, 0,
-      state->renderPassBarriers());
+      state->writeView(), &pipeline, &GrUserStencilSettings::kUnused, &shader,
+      GrPrimitiveType::kTriangleStrip, 0, state->renderPassBarriers(), state->colorLoadOp());
 
   state->bindPipelineAndScissorClip(programInfo, this->bounds());
   state->bindTextures(shader, *fAtlasProxy, pipeline);

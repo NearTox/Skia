@@ -19,7 +19,6 @@ class GrUseExplicitReturn : public GrFragmentProcessor {
   GrUseExplicitReturn(const GrUseExplicitReturn& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "UseExplicitReturn"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrUseExplicitReturn() : INHERITED(kGrUseExplicitReturn_ClassID, kNone_OptimizationFlags) {}

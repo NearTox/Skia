@@ -23,7 +23,7 @@ class SkSurface_Gpu : public SkSurface_Base {
 
   // This is an internal-only factory
   static sk_sp<SkSurface> MakeWrappedRenderTarget(
-      GrRecordingContext*, std::unique_ptr<GrRenderTargetContext>);
+      GrRecordingContext*, std::unique_ptr<GrSurfaceDrawContext>);
 
   GrRecordingContext* onGetRecordingContext() override;
 
@@ -38,13 +38,12 @@ class SkSurface_Gpu : public SkSurface_Base {
   sk_sp<SkImage> onNewImageSnapshot(const SkIRect* subset) override;
   void onWritePixels(const SkPixmap&, int x, int y) override;
   void onAsyncRescaleAndReadPixels(
-      const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma,
-      SkFilterQuality rescaleQuality, ReadPixelsCallback callback,
-      ReadPixelsContext context) override;
+      const SkImageInfo& info, const SkIRect& srcRect, RescaleGamma rescaleGamma, RescaleMode,
+      ReadPixelsCallback callback, ReadPixelsContext context) override;
   void onAsyncRescaleAndReadPixelsYUV420(
       SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-      const SkISize& dstSize, RescaleGamma rescaleGamma, SkFilterQuality rescaleQuality,
-      ReadPixelsCallback callback, ReadPixelsContext context) override;
+      const SkISize& dstSize, RescaleGamma rescaleGamma, RescaleMode, ReadPixelsCallback callback,
+      ReadPixelsContext context) override;
 
   void onCopyOnWrite(ContentChangeMode) override;
   void onDiscard() override;
@@ -56,8 +55,10 @@ class SkSurface_Gpu : public SkSurface_Base {
       bool deleteSemaphoresAfterWait) override;
   bool onCharacterize(SkSurfaceCharacterization*) const override;
   bool onIsCompatible(const SkSurfaceCharacterization&) const override;
-  void onDraw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint) override;
-  bool onDraw(sk_sp<const SkDeferredDisplayList>, int xOffset, int yOffset) override;
+  void onDraw(
+      SkCanvas* canvas, SkScalar x, SkScalar y, const SkSamplingOptions&,
+      const SkPaint* paint) override;
+  bool onDraw(sk_sp<const SkDeferredDisplayList>, SkIPoint offset) override;
 
   SkGpuDevice* getDevice() { return fDevice.get(); }
 

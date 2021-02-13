@@ -10,14 +10,14 @@
 
 #include "include/gpu/GrBackendSurface.h"
 #include "src/core/SkCachedData.h"
+#include "src/gpu/GrYUVATextureProxies.h"
 #include "src/image/SkImage_GpuBase.h"
 
 class GrDirectContext;
 class GrRecordingContext;
 class GrTexture;
-struct SkYUVASizeInfo;
 
-// Wraps the 3 or 4 planes of a YUVA image for consumption by the GPU.
+// Wraps the 1 to 4 planes of a YUVA image for consumption by the GPU.
 // Initially any direct rendering will be done by passing the individual planes to a shader.
 // Once any method requests a flattened image (e.g., onReadPixels), the flattened RGB
 // proxy will be stored and used for any future rendering.
@@ -26,8 +26,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
   friend class GrYUVAImageTextureMaker;
 
   SkImage_GpuYUVA(
-      sk_sp<GrImageContext>, SkISize size, uint32_t uniqueID, SkYUVColorSpace,
-      GrSurfaceProxyView views[], int numViews, const SkYUVAIndex[4], sk_sp<SkColorSpace>);
+      sk_sp<GrImageContext>, uint32_t uniqueID, GrYUVATextureProxies proxies, sk_sp<SkColorSpace>);
 
   GrSemaphoresSubmitted onFlush(GrDirectContext*, const GrFlushInfo&) override;
 
@@ -38,7 +37,8 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
   const GrSurfaceProxyView* view(GrRecordingContext* context) const override;
 
   bool onIsTextureBacked() const override {
-    SkASSERT(fViews[0].proxy() || fRGBView.proxy());
+    // We should have YUVA proxies or a RGBA proxy,but not both.
+    SkASSERT(fYUVAProxies.isValid() != SkToBool(fRGBView));
     return true;
   }
 
@@ -57,7 +57,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
 #if GR_TEST_UTILS
   bool testingOnly_IsFlattened() const {
     // We should only have the flattened proxy or the planar proxies at one point in time.
-    SkASSERT(SkToBool(fRGBView.proxy()) != SkToBool(fViews[0].proxy()));
+    SkASSERT(SkToBool(fRGBView) != fYUVAProxies.isValid());
     return SkToBool(fRGBView.proxy());
   }
 #endif
@@ -66,9 +66,7 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
    * This is the implementation of SkDeferredDisplayListRecorder::makeYUVAPromiseTexture.
    */
   static sk_sp<SkImage> MakePromiseYUVATexture(
-      GrRecordingContext*, SkYUVColorSpace yuvColorSpace, const GrBackendFormat yuvaFormats[],
-      const SkISize yuvaSizes[], const SkYUVAIndex yuvaIndices[4], int width, int height,
-      GrSurfaceOrigin textureOrigin, sk_sp<SkColorSpace> imageColorSpace,
+      GrRecordingContext*, const GrYUVABackendTextureInfo&, sk_sp<SkColorSpace> imageColorSpace,
       PromiseImageTextureFulfillProc textureFulfillProc,
       PromiseImageTextureReleaseProc textureReleaseProc,
       PromiseImageTextureContext textureContexts[]);
@@ -78,12 +76,12 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
 
   void flattenToRGB(GrRecordingContext*) const;
 
-  // This array will usually only be sparsely populated.
-  // The actual non-null fields are dictated by the 'fYUVAIndices' indices
-  mutable GrSurfaceProxyView fViews[4];
-  int fNumViews;
-  SkYUVAIndex fYUVAIndices[4];
-  const SkYUVColorSpace fYUVColorSpace;
+  mutable GrYUVATextureProxies fYUVAProxies;
+
+  // This is only allocated when the image needs to be flattened rather than
+  // using the separate YUVA planes. From thence forth we will only use the
+  // the RGBView.
+  mutable GrSurfaceProxyView fRGBView;
 
   // If this is non-null then the planar data should be converted from fFromColorSpace to
   // this->colorSpace(). Otherwise we assume the planar data (post YUV->RGB conversion) is already
@@ -95,10 +93,6 @@ class SkImage_GpuYUVA : public SkImage_GpuBase {
   mutable sk_sp<SkColorSpace> fOnMakeColorSpaceTarget;
   mutable sk_sp<SkImage> fOnMakeColorSpaceResult;
 
-  // This is only allocated when the image needs to be flattened rather than
-  // using the separate YUVA planes. From thence forth we will only use the
-  // the RGBView.
-  mutable GrSurfaceProxyView fRGBView;
   using INHERITED = SkImage_GpuBase;
 };
 

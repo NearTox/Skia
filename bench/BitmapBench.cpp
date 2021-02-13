@@ -66,6 +66,9 @@ class BitmapBench : public Benchmark {
     this->onDrawIntoBitmap(bm);
 
     fBitmap = bm;
+    if (!fForceUpdate) {
+      fBitmap.setImmutable();
+    }
   }
 
   void onDraw(int loops, SkCanvas* canvas) override {

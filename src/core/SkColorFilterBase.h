@@ -9,6 +9,7 @@
 #define SkColorFilterBase_DEFINED
 
 #include "include/core/SkColorFilter.h"
+#include "src/core/SkVM_fwd.h"
 
 class GrColorInfo;
 class GrFragmentProcessor;
@@ -18,13 +19,6 @@ class SkBitmap;
 class SkColorSpace;
 struct SkStageRec;
 using GrFPResult = std::tuple<bool, std::unique_ptr<GrFragmentProcessor>>;
-
-namespace skvm {
-class Builder;
-struct F32;
-struct Uniforms;
-struct Color;
-}  // namespace skvm
 
 class SkColorFilterBase : public SkColorFilter {
  public:
@@ -60,9 +54,9 @@ class SkColorFilterBase : public SkColorFilter {
 
   static void RegisterFlattenables();
 
-  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkColorFilter_Type; }
+  static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
 
-  SkFlattenable::Type getFlattenableType() const noexcept override { return kSkColorFilter_Type; }
+  SkFlattenable::Type getFlattenableType() const override { return kSkColorFilter_Type; }
 
   static sk_sp<SkColorFilter> Deserialize(
       const void* data, size_t size, const SkDeserialProcs* procs = nullptr) {
@@ -87,19 +81,19 @@ class SkColorFilterBase : public SkColorFilter {
   using INHERITED = SkFlattenable;
 };
 
-static inline SkColorFilterBase* as_CFB(SkColorFilter* filter) noexcept {
+static inline SkColorFilterBase* as_CFB(SkColorFilter* filter) {
   return static_cast<SkColorFilterBase*>(filter);
 }
 
-static inline const SkColorFilterBase* as_CFB(const SkColorFilter* filter) noexcept {
+static inline const SkColorFilterBase* as_CFB(const SkColorFilter* filter) {
   return static_cast<const SkColorFilterBase*>(filter);
 }
 
-static inline const SkColorFilterBase* as_CFB(const sk_sp<SkColorFilter>& filter) noexcept {
+static inline const SkColorFilterBase* as_CFB(const sk_sp<SkColorFilter>& filter) {
   return static_cast<SkColorFilterBase*>(filter.get());
 }
 
-static inline sk_sp<SkColorFilterBase> as_CFB_sp(sk_sp<SkColorFilter> filter) noexcept {
+static inline sk_sp<SkColorFilterBase> as_CFB_sp(sk_sp<SkColorFilter> filter) {
   return sk_sp<SkColorFilterBase>(static_cast<SkColorFilterBase*>(filter.release()));
 }
 

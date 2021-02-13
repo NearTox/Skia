@@ -39,11 +39,11 @@ class BadPaintGM : public skiagm::GM {
 
     // Empty bitmap.
     fPaints.push_back().setColor(SK_ColorGREEN);
-    fPaints.back().setShader(emptyBmp.makeShader());
+    fPaints.back().setShader(emptyBmp.makeShader(SkSamplingOptions()));
 
     // Non-invertible local matrix.
     fPaints.push_back().setColor(SK_ColorGREEN);
-    fPaints.back().setShader(blueBmp.makeShader(&badMatrix));
+    fPaints.back().setShader(blueBmp.makeShader(SkSamplingOptions(), badMatrix));
   }
 
   void onDraw(SkCanvas* canvas) override {

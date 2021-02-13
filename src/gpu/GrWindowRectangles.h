@@ -17,7 +17,7 @@ class GrWindowRectangles {
 
   GrWindowRectangles() : fCount(0) {}
   GrWindowRectangles(const GrWindowRectangles& that) : fCount(0) { *this = that; }
-  ~GrWindowRectangles();
+  ~GrWindowRectangles() { SkSafeUnref(this->rec()); }
 
   GrWindowRectangles makeOffset(int dx, int dy) const;
 
@@ -55,8 +55,6 @@ struct GrWindowRectangles::Rec : public GrNonAtomicRef<Rec> {
 
   SkIRect fData[kMaxWindows];
 };
-
-inline GrWindowRectangles::~GrWindowRectangles() { SkSafeUnref(this->rec()); }
 
 inline const SkIRect* GrWindowRectangles::data() const {
   return fCount <= 1 ? &fLocalWindow : fRec->fData;

@@ -1495,17 +1495,7 @@ class SK_API SkPath {
     bool fForceClose;
     bool fNeedClose;
     bool fCloseLine;
-    enum SegmentState : uint8_t {
-      /** The current contour is empty. Starting processing or have just closed a contour. */
-      kEmptyContour_SegmentState,
-      /** Have seen a move, but nothing else. */
-      kAfterMove_SegmentState,
-      /** Have seen a primitive but not yet closed the path. Also the initial state. */
-      kAfterPrimitive_SegmentState
-    };
-    SegmentState fSegmentState;
 
-    inline const SkPoint& cons_moveTo();
     Verb autoClose(SkPoint pts[2]);
   };
 
@@ -1518,13 +1508,13 @@ class SK_API SkPath {
   */
   class RangeIter {
    public:
-    constexpr RangeIter() noexcept = default;
-    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights) noexcept
+    RangeIter() = default;
+    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights)
         : fVerb(verbs), fPoints(points), fWeights(weights) {
       SkDEBUGCODE(fInitialPoints = fPoints;)
     }
-    bool operator!=(const RangeIter& that) const noexcept { return fVerb != that.fVerb; }
-    bool operator==(const RangeIter& that) const noexcept { return fVerb == that.fVerb; }
+    bool operator!=(const RangeIter& that) const { return fVerb != that.fVerb; }
+    bool operator==(const RangeIter& that) const { return fVerb == that.fVerb; }
     RangeIter& operator++() {
       auto verb = static_cast<SkPathVerb>(*fVerb++);
       fPoints += pts_advance_after_verb(verb);
@@ -1538,7 +1528,7 @@ class SK_API SkPath {
       this->operator++();
       return copy;
     }
-    SkPathVerb peekVerb() const noexcept { return static_cast<SkPathVerb>(*fVerb); }
+    SkPathVerb peekVerb() const { return static_cast<SkPathVerb>(*fVerb); }
     std::tuple<SkPathVerb, const SkPoint*, const SkScalar*> operator*() const {
       SkPathVerb verb = this->peekVerb();
       // We provide the starting point for beziers by peeking backwards from the current
@@ -1568,7 +1558,7 @@ class SK_API SkPath {
         case SkPathVerb::kQuad: return -1;
         case SkPathVerb::kConic: return -1;
         case SkPathVerb::kCubic: return -1;
-        case SkPathVerb::kClose: return 0;
+        case SkPathVerb::kClose: return -1;
       }
       SkUNREACHABLE;
     }
@@ -1589,7 +1579,7 @@ class SK_API SkPath {
 
         @return  RawIter of empty SkPath
     */
-    constexpr RawIter() noexcept = default;
+    RawIter() {}
 
     /** Sets RawIter to return elements of verb array, SkPoint array, and conic weight in path.
 
@@ -1629,7 +1619,7 @@ class SK_API SkPath {
 
         @return  conic weight for conic SkPoint returned by next()
     */
-    SkScalar conicWeight() const noexcept { return fConicWeight; }
+    SkScalar conicWeight() const { return fConicWeight; }
 
    private:
     RangeIter fIter;
@@ -1650,37 +1640,22 @@ class SK_API SkPath {
   bool contains(SkScalar x, SkScalar y) const;
 
   /** Writes text representation of SkPath to stream. If stream is nullptr, writes to
-      standard output. Set forceClose to true to get edges used to fill SkPath.
-      Set dumpAsHex true to generate exact binary representations
+      standard output. Set dumpAsHex true to generate exact binary representations
       of floating point numbers used in SkPoint array and conic weights.
 
       @param stream      writable SkWStream receiving SkPath text representation; may be nullptr
-      @param forceClose  true if missing kClose_Verb is output
       @param dumpAsHex   true if SkScalar values are written as hexadecimal
 
       example: https://fiddle.skia.org/c/@Path_dump
   */
-  void dump(SkWStream* stream, bool forceClose, bool dumpAsHex) const;
+  void dump(SkWStream* stream, bool dumpAsHex) const;
 
-  /** Writes text representation of SkPath to standard output. The representation may be
-      directly compiled as C++ code. Floating point values are written
-      with limited precision; it may not be possible to reconstruct original SkPath
-      from output.
+  void dump() const { this->dump(nullptr, false); }
+  void dumpHex() const { this->dump(nullptr, true); }
 
-      example: https://fiddle.skia.org/c/@Path_dump_2
-  */
-  void dump() const;
-
-  /** Writes text representation of SkPath to standard output. The representation may be
-      directly compiled as C++ code. Floating point values are written
-      in hexadecimal to preserve their exact bit pattern. The output reconstructs the
-      original SkPath.
-
-      Use instead of dump() when submitting
-
-      example: https://fiddle.skia.org/c/@Path_dumpHex
-  */
-  void dumpHex() const;
+  // Like dump(), but outputs for the SkPath::Make() factory
+  void dumpArrays(SkWStream* stream, bool dumpAsHex) const;
+  void dumpArrays() const { this->dumpArrays(nullptr, false); }
 
   /** Writes SkPath to buffer, returning the number of bytes written.
       Pass nullptr to obtain the storage size.

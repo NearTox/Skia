@@ -165,7 +165,7 @@ class PictureShaderGM : public skiagm::GM {
     canvas->translate(fSceneSize * 1.1f, 0);
 
     auto bitmapShader = fBitmap.makeShader(
-        kTileConfigs[tileMode].tmx, kTileConfigs[tileMode].tmy,
+        kTileConfigs[tileMode].tmx, kTileConfigs[tileMode].tmy, SkSamplingOptions(),
         fUseLocalMatrixWrapper ? nullptr : &localMatrix);
     paint.setShader(
         fUseLocalMatrixWrapper ? bitmapShader->makeWithLocalMatrix(localMatrix) : bitmapShader);

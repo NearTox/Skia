@@ -22,7 +22,6 @@ class GrChildProcessorSampleMatrixSingleInUniform : public GrFragmentProcessor {
       const GrChildProcessorSampleMatrixSingleInUniform& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "ChildProcessorSampleMatrixSingleInUniform"; }
-  bool usesExplicitReturn() const override;
   SkMatrix matrix;
 
  private:

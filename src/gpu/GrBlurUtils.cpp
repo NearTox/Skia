@@ -15,10 +15,9 @@
 #include "src/gpu/GrFixedClip.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrRenderTargetContext.h"
-#include "src/gpu/GrRenderTargetContextPriv.h"
 #include "src/gpu/GrSoftwarePathRenderer.h"
 #include "src/gpu/GrStyle.h"
+#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/GrThreadSafeCache.h"
 #include "src/gpu/effects/GrTextureEffect.h"
@@ -41,12 +40,14 @@ static constexpr auto kMaskOrigin = kTopLeft_GrSurfaceOrigin;
 // is already burnt into the mask this boils down to a rect draw.
 // Return true if the mask was successfully drawn.
 static bool draw_mask(
-    GrRenderTargetContext* renderTargetContext, const GrClip* clip, const SkMatrix& viewMatrix,
+    GrSurfaceDrawContext* surfaceDrawContext, const GrClip* clip, const SkMatrix& viewMatrix,
     const SkIRect& maskRect, GrPaint&& paint, GrSurfaceProxyView mask) {
   SkMatrix inverse;
   if (!viewMatrix.invert(&inverse)) {
     return false;
   }
+
+  mask.concatSwizzle(GrSwizzle("aaaa"));
 
   SkMatrix matrix =
       SkMatrix::Translate(-SkIntToScalar(maskRect.fLeft), -SkIntToScalar(maskRect.fTop));
@@ -54,7 +55,7 @@ static bool draw_mask(
   paint.setCoverageFragmentProcessor(
       GrTextureEffect::Make(std::move(mask), kUnknown_SkAlphaType, matrix));
 
-  renderTargetContext->fillRectWithLocalMatrix(
+  surfaceDrawContext->fillRectWithLocalMatrix(
       clip, std::move(paint), GrAA::kNo, SkMatrix::I(), SkRect::Make(maskRect), inverse);
   return true;
 }
@@ -168,8 +169,8 @@ static GrSurfaceProxyView sw_create_filtered_mask(
   return filteredMaskView;
 }
 
-// Create a mask of 'shape' and return the resulting renderTargetContext
-static std::unique_ptr<GrRenderTargetContext> create_mask_GPU(
+// Create a mask of 'shape' and return the resulting surfaceDrawContext
+static std::unique_ptr<GrSurfaceDrawContext> create_mask_GPU(
     GrRecordingContext* context, const SkIRect& maskRect, const SkMatrix& origViewMatrix,
     const GrStyledShape& shape, int sampleCnt) {
   // Use GrResourceProvider::MakeApprox to implement our own approximate size matching, but demand
@@ -182,7 +183,7 @@ static std::unique_ptr<GrRenderTargetContext> create_mask_GPU(
   // the same. We should offset our filter within the render target and expand the size as needed
   // to guarantee at least 1px of padding on all sides.
   auto approxSize = GrResourceProvider::MakeApprox(maskRect.size());
-  auto rtContext = GrRenderTargetContext::MakeWithFallback(
+  auto rtContext = GrSurfaceDrawContext::MakeWithFallback(
       context, GrColorType::kAlpha_8, nullptr, SkBackingFit::kExact, approxSize, sampleCnt,
       GrMipmapped::kNo, GrProtected::kNo, kMaskOrigin);
   if (!rtContext) {
@@ -233,12 +234,12 @@ static bool get_unclipped_shape_dev_bounds(
 // Gets the shape bounds, the clip bounds, and the intersection (if any). Returns false if there
 // is no intersection.
 static bool get_shape_and_clip_bounds(
-    GrRenderTargetContext* renderTargetContext, const GrClip* clip, const GrStyledShape& shape,
+    GrSurfaceDrawContext* surfaceDrawContext, const GrClip* clip, const GrStyledShape& shape,
     const SkMatrix& matrix, SkIRect* unclippedDevShapeBounds, SkIRect* devClipBounds) {
   // compute bounds as intersection of rt size, clip, and path
-  *devClipBounds =
-      clip ? clip->getConservativeBounds()
-           : SkIRect::MakeWH(renderTargetContext->width(), renderTargetContext->height());
+  *devClipBounds = clip
+                       ? clip->getConservativeBounds()
+                       : SkIRect::MakeWH(surfaceDrawContext->width(), surfaceDrawContext->height());
 
   if (!get_unclipped_shape_dev_bounds(shape, matrix, unclippedDevShapeBounds)) {
     *unclippedDevShapeBounds = SkIRect::MakeEmpty();
@@ -330,8 +331,8 @@ static bool compute_key_and_clip_bounds(
 }
 
 static GrSurfaceProxyView hw_create_filtered_mask(
-    GrDirectContext* dContext, GrRenderTargetContext* renderTargetContext,
-    const SkMatrix& viewMatrix, const GrStyledShape& shape, const SkMaskFilterBase* filter,
+    GrDirectContext* dContext, GrSurfaceDrawContext* surfaceDrawContext, const SkMatrix& viewMatrix,
+    const GrStyledShape& shape, const SkMaskFilterBase* filter,
     const SkIRect& unclippedDevShapeBounds, const SkIRect& clipBounds, SkIRect* maskRect,
     GrUniqueKey* key) {
   if (!filter->canFilterMaskGPU(shape, unclippedDevShapeBounds, clipBounds, viewMatrix, maskRect)) {
@@ -370,8 +371,8 @@ static GrSurfaceProxyView hw_create_filtered_mask(
     }
   }
 
-  std::unique_ptr<GrRenderTargetContext> maskRTC(
-      create_mask_GPU(dContext, *maskRect, viewMatrix, shape, renderTargetContext->numSamples()));
+  std::unique_ptr<GrSurfaceDrawContext> maskRTC(
+      create_mask_GPU(dContext, *maskRect, viewMatrix, shape, surfaceDrawContext->numSamples()));
   if (!maskRTC) {
     if (key->isValid()) {
       // It is very unlikely that 'create_mask_GPU' will fail after 'CreateLazyView'
@@ -409,7 +410,7 @@ static GrSurfaceProxyView hw_create_filtered_mask(
 }
 
 static void draw_shape_with_mask_filter(
-    GrRecordingContext* rContext, GrRenderTargetContext* renderTargetContext, const GrClip* clip,
+    GrRecordingContext* rContext, GrSurfaceDrawContext* surfaceDrawContext, const GrClip* clip,
     GrPaint&& paint, const SkMatrix& viewMatrix, const SkMaskFilterBase* maskFilter,
     const GrStyledShape& origShape) {
   SkASSERT(maskFilter);
@@ -432,7 +433,7 @@ static void draw_shape_with_mask_filter(
   }
 
   if (maskFilter->directFilterMaskGPU(
-          rContext, renderTargetContext, std::move(paint), clip, viewMatrix, *shape)) {
+          rContext, surfaceDrawContext, std::move(paint), clip, viewMatrix, *shape)) {
     // the mask filter was able to draw itself directly, so there's nothing
     // left to do.
     return;
@@ -445,8 +446,7 @@ static void draw_shape_with_mask_filter(
 
   SkIRect unclippedDevShapeBounds, devClipBounds;
   if (!get_shape_and_clip_bounds(
-          renderTargetContext, clip, *shape, viewMatrix, &unclippedDevShapeBounds,
-          &devClipBounds)) {
+          surfaceDrawContext, clip, *shape, viewMatrix, &unclippedDevShapeBounds, &devClipBounds)) {
     // TODO: just cons up an opaque mask here
     if (!inverseFilled) {
       return;
@@ -456,7 +456,7 @@ static void draw_shape_with_mask_filter(
   GrUniqueKey maskKey;
   SkIRect boundsForClip;
   if (!compute_key_and_clip_bounds(
-          &maskKey, &boundsForClip, renderTargetContext->caps(), viewMatrix, inverseFilled,
+          &maskKey, &boundsForClip, surfaceDrawContext->caps(), viewMatrix, inverseFilled,
           maskFilter, *shape, unclippedDevShapeBounds, devClipBounds)) {
     return;  // 'shape' was entirely clipped out
   }
@@ -466,11 +466,11 @@ static void draw_shape_with_mask_filter(
 
   if (auto dContext = rContext->asDirectContext()) {
     filteredMaskView = hw_create_filtered_mask(
-        dContext, renderTargetContext, viewMatrix, *shape, maskFilter, unclippedDevShapeBounds,
+        dContext, surfaceDrawContext, viewMatrix, *shape, maskFilter, unclippedDevShapeBounds,
         boundsForClip, &maskRect, &maskKey);
     if (filteredMaskView) {
       if (draw_mask(
-              renderTargetContext, clip, viewMatrix, maskRect, std::move(paint),
+              surfaceDrawContext, clip, viewMatrix, maskRect, std::move(paint),
               std::move(filteredMaskView))) {
         // This path is completely drawn
         return;
@@ -485,7 +485,7 @@ static void draw_shape_with_mask_filter(
       &maskKey);
   if (filteredMaskView) {
     if (draw_mask(
-            renderTargetContext, clip, viewMatrix, maskRect, std::move(paint),
+            surfaceDrawContext, clip, viewMatrix, maskRect, std::move(paint),
             std::move(filteredMaskView))) {
       return;
     }
@@ -494,15 +494,15 @@ static void draw_shape_with_mask_filter(
 }
 
 void GrBlurUtils::drawShapeWithMaskFilter(
-    GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, const GrClip* clip,
+    GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext, const GrClip* clip,
     const GrStyledShape& shape, GrPaint&& paint, const SkMatrix& viewMatrix,
     const SkMaskFilter* mf) {
   draw_shape_with_mask_filter(
-      context, renderTargetContext, clip, std::move(paint), viewMatrix, as_MFB(mf), shape);
+      context, surfaceDrawContext, clip, std::move(paint), viewMatrix, as_MFB(mf), shape);
 }
 
 void GrBlurUtils::drawShapeWithMaskFilter(
-    GrRecordingContext* context, GrRenderTargetContext* renderTargetContext, const GrClip* clip,
+    GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext, const GrClip* clip,
     const SkPaint& paint, const SkMatrixProvider& matrixProvider, const GrStyledShape& shape) {
   if (context->abandoned()) {
     return;
@@ -510,7 +510,7 @@ void GrBlurUtils::drawShapeWithMaskFilter(
 
   GrPaint grPaint;
   if (!SkPaintToGrPaint(
-          context, renderTargetContext->colorInfo(), paint, matrixProvider, &grPaint)) {
+          context, surfaceDrawContext->colorInfo(), paint, matrixProvider, &grPaint)) {
     return;
   }
 
@@ -519,9 +519,9 @@ void GrBlurUtils::drawShapeWithMaskFilter(
   if (mf && !mf->hasFragmentProcessor()) {
     // The MaskFilter wasn't already handled in SkPaintToGrPaint
     draw_shape_with_mask_filter(
-        context, renderTargetContext, clip, std::move(grPaint), viewMatrix, mf, shape);
+        context, surfaceDrawContext, clip, std::move(grPaint), viewMatrix, mf, shape);
   } else {
     GrAA aa = GrAA(paint.isAntiAlias());
-    renderTargetContext->drawShape(clip, std::move(grPaint), aa, viewMatrix, shape);
+    surfaceDrawContext->drawShape(clip, std::move(grPaint), aa, viewMatrix, shape);
   }
 }

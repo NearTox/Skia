@@ -70,7 +70,7 @@ class BitmapShaderGM : public GM {
       }
 
       canvas->save();
-      paint.setShader(fBitmap.makeShader(&s));
+      paint.setShader(fBitmap.makeShader(SkSamplingOptions(), s));
 
       // draw the shader with a bitmap mask
       canvas->drawBitmap(fMask, 0, 0, &paint);
@@ -92,7 +92,8 @@ class BitmapShaderGM : public GM {
 
       canvas->translate(0, 25);
 
-      paint.setShader(fMask.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &s));
+      paint.setShader(
+          fMask.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), s));
       paint.setColor(SK_ColorRED);
 
       // draw the mask using the shader and a color
@@ -130,7 +131,7 @@ DEF_SIMPLE_GM(hugebitmapshader, canvas, 100, 100) {
   }
   bitmap.setPixels(pixels);
 
-  paint.setShader(bitmap.makeShader(SkTileMode::kMirror, SkTileMode::kMirror));
+  paint.setShader(bitmap.makeShader(SkTileMode::kMirror, SkTileMode::kMirror, SkSamplingOptions()));
   paint.setColor(SK_ColorRED);
   paint.setAntiAlias(true);
   canvas->drawCircle(50, 50, 50, paint);

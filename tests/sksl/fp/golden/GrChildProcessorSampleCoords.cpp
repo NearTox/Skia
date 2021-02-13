@@ -23,9 +23,9 @@ class GrGLSLChildProcessorSampleCoords : public GrGLSLFragmentProcessor {
     SkString _coords1 = SkStringPrintf("%s / 2.0", args.fSampleCoord);
     SkString _sample1 = this->invokeChild(0, args, _coords1.c_str());
     fragBuilder->codeAppendf(
-        R"SkSL(%s = %s + %s;
+        R"SkSL(return %s + %s;
 )SkSL",
-        args.fOutputColor, _sample0.c_str(), _sample1.c_str());
+        _sample0.c_str(), _sample1.c_str());
   }
 
  private:
@@ -42,7 +42,6 @@ bool GrChildProcessorSampleCoords::onIsEqual(const GrFragmentProcessor& other) c
   (void)that;
   return true;
 }
-bool GrChildProcessorSampleCoords::usesExplicitReturn() const { return false; }
 GrChildProcessorSampleCoords::GrChildProcessorSampleCoords(const GrChildProcessorSampleCoords& src)
     : INHERITED(kGrChildProcessorSampleCoords_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

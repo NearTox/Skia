@@ -335,6 +335,7 @@ void Window_win::show() { ShowWindow(fHWnd, SW_SHOW); }
 
 bool Window_win::attach(BackendType attachType) {
   fBackend = attachType;
+  fInitializedBackend = true;
 
   switch (attachType) {
 #ifdef SK_GL
@@ -383,7 +384,9 @@ void Window_win::setRequestedDisplayParams(const DisplayParams& params, bool all
     fWindowContext = nullptr;
     this->closeWindow();
     this->init(fHInstance);
-    this->attach(fBackend);
+    if (fInitializedBackend) {
+      this->attach(fBackend);
+    }
   }
 
   INHERITED::setRequestedDisplayParams(params, allowReattach);

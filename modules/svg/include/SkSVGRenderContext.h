@@ -117,6 +117,8 @@ class SkSVGRenderContext {
   const SkPaint* fillPaint() const;
   const SkPaint* strokePaint() const;
 
+  SkSVGColorType resolveSvgColor(const SkSVGColor&) const;
+
   // The local computed clip path (not inherited).
   const SkPath* clipPath() const { return fClipPath.getMaybeNull(); }
 
@@ -132,8 +134,8 @@ class SkSVGRenderContext {
   SkSVGRenderContext& operator=(const SkSVGRenderContext&) = delete;
 
   void applyOpacity(SkScalar opacity, uint32_t flags);
-  void applyFilter(const SkSVGFilterType&);
-  void applyClip(const SkSVGClip&);
+  void applyFilter(const SkSVGFuncIRI&);
+  void applyClip(const SkSVGFuncIRI&);
   void updatePaintsWithCurrentColor(const SkSVGPresentationAttributes&);
 
   const sk_sp<SkFontMgr>& fFontMgr;

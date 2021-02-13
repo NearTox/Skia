@@ -115,19 +115,19 @@ char* SkStrAppendScalar(char buffer[], SkScalar);
 */
 class SK_API SkString {
  public:
-  SkString() noexcept;
+  SkString();
   explicit SkString(size_t len);
   explicit SkString(const char text[]);
   SkString(const char text[], size_t len);
   SkString(const SkString&);
-  SkString(SkString&&) noexcept;
+  SkString(SkString&&);
   explicit SkString(const std::string&);
   ~SkString();
 
-  bool isEmpty() const noexcept { return 0 == fRec->fLength; }
-  size_t size() const noexcept { return (size_t)fRec->fLength; }
-  const char* c_str() const noexcept { return fRec->data(); }
-  char operator[](size_t n) const noexcept { return this->c_str()[n]; }
+  bool isEmpty() const { return 0 == fRec->fLength; }
+  size_t size() const { return (size_t)fRec->fLength; }
+  const char* c_str() const { return fRec->data(); }
+  char operator[](size_t n) const { return this->c_str()[n]; }
 
   bool equals(const SkString&) const;
   bool equals(const char text[]) const;
@@ -148,13 +148,13 @@ class SK_API SkString {
   // these methods edit the string
 
   SkString& operator=(const SkString&);
-  SkString& operator=(SkString&&) noexcept;
+  SkString& operator=(SkString&&);
   SkString& operator=(const char text[]);
 
   char* writable_str();
   char& operator[](size_t n) { return this->writable_str()[n]; }
 
-  void reset() noexcept;
+  void reset();
   /** String contents are preserved on resize. (For destructive resize, `set(nullptr, length)`.)
    * `resize` automatically reserves an extra byte at the end of the buffer for a null terminator.
    */
@@ -226,18 +226,18 @@ class SK_API SkString {
    *  Swap contents between this and other. This function is guaranteed
    *  to never fail or throw.
    */
-  void swap(SkString& other) noexcept;
+  void swap(SkString& other);
 
  private:
   struct Rec {
    public:
-    constexpr Rec(uint32_t len, int32_t refCnt) noexcept : fLength(len), fRefCnt(refCnt) {}
+    constexpr Rec(uint32_t len, int32_t refCnt) : fLength(len), fRefCnt(refCnt) {}
     static sk_sp<Rec> Make(const char text[], size_t len);
-    char* data() noexcept { return &fBeginningOfData; }
-    const char* data() const noexcept { return &fBeginningOfData; }
-    void ref() const noexcept;
-    void unref() const noexcept;
-    bool unique() const noexcept;
+    char* data() { return &fBeginningOfData; }
+    const char* data() const { return &fBeginningOfData; }
+    void ref() const;
+    void unref() const;
+    bool unique() const;
 
     uint32_t fLength;  // logically size_t, but we want it to stay 32 bits
     mutable std::atomic<int32_t> fRefCnt;
@@ -252,8 +252,7 @@ class SK_API SkString {
 #ifdef SK_DEBUG
   const SkString& validate() const;
 #else
-  SkString& validate() noexcept { return *this; }
-  const SkString& validate() const noexcept { return *this; }
+  const SkString& validate() const { return *this; }
 #endif
 
   static const Rec gEmptyRec;
@@ -263,9 +262,9 @@ class SK_API SkString {
 SkString SkStringPrintf(const char* format, ...) SK_PRINTF_LIKE(1, 2);
 /// This makes it easier to write a caller as a VAR_ARGS function where the format string is
 /// optional.
-static inline SkString SkStringPrintf() noexcept { return SkString(); }
+static inline SkString SkStringPrintf() { return SkString(); }
 
-static inline void swap(SkString& a, SkString& b) noexcept { a.swap(b); }
+static inline void swap(SkString& a, SkString& b) { a.swap(b); }
 
 enum SkStrSplitMode {
   // Strictly return all results. If the input is ",," and the separator is ',' this will return

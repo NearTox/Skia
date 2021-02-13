@@ -33,7 +33,7 @@ void SKPAnimationBench::drawPicture() {
   }
 
   for (int j = 0; j < this->tileRects().count(); ++j) {
-    this->surfaces()[j]->getCanvas()->flush();
+    this->surfaces()[j]->flush();
   }
 }
 

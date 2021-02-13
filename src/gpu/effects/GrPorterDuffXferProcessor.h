@@ -39,8 +39,8 @@ class GrPorterDuffXPFactory : public GrXPFactory {
   static const GrXferProcessor& SimpleSrcOverXP();
 
   static AnalysisProperties SrcOverAnalysisProperties(
-      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType);
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, bool hasMixedSamples,
+      const GrCaps&, GrClampType);
 
  private:
   constexpr GrPorterDuffXPFactory(SkBlendMode);
@@ -50,8 +50,8 @@ class GrPorterDuffXPFactory : public GrXPFactory {
       const GrCaps&, GrClampType) const override;
 
   AnalysisProperties analysisProperties(
-      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
-      GrClampType) const override;
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, bool hasMixedSamples,
+      const GrCaps&, GrClampType) const override;
 
   GR_DECLARE_XP_FACTORY_TEST
   static void TestGetXPOutputTypes(const GrXferProcessor*, int* outPrimary, int* outSecondary);

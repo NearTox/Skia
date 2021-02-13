@@ -22,7 +22,7 @@ class TypeReference final : public Expression {
   static constexpr Kind kExpressionKind = Kind::kTypeReference;
 
   TypeReference(const Context& context, int offset, const Type* value)
-      : INHERITED(offset, kExpressionKind, context.fInvalid_Type.get()), fValue(*value) {}
+      : INHERITED(offset, kExpressionKind, context.fTypes.fInvalid.get()), fValue(*value) {}
 
   const Type& value() const { return fValue; }
 

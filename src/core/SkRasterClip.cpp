@@ -63,6 +63,8 @@ static MutateResult mutate_conservative_op(SkRegion::Op* op, bool inverseFilled)
 void SkConservativeClip::opRect(
     const SkRect& localRect, const SkMatrix& ctm, const SkIRect& devBounds, SkRegion::Op op,
     bool doAA) {
+  this->applyOpParams(
+      op, doAA ? ClipAA::kYes : ClipAA::kNo, ctm.isScaleTranslate() ? IsRect::kYes : IsRect::kNo);
   SkIRect ir;
   switch (mutate_conservative_op(&op, false)) {
     case kDoNothing_MutateResult: return;
@@ -79,11 +81,15 @@ void SkConservativeClip::opRect(
 void SkConservativeClip::opRRect(
     const SkRRect& rrect, const SkMatrix& ctm, const SkIRect& devBounds, SkRegion::Op op,
     bool doAA) {
+  this->applyOpParams(
+      op, doAA ? ClipAA::kYes : ClipAA::kNo,
+      (rrect.isRect() && ctm.isScaleTranslate()) ? IsRect::kYes : IsRect::kNo);
   this->opRect(rrect.getBounds(), ctm, devBounds, op, doAA);
 }
 
 void SkConservativeClip::opPath(
     const SkPath& path, const SkMatrix& ctm, const SkIRect& devBounds, SkRegion::Op op, bool doAA) {
+  this->applyOpParams(op, doAA ? ClipAA::kYes : ClipAA::kNo, IsRect::kNo);
   SkIRect ir;
   switch (mutate_conservative_op(&op, path.isInverseFillType())) {
     case kDoNothing_MutateResult: return;
@@ -99,10 +105,13 @@ void SkConservativeClip::opPath(
 }
 
 void SkConservativeClip::opRegion(const SkRegion& rgn, SkRegion::Op op) {
+  this->applyOpParams(op, ClipAA::kNo, rgn.isRect() ? IsRect::kYes : IsRect::kNo);
   this->opIRect(rgn.getBounds(), op);
 }
 
 void SkConservativeClip::opIRect(const SkIRect& devRect, SkRegion::Op op) {
+  this->applyOpParams(op, ClipAA::kNo, IsRect::kYes);
+
   if (SkRegion::kIntersect_Op == op) {
     if (!fBounds.intersect(devRect)) {
       fBounds.setEmpty();

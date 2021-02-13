@@ -186,9 +186,22 @@ class GrVkCaps : public GrCaps {
   void addExtraSamplerKey(
       GrProcessorKeyBuilder*, GrSamplerState, const GrBackendFormat&) const override;
 
-  GrProgramDesc makeDesc(GrRenderTarget*, const GrProgramInfo&) const override;
+  GrProgramDesc makeDesc(
+      GrRenderTarget*, const GrProgramInfo&, ProgramDescOverrideFlags) const override;
 
   GrInternalSurfaceFlags getExtraSurfaceFlagsForDeferredRT() const override;
+
+  // If true then when doing MSAA draws, we will prefer to discard the msaa attachment on load
+  // and stores. The use of this feature for specific draws depends on the render target having a
+  // resolve attachment, and if we need to load previous data the resolve attachment must be
+  // usable as an input attachment. Otherwise we will just write out and store the msaa attachment
+  // like normal.
+  // This flag is similar to enabling gl render to texture for msaa rendering.
+  bool preferDiscardableMSAAAttachment() const { return fPreferDiscardableMSAAAttachment; }
+
+  bool mustLoadFullImageWithDiscardableMSAA() const {
+    return fMustLoadFullImageWithDiscardableMSAA;
+  }
 
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;
@@ -328,6 +341,9 @@ class GrVkCaps : public GrCaps {
   uint32_t fMaxInputAttachmentDescriptors = 0;
 
   bool fPreferCachedCpuMemory = true;
+
+  bool fPreferDiscardableMSAAAttachment = false;
+  bool fMustLoadFullImageWithDiscardableMSAA = false;
 
   using INHERITED = GrCaps;
 };

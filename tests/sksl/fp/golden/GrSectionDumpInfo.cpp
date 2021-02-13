@@ -20,9 +20,8 @@ class GrGLSLSectionDumpInfo : public GrGLSLFragmentProcessor {
     const GrSectionDumpInfo& _outer = args.fFp.cast<GrSectionDumpInfo>();
     (void)_outer;
     fragBuilder->codeAppendf(
-        R"SkSL(%s = half4(1.0);
-)SkSL",
-        args.fOutputColor);
+        R"SkSL(return half4(1.0);
+)SkSL");
   }
 
  private:
@@ -39,7 +38,6 @@ bool GrSectionDumpInfo::onIsEqual(const GrFragmentProcessor& other) const {
   (void)that;
   return true;
 }
-bool GrSectionDumpInfo::usesExplicitReturn() const { return false; }
 GrSectionDumpInfo::GrSectionDumpInfo(const GrSectionDumpInfo& src)
     : INHERITED(kGrSectionDumpInfo_ClassID, src.optimizationFlags()) {
   this->cloneAndRegisterAllChildProcessors(src);

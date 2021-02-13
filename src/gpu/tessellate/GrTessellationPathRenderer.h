@@ -65,7 +65,7 @@ class GrTessellationPathRenderer : public GrPathRenderer, public GrOnFlushCallba
   }
   // Allocates space in fAtlas if the path is small and simple enough, and if there is room.
   bool tryAddPathToAtlas(
-      const GrCaps&, const SkMatrix&, const SkPath&, const SkRect& devBounds, GrAAType,
+      const GrCaps&, const SkMatrix&, const GrStyledShape&, const SkRect& devBounds, GrAAType,
       SkIRect* devIBounds, SkIPoint16* locationInAtlas, bool* transposedInAtlas);
   void renderAtlas(GrOnFlushResourceProvider*);
 

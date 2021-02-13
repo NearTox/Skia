@@ -16,6 +16,7 @@
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkScan.h"
+#include "src/core/SkVM.h"
 #include "src/core/SkVertState.h"
 #include "src/core/SkVerticesPriv.h"
 #include "src/shaders/SkComposeShader.h"
@@ -143,11 +144,19 @@ class SkTriColorShader : public SkShaderBase {
     return true;
   }
 
+  skvm::Color onProgram(
+      skvm::Builder*, skvm::Coord, skvm::Coord, skvm::Color, const SkMatrixProvider&,
+      const SkMatrix*, SkFilterQuality, const SkColorInfo&, skvm::Uniforms*,
+      SkArenaAlloc*) const override {
+    // TODO?
+    return {};
+  }
+
  private:
   bool isOpaque() const override { return fIsOpaque; }
   // For serialization.  This will never be called.
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const noexcept override { return nullptr; }
+  const char* getTypeName() const override { return nullptr; }
 
   // If fUsePersp, we need both of these matrices,
   // otherwise we can combine them, and only use fM43

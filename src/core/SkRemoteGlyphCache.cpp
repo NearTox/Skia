@@ -313,7 +313,6 @@ class RemoteStrike final : public SkStrikeForGPU {
   void writeGlyphPath(const SkGlyph& glyph, Serializer* serializer) const;
   void ensureScalerContext();
 
-  const int fNumberOfGlyphs;
   const SkAutoDescriptor fDescriptor;
   const SkDiscardableHandleId fDiscardableHandleId;
 
@@ -348,8 +347,7 @@ class RemoteStrike final : public SkStrikeForGPU {
 RemoteStrike::RemoteStrike(
     const SkDescriptor& descriptor, std::unique_ptr<SkScalerContext> context,
     uint32_t discardableHandleId)
-    : fNumberOfGlyphs(context->getGlyphCount()),
-      fDescriptor{descriptor},
+    : fDescriptor{descriptor},
       fDiscardableHandleId(discardableHandleId),
       fRoundingSpec{context->isSubpixel(), context->computeAxisAlignmentForHText()}
       // N.B. context must come last because it is used above.
@@ -457,12 +455,10 @@ void RemoteStrike::commonMaskLoop(
     MaskSummary* summary = fSentGlyphs.find(packedID);
     if (summary == nullptr) {
       // Put the new SkGlyph in the glyphs to send.
-      fMasksToSend.emplace_back(packedID);
+      this->ensureScalerContext();
+      fMasksToSend.emplace_back(fContext->makeGlyph(packedID));
       SkGlyph* glyph = &fMasksToSend.back();
 
-      // Build the glyph
-      this->ensureScalerContext();
-      fContext->getMetrics(glyph);
       MaskSummary newSummary = {packedID.value(), CanDrawAsMask(*glyph), CanDrawAsSDFT(*glyph)};
       summary = fSentGlyphs.set(newSummary);
     }
@@ -490,12 +486,9 @@ void RemoteStrike::prepareForMaskDrawing(
     MaskSummary* summary = fSentGlyphs.find(packedID);
     if (summary == nullptr) {
       // Put the new SkGlyph in the glyphs to send.
-      fMasksToSend.emplace_back(packedID);
-      SkGlyph* glyph = &fMasksToSend.back();
-
-      // Build the glyph
       this->ensureScalerContext();
-      fContext->getMetrics(glyph);
+      fMasksToSend.emplace_back(fContext->makeGlyph(packedID));
+      SkGlyph* glyph = &fMasksToSend.back();
 
       MaskSummary newSummary = {packedID.value(), CanDrawAsMask(*glyph), CanDrawAsSDFT(*glyph)};
 
@@ -526,12 +519,9 @@ void RemoteStrike::prepareForPathDrawing(
     PathSummary* summary = fSentPaths.find(glyphID);
     if (summary == nullptr) {
       // Put the new SkGlyph in the glyphs to send.
-      fPathsToSend.emplace_back(SkPackedGlyphID{glyphID});
-      SkGlyph* glyph = &fPathsToSend.back();
-
-      // Build the glyph
       this->ensureScalerContext();
-      fContext->getMetrics(glyph);
+      fPathsToSend.emplace_back(fContext->makeGlyph(SkPackedGlyphID{glyphID}));
+      SkGlyph* glyph = &fPathsToSend.back();
 
       uint16_t maxDimensionOrPath = glyph->maxDimension();
       // Only try to get the path if the glyphs is not color.
@@ -796,8 +786,13 @@ class SkTextBlobCacheDiffCanvas::TrackLayerDevice final : public SkNoPixelsDevic
     GrSDFTOptions options = {
         ctxOptions.fMinDistanceFieldFontSize, ctxOptions.fGlyphsAsPathsFontSize};
 
-    fPainter.processGlyphRunList(
-        glyphRunList, this->localToDevice(), this->surfaceProps(), fDFTSupport, options, nullptr);
+    const SkPoint drawOrigin = glyphRunList.origin();
+    const SkPaint& drawPaint = glyphRunList.paint();
+    for (auto& glyphRun : glyphRunList) {
+      fPainter.processGlyphRun(
+          glyphRun, this->localToDevice(), drawOrigin, drawPaint, this->surfaceProps(), fDFTSupport,
+          options, nullptr);
+    }
 #endif  // SK_SUPPORT_GPU
   }
 
@@ -913,8 +908,10 @@ bool SkStrikeClientImpl::ReadGlyph(SkTLazy<SkGlyph>& glyph, Deserializer* deseri
   if (!deserializer->read<uint16_t>(&glyph->fHeight)) return false;
   if (!deserializer->read<int16_t>(&glyph->fTop)) return false;
   if (!deserializer->read<int16_t>(&glyph->fLeft)) return false;
-  if (!deserializer->read<uint8_t>(&glyph->fMaskFormat)) return false;
-  if (!SkMask::IsValidFormat(glyph->fMaskFormat)) return false;
+  uint8_t maskFormat;
+  if (!deserializer->read<uint8_t>(&maskFormat)) return false;
+  if (!SkMask::IsValidFormat(maskFormat)) return false;
+  glyph->fMaskFormat = static_cast<SkMask::Format>(maskFormat);
 
   return true;
 }

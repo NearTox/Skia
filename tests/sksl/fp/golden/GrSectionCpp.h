@@ -19,7 +19,6 @@ class GrSectionCpp : public GrFragmentProcessor {
   GrSectionCpp(const GrSectionCpp& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "SectionCpp"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrSectionCpp() : INHERITED(kGrSectionCpp_ClassID, kNone_OptimizationFlags) {}

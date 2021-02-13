@@ -54,14 +54,14 @@ class SkSurface_Base : public SkSurface {
    * Default implementation does a rescale/read and then calls the callback.
    */
   virtual void onAsyncRescaleAndReadPixels(
-      const SkImageInfo&, const SkIRect& srcRect, RescaleGamma, SkFilterQuality, ReadPixelsCallback,
+      const SkImageInfo&, const SkIRect& srcRect, RescaleGamma, RescaleMode, ReadPixelsCallback,
       ReadPixelsContext);
   /**
    * Default implementation does a rescale/read/yuv conversion and then calls the callback.
    */
   virtual void onAsyncRescaleAndReadPixelsYUV420(
       SkYUVColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
-      const SkISize& dstSize, RescaleGamma, SkFilterQuality, ReadPixelsCallback, ReadPixelsContext);
+      const SkISize& dstSize, RescaleGamma, RescaleMode, ReadPixelsCallback, ReadPixelsContext);
 
   /**
    *  Default implementation:
@@ -72,7 +72,7 @@ class SkSurface_Base : public SkSurface {
    *      image->unref();
    *  }
    */
-  virtual void onDraw(SkCanvas*, SkScalar x, SkScalar y, const SkPaint*);
+  virtual void onDraw(SkCanvas*, SkScalar x, SkScalar y, const SkSamplingOptions&, const SkPaint*);
 
   /**
    * Called as a performance hint when the Surface is allowed to make it's contents
@@ -115,17 +115,15 @@ class SkSurface_Base : public SkSurface {
 
   virtual bool onCharacterize(SkSurfaceCharacterization*) const { return false; }
   virtual bool onIsCompatible(const SkSurfaceCharacterization&) const { return false; }
-  virtual bool onDraw(sk_sp<const SkDeferredDisplayList>, int xOffset, int yOffset) {
-    return false;
-  }
+  virtual bool onDraw(sk_sp<const SkDeferredDisplayList>, SkIPoint offset) { return false; }
 
   inline SkCanvas* getCachedCanvas();
   inline sk_sp<SkImage> refCachedImage();
 
-  bool hasCachedImage() const noexcept { return fCachedImage != nullptr; }
+  bool hasCachedImage() const { return fCachedImage != nullptr; }
 
   // called by SkSurface to compute a new genID
-  uint32_t newGenerationID() noexcept;
+  uint32_t newGenerationID();
 
  private:
   std::unique_ptr<SkCanvas> fCachedCanvas;
@@ -135,7 +133,7 @@ class SkSurface_Base : public SkSurface {
 
   // Returns true if there is an outstanding image-snapshot, indicating that a call to aboutToDraw
   // would trigger a copy-on-write.
-  bool outstandingImageSnapshot() const noexcept;
+  bool outstandingImageSnapshot() const;
 
   friend class SkCanvas;
   friend class SkSurface;

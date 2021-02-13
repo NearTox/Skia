@@ -94,9 +94,9 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
    */
   GrBackendFormat defaultBackendFormat(SkColorType ct, GrRenderable renderable) const;
 
-  bool isValid() const noexcept { return nullptr != fCaps; }
+  bool isValid() const { return nullptr != fCaps; }
 
-  bool operator==(const GrContextThreadSafeProxy& that) const noexcept {
+  bool operator==(const GrContextThreadSafeProxy& that) const {
     // Each GrContext should only ever have a single thread-safe proxy.
     SkASSERT((this == &that) == (this->fContextID == that.fContextID));
     return this == &that;

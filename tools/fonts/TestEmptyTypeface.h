@@ -24,9 +24,9 @@ class TestEmptyTypeface : public SkTypeface {
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
     return sk_ref_sp(this);
   }
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects& effects, const SkDescriptor* desc) const override {
-    return SkScalerContext::MakeEmptyContext(
+    return SkScalerContext::MakeEmpty(
         sk_ref_sp(const_cast<TestEmptyTypeface*>(this)), effects, desc);
   }
   void onFilterRec(SkScalerContextRec*) const override {}

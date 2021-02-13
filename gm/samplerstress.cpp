@@ -76,7 +76,7 @@ class SamplerStressGM : public GM {
 
     createTexture();
 
-    fShader = fTexture.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat);
+    fShader = fTexture.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions());
   }
 
   void createMaskFilter() {

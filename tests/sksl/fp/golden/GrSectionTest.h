@@ -19,7 +19,6 @@ class GrSectionTest : public GrFragmentProcessor {
   GrSectionTest(const GrSectionTest& src);
   std::unique_ptr<GrFragmentProcessor> clone() const override;
   const char* name() const override { return "SectionTest"; }
-  bool usesExplicitReturn() const override;
 
  private:
   GrSectionTest() : INHERITED(kGrSectionTest_ClassID, kNone_OptimizationFlags) {}

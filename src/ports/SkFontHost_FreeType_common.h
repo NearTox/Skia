@@ -100,7 +100,7 @@ class SkTypeface_FreeType : public SkTypeface {
       : INHERITED(style, isFixedPitch) {}
 
   std::unique_ptr<SkFontData> cloneFontData(const SkFontArguments&) const;
-  SkScalerContext* onCreateScalerContext(
+  std::unique_ptr<SkScalerContext> onCreateScalerContext(
       const SkScalerContextEffects&, const SkDescriptor*) const override;
   void onFilterRec(SkScalerContextRec*) const override;
   void getGlyphToUnicodeMap(SkUnichar*) const override;

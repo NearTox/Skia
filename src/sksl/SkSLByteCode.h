@@ -16,19 +16,21 @@
 
 namespace SkSL {
 
-class ExternalValue;
+class ExternalFunction;
 class FunctionDeclaration;
+class OutputStream;
 
 enum class ByteCodeInstruction : uint8_t {
   // B = bool, F = float, I = int, S = signed, U = unsigned
 
-  kAbs,   // N
-  kAddF,  // N
-  kAddI,  // N
-  kAndB,  // N
-  kACos,  // N
-  kASin,  // N
-  kATan,  // N
+  kAbs,    // N
+  kAddF,   // N
+  kAddI,   // N
+  kAndB,   // N
+  kACos,   // N
+  kASin,   // N
+  kATan,   // N
+  kATan2,  // N
   kBranch,
   // Followed by a byte indicating the index of the function to call
   kCall,
@@ -97,6 +99,7 @@ enum class ByteCodeInstruction : uint8_t {
   // Masked selection: Stack is ... A1, A2, A3, B1, B2, B3, M1, M2, M3
   //                   Result:      M1 ? B1 : A1, M2 ? B2 : A2, M3 ? B3 : A3
   kMix,        // N
+  kMod,        // N
   kNegateF,    // N
   kNegateI,    // N
   kMultiplyF,  // N
@@ -107,10 +110,9 @@ enum class ByteCodeInstruction : uint8_t {
   kPow,        // N
   // Followed by a 32 bit value containing the value to push
   kPushImmediate,
-  kReadExternal,  // N, slot
-  kRemainderF,    // N
-  kRemainderS,    // N
-  kRemainderU,    // N
+  kRemainderF,  // N
+  kRemainderS,  // N
+  kRemainderU,  // N
   // Followed by a byte indicating the number of slots to reserve on the stack (for later return)
   kReserve,
   // Followed by a byte indicating the number of slots being returned
@@ -131,8 +133,10 @@ enum class ByteCodeInstruction : uint8_t {
   kShiftLeft,
   kShiftRightS,
   kShiftRightU,
+  kSign,         // N
   kSin,          // N
   kSqrt,         // N
+  kStep,         // N
   kStore,        // N, slot
   kStoreGlobal,  // N, slot
   // Indirect stores get the slot to store from the top of the stack
@@ -142,11 +146,10 @@ enum class ByteCodeInstruction : uint8_t {
   // count byte provides the current vector size (the vector is the top n stack elements), and the
   // second count byte provides the swizzle component count.
   kSwizzle,
-  kSubtractF,      // N
-  kSubtractI,      // N
-  kTan,            // N
-  kWriteExternal,  // N, slot
-  kXorB,           // N
+  kSubtractF,  // N
+  kSubtractI,  // N
+  kTan,        // N
+  kXorB,       // N
 
   kMaskPush,
   kMaskPop,
@@ -174,9 +177,9 @@ class ByteCodeFunction {
   size_t size() const { return fCode.size(); }
 
   /**
-   * Print bytecode disassembly to stdout.
+   * Print bytecode disassembly to 'out', or SkDebugf if not supplied.
    */
-  void disassemble() const;
+  void disassemble(OutputStream* out = nullptr) const;
 
  private:
   ByteCodeFunction(const FunctionDeclaration* declaration);
@@ -279,6 +282,11 @@ class SK_API ByteCode {
    */
   bool canRun() const { return fChildFPCount == 0 && !fUsesFragCoord; }
 
+  /**
+   * Print bytecode disassembly to 'out', or SkDebugf if not supplied.
+   */
+  void disassemble(OutputStream* out = nullptr) const;
+
  private:
   ByteCode(const ByteCode&) = delete;
   ByteCode& operator=(const ByteCode&) = delete;
@@ -293,7 +301,7 @@ class SK_API ByteCode {
   std::vector<Uniform> fUniforms;
 
   std::vector<std::unique_ptr<ByteCodeFunction>> fFunctions;
-  std::vector<const ExternalValue*> fExternalValues;
+  std::vector<const ExternalFunction*> fExternalFunctions;
 };
 
 }  // namespace SkSL

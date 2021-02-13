@@ -12,7 +12,6 @@
 #include "src/sksl/SkSLIRGenerator.h"
 #include "src/sksl/SkSLLexer.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLFloatLiteral.h"
 
 namespace SkSL {
 
@@ -34,12 +33,6 @@ class PrefixExpression final : public Expression {
 
   const std::unique_ptr<Expression>& operand() const { return fOperand; }
 
-  bool isNegationOfCompileTimeConstant() const {
-    return this->getOperator() == Token::Kind::TK_MINUS && this->operand()->isCompileTimeConstant();
-  }
-
-  bool isCompileTimeConstant() const override { return this->isNegationOfCompileTimeConstant(); }
-
   bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects && (this->getOperator() == Token::Kind::TK_PLUSPLUS ||
                                                this->getOperator() == Token::Kind::TK_MINUSMINUS)) {
@@ -50,21 +43,6 @@ class PrefixExpression final : public Expression {
 
   std::unique_ptr<Expression> constantPropagate(
       const IRGenerator& irGenerator, const DefinitionMap& definitions) override;
-
-  SKSL_FLOAT getFVecComponent(int index) const override {
-    SkASSERT(this->getOperator() == Token::Kind::TK_MINUS);
-    return -this->operand()->getFVecComponent(index);
-  }
-
-  SKSL_INT getIVecComponent(int index) const override {
-    SkASSERT(this->getOperator() == Token::Kind::TK_MINUS);
-    return -this->operand()->getIVecComponent(index);
-  }
-
-  SKSL_FLOAT getMatComponent(int col, int row) const override {
-    SkASSERT(this->getOperator() == Token::Kind::TK_MINUS);
-    return -this->operand()->getMatComponent(col, row);
-  }
 
   std::unique_ptr<Expression> clone() const override {
     return std::unique_ptr<Expression>(

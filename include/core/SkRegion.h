@@ -140,7 +140,7 @@ class SK_API SkRegion {
 
       @return  true if SkRegion contains one SkIRect
   */
-  bool isRect() const noexcept { return fRunHead == kRectRunHeadPtr; }
+  bool isRect() const { return fRunHead == kRectRunHeadPtr; }
 
   /** Returns true if SkRegion is described by more than one rectangle.
 
@@ -153,7 +153,7 @@ class SK_API SkRegion {
 
       @return  combined bounds of all SkIRect elements
   */
-  const SkIRect& getBounds() const noexcept { return fBounds; }
+  const SkIRect& getBounds() const { return fBounds; }
 
   /** Returns a value that increases with the number of
       elements in SkRegion. Returns zero if SkRegion is empty.
@@ -298,7 +298,7 @@ class SK_API SkRegion {
       @param r  SkIRect to contain
       @return   true quickly if r points are equal or inside
   */
-  bool quickContains(const SkIRect& r) const noexcept {
+  bool quickContains(const SkIRect& r) const {
     SkASSERT(this->isEmpty() == fBounds.isEmpty());  // valid region
 
     return r.fLeft < r.fRight && r.fTop < r.fBottom &&
@@ -441,7 +441,7 @@ class SK_API SkRegion {
 
         @return  empty SkRegion iterator
     */
-    Iterator() noexcept : fRgn(nullptr), fDone(true) {}
+    Iterator() : fRgn(nullptr), fDone(true) {}
 
     /** Sets SkRegion::Iterator to return elements of SkIRect array in region.
 
@@ -473,7 +473,7 @@ class SK_API SkRegion {
 
         @return  true if data parsing is complete
     */
-    bool done() const noexcept { return fDone; }
+    bool done() const { return fDone; }
 
     /** Advances SkRegion::Iterator to next SkIRect in SkRegion if it is not done.
 
@@ -486,13 +486,13 @@ class SK_API SkRegion {
 
         @return  part of SkRegion as SkIRect
     */
-    const SkIRect& rect() const noexcept { return fRect; }
+    const SkIRect& rect() const { return fRect; }
 
     /** Returns SkRegion if set; otherwise, returns nullptr.
 
         @return  iterated SkRegion
     */
-    const SkRegion* rgn() const noexcept { return fRgn; }
+    const SkRegion* rgn() const { return fRgn; }
 
    private:
     const SkRegion* fRgn;
@@ -521,7 +521,7 @@ class SK_API SkRegion {
 
         @return  true if data parsing is complete
     */
-    bool done() noexcept { return fDone; }
+    bool done() { return fDone; }
 
     /** Advances iterator to next SkIRect in SkRegion contained by clip.
 
@@ -535,7 +535,7 @@ class SK_API SkRegion {
 
         @return  part of SkRegion inside clip as SkIRect
     */
-    const SkIRect& rect() const noexcept { return fRect; }
+    const SkIRect& rect() const { return fRect; }
 
    private:
     Iterator fIter;
@@ -609,7 +609,7 @@ class SK_API SkRegion {
 
   struct RunHead;
 
-  static RunHead* emptyRunHeadPtr() noexcept { return (SkRegion::RunHead*)-1; }
+  static RunHead* emptyRunHeadPtr() { return (SkRegion::RunHead*)-1; }
   static constexpr RunHead* kRectRunHeadPtr = nullptr;
 
   // allocate space for count runs
