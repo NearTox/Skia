@@ -18,11 +18,10 @@
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrImageInfo.h"
-#include "src/gpu/GrSurfaceContext.h"
-#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrSurfaceProxy.h"
 #include "src/gpu/GrTextureProxy.h"
 #include "src/gpu/SkGr.h"
+#include "src/gpu/SurfaceFillContext.h"
 #include "tests/Test.h"
 #include "tools/gpu/GrContextFactory.h"
 #include "tools/gpu/ProxyUtils.h"
@@ -71,7 +70,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(CopySurface, reporter, ctxInfo) {
           for (const SkIRect& srcRect : kSrcRects) {
             for (const SkIPoint& dstPoint : kDstPoints) {
               for (const SkImageInfo& ii : kImageInfos) {
-                GrPixmap srcPM(ii, srcPixels.get(), kRowBytes);
+                GrCPixmap srcPM(ii, srcPixels.get(), kRowBytes);
                 GrPixmap dstPM(ii, dstPixels.get(), kRowBytes);
                 auto srcView = sk_gpu_test::MakeTextureProxyViewFromData(
                     dContext, sRenderable, sOrigin, srcPM);
@@ -96,12 +95,11 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(CopySurface, reporter, ctxInfo) {
                   }
                 }
 
-                auto dstContext =
-                    GrSurfaceContext::Make(dContext, std::move(dstView), ii.colorInfo());
+                auto dstContext = dContext->priv().makeSC(std::move(dstView), ii.colorInfo());
 
                 bool result = false;
                 if (sOrigin == dOrigin) {
-                  result = dstContext->testCopy(srcView.proxy(), srcRect, dstPoint);
+                  result = dstContext->testCopy(srcView.refProxy(), srcRect, dstPoint);
                 } else if (dRenderable == GrRenderable::kYes) {
                   SkASSERT(dstContext->asFillContext());
                   result = dstContext->asFillContext()->blitTexture(

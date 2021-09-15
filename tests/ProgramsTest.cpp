@@ -16,16 +16,16 @@
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrDrawOpTest.h"
 #include "src/gpu/GrDrawingManager.h"
+#include "src/gpu/GrFragmentProcessor.h"
 #include "src/gpu/GrPipeline.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/effects/GrBlendFragmentProcessor.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
-#include "src/gpu/effects/generated/GrConfigConversionEffect.h"
-#include "src/gpu/glsl/GrGLSLFragmentProcessor.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"
 #include "src/gpu/ops/GrDrawOp.h"
+#include "src/gpu/v1/SurfaceDrawContext_v1.h"
 #include "tests/Test.h"
 #include "tools/gpu/GrContextFactory.h"
 
@@ -34,25 +34,12 @@
 #endif
 
 /*
- * A dummy processor which just tries to insert a massive key and verify that it can retrieve the
+ * A simple processor which just tries to insert a massive key and verify that it can retrieve the
  * whole thing correctly
  */
 static const uint32_t kMaxKeySize = 1024;
 
-class GLBigKeyProcessor : public GrGLSLFragmentProcessor {
- public:
-  void emitCode(EmitArgs& args) override { args.fFragBuilder->codeAppendf("return half4(1);\n"); }
-
-  static void GenKey(const GrProcessor&, const GrShaderCaps&, GrProcessorKeyBuilder* b) {
-    for (uint32_t i = 0; i < kMaxKeySize; i++) {
-      b->add32(i);
-    }
-  }
-
- private:
-  using INHERITED = GrGLSLFragmentProcessor;
-};
-
+namespace {
 class BigKeyProcessor : public GrFragmentProcessor {
  public:
   static std::unique_ptr<GrFragmentProcessor> Make() {
@@ -61,14 +48,25 @@ class BigKeyProcessor : public GrFragmentProcessor {
 
   const char* name() const override { return "Big_Ole_Key"; }
 
-  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLBigKeyProcessor; }
+  std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override {
+    class Impl : public ProgramImpl {
+     public:
+      void emitCode(EmitArgs& args) override {
+        args.fFragBuilder->codeAppendf("return half4(1);\n");
+      }
+    };
+
+    return std::make_unique<Impl>();
+  }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override { return Make(); }
 
  private:
   BigKeyProcessor() : INHERITED(kBigKeyProcessor_ClassID, kNone_OptimizationFlags) {}
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
-    GLBigKeyProcessor::GenKey(*this, caps, b);
+  void onAddToKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {
+    for (uint32_t i = 0; i < kMaxKeySize; i++) {
+      b->add32(i);
+    }
   }
   bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
@@ -76,6 +74,7 @@ class BigKeyProcessor : public GrFragmentProcessor {
 
   using INHERITED = GrFragmentProcessor;
 };
+}  // anonymous namespace
 
 GR_DEFINE_FRAGMENT_PROCESSOR_TEST(BigKeyProcessor);
 
@@ -95,14 +94,16 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
 
   const char* name() const override { return "Block_Input"; }
 
-  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override { return new GLFP; }
+  std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override {
+    return std::make_unique<GLFP>();
+  }
 
   std::unique_ptr<GrFragmentProcessor> clone() const override {
     return Make(this->childProcessor(0)->clone());
   }
 
  private:
-  class GLFP : public GrGLSLFragmentProcessor {
+  class GLFP : public ProgramImpl {
    public:
     void emitCode(EmitArgs& args) override {
       SkString temp = this->invokeChild(0, args);
@@ -110,7 +111,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
     }
 
    private:
-    using INHERITED = GrGLSLFragmentProcessor;
+    using INHERITED = ProgramImpl;
   };
 
   BlockInputFragmentProcessor(std::unique_ptr<GrFragmentProcessor> child)
@@ -118,7 +119,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
     this->registerChild(std::move(child));
   }
 
-  void onGetGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override {}
+  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
 
   bool onIsEqual(const GrFragmentProcessor&) const override { return true; }
 
@@ -133,7 +134,7 @@ class BlockInputFragmentProcessor : public GrFragmentProcessor {
 static const int kRenderTargetHeight = 1;
 static const int kRenderTargetWidth = 1;
 
-static std::unique_ptr<GrSurfaceDrawContext> random_render_target_context(
+static std::unique_ptr<skgpu::v1::SurfaceDrawContext> random_surface_draw_context(
     GrRecordingContext* rContext, SkRandom* random, const GrCaps* caps) {
   GrSurfaceOrigin origin =
       random->nextBool() ? kTopLeft_GrSurfaceOrigin : kBottomLeft_GrSurfaceOrigin;
@@ -145,10 +146,10 @@ static std::unique_ptr<GrSurfaceDrawContext> random_render_target_context(
   // Above could be 0 if msaa isn't supported.
   sampleCnt = std::max(1, sampleCnt);
 
-  return GrSurfaceDrawContext::Make(
+  return skgpu::v1::SurfaceDrawContext::Make(
       rContext, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact,
-      {kRenderTargetWidth, kRenderTargetHeight}, sampleCnt, GrMipmapped::kNo, GrProtected::kNo,
-      origin);
+      {kRenderTargetWidth, kRenderTargetHeight}, SkSurfaceProps(), sampleCnt, GrMipmapped::kNo,
+      GrProtected::kNo, origin);
 }
 
 #if GR_TEST_UTILS
@@ -239,14 +240,14 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
 
   GrProcessorTestData::ViewInfo views[2];
 
-  // setup dummy textures
+  // setup arbitrary textures
   GrMipmapped mipMapped = GrMipmapped(caps->mipmapSupport());
   {
-    static constexpr SkISize kDummyDims = {34, 18};
+    static constexpr SkISize kDims = {34, 18};
     const GrBackendFormat format =
         caps->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
     auto proxy = proxyProvider->createProxy(
-        format, kDummyDims, GrRenderable::kYes, 1, mipMapped, SkBackingFit::kExact, SkBudgeted::kNo,
+        format, kDims, GrRenderable::kYes, 1, mipMapped, SkBackingFit::kExact, SkBudgeted::kNo,
         GrProtected::kNo, GrInternalSurfaceFlags::kNone);
     GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kRGBA_8888);
     views[0] = {
@@ -255,11 +256,11 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
         kPremul_SkAlphaType};
   }
   {
-    static constexpr SkISize kDummyDims = {16, 22};
+    static constexpr SkISize kDims = {16, 22};
     const GrBackendFormat format =
         caps->getDefaultBackendFormat(GrColorType::kAlpha_8, GrRenderable::kNo);
     auto proxy = proxyProvider->createProxy(
-        format, kDummyDims, GrRenderable::kNo, 1, mipMapped, SkBackingFit::kExact, SkBudgeted::kNo,
+        format, kDims, GrRenderable::kNo, 1, mipMapped, SkBackingFit::kExact, SkBudgeted::kNo,
         GrProtected::kNo, GrInternalSurfaceFlags::kNone);
     GrSwizzle swizzle = caps->getReadSwizzle(format, GrColorType::kAlpha_8);
     views[1] = {
@@ -269,7 +270,7 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
   }
 
   if (!std::get<0>(views[0]) || !std::get<0>(views[1])) {
-    SkDebugf("Could not allocate dummy textures");
+    SkDebugf("Could not allocate textures for test");
     return false;
   }
 
@@ -277,7 +278,7 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
   static const int NUM_TESTS = 1024;
   for (int t = 0; t < NUM_TESTS; t++) {
     // setup random render target(can fail)
-    auto surfaceDrawContext = random_render_target_context(direct, &random, caps);
+    auto surfaceDrawContext = random_surface_draw_context(direct, &random, caps);
     if (!surfaceDrawContext) {
       SkDebugf("Could not allocate surfaceDrawContext");
       return false;
@@ -294,10 +295,10 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
   direct->submit(false);
 
   // Validate that GrFPs work correctly without an input.
-  auto surfaceDrawContext = GrSurfaceDrawContext::Make(
+  auto sdc = skgpu::v1::SurfaceDrawContext::Make(
       direct, GrColorType::kRGBA_8888, nullptr, SkBackingFit::kExact,
-      {kRenderTargetWidth, kRenderTargetHeight});
-  if (!surfaceDrawContext) {
+      {kRenderTargetWidth, kRenderTargetHeight}, SkSurfaceProps());
+  if (!sdc) {
     SkDebugf("Could not allocate a surfaceDrawContext");
     return false;
   }
@@ -313,7 +314,7 @@ bool GrDrawingManager::ProgramUnitTest(GrDirectContext* direct, int maxStages, i
       auto fp = GrFragmentProcessorTestFactory::MakeIdx(i, &ptd);
       auto blockFP = BlockInputFragmentProcessor::Make(std::move(fp));
       paint.setColorFragmentProcessor(std::move(blockFP));
-      GrDrawRandomOp(&random, surfaceDrawContext.get(), std::move(paint));
+      GrDrawRandomOp(&random, sdc.get(), std::move(paint));
 
       direct->flush(GrFlushInfo());
       direct->submit(false);
@@ -335,7 +336,7 @@ static int get_programs_max_stages(const sk_gpu_test::ContextInfo& ctxInfo) {
       // Android devices. We have passes on ARM devices with the default number of stages.
       // TODO When we run ES 3.00 GLSL in more places, test again
 #  ifdef SK_BUILD_FOR_ANDROID
-      if (kARM_GrGLVendor != gpu->ctxInfo().vendor()) {
+      if (gpu->ctxInfo().vendor() != GrGLVendor::kARM) {
         maxStages = 1;
       }
 #  endif
@@ -370,7 +371,7 @@ static int get_programs_max_levels(const sk_gpu_test::ContextInfo& ctxInfo) {
     GrGLGpu* gpu = static_cast<GrGLGpu*>(ctxInfo.directContext()->priv().getGpu());
     // Tecno Spark 3 Pro with Power VR Rogue GE8300 will fail shader compiles with
     // no message if the shader is particularly long.
-    if (gpu->ctxInfo().vendor() == kImagination_GrGLVendor) {
+    if (gpu->ctxInfo().vendor() == GrGLVendor::kImagination) {
       maxTreeLevels = 3;
     }
 #endif
@@ -411,5 +412,5 @@ DEF_GPUTEST(Programs, reporter, options) {
   opts.fSuppressPrints = true;
   sk_gpu_test::GrContextFactory debugFactory(opts);
   skiatest::RunWithGPUTestContexts(
-      test_programs, &skiatest::IsRenderingGLOrMetalContextType, reporter, opts);
+      test_programs, &sk_gpu_test::GrContextFactory::IsRenderingContext, reporter, opts);
 }

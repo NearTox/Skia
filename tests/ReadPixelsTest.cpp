@@ -6,8 +6,11 @@
  */
 
 #include "include/core/SkCanvas.h"
+#include "include/core/SkColorPriv.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkSurface.h"
+#include "include/private/SkColorData.h"
+#include "include/private/SkHalf.h"
 #include "include/private/SkImageInfoPriv.h"
 #include "include/utils/SkNWayCanvas.h"
 #include "src/core/SkMathPriv.h"
@@ -78,7 +81,7 @@ static SkPMColor convert_to_pmcolor(
   return SkPackARGB32(a, r, g, b);
 }
 
-static SkBitmap make_src_bitmap() {
+static sk_sp<SkImage> make_src_image() {
   static SkBitmap bmp;
   if (bmp.isNull()) {
     bmp.allocN32Pixels(DEV_W, DEV_H);
@@ -90,8 +93,9 @@ static SkBitmap make_src_bitmap() {
         *pixel = get_src_color(x, y);
       }
     }
+    bmp.setImmutable();
   }
-  return bmp;
+  return bmp.asImage();
 }
 
 static void fill_src_canvas(SkCanvas* canvas) {
@@ -100,7 +104,7 @@ static void fill_src_canvas(SkCanvas* canvas) {
   canvas->clipRect(DEV_RECT_S, SkClipOp::kIntersect);
   SkPaint paint;
   paint.setBlendMode(SkBlendMode::kSrc);
-  canvas->drawBitmap(make_src_bitmap(), 0, 0, &paint);
+  canvas->drawImage(make_src_image(), 0, 0, SkSamplingOptions(), &paint);
   canvas->restore();
 }
 
@@ -481,5 +485,21 @@ DEF_TEST(ReadPixels_ValidConversion, reporter) {
         }
       }
     }
+  }
+}
+
+DEF_TEST(ReadPixels_InvalidRowBytes, reporter) {
+  auto srcII = SkImageInfo::Make({10, 10}, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+  auto surf = SkSurface::MakeRaster(srcII);
+  for (int ct = 0; ct < kLastEnum_SkColorType + 1; ++ct) {
+    auto colorType = static_cast<SkColorType>(ct);
+    size_t bpp = SkColorTypeBytesPerPixel(colorType);
+    if (bpp <= 1) {
+      continue;
+    }
+    auto dstII = srcII.makeColorType(colorType);
+    size_t badRowBytes = (surf->width() + 1) * bpp - 1;
+    auto storage = std::make_unique<char[]>(badRowBytes * surf->height());
+    REPORTER_ASSERT(reporter, !surf->readPixels(dstII, storage.get(), badRowBytes, 0, 0));
   }
 }

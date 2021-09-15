@@ -19,9 +19,9 @@
 
 DEF_TEST(BadImage, reporter) {
   const char* const badImages[] = {
-      "sigabort_favicon.ico", "sigsegv_favicon.ico", "sigsegv_favicon_2.ico",
-      "ico_leak01.ico",       "ico_fuzz0.ico",       "ico_fuzz1.ico",
-      "skbug3442.webp",       "skbug3429.webp",      "b38116746.ico",
+      "sigabort_favicon.ico", "sigsegv_favicon.ico", "sigsegv_favicon_2.ico", "ico_leak01.ico",
+      "ico_fuzz0.ico",        "ico_fuzz1.ico",       "skbug3442.webp",        "skbug3429.webp",
+      "b38116746.ico",        "skbug5883.gif",
   };
 
   const char* badImagesFolder = "invalid_images";

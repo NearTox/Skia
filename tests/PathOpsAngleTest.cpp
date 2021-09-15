@@ -661,6 +661,5 @@ DEF_TEST(PathOpsAngleAllOnOneSide, reporter) {
     /* int result = */
     PathOpsAngleTester::AllOnOneSide(*first->debugLastAngle(), *next->debugLastAngle());
     //      SkDebugf("i=%d result=%d\n", i , result);
-    //      SkDebugf("");
   }
 }

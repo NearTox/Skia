@@ -7,16 +7,18 @@
 
 #include "include/gpu/GrDirectContext.h"
 #include "include/gpu/GrRecordingContext.h"
+#include "src/gpu/GrColorSpaceXform.h"
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/ops/GrTextureOp.h"
-#include "src/gpu/ops/GrTextureOp.h"
+#include "src/gpu/geometry/GrQuad.h"
+#include "src/gpu/ops/OpsTask.h"
+#include "src/gpu/ops/TextureOp.h"
 #include "tests/Test.h"
 
 class OpsTaskTestingAccess {
  public:
-  typedef GrOpsTask::OpChain OpChain;
+  typedef skgpu::v1::OpsTask::OpChain OpChain;
 };
 
 static void check_chain(
@@ -55,9 +57,9 @@ static GrOp::Owner create_op(
   quad.fLocal = GrQuad(rect);
   quad.fEdgeFlags = isAA ? GrQuadAAFlags::kAll : GrQuadAAFlags::kNone;
 
-  return GrTextureOp::Make(
+  return skgpu::v1::TextureOp::Make(
       dContext, proxyView, kPremul_SkAlphaType, nullptr, GrSamplerState::Filter::kNearest,
-      GrSamplerState::MipmapMode::kNone, {1.f, 1.f, 1.f, 1.f}, GrTextureOp::Saturate::kYes,
+      GrSamplerState::MipmapMode::kNone, {1.f, 1.f, 1.f, 1.f}, skgpu::v1::TextureOp::Saturate::kYes,
       SkBlendMode::kSrcOver, isAA ? GrAAType::kCoverage : GrAAType::kNone, &quad, nullptr);
 }
 
@@ -65,7 +67,7 @@ static GrOp::Owner create_op(
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TextureOpTest, reporter, ctxInfo) {
   GrDirectContext* dContext = ctxInfo.directContext();
   const GrCaps* caps = dContext->priv().caps();
-  GrRecordingContext::Arenas arenas = dContext->priv().arenas();
+  SkArenaAlloc arena{nullptr, 0, 1024};
   auto auditTrail = dContext->priv().auditTrail();
 
   if (!caps->dynamicStateArrayGeometryProcessorTextureSupport()) {
@@ -93,7 +95,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TextureOpTest, reporter, ctxInfo) {
   OpsTaskTestingAccess::OpChain chain1(
       std::move(opA), GrProcessorSet::EmptySetAnalysis(), &noClip, nullptr);
   chain1.appendOp(
-      std::move(opB), GrProcessorSet::EmptySetAnalysis(), nullptr, &noClip, *caps, &arenas,
+      std::move(opB), GrProcessorSet::EmptySetAnalysis(), nullptr, &noClip, *caps, &arena,
       dContext->priv().auditTrail());
   check_chain(&chain1, kOpARect, kOpBRect, 2);
 
@@ -106,13 +108,13 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(TextureOpTest, reporter, ctxInfo) {
   OpsTaskTestingAccess::OpChain chain2(
       std::move(opC), GrProcessorSet::EmptySetAnalysis(), &noClip, nullptr);
   chain2.appendOp(
-      std::move(opD), GrProcessorSet::EmptySetAnalysis(), nullptr, &noClip, *caps, &arenas,
+      std::move(opD), GrProcessorSet::EmptySetAnalysis(), nullptr, &noClip, *caps, &arena,
       auditTrail);
   check_chain(&chain2, kOpCRect, kOpDRect, 2);
 
   // opA and opD, now in separate chains, can merge when the two chains are combined while
   // opB and opC can still only chain.
-  chain1.prependChain(&chain2, *caps, &arenas, auditTrail);
+  chain1.prependChain(&chain2, *caps, &arena, auditTrail);
 
   // We should end up with the chain
   //   opC - opD/opA - opB

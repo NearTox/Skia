@@ -201,13 +201,18 @@ DEF_TEST(RecordDraw_SaveLayerAffectsClipBounds, r) {
   //
   // The second bug showed up as adjusting the picture bounds (0,0,50,50) by the drop shadow too.
   // The saveLayer, clipRect, and restore bounds were incorrectly (0,0,70,50).
+  //
+  // Now, all recorded bounds should be (0,0,40,40), representing the union of the original
+  // draw/clip (0,0,20,40) with the 20px offset drop shadow along the x-axis (20,0,40,40).
+  // The saveLayer and restore match the output bounds of the drop shadow filter, instead of
+  // expanding to fill the entire picture.
   SkAutoTMalloc<SkRect> bounds(record.count());
   SkAutoTMalloc<SkBBoxHierarchy::Metadata> meta(record.count());
   SkRecordFillBounds(SkRect::MakeWH(50, 50), record, bounds, meta);
-  REPORTER_ASSERT(r, sloppy_rect_eq(bounds[0], SkRect::MakeLTRB(0, 0, 50, 50)));
-  REPORTER_ASSERT(r, sloppy_rect_eq(bounds[1], SkRect::MakeLTRB(0, 0, 50, 50)));
+  REPORTER_ASSERT(r, sloppy_rect_eq(bounds[0], SkRect::MakeLTRB(0, 0, 40, 40)));
+  REPORTER_ASSERT(r, sloppy_rect_eq(bounds[1], SkRect::MakeLTRB(0, 0, 40, 40)));
   REPORTER_ASSERT(r, sloppy_rect_eq(bounds[2], SkRect::MakeLTRB(0, 0, 40, 40)));
-  REPORTER_ASSERT(r, sloppy_rect_eq(bounds[3], SkRect::MakeLTRB(0, 0, 50, 50)));
+  REPORTER_ASSERT(r, sloppy_rect_eq(bounds[3], SkRect::MakeLTRB(0, 0, 40, 40)));
 }
 
 DEF_TEST(RecordDraw_Metadata, r) {
@@ -269,19 +274,6 @@ DEF_TEST(RecordDraw_drawImage, r) {
    public:
     SkCanvasMock(int width, int height) : SkCanvas(width, height) { this->resetTestValues(); }
 
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-    void onDrawImage(
-        const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) override {
-      fDrawImageCalled = true;
-    }
-
-    void onDrawImageRect(
-        const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-        SrcRectConstraint) override {
-      fDrawImageRectCalled = true;
-    }
-#endif
-
     void resetTestValues() { fDrawImageCalled = fDrawImageRectCalled = false; }
 
     bool fDrawImageCalled;
@@ -293,23 +285,4 @@ DEF_TEST(RecordDraw_drawImage, r) {
   sk_sp<SkImage> image(surface->makeImageSnapshot());
 
   SkCanvasMock canvas(10, 10);
-
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-  {
-    SkRecord record;
-    SkRecorder recorder(&record, 10, 10);
-    recorder.drawImage(image, 0, 0);
-    SkRecordDraw(record, &canvas, nullptr, nullptr, 0, nullptr, nullptr);
-  }
-  REPORTER_ASSERT(r, canvas.fDrawImageCalled);
-  canvas.resetTestValues();
-
-  {
-    SkRecord record;
-    SkRecorder recorder(&record, 10, 10);
-    recorder.drawImageRect(image, SkRect::MakeWH(10, 10), nullptr);
-    SkRecordDraw(record, &canvas, nullptr, nullptr, 0, nullptr, nullptr);
-  }
-  REPORTER_ASSERT(r, canvas.fDrawImageRectCalled);
-#endif
 }

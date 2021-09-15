@@ -154,8 +154,8 @@ void surface_semaphore_test(
   }
   mainCtx->submit();
 
-  sk_sp<SkImage> mainImage = mainSurface->makeImageSnapshot();
-  GrBackendTexture backendTexture = mainImage->getBackendTexture(false);
+  GrBackendTexture backendTexture = mainSurface->getBackendTexture(
+      SkSurface::BackendHandleAccess::kFlushRead_BackendHandleAccess);
 
   draw_child(reporter, childInfo1, backendTexture, semaphores[0]);
 

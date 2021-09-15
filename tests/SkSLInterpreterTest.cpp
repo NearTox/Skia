@@ -6,15 +6,12 @@
  */
 
 #include "include/core/SkM44.h"
-#include "src/sksl/SkSLByteCode.h"
 #include "src/sksl/SkSLCompiler.h"
-#include "src/sksl/SkSLExternalFunction.h"
-#include "src/sksl/SkSLVMGenerator.h"
+#include "src/sksl/codegen/SkSLVMCodeGenerator.h"
+#include "src/sksl/ir/SkSLExternalFunction.h"
 #include "src/utils/SkJSON.h"
 
 #include "tests/Test.h"
-
-#if defined(SK_ENABLE_SKSL_INTERPRETER)
 
 struct ProgramBuilder {
   ProgramBuilder(skiatest::Reporter* r, const char* src)
@@ -26,7 +23,7 @@ struct ProgramBuilder {
     // For convenience, so we can test functions other than (and not called by) main.
     settings.fRemoveDeadFunctions = false;
 
-    fProgram = fCompiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
+    fProgram = fCompiler.convertProgram(SkSL::ProgramKind::kGeneric, SkSL::String(src), settings);
     if (!fProgram) {
       ERRORF(r, "Program failed to compile:\n%s\n%s\n", src, fCompiler.errorText().c_str());
     }
@@ -38,24 +35,6 @@ struct ProgramBuilder {
   GrShaderCaps fCaps;
   SkSL::Compiler fCompiler;
   std::unique_ptr<SkSL::Program> fProgram;
-};
-
-struct ByteCodeBuilder {
-  ByteCodeBuilder(skiatest::Reporter* r, const char* src) : fProgram(r, src), fByteCode(nullptr) {
-    if (fProgram) {
-      fByteCode = fProgram.fCompiler.toByteCode(*fProgram);
-      if (!fByteCode) {
-        ERRORF(
-            r, "Program failed to compile:\n%s\n%s\n", src, fProgram.fCompiler.errorText().c_str());
-      }
-    }
-  }
-
-  operator bool() const { return fByteCode != nullptr; }
-  SkSL::ByteCode* operator->() { return fByteCode.get(); }
-
-  ProgramBuilder fProgram;
-  std::unique_ptr<SkSL::ByteCode> fByteCode;
 };
 
 static void verify_values(
@@ -92,8 +71,9 @@ static void verify_values(
   REPORTER_ASSERT(r, valid);
 }
 
-void test_skvm(
-    skiatest::Reporter* r, const char* src, float* in, const float* expected, bool exactCompare) {
+void test(
+    skiatest::Reporter* r, const char* src, float* in, const float* expected,
+    bool exactCompare = true) {
   ProgramBuilder program(r, src);
   if (!program) {
     return;
@@ -125,75 +105,6 @@ void test_skvm(
 }
 
 void test(
-    skiatest::Reporter* r, const char* src, float* in, const float* expected,
-    bool exactCompare = true) {
-  test_skvm(r, src, in, expected, exactCompare);
-
-  ByteCodeBuilder byteCode(r, src);
-  if (!byteCode) {
-    return;
-  }
-
-  const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
-  int returnCount = main->getReturnCount();
-  std::unique_ptr<float[]> out = std::unique_ptr<float[]>(new float[returnCount]);
-  SkAssertResult(
-      byteCode->run(main, in, main->getParameterCount(), out.get(), returnCount, nullptr, 0));
-
-  verify_values(r, src, out.get(), expected, returnCount, exactCompare);
-}
-
-void vec_test(skiatest::Reporter* r, const char* src) {
-  ByteCodeBuilder byteCode(r, src);
-  if (!byteCode) {
-    return;
-  }
-
-  const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
-
-  // Test on four different vectors (with varying orderings to get divergent control flow)
-  const float input[16] = {1, 2, 3, 4, 4, 3, 2, 1, 7, 5, 8, 6, 6, 8, 5, 7};
-
-  float out_s[16], out_v[16];
-  memcpy(out_s, input, sizeof(out_s));
-  memcpy(out_v, input, sizeof(out_v));
-
-  // First run in scalar mode to determine the expected output
-  for (int i = 0; i < 4; ++i) {
-    SkAssertResult(byteCode->run(main, out_s + i * 4, 4, nullptr, 0, nullptr, 0));
-  }
-
-  // Need to transpose input vectors for striped execution
-  auto transpose = [](float* v) {
-    for (int r = 0; r < 4; ++r)
-      for (int c = 0; c < r; ++c) std::swap(v[r * 4 + c], v[c * 4 + r]);
-  };
-
-  // Need to transpose input vectors for striped execution
-  transpose(out_v);
-  float* args[] = {out_v, out_v + 4, out_v + 8, out_v + 12};
-
-  // Now run in parallel and compare results
-  SkAssertResult(byteCode->runStriped(main, 4, args, 4, nullptr, 0, nullptr, 0));
-
-  // Transpose striped outputs back
-  transpose(out_v);
-
-  if (0 != memcmp(out_s, out_v, sizeof(out_s))) {
-    printf("for program: %s\n", src);
-    for (int i = 0; i < 4; ++i) {
-      printf(
-          "(%g %g %g %g) -> (%g %g %g %g), expected (%g %g %g %g)\n", input[4 * i + 0],
-          input[4 * i + 1], input[4 * i + 2], input[4 * i + 3], out_v[4 * i + 0], out_v[4 * i + 1],
-          out_v[4 * i + 2], out_v[4 * i + 3], out_s[4 * i + 0], out_s[4 * i + 1], out_s[4 * i + 2],
-          out_s[4 * i + 3]);
-    }
-    main->disassemble();
-    REPORT_FAILURE(r, "VecInterpreter mismatch", SkString());
-  }
-}
-
-void test_skvm(
     skiatest::Reporter* r, const char* src, float inR, float inG, float inB, float inA, float exR,
     float exG, float exB, float exA) {
   ProgramBuilder program(r, src);
@@ -217,28 +128,6 @@ void test_skvm(
   verify_values(r, src, actual, expected, 4, /*exactCompare=*/true);
 
   // TODO: vec_test with skvm
-}
-
-void test(
-    skiatest::Reporter* r, const char* src, float inR, float inG, float inB, float inA, float exR,
-    float exG, float exB, float exA) {
-  test_skvm(r, src, inR, inG, inB, inA, exR, exG, exB, exA);
-
-  ByteCodeBuilder byteCode(r, src);
-  if (!byteCode) {
-    return;
-  }
-
-  float inoutColor[4] = {inR, inG, inB, inA};
-  float expected[4] = {exR, exG, exB, exA};
-
-  const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
-  SkAssertResult(byteCode->run(main, inoutColor, 4, nullptr, 0, nullptr, 0));
-
-  verify_values(r, src, inoutColor, expected, 4, /*exactCompare=*/true);
-
-  // Do additional testing of 4x1 vs 1x4 to stress divergent control flow, etc.
-  vec_test(r, src);
 }
 
 DEF_TEST(SkSLInterpreterAdd, r) {
@@ -432,11 +321,11 @@ DEF_TEST(SkSLInterpreterMatrix, r) {
   }
   test(r, "float4x4 main(float4x4 m) { return 1.0 / (m + 1); }", in, expected);
 
-#  if 0
-    // Matrix negation - legal in GLSL, not in SkSL?
-    for (int i = 0; i < 16; ++i) { expected[i] = (float)(-i); }
-    test(r, "float4x4 main(float4x4 m) { return -m; }", in, 16, expected);
-#  endif
+  // Matrix negation
+  for (int i = 0; i < 16; ++i) {
+    expected[i] = (float)(-i);
+  }
+  test(r, "float4x4 main(float4x4 m) { return -m; }", in, expected);
 
   // M*V, V*M
   for (int i = 0; i < 3; ++i) {
@@ -647,6 +536,27 @@ DEF_TEST(SkSLInterpreterGeneric, r) {
   test(r, "float2 main(float x, float y) { return float2(x * x, y * y); }", value2, expected2);
 }
 
+DEF_TEST(SkSLInterpreterFieldAccessComplex, r) {
+  const char* src = R"(
+        struct P { float x; float y; };
+        P make_point() { P p; p.x = 7; p.y = 3; return p; }
+        float main() { return make_point().y; }
+    )";
+
+  float expected = 3.0f;
+  test(r, src, /*in=*/nullptr, &expected);
+}
+
+DEF_TEST(SkSLInterpreterIndexComplex, r) {
+  const char* src = R"(
+        float2x2 make_mtx() { return float2x2(1, 2, 3, 4); }
+        float main() { return make_mtx()[1][0]; }
+    )";
+
+  float expected = 3.0f;
+  test(r, src, /*in=*/nullptr, &expected);
+}
+
 DEF_TEST(SkSLInterpreterCompound, r) {
   struct RectAndColor {
     SkIRect fRect;
@@ -715,12 +625,12 @@ DEF_TEST(SkSLInterpreterCompound, r) {
 
   auto build = [&](const SkSL::FunctionDefinition* fn) {
     skvm::Builder b;
-    skvm::Ptr uniformPtr = b.uniform();
+    skvm::UPtr uniformPtr = b.uniform();
     skvm::Val uniforms[16];
     for (int i = 0; i < 16; ++i) {
       uniforms[i] = b.uniform32(uniformPtr, i * sizeof(int)).id;
     }
-    SkSL::ProgramToSkVM(*program, *fn, &b, uniforms);
+    SkSL::ProgramToSkVM(*program, *fn, &b, SkMakeSpan(uniforms));
     return b.done();
   };
 
@@ -770,8 +680,7 @@ DEF_TEST(SkSLInterpreterCompound, r) {
     REPORTER_ASSERT(r, out == 8);
   }
 
-  // TODO: Doesn't work until SkVM generator supports indexing-by-loop variable
-  if (false) {
+  {
     float in[8] = {1, 2, 3, 4, 5, 6, 7, 8};
     float out = 0;
     skvm::Program p = build(sums);
@@ -791,8 +700,7 @@ DEF_TEST(SkSLInterpreterCompound, r) {
     REPORTER_ASSERT(r, out == gRects[2]);
   }
 
-  // TODO: Doesn't work until SkVM generator supports indexing-by-loop variable
-  if (false) {
+  {
     ManyRects in;
     memset(&in, 0, sizeof(in));
     in.fNumRects = 2;
@@ -816,37 +724,14 @@ static void expect_failure(skiatest::Reporter* r, const char* src) {
   GrShaderCaps caps(GrContextOptions{});
   SkSL::Compiler compiler(&caps);
   SkSL::Program::Settings settings;
-  auto program = compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
+  auto program = compiler.convertProgram(SkSL::ProgramKind::kGeneric, SkSL::String(src), settings);
   REPORTER_ASSERT(r, !program);
-}
-
-static void expect_run_failure(skiatest::Reporter* r, const char* src, float* in) {
-  GrShaderCaps caps(GrContextOptions{});
-  SkSL::Compiler compiler(&caps);
-  SkSL::Program::Settings settings;
-  auto program = compiler.convertProgram(SkSL::Program::kGeneric_Kind, SkSL::String(src), settings);
-  REPORTER_ASSERT(r, program);
-
-  auto byteCode = compiler.toByteCode(*program);
-  REPORTER_ASSERT(r, byteCode);
-
-  auto fun = byteCode->getFunction("main");
-  bool result = byteCode->run(fun, in, fun->getParameterCount(), nullptr, 0, nullptr, 0);
-  REPORTER_ASSERT(r, !result);
 }
 
 DEF_TEST(SkSLInterpreterRestrictLoops, r) {
   // while and do-while loops are not allowed
   expect_failure(r, "void main(inout float x) { while (x < 1) { x++; } }");
   expect_failure(r, "void main(inout float x) { do { x++; } while (x < 1); }");
-}
-
-DEF_TEST(SkSLInterpreterRestrictFunctionCalls, r) {
-  // Ensure that simple recursion is not allowed
-  expect_failure(r, "float main() { return main() + 1; }");
-
-  // Ensure that calls to undefined functions are not allowed (to prevent mutual recursion)
-  expect_failure(r, "float foo(); float bar() { return foo(); } float foo() { return bar(); }");
 }
 
 DEF_TEST(SkSLInterpreterReturnThenCall, r) {
@@ -894,20 +779,6 @@ DEF_TEST(SkSLInterpreterEarlyReturn, r) {
 
   REPORTER_ASSERT(r, rets[0] == 1.0f);
   REPORTER_ASSERT(r, rets[1] == 2.0f);
-}
-
-DEF_TEST(SkSLInterpreterArrayBounds, r) {
-  // Out of bounds array access at compile time prevents a program from being generated at all
-  // (tested in ArrayIndexOutOfRange.sksl).
-
-  // Out of bounds array access at runtime is pinned, and we don't update any inout data.
-  float in[3] = {-1.0f, 1.0f, 2.0f};
-  expect_run_failure(r, "void main(inout float data[3]) { data[int(data[0])] = 0; }", in);
-  REPORTER_ASSERT(r, in[0] == -1.0f && in[1] == 1.0f && in[2] == 2.0f);
-
-  in[0] = 3.0f;
-  expect_run_failure(r, "void main(inout float data[3]) { data[int(data[0])] = 0; }", in);
-  REPORTER_ASSERT(r, in[0] == 3.0f && in[1] == 1.0f && in[2] == 2.0f);
 }
 
 DEF_TEST(SkSLInterpreterFunctions, r) {
@@ -973,15 +844,24 @@ DEF_TEST(SkSLInterpreterOutParams, r) {
 }
 
 DEF_TEST(SkSLInterpreterSwizzleSingleLvalue, r) {
-  // Add in your SkSL here.
   test(r, "void main(inout half4 color) { color.xywz = half4(1,2,3,4); }", 0, 0, 0, 0, 1, 2, 4, 3);
 }
 
 DEF_TEST(SkSLInterpreterSwizzleDoubleLvalue, r) {
-  // Add in your SkSL here.
   test(
       r, "void main(inout half4 color) { color.xywz.yxzw = half4(1,2,3,4); }", 0, 0, 0, 0, 2, 1, 4,
       3);
+}
+
+DEF_TEST(SkSLInterpreterSwizzleIndexLvalue, r) {
+  const char* src = R"(
+        void main(inout half4 color) {
+            for (int i = 0; i < 4; i++) {
+                color.wzyx[i] += half(i);
+            }
+        }
+    )";
+  test(r, src, 0, 0, 0, 0, 3, 2, 1, 0);
 }
 
 DEF_TEST(SkSLInterpreterMathFunctions, r) {
@@ -1097,8 +977,9 @@ class ExternalSqrt : public SkSL::ExternalFunction {
     outTypes[0] = fCompiler.context().fTypes.fFloat.get();
   }
 
-  void call(int /*unusedIndex*/, float* arguments, float* outReturn) const override {
-    outReturn[0] = sqrt(arguments[0]);
+  void call(
+      skvm::Builder* b, skvm::F32* arguments, skvm::F32* outResult, skvm::I32 mask) const override {
+    outResult[0] = sqrt(arguments[0]);
   }
 
  private:
@@ -1110,84 +991,79 @@ DEF_TEST(SkSLInterpreterExternalFunction, r) {
   GrShaderCaps caps(GrContextOptions{});
   SkSL::Compiler compiler(&caps);
   SkSL::Program::Settings settings;
-  const char* src =
-      "float main() {"
-      "    return external(25);"
-      "}";
+  const char* src = "float main() { return external(25); }";
   std::vector<std::unique_ptr<SkSL::ExternalFunction>> externalFunctions;
   externalFunctions.push_back(std::make_unique<ExternalSqrt>("external", compiler));
-  std::unique_ptr<SkSL::Program> program = compiler.convertProgram(
-      SkSL::Program::kGeneric_Kind, SkSL::String(src), settings, &externalFunctions);
+  settings.fExternalFunctions = &externalFunctions;
+  std::unique_ptr<SkSL::Program> program =
+      compiler.convertProgram(SkSL::ProgramKind::kGeneric, SkSL::String(src), settings);
   REPORTER_ASSERT(r, program);
-  if (program) {
-    std::unique_ptr<SkSL::ByteCode> byteCode = compiler.toByteCode(*program);
-    REPORTER_ASSERT(r, !compiler.errorCount());
-    if (compiler.errorCount() > 0) {
-      printf("%s\n%s", src, compiler.errorText().c_str());
-      return;
-    }
-    const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
-    float out;
-    SkAssertResult(byteCode->run(main, nullptr, 0, &out, 1, nullptr, 0));
-    REPORTER_ASSERT(r, out == 5.0);
-  } else {
-    printf("%s\n%s", src, compiler.errorText().c_str());
-  }
+
+  const SkSL::FunctionDefinition* main = SkSL::Program_GetFunction(*program, "main");
+
+  skvm::Builder b;
+  SkSL::ProgramToSkVM(*program, *main, &b, /*uniforms=*/{});
+  skvm::Program p = b.done();
+
+  float out;
+  p.eval(1, &out);
+  REPORTER_ASSERT(r, out == 5.0);
 }
 
-class ExternalSqrt4 : public SkSL::ExternalFunction {
+class ExternalTable : public SkSL::ExternalFunction {
  public:
-  ExternalSqrt4(const char* name, SkSL::Compiler& compiler)
-      : INHERITED(name, *compiler.context().fTypes.fFloat4), fCompiler(compiler) {}
+  ExternalTable(const char* name, SkSL::Compiler& compiler, skvm::Uniforms* uniforms)
+      : INHERITED(name, *compiler.context().fTypes.fFloat),
+        fCompiler(compiler),
+        fTable{1, 2, 4, 8} {
+    fAddr = uniforms->pushPtr(fTable);
+  }
 
   int callParameterCount() const override { return 1; }
 
   void getCallParameterTypes(const SkSL::Type** outTypes) const override {
-    outTypes[0] = fCompiler.context().fTypes.fFloat4.get();
+    outTypes[0] = fCompiler.context().fTypes.fFloat.get();
   }
 
-  void call(int /*unusedIndex*/, float* arguments, float* outReturn) const override {
-    outReturn[0] = sqrt(arguments[0]);
-    outReturn[1] = sqrt(arguments[1]);
-    outReturn[2] = sqrt(arguments[2]);
-    outReturn[3] = sqrt(arguments[3]);
+  void call(
+      skvm::Builder* b, skvm::F32* arguments, skvm::F32* outResult, skvm::I32 mask) const override {
+    skvm::I32 index = skvm::trunc(arguments[0] * 4);
+    index = max(0, min(index, 3));
+    outResult[0] = b->gatherF(fAddr, index);
   }
 
  private:
   SkSL::Compiler& fCompiler;
+  skvm::Uniform fAddr;
+  float fTable[4];
   using INHERITED = SkSL::ExternalFunction;
 };
 
-DEF_TEST(SkSLInterpreterExternalFunctionVector, r) {
+DEF_TEST(SkSLInterpreterExternalTable, r) {
   GrShaderCaps caps(GrContextOptions{});
   SkSL::Compiler compiler(&caps);
   SkSL::Program::Settings settings;
-  const char* src =
-      "float4 main() {"
-      "    return external(float4(1, 4, 9, 16));"
-      "}";
+  const char* src = "float4 main() { return float4(table(2), table(-1), table(0.4), table(0.6)); }";
   std::vector<std::unique_ptr<SkSL::ExternalFunction>> externalFunctions;
-  externalFunctions.push_back(std::make_unique<ExternalSqrt4>("external", compiler));
-  std::unique_ptr<SkSL::Program> program = compiler.convertProgram(
-      SkSL::Program::kGeneric_Kind, SkSL::String(src), settings, &externalFunctions);
-  REPORTER_ASSERT(r, program);
-  if (program) {
-    std::unique_ptr<SkSL::ByteCode> byteCode = compiler.toByteCode(*program);
-    REPORTER_ASSERT(r, !compiler.errorCount());
-    if (compiler.errorCount() > 0) {
-      printf("%s\n%s", src, compiler.errorText().c_str());
-      return;
-    }
-    const SkSL::ByteCodeFunction* main = byteCode->getFunction("main");
-    float out[4];
-    SkAssertResult(byteCode->run(main, nullptr, 0, out, 4, nullptr, 0));
-    REPORTER_ASSERT(r, out[0] == 1.0);
-    REPORTER_ASSERT(r, out[1] == 2.0);
-    REPORTER_ASSERT(r, out[2] == 3.0);
-    REPORTER_ASSERT(r, out[3] == 4.0);
-  } else {
-    printf("%s\n%s", src, compiler.errorText().c_str());
-  }
-}
 
-#endif  // SK_ENABLE_SKSL_INTERPRETER
+  skvm::Builder b;
+  skvm::Uniforms u(b.uniform(), 0);
+
+  externalFunctions.push_back(std::make_unique<ExternalTable>("table", compiler, &u));
+  settings.fExternalFunctions = &externalFunctions;
+  std::unique_ptr<SkSL::Program> program =
+      compiler.convertProgram(SkSL::ProgramKind::kGeneric, SkSL::String(src), settings);
+  REPORTER_ASSERT(r, program);
+
+  const SkSL::FunctionDefinition* main = SkSL::Program_GetFunction(*program, "main");
+
+  SkSL::ProgramToSkVM(*program, *main, &b, /*uniforms=*/{});
+  skvm::Program p = b.done();
+
+  float out[4];
+  p.eval(1, u.buf.data(), &out[0], &out[1], &out[2], &out[3]);
+  REPORTER_ASSERT(r, out[0] == 8.0);
+  REPORTER_ASSERT(r, out[1] == 1.0);
+  REPORTER_ASSERT(r, out[2] == 2.0);
+  REPORTER_ASSERT(r, out[3] == 4.0);
+}

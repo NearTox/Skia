@@ -45,7 +45,7 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlCopySurfaceTest, reporter, ctxInfo) {
   sk_sp<GrSurfaceProxy> srcProxy = proxyProvider->wrapBackendRenderTarget(backendRT, nullptr);
 
   auto dstProxy = GrSurfaceProxy::Copy(
-      context, srcProxy.get(), kTopLeft_GrSurfaceOrigin, GrMipmapped::kNo, SkBackingFit::kExact,
+      context, srcProxy, kTopLeft_GrSurfaceOrigin, GrMipmapped::kNo, SkBackingFit::kExact,
       SkBudgeted::kYes);
 
   // TODO: GrSurfaceProxy::Copy doesn't check to see if the framebufferOnly bit is set yet.
@@ -58,8 +58,8 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlCopySurfaceTest, reporter, ctxInfo) {
   GrBackendFormat backendFormat = GrBackendFormat::MakeMtl(drawable.texture.pixelFormat);
   GrSurface* src = srcProxy->peekSurface();
   sk_sp<GrTexture> dst = gpu->createTexture(
-      {kWidth, kHeight}, backendFormat, GrRenderable::kNo, 1, GrMipmapped::kNo, SkBudgeted::kNo,
-      GrProtected::kNo);
+      {kWidth, kHeight}, backendFormat, GrTextureType::k2D, GrRenderable::kNo, 1, GrMipmapped::kNo,
+      SkBudgeted::kNo, GrProtected::kNo);
 
   bool result = gpu->copySurface(
       dst.get(), src, SkIRect::MakeXYWH(0, 0, kWidth, kHeight), SkIPoint::Make(0, 0));

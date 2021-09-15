@@ -59,7 +59,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceCacheCache, reporter, ctxInfo) {
   readback.allocN32Pixels(size.width(), size.height());
 
   for (int i = 0; i < 100; ++i) {
-    canvas->drawBitmap(src, 0, 0);
+    canvas->drawImage(src.asImage(), 0, 0);
     surface->readPixels(readback, 0, 0);
 
     // "modify" the src texture
@@ -90,13 +90,13 @@ static sk_sp<GrRenderTarget> create_RT_with_SB(
   auto format =
       provider->caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kYes);
   sk_sp<GrTexture> tex(provider->createTexture(
-      {size, size}, format, GrRenderable::kYes, sampleCount, GrMipmapped::kNo, budgeted,
-      GrProtected::kNo));
+      {size, size}, format, GrTextureType::k2D, GrRenderable::kYes, sampleCount, GrMipmapped::kNo,
+      budgeted, GrProtected::kNo));
   if (!tex || !tex->asRenderTarget()) {
     return nullptr;
   }
 
-  if (!provider->attachStencilAttachment(tex->asRenderTarget(), sampleCount)) {
+  if (!provider->attachStencilAttachment(tex->asRenderTarget(), sampleCount > 1)) {
     return nullptr;
   }
   SkASSERT(get_SB(tex->asRenderTarget()));
@@ -323,7 +323,7 @@ class Mock {
     SkASSERT(fDContext);
     fDContext->setResourceCacheLimit(maxBytes);
     GrResourceCache* cache = fDContext->priv().getResourceCache();
-    cache->purgeAllUnlocked();
+    cache->purgeUnlockedResources();
     SkASSERT(0 == cache->getResourceCount() && 0 == cache->getResourceBytes());
   }
 
@@ -355,7 +355,7 @@ static void test_no_key(skiatest::Reporter* reporter) {
                     cache->getResourceBytes());
 
   // Should be safe to purge without deleting the resources since we still have refs.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 4 == TestResource::NumAlive());
 
   // Since the resources have neither unique nor scratch keys, delete immediately upon unref.
@@ -569,7 +569,7 @@ static void test_budgeting(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 0 == cache->getPurgeableBytes());
 
   // Our refs mean that the resources are non purgeable.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 5 == cache->getResourceCount());
   REPORTER_ASSERT(
       reporter, scratch->gpuMemorySize() + unique->gpuMemorySize() +
@@ -599,7 +599,7 @@ static void test_budgeting(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 11 == cache->getPurgeableBytes());
   // This will free 'unique' but not wrappedCacheable which has a key. That requires the key to be
   // removed to be freed.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 4 == cache->getResourceCount());
 
   wrappedCacheableViaKey = cache->findAndRefUniqueResource(uniqueKey2);
@@ -623,7 +623,7 @@ static void test_budgeting(skiatest::Reporter* reporter) {
 
   scratch->unref();
   REPORTER_ASSERT(reporter, 10 == cache->getPurgeableBytes());
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 3 == cache->getResourceCount());
   REPORTER_ASSERT(
       reporter, unbudgeted->gpuMemorySize() + wrappedCacheable->gpuMemorySize() +
@@ -712,7 +712,7 @@ static void test_unbudgeted(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 21 == cache->getBudgetedResourceBytes());
   REPORTER_ASSERT(reporter, 21 == cache->getPurgeableBytes());
 
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
   REPORTER_ASSERT(reporter, 0 == cache->getResourceBytes());
   REPORTER_ASSERT(reporter, 0 == cache->getBudgetedResourceCount());
@@ -808,12 +808,13 @@ static void test_duplicate_scratch_key(skiatest::Reporter* reporter) {
 
   // Scratch resources are registered with GrResourceCache just by existing. There are 2.
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
-  SkDEBUGCODE(REPORTER_ASSERT(reporter, 2 == cache->countScratchEntriesForKey(scratchKey));)
+  // As long as there are outstanding refs on the resources they will not be in the scratch map
+  SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->countScratchEntriesForKey(scratchKey));)
   REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
   REPORTER_ASSERT(reporter, a->gpuMemorySize() + b->gpuMemorySize() == cache->getResourceBytes());
 
   // Our refs mean that the resources are non purgeable.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
   REPORTER_ASSERT(reporter, 2 == cache->getResourceCount());
 
@@ -821,10 +822,11 @@ static void test_duplicate_scratch_key(skiatest::Reporter* reporter) {
   a->unref();
   b->unref();
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
+  // Since we removed the refs to the resources they will now be in the scratch map
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 2 == cache->countScratchEntriesForKey(scratchKey));)
 
   // Purge again. This time resources should be purgeable.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 0 == TestResource::NumAlive());
   REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
   SkDEBUGCODE(REPORTER_ASSERT(reporter, 0 == cache->countScratchEntriesForKey(scratchKey));)
@@ -1005,7 +1007,7 @@ static void test_duplicate_unique_key(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 1 == TestResource::NumAlive());
 
   // c shouldn't be purged because it is ref'ed.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 1 == cache->getResourceCount());
   REPORTER_ASSERT(reporter, c->gpuMemorySize() == cache->getResourceBytes());
   REPORTER_ASSERT(reporter, 1 == TestResource::NumAlive());
@@ -1068,7 +1070,7 @@ static void test_purge_invalidated(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 3 == TestResource::NumAlive());
 
   typedef GrUniqueKeyInvalidatedMessage Msg;
-  typedef SkMessageBus<GrUniqueKeyInvalidatedMessage> Bus;
+  typedef SkMessageBus<GrUniqueKeyInvalidatedMessage, uint32_t> Bus;
 
   // Invalidate two of the three, they should be purged and no longer accessible via their keys.
   Bus::Post(Msg(key1, dContext->priv().contextID()));
@@ -1099,7 +1101,7 @@ static void test_purge_invalidated(skiatest::Reporter* reporter) {
   SkSafeUnref(scratch);
 
   // Get rid of c.
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   scratch = cache->findAndRefScratchResource(scratchKey);
   REPORTER_ASSERT(reporter, 0 == TestResource::NumAlive());
   REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
@@ -1134,14 +1136,14 @@ static void test_cache_chained_purge(skiatest::Reporter* reporter) {
 
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
 
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
 
   // Break the cycle
   unownedA->setUnrefWhenDestroyed(nullptr);
   REPORTER_ASSERT(reporter, 2 == TestResource::NumAlive());
 
-  cache->purgeAllUnlocked();
+  cache->purgeUnlockedResources();
   REPORTER_ASSERT(reporter, 0 == TestResource::NumAlive());
 }
 
@@ -1255,7 +1257,7 @@ static void test_time_purge(skiatest::Reporter* reporter) {
       }
 
       REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
-      cache->purgeAllUnlocked();
+      cache->purgeUnlockedResources();
     }
 
     // Do a similar test but where we leave refs on some resources to prevent them from being
@@ -1289,7 +1291,37 @@ static void test_time_purge(skiatest::Reporter* reporter) {
         REPORTER_ASSERT(reporter, cnt / 2 - i - 1 == cache->getResourceCount());
       }
 
-      cache->purgeAllUnlocked();
+      cache->purgeUnlockedResources();
+    }
+
+    REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
+
+    // Do a similar test where we alternate adding scratch and uniquely keyed resources, but
+    // then purge old scratch resources.
+    {
+      for (int i = 0; i < cnt; ++i) {
+        const bool isScratch = (i % 2 == 0);
+        const SkBudgeted budgeted = SkBudgeted::kYes;
+        const TestResource::SimulatedProperty property = TestResource::kA_SimulatedProperty;
+        TestResource* r = isScratch ? TestResource::CreateScratch(gpu, budgeted, property)
+                                    : new TestResource(gpu, budgeted, property);
+        if (!isScratch) {
+          GrUniqueKey k;
+          make_unique_key<1>(&k, i);
+          r->resourcePriv().setUniqueKey(k);
+        }
+        r->unref();
+        timeStamps.get()[i] = nowish();
+      }
+
+      for (int i = 0; i < cnt; ++i) {
+        // Should get a resource purged every other frame, since the uniquely keyed
+        // resources will not be considered.
+        cache->purgeResourcesNotUsedSince(timeStamps[i], /*scratchResourcesOnly=*/true);
+        REPORTER_ASSERT(reporter, cnt - i / 2 - 1 == cache->getResourceCount());
+      }
+      // Unref remaining resources
+      cache->purgeResourcesNotUsedSince(nowish());
     }
 
     REPORTER_ASSERT(reporter, 0 == cache->getResourceCount());
@@ -1406,7 +1438,7 @@ static void test_partial_purge(skiatest::Reporter* reporter) {
     }
 
     // ensure all are purged before the next
-    dContext->priv().testingOnly_purgeAllUnlockedResources();
+    dContext->priv().getResourceCache()->purgeUnlockedResources();
     REPORTER_ASSERT(reporter, 0 == cache->getBudgetedResourceCount());
     REPORTER_ASSERT(reporter, 0 == cache->getPurgeableBytes());
   }
@@ -1544,15 +1576,15 @@ static void test_free_texture_messages(skiatest::Reporter* reporter) {
   REPORTER_ASSERT(reporter, 0 == (freed[0] + freed[1] + freed[2]));
 
   // Send message to free the first resource
-  GrTextureFreedMessage msg1{wrapped[0], dContext->priv().contextID()};
-  SkMessageBus<GrTextureFreedMessage>::Post(msg1);
+  GrTextureFreedMessage msg1{wrapped[0], dContext->directContextID()};
+  SkMessageBus<GrTextureFreedMessage, GrDirectContext::DirectContextID>::Post(msg1);
   cache->purgeAsNeeded();
 
   REPORTER_ASSERT(reporter, 1 == (freed[0] + freed[1] + freed[2]));
   REPORTER_ASSERT(reporter, 1 == freed[0]);
 
-  GrTextureFreedMessage msg2{wrapped[2], dContext->priv().contextID()};
-  SkMessageBus<GrTextureFreedMessage>::Post(msg2);
+  GrTextureFreedMessage msg2{wrapped[2], dContext->directContextID()};
+  SkMessageBus<GrTextureFreedMessage, GrDirectContext::DirectContextID>::Post(msg2);
   cache->purgeAsNeeded();
 
   REPORTER_ASSERT(reporter, 2 == (freed[0] + freed[1] + freed[2]));
@@ -1589,11 +1621,11 @@ DEF_GPUTEST(ResourceCacheMisc, reporter, /* options */) {
 // This simulates a portion of Chrome's context abandonment processing.
 // Please see: crbug.com/1011368 and crbug.com/1014993
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceMessagesAfterAbandon, reporter, ctxInfo) {
-  auto context = ctxInfo.directContext();
-  GrGpu* gpu = context->priv().getGpu();
-  GrResourceCache* cache = context->priv().getResourceCache();
+  auto dContext = ctxInfo.directContext();
+  GrGpu* gpu = dContext->priv().getGpu();
+  GrResourceCache* cache = dContext->priv().getResourceCache();
 
-  GrBackendTexture backend = context->createBackendTexture(
+  GrBackendTexture backend = dContext->createBackendTexture(
       16, 16, SkColorType::kRGBA_8888_SkColorType, GrMipmapped::kNo, GrRenderable::kNo);
   GrTexture* tex = gpu->wrapBackendTexture(
                           backend, GrWrapOwnership::kBorrow_GrWrapOwnership, GrWrapCacheable::kYes,
@@ -1618,18 +1650,18 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(ResourceMessagesAfterAbandon, reporter, ctxIn
 
   // We must delete the backend texture before abandoning the context in vulkan. We just do it
   // for all the backends for consistency.
-  context->deleteBackendTexture(backend);
-  context->abandonContext();
+  dContext->deleteBackendTexture(backend);
+  dContext->abandonContext();
 
   REPORTER_ASSERT(reporter, 1 == freed);
 
   // In the past, creating this message could cause an exception due to
   // an un-safe downcast from GrTexture to GrGpuResource
-  GrTextureFreedMessage msg{tex, context->priv().contextID()};
-  SkMessageBus<GrTextureFreedMessage>::Post(msg);
+  GrTextureFreedMessage msg{tex, dContext->directContextID()};
+  SkMessageBus<GrTextureFreedMessage, GrDirectContext::DirectContextID>::Post(msg);
 
   // This doesn't actually do anything but it does trigger us to read messages
-  context->purgeUnlockedResources(false);
+  dContext->purgeUnlockedResources(false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1637,7 +1669,8 @@ static sk_sp<GrTexture> make_normal_texture(
     GrResourceProvider* provider, GrRenderable renderable, SkISize dims, int sampleCnt) {
   auto format = provider->caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, renderable);
   return provider->createTexture(
-      dims, format, renderable, sampleCnt, GrMipmapped::kNo, SkBudgeted::kYes, GrProtected::kNo);
+      dims, format, GrTextureType::k2D, renderable, sampleCnt, GrMipmapped::kNo, SkBudgeted::kYes,
+      GrProtected::kNo);
 }
 
 static sk_sp<GrTextureProxy> make_mipmap_proxy(
@@ -1709,6 +1742,42 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(GPUMemorySize, reporter, ctxInfo) {
     proxy = make_mipmap_proxy(context, GrRenderable::kNo, kSize, 1);
     size = proxy->gpuMemorySize();
     REPORTER_ASSERT(reporter, kArea * 4 + (kArea * 4) / 3 == size);
+  }
+}
+
+DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PurgeToMakeHeadroom, reporter, ctxInfo) {
+  constexpr size_t kTexSize = 16 * 16 * 4;
+
+  auto dContext = ctxInfo.directContext();
+  dContext->setResourceCacheLimit(2 * kTexSize);
+  auto resourceProvider = dContext->priv().resourceProvider();
+  auto resourceCache = dContext->priv().getResourceCache();
+  for (bool success : {true, false}) {
+    reporter->push(SkString(success ? "success" : "failure"));
+
+    resourceCache->releaseAll();
+    REPORTER_ASSERT(reporter, resourceCache->getBudgetedResourceBytes() == 0);
+
+    // Make one unpurgeable texture and one purgeable texture.
+    auto lockedTex = make_normal_texture(resourceProvider, GrRenderable::kNo, {16, 16}, 1);
+    REPORTER_ASSERT(reporter, lockedTex->gpuMemorySize() == kTexSize);
+
+    // N.b. this surface is renderable so "reuseScratchTextures = false" won't mess us up.
+    auto purgeableTex = make_normal_texture(resourceProvider, GrRenderable::kYes, {16, 16}, 1);
+    if (success) {
+      purgeableTex = nullptr;
+    }
+
+    size_t expectedPurgeable = success ? kTexSize : 0;
+    REPORTER_ASSERT(
+        reporter, expectedPurgeable == resourceCache->getPurgeableBytes(), "%zu vs %zu",
+        expectedPurgeable, resourceCache->getPurgeableBytes());
+    REPORTER_ASSERT(reporter, success == resourceCache->purgeToMakeHeadroom(kTexSize));
+    size_t expectedBudgeted = success ? kTexSize : (2 * kTexSize);
+    REPORTER_ASSERT(
+        reporter, expectedBudgeted == resourceCache->getBudgetedResourceBytes(), "%zu vs %zu",
+        expectedBudgeted, resourceCache->getBudgetedResourceBytes());
+    reporter->pop();
   }
 }
 

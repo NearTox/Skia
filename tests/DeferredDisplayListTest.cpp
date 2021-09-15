@@ -34,9 +34,7 @@
 #include "src/gpu/GrGpu.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrRenderTargetProxy.h"
-#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrTextureProxy.h"
-#include "src/gpu/SkGpuDevice.h"
 #include "src/gpu/gl/GrGLDefines.h"
 #include "src/image/SkImage_GpuBase.h"
 #include "src/image/SkSurface_Gpu.h"
@@ -45,6 +43,7 @@
 #include "tools/gpu/BackendSurfaceFactory.h"
 #include "tools/gpu/GrContextFactory.h"
 #include "tools/gpu/ManagedBackendTexture.h"
+#include "tools/gpu/ProxyUtils.h"
 
 #include <initializer_list>
 #include <memory>
@@ -271,7 +270,7 @@ class SurfaceParameters {
     SkImageInfo imageInfo =
         SkImageInfo::Make({fWidth, fHeight}, {fColorType, kPremul_SkAlphaType, fColorSpace});
     GrVkDrawableInfo vkInfo;
-    // putting in a bunch of dummy values here
+    // putting in a bunch of placeholder values here
     vkInfo.fSecondaryCommandBuffer = (VkCommandBuffer)1;
     vkInfo.fColorAttachmentIndex = 0;
     vkInfo.fCompatibleRenderPass = (VkRenderPass)1;
@@ -842,11 +841,6 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DDLWrapBackendTest, reporter, ctxInfo) {
   REPORTER_ASSERT(reporter, !image);
 }
 
-static sk_sp<SkPromiseImageTexture> dummy_fulfill_proc(void*) {
-  SkASSERT(0);
-  return nullptr;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 // Test out the behavior of an invalid DDLRecorder
 DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DDLInvalidRecorder, reporter, ctxInfo) {
@@ -872,16 +866,6 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DDLInvalidRecorder, reporter, ctxInfo) {
     REPORTER_ASSERT(reporter, !c.isValid());
     REPORTER_ASSERT(reporter, !recorder.getCanvas());
     REPORTER_ASSERT(reporter, !recorder.detach());
-
-    GrBackendFormat format =
-        dContext->defaultBackendFormat(kRGBA_8888_SkColorType, GrRenderable::kNo);
-    SkASSERT(format.isValid());
-
-    sk_sp<SkImage> image = recorder.makePromiseTexture(
-        format, 32, 32, GrMipmapped::kNo, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
-        kPremul_SkAlphaType, nullptr, dummy_fulfill_proc,
-        /*release proc*/ nullptr, nullptr);
-    REPORTER_ASSERT(reporter, !image);
   }
 }
 
@@ -1037,11 +1021,12 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DDLSkSurfaceFlush, reporter, ctxInfo) {
         context->defaultBackendFormat(kRGBA_8888_SkColorType, GrRenderable::kNo);
     SkASSERT(format.isValid());
 
-    sk_sp<SkImage> promiseImage = recorder.makePromiseTexture(
-        format, 32, 32, GrMipmapped::kNo, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
-        kPremul_SkAlphaType, nullptr, tracking_fulfill_proc, tracking_release_proc, &fulfillInfo);
-
     SkCanvas* canvas = recorder.getCanvas();
+
+    sk_sp<SkImage> promiseImage = SkImage::MakePromiseTexture(
+        canvas->recordingContext()->threadSafeProxy(), format, SkISize::Make(32, 32),
+        GrMipmapped::kNo, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kPremul_SkAlphaType,
+        nullptr, tracking_fulfill_proc, tracking_release_proc, &fulfillInfo);
 
     canvas->clear(SK_ColorRED);
     canvas->drawImage(promiseImage, 0, 0);
@@ -1058,12 +1043,9 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DDLSkSurfaceFlush, reporter, ctxInfo) {
 
   REPORTER_ASSERT(reporter, fulfillInfo.fFulfilled);
 
-  if (GrBackendApi::kVulkan == context->backend() || GrBackendApi::kMetal == context->backend()) {
-    // In order to receive the done callback with Vulkan we need to perform the equivalent
-    // of a glFinish
-    s->flush();
-    context->submit(true);
-  }
+  // In order to receive the done callback with the low-level APIs we need to re-flush
+  s->flush();
+  context->submit(true);
 
   REPORTER_ASSERT(reporter, fulfillInfo.fReleased);
 
@@ -1127,6 +1109,12 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(DDLMultipleDDLs, reporter, ctxInfo) {
 }
 
 #ifdef SK_GL
+
+static sk_sp<SkPromiseImageTexture> noop_fulfill_proc(void*) {
+  SkASSERT(0);
+  return nullptr;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // Check that the texture-specific flags (i.e., for external & rectangle textures) work
 // for promise images. As such, this is a GL-only test.
@@ -1145,17 +1133,20 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(DDLTextureFlagsTest, reporter, ctxInfo) {
     for (auto mipMapped : {GrMipmapped::kNo, GrMipmapped::kYes}) {
       GrBackendFormat format = GrBackendFormat::MakeGL(GR_GL_RGBA8, target);
 
-      sk_sp<SkImage> image = recorder.makePromiseTexture(
-          format, 32, 32, mipMapped, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
-          kPremul_SkAlphaType, nullptr, dummy_fulfill_proc,
-          /*release proc*/ nullptr, nullptr);
+      sk_sp<SkImage> image = SkImage::MakePromiseTexture(
+          recorder.getCanvas()->recordingContext()->threadSafeProxy(), format,
+          SkISize::Make(32, 32), mipMapped, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
+          kPremul_SkAlphaType,
+          /*color space*/ nullptr, noop_fulfill_proc,
+          /*release proc*/ nullptr,
+          /*context*/ nullptr);
       if (GR_GL_TEXTURE_2D != target && mipMapped == GrMipmapped::kYes) {
         REPORTER_ASSERT(reporter, !image);
         continue;
       }
       REPORTER_ASSERT(reporter, image);
 
-      GrTextureProxy* backingProxy = ((SkImage_GpuBase*)image.get())->peekProxy();
+      GrTextureProxy* backingProxy = sk_gpu_test::GetTextureImageProxy(image.get(), context);
 
       REPORTER_ASSERT(reporter, backingProxy->mipmapped() == mipMapped);
       if (GR_GL_TEXTURE_2D == target) {

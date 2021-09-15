@@ -16,7 +16,6 @@
 #include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
 #include "src/gpu/gl/GrGLCaps.h"
-#include "src/gpu/ops/GrMeshDrawOp.h"
 #include "tools/gpu/GrContextFactory.h"
 #include "tools/gpu/ManagedBackendTexture.h"
 
@@ -67,11 +66,10 @@ static GrProcessorSet::Analysis do_analysis(
   GrPaint paint;
   paint.setXPFactory(xpf);
   GrProcessorSet procs(std::move(paint));
-  bool hasMixedSampledCoverage = false;
   SkPMColor4f overrideColor;
   GrProcessorSet::Analysis analysis = procs.finalize(
-      colorInput, coverageInput, nullptr, &GrUserStencilSettings::kUnused, hasMixedSampledCoverage,
-      caps, GrClampType::kAuto, &overrideColor);
+      colorInput, coverageInput, nullptr, &GrUserStencilSettings::kUnused, caps, GrClampType::kAuto,
+      &overrideColor);
   return analysis;
 }
 
@@ -89,8 +87,8 @@ class GrPorterDuffTest {
       fCompatibleWithCoverageAsAlpha = analysis.isCompatibleWithCoverageAsAlpha();
       fUnaffectedByDstValue = analysis.unaffectedByDstValue();
       fIgnoresInputColor = analysis.inputColorIsIgnored();
-      sk_sp<const GrXferProcessor> xp(GrXPFactory::MakeXferProcessor(
-          xpf, inputColor, inputCoverage, false, caps, GrClampType::kAuto));
+      sk_sp<const GrXferProcessor> xp(
+          GrXPFactory::MakeXferProcessor(xpf, inputColor, inputCoverage, caps, GrClampType::kAuto));
       TEST_ASSERT(
           !analysis.requiresDstTexture() ||
           (isLCD && !caps.shaderCaps()->dstReadInShaderSupport() &&
@@ -1021,10 +1019,10 @@ static void test_lcd_coverage_fallback_case(skiatest::Reporter* reporter, const 
   GrProcessorAnalysisColor color = SkPMColor4f::FromBytes_RGBA(GrColorPackRGBA(123, 45, 67, 255));
   GrProcessorAnalysisCoverage coverage = GrProcessorAnalysisCoverage::kLCD;
   TEST_ASSERT(
-      !(GrXPFactory::GetAnalysisProperties(xpf, color, coverage, false, caps, autoClamp) &
+      !(GrXPFactory::GetAnalysisProperties(xpf, color, coverage, caps, autoClamp) &
         GrXPFactory::AnalysisProperties::kRequiresDstTexture));
   sk_sp<const GrXferProcessor> xp_opaque(
-      GrXPFactory::MakeXferProcessor(xpf, color, coverage, false, caps, autoClamp));
+      GrXPFactory::MakeXferProcessor(xpf, color, coverage, caps, autoClamp));
   if (!xp_opaque) {
     ERRORF(reporter, "Failed to create an XP with LCD coverage.");
     return;
@@ -1037,10 +1035,10 @@ static void test_lcd_coverage_fallback_case(skiatest::Reporter* reporter, const 
   color = SkPMColor4f::FromBytes_RGBA(GrColorPackRGBA(123, 45, 67, 221));
   coverage = GrProcessorAnalysisCoverage::kLCD;
   TEST_ASSERT(
-      !(GrXPFactory::GetAnalysisProperties(xpf, color, coverage, false, caps, autoClamp) &
+      !(GrXPFactory::GetAnalysisProperties(xpf, color, coverage, caps, autoClamp) &
         GrXPFactory::AnalysisProperties::kRequiresDstTexture));
   sk_sp<const GrXferProcessor> xp(
-      GrXPFactory::MakeXferProcessor(xpf, color, coverage, false, caps, autoClamp));
+      GrXPFactory::MakeXferProcessor(xpf, color, coverage, caps, autoClamp));
   if (!xp) {
     ERRORF(reporter, "Failed to create an XP with LCD coverage.");
     return;
@@ -1071,7 +1069,7 @@ DEF_GPUTEST(PorterDuffNoDualSourceBlending, reporter, options) {
     ERRORF(reporter, "Could not make texture.");
     return;
   }
-  GrXferProcessor::DstProxyView fakeDstProxyView;
+  GrDstProxyView fakeDstProxyView;
   {
     sk_sp<GrTextureProxy> proxy = proxyProvider->wrapBackendTexture(
         mbet->texture(), kBorrow_GrWrapOwnership, GrWrapCacheable::kNo, kRead_GrIOType,
@@ -1093,7 +1091,7 @@ DEF_GPUTEST(PorterDuffNoDualSourceBlending, reporter, options) {
         SkBlendMode xfermode = static_cast<SkBlendMode>(m);
         const GrXPFactory* xpf = GrPorterDuffXPFactory::Get(xfermode);
         sk_sp<const GrXferProcessor> xp(GrXPFactory::MakeXferProcessor(
-            xpf, colorInput, coverageType, false, caps, GrClampType::kAuto));
+            xpf, colorInput, coverageType, caps, GrClampType::kAuto));
         if (!xp) {
           ERRORF(reporter, "Failed to create an XP without dual source blending.");
           return;

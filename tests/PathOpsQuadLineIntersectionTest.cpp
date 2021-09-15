@@ -97,7 +97,6 @@ static void testOneOffs(skiatest::Reporter* reporter) {
       SkDPoint lineXY = line.ptAtT(lineT);
       if (!quadXY.approximatelyEqual(lineXY)) {
         quadXY.approximatelyEqual(lineXY);
-        SkDebugf("");
       }
       REPORTER_ASSERT(reporter, quadXY.approximatelyEqual(lineXY));
     }

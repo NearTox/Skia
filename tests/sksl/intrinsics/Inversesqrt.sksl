@@ -1,1 +1,0 @@
-in float a; void main() { sk_FragColor.x = half(inversesqrt(a)); }

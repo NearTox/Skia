@@ -67,7 +67,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(RepeatedClippedBlurTest, reporter, ctxInfo) {
         dContext, SkBudgeted::kYes, screenII, 1, kTopLeft_GrSurfaceOrigin, nullptr);
     SkCanvas* c = s->getCanvas();
 
-    c->drawImageRect(bigImg, SkRect::MakeWH(1024, 600), nullptr);
+    c->drawImageRect(bigImg, SkRect::MakeWH(1024, 600), SkSamplingOptions());
 
     smImg = s->makeImageSnapshot();
   }
@@ -96,7 +96,9 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(RepeatedClippedBlurTest, reporter, ctxInfo) {
         smImg->makeWithFilter(dContext, blur.get(), subset, clip, &outSubset, &offset);
 
     SkRect dstRect = SkRect::MakeXYWH(offset.fX, offset.fY, outSubset.width(), outSubset.height());
-    dstCanvas->drawImageRect(filteredImg, outSubset, dstRect, nullptr);
+    dstCanvas->drawImageRect(
+        filteredImg, SkRect::Make(outSubset), dstRect, SkSamplingOptions(), nullptr,
+        SkCanvas::kStrict_SrcRectConstraint);
 
     // Flush here to mimic Chrome's SkiaHelper::ApplyImageFilter
     dContext->flushAndSubmit();

@@ -57,10 +57,9 @@ static const Pair gPairs[] = {
     {kN32_SkColorType, "0101111"},     {kRGBA_F16_SkColorType, "0101011"},
 };
 
-static const int W = 20;
-static const int H = 33;
-
 static void setup_src_bitmaps(SkBitmap* srcOpaque, SkBitmap* srcPremul, SkColorType ct) {
+  const int W = 20;
+  const int H = 33;
   sk_sp<SkColorSpace> colorSpace = nullptr;
   if (kRGBA_F16_SkColorType == ct) {
     colorSpace = SkColorSpace::MakeSRGB();
@@ -73,6 +72,7 @@ static void setup_src_bitmaps(SkBitmap* srcOpaque, SkBitmap* srcPremul, SkColorT
 }
 
 DEF_TEST(BitmapCopy_extractSubset, reporter) {
+  const int W = 20;
   for (size_t i = 0; i < SK_ARRAY_COUNT(gPairs); i++) {
     SkBitmap srcOpaque, srcPremul;
     setup_src_bitmaps(&srcOpaque, &srcPremul, gPairs[i].fColorType);

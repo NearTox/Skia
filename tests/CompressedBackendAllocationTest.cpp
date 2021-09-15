@@ -65,8 +65,8 @@ static void check_compressed_mipmaps(
 
   SkCanvas* canvas = surf->getCanvas();
 
+  const SkSamplingOptions sampling(SkFilterMode::kLinear, SkMipmapMode::kLinear);
   SkPaint p;
-  SkPaintPriv::SetFQ(&p, kMedium_SkFilterQuality);  // to force mipMapping
   p.setBlendMode(SkBlendMode::kSrc);
 
   int numMipLevels = 1;
@@ -80,7 +80,7 @@ static void check_compressed_mipmaps(
     canvas->clear(SK_ColorTRANSPARENT);
 
     SkRect r = SkRect::MakeWH(rectSize, rectSize);
-    canvas->drawImageRect(img, r, &p);
+    canvas->drawImageRect(img, r, sampling, &p);
 
     SkImageInfo readbackII =
         SkImageInfo::Make(rectSize, rectSize, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType);
@@ -275,7 +275,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(CompressedBackendAllocationTest, reporter, ct
       continue;
     }
 
-    if (!caps->isFormatTexturable(format)) {
+    if (!caps->isFormatTexturable(format, GrTextureType::k2D)) {
       continue;
     }
 

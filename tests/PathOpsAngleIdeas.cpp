@@ -329,9 +329,6 @@ static bool bruteMinT(
       rStep /= 2;
     } while (rStep > FLT_EPSILON);
     if (bestCCW < 0) {
-      if (bestR >= maxRadius) {
-        SkDebugf("");
-      }
       REPORTER_ASSERT(reporter, bestR < maxRadius);
       return false;
     }

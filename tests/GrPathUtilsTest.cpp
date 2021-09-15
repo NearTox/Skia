@@ -87,11 +87,11 @@ DEF_TEST(GrPathUtils_findCubicConvex180Chops, r) {
   // Now test an exact quadratic.
   SkPoint quad[4] = {{0, 0}, {2, 2}, {4, 2}, {6, 0}};
   float T[2];
-  REPORTER_ASSERT(r, GrPathUtils::findCubicConvex180Chops(quad, T) == 0);
+  bool areCusps;
+  REPORTER_ASSERT(r, GrPathUtils::findCubicConvex180Chops(quad, T, &areCusps) == 0);
 
   // Now test that cusps and near-cusps get flagged as cusps.
   SkPoint cusp[4] = {{0, 0}, {1, 1}, {1, 0}, {0, 1}};
-  bool areCusps = false;
   REPORTER_ASSERT(r, GrPathUtils::findCubicConvex180Chops(cusp, T, &areCusps) == 1);
   REPORTER_ASSERT(r, areCusps == true);
 
@@ -109,21 +109,20 @@ DEF_TEST(GrPathUtils_findCubicConvex180Chops, r) {
   // Ensure two inflection points barely more than kEpsilon apart do not get flagged as cusps.
   cusp[1].fY = (float)(1 - 1.1 * dy);
   cusp[2].fY = (float)(0 + 1.1 * dy);
-  areCusps = false;
   REPORTER_ASSERT(r, GrPathUtils::findCubicConvex180Chops(cusp, T, &areCusps) == 2);
   REPORTER_ASSERT(r, areCusps == false);
 
   // Ensure two inflection points barely less than kEpsilon apart do get flagged as cusps.
   cusp[1].fY = (float)(1 - .9 * dy);
   cusp[2].fY = (float)(0 + .9 * dy);
-  areCusps = false;
   REPORTER_ASSERT(r, GrPathUtils::findCubicConvex180Chops(cusp, T, &areCusps) == 1);
   REPORTER_ASSERT(r, areCusps == true);
 }
 
 DEF_TEST(GrPathUtils_convertToCubic, r) {
   SkPoint cubic[4];
-  GrPathUtils::convertLineToCubic({0, 0}, {3, 6}, cubic);
+  GrVertexWriter cubicWriter(cubic);
+  GrPathUtils::writeLineAsCubic({0, 0}, {3, 6}, &cubicWriter);
   REPORTER_ASSERT(r, cubic[0] == SkPoint::Make(0, 0));
   REPORTER_ASSERT(r, SkScalarNearlyEqual(cubic[1].fX, 1));
   REPORTER_ASSERT(r, SkScalarNearlyEqual(cubic[1].fY, 2));

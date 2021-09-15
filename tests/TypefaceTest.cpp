@@ -146,29 +146,6 @@ DEF_TEST(FontDescriptorNegativeVariationSerialize, reporter) {
   REPORTER_ASSERT(reporter, descD.getVariation()[0].value == -1.0f);
 };
 
-DEF_TEST(FontDescriptorDeserializeOldFormat, reporter) {
-  // From ossfuzz:26254
-  const uint8_t old_serialized_desc[] = {
-      0x0,                        // style
-      0xff, 0xfb, 0x0, 0x0, 0x0,  // kFontAxes
-      0x0,                        // coordinateCount
-      0xff, 0xff, 0x0, 0x0, 0x0,  // kSentinel
-      0x0,                        // data length
-  };
-
-  SkMemoryStream stream(old_serialized_desc, sizeof(old_serialized_desc), false);
-  SkFontDescriptor desc;
-  if (!SkFontDescriptor::Deserialize(&stream, &desc)) {
-    REPORT_FAILURE(
-        reporter, "!SkFontDescriptor::Deserialize(&stream, &desc)",
-        SkString("bytes should be recognized unless removing support"));
-    return;
-  }
-  // This call should not crash and should not return a valid SkFontData.
-  std::unique_ptr<SkFontData> data = desc.maybeAsSkFontData();
-  REPORTER_ASSERT(reporter, !data);
-};
-
 DEF_TEST(TypefaceAxes, reporter) {
   using Variation = SkFontArguments::VariationPosition;
   // In DWrite in at least up to 1901 18363.1198 IDWriteFontFace5::GetFontAxisValues and
@@ -218,9 +195,7 @@ DEF_TEST(TypefaceAxes, reporter) {
         // Convert to fixed for "almost equal".
         SkFixed fixedRead = SkScalarToFixed(actual[actualIdx].value);
         SkFixed fixedOriginal = SkScalarToFixed(expected.coordinates[expectedIdx].value);
-        if (!(SkTAbs(fixedRead - fixedOriginal) < 2 ||  // variation set correctly
-              SkTAbs(fixedRead - SK_Fixed1) < 2))       // variation remained default
-        {
+        if (!(SkTAbs(fixedRead - fixedOriginal) < 2)) {
           continue;
         }
 
@@ -293,6 +268,12 @@ DEF_TEST(TypefaceAxes, reporter) {
     params.setVariationDesignPosition({position, SK_ARRAY_COUNT(position)});
     sk_sp<SkTypeface> typeface = fm->makeFromStream(std::move(distortable), params);
     test(typeface.get(), Variation{&position[1], 1}, -1);
+
+    if (typeface) {
+      // Cloning without specifying any parameters should produce an equivalent variation.
+      sk_sp<SkTypeface> clone = typeface->makeClone(SkFontArguments());
+      test(clone.get(), Variation{&position[1], 1}, -1);
+    }
   }
 }
 

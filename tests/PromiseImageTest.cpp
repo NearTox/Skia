@@ -13,6 +13,7 @@
 #include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrDirectContextPriv.h"
 #include "src/gpu/GrGpu.h"
+#include "src/gpu/GrResourceProvider.h"
 #include "src/gpu/GrTexture.h"
 #include "src/image/SkImage_Gpu.h"
 #include "tools/gpu/ManagedBackendTexture.h"
@@ -122,7 +123,6 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTest, reporter, ctxInfo) {
   const int kHeight = 10;
 
   auto ctx = ctxInfo.directContext();
-  GrGpu* gpu = ctx->priv().getGpu();
 
   GrBackendTexture backendTex = ctx->createBackendTexture(
       kWidth, kHeight, kRGBA_8888_SkColorType, SkColors::kTransparent, GrMipmapped::kNo,
@@ -135,9 +135,9 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTest, reporter, ctxInfo) {
   PromiseTextureChecker promiseChecker(backendTex, reporter, false);
   GrSurfaceOrigin texOrigin = kTopLeft_GrSurfaceOrigin;
   sk_sp<SkImage> refImg(SkImage_Gpu::MakePromiseTexture(
-      ctx, backendFormat, {kWidth, kHeight}, GrMipmapped::kNo, texOrigin, kRGBA_8888_SkColorType,
-      kPremul_SkAlphaType, nullptr, PromiseTextureChecker::Fulfill, PromiseTextureChecker::Release,
-      &promiseChecker));
+      ctx->threadSafeProxy(), backendFormat, {kWidth, kHeight}, GrMipmapped::kNo, texOrigin,
+      kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr, PromiseTextureChecker::Fulfill,
+      PromiseTextureChecker::Release, &promiseChecker));
 
   SkImageInfo info = SkImageInfo::MakeN32Premul(kWidth, kHeight);
   sk_sp<SkSurface> surface = SkSurface::MakeRenderTarget(ctx, SkBudgeted::kNo, info);
@@ -150,15 +150,14 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTest, reporter, ctxInfo) {
   // We still own the image so we should not have called Release or Done.
   check_only_fulfilled(reporter, promiseChecker);
 
-  gpu->testingOnly_flushGpuAndSync();
+  ctx->submit(true);
   check_only_fulfilled(reporter, promiseChecker);
 
   canvas->drawImage(refImg, 0, 0);
   canvas->drawImage(refImg, 0, 0);
 
-  surface->flushAndSubmit();
+  surface->flushAndSubmit(true);
 
-  gpu->testingOnly_flushGpuAndSync();
   // Image should still be fulfilled from the first time we drew/flushed it.
   check_only_fulfilled(reporter, promiseChecker);
 
@@ -175,7 +174,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTest, reporter, ctxInfo) {
   // Flushing should have called Release. Depending on the backend and timing it may have called
   // done.
   check_all_flushed_but_not_synced(reporter, promiseChecker, ctx->backend());
-  gpu->testingOnly_flushGpuAndSync();
+  ctx->submit(true);
   // Now Done should definitely have been called.
   check_all_done(reporter, promiseChecker);
 
@@ -232,8 +231,8 @@ DEF_GPUTEST(PromiseImageTextureShutdown, reporter, ctxInfo) {
 
       PromiseTextureChecker promiseChecker(mbet->texture(), reporter, false);
       sk_sp<SkImage> image(SkImage_Gpu::MakePromiseTexture(
-          ctx, mbet->texture().getBackendFormat(), {kWidth, kHeight}, GrMipmapped::kNo,
-          kTopLeft_GrSurfaceOrigin, kAlpha_8_SkColorType, kPremul_SkAlphaType,
+          ctx->threadSafeProxy(), mbet->texture().getBackendFormat(), {kWidth, kHeight},
+          GrMipmapped::kNo, kTopLeft_GrSurfaceOrigin, kAlpha_8_SkColorType, kPremul_SkAlphaType,
           /*color space*/ nullptr, PromiseTextureChecker::Fulfill, PromiseTextureChecker::Release,
           &promiseChecker));
       REPORTER_ASSERT(reporter, image);
@@ -270,9 +269,9 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTextureFullCache, reporter, ctxIn
 
   PromiseTextureChecker promiseChecker(backendTex, reporter, false);
   sk_sp<SkImage> image(SkImage_Gpu::MakePromiseTexture(
-      dContext, backendTex.getBackendFormat(), {kWidth, kHeight}, GrMipmapped::kNo,
-      kTopLeft_GrSurfaceOrigin, kAlpha_8_SkColorType, kPremul_SkAlphaType, nullptr,
-      PromiseTextureChecker::Fulfill, PromiseTextureChecker::Release, &promiseChecker));
+      dContext->threadSafeProxy(), backendTex.getBackendFormat(), {kWidth, kHeight},
+      GrMipmapped::kNo, kTopLeft_GrSurfaceOrigin, kAlpha_8_SkColorType, kPremul_SkAlphaType,
+      nullptr, PromiseTextureChecker::Fulfill, PromiseTextureChecker::Release, &promiseChecker));
   REPORTER_ASSERT(reporter, image);
 
   // Make the cache full. This tests that we don't preemptively purge cached textures for
@@ -284,8 +283,8 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTextureFullCache, reporter, ctxIn
     auto format = dContext->priv().caps()->getDefaultBackendFormat(
         GrColorType::kRGBA_8888, GrRenderable::kNo);
     textures.emplace_back(dContext->priv().resourceProvider()->createTexture(
-        {100, 100}, format, GrRenderable::kNo, 1, GrMipmapped::kNo, SkBudgeted::kYes,
-        GrProtected::kNo));
+        {100, 100}, format, GrTextureType::k2D, GrRenderable::kNo, 1, GrMipmapped::kNo,
+        SkBudgeted::kYes, GrProtected::kNo));
     REPORTER_ASSERT(reporter, textures[i]);
   }
 
@@ -310,8 +309,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageTextureFullCache, reporter, ctxIn
   surface->flushAndSubmit();
   // Must call these to ensure that all callbacks are performed before the checker is destroyed.
   image.reset();
-  dContext->flushAndSubmit();
-  dContext->priv().getGpu()->testingOnly_flushGpuAndSync();
+  dContext->flushAndSubmit(true);
 
   dContext->deleteBackendTexture(backendTex);
 }
@@ -343,7 +341,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageNullFulfill, reporter, ctxInfo) {
   };
   GrSurfaceOrigin texOrigin = kTopLeft_GrSurfaceOrigin;
   sk_sp<SkImage> refImg(SkImage_Gpu::MakePromiseTexture(
-      dContext, backendFormat, {kWidth, kHeight}, GrMipmapped::kNo, texOrigin,
+      dContext->threadSafeProxy(), backendFormat, {kWidth, kHeight}, GrMipmapped::kNo, texOrigin,
       kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr, fulfill, release, &counts));
 
   SkImageInfo info = SkImageInfo::MakeN32Premul(kWidth, kHeight);
@@ -353,7 +351,7 @@ DEF_GPUTEST_FOR_RENDERING_CONTEXTS(PromiseImageNullFulfill, reporter, ctxInfo) {
   canvas->drawImage(refImg, 0, 0);
   SkPaint paint;
   paint.setColorFilter(SkColorFilters::LinearToSRGBGamma());
-  canvas->drawImage(refImg, 0, 0, &paint);
+  canvas->drawImage(refImg, 0, 0, SkSamplingOptions(), &paint);
   auto shader = refImg->makeShader(SkSamplingOptions());
   REPORTER_ASSERT(reporter, shader);
   paint.setShader(std::move(shader));
