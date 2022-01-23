@@ -462,8 +462,8 @@ private:
      * Returns a list of quad segments that approximate the offset curve.
      * TODO: no reason this needs to return a vector of quads, can just append to the path
      */
-    std::vector<PathSegment> strokeSegment(const PathSegment& seg,
-                                           const ScalarBezCurve& distFnc) const;
+    std::vector<PathSegment> strokeSegment(
+        const PathSegment& seg, const ScalarBezCurve& distanceFunc) const;
 
     /** Adds an endcap to fOuter */
     enum class CapLocation { Start, End };
@@ -636,108 +636,106 @@ SkVarWidthStroker::OffsetSegments SkVarWidthStroker::strokeSegment(
 }
 
 std::vector<SkVarWidthStroker::PathSegment> SkVarWidthStroker::strokeSegment(
-        const PathSegment& seg, const ScalarBezCurve& distFnc) const {
-    // Work item for the recursive splitting stack.
-    struct Item {
-        PathSegment fSeg;
-        ScalarBezCurve fDistFnc, fDistFncSqd;
-        ScalarBezCurve fSegX, fSegY;
+    const PathSegment& seg, const ScalarBezCurve& distanceFunc) const {
+  // Work item for the recursive splitting stack.
+  struct Item {
+    PathSegment fSeg;
+    ScalarBezCurve fDistFnc, fDistFncSqd;
+    ScalarBezCurve fSegX, fSegY;
 
-        Item(const PathSegment& seg,
-             const ScalarBezCurve& distFnc,
-             const ScalarBezCurve& distFncSqd)
-                : fSeg(seg), fDistFnc(distFnc), fDistFncSqd(distFncSqd) {
-            const int segDegree = segmentDegree(seg);
-            fSegX = ScalarBezCurve(segDegree);
-            fSegY = ScalarBezCurve(segDegree);
-            for (int i = 0; i <= segDegree; i++) {
-                fSegX[i] = seg.fPoints[i].fX;
-                fSegY[i] = seg.fPoints[i].fY;
-            }
-        }
-    };
-
-    // Push the initial segment and distance function
-    std::stack<Item> stack;
-    stack.push(Item(seg, distFnc, ScalarBezCurve::Mul(distFnc, distFnc)));
-
-    std::vector<PathSegment> result;
-    constexpr int kMaxIters = 5000; /** TODO: this is completely arbitrary */
-    int iter = 0;
-    while (!stack.empty()) {
-        if (iter++ >= kMaxIters) break;
-        const Item item = stack.top();
-        stack.pop();
-
-        const ScalarBezCurve& distFnc = item.fDistFnc;
-        ScalarBezCurve distFncSqd = item.fDistFncSqd;
-        const float kTol = std::abs(0.5f * distFnc.extremumWeight());
-
-        // Compute a quad that approximates stroke outline
-        PathSegment quadApprox;
-        approximateSegment(item.fSeg, distFnc, &quadApprox);
-        ScalarBezCurve quadApproxX(2), quadApproxY(2);
-        for (int i = 0; i < 3; i++) {
-            quadApproxX[i] = quadApprox.fPoints[i].fX;
-            quadApproxY[i] = quadApprox.fPoints[i].fY;
-        }
-
-        // Compute control polygon for the delta(t) curve. First must elevate to a common degree.
-        const int deltaDegree = std::max(quadApproxX.degree(), item.fSegX.degree());
-        ScalarBezCurve segX = item.fSegX, segY = item.fSegY;
-        segX.elevateDegree(deltaDegree);
-        segY.elevateDegree(deltaDegree);
-        quadApproxX.elevateDegree(deltaDegree);
-        quadApproxY.elevateDegree(deltaDegree);
-
-        ScalarBezCurve deltaX = ScalarBezCurve::Sub(quadApproxX, segX);
-        ScalarBezCurve deltaY = ScalarBezCurve::Sub(quadApproxY, segY);
-
-        // Compute psi(t) = delta_x(t)^2 + delta_y(t)^2.
-        ScalarBezCurve E = ScalarBezCurve::AddSquares(deltaX, deltaY);
-
-        // Promote E and d(t)^2 to a common degree.
-        const int commonDeg = std::max(distFncSqd.degree(), E.degree());
-        distFncSqd.elevateDegree(commonDeg);
-        E.elevateDegree(commonDeg);
-
-        // Subtract dist squared curve from E, resulting in:
-        //   eps(t) = delta_x(t)^2 + delta_y(t)^2 - d(t)^2
-        E.sub(distFncSqd);
-
-        // Purely for debugging/testing, save the first approximation and error function:
-        if (viz::outerErr == nullptr) {
-            using namespace viz;
-            outerErr = std::make_unique<ScalarBezCurve>(E);
-            outerFirstApprox.rewind();
-            outerFirstApprox.moveTo(quadApprox.fPoints[0]);
-            outerFirstApprox.quadTo(quadApprox.fPoints[1], quadApprox.fPoints[2]);
-        }
-
-        // Compute maxErr, which is just the max coefficient of eps (using convex hull property
-        // of bez curves)
-        float maxAbsErr = std::abs(E.extremumWeight());
-
-        if (maxAbsErr > kTol) {
-            PathSegment left, right;
-            splitSegment(item.fSeg, 0.5f, &left, &right);
-
-            ScalarBezCurve distFncL, distFncR;
-            distFnc.split(0.5f, &distFncL, &distFncR);
-
-            ScalarBezCurve distFncSqdL, distFncSqdR;
-            distFncSqd.split(0.5f, &distFncSqdL, &distFncSqdR);
-
-            stack.push(Item(right, distFncR, distFncSqdR));
-            stack.push(Item(left, distFncL, distFncSqdL));
-        } else {
-            // Approximation is good enough.
-            quadApprox.fVerb = SkPath::kQuad_Verb;
-            result.push_back(quadApprox);
-        }
+    Item(const PathSegment& seg, const ScalarBezCurve& distFnc, const ScalarBezCurve& distFncSqd)
+        : fSeg(seg), fDistFnc(distFnc), fDistFncSqd(distFncSqd) {
+      const int segDegree = segmentDegree(seg);
+      fSegX = ScalarBezCurve(segDegree);
+      fSegY = ScalarBezCurve(segDegree);
+      for (int i = 0; i <= segDegree; i++) {
+        fSegX[i] = seg.fPoints[i].fX;
+        fSegY[i] = seg.fPoints[i].fY;
+      }
     }
-    SkASSERT(!result.empty());
-    return result;
+  };
+
+  // Push the initial segment and distance function
+  std::stack<Item> stack;
+  stack.push(Item(seg, distanceFunc, ScalarBezCurve::Mul(distanceFunc, distanceFunc)));
+
+  std::vector<PathSegment> result;
+  constexpr int kMaxIters = 5000; /** TODO: this is completely arbitrary */
+  int iter = 0;
+  while (!stack.empty()) {
+    if (iter++ >= kMaxIters) break;
+    const Item item = stack.top();
+    stack.pop();
+
+    const ScalarBezCurve& distFnc = item.fDistFnc;
+    ScalarBezCurve distFncSqd = item.fDistFncSqd;
+    const float kTol = std::abs(0.5f * distFnc.extremumWeight());
+
+    // Compute a quad that approximates stroke outline
+    PathSegment quadApprox;
+    approximateSegment(item.fSeg, distFnc, &quadApprox);
+    ScalarBezCurve quadApproxX(2), quadApproxY(2);
+    for (int i = 0; i < 3; i++) {
+      quadApproxX[i] = quadApprox.fPoints[i].fX;
+      quadApproxY[i] = quadApprox.fPoints[i].fY;
+    }
+
+    // Compute control polygon for the delta(t) curve. First must elevate to a common degree.
+    const int deltaDegree = std::max(quadApproxX.degree(), item.fSegX.degree());
+    ScalarBezCurve segX = item.fSegX, segY = item.fSegY;
+    segX.elevateDegree(deltaDegree);
+    segY.elevateDegree(deltaDegree);
+    quadApproxX.elevateDegree(deltaDegree);
+    quadApproxY.elevateDegree(deltaDegree);
+
+    ScalarBezCurve deltaX = ScalarBezCurve::Sub(quadApproxX, segX);
+    ScalarBezCurve deltaY = ScalarBezCurve::Sub(quadApproxY, segY);
+
+    // Compute psi(t) = delta_x(t)^2 + delta_y(t)^2.
+    ScalarBezCurve E = ScalarBezCurve::AddSquares(deltaX, deltaY);
+
+    // Promote E and d(t)^2 to a common degree.
+    const int commonDeg = std::max(distFncSqd.degree(), E.degree());
+    distFncSqd.elevateDegree(commonDeg);
+    E.elevateDegree(commonDeg);
+
+    // Subtract dist squared curve from E, resulting in:
+    //   eps(t) = delta_x(t)^2 + delta_y(t)^2 - d(t)^2
+    E.sub(distFncSqd);
+
+    // Purely for debugging/testing, save the first approximation and error function:
+    if (viz::outerErr == nullptr) {
+      using namespace viz;
+      outerErr = std::make_unique<ScalarBezCurve>(E);
+      outerFirstApprox.rewind();
+      outerFirstApprox.moveTo(quadApprox.fPoints[0]);
+      outerFirstApprox.quadTo(quadApprox.fPoints[1], quadApprox.fPoints[2]);
+    }
+
+    // Compute maxErr, which is just the max coefficient of eps (using convex hull property
+    // of bez curves)
+    float maxAbsErr = std::abs(E.extremumWeight());
+
+    if (maxAbsErr > kTol) {
+      PathSegment left, right;
+      splitSegment(item.fSeg, 0.5f, &left, &right);
+
+      ScalarBezCurve distFncL, distFncR;
+      distFnc.split(0.5f, &distFncL, &distFncR);
+
+      ScalarBezCurve distFncSqdL, distFncSqdR;
+      distFncSqd.split(0.5f, &distFncSqdL, &distFncSqdR);
+
+      stack.push(Item(right, distFncR, distFncSqdR));
+      stack.push(Item(left, distFncL, distFncSqdL));
+    } else {
+      // Approximation is good enough.
+      quadApprox.fVerb = SkPath::kQuad_Verb;
+      result.push_back(quadApprox);
+    }
+  }
+  SkASSERT(!result.empty());
+  return result;
 }
 
 void SkVarWidthStroker::endcap(CapLocation loc) {

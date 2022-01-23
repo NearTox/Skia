@@ -11,9 +11,9 @@
 
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
-#include "include/private/SkMutex.h"
 #include "src/core/SkGlyph.h"
 #include "src/core/SkScalerContext.h"
+#include "src/core/SkSharedMutex.h"
 #include "src/utils/SkCharToGlyphCache.h"
 
 #include "include/core/SkFontMgr.h"
@@ -23,12 +23,13 @@ typedef struct FT_LibraryRec_* FT_Library;
 typedef struct FT_FaceRec_* FT_Face;
 typedef struct FT_StreamRec_* FT_Stream;
 typedef signed long FT_Pos;
+typedef struct FT_BBox_ FT_BBox;
 
 #ifdef SK_DEBUG
 const char* SkTraceFtrGetError(int);
-#  define SK_TRACEFTR(ERR, MSG, ...)                                     \
-    SkDebugf(                                                            \
-        "%s:%lu:1: error: 0x%x '%s' " MSG "\n", __FILE__, __LINE__, ERR, \
+#  define SK_TRACEFTR(ERR, MSG, ...)                                    \
+    SkDebugf(                                                           \
+        "%s:%d:1: error: 0x%x '%s' " MSG "\n", __FILE__, __LINE__, ERR, \
         SkTraceFtrGetError((int)(ERR)), __VA_ARGS__)
 #else
 #  define SK_TRACEFTR(ERR, ...)       \
@@ -51,6 +52,15 @@ class SkScalerContext_FreeType_Base : public SkScalerContext {
   void generateGlyphImage(FT_Face face, const SkGlyph& glyph, const SkMatrix& bitmapTransform);
   bool generateGlyphPath(FT_Face face, SkPath* path);
   bool generateFacePath(FT_Face face, SkGlyphID glyphID, SkPath* path);
+
+  // Computes a bounding box for a COLRv1 glyph id in FT_BBox 26.6 format and FreeType's y-up
+  // coordinate space.
+  // Needed to call into COLRv1 from generateMetrics().
+  //
+  // Note : This method may change the configured size and transforms on FT_Face. Make sure to
+  // configure size, matrix and load glyphs as needed after using this function to restore the
+  // state of FT_Face.
+  bool computeColrV1GlyphBoundingBox(FT_Face face, SkGlyphID glyphID, FT_BBox* boundingBox);
 
  private:
   using INHERITED = SkScalerContext;
@@ -78,7 +88,8 @@ class SkTypeface_FreeType : public SkTypeface {
         AxisDefinitions* axes) const;
     static void computeAxisValues(
         AxisDefinitions axisDefinitions, const SkFontArguments::VariationPosition position,
-        SkFixed* axisValues, const SkString& name);
+        SkFixed* axisValues, const SkString& name,
+        const SkFontArguments::VariationPosition::Coordinate* currentPosition = nullptr);
     static bool GetAxes(FT_Face face, AxisDefinitions* axes);
 
    private:
@@ -94,10 +105,12 @@ class SkTypeface_FreeType : public SkTypeface {
    *  Return the font data, or nullptr on failure.
    */
   std::unique_ptr<SkFontData> makeFontData() const;
+  class FaceRec;
+  FaceRec* getFaceRec() const;
 
  protected:
-  SkTypeface_FreeType(const SkFontStyle& style, bool isFixedPitch)
-      : INHERITED(style, isFixedPitch) {}
+  SkTypeface_FreeType(const SkFontStyle& style, bool isFixedPitch);
+  ~SkTypeface_FreeType() override;
 
   std::unique_ptr<SkFontData> cloneFontData(const SkFontArguments&) const;
   std::unique_ptr<SkScalerContext> onCreateScalerContext(
@@ -127,7 +140,10 @@ class SkTypeface_FreeType : public SkTypeface {
   virtual std::unique_ptr<SkFontData> onMakeFontData() const = 0;
 
  private:
-  mutable SkMutex fC2GCacheMutex;
+  mutable SkOnce fFTFaceOnce;
+  mutable std::unique_ptr<FaceRec> fFaceRec;
+
+  mutable SkSharedMutex fC2GCacheMutex;
   mutable SkCharToGlyphCache fC2GCache;
 
   using INHERITED = SkTypeface;

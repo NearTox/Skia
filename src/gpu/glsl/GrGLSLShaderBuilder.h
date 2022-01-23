@@ -8,16 +8,23 @@
 #ifndef GrGLSLShaderBuilder_DEFINED
 #define GrGLSLShaderBuilder_DEFINED
 
+#include "include/core/SkSpan.h"
+#include "include/private/SkSLStatement.h"
+#include "include/private/SkSLString.h"
 #include "include/private/SkTDArray.h"
-#include "src/core/SkSpan.h"
+#include "src/core/SkTBlockList.h"
 #include "src/gpu/GrShaderVar.h"
-#include "src/gpu/GrTBlockList.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
-#include "src/sksl/SkSLString.h"
 
 #include <stdarg.h>
 
 class GrGLSLColorSpaceXformHelper;
+
+namespace SkSL {
+namespace dsl {
+class DSLWriter;
+}
+}  // namespace SkSL
 
 /**
   base class for all shaders builders
@@ -25,7 +32,7 @@ class GrGLSLColorSpaceXformHelper;
 class GrGLSLShaderBuilder {
  public:
   GrGLSLShaderBuilder(GrGLSLProgramBuilder* program);
-  virtual ~GrGLSLShaderBuilder() {}
+  virtual ~GrGLSLShaderBuilder() = default;
 
   using SamplerHandle = GrGLSLUniformHandler::SamplerHandle;
 
@@ -41,8 +48,8 @@ class GrGLSLShaderBuilder {
       GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
 
   /** Does the work of appendTextureLookup and blends the result by dst, treating the texture
-      lookup a the src input to the blend. The dst is assumed to be half4 and the result is always
-      a half4. If dst is nullptr we use half4(1) as the blend dst. */
+      lookup as the src input to the blend. The dst is assumed to be half4 and the result is
+      always a half4. If dst is nullptr we use half4(1) as the blend dst. */
   void appendTextureLookupAndBlend(
       const char* dst, SkBlendMode, SamplerHandle, const char* coordName,
       GrGLSLColorSpaceXformHelper* colorXformHelper = nullptr);
@@ -84,6 +91,8 @@ class GrGLSLShaderBuilder {
     this->definitions().append(";\n");
   }
 
+  void definitionAppend(const char* str) { this->definitions().append(str); }
+
   void declareGlobal(const GrShaderVar&);
 
   // Generates a unique variable name for holding the result of a temporary expression when it's
@@ -107,6 +116,8 @@ class GrGLSLShaderBuilder {
 
   void codeAppend(const char* str, size_t length) { this->code().append(str, length); }
 
+  void codeAppend(std::unique_ptr<SkSL::Statement> stmt);
+
   void codePrependf(const char format[], ...) SK_PRINTF_LIKE(2, 3) {
     va_list args;
     va_start(args, format);
@@ -127,13 +138,14 @@ class GrGLSLShaderBuilder {
 
   /** Emits a prototype for a helper function outside of main() in the fragment shader. */
   void emitFunctionPrototype(
-      GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args,
-      bool forceInline = false);
+      GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args);
 
   /** Emits a helper function outside of main() in the fragment shader. */
   void emitFunction(
       GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args,
-      const char* body, bool forceInline = false);
+      const char* body);
+
+  void emitFunction(const char* declaration, const char* body);
 
   /**
    * Combines the various parts of the shader to create a single finalized shader string.
@@ -162,12 +174,11 @@ class GrGLSLShaderBuilder {
   };
 
  protected:
-  typedef GrTBlockList<GrShaderVar> VarArray;
+  typedef SkTBlockList<GrShaderVar> VarArray;
   void appendDecls(const VarArray& vars, SkString* out) const;
 
   void appendFunctionDecl(
-      GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args,
-      bool forceInline);
+      GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args);
 
   /**
    * Features that should only be enabled internally by the builders.
@@ -250,6 +261,8 @@ class GrGLSLShaderBuilder {
   SkString fCode;
   SkString fFunctions;
   SkString fExtensions;
+  // Hangs onto Declarations so we don't destroy them prior to the variables that refer to them.
+  SkSL::StatementArray fDeclarations;
 
   VarArray fInputs;
   VarArray fOutputs;
@@ -261,7 +274,6 @@ class GrGLSLShaderBuilder {
   // Counter for generating unique scratch variable names in a shader.
   int fTmpVariableCounter;
 
-  friend class GrCCCoverageProcessor;  // to access code().
   friend class GrGLSLProgramBuilder;
   friend class GrGLProgramBuilder;
   friend class GrD3DPipelineStateBuilder;
@@ -270,5 +282,6 @@ class GrGLSLShaderBuilder {
   friend class GrGLPathProgramBuilder;  // to access fInputs.
   friend class GrVkPipelineStateBuilder;
   friend class GrMtlPipelineStateBuilder;
+  friend class SkSL::dsl::DSLWriter;
 };
 #endif

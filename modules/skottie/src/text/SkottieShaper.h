@@ -85,6 +85,11 @@ class Shaper final {
   // Initial text direction.
   enum class Direction : uint8_t { kLTR, kRTL };
 
+  enum class Capitalization {
+    kNone,
+    kUpperCase,
+  };
+
   enum Flags : uint32_t {
     kNone = 0x00,
 
@@ -98,12 +103,13 @@ class Shaper final {
 
   struct TextDesc {
     const sk_sp<SkTypeface>& fTypeface;
-    SkScalar fTextSize, fLineHeight, fLineShift, fAscent;
+    SkScalar fTextSize, fMinTextSize, fMaxTextSize, fLineHeight, fLineShift, fAscent;
     SkTextUtils::Align fHAlign;
     VAlign fVAlign;
     ResizePolicy fResize;
     LinebreakPolicy fLinebreak;
     Direction fDirection;
+    Capitalization fCapitalization;
     uint32_t fFlags;
   };
 

@@ -12,6 +12,8 @@
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/vk/GrVkManagedResource.h"
 
+#include <cinttypes>
+
 class GrProcessorKeyBuilder;
 class GrVkGpu;
 class GrVkRenderTarget;
@@ -117,7 +119,7 @@ class GrVkRenderPass : public GrVkManagedResource {
   // attachments, and sample counts are all the same. This function is used in the creation of
   // basic RenderPasses that can be used when creating a VkFrameBuffer object.
   bool isCompatible(
-      const GrVkRenderTarget& target, SelfDependencyFlags selfDepFlags, LoadFromResolve) const;
+      GrVkRenderTarget* target, SelfDependencyFlags selfDepFlags, LoadFromResolve) const;
 
   bool isCompatible(const GrVkRenderPass& renderPass) const;
 
@@ -149,7 +151,7 @@ class GrVkRenderPass : public GrVkManagedResource {
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
   void dumpInfo() const override {
-    SkDebugf("GrVkRenderPass: %d (%d refs)\n", fRenderPass, this->getRefCnt());
+    SkDebugf("GrVkRenderPass: %" PRIdPTR " (%d refs)\n", (intptr_t)fRenderPass, this->getRefCnt());
   }
 #endif
 
@@ -180,7 +182,7 @@ class GrVkRenderPass : public GrVkManagedResource {
   using INHERITED = GrVkManagedResource;
 };
 
-GR_MAKE_BITFIELD_OPS(GrVkRenderPass::AttachmentFlags);
-GR_MAKE_BITFIELD_CLASS_OPS(GrVkRenderPass::SelfDependencyFlags);
+GR_MAKE_BITFIELD_OPS(GrVkRenderPass::AttachmentFlags)
+GR_MAKE_BITFIELD_CLASS_OPS(GrVkRenderPass::SelfDependencyFlags)
 
 #endif

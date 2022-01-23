@@ -56,19 +56,20 @@ protected:
         paint.setColor(fg);
 
         for (int i = 9; i < 24; i += 2) {
-            SkTextBlobBuilderRunHandler builder(gText, { margin, margin });
-            SkFont srcFont(nullptr, SkIntToScalar(i));
-            srcFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
-            srcFont.setSubpixel(true);
+          SkShaper::PurgeCaches();
+          SkTextBlobBuilderRunHandler builder(gText, {margin, margin});
+          SkFont srcFont(nullptr, SkIntToScalar(i));
+          srcFont.setEdging(SkFont::Edging::kSubpixelAntiAlias);
+          srcFont.setSubpixel(true);
 
-            const char* utf8 = gText;
-            size_t utf8Bytes = sizeof(gText) - 1;
+          const char* utf8 = gText;
+          size_t utf8Bytes = sizeof(gText) - 1;
 
-            std::unique_ptr<SkShaper::BiDiRunIterator> bidi(
-                SkShaper::MakeBiDiRunIterator(utf8, utf8Bytes, 0xfe));
-            if (!bidi) {
-                return;
-            }
+          std::unique_ptr<SkShaper::BiDiRunIterator> bidi(
+              SkShaper::MakeBiDiRunIterator(utf8, utf8Bytes, 0xfe));
+          if (!bidi) {
+            return;
+          }
 
             std::unique_ptr<SkShaper::LanguageRunIterator> language(
                 SkShaper::MakeStdLanguageRunIterator(utf8, utf8Bytes));

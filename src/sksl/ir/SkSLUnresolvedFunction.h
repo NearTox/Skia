@@ -31,7 +31,7 @@ class UnresolvedFunction final : public Symbol {
 
   const std::vector<const FunctionDeclaration*>& functions() const { return fFunctions; }
 
-  String description() const override { return this->name(); }
+  String description() const override { return String(this->name()); }
 
  private:
   std::vector<const FunctionDeclaration*> fFunctions;

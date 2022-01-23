@@ -72,7 +72,7 @@ class GrResourceCacheBenchAdd : public Benchmark {
     GrResourceCache* cache = context->priv().getResourceCache();
 
     // Make sure the cache is empty.
-    cache->purgeAllUnlocked();
+    cache->purgeUnlockedResources();
     SkASSERT(0 == cache->getResourceCount() && 0 == cache->getResourceBytes());
 
     GrGpu* gpu = context->priv().getGpu();
@@ -114,7 +114,7 @@ class GrResourceCacheBenchFind : public Benchmark {
     GrResourceCache* cache = fContext->priv().getResourceCache();
 
     // Make sure the cache is empty.
-    cache->purgeAllUnlocked();
+    cache->purgeUnlockedResources();
     SkASSERT(0 == cache->getResourceCount() && 0 == cache->getResourceBytes());
 
     GrGpu* gpu = fContext->priv().getGpu();

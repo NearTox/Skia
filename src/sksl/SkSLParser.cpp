@@ -10,8 +10,8 @@
 #include <memory>
 #include "stdio.h"
 
+#include "include/private/SkSLModifiers.h"
 #include "src/sksl/SkSLASTNode.h"
-#include "src/sksl/ir/SkSLModifiers.h"
 #include "src/sksl/ir/SkSLSymbolTable.h"
 #include "src/sksl/ir/SkSLType.h"
 
@@ -22,22 +22,25 @@
 namespace SkSL {
 
 static constexpr int kMaxParseDepth = 50;
-static constexpr int kMaxStructDepth = 8;
 
-static bool struct_is_too_deeply_nested(const Type& type, int limit) {
-  if (limit < 0) {
-    return true;
+static int parse_modifier_token(Token::Kind token) {
+  switch (token) {
+    case Token::Kind::TK_UNIFORM: return Modifiers::kUniform_Flag;
+    case Token::Kind::TK_CONST: return Modifiers::kConst_Flag;
+    case Token::Kind::TK_IN: return Modifiers::kIn_Flag;
+    case Token::Kind::TK_OUT: return Modifiers::kOut_Flag;
+    case Token::Kind::TK_INOUT: return Modifiers::kIn_Flag | Modifiers::kOut_Flag;
+    case Token::Kind::TK_FLAT: return Modifiers::kFlat_Flag;
+    case Token::Kind::TK_NOPERSPECTIVE: return Modifiers::kNoPerspective_Flag;
+    case Token::Kind::TK_HASSIDEEFFECTS: return Modifiers::kHasSideEffects_Flag;
+    case Token::Kind::TK_INLINE: return Modifiers::kInline_Flag;
+    case Token::Kind::TK_NOINLINE: return Modifiers::kNoInline_Flag;
+    case Token::Kind::TK_HIGHP: return Modifiers::kHighp_Flag;
+    case Token::Kind::TK_MEDIUMP: return Modifiers::kMediump_Flag;
+    case Token::Kind::TK_LOWP: return Modifiers::kLowp_Flag;
+    case Token::Kind::TK_ES3: return Modifiers::kES3_Flag;
+    default: return 0;
   }
-
-  if (type.isStruct()) {
-    for (const Type::Field& f : type.fields()) {
-      if (struct_is_too_deeply_nested(*f.fType, limit - 1)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
 }
 
 class AutoDepth {
@@ -74,54 +77,15 @@ void Parser::InitLayoutMap() {
   TOKEN(BUILTIN, "builtin");
   TOKEN(INPUT_ATTACHMENT_INDEX, "input_attachment_index");
   TOKEN(ORIGIN_UPPER_LEFT, "origin_upper_left");
-  TOKEN(OVERRIDE_COVERAGE, "override_coverage");
   TOKEN(BLEND_SUPPORT_ALL_EQUATIONS, "blend_support_all_equations");
-  TOKEN(BLEND_SUPPORT_MULTIPLY, "blend_support_multiply");
-  TOKEN(BLEND_SUPPORT_SCREEN, "blend_support_screen");
-  TOKEN(BLEND_SUPPORT_OVERLAY, "blend_support_overlay");
-  TOKEN(BLEND_SUPPORT_DARKEN, "blend_support_darken");
-  TOKEN(BLEND_SUPPORT_LIGHTEN, "blend_support_lighten");
-  TOKEN(BLEND_SUPPORT_COLORDODGE, "blend_support_colordodge");
-  TOKEN(BLEND_SUPPORT_COLORBURN, "blend_support_colorburn");
-  TOKEN(BLEND_SUPPORT_HARDLIGHT, "blend_support_hardlight");
-  TOKEN(BLEND_SUPPORT_SOFTLIGHT, "blend_support_softlight");
-  TOKEN(BLEND_SUPPORT_DIFFERENCE, "blend_support_difference");
-  TOKEN(BLEND_SUPPORT_EXCLUSION, "blend_support_exclusion");
-  TOKEN(BLEND_SUPPORT_HSL_HUE, "blend_support_hsl_hue");
-  TOKEN(BLEND_SUPPORT_HSL_SATURATION, "blend_support_hsl_saturation");
-  TOKEN(BLEND_SUPPORT_HSL_COLOR, "blend_support_hsl_color");
-  TOKEN(BLEND_SUPPORT_HSL_LUMINOSITY, "blend_support_hsl_luminosity");
   TOKEN(PUSH_CONSTANT, "push_constant");
-  TOKEN(POINTS, "points");
-  TOKEN(LINES, "lines");
-  TOKEN(LINE_STRIP, "line_strip");
-  TOKEN(LINES_ADJACENCY, "lines_adjacency");
-  TOKEN(TRIANGLES, "triangles");
-  TOKEN(TRIANGLE_STRIP, "triangle_strip");
-  TOKEN(TRIANGLES_ADJACENCY, "triangles_adjacency");
-  TOKEN(MAX_VERTICES, "max_vertices");
-  TOKEN(INVOCATIONS, "invocations");
-  TOKEN(MARKER, "marker");
-  TOKEN(WHEN, "when");
-  TOKEN(KEY, "key");
-  TOKEN(TRACKED, "tracked");
   TOKEN(SRGB_UNPREMUL, "srgb_unpremul");
-  TOKEN(CTYPE, "ctype");
-  TOKEN(SKPMCOLOR4F, "SkPMColor4f");
-  TOKEN(SKV4, "SkV4");
-  TOKEN(SKRECT, "SkRect");
-  TOKEN(SKIRECT, "SkIRect");
-  TOKEN(SKPMCOLOR, "SkPMColor");
-  TOKEN(SKM44, "SkM44");
-  TOKEN(BOOL, "bool");
-  TOKEN(INT, "int");
-  TOKEN(FLOAT, "float");
 #undef TOKEN
 }
 
-Parser::Parser(const char* text, size_t length, SymbolTable& symbols, ErrorReporter& errors)
-    : fText(text), fPushback(Token::Kind::TK_NONE, -1, -1), fSymbols(symbols), fErrors(errors) {
-  fLexer.start(text, length);
+Parser::Parser(skstd::string_view text, SymbolTable& symbols, ErrorReporter& errors)
+    : fText(text), fPushback(Token::Kind::TK_NONE, -1, -1), fSymbols(symbols), fErrors(&errors) {
+  fLexer.start(text);
   static const bool layoutMapInitialized = [] { return (void)InitLayoutMap(), true; }();
   (void)layoutMapInitialized;
 }
@@ -147,6 +111,7 @@ void Parser::createEmptyChild(ASTNode::ID target) {
 /* (directive | section | declaration)* END_OF_FILE */
 std::unique_ptr<ASTFile> Parser::compilationUnit() {
   fFile = std::make_unique<ASTFile>();
+  fFile->fNodes.reserve(fText.size() / 10);  // a typical program is approx 10:1 for chars:nodes
   ASTNode::ID result = this->createNode(/*offset=*/0, ASTNode::Kind::kFile);
   fFile->fRoot = result;
   for (;;) {
@@ -154,21 +119,11 @@ std::unique_ptr<ASTFile> Parser::compilationUnit() {
       case Token::Kind::TK_END_OF_FILE: return std::move(fFile);
       case Token::Kind::TK_DIRECTIVE: {
         ASTNode::ID dir = this->directive();
-        if (fErrors.errorCount()) {
+        if (fErrors->errorCount()) {
           return nullptr;
         }
         if (dir) {
           getNode(result).addChild(dir);
-        }
-        break;
-      }
-      case Token::Kind::TK_SECTION: {
-        ASTNode::ID section = this->section();
-        if (fErrors.errorCount()) {
-          return nullptr;
-        }
-        if (section) {
-          getNode(result).addChild(section);
         }
         break;
       }
@@ -178,7 +133,7 @@ std::unique_ptr<ASTFile> Parser::compilationUnit() {
       }
       default: {
         ASTNode::ID decl = this->declaration();
-        if (fErrors.errorCount()) {
+        if (fErrors->errorCount()) {
           return nullptr;
         }
         if (decl) {
@@ -260,17 +215,23 @@ bool Parser::expectIdentifier(Token* result) {
   return true;
 }
 
-StringFragment Parser::text(Token token) {
-  return StringFragment(fText + token.fOffset, token.fLength);
+skstd::string_view Parser::text(Token token) {
+  return skstd::string_view(fText.data() + token.fOffset, token.fLength);
 }
 
 void Parser::error(Token token, String msg) { this->error(token.fOffset, msg); }
 
-void Parser::error(int offset, String msg) { fErrors.error(offset, msg); }
+void Parser::error(int offset, String msg) { fErrors->error(offset, msg); }
 
-bool Parser::isType(StringFragment name) {
+bool Parser::isType(skstd::string_view name) {
   const Symbol* s = fSymbols[name];
   return s && s->is<Type>();
+}
+
+bool Parser::isArrayType(ASTNode::ID type) {
+  const ASTNode& node = this->getNode(type);
+  SkASSERT(node.fKind == ASTNode::Kind::kType);
+  return node.begin() != node.end();
 }
 
 /* DIRECTIVE(#version) INT_LITERAL ("es" | "compatibility")? |
@@ -280,7 +241,7 @@ ASTNode::ID Parser::directive() {
   if (!this->expect(Token::Kind::TK_DIRECTIVE, "a directive", &start)) {
     return ASTNode::ID::Invalid();
   }
-  StringFragment text = this->text(start);
+  skstd::string_view text = this->text(start);
   if (text == "#extension") {
     Token name;
     if (!this->expectIdentifier(&name)) {
@@ -300,123 +261,11 @@ ASTNode::ID Parser::directive() {
   }
 }
 
-/* SECTION LBRACE (LPAREN IDENTIFIER RPAREN)? <any sequence of tokens with balanced braces>
-   RBRACE */
-ASTNode::ID Parser::section() {
-  Token start;
-  if (!this->expect(Token::Kind::TK_SECTION, "a section token", &start)) {
-    return ASTNode::ID::Invalid();
-  }
-  StringFragment argument;
-  if (this->peek().fKind == Token::Kind::TK_LPAREN) {
-    this->nextToken();
-    Token argToken;
-    if (!this->expectIdentifier(&argToken)) {
-      return ASTNode::ID::Invalid();
-    }
-    argument = this->text(argToken);
-    if (!this->expect(Token::Kind::TK_RPAREN, "')'")) {
-      return ASTNode::ID::Invalid();
-    }
-  }
-  if (!this->expect(Token::Kind::TK_LBRACE, "'{'")) {
-    return ASTNode::ID::Invalid();
-  }
-  StringFragment text;
-  Token codeStart = this->nextRawToken();
-  size_t startOffset = codeStart.fOffset;
-  this->pushback(codeStart);
-  text.fChars = fText + startOffset;
-  int level = 1;
-  for (;;) {
-    Token next = this->nextRawToken();
-    switch (next.fKind) {
-      case Token::Kind::TK_LBRACE: ++level; break;
-      case Token::Kind::TK_RBRACE: --level; break;
-      case Token::Kind::TK_END_OF_FILE:
-        this->error(start, "reached end of file while parsing section");
-        return ASTNode::ID::Invalid();
-      default: break;
-    }
-    if (!level) {
-      text.fLength = next.fOffset - startOffset;
-      break;
-    }
-  }
-  StringFragment name = this->text(start);
-  ++name.fChars;
-  --name.fLength;
-  return this->createNode(
-      start.fOffset, ASTNode::Kind::kSection, ASTNode::SectionData(name, argument, text));
-}
-
-/* ENUM CLASS IDENTIFIER LBRACE (IDENTIFIER (EQ expression)? (COMMA IDENTIFIER (EQ expression))*)?
-   RBRACE */
-ASTNode::ID Parser::enumDeclaration() {
-  Token start;
-  if (!this->expect(Token::Kind::TK_ENUM, "'enum'", &start)) {
-    return ASTNode::ID::Invalid();
-  }
-  if (!this->expect(Token::Kind::TK_CLASS, "'class'")) {
-    return ASTNode::ID::Invalid();
-  }
-  Token name;
-  if (!this->expectIdentifier(&name)) {
-    return ASTNode::ID::Invalid();
-  }
-  if (!this->expect(Token::Kind::TK_LBRACE, "'{'")) {
-    return ASTNode::ID::Invalid();
-  }
-  fSymbols.add(Type::MakeSimpleType(this->text(name), Type::TypeKind::kEnum));
-  ASTNode::ID result = this->createNode(name.fOffset, ASTNode::Kind::kEnum, this->text(name));
-  if (!this->checkNext(Token::Kind::TK_RBRACE)) {
-    Token id;
-    if (!this->expectIdentifier(&id)) {
-      return ASTNode::ID::Invalid();
-    }
-    if (this->checkNext(Token::Kind::TK_EQ)) {
-      ASTNode::ID value = this->assignmentExpression();
-      if (!value) {
-        return ASTNode::ID::Invalid();
-      }
-      ASTNode::ID child = this->addChild(
-          result, this->createNode(id.fOffset, ASTNode::Kind::kEnumCase, this->text(id)));
-      getNode(child).addChild(value);
-    } else {
-      this->addChild(
-          result, this->createNode(id.fOffset, ASTNode::Kind::kEnumCase, this->text(id)));
-    }
-    while (!this->checkNext(Token::Kind::TK_RBRACE)) {
-      if (!this->expect(Token::Kind::TK_COMMA, "','")) {
-        return ASTNode::ID::Invalid();
-      }
-      if (!this->expectIdentifier(&id)) {
-        return ASTNode::ID::Invalid();
-      }
-      if (this->checkNext(Token::Kind::TK_EQ)) {
-        ASTNode::ID value = this->assignmentExpression();
-        if (!value) {
-          return ASTNode::ID::Invalid();
-        }
-        ASTNode::ID child = this->addChild(
-            result, this->createNode(id.fOffset, ASTNode::Kind::kEnumCase, this->text(id)));
-        getNode(child).addChild(value);
-      } else {
-        this->addChild(
-            result, this->createNode(id.fOffset, ASTNode::Kind::kEnumCase, this->text(id)));
-      }
-    }
-  }
-  this->expect(Token::Kind::TK_SEMICOLON, "';'");
-  return result;
-}
-
-/* enumDeclaration | modifiers (structVarDeclaration | type IDENTIFIER ((LPAREN parameter
-   (COMMA parameter)* RPAREN (block | SEMICOLON)) | SEMICOLON) | interfaceBlock) */
+/* modifiers (interfaceBlock | structVarDeclaration | SEMICOLON |
+   type IDENTIFIER (varDeclarationEnd | LPAREN functionDeclarationEnd))) */
 ASTNode::ID Parser::declaration() {
   Token lookahead = this->peek();
   switch (lookahead.fKind) {
-    case Token::Kind::TK_ENUM: return this->enumDeclaration();
     case Token::Kind::TK_SEMICOLON:
       this->error(lookahead.fOffset, "expected a declaration, but found ';'");
       return ASTNode::ID::Invalid();
@@ -439,61 +288,104 @@ ASTNode::ID Parser::declaration() {
   if (!type) {
     return ASTNode::ID::Invalid();
   }
-  if (getNode(type).getTypeData().fIsStructDeclaration &&
-      this->checkNext(Token::Kind::TK_SEMICOLON)) {
-    return ASTNode::ID::Invalid();
-  }
   Token name;
   if (!this->expectIdentifier(&name)) {
     return ASTNode::ID::Invalid();
   }
   if (this->checkNext(Token::Kind::TK_LPAREN)) {
-    ASTNode::ID result = this->createNode(name.fOffset, ASTNode::Kind::kFunction);
-    ASTNode::FunctionData fd(modifiers, this->text(name), 0);
-    getNode(result).addChild(type);
-    if (this->peek().fKind != Token::Kind::TK_RPAREN) {
-      for (;;) {
-        ASTNode::ID parameter = this->parameter();
-        if (!parameter) {
-          return ASTNode::ID::Invalid();
-        }
-        ++fd.fParameterCount;
-        getNode(result).addChild(parameter);
-        if (!this->checkNext(Token::Kind::TK_COMMA)) {
-          break;
-        }
-      }
-    }
-    getNode(result).setFunctionData(fd);
-    if (!this->expect(Token::Kind::TK_RPAREN, "')'")) {
-      return ASTNode::ID::Invalid();
-    }
-    ASTNode::ID body;
-    if (!this->checkNext(Token::Kind::TK_SEMICOLON)) {
-      body = this->block();
-      if (!body) {
-        return ASTNode::ID::Invalid();
-      }
-      getNode(result).addChild(body);
-    }
-    return result;
+    return this->functionDeclarationEnd(modifiers, type, name);
   } else {
     return this->varDeclarationEnd(modifiers, type, this->text(name));
   }
 }
 
+/* (RPAREN | VOID RPAREN | parameter (COMMA parameter)* RPAREN) (block | SEMICOLON) */
+ASTNode::ID Parser::functionDeclarationEnd(
+    Modifiers modifiers, ASTNode::ID type, const Token& name) {
+  ASTNode::ID result = this->createNode(name.fOffset, ASTNode::Kind::kFunction);
+  ASTNode::FunctionData fd(modifiers, this->text(name), 0);
+  getNode(result).addChild(type);
+  Token lookahead = this->peek();
+  if (lookahead.fKind == Token::Kind::TK_RPAREN) {
+    // `()` means no parameters at all.
+  } else if (lookahead.fKind == Token::Kind::TK_IDENTIFIER && this->text(lookahead) == "void") {
+    // `(void)` also means no parameters at all.
+    this->nextToken();
+  } else {
+    for (;;) {
+      ASTNode::ID parameter = this->parameter();
+      if (!parameter) {
+        return ASTNode::ID::Invalid();
+      }
+      ++fd.fParameterCount;
+      getNode(result).addChild(parameter);
+      if (!this->checkNext(Token::Kind::TK_COMMA)) {
+        break;
+      }
+    }
+  }
+  getNode(result).setFunctionData(fd);
+  if (!this->expect(Token::Kind::TK_RPAREN, "')'")) {
+    return ASTNode::ID::Invalid();
+  }
+  ASTNode::ID body;
+  if (!this->checkNext(Token::Kind::TK_SEMICOLON)) {
+    body = this->block();
+    if (!body) {
+      return ASTNode::ID::Invalid();
+    }
+    getNode(result).addChild(body);
+  }
+  return result;
+}
+
+/* (varDeclarations | expressionStatement) */
+ASTNode::ID Parser::varDeclarationsOrExpressionStatement() {
+  Token nextToken = this->peek();
+  if (nextToken.fKind == Token::Kind::TK_CONST) {
+    // Statements that begin with `const` might be variable declarations, but can't be legal
+    // SkSL expression-statements. (SkSL constructors don't take a `const` modifier.)
+    return this->varDeclarations();
+  }
+
+  if (nextToken.fKind == Token::Kind::TK_HIGHP || nextToken.fKind == Token::Kind::TK_MEDIUMP ||
+      nextToken.fKind == Token::Kind::TK_LOWP || this->isType(this->text(nextToken))) {
+    // Statements that begin with a typename are most often variable declarations, but
+    // occasionally the type is part of a constructor, and these are actually expression-
+    // statements in disguise. First, attempt the common case: parse it as a vardecl.
+    Checkpoint checkpoint(this);
+    VarDeclarationsPrefix prefix;
+    if (this->varDeclarationsPrefix(&prefix)) {
+      checkpoint.accept();
+      return this->varDeclarationEnd(prefix.modifiers, prefix.type, this->text(prefix.name));
+    }
+
+    // If this statement wasn't actually a vardecl after all, rewind and try parsing it as an
+    // expression-statement instead.
+    checkpoint.rewind();
+  }
+
+  return this->expressionStatement();
+}
+
+// Helper function for varDeclarations(). If this function succeeds, we assume that the rest of the
+// statement is a variable-declaration statement, not an expression-statement.
+bool Parser::varDeclarationsPrefix(VarDeclarationsPrefix* prefixData) {
+  prefixData->modifiers = this->modifiers();
+  prefixData->type = this->type();
+  if (!prefixData->type) {
+    return false;
+  }
+  return this->expectIdentifier(&prefixData->name);
+}
+
 /* modifiers type IDENTIFIER varDeclarationEnd */
 ASTNode::ID Parser::varDeclarations() {
-  Modifiers modifiers = this->modifiers();
-  ASTNode::ID type = this->type();
-  if (!type) {
+  VarDeclarationsPrefix prefix;
+  if (!this->varDeclarationsPrefix(&prefix)) {
     return ASTNode::ID::Invalid();
   }
-  Token name;
-  if (!this->expectIdentifier(&name)) {
-    return ASTNode::ID::Invalid();
-  }
-  return this->varDeclarationEnd(modifiers, type, this->text(name));
+  return this->varDeclarationEnd(prefix.modifiers, prefix.type, this->text(prefix.name));
 }
 
 /* STRUCT IDENTIFIER LBRACE varDeclaration* RBRACE */
@@ -515,14 +407,14 @@ ASTNode::ID Parser::structDeclaration() {
       return ASTNode::ID::Invalid();
     }
     ASTNode& declsNode = getNode(decls);
-    Modifiers modifiers = declsNode.begin()->getModifiers();
+    const Modifiers& modifiers = declsNode.begin()->getModifiers();
     if (modifiers.fFlags != Modifiers::kNo_Flag) {
       String desc = modifiers.description();
       desc.pop_back();  // remove trailing space
       this->error(declsNode.fOffset, "modifier '" + desc + "' is not permitted on a struct field");
     }
 
-    const Symbol* symbol = fSymbols[(declsNode.begin() + 1)->getTypeData().fName];
+    const Symbol* symbol = fSymbols[(declsNode.begin() + 1)->getStringView()];
     SkASSERT(symbol);
     const Type* type = &symbol->as<Type>();
     if (type->isOpaque()) {
@@ -532,9 +424,10 @@ ASTNode::ID Parser::structDeclaration() {
 
     for (auto iter = declsNode.begin() + 2; iter != declsNode.end(); ++iter) {
       ASTNode& var = *iter;
-      ASTNode::VarData vd = var.getVarData();
+      const ASTNode::VarData& vd = var.getVarData();
 
       // Read array size if one is present.
+      const Type* fieldType = type;
       if (vd.fIsArray) {
         const ASTNode& size = *var.begin();
         if (!size || size.fKind != ASTNode::Kind::kInt) {
@@ -547,10 +440,10 @@ ASTNode::ID Parser::structDeclaration() {
         }
         // Add the array dimensions to our type.
         int arraySize = size.getInt();
-        type = fSymbols.addArrayDimension(type, arraySize);
+        fieldType = fSymbols.addArrayDimension(fieldType, arraySize);
       }
 
-      fields.push_back(Type::Field(modifiers, vd.fName, type));
+      fields.push_back(Type::Field(modifiers, vd.fName, fieldType));
       if (vd.fIsArray ? var.begin()->fNext : var.fFirstChild) {
         this->error(declsNode.fOffset, "initializers are not permitted on struct fields");
       }
@@ -559,17 +452,17 @@ ASTNode::ID Parser::structDeclaration() {
   if (!this->expect(Token::Kind::TK_RBRACE, "'}'")) {
     return ASTNode::ID::Invalid();
   }
+  if (fields.empty()) {
+    this->error(name.fOffset, "struct '" + this->text(name) + "' must contain at least one field");
+    return ASTNode::ID::Invalid();
+  }
   std::unique_ptr<Type> newType = Type::MakeStructType(name.fOffset, this->text(name), fields);
-  if (struct_is_too_deeply_nested(*newType, kMaxStructDepth)) {
+  if (newType->isTooDeeplyNested()) {
     this->error(name.fOffset, "struct '" + this->text(name) + "' is too deeply nested");
     return ASTNode::ID::Invalid();
   }
   fSymbols.add(std::move(newType));
-  return this->createNode(
-      name.fOffset, ASTNode::Kind::kType,
-      ASTNode::TypeData(
-          this->text(name),
-          /*isStructDeclaration=*/true));
+  return this->createNode(name.fOffset, ASTNode::Kind::kType, this->text(name));
 }
 
 /* structDeclaration ((IDENTIFIER varDeclarationEnd) | SEMICOLON) */
@@ -588,15 +481,15 @@ ASTNode::ID Parser::structVarDeclaration(Modifiers modifiers) {
 
 /* (LBRACKET expression? RBRACKET)* (EQ assignmentExpression)? (COMMA IDENTIFER
    (LBRACKET expression? RBRACKET)* (EQ assignmentExpression)?)* SEMICOLON */
-ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFragment name) {
+ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, skstd::string_view name) {
   int offset = this->peek().fOffset;
   ASTNode::ID result = this->createNode(offset, ASTNode::Kind::kVarDeclarations);
   this->addChild(result, this->createNode(offset, ASTNode::Kind::kModifiers, mods));
   getNode(result).addChild(type);
 
-  auto parseArrayDimensions = [this](ASTNode::ID currentVar, ASTNode::VarData* vd) -> bool {
+  auto parseArrayDimensions = [&](ASTNode::ID currentVar, ASTNode::VarData* vd) -> bool {
     while (this->checkNext(Token::Kind::TK_LBRACKET)) {
-      if (vd->fIsArray) {
+      if (vd->fIsArray || this->isArrayType(type)) {
         this->error(this->peek(), "multi-dimensional arrays are not supported");
         return false;
       }
@@ -659,10 +552,10 @@ ASTNode::ID Parser::varDeclarationEnd(Modifiers mods, ASTNode::ID type, StringFr
       return ASTNode::ID::Invalid();
     }
   }
-    if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
-      return ASTNode::ID::Invalid();
-    }
-    return result;
+  if (!this->expect(Token::Kind::TK_SEMICOLON, "';'")) {
+    return ASTNode::ID::Invalid();
+  }
+  return result;
 }
 
 /* modifiers type IDENTIFIER (LBRACKET INT_LITERAL RBRACKET)? */
@@ -680,7 +573,7 @@ ASTNode::ID Parser::parameter() {
   ASTNode::ParameterData pd(modifiers, this->text(name), 0);
   getNode(result).addChild(type);
   while (this->checkNext(Token::Kind::TK_LBRACKET)) {
-    if (pd.fIsArray) {
+    if (pd.fIsArray || this->isArrayType(type)) {
       this->error(this->peek(), "multi-dimensional arrays are not supported");
       return ASTNode::ID::Invalid();
     }
@@ -688,7 +581,7 @@ ASTNode::ID Parser::parameter() {
     if (!this->expect(Token::Kind::TK_INT_LITERAL, "a positive integer", &sizeToken)) {
       return ASTNode::ID::Invalid();
     }
-    StringFragment arraySizeFrag = this->text(sizeToken);
+    skstd::string_view arraySizeFrag = this->text(sizeToken);
     SKSL_INT arraySize;
     if (!SkSL::stoi(arraySizeFrag, &arraySize)) {
       this->error(sizeToken, "array size is too large: " + arraySizeFrag);
@@ -713,7 +606,7 @@ int Parser::layoutInt() {
   if (!this->expect(Token::Kind::TK_INT_LITERAL, "a non-negative integer", &resultToken)) {
     return -1;
   }
-  StringFragment resultFrag = this->text(resultToken);
+  skstd::string_view resultFrag = this->text(resultToken);
   SKSL_INT resultValue;
   if (!SkSL::stoi(resultFrag, &resultValue)) {
     this->error(resultToken, "value in layout is too large: " + resultFrag);
@@ -723,92 +616,15 @@ int Parser::layoutInt() {
 }
 
 /** EQ IDENTIFIER */
-StringFragment Parser::layoutIdentifier() {
+skstd::string_view Parser::layoutIdentifier() {
   if (!this->expect(Token::Kind::TK_EQ, "'='")) {
-    return StringFragment();
+    return skstd::string_view();
   }
   Token resultToken;
   if (!this->expectIdentifier(&resultToken)) {
-    return StringFragment();
+    return skstd::string_view();
   }
   return this->text(resultToken);
-}
-
-/** EQ <any sequence of tokens with balanced parentheses and no top-level comma> */
-StringFragment Parser::layoutCode() {
-  if (!this->expect(Token::Kind::TK_EQ, "'='")) {
-    return "";
-  }
-  Token start = this->nextRawToken();
-  this->pushback(start);
-  StringFragment code;
-  code.fChars = fText + start.fOffset;
-  int level = 1;
-  bool done = false;
-  while (!done) {
-    Token next = this->nextRawToken();
-    switch (next.fKind) {
-      case Token::Kind::TK_LPAREN: ++level; break;
-      case Token::Kind::TK_RPAREN: --level; break;
-      case Token::Kind::TK_COMMA:
-        if (level == 1) {
-          done = true;
-        }
-        break;
-      case Token::Kind::TK_END_OF_FILE:
-        this->error(start, "reached end of file while parsing layout");
-        return "";
-      default: break;
-    }
-    if (!level) {
-      done = true;
-    }
-    if (done) {
-      code.fLength = next.fOffset - start.fOffset;
-      this->pushback(std::move(next));
-    }
-  }
-  return code;
-}
-
-/** (EQ IDENTIFIER('identity'))? */
-Layout::Key Parser::layoutKey() {
-  if (this->peek().fKind == Token::Kind::TK_EQ) {
-    this->expect(Token::Kind::TK_EQ, "'='");
-    Token key;
-    if (this->expect(Token::Kind::TK_IDENTIFIER, "an identifer", &key)) {
-      if (this->text(key) == "identity") {
-        return Layout::kIdentity_Key;
-      } else {
-        this->error(key, "unsupported layout key");
-      }
-    }
-  }
-  return Layout::kKey_Key;
-}
-
-Layout::CType Parser::layoutCType() {
-  if (this->expect(Token::Kind::TK_EQ, "'='")) {
-    Token t = this->nextToken();
-    String text = this->text(t);
-    auto found = layoutTokens->find(text);
-    if (found != layoutTokens->end()) {
-      switch (found->second) {
-        case LayoutToken::SKPMCOLOR4F: return Layout::CType::kSkPMColor4f;
-        case LayoutToken::SKV4: return Layout::CType::kSkV4;
-        case LayoutToken::SKRECT: return Layout::CType::kSkRect;
-        case LayoutToken::SKIRECT: return Layout::CType::kSkIRect;
-        case LayoutToken::SKPMCOLOR: return Layout::CType::kSkPMColor;
-        case LayoutToken::BOOL: return Layout::CType::kBool;
-        case LayoutToken::INT: return Layout::CType::kInt32;
-        case LayoutToken::FLOAT: return Layout::CType::kFloat;
-        case LayoutToken::SKM44: return Layout::CType::kSkM44;
-        default: break;
-      }
-    }
-    this->error(t, "unsupported ctype");
-  }
-  return Layout::CType::kDefault;
 }
 
 /* LAYOUT LPAREN IDENTIFIER (EQ INT_LITERAL)? (COMMA IDENTIFIER (EQ INT_LITERAL)?)* RPAREN */
@@ -821,103 +637,61 @@ Layout Parser::layout() {
   int set = -1;
   int builtin = -1;
   int inputAttachmentIndex = -1;
-  Layout::Format format = Layout::Format::kUnspecified;
-  Layout::Primitive primitive = Layout::kUnspecified_Primitive;
-  int maxVertices = -1;
-  int invocations = -1;
-  StringFragment marker;
-  StringFragment when;
-  Layout::Key key = Layout::kNo_Key;
-  Layout::CType ctype = Layout::CType::kDefault;
   if (this->checkNext(Token::Kind::TK_LAYOUT)) {
     if (!this->expect(Token::Kind::TK_LPAREN, "'('")) {
-      return Layout(
-          flags, location, offset, binding, index, set, builtin, inputAttachmentIndex, format,
-          primitive, maxVertices, invocations, marker, when, key, ctype);
+      return Layout(flags, location, offset, binding, index, set, builtin, inputAttachmentIndex);
     }
     for (;;) {
       Token t = this->nextToken();
-      String text = this->text(t);
+      String text(this->text(t));
+      auto setFlag = [&](Layout::Flag f) {
+        if (flags & f) {
+          this->error(t, "layout qualifier '" + text + "' appears more than once");
+        }
+        flags |= f;
+      };
+
       auto found = layoutTokens->find(text);
       if (found != layoutTokens->end()) {
         switch (found->second) {
-          case LayoutToken::LOCATION: location = this->layoutInt(); break;
-          case LayoutToken::OFFSET: offset = this->layoutInt(); break;
-          case LayoutToken::BINDING: binding = this->layoutInt(); break;
-          case LayoutToken::INDEX: index = this->layoutInt(); break;
-          case LayoutToken::SET: set = this->layoutInt(); break;
-          case LayoutToken::BUILTIN: builtin = this->layoutInt(); break;
-          case LayoutToken::INPUT_ATTACHMENT_INDEX: inputAttachmentIndex = this->layoutInt(); break;
-          case LayoutToken::ORIGIN_UPPER_LEFT: flags |= Layout::kOriginUpperLeft_Flag; break;
-          case LayoutToken::OVERRIDE_COVERAGE: flags |= Layout::kOverrideCoverage_Flag; break;
+          case LayoutToken::ORIGIN_UPPER_LEFT: setFlag(Layout::kOriginUpperLeft_Flag); break;
+          case LayoutToken::PUSH_CONSTANT: setFlag(Layout::kPushConstant_Flag); break;
           case LayoutToken::BLEND_SUPPORT_ALL_EQUATIONS:
-            flags |= Layout::kBlendSupportAllEquations_Flag;
+            setFlag(Layout::kBlendSupportAllEquations_Flag);
             break;
-          case LayoutToken::BLEND_SUPPORT_MULTIPLY:
-            flags |= Layout::kBlendSupportMultiply_Flag;
+          case LayoutToken::SRGB_UNPREMUL: setFlag(Layout::kSRGBUnpremul_Flag); break;
+          case LayoutToken::LOCATION:
+            setFlag(Layout::kLocation_Flag);
+            location = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_SCREEN: flags |= Layout::kBlendSupportScreen_Flag; break;
-          case LayoutToken::BLEND_SUPPORT_OVERLAY:
-            flags |= Layout::kBlendSupportOverlay_Flag;
+          case LayoutToken::OFFSET:
+            setFlag(Layout::kOffset_Flag);
+            offset = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_DARKEN: flags |= Layout::kBlendSupportDarken_Flag; break;
-          case LayoutToken::BLEND_SUPPORT_LIGHTEN:
-            flags |= Layout::kBlendSupportLighten_Flag;
+          case LayoutToken::BINDING:
+            setFlag(Layout::kBinding_Flag);
+            binding = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_COLORDODGE:
-            flags |= Layout::kBlendSupportColorDodge_Flag;
+          case LayoutToken::INDEX:
+            setFlag(Layout::kIndex_Flag);
+            index = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_COLORBURN:
-            flags |= Layout::kBlendSupportColorBurn_Flag;
+          case LayoutToken::SET:
+            setFlag(Layout::kSet_Flag);
+            set = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_HARDLIGHT:
-            flags |= Layout::kBlendSupportHardLight_Flag;
+          case LayoutToken::BUILTIN:
+            setFlag(Layout::kBuiltin_Flag);
+            builtin = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_SOFTLIGHT:
-            flags |= Layout::kBlendSupportSoftLight_Flag;
+          case LayoutToken::INPUT_ATTACHMENT_INDEX:
+            setFlag(Layout::kInputAttachmentIndex_Flag);
+            inputAttachmentIndex = this->layoutInt();
             break;
-          case LayoutToken::BLEND_SUPPORT_DIFFERENCE:
-            flags |= Layout::kBlendSupportDifference_Flag;
-            break;
-          case LayoutToken::BLEND_SUPPORT_EXCLUSION:
-            flags |= Layout::kBlendSupportExclusion_Flag;
-            break;
-          case LayoutToken::BLEND_SUPPORT_HSL_HUE: flags |= Layout::kBlendSupportHSLHue_Flag; break;
-          case LayoutToken::BLEND_SUPPORT_HSL_SATURATION:
-            flags |= Layout::kBlendSupportHSLSaturation_Flag;
-            break;
-          case LayoutToken::BLEND_SUPPORT_HSL_COLOR:
-            flags |= Layout::kBlendSupportHSLColor_Flag;
-            break;
-          case LayoutToken::BLEND_SUPPORT_HSL_LUMINOSITY:
-            flags |= Layout::kBlendSupportHSLLuminosity_Flag;
-            break;
-          case LayoutToken::PUSH_CONSTANT: flags |= Layout::kPushConstant_Flag; break;
-          case LayoutToken::TRACKED: flags |= Layout::kTracked_Flag; break;
-          case LayoutToken::SRGB_UNPREMUL: flags |= Layout::kSRGBUnpremul_Flag; break;
-          case LayoutToken::POINTS: primitive = Layout::kPoints_Primitive; break;
-          case LayoutToken::LINES: primitive = Layout::kLines_Primitive; break;
-          case LayoutToken::LINE_STRIP: primitive = Layout::kLineStrip_Primitive; break;
-          case LayoutToken::LINES_ADJACENCY: primitive = Layout::kLinesAdjacency_Primitive; break;
-          case LayoutToken::TRIANGLES: primitive = Layout::kTriangles_Primitive; break;
-          case LayoutToken::TRIANGLE_STRIP: primitive = Layout::kTriangleStrip_Primitive; break;
-          case LayoutToken::TRIANGLES_ADJACENCY:
-            primitive = Layout::kTrianglesAdjacency_Primitive;
-            break;
-          case LayoutToken::MAX_VERTICES: maxVertices = this->layoutInt(); break;
-          case LayoutToken::INVOCATIONS: invocations = this->layoutInt(); break;
-          case LayoutToken::MARKER: marker = this->layoutCode(); break;
-          case LayoutToken::WHEN: when = this->layoutCode(); break;
-          case LayoutToken::KEY: key = this->layoutKey(); break;
-          case LayoutToken::CTYPE: ctype = this->layoutCType(); break;
-          default:
-            this->error(t, ("'" + text + "' is not a valid layout qualifier").c_str());
-            break;
+          default: this->error(t, "'" + text + "' is not a valid layout qualifier"); break;
         }
-      } else if (Layout::ReadFormat(text, &format)) {
-        // AST::ReadFormat stored the result in 'format'.
       } else {
-        this->error(t, ("'" + text + "' is not a valid layout qualifier").c_str());
+        this->error(t, "'" + text + "' is not a valid layout qualifier");
       }
       if (this->checkNext(Token::Kind::TK_RPAREN)) {
         break;
@@ -927,100 +701,23 @@ Layout Parser::layout() {
       }
     }
   }
-  return Layout(
-      flags, location, offset, binding, index, set, builtin, inputAttachmentIndex, format,
-      primitive, maxVertices, invocations, marker, when, key, ctype);
+  return Layout(flags, location, offset, binding, index, set, builtin, inputAttachmentIndex);
 }
 
-/* layout? (UNIFORM | CONST | IN | OUT | INOUT | LOWP | MEDIUMP | HIGHP | FLAT | NOPERSPECTIVE |
-            READONLY | WRITEONLY | COHERENT | VOLATILE | RESTRICT | BUFFER | PLS | PLSIN |
-            PLSOUT | VARYING | INLINE)* */
+/* layout? (UNIFORM | CONST | IN | OUT | INOUT | FLAT | NOPERSPECTIVE | INLINE)* */
 Modifiers Parser::modifiers() {
   Layout layout = this->layout();
   int flags = 0;
   for (;;) {
     // TODO: handle duplicate / incompatible flags
-    switch (peek().fKind) {
-      case Token::Kind::TK_UNIFORM:
-        this->nextToken();
-        flags |= Modifiers::kUniform_Flag;
-        break;
-      case Token::Kind::TK_CONST:
-        this->nextToken();
-        flags |= Modifiers::kConst_Flag;
-        break;
-      case Token::Kind::TK_IN:
-        this->nextToken();
-        flags |= Modifiers::kIn_Flag;
-        break;
-      case Token::Kind::TK_OUT:
-        this->nextToken();
-        flags |= Modifiers::kOut_Flag;
-        break;
-      case Token::Kind::TK_INOUT:
-        this->nextToken();
-        flags |= Modifiers::kIn_Flag;
-        flags |= Modifiers::kOut_Flag;
-        break;
-      case Token::Kind::TK_FLAT:
-        this->nextToken();
-        flags |= Modifiers::kFlat_Flag;
-        break;
-      case Token::Kind::TK_NOPERSPECTIVE:
-        this->nextToken();
-        flags |= Modifiers::kNoPerspective_Flag;
-        break;
-      case Token::Kind::TK_READONLY:
-        this->nextToken();
-        flags |= Modifiers::kReadOnly_Flag;
-        break;
-      case Token::Kind::TK_WRITEONLY:
-        this->nextToken();
-        flags |= Modifiers::kWriteOnly_Flag;
-        break;
-      case Token::Kind::TK_COHERENT:
-        this->nextToken();
-        flags |= Modifiers::kCoherent_Flag;
-        break;
-      case Token::Kind::TK_VOLATILE:
-        this->nextToken();
-        flags |= Modifiers::kVolatile_Flag;
-        break;
-      case Token::Kind::TK_RESTRICT:
-        this->nextToken();
-        flags |= Modifiers::kRestrict_Flag;
-        break;
-      case Token::Kind::TK_BUFFER:
-        this->nextToken();
-        flags |= Modifiers::kBuffer_Flag;
-        break;
-      case Token::Kind::TK_HASSIDEEFFECTS:
-        this->nextToken();
-        flags |= Modifiers::kHasSideEffects_Flag;
-        break;
-      case Token::Kind::TK_PLS:
-        this->nextToken();
-        flags |= Modifiers::kPLS_Flag;
-        break;
-      case Token::Kind::TK_PLSIN:
-        this->nextToken();
-        flags |= Modifiers::kPLSIn_Flag;
-        break;
-      case Token::Kind::TK_PLSOUT:
-        this->nextToken();
-        flags |= Modifiers::kPLSOut_Flag;
-        break;
-      case Token::Kind::TK_VARYING:
-        this->nextToken();
-        flags |= Modifiers::kVarying_Flag;
-        break;
-      case Token::Kind::TK_INLINE:
-        this->nextToken();
-        flags |= Modifiers::kInline_Flag;
-        break;
-      default: return Modifiers(layout, flags);
+    int tokenFlag = parse_modifier_token(peek().fKind);
+    if (!tokenFlag) {
+      break;
     }
+    flags |= tokenFlag;
+    this->nextToken();
   }
+  return Modifiers(layout, flags);
 }
 
 Modifiers Parser::modifiersWithDefaults(int defaultFlags) {
@@ -1055,12 +752,11 @@ ASTNode::ID Parser::statement() {
     case Token::Kind::TK_SEMICOLON:
       this->nextToken();
       return this->createNode(start.fOffset, ASTNode::Kind::kBlock);
-    case Token::Kind::TK_CONST: return this->varDeclarations();
-    case Token::Kind::TK_IDENTIFIER:
-      if (this->isType(this->text(start))) {
-        return this->varDeclarations();
-      }
-      [[fallthrough]];
+    case Token::Kind::TK_HIGHP:
+    case Token::Kind::TK_MEDIUMP:
+    case Token::Kind::TK_LOWP:
+    case Token::Kind::TK_CONST:
+    case Token::Kind::TK_IDENTIFIER: return this->varDeclarationsOrExpressionStatement();
     default: return this->expressionStatement();
   }
 }
@@ -1075,8 +771,7 @@ ASTNode::ID Parser::type() {
     this->error(type, ("no type named '" + this->text(type) + "'").c_str());
     return ASTNode::ID::Invalid();
   }
-  ASTNode::ID result = this->createNode(type.fOffset, ASTNode::Kind::kType);
-  ASTNode::TypeData td(this->text(type), /*isStructDeclaration=*/false);
+  ASTNode::ID result = this->createNode(type.fOffset, ASTNode::Kind::kType, this->text(type));
   bool isArray = false;
   while (this->checkNext(Token::Kind::TK_LBRACKET)) {
     if (isArray) {
@@ -1096,7 +791,6 @@ ASTNode::ID Parser::type() {
     isArray = true;
     this->expect(Token::Kind::TK_RBRACKET, "']'");
   }
-  getNode(result).setTypeData(td);
   return result;
 }
 
@@ -1133,7 +827,7 @@ ASTNode::ID Parser::interfaceBlock(Modifiers mods) {
   }
   this->nextToken();
   std::vector<ASTNode> sizes;
-  StringFragment instanceName;
+  skstd::string_view instanceName;
   Token instanceNameToken;
   if (this->checkNext(Token::Kind::TK_IDENTIFIER, &instanceNameToken)) {
     id.fInstanceName = this->text(instanceNameToken);
@@ -1346,38 +1040,18 @@ ASTNode::ID Parser::forStatement() {
     return ASTNode::ID::Invalid();
   }
   ASTNode::ID result = this->createNode(start.fOffset, ASTNode::Kind::kFor);
-  ASTNode::ID initializer;
   Token nextToken = this->peek();
-  switch (nextToken.fKind) {
-    case Token::Kind::TK_SEMICOLON:
-      this->nextToken();
-      this->createEmptyChild(result);
-      break;
-    case Token::Kind::TK_CONST: {
-      initializer = this->varDeclarations();
-      if (!initializer) {
-        return ASTNode::ID::Invalid();
-      }
-      getNode(result).addChild(initializer);
-      break;
+  if (nextToken.fKind == Token::Kind::TK_SEMICOLON) {
+    // An empty init-statement.
+    this->nextToken();
+    this->createEmptyChild(result);
+  } else {
+    // The init-statement must be an expression or variable declaration.
+    ASTNode::ID initializer = this->varDeclarationsOrExpressionStatement();
+    if (!initializer) {
+      return ASTNode::ID::Invalid();
     }
-    case Token::Kind::TK_IDENTIFIER: {
-      if (this->isType(this->text(nextToken))) {
-        initializer = this->varDeclarations();
-        if (!initializer) {
-          return ASTNode::ID::Invalid();
-        }
-        getNode(result).addChild(initializer);
-        break;
-      }
-      [[fallthrough]];
-    }
-    default:
-      initializer = this->expressionStatement();
-      if (!initializer) {
-        return ASTNode::ID::Invalid();
-      }
-      getNode(result).addChild(initializer);
+    getNode(result).addChild(initializer);
   }
   ASTNode::ID test;
   if (this->peek().fKind != Token::Kind::TK_SEMICOLON) {
@@ -1525,7 +1199,7 @@ ASTNode::ID Parser::expression() {
     if (!right) {
       return ASTNode::ID::Invalid();
     }
-    ASTNode::ID newResult = this->createNode(t.fOffset, ASTNode::Kind::kBinary, std::move(t));
+    ASTNode::ID newResult = this->createNode(t.fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1565,7 +1239,7 @@ ASTNode::ID Parser::assignmentExpression() {
           return ASTNode::ID::Invalid();
         }
         ASTNode::ID newResult =
-            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
         getNode(newResult).addChild(result);
         getNode(newResult).addChild(right);
         result = newResult;
@@ -1624,7 +1298,7 @@ ASTNode::ID Parser::logicalOrExpression() {
       return ASTNode::ID::Invalid();
     }
     ASTNode::ID newResult =
-        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1649,7 +1323,7 @@ ASTNode::ID Parser::logicalXorExpression() {
       return ASTNode::ID::Invalid();
     }
     ASTNode::ID newResult =
-        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1674,7 +1348,7 @@ ASTNode::ID Parser::logicalAndExpression() {
       return ASTNode::ID::Invalid();
     }
     ASTNode::ID newResult =
-        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1699,7 +1373,7 @@ ASTNode::ID Parser::bitwiseOrExpression() {
       return ASTNode::ID::Invalid();
     }
     ASTNode::ID newResult =
-        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1724,7 +1398,7 @@ ASTNode::ID Parser::bitwiseXorExpression() {
       return ASTNode::ID::Invalid();
     }
     ASTNode::ID newResult =
-        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1749,7 +1423,7 @@ ASTNode::ID Parser::bitwiseAndExpression() {
       return ASTNode::ID::Invalid();
     }
     ASTNode::ID newResult =
-        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+        this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
     getNode(newResult).addChild(result);
     getNode(newResult).addChild(right);
     result = newResult;
@@ -1777,7 +1451,7 @@ ASTNode::ID Parser::equalityExpression() {
           return ASTNode::ID::Invalid();
         }
         ASTNode::ID newResult =
-            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
         getNode(newResult).addChild(result);
         getNode(newResult).addChild(right);
         result = newResult;
@@ -1810,7 +1484,7 @@ ASTNode::ID Parser::relationalExpression() {
           return ASTNode::ID::Invalid();
         }
         ASTNode::ID newResult =
-            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
         getNode(newResult).addChild(result);
         getNode(newResult).addChild(right);
         result = newResult;
@@ -1841,7 +1515,7 @@ ASTNode::ID Parser::shiftExpression() {
           return ASTNode::ID::Invalid();
         }
         ASTNode::ID newResult =
-            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
         getNode(newResult).addChild(result);
         getNode(newResult).addChild(right);
         result = newResult;
@@ -1872,7 +1546,7 @@ ASTNode::ID Parser::additiveExpression() {
           return ASTNode::ID::Invalid();
         }
         ASTNode::ID newResult =
-            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
         getNode(newResult).addChild(result);
         getNode(newResult).addChild(right);
         result = newResult;
@@ -1904,7 +1578,7 @@ ASTNode::ID Parser::multiplicativeExpression() {
           return ASTNode::ID::Invalid();
         }
         ASTNode::ID newResult =
-            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, std::move(t));
+            this->createNode(getNode(result).fOffset, ASTNode::Kind::kBinary, Operator(t.fKind));
         getNode(newResult).addChild(result);
         getNode(newResult).addChild(right);
         result = newResult;
@@ -1933,7 +1607,7 @@ ASTNode::ID Parser::unaryExpression() {
       if (!expr) {
         return ASTNode::ID::Invalid();
       }
-      ASTNode::ID result = this->createNode(t.fOffset, ASTNode::Kind::kPrefix, std::move(t));
+      ASTNode::ID result = this->createNode(t.fOffset, ASTNode::Kind::kPrefix, Operator(t.fKind));
       getNode(result).addChild(expr);
       return result;
     }
@@ -1961,7 +1635,6 @@ ASTNode::ID Parser::postfixExpression() {
       case Token::Kind::TK_LPAREN:
       case Token::Kind::TK_PLUSPLUS:
       case Token::Kind::TK_MINUSMINUS:
-      case Token::Kind::TK_COLONCOLON:
         if (!depth.increase()) {
           return ASTNode::ID::Invalid();
         }
@@ -1976,7 +1649,7 @@ ASTNode::ID Parser::postfixExpression() {
 }
 
 /* LBRACKET expression? RBRACKET | DOT IDENTIFIER | LPAREN parameters RPAREN |
-   PLUSPLUS | MINUSMINUS | COLONCOLON IDENTIFIER | FLOAT_LITERAL [IDENTIFIER] */
+   PLUSPLUS | MINUSMINUS | FLOAT_LITERAL [IDENTIFIER] */
 ASTNode::ID Parser::suffix(ASTNode::ID base) {
   SkASSERT(base);
   Token next = this->nextToken();
@@ -2001,19 +1674,9 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
       getNode(result).addChild(e);
       return result;
     }
-    case Token::Kind::TK_COLONCOLON: {
-      int offset = this->peek().fOffset;
-      StringFragment text;
-      if (this->identifier(&text)) {
-        ASTNode::ID result = this->createNode(offset, ASTNode::Kind::kScope, std::move(text));
-        getNode(result).addChild(base);
-        return result;
-      }
-      return ASTNode::ID::Invalid();
-    }
     case Token::Kind::TK_DOT: {
       int offset = this->peek().fOffset;
-      StringFragment text;
+      skstd::string_view text;
       if (this->identifier(&text)) {
         ASTNode::ID result = this->createNode(offset, ASTNode::Kind::kField, std::move(text));
         getNode(result).addChild(base);
@@ -2024,12 +1687,11 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
     case Token::Kind::TK_FLOAT_LITERAL: {
       // Swizzles that start with a constant number, e.g. '.000r', will be tokenized as
       // floating point literals, possibly followed by an identifier. Handle that here.
-      StringFragment field = this->text(next);
-      SkASSERT(field.fChars[0] == '.');
-      ++field.fChars;
-      --field.fLength;
-      for (size_t i = 0; i < field.fLength; ++i) {
-        if (field.fChars[i] != '0' && field.fChars[i] != '1') {
+      skstd::string_view field = this->text(next);
+      SkASSERT(field[0] == '.');
+      field.remove_prefix(1);
+      for (auto iter = field.begin(); iter != field.end(); ++iter) {
+        if (*iter != '0' && *iter != '1') {
           this->error(next, "invalid swizzle");
           return ASTNode::ID::Invalid();
         }
@@ -2038,7 +1700,7 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
       // identifiers that directly follow the float
       Token id = this->nextRawToken();
       if (id.fKind == Token::Kind::TK_IDENTIFIER) {
-        field.fLength += id.fLength;
+        field = skstd::string_view(field.data(), field.length() + id.fLength);
       } else {
         this->pushback(id);
       }
@@ -2066,7 +1728,8 @@ ASTNode::ID Parser::suffix(ASTNode::ID base) {
     }
     case Token::Kind::TK_PLUSPLUS:  // fall through
     case Token::Kind::TK_MINUSMINUS: {
-      ASTNode::ID result = this->createNode(next.fOffset, ASTNode::Kind::kPostfix, next);
+      ASTNode::ID result =
+          this->createNode(next.fOffset, ASTNode::Kind::kPostfix, Operator(next.fKind));
       getNode(result).addChild(base);
       return result;
     }
@@ -2082,7 +1745,7 @@ ASTNode::ID Parser::term() {
   Token t = this->peek();
   switch (t.fKind) {
     case Token::Kind::TK_IDENTIFIER: {
-      StringFragment text;
+      skstd::string_view text;
       if (this->identifier(&text)) {
         return this->createNode(t.fOffset, ASTNode::Kind::kIdentifier, std::move(text));
       }
@@ -2136,7 +1799,7 @@ bool Parser::intLiteral(SKSL_INT* dest) {
   if (!this->expect(Token::Kind::TK_INT_LITERAL, "integer literal", &t)) {
     return false;
   }
-  StringFragment s = this->text(t);
+  skstd::string_view s = this->text(t);
   if (!SkSL::stoi(s, dest)) {
     this->error(t, "integer is too large: " + s);
     return false;
@@ -2150,7 +1813,7 @@ bool Parser::floatLiteral(SKSL_FLOAT* dest) {
   if (!this->expect(Token::Kind::TK_FLOAT_LITERAL, "float literal", &t)) {
     return false;
   }
-  StringFragment s = this->text(t);
+  skstd::string_view s = this->text(t);
   if (!SkSL::stod(s, dest)) {
     this->error(t, "floating-point value is too large: " + s);
     return false;
@@ -2171,7 +1834,7 @@ bool Parser::boolLiteral(bool* dest) {
 }
 
 /* IDENTIFIER */
-bool Parser::identifier(StringFragment* dest) {
+bool Parser::identifier(skstd::string_view* dest) {
   Token t;
   if (this->expect(Token::Kind::TK_IDENTIFIER, "identifier", &t)) {
     *dest = this->text(t);

@@ -9,7 +9,6 @@
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkMatrix.h"
@@ -53,9 +52,8 @@ class PerspShadersGM : public GM {
   SkISize onISize() override { return SkISize::Make(kCellSize * kNumCols, kCellSize * kNumRows); }
 
   void onOnceBeforeDraw() override {
-    fBitmap = ToolUtils::create_checkerboard_bitmap(
+    fBitmapImage = ToolUtils::create_checkerboard_image(
         kCellSize, kCellSize, SK_ColorBLUE, SK_ColorYELLOW, kCellSize / 10);
-    fBitmap.setImmutable();
 
     SkPoint pts1[] = {{0, 0}, {SkIntToScalar(kCellSize), SkIntToScalar(kCellSize)}};
     SkPoint pts2[] = {{0, 0}, {0, SkIntToScalar(kCellSize)}};
@@ -79,13 +77,12 @@ class PerspShadersGM : public GM {
     fPath.close();
   }
 
-  void drawRow(SkCanvas* canvas, SkFilterQuality filterQ) {
+  void drawRow(SkCanvas* canvas, const SkSamplingOptions& sampling) {
     SkPaint filterPaint;
-    filterPaint.setFilterQuality(filterQ);
     filterPaint.setAntiAlias(fDoAA);
 
     SkPaint pathPaint;
-    pathPaint.setShader(fBitmap.makeShader(SkSamplingOptions(filterQ)));
+    pathPaint.setShader(fBitmapImage->makeShader(sampling));
     pathPaint.setAntiAlias(fDoAA);
 
     SkPaint gradPaint1;
@@ -101,13 +98,13 @@ class PerspShadersGM : public GM {
 
     canvas->save();
     canvas->concat(fPerspMatrix);
-    canvas->drawBitmapRect(fBitmap, r, &filterPaint);
+    canvas->drawImageRect(fBitmapImage, r, sampling, &filterPaint);
     canvas->restore();
 
     canvas->translate(SkIntToScalar(kCellSize), 0);
     canvas->save();
     canvas->concat(fPerspMatrix);
-    canvas->drawImage(fImage.get(), 0, 0, &filterPaint);
+    canvas->drawImage(fImage.get(), 0, 0, sampling, &filterPaint);
     canvas->restore();
 
     canvas->translate(SkIntToScalar(kCellSize), 0);
@@ -142,13 +139,13 @@ class PerspShadersGM : public GM {
       fImage = make_image(canvas, kCellSize, kCellSize);
     }
 
-    this->drawRow(canvas, kNone_SkFilterQuality);
+    this->drawRow(canvas, SkSamplingOptions(SkFilterMode::kNearest));
     canvas->translate(0, SkIntToScalar(kCellSize));
-    this->drawRow(canvas, kLow_SkFilterQuality);
+    this->drawRow(canvas, SkSamplingOptions(SkFilterMode::kLinear));
     canvas->translate(0, SkIntToScalar(kCellSize));
-    this->drawRow(canvas, kMedium_SkFilterQuality);
+    this->drawRow(canvas, SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNearest));
     canvas->translate(0, SkIntToScalar(kCellSize));
-    this->drawRow(canvas, kHigh_SkFilterQuality);
+    this->drawRow(canvas, SkSamplingOptions(SkCubicResampler::Mitchell()));
     canvas->translate(0, SkIntToScalar(kCellSize));
   }
 
@@ -163,7 +160,7 @@ class PerspShadersGM : public GM {
   sk_sp<SkShader> fLinearGrad2;
   SkMatrix fPerspMatrix;
   sk_sp<SkImage> fImage;
-  SkBitmap fBitmap;
+  sk_sp<SkImage> fBitmapImage;
 
   using INHERITED = GM;
 };

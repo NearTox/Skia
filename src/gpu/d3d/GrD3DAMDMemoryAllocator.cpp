@@ -46,3 +46,18 @@ gr_cp<ID3D12Resource> GrD3DAMDMemoryAllocator::createResource(
   allocation->reset(new Alloc(d3d12maAllocation));
   return resource;
 }
+
+gr_cp<ID3D12Resource> GrD3DAMDMemoryAllocator::createAliasingResource(
+    sk_sp<GrD3DAlloc>& allocation, uint64_t localOffset, const D3D12_RESOURCE_DESC* resourceDesc,
+    D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE* clearValue) {
+  Alloc* alloc = (Alloc*)allocation.get();
+  gr_cp<ID3D12Resource> resource;
+  HRESULT hr = fAllocator->CreateAliasingResource(
+      alloc->fAllocation, localOffset, resourceDesc, initialResourceState, clearValue,
+      IID_PPV_ARGS(&resource));
+  if (!SUCCEEDED(hr)) {
+    return nullptr;
+  }
+
+  return resource;
+}

@@ -96,7 +96,7 @@ class ColorEmojiBlendModesGM : public skiagm::GM {
     textP.setAntiAlias(true);
     SkFont textFont(fColorType, 70);
 
-    const int W = 5;
+    const int kWrap = 5;
 
     SkScalar x0 = 0;
     SkScalar y0 = 0;
@@ -132,7 +132,7 @@ class ColorEmojiBlendModesGM : public skiagm::GM {
           SkTextUtils::kCenter_Align);
 #endif
       x += w + SkIntToScalar(10);
-      if ((i % W) == W - 1) {
+      if ((i % kWrap) == kWrap - 1) {
         x = x0;
         y += h + SkIntToScalar(30);
       }

@@ -133,8 +133,8 @@ const GrD3DTextureResource* GrD3DRenderTarget::msaaTextureResource() const {
   if (fMSAATextureResource) {
     return fMSAATextureResource.get();
   }
-  SkASSERT(!fMSAATextureResource);
-  return this;
+    SkASSERT(!fMSAATextureResource);
+    return this;
 }
 
 GrD3DTextureResource* GrD3DRenderTarget::msaaTextureResource() {

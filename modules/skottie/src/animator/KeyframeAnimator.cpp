@@ -85,9 +85,9 @@ float KeyframeAnimator::compute_weight(const KFSegment& seg, float t) const {
   return w;
 }
 
-KeyframeAnimatorBuilder::~KeyframeAnimatorBuilder() = default;
+AnimatorBuilder::~AnimatorBuilder() = default;
 
-bool KeyframeAnimatorBuilder::parseKeyframes(
+bool AnimatorBuilder::parseKeyframes(
     const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs) {
   // Keyframe format:
   //
@@ -195,7 +195,7 @@ bool KeyframeAnimatorBuilder::parseKeyframes(
   return true;
 }
 
-uint32_t KeyframeAnimatorBuilder::parseMapping(const skjson::ObjectValue& jkf) {
+uint32_t AnimatorBuilder::parseMapping(const skjson::ObjectValue& jkf) {
   if (ParseDefault(jkf["h"], false)) {
     return Keyframe::kConstantMapping;
   }

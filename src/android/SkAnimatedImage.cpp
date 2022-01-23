@@ -45,7 +45,11 @@ sk_sp<SkAnimatedImage> SkAnimatedImage::Make(std::unique_ptr<SkAndroidCodec> cod
     return nullptr;
   }
 
-  const auto& decodeInfo = codec->getInfo();
+  auto decodeInfo = codec->getInfo();
+  const auto origin = codec->codec()->getOrigin();
+  if (SkEncodedOriginSwapsWidthHeight(origin)) {
+    decodeInfo = decodeInfo.makeWH(decodeInfo.height(), decodeInfo.width());
+  }
   const auto cropRect = SkIRect::MakeSize(decodeInfo.dimensions());
   return Make(std::move(codec), decodeInfo, cropRect, nullptr);
 }
@@ -99,7 +103,7 @@ SkAnimatedImage::SkAnimatedImage(
   this->decodeNextFrame();
 }
 
-SkAnimatedImage::~SkAnimatedImage() {}
+SkAnimatedImage::~SkAnimatedImage() = default;
 
 SkRect SkAnimatedImage::onGetBounds() {
   return SkRect::MakeIWH(fCropRect.width(), fCropRect.height());
@@ -339,9 +343,7 @@ void SkAnimatedImage::onDraw(SkCanvas* canvas) {
   {
     SkAutoCanvasRestore acr(canvas, fPostProcess != nullptr);
     canvas->concat(fMatrix);
-    SkPaint paint;
-    paint.setFilterQuality(kLow_SkFilterQuality);
-    canvas->drawImage(image, 0, 0, &paint);
+    canvas->drawImage(image, 0, 0, SkSamplingOptions(SkFilterMode::kLinear), nullptr);
   }
   if (fPostProcess) {
     canvas->drawPicture(fPostProcess);

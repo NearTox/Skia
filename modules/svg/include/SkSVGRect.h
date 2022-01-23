@@ -14,41 +14,33 @@
 class SkRRect;
 
 class SkSVGRect final : public SkSVGShape {
- public:
-  static sk_sp<SkSVGRect> Make() { return sk_sp<SkSVGRect>(new SkSVGRect()); }
+public:
+    static sk_sp<SkSVGRect> Make() { return sk_sp<SkSVGRect>(new SkSVGRect()); }
 
-  void setX(const SkSVGLength&);
-  void setY(const SkSVGLength&);
-  void setWidth(const SkSVGLength&);
-  void setHeight(const SkSVGLength&);
-  void setRx(const SkSVGLength&);
-  void setRy(const SkSVGLength&);
+    SVG_ATTR(X     , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Y     , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Width , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Height, SkSVGLength, SkSVGLength(0))
 
- protected:
-  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+    SVG_OPTIONAL_ATTR(Rx, SkSVGLength)
+    SVG_OPTIONAL_ATTR(Ry, SkSVGLength)
 
-  void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPathFillType) const override;
+protected:
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  SkPath onAsPath(const SkSVGRenderContext&) const override;
+    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
+                SkPathFillType) const override;
 
-  SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
+    SkPath onAsPath(const SkSVGRenderContext&) const override;
 
- private:
-  SkSVGRect();
+    SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
 
-  SkRRect resolve(const SkSVGLengthContext&) const;
+private:
+    SkSVGRect();
 
-  SkSVGLength fX = SkSVGLength(0);
-  SkSVGLength fY = SkSVGLength(0);
-  SkSVGLength fWidth = SkSVGLength(0);
-  SkSVGLength fHeight = SkSVGLength(0);
+    SkRRect resolve(const SkSVGLengthContext&) const;
 
-  // The x radius for rounded rects.
-  SkSVGLength fRx = SkSVGLength(0);
-  // The y radius for rounded rects.
-  SkSVGLength fRy = SkSVGLength(0);
-
-  using INHERITED = SkSVGShape;
+    using INHERITED = SkSVGShape;
 };
 
-#endif  // SkSVGRect_DEFINED
+#endif // SkSVGRect_DEFINED

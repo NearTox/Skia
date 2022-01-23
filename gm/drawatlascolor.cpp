@@ -132,11 +132,13 @@ class DrawAtlasColorsGM : public skiagm::GM {
           SkIntToScalar(i * (target.height() + kPad)), SkIntToScalar(kTextPad + kPad));
       // w/o a paint
       canvas->drawAtlas(
-          atlas.get(), xforms, rects, quadColors, numColors, gModes[i], nullptr, nullptr);
+          atlas.get(), xforms, rects, quadColors, numColors, gModes[i], SkSamplingOptions(),
+          nullptr, nullptr);
       canvas->translate(0.0f, numColors * (target.height() + kPad));
       // w a paint
       canvas->drawAtlas(
-          atlas.get(), xforms, rects, quadColors, numColors, gModes[i], nullptr, &paint);
+          atlas.get(), xforms, rects, quadColors, numColors, gModes[i], SkSamplingOptions(),
+          nullptr, &paint);
       canvas->restore();
     }
   }

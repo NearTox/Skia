@@ -9,13 +9,13 @@
 #define GrOpsRenderPass_DEFINED
 
 #include "include/core/SkDrawable.h"
+#include "src/gpu/GrDeferredUpload.h"
 #include "src/gpu/GrPipeline.h"
-#include "src/gpu/ops/GrDrawOp.h"
 
 class GrOpFlushState;
 class GrGpu;
 class GrPipeline;
-class GrPrimitiveProcessor;
+class GrGeometryProcessor;
 class GrProgramInfo;
 class GrRenderTarget;
 class GrScissorState;
@@ -30,7 +30,7 @@ struct SkRect;
  */
 class GrOpsRenderPass {
  public:
-  virtual ~GrOpsRenderPass() {}
+  virtual ~GrOpsRenderPass() = default;
 
   struct LoadAndStoreInfo {
     GrLoadOp fLoadOp;
@@ -69,7 +69,7 @@ class GrOpsRenderPass {
   //
   // If the current program does not use textures, this is a no-op.
   void bindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrGeometryProcessor&, const GrSurfaceProxy* const geomProcTextures[],
       const GrPipeline&);
 
   void bindBuffers(
@@ -178,7 +178,7 @@ class GrOpsRenderPass {
   virtual bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) = 0;
   virtual void onSetScissorRect(const SkIRect&) = 0;
   virtual bool onBindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrGeometryProcessor&, const GrSurfaceProxy* const geomProcTextures[],
       const GrPipeline&) = 0;
   virtual void onBindBuffers(
       sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,

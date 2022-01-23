@@ -222,7 +222,7 @@ class SK_API SkRemotableFontMgr_DirectWrite : public SkRemotableFontMgr {
       fIdentity.fDataId = SkFontIdentity::kInvalidDataId;
     }
 
-    virtual ~FontFallbackRenderer() {}
+    virtual ~FontFallbackRenderer() = default;default;
 
     // IDWriteTextRenderer methods
     SK_STDMETHODIMP DrawGlyphRun(

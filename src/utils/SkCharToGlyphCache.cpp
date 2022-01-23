@@ -10,7 +10,7 @@
 
 SkCharToGlyphCache::SkCharToGlyphCache() { this->reset(); }
 
-SkCharToGlyphCache::~SkCharToGlyphCache() {}
+SkCharToGlyphCache::~SkCharToGlyphCache() = default;
 
 void SkCharToGlyphCache::reset() {
   fK32.reset();

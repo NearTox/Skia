@@ -26,7 +26,7 @@ void parse_artboards(const sk_sp<SkRive>& skrive, StreamReader* sr) {
       break;
     }
     if (block.type() != StreamReader::BlockType::kActorArtboard) {
-      SkDebugf("!! Unexpected artboard block type: %d\n", block.type());
+      SkDebugf("!! Unexpected artboard block type: %d\n", (int)block.type());
       continue;
     }
 
@@ -52,7 +52,7 @@ static sk_sp<SkRive> parse_skrive(std::unique_ptr<StreamReader> sr) {
 
     switch (block.type()) {
       case StreamReader::BlockType::kArtboards: parse_artboards(skrive, sr.get()); break;
-      default: SkDebugf("!! Unsupported block type: %d\n", block.type()); break;
+      default: SkDebugf("!! Unsupported block type: %d\n", (int)block.type()); break;
     }
   }
 

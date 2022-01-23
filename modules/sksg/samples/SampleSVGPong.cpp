@@ -143,9 +143,8 @@ class PongView final : public Sample {
     group->addChild(sksg::Draw::Make(fBall.objectNode, ball_paint));
 
     // Handle everything in a normalized 1x1 space.
-    fContentMatrix = sksg::Matrix<SkMatrix>::Make(SkMatrix::MakeRectToRect(
-        SkRect::MakeWH(1, 1), SkRect::MakeIWH(this->width(), this->height()),
-        SkMatrix::kFill_ScaleToFit));
+    fContentMatrix = sksg::Matrix<SkMatrix>::Make(
+        SkMatrix::RectToRect(SkRect::MakeWH(1, 1), SkRect::MakeIWH(this->width(), this->height())));
     auto root = sksg::TransformEffect::Make(std::move(group), fContentMatrix);
     fScene = sksg::Scene::Make(std::move(root));
 
@@ -167,9 +166,8 @@ class PongView final : public Sample {
 
   void onSizeChange() override {
     if (fContentMatrix) {
-      fContentMatrix->setMatrix(SkMatrix::MakeRectToRect(
-          SkRect::MakeWH(1, 1), SkRect::MakeIWH(this->width(), this->height()),
-          SkMatrix::kFill_ScaleToFit));
+      fContentMatrix->setMatrix(SkMatrix::RectToRect(
+          SkRect::MakeWH(1, 1), SkRect::MakeIWH(this->width(), this->height())));
     }
 
     this->INHERITED::onSizeChange();

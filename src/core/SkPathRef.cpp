@@ -54,7 +54,7 @@ void SkPath::shrinkToFit() {
 
 //////////////////////////////////////////////////////////////////////////////
 
-size_t SkPathRef::approximateBytesUsed() const {
+size_t SkPathRef::approximateBytesUsed() const noexcept {
   return sizeof(SkPathRef) + fPoints.reserved() * sizeof(fPoints[0]) +
          fVerbs.reserved() * sizeof(fVerbs[0]) +
          fConicWeights.reserved() * sizeof(fConicWeights[0]);
@@ -157,17 +157,17 @@ void SkPathRef::CreateTransformedCopy(
   }
 
   if (dst->get() != &src) {
-    (*dst)->fPoints = src.fPoints;
     (*dst)->fVerbs = src.fVerbs;
     (*dst)->fConicWeights = src.fConicWeights;
     (*dst)->callGenIDChangeListeners();
     (*dst)->fGenerationID = 0;  // mark as dirty
+    // don't copy, just allocate the points
+    (*dst)->fPoints.setCount(src.fPoints.count());
   }
+  matrix.mapPoints((*dst)->fPoints.begin(), src.fPoints.begin(), src.fPoints.count());
 
   // Need to check this here in case (&src == dst)
   bool canXformBounds = !src.fBoundsIsDirty && matrix.rectStaysRect() && src.countPoints() > 1;
-
-  matrix.mapPoints((*dst)->fPoints.begin(), src.fPoints.begin(), src.fPoints.count());
 
   /*
    *  Here we optimize the bounds computation, by noting if the bounds are
@@ -237,7 +237,7 @@ void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
   }
 }
 
-bool SkPathRef::operator==(const SkPathRef& ref) const {
+bool SkPathRef::operator==(const SkPathRef& ref) const noexcept {
   SkDEBUGCODE(this->validate();)
   SkDEBUGCODE(ref.validate();)
 
@@ -292,7 +292,7 @@ void SkPathRef::writeToBuffer(SkWBuffer* buffer) const {
   SkASSERT(buffer->pos() - beforePos == (size_t)this->writeSize());
 }
 
-uint32_t SkPathRef::writeSize() const {
+uint32_t SkPathRef::writeSize() const noexcept {
   return uint32_t(
       5 * sizeof(uint32_t) + fVerbs.bytes() + fPoints.bytes() + fConicWeights.bytes() +
       sizeof(SkRect));
@@ -456,9 +456,9 @@ SkPoint* SkPathRef::growForVerb(int /* SkPath::Verb*/ verb, SkScalar weight) {
   return pts;
 }
 
-uint32_t SkPathRef::genID() const {
+uint32_t SkPathRef::genID() const noexcept {
   SkASSERT(fEditorsAttached.load() == 0);
-  static const uint32_t kMask = (static_cast<int64_t>(1) << SkPathPriv::kPathRefGenIDBitCnt) - 1;
+  static constexpr uint32_t kMask = (static_cast<int64_t>(1) << SkPathPriv::kPathRefGenIDBitCnt) - 1;
 
   if (fGenerationID == 0) {
     if (fPoints.count() == 0 && fVerbs.count() == 0) {
@@ -477,17 +477,13 @@ void SkPathRef::addGenIDChangeListener(sk_sp<SkIDChangeListener> listener) {
   if (this == gEmpty) {
     return;
   }
-  bool singleThreaded = this->unique();
-  fGenIDChangeListeners.add(std::move(listener), singleThreaded);
+  fGenIDChangeListeners.add(std::move(listener));
 }
 
-int SkPathRef::genIDChangeListenerCount() { return fGenIDChangeListeners.count(); }
+int SkPathRef::genIDChangeListenerCount() noexcept { return fGenIDChangeListeners.count(); }
 
 // we need to be called *before* the genID gets changed or zerod
-void SkPathRef::callGenIDChangeListeners() {
-  bool singleThreaded = this->unique();
-  fGenIDChangeListeners.changed(singleThreaded);
-}
+void SkPathRef::callGenIDChangeListeners() { fGenIDChangeListeners.changed(); }
 
 SkRRect SkPathRef::getRRect() const {
   const SkRect& bounds = this->getBounds();
@@ -531,7 +527,7 @@ SkRRect SkPathRef::getRRect() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPathRef::Iter::Iter() {
+SkPathRef::Iter::Iter() noexcept {
 #ifdef SK_DEBUG
   fPts = nullptr;
   fConicWeights = nullptr;
@@ -541,9 +537,9 @@ SkPathRef::Iter::Iter() {
   fVerbStop = nullptr;
 }
 
-SkPathRef::Iter::Iter(const SkPathRef& path) { this->setPathRef(path); }
+SkPathRef::Iter::Iter(const SkPathRef& path) noexcept { this->setPathRef(path); }
 
-void SkPathRef::Iter::setPathRef(const SkPathRef& path) {
+void SkPathRef::Iter::setPathRef(const SkPathRef& path) noexcept {
   fPts = path.points();
   fVerbs = path.verbsBegin();
   fVerbStop = path.verbsEnd();
@@ -558,7 +554,7 @@ void SkPathRef::Iter::setPathRef(const SkPathRef& path) {
   }
 }
 
-uint8_t SkPathRef::Iter::next(SkPoint pts[4]) {
+uint8_t SkPathRef::Iter::next(SkPoint pts[4]) noexcept {
   SkASSERT(pts);
 
   SkDEBUGCODE(unsigned peekResult = this->peek();)
@@ -604,11 +600,11 @@ uint8_t SkPathRef::Iter::next(SkPoint pts[4]) {
   return (uint8_t)verb;
 }
 
-uint8_t SkPathRef::Iter::peek() const {
+uint8_t SkPathRef::Iter::peek() const noexcept {
   return fVerbs < fVerbStop ? *fVerbs : (uint8_t)SkPath::kDone_Verb;
 }
 
-bool SkPathRef::isValid() const {
+bool SkPathRef::isValid() const noexcept {
   if (fIsOval || fIsRRect) {
     // Currently we don't allow both of these to be set, even though ovals are ro
     if (fIsOval == fIsRRect) {
@@ -666,7 +662,7 @@ bool SkPathRef::dataMatchesVerbs() const {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkPathEdgeIter::SkPathEdgeIter(const SkPath& path) {
+SkPathEdgeIter::SkPathEdgeIter(const SkPath& path) noexcept {
   fMoveToPtr = fPts = path.fPathRef->points();
   fVerbs = path.fPathRef->verbsBegin();
   fVerbsStop = path.fPathRef->verbsEnd();

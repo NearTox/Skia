@@ -80,23 +80,15 @@ class GrDistanceFieldA8TextGeoProc : public GrGeometryProcessor {
 
   const char* name() const override { return "DistanceFieldA8Text"; }
 
-  const Attribute& inPosition() const { return fInPosition; }
-  const Attribute& inColor() const { return fInColor; }
-  const Attribute& inTextureCoords() const { return fInTextureCoords; }
-  const SkMatrix& localMatrix() const { return fLocalMatrix; }
-#ifdef SK_GAMMA_APPLY_TO_A8
-  float getDistanceAdjust() const { return fDistanceAdjust; }
-#endif
-  uint32_t getFlags() const { return fFlags; }
-  const SkISize& atlasDimensions() const { return fAtlasDimensions; }
-
   void addNewViews(const GrSurfaceProxyView* views, int numViews, GrSamplerState);
 
-  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void addToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  std::unique_ptr<ProgramImpl> makeProgramImpl(const GrShaderCaps&) const override;
 
  private:
+  class Impl;
+
   GrDistanceFieldA8TextGeoProc(
       const GrShaderCaps& caps, const GrSurfaceProxyView* views, int numActiveViews,
       GrSamplerState params,
@@ -147,20 +139,15 @@ class GrDistanceFieldPathGeoProc : public GrGeometryProcessor {
 
   const char* name() const override { return "DistanceFieldPath"; }
 
-  const Attribute& inPosition() const { return fInPosition; }
-  const Attribute& inColor() const { return fInColor; }
-  const Attribute& inTextureCoords() const { return fInTextureCoords; }
-  const SkMatrix& matrix() const { return fMatrix; }
-  uint32_t getFlags() const { return fFlags; }
-  const SkISize& atlasDimensions() const { return fAtlasDimensions; }
-
   void addNewViews(const GrSurfaceProxyView*, int numActiveViews, GrSamplerState);
 
-  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void addToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  std::unique_ptr<ProgramImpl> makeProgramImpl(const GrShaderCaps&) const override;
 
  private:
+  class Impl;
+
   GrDistanceFieldPathGeoProc(
       const GrShaderCaps& caps, const SkMatrix& matrix, bool wideColor,
       const GrSurfaceProxyView* views, int numActiveViews, GrSamplerState, uint32_t flags);
@@ -219,21 +206,15 @@ class GrDistanceFieldLCDTextGeoProc : public GrGeometryProcessor {
 
   const char* name() const override { return "DistanceFieldLCDText"; }
 
-  const Attribute& inPosition() const { return fInPosition; }
-  const Attribute& inColor() const { return fInColor; }
-  const Attribute& inTextureCoords() const { return fInTextureCoords; }
-  DistanceAdjust getDistanceAdjust() const { return fDistanceAdjust; }
-  uint32_t getFlags() const { return fFlags; }
-  const SkMatrix& localMatrix() const { return fLocalMatrix; }
-  const SkISize& atlasDimensions() const { return fAtlasDimensions; }
-
   void addNewViews(const GrSurfaceProxyView*, int numActiveViews, GrSamplerState);
 
-  void getGLSLProcessorKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const override;
+  void addToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
-  GrGLSLPrimitiveProcessor* createGLSLInstance(const GrShaderCaps&) const override;
+  std::unique_ptr<ProgramImpl> makeProgramImpl(const GrShaderCaps&) const override;
 
  private:
+  class Impl;
+
   GrDistanceFieldLCDTextGeoProc(
       const GrShaderCaps& caps, const GrSurfaceProxyView* views, int numActiveViews,
       GrSamplerState params, DistanceAdjust wa, uint32_t flags, const SkMatrix& localMatrix);

@@ -132,13 +132,6 @@ class GrManagedResource : SkNoncopyable {
     }
   }
 
-  // Called every time this resource is queued for use on the GPU (typically because
-  // it was added to a command buffer).
-  virtual void notifyQueuedForWorkOnGpu() const {}
-  // Called every time this resource has finished its use on the GPU (typically because
-  // the command buffer finished execution on the GPU.)
-  virtual void notifyFinishedWithWorkOnGpu() const {}
-
 #ifdef SK_DEBUG
   // This is used for validating in the vulkan backend when using a main command buffer and temp
   // command buffer at the same time. We need to validate that no images in the temp command
@@ -214,7 +207,7 @@ class GrRecycledResource : public GrManagedResource {
 /** \class GrTextureResource
 
   GrTextureResource is the base class for managed texture resources, and implements the
-  basic idleProc and releaseProc functionality for them.
+  basic releaseProc functionality for them.
 
 */
 class GrTextureResource : public GrManagedResource {
@@ -227,30 +220,8 @@ class GrTextureResource : public GrManagedResource {
     fReleaseHelper = std::move(releaseHelper);
   }
 
-  /**
-   * These are used to coordinate calling the "finished" idle procs between the GrTexture
-   * and the GrTextureResource. If the GrTexture becomes purgeable and if there are no command
-   * buffers referring to the GrTextureResource then it calls the procs. Otherwise, the
-   * GrTextureResource calls them when the last command buffer reference goes away and the
-   * GrTexture is purgeable.
-   */
-  void addIdleProc(GrTexture*, sk_sp<GrRefCntedCallback>) const;
-  int idleProcCnt() const;
-  sk_sp<GrRefCntedCallback> idleProc(int) const;
-  void resetIdleProcs() const;
-  void removeOwningTexture() const;
-
-  /**
-   * We track how many outstanding references this GrTextureResource has in command buffers and
-   * when the count reaches zero we call the idle proc.
-   */
-  void notifyQueuedForWorkOnGpu() const override;
-  void notifyFinishedWithWorkOnGpu() const override;
-  bool isQueuedForWorkOnGpu() const { return fNumOwners > 0; }
-
  protected:
   mutable sk_sp<GrRefCntedCallback> fReleaseHelper;
-  mutable GrTexture* fOwningTexture = nullptr;
 
   void invokeReleaseProc() const {
     if (fReleaseHelper) {
@@ -261,9 +232,6 @@ class GrTextureResource : public GrManagedResource {
   }
 
  private:
-  mutable int fNumOwners = 0;
-  mutable SkTArray<sk_sp<GrRefCntedCallback>> fIdleProcs;
-
   using INHERITED = GrManagedResource;
 };
 

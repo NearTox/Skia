@@ -17,16 +17,16 @@
 
 class SkSafeMath {
  public:
-  SkSafeMath() = default;
+  SkSafeMath() noexcept = default;
 
-  bool ok() const { return fOK; }
-  explicit operator bool() const { return fOK; }
+  bool ok() const noexcept { return fOK; }
+  explicit operator bool() const noexcept { return fOK; }
 
   size_t mul(size_t x, size_t y) {
     return sizeof(size_t) == sizeof(uint64_t) ? mul64(x, y) : mul32(x, y);
   }
 
-  size_t add(size_t x, size_t y) {
+  size_t add(size_t x, size_t y) noexcept {
     size_t result = x + y;
     fOK &= result >= x;
     return result;
@@ -36,7 +36,7 @@ class SkSafeMath {
    *  Return a + b, unless this result is an overflow/underflow. In those cases, fOK will
    *  be set to false, and it is undefined what this returns.
    */
-  int addInt(int a, int b) {
+  int addInt(int a, int b) noexcept {
     if (b < 0 && a < std::numeric_limits<int>::min() - b) {
       fOK = false;
       return a;
@@ -47,13 +47,13 @@ class SkSafeMath {
     return a + b;
   }
 
-  size_t alignUp(size_t x, size_t alignment) {
+  size_t alignUp(size_t x, size_t alignment) noexcept {
     SkASSERT(alignment && !(alignment & (alignment - 1)));
     return add(x, alignment - 1) & ~(alignment - 1);
   }
 
   template <typename T>
-  T castTo(size_t value) {
+  T castTo(size_t value) noexcept {
     if (!SkTFitsIn<T>(value)) {
       fOK = false;
     }
@@ -61,15 +61,15 @@ class SkSafeMath {
   }
 
   // These saturate to their results
-  static size_t Add(size_t x, size_t y);
-  static size_t Mul(size_t x, size_t y);
-  static size_t Align4(size_t x) {
+  static size_t Add(size_t x, size_t y) noexcept;
+  static size_t Mul(size_t x, size_t y) noexcept;
+  static size_t Align4(size_t x) noexcept {
     SkSafeMath safe;
     return safe.alignUp(x, 4);
   }
 
  private:
-  uint32_t mul32(uint32_t x, uint32_t y) {
+  uint32_t mul32(uint32_t x, uint32_t y) noexcept {
     uint64_t bx = x;
     uint64_t by = y;
     uint64_t result = bx * by;

@@ -80,7 +80,7 @@ class SkPDFDevice final : public SkClipStackDevice {
   void drawImageRect(
       const SkImage*, const SkRect* src, const SkRect& dst, const SkSamplingOptions&,
       const SkPaint&, SkCanvas::SrcRectConstraint) override;
-  void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
+  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
   // PDF specific methods.

@@ -15,7 +15,7 @@
  * SkBaseIStream
  */
 SkBaseIStream::SkBaseIStream() : _refcount(1) {}
-SkBaseIStream::~SkBaseIStream() {}
+SkBaseIStream::~SkBaseIStream() = default;
 
 SK_STDMETHODIMP SkBaseIStream::QueryInterface(REFIID iid, void** ppvObject) {
   if (nullptr == ppvObject) {
@@ -84,7 +84,7 @@ SkIStream::SkIStream(std::unique_ptr<SkStreamAsset> stream)
   this->fSkStream->rewind();
 }
 
-SkIStream::~SkIStream() {}
+SkIStream::~SkIStream() = default;
 
 HRESULT SkIStream::CreateFromSkStream(std::unique_ptr<SkStreamAsset> stream, IStream** ppStream) {
   if (nullptr == stream) {

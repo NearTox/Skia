@@ -8,8 +8,8 @@
 #ifndef SKSL_MODIFIERDECLARATION
 #define SKSL_MODIFIERDECLARATION
 
-#include "src/sksl/ir/SkSLModifiers.h"
-#include "src/sksl/ir/SkSLProgramElement.h"
+#include "include/private/SkSLModifiers.h"
+#include "include/private/SkSLProgramElement.h"
 
 namespace SkSL {
 
@@ -22,10 +22,10 @@ class ModifiersDeclaration final : public ProgramElement {
  public:
   static constexpr Kind kProgramElementKind = Kind::kModifiers;
 
-  ModifiersDeclaration(const Modifiers* modifiers)
+  ModifiersDeclaration(const Modifiers* modifiers) noexcept
       : INHERITED(-1, kProgramElementKind), fModifiers(modifiers) {}
 
-  const Modifiers& modifiers() const { return *fModifiers; }
+  const Modifiers& modifiers() const noexcept { return *fModifiers; }
 
   std::unique_ptr<ProgramElement> clone() const override {
     return std::make_unique<ModifiersDeclaration>(&this->modifiers());

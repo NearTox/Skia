@@ -73,7 +73,7 @@ class SkResourceCache {
     typedef SkResourceCache::Key Key;
 
     Rec() {}
-    virtual ~Rec() {}
+    virtual ~Rec() = default;
 
     uint32_t getHash() const { return this->getKey().hash(); }
 
@@ -163,6 +163,7 @@ class SkResourceCache {
   static size_t GetEffectiveSingleAllocationByteLimit();
 
   static void PurgeAll();
+  static void CheckMessages();
 
   static void TestDumpMemoryStatistics();
 
@@ -266,7 +267,7 @@ class SkResourceCache {
   size_t fSingleAllocationByteLimit;
   int fCount;
 
-  SkMessageBus<PurgeSharedIDMessage>::Inbox fPurgeSharedIDInbox;
+  SkMessageBus<PurgeSharedIDMessage, uint32_t>::Inbox fPurgeSharedIDInbox;
 
   void checkMessages();
   void purgeAsNeeded(bool forcePurge = false);

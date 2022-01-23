@@ -78,11 +78,11 @@ SkSpriteBlitter* SkSpriteBlitter::ChooseL565(
     return nullptr;
   }
 
-  if (source.colorType() == kN32_SkColorType) {
-    switch (paint.getBlendMode()) {
+  const auto bm = paint.asBlendMode();
+  if ((source.colorType() == kN32_SkColorType) && bm) {
+    switch (bm.value()) {
       case SkBlendMode::kSrc:
-      case SkBlendMode::kSrcOver:
-        return allocator->make<Sprite_D16_S32>(source, paint.getBlendMode());
+      case SkBlendMode::kSrcOver: return allocator->make<Sprite_D16_S32>(source, bm.value());
       default: break;
     }
   }
@@ -163,11 +163,11 @@ SkSpriteBlitter* SkSpriteBlitter::ChooseLA8(
     return nullptr;
   }
 
-  if (source.colorType() == kN32_SkColorType) {
-    switch (paint.getBlendMode()) {
+  const auto bm = paint.asBlendMode();
+  if ((source.colorType() == kN32_SkColorType) && bm) {
+    switch (bm.value()) {
       case SkBlendMode::kSrc:
-      case SkBlendMode::kSrcOver:
-        return allocator->make<Sprite_D8_S32>(source, paint.getBlendMode());
+      case SkBlendMode::kSrcOver: return allocator->make<Sprite_D8_S32>(source, bm.value());
       default: break;
     }
   }

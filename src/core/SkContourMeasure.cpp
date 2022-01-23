@@ -87,9 +87,9 @@ void SkContourMeasure_segTo(
         }
       } else {
         if (SK_Scalar1 == stopT) {
-          SkConic tmp1[2];
-          if (conic.chopAt(startT, tmp1)) {
-            dst->conicTo(tmp1[1].fPts[1], tmp1[1].fPts[2], tmp1[1].fW);
+          SkConic tmp[2];
+          if (conic.chopAt(startT, tmp)) {
+            dst->conicTo(tmp[1].fPts[1], tmp[1].fPts[2], tmp[1].fW);
           }
         } else {
           SkConic tmp;
@@ -465,7 +465,7 @@ SkContourMeasureIter::SkContourMeasureIter(
   this->reset(path, forceClosed, resScale);
 }
 
-SkContourMeasureIter::~SkContourMeasureIter() {}
+SkContourMeasureIter::~SkContourMeasureIter() = default;
 
 /** Assign a new path, or null to have none.
  */
@@ -487,7 +487,7 @@ sk_sp<SkContourMeasure> SkContourMeasureIter::next() {
       return sk_sp<SkContourMeasure>(cm);
     }
   }
-  return nullptr;
+    return nullptr;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

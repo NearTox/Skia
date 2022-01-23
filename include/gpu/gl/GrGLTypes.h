@@ -176,7 +176,7 @@ struct GrGLTextureInfo {
   GrGLuint fID;
   GrGLenum fFormat = 0;
 
-  bool operator==(const GrGLTextureInfo& that) const {
+  bool operator==(const GrGLTextureInfo& that) const noexcept {
     return fTarget == that.fTarget && fID == that.fID && fFormat == that.fFormat;
   }
 };
@@ -185,7 +185,7 @@ struct GrGLFramebufferInfo {
   GrGLuint fFBOID;
   GrGLenum fFormat = 0;
 
-  bool operator==(const GrGLFramebufferInfo& that) const {
+  bool operator==(const GrGLFramebufferInfo& that) const noexcept {
     return fFBOID == that.fFBOID && fFormat == that.fFormat;
   }
 };

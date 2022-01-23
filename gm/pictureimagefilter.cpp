@@ -9,7 +9,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkColorSpace.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkFont.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageFilter.h"
@@ -75,13 +74,15 @@ class PictureImageFilterGM : public skiagm::GM {
     fLCDPicture = make_LCD_picture();
   }
 
-  sk_sp<SkImageFilter> make(sk_sp<SkPicture> pic, SkRect r, SkFilterQuality fq) {
+  sk_sp<SkImageFilter> make(sk_sp<SkPicture> pic, SkRect r, const SkSamplingOptions& sampling) {
     SkISize dim = {SkScalarRoundToInt(r.width()), SkScalarRoundToInt(r.height())};
     auto img = SkImage::MakeFromPicture(
         pic, dim, nullptr, nullptr, SkImage::BitDepth::kU8, SkColorSpace::MakeSRGB());
-    return SkImageFilters::Image(img, r, r, fq);
+    return SkImageFilters::Image(img, r, r, sampling);
   }
-  sk_sp<SkImageFilter> make(SkFilterQuality fq) { return make(fPicture, fPicture->cullRect(), fq); }
+  sk_sp<SkImageFilter> make(const SkSamplingOptions& sampling) {
+    return make(fPicture, fPicture->cullRect(), sampling);
+  }
 
   void onDraw(SkCanvas* canvas) override {
     canvas->clear(SK_ColorGRAY);
@@ -92,8 +93,8 @@ class PictureImageFilterGM : public skiagm::GM {
       sk_sp<SkImageFilter> pictureSource(SkImageFilters::Picture(fPicture));
       sk_sp<SkImageFilter> pictureSourceSrcRect(SkImageFilters::Picture(fPicture, srcRect));
       sk_sp<SkImageFilter> pictureSourceEmptyRect(SkImageFilters::Picture(fPicture, emptyRect));
-      sk_sp<SkImageFilter> pictureSourceResampled = make(kLow_SkFilterQuality);
-      sk_sp<SkImageFilter> pictureSourcePixelated = make(kNone_SkFilterQuality);
+      sk_sp<SkImageFilter> pictureSourceResampled = make(SkSamplingOptions(SkFilterMode::kLinear));
+      sk_sp<SkImageFilter> pictureSourcePixelated = make(SkSamplingOptions());
 
       canvas->save();
       // Draw the picture unscaled.
@@ -116,7 +117,7 @@ class PictureImageFilterGM : public skiagm::GM {
         canvas->drawRect(bounds, stroke);
 
         SkPaint paint;
-        paint.setImageFilter(make(fLCDPicture, fPicture->cullRect(), kNone_SkFilterQuality));
+        paint.setImageFilter(make(fLCDPicture, fPicture->cullRect(), SkSamplingOptions()));
 
         canvas->scale(4, 4);
         canvas->translate(-0.9f * srcRect.fLeft, -2.45f * srcRect.fTop);

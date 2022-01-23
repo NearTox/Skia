@@ -8,8 +8,8 @@
 #ifndef SKSL_DISCARDSTATEMENT
 #define SKSL_DISCARDSTATEMENT
 
+#include "include/private/SkSLStatement.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
 
@@ -22,8 +22,12 @@ class DiscardStatement final : public Statement {
 
   DiscardStatement(int offset) : INHERITED(offset, kStatementKind) {}
 
+  static std::unique_ptr<Statement> Make(int offset) {
+    return std::make_unique<DiscardStatement>(offset);
+  }
+
   std::unique_ptr<Statement> clone() const override {
-    return std::unique_ptr<Statement>(new DiscardStatement(fOffset));
+    return std::make_unique<DiscardStatement>(fOffset);
   }
 
   String description() const override { return String("discard;"); }

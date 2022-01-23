@@ -52,9 +52,6 @@ class TypefaceFontProvider : public SkFontMgr {
       const char[], const SkFontStyle&, const char*[], int, SkUnichar) const override {
     return nullptr;
   }
-  SkTypeface* onMatchFaceStyle(const SkTypeface*, const SkFontStyle&) const override {
-    return nullptr;
-  }
 
   sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int) const override { return nullptr; }
   sk_sp<SkTypeface> onMakeFromStreamIndex(std::unique_ptr<SkStreamAsset>, int) const override {
@@ -64,7 +61,6 @@ class TypefaceFontProvider : public SkFontMgr {
       std::unique_ptr<SkStreamAsset>, const SkFontArguments&) const override {
     return nullptr;
   }
-  sk_sp<SkTypeface> onMakeFromFontData(std::unique_ptr<SkFontData>) const override;
   sk_sp<SkTypeface> onMakeFromFile(const char[], int) const override { return nullptr; }
 
   sk_sp<SkTypeface> onLegacyMakeTypeface(const char[], SkFontStyle) const override {

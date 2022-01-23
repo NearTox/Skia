@@ -6,6 +6,7 @@
  */
 
 #include "include/gpu/GrBackendSurface.h"
+#include "include/gpu/GrContextOptions.h"
 #include "include/gpu/d3d/GrD3DBackendContext.h"
 #include "include/gpu/d3d/GrD3DTypes.h"
 
@@ -44,13 +45,15 @@ GrD3DCaps::GrD3DCaps(
   // We always copy in/out of a transfer buffer so it's trivial to support row bytes.
   fReadPixelsRowBytesSupport = true;
   fWritePixelsRowBytesSupport = true;
+  fTransferPixelsToRowBytesSupport = true;
 
-  // TODO: implement these
-  fTransferFromBufferToTextureSupport = false;
-  fTransferFromSurfaceToBufferSupport = false;
+  fTransferFromBufferToTextureSupport = true;
+  fTransferFromSurfaceToBufferSupport = true;
 
   fMaxRenderTargetSize = 16384;  // minimum required by feature level 11_0
   fMaxTextureSize = 16384;       // minimum required by feature level 11_0
+
+  fTransferBufferAlignment = D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
 
   // TODO: implement
   fDynamicStateArrayGeometryProcessorTextureSupport = false;
@@ -66,6 +69,8 @@ bool GrD3DCaps::canCopyTexture(
     return false;
   }
 
+  // D3D allows us to copy within the same format family but doesn't do conversions
+  // so we require strict identity.
   return srcFormat == dstFormat;
 }
 
@@ -82,6 +87,8 @@ bool GrD3DCaps::canCopyAsResolve(
   }
 
   // Surfaces must have the same format.
+  // D3D12 can resolve between typeless and non-typeless formats, but we are not using
+  // typeless formats. It's not possible to resolve within the same format family otherwise.
   if (srcFormat != dstFormat) {
     return false;
   }
@@ -174,18 +181,6 @@ void GrD3DCaps::initGrCaps(
   // Can use standard sample locations
   fSampleLocationsSupport = true;
 
-  D3D12_FEATURE_DATA_D3D12_OPTIONS2 options2Desc;
-  if (SUCCEEDED(device->CheckFeatureSupport(
-          D3D12_FEATURE_D3D12_OPTIONS2, &options2Desc, sizeof(options2Desc))) &&
-      options2Desc.ProgrammableSamplePositionsTier !=
-          D3D12_PROGRAMMABLE_SAMPLE_POSITIONS_TIER_NOT_SUPPORTED) {
-    // We "disable" multisample by colocating all samples at pixel center.
-    fMultisampleDisableSupport = true;
-  }
-
-  // TODO: It's not clear if this is supported or not.
-  fMixedSamplesSupport = false;
-
   if (D3D12_CONSERVATIVE_RASTERIZATION_TIER_NOT_SUPPORTED !=
       optionsDesc.ConservativeRasterizationTier) {
     fConservativeRasterSupport = true;
@@ -234,13 +229,15 @@ void GrD3DCaps::initShaderCaps(int vendorID, const D3D12_FEATURE_DATA_D3D12_OPTI
 
   shaderCaps->fShaderDerivativeSupport = true;
 
-  shaderCaps->fGeometryShaderSupport = shaderCaps->fGSInvocationsSupport = true;
-
   shaderCaps->fDualSourceBlendingSupport = true;
 
   shaderCaps->fIntegerSupport = true;
+  shaderCaps->fNonsquareMatrixSupport = true;
+  // TODO(skia:12352) HLSL does not expose asinh/acosh/atanh
+  shaderCaps->fInverseHyperbolicSupport = false;
   shaderCaps->fVertexIDSupport = true;
-  shaderCaps->fFPManipulationSupport = true;
+  shaderCaps->fInfinitySupport = true;
+  shaderCaps->fBitManipulationSupport = true;
 
   shaderCaps->fFloatIs32Bits = true;
   shaderCaps->fHalfIs32Bits =
@@ -690,6 +687,10 @@ void GrD3DCaps::FormatInfo::InitFormatFlags(
   if (SkToBool(D3D12_FORMAT_SUPPORT1_MULTISAMPLE_RESOLVE & formatSupport.Support1)) {
     *flags = *flags | kResolve_Flag;
   }
+
+  if (SkToBool(D3D12_FORMAT_SUPPORT1_TYPED_UNORDERED_ACCESS_VIEW & formatSupport.Support1)) {
+    *flags = *flags | kUnorderedAccess_Flag;
+  }
 }
 
 static bool multisample_count_supported(ID3D12Device* device, DXGI_FORMAT format, int sampleCount) {
@@ -758,7 +759,7 @@ bool GrD3DCaps::isFormatSRGB(const GrBackendFormat& format) const {
   }
 }
 
-bool GrD3DCaps::isFormatTexturable(const GrBackendFormat& format) const {
+bool GrD3DCaps::isFormatTexturable(const GrBackendFormat& format, GrTextureType) const {
   DXGI_FORMAT dxgiFormat;
   if (!format.asDxgiFormat(&dxgiFormat)) {
     return false;
@@ -798,6 +799,11 @@ bool GrD3DCaps::isFormatRenderable(const GrBackendFormat& format, int sampleCoun
 
 bool GrD3DCaps::isFormatRenderable(DXGI_FORMAT format, int sampleCount) const {
   return sampleCount <= this->maxRenderTargetSampleCount(format);
+}
+
+bool GrD3DCaps::isFormatUnorderedAccessible(DXGI_FORMAT format) const {
+  const FormatInfo& info = this->getFormatInfo(format);
+  return SkToBool(FormatInfo::kUnorderedAccess_Flag & info.fFlags);
 }
 
 int GrD3DCaps::getRenderTargetSampleCount(int requestedCount, const GrBackendFormat& format) const {
@@ -864,7 +870,6 @@ GrCaps::SupportedWrite GrD3DCaps::supportedWritePixelsColorType(
     return {GrColorType::kUnknown, 0};
   }
 
-  // TODO: this seems to be pretty constrictive, confirm
   // Any buffer data needs to be aligned to 512 bytes and that of a single texel.
   size_t offsetAlignment =
       GrAlignTo(GrDxgiFormatBytesPerBlock(dxgiFormat), D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT);
@@ -954,7 +959,8 @@ GrSwizzle GrD3DCaps::onGetReadSwizzle(const GrBackendFormat& format, GrColorType
       return ctInfo.fReadSwizzle;
     }
   }
-  SkDEBUGFAILF("Illegal color type (%d) and format (%d) combination.", colorType, dxgiFormat);
+  SkDEBUGFAILF(
+      "Illegal color type (%d) and format (%d) combination.", (int)colorType, (int)dxgiFormat);
   return {};
 }
 
@@ -968,7 +974,8 @@ GrSwizzle GrD3DCaps::getWriteSwizzle(const GrBackendFormat& format, GrColorType 
       return ctInfo.fWriteSwizzle;
     }
   }
-  SkDEBUGFAILF("Illegal color type (%d) and format (%d) combination.", colorType, dxgiFormat);
+  SkDEBUGFAILF(
+      "Illegal color type (%d) and format (%d) combination.", (int)colorType, (int)dxgiFormat);
   return {};
 }
 
@@ -994,8 +1001,8 @@ GrCaps::SupportedRead GrD3DCaps::onSupportedReadPixelsColorType(
         0};
   }
 
-  // Any subresource buffer data we copy to needs to be aligned to 256 bytes.
-  size_t offsetAlignment = D3D12_TEXTURE_DATA_PITCH_ALIGNMENT;
+  // Any subresource buffer data offset we copy to needs to be aligned to 512 bytes.
+  size_t offsetAlignment = D3D12_TEXTURE_DATA_PLACEMENT_ALIGNMENT;
 
   const auto& info = this->getFormatInfo(dxgiFormat);
   for (int i = 0; i < info.fColorTypeInfoCount; ++i) {
@@ -1020,12 +1027,9 @@ GrProgramDesc GrD3DCaps::makeDesc(
     ProgramDescOverrideFlags overrideFlags) const {
   SkASSERT(overrideFlags == ProgramDescOverrideFlags::kNone);
   GrProgramDesc desc;
-  if (!GrProgramDesc::Build(&desc, rt, programInfo, *this)) {
-    SkASSERT(!desc.isValid());
-    return desc;
-  }
+  GrProgramDesc::Build(&desc, programInfo, *this);
 
-  GrProcessorKeyBuilder b(&desc.key());
+  GrProcessorKeyBuilder b(desc.key());
 
   GrD3DRenderTarget* d3dRT = (GrD3DRenderTarget*)rt;
   d3dRT->genKey(&b);
@@ -1035,13 +1039,11 @@ GrProgramDesc GrD3DCaps::makeDesc(
 
   programInfo.pipeline().genKey(&b, *this);
   // The num samples is already added in the render target key so we don't need to add it here.
-  SkASSERT(programInfo.numRasterSamples() == rt->numSamples());
 
   // D3D requires the full primitive type as part of its key
   b.add32(programInfo.primitiveTypeKey());
 
-  SkASSERT(!this->mixedSamplesSupport());
-
+  b.flush();
   return desc;
 }
 

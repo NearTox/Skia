@@ -35,6 +35,7 @@ class DrawCommand {
     kClipRect_OpType,
     kClipRRect_OpType,
     kClipShader_OpType,
+    kResetClip_OpType,
     kConcat_OpType,
     kConcat44_OpType,
     kDrawAnnotation_OpType,
@@ -209,6 +210,15 @@ class ClipShaderCommand : public DrawCommand {
   using INHERITED = DrawCommand;
 };
 
+class ResetClipCommand : public DrawCommand {
+ public:
+  ResetClipCommand();
+  void execute(SkCanvas* canvas) const override;
+
+ private:
+  using INHERITED = DrawCommand;
+};
+
 class ConcatCommand : public DrawCommand {
  public:
   ConcatCommand(const SkMatrix& matrix);
@@ -249,7 +259,9 @@ class DrawAnnotationCommand : public DrawCommand {
 
 class DrawImageCommand : public DrawCommand {
  public:
-  DrawImageCommand(const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint);
+  DrawImageCommand(
+      const SkImage* image, SkScalar left, SkScalar top, const SkSamplingOptions&,
+      const SkPaint* paint);
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
@@ -259,6 +271,7 @@ class DrawImageCommand : public DrawCommand {
   sk_sp<const SkImage> fImage;
   SkScalar fLeft;
   SkScalar fTop;
+  SkSamplingOptions fSampling;
   SkTLazy<SkPaint> fPaint;
 
   using INHERITED = DrawCommand;
@@ -267,7 +280,7 @@ class DrawImageCommand : public DrawCommand {
 class DrawImageLatticeCommand : public DrawCommand {
  public:
   DrawImageLatticeCommand(
-      const SkImage* image, const SkCanvas::Lattice& lattice, const SkRect& dst,
+      const SkImage* image, const SkCanvas::Lattice& lattice, const SkRect& dst, SkFilterMode,
       const SkPaint* paint);
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
@@ -278,6 +291,7 @@ class DrawImageLatticeCommand : public DrawCommand {
   sk_sp<const SkImage> fImage;
   SkCanvas::Lattice fLattice;
   SkRect fDst;
+  SkFilterMode fFilter;
   SkTLazy<SkPaint> fPaint;
 
   using INHERITED = DrawCommand;
@@ -286,8 +300,8 @@ class DrawImageLatticeCommand : public DrawCommand {
 class DrawImageRectCommand : public DrawCommand {
  public:
   DrawImageRectCommand(
-      const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-      SkCanvas::SrcRectConstraint constraint);
+      const SkImage* image, const SkRect& src, const SkRect& dst, const SkSamplingOptions& sampling,
+      const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
@@ -295,8 +309,9 @@ class DrawImageRectCommand : public DrawCommand {
 
  private:
   sk_sp<const SkImage> fImage;
-  SkTLazy<SkRect> fSrc;
+  SkRect fSrc;
   SkRect fDst;
+  SkSamplingOptions fSampling;
   SkTLazy<SkPaint> fPaint;
   SkCanvas::SrcRectConstraint fConstraint;
 
@@ -309,8 +324,9 @@ class DrawImageRectCommand : public DrawCommand {
 class DrawImageRectLayerCommand : public DrawCommand {
  public:
   DrawImageRectLayerCommand(
-      DebugLayerManager* layerManager, const int nodeId, const int frame, const SkRect* src,
-      const SkRect& dst, const SkPaint* paint, SkCanvas::SrcRectConstraint constraint);
+      DebugLayerManager* layerManager, const int nodeId, const int frame, const SkRect& src,
+      const SkRect& dst, const SkSamplingOptions& sampling, const SkPaint* paint,
+      SkCanvas::SrcRectConstraint constraint);
   void execute(SkCanvas* canvas) const override;
   bool render(SkCanvas* canvas) const override;
   void toJSON(SkJSONWriter& writer, UrlDataManager& urlDataManager) const override;
@@ -319,8 +335,9 @@ class DrawImageRectLayerCommand : public DrawCommand {
   DebugLayerManager* fLayerManager;
   int fNodeId;
   int fFrame;
-  SkTLazy<SkRect> fSrc;
+  SkRect fSrc;
   SkRect fDst;
+  SkSamplingOptions fSampling;
   SkTLazy<SkPaint> fPaint;
   SkCanvas::SrcRectConstraint fConstraint;
 
@@ -554,7 +571,7 @@ class DrawAtlasCommand : public DrawCommand {
  public:
   DrawAtlasCommand(
       const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
-      const SkRect*, const SkPaint*);
+      const SkSamplingOptions&, const SkRect*, const SkPaint*);
 
   void execute(SkCanvas* canvas) const override;
 
@@ -564,6 +581,7 @@ class DrawAtlasCommand : public DrawCommand {
   SkTDArray<SkRect> fTex;
   SkTDArray<SkColor> fColors;
   SkBlendMode fBlendMode;
+  SkSamplingOptions fSampling;
   SkTLazy<SkRect> fCull;
   SkTLazy<SkPaint> fPaint;
 

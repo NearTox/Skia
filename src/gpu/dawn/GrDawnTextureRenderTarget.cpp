@@ -18,7 +18,10 @@ GrDawnTextureRenderTarget::GrDawnTextureRenderTarget(
       GrDawnTexture(gpu, dimensions, textureInfo, mipmapStatus),
       GrDawnRenderTarget(gpu, dimensions, sampleCnt, GrDawnRenderTargetInfo(textureInfo)) {}
 
-bool GrDawnTextureRenderTarget::canAttemptStencilAttachment() const { return true; }
+bool GrDawnTextureRenderTarget::canAttemptStencilAttachment(bool useMSAASurface) const {
+  SkASSERT(useMSAASurface == (this->numSamples() > 1));
+  return true;
+}
 
 size_t GrDawnTextureRenderTarget::onGpuMemorySize() const {
   return GrSurface::ComputeSize(

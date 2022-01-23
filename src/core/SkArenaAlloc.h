@@ -38,7 +38,7 @@ class SkFibBlockSizes {
   // describes the size of the first block to be allocated if the static block is exhausted. By
   // convention, firstAllocationSize is the first choice for the block unit size followed by
   // staticBlockSize followed by the default of 1024 bytes.
-  SkFibBlockSizes(uint32_t staticBlockSize, uint32_t firstAllocationSize) : fIndex{0} {
+  SkFibBlockSizes(uint32_t staticBlockSize, uint32_t firstAllocationSize) noexcept : fIndex{0} {
     fBlockUnitSize = firstAllocationSize > 0 ? firstAllocationSize
                      : staticBlockSize > 0   ? staticBlockSize
                                              : 1024;
@@ -105,10 +105,15 @@ class SkFibBlockSizes {
 // there are 71 allocations.
 class SkArenaAlloc {
  public:
-  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation);
+  SkArenaAlloc(char* block, size_t blockSize, size_t firstHeapAllocation) noexcept;
 
-  explicit SkArenaAlloc(size_t firstHeapAllocation)
+  explicit SkArenaAlloc(size_t firstHeapAllocation) noexcept
       : SkArenaAlloc(nullptr, 0, firstHeapAllocation) {}
+
+  SkArenaAlloc(const SkArenaAlloc&) = delete;
+  SkArenaAlloc& operator=(const SkArenaAlloc&) = delete;
+  SkArenaAlloc(SkArenaAlloc&&) = delete;
+  SkArenaAlloc& operator=(SkArenaAlloc&&) = delete;
 
   ~SkArenaAlloc();
 
@@ -185,12 +190,12 @@ class SkArenaAlloc {
   }
 
  private:
-  static void AssertRelease(bool cond) {
+  static void AssertRelease(bool cond) noexcept {
     if (!cond) {
       ::abort();
     }
   }
-  static uint32_t ToU32(size_t v) {
+  static constexpr uint32_t ToU32(size_t v) noexcept {
     assert(SkTFitsIn<uint32_t>(v));
     return (uint32_t)v;
   }
@@ -201,16 +206,16 @@ class SkArenaAlloc {
     uint8_t padding;
   };
 
-  static char* SkipPod(char* footerEnd);
+  static char* SkipPod(char* footerEnd) noexcept;
   static void RunDtorsOnBlock(char* footerEnd);
   static char* NextBlock(char* footerEnd);
 
   template <typename T>
-  void installRaw(const T& val) {
+  void installRaw(const T& val) noexcept {
     memcpy(fCursor, &val, sizeof(val));
     fCursor += sizeof(val);
   }
-  void installFooter(FooterAction* releaser, uint32_t padding);
+  void installFooter(FooterAction* releaser, uint32_t padding) noexcept;
 
   void ensureSpace(uint32_t size, uint32_t alignment);
 
@@ -256,7 +261,7 @@ class SkArenaAlloc {
       // Can never be UB because max value is alignof(T).
       uint32_t padding = ToU32(objStart - fCursor);
 
-      // Advance to end of array to install footer.?
+      // Advance to end of array to install footer.
       fCursor = objStart + arraySize;
       this->installRaw(ToU32(count));
       this->installFooter(
@@ -286,13 +291,13 @@ class SkArenaAlloc {
 
 class SkArenaAllocWithReset : public SkArenaAlloc {
  public:
-  SkArenaAllocWithReset(char* block, size_t blockSize, size_t firstHeapAllocation);
+  SkArenaAllocWithReset(char* block, size_t blockSize, size_t firstHeapAllocation) noexcept;
 
-  explicit SkArenaAllocWithReset(size_t firstHeapAllocation)
+  explicit SkArenaAllocWithReset(size_t firstHeapAllocation) noexcept
       : SkArenaAllocWithReset(nullptr, 0, firstHeapAllocation) {}
 
   // Destroy all allocated objects, free any heap allocations.
-  void reset();
+  void reset() noexcept;
 
  private:
   char* const fFirstBlock;

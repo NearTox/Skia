@@ -122,7 +122,7 @@ void SkottieSlide::load(SkScalar w, SkScalar h) {
 
     void report() const {
       SkDebugf(
-          "Animation loaded with %lu error%s, %lu warning%s.\n", fErrors.size(),
+          "Animation loaded with %zu error%s, %zu warning%s.\n", fErrors.size(),
           fErrors.size() == 1 ? "" : "s", fWarnings.size(), fWarnings.size() == 1 ? "" : "s");
 
       const auto& show = [](const LogEntry& log, const char prefix[]) {
@@ -204,7 +204,7 @@ void SkottieSlide::draw(SkCanvas* canvas) {
       draw_stats_box(canvas, fAnimationStats);
     }
     if (fShowAnimationInval) {
-      const auto t = SkMatrix::MakeRectToRect(
+      const auto t = SkMatrix::RectToRect(
           SkRect::MakeSize(fAnimation->size()), dstR, SkMatrix::kCenter_ScaleToFit);
       SkPaint fill, stroke;
       fill.setAntiAlias(true);

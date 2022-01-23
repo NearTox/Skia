@@ -77,7 +77,7 @@ class SkMipmap : public SkCachedData {
   static bool Deserialize(SkMipmapBuilder*, const void* data, size_t size);
 
  protected:
-  void onDataChange(void* oldData, void* newData) override {
+  void onDataChange(void* oldData, void* newData) noexcept override {
     fLevels = (Level*)newData;  // could be nullptr
   }
 

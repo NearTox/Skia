@@ -15,12 +15,12 @@
 
 class SkMarkerStack : public SkRefCnt {
  public:
-  SkMarkerStack() {}
+  SkMarkerStack() noexcept = default;
 
   void setMarker(uint32_t id, const SkM44& mx, void* boundary);
-  bool findMarker(uint32_t id, SkM44* mx) const;
-  bool findMarkerInverse(uint32_t id, SkM44* mx) const;
-  void restore(void* boundary);
+  bool findMarker(uint32_t id, SkM44* mx) const noexcept;
+  bool findMarkerInverse(uint32_t id, SkM44* mx) const noexcept;
+  void restore(void* boundary) noexcept;
 
  private:
   struct Rec {

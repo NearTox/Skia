@@ -29,25 +29,25 @@
 // a single writer.
 class SK_CAPABILITY("mutex") SkSharedMutex {
  public:
-  SkSharedMutex();
+  SkSharedMutex() noexcept;
   ~SkSharedMutex();
   // Acquire lock for exclusive use.
-  void acquire() SK_ACQUIRE();
+  void acquire() noexcept SK_ACQUIRE();
 
   // Release lock for exclusive use.
-  void release() SK_RELEASE_CAPABILITY();
+  void release() noexcept SK_RELEASE_CAPABILITY();
 
   // Fail if exclusive is not held.
-  void assertHeld() const SK_ASSERT_CAPABILITY(this);
+  void assertHeld() const noexcept SK_ASSERT_CAPABILITY(this);
 
   // Acquire lock for shared use.
-  void acquireShared() SK_ACQUIRE_SHARED();
+  void acquireShared() noexcept SK_ACQUIRE_SHARED();
 
   // Release lock for shared use.
-  void releaseShared() SK_RELEASE_SHARED_CAPABILITY();
+  void releaseShared() noexcept SK_RELEASE_SHARED_CAPABILITY();
 
   // Fail if shared lock not held.
-  void assertHeldShared() const SK_ASSERT_SHARED_CAPABILITY(this);
+  void assertHeldShared() const noexcept SK_ASSERT_SHARED_CAPABILITY(this);
 
  private:
 #ifdef SK_DEBUG
@@ -67,13 +67,13 @@ class SK_CAPABILITY("mutex") SkSharedMutex {
 };
 
 #ifndef SK_DEBUG
-inline void SkSharedMutex::assertHeld() const {};
-inline void SkSharedMutex::assertHeldShared() const {};
+inline void SkSharedMutex::assertHeld() const noexcept {};
+inline void SkSharedMutex::assertHeldShared() const noexcept {};
 #endif  // SK_DEBUG
 
 class SK_SCOPED_CAPABILITY SkAutoSharedMutexExclusive {
  public:
-  explicit SkAutoSharedMutexExclusive(SkSharedMutex& lock) SK_ACQUIRE(lock) : fLock(lock) {
+  explicit SkAutoSharedMutexExclusive(SkSharedMutex& lock) noexcept SK_ACQUIRE(lock) : fLock(lock) {
     lock.acquire();
   }
   ~SkAutoSharedMutexExclusive() SK_RELEASE_CAPABILITY() { fLock.release(); }
@@ -84,7 +84,8 @@ class SK_SCOPED_CAPABILITY SkAutoSharedMutexExclusive {
 
 class SK_SCOPED_CAPABILITY SkAutoSharedMutexShared {
  public:
-  explicit SkAutoSharedMutexShared(SkSharedMutex& lock) SK_ACQUIRE_SHARED(lock) : fLock(lock) {
+  explicit SkAutoSharedMutexShared(SkSharedMutex& lock) noexcept SK_ACQUIRE_SHARED(lock)
+      : fLock(lock) {
     lock.acquireShared();
   }
 

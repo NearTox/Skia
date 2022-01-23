@@ -13,8 +13,9 @@
 #include "include/gpu/GrDirectContext.h"
 #include "include/utils/SkRandom.h"
 #include "src/core/SkCanvasPriv.h"
-#include "src/gpu/GrSurfaceDrawContext.h"
+#include "src/gpu/GrOpsTypes.h"
 #include "src/gpu/SkGr.h"
+#include "src/gpu/v1/SurfaceDrawContext_v1.h"
 
 // Benchmarks that exercise the bulk image and solid color quad APIs, under a variety of patterns:
 enum class ImageMode {
@@ -51,7 +52,7 @@ class BulkRectBench : public Benchmark {
 
   bool isSuitableFor(Backend backend) override {
     if (kDrawMode == DrawMode::kBatch && kImageMode == ImageMode::kNone) {
-      // Currently the bulk color quad API is only available on GrSurfaceDrawContext
+      // Currently the bulk color quad API is only available on skgpu::v1::SurfaceDrawContext
       return backend == kGPU_Backend;
     } else {
       return this->INHERITED::isSuitableFor(backend);
@@ -104,10 +105,10 @@ class BulkRectBench : public Benchmark {
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setFilterQuality(kLow_SkFilterQuality);
 
     canvas->experimental_DrawEdgeAAImageSet(
-        batch, kRectCount, nullptr, nullptr, &paint, SkCanvas::kFast_SrcRectConstraint);
+        batch, kRectCount, nullptr, nullptr, SkSamplingOptions(SkFilterMode::kLinear), &paint,
+        SkCanvas::kFast_SrcRectConstraint);
   }
 
   void drawImagesRef(SkCanvas* canvas) const {
@@ -116,14 +117,13 @@ class BulkRectBench : public Benchmark {
 
     SkPaint paint;
     paint.setAntiAlias(true);
-    paint.setFilterQuality(kLow_SkFilterQuality);
 
     for (int i = 0; i < kRectCount; ++i) {
       int imageIndex = kImageMode == ImageMode::kShared ? 0 : i;
-      SkIRect srcRect =
-          SkIRect::MakeWH(fImages[imageIndex]->width(), fImages[imageIndex]->height());
+      SkRect srcRect = SkRect::MakeIWH(fImages[imageIndex]->width(), fImages[imageIndex]->height());
       canvas->drawImageRect(
-          fImages[imageIndex].get(), srcRect, fRects[i], &paint, SkCanvas::kFast_SrcRectConstraint);
+          fImages[imageIndex].get(), srcRect, fRects[i], SkSamplingOptions(SkFilterMode::kLinear),
+          &paint, SkCanvas::kFast_SrcRectConstraint);
     }
   }
 
@@ -134,7 +134,7 @@ class BulkRectBench : public Benchmark {
     auto context = canvas->recordingContext();
     SkASSERT(context);
 
-    GrSurfaceDrawContext::QuadSetEntry batch[kRectCount];
+    GrQuadSetEntry batch[kRectCount];
     for (int i = 0; i < kRectCount; ++i) {
       batch[i].fRect = fRects[i];
       batch[i].fColor = fColors[i].premul();
@@ -146,7 +146,7 @@ class BulkRectBench : public Benchmark {
     paint.setColor(SK_ColorWHITE);
     paint.setAntiAlias(true);
 
-    GrSurfaceDrawContext* sdc = SkCanvasPriv::TopDeviceSurfaceDrawContext(canvas);
+    auto sdc = SkCanvasPriv::TopDeviceSurfaceDrawContext(canvas);
     SkMatrix view = canvas->getLocalToDeviceAs3x3();
     SkSimpleMatrixProvider matrixProvider(view);
     GrPaint grPaint;

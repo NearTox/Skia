@@ -12,13 +12,24 @@
 #include "modules/svg/include/SkSVGTypes.h"
 
 class SkSVGClipPath final : public SkSVGHiddenContainer {
- public:
-  static sk_sp<SkSVGClipPath> Make() { return sk_sp<SkSVGClipPath>(new SkSVGClipPath()); }
+public:
+    static sk_sp<SkSVGClipPath> Make() {
+        return sk_sp<SkSVGClipPath>(new SkSVGClipPath());
+    }
 
- private:
-  SkSVGClipPath();
+    SVG_ATTR(ClipPathUnits, SkSVGObjectBoundingBoxUnits,
+             SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kUserSpaceOnUse))
 
-  using INHERITED = SkSVGHiddenContainer;
+private:
+    friend class SkSVGRenderContext;
+
+    SkSVGClipPath();
+
+    bool parseAndSetAttribute(const char*, const char*) override;
+
+    SkPath resolveClip(const SkSVGRenderContext&) const;
+
+    using INHERITED = SkSVGHiddenContainer;
 };
 
-#endif  // SkSVGClipPath_DEFINED
+#endif // SkSVGClipPath_DEFINED

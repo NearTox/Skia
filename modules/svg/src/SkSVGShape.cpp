@@ -11,18 +11,21 @@
 SkSVGShape::SkSVGShape(SkSVGTag t) : INHERITED(t) {}
 
 void SkSVGShape::onRender(const SkSVGRenderContext& ctx) const {
-  const auto fillType = ctx.presentationContext().fInherited.fFillRule->asFillType();
+    const auto fillType = ctx.presentationContext().fInherited.fFillRule->asFillType();
 
-  // TODO: this approach forces duplicate geometry resolution in onDraw(); refactor to avoid.
-  if (const SkPaint* fillPaint = ctx.fillPaint()) {
-    this->onDraw(ctx.canvas(), ctx.lengthContext(), *fillPaint, fillType);
-  }
+    const auto fillPaint = ctx.fillPaint(),
+             strokePaint = ctx.strokePaint();
 
-  if (const SkPaint* strokePaint = ctx.strokePaint()) {
-    this->onDraw(ctx.canvas(), ctx.lengthContext(), *strokePaint, fillType);
-  }
+    // TODO: this approach forces duplicate geometry resolution in onDraw(); refactor to avoid.
+    if (fillPaint.isValid()) {
+        this->onDraw(ctx.canvas(), ctx.lengthContext(), *fillPaint, fillType);
+    }
+
+    if (strokePaint.isValid()) {
+        this->onDraw(ctx.canvas(), ctx.lengthContext(), *strokePaint, fillType);
+    }
 }
 
 void SkSVGShape::appendChild(sk_sp<SkSVGNode>) {
-  SkDebugf("cannot append child nodes to an SVG shape.\n");
+    SkDebugf("cannot append child nodes to an SVG shape.\n");
 }

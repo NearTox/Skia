@@ -156,7 +156,7 @@ class PictureShaderGM : public skiagm::GM {
     canvas->drawRect(SkRect::MakeXYWH(fSceneSize * 1.1f, 0, fSceneSize, fSceneSize), paint);
 
     auto pictureShader = fPicture->makeShader(
-        kTileConfigs[tileMode].tmx, kTileConfigs[tileMode].tmy,
+        kTileConfigs[tileMode].tmx, kTileConfigs[tileMode].tmy, SkFilterMode::kNearest,
         fUseLocalMatrixWrapper ? nullptr : &localMatrix, nullptr);
     paint.setShader(
         fUseLocalMatrixWrapper ? pictureShader->makeWithLocalMatrix(localMatrix) : pictureShader);
@@ -212,6 +212,7 @@ DEF_SIMPLE_GM(tiled_picture_shader, canvas, 400, 400) {
   p.setColor(0xFFB6B6B6);  // gray
   canvas->drawPaint(p);
 
-  p.setShader(picture->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat));
+  p.setShader(
+      picture->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkFilterMode::kNearest));
   canvas->drawPaint(p);
 }

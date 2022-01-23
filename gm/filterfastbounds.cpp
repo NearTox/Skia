@@ -9,7 +9,6 @@
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkMatrix.h"
@@ -91,7 +90,7 @@ static void draw_bitmap(SkCanvas* canvas, const SkRect& r, const SkPaint& p) {
   SkCanvas temp(bm);
   temp.clear(SK_ColorMAGENTA);
 
-  canvas->drawBitmapRect(bm, r, &p);
+  canvas->drawImageRect(bm.asImage(), r, SkSamplingOptions(), &p);
 }
 
 constexpr drawMth gDrawMthds[] = {draw_rect, draw_oval,   draw_rrect, draw_drrect,
@@ -110,7 +109,7 @@ static void create_paints(SkTArray<SkPaint>* paints, sk_sp<SkImageFilter> source
     scale.setScale(2.0f, 2.0f);
 
     sk_sp<SkImageFilter> scaleMIF(
-        SkImageFilters::MatrixTransform(scale, kLow_SkFilterQuality, source));
+        SkImageFilters::MatrixTransform(scale, SkSamplingOptions(SkFilterMode::kLinear), source));
 
     add_paint(paints, std::move(scaleMIF));
   }
@@ -119,7 +118,8 @@ static void create_paints(SkTArray<SkPaint>* paints, sk_sp<SkImageFilter> source
     SkMatrix rot;
     rot.setRotate(-33.3f);
 
-    sk_sp<SkImageFilter> rotMIF(SkImageFilters::MatrixTransform(rot, kLow_SkFilterQuality, source));
+    sk_sp<SkImageFilter> rotMIF(
+        SkImageFilters::MatrixTransform(rot, SkSamplingOptions(SkFilterMode::kLinear), source));
 
     add_paint(paints, std::move(rotMIF));
   }

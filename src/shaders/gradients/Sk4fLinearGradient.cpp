@@ -90,7 +90,7 @@ SkLinearGradient::LinearGradient4fContext::LinearGradient4fContext(
   const bool reverseIntervals = std::signbit(fDstToPos.getScaleX());
   fIntervals.init(
       shader, rec.fDstColorSpace, shader.fTileMode, fColorsArePremul,
-      rec.fPaint->getAlpha() * (1.0f / 255), reverseIntervals);
+      rec.fPaintAlpha * (1.0f / 255), reverseIntervals);
 
   SkASSERT(fIntervals->count() > 0);
   fCachedInterval = fIntervals->begin();

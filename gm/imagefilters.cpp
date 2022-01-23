@@ -10,7 +10,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkColorFilter.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkImageInfo.h"
@@ -71,7 +70,7 @@ DEF_SIMPLE_GM(imagefilters_xfermodes, canvas, 480, 480) {
 
   // just need an imagefilter to trigger the code-path (which creates a tmp layer)
   sk_sp<SkImageFilter> imf(
-      SkImageFilters::MatrixTransform(SkMatrix::I(), kNone_SkFilterQuality, nullptr));
+      SkImageFilters::MatrixTransform(SkMatrix::I(), SkSamplingOptions(), nullptr));
 
   const SkBlendMode modes[] = {SkBlendMode::kSrcATop, SkBlendMode::kDstIn};
 
@@ -112,7 +111,7 @@ DEF_SIMPLE_GM(fast_slow_blurimagefilter, canvas, 620, 260) {
     for (SkScalar outset = 0; outset <= 1; ++outset) {
       canvas->save();
       canvas->clipRect(r.makeOutset(outset, outset));
-      canvas->drawImage(image, 0, 0, &paint);
+      canvas->drawImage(image, 0, 0, SkSamplingOptions(), &paint);
       canvas->restore();
       canvas->translate(0, r.height() + 20);
     }
@@ -174,8 +173,7 @@ class SaveLayerWithBackdropGM : public skiagm::GM {
         {0.125f, 0.125f, 530, 420},
     };
 
-    SkPaint paint;
-    paint.setFilterQuality(kMedium_SkFilterQuality);
+    SkSamplingOptions sampling(SkFilterMode::kLinear, SkMipmapMode::kLinear);
     sk_sp<SkImage> image(GetResourceAsImage("images/mandrill_512.png"));
 
     canvas->translate(20, 20);
@@ -183,7 +181,7 @@ class SaveLayerWithBackdropGM : public skiagm::GM {
       canvas->save();
       canvas->translate(xform.fTx, xform.fTy);
       canvas->scale(xform.fSx, xform.fSy);
-      canvas->drawImage(image, 0, 0, &paint);
+      canvas->drawImage(image, 0, 0, sampling, nullptr);
       draw_set(canvas, filters, SK_ARRAY_COUNT(filters));
       canvas->restore();
     }
@@ -230,13 +228,14 @@ DEF_SIMPLE_GM(imagefilters_effect_order, canvas, 512, 512) {
   SkRect crop = SkRect::Make(image->bounds());
   canvas->save();
   canvas->clipRect(crop);
-  canvas->drawImage(image, 0, 0, &expectedCFPaint);  // Filter applied by draw's SkPaint
+  canvas->drawImage(
+      image, 0, 0, SkSamplingOptions(), &expectedCFPaint);  // Filter applied by draw's SkPaint
   canvas->restore();
 
   canvas->save();
   canvas->translate(image->width(), 0);
   canvas->clipRect(crop);
-  canvas->drawImage(image, 0, 0, &testCFPaint);
+  canvas->drawImage(image, 0, 0, SkSamplingOptions(), &testCFPaint);
   canvas->restore();
 
   // Now test mask filters. These should be run before the image filter, and thus have the same
@@ -267,12 +266,12 @@ DEF_SIMPLE_GM(imagefilters_effect_order, canvas, 512, 512) {
   canvas->save();
   canvas->translate(0, image->height());
   canvas->clipRect(crop);
-  canvas->drawImage(image, 0, 0, &expectedMaskPaint);
+  canvas->drawImage(image, 0, 0, SkSamplingOptions(), &expectedMaskPaint);
   canvas->restore();
 
   canvas->save();
   canvas->translate(image->width(), image->height());
   canvas->clipRect(crop);
-  canvas->drawImage(image, 0, 0, &testMaskPaint);
+  canvas->drawImage(image, 0, 0, SkSamplingOptions(), &testMaskPaint);
   canvas->restore();
 }

@@ -35,12 +35,11 @@ class CacheImpl : public SkImageFilterCache {
     fLookup.foreach ([&](Value* v) { delete v; });
   }
   struct Value {
-    Value(
-        const Key& key, const skif::FilterResult<For::kOutput>& image, const SkImageFilter* filter)
+    Value(const Key& key, const skif::FilterResult& image, const SkImageFilter* filter)
         : fKey(key), fImage(image), fFilter(filter) {}
 
     Key fKey;
-    skif::FilterResult<For::kOutput> fImage;
+    skif::FilterResult fImage;
     const SkImageFilter* fFilter;
     static const Key& GetKey(const Value& v) { return v.fKey; }
     static uint32_t Hash(const Key& key) {
@@ -49,7 +48,7 @@ class CacheImpl : public SkImageFilterCache {
     SK_DECLARE_INTERNAL_LLIST_INTERFACE(Value);
   };
 
-  bool get(const Key& key, skif::FilterResult<For::kOutput>* result) const override {
+  bool get(const Key& key, skif::FilterResult* result) const override {
     SkASSERT(result);
 
     SkAutoMutexExclusive mutex(fMutex);
@@ -65,9 +64,7 @@ class CacheImpl : public SkImageFilterCache {
     return false;
   }
 
-  void set(
-      const Key& key, const SkImageFilter* filter,
-      const skif::FilterResult<For::kOutput>& result) override {
+  void set(const Key& key, const SkImageFilter* filter, const skif::FilterResult& result) override {
     SkAutoMutexExclusive mutex(fMutex);
     if (Value* v = fLookup.find(key)) {
       this->removeInternal(v);

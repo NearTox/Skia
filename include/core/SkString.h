@@ -20,6 +20,18 @@
 #include <atomic>
 #include <string>
 
+#if __cplusplus >= 201703L
+#  include <string_view>
+#endif
+
+namespace skstd {
+#if __cplusplus >= 201703L
+using std::string_view;
+#else
+class string_view;
+#endif
+}  // namespace skstd
+
 /*  Some helper functions for C strings */
 static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) {
   SkASSERT(string);
@@ -115,19 +127,20 @@ char* SkStrAppendScalar(char buffer[], SkScalar);
 */
 class SK_API SkString {
  public:
-  SkString();
+  SkString() noexcept;
   explicit SkString(size_t len);
   explicit SkString(const char text[]);
   SkString(const char text[], size_t len);
-  SkString(const SkString&);
-  SkString(SkString&&);
+  SkString(const SkString&) noexcept;
+  SkString(SkString&&) noexcept;
   explicit SkString(const std::string&);
+  explicit SkString(skstd::string_view);
   ~SkString();
 
-  bool isEmpty() const { return 0 == fRec->fLength; }
-  size_t size() const { return (size_t)fRec->fLength; }
-  const char* c_str() const { return fRec->data(); }
-  char operator[](size_t n) const { return this->c_str()[n]; }
+  bool isEmpty() const noexcept { return 0 == fRec->fLength; }
+  size_t size() const noexcept { return (size_t)fRec->fLength; }
+  const char* c_str() const noexcept { return fRec->data(); }
+  char operator[](size_t n) const noexcept { return this->c_str()[n]; }
 
   bool equals(const SkString&) const;
   bool equals(const char text[]) const;
@@ -147,19 +160,19 @@ class SK_API SkString {
 
   // these methods edit the string
 
-  SkString& operator=(const SkString&);
-  SkString& operator=(SkString&&);
+  SkString& operator=(const SkString&) noexcept;
+  SkString& operator=(SkString&&) noexcept;
   SkString& operator=(const char text[]);
 
   char* writable_str();
   char& operator[](size_t n) { return this->writable_str()[n]; }
 
-  void reset();
+  void reset() noexcept;
   /** String contents are preserved on resize. (For destructive resize, `set(nullptr, length)`.)
    * `resize` automatically reserves an extra byte at the end of the buffer for a null terminator.
    */
   void resize(size_t len);
-  void set(const SkString& src) { *this = src; }
+  void set(const SkString& src) noexcept { *this = src; }
   void set(const char text[]);
   void set(const char text[], size_t len);
 
@@ -226,24 +239,27 @@ class SK_API SkString {
    *  Swap contents between this and other. This function is guaranteed
    *  to never fail or throw.
    */
-  void swap(SkString& other);
+  void swap(SkString& other) noexcept;
 
  private:
   struct Rec {
    public:
-    constexpr Rec(uint32_t len, int32_t refCnt) : fLength(len), fRefCnt(refCnt) {}
+    constexpr Rec(uint32_t len, int32_t refCnt) noexcept : fLength(len), fRefCnt(refCnt) {}
     static sk_sp<Rec> Make(const char text[], size_t len);
-    char* data() { return &fBeginningOfData; }
-    const char* data() const { return &fBeginningOfData; }
-    void ref() const;
-    void unref() const;
-    bool unique() const;
-
+    char* data() noexcept { return fBeginningOfData; }
+    const char* data() const noexcept { return fBeginningOfData; }
+    void ref() const noexcept;
+    void unref() const noexcept;
+    bool unique() const noexcept;
+#ifdef SK_DEBUG
+    int32_t getRefCnt() const;
+#endif
     uint32_t fLength;  // logically size_t, but we want it to stay 32 bits
-    mutable std::atomic<int32_t> fRefCnt;
-    char fBeginningOfData = '\0';
 
    private:
+    mutable std::atomic<int32_t> fRefCnt;
+    char fBeginningOfData[1] = {'\0'};
+
     // Ensure the unsized delete is called.
     void operator delete(void* p) { ::operator delete(p); }
   };
@@ -252,7 +268,8 @@ class SK_API SkString {
 #ifdef SK_DEBUG
   const SkString& validate() const;
 #else
-  const SkString& validate() const { return *this; }
+  constexpr SkString& validate() noexcept { return *this; }
+  const SkString& validate() const noexcept { return *this; }
 #endif
 
   static const Rec gEmptyRec;
@@ -262,9 +279,9 @@ class SK_API SkString {
 SkString SkStringPrintf(const char* format, ...) SK_PRINTF_LIKE(1, 2);
 /// This makes it easier to write a caller as a VAR_ARGS function where the format string is
 /// optional.
-static inline SkString SkStringPrintf() { return SkString(); }
+static inline SkString SkStringPrintf() noexcept { return SkString(); }
 
-static inline void swap(SkString& a, SkString& b) { a.swap(b); }
+static inline void swap(SkString& a, SkString& b) noexcept { a.swap(b); }
 
 enum SkStrSplitMode {
   // Strictly return all results. If the input is ",," and the separator is ',' this will return

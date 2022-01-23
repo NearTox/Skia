@@ -11,15 +11,14 @@
 #include "include/gpu/GrTypes.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/GrNativeRect.h"
-#include "src/gpu/GrPrimitiveProcessor.h"
 #include "src/gpu/vk/GrVkDescriptorSetManager.h"
 
+class GrAttachment;
 class GrSurface;
+class GrVkAttachment;
 class GrVkCommandBuffer;
 class GrVkGpu;
 class GrVkRenderPass;
-class GrVkUniformBuffer;
-class GrVkMeshBuffer;
 struct SkIRect;
 
 class GrVkMSAALoadManager {
@@ -30,7 +29,7 @@ class GrVkMSAALoadManager {
 
   bool loadMSAAFromResolve(
       GrVkGpu* gpu, GrVkCommandBuffer* commandBuffer, const GrVkRenderPass& renderPass,
-      GrSurface* dst, GrSurface* src, const SkIRect& srcRect);
+      GrAttachment* dst, GrVkAttachment* src, const SkIRect& srcRect);
 
   void destroyResources(GrVkGpu* gpu);
 
@@ -45,8 +44,6 @@ class GrVkMSAALoadManager {
   // All pipelines used by this class use the same VkPipelineLayout. Therefore, unlike regular
   // GrVkPipelines, we have the manager own the layout instead of the GrVkPipeline.
   VkPipelineLayout fPipelineLayout;
-
-  std::unique_ptr<GrVkUniformBuffer> fUniformBuffer;
 };
 
 #endif

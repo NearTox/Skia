@@ -26,7 +26,7 @@ class MemoryPoolAccessor {
 // We know in the Android framework there is only one GrContext.
 #if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
   MemoryPoolAccessor() {}
-  ~MemoryPoolAccessor() {}
+  ~MemoryPoolAccessor() = default;
 #else
   MemoryPoolAccessor() { gProcessorSpinlock.acquire(); }
   ~MemoryPoolAccessor() { gProcessorSpinlock.release(); }
@@ -42,6 +42,10 @@ class MemoryPoolAccessor {
 ///////////////////////////////////////////////////////////////////////////////
 
 void* GrProcessor::operator new(size_t size) { return MemoryPoolAccessor().pool()->allocate(size); }
+
+void* GrProcessor::operator new(size_t object_size, size_t footer_size) {
+  return MemoryPoolAccessor().pool()->allocate(object_size + footer_size);
+}
 
 void GrProcessor::operator delete(void* target) {
   return MemoryPoolAccessor().pool()->release(target);

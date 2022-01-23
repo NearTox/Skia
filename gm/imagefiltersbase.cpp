@@ -149,7 +149,7 @@ static void draw_bitmap(SkCanvas* canvas, SkImage* i, const SkRect& r, sk_sp<SkI
   SkCanvas c(bm);
   draw_path(&c, i, r, nullptr);
 
-  canvas->drawBitmap(bm, 0, 0, &paint);
+  canvas->drawImage(bm.asImage(), 0, 0, SkSamplingOptions(), &paint);
 }
 
 static void draw_patch(SkCanvas* canvas, SkImage*, const SkRect& r, sk_sp<SkImageFilter> imf) {
@@ -190,10 +190,10 @@ static void draw_atlas(
 
   SkPaint paint;
   paint.setImageFilter(std::move(imf));
-  paint.setFilterQuality(kHigh_SkFilterQuality);
   paint.setAntiAlias(true);
+  SkSamplingOptions sampling(SkCubicResampler::Mitchell());
   canvas->drawAtlas(
-      atlas, &xform, &r, /*colors=*/nullptr, /*count=*/1, SkBlendMode::kSrc,
+      atlas, &xform, &r, /*colors=*/nullptr, /*count=*/1, SkBlendMode::kSrc, sampling,
       /*cullRect=*/nullptr, &paint);
 }
 
@@ -318,8 +318,6 @@ class ImageFiltersTextBaseGM : public skiagm::GM {
   virtual void installFilter(SkPaint* paint) = 0;
 
   void onDraw(SkCanvas* canvas) override {
-    SkPaint paint;
-
     canvas->translate(20, 40);
 
     for (int doSaveLayer = 0; doSaveLayer <= 1; ++doSaveLayer) {

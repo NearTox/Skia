@@ -17,7 +17,7 @@ SK_BEGIN_REQUIRE_DENSE
 class SK_API SkStrokeRec {
  public:
   enum InitStyle { kHairline_InitStyle, kFill_InitStyle };
-  SkStrokeRec(InitStyle style);
+  SkStrokeRec(InitStyle style) noexcept;
   SkStrokeRec(const SkPaint&, SkPaint::Style, SkScalar resScale = 1);
   explicit SkStrokeRec(const SkPaint&, SkScalar resScale = 1);
 
@@ -26,10 +26,10 @@ class SK_API SkStrokeRec {
   static constexpr int kStyleCount = kStrokeAndFill_Style + 1;
 
   Style getStyle() const;
-  SkScalar getWidth() const { return fWidth; }
-  SkScalar getMiter() const { return fMiterLimit; }
-  SkPaint::Cap getCap() const { return (SkPaint::Cap)fCap; }
-  SkPaint::Join getJoin() const { return (SkPaint::Join)fJoin; }
+  SkScalar getWidth() const noexcept { return fWidth; }
+  SkScalar getMiter() const noexcept { return fMiterLimit; }
+  SkPaint::Cap getCap() const noexcept { return (SkPaint::Cap)fCap; }
+  SkPaint::Join getJoin() const noexcept { return (SkPaint::Join)fJoin; }
 
   bool isHairlineStyle() const { return kHairline_Style == this->getStyle(); }
 
@@ -45,15 +45,15 @@ class SK_API SkStrokeRec {
    */
   void setStrokeStyle(SkScalar width, bool strokeAndFill = false);
 
-  void setStrokeParams(SkPaint::Cap cap, SkPaint::Join join, SkScalar miterLimit) {
+  void setStrokeParams(SkPaint::Cap cap, SkPaint::Join join, SkScalar miterLimit) noexcept {
     fCap = cap;
     fJoin = join;
     fMiterLimit = miterLimit;
   }
 
-  SkScalar getResScale() const { return fResScale; }
+  SkScalar getResScale() const noexcept { return fResScale; }
 
-  void setResScale(SkScalar rs) {
+  void setResScale(SkScalar rs) noexcept {
     SkASSERT(rs > 0 && SkScalarIsFinite(rs));
     fResScale = rs;
   }

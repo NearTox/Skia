@@ -8,7 +8,6 @@
 #include "gm/gm.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
@@ -62,7 +61,7 @@ class ImageFiltersStrokedGM : public GM {
         SkImageFilters::Blur(5, 5, nullptr),
         SkImageFilters::DropShadow(10, 10, 3, 3, SK_ColorGREEN, nullptr),
         SkImageFilters::Offset(-16, 32, nullptr),
-        SkImageFilters::MatrixTransform(resizeMatrix, kNone_SkFilterQuality, nullptr),
+        SkImageFilters::MatrixTransform(resizeMatrix, SkSamplingOptions(), nullptr),
     };
 
     SkRect r = SkRect::MakeWH(64, 64);

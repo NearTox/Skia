@@ -16,7 +16,7 @@
 
 GrStrikeCache::~GrStrikeCache() { this->freeAll(); }
 
-void GrStrikeCache::freeAll() { fCache.reset(); }
+void GrStrikeCache::freeAll() noexcept { fCache.reset(); }
 
 ///////////////////////////////////////////////////////////////////////////////
 

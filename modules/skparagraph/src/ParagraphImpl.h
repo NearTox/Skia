@@ -9,6 +9,7 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
+#include "include/core/SkSpan.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkBitmaskEnum.h"
@@ -24,8 +25,7 @@
 #include "modules/skparagraph/include/TextStyle.h"
 #include "modules/skparagraph/src/Run.h"
 #include "modules/skparagraph/src/TextLine.h"
-#include "modules/skshaper/src/SkUnicode.h"
-#include "src/core/SkSpan.h"
+#include "modules/skunicode/include/SkUnicode.h"
 
 #include <memory>
 #include <string>
@@ -37,11 +37,12 @@ namespace skia {
 namespace textlayout {
 
 enum CodeUnitFlags {
-  kNoCodeUnitFlag = 0x0,
-  kPartOfWhiteSpace = 0x1,
-  kGraphemeStart = 0x2,
-  kSoftLineBreakBefore = 0x4,
-  kHardLineBreakBefore = 0x8,
+  kNoCodeUnitFlag = 0x00,
+  kPartOfWhiteSpaceBreak = 0x01,
+  kGraphemeStart = 0x02,
+  kSoftLineBreakBefore = 0x04,
+  kHardLineBreakBefore = 0x08,
+  kPartOfIntraWordBreak = 0x10,
 };
 }  // namespace textlayout
 }  // namespace skia
@@ -119,9 +120,9 @@ class ParagraphImpl final : public Paragraph {
   size_t lineNumber() override { return fLines.size(); }
 
   TextLine& addLine(
-      SkVector offset, SkVector advance, TextRange text, TextRange textWithSpaces,
-      ClusterRange clusters, ClusterRange clustersWithGhosts, SkScalar widthWithSpaces,
-      InternalLineMetrics sizes);
+      SkVector offset, SkVector advance, TextRange textExcludingSpaces, TextRange text,
+      TextRange textIncludingNewlines, ClusterRange clusters, ClusterRange clustersWithGhosts,
+      SkScalar widthWithSpaces, InternalLineMetrics sizes);
 
   SkSpan<const char> text() const { return SkSpan<const char>(fText.c_str(), fText.size()); }
   InternalState state() const { return fState; }
@@ -192,6 +193,8 @@ class ParagraphImpl final : public Paragraph {
   void updateForegroundPaint(size_t from, size_t to, SkPaint paint) override;
   void updateBackgroundPaint(size_t from, size_t to, SkPaint paint) override;
 
+  void visit(const Visitor&) override;
+
   InternalLineMetrics getEmptyMetrics() const { return fEmptyMetrics; }
   InternalLineMetrics getStrutMetrics() const { return fStrutMetrics; }
 
@@ -203,10 +206,6 @@ class ParagraphImpl final : public Paragraph {
       run.resetShifts();
     }
   }
-
-  using CodeUnitRangeVisitor = std::function<bool(TextRange textRange)>;
-  void forEachCodeUnitPropertyRange(CodeUnitFlags property, CodeUnitRangeVisitor visitor);
-  size_t getWhitespacesLength(TextRange textRange);
 
   bool codeUnitHasProperty(size_t index, CodeUnitFlags property) const {
     return (fCodeUnitProperties[index] & property) == property;

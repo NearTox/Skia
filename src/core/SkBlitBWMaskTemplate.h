@@ -22,14 +22,15 @@
 */
 
 static void SK_BLITBWMASK_NAME(
-    const SkPixmap& dst, const SkMask& srcMask, const SkIRect& clip SK_BLITBWMASK_ARGS) {
+    const SkPixmap& dstPixmap, const SkMask& srcMask,
+    const SkIRect& clip SK_BLITBWMASK_ARGS) noexcept {
   SkASSERT(clip.fRight <= srcMask.fBounds.fRight);
 
   int cx = clip.fLeft;
   int cy = clip.fTop;
   int maskLeft = srcMask.fBounds.fLeft;
   unsigned mask_rowBytes = srcMask.fRowBytes;
-  size_t bitmap_rowBytes = dst.rowBytes();
+  size_t bitmap_rowBytes = dstPixmap.rowBytes();
   unsigned height = clip.height();
 
   SkASSERT(mask_rowBytes != 0);
@@ -37,7 +38,7 @@ static void SK_BLITBWMASK_NAME(
   SkASSERT(height != 0);
 
   const uint8_t* bits = srcMask.getAddr1(cx, cy);
-  SK_BLITBWMASK_DEVTYPE* device = dst.SK_BLITBWMASK_GETADDR(cx, cy);
+  SK_BLITBWMASK_DEVTYPE* device = dstPixmap.SK_BLITBWMASK_GETADDR(cx, cy);
 
   if (cx == maskLeft && clip.fRight == srcMask.fBounds.fRight) {
     do {

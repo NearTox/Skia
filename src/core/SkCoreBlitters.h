@@ -172,12 +172,4 @@ SkBlitter* SkCreateRasterPipelineBlitter(
     const SkPixmap&, const SkPaint&, const SkRasterPipeline& shaderPipeline, bool shader_is_opaque,
     SkArenaAlloc*, sk_sp<SkShader> clipShader);
 
-SkBlitter* SkCreateSkVMBlitter(
-    const SkPixmap& dst, const SkPaint&, const SkMatrixProvider&, SkArenaAlloc*,
-    sk_sp<SkShader> clipShader);
-
-SkBlitter* SkCreateSkVMSpriteBlitter(
-    const SkPixmap& dst, const SkPaint&, const SkPixmap& sprite, int left, int top, SkArenaAlloc*,
-    sk_sp<SkShader> clipShader);
-
 #endif

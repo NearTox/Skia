@@ -14,22 +14,21 @@
 class SkSVGLengthContext;
 
 class SkSVGStop : public SkSVGHiddenContainer {
- public:
-  static sk_sp<SkSVGStop> Make() { return sk_sp<SkSVGStop>(new SkSVGStop()); }
+public:
+    static sk_sp<SkSVGStop> Make() {
+        return sk_sp<SkSVGStop>(new SkSVGStop());
+    }
 
-  const SkSVGLength& offset() const { return fOffset; }
 
-  void setOffset(const SkSVGLength&);
+    SVG_ATTR(Offset, SkSVGLength, SkSVGLength(0, SkSVGLength::Unit::kPercentage))
 
- protected:
-  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+protected:
+    bool parseAndSetAttribute(const char*, const char*) override;
 
- private:
-  SkSVGStop();
+private:
+    SkSVGStop();
 
-  SkSVGLength fOffset = SkSVGLength(0, SkSVGLength::Unit::kPercentage);
-
-  using INHERITED = SkSVGHiddenContainer;
+    using INHERITED = SkSVGHiddenContainer;
 };
 
-#endif  // SkSVGStop_DEFINED
+#endif // SkSVGStop_DEFINED

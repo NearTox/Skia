@@ -165,20 +165,7 @@ class DebugCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
   void onDrawPath(const SkPath&, const SkPaint&) override;
   void onDrawRegion(const SkRegion&, const SkPaint&) override;
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-  void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
-  void onDrawImageRect(
-      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
-      SrcRectConstraint) override;
-  void onDrawImageLattice(
-      const SkImage*, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
-  void onDrawAtlas(
-      const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
-      const SkRect*, const SkPaint*) override;
-  void onDrawEdgeAAImageSet(
-      const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
-      SrcRectConstraint) override;
-#endif
+
   void onDrawImage2(
       const SkImage*, SkScalar, SkScalar, const SkSamplingOptions&, const SkPaint*) override;
   void onDrawImageRect2(
@@ -195,8 +182,9 @@ class DebugCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
   void onClipPath(const SkPath&, SkClipOp, ClipEdgeStyle) override;
   void onClipShader(sk_sp<SkShader>, SkClipOp) override;
   void onClipRegion(const SkRegion& region, SkClipOp) override;
-  void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
+  void onResetClip() override;
 
+  void onDrawShadowRec(const SkPath&, const SkDrawShadowRec&) override;
   void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 
@@ -235,10 +223,11 @@ class DebugCanvas : public SkCanvasVirtualEnforcer<SkCanvas> {
    */
   void addDrawCommand(DrawCommand* command);
 
+#if SK_GPU_V1
   GrAuditTrail* getAuditTrail(SkCanvas*);
-
   void drawAndCollectOps(SkCanvas*);
-  void cleanupAuditTrail(SkCanvas*);
+  void cleanupAuditTrail(GrAuditTrail*);
+#endif
 
   using INHERITED = SkCanvasVirtualEnforcer<SkCanvas>;
 };

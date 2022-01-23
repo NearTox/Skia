@@ -230,7 +230,11 @@
 #  define SK_SUPPORT_GPU 1
 #endif
 
-#if !SK_SUPPORT_GPU
+#if SK_SUPPORT_GPU
+#  if !defined(SK_ENABLE_SKSL)
+#    define SK_ENABLE_SKSL
+#  endif
+#else
 #  undef SK_GL
 #  undef SK_VULKAN
 #  undef SK_METAL
@@ -245,7 +249,7 @@
 // See
 // https://developercommunity.visualstudio.com/content/problem/1128631/code-flow-doesnt-see-noreturn-with-extern-c.html
 // for why this is wrapped. Hopefully removable after msvc++ 19.27 is no longer supported.
-[[noreturn]] static inline void sk_fast_fail() { __fastfail(FAST_FAIL_INVALID_ARG); }
+[[noreturn]] static inline void sk_fast_fail() noexcept { __fastfail(FAST_FAIL_INVALID_ARG); }
 #    define SkUNREACHABLE sk_fast_fail()
 #  else
 #    define SkUNREACHABLE __builtin_trap()
@@ -267,13 +271,12 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 #  else
 #    define SK_DUMP_LINE_FORMAT "%s:%d"
 #  endif
-#  define SK_ABORT(message, ...)                                                             \
-    do {                                                                                     \
-      SkDebugf(/*SK_DUMP_LINE_FORMAT ": fatal error: \"" message "\"\n", __FILE__, __LINE__, \
-               ##__VA_ARGS__*/                                                               \
-               ": fatal error: \"" message "\"\n");                                          \
-      SK_DUMP_GOOGLE3_STACK();                                                               \
-      sk_abort_no_print();                                                                   \
+#  define SK_ABORT(message, ...)                                                            \
+    do {                                                                                    \
+      SkDebugf(/*SK_DUMP_LINE_FORMAT*/                                                      \
+               ": fatal error: \"" message "\"\n" /*, __FILE__, __LINE__*/, ##__VA_ARGS__); \
+      SK_DUMP_GOOGLE3_STACK();                                                              \
+      sk_abort_no_print();                                                                  \
     } while (false)
 #endif
 
@@ -322,6 +325,14 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #    define SK_UNUSED __pragma(warning(suppress : 4189))
 #  else
 #    define SK_UNUSED SK_ATTRIBUTE(unused)
+#  endif
+#endif
+
+#if !defined(SK_MAYBE_UNUSED)
+#  if defined(__clang__) || defined(__GNUC__) || __cplusplus >= 201703L
+#    define SK_MAYBE_UNUSED [[maybe_unused]]
+#  else
+#    define SK_MAYBE_UNUSED
 #  endif
 #endif
 
@@ -379,6 +390,14 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  define GR_TEST_UTILS 0
 #endif
 
+#ifndef SK_GPU_V2
+#  define SK_GPU_V2 0
+#endif
+
+#ifndef SK_GPU_V1
+#  define SK_GPU_V1 1
+#endif
+
 #if defined(SK_HISTOGRAM_ENUMERATION) || defined(SK_HISTOGRAM_BOOLEAN) || \
     defined(SK_HISTOGRAM_EXACT_LINEAR) || defined(SK_HISTOGRAM_MEMORY_KB)
 #  define SK_HISTOGRAMS_ENABLED 1
@@ -423,13 +442,13 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
     The platform implementation must not return, but should either throw
     an exception or otherwise exit.
 */
-[[noreturn]] SK_API extern void sk_abort_no_print(void);
+[[noreturn]] SK_API extern void sk_abort_no_print(void) noexcept;
 
 #ifndef SkDebugf
-SK_API void SkDebugf(const char format[], ...);
+SK_API void SkDebugf(const char format[], ...) noexcept SK_PRINTF_LIKE(1, 2);
 #endif
 #if defined(SK_BUILD_FOR_LIBFUZZER)
-SK_API inline void SkDebugf(const char format[], ...) {}
+SK_API SK_PRINTF_LIKE(1, 2) inline void SkDebugf(const char format[], ...) {}
 #endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
@@ -442,8 +461,10 @@ SK_API inline void SkDebugf(const char format[], ...) {}
 //        return SkASSERT(x > 4),
 //               x - 4;
 //    }
-#define SkASSERT_RELEASE(cond) \
-  static_cast<void>((cond) ? (void)0 : [] { SK_ABORT("assert(%s)", #cond); }())
+#define SkASSERT_RELEASE(cond)                             \
+  static_cast<void>((cond) ? (void)0 : []() noexcept {     \
+    SK_ABORT(/*"assert(%s)", #cond*/ "assert(" #cond ")"); \
+  }())
 
 #ifdef SK_DEBUG
 #  define SkASSERT(cond) SkASSERT_RELEASE(cond)
@@ -489,7 +510,7 @@ typedef unsigned U16CPU;
 /** @return false or true based on the condition
  */
 template <typename T>
-static constexpr bool SkToBool(const T& x) {
+static constexpr bool SkToBool(const T& x) noexcept {
   return 0 != x;  // NOLINT(modernize-use-nullptr)
 }
 
@@ -503,11 +524,11 @@ static constexpr int32_t SK_NaN32 = INT32_MIN;
 static constexpr int64_t SK_MaxS64 = INT64_MAX;
 static constexpr int64_t SK_MinS64 = -SK_MaxS64;
 
-static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) {
+static inline constexpr int32_t SkLeftShift(int32_t value, int32_t shift) noexcept {
   return (int32_t)((uint32_t)value << shift);
 }
 
-static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) {
+static inline constexpr int64_t SkLeftShift(int64_t value, int32_t shift) noexcept {
   return (int64_t)((uint64_t)value << shift);
 }
 
@@ -522,42 +543,42 @@ char (&SkArrayCountHelper(T (&array)[N]))[N];
 ////////////////////////////////////////////////////////////////////////////////
 
 template <typename T>
-static constexpr T SkAlign2(T x) {
+static constexpr T SkAlign2(T x) noexcept {
   return (x + 1) >> 1 << 1;
 }
 template <typename T>
-static constexpr T SkAlign4(T x) {
+static constexpr T SkAlign4(T x) noexcept {
   return (x + 3) >> 2 << 2;
 }
 template <typename T>
-static constexpr T SkAlign8(T x) {
+static constexpr T SkAlign8(T x) noexcept {
   return (x + 7) >> 3 << 3;
 }
 
 template <typename T>
-static constexpr bool SkIsAlign2(T x) {
+static constexpr bool SkIsAlign2(T x) noexcept {
   return 0 == (x & 1);
 }
 template <typename T>
-static constexpr bool SkIsAlign4(T x) {
+static constexpr bool SkIsAlign4(T x) noexcept {
   return 0 == (x & 3);
 }
 template <typename T>
-static constexpr bool SkIsAlign8(T x) {
+static constexpr bool SkIsAlign8(T x) noexcept {
   return 0 == (x & 7);
 }
 
 template <typename T>
-static constexpr T SkAlignPtr(T x) {
+static constexpr T SkAlignPtr(T x) noexcept {
   return sizeof(void*) == 8 ? SkAlign8(x) : SkAlign4(x);
 }
 template <typename T>
-static constexpr bool SkIsAlignPtr(T x) {
+static constexpr bool SkIsAlignPtr(T x) noexcept {
   return sizeof(void*) == 8 ? SkIsAlign8(x) : SkIsAlign4(x);
 }
 
 typedef uint32_t SkFourByteTag;
-static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) {
+static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
   return (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d);
 }
 
@@ -588,7 +609,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static inline int32_t SkAbs32(int32_t value) {
+static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -597,7 +618,7 @@ static inline int32_t SkAbs32(int32_t value) {
 }
 
 template <typename T>
-static inline T SkTAbs(T value) {
+static constexpr inline T SkTAbs(T value) noexcept {
   if (value < 0) {
     value = -value;
   }

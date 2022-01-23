@@ -35,7 +35,7 @@ class GrVkDescriptorSetManager {
   static GrVkDescriptorSetManager* CreateZeroSamplerManager(GrVkGpu* gpu);
   static GrVkDescriptorSetManager* CreateInputManager(GrVkGpu* gpu);
 
-  ~GrVkDescriptorSetManager() {}
+  ~GrVkDescriptorSetManager() = default;
 
   void release(GrVkGpu* gpu);
 

@@ -15,6 +15,10 @@
 #include "include/core/SkPoint.h"
 #include <functional>  // std::function
 
+#ifndef SK_SUPPORT_LEGACY_DRAWLOOPER
+#  error "SkDrawLooper is unsupported"
+#endif
+
 class SkArenaAlloc;
 class SkCanvas;
 class SkMatrix;
@@ -35,7 +39,7 @@ class SK_API SkDrawLooper : public SkFlattenable {
   class SK_API Context {
    public:
     Context() {}
-    virtual ~Context() {}
+    virtual ~Context() = default;
 
     struct Info {
       SkVector fTranslate;

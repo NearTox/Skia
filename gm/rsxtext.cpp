@@ -88,8 +88,7 @@ class RSXShaderGM : public skiagm::GM {
 
     return surface->makeImageSnapshot()
         ->makeShader(
-            SkTileMode::kRepeat, SkTileMode::kRepeat,
-            SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone), &lm)
+            SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(SkFilterMode::kLinear), &lm)
         ->makeWithLocalMatrix(outer_lm);
   }
 

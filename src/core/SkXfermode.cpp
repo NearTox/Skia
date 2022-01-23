@@ -126,7 +126,7 @@ bool SkXfermode::IsOpaque(SkBlendMode mode, SrcColorOpacity opacityType) {
     case SkBlendModeCoeff::kSC: return kTransparentBlack_SrcColorOpacity == opacityType;
     default: return false;
   }
-  return false;
+    return false;
 }
 
 #if SK_SUPPORT_GPU

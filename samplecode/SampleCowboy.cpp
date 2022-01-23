@@ -7,17 +7,18 @@
 
 #include "include/core/SkTypes.h"
 
-#ifdef SK_XML
+#if defined(SK_ENABLE_SVG)
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkRect.h"
-#include "include/core/SkStream.h"
-#include "modules/svg/include/SkSVGDOM.h"
-#include "samplecode/Sample.h"
-#include "src/core/SkOSFile.h"
-#include "src/utils/SkOSPath.h"
-#include "src/xml/SkDOM.h"
-#include "tools/Resources.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkRect.h"
+#  include "include/core/SkStream.h"
+#  include "modules/svg/include/SkSVGDOM.h"
+#  include "modules/svg/include/SkSVGNode.h"
+#  include "samplecode/Sample.h"
+#  include "src/core/SkOSFile.h"
+#  include "src/utils/SkOSPath.h"
+#  include "src/xml/SkDOM.h"
+#  include "tools/Resources.h"
 
 namespace {
 class AnimatedSVGSample : public Sample {
@@ -119,4 +120,4 @@ private:
 
 DEF_SAMPLE( return new AnimatedSVGSample("Cowboy.svg", "SampleCowboy"); )
 
-#endif  // SK_XML
+#endif  // defined(SK_ENABLE_SVG)

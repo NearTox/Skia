@@ -46,7 +46,7 @@ class VideoDecoderGM : public skiagm::GM {
       if (0) {
         SkDebugf("ts %g\n", timeStamp);
       }
-      canvas->drawImage(img, 10, 10, nullptr);
+      canvas->drawImage(img, 10, 10);
     }
   }
 

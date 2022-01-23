@@ -38,7 +38,10 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
   const GrD3DTextureResource* msaaTextureResource() const;
   GrD3DTextureResource* msaaTextureResource();
 
-  bool canAttemptStencilAttachment() const override { return true; }
+  bool canAttemptStencilAttachment(bool useMSAASurface) const override {
+    SkASSERT(useMSAASurface == (this->numSamples() > 1));
+    return true;
+  }
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
 
@@ -94,7 +97,10 @@ class GrD3DRenderTarget : public GrRenderTarget, public virtual GrD3DTextureReso
 
   GrD3DGpu* getD3DGpu() const;
 
-  bool completeStencilAttachment() override { return true; }
+  bool completeStencilAttachment(GrAttachment* stencil, bool useMSAASurface) override {
+    SkASSERT(useMSAASurface == (this->numSamples() > 1));
+    return true;
+  }
 
   // In Direct3D we call the release proc after we are finished with the underlying
   // GrD3DTextureResource::Resource object (which occurs after the GPU finishes all work on it).

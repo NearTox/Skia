@@ -247,7 +247,7 @@ class GDIAllocator : public SkRasterHandleAllocator {
 
     RECT clip_bounds_RECT = toRECT(clip_bounds);
     HRGN hrgn = CreateRectRgnIndirect(&clip_bounds_RECT);
-    int result = SelectClipRgn(hdc, hrgn);
+    SK_MAYBE_UNUSED int result = SelectClipRgn(hdc, hrgn);
     SkASSERT(result != ERROR);
     result = DeleteObject(hrgn);
     SkASSERT(result != 0);
@@ -295,7 +295,5 @@ DEF_SIMPLE_GM(rasterallocator, canvas, 600, 300) {
 
   SkPixmap pm;
   nativeCanvas->peekPixels(&pm);
-  SkBitmap bm;
-  bm.installPixels(pm);
-  canvas->drawBitmap(bm, 280, 0, nullptr);
+  canvas->drawImage(SkImage::MakeRasterCopy(pm), 280, 0);
 }

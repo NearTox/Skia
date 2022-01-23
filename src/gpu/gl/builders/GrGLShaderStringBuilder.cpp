@@ -6,11 +6,12 @@
  */
 
 #include "src/core/SkAutoMalloc.h"
+#include "src/core/SkTraceEvent.h"
 #include "src/gpu/GrShaderUtils.h"
 #include "src/gpu/gl/GrGLGpu.h"
 #include "src/gpu/gl/builders/GrGLShaderStringBuilder.h"
 #include "src/sksl/SkSLCompiler.h"
-#include "src/sksl/SkSLGLSLCodeGenerator.h"
+#include "src/sksl/codegen/SkSLGLSLCodeGenerator.h"
 #include "src/sksl/ir/SkSLProgram.h"
 
 // Print the source code for all shaders generated.
@@ -18,7 +19,7 @@ static const bool gPrintSKSL = false;
 static const bool gPrintGLSL = false;
 
 std::unique_ptr<SkSL::Program> GrSkSLtoGLSL(
-    const GrGLGpu* gpu, SkSL::Program::Kind programKind, const SkSL::String& sksl,
+    const GrGLGpu* gpu, SkSL::ProgramKind programKind, const SkSL::String& sksl,
     const SkSL::Program::Settings& settings, SkSL::String* glsl,
     GrContextOptions::ShaderErrorHandler* errorHandler) {
   SkSL::Compiler* compiler = gpu->shaderCompiler();
@@ -51,7 +52,8 @@ std::unique_ptr<SkSL::Program> GrSkSLtoGLSL(
 
 GrGLuint GrGLCompileAndAttachShader(
     const GrGLContext& glCtx, GrGLuint programId, GrGLenum type, const SkSL::String& glsl,
-    GrGpu::Stats* stats, GrContextOptions::ShaderErrorHandler* errorHandler) {
+    GrThreadSafePipelineBuilder::Stats* stats, GrContextOptions::ShaderErrorHandler* errorHandler) {
+  TRACE_EVENT0_ALWAYS("skia.shaders", "driver_compile_shader");
   const GrGLInterface* gli = glCtx.glInterface();
 
   // Specify GLSL source to the driver.
@@ -70,6 +72,7 @@ GrGLuint GrGLCompileAndAttachShader(
   bool checkCompiled = !glCtx.caps()->skipErrorChecks();
 
   if (checkCompiled) {
+    ATRACE_ANDROID_FRAMEWORK("checkCompiled");
     GrGLint compiled = GR_GL_INIT_ZERO;
     GR_GL_CALL(gli, GetShaderiv(shaderId, GR_GL_COMPILE_STATUS, &compiled));
 

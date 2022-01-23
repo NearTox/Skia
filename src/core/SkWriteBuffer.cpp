@@ -25,7 +25,7 @@ SkBinaryWriteBuffer::SkBinaryWriteBuffer() : fFactorySet(nullptr), fTFSet(nullpt
 SkBinaryWriteBuffer::SkBinaryWriteBuffer(void* storage, size_t storageSize)
     : fFactorySet(nullptr), fTFSet(nullptr), fWriter(storage, storageSize) {}
 
-SkBinaryWriteBuffer::~SkBinaryWriteBuffer() {}
+SkBinaryWriteBuffer::~SkBinaryWriteBuffer() = default;
 
 bool SkBinaryWriteBuffer::usingInitialStorage() const { return fWriter.usingInitialStorage(); }
 

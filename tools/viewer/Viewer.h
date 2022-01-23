@@ -12,8 +12,8 @@
 #include "include/core/SkExecutor.h"
 #include "include/core/SkFont.h"
 #include "include/gpu/GrContextOptions.h"
+#include "include/private/SkSLString.h"
 #include "src/core/SkScan.h"
-#include "src/sksl/SkSLString.h"
 #include "src/sksl/ir/SkSLProgram.h"
 #include "tools/gpu/MemoryCache.h"
 #include "tools/sk_app/Application.h"
@@ -49,6 +49,11 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
   static GrContextOptions::ShaderErrorHandler* ShaderErrorHandler();
 
   struct SkFontFields {
+    bool overridesSomething() const {
+      return fTypeface || fSize || fScaleX || fSkewX || fHinting || fEdging || fSubpixel ||
+             fForceAutoHinting || fEmbeddedBitmaps || fLinearMetrics || fEmbolden || fBaselineSnap;
+    }
+
     bool fTypeface = false;
     bool fSize = false;
     SkScalar fSizeRange[2] = {0, 20};
@@ -64,20 +69,26 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
     bool fBaselineSnap = false;
   };
   struct SkPaintFields {
+    bool overridesSomething() const {
+      return fPathEffect || fShader || fMaskFilter || fColorFilter || fImageFilter || fColor ||
+             fStrokeWidth || fMiterLimit || fBlendMode || fAntiAlias || fDither ||
+             fForceRuntimeBlend || fCapType || fJoinType || fStyle;
+    }
+
     bool fPathEffect = false;
     bool fShader = false;
     bool fMaskFilter = false;
     bool fColorFilter = false;
-    bool fDrawLooper = false;
     bool fImageFilter = false;
 
     bool fColor = false;
-    bool fWidth = false;
+    bool fStrokeWidth = false;
     bool fMiterLimit = false;
     bool fBlendMode = false;
 
     bool fAntiAlias = false;
     bool fDither = false;
+    bool fForceRuntimeBlend = false;
     enum class AntiAliasState {
       Alias,
       Normal,
@@ -90,7 +101,6 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
     bool fCapType = false;
     bool fJoinType = false;
     bool fStyle = false;
-    bool fFilterQuality = false;
   };
   struct SkSurfacePropsFields {
     bool fFlags = false;
@@ -121,6 +131,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
   void setCurrentSlide(int);
   void setupCurrentSlide();
   void listNames() const;
+  void dumpShadersToResources();
 
   void updateUIState();
 
@@ -170,6 +181,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
   skcms_TransferFunction fColorSpaceTransferFn;
 
   // transform data
+  bool fApplyBackingScale;
   SkScalar fZoomLevel;
   SkScalar fRotation;
   SkVector fOffset;
@@ -201,7 +213,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
   PerspectiveMode fPerspectiveMode;
   SkPoint fPerspectivePoints[4];
 
-  SkTArray<std::function<void(void)>> fDeferredActions;
+  SkTArray<std::function<void()>> fDeferredActions;
 
   // fPaint contains override values, fPaintOverrides controls if overrides are applied.
   SkPaint fPaint;
@@ -221,6 +233,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
 
     sk_sp<const SkData> fKey;
     SkString fKeyString;
+    SkString fKeyDescription;
 
     SkFourByteTag fShaderType;
     SkSL::String fShader[kGrShaderTypeCount];
@@ -229,6 +242,14 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
 
   sk_gpu_test::MemoryCache fPersistentCache;
   SkTArray<CachedShader> fCachedShaders;
+
+  enum ShaderOptLevel : int {
+    kShaderOptLevel_Source,
+    kShaderOptLevel_Compile,
+    kShaderOptLevel_Optimize,
+    kShaderOptLevel_Inline,
+  };
+  ShaderOptLevel fOptLevel = kShaderOptLevel_Source;
 };
 
 #endif

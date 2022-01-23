@@ -1,6 +1,6 @@
 9 registers, 22 instructions:
 0	r0 = uniform32 ptr0 0
-1	r1 = uniform32 ptr0 C
+1	r1 = uniform32 ptr0 8
 2	r0 = trunc r0
 3	r2 = splat 1 (1.4012985e-45)
 4	r3 = splat 2 (2.8025969e-45)

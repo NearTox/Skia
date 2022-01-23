@@ -8,8 +8,8 @@
 #ifndef SKSL_BREAKSTATEMENT
 #define SKSL_BREAKSTATEMENT
 
+#include "include/private/SkSLStatement.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
 
@@ -22,8 +22,12 @@ class BreakStatement final : public Statement {
 
   BreakStatement(int offset) : INHERITED(offset, kStatementKind) {}
 
+  static std::unique_ptr<Statement> Make(int offset) {
+    return std::make_unique<BreakStatement>(offset);
+  }
+
   std::unique_ptr<Statement> clone() const override {
-    return std::unique_ptr<Statement>(new BreakStatement(fOffset));
+    return std::make_unique<BreakStatement>(fOffset);
   }
 
   String description() const override { return String("break;"); }

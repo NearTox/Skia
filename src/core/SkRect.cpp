@@ -10,7 +10,7 @@
 #include "include/private/SkMalloc.h"
 #include "src/core/SkRectPriv.h"
 
-bool SkIRect::intersect(const SkIRect& a, const SkIRect& b) {
+bool SkIRect::intersect(const SkIRect& a, const SkIRect& b) noexcept {
   SkIRect tmp = {
       std::max(a.fLeft, b.fLeft), std::max(a.fTop, b.fTop), std::min(a.fRight, b.fRight),
       std::min(a.fBottom, b.fBottom)};
@@ -21,7 +21,7 @@ bool SkIRect::intersect(const SkIRect& a, const SkIRect& b) {
   return true;
 }
 
-void SkIRect::join(const SkIRect& r) {
+void SkIRect::join(const SkIRect& r) noexcept {
   // do nothing if the params are empty
   if (r.fLeft >= r.fRight || r.fTop >= r.fBottom) {
     return;
@@ -40,7 +40,7 @@ void SkIRect::join(const SkIRect& r) {
 
 /////////////////////////////////////////////////////////////////////////////
 
-void SkRect::toQuad(SkPoint quad[4]) const {
+void SkRect::toQuad(SkPoint quad[4]) const noexcept {
   SkASSERT(quad);
 
   quad[0].set(fLeft, fTop);
@@ -51,7 +51,7 @@ void SkRect::toQuad(SkPoint quad[4]) const {
 
 #include "include/private/SkNx.h"
 
-bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
+bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
   SkASSERT((pts && count > 0) || count == 0);
 
   if (count <= 0) {
@@ -91,7 +91,7 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) {
   return all_finite;
 }
 
-void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
+void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) noexcept {
   if (!this->setBoundsCheck(pts, count)) {
     this->setLTRB(SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN, SK_ScalarNaN);
   }
@@ -107,19 +107,19 @@ void SkRect::setBoundsNoCheck(const SkPoint pts[], int count) {
   } while (0)
 // do the !(opposite) check so we return false if either arg is NaN
 
-bool SkRect::intersect(const SkRect& r) {
+bool SkRect::intersect(const SkRect& r) noexcept {
   CHECK_INTERSECT(r.fLeft, r.fTop, r.fRight, r.fBottom, fLeft, fTop, fRight, fBottom);
   this->setLTRB(L, T, R, B);
   return true;
 }
 
-bool SkRect::intersect(const SkRect& a, const SkRect& b) {
+bool SkRect::intersect(const SkRect& a, const SkRect& b) noexcept {
   CHECK_INTERSECT(a.fLeft, a.fTop, a.fRight, a.fBottom, b.fLeft, b.fTop, b.fRight, b.fBottom);
   this->setLTRB(L, T, R, B);
   return true;
 }
 
-void SkRect::join(const SkRect& r) {
+void SkRect::join(const SkRect& r) noexcept {
   if (r.isEmpty()) {
     return;
   }
@@ -170,11 +170,9 @@ void SkRect::dump(bool asHex) const {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <typename R, typename C>
-static bool subtract(const R& a, const R& b, R* out) {
-  static constexpr C kZero = C(0);
-
-  if (!R::Intersects(a, b)) {
+template <typename R>
+static bool subtract(const R& a, const R& b, R* out) noexcept {
+  if (a.isEmpty() || b.isEmpty() || !R::Intersects(a, b)) {
     // Either already empty, or subtracting the empty rect, or there's no intersection, so
     // in all cases the answer is A.
     *out = a;
@@ -188,33 +186,36 @@ static bool subtract(const R& a, const R& b, R* out) {
   // 2. Right part of A:  (B.right, A.top,    A.right, A.bottom)
   // 3. Top part of A:    (A.left,  A.top,    A.right, B.top)
   // 4. Bottom part of A: (A.left,  B.bottom, A.right, A.bottom)
-
-  C height = a.height();
-  C width = a.width();
-
-  // Compute the areas of the 4 rects described above. Depending on how B intersects A, there
-  // will be 1 to 4 positive areas:
+  //
+  // Depending on how B intersects A, there will be 1 to 4 positive areas:
   //  - 4 occur when A contains B
   //  - 3 occur when B intersects a single edge
   //  - 2 occur when B intersects at a corner, or spans two opposing edges
   //  - 1 occurs when B spans two opposing edges and contains a 3rd, resulting in an exact rect
   //  - 0 occurs when B contains A, resulting in the empty rect
-  C leftArea = kZero, rightArea = kZero, topArea = kZero, bottomArea = kZero;
+  //
+  // Compute the relative areas of the 4 rects described above. Since each subrectangle shares
+  // either the width or height of A, we only have to divide by the other dimension, which avoids
+  // overflow on int32 types, and even if the float relative areas overflow to infinity, the
+  // comparisons work out correctly and (one of) the infinitely large subrects will be chosen.
+  float aHeight = (float)a.height();
+  float aWidth = (float)a.width();
+  float leftArea = 0.f, rightArea = 0.f, topArea = 0.f, bottomArea = 0.f;
   int positiveCount = 0;
   if (b.fLeft > a.fLeft) {
-    leftArea = (b.fLeft - a.fLeft) * height;
+    leftArea = (b.fLeft - a.fLeft) / aWidth;
     positiveCount++;
   }
   if (a.fRight > b.fRight) {
-    rightArea = (a.fRight - b.fRight) * height;
+    rightArea = (a.fRight - b.fRight) / aWidth;
     positiveCount++;
   }
   if (b.fTop > a.fTop) {
-    topArea = (b.fTop - a.fTop) * width;
+    topArea = (b.fTop - a.fTop) / aHeight;
     positiveCount++;
   }
   if (a.fBottom > b.fBottom) {
-    bottomArea = (a.fBottom - b.fBottom) * width;
+    bottomArea = (a.fBottom - b.fBottom) / aHeight;
     positiveCount++;
   }
 
@@ -236,7 +237,7 @@ static bool subtract(const R& a, const R& b, R* out) {
     out->fBottom = b.fTop;
   } else {
     // Bottom chunk of A, so the new top edge is B's bottom edge
-    SkASSERT(bottomArea > kZero);
+    SkASSERT(bottomArea > 0.f);
     out->fTop = b.fBottom;
   }
 
@@ -245,10 +246,10 @@ static bool subtract(const R& a, const R& b, R* out) {
   return positiveCount == 1;
 }
 
-bool SkRectPriv::Subtract(const SkRect& a, const SkRect& b, SkRect* out) {
-  return subtract<SkRect, SkScalar>(a, b, out);
+bool SkRectPriv::Subtract(const SkRect& a, const SkRect& b, SkRect* out) noexcept {
+  return subtract<SkRect>(a, b, out);
 }
 
-bool SkRectPriv::Subtract(const SkIRect& a, const SkIRect& b, SkIRect* out) {
-  return subtract<SkIRect, int>(a, b, out);
+bool SkRectPriv::Subtract(const SkIRect& a, const SkIRect& b, SkIRect* out) noexcept {
+  return subtract<SkIRect>(a, b, out);
 }

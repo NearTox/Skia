@@ -17,32 +17,32 @@ class SkSVGRenderContext;
 class SkSVGStop;
 
 class SkSVGGradient : public SkSVGHiddenContainer {
- public:
-  SVG_ATTR(Href, SkSVGIRI, SkSVGIRI())
-  SVG_ATTR(GradientTransform, SkSVGTransformType, SkSVGTransformType(SkMatrix::I()))
-  SVG_ATTR(SpreadMethod, SkSVGSpreadMethod, SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad))
-  SVG_ATTR(
-      GradientUnits, SkSVGObjectBoundingBoxUnits,
-      SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox))
+public:
+    SVG_ATTR(Href, SkSVGIRI, SkSVGIRI())
+    SVG_ATTR(GradientTransform, SkSVGTransformType, SkSVGTransformType(SkMatrix::I()))
+    SVG_ATTR(SpreadMethod, SkSVGSpreadMethod, SkSVGSpreadMethod(SkSVGSpreadMethod::Type::kPad))
+    SVG_ATTR(GradientUnits,
+             SkSVGObjectBoundingBoxUnits,
+             SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox))
 
- protected:
-  explicit SkSVGGradient(SkSVGTag t) : INHERITED(t) {}
+protected:
+    explicit SkSVGGradient(SkSVGTag t) : INHERITED(t) {}
 
-  bool parseAndSetAttribute(const char*, const char*) override;
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const final;
+    bool onAsPaint(const SkSVGRenderContext&, SkPaint*) const final;
 
-  virtual sk_sp<SkShader> onMakeShader(
-      const SkSVGRenderContext&, const SkColor*, const SkScalar*, int count, SkTileMode,
-      const SkMatrix& localMatrix) const = 0;
+    virtual sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&,
+                                         const SkColor4f*, const SkScalar*, int count,
+                                         SkTileMode, const SkMatrix& localMatrix) const = 0;
 
- private:
-  using StopPositionArray = SkSTArray<2, SkScalar, true>;
-  using StopColorArray = SkSTArray<2, SkColor, true>;
-  void collectColorStops(const SkSVGRenderContext&, StopPositionArray*, StopColorArray*) const;
-  SkColor resolveStopColor(const SkSVGRenderContext&, const SkSVGStop&) const;
+private:
+    using StopPositionArray = SkSTArray<2, SkScalar , true>;
+    using    StopColorArray = SkSTArray<2, SkColor4f, true>;
+    void collectColorStops(const SkSVGRenderContext&, StopPositionArray*, StopColorArray*) const;
+    SkColor4f resolveStopColor(const SkSVGRenderContext&, const SkSVGStop&) const;
 
-  using INHERITED = SkSVGHiddenContainer;
+    using INHERITED = SkSVGHiddenContainer;
 };
 
-#endif  // SkSVGGradient_DEFINED
+#endif // SkSVGGradient_DEFINED

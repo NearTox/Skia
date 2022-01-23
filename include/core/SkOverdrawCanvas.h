@@ -22,6 +22,7 @@ class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
   SkOverdrawCanvas(SkCanvas*);
 
   void onDrawTextBlob(const SkTextBlob*, SkScalar, SkScalar, const SkPaint&) override;
+  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
   void onDrawPatch(
       const SkPoint[12], const SkColor[4], const SkPoint[4], SkBlendMode, const SkPaint&) override;
   void onDrawPaint(const SkPaint&) override;
@@ -35,20 +36,7 @@ class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
   void onDrawPoints(PointMode, size_t, const SkPoint[], const SkPaint&) override;
   void onDrawVerticesObject(const SkVertices*, SkBlendMode, const SkPaint&) override;
   void onDrawPath(const SkPath&, const SkPaint&) override;
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-  void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
-  void onDrawImageRect(
-      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
-      SrcRectConstraint) override;
-  void onDrawImageLattice(
-      const SkImage*, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
-  void onDrawAtlas(
-      const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
-      const SkRect*, const SkPaint*) override;
-  void onDrawEdgeAAImageSet(
-      const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
-      SrcRectConstraint) override;
-#endif
+
   void onDrawImage2(
       const SkImage*, SkScalar, SkScalar, const SkSamplingOptions&, const SkPaint*) override;
   void onDrawImageRect2(
@@ -74,9 +62,6 @@ class SK_API SkOverdrawCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> {
       const SkPaint*, SrcRectConstraint) override;
 
  private:
-  void drawPosTextCommon(
-      const SkGlyphID[], int, const SkScalar[], int, const SkPoint&, const SkFont&, const SkPaint&);
-
   inline SkPaint overdrawPaint(const SkPaint& paint);
 
   SkPaint fPaint;

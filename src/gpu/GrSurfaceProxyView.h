@@ -17,22 +17,23 @@
 
 class GrSurfaceProxyView {
  public:
-  GrSurfaceProxyView() = default;
+  GrSurfaceProxyView() noexcept = default;
 
-  GrSurfaceProxyView(sk_sp<GrSurfaceProxy> proxy, GrSurfaceOrigin origin, GrSwizzle swizzle)
+  GrSurfaceProxyView(
+      sk_sp<GrSurfaceProxy> proxy, GrSurfaceOrigin origin, GrSwizzle swizzle) noexcept
       : fProxy(std::move(proxy)), fOrigin(origin), fSwizzle(swizzle) {}
 
   // This entry point is used when we don't care about the origin or the swizzle.
-  explicit GrSurfaceProxyView(sk_sp<GrSurfaceProxy> proxy)
+  explicit GrSurfaceProxyView(sk_sp<GrSurfaceProxy> proxy) noexcept
       : fProxy(std::move(proxy)), fOrigin(kTopLeft_GrSurfaceOrigin) {}
 
-  GrSurfaceProxyView(GrSurfaceProxyView&& view) = default;
-  GrSurfaceProxyView(const GrSurfaceProxyView&) = default;
+  GrSurfaceProxyView(GrSurfaceProxyView&& view) noexcept = default;
+  GrSurfaceProxyView(const GrSurfaceProxyView&) noexcept = default;
 
-  operator bool() const { return SkToBool(fProxy.get()); }
+  operator bool() const noexcept { return SkToBool(fProxy.get()); }
 
-  GrSurfaceProxyView& operator=(const GrSurfaceProxyView&) = default;
-  GrSurfaceProxyView& operator=(GrSurfaceProxyView&& view) = default;
+  GrSurfaceProxyView& operator=(const GrSurfaceProxyView&) noexcept = default;
+  GrSurfaceProxyView& operator=(GrSurfaceProxyView&& view) noexcept = default;
 
   bool operator==(const GrSurfaceProxyView& view) const {
     return fProxy->uniqueID() == view.fProxy->uniqueID() && fOrigin == view.fOrigin &&
@@ -44,8 +45,15 @@ class GrSurfaceProxyView {
   int height() const { return this->proxy()->height(); }
   SkISize dimensions() const { return this->proxy()->dimensions(); }
 
-  GrSurfaceProxy* proxy() const { return fProxy.get(); }
-  sk_sp<GrSurfaceProxy> refProxy() const { return fProxy; }
+  GrMipmapped mipmapped() const {
+    if (const GrTextureProxy* proxy = this->asTextureProxy()) {
+      return proxy->mipmapped();
+    }
+    return GrMipmapped::kNo;
+  }
+
+  GrSurfaceProxy* proxy() const noexcept { return fProxy.get(); }
+  sk_sp<GrSurfaceProxy> refProxy() const noexcept { return fProxy; }
 
   GrTextureProxy* asTextureProxy() const {
     if (!fProxy) {
@@ -68,8 +76,8 @@ class GrSurfaceProxyView {
     return sk_ref_sp<GrRenderTargetProxy>(this->asRenderTargetProxy());
   }
 
-  GrSurfaceOrigin origin() const { return fOrigin; }
-  GrSwizzle swizzle() const { return fSwizzle; }
+  GrSurfaceOrigin origin() const noexcept { return fOrigin; }
+  GrSwizzle swizzle() const noexcept { return fSwizzle; }
 
   void concatSwizzle(GrSwizzle swizzle) { fSwizzle = GrSwizzle::Concat(fSwizzle, swizzle); }
 
@@ -88,15 +96,22 @@ class GrSurfaceProxyView {
   static GrSurfaceProxyView Copy(
       GrRecordingContext* context, GrSurfaceProxyView src, GrMipmapped mipMapped, SkIRect srcRect,
       SkBackingFit fit, SkBudgeted budgeted) {
-    auto origin = src.origin();
-    auto* proxy = src.proxy();
-    auto copy = GrSurfaceProxy::Copy(context, proxy, origin, mipMapped, srcRect, fit, budgeted);
+    auto copy = GrSurfaceProxy::Copy(
+        context, src.refProxy(), src.origin(), mipMapped, srcRect, fit, budgeted);
+    return {std::move(copy), src.origin(), src.swizzle()};
+  }
+
+  static GrSurfaceProxyView Copy(
+      GrRecordingContext* rContext, GrSurfaceProxyView src, GrMipmapped mipMapped, SkBackingFit fit,
+      SkBudgeted budgeted) {
+    auto copy =
+        GrSurfaceProxy::Copy(rContext, src.refProxy(), src.origin(), mipMapped, fit, budgeted);
     return {std::move(copy), src.origin(), src.swizzle()};
   }
 
   // This does not reset the origin or swizzle, so the View can still be used to access those
   // properties associated with the detached proxy.
-  sk_sp<GrSurfaceProxy> detachProxy() { return std::move(fProxy); }
+  sk_sp<GrSurfaceProxy> detachProxy() noexcept { return std::move(fProxy); }
 
  private:
   sk_sp<GrSurfaceProxy> fProxy;

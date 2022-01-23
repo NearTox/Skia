@@ -220,11 +220,13 @@ public:
             blit.setColorFilter(SkColorFilters::Matrix(kFilter));
         }
 
+        auto sampling = scale > 1 ? SkSamplingOptions(SkFilterMode::kNearest)
+                                  : SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear);
+
         canvas->scale(scale, scale);
         canvas->drawImageRect(
             fLastRendered.get(), SkRect::MakeWH(kTileWidth, kTileHeight),
-            SkRect::MakeWH(kTileWidth, kTileHeight),
-            SkSamplingOptions(scale > 1.f ? kNone_SkFilterQuality : kMedium_SkFilterQuality), &blit,
+            SkRect::MakeWH(kTileWidth, kTileHeight), sampling, &blit,
             SkCanvas::kFast_SrcRectConstraint);
     }
 
@@ -481,14 +483,13 @@ private:
         SkFont font(nullptr, 12);
 
         if (gridX == 0) {
-            SkString name = shape->name();
-            SkScalar centering = name.size() * 4.f; // ad-hoc
+          SkScalar centering = shape->name().size() * 4.f;  // ad-hoc
 
-            canvas->save();
-            canvas->translate(-10.f, 4 * ShapeRenderer::kTileHeight + centering);
-            canvas->rotate(-90.f);
-            canvas->drawString(shape->name(), 0.f, 0.f, font, text);
-            canvas->restore();
+          canvas->save();
+          canvas->translate(-10.f, 4 * ShapeRenderer::kTileHeight + centering);
+          canvas->rotate(-90.f);
+          canvas->drawString(shape->name(), 0.f, 0.f, font, text);
+          canvas->restore();
         }
         if (drawNameLabels) {
             canvas->drawString(name, gridX * kZoomGridWidth, -10.f, font, text);

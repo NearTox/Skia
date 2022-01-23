@@ -59,9 +59,13 @@ class TextDevice : public SkNoPixelsDevice, public SkGlyphRunListPainter::Bitmap
     }
   }
 
- protected:
-  void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override {
-    fPainter.drawForBitmapDevice(glyphRunList, fOverdrawCanvas->getTotalMatrix(), this);
+  void drawBitmap(
+      const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkSamplingOptions&,
+      const SkPaint&) const override {}
+
+  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override {
+    SkASSERT(!glyphRunList.hasRSXForm());
+    fPainter.drawForBitmapDevice(glyphRunList, paint, fOverdrawCanvas->getTotalMatrix(), this);
   }
 
  private:
@@ -73,11 +77,17 @@ class TextDevice : public SkNoPixelsDevice, public SkGlyphRunListPainter::Bitmap
 void SkOverdrawCanvas::onDrawTextBlob(
     const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) {
   SkGlyphRunBuilder b;
+  auto glyphRunList = b.blobToGlyphRunList(*blob, {x, y});
+  this->onDrawGlyphRunList(glyphRunList, paint);
+}
+
+void SkOverdrawCanvas::onDrawGlyphRunList(
+    const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
   SkSurfaceProps props{0, kUnknown_SkPixelGeometry};
   this->getProps(&props);
   TextDevice device{this, props};
 
-  b.drawTextBlob(paint, *blob, {x, y}, &device);
+  device.drawGlyphRunList(glyphRunList, paint);
 }
 
 void SkOverdrawCanvas::onDrawPatch(
@@ -153,72 +163,6 @@ void SkOverdrawCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
   fList[0]->onDrawPath(path, fPaint);
 }
 
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-void SkOverdrawCanvas::onDrawImage(const SkImage* image, SkScalar x, SkScalar y, const SkPaint*) {
-  fList[0]->onDrawRect(SkRect::MakeXYWH(x, y, image->width(), image->height()), fPaint);
-}
-
-void SkOverdrawCanvas::onDrawImageRect(
-    const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint*, SrcRectConstraint) {
-  fList[0]->onDrawRect(dst, fPaint);
-}
-
-void SkOverdrawCanvas::onDrawImageLattice(
-    const SkImage* image, const Lattice& lattice, const SkRect& dst, const SkPaint*) {
-  SkIRect bounds;
-  Lattice latticePlusBounds = lattice;
-  if (!latticePlusBounds.fBounds) {
-    bounds = SkIRect::MakeWH(image->width(), image->height());
-    latticePlusBounds.fBounds = &bounds;
-  }
-
-  if (SkLatticeIter::Valid(image->width(), image->height(), latticePlusBounds)) {
-    SkLatticeIter iter(latticePlusBounds, dst);
-
-    SkRect unusedSrc, iterDst;
-    while (iter.next(&unusedSrc, &iterDst)) {
-      fList[0]->onDrawRect(iterDst, fPaint);
-    }
-  } else {
-    fList[0]->onDrawRect(dst, fPaint);
-  }
-}
-
-void SkOverdrawCanvas::onDrawAtlas(
-    const SkImage* image, const SkRSXform xform[], const SkRect texs[], const SkColor colors[],
-    int count, SkBlendMode mode, const SkRect* cull, const SkPaint* paint) {
-  SkPaint* paintPtr = &fPaint;
-  SkPaint storage;
-  if (paint) {
-    storage = this->overdrawPaint(*paint);
-    paintPtr = &storage;
-  }
-
-  fList[0]->onDrawAtlas(image, xform, texs, colors, count, mode, cull, paintPtr);
-}
-
-void SkOverdrawCanvas::onDrawEdgeAAImageSet(
-    const ImageSetEntry set[], int count, const SkPoint dstClips[],
-    const SkMatrix preViewMatrices[], const SkPaint* paint, SrcRectConstraint constraint) {
-  int clipIndex = 0;
-  for (int i = 0; i < count; ++i) {
-    if (set[i].fMatrixIndex >= 0) {
-      fList[0]->save();
-      fList[0]->concat(preViewMatrices[set[i].fMatrixIndex]);
-    }
-    if (set[i].fHasClip) {
-      fList[0]->onDrawPath(SkPath::Polygon(dstClips + clipIndex, 4, true), fPaint);
-      clipIndex += 4;
-    } else {
-      fList[0]->onDrawRect(set[i].fDstRect, fPaint);
-    }
-    if (set[i].fMatrixIndex >= 0) {
-      fList[0]->restore();
-    }
-  }
-}
-#endif
-
 void SkOverdrawCanvas::onDrawImage2(
     const SkImage* image, SkScalar x, SkScalar y, const SkSamplingOptions&, const SkPaint*) {
   fList[0]->onDrawRect(SkRect::MakeXYWH(x, y, image->width(), image->height()), fPaint);
@@ -242,8 +186,8 @@ void SkOverdrawCanvas::onDrawImageLattice2(
   if (SkLatticeIter::Valid(image->width(), image->height(), latticePlusBounds)) {
     SkLatticeIter iter(latticePlusBounds, dst);
 
-    SkRect dummy, iterDst;
-    while (iter.next(&dummy, &iterDst)) {
+    SkRect ignored, iterDst;
+    while (iter.next(&ignored, &iterDst)) {
       fList[0]->onDrawRect(iterDst, fPaint);
     }
   } else {

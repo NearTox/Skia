@@ -71,7 +71,7 @@ struct Decoration {
   TextDecorationStyle fStyle;
   SkScalar fThicknessMultiplier;
 
-  bool operator==(const Decoration& other) const {
+  bool operator==(const Decoration& other) const noexcept {
     return this->fType == other.fType && this->fMode == other.fMode &&
            this->fColor == other.fColor && this->fStyle == other.fStyle &&
            this->fThicknessMultiplier == other.fThicknessMultiplier;
@@ -217,6 +217,9 @@ class TextStyle {
   void setHeightOverride(bool heightOverride) { fHeightOverride = heightOverride; }
   bool getHeightOverride() const { return fHeightOverride; }
 
+  void setHalfLeading(bool halfLeading) { fHalfLeading = halfLeading; }
+  bool getHalfLeading() const { return fHalfLeading; }
+
   void setLetterSpacing(SkScalar letterSpacing) { fLetterSpacing = letterSpacing; }
   SkScalar getLetterSpacing() const { return fLetterSpacing; }
 
@@ -239,6 +242,8 @@ class TextStyle {
   void setPlaceholder() { fIsPlaceholder = true; }
 
  private:
+  static const std::vector<SkString> kDefaultFontFamilies;
+
   Decoration fDecoration = {
       TextDecoration::kNoDecoration,
       // TODO: switch back to kGaps when (if) switching flutter to skparagraph
@@ -251,10 +256,14 @@ class TextStyle {
 
   SkFontStyle fFontStyle;
 
-  std::vector<SkString> fFontFamilies = {SkString(DEFAULT_FONT_FAMILY)};
+  std::vector<SkString> fFontFamilies = kDefaultFontFamilies;
+
   SkScalar fFontSize = 14.0;
   SkScalar fHeight = 1.0;
   bool fHeightOverride = false;
+  // true: half leading.
+  // false: scale ascent/descent with fHeight.
+  bool fHalfLeading = false;
   SkString fLocale = {};
   SkScalar fLetterSpacing = 0.0;
   SkScalar fWordSpacing = 0.0;

@@ -48,7 +48,7 @@ class SK_API SkRemotableFontIdentitySet : public SkRefCnt {
   friend SkRemotableFontIdentitySet* sk_remotable_font_identity_set_new();
 
   int fCount;
-  SkAutoTMalloc<SkFontIdentity> fData;
+  SkAutoTArray<SkFontIdentity> fData;
 
   using INHERITED = SkRefCnt;
 };

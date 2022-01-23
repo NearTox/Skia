@@ -95,7 +95,6 @@ bool SkShaderMF::filterMask(
 
   SkPaint paint;
   paint.setShader(fShader);
-  paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
   // this blendmode is the trick: we only draw the shader where the mask is
   paint.setBlendMode(SkBlendMode::kSrcIn);
 

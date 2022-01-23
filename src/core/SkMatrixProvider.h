@@ -13,20 +13,22 @@
 
 class SkMatrixProvider {
  public:
-  SkMatrixProvider(const SkMatrix& localToDevice)
+  SkMatrixProvider(const SkMatrix& localToDevice) noexcept
       : fLocalToDevice(localToDevice), fLocalToDevice33(localToDevice) {}
 
-  SkMatrixProvider(const SkM44& localToDevice)
+  SkMatrixProvider(const SkM44& localToDevice) noexcept
       : fLocalToDevice(localToDevice), fLocalToDevice33(localToDevice.asM33()) {}
 
-  virtual ~SkMatrixProvider() {}
+  virtual ~SkMatrixProvider() = default;
 
   // These should return the "same" matrix, as either a 3x3 or 4x4. Most sites in Skia still
   // call localToDevice, and operate on SkMatrix.
-  const SkMatrix& localToDevice() const { return fLocalToDevice33; }
-  const SkM44& localToDevice44() const { return fLocalToDevice; }
+  const SkMatrix& localToDevice() const noexcept { return fLocalToDevice33; }
+  const SkM44& localToDevice44() const noexcept { return fLocalToDevice; }
 
   virtual bool getLocalToMarker(uint32_t id, SkM44* localToMarker) const = 0;
+
+  virtual bool localToDeviceHitsPixelCenters() const = 0;
 
  private:
   friend class SkBaseDevice;
@@ -37,12 +39,17 @@ class SkMatrixProvider {
 
 class SkOverrideDeviceMatrixProvider : public SkMatrixProvider {
  public:
-  SkOverrideDeviceMatrixProvider(const SkMatrixProvider& parent, const SkMatrix& localToDevice)
+  SkOverrideDeviceMatrixProvider(
+      const SkMatrixProvider& parent, const SkMatrix& localToDevice) noexcept
       : SkMatrixProvider(localToDevice), fParent(parent) {}
 
   bool getLocalToMarker(uint32_t id, SkM44* localToMarker) const override {
     return fParent.getLocalToMarker(id, localToMarker);
   }
+
+  // We've replaced parent's localToDevice matrix,
+  // so we can't guarantee localToDevice() hits pixel centers anymore.
+  bool localToDeviceHitsPixelCenters() const override { return false; }
 
  private:
   const SkMatrixProvider& fParent;
@@ -50,7 +57,7 @@ class SkOverrideDeviceMatrixProvider : public SkMatrixProvider {
 
 class SkPostTranslateMatrixProvider : public SkMatrixProvider {
  public:
-  SkPostTranslateMatrixProvider(const SkMatrixProvider& parent, SkScalar dx, SkScalar dy)
+  SkPostTranslateMatrixProvider(const SkMatrixProvider& parent, SkScalar dx, SkScalar dy) noexcept
       : SkMatrixProvider(SkM44::Translate(dx, dy) * parent.localToDevice44()), fParent(parent) {}
 
   // Assume that the post-translation doesn't apply to any marked matrices
@@ -58,13 +65,16 @@ class SkPostTranslateMatrixProvider : public SkMatrixProvider {
     return fParent.getLocalToMarker(id, localToMarker);
   }
 
+  // parent.localToDevice() is folded into our localToDevice().
+  bool localToDeviceHitsPixelCenters() const override { return true; }
+
  private:
   const SkMatrixProvider& fParent;
 };
 
 class SkPreConcatMatrixProvider : public SkMatrixProvider {
  public:
-  SkPreConcatMatrixProvider(const SkMatrixProvider& parent, const SkMatrix& preMatrix)
+  SkPreConcatMatrixProvider(const SkMatrixProvider& parent, const SkMatrix& preMatrix) noexcept
       : SkMatrixProvider(parent.localToDevice44() * SkM44(preMatrix)),
         fParent(parent),
         fPreMatrix(preMatrix) {}
@@ -79,6 +89,9 @@ class SkPreConcatMatrixProvider : public SkMatrixProvider {
     return false;
   }
 
+  // parent.localToDevice() is folded into our localToDevice().
+  bool localToDeviceHitsPixelCenters() const override { return true; }
+
  private:
   const SkMatrixProvider& fParent;
   const SkMatrix fPreMatrix;
@@ -86,9 +99,13 @@ class SkPreConcatMatrixProvider : public SkMatrixProvider {
 
 class SkSimpleMatrixProvider : public SkMatrixProvider {
  public:
-  SkSimpleMatrixProvider(const SkMatrix& localToDevice) : SkMatrixProvider(localToDevice) {}
+  SkSimpleMatrixProvider(const SkMatrix& localToDevice) noexcept
+      : SkMatrixProvider(localToDevice) {}
 
   bool getLocalToMarker(uint32_t, SkM44*) const override { return false; }
+
+  // No trickiness to reason about here... we take this case to be axiomatically true.
+  bool localToDeviceHitsPixelCenters() const override { return true; }
 };
 
 #endif

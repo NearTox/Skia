@@ -9,9 +9,9 @@
 
 #include "include/gpu/GrDirectContext.h"
 #include "src/gpu/GrDirectContextPriv.h"
+#include "src/gpu/GrGpuBuffer.h"
 #include "src/gpu/GrProxyProvider.h"
 #include "src/gpu/GrResourceCache.h"
-#include "src/gpu/GrSurfaceDrawContext.h"
 
 GrThreadSafeCache::VertexData::~VertexData() { this->reset(); }
 
@@ -306,10 +306,10 @@ GrThreadSafeCache::CreateLazyView(
     GrDirectContext* dContext, GrColorType origCT, SkISize dimensions, GrSurfaceOrigin origin,
     SkBackingFit fit) {
   GrProxyProvider* proxyProvider = dContext->priv().proxyProvider();
+  const GrCaps* caps = dContext->priv().caps();
 
   constexpr int kSampleCnt = 1;
-  auto [newCT, format] =
-      GrSurfaceFillContext::GetFallbackColorTypeAndFormat(dContext, origCT, kSampleCnt);
+  auto [newCT, format] = caps->getFallbackColorTypeAndFormat(origCT, kSampleCnt);
 
   if (newCT == GrColorType::kUnknown) {
     return {GrSurfaceProxyView(nullptr), nullptr};
@@ -334,7 +334,7 @@ GrThreadSafeCache::CreateLazyView(
       /* wrapsVkSecondaryCB */ false, GrSurfaceProxy::UseAllocator::kYes);
 
   // TODO: It seems like this 'newCT' usage should be 'origCT' but this is
-  // what GrSurfaceDrawContext::MakeWithFallback does
+  // what skgpu::v1::SurfaceDrawContext::MakeWithFallback does
   GrSwizzle swizzle = dContext->priv().caps()->getReadSwizzle(format, newCT);
 
   return {{std::move(proxy), origin, swizzle}, std::move(trampoline)};

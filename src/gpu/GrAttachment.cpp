@@ -14,19 +14,30 @@
 #include "src/gpu/GrGpu.h"
 
 size_t GrAttachment::onGpuMemorySize() const {
-  GrBackendFormat format = this->backendFormat();
-  SkImage::CompressionType compression = GrBackendFormatToCompressionType(format);
+  // The GrTexture[RenderTarget] is built up by a bunch of attachments each of which are their
+  // own GrGpuResource. Ideally the GrRenderTarget would not be a GrGpuResource and the GrTexture
+  // would just merge with the new GrSurface/Attachment world. Then we could just depend on each
+  // attachment to give its own size since we don't have GrGpuResources owning other
+  // GrGpuResources. Until we get to that point we need to live in some hybrid world. We will let
+  // the msaa and stencil attachments track their own size because they do get cached separately.
+  // For all GrTexture* based things we will continue to to use the GrTexture* to report size and
+  // the owned attachments will have no size and be uncached.
+  if (!(fSupportedUsages & UsageFlags::kTexture)) {
+    GrBackendFormat format = this->backendFormat();
+    SkImage::CompressionType compression = GrBackendFormatToCompressionType(format);
 
-  uint64_t size = GrNumBlocks(compression, this->dimensions());
-  size *= GrBackendFormatBytesPerBlock(this->backendFormat());
-  size *= this->numSamples();
-  return size;
+    uint64_t size = GrNumBlocks(compression, this->dimensions());
+    size *= GrBackendFormatBytesPerBlock(this->backendFormat());
+    size *= this->numSamples();
+    return size;
+  }
+  return 0;
 }
 
 static void build_key(
     GrResourceKey::Builder* builder, const GrCaps& caps, const GrBackendFormat& format,
     SkISize dimensions, GrAttachment::UsageFlags requiredUsage, int sampleCnt,
-    GrProtected isProtected) {
+    GrMipmapped mipmapped, GrProtected isProtected) {
   SkASSERT(!dimensions.isEmpty());
 
   SkASSERT(static_cast<uint32_t>(isProtected) <= 1);
@@ -45,29 +56,27 @@ static void build_key(
 
 void GrAttachment::ComputeSharedAttachmentUniqueKey(
     const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, UsageFlags requiredUsage,
-    int sampleCnt, GrProtected isProtected, GrUniqueKey* key) {
+    int sampleCnt, GrMipmapped mipmapped, GrProtected isProtected, GrUniqueKey* key) {
   static const GrUniqueKey::Domain kDomain = GrUniqueKey::GenerateDomain();
 
   GrUniqueKey::Builder builder(key, kDomain, 5);
-  build_key(&builder, caps, format, dimensions, requiredUsage, sampleCnt, isProtected);
+  build_key(&builder, caps, format, dimensions, requiredUsage, sampleCnt, mipmapped, isProtected);
 }
 
 void GrAttachment::ComputeScratchKey(
     const GrCaps& caps, const GrBackendFormat& format, SkISize dimensions, UsageFlags requiredUsage,
-    int sampleCnt, GrProtected isProtected, GrScratchKey* key) {
+    int sampleCnt, GrMipmapped mipmapped, GrProtected isProtected, GrScratchKey* key) {
   static const GrScratchKey::ResourceType kType = GrScratchKey::GenerateResourceType();
 
-  SkASSERT(sampleCnt > 1);
-
   GrScratchKey::Builder builder(key, kType, 5);
-  build_key(&builder, caps, format, dimensions, requiredUsage, sampleCnt, isProtected);
+  build_key(&builder, caps, format, dimensions, requiredUsage, sampleCnt, mipmapped, isProtected);
 }
 
 void GrAttachment::computeScratchKey(GrScratchKey* key) const {
-  if (fSupportedUsages & UsageFlags::kColorAttachment) {
+  if (!SkToBool(fSupportedUsages & UsageFlags::kStencilAttachment)) {
     auto isProtected = this->isProtected() ? GrProtected::kYes : GrProtected::kNo;
     ComputeScratchKey(
         *this->getGpu()->caps(), this->backendFormat(), this->dimensions(), fSupportedUsages,
-        this->numSamples(), isProtected, key);
+        this->numSamples(), this->mipmapped(), isProtected, key);
   }
 }

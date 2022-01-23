@@ -4,10 +4,10 @@
 
 #include <functional>  // std::function
 #include <queue>
+#include "include/core/SkSpan.h"
 #include "modules/skparagraph/include/TextStyle.h"
 #include "modules/skparagraph/src/ParagraphImpl.h"
 #include "modules/skparagraph/src/Run.h"
-#include "src/core/SkSpan.h"
 
 namespace skia {
 namespace textlayout {
@@ -18,6 +18,7 @@ class OneLineShaper : public SkShaper::RunHandler {
   explicit OneLineShaper(ParagraphImpl* paragraph)
       : fParagraph(paragraph),
         fHeight(0.0f),
+        fUseHalfLeading(false),
         fAdvance(SkPoint::Make(0.0f, 0.0f)),
         fUnresolvedGlyphs(0),
         fUniqueRunId(paragraph->fRuns.size()) {}
@@ -61,7 +62,7 @@ class OneLineShaper : public SkShaper::RunHandler {
 #ifdef SK_DEBUG
   void printState();
 #endif
-  void finish(TextRange text, SkScalar height, SkScalar& advanceX);
+  void finish(const Block& block, SkScalar height, SkScalar& advanceX);
 
   void beginLine() override {}
   void runInfo(const RunInfo&) override {}
@@ -70,7 +71,8 @@ class OneLineShaper : public SkShaper::RunHandler {
 
   Buffer runBuffer(const RunInfo& info) override {
     fCurrentRun = std::make_shared<Run>(
-        fParagraph, info, fCurrentText.start, fHeight, ++fUniqueRunId, fAdvance.fX);
+        fParagraph, info, fCurrentText.start, fHeight, fUseHalfLeading, ++fUniqueRunId,
+        fAdvance.fX);
     return fCurrentRun->newRunBuffer();
   }
 
@@ -89,6 +91,7 @@ class OneLineShaper : public SkShaper::RunHandler {
   ParagraphImpl* fParagraph;
   TextRange fCurrentText;
   SkScalar fHeight;
+  bool fUseHalfLeading;
   SkVector fAdvance;
   size_t fUnresolvedGlyphs;
   size_t fUniqueRunId;

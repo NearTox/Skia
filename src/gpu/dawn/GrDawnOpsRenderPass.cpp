@@ -56,19 +56,19 @@ wgpu::RenderPassEncoder GrDawnOpsRenderPass::beginRenderPass(
 
   const float* c = fColorInfo.fClearColor.data();
 
-  wgpu::RenderPassColorAttachmentDescriptor colorAttachment;
-  colorAttachment.attachment = static_cast<GrDawnRenderTarget*>(fRenderTarget)->textureView();
+  wgpu::RenderPassColorAttachment colorAttachment;
+  colorAttachment.view = static_cast<GrDawnRenderTarget*>(fRenderTarget)->textureView();
   colorAttachment.resolveTarget = nullptr;
   colorAttachment.clearColor = {c[0], c[1], c[2], c[3]};
   colorAttachment.loadOp = colorOp;
   colorAttachment.storeOp = wgpu::StoreOp::Store;
-  wgpu::RenderPassColorAttachmentDescriptor* colorAttachments = {&colorAttachment};
+  wgpu::RenderPassColorAttachment* colorAttachments = {&colorAttachment};
   wgpu::RenderPassDescriptor renderPassDescriptor;
   renderPassDescriptor.colorAttachmentCount = 1;
   renderPassDescriptor.colorAttachments = colorAttachments;
   if (stencilAttachment) {
-    wgpu::RenderPassDepthStencilAttachmentDescriptor depthStencilAttachment;
-    depthStencilAttachment.attachment = stencilAttachment->view();
+    wgpu::RenderPassDepthStencilAttachment depthStencilAttachment;
+    depthStencilAttachment.view = stencilAttachment->view();
     depthStencilAttachment.depthLoadOp = stencilOp;
     depthStencilAttachment.stencilLoadOp = stencilOp;
     depthStencilAttachment.clearDepth = 1.0f;
@@ -82,7 +82,7 @@ wgpu::RenderPassEncoder GrDawnOpsRenderPass::beginRenderPass(
   return fEncoder.BeginRenderPass(&renderPassDescriptor);
 }
 
-GrDawnOpsRenderPass::~GrDawnOpsRenderPass() {}
+GrDawnOpsRenderPass::~GrDawnOpsRenderPass() = default;
 
 GrGpu* GrDawnOpsRenderPass::gpu() { return fGpu; }
 
@@ -121,7 +121,7 @@ void GrDawnOpsRenderPass::applyState(GrDawnProgram* program, const GrProgramInfo
   GrXferProcessor::BlendInfo blendInfo = pipeline.getXferProcessor().getBlendInfo();
   const float* c = blendInfo.fBlendConstant.vec();
   wgpu::Color color{c[0], c[1], c[2], c[3]};
-  fPassEncoder.SetBlendColor(&color);
+  fPassEncoder.SetBlendConstant(&color);
   if (!programInfo.pipeline().isScissorTestEnabled()) {
     // "Disable" scissor by setting it to the full pipeline bounds.
     SkIRect rect = SkIRect::MakeWH(fRenderTarget->width(), fRenderTarget->height());
@@ -134,13 +134,16 @@ void GrDawnOpsRenderPass::onEnd() { fPassEncoder.EndPass(); }
 bool GrDawnOpsRenderPass::onBindPipeline(
     const GrProgramInfo& programInfo, const SkRect& drawBounds) {
   fCurrentProgram = fGpu->getOrCreateRenderPipeline(fRenderTarget, programInfo);
+  if (!fCurrentProgram) {
+    return false;
+  }
   this->applyState(fCurrentProgram.get(), programInfo);
   return true;
 }
 
 void GrDawnOpsRenderPass::onSetScissorRect(const SkIRect& scissor) {
-  // Higher-level GrSurfaceDrawContext and clips should have already ensured draw bounds are
-  // restricted to the render target.
+  // Higher-level skgpu::v1::SurfaceDrawContext and clips should have already ensured draw
+  // bounds are restricted to the render target.
   SkASSERT(SkIRect::MakeSize(fRenderTarget->dimensions()).contains(scissor));
   auto nativeScissorRect = GrNativeRect::MakeRelativeTo(fOrigin, fRenderTarget->height(), scissor);
   fPassEncoder.SetScissorRect(
@@ -149,9 +152,9 @@ void GrDawnOpsRenderPass::onSetScissorRect(const SkIRect& scissor) {
 }
 
 bool GrDawnOpsRenderPass::onBindTextures(
-    const GrPrimitiveProcessor& primProc, const GrSurfaceProxy* const primProcTextures[],
+    const GrGeometryProcessor& geomProc, const GrSurfaceProxy* const geomProcTextures[],
     const GrPipeline& pipeline) {
-  auto bindGroup = fCurrentProgram->setTextures(fGpu, primProc, pipeline, primProcTextures);
+  auto bindGroup = fCurrentProgram->setTextures(fGpu, geomProc, pipeline, geomProcTextures);
   if (bindGroup) {
     fPassEncoder.SetBindGroup(1, bindGroup, 0, nullptr);
   }
@@ -171,7 +174,7 @@ void GrDawnOpsRenderPass::onBindBuffers(
   }
   if (indexBuffer) {
     wgpu::Buffer index = static_cast<const GrDawnBuffer*>(indexBuffer.get())->get();
-    fPassEncoder.SetIndexBufferWithFormat(index, wgpu::IndexFormat::Uint16);
+    fPassEncoder.SetIndexBuffer(index, wgpu::IndexFormat::Uint16);
   }
 }
 

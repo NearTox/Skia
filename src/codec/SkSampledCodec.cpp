@@ -13,8 +13,7 @@
 #include "src/codec/SkSampler.h"
 #include "src/core/SkMathPriv.h"
 
-SkSampledCodec::SkSampledCodec(SkCodec* codec, ExifOrientationBehavior behavior)
-    : INHERITED(codec, behavior) {}
+SkSampledCodec::SkSampledCodec(SkCodec* codec) : INHERITED(codec) {}
 
 SkISize SkSampledCodec::accountForNativeScaling(int* sampleSizePtr, int* nativeSampleSize) const {
   SkISize preSampledSize = this->codec()->dimensions();

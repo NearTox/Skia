@@ -63,5 +63,8 @@
     <ClCompile Include="skottie\src\layers\shapelayer\PuckerBloat.cpp" />
     <ClCompile Include="skottie\src\effects\DisplacementMapEffect.cpp" />
     <ClCompile Include="skottie\src\effects\BlackAndWhiteEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\FractalNoiseEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\SphereEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\ThresholdEffect.cpp" />
   </ItemGroup>
 </Project>

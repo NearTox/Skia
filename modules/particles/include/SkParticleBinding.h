@@ -10,10 +10,11 @@
 
 #include "include/core/SkString.h"
 #include "modules/particles/include/SkReflected.h"
-#include "src/sksl/SkSLExternalFunction.h"
+#include "src/sksl/ir/SkSLExternalFunction.h"
 
 #include <memory>
 
+class SkArenaAlloc;
 class SkParticleEffect;
 class SkParticleEffectParams;
 
@@ -25,13 +26,24 @@ namespace SkSL {
 class Compiler;
 }  // namespace SkSL
 
-class SkParticleExternalValue : public SkSL::ExternalFunction {
+namespace skvm {
+struct Uniforms;
+}  // namespace skvm
+
+class SkParticleExternalFunction : public SkSL::ExternalFunction {
  public:
-  SkParticleExternalValue(const char* name, SkSL::Compiler& compiler, const SkSL::Type& type)
-      : SkSL::ExternalFunction(name, type), fCompiler(compiler) {}
+  SkParticleExternalFunction(
+      const char* name, SkSL::Compiler& compiler, const SkSL::Type& type, skvm::Uniforms* uniforms,
+      SkArenaAlloc* alloc)
+      : SkSL::ExternalFunction(name, type),
+        fCompiler(compiler),
+        fUniforms(uniforms),
+        fAlloc(alloc) {}
 
  protected:
   SkSL::Compiler& fCompiler;
+  skvm::Uniforms* fUniforms;
+  SkArenaAlloc* fAlloc;
 };
 
 class SkParticleBinding : public SkReflected {
@@ -42,7 +54,8 @@ class SkParticleBinding : public SkReflected {
 
   void visitFields(SkFieldVisitor* v) override;
 
-  virtual std::unique_ptr<SkParticleExternalValue> toValue(SkSL::Compiler&) = 0;
+  virtual std::unique_ptr<SkParticleExternalFunction> toFunction(
+      SkSL::Compiler&, skvm::Uniforms*, SkArenaAlloc*) = 0;
   virtual void prepare(const skresources::ResourceProvider*) = 0;
 
   static void RegisterBindingTypes();

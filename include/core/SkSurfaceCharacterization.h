@@ -143,6 +143,10 @@ class SK_API SkSurfaceCharacterization {
         fVulkanSecondaryCBCompatible(vulkanSecondaryCBCompatible),
         fIsProtected(isProtected),
         fSurfaceProps(surfaceProps) {
+    if (fSurfaceProps.flags() & SkSurfaceProps::kDynamicMSAA_Flag) {
+      // Dynamic MSAA is not currently supported with DDL.
+      *this = {};
+    }
     SkDEBUGCODE(this->validate());
   }
 
@@ -153,21 +157,25 @@ class SK_API SkSurfaceCharacterization {
       VkRTSupportsInputAttachment vkRTSupportsInputAttachment,
       VulkanSecondaryCBCompatible vulkanSecondaryCBCompatible, GrProtected isProtected,
       const SkSurfaceProps& surfaceProps) {
-    fContextInfo = contextInfo;
-    fCacheMaxResourceBytes = cacheMaxResourceBytes;
+    if (surfaceProps.flags() & SkSurfaceProps::kDynamicMSAA_Flag) {
+      // Dynamic MSAA is not currently supported with DDL.
+      *this = {};
+    } else {
+      fContextInfo = contextInfo;
+      fCacheMaxResourceBytes = cacheMaxResourceBytes;
 
-    fImageInfo = ii;
-    fBackendFormat = backendFormat;
-    fOrigin = origin;
-    fSampleCnt = sampleCnt;
-    fIsTextureable = isTextureable;
-    fIsMipMapped = isMipMapped;
-    fUsesGLFBO0 = usesGLFBO0;
-    fVkRTSupportsInputAttachment = vkRTSupportsInputAttachment;
-    fVulkanSecondaryCBCompatible = vulkanSecondaryCBCompatible;
-    fIsProtected = isProtected;
-    fSurfaceProps = surfaceProps;
-
+      fImageInfo = ii;
+      fBackendFormat = backendFormat;
+      fOrigin = origin;
+      fSampleCnt = sampleCnt;
+      fIsTextureable = isTextureable;
+      fIsMipMapped = isMipMapped;
+      fUsesGLFBO0 = usesGLFBO0;
+      fVkRTSupportsInputAttachment = vkRTSupportsInputAttachment;
+      fVulkanSecondaryCBCompatible = vulkanSecondaryCBCompatible;
+      fIsProtected = isProtected;
+      fSurfaceProps = surfaceProps;
+    }
     SkDEBUGCODE(this->validate());
   }
 

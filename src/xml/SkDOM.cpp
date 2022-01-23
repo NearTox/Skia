@@ -67,7 +67,7 @@ struct SkDOMNode {
 
 SkDOM::SkDOM() : fAlloc(kMinChunkSize), fRoot(nullptr) {}
 
-SkDOM::~SkDOM() {}
+SkDOM::~SkDOM() = default;
 
 const SkDOM::Node* SkDOM::getRootNode() const { return fRoot; }
 
@@ -172,11 +172,11 @@ const char* SkDOM::AttrIter::next(const char** value) {
 #include "include/private/SkTDArray.h"
 #include "src/xml/SkXMLParser.h"
 
-static char* dupstr(SkArenaAlloc* chunk, const char src[]) {
+static char* dupstr(SkArenaAlloc* chunk, const char src[], size_t srcLen) {
   SkASSERT(chunk && src);
-  size_t len = strlen(src);
-  char* dst = chunk->makeArrayDefault<char>(len + 1);
-  memcpy(dst, src, len + 1);
+  char* dst = chunk->makeArrayDefault<char>(srcLen + 1);
+  memcpy(dst, src, srcLen);
+  dst[srcLen] = '\0';
   return dst;
 }
 
@@ -222,14 +222,14 @@ class SkDOMParser : public SkXMLParser {
   }
 
   bool onStartElement(const char elem[]) override {
-    this->startCommon(elem, SkDOM::kElement_Type);
+    this->startCommon(elem, strlen(elem), SkDOM::kElement_Type);
     return false;
   }
 
   bool onAddAttribute(const char name[], const char value[]) override {
     SkDOM::Attr* attr = fAttrs.append();
-    attr->fName = dupstr(fAlloc, name);
-    attr->fValue = dupstr(fAlloc, value);
+    attr->fName = dupstr(fAlloc, name, strlen(name));
+    attr->fValue = dupstr(fAlloc, value, strlen(value));
     return false;
   }
 
@@ -255,20 +255,19 @@ class SkDOMParser : public SkXMLParser {
   }
 
   bool onText(const char text[], int len) override {
-    SkString str(text, len);
-    this->startCommon(str.c_str(), SkDOM::kText_Type);
-    this->SkDOMParser::onEndElement(str.c_str());
+    this->startCommon(text, len, SkDOM::kText_Type);
+    this->SkDOMParser::onEndElement(fElemName);
 
     return false;
   }
 
  private:
-  void startCommon(const char elem[], SkDOM::Type type) {
+  void startCommon(const char elem[], size_t elemSize, SkDOM::Type type) {
     if (fLevel > 0 && fNeedToFlush) {
       this->flushAttributes();
     }
     fNeedToFlush = true;
-    fElemName = dupstr(fAlloc, elem);
+    fElemName = dupstr(fAlloc, elem, elemSize);
     fElemType = type;
     ++fLevel;
   }

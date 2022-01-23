@@ -32,13 +32,13 @@
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 
-void SkPixmap::reset() {
+void SkPixmap::reset() noexcept {
   fPixels = nullptr;
   fRowBytes = 0;
   fInfo = SkImageInfo::MakeUnknown();
 }
 
-void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) {
+void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept {
   if (addr) {
     SkASSERT(info.validRowBytes(rowBytes));
   }
@@ -47,7 +47,7 @@ void SkPixmap::reset(const SkImageInfo& info, const void* addr, size_t rowBytes)
   fInfo = info;
 }
 
-bool SkPixmap::reset(const SkMask& src) {
+bool SkPixmap::reset(const SkMask& src) noexcept {
   if (SkMask::kA8_Format == src.fFormat) {
     this->reset(
         SkImageInfo::MakeA8(src.fBounds.width(), src.fBounds.height()), src.fImage, src.fRowBytes);
@@ -124,6 +124,7 @@ float SkPixmap::getAlphaf(int x, int y) const {
     }
     case kRGBA_8888_SkColorType:
     case kBGRA_8888_SkColorType:
+    case kSRGBA_8888_SkColorType:
       value = static_cast<const uint8_t*>(srcPtr)[3] * (1.0f / 255);
       break;
     case kRGBA_1010102_SkColorType:
@@ -162,8 +163,8 @@ bool SkPixmap::readPixels(
 
   const void* srcPixels = this->addr(rec.fX, rec.fY);
   const SkImageInfo srcInfo = fInfo.makeDimensions(rec.fInfo.dimensions());
-  SkConvertPixels(rec.fInfo, rec.fPixels, rec.fRowBytes, srcInfo, srcPixels, this->rowBytes());
-  return true;
+  return SkConvertPixels(
+      rec.fInfo, rec.fPixels, rec.fRowBytes, srcInfo, srcPixels, this->rowBytes());
 }
 
 bool SkPixmap::erase(SkColor color, const SkIRect& subset) const {
@@ -225,11 +226,10 @@ bool SkPixmap::scalePixels(const SkPixmap& actualDst, const SkSamplingOptions& s
   }
   bitmap.setImmutable();  // Don't copy when we create an image.
 
-  SkMatrix scale = SkMatrix::MakeRectToRect(
-      SkRect::Make(src.bounds()), SkRect::Make(dst.bounds()), SkMatrix::kFill_ScaleToFit);
+  SkMatrix scale = SkMatrix::RectToRect(SkRect::Make(src.bounds()), SkRect::Make(dst.bounds()));
 
   sk_sp<SkShader> shader = SkImageShader::Make(
-      bitmap.asImage(), SkTileMode::kClamp, SkTileMode::kClamp, &sampling, &scale,
+      bitmap.asImage(), SkTileMode::kClamp, SkTileMode::kClamp, sampling, &scale,
       clampAsIfUnpremul);
 
   sk_sp<SkSurface> surface =
@@ -311,6 +311,26 @@ SkColor SkPixmap::getColor(int x, int y) const {
       uint32_t value = *this->addr32(x, y);
       SkPMColor c = SkSwizzle_RGBA_to_PMColor(value);
       return toColor(c);
+    }
+    case kSRGBA_8888_SkColorType: {
+      auto srgb_to_linear = [](float x) {
+        return (x <= 0.04045f) ? x * (1 / 12.92f)
+                               : sk_float_pow(x * (1 / 1.055f) + (0.055f / 1.055f), 2.4f);
+      };
+
+      uint32_t value = *this->addr32(x, y);
+      float r = ((value >> 0) & 0xff) * (1 / 255.0f), g = ((value >> 8) & 0xff) * (1 / 255.0f),
+            b = ((value >> 16) & 0xff) * (1 / 255.0f), a = ((value >> 24) & 0xff) * (1 / 255.0f);
+      r = srgb_to_linear(r);
+      g = srgb_to_linear(g);
+      b = srgb_to_linear(b);
+      if (a != 0 && needsUnpremul) {
+        r = SkTPin(r / a, 0.0f, 1.0f);
+        g = SkTPin(g / a, 0.0f, 1.0f);
+        b = SkTPin(b / a, 0.0f, 1.0f);
+      }
+      return (uint32_t)(r * 255.0f) << 16 | (uint32_t)(g * 255.0f) << 8 |
+             (uint32_t)(b * 255.0f) << 0 | (uint32_t)(a * 255.0f) << 24;
     }
     case kRGB_101010x_SkColorType: {
       uint32_t value = *this->addr32(x, y);
@@ -453,7 +473,8 @@ bool SkPixmap::computeIsOpaque() const {
       return true;
     }
     case kBGRA_8888_SkColorType:
-    case kRGBA_8888_SkColorType: {
+    case kRGBA_8888_SkColorType:
+    case kSRGBA_8888_SkColorType: {
       SkPMColor c = (SkPMColor)~0;
       for (int y = 0; y < height; ++y) {
         const SkPMColor* row = this->addr32(0, y);
@@ -539,7 +560,7 @@ static bool draw_orientation(const SkPixmap& dst, const SkPixmap& src, SkEncoded
   SkPaint p;
   p.setBlendMode(SkBlendMode::kSrc);
   surf->getCanvas()->concat(m);
-  surf->getCanvas()->drawImage(SkImage::MakeFromBitmap(bm), 0, 0, &p);
+  surf->getCanvas()->drawImage(SkImage::MakeFromBitmap(bm), 0, 0, SkSamplingOptions(), &p);
   return true;
 }
 

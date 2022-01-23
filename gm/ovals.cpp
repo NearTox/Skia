@@ -141,7 +141,7 @@ class OvalGM : public GM {
   void onDraw(SkCanvas* canvas) override {
     SkRandom rand(1);
     canvas->translate(20 * SK_Scalar1, 20 * SK_Scalar1);
-    SkRect oval = SkRect::MakeLTRB(-20, -30, 20, 30);
+    const SkRect kOval = SkRect::MakeLTRB(-20, -30, 20, 30);
 
     const SkScalar kXStart = 60.0f;
     const SkScalar kYStart = 80.0f;
@@ -169,8 +169,8 @@ class OvalGM : public GM {
         SkColor color = genColor(&rand);
         fPaints[i].setColor(color);
 
-        canvas->drawRect(oval, rectPaint);
-        canvas->drawOval(oval, fPaints[i]);
+        canvas->drawRect(kOval, rectPaint);
+        canvas->drawOval(kOval, fPaints[i]);
 
         canvas->restore();
 
@@ -264,8 +264,8 @@ class OvalGM : public GM {
       fPaints[i].setColor(color);
       fPaints[i].setShader(shader);
 
-      canvas->drawRect(oval, rectPaint);
-      canvas->drawOval(oval, fPaints[i]);
+      canvas->drawRect(kOval, rectPaint);
+      canvas->drawOval(kOval, fPaints[i]);
 
       fPaints[i].setShader(nullptr);
 

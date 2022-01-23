@@ -20,7 +20,7 @@
  */
 class GrDDLContext final : public GrRecordingContext {
  public:
-  GrDDLContext(sk_sp<GrContextThreadSafeProxy> proxy) : INHERITED(std::move(proxy)) {}
+  GrDDLContext(sk_sp<GrContextThreadSafeProxy> proxy) : INHERITED(std::move(proxy), true) {}
 
   ~GrDDLContext() override {}
 
@@ -42,11 +42,6 @@ class GrDDLContext final : public GrRecordingContext {
         this->backend() == GrBackendApi::kDawn) {
       // Currently Metal, Direct3D, and Dawn require a live renderTarget to
       // compute the key
-      return;
-    }
-
-    if (programInfo->requestedFeatures() & GrProcessor::CustomFeatures::kSampleLocations) {
-      // Sample locations require a live renderTarget to compute the key
       return;
     }
 
@@ -73,7 +68,7 @@ class GrDDLContext final : public GrRecordingContext {
     // All the programInfo data should be stored in the record-time arena so there is no
     // need to ref them here or to delete them in the destructor.
     ProgramInfoMap() : fMap(10) {}
-    ~ProgramInfoMap() {}
+    ~ProgramInfoMap() = default;
 
     // TODO: this is doing a lot of reallocating of the ProgramDesc! Once the program descs
     // are allocated in the record-time area there won't be a problem.

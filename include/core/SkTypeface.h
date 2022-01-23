@@ -45,18 +45,18 @@ typedef uint32_t SkFontTableTag;
 class SK_API SkTypeface : public SkWeakRefCnt {
  public:
   /** Returns the typeface's intrinsic style attributes. */
-  SkFontStyle fontStyle() const { return fStyle; }
+  SkFontStyle fontStyle() const noexcept { return fStyle; }
 
   /** Returns true if style() has the kBold bit set. */
-  bool isBold() const { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
+  bool isBold() const noexcept { return fStyle.weight() >= SkFontStyle::kSemiBold_Weight; }
 
   /** Returns true if style() has the kItalic bit set. */
-  bool isItalic() const { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
+  bool isItalic() const noexcept { return fStyle.slant() != SkFontStyle::kUpright_Slant; }
 
   /** Returns true if the typeface claims to be fixed-pitch.
    *  This is a style bit, advance widths may vary even if this returns true.
    */
-  bool isFixedPitch() const { return fIsFixedPitch; }
+  bool isFixedPitch() const noexcept { return fIsFixedPitch; }
 
   /** Copy into 'coordinates' (allocated by the caller) the design variation coordinates.
    *
@@ -89,7 +89,7 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   /** Return a 32bit value for this typeface, unique for the underlying font
       data. Will never return 0.
    */
-  SkFontID uniqueID() const { return fUniqueID; }
+  SkFontID uniqueID() const noexcept { return fUniqueID; }
 
   /** Return the uniqueID for the specified typeface. If the face is null,
       resolve it to the default font and return its uniqueID. Will never
@@ -177,6 +177,10 @@ class SK_API SkTypeface : public SkWeakRefCnt {
    *  @param glyphs returns the corresponding glyph IDs for each character.
    */
   void unicharsToGlyphs(const SkUnichar uni[], int count, SkGlyphID glyphs[]) const;
+
+  int textToGlyphs(
+      const void* text, size_t byteLength, SkTextEncoding encoding, SkGlyphID glyphs[],
+      int maxGlyphCount) const;
 
   /**
    *  Return the glyphID that corresponds to the specified unicode code-point
@@ -273,10 +277,10 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   };
   class LocalizedStrings {
    public:
-    LocalizedStrings() = default;
-    virtual ~LocalizedStrings() {}
+    constexpr LocalizedStrings() noexcept = default;
+    virtual ~LocalizedStrings() = default;
     virtual bool next(LocalizedString* localizedString) = 0;
-    void unref() { delete this; }
+    void unref() noexcept { delete this; }
 
    private:
     LocalizedStrings(const LocalizedStrings&) = delete;
@@ -342,9 +346,9 @@ class SK_API SkTypeface : public SkWeakRefCnt {
   virtual sk_sp<SkTypeface> onMakeClone(const SkFontArguments&) const = 0;
 
   /** Sets the fixedPitch bit. If used, must be called in the constructor. */
-  void setIsFixedPitch(bool isFixedPitch) { fIsFixedPitch = isFixedPitch; }
+  void setIsFixedPitch(bool isFixedPitch) noexcept { fIsFixedPitch = isFixedPitch; }
   /** Sets the font style. If used, must be called in the constructor. */
-  void setFontStyle(SkFontStyle style) { fStyle = style; }
+  void setFontStyle(SkFontStyle style) noexcept { fStyle = style; }
 
   // Must return a valid scaler context. It can not return nullptr.
   virtual std::unique_ptr<SkScalerContext> onCreateScalerContext(

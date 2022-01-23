@@ -26,11 +26,19 @@ class Literal<SKSL_FLOAT> final : public Expression {
  public:
   static constexpr Kind kExpressionKind = Kind::kFloatLiteral;
 
-  Literal(const Context& context, int offset, float value)
-      : Literal(offset, value, context.fTypes.fFloatLiteral.get()) {}
-
   Literal(int offset, float value, const Type* type)
       : INHERITED(offset, kExpressionKind, type), fValue(value) {}
+
+  // Makes a literal of $floatLiteral type.
+  static std::unique_ptr<FloatLiteral> Make(const Context& context, int offset, float value) {
+    return std::make_unique<FloatLiteral>(offset, value, context.fTypes.fFloatLiteral.get());
+  }
+
+  // Makes a literal of the specified floating-point type.
+  static std::unique_ptr<FloatLiteral> Make(int offset, float value, const Type* type) {
+    SkASSERT(type->isFloat());
+    return std::make_unique<FloatLiteral>(offset, value, type);
+  }
 
   float value() const { return fValue; }
 
@@ -55,10 +63,15 @@ class Literal<SKSL_FLOAT> final : public Expression {
                                                              : ComparisonResult::kNotEqual;
   }
 
-  SKSL_FLOAT getConstantFloat() const override { return this->value(); }
-
   std::unique_ptr<Expression> clone() const override {
     return std::make_unique<FloatLiteral>(fOffset, this->value(), &this->type());
+  }
+
+  bool allowsConstantSubexpressions() const override { return true; }
+
+  const Expression* getConstantSubexpression(int n) const override {
+    SkASSERT(n == 0);
+    return this;
   }
 
  private:

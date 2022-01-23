@@ -16,6 +16,7 @@
 #include "src/gpu/vk/GrVkPipelineState.h"
 #include "src/gpu/vk/GrVkRenderPass.h"
 
+class GrVkFramebuffer;
 class GrVkGpu;
 class GrVkImage;
 class GrVkRenderTarget;
@@ -32,10 +33,12 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   void onExecuteDrawable(std::unique_ptr<SkDrawable::GpuDrawHandler>) override;
 
   bool set(
-      GrRenderTarget*, GrAttachment*, GrSurfaceOrigin, const SkIRect& bounds,
+      GrRenderTarget*, sk_sp<GrVkFramebuffer>, GrSurfaceOrigin, const SkIRect& bounds,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
-      const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
-      GrXferBarrierFlags renderPassXferBarriers);
+      const GrOpsRenderPass::LoadAndStoreInfo& resolveInfo,
+      GrVkRenderPass::SelfDependencyFlags selfDepFlags,
+      GrVkRenderPass::LoadFromResolve loadFromResolve,
+      const SkTArray<GrSurfaceProxy*, true>& sampledProxies);
   void reset();
 
   void submit();
@@ -48,8 +51,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   bool init(
       const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
       const GrOpsRenderPass::LoadAndStoreInfo& resolveInfo,
-      const GrOpsRenderPass::StencilLoadAndStoreInfo&, std::array<float, 4> clearColor,
-      bool withResolve, bool withStencil);
+      const GrOpsRenderPass::StencilLoadAndStoreInfo&);
 
   // Called instead of init when we are drawing to a render target that already wraps a secondary
   // command buffer.
@@ -66,7 +68,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
   bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) override;
   void onSetScissorRect(const SkIRect&) override;
   bool onBindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrGeometryProcessor&, const GrSurfaceProxy* const geomProcTextures[],
       const GrPipeline&) override;
   void onBindBuffers(
       sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
@@ -103,6 +105,7 @@ class GrVkOpsRenderPass : public GrOpsRenderPass {
 
   using SelfDependencyFlags = GrVkRenderPass::SelfDependencyFlags;
 
+  sk_sp<GrVkFramebuffer> fFramebuffer;
   std::unique_ptr<GrVkSecondaryCommandBuffer> fCurrentSecondaryCommandBuffer;
   const GrVkRenderPass* fCurrentRenderPass;
   SkIRect fCurrentPipelineBounds;

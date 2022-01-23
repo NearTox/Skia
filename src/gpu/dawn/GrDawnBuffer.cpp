@@ -48,7 +48,7 @@ GrDawnBuffer::GrDawnBuffer(
   this->registerWithCache(SkBudgeted::kYes);
 }
 
-GrDawnBuffer::~GrDawnBuffer() {}
+GrDawnBuffer::~GrDawnBuffer() = default;
 
 void GrDawnBuffer::onMap() {
   if (this->wasDestroyed()) {

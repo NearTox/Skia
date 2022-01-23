@@ -17,10 +17,10 @@
 */
 class SK_API SkNoncopyable {
  public:
-  SkNoncopyable() = default;
+  constexpr SkNoncopyable() noexcept = default;
 
-  SkNoncopyable(SkNoncopyable&&) = default;
-  SkNoncopyable& operator=(SkNoncopyable&&) = default;
+  constexpr SkNoncopyable(SkNoncopyable&&) noexcept = default;
+  constexpr SkNoncopyable& operator=(SkNoncopyable&&) noexcept = default;
 
  private:
   SkNoncopyable(const SkNoncopyable&) = delete;

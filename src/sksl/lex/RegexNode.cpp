@@ -61,7 +61,7 @@ std::vector<int> RegexNode::createStates(NFA* nfa, const std::vector<int>& accep
       result = fChildren[0].createStates(nfa, accept);
       result.insert(result.end(), accept.begin(), accept.end());
       break;
-    case kRange_Kind: ABORT("unreachable");
+    case kRange_Kind: SkUNREACHABLE;
     case kStar_Kind: {
       std::vector<int> next = accept;
       std::vector<int> placeholder;

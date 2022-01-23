@@ -16,7 +16,7 @@
 GrContext_Base::GrContext_Base(sk_sp<GrContextThreadSafeProxy> proxy)
     : fThreadSafeProxy(std::move(proxy)) {}
 
-GrContext_Base::~GrContext_Base() {}
+GrContext_Base::~GrContext_Base() = default;
 
 bool GrContext_Base::init() {
   SkASSERT(fThreadSafeProxy->isValid());
@@ -40,18 +40,13 @@ GrBackendFormat GrContext_Base::defaultBackendFormat(
 }
 
 GrBackendFormat GrContext_Base::compressedBackendFormat(SkImage::CompressionType c) const {
-  const GrCaps* caps = this->caps();
-
-  GrBackendFormat format = caps->getBackendFormatFromCompressionType(c);
-
-  SkASSERT(!format.isValid() || caps->isFormatTexturable(format));
-  return format;
+  return fThreadSafeProxy->compressedBackendFormat(c);
 }
 
 sk_sp<GrContextThreadSafeProxy> GrContext_Base::threadSafeProxy() { return fThreadSafeProxy; }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const { return fContext->refCaps(); }
+sk_sp<const GrCaps> GrBaseContextPriv::refCaps() const { return this->context()->refCaps(); }
 
 GrContextOptions::ShaderErrorHandler* GrBaseContextPriv::getShaderErrorHandler() const {
   const GrContextOptions& options(this->options());

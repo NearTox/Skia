@@ -17,101 +17,106 @@ class SkSVGTextContext;
 
 // Base class for text-rendering nodes.
 class SkSVGTextFragment : public SkSVGTransformableNode {
- public:
-  void renderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const;
+public:
+    void renderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const;
 
- protected:
-  explicit SkSVGTextFragment(SkSVGTag t) : INHERITED(t) {}
+protected:
+    explicit SkSVGTextFragment(SkSVGTag t) : INHERITED(t) {}
 
-  virtual void onRenderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const = 0;
+    virtual void onShapeText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const = 0;
 
- private:
-  SkPath onAsPath(const SkSVGRenderContext&) const final;
+    // Text nodes other than the root <text> element are not rendered directly.
+    void onRender(const SkSVGRenderContext&) const override {}
 
-  using INHERITED = SkSVGTransformableNode;
+private:
+    SkPath onAsPath(const SkSVGRenderContext&) const override;
+
+    using INHERITED = SkSVGTransformableNode;
 };
 
 // Base class for nestable text containers (<text>, <tspan>, etc).
 class SkSVGTextContainer : public SkSVGTextFragment {
- public:
-  SVG_ATTR(X, std::vector<SkSVGLength>, {})
-  SVG_ATTR(Y, std::vector<SkSVGLength>, {})
-  SVG_ATTR(Dx, std::vector<SkSVGLength>, {})
-  SVG_ATTR(Dy, std::vector<SkSVGLength>, {})
-  SVG_ATTR(Rotate, std::vector<SkSVGNumberType>, {})
+public:
+    SVG_ATTR(X, std::vector<SkSVGLength>, {})
+    SVG_ATTR(Y, std::vector<SkSVGLength>, {})
+    SVG_ATTR(Dx, std::vector<SkSVGLength>, {})
+    SVG_ATTR(Dy, std::vector<SkSVGLength>, {})
+    SVG_ATTR(Rotate, std::vector<SkSVGNumberType>, {})
 
-  SVG_ATTR(XmlSpace, SkSVGXmlSpace, SkSVGXmlSpace::kDefault)
+    SVG_ATTR(XmlSpace, SkSVGXmlSpace, SkSVGXmlSpace::kDefault)
 
-  void appendChild(sk_sp<SkSVGNode>) final;
+    void appendChild(sk_sp<SkSVGNode>) final;
 
- protected:
-  explicit SkSVGTextContainer(SkSVGTag t) : INHERITED(t) {}
+protected:
+    explicit SkSVGTextContainer(SkSVGTag t) : INHERITED(t) {}
 
-  void onRenderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
+    void onShapeText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
 
-  bool parseAndSetAttribute(const char*, const char*) override;
+    bool parseAndSetAttribute(const char*, const char*) override;
 
- private:
-  void onRender(const SkSVGRenderContext&) const final;
+private:
+    std::vector<sk_sp<SkSVGTextFragment>> fChildren;
 
-  std::vector<sk_sp<SkSVGTextFragment>> fChildren;
-
-  using INHERITED = SkSVGTextFragment;
+    using INHERITED = SkSVGTextFragment;
 };
 
 class SkSVGText final : public SkSVGTextContainer {
- public:
-  static sk_sp<SkSVGText> Make() { return sk_sp<SkSVGText>(new SkSVGText()); }
+public:
+    static sk_sp<SkSVGText> Make() { return sk_sp<SkSVGText>(new SkSVGText()); }
 
- private:
-  SkSVGText() : INHERITED(SkSVGTag::kText) {}
+private:
+    SkSVGText() : INHERITED(SkSVGTag::kText) {}
 
-  void onRenderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
+    void onRender(const SkSVGRenderContext&) const override;
 
-  using INHERITED = SkSVGTextContainer;
+    SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
+    SkPath onAsPath(const SkSVGRenderContext&) const override;
+
+    using INHERITED = SkSVGTextContainer;
 };
 
 class SkSVGTSpan final : public SkSVGTextContainer {
- public:
-  static sk_sp<SkSVGTSpan> Make() { return sk_sp<SkSVGTSpan>(new SkSVGTSpan()); }
+public:
+    static sk_sp<SkSVGTSpan> Make() { return sk_sp<SkSVGTSpan>(new SkSVGTSpan()); }
 
- private:
-  SkSVGTSpan() : INHERITED(SkSVGTag::kTSpan) {}
+private:
+    SkSVGTSpan() : INHERITED(SkSVGTag::kTSpan) {}
 
-  using INHERITED = SkSVGTextContainer;
+    using INHERITED = SkSVGTextContainer;
 };
 
 class SkSVGTextLiteral final : public SkSVGTextFragment {
- public:
-  static sk_sp<SkSVGTextLiteral> Make() { return sk_sp<SkSVGTextLiteral>(new SkSVGTextLiteral()); }
+public:
+    static sk_sp<SkSVGTextLiteral> Make() {
+        return sk_sp<SkSVGTextLiteral>(new SkSVGTextLiteral());
+    }
 
-  SVG_ATTR(Text, SkSVGStringType, SkSVGStringType())
+    SVG_ATTR(Text, SkSVGStringType, SkSVGStringType())
 
- private:
-  SkSVGTextLiteral() : INHERITED(SkSVGTag::kTextLiteral) {}
+private:
+    SkSVGTextLiteral() : INHERITED(SkSVGTag::kTextLiteral) {}
 
-  void onRender(const SkSVGRenderContext&) const override {}
-  void onRenderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
+    void onShapeText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
 
-  void appendChild(sk_sp<SkSVGNode>) override {}
+    void appendChild(sk_sp<SkSVGNode>) override {}
 
-  using INHERITED = SkSVGTextFragment;
+    using INHERITED = SkSVGTextFragment;
 };
 
 class SkSVGTextPath final : public SkSVGTextContainer {
- public:
-  static sk_sp<SkSVGTextPath> Make() { return sk_sp<SkSVGTextPath>(new SkSVGTextPath()); }
+public:
+    static sk_sp<SkSVGTextPath> Make() { return sk_sp<SkSVGTextPath>(new SkSVGTextPath()); }
 
-  SVG_ATTR(Href, SkSVGIRI, {SkString()})
-  SVG_ATTR(StartOffset, SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Href       , SkSVGIRI   , {}  )
+    SVG_ATTR(StartOffset, SkSVGLength, SkSVGLength(0))
 
- private:
-  SkSVGTextPath() : INHERITED(SkSVGTag::kTextPath) {}
+private:
+    SkSVGTextPath() : INHERITED(SkSVGTag::kTextPath) {}
 
-  void onRenderText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
-  bool parseAndSetAttribute(const char*, const char*) override;
+    void onShapeText(const SkSVGRenderContext&, SkSVGTextContext*, SkSVGXmlSpace) const override;
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  using INHERITED = SkSVGTextContainer;
+    using INHERITED = SkSVGTextContainer;
 };
 
 #endif  // SkSVGText_DEFINED

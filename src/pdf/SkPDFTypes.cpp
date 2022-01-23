@@ -224,7 +224,7 @@ void SkPDFAtom::emitObject(SkWStream* stream) const {
 
 SkPDFArray::SkPDFArray() {}
 
-SkPDFArray::~SkPDFArray() {}
+SkPDFArray::~SkPDFArray() = default;
 
 size_t SkPDFArray::size() const { return fValues.size(); }
 
@@ -271,7 +271,7 @@ void SkPDFArray::appendRef(SkPDFIndirectReference ref) { this->append(SkPDFUnion
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPDFDict::~SkPDFDict() {}
+SkPDFDict::~SkPDFDict() = default;
 
 SkPDFDict::SkPDFDict(const char type[]) {
   if (type) {

@@ -37,11 +37,11 @@ class RenderNode : public Node {
 
   // Controls the visibility of the render node.  Invisible nodes are not rendered,
   // but they still participate in revalidation.
-  bool isVisible() const;
+  bool isVisible() const noexcept;
   void setVisible(bool);
 
  protected:
-  explicit RenderNode(uint32_t inval_traits = 0);
+  explicit RenderNode(uint32_t inval_traits = 0) noexcept;
 
   virtual void onRender(SkCanvas*, const RenderContext*) const = 0;
   virtual const RenderNode* onNodeAt(const SkPoint& p) const = 0;
@@ -58,7 +58,7 @@ class RenderNode : public Node {
     SkBlendMode fBlendMode = SkBlendMode::kSrcOver;
 
     // Returns true if the paint overrides require a layer when applied to non-atomic draws.
-    bool requiresIsolation() const;
+    bool requiresIsolation() const noexcept;
 
     void modulatePaint(const SkMatrix& ctm, SkPaint*, bool is_layer_paint = false) const;
   };

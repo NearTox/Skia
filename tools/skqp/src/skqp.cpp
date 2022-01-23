@@ -250,7 +250,7 @@ const char* SkQP::GetUnitTestName(SkQP::UnitTest t) { return t->name; }
 
 SkQP::SkQP() {}
 
-SkQP::~SkQP() {}
+SkQP::~SkQP() = default;
 
 void SkQP::init(SkQPAssetManager* am, const char* renderTests, const char* reportDirectory) {
   SkASSERT_RELEASE(!fAssetManager);

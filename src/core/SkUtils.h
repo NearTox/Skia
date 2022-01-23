@@ -36,9 +36,13 @@ SkUnichar SkUTF16_NextUnichar(const uint16_t**);
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline bool SkUTF16_IsLeadingSurrogate(uint16_t c) { return ((c)&0xFC00) == 0xD800; }
+static constexpr inline bool SkUTF16_IsLeadingSurrogate(uint16_t c) noexcept {
+  return ((c)&0xFC00) == 0xD800;
+}
 
-static inline bool SkUTF16_IsTrailingSurrogate(uint16_t c) { return ((c)&0xFC00) == 0xDC00; }
+static constexpr inline bool SkUTF16_IsTrailingSurrogate(uint16_t c) noexcept {
+  return ((c)&0xFC00) == 0xDC00;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

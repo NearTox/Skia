@@ -27,6 +27,7 @@
     <ClCompile Include="skottie\src\effects\DropShadowEffect.cpp" />
     <ClCompile Include="skottie\src\effects\Effects.cpp" />
     <ClCompile Include="skottie\src\effects\FillEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\FractalNoiseEffect.cpp" />
     <ClCompile Include="skottie\src\effects\GaussianBlurEffect.cpp" />
     <ClCompile Include="skottie\src\effects\GlowStyles.cpp" />
     <ClCompile Include="skottie\src\effects\GradientEffect.cpp" />
@@ -39,6 +40,8 @@
     <ClCompile Include="skottie\src\effects\RadialWipeEffect.cpp" />
     <ClCompile Include="skottie\src\effects\ShadowStyles.cpp" />
     <ClCompile Include="skottie\src\effects\ShiftChannelsEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\SphereEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\ThresholdEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TintEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TransformEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TritoneEffect.cpp" />
@@ -85,13 +88,14 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <LLVMToolsVersion>14.0.0</LLVMToolsVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -133,7 +137,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
@@ -157,7 +161,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <RuntimeTypeInfo>false</RuntimeTypeInfo>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <EnablePREfast>false</EnablePREfast>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>

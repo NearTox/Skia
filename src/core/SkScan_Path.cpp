@@ -668,6 +668,11 @@ void SkScan::FillPath(const SkPath& path, const SkIRect& ir, SkBlitter* blitter)
   FillPath(path, rgn, blitter);
 }
 
+bool SkScan::DowngradeClipAA(const SkIRect& bounds) {
+  SkRegion out;  // ignored
+  return clip_to_limit(SkRegion(bounds), &out);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static int build_tri_edges(

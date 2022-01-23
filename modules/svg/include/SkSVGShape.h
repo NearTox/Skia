@@ -15,19 +15,19 @@ class SkSVGLengthContext;
 class SkPaint;
 
 class SkSVGShape : public SkSVGTransformableNode {
- public:
-  void appendChild(sk_sp<SkSVGNode>) override;
+public:
+    void appendChild(sk_sp<SkSVGNode>) override;
 
- protected:
-  SkSVGShape(SkSVGTag);
+protected:
+    SkSVGShape(SkSVGTag);
 
-  void onRender(const SkSVGRenderContext&) const final;
+    void onRender(const SkSVGRenderContext&) const final;
 
-  virtual void onDraw(
-      SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPathFillType) const = 0;
+    virtual void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
+                        SkPathFillType) const = 0;
 
- private:
-  using INHERITED = SkSVGTransformableNode;
+private:
+    using INHERITED = SkSVGTransformableNode;
 };
 
-#endif  // SkSVGShape_DEFINED
+#endif // SkSVGShape_DEFINED

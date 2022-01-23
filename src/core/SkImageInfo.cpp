@@ -10,7 +10,7 @@
 #include "src/core/SkSafeMath.h"
 #include "src/core/SkWriteBuffer.h"
 
-int SkColorTypeBytesPerPixel(SkColorType ct) {
+int SkColorTypeBytesPerPixel(SkColorType ct) noexcept {
   switch (ct) {
     case kUnknown_SkColorType: return 0;
     case kAlpha_8_SkColorType: return 1;
@@ -33,19 +33,20 @@ int SkColorTypeBytesPerPixel(SkColorType ct) {
     case kA16_float_SkColorType: return 2;
     case kR16G16_float_SkColorType: return 4;
     case kR16G16B16A16_unorm_SkColorType: return 8;
+    case kSRGBA_8888_SkColorType: return 4;
   }
   SkUNREACHABLE;
 }
 
-bool SkColorTypeIsAlwaysOpaque(SkColorType ct) {
+bool SkColorTypeIsAlwaysOpaque(SkColorType ct)  noexcept {
   return !(SkColorTypeChannelFlags(ct) & kAlpha_SkColorChannelFlag);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-int SkColorInfo::bytesPerPixel() const { return SkColorTypeBytesPerPixel(fColorType); }
+int SkColorInfo::bytesPerPixel() const noexcept { return SkColorTypeBytesPerPixel(fColorType); }
 
-int SkColorInfo::shiftPerPixel() const { return SkColorTypeShiftPerPixel(fColorType); }
+int SkColorInfo::shiftPerPixel() const noexcept { return SkColorTypeShiftPerPixel(fColorType); }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -92,6 +93,7 @@ bool SkColorTypeValidateAlphaType(
       [[fallthrough]];
     case kARGB_4444_SkColorType:
     case kRGBA_8888_SkColorType:
+    case kSRGBA_8888_SkColorType:
     case kBGRA_8888_SkColorType:
     case kRGBA_1010102_SkColorType:
     case kBGRA_1010102_SkColorType:

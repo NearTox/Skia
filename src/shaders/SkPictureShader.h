@@ -24,10 +24,8 @@ class SkPicture;
  */
 class SkPictureShader : public SkShaderBase {
  public:
-  ~SkPictureShader() override;
-
   static sk_sp<SkShader> Make(
-      sk_sp<SkPicture>, SkTileMode, SkTileMode, const SkMatrix*, const SkRect*);
+      sk_sp<SkPicture>, SkTileMode, SkTileMode, SkFilterMode, const SkMatrix*, const SkRect*);
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
@@ -39,8 +37,8 @@ class SkPictureShader : public SkShaderBase {
   bool onAppendStages(const SkStageRec&) const override;
   skvm::Color onProgram(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
-      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
-      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override;
+      const SkMatrixProvider&, const SkMatrix* localM, const SkColorInfo& dst,
+      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override;
 
 #ifdef SK_ENABLE_LEGACY_SHADERCONTEXT
   Context* onMakeContext(const ContextRec&, SkArenaAlloc*) const override;
@@ -49,11 +47,12 @@ class SkPictureShader : public SkShaderBase {
  private:
   SK_FLATTENABLE_HOOKS(SkPictureShader)
 
-  SkPictureShader(sk_sp<SkPicture>, SkTileMode, SkTileMode, const SkMatrix*, const SkRect*);
+  SkPictureShader(
+      sk_sp<SkPicture>, SkTileMode, SkTileMode, SkFilterMode, const SkMatrix*, const SkRect*);
 
-  sk_sp<SkShader> refBitmapShader(
+  sk_sp<SkShader> rasterShader(
       const SkMatrix&, SkTCopyOnFirstWrite<SkMatrix>* localMatrix, SkColorType dstColorType,
-      SkColorSpace* dstColorSpace, const int maxTextureSize = 0) const;
+      SkColorSpace* dstColorSpace) const;
 
   class PictureShaderContext : public Context {
    public:
@@ -74,9 +73,7 @@ class SkPictureShader : public SkShaderBase {
   sk_sp<SkPicture> fPicture;
   SkRect fTile;
   SkTileMode fTmx, fTmy;
-
-  const uint32_t fUniqueID;
-  mutable std::atomic<bool> fAddedToCache;
+  SkFilterMode fFilter;
 
   using INHERITED = SkShaderBase;
 };

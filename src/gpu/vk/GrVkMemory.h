@@ -8,9 +8,9 @@
 #ifndef GrVkMemory_DEFINED
 #define GrVkMemory_DEFINED
 
+#include "include/gpu/vk/GrVkMemoryAllocator.h"
 #include "include/gpu/vk/GrVkTypes.h"
 #include "include/private/SkTArray.h"
-#include "src/gpu/vk/GrVkBuffer.h"
 
 class GrVkGpu;
 
@@ -20,11 +20,11 @@ namespace GrVkMemory {
  * Returns true if allocation succeeded.
  */
 bool AllocAndBindBufferMemory(
-    GrVkGpu* gpu, VkBuffer buffer, GrVkBuffer::Type type, bool dynamic, GrVkAlloc* alloc);
-void FreeBufferMemory(const GrVkGpu* gpu, GrVkBuffer::Type type, const GrVkAlloc& alloc);
+    GrVkGpu* gpu, VkBuffer buffer, GrVkMemoryAllocator::BufferUsage, GrVkAlloc* alloc);
+void FreeBufferMemory(const GrVkGpu* gpu, const GrVkAlloc& alloc);
 
-bool AllocAndBindImageMemory(GrVkGpu* gpu, VkImage image, bool linearTiling, GrVkAlloc* alloc);
-void FreeImageMemory(const GrVkGpu* gpu, bool linearTiling, const GrVkAlloc& alloc);
+bool AllocAndBindImageMemory(GrVkGpu* gpu, VkImage image, GrVkAlloc* alloc);
+void FreeImageMemory(const GrVkGpu* gpu, const GrVkAlloc& alloc);
 
 // Maps the entire GrVkAlloc and returns a pointer to the start of the allocation. Underneath
 // the hood, we may map more than the range of the GrVkAlloc (e.g. the entire VkDeviceMemory),

@@ -21,10 +21,10 @@
 #include "include/core/SkString.h"
 #include "include/core/SkTypes.h"
 #include "include/gpu/GrRecordingContext.h"
-#include "include/private/GrSharedEnums.h"
 #include "include/private/GrTypesPriv.h"
 #include "include/private/SkColorData.h"
 #include "include/utils/SkRandom.h"
+#include "src/core/SkCanvasPriv.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPointPriv.h"
 #include "src/gpu/GrCaps.h"
@@ -38,7 +38,6 @@
 #include "src/gpu/GrProcessorSet.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrSurfaceDrawContext.h"
 #include "src/gpu/GrUserStencilSettings.h"
 #include "src/gpu/effects/GrBezierEffect.h"
 #include "src/gpu/effects/GrPorterDuffXferProcessor.h"
@@ -47,6 +46,7 @@
 #include "src/gpu/ops/GrMeshDrawOp.h"
 #include "src/gpu/ops/GrOp.h"
 #include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
+#include "src/gpu/v1/SurfaceDrawContext_v1.h"
 
 #include <memory>
 #include <utility>
@@ -60,14 +60,13 @@ class BezierTestOp : public GrMeshDrawOp {
   FixedFunctionFlags fixedFunctionFlags() const override { return FixedFunctionFlags::kNone; }
 
   GrProcessorSet::Analysis finalize(
-      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
-      GrClampType clampType) override {
+      const GrCaps& caps, const GrAppliedClip* clip, GrClampType clampType) override {
     return fProcessorSet.finalize(
         fColor, GrProcessorAnalysisCoverage::kSingleChannel, clip, &GrUserStencilSettings::kUnused,
-        hasMixedSampledCoverage, caps, clampType, &fColor);
+        caps, clampType, &fColor);
   }
 
-  void visitProxies(const VisitProxyFunc& func) const override {
+  void visitProxies(const GrVisitProxyFunc& func) const override {
     if (fProgramInfo) {
       fProgramInfo->visitFPProxies(func);
     } else {
@@ -87,7 +86,7 @@ class BezierTestOp : public GrMeshDrawOp {
 
   void onCreateProgramInfo(
       const GrCaps* caps, SkArenaAlloc* arena, const GrSurfaceProxyView& writeView,
-      GrAppliedClip&& appliedClip, const GrXferProcessor::DstProxyView& dstProxyView,
+      bool usesMSAASurface, GrAppliedClip&& appliedClip, const GrDstProxyView& dstProxyView,
       GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) override {
     auto gp = this->makeGP(*caps, arena);
     if (!gp) {
@@ -97,8 +96,9 @@ class BezierTestOp : public GrMeshDrawOp {
     GrPipeline::InputFlags flags = GrPipeline::InputFlags::kNone;
 
     fProgramInfo = GrSimpleMeshDrawOpHelper::CreateProgramInfo(
-        caps, arena, writeView, std::move(appliedClip), dstProxyView, gp, std::move(fProcessorSet),
-        GrPrimitiveType::kTriangles, renderPassXferBarriers, colorLoadOp, flags);
+        caps, arena, writeView, usesMSAASurface, std::move(appliedClip), dstProxyView, gp,
+        std::move(fProcessorSet), GrPrimitiveType::kTriangles, renderPassXferBarriers, colorLoadOp,
+        flags);
   }
 
   void onExecute(GrOpFlushState* flushState, const SkRect& chainBounds) final {
@@ -111,7 +111,7 @@ class BezierTestOp : public GrMeshDrawOp {
     }
 
     flushState->bindPipelineAndScissorClip(*fProgramInfo, chainBounds);
-    flushState->bindTextures(fProgramInfo->primProc(), nullptr, fProgramInfo->pipeline());
+    flushState->bindTextures(fProgramInfo->geomProc(), nullptr, fProgramInfo->pipeline());
     flushState->drawMesh(*fMesh);
   }
 
@@ -165,7 +165,7 @@ class BezierConicTestOp : public BezierTestOp {
     return tmp;
   }
 
-  void onPrepareDraws(Target* target) final {
+  void onPrepareDraws(GrMeshDrawTarget* target) final {
     QuadHelper helper(target, sizeof(Vertex), 1);
     Vertex* verts = reinterpret_cast<Vertex*>(helper.vertices());
     if (!verts) {
@@ -205,9 +205,13 @@ class BezierConicEffects : public GpuGM {
 
   SkISize onISize() override { return SkISize::Make(kCellWidth, kNumConics * kCellHeight); }
 
-  void onDraw(
-      GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext,
-      SkCanvas* canvas) override {
+  DrawResult onDraw(GrRecordingContext* rContext, SkCanvas* canvas, SkString* errorMsg) override {
+    auto sdc = SkCanvasPriv::TopDeviceSurfaceDrawContext(canvas);
+    if (!sdc) {
+      *errorMsg = kErrorMsg_DrawSkippedGpuOnly;
+      return DrawResult::kSkip;
+    }
+
     const SkScalar w = kCellWidth, h = kCellHeight;
     const SkPMColor4f kOpaqueBlack = SkPMColor4f::FromBytes_RGBA(0xff000000);
 
@@ -272,10 +276,12 @@ class BezierConicEffects : public GpuGM {
 
         canvas->drawRect(bounds, boundsPaint);
 
-        GrOp::Owner op = BezierConicTestOp::Make(context, bounds, kOpaqueBlack, klm);
-        surfaceDrawContext->addDrawOp(std::move(op));
+        GrOp::Owner op = BezierConicTestOp::Make(rContext, bounds, kOpaqueBlack, klm);
+        sdc->addDrawOp(std::move(op));
       }
     }
+
+    return DrawResult::kOk;
   }
 
  private:
@@ -356,7 +362,7 @@ class BezierQuadTestOp : public BezierTestOp {
     return tmp;
   }
 
-  void onPrepareDraws(Target* target) final {
+  void onPrepareDraws(GrMeshDrawTarget* target) final {
     QuadHelper helper(target, sizeof(Vertex), 1);
     Vertex* verts = reinterpret_cast<Vertex*>(helper.vertices());
     if (!verts) {
@@ -393,9 +399,13 @@ class BezierQuadEffects : public GpuGM {
 
   SkISize onISize() override { return SkISize::Make(kCellWidth, kNumQuads * kCellHeight); }
 
-  void onDraw(
-      GrRecordingContext* context, GrSurfaceDrawContext* surfaceDrawContext,
-      SkCanvas* canvas) override {
+  DrawResult onDraw(GrRecordingContext* rContext, SkCanvas* canvas, SkString* errorMsg) override {
+    auto sdc = SkCanvasPriv::TopDeviceSurfaceDrawContext(canvas);
+    if (!sdc) {
+      *errorMsg = kErrorMsg_DrawSkippedGpuOnly;
+      return DrawResult::kSkip;
+    }
+
     const SkScalar w = kCellWidth, h = kCellHeight;
     const SkPMColor4f kOpaqueBlack = SkPMColor4f::FromBytes_RGBA(0xff000000);
 
@@ -454,10 +464,12 @@ class BezierQuadEffects : public GpuGM {
 
         GrPathUtils::QuadUVMatrix DevToUV(pts);
 
-        GrOp::Owner op = BezierQuadTestOp::Make(context, bounds, kOpaqueBlack, DevToUV);
-        surfaceDrawContext->addDrawOp(std::move(op));
+        GrOp::Owner op = BezierQuadTestOp::Make(rContext, bounds, kOpaqueBlack, DevToUV);
+        sdc->addDrawOp(std::move(op));
       }
     }
+
+    return DrawResult::kOk;
   }
 
  private:

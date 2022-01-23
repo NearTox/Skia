@@ -13,7 +13,7 @@
 #include "src/core/SkStrikeForGPU.h"
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/text/GrSDFTOptions.h"
+#  include "src/gpu/text/GrSDFTControl.h"
 class GrStrikeCache;
 class GrTextStrike;
 #endif
@@ -25,10 +25,10 @@ class SkSurfaceProps;
 
 class SkStrikeSpec {
  public:
-  SkStrikeSpec(const SkStrikeSpec&) = default;
+  SkStrikeSpec(const SkStrikeSpec&) noexcept = default;
   SkStrikeSpec& operator=(const SkStrikeSpec&) = delete;
 
-  SkStrikeSpec(SkStrikeSpec&&) = default;
+  SkStrikeSpec(SkStrikeSpec&&) noexcept = default;
   SkStrikeSpec& operator=(SkStrikeSpec&&) = delete;
 
   ~SkStrikeSpec() = default;
@@ -64,7 +64,7 @@ class SkStrikeSpec {
   // Create a strike spec for scaled distance field text.
   static std::tuple<SkStrikeSpec, SkScalar, SkScalar> MakeSDFT(
       const SkFont& font, const SkPaint& paint, const SkSurfaceProps& surfaceProps,
-      const SkMatrix& deviceMatrix, const GrSDFTOptions& options);
+      const SkMatrix& deviceMatrix, const GrSDFTControl& control);
 
   sk_sp<GrTextStrike> findOrCreateGrStrike(GrStrikeCache* cache) const;
 #endif
@@ -78,6 +78,7 @@ class SkStrikeSpec {
   bool isEmpty() const { return SkScalarNearlyZero(fStrikeToSourceRatio); }
   const SkDescriptor& descriptor() const { return *fAutoDescriptor.getDesc(); }
   static bool ShouldDrawAsPath(const SkPaint& paint, const SkFont& font, const SkMatrix& matrix);
+  SkString dump() const;
 
  private:
   SkStrikeSpec(

@@ -15,7 +15,7 @@ SkPathMeasure::SkPathMeasure(const SkPath& path, bool forceClosed, SkScalar resS
   fContour = fIter.next();
 }
 
-SkPathMeasure::~SkPathMeasure() {}
+SkPathMeasure::~SkPathMeasure() = default;
 
 void SkPathMeasure::setPath(const SkPath* path, bool forceClosed) {
   fIter.reset(path ? *path : SkPath(), forceClosed);

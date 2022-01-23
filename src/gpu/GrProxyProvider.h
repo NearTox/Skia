@@ -60,10 +60,10 @@ class GrProxyProvider {
       const GrUniqueKey&, UseAllocator = UseAllocator::kYes);
 
   /**
-   * A helper that uses findOrCreateProxyByUniqueKey() to find a proxy and if found creates a view
+   * A helper that uses findOrCreateProxyByUniqueKey() to find a proxy and, if found, creates
    * a view for the found proxy using the passed in origin and color type. It is assumed that if
-   * the proxy is renderable then it was created by GrSurfaceDrawContext::MakeWithFallback and
-   * the fallback color type will be used to create the view.
+   * the proxy is renderable then it was created via a fallback code path so the fallback
+   * color type will be used to create the view.
    */
   GrSurfaceProxyView findCachedProxyWithColorTypeFallback(
       const GrUniqueKey&, GrSurfaceOrigin, GrColorType, int sampleCnt);
@@ -132,6 +132,14 @@ class GrProxyProvider {
     GrMipmapped fMipmapped;
     GrTextureType fTextureType;
   };
+
+  /**
+   * Similar to createLazyProxy below, except narrowed to the use case of shared promise images
+   * i.e. static so it doesn't have access to mutable state. Used by MakePromiseImageLazyProxy().
+   */
+  static sk_sp<GrTextureProxy> CreatePromiseProxy(
+      GrContextThreadSafeProxy*, LazyInstantiateCallback&&, const GrBackendFormat&,
+      SkISize dimensions, GrMipmapped);
 
   /**
    * Creates a texture proxy that will be instantiated by a user-supplied callback during flush.

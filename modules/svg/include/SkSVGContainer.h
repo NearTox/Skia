@@ -12,25 +12,25 @@
 #include "modules/svg/include/SkSVGTransformableNode.h"
 
 class SkSVGContainer : public SkSVGTransformableNode {
- public:
-  void appendChild(sk_sp<SkSVGNode>) override;
+public:
+    void appendChild(sk_sp<SkSVGNode>) override;
 
- protected:
-  explicit SkSVGContainer(SkSVGTag);
+protected:
+    explicit SkSVGContainer(SkSVGTag);
 
-  void onRender(const SkSVGRenderContext&) const override;
+    void onRender(const SkSVGRenderContext&) const override;
 
-  SkPath onAsPath(const SkSVGRenderContext&) const override;
+    SkPath onAsPath(const SkSVGRenderContext&) const override;
 
-  SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
+    SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
 
-  bool hasChildren() const final;
+    bool hasChildren() const final;
 
-  // TODO: add some sort of child iterator, and hide the container.
-  SkSTArray<1, sk_sp<SkSVGNode>, true> fChildren;
+    // TODO: add some sort of child iterator, and hide the container.
+    SkSTArray<1, sk_sp<SkSVGNode>, true> fChildren;
 
- private:
-  using INHERITED = SkSVGTransformableNode;
+private:
+    using INHERITED = SkSVGTransformableNode;
 };
 
-#endif  // SkSVGContainer_DEFINED
+#endif // SkSVGContainer_DEFINED

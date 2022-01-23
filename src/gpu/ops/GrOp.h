@@ -22,6 +22,7 @@
 
 class GrAppliedClip;
 class GrCaps;
+class GrDstProxyView;
 class GrOpFlushState;
 class GrOpsRenderPass;
 class GrPaint;
@@ -68,50 +69,28 @@ class GrPaint;
 
 class GrOp : private SkNoncopyable {
  public:
-#if defined(GR_OP_ALLOCATE_USE_POOL)
-  struct DeleteFromPool {
-    DeleteFromPool() : fPool{nullptr} {}
-    DeleteFromPool(GrMemoryPool* pool) : fPool{pool} {}
-    void operator()(GrOp* op);
-    GrMemoryPool* fPool;
-  };
-  using Owner = std::unique_ptr<GrOp, DeleteFromPool>;
-#else
   using Owner = std::unique_ptr<GrOp>;
-#endif
 
   template <typename Op, typename... Args>
   static Owner Make(GrRecordingContext* context, Args&&... args) {
-    return MakeWithExtraMemory<Op>(context, 0, std::forward<Args>(args)...);
+    return Owner{new Op(std::forward<Args>(args)...)};
   }
 
   template <typename Op, typename... Args>
   static Owner MakeWithProcessorSet(
       GrRecordingContext* context, const SkPMColor4f& color, GrPaint&& paint, Args&&... args);
 
-#if defined(GR_OP_ALLOCATE_USE_POOL)
-  template <typename Op, typename... Args>
-  static Owner MakeWithExtraMemory(GrRecordingContext* context, size_t extraSize, Args&&... args) {
-    GrMemoryPool* pool = context->priv().opMemoryPool();
-    void* mem = pool->allocate(sizeof(Op) + extraSize);
-    GrOp* op = new (mem) Op(std::forward<Args>(args)...);
-    return Owner{op, pool};
-  }
-#else
   template <typename Op, typename... Args>
   static Owner MakeWithExtraMemory(GrRecordingContext* context, size_t extraSize, Args&&... args) {
     void* bytes = ::operator new(sizeof(Op) + extraSize);
     return Owner{new (bytes) Op(std::forward<Args>(args)...)};
   }
-#endif
 
   virtual ~GrOp() = default;
 
   virtual const char* name() const = 0;
 
-  using VisitProxyFunc = std::function<void(GrSurfaceProxy*, GrMipmapped)>;
-
-  virtual void visitProxies(const VisitProxyFunc&) const {
+  virtual void visitProxies(const GrVisitProxyFunc&) const {
     // This default implementation assumes the op has no proxies
   }
 
@@ -159,22 +138,7 @@ class GrOp : private SkNoncopyable {
     return SkToBool(fBoundsFlags & kZeroArea_BoundsFlag);
   }
 
-#if defined(GR_OP_ALLOCATE_USE_POOL)
-#  if defined(SK_DEBUG)
-  // All GrOp-derived classes should be allocated in and deleted from a GrMemoryPool
-  void* operator new(size_t size);
-  void operator delete(void* target);
-
-  void* operator new(size_t size, void* placement) { return ::operator new(size, placement); }
-  void operator delete(void* target, void* placement) { ::operator delete(target, placement); }
-#  endif
-#else
-  // GrOps are allocated using ::operator new in the GrMemoryPool. Doing this style of memory
-  // allocation defeats the delete with size optimization.
-  void* operator new(size_t) { SK_ABORT("All GrOps are created by placement new."); }
-  void* operator new(size_t, void* p) { return p; }
   void operator delete(void* p) { ::operator delete(p); }
-#endif
 
   /**
    * Helper for safely down-casting to a GrOp subclass
@@ -211,8 +175,9 @@ class GrOp : private SkNoncopyable {
    */
   void prePrepare(
       GrRecordingContext* context, const GrSurfaceProxyView& dstView, GrAppliedClip* clip,
-      const GrXferProcessor::DstProxyView& dstProxyView, GrXferBarrierFlags renderPassXferBarriers,
+      const GrDstProxyView& dstProxyView, GrXferBarrierFlags renderPassXferBarriers,
       GrLoadOp colorLoadOp) {
+    TRACE_EVENT0("skia.gpu", name());
     this->onPrePrepare(context, dstView, clip, dstProxyView, renderPassXferBarriers, colorLoadOp);
   }
 
@@ -220,7 +185,10 @@ class GrOp : private SkNoncopyable {
    * Called prior to executing. The op should perform any resource creation or data transfers
    * necessary before execute() is called.
    */
-  void prepare(GrOpFlushState* state) { this->onPrepare(state); }
+  void prepare(GrOpFlushState* state) {
+    TRACE_EVENT0("skia.gpu", name());
+    this->onPrepare(state);
+  }
 
   /** Issues the op's commands to GrGpu. */
   void execute(GrOpFlushState* state, const SkRect& chainBounds) {
@@ -339,8 +307,7 @@ class GrOp : private SkNoncopyable {
   // TODO: the parameters to onPrePrepare mirror GrOpFlushState::OpArgs - fuse the two?
   virtual void onPrePrepare(
       GrRecordingContext*, const GrSurfaceProxyView& writeView, GrAppliedClip*,
-      const GrXferProcessor::DstProxyView&, GrXferBarrierFlags renderPassXferBarriers,
-      GrLoadOp colorLoadOp) = 0;
+      const GrDstProxyView&, GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp) = 0;
   virtual void onPrepare(GrOpFlushState*) = 0;
   // If this op is chained then chainBounds is the union of the bounds of all ops in the chain.
   // Otherwise, this op's bounds.

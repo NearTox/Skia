@@ -81,8 +81,8 @@ class SkGradientShaderBase : public SkShaderBase {
 
   skvm::Color onProgram(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
-      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
-      const SkColorInfo& dstCS, skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override;
+      const SkMatrixProvider&, const SkMatrix* localM, const SkColorInfo& dstCS,
+      skvm::Uniforms* uniforms, SkArenaAlloc* alloc) const override;
 
   virtual void appendGradientStages(
       SkArenaAlloc* alloc, SkRasterPipeline* tPipeline, SkRasterPipeline* postPipeline) const = 0;

@@ -8,7 +8,6 @@
 #ifndef SkTMultiMap_DEFINED
 #define SkTMultiMap_DEFINED
 
-#include "include/gpu/GrTypes.h"
 #include "src/core/SkTDynamicHash.h"
 
 /** A set that contains pointers to instances of T. Instances can be looked up with key Key.
@@ -28,7 +27,9 @@ class SkTMultiMap {
  public:
   SkTMultiMap() : fCount(0) {}
 
-  ~SkTMultiMap() {
+  ~SkTMultiMap() { this->reset(); }
+
+  void reset() {
     fHash.foreach ([&](ValueList* vl) {
       ValueList* next;
       for (ValueList* it = vl; it; it = next) {
@@ -37,6 +38,8 @@ class SkTMultiMap {
         delete it;
       }
     });
+    fHash.reset();
+    fCount = 0;
   }
 
   void insert(const Key& key, T* value) {

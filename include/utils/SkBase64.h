@@ -14,15 +14,6 @@ struct SkBase64 {
  public:
   enum Error { kNoError, kPadError, kBadCharError };
 
-  /** @deprecated */
-  SkBase64();
-  /** @deprecated, required user to `delete skbase64.getData()` */
-  Error decode(const char* src, size_t length);
-  /** @deprecated */
-  char* getData() { return fData; }
-  /** @deprecated */
-  size_t getDataSize() { return fLength; }
-
   /**
      Base64 encodes src into dst.
 
@@ -51,12 +42,6 @@ struct SkBase64 {
   */
   static Error SK_WARN_UNUSED_RESULT
   Decode(const void* src, size_t srcLength, void* dst, size_t* dstLength);
-
- private:
-  /** @deprecated */
-  size_t fLength;
-  /** @deprecated */
-  char* fData;
 };
 
 #endif  // SkBase64_DEFINED

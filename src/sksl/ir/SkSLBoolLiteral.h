@@ -26,11 +26,20 @@ class Literal<bool> final : public Expression {
  public:
   static constexpr Kind kExpressionKind = Kind::kBoolLiteral;
 
-  Literal(const Context& context, int offset, bool value)
-      : Literal(offset, value, context.fTypes.fBool.get()) {}
-
   Literal(int offset, bool value, const Type* type)
       : INHERITED(offset, kExpressionKind, type), fValue(value) {}
+
+  // Makes a literal of boolean type.
+  static std::unique_ptr<BoolLiteral> Make(const Context& context, int offset, bool value) {
+    return std::make_unique<BoolLiteral>(offset, value, context.fTypes.fBool.get());
+  }
+
+  // Makes a literal of boolean type. (Functionally identical to the above, but useful if you
+  // don't have access to the Context.)
+  static std::unique_ptr<BoolLiteral> Make(int offset, bool value, const Type* type) {
+    SkASSERT(type->isBoolean());
+    return std::make_unique<BoolLiteral>(offset, value, type);
+  }
 
   bool value() const { return fValue; }
 
@@ -48,10 +57,15 @@ class Literal<bool> final : public Expression {
                                                             : ComparisonResult::kNotEqual;
   }
 
-  bool getConstantBool() const override { return this->value(); }
-
   std::unique_ptr<Expression> clone() const override {
     return std::make_unique<BoolLiteral>(fOffset, this->value(), &this->type());
+  }
+
+  bool allowsConstantSubexpressions() const override { return true; }
+
+  const Expression* getConstantSubexpression(int n) const override {
+    SkASSERT(n == 0);
+    return this;
   }
 
  private:

@@ -14,12 +14,13 @@
 class GrBackendFormat;
 
 struct GrMockTextureInfo {
-  GrMockTextureInfo()
+  constexpr GrMockTextureInfo() noexcept
       : fColorType(GrColorType::kUnknown),
         fCompressionType(SkImage::CompressionType::kNone),
         fID(0) {}
 
-  GrMockTextureInfo(GrColorType colorType, SkImage::CompressionType compressionType, int id)
+  GrMockTextureInfo(
+      GrColorType colorType, SkImage::CompressionType compressionType, int id) noexcept
       : fColorType(colorType), fCompressionType(compressionType), fID(id) {
     SkASSERT(fID);
     if (fCompressionType != SkImage::CompressionType::kNone) {
@@ -27,7 +28,7 @@ struct GrMockTextureInfo {
     }
   }
 
-  bool operator==(const GrMockTextureInfo& that) const {
+  bool operator==(const GrMockTextureInfo& that) const noexcept {
     return fColorType == that.fColorType && fCompressionType == that.fCompressionType &&
            fID == that.fID;
   }
@@ -36,12 +37,12 @@ struct GrMockTextureInfo {
 
   SkImage::CompressionType compressionType() const { return fCompressionType; }
 
-  GrColorType colorType() const {
+  GrColorType colorType() const noexcept {
     SkASSERT(fCompressionType == SkImage::CompressionType::kNone);
     return fColorType;
   }
 
-  int id() const { return fID; }
+  int id() const noexcept { return fID; }
 
  private:
   GrColorType fColorType;
@@ -50,19 +51,19 @@ struct GrMockTextureInfo {
 };
 
 struct GrMockRenderTargetInfo {
-  GrMockRenderTargetInfo() : fColorType(GrColorType::kUnknown), fID(0) {}
+  constexpr GrMockRenderTargetInfo() noexcept : fColorType(GrColorType::kUnknown), fID(0) {}
 
-  GrMockRenderTargetInfo(GrColorType colorType, int id) : fColorType(colorType), fID(id) {
+  GrMockRenderTargetInfo(GrColorType colorType, int id) noexcept : fColorType(colorType), fID(id) {
     SkASSERT(fID);
   }
 
-  bool operator==(const GrMockRenderTargetInfo& that) const {
+  bool operator==(const GrMockRenderTargetInfo& that) const noexcept {
     return fColorType == that.fColorType && fID == that.fID;
   }
 
   GrBackendFormat getBackendFormat() const;
 
-  GrColorType colorType() const { return fColorType; }
+  GrColorType colorType() const noexcept { return fColorType; }
 
  private:
   GrColorType fColorType;
@@ -111,7 +112,6 @@ struct GrMockOptions {
   ConfigOptions fCompressedOptions[SkImage::kCompressionTypeCount];
 
   // GrShaderCaps options.
-  bool fGeometryShaderSupport = false;
   bool fIntegerSupport = false;
   bool fFlatInterpolationSupport = false;
   int fMaxVertexSamplers = 0;

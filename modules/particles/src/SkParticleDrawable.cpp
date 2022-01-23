@@ -81,9 +81,10 @@ class SkCircleDrawable : public SkParticleDrawable {
     for (int i = 0; i < count; ++i) {
       arrays.fRects[i].setIWH(fImage->width(), fImage->height());
     }
+    SkSamplingOptions sampling(SkFilterMode::kLinear);
     canvas->drawAtlas(
-        fImage, arrays.fXforms.get(), arrays.fRects.get(), arrays.fColors.get(), count,
-        SkBlendMode::kModulate, nullptr, &paint);
+        fImage.get(), arrays.fXforms.get(), arrays.fRects.get(), arrays.fColors.get(), count,
+        SkBlendMode::kModulate, sampling, nullptr, &paint);
   }
 
   void prepare(const skresources::ResourceProvider*) override {
@@ -128,8 +129,8 @@ class SkImageDrawable : public SkParticleDrawable {
       arrays.fRects[i] = baseRect.makeOffset(col * baseRect.width(), row * baseRect.height());
     }
     canvas->drawAtlas(
-        fImage, arrays.fXforms.get(), arrays.fRects.get(), arrays.fColors.get(), count,
-        SkBlendMode::kModulate, nullptr, &paint);
+        fImage.get(), arrays.fXforms.get(), arrays.fRects.get(), arrays.fColors.get(), count,
+        SkBlendMode::kModulate, SkSamplingOptions(SkFilterMode::kLinear), nullptr, &paint);
   }
 
   void prepare(const skresources::ResourceProvider* resourceProvider) override {

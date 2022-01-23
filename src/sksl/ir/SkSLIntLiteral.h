@@ -28,11 +28,19 @@ class Literal<SKSL_INT> final : public Expression {
 
   // We will need to revisit this if we want full support for unsigned 64-bit integers,
   // but for now an SKSL_INT (int64_t) will hold every value we care about.
-  Literal(const Context& context, int offset, SKSL_INT value)
-      : Literal(offset, value, context.fTypes.fIntLiteral.get()) {}
-
-  Literal(int offset, int64_t value, const Type* type)
+  Literal(int offset, SKSL_INT value, const Type* type)
       : INHERITED(offset, kExpressionKind, type), fValue(value) {}
+
+  // Makes a literal of $intLiteral type.
+  static std::unique_ptr<IntLiteral> Make(const Context& context, int offset, SKSL_INT value) {
+    return std::make_unique<IntLiteral>(offset, value, context.fTypes.fIntLiteral.get());
+  }
+
+  // Makes a literal of the specified integer type.
+  static std::unique_ptr<IntLiteral> Make(int offset, SKSL_INT value, const Type* type) {
+    SkASSERT(type->isInteger());
+    return std::make_unique<IntLiteral>(offset, value, type);
+  }
 
   SKSL_INT value() const { return fValue; }
 
@@ -51,17 +59,21 @@ class Literal<SKSL_INT> final : public Expression {
   }
 
   CoercionCost coercionCost(const Type& target) const override {
-    if (target.isSigned() || target.isUnsigned() || target.isFloat() ||
-        target.typeKind() == Type::TypeKind::kEnum) {
+    if (target.isNumber()) {
       return CoercionCost::Free();
     }
     return INHERITED::coercionCost(target);
   }
 
-  SKSL_INT getConstantInt() const override { return this->value(); }
-
   std::unique_ptr<Expression> clone() const override {
     return std::make_unique<IntLiteral>(fOffset, this->value(), &this->type());
+  }
+
+  bool allowsConstantSubexpressions() const override { return true; }
+
+  const Expression* getConstantSubexpression(int n) const override {
+    SkASSERT(n == 0);
+    return this;
   }
 
  private:

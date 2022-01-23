@@ -44,9 +44,6 @@ class SK_API SkFontMgr_Indirect : public SkFontMgr {
       const char familyName[], const SkFontStyle&, const char* bcp47[], int bcp47Count,
       SkUnichar character) const override;
 
-  SkTypeface* onMatchFaceStyle(
-      const SkTypeface* familyMember, const SkFontStyle& fontStyle) const override;
-
   sk_sp<SkTypeface> onMakeFromStreamIndex(
       std::unique_ptr<SkStreamAsset>, int ttcIndex) const override;
   sk_sp<SkTypeface> onMakeFromStreamArgs(

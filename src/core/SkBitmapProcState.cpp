@@ -179,7 +179,7 @@ static bool valid_for_filtering(unsigned dimension) {
 }
 
 bool SkBitmapProcState::init(
-    const SkMatrix& inv, SkColor paintColor, const SkSamplingOptions& sampling) {
+    const SkMatrix& inv, SkAlpha paintAlpha, const SkSamplingOptions& sampling) {
   SkASSERT(!inv.hasPerspective());
   SkASSERT(SkOpts::S32_alpha_D32_filter_DXDY || inv.isScaleTranslate());
   SkASSERT(!sampling.useCubic);
@@ -195,7 +195,7 @@ bool SkBitmapProcState::init(
   }
   std::tie(fPixmap, fInvMatrix) = access->level();
 
-  fPaintColor = paintColor;
+  fPaintAlpha = paintAlpha;
   fBilerp = sampling.filter == SkFilterMode::kLinear;
   SkASSERT(fPixmap.addr());
 
@@ -262,7 +262,7 @@ bool SkBitmapProcState::chooseProcs() {
   fInvSxFractionalInt = SkScalarToFractionalInt(fInvMatrix.getScaleX());
   fInvKyFractionalInt = SkScalarToFractionalInt(fInvMatrix.getSkewY());
 
-  fAlphaScale = SkAlpha255To256(SkColorGetA(fPaintColor));
+  fAlphaScale = SkAlpha255To256(fPaintAlpha);
 
   bool translate_only = (fInvMatrix.getType() & ~SkMatrix::kTranslate_Mask) == 0;
   fMatrixProc = this->chooseMatrixProc(translate_only);

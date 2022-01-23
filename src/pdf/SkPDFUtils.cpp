@@ -143,8 +143,8 @@ void SkPDFUtils::EmitPath(
   };
   SkipFillState fillState = kEmpty_SkipFillState;
   // if (paintStyle != SkPaint::kFill_Style) {
-  //    fillState = kNonSingleLine_SkipFillState;
-  //}
+  //     fillState = kNonSingleLine_SkipFillState;
+  // }
   SkPoint lastMovePt = SkPoint::Make(0, 0);
   SkDynamicMemoryWStream currentSegment;
   SkPoint args[4];

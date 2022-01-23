@@ -486,7 +486,7 @@ SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect() {
   SkDEBUGCODE(fontconfiginterface_unittest();)
 }
 
-SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() {}
+SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() = default;
 
 bool SkFontConfigInterfaceDirect::isAccessible(const char* filename) {
   if (access(filename, R_OK) != 0) {

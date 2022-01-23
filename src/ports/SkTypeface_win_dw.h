@@ -105,7 +105,7 @@ class DWriteFontTypeface : public SkTypeface {
   }
 
  protected:
-  void weak_dispose() const override {
+  void weak_dispose() const noexcept override {
     fLoaders.reset();
 
     // SkTypefaceCache::Remove(this);

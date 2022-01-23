@@ -6,15 +6,23 @@
 # found in the LICENSE file.
 
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
 
+batchCompile = True
+
 skslc = sys.argv[1]
 lang = sys.argv[2]
 settings = sys.argv[3]
-inputs = sys.argv[4:]
-batchCompile = True
+with open(sys.argv[4], 'r') as reader:
+    inputs = shlex.split(reader.read())
+
+def pairwise(iterable):
+    # Iterate over an array pairwise (two elements at a time).
+    a = iter(iterable)
+    return zip(a, a)
 
 def executeWorklist(input, worklist):
     # Invoke skslc, passing in the worklist.
@@ -38,19 +46,24 @@ def makeEmptyFile(path):
         pass
 
 def extensionForSpirvAsm(ext):
-    return ext if (ext == '.frag' or ext == '.vert' or ext == '.geom') else '.frag'
+    return ext if (ext == '.frag' or ext == '.vert') else '.frag'
 
 if settings != "--settings" and settings != "--nosettings":
     sys.exit("### Expected --settings or --nosettings, got " + settings)
 
 targets = []
-worklist = tempfile.NamedTemporaryFile(suffix='.worklist', delete=False)
+worklist = tempfile.NamedTemporaryFile(suffix='.worklist', delete=False, mode='w')
 
-# Convert the list of command-line inputs into a worklist file sfor skslc.
-for input in inputs:
+# The `inputs` array pairs off input files with their matching output directory, e.g.:
+#     //skia/tests/sksl/shared/test.sksl
+#     //skia/tests/sksl/shared/golden/
+#     //skia/tests/sksl/intrinsics/abs.sksl
+#     //skia/tests/sksl/intrinsics/golden/
+#     ... (etc) ...
+# Here we loop over these inputs and convert them into a worklist file for skslc.
+for input, targetDir in pairwise(inputs):
     noExt, ext = os.path.splitext(input)
     head, tail = os.path.split(noExt)
-    targetDir = os.path.join(head, "golden")
     if not os.path.isdir(targetDir):
         os.mkdir(targetDir)
 
@@ -60,14 +73,7 @@ for input in inputs:
 
     targets.append(target)
 
-    if lang == "--fp":
-        worklist.write(input + "\n")
-        worklist.write(target + ".cpp\n")
-        worklist.write(settings + "\n\n")
-        worklist.write(input + "\n")
-        worklist.write(target + ".h\n")
-        worklist.write(settings + "\n\n")
-    elif lang == "--glsl":
+    if lang == "--glsl":
         worklist.write(input + "\n")
         worklist.write(target + ".glsl\n")
         worklist.write(settings + "\n\n")
@@ -83,13 +89,17 @@ for input in inputs:
         worklist.write(input + "\n")
         worklist.write(target + ".skvm\n")
         worklist.write(settings + "\n\n")
+    elif lang == "--stage":
+        worklist.write(input + "\n")
+        worklist.write(target + ".stage\n")
+        worklist.write(settings + "\n\n")
     else:
-        sys.exit("### Expected one of: --fp --glsl --metal --spirv --skvm, got " + lang)
+        sys.exit("### Expected one of: --glsl --metal --spirv --skvm --stage --dsl, got " + lang)
 
     # Compile items one at a time.
     if not batchCompile:
         executeWorklist(input, worklist)
-        worklist = tempfile.NamedTemporaryFile(suffix='.worklist', delete=False)
+        worklist = tempfile.NamedTemporaryFile(suffix='.worklist', delete=False, mode='w')
 
 # Compile everything all in one go.
 if batchCompile:
@@ -97,19 +107,3 @@ if batchCompile:
 else:
     worklist.close()
     os.remove(worklist.name)
-
-# A special case cleanup pass, just for CPP and H files: if either one of these files starts with
-# `### Compilation failed`, its sibling should be replaced by an empty file. This improves clarity
-# during code review; a failure on either file means that success on the sibling is irrelevant.
-if lang == "--fp":
-    for target in targets:
-        cppFile = open(target + '.cpp', 'r')
-        hFile = open(target + '.h', 'r')
-        if cppFile.readline().startswith("### Compilation failed"):
-            # The CPP had a compilation failure. Clear the header file.
-            hFile.close()
-            makeEmptyFile(target + '.h')
-        elif hFile.readline().startswith("### Compilation failed"):
-            # The header had a compilation failure. Clear the CPP file.
-            cppFile.close()
-            makeEmptyFile(target + '.cpp')

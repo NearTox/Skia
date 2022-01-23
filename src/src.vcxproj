@@ -61,12 +61,14 @@
     <ClCompile Include="core\SkBitmapProcState.cpp" />
     <ClCompile Include="core\SkBitmapProcState_matrixProcs.cpp" />
     <ClCompile Include="core\SkBlendMode.cpp" />
+    <ClCompile Include="core\SkBlendModeBlender.cpp" />
     <ClCompile Include="core\SkBlitRow_D32.cpp" />
     <ClCompile Include="core\SkBlitter.cpp" />
     <ClCompile Include="core\SkBlitter_A8.cpp" />
     <ClCompile Include="core\SkBlitter_ARGB32.cpp" />
     <ClCompile Include="core\SkBlitter_RGB565.cpp" />
     <ClCompile Include="core\SkBlitter_Sprite.cpp" />
+    <ClCompile Include="core\SkBlockAllocator.cpp" />
     <ClCompile Include="core\SkBlurMask.cpp" />
     <ClCompile Include="core\SkBlurMF.cpp" />
     <ClCompile Include="core\SkBuffer.cpp" />
@@ -144,8 +146,8 @@
     <ClCompile Include="core\SkMaskGamma.cpp" />
     <ClCompile Include="core\SkMath.cpp" />
     <ClCompile Include="core\SkMatrix.cpp" />
-    <ClCompile Include="core\SkMatrix44.cpp" />
     <ClCompile Include="core\SkMatrixImageFilter.cpp" />
+    <ClCompile Include="core\SkMatrixInvert.cpp" />
     <ClCompile Include="core\SkMD5.cpp" />
     <ClCompile Include="core\SkMiniRecorder.cpp" />
     <ClCompile Include="core\SkMipmap.cpp" />
@@ -216,6 +218,7 @@
     <ClCompile Include="core\SkStrikeSpec.cpp" />
     <ClCompile Include="core\SkString.cpp" />
     <ClCompile Include="core\SkStringUtils.cpp" />
+    <ClCompile Include="core\SkStringView.cpp" />
     <ClCompile Include="core\SkStroke.cpp" />
     <ClCompile Include="core\SkStrokeRec.cpp" />
     <ClCompile Include="core\SkStrokerPriv.cpp" />
@@ -248,27 +251,28 @@
     <ClCompile Include="c\sk_imageinfo.cpp" />
     <ClCompile Include="c\sk_paint.cpp" />
     <ClCompile Include="c\sk_surface.cpp" />
-    <ClCompile Include="effects\imagefilters\SkAlphaThresholdFilter.cpp" />
+    <ClCompile Include="effects\imagefilters\SkAlphaThresholdImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkArithmeticImageFilter.cpp" />
+    <ClCompile Include="effects\imagefilters\SkBlendImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkBlurImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkColorFilterImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkComposeImageFilter.cpp" />
-    <ClCompile Include="effects\imagefilters\SkDisplacementMapEffect.cpp" />
+    <ClCompile Include="effects\imagefilters\SkDisplacementMapImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkDropShadowImageFilter.cpp" />
-    <ClCompile Include="effects\imagefilters\SkImageFilters.cpp" />
-    <ClCompile Include="effects\imagefilters\SkImageSource.cpp" />
+    <ClCompile Include="effects\imagefilters\SkImageImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkLightingImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkMagnifierImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkMatrixConvolutionImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkMergeImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkMorphologyImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkOffsetImageFilter.cpp" />
-    <ClCompile Include="effects\imagefilters\SkPaintImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkPictureImageFilter.cpp" />
+    <ClCompile Include="effects\imagefilters\SkRuntimeImageFilter.cpp" />
+    <ClCompile Include="effects\imagefilters\SkShaderImageFilter.cpp" />
     <ClCompile Include="effects\imagefilters\SkTileImageFilter.cpp" />
-    <ClCompile Include="effects\imagefilters\SkXfermodeImageFilter.cpp" />
     <ClCompile Include="effects\Sk1DPathEffect.cpp" />
     <ClCompile Include="effects\Sk2DPathEffect.cpp" />
+    <ClCompile Include="effects\SkBlenders.cpp" />
     <ClCompile Include="effects\SkColorMatrix.cpp" />
     <ClCompile Include="effects\SkColorMatrixFilter.cpp" />
     <ClCompile Include="effects\SkCornerPathEffect.cpp" />
@@ -281,56 +285,12 @@
     <ClCompile Include="effects\SkLumaColorFilter.cpp" />
     <ClCompile Include="effects\SkOpPathEffect.cpp" />
     <ClCompile Include="effects\SkOverdrawColorFilter.cpp" />
-    <ClCompile Include="effects\SkPackBits.cpp" />
     <ClCompile Include="effects\SkShaderMaskFilter.cpp" />
     <ClCompile Include="effects\SkTableColorFilter.cpp" />
     <ClCompile Include="effects\SkTableMaskFilter.cpp" />
     <ClCompile Include="effects\SkTrimPathEffect.cpp" />
     <ClCompile Include="fonts\SkFontMgr_indirect.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCAtlas.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCClipPath.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCClipProcessor.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCConicShader.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCCoverageProcessor.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCCubicShader.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCDrawPathsOp.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCFiller.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCFillGeometry.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCPathCache.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCPathProcessor.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCPerFlushResources.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCQuadraticShader.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCStrokeGeometry.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCCStroker.cpp" />
-    <ClCompile Include="gpu\ccpr\GrCoverageCountingPathRenderer.cpp" />
-    <ClCompile Include="gpu\ccpr\GrGSCoverageProcessor.cpp" />
-    <ClCompile Include="gpu\ccpr\GrOctoBounds.cpp" />
-    <ClCompile Include="gpu\ccpr\GrSampleMaskProcessor.cpp" />
-    <ClCompile Include="gpu\ccpr\GrStencilAtlasOp.cpp" />
-    <ClCompile Include="gpu\ccpr\GrVSCoverageProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrAARectEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrAlphaThresholdFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrArithmeticProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrBlurredEdgeFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrCircleBlurFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrCircleEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrClampFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrColorMatrixFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrComposeLerpEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrConfigConversionEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrConstColorProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrDeviceSpaceEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrDitherEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrEllipseEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrHighContrastFilterEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrHSLToRGBFilterEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrLumaColorFilterEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrMagnifierEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrMixerEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrOverrideInputFragmentProcessor.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrRectBlurEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrRGBToHSLFilterEffect.cpp" />
-    <ClCompile Include="gpu\effects\generated\GrRRectBlurEffect.cpp" />
+    <ClCompile Include="gpu\BaseDevice.cpp" />
     <ClCompile Include="gpu\effects\GrBezierEffect.cpp" />
     <ClCompile Include="gpu\effects\GrBicubicEffect.cpp" />
     <ClCompile Include="gpu\effects\GrBitmapTextGeoProc.cpp" />
@@ -343,6 +303,7 @@
     <ClCompile Include="gpu\effects\GrGaussianConvolutionFragmentProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrMatrixConvolutionEffect.cpp" />
     <ClCompile Include="gpu\effects\GrMatrixEffect.cpp" />
+    <ClCompile Include="gpu\effects\GrModulateAtlasCoverageEffect.cpp" />
     <ClCompile Include="gpu\effects\GrOvalEffect.cpp" />
     <ClCompile Include="gpu\effects\GrPorterDuffXferProcessor.cpp" />
     <ClCompile Include="gpu\effects\GrRRectEffect.cpp" />
@@ -350,24 +311,23 @@
     <ClCompile Include="gpu\effects\GrSkSLFP.cpp" />
     <ClCompile Include="gpu\effects\GrTextureEffect.cpp" />
     <ClCompile Include="gpu\effects\GrYUVtoRGBEffect.cpp" />
+    <ClCompile Include="gpu\geometry\GrAAConvexTessellator.cpp" />
+    <ClCompile Include="gpu\geometry\GrAATriangulator.cpp" />
     <ClCompile Include="gpu\geometry\GrPathUtils.cpp" />
     <ClCompile Include="gpu\geometry\GrQuad.cpp" />
     <ClCompile Include="gpu\geometry\GrQuadUtils.cpp" />
     <ClCompile Include="gpu\geometry\GrShape.cpp" />
     <ClCompile Include="gpu\geometry\GrStyledShape.cpp" />
+    <ClCompile Include="gpu\geometry\GrTriangulator.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSL.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLBlend.cpp" />
-    <ClCompile Include="gpu\glsl\GrGLSLFragmentProcessor.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLFragmentShaderBuilder.cpp" />
-    <ClCompile Include="gpu\glsl\GrGLSLGeometryProcessor.cpp" />
-    <ClCompile Include="gpu\glsl\GrGLSLPrimitiveProcessor.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLProgramBuilder.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLProgramDataManager.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLShaderBuilder.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLUniformHandler.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLVarying.cpp" />
     <ClCompile Include="gpu\glsl\GrGLSLVertexGeoBuilder.cpp" />
-    <ClCompile Include="gpu\glsl\GrGLSLXferProcessor.cpp" />
     <ClCompile Include="gpu\gl\builders\GrGLProgramBuilder.cpp" />
     <ClCompile Include="gpu\gl\builders\GrGLShaderStringBuilder.cpp" />
     <ClCompile Include="gpu\gl\GrGLAssembleGLESInterfaceAutogen.cpp" />
@@ -385,8 +345,6 @@
     <ClCompile Include="gpu\gl\GrGLGpuProgramCache.cpp" />
     <ClCompile Include="gpu\gl\GrGLInterfaceAutogen.cpp" />
     <ClCompile Include="gpu\gl\GrGLOpsRenderPass.cpp" />
-    <ClCompile Include="gpu\gl\GrGLPath.cpp" />
-    <ClCompile Include="gpu\gl\GrGLPathRendering.cpp" />
     <ClCompile Include="gpu\gl\GrGLProgram.cpp" />
     <ClCompile Include="gpu\gl\GrGLProgramDataManager.cpp" />
     <ClCompile Include="gpu\gl\GrGLRenderTarget.cpp" />
@@ -396,19 +354,8 @@
     <ClCompile Include="gpu\gl\GrGLTypesPriv.cpp" />
     <ClCompile Include="gpu\gl\GrGLUniformHandler.cpp" />
     <ClCompile Include="gpu\gl\GrGLUtil.cpp" />
-    <ClCompile Include="gpu\gl\GrGLVaryingHandler.cpp" />
     <ClCompile Include="gpu\gl\GrGLVertexArray.cpp" />
     <ClCompile Include="gpu\gl\win\GrGLMakeNativeInterface_win.cpp" />
-    <ClCompile Include="gpu\GrAATriangulator.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrClampedGradientEffect.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrDualIntervalGradientColorizer.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrLinearGradientLayout.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrRadialGradientLayout.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrSingleIntervalGradientColorizer.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrSweepGradientLayout.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrTiledGradientEffect.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrTwoPointConicalGradientLayout.cpp" />
-    <ClCompile Include="gpu\gradients\generated\GrUnrolledBinaryGradientColorizer.cpp" />
     <ClCompile Include="gpu\gradients\GrGradientBitmapCache.cpp" />
     <ClCompile Include="gpu\gradients\GrGradientShader.cpp" />
     <ClCompile Include="gpu\GrAHardwareBufferImageGenerator.cpp" />
@@ -420,14 +367,10 @@
     <ClCompile Include="gpu\GrBackendSurfaceMutableState.cpp" />
     <ClCompile Include="gpu\GrBackendTextureImageGenerator.cpp" />
     <ClCompile Include="gpu\GrBackendUtils.cpp" />
-    <ClCompile Include="gpu\GrBitmapTextureMaker.cpp" />
-    <ClCompile Include="gpu\GrBlockAllocator.cpp" />
     <ClCompile Include="gpu\GrBlurUtils.cpp" />
     <ClCompile Include="gpu\GrBufferAllocPool.cpp" />
     <ClCompile Include="gpu\GrCaps.cpp" />
     <ClCompile Include="gpu\GrClientMappedBufferManager.cpp" />
-    <ClCompile Include="gpu\GrClipStack.cpp" />
-    <ClCompile Include="gpu\GrClipStackClip.cpp" />
     <ClCompile Include="gpu\GrColorInfo.cpp" />
     <ClCompile Include="gpu\GrColorSpaceXform.cpp" />
     <ClCompile Include="gpu\GrContextThreadSafeProxy.cpp" />
@@ -445,28 +388,24 @@
     <ClCompile Include="gpu\GrDrawOpTest.cpp" />
     <ClCompile Include="gpu\GrDriverBugWorkarounds.cpp" />
     <ClCompile Include="gpu\GrDynamicAtlas.cpp" />
+    <ClCompile Include="gpu\GrEagerVertexAllocator.cpp" />
     <ClCompile Include="gpu\GrFinishCallbacks.cpp" />
     <ClCompile Include="gpu\GrFixedClip.cpp" />
     <ClCompile Include="gpu\GrFragmentProcessor.cpp" />
+    <ClCompile Include="gpu\GrGeometryProcessor.cpp" />
     <ClCompile Include="gpu\GrGpu.cpp" />
     <ClCompile Include="gpu\GrGpuBuffer.cpp" />
     <ClCompile Include="gpu\GrGpuResource.cpp" />
     <ClCompile Include="gpu\GrImageContext.cpp" />
-    <ClCompile Include="gpu\GrImageTextureMaker.cpp" />
     <ClCompile Include="gpu\GrManagedResource.cpp" />
     <ClCompile Include="gpu\GrMemoryPool.cpp" />
+    <ClCompile Include="gpu\GrMeshDrawTarget.cpp" />
     <ClCompile Include="gpu\GrOnFlushResourceProvider.cpp" />
     <ClCompile Include="gpu\GrOpFlushState.cpp" />
     <ClCompile Include="gpu\GrOpsRenderPass.cpp" />
-    <ClCompile Include="gpu\GrOpsTask.cpp" />
     <ClCompile Include="gpu\GrPaint.cpp" />
-    <ClCompile Include="gpu\GrPath.cpp" />
-    <ClCompile Include="gpu\GrPathProcessor.cpp" />
-    <ClCompile Include="gpu\GrPathRenderer.cpp" />
-    <ClCompile Include="gpu\GrPathRendererChain.cpp" />
-    <ClCompile Include="gpu\GrPathRendering.cpp" />
+    <ClCompile Include="gpu\GrPersistentCacheUtils.cpp" />
     <ClCompile Include="gpu\GrPipeline.cpp" />
-    <ClCompile Include="gpu\GrPrimitiveProcessor.cpp" />
     <ClCompile Include="gpu\GrProcessor.cpp" />
     <ClCompile Include="gpu\GrProcessorAnalysis.cpp" />
     <ClCompile Include="gpu\GrProcessorSet.cpp" />
@@ -478,103 +417,114 @@
     <ClCompile Include="gpu\GrRecordingContextPriv.cpp" />
     <ClCompile Include="gpu\GrRectanizerPow2.cpp" />
     <ClCompile Include="gpu\GrRectanizerSkyline.cpp" />
-    <ClCompile Include="gpu\GrReducedClip.cpp" />
     <ClCompile Include="gpu\GrRenderTarget.cpp" />
     <ClCompile Include="gpu\GrRenderTargetProxy.cpp" />
     <ClCompile Include="gpu\GrRenderTask.cpp" />
+    <ClCompile Include="gpu\GrRenderTaskCluster.cpp" />
     <ClCompile Include="gpu\GrResourceAllocator.cpp" />
     <ClCompile Include="gpu\GrResourceCache.cpp" />
     <ClCompile Include="gpu\GrResourceProvider.cpp" />
     <ClCompile Include="gpu\GrRingBuffer.cpp" />
-    <ClCompile Include="gpu\GrSamplePatternDictionary.cpp" />
     <ClCompile Include="gpu\GrShaderCaps.cpp" />
     <ClCompile Include="gpu\GrShaderUtils.cpp" />
     <ClCompile Include="gpu\GrShaderVar.cpp" />
-    <ClCompile Include="gpu\GrSoftwarePathRenderer.cpp" />
     <ClCompile Include="gpu\GrSPIRVUniformHandler.cpp" />
     <ClCompile Include="gpu\GrSPIRVVaryingHandler.cpp" />
     <ClCompile Include="gpu\GrStagingBufferManager.cpp" />
-    <ClCompile Include="gpu\GrStencilMaskHelper.cpp" />
     <ClCompile Include="gpu\GrStencilSettings.cpp" />
     <ClCompile Include="gpu\GrStyle.cpp" />
+    <ClCompile Include="gpu\GrSubRunAllocator.cpp" />
     <ClCompile Include="gpu\GrSurface.cpp" />
-    <ClCompile Include="gpu\GrSurfaceContext.cpp" />
-    <ClCompile Include="gpu\GrSurfaceDrawContext.cpp" />
-    <ClCompile Include="gpu\GrSurfaceFillContext.cpp" />
     <ClCompile Include="gpu\GrSurfaceProxy.cpp" />
     <ClCompile Include="gpu\GrSwizzle.cpp" />
     <ClCompile Include="gpu\GrSWMaskHelper.cpp" />
     <ClCompile Include="gpu\GrTestUtils.cpp" />
     <ClCompile Include="gpu\GrTexture.cpp" />
-    <ClCompile Include="gpu\GrTextureAdjuster.cpp" />
-    <ClCompile Include="gpu\GrTextureMaker.cpp" />
-    <ClCompile Include="gpu\GrTextureProducer.cpp" />
     <ClCompile Include="gpu\GrTextureProxy.cpp" />
     <ClCompile Include="gpu\GrTextureRenderTargetProxy.cpp" />
     <ClCompile Include="gpu\GrTextureResolveRenderTask.cpp" />
     <ClCompile Include="gpu\GrThreadSafeCache.cpp" />
+    <ClCompile Include="gpu\GrThreadSafePipelineBuilder.cpp" />
     <ClCompile Include="gpu\GrTransferFromRenderTask.cpp" />
-    <ClCompile Include="gpu\GrTriangulator.cpp" />
     <ClCompile Include="gpu\GrUniformDataManager.cpp" />
     <ClCompile Include="gpu\GrUtil.cpp" />
+    <ClCompile Include="gpu\GrVertexChunkArray.cpp" />
     <ClCompile Include="gpu\GrWaitRenderTask.cpp" />
+    <ClCompile Include="gpu\GrWritePixelsRenderTask.cpp" />
     <ClCompile Include="gpu\GrXferProcessor.cpp" />
     <ClCompile Include="gpu\GrYUVABackendTextures.cpp" />
     <ClCompile Include="gpu\GrYUVATextureProxies.cpp" />
     <ClCompile Include="gpu\mock\GrMockCaps.cpp" />
     <ClCompile Include="gpu\mock\GrMockGpu.cpp" />
     <ClCompile Include="gpu\mock\GrMockTypes.cpp" />
-    <ClCompile Include="gpu\ops\GrAAConvexPathRenderer.cpp" />
-    <ClCompile Include="gpu\ops\GrAAConvexTessellator.cpp" />
-    <ClCompile Include="gpu\ops\GrAAHairLinePathRenderer.cpp" />
-    <ClCompile Include="gpu\ops\GrAALinearizingConvexPathRenderer.cpp" />
-    <ClCompile Include="gpu\ops\GrAtlasTextOp.cpp" />
-    <ClCompile Include="gpu\ops\GrClearOp.cpp" />
-    <ClCompile Include="gpu\ops\GrDashLinePathRenderer.cpp" />
-    <ClCompile Include="gpu\ops\GrDashOp.cpp" />
-    <ClCompile Include="gpu\ops\GrDefaultPathRenderer.cpp" />
-    <ClCompile Include="gpu\ops\GrDrawableOp.cpp" />
-    <ClCompile Include="gpu\ops\GrDrawAtlasOp.cpp" />
-    <ClCompile Include="gpu\ops\GrDrawPathOp.cpp" />
-    <ClCompile Include="gpu\ops\GrDrawVerticesOp.cpp" />
-    <ClCompile Include="gpu\ops\GrFillRectOp.cpp" />
-    <ClCompile Include="gpu\ops\GrFillRRectOp.cpp" />
-    <ClCompile Include="gpu\ops\GrLatticeOp.cpp" />
+    <ClCompile Include="gpu\ops\AAConvexPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\AAHairLinePathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\AALinearizingConvexPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\AtlasPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\AtlasRenderTask.cpp" />
+    <ClCompile Include="gpu\ops\AtlasTextOp.cpp" />
+    <ClCompile Include="gpu\ops\ClearOp.cpp" />
+    <ClCompile Include="gpu\ops\DashLinePathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\DashOp.cpp" />
+    <ClCompile Include="gpu\ops\DefaultPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\DrawableOp.cpp" />
+    <ClCompile Include="gpu\ops\DrawAtlasOp.cpp" />
+    <ClCompile Include="gpu\ops\DrawAtlasPathOp.cpp" />
+    <ClCompile Include="gpu\ops\DrawVerticesOp.cpp" />
+    <ClCompile Include="gpu\ops\FillRectOp.cpp" />
+    <ClCompile Include="gpu\ops\FillRRectOp.cpp" />
+    <ClCompile Include="gpu\ops\GrAtlasInstancedHelper.cpp" />
     <ClCompile Include="gpu\ops\GrMeshDrawOp.cpp" />
     <ClCompile Include="gpu\ops\GrOp.cpp" />
     <ClCompile Include="gpu\ops\GrOvalOpFactory.cpp" />
     <ClCompile Include="gpu\ops\GrQuadPerEdgeAA.cpp" />
-    <ClCompile Include="gpu\ops\GrRegionOp.cpp" />
-    <ClCompile Include="gpu\ops\GrShadowRRectOp.cpp" />
     <ClCompile Include="gpu\ops\GrSimpleMeshDrawOpHelper.cpp" />
     <ClCompile Include="gpu\ops\GrSimpleMeshDrawOpHelperWithStencil.cpp" />
     <ClCompile Include="gpu\ops\GrSmallPathAtlasMgr.cpp" />
-    <ClCompile Include="gpu\ops\GrSmallPathRenderer.cpp" />
     <ClCompile Include="gpu\ops\GrSmallPathShapeData.cpp" />
-    <ClCompile Include="gpu\ops\GrStencilAndCoverPathRenderer.cpp" />
-    <ClCompile Include="gpu\ops\GrStencilPathOp.cpp" />
-    <ClCompile Include="gpu\ops\GrStrokeRectOp.cpp" />
-    <ClCompile Include="gpu\ops\GrTextureOp.cpp" />
-    <ClCompile Include="gpu\ops\GrTriangulatingPathRenderer.cpp" />
-    <ClCompile Include="gpu\SkGpuDevice.cpp" />
-    <ClCompile Include="gpu\SkGpuDevice_drawTexture.cpp" />
+    <ClCompile Include="gpu\ops\LatticeOp.cpp" />
+    <ClCompile Include="gpu\ops\OpsTask.cpp" />
+    <ClCompile Include="gpu\ops\PathInnerTriangulateOp.cpp" />
+    <ClCompile Include="gpu\ops\PathStencilCoverOp.cpp" />
+    <ClCompile Include="gpu\ops\PathTessellateOp.cpp" />
+    <ClCompile Include="gpu\ops\RegionOp.cpp" />
+    <ClCompile Include="gpu\ops\ShadowRRectOp.cpp" />
+    <ClCompile Include="gpu\ops\SmallPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\SoftwarePathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\StrokeRectOp.cpp" />
+    <ClCompile Include="gpu\ops\StrokeTessellateOp.cpp" />
+    <ClCompile Include="gpu\ops\TessellationPathRenderer.cpp" />
+    <ClCompile Include="gpu\ops\TextureOp.cpp" />
+    <ClCompile Include="gpu\ops\TriangulatingPathRenderer.cpp" />
     <ClCompile Include="gpu\SkGr.cpp" />
-    <ClCompile Include="gpu\tessellate\GrDrawAtlasPathOp.cpp" />
-    <ClCompile Include="gpu\tessellate\GrFillPathShader.cpp" />
-    <ClCompile Include="gpu\tessellate\GrPathTessellateOp.cpp" />
-    <ClCompile Include="gpu\tessellate\GrStencilPathShader.cpp" />
-    <ClCompile Include="gpu\tessellate\GrStrokeIndirectOp.cpp" />
-    <ClCompile Include="gpu\tessellate\GrStrokeOp.cpp" />
-    <ClCompile Include="gpu\tessellate\GrStrokeTessellateOp.cpp" />
-    <ClCompile Include="gpu\tessellate\GrStrokeTessellateShader.cpp" />
-    <ClCompile Include="gpu\tessellate\GrTessellationPathRenderer.cpp" />
+    <ClCompile Include="gpu\SurfaceContext.cpp" />
+    <ClCompile Include="gpu\SurfaceFillContext.cpp" />
+    <ClCompile Include="gpu\tessellate\GrPathCurveTessellator.cpp" />
+    <ClCompile Include="gpu\tessellate\GrPathWedgeTessellator.cpp" />
+    <ClCompile Include="gpu\tessellate\GrStrokeFixedCountTessellator.cpp" />
+    <ClCompile Include="gpu\tessellate\GrStrokeHardwareTessellator.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrPathTessellationShader.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrPathTessellationShader_Hardware.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrPathTessellationShader_MiddleOut.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrStrokeTessellationShader.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrStrokeTessellationShader_HardwareImpl.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrStrokeTessellationShader_InstancedImpl.cpp" />
+    <ClCompile Include="gpu\tessellate\shaders\GrTessellationShader.cpp" />
     <ClCompile Include="gpu\text\GrAtlasManager.cpp" />
     <ClCompile Include="gpu\text\GrDistanceFieldAdjustTable.cpp" />
     <ClCompile Include="gpu\text\GrSDFMaskFilter.cpp" />
-    <ClCompile Include="gpu\text\GrSDFTOptions.cpp" />
+    <ClCompile Include="gpu\text\GrSDFTControl.cpp" />
     <ClCompile Include="gpu\text\GrStrikeCache.cpp" />
     <ClCompile Include="gpu\text\GrTextBlob.cpp" />
     <ClCompile Include="gpu\text\GrTextBlobCache.cpp" />
+    <ClCompile Include="gpu\v1\ClipStack.cpp" />
+    <ClCompile Include="gpu\v1\Device.cpp" />
+    <ClCompile Include="gpu\v1\Device_drawTexture.cpp" />
+    <ClCompile Include="gpu\v1\PathRenderer.cpp" />
+    <ClCompile Include="gpu\v1\PathRendererChain.cpp" />
+    <ClCompile Include="gpu\v1\StencilMaskHelper.cpp" />
+    <ClCompile Include="gpu\v1\SurfaceDrawContext.cpp" />
+    <ClCompile Include="gpu\v1\SurfaceFillContext_v1.cpp" />
     <ClCompile Include="gpu\vk\GrVkAMDMemoryAllocator.cpp" />
     <ClCompile Include="gpu\vk\GrVkAttachment.cpp" />
     <ClCompile Include="gpu\vk\GrVkBuffer.cpp" />
@@ -591,7 +541,6 @@
     <ClCompile Include="gpu\vk\GrVkImageView.cpp" />
     <ClCompile Include="gpu\vk\GrVkInterface.cpp" />
     <ClCompile Include="gpu\vk\GrVkMemory.cpp" />
-    <ClCompile Include="gpu\vk\GrVkMeshBuffer.cpp" />
     <ClCompile Include="gpu\vk\GrVkMSAALoadManager.cpp" />
     <ClCompile Include="gpu\vk\GrVkOpsRenderPass.cpp" />
     <ClCompile Include="gpu\vk\GrVkPipeline.cpp" />
@@ -608,9 +557,7 @@
     <ClCompile Include="gpu\vk\GrVkSemaphore.cpp" />
     <ClCompile Include="gpu\vk\GrVkTexture.cpp" />
     <ClCompile Include="gpu\vk\GrVkTextureRenderTarget.cpp" />
-    <ClCompile Include="gpu\vk\GrVkTransferBuffer.cpp" />
     <ClCompile Include="gpu\vk\GrVkTypesPriv.cpp" />
-    <ClCompile Include="gpu\vk\GrVkUniformBuffer.cpp" />
     <ClCompile Include="gpu\vk\GrVkUniformHandler.cpp" />
     <ClCompile Include="gpu\vk\GrVkUtil.cpp" />
     <ClCompile Include="gpu\vk\GrVkVaryingHandler.cpp" />
@@ -714,51 +661,83 @@
     <ClCompile Include="shaders\SkPerlinNoiseShader.cpp" />
     <ClCompile Include="shaders\SkPictureShader.cpp" />
     <ClCompile Include="shaders\SkShader.cpp" />
+    <ClCompile Include="shaders\SkTransformShader.cpp" />
+    <ClCompile Include="sksl\codegen\SkSLGLSLCodeGenerator.cpp" />
+    <ClCompile Include="sksl\codegen\SkSLMetalCodeGenerator.cpp" />
+    <ClCompile Include="sksl\codegen\SkSLPipelineStageCodeGenerator.cpp" />
+    <ClCompile Include="sksl\codegen\SkSLSPIRVCodeGenerator.cpp" />
+    <ClCompile Include="sksl\codegen\SkSLSPIRVtoHLSL.cpp" />
+    <ClCompile Include="sksl\codegen\SkSLVMCodeGenerator.cpp" />
+    <ClCompile Include="sksl\dsl\DSLBlock.cpp" />
+    <ClCompile Include="sksl\dsl\DSLCase.cpp" />
     <ClCompile Include="sksl\dsl\DSLCore.cpp" />
     <ClCompile Include="sksl\dsl\DSLExpression.cpp" />
+    <ClCompile Include="sksl\dsl\DSLFunction.cpp" />
+    <ClCompile Include="sksl\dsl\DSLLayout.cpp" />
+    <ClCompile Include="sksl\dsl\DSLRuntimeEffects.cpp" />
+    <ClCompile Include="sksl\dsl\DSLStatement.cpp" />
+    <ClCompile Include="sksl\dsl\DSLSymbols.cpp" />
     <ClCompile Include="sksl\dsl\DSLType.cpp" />
     <ClCompile Include="sksl\dsl\DSLVar.cpp" />
+    <ClCompile Include="sksl\dsl\priv\DSLFPs.cpp" />
     <ClCompile Include="sksl\dsl\priv\DSLWriter.cpp" />
+    <ClCompile Include="sksl\ir\SkSLBinaryExpression.cpp" />
+    <ClCompile Include="sksl\ir\SkSLBlock.cpp" />
+    <ClCompile Include="sksl\ir\SkSLChildCall.cpp" />
     <ClCompile Include="sksl\ir\SkSLConstructor.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorArray.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorArrayCast.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorCompound.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorCompoundCast.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorDiagonalMatrix.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorMatrixResize.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorScalarCast.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorSplat.cpp" />
+    <ClCompile Include="sksl\ir\SkSLConstructorStruct.cpp" />
+    <ClCompile Include="sksl\ir\SkSLDoStatement.cpp" />
+    <ClCompile Include="sksl\ir\SkSLExpressionStatement.cpp" />
+    <ClCompile Include="sksl\ir\SkSLFieldAccess.cpp" />
+    <ClCompile Include="sksl\ir\SkSLForStatement.cpp" />
+    <ClCompile Include="sksl\ir\SkSLFunctionCall.cpp" />
+    <ClCompile Include="sksl\ir\SkSLFunctionDeclaration.cpp" />
+    <ClCompile Include="sksl\ir\SkSLFunctionDefinition.cpp" />
+    <ClCompile Include="sksl\ir\SkSLIfStatement.cpp" />
+    <ClCompile Include="sksl\ir\SkSLIndexExpression.cpp" />
+    <ClCompile Include="sksl\ir\SkSLPostfixExpression.cpp" />
     <ClCompile Include="sksl\ir\SkSLPrefixExpression.cpp" />
     <ClCompile Include="sksl\ir\SkSLSetting.cpp" />
+    <ClCompile Include="sksl\ir\SkSLSwitchStatement.cpp" />
+    <ClCompile Include="sksl\ir\SkSLSwizzle.cpp" />
     <ClCompile Include="sksl\ir\SkSLSymbolTable.cpp" />
+    <ClCompile Include="sksl\ir\SkSLTernaryExpression.cpp" />
     <ClCompile Include="sksl\ir\SkSLType.cpp" />
+    <ClCompile Include="sksl\ir\SkSLVarDeclarations.cpp" />
+    <ClCompile Include="sksl\ir\SkSLVariable.cpp" />
     <ClCompile Include="sksl\ir\SkSLVariableReference.cpp" />
     <ClCompile Include="sksl\SkSLAnalysis.cpp" />
-    <ClCompile Include="sksl\SkSLASTNode.cpp" />
-    <ClCompile Include="sksl\SkSLByteCode.cpp" />
-    <ClCompile Include="sksl\SkSLByteCodeGenerator.cpp" />
-    <ClCompile Include="sksl\SkSLCFGGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLBuiltinTypes.cpp" />
     <ClCompile Include="sksl\SkSLCompiler.cpp" />
     <ClCompile Include="sksl\SkSLConstantFolder.cpp" />
     <ClCompile Include="sksl\SkSLContext.cpp" />
-    <ClCompile Include="sksl\SkSLCPPCodeGenerator.cpp" />
-    <ClCompile Include="sksl\SkSLCPPUniformCTypes.cpp" />
     <ClCompile Include="sksl\SkSLDehydrator.cpp" />
-    <ClCompile Include="sksl\SkSLGLSLCodeGenerator.cpp" />
-    <ClCompile Include="sksl\SkSLHCodeGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLDSLParser.cpp" />
+    <ClCompile Include="sksl\SkSLErrorReporter.cpp" />
     <ClCompile Include="sksl\SkSLInliner.cpp" />
     <ClCompile Include="sksl\SkSLIRGenerator.cpp" />
     <ClCompile Include="sksl\SkSLLexer.cpp" />
     <ClCompile Include="sksl\SkSLMangler.cpp" />
-    <ClCompile Include="sksl\SkSLMetalCodeGenerator.cpp" />
+    <ClCompile Include="sksl\SkSLOperators.cpp" />
     <ClCompile Include="sksl\SkSLOutputStream.cpp" />
     <ClCompile Include="sksl\SkSLParser.cpp" />
-    <ClCompile Include="sksl\SkSLPipelineStageCodeGenerator.cpp" />
     <ClCompile Include="sksl\SkSLPool.cpp" />
     <ClCompile Include="sksl\SkSLRehydrator.cpp" />
     <ClCompile Include="sksl\SkSLSampleUsage.cpp" />
-    <ClCompile Include="sksl\SkSLSectionAndParameterHelper.cpp" />
-    <ClCompile Include="sksl\SkSLSPIRVCodeGenerator.cpp" />
-    <ClCompile Include="sksl\SkSLSPIRVtoHLSL.cpp" />
     <ClCompile Include="sksl\SkSLString.cpp" />
     <ClCompile Include="sksl\SkSLUtil.cpp" />
-    <ClCompile Include="sksl\SkSLVMGenerator.cpp" />
     <ClCompile Include="svg\SkSVGCanvas.cpp" />
     <ClCompile Include="svg\SkSVGDevice.cpp" />
     <ClCompile Include="utils\mac\SkCreateCGImageRef.cpp" />
-    <ClCompile Include="utils\mac\SkCTFontSmoothBehavior.cpp" />
+    <ClCompile Include="utils\mac\SkCTFont.cpp" />
     <ClCompile Include="utils\SkAnimCodecPlayer.cpp" />
     <ClCompile Include="utils\SkBase64.cpp" />
     <ClCompile Include="utils\SkCamera.cpp" />
@@ -770,13 +749,13 @@
     <ClCompile Include="utils\SkDashPath.cpp" />
     <ClCompile Include="utils\SkEventTracer.cpp" />
     <ClCompile Include="utils\SkFloatToDecimal.cpp" />
-    <ClCompile Include="utils\SkInterpolator.cpp" />
     <ClCompile Include="utils\SkJSON.cpp" />
     <ClCompile Include="utils\SkJSONWriter.cpp" />
     <ClCompile Include="utils\SkMatrix22.cpp" />
     <ClCompile Include="utils\SkMultiPictureDocument.cpp" />
     <ClCompile Include="utils\SkNullCanvas.cpp" />
     <ClCompile Include="utils\SkNWayCanvas.cpp" />
+    <ClCompile Include="utils\SkOrderedFontMgr.cpp" />
     <ClCompile Include="utils\SkOSPath.cpp" />
     <ClCompile Include="utils\SkPaintFilterCanvas.cpp" />
     <ClCompile Include="utils\SkParse.cpp" />
@@ -801,8 +780,6 @@
     <ClCompile Include="xml\SkDOM.cpp" />
     <ClCompile Include="xml\SkXMLParser.cpp" />
     <ClCompile Include="xml\SkXMLWriter.cpp" />
-    <ClCompile Include="xps\SkXPSDevice.cpp" />
-    <ClCompile Include="xps\SkXPSDocument.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{6B67ADCB-D0D8-468D-9FA0-13ADD2203343}</ProjectGuid>
@@ -814,13 +791,14 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v142</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
+    <LLVMToolsVersion>14.0.0</LLVMToolsVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -848,8 +826,8 @@
     <OutDir>$(MyOutDir)</OutDir>
     <IntDir>$(MyTempDir)</IntDir>
     <CodeAnalysisRuleSet>..\rules skia.ruleset</CodeAnalysisRuleSet>
-    <IncludePath>C:\work\STL_out\inc;$(IncludePath)</IncludePath>
     <LibraryPath>C:\work\STL_out\lib\amd64;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\work\STL_out\inc;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -861,7 +839,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>
@@ -890,7 +868,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <PreprocessorDefinitions>$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <EnablePREfast>false</EnablePREfast>

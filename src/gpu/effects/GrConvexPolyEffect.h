@@ -38,7 +38,7 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
    */
   static GrFPResult Make(
       std::unique_ptr<GrFragmentProcessor> inputFP, GrClipEdgeType edgeType, int n,
-      const SkScalar edges[]) {
+      const float edges[]) {
     if (n <= 0 || n > kMaxEdges) {
       return GrFPFailure(std::move(inputFP));
     }
@@ -53,21 +53,10 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
    */
   static GrFPResult Make(std::unique_ptr<GrFragmentProcessor>, GrClipEdgeType, const SkPath&);
 
-  /**
-   * Creates an effect that fills inside the rect with AA edges..
-   */
-  static GrFPResult Make(std::unique_ptr<GrFragmentProcessor>, GrClipEdgeType, const SkRect&);
-
   ~GrConvexPolyEffect() override;
 
   const char* name() const override { return "ConvexPoly"; }
   std::unique_ptr<GrFragmentProcessor> clone() const override;
-
-  GrClipEdgeType getEdgeType() const { return fEdgeType; }
-
-  int getEdgeCount() const { return fEdgeCount; }
-
-  const SkScalar* getEdges() const { return fEdges; }
 
  private:
   GrConvexPolyEffect(
@@ -75,15 +64,15 @@ class GrConvexPolyEffect : public GrFragmentProcessor {
       const SkScalar edges[]);
   GrConvexPolyEffect(const GrConvexPolyEffect&);
 
-  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
+  std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor& other) const override;
 
   GrClipEdgeType fEdgeType;
   int fEdgeCount;
-  SkScalar fEdges[3 * kMaxEdges];
+  std::array<float, 3 * kMaxEdges> fEdges;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 

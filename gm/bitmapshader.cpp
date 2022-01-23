@@ -24,34 +24,34 @@
 
 namespace skiagm {
 
-static void draw_bm(SkBitmap* bm) {
+static sk_sp<SkImage> draw_bm() {
   SkPaint bluePaint;
   bluePaint.setColor(SK_ColorBLUE);
 
-  bm->allocN32Pixels(20, 20);
-  bm->eraseColor(SK_ColorRED);
-
-  SkCanvas canvas(*bm);
-  canvas.drawCircle(10, 10, 5, bluePaint);
+  SkBitmap bm;
+  bm.allocN32Pixels(20, 20);
+  bm.eraseColor(SK_ColorRED);
+  SkCanvas(bm).drawCircle(10, 10, 5, bluePaint);
+  return bm.asImage();
 }
 
-static void draw_mask(SkBitmap* bm) {
+static sk_sp<SkImage> draw_mask() {
   SkPaint circlePaint;
   circlePaint.setColor(SK_ColorBLACK);
 
-  bm->allocPixels(SkImageInfo::MakeA8(20, 20));
-  bm->eraseColor(SK_ColorTRANSPARENT);
-
-  SkCanvas canvas(*bm);
-  canvas.drawCircle(10, 10, 10, circlePaint);
+  SkBitmap bm;
+  bm.allocPixels(SkImageInfo::MakeA8(20, 20));
+  bm.eraseColor(SK_ColorTRANSPARENT);
+  SkCanvas(bm).drawCircle(10, 10, 10, circlePaint);
+  return bm.asImage();
 }
 
 class BitmapShaderGM : public GM {
  protected:
   void onOnceBeforeDraw() override {
     this->setBGColor(SK_ColorGRAY);
-    draw_bm(&fBitmap);
-    draw_mask(&fMask);
+    fImage = draw_bm();
+    fMask = draw_mask();
   }
 
   SkString onShortName() override { return SkString("bitmapshaders"); }
@@ -70,12 +70,12 @@ class BitmapShaderGM : public GM {
       }
 
       canvas->save();
-      paint.setShader(fBitmap.makeShader(SkSamplingOptions(), s));
+      paint.setShader(fImage->makeShader(SkSamplingOptions(), s));
 
       // draw the shader with a bitmap mask
-      canvas->drawBitmap(fMask, 0, 0, &paint);
+      canvas->drawImage(fMask, 0, 0, SkSamplingOptions(), &paint);
       // no blue circle expected (the bitmap shader's coordinates are aligned to CTM still)
-      canvas->drawBitmap(fMask, 30, 0, &paint);
+      canvas->drawImage(fMask, 30, 0, SkSamplingOptions(), &paint);
 
       canvas->translate(0, 25);
 
@@ -87,13 +87,13 @@ class BitmapShaderGM : public GM {
       // clear the shader, colorized by a solid color with a bitmap mask
       paint.setShader(nullptr);
       paint.setColor(SK_ColorGREEN);
-      canvas->drawBitmap(fMask, 0, 0, &paint);
-      canvas->drawBitmap(fMask, 30, 0, &paint);
+      canvas->drawImage(fMask, 0, 0, SkSamplingOptions(), &paint);
+      canvas->drawImage(fMask, 30, 0, SkSamplingOptions(), &paint);
 
       canvas->translate(0, 25);
 
       paint.setShader(
-          fMask.makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), s));
+          fMask->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), s));
       paint.setColor(SK_ColorRED);
 
       // draw the mask using the shader and a color
@@ -105,8 +105,7 @@ class BitmapShaderGM : public GM {
   }
 
  private:
-  SkBitmap fBitmap;
-  SkBitmap fMask;
+  sk_sp<SkImage> fImage, fMask;
 
   using INHERITED = GM;
 };

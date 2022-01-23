@@ -39,7 +39,7 @@ struct SkImageFilterCacheKey {
   uint32_t fSrcGenID;
   SkIRect fSrcSubset;
 
-  bool operator==(const SkImageFilterCacheKey& other) const {
+  bool operator==(const SkImageFilterCacheKey& other) const noexcept {
     return fUniqueID == other.fUniqueID && fMatrix == other.fMatrix &&
            fClipBounds == other.fClipBounds && fSrcGenID == other.fSrcGenID &&
            fSrcSubset == other.fSrcSubset;
@@ -51,8 +51,6 @@ struct SkImageFilterCacheKey {
 // copy of the image filter (with exactly the same parameters) will not yield a cache hit.
 class SkImageFilterCache : public SkRefCnt {
  public:
-  SK_USE_FLUENT_IMAGE_FILTER_TYPES_IN_CLASS
-
   enum { kDefaultTransientSize = 32 * 1024 * 1024 };
 
   ~SkImageFilterCache() override {}
@@ -61,13 +59,12 @@ class SkImageFilterCache : public SkRefCnt {
 
   // Returns true on cache hit and updates 'result' to be the cached result. Returns false when
   // not in the cache, in which case 'result' is not modified.
-  virtual bool get(
-      const SkImageFilterCacheKey& key, skif::FilterResult<For::kOutput>* result) const = 0;
+  virtual bool get(const SkImageFilterCacheKey& key, skif::FilterResult* result) const = 0;
   // 'filter' is included in the caching to allow the purging of all of an image filter's cached
   // results when it is destroyed.
   virtual void set(
       const SkImageFilterCacheKey& key, const SkImageFilter* filter,
-      const skif::FilterResult<For::kOutput>& result) = 0;
+      const skif::FilterResult& result) = 0;
   virtual void purge() = 0;
   virtual void purgeByImageFilter(const SkImageFilter*) = 0;
   SkDEBUGCODE(virtual int count() const = 0;)

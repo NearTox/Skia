@@ -110,8 +110,7 @@ class AlternatingColorPatternBench : public Benchmark {
     int h = 40;
     makebm(&fBmp, w, h);
     fBmShader = fBmp.makeShader(
-        SkTileMode::kRepeat, SkTileMode::kRepeat,
-        SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone));
+        SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(SkFilterMode::kLinear));
     int offset = 2;
     int count = 0;
     for (int j = 0; j < NY; ++j) {

@@ -56,7 +56,7 @@ static inline TFKind classify_transfer_fn(const skcms_TransferFunction& tf) {
     return sRGBish_TF;
   }
 
-  return Bad_TF;
+    return Bad_TF;
 }
 
 static inline bool is_almost_srgb(const skcms_TransferFunction& coeffs) {
@@ -88,6 +88,10 @@ static inline bool is_almost_linear(const skcms_TransferFunction& coeffs) {
 
   return linearExp || linearFn;
 }
+
+skvm::F32 sk_program_transfer_fn(
+    skvm::F32 v, TFKind, skvm::F32 G, skvm::F32 A, skvm::F32 B, skvm::F32 C, skvm::F32 D,
+    skvm::F32 E, skvm::F32 F);
 
 skvm::Color sk_program_transfer_fn(
     skvm::Builder*, skvm::Uniforms*, const skcms_TransferFunction&, skvm::Color);

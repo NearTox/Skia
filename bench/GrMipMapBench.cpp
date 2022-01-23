@@ -42,8 +42,8 @@ class GrMipMapBench : public Benchmark {
     // Clear surface once:
     fSurface->getCanvas()->clear(SK_ColorBLACK);
 
+    SkSamplingOptions sampling(SkFilterMode::kLinear, SkMipmapMode::kLinear);
     SkPaint paint;
-    paint.setFilterQuality(kMedium_SkFilterQuality);
     paint.setColor(SK_ColorWHITE);
     for (int i = 0; i < loops; i++) {
       // Touch surface so mips are dirtied
@@ -52,7 +52,7 @@ class GrMipMapBench : public Benchmark {
       // Draw reduced version of surface to original canvas, to trigger mip generation
       canvas->save();
       canvas->scale(0.1f, 0.1f);
-      canvas->drawImage(fSurface->makeImageSnapshot(), 0, 0, &paint);
+      canvas->drawImage(fSurface->makeImageSnapshot(), 0, 0, sampling, &paint);
       canvas->restore();
     }
   }

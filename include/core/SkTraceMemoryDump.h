@@ -78,8 +78,17 @@ class SK_API SkTraceMemoryDump {
    */
   virtual bool shouldDumpWrappedObjects() const { return true; }
 
+  /**
+   * If shouldDumpWrappedObjects() returns true then this function will be called to populate
+   * the output with information on whether the item being dumped is a wrapped object.
+   */
+  virtual void dumpWrappedState(const char* /*dumpName*/, bool /*isWrappedObject*/) {}
+
  protected:
-  virtual ~SkTraceMemoryDump() {}
+  virtual ~SkTraceMemoryDump() = default;
+  SkTraceMemoryDump() = default;
+  SkTraceMemoryDump(const SkTraceMemoryDump&) = delete;
+  SkTraceMemoryDump& operator=(const SkTraceMemoryDump&) = delete;
 };
 
 #endif

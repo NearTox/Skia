@@ -19,7 +19,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-DECLARE_SKMESSAGEBUS_MESSAGE(SkResourceCache::PurgeSharedIDMessage)
+DECLARE_SKMESSAGEBUS_MESSAGE(SkResourceCache::PurgeSharedIDMessage, uint32_t, true)
 
 static inline bool SkShouldPostMessageToBus(
     const SkResourceCache::PurgeSharedIDMessage&, uint32_t) {
@@ -90,12 +90,13 @@ void SkResourceCache::init() {
   fDiscardableFactory = nullptr;
 }
 
-SkResourceCache::SkResourceCache(DiscardableFactory factory) {
+SkResourceCache::SkResourceCache(DiscardableFactory factory)
+    : fPurgeSharedIDInbox(SK_InvalidUniqueID) {
   this->init();
   fDiscardableFactory = factory;
 }
 
-SkResourceCache::SkResourceCache(size_t byteLimit) {
+SkResourceCache::SkResourceCache(size_t byteLimit) : fPurgeSharedIDInbox(SK_InvalidUniqueID) {
   this->init();
   fTotalByteLimit = byteLimit;
 }
@@ -379,33 +380,33 @@ void SkResourceCache::validate() const {
     return;
   }
 
-  SkASSERT(nullptr == fHead->fPrev);
-  SkASSERT(fHead->fNext);
-  SkASSERT(nullptr == fTail->fNext);
-  SkASSERT(fTail->fPrev);
+    SkASSERT(nullptr == fHead->fPrev);
+    SkASSERT(fHead->fNext);
+    SkASSERT(nullptr == fTail->fNext);
+    SkASSERT(fTail->fPrev);
 
-  size_t used = 0;
-  int count = 0;
-  const Rec* rec = fHead;
-  while (rec) {
-    count += 1;
-    used += rec->bytesUsed();
-    SkASSERT(used <= fTotalBytesUsed);
-    rec = rec->fNext;
-  }
-  SkASSERT(fCount == count);
+    size_t used = 0;
+    int count = 0;
+    const Rec* rec = fHead;
+    while (rec) {
+      count += 1;
+      used += rec->bytesUsed();
+      SkASSERT(used <= fTotalBytesUsed);
+      rec = rec->fNext;
+    }
+    SkASSERT(fCount == count);
 
-  rec = fTail;
-  while (rec) {
-    SkASSERT(count > 0);
-    count -= 1;
-    SkASSERT(used >= rec->bytesUsed());
-    used -= rec->bytesUsed();
-    rec = rec->fPrev;
-  }
+    rec = fTail;
+    while (rec) {
+      SkASSERT(count > 0);
+      count -= 1;
+      SkASSERT(used >= rec->bytesUsed());
+      used -= rec->bytesUsed();
+      rec = rec->fPrev;
+    }
 
-  SkASSERT(0 == count);
-  SkASSERT(0 == used);
+    SkASSERT(0 == count);
+    SkASSERT(0 == used);
 }
 #endif
 
@@ -413,7 +414,7 @@ void SkResourceCache::dump() const {
   this->validate();
 
   SkDebugf(
-      "SkResourceCache: count=%d bytes=%d %s\n", fCount, fTotalBytesUsed,
+      "SkResourceCache: count=%d bytes=%zu %s\n", fCount, fTotalBytesUsed,
       fDiscardableFactory ? "discardable" : "malloc");
 }
 
@@ -522,6 +523,11 @@ void SkResourceCache::PurgeAll() {
   return get_cache()->purgeAll();
 }
 
+void SkResourceCache::CheckMessages() {
+  SkAutoMutexExclusive am(resource_cache_mutex());
+  return get_cache()->checkMessages();
+}
+
 bool SkResourceCache::Find(const Key& key, FindVisitor visitor, void* context) {
   SkAutoMutexExclusive am(resource_cache_mutex());
   return get_cache()->find(key, visitor, context);
@@ -539,7 +545,7 @@ void SkResourceCache::VisitAll(Visitor visitor, void* context) {
 
 void SkResourceCache::PostPurgeSharedID(uint64_t sharedID) {
   if (sharedID) {
-    SkMessageBus<PurgeSharedIDMessage>::Post(PurgeSharedIDMessage(sharedID));
+    SkMessageBus<PurgeSharedIDMessage, uint32_t>::Post(PurgeSharedIDMessage(sharedID));
   }
 }
 
@@ -573,7 +579,7 @@ void SkGraphics::PurgeResourceCache() {
 
 static void dump_visitor(const SkResourceCache::Rec& rec, void*) {
   SkDebugf(
-      "RC: %12s bytes %9lu  discardable %p\n", rec.getCategory(), rec.bytesUsed(),
+      "RC: %12s bytes %9zu  discardable %p\n", rec.getCategory(), rec.bytesUsed(),
       rec.diagnostic_only_getDiscardable());
 }
 

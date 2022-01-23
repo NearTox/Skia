@@ -7,12 +7,15 @@
 
 #include "src/gpu/glsl/GrGLSLShaderBuilder.h"
 
+#include "include/sksl/DSL.h"
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/GrShaderVar.h"
 #include "src/gpu/GrSwizzle.h"
 #include "src/gpu/glsl/GrGLSLBlend.h"
 #include "src/gpu/glsl/GrGLSLColorSpaceXformHelper.h"
 #include "src/gpu/glsl/GrGLSLProgramBuilder.h"
+#include "src/sksl/dsl/priv/DSLWriter.h"
+#include "src/sksl/ir/SkSLVarDeclarations.h"
 
 GrGLSLShaderBuilder::GrGLSLShaderBuilder(GrGLSLProgramBuilder* program)
     : fProgramBuilder(program),
@@ -22,7 +25,7 @@ GrGLSLShaderBuilder::GrGLSLShaderBuilder(GrGLSLProgramBuilder* program)
       fCodeIndex(kCode),
       fFinalized(false),
       fTmpVariableCounter(0) {
-  // We push back some dummy pointers which will later become our header
+  // We push back some placeholder pointers which will later become our header
   for (int i = 0; i <= kCode; i++) {
     fShaderStrings.push_back();
   }
@@ -46,10 +49,8 @@ SkString GrGLSLShaderBuilder::getMangledFunctionName(const char* baseName) {
 }
 
 void GrGLSLShaderBuilder::appendFunctionDecl(
-    GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args,
-    bool forceInline) {
-  this->functions().appendf(
-      "%s%s %s(", forceInline ? "inline " : "", GrGLSLTypeString(returnType), mangledName);
+    GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args) {
+  this->functions().appendf("%s %s(", GrGLSLTypeString(returnType), mangledName);
   for (size_t i = 0; i < args.size(); ++i) {
     if (i > 0) {
       this->functions().append(", ");
@@ -61,9 +62,9 @@ void GrGLSLShaderBuilder::appendFunctionDecl(
 }
 
 void GrGLSLShaderBuilder::emitFunction(
-    GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args, const char* body,
-    bool forceInline) {
-  this->appendFunctionDecl(returnType, mangledName, args, forceInline);
+    GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args,
+    const char* body) {
+  this->appendFunctionDecl(returnType, mangledName, args);
   this->functions().appendf(
       " {\n"
       "%s"
@@ -71,11 +72,27 @@ void GrGLSLShaderBuilder::emitFunction(
       body);
 }
 
+void GrGLSLShaderBuilder::emitFunction(const char* declaration, const char* body) {
+  this->functions().appendf(
+      "%s {\n"
+      "%s"
+      "}\n\n",
+      declaration, body);
+}
+
 void GrGLSLShaderBuilder::emitFunctionPrototype(
-    GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args,
-    bool forceInline) {
-  this->appendFunctionDecl(returnType, mangledName, args, forceInline);
+    GrSLType returnType, const char* mangledName, SkSpan<const GrShaderVar> args) {
+  this->appendFunctionDecl(returnType, mangledName, args);
   this->functions().append(";\n");
+}
+
+void GrGLSLShaderBuilder::codeAppend(std::unique_ptr<SkSL::Statement> stmt) {
+  SkASSERT(SkSL::dsl::DSLWriter::CurrentProcessor());
+  SkASSERT(stmt);
+  this->codeAppend(stmt->description().c_str());
+  if (stmt->is<SkSL::VarDeclaration>()) {
+    fDeclarations.push_back(std::move(stmt));
+  }
 }
 
 static inline void append_texture_swizzle(SkString* out, GrSwizzle swizzle) {
@@ -218,7 +235,7 @@ void GrGLSLShaderBuilder::appendColorGamutXform(
         GrShaderVar("color", useFloat ? kFloat4_GrSLType : kHalf4_GrSLType)};
     SkString body;
     if (colorXformHelper->applyUnpremul()) {
-      body.appendf("color = unpremul%s(color);", useFloat ? "_float" : "");
+      body.append("color = unpremul(color);");
     }
     if (colorXformHelper->applySrcTF()) {
       body.appendf("color.r = %s(half(color.r));", srcTFFuncName.c_str());

@@ -17,16 +17,16 @@ class GrWindowRectangles {
 
   GrWindowRectangles() : fCount(0) {}
   GrWindowRectangles(const GrWindowRectangles& that) : fCount(0) { *this = that; }
-  ~GrWindowRectangles() { SkSafeUnref(this->rec()); }
+  ~GrWindowRectangles();
 
   GrWindowRectangles makeOffset(int dx, int dy) const;
 
-  bool empty() const { return !fCount; }
-  int count() const { return fCount; }
+  bool empty() const noexcept { return !fCount; }
+  int count() const noexcept { return fCount; }
   const SkIRect* data() const;
 
-  void reset();
-  GrWindowRectangles& operator=(const GrWindowRectangles&);
+  void reset() noexcept;
+  GrWindowRectangles& operator=(const GrWindowRectangles&) noexcept;
 
   SkIRect& addWindow(const SkIRect& window) { return this->addWindow() = window; }
   SkIRect& addWindow();
@@ -37,7 +37,7 @@ class GrWindowRectangles {
  private:
   struct Rec;
 
-  const Rec* rec() const { return fCount <= 1 ? nullptr : fRec; }
+  const Rec* rec() const noexcept { return fCount <= 1 ? nullptr : fRec; }
 
   int fCount;
   union {
@@ -56,16 +56,18 @@ struct GrWindowRectangles::Rec : public GrNonAtomicRef<Rec> {
   SkIRect fData[kMaxWindows];
 };
 
+inline GrWindowRectangles::~GrWindowRectangles() { SkSafeUnref(this->rec()); }
+
 inline const SkIRect* GrWindowRectangles::data() const {
   return fCount <= 1 ? &fLocalWindow : fRec->fData;
 }
 
-inline void GrWindowRectangles::reset() {
+inline void GrWindowRectangles::reset() noexcept {
   SkSafeUnref(this->rec());
   fCount = 0;
 }
 
-inline GrWindowRectangles& GrWindowRectangles::operator=(const GrWindowRectangles& that) {
+inline GrWindowRectangles& GrWindowRectangles::operator=(const GrWindowRectangles& that) noexcept {
   SkSafeUnref(this->rec());
   fCount = that.fCount;
   if (fCount <= 1) {

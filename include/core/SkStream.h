@@ -40,7 +40,7 @@ class SkStreamMemory;
  */
 class SK_API SkStream {
  public:
-  virtual ~SkStream() {}
+  virtual ~SkStream() = default;
   SkStream() {}
 
   /**

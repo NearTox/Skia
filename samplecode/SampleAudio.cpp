@@ -27,10 +27,9 @@ protected:
         if (data) {
             fPlayer = SkAudioPlayer::Make(data);
 
-            SkDebugf("make: dur:%g time%g state:%d",
-                     fPlayer->duration(),
-                     fPlayer->time(),
-                     fPlayer->state());
+            SkDebugf(
+                "make: dur:%g time%g state:%d", fPlayer->duration(), fPlayer->time(),
+                (int)fPlayer->state());
         }
 
         fBar = { 10, 10, 510, 30 };

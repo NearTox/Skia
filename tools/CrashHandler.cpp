@@ -165,7 +165,7 @@ static const struct {
 
 static LONG WINAPI handler(EXCEPTION_POINTERS* e) {
   const DWORD code = e->ExceptionRecord->ExceptionCode;
-  SkDebugf("\nCaught exception %u", code);
+  SkDebugf("\nCaught exception %lu", code);
   for (size_t i = 0; i < SK_ARRAY_COUNT(kExceptions); i++) {
     if (kExceptions[i].code == code) {
       SkDebugf(" %s", kExceptions[i].name);
@@ -201,6 +201,7 @@ static LONG WINAPI handler(EXCEPTION_POINTERS* e) {
   const DWORD machineType = IMAGE_FILE_MACHINE_ARM64;
 #    endif
 
+#    if !defined(SK_WINUWP)
   while (StackWalk64(
       machineType, GetCurrentProcess(), GetCurrentThread(), &frame, c, nullptr,
       SymFunctionTableAccess64, SymGetModuleBase64, nullptr)) {
@@ -219,8 +220,9 @@ static LONG WINAPI handler(EXCEPTION_POINTERS* e) {
     DWORD64 offset;
     SymGetSymFromAddr64(hProcess, frame.AddrPC.Offset, &offset, symbol);
 
-    SkDebugf("%s +%x\n", symbol->Name, offset);
+    SkDebugf("%s +%llx\n", symbol->Name, offset);
   }
+#    endif  // SK_WINUWP
 
   // Exit NOW.  Don't notify other threads, don't call anything registered with atexit().
   _exit(1);

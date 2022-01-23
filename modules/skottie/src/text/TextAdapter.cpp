@@ -257,9 +257,10 @@ uint32_t TextAdapter::shaperFlags() const {
 
 void TextAdapter::reshape() {
   const Shaper::TextDesc text_desc = {
-      fText->fTypeface,  fText->fTextSize,  fText->fLineHeight,  fText->fLineShift,
-      fText->fAscent,    fText->fHAlign,    fText->fVAlign,      fText->fResize,
-      fText->fLineBreak, fText->fDirection, this->shaperFlags(),
+      fText->fTypeface,       fText->fTextSize,    fText->fMinTextSize, fText->fMaxTextSize,
+      fText->fLineHeight,     fText->fLineShift,   fText->fAscent,      fText->fHAlign,
+      fText->fVAlign,         fText->fResize,      fText->fLineBreak,   fText->fDirection,
+      fText->fCapitalization, this->shaperFlags(),
   };
   const auto shape_result = Shaper::Shape(fText->fText, text_desc, fText->fBox, fFontMgr);
 

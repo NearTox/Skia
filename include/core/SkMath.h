@@ -15,7 +15,7 @@
 // Handy util that can be passed two ints, and will automatically promote to
 // 64bits before the multiply, so the caller doesn't have to remember to cast
 // e.g. (int64_t)a * b;
-static inline int64_t sk_64_mul(int64_t a, int64_t b) { return a * b; }
+static constexpr inline int64_t sk_64_mul(int64_t a, int64_t b) noexcept { return a * b; }
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -24,7 +24,7 @@ static inline int64_t sk_64_mul(int64_t a, int64_t b) { return a * b; }
  *  value <= 0.
  */
 template <typename T>
-constexpr inline bool SkIsPow2(T value) {
+constexpr inline bool SkIsPow2(T value) noexcept {
   return (value & (value - 1)) == 0;
 }
 
@@ -34,7 +34,7 @@ constexpr inline bool SkIsPow2(T value) {
  *  Return a*b/((1 << shift) - 1), rounding any fractional bits.
  *  Only valid if a and b are unsigned and <= 32767 and shift is > 0 and <= 8
  */
-static inline unsigned SkMul16ShiftRound(U16CPU a, U16CPU b, int shift) {
+static constexpr inline unsigned SkMul16ShiftRound(U16CPU a, U16CPU b, int shift) noexcept {
   SkASSERT(a <= 32767);
   SkASSERT(b <= 32767);
   SkASSERT(shift > 0 && shift <= 8);
@@ -46,6 +46,8 @@ static inline unsigned SkMul16ShiftRound(U16CPU a, U16CPU b, int shift) {
  *  Return a*b/255, rounding any fractional bits.
  *  Only valid if a and b are unsigned and <= 32767.
  */
-static inline U8CPU SkMulDiv255Round(U16CPU a, U16CPU b) { return SkMul16ShiftRound(a, b, 8); }
+static constexpr inline U8CPU SkMulDiv255Round(U16CPU a, U16CPU b) noexcept {
+  return SkMul16ShiftRound(a, b, 8);
+}
 
 #endif

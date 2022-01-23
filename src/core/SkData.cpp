@@ -13,13 +13,13 @@
 #include "src/core/SkWriteBuffer.h"
 #include <new>
 
-SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context)
+SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) noexcept
     : fReleaseProc(proc), fReleaseProcContext(context), fPtr(ptr), fSize(size) {}
 
 /** This constructor means we are inline with our fPtr's contents.
  *  Thus we set fPtr to point right after this.
  */
-SkData::SkData(size_t size)
+SkData::SkData(size_t size) noexcept
     : fReleaseProc(nullptr),
       fReleaseProcContext(nullptr),
       fPtr((const char*)(this + 1)),
@@ -31,7 +31,7 @@ SkData::~SkData() {
   }
 }
 
-bool SkData::equals(const SkData* other) const {
+bool SkData::equals(const SkData* other) const noexcept {
   if (this == other) {
     return true;
   }
@@ -74,7 +74,7 @@ sk_sp<SkData> SkData::PrivateNewWithCopy(const void* srcOrNull, size_t length) {
   return data;
 }
 
-void SkData::DummyReleaseProc(const void*, void*) {}
+void SkData::NoopReleaseProc(const void*, void*) {}
 
 ///////////////////////////////////////////////////////////////////////////////
 

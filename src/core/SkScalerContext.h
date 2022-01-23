@@ -119,15 +119,15 @@ struct SkScalerContextRec {
 
   SkString dump() const {
     SkString msg;
-    msg.appendf("Rec\n");
+    msg.appendf("    Rec\n");
     msg.appendf(
-        "  textsize %g prescale %g preskew %g post [%g %g %g %g]\n", fTextSize, fPreScaleX,
+        "      textsize %a prescale %a preskew %a post [%a %a %a %a]\n", fTextSize, fPreScaleX,
         fPreSkewX, fPost2x2[0][0], fPost2x2[0][1], fPost2x2[1][0], fPost2x2[1][1]);
     msg.appendf(
-        "  frame %g miter %g format %d join %d cap %d flags %#hx\n", fFrameWidth, fMiterLimit,
+        "      frame %g miter %g format %d join %d cap %d flags %#hx\n", fFrameWidth, fMiterLimit,
         fMaskFormat, fStrokeJoin, fStrokeCap, fFlags);
     msg.appendf(
-        "  lum bits %x, device gamma %d, paint gamma %d contrast %d\n", fLumBits, fDeviceGamma,
+        "      lum bits %x, device gamma %d, paint gamma %d contrast %d\n", fLumBits, fDeviceGamma,
         fPaintGamma, fContrast);
     return msg;
   }
@@ -380,7 +380,7 @@ class SkScalerContext {
   bool fGenerateImageFromPath;
 
   /** Returns false if the glyph has no path at all. */
-  bool internalGetPath(SkPackedGlyphID id, SkPath* devPath);
+  bool internalGetPath(SkPackedGlyphID id, SkPath* devPath, bool* hairline);
   SkGlyph internalMakeGlyph(SkPackedGlyphID packedID, SkMask::Format format);
 
   // SkMaskGamma::PreBlend converts linear masks to gamma correcting masks.

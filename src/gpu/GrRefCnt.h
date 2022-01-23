@@ -130,7 +130,6 @@ class gr_sp {
   T* get() const { return fPtr; }
   T* operator->() const { return fPtr; }
 
- private:
   /**
    * Adopt the new bare pointer, and call Unref() on any previously held object (if not null).
    * No call to Ref() will be made.
@@ -141,6 +140,7 @@ class gr_sp {
     SafeUnref(oldPtr);
   }
 
+ private:
   /**
    * Return the bare pointer, and set the internal object pointer to nullptr.
    * The caller must assume ownership of the object, and manage its reference count directly.

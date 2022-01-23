@@ -13,6 +13,7 @@
 #include "src/core/SkColorSpaceXformSteps.h"
 #include "src/gpu/GrFragmentProcessor.h"
 
+class GrColorInfo;
 class SkColorSpace;
 
 /**
@@ -20,15 +21,17 @@ class SkColorSpace;
  */
 class GrColorSpaceXform : public SkRefCnt {
  public:
-  GrColorSpaceXform(const SkColorSpaceXformSteps& steps) : fSteps(steps) {}
+  GrColorSpaceXform(const SkColorSpaceXformSteps& steps) noexcept : fSteps(steps) {}
 
   static sk_sp<GrColorSpaceXform> Make(
       SkColorSpace* src, SkAlphaType srcAT, SkColorSpace* dst, SkAlphaType dstAT);
 
-  const SkColorSpaceXformSteps& steps() const { return fSteps; }
+  static sk_sp<GrColorSpaceXform> Make(const GrColorInfo& srcInfo, const GrColorInfo& dstInfo);
+
+  const SkColorSpaceXformSteps& steps() const noexcept { return fSteps; }
 
   /**
-   * GrGLSLFragmentProcessor::GenKey() must call this and include the returned value in its
+   * GrFragmentProcessor::addToKey() must call this and include the returned value in its
    * computed key.
    */
   static uint32_t XformKey(const GrColorSpaceXform* xform) {
@@ -68,6 +71,9 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
   static std::unique_ptr<GrFragmentProcessor> Make(
       std::unique_ptr<GrFragmentProcessor> child, SkColorSpace* src, SkAlphaType srcAT,
       SkColorSpace* dst, SkAlphaType dstAT);
+  static std::unique_ptr<GrFragmentProcessor> Make(
+      std::unique_ptr<GrFragmentProcessor> child, const GrColorInfo& srcInfo,
+      const GrColorInfo& dstInfo);
 
   /**
    * Returns a fragment processor that calls the passed in FP and then converts it with the given
@@ -91,8 +97,8 @@ class GrColorSpaceXformEffect : public GrFragmentProcessor {
   static OptimizationFlags OptFlags(const GrFragmentProcessor* child);
   SkPMColor4f constantOutputForConstantInput(const SkPMColor4f& input) const override;
 
-  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override;
+  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
   bool onIsEqual(const GrFragmentProcessor&) const override;
 
   sk_sp<GrColorSpaceXform> fColorXform;

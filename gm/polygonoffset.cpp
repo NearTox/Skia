@@ -295,9 +295,8 @@ class PolygonOffsetGM : public GM {
     }
   }
   // Draw a single polygon with insets and potentially outsets
-  void drawPolygon(SkCanvas* canvas, int index, SkPoint* offset) {
+  void drawPolygon(SkCanvas* canvas, int index, SkPoint* position) {
     SkPoint center;
-    SkRect bounds;
     {
       std::unique_ptr<SkPoint[]> data(nullptr);
       int numPts;
@@ -306,16 +305,17 @@ class PolygonOffsetGM : public GM {
       } else {
         GetSimplePolygon(index, SkPathDirection::kCW, &data, &numPts);
       }
+      SkRect bounds;
       bounds.setBounds(data.get(), numPts);
       if (!fConvexOnly) {
         bounds.outset(kMaxOutset, kMaxOutset);
       }
-      if (offset->fX + bounds.width() > kGMWidth) {
-        offset->fX = 0;
-        offset->fY += kMaxPathHeight;
+      if (position->fX + bounds.width() > kGMWidth) {
+        position->fX = 0;
+        position->fY += kMaxPathHeight;
       }
-      center = {offset->fX + SkScalarHalf(bounds.width()), offset->fY};
-      offset->fX += bounds.width();
+      center = {position->fX + SkScalarHalf(bounds.width()), position->fY};
+      position->fX += bounds.width();
     }
 
     const SkPathDirection dirs[2] = {SkPathDirection::kCW, SkPathDirection::kCCW};
@@ -368,8 +368,8 @@ class PolygonOffsetGM : public GM {
       if (result) {
         SkPath path;
         path.moveTo(offsetPoly[0]);
-        for (int i = 1; i < offsetPoly.count(); ++i) {
-          path.lineTo(offsetPoly[i]);
+        for (int j = 1; j < offsetPoly.count(); ++j) {
+          path.lineTo(offsetPoly[j]);
         }
         path.close();
 

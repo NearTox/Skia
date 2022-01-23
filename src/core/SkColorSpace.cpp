@@ -138,7 +138,7 @@ bool SkColorSpace::gammaCloseToSRGB() const {
   return memcmp(&fTransferFn, &SkNamedTransferFn::kSRGB, 7 * sizeof(float)) == 0;
 }
 
-bool SkColorSpace::gammaIsLinear() const {
+bool SkColorSpace::gammaIsLinear() const noexcept {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(&fTransferFn, &SkNamedTransferFn::kLinear, 7 * sizeof(float)) == 0;
 }
@@ -347,7 +347,7 @@ sk_sp<SkColorSpace> SkColorSpace::Deserialize(const void* data, size_t length) {
   }
 }
 
-bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) {
+bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) noexcept {
   if (x == y) {
     return true;
   }

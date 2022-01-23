@@ -46,16 +46,15 @@ class MatrixConvolutionGM : public GM {
 
   void makeBitmap() {
     // Draw our bitmap in N32, so legacy devices get "premul" values they understand
-    fBitmap.allocN32Pixels(80, 80);
-    SkCanvas canvas(fBitmap);
-    canvas.clear(0x00000000);
+    auto surf = SkSurface::MakeRasterN32Premul(80, 80);
     SkPaint paint;
     paint.setColor(0xFFFFFFFF);
     SkPoint pts[2] = {{0, 0}, {0, 80.0f}};
     SkScalar pos[2] = {0, 80.0f};
     paint.setShader(SkGradientShader::MakeLinear(pts, fColors, pos, 2, SkTileMode::kClamp));
     SkFont font(ToolUtils::create_portable_typeface(), 180.0f);
-    canvas.drawString("e", -10.0f, 80.0f, font, paint);
+    surf->getCanvas()->drawString("e", -10.0f, 80.0f, font, paint);
+    fImage = surf->makeImageSnapshot();
   }
 
   SkISize onISize() override { return SkISize::Make(500, 300); }
@@ -92,13 +91,13 @@ class MatrixConvolutionGM : public GM {
     paint.setImageFilter(this->makeFilter(kernelOffset, tileMode, convolveAlpha, cropRect));
     canvas->save();
     canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
-    const SkRect layerBounds = SkRect::MakeIWH(fBitmap.width(), fBitmap.height());
+    const SkRect layerBounds = SkRect::Make(fImage->bounds());
     canvas->clipRect(layerBounds);
     // This GM is, in part, intended to display the wrapping behavior of the
     // matrix image filter. The only (rational) way to achieve that for repeat mode
     // is to create a tight layer.
     canvas->saveLayer(layerBounds, &paint);
-    canvas->drawBitmap(fBitmap, 0, 0, nullptr);
+    canvas->drawImage(fImage, 0, 0);
     canvas->restore();
     canvas->restore();
   }
@@ -108,7 +107,7 @@ class MatrixConvolutionGM : public GM {
   void onDraw(SkCanvas* canvas) override {
     canvas->clear(SK_ColorBLACK);
     SkIPoint kernelOffset = SkIPoint::Make(1, 0);
-    SkIRect rect = fBitmap.bounds();
+    SkIRect rect = fImage->bounds();
     for (int x = 10; x < 310; x += 100) {
       this->draw(canvas, x, 10, kernelOffset, SkTileMode::kClamp, true, &rect);
       this->draw(canvas, x, 110, kernelOffset, SkTileMode::kDecal, true, &rect);
@@ -127,7 +126,7 @@ class MatrixConvolutionGM : public GM {
   }
 
  private:
-  SkBitmap fBitmap;
+  sk_sp<SkImage> fImage;
   SkColor fColors[2];
   const char* fNameSuffix;
   KernelFixture fKernelFixture;

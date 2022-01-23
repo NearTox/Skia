@@ -27,7 +27,8 @@ void SkScalerContextProxy::generateMetrics(SkGlyph* glyph) {
 
   glyph->fMaskFormat = fRec.fMaskFormat;
   glyph->zeroMetrics();
-  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kGlyphMetrics);
+  fDiscardableManager->notifyCacheMiss(
+      SkStrikeClient::CacheMissType::kGlyphMetrics, fRec.fTextSize);
 }
 
 void SkScalerContextProxy::generateImage(const SkGlyph& glyph) {
@@ -38,7 +39,7 @@ void SkScalerContextProxy::generateImage(const SkGlyph& glyph) {
 
   // There is no desperation search here, because if there was an image to be found it was
   // copied over with the metrics search.
-  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kGlyphImage);
+  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kGlyphImage, fRec.fTextSize);
 }
 
 bool SkScalerContextProxy::generatePath(SkGlyphID glyphID, SkPath* path) {
@@ -47,7 +48,7 @@ bool SkScalerContextProxy::generatePath(SkGlyphID glyphID, SkPath* path) {
     SkDebugf("GlyphCacheMiss generatePath: %s\n", this->getRec().dump().c_str());
   }
 
-  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kGlyphPath);
+  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kGlyphPath, fRec.fTextSize);
   return false;
 }
 
@@ -59,7 +60,7 @@ void SkScalerContextProxy::generateFontMetrics(SkFontMetrics* metrics) {
   }
 
   // Font metrics aren't really used for render, so just zero out the data and return.
-  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kFontMetrics);
+  fDiscardableManager->notifyCacheMiss(SkStrikeClient::CacheMissType::kFontMetrics, fRec.fTextSize);
   sk_bzero(metrics, sizeof(*metrics));
 }
 

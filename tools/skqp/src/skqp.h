@@ -34,7 +34,7 @@ class SkStreamAsset;
 class SkQPAssetManager {
  public:
   SkQPAssetManager() {}
-  virtual ~SkQPAssetManager() {}
+  virtual ~SkQPAssetManager() = default;
   virtual sk_sp<SkData> open(const char* path) = 0;
 
  private:

@@ -9,6 +9,9 @@
 #include "include/core/SkStream.h"
 #include "include/core/SkSurface.h"
 #include "modules/svg/include/SkSVGDOM.h"
+#include "modules/svg/include/SkSVGNode.h"
+
+#if defined(SK_ENABLE_SVG)
 
 void FuzzSVG(sk_sp<SkData> bytes) {
   uint8_t w = 100;
@@ -39,4 +42,6 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
   FuzzSVG(bytes);
   return 0;
 }
-#endif
+#  endif
+
+#endif  // SK_ENABLE_SVG

@@ -59,7 +59,8 @@ class PictureShaderCacheGM : public skiagm::GM {
 
   void onDraw(SkCanvas* canvas) override {
     SkPaint paint;
-    paint.setShader(fPicture->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat));
+    paint.setShader(
+        fPicture->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkFilterMode::kNearest));
 
     {
       // Render in a funny color space that converts green to yellow.

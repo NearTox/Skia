@@ -9,11 +9,13 @@
 #define SkSVGRenderContext_DEFINED
 
 #include "include/core/SkFontMgr.h"
+#include "include/core/SkM44.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkPath.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkSize.h"
 #include "include/core/SkTypes.h"
+#include "modules/skresources/include/SkResources.h"
 #include "modules/svg/include/SkSVGAttribute.h"
 #include "modules/svg/include/SkSVGIDMapper.h"
 #include "src/core/SkTLazy.h"
@@ -22,135 +24,162 @@ class SkCanvas;
 class SkSVGLength;
 
 class SkSVGLengthContext {
- public:
-  SkSVGLengthContext(const SkSize& viewport, SkScalar dpi = 90) : fViewport(viewport), fDPI(dpi) {}
+public:
+    SkSVGLengthContext(const SkSize& viewport, SkScalar dpi = 90)
+        : fViewport(viewport), fDPI(dpi) {}
 
-  enum class LengthType {
-    kHorizontal,
-    kVertical,
-    kOther,
-  };
+    enum class LengthType {
+        kHorizontal,
+        kVertical,
+        kOther,
+    };
 
-  const SkSize& viewPort() const { return fViewport; }
-  void setViewPort(const SkSize& viewport) { fViewport = viewport; }
+    const SkSize& viewPort() const { return fViewport; }
+    void setViewPort(const SkSize& viewport) { fViewport = viewport; }
 
-  SkScalar resolve(const SkSVGLength&, LengthType) const;
-  SkRect resolveRect(
-      const SkSVGLength& x, const SkSVGLength& y, const SkSVGLength& w, const SkSVGLength& h) const;
+    SkScalar resolve(const SkSVGLength&, LengthType) const;
+    SkRect   resolveRect(const SkSVGLength& x, const SkSVGLength& y,
+                         const SkSVGLength& w, const SkSVGLength& h) const;
 
- private:
-  SkSize fViewport;
-  SkScalar fDPI;
+private:
+    SkSize   fViewport;
+    SkScalar fDPI;
 };
 
 struct SkSVGPresentationContext {
-  SkSVGPresentationContext();
-  SkSVGPresentationContext(const SkSVGPresentationContext&) = default;
-  SkSVGPresentationContext& operator=(const SkSVGPresentationContext&) = default;
+    SkSVGPresentationContext();
+    SkSVGPresentationContext(const SkSVGPresentationContext&)            = default;
+    SkSVGPresentationContext& operator=(const SkSVGPresentationContext&) = default;
 
-  // Inherited presentation attributes, computed for the current node.
-  SkSVGPresentationAttributes fInherited;
-
-  // Cached paints, reflecting the current presentation attributes.
-  SkPaint fFillPaint;
-  SkPaint fStrokePaint;
+    // Inherited presentation attributes, computed for the current node.
+    SkSVGPresentationAttributes fInherited;
 };
 
 class SkSVGRenderContext {
- public:
-  SkSVGRenderContext(
-      SkCanvas*, const sk_sp<SkFontMgr>&, const SkSVGIDMapper&, const SkSVGLengthContext&,
-      const SkSVGPresentationContext&, const SkSVGNode*);
-  SkSVGRenderContext(const SkSVGRenderContext&);
-  SkSVGRenderContext(const SkSVGRenderContext&, SkCanvas*);
-  SkSVGRenderContext(const SkSVGRenderContext&, const SkSVGNode*);
-  ~SkSVGRenderContext();
+public:
+    // Captures data required for object bounding box resolution.
+    struct OBBScope {
+        const SkSVGNode*          fNode;
+        const SkSVGRenderContext* fCtx;
+    };
 
-  const SkSVGLengthContext& lengthContext() const { return *fLengthContext; }
-  SkSVGLengthContext* writableLengthContext() { return fLengthContext.writable(); }
+    SkSVGRenderContext(SkCanvas*, const sk_sp<SkFontMgr>&,
+                       const sk_sp<skresources::ResourceProvider>&, const SkSVGIDMapper&,
+                       const SkSVGLengthContext&, const SkSVGPresentationContext&,
+                       const OBBScope&);
+    SkSVGRenderContext(const SkSVGRenderContext&);
+    SkSVGRenderContext(const SkSVGRenderContext&, SkCanvas*);
+    // Establish a new OBB scope.  Normally used when entering a node's render scope.
+    SkSVGRenderContext(const SkSVGRenderContext&, const SkSVGNode*);
+    ~SkSVGRenderContext();
 
-  const SkSVGPresentationContext& presentationContext() const { return *fPresentationContext; }
+    const SkSVGLengthContext& lengthContext() const { return *fLengthContext; }
+    SkSVGLengthContext* writableLengthContext() { return fLengthContext.writable(); }
 
-  SkCanvas* canvas() const { return fCanvas; }
-  void saveOnce();
+    const SkSVGPresentationContext& presentationContext() const { return *fPresentationContext; }
 
-  enum ApplyFlags {
-    kLeaf = 1 << 0,  // the target node doesn't have descendants
-  };
-  void applyPresentationAttributes(const SkSVGPresentationAttributes&, uint32_t flags);
+    SkCanvas* canvas() const { return fCanvas; }
+    void saveOnce();
 
-  // Scoped wrapper that temporarily clears the original node reference.
-  class BorrowedNode {
-   public:
-    explicit BorrowedNode(sk_sp<SkSVGNode>* node) : fOwner(node) {
-      if (fOwner) {
-        fBorrowed = std::move(*fOwner);
-        *fOwner = nullptr;
-      }
+    enum ApplyFlags {
+        kLeaf = 1 << 0, // the target node doesn't have descendants
+    };
+    void applyPresentationAttributes(const SkSVGPresentationAttributes&, uint32_t flags);
+
+    // Scoped wrapper that temporarily clears the original node reference.
+    class BorrowedNode {
+    public:
+        explicit BorrowedNode(sk_sp<SkSVGNode>* node)
+            : fOwner(node) {
+            if (fOwner) {
+                fBorrowed = std::move(*fOwner);
+                *fOwner = nullptr;
+            }
+        }
+
+        ~BorrowedNode() {
+            if (fOwner) {
+                *fOwner = std::move(fBorrowed);
+            }
+        }
+
+        const SkSVGNode* get() const { return fBorrowed.get(); }
+        const SkSVGNode* operator->() const { return fBorrowed.get(); }
+        const SkSVGNode& operator*() const { return *fBorrowed; }
+
+        operator bool() const { return !!fBorrowed; }
+
+    private:
+        // noncopyable
+        BorrowedNode(const BorrowedNode&)      = delete;
+        BorrowedNode& operator=(BorrowedNode&) = delete;
+
+        sk_sp<SkSVGNode>* fOwner;
+        sk_sp<SkSVGNode>  fBorrowed;
+    };
+
+    // Note: the id->node association is cleared for the lifetime of the returned value
+    // (effectively breaks reference cycles, assuming appropriate return value scoping).
+    BorrowedNode findNodeById(const SkSVGIRI&) const;
+
+    SkTLazy<SkPaint> fillPaint() const;
+    SkTLazy<SkPaint> strokePaint() const;
+
+    SkSVGColorType resolveSvgColor(const SkSVGColor&) const;
+
+    // The local computed clip path (not inherited).
+    const SkPath* clipPath() const { return fClipPath.getMaybeNull(); }
+
+    const sk_sp<skresources::ResourceProvider>& resourceProvider() const {
+        return fResourceProvider;
     }
 
-    ~BorrowedNode() {
-      if (fOwner) {
-        *fOwner = std::move(fBorrowed);
-      }
+    sk_sp<SkFontMgr> fontMgr() const {
+        return fFontMgr ? fFontMgr : SkFontMgr::RefDefault();
     }
 
-    const SkSVGNode* get() const { return fBorrowed.get(); }
-    const SkSVGNode* operator->() const { return fBorrowed.get(); }
-    const SkSVGNode& operator*() const { return *fBorrowed; }
+    // Returns the translate/scale transformation required to map into the current OBB scope,
+    // with the specified units.
+    struct OBBTransform {
+        SkV2 offset, scale;
+    };
+    OBBTransform transformForCurrentOBB(SkSVGObjectBoundingBoxUnits) const;
 
-    operator bool() const { return !!fBorrowed; }
+    SkRect resolveOBBRect(const SkSVGLength& x, const SkSVGLength& y,
+                          const SkSVGLength& w, const SkSVGLength& h,
+                          SkSVGObjectBoundingBoxUnits) const;
 
-   private:
-    // noncopyable
-    BorrowedNode(const BorrowedNode&) = delete;
-    BorrowedNode& operator=(BorrowedNode&) = delete;
+private:
+    // Stack-only
+    void* operator new(size_t)                               = delete;
+    void* operator new(size_t, void*)                        = delete;
+    SkSVGRenderContext& operator=(const SkSVGRenderContext&) = delete;
 
-    sk_sp<SkSVGNode>* fOwner;
-    sk_sp<SkSVGNode> fBorrowed;
-  };
+    void applyOpacity(SkScalar opacity, uint32_t flags, bool hasFilter);
+    void applyFilter(const SkSVGFuncIRI&);
+    void applyClip(const SkSVGFuncIRI&);
+    void applyMask(const SkSVGFuncIRI&);
 
-  // Note: the id->node association is cleared for the lifetime of the returned value
-  // (effectively breaks reference cycles, assuming appropriate return value scoping).
-  BorrowedNode findNodeById(const SkString&) const;
+    SkTLazy<SkPaint> commonPaint(const SkSVGPaint&, float opacity) const;
 
-  const SkPaint* fillPaint() const;
-  const SkPaint* strokePaint() const;
+    const sk_sp<SkFontMgr>&                       fFontMgr;
+    const sk_sp<skresources::ResourceProvider>&   fResourceProvider;
+    const SkSVGIDMapper&                          fIDMapper;
+    SkTCopyOnFirstWrite<SkSVGLengthContext>       fLengthContext;
+    SkTCopyOnFirstWrite<SkSVGPresentationContext> fPresentationContext;
+    SkCanvas*                                     fCanvas;
+    // The save count on 'fCanvas' at construction time.
+    // A restoreToCount() will be issued on destruction.
+    int                                           fCanvasSaveCount;
 
-  SkSVGColorType resolveSvgColor(const SkSVGColor&) const;
+    // clipPath, if present for the current context (not inherited).
+    SkTLazy<SkPath>                               fClipPath;
 
-  // The local computed clip path (not inherited).
-  const SkPath* clipPath() const { return fClipPath.getMaybeNull(); }
+    // Deferred opacity optimization for leaf nodes.
+    float                                         fDeferredPaintOpacity = 1;
 
-  // The node being rendered (may be null).
-  const SkSVGNode* node() const { return fNode; }
-
-  sk_sp<SkFontMgr> fontMgr() const { return fFontMgr ? fFontMgr : SkFontMgr::RefDefault(); }
-
- private:
-  // Stack-only
-  void* operator new(size_t) = delete;
-  void* operator new(size_t, void*) = delete;
-  SkSVGRenderContext& operator=(const SkSVGRenderContext&) = delete;
-
-  void applyOpacity(SkScalar opacity, uint32_t flags);
-  void applyFilter(const SkSVGFuncIRI&);
-  void applyClip(const SkSVGFuncIRI&);
-  void updatePaintsWithCurrentColor(const SkSVGPresentationAttributes&);
-
-  const sk_sp<SkFontMgr>& fFontMgr;
-  const SkSVGIDMapper& fIDMapper;
-  SkTCopyOnFirstWrite<SkSVGLengthContext> fLengthContext;
-  SkTCopyOnFirstWrite<SkSVGPresentationContext> fPresentationContext;
-  SkCanvas* fCanvas;
-  // The save count on 'fCanvas' at construction time.
-  // A restoreToCount() will be issued on destruction.
-  int fCanvasSaveCount;
-
-  // clipPath, if present for the current context (not inherited).
-  SkTLazy<SkPath> fClipPath;
-
-  const SkSVGNode* fNode;
+    // Current object bounding box scope.
+    const OBBScope                                fOBBScope;
 };
 
-#endif  // SkSVGRenderContext_DEFINED
+#endif // SkSVGRenderContext_DEFINED

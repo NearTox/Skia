@@ -32,8 +32,8 @@ class SkTDPQueue {
   SkTDPQueue() {}
   SkTDPQueue(int reserve) { fArray.setReserve(reserve); }
 
-  SkTDPQueue(SkTDPQueue&&) = default;
-  SkTDPQueue& operator=(SkTDPQueue&&) = default;
+  SkTDPQueue(SkTDPQueue&&) noexcept = default;
+  SkTDPQueue& operator=(SkTDPQueue&&) noexcept = default;
 
   SkTDPQueue(const SkTDPQueue&) = delete;
   SkTDPQueue& operator=(const SkTDPQueue&) = delete;

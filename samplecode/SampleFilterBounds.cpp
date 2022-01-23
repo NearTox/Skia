@@ -184,8 +184,7 @@ public:
         canvas->saveLayer(&localContentRect, &blurPaint);
         canvas->drawImageRect(
             fImage.get(), localContentRect, localContentRect,
-            SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone), nullptr,
-            SkCanvas::kFast_SrcRectConstraint);
+            SkSamplingOptions(SkFilterMode::kLinear), nullptr, SkCanvas::kFast_SrcRectConstraint);
         canvas->restore();
 
         // Now visualize the underlying bounds calculations used to determine the layer for the blur
@@ -196,9 +195,10 @@ public:
         }
         skif::DeviceSpace<SkIRect> targetOutput(target);
         skif::ParameterSpace<SkRect> contentBounds(localContentRect);
-        skif::Mapping mapping = skif::Mapping::DecomposeCTM(
-                ctm, fBlur.get(), skif::ParameterSpace<SkPoint>({localContentRect.centerX(),
-                                                                 localContentRect.centerY()}));
+        skif::ParameterSpace<SkPoint> contentCenter(
+            {localContentRect.centerX(), localContentRect.centerY()});
+        skif::Mapping mapping;
+        SkAssertResult(mapping.decomposeCTM(ctm, fBlur.get(), contentCenter));
 
         // Add axis lines, to show perspective distortion
         canvas->save();

@@ -255,7 +255,7 @@ bool GrVkImage::InitImageInfo(GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImag
     return false;
   }
 
-  if (!GrVkMemory::AllocAndBindImageMemory(gpu, image, isLinear, &alloc)) {
+  if (!GrVkMemory::AllocAndBindImageMemory(gpu, image, &alloc)) {
     VK_CALL(gpu, DestroyImage(gpu->device(), image, nullptr));
     return false;
   }
@@ -277,8 +277,7 @@ bool GrVkImage::InitImageInfo(GrVkGpu* gpu, const ImageDesc& imageDesc, GrVkImag
 
 void GrVkImage::DestroyImageInfo(const GrVkGpu* gpu, GrVkImageInfo* info) {
   VK_CALL(gpu, DestroyImage(gpu->device(), info->fImage, nullptr));
-  bool isLinear = VK_IMAGE_TILING_LINEAR == info->fImageTiling;
-  GrVkMemory::FreeImageMemory(gpu, isLinear, info->fAlloc);
+  GrVkMemory::FreeImageMemory(gpu, info->fAlloc);
 }
 
 GrVkImage::~GrVkImage() {
@@ -306,7 +305,6 @@ void GrVkImage::prepareForExternal(GrVkGpu* gpu) {
 
 void GrVkImage::releaseImage() {
   if (fResource) {
-    fResource->removeOwningTexture();
     fResource->unref();
     fResource = nullptr;
   }
@@ -321,8 +319,7 @@ void GrVkImage::setResourceRelease(sk_sp<GrRefCntedCallback> releaseHelper) {
 void GrVkImage::Resource::freeGPUData() const {
   this->invokeReleaseProc();
   VK_CALL(fGpu, DestroyImage(fGpu->device(), fImage, nullptr));
-  bool isLinear = (VK_IMAGE_TILING_LINEAR == fImageTiling);
-  GrVkMemory::FreeImageMemory(fGpu, isLinear, fAlloc);
+  GrVkMemory::FreeImageMemory(fGpu, fAlloc);
 }
 
 void GrVkImage::BorrowedResource::freeGPUData() const { this->invokeReleaseProc(); }

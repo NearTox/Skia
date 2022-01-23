@@ -11,8 +11,7 @@
 #include "modules/sksg/include/SkSGRenderNode.h"
 
 #include "include/core/SkSamplingOptions.h"
-
-class SkImage;
+#include "include/core/SkImage.h"
 
 namespace sksg {
 
@@ -31,7 +30,7 @@ class Image final : public RenderNode {
   SG_ATTRIBUTE(AntiAlias, bool, fAntiAlias)
 
  protected:
-  explicit Image(sk_sp<SkImage>);
+  explicit Image(sk_sp<SkImage>) noexcept;
 
   void onRender(SkCanvas*, const RenderContext*) const override;
   const RenderNode* onNodeAt(const SkPoint&) const override;

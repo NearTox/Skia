@@ -10,7 +10,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkColorPriv.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkPath.h"
@@ -62,8 +61,7 @@ DEF_SIMPLE_GM_BG(bigmatrix, canvas, 50, 50, ToolUtils::color_to_565(0xFF66AA99))
   s.reset();
   s.setScale(SK_Scalar1 / 1000, SK_Scalar1 / 1000);
   paint.setShader(bmp.makeShader(
-      SkTileMode::kRepeat, SkTileMode::kRepeat,
-      SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone), s));
+      SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(SkFilterMode::kLinear), s));
   paint.setAntiAlias(false);
   rect.setLTRB(pt.fX - small, pt.fY - small, pt.fX + small, pt.fY + small);
   canvas->drawRect(rect, paint);

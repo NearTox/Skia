@@ -72,7 +72,7 @@ class TileImageFilterGM : public GM {
         canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
         SkPaint paint;
         paint.setImageFilter(std::move(filter));
-        canvas->drawImage(fBitmap.get(), 0, 0, &paint);
+        canvas->drawImage(fBitmap.get(), 0, 0, SkSamplingOptions(), &paint);
         canvas->drawRect(srcRect, red);
         canvas->drawRect(dstRect, blue);
         canvas->restore();

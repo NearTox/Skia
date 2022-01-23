@@ -11,15 +11,26 @@
 #include "include/core/SkTypes.h"
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/GrSurfaceDrawContext.h"
+#  include "include/core/SkRefCnt.h"
+#  include "include/private/GrTypesPriv.h"
 
 class GrRecordingContext;
+namespace skgpu {
+namespace v1 {
+class SurfaceDrawContext;
+}
+}  // namespace skgpu
+class GrSurfaceProxyView;
 class GrTexture;
 
 struct SkRect;
 
 namespace SkGpuBlurUtils {
 
+/** Maximum sigma before the implementation downscales the input image. */
+static constexpr float kMaxSigma = 4.f;
+
+#  if SK_GPU_V1
 /**
  * Applies a 2D Gaussian blur to a given texture. The blurred result is returned
  * as a surfaceDrawContext in case the caller wishes to draw into the result.
@@ -31,7 +42,7 @@ namespace SkGpuBlurUtils {
  * @param srcView         The source to be blurred.
  * @param srcColorType    The colorType of srcProxy
  * @param srcAlphaType    The alphaType of srcProxy
- * @param colorSpace      Color space of the source.
+ * @param srcColorSpace   Color space of the source.
  * @param dstBounds       The destination bounds, relative to the source texture.
  * @param srcBounds       The source bounds, relative to the source texture's offset. No pixels
  *                        will be sampled outside of this rectangle.
@@ -41,10 +52,12 @@ namespace SkGpuBlurUtils {
  * @param fit             backing fit for the returned render target context
  * @return                The surfaceDrawContext containing the blurred result.
  */
-std::unique_ptr<GrSurfaceDrawContext> GaussianBlur(
-    GrRecordingContext* context, GrSurfaceProxyView srcView, GrColorType srcColorType,
-    SkAlphaType srcAlphaType, sk_sp<SkColorSpace> colorSpace, SkIRect dstBounds, SkIRect srcBounds,
-    float sigmaX, float sigmaY, SkTileMode mode, SkBackingFit fit = SkBackingFit::kApprox);
+std::unique_ptr<skgpu::v1::SurfaceDrawContext> GaussianBlur(
+    GrRecordingContext*, GrSurfaceProxyView srcView, GrColorType srcColorType,
+    SkAlphaType srcAlphaType, sk_sp<SkColorSpace> srcColorSpace, SkIRect dstBounds,
+    SkIRect srcBounds, float sigmaX, float sigmaY, SkTileMode mode,
+    SkBackingFit fit = SkBackingFit::kApprox);
+#  endif  // SK_GPU_V1
 
 static const int kBlurRRectMaxDivisions = 6;
 
@@ -65,6 +78,8 @@ int CreateIntegralTable(float sixSigma, SkBitmap* table);
 
 void Compute1DGaussianKernel(float* kernel, float sigma, int radius);
 
+void Compute1DLinearGaussianKernel(float* kernel, float* offset, float sigma, int radius);
+
 // Any sigmas smaller than this are effectively an identity blur so can skip convolution at a higher
 // level. The value was chosen because it corresponds roughly to a radius of 1/10px, and is slightly
 // greater than sqrt(1/2*sigma^2) for SK_ScalarNearlyZero.
@@ -76,7 +91,10 @@ inline int SigmaRadius(float sigma) {
 
 inline int KernelWidth(int radius) { return 2 * radius + 1; }
 
+inline int LinearKernelWidth(int radius) { return radius + 1; }
+
 }  // namespace SkGpuBlurUtils
 
-#endif
+#endif  // SK_SUPPORT_GPU
+
 #endif

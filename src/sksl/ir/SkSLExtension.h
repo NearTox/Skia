@@ -8,7 +8,7 @@
 #ifndef SKSL_EXTENSION
 #define SKSL_EXTENSION
 
-#include "src/sksl/ir/SkSLProgramElement.h"
+#include "include/private/SkSLProgramElement.h"
 
 namespace SkSL {
 
@@ -19,10 +19,10 @@ class Extension final : public ProgramElement {
  public:
   static constexpr Kind kProgramElementKind = Kind::kExtension;
 
-  Extension(int offset, String name)
-      : INHERITED(offset, kProgramElementKind), fName(std::move(name)) {}
+  Extension(int offset, skstd::string_view name)
+      : INHERITED(offset, kProgramElementKind), fName(name) {}
 
-  const String& name() const { return fName; }
+  skstd::string_view name() const { return fName; }
 
   std::unique_ptr<ProgramElement> clone() const override {
     return std::unique_ptr<ProgramElement>(new Extension(fOffset, this->name()));
@@ -31,7 +31,7 @@ class Extension final : public ProgramElement {
   String description() const override { return "#extension " + this->name() + " : enable"; }
 
  private:
-  String fName;
+  skstd::string_view fName;
 
   using INHERITED = ProgramElement;
 };

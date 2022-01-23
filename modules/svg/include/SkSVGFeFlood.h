@@ -12,21 +12,21 @@
 #include "modules/svg/include/SkSVGTypes.h"
 
 class SkSVGFeFlood : public SkSVGFe {
- public:
-  static sk_sp<SkSVGFeFlood> Make() { return sk_sp<SkSVGFeFlood>(new SkSVGFeFlood()); }
+public:
+    static sk_sp<SkSVGFeFlood> Make() { return sk_sp<SkSVGFeFlood>(new SkSVGFeFlood()); }
 
- protected:
-  sk_sp<SkImageFilter> onMakeImageFilter(
-      const SkSVGRenderContext&, const SkSVGFilterContext&) const override;
+protected:
+    sk_sp<SkImageFilter> onMakeImageFilter(const SkSVGRenderContext&,
+                                           const SkSVGFilterContext&) const override;
 
-  std::vector<SkSVGFeInputType> getInputs() const override { return {}; }
+    std::vector<SkSVGFeInputType> getInputs() const override { return {}; }
 
- private:
-  SkSVGFeFlood() : INHERITED(SkSVGTag::kFeFlood) {}
+private:
+    SkSVGFeFlood() : INHERITED(SkSVGTag::kFeFlood) {}
 
-  SkColor resolveFloodColor(const SkSVGRenderContext&) const;
+    SkColor resolveFloodColor(const SkSVGRenderContext&) const;
 
-  using INHERITED = SkSVGFe;
+    using INHERITED = SkSVGFe;
 };
 
 #endif  // SkSVGFeFlood_DEFINED

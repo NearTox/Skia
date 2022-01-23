@@ -60,10 +60,10 @@ static void test_rewind(skiatest::Reporter* reporter) {
   for (int i = 0; i < 100; ++i) {
     writer.writeInt(i);
   }
-    REPORTER_ASSERT(reporter, 100 * 4 == writer.bytesWritten());
-    for (int j = 100 * 4; j >= 0; j -= 16) {
-      writer.rewindToOffset(j);
-    }
+  REPORTER_ASSERT(reporter, 100 * 4 == writer.bytesWritten());
+  for (int j = 100 * 4; j >= 0; j -= 16) {
+    writer.rewindToOffset(j);
+  }
     REPORTER_ASSERT(reporter, writer.bytesWritten() < 16);
 }
 

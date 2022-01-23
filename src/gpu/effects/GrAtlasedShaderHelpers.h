@@ -11,14 +11,13 @@
 #include "src/gpu/GrDrawOpAtlas.h"
 #include "src/gpu/GrShaderCaps.h"
 #include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/glsl/GrGLSLPrimitiveProcessor.h"
 #include "src/gpu/glsl/GrGLSLVarying.h"
 #include "src/gpu/glsl/GrGLSLVertexGeoBuilder.h"
 
 static void append_index_uv_varyings(
-    GrGLSLPrimitiveProcessor::EmitArgs& args, int numTextureSamplers, const char* inTexCoordsName,
-    const char* atlasDimensionsInvName, GrGLSLVarying* uv, GrGLSLVarying* texIdx,
-    GrGLSLVarying* st) {
+    GrGeometryProcessor::ProgramImpl::EmitArgs& args, int numTextureSamplers,
+    const char* inTexCoordsName, const char* atlasDimensionsInvName, GrGLSLVarying* uv,
+    GrGLSLVarying* texIdx, GrGLSLVarying* st) {
   using Interpolation = GrGLSLVaryingHandler::Interpolation;
   // This extracts the texture index and texel coordinates from the same variable
   // Packing structure: texel coordinates have the 2-bit texture page encoded in bits 13 & 14 of
@@ -81,8 +80,8 @@ static void append_index_uv_varyings(
 }
 
 static void append_multitexture_lookup(
-    GrGLSLPrimitiveProcessor::EmitArgs& args, int numTextureSamplers, const GrGLSLVarying& texIdx,
-    const char* coordName, const char* colorName) {
+    GrGeometryProcessor::ProgramImpl::EmitArgs& args, int numTextureSamplers,
+    const GrGLSLVarying& texIdx, const char* coordName, const char* colorName) {
   SkASSERT(numTextureSamplers > 0);
   // This shouldn't happen, but will avoid a crash if it does
   if (numTextureSamplers <= 0) {

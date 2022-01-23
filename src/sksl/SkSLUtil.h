@@ -12,7 +12,7 @@
 #include <memory>
 #include "stdlib.h"
 #include "string.h"
-#include "src/sksl/SkSLDefines.h"
+#include "include/private/SkSLDefines.h"
 #include "src/sksl/SkSLLexer.h"
 
 #ifndef SKSL_STANDALONE
@@ -62,8 +62,10 @@ class StandaloneShaderCaps {
   bool fMustForceNegatedAtanParamToFloat = false;
   bool mustForceNegatedAtanParamToFloat() const { return fMustForceNegatedAtanParamToFloat; }
 
-  bool fGeometryShaderSupport = true;
-  bool geometryShaderSupport() const { return fGeometryShaderSupport; }
+  bool fMustForceNegatedLdexpParamToMultiply = false;
+  bool mustForceNegatedLdexpParamToMultiply() const {
+    return fMustForceNegatedLdexpParamToMultiply;
+  }
 
   bool fShaderDerivativeSupport = true;
   bool shaderDerivativeSupport() const { return fShaderDerivativeSupport; }
@@ -110,9 +112,6 @@ class StandaloneShaderCaps {
   bool fMustEnableAdvBlendEqs = false;
   bool mustEnableAdvBlendEqs() const { return fMustEnableAdvBlendEqs; }
 
-  bool fMustEnableSpecificAdvBlendEqs = false;
-  bool mustEnableSpecificAdvBlendEqs() const { return fMustEnableSpecificAdvBlendEqs; }
-
   bool fCanUseAnyFunctionInShader = true;
   bool canUseAnyFunctionInShader() const { return fCanUseAnyFunctionInShader; }
 
@@ -126,6 +125,12 @@ class StandaloneShaderCaps {
 
   bool fIntegerSupport = false;
   bool integerSupport() const { return fIntegerSupport; }
+
+  bool fNonsquareMatrixSupport = false;
+  bool nonsquareMatrixSupport() const { return fNonsquareMatrixSupport; }
+
+  bool fInverseHyperbolicSupport = false;
+  bool inverseHyperbolicSupport() const { return fInverseHyperbolicSupport; }
 
   bool fBuiltinFMASupport = false;
   bool builtinFMASupport() const { return fBuiltinFMASupport; }
@@ -152,12 +157,6 @@ class StandaloneShaderCaps {
     return fFragCoordConventionsExtensionString;
   }
 
-  const char* fGeometryShaderExtensionString = nullptr;
-  const char* geometryShaderExtensionString() const { return fGeometryShaderExtensionString; }
-
-  const char* fGSInvocationsExtensionString = nullptr;
-  const char* gsInvocationsExtensionString() const { return fGSInvocationsExtensionString; }
-
   const char* fExternalTextureExtensionString = nullptr;
   const char* externalTextureExtensionString() const { return fExternalTextureExtensionString; }
 
@@ -168,9 +167,6 @@ class StandaloneShaderCaps {
 
   const char* fVersionDeclString = "";
   const char* versionDeclString() const { return fVersionDeclString; }
-
-  bool fGSInvocationsSupport = true;
-  bool gsInvocationsSupport() const { return fGSInvocationsSupport; }
 
   bool fCanUseFractForNegativeValues = true;
   bool canUseFractForNegativeValues() const { return fCanUseFractForNegativeValues; }
@@ -198,6 +194,12 @@ class StandaloneShaderCaps {
 
   const char* fFBFetchColorName = nullptr;
   const char* fbFetchColorName() const { return fFBFetchColorName; }
+
+  bool fRewriteMatrixVectorMultiply = false;
+  bool rewriteMatrixVectorMultiply() const { return fRewriteMatrixVectorMultiply; }
+
+  bool fRewriteMatrixComparisons = false;
+  bool rewriteMatrixComparisons() const { return fRewriteMatrixComparisons; }
 };
 
 using ShaderCapsClass = StandaloneShaderCaps;
@@ -266,46 +268,6 @@ class ShaderCapsFactory {
     return result;
   }
 
-  static ShaderCapsPointer FragCoordsNew() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fFragCoordConventionsExtensionString = "GL_ARB_fragment_coord_conventions";
-    return result;
-  }
-  static ShaderCapsPointer FragCoordsOld() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 110";
-    result->fGLSLGeneration = GrGLSLGeneration::k110_GrGLSLGeneration;
-    result->fFragCoordConventionsExtensionString = "GL_ARB_fragment_coord_conventions";
-    return result;
-  }
-
-  static ShaderCapsPointer GeometryShaderExtensionString() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 310es";
-    result->fGeometryShaderSupport = true;
-    result->fGeometryShaderExtensionString = "GL_EXT_geometry_shader";
-    result->fGSInvocationsSupport = true;
-    return result;
-  }
-
-  static ShaderCapsPointer GeometryShaderSupport() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fGeometryShaderSupport = true;
-    result->fGSInvocationsSupport = true;
-    return result;
-  }
-
-  static ShaderCapsPointer GSInvocationsExtensionString() {
-    ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fGeometryShaderSupport = true;
-    result->fGSInvocationsSupport = true;
-    result->fGSInvocationsExtensionString = "GL_ARB_gpu_shader5";
-    return result;
-  }
-
   static ShaderCapsPointer IncompleteShortIntPrecision() {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 310es";
@@ -321,17 +283,16 @@ class ShaderCapsFactory {
     return result;
   }
 
-  static ShaderCapsPointer MustGuardDivisionEvenAfterExplicitZeroCheck() {
+  static ShaderCapsPointer MustForceNegatedLdexpParamToMultiply() {
     ShaderCapsPointer result = MakeShaderCaps();
-    result->fMustGuardDivisionEvenAfterExplicitZeroCheck = true;
+    result->fVersionDeclString = "#version 400";
+    result->fMustForceNegatedLdexpParamToMultiply = true;
     return result;
   }
 
-  static ShaderCapsPointer NoGSInvocationsSupport() {
+  static ShaderCapsPointer MustGuardDivisionEvenAfterExplicitZeroCheck() {
     ShaderCapsPointer result = MakeShaderCaps();
-    result->fVersionDeclString = "#version 400";
-    result->fGeometryShaderSupport = true;
-    result->fGSInvocationsSupport = false;
+    result->fMustGuardDivisionEvenAfterExplicitZeroCheck = true;
     return result;
   }
 
@@ -346,6 +307,20 @@ class ShaderCapsFactory {
     ShaderCapsPointer result = MakeShaderCaps();
     result->fVersionDeclString = "#version 400";
     result->fRewriteDoWhileLoops = true;
+    return result;
+  }
+
+  static ShaderCapsPointer RewriteMatrixComparisons() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fRewriteMatrixComparisons = true;
+    result->fUsesPrecisionModifiers = true;
+    return result;
+  }
+
+  static ShaderCapsPointer RewriteMatrixVectorMultiply() {
+    ShaderCapsPointer result = MakeShaderCaps();
+    result->fVersionDeclString = "#version 400";
+    result->fRewriteMatrixVectorMultiply = true;
     return result;
   }
 
@@ -400,8 +375,6 @@ bool type_to_grsltype(const Context& context, const Type& type, GrSLType* outTyp
 #endif
 
 void write_stringstream(const StringStream& d, OutputStream& out);
-
-NORETURN void sksl_abort();
 
 }  // namespace SkSL
 

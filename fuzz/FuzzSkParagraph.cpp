@@ -19,6 +19,7 @@
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
+#include "include/core/SkSpan.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/core/SkTypeface.h"
@@ -37,7 +38,6 @@
 #include "modules/skparagraph/src/TextLine.h"
 #include "modules/skparagraph/utils/TestFontCollection.h"
 #include "src/core/SkOSFile.h"
-#include "src/core/SkSpan.h"
 #include "src/utils/SkOSPath.h"
 #include "src/utils/SkShaperJSONWriter.h"
 #include "tests/Test.h"
@@ -51,11 +51,14 @@
 #include <utility>
 #include <vector>
 
+#if defined(SK_ENABLE_PARAGRAPH)
+
 using namespace skia::textlayout;
 namespace {
 const uint8_t MAX_TEXT_LENGTH = 255;
 const uint8_t MAX_TEXT_ADDITIONS = 4;
-const uint16_t TEST_CANVAS_WIDTH = 1000;
+// Use 250 so uint8 can create text and layout width larger than the canvas.
+const uint16_t TEST_CANVAS_DIM = 250;
 
 class ResourceFontCollection : public FontCollection {
  public:
@@ -247,7 +250,7 @@ ParagraphStyle BuildParagraphStyle(Fuzz* fuzz) {
 
 }  // namespace
 
-DEF_FUZZ(api_skparagraph, fuzz) {
+DEF_FUZZ(SkParagraph, fuzz) {
   static sk_sp<ResourceFontCollection> fontCollection = sk_make_sp<ResourceFontCollection>();
   ParagraphStyle paragraph_style = BuildParagraphStyle(fuzz);
   ParagraphBuilderImpl builder(paragraph_style, fontCollection);
@@ -264,5 +267,15 @@ DEF_FUZZ(api_skparagraph, fuzz) {
   builder.pop();
   auto paragraph = builder.Build();
 
-  paragraph->layout(TEST_CANVAS_WIDTH);
+  SkBitmap bm;
+  if (!bm.tryAllocN32Pixels(TEST_CANVAS_DIM, TEST_CANVAS_DIM)) {
+    return;
+  }
+  SkCanvas canvas(bm);
+  uint8_t layout_width;
+  fuzz->next(&layout_width);
+  paragraph->layout(layout_width);
+  paragraph->paint(&canvas, 0, 0);
 }
+
+#endif  // SK_ENABLE_PARAGRAPH

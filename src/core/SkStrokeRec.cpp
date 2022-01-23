@@ -11,7 +11,7 @@
 // must be < 0, since ==0 means hairline, and >0 means normal stroke
 #define kStrokeRec_FillStyleWidth (-SK_Scalar1)
 
-SkStrokeRec::SkStrokeRec(InitStyle s) {
+SkStrokeRec::SkStrokeRec(InitStyle s) noexcept {
   fResScale = 1;
   fWidth = (kFill_InitStyle == s) ? kStrokeRec_FillStyleWidth : 0;
   fMiterLimit = SkPaintDefaults_MiterLimit;

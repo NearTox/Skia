@@ -22,7 +22,10 @@ class GrMockGpu : public GrGpu {
  public:
   static sk_sp<GrGpu> Make(const GrMockOptions*, const GrContextOptions&, GrDirectContext*);
 
-  ~GrMockGpu() override {}
+  ~GrMockGpu() override;
+
+  GrThreadSafePipelineBuilder* pipelineBuilder() override;
+  sk_sp<GrThreadSafePipelineBuilder> refPipelineBuilder() override;
 
   GrFence SK_WARN_UNUSED_RESULT insertFence() override { return 0; }
   bool waitFence(GrFence) override { return true; }
@@ -32,8 +35,8 @@ class GrMockGpu : public GrGpu {
     return nullptr;
   }
   std::unique_ptr<GrSemaphore> wrapBackendSemaphore(
-      const GrBackendSemaphore& semaphore, GrResourceProvider::SemaphoreWrapType wrapType,
-      GrWrapOwnership ownership) override {
+      const GrBackendSemaphore& /* semaphore */, GrSemaphoreWrapType /* wraptype */,
+      GrWrapOwnership /* ownership */) override {
     return nullptr;
   }
   void insertSemaphore(GrSemaphore* semaphore) override {}
@@ -45,13 +48,10 @@ class GrMockGpu : public GrGpu {
   void submit(GrOpsRenderPass* renderPass) override;
 
   void checkFinishProcs() override {}
+  void finishOutstandingGpuWork() override {}
 
  private:
   GrMockGpu(GrDirectContext*, const GrMockOptions&, const GrContextOptions&);
-
-  void onResetContext(uint32_t resetBits) override {}
-
-  void querySampleLocations(GrRenderTarget*, SkTArray<SkPoint>* sampleLocations) override;
 
   void xferBarrier(GrRenderTarget*, GrXferBarrierType) override {}
 
@@ -77,29 +77,29 @@ class GrMockGpu : public GrGpu {
       size_t sizeInBytes, GrGpuBufferType, GrAccessPattern, const void*) override;
 
   bool onReadPixels(
-      GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
-      GrColorType dstColorType, void* buffer, size_t rowBytes) override {
+      GrSurface*, SkIRect, GrColorType surfaceColorType, GrColorType dstColorType, void*,
+      size_t rowBytes) override {
     return true;
   }
 
   bool onWritePixels(
-      GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
-      GrColorType srcColorType, const GrMipLevel texels[], int mipLevelCount,
-      bool prepForTexSampling) override {
+      GrSurface*, SkIRect, GrColorType surfaceColorType, GrColorType srcColorType,
+      const GrMipLevel[], int mipLevelCount, bool prepForTexSampling) override {
     return true;
   }
 
   bool onTransferPixelsTo(
-      GrTexture* texture, int left, int top, int width, int height, GrColorType surfaceColorType,
-      GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset,
-      size_t rowBytes) override {
+      GrTexture*, SkIRect, GrColorType surfaceColorType, GrColorType bufferColorType,
+      sk_sp<GrGpuBuffer>, size_t offset, size_t rowBytes) override {
     return true;
   }
+
   bool onTransferPixelsFrom(
-      GrSurface* surface, int left, int top, int width, int height, GrColorType surfaceColorType,
-      GrColorType bufferColorType, GrGpuBuffer* transferBuffer, size_t offset) override {
+      GrSurface*, SkIRect, GrColorType surfaceColorType, GrColorType bufferColorType,
+      sk_sp<GrGpuBuffer>, size_t offset) override {
     return true;
   }
+
   bool onCopySurface(
       GrSurface* dst, GrSurface* src, const SkIRect& srcRect, const SkIPoint& dstPoint) override {
     return true;
@@ -116,15 +116,15 @@ class GrMockGpu : public GrGpu {
   }
 
   GrOpsRenderPass* onGetOpsRenderPass(
-      GrRenderTarget*, GrAttachment*, GrSurfaceOrigin, const SkIRect&,
+      GrRenderTarget*, bool useMSAASurface, GrAttachment*, GrSurfaceOrigin, const SkIRect&,
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies,
       GrXferBarrierFlags renderPassXferBarriers) override;
 
   bool onSubmitToGpu(bool syncCpu) override { return true; }
 
-  sk_sp<GrAttachment> makeStencilAttachmentForRenderTarget(
-      const GrRenderTarget*, SkISize dimensions, int numStencilSamples) override;
+  sk_sp<GrAttachment> makeStencilAttachment(
+      const GrBackendFormat& /*colorFormat*/, SkISize dimensions, int numStencilSamples) override;
 
   GrBackendFormat getPreferredStencilFormat(const GrBackendFormat&) override {
     return GrBackendFormat::MakeMock(GrColorType::kUnknown, SkImage::CompressionType::kNone, true);
@@ -139,9 +139,9 @@ class GrMockGpu : public GrGpu {
   GrBackendTexture onCreateBackendTexture(
       SkISize dimensions, const GrBackendFormat&, GrRenderable, GrMipmapped, GrProtected) override;
 
-  bool onUpdateBackendTexture(
+  bool onClearBackendTexture(
       const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
-      const BackendTextureData*) override {
+      std::array<float, 4> color) override {
     return true;
   }
 
@@ -149,8 +149,8 @@ class GrMockGpu : public GrGpu {
       SkISize dimensions, const GrBackendFormat&, GrMipmapped, GrProtected) override;
 
   bool onUpdateCompressedBackendTexture(
-      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback,
-      const BackendTextureData*) override {
+      const GrBackendTexture&, sk_sp<GrRefCntedCallback> finishedCallback, const void*,
+      size_t) override {
     return true;
   }
 
@@ -164,8 +164,6 @@ class GrMockGpu : public GrGpu {
   GrBackendRenderTarget createTestingOnlyBackendRenderTarget(
       SkISize dimensions, GrColorType, int sampleCnt, GrProtected) override;
   void deleteTestingOnlyBackendRenderTarget(const GrBackendRenderTarget&) override;
-
-  void testingOnly_flushGpuAndSync() override {}
 #endif
 
   const GrMockOptions fMockOptions;

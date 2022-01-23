@@ -8,6 +8,7 @@
 #include "bench/Benchmark.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkImage.h"
 #include "include/core/SkM44.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkShader.h"
@@ -123,7 +124,7 @@ class GameBench : public Benchmark {
 
     SkPaint p2;  // for drawVertices path
     p2.setColor(0xFF000000);
-    p2.setShader(fAtlas.makeShader(SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kNone)));
+    p2.setShader(fAtlas->makeShader(SkSamplingOptions(SkFilterMode::kLinear)));
 
     for (int i = 0; i < loops; ++i, ++fNumSaved) {
       if (0 == i % kNumBeforeClear) {
@@ -173,7 +174,7 @@ class GameBench : public Benchmark {
       canvas->concat(mat);
       if (fUseAtlas) {
         const int curCell = i % (kNumAtlasedX * kNumAtlasedY);
-        SkIRect src = fAtlasRects[curCell % (kNumAtlasedX)][curCell / (kNumAtlasedX)];
+        SkRect src = SkRect::Make(fAtlasRects[curCell % (kNumAtlasedX)][curCell / (kNumAtlasedX)]);
 
         if (fUseDrawVertices) {
           SkPoint uvs[4] = {
@@ -187,10 +188,11 @@ class GameBench : public Benchmark {
                   SkVertices::kTriangles_VertexMode, 4, verts, uvs, nullptr, 6, indices),
               SkBlendMode::kModulate, p2);
         } else {
-          canvas->drawBitmapRect(fAtlas, src, dst, &p, SkCanvas::kFast_SrcRectConstraint);
+          canvas->drawImageRect(
+              fAtlas, src, dst, SkSamplingOptions(), &p, SkCanvas::kFast_SrcRectConstraint);
         }
       } else {
-        canvas->drawBitmapRect(fCheckerboard, dst, &p);
+        canvas->drawImageRect(fCheckerboard, dst, SkSamplingOptions(), &p);
       }
     }
   }
@@ -222,19 +224,19 @@ class GameBench : public Benchmark {
   // 0 & 1 are always x & y translate. 2 is either scale or rotate.
   SkScalar fSaved[kNumBeforeClear][3];
 
-  SkBitmap fCheckerboard;
-  SkBitmap fAtlas;
+  sk_sp<SkImage> fCheckerboard, fAtlas;
   SkIRect fAtlasRects[kNumAtlasedX][kNumAtlasedY];
 
   // Note: the resulting checker board has transparency
   void makeCheckerboard() {
     static int kCheckSize = 16;
 
-    fCheckerboard.allocN32Pixels(kCheckerboardWidth, kCheckerboardHeight);
+    SkBitmap bm;
+    bm.allocN32Pixels(kCheckerboardWidth, kCheckerboardHeight);
     for (int y = 0; y < kCheckerboardHeight; ++y) {
       int even = (y / kCheckSize) % 2;
 
-      SkPMColor* scanline = fCheckerboard.getAddr32(0, y);
+      SkPMColor* scanline = bm.getAddr32(0, y);
 
       for (int x = 0; x < kCheckerboardWidth; ++x) {
         if (even == (x / kCheckSize) % 2) {
@@ -244,6 +246,7 @@ class GameBench : public Benchmark {
         }
       }
     }
+    fCheckerboard = bm.asImage();
   }
 
   // Note: the resulting atlas has transparency
@@ -262,13 +265,14 @@ class GameBench : public Benchmark {
       }
     }
 
-    fAtlas.allocN32Pixels(kTotAtlasWidth, kTotAtlasHeight);
+    SkBitmap bm;
+    bm.allocN32Pixels(kTotAtlasWidth, kTotAtlasHeight);
 
     for (int y = 0; y < kTotAtlasHeight; ++y) {
       int colorY = y / (kAtlasCellHeight + kAtlasSpacer);
       bool inColorY = (y % (kAtlasCellHeight + kAtlasSpacer)) >= kAtlasSpacer;
 
-      SkPMColor* scanline = fAtlas.getAddr32(0, y);
+      SkPMColor* scanline = bm.getAddr32(0, y);
 
       for (int x = 0; x < kTotAtlasWidth; ++x, ++scanline) {
         int colorX = x / (kAtlasCellWidth + kAtlasSpacer);
@@ -282,6 +286,7 @@ class GameBench : public Benchmark {
         }
       }
     }
+    fAtlas = bm.asImage();
   }
 
   using INHERITED = Benchmark;

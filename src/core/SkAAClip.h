@@ -81,7 +81,7 @@ class SkAAClip {
   SkIRect fBounds;
   RunHead* fRunHead;
 
-  void freeRuns();
+  void freeRuns() noexcept;
   bool trimBounds();
   bool trimTopBottom();
   bool trimLeftRight();

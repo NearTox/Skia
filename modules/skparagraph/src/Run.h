@@ -7,12 +7,12 @@
 #include "include/core/SkPoint.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkScalar.h"
+#include "include/core/SkSpan.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkTArray.h"
 #include "modules/skparagraph/include/DartTypes.h"
 #include "modules/skparagraph/include/TextStyle.h"
 #include "modules/skshaper/include/SkShaper.h"
-#include "src/core/SkSpan.h"
 
 #include <math.h>
 #include <algorithm>
@@ -55,10 +55,10 @@ class DirText {
 class Run {
  public:
   Run(ParagraphImpl* owner, const SkShaper::RunHandler::RunInfo& info, size_t firstChar,
-      SkScalar heightMultiplier, size_t index, SkScalar shiftX);
+      SkScalar heightMultiplier, bool useHalfLeading, size_t index, SkScalar shiftX);
   Run(const Run&) = default;
   Run& operator=(const Run&) = delete;
-  Run(Run&&) = default;
+  Run(Run&&) noexcept = default;
   Run& operator=(Run&&) = delete;
   ~Run() = default;
 
@@ -94,6 +94,7 @@ class Run {
   }
   size_t index() const { return fIndex; }
   SkScalar heightMultiplier() const { return fHeightMultiplier; }
+  bool useHalfLeading() const { return fUseHalfLeading; }
   PlaceholderStyle* placeholderStyle() const;
   bool isPlaceholder() const { return fPlaceholderIndex != std::numeric_limits<size_t>::max(); }
   size_t clusterIndex(size_t pos) const { return fClusterIndexes[pos]; }
@@ -128,15 +129,14 @@ class Run {
 
   void copyTo(SkTextBlobBuilder& builder, size_t pos, size_t size) const;
 
-  using ClusterTextVisitor = std::function<void(
-      size_t glyphStart, size_t glyphEnd, size_t charStart, size_t charEnd, SkScalar width,
-      SkScalar height)>;
-  void iterateThroughClustersInTextOrder(const ClusterTextVisitor& visitor);
+  template <typename Visitor>
+  void iterateThroughClustersInTextOrder(Visitor visitor);
 
   using ClusterVisitor = std::function<void(Cluster* cluster)>;
   void iterateThroughClusters(const ClusterVisitor& visitor);
 
   std::tuple<bool, ClusterIndex, ClusterIndex> findLimitingClusters(TextRange text) const;
+  std::tuple<bool, TextIndex, TextIndex> findLimitingGraphemes(TextRange text) const;
   SkSpan<const SkGlyphID> glyphs() const {
     return SkSpan<const SkGlyphID>(fGlyphs.begin(), fGlyphs.size());
   }
@@ -192,6 +192,7 @@ class Run {
 
   SkFontMetrics fFontMetrics;
   const SkScalar fHeightMultiplier;
+  const bool fUseHalfLeading;
   SkScalar fCorrectAscent;
   SkScalar fCorrectDescent;
   SkScalar fCorrectLeading;
@@ -200,6 +201,47 @@ class Run {
   bool fEllipsis;
   uint8_t fBidiLevel;
 };
+
+template <typename Visitor>
+void Run::iterateThroughClustersInTextOrder(Visitor visitor) {
+  // Can't figure out how to do it with one code for both cases without 100 ifs
+  // Can't go through clusters because there are no cluster table yet
+  if (leftToRight()) {
+    size_t start = 0;
+    size_t cluster = this->clusterIndex(start);
+    for (size_t glyph = 1; glyph <= this->size(); ++glyph) {
+      auto nextCluster = this->clusterIndex(glyph);
+      if (nextCluster <= cluster) {
+        continue;
+      }
+
+      visitor(
+          start, glyph, fClusterStart + cluster, fClusterStart + nextCluster,
+          this->calculateWidth(start, glyph, glyph == size()),
+          this->calculateHeight(LineMetricStyle::CSS, LineMetricStyle::CSS));
+
+      start = glyph;
+      cluster = nextCluster;
+    }
+  } else {
+    size_t glyph = this->size();
+    size_t cluster = this->fUtf8Range.begin();
+    for (int32_t start = this->size() - 1; start >= 0; --start) {
+      size_t nextCluster = start == 0 ? this->fUtf8Range.end() : this->clusterIndex(start - 1);
+      if (nextCluster <= cluster) {
+        continue;
+      }
+
+      visitor(
+          start, glyph, fClusterStart + cluster, fClusterStart + nextCluster,
+          this->calculateWidth(start, glyph, glyph == 0),
+          this->calculateHeight(LineMetricStyle::CSS, LineMetricStyle::CSS));
+
+      glyph = start;
+      cluster = nextCluster;
+    }
+  }
+}
 
 class Cluster {
  public:
@@ -228,6 +270,7 @@ class Cluster {
 
   Cluster(TextRange textRange) : fTextRange(textRange), fGraphemeRange(EMPTY_RANGE) {}
 
+  Cluster(const Cluster&) = default;
   ~Cluster() = default;
 
   SkScalar sizeToChar(TextIndex ch) const;
@@ -240,8 +283,10 @@ class Cluster {
     fWidth += shift;
   }
 
-  bool isWhitespaces() const { return fIsWhiteSpaces; }
-  bool isHardBreak() const;
+  bool isWhitespaceBreak() const { return fIsWhiteSpaceBreak; }
+  bool isIntraWordBreak() const { return fIsIntraWordBreak; }
+  bool isHardBreak() const { return fIsHardBreak; }
+
   bool isSoftBreak() const;
   bool isGraphemeBreak() const;
   bool canBreakLineAfter() const { return isHardBreak() || isSoftBreak(); }
@@ -259,7 +304,8 @@ class Cluster {
   RunIndex runIndex() const { return fRunIndex; }
   ParagraphImpl* owner() const { return fOwner; }
 
-  Run* run() const;
+  Run* runOrNull() const;
+  Run& run() const;
   SkFont font() const;
 
   SkScalar trimmedWidth(size_t pos) const;
@@ -288,7 +334,10 @@ class Cluster {
   SkScalar fSpacing;
   SkScalar fHeight;
   SkScalar fHalfLetterSpacing;
-  bool fIsWhiteSpaces;
+
+  bool fIsWhiteSpaceBreak;
+  bool fIsIntraWordBreak;
+  bool fIsHardBreak;
 };
 
 class InternalLineMetrics {
@@ -349,11 +398,11 @@ class InternalLineMetrics {
   }
 
   void clean() {
-    fAscent = 0;
-    fDescent = 0;
+    fAscent = SK_ScalarMax;
+    fDescent = SK_ScalarMin;
     fLeading = 0;
-    fRawAscent = 0;
-    fRawDescent = 0;
+    fRawAscent = SK_ScalarMax;
+    fRawDescent = SK_ScalarMin;
     fRawLeading = 0;
   }
 
@@ -383,6 +432,12 @@ class InternalLineMetrics {
   }
 
   SkScalar height() const { return ::round((double)fDescent - fAscent + fLeading); }
+
+  void update(SkScalar a, SkScalar d, SkScalar l) {
+    fAscent = a;
+    fDescent = d;
+    fLeading = l;
+  }
 
   SkScalar alphabeticBaseline() const { return fLeading / 2 - fAscent; }
   SkScalar ideographicBaseline() const { return fDescent - fAscent + fLeading; }

@@ -10,6 +10,8 @@
 
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
+#include "include/core/SkSamplingOptions.h"
+#include "include/core/SkShader.h"
 #include "include/core/SkTileMode.h"
 #include "include/core/SkTypes.h"
 
@@ -19,7 +21,6 @@ struct SkDeserialProcs;
 class SkImage;
 class SkMatrix;
 struct SkSerialProcs;
-class SkShader;
 class SkStream;
 class SkWStream;
 
@@ -37,6 +38,8 @@ class SkWStream;
 */
 class SK_API SkPicture : public SkRefCnt {
  public:
+  ~SkPicture() override;
+
   /** Recreates SkPicture that was serialized into a stream. Returns constructed SkPicture
       if successful; otherwise, returns nullptr. Fails if data does not permit
       constructing valid SkPicture.
@@ -87,14 +90,8 @@ class SK_API SkPicture : public SkRefCnt {
   class SK_API AbortCallback {
    public:
     /** Has no effect.
-
-        @return  abstract class cannot be instantiated
-    */
-    AbortCallback() {}
-
-    /** Has no effect.
      */
-    virtual ~AbortCallback() {}
+    virtual ~AbortCallback() = default;
 
     /** Stops SkPicture playback when some condition is met. A subclass of
         AbortCallback provides an override for abort() that can stop SkPicture::playback.
@@ -111,6 +108,11 @@ class SK_API SkPicture : public SkRefCnt {
     example: https://fiddle.skia.org/c/@Picture_AbortCallback_abort
     */
     virtual bool abort() = 0;
+
+   protected:
+    constexpr AbortCallback() noexcept = default;
+    AbortCallback(const AbortCallback&) = delete;
+    AbortCallback& operator=(const AbortCallback&) = delete;
   };
 
   /** Replays the drawing commands on the specified canvas. In the case that the
@@ -143,7 +145,7 @@ class SK_API SkPicture : public SkRefCnt {
 
       @return  identifier for SkPicture
   */
-  uint32_t uniqueID() const { return fUniqueID; }
+  uint32_t uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns storage containing SkData describing SkPicture, using optional custom
       encoders.
@@ -214,6 +216,7 @@ class SK_API SkPicture : public SkRefCnt {
    *
    *  @param tmx  The tiling mode to use when sampling in the x-direction.
    *  @param tmy  The tiling mode to use when sampling in the y-direction.
+   *  @param mode How to filter the tiles
    *  @param localMatrix Optional matrix used when sampling
    *  @param tile The tile rectangle in picture coordinates: this represents the subset
    *              (or superset) of the picture used when building a tile. It is not
@@ -223,9 +226,12 @@ class SK_API SkPicture : public SkRefCnt {
    *  @return     Returns a new shader object. Note: this function never returns null.
    */
   sk_sp<SkShader> makeShader(
-      SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix, const SkRect* tileRect) const;
-  sk_sp<SkShader> makeShader(
-      SkTileMode tmx, SkTileMode tmy, const SkMatrix* localMatrix = nullptr) const;
+      SkTileMode tmx, SkTileMode tmy, SkFilterMode mode, const SkMatrix* localMatrix,
+      const SkRect* tileRect) const;
+
+  sk_sp<SkShader> makeShader(SkTileMode tmx, SkTileMode tmy, SkFilterMode mode) const {
+    return this->makeShader(tmx, tmy, mode, nullptr, nullptr);
+  }
 
  private:
   // Allowed subclasses.
@@ -256,7 +262,7 @@ class SK_API SkPicture : public SkRefCnt {
   friend bool SkPicture_StreamIsSKP(SkStream*, struct SkPictInfo*);
 
   // Returns NULL if this is not an SkBigPicture.
-  virtual const class SkBigPicture* asSkBigPicture() const { return nullptr; }
+  virtual const class SkBigPicture* asSkBigPicture() const noexcept { return nullptr; }
 
   friend struct SkPathCounter;
 
@@ -268,6 +274,7 @@ class SK_API SkPicture : public SkRefCnt {
   class SkPictureData* backport() const;
 
   uint32_t fUniqueID;
+  mutable std::atomic<bool> fAddedToCache{false};
 };
 
 #endif

@@ -12,30 +12,30 @@
 #include "modules/svg/include/SkSVGTypes.h"
 
 class SkSVGFeGaussianBlur : public SkSVGFe {
- public:
-  struct StdDeviation {
-    SkSVGNumberType fX;
-    SkSVGNumberType fY;
-  };
+public:
+    struct StdDeviation {
+        SkSVGNumberType fX;
+        SkSVGNumberType fY;
+    };
 
-  static sk_sp<SkSVGFeGaussianBlur> Make() {
-    return sk_sp<SkSVGFeGaussianBlur>(new SkSVGFeGaussianBlur());
-  }
+    static sk_sp<SkSVGFeGaussianBlur> Make() {
+        return sk_sp<SkSVGFeGaussianBlur>(new SkSVGFeGaussianBlur());
+    }
 
-  SVG_ATTR(StdDeviation, StdDeviation, StdDeviation({0, 0}))
+    SVG_ATTR(StdDeviation, StdDeviation, StdDeviation({0, 0}))
 
- protected:
-  sk_sp<SkImageFilter> onMakeImageFilter(
-      const SkSVGRenderContext&, const SkSVGFilterContext&) const override;
+protected:
+    sk_sp<SkImageFilter> onMakeImageFilter(const SkSVGRenderContext&,
+                                           const SkSVGFilterContext&) const override;
 
-  std::vector<SkSVGFeInputType> getInputs() const override { return {this->getIn()}; }
+    std::vector<SkSVGFeInputType> getInputs() const override { return {this->getIn()}; }
 
-  bool parseAndSetAttribute(const char*, const char*) override;
+    bool parseAndSetAttribute(const char*, const char*) override;
 
- private:
-  SkSVGFeGaussianBlur() : INHERITED(SkSVGTag::kFeGaussianBlur) {}
+private:
+    SkSVGFeGaussianBlur() : INHERITED(SkSVGTag::kFeGaussianBlur) {}
 
-  using INHERITED = SkSVGFe;
+    using INHERITED = SkSVGFe;
 };
 
 #endif  // SkSVGFeGaussianBlur_DEFINED

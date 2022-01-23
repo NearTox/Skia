@@ -39,7 +39,7 @@ void SkTCoincident::setPerp(const SkTCurve& c1, double t, const SkDPoint& cPt, c
   fMatch = cPt.approximatelyEqual(fPerpPt);
 #if DEBUG_T_SECT
   if (fMatch) {
-    SkDebugf("");  // allow setting breakpoint
+    SkDebugf("%s", "");  // allow setting breakpoint
   }
 #endif
 }
@@ -229,7 +229,7 @@ bool SkTSpan::initBounds(const SkTCurve& c) {
   fDeleted = false;
 #if DEBUG_T_SECT
   if (fCollapsed) {
-    SkDebugf("");  // for convenient breakpoints
+    SkDebugf("%s", "");  // for convenient breakpoints
   }
 #endif
   return fBounds.valid();
@@ -2008,9 +2008,8 @@ void SkTSect::BinarySearch(SkTSect* sect1, SkTSect* sect2, SkIntersections* inte
       break;
     }
     SkTSpan* result2 = sect2->fHead;
-    bool found = false;
     while (result2) {
-      found |= closest.find(result1, result2 SkDEBUGPARAMS(intersections));
+      closest.find(result1, result2 SkDEBUGPARAMS(intersections));
       result2 = result2->fNext;
     }
   } while ((result1 = result1->fNext));

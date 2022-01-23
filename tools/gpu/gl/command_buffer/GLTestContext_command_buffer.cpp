@@ -29,6 +29,7 @@ typedef void (*__eglMustCastToProperFunctionPointerType)(void);
 #  define EGL_FALSE 0
 #  define EGL_TRUE 1
 #  define EGL_OPENGL_ES2_BIT 0x0004
+#  define EGL_OPENGL_ES3_BIT 0x0040
 #  define EGL_CONTEXT_CLIENT_VERSION 0x3098
 #  define EGL_NO_SURFACE ((EGLSurface)0)
 #  define EGL_NO_DISPLAY ((EGLDisplay)0)
@@ -217,13 +218,23 @@ std::function<void()> context_restorer() {
 
 namespace sk_gpu_test {
 
-CommandBufferGLTestContext::CommandBufferGLTestContext(CommandBufferGLTestContext* shareContext)
+CommandBufferGLTestContext::CommandBufferGLTestContext(
+    int version, CommandBufferGLTestContext* shareContext)
     : fContext(EGL_NO_CONTEXT), fDisplay(EGL_NO_DISPLAY), fSurface(EGL_NO_SURFACE) {
-  static const EGLint configAttribs[] = {
+  EGLint renderableType;
+  switch (version) {
+    case 2: renderableType = EGL_OPENGL_ES2_BIT; break;
+    case 3: renderableType = EGL_OPENGL_ES3_BIT; break;
+    default:
+      SkDebugf("Command Buffer: Invalid version requested (%i). Must be either 2 or 3.\n", version);
+      return;
+  }
+
+  EGLint configAttribs[] = {
       EGL_SURFACE_TYPE,
       EGL_PBUFFER_BIT,
       EGL_RENDERABLE_TYPE,
-      EGL_OPENGL_ES2_BIT,
+      renderableType,
       EGL_RED_SIZE,
       8,
       EGL_GREEN_SIZE,
@@ -267,7 +278,7 @@ CommandBufferGLTestContext::CommandBufferGLTestContext(CommandBufferGLTestContex
     return;
   }
 
-  static const EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+  EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, version, EGL_NONE};
   EGLContext eglShareContext =
       shareContext ? reinterpret_cast<EGLContext>(shareContext->fContext) : nullptr;
   fContext =
@@ -294,6 +305,20 @@ CommandBufferGLTestContext::CommandBufferGLTestContext(CommandBufferGLTestContex
   if (!gl->validate()) {
     SkDebugf("Command Buffer: Could not validate CommandBuffer GL interface.\n");
     this->destroyGLContext();
+    return;
+  }
+
+  // libcommand_buffer_gles2 has not always respected the EGL_CONTEXT_CLIENT_VERSION attrib.
+  // Double check that we are not using an old library and we actually got the context version we
+  // asked for.
+  const char* versionString = (const char*)gl->fFunctions.fGetString(GR_GL_VERSION);
+  const char* expectedVersion = (version == 2) ? "OpenGL ES 2.0" : "OpenGL ES 3.0";
+  if (strstr(versionString, expectedVersion) != versionString) {
+    SkDebugf(
+        "Command Buffer: Unexpected version.\n"
+        "           Got: \"%s\".\n"
+        "      Expected: \"%s ...\".\n",
+        versionString, expectedVersion);
     return;
   }
 

@@ -30,6 +30,17 @@ class TernaryExpression final : public Expression {
     SkASSERT(this->ifTrue()->type() == this->ifFalse()->type());
   }
 
+  // Creates a potentially-simplified form of the ternary. Typechecks and coerces input
+  // expressions; reports errors via ErrorReporter.
+  static std::unique_ptr<Expression> Convert(
+      const Context& context, std::unique_ptr<Expression> test, std::unique_ptr<Expression> ifTrue,
+      std::unique_ptr<Expression> ifFalse);
+
+  // Creates a potentially-simplified form of the ternary; reports errors via ASSERT.
+  static std::unique_ptr<Expression> Make(
+      const Context& context, std::unique_ptr<Expression> test, std::unique_ptr<Expression> ifTrue,
+      std::unique_ptr<Expression> ifFalse);
+
   std::unique_ptr<Expression>& test() { return fTest; }
 
   const std::unique_ptr<Expression>& test() const { return fTest; }
@@ -53,8 +64,8 @@ class TernaryExpression final : public Expression {
   }
 
   std::unique_ptr<Expression> clone() const override {
-    return std::unique_ptr<Expression>(new TernaryExpression(
-        fOffset, this->test()->clone(), this->ifTrue()->clone(), this->ifFalse()->clone()));
+    return std::make_unique<TernaryExpression>(
+        fOffset, this->test()->clone(), this->ifTrue()->clone(), this->ifFalse()->clone());
   }
 
   String description() const override {

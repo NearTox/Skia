@@ -39,7 +39,7 @@ class Inliner {
  public:
   Inliner(const Context* context) : fContext(context) {}
 
-  void reset(ModifiersPool* modifiers, const Program::Settings*);
+  void reset();
 
   /** Inlines any eligible functions that are found. Returns true if any changes are made. */
   bool analyze(
@@ -54,6 +54,8 @@ class Inliner {
     kScopedReturns,
     kEarlyReturns,
   };
+
+  const Program::Settings& settings() const { return fContext->fConfig->fSettings; }
 
   void buildCandidateList(
       const std::vector<std::unique_ptr<ProgramElement>>& elements,
@@ -87,7 +89,8 @@ class Inliner {
     std::unique_ptr<Expression> fReplacementExpr;
   };
   InlinedCall inlineCall(
-      FunctionCall*, std::shared_ptr<SymbolTable>, const FunctionDeclaration* caller);
+      FunctionCall*, std::shared_ptr<SymbolTable>, const ProgramUsage&,
+      const FunctionDeclaration* caller);
 
   /** Creates a scratch variable for the inliner to use. */
   struct InlineVariable {
@@ -104,9 +107,9 @@ class Inliner {
   /** Checks whether inlining is viable for a FunctionCall, modulo recursion and function size. */
   bool isSafeToInline(const FunctionDefinition* functionDef);
 
+  ModifiersPool& modifiersPool() const { return *fContext->fModifiersPool; }
+
   const Context* fContext = nullptr;
-  ModifiersPool* fModifiers = nullptr;
-  const Program::Settings* fSettings = nullptr;
   Mangler fMangler;
   int fInlinedStatementCounter = 0;
 };

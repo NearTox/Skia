@@ -201,7 +201,7 @@ void MotionBlurEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) cons
     return;
   }
 
-  SkAutoCanvasRestore acr(canvas, false);
+  SkAutoCanvasRestore acr1(canvas, false);
 
   // Accumulate in F16 for more precision.
   canvas->saveLayer(SkCanvas::SaveLayerRec(&this->bounds(), nullptr, SkCanvas::kF16ColorType));
@@ -229,7 +229,7 @@ void MotionBlurEffect::onRender(SkCanvas* canvas, const RenderContext* ctx) cons
       continue;
     }
 
-    SkAutoCanvasRestore acr(canvas, false);
+    SkAutoCanvasRestore acr2(canvas, false);
     if (isolate_frames) {
       canvas->saveLayer(nullptr, &frame_paint);
     }

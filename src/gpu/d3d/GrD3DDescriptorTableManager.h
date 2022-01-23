@@ -37,7 +37,7 @@ class GrD3DDescriptorTableManager {
  public:
   GrD3DDescriptorTableManager(GrD3DGpu*);
 
-  sk_sp<GrD3DDescriptorTable> createShaderOrConstantResourceTable(GrD3DGpu*, unsigned int count);
+  sk_sp<GrD3DDescriptorTable> createShaderViewTable(GrD3DGpu*, unsigned int count);
   sk_sp<GrD3DDescriptorTable> createSamplerTable(GrD3DGpu*, unsigned int count);
 
   void prepForSubmit(GrD3DGpu* gpu);
@@ -75,7 +75,7 @@ class GrD3DDescriptorTableManager {
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
     void dumpInfo() const override {
-      SkDebugf("GrD3DDescriptorTable::Heap: %d (%d refs)\n", fHeap.get(), this->getRefCnt());
+      SkDebugf("GrD3DDescriptorTable::Heap: %p (%d refs)\n", fHeap.get(), this->getRefCnt());
     }
 #endif
 
@@ -108,7 +108,7 @@ class GrD3DDescriptorTableManager {
   void setHeaps(GrD3DGpu*);
   void recycle(Heap*);
 
-  HeapPool fCBVSRVDescriptorPool;
+  HeapPool fShaderViewDescriptorPool;
   HeapPool fSamplerDescriptorPool;
 };
 

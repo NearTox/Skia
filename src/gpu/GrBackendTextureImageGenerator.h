@@ -9,7 +9,7 @@
 
 #include "include/core/SkImageGenerator.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/gpu/GrRecordingContext.h"
+#include "include/gpu/GrDirectContext.h"
 #include "include/private/GrResourceKey.h"
 #include "include/private/SkMutex.h"
 #include "src/gpu/GrTexture.h"
@@ -50,19 +50,21 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
 
  private:
   GrBackendTextureImageGenerator(
-      const SkImageInfo& info, GrTexture*, GrSurfaceOrigin, uint32_t owningContextID,
-      std::unique_ptr<GrSemaphore>, const GrBackendTexture&);
+      const SkImageInfo& info, GrTexture*, GrSurfaceOrigin,
+      GrDirectContext::DirectContextID owningContextID, std::unique_ptr<GrSemaphore>,
+      const GrBackendTexture&);
 
   static void ReleaseRefHelper_TextureReleaseProc(void* ctx);
 
   class RefHelper : public SkNVRefCnt<RefHelper> {
    public:
-    RefHelper(GrTexture*, uint32_t owningContextID, std::unique_ptr<GrSemaphore>);
+    RefHelper(
+        GrTexture*, GrDirectContext::DirectContextID owningContextID, std::unique_ptr<GrSemaphore>);
 
     ~RefHelper();
 
     GrTexture* fOriginalTexture;
-    uint32_t fOwningContextID;
+    GrDirectContext::DirectContextID fOwningContextID;
 
     // We use this key so that we don't rewrap the GrBackendTexture in a GrTexture for each
     // proxy created from this generator for a particular borrowing context.
@@ -73,7 +75,7 @@ class GrBackendTextureImageGenerator : public SkImageGenerator {
     // this back up to other contexts. In general a ref to this release proc is owned by all
     // proxies and gpu uses of the backend texture.
     GrRefCntedCallback* fBorrowingContextReleaseProc;
-    uint32_t fBorrowingContextID;
+    GrDirectContext::DirectContextID fBorrowingContextID;
 
     std::unique_ptr<GrSemaphore> fSemaphore;
   };

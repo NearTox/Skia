@@ -12,28 +12,27 @@
 #include "modules/svg/include/SkSVGTypes.h"
 
 class SkSVGRadialGradient final : public SkSVGGradient {
- public:
-  static sk_sp<SkSVGRadialGradient> Make() {
-    return sk_sp<SkSVGRadialGradient>(new SkSVGRadialGradient());
-  }
+public:
+    static sk_sp<SkSVGRadialGradient> Make() {
+        return sk_sp<SkSVGRadialGradient>(new SkSVGRadialGradient());
+    }
 
-  SVG_ATTR(Cx, SkSVGLength, SkSVGLength(50, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Cy, SkSVGLength, SkSVGLength(50, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(R, SkSVGLength, SkSVGLength(50, SkSVGLength::Unit::kPercentage))
-  SVG_OPTIONAL_ATTR(Fx, SkSVGLength)
-  SVG_OPTIONAL_ATTR(Fy, SkSVGLength)
+    SVG_ATTR(Cx, SkSVGLength, SkSVGLength(50, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Cy, SkSVGLength, SkSVGLength(50, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(R,  SkSVGLength, SkSVGLength(50, SkSVGLength::Unit::kPercentage))
+    SVG_OPTIONAL_ATTR(Fx, SkSVGLength)
+    SVG_OPTIONAL_ATTR(Fy, SkSVGLength)
 
- protected:
-  bool parseAndSetAttribute(const char*, const char*) override;
+protected:
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  sk_sp<SkShader> onMakeShader(
-      const SkSVGRenderContext&, const SkColor*, const SkScalar*, int count, SkTileMode,
-      const SkMatrix&) const override;
+    sk_sp<SkShader> onMakeShader(const SkSVGRenderContext&,
+                                 const SkColor4f*, const SkScalar*, int count,
+                                 SkTileMode, const SkMatrix&) const override;
+private:
+    SkSVGRadialGradient();
 
- private:
-  SkSVGRadialGradient();
-
-  using INHERITED = SkSVGGradient;
+    using INHERITED = SkSVGGradient;
 };
 
-#endif  // SkSVGRadialGradient_DEFINED
+#endif // SkSVGRadialGradient_DEFINED

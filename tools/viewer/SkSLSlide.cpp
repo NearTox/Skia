@@ -43,7 +43,7 @@ SkSLSlide::SkSLSlide() {
       "uniform shader child;\n"
       "\n"
       "half4 main(float2 p) {\n"
-      "    return sample(child, p);\n"
+      "    return child.eval(p);\n"
       "}\n";
 
   fCodeIsDirty = true;
@@ -96,7 +96,7 @@ bool SkSLSlide::rebuild() {
     fwrite(fSkSL.c_str(), 1, fSkSL.size(), backup);
     fclose(backup);
   }
-  auto [effect, errorText] = SkRuntimeEffect::Make(sksl);
+  auto [effect, errorText] = SkRuntimeEffect::MakeForShader(sksl);
   if (backup) {
     std::remove(kBackupFile);
   }
@@ -155,28 +155,28 @@ void SkSLSlide::draw(SkCanvas* canvas) {
   fMousePos.w = abs(fMousePos.w) * (ImGui::IsMouseClicked(0) ? 1 : -1);
 
   for (const auto& v : fEffect->uniforms()) {
-    char* data = fInputs.get() + v.fOffset;
-    if (v.fName.equals("iResolution")) {
+    char* data = fInputs.get() + v.offset;
+    if (v.name.equals("iResolution")) {
       memcpy(data, &fResolution, sizeof(fResolution));
       continue;
     }
-    if (v.fName.equals("iTime")) {
+    if (v.name.equals("iTime")) {
       memcpy(data, &fSeconds, sizeof(fSeconds));
       continue;
     }
-    if (v.fName.equals("iMouse")) {
+    if (v.name.equals("iMouse")) {
       memcpy(data, &fMousePos, sizeof(fMousePos));
       continue;
     }
-    switch (v.fType) {
+    switch (v.type) {
       case SkRuntimeEffect::Uniform::Type::kFloat:
       case SkRuntimeEffect::Uniform::Type::kFloat2:
       case SkRuntimeEffect::Uniform::Type::kFloat3:
       case SkRuntimeEffect::Uniform::Type::kFloat4: {
-        int rows = ((int)v.fType - (int)SkRuntimeEffect::Uniform::Type::kFloat) + 1;
+        int rows = ((int)v.type - (int)SkRuntimeEffect::Uniform::Type::kFloat) + 1;
         float* f = reinterpret_cast<float*>(data);
-        for (int c = 0; c < v.fCount; ++c, f += rows) {
-          SkString name = v.isArray() ? SkStringPrintf("%s[%d]", v.fName.c_str(), c) : v.fName;
+        for (int c = 0; c < v.count; ++c, f += rows) {
+          SkString name = v.isArray() ? SkStringPrintf("%s[%d]", v.name.c_str(), c) : v.name;
           ImGui::PushID(c);
           ImGui::DragScalarN(name.c_str(), ImGuiDataType_Float, f, rows, 1.0f);
           ImGui::PopID();
@@ -186,30 +186,45 @@ void SkSLSlide::draw(SkCanvas* canvas) {
       case SkRuntimeEffect::Uniform::Type::kFloat2x2:
       case SkRuntimeEffect::Uniform::Type::kFloat3x3:
       case SkRuntimeEffect::Uniform::Type::kFloat4x4: {
-        int rows = ((int)v.fType - (int)SkRuntimeEffect::Uniform::Type::kFloat2x2) + 2;
+        int rows = ((int)v.type - (int)SkRuntimeEffect::Uniform::Type::kFloat2x2) + 2;
         int cols = rows;
         float* f = reinterpret_cast<float*>(data);
-        for (int e = 0; e < v.fCount; ++e) {
+        for (int e = 0; e < v.count; ++e) {
           for (int c = 0; c < cols; ++c, f += rows) {
-            SkString name = v.isArray() ? SkStringPrintf("%s[%d][%d]", v.fName.c_str(), e, c)
-                                        : SkStringPrintf("%s[%d]", v.fName.c_str(), c);
+            SkString name = v.isArray() ? SkStringPrintf("%s[%d][%d]", v.name.c_str(), e, c)
+                                        : SkStringPrintf("%s[%d]", v.name.c_str(), c);
             ImGui::DragScalarN(name.c_str(), ImGuiDataType_Float, f, rows, 1.0f);
           }
+        }
+        break;
+      }
+      case SkRuntimeEffect::Uniform::Type::kInt:
+      case SkRuntimeEffect::Uniform::Type::kInt2:
+      case SkRuntimeEffect::Uniform::Type::kInt3:
+      case SkRuntimeEffect::Uniform::Type::kInt4: {
+        int rows = ((int)v.type - (int)SkRuntimeEffect::Uniform::Type::kInt) + 1;
+        int* i = reinterpret_cast<int*>(data);
+        for (int c = 0; c < v.count; ++c, i += rows) {
+          SkString name = v.isArray() ? SkStringPrintf("%s[%d]", v.name.c_str(), c) : v.name;
+          ImGui::PushID(c);
+          ImGui::DragScalarN(name.c_str(), ImGuiDataType_S32, i, rows, 1.0f);
+          ImGui::PopID();
         }
         break;
       }
     }
   }
 
-  for (const auto& [i, name] : SkMakeEnumerate(fEffect->children())) {
+  for (const auto& c : fEffect->children()) {
     auto curShader = std::find_if(
-        fShaders.begin(), fShaders.end(), [tgt = fChildren[i]](auto p) { return p.second == tgt; });
+        fShaders.begin(), fShaders.end(),
+        [tgt = fChildren[c.index]](auto p) { return p.second == tgt; });
     SkASSERT(curShader != fShaders.end());
 
-    if (ImGui::BeginCombo(name.c_str(), curShader->first)) {
+    if (ImGui::BeginCombo(c.name.c_str(), curShader->first)) {
       for (const auto& namedShader : fShaders) {
         if (ImGui::Selectable(namedShader.first, curShader->second == namedShader.second)) {
-          fChildren[i] = namedShader.second;
+          fChildren[c.index] = namedShader.second;
         }
       }
       ImGui::EndCombo();

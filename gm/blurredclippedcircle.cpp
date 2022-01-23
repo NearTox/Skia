@@ -18,7 +18,6 @@
 #include "include/core/SkScalar.h"
 #include "include/core/SkSize.h"
 #include "include/core/SkString.h"
-#include "src/core/SkClipOpPriv.h"
 
 namespace skiagm {
 
@@ -44,8 +43,7 @@ class BlurredClippedCircleGM : public GM {
     canvas->scale(kScale, kScale);
 
     canvas->save();
-    SkRect clipRect1 = SkRect::MakeLTRB(0, 0, SkIntToScalar(kWidth), SkIntToScalar(kHeight));
-
+    SkRect clipRect1 = SkRect::MakeLTRB(0, 0, kWidth, kHeight);
     canvas->clipRect(clipRect1);
 
     canvas->save();
@@ -57,7 +55,7 @@ class BlurredClippedCircleGM : public GM {
 
     SkRect clipRect2 = SkRect::MakeLTRB(8, 8, 288, 288);
     SkRRect clipRRect = SkRRect::MakeOval(clipRect2);
-    canvas->clipRRect(clipRRect, kDifference_SkClipOp, true);
+    canvas->clipRRect(clipRRect, SkClipOp::kDifference, true);
 
     SkRect r = SkRect::MakeLTRB(4, 4, 292, 292);
     SkRRect rr = SkRRect::MakeOval(r);

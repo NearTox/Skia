@@ -10,6 +10,8 @@
 #import <OpenGLES/EAGL.h>
 #include <dlfcn.h>
 
+#include "include/ports/SkCFObject.h"
+
 #define EAGLCTX ((EAGLContext*)(fEAGLContext))
 
 namespace {
@@ -32,48 +34,44 @@ private:
     std::function<void()> onPlatformGetAutoContextRestore() const override;
     GrGLFuncPtr onPlatformGetProcAddress(const char*) const override;
 
-    EAGLContext* fEAGLContext;
+    sk_cfp<EAGLContext*> fEAGLContext;
     void* fGLLibrary;
 };
 
-IOSGLTestContext::IOSGLTestContext(IOSGLTestContext* shareContext)
-    : fEAGLContext(NULL)
-    , fGLLibrary(RTLD_DEFAULT) {
-
-    if (shareContext) {
-        EAGLContext* iosShareContext = shareContext->fEAGLContext;
-        fEAGLContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3
-                                            sharegroup:[iosShareContext sharegroup]];
-        if (fEAGLContext == nil) {
-            fEAGLContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2
-                                                sharegroup:[iosShareContext sharegroup]];
-        }
-    } else {
-        fEAGLContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3];
-        if (fEAGLContext == nil) {
-            fEAGLContext = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-        }
+IOSGLTestContext::IOSGLTestContext(IOSGLTestContext* shareContext) : fGLLibrary(RTLD_DEFAULT) {
+  if (shareContext) {
+    EAGLContext* iosShareContext = shareContext->fEAGLContext.get();
+    fEAGLContext.reset([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3
+                                             sharegroup:[iosShareContext sharegroup]]);
+    if (!fEAGLContext) {
+      fEAGLContext.reset([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2
+                                               sharegroup:[iosShareContext sharegroup]]);
     }
-    SkScopeExit restorer(context_restorer());
-    [EAGLContext setCurrentContext:fEAGLContext];
-
-    sk_sp<const GrGLInterface> gl(GrGLCreateNativeInterface());
-    if (NULL == gl.get()) {
-        SkDebugf("Failed to create gl interface");
-        this->destroyGLContext();
-        return;
+  } else {
+    fEAGLContext.reset([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES3]);
+    if (!fEAGLContext) {
+      fEAGLContext.reset([[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2]);
     }
-    if (!gl->validate()) {
-        SkDebugf("Failed to validate gl interface");
-        this->destroyGLContext();
-        return;
-    }
+  }
+  SkScopeExit restorer(context_restorer());
+  [EAGLContext setCurrentContext:fEAGLContext.get()];
 
-    fGLLibrary = dlopen(
-        "/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib",
-        RTLD_LAZY);
+  sk_sp<const GrGLInterface> gl(GrGLCreateNativeInterface());
+  if (NULL == gl.get()) {
+    SkDebugf("Failed to create gl interface");
+    this->destroyGLContext();
+    return;
+  }
+  if (!gl->validate()) {
+    SkDebugf("Failed to validate gl interface");
+    this->destroyGLContext();
+    return;
+  }
 
-    this->init(std::move(gl));
+  fGLLibrary = dlopen(
+      "/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", RTLD_LAZY);
+
+  this->init(std::move(gl));
 }
 
 IOSGLTestContext::~IOSGLTestContext() {
@@ -83,11 +81,11 @@ IOSGLTestContext::~IOSGLTestContext() {
 
 void IOSGLTestContext::destroyGLContext() {
     if (fEAGLContext) {
-        if ([EAGLContext currentContext] == fEAGLContext) {
-            // This will ensure that the context is immediately deleted.
-            [EAGLContext setCurrentContext:nil];
-        }
-        fEAGLContext = nil;
+      if ([EAGLContext currentContext] == fEAGLContext.get()) {
+        // This will ensure that the context is immediately deleted.
+        [EAGLContext setCurrentContext:nil];
+      }
+      fEAGLContext.reset();
     }
     if (nullptr != fGLLibrary) {
         dlclose(fGLLibrary);
@@ -101,15 +99,15 @@ void IOSGLTestContext::onPlatformMakeNotCurrent() const {
 }
 
 void IOSGLTestContext::onPlatformMakeCurrent() const {
-    if (![EAGLContext setCurrentContext:fEAGLContext]) {
-        SkDebugf("Could not set the context.\n");
-    }
+  if (![EAGLContext setCurrentContext:fEAGLContext.get()]) {
+    SkDebugf("Could not set the context.\n");
+  }
 }
 
 std::function<void()> IOSGLTestContext::onPlatformGetAutoContextRestore() const {
-    if ([EAGLContext currentContext] == fEAGLContext) {
-      return nullptr;
-    }
+  if ([EAGLContext currentContext] == fEAGLContext.get()) {
+    return nullptr;
+  }
     return context_restorer();
 }
 

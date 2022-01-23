@@ -10,21 +10,20 @@
 
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkRefCnt.h"
+#include "include/private/SkTOptional.h"
 #include "include/private/SkTo.h"
 
+class SkBlender;
 class SkColorFilter;
 class SkColorSpace;
 struct SkRect;
 class SkImageFilter;
 class SkMaskFilter;
+class SkMatrix;
 class SkPath;
 class SkPathEffect;
 class SkShader;
-
-// WIP to eventually remove filter-quality
-#define SK_SUPPORT_LEGACY_SETFILTERQUALITY
 
 /** \class SkPaint
     SkPaint controls options applied when drawing. SkPaint collects all
@@ -44,7 +43,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_empty_constructor
   */
-  SkPaint();
+  SkPaint() noexcept;
 
   /** Constructs SkPaint with default values and the given color.
 
@@ -73,7 +72,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_copy_const_SkPaint
   */
-  SkPaint(const SkPaint& paint);
+  SkPaint(const SkPaint& paint) noexcept;
 
   /** Implements a move constructor to avoid increasing the reference counts
       of objects referenced by the paint.
@@ -85,7 +84,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_move_SkPaint
   */
-  SkPaint(SkPaint&& paint);
+  SkPaint(SkPaint&& paint) noexcept;
 
   /** Decreases SkPaint SkRefCnt of owned objects: SkPathEffect, SkShader,
       SkMaskFilter, SkColorFilter, and SkImageFilter. If the
@@ -105,7 +104,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_copy_operator
   */
-  SkPaint& operator=(const SkPaint& paint);
+  SkPaint& operator=(const SkPaint& paint) noexcept;
 
   /** Moves the paint to avoid increasing the reference counts
       of objects referenced by the paint parameter. Objects containing SkRefCnt in the
@@ -119,7 +118,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_move_operator
   */
-  SkPaint& operator=(SkPaint&& paint);
+  SkPaint& operator=(SkPaint&& paint) noexcept;
 
   /** Compares a and b, and returns true if a and b are equivalent. May return false
       if SkPathEffect, SkShader, SkMaskFilter, SkColorFilter,
@@ -141,28 +140,12 @@ class SK_API SkPaint {
   */
   friend bool operator!=(const SkPaint& a, const SkPaint& b) { return !(a == b); }
 
-  /** Returns a hash generated from SkPaint values and pointers.
-      Identical hashes guarantee that the paints are
-      equivalent, but differing hashes do not guarantee that the paints have differing
-      contents.
-
-      If operator==(const SkPaint& a, const SkPaint& b) returns true for two paints,
-      their hashes are also equal.
-
-      The hash returned is platform and implementation specific.
-
-      @return  a shallow hash
-
-      example: https://fiddle.skia.org/c/@Paint_getHash
-  */
-  uint32_t getHash() const;
-
   /** Sets all SkPaint contents to their initial values. This is equivalent to replacing
       SkPaint with the result of SkPaint().
 
       example: https://fiddle.skia.org/c/@Paint_reset
   */
-  void reset();
+  void reset() noexcept;
 
   /** Returns true if pixels on the active edges of SkPath may be drawn with partial transparency.
       @return  antialiasing state
@@ -184,26 +167,6 @@ class SK_API SkPaint {
       @param dither  setting for ditering
   */
   void setDither(bool dither) { fBitfields.fDither = static_cast<unsigned>(dither); }
-
-#ifndef SK_SUPPORT_LEGACY_SETFILTERQUALITY
- private:
-#endif
-  /** Returns SkFilterQuality, the image filtering level. A lower setting
-      draws faster; a higher setting looks better when the image is scaled.
-  */
-  SkFilterQuality getFilterQuality() const { return (SkFilterQuality)fBitfields.fFilterQuality; }
-
-  /** Sets SkFilterQuality, the image filtering level. A lower setting
-      draws faster; a higher setting looks better when the image is scaled.
-      Does not check to see if quality is valid.
-
-      example: https://fiddle.skia.org/c/@Color_Methods
-      example: https://fiddle.skia.org/c/@Paint_setFilterQuality
-  */
-  void setFilterQuality(SkFilterQuality quality);
-#ifndef SK_SUPPORT_LEGACY_SETFILTERQUALITY
- public:
-#endif
 
   /** \enum SkPaint::Style
       Set Style to fill, stroke, or both fill and stroke geometry.
@@ -420,6 +383,9 @@ class SK_API SkPaint {
   bool getFillPath(
       const SkPath& src, SkPath* dst, const SkRect* cullRect, SkScalar resScale = 1) const;
 
+  bool getFillPath(
+      const SkPath& src, SkPath* dst, const SkRect* cullRect, const SkMatrix& ctm) const;
+
   /** Returns the filled equivalent of the stroked path.
 
       Replaces dst with the src path modified by SkPathEffect and style stroke.
@@ -461,7 +427,7 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Color_Filter_Methods
       example: https://fiddle.skia.org/c/@Paint_setShader
   */
-  void setShader(sk_sp<SkShader> shader);
+  void setShader(sk_sp<SkShader> shader) noexcept;
 
   /** Returns SkColorFilter if set, or nullptr.
       Does not alter SkColorFilter SkRefCnt.
@@ -489,34 +455,66 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Blend_Mode_Methods
       example: https://fiddle.skia.org/c/@Paint_setColorFilter
   */
-  void setColorFilter(sk_sp<SkColorFilter> colorFilter);
+  void setColorFilter(sk_sp<SkColorFilter> colorFilter) noexcept;
 
-  /** Returns SkBlendMode.
-      By default, returns SkBlendMode::kSrcOver.
+  /** If the current blender can be represented as a SkBlendMode enum, this returns that
+   *  enum in the optional's value(). If it cannot, then the returned optional does not
+   *  contain a value.
+   */
+  skstd::optional<SkBlendMode> asBlendMode() const;
 
-      @return  mode used to combine source color with destination color
-  */
-  SkBlendMode getBlendMode() const { return (SkBlendMode)fBitfields.fBlendMode; }
+  /**
+   *  Queries the blender, and if it can be represented as a SkBlendMode, return that mode,
+   *  else return the defaultMode provided.
+   */
+  SkBlendMode getBlendMode_or(SkBlendMode defaultMode) const;
 
-  /** Returns true if SkBlendMode is SkBlendMode::kSrcOver, the default.
+  /** Returns true iff the current blender claims to be equivalent to SkBlendMode::kSrcOver.
+   *
+   *  Also returns true of the current blender is nullptr.
+   */
+  bool isSrcOver() const;
 
-      @return  true if SkBlendMode is SkBlendMode::kSrcOver
-  */
-  bool isSrcOver() const { return (SkBlendMode)fBitfields.fBlendMode == SkBlendMode::kSrcOver; }
+  /** Helper method for calling setBlender().
+   *
+   *  This sets a blender that implements the specified blendmode enum.
+   */
+  void setBlendMode(SkBlendMode mode);
 
-  /** Sets SkBlendMode to mode.
-      Does not check for valid input.
+  /** Returns the user-supplied blend function, if one has been set.
+   *  Does not alter SkBlender's SkRefCnt.
+   *
+   *  A nullptr blender signifies the default SrcOver behavior.
+   *
+   *  @return  the SkBlender assigned to this paint, otherwise nullptr
+   */
+  SkBlender* getBlender() const { return fBlender.get(); }
 
-      @param mode  SkBlendMode used to combine source color and destination
-  */
-  void setBlendMode(SkBlendMode mode) { fBitfields.fBlendMode = (unsigned)mode; }
+  /** Returns the user-supplied blend function, if one has been set.
+   *  Increments the SkBlender's SkRefCnt by one.
+   *
+   *  A nullptr blender signifies the default SrcOver behavior.
+   *
+   *  @return  the SkBlender assigned to this paint, otherwise nullptr
+   */
+  sk_sp<SkBlender> refBlender() const;
+
+  /** Sets the current blender, increasing its refcnt, and if a blender is already
+   *  present, decreasing that object's refcnt.
+   *
+   *  A nullptr blender signifies the default SrcOver behavior.
+   *
+   *  For convenience, you can call setBlendMode() if the blend effect can be expressed
+   *  as one of those values.
+   */
+  void setBlender(sk_sp<SkBlender> blender) noexcept;
 
   /** Returns SkPathEffect if set, or nullptr.
       Does not alter SkPathEffect SkRefCnt.
 
       @return  SkPathEffect if previously set, nullptr otherwise
   */
-  SkPathEffect* getPathEffect() const { return fPathEffect.get(); }
+  SkPathEffect* getPathEffect() const noexcept { return fPathEffect.get(); }
 
   /** Returns SkPathEffect if set, or nullptr.
       Increases SkPathEffect SkRefCnt by one.
@@ -537,14 +535,14 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Mask_Filter_Methods
       example: https://fiddle.skia.org/c/@Paint_setPathEffect
   */
-  void setPathEffect(sk_sp<SkPathEffect> pathEffect);
+  void setPathEffect(sk_sp<SkPathEffect> pathEffect) noexcept;
 
   /** Returns SkMaskFilter if set, or nullptr.
       Does not alter SkMaskFilter SkRefCnt.
 
       @return  SkMaskFilter if previously set, nullptr otherwise
   */
-  SkMaskFilter* getMaskFilter() const { return fMaskFilter.get(); }
+  SkMaskFilter* getMaskFilter() const noexcept { return fMaskFilter.get(); }
 
   /** Returns SkMaskFilter if set, or nullptr.
 
@@ -567,14 +565,14 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Paint_setMaskFilter
       example: https://fiddle.skia.org/c/@Typeface_Methods
   */
-  void setMaskFilter(sk_sp<SkMaskFilter> maskFilter);
+  void setMaskFilter(sk_sp<SkMaskFilter> maskFilter) noexcept;
 
   /** Returns SkImageFilter if set, or nullptr.
       Does not alter SkImageFilter SkRefCnt.
 
       @return  SkImageFilter if previously set, nullptr otherwise
   */
-  SkImageFilter* getImageFilter() const { return fImageFilter.get(); }
+  SkImageFilter* getImageFilter() const noexcept { return fImageFilter.get(); }
 
   /** Returns SkImageFilter if set, or nullptr.
       Increases SkImageFilter SkRefCnt by one.
@@ -595,7 +593,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_setImageFilter
   */
-  void setImageFilter(sk_sp<SkImageFilter> imageFilter);
+  void setImageFilter(sk_sp<SkImageFilter> imageFilter) noexcept;
 
   /** Returns true if SkPaint prevents all drawing;
       otherwise, the SkPaint may or may not allow drawing.
@@ -688,6 +686,7 @@ class SK_API SkPaint {
   sk_sp<SkMaskFilter> fMaskFilter;
   sk_sp<SkColorFilter> fColorFilter;
   sk_sp<SkImageFilter> fImageFilter;
+  sk_sp<SkBlender> fBlender;
 
   SkColor4f fColor4f;
   SkScalar fWidth;
@@ -699,9 +698,7 @@ class SK_API SkPaint {
       unsigned fCapType : 2;
       unsigned fJoinType : 2;
       unsigned fStyle : 2;
-      unsigned fFilterQuality : 2;
-      unsigned fBlendMode : 8;  // only need 5-6?
-      unsigned fPadding : 14;   // 14==32-1-1-2-2-2-2-8
+      unsigned fPadding : 24;  // 24 == 32 -1-1-2-2-2
     } fBitfields;
     uint32_t fBitfieldsUInt;
   };

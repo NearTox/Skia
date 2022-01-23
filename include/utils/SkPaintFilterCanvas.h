@@ -57,20 +57,7 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   void onDrawOval(const SkRect&, const SkPaint&) override;
   void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
   void onDrawPath(const SkPath&, const SkPaint&) override;
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-  void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
-  void onDrawImageRect(
-      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
-      SrcRectConstraint) override;
-  void onDrawImageLattice(
-      const SkImage*, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
-  void onDrawAtlas(
-      const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
-      const SkRect*, const SkPaint*) override;
-  void onDrawEdgeAAImageSet(
-      const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
-      SrcRectConstraint) override;
-#endif
+
   void onDrawImage2(
       const SkImage*, SkScalar, SkScalar, const SkSamplingOptions&, const SkPaint*) override;
   void onDrawImageRect2(
@@ -89,6 +76,7 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
   void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
 
+  void onDrawGlyphRunList(const SkGlyphRunList&, const SkPaint&) override;
   void onDrawTextBlob(
       const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) override;
   void onDrawAnnotation(const SkRect& rect, const char key[], SkData* value) override;
@@ -115,7 +103,6 @@ class SK_API SkPaintFilterCanvas : public SkCanvasVirtualEnforcer<SkNWayCanvas> 
     return fList[0];
   }
 
-  GrSurfaceDrawContext* topDeviceSurfaceDrawContext() override;
   SkPaintFilterCanvas* internal_private_asPaintFilterCanvas() const override {
     return const_cast<SkPaintFilterCanvas*>(this);
   }

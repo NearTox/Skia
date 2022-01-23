@@ -28,8 +28,7 @@ class GrShaderVar {
 
   /** Values for array count that have special meaning. We allow 1-sized arrays. */
   enum {
-    kNonArray = 0,       // not an array
-    kUnsizedArray = -1,  // an unsized array (declared with [])
+    kNonArray = 0,  // not an array
   };
 
   /** Defaults to a void with no type modifier or layout qualifier. */
@@ -63,8 +62,8 @@ class GrShaderVar {
 
   GrShaderVar(const GrShaderVar&) = default;
   GrShaderVar& operator=(const GrShaderVar&) = default;
-  GrShaderVar(GrShaderVar&&) = default;
-  GrShaderVar& operator=(GrShaderVar&&) = default;
+  GrShaderVar(GrShaderVar&&) noexcept = default;
+  GrShaderVar& operator=(GrShaderVar&&) noexcept = default;
 
   /** Sets as a non-array. */
   void set(GrSLType type, const char* name) {
@@ -75,9 +74,6 @@ class GrShaderVar {
 
   /** Is the var an array. */
   bool isArray() const { return kNonArray != fCount; }
-
-  /** Is this an unsized array, (i.e. declared with []). */
-  bool isUnsizedArray() const { return kUnsizedArray == fCount; }
 
   /** Get the array length. */
   int getArrayCount() const { return fCount; }

@@ -16,6 +16,8 @@
 
 namespace skottie::internal {
 
+#ifdef SK_ENABLE_SKSL
+
 namespace {
 
 // The B&W effect allows controlling individual luminance contribution of
@@ -35,12 +37,9 @@ namespace {
 
 static sk_sp<SkRuntimeEffect> make_effect() {
   static constexpr char BLACK_AND_WHITE_EFFECT[] = R"(
-        uniform shader input;
         uniform half kR, kY, kG, kC, kB, kM;
 
-        half4 main() {
-            half4 c = sample(input);
-
+        half4 main(half4 c) {
             half m = min(min(c.r, c.g), c.b),
 
                 dr = c.r - m,
@@ -65,7 +64,7 @@ static sk_sp<SkRuntimeEffect> make_effect() {
     )";
 
   static const SkRuntimeEffect* effect =
-      std::get<0>(SkRuntimeEffect::Make(SkString(BLACK_AND_WHITE_EFFECT))).release();
+      SkRuntimeEffect::MakeForColorFilter(SkString(BLACK_AND_WHITE_EFFECT)).effect.release();
   SkASSERT(effect);
 
   return sk_ref_sp(effect);
@@ -110,10 +109,8 @@ class BlackAndWhiteAdapter final
         (fCoeffs[3]) / 100, (fCoeffs[4]) / 100, (fCoeffs[5]) / 100,
     };
 
-    sk_sp<SkColorFilter> input;
-
     this->node()->setColorFilter(
-        fEffect->makeColorFilter(SkData::MakeWithCopy(&coeffs, sizeof(coeffs)), &input, 1));
+        fEffect->makeColorFilter(SkData::MakeWithCopy(&coeffs, sizeof(coeffs))));
   }
 
   const sk_sp<SkRuntimeEffect> fEffect;
@@ -125,10 +122,17 @@ class BlackAndWhiteAdapter final
 
 }  // namespace
 
+#endif  // SK_ENABLE_SKSL
+
 sk_sp<sksg::RenderNode> EffectBuilder::attachBlackAndWhiteEffect(
     const skjson::ArrayValue& jprops, sk_sp<sksg::RenderNode> layer) const {
+#ifdef SK_ENABLE_SKSL
   return fBuilder->attachDiscardableAdapter<BlackAndWhiteAdapter>(
       jprops, *fBuilder, std::move(layer));
+#else
+  // TODO(skia:12197)
+  return layer;
+#endif
 }
 
 }  // namespace skottie::internal

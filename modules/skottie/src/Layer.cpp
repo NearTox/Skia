@@ -323,7 +323,8 @@ sk_sp<sksg::Transform> LayerBuilder::getTransform(
     // Set valid flag upfront to break cycles.
     fFlags |= cache_valid_mask;
 
-    const AnimationBuilder::AutoPropertyTracker apt(&abuilder, fJlayer);
+    const AnimationBuilder::AutoPropertyTracker apt(
+        &abuilder, fJlayer, PropertyObserver::NodeType::LAYER);
     AnimationBuilder::AutoScope ascope(&abuilder, std::move(fLayerScope));
     fTransformCache[ttype] = this->doAttachTransform(abuilder, cbuilder, ttype);
     fLayerScope = ascope.release();
@@ -385,7 +386,8 @@ bool LayerBuilder::hasMotionBlur(const CompositionBuilder* cbuilder) const {
 sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
     const AnimationBuilder& abuilder, CompositionBuilder* cbuilder,
     const LayerBuilder* prev_layer) {
-  const AnimationBuilder::AutoPropertyTracker apt(&abuilder, fJlayer);
+  const AnimationBuilder::AutoPropertyTracker apt(
+      &abuilder, fJlayer, PropertyObserver::NodeType::LAYER);
 
   using LayerBuilder = sk_sp<sksg::RenderNode> (AnimationBuilder::*)(
       const skjson::ObjectValue&, AnimationBuilder::LayerInfo*) const;
@@ -513,8 +515,8 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
   }
 
   // Optional matte.
-  size_t matte_mode;
-  if (prev_layer && Parse(fJlayer["tt"], &matte_mode)) {
+  const auto matte_mode = prev_layer ? ParseDefault<size_t>(fJlayer["tt"], 0) : 0;
+  if (matte_mode > 0) {
     static constexpr sksg::MaskEffect::Mode gMatteModes[] = {
         sksg::MaskEffect::Mode::kAlphaNormal,  // tt: 1
         sksg::MaskEffect::Mode::kAlphaInvert,  // tt: 2
@@ -522,7 +524,7 @@ sk_sp<sksg::RenderNode> LayerBuilder::buildRenderTree(
         sksg::MaskEffect::Mode::kLumaInvert,   // tt: 4
     };
 
-    if (matte_mode > 0 && matte_mode <= SK_ARRAY_COUNT(gMatteModes)) {
+    if (matte_mode <= SK_ARRAY_COUNT(gMatteModes)) {
       // The current layer is masked with the previous layer *content*.
       layer = sksg::MaskEffect::Make(
           std::move(layer), prev_layer->fContentTree, gMatteModes[matte_mode - 1]);

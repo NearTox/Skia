@@ -20,7 +20,10 @@ class GrDawnRenderTarget : public GrRenderTarget {
 
   ~GrDawnRenderTarget() override;
 
-  bool canAttemptStencilAttachment() const override { return true; }
+  bool canAttemptStencilAttachment(bool useMSAASurface) const override {
+    SkASSERT(useMSAASurface == (this->numSamples() > 1));
+    return true;
+  }
 
   GrBackendRenderTarget getBackendRenderTarget() const override;
   GrBackendFormat backendFormat() const override;
@@ -37,7 +40,7 @@ class GrDawnRenderTarget : public GrRenderTarget {
   // This accounts for the texture's memory and any MSAA renderbuffer's memory.
   size_t onGpuMemorySize() const override;
 
-  bool completeStencilAttachment() override;
+  bool completeStencilAttachment(GrAttachment* stencil, bool useMSAASurface) override;
   GrDawnRenderTargetInfo fInfo;
   using INHERITED = GrRenderTarget;
 };

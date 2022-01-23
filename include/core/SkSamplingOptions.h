@@ -8,7 +8,7 @@
 #ifndef SkImageSampling_DEFINED
 #define SkImageSampling_DEFINED
 
-#include "include/core/SkFilterQuality.h"
+#include "include/core/SkTypes.h"
 #include <new>
 
 enum class SkFilterMode {
@@ -45,6 +45,10 @@ enum class SkMipmapMode {
  */
 struct SkCubicResampler {
   float B, C;
+
+  // Historic default for kHigh_SkFilterQuality
+  static constexpr SkCubicResampler Mitchell() noexcept { return {1 / 3.0f, 1 / 3.0f}; }
+  static constexpr SkCubicResampler CatmullRom() noexcept { return {0.0f, 1 / 2.0f}; }
 };
 
 struct SK_API SkSamplingOptions {
@@ -53,29 +57,27 @@ struct SK_API SkSamplingOptions {
   const SkFilterMode filter = SkFilterMode::kNearest;
   const SkMipmapMode mipmap = SkMipmapMode::kNone;
 
-  SkSamplingOptions() = default;
-  SkSamplingOptions(const SkSamplingOptions&) = default;
-  SkSamplingOptions& operator=(const SkSamplingOptions& that) {
+  constexpr SkSamplingOptions() noexcept = default;
+  SkSamplingOptions(const SkSamplingOptions&) noexcept = default;
+  SkSamplingOptions& operator=(const SkSamplingOptions& that) noexcept {
     this->~SkSamplingOptions();  // A pedantic no-op.
     new (this) SkSamplingOptions(that);
     return *this;
   }
 
-  SkSamplingOptions(SkFilterMode fm, SkMipmapMode mm) : useCubic(false), filter(fm), mipmap(mm) {}
+  SkSamplingOptions(SkFilterMode fm, SkMipmapMode mm) noexcept
+      : useCubic(false), filter(fm), mipmap(mm) {}
 
-  explicit SkSamplingOptions(const SkCubicResampler& c) : useCubic(true), cubic(c) {}
+  explicit SkSamplingOptions(SkFilterMode fm) noexcept
+      : useCubic(false), filter(fm), mipmap(SkMipmapMode::kNone) {}
 
-  enum MediumBehavior {
-    kMedium_asMipmapNearest,  // historic cpu behavior
-    kMedium_asMipmapLinear,   // historic gpu behavior
-  };
-  explicit SkSamplingOptions(SkFilterQuality, MediumBehavior = kMedium_asMipmapNearest);
+  explicit SkSamplingOptions(const SkCubicResampler& c) noexcept : useCubic(true), cubic(c) {}
 
-  bool operator==(const SkSamplingOptions& other) const {
+  bool operator==(const SkSamplingOptions& other) const noexcept {
     return useCubic == other.useCubic && cubic.B == other.cubic.B && cubic.C == other.cubic.C &&
            filter == other.filter && mipmap == other.mipmap;
   }
-  bool operator!=(const SkSamplingOptions& other) const { return !(*this == other); }
+  bool operator!=(const SkSamplingOptions& other) const noexcept { return !(*this == other); }
 };
 
 #endif

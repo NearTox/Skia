@@ -10,6 +10,8 @@
 #include "include/core/SkTypes.h"
 #include "include/private/SkSemaphore.h"
 
+#include <cinttypes>
+
 #if !defined(__has_feature)
 #  define __has_feature(x) 0
 #endif
@@ -121,10 +123,12 @@ void SkSharedMutex::acquire() {
   {
     SkAutoMutexExclusive l(fMu);
 
-    SkASSERTF(!fCurrentShared->find(threadID), "Thread %lx already has an shared lock\n", threadID);
+    SkASSERTF(
+        !fCurrentShared->find(threadID), "Thread %" PRIx64 " already has an shared lock\n",
+        threadID);
 
     if (!fWaitingExclusive->tryAdd(threadID)) {
-      SkDEBUGFAILF("Thread %lx already has an exclusive lock\n", threadID);
+      SkDEBUGFAILF("Thread %" PRIx64 " already has an exclusive lock\n", threadID);
     }
 
     currentSharedCount = fCurrentShared->count();
@@ -151,7 +155,7 @@ void SkSharedMutex::release() {
     SkAutoMutexExclusive l(fMu);
     SkASSERT(0 == fCurrentShared->count());
     if (!fWaitingExclusive->tryRemove(threadID)) {
-      SkDEBUGFAILF("Thread %lx did not have the lock held.\n", threadID);
+      SkDEBUGFAILF("Thread %" PRIx64 " did not have the lock held.\n", threadID);
     }
     exclusiveWaitingCount = fWaitingExclusive->count();
     sharedWaitingCount = fWaitingShared->count();
@@ -185,11 +189,11 @@ void SkSharedMutex::acquireShared() {
     exclusiveWaitingCount = fWaitingExclusive->count();
     if (exclusiveWaitingCount > 0) {
       if (!fWaitingShared->tryAdd(threadID)) {
-        SkDEBUGFAILF("Thread %lx was already waiting!\n", threadID);
+        SkDEBUGFAILF("Thread %" PRIx64 " was already waiting!\n", threadID);
       }
     } else {
       if (!fCurrentShared->tryAdd(threadID)) {
-        SkDEBUGFAILF("Thread %lx already holds a shared lock!\n", threadID);
+        SkDEBUGFAILF("Thread %" PRIx64 " already holds a shared lock!\n", threadID);
       }
     }
     sharedQueueSelect = fSharedQueueSelect;
@@ -211,7 +215,7 @@ void SkSharedMutex::releaseShared() {
   {
     SkAutoMutexExclusive l(fMu);
     if (!fCurrentShared->tryRemove(threadID)) {
-      SkDEBUGFAILF("Thread %lx does not hold a shared lock.\n", threadID);
+      SkDEBUGFAILF("Thread %" PRIx64 " does not hold a shared lock.\n", threadID);
     }
     currentSharedCount = fCurrentShared->count();
     waitingExclusiveCount = fWaitingExclusive->count();
@@ -250,9 +254,9 @@ enum {
   kWaitingSharedMask = ((1 << kLogThreadCount) - 1) << kWaitingSharedOffset,
 };
 
-SkSharedMutex::SkSharedMutex() : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
+SkSharedMutex::SkSharedMutex() noexcept : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
 SkSharedMutex::~SkSharedMutex() { ANNOTATE_RWLOCK_DESTROY(this); }
-void SkSharedMutex::acquire() {
+void SkSharedMutex::acquire() noexcept {
   // Increment the count of exclusive queue waiters.
   int32_t oldQueueCounts =
       fQueueCounts.fetch_add(1 << kWaitingExlusiveOffset, std::memory_order_acquire);
@@ -265,7 +269,7 @@ void SkSharedMutex::acquire() {
   ANNOTATE_RWLOCK_ACQUIRED(this, 1);
 }
 
-void SkSharedMutex::release() {
+void SkSharedMutex::release() noexcept {
   ANNOTATE_RWLOCK_RELEASED(this, 1);
 
   int32_t oldQueueCounts = fQueueCounts.load(std::memory_order_relaxed);
@@ -304,7 +308,7 @@ void SkSharedMutex::release() {
   }
 }
 
-void SkSharedMutex::acquireShared() {
+void SkSharedMutex::acquireShared() noexcept {
   int32_t oldQueueCounts = fQueueCounts.load(std::memory_order_relaxed);
   int32_t newQueueCounts;
   do {
@@ -325,7 +329,7 @@ void SkSharedMutex::acquireShared() {
   ANNOTATE_RWLOCK_ACQUIRED(this, 0);
 }
 
-void SkSharedMutex::releaseShared() {
+void SkSharedMutex::releaseShared() noexcept {
   ANNOTATE_RWLOCK_RELEASED(this, 0);
 
   // Decrement the shared count.

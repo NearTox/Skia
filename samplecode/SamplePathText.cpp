@@ -170,7 +170,7 @@ public:
         // Get valid front data.
         fBackgroundAnimationTask.wait();
         this->runAnimationTask(0, 0, screenWidth, screenHeight);
-        memcpy(fFrontMatrices, fBackMatrices, kNumPaths * sizeof(SkMatrix));
+        std::copy_n(fBackMatrices.get(), kNumPaths, fFrontMatrices.get());
         fLastTick = 0;
     }
 
@@ -241,8 +241,8 @@ protected:
     };
 
     Velocity fVelocities[kNumPaths];
-    SkAutoTMalloc<SkMatrix> fFrontMatrices;
-    SkAutoTMalloc<SkMatrix> fBackMatrices;
+    SkAutoTArray<SkMatrix> fFrontMatrices;
+    SkAutoTArray<SkMatrix> fBackMatrices;
     SkTaskGroup fBackgroundAnimationTask;
     double fLastTick;
 };
@@ -271,53 +271,50 @@ public:
     /**
      * Called on a background thread. Here we can only modify fBackPaths.
      */
-    void runAnimationTask(double t, double dt, int w, int h) override {
-        const float tsec = static_cast<float>(t);
-        this->MovingGlyphAnimator::runAnimationTask(t, 0.5 * dt, w, h);
+    void runAnimationTask(double t, double dt, int width, int height) override {
+      const float tsec = static_cast<float>(t);
+      this->MovingGlyphAnimator::runAnimationTask(t, 0.5 * dt, width, height);
 
-        for (int i = 0; i < kNumPaths; ++i) {
-            const Glyph& glyph = fGlyphs[i];
-            const SkMatrix& backMatrix = fBackMatrices[i];
+      for (int i = 0; i < kNumPaths; ++i) {
+        const Glyph& glyph = fGlyphs[i];
+        const SkMatrix& backMatrix = fBackMatrices[i];
 
-            const Sk2f matrix[3] = {
-                Sk2f(backMatrix.getScaleX(), backMatrix.getSkewY()),
-                Sk2f(backMatrix.getSkewX(), backMatrix.getScaleY()),
-                Sk2f(backMatrix.getTranslateX(), backMatrix.getTranslateY())
-            };
+        const Sk2f matrix[3] = {
+            Sk2f(backMatrix.getScaleX(), backMatrix.getSkewY()),
+            Sk2f(backMatrix.getSkewX(), backMatrix.getScaleY()),
+            Sk2f(backMatrix.getTranslateX(), backMatrix.getTranslateY())};
 
-            SkPath* backpath = &fBackPaths[i];
-            backpath->reset();
-            backpath->setFillType(SkPathFillType::kEvenOdd);
+        SkPath* backpath = &fBackPaths[i];
+        backpath->reset();
+        backpath->setFillType(SkPathFillType::kEvenOdd);
 
-            for (auto [verb, pts, w] : SkPathPriv::Iterate(glyph.fPath)) {
-                switch (verb) {
-                    case SkPathVerb::kMove: {
-                        SkPoint pt = fWaves.apply(tsec, matrix, pts[0]);
-                        backpath->moveTo(pt.x(), pt.y());
-                        break;
-                    }
-                    case SkPathVerb::kLine: {
-                        SkPoint endpt = fWaves.apply(tsec, matrix, pts[1]);
-                        backpath->lineTo(endpt.x(), endpt.y());
-                        break;
-                    }
-                    case SkPathVerb::kQuad: {
-                        SkPoint controlPt = fWaves.apply(tsec, matrix, pts[1]);
-                        SkPoint endpt = fWaves.apply(tsec, matrix, pts[2]);
-                        backpath->quadTo(controlPt.x(), controlPt.y(), endpt.x(), endpt.y());
-                        break;
-                    }
-                    case SkPathVerb::kClose: {
-                        backpath->close();
-                        break;
-                    }
-                    case SkPathVerb::kCubic:
-                    case SkPathVerb::kConic:
-                        SK_ABORT("Unexpected path verb");
-                        break;
-                }
+        for (auto [verb, pts, w] : SkPathPriv::Iterate(glyph.fPath)) {
+          switch (verb) {
+            case SkPathVerb::kMove: {
+              SkPoint pt = fWaves.apply(tsec, matrix, pts[0]);
+              backpath->moveTo(pt.x(), pt.y());
+              break;
             }
+            case SkPathVerb::kLine: {
+              SkPoint endpt = fWaves.apply(tsec, matrix, pts[1]);
+              backpath->lineTo(endpt.x(), endpt.y());
+              break;
+            }
+            case SkPathVerb::kQuad: {
+              SkPoint controlPt = fWaves.apply(tsec, matrix, pts[1]);
+              SkPoint endpt = fWaves.apply(tsec, matrix, pts[2]);
+              backpath->quadTo(controlPt.x(), controlPt.y(), endpt.x(), endpt.y());
+              break;
+            }
+            case SkPathVerb::kClose: {
+              backpath->close();
+              break;
+            }
+            case SkPathVerb::kCubic:
+            case SkPathVerb::kConic: SK_ABORT("Unexpected path verb"); break;
+          }
         }
+      }
     }
 
     void swapAnimationBuffers() override {

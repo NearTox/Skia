@@ -8,13 +8,16 @@
 #ifndef GrAuditTrail_DEFINED
 #define GrAuditTrail_DEFINED
 
-#include "include/core/SkRect.h"
-#include "include/core/SkString.h"
-#include "include/gpu/GrConfig.h"
-#include "include/private/SkTArray.h"
-#include "include/private/SkTHash.h"
-#include "src/gpu/GrGpuResource.h"
-#include "src/gpu/GrRenderTargetProxy.h"
+#include "include/gpu/GrTypes.h"
+
+#if SK_GPU_V1
+
+#  include "include/core/SkRect.h"
+#  include "include/core/SkString.h"
+#  include "include/gpu/GrConfig.h"
+#  include "include/private/SkTArray.h"
+#  include "include/private/SkTHash.h"
+#  include "src/gpu/GrRenderTargetProxy.h"
 
 class GrOp;
 class SkJSONWriter;
@@ -34,7 +37,7 @@ class GrAuditTrail {
 
   class AutoEnable {
    public:
-    AutoEnable(GrAuditTrail* auditTrail) : fAuditTrail(auditTrail) {
+    AutoEnable(GrAuditTrail* auditTrail) noexcept : fAuditTrail(auditTrail) {
       SkASSERT(!fAuditTrail->isEnabled());
       fAuditTrail->setEnabled(true);
     }
@@ -94,10 +97,10 @@ class GrAuditTrail {
   // returns a json string of all of the ops associated with a given client id
   void toJson(SkJSONWriter& writer, int clientID) const;
 
-  bool isEnabled() { return fEnabled; }
-  void setEnabled(bool enabled) { fEnabled = enabled; }
+  bool isEnabled() noexcept { return fEnabled; }
+  void setEnabled(bool enabled) noexcept { fEnabled = enabled; }
 
-  void setClientID(int clientID) { fClientID = clientID; }
+  void setClientID(int clientID) noexcept { fClientID = clientID; }
 
   // We could just return our internal bookkeeping struct if copying the data out becomes
   // a performance issue, but until then its nice to decouple
@@ -160,18 +163,25 @@ class GrAuditTrail {
   bool fEnabled;
 };
 
-#define GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, invoke, ...) \
-  if (audit_trail->isEnabled()) audit_trail->invoke(__VA_ARGS__)
+#  define GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, invoke, ...) \
+    if (audit_trail->isEnabled()) audit_trail->invoke(__VA_ARGS__)
 
-#define GR_AUDIT_TRAIL_AUTO_FRAME(audit_trail, framename) \
-  GR_AUDIT_TRAIL_INVOKE_GUARD((audit_trail), pushFrame, framename)
+#  define GR_AUDIT_TRAIL_AUTO_FRAME(audit_trail, framename) \
+    GR_AUDIT_TRAIL_INVOKE_GUARD((audit_trail), pushFrame, framename)
 
-#define GR_AUDIT_TRAIL_RESET(audit_trail) // GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, fullReset);
+#  define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id) \
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id)
 
-#define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id) \
-  GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, addOp, op, proxy_id)
+#  define GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(audit_trail, combineWith, op) \
+    GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, opsCombined, combineWith, op)
 
-#define GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(audit_trail, combineWith, op) \
-  GR_AUDIT_TRAIL_INVOKE_GUARD(audit_trail, opsCombined, combineWith, op)
+#else  // SK_GPU_V1
 
-#endif
+class GrAuditTrail {};
+
+#  define GR_AUDIT_TRAIL_AUTO_FRAME(audit_trail, framename)
+#  define GR_AUDIT_TRAIL_ADD_OP(audit_trail, op, proxy_id)
+#  define GR_AUDIT_TRAIL_OPS_RESULT_COMBINED(audit_trail, combineWith, op)
+
+#endif  // SK_GPU_V1
+#endif  // GrAuditTrail_DEFINED

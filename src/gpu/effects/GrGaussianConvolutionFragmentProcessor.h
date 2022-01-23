@@ -45,6 +45,8 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
   static constexpr int kMaxKernelRadius = 12;
 
  private:
+  class Impl;
+
   GrGaussianConvolutionFragmentProcessor(
       std::unique_ptr<GrFragmentProcessor>, Direction, int halfWidth, float gaussianSigma);
 
@@ -56,23 +58,22 @@ class GrGaussianConvolutionFragmentProcessor : public GrFragmentProcessor {
   }
 #endif
 
-  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
+  std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor&) const override;
 
   GR_DECLARE_FRAGMENT_PROCESSOR_TEST
 
-  static constexpr int kMaxKernelWidth = 2 * kMaxKernelRadius + 1;
+  static constexpr int kMaxKernelWidth = kMaxKernelRadius + 1;
 
   // The array size must be a multiple of 4 because we pass it as an array of float4 uniform
   // values.
   float fKernel[SkAlign4(kMaxKernelWidth)];
+  float fOffsets[SkAlign4(kMaxKernelWidth)];
   int fRadius;
   Direction fDirection;
-
-  class Impl;
 
   using INHERITED = GrFragmentProcessor;
 };

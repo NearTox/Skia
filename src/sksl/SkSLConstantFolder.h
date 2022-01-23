@@ -10,12 +10,12 @@
 
 #include <memory>
 
-#include "src/sksl/SkSLLexer.h"
+#include "include/private/SkSLDefines.h"
+#include "src/sksl/SkSLOperators.h"
 
 namespace SkSL {
 
 class Context;
-class ErrorReporter;
 class Expression;
 
 /**
@@ -24,9 +24,41 @@ class Expression;
  */
 class ConstantFolder {
  public:
+  /**
+   * If value is an int literal or const int variable with a known value, returns true and stores
+   * the value in out. Otherwise returns false.
+   */
+  static bool GetConstantInt(const Expression& value, SKSL_INT* out);
+
+  /**
+   * If value is a float literal or const float variable with a known value, returns true and
+   * stores the value in out. Otherwise returns false.
+   */
+  static bool GetConstantFloat(const Expression& value, SKSL_FLOAT* out);
+
+  /**
+   * If the expression is a const variable with a known compile-time-constant value, returns that
+   * value. If not, returns the original expression as-is.
+   */
+  static const Expression* GetConstantValueForVariable(const Expression& value);
+
+  /**
+   * If the expression is a const variable with a known compile-time-constant value, returns a
+   * clone of that value. If not, returns the original expression as-is.
+   */
+  static std::unique_ptr<Expression> MakeConstantValueForVariable(std::unique_ptr<Expression> expr);
+
+  /**
+   * Reports an error and returns true if op is a division / mod operator and right is zero or
+   * contains a zero element.
+   */
+  static bool ErrorOnDivideByZero(
+      const Context& context, int offset, Operator op, const Expression& right);
+
   /** Simplifies the binary expression `left OP right`. Returns null if it can't be simplified. */
   static std::unique_ptr<Expression> Simplify(
-      const Context& context, const Expression& left, Token::Kind op, const Expression& right);
+      const Context& context, int offset, const Expression& left, Operator op,
+      const Expression& right, const Type& resultType);
 };
 
 }  // namespace SkSL

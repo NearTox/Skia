@@ -53,8 +53,8 @@ void GrTextureResolveRenderTask::gatherProxyIntervals(GrResourceAllocator* alloc
   // manipulate the resolve proxies.
   auto fakeOp = alloc->curOp();
   SkASSERT(fResolves.count() == this->numTargets());
-  for (const GrSurfaceProxyView& target : fTargets) {
-    alloc->addInterval(target.proxy(), fakeOp, fakeOp, GrResourceAllocator::ActualUse::kYes);
+  for (const sk_sp<GrSurfaceProxy>& target : fTargets) {
+    alloc->addInterval(target.get(), fakeOp, fakeOp, GrResourceAllocator::ActualUse::kYes);
   }
   alloc->incOps();
 }
@@ -65,7 +65,7 @@ bool GrTextureResolveRenderTask::onExecute(GrOpFlushState* flushState) {
   for (int i = 0; i < fResolves.count(); ++i) {
     const Resolve& resolve = fResolves[i];
     if (GrSurfaceProxy::ResolveFlags::kMSAA & resolve.fFlags) {
-      GrSurfaceProxy* proxy = this->target(i).proxy();
+      GrSurfaceProxy* proxy = this->target(i);
       // peekRenderTarget might be null if there was an instantiation error.
       if (GrRenderTarget* renderTarget = proxy->peekRenderTarget()) {
         flushState->gpu()->resolveRenderTarget(renderTarget, resolve.fMSAAResolveRect);
@@ -77,7 +77,7 @@ bool GrTextureResolveRenderTask::onExecute(GrOpFlushState* flushState) {
     const Resolve& resolve = fResolves[i];
     if (GrSurfaceProxy::ResolveFlags::kMipMaps & resolve.fFlags) {
       // peekTexture might be null if there was an instantiation error.
-      GrTexture* texture = this->target(i).proxy()->peekTexture();
+      GrTexture* texture = this->target(i)->peekTexture();
       if (texture && texture->mipmapsAreDirty()) {
         flushState->gpu()->regenerateMipMapLevels(texture);
         SkASSERT(!texture->mipmapsAreDirty());
@@ -89,5 +89,5 @@ bool GrTextureResolveRenderTask::onExecute(GrOpFlushState* flushState) {
 }
 
 #ifdef SK_DEBUG
-void GrTextureResolveRenderTask::visitProxies_debugOnly(const GrOp::VisitProxyFunc& fn) const {}
+void GrTextureResolveRenderTask::visitProxies_debugOnly(const GrVisitProxyFunc&) const {}
 #endif

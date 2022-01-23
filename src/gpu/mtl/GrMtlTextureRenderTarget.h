@@ -14,7 +14,8 @@
 class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
  public:
   static sk_sp<GrMtlTextureRenderTarget> MakeNewTextureRenderTarget(
-      GrMtlGpu*, SkBudgeted, SkISize, int sampleCnt, MTLTextureDescriptor*, GrMipmapStatus);
+      GrMtlGpu*, SkBudgeted, SkISize, int sampleCnt, MTLPixelFormat, uint32_t mipLevels,
+      GrMipmapStatus);
 
   static sk_sp<GrMtlTextureRenderTarget> MakeWrappedTextureRenderTarget(
       GrMtlGpu*, SkISize, int sampleCnt, id<MTLTexture>, GrWrapCacheable);
@@ -33,31 +34,16 @@ class GrMtlTextureRenderTarget : public GrMtlTexture, public GrMtlRenderTarget {
 
  private:
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkBudgeted budgeted, SkISize, int sampleCnt, id<MTLTexture> colorTexture,
-      id<MTLTexture> resolveTexture, GrMipmapStatus);
+      GrMtlGpu* gpu, SkBudgeted budgeted, SkISize, sk_sp<GrMtlAttachment> texture,
+      sk_sp<GrMtlAttachment> colorAttachment, sk_sp<GrMtlAttachment> resolveAttachment,
+      GrMipmapStatus);
 
   GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkBudgeted budgeted, SkISize, id<MTLTexture> colorTexture, GrMipmapStatus);
+      GrMtlGpu* gpu, SkISize, sk_sp<GrMtlAttachment> texture,
+      sk_sp<GrMtlAttachment> colorAttachment, sk_sp<GrMtlAttachment> resolveAttachment,
+      GrMipmapStatus, GrWrapCacheable cacheable);
 
-  GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkISize, int sampleCnt, id<MTLTexture> colorTexture,
-      id<MTLTexture> resolveTexture, GrMipmapStatus, GrWrapCacheable cacheable);
-
-  GrMtlTextureRenderTarget(
-      GrMtlGpu* gpu, SkISize, id<MTLTexture> colorTexture, GrMipmapStatus,
-      GrWrapCacheable cacheable);
-
-  size_t onGpuMemorySize() const override {
-    // TODO: When used as render targets certain formats may actually have a larger size than
-    // the base format size. Check to make sure we are reporting the correct value here.
-    // The plus 1 is to account for the resolve texture or if not using msaa the RT itself
-    int numColorSamples = this->numSamples();
-    if (numColorSamples > 1) {
-      ++numColorSamples;
-    }
-    return GrSurface::ComputeSize(
-        this->backendFormat(), this->dimensions(), numColorSamples, GrMipmapped::kNo);
-  }
+  size_t onGpuMemorySize() const override;
 };
 
 #endif

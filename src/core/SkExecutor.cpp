@@ -25,31 +25,29 @@ static int num_cores() {
 static int num_cores() { return (int)sysconf(_SC_NPROCESSORS_ONLN); }
 #endif
 
-SkExecutor::~SkExecutor() {}
+SkExecutor::~SkExecutor() = default;
 
 // The default default SkExecutor is an SkTrivialExecutor, which just runs the work right away.
 class SkTrivialExecutor final : public SkExecutor {
   void add(std::function<void(void)> work) override { work(); }
 };
 
+static SkExecutor& trivial_executor() {
+  static auto* executor = new SkTrivialExecutor();
+  return *executor;
+}
+
 static SkExecutor* gDefaultExecutor = nullptr;
 
-void SetDefaultTrivialExecutor() {
-  static SkTrivialExecutor* gTrivial = new SkTrivialExecutor();
-  gDefaultExecutor = gTrivial;
-}
 SkExecutor& SkExecutor::GetDefault() {
-  if (!gDefaultExecutor) {
-    SetDefaultTrivialExecutor();
+  if (gDefaultExecutor) {
+    return *gDefaultExecutor;
   }
-  return *gDefaultExecutor;
+  return trivial_executor();
 }
+
 void SkExecutor::SetDefault(SkExecutor* executor) {
-  if (executor) {
     gDefaultExecutor = executor;
-  } else {
-    SetDefaultTrivialExecutor();
-  }
 }
 
 // We'll always push_back() new work, but pop from the front of deques or the back of SkTArray.

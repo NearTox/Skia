@@ -12,27 +12,32 @@
 #include "modules/svg/include/SkSVGTypes.h"
 
 class SkSVGMask final : public SkSVGHiddenContainer {
- public:
-  static sk_sp<SkSVGMask> Make() { return sk_sp<SkSVGMask>(new SkSVGMask()); }
+public:
+    static sk_sp<SkSVGMask> Make() {
+        return sk_sp<SkSVGMask>(new SkSVGMask());
+    }
 
-  SVG_ATTR(X, SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Y, SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Width, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Height, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(X     , SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Y     , SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Width , SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Height, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
 
-  SVG_ATTR(
-      MaskUnits, SkSVGObjectBoundingBoxUnits,
-      SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox))
-  SVG_ATTR(
-      MaskContentUnits, SkSVGObjectBoundingBoxUnits,
-      SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kUserSpaceOnUse))
+    SVG_ATTR(MaskUnits, SkSVGObjectBoundingBoxUnits,
+             SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox))
+    SVG_ATTR(MaskContentUnits, SkSVGObjectBoundingBoxUnits,
+             SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kUserSpaceOnUse))
 
- private:
-  SkSVGMask() : INHERITED(SkSVGTag::kMask) {}
+private:
+    friend class SkSVGRenderContext;
 
-  bool parseAndSetAttribute(const char*, const char*) override;
+    SkSVGMask() : INHERITED(SkSVGTag::kMask) {}
 
-  using INHERITED = SkSVGHiddenContainer;
+    bool parseAndSetAttribute(const char*, const char*) override;
+
+    SkRect bounds(const SkSVGRenderContext&) const;
+    void renderMask(const SkSVGRenderContext&) const;
+
+    using INHERITED = SkSVGHiddenContainer;
 };
 
-#endif  // SkSVGMask_DEFINED
+#endif // SkSVGMask_DEFINED

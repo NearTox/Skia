@@ -102,79 +102,79 @@ DEF_TEST(ArenaAlloc, r) {
     REPORTER_ASSERT(r, destroyed == 0);
     arena.make<OddAlignment>();
   }
-  REPORTER_ASSERT(r, created == 11);
-  REPORTER_ASSERT(r, destroyed == 11);
+    REPORTER_ASSERT(r, created == 11);
+    REPORTER_ASSERT(r, destroyed == 11);
 
-  {
-    SkSTArenaAllocWithReset<64> arena;
-    arena.makeArrayDefault<char>(256);
-    arena.reset();
-    arena.reset();
-  }
-
-  // Make sure that multiple blocks are handled correctly.
-  created = 0;
-  destroyed = 0;
-  {
-    struct Node {
-      Node(Node* n) : next(n) { created++; }
-      ~Node() { destroyed++; }
-      Node* next;
-      char filler[64];
-    };
-
-    SkSTArenaAlloc<64> arena;
-    Node* current = nullptr;
-    for (int i = 0; i < 128; i++) {
-      current = arena.make<Node>(current);
+    {
+      SkSTArenaAllocWithReset<64> arena;
+      arena.makeArrayDefault<char>(256);
+      arena.reset();
+      arena.reset();
     }
-  }
-  REPORTER_ASSERT(r, created == 128);
-  REPORTER_ASSERT(r, destroyed == 128);
 
-  // Make sure that objects and blocks are destroyed in the correct order. If they are not,
-  // then there will be a use after free error in asan.
-  created = 0;
-  destroyed = 0;
-  {
-    struct Node {
-      Node(Node* n) : next(n) { created++; }
-      ~Node() {
-        destroyed++;
-        if (next) {
-          next->~Node();
-        }
+    // Make sure that multiple blocks are handled correctly.
+    created = 0;
+    destroyed = 0;
+    {
+      struct Node {
+        Node(Node* n) : next(n) { created++; }
+        ~Node() { destroyed++; }
+        Node* next;
+        char filler[64];
+      };
+
+      SkSTArenaAlloc<64> arena;
+      Node* current = nullptr;
+      for (int i = 0; i < 128; i++) {
+        current = arena.make<Node>(current);
       }
-      Node* next;
-    };
-
-    SkSTArenaAlloc<64> arena;
-    Node* current = nullptr;
-    for (int i = 0; i < 128; i++) {
-      uint64_t* temp = arena.makeArrayDefault<uint64_t>(sizeof(Node) / sizeof(Node*));
-      current = new (temp) Node(current);
     }
-    current->~Node();
-  }
-  REPORTER_ASSERT(r, created == 128);
-  REPORTER_ASSERT(r, destroyed == 128);
+    REPORTER_ASSERT(r, created == 128);
+    REPORTER_ASSERT(r, destroyed == 128);
 
-  {
-    SkSTArenaAlloc<64> arena;
-    auto a = arena.makeInitializedArray<int>(8, [](size_t i) { return i; });
-    for (size_t i = 0; i < 8; i++) {
-      REPORTER_ASSERT(r, a[i] == (int)i);
+    // Make sure that objects and blocks are destroyed in the correct order. If they are not,
+    // then there will be a use after free error in asan.
+    created = 0;
+    destroyed = 0;
+    {
+      struct Node {
+        Node(Node* n) : next(n) { created++; }
+        ~Node() {
+          destroyed++;
+          if (next) {
+            next->~Node();
+          }
+        }
+        Node* next;
+      };
+
+      SkSTArenaAlloc<64> arena;
+      Node* current = nullptr;
+      for (int i = 0; i < 128; i++) {
+        uint64_t* temp = arena.makeArrayDefault<uint64_t>(sizeof(Node) / sizeof(Node*));
+        current = new (temp) Node(current);
+      }
+      current->~Node();
     }
-  }
+    REPORTER_ASSERT(r, created == 128);
+    REPORTER_ASSERT(r, destroyed == 128);
 
-  {
-    SkArenaAlloc arena(4096);
-    // Move to a 1 character boundary.
-    arena.make<char>();
-    // Allocate something with interesting alignment.
-    void* ptr = arena.makeBytesAlignedTo(4081, 8);
-    REPORTER_ASSERT(r, ((intptr_t)ptr & 7) == 0);
-  }
+    {
+      SkSTArenaAlloc<64> arena;
+      auto a = arena.makeInitializedArray<int>(8, [](size_t i) { return i; });
+      for (size_t i = 0; i < 8; i++) {
+        REPORTER_ASSERT(r, a[i] == (int)i);
+      }
+    }
+
+    {
+      SkArenaAlloc arena(4096);
+      // Move to a 1 character boundary.
+      arena.make<char>();
+      // Allocate something with interesting alignment.
+      void* ptr = arena.makeBytesAlignedTo(4081, 8);
+      REPORTER_ASSERT(r, ((intptr_t)ptr & 7) == 0);
+    }
 }
 
 DEF_TEST(SkFibBlockSizes, r) {

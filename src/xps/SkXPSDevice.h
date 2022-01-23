@@ -82,7 +82,7 @@ class SkXPSDevice : public SkClipStackDevice {
   void drawImageRect(
       const SkImage*, const SkRect* srcOrNull, const SkRect& dst, const SkSamplingOptions&,
       const SkPaint& paint, SkCanvas::SrcRectConstraint) override;
-  void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
+  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
   void drawDevice(SkBaseDevice*, const SkSamplingOptions&, const SkPaint&) override;
 

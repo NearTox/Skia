@@ -67,7 +67,7 @@ class AnimatedGifGM : public skiagm::GM {
       }
     }
 
-    canvas->drawBitmap(bm, 0, 0);
+    canvas->drawImage(bm.asImage(), 0, 0);
   }
 
  public:
@@ -201,7 +201,7 @@ class AnimCodecPlayerGM : public skiagm::GM {
   void onDraw(SkCanvas* canvas) override {
     canvas->scale(0.25f, 0.25f);
     for (auto& p : fPlayers) {
-      canvas->drawImage(p->getFrame(), 0, 0, nullptr);
+      canvas->drawImage(p->getFrame(), 0, 0);
       canvas->translate(p->dimensions().width(), 0);
     }
   }
@@ -272,7 +272,7 @@ class AnimCodecPlayerExifGM : public skiagm::GM {
       canvas->translate(SkIntToScalar(xTranslate), SkIntToScalar(yTranslate));
 
       auto image = fPlayer->getFrame();
-      canvas->drawImage(image, 0, 0, nullptr);
+      canvas->drawImage(image, 0, 0);
       duration += fFrameInfos[frame].fDuration;
       fPlayer->seek(duration);
     }

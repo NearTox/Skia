@@ -113,7 +113,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_copy_const_SkPath
   */
-  SkPath(const SkPath& path);
+  SkPath(const SkPath& path) noexcept;
 
   /** Releases ownership of any shared data and deletes data if SkPath is sole owner.
 
@@ -135,7 +135,7 @@ class SK_API SkPath {
 
       example: https://fiddle.skia.org/c/@Path_copy_operator
   */
-  SkPath& operator=(const SkPath& path);
+  SkPath& operator=(const SkPath& path) noexcept;
 
   /** Compares a and b; returns true if SkPath::FillType, verb array, SkPoint array, and weights
       are equivalent.
@@ -1508,13 +1508,13 @@ class SK_API SkPath {
   */
   class RangeIter {
    public:
-    RangeIter() = default;
-    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights)
+    RangeIter() noexcept = default;
+    RangeIter(const uint8_t* verbs, const SkPoint* points, const SkScalar* weights) noexcept
         : fVerb(verbs), fPoints(points), fWeights(weights) {
       SkDEBUGCODE(fInitialPoints = fPoints;)
     }
-    bool operator!=(const RangeIter& that) const { return fVerb != that.fVerb; }
-    bool operator==(const RangeIter& that) const { return fVerb == that.fVerb; }
+    bool operator!=(const RangeIter& that) const noexcept { return fVerb != that.fVerb; }
+    bool operator==(const RangeIter& that) const noexcept { return fVerb == that.fVerb; }
     RangeIter& operator++() {
       auto verb = static_cast<SkPathVerb>(*fVerb++);
       fPoints += pts_advance_after_verb(verb);
@@ -1730,7 +1730,7 @@ class SK_API SkPath {
  private:
   SkPath(
       sk_sp<SkPathRef>, SkPathFillType, bool isVolatile, SkPathConvexity,
-      SkPathFirstDirection firstDirection);
+      SkPathFirstDirection firstDirection) noexcept;
 
   sk_sp<SkPathRef> fPathRef;
   int fLastMoveToIndex;
@@ -1743,13 +1743,13 @@ class SK_API SkPath {
    *  Assumes the caller has already emptied fPathRef.
    *  On Android increments fGenerationID without reseting it.
    */
-  void resetFields();
+  void resetFields() noexcept;
 
   /** Sets all fields other than fPathRef to the values in 'that'.
    *  Assumes the caller has already set fPathRef.
    *  Doesn't change fGenerationID or fSourcePath on Android.
    */
-  void copyFields(const SkPath& that);
+  void copyFields(const SkPath& that) noexcept;
 
   size_t writeToMemoryAsRRect(void* buffer) const;
   size_t readAsRRect(const void*, size_t);
@@ -1816,17 +1816,15 @@ class SK_API SkPath {
   /** Returns the comvexity type, computing if needed. Never returns kUnknown.
       @return  path's convexity type (convex or concave)
   */
-  SkPathConvexity getConvexity() const {
-    SkPathConvexity convexity = this->getConvexityOrUnknown();
-    if (convexity == SkPathConvexity::kUnknown) {
-      convexity = this->computeConvexity();
-    }
-    SkASSERT(convexity != SkPathConvexity::kUnknown);
-    return convexity;
-  }
+  SkPathConvexity getConvexity() const;
+
   SkPathConvexity getConvexityOrUnknown() const {
     return (SkPathConvexity)fConvexity.load(std::memory_order_relaxed);
   }
+
+  // Compares the cached value with a freshly computed one (computeConvexity())
+  bool isConvexityAccurate() const;
+
   /** Stores a convexity type for this path. This is what will be returned if
    *  getConvexityOrUnknown() is called. If you pass kUnknown, then if getContexityType()
    *  is called, the real convexity will be computed.

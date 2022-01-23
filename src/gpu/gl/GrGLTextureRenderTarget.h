@@ -27,7 +27,7 @@ class GrGLTextureRenderTarget : public GrGLTexture, public GrGLRenderTarget {
       GrGLGpu* gpu, SkBudgeted budgeted, int sampleCount, const GrGLTexture::Desc& texDesc,
       const GrGLRenderTarget::IDs&, GrMipmapStatus);
 
-  bool canAttemptStencilAttachment() const override;
+  bool canAttemptStencilAttachment(bool useMultisampleFBO) const override;
 
   void dumpMemoryStatistics(SkTraceMemoryDump* traceMemoryDump) const override;
 

@@ -145,7 +145,7 @@ class ImageAlphaThresholdSurfaceGM : public skiagm::GM {
 
     SkPaint paint = create_filter_paint();
     canvas->clipRect(SkRect::MakeLTRB(100, 100, WIDTH - 100, HEIGHT - 100));
-    canvas->drawImage(surface->makeImageSnapshot().get(), 0, 0, &paint);
+    canvas->drawImage(surface->makeImageSnapshot().get(), 0, 0, SkSamplingOptions(), &paint);
     return DrawResult::kOk;
   }
 

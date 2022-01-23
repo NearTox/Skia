@@ -15,31 +15,38 @@
 class SkSVGLengthContext;
 
 class SkSVGSVG : public SkSVGContainer {
- public:
-  static sk_sp<SkSVGSVG> Make() { return sk_sp<SkSVGSVG>(new SkSVGSVG()); }
+public:
+    enum class Type {
+        kRoot,
+        kInner,
+    };
+    static sk_sp<SkSVGSVG> Make(Type t = Type::kInner) { return sk_sp<SkSVGSVG>(new SkSVGSVG(t)); }
 
-  SVG_ATTR(X, SkSVGLength, SkSVGLength(0))
-  SVG_ATTR(Y, SkSVGLength, SkSVGLength(0))
-  SVG_ATTR(Width, SkSVGLength, SkSVGLength(100, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Height, SkSVGLength, SkSVGLength(100, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(PreserveAspectRatio, SkSVGPreserveAspectRatio, SkSVGPreserveAspectRatio())
+    SVG_ATTR(X                  , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Y                  , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Width              , SkSVGLength, SkSVGLength(100, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Height             , SkSVGLength, SkSVGLength(100, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(PreserveAspectRatio, SkSVGPreserveAspectRatio, SkSVGPreserveAspectRatio())
 
-  // TODO: SVG_ATTR is not smart enough to handle SkTLazy<T>
-  void setViewBox(const SkSVGViewBoxType&);
+    SVG_OPTIONAL_ATTR(ViewBox, SkSVGViewBoxType)
 
-  SkSize intrinsicSize(const SkSVGLengthContext&) const;
+    SkSize intrinsicSize(const SkSVGLengthContext&) const;
 
- protected:
-  bool onPrepareToRender(SkSVGRenderContext*) const override;
+protected:
+    bool onPrepareToRender(SkSVGRenderContext*) const override;
 
-  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+    void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
 
- private:
-  SkSVGSVG();
+private:
+    explicit SkSVGSVG(Type t)
+        : INHERITED(SkSVGTag::kSvg)
+        , fType(t)
+    {}
 
-  SkTLazy<SkSVGViewBoxType> fViewBox;
+    // Some attributes behave differently for the outermost svg element.
+    const Type fType;
 
-  using INHERITED = SkSVGContainer;
+    using INHERITED = SkSVGContainer;
 };
 
-#endif  // SkSVGSVG_DEFINED
+#endif // SkSVGSVG_DEFINED

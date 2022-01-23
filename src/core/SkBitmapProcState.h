@@ -45,7 +45,7 @@ struct SkBitmapProcState {
 
   SkPixmap fPixmap;
   SkMatrix fInvMatrix;  // This changes based on tile mode.
-  SkColor fPaintColor;
+  SkAlpha fPaintAlpha;
   SkTileMode fTileModeX;
   SkTileMode fTileModeY;
   bool fBilerp;
@@ -92,7 +92,7 @@ struct SkBitmapProcState {
   MatrixProc fMatrixProc;      // chooseProcs
   SampleProc32 fSampleProc32;  // chooseProcs
 
-  bool init(const SkMatrix& inverse, SkColor, const SkSamplingOptions&);
+  bool init(const SkMatrix& inverse, SkAlpha, const SkSamplingOptions&);
   bool chooseProcs();
   MatrixProc chooseMatrixProc(bool trivial_matrix);
   ShaderProc32 chooseShaderProc32();

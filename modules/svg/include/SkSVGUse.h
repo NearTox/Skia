@@ -16,31 +16,27 @@
  * (https://www.w3.org/TR/SVG11/struct.html#UseElement)
  */
 class SkSVGUse final : public SkSVGTransformableNode {
- public:
-  static sk_sp<SkSVGUse> Make() { return sk_sp<SkSVGUse>(new SkSVGUse()); }
+public:
+    static sk_sp<SkSVGUse> Make() { return sk_sp<SkSVGUse>(new SkSVGUse()); }
 
-  void appendChild(sk_sp<SkSVGNode>) override;
+    void appendChild(sk_sp<SkSVGNode>) override;
 
-  void setHref(const SkSVGStringType&);
-  void setX(const SkSVGLength&);
-  void setY(const SkSVGLength&);
+    SVG_ATTR(X   , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Y   , SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Href, SkSVGIRI   , SkSVGIRI())
 
- protected:
-  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+protected:
+    bool onPrepareToRender(SkSVGRenderContext*) const override;
+    void onRender(const SkSVGRenderContext&) const override;
+    SkPath onAsPath(const SkSVGRenderContext&) const override;
+    SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
 
-  bool onPrepareToRender(SkSVGRenderContext*) const override;
-  void onRender(const SkSVGRenderContext&) const override;
-  SkPath onAsPath(const SkSVGRenderContext&) const override;
-  SkRect onObjectBoundingBox(const SkSVGRenderContext&) const override;
+private:
+    SkSVGUse();
 
- private:
-  SkSVGUse();
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  SkSVGStringType fHref;
-  SkSVGLength fX = SkSVGLength(0);
-  SkSVGLength fY = SkSVGLength(0);
-
-  using INHERITED = SkSVGTransformableNode;
+    using INHERITED = SkSVGTransformableNode;
 };
 
-#endif  // SkSVGUse_DEFINED
+#endif // SkSVGUse_DEFINED

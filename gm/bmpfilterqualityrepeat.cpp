@@ -8,7 +8,6 @@
 #include "gm/gm.h"
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkFont.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
@@ -36,13 +35,13 @@ class BmpFilterQualityRepeat : public skiagm::GM {
     SkBitmap colorBmp;
     colorBmp.allocN32Pixels(20, 20, true);
     colorBmp.eraseColor(0xFFFF0000);
-    canvas.drawBitmap(colorBmp, 0, 0);
+    canvas.drawImage(colorBmp.asImage(), 0, 0);
     colorBmp.eraseColor(ToolUtils::color_to_565(0xFF008200));
-    canvas.drawBitmap(colorBmp, 20, 0);
+    canvas.drawImage(colorBmp.asImage(), 20, 0);
     colorBmp.eraseColor(ToolUtils::color_to_565(0xFFFF9000));
-    canvas.drawBitmap(colorBmp, 0, 20);
+    canvas.drawImage(colorBmp.asImage(), 0, 20);
     colorBmp.eraseColor(ToolUtils::color_to_565(0xFF2000FF));
-    canvas.drawBitmap(colorBmp, 20, 20);
+    canvas.drawImage(colorBmp.asImage(), 20, 20);
   }
 
   SkString onShortName() override { return SkString("bmp_filter_quality_repeat"); }
@@ -58,16 +57,6 @@ class BmpFilterQualityRepeat : public skiagm::GM {
 
  private:
   void drawAll(SkCanvas* canvas, SkScalar scaleX) const {
-    constexpr struct {
-      SkFilterQuality fQuality;
-      const char* fName;
-    } kQualities[] = {
-        {kNone_SkFilterQuality, "none"},
-        {kLow_SkFilterQuality, "low"},
-        {kMedium_SkFilterQuality, "medium"},
-        {kHigh_SkFilterQuality, "high"},
-    };
-
     SkRect rect = SkRect::MakeLTRB(20, 60, 220, 210);
     SkMatrix lm = SkMatrix::I();
     lm.setScaleX(scaleX);
@@ -83,11 +72,21 @@ class BmpFilterQualityRepeat : public skiagm::GM {
 
     SkAutoCanvasRestore acr(canvas, true);
 
-    for (size_t q = 0; q < SK_ARRAY_COUNT(kQualities); ++q) {
+    const struct {
+      const char* name;
+      SkSamplingOptions sampling;
+    } recs[] = {
+        {"none", SkSamplingOptions(SkFilterMode::kNearest)},
+        {"low", SkSamplingOptions(SkFilterMode::kLinear)},
+        {"medium", SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear)},
+        {"high", SkSamplingOptions(SkCubicResampler::Mitchell())},
+    };
+
+    for (const auto& rec : recs) {
       constexpr SkTileMode kTM = SkTileMode::kRepeat;
-      bmpPaint.setShader(fBmp.makeShader(kTM, kTM, SkSamplingOptions(kQualities[q].fQuality), lm));
+      bmpPaint.setShader(fBmp.makeShader(kTM, kTM, rec.sampling, lm));
       canvas->drawRect(rect, bmpPaint);
-      canvas->drawString(kQualities[q].fName, 20, 40, font, textPaint);
+      canvas->drawString(rec.name, 20, 40, font, textPaint);
       canvas->translate(250, 0);
     }
   }

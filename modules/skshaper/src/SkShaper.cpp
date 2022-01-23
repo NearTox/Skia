@@ -15,7 +15,7 @@
 #include "modules/skshaper/include/SkShaper.h"
 
 #ifdef SK_UNICODE_AVAILABLE
-#  include "modules/skshaper/src/SkUnicode.h"
+#  include "modules/skunicode/include/SkUnicode.h"
 #endif
 #include "src/core/SkTextBlobPriv.h"
 #include "src/utils/SkUTF.h"
@@ -34,6 +34,12 @@ std::unique_ptr<SkShaper> SkShaper::Make(sk_sp<SkFontMgr> fontmgr) {
   }
 #endif
   return SkShaper::MakePrimitive();
+}
+
+void SkShaper::PurgeCaches() {
+#ifdef SK_SHAPER_HARFBUZZ_AVAILABLE
+  PurgeHarfBuzzCache();
+#endif
 }
 
 std::unique_ptr<SkShaper::BiDiRunIterator> SkShaper::MakeBiDiRunIterator(
@@ -69,7 +75,7 @@ std::unique_ptr<SkShaper::ScriptRunIterator> SkShaper::MakeScriptRunIterator(
 }
 
 SkShaper::SkShaper() {}
-SkShaper::~SkShaper() {}
+SkShaper::~SkShaper() = default;
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
 static inline SkUnichar utf8_next(const char** ptr, const char* end) {
@@ -204,8 +210,7 @@ SkShaper::RunHandler::Buffer SkTextBlobBuilderRunHandler::runBuffer(const RunInf
   int glyphCount = SkTFitsIn<int>(info.glyphCount) ? info.glyphCount : INT_MAX;
   int utf8RangeSize = SkTFitsIn<int>(info.utf8Range.size()) ? info.utf8Range.size() : INT_MAX;
 
-  const auto& runBuffer = SkTextBlobBuilderPriv::AllocRunTextPos(
-      &fBuilder, info.fFont, glyphCount, utf8RangeSize, SkString());
+  const auto& runBuffer = fBuilder.allocRunTextPos(info.fFont, glyphCount, utf8RangeSize);
   if (runBuffer.utf8text && fUtf8Text) {
     memcpy(runBuffer.utf8text, fUtf8Text + info.utf8Range.begin(), utf8RangeSize);
   }

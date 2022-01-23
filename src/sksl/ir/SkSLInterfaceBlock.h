@@ -10,7 +10,8 @@
 
 #include <memory>
 
-#include "src/sksl/ir/SkSLProgramElement.h"
+#include "include/core/SkStringView.h"
+#include "include/private/SkSLProgramElement.h"
 #include "src/sksl/ir/SkSLSymbolTable.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
 
@@ -31,12 +32,12 @@ class InterfaceBlock final : public ProgramElement {
   static constexpr Kind kProgramElementKind = Kind::kInterfaceBlock;
 
   InterfaceBlock(
-      int offset, const Variable* var, String typeName, String instanceName, int arraySize,
-      std::shared_ptr<SymbolTable> typeOwner)
+      int offset, const Variable* var, skstd::string_view typeName, skstd::string_view instanceName,
+      int arraySize, std::shared_ptr<SymbolTable> typeOwner)
       : INHERITED(offset, kProgramElementKind),
         fVariable(var),
-        fTypeName(std::move(typeName)),
-        fInstanceName(std::move(instanceName)),
+        fTypeName(typeName),
+        fInstanceName(instanceName),
         fArraySize(arraySize),
         fTypeOwner(std::move(typeOwner)) {}
 
@@ -44,9 +45,9 @@ class InterfaceBlock final : public ProgramElement {
 
   void setVariable(const Variable* var) { fVariable = var; }
 
-  const String& typeName() const { return fTypeName; }
+  skstd::string_view typeName() const { return fTypeName; }
 
-  const String& instanceName() const { return fInstanceName; }
+  skstd::string_view instanceName() const { return fInstanceName; }
 
   const std::shared_ptr<SymbolTable>& typeOwner() const { return fTypeOwner; }
 
@@ -72,8 +73,6 @@ class InterfaceBlock final : public ProgramElement {
       result += " " + this->instanceName();
       if (this->arraySize() > 0) {
         result.appendf("[%d]", this->arraySize());
-      } else if (this->arraySize() == Type::kUnsizedArray) {
-        result += "[]";
       }
     }
     return result + ";";
@@ -81,8 +80,8 @@ class InterfaceBlock final : public ProgramElement {
 
  private:
   const Variable* fVariable;
-  String fTypeName;
-  String fInstanceName;
+  skstd::string_view fTypeName;
+  skstd::string_view fInstanceName;
   int fArraySize;
   std::shared_ptr<SymbolTable> fTypeOwner;
 

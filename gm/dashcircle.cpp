@@ -163,7 +163,7 @@ class DashCircle2GM : public skiagm::GM {
 
     SkMatrix rotate;
     rotate.setRotate(25.f);
-    static const SkMatrix kMatrices[]{
+    const SkMatrix kMatrices[]{
         SkMatrix::I(),
         SkMatrix::Scale(1.2f, 1.2f),
         SkMatrix::MakeAll(1, 0, 0, 0, -1, 0, 0, 0, 1),  // y flipper
@@ -180,8 +180,7 @@ class DashCircle2GM : public skiagm::GM {
 
     // Compute the union of bounds of all of our test cases.
     SkRect bounds = SkRect::MakeEmpty();
-    static const SkRect kBounds =
-        kThinCircle.makeOutset(kThinStrokeWidth / 2.f, kThinStrokeWidth / 2.f);
+    const SkRect kBounds = kThinCircle.makeOutset(kThinStrokeWidth / 2.f, kThinStrokeWidth / 2.f);
     for (const auto& m : kMatrices) {
       SkRect devBounds;
       m.mapRect(&devBounds, kBounds);

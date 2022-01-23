@@ -452,7 +452,7 @@ class SK_API SkSurface : public SkRefCnt {
 
       example: https://fiddle.skia.org/c/@Surface_notifyContentWillChange
   */
-  uint32_t generationID();
+  uint32_t generationID() noexcept;
 
   /** \enum SkSurface::ContentChangeMode
       ContentChangeMode members are parameters to notifyContentWillChange().
@@ -607,12 +607,10 @@ class SK_API SkSurface : public SkRefCnt {
   void draw(
       SkCanvas* canvas, SkScalar x, SkScalar y, const SkSamplingOptions& sampling,
       const SkPaint* paint);
-  void draw(SkCanvas* canvas, SkScalar x, SkScalar y) {
-    this->draw(canvas, x, y, SkSamplingOptions(), nullptr);
-  }
 
-  // DEPRECATED -- use explicit sampling options
-  void draw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint);
+  void draw(SkCanvas* canvas, SkScalar x, SkScalar y, const SkPaint* paint = nullptr) {
+    this->draw(canvas, x, y, SkSamplingOptions(), paint);
+  }
 
   /** Copies SkSurface pixel address, row bytes, and SkImageInfo to SkPixmap, if address
       is available, and returns true. If pixel address is not available, return

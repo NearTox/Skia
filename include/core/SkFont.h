@@ -12,6 +12,8 @@
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypeface.h"
 
+#include <vector>
+
 class SkMatrix;
 class SkPaint;
 class SkPath;
@@ -34,7 +36,7 @@ class SK_API SkFont {
 
       @return  default initialized SkFont
   */
-  SkFont();
+  SkFont() noexcept;
 
   /** Constructs SkFont with default values with SkTypeface and size in points.
 
@@ -42,14 +44,14 @@ class SK_API SkFont {
       @param size      typographic height of text
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size);
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size) noexcept;
 
   /** Constructs SkFont with default values with SkTypeface.
 
       @param typeface  font and style used to draw and measure text
       @return          initialized SkFont
   */
-  explicit SkFont(sk_sp<SkTypeface> typeface);
+  explicit SkFont(sk_sp<SkTypeface> typeface) noexcept;
 
   /** Constructs SkFont with default values with SkTypeface and size in points,
       horizontal scale, and horizontal skew. Horizontal scale emulates condensed
@@ -61,7 +63,7 @@ class SK_API SkFont {
       @param skewX     additional shear on x-axis relative to y-axis
       @return          initialized SkFont
   */
-  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX);
+  SkFont(sk_sp<SkTypeface> typeface, SkScalar size, SkScalar scaleX, SkScalar skewX) noexcept;
 
   /** Compares SkFont and font, and returns true if they are equivalent.
       May return false if SkTypeface has identical contents but different pointers.
@@ -69,7 +71,7 @@ class SK_API SkFont {
       @param font  font to compare
       @return      true if SkFont pair are equivalent
   */
-  bool operator==(const SkFont& font) const;
+  bool operator==(const SkFont& font) const noexcept;
 
   /** Compares SkFont and font, and returns true if they are not equivalent.
       May return true if SkTypeface has identical contents but different pointers.
@@ -77,7 +79,7 @@ class SK_API SkFont {
       @param font  font to compare
       @return      true if SkFont pair are not equivalent
   */
-  bool operator!=(const SkFont& font) const { return !(*this == font); }
+  bool operator!=(const SkFont& font) const noexcept { return !(*this == font); }
 
   /** If true, instructs the font manager to always hint glyphs.
       Returned value is only meaningful if platform uses FreeType as the font manager.
@@ -125,19 +127,19 @@ class SK_API SkFont {
 
       @param forceAutoHinting  setting to always hint glyphs
   */
-  void setForceAutoHinting(bool forceAutoHinting);
+  void setForceAutoHinting(bool forceAutoHinting) noexcept;
 
   /** Requests, but does not require, to use bitmaps in fonts instead of outlines.
 
       @param embeddedBitmaps  setting to use bitmaps in fonts
   */
-  void setEmbeddedBitmaps(bool embeddedBitmaps);
+  void setEmbeddedBitmaps(bool embeddedBitmaps) noexcept;
 
   /** Requests, but does not require, that glyphs respect sub-pixel positioning.
 
       @param subpixel  setting for sub-pixel positioning
   */
-  void setSubpixel(bool subpixel);
+  void setSubpixel(bool subpixel) noexcept;
 
   /** Requests, but does not require, linearly scalable font and glyph metrics.
 
@@ -146,20 +148,20 @@ class SK_API SkFont {
 
       @param linearMetrics  setting for linearly scalable font and glyph metrics.
   */
-  void setLinearMetrics(bool linearMetrics);
+  void setLinearMetrics(bool linearMetrics) noexcept;
 
   /** Increases stroke width when creating glyph bitmaps to approximate a bold typeface.
 
       @param embolden  setting for bold approximation
   */
-  void setEmbolden(bool embolden);
+  void setEmbolden(bool embolden) noexcept;
 
   /** Requests that baselines be snapped to pixels when the current transformation matrix is axis
       aligned.
 
       @param baselineSnap  setting for baseline snapping to pixels
   */
-  void setBaselineSnap(bool baselineSnap);
+  void setBaselineSnap(bool baselineSnap) noexcept;
 
   /** Whether edge pixels draw opaque or with partial transparency.
    */
@@ -168,16 +170,16 @@ class SK_API SkFont {
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
   */
-  void setEdging(Edging edging);
+  void setEdging(Edging edging) noexcept;
 
   /** Sets level of glyph outline adjustment.
       Does not check for valid values of hintingLevel.
   */
-  void setHinting(SkFontHinting hintingLevel);
+  void setHinting(SkFontHinting hintingLevel) noexcept;
 
   /** Returns level of glyph outline adjustment.
    */
-  SkFontHinting getHinting() const { return (SkFontHinting)fHinting; }
+  SkFontHinting getHinting() const noexcept { return (SkFontHinting)fHinting; }
 
   /** Returns a font with the same attributes of this font, but with the specified size.
       Returns nullptr if size is less than zero, infinite, or NaN.
@@ -185,14 +187,14 @@ class SK_API SkFont {
       @param size  typographic height of text
       @return      initialized SkFont
    */
-  SkFont makeWithSize(SkScalar size) const;
+  SkFont makeWithSize(SkScalar size) const noexcept;
 
   /** Returns SkTypeface if set, or nullptr.
       Does not alter SkTypeface SkRefCnt.
 
       @return  SkTypeface if previously set, nullptr otherwise
   */
-  SkTypeface* getTypeface() const { return fTypeface.get(); }
+  SkTypeface* getTypeface() const noexcept { return fTypeface.get(); }
 
   /** Returns SkTypeface if set, or the default typeface.
       Does not alter SkTypeface SkRefCnt.
@@ -206,27 +208,27 @@ class SK_API SkFont {
 
       @return  typographic height of text
   */
-  SkScalar getSize() const { return fSize; }
+  SkScalar getSize() const noexcept { return fSize; }
 
   /** Returns text scale on x-axis.
       Default value is 1.
 
       @return  text horizontal scale
   */
-  SkScalar getScaleX() const { return fScaleX; }
+  SkScalar getScaleX() const noexcept { return fScaleX; }
 
   /** Returns text skew on x-axis.
       Default value is zero.
 
       @return  additional shear on x-axis relative to y-axis
   */
-  SkScalar getSkewX() const { return fSkewX; }
+  SkScalar getSkewX() const noexcept { return fSkewX; }
 
   /** Increases SkTypeface SkRefCnt by one.
 
       @return  SkTypeface if previously set, nullptr otherwise
   */
-  sk_sp<SkTypeface> refTypeface() const { return fTypeface; }
+  sk_sp<SkTypeface> refTypeface() const noexcept { return fTypeface; }
 
   /** Increases SkTypeface SkRefCnt by one.
 
@@ -241,28 +243,28 @@ class SK_API SkFont {
 
       @param tf  font and style used to draw text
   */
-  void setTypeface(sk_sp<SkTypeface> tf) { fTypeface = tf; }
+  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = tf; }
 
   /** Sets text size in points.
       Has no effect if textSize is not greater than or equal to zero.
 
       @param textSize  typographic height of text
   */
-  void setSize(SkScalar textSize);
+  void setSize(SkScalar textSize) noexcept;
 
   /** Sets text scale on x-axis.
       Default value is 1.
 
       @param scaleX  text horizontal scale
   */
-  void setScaleX(SkScalar scaleX);
+  void setScaleX(SkScalar scaleX) noexcept;
 
   /** Sets text skew on x-axis.
       Default value is zero.
 
       @param skewX  additional shear on x-axis relative to y-axis
   */
-  void setSkewX(SkScalar skewX);
+  void setSkewX(SkScalar skewX) noexcept;
 
   /** Converts text into glyph indices.
       Returns the number of glyph indices represented by text.
@@ -432,6 +434,20 @@ class SK_API SkFont {
    */
   void getXPos(const SkGlyphID glyphs[], int count, SkScalar xpos[], SkScalar origin = 0) const;
 
+  /** Returns intervals [start, end] describing lines parallel to the advance that intersect
+   *  with the glyphs.
+   *
+   *  @param glyphs   the glyphs to intersect
+   *  @param count    the number of glyphs and positions
+   *  @param pos      the position of each glyph
+   *  @param top      the top of the line intersecting
+   *  @param bottom   the bottom of the line intersecting
+      @return         array of pairs of x values [start, end]. May be empty.
+   */
+  std::vector<SkScalar> getIntercepts(
+      const SkGlyphID glyphs[], int count, const SkPoint pos[], SkScalar top, SkScalar bottom,
+      const SkPaint* = nullptr) const;
+
   /** Modifies path to be the outline of the glyph.
       If the glyph has an outline, modifies path to be the glyph's outline and returns true.
       The glyph outline may be empty. Degenerate contours in the glyph outline will be skipped.
@@ -510,7 +526,6 @@ class SK_API SkFont {
 
   friend class SkFontPriv;
   friend class SkGlyphRunListPainter;
-  friend class SkTextBlobCacheDiffCanvas;
   friend class SkStrikeSpec;
 };
 

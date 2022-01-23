@@ -39,6 +39,8 @@ class GrD3DBuffer : public GrGpuBuffer {
   D3D12_RESOURCE_STATES fResourceState;
 
  private:
+  void releaseResource();
+
   void onMap() override;
   void onUnmap() override;
   bool onUpdateData(const void* src, size_t srcSizeInBytes) override;

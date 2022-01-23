@@ -18,8 +18,7 @@ class SkImageStageUpdater;
 class SkImageShader : public SkShaderBase {
  public:
   static sk_sp<SkShader> Make(
-      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy,
-      const SkSamplingOptions*,  // null means inherit-from-paint-fq
+      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions&,
       const SkMatrix* localMatrix, bool clampAsIfUnpremul = false);
 
   bool isOpaque() const override;
@@ -34,7 +33,7 @@ class SkImageShader : public SkShaderBase {
   SK_FLATTENABLE_HOOKS(SkImageShader)
 
   SkImageShader(
-      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions*,
+      sk_sp<SkImage>, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions&,
       const SkMatrix* localMatrix, bool clampAsIfUnpremul = false);
 
   void flatten(SkWriteBuffer&) const override;
@@ -46,10 +45,18 @@ class SkImageShader : public SkShaderBase {
   bool onAppendStages(const SkStageRec&) const override;
   SkStageUpdater* onAppendUpdatableStages(const SkStageRec&) const override;
 
+  SkUpdatableShader* onUpdatableShader(SkArenaAlloc* alloc) const override;
+
   skvm::Color onProgram(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
-      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
-      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+      const SkMatrixProvider&, const SkMatrix* localM, const SkColorInfo& dst,
+      skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+
+  class TransformShader;
+  skvm::Color makeProgram(
+      skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
+      const SkMatrixProvider&, const SkMatrix* localM, const SkColorInfo& dst,
+      skvm::Uniforms* uniforms, const TransformShader* coordShader, SkArenaAlloc*) const;
 
   bool doStages(const SkStageRec&, SkImageStageUpdater* = nullptr) const;
 
@@ -58,13 +65,9 @@ class SkImageShader : public SkShaderBase {
   const SkTileMode fTileModeX;
   const SkTileMode fTileModeY;
   const bool fClampAsIfUnpremul;
-  const bool fUseSamplingOptions;  // else inherit filterquality from paint
 
   friend class SkShaderBase;
   using INHERITED = SkShaderBase;
-
-  // for legacy unflattening
-  static sk_sp<SkFlattenable> PreSamplingCreate(SkReadBuffer&);
 };
 
 #endif

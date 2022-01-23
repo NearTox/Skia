@@ -64,7 +64,8 @@ class SkTLazy {
    *  has already been initialized, then this will copy over the previous
    *  contents.
    */
-  T* set(const T& src) {
+  T* set(const T& src) noexcept(
+      std::is_nothrow_copy_constructible_v<T>&& std::is_nothrow_copy_assignable_v<T>) {
     if (this->isValid()) {
       *fPtr = src;
     } else {
@@ -73,7 +74,9 @@ class SkTLazy {
     return fPtr;
   }
 
-  T* set(T&& src) {
+  T* set(T&& src) noexcept(
+      std::is_nothrow_move_constructible_v<T>&& std::is_nothrow_move_assignable_v<T>) {
+    static_assert(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>);
     if (this->isValid()) {
       *fPtr = std::move(src);
     } else {
@@ -85,7 +88,7 @@ class SkTLazy {
   /**
    * Destroy the lazy object (if it was created via init() or set())
    */
-  void reset() {
+  void reset() noexcept {
     if (this->isValid()) {
       fPtr->~T();
       fPtr = nullptr;
@@ -96,24 +99,24 @@ class SkTLazy {
    *  Returns true if a valid object has been initialized in the SkTLazy,
    *  false otherwise.
    */
-  bool isValid() const { return SkToBool(fPtr); }
+  bool isValid() const noexcept { return SkToBool(fPtr); }
 
   /**
    * Returns the object. This version should only be called when the caller
    * knows that the object has been initialized.
    */
-  T* get() const {
+  T* get() const noexcept {
     SkASSERT(this->isValid());
     return fPtr;
   }
-  T* operator->() const { return this->get(); }
-  T& operator*() const { return *this->get(); }
+  T* operator->() const noexcept { return this->get(); }
+  T& operator*() const noexcept { return *this->get(); }
 
   /**
    * Like above but doesn't assert if object isn't initialized (in which case
    * nullptr is returned).
    */
-  T* getMaybeNull() const { return fPtr; }
+  T* getMaybeNull() const noexcept { return fPtr; }
 
  private:
   alignas(T) char fStorage[sizeof(T)];

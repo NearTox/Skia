@@ -7,8 +7,11 @@
 
 #include "tools/gpu/YUVUtils.h"
 
+#include "include/core/SkCanvas.h"
+#include "include/core/SkColorFilter.h"
 #include "include/core/SkColorPriv.h"
 #include "include/core/SkData.h"
+#include "include/core/SkSurface.h"
 #include "include/gpu/GrRecordingContext.h"
 #include "include/gpu/GrYUVABackendTextures.h"
 #include "src/codec/SkCodecImageGenerator.h"
@@ -36,11 +39,11 @@ static SkPMColor convert_yuva_to_rgba(const float mtx[20], uint8_t yuva[4]) {
   return SkPremultiplyARGBInline(a, r, g, b);
 }
 
-static uint8_t look_up(float x1, float y1, const SkPixmap& pmap, SkColorChannel channel) {
-  SkASSERT(x1 > 0 && x1 < 1.0f);
-  SkASSERT(y1 > 0 && y1 < 1.0f);
-  int x = SkScalarFloorToInt(x1 * pmap.width());
-  int y = SkScalarFloorToInt(y1 * pmap.height());
+static uint8_t look_up(SkPoint normPt, const SkPixmap& pmap, SkColorChannel channel) {
+  SkASSERT(normPt.x() > 0 && normPt.x() < 1.0f);
+  SkASSERT(normPt.y() > 0 && normPt.y() < 1.0f);
+  int x = SkScalarFloorToInt(normPt.x() * pmap.width());
+  int y = SkScalarFloorToInt(normPt.y() * pmap.height());
 
   auto ii = pmap.info().makeColorType(kRGBA_8888_SkColorType).makeWH(1, 1);
   uint32_t pixel;
@@ -68,10 +71,20 @@ class Generator : public SkImageGenerator {
       SkYUVAInfo::YUVALocations yuvaLocations = fPixmaps.toYUVALocations();
       SkASSERT(SkYUVAInfo::YUVALocation::AreValidLocations(yuvaLocations));
 
+      SkMatrix om = fPixmaps.yuvaInfo().originMatrix();
+      SkAssertResult(om.invert(&om));
+      float normX = 1.f / info.width();
+      float normY = 1.f / info.height();
+      if (SkEncodedOriginSwapsWidthHeight(fPixmaps.yuvaInfo().origin())) {
+        using std::swap;
+        swap(normX, normY);
+      }
       for (int y = 0; y < info.height(); ++y) {
         for (int x = 0; x < info.width(); ++x) {
-          float x1 = (x + 0.5f) / info.width();
-          float y1 = (y + 0.5f) / info.height();
+          SkPoint xy1{(x + 0.5f), (y + 0.5f)};
+          xy1 = om.mapPoint(xy1);
+          xy1.fX *= normX;
+          xy1.fY *= normY;
 
           uint8_t yuva[4] = {0, 0, 0, 255};
 
@@ -79,11 +92,12 @@ class Generator : public SkImageGenerator {
                {SkYUVAInfo::YUVAChannels::kY, SkYUVAInfo::YUVAChannels::kU,
                 SkYUVAInfo::YUVAChannels::kV}) {
             const auto& pmap = fPixmaps.plane(yuvaLocations[c].fPlane);
-            yuva[c] = look_up(x1, y1, pmap, yuvaLocations[c].fChannel);
+            yuva[c] = look_up(xy1, pmap, yuvaLocations[c].fChannel);
           }
-          if (yuvaLocations[SkYUVAInfo::YUVAChannels::kA].fPlane >= 0) {
-            const auto& pmap = fPixmaps.plane(yuvaLocations[SkYUVAInfo::YUVAChannels::kA].fPlane);
-            yuva[3] = look_up(x1, y1, pmap, yuvaLocations[SkYUVAInfo::YUVAChannels::kA].fChannel);
+          auto [aPlane, aChan] = yuvaLocations[SkYUVAInfo::YUVAChannels::kA];
+          if (aPlane >= 0) {
+            const auto& pmap = fPixmaps.plane(aPlane);
+            yuva[3] = look_up(xy1, pmap, aChan);
           }
 
           // Making premul here.
@@ -120,6 +134,47 @@ class Generator : public SkImageGenerator {
 }  // anonymous namespace
 
 namespace sk_gpu_test {
+
+std::tuple<std::array<sk_sp<SkImage>, SkYUVAInfo::kMaxPlanes>, SkYUVAInfo> MakeYUVAPlanesAsA8(
+    SkImage* src, SkYUVColorSpace cs, SkYUVAInfo::Subsampling ss, GrRecordingContext* rContext) {
+  float rgbToYUV[20];
+  SkColorMatrix_RGB2YUV(cs, rgbToYUV);
+
+  SkYUVAInfo::PlaneConfig config =
+      src->isOpaque() ? SkYUVAInfo::PlaneConfig::kY_U_V : SkYUVAInfo::PlaneConfig::kY_U_V_A;
+  SkISize dims[SkYUVAInfo::kMaxPlanes];
+  int n =
+      SkYUVAInfo::PlaneDimensions(src->dimensions(), config, ss, kTopLeft_SkEncodedOrigin, dims);
+  std::array<sk_sp<SkImage>, 4> planes;
+  for (int i = 0; i < n; ++i) {
+    SkImageInfo info = SkImageInfo::MakeA8(dims[i]);
+    sk_sp<SkSurface> surf;
+    if (rContext) {
+      surf = SkSurface::MakeRenderTarget(rContext, SkBudgeted::kYes, info, 1, nullptr);
+    } else {
+      surf = SkSurface::MakeRaster(info);
+    }
+    if (!surf) {
+      return {};
+    }
+
+    SkPaint paint;
+    paint.setBlendMode(SkBlendMode::kSrc);
+
+    // Make a matrix with the ith row of rgbToYUV copied to the A row since we're drawing to A8.
+    float m[20] = {};
+    std::copy_n(rgbToYUV + 5 * i, 5, m + 15);
+    paint.setColorFilter(SkColorFilters::Matrix(m));
+    surf->getCanvas()->drawImageRect(
+        src, SkRect::Make(dims[i]), SkSamplingOptions(SkFilterMode::kLinear), &paint);
+    planes[i] = surf->makeImageSnapshot();
+    if (!planes[i]) {
+      return {};
+    }
+  }
+  SkYUVAInfo info(src->dimensions(), config, ss, cs);
+  return {planes, info};
+}
 
 std::unique_ptr<LazyYUVImage> LazyYUVImage::Make(
     sk_sp<SkData> data, GrMipmapped mipmapped, sk_sp<SkColorSpace> cs) {

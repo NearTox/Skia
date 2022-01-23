@@ -35,7 +35,7 @@ GrDawnCaps::GrDawnCaps(const GrContextOptions& contextOptions) : INHERITED(conte
 
 bool GrDawnCaps::isFormatSRGB(const GrBackendFormat& format) const { return false; }
 
-bool GrDawnCaps::isFormatTexturable(const GrBackendFormat& format) const {
+bool GrDawnCaps::isFormatTexturable(const GrBackendFormat& format, GrTextureType) const {
   // Currently, all the formats in GrDawnFormatToPixelConfig are texturable.
   wgpu::TextureFormat dawnFormat;
   return format.asDawnFormat(&dawnFormat);
@@ -163,20 +163,16 @@ GrProgramDesc GrDawnCaps::makeDesc(
     ProgramDescOverrideFlags overrideFlags) const {
   SkASSERT(overrideFlags == ProgramDescOverrideFlags::kNone);
   GrProgramDesc desc;
-  if (!GrProgramDesc::Build(&desc, rt, programInfo, *this)) {
-    SkASSERT(!desc.isValid());
-    return desc;
-  }
+  GrProgramDesc::Build(&desc, programInfo, *this);
 
   wgpu::TextureFormat format;
   if (!programInfo.backendFormat().asDawnFormat(&format)) {
-    desc.key().reset();
+    desc.reset();
     SkASSERT(!desc.isValid());
     return desc;
   }
 
-  GrProcessorKeyBuilder b(&desc.key());
-
+  GrProcessorKeyBuilder b(desc.key());
   GrStencilSettings stencil = programInfo.nonGLStencilSettings();
   stencil.genKey(&b, true);
 
@@ -187,6 +183,8 @@ GrProgramDesc GrDawnCaps::makeDesc(
   b.add32(static_cast<int32_t>(hasDepthStencil));
   b.add32(get_blend_info_key(programInfo.pipeline()));
   b.add32(programInfo.primitiveTypeKey());
+
+  b.flush();
   return desc;
 }
 

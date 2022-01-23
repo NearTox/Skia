@@ -195,12 +195,12 @@ class SkTArray {
   /**
    * Number of elements in the array.
    */
-  int count() const { return fCount; }
+  int count() const noexcept { return fCount; }
 
   /**
    * Is the array empty.
    */
-  bool empty() const { return !fCount; }
+  bool empty() const noexcept { return !fCount; }
 
   /**
    * Adds 1 new default-initialized T value and returns it by reference. Note
@@ -353,42 +353,42 @@ class SkTArray {
     }
   }
 
-  T* begin() { return fItemArray; }
-  const T* begin() const { return fItemArray; }
-  T* end() { return fItemArray ? fItemArray + fCount : nullptr; }
-  const T* end() const { return fItemArray ? fItemArray + fCount : nullptr; }
-  T* data() { return fItemArray; }
-  const T* data() const { return fItemArray; }
-  size_t size() const { return (size_t)fCount; }
+  T* begin() noexcept { return fItemArray; }
+  const T* begin() const noexcept { return fItemArray; }
+  T* end() noexcept { return fItemArray ? fItemArray + fCount : nullptr; }
+  const T* end() const noexcept { return fItemArray ? fItemArray + fCount : nullptr; }
+  T* data() noexcept { return fItemArray; }
+  const T* data() const noexcept { return fItemArray; }
+  size_t size() const noexcept { return (size_t)fCount; }
   void resize(size_t count) { this->resize_back((int)count); }
 
   /**
    * Get the i^th element.
    */
-  T& operator[](int i) {
+  T& operator[](int i) noexcept {
     SkASSERT(i < this->count());
     SkASSERT(i >= 0);
     return fItemArray[i];
   }
 
-  const T& operator[](int i) const {
+  const T& operator[](int i) const noexcept {
     SkASSERT(i < this->count());
     SkASSERT(i >= 0);
     return fItemArray[i];
   }
 
   T& at(int i) { return (*this)[i]; }
-  const T& at(int i) const { return (*this)[i]; }
+  const T& at(int i) const noexcept { return (*this)[i]; }
 
   /**
    * equivalent to operator[](0)
    */
-  T& front() {
+  T& front() noexcept {
     SkASSERT(fCount > 0);
     return fItemArray[0];
   }
 
-  const T& front() const {
+  const T& front() const noexcept {
     SkASSERT(fCount > 0);
     return fItemArray[0];
   }
@@ -396,12 +396,12 @@ class SkTArray {
   /**
    * equivalent to operator[](count() - 1)
    */
-  T& back() {
+  T& back() noexcept {
     SkASSERT(fCount);
     return fItemArray[fCount - 1];
   }
 
-  const T& back() const {
+  const T& back() const noexcept {
     SkASSERT(fCount > 0);
     return fItemArray[fCount - 1];
   }
@@ -415,13 +415,14 @@ class SkTArray {
     return fItemArray[fCount - i - 1];
   }
 
-  const T& fromBack(int i) const {
+  const T& fromBack(int i) const noexcept {
     SkASSERT(i >= 0);
     SkASSERT(i < this->count());
     return fItemArray[fCount - i - 1];
   }
 
-  bool operator==(const SkTArray<T, MEM_MOVE>& right) const {
+  bool operator==(const SkTArray<T, MEM_MOVE>& right) const noexcept {
+    static_assert(noexcept(fItemArray[0] != right.fItemArray[0]));
     int leftCount = this->count();
     if (leftCount != right.count()) {
       return false;
@@ -434,9 +435,9 @@ class SkTArray {
     return true;
   }
 
-  bool operator!=(const SkTArray<T, MEM_MOVE>& right) const { return !(*this == right); }
+  bool operator!=(const SkTArray<T, MEM_MOVE>& right) const noexcept { return !(*this == right); }
 
-  int capacity() const { return fAllocCount; }
+  int capacity() const noexcept { return fAllocCount; }
 
  protected:
   /**
@@ -460,7 +461,7 @@ class SkTArray {
   }
 
  private:
-  void init(int count) {
+  void init(int count) noexcept {
     fCount = SkToU32(count);
     if (!count) {
       fAllocCount = 0;
@@ -505,21 +506,22 @@ class SkTArray {
   }
 
   template <bool E = MEM_MOVE>
-  std::enable_if_t<E, void> move(int dst, int src) {
+  std::enable_if_t<E, void> move(int dst, int src) noexcept {
     memcpy(&fItemArray[dst], &fItemArray[src], sizeof(T));
   }
   template <bool E = MEM_MOVE>
-  std::enable_if_t<E, void> move(void* dst) {
+  std::enable_if_t<E, void> move(void* dst) noexcept {
     sk_careful_memcpy(dst, fItemArray, fCount * sizeof(T));
   }
 
   template <bool E = MEM_MOVE>
-  std::enable_if_t<!E, void> move(int dst, int src) {
+  std::enable_if_t<!E, void> move(int dst, int src) noexcept(
+      std::is_nothrow_move_constructible_v<T>) {
     new (&fItemArray[dst]) T(std::move(fItemArray[src]));
     fItemArray[src].~T();
   }
   template <bool E = MEM_MOVE>
-  std::enable_if_t<!E, void> move(void* dst) {
+  std::enable_if_t<!E, void> move(void* dst) noexcept(std::is_nothrow_move_constructible_v<T>) {
     for (int i = 0; i < this->count(); ++i) {
       new (static_cast<char*>(dst) + sizeof(T) * (size_t)i) T(std::move(fItemArray[i]));
       fItemArray[i].~T();

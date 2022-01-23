@@ -154,7 +154,7 @@ constexpr SkColor SK_ColorMAGENTA = SkColorSetARGB(0xFF, 0xFF, 0x00, 0xFF);
     @param blue   blue component value from zero to 255
     @param hsv    three element array which holds the resulting HSV components
 */
-SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]);
+SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]) noexcept;
 
 /** Converts ARGB to its HSV components. Alpha in ARGB is ignored.
     hsv[0] contains hsv hue, and is assigned a value from zero to less than 360.
@@ -164,7 +164,7 @@ SK_API void SkRGBToHSV(U8CPU red, U8CPU green, U8CPU blue, SkScalar hsv[3]);
     @param color  ARGB color to convert
     @param hsv    three element array which holds the resulting HSV components
 */
-static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) {
+static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) noexcept {
   SkRGBToHSV(SkColorGetR(color), SkColorGetG(color), SkColorGetB(color), hsv);
 }
 
@@ -208,7 +208,7 @@ typedef uint32_t SkPMColor;
     @param b  amount of blue, from no blue (0) to full blue (255)
     @return   premultiplied color
 */
-SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
+SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept;
 
 /** Returns pmcolor closest to color c. Multiplies c RGB components by the c alpha,
     and arranges the bytes to match the format of kN32_SkColorType.
@@ -216,7 +216,7 @@ SK_API SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b);
     @param c  unpremultiplied ARGB color
     @return   premultiplied color
 */
-SK_API SkPMColor SkPreMultiplyColor(SkColor c);
+SK_API SkPMColor SkPreMultiplyColor(SkColor c) noexcept;
 
 /** \enum SkColorChannel
     Describes different color channels one can manipulate
@@ -266,7 +266,7 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f equals other
   */
-  bool operator==(const SkRGBA4f& other) const {
+  bool operator==(const SkRGBA4f& other) const noexcept {
     return fA == other.fA && fR == other.fR && fG == other.fG && fB == other.fB;
   }
 
@@ -275,21 +275,23 @@ struct SkRGBA4f {
       @param other  SkRGBA4f to compare
       @return       true if SkRGBA4f is not equal to other
   */
-  bool operator!=(const SkRGBA4f& other) const { return !(*this == other); }
+  bool operator!=(const SkRGBA4f& other) const noexcept { return !(*this == other); }
 
   /** Returns SkRGBA4f multiplied by scale.
 
       @param scale  value to multiply by
       @return       SkRGBA4f as (fR * scale, fG * scale, fB * scale, fA * scale)
   */
-  SkRGBA4f operator*(float scale) const { return {fR * scale, fG * scale, fB * scale, fA * scale}; }
+  SkRGBA4f operator*(float scale) const noexcept {
+    return {fR * scale, fG * scale, fB * scale, fA * scale};
+  }
 
   /** Returns SkRGBA4f multiplied component-wise by scale.
 
       @param scale  SkRGBA4f to multiply by
       @return       SkRGBA4f as (fR * scale.fR, fG * scale.fG, fB * scale.fB, fA * scale.fA)
   */
-  SkRGBA4f operator*(const SkRGBA4f& scale) const {
+  SkRGBA4f operator*(const SkRGBA4f& scale) const noexcept {
     return {fR * scale.fR, fG * scale.fG, fB * scale.fB, fA * scale.fA};
   }
 
@@ -297,16 +299,16 @@ struct SkRGBA4f {
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  const float* vec() const { return &fR; }
+  const float* vec() const noexcept { return &fR; }
 
   /** Returns a pointer to components of SkRGBA4f, for array access.
 
       @return       pointer to array [fR, fG, fB, fA]
   */
-  float* vec() { return &fR; }
+  float* vec() noexcept { return &fR; }
 
   /** As a std::array<float, 4> */
-  std::array<float, 4> array() const { return {fR, fG, fB, fA}; }
+  std::array<float, 4> array() const noexcept { return {fR, fG, fB, fA}; }
 
   /** Returns one component. Asserts if index is out of range and SK_DEBUG is defined.
 

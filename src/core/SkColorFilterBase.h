@@ -9,6 +9,7 @@
 #define SkColorFilterBase_DEFINED
 
 #include "include/core/SkColorFilter.h"
+#include "include/private/SkColorData.h"
 #include "src/core/SkVM_fwd.h"
 
 class GrColorInfo;
@@ -27,11 +28,11 @@ class SkColorFilterBase : public SkColorFilter {
 
   SK_WARN_UNUSED_RESULT
   skvm::Color program(
-      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*, SkArenaAlloc*) const;
+      skvm::Builder*, skvm::Color, const SkColorInfo& dst, skvm::Uniforms*, SkArenaAlloc*) const;
 
   /** Returns the flags for this filter. Override in subclasses to return custom flags.
    */
-  virtual uint32_t onGetFlags() const { return 0; }
+  virtual bool onIsAlphaUnchanged() const { return false; }
 
 #if SK_SUPPORT_GPU
   /**
@@ -64,6 +65,8 @@ class SkColorFilterBase : public SkColorFilter {
         SkFlattenable::Deserialize(kSkColorFilter_Type, data, size, procs).release()));
   }
 
+  virtual SkPMColor4f onFilterColor4f(const SkPMColor4f& color, SkColorSpace* dstCS) const;
+
  protected:
   SkColorFilterBase() {}
 
@@ -74,7 +77,8 @@ class SkColorFilterBase : public SkColorFilter {
   virtual bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const = 0;
 
   virtual skvm::Color onProgram(
-      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms*, SkArenaAlloc*) const = 0;
+      skvm::Builder*, skvm::Color, const SkColorInfo& dst, skvm::Uniforms*,
+      SkArenaAlloc*) const = 0;
 
   friend class SkColorFilter;
 

@@ -12,30 +12,28 @@
 #include "modules/svg/include/SkSVGTypes.h"
 
 class SkSVGFilter final : public SkSVGHiddenContainer {
- public:
-  static sk_sp<SkSVGFilter> Make() { return sk_sp<SkSVGFilter>(new SkSVGFilter()); }
+public:
+    static sk_sp<SkSVGFilter> Make() { return sk_sp<SkSVGFilter>(new SkSVGFilter()); }
 
-  sk_sp<SkImageFilter> buildFilterDAG(const SkSVGRenderContext&) const;
+    sk_sp<SkImageFilter> buildFilterDAG(const SkSVGRenderContext&) const;
 
-  SVG_ATTR(X, SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Y, SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Width, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(Height, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
-  SVG_ATTR(
-      FilterUnits, SkSVGObjectBoundingBoxUnits,
-      SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox))
-  SVG_ATTR(
-      PrimitiveUnits, SkSVGObjectBoundingBoxUnits,
-      SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kUserSpaceOnUse))
+    SVG_ATTR(X, SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Y, SkSVGLength, SkSVGLength(-10, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Width, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(Height, SkSVGLength, SkSVGLength(120, SkSVGLength::Unit::kPercentage))
+    SVG_ATTR(FilterUnits,
+             SkSVGObjectBoundingBoxUnits,
+             SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox))
+    SVG_ATTR(PrimitiveUnits,
+             SkSVGObjectBoundingBoxUnits,
+             SkSVGObjectBoundingBoxUnits(SkSVGObjectBoundingBoxUnits::Type::kUserSpaceOnUse))
 
- private:
-  SkSVGFilter() : INHERITED(SkSVGTag::kFilter) {}
+private:
+    SkSVGFilter() : INHERITED(SkSVGTag::kFilter) {}
 
-  SkRect resolveFilterRegion(const SkSVGRenderContext&) const;
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  bool parseAndSetAttribute(const char*, const char*) override;
-
-  using INHERITED = SkSVGHiddenContainer;
+    using INHERITED = SkSVGHiddenContainer;
 };
 
 #endif  // SkSVGFilter_DEFINED

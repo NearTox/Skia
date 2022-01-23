@@ -126,8 +126,8 @@ class PictureShaderTileGM : public skiagm::GM {
         tilePtr = nullptr;
       }
 
-      fShaders[i] =
-          pictureRef->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, &localMatrix, tilePtr);
+      fShaders[i] = pictureRef->makeShader(
+          SkTileMode::kRepeat, SkTileMode::kRepeat, SkFilterMode::kNearest, &localMatrix, tilePtr);
     }
   }
 

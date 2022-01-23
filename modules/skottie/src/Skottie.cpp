@@ -157,14 +157,15 @@ sk_sp<sksg::RenderNode> AnimationBuilder::attachBlendMode(
 AnimationBuilder::AnimationBuilder(
     sk_sp<ResourceProvider> rp, sk_sp<SkFontMgr> fontmgr, sk_sp<PropertyObserver> pobserver,
     sk_sp<Logger> logger, sk_sp<MarkerObserver> mobserver, sk_sp<PrecompInterceptor> pi,
-    Animation::Builder::Stats* stats, const SkSize& comp_size, float duration, float framerate,
-    uint32_t flags)
+    sk_sp<ExpressionManager> expressionmgr, Animation::Builder::Stats* stats,
+    const SkSize& comp_size, float duration, float framerate, uint32_t flags)
     : fResourceProvider(std::move(rp)),
       fLazyFontMgr(std::move(fontmgr)),
       fPropertyObserver(std::move(pobserver)),
       fLogger(std::move(logger)),
       fMarkerObserver(std::move(mobserver)),
       fPrecompInterceptor(std::move(pi)),
+      fExpressionManager(std::move(expressionmgr)),
       fStats(stats),
       fCompSize(comp_size),
       fDuration(duration),
@@ -179,6 +180,7 @@ AnimationBuilder::AnimationInfo AnimationBuilder::parse(const skjson::ObjectValu
   this->parseFonts(jroot["fonts"], jroot["chars"]);
 
   AutoScope ascope(this);
+  AutoPropertyTracker apt(this, jroot, PropertyObserver::NodeType::COMPOSITION);
   auto root = CompositionBuilder(*this, fCompSize, jroot).build(*this);
 
   auto animators = ascope.release();
@@ -278,6 +280,8 @@ bool AnimationBuilder::dispatchTransformProperty(const sk_sp<TransformAdapter2D>
   return dispatched;
 }
 
+sk_sp<ExpressionManager> AnimationBuilder::expression_manager() const { return fExpressionManager; }
+
 void AnimationBuilder::AutoPropertyTracker::updateContext(
     PropertyObserver* observer, const skjson::ObjectValue& obj) {
   const skjson::StringValue* name = obj["nm"];
@@ -319,6 +323,11 @@ Animation::Builder& Animation::Builder::setMarkerObserver(sk_sp<MarkerObserver> 
 
 Animation::Builder& Animation::Builder::setPrecompInterceptor(sk_sp<PrecompInterceptor> pi) {
   fPrecompInterceptor = std::move(pi);
+  return *this;
+}
+
+Animation::Builder& Animation::Builder::setExpressionManager(sk_sp<ExpressionManager> em) {
+  fExpressionManager = std::move(em);
   return *this;
 }
 
@@ -393,8 +402,8 @@ sk_sp<Animation> Animation::Builder::make(const char* data, size_t data_len) {
   SkASSERT(resolvedProvider);
   internal::AnimationBuilder builder(
       std::move(resolvedProvider), fFontMgr, std::move(fPropertyObserver), std::move(fLogger),
-      std::move(fMarkerObserver), std::move(fPrecompInterceptor), &fStats, size, duration, fps,
-      fFlags);
+      std::move(fMarkerObserver), std::move(fPrecompInterceptor), std::move(fExpressionManager),
+      &fStats, size, duration, fps, fFlags);
   auto ainfo = builder.parse(json);
 
   const auto t2 = std::chrono::steady_clock::now();
@@ -450,7 +459,7 @@ void Animation::render(SkCanvas* canvas, const SkRect* dstR, RenderFlags renderF
 
   const SkRect srcR = SkRect::MakeSize(this->size());
   if (dstR) {
-    canvas->concat(SkMatrix::MakeRectToRect(srcR, *dstR, SkMatrix::kCenter_ScaleToFit));
+    canvas->concat(SkMatrix::RectToRect(srcR, *dstR, SkMatrix::kCenter_ScaleToFit));
   }
 
   if (!(renderFlags & RenderFlag::kDisableTopLevelClipping)) {

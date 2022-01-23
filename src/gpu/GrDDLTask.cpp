@@ -21,7 +21,7 @@ GrDDLTask::GrDDLTask(
     SkASSERT(task->isClosed());
 
     for (int i = 0; i < task->numTargets(); ++i) {
-      drawingMgr->setLastRenderTask(task->target(i).proxy(), task.get());
+      drawingMgr->setLastRenderTask(task->target(i), task.get());
     }
   }
 
@@ -29,7 +29,7 @@ GrDDLTask::GrDDLTask(
   this->setFlag(kClosed_Flag);
 }
 
-GrDDLTask::~GrDDLTask() {}
+GrDDLTask::~GrDDLTask() = default;
 
 void GrDDLTask::endFlush(GrDrawingManager* drawingManager) {
   for (auto& task : fDDL->priv().renderTasks()) {
@@ -61,12 +61,6 @@ bool GrDDLTask::onIsUsed(GrSurfaceProxy* proxy) const {
   return false;
 }
 
-void GrDDLTask::handleInternalAllocationFailure() {
-  for (auto& task : fDDL->priv().renderTasks()) {
-    task->handleInternalAllocationFailure();
-  }
-}
-
 void GrDDLTask::gatherProxyIntervals(GrResourceAllocator* alloc) const {
   // We don't have any proxies, but the resource allocator will still bark
   // if a task doesn't claim any op indices, so we oblige it.
@@ -78,7 +72,7 @@ void GrDDLTask::gatherProxyIntervals(GrResourceAllocator* alloc) const {
 }
 
 GrRenderTask::ExpectedOutcome GrDDLTask::onMakeClosed(
-    const GrCaps& caps, SkIRect* targetUpdateBounds) {
+    GrRecordingContext*, SkIRect* targetUpdateBounds) {
   SkASSERT(0);
   return ExpectedOutcome::kTargetUnchanged;
 }

@@ -59,7 +59,8 @@ class GrVkAMDMemoryAllocator : public GrVkMemoryAllocator {
 
  private:
   GrVkAMDMemoryAllocator(
-      VmaAllocator allocator, sk_sp<const GrVkInterface> interface, bool preferCachedCpuMemory);
+      VmaAllocator allocator, sk_sp<const GrVkInterface> interface,
+      bool mustUseCoherentHostVisibleMemory);
 
   VmaAllocator fAllocator;
 
@@ -68,7 +69,10 @@ class GrVkAMDMemoryAllocator : public GrVkMemoryAllocator {
   // vulkan calls.
   sk_sp<const GrVkInterface> fInterface;
 
-  bool fPreferCachedCpuMemory;
+  // For host visible allocations do we require they are coherent or not. All devices are required
+  // to support a host visible and coherent memory type. This is used to work around bugs for
+  // devices that don't handle non coherent memory correctly.
+  bool fMustUseCoherentHostVisibleMemory;
 
   using INHERITED = GrVkMemoryAllocator;
 };

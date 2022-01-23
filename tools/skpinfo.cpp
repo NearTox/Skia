@@ -54,7 +54,8 @@ int main(int argc, char** argv) {
 
     SkPictInfo info;
     if (!SkPicture_StreamIsSKP(&stream, &info)) {
-        return kNotAnSKP;
+      SkDebugf("Unsupported version %d\n", info.getVersion());
+      return kNotAnSKP;
     }
 
     if (FLAGS_version && !FLAGS_quiet) {

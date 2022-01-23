@@ -16,7 +16,7 @@ bool FuzzSKSL2GLSL(sk_sp<SkData> bytes) {
   SkSL::String output;
   SkSL::Program::Settings settings;
   std::unique_ptr<SkSL::Program> program = compiler.convertProgram(
-      SkSL::Program::kFragment_Kind, SkSL::String((const char*)bytes->data(), bytes->size()),
+      SkSL::ProgramKind::kFragment, SkSL::String((const char*)bytes->data(), bytes->size()),
       settings);
   if (!program || !compiler.toGLSL(*program, &output)) {
     return false;

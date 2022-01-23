@@ -59,7 +59,7 @@
 // make it clear when converting a scalar that this is what is wanted.
 #  define SkScalarToFLOAT(n) SkScalarToFloat(n)
 
-// Dummy representation of a GUID from createId.
+// Placeholder representation of a GUID from createId.
 #  define L_GUID_ID L"XXXXXXXXsXXXXsXXXXsXXXXsXXXXXXXXXXXX"
 // Length of GUID representation from createId, including nullptr terminator.
 #  define GUID_ID_LEN SK_ARRAY_COUNT(L_GUID_ID)
@@ -104,7 +104,7 @@ SkXPSDevice::SkXPSDevice(SkISize s)
       fCurrentPage(0),
       fTopTypefaces(&fTypefaces) {}
 
-SkXPSDevice::~SkXPSDevice() {}
+SkXPSDevice::~SkXPSDevice() = default;
 
 bool SkXPSDevice::beginPortfolio(SkWStream* outputStream, IXpsOMObjectFactory* factory) {
   SkASSERT(factory);
@@ -268,6 +268,10 @@ bool SkXPSDevice::endSheet() {
 }
 
 static HRESULT subset_typeface(const SkXPSDevice::TypefaceUse& current) {
+// The CreateFontPackage API is only supported on desktop, not in UWP
+#  if defined(SK_WINUWP)
+  return E_NOTIMPL;
+#  else
   // CreateFontPackage wants unsigned short.
   // Microsoft, Y U NO stdint.h?
   std::vector<unsigned short> keepList;
@@ -343,6 +347,7 @@ static HRESULT subset_typeface(const SkXPSDevice::TypefaceUse& current) {
       "Could not set new stream for subsetted font.");
 
   return S_OK;
+#  endif  // SK_WINUWP
 }
 
 bool SkXPSDevice::endPortfolio() {
@@ -1652,8 +1657,9 @@ static bool text_must_be_pathed(const SkPaint& paint, const SkMatrix& matrix) {
     ;
 }
 
-void SkXPSDevice::drawGlyphRunList(const SkGlyphRunList& glyphRunList) {
-  const SkPaint& paint = glyphRunList.paint();
+void SkXPSDevice::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
+  SkASSERT(!glyphRunList.hasRSXForm());
+
   for (const auto& run : glyphRunList) {
     const SkGlyphID* glyphIDs = run.glyphsIDs().data();
     size_t glyphCount = run.glyphsIDs().size();
@@ -1773,7 +1779,7 @@ void SkXPSDevice::drawImageRect(
 
   SkRect bitmapBounds = SkRect::Make(bitmap.bounds());
   SkRect srcBounds = src ? *src : bitmapBounds;
-  SkMatrix matrix = SkMatrix::MakeRectToRect(srcBounds, dst, SkMatrix::kFill_ScaleToFit);
+  SkMatrix matrix = SkMatrix::RectToRect(srcBounds, dst);
   SkRect actualDst;
   if (!src || bitmapBounds.contains(*src)) {
     actualDst = dst;

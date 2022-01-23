@@ -71,7 +71,7 @@ static constexpr inline typename std::enable_if<
         (std::is_integral<D>::value || std::is_enum<D>::value),
     bool>::type
 /*bool*/
-SkTFitsIn(S src) {
+SkTFitsIn(S src) noexcept {
   // SkTFitsIn() is used in public headers, so needs to be written targeting at most C++11.
   return
 

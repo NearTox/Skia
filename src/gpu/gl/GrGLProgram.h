@@ -8,15 +8,17 @@
 #ifndef GrGLProgram_DEFINED
 #define GrGLProgram_DEFINED
 
+#include "src/gpu/GrFragmentProcessor.h"
+#include "src/gpu/GrGeometryProcessor.h"
+#include "src/gpu/GrXferProcessor.h"
 #include "src/gpu/gl/GrGLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 #include "src/gpu/glsl/GrGLSLUniformHandler.h"
 
-class GrGLSLFragmentProcessor;
-class GrGLSLPrimitiveProcessor;
-class GrGLSLXferProcessor;
+#include <vector>
+
 class GrPipeline;
-class GrPrimitiveProcessor;
+class GrGeometryProcessor;
 class GrProgramInfo;
 class GrRenderTarget;
 class GrTextureProxy;
@@ -50,11 +52,11 @@ class GrGLProgram : public SkRefCnt {
   static sk_sp<GrGLProgram> Make(
       GrGLGpu*, const GrGLSLBuiltinUniformHandles&, GrGLuint programID,
       const UniformInfoArray& uniforms, const UniformInfoArray& textureSamplers,
-      const VaryingInfoArray&,  // used for NVPR only currently
-      std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
-      std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, std::unique_ptr<Attribute[]>,
-      int vertexAttributeCnt, int instanceAttributeCnt, int vertexStride, int instanceStride);
+      std::unique_ptr<GrGeometryProcessor::ProgramImpl>,
+      std::unique_ptr<GrXferProcessor::ProgramImpl>,
+      std::vector<std::unique_ptr<GrFragmentProcessor::ProgramImpl>> fps,
+      std::unique_ptr<Attribute[]>, int vertexAttributeCnt, int instanceAttributeCnt,
+      int vertexStride, int instanceStride);
 
   ~GrGLProgram() override;
 
@@ -83,25 +85,6 @@ class GrGLProgram : public SkRefCnt {
       fRenderTargetSize.fHeight = -1;
       fRenderTargetOrigin = (GrSurfaceOrigin)-1;
     }
-
-    /**
-     * Gets a float4 that adjusts the position from Skia device coords to GL's normalized device
-     * coords. Assuming the transformed position, pos, is a homogeneous float3, the vec, v, is
-     * applied as such:
-     * pos.x = dot(v.xy, pos.xz)
-     * pos.y = dot(v.zw, pos.yz)
-     */
-    void getRTAdjustmentVec(float* destVec) {
-      destVec[0] = 2.f / fRenderTargetSize.fWidth;
-      destVec[1] = -1.f;
-      if (kBottomLeft_GrSurfaceOrigin == fRenderTargetOrigin) {
-        destVec[2] = -2.f / fRenderTargetSize.fHeight;
-        destVec[3] = 1.f;
-      } else {
-        destVec[2] = 2.f / fRenderTargetSize.fHeight;
-        destVec[3] = -1.f;
-      }
-    }
   };
 
   /**
@@ -112,10 +95,10 @@ class GrGLProgram : public SkRefCnt {
   void updateUniforms(const GrRenderTarget*, const GrProgramInfo&);
 
   /**
-   * Binds all primitive processor and fragment processor textures.
+   * Binds all geometry processor and fragment processor textures.
    */
   void bindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrGeometryProcessor&, const GrSurfaceProxy* const geomProcTextures[],
       const GrPipeline&);
 
   int vertexStride() const { return fVertexStride; }
@@ -137,14 +120,14 @@ class GrGLProgram : public SkRefCnt {
   GrGLProgram(
       GrGLGpu*, const GrGLSLBuiltinUniformHandles&, GrGLuint programID,
       const UniformInfoArray& uniforms, const UniformInfoArray& textureSamplers,
-      const VaryingInfoArray&,  // used for NVPR only currently
-      std::unique_ptr<GrGLSLPrimitiveProcessor> geometryProcessor,
-      std::unique_ptr<GrGLSLXferProcessor> xferProcessor,
-      std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fps, std::unique_ptr<Attribute[]>,
-      int vertexAttributeCnt, int instanceAttributeCnt, int vertexStride, int instanceStride);
+      std::unique_ptr<GrGeometryProcessor::ProgramImpl>,
+      std::unique_ptr<GrXferProcessor::ProgramImpl>,
+      std::vector<std::unique_ptr<GrFragmentProcessor::ProgramImpl>> fpImpls,
+      std::unique_ptr<Attribute[]>, int vertexAttributeCnt, int instanceAttributeCnt,
+      int vertexStride, int instanceStride);
 
   // Helper for setData() that sets the view matrix and loads the render target height uniform
-  void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin, const GrPrimitiveProcessor&);
+  void setRenderTargetState(const GrRenderTarget*, GrSurfaceOrigin, const GrGeometryProcessor&);
 
   // these reflect the current values of uniforms (GL uniform values travel with program)
   RenderTargetState fRenderTargetState;
@@ -152,9 +135,9 @@ class GrGLProgram : public SkRefCnt {
   GrGLuint fProgramID;
 
   // the installed effects
-  std::unique_ptr<GrGLSLPrimitiveProcessor> fPrimitiveProcessor;
-  std::unique_ptr<GrGLSLXferProcessor> fXferProcessor;
-  std::unique_ptr<std::unique_ptr<GrGLSLFragmentProcessor>[]> fFragmentProcessors;
+  std::unique_ptr<GrGeometryProcessor::ProgramImpl> fGPImpl;
+  std::unique_ptr<GrXferProcessor::ProgramImpl> fXPImpl;
+  std::vector<std::unique_ptr<GrFragmentProcessor::ProgramImpl>> fFPImpls;
 
   std::unique_ptr<Attribute[]> fAttributes;
   int fVertexAttributeCnt;

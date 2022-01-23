@@ -91,25 +91,25 @@ class ColorMatrixGM : public skiagm::GM {
     for (size_t i = 0; i < SK_ARRAY_COUNT(bmps); ++i) {
       matrix.setIdentity();
       set_color_matrix(&paint, matrix);
-      canvas->drawImage(bmps[i], 0, 0, &paint);
+      canvas->drawImage(bmps[i], 0, 0, SkSamplingOptions(), &paint);
 
       ///////////////////////////////////////////////
 
       matrix.setSaturation(0.0f);
       set_color_matrix(&paint, matrix);
-      canvas->drawImage(bmps[i], 80, 0, &paint);
+      canvas->drawImage(bmps[i], 80, 0, SkSamplingOptions(), &paint);
 
       matrix.setSaturation(0.5f);
       set_color_matrix(&paint, matrix);
-      canvas->drawImage(bmps[i], 160, 0, &paint);
+      canvas->drawImage(bmps[i], 160, 0, SkSamplingOptions(), &paint);
 
       matrix.setSaturation(1.0f);
       set_color_matrix(&paint, matrix);
-      canvas->drawImage(bmps[i], 240, 0, &paint);
+      canvas->drawImage(bmps[i], 240, 0, SkSamplingOptions(), &paint);
 
       matrix.setSaturation(2.0f);
       set_color_matrix(&paint, matrix);
-      canvas->drawImage(bmps[i], 320, 0, &paint);
+      canvas->drawImage(bmps[i], 320, 0, SkSamplingOptions(), &paint);
 
       ///////////////////////////////////////////////
 
@@ -119,7 +119,7 @@ class ColorMatrixGM : public skiagm::GM {
       };
 
       set_array(&paint, data);
-      canvas->drawImage(bmps[i], 400, 0, &paint);
+      canvas->drawImage(bmps[i], 400, 0, SkSamplingOptions(), &paint);
       ///////////////////////////////////////////////
       canvas->translate(0, 80);
     }

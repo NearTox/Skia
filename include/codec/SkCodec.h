@@ -28,6 +28,7 @@ class SkAndroidCodec;
 class SkColorSpace;
 class SkData;
 class SkFrameHolder;
+class SkImage;
 class SkPngChunkReader;
 class SkSampler;
 
@@ -52,7 +53,7 @@ class SK_API SkCodec : SkNoncopyable {
    *  this many bytes, or by implementing rewind() to be able to rewind()
    *  after reading this many bytes.
    */
-  static constexpr size_t MinBufferedBytesNeeded() { return 32; }
+  static constexpr size_t MinBufferedBytesNeeded() noexcept { return 32; }
 
   /**
    *  Error codes for various SkCodec methods.
@@ -374,6 +375,13 @@ class SK_API SkCodec : SkNoncopyable {
   Result getPixels(const SkPixmap& pm, const Options* opts = nullptr) {
     return this->getPixels(pm.info(), pm.writable_addr(), pm.rowBytes(), opts);
   }
+
+  /**
+   *  Return an image containing the pixels.
+   */
+  std::tuple<sk_sp<SkImage>, SkCodec::Result> getImage(
+      const SkImageInfo& info, const Options* opts = nullptr);
+  std::tuple<sk_sp<SkImage>, SkCodec::Result> getImage();
 
   /**
    *  If decoding to YUV is supported, this returns true. Otherwise, this

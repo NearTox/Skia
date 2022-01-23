@@ -11,6 +11,8 @@
 #include "include/gpu/vk/GrVkTypes.h"
 #include "src/gpu/vk/GrVkManagedResource.h"
 
+#include <cinttypes>
+
 class GrVkGpu;
 
 /**
@@ -30,7 +32,9 @@ class GrVkDescriptorPool : public GrVkManagedResource {
 
 #ifdef SK_TRACE_MANAGED_RESOURCES
   void dumpInfo() const override {
-    SkDebugf("GrVkDescriptorPool: %d, type %d (%d refs)\n", fDescPool, fType, this->getRefCnt());
+    SkDebugf(
+        "GrVkDescriptorPool: %" PRIdPTR ", type %d (%d refs)\n", (intptr_t)fDescPool, fType,
+        this->getRefCnt());
   }
 #endif
 

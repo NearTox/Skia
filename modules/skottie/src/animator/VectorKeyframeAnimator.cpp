@@ -137,11 +137,11 @@ class VectorKeyframeAnimator final : public KeyframeAnimator {
 
 }  // namespace
 
-VectorKeyframeAnimatorBuilder::VectorKeyframeAnimatorBuilder(
+VectorAnimatorBuilder::VectorAnimatorBuilder(
     std::vector<float>* target, VectorLenParser parse_len, VectorDataParser parse_data)
     : fParseLen(parse_len), fParseData(parse_data), fTarget(target) {}
 
-sk_sp<KeyframeAnimator> VectorKeyframeAnimatorBuilder::make(
+sk_sp<KeyframeAnimator> VectorAnimatorBuilder::makeFromKeyframes(
     const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs) {
   SkASSERT(jkfs.size() > 0);
 
@@ -174,8 +174,11 @@ sk_sp<KeyframeAnimator> VectorKeyframeAnimatorBuilder::make(
       std::move(fKFs), std::move(fCMs), std::move(fStorage), fVecLen, fTarget));
 }
 
-bool VectorKeyframeAnimatorBuilder::parseValue(
-    const AnimationBuilder&, const skjson::Value& jv) const {
+sk_sp<Animator> VectorAnimatorBuilder::makeFromExpression(ExpressionManager&, const char*) {
+  return nullptr;
+}
+
+bool VectorAnimatorBuilder::parseValue(const AnimationBuilder&, const skjson::Value& jv) const {
   size_t vec_len;
   if (!this->fParseLen(jv, &vec_len)) {
     return false;
@@ -185,7 +188,7 @@ bool VectorKeyframeAnimatorBuilder::parseValue(
   return fParseData(jv, vec_len, fTarget->data());
 }
 
-bool VectorKeyframeAnimatorBuilder::parseKFValue(
+bool VectorAnimatorBuilder::parseKFValue(
     const AnimationBuilder&, const skjson::ObjectValue&, const skjson::Value& jv,
     Keyframe::Value* kfv) {
   auto offset = fCurrentVec * fVecLen;
@@ -222,7 +225,7 @@ bool AnimatablePropertyContainer::bind<VectorValue>(
 
   if (!ParseDefault<bool>((*jprop)["s"], false)) {
     // Regular (static or keyframed) vector value.
-    VectorKeyframeAnimatorBuilder builder(
+    VectorAnimatorBuilder builder(
         v,
         // Len parser.
         [](const skjson::Value& jv, size_t* len) -> bool {

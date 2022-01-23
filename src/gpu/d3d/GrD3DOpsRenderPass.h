@@ -31,6 +31,8 @@ class GrD3DOpsRenderPass : public GrOpsRenderPass {
       const GrOpsRenderPass::LoadAndStoreInfo&, const GrOpsRenderPass::StencilLoadAndStoreInfo&,
       const SkTArray<GrSurfaceProxy*, true>& sampledProxies);
 
+  void submit();
+
  private:
   GrGpu* gpu() override;
 
@@ -39,7 +41,7 @@ class GrD3DOpsRenderPass : public GrOpsRenderPass {
   bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) override;
   void onSetScissorRect(const SkIRect&) override;
   bool onBindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrGeometryProcessor&, const GrSurfaceProxy* const geomProcTextures[],
       const GrPipeline&) override;
   void onBindBuffers(
       sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
@@ -65,7 +67,7 @@ class GrD3DOpsRenderPass : public GrOpsRenderPass {
 
   GrD3DGpu* fGpu;
 
-  sk_sp<GrD3DPipelineState> fCurrentPipelineState;
+  GrD3DPipelineState* fCurrentPipelineState = nullptr;
 
   SkIRect fBounds;
   SkIRect fCurrentPipelineBounds;

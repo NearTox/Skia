@@ -71,6 +71,7 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void onDrawDrawable(SkDrawable*, const SkMatrix*) override;
   void onDrawTextBlob(
       const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) override;
+  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
   void onDrawPatch(
       const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4], SkBlendMode,
       const SkPaint& paint) override;
@@ -84,20 +85,7 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void onDrawArc(const SkRect&, SkScalar, SkScalar, bool, const SkPaint&) override;
   void onDrawRRect(const SkRRect&, const SkPaint&) override;
   void onDrawPath(const SkPath&, const SkPaint&) override;
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-  void onDrawImage(const SkImage*, SkScalar left, SkScalar top, const SkPaint*) override;
-  void onDrawImageRect(
-      const SkImage*, const SkRect* src, const SkRect& dst, const SkPaint*,
-      SrcRectConstraint) override;
-  void onDrawImageLattice(
-      const SkImage*, const Lattice& lattice, const SkRect& dst, const SkPaint*) override;
-  void onDrawAtlas(
-      const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, SkBlendMode,
-      const SkRect*, const SkPaint*) override;
-  void onDrawEdgeAAImageSet(
-      const ImageSetEntry[], int count, const SkPoint[], const SkMatrix[], const SkPaint*,
-      SrcRectConstraint) override;
-#endif
+
   void onDrawImage2(
       const SkImage*, SkScalar, SkScalar, const SkSamplingOptions&, const SkPaint*) override;
   void onDrawImageRect2(
@@ -117,6 +105,7 @@ class SkRecorder final : public SkCanvasVirtualEnforcer<SkNoDrawCanvas> {
   void onClipPath(const SkPath& path, SkClipOp, ClipEdgeStyle) override;
   void onClipShader(sk_sp<SkShader>, SkClipOp) override;
   void onClipRegion(const SkRegion& deviceRgn, SkClipOp) override;
+  void onResetClip() override;
 
   void onDrawPicture(const SkPicture*, const SkMatrix*, const SkPaint*) override;
 

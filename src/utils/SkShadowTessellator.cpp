@@ -26,7 +26,7 @@
 class SkBaseShadowTessellator {
  public:
   SkBaseShadowTessellator(const SkPoint3& zPlaneParams, const SkRect& bounds, bool transparent);
-  virtual ~SkBaseShadowTessellator() {}
+  virtual ~SkBaseShadowTessellator() = default;
 
   sk_sp<SkVertices> releaseVertices() {
     if (!fSucceeded) {

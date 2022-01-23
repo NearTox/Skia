@@ -10,8 +10,9 @@
 #include "include/core/SkRect.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrCpuBuffer.h"
+#include "src/gpu/GrDrawIndirectCommand.h"
+#include "src/gpu/GrGeometryProcessor.h"
 #include "src/gpu/GrGpu.h"
-#include "src/gpu/GrPrimitiveProcessor.h"
 #include "src/gpu/GrProgramInfo.h"
 #include "src/gpu/GrRenderTarget.h"
 #include "src/gpu/GrScissorState.h"
@@ -63,7 +64,7 @@ void GrOpsRenderPass::bindPipeline(const GrProgramInfo& programInfo, const SkRec
   // Both the 'programInfo' and this renderPass have an origin. Since they come from the same
   // place (i.e., the target renderTargetProxy) they had best agree.
   SkASSERT(programInfo.origin() == fOrigin);
-  if (programInfo.primProc().hasInstanceAttributes()) {
+  if (programInfo.geomProc().hasInstanceAttributes()) {
     SkASSERT(this->gpu()->caps()->drawInstancedSupport());
   }
   if (programInfo.pipeline().usesConservativeRaster()) {
@@ -90,7 +91,7 @@ void GrOpsRenderPass::bindPipeline(const GrProgramInfo& programInfo, const SkRec
 
   this->resetActiveBuffers();
 
-  if (programInfo.primProc().numVertexAttributes() > this->gpu()->caps()->maxVertexAttributes()) {
+  if (programInfo.geomProc().numVertexAttributes() > this->gpu()->caps()->maxVertexAttributes()) {
     fDrawPipelineStatus = DrawPipelineStatus::kFailedToBind;
     return;
   }
@@ -101,17 +102,10 @@ void GrOpsRenderPass::bindPipeline(const GrProgramInfo& programInfo, const SkRec
   }
 
 #ifdef SK_DEBUG
-  GrProcessor::CustomFeatures processorFeatures = programInfo.requestedFeatures();
-  if (GrProcessor::CustomFeatures::kSampleLocations & processorFeatures) {
-    // Verify we always have the same sample pattern key, regardless of graphics state.
-    SkASSERT(
-        this->gpu()->findOrAssignSamplePatternKey(fRenderTarget) ==
-        fRenderTarget->getSamplePatternKey());
-  }
   fScissorStatus = (programInfo.pipeline().isScissorTestEnabled())
                        ? DynamicStateStatus::kUninitialized
                        : DynamicStateStatus::kDisabled;
-  bool hasTextures = (programInfo.primProc().numTextureSamplers() > 0);
+  bool hasTextures = (programInfo.geomProc().numTextureSamplers() > 0);
   if (!hasTextures) {
     programInfo.pipeline().visitProxies(
         [&hasTextures](GrSurfaceProxy*, GrMipmapped) { hasTextures = true; });
@@ -119,10 +113,10 @@ void GrOpsRenderPass::bindPipeline(const GrProgramInfo& programInfo, const SkRec
   fTextureBindingStatus =
       (hasTextures) ? DynamicStateStatus::kUninitialized : DynamicStateStatus::kDisabled;
   fHasIndexBuffer = false;
-  fInstanceBufferStatus = (programInfo.primProc().hasInstanceAttributes())
+  fInstanceBufferStatus = (programInfo.geomProc().hasInstanceAttributes())
                               ? DynamicStateStatus::kUninitialized
                               : DynamicStateStatus::kDisabled;
-  fVertexBufferStatus = (programInfo.primProc().hasVertexAttributes())
+  fVertexBufferStatus = (programInfo.geomProc().hasVertexAttributes())
                             ? DynamicStateStatus::kUninitialized
                             : DynamicStateStatus::kDisabled;
 #endif
@@ -142,13 +136,13 @@ void GrOpsRenderPass::setScissorRect(const SkIRect& scissor) {
 }
 
 void GrOpsRenderPass::bindTextures(
-    const GrPrimitiveProcessor& primProc, const GrSurfaceProxy* const primProcTextures[],
+    const GrGeometryProcessor& geomProc, const GrSurfaceProxy* const geomProcTextures[],
     const GrPipeline& pipeline) {
 #ifdef SK_DEBUG
-  SkASSERT((primProc.numTextureSamplers() > 0) == SkToBool(primProcTextures));
-  for (int i = 0; i < primProc.numTextureSamplers(); ++i) {
-    const auto& sampler = primProc.textureSampler(i);
-    const GrSurfaceProxy* proxy = primProcTextures[i];
+  SkASSERT((geomProc.numTextureSamplers() > 0) == SkToBool(geomProcTextures));
+  for (int i = 0; i < geomProc.numTextureSamplers(); ++i) {
+    const auto& sampler = geomProc.textureSampler(i);
+    const GrSurfaceProxy* proxy = geomProcTextures[i];
     SkASSERT(proxy);
     SkASSERT(proxy->backendFormat() == sampler.backendFormat());
     SkASSERT(proxy->backendFormat().textureType() == sampler.backendFormat().textureType());
@@ -172,7 +166,7 @@ void GrOpsRenderPass::bindTextures(
   // Don't assert on fTextureBindingStatus. onBindTextures() just turns into a no-op when there
   // aren't any textures, and it's hard to tell from the GrPipeline whether there are any. For
   // many clients it is easier to just always call this method.
-  if (!this->onBindTextures(primProc, primProcTextures, pipeline)) {
+  if (!this->onBindTextures(geomProc, geomProcTextures, pipeline)) {
     fDrawPipelineStatus = DrawPipelineStatus::kFailedToBind;
     return;
   }
@@ -287,13 +281,12 @@ void GrOpsRenderPass::drawIndirect(
   if (!this->gpu()->caps()->nativeDrawIndirectSupport()) {
     // Polyfill indirect draws with looping instanced calls.
     SkASSERT(drawIndirectBuffer->isCpuBuffer());
-    auto cpuIndirectBuffer = static_cast<const GrCpuBuffer*>(drawIndirectBuffer);
-    auto cmd =
+    auto* cpuIndirectBuffer = static_cast<const GrCpuBuffer*>(drawIndirectBuffer);
+    auto* cmds =
         reinterpret_cast<const GrDrawIndirectCommand*>(cpuIndirectBuffer->data() + bufferOffset);
-    auto end = cmd + drawCount;
-    for (; cmd != end; ++cmd) {
-      this->onDrawInstanced(
-          cmd->fInstanceCount, cmd->fBaseInstance, cmd->fVertexCount, cmd->fBaseVertex);
+    for (int i = 0; i < drawCount; ++i) {
+      auto [vertexCount, instanceCount, baseVertex, baseInstance] = cmds[i];
+      this->onDrawInstanced(instanceCount, baseInstance, vertexCount, baseVertex);
     }
     return;
   }
@@ -316,14 +309,12 @@ void GrOpsRenderPass::drawIndexedIndirect(
       this->gpu()->caps()->nativeDrawIndexedIndirectIsBroken()) {
     // Polyfill indexedIndirect draws with looping indexedInstanced calls.
     SkASSERT(drawIndirectBuffer->isCpuBuffer());
-    auto cpuIndirectBuffer = static_cast<const GrCpuBuffer*>(drawIndirectBuffer);
-    auto cmd = reinterpret_cast<const GrDrawIndexedIndirectCommand*>(
+    auto* cpuIndirectBuffer = static_cast<const GrCpuBuffer*>(drawIndirectBuffer);
+    auto* cmds = reinterpret_cast<const GrDrawIndexedIndirectCommand*>(
         cpuIndirectBuffer->data() + bufferOffset);
-    auto end = cmd + drawCount;
-    for (; cmd != end; ++cmd) {
-      this->onDrawIndexedInstanced(
-          cmd->fIndexCount, cmd->fBaseIndex, cmd->fInstanceCount, cmd->fBaseInstance,
-          cmd->fBaseVertex);
+    for (int i = 0; i < drawCount; ++i) {
+      auto [indexCount, instanceCount, baseIndex, baseVertex, baseInstance] = cmds[i];
+      this->onDrawIndexedInstanced(indexCount, baseIndex, instanceCount, baseInstance, baseVertex);
     }
     return;
   }

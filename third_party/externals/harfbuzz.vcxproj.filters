@@ -42,7 +42,6 @@
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-myanmar.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-thai.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-use.cc" />
-    <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-use-table.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-fallback.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-normalize.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-tag.cc" />
@@ -51,5 +50,6 @@
     <ClCompile Include="harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-metrics.cc" />
     <ClCompile Include="harfbuzz\src\hb-number.cc" />
+    <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-syllabic.cc" />
   </ItemGroup>
 </Project>

@@ -9,7 +9,6 @@
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkShader.h"
@@ -58,7 +57,8 @@ class TiledScaledBitmapGM : public GM {
     mat.postTranslate(-72, -72);
 
     paint.setShader(fBitmap.makeShader(
-        SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions({1.0f / 3, 1.0f / 3}), mat));
+        SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(SkCubicResampler::Mitchell()),
+        mat));
     canvas->drawRect({8, 8, 1008, 608}, paint);
   }
 

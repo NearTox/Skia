@@ -48,7 +48,7 @@ class EqualsMatrixBench : public MatrixBench {
     m2.reset();
 
     // xor into a volatile prevents these comparisons from being optimized away.
-    volatile bool junk = false;
+    SK_MAYBE_UNUSED volatile bool junk = false;
     junk ^= (m0 == m1);
     junk ^= (m1 == m2);
     junk ^= (m2 == m0);
@@ -118,7 +118,7 @@ class GetTypeMatrixBench : public MatrixBench {
         fArray[0], fArray[1], fArray[2], fArray[3], fArray[4], fArray[5], fArray[6], fArray[7],
         fArray[8]);
     // xoring into a volatile prevents the compiler from optimizing these away
-    volatile int junk = 0;
+    SK_MAYBE_UNUSED volatile int junk = 0;
     junk ^= (fMatrix.getType());
     fMatrix.dirtyMatrixTypeCache();
     junk ^= (fMatrix.getType());

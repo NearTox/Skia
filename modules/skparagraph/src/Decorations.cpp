@@ -169,7 +169,7 @@ void Decorations::calculatePosition(TextDecoration decoration, SkScalar ascent) 
     case TextDecoration::kOverline: fPosition = 0; break;
     case TextDecoration::kLineThrough: {
       fPosition =
-          (fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kStrikeoutThicknessIsValid_Flag)
+          (fFontMetrics.fFlags & SkFontMetrics::FontMetricsFlags::kStrikeoutPositionIsValid_Flag)
               ? fFontMetrics.fStrikeoutPosition
               : fFontMetrics.fXHeight / -2;
       fPosition -= ascent;

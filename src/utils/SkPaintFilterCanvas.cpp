@@ -116,50 +116,6 @@ void SkPaintFilterCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
   }
 }
 
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-void SkPaintFilterCanvas::onDrawImage(
-    const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawImage(image, left, top, &apf.paint());
-  }
-}
-
-void SkPaintFilterCanvas::onDrawImageRect(
-    const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-    SrcRectConstraint constraint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawImageRect(image, src, dst, &apf.paint(), constraint);
-  }
-}
-
-void SkPaintFilterCanvas::onDrawImageLattice(
-    const SkImage* image, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawImageLattice(image, lattice, dst, &apf.paint());
-  }
-}
-void SkPaintFilterCanvas::onDrawAtlas(
-    const SkImage* image, const SkRSXform xform[], const SkRect tex[], const SkColor colors[],
-    int count, SkBlendMode bmode, const SkRect* cull, const SkPaint* paint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawAtlas(image, xform, tex, colors, count, bmode, cull, &apf.paint());
-  }
-}
-void SkPaintFilterCanvas::onDrawEdgeAAImageSet(
-    const ImageSetEntry set[], int count, const SkPoint dstClips[],
-    const SkMatrix preViewMatrices[], const SkPaint* paint, SrcRectConstraint constraint) {
-  AutoPaintFilter apf(this, paint);
-  if (apf.shouldDraw()) {
-    this->SkNWayCanvas::onDrawEdgeAAImageSet(
-        set, count, dstClips, preViewMatrices, &apf.paint(), constraint);
-  }
-}
-#endif
-
 void SkPaintFilterCanvas::onDrawImage2(
     const SkImage* image, SkScalar left, SkScalar top, const SkSamplingOptions& sampling,
     const SkPaint* paint) {
@@ -216,7 +172,7 @@ void SkPaintFilterCanvas::onDrawPicture(
     if (originalPaint == nullptr) {
       if (newPaint->getAlphaf() == 1.0f && newPaint->getColorFilter() == nullptr &&
           newPaint->getImageFilter() == nullptr &&
-          newPaint->getBlendMode() == SkBlendMode::kSrcOver) {
+          newPaint->asBlendMode() == SkBlendMode::kSrcOver) {
         // restore the original nullptr
         newPaint = nullptr;
       }
@@ -232,6 +188,13 @@ void SkPaintFilterCanvas::onDrawDrawable(SkDrawable* drawable, const SkMatrix* m
   AutoPaintFilter apf(this, nullptr);
   if (apf.shouldDraw()) {
     this->SkNWayCanvas::onDrawDrawable(drawable, matrix);
+  }
+}
+
+void SkPaintFilterCanvas::onDrawGlyphRunList(const SkGlyphRunList& list, const SkPaint& paint) {
+  AutoPaintFilter apf(this, paint);
+  if (apf.shouldDraw()) {
+    this->SkNWayCanvas::onDrawGlyphRunList(list, apf.paint());
   }
 }
 
@@ -271,7 +234,8 @@ void SkPaintFilterCanvas::onDrawEdgeAAQuad(
   AutoPaintFilter apf(this, paint);
   if (apf.shouldDraw()) {
     this->SkNWayCanvas::onDrawEdgeAAQuad(
-        rect, clip, aa, apf.paint().getColor4f(), apf.paint().getBlendMode());
+        rect, clip, aa, apf.paint().getColor4f(),
+        apf.paint().getBlendMode_or(SkBlendMode::kSrcOver));
   }
 }
 
@@ -288,16 +252,18 @@ void SkPaintFilterCanvas::onDrawEdgeAAImageSet2(
 
 sk_sp<SkSurface> SkPaintFilterCanvas::onNewSurface(
     const SkImageInfo& info, const SkSurfaceProps& props) {
-  return proxy()->makeSurface(info, &props);
+  return this->proxy()->makeSurface(info, &props);
 }
 
-bool SkPaintFilterCanvas::onPeekPixels(SkPixmap* pixmap) { return proxy()->peekPixels(pixmap); }
+bool SkPaintFilterCanvas::onPeekPixels(SkPixmap* pixmap) {
+  return this->proxy()->peekPixels(pixmap);
+}
 
 bool SkPaintFilterCanvas::onAccessTopLayerPixels(SkPixmap* pixmap) {
   SkImageInfo info;
   size_t rowBytes;
 
-  void* addr = proxy()->accessTopLayerPixels(&info, &rowBytes);
+  void* addr = this->proxy()->accessTopLayerPixels(&info, &rowBytes);
   if (!addr) {
     return false;
   }
@@ -306,12 +272,8 @@ bool SkPaintFilterCanvas::onAccessTopLayerPixels(SkPixmap* pixmap) {
   return true;
 }
 
-SkImageInfo SkPaintFilterCanvas::onImageInfo() const { return proxy()->imageInfo(); }
+SkImageInfo SkPaintFilterCanvas::onImageInfo() const { return this->proxy()->imageInfo(); }
 
 bool SkPaintFilterCanvas::onGetProps(SkSurfaceProps* props) const {
-  return proxy()->getProps(props);
-}
-
-GrSurfaceDrawContext* SkPaintFilterCanvas::topDeviceSurfaceDrawContext() {
-  return SkCanvasPriv::TopDeviceSurfaceDrawContext(this->proxy());
+  return this->proxy()->getProps(props);
 }

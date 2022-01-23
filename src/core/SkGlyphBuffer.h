@@ -58,9 +58,9 @@ class SkSourceGlyphBuffer {
     return fSource;
   }
 
-  SkZip<const SkGlyphID, const SkPoint> source() const { return fSource; }
+  SkZip<const SkGlyphID, const SkPoint> source() const noexcept { return fSource; }
 
-  int rejectedMaxDimension() const { return fSourceMaxDimension; }
+  int rejectedMaxDimension() const noexcept { return fSourceMaxDimension; }
 
  private:
   SkSourceGlyphBuffer(const SkZip<const SkGlyphID, const SkPoint>& source) { fSource = source; }
@@ -80,39 +80,39 @@ class SkSourceGlyphBuffer {
 // memory.
 class SkGlyphVariant {
  public:
-  SkGlyphVariant() : fV{nullptr} {}
-  SkGlyphVariant& operator=(SkPackedGlyphID packedID) {
+  constexpr SkGlyphVariant() noexcept : fV{nullptr} {}
+  SkGlyphVariant& operator=(SkPackedGlyphID packedID) noexcept {
     fV.packedID = packedID;
     SkDEBUGCODE(fTag = kPackedID);
     return *this;
   }
-  SkGlyphVariant& operator=(SkGlyph* glyph) {
+  SkGlyphVariant& operator=(SkGlyph* glyph) noexcept {
     fV.glyph = glyph;
     SkDEBUGCODE(fTag = kGlyph);
     return *this;
   }
-  SkGlyphVariant& operator=(const SkPath* path) {
+  SkGlyphVariant& operator=(const SkPath* path) noexcept {
     fV.path = path;
     SkDEBUGCODE(fTag = kPath);
     return *this;
   }
 
-  SkGlyph* glyph() const {
+  SkGlyph* glyph() const noexcept {
     SkASSERT(fTag == kGlyph);
     return fV.glyph;
   }
-  const SkPath* path() const {
+  const SkPath* path() const noexcept {
     SkASSERT(fTag == kPath);
     return fV.path;
   }
-  SkPackedGlyphID packedID() const {
+  SkPackedGlyphID packedID() const noexcept {
     SkASSERT(fTag == kPackedID);
     return fV.packedID;
   }
 
-  operator SkPackedGlyphID() const { return this->packedID(); }
-  operator SkGlyph*() const { return this->glyph(); }
-  operator const SkPath*() const { return this->path(); }
+  operator SkPackedGlyphID() const noexcept { return this->packedID(); }
+  operator SkGlyph*() const noexcept { return this->glyph(); }
+  operator const SkPath*() const noexcept { return this->path(); }
 
  private:
   union {
@@ -157,14 +157,16 @@ class SkDrawableGlyphBuffer {
   // In theory, newMappedOrigin - initialMappedOrigin should be integer, but the vagaries of
   // floating point don't guarantee that, so force it to integer.
   void startGPUDevice(
-      const SkZip<const SkGlyphID, const SkPoint>& source, SkPoint origin,
-      const SkMatrix& viewMatrix, const SkGlyphPositionRoundingSpec& roundingSpec);
+      const SkZip<const SkGlyphID, const SkPoint>& source, const SkMatrix& drawMatrix,
+      const SkGlyphPositionRoundingSpec& roundingSpec);
+
+  SkString dumpInput() const;
 
   // The input of SkPackedGlyphIDs
   SkZip<SkGlyphVariant, SkPoint> input() {
     SkASSERT(fPhase == kInput);
     SkDEBUGCODE(fPhase = kProcess);
-    return SkZip<SkGlyphVariant, SkPoint>{fInputSize, fMultiBuffer, fPositions};
+    return SkZip<SkGlyphVariant, SkPoint>{fInputSize, fMultiBuffer.get(), fPositions};
   }
 
   // Store the glyph in the next drawable slot, using the position information located at index
@@ -191,7 +193,7 @@ class SkDrawableGlyphBuffer {
   SkZip<SkGlyphVariant, SkPoint> drawable() {
     SkASSERT(fPhase == kProcess);
     SkDEBUGCODE(fPhase = kDraw);
-    return SkZip<SkGlyphVariant, SkPoint>{fDrawableSize, fMultiBuffer, fPositions};
+    return SkZip<SkGlyphVariant, SkPoint>{fDrawableSize, fMultiBuffer.get(), fPositions};
   }
 
   bool drawableIsEmpty() const {
@@ -212,7 +214,7 @@ class SkDrawableGlyphBuffer {
   size_t fMaxSize{0};
   size_t fInputSize{0};
   size_t fDrawableSize{0};
-  SkAutoTMalloc<SkGlyphVariant> fMultiBuffer;
+  SkAutoTArray<SkGlyphVariant> fMultiBuffer;
   SkAutoTMalloc<SkPoint> fPositions;
 
 #ifdef SK_DEBUG

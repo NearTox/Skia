@@ -35,10 +35,10 @@ class GrYUVATextureProxies {
       GrColorType[SkYUVAInfo::kMaxPlanes]);
 
   GrYUVATextureProxies(const GrYUVATextureProxies&) = default;
-  GrYUVATextureProxies(GrYUVATextureProxies&&) = default;
+  GrYUVATextureProxies(GrYUVATextureProxies&&) noexcept = default;
 
   GrYUVATextureProxies& operator=(const GrYUVATextureProxies&) = default;
-  GrYUVATextureProxies& operator=(GrYUVATextureProxies&&) = default;
+  GrYUVATextureProxies& operator=(GrYUVATextureProxies&&) noexcept = default;
 
   const SkYUVAInfo& yuvaInfo() const { return fYUVAInfo; }
 

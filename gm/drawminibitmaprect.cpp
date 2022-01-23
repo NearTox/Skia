@@ -114,7 +114,8 @@ class DrawMiniBitmapRectGM : public skiagm::GM {
             break;
         }
         canvas->drawImageRect(
-            fImage.get(), srcRect, dstRect, &paint, SkCanvas::kFast_SrcRectConstraint);
+            fImage.get(), SkRect::Make(srcRect), dstRect, SkSamplingOptions(), &paint,
+            SkCanvas::kFast_SrcRectConstraint);
         canvas->restore();
 
         canvas->translate(dstRect.width() + SK_Scalar1 * kPadX, 0);

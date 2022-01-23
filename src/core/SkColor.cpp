@@ -10,27 +10,27 @@
 #include "include/private/SkFixed.h"
 #include "include/private/SkTPin.h"
 
-SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) {
+SkPMColor SkPreMultiplyARGB(U8CPU a, U8CPU r, U8CPU g, U8CPU b) noexcept {
   return SkPremultiplyARGBInline(a, r, g, b);
 }
 
-SkPMColor SkPreMultiplyColor(SkColor c) {
+SkPMColor SkPreMultiplyColor(SkColor c) noexcept {
   return SkPremultiplyARGBInline(SkColorGetA(c), SkColorGetR(c), SkColorGetG(c), SkColorGetB(c));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline SkScalar ByteToScalar(U8CPU x) {
+static inline SkScalar ByteToScalar(U8CPU x) noexcept {
   SkASSERT(x <= 255);
   return SkIntToScalar(x) / 255;
 }
 
-static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) {
+static inline SkScalar ByteDivToScalar(int numer, U8CPU denom) noexcept {
   // cast to keep the answer signed
   return SkIntToScalar(numer) / (int)denom;
 }
 
-void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) {
+void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
   SkASSERT(hsv);
 
   unsigned min = std::min(r, std::min(g, b));

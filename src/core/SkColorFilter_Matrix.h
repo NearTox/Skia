@@ -16,7 +16,7 @@ class SkColorFilter_Matrix : public SkColorFilterBase {
 
   explicit SkColorFilter_Matrix(const float array[20], Domain);
 
-  uint32_t onGetFlags() const override;
+  bool onIsAlphaUnchanged() const override { return fAlphaIsUnchanged; }
 
 #if SK_SUPPORT_GPU
   GrFPResult asFragmentProcessor(
@@ -34,11 +34,11 @@ class SkColorFilter_Matrix : public SkColorFilterBase {
 
   bool onAppendStages(const SkStageRec& rec, bool shaderIsOpaque) const override;
   skvm::Color onProgram(
-      skvm::Builder*, skvm::Color, SkColorSpace* dstCS, skvm::Uniforms* uniforms,
+      skvm::Builder*, skvm::Color, const SkColorInfo& dst, skvm::Uniforms* uniforms,
       SkArenaAlloc*) const override;
 
   float fMatrix[20];
-  uint16_t fFlags;
+  bool fAlphaIsUnchanged;
   Domain fDomain;
 
   using INHERITED = SkColorFilterBase;

@@ -89,11 +89,11 @@ static void draw_save_layer_draw_bitmap_restore_sequence(
   bitmap.eraseColor(shapeColor);
   {
     // Make the bitmap non-uniform color, so that it can not be optimized as uniform drawRect.
-    SkCanvas canvas(bitmap);
+    SkCanvas bitmapCanvas(bitmap);
     SkPaint p;
     p.setColor(SK_ColorWHITE);
     SkASSERT(shapeColor != SK_ColorWHITE);
-    canvas.drawRect(SkRect::MakeWH(SkIntToScalar(7), SkIntToScalar(7)), p);
+    bitmapCanvas.drawRect(SkRect::MakeWH(SkIntToScalar(7), SkIntToScalar(7)), p);
   }
 
   SkRect targetRect(SkRect::MakeWH(SkIntToScalar(kTestRectSize), SkIntToScalar(kTestRectSize)));
@@ -102,7 +102,7 @@ static void draw_save_layer_draw_bitmap_restore_sequence(
   canvas->saveLayer(&targetRect, &layerPaint);
   SkPaint drawPaint;
   installDetector(&drawPaint);
-  canvas->drawBitmap(bitmap, SkIntToScalar(0), SkIntToScalar(0), &drawPaint);
+  canvas->drawImage(bitmap.asImage(), 0, 0, SkSamplingOptions(), &drawPaint);
   canvas->restore();
 }
 
@@ -114,11 +114,11 @@ static void draw_svg_opacity_and_filter_layer_sequence(
   sk_sp<SkPicture> shape;
   {
     SkPictureRecorder recorder;
-    SkCanvas* canvas =
+    SkCanvas* recordCanvas =
         recorder.beginRecording(SkIntToScalar(kTestRectSize + 2), SkIntToScalar(kTestRectSize + 2));
     SkPaint shapePaint;
     shapePaint.setColor(shapeColor);
-    canvas->drawRect(targetRect, shapePaint);
+    recordCanvas->drawRect(targetRect, shapePaint);
     shape = recorder.finishRecordingAsPicture();
   }
 

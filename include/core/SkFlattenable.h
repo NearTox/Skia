@@ -27,22 +27,18 @@ class SK_API SkFlattenable : public SkRefCnt {
  public:
   enum Type {
     kSkColorFilter_Type,
+    kSkBlender_Type,
     kSkDrawable_Type,
     kSkDrawLooper_Type,  // no longer used internally by Skia
     kSkImageFilter_Type,
     kSkMaskFilter_Type,
     kSkPathEffect_Type,
-    kSkPixelRef_Type,
-    kSkUnused_Type4,  // used to be SkRasterizer
-    kSkShaderBase_Type,
-    kSkUnused_Type,  // used to be SkUnitMapper
-    kSkUnused_Type2,
-    kSkUnused_Type3,  // use to be NormalSource,
+    kSkShader_Type,
   };
 
   typedef sk_sp<SkFlattenable> (*Factory)(SkReadBuffer&);
 
-  SkFlattenable() {}
+  constexpr SkFlattenable() noexcept = default;
 
   /** Implement this to return a factory function pointer that can be called
    to recreate your class given a buffer (previously written to by your
@@ -53,7 +49,7 @@ class SK_API SkFlattenable : public SkRefCnt {
   /**
    *  Returns the name of the object's class.
    */
-  virtual const char* getTypeName() const = 0;
+  virtual const char* getTypeName() const noexcept = 0;
 
   static Factory NameToFactory(const char name[]);
   static const char* FactoryToName(Factory);
@@ -111,7 +107,7 @@ class SK_API SkFlattenable : public SkRefCnt {
     static sk_sp<SkFlattenable> CreateProc(SkReadBuffer&);           \
     friend class SkFlattenable::PrivateInitializer;                  \
     Factory getFactory() const override { return type::CreateProc; } \
-    const char* getTypeName() const override { return #type; }
+    const char* getTypeName() const noexcept override { return #type; }
 #endif
 
 #endif

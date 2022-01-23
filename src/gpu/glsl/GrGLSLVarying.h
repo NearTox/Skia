@@ -9,11 +9,11 @@
 #define GrGLSLVarying_DEFINED
 
 #include "include/private/GrTypesPriv.h"
-#include "src/gpu/GrGeometryProcessor.h"
+#include "src/core/SkTBlockList.h"
 #include "src/gpu/GrShaderVar.h"
-#include "src/gpu/GrTBlockList.h"
 #include "src/gpu/glsl/GrGLSLProgramDataManager.h"
 
+class GrGeometryProcessor;
 class GrGLSLProgramBuilder;
 
 #ifdef SK_DEBUG
@@ -57,19 +57,25 @@ class GrGLSLVarying {
     SkASSERT(this->isInVertexShader());
     return fVsOut;
   }
-  const char* gsIn() const { return fGsIn; }
-  const char* gsOut() const { return fGsOut; }
   const char* fsIn() const {
     SkASSERT(this->isInFragmentShader());
     return fFsIn;
+  }
+
+  GrShaderVar vsOutVar() const {
+    SkASSERT(this->isInVertexShader());
+    return GrShaderVar(this->vsOut(), fType, GrShaderVar::TypeModifier::Out);
+  }
+
+  GrShaderVar fsInVar() const {
+    SkASSERT(this->isInFragmentShader());
+    return GrShaderVar(this->fsIn(), fType, GrShaderVar::TypeModifier::In);
   }
 
  private:
   GrSLType fType = kVoid_GrSLType;
   Scope fScope = Scope::kVertToFrag;
   const char* fVsOut = nullptr;
-  const char* fGsIn = nullptr;
-  const char* fGsOut = nullptr;
   const char* fFsIn = nullptr;
 
   friend class GrGLSLVaryingHandler;
@@ -83,16 +89,14 @@ class GrGLSLVaryingHandler {
       : fVaryings(kVaryingsPerBlock),
         fVertexInputs(kVaryingsPerBlock),
         fVertexOutputs(kVaryingsPerBlock),
-        fGeomInputs(kVaryingsPerBlock),
-        fGeomOutputs(kVaryingsPerBlock),
         fFragInputs(kVaryingsPerBlock),
         fFragOutputs(kVaryingsPerBlock),
         fProgramBuilder(program),
         fDefaultInterpolationModifier(nullptr) {}
 
-  virtual ~GrGLSLVaryingHandler() {}
+  virtual ~GrGLSLVaryingHandler() = default;
 
-  /*
+  /**
    * Notifies the varying handler that this shader will never emit geometry in perspective and
    * therefore does not require perspective-correct interpolation. When supported, this allows
    * varyings to use the "noperspective" keyword, which means the GPU can use cheaper math for
@@ -106,7 +110,7 @@ class GrGLSLVaryingHandler {
     kMustBeFlat  // Use "flat" even if it is known to be slow.
   };
 
-  /*
+  /**
    * addVarying allows fine grained control for setting up varyings between stages. Calling this
    * function will make sure all necessary decls are setup for the client. The client however is
    * responsible for setting up all shader code (e.g "vOut = vIn;") If you just need to take an
@@ -117,26 +121,22 @@ class GrGLSLVaryingHandler {
   void addVarying(
       const char* name, GrGLSLVarying* varying, Interpolation = Interpolation::kInterpolated);
 
-  /*
-   * The GP can use these calls to pass an attribute through all shaders directly to 'output' in
-   * the fragment shader.  Though these calls affect both the vertex shader and fragment shader,
-   * they expect 'output' to be defined in the fragment shader before the call is made. If there
-   * is a geometry shader, we will simply take the value of the varying from the first vertex and
-   * that will be set as the output varying for all emitted vertices.
+  /**
+   * The GP can use these calls to pass a vertex shader variable directly to 'output' in the
+   * fragment shader. Though this adds code to vertex and fragment stages, 'output' is expected to
+   * be defined in the fragment shader before the call is made.
    * TODO it might be nicer behavior to have a flag to declare output inside these calls
    */
   void addPassThroughAttribute(
-      const GrGeometryProcessor::Attribute&, const char* output,
-      Interpolation = Interpolation::kInterpolated);
+      const GrShaderVar& vsVar, const char* output, Interpolation = Interpolation::kInterpolated);
 
-  void emitAttributes(const GrGeometryProcessor& gp);
+  void emitAttributes(const GrGeometryProcessor&);
 
   // This should be called once all attributes and varyings have been added to the
   // GrGLSLVaryingHanlder and before getting/adding any of the declarations to the shaders.
   void finalize();
 
   void getVertexDecls(SkString* inputDecls, SkString* outputDecls) const;
-  void getGeomDecls(SkString* inputDecls, SkString* outputDecls) const;
   void getFragDecls(SkString* inputDecls, SkString* outputDecls) const;
 
  protected:
@@ -144,19 +144,15 @@ class GrGLSLVaryingHandler {
     GrSLType fType;
     bool fIsFlat;
     SkString fVsOut;
-    SkString fGsOut;
     GrShaderFlags fVisibility;
   };
 
-  typedef GrTBlockList<VaryingInfo> VaryingList;
-  typedef GrTBlockList<GrShaderVar> VarArray;
-  typedef GrGLSLProgramDataManager::VaryingHandle VaryingHandle;
+  typedef SkTBlockList<VaryingInfo> VaryingList;
+  typedef SkTBlockList<GrShaderVar> VarArray;
 
   VaryingList fVaryings;
   VarArray fVertexInputs;
   VarArray fVertexOutputs;
-  VarArray fGeomInputs;
-  VarArray fGeomOutputs;
   VarArray fFragInputs;
   VarArray fFragOutputs;
 

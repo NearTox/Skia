@@ -8,9 +8,10 @@
 #ifndef SKSL_ASTNODE
 #define SKSL_ASTNODE
 
+#include "include/private/SkSLModifiers.h"
+#include "include/private/SkSLString.h"
 #include "src/sksl/SkSLLexer.h"
-#include "src/sksl/SkSLString.h"
-#include "src/sksl/ir/SkSLModifiers.h"
+#include "src/sksl/SkSLOperators.h"
 
 #include <algorithm>
 #include <vector>
@@ -24,18 +25,18 @@ namespace SkSL {
 struct ASTNode {
   class ID {
    public:
-    static ID Invalid() { return ID(); }
+    static constexpr ID Invalid() noexcept { return ID(); }
 
-    bool operator==(const ID& other) { return fValue == other.fValue; }
+    constexpr bool operator==(const ID& other) noexcept { return fValue == other.fValue; }
 
-    bool operator!=(const ID& other) { return fValue != other.fValue; }
+    constexpr bool operator!=(const ID& other) noexcept { return fValue != other.fValue; }
 
-    operator bool() const { return fValue >= 0; }
+    constexpr operator bool() const noexcept { return fValue >= 0; }
 
    private:
-    ID() : fValue(-1) {}
+    constexpr ID() noexcept : fValue(-1) {}
 
-    ID(int value) : fValue(value) {}
+    constexpr ID(int value) noexcept : fValue(value) {}
 
     int fValue;
 
@@ -45,7 +46,7 @@ struct ASTNode {
   };
 
   enum class Kind {
-    // data: operator(Token), children: left, right
+    // data: operator, children: left, right
     kBinary,
     // children: statements
     kBlock,
@@ -58,13 +59,9 @@ struct ASTNode {
     kDiscard,
     // children: statement, test
     kDo,
-    // data: name(StringFragment), children: enumCases
-    kEnum,
-    // data: name(StringFragment), children: value?
-    kEnumCase,
-    // data: name(StringFragment)
+    // data: name(string_view)
     kExtension,
-    // data: field(StringFragment), children: base
+    // data: field(string_view), children: base
     kField,
     // children: declarations
     kFile,
@@ -74,7 +71,7 @@ struct ASTNode {
     kFor,
     // data: FunctionData, children: returnType, parameters, statement?
     kFunction,
-    // data: name(StringFragment)
+    // data: name(string_view)
     kIdentifier,
     // children: base, index?
     kIndex,
@@ -89,23 +86,19 @@ struct ASTNode {
     kNull,
     // data: ParameterData, children: type, arraySize1, arraySize2, ..., value?
     kParameter,
-    // data: operator(Token), children: operand
+    // data: operator, children: operand
     kPostfix,
-    // data: operator(Token), children: operand
+    // data: operator, children: operand
     kPrefix,
     // children: value
     kReturn,
-    // data: field(StringFragment), children: base
-    kScope,
-    // ...
-    kSection,
     // children: value, statement 1, statement 2...
     kSwitchCase,
     // children: value, case 1, case 2...
     kSwitch,
     // children: test, ifTrue, ifFalse
     kTernary,
-    // data: TypeData, children: sizes
+    // data: name(string_view), children: sizes
     kType,
     // data: VarData, children: arraySize1, arraySize2, ..., value?
     kVarDeclaration,
@@ -143,22 +136,22 @@ struct ASTNode {
       return result += count;
     }
 
-    bool operator==(const iterator& other) const { return fID == other.fID; }
+    bool operator==(const iterator& other) const noexcept { return fID == other.fID; }
 
-    bool operator!=(const iterator& other) const { return fID != other.fID; }
+    bool operator!=(const iterator& other) const noexcept { return fID != other.fID; }
 
-    ASTNode& operator*() {
+    ASTNode& operator*() noexcept {
       SkASSERT(fID);
       return (*fNodes)[fID.fValue];
     }
 
-    ASTNode* operator->() {
+    ASTNode* operator->() noexcept {
       SkASSERT(fID);
       return &(*fNodes)[fID.fValue];
     }
 
    private:
-    iterator(std::vector<ASTNode>* nodes, ID id) : fNodes(nodes), fID(id) {}
+    constexpr iterator(std::vector<ASTNode>* nodes, ID id) noexcept : fNodes(nodes), fID(id) {}
 
     std::vector<ASTNode>* fNodes;
 
@@ -167,44 +160,34 @@ struct ASTNode {
     friend struct ASTNode;
   };
 
-  struct TypeData {
-    TypeData() {}
-
-    TypeData(StringFragment name, bool isStructDeclaration)
-        : fName(name), fIsStructDeclaration(isStructDeclaration) {}
-
-    StringFragment fName;
-    bool fIsStructDeclaration;
-  };
-
   struct ParameterData {
     ParameterData() {}
 
-    ParameterData(Modifiers modifiers, StringFragment name, bool isArray)
+    ParameterData(Modifiers modifiers, skstd::string_view name, bool isArray)
         : fModifiers(modifiers), fName(name), fIsArray(isArray) {}
 
     Modifiers fModifiers;
-    StringFragment fName;
+    skstd::string_view fName;
     bool fIsArray;
   };
 
   struct VarData {
     VarData() {}
 
-    VarData(StringFragment name, bool isArray) : fName(name), fIsArray(isArray) {}
+    VarData(skstd::string_view name, bool isArray) : fName(name), fIsArray(isArray) {}
 
-    StringFragment fName;
+    skstd::string_view fName;
     bool fIsArray;
   };
 
   struct FunctionData {
     FunctionData() {}
 
-    FunctionData(Modifiers modifiers, StringFragment name, size_t parameterCount)
+    FunctionData(Modifiers modifiers, skstd::string_view name, size_t parameterCount)
         : fModifiers(modifiers), fName(name), fParameterCount(parameterCount) {}
 
     Modifiers fModifiers;
-    StringFragment fName;
+    skstd::string_view fName;
     size_t fParameterCount;
   };
 
@@ -212,8 +195,8 @@ struct ASTNode {
     InterfaceBlockData() {}
 
     InterfaceBlockData(
-        Modifiers modifiers, StringFragment typeName, size_t declarationCount,
-        StringFragment instanceName, bool isArray)
+        Modifiers modifiers, skstd::string_view typeName, size_t declarationCount,
+        skstd::string_view instanceName, bool isArray)
         : fModifiers(modifiers),
           fTypeName(typeName),
           fDeclarationCount(declarationCount),
@@ -221,77 +204,63 @@ struct ASTNode {
           fIsArray(isArray) {}
 
     Modifiers fModifiers;
-    StringFragment fTypeName;
+    skstd::string_view fTypeName;
     size_t fDeclarationCount;
-    StringFragment fInstanceName;
+    skstd::string_view fInstanceName;
     bool fIsArray;
   };
 
-  struct SectionData {
-    SectionData() {}
-
-    SectionData(StringFragment name, StringFragment argument, StringFragment text)
-        : fName(name), fArgument(argument), fText(text) {}
-
-    StringFragment fName;
-    StringFragment fArgument;
-    StringFragment fText;
-  };
-
   struct NodeData {
+    // We use fBytes as a union which can hold any type of AST node, and use placement-new to
+    // copy AST objects into fBytes. Note that none of the AST objects have interesting
+    // destructors, so we do not bother doing a placement-delete on any of them in ~NodeData.
     char fBytes[std::max(
-        {sizeof(Token), sizeof(StringFragment), sizeof(bool), sizeof(SKSL_INT), sizeof(SKSL_FLOAT),
-         sizeof(Modifiers), sizeof(TypeData), sizeof(FunctionData), sizeof(ParameterData),
-         sizeof(VarData), sizeof(InterfaceBlockData), sizeof(SectionData)})];
+        {sizeof(Operator), sizeof(skstd::string_view), sizeof(bool), sizeof(SKSL_INT),
+         sizeof(SKSL_FLOAT), sizeof(Modifiers), sizeof(FunctionData), sizeof(ParameterData),
+         sizeof(VarData), sizeof(InterfaceBlockData)})];
 
     enum class Kind {
-      kToken,
-      kStringFragment,
+      kOperator,
+      kStringView,
       kBool,
       kInt,
       kFloat,
       kModifiers,
-      kTypeData,
       kFunctionData,
       kParameterData,
       kVarData,
       kInterfaceBlockData,
-      kSectionData
     } fKind;
 
     NodeData() = default;
 
-    NodeData(Token data) : fKind(Kind::kToken) { memcpy(fBytes, &data, sizeof(data)); }
+    NodeData(Operator op) : fKind(Kind::kOperator) { new (fBytes) Operator(op); }
 
-    NodeData(StringFragment data) : fKind(Kind::kStringFragment) {
-      memcpy(fBytes, &data, sizeof(data));
+    NodeData(const skstd::string_view& data) : fKind(Kind::kStringView) {
+      new (fBytes) skstd::string_view(data);
     }
 
-    NodeData(bool data) : fKind(Kind::kBool) { memcpy(fBytes, &data, sizeof(data)); }
+    NodeData(bool data) : fKind(Kind::kBool) { new (fBytes) bool(data); }
 
-    NodeData(SKSL_INT data) : fKind(Kind::kInt) { memcpy(fBytes, &data, sizeof(data)); }
+    NodeData(SKSL_INT data) : fKind(Kind::kInt) { new (fBytes) SKSL_INT(data); }
 
-    NodeData(SKSL_FLOAT data) : fKind(Kind::kFloat) { memcpy(fBytes, &data, sizeof(data)); }
+    NodeData(SKSL_FLOAT data) : fKind(Kind::kFloat) { new (fBytes) SKSL_FLOAT(data); }
 
-    NodeData(Modifiers data) : fKind(Kind::kModifiers) { memcpy(fBytes, &data, sizeof(data)); }
+    NodeData(const Modifiers& data) : fKind(Kind::kModifiers) { new (fBytes) Modifiers(data); }
 
-    NodeData(TypeData data) : fKind(Kind::kTypeData) { memcpy(fBytes, &data, sizeof(data)); }
-
-    NodeData(FunctionData data) : fKind(Kind::kFunctionData) {
-      memcpy(fBytes, &data, sizeof(data));
+    NodeData(const FunctionData& data) : fKind(Kind::kFunctionData) {
+      new (fBytes) FunctionData(data);
     }
 
-    NodeData(VarData data) : fKind(Kind::kVarData) { memcpy(fBytes, &data, sizeof(data)); }
+    NodeData(const VarData& data) : fKind(Kind::kVarData) { new (fBytes) VarData(data); }
 
-    NodeData(ParameterData data) : fKind(Kind::kParameterData) {
-      memcpy(fBytes, &data, sizeof(data));
+    NodeData(const ParameterData& data) : fKind(Kind::kParameterData) {
+      new (fBytes) ParameterData(data);
     }
 
-    NodeData(InterfaceBlockData data) : fKind(Kind::kInterfaceBlockData) {
-      memcpy(fBytes, &data, sizeof(data));
+    NodeData(const InterfaceBlockData& data) : fKind(Kind::kInterfaceBlockData) {
+      new (fBytes) InterfaceBlockData(data);
     }
-
-    NodeData(SectionData data) : fKind(Kind::kSectionData) { memcpy(fBytes, &data, sizeof(data)); }
   };
 
   ASTNode() : fOffset(-1), fKind(Kind::kNull) {}
@@ -301,18 +270,16 @@ struct ASTNode {
     switch (kind) {
       case Kind::kBinary:
       case Kind::kPostfix:
-      case Kind::kPrefix: fData.fKind = NodeData::Kind::kToken; break;
+      case Kind::kPrefix: fData.fKind = NodeData::Kind::kOperator; break;
 
       case Kind::kBool:
       case Kind::kIf:
       case Kind::kSwitch: fData.fKind = NodeData::Kind::kBool; break;
 
-      case Kind::kEnum:
-      case Kind::kEnumCase:
       case Kind::kExtension:
       case Kind::kField:
       case Kind::kIdentifier:
-      case Kind::kScope: fData.fKind = NodeData::Kind::kStringFragment; break;
+      case Kind::kType: fData.fKind = NodeData::Kind::kStringView; break;
 
       case Kind::kFloat: fData.fKind = NodeData::Kind::kFloat; break;
 
@@ -328,20 +295,18 @@ struct ASTNode {
 
       case Kind::kVarDeclaration: fData.fKind = NodeData::Kind::kVarData; break;
 
-      case Kind::kType: fData.fKind = NodeData::Kind::kTypeData; break;
-
       default: break;
     }
   }
 
-  ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, Token t)
-      : fNodes(nodes), fData(t), fOffset(offset), fKind(kind) {}
+  ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, Operator op)
+      : fNodes(nodes), fData(op), fOffset(offset), fKind(kind) {}
 
-  ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, StringFragment s)
+  ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, skstd::string_view s)
       : fNodes(nodes), fData(s), fOffset(offset), fKind(kind) {}
 
   ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, const char* s)
-      : fNodes(nodes), fData(StringFragment(s)), fOffset(offset), fKind(kind) {}
+      : fNodes(nodes), fData(skstd::string_view(s)), fOffset(offset), fKind(kind) {}
 
   ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, bool b)
       : fNodes(nodes), fData(b), fOffset(offset), fKind(kind) {}
@@ -355,123 +320,68 @@ struct ASTNode {
   ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, Modifiers m)
       : fNodes(nodes), fData(m), fOffset(offset), fKind(kind) {}
 
-  ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, TypeData td)
-      : fNodes(nodes), fData(td), fOffset(offset), fKind(kind) {}
+  operator bool() const noexcept { return fKind != Kind::kNull; }
 
-  ASTNode(std::vector<ASTNode>* nodes, int offset, Kind kind, SectionData s)
-      : fNodes(nodes), fData(s), fOffset(offset), fKind(kind) {}
-
-  operator bool() const { return fKind != Kind::kNull; }
-
-  Token getToken() const {
-    SkASSERT(fData.fKind == NodeData::Kind::kToken);
-    Token result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+  Operator getOperator() const noexcept {
+    SkASSERT(fData.fKind == NodeData::Kind::kOperator);
+    return *reinterpret_cast<const Operator*>(fData.fBytes);
   }
 
-  bool getBool() const {
+  bool getBool() const noexcept {
     SkASSERT(fData.fKind == NodeData::Kind::kBool);
-    bool result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const bool*>(fData.fBytes);
   }
 
-  SKSL_INT getInt() const {
+  SKSL_INT getInt() const noexcept {
     SkASSERT(fData.fKind == NodeData::Kind::kInt);
-    SKSL_INT result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const SKSL_INT*>(fData.fBytes);
   }
 
   SKSL_FLOAT getFloat() const {
     SkASSERT(fData.fKind == NodeData::Kind::kFloat);
-    SKSL_FLOAT result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const SKSL_FLOAT*>(fData.fBytes);
   }
 
-  StringFragment getString() const {
-    SkASSERT(fData.fKind == NodeData::Kind::kStringFragment);
-    StringFragment result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+  const skstd::string_view& getStringView() const {
+    SkASSERT(fData.fKind == NodeData::Kind::kStringView);
+    return *reinterpret_cast<const skstd::string_view*>(fData.fBytes);
   }
 
-  Modifiers getModifiers() const {
+  const Modifiers& getModifiers() const {
     SkASSERT(fData.fKind == NodeData::Kind::kModifiers);
-    Modifiers result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const Modifiers*>(fData.fBytes);
   }
 
-  void setModifiers(const Modifiers& m) { memcpy(fData.fBytes, &m, sizeof(m)); }
+  void setModifiers(const Modifiers& m) { new (fData.fBytes) Modifiers(m); }
 
-  TypeData getTypeData() const {
-    SkASSERT(fData.fKind == NodeData::Kind::kTypeData);
-    TypeData result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
-  }
-
-  void setTypeData(const ASTNode::TypeData& td) {
-    SkASSERT(fData.fKind == NodeData::Kind::kTypeData);
-    memcpy(fData.fBytes, &td, sizeof(td));
-  }
-
-  ParameterData getParameterData() const {
+  const ParameterData& getParameterData() const {
     SkASSERT(fData.fKind == NodeData::Kind::kParameterData);
-    ParameterData result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const ParameterData*>(fData.fBytes);
   }
 
-  void setParameterData(const ASTNode::ParameterData& pd) {
-    SkASSERT(fData.fKind == NodeData::Kind::kParameterData);
-    memcpy(fData.fBytes, &pd, sizeof(pd));
-  }
+  void setParameterData(const ASTNode::ParameterData& pd) { new (fData.fBytes) ParameterData(pd); }
 
-  VarData getVarData() const {
+  const VarData& getVarData() const {
     SkASSERT(fData.fKind == NodeData::Kind::kVarData);
-    VarData result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const VarData*>(fData.fBytes);
   }
 
-  void setVarData(const ASTNode::VarData& vd) {
-    SkASSERT(fData.fKind == NodeData::Kind::kVarData);
-    memcpy(fData.fBytes, &vd, sizeof(vd));
-  }
+  void setVarData(const ASTNode::VarData& vd) { new (fData.fBytes) VarData(vd); }
 
-  FunctionData getFunctionData() const {
+  const FunctionData& getFunctionData() const {
     SkASSERT(fData.fKind == NodeData::Kind::kFunctionData);
-    FunctionData result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const FunctionData*>(fData.fBytes);
   }
 
-  void setFunctionData(const ASTNode::FunctionData& fd) {
-    SkASSERT(fData.fKind == NodeData::Kind::kFunctionData);
-    memcpy(fData.fBytes, &fd, sizeof(fd));
-  }
+  void setFunctionData(const ASTNode::FunctionData& fd) { new (fData.fBytes) FunctionData(fd); }
 
-  InterfaceBlockData getInterfaceBlockData() const {
+  const InterfaceBlockData& getInterfaceBlockData() const {
     SkASSERT(fData.fKind == NodeData::Kind::kInterfaceBlockData);
-    InterfaceBlockData result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    return *reinterpret_cast<const InterfaceBlockData*>(fData.fBytes);
   }
 
   void setInterfaceBlockData(const ASTNode::InterfaceBlockData& id) {
-    SkASSERT(fData.fKind == NodeData::Kind::kInterfaceBlockData);
-    memcpy(fData.fBytes, &id, sizeof(id));
-  }
-
-  SectionData getSectionData() const {
-    SkASSERT(fData.fKind == NodeData::Kind::kSectionData);
-    SectionData result;
-    memcpy(&result, fData.fBytes, sizeof(result));
-    return result;
+    new (fData.fBytes) InterfaceBlockData(id);
   }
 
   void addChild(ID id) {
@@ -489,10 +399,6 @@ struct ASTNode {
   iterator begin() const { return iterator(fNodes, fFirstChild); }
 
   iterator end() const { return iterator(fNodes, ID(-1)); }
-
-#ifdef SK_DEBUG
-  String description() const;
-#endif
 
   std::vector<ASTNode>* fNodes;
 

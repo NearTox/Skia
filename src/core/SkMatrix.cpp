@@ -60,7 +60,7 @@ void SkMatrix::doNormalizePerspective() {
         [persp-0    persp-1     persp-2]   [1]   [1 ]
 */
 
-SkMatrix& SkMatrix::reset() {
+SkMatrix& SkMatrix::reset() noexcept {
   *this = SkMatrix();
   return *this;
 }
@@ -105,7 +105,7 @@ uint8_t SkMatrix::computePerspectiveTypeMask() const {
   return SkToU8(kOnlyPerspectiveValid_Mask | kUnknown_Mask);
 }
 
-uint8_t SkMatrix::computeTypeMask() const {
+uint8_t SkMatrix::computeTypeMask() const noexcept {
   unsigned mask = 0;
 
   if (fMat[kMPersp0] != 0 || fMat[kMPersp1] != 0 || fMat[kMPersp2] != 1) {
@@ -168,7 +168,7 @@ uint8_t SkMatrix::computeTypeMask() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool operator==(const SkMatrix& a, const SkMatrix& b) {
+bool operator==(const SkMatrix& a, const SkMatrix& b) noexcept {
   const SkScalar* SK_RESTRICT ma = a.fMat;
   const SkScalar* SK_RESTRICT mb = b.fMat;
 
@@ -248,20 +248,20 @@ bool SkMatrix::preservesRightAngles(SkScalar tol) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static inline SkScalar sdot(SkScalar a, SkScalar b, SkScalar c, SkScalar d) {
+static inline SkScalar sdot(SkScalar a, SkScalar b, SkScalar c, SkScalar d) noexcept {
   return a * b + c * d;
 }
 
 static inline SkScalar sdot(
-    SkScalar a, SkScalar b, SkScalar c, SkScalar d, SkScalar e, SkScalar f) {
+    SkScalar a, SkScalar b, SkScalar c, SkScalar d, SkScalar e, SkScalar f) noexcept {
   return a * b + c * d + e * f;
 }
 
-static inline SkScalar scross(SkScalar a, SkScalar b, SkScalar c, SkScalar d) {
+static inline SkScalar scross(SkScalar a, SkScalar b, SkScalar c, SkScalar d) noexcept {
   return a * b - c * d;
 }
 
-SkMatrix& SkMatrix::setTranslate(SkScalar dx, SkScalar dy) {
+SkMatrix& SkMatrix::setTranslate(SkScalar dx, SkScalar dy) noexcept {
   *this = SkMatrix(
       1, 0, dx, 0, 1, dy, 0, 0, 1,
       (dx != 0 || dy != 0) ? kTranslate_Mask | kRectStaysRect_Mask
@@ -1513,13 +1513,13 @@ bool SkMatrix::getMinMaxScales(SkScalar scaleFactors[2]) const {
   return get_scale_factor<kBoth_MinMaxOrBoth>(this->getType(), fMat, scaleFactors);
 }
 
-const SkMatrix& SkMatrix::I() {
+const SkMatrix& SkMatrix::I() noexcept {
   static constexpr SkMatrix identity;
   SkASSERT(identity.isIdentity());
   return identity;
 }
 
-const SkMatrix& SkMatrix::InvalidMatrix() {
+const SkMatrix& SkMatrix::InvalidMatrix() noexcept {
   static constexpr SkMatrix invalid(
       SK_ScalarMax, SK_ScalarMax, SK_ScalarMax, SK_ScalarMax, SK_ScalarMax, SK_ScalarMax,
       SK_ScalarMax, SK_ScalarMax, SK_ScalarMax,
@@ -1567,6 +1567,8 @@ size_t SkMatrix::readFromMemory(const void* buffer, size_t length) {
   }
   memcpy(fMat, buffer, sizeInMemory);
   this->setTypeMask(kUnknown_Mask);
+  // Figure out the type now so that we're thread-safe
+  (void)this->getType();
   return sizeInMemory;
 }
 
@@ -1784,36 +1786,6 @@ void SkRSXform::toTriStrip(SkScalar width, SkScalar height, SkPoint strip[4]) co
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkFilterQuality SkMatrixPriv::AdjustHighQualityFilterLevel(
-    const SkMatrix& matrix, bool matrixIsInverse) {
-#ifdef SK_SUPPORT_LEGACY_ADJUSTHQHEURISTIC
-  if (matrix.isIdentity()) {
-    return kNone_SkFilterQuality;
-  }
-
-  auto is_minimizing = [&](SkScalar scale) { return matrixIsInverse ? scale > 1 : scale < 1; };
-
-  SkScalar scales[2];
-  if (!matrix.getMinMaxScales(scales) || is_minimizing(scales[0])) {
-    // Bicubic doesn't handle arbitrary minimization well, as src texels can be skipped
-    // entirely,
-    return kMedium_SkFilterQuality;
-  }
-
-  // At this point if scales[1] == SK_Scalar1 then the matrix doesn't do any scaling.
-  if (scales[1] == SK_Scalar1) {
-    if (matrix.rectStaysRect() && SkScalarIsInt(matrix.getTranslateX()) &&
-        SkScalarIsInt(matrix.getTranslateY())) {
-      return kNone_SkFilterQuality;
-    } else {
-      // Use bilerp to handle rotation or fractional translation.
-      return kLow_SkFilterQuality;
-    }
-  }
-#endif
-  return kHigh_SkFilterQuality;
-}
-
 SkScalar SkMatrixPriv::DifferentialAreaScale(const SkMatrix& m, const SkPoint& p) {
   //              [m00 m01 m02]                                 [f(u,v)]
   // Assuming M = [m10 m11 m12], define the projected p'(u,v) = [g(u,v)] where
@@ -1843,8 +1815,7 @@ SkScalar SkMatrixPriv::DifferentialAreaScale(const SkMatrix& m, const SkPoint& p
       xyw.fX, xyw.fY, xyw.fZ, m.getScaleX(), m.getSkewY(), m.getPerspX(), m.getSkewX(),
       m.getScaleY(), m.getPerspY());
 
-  SkScalar denom = 1.f / xyw.fZ;  // 1/w
+  double denom = 1.0 / xyw.fZ;    // 1/w
   denom = denom * denom * denom;  // 1/w^3
-
-  return SkScalarAbs(SkDoubleToScalar(sk_determinant(jacobian.fMat, true)) * denom);
+  return SkScalarAbs(SkDoubleToScalar(sk_determinant(jacobian.fMat, true) * denom));
 }

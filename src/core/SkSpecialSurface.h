@@ -32,10 +32,10 @@ class SkSpecialImage;
  */
 class SkSpecialSurface : public SkRefCnt {
  public:
-  const SkSurfaceProps& props() const { return fProps; }
+  const SkSurfaceProps& props() const noexcept { return fProps; }
 
-  int width() const { return fSubset.width(); }
-  int height() const { return fSubset.height(); }
+  int width() const noexcept { return fSubset.width(); }
+  int height() const noexcept { return fSubset.height(); }
 
   /**
    *  Return a canvas that will draw into this surface. This will always
@@ -61,15 +61,14 @@ class SkSpecialSurface : public SkRefCnt {
    *  be created, nullptr will be returned.
    */
   static sk_sp<SkSpecialSurface> MakeRenderTarget(
-      GrRecordingContext*, int width, int height, GrColorType, sk_sp<SkColorSpace> colorSpace,
-      const SkSurfaceProps* = nullptr);
+      GrRecordingContext*, const SkImageInfo&, const SkSurfaceProps&);
 #endif
 
   /**
    * Use and existing SkBitmap as the backing store.
    */
   static sk_sp<SkSpecialSurface> MakeFromBitmap(
-      const SkIRect& subset, SkBitmap& bm, const SkSurfaceProps* = nullptr);
+      const SkIRect& subset, SkBitmap& bm, const SkSurfaceProps&);
 
   /**
    *  Return a new CPU-backed surface, with the memory for the pixels automatically
@@ -78,14 +77,14 @@ class SkSpecialSurface : public SkRefCnt {
    *  If the requested surface cannot be created, or the request is not a
    *  supported configuration, nullptr will be returned.
    */
-  static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&, const SkSurfaceProps* = nullptr);
+  static sk_sp<SkSpecialSurface> MakeRaster(const SkImageInfo&, const SkSurfaceProps&);
 
  protected:
-  SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps*);
+  SkSpecialSurface(const SkIRect& subset, const SkSurfaceProps&);
 
   // For testing only
   friend class TestingSpecialSurfaceAccess;
-  const SkIRect& subset() const { return fSubset; }
+  const SkIRect& subset() const noexcept { return fSubset; }
 
  private:
   const SkSurfaceProps fProps;

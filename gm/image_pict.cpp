@@ -31,8 +31,8 @@
 #include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrRecordingContextPriv.h"
 #include "src/gpu/GrSamplerState.h"
-#include "src/gpu/GrSurfaceContext.h"
 #include "src/gpu/GrTextureProxy.h"
+#include "src/gpu/SurfaceContext.h"
 #include "src/image/SkImage_Base.h"
 #include "src/image/SkImage_Gpu.h"
 
@@ -169,10 +169,7 @@ class TextureGenerator : public SkImageGenerator {
       surface->getCanvas()->translate(-100, -100);
       surface->getCanvas()->drawPicture(pic);
       sk_sp<SkImage> image(surface->makeImageSnapshot());
-      const GrSurfaceProxyView* view = as_IB(image)->view(rContext);
-      if (view) {
-        fView = *view;
-      }
+      std::tie(fView, std::ignore) = as_IB(image)->asView(rContext, GrMipmapped::kNo);
     }
   }
 
@@ -286,7 +283,7 @@ class ImageCacheratorGM : public skiagm::GM {
       GrDirectContext* dContext, SkCanvas* canvas, SkImage* image, SkScalar x, SkScalar y) {
     SkBitmap bitmap;
     if (as_IB(image)->getROPixels(dContext, &bitmap)) {
-      canvas->drawBitmap(bitmap, x, y);
+      canvas->drawImage(bitmap.asImage(), x, y);
     } else {
       draw_placeholder(canvas, x, y, image->width(), image->height());
     }
@@ -295,17 +292,17 @@ class ImageCacheratorGM : public skiagm::GM {
   static void draw_as_tex(SkCanvas* canvas, SkImage* image, SkScalar x, SkScalar y) {
     // The gpu-backed images are drawn in this manner bc the generator backed images
     // aren't considered texture-backed
-    GrSurfaceProxyView view = as_IB(image)->refView(canvas->recordingContext(), GrMipmapped::kNo);
+    auto [view, ct] = as_IB(image)->asView(canvas->recordingContext(), GrMipmapped::kNo);
     if (!view) {
       // show placeholder if we have no texture
       draw_placeholder(canvas, x, y, image->width(), image->height());
       return;
     }
-
+    SkColorInfo colorInfo(GrColorTypeToSkColorType(ct), image->alphaType(), image->refColorSpace());
     // No API to draw a GrTexture directly, so we cheat and create a private image subclass
     sk_sp<SkImage> texImage(new SkImage_Gpu(
         sk_ref_sp(canvas->recordingContext()), image->uniqueID(), std::move(view),
-        image->colorType(), image->alphaType(), image->refColorSpace()));
+        std::move(colorInfo)));
     canvas->drawImage(texImage.get(), x, y);
   }
 

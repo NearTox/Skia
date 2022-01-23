@@ -33,7 +33,7 @@
 #include "tools/gpu/GpuTimer.h"
 #include "tools/gpu/GrContextFactory.h"
 
-#ifdef SK_XML
+#if defined(SK_ENABLE_SVG)
 #  include "modules/svg/include/SkSVGDOM.h"
 #  include "src/xml/SkDOM.h"
 #endif
@@ -42,6 +42,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cinttypes>
 #include <cmath>
 #include <vector>
 
@@ -77,6 +78,7 @@ static DEFINE_string(png, "", "if set, save a .png proof to disk at this file lo
 static DEFINE_int(verbosity, 4, "level of verbosity (0=none to 5=debug)");
 static DEFINE_bool(suppressHeader, false, "don't print a header row before the results");
 static DEFINE_double(scale, 1, "Scale the size of the canvas and the zoom level by this factor.");
+static DEFINE_bool(dumpSamples, false, "print the individual samples to stdout");
 
 static const char header[] =
     "   accum    median       max       min   stddev  samples  sample_ms  clock  metric  config    "
@@ -204,9 +206,9 @@ private:
 };
 
 static void ddl_sample(
-    GrDirectContext* context, DDLTileHelper* tiles, GpuSync& gpuSync, Sample* sample,
+    GrDirectContext* dContext, DDLTileHelper* tiles, GpuSync& gpuSync, Sample* sample,
     SkTaskGroup* recordingTaskGroup, SkTaskGroup* gpuTaskGroup,
-    std::chrono::high_resolution_clock::time_point* startStopTime) {
+    std::chrono::high_resolution_clock::time_point* startStopTime, SkPicture* picture) {
   using clock = std::chrono::high_resolution_clock;
 
   clock::time_point start = *startStopTime;
@@ -218,21 +220,21 @@ static void ddl_sample(
     // thread. The interleaving is so that we don't starve the GPU.
     // One unfortunate side effect of this is that we can't delete the DDLs until after
     // the GPU work is flushed.
-    tiles->interleaveDDLCreationAndDraw(context);
+    tiles->interleaveDDLCreationAndDraw(dContext, picture);
   } else if (FLAGS_comparableSKP) {
     // In this mode simply draw the re-inflated per-tile SKPs directly to the GPU w/o going
     // through a DDL.
-    tiles->drawAllTilesDirectly(context);
+    tiles->drawAllTilesDirectly(dContext, picture);
   } else {
-    tiles->kickOffThreadedWork(recordingTaskGroup, gpuTaskGroup, context);
+    tiles->kickOffThreadedWork(recordingTaskGroup, gpuTaskGroup, dContext, picture);
     recordingTaskGroup->wait();
   }
 
   if (gpuTaskGroup) {
-    gpuTaskGroup->add([&] { flush_with_sync(context, gpuSync); });
+    gpuTaskGroup->add([&] { flush_with_sync(dContext, gpuSync); });
     gpuTaskGroup->wait();
   } else {
-    flush_with_sync(context, gpuSync);
+    flush_with_sync(dContext, gpuSync);
   }
 
   *startStopTime = clock::now();
@@ -244,7 +246,7 @@ static void ddl_sample(
 }
 
 static void run_ddl_benchmark(
-    sk_gpu_test::TestContext* testContext, GrDirectContext* context, sk_sp<SkSurface> dstSurface,
+    sk_gpu_test::TestContext* testContext, GrDirectContext* dContext, sk_sp<SkSurface> dstSurface,
     SkPicture* inputPicture, std::vector<Sample>* samples) {
   using clock = std::chrono::high_resolution_clock;
   const Sample::duration sampleDuration = std::chrono::milliseconds(FLAGS_sampleMs);
@@ -255,24 +257,21 @@ static void run_ddl_benchmark(
 
   SkIRect viewport = dstSurface->imageInfo().bounds();
 
-  SkYUVAPixmapInfo::SupportedDataTypes supportedYUVADataTypes(*context);
+  SkYUVAPixmapInfo::SupportedDataTypes supportedYUVADataTypes(*dContext);
   DDLPromiseImageHelper promiseImageHelper(supportedYUVADataTypes);
-  sk_sp<SkData> compressedPictureData = promiseImageHelper.deflateSKP(inputPicture);
-  if (!compressedPictureData) {
+  sk_sp<SkPicture> newSKP = promiseImageHelper.recreateSKP(dContext, inputPicture);
+  if (!newSKP) {
     exitf(ExitErr::kUnavailable, "DDL: conversion of skp failed");
   }
 
-  promiseImageHelper.createCallbackContexts(context);
-
-  promiseImageHelper.uploadAllToGPU(nullptr, context);
+  promiseImageHelper.uploadAllToGPU(nullptr, dContext);
 
   DDLTileHelper tiles(
-      context, dstCharacterization, viewport, FLAGS_ddlTilingWidthHeight,
+      dContext, dstCharacterization, viewport, FLAGS_ddlTilingWidthHeight,
+      FLAGS_ddlTilingWidthHeight,
       /* addRandomPaddingToDst */ false);
 
-  tiles.createBackendTextures(nullptr, context);
-
-  tiles.createSKPPerTile(compressedPictureData.get(), promiseImageHelper);
+  tiles.createBackendTextures(nullptr, dContext);
 
   // In comparable modes, there is no GPU thread. The following pointers are all null.
   // Otherwise, we transfer testContext onto the GPU thread until after the bench.
@@ -293,8 +292,8 @@ static void run_ddl_benchmark(
 
   GpuSync gpuSync;
   ddl_sample(
-      context, &tiles, gpuSync, nullptr, recordingTaskGroup.get(), gpuTaskGroup.get(),
-      &startStopTime);
+      dContext, &tiles, gpuSync, nullptr, recordingTaskGroup.get(), gpuTaskGroup.get(),
+      &startStopTime, newSKP.get());
 
   clock::duration cumulativeDuration = std::chrono::milliseconds(0);
 
@@ -305,8 +304,8 @@ static void run_ddl_benchmark(
     do {
       tiles.resetAllTiles();
       ddl_sample(
-          context, &tiles, gpuSync, &sample, recordingTaskGroup.get(), gpuTaskGroup.get(),
-          &startStopTime);
+          dContext, &tiles, gpuSync, &sample, recordingTaskGroup.get(), gpuTaskGroup.get(),
+          &startStopTime, newSKP.get());
     } while (sample.fDuration < sampleDuration);
 
     cumulativeDuration += sample.fDuration;
@@ -329,12 +328,12 @@ static void run_ddl_benchmark(
 
   // Make sure the gpu has finished all its work before we exit this function and delete the
   // fence.
-  context->flush();
-  context->submit(true);
+  dContext->flush();
+  dContext->submit(true);
 
-  promiseImageHelper.deleteAllFromGPU(nullptr, context);
+  promiseImageHelper.deleteAllFromGPU(nullptr, dContext);
 
-  tiles.deleteBackendTextures(nullptr, context);
+  tiles.deleteBackendTextures(nullptr, dContext);
 }
 
 static void run_benchmark(
@@ -441,6 +440,14 @@ static void run_gpu_time_benchmark(
 void print_result(const std::vector<Sample>& samples, const char* config, const char* bench)  {
     if (0 == (samples.size() % 2)) {
         exitf(ExitErr::kSoftware, "attempted to gather stats on even number of samples");
+    }
+
+    if (FLAGS_dumpSamples) {
+      printf("Samples: ");
+      for (const Sample& sample : samples) {
+        printf("%" PRId64 " ", static_cast<int64_t>(sample.fDuration.count()));
+      }
+      printf("%s\n", bench);
     }
 
     Sample accum = Sample();
@@ -584,11 +591,9 @@ int main(int argc, char** argv) {
     }
 
     // Create a render target.
-    SkImageInfo info =
-            SkImageInfo::Make(width, height, config->getColorType(), config->getAlphaType(),
-                              sk_ref_sp(config->getColorSpace()));
-    uint32_t flags = config->getUseDIText() ? SkSurfaceProps::kUseDeviceIndependentFonts_Flag : 0;
-    SkSurfaceProps props(flags, kRGB_H_SkPixelGeometry);
+    SkImageInfo info = SkImageInfo::Make(
+        width, height, config->getColorType(), config->getAlphaType(), config->refColorSpace());
+    SkSurfaceProps props(config->getSurfaceFlags(), kRGB_H_SkPixelGeometry);
     sk_sp<SkSurface> surface =
         SkSurface::MakeRenderTarget(ctx, SkBudgeted::kNo, info, config->getSamples(), &props);
     if (!surface) {
@@ -690,23 +695,23 @@ static sk_sp<SkPicture> create_warmup_skp() {
 }
 
 static sk_sp<SkPicture> create_skp_from_svg(SkStream* stream, const char* filename) {
-#ifdef SK_XML
+#if defined(SK_ENABLE_SVG)
   sk_sp<SkSVGDOM> svg = SkSVGDOM::MakeFromStream(*stream);
   if (!svg) {
     exitf(ExitErr::kData, "failed to build svg dom from file %s", filename);
   }
 
-    static constexpr SkRect bounds{0, 0, 1200, 1200};
-    SkPictureRecorder recorder;
-    SkCanvas* recording = recorder.beginRecording(bounds);
+  static constexpr SkRect bounds{0, 0, 1200, 1200};
+  SkPictureRecorder recorder;
+  SkCanvas* recording = recorder.beginRecording(bounds);
 
-    svg->setContainerSize(SkSize::Make(recording->getBaseLayerSize()));
-    svg->render(recording);
+  svg->setContainerSize(SkSize::Make(recording->getBaseLayerSize()));
+  svg->render(recording);
 
-    return recorder.finishRecordingAsPicture();
+  return recorder.finishRecordingAsPicture();
 #endif
-    exitf(ExitErr::kData, "SK_XML is disabled; cannot open svg file %s", filename);
-    return nullptr;
+  exitf(ExitErr::kData, "SK_ENABLE_SVG is disabled; cannot open svg file %s", filename);
+  return nullptr;
 }
 
 bool mkdir_p(const SkString& dirname) {

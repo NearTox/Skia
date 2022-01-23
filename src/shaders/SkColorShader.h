@@ -46,8 +46,8 @@ class SkColorShader : public SkShaderBase {
 
   skvm::Color onProgram(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
-      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
-      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+      const SkMatrixProvider&, const SkMatrix* localM, const SkColorInfo& dst,
+      skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
 
   SkColor fColor;
 };
@@ -71,8 +71,8 @@ class SkColor4Shader : public SkShaderBase {
 
   skvm::Color onProgram(
       skvm::Builder*, skvm::Coord device, skvm::Coord local, skvm::Color paint,
-      const SkMatrixProvider&, const SkMatrix* localM, SkFilterQuality quality,
-      const SkColorInfo& dst, skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
+      const SkMatrixProvider&, const SkMatrix* localM, const SkColorInfo& dst,
+      skvm::Uniforms* uniforms, SkArenaAlloc*) const override;
 
   sk_sp<SkColorSpace> fColorSpace;
   const SkColor4f fColor;

@@ -23,16 +23,16 @@ sk_sp<GrDawnTexture> GrDawnTexture::Make(
   bool renderTarget = renderable == GrRenderable::kYes;
   wgpu::TextureDescriptor textureDesc;
 
-  textureDesc.usage =
-      wgpu::TextureUsage::Sampled | wgpu::TextureUsage::CopySrc | wgpu::TextureUsage::CopyDst;
+  textureDesc.usage = wgpu::TextureUsage::TextureBinding | wgpu::TextureUsage::CopySrc |
+                      wgpu::TextureUsage::CopyDst;
 
   if (renderTarget) {
-    textureDesc.usage |= wgpu::TextureUsage::OutputAttachment;
+    textureDesc.usage |= wgpu::TextureUsage::RenderAttachment;
   }
 
   textureDesc.size.width = dimensions.fWidth;
   textureDesc.size.height = dimensions.fHeight;
-  textureDesc.size.depth = 1;
+  textureDesc.size.depthOrArrayLayers = 1;
   textureDesc.format = format;
   textureDesc.mipLevelCount = std::max(mipLevels, 1);
   textureDesc.sampleCount = sampleCnt;
@@ -81,7 +81,7 @@ sk_sp<GrDawnTexture> GrDawnTexture::MakeWrapped(
   return tex;
 }
 
-GrDawnTexture::~GrDawnTexture() {}
+GrDawnTexture::~GrDawnTexture() = default;
 
 GrDawnGpu* GrDawnTexture::getDawnGpu() const {
   SkASSERT(!this->wasDestroyed());

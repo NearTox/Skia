@@ -226,6 +226,11 @@ static transform_scanline_proc choose_proc(const SkImageInfo& info) {
   switch (info.colorType()) {
     case kUnknown_SkColorType: break;
 
+    // TODO: I don't think this can just use kRGBA's procs.
+    // kPremul is especially tricky here, since it's presumably TF⁻¹(rgb * a),
+    // so to get at unpremul rgb we'd need to undo the transfer function first.
+    case kSRGBA_8888_SkColorType: return nullptr;
+
     case kRGBA_8888_SkColorType:
       switch (info.alphaType()) {
         case kOpaque_SkAlphaType: return transform_scanline_RGBX;
@@ -374,7 +379,7 @@ SkPngEncoder::SkPngEncoder(std::unique_ptr<SkPngEncoderMgr> encoderMgr, const Sk
     : INHERITED(src, encoderMgr->pngBytesPerPixel() * src.width()),
       fEncoderMgr(std::move(encoderMgr)) {}
 
-SkPngEncoder::~SkPngEncoder() {}
+SkPngEncoder::~SkPngEncoder() = default;
 
 bool SkPngEncoder::onEncodeRows(int numRows) {
   if (setjmp(png_jmpbuf(fEncoderMgr->pngPtr()))) {

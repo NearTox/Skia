@@ -35,9 +35,9 @@ class GrYUVtoRGBEffect : public GrFragmentProcessor {
   SkString onDumpInfo() const override;
 #endif
 
-  GrGLSLFragmentProcessor* onCreateGLSLInstance() const override;
+  std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override;
 
-  void onGetGLSLProcessorKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor&) const override;
 

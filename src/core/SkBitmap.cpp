@@ -8,7 +8,6 @@
 #include "include/core/SkBitmap.h"
 
 #include "include/core/SkData.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkMallocPixelRef.h"
 #include "include/core/SkMath.h"
 #include "include/core/SkPixelRef.h"
@@ -33,20 +32,20 @@
 #include <cstring>
 #include <utility>
 
-static bool reset_return_false(SkBitmap* bm) {
+static bool reset_return_false(SkBitmap* bm) noexcept {
   bm->reset();
   return false;
 }
 
-SkBitmap::SkBitmap() {}
+SkBitmap::SkBitmap() noexcept = default;
 
-SkBitmap::SkBitmap(const SkBitmap& src)
+SkBitmap::SkBitmap(const SkBitmap& src) noexcept
     : fPixelRef(src.fPixelRef), fPixmap(src.fPixmap), fMips(src.fMips) {
   SkDEBUGCODE(src.validate();)
   SkDEBUGCODE(this->validate();)
 }
 
-SkBitmap::SkBitmap(SkBitmap&& other)
+SkBitmap::SkBitmap(SkBitmap&& other) noexcept
     : fPixelRef(std::move(other.fPixelRef)),
       fPixmap(std::move(other.fPixmap)),
       fMips(std::move(other.fMips)) {
@@ -54,9 +53,9 @@ SkBitmap::SkBitmap(SkBitmap&& other)
   other.fPixmap.reset();
 }
 
-SkBitmap::~SkBitmap() {}
+SkBitmap::~SkBitmap() = default;
 
-SkBitmap& SkBitmap::operator=(const SkBitmap& src) {
+SkBitmap& SkBitmap::operator=(const SkBitmap& src) noexcept {
   if (this != &src) {
     fPixelRef = src.fPixelRef;
     fPixmap = src.fPixmap;
@@ -66,7 +65,7 @@ SkBitmap& SkBitmap::operator=(const SkBitmap& src) {
   return *this;
 }
 
-SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
+SkBitmap& SkBitmap::operator=(SkBitmap&& other) noexcept {
   if (this != &other) {
     fPixelRef = std::move(other.fPixelRef);
     fPixmap = std::move(other.fPixmap);
@@ -77,13 +76,13 @@ SkBitmap& SkBitmap::operator=(SkBitmap&& other) {
   return *this;
 }
 
-void SkBitmap::swap(SkBitmap& other) {
+void SkBitmap::swap(SkBitmap& other) noexcept {
   using std::swap;
   swap(*this, other);
   SkDEBUGCODE(this->validate();)
 }
 
-void SkBitmap::reset() {
+void SkBitmap::reset() noexcept {
   fPixelRef = nullptr;  // Free pixels.
   fPixmap.reset();
   fMips.reset();
@@ -472,7 +471,10 @@ bool SkBitmap::writePixels(const SkPixmap& src, int dstX, int dstY) {
 
   void* dstPixels = this->getAddr(rec.fX, rec.fY);
   const SkImageInfo dstInfo = this->info().makeDimensions(rec.fInfo.dimensions());
-  SkConvertPixels(dstInfo, dstPixels, this->rowBytes(), rec.fInfo, rec.fPixels, rec.fRowBytes);
+  if (!SkConvertPixels(
+          dstInfo, dstPixels, this->rowBytes(), rec.fInfo, rec.fPixels, rec.fRowBytes)) {
+    return false;
+  }
   this->notifyPixelsChanged();
   return true;
 }
@@ -491,10 +493,9 @@ static bool GetBitmapAlpha(const SkBitmap& src, uint8_t* SK_RESTRICT alpha, int 
     }
     return false;
   }
-  SkConvertPixels(
+  return SkConvertPixels(
       SkImageInfo::MakeA8(pmap.width(), pmap.height()), alpha, alphaRowBytes, pmap.info(),
       pmap.addr(), pmap.rowBytes());
-  return true;
 }
 
 #include "include/core/SkMaskFilter.h"

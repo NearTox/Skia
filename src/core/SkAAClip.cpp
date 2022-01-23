@@ -518,7 +518,7 @@ bool SkAAClip::trimBounds() {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkAAClip::freeRuns() {
+void SkAAClip::freeRuns() noexcept {
   if (fRunHead) {
     SkASSERT(fRunHead->fRefCnt.load() >= 1);
     if (1 == fRunHead->fRefCnt--) {

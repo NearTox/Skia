@@ -107,13 +107,13 @@ class CompositingImages : public Benchmark {
 
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint;
-    paint.setFilterQuality(kLow_SkFilterQuality);
     paint.setAntiAlias(true);
+    SkSamplingOptions sampling(SkFilterMode::kLinear);
 
     canvas->save();
     canvas->concat(this->getTransform());
 
-    for (int i = 0; i < loops; ++i) {
+    for (int loop = 0; loop < loops; ++loop) {
       for (int l = 0; l < fLayerCnt; ++l) {
         SkAutoTArray<SkCanvas::ImageSetEntry> set(fTileGridSize.fWidth * fTileGridSize.fHeight);
 
@@ -130,7 +130,7 @@ class CompositingImages : public Benchmark {
                                                        ? SkCanvas::kFast_SrcRectConstraint
                                                        : SkCanvas::kStrict_SrcRectConstraint;
           canvas->experimental_DrawEdgeAAImageSet(
-              set.get(), i, nullptr, nullptr, &paint, constraint);
+              set.get(), i, nullptr, nullptr, sampling, &paint, constraint);
         } else if (fClampMode == ClampingMode::kChromeTiling_RowMajor) {
           // Same tile order, but break batching between fast and strict sections, and
           // adjust bottom and right tiles to encode content area distinct from src rect.
@@ -142,13 +142,13 @@ class CompositingImages : public Benchmark {
             }
             // Flush "fast" horizontal row
             canvas->experimental_DrawEdgeAAImageSet(
-                set.get() + rowStart, fTileGridSize.fWidth - 1, nullptr, nullptr, &paint,
+                set.get() + rowStart, fTileGridSize.fWidth - 1, nullptr, nullptr, sampling, &paint,
                 SkCanvas::kFast_SrcRectConstraint);
             // Then flush a single adjusted entry for the right edge
             SkPoint dstQuad[4];
             set[i++] = this->getAdjustedEntry(fTileGridSize.fWidth - 1, y, l, dstQuad);
             canvas->experimental_DrawEdgeAAImageSet(
-                set.get() + fTileGridSize.fWidth - 1, 1, dstQuad, nullptr, &paint,
+                set.get() + fTileGridSize.fWidth - 1, 1, dstQuad, nullptr, sampling, &paint,
                 SkCanvas::kStrict_SrcRectConstraint);
           }
           // For last row, accumulate it as a single strict batch
@@ -161,7 +161,7 @@ class CompositingImages : public Benchmark {
           // The corner can use conventional strict mode without geometric adjustment
           set[i++] = this->getEntry(fTileGridSize.fWidth - 1, fTileGridSize.fHeight - 1, l);
           canvas->experimental_DrawEdgeAAImageSet(
-              set.get() + rowStart, fTileGridSize.fWidth, dstQuads.get(), nullptr, &paint,
+              set.get() + rowStart, fTileGridSize.fWidth, dstQuads.get(), nullptr, sampling, &paint,
               SkCanvas::kStrict_SrcRectConstraint);
         } else {
           SkASSERT(fClampMode == ClampingMode::kChromeTiling_Optimal);
@@ -173,7 +173,7 @@ class CompositingImages : public Benchmark {
             }
           }
           canvas->experimental_DrawEdgeAAImageSet(
-              set.get(), i, nullptr, nullptr, &paint, SkCanvas::kFast_SrcRectConstraint);
+              set.get(), i, nullptr, nullptr, sampling, &paint, SkCanvas::kFast_SrcRectConstraint);
 
           // Right edge
           int strictStart = i;
@@ -183,7 +183,7 @@ class CompositingImages : public Benchmark {
                 this->getAdjustedEntry(fTileGridSize.fWidth - 1, y, l, dstQuads.get() + y * 4);
           }
           canvas->experimental_DrawEdgeAAImageSet(
-              set.get() + strictStart, i - strictStart, dstQuads.get(), nullptr, &paint,
+              set.get() + strictStart, i - strictStart, dstQuads.get(), nullptr, sampling, &paint,
               SkCanvas::kStrict_SrcRectConstraint);
           int quadStart = 4 * (fTileGridSize.fHeight - 1);
           strictStart = i;
@@ -193,8 +193,8 @@ class CompositingImages : public Benchmark {
           }
           set[i++] = this->getEntry(fTileGridSize.fWidth - 1, fTileGridSize.fHeight - 1, l);
           canvas->experimental_DrawEdgeAAImageSet(
-              set.get() + strictStart, i - strictStart, dstQuads.get() + quadStart, nullptr, &paint,
-              SkCanvas::kStrict_SrcRectConstraint);
+              set.get() + strictStart, i - strictStart, dstQuads.get() + quadStart, nullptr,
+              sampling, &paint, SkCanvas::kStrict_SrcRectConstraint);
         }
       }
       // Prevent any batching between composited "frames".
@@ -273,8 +273,7 @@ class CompositingImages : public Benchmark {
       contentRect.fBottom = fTileSize.fHeight;
     }
 
-    SkMatrix srcToDst =
-        SkMatrix::MakeRectToRect(entry.fSrcRect, entry.fDstRect, SkMatrix::kFill_ScaleToFit);
+    SkMatrix srcToDst = SkMatrix::RectToRect(entry.fSrcRect, entry.fDstRect);
 
     // Story entry's dstRect into dstQuad, and use contentRect and contentDst as its src and dst
     entry.fDstRect.toQuad(dstQuad);

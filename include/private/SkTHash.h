@@ -26,11 +26,11 @@
 template <typename T, typename K, typename Traits = T>
 class SkTHashTable {
  public:
-  SkTHashTable() = default;
+  SkTHashTable() noexcept = default;
   ~SkTHashTable() = default;
 
   SkTHashTable(const SkTHashTable& that) { *this = that; }
-  SkTHashTable(SkTHashTable&& that) { *this = std::move(that); }
+  SkTHashTable(SkTHashTable&& that) noexcept { *this = std::move(that); }
 
   SkTHashTable& operator=(const SkTHashTable& that) {
     if (this != &that) {
@@ -44,7 +44,7 @@ class SkTHashTable {
     return *this;
   }
 
-  SkTHashTable& operator=(SkTHashTable&& that) {
+  SkTHashTable& operator=(SkTHashTable&& that) noexcept {
     if (this != &that) {
       fCount = that.fCount;
       fCapacity = that.fCapacity;
@@ -56,7 +56,7 @@ class SkTHashTable {
   }
 
   // Clear the table.
-  void reset() { *this = SkTHashTable(); }
+  void reset() noexcept { *this = SkTHashTable(); }
 
   // How many entries are in the table?
   int count() const { return fCount; }
@@ -225,6 +225,7 @@ class SkTHashTable {
 
   T* uncheckedSet(T&& val) {
     const K& key = Traits::GetKey(val);
+    SkASSERT(key == key);
     uint32_t hash = Hash(key);
     int index = hash & (fCapacity - 1);
     for (int n = 0; n < fCapacity; n++) {

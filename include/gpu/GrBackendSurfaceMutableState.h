@@ -76,7 +76,7 @@ class SK_API GrBackendSurfaceMutableState {
 #endif
 
   union {
-    char fDummy;
+    char fPlaceholder;
 #ifdef SK_VULKAN
     GrVkSharedImageInfo fVkState;
 #endif

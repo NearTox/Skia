@@ -38,7 +38,7 @@ class ColorFilterAlpha8 : public skiagm::GM {
                                   0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f};
     paint.setColorFilter(SkColorFilters::Matrix(opaqueGrayMatrix));
 
-    canvas->drawImage(bitmap.asImage(), 100.0f, 100.0f, &paint);
+    canvas->drawImage(bitmap.asImage(), 100.0f, 100.0f, SkSamplingOptions(), &paint);
   }
 
  private:

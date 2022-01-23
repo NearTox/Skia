@@ -6,6 +6,7 @@
  */
 
 #include "include/core/SkString.h"
+#include "include/core/SkStringView.h"
 #include "include/private/SkTPin.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkSafeMath.h"
@@ -184,8 +185,8 @@ const SkString::Rec SkString::gEmptyRec(0, 0);
 
 #define SizeOfRec() (gEmptyRec.data() - (const char*)&gEmptyRec)
 
-static uint32_t trim_size_t_to_u32(size_t value) {
-  if (sizeof(size_t) > sizeof(uint32_t)) {
+static constexpr uint32_t trim_size_t_to_u32(size_t value) noexcept {
+  if constexpr (sizeof(size_t) > sizeof(uint32_t)) {
     if (value > UINT32_MAX) {
       value = UINT32_MAX;
     }
@@ -193,9 +194,9 @@ static uint32_t trim_size_t_to_u32(size_t value) {
   return (uint32_t)value;
 }
 
-static size_t check_add32(size_t base, size_t extra) {
+static constexpr size_t check_add32(size_t base, size_t extra) noexcept {
   SkASSERT(base <= UINT32_MAX);
-  if (sizeof(size_t) > sizeof(uint32_t)) {
+  if constexpr (sizeof(size_t) > sizeof(uint32_t)) {
     if (base + extra > UINT32_MAX) {
       extra = UINT32_MAX - base;
     }
@@ -227,14 +228,14 @@ sk_sp<SkString::Rec> SkString::Rec::Make(const char text[], size_t len) {
   return rec;
 }
 
-void SkString::Rec::ref() const {
+void SkString::Rec::ref() const noexcept {
   if (this == &SkString::gEmptyRec) {
     return;
   }
   SkAssertResult(this->fRefCnt.fetch_add(+1, std::memory_order_relaxed));
 }
 
-void SkString::Rec::unref() const {
+void SkString::Rec::unref() const noexcept {
   if (this == &SkString::gEmptyRec) {
     return;
   }
@@ -245,18 +246,20 @@ void SkString::Rec::unref() const {
   }
 }
 
-bool SkString::Rec::unique() const { return fRefCnt.load(std::memory_order_acquire) == 1; }
+bool SkString::Rec::unique() const noexcept { return fRefCnt.load(std::memory_order_acquire) == 1; }
 
 #ifdef SK_DEBUG
+int32_t SkString::Rec::getRefCnt() const { return fRefCnt.load(std::memory_order_relaxed); }
+
 const SkString& SkString::validate() const {
-  // make sure know one has written over our global
+  // make sure no one has written over our global
   SkASSERT(0 == gEmptyRec.fLength);
-  SkASSERT(0 == gEmptyRec.fRefCnt.load(std::memory_order_relaxed));
+  SkASSERT(0 == gEmptyRec.getRefCnt());
   SkASSERT(0 == gEmptyRec.data()[0]);
 
   if (fRec.get() != &gEmptyRec) {
     SkASSERT(fRec->fLength > 0);
-    SkASSERT(fRec->fRefCnt.load(std::memory_order_relaxed) > 0);
+    SkASSERT(fRec->getRefCnt() > 0);
     SkASSERT(0 == fRec->data()[fRec->fLength]);
   }
   return *this;
@@ -265,7 +268,7 @@ const SkString& SkString::validate() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkString::SkString() : fRec(const_cast<Rec*>(&gEmptyRec)) {}
+SkString::SkString() noexcept : fRec(const_cast<Rec*>(&gEmptyRec)) {}
 
 SkString::SkString(size_t len) { fRec = Rec::Make(nullptr, len); }
 
@@ -277,13 +280,15 @@ SkString::SkString(const char text[]) {
 
 SkString::SkString(const char text[], size_t len) { fRec = Rec::Make(text, len); }
 
-SkString::SkString(const SkString& src) : fRec(src.validate().fRec) {}
+SkString::SkString(const SkString& src) noexcept : fRec(src.validate().fRec) {}
 
-SkString::SkString(SkString&& src) : fRec(std::move(src.validate().fRec)) {
+SkString::SkString(SkString&& src) noexcept : fRec(std::move(src.validate().fRec)) {
   src.fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }
 
 SkString::SkString(const std::string& src) { fRec = Rec::Make(src.c_str(), src.size()); }
+
+SkString::SkString(skstd::string_view src) { fRec = Rec::Make(src.data(), src.length()); }
 
 SkString::~SkString() { this->validate(); }
 
@@ -301,13 +306,13 @@ bool SkString::equals(const char text[], size_t len) const {
   return fRec->fLength == len && !sk_careful_memcmp(fRec->data(), text, len);
 }
 
-SkString& SkString::operator=(const SkString& src) {
+SkString& SkString::operator=(const SkString& src) noexcept {
   this->validate();
   fRec = src.fRec;  // sk_sp<Rec>::operator=(const sk_sp<Ref>&) checks for self-assignment.
   return *this;
 }
 
-SkString& SkString::operator=(SkString&& src) {
+SkString& SkString::operator=(SkString&& src) noexcept {
   this->validate();
 
   if (fRec != src.fRec) {
@@ -321,7 +326,7 @@ SkString& SkString::operator=(const char text[]) {
   return *this = SkString(text);
 }
 
-void SkString::reset() {
+void SkString::reset() noexcept {
   this->validate();
   fRec.reset(const_cast<Rec*>(&gEmptyRec));
 }
@@ -579,7 +584,7 @@ void SkString::remove(size_t offset, size_t length) {
   }
 }
 
-void SkString::swap(SkString& other) {
+void SkString::swap(SkString& other) noexcept {
   this->validate();
   other.validate();
 

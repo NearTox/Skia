@@ -23,8 +23,8 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   using GrSimpleMeshDrawOpHelper::visitProxies;
 
   GrProgramInfo* createProgramInfoWithStencil(
-      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeViewSwizzle, GrAppliedClip&&,
-      const GrXferProcessor::DstProxyView&, GrGeometryProcessor*, GrPrimitiveType,
+      const GrCaps*, SkArenaAlloc*, const GrSurfaceProxyView& writeView, bool usesMSAASurface,
+      GrAppliedClip&&, const GrDstProxyView&, GrGeometryProcessor*, GrPrimitiveType,
       GrXferBarrierFlags renderPassXferBarriers, GrLoadOp colorLoadOp);
 
   // using declarations can't be templated, so this is a pass through function instead.
@@ -40,16 +40,14 @@ class GrSimpleMeshDrawOpHelperWithStencil : private GrSimpleMeshDrawOpHelper {
   GrDrawOp::FixedFunctionFlags fixedFunctionFlags() const;
 
   GrProcessorSet::Analysis finalizeProcessors(
-      const GrCaps& caps, const GrAppliedClip* clip, bool hasMixedSampledCoverage,
-      GrClampType clampType, GrProcessorAnalysisCoverage geometryCoverage,
-      GrProcessorAnalysisColor* geometryColor) {
+      const GrCaps& caps, const GrAppliedClip* clip, GrClampType clampType,
+      GrProcessorAnalysisCoverage geometryCoverage, GrProcessorAnalysisColor* geometryColor) {
     return this->INHERITED::finalizeProcessors(
-        caps, clip, fStencilSettings, hasMixedSampledCoverage, clampType, geometryCoverage,
-        geometryColor);
+        caps, clip, fStencilSettings, clampType, geometryCoverage, geometryColor);
   }
 
   GrProcessorSet::Analysis finalizeProcessors(
-      const GrCaps&, const GrAppliedClip*, bool hasMixedSampledCoverage, GrClampType,
+      const GrCaps&, const GrAppliedClip*, GrClampType,
       GrProcessorAnalysisCoverage geometryCoverage, SkPMColor4f* geometryColor, bool* wideColor);
 
   using GrSimpleMeshDrawOpHelper::aaType;

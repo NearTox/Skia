@@ -23,6 +23,7 @@
 class GrBackendSurfaceMutableStateImpl;
 class GrVkImageLayout;
 class GrGLTextureParameters;
+class GrColorFormatDesc;
 
 #ifdef SK_DAWN
 #  include "dawn/webgpu_cpp.h"
@@ -33,8 +34,7 @@ class GrGLTextureParameters;
 #endif
 
 #ifdef SK_DIRECT3D
-#  include "include/gpu/d3d/GrD3DTypesMinimal.h"
-#  include "include/private/GrD3DTypesPriv.h"
+#  include "include/private/GrD3DTypesMinimal.h"
 class GrD3DResourceState;
 #endif
 
@@ -112,6 +112,8 @@ class SK_API GrBackendFormat {
    * Luminance channels are reported as kGray_SkColorChannelFlag.
    */
   uint32_t channelMask() const;
+
+  GrColorFormatDesc desc() const;
 
   /**
    * If the backend API is GL this gets the format as a GrGLFormat. Otherwise, returns
@@ -259,10 +261,12 @@ class SK_API GrBackendTexture {
   SkISize dimensions() const { return {fWidth, fHeight}; }
   int width() const { return fWidth; }
   int height() const { return fHeight; }
+  GrMipmapped mipmapped() const { return fMipmapped; }
   bool hasMipmaps() const { return fMipmapped == GrMipmapped::kYes; }
   /** deprecated alias of hasMipmaps(). */
   bool hasMipMaps() const { return this->hasMipmaps(); }
   GrBackendApi backend() const { return fBackend; }
+  GrTextureType textureType() const { return fTextureType; }
 
   // If the backend API is GL, copies a snapshot of the GrGLTextureInfo struct into the passed in
   // pointer and returns true. Otherwise returns false if the backend API is not GL.
@@ -367,6 +371,7 @@ class SK_API GrBackendTexture {
   int fHeight;  //<! height in pixels
   GrMipmapped fMipmapped;
   GrBackendApi fBackend;
+  GrTextureType fTextureType;
 
   union {
 #  ifdef SK_GL

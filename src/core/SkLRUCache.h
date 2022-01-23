@@ -53,6 +53,8 @@ class SkLRUCache : public SkNoncopyable {
   }
 
   V* insert(const K& key, V value) {
+    SkASSERT(!this->find(key));
+
     Entry* entry = new Entry(key, std::move(value));
     fMap.set(entry);
     fLRU.addToHead(entry);
@@ -60,6 +62,15 @@ class SkLRUCache : public SkNoncopyable {
       this->remove(fLRU.tail()->fKey);
     }
     return &entry->fValue;
+  }
+
+  V* insert_or_update(const K& key, V value) {
+    if (V* found = this->find(key)) {
+      *found = std::move(value);
+      return found;
+    } else {
+      return this->insert(key, std::move(value));
+    }
   }
 
   int count() { return fMap.count(); }

@@ -33,7 +33,7 @@
 // of the source (not inset). This is intended to exercise blurring a smaller source bitmap to a
 // larger destination.
 
-static SkBitmap make_checkerboard(int width, int height) {
+static sk_sp<SkImage> make_checkerboard(int width, int height) {
   SkBitmap bm;
   bm.allocN32Pixels(width, height);
   SkCanvas canvas(bm);
@@ -54,7 +54,7 @@ static SkBitmap make_checkerboard(int width, int height) {
     }
   }
 
-  return bm;
+  return bm.asImage();
 }
 
 class BlurImageFilterBench : public Benchmark {
@@ -89,7 +89,7 @@ class BlurImageFilterBench : public Benchmark {
     static const int kX = 0;
     static const int kY = 0;
     const SkIRect bmpRect =
-        SkIRect::MakeXYWH(kX, kY, fCheckerboard.width(), fCheckerboard.height());
+        SkIRect::MakeXYWH(kX, kY, fCheckerboard->width(), fCheckerboard->height());
     const SkIRect bmpRectInset = bmpRect.makeInset(10, 10);
 
     sk_sp<SkImageFilter> input =
@@ -98,9 +98,10 @@ class BlurImageFilterBench : public Benchmark {
     const SkIRect* crop = fIsExpanded ? &bmpRect : fIsCropped ? &bmpRectInset : nullptr;
     SkPaint paint;
     paint.setImageFilter(SkImageFilters::Blur(fSigmaX, fSigmaY, std::move(input), crop));
+    SkSamplingOptions sampling;
 
     for (int i = 0; i < loops; i++) {
-      canvas->drawBitmap(fCheckerboard, kX, kY, &paint);
+      canvas->drawImage(fCheckerboard, kX, kY, sampling, &paint);
     }
   }
 
@@ -110,7 +111,7 @@ class BlurImageFilterBench : public Benchmark {
   bool fIsCropped;
   bool fIsExpanded;
   bool fInitialized;
-  SkBitmap fCheckerboard;
+  sk_sp<SkImage> fCheckerboard;
   SkScalar fSigmaX, fSigmaY;
   using INHERITED = Benchmark;
 };

@@ -31,9 +31,12 @@ size_t GrDawnRenderTarget::onGpuMemorySize() const {
       this->backendFormat(), this->dimensions(), numSamples, GrMipmapped::kNo);
 }
 
-bool GrDawnRenderTarget::completeStencilAttachment() { return true; }
+bool GrDawnRenderTarget::completeStencilAttachment(GrAttachment* stencil, bool useMSAASurface) {
+  SkASSERT(useMSAASurface == (this->numSamples() > 1));
+  return true;
+}
 
-GrDawnRenderTarget::~GrDawnRenderTarget() {}
+GrDawnRenderTarget::~GrDawnRenderTarget() = default;
 
 void GrDawnRenderTarget::onRelease() { INHERITED::onRelease(); }
 

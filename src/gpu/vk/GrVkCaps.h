@@ -15,6 +15,7 @@
 class GrShaderCaps;
 class GrVkExtensions;
 struct GrVkInterface;
+class GrVkRenderTarget;
 
 /**
  * Stores some capabilities of a Vk backend.
@@ -33,7 +34,7 @@ class GrVkCaps : public GrCaps {
 
   bool isFormatSRGB(const GrBackendFormat&) const override;
 
-  bool isFormatTexturable(const GrBackendFormat&) const override;
+  bool isFormatTexturable(const GrBackendFormat&, GrTextureType) const override;
   bool isVkFormatTexturable(VkFormat) const;
 
   bool isFormatCopyable(const GrBackendFormat&) const override { return true; }
@@ -71,10 +72,15 @@ class GrVkCaps : public GrCaps {
     return SkToBool(FormatInfo::kBlitSrc_Flag & flags);
   }
 
-  // Sometimes calls to QueueWaitIdle return before actually signalling the fences
-  // on the command buffers even though they have completed. This causes an assert to fire when
-  // destroying the command buffers. Therefore we add a sleep to make sure the fence signals.
-  bool mustSleepOnTearDown() const { return fMustSleepOnTearDown; }
+  // Gets the GrColorType that should be used to transfer data in/out of a transfer buffer to
+  // write/read data when using a VkFormat with a specified color type.
+  GrColorType transferColorType(VkFormat, GrColorType surfaceColorType) const;
+
+  // On some GPUs (Windows Nvidia and Imagination) calls to QueueWaitIdle return before actually
+  // signalling the fences on the command buffers even though they have completed. This causes
+  // issues when then deleting the command buffers. Therefore we additionally will call
+  // vkWaitForFences on each outstanding command buffer to make sure the driver signals the fence.
+  bool mustSyncCommandBuffersWithQueue() const { return fMustSyncCommandBuffersWithQueue; }
 
   // Returns true if we should always make dedicated allocations for VkImages.
   bool shouldAlwaysUseDedicatedImageMemory() const { return fShouldAlwaysUseDedicatedImageMemory; }
@@ -132,6 +138,16 @@ class GrVkCaps : public GrCaps {
   // Returns true if it supports ycbcr conversion for samplers
   bool supportsYcbcrConversion() const { return fSupportsYcbcrConversion; }
 
+  // Returns the number of descriptor slots used by immutable ycbcr VkImages.
+  //
+  // TODO: We should update this to return a count for a specific format or external format. We
+  // can use vkGetPhysicalDeviceImageFormatProperties2 with a
+  // VkSamplerYcbcrConversionImageFormatProperties to query this. However, right now that call
+  // does not support external android formats which is where the majority of ycbcr images are
+  // coming from. So for now we stay safe and always return 3 here which is the max value that the
+  // count could be for any format.
+  uint32_t ycbcrCombinedImageSamplerDescriptorCount() const { return 3; }
+
   // Returns true if the device supports protected memory.
   bool supportsProtectedMemory() const { return fSupportsProtectedMemory; }
 
@@ -146,11 +162,29 @@ class GrVkCaps : public GrCaps {
 
   uint32_t maxInputAttachmentDescriptors() const { return fMaxInputAttachmentDescriptors; }
 
-  bool preferCachedCpuMemory() const { return fPreferCachedCpuMemory; }
-
   bool mustInvalidatePrimaryCmdBufferStateAfterClearAttachments() const {
     return fMustInvalidatePrimaryCmdBufferStateAfterClearAttachments;
   }
+
+  // For host visible allocations, this returns true if we require that they are coherent. This
+  // is used to work around bugs for devices that don't handle non-coherent memory correctly.
+  bool mustUseCoherentHostVisibleMemory() const { return fMustUseCoherentHostVisibleMemory; }
+
+  // Returns whether a pure GPU accessible buffer is more performant to read than a buffer that is
+  // also host visible. If so then in some cases we may prefer the cost of doing a copy to the
+  // buffer. This typically would only be the case for buffers that are written once and read
+  // many times on the gpu.
+  bool gpuOnlyBuffersMorePerformant() const { return fGpuOnlyBuffersMorePerformant; }
+
+  // For our CPU write and GPU read buffers (vertex, uniform, etc.), should we keep these buffers
+  // persistently mapped. In general the answer will be yes. The main case we don't do this is
+  // when using special memory that is DEVICE_LOCAL and HOST_VISIBLE on discrete GPUs.
+  bool shouldPersistentlyMapCpuToGpuBuffers() const {
+    return fShouldPersistentlyMapCpuToGpuBuffers;
+  }
+
+  // The max draw count that can be passed into indirect draw calls.
+  uint32_t maxDrawIndirectDrawCount() const { return fMaxDrawIndirectDrawCount; }
 
   /**
    * Helpers used by canCopySurface. In all cases if the SampleCnt parameter is zero that means
@@ -191,6 +225,8 @@ class GrVkCaps : public GrCaps {
 
   GrInternalSurfaceFlags getExtraSurfaceFlagsForDeferredRT() const override;
 
+  VkShaderStageFlags getPushConstantStageFlags() const;
+
   // If true then when doing MSAA draws, we will prefer to discard the msaa attachment on load
   // and stores. The use of this feature for specific draws depends on the render target having a
   // resolve attachment, and if we need to load previous data the resolve attachment must be
@@ -198,10 +234,14 @@ class GrVkCaps : public GrCaps {
   // like normal.
   // This flag is similar to enabling gl render to texture for msaa rendering.
   bool preferDiscardableMSAAAttachment() const { return fPreferDiscardableMSAAAttachment; }
-
   bool mustLoadFullImageWithDiscardableMSAA() const {
     return fMustLoadFullImageWithDiscardableMSAA;
   }
+  bool supportsDiscardableMSAAForDMSAA() const { return fSupportsDiscardableMSAAForDMSAA; }
+  bool renderTargetSupportsDiscardableMSAA(const GrVkRenderTarget*) const;
+  bool programInfoWillUseDiscardableMSAA(const GrProgramInfo&) const;
+
+  bool dmsaaResolveCanBeUsedAsTextureInSameRenderPass() const override { return false; }
 
 #if GR_TEST_UTILS
   std::vector<TestFormatColorTypeCombination> getTestingCombinations() const override;
@@ -245,11 +285,14 @@ class GrVkCaps : public GrCaps {
 
   GrSwizzle onGetReadSwizzle(const GrBackendFormat&, GrColorType) const override;
 
-  GrDstSampleType onGetDstSampleTypeForProxy(const GrRenderTargetProxy*) const override;
+  GrDstSampleFlags onGetDstSampleFlagsForProxy(const GrRenderTargetProxy*) const override;
+
+  bool onSupportsDynamicMSAA(const GrRenderTargetProxy*) const override;
 
   // ColorTypeInfo for a specific format
   struct ColorTypeInfo {
     GrColorType fColorType = GrColorType::kUnknown;
+    GrColorType fTransferColorType = GrColorType::kUnknown;
     enum {
       kUploadData_Flag = 0x1,
       // Does Ganesh itself support rendering to this colorType & format pair. Renderability
@@ -308,7 +351,7 @@ class GrVkCaps : public GrCaps {
 
   SkSTArray<1, GrVkYcbcrConversionInfo> fYcbcrInfos;
 
-  bool fMustSleepOnTearDown = false;
+  bool fMustSyncCommandBuffersWithQueue = false;
   bool fShouldAlwaysUseDedicatedImageMemory = false;
 
   bool fAvoidUpdateBuffers = false;
@@ -333,6 +376,10 @@ class GrVkCaps : public GrCaps {
   bool fPreferPrimaryOverSecondaryCommandBuffers = true;
   bool fMustInvalidatePrimaryCmdBufferStateAfterClearAttachments = false;
 
+  bool fMustUseCoherentHostVisibleMemory = false;
+  bool fGpuOnlyBuffersMorePerformant = false;
+  bool fShouldPersistentlyMapCpuToGpuBuffers = true;
+
   // We default this to 100 since we already cap the max render tasks at 100 before doing a
   // submission in the GrDrawingManager, so we shouldn't be going over 100 secondary command
   // buffers per primary anyways.
@@ -340,10 +387,11 @@ class GrVkCaps : public GrCaps {
 
   uint32_t fMaxInputAttachmentDescriptors = 0;
 
-  bool fPreferCachedCpuMemory = true;
-
   bool fPreferDiscardableMSAAAttachment = false;
   bool fMustLoadFullImageWithDiscardableMSAA = false;
+  bool fSupportsDiscardableMSAAForDMSAA = true;
+
+  uint32_t fMaxDrawIndirectDrawCount = 0;
 
   using INHERITED = GrCaps;
 };

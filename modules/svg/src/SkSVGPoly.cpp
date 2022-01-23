@@ -13,41 +13,39 @@
 
 SkSVGPoly::SkSVGPoly(SkSVGTag t) : INHERITED(t) {}
 
-void SkSVGPoly::setPoints(const SkSVGPointsType& pts) {
-  fPath = SkPath::Polygon(
-      pts.begin(), pts.count(),
-      this->tag() == SkSVGTag::kPolygon);  // only polygons are auto-closed
+bool SkSVGPoly::parseAndSetAttribute(const char* n, const char* v) {
+    if (INHERITED::parseAndSetAttribute(n, v)) {
+        return true;
+    }
+
+    if (this->setPoints(SkSVGAttributeParser::parse<SkSVGPointsType>("points", n, v))) {
+        // TODO: we can likely just keep the points array and create the SkPath when needed.
+        fPath = SkPath::Polygon(
+                fPoints.begin(), fPoints.count(),
+                this->tag() == SkSVGTag::kPolygon);  // only polygons are auto-closed
+    }
+
+    // No other attributes on this node
+    return false;
 }
 
-void SkSVGPoly::onSetAttribute(SkSVGAttribute attr, const SkSVGValue& v) {
-  switch (attr) {
-    case SkSVGAttribute::kPoints:
-      if (const auto* pts = v.as<SkSVGPointsValue>()) {
-        this->setPoints(*pts);
-      }
-      break;
-    default: this->INHERITED::onSetAttribute(attr, v);
-  }
-}
-
-void SkSVGPoly::onDraw(
-    SkCanvas* canvas, const SkSVGLengthContext&, const SkPaint& paint,
-    SkPathFillType fillType) const {
-  // the passed fillType follows inheritance rules and needs to be applied at draw time.
-  fPath.setFillType(fillType);
-  canvas->drawPath(fPath, paint);
+void SkSVGPoly::onDraw(SkCanvas* canvas, const SkSVGLengthContext&, const SkPaint& paint,
+                       SkPathFillType fillType) const {
+    // the passed fillType follows inheritance rules and needs to be applied at draw time.
+    fPath.setFillType(fillType);
+    canvas->drawPath(fPath, paint);
 }
 
 SkPath SkSVGPoly::onAsPath(const SkSVGRenderContext& ctx) const {
-  SkPath path = fPath;
+    SkPath path = fPath;
 
-  // clip-rule can be inherited and needs to be applied at clip time.
-  path.setFillType(ctx.presentationContext().fInherited.fClipRule->asFillType());
+    // clip-rule can be inherited and needs to be applied at clip time.
+    path.setFillType(ctx.presentationContext().fInherited.fClipRule->asFillType());
 
-  this->mapToParent(&path);
-  return path;
+    this->mapToParent(&path);
+    return path;
 }
 
 SkRect SkSVGPoly::onObjectBoundingBox(const SkSVGRenderContext& ctx) const {
-  return fPath.getBounds();
+    return fPath.getBounds();
 }

@@ -16,7 +16,7 @@
 
 /* www.worldserver.com/turk/computergraphics/FixedSqrt.pdf
  */
-int32_t SkSqrtBits(int32_t x, int count) {
+int32_t SkSqrtBits(int32_t x, int count) noexcept {
   SkASSERT(x >= 0 && count > 0 && (unsigned)count <= 30);
 
   uint32_t root = 0;
@@ -41,13 +41,13 @@ int32_t SkSqrtBits(int32_t x, int count) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-size_t SkSafeMath::Add(size_t x, size_t y) {
+size_t SkSafeMath::Add(size_t x, size_t y) noexcept {
   SkSafeMath tmp;
   size_t sum = tmp.add(x, y);
   return tmp.ok() ? sum : SIZE_MAX;
 }
 
-size_t SkSafeMath::Mul(size_t x, size_t y) {
+size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
   SkSafeMath tmp;
   size_t prod = tmp.mul(x, y);
   return tmp.ok() ? prod : SIZE_MAX;

@@ -13,7 +13,6 @@
 #  include "include/core/SkBitmap.h"
 #  include "include/core/SkCanvas.h"
 #  include "include/core/SkColor.h"
-#  include "include/core/SkFilterQuality.h"
 #  include "include/core/SkImage.h"
 #  include "include/core/SkImageInfo.h"
 #  include "include/core/SkPaint.h"
@@ -40,10 +39,8 @@
 #  include <cstdint>
 #  include <memory>
 
-class GrSurfaceDrawContext;
-
 namespace skiagm {
-class RectangleTexture : public GpuGM {
+class RectangleTexture : public GM {
  public:
   RectangleTexture() { this->setBGColor(0xFFFFFFFF); }
 
@@ -137,17 +134,16 @@ class RectangleTexture : public GpuGM {
     fSmallImg = nullptr;
   }
 
-  DrawResult onDraw(
-      GrRecordingContext*, GrSurfaceDrawContext*, SkCanvas* canvas, SkString*) override {
+  DrawResult onDraw(SkCanvas* canvas, SkString* errorMsg) override {
     SkASSERT(fGradImgs[0] && fGradImgs[1] && fSmallImg);
 
     static constexpr SkScalar kPad = 5.f;
 
-    constexpr SkFilterQuality kQualities[] = {
-        kNone_SkFilterQuality,
-        kLow_SkFilterQuality,
-        kMedium_SkFilterQuality,
-        kHigh_SkFilterQuality,
+    const SkSamplingOptions kSamplings[] = {
+        SkSamplingOptions(SkFilterMode::kNearest),
+        SkSamplingOptions(SkFilterMode::kLinear),
+        SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear),
+        SkSamplingOptions(SkCubicResampler::Mitchell()),
     };
 
     constexpr SkScalar kScales[] = {1.0f, 1.2f, 0.75f};
@@ -157,26 +153,24 @@ class RectangleTexture : public GpuGM {
       auto img = fGradImgs[i];
       int w = img->width();
       int h = img->height();
-      for (auto s : kScales) {
+      for (auto scale : kScales) {
         canvas->save();
-        canvas->scale(s, s);
-        for (auto q : kQualities) {
+        canvas->scale(scale, scale);
+        for (auto s : kSamplings) {
           // drawImage
-          SkPaint plainPaint;
-          plainPaint.setFilterQuality(q);
-          canvas->drawImage(img, 0, 0, &plainPaint);
+          canvas->drawImage(img, 0, 0, s);
           canvas->translate(w + kPad, 0);
 
           // clamp/clamp shader
           SkPaint clampPaint;
-          clampPaint.setShader(fGradImgs[i]->makeShader(SkSamplingOptions(q)));
+          clampPaint.setShader(fGradImgs[i]->makeShader(s));
           canvas->drawRect(SkRect::MakeWH(1.5f * w, 1.5f * h), clampPaint);
           canvas->translate(1.5f * w + kPad, 0);
 
           // repeat/mirror shader
           SkPaint repeatPaint;
-          repeatPaint.setShader(fGradImgs[i]->makeShader(
-              SkTileMode::kRepeat, SkTileMode::kMirror, SkSamplingOptions(q)));
+          repeatPaint.setShader(
+              fGradImgs[i]->makeShader(SkTileMode::kRepeat, SkTileMode::kMirror, s));
           canvas->drawRect(SkRect::MakeWH(1.5f * w, 1.5f * h), repeatPaint);
           canvas->translate(1.5f * w + kPad, 0);
 
@@ -184,11 +178,11 @@ class RectangleTexture : public GpuGM {
           auto srcRect = SkRect::MakeXYWH(.25f * w, .25f * h, .50f * w, .50f * h);
           auto dstRect = SkRect::MakeXYWH(0, 0, .50f * w, .50f * h);
           canvas->drawImageRect(
-              fGradImgs[i], srcRect, dstRect, &plainPaint, SkCanvas::kStrict_SrcRectConstraint);
+              fGradImgs[i], srcRect, dstRect, s, nullptr, SkCanvas::kStrict_SrcRectConstraint);
           canvas->translate(.5f * w + kPad, 0);
         }
         canvas->restore();
-        canvas->translate(0, kPad + 1.5f * h * s);
+        canvas->translate(0, kPad + 1.5f * h * scale);
       }
     }
 
@@ -196,8 +190,15 @@ class RectangleTexture : public GpuGM {
     canvas->translate(kOutset, kOutset);
     auto dstRect = SkRect::Make(fSmallImg->dimensions()).makeOutset(kOutset, kOutset);
 
-    for (int fq = kNone_SkFilterQuality; fq <= kLast_SkFilterQuality; ++fq) {
-      if (fq == kMedium_SkFilterQuality) {
+    const SkSamplingOptions gSamplings[] = {
+        SkSamplingOptions(SkFilterMode::kNearest),
+        SkSamplingOptions(SkFilterMode::kLinear),
+        SkSamplingOptions(SkFilterMode::kLinear, SkMipmapMode::kLinear),
+        SkSamplingOptions(SkCubicResampler::Mitchell()),
+    };
+
+    for (const auto& sampling : gSamplings) {
+      if (!sampling.useCubic && sampling.mipmap != SkMipmapMode::kNone) {
         // Medium is the same as Low for upscaling.
         continue;
       }
@@ -210,8 +211,7 @@ class RectangleTexture : public GpuGM {
           lm.postScale(6.5f, 6.5f);
           SkPaint paint;
           paint.setShader(fSmallImg->makeShader(
-              static_cast<SkTileMode>(tx), static_cast<SkTileMode>(ty),
-              SkSamplingOptions((SkFilterQuality)fq), lm));
+              static_cast<SkTileMode>(tx), static_cast<SkTileMode>(ty), sampling, lm));
           canvas->drawRect(dstRect, paint);
           canvas->translate(dstRect.width() + kPad, 0);
         }

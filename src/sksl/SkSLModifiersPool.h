@@ -8,7 +8,7 @@
 #ifndef SKSL_MODIFIERSPOOL
 #define SKSL_MODIFIERSPOOL
 
-#include "src/sksl/ir/SkSLModifiers.h"
+#include "include/private/SkSLModifiers.h"
 
 #include <unordered_set>
 
@@ -20,10 +20,12 @@ namespace SkSL {
  */
 class ModifiersPool {
  public:
-  const Modifiers* addToPool(const Modifiers& modifiers) {
+  const Modifiers* add(const Modifiers& modifiers) {
     auto [iter, wasInserted] = fModifiersSet.insert(modifiers);
     return &*iter;
   }
+
+  void clear() { fModifiersSet.clear(); }
 
  private:
   std::unordered_set<Modifiers> fModifiersSet;

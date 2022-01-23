@@ -53,8 +53,9 @@ class AnimationBuilder final : public SkNoncopyable {
  public:
   AnimationBuilder(
       sk_sp<ResourceProvider>, sk_sp<SkFontMgr>, sk_sp<PropertyObserver>, sk_sp<Logger>,
-      sk_sp<MarkerObserver>, sk_sp<PrecompInterceptor>, Animation::Builder::Stats*,
-      const SkSize& comp_size, float duration, float framerate, uint32_t flags);
+      sk_sp<MarkerObserver>, sk_sp<PrecompInterceptor>, sk_sp<ExpressionManager>,
+      Animation::Builder::Stats*, const SkSize& comp_size, float duration, float framerate,
+      uint32_t flags);
 
   struct AnimationInfo {
     std::unique_ptr<sksg::Scene> fScene;
@@ -141,18 +142,20 @@ class AnimationBuilder final : public SkNoncopyable {
 
   class AutoPropertyTracker {
    public:
-    AutoPropertyTracker(const AnimationBuilder* builder, const skjson::ObjectValue& obj)
-        : fBuilder(builder), fPrevContext(builder->fPropertyObserverContext) {
+    AutoPropertyTracker(
+        const AnimationBuilder* builder, const skjson::ObjectValue& obj,
+        const PropertyObserver::NodeType node_type)
+        : fBuilder(builder), fPrevContext(builder->fPropertyObserverContext), fNodeType(node_type) {
       if (fBuilder->fPropertyObserver) {
         auto observer = builder->fPropertyObserver.get();
         this->updateContext(observer, obj);
-        observer->onEnterNode(fBuilder->fPropertyObserverContext);
+        observer->onEnterNode(fBuilder->fPropertyObserverContext, fNodeType);
       }
     }
 
     ~AutoPropertyTracker() {
       if (fBuilder->fPropertyObserver) {
-        fBuilder->fPropertyObserver->onLeavingNode(fBuilder->fPropertyObserverContext);
+        fBuilder->fPropertyObserver->onLeavingNode(fBuilder->fPropertyObserverContext, fNodeType);
         fBuilder->fPropertyObserverContext = fPrevContext;
       }
     }
@@ -162,12 +165,15 @@ class AnimationBuilder final : public SkNoncopyable {
 
     const AnimationBuilder* fBuilder;
     const char* fPrevContext;
+    const PropertyObserver::NodeType fNodeType;
   };
 
   bool dispatchColorProperty(const sk_sp<sksg::Color>&) const;
   bool dispatchOpacityProperty(const sk_sp<sksg::OpacityEffect>&) const;
   bool dispatchTextProperty(const sk_sp<TextAdapter>&) const;
   bool dispatchTransformProperty(const sk_sp<TransformAdapter2D>&) const;
+
+  sk_sp<ExpressionManager> expression_manager() const;
 
  private:
   friend class CompositionBuilder;
@@ -230,6 +236,7 @@ class AnimationBuilder final : public SkNoncopyable {
   sk_sp<Logger> fLogger;
   sk_sp<MarkerObserver> fMarkerObserver;
   sk_sp<PrecompInterceptor> fPrecompInterceptor;
+  sk_sp<ExpressionManager> fExpressionManager;
   Animation::Builder::Stats* fStats;
   const SkSize fCompSize;
   const float fDuration, fFrameRate;

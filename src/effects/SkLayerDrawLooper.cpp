@@ -9,8 +9,6 @@
 #include "include/core/SkMaskFilter.h"
 #include "include/core/SkString.h"
 #include "include/core/SkUnPreMultiply.h"
-#include "include/effects/SkBlurDrawLooper.h"
-#include "include/effects/SkLayerDrawLooper.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkBlendModePriv.h"
 #include "src/core/SkColorSpacePriv.h"
@@ -19,6 +17,11 @@
 #include "src/core/SkStringUtils.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/core/SkXfermodePriv.h"
+
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+
+#  include "include/effects/SkBlurDrawLooper.h"
+#  include "include/effects/SkLayerDrawLooper.h"
 
 SkLayerDrawLooper::LayerInfo::LayerInfo() {
   fPaintBits = 0;                  // ignore our paint fields
@@ -60,13 +63,13 @@ static SkColor4f xferColor(const SkColor4f& src, const SkColor4f& dst, SkBlendMo
 void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
     SkPaint* dst, const SkPaint& src, const LayerInfo& info) {
   SkColor4f srcColor = src.getColor4f();
-#ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
+#  ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
   // The framework may respect the alpha value on the original paint.
   // Match this legacy behavior.
   if (src.getAlpha() == 255) {
     srcColor.fA = dst->getColor4f().fA;
   }
-#endif
+#  endif
   dst->setColor4f(
       xferColor(srcColor, dst->getColor4f(), (SkBlendMode)info.fColorMode), sk_srgb_singleton());
 
@@ -108,11 +111,11 @@ void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
     dst->setColorFilter(src.refColorFilter());
   }
   if (bits & kXfermode_Bit) {
-    dst->setBlendMode(src.getBlendMode());
+    dst->setBlender(src.refBlender());
   }
 
   // we don't override these
-#if 0
+#  if 0
     dst->setTypeface(src.getTypeface());
     dst->setTextSize(src.getTextSize());
     dst->setTextScaleX(src.getTextScaleX());
@@ -120,7 +123,7 @@ void SkLayerDrawLooper::LayerDrawLooperContext::ApplyInfo(
     dst->setLooper(src.getLooper());
     dst->setTextEncoding(src.getTextEncoding());
     dst->setHinting(src.getHinting());
-#endif
+#  endif
 }
 
 SkLayerDrawLooper::LayerDrawLooperContext::LayerDrawLooperContext(const SkLayerDrawLooper* looper)
@@ -207,7 +210,7 @@ void SkLayerDrawLooper::flatten(SkWriteBuffer& buffer) const {
 sk_sp<SkFlattenable> SkLayerDrawLooper::CreateProc(SkReadBuffer& buffer) {
   int count = buffer.readInt();
 
-#if defined(SK_BUILD_FOR_FUZZER)
+#  if defined(SK_BUILD_FOR_FUZZER)
   if (count > 100) {
     count = 100;
   }
@@ -222,7 +225,7 @@ sk_sp<SkFlattenable> SkLayerDrawLooper::CreateProc(SkReadBuffer& buffer) {
     info.fColorMode = (SkBlendMode)buffer.readInt();
     buffer.readPoint(&info.fOffset);
     info.fPostTranslate = buffer.readBool();
-    buffer.readPaint(builder.addLayerOnTop(info), nullptr);
+    *builder.addLayerOnTop(info) = buffer.readPaint();
     if (!buffer.isValid()) {
       return nullptr;
     }
@@ -320,3 +323,5 @@ sk_sp<SkDrawLooper> SkBlurDrawLooper::Make(
 
   return builder.detach();
 }
+
+#endif

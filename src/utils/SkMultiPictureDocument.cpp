@@ -196,6 +196,9 @@ bool SkMultiPictureDocumentRead(
   }
 
   auto picture = SkPicture::MakeFromStream(stream, procs);
+  if (!picture) {
+    return false;
+  }
 
   PagerCanvas canvas(joined.toCeil(), dstArray, dstArrayCount);
   // Must call playback(), not drawPicture() to reach

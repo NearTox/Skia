@@ -192,12 +192,13 @@ class ImageFilterMatrixWLocalMatrix : public skiagm::GM {
     filterMatrix.setRotate(fDegrees, 64, 64);
 
     sk_sp<SkImageFilter> filter =
-        SkImageFilter::MakeMatrixFilter(filterMatrix, kLow_SkFilterQuality, nullptr)
+        SkImageFilters::MatrixTransform(
+            filterMatrix, SkSamplingOptions(SkFilterMode::kLinear), nullptr)
             ->makeWithLocalMatrix(localMatrix);
 
     SkPaint p;
     p.setImageFilter(filter);
-    canvas->drawImage(fImage.get(), 128, 128, &p);
+    canvas->drawImage(fImage.get(), 128, 128, SkSamplingOptions(), &p);
   }
 
  private:
@@ -244,10 +245,10 @@ class ImageFilterComposedTransform : public skiagm::GM {
 
     canvas->save();
     canvas->translate(tx, ty);
-    canvas->clipRect(SkRect::MakeIWH(256, 256));
+    canvas->clipRect(SkRect::MakeWH(256, 256));
     canvas->scale(0.5f, 0.5f);
     canvas->translate(128, 128);
-    canvas->drawImage(fImage, 0, 0, &p);
+    canvas->drawImage(fImage, 0, 0, SkSamplingOptions(), &p);
     canvas->restore();
   }
 
@@ -256,7 +257,7 @@ class ImageFilterComposedTransform : public skiagm::GM {
     SkPoint v = {fImage->width() / 2.f, fImage->height() / 2.f};
     sk_sp<SkImageFilter> filter = SkImageFilters::Offset(-v.fX, -v.fY, nullptr);
     filter = SkImageFilters::MatrixTransform(
-        matrix, SkFilterQuality::kLow_SkFilterQuality, std::move(filter));
+        matrix, SkSamplingOptions(SkFilterMode::kLinear), std::move(filter));
     filter = SkImageFilters::Offset(v.fX, v.fY, std::move(filter));
     return filter;
   }
@@ -266,7 +267,7 @@ class ImageFilterComposedTransform : public skiagm::GM {
     SkPoint v = {fImage->width() / 2.f, fImage->height() / 2.f};
     sk_sp<SkImageFilter> offset = SkImageFilters::Offset(-v.fX, -v.fY, nullptr);
     sk_sp<SkImageFilter> filter =
-        SkImageFilters::MatrixTransform(matrix, SkFilterQuality::kLow_SkFilterQuality, nullptr);
+        SkImageFilters::MatrixTransform(matrix, SkSamplingOptions(SkFilterMode::kLinear), nullptr);
     filter = SkImageFilters::Compose(std::move(filter), std::move(offset));
     filter = SkImageFilters::Offset(v.fX, v.fY, std::move(filter));
     return filter;
@@ -277,7 +278,7 @@ class ImageFilterComposedTransform : public skiagm::GM {
     SkPoint v = {fImage->width() / 2.f, fImage->height() / 2.f};
     sk_sp<SkImageFilter> filter = SkImageFilters::Offset(-v.fX, -v.fY, nullptr);
     filter = SkImageFilters::MatrixTransform(
-        matrix, SkFilterQuality::kLow_SkFilterQuality, std::move(filter));
+        matrix, SkSamplingOptions(SkFilterMode::kLinear), std::move(filter));
     sk_sp<SkImageFilter> offset = SkImageFilters::Offset(v.fX, v.fY, nullptr);
     filter = SkImageFilters::Compose(std::move(offset), std::move(filter));
     return filter;
@@ -288,7 +289,7 @@ class ImageFilterComposedTransform : public skiagm::GM {
     SkPoint v = {fImage->width() / 2.f, fImage->height() / 2.f};
     sk_sp<SkImageFilter> offset = SkImageFilters::Offset(-v.fX, -v.fY, nullptr);
     sk_sp<SkImageFilter> filter =
-        SkImageFilters::MatrixTransform(matrix, SkFilterQuality::kLow_SkFilterQuality, nullptr);
+        SkImageFilters::MatrixTransform(matrix, SkSamplingOptions(SkFilterMode::kLinear), nullptr);
     filter = SkImageFilters::Compose(std::move(filter), std::move(offset));
     offset = SkImageFilters::Offset(v.fX, v.fY, nullptr);
     filter = SkImageFilters::Compose(std::move(offset), std::move(filter));
@@ -297,3 +298,50 @@ class ImageFilterComposedTransform : public skiagm::GM {
 };
 
 DEF_GM(return new ImageFilterComposedTransform();)
+
+// Tests SkImageFilters::Image under tricky matrices (mirrors and perspective)
+DEF_SIMPLE_GM(imagefilter_transformed_image, canvas, 256, 256) {
+  sk_sp<SkImage> image = GetResourceAsImage("images/color_wheel.png");
+  sk_sp<SkImageFilter> imageFilter = SkImageFilters::Image(image);
+
+  const SkRect imageRect = SkRect::MakeIWH(image->width(), image->height());
+
+  SkM44 m1 =
+      SkM44::Translate(0.9f * image->width(), 0.1f * image->height()) * SkM44::Scale(-.8f, .8f);
+
+  SkM44 m2 = SkM44::RectToRect({-1.f, -1.f, 1.f, 1.f}, imageRect) *
+             SkM44::Perspective(0.01f, 100.f, SK_ScalarPI / 3.f) *
+             SkM44::Translate(0.f, 0.f, -2.f) * SkM44::Rotate({0.f, 1.f, 0.f}, SK_ScalarPI / 6.f) *
+             SkM44::RectToRect(imageRect, {-1.f, -1.f, 1.f, 1.f});
+
+  SkFont font(ToolUtils::create_portable_typeface());
+  canvas->drawString("Columns should match", 5.f, 15.f, font, SkPaint());
+  canvas->translate(0.f, 10.f);
+
+  SkSamplingOptions sampling(SkFilterMode::kLinear);
+  for (auto m : {m1, m2}) {
+    canvas->save();
+    for (bool canvasTransform : {false, true}) {
+      canvas->save();
+      canvas->clipRect(imageRect);
+
+      sk_sp<SkImageFilter> finalFilter;
+      if (canvasTransform) {
+        canvas->concat(m);
+        finalFilter = imageFilter;
+      } else {
+        finalFilter = SkImageFilters::MatrixTransform(m.asM33(), sampling, imageFilter);
+      }
+
+      SkPaint paint;
+      paint.setImageFilter(std::move(finalFilter));
+      canvas->drawPaint(paint);
+
+      canvas->restore();
+      canvas->translate(image->width(), 0.f);
+    }
+    canvas->restore();
+
+    canvas->translate(0.f, image->height());
+  }
+}

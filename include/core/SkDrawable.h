@@ -67,7 +67,7 @@ class SK_API SkDrawable : public SkFlattenable {
 
   class GpuDrawHandler {
    public:
-    virtual ~GpuDrawHandler() {}
+    virtual ~GpuDrawHandler() = default;
 
     virtual void draw(const GrBackendDrawableInfo&) {}
   };
@@ -120,7 +120,7 @@ class SK_API SkDrawable : public SkFlattenable {
   }
 
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const override { return nullptr; }
+  const char* getTypeName() const noexcept override { return nullptr; }
 
  protected:
   SkDrawable();

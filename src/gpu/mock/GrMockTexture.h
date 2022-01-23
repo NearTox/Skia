@@ -86,8 +86,15 @@ class GrMockRenderTarget : public GrRenderTarget {
     this->registerWithCacheWrapped(GrWrapCacheable::kNo);
   }
 
-  bool canAttemptStencilAttachment() const override { return true; }
-  bool completeStencilAttachment() override { return true; }
+  bool canAttemptStencilAttachment(bool useMSAASurface) const override {
+    SkASSERT(useMSAASurface == (this->numSamples() > 1));
+    return true;
+  }
+
+  bool completeStencilAttachment(GrAttachment*, bool useMSAASurface) override {
+    SkASSERT(useMSAASurface == (this->numSamples() > 1));
+    return true;
+  }
 
   size_t onGpuMemorySize() const override {
     int numColorSamples = this->numSamples();
@@ -148,16 +155,12 @@ class GrMockTextureRenderTarget : public GrMockTexture, public GrMockRenderTarge
     this->registerWithCacheWrapped(cacheable);
   }
 
-  GrTexture* asTexture() override { return this; }
-  GrRenderTarget* asRenderTarget() override { return this; }
-  const GrTexture* asTexture() const override { return this; }
-  const GrRenderTarget* asRenderTarget() const override { return this; }
+  GrTexture* asTexture() noexcept override { return this; }
+  GrRenderTarget* asRenderTarget() noexcept override { return this; }
+  const GrTexture* asTexture() const noexcept override { return this; }
+  const GrRenderTarget* asRenderTarget() const noexcept override { return this; }
 
   GrBackendFormat backendFormat() const override { return GrMockTexture::backendFormat(); }
-
- protected:
-  // This avoids an inherits via dominance warning on MSVC.
-  void willRemoveLastRef() override { GrTexture::willRemoveLastRef(); }
 
  private:
   void onAbandon() override {

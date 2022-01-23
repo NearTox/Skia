@@ -94,7 +94,7 @@ class Window_unix : public Window {
   int fPendingHeight;
   bool fPendingResize;
 
-  BackendType fBackend;
+  BackendType fBackend = BackendType::kRaster_BackendType;
 
   std::string fClipboardText;
 

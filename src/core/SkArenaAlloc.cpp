@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <new>
 
-static char* end_chain(char*) { return nullptr; }
+static char* end_chain(char*) noexcept { return nullptr; }
 
-SkArenaAlloc::SkArenaAlloc(char* block, size_t size, size_t firstHeapAllocation)
+SkArenaAlloc::SkArenaAlloc(char* block, size_t size, size_t firstHeapAllocation) noexcept
     : fDtorCursor{block},
       fCursor{block},
       fEnd{block + ToU32(size)},
@@ -27,14 +27,14 @@ SkArenaAlloc::SkArenaAlloc(char* block, size_t size, size_t firstHeapAllocation)
 
 SkArenaAlloc::~SkArenaAlloc() { RunDtorsOnBlock(fDtorCursor); }
 
-void SkArenaAlloc::installFooter(FooterAction* action, uint32_t padding) {
+void SkArenaAlloc::installFooter(FooterAction* action, uint32_t padding) noexcept {
   assert(SkTFitsIn<uint8_t>(padding));
   this->installRaw(action);
   this->installRaw((uint8_t)padding);
   fDtorCursor = fCursor;
 }
 
-char* SkArenaAlloc::SkipPod(char* footerEnd) {
+char* SkArenaAlloc::SkipPod(char* footerEnd) noexcept {
   char* objEnd = footerEnd - (sizeof(Footer) + sizeof(int32_t));
   int32_t skip;
   memmove(&skip, objEnd, sizeof(int32_t));
@@ -61,7 +61,6 @@ char* SkArenaAlloc::NextBlock(char* footerEnd) {
   delete[] objEnd;
   return nullptr;
 }
-
 
 void SkArenaAlloc::ensureSpace(uint32_t size, uint32_t alignment) {
   constexpr uint32_t headerSize = sizeof(Footer) + sizeof(ptrdiff_t);
@@ -132,18 +131,18 @@ restart:
   return objStart;
 }
 
-static uint32_t to_uint32_t(size_t v) {
+static constexpr uint32_t to_uint32_t(size_t v) noexcept {
   assert(SkTFitsIn<uint32_t>(v));
   return (uint32_t)v;
 }
 
-SkArenaAllocWithReset::SkArenaAllocWithReset(char* block, size_t size, size_t firstHeapAllocation)
+SkArenaAllocWithReset::SkArenaAllocWithReset(char* block, size_t size, size_t firstHeapAllocation) noexcept
     : SkArenaAlloc(block, size, firstHeapAllocation),
       fFirstBlock{block},
       fFirstSize{to_uint32_t(size)},
       fFirstHeapAllocationSize{to_uint32_t(firstHeapAllocation)} {}
 
-void SkArenaAllocWithReset::reset() {
+void SkArenaAllocWithReset::reset() noexcept {
   this->~SkArenaAllocWithReset();
   new (this) SkArenaAllocWithReset{fFirstBlock, fFirstSize, fFirstHeapAllocationSize};
 }

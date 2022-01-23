@@ -8,7 +8,6 @@
 #ifndef SkReadBuffer_DEFINED
 #define SkReadBuffer_DEFINED
 
-#include "include/core/SkDrawLooper.h"
 #include "include/core/SkFont.h"
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkPath.h"
@@ -17,19 +16,26 @@
 #include "include/core/SkRefCnt.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkSerialProcs.h"
+#include "src/core/SkBlenderBase.h"
 #include "src/core/SkColorFilterBase.h"
+#include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkPicturePriv.h"
+#include "src/core/SkSamplingPriv.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/shaders/SkShaderBase.h"
+
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
+#  include "include/core/SkDrawLooper.h"
+#endif
 
 class SkData;
 class SkImage;
 
 class SkReadBuffer {
  public:
-  SkReadBuffer() = default;
+  SkReadBuffer() noexcept = default;
   SkReadBuffer(const void* data, size_t size) { this->setMemory(data, size); }
 
   void setMemory(const void*, size_t);
@@ -37,12 +43,12 @@ class SkReadBuffer {
   /**
    *  Returns true IFF the version is older than the specified version.
    */
-  bool isVersionLT(SkPicturePriv::Version targetVersion) const {
+  bool isVersionLT(SkPicturePriv::Version targetVersion) const noexcept {
     SkASSERT(targetVersion > 0);
     return fVersion > 0 && fVersion < targetVersion;
   }
 
-  uint32_t getVersion() const { return fVersion; }
+  uint32_t getVersion() const noexcept { return fVersion; }
 
   /** This may be called at most once; most clients of SkReadBuffer should not mess with it. */
   void setVersion(int version) {
@@ -50,12 +56,12 @@ class SkReadBuffer {
     fVersion = version;
   }
 
-  size_t size() const { return fStop - fBase; }
-  size_t offset() const { return fCurr - fBase; }
-  bool eof() { return fCurr >= fStop; }
+  size_t size() const noexcept { return fStop - fBase; }
+  size_t offset() const noexcept { return fCurr - fBase; }
+  bool eof() noexcept { return fCurr >= fStop; }
   const void* skip(size_t size);
   const void* skip(size_t count, size_t size);  // does safe multiply
-  size_t available() const { return fStop - fCurr; }
+  size_t available() const noexcept { return fStop - fCurr; }
 
   template <typename T>
   const T* skipT() {
@@ -107,9 +113,7 @@ class SkReadBuffer {
 
   void readPath(SkPath* path);
 
-  SkReadPaintResult readPaint(SkPaint* paint, SkFont* font) {
-    return SkPaintPriv::Unflatten(paint, *this, font);
-  }
+  SkPaint readPaint() { return SkPaintPriv::Unflatten(*this); }
 
   SkFlattenable* readFlattenable(SkFlattenable::Type);
   template <typename T>
@@ -117,8 +121,11 @@ class SkReadBuffer {
     return sk_sp<T>((T*)this->readFlattenable(T::GetFlattenableType()));
   }
   sk_sp<SkColorFilter> readColorFilter() { return this->readFlattenable<SkColorFilterBase>(); }
+#ifdef SK_SUPPORT_LEGACY_DRAWLOOPER
   sk_sp<SkDrawLooper> readDrawLooper() { return this->readFlattenable<SkDrawLooper>(); }
-  sk_sp<SkImageFilter> readImageFilter() { return this->readFlattenable<SkImageFilter>(); }
+#endif
+  sk_sp<SkImageFilter> readImageFilter() { return this->readFlattenable<SkImageFilter_Base>(); }
+  sk_sp<SkBlender> readBlender() { return this->readFlattenable<SkBlenderBase>(); }
   sk_sp<SkMaskFilter> readMaskFilter() { return this->readFlattenable<SkMaskFilterBase>(); }
   sk_sp<SkPathEffect> readPathEffect() { return this->readFlattenable<SkPathEffect>(); }
   sk_sp<SkShader> readShader() { return this->readFlattenable<SkShaderBase>(); }
@@ -147,7 +154,7 @@ class SkReadBuffer {
   sk_sp<SkImage> readImage();
   sk_sp<SkTypeface> readTypeface();
 
-  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) {
+  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) noexcept {
     fTFArray = array;
     fTFCount = count;
   }
@@ -156,13 +163,13 @@ class SkReadBuffer {
    *  Call this with a pre-loaded array of Factories, in the same order as
    *  were created/written by the writer. SkPicture uses this.
    */
-  void setFactoryPlayback(SkFlattenable::Factory array[], int count) {
+  void setFactoryPlayback(SkFlattenable::Factory array[], int count) noexcept {
     fFactoryArray = array;
     fFactoryCount = count;
   }
 
   void setDeserialProcs(const SkDeserialProcs& procs);
-  const SkDeserialProcs& getDeserialProcs() const { return fProcs; }
+  const SkDeserialProcs& getDeserialProcs() const noexcept { return fProcs; }
 
   /**
    *  If isValid is false, sets the buffer to be "invalid". Returns true if the buffer
@@ -185,7 +192,7 @@ class SkReadBuffer {
     return this->validate(n <= (this->available() / sizeof(T)));
   }
 
-  bool isValid() const { return !fError; }
+  bool isValid() const noexcept { return !fError; }
   bool validateIndex(int index, int count) { return this->validate(index >= 0 && index < count); }
 
   // Utilities that mark the buffer invalid if the requested value is out-of-range
@@ -199,7 +206,7 @@ class SkReadBuffer {
     return static_cast<T>(this->checkInt(static_cast<int32_t>(min), static_cast<int32_t>(max)));
   }
 
-  SkFilterQuality checkFilterQuality();
+  SkLegacyFQ checkFilterQuality();
 
   SkSamplingOptions readSampling();
 
@@ -209,8 +216,6 @@ class SkReadBuffer {
   void setInvalid();
   bool readArray(void* value, size_t size, size_t elementSize);
   bool isAvailable(size_t size) const { return size <= this->available(); }
-
-  sk_sp<SkImage> readImage_preV78();
 
   // These are always 4-byte aligned
   const char* fCurr = nullptr;  // current position within buffer
@@ -230,7 +235,7 @@ class SkReadBuffer {
 
   SkDeserialProcs fProcs;
 
-  static bool IsPtrAlign4(const void* ptr) { return SkIsAlign4((uintptr_t)ptr); }
+  static bool IsPtrAlign4(const void* ptr) noexcept { return SkIsAlign4((uintptr_t)ptr); }
 
   bool fError = false;
 };

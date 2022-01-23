@@ -13,6 +13,7 @@
 #include "src/core/SkOpts.h"
 #include "src/core/SkRasterPipeline.h"
 #include "src/core/SkSpriteBlitter.h"
+#include "src/core/SkVMBlitter.h"
 
 extern bool gUseSkVMBlitter;
 
@@ -70,8 +71,8 @@ class SkSpriteBlitter_Memcpy final : public SkSpriteBlitter {
     if (0xFF != paint.getAlpha()) {
       return false;
     }
-    SkBlendMode mode = paint.getBlendMode();
-    return SkBlendMode::kSrc == mode || (SkBlendMode::kSrcOver == mode && src.isOpaque());
+    const auto mode = paint.asBlendMode();
+    return mode == SkBlendMode::kSrc || (mode == SkBlendMode::kSrcOver && src.isOpaque());
   }
 
   SkSpriteBlitter_Memcpy(const SkPixmap& src) : INHERITED(src) {}
@@ -181,7 +182,7 @@ SkBlitter* SkBlitter::ChooseSprite(
   SkASSERT(alloc != nullptr);
 
   if (gUseSkVMBlitter) {
-    return SkCreateSkVMSpriteBlitter(dst, paint, source, left, top, alloc, std::move(clipShader));
+    return SkVMBlitter::Make(dst, paint, source, left, top, alloc, std::move(clipShader));
   }
 
   // TODO: in principle SkRasterPipelineSpriteBlitter could be made to handle this.
@@ -216,5 +217,5 @@ SkBlitter* SkBlitter::ChooseSprite(
     return blitter;
   }
 
-  return SkCreateSkVMSpriteBlitter(dst, paint, source, left, top, alloc, std::move(clipShader));
+  return SkVMBlitter::Make(dst, paint, source, left, top, alloc, std::move(clipShader));
 }

@@ -36,7 +36,8 @@ SkDashImpl::SkDashImpl(const SkScalar intervals[], int count, SkScalar phase)
 SkDashImpl::~SkDashImpl() { sk_free(fIntervals); }
 
 bool SkDashImpl::onFilterPath(
-    SkPath* dst, const SkPath& src, SkStrokeRec* rec, const SkRect* cullRect) const {
+    SkPath* dst, const SkPath& src, SkStrokeRec* rec, const SkRect* cullRect,
+    const SkMatrix&) const {
   return SkDashPath::InternalFilter(
       dst, src, rec, cullRect, fIntervals, fCount, fInitialDashLength, fInitialDashIndex,
       fIntervalLength);

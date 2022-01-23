@@ -222,12 +222,12 @@ class PlanGauss final {
         fWeight, noChangeCount, buffer0, buffer0End, buffer1, buffer1End, buffer2, buffer2End);
   }
 
-  uint64_t fWeight;
-  int fBorder;
-  int fSlidingWindow;
-  int fPass0Size;
-  int fPass1Size;
-  int fPass2Size;
+    uint64_t fWeight;
+    int fBorder;
+    int fSlidingWindow;
+    int fPass0Size;
+    int fPass1Size;
+    int fPass2Size;
 };
 
 }  // namespace
@@ -914,6 +914,10 @@ SkIPoint SkMaskBlurFilter::blur(const SkMask& src, SkMask* dst) const {
   // Blur both directions.
   int tmpW = srcH, tmpH = dstW;
 
+  // Make sure not to overflow the multiply for the tmp buffer size.
+  if (tmpH > std::numeric_limits<int>::max() / tmpW) {
+    return {0, 0};
+  }
   auto tmp = alloc.makeArrayDefault<uint8_t>(tmpW * tmpH);
 
   // Blur horizontally, and transpose.
@@ -969,5 +973,5 @@ SkIPoint SkMaskBlurFilter::blur(const SkMask& src, SkMask* dst) const {
         tmpStart, tmpStart + tmpW, dstStart, dst->fRowBytes, dstStart + dst->fRowBytes * dstH);
   }
 
-  return {SkTo<int32_t>(borderW), SkTo<int32_t>(borderH)};
+    return {SkTo<int32_t>(borderW), SkTo<int32_t>(borderH)};
 }

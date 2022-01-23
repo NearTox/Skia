@@ -7,7 +7,7 @@
 
 #include "tools/fonts/TestSVGTypeface.h"
 
-#ifdef SK_XML
+#if defined(SK_ENABLE_SVG)
 
 #  include "include/core/SkBitmap.h"
 #  include "include/core/SkCanvas.h"
@@ -30,6 +30,7 @@
 #  include "include/private/SkTemplates.h"
 #  include "include/utils/SkNoDrawCanvas.h"
 #  include "modules/svg/include/SkSVGDOM.h"
+#  include "modules/svg/include/SkSVGNode.h"
 #  include "src/core/SkAdvancedTypefaceMetrics.h"
 #  include "src/core/SkFontDescriptor.h"
 #  include "src/core/SkFontPriv.h"
@@ -298,7 +299,8 @@ sk_sp<TestSVGTypeface> TestSVGTypeface::Default() {
       return true;
     }
   };
-  return sk_make_sp<DefaultTypeface>("Emoji", 1000, metrics, SkSpan(glyphs), SkFontStyle::Normal());
+  return sk_make_sp<DefaultTypeface>(
+      "Emoji", 1000, metrics, SkMakeSpan(glyphs), SkFontStyle::Normal());
 }
 
 sk_sp<TestSVGTypeface> TestSVGTypeface::Planets() {
@@ -344,7 +346,8 @@ sk_sp<TestSVGTypeface> TestSVGTypeface::Planets() {
       return true;
     }
   };
-  return sk_make_sp<PlanetTypeface>("Planets", 200, metrics, SkSpan(glyphs), SkFontStyle::Normal());
+  return sk_make_sp<PlanetTypeface>(
+      "Planets", 200, metrics, SkMakeSpan(glyphs), SkFontStyle::Normal());
 }
 
 void TestSVGTypeface::exportTtxCommon(
@@ -776,13 +779,13 @@ void TestSVGTypeface::exportTtxCbdt(SkWStream* out, SkSpan<unsigned> strikeSizes
       out->writeText("        </SmallGlyphMetrics>\n");
       out->writeText("        <rawimagedata>");
       uint8_t const* bytes = data->bytes();
-      for (size_t i = 0; i < data->size(); ++i) {
-        if ((i % 0x10) == 0x0) {
+      for (size_t j = 0; j < data->size(); ++j) {
+        if ((j % 0x10) == 0x0) {
           out->writeText("\n          ");
-        } else if (((i - 1) % 0x4) == 0x3) {
+        } else if (((j - 1) % 0x4) == 0x3) {
           out->writeText(" ");
         }
-        out->writeHexAsText(bytes[i], 2);
+        out->writeHexAsText(bytes[j], 2);
       }
       out->writeText("\n");
       out->writeText("        </rawimagedata>\n");
@@ -998,13 +1001,13 @@ void TestSVGTypeface::exportTtxSbix(SkWStream* out, SkSpan<unsigned> strikeSizes
 
       out->writeText("        <hexdata>");
       uint8_t const* bytes = data->bytes();
-      for (size_t i = 0; i < data->size(); ++i) {
-        if ((i % 0x10) == 0x0) {
+      for (size_t j = 0; j < data->size(); ++j) {
+        if ((j % 0x10) == 0x0) {
           out->writeText("\n          ");
-        } else if (((i - 1) % 0x4) == 0x3) {
+        } else if (((j - 1) % 0x4) == 0x3) {
           out->writeText(" ");
         }
-        out->writeHexAsText(bytes[i], 2);
+        out->writeHexAsText(bytes[j], 2);
       }
       out->writeText("\n");
       out->writeText("        </hexdata>\n");
@@ -1389,4 +1392,4 @@ void TestSVGTypeface::exportTtxColr(SkWStream* out) const {
 
   out->writeText("</ttFont>\n");
 }
-#endif  // SK_XML
+#endif  // SK_ENABLE_SVG

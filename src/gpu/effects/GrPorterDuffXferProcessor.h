@@ -28,8 +28,7 @@ class GrPorterDuffXPFactory : public GrXPFactory {
   /** Because src-over is so common we special case it for performance reasons. If this returns
       null then the SimpleSrcOverXP() below should be used. */
   static sk_sp<const GrXferProcessor> MakeSrcOverXferProcessor(
-      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
-      const GrCaps&);
+      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, const GrCaps&);
 
   /** Returns a simple non-LCD porter duff blend XP with no optimizations or coverage. */
   static sk_sp<const GrXferProcessor> MakeNoCoverageXP(SkBlendMode);
@@ -39,19 +38,19 @@ class GrPorterDuffXPFactory : public GrXPFactory {
   static const GrXferProcessor& SimpleSrcOverXP();
 
   static AnalysisProperties SrcOverAnalysisProperties(
-      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, bool hasMixedSamples,
-      const GrCaps&, GrClampType);
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
+      GrClampType);
 
  private:
   constexpr GrPorterDuffXPFactory(SkBlendMode);
 
   sk_sp<const GrXferProcessor> makeXferProcessor(
-      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, bool hasMixedSamples,
-      const GrCaps&, GrClampType) const override;
+      const GrProcessorAnalysisColor&, GrProcessorAnalysisCoverage, const GrCaps&,
+      GrClampType) const override;
 
   AnalysisProperties analysisProperties(
-      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, bool hasMixedSamples,
-      const GrCaps&, GrClampType) const override;
+      const GrProcessorAnalysisColor&, const GrProcessorAnalysisCoverage&, const GrCaps&,
+      GrClampType) const override;
 
   GR_DECLARE_XP_FACTORY_TEST
   static void TestGetXPOutputTypes(const GrXferProcessor*, int* outPrimary, int* outSecondary);

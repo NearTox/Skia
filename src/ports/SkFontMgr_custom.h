@@ -132,7 +132,7 @@ class SkFontMgr_Custom : public SkFontMgr {
   typedef SkTArray<sk_sp<SkFontStyleSet_Custom>> Families;
   class SystemFontLoader {
    public:
-    virtual ~SystemFontLoader() {}
+    virtual ~SystemFontLoader() = default;
     virtual void loadSystemFonts(const SkTypeface_FreeType::Scanner&, Families*) const = 0;
   };
   explicit SkFontMgr_Custom(const SystemFontLoader& loader);
@@ -147,14 +147,11 @@ class SkFontMgr_Custom : public SkFontMgr {
   SkTypeface* onMatchFamilyStyleCharacter(
       const char familyName[], const SkFontStyle&, const char* bcp47[], int bcp47Count,
       SkUnichar character) const override;
-  SkTypeface* onMatchFaceStyle(
-      const SkTypeface* familyMember, const SkFontStyle& fontStyle) const override;
   sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData> data, int ttcIndex) const override;
   sk_sp<SkTypeface> onMakeFromStreamIndex(
       std::unique_ptr<SkStreamAsset>, int ttcIndex) const override;
   sk_sp<SkTypeface> onMakeFromStreamArgs(
       std::unique_ptr<SkStreamAsset>, const SkFontArguments&) const override;
-  sk_sp<SkTypeface> onMakeFromFontData(std::unique_ptr<SkFontData> data) const override;
   sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override;
   sk_sp<SkTypeface> onLegacyMakeTypeface(const char familyName[], SkFontStyle style) const override;
 

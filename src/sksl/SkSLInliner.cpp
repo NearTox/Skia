@@ -11,15 +11,25 @@
 #include <memory>
 #include <unordered_set>
 
+#include "include/private/SkSLLayout.h"
 #include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/ir/SkSLBinaryExpression.h"
 #include "src/sksl/ir/SkSLBoolLiteral.h"
 #include "src/sksl/ir/SkSLBreakStatement.h"
+#include "src/sksl/ir/SkSLChildCall.h"
 #include "src/sksl/ir/SkSLConstructor.h"
+#include "src/sksl/ir/SkSLConstructorArray.h"
+#include "src/sksl/ir/SkSLConstructorArrayCast.h"
+#include "src/sksl/ir/SkSLConstructorCompound.h"
+#include "src/sksl/ir/SkSLConstructorCompoundCast.h"
+#include "src/sksl/ir/SkSLConstructorDiagonalMatrix.h"
+#include "src/sksl/ir/SkSLConstructorMatrixResize.h"
+#include "src/sksl/ir/SkSLConstructorScalarCast.h"
+#include "src/sksl/ir/SkSLConstructorSplat.h"
+#include "src/sksl/ir/SkSLConstructorStruct.h"
 #include "src/sksl/ir/SkSLContinueStatement.h"
 #include "src/sksl/ir/SkSLDiscardStatement.h"
 #include "src/sksl/ir/SkSLDoStatement.h"
-#include "src/sksl/ir/SkSLEnum.h"
 #include "src/sksl/ir/SkSLExpressionStatement.h"
 #include "src/sksl/ir/SkSLExternalFunctionCall.h"
 #include "src/sksl/ir/SkSLExternalFunctionReference.h"
@@ -36,7 +46,6 @@
 #include "src/sksl/ir/SkSLInlineMarker.h"
 #include "src/sksl/ir/SkSLIntLiteral.h"
 #include "src/sksl/ir/SkSLInterfaceBlock.h"
-#include "src/sksl/ir/SkSLLayout.h"
 #include "src/sksl/ir/SkSLNop.h"
 #include "src/sksl/ir/SkSLPostfixExpression.h"
 #include "src/sksl/ir/SkSLPrefixExpression.h"
@@ -63,6 +72,11 @@ static int count_returns_at_end_of_control_flow(const FunctionDefinition& funcDe
       this->visitProgramElement(funcDef);
     }
 
+    bool visitExpression(const Expression& expr) override {
+      // Do not recurse into expressions.
+      return false;
+    }
+
     bool visitStatement(const Statement& stmt) override {
       switch (stmt.kind()) {
         case Statement::Kind::kBlock: {
@@ -87,39 +101,6 @@ static int count_returns_at_end_of_control_flow(const FunctionDefinition& funcDe
   };
 
   return CountReturnsAtEndOfControlFlow{funcDef}.fNumReturns;
-}
-
-static int count_returns_in_continuable_constructs(const FunctionDefinition& funcDef) {
-  class CountReturnsInContinuableConstructs : public ProgramVisitor {
-   public:
-    CountReturnsInContinuableConstructs(const FunctionDefinition& funcDef) {
-      this->visitProgramElement(funcDef);
-    }
-
-    bool visitStatement(const Statement& stmt) override {
-      switch (stmt.kind()) {
-        case Statement::Kind::kDo:
-        case Statement::Kind::kFor: {
-          ++fInsideContinuableConstruct;
-          bool result = INHERITED::visitStatement(stmt);
-          --fInsideContinuableConstruct;
-          return result;
-        }
-
-        case Statement::Kind::kReturn:
-          fNumReturns += (fInsideContinuableConstruct > 0) ? 1 : 0;
-          [[fallthrough]];
-
-        default: return INHERITED::visitStatement(stmt);
-      }
-    }
-
-    int fNumReturns = 0;
-    int fInsideContinuableConstruct = 0;
-    using INHERITED = ProgramVisitor;
-  };
-
-  return CountReturnsInContinuableConstructs{funcDef}.fNumReturns;
 }
 
 static bool contains_recursive_call(const FunctionDeclaration& funcDecl) {
@@ -151,14 +132,6 @@ static bool contains_recursive_call(const FunctionDeclaration& funcDecl) {
   return ContainsRecursiveCall{}.visit(funcDecl);
 }
 
-static const Type* copy_if_needed(const Type* src, SymbolTable& symbolTable) {
-  if (src->isArray()) {
-    return symbolTable.takeOwnershipOfSymbol(
-        Type::MakeArrayType(src->name(), src->componentType(), src->columns()));
-  }
-  return src;
-}
-
 static std::unique_ptr<Statement>* find_parent_statement(
     const std::vector<std::unique_ptr<Statement>*>& stmtStack) {
   SkASSERT(!stmtStack.empty());
@@ -183,23 +156,7 @@ static std::unique_ptr<Statement>* find_parent_statement(
 std::unique_ptr<Expression> clone_with_ref_kind(
     const Expression& expr, VariableReference::RefKind refKind) {
   std::unique_ptr<Expression> clone = expr.clone();
-  class SetRefKindInExpression : public ProgramWriter {
-   public:
-    SetRefKindInExpression(VariableReference::RefKind refKind) : fRefKind(refKind) {}
-    bool visitExpression(Expression& expr) override {
-      if (expr.is<VariableReference>()) {
-        expr.as<VariableReference>().setRefKind(fRefKind);
-      }
-      return INHERITED::visitExpression(expr);
-    }
-
-   private:
-    VariableReference::RefKind fRefKind;
-
-    using INHERITED = ProgramWriter;
-  };
-
-  SetRefKindInExpression{refKind}.visitExpression(*clone);
+  Analysis::UpdateVariableRefKind(clone.get(), refKind);
   return clone;
 }
 
@@ -207,6 +164,11 @@ class CountReturnsWithLimit : public ProgramVisitor {
  public:
   CountReturnsWithLimit(const FunctionDefinition& funcDef, int limit) : fLimit(limit) {
     this->visitProgramElement(funcDef);
+  }
+
+  bool visitExpression(const Expression& expr) override {
+    // Do not recurse into expressions.
+    return false;
   }
 
   bool visitStatement(const Statement& stmt) override {
@@ -307,9 +269,7 @@ void Inliner::ensureScopedBlocks(Statement* inlinedBody, Statement* parentStmt) 
   }
 }
 
-void Inliner::reset(ModifiersPool* modifiers, const Program::Settings* settings) {
-  fModifiers = modifiers;
-  fSettings = settings;
+void Inliner::reset() {
   fMangler.reset();
   fInlinedStatementCounter = 0;
 }
@@ -334,17 +294,66 @@ std::unique_ptr<Expression> Inliner::inlineExpression(
 
   switch (expression.kind()) {
     case Expression::Kind::kBinary: {
-      const BinaryExpression& b = expression.as<BinaryExpression>();
-      return std::make_unique<BinaryExpression>(
-          offset, expr(b.left()), b.getOperator(), expr(b.right()), &b.type());
+      const BinaryExpression& binaryExpr = expression.as<BinaryExpression>();
+      return BinaryExpression::Make(
+          *fContext, expr(binaryExpr.left()), binaryExpr.getOperator(), expr(binaryExpr.right()));
     }
     case Expression::Kind::kBoolLiteral:
     case Expression::Kind::kIntLiteral:
     case Expression::Kind::kFloatLiteral: return expression.clone();
-    case Expression::Kind::kConstructor: {
-      const Constructor& constructor = expression.as<Constructor>();
-      const Type* type = copy_if_needed(&constructor.type(), *symbolTableForExpression);
-      return std::make_unique<Constructor>(offset, type, argList(constructor.arguments()));
+    case Expression::Kind::kChildCall: {
+      const ChildCall& childCall = expression.as<ChildCall>();
+      return ChildCall::Make(
+          *fContext, offset, childCall.type().clone(symbolTableForExpression), childCall.child(),
+          argList(childCall.arguments()));
+    }
+    case Expression::Kind::kConstructorArray: {
+      const ConstructorArray& ctor = expression.as<ConstructorArray>();
+      return ConstructorArray::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression),
+          argList(ctor.arguments()));
+    }
+    case Expression::Kind::kConstructorArrayCast: {
+      const ConstructorArrayCast& ctor = expression.as<ConstructorArrayCast>();
+      return ConstructorArrayCast::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression), expr(ctor.argument()));
+    }
+    case Expression::Kind::kConstructorCompound: {
+      const ConstructorCompound& ctor = expression.as<ConstructorCompound>();
+      return ConstructorCompound::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression),
+          argList(ctor.arguments()));
+    }
+    case Expression::Kind::kConstructorCompoundCast: {
+      const ConstructorCompoundCast& ctor = expression.as<ConstructorCompoundCast>();
+      return ConstructorCompoundCast::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression), expr(ctor.argument()));
+    }
+    case Expression::Kind::kConstructorDiagonalMatrix: {
+      const ConstructorDiagonalMatrix& ctor = expression.as<ConstructorDiagonalMatrix>();
+      return ConstructorDiagonalMatrix::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression), expr(ctor.argument()));
+    }
+    case Expression::Kind::kConstructorMatrixResize: {
+      const ConstructorMatrixResize& ctor = expression.as<ConstructorMatrixResize>();
+      return ConstructorMatrixResize::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression), expr(ctor.argument()));
+    }
+    case Expression::Kind::kConstructorScalarCast: {
+      const ConstructorScalarCast& ctor = expression.as<ConstructorScalarCast>();
+      return ConstructorScalarCast::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression), expr(ctor.argument()));
+    }
+    case Expression::Kind::kConstructorSplat: {
+      const ConstructorSplat& ctor = expression.as<ConstructorSplat>();
+      return ConstructorSplat::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression), expr(ctor.argument()));
+    }
+    case Expression::Kind::kConstructorStruct: {
+      const ConstructorStruct& ctor = expression.as<ConstructorStruct>();
+      return ConstructorStruct::Make(
+          *fContext, offset, *ctor.type().clone(symbolTableForExpression),
+          argList(ctor.arguments()));
     }
     case Expression::Kind::kExternalFunctionCall: {
       const ExternalFunctionCall& externalCall = expression.as<ExternalFunctionCall>();
@@ -354,35 +363,37 @@ std::unique_ptr<Expression> Inliner::inlineExpression(
     case Expression::Kind::kExternalFunctionReference: return expression.clone();
     case Expression::Kind::kFieldAccess: {
       const FieldAccess& f = expression.as<FieldAccess>();
-      return std::make_unique<FieldAccess>(expr(f.base()), f.fieldIndex(), f.ownerKind());
+      return FieldAccess::Make(*fContext, expr(f.base()), f.fieldIndex(), f.ownerKind());
     }
     case Expression::Kind::kFunctionCall: {
       const FunctionCall& funcCall = expression.as<FunctionCall>();
-      return std::make_unique<FunctionCall>(
-          offset, &funcCall.type(), &funcCall.function(), argList(funcCall.arguments()));
+      return FunctionCall::Make(
+          *fContext, offset, funcCall.type().clone(symbolTableForExpression), funcCall.function(),
+          argList(funcCall.arguments()));
     }
     case Expression::Kind::kFunctionReference: return expression.clone();
     case Expression::Kind::kIndex: {
       const IndexExpression& idx = expression.as<IndexExpression>();
-      return std::make_unique<IndexExpression>(*fContext, expr(idx.base()), expr(idx.index()));
+      return IndexExpression::Make(*fContext, expr(idx.base()), expr(idx.index()));
     }
+    case Expression::Kind::kMethodReference: return expression.clone();
     case Expression::Kind::kPrefix: {
       const PrefixExpression& p = expression.as<PrefixExpression>();
-      return std::make_unique<PrefixExpression>(p.getOperator(), expr(p.operand()));
+      return PrefixExpression::Make(*fContext, p.getOperator(), expr(p.operand()));
     }
     case Expression::Kind::kPostfix: {
       const PostfixExpression& p = expression.as<PostfixExpression>();
-      return std::make_unique<PostfixExpression>(expr(p.operand()), p.getOperator());
+      return PostfixExpression::Make(*fContext, expr(p.operand()), p.getOperator());
     }
     case Expression::Kind::kSetting: return expression.clone();
     case Expression::Kind::kSwizzle: {
       const Swizzle& s = expression.as<Swizzle>();
-      return std::make_unique<Swizzle>(*fContext, expr(s.base()), s.components());
+      return Swizzle::Make(*fContext, expr(s.base()), s.components());
     }
     case Expression::Kind::kTernary: {
       const TernaryExpression& t = expression.as<TernaryExpression>();
-      return std::make_unique<TernaryExpression>(
-          offset, expr(t.test()), expr(t.ifTrue()), expr(t.ifFalse()));
+      return TernaryExpression::Make(
+          *fContext, expr(t.test()), expr(t.ifTrue()), expr(t.ifFalse()));
     }
     case Expression::Kind::kTypeReference: return expression.clone();
     case Expression::Kind::kVariableReference: {
@@ -416,14 +427,6 @@ std::unique_ptr<Statement> Inliner::inlineStatement(
     }
     return result;
   };
-  auto stmts = [&](const StatementArray& ss) {
-    StatementArray result;
-    result.reserve_back(ss.size());
-    for (const auto& s : ss) {
-      result.push_back(stmt(s));
-    }
-    return result;
-  };
   auto expr = [&](const std::unique_ptr<Expression>& e) -> std::unique_ptr<Expression> {
     if (e) {
       return this->inlineExpression(offset, varMap, symbolTableForStatement, *e);
@@ -436,7 +439,7 @@ std::unique_ptr<Statement> Inliner::inlineStatement(
   switch (statement.kind()) {
     case Statement::Kind::kBlock: {
       const Block& b = statement.as<Block>();
-      return std::make_unique<Block>(
+      return Block::Make(
           offset, blockStmts(b), SymbolTable::WrapIfBuiltin(b.symbolTable()), b.isScope());
     }
 
@@ -446,105 +449,91 @@ std::unique_ptr<Statement> Inliner::inlineStatement(
 
     case Statement::Kind::kDo: {
       const DoStatement& d = statement.as<DoStatement>();
-      return std::make_unique<DoStatement>(offset, stmt(d.statement()), expr(d.test()));
+      return DoStatement::Make(*fContext, stmt(d.statement()), expr(d.test()));
     }
     case Statement::Kind::kExpression: {
       const ExpressionStatement& e = statement.as<ExpressionStatement>();
-      return std::make_unique<ExpressionStatement>(expr(e.expression()));
+      return ExpressionStatement::Make(*fContext, expr(e.expression()));
     }
     case Statement::Kind::kFor: {
       const ForStatement& f = statement.as<ForStatement>();
       // need to ensure initializer is evaluated first so that we've already remapped its
       // declarations by the time we evaluate test & next
       std::unique_ptr<Statement> initializer = stmt(f.initializer());
-      return std::make_unique<ForStatement>(
-          offset, std::move(initializer), expr(f.test()), expr(f.next()), stmt(f.statement()),
-          SymbolTable::WrapIfBuiltin(f.symbols()));
+      // We can't reuse the unroll info from the original for loop, because it uses a
+      // different induction variable. Ours is a clone.
+      return ForStatement::Make(
+          *fContext, offset, std::move(initializer), expr(f.test()), expr(f.next()),
+          stmt(f.statement()), /*unrollInfo=*/nullptr, SymbolTable::WrapIfBuiltin(f.symbols()));
     }
     case Statement::Kind::kIf: {
       const IfStatement& i = statement.as<IfStatement>();
-      return std::make_unique<IfStatement>(
-          offset, i.isStatic(), expr(i.test()), stmt(i.ifTrue()), stmt(i.ifFalse()));
+      return IfStatement::Make(
+          *fContext, offset, i.isStatic(), expr(i.test()), stmt(i.ifTrue()), stmt(i.ifFalse()));
     }
     case Statement::Kind::kInlineMarker:
     case Statement::Kind::kNop: return statement.clone();
+
     case Statement::Kind::kReturn: {
       const ReturnStatement& r = statement.as<ReturnStatement>();
       if (!r.expression()) {
-        if (returnComplexity >= ReturnComplexity::kEarlyReturns) {
-          // This function doesn't return a value, but has early returns, so we've wrapped
-          // it in a for loop. Use a continue to jump to the end of the loop and "leave"
-          // the function.
-          return std::make_unique<ContinueStatement>(offset);
-        } else {
-          // This function doesn't exit early or return a value. A return statement at the
-          // end is a no-op and can be treated as such.
-          return std::make_unique<Nop>();
-        }
+        // This function doesn't return a value. We won't inline functions with early
+        // returns, so a return statement is a no-op and can be treated as such.
+        return Nop::Make();
       }
 
       // If a function only contains a single return, and it doesn't reference variables from
       // inside an Block's scope, we don't need to store the result in a variable at all. Just
       // replace the function-call expression with the function's return expression.
       SkASSERT(resultExpr);
-      SkASSERT(*resultExpr);
       if (returnComplexity <= ReturnComplexity::kSingleSafeReturn) {
         *resultExpr = expr(r.expression());
-        return std::make_unique<Nop>();
+        return Nop::Make();
       }
 
       // For more complex functions, assign their result into a variable.
-      auto assignment = std::make_unique<ExpressionStatement>(std::make_unique<BinaryExpression>(
-          offset, clone_with_ref_kind(**resultExpr, VariableReference::RefKind::kWrite),
-          Token::Kind::TK_EQ, expr(r.expression()), &resultExpr->get()->type()));
+      SkASSERT(*resultExpr);
+      auto assignment = ExpressionStatement::Make(
+          *fContext, BinaryExpression::Make(
+                         *fContext, clone_with_ref_kind(**resultExpr, VariableRefKind::kWrite),
+                         Token::Kind::TK_EQ, expr(r.expression())));
 
-      // Early returns are wrapped in a for loop; we need to synthesize a continue statement
-      // to "leave" the function.
-      if (returnComplexity >= ReturnComplexity::kEarlyReturns) {
-        StatementArray block;
-        block.reserve_back(2);
-        block.push_back(std::move(assignment));
-        block.push_back(std::make_unique<ContinueStatement>(offset));
-        return std::make_unique<Block>(
-            offset, std::move(block), /*symbols=*/nullptr,
-            /*isScope=*/true);
-      }
       // Functions without early returns aren't wrapped in a for loop and don't need to worry
       // about breaking out of the control flow.
-      return std::move(assignment);
+      return assignment;
     }
     case Statement::Kind::kSwitch: {
       const SwitchStatement& ss = statement.as<SwitchStatement>();
-      std::vector<std::unique_ptr<SwitchCase>> cases;
-      cases.reserve(ss.cases().size());
-      for (const std::unique_ptr<SwitchCase>& sc : ss.cases()) {
+      StatementArray cases;
+      cases.reserve_back(ss.cases().size());
+      for (const std::unique_ptr<Statement>& switchCaseStmt : ss.cases()) {
+        const SwitchCase& sc = switchCaseStmt->as<SwitchCase>();
         cases.push_back(
-            std::make_unique<SwitchCase>(offset, expr(sc->value()), stmts(sc->statements())));
+            std::make_unique<SwitchCase>(offset, expr(sc.value()), stmt(sc.statement())));
       }
-      return std::make_unique<SwitchStatement>(
-          offset, ss.isStatic(), expr(ss.value()), std::move(cases),
+      return SwitchStatement::Make(
+          *fContext, offset, ss.isStatic(), expr(ss.value()), std::move(cases),
           SymbolTable::WrapIfBuiltin(ss.symbols()));
     }
     case Statement::Kind::kVarDeclaration: {
       const VarDeclaration& decl = statement.as<VarDeclaration>();
       std::unique_ptr<Expression> initialValue = expr(decl.value());
-      int arraySize = decl.arraySize();
-      const Variable& old = decl.var();
+      const Variable& variable = decl.var();
+
       // We assign unique names to inlined variables--scopes hide most of the problems in this
       // regard, but see `InlinerAvoidsVariableNameOverlap` for a counterexample where unique
       // names are important.
-      auto name = std::make_unique<String>(
-          fMangler.uniqueName(String(old.name()), symbolTableForStatement));
-      const String* namePtr = symbolTableForStatement->takeOwnershipOfString(std::move(name));
-      const Type* baseTypePtr = copy_if_needed(&decl.baseType(), *symbolTableForStatement);
-      const Type* typePtr = copy_if_needed(&old.type(), *symbolTableForStatement);
-      const Variable* clone =
-          symbolTableForStatement->takeOwnershipOfSymbol(std::make_unique<Variable>(
-              offset, &old.modifiers(), namePtr->c_str(), typePtr, isBuiltinCode, old.storage(),
-              initialValue.get()));
-      (*varMap)[&old] = std::make_unique<VariableReference>(offset, clone);
-      return std::make_unique<VarDeclaration>(
-          clone, baseTypePtr, arraySize, std::move(initialValue));
+      const String* name = symbolTableForStatement->takeOwnershipOfString(
+          fMangler.uniqueName(String(variable.name()), symbolTableForStatement));
+      auto clonedVar = std::make_unique<Variable>(
+          offset, &variable.modifiers(), name->c_str(),
+          variable.type().clone(symbolTableForStatement), isBuiltinCode, variable.storage());
+      (*varMap)[&variable] = VariableReference::Make(offset, clonedVar.get());
+      auto result = VarDeclaration::Make(
+          *fContext, clonedVar.get(), decl.baseType().clone(symbolTableForStatement),
+          decl.arraySize(), std::move(initialValue));
+      symbolTableForStatement->takeOwnershipOfSymbol(std::move(clonedVar));
+      return result;
     }
     default: SkASSERT(false); return nullptr;
   }
@@ -561,31 +550,33 @@ Inliner::InlineVariable Inliner::makeInlineVariable(
     type = &type->scalarTypeForLiteral();
   }
 
+  // Out parameters aren't supported.
+  SkASSERT(!(modifiers.fFlags & Modifiers::kOut_Flag));
+
   // Provide our new variable with a unique name, and add it to our symbol table.
-  const String* namePtr = symbolTable->takeOwnershipOfString(
-      std::make_unique<String>(fMangler.uniqueName(baseName, symbolTable)));
-  StringFragment nameFrag{namePtr->c_str(), namePtr->length()};
+  const String* name =
+      symbolTable->takeOwnershipOfString(fMangler.uniqueName(baseName, symbolTable));
 
   // Create our new variable and add it to the symbol table.
   InlineVariable result;
-  result.fVarSymbol = symbolTable->add(std::make_unique<Variable>(
-      /*offset=*/-1, fModifiers->addToPool(Modifiers()), nameFrag, type, isBuiltinCode,
-      Variable::Storage::kLocal, initialValue->get()));
-
-  // Prepare the variable declaration (taking extra care with `out` params to not clobber any
-  // initial value).
-  if (*initialValue && (modifiers.fFlags & Modifiers::kOut_Flag)) {
-    result.fVarDecl = std::make_unique<VarDeclaration>(
-        result.fVarSymbol, type, /*arraySize=*/0, (*initialValue)->clone());
-  } else {
-    result.fVarDecl = std::make_unique<VarDeclaration>(
-        result.fVarSymbol, type, /*arraySize=*/0, std::move(*initialValue));
+  auto var = std::make_unique<Variable>(
+      /*offset=*/-1, this->modifiersPool().add(Modifiers{}), name->c_str(), type, isBuiltinCode,
+      Variable::Storage::kLocal);
+  // If we are creating an array type, reduce it to base type plus array-size.
+  int arraySize = 0;
+  if (type->isArray()) {
+    arraySize = type->columns();
+    type = &type->componentType();
   }
+  // Create our variable declaration.
+  result.fVarDecl =
+      VarDeclaration::Make(*fContext, var.get(), type, arraySize, std::move(*initialValue));
+  result.fVarSymbol = symbolTable->add(std::move(var));
   return result;
 }
 
 Inliner::InlinedCall Inliner::inlineCall(
-    FunctionCall* call, std::shared_ptr<SymbolTable> symbolTable,
+    FunctionCall* call, std::shared_ptr<SymbolTable> symbolTable, const ProgramUsage& usage,
     const FunctionDeclaration* caller) {
   // Inlining is more complicated here than in a typical compiler, because we have to have a
   // high-level IR and can't just drop statements into the middle of an expression or even use
@@ -596,7 +587,6 @@ Inliner::InlinedCall Inliner::inlineCall(
   // order guarantees. Since we can't use gotos (which are normally used to replace return
   // statements), we wrap the whole function in a loop and use break statements to jump to the
   // end.
-  SkASSERT(fSettings);
   SkASSERT(fContext);
   SkASSERT(call);
   SkASSERT(this->isSafeToInline(call->function().definition()));
@@ -604,144 +594,95 @@ Inliner::InlinedCall Inliner::inlineCall(
   ExpressionArray& arguments = call->arguments();
   const int offset = call->fOffset;
   const FunctionDefinition& function = *call->function().definition();
+  const Block& body = function.body()->as<Block>();
   const ReturnComplexity returnComplexity = GetReturnComplexity(function);
-  bool hasEarlyReturn = (returnComplexity >= ReturnComplexity::kEarlyReturns);
 
-  InlinedCall inlinedCall;
-  inlinedCall.fInlinedBody = std::make_unique<Block>(
-      offset, StatementArray{},
-      /*symbols=*/nullptr,
-      /*isScope=*/false);
+  StatementArray inlineStatements;
+  int expectedStmtCount = 1 +                      // Inline marker
+                          1 +                      // Result variable
+                          arguments.size() +       // Function argument temp-vars
+                          body.children().size();  // Inlined code
 
-  Block& inlinedBody = *inlinedCall.fInlinedBody;
-  inlinedBody.children().reserve_back(
-      1 +                 // Inline marker
-      1 +                 // Result variable
-      arguments.size() +  // Function arguments (passing in)
-      arguments.size() +  // Function arguments (copy out-params back)
-      1);                 // Block for inlined code
+  inlineStatements.reserve_back(expectedStmtCount);
+  inlineStatements.push_back(InlineMarker::Make(&call->function()));
 
-  inlinedBody.children().push_back(std::make_unique<InlineMarker>(&call->function()));
-
-  // Create a variable to hold the result in the extra statements (excepting void).
   std::unique_ptr<Expression> resultExpr;
-  if (function.declaration().returnType() != *fContext->fTypes.fVoid) {
+  if (returnComplexity > ReturnComplexity::kSingleSafeReturn &&
+      !function.declaration().returnType().isVoid()) {
+    // Create a variable to hold the result in the extra statements. We don't need to do this
+    // for void-return functions, or in cases that are simple enough that we can just replace
+    // the function-call node with the result expression.
     std::unique_ptr<Expression> noInitialValue;
     InlineVariable var = this->makeInlineVariable(
-        function.declaration().name(), &function.declaration().returnType(), symbolTable.get(),
-        Modifiers{}, caller->isBuiltin(), &noInitialValue);
-    inlinedBody.children().push_back(std::move(var.fVarDecl));
-    resultExpr = std::make_unique<VariableReference>(/*offset=*/-1, var.fVarSymbol);
+        String(function.declaration().name()), &function.declaration().returnType(),
+        symbolTable.get(), Modifiers{}, caller->isBuiltin(), &noInitialValue);
+    inlineStatements.push_back(std::move(var.fVarDecl));
+    resultExpr = VariableReference::Make(/*offset=*/-1, var.fVarSymbol);
   }
 
   // Create variables in the extra statements to hold the arguments, and assign the arguments to
   // them.
   VariableRewriteMap varMap;
-  std::vector<int> argsToCopyBack;
-  for (int i = 0; i < (int)arguments.size(); ++i) {
+  for (int i = 0; i < arguments.count(); ++i) {
+    // If the parameter isn't written to within the inline function ...
     const Variable* param = function.declaration().parameters()[i];
-    bool isOutParam = param->modifiers().fFlags & Modifiers::kOut_Flag;
-
-    // If this argument can be inlined trivially (e.g. a swizzle, or a constant array index)...
-    if (Analysis::IsTrivialExpression(*arguments[i])) {
-      // ... and it's an `out` param, or it isn't written to within the inline function...
-      if (isOutParam || !Analysis::StatementWritesToVariable(*function.body(), *param)) {
+    const ProgramUsage::VariableCounts& paramUsage = usage.get(*param);
+    if (!paramUsage.fWrite) {
+      // ... and can be inlined trivially (e.g. a swizzle, or a constant array index),
+      // or any expression without side effects that is only accessed at most once...
+      if ((paramUsage.fRead > 1) ? Analysis::IsTrivialExpression(*arguments[i])
+                                 : !arguments[i]->hasSideEffects()) {
         // ... we don't need to copy it at all! We can just use the existing expression.
         varMap[param] = arguments[i]->clone();
         continue;
       }
     }
-    if (isOutParam) {
-      argsToCopyBack.push_back(i);
-    }
     InlineVariable var = this->makeInlineVariable(
-        param->name(), &arguments[i]->type(), symbolTable.get(), param->modifiers(),
+        String(param->name()), &arguments[i]->type(), symbolTable.get(), param->modifiers(),
         caller->isBuiltin(), &arguments[i]);
-    inlinedBody.children().push_back(std::move(var.fVarDecl));
-    varMap[param] = std::make_unique<VariableReference>(/*offset=*/-1, var.fVarSymbol);
+    inlineStatements.push_back(std::move(var.fVarDecl));
+    varMap[param] = VariableReference::Make(/*offset=*/-1, var.fVarSymbol);
   }
 
-  const Block& body = function.body()->as<Block>();
-  StatementArray* inlineStatements;
-
-  if (hasEarlyReturn) {
-    // Since we output to backends that don't have a goto statement (which would normally be
-    // used to perform an early return), we fake it by wrapping the function in a single-
-    // iteration for loop, and use a continue statement to jump to the end of the loop
-    // prematurely.
-
-    // int _1_loop = 0;
-    symbolTable = std::make_shared<SymbolTable>(std::move(symbolTable), caller->isBuiltin());
-    const Type* intType = fContext->fTypes.fInt.get();
-    std::unique_ptr<Expression> initialValue = std::make_unique<IntLiteral>(
-        /*offset=*/-1,
-        /*value=*/0, intType);
-    InlineVariable loopVar = this->makeInlineVariable(
-        "loop", intType, symbolTable.get(), Modifiers{}, caller->isBuiltin(), &initialValue);
-
-    // _1_loop < 1;
-    std::unique_ptr<Expression> test = std::make_unique<BinaryExpression>(
-        /*offset=*/-1, std::make_unique<VariableReference>(/*offset=*/-1, loopVar.fVarSymbol),
-        Token::Kind::TK_LT, std::make_unique<IntLiteral>(/*offset=*/-1, /*value=*/1, intType),
-        fContext->fTypes.fBool.get());
-
-    // _1_loop++
-    std::unique_ptr<Expression> increment = std::make_unique<PostfixExpression>(
-        std::make_unique<VariableReference>(
-            /*offset=*/-1, loopVar.fVarSymbol, VariableReference::RefKind::kReadWrite),
-        Token::Kind::TK_PLUSPLUS);
-
-    // {...}
-    auto innerBlock = std::make_unique<Block>(
-        offset, StatementArray{},
-        /*symbols=*/nullptr, /*isScope=*/true);
-    inlineStatements = &innerBlock->children();
-
-    // for (int _1_loop = 0; _1_loop < 1; _1_loop++) {...}
-    inlinedBody.children().push_back(std::make_unique<ForStatement>(
-        /*offset=*/-1, std::move(loopVar.fVarDecl), std::move(test), std::move(increment),
-        std::move(innerBlock), symbolTable));
-  } else {
-    // No early returns, so we can just dump the code into our existing scopeless block.
-    inlineStatements = &inlinedBody.children();
-  }
-
-  inlineStatements->reserve_back(body.children().size() + argsToCopyBack.size());
   for (const std::unique_ptr<Statement>& stmt : body.children()) {
-    inlineStatements->push_back(this->inlineStatement(
+    inlineStatements.push_back(this->inlineStatement(
         offset, &varMap, symbolTable.get(), &resultExpr, returnComplexity, *stmt,
         caller->isBuiltin()));
   }
 
-  // Copy back the values of `out` parameters into their real destinations.
-  for (int i : argsToCopyBack) {
-    const Variable* p = function.declaration().parameters()[i];
-    SkASSERT(varMap.find(p) != varMap.end());
-    inlineStatements->push_back(
-        std::make_unique<ExpressionStatement>(std::make_unique<BinaryExpression>(
-            offset, clone_with_ref_kind(*arguments[i], VariableReference::RefKind::kWrite),
-            Token::Kind::TK_EQ, std::move(varMap[p]), &arguments[i]->type())));
-  }
+  SkASSERT(inlineStatements.count() <= expectedStmtCount);
 
-  if (resultExpr != nullptr) {
-    // Return our result variable as our replacement expression.
+  // Wrap all of the generated statements in a block. We need a real Block here, so we can't use
+  // MakeUnscoped. This is because we need to add another child statement to the Block later.
+  InlinedCall inlinedCall;
+  inlinedCall.fInlinedBody = Block::Make(
+      offset, std::move(inlineStatements),
+      /*symbols=*/nullptr, /*isScope=*/false);
+
+  if (resultExpr) {
+    // Return our result expression as-is.
     inlinedCall.fReplacementExpr = std::move(resultExpr);
-  } else {
+  } else if (function.declaration().returnType().isVoid()) {
     // It's a void function, so it doesn't actually result in anything, but we have to return
     // something non-null as a standin.
-    inlinedCall.fReplacementExpr = std::make_unique<BoolLiteral>(
-        *fContext, offset,
-        /*value=*/false);
+    inlinedCall.fReplacementExpr = BoolLiteral::Make(*fContext, offset, /*value=*/false);
+  } else {
+    // It's a non-void function, but it never created a result expression--that is, it never
+    // returned anything on any path! This should have been detected in the function finalizer.
+    // Still, discard our output and generate an error.
+    SkDEBUGFAIL("inliner found non-void function that fails to return a value on any path");
+    fContext->fErrors->error(
+        function.fOffset, "inliner found non-void function '" + function.declaration().name() +
+                              "' that fails to return a value on any path");
+    inlinedCall = {};
   }
 
   return inlinedCall;
 }
 
 bool Inliner::isSafeToInline(const FunctionDefinition* functionDef) {
-  SkASSERT(fSettings);
-
   // A threshold of zero indicates that the inliner is completely disabled, so we can just return.
-  if (fSettings->fInlineThreshold <= 0) {
+  if (this->settings().fInlineThreshold <= 0) {
     return false;
   }
 
@@ -755,11 +696,20 @@ bool Inliner::isSafeToInline(const FunctionDefinition* functionDef) {
     return false;
   }
 
-  // We don't have any mechanism to simulate early returns within a construct that supports
-  // continues (for/do/while), so we can't inline if there's a return inside one.
-  bool hasReturnInContinuableConstruct =
-      (count_returns_in_continuable_constructs(*functionDef) > 0);
-  return !hasReturnInContinuableConstruct;
+  if (functionDef->declaration().modifiers().fFlags & Modifiers::kNoInline_Flag) {
+    // Refuse to inline functions decorated with `noinline`.
+    return false;
+  }
+
+  // We don't allow inlining a function with out parameters. (See skia:11326 for rationale.)
+  for (const Variable* param : functionDef->declaration().parameters()) {
+    if (param->modifiers().fFlags & Modifiers::Flag::kOut_Flag) {
+      return false;
+    }
+  }
+
+  // We don't have a mechanism to simulate early returns, so we can't inline if there is one.
+  return GetReturnComplexity(*functionDef) < ReturnComplexity::kEarlyReturns;
 }
 
 // A candidate function for inlining, containing everything that `inlineCall` needs.
@@ -843,8 +793,8 @@ class InlineCandidateAnalyzer {
           fSymbolTableStack.push_back(block.symbolTable());
         }
 
-        for (std::unique_ptr<Statement>& stmt : block.children()) {
-          this->visitStatement(&stmt);
+        for (std::unique_ptr<Statement>& blockStmt : block.children()) {
+          this->visitStatement(&blockStmt);
         }
         break;
       }
@@ -915,11 +865,9 @@ class InlineCandidateAnalyzer {
         }
 
         this->visitExpression(&switchStmt.value());
-        for (const std::unique_ptr<SwitchCase>& switchCase : switchStmt.cases()) {
+        for (const std::unique_ptr<Statement>& switchCase : switchStmt.cases()) {
           // The switch-case's fValue cannot be a FunctionCall; skip it.
-          for (std::unique_ptr<Statement>& caseBlock : switchCase->statements()) {
-            this->visitStatement(&caseBlock);
-          }
+          this->visitStatement(&switchCase->as<SwitchCase>().statement());
         }
         break;
       }
@@ -944,12 +892,12 @@ class InlineCandidateAnalyzer {
 
     switch ((*expr)->kind()) {
       case Expression::Kind::kBoolLiteral:
-      case Expression::Kind::kDefined:
       case Expression::Kind::kExternalFunctionReference:
       case Expression::Kind::kFieldAccess:
       case Expression::Kind::kFloatLiteral:
       case Expression::Kind::kFunctionReference:
       case Expression::Kind::kIntLiteral:
+      case Expression::Kind::kMethodReference:
       case Expression::Kind::kSetting:
       case Expression::Kind::kTypeReference:
       case Expression::Kind::kVariableReference:
@@ -968,17 +916,32 @@ class InlineCandidateAnalyzer {
         // It is illegal for side-effects from x() or y() to occur. The simplest way to
         // enforce that rule is to avoid inlining the right side entirely. However, it is
         // safe for other types of binary expression to inline both sides.
-        Token::Kind op = binaryExpr.getOperator();
+        Operator op = binaryExpr.getOperator();
         bool shortCircuitable =
-            (op == Token::Kind::TK_LOGICALAND || op == Token::Kind::TK_LOGICALOR);
+            (op.kind() == Token::Kind::TK_LOGICALAND || op.kind() == Token::Kind::TK_LOGICALOR);
         if (!shortCircuitable) {
           this->visitExpression(&binaryExpr.right());
         }
         break;
       }
-      case Expression::Kind::kConstructor: {
-        Constructor& constructorExpr = (*expr)->as<Constructor>();
-        for (std::unique_ptr<Expression>& arg : constructorExpr.arguments()) {
+      case Expression::Kind::kChildCall: {
+        ChildCall& childCallExpr = (*expr)->as<ChildCall>();
+        for (std::unique_ptr<Expression>& arg : childCallExpr.arguments()) {
+          this->visitExpression(&arg);
+        }
+        break;
+      }
+      case Expression::Kind::kConstructorArray:
+      case Expression::Kind::kConstructorArrayCast:
+      case Expression::Kind::kConstructorCompound:
+      case Expression::Kind::kConstructorCompoundCast:
+      case Expression::Kind::kConstructorDiagonalMatrix:
+      case Expression::Kind::kConstructorMatrixResize:
+      case Expression::Kind::kConstructorScalarCast:
+      case Expression::Kind::kConstructorSplat:
+      case Expression::Kind::kConstructorStruct: {
+        AnyConstructor& constructorExpr = (*expr)->asAnyConstructor();
+        for (std::unique_ptr<Expression>& arg : constructorExpr.argumentSpan()) {
           this->visitExpression(&arg);
         }
         break;
@@ -1058,7 +1021,7 @@ int Inliner::getFunctionSize(const FunctionDeclaration& funcDecl, FunctionSizeCa
   auto [iter, wasInserted] = cache->insert({&funcDecl, 0});
   if (wasInserted) {
     iter->second =
-        Analysis::NodeCountUpToLimit(*funcDecl.definition(), fSettings->fInlineThreshold);
+        Analysis::NodeCountUpToLimit(*funcDecl.definition(), this->settings().fInlineThreshold);
   }
   return iter->second;
 }
@@ -1091,7 +1054,7 @@ void Inliner::buildCandidateList(
 
   // If the inline threshold is unlimited, or if we have no candidates left, our candidate list is
   // complete.
-  if (fSettings->fInlineThreshold == INT_MAX || candidates.empty()) {
+  if (this->settings().fInlineThreshold == INT_MAX || candidates.empty()) {
     return;
   }
 
@@ -1118,7 +1081,7 @@ void Inliner::buildCandidateList(
               // If a function is only used once, it's cost-free to inline.
               return false;
             }
-            if (candidateTotalCost[&fnDecl] <= fSettings->fInlineThreshold) {
+            if (candidateTotalCost[&fnDecl] <= this->settings().fInlineThreshold) {
               // We won't exceed the inline threshold by inlining this.
               return false;
             }
@@ -1132,7 +1095,7 @@ bool Inliner::analyze(
     const std::vector<std::unique_ptr<ProgramElement>>& elements,
     std::shared_ptr<SymbolTable> symbols, ProgramUsage* usage) {
   // A threshold of zero indicates that the inliner is completely disabled, so we can just return.
-  if (fSettings->fInlineThreshold <= 0) {
+  if (this->settings().fInlineThreshold <= 0) {
     return false;
   }
 
@@ -1145,44 +1108,59 @@ bool Inliner::analyze(
   this->buildCandidateList(elements, symbols, usage, &candidateList);
 
   // Inline the candidates where we've determined that it's safe to do so.
-  std::unordered_set<const std::unique_ptr<Statement>*> enclosingStmtSet;
+  using StatementRemappingTable =
+      std::unordered_map<std::unique_ptr<Statement>*, std::unique_ptr<Statement>*>;
+  StatementRemappingTable statementRemappingTable;
+
   bool madeChanges = false;
   for (const InlineCandidate& candidate : candidateList.fCandidates) {
     FunctionCall& funcCall = (*candidate.fCandidateExpr)->as<FunctionCall>();
 
-    // Inlining two expressions using the same enclosing statement in the same inlining pass
-    // does not work properly. If this happens, skip it; we'll get it in the next pass.
-    auto [unusedIter, inserted] = enclosingStmtSet.insert(candidate.fEnclosingStmt);
-    if (!inserted) {
-      continue;
-    }
-
     // Convert the function call to its inlined equivalent.
     InlinedCall inlinedCall = this->inlineCall(
-        &funcCall, candidate.fSymbols, &candidate.fEnclosingFunction->declaration());
-    if (inlinedCall.fInlinedBody) {
-      // Ensure that the inlined body has a scope if it needs one.
-      this->ensureScopedBlocks(inlinedCall.fInlinedBody.get(), candidate.fParentStmt->get());
+        &funcCall, candidate.fSymbols, *usage, &candidate.fEnclosingFunction->declaration());
 
-      // Add references within the inlined body
-      usage->add(inlinedCall.fInlinedBody.get());
-
-      // Move the enclosing statement to the end of the unscoped Block containing the inlined
-      // function, then replace the enclosing statement with that Block.
-      // Before:
-      //     fInlinedBody = Block{ stmt1, stmt2, stmt3 }
-      //     fEnclosingStmt = stmt4
-      // After:
-      //     fInlinedBody = null
-      //     fEnclosingStmt = Block{ stmt1, stmt2, stmt3, stmt4 }
-      inlinedCall.fInlinedBody->children().push_back(std::move(*candidate.fEnclosingStmt));
-      *candidate.fEnclosingStmt = std::move(inlinedCall.fInlinedBody);
+    // Stop if an error was detected during the inlining process.
+    if (!inlinedCall.fInlinedBody && !inlinedCall.fReplacementExpr) {
+      break;
     }
 
+    // Ensure that the inlined body has a scope if it needs one.
+    this->ensureScopedBlocks(inlinedCall.fInlinedBody.get(), candidate.fParentStmt->get());
+
+    // Add references within the inlined body
+    usage->add(inlinedCall.fInlinedBody.get());
+
+    // Look up the enclosing statement; remap it if necessary.
+    std::unique_ptr<Statement>* enclosingStmt = candidate.fEnclosingStmt;
+    for (;;) {
+      auto iter = statementRemappingTable.find(enclosingStmt);
+      if (iter == statementRemappingTable.end()) {
+        break;
+      }
+      enclosingStmt = iter->second;
+    }
+
+    // Move the enclosing statement to the end of the unscoped Block containing the inlined
+    // function, then replace the enclosing statement with that Block.
+    // Before:
+    //     fInlinedBody = Block{ stmt1, stmt2, stmt3 }
+    //     fEnclosingStmt = stmt4
+    // After:
+    //     fInlinedBody = null
+    //     fEnclosingStmt = Block{ stmt1, stmt2, stmt3, stmt4 }
+    inlinedCall.fInlinedBody->children().push_back(std::move(*enclosingStmt));
+    *enclosingStmt = std::move(inlinedCall.fInlinedBody);
+
     // Replace the candidate function call with our replacement expression.
-    usage->replace(candidate.fCandidateExpr->get(), inlinedCall.fReplacementExpr.get());
+    usage->remove(candidate.fCandidateExpr->get());
+    usage->add(inlinedCall.fReplacementExpr.get());
     *candidate.fCandidateExpr = std::move(inlinedCall.fReplacementExpr);
     madeChanges = true;
+
+    // If anything else pointed at our enclosing statement, it's now pointing at a Block
+    // containing many other statements as well. Maintain a fix-up table to account for this.
+    statementRemappingTable[enclosingStmt] = &(*enclosingStmt)->as<Block>().children().back();
 
     // Stop inlining if we've reached our hard cap on new statements.
     if (fInlinedStatementCounter >= kInlinedStatementLimit) {

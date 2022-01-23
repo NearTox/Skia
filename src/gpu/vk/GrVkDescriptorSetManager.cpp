@@ -19,9 +19,6 @@
 GrVkDescriptorSetManager* GrVkDescriptorSetManager::CreateUniformManager(GrVkGpu* gpu) {
   SkSTArray<1, uint32_t> visibilities;
   uint32_t stages = kVertex_GrShaderFlag | kFragment_GrShaderFlag;
-  if (gpu->vkCaps().shaderCaps()->geometryShaderSupport()) {
-    stages |= kGeometry_GrShaderFlag;
-  }
   visibilities.push_back(stages);
   SkTArray<const GrVkSampler*> samplers;
   return Create(gpu, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, visibilities, samplers);
@@ -58,9 +55,6 @@ VkShaderStageFlags visibility_to_vk_stage_flags(uint32_t visibility) {
   if (visibility & kVertex_GrShaderFlag) {
     flags |= VK_SHADER_STAGE_VERTEX_BIT;
   }
-  if (visibility & kGeometry_GrShaderFlag) {
-    flags |= VK_SHADER_STAGE_GEOMETRY_BIT;
-  }
   if (visibility & kFragment_GrShaderFlag) {
     flags |= VK_SHADER_STAGE_FRAGMENT_BIT;
   }
@@ -76,6 +70,7 @@ static bool get_layout_and_desc_count(
     uint32_t numBindings = visibilities.count();
     std::unique_ptr<VkDescriptorSetLayoutBinding[]> dsSamplerBindings(
         new VkDescriptorSetLayoutBinding[numBindings]);
+    *descCountPerSet = 0;
     for (uint32_t i = 0; i < numBindings; ++i) {
       uint32_t visibility = visibilities[i];
       dsSamplerBindings[i].binding = i;
@@ -84,8 +79,10 @@ static bool get_layout_and_desc_count(
       dsSamplerBindings[i].stageFlags = visibility_to_vk_stage_flags(visibility);
       if (VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER == type) {
         if (immutableSamplers[i]) {
+          (*descCountPerSet) += gpu->vkCaps().ycbcrCombinedImageSamplerDescriptorCount();
           dsSamplerBindings[i].pImmutableSamplers = immutableSamplers[i]->samplerPtr();
         } else {
+          (*descCountPerSet)++;
           dsSamplerBindings[i].pImmutableSamplers = nullptr;
         }
       }
@@ -114,8 +111,6 @@ static bool get_layout_and_desc_count(
     if (result != VK_SUCCESS) {
       return false;
     }
-
-    *descCountPerSet = visibilities.count();
   } else if (type == VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER) {
     static constexpr int kUniformDescPerSet = 1;
     SkASSERT(kUniformDescPerSet == visibilities.count());

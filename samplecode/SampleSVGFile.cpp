@@ -7,15 +7,16 @@
 
 #include "include/core/SkTypes.h"
 
-#ifdef SK_XML
+#if defined(SK_ENABLE_SVG)
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkStream.h"
-#include "modules/svg/include/SkSVGDOM.h"
-#include "samplecode/Sample.h"
-#include "src/core/SkOSFile.h"
-#include "src/utils/SkOSPath.h"
-#include "src/xml/SkDOM.h"
+#  include "include/core/SkCanvas.h"
+#  include "include/core/SkStream.h"
+#  include "modules/svg/include/SkSVGDOM.h"
+#  include "modules/svg/include/SkSVGNode.h"
+#  include "samplecode/Sample.h"
+#  include "src/core/SkOSFile.h"
+#  include "src/utils/SkOSPath.h"
+#  include "src/xml/SkDOM.h"
 
 namespace {
 
@@ -29,8 +30,8 @@ protected:
     void onOnceBeforeDraw() override {
         SkFILEStream svgStream(fPath.c_str());
         if (!svgStream.isValid()) {
-            SkDebugf("file not found: \"path\"\n", fPath.c_str());
-            return;
+          SkDebugf("file not found: \"%s\"\n", fPath.c_str());
+          return;
         }
 
         fDom = SkSVGDOM::MakeFromStream(svgStream);
@@ -69,4 +70,4 @@ Sample* CreateSampleSVGFileView(const SkString& filename);
 Sample* CreateSampleSVGFileView(const SkString& filename) {
     return new SVGFileView(filename);
 }
-#endif  // SK_XML
+#endif  // defined(SK_ENABLE_SVG)

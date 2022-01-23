@@ -14,7 +14,7 @@
 #include "src/gpu/GrResourceCache.h"
 #include <atomic>
 
-static inline GrResourceCache* get_resource_cache(GrGpu* gpu) {
+static inline GrResourceCache* get_resource_cache(GrGpu* gpu) noexcept {
   SkASSERT(gpu);
   SkASSERT(gpu->getContext());
   SkASSERT(gpu->getContext()->priv().getResourceCache());
@@ -89,6 +89,9 @@ void GrGpuResource::dumpMemoryStatisticsPriv(
   if (this->isPurgeable()) {
     traceMemoryDump->dumpNumericValue(resourceName.c_str(), "purgeable_size", "bytes", size);
   }
+  if (traceMemoryDump->shouldDumpWrappedObjects()) {
+    traceMemoryDump->dumpWrappedState(resourceName.c_str(), fRefsWrappedObjects);
+  }
 
   this->setMemoryBacking(traceMemoryDump, resourceName);
 }
@@ -157,21 +160,18 @@ void GrGpuResource::setUniqueKey(const GrUniqueKey& key) {
   get_resource_cache(fGpu)->resourceAccess().changeUniqueKey(this, key);
 }
 
-void GrGpuResource::notifyRefCntWillBeZero() const {
-  GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
-  mutableThis->willRemoveLastRef();
-}
-
-void GrGpuResource::notifyRefCntIsZero() const {
+void GrGpuResource::notifyARefCntIsZero(LastRemovedRef removedRef) const {
   if (this->wasDestroyed()) {
-    // We've already been removed from the cache. Goodbye cruel world!
-    delete this;
+    if (this->hasNoCommandBufferUsages() && !this->hasRef()) {
+      // We've already been removed from the cache. Goodbye cruel world!
+      delete this;
+    }
     return;
   }
 
   GrGpuResource* mutableThis = const_cast<GrGpuResource*>(this);
 
-  get_resource_cache(fGpu)->resourceAccess().notifyRefCntReachedZero(mutableThis);
+  get_resource_cache(fGpu)->resourceAccess().notifyARefCntReachedZero(mutableThis, removedRef);
 }
 
 void GrGpuResource::removeScratchKey() {
@@ -201,7 +201,7 @@ void GrGpuResource::makeUnbudgeted() {
   }
 }
 
-uint32_t GrGpuResource::CreateUniqueID() {
+uint32_t GrGpuResource::CreateUniqueID() noexcept {
   static std::atomic<uint32_t> nextID{1};
   uint32_t id;
   do {

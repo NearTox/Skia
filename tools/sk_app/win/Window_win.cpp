@@ -205,7 +205,6 @@ static skui::ModifierKey get_modifiers(UINT message, WPARAM wParam, LPARAM lPara
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
   PAINTSTRUCT ps;
-  HDC hdc;
 
   Window_win* window = (Window_win*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 
@@ -213,7 +212,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
   switch (message) {
     case WM_PAINT:
-      hdc = BeginPaint(hWnd, &ps);
+      BeginPaint(hWnd, &ps);
       window->onPaint();
       EndPaint(hWnd, &ps);
       eventHandled = true;
@@ -262,11 +261,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
       // if (!gIsFullscreen)
       //{
-      //    RECT rc = { 0, 0, 640, 480 };
-      //    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-      //    xPos -= rc.left;
-      //    yPos -= rc.top;
-      //}
+      //     RECT rc = { 0, 0, 640, 480 };
+      //     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+      //     xPos -= rc.left;
+      //     yPos -= rc.top;
+      // }
 
       skui::InputState istate =
           ((wParam & MK_LBUTTON) != 0) ? skui::InputState::kDown : skui::InputState::kUp;
@@ -280,11 +279,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
       // if (!gIsFullscreen)
       //{
-      //    RECT rc = { 0, 0, 640, 480 };
-      //    AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
-      //    xPos -= rc.left;
-      //    yPos -= rc.top;
-      //}
+      //     RECT rc = { 0, 0, 640, 480 };
+      //     AdjustWindowRect(&rc, WS_OVERLAPPEDWINDOW, FALSE);
+      //     xPos -= rc.left;
+      //     yPos -= rc.top;
+      // }
 
       eventHandled = window->onMouse(
           xPos, yPos, skui::InputState::kMove, get_modifiers(message, wParam, lParam));

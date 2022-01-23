@@ -9,6 +9,10 @@
 
 #include "src/gpu/GrShaderVar.h"
 
+// ensure that these types are the sizes the uniform data is expecting
+static_assert(sizeof(int32_t) == 4);
+static_assert(sizeof(float) == 4);
+
 GrUniformDataManager::GrUniformDataManager(uint32_t uniformCount, uint32_t uniformSize)
     : fUniformSize(uniformSize), fUniformsDirty(false) {
   fUniformData.reset(uniformSize);
@@ -38,7 +42,6 @@ void GrUniformDataManager::set1iv(UniformHandle u, int arrayCount, const int32_t
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(int32_t) == 4);
   for (int i = 0; i < arrayCount; ++i) {
     const int32_t* curVec = &v[i];
     memcpy(buffer, curVec, sizeof(int32_t));
@@ -51,7 +54,6 @@ void GrUniformDataManager::set1f(UniformHandle u, float v0) const {
   SkASSERT(uni.fType == kFloat_GrSLType || uni.fType == kHalf_GrSLType);
   SkASSERT(GrShaderVar::kNonArray == uni.fArrayCount);
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   memcpy(buffer, &v0, sizeof(float));
 }
 
@@ -64,7 +66,6 @@ void GrUniformDataManager::set1fv(UniformHandle u, int arrayCount, const float v
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   for (int i = 0; i < arrayCount; ++i) {
     const float* curVec = &v[i];
     memcpy(buffer, curVec, sizeof(float));
@@ -90,7 +91,6 @@ void GrUniformDataManager::set2iv(UniformHandle u, int arrayCount, const int32_t
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(int32_t) == 4);
   for (int i = 0; i < arrayCount; ++i) {
     const int32_t* curVec = &v[2 * i];
     memcpy(buffer, curVec, 2 * sizeof(int32_t));
@@ -103,7 +103,6 @@ void GrUniformDataManager::set2f(UniformHandle u, float v0, float v1) const {
   SkASSERT(uni.fType == kFloat2_GrSLType || uni.fType == kHalf2_GrSLType);
   SkASSERT(GrShaderVar::kNonArray == uni.fArrayCount);
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   float v[2] = {v0, v1};
   memcpy(buffer, v, 2 * sizeof(float));
 }
@@ -117,7 +116,6 @@ void GrUniformDataManager::set2fv(UniformHandle u, int arrayCount, const float v
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   for (int i = 0; i < arrayCount; ++i) {
     const float* curVec = &v[2 * i];
     memcpy(buffer, curVec, 2 * sizeof(float));
@@ -143,7 +141,6 @@ void GrUniformDataManager::set3iv(UniformHandle u, int arrayCount, const int32_t
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(int32_t) == 4);
   for (int i = 0; i < arrayCount; ++i) {
     const int32_t* curVec = &v[3 * i];
     memcpy(buffer, curVec, 3 * sizeof(int32_t));
@@ -156,7 +153,6 @@ void GrUniformDataManager::set3f(UniformHandle u, float v0, float v1, float v2) 
   SkASSERT(uni.fType == kFloat3_GrSLType || uni.fType == kHalf3_GrSLType);
   SkASSERT(GrShaderVar::kNonArray == uni.fArrayCount);
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   float v[3] = {v0, v1, v2};
   memcpy(buffer, v, 3 * sizeof(float));
 }
@@ -170,7 +166,6 @@ void GrUniformDataManager::set3fv(UniformHandle u, int arrayCount, const float v
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   for (int i = 0; i < arrayCount; ++i) {
     const float* curVec = &v[3 * i];
     memcpy(buffer, curVec, 3 * sizeof(float));
@@ -197,12 +192,7 @@ void GrUniformDataManager::set4iv(UniformHandle u, int arrayCount, const int32_t
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(int32_t) == 4);
-  for (int i = 0; i < arrayCount; ++i) {
-    const int32_t* curVec = &v[4 * i];
-    memcpy(buffer, curVec, 4 * sizeof(int32_t));
-    buffer = static_cast<char*>(buffer) + 4 * sizeof(int32_t);
-  }
+  memcpy(buffer, v, arrayCount * 4 * sizeof(int32_t));
 }
 
 void GrUniformDataManager::set4f(UniformHandle u, float v0, float v1, float v2, float v3) const {
@@ -210,7 +200,6 @@ void GrUniformDataManager::set4f(UniformHandle u, float v0, float v1, float v2, 
   SkASSERT(uni.fType == kFloat4_GrSLType || uni.fType == kHalf4_GrSLType);
   SkASSERT(GrShaderVar::kNonArray == uni.fArrayCount);
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   float v[4] = {v0, v1, v2, v3};
   memcpy(buffer, v, 4 * sizeof(float));
 }
@@ -224,7 +213,6 @@ void GrUniformDataManager::set4fv(UniformHandle u, int arrayCount, const float v
       (1 == arrayCount && GrShaderVar::kNonArray == uni.fArrayCount));
 
   void* buffer = this->getBufferPtrAndMarkDirty(uni);
-  SkASSERT(sizeof(float) == 4);
   memcpy(buffer, v, arrayCount * 4 * sizeof(float));
 }
 
@@ -274,7 +262,6 @@ inline void GrUniformDataManager::setMatrices(
 template <int N>
 struct set_uniform_matrix {
   inline static void set(void* buffer, int uniformOffset, int count, const float matrices[]) {
-    static_assert(sizeof(float) == 4);
     buffer = static_cast<char*>(buffer) + uniformOffset;
     for (int i = 0; i < count; ++i) {
       const float* matrix = &matrices[N * N * i];
@@ -289,7 +276,6 @@ struct set_uniform_matrix {
 template <>
 struct set_uniform_matrix<4> {
   inline static void set(void* buffer, int uniformOffset, int count, const float matrices[]) {
-    static_assert(sizeof(float) == 4);
     buffer = static_cast<char*>(buffer) + uniformOffset;
     memcpy(buffer, matrices, count * 16 * sizeof(float));
   }

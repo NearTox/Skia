@@ -13,8 +13,8 @@
 
 #include "dawn/dawn_proc.h"
 
-static wgpu::TextureUsage kUsage = wgpu::TextureUsage::OutputAttachment |
-                                   wgpu::TextureUsage::CopySrc;
+static wgpu::TextureUsage kUsage =
+    wgpu::TextureUsage::RenderAttachment | wgpu::TextureUsage::CopySrc;
 
 static void PrintDeviceError(WGPUErrorType, const char* message, void*) {
     printf("Device error: %s\n", message);

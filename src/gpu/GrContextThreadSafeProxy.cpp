@@ -14,6 +14,7 @@
 #include "src/gpu/GrBaseContextPriv.h"
 #include "src/gpu/GrCaps.h"
 #include "src/gpu/GrThreadSafeCache.h"
+#include "src/gpu/GrThreadSafePipelineBuilder.h"
 #include "src/gpu/effects/GrSkSLFP.h"
 #include "src/image/SkSurface_Gpu.h"
 
@@ -36,10 +37,12 @@ GrContextThreadSafeProxy::GrContextThreadSafeProxy(
 
 GrContextThreadSafeProxy::~GrContextThreadSafeProxy() = default;
 
-void GrContextThreadSafeProxy::init(sk_sp<const GrCaps> caps) {
+void GrContextThreadSafeProxy::init(
+    sk_sp<const GrCaps> caps, sk_sp<GrThreadSafePipelineBuilder> pipelineBuilder) {
   fCaps = std::move(caps);
   fTextBlobCache = std::make_unique<GrTextBlobCache>(fContextID);
   fThreadSafeCache = std::make_unique<GrThreadSafeCache>();
+  fPipelineBuilder = std::move(pipelineBuilder);
 }
 
 SkSurfaceCharacterization GrContextThreadSafeProxy::createCharacterization(
@@ -92,7 +95,7 @@ SkSurfaceCharacterization GrContextThreadSafeProxy::createCharacterization(
     return {};
   }
 
-  if (isTextureable && !fCaps->isFormatTexturable(backendFormat)) {
+  if (isTextureable && !fCaps->isFormatTexturable(backendFormat, backendFormat.textureType())) {
     // Skia doesn't agree that this is textureable.
     return {};
   }
@@ -143,6 +146,16 @@ GrBackendFormat GrContextThreadSafeProxy::defaultBackendFormat(
   return format;
 }
 
+GrBackendFormat GrContextThreadSafeProxy::compressedBackendFormat(
+    SkImage::CompressionType c) const {
+  SkASSERT(fCaps);
+
+  GrBackendFormat format = fCaps->getBackendFormatFromCompressionType(c);
+
+  SkASSERT(!format.isValid() || fCaps->isFormatTexturable(format, GrTextureType::k2D));
+  return format;
+}
+
 void GrContextThreadSafeProxy::abandonContext() {
   if (!fAbandoned.exchange(true)) {
     fTextBlobCache->freeAll();
@@ -155,4 +168,9 @@ bool GrContextThreadSafeProxy::abandoned() const { return fAbandoned; }
 sk_sp<GrContextThreadSafeProxy> GrContextThreadSafeProxyPriv::Make(
     GrBackendApi backend, const GrContextOptions& options) {
   return sk_sp<GrContextThreadSafeProxy>(new GrContextThreadSafeProxy(backend, options));
+}
+
+void GrContextThreadSafeProxyPriv::init(
+    sk_sp<const GrCaps> caps, sk_sp<GrThreadSafePipelineBuilder> builder) const {
+  fProxy->init(std::move(caps), std::move(builder));
 }

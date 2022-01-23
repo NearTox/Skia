@@ -33,7 +33,7 @@ class MemoryCache : public GrContextOptions::PersistentCache {
   }
 
   sk_sp<SkData> load(const SkData& key) override;
-  void store(const SkData& key, const SkData& data) override;
+  void store(const SkData& key, const SkData& data, const SkString& description) override;
   int numCacheMisses() const { return fCacheMissCnt; }
   int numCacheStores() const { return fCacheStoreCnt; }
   void resetCacheStats() {
@@ -46,7 +46,7 @@ class MemoryCache : public GrContextOptions::PersistentCache {
   template <typename Fn>
   void foreach (Fn&& fn) {
     for (auto it = fMap.begin(); it != fMap.end(); ++it) {
-      fn(it->first.fKey, it->second.fData, it->second.fHitCount);
+      fn(it->first.fKey, it->second.fData, it->second.fDescription, it->second.fHitCount);
     }
   }
 
@@ -65,12 +65,15 @@ class MemoryCache : public GrContextOptions::PersistentCache {
 
   struct Value {
     Value() = default;
-    Value(const SkData& data)
-        : fData(SkData::MakeWithCopy(data.data(), data.size())), fHitCount(1) {}
+    Value(const SkData& data, const SkString& description)
+        : fData(SkData::MakeWithCopy(data.data(), data.size())),
+          fDescription(description),
+          fHitCount(1) {}
     Value(const Value& that) = default;
     Value& operator=(const Value&) = default;
 
     sk_sp<SkData> fData;
+    SkString fDescription;
     int fHitCount;
   };
 

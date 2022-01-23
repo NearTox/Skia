@@ -35,7 +35,7 @@ class TextAnimator final : public SkNVRefCnt<TextAnimator> {
     // unlike pos/scale which are animated vectors, rotation is separated in each dimension.
     SkV3 rotation = {0, 0, 0};
     Vec2Value blur = {0, 0}, line_spacing = {0, 0};
-    ScalarValue opacity = 100, tracking = 0;
+    ScalarValue opacity = 100, fill_opacity = 100, stroke_opacity = 100, tracking = 0;
   };
 
   struct ResolvedProps {

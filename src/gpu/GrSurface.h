@@ -22,17 +22,17 @@ class GrSurface : public GrGpuResource {
   /**
    * Retrieves the dimensions of the surface.
    */
-  SkISize dimensions() const { return fDimensions; }
+  SkISize dimensions() const noexcept { return fDimensions; }
 
   /**
    * Retrieves the width of the surface.
    */
-  int width() const { return fDimensions.width(); }
+  int width() const noexcept { return fDimensions.width(); }
 
   /**
    * Retrieves the height of the surface.
    */
-  int height() const { return fDimensions.height(); }
+  int height() const noexcept { return fDimensions.height(); }
 
   /**
    * Helper that gets the width and height of the surface as a bounding rectangle.
@@ -57,16 +57,16 @@ class GrSurface : public GrGpuResource {
   /**
    * @return the texture associated with the surface, may be null.
    */
-  virtual GrTexture* asTexture() { return nullptr; }
-  virtual const GrTexture* asTexture() const { return nullptr; }
+  virtual GrTexture* asTexture() noexcept { return nullptr; }
+  virtual const GrTexture* asTexture() const noexcept { return nullptr; }
 
   /**
    * @return the render target underlying this surface, may be null.
    */
-  virtual GrRenderTarget* asRenderTarget() { return nullptr; }
-  virtual const GrRenderTarget* asRenderTarget() const { return nullptr; }
+  virtual GrRenderTarget* asRenderTarget() noexcept { return nullptr; }
+  virtual const GrRenderTarget* asRenderTarget() const noexcept { return nullptr; }
 
-  GrInternalSurfaceFlags flags() const { return fSurfaceFlags; }
+  GrInternalSurfaceFlags flags() const noexcept { return fSurfaceFlags; }
 
   static size_t ComputeSize(
       const GrBackendFormat&, SkISize dimensions, int colorSamplesPerPixel, GrMipmapped,
@@ -76,28 +76,32 @@ class GrSurface : public GrGpuResource {
    * The pixel values of this surface cannot be modified (e.g. doesn't support write pixels or
    * MIP map level regen).
    */
-  bool readOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
+  bool readOnly() const noexcept { return fSurfaceFlags & GrInternalSurfaceFlags::kReadOnly; }
 
-  bool framebufferOnly() const { return fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly; }
+  bool framebufferOnly() const noexcept {
+    return fSurfaceFlags & GrInternalSurfaceFlags::kFramebufferOnly;
+  }
 
   // Returns true if we are working with protected content.
-  bool isProtected() const { return fIsProtected == GrProtected::kYes; }
+  bool isProtected() const noexcept { return fIsProtected == GrProtected::kYes; }
 
-  void setFramebufferOnly() {
+  void setFramebufferOnly() noexcept {
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kFramebufferOnly;
   }
 
  protected:
-  void setGLRTFBOIDIs0() {
+  void setGLRTFBOIDIs0() noexcept {
     SkASSERT(!this->requiresManualMSAAResolve());
     SkASSERT(!this->asTexture());
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kGLRTFBOIDIs0;
   }
-  bool glRTFBOIDis0() const { return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0; }
+  bool glRTFBOIDis0() const noexcept {
+    return fSurfaceFlags & GrInternalSurfaceFlags::kGLRTFBOIDIs0;
+  }
 
-  void setRequiresManualMSAAResolve() {
+  void setRequiresManualMSAAResolve() noexcept {
     SkASSERT(!this->glRTFBOIDis0());
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kRequiresManualMSAAResolve;
@@ -106,12 +110,12 @@ class GrSurface : public GrGpuResource {
     return fSurfaceFlags & GrInternalSurfaceFlags::kRequiresManualMSAAResolve;
   }
 
-  void setReadOnly() {
+  void setReadOnly() noexcept {
     SkASSERT(!this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kReadOnly;
   }
 
-  void setVkRTSupportsInputAttachment() {
+  void setVkRTSupportsInputAttachment() noexcept {
     SkASSERT(this->asRenderTarget());
     fSurfaceFlags |= GrInternalSurfaceFlags::kVkRTSupportsInputAttachment;
   }
@@ -137,7 +141,7 @@ class GrSurface : public GrGpuResource {
   // ensure it isn't called until GPU work related to the resource is completed.
   virtual void onSetRelease(sk_sp<GrRefCntedCallback>) {}
 
-  void invokeReleaseProc() {
+  void invokeReleaseProc() noexcept {
     // Depending on the ref count of fReleaseHelper this may or may not actually trigger the
     // ReleaseProc to be called.
     fReleaseHelper.reset();

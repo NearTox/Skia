@@ -10,7 +10,6 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkColorPriv.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkMatrix.h"
@@ -59,7 +58,7 @@ class FilterBugGM : public skiagm::GM {
   }
 
   void onDraw(SkCanvas* canvas) override {
-    static const SkSamplingOptions kSampling({1.0f / 3, 1.0f / 3});
+    static const SkSamplingOptions kSampling(SkCubicResampler::Mitchell());
     static const bool kDoAA = true;
 
     {

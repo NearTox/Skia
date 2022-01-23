@@ -7,6 +7,7 @@
 
 #include "include/gpu/GrBackendSurface.h"
 
+#include "include/private/GrTypesPriv.h"
 #include "src/gpu/GrBackendSurfaceMutableStateImpl.h"
 #include "src/gpu/gl/GrGLUtil.h"
 
@@ -66,16 +67,22 @@ GrBackendFormat& GrBackendFormat::operator=(const GrBackendFormat& that) {
 }
 
 #ifdef SK_GL
-GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target)
-    : fBackend(GrBackendApi::kOpenGL), fValid(true), fGLFormat(format) {
+
+static GrTextureType gl_target_to_gr_target(GrGLenum target) {
   switch (target) {
-    case GR_GL_TEXTURE_NONE: fTextureType = GrTextureType::kNone; break;
-    case GR_GL_TEXTURE_2D: fTextureType = GrTextureType::k2D; break;
-    case GR_GL_TEXTURE_RECTANGLE: fTextureType = GrTextureType::kRectangle; break;
-    case GR_GL_TEXTURE_EXTERNAL: fTextureType = GrTextureType::kExternal; break;
-    default: SK_ABORT("Unexpected texture target");
+    case GR_GL_TEXTURE_NONE: return GrTextureType::kNone;
+    case GR_GL_TEXTURE_2D: return GrTextureType::k2D;
+    case GR_GL_TEXTURE_RECTANGLE: return GrTextureType::kRectangle;
+    case GR_GL_TEXTURE_EXTERNAL: return GrTextureType::kExternal;
+    default: SkUNREACHABLE;
   }
 }
+
+GrBackendFormat::GrBackendFormat(GrGLenum format, GrGLenum target)
+    : fBackend(GrBackendApi::kOpenGL),
+      fValid(true),
+      fGLFormat(format),
+      fTextureType(gl_target_to_gr_target(target)) {}
 #endif
 
 GrGLFormat GrBackendFormat::asGLFormat() const {
@@ -205,6 +212,32 @@ uint32_t GrBackendFormat::channelMask() const {
     case GrBackendApi::kMock: return GrColorTypeChannelFlags(fMock.fColorType);
 
     default: return 0;
+  }
+}
+
+GrColorFormatDesc GrBackendFormat::desc() const {
+  if (!this->isValid()) {
+    return GrColorFormatDesc::MakeInvalid();
+  }
+  switch (fBackend) {
+#ifdef SK_GL
+    case GrBackendApi::kOpenGL: return GrGLFormatDesc(GrGLFormatFromGLEnum(fGLFormat));
+#endif
+#ifdef SK_VULKAN
+    case GrBackendApi::kVulkan: return GrVkFormatDesc(fVk.fFormat);
+#endif
+#ifdef SK_METAL
+    case GrBackendApi::kMetal: return GrMtlFormatDesc(fMtlFormat);
+#endif
+#ifdef SK_DAWN
+    case GrBackendApi::kDawn: return GrDawnFormatDesc(fDawnFormat);
+#endif
+#ifdef SK_DIRECT3D
+    case GrBackendApi::kDirect3D: return GrDxgiFormatDesc(fDxgiFormat);
+#endif
+    case GrBackendApi::kMock: return GrGetColorTypeDesc(fMock.fColorType);
+
+    default: return GrColorFormatDesc::MakeInvalid();
   }
 }
 
@@ -375,6 +408,7 @@ GrBackendTexture::GrBackendTexture(int width, int height, const GrDawnTextureInf
       fHeight(height),
       fMipmapped(GrMipmapped(dawnInfo.fLevelCount > 1)),
       fBackend(GrBackendApi::kDawn),
+      fTextureType(GrTextureType::k2D),
       fDawnInfo(dawnInfo) {}
 #endif
 
@@ -403,6 +437,13 @@ static GrVkImageInfo apply_default_usage_flags(
   return info;
 }
 
+static GrTextureType vk_image_info_to_texture_type(const GrVkImageInfo& info) {
+  if (info.fYcbcrConversionInfo.isValid() && info.fYcbcrConversionInfo.fExternalFormat != 0) {
+    return GrTextureType::kExternal;
+  }
+  return GrTextureType::k2D;
+}
+
 GrBackendTexture::GrBackendTexture(
     int width, int height, const GrVkImageInfo& vkInfo,
     sk_sp<GrBackendSurfaceMutableStateImpl> mutableState)
@@ -411,6 +452,7 @@ GrBackendTexture::GrBackendTexture(
       fHeight(height),
       fMipmapped(GrMipmapped(vkInfo.fLevelCount > 1)),
       fBackend(GrBackendApi::kVulkan),
+      fTextureType(vk_image_info_to_texture_type(vkInfo)),
       fVkInfo(apply_default_usage_flags(vkInfo, kDefaultTexRTUsageFlags)),
       fMutableState(std::move(mutableState)) {}
 #endif
@@ -424,6 +466,7 @@ GrBackendTexture::GrBackendTexture(
       fHeight(height),
       fMipmapped(mipmapped),
       fBackend(GrBackendApi::kOpenGL),
+      fTextureType(gl_target_to_gr_target(glInfo.fTarget)),
       fGLInfo(glInfo, params.release()) {}
 
 sk_sp<GrGLTextureParameters> GrBackendTexture::getGLTextureParams() const {
@@ -442,6 +485,7 @@ GrBackendTexture::GrBackendTexture(
       fHeight(height),
       fMipmapped(mipmapped),
       fBackend(GrBackendApi::kMetal),
+      fTextureType(GrTextureType::k2D),
       fMtlInfo(mtlInfo) {}
 #endif
 
@@ -460,6 +504,7 @@ GrBackendTexture::GrBackendTexture(
       fHeight(height),
       fMipmapped(GrMipmapped(d3dInfo.fLevelCount > 1)),
       fBackend(GrBackendApi::kDirect3D),
+      fTextureType(GrTextureType::k2D),
       fD3DInfo(d3dInfo, state.release()) {}
 #endif
 
@@ -479,6 +524,7 @@ GrBackendTexture::GrBackendTexture(
       fHeight(height),
       fMipmapped(mipmapped),
       fBackend(GrBackendApi::kMock),
+      fTextureType(GrTextureType::k2D),
       fMockInfo(mockInfo) {}
 
 GrBackendTexture::~GrBackendTexture() { this->cleanup(); }
@@ -516,6 +562,7 @@ GrBackendTexture& GrBackendTexture::operator=(const GrBackendTexture& that) {
   fHeight = that.fHeight;
   fMipmapped = that.fMipmapped;
   fBackend = that.fBackend;
+  fTextureType = that.fTextureType;
 
   switch (that.fBackend) {
 #ifdef SK_GL
@@ -830,7 +877,9 @@ GrBackendRenderTarget::GrBackendRenderTarget(int width, int height, const GrMtlT
 
 GrBackendRenderTarget::GrBackendRenderTarget(
     int width, int height, int sampleCount, const GrMtlTextureInfo& mtlInfo)
-    : GrBackendRenderTarget(width, height, mtlInfo) {}
+    : GrBackendRenderTarget(width, height, mtlInfo) {
+  fSampleCnt = sampleCount;
+}
 #endif
 
 #ifdef SK_DIRECT3D

@@ -79,13 +79,25 @@ bool SkDescriptor::operator==(const SkDescriptor& other) const {
   return true;
 }
 
+SkString SkDescriptor::dumpRec() const {
+  const SkScalerContextRec* rec =
+      static_cast<const SkScalerContextRec*>(this->findEntry(kRec_SkDescriptorTag, nullptr));
+
+  SkString result;
+  result.appendf("    Checksum: %x\n", fChecksum);
+  if (rec != nullptr) {
+    result.append(rec->dump());
+  }
+  return result;
+}
+
 uint32_t SkDescriptor::ComputeChecksum(const SkDescriptor* desc) {
   const uint32_t* ptr = (const uint32_t*)desc + 1;  // skip the checksum field
   size_t len = desc->fLength - sizeof(uint32_t);
   return SkOpts::hash(ptr, len);
 }
 
-bool SkDescriptor::isValid() const {
+bool SkDescriptor::isValid() const noexcept {
   uint32_t count = fCount;
   size_t lengthRemaining = this->fLength;
   if (lengthRemaining < sizeof(SkDescriptor)) {
@@ -118,15 +130,17 @@ bool SkDescriptor::isValid() const {
   return lengthRemaining == 0 && count == 0;
 }
 
-SkAutoDescriptor::SkAutoDescriptor() = default;
-SkAutoDescriptor::SkAutoDescriptor(size_t size) { this->reset(size); }
-SkAutoDescriptor::SkAutoDescriptor(const SkDescriptor& desc) { this->reset(desc); }
-SkAutoDescriptor::SkAutoDescriptor(const SkAutoDescriptor& that) { this->reset(*that.getDesc()); }
-SkAutoDescriptor& SkAutoDescriptor::operator=(const SkAutoDescriptor& that) {
+SkAutoDescriptor::SkAutoDescriptor() noexcept = default;
+SkAutoDescriptor::SkAutoDescriptor(size_t size) noexcept { this->reset(size); }
+SkAutoDescriptor::SkAutoDescriptor(const SkDescriptor& desc) noexcept { this->reset(desc); }
+SkAutoDescriptor::SkAutoDescriptor(const SkAutoDescriptor& that) noexcept {
+  this->reset(*that.getDesc());
+}
+SkAutoDescriptor& SkAutoDescriptor::operator=(const SkAutoDescriptor& that) noexcept {
   this->reset(*that.getDesc());
   return *this;
 }
-SkAutoDescriptor::SkAutoDescriptor(SkAutoDescriptor&& that) {
+SkAutoDescriptor::SkAutoDescriptor(SkAutoDescriptor&& that) noexcept {
   if (that.fDesc == (SkDescriptor*)&that.fStorage) {
     this->reset(*that.getDesc());
   } else {
@@ -134,7 +148,7 @@ SkAutoDescriptor::SkAutoDescriptor(SkAutoDescriptor&& that) {
     that.fDesc = nullptr;
   }
 }
-SkAutoDescriptor& SkAutoDescriptor::operator=(SkAutoDescriptor&& that) {
+SkAutoDescriptor& SkAutoDescriptor::operator=(SkAutoDescriptor&& that) noexcept {
   if (that.fDesc == (SkDescriptor*)&that.fStorage) {
     this->reset(*that.getDesc());
   } else {
@@ -147,7 +161,7 @@ SkAutoDescriptor& SkAutoDescriptor::operator=(SkAutoDescriptor&& that) {
 
 SkAutoDescriptor::~SkAutoDescriptor() { this->free(); }
 
-void SkAutoDescriptor::reset(size_t size) {
+void SkAutoDescriptor::reset(size_t size) noexcept {
   this->free();
   if (size <= sizeof(fStorage)) {
     fDesc = new (&fStorage) SkDescriptor{};
@@ -156,13 +170,13 @@ void SkAutoDescriptor::reset(size_t size) {
   }
 }
 
-void SkAutoDescriptor::reset(const SkDescriptor& desc) {
+void SkAutoDescriptor::reset(const SkDescriptor& desc) noexcept {
   size_t size = desc.getLength();
   this->reset(size);
   memcpy(fDesc, &desc, size);
 }
 
-void SkAutoDescriptor::free() {
+void SkAutoDescriptor::free() noexcept {
   if (fDesc == (SkDescriptor*)&fStorage) {
     fDesc->~SkDescriptor();
   } else {

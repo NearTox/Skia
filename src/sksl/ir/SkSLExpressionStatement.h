@@ -8,8 +8,8 @@
 #ifndef SKSL_EXPRESSIONSTATEMENT
 #define SKSL_EXPRESSIONSTATEMENT
 
+#include "include/private/SkSLStatement.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLStatement.h"
 
 namespace SkSL {
 
@@ -23,12 +23,16 @@ class ExpressionStatement final : public Statement {
   ExpressionStatement(std::unique_ptr<Expression> expression)
       : INHERITED(expression->fOffset, kStatementKind), fExpression(std::move(expression)) {}
 
+  // Creates an SkSL expression-statement. Note that there is never any type-coercion and no error
+  // cases are reported; any Expression can be an ExpressionStatement.
+  static std::unique_ptr<Statement> Make(const Context& context, std::unique_ptr<Expression> expr);
+
   const std::unique_ptr<Expression>& expression() const { return fExpression; }
 
   std::unique_ptr<Expression>& expression() { return fExpression; }
 
   std::unique_ptr<Statement> clone() const override {
-    return std::unique_ptr<Statement>(new ExpressionStatement(this->expression()->clone()));
+    return std::make_unique<ExpressionStatement>(this->expression()->clone());
   }
 
   String description() const override { return this->expression()->description() + ";"; }

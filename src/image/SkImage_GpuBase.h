@@ -17,7 +17,6 @@
 class GrColorSpaceXform;
 class GrDirectContext;
 class GrImageContext;
-class GrSurfaceFillContext;
 class SkColorSpace;
 
 class SkImage_GpuBase : public SkImage_Base {
@@ -31,24 +30,7 @@ class SkImage_GpuBase : public SkImage_Base {
       GrDirectContext* dContext, const SkImageInfo& dstInfo, void* dstPixels, size_t dstRB,
       int srcX, int srcY, CachingHint) const override;
 
-  GrSurfaceProxyView refView(GrRecordingContext*, GrMipmapped) const final;
-
-  GrSurfaceProxyView refPinnedView(GrRecordingContext* context, uint32_t* uniqueID) const final {
-    *uniqueID = this->uniqueID();
-    SkASSERT(this->view(context));
-    return *this->view(context);
-  }
-
-  GrBackendTexture onGetBackendTexture(
-      bool flushPendingGrContextIO, GrSurfaceOrigin* origin) const final;
-
-  GrTexture* getTexture() const;
-
   bool onIsValid(GrRecordingContext*) const final;
-
-#if GR_TEST_UTILS
-  void resetContext(sk_sp<GrImageContext> newContext);
-#endif
 
   static bool ValidateBackendTexture(
       const GrCaps*, const GrBackendTexture& tex, GrColorType grCT, SkColorType ct, SkAlphaType at,
@@ -56,24 +38,14 @@ class SkImage_GpuBase : public SkImage_Base {
   static bool ValidateCompressedBackendTexture(
       const GrCaps*, const GrBackendTexture& tex, SkAlphaType);
 
-  using PromiseImageTextureContext = SkDeferredDisplayListRecorder::PromiseImageTextureContext;
-  using PromiseImageTextureFulfillProc =
-      SkDeferredDisplayListRecorder::PromiseImageTextureFulfillProc;
-  using PromiseImageTextureReleaseProc =
-      SkDeferredDisplayListRecorder::PromiseImageTextureReleaseProc;
+  // Helper for making a lazy proxy for a promise image.
+  // PromiseImageTextureFulfillProc must not be null.
+  static sk_sp<GrTextureProxy> MakePromiseImageLazyProxy(
+      GrContextThreadSafeProxy*, SkISize dimensions, GrBackendFormat, GrMipmapped,
+      PromiseImageTextureFulfillProc, sk_sp<GrRefCntedCallback> releaseHelper);
 
  protected:
-  SkImage_GpuBase(
-      sk_sp<GrImageContext>, SkISize size, uint32_t uniqueID, SkColorType, SkAlphaType,
-      sk_sp<SkColorSpace>);
-
-  // Helper for making a lazy proxy for a promise image. The PromiseDoneProc we be called,
-  // if not null, immediately if this function fails. Othwerwise, it is installed in the
-  // proxy along with the TextureFulfillProc and TextureReleaseProc. PromiseDoneProc must not
-  // be null.
-  static sk_sp<GrTextureProxy> MakePromiseImageLazyProxy(
-      GrRecordingContext*, SkISize dimensions, GrBackendFormat, GrMipmapped,
-      PromiseImageTextureFulfillProc, sk_sp<GrRefCntedCallback> releaseHelper);
+  SkImage_GpuBase(sk_sp<GrImageContext>, SkImageInfo, uint32_t uniqueID);
 
   sk_sp<GrImageContext> fContext;
 

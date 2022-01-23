@@ -14,32 +14,28 @@
 struct SkRect;
 
 class SkSVGEllipse final : public SkSVGShape {
- public:
-  static sk_sp<SkSVGEllipse> Make() { return sk_sp<SkSVGEllipse>(new SkSVGEllipse()); }
+public:
+    static sk_sp<SkSVGEllipse> Make() { return sk_sp<SkSVGEllipse>(new SkSVGEllipse()); }
 
-  void setCx(const SkSVGLength&);
-  void setCy(const SkSVGLength&);
-  void setRx(const SkSVGLength&);
-  void setRy(const SkSVGLength&);
+    SVG_ATTR(Cx, SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Cy, SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Rx, SkSVGLength, SkSVGLength(0))
+    SVG_ATTR(Ry, SkSVGLength, SkSVGLength(0))
 
- protected:
-  void onSetAttribute(SkSVGAttribute, const SkSVGValue&) override;
+protected:
+    bool parseAndSetAttribute(const char*, const char*) override;
 
-  void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&, SkPathFillType) const override;
+    void onDraw(SkCanvas*, const SkSVGLengthContext&, const SkPaint&,
+                SkPathFillType) const override;
 
-  SkPath onAsPath(const SkSVGRenderContext&) const override;
+    SkPath onAsPath(const SkSVGRenderContext&) const override;
 
- private:
-  SkSVGEllipse();
+private:
+    SkSVGEllipse();
 
-  SkRect resolve(const SkSVGLengthContext&) const;
+    SkRect resolve(const SkSVGLengthContext&) const;
 
-  SkSVGLength fCx = SkSVGLength(0);
-  SkSVGLength fCy = SkSVGLength(0);
-  SkSVGLength fRx = SkSVGLength(0);
-  SkSVGLength fRy = SkSVGLength(0);
-
-  using INHERITED = SkSVGShape;
+    using INHERITED = SkSVGShape;
 };
 
-#endif  // SkSVGEllipse_DEFINED
+#endif // SkSVGEllipse_DEFINED

@@ -13,6 +13,7 @@
 #include "include/private/SkTo.h"
 #include "src/core/SkBigPicture.h"
 #include "src/core/SkCanvasPriv.h"
+#include "src/core/SkGlyphRun.h"
 #include "src/utils/SkPatchUtils.h"
 
 #include <memory>
@@ -197,64 +198,16 @@ void SkRecorder::onDrawPath(const SkPath& path, const SkPaint& paint) {
   this->append<SkRecords::DrawPath>(paint, path);
 }
 
-#ifdef SK_SUPPORT_LEGACY_ONDRAWIMAGERECT
-void SkRecorder::onDrawImage(
-    const SkImage* image, SkScalar left, SkScalar top, const SkPaint* paint) {
-  this->append<SkRecords::DrawImage>(this->copy(paint), sk_ref_sp(image), left, top);
-}
-
-void SkRecorder::onDrawImageRect(
-    const SkImage* image, const SkRect* src, const SkRect& dst, const SkPaint* paint,
-    SrcRectConstraint constraint) {
-  this->append<SkRecords::DrawImageRect>(
-      this->copy(paint), sk_ref_sp(image), this->copy(src), dst, constraint);
-}
-
-void SkRecorder::onDrawImageLattice(
-    const SkImage* image, const Lattice& lattice, const SkRect& dst, const SkPaint* paint) {
-  int flagCount = lattice.fRectTypes ? (lattice.fXCount + 1) * (lattice.fYCount + 1) : 0;
-  SkASSERT(lattice.fBounds);
-  this->append<SkRecords::DrawImageLattice>(
-      this->copy(paint), sk_ref_sp(image), lattice.fXCount,
-      this->copy(lattice.fXDivs, lattice.fXCount), lattice.fYCount,
-      this->copy(lattice.fYDivs, lattice.fYCount), flagCount,
-      this->copy(lattice.fRectTypes, flagCount), this->copy(lattice.fColors, flagCount),
-      *lattice.fBounds, dst);
-}
-void SkRecorder::onDrawAtlas(
-    const SkImage* atlas, const SkRSXform xform[], const SkRect tex[], const SkColor colors[],
-    int count, SkBlendMode mode, const SkRect* cull, const SkPaint* paint) {
-  this->append<SkRecords::DrawAtlas>(
-      this->copy(paint), sk_ref_sp(atlas), this->copy(xform, count), this->copy(tex, count),
-      this->copy(colors, count), count, mode, this->copy(cull));
-}
-void SkRecorder::onDrawEdgeAAImageSet(
-    const ImageSetEntry set[], int count, const SkPoint dstClips[],
-    const SkMatrix preViewMatrices[], const SkPaint* paint, SrcRectConstraint constraint) {
-  int totalDstClipCount, totalMatrixCount;
-  SkCanvasPriv::GetDstClipAndMatrixCounts(set, count, &totalDstClipCount, &totalMatrixCount);
-
-  SkAutoTArray<ImageSetEntry> setCopy(count);
-  for (int i = 0; i < count; ++i) {
-    setCopy[i] = set[i];
-  }
-
-  this->append<SkRecords::DrawEdgeAAImageSet>(
-      this->copy(paint), std::move(setCopy), count, this->copy(dstClips, totalDstClipCount),
-      this->copy(preViewMatrices, totalMatrixCount), constraint);
-}
-#endif
-
 void SkRecorder::onDrawImage2(
     const SkImage* image, SkScalar x, SkScalar y, const SkSamplingOptions& sampling,
     const SkPaint* paint) {
-  this->append<SkRecords::DrawImage2>(this->copy(paint), sk_ref_sp(image), x, y, sampling);
+  this->append<SkRecords::DrawImage>(this->copy(paint), sk_ref_sp(image), x, y, sampling);
 }
 
 void SkRecorder::onDrawImageRect2(
     const SkImage* image, const SkRect& src, const SkRect& dst, const SkSamplingOptions& sampling,
     const SkPaint* paint, SrcRectConstraint constraint) {
-  this->append<SkRecords::DrawImageRect2>(
+  this->append<SkRecords::DrawImageRect>(
       this->copy(paint), sk_ref_sp(image), src, dst, sampling, constraint);
 }
 
@@ -263,7 +216,7 @@ void SkRecorder::onDrawImageLattice2(
     const SkPaint* paint) {
   int flagCount = lattice.fRectTypes ? (lattice.fXCount + 1) * (lattice.fYCount + 1) : 0;
   SkASSERT(lattice.fBounds);
-  this->append<SkRecords::DrawImageLattice2>(
+  this->append<SkRecords::DrawImageLattice>(
       this->copy(paint), sk_ref_sp(image), lattice.fXCount,
       this->copy(lattice.fXDivs, lattice.fXCount), lattice.fYCount,
       this->copy(lattice.fYDivs, lattice.fYCount), flagCount,
@@ -275,6 +228,15 @@ void SkRecorder::onDrawTextBlob(
     const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) {
   TRY_MINIRECORDER(drawTextBlob, blob, x, y, paint);
   this->append<SkRecords::DrawTextBlob>(paint, sk_ref_sp(blob), x, y);
+}
+
+void SkRecorder::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
+  sk_sp<SkTextBlob> blob = sk_ref_sp(glyphRunList.blob());
+  if (glyphRunList.blob() == nullptr) {
+    blob = glyphRunList.makeBlob();
+  }
+
+  this->onDrawTextBlob(blob.get(), glyphRunList.origin().x(), glyphRunList.origin().y(), paint);
 }
 
 void SkRecorder::onDrawPicture(const SkPicture* pic, const SkMatrix* matrix, const SkPaint* paint) {
@@ -301,7 +263,7 @@ void SkRecorder::onDrawAtlas2(
     const SkImage* atlas, const SkRSXform xform[], const SkRect tex[], const SkColor colors[],
     int count, SkBlendMode mode, const SkSamplingOptions& sampling, const SkRect* cull,
     const SkPaint* paint) {
-  this->append<SkRecords::DrawAtlas2>(
+  this->append<SkRecords::DrawAtlas>(
       this->copy(paint), sk_ref_sp(atlas), this->copy(xform, count), this->copy(tex, count),
       this->copy(colors, count), count, mode, sampling, this->copy(cull));
 }
@@ -332,7 +294,7 @@ void SkRecorder::onDrawEdgeAAImageSet2(
     setCopy[i] = set[i];
   }
 
-  this->append<SkRecords::DrawEdgeAAImageSet2>(
+  this->append<SkRecords::DrawEdgeAAImageSet>(
       this->copy(paint), std::move(setCopy), count, this->copy(dstClips, totalDstClipCount),
       this->copy(preViewMatrices, totalMatrixCount), sampling, constraint);
 }
@@ -393,6 +355,11 @@ void SkRecorder::onClipShader(sk_sp<SkShader> cs, SkClipOp op) {
 void SkRecorder::onClipRegion(const SkRegion& deviceRgn, SkClipOp op) {
   INHERITED(onClipRegion, deviceRgn, op);
   this->append<SkRecords::ClipRegion>(deviceRgn, op);
+}
+
+void SkRecorder::onResetClip() {
+  INHERITED(onResetClip);
+  this->append<SkRecords::ResetClip>();
 }
 
 sk_sp<SkSurface> SkRecorder::onNewSurface(const SkImageInfo&, const SkSurfaceProps&) {

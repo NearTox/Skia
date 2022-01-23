@@ -102,7 +102,7 @@ class SlideAdapter final : public sksg::RenderNode {
 
 SkMatrix SlideMatrix(const sk_sp<Slide>& slide, const SkRect& dst) {
   const auto slideSize = slide->getDimensions();
-  return SkMatrix::MakeRectToRect(
+  return SkMatrix::RectToRect(
       SkRect::MakeIWH(slideSize.width(), slideSize.height()), dst, SkMatrix::kCenter_ScaleToFit);
 }
 
@@ -172,8 +172,8 @@ class SlideDir::FocusController final : public Animator {
     }
 
     // Map coords to slide space.
-    const auto xform = SkMatrix::MakeRectToRect(
-        fRect, SkRect::MakeSize(fDir->fWinSize), SkMatrix::kCenter_ScaleToFit);
+    const auto xform =
+        SkMatrix::RectToRect(fRect, SkRect::MakeSize(fDir->fWinSize), SkMatrix::kCenter_ScaleToFit);
     const auto pt = xform.mapXY(x, y);
 
     return fTarget->fSlide->onMouse(pt.x(), pt.y(), state, modifiers);

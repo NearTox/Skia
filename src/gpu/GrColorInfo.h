@@ -18,24 +18,38 @@
  * the GrColorSpaceXform from sRGB. */
 class GrColorInfo {
  public:
-  GrColorInfo() = default;
-  GrColorInfo(const GrColorInfo&);
-  GrColorInfo& operator=(const GrColorInfo&);
+  constexpr GrColorInfo() noexcept = default;
+  GrColorInfo(const GrColorInfo&) noexcept;
+  GrColorInfo& operator=(const GrColorInfo&) noexcept;
   GrColorInfo(GrColorType, SkAlphaType, sk_sp<SkColorSpace>);
   /* implicit */ GrColorInfo(const SkColorInfo&);
 
-  bool isLinearlyBlended() const { return fColorSpace && fColorSpace->gammaIsLinear(); }
+  bool operator==(const GrColorInfo& that) const noexcept {
+    return fColorType == that.fColorType && fAlphaType == that.fAlphaType &&
+           SkColorSpace::Equals(fColorSpace.get(), that.fColorSpace.get());
+  }
+  bool operator!=(const GrColorInfo& that) const noexcept { return !(*this == that); }
 
-  SkColorSpace* colorSpace() const { return fColorSpace.get(); }
-  sk_sp<SkColorSpace> refColorSpace() const { return fColorSpace; }
+  GrColorInfo makeColorType(GrColorType ct) const {
+    return GrColorInfo(ct, fAlphaType, this->refColorSpace());
+  }
 
-  GrColorSpaceXform* colorSpaceXformFromSRGB() const { return fColorXformFromSRGB.get(); }
-  sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const { return fColorXformFromSRGB; }
+  bool isLinearlyBlended() const noexcept { return fColorSpace && fColorSpace->gammaIsLinear(); }
 
-  GrColorType colorType() const { return fColorType; }
-  SkAlphaType alphaType() const { return fAlphaType; }
+  SkColorSpace* colorSpace() const noexcept { return fColorSpace.get(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fColorSpace; }
 
-  bool isValid() const {
+  GrColorSpaceXform* colorSpaceXformFromSRGB() const noexcept { return fColorXformFromSRGB.get(); }
+  sk_sp<GrColorSpaceXform> refColorSpaceXformFromSRGB() const noexcept {
+    return fColorXformFromSRGB;
+  }
+
+  GrColorType colorType() const noexcept { return fColorType; }
+  SkAlphaType alphaType() const noexcept { return fAlphaType; }
+
+  bool isAlphaOnly() const noexcept { return GrColorTypeIsAlphaOnly(fColorType); }
+
+  bool isValid() const noexcept {
     return fColorType != GrColorType::kUnknown && fAlphaType != kUnknown_SkAlphaType;
   }
 

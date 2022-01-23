@@ -92,7 +92,7 @@ class FontMgr final : public SkFontMgr {
         }
       }
     }
-#ifdef SK_XML
+#if defined(SK_ENABLE_SVG)
     fFamilies.emplace_back(sk_make_sp<FontStyleSet>("Emoji"));
     fFamilies.back()->fTypefaces.emplace_back(
         TestSVGTypeface::Default(), SkFontStyle::Normal(), "Normal");
@@ -151,12 +151,6 @@ class FontMgr final : public SkFontMgr {
     return this->matchFamilyStyle(familyName, style);
   }
 
-  SkTypeface* onMatchFaceStyle(const SkTypeface* tf, const SkFontStyle& style) const override {
-    SkString familyName;
-    tf->getFamilyName(&familyName);
-    return this->matchFamilyStyle(familyName.c_str(), style);
-  }
-
   sk_sp<SkTypeface> onMakeFromData(sk_sp<SkData>, int ttcIndex) const override { return nullptr; }
   sk_sp<SkTypeface> onMakeFromStreamIndex(
       std::unique_ptr<SkStreamAsset>, int ttcIndex) const override {
@@ -164,9 +158,6 @@ class FontMgr final : public SkFontMgr {
   }
   sk_sp<SkTypeface> onMakeFromStreamArgs(
       std::unique_ptr<SkStreamAsset>, const SkFontArguments&) const override {
-    return nullptr;
-  }
-  sk_sp<SkTypeface> onMakeFromFontData(std::unique_ptr<SkFontData>) const override {
     return nullptr;
   }
   sk_sp<SkTypeface> onMakeFromFile(const char path[], int ttcIndex) const override {

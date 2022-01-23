@@ -27,6 +27,7 @@ class SKPBench : public Benchmark {
   int calculateLoops(int defaultLoops) const override { return fDoLooping ? defaultLoops : 1; }
 
   void getGpuStats(SkCanvas*, SkTArray<SkString>* keys, SkTArray<double>* values) override;
+  bool getDMSAAStats(GrRecordingContext*) override;
 
  protected:
   const char* onGetName() override;

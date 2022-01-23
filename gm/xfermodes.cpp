@@ -118,11 +118,12 @@ class XfermodesGM : public skiagm::GM {
    */
   void draw_mode(SkCanvas* canvas, SkBlendMode mode, SrcType srcType, SkScalar x, SkScalar y) {
     SkPaint p;
+    SkSamplingOptions sampling;
     SkMatrix m;
     bool restoreNeeded = false;
     m.setTranslate(x, y);
 
-    canvas->drawBitmap(fSrcB, x, y, &p);
+    canvas->drawImage(fSrcB.asImage(), x, y, sampling, &p);
     p.setBlendMode(mode);
     switch (srcType) {
       case kSmallTransparentImage_SrcType: {
@@ -130,7 +131,7 @@ class XfermodesGM : public skiagm::GM {
 
         SkAutoCanvasRestore acr(canvas, true);
         canvas->concat(m);
-        canvas->drawBitmap(fTransparent, 0, 0, &p);
+        canvas->drawImage(fTransparent.asImage(), 0, 0, sampling, &p);
         break;
       }
       case kQuarterClearInLayer_SrcType: {
@@ -175,7 +176,7 @@ class XfermodesGM : public skiagm::GM {
       case kRectangleImage_SrcType: {
         SkAutoCanvasRestore acr(canvas, true);
         canvas->concat(m);
-        canvas->drawBitmap(fDstB, 0, 0, &p);
+        canvas->drawImage(fDstB.asImage(), 0, 0, sampling, &p);
         break;
       }
       default: break;
@@ -217,7 +218,7 @@ class XfermodesGM : public skiagm::GM {
 
     SkFont font(ToolUtils::create_portable_typeface());
 
-    const int W = 5;
+    const int kWrap = 5;
 
     SkScalar x0 = 0;
     SkScalar y0 = 0;
@@ -250,7 +251,7 @@ class XfermodesGM : public skiagm::GM {
             SkTextUtils::kCenter_Align);
 #endif
         x += w + SkIntToScalar(10);
-        if ((i % W) == W - 1) {
+        if ((i % kWrap) == kWrap - 1) {
           x = x0;
           y += h + SkIntToScalar(30);
         }

@@ -9,7 +9,6 @@
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
-#include "include/core/SkFilterQuality.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkImageFilter.h"
 #include "include/core/SkMatrix.h"
@@ -106,7 +105,7 @@ class ImageFiltersClippedGM : public GM {
         SkImageFilters::Dilate(2, 2, checkerboard),
         SkImageFilters::Erode(2, 2, checkerboard),
         SkImageFilters::Offset(SkIntToScalar(-16), SkIntToScalar(32), nullptr),
-        SkImageFilters::MatrixTransform(resizeMatrix, kNone_SkFilterQuality, nullptr),
+        SkImageFilters::MatrixTransform(resizeMatrix, SkSamplingOptions(), nullptr),
         SkImageFilters::PointLitDiffuse(
             pointLocation, SK_ColorWHITE, SK_Scalar1, SkIntToScalar(2), checkerboard),
 

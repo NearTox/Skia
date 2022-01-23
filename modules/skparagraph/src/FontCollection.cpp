@@ -3,6 +3,7 @@
 #include "modules/skparagraph/include/FontCollection.h"
 #include "modules/skparagraph/include/Paragraph.h"
 #include "modules/skparagraph/src/ParagraphImpl.h"
+#include "modules/skshaper/include/SkShaper.h"
 
 namespace skia {
 namespace textlayout {
@@ -21,7 +22,7 @@ size_t FontCollection::FamilyKey::Hasher::operator()(const FontCollection::Famil
 }
 
 FontCollection::FontCollection()
-    : fEnableFontFallback(true), fDefaultFamilyName(DEFAULT_FONT_FAMILY) {}
+    : fEnableFontFallback(true), fDefaultFamilyNames({SkString(DEFAULT_FONT_FAMILY)}) {}
 
 size_t FontCollection::getFontManagersCount() const { return this->getFontManagerOrder().size(); }
 
@@ -40,7 +41,13 @@ void FontCollection::setTestFontManager(sk_sp<SkFontMgr> font_manager) {
 void FontCollection::setDefaultFontManager(
     sk_sp<SkFontMgr> fontManager, const char defaultFamilyName[]) {
   fDefaultFontManager = std::move(fontManager);
-  fDefaultFamilyName = defaultFamilyName;
+  fDefaultFamilyNames.emplace_back(defaultFamilyName);
+}
+
+void FontCollection::setDefaultFontManager(
+    sk_sp<SkFontMgr> fontManager, const std::vector<SkString>& defaultFamilyNames) {
+  fDefaultFontManager = std::move(fontManager);
+  fDefaultFamilyNames = defaultFamilyNames;
 }
 
 void FontCollection::setDefaultFontManager(sk_sp<SkFontMgr> fontManager) {
@@ -83,7 +90,13 @@ std::vector<sk_sp<SkTypeface>> FontCollection::findTypefaces(
   }
 
   if (typefaces.empty()) {
-    sk_sp<SkTypeface> match = matchTypeface(fDefaultFamilyName, fontStyle);
+    sk_sp<SkTypeface> match;
+    for (const SkString& familyName : fDefaultFamilyNames) {
+      match = matchTypeface(familyName, fontStyle);
+      if (match) {
+        break;
+      }
+    }
     if (!match) {
       for (const auto& manager : this->getFontManagerOrder()) {
         match = manager->legacyMakeTypeface(nullptr, fontStyle);
@@ -138,8 +151,13 @@ sk_sp<SkTypeface> FontCollection::defaultFallback() {
   if (fDefaultFontManager == nullptr) {
     return nullptr;
   }
-  return sk_sp<SkTypeface>(
-      fDefaultFontManager->matchFamilyStyle(fDefaultFamilyName.c_str(), SkFontStyle()));
+  for (const SkString& familyName : fDefaultFamilyNames) {
+    SkTypeface* match = fDefaultFontManager->matchFamilyStyle(familyName.c_str(), SkFontStyle());
+    if (match) {
+      return sk_sp<SkTypeface>(match);
+    }
+  }
+  return nullptr;
 }
 
 void FontCollection::disableFontFallback() { fEnableFontFallback = false; }
@@ -148,6 +166,7 @@ void FontCollection::enableFontFallback() { fEnableFontFallback = true; }
 void FontCollection::clearCaches() {
   fParagraphCache.reset();
   fTypefaces.reset();
+  SkShaper::PurgeCaches();
 }
 
 }  // namespace textlayout

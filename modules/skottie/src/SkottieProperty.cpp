@@ -19,7 +19,8 @@ bool TextPropertyValue::operator==(const TextPropertyValue& other) const {
          fStrokeWidth == other.fStrokeWidth && fLineHeight == other.fLineHeight &&
          fLineShift == other.fLineShift && fAscent == other.fAscent && fHAlign == other.fHAlign &&
          fVAlign == other.fVAlign && fResize == other.fResize && fLineBreak == other.fLineBreak &&
-         fDirection == other.fDirection && fBox == other.fBox && fFillColor == other.fFillColor &&
+         fDirection == other.fDirection && fCapitalization == other.fCapitalization &&
+         fBox == other.fBox && fFillColor == other.fFillColor &&
          fStrokeColor == other.fStrokeColor && fHasFill == other.fHasFill &&
          fHasStroke == other.fHasStroke;
 }
@@ -107,8 +108,8 @@ void PropertyObserver::onTextProperty(const char[], const LazyHandle<TextPropert
 void PropertyObserver::onTransformProperty(
     const char[], const LazyHandle<TransformPropertyHandle>&) {}
 
-void PropertyObserver::onEnterNode(const char node_name[]) {}
+void PropertyObserver::onEnterNode(const char node_name[], NodeType) {}
 
-void PropertyObserver::onLeavingNode(const char node_name[]) {}
+void PropertyObserver::onLeavingNode(const char node_name[], NodeType) {}
 
 }  // namespace skottie

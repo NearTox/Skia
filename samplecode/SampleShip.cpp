@@ -20,30 +20,34 @@ static const int kGrid = 100;
 static const int kWidth = 960;
 static const int kHeight = 640;
 
-typedef void (*DrawAtlasProc)(SkCanvas*, SkImage*, const SkRSXform[], const SkRect[],
-const SkColor[], int, const SkRect*, const SkPaint*);
+typedef void (*DrawAtlasProc)(
+    SkCanvas*, SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int, const SkRect*,
+    const SkSamplingOptions&, const SkPaint*);
 
-static void draw_atlas(SkCanvas* canvas, SkImage* atlas, const SkRSXform xform[],
-                       const SkRect tex[], const SkColor colors[], int count, const SkRect* cull,
-                       const SkPaint* paint) {
-    canvas->drawAtlas(atlas, xform, tex, colors, count, SkBlendMode::kModulate, cull, paint);
+static void draw_atlas(
+    SkCanvas* canvas, SkImage* atlas, const SkRSXform xform[], const SkRect tex[],
+    const SkColor colors[], int count, const SkRect* cull, const SkSamplingOptions& sampling,
+    const SkPaint* paint) {
+  canvas->drawAtlas(
+      atlas, xform, tex, colors, count, SkBlendMode::kModulate, sampling, cull, paint);
 }
 
-static void draw_atlas_sim(SkCanvas* canvas, SkImage* atlas, const SkRSXform xform[],
-                           const SkRect tex[], const SkColor colors[], int count, const SkRect* cull,
-                           const SkPaint* paint) {
-    for (int i = 0; i < count; ++i) {
-        SkMatrix matrix;
-        matrix.setRSXform(xform[i]);
+static void draw_atlas_sim(
+    SkCanvas* canvas, SkImage* atlas, const SkRSXform xform[], const SkRect tex[],
+    const SkColor colors[], int count, const SkRect* cull, const SkSamplingOptions& sampling,
+    const SkPaint* paint) {
+  for (int i = 0; i < count; ++i) {
+    SkMatrix matrix;
+    matrix.setRSXform(xform[i]);
 
-        canvas->save();
-        canvas->concat(matrix);
-        canvas->drawImageRect(atlas, tex[i], tex[i].makeOffset(-tex[i].x(), -tex[i].y()), paint,
-                              SkCanvas::kFast_SrcRectConstraint);
-        canvas->restore();
-    }
+    canvas->save();
+    canvas->concat(matrix);
+    canvas->drawImageRect(
+        atlas, tex[i], tex[i].makeOffset(-tex[i].x(), -tex[i].y()), sampling, paint,
+        SkCanvas::kFast_SrcRectConstraint);
+    canvas->restore();
+  }
 }
-
 
 class DrawShipView : public Sample {
 public:
@@ -97,7 +101,6 @@ protected:
         }
 
         SkPaint paint;
-        SkPaintPriv::SetFQ(&paint, kLow_SkFilterQuality);
         paint.setColor(SK_ColorWHITE);
 
         SkScalar anchorX = fAtlas->width()*0.5f;
@@ -118,7 +121,9 @@ protected:
             fXform[i].fTy += dy;
         }
 
-        fProc(canvas, fAtlas.get(), fXform, fTex, nullptr, kGrid*kGrid+1, nullptr, &paint);
+        fProc(
+            canvas, fAtlas.get(), fXform, fTex, nullptr, kGrid * kGrid + 1, nullptr,
+            SkSamplingOptions(SkFilterMode::kLinear), &paint);
     }
 
     bool onAnimate(double nanos) override {

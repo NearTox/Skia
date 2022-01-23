@@ -23,7 +23,7 @@ struct SkColorSpaceXformSteps {
     bool encode = false;
     bool premul = false;
 
-    uint32_t mask() const {
+    uint32_t mask() const noexcept {
       return (unpremul ? 1 : 0) | (linearize ? 2 : 0) | (gamut_transform ? 4 : 0) |
              (encode ? 8 : 0) | (premul ? 16 : 0);
     }

@@ -37,33 +37,33 @@ class GrTextureProxy;
  */
 class GrDeferredUploadToken {
  public:
-  static GrDeferredUploadToken AlreadyFlushedToken() { return GrDeferredUploadToken(0); }
+  static GrDeferredUploadToken AlreadyFlushedToken() noexcept { return GrDeferredUploadToken(0); }
 
-  GrDeferredUploadToken(const GrDeferredUploadToken&) = default;
-  GrDeferredUploadToken& operator=(const GrDeferredUploadToken&) = default;
+  GrDeferredUploadToken(const GrDeferredUploadToken&) noexcept = default;
+  GrDeferredUploadToken& operator=(const GrDeferredUploadToken&) noexcept = default;
 
-  bool operator==(const GrDeferredUploadToken& that) const {
+  bool operator==(const GrDeferredUploadToken& that) const noexcept {
     return fSequenceNumber == that.fSequenceNumber;
   }
   bool operator!=(const GrDeferredUploadToken& that) const { return !(*this == that); }
-  bool operator<(const GrDeferredUploadToken that) const {
+  bool operator<(const GrDeferredUploadToken that) const noexcept {
     return fSequenceNumber < that.fSequenceNumber;
   }
-  bool operator<=(const GrDeferredUploadToken that) const {
+  bool operator<=(const GrDeferredUploadToken that) const noexcept {
     return fSequenceNumber <= that.fSequenceNumber;
   }
-  bool operator>(const GrDeferredUploadToken that) const {
+  bool operator>(const GrDeferredUploadToken that) const noexcept {
     return fSequenceNumber > that.fSequenceNumber;
   }
-  bool operator>=(const GrDeferredUploadToken that) const {
+  bool operator>=(const GrDeferredUploadToken that) const noexcept {
     return fSequenceNumber >= that.fSequenceNumber;
   }
 
-  GrDeferredUploadToken& operator++() {
+  GrDeferredUploadToken& operator++() noexcept {
     ++fSequenceNumber;
     return *this;
   }
-  GrDeferredUploadToken operator++(int) {
+  GrDeferredUploadToken operator++(int) noexcept {
     auto old = fSequenceNumber;
     ++fSequenceNumber;
     return GrDeferredUploadToken(old);
@@ -78,7 +78,8 @@ class GrDeferredUploadToken {
 
  private:
   GrDeferredUploadToken() = delete;
-  explicit GrDeferredUploadToken(uint64_t sequenceNumber) : fSequenceNumber(sequenceNumber) {}
+  explicit GrDeferredUploadToken(uint64_t sequenceNumber) noexcept
+      : fSequenceNumber(sequenceNumber) {}
   uint64_t fSequenceNumber;
 };
 
@@ -116,8 +117,7 @@ class GrTokenTracker {
  * actually write its pixel data into a texture.
  */
 using GrDeferredTextureUploadWritePixelsFn = std::function<bool(
-    GrTextureProxy*, int left, int top, int width, int height, GrColorType srcColorType,
-    const void* buffer, size_t rowBytes)>;
+    GrTextureProxy*, SkIRect, GrColorType srcColorType, const void*, size_t rowBytes)>;
 
 /**
  * A deferred texture upload is simply a std::function that takes a
@@ -131,7 +131,7 @@ using GrDeferredTextureUploadFn = std::function<void(GrDeferredTextureUploadWrit
  */
 class GrDeferredUploadTarget {
  public:
-  virtual ~GrDeferredUploadTarget() {}
+  virtual ~GrDeferredUploadTarget() = default;
 
   virtual const GrTokenTracker* tokenTracker() = 0;
 

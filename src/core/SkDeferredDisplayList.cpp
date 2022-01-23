@@ -16,7 +16,6 @@ class SkSurfaceCharacterization;
 #if SK_SUPPORT_GPU
 #  include "src/gpu/GrDirectContextPriv.h"
 #  include "src/gpu/GrRenderTask.h"
-#  include "src/gpu/ccpr/GrCCPerOpsTaskPaths.h"
 #endif
 
 SkDeferredDisplayList::SkDeferredDisplayList(
@@ -25,6 +24,7 @@ SkDeferredDisplayList::SkDeferredDisplayList(
     : fCharacterization(characterization)
 #if SK_SUPPORT_GPU
       ,
+      fArenas(true),
       fTargetProxy(std::move(targetProxy)),
       fLazyProxyData(std::move(lazyProxyData))
 #endif
@@ -49,7 +49,7 @@ SkDeferredDisplayList::ProgramIterator::ProgramIterator(
     GrDirectContext* dContext, SkDeferredDisplayList* ddl)
     : fDContext(dContext), fProgramData(ddl->programData()), fIndex(0) {}
 
-SkDeferredDisplayList::ProgramIterator::~ProgramIterator() {}
+SkDeferredDisplayList::ProgramIterator::~ProgramIterator() = default;
 
 bool SkDeferredDisplayList::ProgramIterator::compile() {
   if (!fDContext || fIndex < 0 || fIndex >= (int)fProgramData.size()) {

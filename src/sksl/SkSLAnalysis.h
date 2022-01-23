@@ -8,8 +8,9 @@
 #ifndef SkSLAnalysis_DEFINED
 #define SkSLAnalysis_DEFINED
 
+#include "include/core/SkSpan.h"
+#include "include/private/SkSLDefines.h"
 #include "include/private/SkSLSampleUsage.h"
-#include "src/sksl/SkSLDefines.h"
 
 #include <memory>
 
@@ -25,21 +26,68 @@ struct Program;
 class ProgramElement;
 class ProgramUsage;
 class Statement;
+struct LoopUnrollInfo;
 class Variable;
 class VariableReference;
+enum class VariableRefKind : int8_t;
 
 /**
  * Provides utilities for analyzing SkSL statically before it's composed into a full program.
  */
 struct Analysis {
-  static SampleUsage GetSampleUsage(const Program& program, const Variable& fp);
+  /**
+   * Determines how `program` samples `child`. By default, assumes that the sample coords
+   * (SK_MAIN_COORDS_BUILTIN) might be modified, so `child.eval(sampleCoords)` is treated as
+   * Explicit. If writesToSampleCoords is false, treats that as PassThrough, instead.
+   * If elidedSampleCoordCount is provided, the pointed to value will be incremented by the
+   * number of sample calls where the above rewrite was performed.
+   */
+  static SampleUsage GetSampleUsage(
+      const Program& program, const Variable& child, bool writesToSampleCoords = true,
+      int* elidedSampleCoordCount = nullptr);
 
   static bool ReferencesBuiltin(const Program& program, int builtin);
 
   static bool ReferencesSampleCoords(const Program& program);
   static bool ReferencesFragCoords(const Program& program);
 
+  static bool CallsSampleOutsideMain(const Program& program);
+
+  /**
+   * Computes the size of the program in a completely flattened state--loops fully unrolled,
+   * function calls inlined--and rejects programs that exceed an arbitrary upper bound. This is
+   * intended to prevent absurdly large programs from overwhemling SkVM. Only strict-ES2 mode is
+   * supported; complex control flow is not SkVM-compatible (and this becomes the halting problem)
+   */
+  static bool CheckProgramUnrolledSize(const Program& program);
+
+  /**
+   * Detect an orphaned variable declaration outside of a scope, e.g. if (true) int a;. Returns
+   * true if an error was reported.
+   */
+  static bool DetectVarDeclarationWithoutScope(
+      const Statement& stmt, ErrorReporter* errors = nullptr);
+
   static int NodeCountUpToLimit(const FunctionDefinition& function, int limit);
+
+  /**
+   * Finds unconditional exits from a switch-case. Returns true if this statement unconditionally
+   * causes an exit from this switch (via continue, break or return).
+   */
+  static bool SwitchCaseContainsUnconditionalExit(Statement& stmt);
+
+  /**
+   * A switch-case "falls through" when it doesn't have an unconditional exit.
+   */
+  static bool SwitchCaseFallsThrough(Statement& stmt) {
+    return !SwitchCaseContainsUnconditionalExit(stmt);
+  }
+
+  /**
+   * Finds conditional exits from a switch-case. Returns true if this statement contains a
+   * conditional that wraps a potential exit from the switch (via continue, break or return).
+   */
+  static bool SwitchCaseContainsConditionalExit(Statement& stmt);
 
   static std::unique_ptr<ProgramUsage> GetUsage(const Program& program);
   static std::unique_ptr<ProgramUsage> GetUsage(const LoadedModule& module);
@@ -48,9 +96,15 @@ struct Analysis {
 
   struct AssignmentInfo {
     VariableReference* fAssignedVar = nullptr;
-    bool fIsSwizzled = false;
   };
-  static bool IsAssignable(Expression& expr, AssignmentInfo* info, ErrorReporter* errors = nullptr);
+  static bool IsAssignable(
+      Expression& expr, AssignmentInfo* info = nullptr, ErrorReporter* errors = nullptr);
+
+  // Updates the `refKind` field of the VariableReference at the top level of `expr`.
+  // If `expr` can be assigned to (`IsAssignable`), true is returned and no errors are reported.
+  // If not, false is returned. and an error is reported if `errors` is non-null.
+  static bool UpdateVariableRefKind(
+      Expression* expr, VariableRefKind kind, ErrorReporter* errors = nullptr);
 
   // A "trivial" expression is one where we'd feel comfortable cloning it multiple times in
   // the code, without worrying about incurring a performance penalty. Examples:
@@ -67,19 +121,44 @@ struct Analysis {
   // - myStruct.myArrayField[7].xyz
   static bool IsTrivialExpression(const Expression& expr);
 
-  struct UnrollableLoopInfo {
-    const Variable* fIndex;
-    double fStart;
-    double fDelta;
-    int fCount;
-  };
+  // Returns true if both expression trees are the same. Used by the optimizer to look for self-
+  // assignment or self-comparison; won't necessarily catch complex cases. Rejects expressions
+  // that may cause side effects.
+  static bool IsSameExpressionTree(const Expression& left, const Expression& right);
 
-  // Ensures that 'loop' meets the strict requirements of The OpenGL ES Shading Language 1.00,
+  // Is 'expr' a constant-expression, as defined by GLSL 1.0, section 5.10? A constant expression
+  // is one of:
+  //
+  // - A literal value
+  // - A global or local variable qualified as 'const', excluding function parameters
+  // - An expression formed by an operator on operands that are constant expressions, including
+  //   getting an element of a constant vector or a constant matrix, or a field of a constant
+  //   structure
+  // - A constructor whose arguments are all constant expressions
+  //
+  // GLSL (but not SkSL, yet - skbug.com/10835) also provides:
+  // - A built-in function call whose arguments are all constant expressions, with the exception
+  //   of the texture lookup functions
+  static bool IsConstantExpression(const Expression& expr);
+
+  // Ensures that a for-loop meets the strict requirements of The OpenGL ES Shading Language 1.00,
   // Appendix A, Section 4.
-  // Information about the loop's structure are placed in outLoopInfo (if not nullptr).
-  // If the function returns false, specific reasons are reported via errors (if not nullptr).
-  static bool ForLoopIsValidForES2(
-      const ForStatement& loop, UnrollableLoopInfo* outLoopInfo, ErrorReporter* errors);
+  // If the requirements are met, information about the loop's structure is returned.
+  // If the requirements are not met, the problem is reported via `errors` (if not nullptr), and
+  // null is returned.
+  static std::unique_ptr<LoopUnrollInfo> GetLoopUnrollInfo(
+      int offset, const Statement* loopInitializer, const Expression* loopTest,
+      const Expression* loopNext, const Statement* loopStatement, ErrorReporter* errors);
+
+  static void ValidateIndexingForES2(const ProgramElement& pe, ErrorReporter& errors);
+
+  // Detects functions that fail to return a value on at least one path.
+  static bool CanExitWithoutReturningValue(
+      const FunctionDeclaration& funcDecl, const Statement& body);
+
+  // Searches for @if/@switch statements that didn't optimize away, or dangling
+  // FunctionReference or TypeReference expressions, and reports them as errors.
+  static void VerifyStaticTestsAndExpressions(const Program& program);
 };
 
 /**
@@ -96,16 +175,37 @@ struct Analysis {
  * any visit call returns true, the default behavior stops recursing and propagates true up the
  * stack.
  */
-
-template <typename PROG, typename EXPR, typename STMT, typename ELEM>
+template <typename T>
 class TProgramVisitor {
  public:
   virtual ~TProgramVisitor() = default;
 
  protected:
-  virtual bool visitExpression(EXPR expression);
-  virtual bool visitStatement(STMT statement);
-  virtual bool visitProgramElement(ELEM programElement);
+  virtual bool visitExpression(typename T::Expression& expression);
+  virtual bool visitStatement(typename T::Statement& statement);
+  virtual bool visitProgramElement(typename T::ProgramElement& programElement);
+
+  virtual bool visitExpressionPtr(typename T::UniquePtrExpression& expr) = 0;
+  virtual bool visitStatementPtr(typename T::UniquePtrStatement& stmt) = 0;
+};
+
+// ProgramVisitors take const types; ProgramWriters do not.
+struct ProgramVisitorTypes {
+  using Program = const SkSL::Program;
+  using Expression = const SkSL::Expression;
+  using Statement = const SkSL::Statement;
+  using ProgramElement = const SkSL::ProgramElement;
+  using UniquePtrExpression = const std::unique_ptr<SkSL::Expression>;
+  using UniquePtrStatement = const std::unique_ptr<SkSL::Statement>;
+};
+
+struct ProgramWriterTypes {
+  using Program = SkSL::Program;
+  using Expression = SkSL::Expression;
+  using Statement = SkSL::Statement;
+  using ProgramElement = SkSL::ProgramElement;
+  using UniquePtrExpression = std::unique_ptr<SkSL::Expression>;
+  using UniquePtrStatement = std::unique_ptr<SkSL::Statement>;
 };
 
 // Squelch bogus Clang warning about template vtables: https://bugs.llvm.org/show_bug.cgi?id=18733
@@ -113,21 +213,38 @@ class TProgramVisitor {
 #  pragma clang diagnostic push
 #  pragma clang diagnostic ignored "-Wweak-template-vtables"
 #endif
-extern template class TProgramVisitor<
-    const Program&, const Expression&, const Statement&, const ProgramElement&>;
-extern template class TProgramVisitor<Program&, Expression&, Statement&, ProgramElement&>;
+extern template class TProgramVisitor<ProgramVisitorTypes>;
+extern template class TProgramVisitor<ProgramWriterTypes>;
 #if defined(__clang__)
 #  pragma clang diagnostic pop
 #endif
 
-class ProgramVisitor
-    : public TProgramVisitor<
-          const Program&, const Expression&, const Statement&, const ProgramElement&> {
+class ProgramVisitor : public TProgramVisitor<ProgramVisitorTypes> {
  public:
   bool visit(const Program& program);
+
+ private:
+  // ProgramVisitors shouldn't need access to unique_ptrs, and marking these as final should help
+  // these accessors inline away. Use ProgramWriter if you need the unique_ptrs.
+  bool visitExpressionPtr(const std::unique_ptr<Expression>& e) final {
+    return this->visitExpression(*e);
+  }
+  bool visitStatementPtr(const std::unique_ptr<Statement>& s) final {
+    return this->visitStatement(*s);
+  }
 };
 
-using ProgramWriter = TProgramVisitor<Program&, Expression&, Statement&, ProgramElement&>;
+class ProgramWriter : public TProgramVisitor<ProgramWriterTypes> {
+ public:
+  // Subclass these methods if you want access to the unique_ptrs of IRNodes in a program.
+  // This will allow statements or expressions to be replaced during a visit.
+  bool visitExpressionPtr(std::unique_ptr<Expression>& e) override {
+    return this->visitExpression(*e);
+  }
+  bool visitStatementPtr(std::unique_ptr<Statement>& s) override {
+    return this->visitStatement(*s);
+  }
+};
 
 }  // namespace SkSL
 

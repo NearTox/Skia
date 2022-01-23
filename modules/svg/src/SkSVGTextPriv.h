@@ -11,7 +11,9 @@
 #include "modules/skshaper/include/SkShaper.h"
 #include "modules/svg/include/SkSVGRenderContext.h"
 #include "modules/svg/include/SkSVGText.h"
+#include "src/core/SkTLazy.h"
 
+#include <functional>
 #include <tuple>
 
 class SkContourMeasure;
@@ -29,162 +31,180 @@ struct SkRSXform;
 //
 // [1] https://www.w3.org/TR/SVG11/text.html#TextLayoutIntroduction
 class SkSVGTextContext final : SkShaper::RunHandler {
- public:
-  // Helper for encoding optional positional attributes.
-  class PosAttrs {
-   public:
-    // TODO: rotate
-    enum Attr : size_t {
-      kX = 0,
-      kY = 1,
-      kDx = 2,
-      kDy = 3,
-      kRotate = 4,
+public:
+    using ShapedTextCallback = std::function<void(const SkSVGRenderContext&,
+                                                  const sk_sp<SkTextBlob>&,
+                                                  const SkPaint*,
+                                                  const SkPaint*)>;
+
+    // Helper for encoding optional positional attributes.
+    class PosAttrs {
+    public:
+        // TODO: rotate
+        enum Attr : size_t {
+            kX      = 0,
+            kY      = 1,
+            kDx     = 2,
+            kDy     = 3,
+            kRotate = 4,
+        };
+
+        float  operator[](Attr a) const { return fStorage[a]; }
+        float& operator[](Attr a)       { return fStorage[a]; }
+
+        bool has(Attr a) const { return fStorage[a] != kNone; }
+        bool hasAny()    const {
+            return this->has(kX)
+                || this->has(kY)
+                || this->has(kDx)
+                || this->has(kDy)
+                || this->has(kRotate);
+        }
+
+        void setImplicitRotate(bool imp) { fImplicitRotate = imp; }
+        bool isImplicitRotate() const { return fImplicitRotate; }
+
+    private:
+        static constexpr auto kNone = std::numeric_limits<float>::infinity();
+
+        float fStorage[5]     = { kNone, kNone, kNone, kNone, kNone };
+        bool  fImplicitRotate = false;
     };
 
-    float operator[](Attr a) const { return fStorage[a]; }
-    float& operator[](Attr a) { return fStorage[a]; }
+    // Helper for cascading position attribute resolution (x, y, dx, dy, rotate) [1]:
+    //   - each text position element can specify an arbitrary-length attribute array
+    //   - for each character, we look up a given attribute first in its local attribute array,
+    //     then in the ancestor chain (cascading/fallback) - and return the first value encountered.
+    //   - the lookup is based on character index relative to the text content subtree
+    //     (i.e. the index crosses chunk boundaries)
+    //
+    // [1] https://www.w3.org/TR/SVG11/text.html#TSpanElementXAttribute
+    class ScopedPosResolver {
+    public:
+        ScopedPosResolver(const SkSVGTextContainer&, const SkSVGLengthContext&, SkSVGTextContext*,
+                          size_t);
 
-    bool has(Attr a) const { return fStorage[a] != kNone; }
-    bool hasAny() const {
-      return this->has(kX) || this->has(kY) || this->has(kDx) || this->has(kDy) ||
-             this->has(kRotate);
-    }
+        ScopedPosResolver(const SkSVGTextContainer&, const SkSVGLengthContext&, SkSVGTextContext*);
 
-    void setImplicitRotate(bool imp) { fImplicitRotate = imp; }
-    bool isImplicitRotate() const { return fImplicitRotate; }
+        ~ScopedPosResolver();
 
-   private:
-    static constexpr auto kNone = std::numeric_limits<float>::infinity();
+        PosAttrs resolve(size_t charIndex) const;
 
-    float fStorage[5] = {kNone, kNone, kNone, kNone, kNone};
-    bool fImplicitRotate = false;
-  };
+    private:
+        SkSVGTextContext*         fTextContext;
+        const ScopedPosResolver*  fParent;          // parent resolver (fallback)
+        const size_t              fCharIndexOffset; // start index for the current resolver
+        const std::vector<float>  fX,
+                                  fY,
+                                  fDx,
+                                  fDy;
+        const std::vector<float>& fRotate;
 
-  // Helper for cascading position attribute resolution (x, y, dx, dy, rotate) [1]:
-  //   - each text position element can specify an arbitrary-length attribute array
-  //   - for each character, we look up a given attribute first in its local attribute array,
-  //     then in the ancestor chain (cascading/fallback) - and return the first value encountered.
-  //   - the lookup is based on character index relative to the text content subtree
-  //     (i.e. the index crosses chunk boundaries)
-  //
-  // [1] https://www.w3.org/TR/SVG11/text.html#TSpanElementXAttribute
-  class ScopedPosResolver {
-   public:
-    ScopedPosResolver(
-        const SkSVGTextContainer&, const SkSVGLengthContext&, SkSVGTextContext*, size_t);
+        // cache for the last known index with explicit positioning
+        mutable size_t           fLastPosIndex = std::numeric_limits<size_t>::max();
 
-    ScopedPosResolver(const SkSVGTextContainer&, const SkSVGLengthContext&, SkSVGTextContext*);
+    };
 
-    ~ScopedPosResolver();
+    SkSVGTextContext(const SkSVGRenderContext&,
+                     const ShapedTextCallback&,
+                     const SkSVGTextPath* = nullptr);
+    ~SkSVGTextContext() override;
 
-    PosAttrs resolve(size_t charIndex) const;
+    // Shape and queue codepoints for final alignment.
+    void shapeFragment(const SkString&, const SkSVGRenderContext&, SkSVGXmlSpace);
 
-   private:
-    SkSVGTextContext* fTextContext;
-    const ScopedPosResolver* fParent;  // parent resolver (fallback)
-    const size_t fCharIndexOffset;     // start index for the current resolver
-    const std::vector<float> fX, fY, fDx, fDy;
-    const std::vector<float>& fRotate;
+    // Perform final adjustments and push shaped blobs to the callback.
+    void flushChunk(const SkSVGRenderContext& ctx);
 
-    // cache for the last known index with explicit positioning
-    mutable size_t fLastPosIndex = std::numeric_limits<size_t>::max();
-  };
+    const ShapedTextCallback& getCallback() const { return fCallback; }
 
-  SkSVGTextContext(const SkSVGRenderContext&, const SkSVGTextPath* = nullptr);
-  ~SkSVGTextContext() override;
+private:
+    struct PositionAdjustment {
+        SkVector offset;
+        float    rotation;
+    };
 
-  // Queues codepoints for rendering.
-  void appendFragment(const SkString&, const SkSVGRenderContext&, SkSVGXmlSpace);
+    struct ShapeBuffer {
+        SkSTArray<128, char              , true> fUtf8;
+        // per-utf8-char cumulative pos adjustments
+        SkSTArray<128, PositionAdjustment, true> fUtf8PosAdjust;
 
-  // Perform actual rendering for queued codepoints.
-  void flushChunk(const SkSVGRenderContext& ctx);
+        void reserve(size_t size) {
+            fUtf8.reserve_back(SkToInt(size));
+            fUtf8PosAdjust.reserve_back(SkToInt(size));
+        }
 
- private:
-  struct PositionAdjustment {
-    SkVector offset;
-    float rotation;
-  };
+        void reset() {
+            fUtf8.reset();
+            fUtf8PosAdjust.reset();
+        }
 
-  struct ShapeBuffer {
-    SkSTArray<128, char, true> fUtf8;
-    // per-utf8-char cumulative pos adjustments
-    SkSTArray<128, PositionAdjustment, true> fUtf8PosAdjust;
+        void append(SkUnichar, PositionAdjustment);
+    };
 
-    void reserve(size_t size) {
-      fUtf8.reserve_back(SkToInt(size));
-      fUtf8PosAdjust.reserve_back(SkToInt(size));
-    }
+    struct RunRec {
+        SkFont                                font;
+        std::unique_ptr<SkPaint>              fillPaint,
+                                              strokePaint;
+        std::unique_ptr<SkGlyphID[]>          glyphs;        // filled by SkShaper
+        std::unique_ptr<SkPoint[]>            glyphPos;      // filled by SkShaper
+        std::unique_ptr<PositionAdjustment[]> glyhPosAdjust; // deferred positioning adjustments
+        size_t                                glyphCount;
+        SkVector                              advance;
+    };
 
-    void reset() {
-      fUtf8.reset();
-      fUtf8PosAdjust.reset();
-    }
+    // Caches path information to accelerate position lookups.
+    class PathData {
+    public:
+        PathData(const SkSVGRenderContext&, const SkSVGTextPath&);
 
-    void append(SkUnichar, PositionAdjustment);
-  };
+        SkMatrix getMatrixAt(float offset) const;
 
-  struct RunRec {
-    SkFont font;
-    std::unique_ptr<SkPaint> fillPaint, strokePaint;
-    std::unique_ptr<SkGlyphID[]> glyphs;                  // filled by SkShaper
-    std::unique_ptr<SkPoint[]> glyphPos;                  // filled by SkShaper
-    std::unique_ptr<PositionAdjustment[]> glyhPosAdjust;  // deferred positioning adjustments
-    size_t glyphCount;
-    SkVector advance;
-  };
+        float length() const { return fLength; }
 
-  // Caches path information to accelerate position lookups.
-  class PathData {
-   public:
-    PathData(const SkSVGRenderContext&, const SkSVGTextPath&);
+    private:
+        std::vector<sk_sp<SkContourMeasure>> fContours;
+        float                                fLength = 0; // total path length
+    };
 
-    SkMatrix getMatrixAt(float offset) const;
+    void shapePendingBuffer(const SkFont&);
 
-    float length() const { return fLength; }
+    SkRSXform computeGlyphXform(SkGlyphID, const SkFont&, const SkPoint& glyph_pos,
+                                const PositionAdjustment&) const;
 
-   private:
-    std::vector<sk_sp<SkContourMeasure>> fContours;
-    float fLength = 0;  // total path length
-  };
+    // SkShaper callbacks
+    void beginLine() override {}
+    void runInfo(const RunInfo&) override {}
+    void commitRunInfo() override {}
+    Buffer runBuffer(const RunInfo& ri) override;
+    void commitRunBuffer(const RunInfo& ri) override;
+    void commitLine() override {}
 
-  void shapePendingBuffer(const SkFont&);
+    // http://www.w3.org/TR/SVG11/text.html#TextLayout
+    const SkSVGRenderContext&       fRenderContext; // original render context
+    const ShapedTextCallback&       fCallback;
+    const std::unique_ptr<SkShaper> fShaper;
+    std::vector<RunRec>             fRuns;
+    const ScopedPosResolver*        fPosResolver  = nullptr;
+    std::unique_ptr<PathData>       fPathData;
 
-  SkRSXform computeGlyphXform(
-      SkGlyphID, const SkFont&, const SkPoint& glyph_pos, const PositionAdjustment&) const;
+    // shaper state
+    ShapeBuffer                     fShapeBuffer;
+    std::vector<uint32_t>           fShapeClusterBuffer;
 
-  // SkShaper callbacks
-  void beginLine() override {}
-  void runInfo(const RunInfo&) override {}
-  void commitRunInfo() override {}
-  Buffer runBuffer(const RunInfo& ri) override;
-  void commitRunBuffer(const RunInfo& ri) override;
-  void commitLine() override {}
+    // chunk state
+    SkPoint                         fChunkPos     = {0,0}; // current text chunk position
+    SkVector                        fChunkAdvance = {0,0}; // cumulative advance
+    float                           fChunkAlignmentFactor; // current chunk alignment
 
-  // http://www.w3.org/TR/SVG11/text.html#TextLayout
-  const SkSVGRenderContext& fRenderContext;  // original render context
-  const std::unique_ptr<SkShaper> fShaper;
-  std::vector<RunRec> fRuns;
-  const ScopedPosResolver* fPosResolver = nullptr;
-  std::unique_ptr<PathData> fPathData;
+    // tracks the global text subtree char index (cross chunks).  Used for position resolution.
+    size_t                          fCurrentCharIndex = 0;
 
-  // shaper state
-  ShapeBuffer fShapeBuffer;
-  std::vector<uint32_t> fShapeClusterBuffer;
+    // cached for access from SkShaper callbacks.
+    SkTLazy<SkPaint>                fCurrentFill;
+    SkTLazy<SkPaint>                fCurrentStroke;
 
-  // chunk state
-  SkPoint fChunkPos = {0, 0};       // current text chunk position
-  SkVector fChunkAdvance = {0, 0};  // cumulative advance
-  float fChunkAlignmentFactor;      // current chunk alignment
-
-  // tracks the global text subtree char index (cross chunks).  Used for position resolution.
-  size_t fCurrentCharIndex = 0;
-
-  // cached for access from SkShaper callbacks.
-  const SkPaint* fCurrentFill;
-  const SkPaint* fCurrentStroke;
-
-  bool fPrevCharSpace = true;  // WS filter state
+    bool                            fPrevCharSpace = true; // WS filter state
 };
 
-#endif  // SkSVGTextPriv_DEFINED
+#endif // SkSVGTextPriv_DEFINED

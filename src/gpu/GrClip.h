@@ -11,7 +11,13 @@
 #include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
 #include "src/gpu/GrAppliedClip.h"
-#include "src/gpu/GrSurfaceDrawContext.h"
+
+class GrDrawOp;
+namespace skgpu {
+namespace v1 {
+class SurfaceDrawContext;
+}
+}  // namespace skgpu
 
 /**
  * GrClip is an abstract base class for applying a clip. It constructs a clip mask if necessary, and
@@ -41,7 +47,7 @@ class GrClip {
         : fEffect(Effect::kClipped), fRRect(rrect), fAA(aa), fIsRRect(true) {}
   };
 
-  virtual ~GrClip() {}
+  virtual ~GrClip() = default;
 
   /**
    * Compute a conservative pixel bounds restricted to the given render target dimensions.
@@ -60,8 +66,8 @@ class GrClip {
    * and should be ignored (and the draw should be skipped).
    */
   virtual Effect apply(
-      GrRecordingContext*, GrSurfaceDrawContext*, GrAAType, bool hasUserStencilSettings,
-      GrAppliedClip*, SkRect* bounds) const = 0;
+      GrRecordingContext*, skgpu::v1::SurfaceDrawContext*, GrDrawOp*, GrAAType, GrAppliedClip*,
+      SkRect* bounds) const = 0;
 
   /**
    * Perform preliminary, conservative analysis on the draw bounds as if it were provided to
@@ -105,39 +111,24 @@ class GrClip {
   constexpr static SkScalar kHalfPixelRoundingTolerance = 5e-2f;
 
   /**
-   * Returns true if the given query bounds count as entirely inside the clip.
-   * DEPRECATED: Only used by GrReducedClip
-   * @param innerClipBounds   device-space rect contained by the clip (SkRect or SkIRect).
-   * @param queryBounds       device-space bounds of the query region.
+   * Returns true if the given draw bounds count as entirely inside the clip.
+
+   * @param innerClipBounds   device-space rect fully contained by the clip
+   * @param drawBounds        device-space bounds of the query region.
    */
-  template <typename TRect>
-  constexpr static bool IsInsideClip(const TRect& innerClipBounds, const SkRect& queryBounds) {
-    return innerClipBounds.fRight > innerClipBounds.fLeft + kBoundsTolerance &&
-           innerClipBounds.fBottom > innerClipBounds.fTop + kBoundsTolerance &&
-           innerClipBounds.fLeft < queryBounds.fLeft + kBoundsTolerance &&
-           innerClipBounds.fTop < queryBounds.fTop + kBoundsTolerance &&
-           innerClipBounds.fRight > queryBounds.fRight - kBoundsTolerance &&
-           innerClipBounds.fBottom > queryBounds.fBottom - kBoundsTolerance;
+  static bool IsInsideClip(const SkIRect& innerClipBounds, const SkRect& drawBounds, GrAA aa) {
+    return innerClipBounds.contains(GetPixelIBounds(drawBounds, aa));
   }
 
   /**
-   * Returns true if the given query bounds count as entirely outside the clip.
-   * DEPRECATED: Only used by GrReducedClip
-   * @param outerClipBounds   device-space rect that contains the clip (SkRect or SkIRect).
-   * @param queryBounds       device-space bounds of the query region.
-   */
-  template <typename TRect>
-  constexpr static bool IsOutsideClip(const TRect& outerClipBounds, const SkRect& queryBounds) {
-    return
-        // Is the clip so small that it is effectively empty?
-        outerClipBounds.fRight - outerClipBounds.fLeft <= kBoundsTolerance ||
-        outerClipBounds.fBottom - outerClipBounds.fTop <= kBoundsTolerance ||
+   * Returns true if the given draw bounds count as entirely outside the clip.
 
-        // Are the query bounds effectively outside the clip?
-        outerClipBounds.fLeft >= queryBounds.fRight - kBoundsTolerance ||
-        outerClipBounds.fTop >= queryBounds.fBottom - kBoundsTolerance ||
-        outerClipBounds.fRight <= queryBounds.fLeft + kBoundsTolerance ||
-        outerClipBounds.fBottom <= queryBounds.fTop + kBoundsTolerance;
+   * @param outerClipBounds   device-space rect that contains the clip
+   * @param drawBounds        device-space bounds of the query region.
+   * @param aa                whether or not the draw will use anti-aliasing
+   */
+  static bool IsOutsideClip(const SkIRect& outerClipBounds, const SkRect& drawBounds, GrAA aa) {
+    return !SkIRect::Intersects(outerClipBounds, GetPixelIBounds(drawBounds, aa));
   }
 
   // Modifies the behavior of GetPixelIBounds
@@ -159,14 +150,6 @@ class GrClip {
      */
     kInterior
   };
-
-  /**
-   * Returns the minimal integer rect that counts as containing a given set of bounds.
-   * DEPRECATED: Only used by GrReducedClip
-   */
-  static SkIRect GetPixelIBounds(const SkRect& bounds) {
-    return GetPixelIBounds(bounds, GrAA::kYes);
-  }
 
   /**
    * Convert the analytic bounds of a shape into an integer pixel bounds, where the given aa type
@@ -207,18 +190,6 @@ class GrClip {
   }
 
   /**
-   * Returns the minimal pixel-aligned rect that counts as containing a given set of bounds.
-   * DEPRECATED: Only used by GrReducedClip
-   */
-  static SkRect GetPixelBounds(const SkRect& bounds) {
-    return SkRect::MakeLTRB(
-        SkScalarFloorToScalar(bounds.fLeft + kBoundsTolerance),
-        SkScalarFloorToScalar(bounds.fTop + kBoundsTolerance),
-        SkScalarCeilToScalar(bounds.fRight - kBoundsTolerance),
-        SkScalarCeilToScalar(bounds.fBottom - kBoundsTolerance));
-  }
-
-  /**
    * Returns true if the given rect counts as aligned with pixel boundaries.
    */
   static bool IsPixelAligned(const SkRect& rect) {
@@ -244,7 +215,7 @@ class GrHardClip : public GrClip {
 
  private:
   Effect apply(
-      GrRecordingContext*, GrSurfaceDrawContext* rtc, GrAAType aa, bool hasUserStencilSettings,
+      GrRecordingContext*, skgpu::v1::SurfaceDrawContext*, GrDrawOp*, GrAAType aa,
       GrAppliedClip* out, SkRect* bounds) const final {
     SkIRect pixelBounds = GetPixelIBounds(*bounds, GrAA(aa != GrAAType::kNone));
     Effect effect = this->apply(&out->hardClip(), &pixelBounds);

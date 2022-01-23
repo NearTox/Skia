@@ -17,8 +17,8 @@ class SkBitmapProcLegacyShader : public SkShaderBase {
   friend class SkImageShader;
 
   static Context* MakeContext(
-      const SkShaderBase&, SkTileMode tmx, SkTileMode tmy, const SkImage_Base*, const ContextRec&,
-      SkArenaAlloc* alloc);
+      const SkShaderBase&, SkTileMode tmx, SkTileMode tmy, const SkSamplingOptions&,
+      const SkImage_Base*, const ContextRec&, SkArenaAlloc* alloc);
 
   using INHERITED = SkShaderBase;
 };

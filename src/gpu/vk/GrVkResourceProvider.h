@@ -9,6 +9,7 @@
 #define GrVkResourceProvider_DEFINED
 
 #include "include/gpu/vk/GrVkTypes.h"
+#include "include/private/SkMutex.h"
 #include "include/private/SkTArray.h"
 #include "src/core/SkLRUCache.h"
 #include "src/core/SkTDynamicHash.h"
@@ -17,6 +18,7 @@
 #include "src/gpu/GrManagedResource.h"
 #include "src/gpu/GrProgramDesc.h"
 #include "src/gpu/GrResourceHandle.h"
+#include "src/gpu/GrThreadSafePipelineBuilder.h"
 #include "src/gpu/vk/GrVkDescriptorPool.h"
 #include "src/gpu/vk/GrVkDescriptorSetManager.h"
 #include "src/gpu/vk/GrVkPipelineStateBuilder.h"
@@ -24,9 +26,6 @@
 #include "src/gpu/vk/GrVkSampler.h"
 #include "src/gpu/vk/GrVkSamplerYcbcrConversion.h"
 #include "src/gpu/vk/GrVkUtil.h"
-
-#include <mutex>
-#include <thread>
 
 class GrVkCommandPool;
 class GrVkGpu;
@@ -41,6 +40,10 @@ class GrVkResourceProvider {
  public:
   GrVkResourceProvider(GrVkGpu* gpu);
   ~GrVkResourceProvider();
+
+  GrThreadSafePipelineBuilder* pipelineStateCache() { return fPipelineStateCache.get(); }
+
+  sk_sp<GrThreadSafePipelineBuilder> refPipelineStateCache() { return fPipelineStateCache; }
 
   // Set up any initial vk objects
   void init();
@@ -59,7 +62,7 @@ class GrVkResourceProvider {
   // non null it will be set to a handle that can be used in the furutre to quickly return a
   // compatible GrVkRenderPasses without the need inspecting a GrVkRenderTarget.
   const GrVkRenderPass* findCompatibleRenderPass(
-      const GrVkRenderTarget& target, CompatibleRPHandle* compatibleHandle, bool withResolve,
+      GrVkRenderTarget* target, CompatibleRPHandle* compatibleHandle, bool withResolve,
       bool withStencil, SelfDependencyFlags selfDepFlags, LoadFromResolve);
   const GrVkRenderPass* findCompatibleRenderPass(
       GrVkRenderPass::AttachmentsDescriptor*, GrVkRenderPass::AttachmentFlags,
@@ -91,6 +94,8 @@ class GrVkResourceProvider {
 
   void checkCommandBuffers();
 
+  void forceSyncAllCommandBuffers();
+
   // We must add the finishedProc to all active command buffers since we may have flushed work
   // that the client cares about before they explicitly called flush and the GPU may reorder
   // command execution. So we make sure all previously submitted work finishes before we call the
@@ -121,11 +126,11 @@ class GrVkResourceProvider {
 
   GrVkPipelineState* findOrCreateCompatiblePipelineState(
       const GrProgramDesc&, const GrProgramInfo&, VkRenderPass compatibleRenderPass,
-      GrGpu::Stats::ProgramCacheResult* stat);
+      GrThreadSafePipelineBuilder::Stats::ProgramCacheResult* stat);
 
   sk_sp<const GrVkPipeline> findOrCreateMSAALoadPipeline(
-      const GrVkRenderPass& renderPass, const GrVkRenderTarget* dst,
-      VkPipelineShaderStageCreateInfo*, VkPipelineLayout);
+      const GrVkRenderPass& renderPass, int numSamples, VkPipelineShaderStageCreateInfo*,
+      VkPipelineLayout);
 
   void getSamplerDescriptorSetHandle(
       VkDescriptorType type, const GrVkUniformHandler&, GrVkDescriptorSetManager::Handle* handle);
@@ -171,23 +176,21 @@ class GrVkResourceProvider {
   void recycleDescriptorSet(
       const GrVkDescriptorSet* descSet, const GrVkDescriptorSetManager::Handle&);
 
-  // Creates or finds free uniform buffer resources of size GrVkUniformBuffer::kStandardSize.
-  // Anything larger will need to be created and released by the client.
-  const GrManagedResource* findOrCreateStandardUniformBufferResource();
-
-  // Signals that the resource passed to it (which should be a uniform buffer resource)
-  // can be reused by the next uniform buffer resource request.
-  void recycleStandardUniformBufferResource(const GrManagedResource*);
-
   void storePipelineCacheData();
 
   // Destroy any cached resources. To be called before destroying the VkDevice.
   // The assumption is that all queues are idle and all command buffers are finished.
   // For resource tracing to work properly, this should be called after unrefing all other
   // resource usages.
-  // If deviceLost is true, then resources will not be checked to see if they've finished
-  // before deleting (see section 4.2.4 of the Vulkan spec).
-  void destroyResources(bool deviceLost);
+  void destroyResources();
+
+  // Currently we just release available command pools (which also releases their buffers). The
+  // command buffers and pools take up the most memory. Other objects (e.g. samples,
+  // ycbcr conversions, etc.) tend to be fairly light weight and not worth the effort to remove
+  // them and then possibly remake them. Additionally many of those objects have refs/handles that
+  // are held by other objects that aren't deleted here. Thus the memory wins for removing these
+  // objects from the cache are probably not worth the complexity of safely releasing them.
+  void releaseUnlockedBackendObjects();
 
   void backgroundReset(GrVkCommandPool* pool);
 
@@ -198,10 +201,10 @@ class GrVkResourceProvider {
 #endif
 
  private:
-  class PipelineStateCache : public ::SkNoncopyable {
+  class PipelineStateCache : public GrThreadSafePipelineBuilder {
    public:
     PipelineStateCache(GrVkGpu* gpu);
-    ~PipelineStateCache();
+    ~PipelineStateCache() override;
 
     void release();
     GrVkPipelineState* findOrCreatePipelineState(
@@ -209,18 +212,17 @@ class GrVkResourceProvider {
         bool overrideSubpassForResolveLoad);
     GrVkPipelineState* findOrCreatePipelineState(
         const GrProgramDesc& desc, const GrProgramInfo& programInfo,
-        VkRenderPass compatibleRenderPass, GrGpu::Stats::ProgramCacheResult* stat) {
-      return this->findOrCreatePipelineState(
-          nullptr, desc, programInfo, compatibleRenderPass, false, stat);
+        VkRenderPass compatibleRenderPass, Stats::ProgramCacheResult* stat) {
+      return this->findOrCreatePipelineStateImpl(
+          desc, programInfo, compatibleRenderPass, false, stat);
     }
 
    private:
     struct Entry;
 
-    GrVkPipelineState* findOrCreatePipelineState(
-        GrRenderTarget*, const GrProgramDesc&, const GrProgramInfo&,
-        VkRenderPass compatibleRenderPass, bool overrideSubpassForResolveLoad,
-        GrGpu::Stats::ProgramCacheResult*);
+    GrVkPipelineState* findOrCreatePipelineStateImpl(
+        const GrProgramDesc&, const GrProgramInfo&, VkRenderPass compatibleRenderPass,
+        bool overrideSubpassForResolveLoad, Stats::ProgramCacheResult*);
 
     struct DescHash {
       uint32_t operator()(const GrProgramDesc& desc) const {
@@ -285,11 +287,10 @@ class GrVkResourceProvider {
   // Array of command pools that we are waiting on
   SkSTArray<4, GrVkCommandPool*, true> fActiveCommandPools;
 
-  // Array of available command pools that are not in flight
-  SkSTArray<4, GrVkCommandPool*, true> fAvailableCommandPools;
+  SkMutex fBackgroundMutex;
 
-  // Array of available uniform buffer resources
-  SkSTArray<16, const GrManagedResource*, true> fAvailableUniformBufferResources;
+  // Array of available command pools that are not in flight
+  SkSTArray<4, GrVkCommandPool*, true> fAvailableCommandPools SK_GUARDED_BY(fBackgroundMutex);
 
   // Stores GrVkSampler objects that we've already created so we can reuse them across multiple
   // GrVkPipelineStates
@@ -299,14 +300,12 @@ class GrVkResourceProvider {
   SkTDynamicHash<GrVkSamplerYcbcrConversion, GrVkSamplerYcbcrConversion::Key> fYcbcrConversions;
 
   // Cache of GrVkPipelineStates
-  PipelineStateCache* fPipelineStateCache;
+  sk_sp<PipelineStateCache> fPipelineStateCache;
 
   SkSTArray<4, std::unique_ptr<GrVkDescriptorSetManager>> fDescriptorSetManagers;
 
   GrVkDescriptorSetManager::Handle fUniformDSHandle;
   GrVkDescriptorSetManager::Handle fInputDSHandle;
-
-  std::recursive_mutex fBackgroundMutex;
 };
 
 #endif

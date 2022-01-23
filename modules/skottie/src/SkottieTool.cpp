@@ -208,7 +208,7 @@ class Logger final : public skottie::Logger {
 
   void report() const {
     SkDebugf(
-        "Animation loaded with %lu error%s, %lu warning%s.\n", fErrors.size(),
+        "Animation loaded with %zu error%s, %zu warning%s.\n", fErrors.size(),
         fErrors.size() == 1 ? "" : "s", fWarnings.size(), fWarnings.size() == 1 ? "" : "s");
 
     const auto& show = [](const LogEntry& log, const char prefix[]) {
@@ -279,7 +279,7 @@ int main(int argc, char** argv) {
     return 1;
   }
 
-  const auto scale_matrix = SkMatrix::MakeRectToRect(
+  const auto scale_matrix = SkMatrix::RectToRect(
       SkRect::MakeSize(anim->size()), SkRect::MakeIWH(FLAGS_width, FLAGS_height),
       SkMatrix::kCenter_ScaleToFit);
   logger->report();

@@ -8,15 +8,22 @@
 #ifndef SKSL_VARIABLE
 #define SKSL_VARIABLE
 
+#include "include/private/SkSLModifiers.h"
+#include "include/private/SkSLSymbol.h"
 #include "src/sksl/SkSLPosition.h"
-#include "src/sksl/ir/SkSLModifiers.h"
-#include "src/sksl/ir/SkSLSymbol.h"
+#include "src/sksl/ir/SkSLExpression.h"
 #include "src/sksl/ir/SkSLType.h"
 #include "src/sksl/ir/SkSLVariableReference.h"
 
 namespace SkSL {
 
 class Expression;
+class VarDeclaration;
+
+namespace dsl {
+class DSLCore;
+class DSLFunction;
+}  // namespace dsl
 
 enum class VariableStorage : int8_t { kGlobal, kInterfaceBlock, kLocal, kParameter };
 
@@ -32,25 +39,34 @@ class Variable final : public Symbol {
   static constexpr Kind kSymbolKind = Kind::kVariable;
 
   Variable(
-      int offset, const Modifiers* modifiers, StringFragment name, const Type* type, bool builtin,
-      Storage storage, const Expression* initialValue = nullptr)
+      int offset, const Modifiers* modifiers, skstd::string_view name, const Type* type,
+      bool builtin, Storage storage)
       : INHERITED(offset, kSymbolKind, name, type),
-        fInitialValue(initialValue),
         fModifiers(modifiers),
         fStorage(storage),
         fBuiltin(builtin) {}
 
+  ~Variable() override;
+
   const Modifiers& modifiers() const { return *fModifiers; }
+
+  void setModifiers(const Modifiers* modifiers) { fModifiers = modifiers; }
 
   bool isBuiltin() const { return fBuiltin; }
 
   Storage storage() const { return (Storage)fStorage; }
 
-  const Expression* initialValue() const { return fInitialValue; }
+  const Expression* initialValue() const;
 
-  void setInitialValue(const Expression* initialValue) {
-    SkASSERT(!this->initialValue());
-    fInitialValue = initialValue;
+  void setDeclaration(VarDeclaration* declaration) {
+    SkASSERT(!fDeclaration);
+    fDeclaration = declaration;
+  }
+
+  void detachDeadVarDeclaration() const {
+    // The VarDeclaration is being deleted, so our reference to it has become stale.
+    // This variable is now dead, so it shouldn't matter that we are modifying its symbol.
+    const_cast<Variable*>(this)->fDeclaration = nullptr;
   }
 
   String description() const override {
@@ -58,13 +74,15 @@ class Variable final : public Symbol {
   }
 
  private:
-  const Expression* fInitialValue = nullptr;
+  VarDeclaration* fDeclaration = nullptr;
   const Modifiers* fModifiers;
   VariableStorage fStorage;
   bool fBuiltin;
 
   using INHERITED = Symbol;
 
+  friend class dsl::DSLCore;
+  friend class dsl::DSLFunction;
   friend class VariableReference;
 };
 

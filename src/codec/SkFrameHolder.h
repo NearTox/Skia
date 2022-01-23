@@ -33,7 +33,7 @@ class SkFrame : public SkNoncopyable {
     fRect.setEmpty();
   }
 
-  virtual ~SkFrame() {}
+  virtual ~SkFrame() = default;
 
   /**
    * An explicit move constructor, as
@@ -44,7 +44,7 @@ class SkFrame : public SkNoncopyable {
    * Without a move constructor, it is harder to use an SkFrame, or an
    * SkFrame subclass, inside a std::vector.
    */
-  SkFrame(SkFrame&&) = default;
+  SkFrame(SkFrame&&) noexcept = default;
 
   /**
    *  0-based index of the frame in the image sequence.
@@ -155,7 +155,7 @@ class SkFrameHolder : public SkNoncopyable {
  public:
   SkFrameHolder() : fScreenWidth(0), fScreenHeight(0) {}
 
-  virtual ~SkFrameHolder() {}
+  virtual ~SkFrameHolder() = default;
 
   /**
    *  Size of the image. Each frame will be contained in

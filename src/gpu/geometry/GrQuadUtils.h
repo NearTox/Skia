@@ -49,6 +49,8 @@ bool CropToRect(const SkRect& cropRect, GrAA cropAA, DrawQuad* quad, bool comput
 
 inline void Outset(const skvx::Vec<4, float>& edgeDistances, GrQuad* quad);
 
+bool WillUseHairline(const GrQuad& quad, GrAAType aaType, GrQuadAAFlags edgeFlags);
+
 class TessellationHelper {
  public:
   // Set the original device and (optional) local coordinates that are inset or outset
@@ -88,6 +90,11 @@ class TessellationHelper {
   // edge lengths are ordered LBTR to match distances passed to inset() and outset().
   skvx::Vec<4, float> getEdgeLengths();
 
+  // Determine if the original device space quad has vertices closer than 1px to its opposing
+  // edges, without going through the full work of computing the insets (assuming that the
+  // inset distances would be 0.5px).
+  bool isSubpixel();
+
  private:
   // NOTE: This struct is named 'EdgeVectors' because it holds a lot of cached calculations
   // pertaining to the edge vectors of the input quad, projected into 2D device coordinates.
@@ -119,6 +126,8 @@ class TessellationHelper {
 
     skvx::Vec<4, float> estimateCoverage(
         const skvx::Vec<4, float>& x2d, const skvx::Vec<4, float>& y2d) const;
+
+    bool isSubpixel(const skvx::Vec<4, float>& x2d, const skvx::Vec<4, float>& y2d) const;
 
     // Outsets or insets 'x2d' and 'y2d' in place. To be used when the interior is very
     // small, edges are near parallel, or edges are very short/zero-length. Returns number

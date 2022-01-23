@@ -8,7 +8,6 @@
 #include "experimental/ffmpeg/SkVideoDecoder.h"
 #include "include/core/SkColorSpace.h"
 #include "include/core/SkImage.h"
-#include "include/core/SkYUVAIndex.h"
 #include "include/core/SkYUVAPixmaps.h"
 
 static SkYUVColorSpace get_yuvspace(AVColorSpace space) {
@@ -244,9 +243,9 @@ sk_sp<SkImage> SkVideoDecoder::convertFrame(const AVFrame* frame) {
 }
 
 sk_sp<SkImage> SkVideoDecoder::nextImage(double* timeStamp) {
-  double dummyTimeStampStorage = 0;
+  double defaultTimeStampStorage = 0;
   if (!timeStamp) {
-    timeStamp = &dummyTimeStampStorage;
+    timeStamp = &defaultTimeStampStorage;
   }
 
   if (fFormatCtx == nullptr) {

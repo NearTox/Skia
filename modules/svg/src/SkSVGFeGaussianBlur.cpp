@@ -13,36 +13,31 @@
 #include "modules/svg/include/SkSVGValue.h"
 
 bool SkSVGFeGaussianBlur::parseAndSetAttribute(const char* name, const char* value) {
-  return INHERITED::parseAndSetAttribute(name, value) ||
-         this->setStdDeviation(SkSVGAttributeParser::parse<SkSVGFeGaussianBlur::StdDeviation>(
-             "stdDeviation", name, value));
+    return INHERITED::parseAndSetAttribute(name, value) ||
+           this->setStdDeviation(SkSVGAttributeParser::parse<SkSVGFeGaussianBlur::StdDeviation>(
+                   "stdDeviation", name, value));
 }
 
-sk_sp<SkImageFilter> SkSVGFeGaussianBlur::onMakeImageFilter(
-    const SkSVGRenderContext& ctx, const SkSVGFilterContext& fctx) const {
-  SkScalar sigmaX = fStdDeviation.fX;
-  SkScalar sigmaY = fStdDeviation.fY;
-  if (fctx.primitiveUnits().type() == SkSVGObjectBoundingBoxUnits::Type::kObjectBoundingBox) {
-    SkASSERT(ctx.node());
-    const SkRect objBounds = ctx.node()->objectBoundingBox(ctx);
-    sigmaX *= objBounds.width();
-    sigmaY *= objBounds.height();
-  }
+sk_sp<SkImageFilter> SkSVGFeGaussianBlur::onMakeImageFilter(const SkSVGRenderContext& ctx,
+                                                            const SkSVGFilterContext& fctx) const {
+    const auto sigma = SkV2{fStdDeviation.fX, fStdDeviation.fY}
+                     * ctx.transformForCurrentOBB(fctx.primitiveUnits()).scale;
 
-  return SkImageFilters::Blur(
-      sigmaX, sigmaY, fctx.resolveInput(ctx, this->getIn()),
-      this->resolveFilterSubregion(ctx, fctx));
+    return SkImageFilters::Blur(
+            sigma.x, sigma.y,
+            fctx.resolveInput(ctx, this->getIn(), this->resolveColorspace(ctx, fctx)),
+            this->resolveFilterSubregion(ctx, fctx));
 }
 
 template <>
 bool SkSVGAttributeParser::parse<SkSVGFeGaussianBlur::StdDeviation>(
-    SkSVGFeGaussianBlur::StdDeviation* stdDeviation) {
-  std::vector<SkSVGNumberType> values;
-  if (!this->parse(&values)) {
-    return false;
-  }
+        SkSVGFeGaussianBlur::StdDeviation* stdDeviation) {
+    std::vector<SkSVGNumberType> values;
+    if (!this->parse(&values)) {
+        return false;
+    }
 
-  stdDeviation->fX = values[0];
-  stdDeviation->fY = values.size() > 1 ? values[1] : values[0];
-  return true;
+    stdDeviation->fX = values[0];
+    stdDeviation->fY = values.size() > 1 ? values[1] : values[0];
+    return true;
 }

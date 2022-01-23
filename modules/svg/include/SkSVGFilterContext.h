@@ -19,34 +19,51 @@ class SkSVGFeInputType;
 class SkSVGRenderContext;
 
 class SkSVGFilterContext {
- public:
-  SkSVGFilterContext(
-      const SkRect& filterEffectsRegion, const SkSVGObjectBoundingBoxUnits& primitiveUnits)
-      : fFilterEffectsRegion(filterEffectsRegion), fPrimitiveUnits(primitiveUnits) {}
+public:
+    SkSVGFilterContext(const SkRect& filterEffectsRegion,
+                       const SkSVGObjectBoundingBoxUnits& primitiveUnits)
+            : fFilterEffectsRegion(filterEffectsRegion)
+            , fPrimitiveUnits(primitiveUnits)
+            , fPreviousResult({nullptr, filterEffectsRegion, SkSVGColorspace::kSRGB}) {}
 
-  const SkRect& filterEffectsRegion() const { return fFilterEffectsRegion; }
+    const SkRect& filterEffectsRegion() const { return fFilterEffectsRegion; }
 
-  const SkRect& filterPrimitiveSubregion(const SkSVGFeInputType&) const;
+    const SkRect& filterPrimitiveSubregion(const SkSVGFeInputType&) const;
 
-  const SkSVGObjectBoundingBoxUnits& primitiveUnits() const { return fPrimitiveUnits; }
+    const SkSVGObjectBoundingBoxUnits& primitiveUnits() const { return fPrimitiveUnits; }
 
-  void registerResult(const SkSVGStringType&, const sk_sp<SkImageFilter>&, const SkRect&);
+    void registerResult(const SkSVGStringType&, const sk_sp<SkImageFilter>&, const SkRect&, SkSVGColorspace);
 
-  sk_sp<SkImageFilter> resolveInput(const SkSVGRenderContext&, const SkSVGFeInputType&) const;
+    void setPreviousResult(const sk_sp<SkImageFilter>&, const SkRect&, SkSVGColorspace);
 
- private:
-  struct Result {
-    sk_sp<SkImageFilter> fImageFilter;
-    SkRect fFilterSubregion;
-  };
+    bool previousResultIsSourceGraphic() const;
 
-  sk_sp<SkImageFilter> findResultById(const SkSVGStringType&) const;
+    SkSVGColorspace resolveInputColorspace(const SkSVGRenderContext&,
+                                           const SkSVGFeInputType&) const;
 
-  SkRect fFilterEffectsRegion;
+    sk_sp<SkImageFilter> resolveInput(const SkSVGRenderContext&, const SkSVGFeInputType&) const;
 
-  SkSVGObjectBoundingBoxUnits fPrimitiveUnits;
+    sk_sp<SkImageFilter> resolveInput(const SkSVGRenderContext&, const SkSVGFeInputType&, SkSVGColorspace) const;
 
-  SkTHashMap<SkSVGStringType, Result> fResults;
+private:
+    struct Result {
+        sk_sp<SkImageFilter> fImageFilter;
+        SkRect fFilterSubregion;
+        SkSVGColorspace fColorspace;
+    };
+
+    const Result* findResultById(const SkSVGStringType&) const;
+
+    std::tuple<sk_sp<SkImageFilter>, SkSVGColorspace> getInput(const SkSVGRenderContext&,
+                                                               const SkSVGFeInputType&) const;
+
+    SkRect fFilterEffectsRegion;
+
+    SkSVGObjectBoundingBoxUnits fPrimitiveUnits;
+
+    SkTHashMap<SkSVGStringType, Result> fResults;
+
+    Result fPreviousResult;
 };
 
 #endif  // SkSVGFilterContext_DEFINED

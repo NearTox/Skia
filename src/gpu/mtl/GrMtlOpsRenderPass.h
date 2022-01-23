@@ -16,19 +16,21 @@
 
 typedef uint32_t GrColor;
 class GrMtlBuffer;
+class GrMtlFramebuffer;
 class GrMtlPipelineState;
+class GrMtlRenderCommandEncoder;
 class GrMtlRenderTarget;
 
 class GrMtlOpsRenderPass : public GrOpsRenderPass {
  public:
   GrMtlOpsRenderPass(
-      GrMtlGpu* gpu, GrRenderTarget* rt, GrSurfaceOrigin origin,
+      GrMtlGpu* gpu, GrRenderTarget* rt, sk_sp<GrMtlFramebuffer>, GrSurfaceOrigin origin,
       const GrOpsRenderPass::LoadAndStoreInfo& colorInfo,
       const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo);
 
   ~GrMtlOpsRenderPass() override;
 
-  void initRenderState(id<MTLRenderCommandEncoder>);
+  void initRenderState(GrMtlRenderCommandEncoder*);
 
   void inlineUpload(GrOpFlushState* state, GrDeferredTextureUploadFn& upload) override;
   void submit();
@@ -39,7 +41,7 @@ class GrMtlOpsRenderPass : public GrOpsRenderPass {
   bool onBindPipeline(const GrProgramInfo&, const SkRect& drawBounds) override;
   void onSetScissorRect(const SkIRect&) override;
   bool onBindTextures(
-      const GrPrimitiveProcessor&, const GrSurfaceProxy* const primProcTextures[],
+      const GrGeometryProcessor&, const GrSurfaceProxy* const geomProcTextures[],
       const GrPipeline&) override;
   void onBindBuffers(
       sk_sp<const GrBuffer> indexBuffer, sk_sp<const GrBuffer> instanceBuffer,
@@ -52,6 +54,10 @@ class GrMtlOpsRenderPass : public GrOpsRenderPass {
       int instanceCount, int baseInstance, int vertexCount, int baseVertex) override;
   void onDrawIndexedInstanced(
       int indexCount, int baseIndex, int instanceCount, int baseInstance, int baseVertex) override;
+  void onDrawIndirect(
+      const GrBuffer* drawIndirectBuffer, size_t bufferOffset, int drawCount) override;
+  void onDrawIndexedIndirect(
+      const GrBuffer* drawIndirectBuffer, size_t bufferOffset, int drawCount) override;
 
   void onClear(const GrScissorState& scissor, std::array<float, 4> color) override;
 
@@ -62,24 +68,22 @@ class GrMtlOpsRenderPass : public GrOpsRenderPass {
       const GrOpsRenderPass::StencilLoadAndStoreInfo& stencilInfo);
 
   void setVertexBuffer(
-      id<MTLRenderCommandEncoder>, const GrBuffer*, size_t offset, size_t inputBufferIndex);
-  void resetBufferBindings();
-  void precreateCmdEncoder();
+      GrMtlRenderCommandEncoder*, const GrBuffer*, size_t offset, size_t inputBufferIndex);
+
+  void setupResolve();
 
   GrMtlGpu* fGpu;
 
-  id<MTLRenderCommandEncoder> fActiveRenderCmdEncoder;
+  sk_sp<GrMtlFramebuffer> fFramebuffer;
+  GrMtlRenderCommandEncoder* fActiveRenderCmdEncoder;
   GrMtlPipelineState* fActivePipelineState = nullptr;
   MTLPrimitiveType fActivePrimitiveType;
   MTLRenderPassDescriptor* fRenderPassDesc;
   SkRect fBounds;
   size_t fCurrentVertexStride;
-
-  static constexpr size_t kNumBindings = GrMtlUniformHandler::kLastUniformBinding + 3;
-  struct {
-    id<MTLBuffer> fBuffer;
-    size_t fOffset;
-  } fBufferBindings[kNumBindings];
+#ifdef SK_ENABLE_MTL_DEBUG_INFO
+  bool fDebugGroupActive = false;
+#endif
 
   using INHERITED = GrOpsRenderPass;
 };

@@ -47,11 +47,42 @@ class Pool {
   // the pool can be destroyed.
   static void FreeMemory(void* ptr);
 
- private:
-  void checkForLeaks();
+  static bool IsAttached();
 
-  Pool() = default;  // use Create to make a pool
+ private:
+  constexpr Pool() noexcept = default;  // use Create to make a pool
   std::unique_ptr<SkSL::MemoryPool> fMemPool;
+};
+
+/**
+ * If your class inherits from Poolable, its objects will be allocated from the pool.
+ */
+class Poolable {
+ public:
+  // Override operator new and delete to allow us to use a memory pool.
+  static void* operator new(const size_t size) { return Pool::AllocMemory(size); }
+
+  static void operator delete(void* ptr) { Pool::FreeMemory(ptr); }
+};
+
+/**
+ * Temporarily attaches a pool to the current thread within a scope.
+ */
+class AutoAttachPoolToThread {
+ public:
+  AutoAttachPoolToThread(Pool* p) : fPool(p) {
+    if (fPool) {
+      fPool->attachToThread();
+    }
+  }
+  ~AutoAttachPoolToThread() {
+    if (fPool) {
+      fPool->detachFromThread();
+    }
+  }
+
+ private:
+  Pool* fPool = nullptr;
 };
 
 }  // namespace SkSL

@@ -23,7 +23,7 @@
  */
 class SkColorSpaceLuminance : SkNoncopyable {
  public:
-  virtual ~SkColorSpaceLuminance() {}
+  virtual ~SkColorSpaceLuminance() = default;
 
   /** Converts a color component luminance in the color space to a linear luma. */
   virtual SkScalar toLuma(SkScalar gamma, SkScalar luminance) const = 0;
@@ -185,7 +185,7 @@ class SkTMaskPreBlend {
   SkTMaskPreBlend(const SkTMaskPreBlend<R_LUM_BITS, G_LUM_BITS, B_LUM_BITS>& that)
       : fParent(that.fParent), fR(that.fR), fG(that.fG), fB(that.fB) {}
 
-  ~SkTMaskPreBlend() {}
+  ~SkTMaskPreBlend() = default;
 
   /** True if this PreBlend should be applied. When false, fR, fG, and fB are nullptr. */
   bool isApplicable() const { return SkToBool(this->fG); }

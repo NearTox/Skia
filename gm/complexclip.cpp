@@ -21,7 +21,6 @@
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
 #include "include/effects/SkGradientShader.h"
-#include "src/core/SkClipOpPriv.h"
 #include "tools/Resources.h"
 #include "tools/ToolUtils.h"
 
@@ -88,8 +87,8 @@ class ComplexClipGM : public GM {
       const char* fName;
     } gOps[] = {
         // extra spaces in names for measureText
-        {kIntersect_SkClipOp, "Isect "},
-        {kDifference_SkClipOp, "Diff "},
+        {SkClipOp::kIntersect, "Isect "},
+        {SkClipOp::kDifference, "Diff "},
     };
 
     canvas->translate(20, 20);
@@ -214,7 +213,7 @@ DEF_SIMPLE_GM(clip_shader, canvas, 840, 650) {
   SkPaint p;
 
   canvas->translate(10, 10);
-  canvas->drawImage(img, 0, 0, nullptr);
+  canvas->drawImage(img, 0, 0);
 
   canvas->save();
   canvas->translate(img->width() + 10, 0);
@@ -237,7 +236,7 @@ DEF_SIMPLE_GM(clip_shader, canvas, 840, 650) {
   SkMatrix lm = SkMatrix::Scale(1.0f / 5, 1.0f / 5);
   canvas->clipShader(
       img->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), lm));
-  canvas->drawImage(img, 0, 0, nullptr);
+  canvas->drawImage(img, 0, 0);
 
   canvas->restore();
   canvas->restore();
@@ -406,7 +405,7 @@ DEF_SIMPLE_GM(clip_shader_persp, canvas, 1370, 1030) {
     }
 
     // Actual draw and clip boundary are the same for all configs
-    canvas->clipRect(SkRect::MakeIWH(img->width(), img->height()));
+    canvas->clipIRect(img->bounds());
     canvas->clear(SK_ColorBLACK);
     canvas->drawImage(img, 0, 0);
 
@@ -435,9 +434,8 @@ DEF_SIMPLE_GM(clip_shader_difference, canvas, 512, 512) {
   canvas->clear(SK_ColorGRAY);
 
   SkRect rect = SkRect::MakeWH(256, 256);
-  SkMatrix local = SkMatrix::MakeRectToRect(
-      SkRect::MakeWH(image->width(), image->height()), SkRect::MakeWH(64, 64),
-      SkMatrix::kFill_ScaleToFit);
+  SkMatrix local =
+      SkMatrix::RectToRect(SkRect::MakeWH(image->width(), image->height()), SkRect::MakeWH(64, 64));
   auto shader =
       image->makeShader(SkTileMode::kRepeat, SkTileMode::kRepeat, SkSamplingOptions(), &local);
 

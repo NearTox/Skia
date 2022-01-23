@@ -14,7 +14,7 @@
 
 class GrImageInfo {
  public:
-  GrImageInfo() = default;
+  constexpr GrImageInfo() noexcept = default;
 
   /* implicit */ GrImageInfo(const SkImageInfo& info)
       : fColorInfo(info.colorInfo()), fDimensions(info.dimensions()) {}
@@ -28,20 +28,24 @@ class GrImageInfo {
   GrImageInfo(const GrColorInfo& info, const SkISize& dimensions)
       : fColorInfo(info), fDimensions(dimensions) {}
 
-  GrImageInfo(GrColorInfo&& info, const SkISize& dimensions)
+  GrImageInfo(GrColorInfo&& info, const SkISize& dimensions) noexcept
       : fColorInfo(std::move(info)), fDimensions(dimensions) {}
 
   GrImageInfo(const GrImageInfo&) = default;
-  GrImageInfo(GrImageInfo&&) = default;
+  GrImageInfo(GrImageInfo&&) noexcept = default;
   GrImageInfo& operator=(const GrImageInfo&) = default;
-  GrImageInfo& operator=(GrImageInfo&&) = default;
+  GrImageInfo& operator=(GrImageInfo&&) noexcept = default;
 
   GrImageInfo makeColorType(GrColorType ct) const {
-    return {ct, this->alphaType(), this->refColorSpace(), this->width(), this->height()};
+    return {this->colorInfo().makeColorType(ct), this->dimensions()};
   }
 
   GrImageInfo makeAlphaType(SkAlphaType at) const {
     return {this->colorType(), at, this->refColorSpace(), this->width(), this->height()};
+  }
+
+  GrImageInfo makeColorSpace(sk_sp<SkColorSpace> cs) const {
+    return {this->colorType(), this->alphaType(), std::move(cs), this->width(), this->height()};
   }
 
   GrImageInfo makeDimensions(SkISize dimensions) const {

@@ -542,8 +542,8 @@ bool SkGenerateDistanceFieldFromBWImage(
     const unsigned char* maskPtr = currSrcScanLine;
     while (rowWritesLeft > 0) {
       unsigned mask = *maskPtr++;
-      for (int i = 7; i >= 0 && rowWritesLeft; --i, --rowWritesLeft) {
-        *currDestPtr++ = (mask & (1 << i)) ? 0xff : 0;
+      for (int j = 7; j >= 0 && rowWritesLeft; --j, --rowWritesLeft) {
+        *currDestPtr++ = (mask & (1 << j)) ? 0xff : 0;
       }
     }
     currSrcScanLine += rowBytes;

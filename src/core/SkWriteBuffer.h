@@ -22,8 +22,8 @@ class SkRefCntSet;
 
 class SkWriteBuffer {
  public:
-  SkWriteBuffer() {}
-  virtual ~SkWriteBuffer() {}
+  constexpr SkWriteBuffer() noexcept = default;
+  virtual ~SkWriteBuffer() = default;
 
   virtual void writePad32(const void* buffer, size_t bytes) = 0;
 
@@ -64,7 +64,7 @@ class SkWriteBuffer {
   virtual void writeTypeface(SkTypeface* typeface) = 0;
   virtual void writePaint(const SkPaint& paint) = 0;
 
-  void setSerialProcs(const SkSerialProcs& procs) { fProcs = procs; }
+  void setSerialProcs(const SkSerialProcs& procs) noexcept { fProcs = procs; }
 
  protected:
   SkSerialProcs fProcs;
@@ -76,7 +76,7 @@ class SkWriteBuffer {
  * Concrete implementation that serializes to a flat binary blob.
  */
 class SkBinaryWriteBuffer : public SkWriteBuffer {
- public:
+ public: 
   SkBinaryWriteBuffer();
   SkBinaryWriteBuffer(void* initialStorage, size_t storageSize);
   ~SkBinaryWriteBuffer() override;
@@ -84,11 +84,11 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
   void write(const void* buffer, size_t bytes) { fWriter.write(buffer, bytes); }
   void writePad32(const void* buffer, size_t bytes) override { fWriter.writePad(buffer, bytes); }
 
-  void reset(void* storage = nullptr, size_t storageSize = 0) {
+  void reset(void* storage = nullptr, size_t storageSize = 0) noexcept {
     fWriter.reset(storage, storageSize);
   }
 
-  size_t bytesWritten() const { return fWriter.bytesWritten(); }
+  size_t bytesWritten() const noexcept { return fWriter.bytesWritten(); }
 
   // Returns true iff all of the bytes written so far are stored in the initial storage
   // buffer provided in the constructor or the most recent call to reset.

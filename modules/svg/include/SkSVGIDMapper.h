@@ -16,4 +16,4 @@ class SkSVGNode;
 
 using SkSVGIDMapper = SkTHashMap<SkString, sk_sp<SkSVGNode>>;
 
-#endif  // SkSVGIDMapper_DEFINED
+#endif // SkSVGIDMapper_DEFINED

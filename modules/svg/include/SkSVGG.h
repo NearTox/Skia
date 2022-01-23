@@ -11,13 +11,13 @@
 #include "modules/svg/include/SkSVGContainer.h"
 
 class SkSVGG : public SkSVGContainer {
- public:
-  static sk_sp<SkSVGG> Make() { return sk_sp<SkSVGG>(new SkSVGG()); }
+public:
+    static sk_sp<SkSVGG> Make() { return sk_sp<SkSVGG>(new SkSVGG()); }
 
- private:
-  SkSVGG() : INHERITED(SkSVGTag::kG) {}
+private:
+    SkSVGG() : INHERITED(SkSVGTag::kG) { }
 
-  using INHERITED = SkSVGContainer;
+    using INHERITED = SkSVGContainer;
 };
 
-#endif  // SkSVGG_DEFINED
+#endif // SkSVGG_DEFINED

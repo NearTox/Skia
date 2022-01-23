@@ -21,27 +21,33 @@ class SkTraceMemoryDump;
  * Separated out as a base class to isolate the ref-cnting behavior and provide friendship without
  * exposing all of GrGpuResource.
  *
- * PRIOR to the last ref being removed DERIVED::notifyRefCntWillBeZero() will be called
+ * PRIOR to the last ref being removed DERIVED::notifyARefCntWillBeZero() will be called
  * (static poly morphism using CRTP). It is legal for additional ref's to be added
- * during this time. AFTER the ref count reaches zero DERIVED::notifyRefCntIsZero() will be
+ * during this time. AFTER the ref count reaches zero DERIVED::notifyARefCntIsZero() will be
  * called.
  */
 template <typename DERIVED>
 class GrIORef : public SkNoncopyable {
  public:
-  bool unique() const { return fRefCnt == 1; }
+  bool unique() const noexcept { return fRefCnt == 1; }
 
-  void ref() const {
+  void ref() const noexcept {
     // Only the cache should be able to add the first ref to a resource.
     SkASSERT(this->getRefCnt() > 0);
     // No barrier required.
     (void)fRefCnt.fetch_add(+1, std::memory_order_relaxed);
   }
 
+  // This enum is used to notify the GrResourceCache which type of ref just dropped to zero.
+  enum class LastRemovedRef {
+    kMainRef,             // This refers to fRefCnt
+    kCommandBufferUsage,  // This refers to fCommandBufferUsageCnt
+  };
+
   void unref() const {
     SkASSERT(this->getRefCnt() > 0);
-    if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel) && this->hasNoCommandBufferUsages()) {
-      this->notifyWillBeZero();
+    if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
+      this->notifyWillBeZero(LastRemovedRef::kMainRef);
     }
   }
 
@@ -52,9 +58,8 @@ class GrIORef : public SkNoncopyable {
 
   void removeCommandBufferUsage() const {
     SkASSERT(!this->hasNoCommandBufferUsages());
-    if (1 == fCommandBufferUsageCnt.fetch_add(-1, std::memory_order_acq_rel) &&
-        0 == this->getRefCnt()) {
-      this->notifyWillBeZero();
+    if (1 == fCommandBufferUsageCnt.fetch_add(-1, std::memory_order_acq_rel)) {
+      this->notifyWillBeZero(LastRemovedRef::kCommandBufferUsage);
     }
   }
 
@@ -63,9 +68,7 @@ class GrIORef : public SkNoncopyable {
 #endif
 
  protected:
-  friend class GrResourceCache;  // for internalHasRef
-
-  GrIORef() : fRefCnt(1), fCommandBufferUsageCnt(0) {}
+  constexpr GrIORef() noexcept : fRefCnt(1), fCommandBufferUsageCnt(0) {}
 
   bool internalHasRef() const { return SkToBool(this->getRefCnt()); }
   bool internalHasNoCommandBufferUsages() const {
@@ -80,22 +83,11 @@ class GrIORef : public SkNoncopyable {
   }
 
  private:
-  void notifyWillBeZero() const {
-    // At this point we better be the only thread accessing this resource.
-    // Trick out the notifyRefCntWillBeZero() call by adding back one more ref.
-    fRefCnt.fetch_add(+1, std::memory_order_relaxed);
-    static_cast<const DERIVED*>(this)->notifyRefCntWillBeZero();
-    // notifyRefCntWillBeZero() could have done anything, including re-refing this and
-    // passing on to another thread. Take away the ref-count we re-added above and see
-    // if we're back to zero.
-    // TODO: Consider making it so that refs can't be added and merge
-    //  notifyRefCntWillBeZero()/willRemoveLastRef() with notifyRefCntIsZero().
-    if (1 == fRefCnt.fetch_add(-1, std::memory_order_acq_rel)) {
-      static_cast<const DERIVED*>(this)->notifyRefCntIsZero();
-    }
+  void notifyWillBeZero(LastRemovedRef removedRef) const {
+    static_cast<const DERIVED*>(this)->notifyARefCntIsZero(removedRef);
   }
 
-  int32_t getRefCnt() const { return fRefCnt.load(std::memory_order_relaxed); }
+  int32_t getRefCnt() const noexcept { return fRefCnt.load(std::memory_order_relaxed); }
 
   bool hasNoCommandBufferUsages() const {
     if (0 == fCommandBufferUsageCnt.load(std::memory_order_acquire)) {
@@ -128,12 +120,12 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    * @return true if the object has been released or abandoned,
    *         false otherwise.
    */
-  bool wasDestroyed() const { return nullptr == fGpu; }
+  bool wasDestroyed() const noexcept { return nullptr == fGpu; }
 
   /**
    * Retrieves the context that owns the object. Note that it is possible for
    * this to return NULL. When objects have been release()ed or abandon()ed
-   * they no longer have an owning context. Destroying a GrContext
+   * they no longer have an owning context. Destroying a GrDirectContext
    * automatically releases all its resources.
    */
   const GrDirectContext* getContext() const;
@@ -156,17 +148,17 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
 
   class UniqueID {
    public:
-    UniqueID() = default;
+    constexpr UniqueID() noexcept = default;
 
-    explicit UniqueID(uint32_t id) : fID(id) {}
+    constexpr explicit UniqueID(uint32_t id) noexcept : fID(id) {}
 
-    uint32_t asUInt() const { return fID; }
+    constexpr uint32_t asUInt() const noexcept { return fID; }
 
-    bool operator==(const UniqueID& other) const { return fID == other.fID; }
-    bool operator!=(const UniqueID& other) const { return !(*this == other); }
+    constexpr bool operator==(const UniqueID& other) const noexcept { return fID == other.fID; }
+    constexpr bool operator!=(const UniqueID& other) const noexcept { return !(*this == other); }
 
-    void makeInvalid() { fID = SK_InvalidUniqueID; }
-    bool isInvalid() const { return fID == SK_InvalidUniqueID; }
+    constexpr void makeInvalid() noexcept { fID = SK_InvalidUniqueID; }
+    constexpr bool isInvalid() const noexcept { return fID == SK_InvalidUniqueID; }
 
    protected:
     uint32_t fID = SK_InvalidUniqueID;
@@ -177,11 +169,11 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    * not change when the content of the GrGpuResource object changes. This will never return
    * 0.
    */
-  UniqueID uniqueID() const { return fUniqueID; }
+  UniqueID uniqueID() const noexcept { return fUniqueID; }
 
   /** Returns the current unique key for the resource. It will be invalid if the resource has no
       associated unique key. */
-  const GrUniqueKey& getUniqueKey() const { return fUniqueKey; }
+  const GrUniqueKey& getUniqueKey() const noexcept { return fUniqueKey; }
 
   /**
    * Internal-only helper class used for manipulations of the resource by the cache.
@@ -194,7 +186,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    * Internal-only helper class used for manipulations of the resource by GrSurfaceProxy.
    */
   class ProxyAccess;
-  inline ProxyAccess proxyAccess();
+  inline ProxyAccess proxyAccess() noexcept;
 
   /**
    * Internal-only helper class used for manipulations of the resource by internal code.
@@ -219,7 +211,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
    */
   virtual const char* getResourceType() const = 0;
 
-  static uint32_t CreateUniqueID();
+  static uint32_t CreateUniqueID() noexcept;
 
  protected:
   // This must be called by every non-wrapped GrGpuObject. It should be called once the object is
@@ -234,7 +226,7 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
   GrGpuResource(GrGpu*);
   virtual ~GrGpuResource();
 
-  GrGpu* getGpu() const { return fGpu; }
+  GrGpu* getGpu() const noexcept { return fGpu; }
 
   /** Overridden to free GPU resources in the backend API. */
   virtual void onRelease() {}
@@ -288,16 +280,10 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
 
   virtual size_t onGpuMemorySize() const = 0;
 
-  /**
-   * Called by GrIORef when a resource is about to lose its last ref
-   */
-  virtual void willRemoveLastRef() {}
-
   // See comments in CacheAccess and ResourcePriv.
   void setUniqueKey(const GrUniqueKey&);
   void removeUniqueKey();
-  void notifyRefCntWillBeZero() const;
-  void notifyRefCntIsZero() const;
+  void notifyARefCntIsZero(LastRemovedRef removedRef) const;
   void removeScratchKey();
   void makeBudgeted();
   void makeUnbudgeted();
@@ -328,12 +314,13 @@ class GrGpuResource : public GrIORef<GrGpuResource> {
   const UniqueID fUniqueID;
 
   using INHERITED = GrIORef<GrGpuResource>;
-  friend class GrIORef<GrGpuResource>;  // to access notifyRefCntWillBeZero and notifyRefCntIsZero.
+  friend class GrIORef<GrGpuResource>;  // to access notifyRefCntWillBeZero and
+                                        // notifyARefCntIsZero.
 };
 
 class GrGpuResource::ProxyAccess {
  private:
-  ProxyAccess(GrGpuResource* resource) : fResource(resource) {}
+  ProxyAccess(GrGpuResource* resource) noexcept : fResource(resource) {}
 
   /** Proxies are allowed to take a resource from no refs to one ref. */
   void ref(GrResourceCache* cache);
@@ -348,6 +335,8 @@ class GrGpuResource::ProxyAccess {
   friend class GrSurfaceProxy;
 };
 
-inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() { return ProxyAccess(this); }
+inline GrGpuResource::ProxyAccess GrGpuResource::proxyAccess() noexcept {
+  return ProxyAccess(this);
+}
 
 #endif

@@ -10,6 +10,7 @@
 
 #include "include/private/SkTArray.h"
 #include "include/private/SkTemplates.h"
+#include "include/utils/SkParsePath.h"
 #include "src/core/SkClipStackDevice.h"
 
 class SkXMLWriter;
@@ -32,7 +33,7 @@ class SkSVGDevice final : public SkClipStackDevice {
   void drawRRect(const SkRRect& rr, const SkPaint& paint) override;
   void drawPath(const SkPath& path, const SkPaint& paint, bool pathIsMutable = false) override;
 
-  void drawGlyphRunList(const SkGlyphRunList& glyphRunList) override;
+  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override;
   void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override;
 
  private:
@@ -43,6 +44,8 @@ class SkSVGDevice final : public SkClipStackDevice {
   void drawBitmapCommon(const MxCp&, const SkBitmap& bm, const SkPaint& paint);
 
   void syncClipStack(const SkClipStack&);
+
+  SkParsePath::PathEncoding pathEncoding() const;
 
   class AutoElement;
   class ResourceBucket;
