@@ -59,7 +59,7 @@ bool SkStream::readPackedUInt(size_t* i) {
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-SkWStream::~SkWStream() = default;
+SkWStream::~SkWStream() {}
 
 void SkWStream::flush() {}
 
@@ -166,7 +166,7 @@ SkFILEStream::SkFILEStream(const char path[])
 
 SkFILEStream::~SkFILEStream() { this->close(); }
 
-void SkFILEStream::close() {
+void SkFILEStream::close() noexcept {
   fFILE.reset();
   fEnd = 0;
   fStart = 0;
@@ -435,7 +435,7 @@ struct SkDynamicMemoryWStream::Block {
   }
 };
 
-SkDynamicMemoryWStream::SkDynamicMemoryWStream(SkDynamicMemoryWStream&& other)
+SkDynamicMemoryWStream::SkDynamicMemoryWStream(SkDynamicMemoryWStream&& other) noexcept 
     : fHead(other.fHead),
       fTail(other.fTail),
       fBytesWrittenBeforeTail(other.fBytesWrittenBeforeTail) {
@@ -444,7 +444,7 @@ SkDynamicMemoryWStream::SkDynamicMemoryWStream(SkDynamicMemoryWStream&& other)
   other.fBytesWrittenBeforeTail = 0;
 }
 
-SkDynamicMemoryWStream& SkDynamicMemoryWStream::operator=(SkDynamicMemoryWStream&& other) {
+SkDynamicMemoryWStream& SkDynamicMemoryWStream::operator=(SkDynamicMemoryWStream&& other) noexcept {
   if (this != &other) {
     this->~SkDynamicMemoryWStream();
     new (this) SkDynamicMemoryWStream(std::move(other));
@@ -454,7 +454,7 @@ SkDynamicMemoryWStream& SkDynamicMemoryWStream::operator=(SkDynamicMemoryWStream
 
 SkDynamicMemoryWStream::~SkDynamicMemoryWStream() { this->reset(); }
 
-void SkDynamicMemoryWStream::reset() {
+void SkDynamicMemoryWStream::reset() noexcept {
   Block* block = fHead;
   while (block != nullptr) {
     Block* next = block->fNext;
@@ -826,6 +826,16 @@ std::unique_ptr<SkStreamAsset> SkDynamicMemoryWStream::detachAsStream() {
   this->reset();
   return stream;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool SkDebugfStream::write(const void* buffer, size_t size) {
+  SkDebugf("%.*s", (int)size, (const char*)buffer);
+  fBytesWritten += size;
+  return true;
+}
+
+size_t SkDebugfStream::bytesWritten() const { return fBytesWritten; }
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

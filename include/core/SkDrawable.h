@@ -93,7 +93,7 @@ class SK_API SkDrawable : public SkFlattenable {
    *  Subclasses that change their state should call notifyDrawingChanged() to ensure that
    *  a new value will be returned the next time it is called.
    */
-  uint32_t getGenerationID();
+  uint32_t getGenerationID() noexcept;
 
   /**
    *  Return the (conservative) bounds of what the drawable will draw. If the drawable can
@@ -103,13 +103,19 @@ class SK_API SkDrawable : public SkFlattenable {
   SkRect getBounds();
 
   /**
+   *  Return approximately how many bytes would be freed if this drawable is destroyed.
+   *  The base implementation returns 0 to indicate that this is unknown.
+   */
+  size_t approximateBytesUsed();
+
+  /**
    *  Calling this invalidates the previous generation ID, and causes a new one to be computed
    *  the next time getGenerationID() is called. Typically this is called by the object itself,
    *  in response to its internal state changing.
    */
-  void notifyDrawingChanged();
+  void notifyDrawingChanged() noexcept;
 
-  static SkFlattenable::Type GetFlattenableType() { return kSkDrawable_Type; }
+  static SkFlattenable::Type GetFlattenableType() noexcept { return kSkDrawable_Type; }
 
   SkFlattenable::Type getFlattenableType() const override { return kSkDrawable_Type; }
 
@@ -120,12 +126,13 @@ class SK_API SkDrawable : public SkFlattenable {
   }
 
   Factory getFactory() const override { return nullptr; }
-  const char* getTypeName() const noexcept override { return nullptr; }
+  const char* getTypeName() const override { return nullptr; }
 
  protected:
-  SkDrawable();
+  SkDrawable() noexcept;
 
   virtual SkRect onGetBounds() = 0;
+  virtual size_t onApproximateBytesUsed();
   virtual void onDraw(SkCanvas*) = 0;
 
   virtual std::unique_ptr<GpuDrawHandler> onSnapGpuDrawHandler(

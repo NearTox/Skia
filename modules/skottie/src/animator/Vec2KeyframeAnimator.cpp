@@ -125,7 +125,7 @@ class Vec2ExpressionAnimator final : public Animator {
 class Vec2AnimatorBuilder final : public AnimatorBuilder {
  public:
   Vec2AnimatorBuilder(Vec2Value* vec_target, float* rot_target)
-      : fVecTarget(vec_target), fRotTarget(rot_target) {}
+      : INHERITED(Keyframe::Value::Type::kIndex), fVecTarget(vec_target), fRotTarget(rot_target) {}
 
   sk_sp<KeyframeAnimator> makeFromKeyframes(
       const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs) override {
@@ -223,6 +223,8 @@ class Vec2AnimatorBuilder final : public AnimatorBuilder {
   float* fRotTarget;      // optional
   SkV2 fTi{0, 0}, fTo{0, 0};
   bool fPendingSpatial = false;
+
+  using INHERITED = AnimatorBuilder;
 };
 
 }  // namespace
@@ -241,7 +243,9 @@ bool AnimatablePropertyContainer::bindAutoOrientable(
   }
 
   // Separate-dimensions vector value: each component is animated independently.
-  return this->bind(abuilder, (*jprop)["x"], &v->x) | this->bind(abuilder, (*jprop)["y"], &v->y);
+  bool boundX = this->bind(abuilder, (*jprop)["x"], &v->x);
+  bool boundY = this->bind(abuilder, (*jprop)["y"], &v->y);
+  return boundX || boundY;
 }
 
 template <>

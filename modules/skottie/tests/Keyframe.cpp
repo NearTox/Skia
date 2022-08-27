@@ -31,7 +31,7 @@ class MockProperty final : public AnimatablePropertyContainer {
     fDidBind = this->bind(abuilder, json_dom.root(), &fValue);
   }
 
-  operator bool() const { return fDidBind; }
+  explicit operator bool() const { return fDidBind; }
 
   const T& operator()(float t) {
     this->seek(t);
@@ -67,6 +67,7 @@ DEF_TEST(Skottie_Keyframe, reporter) {
                                          ]
                                        })");
     REPORTER_ASSERT(reporter, prop);
+    REPORTER_ASSERT(reporter, !prop.isStatic());
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(-1), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(1), 1));
@@ -87,6 +88,7 @@ DEF_TEST(Skottie_Keyframe, reporter) {
                                          ]
                                        })");
     REPORTER_ASSERT(reporter, prop);
+    REPORTER_ASSERT(reporter, !prop.isStatic());
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(1), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(1.5), 1));
@@ -108,6 +110,7 @@ DEF_TEST(Skottie_Keyframe, reporter) {
                                          ]
                                        })");
     REPORTER_ASSERT(reporter, prop);
+    REPORTER_ASSERT(reporter, !prop.isStatic());
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(-1), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(1), 1));
@@ -128,6 +131,7 @@ DEF_TEST(Skottie_Keyframe, reporter) {
                                          ]
                                        })");
     REPORTER_ASSERT(reporter, prop);
+    REPORTER_ASSERT(reporter, !prop.isStatic());
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(1), 1));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(1.5), 1));
@@ -137,5 +141,34 @@ DEF_TEST(Skottie_Keyframe, reporter) {
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(std::nextafter(3.f, 0.f)), 2));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(3), 4));
     REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(4), 4));
+  }
+  {
+    // Static scalar prop (all equal keyframes, using float kf Value)
+    MockProperty<ScalarValue> prop(R"({
+                                         "a": 1,
+                                         "k": [
+                                           { "t":  1, "s": 42, "e": 42 },
+                                           { "t":  2, "s": 42, "e": 42 },
+                                           { "t":  3 }
+                                         ]
+                                       })");
+    REPORTER_ASSERT(reporter, prop);
+    REPORTER_ASSERT(reporter, prop.isStatic());
+    REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0), 42));
+  }
+  {
+    // Static vector prop (all equal keyframes, using uint32 kf Value)
+    MockProperty<Vec2Value> prop(R"({
+                                       "a": 1,
+                                       "k": [
+                                         { "t":  1, "s": [4,2], "e": [4,2] },
+                                         { "t":  2, "s": [4,2], "e": [4,2] },
+                                         { "t":  3 }
+                                       ]
+                                     })");
+    REPORTER_ASSERT(reporter, prop);
+    REPORTER_ASSERT(reporter, prop.isStatic());
+    REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0).x, 4));
+    REPORTER_ASSERT(reporter, SkScalarNearlyEqual(prop(0).y, 2));
   }
 }

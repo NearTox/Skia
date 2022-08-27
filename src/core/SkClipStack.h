@@ -21,7 +21,7 @@
 #if SK_SUPPORT_GPU
 class GrProxyProvider;
 
-#  include "include/private/GrResourceKey.h"
+#  include "src/gpu/ResourceKey.h"
 #endif
 
 // Because a single save/restore state can have multiple clips, this class
@@ -66,12 +66,12 @@ class SkClipStack {
     };
     static const int kTypeCnt = (int)DeviceSpaceType::kLastType + 1;
 
-    Element() {
+    Element() noexcept {
       this->initCommon(0, SkClipOp::kIntersect, false);
       this->setEmpty();
     }
 
-    Element(const Element&) noexcept;
+    Element(const Element&);
 
     Element(const SkRect& rect, const SkMatrix& m, SkClipOp op, bool doAA) {
       this->initRect(0, rect, m, op, doAA);
@@ -101,7 +101,7 @@ class SkClipStack {
     int getSaveCount() const noexcept { return fSaveCount; }
 
     //!< Call if getDeviceSpaceType() is kPath to get the path.
-    const SkPath& getDeviceSpacePath() const noexcept {
+    const SkPath& getDeviceSpacePath() const {
       SkASSERT(DeviceSpaceType::kPath == fDeviceSpaceType);
       return *fDeviceSpacePath;
     }
@@ -190,7 +190,7 @@ class SkClipStack {
      * the element is destroyed because their key is based on this element's gen ID.
      */
     void addResourceInvalidationMessage(
-        GrProxyProvider* proxyProvider, const GrUniqueKey& key) const {
+        GrProxyProvider* proxyProvider, const skgpu::UniqueKey& key) const {
       SkASSERT(proxyProvider);
 
       if (!fProxyProvider) {
@@ -234,9 +234,9 @@ class SkClipStack {
     uint32_t fGenID;
 #if SK_SUPPORT_GPU
     mutable GrProxyProvider* fProxyProvider = nullptr;
-    mutable SkTArray<GrUniqueKey> fKeysToInvalidate;
+    mutable SkTArray<skgpu::UniqueKey> fKeysToInvalidate;
 #endif
-    Element(int saveCount) {
+    Element(int saveCount) noexcept {
       this->initCommon(saveCount, SkClipOp::kIntersect, false);
       this->setEmpty();
     }
@@ -253,11 +253,11 @@ class SkClipStack {
       this->initPath(saveCount, path, m, op, doAA);
     }
 
-    Element(int saveCount, sk_sp<SkShader> shader) {
+    Element(int saveCount, sk_sp<SkShader> shader) noexcept {
       this->initShader(saveCount, std::move(shader));
     }
 
-    Element(int saveCount, const SkRect& rect, bool doAA) {
+    Element(int saveCount, const SkRect& rect, bool doAA) noexcept {
       this->initReplaceRect(saveCount, rect, doAA);
     }
 
@@ -273,11 +273,11 @@ class SkClipStack {
 
     // All Element methods below are only used within SkClipStack.cpp
     inline void checkEmpty() const noexcept;
-    inline bool canBeIntersectedInPlace(int saveCount, SkClipOp op) const;
+    inline bool canBeIntersectedInPlace(int saveCount, SkClipOp op) const noexcept;
     /* This method checks to see if two rect clips can be safely merged into one. The issue here
       is that to be strictly correct all the edges of the resulting rect must have the same
       anti-aliasing. */
-    bool rectRectIntersectAllowed(const SkRect& newR, bool newAA) const;
+    bool rectRectIntersectAllowed(const SkRect& newR, bool newAA) const noexcept;
     /** Determines possible finite bounds for the Element given the previous element of the
         stack */
     void updateBoundAndGenID(const Element* prior);
@@ -289,16 +289,16 @@ class SkClipStack {
       kInvPrev_InvCur_FillCombo
     };
     // per-set operation functions used by updateBoundAndGenID().
-    inline void combineBoundsDiff(FillCombo combination, const SkRect& prevFinite);
-    inline void combineBoundsIntersection(int combination, const SkRect& prevFinite);
+    inline void combineBoundsDiff(FillCombo combination, const SkRect& prevFinite) noexcept;
+    inline void combineBoundsIntersection(int combination, const SkRect& prevFinite) noexcept;
   };
 
   SkClipStack();
   SkClipStack(void* storage, size_t size) noexcept;
-  SkClipStack(const SkClipStack& b) noexcept;
+  SkClipStack(const SkClipStack& b);
   ~SkClipStack();
 
-  SkClipStack& operator=(const SkClipStack& b) noexcept;
+  SkClipStack& operator=(const SkClipStack& b);
   bool operator==(const SkClipStack& b) const;
   bool operator!=(const SkClipStack& b) const { return !(*this == b); }
 
@@ -400,7 +400,7 @@ class SkClipStack {
   static const uint32_t kEmptyGenID = 1;     // no pixels writeable
   static const uint32_t kWideOpenGenID = 2;  // all pixels writeable
 
-  uint32_t getTopmostGenID() const noexcept;
+  uint32_t getTopmostGenID() const;
 
 #ifdef SK_DEBUG
   /**
@@ -436,7 +436,7 @@ class SkClipStack {
      * Moves the iterator to the topmost element with the specified RegionOp and returns that
      * element. If no clip element with that op is found, the first element is returned.
      */
-    const Element* skipToTopmost(SkClipOp op) noexcept;
+    const Element* skipToTopmost(SkClipOp op);
 
     /**
      * Restarts the iterator on a clip stack.
@@ -460,7 +460,7 @@ class SkClipStack {
      * Wrap Iter's 2 parameter ctor to force initialization to the
      * beginning of the deque/bottom of the stack
      */
-    B2TIter(const SkClipStack& stack) noexcept : INHERITED(stack, kBottom_IterStart) {}
+    B2TIter(const SkClipStack& stack) : INHERITED(stack, kBottom_IterStart) {}
 
     using Iter::next;
 

@@ -7,45 +7,23 @@
 
 #include "include/sksl/SkSLErrorReporter.h"
 
+#include "include/private/SkStringView.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/SkSLCompiler.h"
-#include "src/sksl/dsl/priv/DSLWriter.h"
 
 namespace SkSL {
 
-void ErrorReporter::error(skstd::string_view msg, PositionInfo position) {
-  if (msg./*contains*/ find(Compiler::POISON_TAG) != skstd::string_view::npos) {
-    // don't report errors on poison values
+void ErrorReporter::error(Position position, std::string_view msg) {
+  if (skstd::contains(msg, Compiler::POISON_TAG)) {
+    // Don't report errors on poison values.
     return;
   }
   ++fErrorCount;
   this->handleError(msg, position);
 }
 
-void ErrorReporter::error(int offset, skstd::string_view msg) {
-  if (msg./*contains*/ find(Compiler::POISON_TAG) != skstd::string_view::npos) {
-    // don't report errors on poison values
-    return;
-  }
-  if (offset == -1) {
-    ++fErrorCount;
-    fPendingErrors.push_back(String(msg));
-  } else {
-    this->error(msg, this->position(offset));
-  }
-}
-
-PositionInfo ErrorReporter::position(int offset) const {
-  if (fSource && offset >= 0) {
-    int line = 1;
-    for (int i = 0; i < offset; i++) {
-      if (fSource[i] == '\n') {
-        ++line;
-      }
-    }
-    return PositionInfo(/*file=*/nullptr, line);
-  } else {
-    return PositionInfo();
-  }
+void TestingOnly_AbortErrorReporter::handleError(std::string_view msg, Position pos) {
+  SK_ABORT("%.*s", (int)msg.length(), msg.data());
 }
 
 }  // namespace SkSL

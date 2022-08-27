@@ -23,7 +23,7 @@ SkPathBuilder::SkPathBuilder(SkPathFillType ft) {
 
 SkPathBuilder::SkPathBuilder(const SkPath& src) { *this = src; }
 
-SkPathBuilder::~SkPathBuilder() = default;
+SkPathBuilder::~SkPathBuilder() {}
 
 SkPathBuilder& SkPathBuilder::reset() {
   fPts.reset();
@@ -38,9 +38,6 @@ SkPathBuilder& SkPathBuilder::reset() {
   fLastMovePoint = {0, 0};
   fLastMoveIndex = -1;  // illegal
   fNeedsMoveVerb = true;
-
-  // testing
-  fOverrideConvexity = SkPathConvexity::kUnknown;
 
   return *this;
 }
@@ -195,10 +192,6 @@ SkPath SkPathBuilder::make(sk_sp<SkPathRef> pr) const {
       dir = fIsACCW ? SkPathFirstDirection::kCCW : SkPathFirstDirection::kCW;
       break;
     default: break;
-  }
-
-  if (fOverrideConvexity != SkPathConvexity::kUnknown) {
-    convexity = fOverrideConvexity;
   }
 
   // Wonder if we can combine convexity and dir internally...

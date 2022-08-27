@@ -22,37 +22,33 @@
 
 namespace {
 class AnimatedSVGSample : public Sample {
-    static constexpr auto kAnimationIterations = 5;
-    enum State {
-        kZoomIn,
-        kScroll,
-        kZoomOut
-    };
-    sk_sp<SkSVGDOM> fDom;
-    const char*     fResource = nullptr;
-    const char*     fName = nullptr;
-    State           fState = kZoomIn;
-    int             fAnimationLoop = kAnimationIterations;
-    SkScalar        fDelta = 1;
+  inline static constexpr auto kAnimationIterations = 5;
+  enum State { kZoomIn, kScroll, kZoomOut };
+  sk_sp<SkSVGDOM> fDom;
+  const char* fResource = nullptr;
+  const char* fName = nullptr;
+  State fState = kZoomIn;
+  int fAnimationLoop = kAnimationIterations;
+  SkScalar fDelta = 1;
 
-public:
-    AnimatedSVGSample(const char* r, const char* n) : fResource(r), fName(n) {}
+ public:
+  AnimatedSVGSample(const char* r, const char* n) : fResource(r), fName(n) {}
 
-private:
-    void onOnceBeforeDraw() override {
-        SkASSERT(fResource);
-        auto data = GetResourceAsData(fResource);
-        if (!data) {
-            SkDebugf("Resource not found: \"%s\"\n", fResource);
-            return;
-        }
-        SkMemoryStream svgStream(std::move(data));
-
-        fDom = SkSVGDOM::MakeFromStream(svgStream);
-        if (fDom) {
-            fDom->setContainerSize(SkSize::Make(this->width(), this->height()));
-        }
+ private:
+  void onOnceBeforeDraw() override {
+    SkASSERT(fResource);
+    auto data = GetResourceAsData(fResource);
+    if (!data) {
+      SkDebugf("Resource not found: \"%s\"\n", fResource);
+      return;
     }
+    SkMemoryStream svgStream(std::move(data));
+
+    fDom = SkSVGDOM::MakeFromStream(svgStream);
+    if (fDom) {
+      fDom->setContainerSize(SkSize::Make(this->width(), this->height()));
+    }
+  }
 
     void onDrawContent(SkCanvas* canvas) override {
         if (fDom) {

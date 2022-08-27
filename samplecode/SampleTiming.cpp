@@ -12,17 +12,16 @@
 #include <chrono>
 
 struct TimingSample : public Sample {
-    static constexpr int W = 24,
-                         H = 16;
-    sk_sp<SkImage> fImg;
+  inline static constexpr int W = 24, H = 16;
+  sk_sp<SkImage> fImg;
 
-    SkString name() override { return SkString("Timing"); }
+  SkString name() override { return SkString("Timing"); }
 
-    void onOnceBeforeDraw() override {
-        sk_sp<SkSurface> surf = SkSurface::MakeRasterN32Premul(W,H);
-        surf->getCanvas()->drawString("abc", 2,H-4, SkFont{}, SkPaint{});
-        fImg = surf->makeImageSnapshot();
-    }
+  void onOnceBeforeDraw() override {
+    sk_sp<SkSurface> surf = SkSurface::MakeRasterN32Premul(W, H);
+    surf->getCanvas()->drawString("abc", 2, H - 4, SkFont{}, SkPaint{});
+    fImg = surf->makeImageSnapshot();
+  }
 
     void onDrawContent(SkCanvas* canvas) override {
         canvas->scale(8,8);

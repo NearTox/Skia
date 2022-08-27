@@ -468,7 +468,6 @@ void Editor::reshapeAll() {
       semaphore.wait();
     }
 #else
-    int i = 0;
     for (TextLine& line : fLines) {
       if (!line.fShaped) {
         ShapeResult result =
@@ -480,7 +479,6 @@ void Editor::reshapeAll() {
         line.fHeight = result.verticalAdvance;
         line.fShaped = true;
       }
-      ++i;
     }
 #endif
     int y = 0;

@@ -268,7 +268,7 @@ struct SK_API SkPoint {
 
       @return  straight-line distance to origin
   */
-  SkScalar length() const { return SkPoint::Length(fX, fY); }
+  SkScalar length() const noexcept { return SkPoint::Length(fX, fY); }
 
   /** Returns the Euclidean distance from origin, computed as:
 
@@ -278,7 +278,7 @@ struct SK_API SkPoint {
 
       @return  straight-line distance to origin
   */
-  SkScalar distanceToOrigin() const { return this->length(); }
+  SkScalar distanceToOrigin() const noexcept { return this->length(); }
 
   /** Scales (fX, fY) so that length() returns one, while preserving ratio of fX to fY,
       if possible. If prior length is nearly zero, sets vector to (0, 0) and returns
@@ -288,7 +288,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_normalize_2
   */
-  bool normalize();
+  bool normalize() noexcept;
 
   /** Sets vector to (x, y) scaled so length() returns one, and so that
       (fX, fY) is proportional to (x, y).  If (x, y) length is nearly zero,
@@ -300,7 +300,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_setNormalize
   */
-  bool setNormalize(SkScalar x, SkScalar y);
+  bool setNormalize(SkScalar x, SkScalar y) noexcept;
 
   /** Scales vector so that distanceToOrigin() returns length, if possible. If former
       length is nearly zero, sets vector to (0, 0) and return false; otherwise returns
@@ -311,7 +311,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_setLength
   */
-  bool setLength(SkScalar length);
+  bool setLength(SkScalar length) noexcept;
 
   /** Sets vector to (x, y) scaled to length, if possible. If former
       length is nearly zero, sets vector to (0, 0) and return false; otherwise returns
@@ -324,7 +324,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_setLength_2
   */
-  bool setLength(SkScalar x, SkScalar y, SkScalar length);
+  bool setLength(SkScalar x, SkScalar y, SkScalar length) noexcept;
 
   /** Sets dst to SkPoint times scale. dst may be SkPoint to modify SkPoint in place.
 
@@ -333,13 +333,13 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_scale
   */
-  void scale(SkScalar scale, SkPoint* dst) const;
+  void scale(SkScalar scale, SkPoint* dst) const noexcept;
 
   /** Scales SkPoint in place by scale.
 
       @param value  factor to multiply SkPoint by
   */
-  void scale(SkScalar value) { this->scale(value, this); }
+  void scale(SkScalar value) noexcept { this->scale(value, this); }
 
   /** Changes the sign of fX and fY.
    */
@@ -474,7 +474,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_Length
   */
-  static SkScalar Length(SkScalar x, SkScalar y);
+  static SkScalar Length(SkScalar x, SkScalar y) noexcept;
 
   /** Scales (vec->fX, vec->fY) so that length() returns one, while preserving ratio of vec->fX
       to vec->fY, if possible. If original length is nearly zero, sets vec to (0, 0) and returns
@@ -489,7 +489,7 @@ struct SK_API SkPoint {
 
       example: https://fiddle.skia.org/c/@Point_Normalize
   */
-  static SkScalar Normalize(SkVector* vec);
+  static SkScalar Normalize(SkVector* vec) noexcept;
 
   /** Returns the Euclidean distance between a and b.
 
@@ -497,7 +497,7 @@ struct SK_API SkPoint {
       @param b  line end point
       @return   straight-line distance from a to b
   */
-  static SkScalar Distance(const SkPoint& a, const SkPoint& b) {
+  static SkScalar Distance(const SkPoint& a, const SkPoint& b) noexcept {
     return Length(a.fX - b.fX, a.fY - b.fY);
   }
 

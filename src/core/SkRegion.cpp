@@ -45,7 +45,7 @@ class RunArray {
 #ifdef SK_DEBUG
   int count() const { return fCount; }
 #endif
-  SkRegionPriv::RunType& operator[](int i) noexcept {
+  SkRegionPriv::RunType& operator[](int i) {
     SkASSERT((unsigned)i < (unsigned)fCount);
     return fPtr[i];
   }
@@ -74,7 +74,7 @@ class RunArray {
  *  We back up 1 to read the interval-count.
  *  Return the beginning of the next scanline (i.e. the next Y-value)
  */
-static SkRegionPriv::RunType* skip_intervals(const SkRegionPriv::RunType runs[]) noexcept {
+static SkRegionPriv::RunType* skip_intervals(const SkRegionPriv::RunType runs[]) {
   int intervals = runs[-1];
 #ifdef SK_DEBUG
   if (intervals > 0) {
@@ -89,7 +89,7 @@ static SkRegionPriv::RunType* skip_intervals(const SkRegionPriv::RunType runs[])
   return const_cast<SkRegionPriv::RunType*>(runs);
 }
 
-bool SkRegion::RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* bounds) noexcept {
+bool SkRegion::RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* bounds) {
   assert_sentinel(runs[0], false);  // top
   SkASSERT(count >= kRectRegionRuns);
 
@@ -159,7 +159,7 @@ void SkRegion::swap(SkRegion& other) noexcept {
   swap(fRunHead, other.fRunHead);
 }
 
-int SkRegion::computeRegionComplexity() const noexcept {
+int SkRegion::computeRegionComplexity() const {
   if (this->isEmpty()) {
     return 0;
   } else if (this->isRect()) {
@@ -257,7 +257,7 @@ int SkRegion::count_runtype_values(int* itop, int* ibot) const {
   return maxT;
 }
 
-static constexpr bool isRunCountEmpty(int count) noexcept { return count <= 2; }
+static bool isRunCountEmpty(int count) { return count <= 2; }
 
 bool SkRegion::setRuns(RunType runs[], int count) {
   SkDEBUGCODE(SkRegionPriv::Validate(*this));
@@ -333,7 +333,7 @@ bool SkRegion::setRuns(RunType runs[], int count) {
   return true;
 }
 
-void SkRegion::BuildRectRuns(const SkIRect& bounds, RunType runs[kRectRegionRuns]) noexcept {
+void SkRegion::BuildRectRuns(const SkIRect& bounds, RunType runs[kRectRegionRuns]) {
   runs[0] = bounds.fTop;
   runs[1] = bounds.fBottom;
   runs[2] = 1;  // 1 interval for this scanline
@@ -377,17 +377,15 @@ bool SkRegion::contains(int32_t x, int32_t y) const {
   return false;
 }
 
-static SkRegionPriv::RunType scanline_bottom(const SkRegionPriv::RunType runs[]) noexcept {
-  return runs[0];
-}
+static SkRegionPriv::RunType scanline_bottom(const SkRegionPriv::RunType runs[]) { return runs[0]; }
 
-static const SkRegionPriv::RunType* scanline_next(const SkRegionPriv::RunType runs[]) noexcept {
+static const SkRegionPriv::RunType* scanline_next(const SkRegionPriv::RunType runs[]) {
   // skip [B N [L R]... S]
   return runs + 2 + runs[1] * 2 + 1;
 }
 
 static bool scanline_contains(
-    const SkRegionPriv::RunType runs[], SkRegionPriv::RunType L, SkRegionPriv::RunType R) noexcept {
+    const SkRegionPriv::RunType runs[], SkRegionPriv::RunType L, SkRegionPriv::RunType R) {
   runs += 2;  // skip Bottom and IntervalCount
   for (;;) {
     if (L < runs[0]) {
@@ -466,7 +464,7 @@ const SkRegion::RunType* SkRegion::getRuns(RunType tmpStorage[], int* intervals)
 ///////////////////////////////////////////////////////////////////////////////
 
 static bool scanline_intersects(
-    const SkRegionPriv::RunType runs[], SkRegionPriv::RunType L, SkRegionPriv::RunType R) noexcept {
+    const SkRegionPriv::RunType runs[], SkRegionPriv::RunType L, SkRegionPriv::RunType R) {
   runs += 2;  // skip Bottom and IntervalCount
   for (;;) {
     if (R <= runs[0]) {
@@ -537,7 +535,7 @@ bool SkRegion::intersects(const SkRegion& rgn) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool SkRegion::operator==(const SkRegion& b) const noexcept {
+bool SkRegion::operator==(const SkRegion& b) const {
   SkDEBUGCODE(SkRegionPriv::Validate(*this));
   SkDEBUGCODE(SkRegionPriv::Validate(b));
 
@@ -565,9 +563,9 @@ bool SkRegion::operator==(const SkRegion& b) const noexcept {
 }
 
 // Return a (new) offset such that when applied (+=) to min and max, we don't overflow/underflow
-static constexpr int32_t pin_offset_s32(int32_t min, int32_t max, int32_t offset) noexcept {
+static int32_t pin_offset_s32(int32_t min, int32_t max, int32_t offset) {
   SkASSERT(min <= max);
-  constexpr int32_t lo = -SK_MaxS32 - 1, hi = +SK_MaxS32;
+  const int32_t lo = -SK_MaxS32 - 1, hi = +SK_MaxS32;
   if ((int64_t)min + offset < lo) {
     offset = lo - min;
   }
@@ -671,7 +669,7 @@ struct spanRec {
   int fA_left, fA_rite, fB_left, fB_rite;
   int fLeft, fRite, fInside;
 
-  void init(const SkRegionPriv::RunType a_runs[], const SkRegionPriv::RunType b_runs[]) noexcept {
+  void init(const SkRegionPriv::RunType a_runs[], const SkRegionPriv::RunType b_runs[]) {
     fA_left = *a_runs++;
     fA_rite = *a_runs++;
     fB_left = *b_runs++;
@@ -681,13 +679,13 @@ struct spanRec {
     fB_runs = b_runs;
   }
 
-  bool done() const noexcept {
+  bool done() const {
     SkASSERT(fA_left <= SkRegion_kRunTypeSentinel);
     SkASSERT(fB_left <= SkRegion_kRunTypeSentinel);
     return fA_left == SkRegion_kRunTypeSentinel && fB_left == SkRegion_kRunTypeSentinel;
   }
 
-  void next() noexcept {
+  void next() {
     assert_valid_pair(fA_left, fA_rite);
     assert_valid_pair(fB_left, fB_rite);
 
@@ -754,7 +752,7 @@ struct spanRec {
   }
 };
 
-static int distance_to_sentinel(const SkRegionPriv::RunType* runs) noexcept {
+static int distance_to_sentinel(const SkRegionPriv::RunType* runs) {
   const SkRegionPriv::RunType* ptr = runs;
   while (*ptr != SkRegion_kRunTypeSentinel) {
     ptr += 2;
@@ -819,7 +817,7 @@ static_assert(3 == SkRegion::kXOR_Op, "");
 
 class RgnOper {
  public:
-  RgnOper(int top, RunArray* array, SkRegion::Op op) noexcept
+  RgnOper(int top, RunArray* array, SkRegion::Op op)
       : fMin(gOpMinMax[op].fMin),
         fMax(gOpMinMax[op].fMax),
         fArray(array),
@@ -857,7 +855,7 @@ class RgnOper {
     }
   }
 
-  int flush() noexcept {
+  int flush() {
     (*fArray)[fStartDst] = fTop;
     // Previously reserved enough for TWO sentinals.
     SkASSERT(fArray->count() > SkToInt(fPrevDst + fPrevLen));
@@ -865,7 +863,7 @@ class RgnOper {
     return (int)(fPrevDst - fStartDst + fPrevLen + 1);
   }
 
-  bool isEmpty() const noexcept { return 0 == fPrevLen; }
+  bool isEmpty() const { return 0 == fPrevLen; }
 
   uint8_t fMin, fMax;
 
@@ -1003,13 +1001,13 @@ static int count_to_intervals(int count) {
 }
 #endif
 
-static bool setEmptyCheck(SkRegion* result) noexcept { return result ? result->setEmpty() : false; }
+static bool setEmptyCheck(SkRegion* result) { return result ? result->setEmpty() : false; }
 
-static bool setRectCheck(SkRegion* result, const SkIRect& rect) noexcept {
+static bool setRectCheck(SkRegion* result, const SkIRect& rect) {
   return result ? result->setRect(rect) : !rect.isEmpty();
 }
 
-static bool setRegionCheck(SkRegion* result, const SkRegion& rgn) noexcept {
+static bool setRegionCheck(SkRegion* result, const SkRegion& rgn) {
   return result ? result->setRegion(rgn) : !rgn.isEmpty();
 }
 
@@ -1152,7 +1150,7 @@ size_t SkRegion::writeToMemory(void* storage) const {
   return buffer.pos();
 }
 
-static bool validate_run_count(int ySpanCount, int intervalCount, int runCount) noexcept {
+static bool validate_run_count(int ySpanCount, int intervalCount, int runCount) {
   // return 2 + 3 * ySpanCount + 2 * intervalCount;
   if (ySpanCount < 1 || intervalCount < 2) {
     return false;
@@ -1324,9 +1322,9 @@ void SkRegion::dump() const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkRegion::Iterator::Iterator(const SkRegion& rgn) noexcept { this->reset(rgn); }
+SkRegion::Iterator::Iterator(const SkRegion& rgn) { this->reset(rgn); }
 
-bool SkRegion::Iterator::rewind() noexcept {
+bool SkRegion::Iterator::rewind() {
   if (fRgn) {
     this->reset(*fRgn);
     return true;
@@ -1334,7 +1332,7 @@ bool SkRegion::Iterator::rewind() noexcept {
   return false;
 }
 
-void SkRegion::Iterator::reset(const SkRegion& rgn) noexcept {
+void SkRegion::Iterator::reset(const SkRegion& rgn) {
   fRgn = &rgn;
   if (rgn.isEmpty()) {
     fDone = true;
@@ -1352,7 +1350,7 @@ void SkRegion::Iterator::reset(const SkRegion& rgn) noexcept {
   }
 }
 
-void SkRegion::Iterator::next() noexcept {
+void SkRegion::Iterator::next() {
   if (fDone) {
     return;
   }
@@ -1392,7 +1390,7 @@ void SkRegion::Iterator::next() noexcept {
   fRuns = runs;
 }
 
-SkRegion::Cliperator::Cliperator(const SkRegion& rgn, const SkIRect& clip) noexcept
+SkRegion::Cliperator::Cliperator(const SkRegion& rgn, const SkIRect& clip)
     : fIter(rgn), fClip(clip), fDone(true) {
   const SkIRect& r = fIter.rect();
 
@@ -1408,7 +1406,7 @@ SkRegion::Cliperator::Cliperator(const SkRegion& rgn, const SkIRect& clip) noexc
   }
 }
 
-void SkRegion::Cliperator::next() noexcept {
+void SkRegion::Cliperator::next() {
   if (fDone) {
     return;
   }
@@ -1473,7 +1471,7 @@ SkRegion::Spanerator::Spanerator(const SkRegion& rgn, int y, int left, int right
   }
 }
 
-bool SkRegion::Spanerator::next(int* left, int* right) noexcept {
+bool SkRegion::Spanerator::next(int* left, int* right) {
   if (fDone) {
     return false;
   }

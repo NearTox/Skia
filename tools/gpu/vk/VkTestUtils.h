@@ -21,14 +21,15 @@ class GrVkExtensions;
 struct GrVkBackendContext;
 
 namespace sk_gpu_test {
-bool LoadVkLibraryAndGetProcAddrFuncs(PFN_vkGetInstanceProcAddr*, PFN_vkGetDeviceProcAddr*);
+bool LoadVkLibraryAndGetProcAddrFuncs(PFN_vkGetInstanceProcAddr*);
 
 using CanPresentFn = std::function<bool(VkInstance, VkPhysicalDevice, uint32_t queueFamilyIndex)>;
 
 bool CreateVkBackendContext(
-    GrVkGetProc getProc, GrVkBackendContext* ctx, GrVkExtensions*, VkPhysicalDeviceFeatures2*,
-    VkDebugReportCallbackEXT* debugCallback, uint32_t* presentQueueIndexPtr = nullptr,
-    CanPresentFn canPresent = CanPresentFn(), bool isProtected = false);
+    PFN_vkGetInstanceProcAddr getInstProc, GrVkBackendContext* ctx, GrVkExtensions*,
+    VkPhysicalDeviceFeatures2*, VkDebugReportCallbackEXT* debugCallback,
+    uint32_t* presentQueueIndexPtr = nullptr, CanPresentFn canPresent = CanPresentFn(),
+    bool isProtected = false);
 
 void FreeVulkanFeaturesStructs(const VkPhysicalDeviceFeatures2*);
 }  // namespace sk_gpu_test

@@ -8,9 +8,10 @@
 #include "include/private/SkPathRef.h"
 
 #include "include/core/SkPath.h"
-#include "include/private/SkNx.h"
+#include "include/core/SkRRect.h"
 #include "include/private/SkOnce.h"
 #include "include/private/SkTo.h"
+#include "include/private/SkVx.h"
 #include "src/core/SkBuffer.h"
 #include "src/core/SkPathPriv.h"
 #include "src/core/SkSafeMath.h"
@@ -54,7 +55,7 @@ void SkPath::shrinkToFit() {
 
 //////////////////////////////////////////////////////////////////////////////
 
-size_t SkPathRef::approximateBytesUsed() const noexcept {
+size_t SkPathRef::approximateBytesUsed() const {
   return sizeof(SkPathRef) + fPoints.reserved() * sizeof(fPoints[0]) +
          fVerbs.reserved() * sizeof(fVerbs[0]) +
          fConicWeights.reserved() * sizeof(fConicWeights[0]);
@@ -237,7 +238,7 @@ void SkPathRef::Rewind(sk_sp<SkPathRef>* pathRef) {
   }
 }
 
-bool SkPathRef::operator==(const SkPathRef& ref) const noexcept {
+bool SkPathRef::operator==(const SkPathRef& ref) const {
   SkDEBUGCODE(this->validate();)
   SkDEBUGCODE(ref.validate();)
 
@@ -292,7 +293,7 @@ void SkPathRef::writeToBuffer(SkWBuffer* buffer) const {
   SkASSERT(buffer->pos() - beforePos == (size_t)this->writeSize());
 }
 
-uint32_t SkPathRef::writeSize() const noexcept {
+uint32_t SkPathRef::writeSize() const {
   return uint32_t(
       5 * sizeof(uint32_t) + fVerbs.bytes() + fPoints.bytes() + fConicWeights.bytes() +
       sizeof(SkRect));
@@ -480,7 +481,7 @@ void SkPathRef::addGenIDChangeListener(sk_sp<SkIDChangeListener> listener) {
   fGenIDChangeListeners.add(std::move(listener));
 }
 
-int SkPathRef::genIDChangeListenerCount() noexcept { return fGenIDChangeListeners.count(); }
+int SkPathRef::genIDChangeListenerCount() { return fGenIDChangeListeners.count(); }
 
 // we need to be called *before* the genID gets changed or zerod
 void SkPathRef::callGenIDChangeListeners() { fGenIDChangeListeners.changed(); }
@@ -525,9 +526,24 @@ SkRRect SkPathRef::getRRect() const {
   return rrect;
 }
 
+bool SkPathRef::isRRect(SkRRect* rrect, bool* isCCW, unsigned* start) const {
+  if (fIsRRect) {
+    if (rrect) {
+      *rrect = this->getRRect();
+    }
+    if (isCCW) {
+      *isCCW = SkToBool(fRRectOrOvalIsCCW);
+    }
+    if (start) {
+      *start = fRRectOrOvalStartIdx;
+    }
+  }
+  return SkToBool(fIsRRect);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
-SkPathRef::Iter::Iter() noexcept {
+SkPathRef::Iter::Iter() {
 #ifdef SK_DEBUG
   fPts = nullptr;
   fConicWeights = nullptr;
@@ -537,9 +553,9 @@ SkPathRef::Iter::Iter() noexcept {
   fVerbStop = nullptr;
 }
 
-SkPathRef::Iter::Iter(const SkPathRef& path) noexcept { this->setPathRef(path); }
+SkPathRef::Iter::Iter(const SkPathRef& path) { this->setPathRef(path); }
 
-void SkPathRef::Iter::setPathRef(const SkPathRef& path) noexcept {
+void SkPathRef::Iter::setPathRef(const SkPathRef& path) {
   fPts = path.points();
   fVerbs = path.verbsBegin();
   fVerbStop = path.verbsEnd();
@@ -554,7 +570,7 @@ void SkPathRef::Iter::setPathRef(const SkPathRef& path) noexcept {
   }
 }
 
-uint8_t SkPathRef::Iter::next(SkPoint pts[4]) noexcept {
+uint8_t SkPathRef::Iter::next(SkPoint pts[4]) {
   SkASSERT(pts);
 
   SkDEBUGCODE(unsigned peekResult = this->peek();)
@@ -600,11 +616,11 @@ uint8_t SkPathRef::Iter::next(SkPoint pts[4]) noexcept {
   return (uint8_t)verb;
 }
 
-uint8_t SkPathRef::Iter::peek() const noexcept {
+uint8_t SkPathRef::Iter::peek() const {
   return fVerbs < fVerbStop ? *fVerbs : (uint8_t)SkPath::kDone_Verb;
 }
 
-bool SkPathRef::isValid() const noexcept {
+bool SkPathRef::isValid() const {
   if (fIsOval || fIsRRect) {
     // Currently we don't allow both of these to be set, even though ovals are ro
     if (fIsOval == fIsRRect) {
@@ -623,12 +639,12 @@ bool SkPathRef::isValid() const noexcept {
 
   if (!fBoundsIsDirty && !fBounds.isEmpty()) {
     bool isFinite = true;
-    Sk2s leftTop = Sk2s(fBounds.fLeft, fBounds.fTop);
-    Sk2s rightBot = Sk2s(fBounds.fRight, fBounds.fBottom);
+    auto leftTop = skvx::float2(fBounds.fLeft, fBounds.fTop);
+    auto rightBot = skvx::float2(fBounds.fRight, fBounds.fBottom);
     for (int i = 0; i < fPoints.count(); ++i) {
-      Sk2s point = Sk2s(fPoints[i].fX, fPoints[i].fY);
+      auto point = skvx::float2(fPoints[i].fX, fPoints[i].fY);
 #ifdef SK_DEBUG
-      if (fPoints[i].isFinite() && ((point < leftTop).anyTrue() || (point > rightBot).anyTrue())) {
+      if (fPoints[i].isFinite() && (any(point < leftTop) || any(point > rightBot))) {
         SkDebugf(
             "bad SkPathRef bounds: %g %g %g %g\n", fBounds.fLeft, fBounds.fTop, fBounds.fRight,
             fBounds.fBottom);
@@ -642,8 +658,7 @@ bool SkPathRef::isValid() const noexcept {
       }
 #endif
 
-      if (fPoints[i].isFinite() && (point < leftTop).anyTrue() && !(point > rightBot).anyTrue())
-        return false;
+      if (fPoints[i].isFinite() && any(point < leftTop) && !any(point > rightBot)) return false;
       if (!fPoints[i].isFinite()) {
         isFinite = false;
       }
@@ -662,7 +677,7 @@ bool SkPathRef::dataMatchesVerbs() const {
 }
 //////////////////////////////////////////////////////////////////////////////////////////////////
 
-SkPathEdgeIter::SkPathEdgeIter(const SkPath& path) noexcept {
+SkPathEdgeIter::SkPathEdgeIter(const SkPath& path) {
   fMoveToPtr = fPts = path.fPathRef->points();
   fVerbs = path.fPathRef->verbsBegin();
   fVerbsStop = path.fPathRef->verbsEnd();

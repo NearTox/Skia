@@ -32,12 +32,12 @@ void draw(SkCanvas* canvas) {
 
     if (auto dContext = GrAsDirectContext(canvas->recordingContext())) {
       sk_sp<SkImage> tmp = SkImage::MakeFromTexture(
-          dContext, backEndTexture->texture(), kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
+          dContext, backEndTexture, kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType,
           kOpaque_SkAlphaType, nullptr);
 
       constexpr int kSampleCnt = 0;
       sk_sp<SkSurface> tmp2 = SkSurface::MakeFromBackendTexture(
-          dContext, backEndTextureRenderTarget->texture(), kTopLeft_GrSurfaceOrigin, kSampleCnt,
+          dContext, backEndTextureRenderTarget, kTopLeft_GrSurfaceOrigin, kSampleCnt,
           kRGBA_8888_SkColorType, nullptr, nullptr);
 
       // Note: this surface should only be renderable (i.e., not textureable)

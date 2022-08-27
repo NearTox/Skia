@@ -22,9 +22,9 @@ enum Flags : uint8_t {
 
 }  // namespace
 
-RenderNode::RenderNode(uint32_t inval_traits) noexcept : INHERITED(inval_traits) {}
+RenderNode::RenderNode(uint32_t inval_traits) : INHERITED(inval_traits) {}
 
-bool RenderNode::isVisible() const noexcept { return !(fNodeFlags & kInvisible_Flag); }
+bool RenderNode::isVisible() const { return !(fNodeFlags & kInvisible_Flag); }
 
 void RenderNode::setVisible(bool v) {
   if (v == this->isVisible()) {
@@ -47,7 +47,7 @@ const RenderNode* RenderNode::nodeAt(const SkPoint& p) const {
   return this->bounds().contains(p.x(), p.y()) ? this->onNodeAt(p) : nullptr;
 }
 
-static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) noexcept {
+static SkAlpha ScaleAlpha(SkAlpha alpha, float opacity) {
   return SkToU8(sk_float_round2int(alpha * opacity));
 }
 
@@ -79,7 +79,7 @@ static sk_sp<SkShader> LocalShader(
   return shader->makeWithLocalMatrix(lm);
 }
 
-bool RenderNode::RenderContext::requiresIsolation() const noexcept {
+bool RenderNode::RenderContext::requiresIsolation() const {
   // Note: fShader is never applied on isolation layers.
   return ScaleAlpha(SK_AlphaOPAQUE, fOpacity) != SK_AlphaOPAQUE || fColorFilter || fMaskShader ||
          fBlendMode != SkBlendMode::kSrcOver;

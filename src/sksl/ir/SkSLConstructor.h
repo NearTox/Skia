@@ -9,17 +9,26 @@
 #define SKSL_CONSTRUCTOR
 
 #include "include/core/SkSpan.h"
-#include "src/sksl/SkSLIRGenerator.h"
+#include "include/private/SkSLDefines.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
+#include "src/sksl/ir/SkSLType.h"
+
+#include <memory>
+#include <optional>
+#include <string>
+#include <utility>
 
 namespace SkSL {
+
+class Context;
 
 /**
  * Base class representing a constructor with unknown arguments.
  */
 class AnyConstructor : public Expression {
  public:
-  AnyConstructor(int offset, Kind kind, const Type* type) : INHERITED(offset, kind, type) {}
+  AnyConstructor(Position pos, Kind kind, const Type* type) : INHERITED(pos, kind, type) {}
 
   virtual SkSpan<std::unique_ptr<Expression>> argumentSpan() = 0;
   virtual SkSpan<const std::unique_ptr<Expression>> argumentSpan() const = 0;
@@ -33,8 +42,8 @@ class AnyConstructor : public Expression {
     return false;
   }
 
-  String description() const override {
-    String result = this->type().description() + "(";
+  std::string description() const override {
+    std::string result = this->type().description() + "(";
     const char* separator = "";
     for (const std::unique_ptr<Expression>& arg : this->argumentSpan()) {
       result += separator;
@@ -56,23 +65,12 @@ class AnyConstructor : public Expression {
     return true;
   }
 
-  bool isConstantOrUniform() const override {
-    for (const std::unique_ptr<Expression>& arg : this->argumentSpan()) {
-      if (!arg->isConstantOrUniform()) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  bool allowsConstantSubexpressions() const override { return true; }
-  const Expression* getConstantSubexpression(int n) const override;
+  bool supportsConstantValues() const override { return true; }
+  std::optional<double> getConstantValue(int n) const override;
 
   ComparisonResult compareConstant(const Expression& other) const override;
 
  private:
-  std::unique_ptr<Expression> fArgument;
-
   using INHERITED = Expression;
 };
 
@@ -82,8 +80,8 @@ class AnyConstructor : public Expression {
 class SingleArgumentConstructor : public AnyConstructor {
  public:
   SingleArgumentConstructor(
-      int offset, Kind kind, const Type* type, std::unique_ptr<Expression> argument)
-      : INHERITED(offset, kind, type), fArgument(std::move(argument)) {}
+      Position pos, Kind kind, const Type* type, std::unique_ptr<Expression> argument)
+      : INHERITED(pos, kind, type), fArgument(std::move(argument)) {}
 
   std::unique_ptr<Expression>& argument() { return fArgument; }
 
@@ -104,21 +102,12 @@ class SingleArgumentConstructor : public AnyConstructor {
  */
 class MultiArgumentConstructor : public AnyConstructor {
  public:
-  MultiArgumentConstructor(int offset, Kind kind, const Type* type, ExpressionArray arguments)
-      : INHERITED(offset, kind, type), fArguments(std::move(arguments)) {}
+  MultiArgumentConstructor(Position pos, Kind kind, const Type* type, ExpressionArray arguments)
+      : INHERITED(pos, kind, type), fArguments(std::move(arguments)) {}
 
   ExpressionArray& arguments() { return fArguments; }
 
   const ExpressionArray& arguments() const { return fArguments; }
-
-  ExpressionArray cloneArguments() const {
-    ExpressionArray clonedArgs;
-    clonedArgs.reserve_back(this->arguments().size());
-    for (const std::unique_ptr<Expression>& arg : this->arguments()) {
-      clonedArgs.push_back(arg->clone());
-    }
-    return clonedArgs;
-  }
 
   SkSpan<std::unique_ptr<Expression>> argumentSpan() final {
     return {&fArguments.front(), fArguments.size()};
@@ -152,7 +141,7 @@ namespace Constructor {
 // Constructor expression types; this class chooses the proper one based on context, e.g.
 // `ConstructorCompound`, `ConstructorScalarCast`, or `ConstructorMatrixResize`.
 std::unique_ptr<Expression> Convert(
-    const Context& context, int offset, const Type& type, ExpressionArray args);
+    const Context& context, Position pos, const Type& type, ExpressionArray args);
 };  // namespace Constructor
 
 }  // namespace SkSL

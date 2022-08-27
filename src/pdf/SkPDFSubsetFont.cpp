@@ -3,10 +3,6 @@
 
 #include "src/pdf/SkPDFSubsetFont.h"
 
-#if defined(SK_USING_THIRD_PARTY_ICU)
-#  include "SkLoadICU.h"
-#endif
-
 #if defined(SK_PDF_USE_HARFBUZZ_SUBSET)
 
 #  include "include/private/SkTemplates.h"
@@ -82,11 +78,6 @@ struct SkPDFHarfBuzzSubset<
 
 static sk_sp<SkData> subset_harfbuzz(
     sk_sp<SkData> fontData, const SkPDFGlyphUse& glyphUsage, int ttcIndex) {
-#  if defined(SK_USING_THIRD_PARTY_ICU)
-  if (!SkLoadICU()) {
-    return nullptr;
-  }
-#  endif
   if (!fontData) {
     return nullptr;
   }
@@ -146,7 +137,7 @@ static sk_sp<SkData> subset_sfntly(
     return nullptr;
   }
   return SkData::MakeWithProc(
-      subsetFont, subsetFontSize, [](const void* p, void*) { delete[](unsigned char*) p; },
+      subsetFont, subsetFontSize, [](const void* p, void*) { delete[] (unsigned char*)p; },
       nullptr);
 }
 

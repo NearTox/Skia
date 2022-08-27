@@ -15,7 +15,7 @@ class SkIntersections;
 
 class SkTCurve {
  public:
-  virtual ~SkTCurve() = default;
+  virtual ~SkTCurve() {}
   virtual const SkDPoint& operator[](int n) const = 0;
   virtual SkDPoint& operator[](int n) = 0;
 

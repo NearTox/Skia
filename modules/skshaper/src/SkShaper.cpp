@@ -75,7 +75,7 @@ std::unique_ptr<SkShaper::ScriptRunIterator> SkShaper::MakeScriptRunIterator(
 }
 
 SkShaper::SkShaper() {}
-SkShaper::~SkShaper() = default;
+SkShaper::~SkShaper() {}
 
 /** Replaces invalid utf-8 sequences with REPLACEMENT CHARACTER U+FFFD. */
 static inline SkUnichar utf8_next(const char** ptr, const char* end) {

@@ -16,6 +16,7 @@
 #include "include/private/SkTemplates.h"
 #include "include/private/SkTo.h"
 
+#include <algorithm>
 #include <string.h>
 #include <initializer_list>
 #include <memory>
@@ -43,20 +44,20 @@ class SkTArray {
   /**
    * Creates an empty array with no initial storage
    */
-  SkTArray() { this->init(0); }
+  SkTArray() noexcept { this->init(0); }
 
   /**
    * Creates an empty array that will preallocate space for reserveCount
    * elements.
    */
-  explicit SkTArray(int reserveCount) : SkTArray() { this->reserve_back(reserveCount); }
+  explicit SkTArray(int reserveCount) noexcept : SkTArray() { this->reserve_back(reserveCount); }
 
   /**
    * Copies one array to another. The new array will be heap allocated.
    */
   SkTArray(const SkTArray& that) : SkTArray(that.fItemArray, that.fCount) {}
 
-  SkTArray(SkTArray&& that) {
+  SkTArray(SkTArray&& that) noexcept {
     if (that.fOwnMemory) {
       fItemArray = that.fItemArray;
       fCount = that.fCount;
@@ -103,7 +104,7 @@ class SkTArray {
     this->copy(that.fItemArray);
     return *this;
   }
-  SkTArray& operator=(SkTArray&& that) {
+  SkTArray& operator=(SkTArray&& that) noexcept {
     if (this == &that) {
       return *this;
     }
@@ -130,7 +131,7 @@ class SkTArray {
   /**
    * Resets to count() == 0 and resets any reserve count.
    */
-  void reset() {
+  void reset() noexcept {
     this->pop_back_n(fCount);
     fReserved = false;
   }
@@ -138,7 +139,7 @@ class SkTArray {
   /**
    * Resets to count() = n newly constructed T objects and resets any reserve count.
    */
-  void reset(int n) {
+  void reset(int n) noexcept(noexcept(T())) {
     SkASSERT(n >= 0);
     for (int i = 0; i < this->count(); ++i) {
       fItemArray[i].~T();
@@ -172,7 +173,7 @@ class SkTArray {
    * until the array size grows above n and subsequently shrinks below n, any version of reset()
    * is called, or reserve_back() is called again.
    */
-  void reserve_back(int n) {
+  void reserve_back(int n) noexcept {
     SkASSERT(n >= 0);
     if (n > 0) {
       this->checkRealloc(n, kExactFit);
@@ -182,7 +183,7 @@ class SkTArray {
     }
   }
 
-  void removeShuffle(int n) {
+  void removeShuffle(int n) noexcept {
     SkASSERT(n < this->count());
     int newCount = fCount - 1;
     fCount = newCount;
@@ -330,7 +331,7 @@ class SkTArray {
 
   /** Swaps the contents of this array with that array. Does a pointer swap if possible,
       otherwise copies the T values. */
-  void swap(SkTArray& that) {
+  void swap(SkTArray& that) noexcept {
     using std::swap;
     if (this == &that) {
       return;
@@ -377,7 +378,7 @@ class SkTArray {
     return fItemArray[i];
   }
 
-  T& at(int i) { return (*this)[i]; }
+  T& at(int i) noexcept { return (*this)[i]; }
   const T& at(int i) const noexcept { return (*this)[i]; }
 
   /**
@@ -409,7 +410,7 @@ class SkTArray {
   /**
    * equivalent to operator[](count()-1-i)
    */
-  T& fromBack(int i) {
+  T& fromBack(int i) noexcept {
     SkASSERT(i >= 0);
     SkASSERT(i < this->count());
     return fItemArray[fCount - i - 1];
@@ -421,8 +422,7 @@ class SkTArray {
     return fItemArray[fCount - i - 1];
   }
 
-  bool operator==(const SkTArray<T, MEM_MOVE>& right) const noexcept {
-    static_assert(noexcept(fItemArray[0] != right.fItemArray[0]));
+  bool operator==(const SkTArray<T, MEM_MOVE>& right) const {
     int leftCount = this->count();
     if (leftCount != right.count()) {
       return false;
@@ -435,7 +435,7 @@ class SkTArray {
     return true;
   }
 
-  bool operator!=(const SkTArray<T, MEM_MOVE>& right) const noexcept { return !(*this == right); }
+  bool operator!=(const SkTArray<T, MEM_MOVE>& right) const { return !(*this == right); }
 
   int capacity() const noexcept { return fAllocCount; }
 
@@ -461,6 +461,16 @@ class SkTArray {
   }
 
  private:
+  // We disable Control-Flow Integrity sanitization (go/cfi) when casting item-array buffers.
+  // CFI flags this code as dangerous because we are casting `buffer` to a T* while the buffer's
+  // contents might still be uninitialized memory. When T has a vtable, this is especially risky
+  // because we could hypothetically access a virtual method on fItemArray and jump to an
+  // unpredictable location in memory. Of course, SkTArray won't actually use fItemArray in this
+  // way, and we don't want to construct a T before the user requests one. There's no real risk
+  // here, so disable CFI when doing these casts.
+  SK_ATTRIBUTE(no_sanitize("cfi"))
+  static T* TCast(void* buffer) noexcept { return (T*)buffer; }
+
   void init(int count) noexcept {
     fCount = SkToU32(count);
     if (!count) {
@@ -468,26 +478,26 @@ class SkTArray {
       fItemArray = nullptr;
     } else {
       fAllocCount = SkToU32(std::max(count, kMinHeapAllocCount));
-      fItemArray = (T*)sk_malloc_throw((size_t)fAllocCount, sizeof(T));
+      fItemArray = TCast(sk_malloc_throw((size_t)fAllocCount, sizeof(T)));
     }
     fOwnMemory = true;
     fReserved = false;
   }
 
-  void initWithPreallocatedStorage(int count, void* preallocStorage, int preallocCount) {
+  void initWithPreallocatedStorage(int count, void* preallocStorage, int preallocCount) noexcept {
     SkASSERT(count >= 0);
     SkASSERT(preallocCount > 0);
     SkASSERT(preallocStorage);
-    fCount = count;
+    fCount = SkToU32(count);
     fItemArray = nullptr;
     fReserved = false;
     if (count > preallocCount) {
-      fAllocCount = std::max(count, kMinHeapAllocCount);
-      fItemArray = (T*)sk_malloc_throw(fAllocCount, sizeof(T));
+      fAllocCount = SkToU32(std::max(count, kMinHeapAllocCount));
+      fItemArray = TCast(sk_malloc_throw(fAllocCount, sizeof(T)));
       fOwnMemory = true;
     } else {
-      fAllocCount = preallocCount;
-      fItemArray = (T*)preallocStorage;
+      fAllocCount = SkToU32(preallocCount);
+      fItemArray = TCast(preallocStorage);
       fOwnMemory = false;
     }
   }
@@ -515,13 +525,16 @@ class SkTArray {
   }
 
   template <bool E = MEM_MOVE>
-  std::enable_if_t<!E, void> move(int dst, int src) noexcept(
-      std::is_nothrow_move_constructible_v<T>) {
+  std::enable_if_t<!E, void> move(int dst, int src) noexcept {
+    static_assert(noexcept(new (&fItemArray[dst]) T(std::move(fItemArray[src]))));
+
     new (&fItemArray[dst]) T(std::move(fItemArray[src]));
     fItemArray[src].~T();
   }
   template <bool E = MEM_MOVE>
-  std::enable_if_t<!E, void> move(void* dst) noexcept(std::is_nothrow_move_constructible_v<T>) {
+  std::enable_if_t<!E, void> move(void* dst) noexcept {
+    static_assert(noexcept(new (&fItemArray[0]) T(std::move(fItemArray[1]))));
+
     for (int i = 0; i < this->count(); ++i) {
       new (static_cast<char*>(dst) + sizeof(T) * (size_t)i) T(std::move(fItemArray[i]));
       fItemArray[i].~T();
@@ -532,14 +545,14 @@ class SkTArray {
 
   // Helper function that makes space for n objects, adjusts the count, but does not initialize
   // the new objects.
-  void* push_back_raw(int n) {
+  void* push_back_raw(int n) noexcept {
     this->checkRealloc(n, kGrowing);
     void* ptr = fItemArray + fCount;
     fCount += n;
     return ptr;
   }
 
-  void checkRealloc(int delta, ReallocType reallocType) {
+  void checkRealloc(int delta, ReallocType reallocType) noexcept {
     SkASSERT(fCount >= 0);
     SkASSERT(fAllocCount >= 0);
     SkASSERT(-delta <= this->count());
@@ -572,7 +585,7 @@ class SkTArray {
 
     fAllocCount = SkToU32(Sk64_pin_to_s32(newAllocCount));
     SkASSERT(fAllocCount >= newCount);
-    T* newItemArray = (T*)sk_malloc_throw((size_t)fAllocCount, sizeof(T));
+    T* newItemArray = TCast(sk_malloc_throw((size_t)fAllocCount, sizeof(T)));
     this->move(newItemArray);
     if (fOwnMemory) {
       sk_free(fItemArray);
@@ -590,7 +603,7 @@ class SkTArray {
 };
 
 template <typename T, bool M>
-static inline void swap(SkTArray<T, M>& a, SkTArray<T, M>& b) {
+static inline void swap(SkTArray<T, M>& a, SkTArray<T, M>& b) noexcept {
   a.swap(b);
 }
 
@@ -618,8 +631,8 @@ class SkSTArray : private SkAlignedSTStorage<N, T>, public SkTArray<T, MEM_MOVE>
 
   SkSTArray(const SkSTArray& that) : SkSTArray() { *this = that; }
   explicit SkSTArray(const INHERITED& that) : SkSTArray() { *this = that; }
-  SkSTArray(SkSTArray&& that) : SkSTArray() { *this = std::move(that); }
-  explicit SkSTArray(INHERITED&& that) : SkSTArray() { *this = std::move(that); }
+  SkSTArray(SkSTArray&& that) noexcept : SkSTArray() { *this = std::move(that); }
+  explicit SkSTArray(INHERITED&& that) noexcept : SkSTArray() { *this = std::move(that); }
 
   SkSTArray& operator=(const SkSTArray& that) {
     INHERITED::operator=(that);
@@ -630,11 +643,11 @@ class SkSTArray : private SkAlignedSTStorage<N, T>, public SkTArray<T, MEM_MOVE>
     return *this;
   }
 
-  SkSTArray& operator=(SkSTArray&& that) {
+  SkSTArray& operator=(SkSTArray&& that) noexcept {
     INHERITED::operator=(std::move(that));
     return *this;
   }
-  SkSTArray& operator=(INHERITED&& that) {
+  SkSTArray& operator=(INHERITED&& that) noexcept {
     INHERITED::operator=(std::move(that));
     return *this;
   }

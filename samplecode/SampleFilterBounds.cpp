@@ -128,32 +128,32 @@ static void draw_scale_factors(SkCanvas* canvas, const skif::Mapping& mapping, c
     testPoints[0] = {rect.centerX(), rect.centerY()};
     rect.toQuad(testPoints + 1);
     for (int i = 0; i < 5; ++i) {
-        float scale = SkMatrixPriv::DifferentialAreaScale(
-                mapping.deviceMatrix(),
-                SkPoint(mapping.paramToLayer(skif::ParameterSpace<SkPoint>(testPoints[i]))));
-        SkColor4f color = {0.f, 0.f, 0.f, 1.f};
+      float scale = SkMatrixPriv::DifferentialAreaScale(
+          mapping.layerToDevice(),
+          SkPoint(mapping.paramToLayer(skif::ParameterSpace<SkPoint>(testPoints[i]))));
+      SkColor4f color = {0.f, 0.f, 0.f, 1.f};
 
-        if (SkScalarIsFinite(scale)) {
-            float logScale = SkScalarLog2(scale);
-            for (int j = 0; j <= kStopCount; ++j) {
-                if (j == kStopCount) {
-                    color = kScaleGradientColors[j - 1];
-                    break;
-                } else if (kLogScaleFactors[j] >= logScale) {
-                    if (j == 0) {
-                        color = kScaleGradientColors[0];
-                    } else {
-                        SkScalar t = (logScale - kLogScaleFactors[j - 1]) /
-                                    (kLogScaleFactors[j] - kLogScaleFactors[j - 1]);
+      if (SkScalarIsFinite(scale)) {
+        float logScale = SkScalarLog2(scale);
+        for (int j = 0; j <= kStopCount; ++j) {
+          if (j == kStopCount) {
+            color = kScaleGradientColors[j - 1];
+            break;
+          } else if (kLogScaleFactors[j] >= logScale) {
+            if (j == 0) {
+              color = kScaleGradientColors[0];
+            } else {
+              SkScalar t = (logScale - kLogScaleFactors[j - 1]) /
+                           (kLogScaleFactors[j] - kLogScaleFactors[j - 1]);
 
-                        SkColor4f a = kScaleGradientColors[j - 1] * (1.f - t);
-                        SkColor4f b = kScaleGradientColors[j] * t;
-                        color = {a.fR + b.fR, a.fG + b.fG, a.fB + b.fB, a.fA + b.fA};
-                    }
-                    break;
-                }
+              SkColor4f a = kScaleGradientColors[j - 1] * (1.f - t);
+              SkColor4f b = kScaleGradientColors[j] * t;
+              color = {a.fR + b.fR, a.fG + b.fG, a.fB + b.fB, a.fA + b.fA};
             }
+            break;
+          }
         }
+      }
 
         SkPaint p;
         p.setAntiAlias(true);
@@ -202,7 +202,7 @@ public:
 
         // Add axis lines, to show perspective distortion
         canvas->save();
-        canvas->setMatrix(mapping.deviceMatrix());
+        canvas->setMatrix(mapping.layerToDevice());
         canvas->drawPath(create_axis_path(SkRect(mapping.paramToLayer(contentBounds)), 20.f),
                          line_paint(SK_ColorGRAY));
         canvas->restore();
@@ -224,7 +224,7 @@ public:
         skif::LayerSpace<SkIRect> unhintedLayerBounds = as_IFB(fBlur)->getInputBounds(
                 mapping, targetOutput, nullptr);
 
-        canvas->setMatrix(mapping.deviceMatrix());
+        canvas->setMatrix(mapping.layerToDevice());
         canvas->drawRect(SkRect::Make(SkIRect(targetOutputInLayer)),
                          line_paint(SK_ColorDKGRAY, true));
         canvas->drawRect(SkRect::Make(SkIRect(hintedLayerBounds)), line_paint(SK_ColorRED));
@@ -232,7 +232,7 @@ public:
 
         // For visualization purposes, we want to show the layer-space output, this is what we get
         // when contentBounds is provided as a hint in local/parameter space.
-        skif::Mapping layerOnly(SkMatrix::I(), mapping.layerMatrix());
+        skif::Mapping layerOnly{mapping.layerMatrix()};
         skif::DeviceSpace<SkIRect> hintedOutputBounds = as_IFB(fBlur)->getOutputBounds(
                 layerOnly, contentBounds);
         canvas->drawRect(SkRect::Make(SkIRect(hintedOutputBounds)), line_paint(SK_ColorBLUE));

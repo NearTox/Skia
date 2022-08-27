@@ -112,7 +112,7 @@ sk_sp<SkSpecialImage> SkMergeImageFilter::onFilterImage(
       continue;
     }
 
-    inputs[i]->draw(canvas, SkIntToScalar(offsets[i].x() - x0), SkIntToScalar(offsets[i].y() - y0));
+    inputs[i]->draw(canvas, SkIntToScalar(offsets[i].x()) - x0, SkIntToScalar(offsets[i].y()) - y0);
   }
 
   offset->fX = bounds.left();

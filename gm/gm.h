@@ -103,7 +103,8 @@ class GM {
   void setMode(Mode mode) { fMode = mode; }
   Mode getMode() const { return fMode; }
 
-  static constexpr char kErrorMsg_DrawSkippedGpuOnly[] = "This test is for GPU configs only.";
+  inline static constexpr char kErrorMsg_DrawSkippedGpuOnly[] =
+      "This test is for GPU configs only.";
 
   DrawResult gpuSetup(GrDirectContext* context, SkCanvas* canvas) {
     SkString errorMsg;

@@ -86,8 +86,8 @@ class TextBlobBlockReordering : public GM {
  private:
   sk_sp<SkTextBlob> fBlob;
 
-  static constexpr int kWidth = 275;
-  static constexpr int kHeight = 200;
+  inline static constexpr int kWidth = 275;
+  inline static constexpr int kHeight = 200;
 
   using INHERITED = GM;
 };

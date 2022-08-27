@@ -5,19 +5,30 @@
  * found in the LICENSE file.
  */
 
+#include "src/utils/SkShadowTessellator.h"
+
+#include "include/core/SkColor.h"
+#include "include/core/SkMatrix.h"
 #include "include/core/SkPath.h"
+#include "include/core/SkPoint.h"
 #include "include/core/SkPoint3.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkTypes.h"
 #include "include/core/SkVertices.h"
 #include "include/private/SkColorData.h"
-#include "include/private/SkTPin.h"
+#include "include/private/SkFloatingPoint.h"
+#include "include/private/SkTDArray.h"
+#include "include/private/SkTemplates.h"
 #include "src/core/SkDrawShadowInfo.h"
 #include "src/core/SkGeometry.h"
 #include "src/core/SkPointPriv.h"
+#include "src/core/SkRectPriv.h"
 #include "src/utils/SkPolyUtils.h"
-#include "src/utils/SkShadowTessellator.h"
+
+#include <algorithm>
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/geometry/GrPathUtils.h"
+#  include "src/gpu/ganesh/geometry/GrPathUtils.h"
 #endif
 
 /**
@@ -26,7 +37,7 @@
 class SkBaseShadowTessellator {
  public:
   SkBaseShadowTessellator(const SkPoint3& zPlaneParams, const SkRect& bounds, bool transparent);
-  virtual ~SkBaseShadowTessellator() = default;
+  virtual ~SkBaseShadowTessellator() {}
 
   sk_sp<SkVertices> releaseVertices() {
     if (!fSucceeded) {
@@ -38,9 +49,9 @@ class SkBaseShadowTessellator {
   }
 
  protected:
-  static constexpr auto kMinHeight = 0.1f;
-  static constexpr auto kPenumbraColor = SK_ColorTRANSPARENT;
-  static constexpr auto kUmbraColor = SK_ColorBLACK;
+  inline static constexpr auto kMinHeight = 0.1f;
+  inline static constexpr auto kPenumbraColor = SK_ColorTRANSPARENT;
+  inline static constexpr auto kUmbraColor = SK_ColorBLACK;
 
   int vertexCount() const { return fPositions.count(); }
   int indexCount() const { return fIndices.count(); }
@@ -124,10 +135,6 @@ class SkBaseShadowTessellator {
   SkVector fPrevOutset;
   SkPoint fPrevPoint;
 };
-
-// make external linkage happy
-constexpr SkColor SkBaseShadowTessellator::kUmbraColor;
-constexpr SkColor SkBaseShadowTessellator::kPenumbraColor;
 
 static bool compute_normal(
     const SkPoint& p0, const SkPoint& p1, SkScalar dir, SkVector* newNormal) {
@@ -549,6 +556,11 @@ bool SkBaseShadowTessellator::computeConcaveShadow(SkScalar inset, SkScalar outs
     return false;
   }
 
+  // shouldn't inset more than the half bounds of the polygon
+  inset = std::min(
+      inset,
+      std::min(
+          SkTAbs(SkRectPriv::HalfWidth(fPathBounds)), SkTAbs(SkRectPriv::HalfHeight(fPathBounds))));
   // generate inner ring
   SkTDArray<SkPoint> umbraPolygon;
   SkTDArray<int> umbraIndices;
@@ -712,10 +724,12 @@ void SkBaseShadowTessellator::stitchConcaveRings(
 
 // tesselation tolerance values, in device space pixels
 #if SK_SUPPORT_GPU
-static const SkScalar kQuadTolerance = 0.2f;
-static const SkScalar kCubicTolerance = 0.2f;
+static constexpr SkScalar kQuadTolerance = 0.2f;
+static constexpr SkScalar kCubicTolerance = 0.2f;
+static constexpr SkScalar kQuadToleranceSqd = kQuadTolerance * kQuadTolerance;
+static constexpr SkScalar kCubicToleranceSqd = kCubicTolerance * kCubicTolerance;
 #endif
-static const SkScalar kConicTolerance = 0.25f;
+static constexpr SkScalar kConicTolerance = 0.25f;
 
 // clamps the point to the nearest 16th of a pixel
 static void sanitize_point(const SkPoint& in, SkPoint* out) {
@@ -769,7 +783,7 @@ void SkBaseShadowTessellator::handleQuad(const SkPoint pts[3]) {
   fPointBuffer.setCount(maxCount);
   SkPoint* target = fPointBuffer.begin();
   int count = GrPathUtils::generateQuadraticPoints(
-      pts[0], pts[1], pts[2], kQuadTolerance, &target, maxCount);
+      pts[0], pts[1], pts[2], kQuadToleranceSqd, &target, maxCount);
   fPointBuffer.setCount(count);
   for (int i = 0; i < count; i++) {
     this->handleLine(fPointBuffer[i]);
@@ -794,7 +808,7 @@ void SkBaseShadowTessellator::handleCubic(const SkMatrix& m, SkPoint pts[4]) {
   fPointBuffer.setCount(maxCount);
   SkPoint* target = fPointBuffer.begin();
   int count = GrPathUtils::generateCubicPoints(
-      pts[0], pts[1], pts[2], pts[3], kCubicTolerance, &target, maxCount);
+      pts[0], pts[1], pts[2], pts[3], kCubicToleranceSqd, &target, maxCount);
   fPointBuffer.setCount(count);
   for (int i = 0; i < count; i++) {
     this->handleLine(fPointBuffer[i]);
@@ -898,7 +912,6 @@ SkAmbientShadowTessellator::SkAmbientShadowTessellator(
   // umbraColor is the interior value, penumbraColor the exterior value.
   auto outset = SkDrawShadowMetrics::AmbientBlurRadius(baseZ);
   auto inset = outset * SkDrawShadowMetrics::AmbientRecipAlpha(baseZ) - outset;
-  inset = SkTPin(inset, 0.0f, std::min(path.getBounds().width(), path.getBounds().height()));
 
   if (!this->computePathPolygon(path, ctm)) {
     return;

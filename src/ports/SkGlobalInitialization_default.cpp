@@ -129,6 +129,7 @@ void SkFlattenable::PrivateInitializer::InitImageFilters() {
   SkRegisterBlurImageFilterFlattenable();
   SkRegisterColorFilterImageFilterFlattenable();
   SkRegisterComposeImageFilterFlattenable();
+  SkRegisterCropImageFilterFlattenable();
   SkRegisterDisplacementMapImageFilterFlattenable();
   SkRegisterDropShadowImageFilterFlattenable();
   SkRegisterImageImageFilterFlattenable();

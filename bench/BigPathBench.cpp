@@ -6,6 +6,7 @@
  */
 
 #include "bench/Benchmark.h"
+#include "bench/BigPath.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkPath.h"
 #include "tools/ToolUtils.h"
@@ -34,7 +35,7 @@ class BigPathBench : public Benchmark {
 
   SkIPoint onGetSize() override { return SkIPoint::Make(640, 100); }
 
-  void onDelayedSetup() override { fPath = ToolUtils::make_big_path(); }
+  void onDelayedSetup() override { fPath = BenchUtils::make_big_path(); }
 
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint;

@@ -213,7 +213,7 @@ class ResourceProviderProxyBase : public ResourceProvider {
   const sk_sp<ResourceProvider> fProxy;
 };
 
-class CachingResourceProvider final : public ResourceProviderProxyBase {
+class SK_API CachingResourceProvider final : public ResourceProviderProxyBase {
  public:
   static sk_sp<CachingResourceProvider> Make(sk_sp<ResourceProvider> rp) {
     return rp ? sk_sp<CachingResourceProvider>(new CachingResourceProvider(std::move(rp)))

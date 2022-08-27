@@ -19,7 +19,7 @@
 #  include "src/images/SkImageEncoderFns.h"
 #  include <vector>
 
-#  include "png.h"
+#  include <png.h>
 
 static_assert(PNG_FILTER_NONE == (int)SkPngEncoder::FilterFlag::kNone, "Skia libpng filter err.");
 static_assert(PNG_FILTER_SUB == (int)SkPngEncoder::FilterFlag::kSub, "Skia libpng filter err.");
@@ -293,7 +293,8 @@ static transform_scanline_proc choose_proc(const SkImageInfo& info) {
     case kR16G16_float_SkColorType:
     case kA16_unorm_SkColorType:
     case kA16_float_SkColorType:
-    case kR16G16B16A16_unorm_SkColorType: return nullptr;
+    case kR16G16B16A16_unorm_SkColorType:
+    case kR8_unorm_SkColorType: return nullptr;
   }
   SkASSERT(false);
   return nullptr;
@@ -379,7 +380,7 @@ SkPngEncoder::SkPngEncoder(std::unique_ptr<SkPngEncoderMgr> encoderMgr, const Sk
     : INHERITED(src, encoderMgr->pngBytesPerPixel() * src.width()),
       fEncoderMgr(std::move(encoderMgr)) {}
 
-SkPngEncoder::~SkPngEncoder() = default;
+SkPngEncoder::~SkPngEncoder() {}
 
 bool SkPngEncoder::onEncodeRows(int numRows) {
   if (setjmp(png_jmpbuf(fEncoderMgr->pngPtr()))) {

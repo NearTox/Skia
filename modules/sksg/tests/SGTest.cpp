@@ -30,7 +30,7 @@ static void check_inval(
   sksg::InvalidationController ic;
   const auto bbox = root->revalidate(&ic, SkMatrix::I());
 
-  if (0) {
+  if ((false)) {
     SkDebugf(
         "** bbox: [%f %f %f %f], ibbox: [%f %f %f %f]\n", bbox.fLeft, bbox.fTop, bbox.fRight,
         bbox.fBottom, ic.bounds().left(), ic.bounds().top(), ic.bounds().right(),
@@ -45,7 +45,7 @@ static void check_inval(
     REPORTER_ASSERT(reporter, expected_damage->size() == damage_count);
     for (size_t i = 0; i < std::min(expected_damage->size(), damage_count); ++i) {
       const auto r1 = (*expected_damage)[i], r2 = ic.begin()[i];
-      if (0) {
+      if ((false)) {
         SkDebugf(
             "*** expected inval: [%f %f %f %f], actual: [%f %f %f %f]\n", r1.left(), r1.top(),
             r1.right(), r1.bottom(), r2.left(), r2.top(), r2.right(), r2.bottom());

@@ -57,7 +57,8 @@ static uint32_t SkGetCoreTextVersion() {
 
 static uint32_t SkGetCoreTextVersion() {
   // Check for CoreText availability before calling CTGetCoreTextVersion().
-  if (&CTGetCoreTextVersion) {
+  static const bool kCoreTextIsAvailable = (&CTGetCoreTextVersion != nullptr);
+  if (kCoreTextIsAvailable) {
     return CTGetCoreTextVersion();
   }
 
@@ -540,7 +541,8 @@ class SkFontMgr_Mac : public SkFontMgr {
       return nullptr;
     }
 
-    CTFontVariation ctVariation = SkCTVariationFromSkFontArguments(ct.get(), args);
+    SkUniqueCFRef<CFArrayRef> axes(CTFontCopyVariationAxes(ct.get()));
+    CTFontVariation ctVariation = SkCTVariationFromSkFontArguments(ct.get(), axes.get(), args);
 
     SkUniqueCFRef<CTFontRef> ctVariant;
     if (ctVariation.variation) {

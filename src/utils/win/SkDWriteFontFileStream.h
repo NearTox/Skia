@@ -77,7 +77,7 @@ class SkDWriteFontFileStreamWrapper : public IDWriteFontFileStream {
 
  private:
   explicit SkDWriteFontFileStreamWrapper(SkStreamAsset* stream);
-  virtual ~SkDWriteFontFileStreamWrapper() = default;
+  virtual ~SkDWriteFontFileStreamWrapper() {}
 
   ULONG fRefCount;
   std::unique_ptr<SkStreamAsset> fStream;

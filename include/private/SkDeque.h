@@ -39,8 +39,9 @@ class SK_API SkDeque {
   const void* front() const noexcept { return fFront; }
   const void* back() const noexcept { return fBack; }
 
-  void* front() noexcept { return fFront; }
-  void* back() noexcept { return fBack; }
+  void* front() noexcept { return (void*)((const SkDeque*)this)->front(); }
+
+  void* back() noexcept { return (void*)((const SkDeque*)this)->back(); }
 
   /**
    * push_front and push_back return a pointer to the memory space

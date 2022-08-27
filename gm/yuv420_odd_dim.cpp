@@ -11,6 +11,7 @@
 #include "include/core/SkCanvas.h"
 #include "include/core/SkImage.h"
 #include "include/core/SkPixmap.h"
+#include "include/core/SkStream.h"
 #include "include/core/SkSurface.h"
 #include "include/encode/SkJpegEncoder.h"
 #include "include/gpu/GrRecordingContext.h"
@@ -107,7 +108,7 @@ DEF_SIMPLE_GM_CAN_FAIL(yuv420_odd_dim_repeat, canvas, errMsg, 1000, 500) {
   }
   auto yuvaPixmaps = SkYUVAPixmaps::FromExternalPixmaps(yuvaInfo, pixmaps);
   image = SkImage::MakeFromYUVAPixmaps(
-      canvas->recordingContext(), yuvaPixmaps, GrMipMapped::kYes,
+      canvas->recordingContext(), yuvaPixmaps, GrMipmapped::kYes,
       /* limit to max tex size */ false,
       /* color space */ nullptr);
   if (!image) {

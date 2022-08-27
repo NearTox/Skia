@@ -56,8 +56,8 @@ IOSGLTestContext::IOSGLTestContext(IOSGLTestContext* shareContext) : fGLLibrary(
   SkScopeExit restorer(context_restorer());
   [EAGLContext setCurrentContext:fEAGLContext.get()];
 
-  sk_sp<const GrGLInterface> gl(GrGLCreateNativeInterface());
-  if (NULL == gl.get()) {
+  sk_sp<const GrGLInterface> gl = GrGLMakeNativeInterface();
+  if (nullptr == gl.get()) {
     SkDebugf("Failed to create gl interface");
     this->destroyGLContext();
     return;

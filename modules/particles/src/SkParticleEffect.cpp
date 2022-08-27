@@ -132,8 +132,8 @@ void SkParticleEffectParams::prepare(const skresources::ResourceProvider* resour
     fDrawable->prepare(resourceProvider);
   }
 
-  auto buildProgram = [this](const SkSL::String& code) -> std::unique_ptr<SkParticleProgram> {
-    SkSL::ShaderCapsPointer caps = SkSL::ShaderCapsFactory::Standalone();
+  auto buildProgram = [this](const std::string& code) -> std::unique_ptr<SkParticleProgram> {
+    std::unique_ptr<SkSL::ShaderCaps> caps = SkSL::ShaderCapsFactory::Standalone();
     SkSL::Compiler compiler(caps.get());
 
     // We use two separate blocks of uniforms (ie two args of stride 0). The first is for skvm
@@ -153,7 +153,6 @@ void SkParticleEffectParams::prepare(const skresources::ResourceProvider* resour
     }
 
     SkSL::Program::Settings settings;
-    settings.fRemoveDeadFunctions = false;
     settings.fExternalFunctions = &externalFns;
 
     auto program = compiler.convertProgram(SkSL::ProgramKind::kGeneric, code, settings);
@@ -181,7 +180,7 @@ void SkParticleEffectParams::prepare(const skresources::ResourceProvider* resour
       for (int i = 0; i < uniformInfo->fUniformSlotCount; ++i) {
         uniformIDs.push_back(b.uniform32(skslUniformPtr, i * sizeof(int)).id);
       }
-      if (!SkSL::ProgramToSkVM(*program, *fn, &b, SkMakeSpan(uniformIDs))) {
+      if (!SkSL::ProgramToSkVM(*program, *fn, &b, /*debugTrace=*/nullptr, SkMakeSpan(uniformIDs))) {
         return skvm::Program{};
       }
       return b.done();
@@ -196,7 +195,7 @@ void SkParticleEffectParams::prepare(const skresources::ResourceProvider* resour
         std::move(externalFns), std::move(efUniforms), std::move(alloc), std::move(uniformInfo));
   };
 
-  SkSL::String particleCode(kCommonHeader);
+  std::string particleCode(kCommonHeader);
   particleCode.append(fCode.c_str());
 
   if (auto prog = buildProgram(particleCode)) {
@@ -473,8 +472,7 @@ void SkParticleEffect::update(double now) {
 
 void SkParticleEffect::draw(SkCanvas* canvas) {
   if (this->isAlive() && fParams->fDrawable) {
-    SkPaint paint;
-    fParams->fDrawable->draw(canvas, fParticles, fCount, paint);
+    fParams->fDrawable->draw(canvas, fParticles, fCount);
   }
 }
 

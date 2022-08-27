@@ -23,12 +23,11 @@ static void PrintDeviceError(WGPUErrorType, const char* message, void*) {
 
 namespace sk_app {
 
-DawnWindowContext::DawnWindowContext(const DisplayParams& params,
-                                     wgpu::TextureFormat swapChainFormat)
-    : WindowContext(params)
-    , fSwapChainFormat(swapChainFormat)
-    , fInstance(std::make_unique<dawn_native::Instance>()) {
-}
+DawnWindowContext::DawnWindowContext(
+    const DisplayParams& params, wgpu::TextureFormat swapChainFormat)
+    : WindowContext(params),
+      fSwapChainFormat(swapChainFormat),
+      fInstance(std::make_unique<dawn::native::Instance>()) {}
 
 void DawnWindowContext::initializeContext(int width, int height) {
   SkASSERT(!fContext);
@@ -103,18 +102,20 @@ void DawnWindowContext::setDisplayParams(const DisplayParams& params) {
     fDisplayParams = params;
 }
 
-wgpu::Device DawnWindowContext::createDevice(dawn_native::BackendType type) {
-    fInstance->DiscoverDefaultAdapters();
-    DawnProcTable backendProcs = dawn_native::GetProcs();
-    dawnProcSetProcs(&backendProcs);
+wgpu::Device DawnWindowContext::createDevice(wgpu::BackendType type) {
+  fInstance->DiscoverDefaultAdapters();
+  DawnProcTable backendProcs = dawn::native::GetProcs();
+  dawnProcSetProcs(&backendProcs);
 
-    std::vector<dawn_native::Adapter> adapters = fInstance->GetAdapters();
-    for (dawn_native::Adapter adapter : adapters) {
-        if (adapter.GetBackendType() == type) {
-            return adapter.CreateDevice();
-        }
+  std::vector<dawn::native::Adapter> adapters = fInstance->GetAdapters();
+  for (dawn::native::Adapter adapter : adapters) {
+    wgpu::AdapterProperties properties;
+    adapter.GetProperties(&properties);
+    if (properties.backendType == type) {
+      return adapter.CreateDevice();
     }
-    return nullptr;
+  }
+  return nullptr;
 }
 
 }   //namespace sk_app

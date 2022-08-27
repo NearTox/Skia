@@ -9,8 +9,8 @@
 #define SKSL_INTERFACEBLOCK
 
 #include <memory>
+#include <string_view>
 
-#include "include/core/SkStringView.h"
 #include "include/private/SkSLProgramElement.h"
 #include "src/sksl/ir/SkSLSymbolTable.h"
 #include "src/sksl/ir/SkSLVarDeclarations.h"
@@ -29,25 +29,27 @@ namespace SkSL {
  */
 class InterfaceBlock final : public ProgramElement {
  public:
-  static constexpr Kind kProgramElementKind = Kind::kInterfaceBlock;
+  inline static constexpr Kind kProgramElementKind = Kind::kInterfaceBlock;
 
   InterfaceBlock(
-      int offset, const Variable* var, skstd::string_view typeName, skstd::string_view instanceName,
+      Position pos, const Variable& var, std::string_view typeName, std::string_view instanceName,
       int arraySize, std::shared_ptr<SymbolTable> typeOwner)
-      : INHERITED(offset, kProgramElementKind),
+      : INHERITED(pos, kProgramElementKind),
         fVariable(var),
         fTypeName(typeName),
         fInstanceName(instanceName),
         fArraySize(arraySize),
-        fTypeOwner(std::move(typeOwner)) {}
+        fTypeOwner(std::move(typeOwner)) {
+    SkASSERT(
+        fVariable.type().isInterfaceBlock() ||
+        (fVariable.type().isArray() && fVariable.type().componentType().isInterfaceBlock()));
+  }
 
-  const Variable& variable() const { return *fVariable; }
+  const Variable& variable() const { return fVariable; }
 
-  void setVariable(const Variable* var) { fVariable = var; }
+  std::string_view typeName() const { return fTypeName; }
 
-  skstd::string_view typeName() const { return fTypeName; }
-
-  skstd::string_view instanceName() const { return fInstanceName; }
+  std::string_view instanceName() const { return fInstanceName; }
 
   const std::shared_ptr<SymbolTable>& typeOwner() const { return fTypeOwner; }
 
@@ -55,12 +57,13 @@ class InterfaceBlock final : public ProgramElement {
 
   std::unique_ptr<ProgramElement> clone() const override {
     return std::make_unique<InterfaceBlock>(
-        fOffset, &this->variable(), this->typeName(), this->instanceName(), this->arraySize(),
+        fPosition, this->variable(), this->typeName(), this->instanceName(), this->arraySize(),
         SymbolTable::WrapIfBuiltin(this->typeOwner()));
   }
 
-  String description() const override {
-    String result = this->variable().modifiers().description() + this->typeName() + " {\n";
+  std::string description() const override {
+    std::string result =
+        this->variable().modifiers().description() + std::string(this->typeName()) + " {\n";
     const Type* structType = &this->variable().type();
     if (structType->isArray()) {
       structType = &structType->componentType();
@@ -70,18 +73,18 @@ class InterfaceBlock final : public ProgramElement {
     }
     result += "}";
     if (!this->instanceName().empty()) {
-      result += " " + this->instanceName();
+      result += " " + std::string(this->instanceName());
       if (this->arraySize() > 0) {
-        result.appendf("[%d]", this->arraySize());
+        String::appendf(&result, "[%d]", this->arraySize());
       }
     }
     return result + ";";
   }
 
  private:
-  const Variable* fVariable;
-  skstd::string_view fTypeName;
-  skstd::string_view fInstanceName;
+  const Variable& fVariable;
+  std::string_view fTypeName;
+  std::string_view fInstanceName;
   int fArraySize;
   std::shared_ptr<SymbolTable> fTypeOwner;
 

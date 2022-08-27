@@ -32,7 +32,7 @@ static bool rotate(const SkDCubic& cubic, int zero, int index, SkDCubic& rotPath
     rotPath[i].fX = cubic[i].fX * dx + cubic[i].fY * dy;
     rotPath[i].fY = cubic[i].fY * dx - cubic[i].fX * dy;
   }
-    return true;
+  return true;
 }
 
 // Returns 0 if negative, 1 if zero, 2 if positive

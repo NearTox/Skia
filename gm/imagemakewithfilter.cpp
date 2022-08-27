@@ -230,10 +230,6 @@ class ImageMakeWithFilterGM : public skiagm::GM {
     SkIRect clipBounds[]{{-20, -20, 100, 100}, {0, 0, 75, 75},   {20, 20, 100, 100},
                          {-20, -20, 50, 50},   {20, 20, 50, 50}, {30, 30, 75, 75}};
 
-    // These need to be GPU-backed when on the GPU to ensure that the image filters use the GPU
-    // code paths (otherwise they may choose to do CPU filtering then upload)
-    sk_sp<SkImage> mainImage, auxImage;
-
     auto rContext = canvas->recordingContext();
     // In a DDL context, we can't use the GPU code paths and we will drop the work – skip.
     auto dContext = GrAsDirectContext(rContext);
@@ -246,17 +242,17 @@ class ImageMakeWithFilterGM : public skiagm::GM {
         *errorMsg = "Direct context abandoned.";
         return DrawResult::kSkip;
       }
-      mainImage = fMainImage->makeTextureImage(dContext);
-      auxImage = fAuxImage->makeTextureImage(dContext);
-    } else {
-      mainImage = fMainImage;
-      auxImage = fAuxImage;
     }
+
+    // These need to be GPU-backed when on the GPU to ensure that the image filters use the GPU
+    // code paths (otherwise they may choose to do CPU filtering then upload)
+    sk_sp<SkImage> mainImage = ToolUtils::MakeTextureImage(canvas, fMainImage);
+    sk_sp<SkImage> auxImage = ToolUtils::MakeTextureImage(canvas, fAuxImage);
     if (!mainImage || !auxImage) {
       return DrawResult::kFail;
     }
-    SkASSERT(mainImage && (mainImage->isTextureBacked() || !rContext));
-    SkASSERT(auxImage && (auxImage->isTextureBacked() || !rContext));
+    SkASSERT(mainImage && (mainImage->isTextureBacked() || !dContext));
+    SkASSERT(auxImage && (auxImage->isTextureBacked() || !dContext));
 
     SkScalar MARGIN = SkIntToScalar(40);
     SkScalar DX = mainImage->width() + MARGIN;
@@ -342,8 +338,10 @@ class ImageMakeWithFilterGM : public skiagm::GM {
 
       auto rContext = canvas->recordingContext();
       result = mainImage->makeWithFilter(rContext, filter.get(), subset, clip, &outSubset, &offset);
+      if (!result) {
+        return;
+      }
 
-      SkASSERT(result);
       SkASSERT(mainImage->isTextureBacked() == result->isTextureBacked());
 
       *dstRect = SkIRect::MakeXYWH(offset.x(), offset.y(), outSubset.width(), outSubset.height());

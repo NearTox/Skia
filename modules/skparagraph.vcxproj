@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="skparagraph\src\Decorations.cpp" />
+    <ClCompile Include="skparagraph\src\FontArguments.cpp" />
     <ClCompile Include="skparagraph\src\FontCollection.cpp" />
     <ClCompile Include="skparagraph\src\OneLineShaper.cpp" />
     <ClCompile Include="skparagraph\src\ParagraphBuilderImpl.cpp" />
@@ -43,7 +44,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <LLVMToolsVersion>14.0.0</LLVMToolsVersion>
+    <LLVMToolsVersion>15.0.0</LLVMToolsVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

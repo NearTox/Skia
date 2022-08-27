@@ -187,7 +187,7 @@ class SkNVRefCnt {
   // least 'threadIsolatedTestCnt' refs for which no other thread may make a balancing unref()
   // call. Assuming the contract is followed, if this returns false then no other thread has
   // ownership of this. If it returns true then another thread *may* have ownership.
-  bool refCntGreaterThan(int32_t threadIsolatedTestCnt) const {
+  bool refCntGreaterThan(int32_t threadIsolatedTestCnt) const noexcept {
     int cnt = fRefCnt.load(std::memory_order_acquire);
     // If this fails then the above contract has been violated.
     SkASSERT(cnt >= threadIsolatedTestCnt);
@@ -301,10 +301,10 @@ class sk_sp {
     return *this->get();
   }
 
-  explicit operator bool() const noexcept { return this->get() != nullptr; }
+  constexpr explicit operator bool() const noexcept { return this->get() != nullptr; }
 
-  T* get() const noexcept { return fPtr; }
-  T* operator->() const noexcept { return fPtr; }
+  constexpr T* get() const noexcept { return fPtr; }
+  constexpr T* operator->() const noexcept { return fPtr; }
 
   /**
    *  Adopt the new bare pointer, and call unref() on any previously held object (if not null).
@@ -324,7 +324,7 @@ class sk_sp {
    *  The caller must assume ownership of the object, and manage its reference count directly.
    *  No call to unref() will be made.
    */
-  T* SK_WARN_UNUSED_RESULT release() noexcept {
+  constexpr T* SK_WARN_UNUSED_RESULT release() noexcept {
     T* ptr = fPtr;
     fPtr = nullptr;
     return ptr;

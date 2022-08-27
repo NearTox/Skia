@@ -38,12 +38,12 @@ protected:
 
             canvas->translate(SkIntToScalar(x), SkIntToScalar(y));
             // Uncomment to test rotated rect draw combining.
-            if (false) {
-                SkMatrix rotate;
-                rotate.setRotate(fRandom.nextUScalar1() * 360,
-                                 SkIntToScalar(x) + SkScalarHalf(rect.fRight),
-                                 SkIntToScalar(y) + SkScalarHalf(rect.fBottom));
-                canvas->concat(rotate);
+            if ((false)) {
+              SkMatrix rotate;
+              rotate.setRotate(
+                  fRandom.nextUScalar1() * 360, SkIntToScalar(x) + SkScalarHalf(rect.fRight),
+                  SkIntToScalar(y) + SkScalarHalf(rect.fBottom));
+              canvas->concat(rotate);
             }
             SkRect clipRect = rect;
             // This clip will always contain the entire rect. It's here to give the GPU op combining

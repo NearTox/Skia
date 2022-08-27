@@ -8,7 +8,7 @@
 #ifndef SkColor_DEFINED
 #define SkColor_DEFINED
 
-#include "include/core/SkImageInfo.h"
+#include "include/core/SkAlphaType.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
 
@@ -179,7 +179,7 @@ static inline void SkColorToHSV(SkColor color, SkScalar hsv[3]) noexcept {
     @param hsv    three element array which holds the input HSV components
     @return       ARGB equivalent to HSV
 */
-SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]);
+SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]) noexcept;
 
 /** Converts HSV components to an ARGB color. Alpha is set to 255.
     hsv[0] represents hsv hue, an angle from zero to less than 360.
@@ -191,7 +191,9 @@ SK_API SkColor SkHSVToColor(U8CPU alpha, const SkScalar hsv[3]);
     @param hsv  three element array which holds the input HSV components
     @return     RGB equivalent to HSV
 */
-static inline SkColor SkHSVToColor(const SkScalar hsv[3]) { return SkHSVToColor(0xFF, hsv); }
+static inline SkColor SkHSVToColor(const SkScalar hsv[3]) noexcept {
+  return SkHSVToColor(0xFF, hsv);
+}
 
 /** 32-bit ARGB color value, premultiplied. The byte order for this value is
     configuration dependent, matching the format of kBGRA_8888_SkColorType bitmaps.
@@ -308,14 +310,14 @@ struct SkRGBA4f {
   float* vec() noexcept { return &fR; }
 
   /** As a std::array<float, 4> */
-  std::array<float, 4> array() const noexcept { return {fR, fG, fB, fA}; }
+  std::array<float, 4> array() const { return {fR, fG, fB, fA}; }
 
   /** Returns one component. Asserts if index is out of range and SK_DEBUG is defined.
 
       @param index  one of: 0 (fR), 1 (fG), 2 (fB), 3 (fA)
       @return       value corresponding to index
   */
-  float operator[](int index) const {
+  float operator[](int index) const noexcept {
     SkASSERT(index >= 0 && index < 4);
     return this->vec()[index];
   }
@@ -325,7 +327,7 @@ struct SkRGBA4f {
       @param index  one of: 0 (fR), 1 (fG), 2 (fB), 3 (fA)
       @return       value corresponding to index
   */
-  float& operator[](int index) {
+  float& operator[](int index) noexcept {
     SkASSERT(index >= 0 && index < 4);
     return this->vec()[index];
   }
@@ -335,13 +337,13 @@ struct SkRGBA4f {
 
       @return       true if SkRGBA4f is opaque
   */
-  bool isOpaque() const {
+  bool isOpaque() const noexcept {
     SkASSERT(fA <= 1.0f && fA >= 0.0f);
     return fA == 1.0f;
   }
 
   /** Returns true if all channels are in [0, 1]. */
-  bool fitsInBytes() const {
+  bool fitsInBytes() const noexcept {
     SkASSERT(fA >= 0.0f && fA <= 1.0f);
     return fR >= 0.0f && fR <= 1.0f && fG >= 0.0f && fG <= 1.0f && fB >= 0.0f && fB <= 1.0f;
   }
@@ -353,7 +355,7 @@ struct SkRGBA4f {
 
       example: https://fiddle.skia.org/c/@RGBA4f_FromColor
   */
-  static SkRGBA4f FromColor(SkColor color);  // impl. depends on kAT
+  static SkRGBA4f FromColor(SkColor color) noexcept;  // impl. depends on kAT
 
   /** Returns closest SkColor to SkRGBA4f. Only allowed if SkRGBA4f is unpremultiplied.
 
@@ -361,13 +363,13 @@ struct SkRGBA4f {
 
       example: https://fiddle.skia.org/c/@RGBA4f_toSkColor
   */
-  SkColor toSkColor() const;  // impl. depends on kAT
+  SkColor toSkColor() const noexcept;  // impl. depends on kAT
 
   /** Returns closest SkRGBA4f to SkPMColor. Only allowed if SkRGBA4f is premultiplied.
 
       @return        SkPMColor as SkRGBA4f
   */
-  static SkRGBA4f FromPMColor(SkPMColor);  // impl. depends on kAT
+  static SkRGBA4f FromPMColor(SkPMColor) noexcept;  // impl. depends on kAT
 
   /** Returns SkRGBA4f premultiplied by alpha. Asserts at compile time if SkRGBA4f is
       already premultiplied.
@@ -396,10 +398,15 @@ struct SkRGBA4f {
   }
 
   // This produces bytes in RGBA order (eg GrColor). Impl. is the same, regardless of kAT
-  uint32_t toBytes_RGBA() const;
-  static SkRGBA4f FromBytes_RGBA(uint32_t color);
+  uint32_t toBytes_RGBA() const noexcept;
+  static SkRGBA4f FromBytes_RGBA(uint32_t color) noexcept;
 
-  SkRGBA4f makeOpaque() const { return {fR, fG, fB, 1.0f}; }
+  /**
+    Returns a copy of the SkRGBA4f but with alpha component set to 1.0f.
+
+    @return         opaque color
+  */
+  SkRGBA4f makeOpaque() const noexcept { return {fR, fG, fB, 1.0f}; }
 };
 
 /** \struct SkColor4f
@@ -411,9 +418,9 @@ struct SkRGBA4f {
 using SkColor4f = SkRGBA4f<kUnpremul_SkAlphaType>;
 
 template <>
-SK_API SkColor4f SkColor4f::FromColor(SkColor);
+SK_API SkColor4f SkColor4f::FromColor(SkColor) noexcept;
 template <>
-SK_API SkColor SkColor4f::toSkColor() const;
+SK_API SkColor SkColor4f::toSkColor() const noexcept;
 
 namespace SkColors {
 constexpr SkColor4f kTransparent = {0, 0, 0, 0};

@@ -27,7 +27,6 @@ class Statement : public IRNode {
     kExpression,
     kFor,
     kIf,
-    kInlineMarker,
     kNop,
     kReturn,
     kSwitch,
@@ -38,11 +37,11 @@ class Statement : public IRNode {
     kLast = kVarDeclaration,
   };
 
-  Statement(int offset, Kind kind) : INHERITED(offset, (int)kind) {
+  Statement(Position pos, Kind kind) noexcept : INHERITED(pos, (int)kind) {
     SkASSERT(kind >= Kind::kFirst && kind <= Kind::kLast);
   }
 
-  Kind kind() const { return (Kind)fKind; }
+  Kind kind() const noexcept { return (Kind)fKind; }
 
   /**
    *  Use is<T> to check the type of a statement.

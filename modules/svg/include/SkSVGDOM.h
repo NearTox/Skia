@@ -19,6 +19,7 @@ class SkCanvas;
 class SkDOM;
 class SkStream;
 class SkSVGNode;
+struct SkSVGPresentationContext;
 class SkSVGSVG;
 
 class SkSVGDOM : public SkRefCnt {
@@ -81,7 +82,10 @@ public:
 
     void render(SkCanvas*) const;
 
-private:
+    /** Render the node with the given id as if it were the only child of the root. */
+    void renderNode(SkCanvas*, SkSVGPresentationContext&, const char* id) const;
+
+   private:
     SkSVGDOM(sk_sp<SkSVGSVG>, sk_sp<SkFontMgr>, sk_sp<skresources::ResourceProvider>,
              SkSVGIDMapper&&);
 

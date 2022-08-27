@@ -17,10 +17,10 @@ namespace SkSL {
  */
 class UnresolvedFunction final : public Symbol {
  public:
-  static constexpr Kind kSymbolKind = Kind::kUnresolvedFunction;
+  inline static constexpr Kind kSymbolKind = Kind::kUnresolvedFunction;
 
   UnresolvedFunction(std::vector<const FunctionDeclaration*> funcs)
-      : INHERITED(-1, kSymbolKind, funcs[0]->name()), fFunctions(std::move(funcs)) {
+      : INHERITED(Position(), kSymbolKind, funcs[0]->name()), fFunctions(std::move(funcs)) {
 #ifdef SK_DEBUG
     SkASSERT(!this->functions().empty());
     for (auto func : this->functions()) {
@@ -31,7 +31,7 @@ class UnresolvedFunction final : public Symbol {
 
   const std::vector<const FunctionDeclaration*>& functions() const { return fFunctions; }
 
-  String description() const override { return String(this->name()); }
+  std::string description() const override { return std::string(this->name()); }
 
  private:
   std::vector<const FunctionDeclaration*> fFunctions;

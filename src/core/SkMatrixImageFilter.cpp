@@ -42,7 +42,7 @@ sk_sp<SkFlattenable> SkMatrixImageFilter::CreateProc(SkReadBuffer& buffer) {
     if (buffer.isVersionLT(SkPicturePriv::kMatrixImageFilterSampling_Version)) {
       return SkSamplingPriv::FromFQ(buffer.read32LE(kLast_SkLegacyFQ), kLinear_SkMediumAs);
     } else {
-      return SkSamplingPriv::Read(buffer);
+      return buffer.readSampling();
     }
   }();
   return Make(matrix, sampling, common.getInput(0));
@@ -51,7 +51,7 @@ sk_sp<SkFlattenable> SkMatrixImageFilter::CreateProc(SkReadBuffer& buffer) {
 void SkMatrixImageFilter::flatten(SkWriteBuffer& buffer) const {
   this->INHERITED::flatten(buffer);
   buffer.writeMatrix(fTransform);
-  SkSamplingPriv::Write(buffer, fSampling);
+  buffer.writeSampling(fSampling);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////

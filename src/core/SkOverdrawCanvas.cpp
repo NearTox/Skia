@@ -16,6 +16,8 @@
 #include "include/private/SkTo.h"
 #include "src/core/SkDevice.h"
 #include "src/core/SkDrawShadowInfo.h"
+#include "src/core/SkGlyphBuffer.h"
+#include "src/core/SkGlyphRun.h"
 #include "src/core/SkGlyphRunPainter.h"
 #include "src/core/SkImagePriv.h"
 #include "src/core/SkLatticeIter.h"
@@ -40,17 +42,15 @@ SkOverdrawCanvas::SkOverdrawCanvas(SkCanvas* canvas)
 }
 
 namespace {
-class TextDevice : public SkNoPixelsDevice, public SkGlyphRunListPainter::BitmapDevicePainter {
+class TextDevice : public SkNoPixelsDevice, public SkGlyphRunListPainterCPU::BitmapDevicePainter {
  public:
   TextDevice(SkCanvas* overdrawCanvas, const SkSurfaceProps& props)
       : SkNoPixelsDevice{SkIRect::MakeWH(32767, 32767), props},
         fOverdrawCanvas{overdrawCanvas},
-        fPainter{props, kN32_SkColorType, nullptr, SkStrikeCache::GlobalStrikeCache()} {}
+        fPainter{props, kN32_SkColorType, nullptr} {}
 
-  void paintPaths(SkDrawableGlyphBuffer*, SkScalar, SkPoint, const SkPaint&) const override {}
-
-  void paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) const override {
-    for (auto t : drawables->drawable()) {
+  void paintMasks(SkDrawableGlyphBuffer* accepted, const SkPaint& paint) const override {
+    for (auto t : accepted->accepted()) {
       SkGlyphVariant glyph;
       SkPoint pos;
       std::tie(glyph, pos) = t;
@@ -63,14 +63,17 @@ class TextDevice : public SkNoPixelsDevice, public SkGlyphRunListPainter::Bitmap
       const SkBitmap&, const SkMatrix&, const SkRect* dstOrNull, const SkSamplingOptions&,
       const SkPaint&) const override {}
 
-  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override {
+  void onDrawGlyphRunList(
+      SkCanvas* canvas, const SkGlyphRunList& glyphRunList, const SkPaint& initialPaint,
+      const SkPaint& drawingPaint) override {
     SkASSERT(!glyphRunList.hasRSXForm());
-    fPainter.drawForBitmapDevice(glyphRunList, paint, fOverdrawCanvas->getTotalMatrix(), this);
+    fPainter.drawForBitmapDevice(
+        canvas, this, glyphRunList, drawingPaint, fOverdrawCanvas->getTotalMatrix());
   }
 
  private:
   SkCanvas* const fOverdrawCanvas;
-  SkGlyphRunListPainter fPainter;
+  SkGlyphRunListPainterCPU fPainter;
 };
 }  // namespace
 
@@ -87,7 +90,7 @@ void SkOverdrawCanvas::onDrawGlyphRunList(
   this->getProps(&props);
   TextDevice device{this, props};
 
-  device.drawGlyphRunList(glyphRunList, paint);
+  device.drawGlyphRunList(this, glyphRunList, paint, paint);
 }
 
 void SkOverdrawCanvas::onDrawPatch(

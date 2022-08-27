@@ -191,8 +191,8 @@ union TraceValueUnion {
 // Simple container for const char* that should be copied instead of retained.
 class TraceStringWithCopy {
  public:
-  constexpr explicit TraceStringWithCopy(const char* str) noexcept : str_(str) {}
-  operator const char*() const noexcept { return str_; }
+  explicit TraceStringWithCopy(const char* str) : str_(str) {}
+  operator const char*() const { return str_; }
 
  private:
   const char* str_;
@@ -278,7 +278,7 @@ static inline SkEventTracer::Handle AddTraceEvent(
 class TRACE_EVENT_API_CLASS_EXPORT ScopedTracer {
  public:
   // Note: members of data_ intentionally left uninitialized. See Initialize.
-  ScopedTracer() : p_data_(nullptr) {}
+  ScopedTracer() noexcept : p_data_(nullptr) {}
 
   ~ScopedTracer() {
     if (p_data_ && *data_.category_group_enabled)
@@ -287,7 +287,8 @@ class TRACE_EVENT_API_CLASS_EXPORT ScopedTracer {
   }
 
   void Initialize(
-      const uint8_t* category_group_enabled, const char* name, SkEventTracer::Handle event_handle) {
+      const uint8_t* category_group_enabled, const char* name,
+      SkEventTracer::Handle event_handle) noexcept {
     data_.category_group_enabled = category_group_enabled;
     data_.name = name;
     data_.event_handle = event_handle;

@@ -36,6 +36,8 @@ class ParticlesSlide : public Slide {
       SkScalar x, SkScalar y, skui::InputState state, skui::ModifierKey modifiers) override;
 
  private:
+  class TestingResourceProvider;
+
   void loadEffects(const char* dirname);
 
   SkRandom fRandom;
@@ -56,7 +58,7 @@ class ParticlesSlide : public Slide {
   };
   SkTArray<RunningEffect> fRunning;
 
-  sk_sp<skresources::ResourceProvider> fResourceProvider;
+  sk_sp<TestingResourceProvider> fResourceProvider;
 };
 
 #endif

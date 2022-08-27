@@ -20,18 +20,18 @@ namespace SkSL {
  */
 class ModifiersDeclaration final : public ProgramElement {
  public:
-  static constexpr Kind kProgramElementKind = Kind::kModifiers;
+  inline static constexpr Kind kProgramElementKind = Kind::kModifiers;
 
-  ModifiersDeclaration(const Modifiers* modifiers) noexcept
-      : INHERITED(-1, kProgramElementKind), fModifiers(modifiers) {}
+  ModifiersDeclaration(const Modifiers* modifiers)
+      : INHERITED(Position(), kProgramElementKind), fModifiers(modifiers) {}
 
-  const Modifiers& modifiers() const noexcept { return *fModifiers; }
+  const Modifiers& modifiers() const { return *fModifiers; }
 
   std::unique_ptr<ProgramElement> clone() const override {
     return std::make_unique<ModifiersDeclaration>(&this->modifiers());
   }
 
-  String description() const override { return this->modifiers().description() + ";"; }
+  std::string description() const override { return this->modifiers().description() + ";"; }
 
  private:
   const Modifiers* fModifiers;

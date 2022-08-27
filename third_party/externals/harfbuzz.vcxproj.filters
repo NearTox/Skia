@@ -51,5 +51,8 @@
     <ClCompile Include="harfbuzz\src\hb-ot-metrics.cc" />
     <ClCompile Include="harfbuzz\src\hb-number.cc" />
     <ClCompile Include="harfbuzz\src\hb-ot-shape-complex-syllabic.cc" />
+    <ClCompile Include="harfbuzz\src\hb-draw.cc" />
+    <ClCompile Include="harfbuzz\src\hb-subset-repacker.cc" />
+    <ClCompile Include="harfbuzz\src\hb-buffer-verify.cc" />
   </ItemGroup>
 </Project>

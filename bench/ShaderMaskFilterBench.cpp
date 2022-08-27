@@ -41,14 +41,15 @@ class ShaderMFBench final : public Benchmark {
  public:
   using ShaderMaker = sk_sp<SkShader> (*)();
 
-  ShaderMFBench(const char* nm, bool opaque, const ShaderMaker& maker) {
-    fMaskFilter = SkShaderMaskFilter::Make(maker());
-    fColor = opaque ? 0xff00ff00 : 0x8000ff00;
+  ShaderMFBench(const char* nm, bool opaque, const ShaderMaker maker)
+      : fMaker{maker}, fColor{opaque ? 0xff00ff00 : 0x8000ff00} {
     fName = SkStringPrintf("shadermaskfilter_%s_%x", nm, SkColorGetA(fColor));
   }
 
  protected:
   const char* onGetName() override { return fName.c_str(); }
+
+  void onDelayedSetup() override { fMaskFilter = SkShaderMaskFilter::Make(fMaker()); }
 
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint maskPaint;
@@ -62,9 +63,10 @@ class ShaderMFBench final : public Benchmark {
   }
 
  private:
+  const ShaderMaker fMaker;
+  const SkColor fColor;
   SkString fName;
   sk_sp<SkMaskFilter> fMaskFilter;
-  SkColor fColor;
 
   using INHERITED = Benchmark;
 };

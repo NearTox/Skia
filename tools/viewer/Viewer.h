@@ -14,6 +14,7 @@
 #include "include/gpu/GrContextOptions.h"
 #include "include/private/SkSLString.h"
 #include "src/core/SkScan.h"
+#include "src/core/SkVMBlitter.h"
 #include "src/sksl/ir/SkSLProgram.h"
 #include "tools/gpu/MemoryCache.h"
 #include "tools/sk_app/Application.h"
@@ -166,6 +167,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
   bool fShowImGuiDebugWindow;
   bool fShowSlidePicker;
   bool fShowImGuiTestWindow;
+  bool fShowHistogramWindow;
 
   bool fShowZoomWindow;
   bool fZoomWindowFixed;
@@ -236,7 +238,7 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
     SkString fKeyDescription;
 
     SkFourByteTag fShaderType;
-    SkSL::String fShader[kGrShaderTypeCount];
+    std::string fShader[kGrShaderTypeCount];
     SkSL::Program::Inputs fInputs[kGrShaderTypeCount];
   };
 
@@ -250,6 +252,11 @@ class Viewer : public sk_app::Application, sk_app::Window::Layer {
     kShaderOptLevel_Inline,
   };
   ShaderOptLevel fOptLevel = kShaderOptLevel_Source;
+
+  SkVMBlitter::Key fHoveredKey;
+  skvm::Program fHoveredProgram;
+
+  SkTHashMap<SkVMBlitter::Key, std::string> fDisassemblyCache;
 };
 
 #endif

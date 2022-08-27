@@ -7,13 +7,20 @@
 
 #include "src/utils/SkJSON.h"
 
+#include "include/core/SkData.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkStream.h"
 #include "include/core/SkString.h"
 #include "include/private/SkMalloc.h"
+#include "include/private/SkTo.h"
 #include "include/utils/SkParse.h"
 #include "src/utils/SkUTF.h"
 
+#include <stdlib.h>
 #include <cmath>
+#include <cstdint>
+#include <limits>
+#include <new>
 #include <tuple>
 #include <vector>
 
@@ -137,7 +144,7 @@ class FastString final : public Value {
 
  private:
   // first byte reserved for tagging, \0 terminator => 6 usable chars
-  static constexpr size_t kMaxInlineStringSize = sizeof(Value) - 2;
+  inline static constexpr size_t kMaxInlineStringSize = sizeof(Value) - 2;
 
   void initLongString(const char* src, size_t size, SkArenaAlloc& alloc) {
     SkASSERT(size > kMaxInlineStringSize);
@@ -443,11 +450,11 @@ class DOMParser {
   SkArenaAlloc& fAlloc;
 
   // Pending values stack.
-  static constexpr size_t kValueStackReserve = 256;
+  inline static constexpr size_t kValueStackReserve = 256;
   std::vector<Value> fValueStack;
 
   // String unescape buffer.
-  static constexpr size_t kUnescapeBufferReserve = 512;
+  inline static constexpr size_t kUnescapeBufferReserve = 512;
   std::vector<char> fUnescapeBuffer;
 
   // Tracks the current object/array scope, as an index into fStack:

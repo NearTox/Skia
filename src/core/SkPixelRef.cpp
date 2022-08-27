@@ -14,7 +14,7 @@
 
 #include <atomic>
 
-uint32_t SkNextID::ImageID() noexcept {
+uint32_t SkNextID::ImageID() {
   // We never set the low bit.... see SkPixelRef::genIDIsUnique().
   static std::atomic<uint32_t> nextID{2};
 

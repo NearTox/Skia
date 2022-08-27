@@ -9,6 +9,7 @@
 #include "include/core/SkFont.h"
 #include "include/core/SkFontMetrics.h"
 #include "include/core/SkPath.h"
+#include "include/private/SkTDArray.h"
 #include "samplecode/Sample.h"
 
 #include "modules/sksg/include/SkSGDraw.h"
@@ -27,18 +28,19 @@ struct PerNodeInfo {
 };
 
 class SampleSG : public Sample {
-    SkTDArray<PerNodeInfo> fSideCar;
-    sk_sp<sksg::Group> fGroup;
-    std::unique_ptr<sksg::Scene> fScene;
+  // TODO(kjlubick) use a vector instead of our private SkTDArray
+  SkTDArray<PerNodeInfo> fSideCar;
+  sk_sp<sksg::Group> fGroup;
+  std::unique_ptr<sksg::Scene> fScene;
 
-    PerNodeInfo* findInfo(sksg::Draw* key) {
-        for (int i = 0; i < fSideCar.count(); ++i) {
-            if (fSideCar[i].fDraw == key) {
-                return &fSideCar[i];
-            }
-        }
-        return nullptr;
+  PerNodeInfo* findInfo(sksg::Draw* key) {
+    for (int i = 0; i < fSideCar.count(); ++i) {
+      if (fSideCar[i].fDraw == key) {
+        return &fSideCar[i];
+      }
     }
+    return nullptr;
+  }
 
     void appendNode(sk_sp<sksg::Draw> d, sk_sp<sksg::GeometryNode> g, sk_sp<sksg::PaintNode> p) {
         fGroup->addChild(d);

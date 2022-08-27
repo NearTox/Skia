@@ -9,20 +9,20 @@
 
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrGpu.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrGpu.h"
 #include "tools/gpu/ManagedBackendTexture.h"
 
 namespace sk_gpu_test {
 
 sk_sp<SkSurface> MakeBackendTextureSurface(
     GrDirectContext* dContext, const SkImageInfo& ii, GrSurfaceOrigin origin, int sampleCnt,
-    GrMipmapped mipMapped, GrProtected isProtected, const SkSurfaceProps* props) {
+    GrMipmapped mipmapped, GrProtected isProtected, const SkSurfaceProps* props) {
   if (ii.alphaType() == kUnpremul_SkAlphaType) {
     return nullptr;
   }
   auto mbet = ManagedBackendTexture::MakeWithoutData(
-      dContext, ii.width(), ii.height(), ii.colorType(), mipMapped, GrRenderable::kYes,
+      dContext, ii.width(), ii.height(), ii.colorType(), mipmapped, GrRenderable::kYes,
       isProtected);
   if (!mbet) {
     return nullptr;
@@ -34,10 +34,10 @@ sk_sp<SkSurface> MakeBackendTextureSurface(
 
 sk_sp<SkSurface> MakeBackendTextureSurface(
     GrDirectContext* dContext, SkISize dimensions, GrSurfaceOrigin origin, int sampleCnt,
-    SkColorType colorType, sk_sp<SkColorSpace> colorSpace, GrMipmapped mipMapped,
+    SkColorType colorType, sk_sp<SkColorSpace> colorSpace, GrMipmapped mipmapped,
     GrProtected isProtected, const SkSurfaceProps* props) {
   auto ii = SkImageInfo::Make(dimensions, colorType, kPremul_SkAlphaType, std::move(colorSpace));
-  return MakeBackendTextureSurface(dContext, ii, origin, sampleCnt, mipMapped, isProtected, props);
+  return MakeBackendTextureSurface(dContext, ii, origin, sampleCnt, mipmapped, isProtected, props);
 }
 sk_sp<SkSurface> MakeBackendRenderTargetSurface(
     GrDirectContext* dContext, const SkImageInfo& ii, GrSurfaceOrigin origin, int sampleCnt,

@@ -8,15 +8,19 @@
 #ifndef SKSL_SWITCHSTATEMENT
 #define SKSL_SWITCHSTATEMENT
 
+#include "include/private/SkSLDefines.h"
 #include "include/private/SkSLStatement.h"
-#include "src/sksl/ir/SkSLSwitchCase.h"
+#include "include/sksl/SkSLPosition.h"
+#include "src/sksl/ir/SkSLExpression.h"
 
 #include <memory>
-#include <vector>
+#include <string>
+#include <utility>
 
 namespace SkSL {
 
-class Expression;
+class Context;
+class SwitchCase;
 class SymbolTable;
 
 /**
@@ -24,12 +28,12 @@ class SymbolTable;
  */
 class SwitchStatement final : public Statement {
  public:
-  static constexpr Kind kStatementKind = Kind::kSwitch;
+  inline static constexpr Kind kStatementKind = Kind::kSwitch;
 
   SwitchStatement(
-      int offset, bool isStatic, std::unique_ptr<Expression> value, StatementArray cases,
+      Position pos, bool isStatic, std::unique_ptr<Expression> value, StatementArray cases,
       std::shared_ptr<SymbolTable> symbols)
-      : INHERITED(offset, kStatementKind),
+      : INHERITED(pos, kStatementKind),
         fIsStatic(isStatic),
         fValue(std::move(value)),
         fCases(std::move(cases)),
@@ -39,14 +43,14 @@ class SwitchStatement final : public Statement {
   // Coerces case values to the proper type and reports an error if cases are duplicated.
   // Reports errors via the ErrorReporter.
   static std::unique_ptr<Statement> Convert(
-      const Context& context, int offset, bool isStatic, std::unique_ptr<Expression> value,
+      const Context& context, Position pos, bool isStatic, std::unique_ptr<Expression> value,
       ExpressionArray caseValues, StatementArray caseStatements,
       std::shared_ptr<SymbolTable> symbolTable);
 
   // Create a `switch` statement with an array of SwitchCases. The array of SwitchCases must
   // already contain non-overlapping, correctly-typed case values. Reports errors via ASSERT.
   static std::unique_ptr<Statement> Make(
-      const Context& context, int offset, bool isStatic, std::unique_ptr<Expression> value,
+      const Context& context, Position pos, bool isStatic, std::unique_ptr<Expression> value,
       StatementArray cases, std::shared_ptr<SymbolTable> symbolTable);
 
   // Returns a block containing all of the statements that will be run if the given case matches
@@ -71,7 +75,7 @@ class SwitchStatement final : public Statement {
 
   std::unique_ptr<Statement> clone() const override;
 
-  String description() const override;
+  std::string description() const override;
 
  private:
   bool fIsStatic;

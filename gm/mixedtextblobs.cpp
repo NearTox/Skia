@@ -149,8 +149,8 @@ class MixedTextBlobsGM : public GM {
   const char* fEmojiText;
   sk_sp<SkTextBlob> fBlob;
 
-  static constexpr int kWidth = 1250;
-  static constexpr int kHeight = 700;
+  inline static constexpr int kWidth = 1250;
+  inline static constexpr int kHeight = 700;
 
   using INHERITED = GM;
 };

@@ -93,8 +93,6 @@ class XfermodeBench : public Benchmark {
     }
   }
 
-  bool isSuitableFor(Backend backend) override { return backend == kRaster_Backend; }
-
  private:
   SkBlendMode fBlendMode;
   SkString fName;

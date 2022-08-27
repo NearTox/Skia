@@ -1,6 +1,6 @@
 9 registers, 22 instructions:
 0	r0 = uniform32 ptr0 0
-1	r1 = uniform32 ptr0 8
+1	r1 = uniform32 ptr0 C
 2	r0 = trunc r0
 3	r2 = splat 1 (1.4012985e-45)
 4	r3 = splat 2 (2.8025969e-45)
@@ -8,7 +8,7 @@
 loop:
 6	    r5 = index
 7	    r5 = trunc r5
-8	    r5 = mul_i32 r5 r1
+8	    r5 = mul_i32 r1 r5
 9	    r5 = add_i32 r0 r5
 10	    r5 = shl_i32 r5 2
 11	    r6 = gather32 ptr0 4 r5

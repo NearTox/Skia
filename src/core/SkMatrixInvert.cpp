@@ -9,7 +9,7 @@
 
 #include "include/private/SkFloatingPoint.h"
 
-SkScalar SkInvert2x2Matrix(const SkScalar inMatrix[4], SkScalar outMatrix[4]) noexcept {
+SkScalar SkInvert2x2Matrix(const SkScalar inMatrix[4], SkScalar outMatrix[4]) {
   double a00 = inMatrix[0];
   double a01 = inMatrix[1];
   double a10 = inMatrix[2];
@@ -32,7 +32,7 @@ SkScalar SkInvert2x2Matrix(const SkScalar inMatrix[4], SkScalar outMatrix[4]) no
   return determinant;
 }
 
-SkScalar SkInvert3x3Matrix(const SkScalar inMatrix[9], SkScalar outMatrix[9]) noexcept {
+SkScalar SkInvert3x3Matrix(const SkScalar inMatrix[9], SkScalar outMatrix[9]) {
   double a00 = inMatrix[0];
   double a01 = inMatrix[1];
   double a02 = inMatrix[2];
@@ -69,7 +69,7 @@ SkScalar SkInvert3x3Matrix(const SkScalar inMatrix[9], SkScalar outMatrix[9]) no
   return determinant;
 }
 
-SkScalar SkInvert4x4Matrix(const SkScalar inMatrix[16], SkScalar outMatrix[16]) noexcept {
+SkScalar SkInvert4x4Matrix(const SkScalar inMatrix[16], SkScalar outMatrix[16]) {
   double a00 = inMatrix[0];
   double a01 = inMatrix[1];
   double a02 = inMatrix[2];

@@ -108,15 +108,15 @@ static void TestPDFUnion(skiatest::Reporter* reporter) {
   assert_emit_eq_number(reporter, 50000000.1f);   // biggerScalar
   assert_emit_eq_number(reporter, 1.0f / 65536);  // smallScalar
 
-  SkPDFUnion stringSimple = SkPDFUnion::String("test ) string ( foo");
+  SkPDFUnion stringSimple = SkPDFUnion::TextString("test ) string ( foo");
   assert_emit_eq(reporter, stringSimple, "(test \\) string \\( foo)");
 
   SkString stringComplexInput("\ttest ) string ( foo");
-  SkPDFUnion stringComplex = SkPDFUnion::String(stringComplexInput);
+  SkPDFUnion stringComplex = SkPDFUnion::TextString(stringComplexInput);
   assert_emit_eq(reporter, stringComplex, "(\\011test \\) string \\( foo)");
 
   SkString binaryStringInput("\1\2\3\4\5\6\7\10\11\12\13\14\15\16\17\20");
-  SkPDFUnion binaryString = SkPDFUnion::String(binaryStringInput);
+  SkPDFUnion binaryString = SkPDFUnion::ByteString(binaryStringInput);
   assert_emit_eq(reporter, binaryString, "<0102030405060708090A0B0C0D0E0F10>");
 
   SkString nameInput("Test name\twith#tab");
@@ -167,10 +167,10 @@ static void TestPDFArray(skiatest::Reporter* reporter) {
   array->appendName(SkString("AnotherName"));
   assert_emit_eq(reporter, *array, "[42 .5 0 true /ThisName /AnotherName]");
 
-  array->appendString("This String");
+  array->appendTextString("This String");
   assert_emit_eq(reporter, *array, "[42 .5 0 true /ThisName /AnotherName (This String)]");
 
-  array->appendString(SkString("Another String"));
+  array->appendByteString(SkString("Another String"));
   assert_emit_eq(
       reporter, *array,
       "[42 .5 0 true /ThisName /AnotherName (This String) "
@@ -227,13 +227,13 @@ static void TestPDFDict(skiatest::Reporter* reporter) {
       "<</n1 24\n/n2 99\n/n3 .5\n/n4 /AName\n"
       "/n5 /AnotherName>>");
 
-  dict->insertString("n6", "A String");
+  dict->insertTextString("n6", "A String");
   assert_emit_eq(
       reporter, *dict,
       "<</n1 24\n/n2 99\n/n3 .5\n/n4 /AName\n"
       "/n5 /AnotherName\n/n6 (A String)>>");
 
-  dict->insertString("n7", SkString("Another String"));
+  dict->insertByteString("n7", SkString("Another String"));
   assert_emit_eq(
       reporter, *dict,
       "<</n1 24\n/n2 99\n/n3 .5\n/n4 /AName\n"

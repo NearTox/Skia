@@ -77,7 +77,6 @@ float KeyframeAnimator::compute_weight(const KFSegment& seg, float t) const {
 
   // Optional cubic mapper.
   if (seg.kf0->mapping >= Keyframe::kCubicIndexOffset) {
-    SkASSERT(seg.kf0->v != seg.kf1->v);
     const auto mapper_index = SkToSizeT(seg.kf0->mapping - Keyframe::kCubicIndexOffset);
     w = fCMs[mapper_index].computeYFromX(w);
   }
@@ -166,14 +165,14 @@ bool AnimatorBuilder::parseKeyframes(
       }
 
       // We can power-reduce the mapping of repeated values (implicitly constant).
-      if (v == prev_kf.v) {
+      if (v.equals(prev_kf.v, keyframe_type)) {
         prev_kf.mapping = Keyframe::kConstantMapping;
       }
     }
 
     fKFs.push_back({t, v, this->parseMapping(*jkf)});
 
-    constant_value = constant_value && (v == fKFs.front().v);
+    constant_value = constant_value && (v.equals(fKFs.front().v, keyframe_type));
   }
 
   SkASSERT(fKFs.size() == jkfs.size());

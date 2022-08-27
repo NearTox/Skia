@@ -10,6 +10,8 @@
 
 #include "src/shaders/gradients/SkGradientShaderPriv.h"
 
+class SkShaderCodeDictionary;
+
 class SkTwoPointConicalGradient final : public SkGradientShaderBase {
  public:
   // See https://skia.org/dev/design/conical for what focal data means and how our shader works.
@@ -46,6 +48,10 @@ class SkTwoPointConicalGradient final : public SkGradientShaderBase {
   SkShader::GradientType asAGradient(GradientInfo* info) const override;
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+#endif
+#ifdef SK_ENABLE_SKSL
+  void addToKey(
+      const SkKeyContext&, SkPaintParamsKeyBuilder*, SkPipelineDataGatherer*) const override;
 #endif
   bool isOpaque() const override;
 

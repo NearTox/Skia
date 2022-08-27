@@ -19,26 +19,15 @@
 #include <string.h>
 #include <atomic>
 #include <string>
-
-#if __cplusplus >= 201703L
-#  include <string_view>
-#endif
-
-namespace skstd {
-#if __cplusplus >= 201703L
-using std::string_view;
-#else
-class string_view;
-#endif
-}  // namespace skstd
+#include <string_view>
 
 /*  Some helper functions for C strings */
-static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) {
+static inline bool SkStrStartsWith(const char string[], const char prefixStr[]) noexcept {
   SkASSERT(string);
   SkASSERT(prefixStr);
   return !strncmp(string, prefixStr, strlen(prefixStr));
 }
-static inline bool SkStrStartsWith(const char string[], const char prefixChar) {
+static inline bool SkStrStartsWith(const char string[], const char prefixChar) noexcept {
   SkASSERT(string);
   return (prefixChar == *string);
 }
@@ -134,7 +123,7 @@ class SK_API SkString {
   SkString(const SkString&) noexcept;
   SkString(SkString&&) noexcept;
   explicit SkString(const std::string&);
-  explicit SkString(skstd::string_view);
+  explicit SkString(std::string_view);
   ~SkString();
 
   bool isEmpty() const noexcept { return 0 == fRec->fLength; }
@@ -142,9 +131,9 @@ class SK_API SkString {
   const char* c_str() const noexcept { return fRec->data(); }
   char operator[](size_t n) const noexcept { return this->c_str()[n]; }
 
-  bool equals(const SkString&) const;
-  bool equals(const char text[]) const;
-  bool equals(const char text[], size_t len) const;
+  bool equals(const SkString&) const noexcept;
+  bool equals(const char text[]) const noexcept;
+  bool equals(const char text[], size_t len) const noexcept;
 
   bool startsWith(const char prefixStr[]) const { return SkStrStartsWith(fRec->data(), prefixStr); }
   bool startsWith(const char prefixChar) const { return SkStrStartsWith(fRec->data(), prefixChar); }
@@ -155,8 +144,8 @@ class SK_API SkString {
   int find(const char substring[]) const { return SkStrFind(fRec->data(), substring); }
   int findLastOf(const char subchar) const { return SkStrFindLastOf(fRec->data(), subchar); }
 
-  friend bool operator==(const SkString& a, const SkString& b) { return a.equals(b); }
-  friend bool operator!=(const SkString& a, const SkString& b) { return !a.equals(b); }
+  friend bool operator==(const SkString& a, const SkString& b) noexcept { return a.equals(b); }
+  friend bool operator!=(const SkString& a, const SkString& b) noexcept { return !a.equals(b); }
 
   // these methods edit the string
 
@@ -214,11 +203,11 @@ class SK_API SkString {
   void prependScalar(SkScalar value) { this->insertScalar((size_t)-1, value); }
 
   void printf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
-  void printVAList(const char format[], va_list);
+  void printVAList(const char format[], va_list) SK_PRINTF_LIKE(2, 0);
   void appendf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
-  void appendVAList(const char format[], va_list);
+  void appendVAList(const char format[], va_list) SK_PRINTF_LIKE(2, 0);
   void prependf(const char format[], ...) SK_PRINTF_LIKE(2, 3);
-  void prependVAList(const char format[], va_list);
+  void prependVAList(const char format[], va_list) SK_PRINTF_LIKE(2, 0);
 
   void remove(size_t offset, size_t length);
 
@@ -268,8 +257,8 @@ class SK_API SkString {
 #ifdef SK_DEBUG
   const SkString& validate() const;
 #else
-  constexpr SkString& validate() noexcept { return *this; }
   const SkString& validate() const noexcept { return *this; }
+  SkString& validate() noexcept { return *this; }
 #endif
 
   static const Rec gEmptyRec;

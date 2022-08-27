@@ -15,38 +15,35 @@
 #include "include/core/SkTypeface.h"
 #include "include/private/SkMutex.h"
 #include "include/private/SkTemplates.h"
-#include "src/core/SkGlyphRunPainter.h"
 #include "src/core/SkScalerCache.h"
+
+#if SK_SUPPORT_GPU
+#  include "src/text/gpu/StrikeCache.h"
+#endif
 
 bool gSkUseThreadLocalStrikeCaches_IAcknowledgeThisIsIncrediblyExperimental = false;
 
 SkStrikeCache* SkStrikeCache::GlobalStrikeCache() {
-#if !defined(SK_BUILD_FOR_IOS)
   if (gSkUseThreadLocalStrikeCaches_IAcknowledgeThisIsIncrediblyExperimental) {
     static thread_local auto* cache = new SkStrikeCache;
     return cache;
   }
-#endif
   static auto* cache = new SkStrikeCache;
   return cache;
 }
 
-auto SkStrikeCache::findOrCreateStrike(
-    const SkDescriptor& desc, const SkScalerContextEffects& effects, const SkTypeface& typeface)
-    -> sk_sp<Strike> {
+auto SkStrikeCache::findOrCreateStrike(const SkStrikeSpec& strikeSpec) -> sk_sp<SkStrike> {
   SkAutoMutexExclusive ac(fLock);
-  sk_sp<Strike> strike = this->internalFindStrikeOrNull(desc);
+  sk_sp<SkStrike> strike = this->internalFindStrikeOrNull(strikeSpec.descriptor());
   if (strike == nullptr) {
-    auto scaler = typeface.createScalerContext(effects, &desc);
-    strike = this->internalCreateStrike(desc, std::move(scaler));
+    strike = this->internalCreateStrike(strikeSpec);
   }
   this->internalPurge();
   return strike;
 }
 
-SkScopedStrikeForGPU SkStrikeCache::findOrCreateScopedStrike(
-    const SkDescriptor& desc, const SkScalerContextEffects& effects, const SkTypeface& typeface) {
-  return SkScopedStrikeForGPU{this->findOrCreateStrike(desc, effects, typeface).release()};
+SkScopedStrikeForGPU SkStrikeCache::findOrCreateScopedStrike(const SkStrikeSpec& strikeSpec) {
+  return SkScopedStrikeForGPU{this->findOrCreateStrike(strikeSpec).release()};
 }
 
 void SkStrikeCache::PurgeAll() { GlobalStrikeCache()->purgeAll(); }
@@ -62,10 +59,10 @@ void SkStrikeCache::Dump() {
 
   int counter = 0;
 
-  auto visitor = [&counter](const Strike& strike) {
+  auto visitor = [&counter](const SkStrike& strike) {
     const SkScalerContextRec& rec = strike.fScalerCache.getScalerContext()->getRec();
 
-    SkDebugf("index %d\n", counter);
+    SkDebugf("index %d checksum: %x\n", counter, strike.getDescriptor().getChecksum());
     SkDebugf("%s", rec.dump().c_str());
     counter += 1;
   };
@@ -91,7 +88,7 @@ void SkStrikeCache::DumpMemoryStatistics(SkTraceMemoryDump* dump) {
     return;
   }
 
-  auto visitor = [&dump](const Strike& strike) {
+  auto visitor = [&dump](const SkStrike& strike) {
     const SkTypeface* face = strike.fScalerCache.getScalerContext()->getTypeface();
     const SkScalerContextRec& rec = strike.fScalerCache.getScalerContext()->getRec();
 
@@ -104,8 +101,8 @@ void SkStrikeCache::DumpMemoryStatistics(SkTraceMemoryDump* dump) {
       }
     }
 
-    SkString dumpName =
-        SkStringPrintf("%s/%s_%d/%p", gGlyphCacheDumpName, fontName.c_str(), rec.fFontID, &strike);
+    SkString dumpName = SkStringPrintf(
+        "%s/%s_%d/%p", gGlyphCacheDumpName, fontName.c_str(), rec.fTypefaceID, &strike);
 
     dump->dumpNumericValue(dumpName.c_str(), "size", "bytes", strike.fMemoryUsed);
     dump->dumpNumericValue(
@@ -123,18 +120,18 @@ sk_sp<SkStrike> SkStrikeCache::findStrike(const SkDescriptor& desc) {
   return result;
 }
 
-auto SkStrikeCache::internalFindStrikeOrNull(const SkDescriptor& desc) -> sk_sp<Strike> {
+auto SkStrikeCache::internalFindStrikeOrNull(const SkDescriptor& desc) -> sk_sp<SkStrike> {
   // Check head because it is likely the strike we are looking for.
   if (fHead != nullptr && fHead->getDescriptor() == desc) {
     return sk_ref_sp(fHead);
   }
 
   // Do the heavy search looking for the strike.
-  sk_sp<Strike>* strikeHandle = fStrikeLookup.find(desc);
+  sk_sp<SkStrike>* strikeHandle = fStrikeLookup.find(desc);
   if (strikeHandle == nullptr) {
     return nullptr;
   }
-  Strike* strikePtr = strikeHandle->get();
+  SkStrike* strikePtr = strikeHandle->get();
   SkASSERT(strikePtr != nullptr);
   if (fHead != strikePtr) {
     // Make most recently used
@@ -153,16 +150,18 @@ auto SkStrikeCache::internalFindStrikeOrNull(const SkDescriptor& desc) -> sk_sp<
 }
 
 sk_sp<SkStrike> SkStrikeCache::createStrike(
-    const SkDescriptor& desc, std::unique_ptr<SkScalerContext> scaler, SkFontMetrics* maybeMetrics,
+    const SkStrikeSpec& strikeSpec, SkFontMetrics* maybeMetrics,
     std::unique_ptr<SkStrikePinner> pinner) {
   SkAutoMutexExclusive ac(fLock);
-  return this->internalCreateStrike(desc, std::move(scaler), maybeMetrics, std::move(pinner));
+  return this->internalCreateStrike(strikeSpec, maybeMetrics, std::move(pinner));
 }
 
 auto SkStrikeCache::internalCreateStrike(
-    const SkDescriptor& desc, std::unique_ptr<SkScalerContext> scaler, SkFontMetrics* maybeMetrics,
-    std::unique_ptr<SkStrikePinner> pinner) -> sk_sp<Strike> {
-  auto strike = sk_make_sp<Strike>(this, desc, std::move(scaler), maybeMetrics, std::move(pinner));
+    const SkStrikeSpec& strikeSpec, SkFontMetrics* maybeMetrics,
+    std::unique_ptr<SkStrikePinner> pinner) -> sk_sp<SkStrike> {
+  std::unique_ptr<SkScalerContext> scaler = strikeSpec.createScalerContext();
+  auto strike =
+      sk_make_sp<SkStrike>(this, strikeSpec, std::move(scaler), maybeMetrics, std::move(pinner));
   this->internalAttachToHead(strike);
   return strike;
 }
@@ -214,12 +213,12 @@ int SkStrikeCache::setCacheCountLimit(int newCount) {
   return prevCount;
 }
 
-void SkStrikeCache::forEachStrike(std::function<void(const Strike&)> visitor) const {
+void SkStrikeCache::forEachStrike(std::function<void(const SkStrike&)> visitor) const {
   SkAutoMutexExclusive ac(fLock);
 
   this->validate();
 
-  for (Strike* strike = fHead; strike != nullptr; strike = strike->fNext) {
+  for (SkStrike* strike = fHead; strike != nullptr; strike = strike->fNext) {
     visitor(*strike);
   }
 }
@@ -252,9 +251,9 @@ size_t SkStrikeCache::internalPurge(size_t minBytesNeeded) {
 
   // Start at the tail and proceed backwards deleting; the list is in LRU
   // order, with unimportant entries at the tail.
-  Strike* strike = fTail;
+  SkStrike* strike = fTail;
   while (strike != nullptr && (bytesFreed < bytesNeeded || countFreed < countNeeded)) {
-    Strike* prev = strike->fPrev;
+    SkStrike* prev = strike->fPrev;
 
     // Only delete if the strike is not pinned.
     if (strike->fPinner == nullptr || strike->fPinner->canDelete()) {
@@ -276,9 +275,9 @@ size_t SkStrikeCache::internalPurge(size_t minBytesNeeded) {
   return bytesFreed;
 }
 
-void SkStrikeCache::internalAttachToHead(sk_sp<Strike> strike) {
+void SkStrikeCache::internalAttachToHead(sk_sp<SkStrike> strike) {
   SkASSERT(fStrikeLookup.find(strike->getDescriptor()) == nullptr);
-  Strike* strikePtr = strike.get();
+  SkStrike* strikePtr = strike.get();
   fStrikeLookup.set(std::move(strike));
   SkASSERT(nullptr == strikePtr->fPrev && nullptr == strikePtr->fNext);
 
@@ -297,7 +296,7 @@ void SkStrikeCache::internalAttachToHead(sk_sp<Strike> strike) {
   fHead = strikePtr;  // Transfer ownership of strike to the cache list.
 }
 
-void SkStrikeCache::internalRemoveStrike(Strike* strike) {
+void SkStrikeCache::internalRemoveStrike(SkStrike* strike) {
   SkASSERT(fCacheCount > 0);
   fCacheCount -= 1;
   fTotalMemoryUsed -= strike->fMemoryUsed;
@@ -323,7 +322,7 @@ void SkStrikeCache::validate() const {
   size_t computedBytes = 0;
   int computedCount = 0;
 
-  const Strike* strike = fHead;
+  const SkStrike* strike = fHead;
   while (strike != nullptr) {
     computedBytes += strike->fMemoryUsed;
     computedCount += 1;
@@ -342,7 +341,14 @@ void SkStrikeCache::validate() const {
 #endif
 }
 
-void SkStrikeCache::Strike::updateDelta(size_t increase) {
+#if SK_SUPPORT_GPU
+sk_sp<sktext::gpu::TextStrike> SkStrike::findOrCreateTextStrike(
+    sktext::gpu::StrikeCache* gpuStrikeCache) const {
+  return gpuStrikeCache->findOrCreateStrike(fStrikeSpec);
+}
+#endif
+
+void SkStrike::updateDelta(size_t increase) {
   if (increase != 0) {
     SkAutoMutexExclusive lock{fStrikeCache->fLock};
     fMemoryUsed += increase;

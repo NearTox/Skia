@@ -32,11 +32,8 @@ class SkRasterClip {
 
   SkRasterClip& operator=(const SkRasterClip&);
 
-  bool operator==(const SkRasterClip&) const;
-  bool operator!=(const SkRasterClip& other) const { return !(*this == other); }
-
-  bool isBW() const { return fIsBW; }
-  bool isAA() const { return !fIsBW; }
+  bool isBW() const noexcept { return fIsBW; }
+  bool isAA() const noexcept { return !fIsBW; }
   const SkRegion& bwRgn() const {
     SkASSERT(fIsBW);
     return fBW;
@@ -87,7 +84,7 @@ class SkRasterClip {
 #ifdef SK_DEBUG
   void validate() const;
 #else
-  void validate() const {}
+  void validate() const noexcept {}
 #endif
 
   sk_sp<SkShader> clipShader() const { return fShader; }
@@ -127,7 +124,7 @@ class SkRasterClip {
 
 class SkAutoRasterClipValidate : SkNoncopyable {
  public:
-  SkAutoRasterClipValidate(const SkRasterClip& rc) : fRC(rc) { fRC.validate(); }
+  SkAutoRasterClipValidate(const SkRasterClip& rc) noexcept : fRC(rc) { fRC.validate(); }
   ~SkAutoRasterClipValidate() { fRC.validate(); }
 
  private:

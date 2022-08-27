@@ -22,8 +22,7 @@
 */
 
 static void SK_BLITBWMASK_NAME(
-    const SkPixmap& dstPixmap, const SkMask& srcMask,
-    const SkIRect& clip SK_BLITBWMASK_ARGS) noexcept {
+    const SkPixmap& dstPixmap, const SkMask& srcMask, const SkIRect& clip SK_BLITBWMASK_ARGS) {
   SkASSERT(clip.fRight <= srcMask.fBounds.fRight);
 
   int cx = clip.fLeft;

@@ -150,7 +150,7 @@ class SK_API SkDiscretePathEffectImpl : public SkPathEffectBase {
   }
 
   Factory getFactory() const override { return CreateProc; }
-  const char* getTypeName() const noexcept override { return "SkDiscretePathEffect"; }
+  const char* getTypeName() const override { return "SkDiscretePathEffect"; }
 
  private:
   const SkScalar fSegLength, fPerterb;

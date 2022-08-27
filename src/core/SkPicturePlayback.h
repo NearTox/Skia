@@ -28,7 +28,7 @@ class SkPicturePlayback final : SkNoncopyable {
   size_t curOpID() const { return fCurOffset; }
   void resetOpID() { fCurOffset = 0; }
 
- protected:
+ private:
   const SkPictureData* fPictureData;
 
   // The offset of the current operation when within the draw method
@@ -51,7 +51,6 @@ class SkPicturePlayback final : SkNoncopyable {
     SkPicturePlayback* fPlayback;
   };
 
- private:
   using INHERITED = SkNoncopyable;
 };
 

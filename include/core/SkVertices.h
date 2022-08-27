@@ -54,7 +54,7 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
    public:
     Builder(VertexMode mode, int vertexCount, int indexCount, uint32_t flags);
 
-    bool isValid() const noexcept { return fVertices != nullptr; }
+    bool isValid() const { return fVertices != nullptr; }
 
     SkPoint* positions();
     uint16_t* indices();  // returns null if there are no indices
@@ -81,8 +81,8 @@ class SK_API SkVertices : public SkNVRefCnt<SkVertices> {
     friend class SkVerticesPriv;
   };
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
-  const SkRect& bounds() const noexcept { return fBounds; }
+  uint32_t uniqueID() const { return fUniqueID; }
+  const SkRect& bounds() const { return fBounds; }
 
   // returns approximate byte size of the vertices object
   size_t approximateSize() const;

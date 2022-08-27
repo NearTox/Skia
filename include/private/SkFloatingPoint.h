@@ -17,19 +17,6 @@
 #include <cstring>
 #include <limits>
 
-#if defined(SK_LEGACY_FLOAT_RSQRT)
-#  if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-#    include <xmmintrin.h>
-#  elif defined(SK_ARM_HAS_NEON)
-#    include <arm_neon.h>
-#  endif
-#endif
-
-// For _POSIX_VERSION
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
-#  include <unistd.h>
-#endif
-
 constexpr float SK_FloatSqrt2 = 1.41421356f;
 constexpr float SK_FloatPI = 3.14159265f;
 constexpr double SK_DoublePI = 3.14159265358979323846264338327950288;
@@ -80,11 +67,11 @@ static inline float sk_float_log2(float x) {
 #  define sk_float_log2(x) log2f(x)
 #endif
 
-static constexpr inline bool sk_float_isfinite(float x) noexcept {
+static inline bool sk_float_isfinite(float x) noexcept {
   return SkFloatBits_IsFinite(SkFloat2Bits(x));
 }
 
-static constexpr inline bool sk_floats_are_finite(float a, float b) noexcept {
+static inline bool sk_floats_are_finite(float a, float b) noexcept {
   return sk_float_isfinite(a) && sk_float_isfinite(b);
 }
 
@@ -97,11 +84,9 @@ static inline bool sk_floats_are_finite(const float array[], int count) noexcept
   return prod == 0;  // if prod is NaN, this check will return false
 }
 
-static constexpr inline bool sk_float_isinf(float x) noexcept {
-  return SkFloatBits_IsInf(SkFloat2Bits(x));
-}
+static inline bool sk_float_isinf(float x) noexcept { return SkFloatBits_IsInf(SkFloat2Bits(x)); }
 
-static constexpr inline bool sk_float_isnan(float x) noexcept { return !(x == x); }
+static inline bool sk_float_isnan(float x) noexcept { return !(x == x); }
 
 #define sk_double_isnan(a) sk_float_isnan(a)
 
@@ -114,7 +99,7 @@ static constexpr inline bool sk_float_isnan(float x) noexcept { return !(x == x)
 /**
  *  Return the closest int for the given float. Returns SK_MaxS32FitsInFloat for NaN.
  */
-static constexpr inline int sk_float_saturate2int(float x) noexcept {
+static inline int sk_float_saturate2int(float x) noexcept {
   x = x < SK_MaxS32FitsInFloat ? x : SK_MaxS32FitsInFloat;
   x = x > SK_MinS32FitsInFloat ? x : SK_MinS32FitsInFloat;
   return (int)x;
@@ -123,7 +108,7 @@ static constexpr inline int sk_float_saturate2int(float x) noexcept {
 /**
  *  Return the closest int for the given double. Returns SK_MaxS32 for NaN.
  */
-static constexpr inline int sk_double_saturate2int(double x) noexcept {
+static inline int sk_double_saturate2int(double x) noexcept {
   x = x < SK_MaxS32 ? x : SK_MaxS32;
   x = x > SK_MinS32 ? x : SK_MinS32;
   return (int)x;
@@ -132,7 +117,7 @@ static constexpr inline int sk_double_saturate2int(double x) noexcept {
 /**
  *  Return the closest int64_t for the given float. Returns SK_MaxS64FitsInFloat for NaN.
  */
-static constexpr inline int64_t sk_float_saturate2int64(float x) noexcept {
+static inline int64_t sk_float_saturate2int64(float x) noexcept {
   x = x < SK_MaxS64FitsInFloat ? x : SK_MaxS64FitsInFloat;
   x = x > SK_MinS64FitsInFloat ? x : SK_MinS64FitsInFloat;
   return (int64_t)x;
@@ -157,9 +142,7 @@ static constexpr inline int64_t sk_float_saturate2int64(float x) noexcept {
 // Clang thinks this is undefined, but it's actually implementation defined to return either
 // the largest float or infinity (one of the two bracketing representable floats).  Good enough!
 SK_ATTRIBUTE(no_sanitize("float-cast-overflow"))
-static constexpr inline float sk_double_to_float(double x) noexcept {
-  return static_cast<float>(x);
-}
+static inline float sk_double_to_float(double x) noexcept { return static_cast<float>(x); }
 
 #define SK_FloatNaN std::numeric_limits<float>::quiet_NaN()
 #define SK_FloatInfinity (+std::numeric_limits<float>::infinity())
@@ -169,54 +152,10 @@ static constexpr inline float sk_double_to_float(double x) noexcept {
 
 // Returns false if any of the floats are outside of [0...1]
 // Returns true if count is 0
-bool sk_floats_are_unit(const float array[], size_t count);
-
-#if defined(SK_LEGACY_FLOAT_RSQRT)
-static inline float sk_float_rsqrt_portable(float x) {
-  // Get initial estimate.
-  int i;
-  memcpy(&i, &x, 4);
-  i = 0x5F1FFFF9 - (i >> 1);
-  float estimate;
-  memcpy(&estimate, &i, 4);
-
-  // One step of Newton's method to refine.
-  const float estimate_sq = estimate * estimate;
-  estimate *= 0.703952253f * (2.38924456f - x * estimate_sq);
-  return estimate;
-}
-
-// Fast, approximate inverse square root.
-// Compare to name-brand "1.0f / sk_float_sqrt(x)".  Should be around 10x faster on SSE, 2x on NEON.
-static inline float sk_float_rsqrt(float x) {
-// We want all this inlined, so we'll inline SIMD and just take the hit when we don't know we've got
-// it at compile time.  This is going to be too fast to productively hide behind a function pointer.
-//
-// We do one step of Newton's method to refine the estimates in the NEON and portable paths.  No
-// refinement is faster, but very innacurate.  Two steps is more accurate, but slower than 1/sqrt.
-//
-// Optimized constants in the portable path courtesy of http://rrrola.wz.cz/inv_sqrt.html
-#  if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-  return _mm_cvtss_f32(_mm_rsqrt_ss(_mm_set_ss(x)));
-#  elif defined(SK_ARM_HAS_NEON)
-  // Get initial estimate.
-  const float32x2_t xx = vdup_n_f32(x);  // Clever readers will note we're doing everything 2x.
-  float32x2_t estimate = vrsqrte_f32(xx);
-
-  // One step of Newton's method to refine.
-  const float32x2_t estimate_sq = vmul_f32(estimate, estimate);
-  estimate = vmul_f32(estimate, vrsqrts_f32(xx, estimate_sq));
-  return vget_lane_f32(estimate, 0);  // 1 will work fine too; the answer's in both places.
-#  else
-  return sk_float_rsqrt_portable(x);
-#  endif
-}
-#else
+bool sk_floats_are_unit(const float array[], size_t count) noexcept;
 
 static inline float sk_float_rsqrt_portable(float x) noexcept { return 1.0f / sk_float_sqrt(x); }
 static inline float sk_float_rsqrt(float x) noexcept { return 1.0f / sk_float_sqrt(x); }
-
-#endif
 
 // Returns the log2 of the provided value, were that value to be rounded up to the next power of 2.
 // Returns 0 if value <= 0:
@@ -227,7 +166,7 @@ static inline float sk_float_rsqrt(float x) noexcept { return 1.0f / sk_float_sq
 //     sk_float_nextlog2((2..4]) -> 2
 //     sk_float_nextlog2((4..8]) -> 3
 //     ...
-static constexpr inline int sk_float_nextlog2(float x) noexcept {
+static inline int sk_float_nextlog2(float x) noexcept {
   uint32_t bits = (uint32_t)SkFloat2Bits(x);
   bits += (1u << 23) - 1u;  // Increment the exponent for non-powers-of-2.
   int exp = ((int32_t)bits >> 23) - 127;
@@ -247,22 +186,22 @@ static constexpr inline int sk_float_nextlog2(float x) noexcept {
 // so we have a helper that suppresses the possible undefined-behavior warnings.
 
 SK_ATTRIBUTE(no_sanitize("float-divide-by-zero"))
-static constexpr inline float sk_ieee_float_divide(float numer, float denom) noexcept {
+static inline float sk_ieee_float_divide(float numer, float denom) noexcept {
   return numer / denom;
 }
 
 SK_ATTRIBUTE(no_sanitize("float-divide-by-zero"))
-static constexpr inline double sk_ieee_double_divide(double numer, double denom) noexcept {
+static inline double sk_ieee_double_divide(double numer, double denom) noexcept {
   return numer / denom;
 }
 
 // While we clean up divide by zero, we'll replace places that do divide by zero with this TODO.
-static constexpr inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
+static inline float sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(
     float n, float d) noexcept {
   return sk_ieee_float_divide(n, d);
 }
 
-static constexpr inline float sk_fmaf(float f, float m, float a) noexcept {
+static inline float sk_fmaf(float f, float m, float a) noexcept {
 #if defined(FP_FAST_FMA)
   return std::fmaf(f, m, a);
 #else

@@ -88,14 +88,14 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_equal1_operator
   */
-  bool operator==(const SkRegion& other) const noexcept;
+  bool operator==(const SkRegion& other) const;
 
   /** Compares SkRegion and other; returns true if they do not enclose the same area.
 
       @param other  SkRegion to compare
       @return       true if SkRegion pair are not equivalent
   */
-  bool operator!=(const SkRegion& other) const noexcept { return !(*this == other); }
+  bool operator!=(const SkRegion& other) const { return !(*this == other); }
 
   /** Sets SkRegion to src, and returns true if src bounds is not empty.
       This makes SkRegion and src identical by value. Internally,
@@ -166,7 +166,7 @@ class SK_API SkRegion {
 
       example: https://fiddle.skia.org/c/@Region_computeRegionComplexity
   */
-  int computeRegionComplexity() const noexcept;
+  int computeRegionComplexity() const;
 
   /** Appends outline of SkRegion to path.
       Returns true if SkRegion is not empty; otherwise, returns false, and leaves path
@@ -441,7 +441,7 @@ class SK_API SkRegion {
 
         @return  empty SkRegion iterator
     */
-    constexpr Iterator() noexcept : fRgn(nullptr), fDone(true) {}
+    Iterator() noexcept : fRgn(nullptr), fDone(true) {}
 
     /** Sets SkRegion::Iterator to return elements of SkIRect array in region.
 
@@ -450,7 +450,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Iterator_copy_const_SkRegion
     */
-    Iterator(const SkRegion& region) noexcept;
+    Iterator(const SkRegion& region);
 
     /** SkPoint SkRegion::Iterator to start of SkRegion.
         Returns true if SkRegion was set; otherwise, returns false.
@@ -459,7 +459,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Iterator_rewind
     */
-    bool rewind() noexcept;
+    bool rewind();
 
     /** Resets iterator, using the new SkRegion.
 
@@ -467,7 +467,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Iterator_reset
     */
-    void reset(const SkRegion& region) noexcept;
+    void reset(const SkRegion& region);
 
     /** Returns true if SkRegion::Iterator is pointing to final SkIRect in SkRegion.
 
@@ -479,7 +479,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Iterator_next
     */
-    void next() noexcept;
+    void next();
 
     /** Returns SkIRect element in SkRegion. Does not return predictable results if SkRegion
         is empty.
@@ -515,7 +515,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Cliperator_const_SkRegion_const_SkIRect
     */
-    Cliperator(const SkRegion& region, const SkIRect& clip) noexcept;
+    Cliperator(const SkRegion& region, const SkIRect& clip);
 
     /** Returns true if SkRegion::Cliperator is pointing to final SkIRect in SkRegion.
 
@@ -527,7 +527,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Cliperator_next
     */
-    void next() noexcept;
+    void next();
 
     /** Returns SkIRect element in SkRegion, intersected with clip passed to
         SkRegion::Cliperator constructor. Does not return predictable results if SkRegion
@@ -570,7 +570,7 @@ class SK_API SkRegion {
 
     example: https://fiddle.skia.org/c/@Region_Spanerator_next
     */
-    bool next(int* left, int* right) noexcept;
+    bool next(int* left, int* right);
 
    private:
     const SkRegion::RunType* fRuns;
@@ -640,11 +640,11 @@ class SK_API SkRegion {
 
   bool isValid() const;
 
-  static void BuildRectRuns(const SkIRect& bounds, RunType runs[kRectRegionRuns]) noexcept;
+  static void BuildRectRuns(const SkIRect& bounds, RunType runs[kRectRegionRuns]);
 
   // If the runs define a simple rect, return true and set bounds to that
   // rect. If not, return false and ignore bounds.
-  static bool RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* bounds) noexcept;
+  static bool RunsAreARect(const SkRegion::RunType runs[], int count, SkIRect* bounds);
 
   /**
    *  If the last arg is null, just return if the result is non-empty,

@@ -46,9 +46,6 @@ class TextSample_Align_Dir : public Sample {
   void drawLine(
       SkCanvas* canvas, SkScalar w, SkScalar h, const std::u16string& text, TextAlign align,
       TextDirection direction = TextDirection::kLtr) {
-    const std::u16string& ellipsis = u"\u2026";
-    SkScalar margin = 20;
-
     SkAutoCanvasRestore acr(canvas, true);
 
     canvas->clipRect(SkRect::MakeWH(w, h));
@@ -134,11 +131,11 @@ class TextSample_LongLTR : public Sample {
   std::unique_ptr<SkUnicode> fUnicode;
 };
 
-class TextSample_LongRTL : public Sample {
+class TextSample_LongRTL1 : public Sample {
  protected:
   SkString name() override { return SkString("TextSample_LongRTL"); }
 
-  SkString mirror(const std::string& text) {
+  std::u16string mirror(const std::string& text) {
     std::u16string result;
     result += u"\u202E";
     for (auto i = text.size(); i > 0; --i) {
@@ -148,12 +145,34 @@ class TextSample_LongRTL : public Sample {
       result += ch;
     }
     result += u"\u202C";
-    return fUnicode->convertUtf16ToUtf8(result);
+    return result;
   }
 
   void onDrawContent(SkCanvas* canvas) override {
     canvas->drawColor(SK_ColorWHITE);
-    Paint::drawText(u"LONG MIRRORED TEXT SHOULD SHOW RIGHT TO LEFT (AS NORMAL)", canvas, 0, 0);
+    Paint::drawText(
+        mirror("LONG MIRRORED TEXT SHOULD SHOW RIGHT TO LEFT (AS NORMAL)"), canvas, 0, 0);
+  }
+
+ private:
+  using INHERITED = Sample;
+  std::unique_ptr<SkUnicode> fUnicode;
+};
+
+class TextSample_LongRTL2 : public Sample {
+ protected:
+  SkString name() override { return SkString("TextSample_LongRTL"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->drawColor(SK_ColorWHITE);
+    std::u16string utf16(
+        u"يَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمُيَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمُ يَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمُ يَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ "
+        u"بَالَكُمُ يَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمُيَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمُ يَهْدِيْكُمُ اللَّهُ وَيُصْلِحُ بَالَكُمُ يَهْدِيْكُمُ اللَّهُ "
+        u"وَيُصْلِحُ بَالَكُمُ");
+    Paint::drawText(
+        utf16, canvas, TextDirection::kRtl, TextAlign::kRight, SkPaint(SkColors::kBlack),
+        SkPaint(SkColors::kLtGray), SkString("Noto Naskh Arabic"), 40.0f, SkFontStyle::Normal(),
+        SkSize::Make(800, 800), 0, 0);
   }
 
  private:
@@ -166,4 +185,5 @@ class TextSample_LongRTL : public Sample {
 DEF_SAMPLE(return new TextSample_HelloWorld();)
 DEF_SAMPLE(return new TextSample_Align_Dir();)
 DEF_SAMPLE(return new TextSample_LongLTR();)
-DEF_SAMPLE(return new TextSample_LongRTL();)
+DEF_SAMPLE(return new TextSample_LongRTL1();)
+DEF_SAMPLE(return new TextSample_LongRTL2();)

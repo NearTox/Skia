@@ -35,7 +35,7 @@ size_t SkMask::computeTotalImageSize() const {
 /** We explicitly use this allocator for SkBimap pixels, so that we can
     freely assign memory allocated by one class to the other.
 */
-uint8_t* SkMask::AllocImage(size_t size, AllocType at) noexcept {
+uint8_t* SkMask::AllocImage(size_t size, AllocType at) {
   size_t aligned_size = SkSafeMath::Align4(size);
   unsigned flags = SK_MALLOC_THROW;
   if (at == kZeroInit_Alloc) {
@@ -91,13 +91,13 @@ static const int gMaskFormatToShift[] = {
     0,   // SDF
 };
 
-static int maskFormatToShift(SkMask::Format format) noexcept {
+static int maskFormatToShift(SkMask::Format format) {
   SkASSERT((unsigned)format < SK_ARRAY_COUNT(gMaskFormatToShift));
   SkASSERT(SkMask::kBW_Format != format);
   return gMaskFormatToShift[format];
 }
 
-void* SkMask::getAddr(int x, int y) const noexcept {
+void* SkMask::getAddr(int x, int y) const {
   SkASSERT(kBW_Format != fFormat);
   SkASSERT(fBounds.contains(x, y));
   SkASSERT(fImage);

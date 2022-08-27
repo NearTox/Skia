@@ -7,16 +7,17 @@
 
 #include "gm/gm.h"
 
+#include "include/core/SkColorSpace.h"
 #include "include/effects/SkGradientShader.h"
 #include "include/gpu/GrRecordingContext.h"
 #include "src/core/SkCanvasPriv.h"
 #include "src/core/SkGpuBlurUtils.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrStyle.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrBlendFragmentProcessor.h"
-#include "src/gpu/effects/GrTextureEffect.h"
-#include "src/gpu/v1/SurfaceDrawContext_v1.h"
+#include "src/gpu/ganesh/GrRecordingContextPriv.h"
+#include "src/gpu/ganesh/GrStyle.h"
+#include "src/gpu/ganesh/SkGr.h"
+#include "src/gpu/ganesh/effects/GrBlendFragmentProcessor.h"
+#include "src/gpu/ganesh/effects/GrTextureEffect.h"
+#include "src/gpu/ganesh/v1/SurfaceDrawContext_v1.h"
 #include "src/image/SkImage_Base.h"
 
 namespace {
@@ -262,15 +263,15 @@ static GM::DrawResult run(
           auto fp =
               GrTextureEffect::Make(blurView, kPremul_SkAlphaType, SkMatrix::I(), sampler, caps);
           // Compose against white (default paint color)
-          fp = GrBlendFragmentProcessor::Make(
+          fp = GrBlendFragmentProcessor::Make<SkBlendMode::kSrcOver>(
               std::move(fp),
-              /*dst=*/nullptr, SkBlendMode::kSrcOver);
+              /*dst=*/nullptr);
           GrPaint paint;
           // Compose against white (default paint color) and then replace the dst
           // (SkBlendMode::kSrc).
-          fp = GrBlendFragmentProcessor::Make(
+          fp = GrBlendFragmentProcessor::Make<SkBlendMode::kSrcOver>(
               std::move(fp),
-              /*dst=*/nullptr, SkBlendMode::kSrcOver);
+              /*dst=*/nullptr);
           paint.setColorFragmentProcessor(std::move(fp));
           paint.setPorterDuffXPFactory(SkBlendMode::kSrc);
           sdc->fillRectToRect(
@@ -348,7 +349,7 @@ static DrawResult do_very_large_blur_gm(
   int x = 10;
   int y = 10;
   for (auto blurDirs : {0b01, 0b10, 0b11}) {
-    for (int t = 0; t <= static_cast<int>(SkTileMode::kLastTileMode); ++t) {
+    for (int t = 0; t < kSkTileModeCount; ++t) {
       auto tm = static_cast<SkTileMode>(t);
       auto dstB = srcB.makeOutset(30, 30);
       for (float sigma : {0.f, 5.f, 25.f, 80.f}) {
@@ -372,9 +373,9 @@ static DrawResult do_very_large_blur_gm(
           if (result) {
             std::unique_ptr<GrFragmentProcessor> fp =
                 GrTextureEffect::Make(std::move(result), kPremul_SkAlphaType);
-            fp = GrBlendFragmentProcessor::Make(
+            fp = GrBlendFragmentProcessor::Make<SkBlendMode::kSrcOver>(
                 std::move(fp),
-                /*dst=*/nullptr, SkBlendMode::kSrcOver);
+                /*dst=*/nullptr);
             sdc->fillRectToRectWithFP(SkIRect::MakeSize(dstB.size()), dstRect, std::move(fp));
           }
           x += dstB.width() + 10;

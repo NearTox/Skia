@@ -591,7 +591,7 @@ DEF_TEST(PathOpsQuadIntersection, reporter) {
   oneOffTests(reporter);
   coincidentTest(reporter);
   standardTestCases(reporter);
-  if (false) QuadraticIntersection_IntersectionFinder();
+  if ((false)) QuadraticIntersection_IntersectionFinder();
 }
 
 DEF_TEST(PathOpsQuadBinaryProfile, reporter) {

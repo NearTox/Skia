@@ -111,8 +111,6 @@ struct ParagraphStyle {
   TextAlign effective_align() const;
   bool hintingIsOn() const { return fHintingIsOn; }
   void turnHintingOff() { fHintingIsOn = false; }
-  DrawOptions getDrawOptions() { return fDrawingOptions; }
-  void setDrawOptions(DrawOptions value) { fDrawingOptions = value; }
 
  private:
   StrutStyle fStrutStyle;
@@ -125,7 +123,6 @@ struct ParagraphStyle {
   SkScalar fHeight;
   TextHeightBehavior fTextHeightBehavior;
   bool fHintingIsOn;
-  DrawOptions fDrawingOptions = DrawOptions::kDirect;
 };
 }  // namespace textlayout
 }  // namespace skia

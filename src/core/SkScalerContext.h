@@ -31,14 +31,13 @@ class SkPathEffect;
 class SkScalerContext;
 class SkScalerContext_DW;
 
-enum SkScalerContextFlags : uint32_t {
+enum class SkScalerContextFlags : uint32_t {
   kNone = 0,
   kFakeGamma = 1 << 0,
   kBoostContrast = 1 << 1,
   kFakeGammaAndBoostContrast = kFakeGamma | kBoostContrast,
 };
-
-enum SkAxisAlignment : uint32_t { kNone_SkAxisAlignment, kX_SkAxisAlignment, kY_SkAxisAlignment };
+SK_MAKE_BITFIELD_OPS(SkScalerContextFlags)
 
 /*
  *  To allow this to be forward-declared, it must be its own typename, rather
@@ -49,10 +48,15 @@ enum SkAxisAlignment : uint32_t { kNone_SkAxisAlignment, kX_SkAxisAlignment, kY_
  */
 SK_BEGIN_REQUIRE_DENSE
 struct SkScalerContextRec {
-  uint32_t fFontID;
+  SkTypefaceID fTypefaceID;
   SkScalar fTextSize, fPreScaleX, fPreSkewX;
   SkScalar fPost2x2[2][2];
   SkScalar fFrameWidth, fMiterLimit;
+
+  // This will be set if to the paint's foreground color if
+  // kNeedsForegroundColor is set, which will usually be the case for COLRv0 and
+  // COLRv1 fonts.
+  uint32_t fForegroundColor{SK_ColorBLACK};
 
  private:
   // These describe the parameters to create (uniquely identify) the pre-blend.
@@ -63,23 +67,23 @@ struct SkScalerContextRec {
   const uint8_t fReservedAlign{0};
 
  public:
-  SkScalar getDeviceGamma() const { return SkIntToScalar(fDeviceGamma) / (1 << 6); }
-  void setDeviceGamma(SkScalar dg) {
+  SkScalar getDeviceGamma() const noexcept { return SkIntToScalar(fDeviceGamma) / (1 << 6); }
+  void setDeviceGamma(SkScalar dg) noexcept {
     SkASSERT(0 <= dg && dg < SkIntToScalar(4));
     fDeviceGamma = SkScalarFloorToInt(dg * (1 << 6));
   }
 
-  SkScalar getPaintGamma() const { return SkIntToScalar(fPaintGamma) / (1 << 6); }
-  void setPaintGamma(SkScalar pg) {
+  SkScalar getPaintGamma() const noexcept { return SkIntToScalar(fPaintGamma) / (1 << 6); }
+  void setPaintGamma(SkScalar pg) noexcept {
     SkASSERT(0 <= pg && pg < SkIntToScalar(4));
     fPaintGamma = SkScalarFloorToInt(pg * (1 << 6));
   }
 
-  SkScalar getContrast() const {
+  SkScalar getContrast() const noexcept {
     sk_ignore_unused_variable(fReservedAlign);
     return SkIntToScalar(fContrast) / ((1 << 8) - 1);
   }
-  void setContrast(SkScalar c) {
+  void setContrast(SkScalar c) noexcept {
     SkASSERT(0 <= c && c <= SK_Scalar1);
     fContrast = SkScalarRoundToInt(c * ((1 << 8) - 1));
   }
@@ -129,6 +133,7 @@ struct SkScalerContextRec {
     msg.appendf(
         "      lum bits %x, device gamma %d, paint gamma %d contrast %d\n", fLumBits, fDeviceGamma,
         fPaintGamma, fContrast);
+    msg.appendf("      foreground color %x\n", fForegroundColor);
     return msg;
   }
 
@@ -137,10 +142,10 @@ struct SkScalerContextRec {
   void getSingleMatrix(SkMatrix*) const;
 
   /** The kind of scale which will be applied by the underlying port (pre-matrix). */
-  enum PreMatrixScale {
-    kFull_PreMatrixScale,            // The underlying port can apply both x and y scale.
-    kVertical_PreMatrixScale,        // The underlying port can only apply a y scale.
-    kVerticalInteger_PreMatrixScale  // The underlying port can only apply an integer y scale.
+  enum class PreMatrixScale {
+    kFull,            // The underlying port can apply both x and y scale.
+    kVertical,        // The underlying port can only apply a y scale.
+    kVerticalInteger  // The underlying port can only apply an integer y scale.
   };
   /**
    *  Compute useful matrices for use with sizing in underlying libraries.
@@ -182,12 +187,12 @@ struct SkScalerContextRec {
 
   SkAxisAlignment computeAxisAlignmentForHText() const;
 
-  inline SkFontHinting getHinting() const;
-  inline void setHinting(SkFontHinting);
+  inline SkFontHinting getHinting() const noexcept;
+  inline void setHinting(SkFontHinting) noexcept;
 
-  SkMask::Format getFormat() const { return fMaskFormat; }
+  SkMask::Format getFormat() const noexcept { return fMaskFormat; }
 
-  SkColor getLuminanceColor() const { return fLumBits; }
+  SkColor getLuminanceColor() const noexcept { return fLumBits; }
 
   // setLuminanceColor forces the alpha to be 0xFF because the blitter that draws the glyph
   // will apply the alpha from the paint. Don't apply the alpha twice.
@@ -201,8 +206,9 @@ SK_END_REQUIRE_DENSE
 
 // TODO: rename SkScalerContextEffects -> SkStrikeEffects
 struct SkScalerContextEffects {
-  SkScalerContextEffects() : fPathEffect(nullptr), fMaskFilter(nullptr) {}
-  SkScalerContextEffects(SkPathEffect* pe, SkMaskFilter* mf) : fPathEffect(pe), fMaskFilter(mf) {}
+  constexpr SkScalerContextEffects() noexcept : fPathEffect(nullptr), fMaskFilter(nullptr) {}
+  SkScalerContextEffects(SkPathEffect* pe, SkMaskFilter* mf) noexcept
+      : fPathEffect(pe), fMaskFilter(mf) {}
   explicit SkScalerContextEffects(const SkPaint& paint)
       : fPathEffect(paint.getPathEffect()), fMaskFilter(paint.getMaskFilter()) {}
 
@@ -243,6 +249,8 @@ class SkScalerContext {
     kGenA8FromLCD_Flag = 0x0800,  // could be 0x200 (bit meaning dependent on fMaskFormat)
     kLinearMetrics_Flag = 0x1000,
     kBaselineSnap_Flag = 0x2000,
+
+    kNeedsForegroundColor_Flag = 0x4000,
   };
 
   // computed values
@@ -253,20 +261,21 @@ class SkScalerContext {
   SkScalerContext(sk_sp<SkTypeface>, const SkScalerContextEffects&, const SkDescriptor*);
   virtual ~SkScalerContext();
 
-  SkTypeface* getTypeface() const { return fTypeface.get(); }
+  SkTypeface* getTypeface() const noexcept { return fTypeface.get(); }
 
-  SkMask::Format getMaskFormat() const { return fRec.fMaskFormat; }
+  SkMask::Format getMaskFormat() const noexcept { return fRec.fMaskFormat; }
 
-  bool isSubpixel() const { return SkToBool(fRec.fFlags & kSubpixelPositioning_Flag); }
+  bool isSubpixel() const noexcept { return SkToBool(fRec.fFlags & kSubpixelPositioning_Flag); }
 
-  bool isLinearMetrics() const { return SkToBool(fRec.fFlags & kLinearMetrics_Flag); }
+  bool isLinearMetrics() const noexcept { return SkToBool(fRec.fFlags & kLinearMetrics_Flag); }
 
   // DEPRECATED
-  bool isVertical() const { return false; }
+  bool isVertical() const noexcept { return false; }
 
-  SkGlyph makeGlyph(SkPackedGlyphID);
+  SkGlyph makeGlyph(SkPackedGlyphID, SkArenaAlloc*);
   void getImage(const SkGlyph&);
-  bool SK_WARN_UNUSED_RESULT getPath(SkPackedGlyphID, SkPath*);
+  void getPath(SkGlyph&, SkArenaAlloc*);
+  sk_sp<SkDrawable> getDrawable(SkGlyph&);
   void getFontMetrics(SkFontMetrics*);
 
   /** Return the size in bytes of the associated gamma lookup table
@@ -310,13 +319,15 @@ class SkScalerContext {
 
   static SkMaskGamma::PreBlend GetMaskPreBlend(const SkScalerContextRec& rec);
 
-  const SkScalerContextRec& getRec() const { return fRec; }
+  const SkScalerContextRec& getRec() const noexcept { return fRec; }
 
-  SkScalerContextEffects getEffects() const { return {fPathEffect.get(), fMaskFilter.get()}; }
+  SkScalerContextEffects getEffects() const noexcept {
+    return {fPathEffect.get(), fMaskFilter.get()};
+  }
 
   /**
    *  Return the axis (if any) that the baseline for horizontal text should land on.
-   *  As an example, the identity matrix will return kX_SkAxisAlignment
+   *  As an example, the identity matrix will return SkAxisAlignment::kX.
    */
   SkAxisAlignment computeAxisAlignmentForHText() const;
 
@@ -334,16 +345,14 @@ class SkScalerContext {
 
   /** Generates the contents of glyph.fWidth, fHeight, fTop, fLeft,
    *  as well as fAdvanceX and fAdvanceY if not already set.
-   *
-   *  TODO: fMaskFormat is set by internalMakeGlyph later; cannot be set here.
+   *  The fMaskFormat will already be set to a requested format but may be changed.
    */
-  virtual void generateMetrics(SkGlyph* glyph) = 0;
+  virtual void generateMetrics(SkGlyph* glyph, SkArenaAlloc*) = 0;
 
   /** Generates the contents of glyph.fImage.
    *  When called, glyph.fImage will be pointing to a pre-allocated,
    *  uninitialized region of memory of size glyph.imageSize().
-   *  This method may change glyph.fMaskFormat if the new image size is
-   *  less than or equal to the old image size.
+   *  This method may not change glyph.fMaskFormat.
    *
    *  Because glyph.imageSize() will determine the size of fImage,
    *  generateMetrics will be called before generateImage.
@@ -352,21 +361,34 @@ class SkScalerContext {
 
   /** Sets the passed path to the glyph outline.
    *  If this cannot be done the path is set to empty;
+   *  Does not apply subpixel positioning to the path.
    *  @return false if this glyph does not have any path.
    */
-  virtual bool SK_WARN_UNUSED_RESULT generatePath(SkGlyphID glyphId, SkPath* path) = 0;
+  virtual bool SK_WARN_UNUSED_RESULT generatePath(const SkGlyph&, SkPath*) = 0;
+
+  /** Returns the drawable for the glyph (if any).
+   *
+   *  The generated drawable will be lifetime scoped to the lifetime of this scaler context.
+   *  This means the drawable may refer to the scaler context and associated font data.
+   *
+   *  The drawable does not need to be flattenable (e.g. implement getFactory and getTypeName).
+   *  Any necessary serialization will be done with newPictureSnapshot.
+   */
+  virtual sk_sp<SkDrawable> generateDrawable(const SkGlyph&);  // TODO: = 0
 
   /** Retrieves font metrics. */
   virtual void generateFontMetrics(SkFontMetrics*) = 0;
 
-  void forceGenerateImageFromPath() { fGenerateImageFromPath = true; }
-  void forceOffGenerateImageFromPath() { fGenerateImageFromPath = false; }
+  void forceGenerateImageFromPath() noexcept { fGenerateImageFromPath = true; }
+  void forceOffGenerateImageFromPath() noexcept { fGenerateImageFromPath = false; }
 
  private:
+  friend class PathText;             // For debug purposes
+  friend class PathTextBench;        // For debug purposes
   friend class RandomScalerContext;  // For debug purposes
 
   static SkScalerContextRec PreprocessRec(
-      const SkTypeface& typeface, const SkScalerContextEffects& effects, const SkDescriptor& desc);
+      const SkTypeface&, const SkScalerContextEffects&, const SkDescriptor&);
 
   // never null
   sk_sp<SkTypeface> fTypeface;
@@ -380,8 +402,8 @@ class SkScalerContext {
   bool fGenerateImageFromPath;
 
   /** Returns false if the glyph has no path at all. */
-  bool internalGetPath(SkPackedGlyphID id, SkPath* devPath, bool* hairline);
-  SkGlyph internalMakeGlyph(SkPackedGlyphID packedID, SkMask::Format format);
+  void internalGetPath(SkGlyph&, SkArenaAlloc*);
+  SkGlyph internalMakeGlyph(SkPackedGlyphID, SkMask::Format, SkArenaAlloc*);
 
   // SkMaskGamma::PreBlend converts linear masks to gamma correcting masks.
  protected:
@@ -394,12 +416,12 @@ class SkScalerContext {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkFontHinting SkScalerContextRec::getHinting() const {
+SkFontHinting SkScalerContextRec::getHinting() const noexcept {
   unsigned hint = (fFlags & SkScalerContext::kHinting_Mask) >> SkScalerContext::kHinting_Shift;
   return static_cast<SkFontHinting>(hint);
 }
 
-void SkScalerContextRec::setHinting(SkFontHinting hinting) {
+void SkScalerContextRec::setHinting(SkFontHinting hinting) noexcept {
   fFlags = (fFlags & ~SkScalerContext::kHinting_Mask) |
            (static_cast<unsigned>(hinting) << SkScalerContext::kHinting_Shift);
 }

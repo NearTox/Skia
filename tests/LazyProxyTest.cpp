@@ -7,24 +7,25 @@
 
 #include "tests/Test.h"
 
+#include "include/core/SkColorSpace.h"
 #include "include/gpu/mock/GrMockTypes.h"
 #include "src/core/SkRectPriv.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrMemoryPool.h"
-#include "src/gpu/GrOnFlushResourceProvider.h"
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrRecordingContextPriv.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/GrSurfaceProxy.h"
-#include "src/gpu/GrSurfaceProxyPriv.h"
-#include "src/gpu/GrTexture.h"
-#include "src/gpu/GrTextureProxy.h"
-#include "src/gpu/GrTextureProxyPriv.h"
-#include "src/gpu/effects/GrTextureEffect.h"
-#include "src/gpu/mock/GrMockGpu.h"
-#include "src/gpu/ops/GrDrawOp.h"
-#include "src/gpu/v1/SurfaceDrawContext_v1.h"
+#include "src/gpu/ganesh/GrClip.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrMemoryPool.h"
+#include "src/gpu/ganesh/GrOnFlushResourceProvider.h"
+#include "src/gpu/ganesh/GrProxyProvider.h"
+#include "src/gpu/ganesh/GrRecordingContextPriv.h"
+#include "src/gpu/ganesh/GrResourceProvider.h"
+#include "src/gpu/ganesh/GrSurfaceProxy.h"
+#include "src/gpu/ganesh/GrSurfaceProxyPriv.h"
+#include "src/gpu/ganesh/GrTexture.h"
+#include "src/gpu/ganesh/GrTextureProxy.h"
+#include "src/gpu/ganesh/GrTextureProxyPriv.h"
+#include "src/gpu/ganesh/effects/GrTextureEffect.h"
+#include "src/gpu/ganesh/mock/GrMockGpu.h"
+#include "src/gpu/ganesh/ops/GrDrawOp.h"
+#include "src/gpu/ganesh/v1/SurfaceDrawContext_v1.h"
 
 // This test verifies that lazy proxy callbacks get invoked during flush, after onFlush callbacks,
 // but before Ops are executed. It also ensures that lazy proxy callbacks are invoked both for
@@ -39,12 +40,19 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
     REPORTER_ASSERT(fReporter, fHasClipTexture);
   }
 
-  void preFlush(GrOnFlushResourceProvider*, SkSpan<const uint32_t>) override {
+  bool preFlush(GrOnFlushResourceProvider* onFlushRP) override {
+#if GR_TEST_UTILS
+    if (onFlushRP->failFlushTimeCallbacks()) {
+      return false;
+    }
+#endif
+
     REPORTER_ASSERT(fReporter, !fHasOpTexture);
     REPORTER_ASSERT(fReporter, !fHasClipTexture);
+    return true;
   }
 
-  void postFlush(GrDeferredUploadToken, SkSpan<const uint32_t>) override {
+  void postFlush(skgpu::DrawToken) override {
     REPORTER_ASSERT(fReporter, fHasOpTexture);
     REPORTER_ASSERT(fReporter, fHasClipTexture);
   }
@@ -87,7 +95,8 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
               static constexpr SkISize kDimensions = {1234, 567};
               sk_sp<GrTexture> texture = rp->createTexture(
                   kDimensions, desc.fFormat, desc.fTextureType, desc.fRenderable, desc.fSampleCnt,
-                  desc.fMipmapped, desc.fBudgeted, desc.fProtected);
+                  desc.fMipmapped, desc.fBudgeted, desc.fProtected,
+                  /*label=*/{});
               REPORTER_ASSERT(fTest->fReporter, texture);
               return texture;
             }
@@ -129,7 +138,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
       static const GrSurfaceOrigin kOrigin = kBottomLeft_GrSurfaceOrigin;
       const GrBackendFormat format =
           ctx->priv().caps()->getDefaultBackendFormat(kColorType, GrRenderable::kYes);
-      GrSwizzle readSwizzle = ctx->priv().caps()->getReadSwizzle(format, kColorType);
+      skgpu::Swizzle readSwizzle = ctx->priv().caps()->getReadSwizzle(format, kColorType);
       fLazyProxy = GrProxyProvider::MakeFullyLazyProxy(
           [this](GrResourceProvider* rp, const GrSurfaceProxy::LazySurfaceDesc&)
               -> GrSurfaceProxy::LazyCallbackResult {
@@ -151,7 +160,7 @@ class LazyProxyTest final : public GrOnFlushCallbackObject {
       return std::make_unique<ClipFP>(fContext, fProxyProvider, fTest, fAtlas);
     }
     std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override { return nullptr; }
-    void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override {}
+    void onAddToKey(const GrShaderCaps&, skgpu::KeyBuilder*) const override {}
     bool onIsEqual(const GrFragmentProcessor&) const override { return false; }
 
     GrRecordingContext* const fContext;
@@ -222,7 +231,8 @@ DEF_GPUTEST(LazyProxyReleaseTest, reporter, /* options */) {
 
   auto tex = ctx->priv().resourceProvider()->createTexture(
       {kSize, kSize}, format, GrTextureType::k2D, GrRenderable::kNo, 1, GrMipmapped::kNo,
-      SkBudgeted::kNo, GrProtected::kNo);
+      SkBudgeted::kNo, GrProtected::kNo,
+      /*label=*/{});
   using LazyInstantiationResult = GrSurfaceProxy::LazyCallbackResult;
   for (bool doInstantiate : {true, false}) {
     for (bool releaseCallback : {false, true}) {
@@ -324,7 +334,8 @@ class LazyFailedInstantiationTestOp : public GrDrawOp {
           return {
               rp->createTexture(
                   desc.fDimensions, desc.fFormat, desc.fTextureType, desc.fRenderable,
-                  desc.fSampleCnt, desc.fMipmapped, desc.fBudgeted, desc.fProtected),
+                  desc.fSampleCnt, desc.fMipmapped, desc.fBudgeted, desc.fProtected,
+                  /*label=*/{}),
               true, GrSurfaceProxy::LazyInstantiationKeyMode::kUnsynced};
         },
         format, dims, GrMipmapped::kNo, GrMipmapStatus::kNotAllocated,

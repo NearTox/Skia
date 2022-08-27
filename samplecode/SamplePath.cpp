@@ -731,16 +731,15 @@ protected:
             Dot(canvas, p, 7, SK_ColorBLACK);
         }
 
-        if (false) {
-            SkScalar ts[2];
-            int n = SkFindCubicInflections(fPts, ts);
-            for (int i = 0; i < n; ++i) {
-                SkPoint p;
-                SkEvalCubicAt(fPts, ts[i], &p, nullptr, nullptr);
-                canvas->drawCircle(p.fX, p.fY, 3, paint);
-            }
+        if ((false)) {
+          SkScalar ts[2];
+          int n = SkFindCubicInflections(fPts, ts);
+          for (int i = 0; i < n; ++i) {
+            SkPoint p;
+            SkEvalCubicAt(fPts, ts[i], &p, nullptr, nullptr);
+            canvas->drawCircle(p.fX, p.fY, 3, paint);
+          }
         }
-
     }
 
     Sample::Click* onFindClickHandler(SkScalar x, SkScalar y, skui::ModifierKey modi) override {

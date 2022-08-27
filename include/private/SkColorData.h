@@ -10,8 +10,8 @@
 
 #include "include/core/SkColor.h"
 #include "include/core/SkColorPriv.h"
-#include "include/private/SkNx.h"
 #include "include/private/SkTo.h"
+#include "include/private/SkVx.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 // Convert a 16bit pixel to a 32bit pixel
@@ -116,7 +116,7 @@ static inline SkPMColor SkSwizzle_BGRA_to_PMColor(uint32_t c) noexcept {
 /** Computes the luminance from the given r, g, and b in accordance with
     SK_LUM_COEFF_X. For correct results, r, g, and b should be in linear space.
 */
-static constexpr inline U8CPU SkComputeLuminance(U8CPU r, U8CPU g, U8CPU b) noexcept {
+static inline U8CPU SkComputeLuminance(U8CPU r, U8CPU g, U8CPU b) noexcept {
   // The following is
   // r * SK_LUM_COEFF_R + g * SK_LUM_COEFF_G + b * SK_LUM_COEFF_B
   // with SK_LUM_COEFF_X in 1.8 fixed point (rounding adjusted to sum to 256).
@@ -126,7 +126,7 @@ static constexpr inline U8CPU SkComputeLuminance(U8CPU r, U8CPU g, U8CPU b) noex
 /** Calculates 256 - (value * alpha256) / 255 in range [0,256],
  *  for [0,255] value and [0,256] alpha256.
  */
-static constexpr inline U16CPU SkAlphaMulInv256(U16CPU value, U16CPU alpha256) noexcept {
+static inline U16CPU SkAlphaMulInv256(U16CPU value, U16CPU alpha256) noexcept {
   unsigned prod = 0xFFFF - value * alpha256;
   return (prod + (prod >> 8)) >> 8;
 }
@@ -184,7 +184,7 @@ static inline SkPMColor SkFourByteInterp(SkPMColor src, SkPMColor dst, U8CPU src
  * 0xAARRGGBB -> 0x00AA00GG, 0x00RR00BB
  */
 static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept {
-  const uint32_t mask = 0x00FF00FF;
+  constexpr uint32_t mask = 0x00FF00FF;
   *ag = (color >> 8) & mask;
   *rb = color & mask;
 }
@@ -194,7 +194,7 @@ static inline void SkSplay(uint32_t color, uint32_t* ag, uint32_t* rb) noexcept 
  * (note, ARGB -> AGRB)
  */
 static inline uint64_t SkSplay(uint32_t color) noexcept {
-  const uint32_t mask = 0x00FF00FF;
+  constexpr uint32_t mask = 0x00FF00FF;
   uint64_t agrb = (color >> 8) & mask;  // 0x0000000000AA00GG
   agrb <<= 32;                          // 0x00AA00GG00000000
   agrb |= color & mask;                 // 0x00AA00GG00RR00BB
@@ -205,7 +205,7 @@ static inline uint64_t SkSplay(uint32_t color) noexcept {
  * 0xAAxxGGxx, 0xRRxxBBxx-> 0xAARRGGBB
  */
 static inline uint32_t SkUnsplay(uint32_t ag, uint32_t rb) noexcept {
-  const uint32_t mask = 0xFF00FF00;
+  constexpr uint32_t mask = 0xFF00FF00;
   return (ag & mask) | ((rb & mask) >> 8);
 }
 
@@ -214,7 +214,7 @@ static inline uint32_t SkUnsplay(uint32_t ag, uint32_t rb) noexcept {
  * (note, AGRB -> ARGB)
  */
 static inline uint32_t SkUnsplay(uint64_t agrb) noexcept {
-  const uint32_t mask = 0xFF00FF00;
+  constexpr uint32_t mask = 0xFF00FF00;
   return SkPMColor(
       ((agrb & mask) >> 8) |   // 0x00RR00BB
       ((agrb >> 32) & mask));  // 0xAARRGGBB
@@ -396,9 +396,11 @@ static inline SkPMColor SkPixel4444ToPixel32(U16CPU c) noexcept {
   return d | (d << 4);
 }
 
-static inline Sk4f swizzle_rb(const Sk4f& x) { return SkNx_shuffle<2, 1, 0, 3>(x); }
+static inline skvx::float4 swizzle_rb(const skvx::float4& x) noexcept {
+  return skvx::shuffle<2, 1, 0, 3>(x);
+}
 
-static inline Sk4f swizzle_rb_if_bgra(const Sk4f& x) {
+static inline skvx::float4 swizzle_rb_if_bgra(const skvx::float4& x) noexcept {
 #ifdef SK_PMCOLOR_IS_BGRA
   return swizzle_rb(x);
 #else
@@ -406,24 +408,13 @@ static inline Sk4f swizzle_rb_if_bgra(const Sk4f& x) {
 #endif
 }
 
-static inline Sk4f Sk4f_fromL32(uint32_t px) {
-  return SkNx_cast<float>(Sk4b::Load(&px)) * (1 / 255.0f);
+static inline skvx::float4 Sk4f_fromL32(uint32_t px) noexcept {
+  return skvx::cast<float>(skvx::byte4::Load(&px)) * (1 / 255.0f);
 }
 
-static inline uint32_t Sk4f_toL32(const Sk4f& px) {
-  Sk4f v = px;
-
-#if !defined(SKNX_NO_SIMD) && SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE2
-  // SkNx_cast<uint8_t, int32_t>() pins, and we don't anticipate giant floats
-#elif !defined(SKNX_NO_SIMD) && defined(SK_ARM_HAS_NEON)
-  // SkNx_cast<uint8_t, int32_t>() pins, and so does Sk4f_round().
-#else
-  // No guarantee of a pin.
-  v = Sk4f::Max(0, Sk4f::Min(v, 1));
-#endif
-
+static inline uint32_t Sk4f_toL32(const skvx::float4& px) noexcept {
   uint32_t l32;
-  SkNx_cast<uint8_t>(Sk4f_round(v * 255.0f)).store(&l32);
+  skvx::cast<uint8_t>(pin(lrint(px * 255.f), skvx::int4(0), skvx::int4(255))).store(&l32);
   return l32;
 }
 

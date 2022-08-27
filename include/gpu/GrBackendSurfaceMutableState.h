@@ -11,7 +11,7 @@
 #include "include/gpu/GrTypes.h"
 
 #ifdef SK_VULKAN
-#  include "include/private/GrVkTypesPriv.h"
+#  include "include/private/gpu/ganesh/GrVkTypesPriv.h"
 #endif
 
 /**
@@ -57,9 +57,9 @@ class SK_API GrBackendSurfaceMutableState {
 #endif
 
   // Returns true if the backend mutable state has been initialized.
-  bool isValid() const { return fIsValid; }
+  bool isValid() const noexcept { return fIsValid; }
 
-  GrBackendApi backend() const { return fBackend; }
+  GrBackendApi backend() const noexcept { return fBackend; }
 
  private:
   friend class GrBackendSurfaceMutableStateImpl;

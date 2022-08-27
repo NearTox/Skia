@@ -14,5 +14,6 @@
     <ClCompile Include="skparagraph\src\TextStyle.cpp" />
     <ClCompile Include="skparagraph\src\TextWrapper.cpp" />
     <ClCompile Include="skparagraph\src\TypefaceFontProvider.cpp" />
+    <ClCompile Include="skparagraph\src\FontArguments.cpp" />
   </ItemGroup>
 </Project>

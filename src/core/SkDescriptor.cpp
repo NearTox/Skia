@@ -7,14 +7,18 @@
 
 #include "src/core/SkDescriptor.h"
 
-#include <new>
-
 #include "include/core/SkTypes.h"
 #include "include/private/SkTo.h"
+#include "include/private/chromium/SkChromeRemoteGlyphCache.h"
 #include "src/core/SkOpts.h"
+#include "src/core/SkReadBuffer.h"
+#include "src/core/SkWriteBuffer.h"
+
+#include <string.h>
+#include <new>
 
 std::unique_ptr<SkDescriptor> SkDescriptor::Alloc(size_t length) {
-  SkASSERT(SkAlign4(length) == length);
+  SkASSERT(length >= sizeof(SkDescriptor) && SkAlign4(length) == length);
   void* allocation = ::operator new(length);
   return std::unique_ptr<SkDescriptor>(new (allocation) SkDescriptor{});
 }
@@ -22,6 +26,10 @@ std::unique_ptr<SkDescriptor> SkDescriptor::Alloc(size_t length) {
 void SkDescriptor::operator delete(void* p) { ::operator delete(p); }
 void* SkDescriptor::operator new(size_t) {
   SK_ABORT("Descriptors are created with placement new.");
+}
+
+void SkDescriptor::flatten(SkWriteBuffer& buffer) const {
+  buffer.writePad32(static_cast<const void*>(this), this->fLength);
 }
 
 void* SkDescriptor::addEntry(uint32_t tag, size_t length, const void* data) {
@@ -97,7 +105,7 @@ uint32_t SkDescriptor::ComputeChecksum(const SkDescriptor* desc) {
   return SkOpts::hash(ptr, len);
 }
 
-bool SkDescriptor::isValid() const noexcept {
+bool SkDescriptor::isValid() const {
   uint32_t count = fCount;
   size_t lengthRemaining = this->fLength;
   if (lengthRemaining < sizeof(SkDescriptor)) {
@@ -130,17 +138,15 @@ bool SkDescriptor::isValid() const noexcept {
   return lengthRemaining == 0 && count == 0;
 }
 
-SkAutoDescriptor::SkAutoDescriptor() noexcept = default;
-SkAutoDescriptor::SkAutoDescriptor(size_t size) noexcept { this->reset(size); }
-SkAutoDescriptor::SkAutoDescriptor(const SkDescriptor& desc) noexcept { this->reset(desc); }
-SkAutoDescriptor::SkAutoDescriptor(const SkAutoDescriptor& that) noexcept {
-  this->reset(*that.getDesc());
-}
-SkAutoDescriptor& SkAutoDescriptor::operator=(const SkAutoDescriptor& that) noexcept {
+SkAutoDescriptor::SkAutoDescriptor() = default;
+SkAutoDescriptor::SkAutoDescriptor(size_t size) { this->reset(size); }
+SkAutoDescriptor::SkAutoDescriptor(const SkDescriptor& desc) { this->reset(desc); }
+SkAutoDescriptor::SkAutoDescriptor(const SkAutoDescriptor& that) { this->reset(*that.getDesc()); }
+SkAutoDescriptor& SkAutoDescriptor::operator=(const SkAutoDescriptor& that) {
   this->reset(*that.getDesc());
   return *this;
 }
-SkAutoDescriptor::SkAutoDescriptor(SkAutoDescriptor&& that) noexcept {
+SkAutoDescriptor::SkAutoDescriptor(SkAutoDescriptor&& that) {
   if (that.fDesc == (SkDescriptor*)&that.fStorage) {
     this->reset(*that.getDesc());
   } else {
@@ -148,7 +154,7 @@ SkAutoDescriptor::SkAutoDescriptor(SkAutoDescriptor&& that) noexcept {
     that.fDesc = nullptr;
   }
 }
-SkAutoDescriptor& SkAutoDescriptor::operator=(SkAutoDescriptor&& that) noexcept {
+SkAutoDescriptor& SkAutoDescriptor::operator=(SkAutoDescriptor&& that) {
   if (that.fDesc == (SkDescriptor*)&that.fStorage) {
     this->reset(*that.getDesc());
   } else {
@@ -161,7 +167,48 @@ SkAutoDescriptor& SkAutoDescriptor::operator=(SkAutoDescriptor&& that) noexcept 
 
 SkAutoDescriptor::~SkAutoDescriptor() { this->free(); }
 
-void SkAutoDescriptor::reset(size_t size) noexcept {
+std::optional<SkAutoDescriptor> SkAutoDescriptor::MakeFromBuffer(SkReadBuffer& buffer) {
+  SkDescriptor descriptorHeader;
+  if (!buffer.readPad32(&descriptorHeader, sizeof(SkDescriptor))) {
+    return {};
+  }
+
+  // Basic bounds check on header length to make sure that bodyLength calculation does not
+  // underflow.
+  if (descriptorHeader.getLength() < sizeof(SkDescriptor)) {
+    return {};
+  }
+  uint32_t bodyLength = descriptorHeader.getLength() - sizeof(SkDescriptor);
+
+  // Make sure the fLength makes sense with respect to the incoming data.
+  if (bodyLength > buffer.available()) {
+    return {};
+  }
+
+  SkAutoDescriptor ad{descriptorHeader.getLength()};
+  memcpy(ad.fDesc, &descriptorHeader, sizeof(SkDescriptor));
+  if (!buffer.readPad32(SkTAddOffset<void>(ad.fDesc, sizeof(SkDescriptor)), bodyLength)) {
+    return {};
+  }
+
+// If the fuzzer produces data but the checksum does not match, let it continue. This will boost
+// fuzzing speed. We leave the actual checksum computation in for fuzzing builds to make sure
+// the ComputeChecksum function is covered.
+#if defined(SK_BUILD_FOR_FUZZER)
+  SkDescriptor::ComputeChecksum(ad.getDesc());
+#else
+  if (SkDescriptor::ComputeChecksum(ad.getDesc()) != ad.getDesc()->fChecksum) {
+    return {};
+  }
+#endif
+  if (!ad.getDesc()->isValid()) {
+    return {};
+  }
+
+  return {ad};
+}
+
+void SkAutoDescriptor::reset(size_t size) {
   this->free();
   if (size <= sizeof(fStorage)) {
     fDesc = new (&fStorage) SkDescriptor{};
@@ -170,13 +217,13 @@ void SkAutoDescriptor::reset(size_t size) noexcept {
   }
 }
 
-void SkAutoDescriptor::reset(const SkDescriptor& desc) noexcept {
+void SkAutoDescriptor::reset(const SkDescriptor& desc) {
   size_t size = desc.getLength();
   this->reset(size);
   memcpy(fDesc, &desc, size);
 }
 
-void SkAutoDescriptor::free() noexcept {
+void SkAutoDescriptor::free() {
   if (fDesc == (SkDescriptor*)&fStorage) {
     fDesc->~SkDescriptor();
   } else {

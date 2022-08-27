@@ -142,7 +142,7 @@ class SkReflected : public SkRefCnt {
  */
 class SkFieldVisitor {
  public:
-  virtual ~SkFieldVisitor() = default;
+  virtual ~SkFieldVisitor() {}
 
   // Visit functions for primitive types, to be implemented by derived visitors.
   virtual void visit(const char*, float&) = 0;

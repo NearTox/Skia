@@ -79,7 +79,7 @@ class ImageSourceGM : public GM {
   }
 
  private:
-  static constexpr int kImageSize = 503;
+  inline static constexpr int kImageSize = 503;
 
   SkString fSuffix;
   SkSamplingOptions fSampling;

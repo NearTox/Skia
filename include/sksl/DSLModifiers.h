@@ -20,30 +20,32 @@ class DSLField;
 class DSLType;
 
 enum Modifier {
-  kNo_Modifier = 0,
-  kConst_Modifier = 1 << 0,
-  kIn_Modifier = 1 << 1,
-  kOut_Modifier = 1 << 2,
-  kInOut_Modifier = kIn_Modifier | kOut_Modifier,
-  kUniform_Modifier = 1 << 3,
-  kFlat_Modifier = 1 << 4,
-  kNoPerspective_Modifier = 1 << 5,
+  kNo_Modifier = SkSL::Modifiers::kNo_Flag,
+  kConst_Modifier = SkSL::Modifiers::kConst_Flag,
+  kIn_Modifier = SkSL::Modifiers::kIn_Flag,
+  kOut_Modifier = SkSL::Modifiers::kOut_Flag,
+  kInOut_Modifier = SkSL::Modifiers::kIn_Flag | SkSL::Modifiers::kOut_Flag,
+  kUniform_Modifier = SkSL::Modifiers::kUniform_Flag,
+  kFlat_Modifier = SkSL::Modifiers::kFlat_Flag,
+  kNoPerspective_Modifier = SkSL::Modifiers::kNoPerspective_Flag,
 };
 
 class DSLModifiers {
  public:
-  DSLModifiers(int flags = 0) : DSLModifiers(DSLLayout(), flags) {}
+  DSLModifiers(int flags = 0, Position pos = {}) : DSLModifiers(DSLLayout(), flags, pos) {}
 
-  DSLModifiers(DSLLayout layout, int flags = 0) : fModifiers(layout.fSkSLLayout, flags) {}
+  DSLModifiers(DSLLayout layout, int flags = 0, Position pos = {}) noexcept
+      : fModifiers(layout.fSkSLLayout, flags), fPosition(pos) {}
 
-  int flags() const { return fModifiers.fFlags; }
+  int flags() const noexcept { return fModifiers.fFlags; }
 
-  DSLLayout layout() const { return DSLLayout(fModifiers.fLayout); }
+  DSLLayout layout() const noexcept { return DSLLayout(fModifiers.fLayout); }
 
  private:
   SkSL::Modifiers fModifiers;
+  Position fPosition;
 
-  friend DSLType Struct(skstd::string_view name, SkSpan<DSLField> fields, PositionInfo pos);
+  friend DSLType Struct(std::string_view name, SkSpan<DSLField> fields, Position pos);
   friend class DSLCore;
   friend class DSLFunction;
   friend class DSLType;

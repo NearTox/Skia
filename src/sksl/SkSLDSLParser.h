@@ -8,72 +8,60 @@
 #ifndef SKSL_DSLPARSER
 #define SKSL_DSLPARSER
 
-#include <memory>
-#include <unordered_map>
-#include "include/core/SkStringView.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkSLDefines.h"
 #include "include/private/SkSLProgramKind.h"
-#include "include/private/SkTOptional.h"
-#include "include/sksl/DSL.h"
-#include "include/sksl/DSLSymbols.h"
+#include "include/private/SkTArray.h"
+#include "include/sksl/DSLCore.h"
+#include "include/sksl/DSLExpression.h"
+#include "include/sksl/DSLLayout.h"
+#include "include/sksl/DSLModifiers.h"
+#include "include/sksl/DSLStatement.h"
+#include "include/sksl/DSLType.h"
+#include "include/sksl/SkSLErrorReporter.h"
+#include "include/sksl/SkSLOperator.h"
+#include "include/sksl/SkSLPosition.h"
+#include "src/sksl/SkSLCompiler.h"
 #include "src/sksl/SkSLLexer.h"
-#include "src/sksl/ir/SkSLProgram.h"
+#include "src/sksl/SkSLProgramSettings.h"
 
-#if SKSL_DSL_PARSER
+#include <memory>
+#include <optional>
+#include <string>
+#include <string_view>
 
 namespace SkSL {
 
-class ErrorReporter;
-struct Modifiers;
-class SymbolTable;
+struct ParsedModule;
+struct Program;
+
+namespace dsl {
+class DSLBlock;
+class DSLCase;
+class DSLGlobalVar;
+class DSLParameter;
+
+}  // namespace dsl
+
+class AutoDSLDepth;
 
 /**
  * Consumes .sksl text and invokes DSL functions to instantiate the program.
  */
 class DSLParser {
  public:
-  enum class LayoutToken {
-    LOCATION,
-    OFFSET,
-    BINDING,
-    INDEX,
-    SET,
-    BUILTIN,
-    INPUT_ATTACHMENT_INDEX,
-    ORIGIN_UPPER_LEFT,
-    OVERRIDE_COVERAGE,
-    EARLY_FRAGMENT_TESTS,
-    BLEND_SUPPORT_ALL_EQUATIONS,
-    PUSH_CONSTANT,
-    MARKER,
-    WHEN,
-    KEY,
-    TRACKED,
-    SRGB_UNPREMUL,
-    CTYPE,
-    SKPMCOLOR4F,
-    SKV4,
-    SKRECT,
-    SKIRECT,
-    SKPMCOLOR,
-    SKM44,
-    BOOL,
-    INT,
-    FLOAT,
-  };
-
-  DSLParser(Compiler* compiler, const ProgramSettings& settings, ProgramKind kind, String text);
+  DSLParser(
+      Compiler* compiler, const ProgramSettings& settings, ProgramKind kind, std::string text);
 
   std::unique_ptr<Program> program();
 
-  skstd::string_view text(Token token);
+  SkSL::LoadedModule moduleInheritingFrom(SkSL::ParsedModule baseModule);
 
-  PositionInfo position(Token token);
+  std::string_view text(Token token);
 
-  PositionInfo position(int offset);
+  Position position(Token token);
 
  private:
-  static void InitLayoutMap();
-
   /**
    * Return the next token, including whitespace tokens, from the parse stream.
    */
@@ -103,6 +91,13 @@ class DSLParser {
   bool checkNext(Token::Kind kind, Token* result = nullptr);
 
   /**
+   * Behaves like checkNext(TK_IDENTIFIER), but also verifies that identifier is not a builtin
+   * type. If the token was actually a builtin type, false is returned (the next token is not
+   * considered to be an identifier).
+   */
+  bool checkIdentifier(Token* result = nullptr);
+
+  /**
    * Reads the next non-whitespace token and generates an error if it is not the expected type.
    * The 'expected' string is part of the error message, which reads:
    *
@@ -112,7 +107,7 @@ class DSLParser {
    * Returns true if the read token was as expected, false otherwise.
    */
   bool expect(Token::Kind kind, const char* expected, Token* result = nullptr);
-  bool expect(Token::Kind kind, String expected, Token* result = nullptr);
+  bool expect(Token::Kind kind, std::string expected, Token* result = nullptr);
 
   /**
    * Behaves like expect(TK_IDENTIFIER), but also verifies that identifier is not a type.
@@ -122,28 +117,37 @@ class DSLParser {
    */
   bool expectIdentifier(Token* result);
 
-  void error(Token token, String msg);
-  void error(int offset, String msg);
+  void error(Token token, std::string_view msg);
+  void error(Position position, std::string_view msg);
 
-  SymbolTable& symbols() { return *dsl::CurrentSymbolTable(); }
+  // Returns the range from `start` to the current parse position.
+  Position rangeFrom(Position start);
+  Position rangeFrom(Token start);
 
   // these functions parse individual grammar rules from the current parse position; you probably
   // don't need to call any of these outside of the parser. The function declarations in the .cpp
   // file have comments describing the grammar rules.
 
-  ASTNode::ID precision();
+  void declarations();
 
-  SKSL_INT arraySize();
+  /**
+   * Parses an expression representing an array size. Reports errors if the array size is not
+   * valid (out of bounds, not a literal integer). Returns true if an expression was
+   * successfully parsed, even if that array size is not actually valid. In the event of a true
+   * return, outResult always contains a valid array size (even if the parsed array size was not
+   * actually valid; invalid array sizes result in a 1 to avoid additional errors downstream).
+   */
+  bool arraySize(SKSL_INT* outResult);
 
-  void directive();
+  void directive(bool allowVersion);
 
   bool declaration();
 
   bool functionDeclarationEnd(
-      const dsl::DSLModifiers& modifiers, dsl::DSLType type, const Token& name);
+      Position start, const dsl::DSLModifiers& modifiers, dsl::DSLType type, const Token& name);
 
   struct VarDeclarationsPrefix {
-    PositionInfo fPosition;
+    Position fPosition;
     dsl::DSLModifiers fModifiers;
     dsl::DSLType fType = dsl::DSLType(dsl::kVoid_Type);
     Token fName;
@@ -151,107 +155,109 @@ class DSLParser {
 
   bool varDeclarationsPrefix(VarDeclarationsPrefix* prefixData);
 
-  skstd::optional<dsl::DSLStatement> varDeclarationsOrExpressionStatement();
+  dsl::DSLStatement varDeclarationsOrExpressionStatement();
 
-  skstd::optional<dsl::DSLStatement> varDeclarations();
+  dsl::DSLStatement varDeclarations();
 
-  skstd::optional<dsl::DSLType> structDeclaration();
+  dsl::DSLType structDeclaration();
 
-  SkTArray<dsl::DSLGlobalVar> structVarDeclaration(const dsl::DSLModifiers& modifiers);
+  SkTArray<dsl::DSLGlobalVar> structVarDeclaration(
+      Position start, const dsl::DSLModifiers& modifiers);
 
-  /* (LBRACKET expression? RBRACKET)* (EQ assignmentExpression)? (COMMA IDENTIFER
-     (LBRACKET expression? RBRACKET)* (EQ assignmentExpression)?)* SEMICOLON */
-  template <class T>
-  SkTArray<T> varDeclarationEnd(
-      PositionInfo position, const dsl::DSLModifiers& mods, dsl::DSLType baseType,
-      skstd::string_view name);
+  bool parseArrayDimensions(Position pos, dsl::DSLType* type);
 
-  SkTArray<dsl::DSLGlobalVar> globalVarDeclarationEnd(
-      const dsl::DSLModifiers& modifiers, dsl::DSLType type, skstd::string_view name);
+  bool parseInitializer(Position pos, dsl::DSLExpression* initializer);
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLParameter>> parameter();
+  void globalVarDeclarationEnd(
+      Position position, const dsl::DSLModifiers& mods, dsl::DSLType baseType, Token name);
+
+  dsl::DSLStatement localVarDeclarationEnd(
+      Position position, const dsl::DSLModifiers& mods, dsl::DSLType baseType, Token name);
+
+  std::optional<dsl::DSLParameter> parameter(size_t paramIndex);
 
   int layoutInt();
 
-  skstd::string_view layoutIdentifier();
+  std::string_view layoutIdentifier();
 
   dsl::DSLLayout layout();
 
   dsl::DSLModifiers modifiers();
 
-  dsl::DSLModifiers modifiersWithDefaults(int defaultFlags);
+  dsl::DSLStatement statement();
 
-  skstd::optional<dsl::DSLStatement> statement();
-
-  skstd::optional<dsl::DSLType> type(const dsl::DSLModifiers& modifiers);
+  dsl::DSLType type(dsl::DSLModifiers* modifiers);
 
   bool interfaceBlock(const dsl::DSLModifiers& mods);
 
-  skstd::optional<dsl::DSLStatement> ifStatement();
+  dsl::DSLStatement ifStatement();
 
-  skstd::optional<dsl::DSLStatement> doStatement();
+  dsl::DSLStatement doStatement();
 
-  skstd::optional<dsl::DSLStatement> whileStatement();
+  dsl::DSLStatement whileStatement();
 
-  skstd::optional<dsl::DSLStatement> forStatement();
+  dsl::DSLStatement forStatement();
 
-  skstd::optional<dsl::DSLCase> switchCase();
+  std::optional<dsl::DSLCase> switchCase();
 
-  skstd::optional<dsl::DSLStatement> switchStatement();
+  dsl::DSLStatement switchStatement();
 
-  skstd::optional<dsl::DSLStatement> returnStatement();
+  dsl::DSLStatement returnStatement();
 
-  skstd::optional<dsl::DSLStatement> breakStatement();
+  dsl::DSLStatement breakStatement();
 
-  skstd::optional<dsl::DSLStatement> continueStatement();
+  dsl::DSLStatement continueStatement();
 
-  skstd::optional<dsl::DSLStatement> discardStatement();
+  dsl::DSLStatement discardStatement();
 
-  skstd::optional<dsl::DSLBlock> block();
+  std::optional<dsl::DSLBlock> block();
 
-  skstd::optional<dsl::DSLStatement> expressionStatement();
+  dsl::DSLStatement expressionStatement();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> expression();
+  using BinaryParseFn = dsl::DSLExpression (DSLParser::*)();
+  bool SK_WARN_UNUSED_RESULT operatorRight(
+      AutoDSLDepth& depth, Operator::Kind op, BinaryParseFn rightFn, dsl::DSLExpression& result);
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> assignmentExpression();
+  dsl::DSLExpression expression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> ternaryExpression();
+  dsl::DSLExpression assignmentExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> logicalOrExpression();
+  dsl::DSLExpression ternaryExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> logicalXorExpression();
+  dsl::DSLExpression logicalOrExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> logicalAndExpression();
+  dsl::DSLExpression logicalXorExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> bitwiseOrExpression();
+  dsl::DSLExpression logicalAndExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> bitwiseXorExpression();
+  dsl::DSLExpression bitwiseOrExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> bitwiseAndExpression();
+  dsl::DSLExpression bitwiseXorExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> equalityExpression();
+  dsl::DSLExpression bitwiseAndExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> relationalExpression();
+  dsl::DSLExpression equalityExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> shiftExpression();
+  dsl::DSLExpression relationalExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> additiveExpression();
+  dsl::DSLExpression shiftExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> multiplicativeExpression();
+  dsl::DSLExpression additiveExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> unaryExpression();
+  dsl::DSLExpression multiplicativeExpression();
 
-  skstd::optional<dsl::DSLWrapper<dsl::DSLExpression>> postfixExpression();
+  dsl::DSLExpression unaryExpression();
 
-  skstd::optional<dsl::Wrapper<dsl::DSLExpression>> swizzle(
-      int offset, dsl::DSLExpression base, skstd::string_view swizzleMask);
+  dsl::DSLExpression postfixExpression();
 
-  skstd::optional<dsl::Wrapper<dsl::DSLExpression>> call(
-      int offset, dsl::DSLExpression base, SkTArray<dsl::Wrapper<dsl::DSLExpression>> args);
+  dsl::DSLExpression swizzle(
+      Position pos, dsl::DSLExpression base, std::string_view swizzleMask, Position maskPos);
 
-  skstd::optional<dsl::Wrapper<dsl::DSLExpression>> suffix(dsl::DSLExpression base);
+  dsl::DSLExpression call(Position pos, dsl::DSLExpression base, ExpressionArray args);
 
-  skstd::optional<dsl::Wrapper<dsl::DSLExpression>> term();
+  dsl::DSLExpression suffix(dsl::DSLExpression base);
+
+  dsl::DSLExpression term();
 
   bool intLiteral(SKSL_INT* dest);
 
@@ -259,7 +265,7 @@ class DSLParser {
 
   bool boolLiteral(bool* dest);
 
-  bool identifier(skstd::string_view* dest);
+  bool identifier(std::string_view* dest);
 
   class Checkpoint {
    public:
@@ -294,20 +300,20 @@ class DSLParser {
    private:
     class ForwardingErrorReporter : public ErrorReporter {
      public:
-      void handleError(skstd::string_view msg, PositionInfo pos) override {
-        fErrors.push_back({String(msg), pos});
+      void handleError(std::string_view msg, Position pos) override {
+        fErrors.push_back({std::string(msg), pos});
       }
 
       void forwardErrors() {
         for (Error& error : fErrors) {
-          dsl::GetErrorReporter().error(error.fMsg.c_str(), error.fPos);
+          dsl::GetErrorReporter().error(error.fPos, error.fMsg);
         }
       }
 
      private:
       struct Error {
-        String fMsg;
-        PositionInfo fPos;
+        std::string fMsg;
+        Position fPos;
       };
 
       SkTArray<Error> fErrors;
@@ -315,27 +321,24 @@ class DSLParser {
 
     void restoreErrorReporter() {
       SkASSERT(fOldErrorReporter);
-      fErrorReporter.reportPendingErrors(PositionInfo());
       dsl::SetErrorReporter(fOldErrorReporter);
       fOldErrorReporter = nullptr;
     }
 
     DSLParser* fParser;
     Token fPushbackCheckpoint;
-    int32_t fLexerCheckpoint;
+    SkSL::Lexer::Checkpoint fLexerCheckpoint;
     ForwardingErrorReporter fErrorReporter;
     ErrorReporter* fOldErrorReporter;
     bool fOldEncounteredFatalError;
   };
-
-  static std::unordered_map<skstd::string_view, LayoutToken>* layoutTokens;
 
   Compiler& fCompiler;
   ProgramSettings fSettings;
   ErrorReporter* fErrorReporter;
   bool fEncounteredFatalError;
   ProgramKind fKind;
-  std::unique_ptr<String> fText;
+  std::unique_ptr<std::string> fText;
   Lexer fLexer;
   // current parse depth, used to enforce a recursion limit to try to keep us from overflowing the
   // stack on pathological inputs
@@ -347,7 +350,5 @@ class DSLParser {
 };
 
 }  // namespace SkSL
-
-#endif  // SKSL_DSL_PARSER
 
 #endif

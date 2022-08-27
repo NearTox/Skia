@@ -64,7 +64,7 @@ class BlurCirclesGM : public skiagm::GM {
   }
 
  private:
-  static constexpr int kNumBlurs = 4;
+  inline static constexpr int kNumBlurs = 4;
 
   sk_sp<SkMaskFilter> fBlurFilters[kNumBlurs];
 

@@ -5,12 +5,22 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/SkTOptional.h"
+#include "src/sksl/ir/SkSLSwizzle.h"
+
+#include "include/core/SkSpan.h"
+#include "include/private/SkSLString.h"
+#include "include/sksl/SkSLErrorReporter.h"
+#include "src/sksl/SkSLAnalysis.h"
 #include "src/sksl/SkSLConstantFolder.h"
-#include "src/sksl/ir/SkSLConstructor.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLConstructorCompound.h"
+#include "src/sksl/ir/SkSLConstructorCompoundCast.h"
 #include "src/sksl/ir/SkSLConstructorScalarCast.h"
 #include "src/sksl/ir/SkSLConstructorSplat.h"
-#include "src/sksl/ir/SkSLSwizzle.h"
+#include "src/sksl/ir/SkSLLiteral.h"
+
+#include <algorithm>
+#include <optional>
 
 namespace SkSL {
 
@@ -22,7 +32,7 @@ static bool validate_swizzle_domain(const ComponentArray& fields) {
     kRectangle,
   };
 
-  skstd::optional<SwizzleDomain> domain;
+  std::optional<SwizzleDomain> domain;
 
   for (int8_t field : fields) {
     SwizzleDomain fieldDomain;
@@ -82,8 +92,8 @@ static char mask_char(int8_t component) {
   }
 }
 
-static String mask_string(const ComponentArray& components) {
-  String result;
+static std::string mask_string(const ComponentArray& components) {
+  std::string result;
   for (int8_t component : components) {
     result += mask_char(component);
   }
@@ -91,7 +101,8 @@ static String mask_string(const ComponentArray& components) {
 }
 
 static std::unique_ptr<Expression> optimize_constructor_swizzle(
-    const Context& context, const AnyConstructor& base, ComponentArray components) {
+    const Context& context, Position pos, const ConstructorCompound& base,
+    ComponentArray components) {
   auto baseArguments = base.argumentSpan();
   std::unique_ptr<Expression> replacement;
   const Type& exprType = base.type();
@@ -199,22 +210,21 @@ static std::unique_ptr<Expression> optimize_constructor_swizzle(
     if (reorderedArg.fComponents.empty()) {
       newArgs.push_back(std::move(newArg));
     } else {
-      newArgs.push_back(Swizzle::Make(context, std::move(newArg), reorderedArg.fComponents));
+      newArgs.push_back(Swizzle::Make(context, pos, std::move(newArg), reorderedArg.fComponents));
     }
   }
 
-  // Wrap the new argument list in a constructor.
-  auto ctor = Constructor::Convert(
-      context, base.fOffset, componentType.toCompound(context, swizzleSize, /*rows=*/1),
-      std::move(newArgs));
-  SkASSERT(ctor);
-  return ctor;
+  // Wrap the new argument list in a compound constructor.
+  return ConstructorCompound::Make(
+      context, pos, componentType.toCompound(context, swizzleSize, /*rows=*/1), std::move(newArgs));
 }
 
 std::unique_ptr<Expression> Swizzle::Convert(
-    const Context& context, std::unique_ptr<Expression> base, skstd::string_view maskString) {
+    const Context& context, Position pos, Position maskPos, std::unique_ptr<Expression> base,
+    std::string_view maskString) {
   ComponentArray components;
-  for (char field : maskString) {
+  for (size_t i = 0; i < maskString.length(); ++i) {
+    char field = maskString[i];
     switch (field) {
       case '0': components.push_back(SwizzleComponent::ZERO); break;
       case '1': components.push_back(SwizzleComponent::ONE); break;
@@ -236,11 +246,12 @@ std::unique_ptr<Expression> Swizzle::Convert(
       case 'B': components.push_back(SwizzleComponent::UB); break;
       default:
         context.fErrors->error(
-            base->fOffset, String::printf("invalid swizzle component '%c'", field));
+            Position::Range(maskPos.startOffset() + i, maskPos.startOffset() + i + 1),
+            String::printf("invalid swizzle component '%c'", field));
         return nullptr;
     }
   }
-  return Convert(context, std::move(base), std::move(components));
+  return Convert(context, pos, maskPos, std::move(base), std::move(components));
 }
 
 // Swizzles are complicated due to constant components. The most difficult case is a mask like
@@ -249,24 +260,26 @@ std::unique_ptr<Expression> Swizzle::Convert(
 // secondary swizzle to put them back into the right order, so in this case we end up with
 // 'float4(base.xw, 1, 0).xzyw'.
 std::unique_ptr<Expression> Swizzle::Convert(
-    const Context& context, std::unique_ptr<Expression> base, ComponentArray inComponents) {
+    const Context& context, Position pos, Position rawMaskPos, std::unique_ptr<Expression> base,
+    ComponentArray inComponents) {
+  Position maskPos = rawMaskPos.valid() ? rawMaskPos : pos;
   if (!validate_swizzle_domain(inComponents)) {
-    context.fErrors->error(
-        base->fOffset, "invalid swizzle mask '" + mask_string(inComponents) + "'");
+    context.fErrors->error(maskPos, "invalid swizzle mask '" + mask_string(inComponents) + "'");
     return nullptr;
   }
 
-  const int offset = base->fOffset;
-  const Type& baseType = base->type();
+  const Type& baseType = base->type().scalarTypeForLiteral();
 
   if (!baseType.isVector() && !baseType.isScalar()) {
-    context.fErrors->error(offset, "cannot swizzle value of type '" + baseType.displayName() + "'");
+    context.fErrors->error(pos, "cannot swizzle value of type '" + baseType.displayName() + "'");
     return nullptr;
   }
 
   if (inComponents.count() > 4) {
+    Position errorPos =
+        rawMaskPos.valid() ? Position::Range(maskPos.startOffset() + 4, maskPos.endOffset()) : pos;
     context.fErrors->error(
-        offset, "too many components in swizzle mask '" + mask_string(inComponents) + "'");
+        errorPos, "too many components in swizzle mask '" + mask_string(inComponents) + "'");
     return nullptr;
   }
 
@@ -318,13 +331,20 @@ std::unique_ptr<Expression> Swizzle::Convert(
       default:
         // The swizzle component references a field that doesn't exist in the base type.
         context.fErrors->error(
-            offset, String::printf("invalid swizzle component '%c'", mask_char(inComponents[i])));
+            Position::Range(maskPos.startOffset() + i, maskPos.startOffset() + i + 1),
+            String::printf("invalid swizzle component '%c'", mask_char(inComponents[i])));
         return nullptr;
     }
   }
 
   if (!foundXYZW) {
-    context.fErrors->error(offset, "swizzle must refer to base expression");
+    context.fErrors->error(maskPos, "swizzle must refer to base expression");
+    return nullptr;
+  }
+
+  // Coerce literals in expressions such as `(12345).xxx` to their actual type.
+  base = baseType.coerceExpression(std::move(base), context);
+  if (!base) {
     return nullptr;
   }
 
@@ -333,7 +353,7 @@ std::unique_ptr<Expression> Swizzle::Convert(
   //   scalar.x0x0 -> type2(scalar)
   //   vector.zyx  -> vector.zyx
   //   vector.x0y0 -> vector.xy
-  std::unique_ptr<Expression> expr = Swizzle::Make(context, std::move(base), maskComponents);
+  std::unique_ptr<Expression> expr = Swizzle::Make(context, pos, std::move(base), maskComponents);
 
   // If we have processed the entire swizzle, we're done.
   if (maskComponents.count() == inComponents.count()) {
@@ -354,7 +374,7 @@ std::unique_ptr<Expression> Swizzle::Convert(
   // Apply another swizzle to shuffle the constants into the correct place. Any constant values we
   // need are also tacked on to the end of the constructor.
   //   scalar.x0x0 -> type4(type2(x), 0).xyxy
-  //   vector.y111 -> type4(vector.y, 1).xyyy
+  //   vector.y111 -> type2(vector.y, 1).xyyy
   //   vector.z10x -> type4(vector.zx, 1, 0).xzwy
   const Type* scalarType = &baseType.componentType();
   ComponentArray swizzleComponents;
@@ -366,18 +386,16 @@ std::unique_ptr<Expression> Swizzle::Convert(
     switch (inComponents[i]) {
       case SwizzleComponent::ZERO:
         if (constantZeroIdx == -1) {
-          // Synthesize a 'type(0)' argument at the end of the constructor.
-          constructorArgs.push_back(ConstructorScalarCast::Make(
-              context, offset, *scalarType, IntLiteral::Make(context, offset, /*value=*/0)));
+          // Synthesize a '0' argument at the end of the constructor.
+          constructorArgs.push_back(Literal::Make(pos, /*value=*/0, scalarType));
           constantZeroIdx = constantFieldIdx++;
         }
         swizzleComponents.push_back(constantZeroIdx);
         break;
       case SwizzleComponent::ONE:
         if (constantOneIdx == -1) {
-          // Synthesize a 'type(1)' argument at the end of the constructor.
-          constructorArgs.push_back(ConstructorScalarCast::Make(
-              context, offset, *scalarType, IntLiteral::Make(context, offset, /*value=*/1)));
+          // Synthesize a '1' argument at the end of the constructor.
+          constructorArgs.push_back(Literal::Make(pos, /*value=*/1, scalarType));
           constantOneIdx = constantFieldIdx++;
         }
         swizzleComponents.push_back(constantOneIdx);
@@ -389,18 +407,17 @@ std::unique_ptr<Expression> Swizzle::Convert(
     }
   }
 
-  expr = Constructor::Convert(
-      context, offset, scalarType->toCompound(context, constantFieldIdx, /*rows=*/1),
+  expr = ConstructorCompound::Make(
+      context, pos, scalarType->toCompound(context, constantFieldIdx, /*rows=*/1),
       std::move(constructorArgs));
-  if (!expr) {
-    return nullptr;
-  }
 
-  return Swizzle::Make(context, std::move(expr), swizzleComponents);
+  // Create (and potentially optimize-away) the resulting swizzle-expression.
+  return Swizzle::Make(context, pos, std::move(expr), swizzleComponents);
 }
 
 std::unique_ptr<Expression> Swizzle::Make(
-    const Context& context, std::unique_ptr<Expression> expr, ComponentArray components) {
+    const Context& context, Position pos, std::unique_ptr<Expression> expr,
+    ComponentArray components) {
   const Type& exprType = expr->type();
   SkASSERTF(
       exprType.isVector() || exprType.isScalar(), "cannot swizzle type '%s'",
@@ -417,66 +434,76 @@ std::unique_ptr<Expression> Swizzle::Make(
   // SkSL supports splatting a scalar via `scalar.xxxx`, but not all versions of GLSL allow this.
   // Replace swizzles with equivalent splat constructors (`scalar.xxx` --> `half3(value)`).
   if (exprType.isScalar()) {
-    int offset = expr->fOffset;
     return ConstructorSplat::Make(
-        context, offset, exprType.toCompound(context, components.size(), /*rows=*/1),
-        std::move(expr));
+        context, pos, exprType.toCompound(context, components.size(), /*rows=*/1), std::move(expr));
   }
 
-  if (context.fConfig->fSettings.fOptimize) {
-    // Detect identity swizzles like `color.rgba` and return the base-expression as-is.
-    if (components.count() == exprType.columns()) {
-      bool identity = true;
-      for (int i = 0; i < components.count(); ++i) {
-        if (components[i] != i) {
-          identity = false;
-          break;
-        }
-      }
-      if (identity) {
-        return expr;
+  // Detect identity swizzles like `color.rgba` and optimize it away.
+  if (components.count() == exprType.columns()) {
+    bool identity = true;
+    for (int i = 0; i < components.count(); ++i) {
+      if (components[i] != i) {
+        identity = false;
+        break;
       }
     }
+    if (identity) {
+      expr->fPosition = pos;
+      return expr;
+    }
+  }
 
-    // Optimize swizzles of swizzles, e.g. replace `foo.argb.rggg` with `foo.arrr`.
-    if (expr->is<Swizzle>()) {
-      Swizzle& base = expr->as<Swizzle>();
-      ComponentArray combined;
-      for (int8_t c : components) {
-        combined.push_back(base.components()[c]);
-      }
-
-      // It may actually be possible to further simplify this swizzle. Go again.
-      // (e.g. `color.abgr.abgr` --> `color.rgba` --> `color`.)
-      return Swizzle::Make(context, std::move(base.base()), combined);
+  // Optimize swizzles of swizzles, e.g. replace `foo.argb.rggg` with `foo.arrr`.
+  if (expr->is<Swizzle>()) {
+    Swizzle& base = expr->as<Swizzle>();
+    ComponentArray combined;
+    for (int8_t c : components) {
+      combined.push_back(base.components()[c]);
     }
 
-    // If we are swizzling a constant expression, we can use its value instead here (so that
-    // swizzles like `colorWhite.x` can be simplified to `1`).
-    const Expression* value = ConstantFolder::GetConstantValueForVariable(*expr);
+    // It may actually be possible to further simplify this swizzle. Go again.
+    // (e.g. `color.abgr.abgr` --> `color.rgba` --> `color`.)
+    return Swizzle::Make(context, pos, std::move(base.base()), combined);
+  }
 
-    // `half4(scalar).zyy` can be optimized to `half3(scalar)`, and `half3(scalar).y` can be
-    // optimized to just `scalar`. The swizzle components don't actually matter, as every field
-    // in a splat constructor holds the same value.
-    if (value->is<ConstructorSplat>()) {
-      const ConstructorSplat& splat = value->as<ConstructorSplat>();
-      return ConstructorSplat::Make(
-          context, splat.fOffset,
-          splat.type().componentType().toCompound(context, components.size(), /*rows=*/1),
-          splat.argument()->clone());
-    }
+  // If we are swizzling a constant expression, we can use its value instead here (so that
+  // swizzles like `colorWhite.x` can be simplified to `1`).
+  const Expression* value = ConstantFolder::GetConstantValueForVariable(*expr);
 
-    // Optimize swizzles of constructors.
-    if (value->isAnyConstructor()) {
-      const AnyConstructor& ctor = value->asAnyConstructor();
-      if (auto replacement = optimize_constructor_swizzle(context, ctor, components)) {
-        return replacement;
-      }
+  // `half4(scalar).zyy` can be optimized to `half3(scalar)`, and `half3(scalar).y` can be
+  // optimized to just `scalar`. The swizzle components don't actually matter, as every field
+  // in a splat constructor holds the same value.
+  if (value->is<ConstructorSplat>()) {
+    const ConstructorSplat& splat = value->as<ConstructorSplat>();
+    return ConstructorSplat::Make(
+        context, pos,
+        splat.type().componentType().toCompound(context, components.size(), /*rows=*/1),
+        splat.argument()->clone());
+  }
+
+  // Swizzles on casts, like `half4(myFloat4).zyy`, can optimize to `half3(myFloat4.zyy)`.
+  if (value->is<ConstructorCompoundCast>()) {
+    const ConstructorCompoundCast& cast = value->as<ConstructorCompoundCast>();
+    const Type& castType = cast.type().componentType().toCompound(
+        context, components.size(),
+        /*rows=*/1);
+    std::unique_ptr<Expression> swizzled =
+        Swizzle::Make(context, pos, cast.argument()->clone(), std::move(components));
+    return (castType.columns() > 1)
+               ? ConstructorCompoundCast::Make(context, pos, castType, std::move(swizzled))
+               : ConstructorScalarCast::Make(context, pos, castType, std::move(swizzled));
+  }
+
+  // Swizzles on compound constructors, like `half4(1, 2, 3, 4).yw`, can become `half2(2, 4)`.
+  if (value->is<ConstructorCompound>()) {
+    const ConstructorCompound& ctor = value->as<ConstructorCompound>();
+    if (auto replacement = optimize_constructor_swizzle(context, pos, ctor, components)) {
+      return replacement;
     }
   }
 
   // The swizzle could not be simplified, so apply the requested swizzle to the base expression.
-  return std::make_unique<Swizzle>(context, std::move(expr), components);
+  return std::make_unique<Swizzle>(context, pos, std::move(expr), components);
 }
 
 }  // namespace SkSL

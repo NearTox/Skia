@@ -45,20 +45,18 @@ void android_main(struct android_app* state) {
         struct android_poll_source* source;
 
         // block forever waiting for events.
-        while ((ident=ALooper_pollAll(-1, NULL, &events,
-                (void**)&source)) >= 0) {
+        while ((ident = ALooper_pollAll(-1, nullptr, &events, (void**)&source)) >= 0) {
+          // Process this event.
+          if (source != nullptr) {
+            source->process(state, source);
+          }
 
-            // Process this event.
-            if (source != NULL) {
-                source->process(state, source);
-            }
+          // Check if we are exiting.
+          if (state->destroyRequested != 0) {
+            return;
+          }
 
-            // Check if we are exiting.
-            if (state->destroyRequested != 0) {
-                return;
-            }
-
-            vkApp->onIdle();
+          vkApp->onIdle();
         }
     }
 }

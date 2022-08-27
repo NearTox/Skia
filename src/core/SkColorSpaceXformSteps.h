@@ -8,11 +8,12 @@
 #ifndef SkColorSpaceXformSteps_DEFINED
 #define SkColorSpaceXformSteps_DEFINED
 
-#include "include/core/SkColorSpace.h"
-#include "include/core/SkImageInfo.h"
-#include "include/private/SkImageInfoPriv.h"
-#include "src/core/SkVM_fwd.h"
+#include "include/core/SkAlphaType.h"
+#include "include/third_party/skcms/skcms.h"
+#include "src/core/SkVM.h"
+#include <stdint.h>
 
+class SkColorSpace;
 class SkRasterPipeline;
 
 struct SkColorSpaceXformSteps {
@@ -23,7 +24,7 @@ struct SkColorSpaceXformSteps {
     bool encode = false;
     bool premul = false;
 
-    uint32_t mask() const noexcept {
+    uint32_t mask() const {
       return (unpremul ? 1 : 0) | (linearize ? 2 : 0) | (gamut_transform ? 4 : 0) |
              (encode ? 8 : 0) | (premul ? 16 : 0);
     }

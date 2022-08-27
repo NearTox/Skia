@@ -9,6 +9,7 @@
 #include "include/core/SkM44.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkRRect.h"
+#include "include/core/SkStream.h"
 #include "include/core/SkVertices.h"
 #include "include/utils/SkRandom.h"
 #include "samplecode/Sample.h"
@@ -118,18 +119,18 @@ struct Face {
     }
 };
 
-static bool front(const SkM44& m) {
-    SkM44 m2(SkM44::kUninitialized_Constructor);
-    if (!m.invert(&m2)) {
-        m2.setIdentity();
-    }
-    /*
-     *  Classically we want to dot the transpose(inverse(ctm)) with our surface normal.
-     *  In this case, the normal is known to be {0, 0, 1}, so we only actually need to look
-     *  at the z-scale of the inverse (the transpose doesn't change the main diagonal, so
-     *  no need to actually transpose).
-     */
-    return m2.rc(2,2) > 0;
+static bool isFrontFacing(const SkM44& m) {
+  SkM44 m2(SkM44::kUninitialized_Constructor);
+  if (!m.invert(&m2)) {
+    m2.setIdentity();
+  }
+  /*
+   *  Classically we want to dot the transpose(inverse(ctm)) with our surface normal.
+   *  In this case, the normal is known to be {0, 0, 1}, so we only actually need to look
+   *  at the z-scale of the inverse (the transpose doesn't change the main diagonal, so
+   *  no need to actually transpose).
+   */
+  return m2.rc(2, 2) > 0;
 }
 
 const Face faces[] = {
@@ -176,10 +177,10 @@ class RotateAnimator {
     SkScalar    fAngleSpeed = 0,
                 fAngleSign = 1;
 
-    static constexpr double kSlowDown = 4;
-    static constexpr SkScalar kMaxSpeed = 16;
+    inline static constexpr double kSlowDown = 4;
+    inline static constexpr SkScalar kMaxSpeed = 16;
 
-public:
+   public:
     void update(SkV3 axis, SkScalar angle) {
         if (angle != fPrevAngle) {
             fPrevAngle = fAngle;
@@ -264,8 +265,7 @@ public:
         return this->Sample3DView::onChar(uni);
     }
 
-    virtual void drawContent(
-        SkCanvas* canvas, SkColor, int index, bool drawFront, const SkM44& localToWorld) = 0;
+    virtual void drawFace(SkCanvas*, SkColor, int face, bool front, const SkM44& localToWorld) = 0;
 
     void onDrawContent(SkCanvas* canvas) override {
         if (!canvas->recordingContext() && !(fFlags & kCanRunOnCPU)) {
@@ -277,22 +277,22 @@ public:
 
         this->concatCamera(canvas, {0, 0, 400, 400}, 200);
 
-        for (bool drawFront : {false, true}) {
-            int index = 0;
-            for (auto f : faces) {
-                SkAutoCanvasRestore acr(canvas, true);
+        SkM44 m = fRotateAnimator.rotation() * fRotation;
+        for (bool front : {false, true}) {
+          int index = 0;
+          for (auto f : faces) {
+            SkAutoCanvasRestore acr(canvas, true);
 
-                SkM44 trans = SkM44::Translate(200, 200, 0);   // center of the rotation
-                SkM44 m = fRotateAnimator.rotation() * fRotation * f.asM44(200);
+            SkM44 trans = SkM44::Translate(200, 200, 0);  // center of the rotation
 
-                canvas->concat(trans);
+            canvas->concat(trans);
 
-                // "World" space - content is centered at the origin, in device scale (+-200)
-                SkM44 localToWorld = m * inv(trans);
+            // "World" space - content is centered at the origin, in device scale (+-200)
+            SkM44 localToWorld = m * f.asM44(200) * inv(trans);
 
-                canvas->concat(localToWorld);
-                this->drawContent(canvas, f.fColor, index++, drawFront, localToWorld);
-            }
+            canvas->concat(localToWorld);
+            this->drawFace(canvas, f.fColor, index++, front, localToWorld);
+          }
         }
 
         canvas->restore();  // camera & center the content in the window
@@ -409,10 +409,9 @@ public:
         fEffect = effect;
     }
 
-    void drawContent(
-        SkCanvas* canvas, SkColor color, int index, bool drawFront,
-        const SkM44& localToWorld) override {
-      if (!drawFront || !front(canvas->getLocalToDevice())) {
+    void drawFace(
+        SkCanvas* canvas, SkColor color, int face, bool front, const SkM44& localToWorld) override {
+      if (!front || !isFrontFacing(canvas->getLocalToDevice())) {
         return;
       }
 
@@ -426,7 +425,7 @@ public:
 
       SkPaint paint;
       paint.setColor(color);
-      paint.setShader(builder.makeShader(nullptr, true));
+      paint.setShader(builder.makeShader());
 
       canvas->drawRRect(fRR, paint);
     }
@@ -460,9 +459,8 @@ public:
         }
     }
 
-    void drawContent(
-        SkCanvas* canvas, SkColor color, int index, bool drawFront, const SkM44&) override {
-      if (!drawFront || !front(canvas->getLocalToDevice())) {
+    void drawFace(SkCanvas* canvas, SkColor color, int face, bool front, const SkM44&) override {
+      if (!front || !isFrontFacing(canvas->getLocalToDevice())) {
         return;
       }
 
@@ -470,7 +468,7 @@ public:
       paint.setColor(color);
       SkRect r = {0, 0, 400, 400};
       canvas->drawRect(r, paint);
-      fAnim[index]->render(canvas, &r);
+      fAnim[face]->render(canvas, &r);
     }
 
     bool onAnimate(double nanos) override {

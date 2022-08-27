@@ -117,7 +117,7 @@ class SK_API SkMatrix {
       @param ky  vertical skew factor
       @return    SkMatrix with skew
   */
-  static SkMatrix SK_WARN_UNUSED_RESULT Skew(SkScalar kx, SkScalar ky) {
+  static SkMatrix SK_WARN_UNUSED_RESULT Skew(SkScalar kx, SkScalar ky) noexcept {
     SkMatrix m;
     m.setSkew(kx, ky);
     return m;
@@ -290,7 +290,7 @@ class SK_API SkMatrix {
 
       @return  true if SkMatrix maps one SkRect into another
   */
-  bool preservesAxisAlignment() const { return this->rectStaysRect(); }
+  bool preservesAxisAlignment() const noexcept { return this->rectStaysRect(); }
 
   /** Returns true if the matrix contains perspective elements. SkMatrix form is:
 
@@ -303,7 +303,7 @@ class SK_API SkMatrix {
 
       @return  true if SkMatrix is in most general form
   */
-  bool hasPerspective() const {
+  bool hasPerspective() const noexcept {
     return SkToBool(this->getPerspectiveTypeMaskOnly() & kPerspective_Mask);
   }
 
@@ -370,7 +370,7 @@ class SK_API SkMatrix {
                     kMPersp0, kMPersp1, kMPersp2
       @return       value corresponding to index
   */
-  SkScalar operator[](int index) const noexcept {
+  constexpr SkScalar operator[](int index) const noexcept {
     SkASSERT((unsigned)index < 9);
     return fMat[index];
   }
@@ -574,7 +574,7 @@ class SK_API SkMatrix {
 
       @param buffer  storage for nine scalar values
   */
-  void get9(SkScalar buffer[9]) const { memcpy(buffer, fMat, 9 * sizeof(SkScalar)); }
+  void get9(SkScalar buffer[9]) const noexcept { memcpy(buffer, fMat, 9 * sizeof(SkScalar)); }
 
   /** Sets SkMatrix to nine scalar values in buffer, in member value ascending order:
       kMScaleX, kMSkewX, kMTransX, kMSkewY, kMScaleY, kMTransY, kMPersp0, kMPersp1,
@@ -592,7 +592,7 @@ class SK_API SkMatrix {
 
       @param buffer  nine scalar values
   */
-  SkMatrix& set9(const SkScalar buffer[9]);
+  SkMatrix& set9(const SkScalar buffer[9]) noexcept;
 
   /** Sets SkMatrix to identity; which has no effect on mapped SkPoint. Sets SkMatrix to:
 
@@ -708,14 +708,14 @@ class SK_API SkMatrix {
       @param px  pivot on x-axis
       @param py  pivot on y-axis
   */
-  SkMatrix& setSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py);
+  SkMatrix& setSkew(SkScalar kx, SkScalar ky, SkScalar px, SkScalar py) noexcept;
 
   /** Sets SkMatrix to skew by kx and ky, about a pivot point at (0, 0).
 
       @param kx  horizontal skew factor
       @param ky  vertical skew factor
   */
-  SkMatrix& setSkew(SkScalar kx, SkScalar ky);
+  SkMatrix& setSkew(SkScalar kx, SkScalar ky) noexcept;
 
   /** Sets SkMatrix to SkMatrix a multiplied by SkMatrix b. Either a or b may be this.
 
@@ -1244,7 +1244,7 @@ class SK_API SkMatrix {
 
       @param affine  3 by 2 affine matrix
   */
-  SkMatrix& setAffine(const SkScalar affine[6]);
+  SkMatrix& setAffine(const SkScalar affine[6]) noexcept;
 
   /**
    *  A matrix is categorized as 'perspective' if the bottom row is not [0, 0, 1].
@@ -1421,7 +1421,7 @@ class SK_API SkMatrix {
 
       @return   mapped (0, 0)
   */
-  SkPoint mapOrigin() const {
+  SkPoint mapOrigin() const noexcept {
     SkScalar x = this->getTranslateX(), y = this->getTranslateY();
     if (this->hasPerspective()) {
       SkScalar w = fMat[kMPersp2];
@@ -1844,7 +1844,7 @@ class SK_API SkMatrix {
   static void ComputeInv(SkScalar dst[9], const SkScalar src[9], double invDet, bool isPersp);
 
   uint8_t computeTypeMask() const noexcept;
-  uint8_t computePerspectiveTypeMask() const;
+  uint8_t computePerspectiveTypeMask() const noexcept;
 
   void setTypeMask(int mask) noexcept {
     // allow kUnknown or a valid mask
@@ -1866,7 +1866,7 @@ class SK_API SkMatrix {
     fTypeMask &= ~mask;
   }
 
-  TypeMask getPerspectiveTypeMaskOnly() const {
+  TypeMask getPerspectiveTypeMaskOnly() const noexcept {
     if ((fTypeMask & kUnknown_Mask) && !(fTypeMask & kOnlyPerspectiveValid_Mask)) {
       fTypeMask = this->computePerspectiveTypeMask();
     }

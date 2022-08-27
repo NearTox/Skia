@@ -116,7 +116,7 @@ void GetCustomFontFamilies(
  *  If the string cannot be parsed into 'value', returns false and does not change 'value'.
  */
 template <typename T>
-static bool parse_non_negative_integer(const char* s, T* value) {
+bool parse_non_negative_integer(const char* s, T* value) {
   static_assert(std::numeric_limits<T>::is_integer, "T_must_be_integer");
 
   if (*s == '\0') {
@@ -154,7 +154,7 @@ static bool parse_non_negative_integer(const char* s, T* value) {
  *  If the string cannot be parsed into 'value', returns false and does not change 'value'.
  */
 template <int N, typename T>
-static bool parse_fixed(const char* s, T* value) {
+bool parse_fixed(const char* s, T* value) {
   static_assert(std::numeric_limits<T>::is_integer, "T_must_be_integer");
   static_assert(std::numeric_limits<T>::is_signed, "T_must_be_signed");
   static_assert(sizeof(T) * CHAR_BIT - N >= 5, "N_must_leave_four_bits_plus_sign");

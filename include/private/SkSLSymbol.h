@@ -22,7 +22,6 @@ class Symbol : public IRNode {
     kExternal = (int)ProgramElement::Kind::kLast + 1,
     kField,
     kFunctionDeclaration,
-    kSymbolAlias,
     kType,
     kUnresolvedFunction,
     kVariable,
@@ -31,28 +30,28 @@ class Symbol : public IRNode {
     kLast = kVariable
   };
 
-  Symbol(int offset, Kind kind, skstd::string_view name, const Type* type = nullptr) noexcept
-      : INHERITED(offset, (int)kind), fName(name), fType(type) {
+  Symbol(Position pos, Kind kind, std::string_view name, const Type* type = nullptr)
+      : INHERITED(pos, (int)kind), fName(name), fType(type) {
     SkASSERT(kind >= Kind::kFirst && kind <= Kind::kLast);
   }
 
   ~Symbol() override {}
 
-  const Type& type() const noexcept {
+  const Type& type() const {
     SkASSERT(fType);
     return *fType;
   }
 
   Kind kind() const noexcept { return (Kind)fKind; }
 
-  skstd::string_view name() const noexcept { return fName; }
+  std::string_view name() const noexcept { return fName; }
 
   /**
    *  Use is<T> to check the type of a symbol.
    *  e.g. replace `sym.kind() == Symbol::Kind::kVariable` with `sym.is<Variable>()`.
    */
   template <typename T>
-  bool is() const {
+  bool is() const noexcept {
     return this->kind() == T::kSymbolKind;
   }
 
@@ -72,7 +71,7 @@ class Symbol : public IRNode {
   }
 
  private:
-  skstd::string_view fName;
+  std::string_view fName;
   const Type* fType;
 
   using INHERITED = IRNode;

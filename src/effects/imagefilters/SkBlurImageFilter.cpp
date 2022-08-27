@@ -24,12 +24,21 @@
 #include "src/core/SkWriteBuffer.h"
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/GrTextureProxy.h"
-#  include "src/gpu/SkGr.h"
+#  include "src/gpu/ganesh/GrTextureProxy.h"
+#  include "src/gpu/ganesh/SkGr.h"
 #  if SK_GPU_V1
-#    include "src/gpu/v1/SurfaceDrawContext_v1.h"
+#    include "src/gpu/ganesh/v1/SurfaceDrawContext_v1.h"
 #  endif  // SK_GPU_V1
 #endif    // SK_SUPPORT_GPU
+
+#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
+#  include <immintrin.h>
+#  define SK_PREFETCH(ptr) _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0)
+#elif defined(__GNUC__)
+#  define SK_PREFETCH(ptr) __builtin_prefetch(ptr)
+#else
+#  define SK_PREFETCH(ptr)
+#endif
 
 namespace {
 
@@ -106,6 +115,28 @@ namespace {
 int calculate_window(double sigma) {
   auto possibleWindow = static_cast<int>(floor(sigma * 3 * sqrt(2 * SK_DoublePI) / 4 + 0.5));
   return std::max(1, possibleWindow);
+}
+
+// This rather arbitrary-looking value results in a maximum box blur kernel size
+// of 1000 pixels on the raster path, which matches the WebKit and Firefox
+// implementations. Since the GPU path does not compute a box blur, putting
+// the limit on sigma ensures consistent behaviour between the GPU and
+// raster paths.
+static constexpr SkScalar kMaxSigma = 532.f;
+
+static SkVector map_sigma(const SkSize& localSigma, const SkMatrix& ctm) {
+  SkVector sigma = SkVector::Make(localSigma.width(), localSigma.height());
+  ctm.mapVectors(&sigma, 1);
+  sigma.fX = std::min(SkScalarAbs(sigma.fX), kMaxSigma);
+  sigma.fY = std::min(SkScalarAbs(sigma.fY), kMaxSigma);
+  // Disable blurring on axes that were never finite, or became non-finite after mapping by ctm.
+  if (!SkScalarIsFinite(sigma.fX)) {
+    sigma.fX = 0.f;
+  }
+  if (!SkScalarIsFinite(sigma.fY)) {
+    sigma.fY = 0.f;
+  }
+  return sigma;
 }
 
 class Pass {
@@ -300,42 +331,26 @@ class GaussPass final : public Pass {
     int window2 = window * window;
     int window3 = window2 * window;
     int divisor = (window & 1) == 1 ? window3 : window3 + window2;
-
-    // NB the sums in the blur code use the following technique to avoid
-    // adding 1/2 to round the divide.
-    //
-    //   Sum/d + 1/2 == (Sum + h) / d
-    //   Sum + d(1/2) ==  Sum + h
-    //     h == (1/2)d
-    //
-    // But the d/2 it self should be rounded.
-    //    h == d/2 + 1/2 == (d + 1) / 2
-    //
-    // divisorFactor = (1 / d) * 2 ^ 32
-    auto divisorFactor = static_cast<uint32_t>(round((1.0 / divisor) * (1ull << 32)));
-    auto half = static_cast<uint32_t>((divisor + 1) / 2);
-    return alloc->make<GaussPass>(
-        buffer0, buffer1, buffer2, buffersEnd, border, divisorFactor, half);
+    return alloc->make<GaussPass>(buffer0, buffer1, buffer2, buffersEnd, border, divisor);
   }
 
   GaussPass(
       skvx::Vec<4, uint32_t>* buffer0, skvx::Vec<4, uint32_t>* buffer1,
-      skvx::Vec<4, uint32_t>* buffer2, skvx::Vec<4, uint32_t>* buffersEnd, int border,
-      uint32_t divisorFactor, uint32_t half)
+      skvx::Vec<4, uint32_t>* buffer2, skvx::Vec<4, uint32_t>* buffersEnd, int border, int divisor)
       : Pass{border},
         fBuffer0{buffer0},
         fBuffer1{buffer1},
         fBuffer2{buffer2},
         fBuffersEnd{buffersEnd},
-        fDivisorFactor{divisorFactor},
-        fHalf{half} {}
+        fDivider(divisor) {}
 
  private:
   void startBlur() override {
     skvx::Vec<4, uint32_t> zero = {0u, 0u, 0u, 0u};
     zero.store(fSum0);
     zero.store(fSum1);
-    skvx::Vec<4, uint32_t>{fHalf, fHalf, fHalf, fHalf}.store(fSum2);
+    auto half = fDivider.half();
+    skvx::Vec<4, uint32_t>{half, half, half, half}.store(fSum2);
     sk_bzero(fBuffer0, (fBuffersEnd - fBuffer0) * sizeof(skvx::Vec<4, uint32_t>));
 
     fBuffer0Cursor = fBuffer0;
@@ -396,8 +411,7 @@ class GaussPass final : public Pass {
       sum1 += sum0;
       sum2 += sum1;
 
-      skvx::Vec<4, uint64_t> w = skvx::cast<uint64_t>(sum2) * fDivisorFactor;
-      skvx::Vec<4, uint32_t> value = skvx::cast<uint32_t>(w >> 32);
+      skvx::Vec<4, uint32_t> blurred = fDivider.divide(sum2);
 
       sum2 -= *buffer2Cursor;
       *buffer2Cursor = sum1;
@@ -409,7 +423,7 @@ class GaussPass final : public Pass {
       *buffer0Cursor = leadingEdge;
       buffer0Cursor = (buffer0Cursor + 1) < fBuffer1 ? buffer0Cursor + 1 : fBuffer0;
 
-      return skvx::cast<uint8_t>(value);
+      return skvx::cast<uint8_t>(blurred);
     };
 
     auto loadEdge = [&](const uint32_t* srcCursor) {
@@ -452,8 +466,7 @@ class GaussPass final : public Pass {
   skvx::Vec<4, uint32_t>* const fBuffer1;
   skvx::Vec<4, uint32_t>* const fBuffer2;
   skvx::Vec<4, uint32_t>* const fBuffersEnd;
-  const uint32_t fDivisorFactor;
-  const uint32_t fHalf;
+  const skvx::ScaledDividerU32 fDivider;
 
   // blur state
   char fSum0[sizeof(skvx::Vec<4, uint32_t>)];
@@ -468,8 +481,8 @@ class GaussPass final : public Pass {
 // The TentPass is limit to processing sigmas < 2183.
 class TentPass final : public Pass {
  public:
-  // NB 136 is the largest sigma that will not cause a buffer full of 255 mask values to overflow
-  // using the Gauss filter. It also limits the size of buffers used hold intermediate values.
+  // NB 2183 is the largest sigma that will not cause a buffer full of 255 mask values to overflow
+  // using the Tent filter. It also limits the size of buffers used hold intermediate values.
   // Explanation of maximums:
   //   sum0 = window * 255
   //   sum1 = window * sum0 -> window * window * 255
@@ -568,37 +581,23 @@ class TentPass final : public Pass {
     int border = window - 1;
 
     int divisor = window * window;
-
-    // NB the sums in the blur code use the following technique to avoid
-    // adding 1/2 to round the divide.
-    //
-    //   Sum/d + 1/2 == (Sum + h) / d
-    //   Sum + d(1/2) ==  Sum + h
-    //     h == (1/2)d
-    //
-    // But the d/2 it self should be rounded.
-    //    h == d/2 + 1/2 == (d + 1) / 2
-    //
-    // divisorFactor = (1 / d) * 2 ^ 32
-    auto divisorFactor = static_cast<uint32_t>(round((1.0 / divisor) * (1ull << 32)));
-    auto half = static_cast<uint32_t>((divisor + 1) / 2);
-    return alloc->make<TentPass>(buffer0, buffer1, buffersEnd, border, divisorFactor, half);
+    return alloc->make<TentPass>(buffer0, buffer1, buffersEnd, border, divisor);
   }
 
   TentPass(
       skvx::Vec<4, uint32_t>* buffer0, skvx::Vec<4, uint32_t>* buffer1,
-      skvx::Vec<4, uint32_t>* buffersEnd, int border, uint32_t divisorFactor, uint32_t half)
+      skvx::Vec<4, uint32_t>* buffersEnd, int border, int divisor)
       : Pass{border},
         fBuffer0{buffer0},
         fBuffer1{buffer1},
         fBuffersEnd{buffersEnd},
-        fDivisorFactor{divisorFactor},
-        fHalf{half} {}
+        fDivider(divisor) {}
 
  private:
   void startBlur() override {
     skvx::Vec<4, uint32_t>{0u, 0u, 0u, 0u}.store(fSum0);
-    skvx::Vec<4, uint32_t>{fHalf, fHalf, fHalf, fHalf}.store(fSum1);
+    auto half = fDivider.half();
+    skvx::Vec<4, uint32_t>{half, half, half, half}.store(fSum1);
     sk_bzero(fBuffer0, (fBuffersEnd - fBuffer0) * sizeof(skvx::Vec<4, uint32_t>));
 
     fBuffer0Cursor = fBuffer0;
@@ -651,8 +650,7 @@ class TentPass final : public Pass {
       sum0 += leadingEdge;
       sum1 += sum0;
 
-      skvx::Vec<4, uint64_t> w = skvx::cast<uint64_t>(sum1) * fDivisorFactor;
-      skvx::Vec<4, uint32_t> value = skvx::cast<uint32_t>(w >> 32);
+      skvx::Vec<4, uint32_t> blurred = fDivider.divide(sum1);
 
       sum1 -= *buffer1Cursor;
       *buffer1Cursor = sum0;
@@ -661,7 +659,7 @@ class TentPass final : public Pass {
       *buffer0Cursor = leadingEdge;
       buffer0Cursor = (buffer0Cursor + 1) < fBuffer1 ? buffer0Cursor + 1 : fBuffer0;
 
-      return skvx::cast<uint8_t>(value);
+      return skvx::cast<uint8_t>(blurred);
     };
 
     auto loadEdge = [&](const uint32_t* srcCursor) {
@@ -700,8 +698,7 @@ class TentPass final : public Pass {
   skvx::Vec<4, uint32_t>* const fBuffer0;
   skvx::Vec<4, uint32_t>* const fBuffer1;
   skvx::Vec<4, uint32_t>* const fBuffersEnd;
-  const uint32_t fDivisorFactor;
-  const uint32_t fHalf;
+  const skvx::ScaledDividerU32 fDivider;
 
   // blur state
   char fSum0[sizeof(skvx::Vec<4, uint32_t>)];
@@ -776,11 +773,14 @@ sk_sp<SkSpecialImage> copy_image_with_bounds(
 sk_sp<SkSpecialImage> cpu_blur(
     const SkImageFilter_Base::Context& ctx, SkVector sigma, const sk_sp<SkSpecialImage>& input,
     SkIRect srcBounds, SkIRect dstBounds) {
-  SkVector limitedSigma = {SkTPin(sigma.x(), 0.0f, 2183.0f), SkTPin(sigma.y(), 0.0f, 2183.0f)};
+  // map_sigma limits sigma to 532 to match 1000px box filter limit of WebKit and Firefox.
+  // Since this does not exceed the limits of the TentPass (2183), there won't be overflow when
+  // computing a kernel over a pixel window filled with 255.
+  static_assert(kMaxSigma <= 2183.0f);
 
   SkSTArenaAlloc<1024> alloc;
   auto makeMaker = [&](double sigma) -> PassMaker* {
-    SkASSERT(0 <= sigma && sigma <= 2183);
+    SkASSERT(0 <= sigma && sigma <= 2183);  // should be guaranteed after map_sigma
     if (PassMaker* maker = GaussPass::MakeMaker(sigma, &alloc)) {
       return maker;
     }
@@ -790,8 +790,8 @@ sk_sp<SkSpecialImage> cpu_blur(
     SK_ABORT("Sigma is out of range.");
   };
 
-  PassMaker* makerX = makeMaker(limitedSigma.x());
-  PassMaker* makerY = makeMaker(limitedSigma.y());
+  PassMaker* makerX = makeMaker(sigma.x());
+  PassMaker* makerY = makeMaker(sigma.y());
 
   if (makerX->window() <= 1 && makerY->window() <= 1) {
     return copy_image_with_bounds(ctx, input, srcBounds, dstBounds);
@@ -896,21 +896,6 @@ sk_sp<SkSpecialImage> cpu_blur(
 }
 }  // namespace
 
-// This rather arbitrary-looking value results in a maximum box blur kernel size
-// of 1000 pixels on the raster path, which matches the WebKit and Firefox
-// implementations. Since the GPU path does not compute a box blur, putting
-// the limit on sigma ensures consistent behaviour between the GPU and
-// raster paths.
-#define MAX_SIGMA SkIntToScalar(532)
-
-static SkVector map_sigma(const SkSize& localSigma, const SkMatrix& ctm) {
-  SkVector sigma = SkVector::Make(localSigma.width(), localSigma.height());
-  ctm.mapVectors(&sigma, 1);
-  sigma.fX = std::min(SkScalarAbs(sigma.fX), MAX_SIGMA);
-  sigma.fY = std::min(SkScalarAbs(sigma.fY), MAX_SIGMA);
-  return sigma;
-}
-
 sk_sp<SkSpecialImage> SkBlurImageFilter::onFilterImage(const Context& ctx, SkIPoint* offset) const {
   SkIPoint inputOffset = SkIPoint::Make(0, 0);
 
@@ -939,9 +924,9 @@ sk_sp<SkSpecialImage> SkBlurImageFilter::onFilterImage(const Context& ctx, SkIPo
   dstBounds.offset(-inputOffset);
 
   SkVector sigma = map_sigma(fSigma, ctx.ctm());
-  if (sigma.x() < 0 || sigma.y() < 0) {
-    return nullptr;
-  }
+  SkASSERT(
+      SkScalarIsFinite(sigma.x()) && sigma.x() >= 0.f && sigma.x() <= kMaxSigma &&
+      SkScalarIsFinite(sigma.y()) && sigma.y() >= 0.f && sigma.y() <= kMaxSigma);
 
   sk_sp<SkSpecialImage> result;
 #if SK_SUPPORT_GPU
@@ -953,12 +938,6 @@ sk_sp<SkSpecialImage> SkBlurImageFilter::onFilterImage(const Context& ctx, SkIPo
   } else
 #endif
   {
-    // Please see the comment on TentPass::MakeMaker for how the limit of 2183 for sigma is
-    // calculated. The effective limit of blur is 532 which is set by the GPU above in
-    // map_sigma.
-    sigma.fX = SkTPin(sigma.fX, 0.0f, 2183.0f);
-    sigma.fY = SkTPin(sigma.fY, 0.0f, 2183.0f);
-
     result = cpu_blur(ctx, sigma, input, inputBounds, dstBounds);
   }
 

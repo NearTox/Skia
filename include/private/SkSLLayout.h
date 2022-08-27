@@ -22,7 +22,7 @@ struct Layout {
     kOriginUpperLeft_Flag = 1 << 0,
     kPushConstant_Flag = 1 << 1,
     kBlendSupportAllEquations_Flag = 1 << 2,
-    kSRGBUnpremul_Flag = 1 << 3,
+    kColor_Flag = 1 << 3,
 
     // These flags indicate if the qualifier appeared, regardless of the accompanying value.
     kLocation_Flag = 1 << 4,
@@ -62,9 +62,9 @@ struct Layout {
     return result;
   }
 
-  String description() const {
-    String result;
-    auto separator = [firstSeparator = true]() mutable -> String {
+  std::string description() const {
+    std::string result;
+    auto separator = [firstSeparator = true]() mutable -> std::string {
       if (firstSeparator) {
         firstSeparator = false;
         return "";
@@ -73,25 +73,25 @@ struct Layout {
       }
     };
     if (fLocation >= 0) {
-      result += separator() + "location = " + to_string(fLocation);
+      result += separator() + "location = " + std::to_string(fLocation);
     }
     if (fOffset >= 0) {
-      result += separator() + "offset = " + to_string(fOffset);
+      result += separator() + "offset = " + std::to_string(fOffset);
     }
     if (fBinding >= 0) {
-      result += separator() + "binding = " + to_string(fBinding);
+      result += separator() + "binding = " + std::to_string(fBinding);
     }
     if (fIndex >= 0) {
-      result += separator() + "index = " + to_string(fIndex);
+      result += separator() + "index = " + std::to_string(fIndex);
     }
     if (fSet >= 0) {
-      result += separator() + "set = " + to_string(fSet);
+      result += separator() + "set = " + std::to_string(fSet);
     }
     if (fBuiltin >= 0) {
-      result += separator() + "builtin = " + to_string(fBuiltin);
+      result += separator() + "builtin = " + std::to_string(fBuiltin);
     }
     if (fInputAttachmentIndex >= 0) {
-      result += separator() + "input_attachment_index = " + to_string(fInputAttachmentIndex);
+      result += separator() + "input_attachment_index = " + std::to_string(fInputAttachmentIndex);
     }
     if (fFlags & kOriginUpperLeft_Flag) {
       result += separator() + "origin_upper_left";
@@ -102,8 +102,8 @@ struct Layout {
     if (fFlags & kPushConstant_Flag) {
       result += separator() + "push_constant";
     }
-    if (fFlags & kSRGBUnpremul_Flag) {
-      result += separator() + "srgb_unpremul";
+    if (fFlags & kColor_Flag) {
+      result += separator() + "color";
     }
     if (result.size() > 0) {
       result = "layout (" + result + ")";
@@ -117,7 +117,7 @@ struct Layout {
            fBuiltin == other.fBuiltin && fInputAttachmentIndex == other.fInputAttachmentIndex;
   }
 
-  bool operator!=(const Layout& other) const { return !(*this == other); }
+  bool operator!=(const Layout& other) const noexcept { return !(*this == other); }
 
   int fFlags;
   int fLocation;

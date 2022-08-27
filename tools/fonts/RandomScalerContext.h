@@ -43,6 +43,7 @@ class SkRandomTypeface : public SkTypeface {
 
   void getPostScriptGlyphNames(SkString*) const override;
 
+  bool onGlyphMaskNeedsCurrentColor() const override;
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[],
       int coordinateCount) const override;

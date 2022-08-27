@@ -44,7 +44,7 @@ SkTableMaskFilterImpl::SkTableMaskFilterImpl(const uint8_t table[256]) {
   memcpy(fTable, table, sizeof(fTable));
 }
 
-SkTableMaskFilterImpl::~SkTableMaskFilterImpl() = default;
+SkTableMaskFilterImpl::~SkTableMaskFilterImpl() {}
 
 bool SkTableMaskFilterImpl::filterMask(
     SkMask* dst, const SkMask& src, const SkMatrix&, SkIPoint* margin) const {

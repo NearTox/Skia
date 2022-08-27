@@ -22,7 +22,10 @@
     <ClCompile Include="skottie\src\Composition.cpp" />
     <ClCompile Include="skottie\src\effects\BlackAndWhiteEffect.cpp" />
     <ClCompile Include="skottie\src\effects\BrightnessContrastEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\BulgeEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\CCTonerEffect.cpp" />
     <ClCompile Include="skottie\src\effects\CornerPinEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\DirectionalBlur.cpp" />
     <ClCompile Include="skottie\src\effects\DisplacementMapEffect.cpp" />
     <ClCompile Include="skottie\src\effects\DropShadowEffect.cpp" />
     <ClCompile Include="skottie\src\effects\Effects.cpp" />
@@ -39,7 +42,9 @@
     <ClCompile Include="skottie\src\effects\MotionTileEffect.cpp" />
     <ClCompile Include="skottie\src\effects\RadialWipeEffect.cpp" />
     <ClCompile Include="skottie\src\effects\ShadowStyles.cpp" />
+    <ClCompile Include="skottie\src\effects\SharpenEffect.cpp" />
     <ClCompile Include="skottie\src\effects\ShiftChannelsEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\SkSLEffect.cpp" />
     <ClCompile Include="skottie\src\effects\SphereEffect.cpp" />
     <ClCompile Include="skottie\src\effects\ThresholdEffect.cpp" />
     <ClCompile Include="skottie\src\effects\TintEffect.cpp" />
@@ -95,7 +100,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <LLVMToolsVersion>14.0.0</LLVMToolsVersion>
+    <LLVMToolsVersion>15.0.0</LLVMToolsVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">

@@ -395,9 +395,9 @@ void SkPDFDevice::drawPoints(
   }
 
   // SkDraw::drawPoints converts to multiple calls to fDevice->drawPath.
-  // We only use this when there's a path effect because of the overhead
+  // We only use this when there's a path effect or perspective because of the overhead
   // of multiple calls to setUpContentEntry it causes.
-  if (paint->getPathEffect()) {
+  if (paint->getPathEffect() || this->localToDevice().hasPerspective()) {
     draw_points(mode, count, points, *paint, this->devClipBounds(), this);
     return;
   }
@@ -487,7 +487,7 @@ void SkPDFDevice::internalDrawPathWithFilter(
   SkIRect bounds = clipStack.bounds(this->bounds()).roundOut();
   SkMask sourceMask;
   if (!SkDraw::DrawToMask(
-          path, &bounds, paint->getMaskFilter(), &SkMatrix::I(), &sourceMask,
+          path, bounds, paint->getMaskFilter(), &SkMatrix::I(), &sourceMask,
           SkMask::kComputeBoundsAndRenderImage_CreateMode, initStyle)) {
     return;
   }
@@ -806,7 +806,7 @@ void SkPDFDevice::internalDrawGlyphRun(
   if (!metrics) {
     return;
   }
-  SkAdvancedTypefaceMetrics::FontType fontType = SkPDFFont::FontType(*metrics);
+  SkAdvancedTypefaceMetrics::FontType fontType = SkPDFFont::FontType(*typeface, *metrics);
 
   const std::vector<SkUnichar>& glyphToUnicode = SkPDFFont::GetUnicodeMap(typeface, fDocument);
 
@@ -865,24 +865,15 @@ void SkPDFDevice::internalDrawGlyphRun(
       if (unichar < 0) {
         return;
       }
-      if (textPtr < textEnd ||                                    // more characters left
-          glyphLimit > index + 1 ||                               // toUnicode wouldn't work
-          unichar != map_glyph(glyphToUnicode, glyphIDs[index]))  // test single Unichar map
+      if (textPtr < textEnd ||                                    // >1 code points in cluster
+          c.fGlyphCount > 1 ||                                    // >1 glyphs in cluster
+          unichar != map_glyph(glyphToUnicode, glyphIDs[index]))  // 1:1 but wrong mapping
       {
         glyphPositioner.flush();
-        out->writeText("/Span<</ActualText <");
-        SkPDFUtils::WriteUTF16beHex(out, 0xFEFF);  // U+FEFF = BYTE ORDER MARK
-        // the BOM marks this text as UTF-16BE, not PDFDocEncoding.
-        SkPDFUtils::WriteUTF16beHex(out, unichar);  // first char
-        while (textPtr < textEnd) {
-          unichar = SkUTF::NextUTF8(&textPtr, textEnd);
-          if (unichar < 0) {
-            break;
-          }
-          SkPDFUtils::WriteUTF16beHex(out, unichar);
-        }
-        out->writeText("> >> BDC\n");  // begin marked-content sequence
-                                       // with an associated property list.
+        out->writeText("/Span<</ActualText ");
+        SkPDFWriteTextString(out, c.fUtf8Text, c.fTextByteLength);
+        out->writeText(" >> BDC\n");  // begin marked-content sequence
+                                      // with an associated property list.
         actualText = true;
       }
     }
@@ -923,19 +914,30 @@ void SkPDFDevice::internalDrawGlyphRun(
   }
 }
 
-void SkPDFDevice::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
+void SkPDFDevice::onDrawGlyphRunList(
+    SkCanvas*, const SkGlyphRunList& glyphRunList, const SkPaint& initialPaint,
+    const SkPaint& drawingPaint) {
   SkASSERT(!glyphRunList.hasRSXForm());
   for (const SkGlyphRun& glyphRun : glyphRunList) {
-    this->internalDrawGlyphRun(glyphRun, glyphRunList.origin(), paint);
+    this->internalDrawGlyphRun(glyphRun, glyphRunList.origin(), drawingPaint);
   }
 }
 
-void SkPDFDevice::drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) {
+void SkPDFDevice::drawVertices(const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool) {
   if (this->hasEmptyClip()) {
     return;
   }
   // TODO: implement drawVertices
 }
+
+#ifdef SK_ENABLE_SKSL
+void SkPDFDevice::drawMesh(const SkMesh&, sk_sp<SkBlender>, const SkPaint&) {
+  if (this->hasEmptyClip()) {
+    return;
+  }
+  // TODO: implement drawMesh
+}
+#endif
 
 void SkPDFDevice::drawFormXObject(SkPDFIndirectReference xObject, SkDynamicMemoryWStream* content) {
   ScopedOutputMarkedContentTags mark(fNodeId, fDocument, content);

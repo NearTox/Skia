@@ -86,39 +86,39 @@ class SK_API SkFont {
 
       @return  true if all glyphs are hinted
   */
-  bool isForceAutoHinting() const { return SkToBool(fFlags & kForceAutoHinting_PrivFlag); }
+  bool isForceAutoHinting() const noexcept { return SkToBool(fFlags & kForceAutoHinting_PrivFlag); }
 
   /** Returns true if font engine may return glyphs from font bitmaps instead of from outlines.
 
       @return  true if glyphs may be font bitmaps
   */
-  bool isEmbeddedBitmaps() const { return SkToBool(fFlags & kEmbeddedBitmaps_PrivFlag); }
+  bool isEmbeddedBitmaps() const noexcept { return SkToBool(fFlags & kEmbeddedBitmaps_PrivFlag); }
 
   /** Returns true if glyphs may be drawn at sub-pixel offsets.
 
       @return  true if glyphs may be drawn at sub-pixel offsets.
   */
-  bool isSubpixel() const { return SkToBool(fFlags & kSubpixel_PrivFlag); }
+  bool isSubpixel() const noexcept { return SkToBool(fFlags & kSubpixel_PrivFlag); }
 
   /** Returns true if font and glyph metrics are requested to be linearly scalable.
 
       @return  true if font and glyph metrics are requested to be linearly scalable.
   */
-  bool isLinearMetrics() const { return SkToBool(fFlags & kLinearMetrics_PrivFlag); }
+  bool isLinearMetrics() const noexcept { return SkToBool(fFlags & kLinearMetrics_PrivFlag); }
 
   /** Returns true if bold is approximated by increasing the stroke width when creating glyph
       bitmaps from outlines.
 
       @return  bold is approximated through stroke width
   */
-  bool isEmbolden() const { return SkToBool(fFlags & kEmbolden_PrivFlag); }
+  bool isEmbolden() const noexcept { return SkToBool(fFlags & kEmbolden_PrivFlag); }
 
   /** Returns true if baselines will be snapped to pixel positions when the current transformation
       matrix is axis aligned.
 
       @return  baselines may be snapped to pixels
    */
-  bool isBaselineSnap() const { return SkToBool(fFlags & kBaselineSnap_PrivFlag); }
+  bool isBaselineSnap() const noexcept { return SkToBool(fFlags & kBaselineSnap_PrivFlag); }
 
   /** Sets whether to always hint glyphs.
       If forceAutoHinting is set, instructs the font manager to always hint glyphs.
@@ -127,19 +127,19 @@ class SK_API SkFont {
 
       @param forceAutoHinting  setting to always hint glyphs
   */
-  void setForceAutoHinting(bool forceAutoHinting) noexcept;
+  void setForceAutoHinting(bool forceAutoHinting);
 
   /** Requests, but does not require, to use bitmaps in fonts instead of outlines.
 
       @param embeddedBitmaps  setting to use bitmaps in fonts
   */
-  void setEmbeddedBitmaps(bool embeddedBitmaps) noexcept;
+  void setEmbeddedBitmaps(bool embeddedBitmaps);
 
   /** Requests, but does not require, that glyphs respect sub-pixel positioning.
 
       @param subpixel  setting for sub-pixel positioning
   */
-  void setSubpixel(bool subpixel) noexcept;
+  void setSubpixel(bool subpixel);
 
   /** Requests, but does not require, linearly scalable font and glyph metrics.
 
@@ -148,34 +148,34 @@ class SK_API SkFont {
 
       @param linearMetrics  setting for linearly scalable font and glyph metrics.
   */
-  void setLinearMetrics(bool linearMetrics) noexcept;
+  void setLinearMetrics(bool linearMetrics);
 
   /** Increases stroke width when creating glyph bitmaps to approximate a bold typeface.
 
       @param embolden  setting for bold approximation
   */
-  void setEmbolden(bool embolden) noexcept;
+  void setEmbolden(bool embolden);
 
   /** Requests that baselines be snapped to pixels when the current transformation matrix is axis
       aligned.
 
       @param baselineSnap  setting for baseline snapping to pixels
   */
-  void setBaselineSnap(bool baselineSnap) noexcept;
+  void setBaselineSnap(bool baselineSnap);
 
   /** Whether edge pixels draw opaque or with partial transparency.
    */
-  Edging getEdging() const { return (Edging)fEdging; }
+  Edging getEdging() const noexcept { return (Edging)fEdging; }
 
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
   */
-  void setEdging(Edging edging) noexcept;
+  void setEdging(Edging edging);
 
   /** Sets level of glyph outline adjustment.
       Does not check for valid values of hintingLevel.
   */
-  void setHinting(SkFontHinting hintingLevel) noexcept;
+  void setHinting(SkFontHinting hintingLevel);
 
   /** Returns level of glyph outline adjustment.
    */
@@ -187,7 +187,7 @@ class SK_API SkFont {
       @param size  typographic height of text
       @return      initialized SkFont
    */
-  SkFont makeWithSize(SkScalar size) const noexcept;
+  SkFont makeWithSize(SkScalar size) const;
 
   /** Returns SkTypeface if set, or nullptr.
       Does not alter SkTypeface SkRefCnt.
@@ -243,28 +243,28 @@ class SK_API SkFont {
 
       @param tf  font and style used to draw text
   */
-  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = tf; }
+  void setTypeface(sk_sp<SkTypeface> tf) noexcept { fTypeface = std::move(tf); }
 
   /** Sets text size in points.
       Has no effect if textSize is not greater than or equal to zero.
 
       @param textSize  typographic height of text
   */
-  void setSize(SkScalar textSize) noexcept;
+  void setSize(SkScalar textSize);
 
   /** Sets text scale on x-axis.
       Default value is 1.
 
       @param scaleX  text horizontal scale
   */
-  void setScaleX(SkScalar scaleX) noexcept;
+  void setScaleX(SkScalar scaleX);
 
   /** Sets text skew on x-axis.
       Default value is zero.
 
       @param skewX  additional shear on x-axis relative to y-axis
   */
-  void setSkewX(SkScalar skewX) noexcept;
+  void setSkewX(SkScalar skewX);
 
   /** Converts text into glyph indices.
       Returns the number of glyph indices represented by text.
@@ -330,7 +330,7 @@ class SK_API SkFont {
       @param text        character storage encoded with SkTextEncoding
       @param byteLength  length of character storage in bytes
       @param bounds      returns bounding box relative to (0, 0) if not nullptr
-      @return            number of glyphs represented by text of length byteLength
+      @return            the sum of the default advance widths
   */
   SkScalar measureText(
       const void* text, size_t byteLength, SkTextEncoding encoding,
@@ -347,7 +347,7 @@ class SK_API SkFont {
       @param byteLength  length of character storage in bytes
       @param bounds      returns bounding box relative to (0, 0) if not nullptr
       @param paint       optional; may be nullptr
-      @return            number of glyphs represented by text of length byteLength
+      @return            the sum of the default advance widths
   */
   SkScalar measureText(
       const void* text, size_t byteLength, SkTextEncoding encoding, SkRect* bounds,
@@ -525,8 +525,9 @@ class SK_API SkFont {
   bool hasSomeAntiAliasing() const;
 
   friend class SkFontPriv;
-  friend class SkGlyphRunListPainter;
+  friend class SkGlyphRunListPainterCPU;
   friend class SkStrikeSpec;
+  friend class SkRemoteGlyphCacheTest;
 };
 
 #endif

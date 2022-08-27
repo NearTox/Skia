@@ -17,12 +17,12 @@
 
 class SkSafeMath {
  public:
-  SkSafeMath() noexcept = default;
+  constexpr SkSafeMath() noexcept = default;
 
   bool ok() const noexcept { return fOK; }
   explicit operator bool() const noexcept { return fOK; }
 
-  size_t mul(size_t x, size_t y) {
+  size_t mul(size_t x, size_t y) noexcept {
     return sizeof(size_t) == sizeof(uint64_t) ? mul64(x, y) : mul32(x, y);
   }
 
@@ -77,7 +77,7 @@ class SkSafeMath {
     return result;
   }
 
-  uint64_t mul64(uint64_t x, uint64_t y) {
+  uint64_t mul64(uint64_t x, uint64_t y) noexcept {
     if (x <= std::numeric_limits<uint64_t>::max() >> 32 &&
         y <= std::numeric_limits<uint64_t>::max() >> 32) {
       return x * y;

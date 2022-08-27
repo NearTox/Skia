@@ -254,9 +254,9 @@ enum {
   kWaitingSharedMask = ((1 << kLogThreadCount) - 1) << kWaitingSharedOffset,
 };
 
-SkSharedMutex::SkSharedMutex() noexcept : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
+SkSharedMutex::SkSharedMutex() : fQueueCounts(0) { ANNOTATE_RWLOCK_CREATE(this); }
 SkSharedMutex::~SkSharedMutex() { ANNOTATE_RWLOCK_DESTROY(this); }
-void SkSharedMutex::acquire() noexcept {
+void SkSharedMutex::acquire() {
   // Increment the count of exclusive queue waiters.
   int32_t oldQueueCounts =
       fQueueCounts.fetch_add(1 << kWaitingExlusiveOffset, std::memory_order_acquire);
@@ -269,7 +269,7 @@ void SkSharedMutex::acquire() noexcept {
   ANNOTATE_RWLOCK_ACQUIRED(this, 1);
 }
 
-void SkSharedMutex::release() noexcept {
+void SkSharedMutex::release() {
   ANNOTATE_RWLOCK_RELEASED(this, 1);
 
   int32_t oldQueueCounts = fQueueCounts.load(std::memory_order_relaxed);
@@ -308,7 +308,7 @@ void SkSharedMutex::release() noexcept {
   }
 }
 
-void SkSharedMutex::acquireShared() noexcept {
+void SkSharedMutex::acquireShared() {
   int32_t oldQueueCounts = fQueueCounts.load(std::memory_order_relaxed);
   int32_t newQueueCounts;
   do {
@@ -329,7 +329,7 @@ void SkSharedMutex::acquireShared() noexcept {
   ANNOTATE_RWLOCK_ACQUIRED(this, 0);
 }
 
-void SkSharedMutex::releaseShared() noexcept {
+void SkSharedMutex::releaseShared() {
   ANNOTATE_RWLOCK_RELEASED(this, 0);
 
   // Decrement the shared count.

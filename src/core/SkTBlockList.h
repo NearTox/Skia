@@ -133,7 +133,7 @@ class SkTBlockList {
   /**
    * Removes all added items.
    */
-  void reset() {
+  void reset() noexcept {
     // Invoke destructors in reverse order if not trivially destructible
     if constexpr (!std::is_trivially_destructible<T>::value) {
       for (T& t : this->ritems()) {
@@ -226,7 +226,7 @@ class SkTBlockList {
   friend class SkTBlockList;
   friend class TBlockListTestAccess;  // for fAllocator
 
-  static constexpr size_t StartingSize =
+  inline static constexpr size_t StartingSize =
       SkBlockAllocator::Overhead<alignof(T)>() + StartingItems * sizeof(T);
 
   static T& GetItem(SkBlockAllocator::Block* block, int index) {
@@ -268,12 +268,12 @@ class SkTBlockList {
    *
    *   for (auto&& T : this->items()) {}
    */
-  Iter items() { return Iter(fAllocator.allocator()); }
-  CIter items() const { return CIter(fAllocator.allocator()); }
+  Iter items() noexcept { return Iter(fAllocator.allocator()); }
+  CIter items() const noexcept { return CIter(fAllocator.allocator()); }
 
   // Iterate from newest to oldest using a for-range loop.
-  RIter ritems() { return RIter(fAllocator.allocator()); }
-  CRIter ritems() const { return CRIter(fAllocator.allocator()); }
+  RIter ritems() noexcept { return RIter(fAllocator.allocator()); }
+  CRIter ritems() const noexcept { return CRIter(fAllocator.allocator()); }
 };
 
 template <typename T, int SI1>
@@ -375,7 +375,7 @@ class BlockIndexIterator {
 
   class Item {
    public:
-    bool operator!=(const Item& other) const noexcept {
+    bool operator!=(const Item& other) const {
       return other.fBlock != fBlock || (SkToBool(*fBlock) && other.fIndex != fIndex);
     }
 
@@ -401,7 +401,7 @@ class BlockIndexIterator {
     friend BlockIndexIterator;
     using BlockItem = typename BlockIter::Item;
 
-    Item(BlockItem block) : fBlock(block) { this->setIndices(); }
+    Item(BlockItem block) noexcept : fBlock(block) { this->setIndices(); }
 
     void setIndices() {
       // Skip empty blocks

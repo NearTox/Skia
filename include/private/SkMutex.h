@@ -18,6 +18,8 @@ class SK_CAPABILITY("mutex") SkMutex {
  public:
   constexpr SkMutex() noexcept = default;
 
+  ~SkMutex() { this->assertNotHeld(); }
+
   void acquire() noexcept SK_ACQUIRE() {
     fSemaphore.wait();
     SkDEBUGCODE(fOwner = SkGetThreadID();)
@@ -30,6 +32,8 @@ class SK_CAPABILITY("mutex") SkMutex {
   }
 
   void assertHeld() noexcept SK_ASSERT_CAPABILITY(this) { SkASSERT(fOwner == SkGetThreadID()); }
+
+  void assertNotHeld() noexcept { SkASSERT(fOwner == kIllegalThreadID); }
 
  private:
   SkSemaphore fSemaphore{1};

@@ -59,7 +59,7 @@ static inline SkFixed SkFloatToFixed_Check(float x) {
     a 32 bit signed integer
 */
 #ifdef SK_DEBUG
-inline SkFixed SkIntToFixed(int n) {
+inline SkFixed SkIntToFixed(int n) noexcept {
   SkASSERT(n >= -32768 && n <= 32767);
   // Left shifting a negative value has undefined behavior in C, so we cast to unsigned before
   // shifting.
@@ -76,13 +76,13 @@ inline SkFixed SkIntToFixed(int n) {
 #define SkFixedCeilToInt(x) (((x) + SK_Fixed1 - 1) >> 16)
 #define SkFixedFloorToInt(x) ((x) >> 16)
 
-static constexpr inline SkFixed SkFixedRoundToFixed(SkFixed x) noexcept {
+static inline SkFixed SkFixedRoundToFixed(SkFixed x) noexcept {
   return (SkFixed)((uint32_t)(x + SK_FixedHalf) & 0xFFFF0000);
 }
-static constexpr inline SkFixed SkFixedCeilToFixed(SkFixed x) noexcept {
+static inline SkFixed SkFixedCeilToFixed(SkFixed x) noexcept {
   return (SkFixed)((uint32_t)(x + SK_Fixed1 - 1) & 0xFFFF0000);
 }
-static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept {
+static inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept {
   return (SkFixed)((uint32_t)x & 0xFFFF0000);
 }
 
@@ -93,7 +93,7 @@ static constexpr inline SkFixed SkFixedFloorToFixed(SkFixed x) noexcept {
 #define SkFixedDiv(numer, denom) \
   SkToS32(SkTPin<int64_t>((SkLeftShift((int64_t)(numer), 16) / (denom)), SK_MinS32, SK_MaxS32))
 
-static constexpr inline SkFixed SkFixedMul(SkFixed a, SkFixed b) noexcept {
+static inline SkFixed SkFixedMul(SkFixed a, SkFixed b) noexcept {
   return (SkFixed)((int64_t)a * b >> 16);
 }
 

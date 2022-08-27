@@ -18,11 +18,13 @@
 #include "src/core/SkMathPriv.h"
 
 class SkArenaAlloc;
+class SkDrawable;
 class SkScalerContext;
 
+// -- SkPackedGlyphID ------------------------------------------------------------------------------
 // A combination of SkGlyphID and sub-pixel position information.
 struct SkPackedGlyphID {
-  static constexpr uint32_t kImpossibleID = ~0u;
+  inline static constexpr uint32_t kImpossibleID = ~0u;
   enum {
     // Lengths
     kGlyphIDLen = 16u,
@@ -44,21 +46,26 @@ struct SkPackedGlyphID {
     kFixedPointSubPixelPosBits = kFixedPointBinaryPointPos - kSubPixelPosLen,
   };
 
-  static constexpr SkScalar kSubpixelRound = 1.f / (1u << (SkPackedGlyphID::kSubPixelPosLen + 1));
+  inline static const constexpr SkScalar kSubpixelRound =
+      1.f / (1u << (SkPackedGlyphID::kSubPixelPosLen + 1));
 
-  static constexpr SkIPoint kXYFieldMask{
+  inline static const constexpr SkIPoint kXYFieldMask{
       kSubPixelPosMask << kSubPixelX, kSubPixelPosMask << kSubPixelY};
+
+  struct Hash {
+    uint32_t operator()(SkPackedGlyphID packedID) const noexcept { return packedID.hash(); }
+  };
 
   constexpr explicit SkPackedGlyphID(SkGlyphID glyphID) noexcept
       : fID{(uint32_t)glyphID << kGlyphID} {}
 
-  constexpr SkPackedGlyphID(SkGlyphID glyphID, SkFixed x, SkFixed y) noexcept
+  constexpr SkPackedGlyphID(SkGlyphID glyphID, SkFixed x, SkFixed y) noexcept 
       : fID{PackIDXY(glyphID, x, y)} {}
 
-  constexpr SkPackedGlyphID(SkGlyphID glyphID, uint32_t x, uint32_t y) noexcept
+  constexpr SkPackedGlyphID(SkGlyphID glyphID, uint32_t x, uint32_t y) noexcept 
       : fID{PackIDSubXSubY(glyphID, x, y)} {}
 
-  SkPackedGlyphID(SkGlyphID glyphID, SkPoint pt, SkIPoint mask) noexcept
+  SkPackedGlyphID(SkGlyphID glyphID, SkPoint pt, SkIPoint mask) noexcept 
       : fID{PackIDSkPoint(glyphID, pt, mask)} {}
 
   constexpr explicit SkPackedGlyphID(uint32_t v) noexcept : fID{v & kMaskAll} {}
@@ -76,11 +83,19 @@ struct SkPackedGlyphID {
 
   SkFixed getSubYFixed() const noexcept { return this->subToFixed(kSubPixelY); }
 
-  uint32_t hash() const { return SkChecksum::CheapMix(fID); }
+  uint32_t hash() const noexcept { return SkChecksum::CheapMix(fID); }
 
   SkString dump() const {
     SkString str;
     str.appendf("glyphID: %d, x: %d, y:%d", glyphID(), getSubXFixed(), getSubYFixed());
+    return str;
+  }
+
+  SkString shortDump() const {
+    SkString str;
+    str.appendf(
+        "0x%x|%1d|%1d", this->glyphID(), this->subPixelField(kSubPixelX),
+        this->subPixelField(kSubPixelY));
     return str;
   }
 
@@ -121,7 +136,7 @@ struct SkPackedGlyphID {
         XY subPos = (pos - floor(pos)) + 1.0f;
         SubXY sub = cast<int>(subPos * magic) & SubXY{mask.x(), mask.y()};
 #else
-    const float magicX = 1.f * (1u << (kSubPixelPosLen + kSubPixelX)),
+    constexpr float magicX = 1.f * (1u << (kSubPixelPosLen + kSubPixelX)),
                 magicY = 1.f * (1u << (kSubPixelPosLen + kSubPixelY));
 
     float x = pt.x(), y = pt.y();
@@ -146,67 +161,142 @@ struct SkPackedGlyphID {
     return ((uint32_t)n >> kFixedPointSubPixelPosBits) & kSubPixelPosMask;
   }
 
+  constexpr uint32_t subPixelField(uint32_t subPixelPosBit) const noexcept {
+    return (fID >> subPixelPosBit) & kSubPixelPosMask;
+  }
+
   constexpr SkFixed subToFixed(uint32_t subPixelPosBit) const noexcept {
-    uint32_t subPixelPosition = (fID >> subPixelPosBit) & kSubPixelPosMask;
+    uint32_t subPixelPosition = this->subPixelField(subPixelPosBit);
     return subPixelPosition << kFixedPointSubPixelPosBits;
   }
 
   uint32_t fID;
 };
 
+// -- SkAxisAlignment ------------------------------------------------------------------------------
+// SkAxisAlignment specifies the x component of a glyph's position is rounded when kX, and the y
+// component is rounded when kY. If kNone then neither are rounded.
+enum class SkAxisAlignment : uint32_t {
+  kNone,
+  kX,
+  kY,
+};
+
+// round and ignorePositionMask are used to calculate the subpixel position of a glyph.
+// The per component (x or y) calculation is:
+//
+//   subpixelOffset = (floor((viewportPosition + rounding) & mask) >> 14) & 3
+//
+// where mask is either 0 or ~0, and rounding is either
+// 1/2 for non-subpixel or 1/8 for subpixel.
+struct SkGlyphPositionRoundingSpec {
+  SkGlyphPositionRoundingSpec(bool isSubpixel, SkAxisAlignment axisAlignment);
+  const SkVector halfAxisSampleFreq;
+  const SkIPoint ignorePositionMask;
+  const SkIPoint ignorePositionFieldMask;
+
+ private:
+  static SkVector HalfAxisSampleFreq(bool isSubpixel, SkAxisAlignment axisAlignment);
+  static SkIPoint IgnorePositionMask(bool isSubpixel, SkAxisAlignment axisAlignment);
+  static SkIPoint IgnorePositionFieldMask(bool isSubpixel, SkAxisAlignment axisAlignment);
+};
+
 class SkGlyphRect;
 namespace skglyph {
-SkGlyphRect rect_union(SkGlyphRect, SkGlyphRect);
-SkGlyphRect rect_intersection(SkGlyphRect, SkGlyphRect);
+SkGlyphRect rect_union(SkGlyphRect, SkGlyphRect) noexcept;
+SkGlyphRect rect_intersection(SkGlyphRect, SkGlyphRect) noexcept;
 }  // namespace skglyph
 
 // SkGlyphRect encodes rectangles with coordinates on [-32767, 32767]. It is specialized for
 // rectangle union and intersection operations.
 class SkGlyphRect {
  public:
-  SkGlyphRect(int16_t left, int16_t top, int16_t right, int16_t bottom)
-      : fRect{left, top, (int16_t)-right, (int16_t)-bottom} {
+  SkGlyphRect() = default;
+  SkGlyphRect(int16_t left, int16_t top, int16_t right, int16_t bottom) noexcept 
+      : fRect{(int16_t)-left, (int16_t)-top, right, bottom} {
     SkDEBUGCODE(const int32_t min = std::numeric_limits<int16_t>::min());
     SkASSERT(left != min && top != min && right != min && bottom != min);
   }
-  bool empty() const { return fRect[0] >= -fRect[2] || fRect[1] >= -fRect[3]; }
-  SkRect rect() const { return SkRect::MakeLTRB(fRect[0], fRect[1], -fRect[2], -fRect[3]); }
-  SkIRect iRect() const { return SkIRect::MakeLTRB(fRect[0], fRect[1], -fRect[2], -fRect[3]); }
-  SkGlyphRect offset(int16_t x, int16_t y) const {
-    return SkGlyphRect{fRect + Storage{x, y, SkTo<int16_t>(-x), SkTo<int16_t>(-y)}};
+  bool empty() const noexcept { return -fRect[0] >= fRect[2] || -fRect[1] >= fRect[3]; }
+  SkRect rect() const noexcept {
+    return SkRect::MakeLTRB(-fRect[0], -fRect[1], fRect[2], fRect[3]);
   }
-  skvx::Vec<2, int16_t> topLeft() const { return {fRect[0], fRect[1]}; }
-  friend SkGlyphRect skglyph::rect_union(SkGlyphRect, SkGlyphRect);
-  friend SkGlyphRect skglyph::rect_intersection(SkGlyphRect, SkGlyphRect);
+  SkIRect iRect() const noexcept {
+    return SkIRect::MakeLTRB(-fRect[0], -fRect[1], fRect[2], fRect[3]);
+  }
+  SkGlyphRect offset(int16_t x, int16_t y) const noexcept {
+    return SkGlyphRect{fRect + Storage{SkTo<int16_t>(-x), SkTo<int16_t>(-y), x, y}};
+  }
+  skvx::Vec<2, int16_t> leftTop() const noexcept { return -this->negLeftTop(); }
+  skvx::Vec<2, int16_t> rightBottom() const noexcept { return {fRect[2], fRect[3]}; }
+  skvx::Vec<2, int16_t> widthHeight() const noexcept { return this->rightBottom() + negLeftTop(); }
+  friend SkGlyphRect skglyph::rect_union(SkGlyphRect, SkGlyphRect) noexcept;
+  friend SkGlyphRect skglyph::rect_intersection(SkGlyphRect, SkGlyphRect) noexcept;
 
  private:
+  skvx::Vec<2, int16_t> negLeftTop() const noexcept { return {fRect[0], fRect[1]}; }
   using Storage = skvx::Vec<4, int16_t>;
-  SkGlyphRect(Storage rect) : fRect{rect} {}
+  SkGlyphRect(Storage rect) noexcept : fRect{rect} {}
   Storage fRect;
 };
 
 namespace skglyph {
-inline SkGlyphRect empty_rect() {
+inline SkGlyphRect empty_rect() noexcept {
   constexpr int16_t max = std::numeric_limits<int16_t>::max();
   return {max, max, -max, -max};
 }
-inline SkGlyphRect full_rect() {
+inline SkGlyphRect full_rect() noexcept {
   constexpr int16_t max = std::numeric_limits<int16_t>::max();
   return {-max, -max, max, max};
 }
-inline SkGlyphRect rect_union(SkGlyphRect a, SkGlyphRect b) { return skvx::min(a.fRect, b.fRect); }
-inline SkGlyphRect rect_intersection(SkGlyphRect a, SkGlyphRect b) {
+inline SkGlyphRect rect_union(SkGlyphRect a, SkGlyphRect b) noexcept {
   return skvx::max(a.fRect, b.fRect);
+}
+inline SkGlyphRect rect_intersection(SkGlyphRect a, SkGlyphRect b) noexcept {
+  return skvx::min(a.fRect, b.fRect);
 }
 }  // namespace skglyph
 
-struct SkGlyphPrototype;
+class SkGlyph;
+
+// SkGlyphDigest contains a digest of information for making GPU drawing decisions. It can be
+// referenced instead of the glyph itself in many situations. In the remote glyphs cache the
+// SkGlyphDigest is the only information that needs to be stored in the cache.
+class SkGlyphDigest {
+ public:
+  // Default ctor is only needed for the hash table.
+  SkGlyphDigest() = default;
+  SkGlyphDigest(size_t index, const SkGlyph& glyph);
+  int index() const noexcept { return fIndex; }
+  bool isEmpty() const noexcept { return fIsEmpty; }
+  bool isColor() const noexcept { return fIsColor; }
+  bool canDrawAsMask() const noexcept { return fCanDrawAsMask; }
+  bool canDrawAsSDFT() const noexcept { return fCanDrawAsSDFT; }
+  uint16_t maxDimension() const noexcept { return std::max(fWidth, fHeight); }
+
+ private:
+  static_assert(SkPackedGlyphID::kEndData == 20);
+  struct {
+    uint32_t fIndex : SkPackedGlyphID::kEndData;
+    uint32_t fIsEmpty : 1;
+    uint32_t fIsColor : 1;
+    uint32_t fCanDrawAsMask : 1;
+    uint32_t fCanDrawAsSDFT : 1;
+  };
+  int16_t fLeft, fTop;
+  uint16_t fWidth, fHeight;
+};
 
 class SkGlyph {
  public:
   // SkGlyph() is used for testing.
   constexpr SkGlyph() noexcept : SkGlyph{SkPackedGlyphID()} {}
-  constexpr explicit SkGlyph(SkPackedGlyphID id) noexcept : fID{id} {}
+  SkGlyph(const SkGlyph&) noexcept;
+  SkGlyph& operator=(const SkGlyph&) noexcept;
+  SkGlyph(SkGlyph&&) noexcept;
+  SkGlyph& operator=(SkGlyph&&) noexcept;
+  ~SkGlyph();
+  constexpr explicit SkGlyph(SkPackedGlyphID id) : fID{id} {}
 
   SkVector advanceVector() const noexcept { return SkVector{fAdvanceX, fAdvanceY}; }
   SkScalar advanceX() const noexcept { return fAdvanceX; }
@@ -214,8 +304,8 @@ class SkGlyph {
 
   SkGlyphID getGlyphID() const noexcept { return fID.glyphID(); }
   SkPackedGlyphID getPackedID() const noexcept { return fID; }
-  SkFixed getSubXFixed() const noexcept { return fID.getSubXFixed(); }
-  SkFixed getSubYFixed() const noexcept { return fID.getSubYFixed(); }
+  SkFixed getSubXFixed() const { return fID.getSubXFixed(); }
+  SkFixed getSubYFixed() const { return fID.getSubYFixed(); }
 
   size_t rowBytes() const;
   size_t rowBytesUsingFormat(SkMask::Format format) const;
@@ -242,12 +332,12 @@ class SkGlyph {
   size_t setMetricsAndImage(SkArenaAlloc* alloc, const SkGlyph& from);
 
   // Returns true if the image has been set.
-  bool setImageHasBeenCalled() const {
+  bool setImageHasBeenCalled() const noexcept {
     return fImage != nullptr || this->isEmpty() || this->imageTooLarge();
   }
 
   // Return a pointer to the path if the image exists, otherwise return nullptr.
-  const void* image() const {
+  const void* image() const noexcept {
     SkASSERT(this->setImageHasBeenCalled());
     return fImage;
   }
@@ -268,7 +358,7 @@ class SkGlyph {
   // Returns true if this is the first time you called setPath()
   // and there actually is a path; call path() to get it.
   bool setPath(SkArenaAlloc* alloc, SkScalerContext* scalerContext);
-  bool setPath(SkArenaAlloc* alloc, const SkPath* path);
+  bool setPath(SkArenaAlloc* alloc, const SkPath* path, bool hairline);
 
   // Returns true if that path has been set.
   bool setPathHasBeenCalled() const noexcept { return fPathData != nullptr; }
@@ -276,6 +366,12 @@ class SkGlyph {
   // Return a pointer to the path if it exists, otherwise return nullptr. Only works if the
   // path was previously set.
   const SkPath* path() const;
+  bool pathIsHairline() const;
+
+  bool setDrawable(SkArenaAlloc* alloc, SkScalerContext* scalerContext);
+  bool setDrawable(SkArenaAlloc* alloc, sk_sp<SkDrawable> drawable);
+  bool setDrawableHasBeenCalled() const noexcept { return fDrawableData != nullptr; }
+  SkDrawable* drawable() const;
 
   // Format
   bool isColor() const noexcept { return fMaskFormat == SkMask::kARGB32_Format; }
@@ -284,9 +380,9 @@ class SkGlyph {
 
   // Bounds
   int maxDimension() const noexcept { return std::max(fWidth, fHeight); }
-  SkIRect iRect() const { return SkIRect::MakeXYWH(fLeft, fTop, fWidth, fHeight); }
-  SkRect rect() const { return SkRect::MakeXYWH(fLeft, fTop, fWidth, fHeight); }
-  SkGlyphRect glyphRect() const {
+  SkIRect iRect() const noexcept { return SkIRect::MakeXYWH(fLeft, fTop, fWidth, fHeight); }
+  SkRect rect() const noexcept { return SkRect::MakeXYWH(fLeft, fTop, fWidth, fHeight); }
+  SkGlyphRect glyphRect() const noexcept {
     return {fLeft, fTop, SkTo<int16_t>(fLeft + fWidth), SkTo<int16_t>(fTop + fHeight)};
   }
   int left() const noexcept { return fLeft; }
@@ -310,12 +406,13 @@ class SkGlyph {
       const SkScalar bounds[2], SkScalar scale, SkScalar xPos, SkScalar* array, int* count,
       SkArenaAlloc* alloc);
 
+  void setImage(void* image) { fImage = image; }
+
  private:
   // There are two sides to an SkGlyph, the scaler side (things that create glyph data) have
   // access to all the fields. Scalers are assumed to maintain all the SkGlyph invariants. The
   // consumer side has a tighter interface.
   friend class RandomScalerContext;
-  friend class RemoteStrike;
   friend class SkScalerContext;
   friend class SkScalerContextProxy;
   friend class SkScalerContext_Empty;
@@ -331,12 +428,12 @@ class SkGlyph {
   friend class TestSVGTypeface;
   friend class TestTypeface;
 
-  static constexpr uint16_t kMaxGlyphWidth = 1u << 13u;
+  inline static constexpr uint16_t kMaxGlyphWidth = 1u << 13u;
 
   // Support horizontal and vertical skipping strike-through / underlines.
   // The caller walks the linked list looking for a match. For a horizontal underline,
   // the fBounds contains the top and bottom of the underline. The fInterval pair contains the
-  // beginning and end of of the intersection of the bounds and the glyph's path.
+  // beginning and end of the intersection of the bounds and the glyph's path.
   // If interval[0] >= interval[1], no intersection was found.
   struct Intercept {
     Intercept* fNext;
@@ -348,12 +445,26 @@ class SkGlyph {
     Intercept* fIntercept{nullptr};
     SkPath fPath;
     bool fHasPath{false};
+    // A normal user-path will have patheffects applied to it and eventually become a dev-path.
+    // A dev-path is always a fill-path, except when it is hairline.
+    // The fPath is a dev-path, so sidecar the paths hairline status.
+    // This allows the user to avoid filling paths which should not be filled.
+    bool fHairline{false};
+  };
+
+  struct DrawableData {
+    Intercept* fIntercept{nullptr};
+    sk_sp<SkDrawable> fDrawable;
+    bool fHasDrawable{false};
   };
 
   size_t allocImage(SkArenaAlloc* alloc);
 
   // path == nullptr indicates that there is no path.
-  void installPath(SkArenaAlloc* alloc, const SkPath* path);
+  void installPath(SkArenaAlloc* alloc, const SkPath* path, bool hairline);
+
+  // drawable == nullptr indicates that there is no path.
+  void installDrawable(SkArenaAlloc* alloc, sk_sp<SkDrawable> drawable);
 
   // The width and height of the glyph mask.
   uint16_t fWidth = 0, fHeight = 0;
@@ -368,14 +479,20 @@ class SkGlyph {
   // else if fPathData is not null, then a path has been requested. The fPath field of fPathData
   // may still be null after the request meaning that there is no path for this glyph.
   PathData* fPathData = nullptr;
+  DrawableData* fDrawableData = nullptr;
 
   // The advance for this glyph.
   float fAdvanceX = 0, fAdvanceY = 0;
 
   SkMask::Format fMaskFormat{SkMask::kBW_Format};
 
-  // Used by the DirectWrite scaler to track state.
-  int8_t fForceBW = 0;
+  // Used by the SkScalerContext to pass state from generateMetrics to generateImage.
+  // Usually specifies which glyph representation was used to generate the metrics.
+  uint16_t fScalerContextBits = 0;
+
+  // An SkGlyph can be created with just a packedID, but generally speaking some glyph factory
+  // needs to actually fill out the glyph before it can be used as part of that system.
+  SkDEBUGCODE(bool fAdvancesBoundsFormatAndInitialPathDone{false};)
 
   SkPackedGlyphID fID;
 };

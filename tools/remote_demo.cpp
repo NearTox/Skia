@@ -16,9 +16,10 @@
 #include <thread>
 #include <unistd.h>
 
+#include "include/core/SkColorSpace.h"
 #include "include/core/SkGraphics.h"
 #include "include/core/SkSurface.h"
-#include "src/core/SkRemoteGlyphCache.h"
+#include "include/private/chromium/SkChromeRemoteGlyphCache.h"
 #include "src/core/SkScalerContext.h"
 
 static std::string gSkpName;
@@ -37,7 +38,9 @@ public:
     }
     void purgeAll() { lastPurgedHandleId = nextHandleId; }
 
-private:
+    bool isHandleDeleted(SkDiscardableHandleId id) override { return false; }
+
+   private:
     SkDiscardableHandleId nextHandleId = 0u;
     SkDiscardableHandleId lastPurgedHandleId = 0u;
 };
@@ -62,7 +65,9 @@ public:
 
     bool deleteHandle(SkDiscardableHandleId) override { return allowPurging; }
 
-private:
+    void notifyCacheMiss(SkStrikeClient::CacheMissType type, int fontSize) override {}
+
+   private:
     bool allowPurging = false;
 };
 

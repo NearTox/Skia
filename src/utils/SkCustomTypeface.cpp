@@ -5,11 +5,42 @@
  * found in the LICENSE file.
  */
 
-#include "include/core/SkCanvas.h"
-#include "include/core/SkData.h"
-#include "include/core/SkFontMetrics.h"
 #include "include/utils/SkCustomTypeface.h"
-#include "src/core/SkAdvancedTypefaceMetrics.h"
+
+#include "include/core/SkData.h"
+#include "include/core/SkFontArguments.h"
+#include "include/core/SkFontMetrics.h"
+#include "include/core/SkFontParameters.h"
+#include "include/core/SkFontStyle.h"
+#include "include/core/SkFontTypes.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkPath.h"
+#include "include/core/SkPathTypes.h"
+#include "include/core/SkPoint.h"
+#include "include/core/SkRect.h"
+#include "include/core/SkRefCnt.h"
+#include "include/core/SkScalar.h"
+#include "include/core/SkStream.h"
+#include "include/core/SkString.h"
+#include "include/core/SkTypeface.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkFloatingPoint.h"
+#include "include/private/SkMalloc.h"
+#include "include/private/SkTo.h"
+#include "src/core/SkAdvancedTypefaceMetrics.h"  // IWYU pragma: keep
+#include "src/core/SkAutoMalloc.h"
+#include "src/core/SkGlyph.h"
+#include "src/core/SkPathPriv.h"
+#include "src/core/SkScalerContext.h"
+
+#include <string.h>
+#include <memory>
+#include <utility>
+#include <vector>
+
+class SkArenaAlloc;
+class SkDescriptor;
+class SkFontDescriptor;
 
 static SkFontMetrics scale_fontmetrics(const SkFontMetrics& src, float sx, float sy) {
   SkFontMetrics dst = src;
@@ -82,6 +113,7 @@ class SkUserTypeface final : public SkTypeface {
   // noops
 
   void getPostScriptGlyphNames(SkString*) const override {}
+  bool onGlyphMaskNeedsCurrentColor() const override { return false; }
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate[], int) const override {
     return 0;
@@ -143,8 +175,6 @@ sk_sp<SkTypeface> SkCustomTypefaceBuilder::detach() {
 
 /////////////
 
-#include "src/core/SkScalerContext.h"
-
 void SkUserTypeface::onFilterRec(SkScalerContextRec* rec) const {
   rec->setHinting(SkFontHinting::kNone);
 }
@@ -177,8 +207,6 @@ SkTypeface::LocalizedStrings* SkUserTypeface::onCreateFamilyNameIterator() const
 
 //////////////
 
-#include "src/core/SkScalerContext.h"
-
 class SkUserScalerContext : public SkScalerContext {
  public:
   SkUserScalerContext(
@@ -200,7 +228,7 @@ class SkUserScalerContext : public SkScalerContext {
     return true;
   }
 
-  void generateMetrics(SkGlyph* glyph) override {
+  void generateMetrics(SkGlyph* glyph, SkArenaAlloc*) override {
     glyph->zeroMetrics();
     this->generateAdvance(glyph);
     // Always generates from paths, so SkScalerContext::makeGlyph will figure the bounds.
@@ -208,8 +236,8 @@ class SkUserScalerContext : public SkScalerContext {
 
   void generateImage(const SkGlyph&) override { SK_ABORT("Should have generated from path."); }
 
-  bool generatePath(SkGlyphID glyph, SkPath* path) override {
-    this->userTF()->fPaths[glyph].transform(fMatrix, path);
+  bool generatePath(const SkGlyph& glyph, SkPath* path) override {
+    this->userTF()->fPaths[glyph.getGlyphID()].transform(fMatrix, path);
     return true;
   }
 
@@ -229,10 +257,6 @@ std::unique_ptr<SkScalerContext> SkUserTypeface::onCreateScalerContext(
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
-
-#include "include/private/SkFloatingPoint.h"
-#include "src/core/SkAutoMalloc.h"
-#include "src/core/SkPathPriv.h"
 
 static void write_scaled_float_to_16(SkWStream* stream, float x, float scale) {
   stream->write16(SkToS16(sk_float_round2int(x * scale)) & 0xFFFF);

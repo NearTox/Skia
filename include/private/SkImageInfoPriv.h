@@ -35,6 +35,7 @@ static inline uint32_t SkColorTypeChannelFlags(SkColorType ct) noexcept {
     case kR16G16_float_SkColorType: return kRG_SkColorChannelFlags;
     case kR16G16B16A16_unorm_SkColorType: return kRGBA_SkColorChannelFlags;
     case kSRGBA_8888_SkColorType: return kRGBA_SkColorChannelFlags;
+    case kR8_unorm_SkColorType: return kRed_SkColorChannelFlag;
   }
   SkUNREACHABLE;
 }
@@ -71,6 +72,7 @@ static int SkColorTypeShiftPerPixel(SkColorType ct) noexcept {
     case kR16G16_float_SkColorType: return 2;
     case kR16G16B16A16_unorm_SkColorType: return 3;
     case kSRGBA_8888_SkColorType: return 2;
+    case kR8_unorm_SkColorType: return 0;
   }
   SkUNREACHABLE;
 }
@@ -83,7 +85,8 @@ static inline bool SkColorTypeIsValid(unsigned value) noexcept {
   return value <= kLastEnum_SkColorType;
 }
 
-static inline size_t SkColorTypeComputeOffset(SkColorType ct, int x, int y, size_t rowBytes) {
+static inline size_t SkColorTypeComputeOffset(
+    SkColorType ct, int x, int y, size_t rowBytes) noexcept {
   if (kUnknown_SkColorType == ct) {
     return 0;
   }
@@ -110,7 +113,8 @@ static inline bool SkColorTypeIsNormalized(SkColorType ct) noexcept {
     case kA16_float_SkColorType: /*subtle... alpha is always [0,1]*/
     case kR16G16_unorm_SkColorType:
     case kR16G16B16A16_unorm_SkColorType:
-    case kSRGBA_8888_SkColorType: return true;
+    case kSRGBA_8888_SkColorType:
+    case kR8_unorm_SkColorType: return true;
 
     case kRGBA_F16_SkColorType:
     case kRGBA_F32_SkColorType:
@@ -133,7 +137,8 @@ static inline int SkColorTypeMaxBitsPerChannel(SkColorType ct) noexcept {
     case kBGRA_8888_SkColorType:
     case kGray_8_SkColorType:
     case kR8G8_unorm_SkColorType:
-    case kSRGBA_8888_SkColorType: return 8;
+    case kSRGBA_8888_SkColorType:
+    case kR8_unorm_SkColorType: return 8;
 
     case kRGBA_1010102_SkColorType:
     case kRGB_101010x_SkColorType:
@@ -163,7 +168,7 @@ static inline bool SkColorInfoIsValid(const SkColorInfo& info) noexcept {
 /**
  *  Returns true if |info| contains a valid combination of width, height and colorInfo.
  */
-static inline bool SkImageInfoIsValid(const SkImageInfo& info) {
+static inline bool SkImageInfoIsValid(const SkImageInfo& info) noexcept {
   if (info.width() <= 0 || info.height() <= 0) {
     return false;
   }
@@ -180,7 +185,8 @@ static inline bool SkImageInfoIsValid(const SkImageInfo& info) {
  *  Returns true if Skia has defined a pixel conversion from the |src| to the |dst|.
  *  Returns false otherwise.
  */
-static inline bool SkImageInfoValidConversion(const SkImageInfo& dst, const SkImageInfo& src) {
+static inline bool SkImageInfoValidConversion(
+    const SkImageInfo& dst, const SkImageInfo& src) noexcept {
   return SkImageInfoIsValid(dst) && SkImageInfoIsValid(src);
 }
 #endif  // SkImageInfoPriv_DEFINED

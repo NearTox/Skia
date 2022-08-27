@@ -11,8 +11,9 @@
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkRefCnt.h"
-#include "include/private/SkTOptional.h"
 #include "include/private/SkTo.h"
+
+#include <optional>
 
 class SkBlender;
 class SkColorFilter;
@@ -150,23 +151,23 @@ class SK_API SkPaint {
   /** Returns true if pixels on the active edges of SkPath may be drawn with partial transparency.
       @return  antialiasing state
   */
-  bool isAntiAlias() const { return SkToBool(fBitfields.fAntiAlias); }
+  bool isAntiAlias() const noexcept { return SkToBool(fBitfields.fAntiAlias); }
 
   /** Requests, but does not require, that edge pixels draw opaque or with
       partial transparency.
       @param aa  setting for antialiasing
   */
-  void setAntiAlias(bool aa) { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
+  void setAntiAlias(bool aa) noexcept { fBitfields.fAntiAlias = static_cast<unsigned>(aa); }
 
   /** Returns true if color error may be distributed to smooth color transition.
       @return  dithering state
   */
-  bool isDither() const { return SkToBool(fBitfields.fDither); }
+  bool isDither() const noexcept { return SkToBool(fBitfields.fDither); }
 
   /** Requests, but does not require, to distribute color error.
       @param dither  setting for ditering
   */
-  void setDither(bool dither) { fBitfields.fDither = static_cast<unsigned>(dither); }
+  void setDither(bool dither) noexcept { fBitfields.fDither = static_cast<unsigned>(dither); }
 
   /** \enum SkPaint::Style
       Set Style to fill, stroke, or both fill and stroke geometry.
@@ -188,7 +189,7 @@ class SK_API SkPaint {
 
   /** Returns whether the geometry is filled, stroked, or filled and stroked.
    */
-  Style getStyle() const { return (Style)fBitfields.fStyle; }
+  Style getStyle() const noexcept { return (Style)fBitfields.fStyle; }
 
   /** Sets whether the geometry is filled, stroked, or filled and stroked.
       Has no effect if style is not a legal SkPaint::Style value.
@@ -196,12 +197,12 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Paint_setStyle
       example: https://fiddle.skia.org/c/@Stroke_Width
   */
-  void setStyle(Style style);
+  void setStyle(Style style) noexcept;
 
   /**
    *  Set paint's style to kStroke if true, or kFill if false.
    */
-  void setStroke(bool);
+  void setStroke(bool) noexcept;
 
   /** Retrieves alpha and RGB, unpremultiplied, packed into 32 bits.
       Use helpers SkColorGetA(), SkColorGetR(), SkColorGetG(), and SkColorGetB() to extract
@@ -216,7 +217,7 @@ class SK_API SkPaint {
 
       @return  unpremultiplied RGBA
   */
-  SkColor4f getColor4f() const { return fColor4f; }
+  SkColor4f getColor4f() const noexcept { return fColor4f; }
 
   /** Sets alpha and RGB used when stroking and filling. The color is a 32-bit value,
       unpremultiplied, packing 8-bit components for alpha, red, blue, and green.
@@ -245,10 +246,10 @@ class SK_API SkPaint {
 
       @return  alpha ranging from zero, fully transparent, to 255, fully opaque
   */
-  float getAlphaf() const { return fColor4f.fA; }
+  float getAlphaf() const noexcept { return fColor4f.fA; }
 
   // Helper that scales the alpha by 255.
-  uint8_t getAlpha() const { return sk_float_round2int(this->getAlphaf() * 255); }
+  uint8_t getAlpha() const noexcept { return sk_float_round2int(this->getAlphaf() * 255); }
 
   /** Replaces alpha, leaving RGB
       unchanged. An out of range value triggers an assert in the debug
@@ -258,10 +259,10 @@ class SK_API SkPaint {
 
       @param a  alpha component of color
   */
-  void setAlphaf(float a);
+  void setAlphaf(float a) noexcept;
 
   // Helper that accepts an int between 0 and 255, and divides it by 255.0
-  void setAlpha(U8CPU a) { this->setAlphaf(a * (1.0f / 255)); }
+  void setAlpha(U8CPU a) noexcept { this->setAlphaf(a * (1.0f / 255)); }
 
   /** Sets color used when drawing solid fills. The color components range from 0 to 255.
       The color is unpremultiplied; alpha sets the transparency independent of RGB.
@@ -280,7 +281,7 @@ class SK_API SkPaint {
 
       @return  zero for hairline, greater than zero for pen thickness
   */
-  SkScalar getStrokeWidth() const { return fWidth; }
+  SkScalar getStrokeWidth() const noexcept { return fWidth; }
 
   /** Sets the thickness of the pen used by the paint to outline the shape.
       A stroke-width of zero is treated as "hairline" width. Hairlines are always exactly one
@@ -292,13 +293,13 @@ class SK_API SkPaint {
       example: https://fiddle.skia.org/c/@Miter_Limit
       example: https://fiddle.skia.org/c/@Paint_setStrokeWidth
   */
-  void setStrokeWidth(SkScalar width);
+  void setStrokeWidth(SkScalar width) noexcept;
 
   /** Returns the limit at which a sharp corner is drawn beveled.
 
       @return  zero and greater miter limit
   */
-  SkScalar getStrokeMiter() const { return fMiterLimit; }
+  SkScalar getStrokeMiter() const noexcept { return fMiterLimit; }
 
   /** Sets the limit at which a sharp corner is drawn beveled.
       Valid values are zero and greater.
@@ -308,7 +309,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeMiter
   */
-  void setStrokeMiter(SkScalar miter);
+  void setStrokeMiter(SkScalar miter) noexcept;
 
   /** \enum SkPaint::Cap
       Cap draws at the beginning and end of an open path contour.
@@ -352,24 +353,24 @@ class SK_API SkPaint {
 
   /** Returns the geometry drawn at the beginning and end of strokes.
    */
-  Cap getStrokeCap() const { return (Cap)fBitfields.fCapType; }
+  Cap getStrokeCap() const noexcept { return (Cap)fBitfields.fCapType; }
 
   /** Sets the geometry drawn at the beginning and end of strokes.
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeCap_a
       example: https://fiddle.skia.org/c/@Paint_setStrokeCap_b
   */
-  void setStrokeCap(Cap cap);
+  void setStrokeCap(Cap cap) noexcept;
 
   /** Returns the geometry drawn at the corners of strokes.
    */
-  Join getStrokeJoin() const { return (Join)fBitfields.fJoinType; }
+  Join getStrokeJoin() const noexcept { return (Join)fBitfields.fJoinType; }
 
   /** Sets the geometry drawn at the corners of strokes.
 
       example: https://fiddle.skia.org/c/@Paint_setStrokeJoin
   */
-  void setStrokeJoin(Join join);
+  void setStrokeJoin(Join join) noexcept;
 
   /** Returns the filled equivalent of the stroked path.
 
@@ -405,7 +406,7 @@ class SK_API SkPaint {
 
       @return  SkShader if previously set, nullptr otherwise
   */
-  SkShader* getShader() const { return fShader.get(); }
+  SkShader* getShader() const noexcept { return fShader.get(); }
 
   /** Returns optional colors used when filling a path, such as a gradient.
 
@@ -415,7 +416,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refShader
   */
-  sk_sp<SkShader> refShader() const;
+  sk_sp<SkShader> refShader() const noexcept;
 
   /** Sets optional colors used when filling a path, such as a gradient.
 
@@ -434,7 +435,7 @@ class SK_API SkPaint {
 
       @return  SkColorFilter if previously set, nullptr otherwise
   */
-  SkColorFilter* getColorFilter() const { return fColorFilter.get(); }
+  SkColorFilter* getColorFilter() const noexcept { return fColorFilter.get(); }
 
   /** Returns SkColorFilter if set, or nullptr.
       Increases SkColorFilter SkRefCnt by one.
@@ -443,7 +444,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refColorFilter
   */
-  sk_sp<SkColorFilter> refColorFilter() const;
+  sk_sp<SkColorFilter> refColorFilter() const noexcept;
 
   /** Sets SkColorFilter to filter, decreasing SkRefCnt of the previous
       SkColorFilter. Pass nullptr to clear SkColorFilter.
@@ -461,7 +462,7 @@ class SK_API SkPaint {
    *  enum in the optional's value(). If it cannot, then the returned optional does not
    *  contain a value.
    */
-  skstd::optional<SkBlendMode> asBlendMode() const;
+  std::optional<SkBlendMode> asBlendMode() const;
 
   /**
    *  Queries the blender, and if it can be represented as a SkBlendMode, return that mode,
@@ -488,7 +489,7 @@ class SK_API SkPaint {
    *
    *  @return  the SkBlender assigned to this paint, otherwise nullptr
    */
-  SkBlender* getBlender() const { return fBlender.get(); }
+  SkBlender* getBlender() const noexcept { return fBlender.get(); }
 
   /** Returns the user-supplied blend function, if one has been set.
    *  Increments the SkBlender's SkRefCnt by one.
@@ -497,7 +498,7 @@ class SK_API SkPaint {
    *
    *  @return  the SkBlender assigned to this paint, otherwise nullptr
    */
-  sk_sp<SkBlender> refBlender() const;
+  sk_sp<SkBlender> refBlender() const noexcept;
 
   /** Sets the current blender, increasing its refcnt, and if a blender is already
    *  present, decreasing that object's refcnt.
@@ -523,7 +524,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refPathEffect
   */
-  sk_sp<SkPathEffect> refPathEffect() const;
+  sk_sp<SkPathEffect> refPathEffect() const noexcept;
 
   /** Sets SkPathEffect to pathEffect, decreasing SkRefCnt of the previous
       SkPathEffect. Pass nullptr to leave the path geometry unaltered.
@@ -552,7 +553,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refMaskFilter
   */
-  sk_sp<SkMaskFilter> refMaskFilter() const;
+  sk_sp<SkMaskFilter> refMaskFilter() const noexcept;
 
   /** Sets SkMaskFilter to maskFilter, decreasing SkRefCnt of the previous
       SkMaskFilter. Pass nullptr to clear SkMaskFilter and leave SkMaskFilter effect on
@@ -581,7 +582,7 @@ class SK_API SkPaint {
 
       example: https://fiddle.skia.org/c/@Paint_refImageFilter
   */
-  sk_sp<SkImageFilter> refImageFilter() const;
+  sk_sp<SkImageFilter> refImageFilter() const noexcept;
 
   /** Sets SkImageFilter to imageFilter, decreasing SkRefCnt of the previous
       SkImageFilter. Pass nullptr to clear SkImageFilter, and remove SkImageFilter effect
@@ -640,23 +641,7 @@ class SK_API SkPaint {
       @param storage  computed bounds of geometry; may not be nullptr
       @return         fast computed bounds
   */
-  const SkRect& computeFastBounds(const SkRect& orig, SkRect* storage) const {
-    // Things like stroking, etc... will do math on the bounds rect, assuming that it's sorted.
-    SkASSERT(orig.isSorted());
-    SkPaint::Style style = this->getStyle();
-    // ultra fast-case: filling with no effects that affect geometry
-    if (kFill_Style == style) {
-      uintptr_t effects = 0;
-      effects |= reinterpret_cast<uintptr_t>(this->getMaskFilter());
-      effects |= reinterpret_cast<uintptr_t>(this->getPathEffect());
-      effects |= reinterpret_cast<uintptr_t>(this->getImageFilter());
-      if (!effects) {
-        return orig;
-      }
-    }
-
-    return this->doComputeFastBounds(orig, storage, style);
-  }
+  const SkRect& computeFastBounds(const SkRect& orig, SkRect* storage) const;
 
   /**     (to be made private)
 

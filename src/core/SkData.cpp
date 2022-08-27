@@ -13,13 +13,13 @@
 #include "src/core/SkWriteBuffer.h"
 #include <new>
 
-SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) noexcept
+SkData::SkData(const void* ptr, size_t size, ReleaseProc proc, void* context) noexcept 
     : fReleaseProc(proc), fReleaseProcContext(context), fPtr(ptr), fSize(size) {}
 
 /** This constructor means we are inline with our fPtr's contents.
  *  Thus we set fPtr to point right after this.
  */
-SkData::SkData(size_t size) noexcept
+SkData::SkData(size_t size) noexcept 
     : fReleaseProc(nullptr),
       fReleaseProcContext(nullptr),
       fPtr((const char*)(this + 1)),
@@ -41,7 +41,7 @@ bool SkData::equals(const SkData* other) const noexcept {
   return fSize == other->fSize && !sk_careful_memcmp(fPtr, other->fPtr, fSize);
 }
 
-size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const {
+size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const noexcept {
   size_t available = fSize;
   if (offset >= available || 0 == length) {
     return 0;
@@ -52,7 +52,9 @@ size_t SkData::copyRange(size_t offset, size_t length, void* buffer) const {
   }
   SkASSERT(length > 0);
 
-  memcpy(buffer, this->bytes() + offset, length);
+  if (buffer) {
+    memcpy(buffer, this->bytes() + offset, length);
+  }
   return length;
 }
 
@@ -87,7 +89,7 @@ sk_sp<SkData> SkData::MakeEmpty() {
 }
 
 // assumes fPtr was allocated via sk_malloc
-static void sk_free_releaseproc(const void* ptr, void*) { sk_free((void*)ptr); }
+static void sk_free_releaseproc(const void* ptr, void*) noexcept { sk_free((void*)ptr); }
 
 sk_sp<SkData> SkData::MakeFromMalloc(const void* data, size_t length) {
   return sk_sp<SkData>(new SkData(data, length, sk_free_releaseproc, nullptr));
@@ -100,6 +102,14 @@ sk_sp<SkData> SkData::MakeWithCopy(const void* src, size_t length) {
 
 sk_sp<SkData> SkData::MakeUninitialized(size_t length) {
   return PrivateNewWithCopy(nullptr, length);
+}
+
+sk_sp<SkData> SkData::MakeZeroInitialized(size_t length) {
+  auto data = MakeUninitialized(length);
+  if (length != 0) {
+    memset(data->writable_data(), 0, data->size());
+  }
+  return data;
 }
 
 sk_sp<SkData> SkData::MakeWithProc(const void* ptr, size_t length, ReleaseProc proc, void* ctx) {
@@ -142,7 +152,7 @@ sk_sp<SkData> SkData::MakeFromFD(int fd) {
 }
 
 // assumes context is a SkData
-static void sk_dataref_releaseproc(const void*, void* context) {
+static void sk_dataref_releaseproc(const void*, void* context) noexcept {
   SkData* src = reinterpret_cast<SkData*>(context);
   src->unref();
 }

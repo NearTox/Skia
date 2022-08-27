@@ -8,87 +8,77 @@
 #ifndef SkAAClip_DEFINED
 #define SkAAClip_DEFINED
 
-#include "include/core/SkRegion.h"
+#include "include/core/SkClipOp.h"
+#include "include/core/SkRect.h"
 #include "src/core/SkAutoMalloc.h"
 #include "src/core/SkBlitter.h"
 
+class SkPath;
+class SkRegion;
+
 class SkAAClip {
  public:
-  SkAAClip();
-  SkAAClip(const SkAAClip&);
+  SkAAClip() noexcept;
+  SkAAClip(const SkAAClip&) noexcept;
   ~SkAAClip();
 
-  SkAAClip& operator=(const SkAAClip&);
-  friend bool operator==(const SkAAClip&, const SkAAClip&);
-  friend bool operator!=(const SkAAClip& a, const SkAAClip& b) { return !(a == b); }
+  SkAAClip& operator=(const SkAAClip&) noexcept;
 
-  void swap(SkAAClip&);
-
-  bool isEmpty() const { return nullptr == fRunHead; }
-  const SkIRect& getBounds() const { return fBounds; }
+  bool isEmpty() const noexcept { return nullptr == fRunHead; }
+  const SkIRect& getBounds() const noexcept { return fBounds; }
 
   // Returns true iff the clip is not empty, and is just a hard-edged rect (no partial alpha).
   // If true, getBounds() can be used in place of this clip.
   bool isRect() const;
 
-  bool setEmpty();
+  bool setEmpty() noexcept;
   bool setRect(const SkIRect&);
-  bool setRect(const SkRect&, bool doAA = true);
-  bool setPath(const SkPath&, const SkRegion* clip = nullptr, bool doAA = true);
+  bool setPath(const SkPath&, const SkIRect& bounds, bool doAA = true);
   bool setRegion(const SkRegion&);
-  bool set(const SkAAClip&);
 
-  bool op(const SkAAClip&, const SkAAClip&, SkRegion::Op);
-
-  // Helpers for op()
-  bool op(const SkIRect&, SkRegion::Op);
-  bool op(const SkRect&, SkRegion::Op, bool doAA);
-  bool op(const SkAAClip&, SkRegion::Op);
+  bool op(const SkIRect&, SkClipOp);
+  bool op(const SkRect&, SkClipOp, bool doAA);
+  bool op(const SkAAClip&, SkClipOp);
 
   bool translate(int dx, int dy, SkAAClip* dst) const;
-  bool translate(int dx, int dy) { return this->translate(dx, dy, this); }
 
   /**
    *  Allocates a mask the size of the aaclip, and expands its data into
-   *  the mask, using kA8_Format
+   *  the mask, using kA8_Format. Used for tests and visualization purposes.
    */
   void copyToMask(SkMask*) const;
 
-  // called internally
-
-  bool quickContains(int left, int top, int right, int bottom) const;
   bool quickContains(const SkIRect& r) const {
     return this->quickContains(r.fLeft, r.fTop, r.fRight, r.fBottom);
   }
-
-  const uint8_t* findRow(int y, int* lastYForRow = nullptr) const;
-  const uint8_t* findX(const uint8_t data[], int x, int* initialCount = nullptr) const;
-
-  class Iter;
-  struct RunHead;
-  struct YOffset;
-  class Builder;
 
 #ifdef SK_DEBUG
   void validate() const;
   void debug(bool compress_y = false) const;
 #else
-  void validate() const {}
-  void debug(bool compress_y = false) const {}
+  void validate() const noexcept {}
+  void debug(bool compress_y = false) const noexcept {}
 #endif
 
  private:
+  class Builder;
+  struct RunHead;
+  friend class SkAAClipBlitter;
+
   SkIRect fBounds;
   RunHead* fRunHead;
 
   void freeRuns() noexcept;
+
+  bool quickContains(int left, int top, int right, int bottom) const;
+
   bool trimBounds();
   bool trimTopBottom();
   bool trimLeftRight();
 
-  friend class Builder;
-  class BuilderBlitter;
-  friend class BuilderBlitter;
+  // For SkAAClipBlitter and quickContains
+  const uint8_t* findRow(int y, int* lastYForRow = nullptr) const;
+  const uint8_t* findX(const uint8_t data[], int x, int* initialCount = nullptr) const;
 };
 
 ///////////////////////////////////////////////////////////////////////////////

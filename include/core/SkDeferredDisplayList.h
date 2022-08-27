@@ -32,7 +32,9 @@ class SkDeferredDisplayList : public SkNVRefCnt<SkDeferredDisplayList> {
  public:
   SK_API ~SkDeferredDisplayList();
 
-  SK_API const SkSurfaceCharacterization& characterization() const { return fCharacterization; }
+  SK_API const SkSurfaceCharacterization& characterization() const noexcept {
+    return fCharacterization;
+  }
 
 #if SK_SUPPORT_GPU
   /**
@@ -86,7 +88,9 @@ class SkDeferredDisplayList : public SkNVRefCnt<SkDeferredDisplayList> {
       sk_sp<LazyProxyData>);
 
 #if SK_SUPPORT_GPU
-  const SkTArray<GrRecordingContext::ProgramData>& programData() const { return fProgramData; }
+  const SkTArray<GrRecordingContext::ProgramData>& programData() const noexcept {
+    return fProgramData;
+  }
 #endif
 
   const SkSurfaceCharacterization fCharacterization;

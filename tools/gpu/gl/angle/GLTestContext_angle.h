@@ -18,7 +18,7 @@ namespace sk_gpu_test {
  */
 sk_sp<const GrGLInterface> CreateANGLEGLInterface();
 
-enum class ANGLEBackend { kD3D9, kD3D11, kOpenGL };
+enum class ANGLEBackend { kD3D9, kD3D11, kOpenGL, kMetal };
 
 enum class ANGLEContextVersion { kES2, kES3 };
 

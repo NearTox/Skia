@@ -63,7 +63,6 @@ class TextLine {
   SkScalar width() const {
     return fAdvance.fX + (fEllipsis != nullptr ? fEllipsis->fAdvance.fX : 0);
   }
-  SkScalar shift() const { return fShift; }
   SkVector offset() const;
 
   SkScalar alphabeticBaseline() const { return fSizes.alphabeticBaseline(); }
@@ -84,7 +83,7 @@ class TextLine {
       bool reverse, bool includeGhosts, const ClustersVisitor& visitor) const;
 
   void format(TextAlign align, SkScalar maxWidth);
-  SkRect paint(SkCanvas* canvas, SkScalar x, SkScalar y);
+  void paint(SkCanvas* canvas, SkScalar x, SkScalar y);
   void visit(SkScalar x, SkScalar y);
   void ensureTextBlobCachePopulated();
 
@@ -125,7 +124,7 @@ class TextLine {
   void paintBackground(
       SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
-  SkRect paintShadow(
+  void paintShadow(
       SkCanvas* canvas, SkScalar x, SkScalar y, TextRange textRange, const TextStyle& style,
       const ClipContext& context) const;
   void paintDecorations(

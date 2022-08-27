@@ -142,8 +142,8 @@ class ImageScaleAlignedGM : public skiagm::GM {
     return pt;
   }
 
-  static constexpr unsigned kSegLen = 15;
-  static constexpr unsigned kStretchFactor = 4;
+  inline static constexpr unsigned kSegLen = 15;
+  inline static constexpr unsigned kStretchFactor = 4;
   SkSTArray<2, ImageSet> fSets;
 
   using INHERITED = GM;

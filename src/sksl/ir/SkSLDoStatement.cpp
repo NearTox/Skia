@@ -5,17 +5,23 @@
  * found in the LICENSE file.
  */
 
+#include "src/sksl/ir/SkSLDoStatement.h"
+
+#include "include/core/SkTypes.h"
+#include "include/sksl/SkSLErrorReporter.h"
 #include "src/sksl/SkSLAnalysis.h"
+#include "src/sksl/SkSLBuiltinTypes.h"
 #include "src/sksl/SkSLContext.h"
 #include "src/sksl/SkSLProgramSettings.h"
-#include "src/sksl/ir/SkSLDoStatement.h"
+#include "src/sksl/ir/SkSLType.h"
 
 namespace SkSL {
 
 std::unique_ptr<Statement> DoStatement::Convert(
-    const Context& context, std::unique_ptr<Statement> stmt, std::unique_ptr<Expression> test) {
+    const Context& context, Position pos, std::unique_ptr<Statement> stmt,
+    std::unique_ptr<Expression> test) {
   if (context.fConfig->strictES2Mode()) {
-    context.fErrors->error(stmt->fOffset, "do-while loops are not supported");
+    context.fErrors->error(pos, "do-while loops are not supported");
     return nullptr;
   }
   test = context.fTypes.fBool->coerceExpression(std::move(test), context);
@@ -25,22 +31,24 @@ std::unique_ptr<Statement> DoStatement::Convert(
   if (Analysis::DetectVarDeclarationWithoutScope(*stmt, context.fErrors)) {
     return nullptr;
   }
-  return DoStatement::Make(context, std::move(stmt), std::move(test));
+  return DoStatement::Make(context, pos, std::move(stmt), std::move(test));
 }
 
 std::unique_ptr<Statement> DoStatement::Make(
-    const Context& context, std::unique_ptr<Statement> stmt, std::unique_ptr<Expression> test) {
+    const Context& context, Position pos, std::unique_ptr<Statement> stmt,
+    std::unique_ptr<Expression> test) {
   SkASSERT(!context.fConfig->strictES2Mode());
-  SkASSERT(test->type() == *context.fTypes.fBool);
+  SkASSERT(test->type().matches(*context.fTypes.fBool));
   SkASSERT(!Analysis::DetectVarDeclarationWithoutScope(*stmt));
-  return std::make_unique<DoStatement>(stmt->fOffset, std::move(stmt), std::move(test));
+  return std::make_unique<DoStatement>(pos, std::move(stmt), std::move(test));
 }
 
 std::unique_ptr<Statement> DoStatement::clone() const {
-  return std::make_unique<DoStatement>(fOffset, this->statement()->clone(), this->test()->clone());
+  return std::make_unique<DoStatement>(
+      fPosition, this->statement()->clone(), this->test()->clone());
 }
 
-String DoStatement::description() const {
+std::string DoStatement::description() const {
   return "do " + this->statement()->description() + " while (" + this->test()->description() + ");";
 }
 

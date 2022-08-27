@@ -40,7 +40,7 @@ class Sk2DPathEffect : public SkPathEffectBase {
       return;
     }
 #if defined(SK_BUILD_FOR_FUZZER)
-    if (count > 100) {
+    if (ucount > 100) {
       return;
     }
 #endif
@@ -83,6 +83,11 @@ class Sk2DPathEffect : public SkPathEffectBase {
       SkRegion::Iterator iter(rgn);
       for (; !iter.done(); iter.next()) {
         const SkIRect& rect = iter.rect();
+#if defined(SK_BUILD_FOR_FUZZER)
+        if (rect.height() > 100) {
+          continue;
+        }
+#endif
         for (int y = rect.fTop; y < rect.fBottom; ++y) {
           this->nextSpan(rect.fLeft, y, rect.width(), dst);
         }
@@ -149,7 +154,7 @@ class SkLine2DPathEffectImpl : public Sk2DPathEffect {
   }
 
   Factory getFactory() const override { return CreateProc; }
-  const char* getTypeName() const noexcept override { return "SkLine2DPathEffect"; }
+  const char* getTypeName() const override { return "SkLine2DPathEffect"; }
 
  private:
   SkScalar fWidth;
@@ -181,7 +186,7 @@ class SK_API SkPath2DPathEffectImpl : public Sk2DPathEffect {
   }
 
   Factory getFactory() const override { return CreateProc; }
-  const char* getTypeName() const noexcept override { return "SkPath2DPathEffect"; }
+  const char* getTypeName() const override { return "SkPath2DPathEffect"; }
 
  private:
   SkPath fPath;

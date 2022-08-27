@@ -32,14 +32,15 @@
 #include "src/core/SkImageFilter_Base.h"
 #include "src/core/SkLatticeIter.h"
 #include "src/core/SkMSAN.h"
-#include "src/core/SkMarkerStack.h"
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkMatrixUtils.h"
+#include "src/core/SkMeshPriv.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkRasterClip.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkStrikeCache.h"
 #include "src/core/SkTLazy.h"
+#include "src/core/SkTextBlobPriv.h"
 #include "src/core/SkTextFormatParams.h"
 #include "src/core/SkTraceEvent.h"
 #include "src/core/SkVerticesPriv.h"
@@ -49,15 +50,25 @@
 
 #include <memory>
 #include <new>
+#include <optional>
 
 #if SK_SUPPORT_GPU
 #  include "include/gpu/GrDirectContext.h"
-#  include "src/gpu/BaseDevice.h"
-#  include "src/gpu/SkGr.h"
+#  include "src/gpu/ganesh/BaseDevice.h"
+#  include "src/gpu/ganesh/SkGr.h"
+#  include "src/utils/SkTestCanvas.h"
 #  if defined(SK_BUILD_FOR_ANDROID_FRAMEWORK)
-#    include "src/gpu/GrRenderTarget.h"
-#    include "src/gpu/GrRenderTargetProxy.h"
+#    include "src/gpu/ganesh/GrRenderTarget.h"
+#    include "src/gpu/ganesh/GrRenderTargetProxy.h"
 #  endif
+#endif
+
+#ifdef SK_GRAPHITE_ENABLED
+#  include "src/gpu/graphite/Device.h"
+#endif
+
+#if (SK_SUPPORT_GPU || defined(SK_GRAPHITE_ENABLED))
+#  include "include/private/chromium/Slug.h"
 #endif
 
 #define RETURN_ON_NULL(ptr)       \
@@ -72,6 +83,8 @@
 // This is a test: static_assert with no message is a c++17 feature,
 // and std::max() is constexpr only since the c++14 stdlib.
 static_assert(std::max(3, 4) == 4);
+
+using Slug = sktext::gpu::Slug;
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -178,15 +191,18 @@ static void dec_canvas() {
 #  define dec_canvas()
 #endif
 
-void SkCanvas::predrawNotify(bool willOverwritesEntireSurface) {
+bool SkCanvas::predrawNotify(bool willOverwritesEntireSurface) {
   if (fSurfaceBase) {
-    fSurfaceBase->aboutToDraw(
-        willOverwritesEntireSurface ? SkSurface::kDiscard_ContentChangeMode
-                                    : SkSurface::kRetain_ContentChangeMode);
+    if (!fSurfaceBase->aboutToDraw(
+            willOverwritesEntireSurface ? SkSurface::kDiscard_ContentChangeMode
+                                        : SkSurface::kRetain_ContentChangeMode)) {
+      return false;
+    }
   }
+  return true;
 }
 
-void SkCanvas::predrawNotify(
+bool SkCanvas::predrawNotify(
     const SkRect* rect, const SkPaint* paint, ShaderOverrideOpacity overrideOpacity) {
   if (fSurfaceBase) {
     SkSurface::ContentChangeMode mode = SkSurface::kRetain_ContentChangeMode;
@@ -199,20 +215,17 @@ void SkCanvas::predrawNotify(
         mode = SkSurface::kDiscard_ContentChangeMode;
       }
     }
-    fSurfaceBase->aboutToDraw(mode);
+    if (!fSurfaceBase->aboutToDraw(mode)) {
+      return false;
+    }
   }
+  return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
-namespace {
-
-enum class CheckForOverwrite : bool { kNo = false, kYes = true };
-
-}  // namespace
-
 SkCanvas::Layer::Layer(
-    sk_sp<SkBaseDevice> device, sk_sp<SkImageFilter> imageFilter, const SkPaint& paint)
+    sk_sp<SkBaseDevice> device, sk_sp<SkImageFilter> imageFilter, const SkPaint& paint) noexcept
     : fDevice(std::move(device)),
       fImageFilter(std::move(imageFilter)),
       fPaint(paint),
@@ -223,12 +236,13 @@ SkCanvas::Layer::Layer(
   SkASSERT(!fPaint.getImageFilter());
 }
 
-SkCanvas::MCRec::MCRec(SkBaseDevice* device) : fDevice(device) {
+SkCanvas::MCRec::MCRec(SkBaseDevice* device) noexcept : fDevice(device) {
   SkASSERT(fDevice);
   inc_rec();
 }
 
-SkCanvas::MCRec::MCRec(const MCRec* prev) : fDevice(prev->fDevice), fMatrix(prev->fMatrix) {
+SkCanvas::MCRec::MCRec(const MCRec* prev) noexcept
+    : fDevice(prev->fDevice), fMatrix(prev->fMatrix) {
   SkASSERT(fDevice);
   inc_rec();
 }
@@ -320,18 +334,9 @@ class AutoLayerForImageFilter {
   // If null, the clip will be used instead.
   //
   // Draw functions should use layer->paint() instead of the passed-in paint.
-  AutoLayerForImageFilter(
-      SkCanvas* canvas, const SkPaint& paint, const SkRect* rawBounds = nullptr,
-      CheckForOverwrite checkOverwrite = CheckForOverwrite::kNo,
-      SkCanvas::ShaderOverrideOpacity overrideOpacity = SkCanvas::kNone_ShaderOverrideOpacity)
+  AutoLayerForImageFilter(SkCanvas* canvas, const SkPaint& paint, const SkRect* rawBounds = nullptr)
       : fPaint(paint), fCanvas(canvas), fTempLayerForImageFilter(false) {
     SkDEBUGCODE(fSaveCount = canvas->getSaveCount();)
-
-    if (checkOverwrite == CheckForOverwrite::kYes) {
-      canvas->predrawNotify(rawBounds, &fPaint, overrideOpacity);
-    } else {
-      canvas->predrawNotify();
-    }
 
     if (fPaint.getImageFilter() && !image_to_color_filter(&fPaint)) {
       // The draw paint has an image filter that couldn't be simplified to an equivalent
@@ -352,20 +357,27 @@ class AutoLayerForImageFilter {
         rawBounds = &fPaint.computeFastBounds(*rawBounds, &storage);
       }
 
+      canvas->fSaveCount += 1;
       (void)canvas->internalSaveLayer(
           SkCanvas::SaveLayerRec(rawBounds, &restorePaint), SkCanvas::kFullLayer_SaveLayerStrategy);
       fTempLayerForImageFilter = true;
     }
   }
 
+  AutoLayerForImageFilter(const AutoLayerForImageFilter&) = delete;
+  AutoLayerForImageFilter& operator=(const AutoLayerForImageFilter&) = delete;
+  AutoLayerForImageFilter(AutoLayerForImageFilter&&) noexcept = default;
+  AutoLayerForImageFilter& operator=(AutoLayerForImageFilter&&) noexcept = default;
+
   ~AutoLayerForImageFilter() {
     if (fTempLayerForImageFilter) {
+      fCanvas->fSaveCount -= 1;
       fCanvas->internalRestore();
     }
     SkASSERT(fCanvas->getSaveCount() == fSaveCount);
   }
 
-  const SkPaint& paint() const { return fPaint; }
+  const SkPaint& paint() const noexcept { return fPaint; }
 
  private:
   SkPaint fPaint;
@@ -374,6 +386,21 @@ class AutoLayerForImageFilter {
 
   SkDEBUGCODE(int fSaveCount;)
 };
+
+std::optional<AutoLayerForImageFilter> SkCanvas::aboutToDraw(
+    SkCanvas* canvas, const SkPaint& paint, const SkRect* rawBounds,
+    CheckForOverwrite checkOverwrite, ShaderOverrideOpacity overrideOpacity) {
+  if (checkOverwrite == CheckForOverwrite::kYes) {
+    if (!this->predrawNotify(rawBounds, &paint, overrideOpacity)) {
+      return std::nullopt;
+    }
+  } else {
+    if (!this->predrawNotify()) {
+      return std::nullopt;
+    }
+  }
+  return std::optional<AutoLayerForImageFilter>(std::in_place, canvas, paint, rawBounds);
+}
 
 ////////////////////////////////////////////////////////////////////////////
 
@@ -403,11 +430,9 @@ void SkCanvas::init(sk_sp<SkBaseDevice> device) {
 
   fSaveCount = 1;
   fMCRec = new (fMCStack.push_back()) MCRec(device.get());
-  fMarkerStack = sk_make_sp<SkMarkerStack>();
 
   // The root device and the canvas should always have the same pixel geometry
   SkASSERT(fProps.pixelGeometry() == device->surfaceProps().pixelGeometry());
-  device->setMarkerStack(fMarkerStack.get());
 
   fSurfaceBase = nullptr;
   fBaseDevice = std::move(device);
@@ -448,21 +473,23 @@ SkCanvas::SkCanvas(const SkBitmap& bitmap, const SkSurfaceProps& props)
     : fMCStack(sizeof(MCRec), fMCRecStorage, sizeof(fMCRecStorage)), fProps(props) {
   inc_canvas();
 
-  sk_sp<SkBaseDevice> device(new SkBitmapDevice(bitmap, fProps, nullptr, nullptr));
+  sk_sp<SkBaseDevice> device(new SkBitmapDevice(bitmap, fProps));
   this->init(device);
 }
 
 SkCanvas::SkCanvas(
     const SkBitmap& bitmap, std::unique_ptr<SkRasterHandleAllocator> alloc,
-    SkRasterHandleAllocator::Handle hndl)
-    : fMCStack(sizeof(MCRec), fMCRecStorage, sizeof(fMCRecStorage)), fAllocator(std::move(alloc)) {
+    SkRasterHandleAllocator::Handle hndl, const SkSurfaceProps* props)
+    : fMCStack(sizeof(MCRec), fMCRecStorage, sizeof(fMCRecStorage)),
+      fProps(SkSurfacePropsCopyOrDefault(props)),
+      fAllocator(std::move(alloc)) {
   inc_canvas();
 
-  sk_sp<SkBaseDevice> device(new SkBitmapDevice(bitmap, fProps, hndl, nullptr));
+  sk_sp<SkBaseDevice> device(new SkBitmapDevice(bitmap, fProps, hndl));
   this->init(device);
 }
 
-SkCanvas::SkCanvas(const SkBitmap& bitmap) : SkCanvas(bitmap, nullptr, nullptr) {}
+SkCanvas::SkCanvas(const SkBitmap& bitmap) : SkCanvas(bitmap, nullptr, nullptr, nullptr) {}
 
 #ifdef SK_BUILD_FOR_ANDROID_FRAMEWORK
 SkCanvas::SkCanvas(const SkBitmap& bitmap, ColorBehavior)
@@ -471,7 +498,7 @@ SkCanvas::SkCanvas(const SkBitmap& bitmap, ColorBehavior)
 
   SkBitmap tmp(bitmap);
   *const_cast<SkImageInfo*>(&tmp.info()) = tmp.info().makeColorSpace(nullptr);
-  sk_sp<SkBaseDevice> device(new SkBitmapDevice(tmp, fProps, nullptr, nullptr));
+  sk_sp<SkBaseDevice> device(new SkBitmapDevice(tmp, fProps));
   this->init(device);
 }
 #endif
@@ -552,8 +579,10 @@ bool SkCanvas::writePixels(
   }
 
   // Tell our owning surface to bump its generation ID.
-  const bool completeOverwrite = srcRect.size() == SkISize::Make(device->width(), device->height());
-  this->predrawNotify(completeOverwrite);
+  const bool completeOverwrite = srcRect.size() == device->imageInfo().dimensions();
+  if (!this->predrawNotify(completeOverwrite)) {
+    return false;
+  }
 
   // This can still fail, most notably in the case of a invalid color type or alpha type
   // conversion.  We could pull those checks into this function and avoid the unnecessary
@@ -703,10 +732,11 @@ static skif::ParameterSpace<SkPoint> compute_decomposition_center(
 static std::pair<skif::Mapping, skif::LayerSpace<SkIRect>> get_layer_mapping_and_bounds(
     const SkImageFilter* filter, const SkMatrix& localToDst,
     const skif::DeviceSpace<SkIRect>& targetOutput,
-    const skif::ParameterSpace<SkRect>* contentBounds = nullptr, bool mustCoverDst = true) {
+    const skif::ParameterSpace<SkRect>* contentBounds = nullptr, bool mustCoverDst = true,
+    SkScalar scaleFactor = 1.0f) {
   auto failedMapping = []() {
     return std::make_pair<skif::Mapping, skif::LayerSpace<SkIRect>>(
-        {}, skif::LayerSpace<SkIRect>(SkIRect::MakeEmpty()));
+        {}, skif::LayerSpace<SkIRect>::Empty());
   };
 
   SkMatrix dstToLocal;
@@ -728,6 +758,12 @@ static std::pair<skif::Mapping, skif::LayerSpace<SkIRect>> get_layer_mapping_and
   if (!mapping.decomposeCTM(localToDst, filter, center)) {
     return failedMapping();
   }
+  // Push scale factor into layer matrix and device matrix (net no change, but the layer will have
+  // its resolution adjusted in comparison to the final device).
+  if (scaleFactor != 1.0f && !mapping.adjustLayerSpace(SkMatrix::Scale(scaleFactor, scaleFactor))) {
+    return failedMapping();
+  }
+
   // Perspective and skew could exceed this since mapping.deviceToLayer(targetOutput) is
   // theoretically unbounded under those conditions. Under a 45 degree rotation, a layer needs to
   // be 2X larger per side of the prior device in order to fully cover it. We use the max of that
@@ -745,7 +781,7 @@ static std::pair<skif::Mapping, skif::LayerSpace<SkIRect>> get_layer_mapping_and
     // When a filter is involved, the layer size may be larger than the default maxLayerDim due
     // to required inputs for filters (e.g. a displacement map with a large radius).
     if (layerBounds.width() > maxLayerDim || layerBounds.height() > maxLayerDim) {
-      skif::Mapping idealMapping(SkMatrix::I(), mapping.layerMatrix());
+      skif::Mapping idealMapping{mapping.layerMatrix()};
       auto idealLayerBounds =
           as_IFB(filter)->getInputBounds(idealMapping, targetOutput, contentBounds);
       maxLayerDim =
@@ -801,7 +837,7 @@ static bool draw_layer_as_sprite(const SkMatrix& matrix, const SkISize& size) {
 
 void SkCanvas::internalDrawDeviceWithFilter(
     SkBaseDevice* src, SkBaseDevice* dst, const SkImageFilter* filter, const SkPaint& paint,
-    DeviceCompatibleWithFilter compat) {
+    DeviceCompatibleWithFilter compat, SkScalar scaleFactor) {
   check_drawdevice_colorspaces(dst->imageInfo().colorSpace(), src->imageInfo().colorSpace());
 
   // 'filter' sees the src device's buffer as the implicit input image, and processes the image
@@ -820,15 +856,22 @@ void SkCanvas::internalDrawDeviceWithFilter(
   skif::LayerSpace<SkIRect> requiredInput;
   if (compat == DeviceCompatibleWithFilter::kYes) {
     // Just use the relative transform from src to dst and the src's whole image, since
-    // internalSaveLayer should have already determined what was necessary.
-    mapping = skif::Mapping(src->getRelativeTransform(*dst), localToSrc);
+    // internalSaveLayer should have already determined what was necessary. We explicitly
+    // construct the inverse (dst->src) to avoid the case where src's and dst's coord transforms
+    // were individually invertible by SkM44::invert() but their product is considered not
+    // invertible by SkMatrix::invert(). When this happens the matrices are already poorly
+    // conditioned so getRelativeTransform() gives us something reasonable.
+    SkASSERT(scaleFactor == 1.0f);
+    mapping =
+        skif::Mapping(src->getRelativeTransform(*dst), dst->getRelativeTransform(*src), localToSrc);
     requiredInput = skif::LayerSpace<SkIRect>(SkIRect::MakeSize(srcDims));
     SkASSERT(!requiredInput.isEmpty());
   } else {
     // Compute the image filter mapping by decomposing the local->device matrix of dst and
     // re-determining the required input.
     std::tie(mapping, requiredInput) = get_layer_mapping_and_bounds(
-        filter, dst->localToDevice(), skif::DeviceSpace<SkIRect>(dst->devClipBounds()));
+        filter, dst->localToDevice(), skif::DeviceSpace<SkIRect>(dst->devClipBounds()), nullptr,
+        true, SkTPin(scaleFactor, 0.f, 1.f));
     if (requiredInput.isEmpty()) {
       return;
     }
@@ -868,6 +911,10 @@ void SkCanvas::internalDrawDeviceWithFilter(
   } else {
     // We need to produce a temporary image that is equivalent to 'src' but transformed to
     // a coordinate space compatible with the image filter
+
+    // TODO: If the srcToIntermediate is scale+translate, can we use the framebuffer blit
+    // extensions to handle doing the copy and scale at the same time?
+
     SkASSERT(compat == DeviceCompatibleWithFilter::kUnknown);
     SkRect srcRect;
     if (!SkMatrixPriv::InverseMapRect(
@@ -884,7 +931,7 @@ void SkCanvas::internalDrawDeviceWithFilter(
       SkBaseDevice::CreateInfo info(
           make_layer_info(src->imageInfo(), requiredInput.width(), requiredInput.height(), false),
           SkPixelGeometry::kUnknown_SkPixelGeometry, SkBaseDevice::TileUsage::kNever_TileUsage,
-          false, fAllocator.get());
+          fAllocator.get());
       sk_sp<SkBaseDevice> intermediateDevice(src->onCreateDevice(info, &paint));
       if (!intermediateDevice) {
         return;
@@ -892,12 +939,15 @@ void SkCanvas::internalDrawDeviceWithFilter(
       intermediateDevice->setOrigin(
           SkM44(srcToIntermediate), requiredInput.left(), requiredInput.top());
 
-      SkMatrix offsetLocalToDevice = intermediateDevice->localToDevice();
-      offsetLocalToDevice.preTranslate(srcSubset.left(), srcSubset.top());
-      // We draw with non-AA bilinear since we cover the destination but definitely don't have
-      // a pixel-aligned transform.
-      intermediateDevice->drawSpecial(
-          srcImage.get(), offsetLocalToDevice, SkSamplingOptions{SkFilterMode::kLinear}, {});
+      // We use drawPaint to fill the entire device with the src input + clamp tiling, which
+      // extends the backdrop's edge pixels to the parts of 'requiredInput' that map offscreen
+      // Without this, the intermediateDevice would contain transparent pixels that may then
+      // infect blurs and other filters with large kernels.
+      SkPaint imageFill;
+      imageFill.setShader(srcImage->asShader(
+          SkTileMode::kClamp, SkSamplingOptions{SkFilterMode::kLinear},
+          SkMatrix::Translate(srcSubset.topLeft())));
+      intermediateDevice->drawPaint(imageFill);
       filterInput = intermediateDevice->snapSpecial();
 
       // TODO: Like the non-intermediate case, we need to apply the image origin.
@@ -906,12 +956,12 @@ void SkCanvas::internalDrawDeviceWithFilter(
   }
 
   if (filterInput) {
-    const bool use_nn = draw_layer_as_sprite(mapping.deviceMatrix(), filterInput->subset().size());
+    const bool use_nn = draw_layer_as_sprite(mapping.layerToDevice(), filterInput->subset().size());
     SkSamplingOptions sampling{use_nn ? SkFilterMode::kNearest : SkFilterMode::kLinear};
     if (filter) {
       dst->drawFilteredImage(mapping, filterInput.get(), filter, sampling, paint);
     } else {
-      dst->drawSpecial(filterInput.get(), mapping.deviceMatrix(), sampling, paint);
+      dst->drawSpecial(filterInput.get(), mapping.layerToDevice(), sampling, paint);
     }
   }
 }
@@ -969,8 +1019,7 @@ static const SkImageFilter* optimize_layer_filter(
 // transparent black, then the new layer must be sized such that it covers the entire device
 // clip bounds of the prior device (otherwise edges of the temporary layer would be visible).
 // See skbug.com/8783
-static bool must_cover_prior_device(
-    const SkImageFilter* backdrop, const SkPaint& restorePaint) noexcept {
+static bool must_cover_prior_device(const SkImageFilter* backdrop, const SkPaint& restorePaint) {
   // FIXME(michaelludwig) - see skbug.com/12083, once clients do not depend on user bounds for
   // clipping a layer visually, we can respect the fact that the color filter affects transparent
   // black and should cover the device.
@@ -1043,10 +1092,8 @@ void SkCanvas::internalSaveLayer(const SaveLayerRec& rec, SaveLayerStrategy stra
     SkPixelGeometry geo = rec.fSaveLayerFlags & kPreserveLCDText_SaveLayerFlag
                               ? fProps.pixelGeometry()
                               : kUnknown_SkPixelGeometry;
-    const bool trackCoverage =
-        SkToBool(rec.fSaveLayerFlags & kMaskAgainstCoverage_EXPERIMENTAL_DONT_USE_SaveLayerFlag);
-    const auto createInfo = SkBaseDevice::CreateInfo(
-        info, geo, SkBaseDevice::kNever_TileUsage, trackCoverage, fAllocator.get());
+    const auto createInfo =
+        SkBaseDevice::CreateInfo(info, geo, SkBaseDevice::kNever_TileUsage, fAllocator.get());
     // Use the original paint as a hint so that it includes the image filter
     newDevice.reset(priorDevice->onCreateDevice(createInfo, rec.fPaint));
   }
@@ -1067,19 +1114,10 @@ void SkCanvas::internalSaveLayer(const SaveLayerRec& rec, SaveLayerStrategy stra
   // The setDeviceCoordinateSystem applies the prior device's global transform since
   // 'newLayerMapping' only defines the transforms between the two devices and it must be updated
   // to the global coordinate system.
-  newDevice->setMarkerStack(fMarkerStack.get());
-  if (!newDevice->setDeviceCoordinateSystem(
-          priorDevice->deviceToGlobal() * SkM44(newLayerMapping.deviceMatrix()),
-          SkM44(newLayerMapping.layerMatrix()), layerBounds.left(), layerBounds.top())) {
-    // If we made it this far and the coordinate system is invalid, we most likely had a valid
-    // mapping until being combined with the previous device-to-global matrix, at which point
-    // it overflowed or floating point rounding caused it to no longer be invertible. There's
-    // not much we can do but clean up the layer and mark the clip as empty. This tends to come
-    // up in fuzzer-generated inputs, so this policy is not unreasonable and helps avoids UB.
-    newDevice = nullptr;
-    abortLayer();
-    return;
-  }
+  newDevice->setDeviceCoordinateSystem(
+      priorDevice->deviceToGlobal() * SkM44(newLayerMapping.layerToDevice()),
+      SkM44(newLayerMapping.deviceToLayer()) * priorDevice->globalToDevice(),
+      SkM44(newLayerMapping.layerMatrix()), layerBounds.left(), layerBounds.top());
 
   if (initBackdrop) {
     SkPaint backdropPaint;
@@ -1088,12 +1126,13 @@ void SkCanvas::internalSaveLayer(const SaveLayerRec& rec, SaveLayerStrategy stra
     // 'rec.fBackdrop', so allow DrawDeviceWithFilter to transform the prior device contents
     // if necessary to evaluate the backdrop filter. If no filters are involved, then the
     // devices differ by integer translations and are always compatible.
-    auto compat = (filter || backdropFilter) ? DeviceCompatibleWithFilter::kUnknown
-                                             : DeviceCompatibleWithFilter::kYes;
+    bool scaleBackdrop = rec.fExperimentalBackdropScale != 1.0f;
+    auto compat = (filter || backdropFilter || scaleBackdrop) ? DeviceCompatibleWithFilter::kUnknown
+                                                              : DeviceCompatibleWithFilter::kYes;
     this->internalDrawDeviceWithFilter(
         priorDevice,      // src
         newDevice.get(),  // dst
-        backdropFilter, backdropPaint, compat);
+        backdropFilter, backdropPaint, compat, rec.fExperimentalBackdropScale);
   }
 
   fMCRec->newLayer(std::move(newDevice), sk_ref_sp(filter), restorePaint);
@@ -1156,8 +1195,6 @@ void SkCanvas::internalRestore() {
   std::unique_ptr<Layer> layer = std::move(fMCRec->fLayer);
   std::unique_ptr<BackImage> backImage = std::move(fMCRec->fBackImage);
 
-  fMarkerStack->restore(fMCRec);
-
   // now do the normal restore()
   fMCRec->~MCRec();  // balanced in save()
   fMCStack.pop_back();
@@ -1184,20 +1221,20 @@ void SkCanvas::internalRestore() {
 
     // Don't go through AutoLayerForImageFilter since device draws are so closely tied to
     // internalSaveLayer and internalRestore.
-    this->predrawNotify();
-
-    SkBaseDevice* dstDev = this->topDevice();
-    if (layer->fImageFilter) {
-      this->internalDrawDeviceWithFilter(
-          layer->fDevice.get(),  // src
-          dstDev,                // dst
-          layer->fImageFilter.get(), layer->fPaint, DeviceCompatibleWithFilter::kYes);
-    } else {
-      // NOTE: We don't just call internalDrawDeviceWithFilter with a null filter
-      // because we want to take advantage of overridden drawDevice functions for
-      // document-based devices.
-      SkSamplingOptions sampling;
-      dstDev->drawDevice(layer->fDevice.get(), sampling, layer->fPaint);
+    if (this->predrawNotify()) {
+      SkBaseDevice* dstDev = this->topDevice();
+      if (layer->fImageFilter) {
+        this->internalDrawDeviceWithFilter(
+            layer->fDevice.get(),  // src
+            dstDev,                // dst
+            layer->fImageFilter.get(), layer->fPaint, DeviceCompatibleWithFilter::kYes);
+      } else {
+        // NOTE: We don't just call internalDrawDeviceWithFilter with a null filter
+        // because we want to take advantage of overridden drawDevice functions for
+        // document-based devices.
+        SkSamplingOptions sampling;
+        dstDev->drawDevice(layer->fDevice.get(), sampling, layer->fPaint);
+      }
     }
   }
 
@@ -1349,19 +1386,6 @@ void SkCanvas::setMatrix(const SkM44& m) {
 }
 
 void SkCanvas::resetMatrix() { this->setMatrix(SkM44()); }
-
-void SkCanvas::markCTM(const char* name) {
-  if (SkCanvasPriv::ValidateMarker(name)) {
-    fMarkerStack->setMarker(
-        SkOpts::hash_fn(name, strlen(name), 0), this->getLocalToDevice(), fMCRec);
-    this->onMarkCTM(name);
-  }
-}
-
-bool SkCanvas::findMarkedCTM(const char* name, SkM44* mx) const {
-  return SkCanvasPriv::ValidateMarker(name) &&
-         fMarkerStack->findMarker(SkOpts::hash_fn(name, strlen(name), 0), mx);
-}
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -1650,8 +1674,18 @@ GrBackendRenderTarget SkCanvas::topLayerBackendRenderTarget() const {
 
 GrRecordingContext* SkCanvas::recordingContext() {
 #if SK_SUPPORT_GPU
-  if (auto gpuDevice = this->topDevice()->asGpuDevice()) {
+  if (auto gpuDevice = this->topDevice()->asGaneshDevice()) {
     return gpuDevice->recordingContext();
+  }
+#endif
+
+  return nullptr;
+}
+
+skgpu::graphite::Recorder* SkCanvas::recorder() {
+#ifdef SK_GRAPHITE_ENABLED
+  if (auto graphiteDevice = this->topDevice()->asGraphiteDevice()) {
+    return graphiteDevice->recorder();
   }
 #endif
 
@@ -1748,9 +1782,19 @@ void SkCanvas::drawVertices(const SkVertices* vertices, SkBlendMode mode, const 
     return;
   }
 #endif
-
   this->onDrawVerticesObject(vertices, mode, paint);
 }
+
+#ifdef SK_ENABLE_SKSL
+void SkCanvas::drawMesh(const SkMesh& mesh, sk_sp<SkBlender> blender, const SkPaint& paint) {
+  TRACE_EVENT0("skia", TRACE_FUNC);
+  RETURN_ON_FALSE(mesh.isValid());
+  if (!blender) {
+    blender = SkBlender::Mode(SkBlendMode::kModulate);
+  }
+  this->onDrawMesh(mesh, std::move(blender), paint);
+}
+#endif
 
 void SkCanvas::drawPath(const SkPath& path, const SkPaint& paint) {
   TRACE_EVENT0("skia", TRACE_FUNC);
@@ -1808,13 +1852,13 @@ void SkCanvas::drawImageLattice(
     latticePlusBounds.fBounds = &bounds;
   }
 
+  SkPaint latticePaint = clean_paint_for_lattice(paint);
   if (SkLatticeIter::Valid(image->width(), image->height(), latticePlusBounds)) {
-    SkPaint latticePaint = clean_paint_for_lattice(paint);
     this->onDrawImageLattice2(image, latticePlusBounds, dst, filter, &latticePaint);
   } else {
     this->drawImageRect(
         image, SkRect::MakeIWH(image->width(), image->height()), dst, SkSamplingOptions(filter),
-        paint, kStrict_SrcRectConstraint);
+        &latticePaint, kStrict_SrcRectConstraint);
   }
 }
 
@@ -1847,7 +1891,9 @@ void SkCanvas::private_draw_shadow_rec(const SkPath& path, const SkDrawShadowRec
 void SkCanvas::onDrawShadowRec(const SkPath& path, const SkDrawShadowRec& rec) {
   // We don't test quickReject because the shadow outsets the path's bounds.
   // TODO(michaelludwig): Is it worth calling SkDrawShadowMetrics::GetLocalBounds here?
-  this->predrawNotify();
+  if (!this->predrawNotify()) {
+    return;
+  }
   this->topDevice()->drawShadow(path, rec);
 }
 
@@ -1874,7 +1920,7 @@ void SkCanvas::experimental_DrawEdgeAAImageSet(
 
 void SkCanvas::onDiscard() {
   if (fSurfaceBase) {
-    fSurfaceBase->aboutToDraw(SkSurface::kDiscard_ContentChangeMode);
+    sk_ignore_unused_variable(fSurfaceBase->aboutToDraw(SkSurface::kDiscard_ContentChangeMode));
   }
 }
 
@@ -1887,8 +1933,10 @@ void SkCanvas::internalDrawPaint(const SkPaint& paint) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, nullptr, CheckForOverwrite::kYes);
-  this->topDevice()->drawPaint(layer.paint());
+  auto layer = this->aboutToDraw(this, paint, nullptr, CheckForOverwrite::kYes);
+  if (layer) {
+    this->topDevice()->drawPaint(layer->paint());
+  }
 }
 
 void SkCanvas::onDrawPoints(
@@ -1913,8 +1961,10 @@ void SkCanvas::onDrawPoints(
     return;
   }
 
-  AutoLayerForImageFilter layer(this, strokePaint, &bounds);
-  this->topDevice()->drawPoints(mode, count, pts, layer.paint());
+  auto layer = this->aboutToDraw(this, strokePaint, &bounds);
+  if (layer) {
+    this->topDevice()->drawPoints(mode, count, pts, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawRect(const SkRect& r, const SkPaint& paint) {
@@ -1923,8 +1973,10 @@ void SkCanvas::onDrawRect(const SkRect& r, const SkPaint& paint) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &r, CheckForOverwrite::kYes);
-  this->topDevice()->drawRect(r, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &r, CheckForOverwrite::kYes);
+  if (layer) {
+    this->topDevice()->drawRect(r, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawRegion(const SkRegion& region, const SkPaint& paint) {
@@ -1933,8 +1985,10 @@ void SkCanvas::onDrawRegion(const SkRegion& region, const SkPaint& paint) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &bounds);
-  this->topDevice()->drawRegion(region, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &bounds);
+  if (layer) {
+    this->topDevice()->drawRegion(region, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawBehind(const SkPaint& paint) {
@@ -1973,8 +2027,10 @@ void SkCanvas::onDrawBehind(const SkPaint& paint) {
     // ~adtr will reset the local-to-device matrix so that drawPaint() shades correctly.
   }
 
-  AutoLayerForImageFilter layer(this, paint);
-  this->topDevice()->drawPaint(layer.paint());
+  auto layer = this->aboutToDraw(this, paint);
+  if (layer) {
+    this->topDevice()->drawPaint(layer->paint());
+  }
 
   dev->restore(fMCRec->fMatrix);
 }
@@ -1985,8 +2041,10 @@ void SkCanvas::onDrawOval(const SkRect& oval, const SkPaint& paint) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &oval);
-  this->topDevice()->drawOval(oval, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &oval);
+  if (layer) {
+    this->topDevice()->drawOval(oval, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawArc(
@@ -1997,8 +2055,10 @@ void SkCanvas::onDrawArc(
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &oval);
-  this->topDevice()->drawArc(oval, startAngle, sweepAngle, useCenter, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &oval);
+  if (layer) {
+    this->topDevice()->drawArc(oval, startAngle, sweepAngle, useCenter, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawRRect(const SkRRect& rrect, const SkPaint& paint) {
@@ -2019,8 +2079,10 @@ void SkCanvas::onDrawRRect(const SkRRect& rrect, const SkPaint& paint) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &bounds);
-  this->topDevice()->drawRRect(rrect, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &bounds);
+  if (layer) {
+    this->topDevice()->drawRRect(rrect, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawDRRect(const SkRRect& outer, const SkRRect& inner, const SkPaint& paint) {
@@ -2029,8 +2091,10 @@ void SkCanvas::onDrawDRRect(const SkRRect& outer, const SkRRect& inner, const Sk
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &bounds);
-  this->topDevice()->drawDRRect(outer, inner, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &bounds);
+  if (layer) {
+    this->topDevice()->drawDRRect(outer, inner, layer->paint());
+  }
 }
 
 void SkCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
@@ -2047,8 +2111,10 @@ void SkCanvas::onDrawPath(const SkPath& path, const SkPaint& paint) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, paint, &pathBounds);
-  this->topDevice()->drawPath(path, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, path.isInverseFillType() ? nullptr : &pathBounds);
+  if (layer) {
+    this->topDevice()->drawPath(path, layer->paint());
+  }
 }
 
 bool SkCanvas::canDrawBitmapAsSprite(
@@ -2130,32 +2196,57 @@ void SkCanvas::onDrawImage2(
       // pre-concat here.
       SkMatrix layerToDevice = device->localToDevice();
       layerToDevice.preTranslate(x, y);
-      skif::Mapping mapping(layerToDevice, SkMatrix::Translate(-x, -y));
 
-      this->predrawNotify();
-      device->drawFilteredImage(mapping, special.get(), filter.get(), sampling, realPaint);
+      SkMatrix deviceToLayer;
+      if (!layerToDevice.invert(&deviceToLayer)) {
+        return;  // bad ctm, draw nothing
+      }
+
+      skif::Mapping mapping(layerToDevice, deviceToLayer, SkMatrix::Translate(-x, -y));
+
+      if (this->predrawNotify()) {
+        device->drawFilteredImage(mapping, special.get(), filter.get(), sampling, realPaint);
+      }
       return;
     }  // else fall through to regular drawing path
   }
 
-  AutoLayerForImageFilter layer(this, realPaint, &bounds);
-  this->topDevice()->drawImageRect(
-      image, nullptr, bounds, sampling, layer.paint(), kStrict_SrcRectConstraint);
+  auto layer = this->aboutToDraw(this, realPaint, &bounds);
+  if (layer) {
+    this->topDevice()->drawImageRect(
+        image, nullptr, bounds, sampling, layer->paint(), kFast_SrcRectConstraint);
+  }
+}
+
+static SkSamplingOptions clean_sampling_for_constraint(
+    const SkSamplingOptions& sampling, SkCanvas::SrcRectConstraint constraint) {
+  if (constraint == SkCanvas::kStrict_SrcRectConstraint) {
+    if (sampling.mipmap != SkMipmapMode::kNone) {
+      return SkSamplingOptions(sampling.filter);
+    }
+    if (sampling.isAniso()) {
+      return SkSamplingOptions(SkFilterMode::kLinear);
+    }
+  }
+  return sampling;
 }
 
 void SkCanvas::onDrawImageRect2(
     const SkImage* image, const SkRect& src, const SkRect& dst, const SkSamplingOptions& sampling,
     const SkPaint* paint, SrcRectConstraint constraint) {
   SkPaint realPaint = clean_paint_for_drawImage(paint);
+  SkSamplingOptions realSampling = clean_sampling_for_constraint(sampling, constraint);
 
   if (this->internalQuickReject(dst, realPaint)) {
     return;
   }
 
-  AutoLayerForImageFilter layer(
+  auto layer = this->aboutToDraw(
       this, realPaint, &dst, CheckForOverwrite::kYes,
       image->isOpaque() ? kOpaque_ShaderOverrideOpacity : kNotOpaque_ShaderOverrideOpacity);
-  this->topDevice()->drawImageRect(image, &src, dst, sampling, layer.paint(), constraint);
+  if (layer) {
+    this->topDevice()->drawImageRect(image, &src, dst, realSampling, layer->paint(), constraint);
+  }
 }
 
 void SkCanvas::onDrawImageLattice2(
@@ -2167,8 +2258,10 @@ void SkCanvas::onDrawImageLattice2(
     return;
   }
 
-  AutoLayerForImageFilter layer(this, realPaint, &dst);
-  this->topDevice()->drawImageLattice(image, lattice, dst, filter, layer.paint());
+  auto layer = this->aboutToDraw(this, realPaint, &dst);
+  if (layer) {
+    this->topDevice()->drawImageLattice(image, lattice, dst, filter, layer->paint());
+  }
 }
 
 void SkCanvas::drawImage(
@@ -2209,9 +2302,52 @@ void SkCanvas::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPa
   if (this->internalQuickReject(bounds, paint)) {
     return;
   }
-  AutoLayerForImageFilter layer(this, paint, &bounds);
-  this->topDevice()->drawGlyphRunList(glyphRunList, layer.paint());
+  auto layer = this->aboutToDraw(this, paint, &bounds);
+  if (layer) {
+    this->topDevice()->drawGlyphRunList(this, glyphRunList, paint, layer->paint());
+  }
 }
+
+#if (SK_SUPPORT_GPU || defined(SK_GRAPHITE_ENABLED))
+sk_sp<Slug> SkCanvas::convertBlobToSlug(
+    const SkTextBlob& blob, SkPoint origin, const SkPaint& paint) {
+  TRACE_EVENT0("skia", TRACE_FUNC);
+  auto glyphRunList = fScratchGlyphRunBuilder->blobToGlyphRunList(blob, origin);
+  return this->onConvertGlyphRunListToSlug(glyphRunList, paint);
+}
+
+sk_sp<Slug> SkCanvas::onConvertGlyphRunListToSlug(
+    const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
+  SkRect bounds = glyphRunList.sourceBounds();
+  if (bounds.isEmpty() || !bounds.isFinite() || paint.nothingToDraw()) {
+    return nullptr;
+  }
+  auto layer = this->aboutToDraw(this, paint, &bounds);
+  if (layer) {
+    return this->topDevice()->convertGlyphRunListToSlug(glyphRunList, paint, layer->paint());
+  }
+  return nullptr;
+}
+
+void SkCanvas::drawSlug(const Slug* slug) {
+  TRACE_EVENT0("skia", TRACE_FUNC);
+  if (slug) {
+    this->onDrawSlug(slug);
+  }
+}
+
+void SkCanvas::onDrawSlug(const Slug* slug) {
+  SkRect bounds = slug->sourceBounds();
+  if (this->internalQuickReject(bounds, slug->initialPaint())) {
+    return;
+  }
+
+  auto layer = this->aboutToDraw(this, slug->initialPaint(), &bounds);
+  if (layer) {
+    this->topDevice()->drawSlug(this, slug, layer->paint());
+  }
+}
+#endif
 
 // These call the (virtual) onDraw... method
 void SkCanvas::drawSimpleText(
@@ -2243,7 +2379,8 @@ void SkCanvas::drawGlyphs(
       SkMakeSpan(utf8text, textByteCount),
       SkMakeSpan(clusters, count),
       SkSpan<SkVector>()};
-  SkGlyphRunList glyphRunList{glyphRun, glyphRun.sourceBounds(paint).makeOffset(origin), origin};
+  SkGlyphRunList glyphRunList = fScratchGlyphRunBuilder->makeGlyphRunList(
+      glyphRun, glyphRun.sourceBounds(paint).makeOffset(origin), origin);
   this->onDrawGlyphRunList(glyphRunList, paint);
 }
 
@@ -2261,7 +2398,8 @@ void SkCanvas::drawGlyphs(
       SkSpan<const char>(),
       SkSpan<const uint32_t>(),
       SkSpan<SkVector>()};
-  SkGlyphRunList glyphRunList{glyphRun, glyphRun.sourceBounds(paint).makeOffset(origin), origin};
+  SkGlyphRunList glyphRunList = fScratchGlyphRunBuilder->makeGlyphRunList(
+      glyphRun, glyphRun.sourceBounds(paint).makeOffset(origin), origin);
   this->onDrawGlyphRunList(glyphRunList, paint);
 }
 
@@ -2281,9 +2419,14 @@ void SkCanvas::drawGlyphs(
                       SkSpan<const char>(),
                       SkSpan<const uint32_t>(),
                       rotateScales};
-  SkGlyphRunList glyphRunList{glyphRun, glyphRun.sourceBounds(paint).makeOffset(origin), origin};
+  SkGlyphRunList glyphRunList = fScratchGlyphRunBuilder->makeGlyphRunList(
+      glyphRun, glyphRun.sourceBounds(paint).makeOffset(origin), origin);
   this->onDrawGlyphRunList(glyphRunList, paint);
 }
+
+#if SK_SUPPORT_GPU && GR_TEST_UTILS
+bool gSkBlobAsSlugTesting = false;
+#endif
 
 void SkCanvas::drawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y, const SkPaint& paint) {
   TRACE_EVENT0("skia", TRACE_FUNC);
@@ -2302,7 +2445,22 @@ void SkCanvas::drawTextBlob(const SkTextBlob* blob, SkScalar x, SkScalar y, cons
     RETURN_ON_FALSE(r.fGlyphCount <= glyphsLeft);
     totalGlyphCount += r.fGlyphCount;
   }
-  this->onDrawTextBlob(blob, x, y, paint);
+
+#if SK_SUPPORT_GPU && GR_TEST_UTILS
+  // Draw using text blob normally or if the blob has RSX form because slugs can't convert that
+  // form.
+  if (!gSkBlobAsSlugTesting || this->topDevice()->asGaneshDevice() == nullptr ||
+      SkTextBlobPriv::HasRSXForm(*blob))
+#endif
+  {
+    this->onDrawTextBlob(blob, x, y, paint);
+  }
+#if SK_SUPPORT_GPU && GR_TEST_UTILS
+  else {
+    auto slug = Slug::ConvertBlob(this, *blob, {x, y}, paint);
+    slug->draw(this);
+  }
+#endif
 }
 
 void SkCanvas::onDrawVerticesObject(
@@ -2314,9 +2472,26 @@ void SkCanvas::onDrawVerticesObject(
     return;
   }
 
-  AutoLayerForImageFilter layer(this, simplePaint, &bounds);
-  this->topDevice()->drawVertices(vertices, bmode, layer.paint());
+  auto layer = this->aboutToDraw(this, simplePaint, &bounds);
+  if (layer) {
+    this->topDevice()->drawVertices(vertices, SkBlender::Mode(bmode), layer->paint());
+  }
 }
+
+#ifdef SK_ENABLE_SKSL
+void SkCanvas::onDrawMesh(const SkMesh& mesh, sk_sp<SkBlender> blender, const SkPaint& paint) {
+  SkPaint simplePaint = clean_paint_for_drawVertices(paint);
+
+  if (this->internalQuickReject(mesh.bounds(), simplePaint)) {
+    return;
+  }
+
+  auto layer = this->aboutToDraw(this, simplePaint, nullptr);
+  if (layer) {
+    this->topDevice()->drawMesh(mesh, std::move(blender), paint);
+  }
+}
+#endif
 
 void SkCanvas::drawPatch(
     const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4],
@@ -2343,8 +2518,10 @@ void SkCanvas::onDrawPatch(
     return;
   }
 
-  AutoLayerForImageFilter layer(this, simplePaint, &bounds);
-  this->topDevice()->drawPatch(cubics, colors, texCoords, bmode, layer.paint());
+  auto layer = this->aboutToDraw(this, simplePaint, &bounds);
+  if (layer) {
+    this->topDevice()->drawPatch(cubics, colors, texCoords, SkBlender::Mode(bmode), layer->paint());
+  }
 }
 
 void SkCanvas::drawDrawable(SkDrawable* dr, SkScalar x, SkScalar y) {
@@ -2374,8 +2551,9 @@ void SkCanvas::drawDrawable(SkDrawable* dr, const SkMatrix* matrix) {
 void SkCanvas::onDrawDrawable(SkDrawable* dr, const SkMatrix* matrix) {
   // drawable bounds are no longer reliable (e.g. android displaylist)
   // so don't use them for quick-reject
-  this->predrawNotify();
-  this->baseDevice()->drawDrawable(dr, matrix, this);
+  if (this->predrawNotify()) {
+    this->topDevice()->drawDrawable(this, dr, matrix);
+  }
 }
 
 void SkCanvas::onDrawAtlas2(
@@ -2384,20 +2562,24 @@ void SkCanvas::onDrawAtlas2(
     const SkPaint* paint) {
   // drawAtlas is a combination of drawVertices and drawImage...
   SkPaint realPaint = clean_paint_for_drawVertices(clean_paint_for_drawImage(paint));
+  realPaint.setShader(atlas->makeShader(sampling));
 
   if (cull && this->internalQuickReject(*cull, realPaint)) {
     return;
   }
 
-  AutoLayerForImageFilter layer(this, realPaint);
-  this->topDevice()->drawAtlas(atlas, xform, tex, colors, count, bmode, sampling, layer.paint());
+  auto layer = this->aboutToDraw(this, realPaint);
+  if (layer) {
+    this->topDevice()->drawAtlas(xform, tex, colors, count, SkBlender::Mode(bmode), layer->paint());
+  }
 }
 
 void SkCanvas::onDrawAnnotation(const SkRect& rect, const char key[], SkData* value) {
   SkASSERT(key);
 
-  this->predrawNotify();
-  this->topDevice()->drawAnnotation(rect, key, value);
+  if (this->predrawNotify()) {
+    this->topDevice()->drawAnnotation(rect, key, value);
+  }
 }
 
 void SkCanvas::onDrawEdgeAAQuad(
@@ -2411,8 +2593,9 @@ void SkCanvas::onDrawEdgeAAQuad(
     return;
   }
 
-  this->predrawNotify();
-  this->topDevice()->drawEdgeAAQuad(r, clip, edgeAA, color, mode);
+  if (this->predrawNotify()) {
+    this->topDevice()->drawEdgeAAQuad(r, clip, edgeAA, color, mode);
+  }
 }
 
 void SkCanvas::onDrawEdgeAAImageSet2(
@@ -2425,6 +2608,7 @@ void SkCanvas::onDrawEdgeAAImageSet2(
   }
 
   SkPaint realPaint = clean_paint_for_drawImage(paint);
+  SkSamplingOptions realSampling = clean_sampling_for_constraint(sampling, constraint);
 
   // We could calculate the set's dstRect union to always check quickReject(), but we can't reject
   // individual entries and Chromium's occlusion culling already makes it likely that at least one
@@ -2452,9 +2636,11 @@ void SkCanvas::onDrawEdgeAAImageSet2(
     return;
   }
 
-  AutoLayerForImageFilter layer(this, realPaint, setBoundsValid ? &setBounds : nullptr);
-  this->topDevice()->drawEdgeAAImageSet(
-      imageSet, count, dstClips, preViewMatrices, sampling, layer.paint(), constraint);
+  auto layer = this->aboutToDraw(this, realPaint, setBoundsValid ? &setBounds : nullptr);
+  if (layer) {
+    this->topDevice()->drawEdgeAAImageSet(
+        imageSet, count, dstClips, preViewMatrices, realSampling, layer->paint(), constraint);
+  }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -2548,14 +2734,14 @@ void SkCanvas::onDrawPicture(
 
 ///////////////////////////////////////////////////////////////////////////////
 
-SkCanvas::ImageSetEntry::ImageSetEntry() noexcept = default;
+SkCanvas::ImageSetEntry::ImageSetEntry() = default;
 SkCanvas::ImageSetEntry::~ImageSetEntry() = default;
-SkCanvas::ImageSetEntry::ImageSetEntry(const ImageSetEntry&) noexcept = default;
+SkCanvas::ImageSetEntry::ImageSetEntry(const ImageSetEntry&) = default;
 SkCanvas::ImageSetEntry& SkCanvas::ImageSetEntry::operator=(const ImageSetEntry&) = default;
 
 SkCanvas::ImageSetEntry::ImageSetEntry(
     sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, int matrixIndex,
-    float alpha, unsigned aaFlags, bool hasClip) noexcept
+    float alpha, unsigned aaFlags, bool hasClip)
     : fImage(std::move(image)),
       fSrcRect(srcRect),
       fDstRect(dstRect),
@@ -2566,7 +2752,7 @@ SkCanvas::ImageSetEntry::ImageSetEntry(
 
 SkCanvas::ImageSetEntry::ImageSetEntry(
     sk_sp<const SkImage> image, const SkRect& srcRect, const SkRect& dstRect, float alpha,
-    unsigned aaFlags) noexcept
+    unsigned aaFlags)
     : fImage(std::move(image)),
       fSrcRect(srcRect),
       fDstRect(dstRect),
@@ -2641,7 +2827,8 @@ SkRasterHandleAllocator::Handle SkRasterHandleAllocator::allocBitmap(
 }
 
 std::unique_ptr<SkCanvas> SkRasterHandleAllocator::MakeCanvas(
-    std::unique_ptr<SkRasterHandleAllocator> alloc, const SkImageInfo& info, const Rec* rec) {
+    std::unique_ptr<SkRasterHandleAllocator> alloc, const SkImageInfo& info, const Rec* rec,
+    const SkSurfaceProps* props) {
   if (!alloc || !SkSurfaceValidateRasterInfo(info, rec ? rec->fRowBytes : kIgnoreRowBytesValue)) {
     return nullptr;
   }
@@ -2654,7 +2841,31 @@ std::unique_ptr<SkCanvas> SkRasterHandleAllocator::MakeCanvas(
   } else {
     hndl = alloc->allocBitmap(info, &bm);
   }
-  return hndl ? std::unique_ptr<SkCanvas>(new SkCanvas(bm, std::move(alloc), hndl)) : nullptr;
+  return hndl ? std::unique_ptr<SkCanvas>(new SkCanvas(bm, std::move(alloc), hndl, props))
+              : nullptr;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////
+#if SK_SUPPORT_GPU && GR_TEST_UTILS
+SkTestCanvas<SkSlugTestKey>::SkTestCanvas(SkCanvas* canvas)
+    : SkCanvas(sk_ref_sp(canvas->baseDevice())) {}
+
+void SkTestCanvas<SkSlugTestKey>::onDrawGlyphRunList(
+    const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
+  SkRect bounds = glyphRunList.sourceBounds();
+  if (this->internalQuickReject(bounds, paint)) {
+    return;
+  }
+  auto layer = this->aboutToDraw(this, paint, &bounds);
+  if (layer) {
+    if (glyphRunList.hasRSXForm()) {
+      this->SkCanvas::onDrawGlyphRunList(glyphRunList, layer->paint());
+    } else {
+      auto slug = this->onConvertGlyphRunListToSlug(glyphRunList, layer->paint());
+      this->drawSlug(slug.get());
+    }
+  }
+}
+#endif
+
+////////////////////////////////////////////////////////////////////////////////////////////////////

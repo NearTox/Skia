@@ -10,46 +10,46 @@
 #include "include/core/SkColor.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/gpu/GrDirectContext.h"
-#include "include/private/GrImageContext.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrDrawingManager.h"
-#include "src/gpu/GrGpu.h"
-#include "src/gpu/GrImageContextPriv.h"
-#include "src/gpu/GrPixmap.h"
-#include "src/gpu/GrProgramInfo.h"
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/SurfaceContext.h"
+#include "include/private/gpu/ganesh/GrImageContext.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrDrawingManager.h"
+#include "src/gpu/ganesh/GrGpu.h"
+#include "src/gpu/ganesh/GrImageContextPriv.h"
+#include "src/gpu/ganesh/GrPixmap.h"
+#include "src/gpu/ganesh/GrProgramInfo.h"
+#include "src/gpu/ganesh/GrProxyProvider.h"
+#include "src/gpu/ganesh/SkGr.h"
+#include "src/gpu/ganesh/SurfaceContext.h"
 #include "src/image/SkImage_Base.h"
 
 #if SK_GPU_V1
-#  include "src/gpu/ops/GrSimpleMeshDrawOpHelper.h"
+#  include "src/gpu/ganesh/ops/GrSimpleMeshDrawOpHelper.h"
 #endif
 
 namespace sk_gpu_test {
 
 GrTextureProxy* GetTextureImageProxy(SkImage* image, GrRecordingContext* rContext) {
-  if (!image->isTextureBacked() || as_IB(image)->isYUVA()) {
+  if (!as_IB(image)->isGaneshBacked() || as_IB(image)->isYUVA()) {
     return nullptr;
   }
-  if (!rContext) {
-    // If the image is backed by a recording context we'll use that.
-    GrImageContext* iContext = as_IB(image)->context();
-    SkASSERT(iContext);
-    rContext = iContext->priv().asRecordingContext();
     if (!rContext) {
+      // If the image is backed by a recording context we'll use that.
+      GrImageContext* iContext = as_IB(image)->context();
+      SkASSERT(iContext);
+      rContext = iContext->priv().asRecordingContext();
+      if (!rContext) {
+        return nullptr;
+      }
+    }
+    auto [view, ct] = as_IB(image)->asView(rContext, GrMipmapped::kNo);
+    if (!view) {
+      // With the above checks we expect this to succeed unless there is a context mismatch.
+      SkASSERT(!image->isValid(rContext));
       return nullptr;
     }
-  }
-  auto [view, ct] = as_IB(image)->asView(rContext, GrMipmapped::kNo);
-  if (!view) {
-    // With the above checks we expect this to succeed unless there is a context mismatch.
-    SkASSERT(!image->isValid(rContext));
-    return nullptr;
-  }
-  GrSurfaceProxy* proxy = view.proxy();
-  SkASSERT(proxy->asTextureProxy());
-  return proxy->asTextureProxy();
+    GrSurfaceProxy* proxy = view.proxy();
+    SkASSERT(proxy->asTextureProxy());
+    return proxy->asTextureProxy();
 }
 
 GrSurfaceProxyView MakeTextureProxyViewFromData(
@@ -64,13 +64,14 @@ GrSurfaceProxyView MakeTextureProxyViewFromData(
   if (!format.isValid()) {
     return {};
   }
-  GrSwizzle swizzle = caps->getReadSwizzle(format, pixmap.colorType());
+  skgpu::Swizzle swizzle = caps->getReadSwizzle(format, pixmap.colorType());
 
   sk_sp<GrTextureProxy> proxy;
   proxy = dContext->priv().proxyProvider()->createProxy(
       format, pixmap.dimensions(), renderable,
       /*sample count*/ 1, GrMipmapped::kNo, SkBackingFit::kExact, SkBudgeted::kYes,
-      GrProtected::kNo);
+      GrProtected::kNo,
+      /*label=*/"TextureProxyViewFromData");
   if (!proxy) {
     return {};
   }

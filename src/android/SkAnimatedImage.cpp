@@ -103,7 +103,7 @@ SkAnimatedImage::SkAnimatedImage(
   this->decodeNextFrame();
 }
 
-SkAnimatedImage::~SkAnimatedImage() = default;
+SkAnimatedImage::~SkAnimatedImage() {}
 
 SkRect SkAnimatedImage::onGetBounds() {
   return SkRect::MakeIWH(fCropRect.width(), fCropRect.height());
@@ -299,7 +299,8 @@ int SkAnimatedImage::decodeNextFrame() {
 
   auto result = fCodec->getAndroidPixels(dst->info(), dst->getPixels(), dst->rowBytes(), &options);
   if (result != SkCodec::kSuccess) {
-    SkCodecPrintf("error %i, frame %i of %i\n", result, frameToDecode, fFrameCount);
+    SkCodecPrintf(
+        "%s, frame %i of %i\n", SkCodec::ResultToString(result), frameToDecode, fFrameCount);
     return this->finish();
   }
 

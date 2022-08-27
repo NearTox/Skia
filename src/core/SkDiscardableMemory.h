@@ -37,7 +37,7 @@ class SK_SPI SkDiscardableMemory {
 
   /** Must not be called while locked.
    */
-  virtual ~SkDiscardableMemory() = default;
+  virtual ~SkDiscardableMemory() {}
 
   /**
    * Locks the memory, prevent it from being discarded. Once locked. you may
@@ -48,22 +48,22 @@ class SK_SPI SkDiscardableMemory {
    *
    * Nested calls to lock are not allowed.
    */
-  virtual bool SK_WARN_UNUSED_RESULT lock() noexcept = 0;
+  virtual bool SK_WARN_UNUSED_RESULT lock() = 0;
 
   /**
    * Returns the current pointer for the discardable memory. This call is ONLY
    * valid when the discardable memory object is locked.
    */
-  virtual void* data() noexcept = 0;
+  virtual void* data() = 0;
 
   /**
    * Unlock the memory so that it can be purged by the system. Must be called
    * after every successful lock call.
    */
-  virtual void unlock() noexcept = 0;
+  virtual void unlock() = 0;
 
  protected:
-  constexpr SkDiscardableMemory() noexcept = default;
+  SkDiscardableMemory() = default;
   SkDiscardableMemory(const SkDiscardableMemory&) = delete;
   SkDiscardableMemory& operator=(const SkDiscardableMemory&) = delete;
 };

@@ -10,6 +10,8 @@
 
 #include "src/shaders/SkShaderBase.h"
 
+class SkShaderCodeDictionary;
+
 /** \class SkColorShader
     A Shader that represents a single color. In general, this effect can be
     accomplished by just using the color field on the paint, but if an
@@ -30,6 +32,11 @@ class SkColorShader : public SkShaderBase {
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+#endif
+
+#ifdef SK_ENABLE_SKSL
+  void addToKey(
+      const SkKeyContext&, SkPaintParamsKeyBuilder*, SkPipelineDataGatherer*) const override;
 #endif
 
  private:
@@ -61,6 +68,10 @@ class SkColor4Shader : public SkShaderBase {
 
 #if SK_SUPPORT_GPU
   std::unique_ptr<GrFragmentProcessor> asFragmentProcessor(const GrFPArgs&) const override;
+#endif
+#ifdef SK_ENABLE_SKSL
+  void addToKey(
+      const SkKeyContext&, SkPaintParamsKeyBuilder*, SkPipelineDataGatherer*) const override;
 #endif
 
  private:

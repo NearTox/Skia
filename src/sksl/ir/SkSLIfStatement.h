@@ -9,23 +9,28 @@
 #define SKSL_IFSTATEMENT
 
 #include "include/private/SkSLStatement.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
 
 #include <memory>
+#include <string>
+#include <utility>
 
 namespace SkSL {
+
+class Context;
 
 /**
  * An 'if' statement.
  */
 class IfStatement final : public Statement {
  public:
-  static constexpr Kind kStatementKind = Kind::kIf;
+  inline static constexpr Kind kStatementKind = Kind::kIf;
 
   IfStatement(
-      int offset, bool isStatic, std::unique_ptr<Expression> test,
+      Position pos, bool isStatic, std::unique_ptr<Expression> test,
       std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse)
-      : INHERITED(offset, kStatementKind),
+      : INHERITED(pos, kStatementKind),
         fTest(std::move(test)),
         fIfTrue(std::move(ifTrue)),
         fIfFalse(std::move(ifFalse)),
@@ -34,12 +39,12 @@ class IfStatement final : public Statement {
   // Creates a potentially-simplified form of the if-statement. Typechecks and coerces the test
   // expression; reports errors via ErrorReporter.
   static std::unique_ptr<Statement> Convert(
-      const Context& context, int offset, bool isStatic, std::unique_ptr<Expression> test,
+      const Context& context, Position pos, bool isStatic, std::unique_ptr<Expression> test,
       std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse);
 
   // Creates a potentially-simplified form of the if-statement; reports errors via ASSERT.
   static std::unique_ptr<Statement> Make(
-      const Context& context, int offset, bool isStatic, std::unique_ptr<Expression> test,
+      const Context& context, Position pos, bool isStatic, std::unique_ptr<Expression> test,
       std::unique_ptr<Statement> ifTrue, std::unique_ptr<Statement> ifFalse);
 
   bool isStatic() const { return fIsStatic; }
@@ -58,7 +63,7 @@ class IfStatement final : public Statement {
 
   std::unique_ptr<Statement> clone() const override;
 
-  String description() const override;
+  std::string description() const override;
 
  private:
   std::unique_ptr<Expression> fTest;

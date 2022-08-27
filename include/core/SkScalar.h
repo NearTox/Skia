@@ -64,13 +64,13 @@ typedef float SkScalar;
 
 #define SK_ScalarMin (-SK_ScalarMax)
 
-static constexpr inline bool SkScalarIsNaN(SkScalar x) noexcept { return x != x; }
+static inline bool SkScalarIsNaN(SkScalar x) noexcept { return x != x; }
 
 /** Returns true if x is not NaN and not infinite
  */
-static constexpr inline bool SkScalarIsFinite(SkScalar x) noexcept { return sk_float_isfinite(x); }
+static inline bool SkScalarIsFinite(SkScalar x) noexcept { return sk_float_isfinite(x); }
 
-static constexpr inline bool SkScalarsAreFinite(SkScalar a, SkScalar b) noexcept {
+static inline bool SkScalarsAreFinite(SkScalar a, SkScalar b) noexcept {
   return sk_floats_are_finite(a, b);
 }
 
@@ -103,7 +103,7 @@ static inline SkScalar SkScalarFraction(SkScalar x) noexcept {
   return x - SkScalarTruncToScalar(x);
 }
 
-static constexpr inline SkScalar SkScalarSquare(SkScalar x) noexcept { return x * x; }
+static inline SkScalar SkScalarSquare(SkScalar x) noexcept { return x * x; }
 
 #define SkScalarInvert(x) sk_ieee_float_divide_TODO_IS_DIVIDE_BY_ZERO_SAFE_HERE(SK_Scalar1, (x))
 #define SkScalarAve(a, b) (((a) + (b)) * SK_ScalarHalf)
@@ -120,10 +120,10 @@ static inline bool SkScalarIsInt(SkScalar x) noexcept { return x == SkScalarFloo
  *   0 if x == 0
  *   1 if x > 0
  */
-static constexpr inline int SkScalarSignAsInt(SkScalar x) noexcept { return x < 0 ? -1 : (x > 0); }
+static inline int SkScalarSignAsInt(SkScalar x) noexcept { return x < 0 ? -1 : (x > 0); }
 
 // Scalar result version of above
-static constexpr inline SkScalar SkScalarSignAsScalar(SkScalar x) noexcept {
+static inline SkScalar SkScalarSignAsScalar(SkScalar x) noexcept {
   return x < 0 ? -SK_Scalar1 : ((x > 0) ? SK_Scalar1 : 0);
 }
 
@@ -157,7 +157,7 @@ static inline float SkScalarCosSnapToZero(SkScalar radians) noexcept {
     else interpolate.
     t must be [0..SK_Scalar1]
 */
-static constexpr inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar t) noexcept {
+static inline SkScalar SkScalarInterp(SkScalar A, SkScalar B, SkScalar t) noexcept {
   SkASSERT(t >= 0 && t <= SK_Scalar1);
   return A + (B - A) * t;
 }

@@ -6,7 +6,6 @@
  */
 
 #include "include/core/SkString.h"
-#include "include/core/SkStringView.h"
 #include "include/private/SkTPin.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkSafeMath.h"
@@ -15,16 +14,22 @@
 
 #include <cstdio>
 #include <new>
+#include <string_view>
 #include <utility>
 #include <vector>
 
 // number of bytes (on the stack) to receive the printf result
-static const size_t kBufferSize = 1024;
+static constexpr size_t kBufferSize = 1024;
 
 struct StringBuffer {
   char* fText;
   int fLength;
 };
+
+template <int SIZE>
+static StringBuffer apply_format_string(
+    const char* format, va_list args, char (&stackBuffer)[SIZE], SkString* heapBuffer)
+    SK_PRINTF_LIKE(1, 0);
 
 template <int SIZE>
 static StringBuffer apply_format_string(
@@ -100,10 +105,10 @@ char* SkStrAppendU32(char string[], uint32_t dec) {
   } while (dec != 0);
 
   SkASSERT(p >= buffer);
-  char* stop = buffer + sizeof(buffer);
-  while (p < stop) {
-    *string++ = *p++;
-  }
+  size_t cp_len = buffer + sizeof(buffer) - p;
+  memcpy(string, p, cp_len);
+  string += cp_len;
+
   SkASSERT(string - start <= kSkStrAppendU32_MaxSize);
   return string;
 }
@@ -185,8 +190,8 @@ const SkString::Rec SkString::gEmptyRec(0, 0);
 
 #define SizeOfRec() (gEmptyRec.data() - (const char*)&gEmptyRec)
 
-static constexpr uint32_t trim_size_t_to_u32(size_t value) noexcept {
-  if constexpr (sizeof(size_t) > sizeof(uint32_t)) {
+static uint32_t trim_size_t_to_u32(size_t value) noexcept {
+  if (sizeof(size_t) > sizeof(uint32_t)) {
     if (value > UINT32_MAX) {
       value = UINT32_MAX;
     }
@@ -194,9 +199,9 @@ static constexpr uint32_t trim_size_t_to_u32(size_t value) noexcept {
   return (uint32_t)value;
 }
 
-static constexpr size_t check_add32(size_t base, size_t extra) noexcept {
+static size_t check_add32(size_t base, size_t extra) noexcept {
   SkASSERT(base <= UINT32_MAX);
-  if constexpr (sizeof(size_t) > sizeof(uint32_t)) {
+  if (sizeof(size_t) > sizeof(uint32_t)) {
     if (base + extra > UINT32_MAX) {
       extra = UINT32_MAX - base;
     }
@@ -288,19 +293,19 @@ SkString::SkString(SkString&& src) noexcept : fRec(std::move(src.validate().fRec
 
 SkString::SkString(const std::string& src) { fRec = Rec::Make(src.c_str(), src.size()); }
 
-SkString::SkString(skstd::string_view src) { fRec = Rec::Make(src.data(), src.length()); }
+SkString::SkString(std::string_view src) { fRec = Rec::Make(src.data(), src.length()); }
 
 SkString::~SkString() { this->validate(); }
 
-bool SkString::equals(const SkString& src) const {
+bool SkString::equals(const SkString& src) const noexcept {
   return fRec == src.fRec || this->equals(src.c_str(), src.size());
 }
 
-bool SkString::equals(const char text[]) const {
+bool SkString::equals(const char text[]) const noexcept {
   return this->equals(text, text ? strlen(text) : 0);
 }
 
-bool SkString::equals(const char text[], size_t len) const {
+bool SkString::equals(const char text[], size_t len) const noexcept {
   SkASSERT(len == 0 || text != nullptr);
 
   return fRec->fLength == len && !sk_careful_memcmp(fRec->data(), text, len);

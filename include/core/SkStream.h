@@ -41,7 +41,7 @@ class SkStreamMemory;
 class SK_API SkStream {
  public:
   virtual ~SkStream() = default;
-  SkStream() {}
+  constexpr SkStream() noexcept = default;
 
   /**
    *  Attempts to open the specified file as a stream, returns nullptr on failure.
@@ -230,7 +230,7 @@ class SK_API SkStreamMemory : public SkStreamAsset {
 class SK_API SkWStream {
  public:
   virtual ~SkWStream();
-  SkWStream() {}
+  SkWStream() = default;
 
   /** Called to write bytes to a SkWStream. Returns true on success
       @param buffer the address of at least size bytes to be written to the stream
@@ -332,10 +332,10 @@ class SK_API SkFILEStream : public SkStreamAsset {
   }
 
   /** Returns true if the current path could be opened. */
-  bool isValid() const { return fFILE != nullptr; }
+  bool isValid() const noexcept { return fFILE != nullptr; }
 
   /** Close this SkFILEStream. */
-  void close();
+  void close() noexcept;
 
   size_t read(void* buffer, size_t size) override;
   bool isAtEnd() const override;
@@ -470,8 +470,8 @@ class SK_API SkFILEWStream : public SkWStream {
 class SK_API SkDynamicMemoryWStream : public SkWStream {
  public:
   SkDynamicMemoryWStream() = default;
-  SkDynamicMemoryWStream(SkDynamicMemoryWStream&&);
-  SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&);
+  SkDynamicMemoryWStream(SkDynamicMemoryWStream&&) noexcept;
+  SkDynamicMemoryWStream& operator=(SkDynamicMemoryWStream&&) noexcept;
   ~SkDynamicMemoryWStream() override;
 
   bool write(const void* buffer, size_t size) override;
@@ -503,7 +503,7 @@ class SK_API SkDynamicMemoryWStream : public SkWStream {
   std::unique_ptr<SkStreamAsset> detachAsStream();
 
   /** Reset the stream to its original, empty, state. */
-  void reset();
+  void reset() noexcept;
   void padToAlign4();
 
  private:

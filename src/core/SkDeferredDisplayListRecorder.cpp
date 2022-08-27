@@ -15,7 +15,7 @@
 #if !SK_SUPPORT_GPU
 SkDeferredDisplayListRecorder::SkDeferredDisplayListRecorder(const SkSurfaceCharacterization&) {}
 
-SkDeferredDisplayListRecorder::~SkDeferredDisplayListRecorder() = default;
+SkDeferredDisplayListRecorder::~SkDeferredDisplayListRecorder() {}
 
 bool SkDeferredDisplayListRecorder::init() { return false; }
 
@@ -23,31 +23,15 @@ SkCanvas* SkDeferredDisplayListRecorder::getCanvas() { return nullptr; }
 
 sk_sp<SkDeferredDisplayList> SkDeferredDisplayListRecorder::detach() { return nullptr; }
 
-sk_sp<SkImage> SkDeferredDisplayListRecorder::makePromiseTexture(
-    const GrBackendFormat& backendFormat, int width, int height, GrMipmapped mipMapped,
-    GrSurfaceOrigin origin, SkColorType colorType, SkAlphaType alphaType,
-    sk_sp<SkColorSpace> colorSpace, PromiseImageTextureFulfillProc textureFulfillProc,
-    PromiseImageTextureReleaseProc textureReleaseProc, PromiseImageTextureContext textureContext) {
-  return nullptr;
-}
-
-sk_sp<SkImage> SkDeferredDisplayListRecorder::makeYUVAPromiseTexture(
-    const GrYUVABackendTextureInfo& yuvaBackendTextureInfo, sk_sp<SkColorSpace> imageColorSpace,
-    PromiseImageTextureFulfillProc textureFulfillProc,
-    PromiseImageTextureReleaseProc textureReleaseProc,
-    PromiseImageTextureContext textureContexts[]) {
-  return nullptr;
-}
-
 #else
 
 #  include "include/core/SkPromiseImageTexture.h"
 #  include "include/gpu/GrRecordingContext.h"
 #  include "include/gpu/GrYUVABackendTextures.h"
-#  include "src/gpu/GrProxyProvider.h"
-#  include "src/gpu/GrRecordingContextPriv.h"
-#  include "src/gpu/GrTexture.h"
-#  include "src/gpu/SkGr.h"
+#  include "src/gpu/ganesh/GrProxyProvider.h"
+#  include "src/gpu/ganesh/GrRecordingContextPriv.h"
+#  include "src/gpu/ganesh/GrTexture.h"
+#  include "src/gpu/ganesh/SkGr.h"
 #  include "src/image/SkImage_Gpu.h"
 #  include "src/image/SkImage_GpuYUVA.h"
 #  include "src/image/SkSurface_Gpu.h"
@@ -212,7 +196,7 @@ sk_sp<SkDeferredDisplayList> SkDeferredDisplayListRecorder::detach() {
 
 #  ifndef SK_MAKE_PROMISE_TEXTURE_DISABLE_LEGACY_API
 sk_sp<SkImage> SkDeferredDisplayListRecorder::makePromiseTexture(
-    const GrBackendFormat& backendFormat, int width, int height, GrMipmapped mipMapped,
+    const GrBackendFormat& backendFormat, int width, int height, GrMipmapped mipmapped,
     GrSurfaceOrigin origin, SkColorType colorType, SkAlphaType alphaType,
     sk_sp<SkColorSpace> colorSpace, PromiseImageTextureFulfillProc textureFulfillProc,
     PromiseImageTextureReleaseProc textureReleaseProc, PromiseImageTextureContext textureContext) {
@@ -220,7 +204,7 @@ sk_sp<SkImage> SkDeferredDisplayListRecorder::makePromiseTexture(
     return nullptr;
   }
   return SkImage::MakePromiseTexture(
-      fContext->threadSafeProxy(), backendFormat, {width, height}, mipMapped, origin, colorType,
+      fContext->threadSafeProxy(), backendFormat, {width, height}, mipmapped, origin, colorType,
       alphaType, std::move(colorSpace), textureFulfillProc, textureReleaseProc, textureContext);
 }
 

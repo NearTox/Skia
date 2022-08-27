@@ -8,9 +8,10 @@
 #ifndef SKSL_POOL
 #define SKSL_POOL
 
-#include <memory>
-
 #include "src/sksl/SkSLMemoryPool.h"
+
+#include <stddef.h>
+#include <memory>
 
 namespace SkSL {
 
@@ -33,11 +34,11 @@ class Pool {
 
   // Attaches a pool to the current thread.
   // It is an error to call this while a pool is already attached.
-  void attachToThread();
+  void attachToThread() noexcept;
 
   // Once you are done creating or destroying objects in the pool, detach it from the thread.
   // It is an error to call this while no pool is attached.
-  void detachFromThread();
+  void detachFromThread() noexcept;
 
   // Allocates memory from the thread pool. If the pool is exhausted, an additional block of pool
   // storage will be created to hold the data.
@@ -45,12 +46,12 @@ class Pool {
 
   // Releases memory that was created by AllocMemory. All objects in the pool must be freed before
   // the pool can be destroyed.
-  static void FreeMemory(void* ptr);
+  static void FreeMemory(void* ptr) noexcept;
 
-  static bool IsAttached();
+  static bool IsAttached() noexcept;
 
  private:
-  constexpr Pool() noexcept = default;  // use Create to make a pool
+  Pool() noexcept = default;  // use Create to make a pool
   std::unique_ptr<SkSL::MemoryPool> fMemPool;
 };
 
@@ -70,7 +71,7 @@ class Poolable {
  */
 class AutoAttachPoolToThread {
  public:
-  AutoAttachPoolToThread(Pool* p) : fPool(p) {
+  AutoAttachPoolToThread(Pool* p) noexcept : fPool(p) {
     if (fPool) {
       fPool->attachToThread();
     }

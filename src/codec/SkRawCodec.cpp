@@ -166,7 +166,7 @@ bool is_asset_stream(const SkStream& stream) { return stream.hasLength() && stre
 
 class SkRawStream {
  public:
-  virtual ~SkRawStream() = default;
+  virtual ~SkRawStream() {}
 
   /*
    * Gets the length of the stream. Depending on the type of stream, this may require reading to
@@ -426,12 +426,13 @@ class SkDngImage {
     // We just pretend all streams are invalid. Our AFL-fuzzer
     // should still exercise this code; it's more resistant to OOM.
     return nullptr;
-#endif
+#else
     if (!dngImage->initFromPiex() && !dngImage->readDng()) {
       return nullptr;
     }
 
     return dngImage.release();
+#endif
   }
 
   /*
@@ -762,7 +763,7 @@ bool SkRawCodec::onDimensionsSupported(const SkISize& dim) {
   return sizeFloor == dim || sizeCeil == dim;
 }
 
-SkRawCodec::~SkRawCodec() = default;
+SkRawCodec::~SkRawCodec() {}
 
 SkRawCodec::SkRawCodec(SkDngImage* dngImage)
     : INHERITED(

@@ -12,7 +12,7 @@
 
 namespace sksg {
 
-InvalidationController::InvalidationController() : fBounds(SkRect::MakeEmpty()) {}
+InvalidationController::InvalidationController() noexcept : fBounds(SkRect::MakeEmpty()) {}
 
 void InvalidationController::inval(const SkRect& r, const SkMatrix& ctm) {
   if (r.isEmpty()) {
@@ -29,7 +29,7 @@ void InvalidationController::inval(const SkRect& r, const SkMatrix& ctm) {
   fBounds.join(*rect);
 }
 
-void InvalidationController::reset() {
+void InvalidationController::reset() noexcept {
   fRects.clear();
   fBounds.setEmpty();
 }

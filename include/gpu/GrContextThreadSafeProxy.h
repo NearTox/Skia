@@ -21,11 +21,14 @@
 class GrBackendFormat;
 class GrCaps;
 class GrContextThreadSafeProxyPriv;
-class GrTextBlobCache;
 class GrThreadSafeCache;
 class GrThreadSafePipelineBuilder;
 class SkSurfaceCharacterization;
 class SkSurfaceProps;
+
+namespace sktext::gpu {
+class TextBlobRedrawCoordinator;
+}
 
 /**
  * Can be used to perform actions related to the generating GrContext in a thread safe manner. The
@@ -107,7 +110,14 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
    */
   GrBackendFormat compressedBackendFormat(SkImage::CompressionType c) const;
 
-  bool isValid() const noexcept { return nullptr != fCaps; }
+  /**
+   * Gets the maximum supported sample count for a color type. 1 is returned if only non-MSAA
+   * rendering is supported for the color type. 0 is returned if rendering to this color type
+   * is not supported at all.
+   */
+  int maxSurfaceSampleCountForColorType(SkColorType colorType) const;
+
+  bool isValid() const { return nullptr != fCaps; }
 
   bool operator==(const GrContextThreadSafeProxy& that) const noexcept {
     // Each GrContext should only ever have a single thread-safe proxy.
@@ -115,12 +125,11 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
     return this == &that;
   }
 
-  bool operator!=(const GrContextThreadSafeProxy& that) const noexcept { return !(*this == that); }
+  bool operator!=(const GrContextThreadSafeProxy& that) const { return !(*this == that); }
 
   // Provides access to functions that aren't part of the public API.
-  GrContextThreadSafeProxyPriv priv() noexcept;
-  const GrContextThreadSafeProxyPriv priv()
-      const noexcept;  // NOLINT(readability-const-return-type)
+  GrContextThreadSafeProxyPriv priv();
+  const GrContextThreadSafeProxyPriv priv() const;  // NOLINT(readability-const-return-type)
 
  private:
   friend class GrContextThreadSafeProxyPriv;  // for ctor and hidden methods
@@ -140,7 +149,7 @@ class SK_API GrContextThreadSafeProxy final : public SkNVRefCnt<GrContextThreadS
   const GrContextOptions fOptions;
   const uint32_t fContextID;
   sk_sp<const GrCaps> fCaps;
-  std::unique_ptr<GrTextBlobCache> fTextBlobCache;
+  std::unique_ptr<sktext::gpu::TextBlobRedrawCoordinator> fTextBlobRedrawCoordinator;
   std::unique_ptr<GrThreadSafeCache> fThreadSafeCache;
   sk_sp<GrThreadSafePipelineBuilder> fPipelineBuilder;
   std::atomic<bool> fAbandoned{false};

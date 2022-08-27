@@ -7,7 +7,7 @@
 #include "include/private/SkMalloc.h"
 #include "src/codec/SkBmpBaseCodec.h"
 
-SkBmpBaseCodec::~SkBmpBaseCodec() = default;
+SkBmpBaseCodec::~SkBmpBaseCodec() {}
 
 SkBmpBaseCodec::SkBmpBaseCodec(
     SkEncodedInfo&& info, std::unique_ptr<SkStream> stream, uint16_t bitsPerPixel,

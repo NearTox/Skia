@@ -19,10 +19,11 @@ enum HeifColorFormat {
   kHeifColorFormat_RGB565,
   kHeifColorFormat_RGBA_8888,
   kHeifColorFormat_BGRA_8888,
+  kHeifColorFormat_RGBA_1010102,
 };
 
 struct HeifStream {
-  virtual ~HeifStream() = default;
+  virtual ~HeifStream() {}
 
   virtual size_t read(void*, size_t) = 0;
   virtual bool rewind() = 0;
@@ -57,6 +58,8 @@ struct HeifDecoder {
   bool getScanline(uint8_t*) { return false; }
 
   int skipScanlines(int) { return 0; }
+
+  uint32_t getColorDepth() { return 0; }
 };
 
 static inline HeifDecoder* createHeifDecoder() { return new HeifDecoder; }

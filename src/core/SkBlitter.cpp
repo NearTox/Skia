@@ -17,11 +17,11 @@
 #include "src/core/SkMask.h"
 #include "src/core/SkMaskFilterBase.h"
 #include "src/core/SkMatrixProvider.h"
+#include "src/core/SkOpts.h"
 #include "src/core/SkPaintPriv.h"
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkRegionPriv.h"
 #include "src/core/SkTLazy.h"
-#include "src/core/SkUtils.h"
 #include "src/core/SkVMBlitter.h"
 #include "src/core/SkWriteBuffer.h"
 #include "src/core/SkXfermodeInterpretation.h"
@@ -31,7 +31,7 @@
 bool gUseSkVMBlitter{false};
 bool gSkForceRasterPipelineBlitter{false};
 
-SkBlitter::~SkBlitter() = default;
+SkBlitter::~SkBlitter() {}
 
 bool SkBlitter::isNullBlitter() const { return false; }
 
@@ -49,7 +49,7 @@ void SkBlitter::blitAntiH(int x, int y, const SkAlpha antialias[],
 }
  */
 
-inline constexpr static SkAlpha ScalarToAlpha(SkScalar a) {
+inline static SkAlpha ScalarToAlpha(SkScalar a) {
   SkAlpha alpha = (SkAlpha)(a * 255);
   return alpha > 247 ? 0xFF : alpha < 8 ? 0 : alpha;
 }
@@ -184,7 +184,7 @@ static inline void bits_to_runs(
 }
 
 // maskBitCount is the number of 1's to place in the mask. It must be in the range between 1 and 8.
-static constexpr uint8_t generate_right_mask(int maskBitCount) {
+static uint8_t generate_right_mask(int maskBitCount) {
   return static_cast<uint8_t>((0xFF00U >> maskBitCount) & 0xFF);
 }
 
@@ -270,20 +270,6 @@ void SkBlitter::blitMask(const SkMask& mask, const SkIRect& clip) {
 }
 
 /////////////////////// these are not virtual, just helpers
-
-void SkBlitter::blitMaskRegion(const SkMask& mask, const SkRegion& clip) {
-  if (clip.quickReject(mask.fBounds)) {
-    return;
-  }
-
-  SkRegion::Cliperator clipper(clip, mask.fBounds);
-
-  while (!clipper.done()) {
-    const SkIRect& cr = clipper.rect();
-    this->blitMask(mask, cr);
-    clipper.next();
-  }
-}
 
 void SkBlitter::blitRectRegion(const SkIRect& rect, const SkRegion& clip) {
   SkRegion::Cliperator clipper(clip, rect);
@@ -631,7 +617,7 @@ SkBlitter* SkBlitterClipper::apply(SkBlitter* blitter, const SkRegion* clip, con
 
 bool SkBlitter::UseLegacyBlitter(
     const SkPixmap& device, const SkPaint& paint, const SkMatrix& matrix) {
-  if (gSkForceRasterPipelineBlitter) {
+  if (gSkForceRasterPipelineBlitter || gUseSkVMBlitter) {
     return false;
   }
 #if defined(SK_FORCE_RASTER_PIPELINE_BLITTER)
@@ -725,21 +711,24 @@ SkBlitter* SkBlitter::Choose(
     paint.writable()->setDither(false);
   }
 
-  if (gUseSkVMBlitter) {
-    if (auto blitter = SkVMBlitter::Make(device, *paint, matrixProvider, alloc, clipShader)) {
-      return blitter;
-    }
-  }
-
   // Same basic idea used a few times: try SkRP, then try SkVM, then give up with a null-blitter.
   // (Setting gUseSkVMBlitter is the only way we prefer SkVM over SkRP at the moment.)
   auto create_SkRP_or_SkVMBlitter = [&]() -> SkBlitter* {
+    // We need to make sure that in case RP blitter cannot be created we use VM and
+    // when VM blitter cannot be created we use RP
+    if (gUseSkVMBlitter) {
+      if (auto blitter = SkVMBlitter::Make(device, *paint, matrixProvider, alloc, clipShader)) {
+        return blitter;
+      }
+    }
     if (auto blitter =
             SkCreateRasterPipelineBlitter(device, *paint, matrixProvider, alloc, clipShader)) {
       return blitter;
     }
-    if (auto blitter = SkVMBlitter::Make(device, *paint, matrixProvider, alloc, clipShader)) {
-      return blitter;
+    if (!gUseSkVMBlitter) {
+      if (auto blitter = SkVMBlitter::Make(device, *paint, matrixProvider, alloc, clipShader)) {
+        return blitter;
+      }
     }
     return alloc->make<SkNullBlitter>();
   };

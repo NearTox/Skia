@@ -12,7 +12,9 @@
 #include "include/core/SkYUVAInfo.h"
 #include "include/gpu/GrDirectContext.h"
 
-class GrRefCntedCallback;
+namespace skgpu {
+class RefCntedCallback;
+}
 struct SkImageInfo;
 
 namespace sk_gpu_test {
@@ -60,7 +62,7 @@ class ManagedBackendTexture : public SkNVRefCnt<ManagedBackendTexture> {
   void* releaseContext(
       GrGpuFinishedProc wrappedProc = nullptr, GrGpuFinishedContext wrappedContext = nullptr) const;
 
-  sk_sp<GrRefCntedCallback> refCountedCallback() const;
+  sk_sp<skgpu::RefCntedCallback> refCountedCallback() const;
 
   /**
    * Call if the underlying GrBackendTexture was adopted by a GrContext. This clears this out the

@@ -69,6 +69,7 @@ class SkTypeface_Stream : public SkTypeface_Custom {
   std::unique_ptr<SkStreamAsset> onOpenStream(int* ttcIndex) const override;
   std::unique_ptr<SkFontData> onMakeFontData() const override;
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override;
+  void onGetFontDescriptor(SkFontDescriptor* desc, bool* isLocal) const override;
 
  private:
   const std::unique_ptr<const SkFontData> fData;
@@ -132,7 +133,7 @@ class SkFontMgr_Custom : public SkFontMgr {
   typedef SkTArray<sk_sp<SkFontStyleSet_Custom>> Families;
   class SystemFontLoader {
    public:
-    virtual ~SystemFontLoader() = default;
+    virtual ~SystemFontLoader() {}
     virtual void loadSystemFonts(const SkTypeface_FreeType::Scanner&, Families*) const = 0;
   };
   explicit SkFontMgr_Custom(const SystemFontLoader& loader);

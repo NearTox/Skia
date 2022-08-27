@@ -80,8 +80,8 @@ class ContourStartGM : public GM {
   }
 
  private:
-  static constexpr int kImageWidth = 1200;
-  static constexpr int kImageHeight = 600;
+  inline static constexpr int kImageWidth = 1200;
+  inline static constexpr int kImageHeight = 600;
 
   SkPaint fDashPaint, fPointsPaint;
   SkRect fRect;

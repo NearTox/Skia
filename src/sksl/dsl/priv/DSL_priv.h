@@ -23,7 +23,7 @@ namespace dsl {
  */
 void StartModule(
     SkSL::Compiler* compiler, SkSL::ProgramKind kind, const SkSL::ProgramSettings& settings,
-    SkSL::ParsedModule module);
+    SkSL::ParsedModule baseModule);
 
 }  // namespace dsl
 

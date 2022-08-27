@@ -25,7 +25,7 @@ SkBinaryWriteBuffer::SkBinaryWriteBuffer() : fFactorySet(nullptr), fTFSet(nullpt
 SkBinaryWriteBuffer::SkBinaryWriteBuffer(void* storage, size_t storageSize)
     : fFactorySet(nullptr), fTFSet(nullptr), fWriter(storage, storageSize) {}
 
-SkBinaryWriteBuffer::~SkBinaryWriteBuffer() = default;
+SkBinaryWriteBuffer::~SkBinaryWriteBuffer() {}
 
 bool SkBinaryWriteBuffer::usingInitialStorage() const { return fWriter.usingInitialStorage(); }
 
@@ -96,6 +96,10 @@ void SkBinaryWriteBuffer::writeRect(const SkRect& rect) { fWriter.writeRect(rect
 
 void SkBinaryWriteBuffer::writeRegion(const SkRegion& region) { fWriter.writeRegion(region); }
 
+void SkBinaryWriteBuffer::writeSampling(const SkSamplingOptions& sampling) {
+  fWriter.writeSampling(sampling);
+}
+
 void SkBinaryWriteBuffer::writePath(const SkPath& path) { fWriter.writePath(path); }
 
 size_t SkBinaryWriteBuffer::writeStream(SkStream* stream, size_t length) {
@@ -124,6 +128,9 @@ void SkBinaryWriteBuffer::writeImage(const SkImage* image) {
   const SkMipmap* mips = as_IB(image)->onPeekMips();
   if (mips) {
     flags |= SkWriteBufferImageFlags::kHasMipmap;
+  }
+  if (image->alphaType() == kUnpremul_SkAlphaType) {
+    flags |= SkWriteBufferImageFlags::kUnpremul;
   }
 
   this->write32(flags);

@@ -34,7 +34,7 @@ static SkMutex& f_c_mutex() {
 }
 
 struct FCLocker {
-  static constexpr int FontConfigThreadSafeVersion = 21393;
+  inline static constexpr int FontConfigThreadSafeVersion = 21393;
 
   // Assume FcGetVersion() has always been thread safe.
   FCLocker() {
@@ -482,11 +482,15 @@ const char* kFontFormatTrueType = "TrueType";
 const char* kFontFormatCFF = "CFF";
 #endif
 
-SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect() {
+SkFontConfigInterfaceDirect::SkFontConfigInterfaceDirect(FcConfig* fc) : fFC(fc) {
   SkDEBUGCODE(fontconfiginterface_unittest();)
 }
 
-SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() = default;
+SkFontConfigInterfaceDirect::~SkFontConfigInterfaceDirect() {
+  if (fFC) {
+    FcConfigDestroy(fFC);
+  }
+}
 
 bool SkFontConfigInterfaceDirect::isAccessible(const char* filename) {
   if (access(filename, R_OK) != 0) {
@@ -509,8 +513,15 @@ bool SkFontConfigInterfaceDirect::isValidPattern(FcPattern* pattern) {
   if (!c_filename) {
     return false;
   }
-  UniqueFCConfig fcConfig(FcConfigReference(nullptr));
-  const char* sysroot = (const char*)FcConfigGetSysRoot(fcConfig.get());
+
+  FcConfig* fc = fFC;
+  UniqueFCConfig fcStorage;
+  if (!fc) {
+    fcStorage.reset(FcConfigReference(nullptr));
+    fc = fcStorage.get();
+  }
+
+  const char* sysroot = (const char*)FcConfigGetSysRoot(fc);
   SkString resolvedFilename;
   if (sysroot) {
     resolvedFilename = sysroot;
@@ -563,8 +574,14 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
     return false;
   }
 
+  FcConfig* fc = fFC;
+  UniqueFCConfig fcStorage;
+  if (!fc) {
+    fcStorage.reset(FcConfigReference(nullptr));
+    fc = fcStorage.get();
+  }
+
   FCLocker lock;
-  UniqueFCConfig fcConfig(FcConfigReference(nullptr));
   FcPattern* pattern = FcPatternCreate();
 
   if (familyName) {
@@ -574,7 +591,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
 
   FcPatternAddBool(pattern, FC_SCALABLE, FcTrue);
 
-  FcConfigSubstitute(fcConfig.get(), pattern, FcMatchPattern);
+  FcConfigSubstitute(fc, pattern, FcMatchPattern);
   FcDefaultSubstitute(pattern);
 
   // Font matching:
@@ -613,7 +630,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
   }
 
   FcResult result;
-  FcFontSet* font_set = FcFontSort(fcConfig.get(), pattern, 0, nullptr, &result);
+  FcFontSet* font_set = FcFontSort(fc, pattern, 0, nullptr, &result);
   if (!font_set) {
     FcPatternDestroy(pattern);
     return false;
@@ -641,7 +658,7 @@ bool SkFontConfigInterfaceDirect::matchFamilyName(
     FcFontSetDestroy(font_set);
     return false;
   }
-  const char* sysroot = (const char*)FcConfigGetSysRoot(fcConfig.get());
+  const char* sysroot = (const char*)FcConfigGetSysRoot(fc);
   SkString resolvedFilename;
   if (sysroot) {
     resolvedFilename = sysroot;

@@ -35,12 +35,13 @@ class TextAnimator final : public SkNVRefCnt<TextAnimator> {
     // unlike pos/scale which are animated vectors, rotation is separated in each dimension.
     SkV3 rotation = {0, 0, 0};
     Vec2Value blur = {0, 0}, line_spacing = {0, 0};
-    ScalarValue opacity = 100, fill_opacity = 100, stroke_opacity = 100, tracking = 0;
+    ScalarValue opacity = 100, fill_opacity = 100, stroke_opacity = 100, tracking = 0,
+                stroke_width = 0;
   };
 
   struct ResolvedProps {
     SkV3 position = {0, 0, 0}, scale = {1, 1, 1}, rotation = {0, 0, 0};
-    float opacity = 1, tracking = 0;
+    float opacity = 1, tracking = 0, stroke_width = 0;
     SkColor fill_color = SK_ColorTRANSPARENT, stroke_color = SK_ColorTRANSPARENT;
     SkV2 blur = {0, 0}, line_spacing = {0, 0};
   };
@@ -72,6 +73,7 @@ class TextAnimator final : public SkNVRefCnt<TextAnimator> {
   bool hasBlur() const { return fHasBlur; }
 
   bool requiresAnchorPoint() const { return fRequiresAnchorPoint; }
+  bool requiresLineAdjustments() const { return fRequiresLineAdjustments; }
 
  private:
   TextAnimator(
@@ -83,8 +85,10 @@ class TextAnimator final : public SkNVRefCnt<TextAnimator> {
   const std::vector<sk_sp<RangeSelector>> fSelectors;
 
   AnimatedProps fTextProps;
-  bool fHasFillColor : 1, fHasStrokeColor : 1, fHasBlur : 1,
-      fRequiresAnchorPoint : 1;  // animator sensitive to transform origin?
+  bool fHasFillColor : 1, fHasStrokeColor : 1, fHasFillOpacity : 1, fHasStrokeOpacity : 1,
+      fHasOpacity : 1, fHasBlur : 1,
+      fRequiresAnchorPoint : 1,      // animator sensitive to transform origin?
+      fRequiresLineAdjustments : 1;  // animator effects line-wide fragment adjustments
 };
 
 }  // namespace internal

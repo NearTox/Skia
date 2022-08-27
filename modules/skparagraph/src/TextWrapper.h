@@ -201,6 +201,7 @@ class TextWrapper {
     fClip.clean();
     fTooLongCluster = false;
     fTooLongWord = false;
+    fHardLineBreak = false;
   }
 
   void lookAhead(SkScalar maxWidth, Cluster* endOfClusters);

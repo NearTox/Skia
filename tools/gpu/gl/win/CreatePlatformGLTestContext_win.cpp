@@ -55,7 +55,10 @@ class WinGLTestContext : public sk_gpu_test::GLTestContext {
 ATOM WinGLTestContext::gWC = 0;
 
 WinGLTestContext::WinGLTestContext(GrGLStandard forcedGpuAPI, WinGLTestContext* shareContext)
-    : fWindow(nullptr), fDeviceContext(nullptr), fGlRenderContext(0), fPbufferContext(nullptr) {
+    : fWindow(nullptr),
+      fDeviceContext(nullptr),
+      fGlRenderContext(nullptr),
+      fPbufferContext(nullptr) {
   HINSTANCE hInstance = (HINSTANCE)GetModuleHandle(nullptr);
 
   if (!gWC) {
@@ -117,9 +120,9 @@ WinGLTestContext::WinGLTestContext(GrGLStandard forcedGpuAPI, WinGLTestContext* 
     glrc = fGlRenderContext;
   } else {
     ReleaseDC(fWindow, fDeviceContext);
-    fDeviceContext = 0;
+    fDeviceContext = nullptr;
     DestroyWindow(fWindow);
-    fWindow = 0;
+    fWindow = nullptr;
 
     dc = fPbufferContext->getDC();
     glrc = fPbufferContext->getGLRC();
@@ -164,20 +167,20 @@ void WinGLTestContext::destroyGLContext() {
   if (fGlRenderContext) {
     // This deletes the context immediately even if it is current.
     wglDeleteContext(fGlRenderContext);
-    fGlRenderContext = 0;
+    fGlRenderContext = nullptr;
   }
   if (fWindow && fDeviceContext) {
     ReleaseDC(fWindow, fDeviceContext);
-    fDeviceContext = 0;
+    fDeviceContext = nullptr;
   }
   if (fWindow) {
     DestroyWindow(fWindow);
-    fWindow = 0;
+    fWindow = nullptr;
   }
 }
 
 void WinGLTestContext::onPlatformMakeNotCurrent() const {
-  if (!wglMakeCurrent(NULL, NULL)) {
+  if (!wglMakeCurrent(nullptr, nullptr)) {
     SkDebugf("Could not null out the rendering context.\n");
   }
 }

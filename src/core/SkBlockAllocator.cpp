@@ -12,13 +12,14 @@
 #endif
 
 SkBlockAllocator::SkBlockAllocator(
-    GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes)
+    GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes) noexcept 
     : fTail(&fHead)
       // Round up to the nearest max-aligned value, and then divide so that fBlockSizeIncrement
       // can effectively fit higher byte counts in its 16 bits of storage
       ,
-      fBlockIncrement(
-          SkTo<uint16_t>(GrAlignTo(blockIncrementBytes, kAddressAlign) / kAddressAlign)),
+      fBlockIncrement(SkTo<uint16_t>(std::min(
+          SkAlignTo(blockIncrementBytes, kAddressAlign) / kAddressAlign,
+          (size_t)std::numeric_limits<uint16_t>::max()))),
       fGrowthPolicy(static_cast<uint64_t>(policy)),
       fN0((policy == GrowthPolicy::kLinear || policy == GrowthPolicy::kExponential) ? 1 : 0),
       fN1(1)
@@ -30,7 +31,7 @@ SkBlockAllocator::SkBlockAllocator(
   SkASSERT(additionalPreallocBytes <= kMaxAllocationSize);
 }
 
-SkBlockAllocator::Block::Block(Block* prev, int allocationSize) noexcept
+SkBlockAllocator::Block::Block(Block* prev, int allocationSize) noexcept 
     : fNext(nullptr),
       fPrev(prev),
       fSize(allocationSize),
@@ -50,7 +51,7 @@ SkBlockAllocator::Block::~Block() {
   SkDEBUGCODE(fSentinel = kFreedMarker;)  // FWIW
 }
 
-size_t SkBlockAllocator::totalSize() const {
+size_t SkBlockAllocator::totalSize() const noexcept {
   // Use size_t since the sum across all blocks could exceed 'int', even though each block won't
   size_t size = offsetof(SkBlockAllocator, fHead) + this->scratchBlockSize();
   for (const Block* b : this->blocks()) {
@@ -60,7 +61,7 @@ size_t SkBlockAllocator::totalSize() const {
   return size;
 }
 
-size_t SkBlockAllocator::totalUsableSpace() const {
+size_t SkBlockAllocator::totalUsableSpace() const noexcept {
   size_t size = this->scratchBlockSize();
   if (size > 0) {
     size -= kDataStart;  // scratchBlockSize reports total block size, not usable size
@@ -72,7 +73,7 @@ size_t SkBlockAllocator::totalUsableSpace() const {
   return size;
 }
 
-size_t SkBlockAllocator::totalSpaceInUse() const {
+size_t SkBlockAllocator::totalSpaceInUse() const noexcept {
   size_t size = 0;
   for (const Block* b : this->blocks()) {
     size += (b->fCursor - kDataStart);
@@ -81,7 +82,7 @@ size_t SkBlockAllocator::totalSpaceInUse() const {
   return size;
 }
 
-SkBlockAllocator::Block* SkBlockAllocator::findOwningBlock(const void* p) {
+SkBlockAllocator::Block* SkBlockAllocator::findOwningBlock(const void* p) noexcept {
   // When in doubt, search in reverse to find an overlapping block.
   uintptr_t ptr = reinterpret_cast<uintptr_t>(p);
   for (Block* b : this->rblocks()) {
@@ -95,7 +96,7 @@ SkBlockAllocator::Block* SkBlockAllocator::findOwningBlock(const void* p) {
   return nullptr;
 }
 
-void SkBlockAllocator::releaseBlock(Block* block) {
+void SkBlockAllocator::releaseBlock(Block* block) noexcept {
   if (block == &fHead) {
     // Reset the cursor of the head block so that it can be reused if it becomes the new tail
     block->fCursor = kDataStart;
@@ -149,7 +150,7 @@ void SkBlockAllocator::releaseBlock(Block* block) {
   SkASSERT(fN1 >= 1 && fN0 >= 0);
 }
 
-void SkBlockAllocator::stealHeapBlocks(SkBlockAllocator* other) {
+void SkBlockAllocator::stealHeapBlocks(SkBlockAllocator* other) noexcept {
   Block* toSteal = other->fHead.fNext;
   if (toSteal) {
     // The other's next block connects back to this allocator's current tail, and its new tail

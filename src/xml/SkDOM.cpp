@@ -67,7 +67,7 @@ struct SkDOMNode {
 
 SkDOM::SkDOM() : fAlloc(kMinChunkSize), fRoot(nullptr) {}
 
-SkDOM::~SkDOM() = default;
+SkDOM::~SkDOM() {}
 
 const SkDOM::Node* SkDOM::getRootNode() const { return fRoot; }
 
@@ -234,9 +234,9 @@ class SkDOMParser : public SkXMLParser {
   }
 
   bool onEndElement(const char elem[]) override {
-    --fLevel;
     if (fNeedToFlush) this->flushAttributes();
     fNeedToFlush = false;
+    --fLevel;
 
     SkDOM::Node* parent;
 

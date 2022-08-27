@@ -29,7 +29,7 @@ struct SkRect;
 class SkRRect;
 class SkVertices;
 
-class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
+class SkDraw : public SkGlyphRunListPainterCPU::BitmapDevicePainter {
  public:
   SkDraw();
 
@@ -64,12 +64,13 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
       const SkPaint&) const override;
   void drawSprite(const SkBitmap&, int x, int y, const SkPaint&) const;
   void drawGlyphRunList(
-      const SkGlyphRunList& glyphRunList, const SkPaint& paint,
-      SkGlyphRunListPainter* glyphPainter) const;
-  void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) const;
+      SkCanvas* canvas, SkGlyphRunListPainterCPU* glyphPainter, const SkGlyphRunList& glyphRunList,
+      const SkPaint& paint) const;
+  /* If skipColorXform, skips color conversion when assigning per-vertex colors */
+  void drawVertices(const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool skipColorXform) const;
   void drawAtlas(
-      const SkImage*, const SkRSXform[], const SkRect[], const SkColor[], int count, SkBlendMode,
-      const SkSamplingOptions&, const SkPaint&);
+      const SkRSXform[], const SkRect[], const SkColor[], int count, sk_sp<SkBlender>,
+      const SkPaint&);
 
   /**
    *  Overwrite the target with the path's coverage (i.e. its mask).
@@ -83,14 +84,10 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
     this->drawPath(src, paint, nullptr, false, !isHairline, customBlitter);
   }
 
-  void paintPaths(
-      SkDrawableGlyphBuffer* drawables, SkScalar scale, SkPoint origin,
-      const SkPaint& paint) const override;
-
-  void paintMasks(SkDrawableGlyphBuffer* drawables, const SkPaint& paint) const override;
+  void paintMasks(SkDrawableGlyphBuffer* accepted, const SkPaint& paint) const override;
 
   static bool ComputeMaskBounds(
-      const SkRect& devPathBounds, const SkIRect* clipBounds, const SkMaskFilter* filter,
+      const SkRect& devPathBounds, const SkIRect& clipBounds, const SkMaskFilter* filter,
       const SkMatrix* filterMatrix, SkIRect* bounds);
 
   /** Helper function that creates a mask from a path and an optional maskfilter.
@@ -99,11 +96,9 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
       solely to assist in computing the mask's bounds (if the mode requests that).
   */
   static bool DrawToMask(
-      const SkPath& devPath, const SkIRect* clipBounds, const SkMaskFilter*,
+      const SkPath& devPath, const SkIRect& clipBounds, const SkMaskFilter*,
       const SkMatrix* filterMatrix, SkMask* mask, SkMask::CreateMode mode,
       SkStrokeRec::InitStyle style);
-
-  void drawDevMask(const SkMask& mask, const SkPaint&) const;
 
   enum RectType { kHair_RectType, kFill_RectType, kStroke_RectType, kPath_RectType };
 
@@ -119,11 +114,10 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
       const SkRect&, const SkPaint&, const SkMatrix&, SkPoint* strokeSize);
 
  private:
-  void drawBitmapAsMask(const SkBitmap&, const SkSamplingOptions&, const SkPaint&) const;
   void drawFixedVertices(
-      const SkVertices* vertices, SkBlendMode blendMode, const SkPaint& paint,
+      const SkVertices* vertices, sk_sp<SkBlender> blender, const SkPaint& paint,
       const SkMatrix& ctmInverse, const SkPoint* dev2, const SkPoint3* dev3,
-      SkArenaAlloc* outerAlloc) const;
+      SkArenaAlloc* outerAlloc, bool skipColorXform) const;
 
   void drawPath(
       const SkPath&, const SkPaint&, const SkMatrix* preMatrix, bool pathIsMutable,
@@ -148,9 +142,6 @@ class SkDraw : public SkGlyphRunListPainter::BitmapDevicePainter {
   SkPixmap fDst;
   const SkMatrixProvider* fMatrixProvider{nullptr};  // required
   const SkRasterClip* fRC{nullptr};                  // required
-
-  // optional, will be same dimensions as fDst if present
-  const SkPixmap* fCoverage{nullptr};
 
 #ifdef SK_DEBUG
   void validate() const;

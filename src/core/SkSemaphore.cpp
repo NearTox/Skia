@@ -68,12 +68,12 @@ struct SkSemaphore::OSSemaphore {
 SkSemaphore::~SkSemaphore() { delete fOSSemaphore; }
 
 void SkSemaphore::osSignal(int n) noexcept {
-  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->signal(n);
 }
 
 void SkSemaphore::osWait() noexcept {
-  fOSSemaphoreOnce([this] { fOSSemaphore = new OSSemaphore; });
+  fOSSemaphoreOnce([this]() noexcept { fOSSemaphore = new OSSemaphore; });
   fOSSemaphore->wait();
 }
 

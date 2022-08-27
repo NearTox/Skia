@@ -5,6 +5,8 @@
  * found in the LICENSE file.
  */
 
+#include "src/shaders/SkColorShader.h"
+
 #include "include/core/SkColorSpace.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkColorSpacePriv.h"
@@ -13,7 +15,11 @@
 #include "src/core/SkReadBuffer.h"
 #include "src/core/SkUtils.h"
 #include "src/core/SkVM.h"
-#include "src/shaders/SkColorShader.h"
+
+#ifdef SK_ENABLE_SKSL
+#  include "src/core/SkKeyHelpers.h"
+#  include "src/core/SkPaintParamsKey.h"
+#endif
 
 SkColorShader::SkColorShader(SkColor c) : fColor(c) {}
 
@@ -37,7 +43,8 @@ SkShader::GradientType SkColorShader::asAGradient(GradientInfo* info) const {
 }
 
 SkColor4Shader::SkColor4Shader(const SkColor4f& color, sk_sp<SkColorSpace> space)
-    : fColorSpace(std::move(space)), fColor(color) {}
+    : fColorSpace(std::move(space)),
+      fColor({color.fR, color.fG, color.fB, SkTPin(color.fA, 0.0f, 1.0f)}) {}
 
 sk_sp<SkFlattenable> SkColor4Shader::CreateProc(SkReadBuffer& buffer) {
   SkColor4f color;
@@ -109,15 +116,14 @@ skvm::Color SkColor4Shader::onProgram(
 
 #if SK_SUPPORT_GPU
 
-#  include "src/gpu/GrColorInfo.h"
-#  include "src/gpu/GrColorSpaceXform.h"
-#  include "src/gpu/GrFragmentProcessor.h"
-#  include "src/gpu/SkGr.h"
+#  include "src/gpu/ganesh/GrColorInfo.h"
+#  include "src/gpu/ganesh/GrColorSpaceXform.h"
+#  include "src/gpu/ganesh/GrFragmentProcessor.h"
+#  include "src/gpu/ganesh/SkGr.h"
 
 std::unique_ptr<GrFragmentProcessor> SkColorShader::asFragmentProcessor(
     const GrFPArgs& args) const {
-  return GrFragmentProcessor::ModulateAlpha(
-      /*child=*/nullptr, SkColorToPMColor4f(fColor, *args.fDstColorInfo));
+  return GrFragmentProcessor::MakeColor(SkColorToPMColor4f(fColor, *args.fDstColorInfo));
 }
 
 std::unique_ptr<GrFragmentProcessor> SkColor4Shader::asFragmentProcessor(
@@ -127,7 +133,24 @@ std::unique_ptr<GrFragmentProcessor> SkColor4Shader::asFragmentProcessor(
       kUnpremul_SkAlphaType};
   SkColor4f color = fColor;
   steps.apply(color.vec());
-  return GrFragmentProcessor::ModulateAlpha(/*child=*/nullptr, color.premul());
+  return GrFragmentProcessor::MakeColor(color.premul());
 }
 
+#endif
+
+#ifdef SK_ENABLE_SKSL
+void SkColorShader::addToKey(
+    const SkKeyContext& keyContext, SkPaintParamsKeyBuilder* builder,
+    SkPipelineDataGatherer* gatherer) const {
+  SolidColorShaderBlock::BeginBlock(
+      keyContext, builder, gatherer, SkColor4f::FromColor(fColor).premul());
+  builder->endBlock();
+}
+
+void SkColor4Shader::addToKey(
+    const SkKeyContext& keyContext, SkPaintParamsKeyBuilder* builder,
+    SkPipelineDataGatherer* gatherer) const {
+  SolidColorShaderBlock::BeginBlock(keyContext, builder, gatherer, fColor.premul());
+  builder->endBlock();
+}
 #endif

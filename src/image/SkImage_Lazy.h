@@ -23,7 +23,7 @@ class SkImage_Lazy : public SkImage_Base {
   struct Validator {
     Validator(sk_sp<SharedGenerator>, const SkColorType*, sk_sp<SkColorSpace>);
 
-    operator bool() const { return fSharedGenerator.get(); }
+    explicit operator bool() const { return fSharedGenerator.get(); }
 
     sk_sp<SharedGenerator> fSharedGenerator;
     SkImageInfo fInfo;

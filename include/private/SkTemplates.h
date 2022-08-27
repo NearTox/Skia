@@ -37,7 +37,7 @@ inline void sk_ignore_unused_variable(const T&) noexcept {}
  *  Returns a pointer to a D which comes immediately after S[count].
  */
 template <typename D, typename S>
-static D* SkTAfter(S* ptr, size_t count = 1) noexcept {
+inline D* SkTAfter(S* ptr, size_t count = 1) noexcept {
   return reinterpret_cast<D*>(ptr + count);
 }
 
@@ -45,7 +45,7 @@ static D* SkTAfter(S* ptr, size_t count = 1) noexcept {
  *  Returns a pointer to a D which comes byteOffset bytes after S.
  */
 template <typename D, typename S>
-static D* SkTAddOffset(S* ptr, ptrdiff_t byteOffset) noexcept {
+inline D* SkTAddOffset(S* ptr, ptrdiff_t byteOffset) noexcept {
   // The intermediate char* has the same cv-ness as D as this produces better error messages.
   // This relies on the fact that reinterpret_cast can add constness, but cannot remove it.
   return reinterpret_cast<D*>(reinterpret_cast<sknonstd::same_cv_t<char, D>*>(ptr) + byteOffset);
@@ -76,9 +76,9 @@ class SkAutoTCallVProc
  public:
   using inherited::inherited;
   SkAutoTCallVProc(const SkAutoTCallVProc&) = delete;
-  SkAutoTCallVProc(SkAutoTCallVProc&& that) : inherited(std::move(that)) {}
+  SkAutoTCallVProc(SkAutoTCallVProc&& that) noexcept : inherited(std::move(that)) {}
 
-  operator T*() const { return this->get(); }
+  operator T*() const noexcept { return this->get(); }
 };
 
 /** Allocate an array of T elements, and free the array in the destructor
@@ -118,7 +118,7 @@ class SkAutoTArray {
 
   /** Return the nth element in the array
    */
-  T& operator[](int index) const {
+  T& operator[](int index) const noexcept {
     SkASSERT((unsigned)index < (unsigned)fCount);
     return fArray[index];
   }
@@ -143,7 +143,7 @@ class SkAutoSTArray {
   SkAutoSTArray& operator=(const SkAutoSTArray&) = delete;
 
   /** Initialize with no objects */
-  SkAutoSTArray() {
+  SkAutoSTArray() noexcept {
     fArray = nullptr;
     fCount = 0;
   }
@@ -247,22 +247,22 @@ template <
 class SkAutoTMalloc {
  public:
   /** Takes ownership of the ptr. The ptr must be a value which can be passed to sk_free. */
-  constexpr explicit SkAutoTMalloc(T* ptr = nullptr) noexcept : fPtr(ptr) {}
+  explicit SkAutoTMalloc(T* ptr = nullptr) noexcept : fPtr(ptr) {}
 
   /** Allocates space for 'count' Ts. */
-  explicit SkAutoTMalloc(size_t count)
+  explicit SkAutoTMalloc(size_t count) noexcept
       : fPtr(count ? (T*)sk_malloc_throw(count, sizeof(T)) : nullptr) {}
 
   SkAutoTMalloc(SkAutoTMalloc&&) noexcept = default;
   SkAutoTMalloc& operator=(SkAutoTMalloc&&) noexcept = default;
 
   /** Resize the memory area pointed to by the current ptr preserving contents. */
-  void realloc(size_t count) {
+  void realloc(size_t count) noexcept {
     fPtr.reset(count ? (T*)sk_realloc_throw(fPtr.release(), count * sizeof(T)) : nullptr);
   }
 
   /** Resize the memory area pointed to by the current ptr without preserving contents. */
-  T* reset(size_t count = 0) {
+  T* reset(size_t count = 0) noexcept {
     fPtr.reset(count ? (T*)sk_malloc_throw(count, sizeof(T)) : nullptr);
     return this->get();
   }
@@ -352,7 +352,7 @@ class SkAutoSTMalloc {
   T* data() noexcept { return fPtr; }
 
   // Reallocs the array, can be used to shrink the allocation.  Makes no attempt to be intelligent
-  void realloc(size_t count) {
+  void realloc(size_t count) noexcept {
     if (count > kCount) {
       if (fPtr == fTStorage) {
         fPtr = (T*)sk_malloc_throw(count, sizeof(T));
@@ -441,13 +441,13 @@ class SkAlignedSTStorage {
 using SkAutoFree = std::unique_ptr<void, SkFunctionWrapper<void(void*), sk_free>>;
 
 template <typename C, std::size_t... Is>
-constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...> is) noexcept
+constexpr auto SkMakeArrayFromIndexSequence(C c, std::index_sequence<Is...> is)
     -> std::array<decltype(c(std::declval<typename decltype(is)::value_type>())), sizeof...(Is)> {
   return {{c(Is)...}};
 }
 
 template <size_t N, typename C>
-constexpr auto SkMakeArray(C c) noexcept
+constexpr auto SkMakeArray(C c)
     -> std::array<decltype(c(std::declval<typename std::index_sequence<N>::value_type>())), N> {
   return SkMakeArrayFromIndexSequence(c, std::make_index_sequence<N>{});
 }

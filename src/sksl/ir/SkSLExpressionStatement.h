@@ -11,20 +11,29 @@
 #include "include/private/SkSLStatement.h"
 #include "src/sksl/ir/SkSLExpression.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace SkSL {
+
+class Context;
 
 /**
  * A lone expression being used as a statement.
  */
 class ExpressionStatement final : public Statement {
  public:
-  static constexpr Kind kStatementKind = Kind::kExpression;
+  inline static constexpr Kind kStatementKind = Kind::kExpression;
 
   ExpressionStatement(std::unique_ptr<Expression> expression)
-      : INHERITED(expression->fOffset, kStatementKind), fExpression(std::move(expression)) {}
+      : INHERITED(expression->fPosition, kStatementKind), fExpression(std::move(expression)) {}
 
-  // Creates an SkSL expression-statement. Note that there is never any type-coercion and no error
-  // cases are reported; any Expression can be an ExpressionStatement.
+  // Creates an SkSL expression-statement; reports errors via ErrorReporter.
+  static std::unique_ptr<Statement> Convert(
+      const Context& context, std::unique_ptr<Expression> expr);
+
+  // Creates an SkSL expression-statement; reports errors via assertion.
   static std::unique_ptr<Statement> Make(const Context& context, std::unique_ptr<Expression> expr);
 
   const std::unique_ptr<Expression>& expression() const { return fExpression; }
@@ -35,7 +44,7 @@ class ExpressionStatement final : public Statement {
     return std::make_unique<ExpressionStatement>(this->expression()->clone());
   }
 
-  String description() const override { return this->expression()->description() + ";"; }
+  std::string description() const override { return this->expression()->description() + ";"; }
 
  private:
   std::unique_ptr<Expression> fExpression;

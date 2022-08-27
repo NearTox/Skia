@@ -48,7 +48,7 @@ class D3D12WindowContext : public WindowContext {
   void setDisplayParams(const DisplayParams& params) override;
 
  private:
-  static constexpr int kNumFrames = 2;
+  inline static constexpr int kNumFrames = 2;
 
   HWND fWindow;
   gr_cp<ID3D12Device> fDevice;

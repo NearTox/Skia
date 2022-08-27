@@ -14,8 +14,8 @@
 class SkSurfaceCharacterization;
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/GrDirectContextPriv.h"
-#  include "src/gpu/GrRenderTask.h"
+#  include "src/gpu/ganesh/GrDirectContextPriv.h"
+#  include "src/gpu/ganesh/GrRenderTask.h"
 #endif
 
 SkDeferredDisplayList::SkDeferredDisplayList(
@@ -49,7 +49,7 @@ SkDeferredDisplayList::ProgramIterator::ProgramIterator(
     GrDirectContext* dContext, SkDeferredDisplayList* ddl)
     : fDContext(dContext), fProgramData(ddl->programData()), fIndex(0) {}
 
-SkDeferredDisplayList::ProgramIterator::~ProgramIterator() = default;
+SkDeferredDisplayList::ProgramIterator::~ProgramIterator() {}
 
 bool SkDeferredDisplayList::ProgramIterator::compile() {
   if (!fDContext || fIndex < 0 || fIndex >= (int)fProgramData.size()) {

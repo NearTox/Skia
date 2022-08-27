@@ -61,7 +61,7 @@ class SkIDChangeListener : public SkRefCnt {
     void changed() SK_EXCLUDES(fMutex);
 
     /** Resets without calling changed() on the listeners. */
-    void reset() SK_EXCLUDES(fMutex);
+    void reset() noexcept SK_EXCLUDES(fMutex);
 
    private:
     mutable SkMutex fMutex;

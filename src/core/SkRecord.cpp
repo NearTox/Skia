@@ -16,13 +16,13 @@ SkRecord::~SkRecord() {
   }
 }
 
-void SkRecord::grow() {
+void SkRecord::grow() noexcept {
   SkASSERT(fCount == fReserved);
   fReserved = fReserved ? fReserved * 2 : 4;
   fRecords.realloc(fReserved);
 }
 
-size_t SkRecord::bytesUsed() const {
+size_t SkRecord::bytesUsed() const noexcept {
   size_t bytes = fApproxBytesAllocated + sizeof(SkRecord);
   return bytes;
 }

@@ -5,6 +5,7 @@
  * found in the LICENSE file.
  */
 
+#include "bench/BigPath.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkDeferredDisplayList.h"
 #include "include/core/SkGraphics.h"
@@ -17,9 +18,9 @@
 #include "include/gpu/GrDirectContext.h"
 #include "src/core/SkOSFile.h"
 #include "src/core/SkTaskGroup.h"
-#include "src/gpu/GrCaps.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/SkGr.h"
+#include "src/gpu/ganesh/GrCaps.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/SkGr.h"
 #include "src/utils/SkMultiPictureDocument.h"
 #include "src/utils/SkOSPath.h"
 #include "tools/DDLPromiseImageHelper.h"
@@ -557,7 +558,7 @@ int main(int argc, char** argv) {
 
     // Create a context.
     GrContextOptions ctxOptions;
-    SetCtxOptionsFromCommonFlags(&ctxOptions);
+    CommonFlags::SetCtxOptions(&ctxOptions);
     sk_gpu_test::GrContextFactory factory(ctxOptions);
     sk_gpu_test::ContextInfo ctxInfo =
         factory.getContextInfo(config->getContextType(), config->getContextOverrides());
@@ -683,7 +684,7 @@ static sk_sp<SkPicture> create_warmup_skp() {
     stroke.setStrokeWidth(2);
 
     // Use a big path to (theoretically) warmup the CPU.
-    SkPath bigPath = ToolUtils::make_big_path();
+    SkPath bigPath = BenchUtils::make_big_path();
     recording->drawPath(bigPath, stroke);
 
     // Use a perlin shader to warmup the GPU.
@@ -728,6 +729,8 @@ static SkString join(const CommandLineFlags::StringArray& stringArray) {
     }
     return joined;
 }
+
+static void exitf(ExitErr err, const char* format, ...) SK_PRINTF_LIKE(2, 3);
 
 static void exitf(ExitErr err, const char* format, ...) {
     fprintf(stderr, ExitErr::kSoftware == err ? "INTERNAL ERROR: " : "ERROR: ");

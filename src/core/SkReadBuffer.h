@@ -35,7 +35,7 @@ class SkImage;
 
 class SkReadBuffer {
  public:
-  SkReadBuffer() noexcept = default;
+  SkReadBuffer() = default;
   SkReadBuffer(const void* data, size_t size) { this->setMemory(data, size); }
 
   void setMemory(const void*, size_t);
@@ -43,12 +43,12 @@ class SkReadBuffer {
   /**
    *  Returns true IFF the version is older than the specified version.
    */
-  bool isVersionLT(SkPicturePriv::Version targetVersion) const noexcept {
+  bool isVersionLT(SkPicturePriv::Version targetVersion) const {
     SkASSERT(targetVersion > 0);
     return fVersion > 0 && fVersion < targetVersion;
   }
 
-  uint32_t getVersion() const noexcept { return fVersion; }
+  uint32_t getVersion() const { return fVersion; }
 
   /** This may be called at most once; most clients of SkReadBuffer should not mess with it. */
   void setVersion(int version) {
@@ -56,12 +56,12 @@ class SkReadBuffer {
     fVersion = version;
   }
 
-  size_t size() const noexcept { return fStop - fBase; }
-  size_t offset() const noexcept { return fCurr - fBase; }
-  bool eof() noexcept { return fCurr >= fStop; }
+  size_t size() const { return fStop - fBase; }
+  size_t offset() const { return fCurr - fBase; }
+  bool eof() { return fCurr >= fStop; }
   const void* skip(size_t size);
   const void* skip(size_t count, size_t size);  // does safe multiply
-  size_t available() const noexcept { return fStop - fCurr; }
+  size_t available() const { return fStop - fCurr; }
 
   template <typename T>
   const T* skipT() {
@@ -115,6 +115,7 @@ class SkReadBuffer {
 
   SkPaint readPaint() { return SkPaintPriv::Unflatten(*this); }
 
+  SkFlattenable* readRawFlattenable();
   SkFlattenable* readFlattenable(SkFlattenable::Type);
   template <typename T>
   sk_sp<T> readFlattenable() {
@@ -154,7 +155,7 @@ class SkReadBuffer {
   sk_sp<SkImage> readImage();
   sk_sp<SkTypeface> readTypeface();
 
-  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) noexcept {
+  void setTypefaceArray(sk_sp<SkTypeface> array[], int count) {
     fTFArray = array;
     fTFCount = count;
   }
@@ -163,13 +164,13 @@ class SkReadBuffer {
    *  Call this with a pre-loaded array of Factories, in the same order as
    *  were created/written by the writer. SkPicture uses this.
    */
-  void setFactoryPlayback(SkFlattenable::Factory array[], int count) noexcept {
+  void setFactoryPlayback(SkFlattenable::Factory array[], int count) {
     fFactoryArray = array;
     fFactoryCount = count;
   }
 
   void setDeserialProcs(const SkDeserialProcs& procs);
-  const SkDeserialProcs& getDeserialProcs() const noexcept { return fProcs; }
+  const SkDeserialProcs& getDeserialProcs() const { return fProcs; }
 
   /**
    *  If isValid is false, sets the buffer to be "invalid". Returns true if the buffer
@@ -192,7 +193,7 @@ class SkReadBuffer {
     return this->validate(n <= (this->available() / sizeof(T)));
   }
 
-  bool isValid() const noexcept { return !fError; }
+  bool isValid() const { return !fError; }
   bool validateIndex(int index, int count) { return this->validate(index >= 0 && index < count); }
 
   // Utilities that mark the buffer invalid if the requested value is out-of-range
@@ -235,7 +236,7 @@ class SkReadBuffer {
 
   SkDeserialProcs fProcs;
 
-  static bool IsPtrAlign4(const void* ptr) noexcept { return SkIsAlign4((uintptr_t)ptr); }
+  static bool IsPtrAlign4(const void* ptr) { return SkIsAlign4((uintptr_t)ptr); }
 
   bool fError = false;
 };

@@ -13,19 +13,19 @@
 #  include <execinfo.h>
 #  include <stdio.h>
 
-static void debug_trace() {
-  void* stack[64];
-  int len = backtrace(stack, SK_ARRAY_COUNT(stack));
+    static void debug_trace() {
+        void* stack[64];
+        int len = backtrace(stack, SK_ARRAY_COUNT(stack));
 
-  // As you might imagine, we can't use an SkSpinlock here...
-  static SkMutex lock;
-  {
-    SkAutoMutexExclusive locked(lock);
-    fprintf(stderr, "\n");
-    backtrace_symbols_fd(stack, len, 2 /*stderr*/);
-    fprintf(stderr, "\n");
-  }
-}
+        // As you might imagine, we can't use an SkSpinlock here...
+        static SkMutex lock;
+        {
+            SkAutoMutexExclusive locked(lock);
+            fprintf(stderr, "\n");
+            backtrace_symbols_fd(stack, len, 2/*stderr*/);
+            fprintf(stderr, "\n");
+        }
+    }
 #else
 static void debug_trace() noexcept {}
 #endif

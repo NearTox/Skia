@@ -66,5 +66,10 @@
     <ClCompile Include="skottie\src\effects\FractalNoiseEffect.cpp" />
     <ClCompile Include="skottie\src\effects\SphereEffect.cpp" />
     <ClCompile Include="skottie\src\effects\ThresholdEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\CCTonerEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\DirectionalBlur.cpp" />
+    <ClCompile Include="skottie\src\effects\SharpenEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\SkSLEffect.cpp" />
+    <ClCompile Include="skottie\src\effects\BulgeEffect.cpp" />
   </ItemGroup>
 </Project>

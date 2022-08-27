@@ -142,7 +142,7 @@ DEF_TEST(SkRecordingAccuracyXfermode, reporter) {
   SkString errors;
 #endif
 
-  for (int iMode = 0; iMode < int(SkBlendMode::kLastMode); iMode++) {
+  for (int iMode = 0; iMode < kSkBlendModeCount; iMode++) {
     const SkRect& clip = SkRect::MakeXYWH(100, 0, 100, 100);
     SkBlendMode mode = SkBlendMode(iMode);
 
@@ -166,6 +166,6 @@ DEF_TEST(SkRecordingAccuracyXfermode, reporter) {
   }
 
 #if !FINEGRAIN
-  REPORTER_ASSERT(reporter, 0 == numErrors, errors.c_str());
+  REPORTER_ASSERT(reporter, 0 == numErrors, "%s", errors.c_str());
 #endif
 }

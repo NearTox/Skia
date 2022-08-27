@@ -15,7 +15,7 @@
 #  include "include/gpu/vk/GrVkVulkan.h"
 
 #  include "include/gpu/vk/GrVkBackendContext.h"
-#  include "src/gpu/vk/GrVkInterface.h"
+#  include "src/gpu/ganesh/vk/GrVkInterface.h"
 #  include "tools/gpu/vk/VkTestUtils.h"
 #  include "tools/sk_app/WindowContext.h"
 
@@ -46,8 +46,7 @@ class VulkanWindowContext : public WindowContext {
   using CanPresentFn = sk_gpu_test::CanPresentFn;
 
   VulkanWindowContext(
-      const DisplayParams&, CreateVkSurfaceFn, CanPresentFn, PFN_vkGetInstanceProcAddr,
-      PFN_vkGetDeviceProcAddr);
+      const DisplayParams&, CreateVkSurfaceFn, CanPresentFn, PFN_vkGetInstanceProcAddr);
 
  private:
   void initializeContext();
@@ -72,9 +71,7 @@ class VulkanWindowContext : public WindowContext {
   CreateVkSurfaceFn fCreateVkSurfaceFn;
   CanPresentFn fCanPresentFn;
 
-  // Vulkan GetProcAddr functions
   PFN_vkGetInstanceProcAddr fGetInstanceProcAddr = nullptr;
-  PFN_vkGetDeviceProcAddr fGetDeviceProcAddr = nullptr;
 
   // WSI interface functions
   PFN_vkDestroySurfaceKHR fDestroySurfaceKHR = nullptr;

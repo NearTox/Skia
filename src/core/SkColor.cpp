@@ -70,7 +70,7 @@ void SkRGBToHSV(U8CPU r, U8CPU g, U8CPU b, SkScalar hsv[3]) noexcept {
   hsv[2] = v;
 }
 
-SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
+SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) noexcept {
   SkASSERT(hsv);
 
   SkScalar s = SkTPin(hsv[1], 0.0f, 1.0f);
@@ -130,43 +130,43 @@ SkColor SkHSVToColor(U8CPU a, const SkScalar hsv[3]) {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 template <>
-SkColor4f SkColor4f::FromColor(SkColor bgra) {
+SkColor4f SkColor4f::FromColor(SkColor bgra) noexcept {
   SkColor4f rgba;
   swizzle_rb(Sk4f_fromL32(bgra)).store(rgba.vec());
   return rgba;
 }
 
 template <>
-SkColor SkColor4f::toSkColor() const {
-  return Sk4f_toL32(swizzle_rb(Sk4f::Load(this->vec())));
+SkColor SkColor4f::toSkColor() const noexcept {
+  return Sk4f_toL32(swizzle_rb(skvx::float4::Load(this->vec())));
 }
 
 template <>
-uint32_t SkColor4f::toBytes_RGBA() const {
-  return Sk4f_toL32(Sk4f::Load(this->vec()));
+uint32_t SkColor4f::toBytes_RGBA() const noexcept {
+  return Sk4f_toL32(skvx::float4::Load(this->vec()));
 }
 
 template <>
-SkColor4f SkColor4f::FromBytes_RGBA(uint32_t c) {
+SkColor4f SkColor4f::FromBytes_RGBA(uint32_t c) noexcept {
   SkColor4f color;
   Sk4f_fromL32(c).store(&color);
   return color;
 }
 
 template <>
-SkPMColor4f SkPMColor4f::FromPMColor(SkPMColor c) {
+SkPMColor4f SkPMColor4f::FromPMColor(SkPMColor c) noexcept {
   SkPMColor4f color;
   swizzle_rb_if_bgra(Sk4f_fromL32(c)).store(&color);
   return color;
 }
 
 template <>
-uint32_t SkPMColor4f::toBytes_RGBA() const {
-  return Sk4f_toL32(Sk4f::Load(this->vec()));
+uint32_t SkPMColor4f::toBytes_RGBA() const noexcept {
+  return Sk4f_toL32(skvx::float4::Load(this->vec()));
 }
 
 template <>
-SkPMColor4f SkPMColor4f::FromBytes_RGBA(uint32_t c) {
+SkPMColor4f SkPMColor4f::FromBytes_RGBA(uint32_t c) noexcept {
   SkPMColor4f color;
   Sk4f_fromL32(c).store(&color);
   return color;

@@ -8,6 +8,7 @@
 #ifndef SkImageFilterTypes_DEFINED
 #define SkImageFilterTypes_DEFINED
 
+#include "include/core/SkColorSpace.h"
 #include "include/core/SkMatrix.h"
 #include "src/core/SkSpecialImage.h"
 #include "src/core/SkSpecialSurface.h"
@@ -25,6 +26,10 @@ class SkSurfaceProps;
 // strongly encouraged.
 namespace skif {
 
+// Rounds in/out but with a tolerance.
+SkIRect RoundOut(SkRect);
+SkIRect RoundIn(SkRect);
+
 // skif::IVector and skif::Vector represent plain-old-data types for storing direction vectors, so
 // that the coordinate-space templating system defined below can have a separate type id for
 // directions vs. points, and specialize appropriately. As such, all operations with direction
@@ -34,8 +39,8 @@ struct IVector {
   int32_t fY;
 
   IVector() = default;
-  IVector(int32_t x, int32_t y) noexcept : fX(x), fY(y) {}
-  explicit IVector(const SkIVector& v) noexcept : fX(v.fX), fY(v.fY) {}
+  IVector(int32_t x, int32_t y) : fX(x), fY(y) {}
+  explicit IVector(const SkIVector& v) : fX(v.fX), fY(v.fY) {}
 };
 
 struct Vector {
@@ -43,8 +48,8 @@ struct Vector {
   SkScalar fY;
 
   Vector() = default;
-  Vector(SkScalar x, SkScalar y) noexcept : fX(x), fY(y) {}
-  explicit Vector(const SkVector& v) noexcept : fX(v.fX), fY(v.fY) {}
+  Vector(SkScalar x, SkScalar y) : fX(x), fY(y) {}
+  explicit Vector(const SkVector& v) : fX(v.fX), fY(v.fY) {}
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,13 +79,11 @@ struct Vector {
 template <typename T>
 class ParameterSpace {
  public:
-  ParameterSpace() noexcept(std::is_nothrow_default_constructible_v<T>) = default;
-  explicit ParameterSpace(const T& data) noexcept(std::is_nothrow_copy_constructible_v<T>)
-      : fData(data) {}
-  explicit ParameterSpace(T&& data) noexcept(std::is_nothrow_move_constructible_v<T>)
-      : fData(std::move(data)) {}
+  ParameterSpace() = default;
+  explicit ParameterSpace(const T& data) : fData(data) {}
+  explicit ParameterSpace(T&& data) : fData(std::move(data)) {}
 
-  explicit operator const T&() const noexcept { return fData; }
+  explicit operator const T&() const { return fData; }
 
   static const ParameterSpace<T>* Optional(const T* ptr) {
     return static_cast<const ParameterSpace<T>*>(reinterpret_cast<const void*>(ptr));
@@ -99,13 +102,11 @@ class ParameterSpace {
 template <typename T>
 class DeviceSpace {
  public:
-  DeviceSpace() noexcept(std::is_nothrow_default_constructible_v<T>) = default;
-  explicit DeviceSpace(const T& data) noexcept(std::is_nothrow_copy_constructible_v<T>)
-      : fData(data) {}
-  explicit DeviceSpace(T&& data) noexcept(std::is_nothrow_move_constructible_v<T>)
-      : fData(std::move(data)) {}
+  DeviceSpace() = default;
+  explicit DeviceSpace(const T& data) : fData(data) {}
+  explicit DeviceSpace(T&& data) : fData(std::move(data)) {}
 
-  explicit operator const T&() const noexcept { return fData; }
+  explicit operator const T&() const { return fData; }
 
  private:
   T fData;
@@ -134,14 +135,12 @@ class LayerSpace<IVector> {
   explicit LayerSpace(IVector&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const IVector&() const noexcept { return fData; }
 
-  explicit operator SkIVector() const noexcept { return SkIVector::Make(fData.fX, fData.fY); }
+  explicit operator SkIVector() const { return SkIVector::Make(fData.fX, fData.fY); }
 
-  int32_t x() const noexcept { return fData.fX; }
-  int32_t y() const noexcept { return fData.fY; }
+  int32_t x() const { return fData.fX; }
+  int32_t y() const { return fData.fY; }
 
-  LayerSpace<IVector> operator-() const noexcept {
-    return LayerSpace<IVector>({-fData.fX, -fData.fY});
-  }
+  LayerSpace<IVector> operator-() const { return LayerSpace<IVector>({-fData.fX, -fData.fY}); }
 
   LayerSpace<IVector> operator+(const LayerSpace<IVector>& v) const {
     LayerSpace<IVector> sum = *this;
@@ -154,11 +153,11 @@ class LayerSpace<IVector> {
     return diff;
   }
 
-  void operator+=(const LayerSpace<IVector>& v) noexcept {
+  void operator+=(const LayerSpace<IVector>& v) {
     fData.fX += v.fData.fX;
     fData.fY += v.fData.fY;
   }
-  void operator-=(const LayerSpace<IVector>& v) noexcept {
+  void operator-=(const LayerSpace<IVector>& v) {
     fData.fX -= v.fData.fX;
     fData.fY -= v.fData.fY;
   }
@@ -176,16 +175,14 @@ class LayerSpace<Vector> {
   explicit LayerSpace(Vector&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const Vector&() const noexcept { return fData; }
 
-  explicit operator SkVector() const noexcept { return SkVector::Make(fData.fX, fData.fY); }
+  explicit operator SkVector() const { return SkVector::Make(fData.fX, fData.fY); }
 
-  SkScalar x() const noexcept { return fData.fX; }
-  SkScalar y() const noexcept { return fData.fY; }
+  SkScalar x() const { return fData.fX; }
+  SkScalar y() const { return fData.fY; }
 
   SkScalar length() const { return SkVector::Length(fData.fX, fData.fY); }
 
-  LayerSpace<Vector> operator-() const noexcept {
-    return LayerSpace<Vector>({-fData.fX, -fData.fY});
-  }
+  LayerSpace<Vector> operator-() const { return LayerSpace<Vector>({-fData.fX, -fData.fY}); }
 
   LayerSpace<Vector> operator*(SkScalar s) const {
     LayerSpace<Vector> scaled = *this;
@@ -204,15 +201,15 @@ class LayerSpace<Vector> {
     return diff;
   }
 
-  void operator*=(SkScalar s) noexcept {
+  void operator*=(SkScalar s) {
     fData.fX *= s;
     fData.fY *= s;
   }
-  void operator+=(const LayerSpace<Vector>& v) noexcept {
+  void operator+=(const LayerSpace<Vector>& v) {
     fData.fX += v.fData.fX;
     fData.fY += v.fData.fY;
   }
-  void operator-=(const LayerSpace<Vector>& v) noexcept {
+  void operator-=(const LayerSpace<Vector>& v) {
     fData.fX -= v.fData.fX;
     fData.fY -= v.fData.fY;
   }
@@ -228,33 +225,31 @@ template <>
 class LayerSpace<SkIPoint> {
  public:
   LayerSpace() = default;
-  constexpr explicit LayerSpace(const SkIPoint& geometry) noexcept : fData(geometry) {}
-  constexpr explicit LayerSpace(SkIPoint&& geometry) noexcept : fData(std::move(geometry)) {}
-  explicit constexpr operator const SkIPoint&() const noexcept { return fData; }
+  explicit LayerSpace(const SkIPoint& geometry) noexcept : fData(geometry) {}
+  explicit LayerSpace(SkIPoint&& geometry) noexcept : fData(std::move(geometry)) {}
+  explicit operator const SkIPoint&() const noexcept { return fData; }
 
   // Parrot the SkIPoint API while preserving coordinate space.
   int32_t x() const { return fData.fX; }
   int32_t y() const { return fData.fY; }
 
   // Offsetting by direction vectors produce more points
-  LayerSpace<SkIPoint> operator+(const LayerSpace<IVector>& v) noexcept {
+  LayerSpace<SkIPoint> operator+(const LayerSpace<IVector>& v) {
     return LayerSpace<SkIPoint>(fData + SkIVector(v));
   }
-  LayerSpace<SkIPoint> operator-(const LayerSpace<IVector>& v) noexcept {
+  LayerSpace<SkIPoint> operator-(const LayerSpace<IVector>& v) {
     return LayerSpace<SkIPoint>(fData - SkIVector(v));
   }
 
-  void operator+=(const LayerSpace<IVector>& v) noexcept { fData += SkIVector(v); }
-  void operator-=(const LayerSpace<IVector>& v) noexcept { fData -= SkIVector(v); }
+  void operator+=(const LayerSpace<IVector>& v) { fData += SkIVector(v); }
+  void operator-=(const LayerSpace<IVector>& v) { fData -= SkIVector(v); }
 
   // Subtracting another point makes a direction between them
-  LayerSpace<IVector> operator-(const LayerSpace<SkIPoint>& p) noexcept {
+  LayerSpace<IVector> operator-(const LayerSpace<SkIPoint>& p) {
     return LayerSpace<IVector>(IVector(fData - p.fData));
   }
 
-  LayerSpace<IVector> operator-() const noexcept {
-    return LayerSpace<IVector>({-fData.fX, -fData.fY});
-  }
+  LayerSpace<IVector> operator-() const { return LayerSpace<IVector>({-fData.fX, -fData.fY}); }
 
  private:
   SkIPoint fData;
@@ -267,7 +262,7 @@ class LayerSpace<SkPoint> {
   LayerSpace() = default;
   explicit LayerSpace(const SkPoint& geometry) noexcept : fData(geometry) {}
   explicit LayerSpace(SkPoint&& geometry) noexcept : fData(std::move(geometry)) {}
-  explicit operator const SkPoint&() const { return fData; }
+  explicit operator const SkPoint&() const noexcept { return fData; }
 
   // Parrot the SkPoint API while preserving coordinate space.
   SkScalar x() const { return fData.fX; }
@@ -306,10 +301,10 @@ class LayerSpace<SkISize> {
   explicit LayerSpace(SkISize&& geometry) noexcept : fData(std::move(geometry)) {}
   explicit operator const SkISize&() const noexcept { return fData; }
 
-  int32_t width() const noexcept { return fData.width(); }
-  int32_t height() const noexcept { return fData.height(); }
+  int32_t width() const { return fData.width(); }
+  int32_t height() const { return fData.height(); }
 
-  bool isEmpty() const noexcept { return fData.isEmpty(); }
+  bool isEmpty() const { return fData.isEmpty(); }
 
  private:
   SkISize fData;
@@ -320,15 +315,15 @@ template <>
 class LayerSpace<SkSize> {
  public:
   LayerSpace() = default;
-  explicit LayerSpace(const SkSize& geometry) noexcept : fData(geometry) {}
-  explicit LayerSpace(SkSize&& geometry) noexcept : fData(std::move(geometry)) {}
-  explicit operator const SkSize&() const noexcept { return fData; }
+  explicit LayerSpace(const SkSize& geometry) : fData(geometry) {}
+  explicit LayerSpace(SkSize&& geometry) : fData(std::move(geometry)) {}
+  explicit operator const SkSize&() const { return fData; }
 
-  SkScalar width() const noexcept { return fData.width(); }
-  SkScalar height() const noexcept { return fData.height(); }
+  SkScalar width() const { return fData.width(); }
+  SkScalar height() const { return fData.height(); }
 
-  bool isEmpty() const noexcept { return fData.isEmpty(); }
-  bool isZero() const noexcept { return fData.isZero(); }
+  bool isEmpty() const { return fData.isEmpty(); }
+  bool isZero() const { return fData.isZero(); }
 
   LayerSpace<SkISize> round() const { return LayerSpace<SkISize>(fData.toRound()); }
   LayerSpace<SkISize> ceil() const { return LayerSpace<SkISize>(fData.toCeil()); }
@@ -343,14 +338,16 @@ template <>
 class LayerSpace<SkIRect> {
  public:
   LayerSpace() = default;
-  explicit LayerSpace(const SkIRect& geometry) : fData(geometry) {}
-  explicit LayerSpace(SkIRect&& geometry) : fData(std::move(geometry)) {}
-  explicit operator const SkIRect&() const { return fData; }
+  explicit LayerSpace(const SkIRect& geometry) noexcept : fData(geometry) {}
+  explicit LayerSpace(SkIRect&& geometry) noexcept : fData(std::move(geometry)) {}
+  explicit operator const SkIRect&() const noexcept { return fData; }
+
+  static LayerSpace<SkIRect> Empty() noexcept { return LayerSpace<SkIRect>(SkIRect::MakeEmpty()); }
 
   // Parrot the SkIRect API while preserving coord space
-  bool isEmpty() const { return fData.isEmpty(); }
+  bool isEmpty() const noexcept { return fData.isEmpty(); }
 
-  int32_t left() const { return fData.fLeft; }
+  int32_t left() const noexcept { return fData.fLeft; }
   int32_t top() const { return fData.fTop; }
   int32_t right() const { return fData.fRight; }
   int32_t bottom() const { return fData.fBottom; }
@@ -375,35 +372,38 @@ template <>
 class LayerSpace<SkRect> {
  public:
   LayerSpace() = default;
-  explicit LayerSpace(const SkRect& geometry) noexcept : fData(geometry) {}
-  explicit LayerSpace(SkRect&& geometry) noexcept : fData(std::move(geometry)) {}
-  explicit operator const SkRect&() const noexcept { return fData; }
+  explicit LayerSpace(const SkRect& geometry) : fData(geometry) {}
+  explicit LayerSpace(SkRect&& geometry) : fData(std::move(geometry)) {}
+  explicit operator const SkRect&() const { return fData; }
+
+  static LayerSpace<SkRect> Empty() { return LayerSpace<SkRect>(SkRect::MakeEmpty()); }
 
   // Parrot the SkRect API while preserving coord space and usage
-  bool isEmpty() const noexcept { return fData.isEmpty(); }
+  bool isEmpty() const { return fData.isEmpty(); }
 
-  SkScalar left() const noexcept { return fData.fLeft; }
-  SkScalar top() const noexcept { return fData.fTop; }
-  SkScalar right() const noexcept { return fData.fRight; }
-  SkScalar bottom() const noexcept { return fData.fBottom; }
+  SkScalar left() const { return fData.fLeft; }
+  SkScalar top() const { return fData.fTop; }
+  SkScalar right() const { return fData.fRight; }
+  SkScalar bottom() const { return fData.fBottom; }
 
-  SkScalar width() const noexcept { return fData.width(); }
-  SkScalar height() const noexcept { return fData.height(); }
+  SkScalar width() const { return fData.width(); }
+  SkScalar height() const { return fData.height(); }
 
-  LayerSpace<SkPoint> topLeft() const noexcept {
+  LayerSpace<SkPoint> topLeft() const {
     return LayerSpace<SkPoint>(SkPoint::Make(fData.fLeft, fData.fTop));
   }
   LayerSpace<SkSize> size() const {
     return LayerSpace<SkSize>(SkSize::Make(fData.width(), fData.height()));
   }
-  LayerSpace<SkIRect> roundOut() const { return LayerSpace<SkIRect>(fData.roundOut()); }
 
-  bool intersect(const LayerSpace<SkRect>& r) noexcept { return fData.intersect(r.fData); }
-  void join(const LayerSpace<SkRect>& r) noexcept { fData.join(r.fData); }
-  void offset(const LayerSpace<Vector>& v) noexcept { fData.offset(SkVector(v)); }
-  void outset(const LayerSpace<SkSize>& delta) noexcept {
-    fData.outset(delta.width(), delta.height());
-  }
+  LayerSpace<SkIRect> round() const { return LayerSpace<SkIRect>(fData.round()); }
+  LayerSpace<SkIRect> roundIn() const { return LayerSpace<SkIRect>(RoundIn(fData)); }
+  LayerSpace<SkIRect> roundOut() const { return LayerSpace<SkIRect>(RoundOut(fData)); }
+
+  bool intersect(const LayerSpace<SkRect>& r) { return fData.intersect(r.fData); }
+  void join(const LayerSpace<SkRect>& r) { fData.join(r.fData); }
+  void offset(const LayerSpace<Vector>& v) { fData.offset(SkVector(v)); }
+  void outset(const LayerSpace<SkSize>& delta) { fData.outset(delta.width(), delta.height()); }
 
  private:
   SkRect fData;
@@ -419,12 +419,18 @@ class Mapping {
  public:
   Mapping() = default;
 
-  // This constructor allows the decomposition to be explicitly provided, requires
-  // layerToDev to be invertible.
-  Mapping(const SkMatrix& layerToDev, const SkMatrix& paramToLayer)
-      : fLayerToDevMatrix(layerToDev), fParamToLayerMatrix(paramToLayer) {
-    SkAssertResult(fLayerToDevMatrix.invert(&fDevToLayerMatrix));
-  }
+  // Helper constructor that equates device and layer space to the same coordinate space.
+  explicit Mapping(const SkMatrix& paramToLayer)
+      : fLayerToDevMatrix(SkMatrix::I()),
+        fParamToLayerMatrix(paramToLayer),
+        fDevToLayerMatrix(SkMatrix::I()) {}
+
+  // This constructor allows the decomposition to be explicitly provided, assumes that
+  // 'layerToDev's inverse has already been calculated in 'devToLayer'
+  Mapping(const SkMatrix& layerToDev, const SkMatrix& devToLayer, const SkMatrix& paramToLayer)
+      : fLayerToDevMatrix(layerToDev),
+        fParamToLayerMatrix(paramToLayer),
+        fDevToLayerMatrix(devToLayer) {}
 
   // Sets this Mapping to the default decomposition of the canvas's total transform, given the
   // requirements of the 'filter'. Returns false if the decomposition failed or would produce an
@@ -453,8 +459,9 @@ class Mapping {
     SkAssertResult(this->adjustLayerSpace(SkMatrix::Translate(-origin.x(), -origin.y())));
   }
 
-  const SkMatrix& deviceMatrix() const noexcept { return fLayerToDevMatrix; }
-  const SkMatrix& layerMatrix() const noexcept { return fParamToLayerMatrix; }
+  const SkMatrix& layerToDevice() const { return fLayerToDevMatrix; }
+  const SkMatrix& deviceToLayer() const { return fDevToLayerMatrix; }
+  const SkMatrix& layerMatrix() const { return fParamToLayerMatrix; }
   SkMatrix totalMatrix() const { return SkMatrix::Concat(fLayerToDevMatrix, fParamToLayerMatrix); }
 
   template <typename T>
@@ -506,15 +513,14 @@ class Mapping {
 // it is equivalent to the result of an identity filter.
 class FilterResult {
  public:
-  constexpr FilterResult() noexcept : fImage(nullptr), fOrigin(SkIPoint::Make(0, 0)) {}
+  FilterResult() : fImage(nullptr), fOrigin(SkIPoint::Make(0, 0)) {}
 
-  FilterResult(sk_sp<SkSpecialImage> image, const LayerSpace<SkIPoint>& origin) noexcept
+  FilterResult(sk_sp<SkSpecialImage> image, const LayerSpace<SkIPoint>& origin)
       : fImage(std::move(image)), fOrigin(origin) {}
-  explicit FilterResult(sk_sp<SkSpecialImage> image) noexcept
-      : fImage(std::move(image)), fOrigin{{0, 0}} {}
+  explicit FilterResult(sk_sp<SkSpecialImage> image) : fImage(std::move(image)), fOrigin{{0, 0}} {}
 
-  const SkSpecialImage* image() const noexcept { return fImage.get(); }
-  sk_sp<SkSpecialImage> refImage() const noexcept { return fImage; }
+  const SkSpecialImage* image() const { return fImage.get(); }
+  sk_sp<SkSpecialImage> refImage() const { return fImage; }
 
   // Get the layer-space bounds of the result. This will have the same dimensions as the
   // image and its top left corner will be 'origin()'.
@@ -524,14 +530,25 @@ class FilterResult {
   }
 
   // Get the layer-space coordinate of this image's top left pixel.
-  const LayerSpace<SkIPoint>& layerOrigin() const noexcept { return fOrigin; }
+  const LayerSpace<SkIPoint>& layerOrigin() const { return fOrigin; }
+
+  // Produce a new FilterResult that can correctly cover 'newBounds' when it's drawn with its
+  // tile mode at its origin. When possible, the returned FilterResult can reuse the same image
+  // data and adjust its access subset, origin, and tile mode. If 'forcePad' is true or if the
+  // 'newTileMode' that applies at the 'newBounds' geometry is incompatible with the current
+  // bounds and tile mode, then a new image is created that resolves this image's data and tiling.
+  // TODO (michaelludwig): All FilterResults are decal mode and there are no current usages that
+  // require force-padding a decal FilterResult so these arguments aren't implemented yet.
+  FilterResult resolveToBounds(const LayerSpace<SkIRect>& newBounds) const;
+  //  SkTileMode newTileMode=SkTileMode::kDecal,
+  //  bool forcePad=false) const;
 
   // Extract image and origin, safely when the image is null.
   // TODO (michaelludwig) - This is intended for convenience until all call sites of
   // SkImageFilter_Base::filterImage() have been updated to work in the new type system
   // (which comes later as SkDevice, SkCanvas, etc. need to be modified, and coordinate space
   // tagging needs to be added).
-  sk_sp<SkSpecialImage> imageAndOffset(SkIPoint* offset) const noexcept {
+  sk_sp<SkSpecialImage> imageAndOffset(SkIPoint* offset) const {
     if (fImage) {
       *offset = SkIPoint(fOrigin);
       return fImage;
@@ -544,6 +561,7 @@ class FilterResult {
  private:
   sk_sp<SkSpecialImage> fImage;
   LayerSpace<SkIPoint> fOrigin;
+  // SkTileMode         fTileMode = SkTileMode::kDecal;
 };
 
 // The context contains all necessary information to describe how the image filter should be
@@ -558,7 +576,7 @@ class Context {
   Context(
       const SkMatrix& layerMatrix, const SkIRect& clipBounds, SkImageFilterCache* cache,
       SkColorType colorType, SkColorSpace* colorSpace, const SkSpecialImage* source)
-      : fMapping(SkMatrix::I(), layerMatrix),
+      : fMapping(layerMatrix),
         fDesiredOutput(clipBounds),
         fCache(cache),
         fColorType(colorType),

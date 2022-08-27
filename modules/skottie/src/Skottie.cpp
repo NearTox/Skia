@@ -38,7 +38,7 @@
 #include <cmath>
 #include <memory>
 
-#include "stdlib.h"
+#include <stdlib.h>
 
 namespace skottie {
 
@@ -112,9 +112,9 @@ static SkBlendMode GetBlendMode(
       SkBlendMode::kPlus,        // 16:'add'
   };
 
-  const auto bm_index = ParseDefault<size_t>(jobject["bm"], 0);
+  const size_t bm_index = ParseDefault<size_t>(jobject["bm"], 0);
   if (bm_index >= SK_ARRAY_COUNT(kBlendModeMap)) {
-    abuilder->log(Logger::Level::kWarning, &jobject, "Unsupported blend mode %lu\n", bm_index);
+    abuilder->log(Logger::Level::kWarning, &jobject, "Unsupported blend mode %zu\n", bm_index);
     return SkBlendMode::kSrcOver;
   }
 

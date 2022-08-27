@@ -25,6 +25,16 @@ static SkVector map_as_vector(SkScalar x, SkScalar y, const SkMatrix& matrix) {
 }
 
 namespace skif {
+// This exists to cover up issues where infinite precision would produce integers but float
+// math produces values just larger/smaller than an int and roundOut/In on bounds would produce
+// nearly a full pixel error. One such case is crbug.com/1313579 where the caller has produced
+// near integer CTM and uses integer crop rects that would grab an extra row/column of the
+// input image when using a strict roundOut.
+static constexpr float kRoundEpsilon = 1e-3f;
+
+SkIRect RoundOut(SkRect r) { return r.makeInset(kRoundEpsilon, kRoundEpsilon).roundOut(); }
+
+SkIRect RoundIn(SkRect r) { return r.makeOutset(kRoundEpsilon, kRoundEpsilon).roundIn(); }
 
 bool Mapping::decomposeCTM(
     const SkMatrix& ctm, const SkImageFilter* filter,
@@ -100,9 +110,7 @@ SkRect Mapping::map<SkRect>(const SkRect& geom, const SkMatrix& matrix) {
 
 template <>
 SkIRect Mapping::map<SkIRect>(const SkIRect& geom, const SkMatrix& matrix) {
-  SkRect mapped = matrix.mapRect(SkRect::Make(geom));
-  mapped.inset(1e-3f, 1e-3f);
-  return mapped.roundOut();
+  return RoundOut(matrix.mapRect(SkRect::Make(geom)));
 }
 
 template <>
@@ -139,6 +147,24 @@ template <>
 SkSize Mapping::map<SkSize>(const SkSize& geom, const SkMatrix& matrix) {
   SkVector v = map_as_vector(geom.fWidth, geom.fHeight, matrix);
   return SkSize::Make(v.fX, v.fY);
+}
+
+FilterResult FilterResult::resolveToBounds(const LayerSpace<SkIRect>& newBounds) const {
+  // NOTE(michaelludwig) - This implementation is based on the assumption that an image resolved
+  // to 'newBounds' will be decal tiled and that the current image is decal tiled. Because of this
+  // simplification, the resolved image is always a subset of 'fImage' that matches the
+  // intersection of 'newBounds' and 'layerBounds()' so no rendering/copying is needed.
+  LayerSpace<SkIRect> tightBounds = newBounds;
+  if (!fImage || !tightBounds.intersect(this->layerBounds())) {
+    return {};  //  Fully transparent
+  }
+
+  // Calculate offset from old origin to new origin, representing the relative subset in the image
+  LayerSpace<IVector> originShift = tightBounds.topLeft() - fOrigin;
+
+  auto subsetImage = fImage->makeSubset(SkIRect::MakeXYWH(
+      originShift.x(), originShift.y(), tightBounds.width(), tightBounds.height()));
+  return {std::move(subsetImage), tightBounds.topLeft()};
 }
 
 }  // end namespace skif

@@ -18,9 +18,9 @@
 #include "include/core/SkString.h"
 #include "include/private/SkOnce.h"
 #include "include/private/SkSLSampleUsage.h"
-#include "include/private/SkTOptional.h"
 
 #include <string>
+#include <optional>
 #include <vector>
 
 #ifdef SK_ENABLE_SKSL
@@ -28,11 +28,15 @@
 class GrRecordingContext;
 class SkFilterColorProgram;
 class SkImage;
+class SkRuntimeImageFilter;
 
 namespace SkSL {
+class DebugTrace;
+class ErrorReporter;
 class FunctionDefinition;
 struct Program;
 enum class ProgramKind : int8_t;
+struct ProgramSettings;
 }  // namespace SkSL
 
 namespace skvm {
@@ -64,8 +68,21 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
     };
 
     enum Flags {
+      // Uniform is declared as an array. 'count' contains array length.
       kArray_Flag = 0x1,
-      kSRGBUnpremul_Flag = 0x2,
+
+      // Uniform is declared with layout(color). Colors should be supplied as unpremultiplied,
+      // extended-range (unclamped) sRGB (ie SkColor4f). The uniform will be automatically
+      // transformed to unpremultiplied extended-range working-space colors.
+      kColor_Flag = 0x2,
+
+      // When used with SkMeshSpecification, indicates that the uniform is present in the
+      // vertex shader. Not used with SkRuntimeEffect.
+      kVertex_Flag = 0x4,
+
+      // When used with SkMeshSpecification, indicates that the uniform is present in the
+      // fragment shader. Not used with SkRuntimeEffect.
+      kFragment_Flag = 0x8,
     };
 
     SkString name;
@@ -74,7 +91,8 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
     int count;
     uint32_t flags;
 
-    bool isArray() const { return SkToBool(this->flags & kArray_Flag); }
+    bool isArray() const noexcept { return SkToBool(this->flags & kArray_Flag); }
+    bool isColor() const noexcept { return SkToBool(this->flags & kColor_Flag); }
     size_t sizeInBytes() const;
   };
 
@@ -93,14 +111,16 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
 
   class Options {
    public:
-    // For testing purposes, completely disable the inliner. (Normally, Runtime Effects don't
-    // run the inliner directly, but they still get an inlining pass once they are painted.)
-    bool forceNoInline = false;
+    // For testing purposes, disables optimization and inlining. (Normally, Runtime Effects
+    // don't run the inliner directly, but they still get an inlining pass once they are
+    // painted.)
+    bool forceUnoptimized = false;
 
    private:
     friend class SkRuntimeEffect;
     friend class SkRuntimeEffectPriv;
 
+    // TODO(skia:11209) - Replace this with a promised SkCapabilities?
     // This flag lifts the ES2 restrictions on Runtime Effects that are gated by the
     // `strictES2Mode` check. Be aware that the software renderer and pipeline-stage effect are
     // still largely ES3-unaware and can still fail or crash if post-ES2 features are used.
@@ -110,7 +130,7 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
     // Similarly: Public SkSL does not allow access to sk_FragCoord. The semantics of that
     // variable are confusing, and expose clients to implementation details of saveLayer and
     // image filters.
-    bool allowFragCoord = false;
+    bool usePrivateRTShaderModule = false;
   };
 
   // If the effect is compiled successfully, `effect` will be non-null.
@@ -149,76 +169,74 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
   static Result MakeForBlender(SkString sksl, const Options&);
   static Result MakeForBlender(SkString sksl) { return MakeForBlender(std::move(sksl), Options{}); }
 
-  // DSL entry points
-  static Result MakeForColorFilter(std::unique_ptr<SkSL::Program> program, const Options&);
-  static Result MakeForColorFilter(std::unique_ptr<SkSL::Program> program);
-
-  static Result MakeForShader(std::unique_ptr<SkSL::Program> program, const Options&);
-  static Result MakeForShader(std::unique_ptr<SkSL::Program> program);
-
-  static Result MakeForBlender(std::unique_ptr<SkSL::Program> program, const Options&);
-  static Result MakeForBlender(std::unique_ptr<SkSL::Program> program);
-
   // Object that allows passing a SkShader, SkColorFilter or SkBlender as a child
   class ChildPtr {
    public:
-    ChildPtr() = default;
-    ChildPtr(sk_sp<SkShader> s) : fChild(std::move(s)) {}
-    ChildPtr(sk_sp<SkColorFilter> cf) : fChild(std::move(cf)) {}
-    ChildPtr(sk_sp<SkBlender> b) : fChild(std::move(b)) {}
+    ChildPtr() noexcept = default;
+    ChildPtr(sk_sp<SkShader> s) noexcept : fChild(std::move(s)) {}
+    ChildPtr(sk_sp<SkColorFilter> cf) noexcept : fChild(std::move(cf)) {}
+    ChildPtr(sk_sp<SkBlender> b) noexcept : fChild(std::move(b)) {}
 
-    skstd::optional<ChildType> type() const;
+    // Asserts that the flattenable is either null, or one of the legal derived types
+    ChildPtr(sk_sp<SkFlattenable> f);
+
+    std::optional<ChildType> type() const;
 
     SkShader* shader() const;
     SkColorFilter* colorFilter() const;
     SkBlender* blender() const;
-    SkFlattenable* flattenable() const { return fChild.get(); }
+    SkFlattenable* flattenable() const noexcept { return fChild.get(); }
 
    private:
     sk_sp<SkFlattenable> fChild;
   };
 
   sk_sp<SkShader> makeShader(
-      sk_sp<SkData> uniforms, sk_sp<SkShader> children[], size_t childCount,
-      const SkMatrix* localMatrix, bool isOpaque) const;
+      sk_sp<const SkData> uniforms, sk_sp<SkShader> children[], size_t childCount,
+      const SkMatrix* localMatrix = nullptr) const;
   sk_sp<SkShader> makeShader(
-      sk_sp<SkData> uniforms, SkSpan<ChildPtr> children, const SkMatrix* localMatrix,
-      bool isOpaque) const;
+      sk_sp<const SkData> uniforms, SkSpan<ChildPtr> children,
+      const SkMatrix* localMatrix = nullptr) const;
 
   sk_sp<SkImage> makeImage(
-      GrRecordingContext*, sk_sp<SkData> uniforms, SkSpan<ChildPtr> children,
+      GrRecordingContext*, sk_sp<const SkData> uniforms, SkSpan<ChildPtr> children,
       const SkMatrix* localMatrix, SkImageInfo resultInfo, bool mipmapped) const;
 
-  sk_sp<SkColorFilter> makeColorFilter(sk_sp<SkData> uniforms) const;
+  sk_sp<SkColorFilter> makeColorFilter(sk_sp<const SkData> uniforms) const;
   sk_sp<SkColorFilter> makeColorFilter(
-      sk_sp<SkData> uniforms, sk_sp<SkColorFilter> children[], size_t childCount) const;
-  sk_sp<SkColorFilter> makeColorFilter(sk_sp<SkData> uniforms, SkSpan<ChildPtr> children) const;
+      sk_sp<const SkData> uniforms, sk_sp<SkColorFilter> children[], size_t childCount) const;
+  sk_sp<SkColorFilter> makeColorFilter(
+      sk_sp<const SkData> uniforms, SkSpan<ChildPtr> children) const;
 
-  sk_sp<SkBlender> makeBlender(sk_sp<SkData> uniforms, SkSpan<ChildPtr> children = {}) const;
+  sk_sp<SkBlender> makeBlender(sk_sp<const SkData> uniforms, SkSpan<ChildPtr> children = {}) const;
 
-  const std::string& source() const;
+  /**
+   * Creates a new Runtime Effect patterned after an already-existing one. The new shader behaves
+   * like the original, but also creates a debug trace of its execution at the requested
+   * coordinate. After painting with this shader, the associated DebugTrace object will contain a
+   * shader execution trace. Call `writeTrace` on the debug trace object to generate a full trace
+   * suitable for a debugger, or call `dump` to emit a human-readable trace.
+   *
+   * Debug traces are only supported on a raster (non-GPU) canvas.
 
-  template <typename T>
-  class ConstIterable {
-   public:
-    ConstIterable(const std::vector<T>& vec) : fVec(vec) {}
-
-    using const_iterator = typename std::vector<T>::const_iterator;
-
-    const_iterator begin() const { return fVec.begin(); }
-    const_iterator end() const { return fVec.end(); }
-    size_t count() const { return fVec.size(); }
-
-   private:
-    const std::vector<T>& fVec;
+   * Debug traces are currently only supported on shaders. Color filter and blender tracing is a
+   * work-in-progress.
+   */
+  struct TracedShader {
+    sk_sp<SkShader> shader;
+    sk_sp<SkSL::DebugTrace> debugTrace;
   };
+  static TracedShader MakeTraced(sk_sp<SkShader> shader, const SkIPoint& traceCoord);
+
+  // Returns the SkSL source of the runtime effect shader.
+  const std::string& source() const;
 
   // Combined size of all 'uniform' variables. When calling makeColorFilter or makeShader,
   // provide an SkData of this size, containing values for all of those variables.
   size_t uniformSize() const;
 
-  ConstIterable<Uniform> uniforms() const { return ConstIterable<Uniform>(fUniforms); }
-  ConstIterable<Child> children() const { return ConstIterable<Child>(fChildren); }
+  SkSpan<const Uniform> uniforms() const { return SkMakeSpan(fUniforms); }
+  SkSpan<const Child> children() const { return SkMakeSpan(fChildren); }
 
   // Returns pointer to the named uniform variable's description, or nullptr if not found
   const Uniform* findUniform(const char* name) const;
@@ -231,11 +249,13 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
 
  private:
   enum Flags {
-    kUsesSampleCoords_Flag = 0x1,
-    kAllowColorFilter_Flag = 0x2,
-    kAllowShader_Flag = 0x4,
-    kAllowBlender_Flag = 0x8,
+    kUsesSampleCoords_Flag = 0x01,
+    kAllowColorFilter_Flag = 0x02,
+    kAllowShader_Flag = 0x04,
+    kAllowBlender_Flag = 0x08,
     kSamplesOutsideMain_Flag = 0x10,
+    kUsesColorTransform_Flag = 0x20,
+    kAlwaysOpaque_Flag = 0x40,
   };
 
   SkRuntimeEffect(
@@ -243,20 +263,23 @@ class SK_API SkRuntimeEffect : public SkRefCnt {
       const SkSL::FunctionDefinition& main, std::vector<Uniform>&& uniforms,
       std::vector<Child>&& children, std::vector<SkSL::SampleUsage>&& sampleUsages, uint32_t flags);
 
-  static Result MakeFromSource(SkString sksl, const Options& options, SkSL::ProgramKind kind);
+  sk_sp<SkRuntimeEffect> makeUnoptimizedClone();
 
-  static Result MakeFromDSL(
-      std::unique_ptr<SkSL::Program> program, const Options& options, SkSL::ProgramKind kind);
+  static Result MakeFromSource(SkString sksl, const Options& options, SkSL::ProgramKind kind);
 
   static Result MakeInternal(
       std::unique_ptr<SkSL::Program> program, const Options& options, SkSL::ProgramKind kind);
 
-  uint32_t hash() const { return fHash; }
-  bool usesSampleCoords() const { return (fFlags & kUsesSampleCoords_Flag); }
-  bool allowShader() const { return (fFlags & kAllowShader_Flag); }
-  bool allowColorFilter() const { return (fFlags & kAllowColorFilter_Flag); }
-  bool allowBlender() const { return (fFlags & kAllowBlender_Flag); }
-  bool samplesOutsideMain() const { return (fFlags & kSamplesOutsideMain_Flag); }
+  static SkSL::ProgramSettings MakeSettings(const Options& options);
+
+  uint32_t hash() const noexcept { return fHash; }
+  bool usesSampleCoords() const noexcept { return (fFlags & kUsesSampleCoords_Flag); }
+  bool allowShader() const noexcept { return (fFlags & kAllowShader_Flag); }
+  bool allowColorFilter() const noexcept { return (fFlags & kAllowColorFilter_Flag); }
+  bool allowBlender() const noexcept { return (fFlags & kAllowBlender_Flag); }
+  bool samplesOutsideMain() const noexcept { return (fFlags & kSamplesOutsideMain_Flag); }
+  bool usesColorTransform() const noexcept { return (fFlags & kUsesColorTransform_Flag); }
+  bool alwaysOpaque() const noexcept { return (fFlags & kAlwaysOpaque_Flag); }
 
   const SkFilterColorProgram* getFilterColorProgram();
 
@@ -359,7 +382,7 @@ class SkRuntimeEffectBuilder {
       return *this;
     }
 
-    BuilderChild& operator=(std::nullptr_t) {
+    BuilderChild& operator=(std::nullptr_t) noexcept {
       if (!fChild) {
         SkDEBUGFAIL("Assigning to missing child");
       } else {
@@ -370,25 +393,26 @@ class SkRuntimeEffectBuilder {
 
     SkRuntimeEffectBuilder* fOwner;
     const SkRuntimeEffect::Child* fChild;  // nullptr if the child was not found
-
-    // DEPRECATED - Left temporarily for Android
-    int fIndex;  // -1 if the child was not found
   };
 
-  const SkRuntimeEffect* effect() const { return fEffect.get(); }
+  const SkRuntimeEffect* effect() const noexcept { return fEffect.get(); }
 
   BuilderUniform uniform(const char* name) { return {this, fEffect->findUniform(name)}; }
   BuilderChild child(const char* name) {
     const SkRuntimeEffect::Child* child = fEffect->findChild(name);
-    return {this, child, child ? child->index : -1};
+    return {this, child};
   }
 
  protected:
   SkRuntimeEffectBuilder() = delete;
   explicit SkRuntimeEffectBuilder(sk_sp<SkRuntimeEffect> effect)
       : fEffect(std::move(effect)),
-        fUniforms(SkData::MakeUninitialized(fEffect->uniformSize())),
-        fChildren(fEffect->children().count()) {}
+        fUniforms(SkData::MakeZeroInitialized(fEffect->uniformSize())),
+        fChildren(fEffect->children().size()) {}
+  explicit SkRuntimeEffectBuilder(sk_sp<SkRuntimeEffect> effect, sk_sp<SkData> uniforms)
+      : fEffect(std::move(effect)),
+        fUniforms(std::move(uniforms)),
+        fChildren(fEffect->children().size()) {}
 
   SkRuntimeEffectBuilder(SkRuntimeEffectBuilder&&) = default;
   SkRuntimeEffectBuilder(const SkRuntimeEffectBuilder&) = default;
@@ -396,7 +420,7 @@ class SkRuntimeEffectBuilder {
   SkRuntimeEffectBuilder& operator=(SkRuntimeEffectBuilder&&) = delete;
   SkRuntimeEffectBuilder& operator=(const SkRuntimeEffectBuilder&) = delete;
 
-  sk_sp<SkData> uniforms() { return fUniforms; }
+  sk_sp<const SkData> uniforms() { return fUniforms; }
   SkRuntimeEffect::ChildPtr* children() { return fChildren.data(); }
   size_t numChildren() { return fChildren.size(); }
 
@@ -441,12 +465,17 @@ class SK_API SkRuntimeShaderBuilder : public SkRuntimeEffectBuilder {
   SkRuntimeShaderBuilder(const SkRuntimeShaderBuilder&) = default;
   ~SkRuntimeShaderBuilder();
 
-  sk_sp<SkShader> makeShader(const SkMatrix* localMatrix, bool isOpaque);
+  sk_sp<SkShader> makeShader(const SkMatrix* localMatrix = nullptr);
   sk_sp<SkImage> makeImage(
       GrRecordingContext*, const SkMatrix* localMatrix, SkImageInfo resultInfo, bool mipmapped);
 
  private:
   using INHERITED = SkRuntimeEffectBuilder;
+
+  explicit SkRuntimeShaderBuilder(sk_sp<SkRuntimeEffect> effect, sk_sp<SkData> uniforms)
+      : INHERITED(std::move(effect), std::move(uniforms)) {}
+
+  friend class SkRuntimeImageFilter;
 };
 
 /**

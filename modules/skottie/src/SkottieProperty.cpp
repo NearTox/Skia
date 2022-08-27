@@ -17,11 +17,13 @@ namespace skottie {
 bool TextPropertyValue::operator==(const TextPropertyValue& other) const {
   return fTypeface == other.fTypeface && fText == other.fText && fTextSize == other.fTextSize &&
          fStrokeWidth == other.fStrokeWidth && fLineHeight == other.fLineHeight &&
-         fLineShift == other.fLineShift && fAscent == other.fAscent && fHAlign == other.fHAlign &&
-         fVAlign == other.fVAlign && fResize == other.fResize && fLineBreak == other.fLineBreak &&
+         fLineShift == other.fLineShift && fAscent == other.fAscent &&
+         fMaxLines == other.fMaxLines && fHAlign == other.fHAlign && fVAlign == other.fVAlign &&
+         fResize == other.fResize && fLineBreak == other.fLineBreak &&
          fDirection == other.fDirection && fCapitalization == other.fCapitalization &&
          fBox == other.fBox && fFillColor == other.fFillColor &&
-         fStrokeColor == other.fStrokeColor && fHasFill == other.fHasFill &&
+         fStrokeColor == other.fStrokeColor && fPaintOrder == other.fPaintOrder &&
+         fStrokeJoin == other.fStrokeJoin && fHasFill == other.fHasFill &&
          fHasStroke == other.fHasStroke;
 }
 
@@ -40,56 +42,58 @@ bool TransformPropertyValue::operator!=(const TransformPropertyValue& other) con
 }
 
 template <>
-PropertyHandle<ColorPropertyValue, sksg::Color>::~PropertyHandle() {}
+SK_API PropertyHandle<ColorPropertyValue, sksg::Color>::~PropertyHandle() {}
 
 template <>
-ColorPropertyValue PropertyHandle<ColorPropertyValue, sksg::Color>::get() const {
+SK_API ColorPropertyValue PropertyHandle<ColorPropertyValue, sksg::Color>::get() const {
   return fNode->getColor();
 }
 
 template <>
-void PropertyHandle<ColorPropertyValue, sksg::Color>::set(const ColorPropertyValue& c) {
+SK_API void PropertyHandle<ColorPropertyValue, sksg::Color>::set(const ColorPropertyValue& c) {
   fNode->setColor(c);
 }
 
 template <>
-PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::~PropertyHandle() {}
+SK_API PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::~PropertyHandle() {}
 
 template <>
-OpacityPropertyValue PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::get() const {
+SK_API OpacityPropertyValue PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::get() const {
   return fNode->getOpacity() * 100;
 }
 
 template <>
-void PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::set(const OpacityPropertyValue& o) {
+SK_API void PropertyHandle<OpacityPropertyValue, sksg::OpacityEffect>::set(
+    const OpacityPropertyValue& o) {
   fNode->setOpacity(o / 100);
 }
 
 template <>
-PropertyHandle<TextPropertyValue, internal::TextAdapter>::~PropertyHandle() {}
+SK_API PropertyHandle<TextPropertyValue, internal::TextAdapter>::~PropertyHandle() {}
 
 template <>
-TextPropertyValue PropertyHandle<TextPropertyValue, internal::TextAdapter>::get() const {
+SK_API TextPropertyValue PropertyHandle<TextPropertyValue, internal::TextAdapter>::get() const {
   return fNode->getText();
 }
 
 template <>
-void PropertyHandle<TextPropertyValue, internal::TextAdapter>::set(const TextPropertyValue& t) {
+SK_API void PropertyHandle<TextPropertyValue, internal::TextAdapter>::set(
+    const TextPropertyValue& t) {
   fNode->setText(t);
 }
 
 template <>
-PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>::~PropertyHandle() {}
+SK_API PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>::~PropertyHandle() {}
 
 template <>
-TransformPropertyValue PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>::get()
-    const {
+SK_API TransformPropertyValue
+PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>::get() const {
   return {fNode->getAnchorPoint(), fNode->getPosition(), fNode->getScale(),
           fNode->getRotation(),    fNode->getSkew(),     fNode->getSkewAxis()};
 }
 
 template <>
-void PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>::set(
+SK_API void PropertyHandle<TransformPropertyValue, internal::TransformAdapter2D>::set(
     const TransformPropertyValue& t) {
   fNode->setAnchorPoint(t.fAnchorPoint);
   fNode->setPosition(t.fPosition);

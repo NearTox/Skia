@@ -150,7 +150,7 @@ class SkCornerPathEffectImpl : public SkPathEffectBase {
   void flatten(SkWriteBuffer& buffer) const override { buffer.writeScalar(fRadius); }
 
   Factory getFactory() const override { return CreateProc; }
-  const char* getTypeName() const noexcept override { return "SkCornerPathEffect"; }
+  const char* getTypeName() const override { return "SkCornerPathEffect"; }
 
  private:
   const SkScalar fRadius;

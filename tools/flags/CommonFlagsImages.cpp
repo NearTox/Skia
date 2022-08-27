@@ -5,6 +5,7 @@
 #include "src/utils/SkOSPath.h"
 #include "tools/flags/CommonFlags.h"
 
+namespace CommonFlags {
 bool CollectImages(CommandLineFlags::StringArray images, SkTArray<SkString>* output) {
     SkASSERT(output);
 
@@ -75,10 +76,10 @@ bool CollectImages(CommandLineFlags::StringArray images, SkTArray<SkString>* out
             bool foundAnImage = false;
             for (const char* ext : exts) {
                 SkOSFile::Iter it(flag, ext);
-                SkString       file;
+                SkString file;
                 while (it.next(&file)) {
-                    foundAnImage        = true;
-                    output->push_back() = SkOSPath::Join(flag, file.c_str());
+                  foundAnImage = true;
+                  output->push_back() = SkOSPath::Join(flag, file.c_str());
                 }
             }
             if (!foundAnImage) {
@@ -92,3 +93,5 @@ bool CollectImages(CommandLineFlags::StringArray images, SkTArray<SkString>* out
     }
     return true;
 }
+
+}  // namespace CommonFlags

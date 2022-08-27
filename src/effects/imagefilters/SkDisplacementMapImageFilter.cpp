@@ -16,18 +16,19 @@
 
 #if SK_SUPPORT_GPU
 #  include "include/gpu/GrRecordingContext.h"
-#  include "src/gpu/GrCaps.h"
-#  include "src/gpu/GrColorSpaceXform.h"
-#  include "src/gpu/GrFragmentProcessor.h"
-#  include "src/gpu/GrRecordingContextPriv.h"
-#  include "src/gpu/GrTexture.h"
-#  include "src/gpu/GrTextureProxy.h"
-#  include "src/gpu/SkGr.h"
-#  include "src/gpu/SurfaceFillContext.h"
-#  include "src/gpu/effects/GrTextureEffect.h"
-#  include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#  include "src/gpu/glsl/GrGLSLProgramDataManager.h"
-#  include "src/gpu/glsl/GrGLSLUniformHandler.h"
+#  include "src/gpu/KeyBuilder.h"
+#  include "src/gpu/ganesh/GrCaps.h"
+#  include "src/gpu/ganesh/GrColorSpaceXform.h"
+#  include "src/gpu/ganesh/GrFragmentProcessor.h"
+#  include "src/gpu/ganesh/GrRecordingContextPriv.h"
+#  include "src/gpu/ganesh/GrTexture.h"
+#  include "src/gpu/ganesh/GrTextureProxy.h"
+#  include "src/gpu/ganesh/SkGr.h"
+#  include "src/gpu/ganesh/SurfaceFillContext.h"
+#  include "src/gpu/ganesh/effects/GrTextureEffect.h"
+#  include "src/gpu/ganesh/glsl/GrGLSLFragmentShaderBuilder.h"
+#  include "src/gpu/ganesh/glsl/GrGLSLProgramDataManager.h"
+#  include "src/gpu/ganesh/glsl/GrGLSLUniformHandler.h"
 #endif
 
 namespace {
@@ -166,7 +167,7 @@ class GrDisplacementMapEffect : public GrFragmentProcessor {
 
   std::unique_ptr<ProgramImpl> onMakeProgramImpl() const override;
 
-  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder*) const override;
+  void onAddToKey(const GrShaderCaps&, skgpu::KeyBuilder*) const override;
 
   bool onIsEqual(const GrFragmentProcessor&) const override;
 
@@ -407,7 +408,7 @@ std::unique_ptr<GrFragmentProcessor::ProgramImpl> GrDisplacementMapEffect::onMak
   return std::make_unique<Impl>();
 }
 
-void GrDisplacementMapEffect::onAddToKey(const GrShaderCaps& caps, GrProcessorKeyBuilder* b) const {
+void GrDisplacementMapEffect::onAddToKey(const GrShaderCaps& caps, skgpu::KeyBuilder* b) const {
   static constexpr int kChannelSelectorKeyBits = 2;  // Max value is 3, so 2 bits are required
 
   uint32_t xKey = static_cast<uint32_t>(fXChannelSelector);
@@ -434,7 +435,7 @@ GrDisplacementMapEffect::GrDisplacementMapEffect(const GrDisplacementMapEffect& 
       fYChannelSelector(that.fYChannelSelector),
       fScale(that.fScale) {}
 
-GrDisplacementMapEffect::~GrDisplacementMapEffect() = default;
+GrDisplacementMapEffect::~GrDisplacementMapEffect() {}
 
 std::unique_ptr<GrFragmentProcessor> GrDisplacementMapEffect::clone() const {
   return std::unique_ptr<GrFragmentProcessor>(new GrDisplacementMapEffect(*this));
@@ -480,7 +481,7 @@ void GrDisplacementMapEffect::Impl::emitCode(EmitArgs& args) {
   const GrDisplacementMapEffect& displacementMap = args.fFp.cast<GrDisplacementMapEffect>();
 
   fScaleUni = args.fUniformHandler->addUniform(
-      &displacementMap, kFragment_GrShaderFlag, kHalf2_GrSLType, "Scale");
+      &displacementMap, kFragment_GrShaderFlag, SkSLType::kHalf2, "Scale");
   const char* scaleUni = args.fUniformHandler->getUniformCStr(fScaleUni);
 
   GrGLSLFPFragmentBuilder* fragBuilder = args.fFragBuilder;

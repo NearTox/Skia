@@ -465,7 +465,7 @@ SkContourMeasureIter::SkContourMeasureIter(
   this->reset(path, forceClosed, resScale);
 }
 
-SkContourMeasureIter::~SkContourMeasureIter() = default;
+SkContourMeasureIter::~SkContourMeasureIter() {}
 
 /** Assign a new path, or null to have none.
  */

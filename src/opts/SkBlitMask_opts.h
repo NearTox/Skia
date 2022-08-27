@@ -49,7 +49,8 @@ static void D32_A8_Opaque_Color_neon(
   const uint8_t* SK_RESTRICT mask = (const uint8_t*)maskPtr;
   uint8x8x4_t vpmc;
 
-  maskRB -= width;
+  // Nine patch may set maskRB to 0 to blit the same row repeatedly.
+  ptrdiff_t mask_adjust = (ptrdiff_t)maskRB - width;
   dstRB -= (width << 2);
 
   if (width >= 8) {
@@ -98,7 +99,7 @@ static void D32_A8_Opaque_Color_neon(
     }
 
     device = (uint32_t*)((char*)device + dstRB);
-    mask += maskRB;
+    mask += mask_adjust;
 
   } while (--height != 0);
 }
@@ -120,7 +121,8 @@ static void blit_mask_d32_a8_black(
   SkPMColor* SK_RESTRICT device = (SkPMColor*)dst;
   const uint8_t* SK_RESTRICT mask = (const uint8_t*)maskPtr;
 
-  maskRB -= width;
+  // Nine patch may set maskRB to 0 to blit the same row repeatedly.
+  ptrdiff_t mask_adjust = (ptrdiff_t)maskRB - width;
   dstRB -= (width << 2);
   do {
     int w = width;
@@ -144,7 +146,7 @@ static void blit_mask_d32_a8_black(
       device += 1;
     }
     device = (uint32_t*)((char*)device + dstRB);
-    mask += maskRB;
+    mask += mask_adjust;
   } while (--height != 0);
 }
 
@@ -193,7 +195,7 @@ static void blit_mask_d32_a8_black(
     //   ~~~>
     // a = 1*aa + d(1-1*aa) = aa + d(1-aa)
     // c = 0*aa + d(1-1*aa) =      d(1-aa)
-    return Sk4px(Sk16b(aa) & Sk16b(0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255)) +
+    return (aa & Sk4px(skvx::byte16{0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255, 0, 0, 0, 255})) +
            d.approxMulDiv255(aa.inv());
   };
   while (h-- > 0) {

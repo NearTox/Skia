@@ -20,7 +20,7 @@
     the 3-channel 3D format. These are passed to SkMaskFilter objects.
 */
 struct SkMask {
-  SkMask() noexcept : fImage(nullptr) {}
+  SkMask() : fImage(nullptr) {}
 
   enum Format : uint8_t {
     kBW_Format,      //!< 1bit per pixel mask (e.g. monochrome)
@@ -118,13 +118,13 @@ struct SkMask {
    *  This should not be called with kBW_Format, as it will give unspecified
    *  results (and assert in the debug build).
    */
-  void* getAddr(int x, int y) const noexcept;
+  void* getAddr(int x, int y) const;
 
   enum AllocType {
     kUninit_Alloc,
     kZeroInit_Alloc,
   };
-  static uint8_t* AllocImage(size_t bytes, AllocType = kUninit_Alloc) noexcept;
+  static uint8_t* AllocImage(size_t bytes, AllocType = kUninit_Alloc);
   static void FreeImage(void* image) noexcept;
 
   enum CreateMode {

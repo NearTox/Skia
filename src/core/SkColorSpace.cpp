@@ -138,7 +138,7 @@ bool SkColorSpace::gammaCloseToSRGB() const {
   return memcmp(&fTransferFn, &SkNamedTransferFn::kSRGB, 7 * sizeof(float)) == 0;
 }
 
-bool SkColorSpace::gammaIsLinear() const noexcept {
+bool SkColorSpace::gammaIsLinear() const {
   // Nearly-equal transfer functions were snapped at construction time, so just do an exact test
   return memcmp(&fTransferFn, &SkNamedTransferFn::kLinear, 7 * sizeof(float)) == 0;
 }
@@ -230,9 +230,9 @@ enum NamedGamma {
 
 struct ColorSpaceHeader {
   // Flag values, only used by old (k0_Version) serialization
-  static constexpr uint8_t kMatrix_Flag = 1 << 0;
-  static constexpr uint8_t kICC_Flag = 1 << 1;
-  static constexpr uint8_t kTransferFn_Flag = 1 << 3;
+  inline static constexpr uint8_t kMatrix_Flag = 1 << 0;
+  inline static constexpr uint8_t kICC_Flag = 1 << 1;
+  inline static constexpr uint8_t kTransferFn_Flag = 1 << 3;
 
   uint8_t fVersion = kCurrent_Version;
 
@@ -347,7 +347,7 @@ sk_sp<SkColorSpace> SkColorSpace::Deserialize(const void* data, size_t length) {
   }
 }
 
-bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) noexcept {
+bool SkColorSpace::Equals(const SkColorSpace* x, const SkColorSpace* y) {
   if (x == y) {
     return true;
   }

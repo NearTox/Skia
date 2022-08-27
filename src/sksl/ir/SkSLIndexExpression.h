@@ -8,32 +8,41 @@
 #ifndef SKSL_INDEX
 #define SKSL_INDEX
 
-#include "src/sksl/SkSLContext.h"
-#include "src/sksl/SkSLUtil.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
 
+#include <memory>
+#include <string>
+#include <utility>
+
 namespace SkSL {
+
+class Context;
+class SymbolTable;
+class Type;
 
 /**
  * An expression which extracts a value from an array or matrix, as in 'm[2]'.
  */
 struct IndexExpression final : public Expression {
-  static constexpr Kind kExpressionKind = Kind::kIndex;
+  inline static constexpr Kind kExpressionKind = Kind::kIndex;
 
   IndexExpression(
-      const Context& context, std::unique_ptr<Expression> base, std::unique_ptr<Expression> index)
-      : INHERITED(base->fOffset, kExpressionKind, &IndexType(context, base->type())),
+      const Context& context, Position pos, std::unique_ptr<Expression> base,
+      std::unique_ptr<Expression> index)
+      : INHERITED(pos, kExpressionKind, &IndexType(context, base->type())),
         fBase(std::move(base)),
         fIndex(std::move(index)) {}
 
   // Returns a simplified index-expression; reports errors via the ErrorReporter.
   static std::unique_ptr<Expression> Convert(
-      const Context& context, SymbolTable& symbolTable, std::unique_ptr<Expression> base,
-      std::unique_ptr<Expression> index);
+      const Context& context, SymbolTable& symbolTable, Position pos,
+      std::unique_ptr<Expression> base, std::unique_ptr<Expression> index);
 
   // Returns a simplified index-expression; reports errors via ASSERT.
   static std::unique_ptr<Expression> Make(
-      const Context& context, std::unique_ptr<Expression> base, std::unique_ptr<Expression> index);
+      const Context& context, Position pos, std::unique_ptr<Expression> base,
+      std::unique_ptr<Expression> index);
 
   /**
    * Given a type, returns the type that will result from extracting an array value from it.
@@ -52,12 +61,12 @@ struct IndexExpression final : public Expression {
     return this->base()->hasProperty(property) || this->index()->hasProperty(property);
   }
 
-  std::unique_ptr<Expression> clone() const override {
+  std::unique_ptr<Expression> clone(Position pos) const override {
     return std::unique_ptr<Expression>(
-        new IndexExpression(this->base()->clone(), this->index()->clone(), &this->type()));
+        new IndexExpression(pos, this->base()->clone(), this->index()->clone(), &this->type()));
   }
 
-  String description() const override {
+  std::string description() const override {
     return this->base()->description() + "[" + this->index()->description() + "]";
   }
 
@@ -65,10 +74,9 @@ struct IndexExpression final : public Expression {
 
  private:
   IndexExpression(
-      std::unique_ptr<Expression> base, std::unique_ptr<Expression> index, const Type* type)
-      : INHERITED(base->fOffset, Kind::kIndex, type),
-        fBase(std::move(base)),
-        fIndex(std::move(index)) {}
+      Position pos, std::unique_ptr<Expression> base, std::unique_ptr<Expression> index,
+      const Type* type)
+      : INHERITED(pos, Kind::kIndex, type), fBase(std::move(base)), fIndex(std::move(index)) {}
 
   std::unique_ptr<Expression> fBase;
   std::unique_ptr<Expression> fIndex;

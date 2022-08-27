@@ -22,13 +22,13 @@ static inline int32_t SkSqrt32(int32_t n) noexcept { return SkSqrtBits(n, 15); }
 /**
  *  Returns (value < 0 ? 0 : value) efficiently (i.e. no compares or branches)
  */
-static constexpr inline int SkClampPos(int value) noexcept { return value & ~(value >> 31); }
+static inline int SkClampPos(int value) noexcept { return value & ~(value >> 31); }
 
 /**
  * Stores numer/denom and numer%denom into div and mod respectively.
  */
 template <typename In, typename Out>
-inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) noexcept {
+inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) {
 #ifdef SK_CPU_ARM32
   // If we wrote this as in the else branch, GCC won't fuse the two into one
   // divmod call, but rather a div call followed by a divmod.  Silly!  This
@@ -53,13 +53,13 @@ inline void SkTDivMod(In numer, In denom, Out* div, Out* mod) noexcept {
 /** If sign == -1, returns -n, else sign must be 0, and returns n.
  Typically used in conjunction with SkExtractSign().
  */
-static constexpr inline int32_t SkApplySign(int32_t n, int32_t sign) noexcept {
+static inline int32_t SkApplySign(int32_t n, int32_t sign) noexcept {
   SkASSERT(sign == 0 || sign == -1);
   return (n ^ sign) - sign;
 }
 
 /** Return x with the sign of y */
-static constexpr inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
+static inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
   return SkApplySign(x, SkExtractSign(x ^ y));
 }
 
@@ -68,7 +68,7 @@ static constexpr inline int32_t SkCopySign32(int32_t x, int32_t y) noexcept {
  Note: only works as long as max - value doesn't wrap around
  @return max if value >= max, else value
  */
-static constexpr inline unsigned SkClampUMax(unsigned value, unsigned max) noexcept {
+static inline unsigned SkClampUMax(unsigned value, unsigned max) noexcept {
   if (value > max) {
     value = max;
   }
@@ -79,7 +79,7 @@ static constexpr inline unsigned SkClampUMax(unsigned value, unsigned max) noexc
 // we negate it (even though we *know* we're 2's complement and we'll get the same
 // value back). So we create this helper function that casts to size_t (unsigned) first,
 // to avoid the complaint.
-static constexpr inline size_t sk_negate_to_size_t(int32_t value) noexcept {
+static inline size_t sk_negate_to_size_t(int32_t value) noexcept {
 #if defined(_MSC_VER)
 #  pragma warning(push)
 #  pragma warning(disable : 4146)  // Thanks MSVC, we know what we're negating an unsigned
@@ -95,7 +95,7 @@ static constexpr inline size_t sk_negate_to_size_t(int32_t value) noexcept {
 /** Return a*b/255, truncating away any fractional bits. Only valid if both
  a and b are 0..255
  */
-static constexpr inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
+static inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
   SkASSERT((uint8_t)a == a);
   SkASSERT((uint8_t)b == b);
   unsigned prod = a * b + 1;
@@ -105,7 +105,7 @@ static constexpr inline U8CPU SkMulDiv255Trunc(U8CPU a, U8CPU b) noexcept {
 /** Return (a*b)/255, taking the ceiling of any fractional bits. Only valid if
  both a and b are 0..255. The expected result equals (a * b + 254) / 255.
  */
-static constexpr inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
+static inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
   SkASSERT((uint8_t)a == a);
   SkASSERT((uint8_t)b == b);
   unsigned prod = a * b + 255;
@@ -114,7 +114,7 @@ static constexpr inline U8CPU SkMulDiv255Ceiling(U8CPU a, U8CPU b) noexcept {
 
 /** Just the rounding step in SkDiv255Round: round(value / 255)
  */
-static constexpr inline unsigned SkDiv255Round(unsigned prod) noexcept {
+static inline unsigned SkDiv255Round(unsigned prod) noexcept {
   prod += 128;
   return (prod + (prod >> 8)) >> 8;
 }
@@ -128,6 +128,23 @@ static inline uint32_t SkBSwap32(uint32_t v) noexcept { return _byteswap_ulong(v
 #else
 static inline uint32_t SkBSwap32(uint32_t v) noexcept { return __builtin_bswap32(v); }
 #endif
+
+/*
+ * Return the number of set bits (i.e., the population count) in the provided uint32_t.
+ */
+int SkPopCount_portable(uint32_t n) noexcept;
+
+#if defined(__GNUC__) || defined(__clang__)
+static inline int SkPopCount(uint32_t n) noexcept { return __builtin_popcount(n); }
+#else
+static inline int SkPopCount(uint32_t n) noexcept { return SkPopCount_portable(n); }
+#endif
+
+/*
+ * Return the 0-based index of the nth bit set in target
+ * Returns 32 if there is no nth bit set.
+ */
+int SkNthSet(uint32_t target, int n) noexcept;
 
 //! Returns the number of leading zero bits (0...32)
 // From Hacker's Delight 2nd Edition
@@ -182,12 +199,12 @@ static inline int SkCLZ(uint32_t mask) noexcept {
   }
 }
 #elif defined(SK_CPU_ARM32) || defined(__GNUC__) || defined(__clang__)
-static inline int SkCLZ(uint32_t mask) noexcept {
+static inline int SkCLZ(uint32_t mask) {
   // __builtin_clz(0) is undefined, so we have to detect that case.
   return mask ? __builtin_clz(mask) : 32;
 }
 #else
-static inline int SkCLZ(uint32_t mask) noexcept { return SkCLZ_portable(mask); }
+static inline int SkCLZ(uint32_t mask) { return SkCLZ_portable(mask); }
 #endif
 
 //! Returns the number of trailing zero bits (0...32)
@@ -325,7 +342,7 @@ static inline size_t GrNextSizePow2(size_t n) noexcept {
 
 // conservative check. will return false for very large values that "could" fit
 template <typename T>
-static constexpr inline bool SkFitsInFixed(T x) noexcept {
+static inline bool SkFitsInFixed(T x) noexcept {
   return SkTAbs(x) <= 32767.0f;
 }
 

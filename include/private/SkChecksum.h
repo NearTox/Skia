@@ -14,6 +14,9 @@
 #include "include/private/SkOpts_spi.h"
 #include "include/private/SkTLogic.h"
 
+#include <string>
+#include <string_view>
+
 class SkChecksum : SkNoncopyable {
  public:
   /**
@@ -22,7 +25,7 @@ class SkChecksum : SkNoncopyable {
    *
    * This is the Murmur3 finalizer.
    */
-  static constexpr uint32_t Mix(uint32_t hash) noexcept {
+  static uint32_t Mix(uint32_t hash) noexcept {
     hash ^= hash >> 16;
     hash *= 0x85ebca6b;
     hash ^= hash >> 13;
@@ -37,7 +40,7 @@ class SkChecksum : SkNoncopyable {
    *
    *  This version is 2-lines cheaper than Mix, but seems to be sufficient for the font cache.
    */
-  static constexpr uint32_t CheapMix(uint32_t hash) noexcept {
+  static uint32_t CheapMix(uint32_t hash) noexcept {
     hash ^= hash >> 16;
     hash *= 0x85ebca6b;
     hash ^= hash >> 16;
@@ -59,6 +62,12 @@ struct SkGoodHash {
   }
 
   uint32_t operator()(const SkString& k) const { return SkOpts::hash_fn(k.c_str(), k.size(), 0); }
+
+  uint32_t operator()(const std::string& k) const {
+    return SkOpts::hash_fn(k.c_str(), k.size(), 0);
+  }
+
+  uint32_t operator()(std::string_view k) const { return SkOpts::hash_fn(k.data(), k.size(), 0); }
 };
 
 #endif

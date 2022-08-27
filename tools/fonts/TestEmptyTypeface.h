@@ -50,6 +50,7 @@ class TestEmptyTypeface : public SkTypeface {
   SkTypeface::LocalizedStrings* onCreateFamilyNameIterator() const override {
     return new EmptyLocalizedStrings;
   }
+  bool onGlyphMaskNeedsCurrentColor() const override { return false; }
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[],
       int coordinateCount) const override {

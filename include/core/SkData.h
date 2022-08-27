@@ -58,7 +58,7 @@ class SK_API SkData final : public SkNVRefCnt<SkData> {
    *  length to the size of the data. If buffer is NULL, it is ignored, and
    *  only the computed number of bytes is returned.
    */
-  size_t copyRange(size_t offset, size_t length, void* buffer) const;
+  size_t copyRange(size_t offset, size_t length, void* buffer) const noexcept;
 
   /**
    *  Returns true if these two objects have the same length and contents,
@@ -82,6 +82,12 @@ class SK_API SkData final : public SkNVRefCnt<SkData> {
    *  to write into the buffer, but this must be done before another ref() is made.
    */
   static sk_sp<SkData> MakeUninitialized(size_t length);
+
+  /**
+   *  Create a new data with zero-initialized contents. The caller should call writable_data()
+   *  to write into the buffer, but this must be done before another ref() is made.
+   */
+  static sk_sp<SkData> MakeZeroInitialized(size_t length);
 
   /**
    *  Create a new dataref by copying the specified c-string

@@ -9,14 +9,19 @@
 #define SkBlenderBase_DEFINED
 
 #include "include/core/SkBlender.h"
-#include "include/core/SkColorSpace.h"
-#include "include/private/SkTOptional.h"
 #include "src/core/SkArenaAlloc.h"
 #include "src/core/SkVM.h"
 
+#include <optional>
+
+enum class SkBackend : uint8_t;
 struct GrFPArgs;
 class GrFragmentProcessor;
+class SkColorInfo;
+class SkPaintParamsKeyBuilder;
+class SkPipelineDataGatherer;
 class SkRuntimeEffect;
+class SkKeyContext;
 
 /**
  * Encapsulates a blend function, including non-public APIs.
@@ -29,7 +34,7 @@ class SkBlenderBase : public SkBlender {
    * Returns true if this SkBlender represents any SkBlendMode, and returns the blender's
    * SkBlendMode in `mode`. Returns false for other types of blends.
    */
-  virtual skstd::optional<SkBlendMode> asBlendMode() const { return {}; }
+  virtual std::optional<SkBlendMode> asBlendMode() const { return {}; }
 
   /** Creates the blend program in SkVM. */
   SK_WARN_UNUSED_RESULT
@@ -51,6 +56,12 @@ class SkBlenderBase : public SkBlender {
 
   virtual SkRuntimeEffect* asRuntimeEffect() const { return nullptr; }
 
+#ifdef SK_ENABLE_SKSL
+  // TODO: make pure virtual
+  virtual void addToKey(
+      const SkKeyContext&, SkPaintParamsKeyBuilder*, SkPipelineDataGatherer*) const;
+#endif
+
   static SkFlattenable::Type GetFlattenableType() { return kSkBlender_Type; }
   Type getFlattenableType() const override { return GetFlattenableType(); }
 
@@ -62,13 +73,15 @@ class SkBlenderBase : public SkBlender {
   using INHERITED = SkFlattenable;
 };
 
-inline SkBlenderBase* as_BB(SkBlender* blend) { return static_cast<SkBlenderBase*>(blend); }
+inline SkBlenderBase* as_BB(SkBlender* blend) noexcept {
+  return static_cast<SkBlenderBase*>(blend);
+}
 
-inline const SkBlenderBase* as_BB(const SkBlender* blend) {
+inline const SkBlenderBase* as_BB(const SkBlender* blend) noexcept {
   return static_cast<const SkBlenderBase*>(blend);
 }
 
-inline const SkBlenderBase* as_BB(const sk_sp<SkBlender>& blend) {
+inline const SkBlenderBase* as_BB(const sk_sp<SkBlender>& blend) noexcept {
   return static_cast<SkBlenderBase*>(blend.get());
 }
 

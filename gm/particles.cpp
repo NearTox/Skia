@@ -8,14 +8,15 @@
 #include "gm/gm.h"
 
 #if !defined(SK_BUILD_FOR_GOOGLE3)  // Google3 doesn't build particles module
+#  if !defined(SK_BUILD_FOR_SKQP)   // SkQP doesn't need to test particles
 
-#  include "include/core/SkCanvas.h"
-#  include "include/core/SkColor.h"
-#  include "modules/particles/include/SkParticleEffect.h"
-#  include "modules/particles/include/SkParticleSerialization.h"
-#  include "modules/skresources/include/SkResources.h"
-#  include "src/sksl/codegen/SkSLVMCodeGenerator.h"
-#  include "tools/Resources.h"
+#    include "include/core/SkCanvas.h"
+#    include "include/core/SkColor.h"
+#    include "modules/particles/include/SkParticleEffect.h"
+#    include "modules/particles/include/SkParticleSerialization.h"
+#    include "modules/skresources/include/SkResources.h"
+#    include "src/sksl/codegen/SkSLVMCodeGenerator.h"
+#    include "tools/Resources.h"
 
 struct UniformValue {
   const char* fName;
@@ -96,4 +97,5 @@ DEF_GM(return new ParticlesGM(
                   "uniforms", 2.0, {250, 250}, {125, 125},
                   {{"rate", {2.0f}}, {"spin", {4.0f}}, {"color", {0.25f, 0.75f, 0.75f}}});)
 
+#  endif  // SK_BUILD_FOR_SKQP
 #endif  // SK_BUILD_FOR_GOOGLE3

@@ -23,6 +23,8 @@
 #include "include/private/SkTemplates.h"
 #include "include/private/SkTo.h"
 
+struct SkSamplingOptions;
+
 class SkWriter32 : SkNoncopyable {
  public:
   /**
@@ -32,7 +34,7 @@ class SkWriter32 : SkNoncopyable {
    *  first time an allocation doesn't fit.  From then it will use dynamically allocated storage.
    *  This used to be optional behavior, but pipe now relies on it.
    */
-  constexpr SkWriter32(void* external = nullptr, size_t externalBytes = 0) noexcept {
+  SkWriter32(void* external = nullptr, size_t externalBytes = 0) noexcept {
     this->reset(external, externalBytes);
   }
 
@@ -43,7 +45,7 @@ class SkWriter32 : SkNoncopyable {
   // buffer provided in the constructor or the most recent call to reset.
   bool usingInitialStorage() const noexcept { return fData == fExternal; }
 
-  constexpr void reset(void* external = nullptr, size_t externalBytes = 0) noexcept {
+  void reset(void* external = nullptr, size_t externalBytes = 0) noexcept {
     // we cast this pointer to int* and float* at times, so assert that it is aligned.
     SkASSERT(SkIsAlign4((uintptr_t)external));
     // we always write multiples of 4-bytes, so truncate down the size to match that
@@ -130,6 +132,8 @@ class SkWriter32 : SkNoncopyable {
     rgn.writeToMemory(this->reserve(size));
   }
 
+  void writeSampling(const SkSamplingOptions& sampling);
+
   // write count bytes (must be a multiple of 4)
   void writeMul4(const void* values, size_t size) { this->write(values, size); }
 
@@ -187,20 +191,22 @@ class SkWriter32 : SkNoncopyable {
     }
   }
 
-  static size_t WriteDataSize(const SkData* data) { return 4 + SkAlign4(data ? data->size() : 0); }
+  static size_t WriteDataSize(const SkData* data) noexcept {
+    return 4 + SkAlign4(data ? data->size() : 0);
+  }
 
   /**
    *  Move the cursor back to offset bytes from the beginning.
    *  offset must be a multiple of 4 no greater than size().
    */
-  void rewindToOffset(size_t offset) {
+  void rewindToOffset(size_t offset) noexcept {
     SkASSERT(SkAlign4(offset) == offset);
     SkASSERT(offset <= bytesWritten());
     fUsed = offset;
   }
 
   // copy into a single buffer (allocated by caller). Must be at least size()
-  void flatten(void* dst) const { memcpy(dst, fData, fUsed); }
+  void flatten(void* dst) const noexcept { memcpy(dst, fData, fUsed); }
 
   bool writeToStream(SkWStream* stream) const { return stream->write(fData, fUsed); }
 

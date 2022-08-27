@@ -11,6 +11,8 @@
 #include "include/core/SkTypes.h"
 #include "include/private/SkChecksum.h"
 #include "include/private/SkTemplates.h"
+
+#include <initializer_list>
 #include <new>
 #include <utility>
 
@@ -26,11 +28,11 @@
 template <typename T, typename K, typename Traits = T>
 class SkTHashTable {
  public:
-  SkTHashTable() noexcept = default;
+  SkTHashTable() = default;
   ~SkTHashTable() = default;
 
   SkTHashTable(const SkTHashTable& that) { *this = that; }
-  SkTHashTable(SkTHashTable&& that) noexcept { *this = std::move(that); }
+  SkTHashTable(SkTHashTable&& that) { *this = std::move(that); }
 
   SkTHashTable& operator=(const SkTHashTable& that) {
     if (this != &that) {
@@ -44,7 +46,7 @@ class SkTHashTable {
     return *this;
   }
 
-  SkTHashTable& operator=(SkTHashTable&& that) noexcept {
+  SkTHashTable& operator=(SkTHashTable&& that) {
     if (this != &that) {
       fCount = that.fCount;
       fCapacity = that.fCapacity;
@@ -56,7 +58,7 @@ class SkTHashTable {
   }
 
   // Clear the table.
-  void reset() noexcept { *this = SkTHashTable(); }
+  void reset() { *this = SkTHashTable(); }
 
   // How many entries are in the table?
   int count() const { return fCount; }
@@ -96,8 +98,8 @@ class SkTHashTable {
       if (s.empty()) {
         return nullptr;
       }
-      if (hash == s.hash && key == Traits::GetKey(s.val)) {
-        return &s.val;
+      if (hash == s.hash && key == Traits::GetKey(*s)) {
+        return &*s;
       }
       index = this->next(index);
     }
@@ -122,8 +124,8 @@ class SkTHashTable {
     int index = hash & (fCapacity - 1);
     for (int n = 0; n < fCapacity; n++) {
       Slot& s = fSlots[index];
-      SkASSERT(!s.empty());
-      if (hash == s.hash && key == Traits::GetKey(s.val)) {
+      SkASSERT(s.has_value());
+      if (hash == s.hash && key == Traits::GetKey(*s)) {
         this->removeSlot(index);
         if (4 * fCount <= fCapacity && fCapacity > 4) {
           this->resize(fCapacity / 2);
@@ -134,12 +136,33 @@ class SkTHashTable {
     }
   }
 
+  // Hash tables will automatically resize themselves when set() and remove() are called, but
+  // resize() can be called to manually grow capacity before a bulk insertion.
+  void resize(int capacity) {
+    SkASSERT(capacity >= fCount);
+    int oldCapacity = fCapacity;
+    SkDEBUGCODE(int oldCount = fCount);
+
+    fCount = 0;
+    fCapacity = capacity;
+    SkAutoTArray<Slot> oldSlots = std::move(fSlots);
+    fSlots = SkAutoTArray<Slot>(capacity);
+
+    for (int i = 0; i < oldCapacity; i++) {
+      Slot& s = oldSlots[i];
+      if (s.has_value()) {
+        this->uncheckedSet(*std::move(s));
+      }
+    }
+    SkASSERT(fCount == oldCount);
+  }
+
   // Call fn on every entry in the table.  You may mutate the entries, but be very careful.
   template <typename Fn>  // f(T*)
   void foreach (Fn&& fn) {
     for (int i = 0; i < fCapacity; i++) {
-      if (!fSlots[i].empty()) {
-        fn(&fSlots[i].val);
+      if (fSlots[i].has_value()) {
+        fn(&*fSlots[i]);
       }
     }
   }
@@ -148,8 +171,8 @@ class SkTHashTable {
   template <typename Fn>  // f(T) or f(const T&)
   void foreach (Fn&& fn) const {
     for (int i = 0; i < fCapacity; i++) {
-      if (!fSlots[i].empty()) {
-        fn(fSlots[i].val);
+      if (fSlots[i].has_value()) {
+        fn(*fSlots[i]);
       }
     }
   }
@@ -200,7 +223,7 @@ class SkTHashTable {
   // Finds the first non-empty slot for an iterator.
   int firstPopulatedSlot() const {
     for (int i = 0; i < fCapacity; i++) {
-      if (!fSlots[i].empty()) {
+      if (fSlots[i].has_value()) {
         return i;
       }
     }
@@ -210,7 +233,7 @@ class SkTHashTable {
   // Increments an iterator's slot.
   int nextPopulatedSlot(int currentSlot) const {
     for (int i = currentSlot + 1; i < fCapacity; i++) {
-      if (!fSlots[i].empty()) {
+      if (fSlots[i].has_value()) {
         return i;
       }
     }
@@ -219,8 +242,8 @@ class SkTHashTable {
 
   // Reads from an iterator's slot.
   const T* slot(int i) const {
-    SkASSERT(!fSlots[i].empty());
-    return &fSlots[i].val;
+    SkASSERT(fSlots[i].has_value());
+    return &*fSlots[i];
   }
 
   T* uncheckedSet(T&& val) {
@@ -232,40 +255,21 @@ class SkTHashTable {
       Slot& s = fSlots[index];
       if (s.empty()) {
         // New entry.
-        s.val = std::move(val);
-        s.hash = hash;
+        s.emplace(std::move(val), hash);
         fCount++;
-        return &s.val;
+        return &*s;
       }
-      if (hash == s.hash && key == Traits::GetKey(s.val)) {
+      if (hash == s.hash && key == Traits::GetKey(*s)) {
         // Overwrite previous entry.
         // Note: this triggers extra copies when adding the same value repeatedly.
-        s.val = std::move(val);
-        return &s.val;
+        s.emplace(std::move(val), hash);
+        return &*s;
       }
 
       index = this->next(index);
     }
     SkASSERT(false);
     return nullptr;
-  }
-
-  void resize(int capacity) {
-    int oldCapacity = fCapacity;
-    SkDEBUGCODE(int oldCount = fCount);
-
-    fCount = 0;
-    fCapacity = capacity;
-    SkAutoTArray<Slot> oldSlots = std::move(fSlots);
-    fSlots = SkAutoTArray<Slot>(capacity);
-
-    for (int i = 0; i < oldCapacity; i++) {
-      Slot& s = oldSlots[i];
-      if (!s.empty()) {
-        this->uncheckedSet(std::move(s.val));
-      }
-    }
-    SkASSERT(fCount == oldCount);
   }
 
   void removeSlot(int index) {
@@ -287,7 +291,7 @@ class SkTHashTable {
         Slot& s = fSlots[index];
         if (s.empty()) {
           // We're done shuffling elements around.  Clear the last empty slot.
-          emptySlot = Slot();
+          emptySlot.reset();
           return;
         }
         originalIndex = s.hash & (fCapacity - 1);
@@ -315,12 +319,85 @@ class SkTHashTable {
 
   struct Slot {
     Slot() = default;
-    Slot(T&& v, uint32_t h) : val(std::move(v)), hash(h) {}
+    ~Slot() { this->reset(); }
 
-    bool empty() const { return this->hash == 0; }
+    Slot(const Slot& that) { *this = that; }
+    Slot& operator=(const Slot& that) {
+      if (this == &that) {
+        return *this;
+      }
+      if (hash) {
+        if (that.hash) {
+          val.storage = that.val.storage;
+          hash = that.hash;
+        } else {
+          this->reset();
+        }
+      } else {
+        if (that.hash) {
+          new (&val.storage) T(that.val.storage);
+          hash = that.hash;
+        } else {
+          // do nothing, no value on either side
+        }
+      }
+      return *this;
+    }
 
-    T val{};
+    Slot(Slot&& that) { *this = std::move(that); }
+    Slot& operator=(Slot&& that) {
+      if (this == &that) {
+        return *this;
+      }
+      if (hash) {
+        if (that.hash) {
+          val.storage = std::move(that.val.storage);
+          hash = that.hash;
+        } else {
+          this->reset();
+        }
+      } else {
+        if (that.hash) {
+          new (&val.storage) T(std::move(that.val.storage));
+          hash = that.hash;
+        } else {
+          // do nothing, no value on either side
+        }
+      }
+      return *this;
+    }
+
+    T& operator*() & { return val.storage; }
+    const T& operator*() const& { return val.storage; }
+    T&& operator*() && { return std::move(val.storage); }
+    const T&& operator*() const&& { return std::move(val.storage); }
+
+    Slot& emplace(T&& v, uint32_t h) {
+      this->reset();
+      new (&val.storage) T(std::move(v));
+      hash = h;
+      return *this;
+    }
+
+    bool has_value() const { return hash != 0; }
+    explicit operator bool() const { return this->has_value(); }
+    bool empty() const { return !this->has_value(); }
+
+    void reset() noexcept {
+      if (hash) {
+        val.storage.~T();
+        hash = 0;
+      }
+    }
+
     uint32_t hash = 0;
+
+   private:
+    union Storage {
+      T storage;
+      Storage() {}
+      ~Storage() {}
+    } val;
   };
 
   int fCount = 0, fCapacity = 0;
@@ -332,11 +409,37 @@ class SkTHashTable {
 template <typename K, typename V, typename HashK = SkGoodHash>
 class SkTHashMap {
  public:
+  // Allow default construction and assignment.
+  SkTHashMap() = default;
+
+  SkTHashMap(SkTHashMap<K, V, HashK>&& that) = default;
+  SkTHashMap(const SkTHashMap<K, V, HashK>& that) = default;
+
+  SkTHashMap<K, V, HashK>& operator=(SkTHashMap<K, V, HashK>&& that) = default;
+  SkTHashMap<K, V, HashK>& operator=(const SkTHashMap<K, V, HashK>& that) = default;
+
+  // Construct with an initializer list of key-value pairs.
+  struct Pair : public std::pair<K, V> {
+    using std::pair<K, V>::pair;
+    static const K& GetKey(const Pair& p) { return p.first; }
+    static auto Hash(const K& key) { return HashK()(key); }
+  };
+
+  SkTHashMap(std::initializer_list<Pair> pairs) {
+    fTable.resize(pairs.size() * 5 / 3);
+    for (const Pair& p : pairs) {
+      fTable.set(p);
+    }
+  }
+
   // Clear the map.
   void reset() { fTable.reset(); }
 
   // How many key/value pairs are in the table?
   int count() const { return fTable.count(); }
+
+  // Is empty?
+  bool empty() const { return fTable.count() == 0; }
 
   // Approximately how many bytes of memory do we use beyond sizeof(*this)?
   size_t approxBytesUsed() const { return fTable.approxBytesUsed(); }
@@ -385,12 +488,6 @@ class SkTHashMap {
   }
 
   // Dereferencing an iterator gives back a key-value pair, suitable for structured binding.
-  struct Pair : public std::pair<K, V> {
-    using std::pair<K, V>::pair;
-    static const K& GetKey(const Pair& p) { return p.first; }
-    static auto Hash(const K& key) { return HashK()(key); }
-  };
-
   using Iter = typename SkTHashTable<Pair, K>::template Iter<std::pair<K, V>>;
 
   Iter begin() const { return Iter::MakeBegin(&fTable); }
@@ -405,6 +502,23 @@ class SkTHashMap {
 template <typename T, typename HashT = SkGoodHash>
 class SkTHashSet {
  public:
+  // Allow default construction and assignment.
+  SkTHashSet() = default;
+
+  SkTHashSet(SkTHashSet<T, HashT>&& that) = default;
+  SkTHashSet(const SkTHashSet<T, HashT>& that) = default;
+
+  SkTHashSet<T, HashT>& operator=(SkTHashSet<T, HashT>&& that) = default;
+  SkTHashSet<T, HashT>& operator=(const SkTHashSet<T, HashT>& that) = default;
+
+  // Construct with an initializer list of Ts.
+  SkTHashSet(std::initializer_list<T> vals) {
+    fTable.resize(vals.size() * 5 / 3);
+    for (const T& val : vals) {
+      fTable.set(val);
+    }
+  }
+
   // Clear the set.
   void reset() { fTable.reset(); }
 

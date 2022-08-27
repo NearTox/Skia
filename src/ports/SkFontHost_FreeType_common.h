@@ -11,6 +11,7 @@
 
 #include "include/core/SkTypeface.h"
 #include "include/core/SkTypes.h"
+#include "include/private/SkMutex.h"
 #include "src/core/SkGlyph.h"
 #include "src/core/SkScalerContext.h"
 #include "src/core/SkSharedMutex.h"
@@ -49,18 +50,29 @@ class SkScalerContext_FreeType_Base : public SkScalerContext {
       sk_sp<SkTypeface> typeface, const SkScalerContextEffects& effects, const SkDescriptor* desc)
       : INHERITED(std::move(typeface), effects, desc) {}
 
-  void generateGlyphImage(FT_Face face, const SkGlyph& glyph, const SkMatrix& bitmapTransform);
-  bool generateGlyphPath(FT_Face face, SkPath* path);
-  bool generateFacePath(FT_Face face, SkGlyphID glyphID, SkPath* path);
+  bool drawCOLRv0Glyph(
+      FT_Face, const SkGlyph&, uint32_t loadGlyphFlags, SkSpan<SkColor> palette, SkCanvas*);
+  bool drawCOLRv1Glyph(
+      FT_Face, const SkGlyph&, uint32_t loadGlyphFlags, SkSpan<SkColor> palette, SkCanvas*);
+  bool drawSVGGlyph(
+      FT_Face, const SkGlyph&, uint32_t loadGlyphFlags, SkSpan<SkColor> palette, SkCanvas*);
+  void generateGlyphImage(FT_Face, const SkGlyph&, const SkMatrix& bitmapTransform);
+  bool generateGlyphPath(FT_Face, SkPath*);
+  bool generateFacePath(FT_Face, SkGlyphID, uint32_t loadGlyphFlags, SkPath*);
 
-  // Computes a bounding box for a COLRv1 glyph id in FT_BBox 26.6 format and FreeType's y-up
-  // coordinate space.
-  // Needed to call into COLRv1 from generateMetrics().
-  //
-  // Note : This method may change the configured size and transforms on FT_Face. Make sure to
-  // configure size, matrix and load glyphs as needed after using this function to restore the
-  // state of FT_Face.
-  bool computeColrV1GlyphBoundingBox(FT_Face face, SkGlyphID glyphID, FT_BBox* boundingBox);
+  /** Computes a bounding box for a COLRv1 glyph.
+   *
+   *  This method may change the configured size and transforms on FT_Face. Make sure to
+   *  configure size, matrix and load glyphs as needed after using this function to restore the
+   *  state of FT_Face.
+   */
+  static bool computeColrV1GlyphBoundingBox(FT_Face, SkGlyphID, SkRect* bounds);
+
+  struct ScalerContextBits {
+    static const constexpr uint32_t COLRv0 = 1;
+    static const constexpr uint32_t COLRv1 = 2;
+    static const constexpr uint32_t SVG = 3;
+  };
 
  private:
   using INHERITED = SkScalerContext;
@@ -101,9 +113,7 @@ class SkTypeface_FreeType : public SkTypeface {
   /** Fetch units/EM from "head" table if needed (ie for bitmap fonts) */
   static int GetUnitsPerEm(FT_Face face);
 
-  /**
-   *  Return the font data, or nullptr on failure.
-   */
+  /** Return the font data, or nullptr on failure. */
   std::unique_ptr<SkFontData> makeFontData() const;
   class FaceRec;
   FaceRec* getFaceRec() const;
@@ -128,6 +138,7 @@ class SkTypeface_FreeType : public SkTypeface {
 
   LocalizedStrings* onCreateFamilyNameIterator() const override;
 
+  bool onGlyphMaskNeedsCurrentColor() const override;
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[],
       int coordinateCount) const override;
@@ -138,6 +149,8 @@ class SkTypeface_FreeType : public SkTypeface {
   sk_sp<SkData> onCopyTableData(SkFontTableTag) const override;
 
   virtual std::unique_ptr<SkFontData> onMakeFontData() const = 0;
+  /** Utility to fill out the SkFontDescriptor palette information from the SkFontData. */
+  static void FontDataPaletteToDescriptorPalette(const SkFontData&, SkFontDescriptor*);
 
  private:
   mutable SkOnce fFTFaceOnce;
@@ -145,6 +158,9 @@ class SkTypeface_FreeType : public SkTypeface {
 
   mutable SkSharedMutex fC2GCacheMutex;
   mutable SkCharToGlyphCache fC2GCache;
+
+  mutable SkOnce fGlyphMasksMayNeedCurrentColorOnce;
+  mutable bool fGlyphMasksMayNeedCurrentColor;
 
   using INHERITED = SkTypeface;
 };

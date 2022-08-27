@@ -23,7 +23,7 @@ struct SK_API SkPoint3 {
   SkScalar y() const noexcept { return fY; }
   SkScalar z() const noexcept { return fZ; }
 
-  constexpr void set(SkScalar x, SkScalar y, SkScalar z) noexcept {
+  void set(SkScalar x, SkScalar y, SkScalar z) noexcept {
     fX = x;
     fY = y;
     fZ = z;

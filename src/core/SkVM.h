@@ -10,6 +10,7 @@
 
 #include "include/core/SkBlendMode.h"
 #include "include/core/SkColor.h"
+#include "include/core/SkColorType.h"
 #include "include/core/SkSpan.h"
 #include "include/private/SkMacros.h"
 #include "include/private/SkTArray.h"
@@ -41,6 +42,10 @@ class SkWStream;
 #endif
 
 namespace skvm {
+
+namespace viz {
+class Visualizer;
+}
 
 class Assembler {
  public:
@@ -211,11 +216,11 @@ class Assembler {
     };
     enum { REG, MEM, LABEL } kind;
 
-    constexpr Operand(GP64 r) noexcept : reg(r), kind(REG) {}
-    constexpr Operand(Xmm r) noexcept : reg(r), kind(REG) {}
-    constexpr Operand(Ymm r) noexcept : reg(r), kind(REG) {}
-    constexpr Operand(Mem m) noexcept : mem(m), kind(MEM) {}
-    constexpr Operand(Label* l) noexcept : label(l), kind(LABEL) {}
+    Operand(GP64 r) : reg(r), kind(REG) {}
+    Operand(Xmm r) : reg(r), kind(REG) {}
+    Operand(Ymm r) : reg(r), kind(REG) {}
+    Operand(Mem m) : mem(m), kind(MEM) {}
+    Operand(Label* l) : label(l), kind(LABEL) {}
   };
 
   void vpand(Ymm dst, Ymm x, Operand y);
@@ -521,16 +526,17 @@ class Assembler {
 };
 
 // Order matters a little: Ops <=store128 are treated as having side effects.
-#define SKVM_OPS(M)                                                                               \
-  M(assert_true)                                                                                  \
-  M(store8)                                                                                       \
-  M(store16) M(store32) M(store64) M(store128) M(load8) M(load16) M(load32) M(load64) M(load128)  \
-      M(index) M(gather8) M(gather16) M(gather32) M(uniform32) M(array32) M(splat) M(add_f32)     \
-          M(add_i32) M(sub_f32) M(sub_i32) M(mul_f32) M(mul_i32) M(div_f32) M(min_f32) M(max_f32) \
-              M(fma_f32) M(fms_f32) M(fnma_f32) M(sqrt_f32) M(shl_i32) M(shr_i32) M(sra_i32)      \
-                  M(ceil) M(floor) M(trunc) M(round) M(to_fp16) M(from_fp16) M(to_f32) M(neq_f32) \
-                      M(eq_f32) M(eq_i32) M(gte_f32) M(gt_f32) M(gt_i32) M(bit_and) M(bit_or)     \
-                          M(bit_xor) M(bit_clear) M(select)
+#define SKVM_OPS(M)                                                                                \
+  M(assert_true)                                                                                   \
+  M(trace_line)                                                                                    \
+  M(trace_var) M(trace_enter) M(trace_exit) M(trace_scope) M(store8) M(store16) M(store32)         \
+      M(store64) M(store128) M(load8) M(load16) M(load32) M(load64) M(load128) M(index) M(gather8) \
+          M(gather16) M(gather32) M(uniform32) M(array32) M(splat) M(add_f32) M(add_i32)           \
+              M(sub_f32) M(sub_i32) M(mul_f32) M(mul_i32) M(div_f32) M(min_f32) M(max_f32)         \
+                  M(fma_f32) M(fms_f32) M(fnma_f32) M(sqrt_f32) M(shl_i32) M(shr_i32) M(sra_i32)   \
+                      M(ceil) M(floor) M(trunc) M(round) M(to_fp16) M(from_fp16) M(to_f32)         \
+                          M(neq_f32) M(eq_f32) M(eq_i32) M(gte_f32) M(gt_f32) M(gt_i32) M(bit_and) \
+                              M(bit_or) M(bit_xor) M(bit_clear) M(select) M(duplicate)
 // End of SKVM_OPS
 
 enum class Op : int {
@@ -539,14 +545,13 @@ enum class Op : int {
 #undef M
 };
 
-static inline bool has_side_effect(Op op) noexcept { return op <= Op::store128; }
-static inline bool touches_varying_memory(Op op) noexcept {
-  return Op::store8 <= op && op <= Op::load128;
-}
-static inline bool is_always_varying(Op op) noexcept { return Op::store8 <= op && op <= Op::index; }
+static inline bool has_side_effect(Op op) { return op <= Op::store128; }
+static inline bool touches_varying_memory(Op op) { return Op::store8 <= op && op <= Op::load128; }
+static inline bool is_always_varying(Op op) { return Op::store8 <= op && op <= Op::index; }
+static inline bool is_trace(Op op) { return Op::trace_line <= op && op <= Op::trace_scope; }
 
 using Val = int;
-// We reserve an impossibe Val ID as a sentinel
+// We reserve an impossible Val ID as a sentinel
 // NA meaning none, n/a, null, nil, etc.
 static const Val NA = -1;
 
@@ -564,8 +569,8 @@ bool operator!=(Ptr a, Ptr b);
 struct I32 {
   Builder* builder = nullptr;
   Val id = NA;
-  explicit operator bool() const { return id != NA; }
-  Builder* operator->() const { return builder; }
+  explicit operator bool() const noexcept { return id != NA; }
+  Builder* operator->() const noexcept { return builder; }
 };
 
 struct F32 {
@@ -577,8 +582,8 @@ struct F32 {
 
 struct Color {
   F32 r, g, b, a;
-  explicit operator bool() const { return r && g && b && a; }
-  Builder* operator->() const { return a.operator->(); }
+  explicit operator bool() const noexcept { return r && g && b && a; }
+  Builder* operator->() const noexcept { return a.operator->(); }
 };
 
 struct HSLA {
@@ -589,8 +594,8 @@ struct HSLA {
 
 struct Coord {
   F32 x, y;
-  explicit operator bool() const noexcept { return x && y; }
-  Builder* operator->() const noexcept { return x.operator->(); }
+  explicit operator bool() const { return x && y; }
+  Builder* operator->() const { return x.operator->(); }
 };
 
 struct Uniform {
@@ -662,16 +667,31 @@ struct Features {
   bool fp16 = false;
 };
 
+class TraceHook {
+ public:
+  virtual ~TraceHook() = default;
+  virtual void line(int lineNum) = 0;
+  virtual void var(int slot, int32_t val) = 0;
+  virtual void enter(int fnIdx) = 0;
+  virtual void exit(int fnIdx) = 0;
+  virtual void scope(int delta) = 0;
+};
+
 class Builder {
  public:
-  Builder();
-  explicit Builder(Features);
+  Builder(bool createDuplicates = false);
+  Builder(Features, bool createDuplicates = false);
 
+  Program done(
+      const char* debug_name, bool allow_jit, std::unique_ptr<viz::Visualizer> visualizer) const;
   Program done(const char* debug_name = nullptr, bool allow_jit = true) const;
 
   // Mostly for debugging, tests, etc.
   std::vector<Instruction> program() const { return fProgram; }
-  std::vector<OptimizedInstruction> optimize() const;
+  std::vector<OptimizedInstruction> optimize(viz::Visualizer* visualizer = nullptr) const;
+
+  // Returns a trace-hook ID which must be passed to the trace opcodes.
+  int attachTraceHook(TraceHook*);
 
   // Convenience arg() wrappers for most common strides, sizeof(T) and 0.
   template <typename T>
@@ -695,6 +715,14 @@ class Builder {
   void assert_true(I32 cond, I32 debug);
   void assert_true(I32 cond, F32 debug) { assert_true(cond, pun_to_I32(debug)); }
   void assert_true(I32 cond) { assert_true(cond, cond); }
+
+  // Insert debug traces into the instruction stream
+  bool mergeMasks(I32& mask, I32& traceMask);
+  void trace_line(int traceHookID, I32 mask, I32 traceMask, int line);
+  void trace_var(int traceHookID, I32 mask, I32 traceMask, int slot, I32 val);
+  void trace_enter(int traceHookID, I32 mask, I32 traceMask, int fnIdx);
+  void trace_exit(int traceHookID, I32 mask, I32 traceMask, int fnIdx);
+  void trace_scope(int traceHookID, I32 mask, I32 traceMask, int delta);
 
   // Store {8,16,32,64,128}-bit varying.
   void store8(Ptr ptr, I32 val);
@@ -1045,16 +1073,31 @@ class Builder {
     return this->allImm(id, &imm) && imm == want;
   }
 
+  // `canonicalizeIdOrder` and has two rules:
+  // - Immediate values go last; that is, `x + 1` is preferred over `1 + x`.
+  // - If both/neither of x and y are immediate, lower IDs go before higher IDs.
+  // Canonicalizing the IDs helps with opcode deduplication. Putting immediates in a
+  // consistent position makes it easier to detect no-op arithmetic like `x + 0`.
+  template <typename F32_or_I32>
+  void canonicalizeIdOrder(F32_or_I32& x, F32_or_I32& y);
+
+  // If the passed in ID is a bit-not, return the value being bit-notted. Otherwise, NA.
+  Val holdsBitNot(Val id);
+
   SkTHashMap<Instruction, Val, InstructionHash> fIndex;
   std::vector<Instruction> fProgram;
+  std::vector<TraceHook*> fTraceHooks;
   std::vector<int> fStrides;
   const Features fFeatures;
+  bool fCreateDuplicates;
 };
 
 // Optimization passes and data structures normally used by Builder::optimize(),
 // extracted here so they can be unit tested.
-std::vector<Instruction> eliminate_dead_code(std::vector<Instruction>);
-std::vector<OptimizedInstruction> finalize(std::vector<Instruction>);
+std::vector<Instruction> eliminate_dead_code(
+    std::vector<Instruction>, viz::Visualizer* visualizer = nullptr);
+std::vector<OptimizedInstruction> finalize(
+    std::vector<Instruction>, viz::Visualizer* visualizer = nullptr);
 
 using Reg = int;
 
@@ -1068,8 +1111,9 @@ struct InterpreterInstruction {
 class Program {
  public:
   Program(
-      const std::vector<OptimizedInstruction>& instructions, const std::vector<int>& strides,
-      const char* debug_name, bool allow_jit);
+      const std::vector<OptimizedInstruction>& instructions,
+      std::unique_ptr<viz::Visualizer> visualizer, const std::vector<int>& strides,
+      const std::vector<TraceHook*>& traceHooks, const char* debug_name, bool allow_jit);
 
   Program();
   ~Program();
@@ -1096,9 +1140,13 @@ class Program {
   int loop() const;
   bool empty() const;
 
-  bool hasJIT() const;  // Has this Program been JITted?
+  bool hasJIT() const;         // Has this Program been JITted?
+  bool hasTraceHooks() const;  // Is this program instrumented for debugging?
 
+  void visualize(SkWStream* output, const char* code) const;
   void dump(SkWStream* = nullptr) const;
+  void disassemble(SkWStream* = nullptr) const;
+  viz::Visualizer* visualizer();
 
  private:
   void setupInterpreter(const std::vector<OptimizedInstruction>&);

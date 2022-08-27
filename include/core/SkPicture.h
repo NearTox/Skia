@@ -110,7 +110,7 @@ class SK_API SkPicture : public SkRefCnt {
     virtual bool abort() = 0;
 
    protected:
-    constexpr AbortCallback() noexcept = default;
+    AbortCallback() = default;
     AbortCallback(const AbortCallback&) = delete;
     AbortCallback& operator=(const AbortCallback&) = delete;
   };
@@ -145,7 +145,7 @@ class SK_API SkPicture : public SkRefCnt {
 
       @return  identifier for SkPicture
   */
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
 
   /** Returns storage containing SkData describing SkPicture, using optional custom
       encoders.
@@ -262,7 +262,7 @@ class SK_API SkPicture : public SkRefCnt {
   friend bool SkPicture_StreamIsSKP(SkStream*, struct SkPictInfo*);
 
   // Returns NULL if this is not an SkBigPicture.
-  virtual const class SkBigPicture* asSkBigPicture() const noexcept { return nullptr; }
+  virtual const class SkBigPicture* asSkBigPicture() const { return nullptr; }
 
   friend struct SkPathCounter;
 

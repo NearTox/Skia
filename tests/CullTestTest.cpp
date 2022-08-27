@@ -8,7 +8,9 @@
 #include "tests/Test.h"
 
 #include "include/utils/SkRandom.h"
-#include "src/gpu/tessellate/GrCullTest.h"
+#include "src/gpu/tessellate/CullTest.h"
+
+namespace skgpu::tess {
 
 const SkMatrix gMatrices[] = {
     SkMatrix::I(),
@@ -34,10 +36,10 @@ DEF_TEST(CullTestTest, reporter) {
     float valuesR[4] = {r+20, r+10, r-10, r-20};
     float valuesB[4] = {b+20, b+10, b-10, b-20};
     for (SkMatrix m : gMatrices) {
-        GrCullTest cullTest(viewportRect, m);
-        SkMatrix inverse;
-        SkAssertResult(m.invert(&inverse));
-        for (const float* y : {valuesT, valuesB}) {
+      CullTest cullTest(viewportRect, m);
+      SkMatrix inverse;
+      SkAssertResult(m.invert(&inverse));
+      for (const float* y : {valuesT, valuesB}) {
         for (const float* x : {valuesL, valuesR}) {
         for (int i = 0; i < 500; ++i) {
             int mask = rand.nextU();
@@ -72,6 +74,10 @@ DEF_TEST(CullTestTest, reporter) {
                 REPORTER_ASSERT(reporter,
                         cullTest.areVisible4(localPts) == viewportRect.intersects(devBounds4));
             }
-        }}}
+        }
+        }
+      }
     }
 }
+
+}  // namespace skgpu::tess

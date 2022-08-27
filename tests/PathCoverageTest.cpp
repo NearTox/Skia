@@ -112,7 +112,7 @@ static bool one_d_pe(const int* array, const unsigned int count, skiatest::Repor
     uint32_t computedCount = quadraticPointCount_CC(path, SkIntToScalar(1));
     uint32_t estimatedCount = quadraticPointCount_EE(path);
 
-    if (false) {  // avoid bit rot, suppress warning
+    if ((false)) {  // avoid bit rot, suppress warning
       computedCount = quadraticPointCount_EC(path, SkIntToScalar(1));
       estimatedCount = quadraticPointCount_CE(path);
     }

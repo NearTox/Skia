@@ -11,6 +11,7 @@
 #include "include/core/SkBitmap.h"
 #include "include/core/SkDeferredDisplayListRecorder.h"
 #include "include/core/SkPromiseImageTexture.h"
+#include "include/core/SkRefCnt.h"
 #include "include/core/SkYUVAPixmaps.h"
 #include "include/gpu/GrBackendSurface.h"
 #include "include/private/SkTArray.h"
@@ -171,7 +172,7 @@ class DDLPromiseImageHelper {
       return fCallbackContexts[index];
     }
 
-    GrMipmapped mipMapped(int index) const {
+    GrMipmapped mipmapped(int index) const {
       if (this->isYUV()) {
         return GrMipmapped::kNo;
       }

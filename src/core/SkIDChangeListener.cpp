@@ -51,7 +51,7 @@ void List::add(sk_sp<SkIDChangeListener> listener) {
   *fListeners.append() = listener.release();
 }
 
-int List::count() const noexcept {
+int List::count() const noexcept{
   SkAutoMutexExclusive lock(fMutex);
   return fListeners.count();
 }
@@ -68,7 +68,7 @@ void List::changed() {
   fListeners.reset();
 }
 
-void List::reset() {
+void List::reset() noexcept {
   SkAutoMutexExclusive lock(fMutex);
   fListeners.unrefAll();
 }

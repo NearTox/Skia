@@ -47,7 +47,7 @@ class FrontBufferedStream : public SkStreamRewindable {
   // Total size of the buffer.
   const size_t fBufferSize;
   char* fBuffer;
-  static constexpr size_t kStorageSize = SkCodec::MinBufferedBytesNeeded();
+  inline static constexpr size_t kStorageSize = SkCodec::MinBufferedBytesNeeded();
   char fStorage[kStorageSize];
 
   // Read up to size bytes from already buffered data, and copy to

@@ -15,10 +15,10 @@
  *  Helper class to package and trim the parameters passed to readPixels()
  */
 struct SkReadPixelsRec {
-  SkReadPixelsRec(const SkImageInfo& info, void* pixels, size_t rowBytes, int x, int y)
+  SkReadPixelsRec(const SkImageInfo& info, void* pixels, size_t rowBytes, int x, int y) noexcept 
       : fPixels(pixels), fRowBytes(rowBytes), fInfo(info), fX(x), fY(y) {}
 
-  SkReadPixelsRec(const SkPixmap& pm, int x, int y)
+  SkReadPixelsRec(const SkPixmap& pm, int x, int y) noexcept 
       : fPixels(pm.writable_addr()), fRowBytes(pm.rowBytes()), fInfo(pm.info()), fX(x), fY(y) {}
 
   void* fPixels;
@@ -34,7 +34,7 @@ struct SkReadPixelsRec {
    *  On false, leaves self unchanged, but indicates that it does not overlap src, or
    *  is not valid (e.g. bad fInfo) for readPixels().
    */
-  bool trim(int srcWidth, int srcHeight);
+  bool trim(int srcWidth, int srcHeight) noexcept;
 };
 
 #endif

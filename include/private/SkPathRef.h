@@ -10,7 +10,6 @@
 
 #include "include/core/SkMatrix.h"
 #include "include/core/SkPoint.h"
-#include "include/core/SkRRect.h"
 #include "include/core/SkRect.h"
 #include "include/core/SkRefCnt.h"
 #include "include/private/SkIDChangeListener.h"
@@ -25,6 +24,7 @@
 
 class SkRBuffer;
 class SkWBuffer;
+class SkRRect;
 
 enum class SkPathConvexity {
   kConvex,
@@ -161,10 +161,10 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
 
   class SK_API Iter {
    public:
-    Iter() noexcept;
-    Iter(const SkPathRef&) noexcept;
+    Iter();
+    Iter(const SkPathRef&);
 
-    void setPathRef(const SkPathRef&) noexcept;
+    void setPathRef(const SkPathRef&);
 
     /** Return the next verb in this iteration of the path. When all
         segments have been visited, return kDone_Verb.
@@ -175,8 +175,8 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
                     This must not be NULL.
         @return The verb for the current segment
     */
-    uint8_t next(SkPoint pts[4]) noexcept;
-    uint8_t peek() const noexcept;
+    uint8_t next(SkPoint pts[4]);
+    uint8_t peek() const;
 
     SkScalar conicWeight() const noexcept { return *fConicWeights; }
 
@@ -240,20 +240,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
     return SkToBool(fIsOval);
   }
 
-  bool isRRect(SkRRect* rrect, bool* isCCW, unsigned* start) const {
-    if (fIsRRect) {
-      if (rrect) {
-        *rrect = this->getRRect();
-      }
-      if (isCCW) {
-        *isCCW = SkToBool(fRRectOrOvalIsCCW);
-      }
-      if (start) {
-        *start = fRRectOrOvalStartIdx;
-      }
-    }
-    return SkToBool(fIsRRect);
-  }
+  bool isRRect(SkRRect* rrect, bool* isCCW, unsigned* start) const;
 
   bool hasComputedBounds() const noexcept { return !fBoundsIsDirty; }
 
@@ -291,7 +278,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   int countVerbs() const noexcept { return fVerbs.count(); }
   int countWeights() const noexcept { return fConicWeights.count(); }
 
-  size_t approximateBytesUsed() const noexcept;
+  size_t approximateBytesUsed() const;
 
   /**
    * Returns a pointer one beyond the first logical verb (last verb in memory order).
@@ -322,7 +309,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   uint8_t atVerb(int index) const noexcept { return fVerbs[index]; }
   const SkPoint& atPoint(int index) const noexcept { return fPoints[index]; }
 
-  bool operator==(const SkPathRef& ref) const noexcept;
+  bool operator==(const SkPathRef& ref) const;
 
   /**
    * Writes the path points and verbs to a buffer.
@@ -332,7 +319,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   /**
    * Gets the number of bytes that would be written in writeBuffer()
    */
-  uint32_t writeSize() const noexcept;
+  uint32_t writeSize() const;
 
   void interpolate(const SkPathRef& ending, SkScalar weight, SkPathRef* out) const;
 
@@ -344,11 +331,11 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
   uint32_t genID() const noexcept;
 
   void addGenIDChangeListener(sk_sp<SkIDChangeListener>);  // Threadsafe.
-  int genIDChangeListenerCount() noexcept;                 // Threadsafe
+  int genIDChangeListenerCount();                          // Threadsafe
 
   bool dataMatchesVerbs() const;
-  bool isValid() const noexcept;
-  SkDEBUGCODE(void validate() const noexcept { SkASSERT(this->isValid()); })
+  bool isValid() const;
+  SkDEBUGCODE(void validate() const { SkASSERT(this->isValid()); })
 
  private:
   enum SerializationOffsets {
@@ -360,7 +347,7 @@ class SK_API SkPathRef final : public SkNVRefCnt<SkPathRef> {
     kSegmentMask_SerializationShift = 0                  // requires 4 bits (deprecated)
   };
 
-  SkPathRef() noexcept {
+  SkPathRef() {
     fBoundsIsDirty = true;  // this also invalidates fIsFinite
     fGenerationID = kEmptyGenID;
     fSegmentMask = 0;

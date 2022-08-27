@@ -18,24 +18,23 @@ namespace skiagm {
 
 class ShapeRenderer : public SkRefCntBase {
 public:
-    static constexpr SkScalar kTileWidth = 20.f;
-    static constexpr SkScalar kTileHeight = 20.f;
+ inline static constexpr SkScalar kTileWidth = 20.f;
+ inline static constexpr SkScalar kTileHeight = 20.f;
 
-    // Draw the shape, limited to kTileWidth x kTileHeight. It must apply the local subpixel (tx,
-    // ty) translation and rotation by angle. Prior to these transform adjustments, the SkCanvas
-    // will only have pixel aligned translations (these are separated to make super-sampling
-    // renderers easier).
-    virtual void draw(SkCanvas* canvas, SkPaint* paint,
-                      SkScalar tx, SkScalar ty, SkScalar angle) = 0;
+ // Draw the shape, limited to kTileWidth x kTileHeight. It must apply the local subpixel (tx,
+ // ty) translation and rotation by angle. Prior to these transform adjustments, the SkCanvas
+ // will only have pixel aligned translations (these are separated to make super-sampling
+ // renderers easier).
+ virtual void draw(SkCanvas* canvas, SkPaint* paint, SkScalar tx, SkScalar ty, SkScalar angle) = 0;
 
-    virtual SkString name() = 0;
+ virtual SkString name() = 0;
 
-    virtual sk_sp<ShapeRenderer> toHairline() = 0;
+ virtual sk_sp<ShapeRenderer> toHairline() = 0;
 
-    void applyLocalTransform(SkCanvas* canvas, SkScalar tx, SkScalar ty, SkScalar angle) {
-        canvas->translate(tx, ty);
-        canvas->rotate(angle, kTileWidth / 2.f, kTileHeight / 2.f);
-    }
+ void applyLocalTransform(SkCanvas* canvas, SkScalar tx, SkScalar ty, SkScalar angle) {
+   canvas->translate(tx, ty);
+   canvas->rotate(angle, kTileWidth / 2.f, kTileHeight / 2.f);
+ }
 };
 
 class RectRenderer : public ShapeRenderer {

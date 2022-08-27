@@ -78,7 +78,8 @@ void SkRRect::setRectXY(const SkRect& rect, SkScalar xRad, SkScalar yRad) noexce
 }
 
 void SkRRect::setNinePatch(
-    const SkRect& rect, SkScalar leftRad, SkScalar topRad, SkScalar rightRad, SkScalar bottomRad) {
+    const SkRect& rect, SkScalar leftRad, SkScalar topRad, SkScalar rightRad,
+    SkScalar bottomRad) noexcept {
   if (!this->initializeRect(rect)) {
     return;
   }
@@ -165,7 +166,7 @@ static bool clamp_to_zero(SkVector radii[4]) noexcept {
   return allCornersSquare;
 }
 
-void SkRRect::setRectRadii(const SkRect& rect, const SkVector radii[4]) {
+void SkRRect::setRectRadii(const SkRect& rect, const SkVector radii[4]) noexcept {
   if (!this->initializeRect(rect)) {
     return;
   }
@@ -218,7 +219,7 @@ static void flush_to_zero(SkScalar& a, SkScalar& b) noexcept {
   }
 }
 
-bool SkRRect::scaleRadii() {
+bool SkRRect::scaleRadii() noexcept {
   // Proportionally scale down all radii to fit. Find the minimum ratio
   // of a side and the radii on that side (for all four sides) and use
   // that to scale down _all_ the radii. This algorithm is from the
@@ -265,7 +266,7 @@ bool SkRRect::scaleRadii() {
 
 // This method determines if a point known to be inside the RRect's bounds is
 // inside all the corners.
-bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const {
+bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const noexcept {
   SkPoint canonicalPt;  // (x,y) translated to one of the quadrants
   int index;
 
@@ -325,7 +326,7 @@ bool SkRRect::checkCornerContainment(SkScalar x, SkScalar y) const {
   return dist <= SkScalarSquare(fRadii[index].fX * fRadii[index].fY);
 }
 
-bool SkRRectPriv::IsNearlySimpleCircular(const SkRRect& rr, SkScalar tolerance) {
+bool SkRRectPriv::IsNearlySimpleCircular(const SkRRect& rr, SkScalar tolerance) noexcept {
   SkScalar simpleRadius = rr.fRadii[0].fX;
   return SkScalarNearlyEqual(simpleRadius, rr.fRadii[0].fY, tolerance) &&
          SkScalarNearlyEqual(simpleRadius, rr.fRadii[1].fX, tolerance) &&
@@ -336,14 +337,14 @@ bool SkRRectPriv::IsNearlySimpleCircular(const SkRRect& rr, SkScalar tolerance) 
          SkScalarNearlyEqual(simpleRadius, rr.fRadii[3].fY, tolerance);
 }
 
-bool SkRRectPriv::AllCornersCircular(const SkRRect& rr, SkScalar tolerance) {
+bool SkRRectPriv::AllCornersCircular(const SkRRect& rr, SkScalar tolerance) noexcept {
   return SkScalarNearlyEqual(rr.fRadii[0].fX, rr.fRadii[0].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[1].fX, rr.fRadii[1].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[2].fX, rr.fRadii[2].fY, tolerance) &&
          SkScalarNearlyEqual(rr.fRadii[3].fX, rr.fRadii[3].fY, tolerance);
 }
 
-bool SkRRect::contains(const SkRect& rect) const {
+bool SkRRect::contains(const SkRect& rect) const noexcept {
   if (!this->getBounds().contains(rect)) {
     // If 'rect' isn't contained by the RR's bounds then the
     // RR definitely doesn't contain it
@@ -552,7 +553,7 @@ bool SkRRect::transform(const SkMatrix& matrix, SkRRect* dst) const {
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkRRect::inset(SkScalar dx, SkScalar dy, SkRRect* dst) const {
+void SkRRect::inset(SkScalar dx, SkScalar dy, SkRRect* dst) const noexcept {
   SkRect r = fRect.makeInset(dx, dy);
   bool degenerate = false;
   if (r.fRight <= r.fLeft) {
@@ -651,8 +652,7 @@ void SkRRect::dump(bool asHex) const { SkDebugf("%s\n", this->dumpToString(asHex
 /**
  *  We need all combinations of predicates to be true to have a "safe" radius value.
  */
-static constexpr bool are_radius_check_predicates_valid(
-    SkScalar rad, SkScalar min, SkScalar max) noexcept {
+static bool are_radius_check_predicates_valid(SkScalar rad, SkScalar min, SkScalar max) noexcept {
   return (min <= max) && (rad <= max - min) && (min + rad <= max) && (max - rad >= min) && rad >= 0;
 }
 
@@ -741,7 +741,7 @@ bool SkRRect::AreRectAndRadiiValid(const SkRect& rect, const SkVector radii[4]) 
 }
 ///////////////////////////////////////////////////////////////////////////////
 
-SkRect SkRRectPriv::InnerBounds(const SkRRect& rr) {
+SkRect SkRRectPriv::InnerBounds(const SkRRect& rr) noexcept {
   if (rr.isEmpty() || rr.isRect()) {
     return rr.rect();
   }

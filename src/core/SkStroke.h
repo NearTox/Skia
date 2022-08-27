@@ -12,7 +12,6 @@
 #include "include/core/SkPath.h"
 #include "include/core/SkPoint.h"
 #include "include/private/SkTo.h"
-#include "src/core/SkStrokerPriv.h"
 
 #ifdef SK_DEBUG
 extern bool gDebugStrokerErrorSet;
@@ -32,16 +31,16 @@ class SkStroke {
   SkStroke(const SkPaint&);
   SkStroke(const SkPaint&, SkScalar width);  // width overrides paint.getStrokeWidth()
 
-  SkPaint::Cap getCap() const { return (SkPaint::Cap)fCap; }
+  SkPaint::Cap getCap() const noexcept { return (SkPaint::Cap)fCap; }
   void setCap(SkPaint::Cap);
 
-  SkPaint::Join getJoin() const { return (SkPaint::Join)fJoin; }
+  SkPaint::Join getJoin() const noexcept { return (SkPaint::Join)fJoin; }
   void setJoin(SkPaint::Join);
 
   void setMiterLimit(SkScalar);
   void setWidth(SkScalar);
 
-  bool getDoFill() const { return SkToBool(fDoFill); }
+  bool getDoFill() const noexcept { return SkToBool(fDoFill); }
   void setDoFill(bool doFill) { fDoFill = SkToU8(doFill); }
 
   /**
@@ -52,8 +51,8 @@ class SkStroke {
    *      Smaller values (0 < res < 1) indicate that the result can be less precise, since it will
    *          be zoomed down, and small errors may be invisible.
    */
-  SkScalar getResScale() const { return fResScale; }
-  void setResScale(SkScalar rs) {
+  SkScalar getResScale() const noexcept { return fResScale; }
+  void setResScale(SkScalar rs) noexcept {
     SkASSERT(rs > 0 && SkScalarIsFinite(rs));
     fResScale = rs;
   }

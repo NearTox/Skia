@@ -8,12 +8,17 @@
 #ifndef SkBlockAllocator_DEFINED
 #define SkBlockAllocator_DEFINED
 
-#include "include/private/GrTypesPriv.h"
+#include "include/core/SkMath.h"
+#include "include/core/SkTypes.h"
+#include "include/private/SkMacros.h"
 #include "include/private/SkNoncopyable.h"
+#include "include/private/SkTo.h"
 #include "src/core/SkASAN.h"
 
-#include <memory>   // std::unique_ptr
-#include <cstddef>  // max_align_t
+#include <memory>     // std::unique_ptr
+#include <cstddef>    // max_align_t
+#include <limits>     // numeric_limits
+#include <algorithm>  // max
 
 /**
  * SkBlockAllocator provides low-level support for a block allocated arena with a dynamic tail that
@@ -49,7 +54,7 @@ class SkBlockAllocator final : SkNoncopyable {
  public:
   // Largest size that can be requested from allocate(), chosen because it's the largest pow-2
   // that is less than int32_t::max()/2.
-  static constexpr int kMaxAllocationSize = 1 << 29;
+  inline static constexpr int kMaxAllocationSize = 1 << 29;
 
   enum class GrowthPolicy : int {
     kFixed,        // Next block size = N
@@ -58,7 +63,7 @@ class SkBlockAllocator final : SkNoncopyable {
     kExponential,  //   = 2^#blocks * N
     kLast = kExponential
   };
-  static constexpr int kGrowthPolicyCount = static_cast<int>(GrowthPolicy::kLast) + 1;
+  inline static constexpr int kGrowthPolicyCount = static_cast<int>(GrowthPolicy::kLast) + 1;
 
   class Block;
 
@@ -92,16 +97,16 @@ class SkBlockAllocator final : SkNoncopyable {
     }
 
     // Convert an offset into this block's storage into a usable pointer.
-    void* ptr(int offset) {
+    void* ptr(int offset) noexcept {
       SkASSERT(offset >= kDataStart && offset < fSize);
       return reinterpret_cast<char*>(this) + offset;
     }
-    const void* ptr(int offset) const { return const_cast<Block*>(this)->ptr(offset); }
+    const void* ptr(int offset) const noexcept { return const_cast<Block*>(this)->ptr(offset); }
 
     // Every block has an extra 'int' for clients to use however they want. It will start
     // at 0 when a new block is made, or when the head block is reset.
     int metadata() const noexcept { return fMetadata; }
-    void setMetadata(int value) { fMetadata = value; }
+    void setMetadata(int value) noexcept { fMetadata = value; }
 
     /**
      * Release the byte range between offset 'start' (inclusive) and 'end' (exclusive). This
@@ -109,7 +114,7 @@ class SkBlockAllocator final : SkNoncopyable {
      * request could occupy the space. Regardless of return value, the provided byte range that
      * [start, end) represents should not be used until it's re-allocated with allocate<...>().
      */
-    inline bool release(int start, int end);
+    inline bool release(int start, int end) noexcept;
 
     /**
      * Resize a previously reserved byte range of offset 'start' (inclusive) to 'end'
@@ -182,7 +187,7 @@ class SkBlockAllocator final : SkNoncopyable {
   // is in-place new'ed into a larger block of memory, but it should remain set to 0 if stack
   // allocated or if the class layout does not guarantee that space is present.
   SkBlockAllocator(
-      GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes = 0);
+      GrowthPolicy policy, size_t blockIncrementBytes, size_t additionalPreallocBytes = 0) noexcept;
 
   ~SkBlockAllocator() { this->reset(); }
   void operator delete(void* p) { ::operator delete(p); }
@@ -194,7 +199,7 @@ class SkBlockAllocator final : SkNoncopyable {
    *   BlockOverhead<alignof(T)>() + N * sizeof(T) when making the SkBlockAllocator.
    */
   template <size_t Align = 1, size_t Padding = 0>
-  static constexpr size_t BlockOverhead();
+  static constexpr size_t BlockOverhead() noexcept;
 
   /**
    * Helper to calculate the minimum number of bytes needed for a preallocation, under the
@@ -203,31 +208,31 @@ class SkBlockAllocator final : SkNoncopyable {
    *   Overhead<alignof(T)>() + N * sizeof(T)
    */
   template <size_t Align = 1, size_t Padding = 0>
-  static constexpr size_t Overhead();
+  static constexpr size_t Overhead() noexcept;
 
   /**
    * Return the total number of bytes of the allocator, including its instance overhead, per-block
    * overhead and space used for allocations.
    */
-  size_t totalSize() const;
+  size_t totalSize() const noexcept;
   /**
    * Return the total number of bytes usable for allocations. This includes bytes that have
    * been reserved already by a call to allocate() and bytes that are still available. It is
    * totalSize() minus all allocator and block-level overhead.
    */
-  size_t totalUsableSpace() const;
+  size_t totalUsableSpace() const noexcept;
   /**
    * Return the total number of usable bytes that have been reserved by allocations. This will
    * be less than or equal to totalUsableSpace().
    */
-  size_t totalSpaceInUse() const;
+  size_t totalSpaceInUse() const noexcept;
 
   /**
    * Return the total number of bytes that were pre-allocated for the SkBlockAllocator. This will
    * include 'additionalPreallocBytes' passed to the constructor, and represents what the total
    * size would become after a call to reset().
    */
-  size_t preallocSize() const {
+  size_t preallocSize() const noexcept {
     // Don't double count fHead's Block overhead in both sizeof(SkBlockAllocator) and fSize.
     return sizeof(SkBlockAllocator) + fHead.fSize - BaseHeadBlockSize();
   }
@@ -236,19 +241,19 @@ class SkBlockAllocator final : SkNoncopyable {
    * 'additionalPreallocBytes' plus any alignment padding that the system had to add to Block.
    * The returned value represents what could be allocated before a heap block is be created.
    */
-  size_t preallocUsableSpace() const { return fHead.fSize - kDataStart; }
+  size_t preallocUsableSpace() const noexcept { return fHead.fSize - kDataStart; }
 
   /**
    * Get the current value of the allocator-level metadata (a user-oriented slot). This is
    * separate from any block-level metadata, but can serve a similar purpose to compactly support
    * data collections on top of SkBlockAllocator.
    */
-  int metadata() const { return fHead.fAllocatorMetadata; }
+  int metadata() const noexcept { return fHead.fAllocatorMetadata; }
 
   /**
    * Set the current value of the allocator-level metadata.
    */
-  void setMetadata(int value) { fHead.fAllocatorMetadata = value; }
+  void setMetadata(int value) noexcept { fHead.fAllocatorMetadata = value; }
 
   /**
    * Reserve space that will hold 'size' bytes. This will automatically allocate a new block if
@@ -310,11 +315,11 @@ class SkBlockAllocator final : SkNoncopyable {
   /**
    * Return a pointer to the start of the current block. This will never be null.
    */
-  const Block* currentBlock() const { return fTail; }
-  Block* currentBlock() { return fTail; }
+  const Block* currentBlock() const noexcept { return fTail; }
+  Block* currentBlock() noexcept { return fTail; }
 
-  const Block* headBlock() const { return &fHead; }
-  Block* headBlock() { return &fHead; }
+  const Block* headBlock() const noexcept { return &fHead; }
+  Block* headBlock() noexcept { return &fHead; }
 
   /**
    * Return the block that owns the allocated 'ptr'. Assuming that earlier, an allocation was
@@ -329,10 +334,10 @@ class SkBlockAllocator final : SkNoncopyable {
    * since the owning block is just 'p - alignedOffset', regardless of original Align or Padding.
    */
   template <size_t Align, size_t Padding = 0>
-  Block* owningBlock(const void* ptr, int start);
+  Block* owningBlock(const void* ptr, int start) noexcept;
 
   template <size_t Align, size_t Padding = 0>
-  const Block* owningBlock(const void* ptr, int start) const {
+  const Block* owningBlock(const void* ptr, int start) const noexcept {
     return const_cast<SkBlockAllocator*>(this)->owningBlock<Align, Padding>(ptr, start);
   }
 
@@ -340,8 +345,8 @@ class SkBlockAllocator final : SkNoncopyable {
    * Find the owning block of the allocated pointer, 'p'. Without any additional information this
    * is O(N) on the number of allocated blocks.
    */
-  Block* findOwningBlock(const void* ptr);
-  const Block* findOwningBlock(const void* ptr) const {
+  Block* findOwningBlock(const void* ptr) noexcept;
+  const Block* findOwningBlock(const void* ptr) const noexcept {
     return const_cast<SkBlockAllocator*>(this)->findOwningBlock(ptr);
   }
 
@@ -358,7 +363,7 @@ class SkBlockAllocator final : SkNoncopyable {
    * subsequent allocation requests, instead of making an entirely new block. A scratch block is
    * not visible when iterating over blocks but is reported in the total size of the allocator.
    */
-  void releaseBlock(Block* block);
+  void releaseBlock(Block* block) noexcept;
 
   /**
    * Detach every heap-allocated block owned by 'other' and concatenate them to this allocator's
@@ -371,7 +376,7 @@ class SkBlockAllocator final : SkNoncopyable {
    * The head block of 'other' cannot be stolen, so higher-level allocators and memory structures
    * must handle that data differently.
    */
-  void stealHeapBlocks(SkBlockAllocator* other);
+  void stealHeapBlocks(SkBlockAllocator* other) noexcept;
 
   /**
    * Explicitly free all blocks (invalidating all allocations), and resets the head block to its
@@ -403,8 +408,8 @@ class SkBlockAllocator final : SkNoncopyable {
   inline BlockIter<false, true> rblocks() const noexcept;
 
 #ifdef SK_DEBUG
-  static constexpr int kAssignedMarker = 0xBEEFFACE;
-  static constexpr int kFreedMarker = 0xCAFEBABE;
+  inline static constexpr int kAssignedMarker = 0xBEEFFACE;
+  inline static constexpr int kFreedMarker = 0xCAFEBABE;
 
   void validate() const;
 #endif
@@ -413,7 +418,7 @@ class SkBlockAllocator final : SkNoncopyable {
   friend class BlockAllocatorTestAccess;
   friend class TBlockListTestAccess;
 
-  static constexpr int kDataStart = sizeof(Block);
+  inline static constexpr int kDataStart = sizeof(Block);
 #ifdef SK_FORCE_8_BYTE_ALIGNMENT
   // This is an issue for WASM builds using emscripten, which had std::max_align_t = 16, but
   // was returning pointers only aligned to 8 bytes.
@@ -422,19 +427,19 @@ class SkBlockAllocator final : SkNoncopyable {
   // Setting this to 8 will let SkBlockAllocator properly correct for the pointer address if
   // a 16-byte aligned allocation is requested in wasm (unlikely since we don't use long
   // doubles).
-  static constexpr size_t kAddressAlign = 8;
+  inline static constexpr size_t kAddressAlign = 8;
 #else
   // The alignment Block addresses will be at when created using operator new
   // (spec-compliant is pointers are aligned to max_align_t).
-  static constexpr size_t kAddressAlign = alignof(std::max_align_t);
+  inline static constexpr size_t kAddressAlign = alignof(std::max_align_t);
 #endif
 
   // Calculates the size of a new Block required to store a kMaxAllocationSize request for the
   // given alignment and padding bytes. Also represents maximum valid fCursor value in a Block.
   template <size_t Align, size_t Padding>
-  static constexpr size_t MaxBlockSize();
+  static constexpr size_t MaxBlockSize() noexcept;
 
-  static constexpr int BaseHeadBlockSize() {
+  static constexpr int BaseHeadBlockSize() noexcept {
     return sizeof(SkBlockAllocator) - offsetof(SkBlockAllocator, fHead);
   }
 
@@ -443,7 +448,7 @@ class SkBlockAllocator final : SkNoncopyable {
   // that will preserve the static guarantees SkBlockAllocator makes.
   void addBlock(int minSize, int maxSize);
 
-  int scratchBlockSize() const { return fHead.fPrev ? fHead.fPrev->fSize : 0; }
+  int scratchBlockSize() const noexcept { return fHead.fPrev ? fHead.fPrev->fSize : 0; }
 
   Block* fTail;  // All non-head blocks are heap allocated; tail will never be null.
 
@@ -512,16 +517,16 @@ class SkSBlockAllocator : SkNoncopyable {
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Template and inline implementations
 
-GR_MAKE_BITFIELD_OPS(SkBlockAllocator::ReserveFlags)
+SK_MAKE_BITFIELD_OPS(SkBlockAllocator::ReserveFlags)
 
 template <size_t Align, size_t Padding>
-constexpr size_t SkBlockAllocator::BlockOverhead() {
-  static_assert(GrAlignTo(kDataStart + Padding, Align) >= sizeof(Block));
-  return GrAlignTo(kDataStart + Padding, Align);
+constexpr size_t SkBlockAllocator::BlockOverhead() noexcept {
+  static_assert(SkAlignTo(kDataStart + Padding, Align) >= sizeof(Block));
+  return SkAlignTo(kDataStart + Padding, Align);
 }
 
 template <size_t Align, size_t Padding>
-constexpr size_t SkBlockAllocator::Overhead() {
+constexpr size_t SkBlockAllocator::Overhead() noexcept {
   // NOTE: On most platforms, SkBlockAllocator is packed; this is not the case on debug builds
   // due to extra fields, or on WASM due to 4byte pointers but 16byte max align.
   return std::max(
@@ -530,7 +535,7 @@ constexpr size_t SkBlockAllocator::Overhead() {
 }
 
 template <size_t Align, size_t Padding>
-constexpr size_t SkBlockAllocator::MaxBlockSize() {
+constexpr size_t SkBlockAllocator::MaxBlockSize() noexcept {
   // Without loss of generality, assumes 'align' will be the largest encountered alignment for the
   // allocator (if it's not, the largest align will be encountered by the compiler and pass/fail
   // the same set of static asserts).
@@ -565,7 +570,7 @@ SkBlockAllocator::ByteRange SkBlockAllocator::allocate(size_t size) {
 
   // Ensures 'offset' and 'end' calculations will be valid
   static_assert(
-      (kMaxAllocationSize + GrAlignTo(MaxBlockSize<Align, Padding>(), Align)) <=
+      (kMaxAllocationSize + SkAlignTo(MaxBlockSize<Align, Padding>(), Align)) <=
       (size_t)std::numeric_limits<int32_t>::max());
   // Ensures size + blockOverhead + addBlock's alignment operations will be valid
   static_assert(
@@ -602,7 +607,7 @@ SkBlockAllocator::ByteRange SkBlockAllocator::allocate(size_t size) {
 }
 
 template <size_t Align, size_t Padding>
-SkBlockAllocator::Block* SkBlockAllocator::owningBlock(const void* p, int start) {
+SkBlockAllocator::Block* SkBlockAllocator::owningBlock(const void* p, int start) noexcept {
   // 'p' was originally formed by aligning 'block + start + Padding', producing the inequality:
   //     block + start + Padding <= p <= block + start + Padding + Align-1
   // Rearranging this yields:
@@ -631,7 +636,7 @@ int SkBlockAllocator::Block::alignedOffset(int offset) const {
       (size_t)std::numeric_limits<int32_t>::max());
 
   if /* constexpr */ (Align <= kAddressAlign) {
-    // Same as GrAlignTo, but operates on ints instead of size_t
+    // Same as SkAlignTo, but operates on ints instead of size_t
     return (offset + Padding + Align - 1) & ~(Align - 1);
   } else {
     // Must take into account that 'this' may be starting at a pointer that doesn't satisfy the
@@ -674,7 +679,7 @@ bool SkBlockAllocator::Block::resize(int start, int end, int deltaBytes) {
 // NOTE: release is equivalent to resize(start, end, start - end), and the compiler can optimize
 // most of the operations away, but it wasn't able to remove the unnecessary branch comparing the
 // new cursor to the block size or old start, so release() gets a specialization.
-bool SkBlockAllocator::Block::release(int start, int end) {
+bool SkBlockAllocator::Block::release(int start, int end) noexcept {
   SkASSERT(fSentinel == kAssignedMarker);
   SkASSERT(start >= kDataStart && end <= fSize && start < end);
 

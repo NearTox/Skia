@@ -45,7 +45,7 @@ class SK_API SkFontStyle {
     kOblique_Slant,
   };
 
-  constexpr SkFontStyle(int weight, int width, Slant slant) noexcept
+  constexpr SkFontStyle(int weight, int width, Slant slant) noexcept 
       : fValue(
             (SkTPin<int>(weight, kInvisible_Weight, kExtraBlack_Weight)) +
             (SkTPin<int>(width, kUltraCondensed_Width, kUltraExpanded_Width) << 16) +

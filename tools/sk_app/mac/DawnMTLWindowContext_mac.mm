@@ -7,10 +7,10 @@
 
 #include "tools/sk_app/DawnWindowContext.h"
 #include "tools/sk_app/mac/WindowContextFactory_mac.h"
-#include "dawn/webgpu_cpp.h"
+#include "webgpu/webgpu_cpp.h"
 #include "dawn/dawn_wsi.h"
-#include "dawn_native/DawnNative.h"
-#include "dawn_native/MetalBackend.h"
+#include "dawn/native/DawnNative.h"
+#include "dawn/native/MetalBackend.h"
 
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
@@ -119,28 +119,28 @@ DawnSwapChainImplementation DawnMTLWindowContext::createSwapChainImplementation(
 }
 
 wgpu::Device DawnMTLWindowContext::onInitializeContext() {
-    wgpu::Device device = this->createDevice(dawn_native::BackendType::Metal);
-    if (!device) {
-        return nullptr;
-    }
+  wgpu::Device device = this->createDevice(wgpu::BackendType::Metal);
+  if (!device) {
+    return nullptr;
+  }
 
-    fMTLDevice = dawn_native::metal::GetMetalDevice(device.Get());
+  fMTLDevice = dawn::native::metal::GetMetalDevice(device.Get());
 
-    CGSize size;
-    size.width = width();
-    size.height = height();
+  CGSize size;
+  size.width = width();
+  size.height = height();
 
-    fLayer = [CAMetalLayer layer];
-    [fLayer setDevice:fMTLDevice];
-    [fLayer setPixelFormat: MTLPixelFormatBGRA8Unorm];
-    [fLayer setFramebufferOnly: YES];
-    [fLayer setDrawableSize: size];
-    [fLayer setColorspace: CGColorSpaceCreateDeviceRGB()];
+  fLayer = [CAMetalLayer layer];
+  [fLayer setDevice:fMTLDevice];
+  [fLayer setPixelFormat:MTLPixelFormatBGRA8Unorm];
+  [fLayer setFramebufferOnly:YES];
+  [fLayer setDrawableSize:size];
+  [fLayer setColorspace:CGColorSpaceCreateDeviceRGB()];
 
-    [fMainView setWantsLayer: YES];
-    [fMainView setLayer: fLayer];
+  [fMainView setWantsLayer:YES];
+  [fMainView setLayer:fLayer];
 
-    return device;
+  return device;
 }
 
 void DawnMTLWindowContext::onDestroyContext() {

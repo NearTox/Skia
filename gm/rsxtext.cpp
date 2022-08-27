@@ -92,7 +92,7 @@ class RSXShaderGM : public skiagm::GM {
         ->makeWithLocalMatrix(outer_lm);
   }
 
-  static constexpr float kSZ = 300, kFontSZ = kSZ * 0.38, kScale = 1.4f;
+  inline static constexpr float kSZ = 300, kFontSZ = kSZ * 0.38, kScale = 1.4f;
 
   sk_sp<SkTextBlob> fBlob;
 };

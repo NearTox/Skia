@@ -16,20 +16,21 @@
 #include "src/codec/SkCodecPriv.h"
 #include "src/codec/SkJpegDecoderMgr.h"
 #include "src/codec/SkParseEncodedOrigin.h"
-#include "src/pdf/SkJpegInfo.h"
 
 // stdio is needed for libjpeg-turbo
 #include <stdio.h>
 #include "src/codec/SkJpegUtility.h"
 
+#ifdef SK_CODEC_DECODES_JPEG
+
 // This warning triggers false postives way too often in here.
 #if defined(__GNUC__) && !defined(__clang__)
-#  pragma GCC diagnostic ignored "-Wclobbered"
+#    pragma GCC diagnostic ignored "-Wclobbered"
 #endif
 
 extern "C" {
-#include "jerror.h"
-#include "jpeglib.h"
+#  include "jerror.h"
+#  include "jpeglib.h"
 }
 
 bool SkJpegCodec::IsJpeg(const void* buffer, size_t bytesRead) {
@@ -834,7 +835,7 @@ SkCodec::Result SkJpegCodec::onGetYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) {
 
   const std::array<SkPixmap, SkYUVAPixmaps::kMaxPlanes>& planes = yuvaPixmaps.planes();
 
-#ifdef SK_DEBUG
+#  ifdef SK_DEBUG
   {
     // A previous implementation claims that the return value of is_yuv_supported()
     // may change after calling jpeg_start_decompress().  It looks to me like this
@@ -848,7 +849,7 @@ SkCodec::Result SkJpegCodec::onGetYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) {
       SkASSERT(info.planeInfo(i) == planes[i].info());
     }
   }
-#endif
+#  endif
 
   // Build a JSAMPIMAGE to handle output from libjpeg-turbo.  A JSAMPIMAGE has
   // a 2-D array of pixels for each of the components (Y, U, V) in the image.
@@ -867,7 +868,7 @@ SkCodec::Result SkJpegCodec::onGetYUVAPlanes(const SkYUVAPixmaps& yuvaPixmaps) {
   static_assert(sizeof(JSAMPLE) == 1);
   for (int i = 0; i < numYRowsPerBlock; i++) {
     rowptrs[i] = static_cast<JSAMPLE*>(planes[0].writable_addr()) + i * planes[0].rowBytes();
-    }
+  }
     for (int i = 0; i < DCTSIZE; i++) {
       rowptrs[i + 2 * DCTSIZE] =
           static_cast<JSAMPLE*>(planes[1].writable_addr()) + i * planes[1].rowBytes();
@@ -968,3 +969,5 @@ bool SkGetJpegInfo(
   }
   return true;
 }
+
+#endif  // SK_CODEC_DECODES_JPEG

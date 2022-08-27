@@ -28,6 +28,7 @@ class SkTransformShader : public SkUpdatableShader {
   // Add code to calculate a new coordinate given local using the mapping in fMatrix.
   skvm::Coord applyMatrix(
       skvm::Builder* b, const SkMatrix& matrix, skvm::Coord local, skvm::Uniforms* uniforms) const;
+  void appendMatrix(const SkMatrix& matrix, SkRasterPipeline* p) const;
 
   // Change the values represented by the uniforms in fMatrix.
   bool update(const SkMatrix& ctm) const override;
@@ -37,5 +38,6 @@ class SkTransformShader : public SkUpdatableShader {
   const SkShaderBase& fShader;
   mutable SkScalar fMatrixStorage[9];
   mutable skvm::Uniform fMatrix;
+  mutable bool fProcessingAsPerspective{false};
 };
 #endif  // SkTextCoordShader_DEFINED

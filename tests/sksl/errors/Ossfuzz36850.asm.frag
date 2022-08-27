@@ -1,4 +1,6 @@
 ### Compilation failed:
 
-error: array must have a size
+error: 1: unsized arrays are not permitted here
+T { int x; } f[];
+               ^
 1 error

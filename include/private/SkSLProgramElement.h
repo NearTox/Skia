@@ -32,11 +32,11 @@ class ProgramElement : public IRNode {
     kLast = kStructDefinition
   };
 
-  ProgramElement(int offset, Kind kind) noexcept : INHERITED(offset, (int)kind) {
+  ProgramElement(Position pos, Kind kind) : INHERITED(pos, (int)kind) {
     SkASSERT(kind >= Kind::kFirst && kind <= Kind::kLast);
   }
 
-  Kind kind() const noexcept { return (Kind)fKind; }
+  Kind kind() const { return (Kind)fKind; }
 
   /**
    *  Use is<T> to check the type of a program element.

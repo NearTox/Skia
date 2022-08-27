@@ -9,14 +9,14 @@
 #include "include/core/SkSpan.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrGpu.h"
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrResourceAllocator.h"
-#include "src/gpu/GrResourceProviderPriv.h"
-#include "src/gpu/GrSurfaceProxyPriv.h"
-#include "src/gpu/GrTexture.h"
-#include "src/gpu/GrTextureProxy.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrGpu.h"
+#include "src/gpu/ganesh/GrProxyProvider.h"
+#include "src/gpu/ganesh/GrResourceAllocator.h"
+#include "src/gpu/ganesh/GrResourceProviderPriv.h"
+#include "src/gpu/ganesh/GrSurfaceProxyPriv.h"
+#include "src/gpu/ganesh/GrTexture.h"
+#include "src/gpu/ganesh/GrTextureProxy.h"
 #include "tests/Test.h"
 #include "tools/gpu/ManagedBackendTexture.h"
 
@@ -30,7 +30,7 @@ struct ProxyParams {
   SkBudgeted fBudgeted;
   enum Kind { kDeferred, kBackend, kFullyLazy, kLazy, kInstantiated };
   Kind fKind;
-  GrUniqueKey fUniqueKey = GrUniqueKey();
+  skgpu::UniqueKey fUniqueKey = skgpu::UniqueKey();
   // TODO: do we care about mipmapping
 };
 
@@ -58,7 +58,8 @@ static sk_sp<GrSurfaceProxy> make_deferred(
   const GrBackendFormat format = caps->getDefaultBackendFormat(p.fColorType, p.fRenderable);
   return proxyProvider->createProxy(
       format, {p.fSize, p.fSize}, p.fRenderable, p.fSampleCnt, GrMipmapped::kNo, p.fFit,
-      p.fBudgeted, GrProtected::kNo);
+      p.fBudgeted, GrProtected::kNo,
+      /*label=*/"ResourceAllocatorTest_Deffered");
 }
 
 static sk_sp<GrSurfaceProxy> make_backend(GrDirectContext* dContext, const ProxyParams& p) {
@@ -85,7 +86,8 @@ static sk_sp<GrSurfaceProxy> make_fully_lazy(
   auto cb = [p](GrResourceProvider* provider, const GrSurfaceProxy::LazySurfaceDesc& desc) {
     auto tex = provider->createTexture(
         {p.fSize, p.fSize}, desc.fFormat, desc.fTextureType, desc.fRenderable, desc.fSampleCnt,
-        desc.fMipmapped, desc.fBudgeted, desc.fProtected);
+        desc.fMipmapped, desc.fBudgeted, desc.fProtected,
+        /*label=*/"ResourceAllocatorTest_FullLazy");
     return GrSurfaceProxy::LazyCallbackResult(std::move(tex));
   };
   return GrProxyProvider::MakeFullyLazyProxy(
@@ -99,7 +101,8 @@ static sk_sp<GrSurfaceProxy> make_lazy(
   auto cb = [](GrResourceProvider* provider, const GrSurfaceProxy::LazySurfaceDesc& desc) {
     auto tex = provider->createTexture(
         desc.fDimensions, desc.fFormat, desc.fTextureType, desc.fRenderable, desc.fSampleCnt,
-        desc.fMipmapped, desc.fBudgeted, desc.fProtected);
+        desc.fMipmapped, desc.fBudgeted, desc.fProtected,
+        /*label=*/"ResourceAllocatorTest_Lazy");
     return GrSurfaceProxy::LazyCallbackResult(std::move(tex));
   };
   return proxyProvider->createLazyProxy(

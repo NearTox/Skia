@@ -89,8 +89,8 @@ class TextBlobColorTrans : public GM {
  private:
   sk_sp<SkTextBlob> fBlob;
 
-  static constexpr int kWidth = 675;
-  static constexpr int kHeight = 1600;
+  inline static constexpr int kWidth = 675;
+  inline static constexpr int kHeight = 1600;
 
   using INHERITED = GM;
 };

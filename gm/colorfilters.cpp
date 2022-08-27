@@ -151,8 +151,8 @@ class HSLColorFilterGM : public skiagm::GM {
   }
 
  private:
-  static constexpr SkScalar kWheelSize = 100;
-  static constexpr size_t kSteps = 7;
+  inline static constexpr SkScalar kWheelSize = 100;
+  inline static constexpr size_t kSteps = 7;
 
   static sk_sp<SkColorFilter> make_filter(float h, float s, float l) {
     // These are roughly AE semantics.

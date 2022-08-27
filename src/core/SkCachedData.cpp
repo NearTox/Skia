@@ -9,7 +9,7 @@
 #include "src/core/SkCachedData.h"
 #include "src/core/SkDiscardableMemory.h"
 
-SkCachedData::SkCachedData(void* data, size_t size) noexcept
+SkCachedData::SkCachedData(void* data, size_t size)
     : fData(data),
       fSize(size),
       fRefCnt(1),
@@ -19,7 +19,7 @@ SkCachedData::SkCachedData(void* data, size_t size) noexcept
   fStorage.fMalloc = data;
 }
 
-SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm) noexcept
+SkCachedData::SkCachedData(size_t size, SkDiscardableMemory* dm)
     : fData(dm->data()),
       fSize(size),
       fRefCnt(1),
@@ -38,7 +38,7 @@ SkCachedData::~SkCachedData() {
 
 class SkCachedData::AutoMutexWritable {
  public:
-  AutoMutexWritable(const SkCachedData* cd) noexcept : fCD(const_cast<SkCachedData*>(cd)) {
+  AutoMutexWritable(const SkCachedData* cd) : fCD(const_cast<SkCachedData*>(cd)) {
     fCD->fMutex.acquire();
     fCD->validate();
   }
@@ -79,7 +79,7 @@ void SkCachedData::inMutexRef(bool fromCache) {
   }
 }
 
-bool SkCachedData::inMutexUnref(bool fromCache) noexcept {
+bool SkCachedData::inMutexUnref(bool fromCache) {
   switch (--fRefCnt) {
     case 0:
       // we're going to be deleted, so we need to be unlocked (for DiscardableMemory)
@@ -107,7 +107,7 @@ bool SkCachedData::inMutexUnref(bool fromCache) noexcept {
   return 0 == fRefCnt;
 }
 
-void SkCachedData::inMutexLock() noexcept {
+void SkCachedData::inMutexLock() {
   fMutex.assertHeld();
 
   SkASSERT(!fIsLocked);
@@ -127,7 +127,7 @@ void SkCachedData::inMutexLock() noexcept {
   }
 }
 
-void SkCachedData::inMutexUnlock() noexcept {
+void SkCachedData::inMutexUnlock() {
   fMutex.assertHeld();
 
   SkASSERT(fIsLocked);

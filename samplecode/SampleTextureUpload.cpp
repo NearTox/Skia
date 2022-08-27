@@ -17,42 +17,39 @@
  * This sample exercises heavy texture updates and uploads.
  */
 class TextureUploadSample : public Sample {
-    static constexpr int kMinTileSize = 128;
-    static constexpr int kMaxTileSize = 2048;
-    static constexpr float kGridScale = 0.25f;
+  inline static constexpr int kMinTileSize = 128;
+  inline static constexpr int kMaxTileSize = 2048;
+  inline static constexpr float kGridScale = 0.25f;
 
-    bool fDrawTexturesToScreen = true;
-    int fTileSize = 256;
-    int fTileRows = 8;
-    int fTileCols = 8;
+  bool fDrawTexturesToScreen = true;
+  int fTileSize = 256;
+  int fTileRows = 8;
+  int fTileCols = 8;
 
-    sk_sp<SkSurface> fBlueSurface;
-    sk_sp<SkSurface> fGraySurface;
+  sk_sp<SkSurface> fBlueSurface;
+  sk_sp<SkSurface> fGraySurface;
 
-    class RenderTargetTexture : public SkRefCnt {
-    public:
-        RenderTargetTexture(GrDirectContext* direct, int size) {
-            SkSurfaceProps surfaceProps(0, kRGB_H_SkPixelGeometry);
-            SkImageInfo imageInfo = SkImageInfo::Make(size, size, kRGBA_8888_SkColorType,
-                                                      kPremul_SkAlphaType);
-            fSurface = SkSurface::MakeRenderTarget(direct, SkBudgeted::kNo, imageInfo, 0,
-                                                   &surfaceProps);
-        }
+  class RenderTargetTexture : public SkRefCnt {
+   public:
+    RenderTargetTexture(GrDirectContext* direct, int size) {
+      SkSurfaceProps surfaceProps(0, kRGB_H_SkPixelGeometry);
+      SkImageInfo imageInfo =
+          SkImageInfo::Make(size, size, kRGBA_8888_SkColorType, kPremul_SkAlphaType);
+      fSurface = SkSurface::MakeRenderTarget(direct, SkBudgeted::kNo, imageInfo, 0, &surfaceProps);
+    }
 
-        sk_sp<SkImage> getImage() {
-            return fSurface->makeImageSnapshot();
-        }
+    sk_sp<SkImage> getImage() { return fSurface->makeImageSnapshot(); }
 
-        void uploadRasterSurface(sk_sp<SkSurface> rasterSurface) {
-            SkPixmap pixmap;
-            rasterSurface->peekPixels(&pixmap);
-            fSurface->writePixels(pixmap, 0, 0);
-        }
+    void uploadRasterSurface(sk_sp<SkSurface> rasterSurface) {
+      SkPixmap pixmap;
+      rasterSurface->peekPixels(&pixmap);
+      fSurface->writePixels(pixmap, 0, 0);
+    }
 
-    private:
-        sk_sp<SkSurface> fSurface;
-        sk_sp<SkImage> fCachedImage;
-    };
+   private:
+    sk_sp<SkSurface> fSurface;
+    sk_sp<SkImage> fCachedImage;
+  };
 
     SkTArray<sk_sp<RenderTargetTexture>> fTextures;
     GrDirectContext* fCachedContext = nullptr;

@@ -6,8 +6,8 @@
  */
 
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/mtl/GrMtlCaps.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/mtl/GrMtlCaps.h"
 #include "tests/Test.h"
 #include "tools/gpu/ManagedBackendTexture.h"
 
@@ -88,8 +88,8 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
       continue;
     }
 
-    for (auto mipMapped : {GrMipmapped::kNo, GrMipmapped::kYes}) {
-      if (GrMipmapped::kYes == mipMapped && !mtlCaps->mipmapSupport()) {
+    for (auto mipmapped : {GrMipmapped::kNo, GrMipmapped::kYes}) {
+      if (GrMipmapped::kYes == mipmapped && !mtlCaps->mipmapSupport()) {
         continue;
       }
 
@@ -105,13 +105,13 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
 
         {
           auto uninitCreateMtd =
-              [format](GrDirectContext* dContext, GrMipmapped mipMapped, GrRenderable renderable) {
+              [format](GrDirectContext* dContext, GrMipmapped mipmapped, GrRenderable renderable) {
                 return ManagedBackendTexture::MakeWithoutData(
-                    dContext, 32, 32, format, mipMapped, renderable, GrProtected::kNo);
+                    dContext, 32, 32, format, mipmapped, renderable, GrProtected::kNo);
               };
 
           test_wrapping(
-              dContext, reporter, uninitCreateMtd, combo.fColorType, mipMapped, renderable);
+              dContext, reporter, uninitCreateMtd, combo.fColorType, mipmapped, renderable);
         }
 
         {
@@ -123,23 +123,23 @@ DEF_GPUTEST_FOR_METAL_CONTEXT(MtlBackendAllocationTest, reporter, ctxInfo) {
           // Ideally we'd update our validation code to use a "raw" read that doesn't
           // impose a color type but for now we just munge the data we upload to match the
           // expectation.
-          GrSwizzle swizzle;
+          skgpu::Swizzle swizzle;
           switch (combo.fColorType) {
-            case GrColorType::kAlpha_8: swizzle = GrSwizzle("aaaa"); break;
-            case GrColorType::kAlpha_16: swizzle = GrSwizzle("aaaa"); break;
-            case GrColorType::kAlpha_F16: swizzle = GrSwizzle("aaaa"); break;
+            case GrColorType::kAlpha_8: swizzle = skgpu::Swizzle("aaaa"); break;
+            case GrColorType::kAlpha_16: swizzle = skgpu::Swizzle("aaaa"); break;
+            case GrColorType::kAlpha_F16: swizzle = skgpu::Swizzle("aaaa"); break;
             default: break;
           }
 
           auto createWithColorMtd = [format, swizzle](
                                         GrDirectContext* dContext, const SkColor4f& color,
-                                        GrMipmapped mipMapped, GrRenderable renderable) {
+                                        GrMipmapped mipmapped, GrRenderable renderable) {
             auto swizzledColor = swizzle.applyTo(color);
             return ManagedBackendTexture::MakeWithData(
-                dContext, 32, 32, format, swizzledColor, mipMapped, renderable, GrProtected::kNo);
+                dContext, 32, 32, format, swizzledColor, mipmapped, renderable, GrProtected::kNo);
           };
           test_color_init(
-              dContext, reporter, createWithColorMtd, combo.fColorType, combo.fColor, mipMapped,
+              dContext, reporter, createWithColorMtd, combo.fColorType, combo.fColor, mipmapped,
               renderable);
         }
       }

@@ -15,8 +15,8 @@
 #include "src/core/SkNextID.h"
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrTypesPriv.h"
-#  include "src/gpu/GrSurfaceProxyView.h"
+#  include "include/private/gpu/ganesh/GrTypesPriv.h"
+#  include "src/gpu/ganesh/GrSurfaceProxyView.h"
 #endif
 
 class GrRecordingContext;
@@ -25,10 +25,13 @@ class SkBitmap;
 class SkCanvas;
 class SkImage;
 struct SkImageInfo;
+class SkMatrix;
 class SkPaint;
 class SkPixmap;
+class SkShader;
 class SkSpecialSurface;
 class SkSurface;
+enum class SkTileMode;
 
 enum { kNeedNewImageUniqueID_SpecialImage = 0 };
 
@@ -48,14 +51,14 @@ class SkSpecialImage : public SkRefCnt {
   typedef void* ReleaseContext;
   typedef void (*RasterReleaseProc)(void* pixels, ReleaseContext);
 
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
   int width() const { return fSubset.width(); }
   int height() const { return fSubset.height(); }
   const SkIRect& subset() const { return fSubset; }
   SkColorSpace* getColorSpace() const;
 
-  uint32_t uniqueID() const noexcept { return fUniqueID; }
+  uint32_t uniqueID() const { return fUniqueID; }
   virtual SkAlphaType alphaType() const = 0;
   virtual SkColorType colorType() const = 0;
   virtual size_t getSize() const = 0;
@@ -113,7 +116,19 @@ class SkSpecialImage : public SkRefCnt {
    * When the 'subset' parameter is specified the returned image will be tight even if that
    * entails a copy! The 'subset' is relative to this special image's content rect.
    */
+  // TODO: The only version that uses the subset is the tile image filter, and that doesn't need
+  // to if it can be rewritten to use asShader() and SkTileModes. Similarly, the only use case of
+  // asImage() w/o a subset is SkImage::makeFiltered() and that could/should return an SkShader so
+  // that users don't need to worry about correctly applying the subset, etc.
   sk_sp<SkImage> asImage(const SkIRect* subset = nullptr) const;
+
+  /**
+   * Create an SkShader that samples the contents of this special image, applying tile mode for
+   * any sample that falls outside its internal subset.
+   */
+  sk_sp<SkShader> asShader(SkTileMode, const SkSamplingOptions&, const SkMatrix&) const;
+  sk_sp<SkShader> asShader(const SkSamplingOptions& sampling) const;
+  sk_sp<SkShader> asShader(const SkSamplingOptions& sampling, const SkMatrix& lm) const;
 
   /**
    *  If the SpecialImage is backed by a gpu texture, return true.

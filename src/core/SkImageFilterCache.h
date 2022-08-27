@@ -39,7 +39,7 @@ struct SkImageFilterCacheKey {
   uint32_t fSrcGenID;
   SkIRect fSrcSubset;
 
-  bool operator==(const SkImageFilterCacheKey& other) const noexcept {
+  bool operator==(const SkImageFilterCacheKey& other) const {
     return fUniqueID == other.fUniqueID && fMatrix == other.fMatrix &&
            fClipBounds == other.fClipBounds && fSrcGenID == other.fSrcGenID &&
            fSrcSubset == other.fSrcSubset;

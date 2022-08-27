@@ -39,6 +39,28 @@ int32_t SkSqrtBits(int32_t x, int count) noexcept {
   return root;
 }
 
+// Kernighan's method
+int SkPopCount_portable(uint32_t n) noexcept {
+  int count = 0;
+
+  while (n) {
+    n &= (n - 1);  // Remove the lowest bit in the integer.
+    count++;
+  }
+  return count;
+}
+
+// Here we strip off the unwanted bits and then return the number of trailing zero bits
+int SkNthSet(uint32_t target, int n) noexcept {
+  SkASSERT(n < SkPopCount(target));
+
+  for (int i = 0; i < n; ++i) {
+    target &= (target - 1);  // Remove the lowest bit in the integer.
+  }
+
+  return SkCTZ(target);
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 size_t SkSafeMath::Add(size_t x, size_t y) noexcept {
@@ -55,7 +77,7 @@ size_t SkSafeMath::Mul(size_t x, size_t y) noexcept {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool sk_floats_are_unit(const float array[], size_t count) {
+bool sk_floats_are_unit(const float array[], size_t count) noexcept {
   bool is_unit = true;
   for (size_t i = 0; i < count; ++i) {
     is_unit &= (array[i] >= 0) & (array[i] <= 1);

@@ -22,7 +22,7 @@
  */
 class SkRandom {
  public:
-  SkRandom() noexcept { init(0); }
+  SkRandom() { init(0); }
   SkRandom(uint32_t seed) noexcept { init(seed); }
   SkRandom(const SkRandom& rand) noexcept : fK(rand.fK), fJ(rand.fJ) {}
 

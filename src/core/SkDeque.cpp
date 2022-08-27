@@ -25,14 +25,14 @@ struct SkDeque::Block {
   }
 };
 
-SkDeque::SkDeque(size_t elemSize, int allocCount) noexcept
+SkDeque::SkDeque(size_t elemSize, int allocCount) noexcept 
     : fElemSize(elemSize), fInitialStorage(nullptr), fCount(0), fAllocCount(allocCount) {
   SkASSERT(allocCount >= 1);
   fFrontBlock = fBackBlock = nullptr;
   fFront = fBack = nullptr;
 }
 
-SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount) noexcept
+SkDeque::SkDeque(size_t elemSize, void* storage, size_t storageSize, int allocCount) noexcept 
     : fElemSize(elemSize), fInitialStorage(storage), fCount(0), fAllocCount(allocCount) {
   SkASSERT(storageSize == 0 || storage != nullptr);
   SkASSERT(allocCount >= 1);

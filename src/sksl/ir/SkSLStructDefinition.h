@@ -26,19 +26,19 @@ namespace SkSL {
  */
 class StructDefinition final : public ProgramElement {
  public:
-  static constexpr Kind kProgramElementKind = Kind::kStructDefinition;
+  inline static constexpr Kind kProgramElementKind = Kind::kStructDefinition;
 
-  StructDefinition(int offset, const Type& type)
-      : INHERITED(offset, kProgramElementKind), fType(&type) {}
+  StructDefinition(Position pos, const Type& type)
+      : INHERITED(pos, kProgramElementKind), fType(&type) {}
 
   const Type& type() const { return *fType; }
 
   std::unique_ptr<ProgramElement> clone() const override {
-    return std::make_unique<StructDefinition>(fOffset, this->type());
+    return std::make_unique<StructDefinition>(fPosition, this->type());
   }
 
-  String description() const override {
-    String s = "struct ";
+  std::string description() const override {
+    std::string s = "struct ";
     s += this->type().name();
     s += " { ";
     for (const auto& f : this->type().fields()) {

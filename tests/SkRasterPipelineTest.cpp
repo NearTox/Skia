@@ -8,7 +8,7 @@
 #include "include/private/SkHalf.h"
 #include "include/private/SkTo.h"
 #include "src/core/SkRasterPipeline.h"
-#include "src/gpu/GrSwizzle.h"
+#include "src/gpu/Swizzle.h"
 #include "tests/Test.h"
 
 DEF_TEST(SkRasterPipeline, r) {
@@ -470,7 +470,7 @@ DEF_TEST(SkRasterPipeline_swizzle, r) {
       rg[i] = (4 * i + 0) << 0 | (4 * i + 1) << 8;
     }
 
-    GrSwizzle swizzle("g1b1");
+    skgpu::Swizzle swizzle("g1b1");
 
     SkRasterPipeline_MemoryCtx ptr = {rg, 0};
     SkRasterPipeline_<256> p;
@@ -494,7 +494,7 @@ DEF_TEST(SkRasterPipeline_swizzle, r) {
       rg[i][1] = 2 * i + 1;
     }
 
-    GrSwizzle swizzle("0gra");
+    skgpu::Swizzle swizzle("0gra");
 
     uint16_t buffer[64][4];
     SkRasterPipeline_MemoryCtx src = {rg, 0}, dst = {buffer, 0};

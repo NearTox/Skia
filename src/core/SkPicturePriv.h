@@ -31,16 +31,16 @@ class SkPicturePriv {
   static void Flatten(const sk_sp<const SkPicture>, SkWriteBuffer& buffer);
 
   // Returns NULL if this is not an SkBigPicture.
-  static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) noexcept {
+  static const SkBigPicture* AsSkBigPicture(const sk_sp<const SkPicture> picture) {
     return picture->asSkBigPicture();
   }
 
-  static constexpr uint64_t MakeSharedID(uint32_t pictureID) noexcept {
-    constexpr uint64_t sharedID = SkSetFourByteTag('p', 'i', 'c', 't');
+  static uint64_t MakeSharedID(uint32_t pictureID) {
+    uint64_t sharedID = SkSetFourByteTag('p', 'i', 'c', 't');
     return (sharedID << 32) | pictureID;
   }
 
-  static void AddedToCache(const SkPicture* pic) noexcept { pic->fAddedToCache.store(true); }
+  static void AddedToCache(const SkPicture* pic) { pic->fAddedToCache.store(true); }
 
   // V35: Store SkRect (rather then width & height) in header
   // V36: Remove (obsolete) alphatype from SkColorTable
@@ -97,6 +97,9 @@ class SkPicturePriv {
   // V87: SkPaint now holds a user-defined blend function (SkBlender), no longer has DrawLooper
   // V88: Add blender to ComposeShader and BlendImageFilter
   // V89: Deprecated SkClipOps are no longer supported
+  // V90: Private API for backdrop scale factor in SaveLayerRec
+  // V91: Added raw image shaders
+  // V92: Added anisotropic filtering to SkSamplingOptions
 
   enum Version {
     kPictureShaderFilterParam_Version = 82,
@@ -107,10 +110,36 @@ class SkPicturePriv {
     kSkBlenderInSkPaint = 87,
     kBlenderInEffects = 88,
     kNoExpandingClipOps = 89,
+    kBackdropScaleFactor = 90,
+    kRawImageShaders = 91,
+    kAnisotropicFilter = 92,
 
     // Only SKPs within the min/current picture version range (inclusive) can be read.
+    //
+    // When updating kMin_Version also update oldestSupportedSkpVersion in
+    // infra/bots/gen_tasks_logic/gen_tasks_logic.go
+    //
+    // Steps on how to find which oldestSupportedSkpVersion to use:
+    // 1) Find the git hash when the desired kMin_Version was the kCurrent_Version from the
+    //    git logs: https://skia.googlesource.com/skia/+log/main/src/core/SkPicturePriv.h
+    //    Eg:
+    //    https://skia.googlesource.com/skia/+/bfd330d081952424a93d51715653e4d1314d4822%5E%21/#F1
+    //
+    // 2) Use that git hash to find the SKP asset version number at that time here:
+    //    https://skia.googlesource.com/skia/+/bfd330d081952424a93d51715653e4d1314d4822/infra/bots/assets/skp/VERSION
+    //
+    // 3) [Optional] Increment the SKP asset version number from step 3 and verify that it has
+    //    the expected version number by downloading the asset and running skpinfo on it.
+    //
+    // 4) Use the incremented SKP asset version number as the oldestSupportedSkpVersion in
+    //    infra/bots/gen_tasks_logic/gen_tasks_logic.go
+    //
+    // 5) Run `make -C infra/bots train`
+    //
+    // Contact the Infra Gardener (or directly ping rmistry@) if the above steps do not work
+    // for you.
     kMin_Version = kPictureShaderFilterParam_Version,
-    kCurrent_Version = kNoExpandingClipOps
+    kCurrent_Version = kAnisotropicFilter
   };
 };
 

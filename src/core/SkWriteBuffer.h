@@ -22,13 +22,13 @@ class SkRefCntSet;
 
 class SkWriteBuffer {
  public:
-  constexpr SkWriteBuffer() noexcept = default;
-  virtual ~SkWriteBuffer() = default;
+  SkWriteBuffer() {}
+  virtual ~SkWriteBuffer() {}
 
   virtual void writePad32(const void* buffer, size_t bytes) = 0;
 
   virtual void writeByteArray(const void* data, size_t size) = 0;
-  void writeDataAsByteArray(SkData* data) {
+  void writeDataAsByteArray(const SkData* data) {
     if (!data) {
       this->write32(0);
     } else {
@@ -58,13 +58,14 @@ class SkWriteBuffer {
   virtual void writeIRect(const SkIRect& rect) = 0;
   virtual void writeRect(const SkRect& rect) = 0;
   virtual void writeRegion(const SkRegion& region) = 0;
+  virtual void writeSampling(const SkSamplingOptions&) = 0;
   virtual void writePath(const SkPath& path) = 0;
   virtual size_t writeStream(SkStream* stream, size_t length) = 0;
   virtual void writeImage(const SkImage*) = 0;
   virtual void writeTypeface(SkTypeface* typeface) = 0;
   virtual void writePaint(const SkPaint& paint) = 0;
 
-  void setSerialProcs(const SkSerialProcs& procs) noexcept { fProcs = procs; }
+  void setSerialProcs(const SkSerialProcs& procs) { fProcs = procs; }
 
  protected:
   SkSerialProcs fProcs;
@@ -76,7 +77,7 @@ class SkWriteBuffer {
  * Concrete implementation that serializes to a flat binary blob.
  */
 class SkBinaryWriteBuffer : public SkWriteBuffer {
- public: 
+ public:
   SkBinaryWriteBuffer();
   SkBinaryWriteBuffer(void* initialStorage, size_t storageSize);
   ~SkBinaryWriteBuffer() override;
@@ -84,11 +85,11 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
   void write(const void* buffer, size_t bytes) { fWriter.write(buffer, bytes); }
   void writePad32(const void* buffer, size_t bytes) override { fWriter.writePad(buffer, bytes); }
 
-  void reset(void* storage = nullptr, size_t storageSize = 0) noexcept {
+  void reset(void* storage = nullptr, size_t storageSize = 0) {
     fWriter.reset(storage, storageSize);
   }
 
-  size_t bytesWritten() const noexcept { return fWriter.bytesWritten(); }
+  size_t bytesWritten() const { return fWriter.bytesWritten(); }
 
   // Returns true iff all of the bytes written so far are stored in the initial storage
   // buffer provided in the constructor or the most recent call to reset.
@@ -116,6 +117,7 @@ class SkBinaryWriteBuffer : public SkWriteBuffer {
   void writeIRect(const SkIRect& rect) override;
   void writeRect(const SkRect& rect) override;
   void writeRegion(const SkRegion& region) override;
+  void writeSampling(const SkSamplingOptions&) override;
   void writePath(const SkPath& path) override;
   size_t writeStream(SkStream* stream, size_t length) override;
   void writeImage(const SkImage*) override;
@@ -145,6 +147,7 @@ enum SkWriteBufferImageFlags {
 
   kHasSubsetRect = 1 << 8,
   kHasMipmap = 1 << 9,
+  kUnpremul = 1 << 10,
 };
 
 #endif  // SkWriteBuffer_DEFINED

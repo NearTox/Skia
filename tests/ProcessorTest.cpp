@@ -7,20 +7,23 @@
 
 #include "tests/Test.h"
 
+#include "include/core/SkColorSpace.h"
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrClip.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrFragmentProcessor.h"
-#include "src/gpu/GrGpuResource.h"
-#include "src/gpu/GrImageInfo.h"
-#include "src/gpu/GrMemoryPool.h"
-#include "src/gpu/GrProxyProvider.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/SkGr.h"
-#include "src/gpu/effects/GrTextureEffect.h"
-#include "src/gpu/glsl/GrGLSLFragmentShaderBuilder.h"
-#include "src/gpu/ops/GrMeshDrawOp.h"
-#include "src/gpu/v1/SurfaceDrawContext_v1.h"
+#include "src/gpu/KeyBuilder.h"
+#include "src/gpu/ganesh/GrClip.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrFragmentProcessor.h"
+#include "src/gpu/ganesh/GrGpuResource.h"
+#include "src/gpu/ganesh/GrImageInfo.h"
+#include "src/gpu/ganesh/GrMemoryPool.h"
+#include "src/gpu/ganesh/GrProxyProvider.h"
+#include "src/gpu/ganesh/GrResourceProvider.h"
+#include "src/gpu/ganesh/SkGr.h"
+#include "src/gpu/ganesh/effects/GrTextureEffect.h"
+#include "src/gpu/ganesh/glsl/GrGLSLFragmentShaderBuilder.h"
+#include "src/gpu/ganesh/ops/GrMeshDrawOp.h"
+#include "src/gpu/ganesh/v1/SurfaceDrawContext_v1.h"
+#include "tests/TestHarness.h"
 #include "tests/TestUtils.h"
 
 #include <atomic>
@@ -89,7 +92,7 @@ class TestFP : public GrFragmentProcessor {
 
   const char* name() const override { return "test"; }
 
-  void onAddToKey(const GrShaderCaps&, GrProcessorKeyBuilder* b) const override {
+  void onAddToKey(const GrShaderCaps&, skgpu::KeyBuilder* b) const override {
     static std::atomic<int32_t> nextKey{0};
     b->add32(nextKey++);
   }
@@ -137,7 +140,7 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(ProcessorRefTest, reporter, ctxInfo) {
 
   const GrBackendFormat format =
       dContext->priv().caps()->getDefaultBackendFormat(GrColorType::kRGBA_8888, GrRenderable::kNo);
-  GrSwizzle swizzle = dContext->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
+  skgpu::Swizzle swizzle = dContext->priv().caps()->getReadSwizzle(format, GrColorType::kRGBA_8888);
 
   for (bool makeClone : {false, true}) {
     for (int parentCnt = 0; parentCnt < 2; parentCnt++) {
@@ -147,7 +150,8 @@ DEF_GPUTEST_FOR_ALL_CONTEXTS(ProcessorRefTest, reporter, ctxInfo) {
       {
         sk_sp<GrTextureProxy> proxy = proxyProvider->createProxy(
             format, kDims, GrRenderable::kNo, 1, GrMipmapped::kNo, SkBackingFit::kExact,
-            SkBudgeted::kYes, GrProtected::kNo);
+            SkBudgeted::kYes, GrProtected::kNo,
+            /*label=*/"ProcessorRefTest");
 
         {
           SkTArray<GrSurfaceProxyView> views;
@@ -256,7 +260,7 @@ class TestFPGenerator {
       SkBitmap bitmap;
       bitmap.installPixels(
           ii, rgbaData, ii.minRowBytes(),
-          [](void* addr, void* context) { delete[](GrColor*) addr; }, nullptr);
+          [](void* addr, void* context) { delete[] (GrColor*)addr; }, nullptr);
       bitmap.setImmutable();
       auto view = std::get<0>(GrMakeUncachedBitmapProxyView(fContext, bitmap));
       if (!view || !view.proxy()->instantiate(fResourceProvider)) {
@@ -281,7 +285,7 @@ class TestFPGenerator {
       SkBitmap bitmap;
       bitmap.installPixels(
           ii, alphaData, ii.minRowBytes(),
-          [](void* addr, void* context) { delete[](uint8_t*) addr; }, nullptr);
+          [](void* addr, void* context) { delete[] (uint8_t*)addr; }, nullptr);
       bitmap.setImmutable();
       auto view = std::get<0>(GrMakeUncachedBitmapProxyView(fContext, bitmap));
       if (!view || !view.proxy()->instantiate(fResourceProvider)) {
@@ -453,48 +457,50 @@ static bool legal_modulation(const GrColor inGr[3], const GrColor outGr[3]) {
       SkASSERT(inf[i].fR == 0 && inf[i].fG == 0 && inf[i].fB == 0);
       expectedForColorModulation[i] = expectedForAlphaModulation[i] = {0, 0, 0, 0};
     }
-  }
-
-  bool isLegalColorModulation = fuzzy_color_equals(outf[0], expectedForColorModulation[0]) &&
-                                fuzzy_color_equals(outf[1], expectedForColorModulation[1]) &&
-                                fuzzy_color_equals(outf[2], expectedForColorModulation[2]);
-
-  bool isLegalAlphaModulation = fuzzy_color_equals(outf[0], expectedForAlphaModulation[0]) &&
-                                fuzzy_color_equals(outf[1], expectedForAlphaModulation[1]) &&
-                                fuzzy_color_equals(outf[2], expectedForAlphaModulation[2]);
-
-  // This can be enabled to print the values that caused this check to fail.
-  if (0 && !isLegalColorModulation && !isLegalAlphaModulation) {
-    SkDebugf(
-        "Color modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
-        fpPreColorModulation[0], fpPreColorModulation[1], fpPreColorModulation[2],
-        fpPreColorModulation[3]);
-    for (int i = 0; i < 3; ++i) {
-      SkDebugf(
-          "\t(%.03f, %.03f, %.03f, %.03f) -> "
-          "(%.03f, %.03f, %.03f, %.03f) | "
-          "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
-          inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
-          outf[i].fA, expectedForColorModulation[i].fR, expectedForColorModulation[i].fG,
-          expectedForColorModulation[i].fB, expectedForColorModulation[i].fA,
-          fuzzy_color_equals(outf[i], expectedForColorModulation[i]));
     }
-    SkDebugf(
-        "Alpha modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
-        fpPreAlphaModulation[0], fpPreAlphaModulation[1], fpPreAlphaModulation[2],
-        fpPreAlphaModulation[3]);
-    for (int i = 0; i < 3; ++i) {
-      SkDebugf(
-          "\t(%.03f, %.03f, %.03f, %.03f) -> "
-          "(%.03f, %.03f, %.03f, %.03f) | "
-          "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
-          inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
-          outf[i].fA, expectedForAlphaModulation[i].fR, expectedForAlphaModulation[i].fG,
-          expectedForAlphaModulation[i].fB, expectedForAlphaModulation[i].fA,
-          fuzzy_color_equals(outf[i], expectedForAlphaModulation[i]));
+
+    bool isLegalColorModulation = fuzzy_color_equals(outf[0], expectedForColorModulation[0]) &&
+                                  fuzzy_color_equals(outf[1], expectedForColorModulation[1]) &&
+                                  fuzzy_color_equals(outf[2], expectedForColorModulation[2]);
+
+    bool isLegalAlphaModulation = fuzzy_color_equals(outf[0], expectedForAlphaModulation[0]) &&
+                                  fuzzy_color_equals(outf[1], expectedForAlphaModulation[1]) &&
+                                  fuzzy_color_equals(outf[2], expectedForAlphaModulation[2]);
+
+    // This can be enabled to print the values that caused this check to fail.
+    if ((false)) {
+      if (!isLegalColorModulation && !isLegalAlphaModulation) {
+        SkDebugf(
+            "Color modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
+            fpPreColorModulation[0], fpPreColorModulation[1], fpPreColorModulation[2],
+            fpPreColorModulation[3]);
+        for (int i = 0; i < 3; ++i) {
+          SkDebugf(
+              "\t(%.03f, %.03f, %.03f, %.03f) -> "
+              "(%.03f, %.03f, %.03f, %.03f) | "
+              "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
+              inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
+              outf[i].fA, expectedForColorModulation[i].fR, expectedForColorModulation[i].fG,
+              expectedForColorModulation[i].fB, expectedForColorModulation[i].fA,
+              fuzzy_color_equals(outf[i], expectedForColorModulation[i]));
+        }
+        SkDebugf(
+            "Alpha modulation test\n\timplied mod color: (%.03f, %.03f, %.03f, %.03f)\n",
+            fpPreAlphaModulation[0], fpPreAlphaModulation[1], fpPreAlphaModulation[2],
+            fpPreAlphaModulation[3]);
+        for (int i = 0; i < 3; ++i) {
+          SkDebugf(
+              "\t(%.03f, %.03f, %.03f, %.03f) -> "
+              "(%.03f, %.03f, %.03f, %.03f) | "
+              "(%.03f, %.03f, %.03f, %.03f), ok: %d\n",
+              inf[i].fR, inf[i].fG, inf[i].fB, inf[i].fA, outf[i].fR, outf[i].fG, outf[i].fB,
+              outf[i].fA, expectedForAlphaModulation[i].fR, expectedForAlphaModulation[i].fG,
+              expectedForAlphaModulation[i].fB, expectedForAlphaModulation[i].fA,
+              fuzzy_color_equals(outf[i], expectedForAlphaModulation[i]));
+        }
+      }
     }
-  }
-  return isLegalColorModulation || isLegalAlphaModulation;
+    return isLegalColorModulation || isLegalAlphaModulation;
 }
 
 DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(ProcessorOptimizationValidationTest, reporter, ctxInfo) {
@@ -625,11 +631,9 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(ProcessorOptimizationValidationTest, repor
       // violating the optimizations, it's reasonable to expect it to violate requirements on
       // a large number of pixels in the image. Sporadic pixel violations are more indicative
       // of device errors and represents a separate problem.
-#  if defined(SK_BUILD_FOR_SKQP)
-      static constexpr int kMaxAcceptableFailedPixels = 0;  // Strict when running as SKQP
-#  else
-      static constexpr int kMaxAcceptableFailedPixels = 2 * kRenderSize;  // ~0.7% of the image
-#  endif
+      static const int kMaxAcceptableFailedPixels =
+          CurrentTestHarnessIsSkQP() ? 0 :  // Strict when running as SKQP
+              2 * kRenderSize;              // ~0.7% of the image
 
       // Collect first optimization failure message, to be output later as a warning or an
       // error depending on whether the rendering "passed" or failed.
@@ -721,13 +725,13 @@ DEF_GPUTEST_FOR_GL_RENDERING_CONTEXTS(ProcessorOptimizationValidationTest, repor
 
         // Print first failing pixel's details.
         if (!coverageMessage.isEmpty()) {
-          ERRORF(reporter, coverageMessage.c_str());
+          ERRORF(reporter, "%s", coverageMessage.c_str());
         }
         if (!constMessage.isEmpty()) {
-          ERRORF(reporter, constMessage.c_str());
+          ERRORF(reporter, "%s", constMessage.c_str());
         }
         if (!opaqueMessage.isEmpty()) {
-          ERRORF(reporter, opaqueMessage.c_str());
+          ERRORF(reporter, "%s", opaqueMessage.c_str());
         }
 
         if (!loggedFirstFailure) {
@@ -809,11 +813,9 @@ static bool verify_identical_render(
   // is logically wrong, it's reasonable to expect it produce a large number of pixel differences
   // in the image. Sporadic pixel violations are more indicative device errors and represents a
   // separate problem.
-#  if defined(SK_BUILD_FOR_SKQP)
-  const int maxAcceptableFailedPixels = 0;  // Strict when running as SKQP
-#  else
-  const int maxAcceptableFailedPixels = 2 * renderSize;                   // ~0.002% of the pixels (size 1024*1024)
-#  endif
+  static const int maxAcceptableFailedPixels =
+      CurrentTestHarnessIsSkQP() ? 0 :  // Strict when running as SKQP
+          2 * renderSize;               // ~0.002% of the pixels (size 1024*1024)
 
   int failedPixelCount = 0;
   int firstWrongX = 0;

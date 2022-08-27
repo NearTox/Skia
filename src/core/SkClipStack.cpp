@@ -15,10 +15,10 @@
 #include <new>
 
 #if SK_SUPPORT_GPU
-#  include "src/gpu/GrProxyProvider.h"
+#  include "src/gpu/ganesh/GrProxyProvider.h"
 #endif
 
-SkClipStack::Element::Element(const Element& that) noexcept {
+SkClipStack::Element::Element(const Element& that) {
   switch (that.getDeviceSpaceType()) {
     case DeviceSpaceType::kEmpty:
       fDeviceSpaceRRect.setEmpty();
@@ -274,7 +274,7 @@ void SkClipStack::Element::checkEmpty() const noexcept {
   SkASSERT(!fShader);
 }
 
-bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) const {
+bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) const noexcept {
   if (DeviceSpaceType::kEmpty == fDeviceSpaceType &&
       (SkClipOp::kDifference == op || SkClipOp::kIntersect == op)) {
     return true;
@@ -285,7 +285,7 @@ bool SkClipStack::Element::canBeIntersectedInPlace(int saveCount, SkClipOp op) c
          (SkClipOp::kIntersect == fOp || this->isReplaceOp());
 }
 
-bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool newAA) const {
+bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool newAA) const noexcept {
   SkASSERT(DeviceSpaceType::kRect == fDeviceSpaceType);
 
   if (fDoAA == newAA) {
@@ -313,7 +313,8 @@ bool SkClipStack::Element::rectRectIntersectAllowed(const SkRect& newR, bool new
 }
 
 // a mirror of combineBoundsRevDiff
-void SkClipStack::Element::combineBoundsDiff(FillCombo combination, const SkRect& prevFinite) {
+void SkClipStack::Element::combineBoundsDiff(
+    FillCombo combination, const SkRect& prevFinite) noexcept {
   switch (combination) {
     case kInvPrev_InvCur_FillCombo:
       // In this case the only pixels that can remain set
@@ -354,7 +355,8 @@ void SkClipStack::Element::combineBoundsDiff(FillCombo combination, const SkRect
 }
 
 // a mirror of combineBoundsUnion
-void SkClipStack::Element::combineBoundsIntersection(int combination, const SkRect& prevFinite) {
+void SkClipStack::Element::combineBoundsIntersection(
+    int combination, const SkRect& prevFinite) noexcept {
   switch (combination) {
     case kInvPrev_InvCur_FillCombo:
       // The only pixels that aren't writable in this case
@@ -478,14 +480,13 @@ SkClipStack::SkClipStack() : fDeque(sizeof(Element), kDefaultElementAllocCnt), f
 SkClipStack::SkClipStack(void* storage, size_t size) noexcept
     : fDeque(sizeof(Element), storage, size, kDefaultElementAllocCnt), fSaveCount(0) {}
 
-SkClipStack::SkClipStack(const SkClipStack& b) noexcept
-    : fDeque(sizeof(Element), kDefaultElementAllocCnt) {
+SkClipStack::SkClipStack(const SkClipStack& b) : fDeque(sizeof(Element), kDefaultElementAllocCnt) {
   *this = b;
 }
 
 SkClipStack::~SkClipStack() { reset(); }
 
-SkClipStack& SkClipStack::operator=(const SkClipStack& b) noexcept {
+SkClipStack& SkClipStack::operator=(const SkClipStack& b) {
   if (this == &b) {
     return *this;
   }
@@ -745,7 +746,7 @@ const SkClipStack::Element* SkClipStack::Iter::prev() noexcept {
   return (const SkClipStack::Element*)fIter.prev();
 }
 
-const SkClipStack::Element* SkClipStack::Iter::skipToTopmost(SkClipOp op) noexcept {
+const SkClipStack::Element* SkClipStack::Iter::skipToTopmost(SkClipOp op) {
   if (nullptr == fStack) {
     return nullptr;
   }
@@ -868,7 +869,7 @@ bool SkClipStack::isRRect(const SkRect& bounds, SkRRect* rrect, bool* aa) const 
 
 uint32_t SkClipStack::GetNextGenID() noexcept {
   // 0-2 are reserved for invalid, empty & wide-open
-  static const uint32_t kFirstUnreservedGenID = 3;
+  static constexpr uint32_t kFirstUnreservedGenID = 3;
   static std::atomic<uint32_t> nextID{kFirstUnreservedGenID};
 
   uint32_t id;
@@ -878,7 +879,7 @@ uint32_t SkClipStack::GetNextGenID() noexcept {
   return id;
 }
 
-uint32_t SkClipStack::getTopmostGenID() const noexcept {
+uint32_t SkClipStack::getTopmostGenID() const {
   if (fDeque.empty()) {
     return kWideOpenGenID;
   }

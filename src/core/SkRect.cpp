@@ -49,7 +49,7 @@ void SkRect::toQuad(SkPoint quad[4]) const noexcept {
   quad[3].set(fLeft, fBottom);
 }
 
-#include "include/private/SkNx.h"
+#include "include/private/SkVx.h"
 
 bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
   SkASSERT((pts && count > 0) || count == 0);
@@ -59,28 +59,28 @@ bool SkRect::setBoundsCheck(const SkPoint pts[], int count) noexcept {
     return true;
   }
 
-  Sk4s min, max;
+  skvx::float4 min, max;
   if (count & 1) {
-    min = max = Sk4s(pts->fX, pts->fY, pts->fX, pts->fY);
+    min = max = skvx::float2::Load(pts).xyxy();
     pts += 1;
     count -= 1;
   } else {
-    min = max = Sk4s::Load(pts);
+    min = max = skvx::float4::Load(pts);
     pts += 2;
     count -= 2;
   }
 
-  Sk4s accum = min * 0;
+  skvx::float4 accum = min * 0.f;
   while (count) {
-    Sk4s xy = Sk4s::Load(pts);
+    skvx::float4 xy = skvx::float4::Load(pts);
     accum = accum * xy;
-    min = Sk4s::Min(min, xy);
-    max = Sk4s::Max(max, xy);
+    min = skvx::min(min, xy);
+    max = skvx::max(max, xy);
     pts += 2;
     count -= 2;
   }
 
-  bool all_finite = (accum * 0 == 0).allTrue();
+  const bool all_finite = all(accum * 0.f == 0.f);
   if (all_finite) {
     this->setLTRB(
         std::min(min[0], min[2]), std::min(min[1], min[3]), std::max(max[0], max[2]),

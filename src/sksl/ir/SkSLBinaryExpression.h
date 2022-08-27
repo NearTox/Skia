@@ -8,30 +8,31 @@
 #ifndef SKSL_BINARYEXPRESSION
 #define SKSL_BINARYEXPRESSION
 
-#include "src/sksl/SkSLIRGenerator.h"
-#include "src/sksl/SkSLLexer.h"
-#include "src/sksl/SkSLOperators.h"
+#include "include/core/SkTypes.h"
+#include "include/sksl/SkSLOperator.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLFieldAccess.h"
-#include "src/sksl/ir/SkSLIndexExpression.h"
-#include "src/sksl/ir/SkSLSwizzle.h"
-#include "src/sksl/ir/SkSLTernaryExpression.h"
 
 #include <memory>
+#include <string>
+#include <utility>
 
 namespace SkSL {
+
+class Context;
+class Type;
 
 /**
  * A binary operation.
  */
 class BinaryExpression final : public Expression {
  public:
-  static constexpr Kind kExpressionKind = Kind::kBinary;
+  inline static constexpr Kind kExpressionKind = Kind::kBinary;
 
   BinaryExpression(
-      int offset, std::unique_ptr<Expression> left, Operator op, std::unique_ptr<Expression> right,
-      const Type* type)
-      : INHERITED(offset, kExpressionKind, type),
+      Position pos, std::unique_ptr<Expression> left, Operator op,
+      std::unique_ptr<Expression> right, const Type* type) noexcept 
+      : INHERITED(pos, kExpressionKind, type),
         fLeft(std::move(left)),
         fOperator(op),
         fRight(std::move(right)) {
@@ -42,34 +43,30 @@ class BinaryExpression final : public Expression {
   // Creates a potentially-simplified form of the expression. Determines the result type
   // programmatically. Typechecks and coerces input expressions; reports errors via ErrorReporter.
   static std::unique_ptr<Expression> Convert(
-      const Context& context, std::unique_ptr<Expression> left, Operator op,
+      const Context& context, Position pos, std::unique_ptr<Expression> left, Operator op,
       std::unique_ptr<Expression> right);
 
   // Creates a potentially-simplified form of the expression. Determines the result type
   // programmatically. Asserts if the expressions do not typecheck or are otherwise invalid.
   static std::unique_ptr<Expression> Make(
-      const Context& context, std::unique_ptr<Expression> left, Operator op,
+      const Context& context, Position pos, std::unique_ptr<Expression> left, Operator op,
       std::unique_ptr<Expression> right);
 
   // Creates a potentially-simplified form of the expression. Result type is passed in.
   // Asserts if the expressions do not typecheck or are otherwise invalid.
   static std::unique_ptr<Expression> Make(
-      const Context& context, std::unique_ptr<Expression> left, Operator op,
+      const Context& context, Position pos, std::unique_ptr<Expression> left, Operator op,
       std::unique_ptr<Expression> right, const Type* resultType);
 
-  std::unique_ptr<Expression>& left() { return fLeft; }
+  std::unique_ptr<Expression>& left() noexcept { return fLeft; }
 
-  const std::unique_ptr<Expression>& left() const { return fLeft; }
+  const std::unique_ptr<Expression>& left() const noexcept { return fLeft; }
 
-  std::unique_ptr<Expression>& right() { return fRight; }
+  std::unique_ptr<Expression>& right() noexcept { return fRight; }
 
-  const std::unique_ptr<Expression>& right() const { return fRight; }
+  const std::unique_ptr<Expression>& right() const noexcept { return fRight; }
 
-  Operator getOperator() const { return fOperator; }
-
-  bool isConstantOrUniform() const override {
-    return this->left()->isConstantOrUniform() && this->right()->isConstantOrUniform();
-  }
+  Operator getOperator() const noexcept { return fOperator; }
 
   bool hasProperty(Property property) const override {
     if (property == Property::kSideEffects && this->getOperator().isAssignment()) {
@@ -78,9 +75,9 @@ class BinaryExpression final : public Expression {
     return this->left()->hasProperty(property) || this->right()->hasProperty(property);
   }
 
-  std::unique_ptr<Expression> clone() const override;
+  std::unique_ptr<Expression> clone(Position pos) const override;
 
-  String description() const override;
+  std::string description() const override;
 
  private:
   static bool CheckRef(const Expression& expr);

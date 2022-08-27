@@ -138,7 +138,8 @@ protected:
     }
 
     void onDrawContent(SkCanvas* canvas) override {
-        test_huge_stroke(canvas); return;
+      test_huge_stroke(canvas);
+#if 0
         canvas->translate(SkIntToScalar(10), SkIntToScalar(10));
 
         SkPaint paint;
@@ -173,22 +174,22 @@ protected:
 
         paint.setColor(SK_ColorBLUE);
 
-#if 1
+#  if 1
         SkPath p;
         float r = rand.nextUScalar1() + 0.5f;
         SkScalar x = 0, y = 0;
         p.moveTo(x, y);
-#if 0
+#    if 0
         p.cubicTo(x-75*r, y+75*r, x-40*r, y+125*r, x, y+85*r);
         p.cubicTo(x+40*r, y+125*r, x+75*r, y+75*r, x, y);
-#else
+#    else
         p.cubicTo(x+75*r, y+75*r, x+40*r, y+125*r, x, y+85*r);
         p.cubicTo(x-40*r, y+125*r, x-75*r, y+75*r, x, y);
-#endif
+#    endif
         p.close();
         fPath = p;
         fPath.offset(100, 0);
-#endif
+#  endif
 
         fPath.setFillType(SkPathFillType::kWinding);
         drawSet(canvas, &paint);
@@ -196,6 +197,7 @@ protected:
         canvas->translate(0, fPath.getBounds().height() * 5 / 4);
         fPath.setFillType(SkPathFillType::kEvenOdd);
         drawSet(canvas, &paint);
+#endif
     }
 
 private:

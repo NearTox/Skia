@@ -7,6 +7,7 @@
 
 #include "include/core/SkBBHFactory.h"
 #include "include/core/SkImage.h"
+#include "include/private/SkTDArray.h"
 #include "src/core/SkCanvasPriv.h"
 #include "src/core/SkColorFilterBase.h"
 #include "src/core/SkImageFilter_Base.h"
@@ -82,8 +83,8 @@ DRAW(Flush, flush());
 DRAW(Restore, restore());
 DRAW(Save, save());
 DRAW(
-    SaveLayer,
-    saveLayer(SkCanvas::SaveLayerRec(r.bounds, r.paint, r.backdrop.get(), r.saveLayerFlags)));
+    SaveLayer, saveLayer(SkCanvasPriv::ScaledBackdropLayer(
+                   r.bounds, r.paint, r.backdrop.get(), r.backdropScale, r.saveLayerFlags)));
 
 template <>
 void Draw::draw(const SaveBehind& r) {
@@ -95,7 +96,6 @@ void Draw::draw(const DrawBehind& r) {
   SkCanvasPriv::DrawBehind(fCanvas, r.paint);
 }
 
-DRAW(MarkCTM, markCTM(r.name.c_str()));
 DRAW(SetMatrix, setMatrix(fInitialCTM.asM33() * r.matrix));
 DRAW(SetM44, setMatrix(fInitialCTM* r.matrix));
 DRAW(Concat44, concat(r.matrix));
@@ -142,6 +142,13 @@ DRAW(DrawRRect, drawRRect(r.rrect, r.paint));
 DRAW(DrawRect, drawRect(r.rect, r.paint));
 DRAW(DrawRegion, drawRegion(r.region, r.paint));
 DRAW(DrawTextBlob, drawTextBlob(r.blob.get(), r.x, r.y, r.paint));
+#if SK_SUPPORT_GPU
+DRAW(DrawSlug, drawSlug(r.slug.get()));
+#else
+// Turn draw into a nop.
+template <>
+void Draw::draw(const DrawSlug&) {}
+#endif
 DRAW(
     DrawAtlas,
     drawAtlas(
@@ -282,7 +289,6 @@ class FillBounds : SkNoncopyable {
     fMeta[fCurrentOp].isDraw = isSaveLayer;
   }
 
-  void trackBounds(const MarkCTM&) { this->pushControl(); }
   void trackBounds(const SetMatrix&) { this->pushControl(); }
   void trackBounds(const SetM44&) { this->pushControl(); }
   void trackBounds(const Concat&) { this->pushControl(); }
@@ -467,6 +473,15 @@ class FillBounds : SkNoncopyable {
     dst.offset(op.x, op.y);
     return this->adjustAndMap(dst, &op.paint);
   }
+
+#if SK_SUPPORT_GPU
+  Bounds bounds(const DrawSlug& op) const {
+    SkRect dst = op.slug->sourceBounds();
+    return this->adjustAndMap(dst, &op.slug->initialPaint());
+  }
+#else
+  Bounds bounds(const DrawSlug& op) const { return SkRect::MakeEmpty(); }
+#endif
 
   Bounds bounds(const DrawDrawable& op) const {
     return this->adjustAndMap(op.worstCaseBounds, nullptr);

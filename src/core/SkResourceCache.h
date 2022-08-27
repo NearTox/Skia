@@ -73,7 +73,7 @@ class SkResourceCache {
     typedef SkResourceCache::Key Key;
 
     Rec() {}
-    virtual ~Rec() = default;
+    virtual ~Rec() {}
 
     uint32_t getHash() const { return this->getKey().hash(); }
 

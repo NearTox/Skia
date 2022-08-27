@@ -8,27 +8,33 @@
 #ifndef SKSL_CHILDCALL
 #define SKSL_CHILDCALL
 
-#include "include/private/SkTArray.h"
+#include "include/private/SkSLDefines.h"
+#include "include/sksl/SkSLPosition.h"
 #include "src/sksl/ir/SkSLExpression.h"
-#include "src/sksl/ir/SkSLVariable.h"
+
+#include <memory>
+#include <string>
+#include <utility>
 
 namespace SkSL {
+
+class Context;
+class Type;
+class Variable;
 
 /**
  * A call to a child effect object (shader, color filter, or blender).
  */
 class ChildCall final : public Expression {
  public:
-  static constexpr Kind kExpressionKind = Kind::kChildCall;
+  inline static constexpr Kind kExpressionKind = Kind::kChildCall;
 
-  ChildCall(int offset, const Type* type, const Variable* child, ExpressionArray arguments)
-      : INHERITED(offset, kExpressionKind, type),
-        fChild(*child),
-        fArguments(std::move(arguments)) {}
+  ChildCall(Position pos, const Type* type, const Variable* child, ExpressionArray arguments)
+      : INHERITED(pos, kExpressionKind, type), fChild(*child), fArguments(std::move(arguments)) {}
 
   // Creates the child call; reports errors via ASSERT.
   static std::unique_ptr<Expression> Make(
-      const Context& context, int offset, const Type* returnType, const Variable& child,
+      const Context& context, Position pos, const Type* returnType, const Variable& child,
       ExpressionArray arguments);
 
   const Variable& child() const { return fChild; }
@@ -39,9 +45,9 @@ class ChildCall final : public Expression {
 
   bool hasProperty(Property property) const override;
 
-  std::unique_ptr<Expression> clone() const override;
+  std::unique_ptr<Expression> clone(Position pos) const override;
 
-  String description() const override;
+  std::string description() const override;
 
  private:
   const Variable& fChild;

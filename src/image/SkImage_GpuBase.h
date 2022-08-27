@@ -10,7 +10,7 @@
 
 #include "include/core/SkDeferredDisplayListRecorder.h"
 #include "include/gpu/GrBackendSurface.h"
-#include "include/private/GrTypesPriv.h"
+#include "include/private/gpu/ganesh/GrTypesPriv.h"
 #include "src/core/SkYUVAInfoLocation.h"
 #include "src/image/SkImage_Base.h"
 
@@ -42,7 +42,7 @@ class SkImage_GpuBase : public SkImage_Base {
   // PromiseImageTextureFulfillProc must not be null.
   static sk_sp<GrTextureProxy> MakePromiseImageLazyProxy(
       GrContextThreadSafeProxy*, SkISize dimensions, GrBackendFormat, GrMipmapped,
-      PromiseImageTextureFulfillProc, sk_sp<GrRefCntedCallback> releaseHelper);
+      PromiseImageTextureFulfillProc, sk_sp<skgpu::RefCntedCallback> releaseHelper);
 
  protected:
   SkImage_GpuBase(sk_sp<GrImageContext>, SkImageInfo, uint32_t uniqueID);

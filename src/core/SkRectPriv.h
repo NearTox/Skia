@@ -26,13 +26,16 @@ class SkRectPriv {
     return {SK_MaxS32, SK_MaxS32, SK_MinS32, SK_MinS32};
   }
 
-  static constexpr SkRect MakeLargeS32() noexcept { return SkRect::Make(MakeILarge()); }
+  constexpr static SkRect MakeLargeS32() noexcept {
+    SkRect r = SkRect::Make(MakeILarge());
+    return r;
+  }
 
   static constexpr SkRect MakeLargest() noexcept {
     return {SK_ScalarMin, SK_ScalarMin, SK_ScalarMax, SK_ScalarMax};
   }
 
-  static constexpr SkRect MakeLargestInverted() {
+  static constexpr SkRect MakeLargestInverted() noexcept {
     return {SK_ScalarMax, SK_ScalarMax, SK_ScalarMin, SK_ScalarMin};
   }
 
@@ -45,22 +48,22 @@ class SkRectPriv {
 
   // Conservative check if r can be expressed in fixed-point.
   // Will return false for very large values that might have fit
-  static constexpr bool FitsInFixed(const SkRect& r) noexcept {
+  static bool FitsInFixed(const SkRect& r) noexcept {
     return SkFitsInFixed(r.fLeft) && SkFitsInFixed(r.fTop) && SkFitsInFixed(r.fRight) &&
            SkFitsInFixed(r.fBottom);
   }
 
-  static constexpr bool Is16Bit(const SkIRect& r) noexcept {
+  static bool Is16Bit(const SkIRect& r) noexcept {
     return SkTFitsIn<int16_t>(r.fLeft) && SkTFitsIn<int16_t>(r.fTop) &&
            SkTFitsIn<int16_t>(r.fRight) && SkTFitsIn<int16_t>(r.fBottom);
   }
 
   // Returns r.width()/2 but divides first to avoid width() overflowing.
-  static constexpr SkScalar HalfWidth(const SkRect& r) noexcept {
+  static SkScalar HalfWidth(const SkRect& r) noexcept {
     return SkScalarHalf(r.fRight) - SkScalarHalf(r.fLeft);
   }
   // Returns r.height()/2 but divides first to avoid height() overflowing.
-  static constexpr SkScalar HalfHeight(const SkRect& r) noexcept {
+  static SkScalar HalfHeight(const SkRect& r) noexcept {
     return SkScalarHalf(r.fBottom) - SkScalarHalf(r.fTop);
   }
 

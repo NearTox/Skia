@@ -11,10 +11,10 @@
 #include "include/core/SkFontStyle.h"
 #include "include/core/SkPaint.h"
 #include "include/core/SkTypeface.h"
+#include "include/private/chromium/SkChromeRemoteGlyphCache.h"
 #include "src/core/SkAdvancedTypefaceMetrics.h"
 #include "src/core/SkDescriptor.h"
 #include "src/core/SkFontDescriptor.h"
-#include "src/core/SkRemoteGlyphCache.h"
 #include "src/core/SkScalerContext.h"
 
 class SkTypefaceProxy;
@@ -28,9 +28,10 @@ class SkScalerContextProxy : public SkScalerContext {
 
  protected:
   bool generateAdvance(SkGlyph* glyph) override;
-  void generateMetrics(SkGlyph* glyph) override;
+  void generateMetrics(SkGlyph* glyph, SkArenaAlloc*) override;
   void generateImage(const SkGlyph& glyph) override;
-  bool generatePath(SkGlyphID glyphID, SkPath* path) override;
+  bool generatePath(const SkGlyph& glyphID, SkPath* path) override;
+  sk_sp<SkDrawable> generateDrawable(const SkGlyph&) override;
   void generateFontMetrics(SkFontMetrics* metrics) override;
   SkTypefaceProxy* getProxyTypeface() const;
 
@@ -42,14 +43,16 @@ class SkScalerContextProxy : public SkScalerContext {
 class SkTypefaceProxy : public SkTypeface {
  public:
   SkTypefaceProxy(
-      SkFontID fontId, int glyphCount, const SkFontStyle& style, bool isFixed,
-      sk_sp<SkStrikeClient::DiscardableHandleManager> manager, bool isLogging = true)
+      SkTypefaceID typefaceID, int glyphCount, const SkFontStyle& style, bool isFixed,
+      bool glyphMaskNeedsCurrentColor, sk_sp<SkStrikeClient::DiscardableHandleManager> manager,
+      bool isLogging = true)
       : INHERITED{style, false},
-        fFontId{fontId},
+        fTypefaceID{typefaceID},
         fGlyphCount{glyphCount},
         fIsLogging{isLogging},
+        fGlyphMaskNeedsCurrentColor(glyphMaskNeedsCurrentColor),
         fDiscardableManager{std::move(manager)} {}
-  SkFontID remoteTypefaceID() const { return fFontId; }
+  SkTypefaceID remoteTypefaceID() const { return fTypefaceID; }
   int glyphCount() const { return fGlyphCount; }
   bool isLogging() const { return fIsLogging; }
 
@@ -61,6 +64,7 @@ class SkTypefaceProxy : public SkTypeface {
   sk_sp<SkTypeface> onMakeClone(const SkFontArguments& args) const override {
     SK_ABORT("Should never be called.");
   }
+  bool onGlyphMaskNeedsCurrentColor() const override { return fGlyphMaskNeedsCurrentColor; }
   int onGetVariationDesignPosition(
       SkFontArguments::VariationPosition::Coordinate coordinates[],
       int coordinateCount) const override {
@@ -109,9 +113,10 @@ class SkTypefaceProxy : public SkTypeface {
   void* onGetCTFontRef() const override { SK_ABORT("Should never be called."); }
 
  private:
-  const SkFontID fFontId;
+  const SkTypefaceID fTypefaceID;
   const int fGlyphCount;
   const bool fIsLogging;
+  const bool fGlyphMaskNeedsCurrentColor;
   sk_sp<SkStrikeClient::DiscardableHandleManager> fDiscardableManager;
 
   using INHERITED = SkTypeface;

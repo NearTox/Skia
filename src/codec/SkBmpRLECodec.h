@@ -97,7 +97,7 @@ class SkBmpRLECodec : public SkBmpCodec {
   const uint32_t fBytesPerColor;
   const uint32_t fOffset;
 
-  static constexpr size_t kBufferSize = 4096;
+  inline static constexpr size_t kBufferSize = 4096;
   uint8_t fStreamBuffer[kBufferSize];
   size_t fBytesBuffered;
 

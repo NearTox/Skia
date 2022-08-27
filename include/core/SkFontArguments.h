@@ -8,6 +8,7 @@
 #ifndef SkFontArguments_DEFINED
 #define SkFontArguments_DEFINED
 
+#include "include/core/SkColor.h"
 #include "include/core/SkScalar.h"
 #include "include/core/SkTypes.h"
 
@@ -22,14 +23,32 @@ struct SkFontArguments {
     int coordinateCount;
   };
 
-  SkFontArguments() : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0} {}
+  /** Specify a palette to use and overrides for palette entries.
+   *
+   *  `overrides` is a list of pairs of palette entry index and color.
+   *  The overriden palette entries will use the associated color.
+   *  Override pairs with palette entry indices out of range will not be applied.
+   *  Later override entries override earlier ones.
+   */
+  struct Palette {
+    struct Override {
+      int index;
+      SkColor color;
+    };
+    int index;
+    const Override* overrides;
+    int overrideCount;
+  };
+
+  constexpr SkFontArguments() noexcept
+      : fCollectionIndex(0), fVariationDesignPosition{nullptr, 0}, fPalette{0, nullptr, 0} {}
 
   /** Specify the index of the desired font.
    *
    *  Font formats like ttc, dfont, cff, cid, pfr, t42, t1, and fon may actually be indexed
    *  collections of fonts.
    */
-  SkFontArguments& setCollectionIndex(int collectionIndex) {
+  SkFontArguments& setCollectionIndex(int collectionIndex) noexcept {
     fCollectionIndex = collectionIndex;
     return *this;
   }
@@ -41,19 +60,29 @@ struct SkFontArguments {
    *
    *  @param position not copied. The value must remain valid for life of SkFontArguments.
    */
-  SkFontArguments& setVariationDesignPosition(VariationPosition position) {
+  SkFontArguments& setVariationDesignPosition(VariationPosition position) noexcept {
     fVariationDesignPosition.coordinates = position.coordinates;
     fVariationDesignPosition.coordinateCount = position.coordinateCount;
     return *this;
   }
 
-  int getCollectionIndex() const { return fCollectionIndex; }
+  int getCollectionIndex() const noexcept { return fCollectionIndex; }
 
-  VariationPosition getVariationDesignPosition() const { return fVariationDesignPosition; }
+  VariationPosition getVariationDesignPosition() const noexcept { return fVariationDesignPosition; }
+
+  SkFontArguments& setPalette(Palette palette) noexcept {
+    fPalette.index = palette.index;
+    fPalette.overrides = palette.overrides;
+    fPalette.overrideCount = palette.overrideCount;
+    return *this;
+  }
+
+  Palette getPalette() const noexcept { return fPalette; }
 
  private:
   int fCollectionIndex;
   VariationPosition fVariationDesignPosition;
+  Palette fPalette;
 };
 
 #endif

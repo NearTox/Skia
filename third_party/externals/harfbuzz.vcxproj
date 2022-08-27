@@ -15,8 +15,10 @@
     <ClCompile Include="harfbuzz\src\hb-aat-map.cc" />
     <ClCompile Include="harfbuzz\src\hb-blob.cc" />
     <ClCompile Include="harfbuzz\src\hb-buffer-serialize.cc" />
+    <ClCompile Include="harfbuzz\src\hb-buffer-verify.cc" />
     <ClCompile Include="harfbuzz\src\hb-buffer.cc" />
     <ClCompile Include="harfbuzz\src\hb-common.cc" />
+    <ClCompile Include="harfbuzz\src\hb-draw.cc" />
     <ClCompile Include="harfbuzz\src\hb-face.cc" />
     <ClCompile Include="harfbuzz\src\hb-fallback-shape.cc" />
     <ClCompile Include="harfbuzz\src\hb-font.cc" />
@@ -59,6 +61,7 @@
     <ClCompile Include="harfbuzz\src\hb-subset-cff2.cc" />
     <ClCompile Include="harfbuzz\src\hb-subset-input.cc" />
     <ClCompile Include="harfbuzz\src\hb-subset-plan.cc" />
+    <ClCompile Include="harfbuzz\src\hb-subset-repacker.cc" />
     <ClCompile Include="harfbuzz\src\hb-ucd.cc" />
     <ClCompile Include="harfbuzz\src\hb-unicode.cc" />
   </ItemGroup>
@@ -78,7 +81,7 @@
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <PlatformToolset>ClangCL</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
-    <LLVMToolsVersion>14.0.0</LLVMToolsVersion>
+    <LLVMToolsVersion>15.0.0</LLVMToolsVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -110,10 +113,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)harfbuzz\src;$(MyIncludeDir);$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)harfbuzz\src;$(MyIncludeDir);$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\harfbuzz\;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;HAVE_INTEL_ATOMIC_PRIMITIVES;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;HAVE_CONFIG_OVERRIDE_H;HB_NO_FALLBACK_SHAPE;HB_NO_WIN1256;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>
@@ -130,10 +133,10 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
-      <AdditionalIncludeDirectories>$(ProjectDir)harfbuzz\src;$(MyIncludeDir);$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)harfbuzz\src;$(MyIncludeDir);$(SolutionDir);$(SkiaIncludeDir);$(SkiaThirdParty);$(SolutionDir)\modules\skshaper\include;$(SolutionDir)\third_party\harfbuzz\;$(SolutionDir)\third_party\externals\harfbuzz\src;$(SolutionDir)\third_party\externals\icu\source\common;$(SolutionDir)\third_party\externals\icu\source\i18n</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;HAVE_INTEL_ATOMIC_PRIMITIVES;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>HAVE_ICU;HAVE_ICU_BUILTIN;HAVE_OT;HAVE_ROUND;HAVE_CONFIG_OVERRIDE_H;HB_NO_FALLBACK_SHAPE;HB_NO_WIN1256;$(SkiaDef);$(SkiaDef2);WIN32_LEAN_AND_MEAN;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalOptions> /bigobj /utf-8 /Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <ConformanceMode>true</ConformanceMode>

@@ -2073,8 +2073,7 @@ protected:
             for (auto& line : impl->lines()) {
                 if (this->isVerbose()) {
                   SkDebugf(
-                      "line[%d]: %f + %f\n", (int)(&line - impl->lines().begin()), line.offset().fX,
-                      line.shift());
+                      "line[%d]: %f\n", (int)(&line - impl->lines().begin()), line.offset().fX);
                 }
                 line.iterateThroughVisualRuns(true,
                     [&](const Run* run, SkScalar runOffset, TextRange textRange, SkScalar* width) {
@@ -2918,8 +2917,7 @@ class ParagraphView46 : public ParagraphView_Base {
     ParagraphStyle paragraph_style;
 
     auto column = width() / 3;
-    auto draw = [&](DrawOptions options, SkScalar x) {
-      paragraph_style.setDrawOptions(options);
+    auto draw = [&](SkScalar x) {
       ParagraphBuilderImpl builder(paragraph_style, fontCollection);
       TextStyle text_style;
       text_style.setColor(SK_ColorBLACK);
@@ -2934,9 +2932,7 @@ class ParagraphView46 : public ParagraphView_Base {
       paragraph->paint(canvas, x, 400);
     };
 
-    draw(DrawOptions::kReplay, column * 0);
-    draw(DrawOptions::kRecord, column * 1);
-    draw(DrawOptions::kDirect, column * 2);
+    draw(column * 0);
   }
 
  private:
@@ -3594,6 +3590,83 @@ class ParagraphView62 : public ParagraphView_Base {
  private:
   using INHERITED = Sample;
 };
+
+// Baseline shift
+class ParagraphView63 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("ParagraphView63"); }
+
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->drawColor(SK_ColorWHITE);
+    auto fontCollection = getFontCollection();
+
+    StrutStyle strut_style;
+    strut_style.setFontFamilies({SkString("Roboto")});
+    strut_style.setStrutEnabled(true);
+    strut_style.setFontSize(8);
+    strut_style.setForceStrutHeight(true);
+
+    TextStyle text_style;
+    text_style.setFontFamilies({SkString("Roboto")});
+    text_style.setFontSize(14);
+    text_style.setColor(SK_ColorBLACK);
+
+    ParagraphStyle paragraph_style;
+    paragraph_style.setTextStyle(text_style);
+    paragraph_style.setStrutStyle(strut_style);
+    ParagraphBuilderImpl builder(paragraph_style, fontCollection);
+
+    builder.pushStyle(text_style);
+    builder.addText("something");
+    auto paragraph = builder.Build();
+    paragraph->layout(SK_ScalarInfinity);
+    paragraph->paint(canvas, 0, 0);
+    SkDebugf("height=%f\n", paragraph->getHeight());
+    /*
+    auto boxes =
+            paragraph->getRectsForRange(0, 1, RectHeightStyle::kTight, RectWidthStyle::kTight);
+    for (auto& box : boxes) {
+        SkDebugf("[%f,%f:%f,%f]\n",
+                 box.rect.fLeft, box.rect.fTop, box.rect.fRight, box.rect.fBottom);
+    }
+    */
+  }
+
+ private:
+  using INHERITED = Sample;
+};
+
+// Non-monotonic glyph placement
+class ParagraphView64 : public ParagraphView_Base {
+ protected:
+  SkString name() override { return SkString("ParagraphView64"); }
+  void onDrawContent(SkCanvas* canvas) override {
+    canvas->drawColor(SK_ColorWHITE);
+    auto fontCollection = getFontCollection();
+    fontCollection->setDefaultFontManager(SkFontMgr::RefDefault());
+    fontCollection->enableFontFallback();
+    TextStyle text_style;
+    text_style.setFontFamilies({SkString("Google Sans"), SkString("Noto Naskh Arabic")});
+    text_style.setFontSize(48);
+    text_style.setColor(SK_ColorBLACK);
+    ParagraphStyle paragraph_style;
+    paragraph_style.setTextStyle(text_style);
+    ParagraphBuilderImpl builder(paragraph_style, fontCollection);
+    builder.pushStyle(text_style);
+    // builder.addText("ٱلْرَّحْمَـانُ");
+    builder.addText("حَاوِلْ نُطْقَ \"كَيْفَ حَالُكَ؟\"");
+    //  لْرَّحْمَـان
+    // builder.addText("ُُُُُُٱٱٱٱٱُ");
+    auto paragraph = builder.Build();
+    paragraph->layout(SK_ScalarInfinity);
+    paragraph->layout(paragraph->getMaxIntrinsicWidth() + 1);
+    paragraph->paint(canvas, 0, 0);
+  }
+
+ private:
+  using INHERITED = Sample;
+};
+
 }  // namespace
 
 //////////////////////////////////////////////////////////////////////////////
@@ -3657,3 +3730,5 @@ DEF_SAMPLE(return new ParagraphView59();)
 DEF_SAMPLE(return new ParagraphView60();)
 DEF_SAMPLE(return new ParagraphView61();)
 DEF_SAMPLE(return new ParagraphView62();)
+DEF_SAMPLE(return new ParagraphView63();)
+DEF_SAMPLE(return new ParagraphView64();)

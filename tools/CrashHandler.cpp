@@ -154,7 +154,9 @@ static const struct {
   const DWORD code;
 } kExceptions[] = {
 #    define _(E) \
-      { #E, E }
+      {          \
+#        E, E    \
+      }
     _(EXCEPTION_ACCESS_VIOLATION),
     _(EXCEPTION_BREAKPOINT),
     _(EXCEPTION_INT_DIVIDE_BY_ZERO),

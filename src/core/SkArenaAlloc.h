@@ -47,7 +47,7 @@ class SkFibBlockSizes {
     SkASSERT_RELEASE(fBlockUnitSize < std::min(kMaxSize, (1u << 26) - 1));
   }
 
-  uint32_t nextBlockSize() {
+  uint32_t nextBlockSize() noexcept {
     uint32_t result = SkFibonacci47[fIndex] * fBlockUnitSize;
 
     if (SkTo<size_t>(fIndex + 1) < SkFibonacci47.size() &&
@@ -121,8 +121,8 @@ class SkArenaAlloc {
   auto make(Ctor&& ctor) -> decltype(ctor(nullptr)) {
     using T = std::remove_pointer_t<decltype(ctor(nullptr))>;
 
-    uint32_t size = ToU32(sizeof(T));
-    uint32_t alignment = ToU32(alignof(T));
+    uint32_t size = SkToU32(sizeof(T));
+    constexpr uint32_t alignment = SkToU32(alignof(T));
     char* objStart;
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(size, alignment);
@@ -130,7 +130,7 @@ class SkArenaAlloc {
     } else {
       objStart = this->allocObjectWithFooter(size + sizeof(Footer), alignment);
       // Can never be UB because max value is alignof(T).
-      uint32_t padding = ToU32(objStart - fCursor);
+      uint32_t padding = SkToU32(objStart - fCursor);
 
       // Advance to end of object to install footer.
       fCursor = objStart + size;
@@ -184,7 +184,7 @@ class SkArenaAlloc {
   // Only use makeBytesAlignedTo if none of the typed variants are impractical to use.
   void* makeBytesAlignedTo(size_t size, size_t align) {
     AssertRelease(SkTFitsIn<uint32_t>(size));
-    auto objStart = this->allocObject(ToU32(size), ToU32(align));
+    auto objStart = this->allocObject(SkToU32(size), SkToU32(align));
     fCursor = objStart + size;
     return objStart;
   }
@@ -194,10 +194,6 @@ class SkArenaAlloc {
     if (!cond) {
       ::abort();
     }
-  }
-  static constexpr uint32_t ToU32(size_t v) noexcept {
-    assert(SkTFitsIn<uint32_t>(v));
-    return (uint32_t)v;
   }
 
   using FooterAction = char*(char*);
@@ -242,12 +238,12 @@ class SkArenaAlloc {
   template <typename T>
   T* allocUninitializedArray(size_t countZ) {
     AssertRelease(SkTFitsIn<uint32_t>(countZ));
-    uint32_t count = ToU32(countZ);
+    uint32_t count = SkToU32(countZ);
 
     char* objStart;
     AssertRelease(count <= std::numeric_limits<uint32_t>::max() / sizeof(T));
-    uint32_t arraySize = ToU32(count * sizeof(T));
-    uint32_t alignment = ToU32(alignof(T));
+    uint32_t arraySize = SkToU32(count * sizeof(T));
+    constexpr uint32_t alignment = SkToU32(alignof(T));
 
     if (std::is_trivially_destructible<T>::value) {
       objStart = this->allocObject(arraySize, alignment);
@@ -259,11 +255,11 @@ class SkArenaAlloc {
       objStart = this->allocObjectWithFooter(totalSize, alignment);
 
       // Can never be UB because max value is alignof(T).
-      uint32_t padding = ToU32(objStart - fCursor);
+      uint32_t padding = SkToU32(objStart - fCursor);
 
       // Advance to end of array to install footer.
       fCursor = objStart + arraySize;
-      this->installRaw(ToU32(count));
+      this->installRaw(SkToU32(count));
       this->installFooter(
           [](char* footerEnd) {
             char* objEnd = footerEnd - (sizeof(Footer) + sizeof(uint32_t));

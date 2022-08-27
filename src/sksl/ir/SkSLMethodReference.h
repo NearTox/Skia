@@ -29,12 +29,12 @@ class FunctionDeclaration;
  */
 class MethodReference final : public Expression {
  public:
-  static constexpr Kind kExpressionKind = Kind::kMethodReference;
+  inline static constexpr Kind kExpressionKind = Kind::kMethodReference;
 
   MethodReference(
-      const Context& context, int offset, std::unique_ptr<Expression> self,
+      const Context& context, Position pos, std::unique_ptr<Expression> self,
       std::vector<const FunctionDeclaration*> functions)
-      : INHERITED(offset, kExpressionKind, context.fTypes.fInvalid.get()),
+      : INHERITED(pos, kExpressionKind, context.fTypes.fInvalid.get()),
         fSelf(std::move(self)),
         fFunctions(std::move(functions)) {}
 
@@ -45,18 +45,18 @@ class MethodReference final : public Expression {
 
   bool hasProperty(Property property) const override { return false; }
 
-  std::unique_ptr<Expression> clone() const override {
+  std::unique_ptr<Expression> clone(Position pos) const override {
     return std::unique_ptr<Expression>(
-        new MethodReference(fOffset, this->self()->clone(), this->functions(), &this->type()));
+        new MethodReference(pos, this->self()->clone(), this->functions(), &this->type()));
   }
 
-  String description() const override { return String("<method>"); }
+  std::string description() const override { return "<method>"; }
 
  private:
   MethodReference(
-      int offset, std::unique_ptr<Expression> self,
+      Position pos, std::unique_ptr<Expression> self,
       std::vector<const FunctionDeclaration*> functions, const Type* type)
-      : INHERITED(offset, kExpressionKind, type),
+      : INHERITED(pos, kExpressionKind, type),
         fSelf(std::move(self)),
         fFunctions(std::move(functions)) {}
 

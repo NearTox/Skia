@@ -41,6 +41,8 @@ class VectorAnimatorBuilder final : public AnimatorBuilder {
       fCurrentVec = 0;  // vector value index being parsed (corresponding
                         // storage offset is fCurrentVec * fVecLen)
   std::vector<float>* fTarget;
+
+  using INHERITED = AnimatorBuilder;
 };
 
 }  // namespace skottie::internal

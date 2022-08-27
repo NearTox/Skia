@@ -5,19 +5,20 @@
  * found in the LICENSE file.
  */
 
-// This is a GPU-backend specific test. It relies on static intializers to work
+// This is a GPU-backend specific test. It relies on static initializers to work
 
 #include "include/core/SkTypes.h"
 
+#include "include/core/SkColorSpace.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrGpu.h"
-#include "src/gpu/GrImageInfo.h"
-#include "src/gpu/GrResourceProvider.h"
-#include "src/gpu/GrSurfaceProxy.h"
-#include "src/gpu/GrTexture.h"
-#include "src/gpu/SkGr.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrGpu.h"
+#include "src/gpu/ganesh/GrImageInfo.h"
+#include "src/gpu/ganesh/GrResourceProvider.h"
+#include "src/gpu/ganesh/GrSurfaceProxy.h"
+#include "src/gpu/ganesh/GrTexture.h"
+#include "src/gpu/ganesh/SkGr.h"
 #include "tests/Test.h"
 #include "tests/TestUtils.h"
 #include "tools/gpu/GrContextFactory.h"
@@ -120,7 +121,8 @@ void basic_transfer_to_test(
 
   sk_sp<GrTexture> tex = resourceProvider->createTexture(
       kTexDims, backendFormat, GrTextureType::k2D, renderable, 1, GrMipmapped::kNo, SkBudgeted::kNo,
-      GrProtected::kNo);
+      GrProtected::kNo,
+      /*label=*/{});
   if (!tex) {
     ERRORF(reporter, "Could not create texture");
     return;
@@ -146,7 +148,7 @@ void basic_transfer_to_test(
   if (!allowedSrc.fOffsetAlignmentForTransferBuffer) {
     return;
   }
-  size_t srcRowBytes = GrAlignTo(
+  size_t srcRowBytes = SkAlignTo(
       GrColorTypeBytesPerPixel(allowedSrc.fColorType) * srcBufferWidth,
       caps->transferBufferAlignment());
 
@@ -299,7 +301,8 @@ void basic_transfer_from_test(
   data.fRowBytes = textureDataRowBytes;
   sk_sp<GrTexture> tex = resourceProvider->createTexture(
       kTexDims, format, GrTextureType::k2D, colorType, renderable, 1, SkBudgeted::kNo,
-      GrMipMapped::kNo, GrProtected::kNo, &data);
+      GrMipmapped::kNo, GrProtected::kNo, &data,
+      /*label=*/{});
   if (!tex) {
     return;
   }
@@ -322,8 +325,8 @@ void basic_transfer_from_test(
   GrImageInfo readInfo(allowedRead.fColorType, kUnpremul_SkAlphaType, nullptr, kTexDims);
 
   size_t bpp = GrColorTypeBytesPerPixel(allowedRead.fColorType);
-  size_t fullBufferRowBytes = GrAlignTo(kTexDims.fWidth * bpp, caps->transferBufferAlignment());
-  size_t partialBufferRowBytes = GrAlignTo(kPartialWidth * bpp, caps->transferBufferAlignment());
+  size_t fullBufferRowBytes = SkAlignTo(kTexDims.fWidth * bpp, caps->transferBufferAlignment());
+  size_t partialBufferRowBytes = SkAlignTo(kPartialWidth * bpp, caps->transferBufferAlignment());
   size_t offsetAlignment = allowedRead.fOffsetAlignmentForTransferBuffer;
   SkASSERT(offsetAlignment);
 

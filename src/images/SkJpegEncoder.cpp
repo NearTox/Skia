@@ -197,7 +197,7 @@ SkJpegEncoder::SkJpegEncoder(std::unique_ptr<SkJpegEncoderMgr> encoderMgr, const
     : INHERITED(src, encoderMgr->proc() ? encoderMgr->cinfo()->input_components * src.width() : 0),
       fEncoderMgr(std::move(encoderMgr)) {}
 
-SkJpegEncoder::~SkJpegEncoder() = default;
+SkJpegEncoder::~SkJpegEncoder() {}
 
 bool SkJpegEncoder::onEncodeRows(int numRows) {
   skjpeg_error_mgr::AutoPushJmpBuf jmp(fEncoderMgr->errorMgr());

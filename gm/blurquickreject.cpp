@@ -75,8 +75,8 @@ class BlurQuickRejectGM : public skiagm::GM {
   }
 
  private:
-  static constexpr int kWidth = 300;
-  static constexpr int kHeight = 300;
+  inline static constexpr int kWidth = 300;
+  inline static constexpr int kHeight = 300;
 
   using INHERITED = GM;
 };

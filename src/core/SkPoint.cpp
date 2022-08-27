@@ -10,16 +10,18 @@
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void SkPoint::scale(SkScalar scale, SkPoint* dst) const {
+void SkPoint::scale(SkScalar scale, SkPoint* dst) const noexcept {
   SkASSERT(dst);
   dst->set(fX * scale, fY * scale);
 }
 
-bool SkPoint::normalize() { return this->setLength(fX, fY, SK_Scalar1); }
+bool SkPoint::normalize() noexcept { return this->setLength(fX, fY, SK_Scalar1); }
 
-bool SkPoint::setNormalize(SkScalar x, SkScalar y) { return this->setLength(x, y, SK_Scalar1); }
+bool SkPoint::setNormalize(SkScalar x, SkScalar y) noexcept {
+  return this->setLength(x, y, SK_Scalar1);
+}
 
-bool SkPoint::setLength(SkScalar length) { return this->setLength(fX, fY, length); }
+bool SkPoint::setLength(SkScalar length) noexcept { return this->setLength(fX, fY, length); }
 
 /*
  *  We have to worry about 2 tricky conditions:
@@ -30,7 +32,8 @@ bool SkPoint::setLength(SkScalar length) { return this->setLength(fX, fY, length
  *  doubles, which is much slower (3x in a desktop test) but will not overflow.
  */
 template <bool use_rsqrt>
-bool set_point_length(SkPoint* pt, float x, float y, float length, float* orig_length = nullptr) {
+bool set_point_length(
+    SkPoint* pt, float x, float y, float length, float* orig_length = nullptr) noexcept {
   SkASSERT(!use_rsqrt || (orig_length == nullptr));
 
   // our mag2 step overflowed to infinity, so use doubles instead.
@@ -58,7 +61,7 @@ bool set_point_length(SkPoint* pt, float x, float y, float length, float* orig_l
   return true;
 }
 
-SkScalar SkPoint::Normalize(SkPoint* pt) {
+SkScalar SkPoint::Normalize(SkPoint* pt) noexcept {
   float mag;
   if (set_point_length<false>(pt, pt->fX, pt->fY, 1.0f, &mag)) {
     return mag;
@@ -66,7 +69,7 @@ SkScalar SkPoint::Normalize(SkPoint* pt) {
   return 0;
 }
 
-SkScalar SkPoint::Length(SkScalar dx, SkScalar dy) {
+SkScalar SkPoint::Length(SkScalar dx, SkScalar dy) noexcept {
   float mag2 = dx * dx + dy * dy;
   if (SkScalarIsFinite(mag2)) {
     return sk_float_sqrt(mag2);
@@ -77,18 +80,18 @@ SkScalar SkPoint::Length(SkScalar dx, SkScalar dy) {
   }
 }
 
-bool SkPoint::setLength(float x, float y, float length) {
+bool SkPoint::setLength(float x, float y, float length) noexcept {
   return set_point_length<false>(this, x, y, length);
 }
 
-bool SkPointPriv::SetLengthFast(SkPoint* pt, float length) {
+bool SkPointPriv::SetLengthFast(SkPoint* pt, float length) noexcept {
   return set_point_length<true>(pt, pt->fX, pt->fY, length);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 
 SkScalar SkPointPriv::DistanceToLineBetweenSqd(
-    const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side) {
+    const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side) noexcept {
   SkVector u = b - a;
   SkVector v = pt - a;
 
@@ -109,7 +112,7 @@ SkScalar SkPointPriv::DistanceToLineBetweenSqd(
 }
 
 SkScalar SkPointPriv::DistanceToLineSegmentBetweenSqd(
-    const SkPoint& pt, const SkPoint& a, const SkPoint& b) {
+    const SkPoint& pt, const SkPoint& a, const SkPoint& b) noexcept {
   // See comments to distanceToLineBetweenSqd. If the projection of c onto
   // u is between a and b then this returns the same result as that
   // function. Otherwise, it returns the distance to the closer of a and

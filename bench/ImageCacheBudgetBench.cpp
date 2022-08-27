@@ -10,8 +10,8 @@
 #include "include/core/SkImage.h"
 #include "include/core/SkSurface.h"
 #include "include/gpu/GrDirectContext.h"
-#include "src/gpu/GrDirectContextPriv.h"
-#include "src/gpu/GrResourceCache.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrResourceCache.h"
 #include "tools/ToolUtils.h"
 
 
@@ -138,8 +138,8 @@ class ImageCacheBudgetBench : public Benchmark {
   }
 
  private:
-  static constexpr int kImagesToDraw = 100;
-  static constexpr int kSimulatedFrames = 5;
+  inline static constexpr int kImagesToDraw = 100;
+  inline static constexpr int kSimulatedFrames = 5;
 
   int fBudgetSize;
   bool fShuffle;
@@ -240,10 +240,10 @@ class ImageCacheBudgetDynamicBench : public Benchmark {
   }
 
  private:
-  static constexpr int kImagesInBudget = 25;
-  static constexpr int kMinImagesToDraw = 15;
-  static constexpr int kMaxImagesToDraw = 35;
-  static constexpr int kSimulatedFrames = 80;
+  inline static constexpr int kImagesInBudget = 25;
+  inline static constexpr int kMinImagesToDraw = 15;
+  inline static constexpr int kMaxImagesToDraw = 35;
+  inline static constexpr int kSimulatedFrames = 80;
 
   Mode fMode;
   sk_sp<SkImage> fImages[kMaxImagesToDraw];

@@ -5,8 +5,14 @@
  * found in the LICENSE file.
  */
 
-#include "src/sksl/SkSLContext.h"
 #include "src/sksl/ir/SkSLChildCall.h"
+
+#include "include/core/SkTypes.h"
+#include "include/private/SkTArray.h"
+#include "src/sksl/SkSLBuiltinTypes.h"
+#include "src/sksl/SkSLContext.h"
+#include "src/sksl/ir/SkSLType.h"
+#include "src/sksl/ir/SkSLVariable.h"
 
 namespace SkSL {
 
@@ -19,18 +25,13 @@ bool ChildCall::hasProperty(Property property) const {
   return false;
 }
 
-std::unique_ptr<Expression> ChildCall::clone() const {
-  ExpressionArray cloned;
-  cloned.reserve_back(this->arguments().size());
-  for (const std::unique_ptr<Expression>& arg : this->arguments()) {
-    cloned.push_back(arg->clone());
-  }
-  return std::make_unique<ChildCall>(fOffset, &this->type(), &this->child(), std::move(cloned));
+std::unique_ptr<Expression> ChildCall::clone(Position pos) const {
+  return std::make_unique<ChildCall>(pos, &this->type(), &this->child(), this->arguments().clone());
 }
 
-String ChildCall::description() const {
-  String result = String(this->child().name()) + ".eval(";
-  String separator;
+std::string ChildCall::description() const {
+  std::string result = std::string(this->child().name()) + ".eval(";
+  std::string separator;
   for (const std::unique_ptr<Expression>& arg : this->arguments()) {
     result += separator;
     result += arg->description();
@@ -58,7 +59,7 @@ String ChildCall::description() const {
     return false;
   }
   for (size_t i = 0; i < arguments.size(); i++) {
-    if (arguments[i]->type() != *params[i]) {
+    if (!arguments[i]->type().matches(*params[i])) {
       return false;
     }
   }
@@ -66,10 +67,10 @@ String ChildCall::description() const {
 }
 
 std::unique_ptr<Expression> ChildCall::Make(
-    const Context& context, int offset, const Type* returnType, const Variable& child,
+    const Context& context, Position pos, const Type* returnType, const Variable& child,
     ExpressionArray arguments) {
   SkASSERT(call_signature_is_valid(context, child, arguments));
-  return std::make_unique<ChildCall>(offset, returnType, &child, std::move(arguments));
+  return std::make_unique<ChildCall>(pos, returnType, &child, std::move(arguments));
 }
 
 }  // namespace SkSL

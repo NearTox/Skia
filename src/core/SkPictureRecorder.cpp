@@ -25,7 +25,7 @@ SkPictureRecorder::SkPictureRecorder() {
   fRecorder = std::make_unique<SkRecorder>(nullptr, SkRect::MakeEmpty(), fMiniRecorder.get());
 }
 
-SkPictureRecorder::~SkPictureRecorder() = default;
+SkPictureRecorder::~SkPictureRecorder() {}
 
 SkCanvas* SkPictureRecorder::beginRecording(
     const SkRect& userCullRect, sk_sp<SkBBoxHierarchy> bbh) {

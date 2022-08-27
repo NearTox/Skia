@@ -13,7 +13,7 @@
 #include "include/core/SkSurfaceProps.h"
 
 #if SK_SUPPORT_GPU
-#  include "include/private/GrTypesPriv.h"
+#  include "include/private/gpu/ganesh/GrTypesPriv.h"
 #endif
 
 class GrBackendFormat;
@@ -32,10 +32,10 @@ class SkSpecialImage;
  */
 class SkSpecialSurface : public SkRefCnt {
  public:
-  const SkSurfaceProps& props() const noexcept { return fProps; }
+  const SkSurfaceProps& props() const { return fProps; }
 
-  int width() const noexcept { return fSubset.width(); }
-  int height() const noexcept { return fSubset.height(); }
+  int width() const { return fSubset.width(); }
+  int height() const { return fSubset.height(); }
 
   /**
    *  Return a canvas that will draw into this surface. This will always
@@ -61,7 +61,7 @@ class SkSpecialSurface : public SkRefCnt {
    *  be created, nullptr will be returned.
    */
   static sk_sp<SkSpecialSurface> MakeRenderTarget(
-      GrRecordingContext*, const SkImageInfo&, const SkSurfaceProps&);
+      GrRecordingContext*, const SkImageInfo&, const SkSurfaceProps&, GrSurfaceOrigin);
 #endif
 
   /**
@@ -84,7 +84,7 @@ class SkSpecialSurface : public SkRefCnt {
 
   // For testing only
   friend class TestingSpecialSurfaceAccess;
-  const SkIRect& subset() const noexcept { return fSubset; }
+  const SkIRect& subset() const { return fSubset; }
 
  private:
   const SkSurfaceProps fProps;

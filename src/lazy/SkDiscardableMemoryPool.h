@@ -27,9 +27,9 @@
  */
 class SkDiscardableMemoryPool : public SkDiscardableMemory::Factory {
  public:
-  virtual size_t getRAMUsed() noexcept = 0;
+  virtual size_t getRAMUsed() = 0;
   virtual void setRAMBudget(size_t budget) = 0;
-  virtual size_t getRAMBudget() noexcept = 0;
+  virtual size_t getRAMBudget() = 0;
 
   /** purges all unlocked DMs */
   virtual void dumpPool() = 0;

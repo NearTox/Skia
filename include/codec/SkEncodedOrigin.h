@@ -29,7 +29,7 @@ enum SkEncodedOrigin {
  * that transforms the source rectangle with upper left corner at [0, 0] and origin to a correctly
  * oriented destination rectangle of [0, 0, w, h].
  */
-static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, int h) {
+static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, int h) noexcept {
   switch (origin) {
     case kTopLeft_SkEncodedOrigin: return SkMatrix::I();
     case kTopRight_SkEncodedOrigin: return SkMatrix::MakeAll(-1, 0, w, 0, 1, 0, 0, 0, 1);
@@ -47,7 +47,7 @@ static inline SkMatrix SkEncodedOriginToMatrix(SkEncodedOrigin origin, int w, in
  * Return true if the encoded origin includes a 90 degree rotation, in which case the width
  * and height of the source data are swapped relative to a correctly oriented destination.
  */
-static inline bool SkEncodedOriginSwapsWidthHeight(SkEncodedOrigin origin) {
+static inline bool SkEncodedOriginSwapsWidthHeight(SkEncodedOrigin origin) noexcept {
   return origin >= kLeftTop_SkEncodedOrigin;
 }
 

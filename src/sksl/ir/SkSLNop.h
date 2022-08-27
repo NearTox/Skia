@@ -18,15 +18,15 @@ namespace SkSL {
  */
 class Nop final : public Statement {
  public:
-  static constexpr Kind kStatementKind = Kind::kNop;
+  inline static constexpr Kind kStatementKind = Kind::kNop;
 
-  Nop() : INHERITED(/*offset=*/-1, kStatementKind) {}
+  Nop() : INHERITED(Position(), kStatementKind) {}
 
   static std::unique_ptr<Statement> Make() { return std::make_unique<Nop>(); }
 
   bool isEmpty() const override { return true; }
 
-  String description() const override { return String(";"); }
+  std::string description() const override { return ";"; }
 
   std::unique_ptr<Statement> clone() const override { return std::make_unique<Nop>(); }
 

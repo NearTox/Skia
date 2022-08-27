@@ -16,8 +16,8 @@ class SkDiscardableMemory;
 
 class SkCachedData : ::SkNoncopyable {
  public:
-  SkCachedData(void* mallocData, size_t size) noexcept;
-  SkCachedData(size_t size, SkDiscardableMemory*) noexcept;
+  SkCachedData(void* mallocData, size_t size);
+  SkCachedData(size_t size, SkDiscardableMemory*);
   virtual ~SkCachedData();
 
   size_t size() const noexcept { return fSize; }
@@ -38,7 +38,7 @@ class SkCachedData : ::SkNoncopyable {
 
  protected:
   // called when fData changes. could be nullptr.
-  virtual void onDataChange(void* oldData, void* newData)noexcept {}
+  virtual void onDataChange(void* oldData, void* newData) noexcept {}
 
  private:
   SkMutex fMutex;  // could use a pool of these...
@@ -60,12 +60,12 @@ class SkCachedData : ::SkNoncopyable {
   void internalUnref(bool fromCache) const noexcept;
 
   void inMutexRef(bool fromCache);
-  bool inMutexUnref(bool fromCache) noexcept;  // returns true if we should delete "this"
-  void inMutexLock() noexcept;
-  void inMutexUnlock() noexcept;
+  bool inMutexUnref(bool fromCache);  // returns true if we should delete "this"
+  void inMutexLock();
+  void inMutexUnlock();
 
   // called whenever our fData might change (lock or unlock)
-  void setData(void* newData) noexcept {
+  void setData(void* newData) {
     if (newData != fData) {
       // notify our subclasses of the change
       this->onDataChange(fData, newData);
@@ -98,13 +98,13 @@ class SkCachedData : ::SkNoncopyable {
    *  Call when adding this instance to a SkResourceCache::Rec subclass
    *  (typically in the Rec's constructor).
    */
-  void attachToCacheAndRef() const noexcept { this->internalRef(true); }
+  void attachToCacheAndRef() const { this->internalRef(true); }
 
   /*
    *  Call when removing this instance from a SkResourceCache::Rec subclass
    *  (typically in the Rec's destructor).
    */
-  void detachFromCacheAndUnref() const noexcept { this->internalUnref(true); }
+  void detachFromCacheAndUnref() const { this->internalUnref(true); }
 };
 
 #endif

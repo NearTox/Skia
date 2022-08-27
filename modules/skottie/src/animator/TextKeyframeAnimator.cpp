@@ -39,9 +39,29 @@ class TextKeyframeAnimator final : public KeyframeAnimator {
   using INHERITED = KeyframeAnimator;
 };
 
+class TextExpressionAnimator final : public Animator {
+ public:
+  TextExpressionAnimator(
+      sk_sp<ExpressionEvaluator<SkString>> expression_evaluator, TextValue* target_value)
+      : fExpressionEvaluator(std::move(expression_evaluator)), fTarget(target_value) {}
+
+ private:
+  StateChanged onSeek(float t) override {
+    SkString old_value = fTarget->fText;
+
+    fTarget->fText = fExpressionEvaluator->evaluate(t);
+
+    return fTarget->fText != old_value;
+  }
+
+  sk_sp<ExpressionEvaluator<SkString>> fExpressionEvaluator;
+  TextValue* fTarget;
+};
+
 class TextAnimatorBuilder final : public AnimatorBuilder {
  public:
-  explicit TextAnimatorBuilder(TextValue* target) : fTarget(target) {}
+  explicit TextAnimatorBuilder(TextValue* target)
+      : INHERITED(Keyframe::Value::Type::kIndex), fTarget(target) {}
 
   sk_sp<KeyframeAnimator> makeFromKeyframes(
       const AnimationBuilder& abuilder, const skjson::ArrayValue& jkfs) override {
@@ -57,7 +77,11 @@ class TextAnimatorBuilder final : public AnimatorBuilder {
         new TextKeyframeAnimator(std::move(fKFs), std::move(fCMs), std::move(fValues), fTarget));
   }
 
-  sk_sp<Animator> makeFromExpression(ExpressionManager&, const char*) override { return nullptr; }
+  sk_sp<Animator> makeFromExpression(ExpressionManager& em, const char* expr) override {
+    sk_sp<ExpressionEvaluator<SkString>> expression_evaluator =
+        em.createStringExpressionEvaluator(expr);
+    return sk_make_sp<TextExpressionAnimator>(expression_evaluator, fTarget);
+  }
 
   bool parseValue(const AnimationBuilder& abuilder, const skjson::Value& jv) const override {
     return Parse(jv, abuilder, fTarget);
@@ -84,6 +108,8 @@ class TextAnimatorBuilder final : public AnimatorBuilder {
 
   std::vector<TextValue> fValues;
   TextValue* fTarget;
+
+  using INHERITED = AnimatorBuilder;
 };
 
 }  // namespace

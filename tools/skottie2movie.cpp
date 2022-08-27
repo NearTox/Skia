@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
 
     SkVideoEncoder encoder;
 
-    GrDirectContext* context = nullptr;
+    GrDirectContext* grctx = nullptr;
     sk_sp<SkSurface> surf;
     sk_sp<SkData> data;
 
@@ -109,12 +109,12 @@ int main(int argc, char** argv) {
         // lazily allocate the surfaces
         if (!surf) {
             if (FLAGS_gpu) {
-              context = factory.getContextInfo(contextType).directContext();
+              grctx = factory.getContextInfo(contextType).directContext();
               surf = SkSurface::MakeRenderTarget(
-                  context, SkBudgeted::kNo, info, 0, GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin,
+                  grctx, SkBudgeted::kNo, info, 0, GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin,
                   nullptr);
               if (!surf) {
-                context = nullptr;
+                grctx = nullptr;
               }
             }
             if (!surf) {
@@ -132,23 +132,28 @@ int main(int argc, char** argv) {
             produce_frame(surf.get(), animation.get(), frame);
 
             AsyncRec asyncRec = { info, &encoder };
-            if (context) {
-                auto read_pixels_cb = [](SkSurface::ReadPixelsContext ctx,
-                                         std::unique_ptr<const SkSurface::AsyncReadResult> result) {
-                    if (result && result->count() == 1) {
-                        AsyncRec* rec = reinterpret_cast<AsyncRec*>(ctx);
-                        rec->encoder->addFrame({rec->info, result->data(0), result->rowBytes(0)});
-                    }
-                };
-                surf->asyncRescaleAndReadPixels(
-                    info, {0, 0, info.width(), info.height()}, SkSurface::RescaleGamma::kSrc,
-                    SkImage::RescaleMode::kNearest, read_pixels_cb, &asyncRec);
-                context->submit();
+            if (grctx) {
+              auto read_pixels_cb = [](SkSurface::ReadPixelsContext ctx,
+                                       std::unique_ptr<const SkSurface::AsyncReadResult> result) {
+                if (result && result->count() == 1) {
+                  AsyncRec* rec = reinterpret_cast<AsyncRec*>(ctx);
+                  rec->encoder->addFrame({rec->info, result->data(0), result->rowBytes(0)});
+                }
+              };
+              surf->asyncRescaleAndReadPixels(
+                  info, {0, 0, info.width(), info.height()}, SkSurface::RescaleGamma::kSrc,
+                  SkImage::RescaleMode::kNearest, read_pixels_cb, &asyncRec);
+              grctx->submit();
             } else {
-                SkPixmap pm;
-                SkAssertResult(surf->peekPixels(&pm));
-                encoder.addFrame(pm);
+              SkPixmap pm;
+              SkAssertResult(surf->peekPixels(&pm));
+              encoder.addFrame(pm);
             }
+        }
+
+        if (grctx) {
+          // ensure all pending reads are completed
+          grctx->flushAndSubmit(true);
         }
         data = encoder.endRecording();
 

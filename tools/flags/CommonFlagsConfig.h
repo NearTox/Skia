@@ -14,6 +14,7 @@
 DECLARE_string(config);
 
 class SkCommandLineConfigGpu;
+class SkCommandLineConfigGraphite;
 class SkCommandLineConfigSvg;
 
 // SkCommandLineConfig represents a Skia rendering configuration string.
@@ -28,6 +29,7 @@ class SkCommandLineConfig {
       const SkString& tag, const SkString& backend, const SkTArray<SkString>& viaParts);
   virtual ~SkCommandLineConfig();
   virtual const SkCommandLineConfigGpu* asConfigGpu() const { return nullptr; }
+  virtual const SkCommandLineConfigGraphite* asConfigGraphite() const { return nullptr; }
   virtual const SkCommandLineConfigSvg* asConfigSvg() const { return nullptr; }
   const SkString& getTag() const { return fTag; }
   const SkString& getBackend() const { return fBackend; }
@@ -56,7 +58,7 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
       const SkString& tag, const SkTArray<SkString>& viaParts, ContextType contextType,
       bool fakeGLESVer2, uint32_t surfaceFlags, int samples, SkColorType colorType,
       SkAlphaType alphaType, bool useStencilBuffers, bool testThreading, int testPersistentCache,
-      bool testPrecompile, bool useDDLSink, bool OOPRish, bool reducedShaders, SurfType);
+      bool testPrecompile, bool useDDLSink, bool OOPRish, bool slug, bool reducedShaders, SurfType);
 
   const SkCommandLineConfigGpu* asConfigGpu() const override { return this; }
   ContextType getContextType() const { return fContextType; }
@@ -70,6 +72,7 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
   bool getTestPrecompile() const { return fTestPrecompile; }
   bool getUseDDLSink() const { return fUseDDLSink; }
   bool getOOPRish() const { return fOOPRish; }
+  bool getSlug() const { return fSlug; }
   bool getReducedShaders() const { return fReducedShaders; }
   SurfType getSurfType() const { return fSurfType; }
 
@@ -85,9 +88,39 @@ class SkCommandLineConfigGpu : public SkCommandLineConfig {
   bool fTestPrecompile;
   bool fUseDDLSink;
   bool fOOPRish;
+  bool fSlug;
   bool fReducedShaders;
   SurfType fSurfType;
 };
+
+#ifdef SK_GRAPHITE_ENABLED
+
+#  include "tools/graphite/ContextFactory.h"
+
+class SkCommandLineConfigGraphite : public SkCommandLineConfig {
+ public:
+  using ContextType = skiatest::graphite::ContextFactory::ContextType;
+
+  SkCommandLineConfigGraphite(
+      const SkString& tag, const SkTArray<SkString>& viaParts, ContextType contextType,
+      SkColorType colorType, SkAlphaType alphaType)
+      : SkCommandLineConfig(tag, SkString("graphite"), viaParts),
+        fContextType(contextType),
+        fColorType(colorType),
+        fAlphaType(alphaType) {}
+  const SkCommandLineConfigGraphite* asConfigGraphite() const override { return this; }
+
+  ContextType getContextType() const { return fContextType; }
+  SkColorType getColorType() const { return fColorType; }
+  SkAlphaType getAlphaType() const { return fAlphaType; }
+
+ private:
+  ContextType fContextType;
+  SkColorType fColorType;
+  SkAlphaType fAlphaType;
+};
+
+#endif  // SK_GRAPHITE_ENABLED
 
 // SkCommandLineConfigSvg is a SkCommandLineConfig that extracts information out of the backend
 // part of the tag. It is constructed tags that have:

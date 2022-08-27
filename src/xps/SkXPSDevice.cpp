@@ -39,6 +39,7 @@
 #  include "src/core/SkDraw.h"
 #  include "src/core/SkEndian.h"
 #  include "src/core/SkGeometry.h"
+#  include "src/core/SkGlyphRun.h"
 #  include "src/core/SkImagePriv.h"
 #  include "src/core/SkMaskFilterBase.h"
 #  include "src/core/SkRasterClip.h"
@@ -104,7 +105,7 @@ SkXPSDevice::SkXPSDevice(SkISize s)
       fCurrentPage(0),
       fTopTypefaces(&fTypefaces) {}
 
-SkXPSDevice::~SkXPSDevice() = default;
+SkXPSDevice::~SkXPSDevice() {}
 
 bool SkXPSDevice::beginPortfolio(SkWStream* outputStream, IXpsOMObjectFactory* factory) {
   SkASSERT(factory);
@@ -989,7 +990,11 @@ void SkXPSDevice::drawPoints(
   // TODO
 }
 
-void SkXPSDevice::drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) {
+void SkXPSDevice::drawVertices(const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool) {
+  // TODO
+}
+
+void SkXPSDevice::drawMesh(const SkMesh&, sk_sp<SkBlender>, const SkPaint&) {
   // TODO
 }
 
@@ -1398,7 +1403,7 @@ void SkXPSDevice::drawPath(
     //[Pixel-path -> Mask]
     SkMask rasteredMask;
     if (SkDraw::DrawToMask(
-            *pixelPath, &clipIRect,
+            *pixelPath, clipIRect,
             filter,  // just to compute how much to draw.
             &matrix, &rasteredMask, SkMask::kComputeBoundsAndRenderImage_CreateMode, style)) {
       SkAutoMaskFreeImage rasteredAmi(rasteredMask.fImage);
@@ -1522,7 +1527,7 @@ HRESULT SkXPSDevice::CreateTypefaceUse(const SkFont& font, TypefaceUse** typefac
   SkTypeface* typeface = font.getTypefaceOrDefault();
 
   // Check cache.
-  const SkFontID typefaceID = typeface->uniqueID();
+  const SkTypefaceID typefaceID = typeface->uniqueID();
   for (TypefaceUse& current : *this->fTopTypefaces) {
     if (current.typefaceId == typefaceID) {
       *typefaceUse = &current;
@@ -1657,7 +1662,9 @@ static bool text_must_be_pathed(const SkPaint& paint, const SkMatrix& matrix) {
     ;
 }
 
-void SkXPSDevice::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) {
+void SkXPSDevice::onDrawGlyphRunList(
+    SkCanvas*, const SkGlyphRunList& glyphRunList, const SkPaint& initailPaint,
+    const SkPaint& drawingPaint) {
   SkASSERT(!glyphRunList.hasRSXForm());
 
   for (const auto& run : glyphRunList) {
@@ -1671,7 +1678,7 @@ void SkXPSDevice::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const S
 
     TypefaceUse* typeface;
     if (FAILED(CreateTypefaceUse(font, &typeface)) ||
-        text_must_be_pathed(paint, this->localToDevice())) {
+        text_must_be_pathed(drawingPaint, this->localToDevice())) {
       SkPath path;
       // TODO: make this work, Draw currently does not handle as well.
       // paint.getTextPath(text, byteLength, x, y, &path);
@@ -1714,7 +1721,7 @@ void SkXPSDevice::onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const S
     HRV(AddGlyphs(
         this->fXpsFactory.get(), this->fCurrentXpsCanvas.get(), typeface, nullptr, xpsGlyphs.get(),
         actualGlyphCount, &origin, SkScalarToFLOAT(font.getSize()), XPS_STYLE_SIMULATION_NONE,
-        this->localToDevice(), paint));
+        this->localToDevice(), drawingPaint));
   }
 }
 

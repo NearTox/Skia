@@ -18,6 +18,7 @@ class GrRecordingContext;
 class SkArenaAlloc;
 class SkBitmap;
 class SkColorSpace;
+class SkRuntimeEffect;
 struct SkStageRec;
 using GrFPResult = std::tuple<bool, std::unique_ptr<GrFragmentProcessor>>;
 
@@ -55,6 +56,8 @@ class SkColorFilterBase : public SkColorFilter {
 
   static void RegisterFlattenables();
 
+  virtual SkRuntimeEffect* asRuntimeEffect() const noexcept { return nullptr; }
+
   static SkFlattenable::Type GetFlattenableType() { return kSkColorFilter_Type; }
 
   SkFlattenable::Type getFlattenableType() const override { return kSkColorFilter_Type; }
@@ -85,19 +88,19 @@ class SkColorFilterBase : public SkColorFilter {
   using INHERITED = SkFlattenable;
 };
 
-static inline SkColorFilterBase* as_CFB(SkColorFilter* filter) {
+static inline SkColorFilterBase* as_CFB(SkColorFilter* filter) noexcept {
   return static_cast<SkColorFilterBase*>(filter);
 }
 
-static inline const SkColorFilterBase* as_CFB(const SkColorFilter* filter) {
+static inline const SkColorFilterBase* as_CFB(const SkColorFilter* filter) noexcept {
   return static_cast<const SkColorFilterBase*>(filter);
 }
 
-static inline const SkColorFilterBase* as_CFB(const sk_sp<SkColorFilter>& filter) {
+static inline const SkColorFilterBase* as_CFB(const sk_sp<SkColorFilter>& filter) noexcept {
   return static_cast<SkColorFilterBase*>(filter.get());
 }
 
-static inline sk_sp<SkColorFilterBase> as_CFB_sp(sk_sp<SkColorFilter> filter) {
+static inline sk_sp<SkColorFilterBase> as_CFB_sp(sk_sp<SkColorFilter> filter) noexcept {
   return sk_sp<SkColorFilterBase>(static_cast<SkColorFilterBase*>(filter.release()));
 }
 

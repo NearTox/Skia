@@ -67,31 +67,31 @@ DEF_SIMPLE_GM(crbug_1177833, canvas, 400, 400) {
     canvas->experimental_DrawEdgeAAQuad(rect, clip, aaFlags, color, mode);
     canvas->restore();
   }
-  canvas->restore();
-  // This quad exposed a similar issue to the point issue above, but when collapsing to a
-  // triangle. When a 2D quad edge collapsed from insetting we'd replace it with a point off of
-  // its adjacent edges. We need to ensure the code that moves the 3D point that projects to
-  // the 2D point has 2 degrees of freedom so it can find the correct 3D point.
-  {
-    canvas->save();
-    canvas->concat(SkMatrix::MakeAll(
-        SkBits2Float(0x3f54b255), SkBits2Float(0x3eb5a94d), SkBits2Float(0x443d7419),
-        SkBits2Float(0x3f885d66), SkBits2Float(0x3f5a6b9c), SkBits2Float(0x443c7334),
-        SkBits2Float(0x3aa95ea5), SkBits2Float(0xb8a1391e), SkBits2Float(0x3f84dde5)));
-    SkRect rect = {
-        SkBits2Float(0x00000000), SkBits2Float(0x00000000), SkBits2Float(0x40a00000),
-        SkBits2Float(0x43100000)};
-    SkPoint clip[4] = {
-        {SkBits2Float(0x405a654c), SkBits2Float(0x42e8c790)},
-        {SkBits2Float(0x3728c61b), SkBits2Float(0x42e7df31)},
-        {SkBits2Float(0xb678ecc5), SkBits2Float(0x412db4e0)},
-        {SkBits2Float(0x4024b2ad), SkBits2Float(0x413ab3ed)}};
-    SkCanvas::QuadAAFlags aaFlags = static_cast<SkCanvas::QuadAAFlags>(0x00000004);
-    SkColor4f color = {
-        SkBits2Float(0x3f800000), SkBits2Float(0x3f800000), SkBits2Float(0x3f800000),
-        SkBits2Float(0x3f800000)};
-    SkBlendMode mode = static_cast<SkBlendMode>(0x00000003);
-    canvas->experimental_DrawEdgeAAQuad(rect, clip, aaFlags, color, mode);
     canvas->restore();
-  }
+    // This quad exposed a similar issue to the point issue above, but when collapsing to a
+    // triangle. When a 2D quad edge collapsed from insetting we'd replace it with a point off of
+    // its adjacent edges. We need to ensure the code that moves the 3D point that projects to
+    // the 2D point has 2 degrees of freedom so it can find the correct 3D point.
+    {
+      canvas->save();
+      canvas->concat(SkMatrix::MakeAll(
+          SkBits2Float(0x3f54b255), SkBits2Float(0x3eb5a94d), SkBits2Float(0x443d7419),
+          SkBits2Float(0x3f885d66), SkBits2Float(0x3f5a6b9c), SkBits2Float(0x443c7334),
+          SkBits2Float(0x3aa95ea5), SkBits2Float(0xb8a1391e), SkBits2Float(0x3f84dde5)));
+      SkRect rect = {
+          SkBits2Float(0x00000000), SkBits2Float(0x00000000), SkBits2Float(0x40a00000),
+          SkBits2Float(0x43100000)};
+      SkPoint clip[4] = {
+          {SkBits2Float(0x405a654c), SkBits2Float(0x42e8c790)},
+          {SkBits2Float(0x3728c61b), SkBits2Float(0x42e7df31)},
+          {SkBits2Float(0xb678ecc5), SkBits2Float(0x412db4e0)},
+          {SkBits2Float(0x4024b2ad), SkBits2Float(0x413ab3ed)}};
+      SkCanvas::QuadAAFlags aaFlags = static_cast<SkCanvas::QuadAAFlags>(0x00000004);
+      SkColor4f color = {
+          SkBits2Float(0x3f800000), SkBits2Float(0x3f800000), SkBits2Float(0x3f800000),
+          SkBits2Float(0x3f800000)};
+      SkBlendMode mode = static_cast<SkBlendMode>(0x00000003);
+      canvas->experimental_DrawEdgeAAQuad(rect, clip, aaFlags, color, mode);
+      canvas->restore();
+    }
 }

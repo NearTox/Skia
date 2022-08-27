@@ -28,7 +28,7 @@ class SkRBuffer : SkNoncopyable {
 
   /** Initialize RBuffer with a data point and length.
    */
-  constexpr SkRBuffer(const void* data, size_t size) noexcept {
+  SkRBuffer(const void* data, size_t size) noexcept {
     SkASSERT(data != nullptr || size == 0);
     fData = (const char*)data;
     fPos = (const char*)data;
@@ -56,17 +56,17 @@ class SkRBuffer : SkNoncopyable {
   /** Read the specified number of bytes from the data pointer. If buffer is not
       null, copy those bytes into buffer.
   */
-  bool read(void* buffer, size_t size) noexcept;
-  bool skipToAlign4() noexcept;
+  bool read(void* buffer, size_t size);
+  bool skipToAlign4();
 
-  bool readU8(uint8_t* x) noexcept { return this->read(x, 1); }
-  bool readS32(int32_t* x) noexcept { return this->read(x, 4); }
-  bool readU32(uint32_t* x) noexcept { return this->read(x, 4); }
+  bool readU8(uint8_t* x) { return this->read(x, 1); }
+  bool readS32(int32_t* x) { return this->read(x, 4); }
+  bool readU32(uint32_t* x) { return this->read(x, 4); }
 
   // returns nullptr on failure
-  const void* skip(size_t bytes) noexcept;
+  const void* skip(size_t bytes);
   template <typename T>
-  const T* skipCount(size_t count) noexcept {
+  const T* skipCount(size_t count) {
     return static_cast<const T*>(this->skip(SkSafeMath::Mul(count, sizeof(T))));
   }
 
@@ -88,16 +88,16 @@ class SkRBuffer : SkNoncopyable {
 class SkWBuffer : SkNoncopyable {
  public:
   constexpr SkWBuffer() noexcept : fData(nullptr), fPos(nullptr), fStop(nullptr) {}
-  constexpr SkWBuffer(void* data) noexcept { reset(data); }
-  constexpr SkWBuffer(void* data, size_t size) noexcept { reset(data, size); }
+  SkWBuffer(void* data) noexcept { reset(data); }
+  SkWBuffer(void* data, size_t size) noexcept { reset(data, size); }
 
-  constexpr void reset(void* data) noexcept {
+  void reset(void* data) noexcept {
     fData = (char*)data;
     fPos = (char*)data;
     fStop = nullptr;  // no bounds checking
   }
 
-  constexpr void reset(void* data, size_t size) noexcept {
+  void reset(void* data, size_t size) noexcept {
     SkASSERT(data != nullptr || size == 0);
     fData = (char*)data;
     fPos = (char*)data;
@@ -105,25 +105,25 @@ class SkWBuffer : SkNoncopyable {
   }
 
   size_t pos() const noexcept { return fPos - fData; }
-  void* skip(size_t size) noexcept;  // return start of skipped data
+  void* skip(size_t size);  // return start of skipped data
 
-  void write(const void* buffer, size_t size) noexcept {
+  void write(const void* buffer, size_t size) {
     if (size) {
       this->writeNoSizeCheck(buffer, size);
     }
   }
 
-  size_t padToAlign4() noexcept;
+  size_t padToAlign4();
 
-  void writePtr(const void* x) noexcept { this->writeNoSizeCheck(&x, sizeof(x)); }
-  void writeScalar(SkScalar x) noexcept { this->writeNoSizeCheck(&x, 4); }
-  void write32(int32_t x) noexcept { this->writeNoSizeCheck(&x, 4); }
-  void write16(int16_t x) noexcept { this->writeNoSizeCheck(&x, 2); }
-  void write8(int8_t x) noexcept { this->writeNoSizeCheck(&x, 1); }
-  void writeBool(bool x) noexcept { this->write8(x); }
+  void writePtr(const void* x) { this->writeNoSizeCheck(&x, sizeof(x)); }
+  void writeScalar(SkScalar x) { this->writeNoSizeCheck(&x, 4); }
+  void write32(int32_t x) { this->writeNoSizeCheck(&x, 4); }
+  void write16(int16_t x) { this->writeNoSizeCheck(&x, 2); }
+  void write8(int8_t x) { this->writeNoSizeCheck(&x, 1); }
+  void writeBool(bool x) { this->write8(x); }
 
  private:
-  void writeNoSizeCheck(const void* buffer, size_t size) noexcept;
+  void writeNoSizeCheck(const void* buffer, size_t size);
 
   char* fData;
   char* fPos;

@@ -8,6 +8,7 @@
 #ifndef SkDevice_DEFINED
 #define SkDevice_DEFINED
 
+#include "include/core/SkBlender.h"
 #include "include/core/SkCanvas.h"
 #include "include/core/SkColor.h"
 #include "include/core/SkRefCnt.h"
@@ -18,16 +19,18 @@
 #include "src/core/SkMatrixPriv.h"
 #include "src/core/SkMatrixProvider.h"
 #include "src/core/SkRasterClip.h"
+#include "src/core/SkScalerContext.h"
 #include "src/shaders/SkShaderBase.h"
 
 class SkBitmap;
+class SkColorSpace;
+class SkMesh;
 struct SkDrawShadowRec;
 class SkGlyphRun;
 class SkGlyphRunList;
 class SkImageFilter;
 class SkImageFilterCache;
 struct SkIRect;
-class SkMarkerStack;
 class SkRasterHandleAllocator;
 class SkSpecialImage;
 
@@ -37,10 +40,23 @@ class Mapping;
 namespace skgpu {
 class BaseDevice;
 }
+namespace skgpu::graphite {
+class Device;
+}
+namespace sktext::gpu {
+class SDFTControl;
+}
+
+struct SkStrikeDeviceInfo {
+  const SkSurfaceProps fSurfaceProps;
+  const SkScalerContextFlags fScalerContextFlags;
+  // This is a pointer so this can be compiled without SK_GPU_SUPPORT.
+  const sktext::gpu::SDFTControl* const fSDFTControl;
+};
 
 class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
  public:
-  SkBaseDevice(const SkImageInfo&, const SkSurfaceProps&) noexcept;
+  SkBaseDevice(const SkImageInfo&, const SkSurfaceProps&);
 
   /**
    *  Return ImageInfo for this device. If the canvas is not backed by pixels
@@ -52,6 +68,12 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
    *  Return SurfaceProps for this device.
    */
   const SkSurfaceProps& surfaceProps() const noexcept { return fSurfaceProps; }
+
+  SkScalerContextFlags scalerContextFlags() const;
+
+  virtual SkStrikeDeviceInfo strikeDeviceInfo() const {
+    return {fSurfaceProps, this->scalerContextFlags(), nullptr};
+  }
 
   SkIRect bounds() const noexcept { return SkIRect::MakeWH(this->width(), this->height()); }
 
@@ -109,12 +131,12 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
    *  into the global canvas' space (or root device space). This includes the translation
    *  necessary to account for the device's origin.
    */
-  const SkM44& deviceToGlobal() const noexcept { return fDeviceToGlobal; }
+  const SkM44& deviceToGlobal() const { return fDeviceToGlobal; }
   /**
    *  Return the inverse of getDeviceToGlobal(), mapping from the global canvas' space (or root
    *  device space) into this device's coordinate space.
    */
-  const SkM44& globalToDevice() const noexcept { return fGlobalToDevice; }
+  const SkM44& globalToDevice() const { return fGlobalToDevice; }
   /**
    *  DEPRECATED: This asserts that 'getDeviceToGlobal' is a translation matrix with integer
    *  components. In the future some SkDevices will have more complex device-to-global transforms,
@@ -125,7 +147,7 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
    * Returns true when this device's pixel grid is axis aligned with the global coordinate space,
    * and any relative translation between the two spaces is in integer pixel units.
    */
-  bool isPixelAlignedToGlobal() const noexcept;
+  bool isPixelAlignedToGlobal() const;
   /**
    * Get the transformation from this device's coordinate system to the provided device space.
    * This transform can be used to draw this device into the provided device, such that once
@@ -135,13 +157,6 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   SkMatrix getRelativeTransform(const SkBaseDevice&) const;
 
   virtual void* getRasterHandle() const { return nullptr; }
-
-  SkMarkerStack* markerStack() const noexcept { return fMarkerStack; }
-  void setMarkerStack(SkMarkerStack* ms) noexcept { fMarkerStack = ms; }
-
-  // SkMatrixProvider interface:
-  bool getLocalToMarker(uint32_t, SkM44* localToMarker) const override;
-  bool localToDeviceHitsPixelCenters() const override { return true; }
 
   const SkMatrixProvider& asMatrixProvider() const noexcept { return *this; }
 
@@ -172,16 +187,20 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   void setLocalToDevice(const SkM44& localToDevice) noexcept {
     fLocalToDevice = localToDevice;
     fLocalToDevice33 = fLocalToDevice.asM33();
+    fLocalToDeviceDirty = true;
   }
-  void setGlobalCTM(const SkM44& ctm) noexcept;
+  void setGlobalCTM(const SkM44& ctm);
   virtual void validateDevBounds(const SkIRect&) {}
 
   virtual bool android_utils_clipWithStencil() { return false; }
 
-  virtual skgpu::BaseDevice* asGpuDevice() noexcept { return nullptr; }
+  virtual skgpu::BaseDevice* asGaneshDevice() noexcept { return nullptr; }
+  virtual skgpu::graphite::Device* asGraphiteDevice() noexcept { return nullptr; }
 
   // Ensure that non-RSXForm runs are passed to onDrawGlyphRunList.
-  void drawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint);
+  void drawGlyphRunList(
+      SkCanvas*, const SkGlyphRunList& glyphRunList, const SkPaint& initialPaint,
+      const SkPaint& drawingPaint);
 
  protected:
   enum TileUsage {
@@ -244,18 +263,26 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   virtual void drawImageLattice(
       const SkImage*, const SkCanvas::Lattice&, const SkRect& dst, SkFilterMode, const SkPaint&);
 
-  virtual void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) = 0;
+  /**
+   * If skipColorXform is true, then the implementation should assume that the provided
+   * vertex colors are already in the destination color space.
+   */
+  virtual void drawVertices(
+      const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool skipColorXform = false) = 0;
+#ifdef SK_ENABLE_SKSL
+  virtual void drawMesh(const SkMesh& mesh, sk_sp<SkBlender>, const SkPaint&) = 0;
+#endif
   virtual void drawShadow(const SkPath&, const SkDrawShadowRec&);
 
   // default implementation calls drawVertices
   virtual void drawPatch(
-      const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4], SkBlendMode,
-      const SkPaint& paint);
+      const SkPoint cubics[12], const SkColor colors[4], const SkPoint texCoords[4],
+      sk_sp<SkBlender>, const SkPaint& paint);
 
-  // default implementation calls drawPath
+  // default implementation calls drawVertices
   virtual void drawAtlas(
-      const SkImage* atlas, const SkRSXform[], const SkRect[], const SkColor[], int count,
-      SkBlendMode, const SkSamplingOptions&, const SkPaint&);
+      const SkRSXform[], const SkRect[], const SkColor[], int count, sk_sp<SkBlender>,
+      const SkPaint&);
 
   virtual void drawAnnotation(const SkRect&, const char[], SkData*) {}
 
@@ -272,10 +299,19 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
       const SkMatrix preViewMatrices[], const SkSamplingOptions&, const SkPaint&,
       SkCanvas::SrcRectConstraint);
 
-  virtual void drawDrawable(SkDrawable*, const SkMatrix*, SkCanvas*);
+  virtual void drawDrawable(SkCanvas*, SkDrawable*, const SkMatrix*);
 
   // Only called with glyphRunLists that do not contain RSXForm.
-  virtual void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) = 0;
+  virtual void onDrawGlyphRunList(
+      SkCanvas*, const SkGlyphRunList&, const SkPaint& initialPaint,
+      const SkPaint& drawingPaint) = 0;
+
+  // Slug handling routines.
+#if (SK_SUPPORT_GPU || defined(SK_GRAPHITE_ENABLED))
+  virtual sk_sp<sktext::gpu::Slug> convertGlyphRunListToSlug(
+      const SkGlyphRunList& glyphRunList, const SkPaint& initialPaint, const SkPaint& drawingPaint);
+  virtual void drawSlug(SkCanvas*, const sktext::gpu::Slug* slug, const SkPaint& drawingPaint);
+#endif
 
   /**
    * The SkDevice passed will be an SkDevice which was returned by a call to
@@ -345,18 +381,13 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
 
   struct CreateInfo {
     CreateInfo(
-        const SkImageInfo& info, SkPixelGeometry geo, TileUsage tileUsage, bool trackCoverage,
-        SkRasterHandleAllocator* allocator) noexcept
-        : fInfo(info),
-          fTileUsage(tileUsage),
-          fPixelGeometry(geo),
-          fTrackCoverage(trackCoverage),
-          fAllocator(allocator) {}
+        const SkImageInfo& info, SkPixelGeometry geo, TileUsage tileUsage,
+        SkRasterHandleAllocator* allocator) noexcept 
+        : fInfo(info), fTileUsage(tileUsage), fPixelGeometry(geo), fAllocator(allocator) {}
 
     const SkImageInfo fInfo;
     const TileUsage fTileUsage;
     const SkPixelGeometry fPixelGeometry;
-    const bool fTrackCoverage = false;
     SkRasterHandleAllocator* fAllocator = nullptr;
   };
 
@@ -377,6 +408,13 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   // inspect a layer's device to know if calling drawDevice() later is allowed.
   virtual bool isNoPixelsDevice() const { return false; }
 
+  // Returns whether or not localToDevice() has changed since the last call to this function.
+  bool checkLocalToDeviceDirty() noexcept {
+    bool wasDirty = fLocalToDeviceDirty;
+    fLocalToDeviceDirty = false;
+    return wasDirty;
+  }
+
  private:
   friend class SkAndroidFrameworkUtils;
   friend class SkCanvas;
@@ -384,7 +422,8 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   friend class SkSurface_Raster;
   friend class DeviceTestingAccess;
 
-  void simplifyGlyphRunRSXFormAndRedraw(const SkGlyphRunList& glyphRunList, const SkPaint& paint);
+  void simplifyGlyphRunRSXFormAndRedraw(
+      SkCanvas*, const SkGlyphRunList&, const SkPaint& initialPaint, const SkPaint& drawingPaint);
 
   // used to change the backend's pixels (and possibly config/rowbytes)
   // but cannot change the width/height, so there should be no change to
@@ -402,16 +441,13 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   // is anchored in the device space. The final device-to-global matrix stored by the SkDevice
   // will include a pre-translation by T(deviceOriginX, deviceOriginY), and the final
   // local-to-device matrix will have a post-translation of T(-deviceOriginX, -deviceOriginY).
-  //
-  // Returns false if the final device coordinate space is invalid, in which case the canvas
-  // should discard the device
-  bool SK_WARN_UNUSED_RESULT setDeviceCoordinateSystem(
-      const SkM44& deviceToGlobal, const SkM44& localToDevice, int bufferOriginX,
-      int bufferOriginY);
+  void setDeviceCoordinateSystem(
+      const SkM44& deviceToGlobal, const SkM44& globalToDevice, const SkM44& localToDevice,
+      int bufferOriginX, int bufferOriginY);
   // Convenience to configure the device to be axis-aligned with the root canvas, but with a
   // unique origin.
   void setOrigin(const SkM44& globalCTM, int x, int y) {
-    SkAssertResult(this->setDeviceCoordinateSystem(SkM44(), globalCTM, x, y));
+    this->setDeviceCoordinateSystem(SkM44(), SkM44(), globalCTM, x, y);
   }
 
   virtual SkImageFilterCache* getImageFilterCache() { return nullptr; }
@@ -421,8 +457,6 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   void privateResize(int w, int h) noexcept {
     *const_cast<SkImageInfo*>(&fInfo) = fInfo.makeWH(w, h);
   }
-
-  SkMarkerStack* fMarkerStack = nullptr;  // does not own this, set in setMarkerStack()
 
   const SkImageInfo fInfo;
   const SkSurfaceProps fSurfaceProps;
@@ -434,25 +468,20 @@ class SkBaseDevice : public SkRefCnt, public SkMatrixProvider {
   // fLocalToDevice (inherited from SkMatrixProvider) is the device CTM, not the global CTM
   // It maps from local space to the device's coordinate space.
   // fDeviceToGlobal * fLocalToDevice will match the canvas' CTM.
+  //
+  // setGlobalCTM and setLocalToDevice are intentionally not virtual for performance reasons.
+  // However, track a dirty bit for subclasses that want to defer local-to-device dependent
+  // calculations until needed for a clip or draw.
+  bool fLocalToDeviceDirty = true;
 
   using INHERITED = SkRefCnt;
 };
 
 class SkNoPixelsDevice : public SkBaseDevice {
  public:
+  SkNoPixelsDevice(const SkIRect& bounds, const SkSurfaceProps& props);
   SkNoPixelsDevice(
-      const SkIRect& bounds, const SkSurfaceProps& props, sk_sp<SkColorSpace> colorSpace = nullptr)
-      : SkBaseDevice(
-            SkImageInfo::Make(
-                bounds.size(), kUnknown_SkColorType, kUnknown_SkAlphaType, std::move(colorSpace)),
-            props) {
-    // this fails if we enable this assert:
-    // DiscardableImageMapTest.GetDiscardableImagesInRectMaxImage
-    // SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
-
-    this->setOrigin(SkM44(), bounds.left(), bounds.top());
-    this->resetClipStack();
-  }
+      const SkIRect& bounds, const SkSurfaceProps& props, sk_sp<SkColorSpace> colorSpace);
 
   void resetForNextPicture(const SkIRect& bounds) {
     // SkASSERT(bounds.width() >= 0 && bounds.height() >= 0);
@@ -490,13 +519,20 @@ class SkNoPixelsDevice : public SkBaseDevice {
   void drawRRect(const SkRRect&, const SkPaint&) override {}
   void drawPath(const SkPath&, const SkPaint&, bool) override {}
   void drawDevice(SkBaseDevice*, const SkSamplingOptions&, const SkPaint&) override {}
-  void drawVertices(const SkVertices*, SkBlendMode, const SkPaint&) override {}
+  void drawVertices(const SkVertices*, sk_sp<SkBlender>, const SkPaint&, bool) override {}
+#ifdef SK_ENABLE_SKSL
+  void drawMesh(const SkMesh&, sk_sp<SkBlender>, const SkPaint&) override {}
+#endif
 
   void drawFilteredImage(
       const skif::Mapping&, SkSpecialImage* src, const SkImageFilter*, const SkSamplingOptions&,
       const SkPaint&) override {}
+#if SK_SUPPORT_GPU
+  void drawSlug(SkCanvas*, const sktext::gpu::Slug*, const SkPaint&) override {}
+#endif
 
-  void onDrawGlyphRunList(const SkGlyphRunList& glyphRunList, const SkPaint& paint) override {}
+  void onDrawGlyphRunList(
+      SkCanvas*, const SkGlyphRunList&, const SkPaint&, const SkPaint&) override {}
 
   bool isNoPixelsDevice() const override { return true; }
 
@@ -507,7 +543,7 @@ class SkNoPixelsDevice : public SkBaseDevice {
     bool fIsAA;
     bool fIsRect;
 
-    ClipState(const SkIRect& bounds, bool isAA, bool isRect) noexcept
+    ClipState(const SkIRect& bounds, bool isAA, bool isRect) noexcept 
         : fClipBounds(bounds), fDeferredSaveCount(0), fIsAA(isAA), fIsRect(isRect) {}
 
     void op(SkClipOp op, const SkM44& transform, const SkRect& bounds, bool isAA, bool fillsBounds);
@@ -528,7 +564,7 @@ class SkNoPixelsDevice : public SkBaseDevice {
 
 class SkAutoDeviceTransformRestore : SkNoncopyable {
  public:
-  SkAutoDeviceTransformRestore(SkBaseDevice* device, const SkMatrix& localToDevice) noexcept
+  SkAutoDeviceTransformRestore(SkBaseDevice* device, const SkMatrix& localToDevice)
       : fDevice(device), fPrevLocalToDevice(device->localToDevice()) {
     fDevice->setLocalToDevice(SkM44(localToDevice));
   }

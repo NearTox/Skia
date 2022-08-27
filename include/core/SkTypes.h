@@ -23,7 +23,7 @@
     !defined(SK_BUILD_FOR_UNIX) && !defined(SK_BUILD_FOR_MAC)
 
 #  ifdef __APPLE__
-#    include "TargetConditionals.h"
+#    include <TargetConditionals.h>
 #  endif
 
 #  if defined(_WIN32) || defined(__SYMBIAN32__)
@@ -230,7 +230,7 @@
 #  define SK_SUPPORT_GPU 1
 #endif
 
-#if SK_SUPPORT_GPU
+#if SK_SUPPORT_GPU || defined(SK_GRAPHITE_ENABLED)
 #  if !defined(SK_ENABLE_SKSL)
 #    define SK_ENABLE_SKSL
 #  endif
@@ -258,8 +258,10 @@
 
 #if defined(SK_BUILD_FOR_GOOGLE3)
 void SkDebugfForDumpStackTrace(const char* data, void* unused);
+namespace base {
 void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
-#  define SK_DUMP_GOOGLE3_STACK() DumpStackTrace(0, SkDebugfForDumpStackTrace, nullptr)
+}
+#  define SK_DUMP_GOOGLE3_STACK() ::base::DumpStackTrace(0, SkDebugfForDumpStackTrace, nullptr)
 #else
 #  define SK_DUMP_GOOGLE3_STACK()
 #endif
@@ -271,12 +273,13 @@ void DumpStackTrace(int skip_count, void w(const char*, void*), void* arg);
 #  else
 #    define SK_DUMP_LINE_FORMAT "%s:%d"
 #  endif
-#  define SK_ABORT(message, ...)                                                            \
-    do {                                                                                    \
-      SkDebugf(/*SK_DUMP_LINE_FORMAT*/                                                      \
-               ": fatal error: \"" message "\"\n" /*, __FILE__, __LINE__*/, ##__VA_ARGS__); \
-      SK_DUMP_GOOGLE3_STACK();                                                              \
-      sk_abort_no_print();                                                                  \
+#  define SK_ABORT(message, ...)                                                      \
+    do {                                                                              \
+      SkDebugf(                                                                       \
+          SK_DUMP_LINE_FORMAT ": fatal error: \"" message "\"\n", __FILE__, __LINE__, \
+          ##__VA_ARGS__);                                                             \
+      SK_DUMP_GOOGLE3_STACK();                                                        \
+      sk_abort_no_print();                                                            \
     } while (false)
 #endif
 
@@ -329,7 +332,7 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #endif
 
 #if !defined(SK_MAYBE_UNUSED)
-#  if defined(__clang__) || defined(__GNUC__) || __cplusplus >= 201703L
+#  if defined(__clang__) || defined(__GNUC__)
 #    define SK_MAYBE_UNUSED [[maybe_unused]]
 #  else
 #    define SK_MAYBE_UNUSED
@@ -362,14 +365,6 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  endif
 #endif
 
-#if SK_CPU_SSE_LEVEL >= SK_CPU_SSE_LEVEL_SSE1
-#  define SK_PREFETCH(ptr) _mm_prefetch(reinterpret_cast<const char*>(ptr), _MM_HINT_T0)
-#elif defined(__GNUC__)
-#  define SK_PREFETCH(ptr) __builtin_prefetch(ptr)
-#else
-#  define SK_PREFETCH(ptr)
-#endif
-
 #ifndef SK_PRINTF_LIKE
 #  if defined(__clang__) || defined(__GNUC__)
 #    define SK_PRINTF_LIKE(A, B) __attribute__((format(printf, (A), (B))))
@@ -390,12 +385,10 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #  define GR_TEST_UTILS 0
 #endif
 
-#ifndef SK_GPU_V2
-#  define SK_GPU_V2 0
-#endif
-
-#ifndef SK_GPU_V1
-#  define SK_GPU_V1 1
+#if !SK_SUPPORT_GPU
+#  define SK_GPU_V1 0  // always false if Ganesh is disabled
+#elif !defined(SK_GPU_V1)
+#  define SK_GPU_V1 1  // otherwise default to v1 enabled
 #endif
 
 #if defined(SK_HISTOGRAM_ENUMERATION) || defined(SK_HISTOGRAM_BOOLEAN) || \
@@ -447,9 +440,6 @@ static_assert(SK_B32_SHIFT == (16 - SK_R32_SHIFT), "");
 #ifndef SkDebugf
 SK_API void SkDebugf(const char format[], ...) noexcept SK_PRINTF_LIKE(1, 2);
 #endif
-#if defined(SK_BUILD_FOR_LIBFUZZER)
-SK_API SK_PRINTF_LIKE(1, 2) inline void SkDebugf(const char format[], ...) {}
-#endif
 
 // SkASSERT, SkASSERTF and SkASSERT_RELEASE can be used as stand alone assertion expressions, e.g.
 //    uint32_t foo(int x) {
@@ -461,17 +451,15 @@ SK_API SK_PRINTF_LIKE(1, 2) inline void SkDebugf(const char format[], ...) {}
 //        return SkASSERT(x > 4),
 //               x - 4;
 //    }
-#define SkASSERT_RELEASE(cond)                             \
-  static_cast<void>((cond) ? (void)0 : []() noexcept {     \
-    SK_ABORT(/*"assert(%s)", #cond*/ "assert(" #cond ")"); \
-  }())
+#define SkASSERT_RELEASE(cond) \
+  static_cast<void>((cond) ? (void)0 : []() noexcept { SK_ABORT("assert(%s)", #cond); }())
 
 #ifdef SK_DEBUG
 #  define SkASSERT(cond) SkASSERT_RELEASE(cond)
-#  define SkASSERTF(cond, fmt, ...)            \
-    static_cast<void>((cond) ? (void)0 : [&] { \
-      SkDebugf(fmt "\n", ##__VA_ARGS__);       \
-      SK_ABORT("assert(%s)", #cond);           \
+#  define SkASSERTF(cond, fmt, ...)                       \
+    static_cast<void>((cond) ? (void)0 : [&]() noexcept { \
+      SkDebugf(fmt "\n", ##__VA_ARGS__);                  \
+      SK_ABORT("assert(%s)", #cond);                      \
     }())
 #  define SkDEBUGFAIL(message) SK_ABORT("%s", message)
 #  define SkDEBUGFAILF(fmt, ...) SK_ABORT(fmt, ##__VA_ARGS__)
@@ -511,7 +499,7 @@ typedef unsigned U16CPU;
  */
 template <typename T>
 static constexpr bool SkToBool(const T& x) noexcept {
-  return 0 != x;  // NOLINT(modernize-use-nullptr)
+  return (bool)x;
 }
 
 static constexpr int16_t SK_MaxS16 = INT16_MAX;
@@ -577,6 +565,15 @@ static constexpr bool SkIsAlignPtr(T x) noexcept {
   return sizeof(void*) == 8 ? SkIsAlign8(x) : SkIsAlign4(x);
 }
 
+/**
+ *  align up to a power of 2
+ */
+static inline constexpr size_t SkAlignTo(size_t x, size_t alignment) noexcept {
+  // The same as alignment && SkIsPow2(value), w/o a dependency cycle.
+  SkASSERT(alignment && (alignment & (alignment - 1)) == 0);
+  return (x + alignment - 1) & ~(alignment - 1);
+}
+
 typedef uint32_t SkFourByteTag;
 static inline constexpr SkFourByteTag SkSetFourByteTag(char a, char b, char c, char d) noexcept {
   return (((uint32_t)a << 24) | ((uint32_t)b << 16) | ((uint32_t)c << 8) | (uint32_t)d);
@@ -609,7 +606,7 @@ static constexpr uint32_t SK_InvalidGenID = 0;
  */
 static constexpr uint32_t SK_InvalidUniqueID = 0;
 
-static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
+static inline int32_t SkAbs32(int32_t value) noexcept {
   SkASSERT(value != SK_NaN32);  // The most negative int32_t can't be negated.
   if (value < 0) {
     value = -value;
@@ -618,7 +615,7 @@ static constexpr inline int32_t SkAbs32(int32_t value) noexcept {
 }
 
 template <typename T>
-static constexpr inline T SkTAbs(T value) noexcept {
+static inline T SkTAbs(T value) noexcept {
   if (value < 0) {
     value = -value;
   }

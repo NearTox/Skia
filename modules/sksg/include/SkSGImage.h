@@ -30,7 +30,7 @@ class Image final : public RenderNode {
   SG_ATTRIBUTE(AntiAlias, bool, fAntiAlias)
 
  protected:
-  explicit Image(sk_sp<SkImage>) noexcept;
+  explicit Image(sk_sp<SkImage>);
 
   void onRender(SkCanvas*, const RenderContext*) const override;
   const RenderNode* onNodeAt(const SkPoint&) const override;

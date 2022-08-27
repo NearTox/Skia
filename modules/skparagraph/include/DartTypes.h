@@ -89,36 +89,35 @@ UnaryFunction directional_for_each(C& c, bool forwards, UnaryFunction f) {
 const size_t EMPTY_INDEX = std::numeric_limits<size_t>::max();
 template <typename T>
 struct SkRange {
-  static_assert(std::is_integral_v<T>);
-  constexpr SkRange() noexcept : start(), end() {}
-  constexpr SkRange(T s, T e) noexcept : start(s), end(e) {}
+  SkRange() : start(), end() {}
+  SkRange(T s, T e) : start(s), end(e) {}
+
+  using SignedT = std::make_signed_t<T>;
 
   T start, end;
 
-  bool operator==(const SkRange<T>& other) const noexcept {
+  bool operator==(const SkRange<T>& other) const {
     return start == other.start && end == other.end;
   }
 
-  constexpr T width() const noexcept { return end - start; }
+  T width() const { return end - start; }
 
-  void Shift(T delta) noexcept {
+  void Shift(SignedT delta) {
     start += delta;
     end += delta;
   }
 
-  bool contains(SkRange<size_t> other) const noexcept {
-    return start <= other.start && end >= other.end;
-  }
+  bool contains(SkRange<size_t> other) const { return start <= other.start && end >= other.end; }
 
-  bool intersects(SkRange<size_t> other) const noexcept {
+  bool intersects(SkRange<size_t> other) const {
     return std::max(start, other.start) <= std::min(end, other.end);
   }
 
-  SkRange<size_t> intersection(SkRange<size_t> other) const noexcept {
+  SkRange<size_t> intersection(SkRange<size_t> other) const {
     return SkRange<size_t>(std::max(start, other.start), std::min(end, other.end));
   }
 
-  bool empty() const noexcept { return start == EMPTY_INDEX && end == EMPTY_INDEX; }
+  bool empty() const { return start == EMPTY_INDEX && end == EMPTY_INDEX; }
 };
 
 const SkRange<size_t> EMPTY_RANGE = SkRange<size_t>(EMPTY_INDEX, EMPTY_INDEX);
@@ -141,8 +140,6 @@ enum class LineMetricStyle : uint8_t {
   // Use ascent, descent, etc like css with the leading split and with height adjustments
   CSS
 };
-
-enum class DrawOptions { kRecord, kReplay, kDirect };
 
 }  // namespace textlayout
 }  // namespace skia

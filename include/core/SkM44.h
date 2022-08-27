@@ -18,8 +18,8 @@ struct SK_API SkV2 {
   bool operator==(const SkV2 v) const noexcept { return x == v.x && y == v.y; }
   bool operator!=(const SkV2 v) const noexcept { return !(*this == v); }
 
-  static constexpr SkScalar Dot(SkV2 a, SkV2 b) noexcept { return a.x * b.x + a.y * b.y; }
-  static constexpr SkScalar Cross(SkV2 a, SkV2 b) noexcept { return a.x * b.y - a.y * b.x; }
+  static SkScalar Dot(SkV2 a, SkV2 b) noexcept { return a.x * b.x + a.y * b.y; }
+  static SkScalar Cross(SkV2 a, SkV2 b) noexcept { return a.x * b.y - a.y * b.x; }
   static SkV2 Normalize(SkV2 v) noexcept { return v * (1.0f / v.length()); }
 
   SkV2 operator-() const noexcept { return {-x, -y}; }
@@ -132,10 +132,10 @@ class SK_API SkM44 {
 
   constexpr SkM44() noexcept : fMat{1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1} {}
 
-  SkM44(const SkM44& a, const SkM44& b) noexcept { this->setConcat(a, b); }
+  SkM44(const SkM44& a, const SkM44& b) { this->setConcat(a, b); }
 
   enum Uninitialized_Constructor { kUninitialized_Constructor };
-  SkM44(Uninitialized_Constructor) noexcept {}
+  SkM44(Uninitialized_Constructor) {}
 
   enum NaN_Constructor { kNaN_Constructor };
   constexpr SkM44(NaN_Constructor) noexcept
@@ -153,7 +153,7 @@ class SK_API SkM44 {
       // fMat is column-major order in memory.
       : fMat{m0, m1, m2, m3, m4, m5, m6, m7, m8, m9, m10, m11, m12, m13, m14, m15} {}
 
-  static SkM44 Rows(const SkV4& r0, const SkV4& r1, const SkV4& r2, const SkV4& r3) noexcept {
+  static SkM44 Rows(const SkV4& r0, const SkV4& r1, const SkV4& r2, const SkV4& r3) {
     SkM44 m(kUninitialized_Constructor);
     m.setRow(0, r0);
     m.setRow(1, r1);
@@ -161,7 +161,7 @@ class SK_API SkM44 {
     m.setRow(3, r3);
     return m;
   }
-  static SkM44 Cols(const SkV4& c0, const SkV4& c1, const SkV4& c2, const SkV4& c3) noexcept {
+  static SkM44 Cols(const SkV4& c0, const SkV4& c1, const SkV4& c2, const SkV4& c3) {
     SkM44 m(kUninitialized_Constructor);
     m.setCol(0, c0);
     m.setCol(1, c1);
@@ -181,31 +181,31 @@ class SK_API SkM44 {
         c[11], c[15]);
   }
 
-  static SkM44 Translate(SkScalar x, SkScalar y, SkScalar z = 0) noexcept {
+  static constexpr SkM44 Translate(SkScalar x, SkScalar y, SkScalar z = 0) noexcept {
     return SkM44(1, 0, 0, x, 0, 1, 0, y, 0, 0, 1, z, 0, 0, 0, 1);
   }
 
-  static SkM44 Scale(SkScalar x, SkScalar y, SkScalar z = 1) noexcept {
+  static constexpr SkM44 Scale(SkScalar x, SkScalar y, SkScalar z = 1) noexcept {
     return SkM44(x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1);
   }
 
-  static SkM44 Rotate(SkV3 axis, SkScalar radians) noexcept {
+  static SkM44 Rotate(SkV3 axis, SkScalar radians) {
     SkM44 m(kUninitialized_Constructor);
     m.setRotate(axis, radians);
     return m;
   }
 
   // Scales and translates 'src' to fill 'dst' exactly.
-  static SkM44 RectToRect(const SkRect& src, const SkRect& dst) noexcept;
+  static SkM44 RectToRect(const SkRect& src, const SkRect& dst);
 
-  static SkM44 LookAt(const SkV3& eye, const SkV3& center, const SkV3& up) noexcept;
-  static SkM44 Perspective(float near, float far, float angle) noexcept;
+  static SkM44 LookAt(const SkV3& eye, const SkV3& center, const SkV3& up);
+  static SkM44 Perspective(float near, float far, float angle);
 
-  bool operator==(const SkM44& other) const noexcept;
-  bool operator!=(const SkM44& other) const noexcept { return !(other == *this); }
+  bool operator==(const SkM44& other) const;
+  bool operator!=(const SkM44& other) const { return !(other == *this); }
 
   void getColMajor(SkScalar v[]) const noexcept { memcpy(v, fMat, sizeof(fMat)); }
-  void getRowMajor(SkScalar v[]) const noexcept;
+  void getRowMajor(SkScalar v[]) const;
 
   SkScalar rc(int r, int c) const noexcept {
     SkASSERT(r >= 0 && r <= 3);
@@ -261,7 +261,7 @@ class SK_API SkM44 {
    *  This does not attempt to verify that axis.length() == 1 or that the sin,cos values
    *  are correct.
    */
-  SkM44& setRotateUnitSinCos(SkV3 axis, SkScalar sinAngle, SkScalar cosAngle) noexcept;
+  SkM44& setRotateUnitSinCos(SkV3 axis, SkScalar sinAngle, SkScalar cosAngle);
 
   /**
    *  Set this matrix to rotate about the specified unit-length axis vector,
@@ -269,7 +269,7 @@ class SK_API SkM44 {
    *
    *  This does not attempt to verify that axis.length() == 1.
    */
-  SkM44& setRotateUnit(SkV3 axis, SkScalar radians) noexcept {
+  SkM44& setRotateUnit(SkV3 axis, SkScalar radians) {
     return this->setRotateUnitSinCos(axis, SkScalarSin(radians), SkScalarCos(radians));
   }
 
@@ -280,15 +280,15 @@ class SK_API SkM44 {
    *  Note: axis is not assumed to be unit-length, so it will be normalized internally.
    *        If axis is already unit-length, call setRotateAboutUnitRadians() instead.
    */
-  SkM44& setRotate(SkV3 axis, SkScalar radians) noexcept;
+  SkM44& setRotate(SkV3 axis, SkScalar radians);
 
-  SkM44& setConcat(const SkM44& a, const SkM44& b) noexcept;
+  SkM44& setConcat(const SkM44& a, const SkM44& b);
 
-  friend SkM44 operator*(const SkM44& a, const SkM44& b) noexcept { return SkM44(a, b); }
+  friend SkM44 operator*(const SkM44& a, const SkM44& b) { return SkM44(a, b); }
 
-  SkM44& preConcat(const SkM44& m) noexcept { return this->setConcat(*this, m); }
+  SkM44& preConcat(const SkM44& m) { return this->setConcat(*this, m); }
 
-  SkM44& postConcat(const SkM44& m) noexcept { return this->setConcat(m, *this); }
+  SkM44& postConcat(const SkM44& m) { return this->setConcat(m, *this); }
 
   /**
    *  A matrix is categorized as 'perspective' if the bottom row is not [0, 0, 0, 1].
@@ -302,7 +302,7 @@ class SK_API SkM44 {
    *  | I J K L |    | I/X J/X K/X L/X |
    *  | 0 0 0 X |    |  0   0   0   1  |
    */
-  void normalizePerspective() noexcept;
+  void normalizePerspective();
 
   /** Returns true if all elements of the matrix are finite. Returns false if any
       element is infinity, or NaN.
@@ -314,17 +314,17 @@ class SK_API SkM44 {
   /** If this is invertible, return that in inverse and return true. If it is
    *  not invertible, return false and leave the inverse parameter unchanged.
    */
-  bool SK_WARN_UNUSED_RESULT invert(SkM44* inverse) const noexcept;
+  bool SK_WARN_UNUSED_RESULT invert(SkM44* inverse) const;
 
-  SkM44 SK_WARN_UNUSED_RESULT transpose() const noexcept;
+  SkM44 SK_WARN_UNUSED_RESULT transpose() const;
 
   void dump() const;
 
   ////////////
 
-  SkV4 map(float x, float y, float z, float w) const noexcept;
-  SkV4 operator*(const SkV4& v) const noexcept { return this->map(v.x, v.y, v.z, v.w); }
-  SkV3 operator*(SkV3 v) const noexcept {
+  SkV4 map(float x, float y, float z, float w) const;
+  SkV4 operator*(const SkV4& v) const { return this->map(v.x, v.y, v.z, v.w); }
+  SkV3 operator*(SkV3 v) const {
     auto v4 = this->map(v.x, v.y, v.z, 0);
     return {v4.x, v4.y, v4.z};
   }
@@ -349,12 +349,12 @@ class SK_API SkM44 {
             src[SkMatrix::kMSkewY], src[SkMatrix::kMScaleY], 0, src[SkMatrix::kMTransY], 0, 0, 1, 0,
             src[SkMatrix::kMPersp0], src[SkMatrix::kMPersp1], 0, src[SkMatrix::kMPersp2]) {}
 
-  SkM44& preTranslate(SkScalar x, SkScalar y, SkScalar z = 0) noexcept;
-  SkM44& postTranslate(SkScalar x, SkScalar y, SkScalar z = 0) noexcept;
+  SkM44& preTranslate(SkScalar x, SkScalar y, SkScalar z = 0);
+  SkM44& postTranslate(SkScalar x, SkScalar y, SkScalar z = 0);
 
-  SkM44& preScale(SkScalar x, SkScalar y) noexcept;
-  SkM44& preScale(SkScalar x, SkScalar y, SkScalar z) noexcept;
-  SkM44& preConcat(const SkMatrix&) noexcept;
+  SkM44& preScale(SkScalar x, SkScalar y);
+  SkM44& preScale(SkScalar x, SkScalar y, SkScalar z);
+  SkM44& preConcat(const SkMatrix&);
 
  private:
   /* Stored in column-major.

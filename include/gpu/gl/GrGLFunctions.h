@@ -133,6 +133,7 @@ using GrGLGetBufferParameterivFn =
 using GrGLGetErrorFn = GrGLenum GR_GL_FUNCTION_TYPE();
 using GrGLGetFramebufferAttachmentParameterivFn = GrGLvoid GR_GL_FUNCTION_TYPE(
     GrGLenum target, GrGLenum attachment, GrGLenum pname, GrGLint* params);
+using GrGLGetFloatvFn = GrGLvoid GR_GL_FUNCTION_TYPE(GrGLenum pname, GrGLfloat* params);
 using GrGLGetIntegervFn = GrGLvoid GR_GL_FUNCTION_TYPE(GrGLenum pname, GrGLint* params);
 using GrGLGetMultisamplefvFn =
     GrGLvoid GR_GL_FUNCTION_TYPE(GrGLenum pname, GrGLuint index, GrGLfloat* val);
@@ -209,8 +210,10 @@ using GrGLRenderbufferStorageFn = GrGLvoid GR_GL_FUNCTION_TYPE(
 using GrGLRenderbufferStorageMultisampleFn = GrGLvoid GR_GL_FUNCTION_TYPE(
     GrGLenum target, GrGLsizei samples, GrGLenum internalformat, GrGLsizei width, GrGLsizei height);
 using GrGLResolveMultisampleFramebufferFn = GrGLvoid GR_GL_FUNCTION_TYPE();
+using GrGLSamplerParameterfFn =
+    GrGLvoid GR_GL_FUNCTION_TYPE(GrGLuint sampler, GrGLenum pname, GrGLfloat param);
 using GrGLSamplerParameteriFn =
-    GrGLvoid GR_GL_FUNCTION_TYPE(GrGLuint sampler, GrGLenum pname, GrGLint params);
+    GrGLvoid GR_GL_FUNCTION_TYPE(GrGLuint sampler, GrGLenum pname, GrGLint param);
 using GrGLSamplerParameterivFn =
     GrGLvoid GR_GL_FUNCTION_TYPE(GrGLuint sampler, GrGLenum pname, const GrGLint* params);
 using GrGLScissorFn =

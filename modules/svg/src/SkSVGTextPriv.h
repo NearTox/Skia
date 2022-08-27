@@ -65,10 +65,10 @@ public:
         bool isImplicitRotate() const { return fImplicitRotate; }
 
     private:
-        static constexpr auto kNone = std::numeric_limits<float>::infinity();
+     inline static constexpr auto kNone = std::numeric_limits<float>::infinity();
 
-        float fStorage[5]     = { kNone, kNone, kNone, kNone, kNone };
-        bool  fImplicitRotate = false;
+     float fStorage[5] = {kNone, kNone, kNone, kNone, kNone};
+     bool fImplicitRotate = false;
     };
 
     // Helper for cascading position attribute resolution (x, y, dx, dy, rotate) [1]:

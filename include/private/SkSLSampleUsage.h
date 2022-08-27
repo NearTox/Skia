@@ -33,9 +33,9 @@ class SampleUsage {
   };
 
   // Make a SampleUsage that corresponds to no sampling of the child at all
-  constexpr SampleUsage() noexcept = default;
+  SampleUsage() noexcept = default;
 
-  constexpr SampleUsage(Kind kind, bool hasPerspective) noexcept
+  SampleUsage(Kind kind, bool hasPerspective) noexcept
       : fKind(kind), fHasPerspective(hasPerspective) {
     if (kind != Kind::kUniformMatrix) {
       SkASSERT(!fHasPerspective);
@@ -43,15 +43,15 @@ class SampleUsage {
   }
 
   // Child is sampled with a matrix whose value is uniform. The name is fixed.
-  static SampleUsage UniformMatrix(bool hasPerspective) {
+  static SampleUsage UniformMatrix(bool hasPerspective) noexcept {
     return SampleUsage(Kind::kUniformMatrix, hasPerspective);
   }
 
-  static SampleUsage Explicit() { return SampleUsage(Kind::kExplicit, false); }
+  static SampleUsage Explicit() noexcept { return SampleUsage(Kind::kExplicit, false); }
 
-  static SampleUsage PassThrough() { return SampleUsage(Kind::kPassThrough, false); }
+  static SampleUsage PassThrough() noexcept { return SampleUsage(Kind::kPassThrough, false); }
 
-  static SampleUsage FragCoord() { return SampleUsage(Kind::kFragCoord, false); }
+  static SampleUsage FragCoord() noexcept { return SampleUsage(Kind::kFragCoord, false); }
 
   bool operator==(const SampleUsage& that) const noexcept {
     return fKind == that.fKind && fHasPerspective == that.fHasPerspective;
@@ -60,7 +60,7 @@ class SampleUsage {
   bool operator!=(const SampleUsage& that) const noexcept { return !(*this == that); }
 
   // Arbitrary name used by all uniform sampling matrices
-  static const char* MatrixUniformName() { return "matrix"; }
+  static const char* MatrixUniformName() noexcept { return "matrix"; }
 
   SampleUsage merge(const SampleUsage& other);
 

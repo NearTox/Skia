@@ -5,12 +5,11 @@
  * found in the LICENSE file.
  */
 
-#include "include/private/SkTFitsIn.h"
 #include "src/utils/SkCharToGlyphCache.h"
 
 SkCharToGlyphCache::SkCharToGlyphCache() { this->reset(); }
 
-SkCharToGlyphCache::~SkCharToGlyphCache() = default;
+SkCharToGlyphCache::~SkCharToGlyphCache() {}
 
 void SkCharToGlyphCache::reset() {
   fK32.reset();

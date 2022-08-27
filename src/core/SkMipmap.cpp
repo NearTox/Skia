@@ -6,11 +6,11 @@
  */
 
 #include "include/core/SkBitmap.h"
+#include "include/core/SkColorSpace.h"
 #include "include/core/SkTypes.h"
 #include "include/private/SkColorData.h"
 #include "include/private/SkHalf.h"
 #include "include/private/SkImageInfoPriv.h"
-#include "include/private/SkNx.h"
 #include "include/private/SkTo.h"
 #include "include/private/SkVx.h"
 #include "src/core/SkMathPriv.h"
@@ -27,10 +27,12 @@
 
 struct ColorTypeFilter_8888 {
   typedef uint32_t Type;
-  static Sk4h Expand(uint32_t x) { return SkNx_cast<uint16_t>(Sk4b::Load(&x)); }
-  static uint32_t Compact(const Sk4h& x) {
+  static skvx::Vec<4, uint16_t> Expand(uint32_t x) {
+    return skvx::cast<uint16_t>(skvx::byte4::Load(&x));
+  }
+  static uint32_t Compact(const skvx::Vec<4, uint16_t>& x) {
     uint32_t r;
-    SkNx_cast<uint8_t>(x).store(&r);
+    skvx::cast<uint8_t>(x).store(&r);
     return r;
   }
 };
@@ -59,10 +61,10 @@ struct ColorTypeFilter_8 {
 
 struct ColorTypeFilter_Alpha_F16 {
   typedef uint16_t Type;
-  static Sk4f Expand(uint16_t x) {
+  static skvx::float4 Expand(uint16_t x) {
     return SkHalfToFloat_finite_ftz((uint64_t)x);  // expand out to four lanes
   }
-  static uint16_t Compact(const Sk4f& x) {
+  static uint16_t Compact(const skvx::float4& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return r & 0xFFFF;  // but ignore the extra 3 here
@@ -71,8 +73,8 @@ struct ColorTypeFilter_Alpha_F16 {
 
 struct ColorTypeFilter_RGBA_F16 {
   typedef uint64_t Type;  // SkHalf x4
-  static Sk4f Expand(uint64_t x) { return SkHalfToFloat_finite_ftz(x); }
-  static uint64_t Compact(const Sk4f& x) {
+  static skvx::float4 Expand(uint64_t x) { return SkHalfToFloat_finite_ftz(x); }
+  static uint64_t Compact(const skvx::float4& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return r;
@@ -93,10 +95,10 @@ struct ColorTypeFilter_1616 {
 
 struct ColorTypeFilter_F16F16 {
   typedef uint32_t Type;
-  static Sk4f Expand(uint32_t x) {
+  static skvx::float4 Expand(uint32_t x) {
     return SkHalfToFloat_finite_ftz((uint64_t)x);  // expand out to four lanes
   }
-  static uint32_t Compact(const Sk4f& x) {
+  static uint32_t Compact(const skvx::float4& x) {
     uint64_t r;
     SkFloatToHalf_finite_ftz(x).store(&r);
     return (uint32_t)(r & 0xFFFFFFFF);  // but ignore the extra 2 here
@@ -143,14 +145,14 @@ T shift_right(const T& x, int bits) {
   return x >> bits;
 }
 
-Sk4f shift_right(const Sk4f& x, int bits) { return x * (1.0f / (1 << bits)); }
+skvx::float4 shift_right(const skvx::float4& x, int bits) { return x * (1.0f / (1 << bits)); }
 
 template <typename T>
 T shift_left(const T& x, int bits) {
   return x << bits;
 }
 
-Sk4f shift_left(const Sk4f& x, int bits) { return x * (1 << bits); }
+skvx::float4 shift_left(const skvx::float4& x, int bits) { return x * (1 << bits); }
 
 //
 //  To produce each mip level, we need to filter down by 1/2 (e.g. 100x100 -> 50,50)
@@ -362,6 +364,11 @@ void downsample_3_3(void* dst, const void* src, size_t srcRB, int count) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+SkMipmap::SkMipmap(void* malloc, size_t size) : SkCachedData(malloc, size) {}
+SkMipmap::SkMipmap(size_t size, SkDiscardableMemory* dm) : SkCachedData(size, dm) {}
+
+SkMipmap::~SkMipmap() = default;
+
 size_t SkMipmap::AllocLevelsSize(int levelCount, size_t pixelSize) {
   if (levelCount < 0) {
     return 0;
@@ -423,6 +430,7 @@ SkMipmap* SkMipmap::Build(
       break;
     case kAlpha_8_SkColorType:
     case kGray_8_SkColorType:
+    case kR8_unorm_SkColorType:
       proc_1_2 = downsample_1_2<ColorTypeFilter_8>;
       proc_1_3 = downsample_1_3<ColorTypeFilter_8>;
       proc_2_1 = downsample_2_1<ColorTypeFilter_8>;
@@ -699,23 +707,23 @@ float SkMipmap::ComputeLevel(SkSize scaleSize) {
 
 #ifndef SK_SUPPORT_LEGACY_ANISOTROPIC_MIPMAP_SCALE
   // Use the smallest scale to match the GPU impl.
-  const SkScalar scale = std::min(scaleSize.width(), scaleSize.height());
+  const float scale = std::min(scaleSize.width(), scaleSize.height());
 #else
   // Ideally we'd pick the smaller scale, to match Ganesh.  But ignoring one of the
   // scales can produce some atrocious results, so for now we use the geometric mean.
   // (https://bugs.chromium.org/p/skia/issues/detail?id=4863)
-  const SkScalar scale = SkScalarSqrt(scaleSize.width() * scaleSize.height());
+  const float scale = sk_float_sqrt(scaleSize.width() * scaleSize.height());
 #endif
 
   if (scale >= SK_Scalar1 || scale <= 0 || !SkScalarIsFinite(scale)) {
     return -1;
   }
 
-  SkScalar L = -SkScalarLog2(scale);
+  // The -0.5 bias here is to emulate GPU's sharpen mipmap option.
+  float L = std::max(-SkScalarLog2(scale) - 0.5f, 0.f);
   if (!SkScalarIsFinite(L)) {
     return -1;
   }
-  SkASSERT(L >= 0);
   return L;
 }
 
@@ -725,7 +733,7 @@ bool SkMipmap::extractLevel(SkSize scaleSize, Level* levelPtr) const {
   }
 
   float L = ComputeLevel(scaleSize);
-  int level = SkScalarFloorToInt(L);
+  int level = sk_float_round2int(L);
   if (level <= 0) {
     return false;
   }

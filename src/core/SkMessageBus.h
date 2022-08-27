@@ -50,7 +50,7 @@ class SkMessageBus : SkNoncopyable {
     Inbox(IDType uniqueID);
     ~Inbox();
 
-    IDType uniqueID() const { return fUniqueID; }
+    IDType uniqueID() const noexcept { return fUniqueID; }
 
     // Overwrite out with all the messages we've received since the last call.  Threadsafe.
     void poll(SkTArray<Message>* out);

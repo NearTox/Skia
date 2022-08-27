@@ -162,8 +162,8 @@ class TextBlobRandomFont : public GM {
  private:
   sk_sp<SkTextBlob> fBlob;
 
-  static constexpr int kWidth = 2000;
-  static constexpr int kHeight = 1600;
+  inline static constexpr int kWidth = 2000;
+  inline static constexpr int kHeight = 1600;
 
   using INHERITED = GM;
 };

@@ -27,7 +27,7 @@ template <typename T>
 class SkTDArray {
  public:
   constexpr SkTDArray() noexcept : fArray(nullptr), fReserve(0), fCount(0) {}
-  SkTDArray(const T src[], int count) {
+  SkTDArray(const T src[], int count) noexcept {
     SkASSERT(src || count == 0);
 
     fReserve = fCount = 0;
@@ -39,7 +39,7 @@ class SkTDArray {
     }
   }
   SkTDArray(const std::initializer_list<T>& list) : SkTDArray(list.begin(), list.size()) {}
-  SkTDArray(const SkTDArray<T>& src) : fArray(nullptr), fReserve(0), fCount(0) {
+  SkTDArray(const SkTDArray<T>& src) noexcept : fArray(nullptr), fReserve(0), fCount(0) {
     SkTDArray<T> tmp(src.fArray, src.fCount);
     this->swap(tmp);
   }
@@ -48,7 +48,7 @@ class SkTDArray {
   }
   ~SkTDArray() { sk_free(fArray); }
 
-  SkTDArray<T>& operator=(const SkTDArray<T>& src) {
+  SkTDArray<T>& operator=(const SkTDArray<T>& src) noexcept {
     if (this != &src) {
       if (src.fCount > fReserve) {
         SkTDArray<T> tmp(src.fArray, src.fCount);
@@ -97,7 +97,7 @@ class SkTDArray {
    *  reserved() - count() gives you the number of elements you can add
    *  without causing an allocation.
    */
-  int reserved() const noexcept { return fReserve; }
+  int reserved() const { return fReserve; }
 
   /**
    *  return the number of bytes in the array: count * sizeof(T)
@@ -169,14 +169,14 @@ class SkTDArray {
     this->setReserve(SkToInt(n));
   }
 
-  T* prepend() {
+  T* prepend() noexcept {
     this->adjustCount(1);
     memmove(fArray + 1, fArray, (fCount - 1) * sizeof(T));
     return fArray;
   }
 
-  T* append() { return this->append(1, nullptr); }
-  T* append(int count, const T* src = nullptr) {
+  T* append() noexcept { return this->append(1, nullptr); }
+  T* append(int count, const T* src = nullptr) noexcept {
     int oldCount = fCount;
     if (count) {
       SkASSERT(
@@ -190,8 +190,8 @@ class SkTDArray {
     return fArray + oldCount;
   }
 
-  T* insert(int index) { return this->insert(index, 1, nullptr); }
-  T* insert(int index, int count, const T* src = nullptr) {
+  T* insert(int index) noexcept { return this->insert(index, 1, nullptr); }
+  T* insert(int index, int count, const T* src = nullptr) noexcept {
     SkASSERT(count);
     SkASSERT(index <= fCount);
     size_t oldCount = fCount;
@@ -204,13 +204,13 @@ class SkTDArray {
     return dst;
   }
 
-  void remove(int index, int count = 1) {
+  void remove(int index, int count = 1) noexcept {
     SkASSERT(index + count <= fCount);
     fCount = fCount - count;
     memmove(fArray + index, fArray + index + count, sizeof(T) * (fCount - index));
   }
 
-  void removeShuffle(int index) {
+  void removeShuffle(int index) noexcept {
     SkASSERT(index < fCount);
     int newCount = fCount - 1;
     fCount = newCount;
@@ -252,7 +252,7 @@ class SkTDArray {
    * Copies up to max elements into dst. The number of items copied is
    * capped by count - index. The actual number copied is returned.
    */
-  int copyRange(T* dst, int index, int max) const {
+  int copyRange(T* dst, int index, int max) const noexcept {
     SkASSERT(max >= 0);
     SkASSERT(!max || dst);
     if (index >= fCount) {
@@ -263,19 +263,19 @@ class SkTDArray {
     return count;
   }
 
-  void copy(T* dst) const { this->copyRange(dst, 0, fCount); }
+  void copy(T* dst) const noexcept { this->copyRange(dst, 0, fCount); }
 
   // routines to treat the array like a stack
   void push_back(const T& v) { *this->append() = v; }
   T* push() { return this->append(); }
-  const T& top() const { return (*this)[fCount - 1]; }
-  T& top() { return (*this)[fCount - 1]; }
-  void pop(T* elem) {
+  const T& top() const noexcept { return (*this)[fCount - 1]; }
+  T& top() noexcept { return (*this)[fCount - 1]; }
+  void pop(T* elem) noexcept {
     SkASSERT(fCount > 0);
     if (elem) *elem = (*this)[fCount - 1];
     --fCount;
   }
-  void pop() {
+  void pop() noexcept {
     SkASSERT(fCount > 0);
     --fCount;
   }
@@ -300,7 +300,7 @@ class SkTDArray {
     this->reset();
   }
 
-  void unrefAll() {
+  void unrefAll() noexcept(noexcept((*fArray)->unref())) {
     T* iter = fArray;
     T* stop = fArray + fCount;
     while (iter < stop) {
@@ -310,7 +310,7 @@ class SkTDArray {
     this->reset();
   }
 
-  void safeUnrefAll() {
+  void safeUnrefAll() noexcept(noexcept(SkSafeUnref(*fArray))) {
     T* iter = fArray;
     T* stop = fArray + fCount;
     while (iter < stop) {

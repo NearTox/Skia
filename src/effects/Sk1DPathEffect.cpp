@@ -120,7 +120,7 @@ class SkPath1DPathEffectImpl : public Sk1DPathEffect {
   }
 
   Factory getFactory() const override { return CreateProc; }
-  const char* getTypeName() const noexcept override { return "SkPath1DPathEffect"; }
+  const char* getTypeName() const override { return "SkPath1DPathEffect"; }
 
  private:
   SkPath fPath;                      // copied from constructor

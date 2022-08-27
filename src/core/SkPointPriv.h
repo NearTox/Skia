@@ -30,7 +30,7 @@ class SkPointPriv {
   }
 
   static SkScalar DistanceToLineBetweenSqd(
-      const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side = nullptr);
+      const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side = nullptr) noexcept;
 
   static SkScalar DistanceToLineBetween(
       const SkPoint& pt, const SkPoint& a, const SkPoint& b, Side* side = nullptr) {
@@ -38,7 +38,7 @@ class SkPointPriv {
   }
 
   static SkScalar DistanceToLineSegmentBetweenSqd(
-      const SkPoint& pt, const SkPoint& a, const SkPoint& b);
+      const SkPoint& pt, const SkPoint& a, const SkPoint& b) noexcept;
 
   static SkScalar DistanceToLineSegmentBetween(
       const SkPoint& pt, const SkPoint& a, const SkPoint& b) {
@@ -84,7 +84,7 @@ class SkPointPriv {
 
   static void RotateCW(SkPoint* pt) { RotateCW(*pt, pt); }
 
-  static bool SetLengthFast(SkPoint* pt, float length);
+  static bool SetLengthFast(SkPoint* pt, float length) noexcept;
 
   static SkPoint MakeOrthog(const SkPoint& vec, Side side = kLeft_Side) {
     SkASSERT(side == kRight_Side || side == kLeft_Side);

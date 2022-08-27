@@ -16,7 +16,7 @@
 #include "src/core/SkCachedData.h"
 #include "src/core/SkMipmap.h"
 #include "src/core/SkTaskGroup.h"
-#include "src/gpu/GrDirectContextPriv.h"
+#include "src/gpu/ganesh/GrDirectContextPriv.h"
 #include "src/image/SkImage_Base.h"
 #include "src/image/SkImage_GpuYUVA.h"
 
@@ -333,7 +333,7 @@ sk_sp<SkImage> DDLPromiseImageHelper::CreatePromiseImages(
 
     image = SkImage::MakePromiseTexture(
         procContext->fThreadSafeProxy, backendFormat, curImage.overallDimensions(),
-        curImage.mipMapped(0), GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin,
+        curImage.mipmapped(0), GrSurfaceOrigin::kTopLeft_GrSurfaceOrigin,
         curImage.overallColorType(), curImage.overallAlphaType(), curImage.refOverallColorSpace(),
         PromiseImageCallbackContext::PromiseImageFulfillProc,
         PromiseImageCallbackContext::PromiseImageReleaseProc,

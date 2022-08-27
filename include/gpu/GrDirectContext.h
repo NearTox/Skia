@@ -28,11 +28,8 @@ struct GrMtlBackendContext;
 struct GrMockOptions;
 class GrPath;
 class GrResourceCache;
-class GrSmallPathAtlasMgr;
 class GrResourceProvider;
-class GrStrikeCache;
 class GrSurfaceProxy;
-class GrSwizzle;
 class GrTextureProxy;
 struct GrVkBackendContext;
 
@@ -42,6 +39,17 @@ class SkSurfaceCharacterization;
 class SkSurfaceProps;
 class SkTaskGroup;
 class SkTraceMemoryDump;
+
+namespace skgpu {
+class Swizzle;
+namespace v1 {
+class SmallPathAtlasMgr;
+}
+}  // namespace skgpu
+
+namespace sktext::gpu {
+class StrikeCache;
+}
 
 class SK_API GrDirectContext : public GrRecordingContext {
  public:
@@ -495,7 +503,7 @@ class SK_API GrDirectContext : public GrRecordingContext {
    * pixmap(s). Compatible, in this case, means that the backend format will be the result
    * of calling defaultBackendFormat on the base pixmap's colortype. The src data can be deleted
    * when this call returns.
-   * If numLevels is 1 a non-mipMapped texture will result. If a mipMapped texture is desired
+   * If numLevels is 1 a non-mipmapped texture will result. If a mipmapped texture is desired
    * the data for all the mipmap levels must be provided. In the mipmapped case all the
    * colortypes of the provided pixmaps must be the same. Additionally, all the miplevels
    * must be sized correctly (please see SkMipmap::ComputeLevelSize and ComputeLevelCount). The
@@ -638,7 +646,7 @@ class SK_API GrDirectContext : public GrRecordingContext {
    * finishedProc to be notified when the data has been uploaded by the gpu and the texture can be
    * deleted. The client is required to call `submit` to send the upload work to the gpu.
    * The finishedProc will always get called even if we failed to create the GrBackendTexture
-   * If numLevels is 1 a non-mipMapped texture will result. If a mipMapped texture is desired
+   * If numLevels is 1 a non-mipmapped texture will result. If a mipmapped texture is desired
    * the data for all the mipmap levels must be provided. Additionally, all the miplevels
    * must be sized correctly (please see SkMipmap::ComputeLevelSize and ComputeLevelCount).
    * For the Vulkan backend the layout of the created VkImage will be:
@@ -674,7 +682,7 @@ class SK_API GrDirectContext : public GrRecordingContext {
    * finishedProc to be notified when the data has been uploaded by the gpu and the texture can be
    * deleted. The client is required to call `submit` to send the upload work to the gpu.
    * The finishedProc will always get called even if we failed to create the GrBackendTexture.
-   * If a mipMapped texture is passed in, the data for all the mipmap levels must be provided.
+   * If a mipmapped texture is passed in, the data for all the mipmap levels must be provided.
    * Additionally, all the miplevels must be sized correctly (please see
    * SkMipMap::ComputeLevelSize and ComputeLevelCount).
    * For the Vulkan backend after a successful update the layout of the created VkImage will be:
@@ -739,9 +747,9 @@ class SK_API GrDirectContext : public GrRecordingContext {
 
   class DirectContextID {
    public:
-    static GrDirectContext::DirectContextID Next();
+    static GrDirectContext::DirectContextID Next() noexcept;
 
-    constexpr DirectContextID() noexcept : fID(SK_InvalidUniqueID) {}
+    DirectContextID() noexcept : fID(SK_InvalidUniqueID) {}
 
     bool operator==(const DirectContextID& that) const noexcept { return fID == that.fID; }
     bool operator!=(const DirectContextID& that) const noexcept { return !(*this == that); }
@@ -754,19 +762,19 @@ class SK_API GrDirectContext : public GrRecordingContext {
     uint32_t fID;
   };
 
-  DirectContextID directContextID() const noexcept { return fDirectContextID; }
+  DirectContextID directContextID() const { return fDirectContextID; }
 
   // Provides access to functions that aren't part of the public API.
-  GrDirectContextPriv priv() noexcept;
-  const GrDirectContextPriv priv() const noexcept;  // NOLINT(readability-const-return-type)
+  GrDirectContextPriv priv();
+  const GrDirectContextPriv priv() const;  // NOLINT(readability-const-return-type)
 
  protected:
   GrDirectContext(GrBackendApi backend, const GrContextOptions& options);
 
   bool init() override;
 
-  GrAtlasManager* onGetAtlasManager() noexcept { return fAtlasManager.get(); }
-  GrSmallPathAtlasMgr* onGetSmallPathAtlasMgr();
+  GrAtlasManager* onGetAtlasManager() { return fAtlasManager.get(); }
+  skgpu::v1::SmallPathAtlasMgr* onGetSmallPathAtlasMgr();
 
   GrDirectContext* asDirectContext() override { return this; }
 
@@ -790,7 +798,7 @@ class SK_API GrDirectContext : public GrRecordingContext {
   // wait() on it as they are being destroyed, to avoid the possibility of pending tasks being
   // invoked after objects they depend upon have already been destroyed.
   std::unique_ptr<SkTaskGroup> fTaskGroup;
-  std::unique_ptr<GrStrikeCache> fStrikeCache;
+  std::unique_ptr<sktext::gpu::StrikeCache> fStrikeCache;
   sk_sp<GrGpu> fGpu;
   std::unique_ptr<GrResourceCache> fResourceCache;
   std::unique_ptr<GrResourceProvider> fResourceProvider;
@@ -804,7 +812,7 @@ class SK_API GrDirectContext : public GrRecordingContext {
   std::unique_ptr<GrClientMappedBufferManager> fMappedBufferManager;
   std::unique_ptr<GrAtlasManager> fAtlasManager;
 
-  std::unique_ptr<GrSmallPathAtlasMgr> fSmallPathAtlasMgr;
+  std::unique_ptr<skgpu::v1::SmallPathAtlasMgr> fSmallPathAtlasMgr;
 
   friend class GrDirectContextPriv;
 

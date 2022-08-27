@@ -27,25 +27,9 @@ static void create_gradient(SkBitmap* bm) {
 // Test out the special case of a tiled 1xN texture. Test out opacity,
 // filtering and the different tiling modes
 class ConstXTileBench : public Benchmark {
-  SkPaint fPaint;
-  SkString fName;
-  bool fDoTrans;
-  bool fDoScale;
-  static const int kWidth = 1;
-  static const int kHeight = 300;
-
  public:
   ConstXTileBench(SkTileMode xTile, SkTileMode yTile, SkFilterMode fm, bool doTrans, bool doScale)
-      : fDoTrans(doTrans), fDoScale(doScale) {
-    SkBitmap bm;
-
-    bm.allocN32Pixels(kWidth, kHeight, true);
-    bm.eraseColor(SK_ColorWHITE);
-
-    create_gradient(&bm);
-
-    fPaint.setShader(bm.makeShader(xTile, yTile, SkSamplingOptions(fm)));
-
+      : fFilterMode{fm}, fXTile{xTile}, fYTile{yTile}, fDoTrans{doTrans}, fDoScale{doScale} {
     fName.printf("constXTile_");
 
     static const char* gTileModeStr[kSkTileModeCount] = {"C", "R", "M", "D"};
@@ -67,6 +51,17 @@ class ConstXTileBench : public Benchmark {
 
  protected:
   const char* onGetName() override { return fName.c_str(); }
+
+  void onDelayedSetup() override {
+    SkBitmap bm;
+
+    bm.allocN32Pixels(kWidth, kHeight, true);
+    bm.eraseColor(SK_ColorWHITE);
+
+    create_gradient(&bm);
+
+    fPaint.setShader(bm.makeShader(fXTile, fYTile, SkSamplingOptions(fFilterMode)));
+  }
 
   void onDraw(int loops, SkCanvas* canvas) override {
     SkPaint paint(fPaint);
@@ -97,6 +92,14 @@ class ConstXTileBench : public Benchmark {
   }
 
  private:
+  inline static constexpr int kWidth = 1;
+  inline static constexpr int kHeight = 300;
+
+  const SkFilterMode fFilterMode;
+  const SkTileMode fXTile, fYTile;
+  const bool fDoTrans, fDoScale;
+  SkPaint fPaint;
+  SkString fName;
   using INHERITED = Benchmark;
 };
 

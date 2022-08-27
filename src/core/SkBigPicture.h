@@ -49,7 +49,7 @@ class SkBigPicture final : public SkPicture {
   SkRect cullRect() const override;
   int approximateOpCount(bool nested) const override;
   size_t approximateBytesUsed() const override;
-  const SkBigPicture* asSkBigPicture() const noexcept override { return this; }
+  const SkBigPicture* asSkBigPicture() const override { return this; }
 
   // Used by GrLayerHoister
   void partialPlayback(SkCanvas*, int start, int stop, const SkM44& initialCTM) const;

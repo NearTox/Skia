@@ -8,7 +8,7 @@
 #ifndef SkSurface_Gpu_DEFINED
 #define SkSurface_Gpu_DEFINED
 
-#include "include/private/GrTypesPriv.h"
+#include "include/private/gpu/ganesh/GrTypesPriv.h"
 #include "src/image/SkSurface_Base.h"
 
 #if SK_SUPPORT_GPU
@@ -42,9 +42,9 @@ class SkSurface_Gpu : public SkSurface_Base {
       SkYUVColorSpace yuvColorSpace, sk_sp<SkColorSpace> dstColorSpace, const SkIRect& srcRect,
       const SkISize& dstSize, RescaleGamma rescaleGamma, RescaleMode, ReadPixelsCallback callback,
       ReadPixelsContext context) override;
-
-  void onCopyOnWrite(ContentChangeMode) override;
+  bool onCopyOnWrite(ContentChangeMode) override;
   void onDiscard() override;
+  void onResolveMSAA() override;
   GrSemaphoresSubmitted onFlush(
       BackendSurfaceAccess access, const GrFlushInfo& info,
       const GrBackendSurfaceMutableState*) override;
@@ -58,6 +58,7 @@ class SkSurface_Gpu : public SkSurface_Base {
       const SkPaint* paint) override;
   bool onDraw(sk_sp<const SkDeferredDisplayList>, SkIPoint offset) override;
 
+  sk_sp<const SkCapabilities> onCapabilities() override;
   skgpu::BaseDevice* getDevice();
 
  private:

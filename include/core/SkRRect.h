@@ -132,7 +132,7 @@ class SK_API SkRRect {
 
       @return  empty SkRRect
   */
-  static constexpr SkRRect MakeEmpty() noexcept { return SkRRect(); }
+  static SkRRect MakeEmpty() noexcept { return SkRRect(); }
 
   /** Initializes to copy of r bounds and zeroes corner radii.
 
@@ -220,7 +220,8 @@ class SK_API SkRRect {
       @param bottomRad  left-bottom and right-bottom y-axis radius
   */
   void setNinePatch(
-      const SkRect& rect, SkScalar leftRad, SkScalar topRad, SkScalar rightRad, SkScalar bottomRad);
+      const SkRect& rect, SkScalar leftRad, SkScalar topRad, SkScalar rightRad,
+      SkScalar bottomRad) noexcept;
 
   /** Sets bounds to rect. Sets radii array for individual control of all for corners.
 
@@ -236,7 +237,7 @@ class SK_API SkRRect {
 
       example: https://fiddle.skia.org/c/@RRect_setRectRadii
   */
-  void setRectRadii(const SkRect& rect, const SkVector radii[4]);
+  void setRectRadii(const SkRect& rect, const SkVector radii[4]) noexcept;
 
   /** \enum SkRRect::Corner
       The radii are stored: top-left, top-right, bottom-right, bottom-left.
@@ -315,7 +316,7 @@ class SK_API SkRRect {
 
       example: https://fiddle.skia.org/c/@RRect_inset
   */
-  void inset(SkScalar dx, SkScalar dy, SkRRect* dst) const;
+  void inset(SkScalar dx, SkScalar dy, SkRRect* dst) const noexcept;
 
   /** Insets bounds by dx and dy, and adjusts radii by dx and dy. dx and dy may be
       positive, negative, or zero.
@@ -391,7 +392,7 @@ class SK_API SkRRect {
 
       example: https://fiddle.skia.org/c/@RRect_contains
   */
-  bool contains(const SkRect& rect) const;
+  bool contains(const SkRect& rect) const noexcept;
 
   /** Returns true if bounds and radii values are finite and describe a SkRRect
       SkRRect::Type that matches getType(). All SkRRect methods construct valid types,
@@ -470,7 +471,7 @@ class SK_API SkRRect {
  private:
   static bool AreRectAndRadiiValid(const SkRect&, const SkVector[4]) noexcept;
 
-  constexpr SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type) noexcept
+  SkRRect(const SkRect& rect, const SkVector radii[4], int32_t type) noexcept 
       : fRect(rect), fRadii{radii[0], radii[1], radii[2], radii[3]}, fType(type) {}
 
   /**
@@ -480,9 +481,9 @@ class SK_API SkRRect {
   bool initializeRect(const SkRect&) noexcept;
 
   void computeType() noexcept;
-  bool checkCornerContainment(SkScalar x, SkScalar y) const;
+  bool checkCornerContainment(SkScalar x, SkScalar y) const noexcept;
   // Returns true if the radii had to be scaled to fit rect
-  bool scaleRadii();
+  bool scaleRadii() noexcept;
 
   SkRect fRect = SkRect::MakeEmpty();
   // Radii order is UL, UR, LR, LL. Use Corner enum to index into fRadii[]

@@ -9,7 +9,10 @@
 
 #include "include/core/SkBitmap.h"
 #include "include/core/SkCanvas.h"
+#include "include/core/SkColorSpace.h"
 #include "include/core/SkImage.h"
+#include "include/core/SkMatrix.h"
+#include "include/core/SkTileMode.h"
 #include "src/core/SkSpecialSurface.h"
 #include "src/core/SkSurfacePriv.h"
 #include "src/image/SkImage_Base.h"
@@ -17,11 +20,12 @@
 #if SK_SUPPORT_GPU
 #  include "include/gpu/GrDirectContext.h"
 #  include "include/gpu/GrRecordingContext.h"
-#  include "src/gpu/GrImageInfo.h"
-#  include "src/gpu/GrProxyProvider.h"
-#  include "src/gpu/GrRecordingContextPriv.h"
-#  include "src/gpu/GrTextureProxy.h"
+#  include "src/gpu/ganesh/GrImageInfo.h"
+#  include "src/gpu/ganesh/GrProxyProvider.h"
+#  include "src/gpu/ganesh/GrRecordingContextPriv.h"
+#  include "src/gpu/ganesh/GrTextureProxy.h"
 #  include "src/image/SkImage_Gpu.h"
+#  include "src/shaders/SkImageShader.h"
 #endif
 
 // Currently the raster imagefilters can only handle certain imageinfos. Call this to know if
@@ -62,6 +66,9 @@ class SkSpecialImage_Base : public SkSpecialImage {
   // This subset (when not null) is relative to the backing store's coordinate frame, it has
   // already been mapped from the content rect by the non-virtual asImage().
   virtual sk_sp<SkImage> onAsImage(const SkIRect* subset) const = 0;
+
+  virtual sk_sp<SkShader> onAsShader(
+      SkTileMode, const SkSamplingOptions&, const SkMatrix&) const = 0;
 
   virtual sk_sp<SkSurface> onMakeTightSurface(
       SkColorType colorType, const SkColorSpace* colorSpace, const SkISize& size,
@@ -126,6 +133,20 @@ sk_sp<SkImage> SkSpecialImage::asImage(const SkIRect* subset) const {
   } else {
     return as_SIB(this)->onAsImage(nullptr);
   }
+}
+
+sk_sp<SkShader> SkSpecialImage::asShader(
+    SkTileMode tileMode, const SkSamplingOptions& sampling, const SkMatrix& lm) const {
+  return as_SIB(this)->onAsShader(tileMode, sampling, lm);
+}
+
+sk_sp<SkShader> SkSpecialImage::asShader(const SkSamplingOptions& sampling) const {
+  return this->asShader(sampling, SkMatrix::I());
+}
+
+sk_sp<SkShader> SkSpecialImage::asShader(
+    const SkSamplingOptions& sampling, const SkMatrix& lm) const {
+  return this->asShader(SkTileMode::kClamp, sampling, lm);
 }
 
 #if defined(SK_DEBUG) || SK_SUPPORT_GPU
@@ -230,6 +251,17 @@ class SkSpecialImage_Raster : public SkSpecialImage_Base {
     }
 
     return fBitmap.asImage();
+  }
+
+  sk_sp<SkShader> onAsShader(
+      SkTileMode tileMode, const SkSamplingOptions& sampling, const SkMatrix& lm) const override {
+    // TODO(skbug.com/12784): SkImage::makeShader() doesn't support a subset yet, but SkBitmap
+    // supports subset views so create the shader from the subset bitmap instead of fBitmap.
+    SkBitmap subsetBM;
+    if (!this->getROPixels(&subsetBM)) {
+      return nullptr;
+    }
+    return subsetBM.asImage()->makeShader(tileMode, tileMode, sampling, lm);
   }
 
   sk_sp<SkSurface> onMakeTightSurface(
@@ -367,7 +399,7 @@ class SkSpecialImage_Gpu : public SkSpecialImage_Base {
 
     SkImageInfo ii = SkImageInfo::Make(size, colorType, at, sk_ref_sp(colorSpace));
 
-    return SkSpecialSurface::MakeRenderTarget(fContext, ii, props);
+    return SkSpecialSurface::MakeRenderTarget(fContext, ii, props, fView.origin());
   }
 
   sk_sp<SkSpecialImage> onMakeSubset(const SkIRect& subset) const override {
@@ -404,6 +436,22 @@ class SkSpecialImage_Gpu : public SkSpecialImage_Base {
     return wrap_proxy_in_image(fContext, fView, this->colorType(), fAlphaType, fColorSpace);
   }
 
+  sk_sp<SkShader> onAsShader(
+      SkTileMode tileMode, const SkSamplingOptions& sampling, const SkMatrix& lm) const override {
+    // The special image's logical (0,0) is at its subset's topLeft() so we need to account for
+    // that in the local matrix used when sampling.
+    SkMatrix subsetOrigin = SkMatrix::Translate(-this->subset().topLeft());
+    subsetOrigin.postConcat(lm);
+    // However, we don't need to modify the subset itself since that is defined with respect to
+    // the base image, and the local matrix is applied before any tiling/clamping.
+    const SkRect subset = SkRect::Make(this->subset());
+
+    // asImage() w/o a subset makes no copy; create the SkImageShader directly to remember the
+    // subset used to access the image.
+    return SkImageShader::MakeSubset(
+        this->asImage(), subset, tileMode, tileMode, sampling, &subsetOrigin);
+  }
+
   sk_sp<SkSurface> onMakeTightSurface(
       SkColorType colorType, const SkColorSpace* colorSpace, const SkISize& size,
       SkAlphaType at) const override {
@@ -413,7 +461,8 @@ class SkSpecialImage_Gpu : public SkSpecialImage_Base {
     colorType =
         colorSpace && colorSpace->gammaIsLinear() ? kRGBA_F16_SkColorType : kRGBA_8888_SkColorType;
     SkImageInfo info = SkImageInfo::Make(size, colorType, at, sk_ref_sp(colorSpace));
-    return SkSurface::MakeRenderTarget(fContext, SkBudgeted::kYes, info);
+    return SkSurface::MakeRenderTarget(
+        fContext, SkBudgeted::kYes, info, 0, fView.origin(), nullptr);
   }
 
  private:

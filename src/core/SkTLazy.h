@@ -9,9 +9,7 @@
 #define SkTLazy_DEFINED
 
 #include "include/core/SkTypes.h"
-#include <new>
-#include <type_traits>
-#include <utility>
+#include <optional>
 
 /**
  *  Efficient way to defer allocating/initializing a class until it is needed
@@ -20,28 +18,20 @@
 template <typename T>
 class SkTLazy {
  public:
-  SkTLazy() = default;
-  explicit SkTLazy(const T* src) : fPtr(src ? new (&fStorage) T(*src) : nullptr) {}
-  SkTLazy(const SkTLazy& that) : fPtr(that.fPtr ? new (&fStorage) T(*that.fPtr) : nullptr) {}
-  SkTLazy(SkTLazy&& that) : fPtr(that.fPtr ? new (&fStorage) T(std::move(*that.fPtr)) : nullptr) {}
+  constexpr SkTLazy() noexcept = default;
+  explicit SkTLazy(const T* src) : fValue(src ? std::optional<T>(*src) : std::nullopt) {}
+  SkTLazy(const SkTLazy& that) : fValue(that.fValue) {}
+  SkTLazy(SkTLazy&& that) : fValue(std::move(that.fValue)) {}
 
-  ~SkTLazy() { this->reset(); }
+  ~SkTLazy() = default;
 
   SkTLazy& operator=(const SkTLazy& that) {
-    if (that.isValid()) {
-      this->set(*that);
-    } else {
-      this->reset();
-    }
+    fValue = that.fValue;
     return *this;
   }
 
   SkTLazy& operator=(SkTLazy&& that) {
-    if (that.isValid()) {
-      this->set(std::move(*that));
-    } else {
-      this->reset();
-    }
+    fValue = std::move(that.fValue);
     return *this;
   }
 
@@ -53,9 +43,8 @@ class SkTLazy {
    */
   template <typename... Args>
   T* init(Args&&... args) {
-    this->reset();
-    fPtr = new (&fStorage) T(std::forward<Args>(args)...);
-    return fPtr;
+    fValue.emplace(std::forward<Args>(args)...);
+    return this->get();
   }
 
   /**
@@ -64,67 +53,64 @@ class SkTLazy {
    *  has already been initialized, then this will copy over the previous
    *  contents.
    */
-  T* set(const T& src) noexcept(
-      std::is_nothrow_copy_constructible_v<T>&& std::is_nothrow_copy_assignable_v<T>) {
-    if (this->isValid()) {
-      *fPtr = src;
-    } else {
-      fPtr = new (&fStorage) T(src);
-    }
-    return fPtr;
+  T* set(const T& src) {
+    fValue = src;
+    return this->get();
   }
 
-  T* set(T&& src) noexcept(
-      std::is_nothrow_move_constructible_v<T>&& std::is_nothrow_move_assignable_v<T>) {
-    static_assert(std::is_nothrow_move_constructible_v<T> && std::is_nothrow_move_assignable_v<T>);
-    if (this->isValid()) {
-      *fPtr = std::move(src);
-    } else {
-      fPtr = new (&fStorage) T(std::move(src));
-    }
-    return fPtr;
+  T* set(T&& src) {
+    fValue = std::move(src);
+    return this->get();
   }
 
   /**
    * Destroy the lazy object (if it was created via init() or set())
    */
-  void reset() noexcept {
-    if (this->isValid()) {
-      fPtr->~T();
-      fPtr = nullptr;
-    }
-  }
+  void reset() noexcept { fValue.reset(); }
 
   /**
    *  Returns true if a valid object has been initialized in the SkTLazy,
    *  false otherwise.
    */
-  bool isValid() const noexcept { return SkToBool(fPtr); }
+  bool isValid() const noexcept { return fValue.has_value(); }
 
   /**
    * Returns the object. This version should only be called when the caller
    * knows that the object has been initialized.
    */
-  T* get() const noexcept {
-    SkASSERT(this->isValid());
-    return fPtr;
+  T* get() {
+    SkASSERT(fValue.has_value());
+    return &fValue.value();
   }
-  T* operator->() const noexcept { return this->get(); }
-  T& operator*() const noexcept { return *this->get(); }
+  const T* get() const {
+    SkASSERT(fValue.has_value());
+    return &fValue.value();
+  }
+
+  T* operator->() { return this->get(); }
+  const T* operator->() const { return this->get(); }
+
+  T& operator*() {
+    SkASSERT(fValue.has_value());
+    return *fValue;
+  }
+  const T& operator*() const {
+    SkASSERT(fValue.has_value());
+    return *fValue;
+  }
 
   /**
    * Like above but doesn't assert if object isn't initialized (in which case
    * nullptr is returned).
    */
-  T* getMaybeNull() const noexcept { return fPtr; }
+  const T* getMaybeNull() const { return fValue.has_value() ? this->get() : nullptr; }
 
  private:
-  alignas(T) char fStorage[sizeof(T)];
-  T* fPtr{nullptr};  // nullptr or fStorage
+  std::optional<T> fValue;
 };
 
 /**
- * A helper built on top of SkTLazy to do copy-on-first-write. The object is initialized
+ * A helper built on top of std::optional to do copy-on-first-write. The object is initialized
  * with a const pointer but provides a non-const pointer accessor. The first time the
  * accessor is called (if ever) the object is cloned.
  *
@@ -154,36 +140,36 @@ class SkTCopyOnFirstWrite {
   explicit SkTCopyOnFirstWrite(const T* initial) : fObj(initial) {}
 
   // Constructor for delayed initialization.
-  SkTCopyOnFirstWrite() : fObj(nullptr) {}
+  constexpr SkTCopyOnFirstWrite() noexcept : fObj(nullptr) {}
 
   SkTCopyOnFirstWrite(const SkTCopyOnFirstWrite& that) { *this = that; }
   SkTCopyOnFirstWrite(SkTCopyOnFirstWrite&& that) { *this = std::move(that); }
 
   SkTCopyOnFirstWrite& operator=(const SkTCopyOnFirstWrite& that) {
     fLazy = that.fLazy;
-    fObj = fLazy.isValid() ? fLazy.get() : that.fObj;
+    fObj = fLazy.has_value() ? &fLazy.value() : that.fObj;
     return *this;
   }
 
   SkTCopyOnFirstWrite& operator=(SkTCopyOnFirstWrite&& that) {
     fLazy = std::move(that.fLazy);
-    fObj = fLazy.isValid() ? fLazy.get() : that.fObj;
+    fObj = fLazy.has_value() ? &fLazy.value() : that.fObj;
     return *this;
   }
 
   // Should only be called once, and only if the default constructor was used.
   void init(const T& initial) {
-    SkASSERT(nullptr == fObj);
-    SkASSERT(!fLazy.isValid());
+    SkASSERT(!fObj);
+    SkASSERT(!fLazy.has_value());
     fObj = &initial;
   }
 
   // If not already initialized, in-place instantiates the writable object
   template <typename... Args>
   void initIfNeeded(Args&&... args) {
-    if (nullptr == fObj) {
-      SkASSERT(!fLazy.isValid());
-      fObj = fLazy.init(std::forward<Args>(args)...);
+    if (!fObj) {
+      SkASSERT(!fLazy.has_value());
+      fObj = fLazy.emplace(std::forward<Args>(args)...);
     }
   }
 
@@ -192,11 +178,11 @@ class SkTCopyOnFirstWrite {
    */
   T* writable() {
     SkASSERT(fObj);
-    if (!fLazy.isValid()) {
-      fLazy.set(*fObj);
-      fObj = fLazy.get();
+    if (!fLazy.has_value()) {
+      fLazy = *fObj;
+      fObj = &fLazy.value();
     }
-    return const_cast<T*>(fObj);
+    return &fLazy.value();
   }
 
   const T* get() const { return fObj; }
@@ -205,15 +191,15 @@ class SkTCopyOnFirstWrite {
    * Operators for treating this as though it were a const pointer.
    */
 
-  const T* operator->() const { return fObj; }
+  const T* operator->() const noexcept { return fObj; }
 
-  operator const T*() const { return fObj; }
+  operator const T*() const noexcept { return fObj; }
 
-  const T& operator*() const { return *fObj; }
+  const T& operator*() const noexcept { return *fObj; }
 
  private:
   const T* fObj;
-  SkTLazy<T> fLazy;
+  std::optional<T> fLazy;
 };
 
 #endif

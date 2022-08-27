@@ -12,6 +12,7 @@
 #include "include/core/SkImageInfo.h"
 #include "include/core/SkSamplingOptions.h"
 
+class SkColorSpace;
 class SkData;
 struct SkMask;
 
@@ -56,7 +57,7 @@ class SK_API SkPixmap {
       @param rowBytes  size of one row of addr; width times pixel size, or larger
       @return          initialized SkPixmap
   */
-  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept
+  SkPixmap(const SkImageInfo& info, const void* addr, size_t rowBytes) noexcept 
       : fPixels(addr), fRowBytes(rowBytes), fInfo(info) {}
 
   /** Sets width, height, row bytes to zero; pixel address to nullptr; SkColorType to
@@ -96,7 +97,7 @@ class SK_API SkPixmap {
 
       example: https://fiddle.skia.org/c/@Pixmap_setColorSpace
   */
-  void setColorSpace(sk_sp<SkColorSpace> colorSpace);
+  void setColorSpace(sk_sp<SkColorSpace> colorSpace) noexcept;
 
   /** Deprecated.
    */
@@ -166,7 +167,7 @@ class SK_API SkPixmap {
 
       @return  SkColorSpace in SkImageInfo, or nullptr
   */
-  SkColorSpace* colorSpace() const noexcept { return fInfo.colorSpace(); }
+  SkColorSpace* colorSpace() const noexcept;
 
   /** Returns smart pointer to SkColorSpace, the range of colors, associated with
       SkImageInfo. The smart pointer tracks the number of objects sharing this
@@ -176,7 +177,7 @@ class SK_API SkPixmap {
 
       @return  SkColorSpace in SkImageInfo wrapped in a smart pointer
   */
-  sk_sp<SkColorSpace> refColorSpace() const noexcept { return fInfo.refColorSpace(); }
+  sk_sp<SkColorSpace> refColorSpace() const noexcept;
 
   /** Returns true if SkAlphaType is kOpaque_SkAlphaType.
       Does not check if SkColorType allows alpha, or if any pixel value has
@@ -184,7 +185,7 @@ class SK_API SkPixmap {
 
       @return  true if SkImageInfo has opaque SkAlphaType
   */
-  bool isOpaque() const noexcept { return fInfo.isOpaque(); }
+  bool isOpaque() const { return fInfo.isOpaque(); }
 
   /** Returns SkIRect { 0, 0, width(), height() }.
 
@@ -197,14 +198,14 @@ class SK_API SkPixmap {
 
       @return  maximum pixels per row
   */
-  int rowBytesAsPixels() const { return int(fRowBytes >> this->shiftPerPixel()); }
+  int rowBytesAsPixels() const noexcept { return int(fRowBytes >> this->shiftPerPixel()); }
 
   /** Returns bit shift converting row bytes to row pixels.
       Returns zero for kUnknown_SkColorType.
 
       @return  one of: 0, 1, 2, 3; left shift to convert pixels to bytes
   */
-  int shiftPerPixel() const { return fInfo.shiftPerPixel(); }
+  int shiftPerPixel() const noexcept { return fInfo.shiftPerPixel(); }
 
   /** Returns minimum memory required for pixel storage.
       Does not include unused memory on last row when rowBytesAsPixels() exceeds width().
@@ -214,7 +215,7 @@ class SK_API SkPixmap {
 
       @return  size in bytes of image buffer
   */
-  size_t computeByteSize() const { return fInfo.computeByteSize(fRowBytes); }
+  size_t computeByteSize() const noexcept { return fInfo.computeByteSize(fRowBytes); }
 
   /** Returns true if all pixels are opaque. SkColorType determines how pixels
       are encoded, and whether pixel describes alpha. Returns true for SkColorType
@@ -234,7 +235,7 @@ class SK_API SkPixmap {
 
       example: https://fiddle.skia.org/c/@Pixmap_computeIsOpaque
   */
-  bool computeIsOpaque() const;
+  bool computeIsOpaque() const noexcept;
 
   /** Returns pixel at (x, y) as unpremultiplied color.
       Returns black with alpha if SkColorType is kAlpha_8_SkColorType.
@@ -278,7 +279,7 @@ class SK_API SkPixmap {
       @param y  row index, zero or greater, and less than height()
       @return   readable generic pointer to pixel
   */
-  const void* addr(int x, int y) const {
+  const void* addr(int x, int y) const noexcept {
     return (const char*)fPixels + fInfo.computeOffset(x, y, fRowBytes);
   }
 
@@ -460,7 +461,7 @@ class SK_API SkPixmap {
       @param y  row index, zero or greater, and less than height()
       @return   writable generic pointer to pixel
   */
-  void* writable_addr(int x, int y) const { return const_cast<void*>(this->addr(x, y)); }
+  void* writable_addr(int x, int y) const noexcept { return const_cast<void*>(this->addr(x, y)); }
 
   /** Returns writable pixel address at (x, y). Result is addressable as unsigned
       8-bit bytes. Will trigger an assert() if SkColorType is not kAlpha_8_SkColorType
